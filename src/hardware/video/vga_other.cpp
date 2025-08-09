@@ -19,7 +19,7 @@
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "reelmagic.h"
-#include "render.h"
+#include "gui/render.h"
 #include "util/rgb888.h"
 #include "util/string_utils.h"
 #include "vga.h"

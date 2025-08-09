@@ -15,7 +15,7 @@
 #include "hardware/video/vga.h"
 #include "inout.h"
 #include "pci_bus.h"
-#include "render.h"
+#include "gui/render.h"
 #include "util/rgb888.h"
 #include "config/setup.h"
 #include "util/math_utils.h"

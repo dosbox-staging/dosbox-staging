@@ -58,7 +58,7 @@
 #include "mouse.h"
 #include "pacer.h"
 #include "util/rect.h"
-#include "render.h"
+#include "gui/render.h"
 #include "sdlmain.h"
 #include "config/setup.h"
 #include "util/string_utils.h"

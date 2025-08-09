@@ -16,7 +16,7 @@
 #include "hardware/video/vga.h"
 #include "mapper.h"
 #include "util/math_utils.h"
-#include "render.h"
+#include "gui/render.h"
 #include "config/setup.h"
 #include "shader_manager.h"
 #include "shell.h"

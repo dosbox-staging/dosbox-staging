@@ -37,7 +37,7 @@
 #include "pci_bus.h"
 #include "programs.h"
 #include "reelmagic.h"
-#include "render.h"
+#include "gui/render.h"
 #include "config/setup.h"
 #include "shell.h"
 #include "misc/support.h"
