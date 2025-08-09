@@ -11,7 +11,7 @@
 #include "misc/support.h"
 
 #ifndef DOSBOX_REGS_H
-	#include "regs.h"
+	#include "cpu/registers.h"
 #endif
 #ifndef DOSBOX_MEM_H
 	#include "hardware/memory.h"

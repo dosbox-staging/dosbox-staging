@@ -12,7 +12,7 @@
 #include <unistd.h>
 
 #include "compiler.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "cpu/callback.h"
 #include "dos_system.h"
 #include "dos_inc.h"

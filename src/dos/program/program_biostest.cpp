@@ -12,7 +12,7 @@
 #include <string>
 
 #include "drives.h"
-#include "regs.h"
+#include "cpu/registers.h"
 
 void BIOSTEST::Run(void) {
 	if (!(cmd->FindCommand(1, temp_line))) {

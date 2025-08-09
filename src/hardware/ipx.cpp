@@ -24,7 +24,7 @@
 #include "hardware/memory.h"
 #include "pic.h"
 #include "programs.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
 #include "timer.h"

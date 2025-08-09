@@ -21,7 +21,7 @@ void FillFlagsNoCFOF(void);
 void DestroyConditionFlags(void);
 
 #ifndef DOSBOX_REGS_H
-#include "regs.h"
+#include "cpu/registers.h"
 #endif
 
 struct LazyFlags {

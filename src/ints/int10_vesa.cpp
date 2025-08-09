@@ -14,7 +14,7 @@
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "pci_bus.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "util/string_utils.h"
 
 #define VESA_SUCCESS          0x00

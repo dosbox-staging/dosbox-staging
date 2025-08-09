@@ -9,7 +9,7 @@
 #include "dos_windows.h"
 #include "mouse.h"
 #include "program_more_output.h"
-#include "regs.h"
+#include "cpu/registers.h"
 
 CHECK_NARROWING();
 

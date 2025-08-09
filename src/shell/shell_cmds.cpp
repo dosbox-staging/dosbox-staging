@@ -30,7 +30,7 @@
 #include "hardware/timer.h"
 #include "ints/int10.h"
 #include "cpu/paging.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 
