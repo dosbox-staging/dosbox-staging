@@ -20,7 +20,7 @@
 #include "config/config.h"
 #include "misc/cross.h"
 #include "util/fs_utils.h"
-#include "notifications.h"
+#include "misc/notifications.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 
