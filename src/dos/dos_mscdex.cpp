@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "compiler.h"
+#include "misc/compiler.h"
 #include "cpu/registers.h"
 #include "cpu/callback.h"
 #include "dos/dos_system.h"
