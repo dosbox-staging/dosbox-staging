@@ -57,7 +57,7 @@
 #include "util/math_utils.h"
 #include "mouse.h"
 #include "pacer.h"
-#include "rect.h"
+#include "util/rect.h"
 #include "render.h"
 #include "sdlmain.h"
 #include "setup.h"

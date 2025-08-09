@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "config.h"
-#include "rect.h"
+#include "util/rect.h"
 
 // ***************************************************************************
 // Initialization, configuration
