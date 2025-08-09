@@ -14,7 +14,7 @@
 #include "audio/opl_capture.h"
 #include "util/checks.h"
 #include "config/config.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "util/math_utils.h"
 #include "mapper.h"
 #include "hardware/memory.h"

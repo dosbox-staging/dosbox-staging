@@ -25,7 +25,7 @@
 #include "nullmodem.h"
 #include "serialmouse.h"
 
-#include "cpu.h"
+#include "cpu/cpu.h"
 
 #define LOG_SER(x) log_ser
 

@@ -10,7 +10,7 @@
 
 #include "ints/bios.h"
 #include "cpu/callback.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "dos_inc.h"
 #include "hardware/dma.h"
 #include "inout.h"

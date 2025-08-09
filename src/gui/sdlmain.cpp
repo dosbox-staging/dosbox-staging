@@ -41,7 +41,7 @@
 #include "capture/capture.h"
 #include "command_line.h"
 #include "config/config.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "misc/cross.h"
 #include "debug.h"
 #include "dos/dos_locale.h"

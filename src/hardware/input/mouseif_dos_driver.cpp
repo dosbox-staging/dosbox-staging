@@ -14,7 +14,7 @@
 #include "util/byteorder.h"
 #include "cpu/callback.h"
 #include "util/checks.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "dos_inc.h"
 #include "dosbox_config.h"
 #include "ints/int10.h"

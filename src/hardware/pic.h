@@ -9,7 +9,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "cpu.h"
+#include "cpu/cpu.h"
 
 typedef void(PIC_EOIHandler)();
 typedef void (*PIC_EventHandler)(uint32_t val);

@@ -8,7 +8,7 @@
 #include <cstring>
 #include <vector>
 
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "inout.h"
 #include "hardware/memory.h"
 #include "util/mem_host.h"

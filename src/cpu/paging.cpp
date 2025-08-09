@@ -12,7 +12,7 @@
 #include "hardware/memory.h"
 #include "regs.h"
 #include "lazyflags.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "debug.h"
 #include "config/setup.h"
 

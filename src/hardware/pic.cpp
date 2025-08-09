@@ -3,7 +3,7 @@
 
 #include "dosbox.h"
 #include "inout.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "cpu/callback.h"
 #include "hardware/pic.h"
 #include "timer.h"

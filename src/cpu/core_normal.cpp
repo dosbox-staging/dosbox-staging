@@ -6,7 +6,7 @@
 #include <cmath>
 
 #include "cpu/callback.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "fpu.h"
 #include "inout.h"
 #include "lazyflags.h"

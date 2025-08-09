@@ -32,7 +32,7 @@
 #endif // HAVE_MPROTECT
 
 #include "cpu/callback.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "debug.h"
 #include "inout.h"
 #include "lazyflags.h"

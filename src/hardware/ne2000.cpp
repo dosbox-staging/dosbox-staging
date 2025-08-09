@@ -12,7 +12,7 @@
 #include <cstring>
 
 #include "cpu/callback.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "misc/ethernet.h"
 #include "inout.h"
 #include "pic.h"
