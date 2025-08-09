@@ -14,7 +14,7 @@
 #include "util/fs_utils.h"
 #include "shell.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 constexpr auto default_date = DOS_PackDate(2002, 10, 1);
 constexpr auto default_time = DOS_PackTime(12, 34, 56);

@@ -18,7 +18,7 @@
 #include "hardware/mame/saa1099.h"
 #include "inout.h"
 #include "util/math_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 class GameBlaster {
 public:

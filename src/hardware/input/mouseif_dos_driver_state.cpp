@@ -4,7 +4,7 @@
 #include "mouseif_dos_driver_state.h"
 
 #include "util/checks.h"
-#include "support.h"
+#include "misc/support.h"
 
 #include <bit>
 #include <cstring>

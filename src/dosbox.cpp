@@ -40,7 +40,7 @@
 #include "render.h"
 #include "config/setup.h"
 #include "shell.h"
-#include "support.h"
+#include "misc/support.h"
 #include "tracy.h"
 #include "video.h"
 

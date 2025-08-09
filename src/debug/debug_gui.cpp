@@ -14,7 +14,7 @@
 
 #include "misc/cross.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 #include "regs.h"
 #include "debug.h"
 #include "debug_inc.h"

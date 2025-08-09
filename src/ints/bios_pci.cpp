@@ -10,7 +10,7 @@
 #include "inout.h"
 #include "pci_bus.h"
 #include "regs.h"
-#include "support.h"
+#include "misc/support.h"
 
 CHECK_NARROWING();
 

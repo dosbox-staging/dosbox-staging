@@ -19,7 +19,7 @@
 #include "paging.h"
 #include "regs.h"
 #include "config/setup.h"
-#include "support.h"
+#include "misc/support.h"
 
 #define EMM_PAGEFRAME	0xE000
 #define EMM_PAGEFRAME4K	((EMM_PAGEFRAME*16)/4096)

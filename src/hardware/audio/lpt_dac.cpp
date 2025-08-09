@@ -10,7 +10,7 @@
 #include "util/math_utils.h"
 #include "hardware/pic.h"
 #include "config/setup.h"
-#include "support.h"
+#include "misc/support.h"
 
 #include "covox.h"
 #include "disney.h"

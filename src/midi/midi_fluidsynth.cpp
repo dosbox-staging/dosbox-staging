@@ -23,7 +23,7 @@
 #include "hardware/pic.h"
 #include "programs.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 constexpr auto SoundFontExtension = ".sf2";
 

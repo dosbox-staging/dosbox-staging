@@ -10,7 +10,7 @@
 #include "mapper.h"
 #include "sdlmain.h"
 #include "config/setup.h"
-#include "support.h"
+#include "misc/support.h"
 #include "unicode.h"
 #include "video.h"
 

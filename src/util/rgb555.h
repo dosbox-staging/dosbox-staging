@@ -7,7 +7,7 @@
 #include <cstdint>
 
 #include "util/rgb888.h"
-#include "support.h"
+#include "misc/support.h"
 #include "util/rgb.h"
 
 class Rgb555 {

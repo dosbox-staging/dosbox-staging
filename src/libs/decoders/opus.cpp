@@ -27,7 +27,7 @@
 #include <SDL.h>
 
 #include "util/math_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 #include "SDL_sound.h"
 #define __SDL_SOUND_INTERNAL__

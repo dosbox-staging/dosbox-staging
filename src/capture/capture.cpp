@@ -19,7 +19,7 @@
 #include "mapper.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 #include <SDL.h>
 

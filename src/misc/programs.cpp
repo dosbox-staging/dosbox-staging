@@ -23,7 +23,7 @@
 #include "mapper.h"
 #include "regs.h"
 #include "shell.h"
-#include "support.h"
+#include "misc/support.h"
 #include "unicode.h"
 
 callback_number_t call_program = 0;

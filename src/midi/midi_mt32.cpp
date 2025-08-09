@@ -28,7 +28,7 @@
 #include "midi_lasynth_model.h"
 #include "hardware/pic.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 // #define DEBUG_MT32
 

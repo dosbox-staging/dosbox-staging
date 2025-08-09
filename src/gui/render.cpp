@@ -21,7 +21,7 @@
 #include "shader_manager.h"
 #include "shell.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 #include "video.h"
 
 Render render;

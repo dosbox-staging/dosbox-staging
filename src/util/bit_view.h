@@ -86,7 +86,7 @@ big-endian.
 #include <type_traits>
 
 #include "util/bitops.h"
-#include "support.h"
+#include "misc/support.h"
 
 template <int view_index, int view_width>
 class bit_view {

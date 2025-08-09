@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "support.h"
+#include "misc/support.h"
 
 #include <algorithm>
 #include <cassert>

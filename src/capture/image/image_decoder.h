@@ -12,7 +12,7 @@
 #include "hardware/video/vga.h"
 #include "render.h"
 #include "util/rgb888.h"
-#include "support.h"
+#include "misc/support.h"
 #include "util/rgb555.h"
 #include "util/rgb565.h"
 

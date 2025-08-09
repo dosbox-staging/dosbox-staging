@@ -11,7 +11,7 @@
 #include <functional>
 
 #include "inout.h"
-#include "support.h"
+#include "misc/support.h"
 
 enum class DmaDirection {
 	Read,

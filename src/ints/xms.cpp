@@ -15,7 +15,7 @@
 #include "hardware/memory.h"
 #include "regs.h"
 #include "config/setup.h"
-#include "support.h"
+#include "misc/support.h"
 
 #include <cstddef>
 #include <cstdlib>

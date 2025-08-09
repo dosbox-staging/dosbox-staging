@@ -19,7 +19,7 @@
  * 4. Additional dosbox-staging headers (if needed)
  */
 
-#include "support.h"
+#include "misc/support.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

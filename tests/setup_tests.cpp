@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include "support.h"
+#include "misc/support.h"
 #include <string>
 
 namespace {

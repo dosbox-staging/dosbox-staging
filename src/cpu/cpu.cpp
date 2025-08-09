@@ -20,7 +20,7 @@
 #include "programs.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 #include "video.h"
 
 #if 1

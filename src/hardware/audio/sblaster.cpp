@@ -31,7 +31,7 @@
 #include "config/setup.h"
 #include "shell.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 constexpr uint8_t MixerIndex = 0x04;
 constexpr uint8_t MixerData  = 0x05;

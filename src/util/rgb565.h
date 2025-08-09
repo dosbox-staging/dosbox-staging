@@ -8,7 +8,7 @@
 
 #include "rgb.h"
 #include "rgb888.h"
-#include "support.h"
+#include "misc/support.h"
 
 class Rgb565 {
 public:
