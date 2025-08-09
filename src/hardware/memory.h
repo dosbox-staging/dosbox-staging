@@ -9,7 +9,7 @@
 
 #include "util/mem_host.h"
 #include "util/mem_unaligned.h"
-#include "types.h"
+#include "misc/types.h"
 
 constexpr uint16_t MemPageSize     = 4096;
 constexpr uint8_t  RealSegmentSize = 16;

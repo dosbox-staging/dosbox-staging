@@ -10,7 +10,7 @@
 #include "util/fraction.h"
 #include "util/rect.h"
 #include "config/setup.h"
-#include "types.h"
+#include "misc/types.h"
 
 // Pixels and logical units
 // ========================
