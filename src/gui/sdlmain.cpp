@@ -59,7 +59,7 @@
 #include "pacer.h"
 #include "util/rect.h"
 #include "gui/render.h"
-#include "sdlmain.h"
+#include "gui/sdlmain.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
 #include "titlebar.h"

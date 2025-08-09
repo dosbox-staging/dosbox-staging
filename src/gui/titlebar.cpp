@@ -8,7 +8,7 @@
 #include "cpu/cpu.h"
 #include "dosbox.h"
 #include "mapper.h"
-#include "sdlmain.h"
+#include "gui/sdlmain.h"
 #include "config/setup.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
