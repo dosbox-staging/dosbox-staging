@@ -81,7 +81,7 @@
 #include "cpu/paging.h"
 #include "pci_bus.h"
 #include "hardware/pic.h"
-#include "render.h"
+#include "gui/render.h"
 #include "config/setup.h"
 #include "simde/x86/sse2.h"
 #include "misc/support.h"

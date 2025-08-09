@@ -10,7 +10,7 @@
 #include "ints/int10.h"
 #include "hardware/memory.h"
 #include "reelmagic.h"
-#include "render.h"
+#include "gui/render.h"
 #include "util/rgb.h"
 #include "vga.h"
 

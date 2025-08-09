@@ -16,7 +16,7 @@
 #include "ints/int10.h"
 #include "util/mem_unaligned.h"
 #include "reelmagic.h"
-#include "render.h"
+#include "gui/render.h"
 #include "util/math_utils.h"
 #include "util/rgb565.h"
 #include "vga.h"
