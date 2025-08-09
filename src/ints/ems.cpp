@@ -8,7 +8,7 @@
 #include <cstring>
 #include <cstdlib>
 
-#include "bios.h"
+#include "ints/bios.h"
 #include "callback.h"
 #include "cpu.h"
 #include "dos_inc.h"

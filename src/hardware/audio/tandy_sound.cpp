@@ -30,7 +30,7 @@
 #include <string_view>
 
 #include "audio/channel_names.h"
-#include "bios.h"
+#include "ints/bios.h"
 #include "util/checks.h"
 #include "hardware/dma.h"
 #include "hardware.h"

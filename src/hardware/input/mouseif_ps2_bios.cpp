@@ -10,7 +10,7 @@
 #include <cmath>
 #include <vector>
 
-#include "bios.h"
+#include "ints/bios.h"
 #include "util/bitops.h"
 #include "callback.h"
 #include "util/checks.h"

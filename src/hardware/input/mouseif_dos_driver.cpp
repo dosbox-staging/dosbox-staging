@@ -9,7 +9,7 @@
 
 #include <algorithm>
 
-#include "bios.h"
+#include "ints/bios.h"
 #include "util/bitops.h"
 #include "util/byteorder.h"
 #include "callback.h"

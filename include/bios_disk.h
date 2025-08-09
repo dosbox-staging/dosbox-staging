@@ -10,7 +10,7 @@
 #include <array>
 #include <memory>
 
-#include "bios.h"
+#include "ints/bios.h"
 #include "dos_inc.h"
 #include "hardware/memory.h"
 

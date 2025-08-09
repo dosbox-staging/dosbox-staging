@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "shell/autoexec.h"
-#include "bios.h"
+#include "ints/bios.h"
 #include "util/checks.h"
 #include "dos_locale.h"
 #include "ints/int10.h"
