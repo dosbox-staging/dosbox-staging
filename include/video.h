@@ -8,7 +8,7 @@
 #include <string>
 
 #include "fraction.h"
-#include "rect.h"
+#include "util/rect.h"
 #include "setup.h"
 #include "types.h"
 

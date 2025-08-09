@@ -17,7 +17,7 @@
 
 #include "fraction.h"
 #include "gui/shader_manager.h"
-#include "rect.h"
+#include "util/rect.h"
 #include "render.h"
 #include "video.h"
 
