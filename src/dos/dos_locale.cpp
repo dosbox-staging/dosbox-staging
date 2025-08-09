@@ -13,7 +13,7 @@
 #include "util/checks.h"
 #include "dos_keyboard_layout.h"
 #include "dos_locale.h"
-#include "logging.h"
+#include "misc/logging.h"
 #include "mapper.h"
 #include "misc/host_locale.h"
 #include "util/string_utils.h"

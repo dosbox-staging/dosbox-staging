@@ -5,7 +5,7 @@
 #define DOSBOX_DYNLIB_H
 
 #include "dosbox_config.h"
-#include "logging.h"
+#include "misc/logging.h"
 #include "misc/std_filesystem.h"
 
 enum class DynLibResult {

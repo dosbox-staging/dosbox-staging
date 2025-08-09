@@ -6,7 +6,7 @@
 #include "callback.h"
 #include "util/checks.h"
 #include "cpu.h"
-#include "logging.h"
+#include "misc/logging.h"
 #include "mouse.h"
 #include "regs.h"
 

@@ -6,7 +6,7 @@
 #include <cassert>
 
 #include "util/checks.h"
-#include "logging.h"
+#include "misc/logging.h"
 #include "midi/midi.h"
 
 CHECK_NARROWING();

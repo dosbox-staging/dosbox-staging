@@ -35,7 +35,7 @@
 #include "audio/mixer.h"
 #include "dos_system.h"
 #include "hardware/timer.h"
-#include "logging.h"
+#include "misc/logging.h"
 #include "player.h"
 #include "util/rwqueue.h"
 #include "config/setup.h"
