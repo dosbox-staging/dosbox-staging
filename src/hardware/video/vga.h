@@ -15,7 +15,7 @@
 #include "config.h"
 #include "fraction.h"
 #include "inout.h"
-#include "rgb666.h"
+#include "util/rgb666.h"
 #include "video.h"
 
 //Don't enable keeping changes and mapping lfb probably...
