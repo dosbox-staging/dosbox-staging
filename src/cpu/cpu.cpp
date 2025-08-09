@@ -15,7 +15,7 @@
 #include "lazyflags.h"
 #include "mapper.h"
 #include "util/math_utils.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "hardware/pic.h"
 #include "programs.h"
 #include "config/setup.h"

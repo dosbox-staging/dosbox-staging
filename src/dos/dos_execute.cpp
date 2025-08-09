@@ -13,7 +13,7 @@
 #include "dos_inc.h"
 #include "hardware/vmware.h"
 #include "hardware/memory.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "program/program_setver.h"
 #include "programs.h"
 #include "regs.h"

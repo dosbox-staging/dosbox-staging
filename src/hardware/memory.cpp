@@ -7,7 +7,7 @@
 #include <cstring>
 
 #include "inout.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "pci_bus.h"
 #include "regs.h"
 #include "config/setup.h"

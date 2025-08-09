@@ -12,7 +12,7 @@
 #include "inout.h"
 #include "hardware/memory.h"
 #include "util/mem_host.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "hardware/pic.h"
 #include "config/setup.h"
 #include "vga.h"

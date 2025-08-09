@@ -9,7 +9,7 @@
 #include "fpu.h"
 #include "inout.h"
 #include "lazyflags.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "hardware/pic.h"
 #include "regs.h"
 #include "tracy.h"

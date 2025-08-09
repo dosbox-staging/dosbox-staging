@@ -8,7 +8,7 @@
 #include <type_traits>
 
 #include "util/mem_unaligned.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "misc/types.h"
 
 #if defined(HAVE_MMAP)
