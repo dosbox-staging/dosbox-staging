@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 
-#include "bgrx8888.h"
+#include "util/bgrx8888.h"
 #include "bit_view.h"
 #include "config.h"
 #include "fraction.h"
