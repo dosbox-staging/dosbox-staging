@@ -10,7 +10,7 @@
 #include <cstring>
 #include <tuple>
 
-#include "bios.h"					// SetComPorts(..)
+#include "ints/bios.h"					// SetComPorts(..)
 #include "callback.h"				// CALLBACK_Idle
 #include "capture/capture.h"
 #include "inout.h"

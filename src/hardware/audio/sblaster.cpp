@@ -13,7 +13,7 @@
 
 #include "audio/channel_names.h"
 #include "shell/autoexec.h"
-#include "bios.h"
+#include "ints/bios.h"
 #include "util/bit_view.h"
 #include "util/bitops.h"
 #include "config/config.h"

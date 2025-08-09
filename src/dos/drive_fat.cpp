@@ -8,7 +8,7 @@
 #include <cstring>
 #include <ctime>
 
-#include "bios.h"
+#include "ints/bios.h"
 #include "bios_disk.h"
 #include "dos_inc.h"
 #include "util/string_utils.h"

@@ -10,7 +10,7 @@
 #include "callback.h"
 #include "regs.h"
 #include "hardware/memory.h"
-#include "bios.h"
+#include "ints/bios.h"
 #include "dos_inc.h"
 #include "misc/support.h"
 #include "drives.h"
