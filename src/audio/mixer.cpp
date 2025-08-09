@@ -32,7 +32,7 @@
 #include "ring_buffer.h"
 #include "rwqueue.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "tracy.h"
 #include "video.h"
 

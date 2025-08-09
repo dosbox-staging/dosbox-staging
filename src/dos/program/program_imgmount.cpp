@@ -20,7 +20,7 @@
 #include "program_more_output.h"
 #include "program_mount_common.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 void IMGMOUNT::ListImgMounts(void)
 {

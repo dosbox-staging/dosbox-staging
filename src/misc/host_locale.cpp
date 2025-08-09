@@ -4,7 +4,7 @@
 #include "host_locale.h"
 
 #include "checks.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #include <ctime>
 #include <iomanip>

@@ -9,7 +9,7 @@
 #include "config.h"
 #include "dosbox.h"
 #include "fs_utils.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "unicode.h"
 
 CHECK_NARROWING();

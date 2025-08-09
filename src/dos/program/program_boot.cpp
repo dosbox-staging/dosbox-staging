@@ -20,7 +20,7 @@
 #include "mouse.h"
 #include "program_more_output.h"
 #include "regs.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "video.h"
 
 FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,

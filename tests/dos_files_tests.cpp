@@ -29,7 +29,7 @@
 #include "dos_system.h"
 #include "drives.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #include "dosbox_test_fixture.h"
 #include "dos/dos_files.cpp"

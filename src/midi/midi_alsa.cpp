@@ -15,7 +15,7 @@
 
 #include "logging.h"
 #include "programs.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #define ADDR_DELIM ".:"
 

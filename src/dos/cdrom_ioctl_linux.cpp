@@ -5,7 +5,7 @@
 #include <cstring>
 
 #include "cdrom.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 #if defined(LINUX)

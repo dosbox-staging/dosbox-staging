@@ -24,7 +24,7 @@
 #include "mem.h"
 #include "pic.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "timer.h"
 
 extern int bootdrive;

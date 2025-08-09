@@ -26,7 +26,7 @@
 #include "programs.h"
 #include "regs.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "timer.h"
 
 #define SOCKTABLESIZE	150 // DOS IPX driver was limited to 150 open sockets
