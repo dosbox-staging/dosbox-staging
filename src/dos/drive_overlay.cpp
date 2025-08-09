@@ -18,7 +18,7 @@
 #include "dos_inc.h"
 #include "util/fs_utils.h"
 #include "hardware/timer.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "misc/std_filesystem.h"
 #include "util/string_utils.h"
 

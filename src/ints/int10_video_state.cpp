@@ -7,7 +7,7 @@
 #include <cassert>
 
 #include "hardware/memory.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 
 Bitu INT10_VideoState_GetSize(Bitu state) {
 	// state: bit0=hardware, bit1=bios data, bit2=color regs/dac state

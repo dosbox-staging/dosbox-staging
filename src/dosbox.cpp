@@ -28,7 +28,7 @@
 #include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "hardware/video/voodoo.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "ints/int10.h"
 #include "gui/mapper.h"
 #include "util/math_utils.h"

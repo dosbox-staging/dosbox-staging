@@ -8,7 +8,7 @@
 
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "lpt_dac.h"
 
 class StereoOn1 final : public LptDac {

@@ -9,7 +9,7 @@
 #include <queue>
 
 #include "audio/mixer.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "lpt_dac.h"
 
 class Disney final : public LptDac {

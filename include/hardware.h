@@ -11,7 +11,7 @@
 #include <string>
 
 #include "config/config.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 
 class Section;
 

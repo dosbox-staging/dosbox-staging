@@ -8,7 +8,7 @@
 #include <cmath>
 
 #include "audio/mixer.h"
-#include "inout.h"
+#include "port.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "pic.h"

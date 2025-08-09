@@ -8,7 +8,7 @@
 #include "hardware/memory.h"
 #include "keyboard.h"
 #include "cpu/registers.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "dos_inc.h"
 
 static callback_number_t call_int16 = 0;

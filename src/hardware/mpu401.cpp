@@ -6,7 +6,7 @@
 #include <cstring>
 
 #include "cpu/cpu.h"
-#include "inout.h"
+#include "port.h"
 #include "util/math_utils.h"
 #include "midi/midi.h"
 #include "pic.h"
