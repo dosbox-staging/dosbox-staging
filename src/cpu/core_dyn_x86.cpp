@@ -25,7 +25,7 @@
 
 #endif // HAVE_MPROTECT
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "cpu.h"
 #include "debug.h"
 #include "fpu.h"

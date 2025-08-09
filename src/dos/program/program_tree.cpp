@@ -3,7 +3,7 @@
 
 #include "program_tree.h"
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "util/checks.h"
 #include "dos_inc.h"
 #include "drives.h"

@@ -5,7 +5,7 @@
 #include "ints/bios.h"
 
 #include "util/bitops.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "config/config.h"
 #include "cpu.h"
 #include "dos_memory.h"

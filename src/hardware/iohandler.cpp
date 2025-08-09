@@ -9,7 +9,7 @@
 #include <cstring>
 #include <unordered_map>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "cpu.h"
 #include "cpu/lazyflags.h"
 #include "config/setup.h"

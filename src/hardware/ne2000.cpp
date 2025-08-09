@@ -11,7 +11,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "cpu.h"
 #include "misc/ethernet.h"
 #include "inout.h"

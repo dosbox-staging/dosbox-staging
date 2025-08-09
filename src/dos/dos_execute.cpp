@@ -7,7 +7,7 @@
 #include <cctype>
 #include <cstring>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "cpu.h"
 #include "debug.h"
 #include "dos_inc.h"

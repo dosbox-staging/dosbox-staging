@@ -6,7 +6,7 @@
 #include "dosbox.h"
 #include "hardware/memory.h"
 #include "dos_inc.h"
-#include "callback.h"
+#include "cpu/callback.h"
 
 #ifdef _MSC_VER
 #pragma pack(1)

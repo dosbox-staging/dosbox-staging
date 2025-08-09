@@ -12,7 +12,7 @@
 #include <regex>
 
 #include "shell/autoexec.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "config/config.h"
 #include "dos/program/program_more_output.h"
 #include "dos/program/program_setver.h"
