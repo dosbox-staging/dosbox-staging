@@ -8,7 +8,7 @@
 
 #include "clap/all.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "logging.h"
 #include "util/string_utils.h"
 #include "support.h"

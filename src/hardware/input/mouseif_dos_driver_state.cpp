@@ -3,7 +3,7 @@
 
 #include "mouseif_dos_driver_state.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "support.h"
 
 #include <bit>

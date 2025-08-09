@@ -7,7 +7,7 @@
 
 #include "audio/mixer.h"
 #include "util/bitops.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "hardware/timer.h"
 #include "inout.h"
 

@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "byteorder.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "hardware/video/vga.h"
 #include "render.h"
 #include "util/rgb888.h"

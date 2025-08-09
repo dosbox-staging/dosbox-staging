@@ -8,7 +8,7 @@
 
 #include "host_locale.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "dosbox.h"
 #include "fs_utils.h"
 #include "std_filesystem.h"

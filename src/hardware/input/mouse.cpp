@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "callback.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "cpu.h"
 #include "util/math_utils.h"
 #include "hardware/pic.h"

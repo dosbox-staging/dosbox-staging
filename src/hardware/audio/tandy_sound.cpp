@@ -31,7 +31,7 @@
 
 #include "audio/channel_names.h"
 #include "bios.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "hardware/dma.h"
 #include "hardware.h"
 #include "hardware/mame/emu.h"

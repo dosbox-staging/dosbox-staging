@@ -5,7 +5,7 @@
 #include "innovation.h"
 
 #include "audio/channel_names.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "notifications.h"
 #include "hardware/pic.h"

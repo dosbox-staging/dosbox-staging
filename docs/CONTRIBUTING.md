@@ -203,7 +203,7 @@ with standard library functions less cumbersome.
     Guide](https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes).
 
 15. Enable narrowing checks in new code and when you rework a file by adding
-    `CHECK_NARROWING()` and including `"checks.h"` (just search for
+    `CHECK_NARROWING()` and including `"util/checks.h"` (just search for
     `CHECK_NARROWING())`.
 
 16. Use header guards in the format: `DOSBOX_HEADERNAME_H` or
