@@ -10,7 +10,7 @@
 #include "util/checks.h"
 #include "config/config.h"
 #include "dosbox_config.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 

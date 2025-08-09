@@ -4,7 +4,7 @@
 
 #include "compiler.h"
 
-#include "hardware/inout.h"
+#include "hardware/port.h"
 
 #define X86_INLINED_MEMACCESS
 #define X86_DYNREC_MMX_ENABLED

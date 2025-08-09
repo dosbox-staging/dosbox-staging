@@ -8,7 +8,7 @@
 #include <cstring>
 
 #include "config/config.h"
-#include "inout.h"
+#include "port.h"
 #include "util/math_utils.h"
 #include "gui/mapper.h"
 #include "pic.h"

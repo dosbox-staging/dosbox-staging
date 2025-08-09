@@ -12,7 +12,7 @@
 #include "util/bitops.h"
 #include "cpu/callback.h"
 #include "cpu/cpu.h"		// for 0x3da delay
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "vga.h"
 
 constexpr auto &XGA_SCREEN_WIDTH = vga.s3.xga_screen_width;

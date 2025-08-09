@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "cpu/cpu.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "hardware/memory.h"
 #include "util/mem_host.h"
 #include "cpu/paging.h"

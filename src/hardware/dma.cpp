@@ -10,7 +10,7 @@
 
 #include "dma.h"
 #include "hardware/memory.h"
-#include "inout.h"
+#include "hardware/port.h"
 #include "pic.h"
 #include "cpu/paging.h"
 #include "config/setup.h"

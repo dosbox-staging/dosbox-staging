@@ -29,7 +29,7 @@
 #include "cpu/cpu.h"
 #include "debug.h"
 #include "fpu.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "hardware/memory.h"
 #include "cpu/paging.h"
 #include "cpu/registers.h"

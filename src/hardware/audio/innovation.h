@@ -11,7 +11,7 @@
 #include <string>
 
 #include "audio/mixer.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 
 #include "residfp/SID.h"
 

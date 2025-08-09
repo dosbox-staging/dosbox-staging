@@ -4,7 +4,7 @@
 #include "int10.h"
 
 #include "hardware/memory.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 
 #define ACTL_MAX_REG   0x14
 

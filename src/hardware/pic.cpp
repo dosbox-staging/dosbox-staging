@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox.h"
-#include "inout.h"
+#include "port.h"
 #include "cpu/cpu.h"
 #include "cpu/callback.h"
 #include "hardware/pic.h"

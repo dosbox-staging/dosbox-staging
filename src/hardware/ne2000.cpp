@@ -14,7 +14,7 @@
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "misc/ethernet.h"
-#include "inout.h"
+#include "port.h"
 #include "pic.h"
 #include "config/setup.h"
 #include "util/string_utils.h"

@@ -11,7 +11,7 @@
 #include <string_view>
 
 #include "audio/mixer.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "lpt.h"
 #include "util/rwqueue.h"
 

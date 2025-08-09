@@ -7,7 +7,7 @@
 #include "hardware/memory.h"
 #include "cpu/callback.h"
 #include "cpu/registers.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "int10.h"
 #include "mouse.h"
 #include "config/setup.h"

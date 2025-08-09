@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "vga.h"
 
 #define gfx(blah) vga.gfx.blah
