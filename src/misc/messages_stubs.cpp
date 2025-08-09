@@ -4,7 +4,7 @@
 // Empty functions to suppress output in unit tests as well as a to eliminate
 // dependency-sprawl
 
-#include "messages.h"
+#include "misc/messages.h"
 
 void MSG_NotifyNewCodePage() {}
 

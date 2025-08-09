@@ -7,7 +7,7 @@
 
 #include "dosbox_config.h"
 #include "compiler.h"
-#include "messages.h"
+#include "misc/messages.h"
 #include "misc/types.h"
 
 #include <memory>
