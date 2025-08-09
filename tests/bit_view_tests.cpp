@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "util/bit_view.h"
-#include "byteorder.h"
+#include "util/byteorder.h"
 
 #include <gtest/gtest.h>
 #include <memory>

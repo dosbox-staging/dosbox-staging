@@ -72,7 +72,7 @@
 #include <SDL_cpuinfo.h> // for proper SSE defines for MSVC
 
 #include "util/bitops.h"
-#include "byteorder.h"
+#include "util/byteorder.h"
 #include "config.h"
 #include "cross.h"
 #include "fraction.h"

@@ -11,7 +11,7 @@
 
 #include "bios.h"
 #include "util/bitops.h"
-#include "byteorder.h"
+#include "util/byteorder.h"
 #include "callback.h"
 #include "util/checks.h"
 #include "cpu.h"
