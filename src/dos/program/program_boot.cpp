@@ -10,7 +10,7 @@
 #include "ints/bios_disk.h"
 #include "cpu/callback.h"
 #include "config/config.h"
-#include "dos_windows.h"
+#include "dos/dos_windows.h"
 #include "drives.h"
 #include "util/fs_utils.h"
 #include "hardware/dma.h"

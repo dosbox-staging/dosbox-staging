@@ -9,7 +9,7 @@
 #include <cstdio>
 
 #include "cpu/callback.h"
-#include "dos_windows.h"
+#include "dos/dos_windows.h"
 #include "drives.h"
 #include "program_more_output.h"
 #include "cpu/registers.h"
