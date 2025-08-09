@@ -629,4 +629,25 @@ TEST(IsTextEqual, Valid)
 	EXPECT_FALSE(is_text_equal("FooBarBaz", "FooBar"));
 }
 
+TEST(StripPunctuation, DoesNotStripValidPunctuation)
+{
+	std::string path     = "A_B-C";
+	std::string expected = "A_B-C";
+
+	strip_punctuation(path);
+
+	EXPECT_EQ(expected, path);
+}
+
+TEST(StripPunctuation, StripsInvalidPunctuation)
+{
+	std::string path     = "A+B\\C?D/\"'E\tF";
+	std::string expected = "ABCDEF";
+
+	strip_punctuation(path);
+
+	EXPECT_EQ(expected, path);
+}
+
+
 } // namespace
