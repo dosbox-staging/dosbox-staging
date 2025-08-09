@@ -17,7 +17,7 @@
 #include "util/bit_view.h"
 #include "util/bitops.h"
 #include "config/config.h"
-#include "hardware.h"
+#include "hardware/hardware.h"
 #include "hardware/dma.h"
 #include "hardware/timer.h"
 #include "hardware/port.h"

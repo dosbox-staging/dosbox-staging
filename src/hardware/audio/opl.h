@@ -12,7 +12,7 @@
 
 #include "audio/mixer.h"
 #include "adlib_gold.h"
-#include "hardware.h"
+#include "hardware/hardware.h"
 #include "hardware/port.h"
 #include "hardware/pic.h"
 #include "config/setup.h"
