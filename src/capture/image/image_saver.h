@@ -14,7 +14,7 @@
 #include "image_decoder.h"
 #include "image_scaler.h"
 #include "render.h"
-#include "rwqueue.h"
+#include "util/rwqueue.h"
 
 enum class CapturedImageType { Raw, Upscaled, Rendered };
 

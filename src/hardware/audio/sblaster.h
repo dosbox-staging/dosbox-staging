@@ -6,7 +6,7 @@
 
 #include "audio/mixer.h"
 #include "inout.h"
-#include "rwqueue.h"
+#include "util/rwqueue.h"
 
 class SBLASTER final {
 public:

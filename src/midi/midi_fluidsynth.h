@@ -15,7 +15,7 @@
 
 #include "audio/mixer.h"
 #include "util/dynlib.h"
-#include "rwqueue.h"
+#include "util/rwqueue.h"
 #include "std_filesystem.h"
 
 namespace FluidSynth {

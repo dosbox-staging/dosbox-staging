@@ -6,7 +6,7 @@
 
 #include "audio/mixer.h"
 #include "util/math_utils.h"
-#include "rwqueue.h"
+#include "util/rwqueue.h"
 
 struct Ps1Registers {
 	// Read via port 0x202 control status
