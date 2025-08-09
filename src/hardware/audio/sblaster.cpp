@@ -22,7 +22,7 @@
 #include "hardware/timer.h"
 #include "inout.h"
 #include "util/math_utils.h"
-#include "messages.h"
+#include "misc/messages.h"
 #include "midi/midi.h"
 #include "misc/notifications.h"
 #include "hardware/pic.h"
