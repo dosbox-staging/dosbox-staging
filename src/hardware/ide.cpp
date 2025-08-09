@@ -14,7 +14,7 @@
 #include <cassert>
 
 #include "audio/mixer.h"
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 #include "callback.h"
 #include "config/config.h"
 #include "cpu.h"

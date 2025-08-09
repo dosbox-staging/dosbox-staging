@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 #include "config/config.h"
 #include "misc/cross.h"
 #include "dos/cdrom.h"

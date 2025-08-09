@@ -7,7 +7,7 @@
 
 #include "dosbox.h"
 
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 #include "config/config.h"
 #include "dos/cdrom.h"
 #include "drives.h"
