@@ -8,7 +8,7 @@
 #include "dosbox_config.h"
 #include "util/checks.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 #include <zlib.h>
 

@@ -18,7 +18,7 @@
 #include "dos_inc.h"
 #include "util/fs_utils.h"
 #include "config/setup.h"
-#include "support.h"
+#include "misc/support.h"
 #include "bios_disk.h"
 #include "cpu.h"
 #include "cdrom.h"

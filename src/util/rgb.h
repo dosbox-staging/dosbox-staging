@@ -9,7 +9,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "support.h"
+#include "misc/support.h"
 
 static constexpr auto Rgb5Max = 31;
 static constexpr auto Rgb6Max = 63;

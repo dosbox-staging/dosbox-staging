@@ -14,7 +14,7 @@
 #include "misc/cross.h"
 #include "util/fs_utils.h"
 #include "hardware/memory.h"
-#include "support.h"
+#include "misc/support.h"
 
 #define DOS_NAMELENGTH 12
 #define DOS_NAMELENGTH_ASCII (DOS_NAMELENGTH+1)

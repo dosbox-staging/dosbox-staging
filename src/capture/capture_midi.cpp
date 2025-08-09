@@ -12,7 +12,7 @@
 
 #include "midi/midi.h"
 #include "hardware/pic.h"
-#include "support.h"
+#include "misc/support.h"
 
 static struct {
 	FILE* handle = nullptr;

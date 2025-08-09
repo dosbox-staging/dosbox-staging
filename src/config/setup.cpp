@@ -22,7 +22,7 @@
 #include "util/fs_utils.h"
 #include "notifications.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 #if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))
 _CRTIMP extern char** _environ;

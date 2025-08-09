@@ -13,7 +13,7 @@
 #include "ints/int10.h"
 #include "hardware/memory.h"
 #include "pci_bus.h"
-#include "support.h"
+#include "misc/support.h"
 #include "vga.h"
 
 void PCI_AddSVGAS3_Device();
