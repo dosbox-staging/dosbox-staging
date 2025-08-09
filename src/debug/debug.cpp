@@ -27,7 +27,7 @@
 #include "inout.h"
 #include "keyboard.h"
 #include "mapper.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "hardware/pic.h"
 #include "programs.h"
 #include "config/setup.h"

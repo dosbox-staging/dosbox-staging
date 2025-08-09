@@ -31,7 +31,7 @@
 #include "fpu.h"
 #include "inout.h"
 #include "hardware/memory.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "regs.h"
 #include "tracy.h"
 

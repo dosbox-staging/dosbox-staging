@@ -15,7 +15,7 @@
 #include "lazyflags.h"
 #include "hardware/memory.h"
 #include "cpu/mmx.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "hardware/pic.h"
 
 #include "simde/x86/mmx.h"
@@ -34,7 +34,7 @@
 #define SaveMd(off,val)	mem_writed(off,val)
 #define SaveMq(off,val) mem_writeq(off,val) 
 #else 
-#include "paging.h"
+#include "cpu/paging.h"
 #define LoadMb(off) mem_readb_inline(off)
 #define LoadMw(off) mem_readw_inline(off)
 #define LoadMd(off) mem_readd_inline(off)

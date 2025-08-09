@@ -12,7 +12,7 @@
 #include "lazyflags.h"
 #include "hardware/memory.h"
 #include "cpu/mmx.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "hardware/pic.h"
 #include "tracy.h"
 
