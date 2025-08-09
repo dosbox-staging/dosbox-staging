@@ -20,7 +20,7 @@
 #include "audio/mixer.h"
 #include "config.h"
 #include "cross.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "hardware/mpu401.h"
 #include "ints/int10.h"
 #include "util/math_utils.h"

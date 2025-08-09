@@ -16,7 +16,7 @@
 #include "config.h"
 #include "dos/program/program_more_output.h"
 #include "dos/program/program_setver.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "hardware/timer.h"
 #include "mapper.h"
 #include "regs.h"

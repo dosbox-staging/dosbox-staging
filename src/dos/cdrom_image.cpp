@@ -26,7 +26,7 @@
 
 #include "audio/channel_names.h"
 #include "drives.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "util/math_utils.h"
 #include "setup.h"
 #include "util/string_utils.h"

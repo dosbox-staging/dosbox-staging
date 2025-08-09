@@ -21,7 +21,7 @@
 #include "cross.h"
 #include "dos_inc.h"
 #include "dos_mscdex.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "inout.h"
 #include "util/string_utils.h"
 

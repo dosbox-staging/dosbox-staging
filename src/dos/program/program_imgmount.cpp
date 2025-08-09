@@ -13,7 +13,7 @@
 #include "cross.h"
 #include "dos/cdrom.h"
 #include "drives.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "hardware/ide.h"
 #include "ints/int10.h"
 #include "mapper.h"

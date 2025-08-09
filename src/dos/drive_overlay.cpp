@@ -16,7 +16,7 @@
 
 #include "cross.h"
 #include "dos_inc.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "hardware/timer.h"
 #include "inout.h"
 #include "std_filesystem.h"

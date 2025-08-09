@@ -3,7 +3,7 @@
 
 #include "command_line.h"
 
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "programs.h"
 #include "util/string_utils.h"
 
