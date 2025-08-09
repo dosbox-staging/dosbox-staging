@@ -4,7 +4,7 @@
 #include "program_clip.h"
 
 #include "util/checks.h"
-#include "clipboard.h"
+#include "gui/clipboard.h"
 #include "dos_inc.h"
 #include "util/math_utils.h"
 #include "program_more_output.h"

@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "callback.h"
-#include "clipboard.h"
+#include "gui/clipboard.h"
 #include "file_reader.h"
 #include "ints/int10.h"
 #include "keyboard.h"
