@@ -13,7 +13,7 @@
 #include "util/bgrx8888.h"
 #include "util/bit_view.h"
 #include "config.h"
-#include "fraction.h"
+#include "util/fraction.h"
 #include "inout.h"
 #include "util/rgb666.h"
 #include "video.h"
