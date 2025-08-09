@@ -5,7 +5,7 @@
 #include "dosbox.h"
 
 #include "cpu/cpu.h"
-#include "fpu.h"
+#include "fpu/fpu.h"
 #include "hardware/memory.h"
 #include "cpu/mmx.h"
 

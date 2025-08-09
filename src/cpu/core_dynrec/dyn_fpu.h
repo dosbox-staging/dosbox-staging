@@ -7,7 +7,7 @@
 
 #include "cpu/cpu.h"
 #include "misc/cross.h"
-#include "fpu.h"
+#include "fpu/fpu.h"
 #include "hardware/memory.h"
 #include <cmath>
 
