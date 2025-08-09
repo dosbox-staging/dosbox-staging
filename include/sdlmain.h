@@ -15,7 +15,7 @@
 #include <SDL_opengl.h>
 #endif
 
-#include "fraction.h"
+#include "util/fraction.h"
 #include "gui/shader_manager.h"
 #include "util/rect.h"
 #include "render.h"

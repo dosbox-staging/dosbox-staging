@@ -75,7 +75,7 @@
 #include "util/byteorder.h"
 #include "config.h"
 #include "cross.h"
-#include "fraction.h"
+#include "util/fraction.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "paging.h"
