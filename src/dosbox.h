@@ -6,7 +6,7 @@
 #define DOSBOX_DOSBOX_H
 
 #include "dosbox_config.h"
-#include "compiler.h"
+#include "misc/compiler.h"
 #include "misc/messages.h"
 #include "misc/types.h"
 

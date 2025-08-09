@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <utility>
 
-#include "compiler.h"
+#include "misc/compiler.h"
 #include "hardware/memory.h"
 
 // Functions and definitions which can be used by programs and drivers to

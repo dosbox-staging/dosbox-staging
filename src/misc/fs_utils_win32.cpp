@@ -10,7 +10,7 @@
 #include <io.h>
 #include <sys/stat.h>
 
-#include "compiler.h"
+#include "misc/compiler.h"
 #include "dos/dos_inc.h"
 #include "dos/dos_system.h"
 
