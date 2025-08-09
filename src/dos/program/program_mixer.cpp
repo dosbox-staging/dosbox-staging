@@ -6,7 +6,7 @@
 #include <cctype>
 #include <optional>
 
-#include "ansi_code_markup.h"
+#include "misc/ansi_code_markup.h"
 #include "audio/audio_frame.h"
 #include "audio/channel_names.h"
 #include "util/checks.h"

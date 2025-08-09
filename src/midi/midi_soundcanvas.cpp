@@ -9,7 +9,7 @@
 
 #include "clap/all.h"
 
-#include "ansi_code_markup.h"
+#include "misc/ansi_code_markup.h"
 #include "audio/channel_names.h"
 #include "audio/clap/plugin_manager.h"
 #include "util/checks.h"

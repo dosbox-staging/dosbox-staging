@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "ansi_code_markup.h"
+#include "misc/ansi_code_markup.h"
 
 #include <gtest/gtest.h>
 

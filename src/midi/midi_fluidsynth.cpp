@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "audio/channel_names.h"
-#include "ansi_code_markup.h"
+#include "misc/ansi_code_markup.h"
 #include "audio/mixer.h"
 #include "config/config.h"
 #include "misc/cross.h"

@@ -14,7 +14,7 @@
 
 #include <SDL.h>
 
-#include "ansi_code_markup.h"
+#include "misc/ansi_code_markup.h"
 #include "capture/capture.h"
 #include "config/config.h"
 #include "misc/cross.h"
