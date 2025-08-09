@@ -9,7 +9,7 @@
 #include "bios.h"
 #include "callback.h"
 #include "inout.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "regs.h"
 

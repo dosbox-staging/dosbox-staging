@@ -5,7 +5,7 @@
 #include "callback.h"
 #include "dos_inc.h"
 #include "dosbox.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "regs.h"
 #include <cstring>
 

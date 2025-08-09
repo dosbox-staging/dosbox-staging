@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "dma.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "inout.h"
 #include "pic.h"
 #include "paging.h"

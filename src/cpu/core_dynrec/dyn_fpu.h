@@ -8,7 +8,7 @@
 #include "cpu.h"
 #include "cross.h"
 #include "fpu.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include <cmath>
 
 static void FPU_FDECSTP(){

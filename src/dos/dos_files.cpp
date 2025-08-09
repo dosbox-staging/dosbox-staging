@@ -13,7 +13,7 @@
 
 #include "dosbox.h"
 #include "bios.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "regs.h"
 #include "drives.h"
 #include "cross.h"

@@ -30,7 +30,7 @@
 #include "debug.h"
 #include "fpu.h"
 #include "inout.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "paging.h"
 #include "regs.h"
 #include "tracy.h"

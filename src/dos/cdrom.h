@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "audio/mixer.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "rwqueue.h"
 #include "support.h"
 

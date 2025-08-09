@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "mem.h"
+#include "hardware/memory.h"
 #include "util/string_utils.h"
 #include "support.h"
 

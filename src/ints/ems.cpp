@@ -15,7 +15,7 @@
 #include "hardware/dma.h"
 #include "inout.h"
 #include "keyboard.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "paging.h"
 #include "regs.h"
 #include "setup.h"

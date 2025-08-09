@@ -77,7 +77,7 @@
 #include "cross.h"
 #include "fraction.h"
 #include "util/math_utils.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "paging.h"
 #include "pci_bus.h"
 #include "hardware/pic.h"

@@ -9,7 +9,7 @@
 
 #include "callback.h"
 #include "regs.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "dos_inc.h" /* for Drives[] */
 #include "drives.h"
 #include "mapper.h"

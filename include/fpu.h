@@ -13,7 +13,7 @@
 #endif
 
 #ifndef DOSBOX_MEM_H
-#include "mem.h"
+#include "hardware/memory.h"
 #endif
 
 #include "mmx.h"

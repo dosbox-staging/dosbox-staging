@@ -12,7 +12,7 @@
 #include "dos_inc.h"
 #include "inout.h"
 #include "util/math_utils.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "pci_bus.h"
 #include "regs.h"
 #include "util/string_utils.h"

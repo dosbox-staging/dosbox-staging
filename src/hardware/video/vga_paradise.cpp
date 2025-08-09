@@ -5,7 +5,7 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "ints/int10.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "setup.h"
 #include "vga.h"
 

@@ -6,7 +6,7 @@
 #include "config.h"
 #include "dos_inc.h"
 #include "dos_memory.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "support.h"
 
 #include <string_view>

@@ -17,7 +17,7 @@
 #include "dos_locale.h"
 #include "ints/int10.h"
 #include "util/math_utils.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "util/string_utils.h"
 #include "support.h"
 #include "unicode.h"

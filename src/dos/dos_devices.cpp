@@ -9,7 +9,7 @@
 #include "dosbox.h"
 #include "callback.h"
 #include "regs.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "bios.h"
 #include "dos_inc.h"
 #include "support.h"

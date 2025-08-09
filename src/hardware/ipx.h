@@ -21,7 +21,7 @@
 #include "dosbox.h"
 #endif
 #ifndef DOSBOX_MEM_H
-#include "mem.h"
+#include "hardware/memory.h"
 #endif
 
 // In Use Flag codes

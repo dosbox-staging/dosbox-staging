@@ -3,7 +3,7 @@
 
 #include "int10.h"
 
-#include "mem.h"
+#include "hardware/memory.h"
 #include "inout.h"
 
 #define ACTL_MAX_REG   0x14

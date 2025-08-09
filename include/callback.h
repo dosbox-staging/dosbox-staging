@@ -7,7 +7,7 @@
 #define DOSBOX_CALLBACK_H
 
 #ifndef DOSBOX_MEM_H
-#include "mem.h"
+#include "hardware/memory.h"
 #endif
 
 typedef Bitu (*Callback_Handler)();

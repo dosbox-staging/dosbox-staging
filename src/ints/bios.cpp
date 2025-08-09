@@ -17,7 +17,7 @@
 #include "inout.h"
 #include "int10.h"
 #include "util/math_utils.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "mouse.h"
 #include "regs.h"
 #include "setup.h"

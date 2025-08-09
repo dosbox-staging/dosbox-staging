@@ -4,7 +4,7 @@
 
 
 #include "dosbox.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "dos_inc.h"
 #include "callback.h"
 

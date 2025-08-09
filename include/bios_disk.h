@@ -12,7 +12,7 @@
 
 #include "bios.h"
 #include "dos_inc.h"
-#include "mem.h"
+#include "hardware/memory.h"
 
 /* The Section handling Bios Disk Access */
 #define BIOS_MAX_DISK 10

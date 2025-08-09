@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "compiler.h"
-#include "mem.h"
+#include "hardware/memory.h"
 
 // Functions and definitions which can be used by programs and drivers to
 // communicate with Microsoft Windows running on the simulated DOS.
