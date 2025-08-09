@@ -45,7 +45,7 @@
 #include "cross.h"
 #include "debug.h"
 #include "dos/dos_locale.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "gui_msgs.h"
 #include "hardware/joystick.h"
 #include "hardware/pic.h"

@@ -16,7 +16,7 @@
 #include "callback.h"
 #include "dos_system.h"
 #include "dos_inc.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "setup.h"
 #include "support.h"
 #include "bios_disk.h"

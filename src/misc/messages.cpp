@@ -9,7 +9,7 @@
 #include "util/checks.h"
 #include "config.h"
 #include "cross.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "host_locale.h"
 #include "setup.h"
 #include "std_filesystem.h"

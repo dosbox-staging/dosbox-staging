@@ -11,7 +11,7 @@
 
 #include "cross.h"
 #include "dos_inc.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "shell.h"
 #include "util/string_utils.h"
 #include "support.h"

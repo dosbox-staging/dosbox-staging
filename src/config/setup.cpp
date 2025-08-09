@@ -19,7 +19,7 @@
 #include "console.h"
 #include "config.h"
 #include "cross.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "notifications.h"
 #include "util/string_utils.h"
 #include "support.h"
