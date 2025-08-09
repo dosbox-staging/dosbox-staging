@@ -13,7 +13,7 @@
 #include "hardware/port.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
-#include "pci_bus.h"
+#include "hardware/pci_bus.h"
 #include "cpu/registers.h"
 #include "util/string_utils.h"
 

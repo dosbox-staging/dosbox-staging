@@ -79,7 +79,7 @@
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "cpu/paging.h"
-#include "pci_bus.h"
+#include "hardware/pci_bus.h"
 #include "hardware/pic.h"
 #include "gui/render.h"
 #include "config/setup.h"
