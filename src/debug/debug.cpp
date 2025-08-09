@@ -20,7 +20,7 @@
 #include "cpu.h"
 #include "cpu.h"
 #include "cpu/lazyflags.h"
-#include "cross.h" //snprintf
+#include "misc/cross.h" //snprintf
 #include "debug.h"
 #include "debug_inc.h"
 #include "hardware/timer.h"

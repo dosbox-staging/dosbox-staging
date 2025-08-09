@@ -15,7 +15,7 @@
 
 #include "callback.h"
 #include "cpu.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "debug.h"
 #include "dos_system.h"
 #include "inout.h"

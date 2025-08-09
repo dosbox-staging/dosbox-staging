@@ -9,7 +9,7 @@
 #include <cstring>
 #include <ctime>
 
-#include "cross.h"
+#include "misc/cross.h"
 #include "dos_inc.h"
 #include "util/fs_utils.h"
 #include "shell.h"

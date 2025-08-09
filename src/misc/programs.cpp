@@ -18,7 +18,7 @@
 #include "callback.h"
 #include "capture/capture.h"
 #include "config/config.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "dos/program/program_more_output.h"
 #include "mapper.h"
 #include "regs.h"

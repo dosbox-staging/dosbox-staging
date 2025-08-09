@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include "cross.h"
+#include "misc/cross.h"
 #include "dos_inc.h"
 #include "util/fs_utils.h"
 #include "hardware/timer.h"

@@ -10,7 +10,7 @@
 
 #include "bios_disk.h"
 #include "config/config.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "dos/cdrom.h"
 #include "drives.h"
 #include "util/fs_utils.h"

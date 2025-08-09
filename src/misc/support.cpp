@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "cross.h"
+#include "misc/cross.h"
 #include "debug.h"
 #include "util/fs_utils.h"
 #include "util/string_utils.h"

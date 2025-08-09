@@ -8,7 +8,7 @@
 #include <iterator>
 #include <vector>
 
-#include "cross.h"
+#include "misc/cross.h"
 #include "dos_inc.h"
 #include "drives.h"
 #include "util/string_utils.h"

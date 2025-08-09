@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "util/bit_view.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "util/fs_utils.h"
 #include "hardware/memory.h"
 #include "support.h"

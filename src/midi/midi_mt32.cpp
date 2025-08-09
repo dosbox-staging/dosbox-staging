@@ -19,7 +19,7 @@
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
 #include "config/config.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "util/fs_utils.h"
 #include "hardware/mpu401.h"
 #include "ints/int10.h"

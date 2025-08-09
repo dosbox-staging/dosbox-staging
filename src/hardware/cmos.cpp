@@ -7,7 +7,7 @@
 #include <ctime>
 
 #include "bios_disk.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "timer.h"
 #include "inout.h"
 #include "hardware/memory.h"
