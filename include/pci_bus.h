@@ -7,7 +7,7 @@
 
 #include "dosbox.h"
 
-#include "mem.h"
+#include "hardware/memory.h"
 
 // Start of PCI address space
 constexpr uint32_t PciMemoryBase     = 0xc000'0000; // gives 3072 MB max RAM

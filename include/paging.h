@@ -8,7 +8,7 @@
 #include "debug.h"
 #include <vector>
 
-#include "mem.h"
+#include "hardware/memory.h"
 
 // disable this to reduce the size of the TLB
 // NOTE: does not work with the dynamic core (dynrec is fine)

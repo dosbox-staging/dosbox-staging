@@ -21,7 +21,7 @@
 #include "dos/cdrom.h"
 #include "ide.h"
 #include "inout.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "pic.h"
 #include "setup.h"
 #include "util/string_utils.h"

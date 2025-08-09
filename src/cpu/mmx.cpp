@@ -6,7 +6,7 @@
 
 #include "cpu.h"
 #include "fpu.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "mmx.h"
 
 MMX_reg* reg_mmx[8] = {

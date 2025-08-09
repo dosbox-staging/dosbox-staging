@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "mem.h"
+#include "hardware/memory.h"
 #include "setup.h"
 #include "video.h"
 

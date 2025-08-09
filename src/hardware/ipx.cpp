@@ -21,7 +21,7 @@
 #include "inout.h"
 #include "ipx.h"
 #include "ipxserver.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "pic.h"
 #include "programs.h"
 #include "regs.h"

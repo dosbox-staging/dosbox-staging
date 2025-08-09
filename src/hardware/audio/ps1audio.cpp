@@ -18,7 +18,7 @@
 #include "hardware/timer.h"
 #include "inout.h"
 #include "util/math_utils.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "ps1audio.h"
 #include "setup.h"

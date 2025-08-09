@@ -11,7 +11,7 @@
 #include "config.h"
 #include "dosbox_config.h"
 #include "inout.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "hardware/pic.h"
 
 CHECK_NARROWING();

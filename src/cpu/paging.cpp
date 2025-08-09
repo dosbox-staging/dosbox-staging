@@ -9,7 +9,7 @@
 #include <cstring>
 #include <memory>
 
-#include "mem.h"
+#include "hardware/memory.h"
 #include "regs.h"
 #include "lazyflags.h"
 #include "cpu.h"

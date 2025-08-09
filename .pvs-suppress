@@ -94,7 +94,7 @@
             "CodeNext": 3299936121,
             "CodePrev": 2974951853,
             "ErrorCode": "V570",
-            "FileName": "mem.h",
+            "FileName": "hardware/memory.h",
             "Message": "The 'val' variable is assigned to itself."
         },
         {
@@ -102,7 +102,7 @@
             "CodeNext": 3299936121,
             "CodePrev": 2974951853,
             "ErrorCode": "V570",
-            "FileName": "mem.h",
+            "FileName": "hardware/memory.h",
             "Message": "The 'val' variable is assigned to itself."
         },
         {
@@ -110,7 +110,7 @@
             "CodeNext": 3299936121,
             "CodePrev": 2974951853,
             "ErrorCode": "V570",
-            "FileName": "mem.h",
+            "FileName": "hardware/memory.h",
             "Message": "The 'val' variable is assigned to itself."
         },
         {
