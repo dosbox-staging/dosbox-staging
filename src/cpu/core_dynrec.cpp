@@ -31,17 +31,17 @@
 
 #endif // HAVE_MPROTECT
 
-#include "callback.h"
-#include "cpu.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
 #include "debug.h"
-#include "inout.h"
+#include "hardware/port.h"
 #include "lazyflags.h"
-#include "mem.h"
-#include "mmx.h"
-#include "paging.h"
-#include "pic.h"
-#include "regs.h"
-#include "tracy.h"
+#include "hardware/memory.h"
+#include "cpu/mmx.h"
+#include "cpu/paging.h"
+#include "hardware/pic.h"
+#include "cpu/registers.h"
+#include "misc/tracy.h"
 
 #define CACHE_MAXSIZE	(4096*2)
 #define CACHE_TOTAL		(1024*1024*8)

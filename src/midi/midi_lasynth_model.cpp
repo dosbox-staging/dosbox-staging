@@ -9,7 +9,7 @@
 #include <map>
 #include <set>
 
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 
 // Construct a new model and ensure both PCM and control ROM(s) are provided
 LASynthModel::LASynthModel(const std::string& rom_name, const Rom* pcm_rom_full,

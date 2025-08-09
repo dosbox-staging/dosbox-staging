@@ -5,11 +5,11 @@
 
 #include <cmath>
 
-#include "byteorder.h"
-#include "checks.h"
-#include "math_utils.h"
-#include "rgb.h"
-#include "support.h"
+#include "util/byteorder.h"
+#include "util/checks.h"
+#include "misc/support.h"
+#include "util/math_utils.h"
+#include "util/rgb.h"
 
 CHECK_NARROWING();
 

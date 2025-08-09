@@ -13,20 +13,18 @@
 #include <cmath>
 #include <cassert>
 
-#include "bios_disk.h"
-#include "callback.h"
-#include "control.h"
-#include "cpu.h"
+#include "audio/mixer.h"
+#include "ints/bios_disk.h"
+#include "cpu/callback.h"
+#include "config/config.h"
+#include "cpu/cpu.h"
+#include "dos/cdrom.h"
 #include "ide.h"
-#include "inout.h"
-#include "mem.h"
-#include "mixer.h"
+#include "hardware/port.h"
 #include "pic.h"
-#include "setup.h"
-#include "string_utils.h"
+#include "config/setup.h"
+#include "util/string_utils.h"
 #include "timer.h"
-
-#include "../src/dos/cdrom.h"
 
 extern int bootdrive;
 extern bool bootguest, bootvm, use_quick_reboot;

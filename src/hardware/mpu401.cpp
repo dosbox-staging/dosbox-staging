@@ -5,12 +5,12 @@
 
 #include <cstring>
 
-#include "cpu.h"
-#include "inout.h"
-#include "math_utils.h"
-#include "midi.h"
+#include "cpu/cpu.h"
+#include "port.h"
+#include "util/math_utils.h"
+#include "midi/midi.h"
 #include "pic.h"
-#include "setup.h"
+#include "config/setup.h"
 
 static void MPU401_Event(uint32_t);
 static void MPU401_Reset();

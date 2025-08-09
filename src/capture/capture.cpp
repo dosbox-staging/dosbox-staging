@@ -12,14 +12,14 @@
 #include "capture_audio.h"
 #include "capture_midi.h"
 #include "capture_video.h"
-#include "checks.h"
-#include "control.h"
-#include "fs_utils.h"
+#include "util/checks.h"
+#include "config/config.h"
+#include "util/fs_utils.h"
 #include "image/image_capturer.h"
-#include "mapper.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "support.h"
+#include "gui/mapper.h"
+#include "config/setup.h"
+#include "util/string_utils.h"
+#include "misc/support.h"
 
 #include <SDL.h>
 

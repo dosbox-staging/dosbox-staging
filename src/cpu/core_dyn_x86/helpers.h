@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "../flags.h"
+#include "cpu/flags.h"
 
 static bool dyn_helper_divb(uint8_t val) {
 	if (!val) return CPU_PrepareException(0,0);

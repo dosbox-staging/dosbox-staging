@@ -5,11 +5,11 @@
 #include "intel8255.h"
 #include "dosbox.h"
 
-#include "bitops.h"
-#include "checks.h"
-#include "inout.h"
-#include "mixer.h"
-#include "timer.h"
+#include "audio/mixer.h"
+#include "util/bitops.h"
+#include "util/checks.h"
+#include "hardware/timer.h"
+#include "hardware/port.h"
 
 CHECK_NARROWING();
 

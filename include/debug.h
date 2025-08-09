@@ -5,7 +5,7 @@
 #define DOSBOX_DEBUG_H
 
 #include "dosbox.h"
-#include "mem.h"
+#include "hardware/memory.h"
 
 #if C_DEBUG
 void DEBUG_DrawScreen();

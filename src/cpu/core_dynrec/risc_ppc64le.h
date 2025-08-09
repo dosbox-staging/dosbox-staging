@@ -73,7 +73,7 @@ static const HostReg RegParams[] = {
 };
 
 #if C_FPU
-#include "fpu.h"
+#include "fpu/fpu.h"
 extern FPU_rec fpu;
 #endif
 

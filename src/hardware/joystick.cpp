@@ -7,10 +7,10 @@
 #include <cmath>
 #include <cstring>
 
-#include "control.h"
-#include "inout.h"
-#include "math_utils.h"
-#include "mapper.h"
+#include "config/config.h"
+#include "port.h"
+#include "util/math_utils.h"
+#include "gui/mapper.h"
 #include "pic.h"
 //TODO: higher axis can't be mapped. Find out why again
 
@@ -164,7 +164,7 @@ static bool write_active = false;
 static bool swap34 = false;
 bool button_wrapping_enabled = true;
 
-extern bool autofire; //sdl_mapper.cpp
+extern bool autofire; //mapper.cpp
 
 static uint8_t read_p201(io_port_t, io_width_t)
 {

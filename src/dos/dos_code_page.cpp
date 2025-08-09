@@ -11,16 +11,16 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../ints/int10.h"
-#include "autoexec.h"
-#include "bios.h"
-#include "checks.h"
+#include "shell/autoexec.h"
+#include "ints/bios.h"
+#include "util/checks.h"
 #include "dos_locale.h"
-#include "math_utils.h"
-#include "mem.h"
-#include "string_utils.h"
-#include "support.h"
-#include "unicode.h"
+#include "ints/int10.h"
+#include "util/math_utils.h"
+#include "hardware/memory.h"
+#include "util/string_utils.h"
+#include "misc/support.h"
+#include "misc/unicode.h"
 
 CHECK_NARROWING();
 

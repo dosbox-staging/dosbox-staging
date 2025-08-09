@@ -3,8 +3,8 @@
 
 #include "int10.h"
 
-#include "mem.h"
-#include "inout.h"
+#include "hardware/memory.h"
+#include "hardware/port.h"
 
 const uint8_t vparams[] = {
 	// 40x25 mode 0 and 1 crtc registers

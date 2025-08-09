@@ -15,7 +15,6 @@ target_sources(libdosboxcommon PRIVATE
   pacer.cpp
   programs.cpp
   rwqueue.cpp
-  setup.cpp
   string_utils.cpp
   support.cpp
   unicode.cpp)

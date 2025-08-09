@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "../include/vga.h"
+#include "hardware/video/vga.h"
 
 #include <gtest/gtest.h>
 

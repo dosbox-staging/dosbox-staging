@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "setup.h"
+#include "config/setup.h"
 
 #include <gtest/gtest.h>
 
-#include "support.h"
+#include "misc/support.h"
 #include <string>
 
 namespace {

@@ -12,8 +12,8 @@
 	according to the instruction.
 */
 
-#include "compiler.h"
-#include "../string_ops.h"
+#include "misc/compiler.h"
+#include "cpu/string_ops.h"
 
 static void dyn_dop_ebgb(DualOps op) {
 	dyn_get_modrm();

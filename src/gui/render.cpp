@@ -10,19 +10,19 @@
 #include <memory>
 #include <mutex>
 
-#include "../capture/capture.h"
-#include "control.h"
-#include "fraction.h"
-#include "mapper.h"
-#include "math_utils.h"
-#include "render.h"
-#include "setup.h"
+#include "capture/capture.h"
+#include "config/config.h"
+#include "util/fraction.h"
+#include "hardware/video/vga.h"
+#include "gui/mapper.h"
+#include "util/math_utils.h"
+#include "gui/render.h"
+#include "config/setup.h"
 #include "shader_manager.h"
-#include "shell.h"
-#include "string_utils.h"
-#include "support.h"
-#include "vga.h"
-#include "video.h"
+#include "shell/shell.h"
+#include "util/string_utils.h"
+#include "misc/support.h"
+#include "misc/video.h"
 
 Render render;
 ScalerLineHandler_t RENDER_DrawLine;

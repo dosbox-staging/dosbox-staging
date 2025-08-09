@@ -13,10 +13,10 @@
 #include <thread>
 #include <vector>
 
-#include "dynlib.h"
-#include "mixer.h"
-#include "rwqueue.h"
-#include "std_filesystem.h"
+#include "audio/mixer.h"
+#include "util/dynlib.h"
+#include "util/rwqueue.h"
+#include "misc/std_filesystem.h"
 
 namespace FluidSynth {
 

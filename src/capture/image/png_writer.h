@@ -10,7 +10,7 @@
 
 #include "image_saver.h"
 
-#include "render.h"
+#include "gui/render.h"
 
 #include <png.h>
 

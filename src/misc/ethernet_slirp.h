@@ -12,8 +12,8 @@
 
 #include <slirp/libslirp.h>
 
-#include "config.h"
-#include "ethernet.h"
+#include "dosbox_config.h"
+#include "misc/ethernet.h"
 
 /*
  * libslirp really wants a poll() API, so we'll use that when we're

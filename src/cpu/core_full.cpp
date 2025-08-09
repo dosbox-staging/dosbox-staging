@@ -3,16 +3,16 @@
 
 #include "dosbox.h"
 
-#include "callback.h"
-#include "cpu.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
 #include "debug.h"
-#include "fpu.h"
-#include "inout.h"
+#include "fpu/fpu.h"
+#include "hardware/port.h"
 #include "lazyflags.h"
-#include "paging.h"
-#include "pic.h"
-#include "regs.h"
-#include "tracy.h"
+#include "cpu/paging.h"
+#include "hardware/pic.h"
+#include "cpu/registers.h"
+#include "misc/tracy.h"
 
 typedef PhysPt EAPoint;
 #define SegBase(c)	SegPhys(c)

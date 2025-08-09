@@ -5,13 +5,13 @@
 #include "mouse_common.h"
 #include "mouse_interfaces.h"
 
-#include "checks.h"
-#include "control.h"
-#include "math_utils.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "support.h"
-#include "video.h"
+#include "util/checks.h"
+#include "config/config.h"
+#include "util/math_utils.h"
+#include "config/setup.h"
+#include "util/string_utils.h"
+#include "misc/support.h"
+#include "misc/video.h"
 
 #include <cmath>
 

@@ -5,17 +5,17 @@
 #include "dosbox.h"
 
 #if C_DEBUG
-#include "control.h"
+#include "config/config.h"
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <curses.h>
 
-#include "cross.h"
-#include "string_utils.h"
-#include "support.h"
-#include "regs.h"
+#include "misc/cross.h"
+#include "util/string_utils.h"
+#include "misc/support.h"
+#include "cpu/registers.h"
 #include "debug.h"
 #include "debug_inc.h"
 

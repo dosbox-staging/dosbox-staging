@@ -15,20 +15,20 @@
 
 #include <SDL_endian.h>
 
-#include "../ints/int10.h"
-#include "ansi_code_markup.h"
-#include "channel_names.h"
-#include "control.h"
-#include "cross.h"
-#include "fs_utils.h"
-#include "math_utils.h"
+#include "misc/ansi_code_markup.h"
+#include "audio/channel_names.h"
+#include "audio/mixer.h"
+#include "config/config.h"
+#include "misc/cross.h"
+#include "util/fs_utils.h"
+#include "hardware/mpu401.h"
+#include "ints/int10.h"
+#include "util/math_utils.h"
 #include "midi.h"
 #include "midi_lasynth_model.h"
-#include "mixer.h"
-#include "mpu401.h"
-#include "pic.h"
-#include "string_utils.h"
-#include "support.h"
+#include "hardware/pic.h"
+#include "util/string_utils.h"
+#include "misc/support.h"
 
 // #define DEBUG_MT32
 

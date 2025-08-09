@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "config.h"
+#include "dosbox_config.h"
 
 #if defined(C_SYSTEM_ZLIB_NG)
 #include <zlib-ng.h>

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "support.h"
+#include "misc/support.h"
 
 #include <algorithm>
 #include <cassert>
@@ -20,11 +20,11 @@
 #include <stdexcept>
 #include <string>
 
-#include "cross.h"
+#include "misc/cross.h"
 #include "debug.h"
-#include "fs_utils.h"
-#include "string_utils.h"
-#include "video.h"
+#include "util/fs_utils.h"
+#include "util/string_utils.h"
+#include "misc/video.h"
 
 #include "whereami.h"
 

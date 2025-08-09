@@ -5,10 +5,10 @@
 #include "dosbox.h"
 #if C_FPU
 
-#include "cpu.h"
-#include "cross.h"
-#include "fpu.h"
-#include "mem.h"
+#include "cpu/cpu.h"
+#include "misc/cross.h"
+#include "fpu/fpu.h"
+#include "hardware/memory.h"
 #include <cmath>
 
 FPU_rec fpu = {};

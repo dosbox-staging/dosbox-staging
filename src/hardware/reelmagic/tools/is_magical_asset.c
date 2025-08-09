@@ -19,7 +19,7 @@
 #include <stdio.h>
 
 #define PL_MPEG_IMPLEMENTATION
-#include "../mpeg_decoder.h"
+#include "hardware/reelmagic/mpeg_decoder.h"
 
 
 int

@@ -7,14 +7,14 @@
 #include <cassert>
 #include <vector>
 
-#include "byteorder.h"
-#include "checks.h"
-#include "render.h"
-#include "rgb555.h"
-#include "rgb565.h"
-#include "rgb888.h"
-#include "support.h"
-#include "vga.h"
+#include "util/byteorder.h"
+#include "util/checks.h"
+#include "hardware/video/vga.h"
+#include "gui/render.h"
+#include "util/rgb888.h"
+#include "misc/support.h"
+#include "util/rgb555.h"
+#include "util/rgb565.h"
 
 class ImageDecoder {
 public:

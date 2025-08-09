@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 
 #include <gtest/gtest.h>
 

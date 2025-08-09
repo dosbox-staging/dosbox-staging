@@ -3,11 +3,11 @@
 
 #include "dosbox.h"
 
-#include "control.h"
+#include "config/config.h"
 #include "dos_inc.h"
-#include "dos_memory.h"
-#include "mem.h"
-#include "support.h"
+#include "dos/dos_memory.h"
+#include "hardware/memory.h"
+#include "misc/support.h"
 
 #include <string_view>
 

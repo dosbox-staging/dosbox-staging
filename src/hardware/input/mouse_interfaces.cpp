@@ -5,12 +5,12 @@
 
 #include <memory>
 
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "mouse_common.h"
 #include "mouse_config.h"
 #include "mouse_manymouse.h"
 
-#include "checks.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 

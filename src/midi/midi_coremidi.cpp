@@ -8,8 +8,8 @@
 
 #include <sstream>
 
-#include "programs.h"
-#include "string_utils.h"
+#include "dos/programs.h"
+#include "util/string_utils.h"
 
 MidiDeviceCoreMidi::MidiDeviceCoreMidi(const char* conf)
         : MidiDevice(),

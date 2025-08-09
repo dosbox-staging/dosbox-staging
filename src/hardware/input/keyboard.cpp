@@ -2,20 +2,20 @@
 // SPDX-FileCopyrightText:  2002-2022 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "keyboard.h"
+#include "hardware/input/keyboard.h"
 #include "dosbox.h"
 
 #include <array>
 
-#include "bitops.h"
-#include "checks.h"
-#include "control.h"
-#include "cpu.h"
+#include "util/bitops.h"
+#include "util/checks.h"
+#include "config/config.h"
+#include "cpu/cpu.h"
+#include "hardware/timer.h"
 #include "intel8042.h"
 #include "intel8255.h"
-#include "pic.h"
-#include "support.h"
-#include "timer.h"
+#include "hardware/pic.h"
+#include "misc/support.h"
 
 CHECK_NARROWING();
 

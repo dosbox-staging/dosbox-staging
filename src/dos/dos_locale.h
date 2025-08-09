@@ -6,7 +6,7 @@
 #define DOSBOX_DOS_LOCALE_H
 
 #include "dos_inc.h"
-#include "setup.h"
+#include "config/setup.h"
 
 #include <cstdint>
 #include <optional>

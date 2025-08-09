@@ -2,19 +2,19 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "shell.h"
+#include "shell/shell.h"
 
 #include <algorithm>
 #include <cstring>
 #include <memory>
 
-#include "../ints/int10.h"
-#include "callback.h"
-#include "clipboard.h"
+#include "cpu/callback.h"
+#include "gui/clipboard.h"
 #include "file_reader.h"
-#include "keyboard.h"
-#include "regs.h"
-#include "unicode.h"
+#include "ints/int10.h"
+#include "hardware/input/keyboard.h"
+#include "cpu/registers.h"
+#include "misc/unicode.h"
 
 [[nodiscard]] static std::vector<std::string> get_completions(std::string_view command);
 static void run_binary_executable(std::string_view fullname, std::string_view args);

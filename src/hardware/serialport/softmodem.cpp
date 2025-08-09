@@ -12,12 +12,12 @@
 #include <sstream>
 #include <utility>
 
-#include "string_utils.h"
+#include "shell/command_line.h"
+#include "util/string_utils.h"
 #include "serialport.h"
 #include "softmodem.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "misc_util.h"
-#include "version.h"
 
 class PhonebookEntry {
 public:

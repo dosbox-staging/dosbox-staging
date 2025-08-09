@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "ethernet.h"
+#include "misc/ethernet.h"
 
 #include <cstring>
 
-#include "control.h"
+#include "config/config.h"
 #include "ethernet_slirp.h"
 
 EthernetConnection* ETHERNET_OpenConnection([[maybe_unused]] const std::string& backend)

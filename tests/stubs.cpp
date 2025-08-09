@@ -3,8 +3,8 @@
 
 #include "dosbox.h"
 
-#include "control.h"
-#include "logging.h"
+#include "config/config.h"
+#include "misc/logging.h"
 
 // During testing we never want to log to stdout/stderr, as it could
 // negatively affect test harness.

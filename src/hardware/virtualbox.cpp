@@ -3,13 +3,13 @@
 
 #include "virtualbox.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "dosbox.h"
-#include "inout.h"
-#include "mouse.h"
-#include "pci_bus.h"
-#include "setup.h"
-#include "support.h"
+#include "port.h"
+#include "hardware/input/mouse.h"
+#include "hardware/pci_bus.h"
+#include "config/setup.h"
+#include "misc/support.h"
 
 #include <map>
 #include <set>

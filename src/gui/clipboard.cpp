@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "clipboard.h"
+#include "gui/clipboard.h"
 
-#include "checks.h"
-#include "control.h"
-#include "logging.h"
-#include "string_utils.h"
-#include "unicode.h"
+#include "util/checks.h"
+#include "config/config.h"
+#include "misc/logging.h"
+#include "util/string_utils.h"
+#include "misc/unicode.h"
 
 #include <SDL.h>
 

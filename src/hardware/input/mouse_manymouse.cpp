@@ -5,12 +5,12 @@
 #include "mouse_common.h"
 #include "mouse_config.h"
 
-#include "callback.h"
-#include "checks.h"
-#include "dos_inc.h"
-#include "math_utils.h"
-#include "pic.h"
-#include "unicode.h"
+#include "cpu/callback.h"
+#include "util/checks.h"
+#include "dos/dos_inc.h"
+#include "util/math_utils.h"
+#include "hardware/pic.h"
+#include "misc/unicode.h"
 
 #include <algorithm>
 #include <initializer_list>

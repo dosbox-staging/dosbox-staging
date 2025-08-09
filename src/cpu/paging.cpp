@@ -2,19 +2,19 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "paging.h"
+#include "cpu/paging.h"
 
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <memory>
 
-#include "mem.h"
-#include "regs.h"
+#include "hardware/memory.h"
+#include "cpu/registers.h"
 #include "lazyflags.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "debug.h"
-#include "setup.h"
+#include "config/setup.h"
 
 #define LINK_TOTAL		(64*1024)
 

@@ -2,19 +2,19 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "pci_bus.h"
+#include "hardware/pci_bus.h"
 
 #include <array>
 #include <memory>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "debug.h"
 #include "dosbox.h"
-#include "inout.h"
-#include "mem.h"
-#include "regs.h"
-#include "setup.h"
-#include "support.h"
+#include "hardware/memory.h"
+#include "hardware/port.h"
+#include "cpu/registers.h"
+#include "config/setup.h"
+#include "misc/support.h"
 
 static uint32_t pci_caddress=0;			// current PCI addressing
 static Bitu pci_devices_installed=0;	// number of registered PCI devices

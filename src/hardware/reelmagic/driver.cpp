@@ -9,7 +9,7 @@
 // implementation of the provided driver API notes.
 //
 
-#include "reelmagic.h"
+#include "hardware/reelmagic/reelmagic.h"
 
 #include <cerrno>
 #include <cstdarg>
@@ -19,17 +19,17 @@
 #include <stack>
 #include <string>
 
-#include "../../dos/program_more_output.h"
-#include "callback.h"
-#include "channel_names.h"
-#include "dos_inc.h"
-#include "dos_system.h"
-#include "mapper.h"
-#include "math_utils.h"
-#include "mixer.h"
-#include "programs.h"
-#include "regs.h"
-#include "setup.h"
+#include "audio/channel_names.h"
+#include "audio/mixer.h"
+#include "cpu/callback.h"
+#include "dos/program/program_more_output.h"
+#include "dos/dos_inc.h"
+#include "dos/dos_system.h"
+#include "gui/mapper.h"
+#include "util/math_utils.h"
+#include "dos/programs.h"
+#include "cpu/registers.h"
+#include "config/setup.h"
 
 // note: Reported ReelMagic driver version 2.21 seems to be the most common...
 static const uint8_t REELMAGIC_DRIVER_VERSION_MAJOR = 2;
@@ -1311,7 +1311,7 @@ static bool RMDEV_SYS_int2fHandler()
 	return false;
 }
 
-// #include "inout.h"
+// #include "hardware/port.h"
 // static IO_ReadHandleObject   _readHandler;
 // static IO_WriteHandleObject  _writeHandler;
 // static Bitu read_rm(Bitu port, Bitu /*iolen*/) {

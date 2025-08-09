@@ -4,13 +4,13 @@
 
 
 #include "dosbox.h"
-#include "mem.h"
-#include "callback.h"
-#include "regs.h"
-#include "inout.h"
+#include "hardware/memory.h"
+#include "cpu/callback.h"
+#include "cpu/registers.h"
+#include "hardware/port.h"
 #include "int10.h"
-#include "mouse.h"
-#include "setup.h"
+#include "hardware/input/mouse.h"
+#include "config/setup.h"
 
 Int10Data int10;
 static callback_number_t call_10 = 0;

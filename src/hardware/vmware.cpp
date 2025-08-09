@@ -3,14 +3,14 @@
 
 #include "vmware.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "dosbox.h"
-#include "inout.h"
-#include "mouse.h"
-#include "regs.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "support.h"
+#include "port.h"
+#include "hardware/input/mouse.h"
+#include "cpu/registers.h"
+#include "config/setup.h"
+#include "util/string_utils.h"
+#include "misc/support.h"
 
 #include <set>
 

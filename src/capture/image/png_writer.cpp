@@ -5,10 +5,10 @@
 
 #include "png_writer.h"
 
-#include "checks.h"
-#include "string_utils.h"
-#include "support.h"
-#include "version.h"
+#include "dosbox_config.h"
+#include "util/checks.h"
+#include "util/string_utils.h"
+#include "misc/support.h"
 
 #include <zlib.h>
 

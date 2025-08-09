@@ -2,25 +2,26 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "cpu.h"
+#include "cpu/cpu.h"
 
 #include <cassert>
 #include <cstddef>
 #include <sstream>
+#include <memory>
 
-#include "control.h"
+#include "config/config.h"
+#include "shell/command_line.h"
 #include "debug.h"
 #include "lazyflags.h"
-#include "mapper.h"
-#include "math_utils.h"
-#include "memory.h"
-#include "paging.h"
-#include "pic.h"
-#include "programs.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "support.h"
-#include "video.h"
+#include "gui/mapper.h"
+#include "util/math_utils.h"
+#include "cpu/paging.h"
+#include "hardware/pic.h"
+#include "dos/programs.h"
+#include "config/setup.h"
+#include "util/string_utils.h"
+#include "misc/support.h"
+#include "misc/video.h"
 
 #if 1
 	#undef LOG

@@ -8,8 +8,9 @@
 #include "serialport.h"
 #include "directserial.h"
 #include "misc_util.h"
-#include "pic.h"
+#include "hardware/pic.h"
 
+#include "shell/command_line.h"
 #include "libserial.h"
 
 /* This is a serial passthrough class.  Its amazingly simple to */

@@ -4,9 +4,9 @@
 #ifndef DOSBOX_MOUSE_COMMON_H
 #define DOSBOX_MOUSE_COMMON_H
 
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 
-#include "bit_view.h"
+#include "util/bit_view.h"
 
 // ***************************************************************************
 // Common variables

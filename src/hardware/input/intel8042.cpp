@@ -5,14 +5,14 @@
 #include "intel8042.h"
 #include "dosbox.h"
 
-#include "bit_view.h"
-#include "bitops.h"
-#include "checks.h"
-#include "config.h"
-#include "control.h"
-#include "inout.h"
-#include "mem.h"
-#include "pic.h"
+#include "util/bit_view.h"
+#include "util/bitops.h"
+#include "util/checks.h"
+#include "config/config.h"
+#include "dosbox_config.h"
+#include "hardware/port.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
 
 CHECK_NARROWING();
 

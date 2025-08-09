@@ -6,9 +6,9 @@
 
 #include <list>
 
-#include "callback.h"
-#include "mem.h"
-#include "regs.h"
+#include "cpu/callback.h"
+#include "hardware/memory.h"
+#include "cpu/registers.h"
 
 RealPt fake_sft_table = 0;
 

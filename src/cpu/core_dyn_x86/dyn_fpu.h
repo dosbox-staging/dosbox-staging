@@ -8,10 +8,10 @@
 
 #if C_FPU
 
-#include "cpu.h"
-#include "cross.h"
-#include "fpu.h"
-#include "mem.h"
+#include "cpu/cpu.h"
+#include "misc/cross.h"
+#include "fpu/fpu.h"
+#include "hardware/memory.h"
 #include <cfloat>
 #include <cmath>
 
@@ -33,9 +33,9 @@ static void FPU_FFREE(Bitu st) {
 
 
 #if C_FPU_X86
-#include "../../fpu/fpu_instructions_x86.h"
+#include "fpu/fpu_instructions_x86.h"
 #else
-#include "../../fpu/fpu_instructions.h"
+#include "fpu/fpu_instructions.h"
 #endif
 
 

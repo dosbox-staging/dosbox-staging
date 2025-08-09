@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mem_unaligned.h"
+#include "util/mem_unaligned.h"
 
 #if SCALER_MAX_MUL_HEIGHT < SCALERHEIGHT
 #error "Scaler goes too high"

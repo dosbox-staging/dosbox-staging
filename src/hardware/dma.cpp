@@ -9,11 +9,11 @@
 #include <memory>
 
 #include "dma.h"
-#include "mem.h"
-#include "inout.h"
+#include "hardware/memory.h"
+#include "hardware/port.h"
 #include "pic.h"
-#include "paging.h"
-#include "setup.h"
+#include "cpu/paging.h"
+#include "config/setup.h"
 
 std::unique_ptr<DmaController> primary   = {};
 std::unique_ptr<DmaController> secondary = {};

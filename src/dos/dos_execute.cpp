@@ -7,19 +7,18 @@
 #include <cctype>
 #include <cstring>
 
-#include "callback.h"
-#include "cpu.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
 #include "debug.h"
 #include "dos_inc.h"
-#include "mem.h"
-#include "paging.h"
-#include "program_setver.h"
-#include "programs.h"
-#include "regs.h"
-#include "string_utils.h"
-#include "video.h"
-
-#include "../hardware/vmware.h"
+#include "hardware/vmware.h"
+#include "hardware/memory.h"
+#include "cpu/paging.h"
+#include "program/program_setver.h"
+#include "dos/programs.h"
+#include "cpu/registers.h"
+#include "util/string_utils.h"
+#include "misc/video.h"
 
 #ifdef _MSC_VER
 #pragma pack(1)

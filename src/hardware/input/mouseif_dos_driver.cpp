@@ -2,26 +2,25 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "mouse_config.h"
 #include "mouse_interfaces.h"
 #include "mouseif_dos_driver_state.h"
 
 #include <algorithm>
 
-#include "bios.h"
-#include "bitops.h"
-#include "byteorder.h"
-#include "callback.h"
-#include "checks.h"
-#include "config.h"
-#include "cpu.h"
-#include "dos_inc.h"
-#include "math_utils.h"
-#include "pic.h"
-#include "regs.h"
-
-#include "../../ints/int10.h"
+#include "ints/bios.h"
+#include "util/bitops.h"
+#include "util/byteorder.h"
+#include "cpu/callback.h"
+#include "util/checks.h"
+#include "cpu/cpu.h"
+#include "dos/dos_inc.h"
+#include "dosbox_config.h"
+#include "ints/int10.h"
+#include "util/math_utils.h"
+#include "hardware/pic.h"
+#include "cpu/registers.h"
 
 CHECK_NARROWING();
 

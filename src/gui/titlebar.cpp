@@ -3,16 +3,16 @@
 
 #include "titlebar.h"
 
-#include "checks.h"
-#include "control.h"
-#include "cpu.h"
+#include "util/checks.h"
+#include "config/config.h"
+#include "cpu/cpu.h"
 #include "dosbox.h"
-#include "mapper.h"
-#include "sdlmain.h"
-#include "setup.h"
-#include "support.h"
-#include "unicode.h"
-#include "video.h"
+#include "gui/mapper.h"
+#include "gui/sdlmain.h"
+#include "config/setup.h"
+#include "misc/support.h"
+#include "misc/unicode.h"
+#include "misc/video.h"
 
 #include <SDL.h>
 #include <map>

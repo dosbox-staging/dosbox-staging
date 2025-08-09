@@ -8,7 +8,7 @@
 //just handle it all in one go, but this seems to work well enough for now
 
 #include "dosbox.h"
-#include "render.h"
+#include "gui/render.h"
 #include <cstring>
 
 uint8_t Scaler_Aspect[SCALER_MAXHEIGHT]        = {};
