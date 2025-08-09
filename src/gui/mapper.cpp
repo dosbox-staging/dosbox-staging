@@ -25,7 +25,7 @@
 #include "hardware/input/keyboard.h"
 #include "gui/mapper.h"
 #include "util/math_utils.h"
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "util/rgb888.h"
 #include "config/setup.h"
 #include "util/string_utils.h"

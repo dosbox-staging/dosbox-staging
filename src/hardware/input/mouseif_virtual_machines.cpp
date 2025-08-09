@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "mouse_config.h"
 #include "mouse_interfaces.h"
 

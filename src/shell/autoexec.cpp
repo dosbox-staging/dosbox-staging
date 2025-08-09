@@ -9,7 +9,7 @@
 #include "dosbox.h"
 #include "util/fs_utils.h"
 #include "hardware/input/keyboard.h"
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "config/setup.h"
 #include "shell.h"
 #include "util/string_utils.h"
