@@ -13,7 +13,7 @@
 #include "cpu/cpu.h"
 #include "dos_inc.h"
 #include "hardware/dma.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "keyboard.h"
 #include "hardware/memory.h"
 #include "cpu/paging.h"

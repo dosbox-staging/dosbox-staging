@@ -5,7 +5,7 @@
 #include "int10.h"
 
 #include "hardware/memory.h"
-#include "inout.h"
+#include "hardware/inout.h"
 
 #pragma pack(1)
 struct Dynamic_Functionality {

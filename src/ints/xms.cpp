@@ -10,7 +10,7 @@
 #include "util/checks.h"
 #include "cpu/cpu.h"
 #include "dos_inc.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "cpu/registers.h"

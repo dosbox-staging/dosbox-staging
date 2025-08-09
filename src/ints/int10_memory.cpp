@@ -5,7 +5,7 @@
 #include "int10.h"
 
 #include "hardware/memory.h"
-#include "inout.h"
+#include "hardware/inout.h"
 
 // clang-format off
 static const std::vector<uint8_t> static_functionality = {

@@ -13,7 +13,7 @@
 #include "audio/mixer.h"
 #include "adlib_gold.h"
 #include "hardware.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "hardware/pic.h"
 #include "config/setup.h"
 

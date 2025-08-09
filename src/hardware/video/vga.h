@@ -14,7 +14,7 @@
 #include "util/bit_view.h"
 #include "config/config.h"
 #include "util/fraction.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "util/rgb666.h"
 #include "misc/video.h"
 

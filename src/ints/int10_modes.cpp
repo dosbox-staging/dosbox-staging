@@ -13,7 +13,7 @@
 
 #include "util/bitops.h"
 #include "hardware/video/vga.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "pci_bus.h"
 #include "gui/render.h"
 #include "util/rgb888.h"

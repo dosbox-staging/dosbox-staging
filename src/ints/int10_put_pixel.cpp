@@ -4,7 +4,7 @@
 
 #include "int10.h"
 
-#include "inout.h"
+#include "hardware/inout.h"
 #include "hardware/memory.h"
 #include "pci_bus.h"
 

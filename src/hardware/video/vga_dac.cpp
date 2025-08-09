@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-#include "inout.h"
+#include "hardware/inout.h"
 #include "ints/int10.h"
 #include "hardware/memory.h"
 #include "reelmagic.h"

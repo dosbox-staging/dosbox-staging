@@ -9,7 +9,7 @@
 #include <string>
 #include <map>
 
-#include "inout.h"
+#include "hardware/inout.h"
 #include "ints/int10.h"
 #include "hardware/memory.h"
 #include "pci_bus.h"

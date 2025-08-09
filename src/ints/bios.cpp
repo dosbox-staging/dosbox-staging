@@ -14,7 +14,7 @@
 #include "hardware/joystick.h"
 #include "hardware/pic.h"
 #include "hardware/serialport/serialport.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "int10.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"

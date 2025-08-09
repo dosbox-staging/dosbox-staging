@@ -55,7 +55,7 @@
 #include "audio/mixer.h"
 #include "config/config.h"
 #include "hardware/dma.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "util/math_utils.h"
 #include "misc/notifications.h"
 #include "hardware/pic.h"

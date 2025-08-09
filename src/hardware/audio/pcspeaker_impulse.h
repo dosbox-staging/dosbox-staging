@@ -8,7 +8,7 @@
 #include <string>
 
 #include "audio/channel_names.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "hardware/pic.h"
 #include "config/setup.h"
 #include "misc/support.h"

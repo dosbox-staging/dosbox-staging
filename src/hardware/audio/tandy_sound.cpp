@@ -37,7 +37,7 @@
 #include "hardware/mame/emu.h"
 #include "hardware/mame/sn76496.h"
 #include "hardware/timer.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"

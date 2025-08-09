@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "ints/int10.h"
 #include "hardware/memory.h"
 #include "config/setup.h"
