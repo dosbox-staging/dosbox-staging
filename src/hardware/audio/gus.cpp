@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "audio/channel_names.h"
-#include "autoexec.h"
+#include "shell/autoexec.h"
 #include "util/bit_view.h"
 #include "config/config.h"
 #include "gus.h"

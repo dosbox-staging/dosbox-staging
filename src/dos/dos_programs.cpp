@@ -4,7 +4,7 @@
 
 #include "programs.h"
 
-#include "autoexec.h"
+#include "shell/autoexec.h"
 #include "program/program_attrib.h"
 #include "program/program_autotype.h"
 #include "program/program_boot.h"

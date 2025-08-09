@@ -11,7 +11,7 @@
 #include <memory>
 #include <regex>
 
-#include "autoexec.h"
+#include "shell/autoexec.h"
 #include "callback.h"
 #include "config/config.h"
 #include "dos/program/program_more_output.h"

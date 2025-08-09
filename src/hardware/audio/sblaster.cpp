@@ -12,7 +12,7 @@
 #include <tuple>
 
 #include "audio/channel_names.h"
-#include "autoexec.h"
+#include "shell/autoexec.h"
 #include "bios.h"
 #include "util/bit_view.h"
 #include "util/bitops.h"
