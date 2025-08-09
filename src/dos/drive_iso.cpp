@@ -8,7 +8,7 @@
 
 #include "cdrom.h"
 #include "dos_mscdex.h"
-#include "dos_system.h"
+#include "dos/dos_system.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 

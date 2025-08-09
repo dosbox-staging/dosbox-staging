@@ -14,7 +14,7 @@
 #include "compiler.h"
 #include "cpu/registers.h"
 #include "cpu/callback.h"
-#include "dos_system.h"
+#include "dos/dos_system.h"
 #include "dos_inc.h"
 #include "util/fs_utils.h"
 #include "config/setup.h"

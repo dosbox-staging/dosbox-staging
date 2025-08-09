@@ -12,7 +12,7 @@
 
 #include "compiler.h"
 #include "dos/dos_inc.h"
-#include "dos_system.h"
+#include "dos/dos_system.h"
 
 bool path_exists(const char *path) noexcept
 {

@@ -17,7 +17,7 @@
 #include "cpu/cpu.h"
 #include "misc/cross.h"
 #include "debug.h"
-#include "dos_system.h"
+#include "dos/dos_system.h"
 #include "port.h"
 #include "ipx.h"
 #include "ipxserver.h"
