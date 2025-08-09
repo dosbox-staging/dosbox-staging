@@ -6,7 +6,7 @@
 
 #include "cpu/callback.h"
 #include "hardware/memory.h"
-#include "keyboard.h"
+#include "hardware/input/keyboard.h"
 #include "cpu/registers.h"
 #include "hardware/port.h"
 #include "dos/dos_inc.h"

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2022 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "keyboard.h"
+#include "hardware/input/keyboard.h"
 #include "dosbox.h"
 
 #include <array>

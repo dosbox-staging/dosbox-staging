@@ -12,7 +12,7 @@
 #include "gui/clipboard.h"
 #include "file_reader.h"
 #include "ints/int10.h"
-#include "keyboard.h"
+#include "hardware/input/keyboard.h"
 #include "cpu/registers.h"
 #include "misc/unicode.h"
 
