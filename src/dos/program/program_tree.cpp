@@ -9,7 +9,7 @@
 #include "drives.h"
 #include "ints/int10.h"
 #include "shell.h"
-#include "unicode.h"
+#include "misc/unicode.h"
 
 CHECK_NARROWING();
 

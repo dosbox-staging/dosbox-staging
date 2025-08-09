@@ -17,7 +17,7 @@
 #include "mapper.h"
 #include "misc/host_locale.h"
 #include "util/string_utils.h"
-#include "unicode.h"
+#include "misc/unicode.h"
 
 CHECK_NARROWING();
 
