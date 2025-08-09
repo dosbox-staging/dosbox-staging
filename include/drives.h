@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "dos_system.h"
 
 // GCC throws a warning about non-virtual destructor for std::enable_shared_from_this

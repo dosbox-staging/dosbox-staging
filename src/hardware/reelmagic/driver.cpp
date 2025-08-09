@@ -23,7 +23,7 @@
 #include "audio/mixer.h"
 #include "cpu/callback.h"
 #include "dos/program/program_more_output.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "dos_system.h"
 #include "gui/mapper.h"
 #include "util/math_utils.h"

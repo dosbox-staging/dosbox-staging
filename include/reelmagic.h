@@ -6,7 +6,7 @@
 
 #include "dosbox.h"
 
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "util/fraction.h"
 #include "gui/render.h"
 

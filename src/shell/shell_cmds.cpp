@@ -25,7 +25,7 @@
 #include "config/config.h"
 #include "misc/cross.h"
 #include "dos/program/program_more_output.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "drives.h"
 #include "hardware/timer.h"
 #include "ints/int10.h"

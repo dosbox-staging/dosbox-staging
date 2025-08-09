@@ -17,7 +17,7 @@
 #include "hardware/timer.h"
 #endif
 #ifndef DOSBOX_DOS_INC_H
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #endif
 #ifndef DOSBOX_PROGRAMS_H
 #include "programs.h"

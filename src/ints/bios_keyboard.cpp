@@ -9,7 +9,7 @@
 #include "keyboard.h"
 #include "cpu/registers.h"
 #include "hardware/port.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 
 static callback_number_t call_int16 = 0;
 static callback_number_t call_irq1  = 0;

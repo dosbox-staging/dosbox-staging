@@ -6,7 +6,7 @@
 #include "util/ascii.h"
 #include "cpu/callback.h"
 #include "util/checks.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "ints/int10.h"
 #include "shell.h"
 #include "util/string_utils.h"

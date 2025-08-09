@@ -18,7 +18,7 @@
 #include <sys/xattr.h>
 #endif
 
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "misc/logging.h"
 #include "util/string_utils.h"
 

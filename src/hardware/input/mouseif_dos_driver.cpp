@@ -15,7 +15,7 @@
 #include "cpu/callback.h"
 #include "util/checks.h"
 #include "cpu/cpu.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "dosbox_config.h"
 #include "ints/int10.h"
 #include "util/math_utils.h"

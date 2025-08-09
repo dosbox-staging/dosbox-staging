@@ -22,7 +22,7 @@
 #include "misc/cross.h"
 #include "debug.h"
 #include "dos/dos_locale.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "hardware.h"
 #include "hardware/ne2000.h"
 #include "hardware/pic.h"

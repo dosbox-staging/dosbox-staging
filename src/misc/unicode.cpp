@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "util/checks.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "misc/unicode.h"
 
 CHECK_NARROWING();

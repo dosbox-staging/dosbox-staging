@@ -7,7 +7,7 @@
 
 #include "cpu/callback.h"
 #include "util/checks.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "util/math_utils.h"
 #include "hardware/pic.h"
 #include "misc/unicode.h"

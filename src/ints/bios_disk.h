@@ -11,7 +11,7 @@
 #include <memory>
 
 #include "ints/bios.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "hardware/memory.h"
 
 /* The Section handling Bios Disk Access */

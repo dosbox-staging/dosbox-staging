@@ -18,7 +18,7 @@
  * 4. Additional dosbox-staging headers (if needed)
  */
 
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 
 #include <iterator>
 #include <string>

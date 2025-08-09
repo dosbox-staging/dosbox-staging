@@ -9,7 +9,7 @@
 #include "cpu/callback.h"
 #include "util/checks.h"
 #include "cpu/cpu.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "hardware/port.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
