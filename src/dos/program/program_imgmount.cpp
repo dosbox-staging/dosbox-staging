@@ -12,7 +12,7 @@
 #include "config/config.h"
 #include "misc/cross.h"
 #include "dos/cdrom.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "util/fs_utils.h"
 #include "hardware/ide.h"
 #include "ints/int10.h"

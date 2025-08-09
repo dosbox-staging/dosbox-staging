@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include "drives.h"
+#include "dos/drives.h"
 #include "cpu/registers.h"
 
 void BIOSTEST::Run(void) {

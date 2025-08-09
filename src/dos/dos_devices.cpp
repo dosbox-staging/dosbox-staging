@@ -13,7 +13,7 @@
 #include "ints/bios.h"
 #include "dos_inc.h"
 #include "misc/support.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "dev_con.h"
 
 DOS_Device * Devices[DOS_DEVICES];

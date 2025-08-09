@@ -11,7 +11,7 @@
 #include "cpu/callback.h"
 #include "config/config.h"
 #include "dos/dos_windows.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "util/fs_utils.h"
 #include "hardware/dma.h"
 #include "hardware/virtualbox.h"

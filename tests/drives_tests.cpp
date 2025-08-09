@@ -18,7 +18,7 @@
  * 4. Additional dosbox-staging headers (if needed)
  */
 
-#include "drives.h"
+#include "dos/drives.h"
 
 #include <gtest/gtest.h>
 

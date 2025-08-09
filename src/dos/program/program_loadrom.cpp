@@ -10,7 +10,7 @@
 
 #include "cpu/callback.h"
 #include "dos/dos_windows.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "program_more_output.h"
 #include "cpu/registers.h"
 

@@ -6,7 +6,7 @@
 #define DOSBOX_DRIVE_LOCAL_H
 
 #include "dos/dos_system.h"
-#include "drives.h"
+#include "dos/drives.h"
 
 class localFile : public DOS_File {
 public:

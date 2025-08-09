@@ -15,7 +15,7 @@
 #include "ints/bios.h"
 #include "hardware/memory.h"
 #include "cpu/registers.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "misc/cross.h"
 #include "config/setup.h"
 #include "util/string_utils.h"

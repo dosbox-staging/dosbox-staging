@@ -15,7 +15,7 @@
 #include "cpu/callback.h"
 #include "dos_locale.h"
 #include "dos/dos_windows.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "hardware/pic.h"
 #include "hardware/serialport/serialport.h"
 #include "hardware/memory.h"

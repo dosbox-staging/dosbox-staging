@@ -5,7 +5,7 @@
 // Uncomment to enable file-open diagnostic messages
 // #define DEBUG 1
 
-#include "drives.h"
+#include "dos/drives.h"
 #include "drive_local.h"
 
 #include <cerrno>

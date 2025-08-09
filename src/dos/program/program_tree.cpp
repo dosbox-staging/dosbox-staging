@@ -6,7 +6,7 @@
 #include "cpu/callback.h"
 #include "util/checks.h"
 #include "dos/dos_inc.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "ints/int10.h"
 #include "shell.h"
 #include "misc/unicode.h"
