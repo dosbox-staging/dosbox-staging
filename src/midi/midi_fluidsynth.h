@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "audio/mixer.h"
-#include "dynlib.h"
+#include "util/dynlib.h"
 #include "rwqueue.h"
 #include "std_filesystem.h"
 
