@@ -20,7 +20,7 @@
 #include "hardware/pic.h"
 #include "reelmagic.h"
 #include "render.h"
-#include "rgb888.h"
+#include "util/rgb888.h"
 #include "util/string_utils.h"
 #include "vga.h"
 
