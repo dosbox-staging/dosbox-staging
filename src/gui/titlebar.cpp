@@ -4,7 +4,7 @@
 #include "titlebar.h"
 
 #include "util/checks.h"
-#include "config.h"
+#include "config/config.h"
 #include "cpu.h"
 #include "dosbox.h"
 #include "mapper.h"

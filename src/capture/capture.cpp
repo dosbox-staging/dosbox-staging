@@ -13,7 +13,7 @@
 #include "capture_midi.h"
 #include "capture_video.h"
 #include "util/checks.h"
-#include "config.h"
+#include "config/config.h"
 #include "util/fs_utils.h"
 #include "image/image_capturer.h"
 #include "mapper.h"

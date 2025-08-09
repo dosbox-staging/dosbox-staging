@@ -18,7 +18,7 @@
 #include "ansi_code_markup.h"
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
-#include "config.h"
+#include "config/config.h"
 #include "cross.h"
 #include "util/fs_utils.h"
 #include "hardware/mpu401.h"

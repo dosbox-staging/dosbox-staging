@@ -8,7 +8,7 @@
 #include "util/bit_view.h"
 #include "util/bitops.h"
 #include "util/checks.h"
-#include "config.h"
+#include "config/config.h"
 #include "dosbox_config.h"
 #include "inout.h"
 #include "hardware/memory.h"

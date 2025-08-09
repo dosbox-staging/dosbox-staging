@@ -25,7 +25,7 @@
 
 #include <gtest/gtest.h>
 
-#include "config.h"
+#include "config/config.h"
 #include "dos_system.h"
 #include "drives.h"
 #include "shell.h"

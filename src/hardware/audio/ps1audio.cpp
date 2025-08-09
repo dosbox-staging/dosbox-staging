@@ -11,7 +11,7 @@
 
 #include "audio/channel_names.h"
 #include "util/checks.h"
-#include "config.h"
+#include "config/config.h"
 #include "hardware/dma.h"
 #include "hardware/mame/emu.h"
 #include "hardware/mame/sn76496.h"

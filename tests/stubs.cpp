@@ -3,7 +3,7 @@
 
 #include "dosbox.h"
 
-#include "config.h"
+#include "config/config.h"
 #include "logging.h"
 
 // During testing we never want to log to stdout/stderr, as it could

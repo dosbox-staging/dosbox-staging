@@ -9,7 +9,7 @@
 
 #include "bios_disk.h"
 #include "callback.h"
-#include "config.h"
+#include "config/config.h"
 #include "dos_windows.h"
 #include "drives.h"
 #include "util/fs_utils.h"

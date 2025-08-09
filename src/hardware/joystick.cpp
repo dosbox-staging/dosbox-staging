@@ -7,7 +7,7 @@
 #include <cmath>
 #include <cstring>
 
-#include "config.h"
+#include "config/config.h"
 #include "inout.h"
 #include "util/math_utils.h"
 #include "mapper.h"

@@ -10,7 +10,7 @@
 #include <array>
 #include <cassert>
 
-#include "config.h"
+#include "config/config.h"
 #include "config/setup.h"
 
 class Program;

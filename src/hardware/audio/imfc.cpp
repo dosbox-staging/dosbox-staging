@@ -53,7 +53,7 @@
 
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
-#include "config.h"
+#include "config/config.h"
 #include "hardware/dma.h"
 #include "inout.h"
 #include "util/math_utils.h"

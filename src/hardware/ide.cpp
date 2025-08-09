@@ -16,7 +16,7 @@
 #include "audio/mixer.h"
 #include "bios_disk.h"
 #include "callback.h"
-#include "config.h"
+#include "config/config.h"
 #include "cpu.h"
 #include "dos/cdrom.h"
 #include "ide.h"

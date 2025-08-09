@@ -16,7 +16,7 @@
 #include "bios.h"
 #include "util/bit_view.h"
 #include "util/bitops.h"
-#include "config.h"
+#include "config/config.h"
 #include "hardware.h"
 #include "hardware/dma.h"
 #include "hardware/timer.h"

@@ -22,7 +22,7 @@
 #include "bios.h"
 #include "callback.h"
 #include "command_line.h"
-#include "config.h"
+#include "config/config.h"
 #include "cross.h"
 #include "dos/program/program_more_output.h"
 #include "dos_inc.h"

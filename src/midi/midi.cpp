@@ -16,7 +16,7 @@
 
 #include "ansi_code_markup.h"
 #include "capture/capture.h"
-#include "config.h"
+#include "config/config.h"
 #include "cross.h"
 #include "hardware/mpu401.h"
 #include "hardware/timer.h"

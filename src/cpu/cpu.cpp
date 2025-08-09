@@ -9,7 +9,7 @@
 #include <sstream>
 #include <memory>
 
-#include "config.h"
+#include "config/config.h"
 #include "command_line.h"
 #include "debug.h"
 #include "lazyflags.h"
