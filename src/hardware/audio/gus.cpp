@@ -14,7 +14,7 @@
 
 #include "audio/channel_names.h"
 #include "autoexec.h"
-#include "bit_view.h"
+#include "util/bit_view.h"
 #include "config.h"
 #include "gus.h"
 #include "hardware.h"
