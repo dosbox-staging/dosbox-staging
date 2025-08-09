@@ -4,7 +4,7 @@
 #ifndef DOSBOX_TIMER_H
 #define DOSBOX_TIMER_H
 
-#include "bit_view.h"
+#include "util/bit_view.h"
 
 #include <cassert>
 #include <chrono>

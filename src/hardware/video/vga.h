@@ -11,7 +11,7 @@
 #include <utility>
 
 #include "util/bgrx8888.h"
-#include "bit_view.h"
+#include "util/bit_view.h"
 #include "config.h"
 #include "fraction.h"
 #include "inout.h"

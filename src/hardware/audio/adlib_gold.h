@@ -7,7 +7,7 @@
 #include "dosbox.h"
 
 #include "audio/mixer.h"
-#include "bit_view.h"
+#include "util/bit_view.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"

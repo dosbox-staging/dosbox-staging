@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "bit_view.h"
+#include "util/bit_view.h"
 #include "cross.h"
 #include "fs_utils.h"
 #include "hardware/memory.h"

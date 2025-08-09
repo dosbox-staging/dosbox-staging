@@ -9,7 +9,7 @@
 #include <optional>
 #include <vector>
 
-#include "bit_view.h"
+#include "util/bit_view.h"
 #include "hardware/video/vga.h"
 #include "hardware/memory.h"
 

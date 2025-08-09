@@ -4,7 +4,7 @@
 #ifndef PARALLEL_PORT_H_
 #define PARALLEL_PORT_H_
 
-#include "bit_view.h"
+#include "util/bit_view.h"
 
 // There are three hexadecimal addresses commonly
 // used for parallel ports: 378h, 278h, 3BCh.
