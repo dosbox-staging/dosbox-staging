@@ -11,7 +11,7 @@
 #include "checks.h"
 #include "hardware/video/vga.h"
 #include "render.h"
-#include "rgb888.h"
+#include "util/rgb888.h"
 #include "support.h"
 #include "util/rgb555.h"
 #include "util/rgb565.h"

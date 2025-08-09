@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "rgb888.h"
+#include "util/rgb888.h"
 #include "support.h"
 #include "util/rgb.h"
 
