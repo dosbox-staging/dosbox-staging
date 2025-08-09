@@ -12,7 +12,7 @@
 
 #include "audio/mixer.h"
 #include "hardware/port.h"
-#include "lpt.h"
+#include "hardware/lpt.h"
 #include "util/rwqueue.h"
 
 // Provides mandatory scafolding for derived LPT DAC devices
