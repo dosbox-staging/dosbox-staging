@@ -36,7 +36,7 @@
 #include "mouse.h"
 #include "pci_bus.h"
 #include "programs.h"
-#include "reelmagic.h"
+#include "hardware/reelmagic/reelmagic.h"
 #include "gui/render.h"
 #include "config/setup.h"
 #include "shell.h"

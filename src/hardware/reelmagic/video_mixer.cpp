@@ -6,7 +6,7 @@
 // This file contains the VGA/RENDER_ interception code...
 //
 
-#include "reelmagic.h"
+#include "hardware/reelmagic/reelmagic.h"
 
 #include <cassert>
 #include <cstdarg>

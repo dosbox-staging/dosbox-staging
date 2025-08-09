@@ -20,7 +20,7 @@
 // This file contains the reelmagic MPEG player code...
 //
 
-#include "reelmagic.h"
+#include "hardware/reelmagic/reelmagic.h"
 
 #include <array>
 #include <cstdarg>
