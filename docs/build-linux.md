@@ -1,6 +1,185 @@
-# Build instructions
+# Building on Linux
 
-## Minimum build requirements
+Two build methods are available for Linux - using the [system libraries](#building-using-system-libraries)
+provided by the Linux distribution or using the [vcpkg tool](#building-using-vcpkg)
+to fetch and compile dependencies.
+
+The vcpkg method is used by the team to provide the official binaries, which are
+intended to be run on different distros, without a need to install uncommon
+dependencies.
+
+Using system libraries shortens the build time, does not require Internet
+connection, and is easier if your distro supplies all the dependencies.
+
+## Packaging
+
+To create a distro package, use the [system libraries](#building-using-system-libraries)
+build method. 
+
+DOSBox Staging ships some binary files as a part of it's assets:
+
+- `contrib/resources/drives/y` - important DOS commands which are not yet
+  implemented internally.
+  These are pre-build DOS executables, taken from the FreeDOS or DOSBox-X
+  projects. To rebuild them, one might need legacy build tools, which are
+  considered exotic today (like the OpenWatcom compiler), that's why they are
+  not being compiled at build time.
+  If shipping such binaries is against your distro policy, feel free to strip
+  them away. DOSBox Staging will continue to work normally - the only real
+  disadvantage for the end user is that he will have to provide them by himself
+  to run some game/software installers.
+
+- `contrib/resources/freedos-cpi` - DOS screen fonts (CodePage Information
+  files, CPI).
+  These are a bitmap fonts in a native MS-DOS format, taken from the FreeDOS
+  project, painted by hand using a specialized font editor (so nothing like a
+  'source code' exists for them).
+  Probably all the other DOSBox forks uses such files in some form; it's just
+  most of them store the files content as an array of binary data, like the
+  [original DOSBox does](https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/tags/RELEASE_0_74_3/src/dos/dos_codepages.h).
+  Running DOSBox Staging without these files is completely unsupported; even if
+  it seems to work for you, the internationalization features will malfunction.
+
+- `contrib/resources/freedos-keyboard` - DOS keyboard layout definitions.
+  Despite their extension suggestin a DOS device driver, these are data files,
+  not executables. They are, too, taken from the FreeDOS project; the binaries
+  were created from the source `*.KEY` text files, using a specialized tools,
+  written in Pascal - they are, too, part of the FreeDOS project, search for
+  `KEYB200S.ZIP`, `KEYB200X.ZIP`, `KC200S.ZIP`, and `KC200X.ZIP` files.
+  Probably all the other DOSBox forks uses such files in some form; it's just
+  most of them store the files content as an array of binary data, like the
+  [original DOSBox does](https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/tags/RELEASE_0_74_3/src/dos/dos_keyboard_layout_data.h).
+  Running DOSBox Staging without these files is completely unsupported; even if
+  it seems to work for you, the internationalization features will malfunction.
+
+## Building using system libraries
+
+These are generic, distro-independent building instructions.
+
+1. Install the necessary build tools:
+
+- GCC or Clang compiler (the compiler has to support C++20)
+- GIT
+- CMake
+- pkg-config
+
+2. Install the dependencies, development packages are needed too:
+
+- SDL 2.x
+- SDL2_net
+- IIR
+- OpusFile
+- MT32Emu
+- FluidSynth
+- ALSA
+- libpng
+- OpenGL headers
+
+3. Clone DOSBox Staging:
+
+```bash
+git clone https://github.com/dosbox-staging/dosbox-staging.git
+```
+
+4. Configure the sources and build DOSBox Staging:
+
+```bash
+cd dosbox-staging
+cmake --preset=release-linux
+cmake --build --preset=release-linux
+```
+
+5. You can now launch DOSBox with the command:
+
+``` bash
+./build/release-linux/dosbox
+```
+
+## Building using vcpkg
+
+1. Install the necessary build tools:
+
+- for Ubuntu:
+
+```bash
+sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
+             autoconf bison libtool libgl1-mesa-dev libsdl2-dev
+```
+
+2. Install the `vcpkg` tool:
+
+- clone the `vcpkg` tool into your home directory
+
+```bash
+cd ~
+git clone https://github.com/microsoft/vcpkg.git
+```
+
+- bootstrap the `vcpkg` tool:
+
+```bash
+cd vcpkg
+./bootstrap-vcpkg.sh -disableMetrics
+```
+
+- set the vcpkg path in your compile shell (it is recommended to add the command
+  to your shell startup script, usually `~/.bashrc`)
+
+```bash
+export VCPKG_ROOT=$HOME/vcpkg
+```
+
+3. Clone DOSBox Staging into your home directory:
+
+```bash
+cd ~
+git clone https://github.com/dosbox-staging/dosbox-staging.git
+```
+
+4. Configure the sources and build DOSBox Staging:
+
+```bash
+cd dosbox-staging
+cmake --preset=release-linux-vcpkg
+cmake --build --preset=release-linux-vcpkg
+```
+
+5. You can now launch DOSBox with the command:
+
+```bash
+./build/release-linux/dosbox
+```
+
+## Sanitizer build
+
+There are two (mutually exclusive) sanitizer settings available:
+- `OPT_SANITIZER` - detects memory errors and undefined behaviors
+- `OPT_THREAD_SANITIZER` - data race detector
+
+To use any of these, pass the appropriate option when configuring the sources,
+for example:
+
+```bash
+cmake -DOPT_SANITIZER=ON --preset=release-linux
+cmake --build --preset=release-linux
+```
+
+For more information about sanitizers check the `GCC` or `clang` documentation
+on the `-fsanitize` option.
+
+As sanitizer availability and performance are highly dependent on the concrete
+platform (CPU, OS, compiler), you might need to manually adapt the
+`SANITIZER_FLAGS` variable in the `CMakeLists.txt` file to suit your needs.
+
+## Building using Meson (legacy method, to be removed)
+
+> **Note**
+>
+> The documentation in this section is mostly unmainained now.
+> 
+> **The Meson build system is going to be removed soon!**
+
+### Minimum build requirements
 
 Install dependencies listed in [README.md](README.md). Although `ccache` is
 optional, we recommend installing it because Meson will use it to greatly speed
@@ -15,7 +194,7 @@ All other dependencies are optional and can be disabled while configuring the
 build (in `meson setup` step).
 
 
-## General notes
+### General notes
 
 You can maintain several Meson build configurations using subdirectories, for
 example, the **debug** and **release** configurations can reside in
@@ -30,16 +209,7 @@ CCACHE_COMPRESSLEVEL=6
 CCACHE_SLOPPINESS="pch_defines,time_macros"
 ```
 
-> **Note**
->
-> CMake support is currently an experimental internal-only, work-in-progress
-> feature; it's not ready for public consumption yet. If you want to experiment,
-> check the [chapter](#experimental-cmake-support) at the end of the document.
-> 
-> **PLEASE DO NOT SUBMIT ANY BUGS OR HELP REQUESTS!**
-
-
-## Standard release build, all features enabled
+### Standard release build, all features enabled
 
 ``` shell
 meson setup build/release
@@ -54,14 +224,14 @@ up the binary along with its dependencies and resource tree, you can run:
 `./scripts/packaging/create-package.sh` to learn more.
 
 
-## Debug build (for code contributors or diagnosing a crash)
+### Debug build (for code contributors or diagnosing a crash)
 
 ``` shell
 meson setup -Dbuildtype=debug build/debug
 meson compile -C build/debug
 ```
 
-## Built-in debugger build
+### Built-in debugger build
 
 ``` shell
 meson setup -Denable_debugger=normal build/debugger
@@ -71,7 +241,7 @@ meson compile -C build/debugger
 For the heavy debugger, use `heavy` instead of `normal`.
 
 
-## Make a build with profiling enabled
+### Make a build with profiling enabled
 
 Staging includes the [Tracy](https://github.com/wolfpld/tracy) profiler, which
 is disabled by default. To enable it for Meson builds, set the `tracy` option
@@ -99,7 +269,7 @@ different platform.
 Please refer to the Tracy documentation for further information.
 
 
-## Repository and package maintainers
+### Repository and package maintainers
 
 By default, the Meson build system will lookup shared (or dynamic)
 libraries using PATH-provided pkg-config or cmake.  If they're not
@@ -116,7 +286,7 @@ Detailed documentation: [Meson: Core options][meson-core]
 [meson-core]: https://mesonbuild.com/Builtin-options.html#core-options
 
 
-### Disabling dependencies
+#### Disabling dependencies
 
 The majority of dependencies are optional and can be disabled. For example,
 to compile without OpenGL:
@@ -130,7 +300,7 @@ We highly recommend package maintainers only offer DOSBox Staging if all
 its features (and dependencies) can be provided.
 
 
-### List Meson's setup options
+#### List Meson's setup options
 
 Run `meson configure` to see the full list of Meson setup options as well
 as project-specific options. Or, see the file
@@ -149,7 +319,7 @@ notation or using comma-separated notation (i.e.: `-Doption=value1,value2,value3
 when the option supports multiple values.
 
 
-### If your build fails
+#### If your build fails
 
 1. Check if the `main` branch is also experiencing build failures
    [on GitHub](https://github.com/dosbox-staging/dosbox-staging/actions?query=event%3Apush+is%3Acompleted+branch%3Amain).
@@ -177,7 +347,7 @@ when the option supports multiple values.
     git clean -fdx
     ```
 
-### Run unit tests
+#### Run unit tests
 
 Prerequisites:
 
@@ -202,7 +372,7 @@ meson test -C build/debug
 ```
 
 
-### Run unit tests (with user-supplied gtest sources)
+#### Run unit tests (with user-supplied gtest sources)
 
 *Appropriate during packaging or when user is behind a proxy or without
 internet access.*
@@ -241,7 +411,7 @@ Concrete example:
 ```
 
 
-### Bisecting and building old versions
+#### Bisecting and building old versions
 
 To automate and ensure successful builds when bisecting or building old
 versions, run `meson setup --wipe` on your build area before every build.
@@ -263,7 +433,7 @@ available in these old versions can be used (choose one for your compiler):
 ```
 
 
-### Make a sanitizer build
+#### Make a sanitizer build
 
 Recent compilers can add runtime checks for various classes of issues.
 Compared to a debug build, sanitizer builds take longer to compile
@@ -290,129 +460,3 @@ will leave your normal `build/` files untouched.
 Run the sanitizer binary as you normally would, then exit and look for
 sanitizer messages in the log output.  If none exist, then your program
 is running clean.
-
-
-## Experimental CMake support
-
-> **Note**
->
-> This is experimental, internal-only, work-in-progress feature.
-> 
-> **PLEASE DO NOT SUBMIT ANY BUGS OR HELP REQUESTS!**
-
-### Using system dependencies
-
-1. Install the necessary build tools:
-
-- GCC or Clang compiler
-- GIT
-- CMake
-- pkg-config
-
-1. Install the dependencies, development packages are needed too:
-
-- SDL 2.x
-- SDL2_net
-- IIR
-- OpusFile
-- MT32Emu
-- FluidSynth
-- ALSA
-- libpng
-- OpenGL headers
-
-1. Clone DOSBox Staging:
-
-```bash
-git clone https://github.com/dosbox-staging/dosbox-staging.git
-```
-
-1. Configure the sources and build DOSBox Staging:
-
-```bash
-cd dosbox-staging
-cmake --preset=release-linux
-cmake --build --preset=release-linux
-```
-
-1. You can now launch DOSBox with the command:
-
-``` bash
-./build/release-linux/dosbox
-```
-
-### Using `vcpkg` to fetch dependencies at compile time
-
-1. Install the necessary build tools:
-
-- for Ubuntu:
-
-```bash
-sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
-             autoconf bison libtool libgl1-mesa-dev libsdl2-dev
-```
-
-1. Install the `vcpkg` tool:
-
-- clone the `vcpkg` tool into your home directory
-
-```bash
-cd ~
-git clone https://github.com/microsoft/vcpkg.git
-```
-
-- bootstrap the `vcpkg` tool:
-
-```bash
-cd vcpkg
-./bootstrap-vcpkg.sh -disableMetrics
-```
-
-- set the vcpkg path in your compile shell (it is recommended to add the command
-  to your shell startup script, usually `~/.bashrc`)
-
-```bash
-export VCPKG_ROOT=$HOME/vcpkg
-```
-
-1. Clone DOSBox Staging into your home directory:
-
-```bash
-cd ~
-git clone https://github.com/dosbox-staging/dosbox-staging.git
-```
-
-1. Configure the sources and build DOSBox Staging:
-
-```bash
-cd dosbox-staging
-cmake --preset=release-linux-vcpkg
-cmake --build --preset=release-linux-vcpkg
-```
-
-1. You can now launch DOSBox with the command:
-
-```bash
-./build/release-linux/dosbox
-```
-
-### Sanitizer build
-
-There are two (mutually exclusive) sanitizer settings available:
-- `OPT_SANITIZER` - detects memory errors and undefined behaviors
-- `OPT_THREAD_SANITIZER` - data race detector
-
-To use any of these, pass the appropriate option when configuring the sources,
-for example:
-
-```bash
-cmake -DOPT_SANITIZER=ON --preset=release-linux
-cmake --build --preset=release-linux
-```
-
-For more information about sanitizers check the `GCC` or `clang` documentation
-on the `-fsanitize` option.
-
-As sanitizer availability and performance are highly dependent on the concrete
-platform (CPU, OS, compiler), you might need to manually adapt the
-`SANITIZER_FLAGS` variable in the `CMakeLists.txt` file to suit your needs.
