@@ -13,7 +13,7 @@
 
 #include "callback.h"
 #include "cpu.h"
-#include "ethernet.h"
+#include "misc/ethernet.h"
 #include "inout.h"
 #include "pic.h"
 #include "config/setup.h"
