@@ -9,7 +9,7 @@
 
 #include "util/bitops.h"
 #include "util/checks.h"
-#include "config.h"
+#include "config/config.h"
 #include "cpu.h"
 #include "hardware/timer.h"
 #include "intel8042.h"

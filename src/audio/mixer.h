@@ -21,7 +21,7 @@
 #include "audio/envelope.h"
 #include "audio/noise_gate.h"
 #include "audio_frame.h"
-#include "config.h"
+#include "config/config.h"
 #include "util/math_utils.h"
 
 #include <Iir.h>

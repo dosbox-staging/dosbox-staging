@@ -18,7 +18,7 @@
 #include <SDL.h>
 
 #include "audio/mixer.h"
-#include "config.h"
+#include "config/config.h"
 #include "hardware/joystick.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"

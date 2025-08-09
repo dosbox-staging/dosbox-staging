@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "bios_disk.h"
-#include "config.h"
+#include "config/config.h"
 #include "cross.h"
 #include "dos/cdrom.h"
 #include "drives.h"
