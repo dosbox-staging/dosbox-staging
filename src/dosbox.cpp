@@ -23,7 +23,7 @@
 #include "debug.h"
 #include "dos/dos_locale.h"
 #include "dos/dos_inc.h"
-#include "hardware.h"
+#include "hardware/hardware.h"
 #include "hardware/ne2000.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"

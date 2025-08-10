@@ -31,7 +31,7 @@
 #endif
 
 #if SERIAL_DEBUG
-#include "hardware.h"
+#include "hardware/hardware.h"
 #endif
 
 constexpr uint32_t SerialMinBaudRate = 300u;

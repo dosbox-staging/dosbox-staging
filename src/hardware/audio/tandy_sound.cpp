@@ -33,7 +33,7 @@
 #include "ints/bios.h"
 #include "util/checks.h"
 #include "hardware/dma.h"
-#include "hardware.h"
+#include "hardware/hardware.h"
 #include "hardware/mame/emu.h"
 #include "hardware/mame/sn76496.h"
 #include "hardware/timer.h"
