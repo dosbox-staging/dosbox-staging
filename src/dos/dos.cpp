@@ -11,7 +11,7 @@
 #include <array>
 
 #include "util/ascii.h"
-#include "bios.h"
+#include "ints/bios.h"
 #include "callback.h"
 #include "dos_locale.h"
 #include "dos_windows.h"

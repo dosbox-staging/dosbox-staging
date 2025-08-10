@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "misc/ansi_code_markup.h"
-#include "bios.h"
+#include "ints/bios.h"
 #include "callback.h"
 #include "command_line.h"
 #include "config/config.h"
