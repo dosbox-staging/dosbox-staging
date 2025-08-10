@@ -5,7 +5,7 @@
 #define DOSBOX_MOUSEIF_DOS_DRIVER_STATE_H
 
 #include "dos/dos_inc.h"
-#include "dos_windows.h"
+#include "dos/dos_windows.h"
 #include "mouse_common.h"
 
 static constexpr auto MaxMouseButtons  = 3;
