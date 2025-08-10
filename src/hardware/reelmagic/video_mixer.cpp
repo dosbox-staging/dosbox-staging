@@ -16,8 +16,8 @@
 #include <string>
 
 #include "gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
-#include "rgb565.h"
 #include "setup.h"
+#include "util/rgb565.h"
 #include "video.h"
 
 namespace {
