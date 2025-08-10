@@ -32,7 +32,7 @@
 
 #define SOCKET_WAIT 1000 // 1 second
 
-std::thread ipxClientThread = {};
+static std::thread ipxClientThread = {};
 
 #define SOCKTABLESIZE	150 // DOS IPX driver was limited to 150 open sockets
 
@@ -600,7 +600,6 @@ static void receivePacket(uint8_t *buffer, int16_t bufSize) {
 
 void IPX_UDPClientListener()
 {
-	int numrecv;
 	UDPpacket inPacket;
 	inPacket.data = (Uint8 *)recvBuffer;
 	inPacket.maxlen = IPXBUFFERSIZE;
@@ -609,19 +608,16 @@ void IPX_UDPClientListener()
 	SDLNet_SocketSet socketset = SDLNet_AllocSocketSet(1);
 	SDLNet_UDP_AddSocket(socketset, ipxClientSocket);
 
-	while (socketset != NULL && incomingPacket.connected)
-	{
-		if (!isPinging)
-		{
-			if (SDLNet_CheckSockets(socketset, SOCKET_WAIT) == 1)
-			{
+	while (socketset != nullptr && incomingPacket.connected) {
+		if (!isPinging) {
+			if (SDLNet_CheckSockets(socketset, SOCKET_WAIT) == 1)	{
 				if (SDLNet_UDP_Recv(ipxClientSocket, &inPacket))
 					receivePacket(inPacket.data, inPacket.len);
 			}
 		}
 	}
 
-	if (socketset != NULL)
+	if (socketset != nullptr)
 		SDLNet_FreeSocketSet(socketset);
 }
 
