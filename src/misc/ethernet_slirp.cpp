@@ -11,7 +11,7 @@
 
 #include "dosbox.h"
 #include "dosbox_config.h"
-#include "dynlib.h"
+#include "util/dynlib.h"
 #include "ethernet_slirp.h"
 #include "hardware/timer.h"
 #include "setup.h"

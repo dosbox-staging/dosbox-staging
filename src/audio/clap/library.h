@@ -10,7 +10,7 @@
 
 #include "clap/all.h"
 
-#include "dynlib.h"
+#include "util/dynlib.h"
 #include "std_filesystem.h"
 
 namespace Clap {
