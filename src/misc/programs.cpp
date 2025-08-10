@@ -22,7 +22,7 @@
 #include "dos/program/program_more_output.h"
 #include "gui/mapper.h"
 #include "cpu/registers.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
 

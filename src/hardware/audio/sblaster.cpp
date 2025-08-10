@@ -29,7 +29,7 @@
 #include "util/rwqueue.h"
 #include "sblaster.h"
 #include "config/setup.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 

@@ -61,7 +61,7 @@
 #include "hardware/pic.h"
 #include "cpu/registers.h"
 #include "config/setup.h"
-#include "shell.h"
+#include "shell/shell.h"
 
 #include "SDL_thread.h"
 

@@ -12,7 +12,7 @@
 #include "misc/cross.h"
 #include "dos_inc.h"
 #include "util/fs_utils.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 
