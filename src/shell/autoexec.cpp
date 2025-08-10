@@ -8,7 +8,7 @@
 #include "config/config.h"
 #include "dosbox.h"
 #include "util/fs_utils.h"
-#include "keyboard.h"
+#include "hardware/input/keyboard.h"
 #include "mouse.h"
 #include "config/setup.h"
 #include "shell.h"
