@@ -37,7 +37,7 @@
 #	include <pwd.h>
 #endif
 
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "util/string_utils.h"
 #include "support.h"
 #include "drives.h"

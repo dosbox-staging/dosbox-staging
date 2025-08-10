@@ -7,7 +7,7 @@
 #include "util/checks.h"
 #include "config.h"
 #include "dosbox.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "keyboard.h"
 #include "mouse.h"
 #include "setup.h"

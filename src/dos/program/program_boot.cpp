@@ -12,7 +12,7 @@
 #include "config.h"
 #include "dos_windows.h"
 #include "drives.h"
-#include "fs_utils.h"
+#include "util/fs_utils.h"
 #include "hardware/dma.h"
 #include "hardware/virtualbox.h"
 #include "hardware/vmware.h"
