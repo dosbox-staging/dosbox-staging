@@ -9,7 +9,7 @@
 
 #include "util/mem_unaligned.h"
 #include "paging.h"
-#include "types.h"
+#include "misc/types.h"
 
 #if defined(HAVE_MMAP)
 #include <sys/mman.h>
