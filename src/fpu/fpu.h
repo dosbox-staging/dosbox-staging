@@ -8,7 +8,7 @@
 #include <optional>
 
 #ifndef DOSBOX_DOSBOX_H
-	// So the right config.h gets included for C_DEBUG
+	// So the right config.h gets included for C_DEBUGGER
 	#include "dosbox.h"
 #endif
 
@@ -178,7 +178,7 @@ static inline void FPU_LOG_WARN(unsigned tree, bool ea, uintptr_t group, uintptr
 //EXIT is to hard exit.
 //Currently pop is ignored in release mode and overflow is exit.
 //in debug mode: pop will log and overflow is exit. 
-#if C_DEBUG
+#if C_DEBUGGER
 #define DB_FPU_STACK_CHECK_POP DB_FPU_STACK_CHECK_LOG
 #define DB_FPU_STACK_CHECK_PUSH DB_FPU_STACK_CHECK_EXIT
 #else

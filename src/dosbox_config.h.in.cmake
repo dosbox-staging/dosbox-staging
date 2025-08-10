@@ -84,10 +84,10 @@
 #cmakedefine01 C_TRACY
 
 // Define to 1 to enable internal debugger (using ncurses or pdcurses)
-#cmakedefine01 C_DEBUG
+#cmakedefine01 C_DEBUGGER
 
-// Define to 1 to enable heavy debugging (requires C_DEBUG)
-#cmakedefine01 C_HEAVY_DEBUG
+// Define to 1 to enable heavy debugging (requires C_DEBUGGER)
+#cmakedefine01 C_HEAVY_DEBUGGER
 
 // Define to 1 to enable MT-32 emulator
 #cmakedefine01 C_MT32EMU

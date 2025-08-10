@@ -32,7 +32,7 @@
 #include "program/program_subst.h"
 #include "program/program_tree.h"
 
-#if C_DEBUG
+#if C_DEBUGGER
 #include "program/program_biostest.h"
 #endif
 
@@ -60,7 +60,7 @@ void Add_VFiles()
 
 	PROGRAMS_MakeFile("ATTRIB.COM", ProgramCreate<ATTRIB>);
 	PROGRAMS_MakeFile("AUTOTYPE.COM", ProgramCreate<AUTOTYPE>);
-#if C_DEBUG
+#if C_DEBUGGER
 	PROGRAMS_MakeFile("BIOSTEST.COM", ProgramCreate<BIOSTEST>);
 #endif
 	PROGRAMS_MakeFile("BOOT.COM", ProgramCreate<BOOT>);

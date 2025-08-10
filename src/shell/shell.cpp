@@ -453,7 +453,7 @@ void DOS_Shell::Run()
 			         DOSBOX_GetDetailedVersion(), PRIMARY_MOD_NAME,
 			         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_PAD,
 			         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD);
-#if C_DEBUG
+#if C_DEBUGGER
 			WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"), MMOD2_NAME);
 #endif
 			if (is_machine_cga()) {

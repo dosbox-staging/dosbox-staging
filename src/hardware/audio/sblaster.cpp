@@ -1517,7 +1517,7 @@ static void dsp_raise_irq_event(const uint32_t /*val*/)
 	sb_raise_irq(SbIrq::Irq8);
 }
 
-#if (C_DEBUG)
+#if (C_DEBUGGER)
 static const char* get_dma_mode_name()
 {
 	switch (sb.dma.mode) {
@@ -1586,7 +1586,7 @@ static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq_hz,
 	sb.mode = DspMode::DmaMasked;
 	sb.dma.chan->RegisterCallback(dsp_dma_callback);
 
-#if (C_DEBUG)
+#if (C_DEBUGGER)
 	LOG(LOG_SB, LOG_NORMAL)
 	("DMA Transfer:%s %s %s freq_hz %d rate %d size %d",
 	 get_dma_mode_name(),

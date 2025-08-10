@@ -51,9 +51,9 @@ Bits CPU_Core_Full_Run() noexcept
 	ZoneScoped;
 	FullData inst{};
 	while (CPU_Cycles-->0) {
-#if C_DEBUG
+#if C_DEBUGGER
 		cycle_count++;
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 		if (DEBUG_HeavyIsBreakpoint()) {
 			FillFlags();
 			return debugCallback;

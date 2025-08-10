@@ -160,7 +160,7 @@ static Bitu Normal_Loop()
 					return blah;
 				}
 			}
-#if C_DEBUG
+#if C_DEBUGGER
 			if (DEBUG_ExitLoop()) {
 				return 0;
 			}
@@ -670,7 +670,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	pstring = secprop->AddPath("captures", deprecated, "capture");
 	pstring->SetHelp("Moved to [capture] section and renamed to 'capture_dir'.");
 
-#if C_DEBUG
+#if C_DEBUGGER
 	LOG_StartUp();
 #endif
 
@@ -891,7 +891,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	// startup time (e.g., by having `mididevice = mt32` in the config).
 	MIDI_AddConfigSection(control);
 
-#if C_DEBUG
+#if C_DEBUGGER
 	secprop = control->AddSectionProp("debug", &DEBUG_Init);
 #endif
 

@@ -4,7 +4,7 @@
 
 #include "program_biostest.h"
 
-#if C_DEBUG
+#if C_DEBUGGER
 
 #include <cstdio>
 #include <cstring>
@@ -68,4 +68,4 @@ void BIOSTEST::Run(void) {
 	}
 }
 
-#endif // C_DEBUG
+#endif // C_DEBUGGER

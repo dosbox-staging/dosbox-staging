@@ -148,7 +148,7 @@ static char e_exit_buf[1024];
 
 void E_Exit(const char* format, ...)
 {
-#if C_DEBUG && C_HEAVY_DEBUG
+#if C_DEBUGGER && C_HEAVY_DEBUGGER
 	DEBUG_HeavyWriteLogInstruction();
 #endif
 	va_list msg;

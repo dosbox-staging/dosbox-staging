@@ -63,7 +63,7 @@ Any comments/updates/bug reports to:
 
 */
 #include "dosbox.h"
-#if C_DEBUG
+#if C_DEBUGGER
 #include "hardware/memory.h"
 #include <cstdarg>
 #include <cstdio>

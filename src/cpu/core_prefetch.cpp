@@ -20,7 +20,7 @@
 
 #include "simde/x86/mmx.h"
 
-#if C_DEBUG
+#if C_DEBUGGER
 #include "debugger.h"
 #endif
 
@@ -217,8 +217,8 @@ Bits CPU_Core_Prefetch_Run() noexcept
 		BaseDS=SegBase(ds);
 		BaseSS=SegBase(ss);
 		core.base_val_ds=ds;
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+#if C_DEBUGGER
+#if C_HEAVY_DEBUGGER
 		if (DEBUG_HeavyIsBreakpoint()) {
 			FillFlags();
 			return debugCallback;
@@ -277,7 +277,7 @@ restart_opcode:
 		#include "core_normal/prefix_66_0f.h"
 		default:
 		illegal_opcode:
-#if C_DEBUG	
+#if C_DEBUGGER	
 			{
 				Bitu len=(GETIP-reg_eip);
 				LOADIP;

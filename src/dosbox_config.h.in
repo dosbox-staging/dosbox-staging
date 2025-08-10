@@ -88,10 +88,10 @@
 #mesondefine C_TRACY
 
 // Define to 1 to enable internal debugger (using ncurses or pdcurses)
-#mesondefine C_DEBUG
+#mesondefine C_DEBUGGER
 
-// Define to 1 to enable heavy debugging (requires C_DEBUG)
-#mesondefine C_HEAVY_DEBUG
+// Define to 1 to enable heavy debugging (requires C_DEBUGGER)
+#mesondefine C_HEAVY_DEBUGGER
 
 // Define to 1 to enable MT-32 emulator
 #mesondefine C_MT32EMU

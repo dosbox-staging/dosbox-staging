@@ -442,11 +442,11 @@ conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
 
 if get_option('enable_debugger') != 'none'
-    conf_data.set10('C_DEBUG', true)
+    conf_data.set10('C_DEBUGGER', true)
 endif
 
 if get_option('enable_debugger') == 'heavy'
-    conf_data.set10('C_HEAVY_DEBUG', true)
+    conf_data.set10('C_HEAVY_DEBUGGER', true)
 endif
 
 foreach osdef : ['LINUX', 'WIN32', 'MACOSX', 'BSD']

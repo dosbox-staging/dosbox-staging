@@ -2682,7 +2682,7 @@ restart_prefix:
 		case 0xca:dyn_ret_far(decode_fetchw());goto finish_block;
 		case 0xcb:dyn_ret_far(0);goto finish_block;
 		/* Interrupt */
-#if !(C_DEBUG)
+#if !(C_DEBUGGER)
 		case 0xcd:dyn_interrupt(decode_fetchb());goto finish_block;
 #endif
 		/* IRET */

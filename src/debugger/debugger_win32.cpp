@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox.h"
-#if C_DEBUG
+#if C_DEBUGGER
 #ifdef WIN32
 
 #include <cstdarg>

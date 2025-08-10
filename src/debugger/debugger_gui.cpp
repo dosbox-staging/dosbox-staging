@@ -4,7 +4,7 @@
 
 #include "dosbox.h"
 
-#if C_DEBUG
+#if C_DEBUGGER
 #include "config/config.h"
 #include <cstdarg>
 #include <cstdio>

@@ -31,7 +31,7 @@ enum LOG_SEVERITIES {
 	LOG_ERROR
 };
 
-#if C_DEBUG
+#if C_DEBUGGER
 class LOG 
 { 
 	LOG_TYPES       d_type;
@@ -54,7 +54,7 @@ void DEBUG_ShowMsg(const char* format, ...)
 #define LOG_WARNING(...) LOG(LOG_ALL, LOG_WARN)(__VA_ARGS__)
 #define LOG_ERR(...)     LOG(LOG_ALL, LOG_ERROR)(__VA_ARGS__)
 
-#else // C_DEBUG
+#else // C_DEBUGGER
 
 struct LOG
 {
@@ -73,11 +73,11 @@ void GFX_ShowMsg(const char* format, ...)
 #define LOG_WARNING(...)	LOG_F(WARNING, __VA_ARGS__)
 #define LOG_ERR(...)		LOG_F(ERROR, __VA_ARGS__)
 
-#endif // C_DEBUG
+#endif // C_DEBUGGER
 
 #ifdef NDEBUG
 // LOG_DEBUG exists only for messages useful during development, and not to
-// be redirected into internal DOSBox debugger for DOS programs (C_DEBUG feature).
+// be redirected into internal DOSBox debugger for DOS programs (C_DEBUGGER feature).
 #define LOG_DEBUG(...)
 #define LOG_TRACE(...)
 #else

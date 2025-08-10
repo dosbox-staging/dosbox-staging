@@ -7,7 +7,7 @@
 #include "dosbox.h"
 #include "hardware/memory.h"
 
-#if C_DEBUG
+#if C_DEBUGGER
 void DEBUG_DrawScreen();
 bool DEBUG_Breakpoint();
 bool DEBUG_IntBreakpoint(uint8_t intNum);
@@ -20,9 +20,9 @@ Bitu DEBUG_EnableDebugger();
 extern Bitu cycle_count;
 extern Bitu debugCallback;
 #else  // Empty debugging replacements
-#endif // C_DEBUG
+#endif // C_DEBUGGER
 
-#if C_DEBUG && C_HEAVY_DEBUG
+#if C_DEBUGGER && C_HEAVY_DEBUGGER
 bool DEBUG_HeavyIsBreakpoint();
 void DEBUG_HeavyWriteLogInstruction();
 template <typename T>
@@ -32,6 +32,6 @@ template <typename T>
 constexpr void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt)
 { /* no-op */
 }
-#endif // C_DEBUG && C_HEAVY_DEBUG
+#endif // C_DEBUGGER && C_HEAVY_DEBUGGER
 
 #endif // DOSBOX_DEBUG_H

@@ -617,7 +617,7 @@ static const uint8_t* gen_create_branch_on_nonzero(HostReg reg, bool dword)
 static void gen_fill_branch(const uint8_t* pdata)
 {
 	uint64_t data = (uint64_t)pdata;
-#if C_DEBUG
+#if C_DEBUGGER
 	Bits len=(uint64_t)cache.pos-data;
 	if (len<0) len=-len;
 	if (len >= 0x8000) LOG_MSG("Big jump %d",len);

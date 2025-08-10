@@ -737,7 +737,7 @@ void AutoExecModule::AddMessages()
 
 void AUTOEXEC_SetVariable(const std::string& name, const std::string& value)
 {
-#if C_DEBUG
+#if C_DEBUGGER
 	if (!std::all_of(name.cbegin(), name.cend(), is_printable_ascii)) {
 		E_Exit("AUTOEXEC: Variable name is not a printable ASCII");
 	}

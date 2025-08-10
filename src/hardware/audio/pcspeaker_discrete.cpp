@@ -262,7 +262,7 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 		pit_max   = period_of_1k_pit_ticks_f * count_f;
 		break;
 	default:
-#if C_DEBUG
+#if C_DEBUGGER
 		LOG_WARNING("PCSPEAKER: Unhandled speaker PIT mode: '%s'", pit_mode_to_string(pit_mode));
 #endif
 		return;

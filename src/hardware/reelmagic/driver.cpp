@@ -50,7 +50,7 @@ static uint8_t _installedInterruptNumber       = 0; // 0 means not currently ins
 static bool _unloadAllowed                     = true;
 
 // enable full API logging only when heavy debugging is on...
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 static bool _a204debug = true;
 static bool _a206debug = true;
 static inline bool IsDebugLogMessageFiltered(const uint8_t command, const uint16_t subfunc)
@@ -1440,7 +1440,7 @@ void ReelMagic_Init(Section* sec)
 		LOG_WARNING("REELMAGIC: Failed initializing ReelMagic MPEG playback card and/or driver");
 	}
 
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 	_a204debug = true;
 	_a206debug = true;
 #endif

@@ -56,7 +56,7 @@ public:
 	}
 	uint8_t readb(PhysPt addr) override
 	{
-#if C_DEBUG
+#if C_DEBUGGER
 		LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 #else
 		static Bits lcount=0;
@@ -69,7 +69,7 @@ public:
 	}
 	void writeb(PhysPt addr, [[maybe_unused]] uint8_t val) override
 	{
-#if C_DEBUG
+#if C_DEBUGGER
 		LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 #else
 		static Bits lcount=0;

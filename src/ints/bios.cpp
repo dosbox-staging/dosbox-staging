@@ -987,7 +987,7 @@ static Bitu Default_IRQ_Handler()
 			IO_WriteB(0x21, IO_ReadB(0x21) | (primary_isr & ~4));
 		}
 		IO_WriteB(0x20, 0x20);
-#if C_DEBUG
+#if C_DEBUGGER
 		uint16_t irq = 0;
 		uint16_t isr = secondary_isr ? secondary_isr << 8 : primary_isr;
 		while (isr >>= 1)

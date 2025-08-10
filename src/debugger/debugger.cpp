@@ -4,7 +4,7 @@
 
 #include "dosbox.h"
 
-#if C_DEBUG
+#if C_DEBUGGER
 
 #include <cctype>
 #include <cstring>
@@ -84,7 +84,7 @@ bool	exitLoop	= false;
 
 
 // Heavy Debugging Vars for logging
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 static std::ofstream 	cpuLogFile;
 static bool		cpuLog			= false;
 static int		cpuLogCounter	= 0;
@@ -310,7 +310,7 @@ public:
 	uint8_t GetIntNr() const noexcept { return intNr; }
 	uint16_t GetValue() const noexcept { return ahValue; }
 	uint16_t GetOther() const noexcept { return alValue; }
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 	void FlagMemoryAsRead()
 	{
 		memory_was_read = true;
@@ -360,7 +360,7 @@ private:
 	// Shared
 	bool active = 0;
 	bool once   = 0;
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 	bool memory_was_read = false;
 
 	friend bool DEBUG_HeavyIsBreakpoint(void);
@@ -375,7 +375,7 @@ active(false),once(false){ }
 
 void CBreakpoint::Activate(bool _active)
 {
-#if !C_HEAVY_DEBUG
+#if !C_HEAVY_DEBUGGER
 	if (GetType() == BKPNT_PHYSICAL) {
 		if (_active) {
 			// Set 0xCC and save old value
@@ -416,7 +416,7 @@ void CBreakpoint::Activate(bool _active)
 // Statics
 static std::list<CBreakpoint *> BPoints = {};
 
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 template <typename T>
 void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr)
 {
@@ -529,7 +529,7 @@ bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 			}
 			return true;
 		}
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 		// Memory breakpoint support
 		else if (bp->IsActive()) {
 			if ((bp->GetType()==BKPNT_MEMORY) || (bp->GetType()==BKPNT_MEMORY_PROT) || (bp->GetType()==BKPNT_MEMORY_LINEAR)) {
@@ -627,12 +627,12 @@ bool CBreakpoint::DeleteByIndex(uint16_t index)
 CBreakpoint* CBreakpoint::FindPhysBreakpoint(uint16_t seg, uint32_t off, bool once)
 {
 	if (BPoints.empty()) return nullptr;
-#if !C_HEAVY_DEBUG
+#if !C_HEAVY_DEBUGGER
 	PhysPt adr = GetAddress(seg, off);
 #endif
 	// Search for matching breakpoint
 	for (auto &bp : BPoints) {
-#	if C_HEAVY_DEBUG
+#	if C_HEAVY_DEBUGGER
 		// Heavy debugging breakpoints are triggered by matching seg:off
 		bool atLocation = bp->GetSegment() == seg && bp->GetOffset() == off;
 #else
@@ -741,7 +741,7 @@ static bool StepOver()
 
 bool DEBUG_ExitLoop(void)
 {
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 	DrawVariables();
 #endif
 
@@ -1169,7 +1169,7 @@ bool ParseCommand(char* str) {
 		return true;
 	}
 
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 
 	if (command == "BPM") { // Add new breakpoint
 		uint16_t seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
@@ -1270,7 +1270,7 @@ bool ParseCommand(char* str) {
 		return true;
 	}
 
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 
 	if (command == "LOG") { // Create Cpu normal log file
 		cpuLogType = 1;
@@ -1390,7 +1390,7 @@ bool ParseCommand(char* str) {
 	}
 
 
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 	if (command == "HEAVYLOG") { // Create Cpu log file
 		logHeavy = !logHeavy;
 		DEBUG_ShowMsg("DEBUG: Heavy cpu logging %s.\n",logHeavy?"on":"off");
@@ -1411,7 +1411,7 @@ bool ParseCommand(char* str) {
 		DEBUG_ShowMsg("BPINT  [intNr] *          - Set interrupt breakpoint.\n");
 		DEBUG_ShowMsg("BPINT  [intNr] [ah] *     - Set interrupt breakpoint with ah.\n");
 		DEBUG_ShowMsg("BPINT  [intNr] [ah] [al]  - Set interrupt breakpoint with ah and al.\n");
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 		DEBUG_ShowMsg("BPM    [segment]:[offset] - Set memory breakpoint (memory change).\n");
 		DEBUG_ShowMsg("BPMR   [segment]:[offset] - Set memory breakpoint (memory read).\n");
 		DEBUG_ShowMsg("BPPM   [selector]:[offset]- Set pmode-memory breakpoint (memory change).\n");
@@ -1422,7 +1422,7 @@ bool ParseCommand(char* str) {
 		DEBUG_ShowMsg("C / D  [segment]:[offset] - Set code / data view address.\n");
 		DEBUG_ShowMsg("DOS MCBS                  - Show Memory Control Block chain.\n");
 		DEBUG_ShowMsg("INT [nr] / INTT [nr]      - Execute / Trace into interrupt.\n");
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 		DEBUG_ShowMsg("LOG [num]                 - Write cpu log file.\n");
 		DEBUG_ShowMsg("LOGS/LOGL/LOGC [num]      - Write short/long/cs:ip-only cpu log file.\n");
 		DEBUG_ShowMsg("HEAVYLOG                  - Enable/Disable automatic cpu log when DOSBox exits.\n");
@@ -2205,7 +2205,7 @@ static void LogCPUInfo(void) {
 	}
 }
 
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 static void LogInstruction(uint16_t segValue, uint32_t eipValue, std::ofstream &out)
 {
 	static char empty[23] = { 32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,0 };
@@ -2596,7 +2596,7 @@ static void DrawVariables()
 #undef DEBUG_VAR_BUF_LEN
 // HEAVY DEBUGGING STUFF
 
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 
 const uint32_t LOGCPUMAX = 20000;
 

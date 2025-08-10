@@ -818,7 +818,7 @@ static const uint8_t* gen_create_branch_on_nonzero(HostReg reg,bool dword) {
 
 // calculate relative offset and fill it into the location pointed to by data
 static void inline gen_fill_branch(const uint8_t* data) {
-#if C_DEBUG
+#if C_DEBUGGER
 	Bits len=cache.pos-data;
 	if (len<0) len=-len;
 	if (len>=0x00100000) LOG_MSG("Big jump %ld",len);
