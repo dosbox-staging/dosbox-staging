@@ -11,7 +11,7 @@
 #include "mem.h"
 #include "reelmagic.h"
 #include "render.h"
-#include "rgb.h"
+#include "util/rgb.h"
 #include "vga.h"
 
 /*
