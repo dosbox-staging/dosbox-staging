@@ -22,7 +22,7 @@
 #include "hardware/timer.h"
 #include "mapper.h"
 #include "midi_device.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "programs.h"
 #include "setup.h"
 #include "string_utils.h"

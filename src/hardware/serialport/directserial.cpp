@@ -8,7 +8,7 @@
 #include "serialport.h"
 #include "directserial.h"
 #include "misc_util.h"
-#include "pic.h"
+#include "hardware/pic.h"
 
 #include "command_line.h"
 #include "libserial.h"

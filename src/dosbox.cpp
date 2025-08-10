@@ -34,7 +34,7 @@
 #include "mouse.h"
 #include "ne2000.h"
 #include "pci_bus.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "programs.h"
 #include "reelmagic.h"
 #include "render.h"

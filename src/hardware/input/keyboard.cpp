@@ -14,7 +14,7 @@
 #include "hardware/timer.h"
 #include "intel8042.h"
 #include "intel8255.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "support.h"
 
 CHECK_NARROWING();

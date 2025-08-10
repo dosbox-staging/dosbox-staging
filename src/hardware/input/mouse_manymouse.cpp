@@ -9,7 +9,7 @@
 #include "checks.h"
 #include "dos_inc.h"
 #include "math_utils.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "unicode.h"
 
 #include <algorithm>

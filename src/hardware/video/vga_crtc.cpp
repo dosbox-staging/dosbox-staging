@@ -6,7 +6,7 @@
 
 #include "cpu.h"
 #include "debug.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "vga.h"
 
 void VGA_MapMMIO(void);

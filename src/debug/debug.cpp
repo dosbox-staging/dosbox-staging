@@ -28,7 +28,7 @@
 #include "keyboard.h"
 #include "mapper.h"
 #include "paging.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "programs.h"
 #include "setup.h"
 #include "shell.h"
