@@ -12,13 +12,13 @@
 #include <vector>
 
 #include "ansi_code_markup.h"
+#include "audio/mixer.h"
 #include "channel_names.h"
 #include "config.h"
 #include "cross.h"
 #include "fs_utils.h"
 #include "ints/int10.h"
 #include "math_utils.h"
-#include "mixer.h"
 #include "notifications.h"
 #include "pic.h"
 #include "programs.h"

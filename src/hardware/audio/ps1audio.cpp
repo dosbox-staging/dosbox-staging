@@ -13,17 +13,15 @@
 #include "checks.h"
 #include "config.h"
 #include "dma.h"
+#include "hardware/mame/emu.h"
+#include "hardware/mame/sn76496.h"
 #include "inout.h"
 #include "math_utils.h"
 #include "mem.h"
-#include "mixer.h"
 #include "pic.h"
 #include "ps1audio.h"
 #include "setup.h"
 #include "timer.h"
-
-#include "mame/emu.h"
-#include "mame/sn76496.h"
 
 CHECK_NARROWING();
 

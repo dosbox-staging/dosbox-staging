@@ -15,27 +15,27 @@
 #include <string>
 #include <vector>
 
-#include "debug.h"
-#include "cross.h" //snprintf
+#include "audio/mixer.h"
+#include "callback.h"
+#include "cpu.h"
 #include "cpu.h"
 #include "cpu/lazyflags.h"
-#include "video.h"
-#include "pic.h"
-#include "mapper.h"
-#include "cpu.h"
-#include "callback.h"
+#include "cross.h" //snprintf
+#include "debug.h"
+#include "debug_inc.h"
 #include "inout.h"
-#include "mixer.h"
-#include "timer.h"
+#include "keyboard.h"
+#include "mapper.h"
 #include "paging.h"
+#include "pic.h"
+#include "programs.h"
+#include "setup.h"
+#include "shell.h"
+#include "std_filesystem.h"
 #include "string_utils.h"
 #include "support.h"
-#include "shell.h"
-#include "programs.h"
-#include "debug_inc.h"
-#include "keyboard.h"
-#include "setup.h"
-#include "std_filesystem.h"
+#include "timer.h"
+#include "video.h"
 
 SDL_Window *GFX_GetSDLWindow(void);
 

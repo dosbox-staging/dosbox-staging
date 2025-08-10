@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mixer.h"
+#include "audio/mixer.h"
 
 #include <gtest/gtest.h>
 

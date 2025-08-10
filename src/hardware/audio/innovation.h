@@ -10,7 +10,7 @@
 #include <queue>
 #include <string>
 
-#include "mixer.h"
+#include "audio/mixer.h"
 #include "inout.h"
 
 #include "residfp/SID.h"

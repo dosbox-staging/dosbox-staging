@@ -4,6 +4,9 @@ target_sources(libdosboxcommon PRIVATE
   clap/plugin.cpp
   clap/plugin_manager.cpp
 
+  disk_noise.cpp
   compressor.cpp
   envelope.cpp
-  noise_gate.cpp)
+  mixer.cpp
+  noise_gate.cpp
+)

@@ -16,6 +16,7 @@
 #include <SDL_endian.h>
 
 #include "ansi_code_markup.h"
+#include "audio/mixer.h"
 #include "channel_names.h"
 #include "config.h"
 #include "cross.h"
@@ -24,7 +25,6 @@
 #include "math_utils.h"
 #include "midi.h"
 #include "midi_lasynth_model.h"
-#include "mixer.h"
 #include "mpu401.h"
 #include "pic.h"
 #include "string_utils.h"

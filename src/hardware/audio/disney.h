@@ -1,35 +1,40 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_STEREO_ON_1_H
-#define DOSBOX_STEREO_ON_1_H
+#ifndef DOSBOX_DISNEY_H
+#define DOSBOX_DISNEY_H
 
 #include "dosbox.h"
 
-#include "channel_names.h"
+#include <queue>
+
+#include "audio/mixer.h"
 #include "inout.h"
 #include "lpt_dac.h"
-#include "mixer.h"
 
-class StereoOn1 final : public LptDac {
+class Disney final : public LptDac {
 public:
-	StereoOn1()
-	        : LptDac(ChannelName::StereoOn1Dac, SampleRateHz,
-	                 {ChannelFeature::Stereo})
-	{}
+	Disney();
+	~Disney() override;
 
 	void BindToPort(const io_port_t lpt_port) override;
 	void ConfigureFilters(const FilterState state) override;
 
-private:
+protected:
 	AudioFrame Render() override;
+
+private:
+	bool IsFifoFull() const;
 	void WriteData(const io_port_t, const io_val_t value, const io_width_t);
 	uint8_t ReadStatus(const io_port_t, const io_width_t);
 	void WriteControl(const io_port_t, const io_val_t value, const io_width_t);
 
-	static constexpr auto SampleRateHz = 30000;
+	// The DSS is an LPT DAC with a 16-level FIFO running at 7kHz
+	static constexpr auto DisneySampleRateHz = 7000;
+	static constexpr auto MaxFifoSize        = 16;
 
-	uint8_t stereo_data[2] = {data_reg, data_reg};
+	// Managed objects
+	std::queue<uint8_t> fifo = {};
 };
 
 #endif

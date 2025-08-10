@@ -1,15 +1,14 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
- #ifndef PS1AUDIO_H
- #define PS1AUDIO_H
+#ifndef PS1AUDIO_H
+#define PS1AUDIO_H
 
- #include "inout.h"
- #include "mixer.h"
- #include "math_utils.h"
- #include "rwqueue.h"
+#include "audio/mixer.h"
+#include "math_utils.h"
+#include "rwqueue.h"
 
- struct Ps1Registers {
+struct Ps1Registers {
 	// Read via port 0x202 control status
 	uint8_t status = 0;
 
@@ -29,9 +28,9 @@ public:
 	~Ps1Dac();
 	void PicCallback(const int frames_requested);
 
-	RWQueue<uint8_t> output_queue {1};
+	RWQueue<uint8_t> output_queue{1};
 	MixerChannelPtr channel = nullptr;
-	float frame_counter = 0.0f;
+	float frame_counter     = 0.0f;
 
 private:
 	uint8_t CalcStatus() const;

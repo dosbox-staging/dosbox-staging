@@ -30,22 +30,20 @@
 #include <string_view>
 
 #include "bios.h"
-#include "checks.h"
 #include "channel_names.h"
+#include "checks.h"
 #include "dma.h"
 #include "hardware.h"
+#include "hardware/mame/emu.h"
+#include "hardware/mame/sn76496.h"
 #include "inout.h"
 #include "math_utils.h"
 #include "mem.h"
-#include "mixer.h"
 #include "pic.h"
 #include "rwqueue.h"
 #include "setup.h"
 #include "tandy_sound.h"
 #include "timer.h"
-
-#include "mame/emu.h"
-#include "mame/sn76496.h"
 
 CHECK_NARROWING();
 
