@@ -8,7 +8,7 @@
 
 #include "port.h"
 #include "cpu/paging.h"
-#include "pci_bus.h"
+#include "hardware/pci_bus.h"
 #include "cpu/registers.h"
 #include "config/setup.h"
 #include "misc/support.h"
