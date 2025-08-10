@@ -23,7 +23,7 @@
 #include "dos/dos_locale.h"
 #include "dos_inc.h"
 #include "hardware.h"
-#include "hardware/voodoo.h"
+#include "hardware/video/voodoo.h"
 #include "inout.h"
 #include "ints/int10.h"
 #include "mapper.h"
