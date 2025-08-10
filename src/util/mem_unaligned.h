@@ -24,7 +24,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "byteorder.h"
+#include "util/byteorder.h"
 #include "compiler.h"
 
 /* Use read_unaligned_* functions instead constructs like:
