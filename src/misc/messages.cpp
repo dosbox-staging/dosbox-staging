@@ -5,7 +5,7 @@
 #include "dosbox.h"
 
 #include "dos/dos_locale.h"
-#include "ansi_code_markup.h"
+#include "misc/ansi_code_markup.h"
 #include "util/checks.h"
 #include "config/config.h"
 #include "misc/cross.h"

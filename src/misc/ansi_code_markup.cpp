@@ -4,7 +4,7 @@
 #include <regex>
 #include <unordered_map>
 
-#include "ansi_code_markup.h"
+#include "misc/ansi_code_markup.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 
