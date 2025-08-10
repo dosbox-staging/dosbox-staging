@@ -9,7 +9,7 @@
 #include "hardware/port.h"
 #include "ints/int10.h"
 #include "hardware/memory.h"
-#include "reelmagic.h"
+#include "hardware/reelmagic/reelmagic.h"
 #include "gui/render.h"
 #include "util/rgb.h"
 #include "vga.h"
