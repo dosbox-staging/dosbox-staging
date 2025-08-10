@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-#include "channel_names.h"
+#include "audio/channel_names.h"
 #include "checks.h"
 
 CHECK_NARROWING();

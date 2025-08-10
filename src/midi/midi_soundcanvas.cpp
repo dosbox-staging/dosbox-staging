@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightTextound  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "midi_soundcanvas.h"
@@ -10,8 +10,8 @@
 #include "clap/all.h"
 
 #include "ansi_code_markup.h"
+#include "audio/channel_names.h"
 #include "audio/clap/plugin_manager.h"
-#include "channel_names.h"
 #include "checks.h"
 #include "pic.h"
 #include "setup.h"

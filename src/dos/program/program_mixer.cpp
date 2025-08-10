@@ -8,7 +8,7 @@
 
 #include "ansi_code_markup.h"
 #include "audio/audio_frame.h"
-#include "channel_names.h"
+#include "audio/channel_names.h"
 #include "checks.h"
 #include "math_utils.h"
 #include "midi/midi.h"

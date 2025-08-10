@@ -51,8 +51,8 @@
 #include <thread>
 #include <utility>
 
+#include "audio/channel_names.h"
 #include "audio/mixer.h"
-#include "channel_names.h"
 #include "config.h"
 #include "dma.h"
 #include "inout.h"

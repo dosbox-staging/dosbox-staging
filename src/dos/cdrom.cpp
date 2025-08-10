@@ -7,8 +7,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "audio/channel_names.h"
 #include "callback.h"
-#include "channel_names.h"
 #include "dosbox.h"
 #include "pic.h"
 #include "string_utils.h"
