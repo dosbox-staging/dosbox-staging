@@ -447,7 +447,7 @@ void DOS_Shell::Run()
 	/* Start a normal shell and check for a first command init */
 	if (cmd->FindString("/INIT",line,true)) {
 		const bool wants_welcome_banner = control->GetStartupVerbosity() >=
-		                                  Verbosity::High;
+		                                  StartupVerbosity::High;
 		if (wants_welcome_banner) {
 			WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"),
 			         DOSBOX_GetDetailedVersion(), PRIMARY_MOD_NAME,
