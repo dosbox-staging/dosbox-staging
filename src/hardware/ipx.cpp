@@ -48,7 +48,7 @@ IPaddress ipxServConnIp;			// IPAddress for client connection to server
 UDPsocket ipxClientSocket;
 int UDPChannel;						// Channel used by UDP connection
 uint8_t recvBuffer[IPXBUFFERSIZE];	// Incoming packet buffer
-bool isPinging;
+static bool is_pinging = false;
 
 static RealPt ipx_callback;
 
@@ -609,7 +609,7 @@ void IPX_UdpClientListener()
 	SDLNet_UDP_AddSocket(socketset, ipxClientSocket);
 
 	while (socketset != nullptr && incomingPacket.connected) {
-		if (!isPinging) {
+		if (!is_pinging) {
 			if (SDLNet_CheckSockets(socketset, SocketWaitMs) == 1)	{
 				if (SDLNet_UDP_Recv(ipxClientSocket, &inPacket))
 					receivePacket(inPacket.data, inPacket.len);
@@ -1048,7 +1048,7 @@ public:
 					WriteOut("IPX Tunneling Client not connected.\n");
 					return;
 				}
-				isPinging = true;
+				is_pinging = true;
 				WriteOut("Sending broadcast ping:\n\n");
 				pingSend();
 				const auto ticks = GetTicks();
@@ -1062,7 +1062,7 @@ public:
 						        GetTicksSince(ticks));
 					}
 				}
-				isPinging = false;
+				is_pinging = false;
 				return;
 			}
 		}
