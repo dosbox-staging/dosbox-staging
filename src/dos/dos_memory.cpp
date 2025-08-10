@@ -3,7 +3,7 @@
 
 #include "dosbox.h"
 
-#include "control.h"
+#include "config.h"
 #include "dos_inc.h"
 #include "dos_memory.h"
 #include "mem.h"

@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <sstream>
 
-#include "control.h"
+#include "config.h"
 #include "command_line.h"
 #include "debug.h"
 #include "lazyflags.h"

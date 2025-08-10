@@ -6,7 +6,7 @@
 #include "mouse_interfaces.h"
 
 #include "checks.h"
-#include "control.h"
+#include "config.h"
 #include "math_utils.h"
 #include "setup.h"
 #include "string_utils.h"

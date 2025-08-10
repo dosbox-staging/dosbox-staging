@@ -6,7 +6,7 @@
 
 #include "channel_names.h"
 #include "checks.h"
-#include "control.h"
+#include "config.h"
 #include "notifications.h"
 #include "pic.h"
 #include "support.h"

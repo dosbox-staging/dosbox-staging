@@ -16,7 +16,7 @@
 #include "bit_view.h"
 #include "bitops.h"
 #include "channel_names.h"
-#include "control.h"
+#include "config.h"
 #include "dma.h"
 #include "hardware.h"
 #include "inout.h"

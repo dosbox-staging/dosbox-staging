@@ -15,7 +15,7 @@
 #include "autoexec.h"
 #include "bit_view.h"
 #include "channel_names.h"
-#include "control.h"
+#include "config.h"
 #include "dma.h"
 #include "gus.h"
 #include "hardware.h"

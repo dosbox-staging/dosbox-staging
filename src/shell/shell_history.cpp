@@ -6,7 +6,7 @@
 #include <fstream>
 
 #include "checks.h"
-#include "control.h"
+#include "config.h"
 #include "dosbox.h"
 #include "fs_utils.h"
 #include "string_utils.h"

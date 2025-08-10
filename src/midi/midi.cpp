@@ -16,7 +16,7 @@
 
 #include "../capture/capture.h"
 #include "ansi_code_markup.h"
-#include "control.h"
+#include "config.h"
 #include "cross.h"
 #include "mapper.h"
 #include "midi_device.h"

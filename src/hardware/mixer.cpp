@@ -19,7 +19,7 @@
 #include "../capture/capture.h"
 #include "channel_names.h"
 #include "checks.h"
-#include "control.h"
+#include "config.h"
 #include "cross.h"
 #include "hardware.h"
 #include "mapper.h"

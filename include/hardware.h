@@ -10,7 +10,7 @@
 #include <cstdio>
 #include <string>
 
-#include "control.h"
+#include "config.h"
 #include "inout.h"
 
 class Section;

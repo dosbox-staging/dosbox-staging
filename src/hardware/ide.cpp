@@ -15,7 +15,7 @@
 
 #include "bios_disk.h"
 #include "callback.h"
-#include "control.h"
+#include "config.h"
 #include "cpu.h"
 #include "ide.h"
 #include "inout.h"

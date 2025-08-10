@@ -12,7 +12,7 @@
 #include "../ints/int10.h"
 #include "bitops.h"
 #include "checks.h"
-#include "control.h"
+#include "config.h"
 #include "inout.h"
 #include "mapper.h"
 #include "math_utils.h"

@@ -17,7 +17,7 @@
 
 #include "ansi_code_markup.h"
 #include "console.h"
-#include "control.h"
+#include "config.h"
 #include "cross.h"
 #include "fs_utils.h"
 #include "notifications.h"

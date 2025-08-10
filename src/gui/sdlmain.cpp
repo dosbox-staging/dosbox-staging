@@ -39,7 +39,7 @@
 #include "../capture/capture.h"
 #include "../dos/dos_locale.h"
 #include "../ints/int10.h"
-#include "control.h"
+#include "config.h"
 #include "cpu.h"
 #include "cross.h"
 #include "command_line.h"
