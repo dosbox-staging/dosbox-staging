@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dos/program_mixer.h"
 #include "channel_names.h"
+#include "dos/program/program_mixer.h"
 
 #include <gtest/gtest.h>
 
