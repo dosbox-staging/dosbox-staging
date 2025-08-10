@@ -63,7 +63,7 @@
 #include "config/setup.h"
 #include "util/string_utils.h"
 #include "titlebar.h"
-#include "tracy.h"
+#include "misc/tracy.h"
 #include "misc/video.h"
 
 static void switch_console_to_utf8()
