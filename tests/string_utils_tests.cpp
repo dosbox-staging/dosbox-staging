@@ -629,5 +629,4 @@ TEST(IsTextEqual, Valid)
 	EXPECT_FALSE(is_text_equal("FooBarBaz", "FooBar"));
 }
 
-
 } // namespace
