@@ -12,7 +12,7 @@
 
 #include "capture/capture.h"
 #include "config.h"
-#include "fraction.h"
+#include "util/fraction.h"
 #include "hardware/video/vga.h"
 #include "mapper.h"
 #include "util/math_utils.h"
