@@ -11,7 +11,7 @@
 
 #include "util/bitops.h"
 #include "util/checks.h"
-#include "config.h"
+#include "config/config.h"
 #include "inout.h"
 #include "ints/int10.h"
 #include "mapper.h"

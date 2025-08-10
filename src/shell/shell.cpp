@@ -13,7 +13,7 @@
 
 #include "autoexec.h"
 #include "callback.h"
-#include "config.h"
+#include "config/config.h"
 #include "dos/program/program_more_output.h"
 #include "dos/program/program_setver.h"
 #include "util/fs_utils.h"

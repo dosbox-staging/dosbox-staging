@@ -5,7 +5,7 @@
 #include "autoexec.h"
 
 #include "util/checks.h"
-#include "config.h"
+#include "config/config.h"
 #include "dosbox.h"
 #include "util/fs_utils.h"
 #include "keyboard.h"

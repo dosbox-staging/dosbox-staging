@@ -17,7 +17,7 @@
 #include "audio/mixer.h"
 #include "callback.h"
 #include "capture/capture.h"
-#include "config.h"
+#include "config/config.h"
 #include "cpu.h"
 #include "cross.h"
 #include "debug.h"

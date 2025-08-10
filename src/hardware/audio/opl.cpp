@@ -13,7 +13,7 @@
 #include "audio/channel_names.h"
 #include "audio/opl_capture.h"
 #include "util/checks.h"
-#include "config.h"
+#include "config/config.h"
 #include "cpu.h"
 #include "util/math_utils.h"
 #include "mapper.h"

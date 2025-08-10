@@ -6,7 +6,7 @@
 
 #include "audio/channel_names.h"
 #include "util/checks.h"
-#include "config.h"
+#include "config/config.h"
 #include "notifications.h"
 #include "hardware/pic.h"
 #include "support.h"

@@ -11,7 +11,7 @@
 #include <mutex>
 
 #include "capture/capture.h"
-#include "config.h"
+#include "config/config.h"
 #include "util/fraction.h"
 #include "hardware/video/vga.h"
 #include "mapper.h"
