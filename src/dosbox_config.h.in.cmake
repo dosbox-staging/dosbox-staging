@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_CONFIG_H
-#define DOSBOX_CONFIG_H
+#ifndef DOSBOX_DOSBOX_CONFIG_H
+#define DOSBOX_DOSBOX_CONFIG_H
 
 // Current DOSBox Staging version without 'v' prefix (e.g., 0.79.1,
 // 0.81.1-alpha)
@@ -206,4 +206,4 @@
 #cmakedefine CUSTOM_DATADIR "@CUSTOM_DATADIR@"
 
 
-#endif
+#endif // DOSBOX_DOSBOX_CONFIG_H

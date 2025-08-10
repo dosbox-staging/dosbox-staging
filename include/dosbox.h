@@ -5,8 +5,8 @@
 #ifndef DOSBOX_DOSBOX_H
 #define DOSBOX_DOSBOX_H
 
+#include "dosbox_config.h"
 #include "compiler.h"
-#include "config.h"
 #include "messages.h"
 #include "types.h"
 
