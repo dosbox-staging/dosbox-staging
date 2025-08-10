@@ -9,9 +9,9 @@
 #include "image_saver.h"
 
 #include "capture/capture.h"
-#include "util/checks.h"
-#include "png_writer.h"
 #include "misc/support.h"
+#include "png_writer.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 

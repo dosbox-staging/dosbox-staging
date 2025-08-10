@@ -8,14 +8,15 @@
 #include <cstring>
 #include <vector>
 
-#include "cpu/cpu.h"
-#include "hardware/port.h"
-#include "hardware/memory.h"
-#include "util/mem_host.h"
-#include "cpu/paging.h"
-#include "hardware/pic.h"
-#include "config/setup.h"
 #include "vga.h"
+
+#include "config/setup.h"
+#include "cpu/cpu.h"
+#include "cpu/paging.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "util/mem_host.h"
 
 #ifndef C_VGARAM_CHECKED
 #define C_VGARAM_CHECKED 1

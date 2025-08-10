@@ -12,17 +12,17 @@
 
 #include "capture/capture.h"
 #include "config/config.h"
-#include "util/fraction.h"
-#include "hardware/video/vga.h"
-#include "gui/mapper.h"
-#include "util/math_utils.h"
-#include "gui/render.h"
 #include "config/setup.h"
-#include "shader_manager.h"
-#include "shell/shell.h"
-#include "util/string_utils.h"
+#include "gui/mapper.h"
+#include "gui/render.h"
+#include "hardware/video/vga.h"
 #include "misc/support.h"
 #include "misc/video.h"
+#include "shader_manager.h"
+#include "shell/shell.h"
+#include "util/fraction.h"
+#include "util/math_utils.h"
+#include "util/string_utils.h"
 
 Render render;
 ScalerLineHandler_t RENDER_DrawLine;

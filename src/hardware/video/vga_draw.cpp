@@ -10,17 +10,18 @@
 #include <cstring>
 #include <utility>
 
-#include "util/bitops.h"
+#include "vga.h"
+
+#include "gui/render.h"
 #include "gui/render_scalers.h"
 #include "hardware/pic.h"
-#include "ints/int10.h"
-#include "util/mem_unaligned.h"
 #include "hardware/reelmagic/reelmagic.h"
-#include "gui/render.h"
-#include "util/math_utils.h"
-#include "util/rgb565.h"
-#include "vga.h"
+#include "ints/int10.h"
 #include "misc/video.h"
+#include "util/bitops.h"
+#include "util/math_utils.h"
+#include "util/mem_unaligned.h"
+#include "util/rgb565.h"
 
 // #define DEBUG_VGA_DRAW
 

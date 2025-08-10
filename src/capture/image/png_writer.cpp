@@ -1,16 +1,16 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <cassert>
-
 #include "png_writer.h"
 
-#include "dosbox_config.h"
-#include "util/checks.h"
-#include "util/string_utils.h"
-#include "misc/support.h"
+#include <cassert>
 
 #include <zlib.h>
+
+#include "dosbox_config.h"
+#include "misc/support.h"
+#include "util/checks.h"
+#include "util/string_utils.h"
 
 CHECK_NARROWING();
 

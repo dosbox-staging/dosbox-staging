@@ -15,14 +15,14 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "config/config.h"
 #include "misc/ansi_code_markup.h"
 #include "misc/console.h"
-#include "config/config.h"
 #include "misc/cross.h"
-#include "util/fs_utils.h"
 #include "misc/notifications.h"
-#include "util/string_utils.h"
 #include "misc/support.h"
+#include "util/fs_utils.h"
+#include "util/string_utils.h"
 
 #if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))
 _CRTIMP extern char** _environ;

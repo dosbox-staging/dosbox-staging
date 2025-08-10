@@ -4,10 +4,11 @@
 
 #include <cstdlib>
 
+#include "vga.h"
+
 #include "cpu/cpu.h"
 #include "debugger/debugger.h"
 #include "hardware/pic.h"
-#include "vga.h"
 
 void VGA_MapMMIO(void);
 void VGA_UnmapMMIO(void);

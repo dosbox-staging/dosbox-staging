@@ -9,12 +9,13 @@
 #include <string>
 #include <map>
 
-#include "hardware/port.h"
-#include "ints/int10.h"
+#include "vga.h"
+
 #include "hardware/memory.h"
 #include "hardware/pci_bus.h"
+#include "hardware/port.h"
+#include "ints/int10.h"
 #include "misc/support.h"
-#include "vga.h"
 
 void PCI_AddSVGAS3_Device();
 

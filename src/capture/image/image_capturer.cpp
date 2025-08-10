@@ -6,10 +6,9 @@
 #include <cassert>
 #include <string>
 
-#include "misc/std_filesystem.h"
-
-#include "util/checks.h"
 #include "config/setup.h"
+#include "misc/std_filesystem.h"
+#include "util/checks.h"
 #include "util/string_utils.h"
 
 CHECK_NARROWING();

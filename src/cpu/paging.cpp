@@ -9,12 +9,12 @@
 #include <cstring>
 #include <memory>
 
-#include "hardware/memory.h"
-#include "cpu/registers.h"
-#include "lazyflags.h"
-#include "cpu/cpu.h"
-#include "debugger/debugger.h"
 #include "config/setup.h"
+#include "cpu/cpu.h"
+#include "cpu/registers.h"
+#include "debugger/debugger.h"
+#include "hardware/memory.h"
+#include "lazyflags.h"
 
 #define LINK_TOTAL		(64*1024)
 

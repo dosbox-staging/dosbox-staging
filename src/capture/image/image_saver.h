@@ -9,11 +9,10 @@
 #include <thread>
 #include <vector>
 
-#include "misc/std_filesystem.h"
-
+#include "gui/render.h"
 #include "image_decoder.h"
 #include "image_scaler.h"
-#include "gui/render.h"
+#include "misc/std_filesystem.h"
 #include "util/rwqueue.h"
 
 enum class CapturedImageType { Raw, Upscaled, Rendered };

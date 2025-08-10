@@ -6,13 +6,14 @@
 
 #include <cassert>
 
-#include "hardware/port.h"
-#include "ints/int10.h"
-#include "hardware/memory.h"
-#include "hardware/reelmagic/reelmagic.h"
-#include "gui/render.h"
-#include "util/rgb.h"
 #include "vga.h"
+
+#include "gui/render.h"
+#include "hardware/memory.h"
+#include "hardware/port.h"
+#include "hardware/reelmagic/reelmagic.h"
+#include "ints/int10.h"
+#include "util/rgb.h"
 
 /*
 3C6h (R/W):  PEL Mask

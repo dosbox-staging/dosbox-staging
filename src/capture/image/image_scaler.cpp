@@ -5,9 +5,9 @@
 
 #include <cmath>
 
+#include "misc/support.h"
 #include "util/byteorder.h"
 #include "util/checks.h"
-#include "misc/support.h"
 #include "util/math_utils.h"
 #include "util/rgb.h"
 

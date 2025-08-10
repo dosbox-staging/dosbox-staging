@@ -10,13 +10,13 @@
 #include <string>
 #include <utility>
 
+#include "config/config.h"
+#include "hardware/port.h"
+#include "misc/video.h"
 #include "util/bgrx8888.h"
 #include "util/bit_view.h"
-#include "config/config.h"
 #include "util/fraction.h"
-#include "hardware/port.h"
 #include "util/rgb666.h"
-#include "misc/video.h"
 
 //Don't enable keeping changes and mapping lfb probably...
 #define VGA_LFB_MAPPED

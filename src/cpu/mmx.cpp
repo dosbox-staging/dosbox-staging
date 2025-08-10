@@ -5,9 +5,9 @@
 #include "dosbox.h"
 
 #include "cpu/cpu.h"
+#include "cpu/mmx.h"
 #include "fpu/fpu.h"
 #include "hardware/memory.h"
-#include "cpu/mmx.h"
 
 MMX_reg* reg_mmx[8] = {
         &fpu.mmx_regs[0],

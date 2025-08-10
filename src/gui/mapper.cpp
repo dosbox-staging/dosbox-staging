@@ -19,17 +19,17 @@
 
 #include "audio/mixer.h"
 #include "config/config.h"
+#include "config/setup.h"
+#include "gui/mapper.h"
+#include "hardware/input/keyboard.h"
+#include "hardware/input/mouse.h"
 #include "hardware/joystick.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"
-#include "hardware/input/keyboard.h"
-#include "gui/mapper.h"
-#include "util/math_utils.h"
-#include "hardware/input/mouse.h"
-#include "util/rgb888.h"
-#include "config/setup.h"
-#include "util/string_utils.h"
 #include "misc/video.h"
+#include "util/math_utils.h"
+#include "util/rgb888.h"
+#include "util/string_utils.h"
 
 //  Status Colors
 //  ~~~~~~~~~~~~~

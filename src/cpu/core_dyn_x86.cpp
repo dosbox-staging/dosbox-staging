@@ -27,12 +27,12 @@
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "debugger/debugger.h"
-#include "fpu/fpu.h"
-#include "hardware/port.h"
-#include "hardware/memory.h"
 #include "cpu/paging.h"
 #include "cpu/registers.h"
+#include "debugger/debugger.h"
+#include "fpu/fpu.h"
+#include "hardware/memory.h"
+#include "hardware/port.h"
 #include "misc/tracy.h"
 
 #define CACHE_MAXSIZE	(4096*3)

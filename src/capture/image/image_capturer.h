@@ -7,11 +7,10 @@
 #include <array>
 #include <string>
 
-#include "misc/std_filesystem.h"
-
 #include "capture/capture.h"
-#include "image_saver.h"
 #include "gui/render.h"
+#include "image_saver.h"
+#include "misc/std_filesystem.h"
 
 // Image capturing works in a rather roundabout fashion... If capturing the
 // next frame has been requested (e.g. by pressing one of the capture

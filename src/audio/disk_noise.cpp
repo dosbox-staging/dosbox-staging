@@ -14,11 +14,11 @@
 #include <vector>
 
 #include "channel_names.h"
-#include "util/checks.h"
+#include "config/setup.h"
 #include "decoders/dr_flac.h"
 #include "hardware/timer.h"
 #include "mixer.h"
-#include "config/setup.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 

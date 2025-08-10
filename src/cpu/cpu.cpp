@@ -10,18 +10,18 @@
 #include <memory>
 
 #include "config/config.h"
-#include "shell/command_line.h"
-#include "debugger/debugger.h"
-#include "lazyflags.h"
-#include "gui/mapper.h"
-#include "util/math_utils.h"
-#include "cpu/paging.h"
-#include "hardware/pic.h"
-#include "dos/programs.h"
 #include "config/setup.h"
-#include "util/string_utils.h"
+#include "cpu/paging.h"
+#include "debugger/debugger.h"
+#include "dos/programs.h"
+#include "gui/mapper.h"
+#include "hardware/pic.h"
+#include "lazyflags.h"
 #include "misc/support.h"
 #include "misc/video.h"
+#include "shell/command_line.h"
+#include "util/math_utils.h"
+#include "util/string_utils.h"
 
 #if 1
 	#undef LOG

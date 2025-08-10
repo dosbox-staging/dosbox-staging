@@ -33,14 +33,14 @@
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "debugger/debugger.h"
-#include "hardware/port.h"
-#include "lazyflags.h"
-#include "hardware/memory.h"
 #include "cpu/mmx.h"
 #include "cpu/paging.h"
-#include "hardware/pic.h"
 #include "cpu/registers.h"
+#include "debugger/debugger.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "lazyflags.h"
 #include "misc/tracy.h"
 
 #define CACHE_MAXSIZE	(4096*2)

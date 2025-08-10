@@ -16,26 +16,26 @@
 #include <vector>
 
 #include "audio/mixer.h"
+#include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "cpu/cpu.h"
 #include "cpu/lazyflags.h"
-#include "misc/cross.h" //snprintf
+#include "cpu/paging.h"
 #include "debugger.h"
 #include "debugger_inc.h"
-#include "hardware/timer.h"
-#include "hardware/port.h"
-#include "hardware/input/keyboard.h"
-#include "gui/mapper.h"
-#include "cpu/paging.h"
-#include "hardware/pic.h"
 #include "dos/programs.h"
-#include "config/setup.h"
-#include "shell/shell.h"
+#include "gui/mapper.h"
+#include "hardware/input/keyboard.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "hardware/timer.h"
+#include "misc/cross.h" //snprintf
 #include "misc/std_filesystem.h"
-#include "util/string_utils.h"
 #include "misc/support.h"
 #include "misc/video.h"
+#include "shell/shell.h"
+#include "util/string_utils.h"
 
 SDL_Window *GFX_GetSDLWindow(void);
 

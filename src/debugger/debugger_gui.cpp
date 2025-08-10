@@ -12,12 +12,12 @@
 #include <cstring>
 #include <curses.h>
 
-#include "misc/cross.h"
-#include "util/string_utils.h"
-#include "misc/support.h"
 #include "cpu/registers.h"
 #include "debugger.h"
 #include "debugger_inc.h"
+#include "misc/cross.h"
+#include "misc/support.h"
+#include "util/string_utils.h"
 
 #if !PDCURSES
 #error SYSTEM CURSES INCLUDED, SHOULD BE PDCURSES

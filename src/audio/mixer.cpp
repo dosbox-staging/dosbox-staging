@@ -15,28 +15,28 @@
 #include <SDL.h>
 #include <speex/speex_resampler.h>
 
+#include "mverb/MVerb.h"
+#include "tal-chorus/ChorusEngine.h"
+
 #include "audio/compressor.h"
 #include "capture/capture.h"
 #include "channel_names.h"
-#include "util/checks.h"
 #include "config/config.h"
-#include "misc/cross.h"
-#include "hardware/hardware.h"
-#include "hardware/timer.h"
-#include "gui/mapper.h"
-#include "util/math_utils.h"
-#include "hardware/memory.h"
-#include "midi/midi.h"
-#include "misc/notifications.h"
-#include "hardware/pic.h"
-#include "util/rwqueue.h"
 #include "config/setup.h"
-#include "util/string_utils.h"
+#include "gui/mapper.h"
+#include "hardware/hardware.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
+#include "hardware/timer.h"
+#include "midi/midi.h"
+#include "misc/cross.h"
+#include "misc/notifications.h"
 #include "misc/tracy.h"
 #include "misc/video.h"
-
-#include "mverb/MVerb.h"
-#include "tal-chorus/ChorusEngine.h"
+#include "util/checks.h"
+#include "util/math_utils.h"
+#include "util/rwqueue.h"
+#include "util/string_utils.h"
 
 CHECK_NARROWING();
 

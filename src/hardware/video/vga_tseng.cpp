@@ -6,11 +6,12 @@
 
 #include <cstdlib>
 
+#include "vga.h"
+
+#include "config/setup.h"
+#include "hardware/memory.h"
 #include "hardware/port.h"
 #include "ints/int10.h"
-#include "hardware/memory.h"
-#include "config/setup.h"
-#include "vga.h"
 
 // Tseng ET4K data
 typedef struct {

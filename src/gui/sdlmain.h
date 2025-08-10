@@ -15,11 +15,11 @@
 #include <SDL_opengl.h>
 #endif
 
-#include "util/fraction.h"
-#include "gui/shader_manager.h"
-#include "util/rect.h"
 #include "gui/render.h"
+#include "gui/shader_manager.h"
 #include "misc/video.h"
+#include "util/fraction.h"
+#include "util/rect.h"
 
 // The image rendered in the emulated computer's raw framebuffer as raw pixels
 // goes through a number of transformations until it gets shown on the host

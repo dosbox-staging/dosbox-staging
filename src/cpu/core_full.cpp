@@ -5,13 +5,13 @@
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
+#include "cpu/paging.h"
+#include "cpu/registers.h"
 #include "debugger/debugger.h"
 #include "fpu/fpu.h"
+#include "hardware/pic.h"
 #include "hardware/port.h"
 #include "lazyflags.h"
-#include "cpu/paging.h"
-#include "hardware/pic.h"
-#include "cpu/registers.h"
 #include "misc/tracy.h"
 
 typedef PhysPt EAPoint;

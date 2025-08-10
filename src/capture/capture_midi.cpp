@@ -10,8 +10,8 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "midi/midi.h"
 #include "hardware/pic.h"
+#include "midi/midi.h"
 #include "misc/support.h"
 
 static struct {

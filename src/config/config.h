@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 
-#include "dos/programs.h"
 #include "config/setup.h"
+#include "dos/programs.h"
 #include "misc/std_filesystem.h"
 
 // clang-format off

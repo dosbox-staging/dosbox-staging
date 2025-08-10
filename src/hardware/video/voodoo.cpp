@@ -71,21 +71,22 @@
 #include <SDL.h>
 #include <SDL_cpuinfo.h> // for proper SSE defines for MSVC
 
-#include "util/bitops.h"
-#include "util/byteorder.h"
+#include "vga.h"
+
 #include "config/config.h"
-#include "misc/cross.h"
-#include "util/fraction.h"
-#include "util/math_utils.h"
-#include "hardware/memory.h"
+#include "config/setup.h"
 #include "cpu/paging.h"
+#include "gui/render.h"
+#include "hardware/memory.h"
 #include "hardware/pci_bus.h"
 #include "hardware/pic.h"
-#include "gui/render.h"
-#include "config/setup.h"
-#include "simde/x86/sse2.h"
+#include "misc/cross.h"
 #include "misc/support.h"
-#include "vga.h"
+#include "simde/x86/sse2.h"
+#include "util/bitops.h"
+#include "util/byteorder.h"
+#include "util/fraction.h"
+#include "util/math_utils.h"
 
 #ifndef DOSBOX_VOODOO_TYPES_H
 #define DOSBOX_VOODOO_TYPES_H

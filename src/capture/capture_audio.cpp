@@ -7,8 +7,8 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "hardware/memory.h"
 #include "config/setup.h"
+#include "hardware/memory.h"
 #include "misc/video.h"
 
 static constexpr auto SampleFrameSize   = 4;

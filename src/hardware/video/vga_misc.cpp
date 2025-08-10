@@ -3,10 +3,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox.h"
-#include "hardware/port.h"
-#include "hardware/pic.h"
-#include "vga.h"
+
 #include <cmath>
+
+#include "vga.h"
+
+#include "hardware/pic.h"
+#include "hardware/port.h"
 
 void vga_write_p3d4(io_port_t port, io_val_t value, io_width_t);
 uint8_t vga_read_p3d4(io_port_t port, io_width_t);

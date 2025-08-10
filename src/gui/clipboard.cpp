@@ -3,11 +3,11 @@
 
 #include "gui/clipboard.h"
 
-#include "util/checks.h"
 #include "config/config.h"
 #include "misc/logging.h"
-#include "util/string_utils.h"
 #include "misc/unicode.h"
+#include "util/checks.h"
+#include "util/string_utils.h"
 
 #include <SDL.h>
 

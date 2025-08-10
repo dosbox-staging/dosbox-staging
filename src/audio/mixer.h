@@ -18,13 +18,13 @@
 #include <utility>
 #include <vector>
 
+#include <Iir.h>
+
 #include "audio/envelope.h"
 #include "audio/noise_gate.h"
 #include "audio_frame.h"
 #include "config/config.h"
 #include "util/math_utils.h"
-
-#include <Iir.h>
 
 // The mixer callback can accept a static function or a member function
 // using a std::bind. The callback typically requests enough frames to

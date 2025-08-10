@@ -9,14 +9,14 @@
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "dosbox.h"
-#include "fpu/fpu.h"
-#include "hardware/port.h"
-#include "lazyflags.h"
-#include "hardware/memory.h"
 #include "cpu/mmx.h"
 #include "cpu/paging.h"
+#include "dosbox.h"
+#include "fpu/fpu.h"
+#include "hardware/memory.h"
 #include "hardware/pic.h"
+#include "hardware/port.h"
+#include "lazyflags.h"
 
 #include "simde/x86/mmx.h"
 
