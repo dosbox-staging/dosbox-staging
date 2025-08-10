@@ -7,7 +7,7 @@
 
 #include "dosbox.h"
 
-#include "mem_host.h"
+#include "util/mem_host.h"
 #include "mem_unaligned.h"
 #include "types.h"
 
