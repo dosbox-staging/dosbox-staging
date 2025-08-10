@@ -6,7 +6,7 @@
 
 #include "dosbox_config.h"
 #include "logging.h"
-#include "std_filesystem.h"
+#include "misc/std_filesystem.h"
 
 enum class DynLibResult {
 	Success,
