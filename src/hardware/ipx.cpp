@@ -32,7 +32,7 @@
 
 constexpr int SocketWaitMs = 1000;
 
-static std::thread ipxClientThread = {};
+static std::thread ipx_client_thread = {};
 
 #define SOCKTABLESIZE	150 // DOS IPX driver was limited to 150 open sockets
 
@@ -610,8 +610,9 @@ void IPX_UdpClientListener() {
 	while(socketset && incomingPacket.connected) {
 		if(!is_pinging) {
 			if(SDLNet_CheckSockets(socketset, SocketWaitMs) == 1) {
-				if(SDLNet_UDP_Recv(ipxClientSocket, &inPacket))
+				if(SDLNet_UDP_Recv(ipxClientSocket, &inPacket)) {
 					receivePacket(inPacket.data, inPacket.len);
+				}
 			}
 		}
 	}
@@ -624,8 +625,9 @@ void DisconnectFromServer(bool unexpected) {
 	if(unexpected) LOG_MSG("IPX: Server disconnected unexpectedly");
 	if(incomingPacket.connected) {
 		incomingPacket.connected = false;
-		if(ipxClientThread.joinable())
-			ipxClientThread.join();
+		if(ipx_client_thread.joinable()) {
+			ipx_client_thread.join();
+		}
 		SDLNet_UDP_Close(ipxClientSocket);
 	}
 }
@@ -827,8 +829,8 @@ bool ConnectToServer(const char* strAddr)
 				LOG_MSG("IPX: Connected to server.  IPX address is %d:%d:%d:%d:%d:%d", CONVIPX(localIpxAddr.netnode));
 
 				incomingPacket.connected = true;
-				ipxClientThread = std::thread(IPX_UdpClientListener);
-				set_thread_name(ipxClientThread, "ipx:udp-client-listener");
+				ipx_client_thread = std::thread(IPX_UdpClientListener);
+				set_thread_name(ipx_client_thread, "ipx:udp-client-listener");
 				return true;
 			}
 		} else {
