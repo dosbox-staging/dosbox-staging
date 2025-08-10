@@ -17,7 +17,7 @@
 #include "misc/support.h"
 #include "cpu/registers.h"
 #include "debugger.h"
-#include "debug_inc.h"
+#include "debugger_inc.h"
 
 #if !PDCURSES
 #error SYSTEM CURSES INCLUDED, SHOULD BE PDCURSES

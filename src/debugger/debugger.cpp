@@ -22,7 +22,7 @@
 #include "cpu/lazyflags.h"
 #include "misc/cross.h" //snprintf
 #include "debugger.h"
-#include "debug_inc.h"
+#include "debugger_inc.h"
 #include "hardware/timer.h"
 #include "hardware/port.h"
 #include "hardware/input/keyboard.h"

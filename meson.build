@@ -1207,7 +1207,7 @@ subdir('src/shell')
 # debugger-specific libs
 if get_option('enable_debugger') != 'none'
     subdir('src/libs/PDCurses')
-    subdir('src/debug')
+    subdir('src/debugger')
     third_party_deps += libpdcurses_dep
 endif
 
