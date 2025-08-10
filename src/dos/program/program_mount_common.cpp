@@ -4,7 +4,7 @@
 
 #include "program_mount_common.h"
 
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 #include "drives.h"
 #include "misc/support.h"
 
