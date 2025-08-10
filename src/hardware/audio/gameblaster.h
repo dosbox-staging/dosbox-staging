@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "audio/mixer.h"
-#include "audio_frame.h"
+#include "audio/audio_frame.h"
 #include "hardware/mame/emu.h"
 #include "hardware/mame/saa1099.h"
 #include "inout.h"

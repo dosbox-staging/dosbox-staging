@@ -314,7 +314,7 @@ template class RWQueue<int>;
 template class RWQueue<std::vector<int16_t>>;
 
 // FluidSynth, MT-32, LPT DAC, SoundBlaster
-#include "audio_frame.h"
+#include "audio/audio_frame.h"
 template class RWQueue<AudioFrame>;
 
 #include "midi/midi.h"
