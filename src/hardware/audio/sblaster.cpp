@@ -21,7 +21,7 @@
 #include "hardware/dma.h"
 #include "hardware/timer.h"
 #include "inout.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "messages.h"
 #include "midi/midi.h"
 #include "notifications.h"

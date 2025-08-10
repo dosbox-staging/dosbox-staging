@@ -15,7 +15,7 @@
 #include "inout.h"
 #include "ints/int10.h"
 #include "mapper.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "mem.h"
 #include "hardware/pic.h"
 #include "reelmagic.h"

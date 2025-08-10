@@ -16,7 +16,7 @@
 #include "checks.h"
 #include "dos_locale.h"
 #include "ints/int10.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "mem.h"
 #include "string_utils.h"
 #include "support.h"

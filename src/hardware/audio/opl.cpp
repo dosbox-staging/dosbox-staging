@@ -15,7 +15,7 @@
 #include "checks.h"
 #include "config.h"
 #include "cpu.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "mapper.h"
 #include "mem.h"
 #include "setup.h"

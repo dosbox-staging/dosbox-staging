@@ -24,7 +24,7 @@
 #include "hardware/timer.h"
 #include "keyboard.h"
 #include "mapper.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "mouse.h"
 #include "rgb888.h"
 #include "setup.h"

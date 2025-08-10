@@ -13,7 +13,7 @@
 #include "debug.h"
 #include "lazyflags.h"
 #include "mapper.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "memory.h"
 #include "paging.h"
 #include "hardware/pic.h"
