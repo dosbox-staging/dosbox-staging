@@ -6,7 +6,7 @@
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "debug.h"
-#include "fpu.h"
+#include "fpu/fpu.h"
 #include "hardware/port.h"
 #include "lazyflags.h"
 #include "cpu/paging.h"
