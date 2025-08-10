@@ -60,7 +60,7 @@
 #include "util/rect.h"
 #include "render.h"
 #include "sdlmain.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 #include "titlebar.h"
 #include "tracy.h"

@@ -10,7 +10,7 @@
 #include "paging.h"
 #include "pci_bus.h"
 #include "regs.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "support.h"
 
 constexpr auto Megabyte = 1024 * 1024;

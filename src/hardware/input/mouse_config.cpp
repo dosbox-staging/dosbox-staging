@@ -8,7 +8,7 @@
 #include "util/checks.h"
 #include "config.h"
 #include "util/math_utils.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 #include "support.h"
 #include "video.h"

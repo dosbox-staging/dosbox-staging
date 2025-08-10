@@ -17,7 +17,7 @@
 #include "mapper.h"
 #include "util/math_utils.h"
 #include "render.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "shader_manager.h"
 #include "shell.h"
 #include "util/string_utils.h"

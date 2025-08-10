@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "programs.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "std_filesystem.h"
 
 // clang-format off

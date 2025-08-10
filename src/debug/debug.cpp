@@ -30,7 +30,7 @@
 #include "paging.h"
 #include "hardware/pic.h"
 #include "programs.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "shell.h"
 #include "std_filesystem.h"
 #include "util/string_utils.h"

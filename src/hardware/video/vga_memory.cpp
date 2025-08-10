@@ -14,7 +14,7 @@
 #include "util/mem_host.h"
 #include "paging.h"
 #include "hardware/pic.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "vga.h"
 
 #ifndef C_VGARAM_CHECKED

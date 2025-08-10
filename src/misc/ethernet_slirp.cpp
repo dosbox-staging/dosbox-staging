@@ -14,7 +14,7 @@
 #include "util/dynlib.h"
 #include "ethernet_slirp.h"
 #include "hardware/timer.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 
 /**
