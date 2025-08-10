@@ -20,7 +20,7 @@
 
 #include "misc/console.h"
 #include "util/checks.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 
 CHECK_NARROWING();
 
