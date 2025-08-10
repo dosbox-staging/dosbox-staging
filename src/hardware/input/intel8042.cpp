@@ -5,7 +5,7 @@
 #include "intel8042.h"
 #include "dosbox.h"
 
-#include "bit_view.h"
+#include "util/bit_view.h"
 #include "bitops.h"
 #include "checks.h"
 #include "config.h"
