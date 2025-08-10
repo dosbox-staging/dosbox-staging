@@ -7,7 +7,7 @@
 #include "bios.h"
 #include "util/bitops.h"
 #include "callback.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "cpu.h"
 #include "dos_inc.h"
 #include "inout.h"

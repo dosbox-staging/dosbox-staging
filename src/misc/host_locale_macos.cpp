@@ -7,7 +7,7 @@
 
 #include "host_locale.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "util/string_utils.h"
 
 #include <CoreFoundation/CoreFoundation.h>

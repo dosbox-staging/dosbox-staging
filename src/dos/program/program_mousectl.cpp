@@ -4,7 +4,7 @@
 #include "program_mousectl.h"
 
 #include "ansi_code_markup.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "program_more_output.h"
 #include "util/string_utils.h"
 

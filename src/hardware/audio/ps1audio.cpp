@@ -10,7 +10,7 @@
 #include <queue>
 
 #include "audio/channel_names.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "hardware/dma.h"
 #include "hardware/mame/emu.h"

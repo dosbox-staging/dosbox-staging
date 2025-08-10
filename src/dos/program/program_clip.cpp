@@ -3,7 +3,7 @@
 
 #include "program_clip.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "clipboard.h"
 #include "dos_inc.h"
 #include "util/math_utils.h"

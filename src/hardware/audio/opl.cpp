@@ -12,7 +12,7 @@
 
 #include "audio/channel_names.h"
 #include "audio/opl_capture.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "cpu.h"
 #include "util/math_utils.h"

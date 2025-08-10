@@ -6,7 +6,7 @@
 
 #include "dos/dos_locale.h"
 #include "ansi_code_markup.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "cross.h"
 #include "fs_utils.h"

@@ -19,7 +19,7 @@
  */
 
 #include "console.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "dos_inc.h"
 
 CHECK_NARROWING();

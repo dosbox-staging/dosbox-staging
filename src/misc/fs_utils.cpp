@@ -10,7 +10,7 @@
 #include <cstring>
 #include <fstream>
 
-#include "checks.h"
+#include "util/checks.h"
 #include "dos_inc.h"
 #include "dos_system.h"
 #include "std_filesystem.h"

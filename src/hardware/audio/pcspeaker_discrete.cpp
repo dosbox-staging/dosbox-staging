@@ -10,7 +10,7 @@
 #include <limits>
 #include <mutex>
 
-#include "checks.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 

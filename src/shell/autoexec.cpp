@@ -4,7 +4,7 @@
 
 #include "autoexec.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "dosbox.h"
 #include "fs_utils.h"

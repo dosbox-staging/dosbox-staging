@@ -12,7 +12,7 @@
 #include "capture_audio.h"
 #include "capture_midi.h"
 #include "capture_video.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "fs_utils.h"
 #include "image/image_capturer.h"

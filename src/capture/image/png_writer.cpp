@@ -6,7 +6,7 @@
 #include "png_writer.h"
 
 #include "dosbox_config.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "util/string_utils.h"
 #include "support.h"
 

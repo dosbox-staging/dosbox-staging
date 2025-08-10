@@ -5,7 +5,7 @@
 
 #include "program_more_output.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "dosbox_config.h"
 #include "setup.h"

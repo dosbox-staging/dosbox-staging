@@ -13,7 +13,7 @@
 
 #include "autoexec.h"
 #include "bios.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "dos_locale.h"
 #include "ints/int10.h"
 #include "util/math_utils.h"

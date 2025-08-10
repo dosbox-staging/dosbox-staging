@@ -7,7 +7,7 @@
 
 #include "util/bit_view.h"
 #include "util/bitops.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "dosbox_config.h"
 #include "inout.h"

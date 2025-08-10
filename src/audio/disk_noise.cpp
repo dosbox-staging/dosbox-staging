@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "channel_names.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "decoders/dr_flac.h"
 #include "hardware/timer.h"
 #include "mixer.h"
