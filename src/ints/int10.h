@@ -10,8 +10,8 @@
 #include <vector>
 
 #include "bit_view.h"
+#include "hardware/video/vga.h"
 #include "mem.h"
-#include "vga.h"
 
 // forward declarations
 class Rgb666;

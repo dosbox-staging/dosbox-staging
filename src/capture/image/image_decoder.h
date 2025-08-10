@@ -9,12 +9,12 @@
 
 #include "byteorder.h"
 #include "checks.h"
+#include "hardware/video/vga.h"
 #include "render.h"
 #include "rgb555.h"
 #include "rgb565.h"
 #include "rgb888.h"
 #include "support.h"
-#include "vga.h"
 
 class ImageDecoder {
 public:
