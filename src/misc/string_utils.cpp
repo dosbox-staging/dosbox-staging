@@ -263,16 +263,6 @@ std::string strip_word(std::string& line)
 	return word;
 }
 
-void strip_punctuation(std::string& str)
-{
-	auto punct_chars = {
-	        '\t', '?', '/', '\\', '|', '.', ',', ';', ':', '+', '=', '[', ']', '<', '>', '"', '\''};
-	auto is_punct = [punct_chars](unsigned char c) {
-		return std::count(punct_chars.begin(), punct_chars.end(), c) > 0;
-	};
-	str.erase(std::remove_if(str.begin(), str.end(), is_punct), str.end());
-}
-
 std::string strip_prefix(const std::string_view str, const std::string_view prefix) noexcept
 {
 	if (str.starts_with(prefix)) {
