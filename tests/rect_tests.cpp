@@ -3,7 +3,7 @@
 
 #include <cstdio>
 
-#include "rect.h"
+#include "util/rect.h"
 
 #include <gtest/gtest.h>
 

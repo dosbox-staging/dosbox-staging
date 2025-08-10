@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "hardware/video/vga.h"
-#include "rect.h"
+#include "util/rect.h"
 #include "render.h"
 
 // forward references
