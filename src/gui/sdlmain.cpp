@@ -43,7 +43,7 @@
 #include "config/config.h"
 #include "cpu/cpu.h"
 #include "misc/cross.h"
-#include "debug.h"
+#include "debugger.h"
 #include "dos/dos_locale.h"
 #include "util/fs_utils.h"
 #include "gui_msgs.h"

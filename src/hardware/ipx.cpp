@@ -17,7 +17,7 @@
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "cpu/registers.h"
-#include "debug.h"
+#include "debugger.h"
 #include "dos/dos_system.h"
 #include "dos/programs.h"
 #include "hardware/ipx.h"

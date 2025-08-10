@@ -16,7 +16,7 @@
 #include "util/string_utils.h"
 #include "misc/support.h"
 #include "cpu/registers.h"
-#include "debug.h"
+#include "debugger.h"
 #include "debug_inc.h"
 
 #if !PDCURSES

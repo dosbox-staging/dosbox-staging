@@ -21,7 +21,7 @@
 #include "cpu/cpu.h"
 #include "cpu/lazyflags.h"
 #include "misc/cross.h" //snprintf
-#include "debug.h"
+#include "debugger.h"
 #include "debug_inc.h"
 #include "hardware/timer.h"
 #include "hardware/port.h"

@@ -9,7 +9,7 @@
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "debug.h"
+#include "debugger.h"
 #include "dos_inc.h"
 #include "hardware/vmware.h"
 #include "hardware/memory.h"
