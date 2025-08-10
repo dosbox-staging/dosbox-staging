@@ -22,7 +22,7 @@
 #include <sstream>
 #include <string>
 
-#include "programs.h"
+#include "dos/programs.h"
 #include "util/string_utils.h"
 
 class MidiDeviceWin32 final : public MidiDevice {

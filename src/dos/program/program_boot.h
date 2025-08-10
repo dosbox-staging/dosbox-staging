@@ -6,7 +6,7 @@
 #define DOSBOX_PROGRAM_BOOT_H
 
 #include "dosbox.h"
-#include "programs.h"
+#include "dos/programs.h"
 
 class BOOT final : public Program {
     public:

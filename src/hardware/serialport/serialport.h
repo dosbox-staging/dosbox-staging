@@ -20,7 +20,7 @@
 #include "dos/dos_inc.h"
 #endif
 #ifndef DOSBOX_PROGRAMS_H
-#include "programs.h"
+#include "dos/programs.h"
 #endif
 
 // set this to 1 for serial debugging in release mode

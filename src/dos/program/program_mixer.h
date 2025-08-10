@@ -4,7 +4,7 @@
 #ifndef DOSBOX_PROGRAM_MIXER_H
 #define DOSBOX_PROGRAM_MIXER_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 #include <map>
 #include <memory>

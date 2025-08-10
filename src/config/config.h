@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "programs.h"
+#include "dos/programs.h"
 #include "config/setup.h"
 #include "misc/std_filesystem.h"
 

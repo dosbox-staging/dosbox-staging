@@ -35,7 +35,7 @@
 #include "midi/midi.h"
 #include "hardware/input/mouse.h"
 #include "hardware/pci_bus.h"
-#include "programs.h"
+#include "dos/programs.h"
 #include "hardware/reelmagic/reelmagic.h"
 #include "gui/render.h"
 #include "config/setup.h"

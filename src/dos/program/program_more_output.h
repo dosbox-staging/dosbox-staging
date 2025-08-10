@@ -4,7 +4,7 @@
 #ifndef DOSBOX_PROGRAM_MORE_OUTPUT_H
 #define DOSBOX_PROGRAM_MORE_OUTPUT_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 #include <string>
 

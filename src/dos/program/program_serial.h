@@ -6,7 +6,7 @@
 
 #include "dosbox.h"
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class SERIAL final : public Program {
 public:
