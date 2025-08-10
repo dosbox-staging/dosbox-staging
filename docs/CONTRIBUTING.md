@@ -94,6 +94,27 @@ design. To clarify:
   new code. All new code must use the C++ standard library instead of C
   arrays, C filesystem functions, and OS-specific concurrency APIs if possible.
 
+- Before starting to use platform-specific, OS-level APIs, check if the C++
+  standard library or SDL provides a cross-platform implementation already.
+  They probably do. If that's not the case, look into using battle-tested
+  libraries instead of adding lots of platform-specific custom code.
+
+- In general, try to use well-established libraries for common tasks. Don't
+  reinvent the wheel unnecessarily.
+
+- Our use of SDL is generally restricted to the texture renderer fallback
+  option, and interfacing with OS-specific APIs that aren't covered by the C++
+  standard. So that means window management, OpenGL context creation, input
+  handling, and interfacing with OS-level audio and MIDI APIs. We should avoid
+  using SDL's thread, timer, filesystem and similar APIs when equivalent
+  functionality is available in the C++ standard library (we prefer to use
+  `std::thread`, `std::mutex`, `std::lock_guard`, `std::filesystem`,
+  `std::atomic`, etc.)
+
+- The use of SDL-specific types should be restricted to a minimum. We don't
+  want them to "infect" the entire codebase (ideally, they should be only used
+  in a few files that directly interface with SDL).
+
 - Prefer [RAII](https://en.cppreference.com/w/cpp/language/raii) patterns for
   resource lifecycle management when possible. This means using [smart
   pointers](https://en.cppreference.com/w/cpp/memory) (`unique_ptr`,
@@ -110,24 +131,24 @@ design. To clarify:
   code. Only use `std::string` and `std::string_view`.
 
 - Avoid using exceptions. C++ exceptions are trickier than you think.
-  No, you won't get it right. Or the person touching the code after you won't get
-  it right. Or the person using your exception-ridden interface won't get it right. 😅
-  Let errors like `std::logic_error` or `std::bad_alloc` terminate the
-  process, so it's easier to notice during testing and can be fixed early.
-  The single good use case for exceptions is signalling construction failures
-  in RAII-style lifecycle management. That's vastly preferable to two-stage
-  initialisation (i.e., to have a separate `Init()` method you need to call
-  after object construction). Other than that, don't throw exceptions
-  anywhere else.
+  No, you won't get it right. Or the person touching the code after you won't
+  get it right. Or the person using your exception-ridden interface won't get
+  it right. 😅 Let errors like `std::logic_error` or `std::bad_alloc`
+  terminate the process, so it's easier to notice during testing and can be
+  fixed early. The single good use case for exceptions is signalling
+  construction failures in RAII-style lifecycle management. That's vastly
+  preferable to two-stage initialisation (i.e., to have a separate `Init()`
+  method you need to call after object construction). Other than that, don't
+  throw exceptions anywhere else.
 
 - Don't micro-optimise, and avoid writing "clever code". Always optimise for
-    clarity of intent, maintainability, and readability in the first round,
-    and only deviate from that if warranted due to performance considerations
-    backed by actual real-world measurements. _Do not attempt to "optimise"
-    anything before proving you are indeed dealing with a bottleneck, and even
-    then only optimise things that causes measurable, user-observable issues
-    during real-world usage (e.g., speeding something up 50-fold in a
-    synthetic micro-benchmark might or might not matter during real useage)._
+  clarity of intent, maintainability, and readability in the first round,
+  and only deviate from that if warranted due to performance considerations
+  backed by real-world measurements. _Do not attempt to "optimise"
+  anything before proving you are indeed dealing with a bottleneck, and even
+  then, only optimise things that cause measurable, user-observable issues
+  during real-world usage (e.g., speeding something up 50-fold in a
+  synthetic micro-benchmark might or might not matter during real usage)._
 
 - Avoid complex template metaprogramming. Simple templates are fine.
 
@@ -140,14 +161,6 @@ design. To clarify:
 - Prefer using namespaces in new code instead of name prefixes. Namespaces are
   also handy for grouping strings and constants.
 
-- Before starting to use platform-specific, OS-level APIs, check if SDL provides a
-  cross-platform interface for the feature you want to use. It probably does.
-  If it doesn't, look into using battle-tested libraries before introducing
-  lots of platform-specific custom code.
-
-- In general, try to use well-established libraries for common tasks. Don't
-  reinvent the wheel unnecessarily.
-
 
 ### Code formatting
 
@@ -156,7 +169,8 @@ advice on good C coding style.
 
 Following all the details of formatting style is tedious; that's why we use a
 custom [clang-format](https://clang.llvm.org/docs/ClangFormat.html) ruleset to
-make it crystal clear. See the [clang-format](#clang-format) section to learn how.
+make it crystal clear. See the [clang-format](#clang-format) section to learn
+how.
 
 [Linux coding style]:https://www.kernel.org/doc/html/latest/process/coding-style.html
 
