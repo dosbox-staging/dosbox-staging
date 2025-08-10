@@ -247,7 +247,7 @@ bool SERIAL_setCommParameters(COMPORT port,
 
 #if defined (LINUX) || defined (MACOSX) || defined (BSD)
 
-#include "logging.h"
+#include "misc/logging.h"
 
 #include <cstdlib>
 #include <cstring> // safe_strlen
