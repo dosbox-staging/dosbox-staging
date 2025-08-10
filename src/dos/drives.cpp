@@ -21,10 +21,8 @@ extern char sfn[DOS_NAMELENGTH_ASCII];
 std::string To_Label(const char* name) {
 	// Reformat the name per the DOS label specification:
 	// - Upper-case, up to 11 ASCII characters
-	// - Internal spaces allowed but no: tabs ? / \ | . , ; : + = [ ] < > " '
 	std::string label(name);
 	trim(label); // strip front-and-back white-space
-	strip_punctuation(label); // strip all punctuation
 	label.resize(11); // collapse remainder to (at-most) 11 chars
 	upcase(label);
 	return label;
