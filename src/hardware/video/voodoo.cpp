@@ -78,7 +78,7 @@
 #include "util/fraction.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "pci_bus.h"
 #include "hardware/pic.h"
 #include "render.h"

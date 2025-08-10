@@ -16,7 +16,7 @@
 #include "inout.h"
 #include "keyboard.h"
 #include "hardware/memory.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "regs.h"
 #include "config/setup.h"
 #include "misc/support.h"

@@ -12,7 +12,7 @@
 #include "hardware/memory.h"
 #include "inout.h"
 #include "pic.h"
-#include "paging.h"
+#include "cpu/paging.h"
 #include "config/setup.h"
 
 std::unique_ptr<DmaController> primary   = {};
