@@ -29,7 +29,7 @@
 #include "midi/midi.h"
 #include "notifications.h"
 #include "hardware/pic.h"
-#include "rwqueue.h"
+#include "util/rwqueue.h"
 #include "setup.h"
 #include "util/string_utils.h"
 #include "tracy.h"

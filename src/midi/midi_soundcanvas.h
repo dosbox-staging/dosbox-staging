@@ -12,7 +12,7 @@
 #include "audio/clap/event_list.h"
 #include "audio/clap/plugin.h"
 #include "audio/mixer.h"
-#include "rwqueue.h"
+#include "util/rwqueue.h"
 
 namespace SoundCanvas {
 

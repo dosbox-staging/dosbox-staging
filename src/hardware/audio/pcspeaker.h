@@ -10,7 +10,7 @@
 
 #include "audio/mixer.h"
 #include "hardware/timer.h"
-#include "rwqueue.h"
+#include "util/rwqueue.h"
 
 class PcSpeaker {
 public:
