@@ -4,7 +4,7 @@
 #ifndef DOSBOX_HOST_LOCALE_H
 #define DOSBOX_HOST_LOCALE_H
 
-#include "../dos/dos_locale.h"
+#include "dos/dos_locale.h"
 
 #include <cstdint>
 #include <optional>

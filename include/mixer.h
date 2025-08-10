@@ -18,8 +18,8 @@
 #include <utility>
 #include <vector>
 
-#include "../audio/envelope.h"
-#include "../audio/noise_gate.h"
+#include "audio/envelope.h"
+#include "audio/noise_gate.h"
 #include "audio_frame.h"
 #include "config.h"
 #include "math_utils.h"

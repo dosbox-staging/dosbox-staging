@@ -6,7 +6,7 @@
 
 #include "mouse_common.h"
 
-#include "../serialport/serialmouse.h"
+#include "hardware/serialport/serialmouse.h"
 
 // ***************************************************************************
 // Main mouse module

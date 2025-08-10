@@ -78,6 +78,6 @@ static inline int32_t Fetchds()
 
 #include "helpers.h"
 #include "table_ea.h"
-#include "../modrm.h"
+#include "cpu/modrm.h"
 
 

@@ -3,9 +3,9 @@
 
 #include "program_keyb.h"
 
-#include "../ints/int10.h"
 #include "ansi_code_markup.h"
 #include "dos_locale.h"
+#include "ints/int10.h"
 #include "program_more_output.h"
 #include "shell.h"
 #include "string_utils.h"

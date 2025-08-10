@@ -9,8 +9,8 @@
 
 #include "clap/all.h"
 
-#include "../audio/clap/plugin_manager.h"
 #include "ansi_code_markup.h"
+#include "audio/clap/plugin_manager.h"
 #include "channel_names.h"
 #include "checks.h"
 #include "pic.h"

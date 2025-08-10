@@ -8,7 +8,6 @@
 #include <map>
 #include <vector>
 
-#include "../misc/host_locale.h"
 #include "ansi_code_markup.h"
 #include "bitops.h"
 #include "checks.h"
@@ -16,6 +15,7 @@
 #include "dos_locale.h"
 #include "logging.h"
 #include "mapper.h"
+#include "misc/host_locale.h"
 #include "string_utils.h"
 #include "unicode.h"
 

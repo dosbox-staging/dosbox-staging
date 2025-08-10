@@ -7,10 +7,10 @@
 
 #include "ansi_code_markup.h"
 #include "checks.h"
+#include "ints/int10.h"
 #include "program_more_output.h"
 #include "shell.h"
 #include "string_utils.h"
-#include "../ints/int10.h"
 
 CHECK_NARROWING();
 

@@ -15,11 +15,11 @@
 #include <sstream>
 #include <vector>
 
-#include "../capture/capture.h"
-#include "../dos/program_more_output.h"
 #include "callback.h"
+#include "capture/capture.h"
 #include "config.h"
 #include "cross.h"
+#include "dos/program_more_output.h"
 #include "mapper.h"
 #include "regs.h"
 #include "shell.h"

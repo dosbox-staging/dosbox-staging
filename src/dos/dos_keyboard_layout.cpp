@@ -8,13 +8,13 @@
 #include <memory>
 #include <string_view>
 
-#include "../ints/int10.h"
 #include "bios_disk.h"
 #include "callback.h"
 #include "dos_code_page.h"
 #include "dos_inc.h"
 #include "dos_locale.h"
 #include "drives.h"
+#include "ints/int10.h"
 #include "mapper.h"
 #include "math_utils.h"
 #include "regs.h"

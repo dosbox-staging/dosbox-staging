@@ -17,6 +17,7 @@
 #include "callback.h"
 #include "config.h"
 #include "cpu.h"
+#include "dos/cdrom.h"
 #include "ide.h"
 #include "inout.h"
 #include "mem.h"
@@ -25,8 +26,6 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "timer.h"
-
-#include "../src/dos/cdrom.h"
 
 extern int bootdrive;
 extern bool bootguest, bootvm, use_quick_reboot;
