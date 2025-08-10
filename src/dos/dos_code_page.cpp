@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "autoexec.h"
+#include "shell/autoexec.h"
 #include "bios.h"
 #include "util/checks.h"
 #include "dos_locale.h"
