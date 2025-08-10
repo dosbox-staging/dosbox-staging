@@ -20,7 +20,7 @@
 #include "config/config.h"
 #include "misc/cross.h"
 #include "dos/program/program_more_output.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "cpu/registers.h"
 #include "shell.h"
 #include "misc/support.h"

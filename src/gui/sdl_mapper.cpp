@@ -23,7 +23,7 @@
 #include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "keyboard.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "util/math_utils.h"
 #include "mouse.h"
 #include "util/rgb888.h"

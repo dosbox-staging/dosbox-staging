@@ -20,7 +20,7 @@
 #include "misc/cross.h"
 #include "hardware/mpu401.h"
 #include "hardware/timer.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "midi_device.h"
 #include "hardware/pic.h"
 #include "programs.h"

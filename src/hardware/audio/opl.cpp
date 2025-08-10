@@ -16,7 +16,7 @@
 #include "config/config.h"
 #include "cpu/cpu.h"
 #include "util/math_utils.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "hardware/memory.h"
 #include "config/setup.h"
 #include "util/string_utils.h"

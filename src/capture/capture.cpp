@@ -16,7 +16,7 @@
 #include "config/config.h"
 #include "util/fs_utils.h"
 #include "image/image_capturer.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
