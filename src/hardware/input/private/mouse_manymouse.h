@@ -5,7 +5,7 @@
 #define DOSBOX_MOUSE_MANYMOUSE_H
 
 #include "hardware/input/mouse.h"
-#include "mouse_interfaces.h"
+#include "hardware/input/mouse_interfaces.h"
 
 #include <string>
 #include <vector>

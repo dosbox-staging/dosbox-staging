@@ -4,9 +4,10 @@
 #ifndef DOSBOX_MOUSEIF_DOS_DRIVER_STATE_H
 #define DOSBOX_MOUSEIF_DOS_DRIVER_STATE_H
 
+#include "mouse_common.h"
+
 #include "dos/dos_inc.h"
 #include "dos/dos_windows.h"
-#include "mouse_common.h"
 
 static constexpr auto MaxMouseButtons  = 3;
 static constexpr auto MaxUpdateRegions = 2;

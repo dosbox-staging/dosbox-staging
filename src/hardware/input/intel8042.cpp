@@ -2,17 +2,17 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "intel8042.h"
-#include "dosbox.h"
+#include "private/intel8042.h"
 
+#include "config/config.h"
+#include "dosbox.h"
+#include "dosbox_config.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
 #include "util/bit_view.h"
 #include "util/bitops.h"
 #include "util/checks.h"
-#include "config/config.h"
-#include "dosbox_config.h"
-#include "hardware/port.h"
-#include "hardware/memory.h"
-#include "hardware/pic.h"
 
 CHECK_NARROWING();
 

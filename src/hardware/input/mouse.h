@@ -5,13 +5,12 @@
 #ifndef DOSBOX_MOUSE_H
 #define DOSBOX_MOUSE_H
 
-#include "dosbox.h"
-
 #include <regex>
 #include <string>
 #include <vector>
 
 #include "config/config.h"
+#include "dosbox.h"
 #include "util/rect.h"
 
 // ***************************************************************************

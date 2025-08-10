@@ -1,19 +1,20 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mouse_manymouse.h"
-#include "mouse_common.h"
-#include "mouse_config.h"
+#include "private/mouse_manymouse.h"
 
-#include "cpu/callback.h"
-#include "util/checks.h"
-#include "dos/dos_inc.h"
-#include "util/math_utils.h"
-#include "hardware/pic.h"
-#include "misc/unicode.h"
+#include "private/mouse_common.h"
+#include "mouse_config.h"
 
 #include <algorithm>
 #include <initializer_list>
+
+#include "cpu/callback.h"
+#include "dos/dos_inc.h"
+#include "hardware/pic.h"
+#include "misc/unicode.h"
+#include "util/checks.h"
+#include "util/math_utils.h"
 
 CHECK_NARROWING();
 

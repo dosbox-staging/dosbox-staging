@@ -4,7 +4,7 @@
 #ifndef DOSBOX_MOUSE_INTERFACES_H
 #define DOSBOX_MOUSE_INTERFACES_H
 
-#include "mouse_common.h"
+#include "private/mouse_common.h"
 
 #include "hardware/serialport/serialmouse.h"
 

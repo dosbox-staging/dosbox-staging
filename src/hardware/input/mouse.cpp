@@ -2,10 +2,11 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "hardware/input/mouse.h"
+#include "mouse.h"
+
+#include "private/mouse_manymouse.h"
 #include "mouse_config.h"
 #include "mouse_interfaces.h"
-#include "mouse_manymouse.h"
 
 #include <algorithm>
 #include <cctype>
@@ -14,11 +15,11 @@
 #include <vector>
 
 #include "cpu/callback.h"
-#include "util/checks.h"
 #include "cpu/cpu.h"
-#include "util/math_utils.h"
 #include "hardware/pic.h"
 #include "misc/video.h"
+#include "util/checks.h"
+#include "util/math_utils.h"
 
 CHECK_NARROWING();
 
