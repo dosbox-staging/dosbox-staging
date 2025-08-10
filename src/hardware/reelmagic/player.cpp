@@ -33,7 +33,7 @@
 
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
-#include "dos_system.h"
+#include "dos/dos_system.h"
 #include "hardware/timer.h"
 #include "misc/logging.h"
 #include "player.h"
