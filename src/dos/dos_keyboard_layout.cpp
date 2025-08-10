@@ -13,7 +13,7 @@
 #include "dos_code_page.h"
 #include "dos_inc.h"
 #include "dos_locale.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "ints/int10.h"
 #include "gui/mapper.h"
 #include "util/math_utils.h"

@@ -5,7 +5,7 @@
 #include "program_mount_common.h"
 
 #include "ints/bios_disk.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "misc/support.h"
 
 Bitu ZDRIVE_NUM = 25;

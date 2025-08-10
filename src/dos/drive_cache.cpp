@@ -10,7 +10,7 @@
 
 #include "misc/cross.h"
 #include "dos_inc.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 

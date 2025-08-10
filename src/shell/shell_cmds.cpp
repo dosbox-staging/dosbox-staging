@@ -26,7 +26,7 @@
 #include "misc/cross.h"
 #include "dos/program/program_more_output.h"
 #include "dos/dos_inc.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "hardware/timer.h"
 #include "ints/int10.h"
 #include "cpu/paging.h"
