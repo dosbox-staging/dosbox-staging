@@ -10,7 +10,7 @@
 
 #include "cpu/callback.h"
 #include "dos_inc.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "pci_bus.h"

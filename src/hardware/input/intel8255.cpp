@@ -9,7 +9,7 @@
 #include "util/bitops.h"
 #include "util/checks.h"
 #include "hardware/timer.h"
-#include "inout.h"
+#include "hardware/inout.h"
 
 CHECK_NARROWING();
 

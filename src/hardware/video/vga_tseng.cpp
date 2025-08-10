@@ -6,7 +6,7 @@
 
 #include <cstdlib>
 
-#include "inout.h"
+#include "hardware/inout.h"
 #include "ints/int10.h"
 #include "hardware/memory.h"
 #include "config/setup.h"

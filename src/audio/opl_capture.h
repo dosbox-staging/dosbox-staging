@@ -7,7 +7,7 @@
 #include "dosbox.h"
 
 #include "hardware/audio/opl.h"
-#include "inout.h"
+#include "hardware/inout.h"
 
 
 #ifdef _MSC_VER

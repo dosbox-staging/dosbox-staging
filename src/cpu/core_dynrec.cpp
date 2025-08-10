@@ -34,7 +34,7 @@
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "debug.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "lazyflags.h"
 #include "hardware/memory.h"
 #include "cpu/mmx.h"
