@@ -22,6 +22,7 @@
 #include "config.h"
 #include "cross.h"
 #include "hardware.h"
+#include "hardware/timer.h"
 #include "mapper.h"
 #include "math_utils.h"
 #include "mem.h"
@@ -32,7 +33,6 @@
 #include "rwqueue.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "timer.h"
 #include "tracy.h"
 #include "video.h"
 

@@ -17,11 +17,11 @@
 #include "dos/program/program_more_output.h"
 #include "dos/program/program_setver.h"
 #include "fs_utils.h"
+#include "hardware/timer.h"
 #include "mapper.h"
 #include "regs.h"
 #include "string_utils.h"
 #include "support.h"
-#include "timer.h"
 
 callback_number_t call_shellstop = 0;
 

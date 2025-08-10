@@ -9,8 +9,8 @@
 #include <string_view>
 
 #include "audio/mixer.h"
+#include "hardware/timer.h"
 #include "rwqueue.h"
-#include "timer.h"
 
 class PcSpeaker {
 public:

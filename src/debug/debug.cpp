@@ -23,6 +23,7 @@
 #include "cross.h" //snprintf
 #include "debug.h"
 #include "debug_inc.h"
+#include "hardware/timer.h"
 #include "inout.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -34,7 +35,6 @@
 #include "std_filesystem.h"
 #include "string_utils.h"
 #include "support.h"
-#include "timer.h"
 #include "video.h"
 
 SDL_Window *GFX_GetSDLWindow(void);
