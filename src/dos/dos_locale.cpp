@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "ansi_code_markup.h"
-#include "bitops.h"
+#include "util/bitops.h"
 #include "checks.h"
 #include "dos_keyboard_layout.h"
 #include "dos_locale.h"

@@ -6,7 +6,7 @@
 #include "dosbox.h"
 
 #include "audio/mixer.h"
-#include "bitops.h"
+#include "util/bitops.h"
 #include "checks.h"
 #include "hardware/timer.h"
 #include "inout.h"

@@ -85,7 +85,7 @@ big-endian.
 #include <cassert>
 #include <type_traits>
 
-#include "bitops.h"
+#include "util/bitops.h"
 #include "support.h"
 
 template <int view_index, int view_width>
