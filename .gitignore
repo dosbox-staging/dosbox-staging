@@ -92,3 +92,6 @@ Resources
 
 # External deps for symlinking for local dev
 /lib
+
+# Tests
+/Testing
