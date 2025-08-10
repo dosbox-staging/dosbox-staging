@@ -7,7 +7,7 @@
 #include <cassert>
 #include <utility>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "regs.h"
 #include "hardware/memory.h"
 #include "dos_inc.h" /* for Drives[] */

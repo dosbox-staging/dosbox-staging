@@ -12,7 +12,7 @@
 #include <stack>
 #include <string>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "programs.h"
 
 class DOS_Shell;

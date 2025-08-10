@@ -12,7 +12,7 @@
 
 #include "util/ascii.h"
 #include "ints/bios.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "dos_locale.h"
 #include "dos_windows.h"
 #include "drives.h"

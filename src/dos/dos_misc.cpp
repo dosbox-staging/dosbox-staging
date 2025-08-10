@@ -6,7 +6,7 @@
 
 #include <list>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "hardware/memory.h"
 #include "regs.h"
 

@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "audio/mixer.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "cpu.h"
 #include "cpu.h"
 #include "cpu/lazyflags.h"

@@ -4,7 +4,7 @@
 
 #include "ints/bios.h"
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "util/checks.h"
 #include "dosbox.h"
 #include "inout.h"

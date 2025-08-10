@@ -3,7 +3,7 @@
 
 #include "dos_windows.h"
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "util/checks.h"
 #include "cpu.h"
 #include "misc/logging.h"

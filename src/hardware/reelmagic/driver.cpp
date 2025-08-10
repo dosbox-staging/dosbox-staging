@@ -21,7 +21,7 @@
 
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "dos/program/program_more_output.h"
 #include "dos_inc.h"
 #include "dos_system.h"

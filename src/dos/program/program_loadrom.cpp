@@ -8,7 +8,7 @@
 
 #include <cstdio>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "dos_windows.h"
 #include "drives.h"
 #include "program_more_output.h"
