@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dosbox.h"
+#include "ps1audio.h"
 
 #include <algorithm>
 #include <cassert>
@@ -10,18 +10,18 @@
 #include <queue>
 
 #include "audio/channel_names.h"
-#include "util/checks.h"
 #include "config/config.h"
+#include "config/setup.h"
+#include "dosbox.h"
 #include "hardware/dma.h"
 #include "hardware/mame/emu.h"
 #include "hardware/mame/sn76496.h"
-#include "hardware/timer.h"
-#include "hardware/port.h"
-#include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
-#include "ps1audio.h"
-#include "config/setup.h"
+#include "hardware/port.h"
+#include "hardware/timer.h"
+#include "util/checks.h"
+#include "util/math_utils.h"
 
 CHECK_NARROWING();
 

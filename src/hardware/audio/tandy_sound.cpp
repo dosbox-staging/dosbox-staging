@@ -22,7 +22,7 @@
 // Tandy+SB combo configuration as well. Note that the Tandy DAC BIOS routine
 // only exists if the Tandy Card is enabled (either 'tandy=on' or 'tandy=psg').
 
-#include "dosbox.h"
+#include "tandy_sound.h"
 
 #include <algorithm>
 #include <array>
@@ -30,20 +30,20 @@
 #include <string_view>
 
 #include "audio/channel_names.h"
-#include "ints/bios.h"
-#include "util/checks.h"
+#include "config/setup.h"
+#include "dosbox.h"
 #include "hardware/dma.h"
 #include "hardware/hardware.h"
 #include "hardware/mame/emu.h"
 #include "hardware/mame/sn76496.h"
-#include "hardware/timer.h"
-#include "hardware/port.h"
-#include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
+#include "hardware/port.h"
+#include "hardware/timer.h"
+#include "ints/bios.h"
+#include "util/checks.h"
+#include "util/math_utils.h"
 #include "util/rwqueue.h"
-#include "config/setup.h"
-#include "tandy_sound.h"
 
 CHECK_NARROWING();
 

@@ -5,10 +5,10 @@
 #include "gameblaster.h"
 
 #include "audio/channel_names.h"
-#include "util/checks.h"
-#include "misc/notifications.h"
-#include "hardware/pic.h"
 #include "config/setup.h"
+#include "hardware/pic.h"
+#include "misc/notifications.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 

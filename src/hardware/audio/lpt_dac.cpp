@@ -6,15 +6,14 @@
 
 #include "dosbox.h"
 
-#include "hardware/timer.h"
-#include "util/math_utils.h"
-#include "hardware/pic.h"
 #include "config/setup.h"
+#include "hardware/audio/covox.h"
+#include "hardware/audio/disney.h"
+#include "hardware/audio/ston1_dac.h"
+#include "hardware/pic.h"
+#include "hardware/timer.h"
 #include "misc/support.h"
-
-#include "covox.h"
-#include "disney.h"
-#include "ston1_dac.h"
+#include "util/math_utils.h"
 
 LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
                std::set<ChannelFeature> extra_features)

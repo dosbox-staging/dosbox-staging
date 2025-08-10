@@ -2,15 +2,15 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "hardware/memory.h"
+#include "memory.h"
 
 #include <cstring>
 
-#include "port.h"
-#include "cpu/paging.h"
-#include "hardware/pci_bus.h"
-#include "cpu/registers.h"
 #include "config/setup.h"
+#include "cpu/paging.h"
+#include "cpu/registers.h"
+#include "hardware/pci_bus.h"
+#include "hardware/port.h"
 #include "misc/support.h"
 
 constexpr auto Megabyte = 1024 * 1024;

@@ -12,15 +12,15 @@
 
 #include "audio/channel_names.h"
 #include "audio/opl_capture.h"
-#include "util/checks.h"
 #include "config/config.h"
+#include "config/setup.h"
 #include "cpu/cpu.h"
-#include "util/math_utils.h"
 #include "gui/mapper.h"
 #include "hardware/memory.h"
-#include "config/setup.h"
-#include "util/string_utils.h"
 #include "misc/support.h"
+#include "util/checks.h"
+#include "util/math_utils.h"
+#include "util/string_utils.h"
 
 CHECK_NARROWING();
 

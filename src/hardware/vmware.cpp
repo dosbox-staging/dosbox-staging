@@ -3,16 +3,16 @@
 
 #include "vmware.h"
 
-#include "util/checks.h"
-#include "dosbox.h"
-#include "port.h"
-#include "hardware/input/mouse.h"
-#include "cpu/registers.h"
-#include "config/setup.h"
-#include "util/string_utils.h"
-#include "misc/support.h"
-
 #include <set>
+
+#include "config/setup.h"
+#include "cpu/registers.h"
+#include "dosbox.h"
+#include "hardware/input/mouse.h"
+#include "hardware/port.h"
+#include "misc/support.h"
+#include "util/checks.h"
+#include "util/string_utils.h"
 
 CHECK_NARROWING();
 

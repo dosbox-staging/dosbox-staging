@@ -5,11 +5,11 @@
 #include "innovation.h"
 
 #include "audio/channel_names.h"
-#include "util/checks.h"
 #include "config/config.h"
-#include "misc/notifications.h"
 #include "hardware/pic.h"
+#include "misc/notifications.h"
 #include "misc/support.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 

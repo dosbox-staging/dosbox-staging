@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dosbox.h"
+#include "gus.h"
 
 #include <array>
 #include <iomanip>
@@ -13,17 +13,17 @@
 #include <vector>
 
 #include "audio/channel_names.h"
-#include "shell/autoexec.h"
-#include "util/bit_view.h"
 #include "config/config.h"
-#include "gus.h"
-#include "hardware/hardware.h"
-#include "hardware/timer.h"
-#include "util/math_utils.h"
-#include "misc/notifications.h"
-#include "hardware/pic.h"
 #include "config/setup.h"
+#include "dosbox.h"
+#include "hardware/hardware.h"
+#include "hardware/pic.h"
+#include "hardware/timer.h"
+#include "misc/notifications.h"
+#include "shell/autoexec.h"
 #include "shell/shell.h"
+#include "util/bit_view.h"
+#include "util/math_utils.h"
 #include "util/string_utils.h"
 
 #define LOG_GUS 0 // set to 1 for detailed logging

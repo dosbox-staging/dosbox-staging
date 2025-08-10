@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "sblaster.h"
+
 #include <array>
 #include <cmath>
 #include <cstring>
@@ -12,26 +14,24 @@
 #include <tuple>
 
 #include "audio/channel_names.h"
-#include "shell/autoexec.h"
+#include "config/config.h"
+#include "config/setup.h"
+#include "hardware/dma.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "hardware/timer.h"
 #include "ints/bios.h"
+#include "midi/midi.h"
+#include "misc/messages.h"
+#include "misc/notifications.h"
+#include "misc/support.h"
+#include "shell/autoexec.h"
+#include "shell/shell.h"
 #include "util/bit_view.h"
 #include "util/bitops.h"
-#include "config/config.h"
-#include "hardware/hardware.h"
-#include "hardware/dma.h"
-#include "hardware/timer.h"
-#include "hardware/port.h"
 #include "util/math_utils.h"
-#include "misc/messages.h"
-#include "midi/midi.h"
-#include "misc/notifications.h"
-#include "hardware/pic.h"
 #include "util/rwqueue.h"
-#include "sblaster.h"
-#include "config/setup.h"
-#include "shell/shell.h"
 #include "util/string_utils.h"
-#include "misc/support.h"
 
 constexpr uint8_t MixerIndex = 0x04;
 constexpr uint8_t MixerData  = 0x05;

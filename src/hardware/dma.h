@@ -10,7 +10,7 @@
 #include <cassert>
 #include <functional>
 
-#include "port.h"
+#include "hardware/port.h"
 #include "misc/support.h"
 
 enum class DmaDirection {

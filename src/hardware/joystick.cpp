@@ -8,10 +8,10 @@
 #include <cstring>
 
 #include "config/config.h"
-#include "port.h"
-#include "util/math_utils.h"
 #include "gui/mapper.h"
-#include "pic.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "util/math_utils.h"
 //TODO: higher axis can't be mapped. Find out why again
 
 //Set to true, to enable automated switching back to square on circle mode if the inputs are outside the cirle.

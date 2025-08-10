@@ -4,7 +4,10 @@
 #ifndef PS1AUDIO_H
 #define PS1AUDIO_H
 
+#include "dosbox.h"
+
 #include "audio/mixer.h"
+#include "hardware/port.h"
 #include "util/math_utils.h"
 #include "util/rwqueue.h"
 

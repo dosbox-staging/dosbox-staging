@@ -11,7 +11,7 @@
 #include "misc/cross.h"
 #include "hardware/timer.h"
 #include "hardware/memory.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "config/setup.h"
 
 static struct {

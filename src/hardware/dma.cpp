@@ -2,18 +2,17 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dosbox.h"
+#include "dma.h"
 
 #include <algorithm>
 #include <cstring>
 #include <memory>
 
-#include "dma.h"
-#include "hardware/memory.h"
-#include "hardware/port.h"
-#include "pic.h"
-#include "cpu/paging.h"
 #include "config/setup.h"
+#include "cpu/paging.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
 
 std::unique_ptr<DmaController> primary   = {};
 std::unique_ptr<DmaController> secondary = {};

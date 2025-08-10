@@ -8,6 +8,8 @@
 #ifndef DOSBOX_IDE_H
 #define DOSBOX_IDE_H
 
+#include "dosbox.h"
+
 constexpr int MAX_IDE_CONTROLLERS = 4;
 
 extern const char *ide_names[MAX_IDE_CONTROLLERS];

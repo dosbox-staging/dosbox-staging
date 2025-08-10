@@ -5,6 +5,7 @@
 #define SBLASTER_H
 
 #include "audio/mixer.h"
+#include "hardware/hardware.h"
 #include "hardware/port.h"
 #include "util/rwqueue.h"
 

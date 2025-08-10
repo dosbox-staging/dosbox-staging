@@ -8,9 +8,9 @@
 #include <string>
 
 #include "audio/channel_names.h"
-#include "hardware/port.h"
-#include "hardware/pic.h"
 #include "config/setup.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
 #include "misc/support.h"
 
 class PcSpeakerImpulse final : public PcSpeaker {

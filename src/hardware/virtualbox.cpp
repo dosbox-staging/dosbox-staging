@@ -3,16 +3,16 @@
 
 #include "virtualbox.h"
 
-#include "util/checks.h"
-#include "dosbox.h"
-#include "port.h"
-#include "hardware/input/mouse.h"
-#include "hardware/pci_bus.h"
-#include "config/setup.h"
-#include "misc/support.h"
-
 #include <map>
 #include <set>
+
+#include "config/setup.h"
+#include "dosbox.h"
+#include "hardware/input/mouse.h"
+#include "hardware/pci_bus.h"
+#include "hardware/port.h"
+#include "misc/support.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 

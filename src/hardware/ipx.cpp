@@ -6,28 +6,28 @@
 
 #if C_IPX
 
-#include <SDL_net.h>
-
 #include <cinttypes>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
 
+#include <SDL_net.h>
+
+#include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "misc/cross.h"
+#include "cpu/registers.h"
 #include "debug.h"
 #include "dos/dos_system.h"
-#include "port.h"
-#include "ipx.h"
-#include "ipxserver.h"
-#include "hardware/memory.h"
-#include "pic.h"
 #include "dos/programs.h"
-#include "cpu/registers.h"
-#include "config/setup.h"
+#include "hardware/ipx.h"
+#include "hardware/ipxserver.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "hardware/timer.h"
+#include "misc/cross.h"
 #include "util/string_utils.h"
-#include "timer.h"
 
 #define SOCKTABLESIZE	150 // DOS IPX driver was limited to 150 open sockets
 

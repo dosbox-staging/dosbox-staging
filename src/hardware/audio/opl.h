@@ -10,15 +10,15 @@
 #include <memory>
 #include <queue>
 
-#include "audio/mixer.h"
-#include "adlib_gold.h"
-#include "hardware/hardware.h"
-#include "hardware/port.h"
-#include "hardware/pic.h"
-#include "config/setup.h"
-
 #include "ESFMu/esfm.h"
 #include "nuked/opl3.h"
+
+#include "adlib_gold.h"
+#include "audio/mixer.h"
+#include "config/setup.h"
+#include "hardware/hardware.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
 
 class Timer {
 public:

@@ -10,10 +10,10 @@
 #include <queue>
 #include <string>
 
+#include "residfp/SID.h"
+
 #include "audio/mixer.h"
 #include "hardware/port.h"
-
-#include "residfp/SID.h"
 
 class Innovation {
 public:
