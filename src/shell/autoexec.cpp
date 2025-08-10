@@ -13,7 +13,7 @@
 #include "config/setup.h"
 #include "shell.h"
 #include "util/string_utils.h"
-#include "unicode.h"
+#include "misc/unicode.h"
 
 #include <algorithm>
 #include <iostream>

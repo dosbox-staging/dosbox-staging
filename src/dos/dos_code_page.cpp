@@ -20,7 +20,7 @@
 #include "hardware/memory.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
-#include "unicode.h"
+#include "misc/unicode.h"
 
 CHECK_NARROWING();
 
