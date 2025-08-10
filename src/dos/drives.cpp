@@ -21,6 +21,10 @@ extern char sfn[DOS_NAMELENGTH_ASCII];
 std::string To_Label(const char* name) {
 	// Reformat the name per the DOS label specification:
 	// - Upper-case, up to 11 ASCII characters
+	// The LABEL command disallows the use of a range special
+	// characters when updating the volume labels, but other
+	// commands and DOS itself doesn't seem to perform this
+	// validation, so we are intentionally lenient here.
 	std::string label(name);
 	trim(label); // strip front-and-back white-space
 	label.resize(11); // collapse remainder to (at-most) 11 chars
