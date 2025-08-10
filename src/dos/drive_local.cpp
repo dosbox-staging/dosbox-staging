@@ -18,7 +18,7 @@
 #include <sys/types.h>
 
 #include "audio/disk_noise.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "dos_inc.h"
 #include "dos_mscdex.h"
 #include "util/fs_utils.h"

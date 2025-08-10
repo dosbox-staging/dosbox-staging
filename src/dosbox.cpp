@@ -19,7 +19,7 @@
 #include "capture/capture.h"
 #include "config/config.h"
 #include "cpu.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "debug.h"
 #include "dos/dos_locale.h"
 #include "dos_inc.h"

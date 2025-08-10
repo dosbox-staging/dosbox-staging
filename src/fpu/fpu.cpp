@@ -6,7 +6,7 @@
 #if C_FPU
 
 #include "cpu.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "fpu.h"
 #include "hardware/memory.h"
 #include <cmath>

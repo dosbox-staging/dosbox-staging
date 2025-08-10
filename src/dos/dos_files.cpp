@@ -16,7 +16,7 @@
 #include "hardware/memory.h"
 #include "regs.h"
 #include "drives.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
 #include "support.h"
