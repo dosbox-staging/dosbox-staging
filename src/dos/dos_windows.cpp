@@ -7,7 +7,7 @@
 #include "util/checks.h"
 #include "cpu/cpu.h"
 #include "misc/logging.h"
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "cpu/registers.h"
 
 CHECK_NARROWING();
