@@ -23,7 +23,7 @@
 
 #include <string>
 
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 void CONSOLE_Write(const std::string_view output);
 

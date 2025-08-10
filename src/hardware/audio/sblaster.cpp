@@ -30,7 +30,7 @@
 #include "sblaster.h"
 #include "setup.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 constexpr uint8_t MixerIndex = 0x04;

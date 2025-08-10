@@ -12,7 +12,7 @@
 #include "logging.h"
 #include "util/math_utils.h"
 #include "hardware/pic.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "video.h"
 
 VgaType vga;

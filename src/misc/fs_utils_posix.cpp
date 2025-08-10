@@ -20,7 +20,7 @@
 
 #include "dos_inc.h"
 #include "logging.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 bool path_exists(const char *path) noexcept
 {

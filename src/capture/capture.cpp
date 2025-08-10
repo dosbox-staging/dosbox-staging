@@ -18,7 +18,7 @@
 #include "image/image_capturer.h"
 #include "mapper.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 #include <SDL.h>

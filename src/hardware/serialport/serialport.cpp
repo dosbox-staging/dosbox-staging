@@ -16,7 +16,7 @@
 #include "inout.h"
 #include "hardware/pic.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #include "serialport.h"
 #include "directserial.h"

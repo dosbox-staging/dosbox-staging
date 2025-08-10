@@ -12,7 +12,7 @@
 #include "mouse.h"
 #include "setup.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "unicode.h"
 
 #include <algorithm>

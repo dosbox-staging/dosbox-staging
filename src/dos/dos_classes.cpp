@@ -9,7 +9,7 @@
 #include <cstring>
 
 #include "mem.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 static void dos_memset(PhysPt addr, uint8_t val, size_t n)

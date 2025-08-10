@@ -20,7 +20,7 @@
 #include "hardware/timer.h"
 #include "mapper.h"
 #include "regs.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 callback_number_t call_shellstop = 0;

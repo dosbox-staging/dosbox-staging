@@ -26,7 +26,7 @@
 #include "ansi_code_markup.h"
 #include "console.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 // Notification subsystem
 // ======================

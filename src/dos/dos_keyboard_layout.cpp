@@ -19,7 +19,7 @@
 #include "util/math_utils.h"
 #include "regs.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 static const std::string ResourceDir = "freedos-keyboard";
 

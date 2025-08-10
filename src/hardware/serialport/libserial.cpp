@@ -12,7 +12,7 @@
 #include <cstdio>
 // clang-format on
 
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 struct _COMPORT {
 	HANDLE porthandle;
