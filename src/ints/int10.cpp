@@ -6,7 +6,7 @@
 #include "dosbox.h"
 #include "hardware/memory.h"
 #include "cpu/callback.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "inout.h"
 #include "int10.h"
 #include "mouse.h"

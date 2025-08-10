@@ -6,7 +6,7 @@
 
 #include "cpu/callback.h"
 #include "program_more_output.h"
-#include "regs.h"
+#include "cpu/registers.h"
 
 void MEM::Run(void)
 {

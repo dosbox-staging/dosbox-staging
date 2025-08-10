@@ -19,7 +19,7 @@
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "mouse.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "config/setup.h"
 
 #include <ctime>

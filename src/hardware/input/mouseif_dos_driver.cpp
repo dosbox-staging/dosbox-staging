@@ -20,7 +20,7 @@
 #include "ints/int10.h"
 #include "util/math_utils.h"
 #include "hardware/pic.h"
-#include "regs.h"
+#include "cpu/registers.h"
 
 CHECK_NARROWING();
 

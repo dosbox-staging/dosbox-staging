@@ -32,7 +32,7 @@
 #include "inout.h"
 #include "hardware/memory.h"
 #include "cpu/paging.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "tracy.h"
 
 #define CACHE_MAXSIZE	(4096*3)

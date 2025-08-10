@@ -8,7 +8,7 @@
 
 #include "dosbox.h"
 #include "cpu/callback.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "hardware/memory.h"
 #include "ints/bios.h"
 #include "dos_inc.h"
