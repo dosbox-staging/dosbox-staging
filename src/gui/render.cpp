@@ -22,7 +22,7 @@
 #include "shell.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
-#include "video.h"
+#include "misc/video.h"
 
 Render render;
 ScalerLineHandler_t RENDER_DrawLine;

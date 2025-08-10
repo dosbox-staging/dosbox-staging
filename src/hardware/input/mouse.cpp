@@ -18,7 +18,7 @@
 #include "cpu.h"
 #include "util/math_utils.h"
 #include "hardware/pic.h"
-#include "video.h"
+#include "misc/video.h"
 
 CHECK_NARROWING();
 
