@@ -10,7 +10,7 @@
 #include "cross.h"
 #include "timer.h"
 #include "inout.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "pic.h"
 #include "setup.h"
 

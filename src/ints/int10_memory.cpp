@@ -4,7 +4,7 @@
 
 #include "int10.h"
 
-#include "mem.h"
+#include "hardware/memory.h"
 #include "inout.h"
 
 // clang-format off

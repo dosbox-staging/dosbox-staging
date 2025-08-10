@@ -16,7 +16,7 @@
 #include "ints/int10.h"
 #include "mapper.h"
 #include "util/math_utils.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "reelmagic.h"
 #include "render.h"

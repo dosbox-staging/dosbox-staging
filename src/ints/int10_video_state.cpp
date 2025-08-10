@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-#include "mem.h"
+#include "hardware/memory.h"
 #include "inout.h"
 
 Bitu INT10_VideoState_GetSize(Bitu state) {

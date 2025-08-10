@@ -5,7 +5,7 @@
 
 
 #include <curses.h>
-#include "mem.h"
+#include "hardware/memory.h"
 
 enum NCURSES_COLOR_PAIRS {
 	PAIR_BLACK_BLUE = 1,

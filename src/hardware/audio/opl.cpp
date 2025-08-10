@@ -17,7 +17,7 @@
 #include "cpu.h"
 #include "util/math_utils.h"
 #include "mapper.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "setup.h"
 #include "util/string_utils.h"
 #include "support.h"

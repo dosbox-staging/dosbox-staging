@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_MEM_H
-#define DOSBOX_MEM_H
+#ifndef DOSBOX_MEMORY_H
+#define DOSBOX_MEMORY_H
 
 #include "dosbox.h"
 
@@ -290,4 +290,4 @@ static inline RealPt RealGetVec(uint8_t vec)
 	return mem_readd(target);
 }
 
-#endif
+#endif // DOSBOX_MEMORY_H

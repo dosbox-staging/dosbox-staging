@@ -36,7 +36,7 @@
 #include "debug.h"
 #include "inout.h"
 #include "lazyflags.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "mmx.h"
 #include "paging.h"
 #include "hardware/pic.h"

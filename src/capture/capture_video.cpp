@@ -8,7 +8,7 @@
 #include <cmath>
 
 #include "util/math_utils.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "render.h"
 #include "support.h"
 

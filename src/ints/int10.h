@@ -11,7 +11,7 @@
 
 #include "bit_view.h"
 #include "hardware/video/vga.h"
-#include "mem.h"
+#include "hardware/memory.h"
 
 // forward declarations
 class Rgb666;

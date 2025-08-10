@@ -13,7 +13,7 @@
 #include "bit_view.h"
 #include "cross.h"
 #include "fs_utils.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "support.h"
 
 #define DOS_NAMELENGTH 12

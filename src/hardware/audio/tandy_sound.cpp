@@ -39,7 +39,7 @@
 #include "hardware/timer.h"
 #include "inout.h"
 #include "util/math_utils.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "rwqueue.h"
 #include "setup.h"

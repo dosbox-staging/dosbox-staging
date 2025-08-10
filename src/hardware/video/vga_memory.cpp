@@ -10,7 +10,7 @@
 
 #include "cpu.h"
 #include "inout.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "mem_host.h"
 #include "paging.h"
 #include "hardware/pic.h"

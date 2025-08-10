@@ -11,7 +11,7 @@
 #include "debug.h"
 #include "dosbox.h"
 #include "inout.h"
-#include "mem.h"
+#include "hardware/memory.h"
 #include "regs.h"
 #include "setup.h"
 #include "support.h"

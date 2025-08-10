@@ -14,7 +14,7 @@
 	#include "regs.h"
 #endif
 #ifndef DOSBOX_MEM_H
-	#include "mem.h"
+	#include "hardware/memory.h"
 #endif
 
 constexpr auto CpuCyclesMin = 50;

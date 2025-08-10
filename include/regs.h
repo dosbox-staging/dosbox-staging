@@ -5,7 +5,7 @@
 #define DOSBOX_REGS_H
 
 #ifndef DOSBOX_MEM_H
-#include "mem.h"
+#include "hardware/memory.h"
 #endif
 
 #include <cassert>
