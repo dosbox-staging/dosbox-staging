@@ -8,7 +8,7 @@
 
 #include "dos_inc.h"
 #include "util/fraction.h"
-#include "render.h"
+#include "gui/render.h"
 
 //
 // video mixer stuff
