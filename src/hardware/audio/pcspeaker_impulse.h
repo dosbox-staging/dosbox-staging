@@ -11,7 +11,7 @@
 #include "inout.h"
 #include "hardware/pic.h"
 #include "config/setup.h"
-#include "support.h"
+#include "misc/support.h"
 
 class PcSpeakerImpulse final : public PcSpeaker {
 public:

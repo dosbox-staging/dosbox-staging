@@ -12,7 +12,7 @@
 #include "dos_inc.h"
 #include "drives.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 int fileInfoCounter = 0;
 

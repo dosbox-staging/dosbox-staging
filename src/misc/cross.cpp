@@ -39,7 +39,7 @@
 
 #include "util/fs_utils.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 #include "drives.h"
 
 std::string GetPrimaryConfigName()

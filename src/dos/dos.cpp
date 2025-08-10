@@ -23,7 +23,7 @@
 #include "regs.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 #if defined(WIN32)
 #include <winsock2.h> // for gethostname

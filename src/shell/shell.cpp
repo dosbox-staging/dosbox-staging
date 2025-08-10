@@ -21,7 +21,7 @@
 #include "mapper.h"
 #include "regs.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 callback_number_t call_shellstop = 0;
 

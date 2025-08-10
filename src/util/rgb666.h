@@ -8,7 +8,7 @@
 #include <cstdint>
 
 #include "rgb888.h"
-#include "support.h"
+#include "misc/support.h"
 
 class Rgb666 {
 public:

@@ -84,7 +84,7 @@
 #include "render.h"
 #include "config/setup.h"
 #include "simde/x86/sse2.h"
-#include "support.h"
+#include "misc/support.h"
 #include "vga.h"
 
 #ifndef DOSBOX_VOODOO_TYPES_H

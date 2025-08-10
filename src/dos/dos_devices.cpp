@@ -12,7 +12,7 @@
 #include "hardware/memory.h"
 #include "bios.h"
 #include "dos_inc.h"
-#include "support.h"
+#include "misc/support.h"
 #include "drives.h"
 #include "dev_con.h"
 

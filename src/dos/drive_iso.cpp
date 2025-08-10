@@ -10,7 +10,7 @@
 #include "dos_mscdex.h"
 #include "dos_system.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 #define FLAGS1	((iso) ? de.fileFlags : de.timeZone)
 #define FLAGS2	((iso) ? de->fileFlags : de->timeZone)

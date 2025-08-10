@@ -9,7 +9,7 @@
 #include "config/config.h"
 #include "notifications.h"
 #include "hardware/pic.h"
-#include "support.h"
+#include "misc/support.h"
 
 CHECK_NARROWING();
 

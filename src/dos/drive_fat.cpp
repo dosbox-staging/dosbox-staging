@@ -12,7 +12,7 @@
 #include "bios_disk.h"
 #include "dos_inc.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 #define IMGTYPE_FLOPPY 0
 #define IMGTYPE_ISO    1

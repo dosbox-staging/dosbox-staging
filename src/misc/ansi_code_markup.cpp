@@ -6,7 +6,7 @@
 
 #include "ansi_code_markup.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 // Pre-defined markups to help creating strings
 

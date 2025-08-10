@@ -8,7 +8,7 @@
 #include <cassert>
 #include <cmath>
 
-#include "support.h"
+#include "misc/support.h"
 
 // Clamp: given a value that can be compared with the given minimum and maximum
 //        values, this function will:

@@ -32,7 +32,7 @@
 #include "paging.h"
 #include "regs.h"
 #include "util/string_utils.h"
-#include "support.h"
+#include "misc/support.h"
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {
