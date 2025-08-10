@@ -21,7 +21,7 @@
 #include "simde/x86/mmx.h"
 
 #if C_DEBUGGER
-#include "debugger.h"
+#include "debugger/debugger.h"
 #endif
 
 #if (!C_CORE_INLINE)

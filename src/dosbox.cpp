@@ -20,7 +20,7 @@
 #include "config/config.h"
 #include "cpu/cpu.h"
 #include "misc/cross.h"
-#include "debugger.h"
+#include "debugger/debugger.h"
 #include "dos/dos_locale.h"
 #include "dos/dos_inc.h"
 #include "hardware/hardware.h"

@@ -19,7 +19,7 @@
 #include "simde/x86/mmx.h"
 
 #if C_DEBUGGER
-#include "debugger.h"
+#include "debugger/debugger.h"
 #endif
 
 #define SegBase(c)	SegPhys(c)

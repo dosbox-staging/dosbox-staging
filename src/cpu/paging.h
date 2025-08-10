@@ -5,7 +5,7 @@
 #define DOSBOX_PAGING_H
 
 #include "dosbox.h"
-#include "debugger.h"
+#include "debugger/debugger.h"
 #include <vector>
 
 #include "hardware/memory.h"

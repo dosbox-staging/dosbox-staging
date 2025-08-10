@@ -19,7 +19,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Disable the noisy narrowing and conversion warnings by default. Use the
 # CHECK_NARROWING() macro to opt-in these checks on a per-file basis. See
-# `include/checks.h` for details.
+# `src/util/checks.h` for details.
 if(MSVC)
   add_compile_options("/wd4244" "/MP")
 
@@ -358,7 +358,6 @@ add_copy_assets()
 #target_link_libraries(dosbox PRIVATE Tracy::TracyClient)
 
 include_directories(
-  include
   src
   src/libs
   ${CMAKE_CURRENT_BINARY_DIR}/include

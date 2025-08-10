@@ -5,7 +5,7 @@
 #include <cstdlib>
 
 #include "cpu/cpu.h"
-#include "debugger.h"
+#include "debugger/debugger.h"
 #include "hardware/pic.h"
 #include "vga.h"
 
