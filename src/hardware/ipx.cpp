@@ -598,8 +598,7 @@ static void receivePacket(uint8_t *buffer, int16_t bufSize) {
 	LOG_IPX("IPX: RX Packet loss!");
 }
 
-void IPX_UdpClientListener()
-{
+void IPX_UdpClientListener() {
 	UDPpacket inPacket;
 	inPacket.data = (Uint8 *)recvBuffer;
 	inPacket.maxlen = IPXBUFFERSIZE;
@@ -608,16 +607,16 @@ void IPX_UdpClientListener()
 	SDLNet_SocketSet socketset = SDLNet_AllocSocketSet(1);
 	SDLNet_UDP_AddSocket(socketset, ipxClientSocket);
 
-	while (socketset != nullptr && incomingPacket.connected) {
-		if (!is_pinging) {
-			if (SDLNet_CheckSockets(socketset, SocketWaitMs) == 1)	{
-				if (SDLNet_UDP_Recv(ipxClientSocket, &inPacket))
+	while(socketset && incomingPacket.connected) {
+		if(!is_pinging) {
+			if(SDLNet_CheckSockets(socketset, SocketWaitMs) == 1) {
+				if(SDLNet_UDP_Recv(ipxClientSocket, &inPacket))
 					receivePacket(inPacket.data, inPacket.len);
 			}
 		}
 	}
 
-	if (socketset != nullptr)
+	if(socketset)
 		SDLNet_FreeSocketSet(socketset);
 }
 
@@ -625,7 +624,7 @@ void DisconnectFromServer(bool unexpected) {
 	if(unexpected) LOG_MSG("IPX: Server disconnected unexpectedly");
 	if(incomingPacket.connected) {
 		incomingPacket.connected = false;
-		if (ipxClientThread.joinable())
+		if(ipxClientThread.joinable())
 			ipxClientThread.join();
 		SDLNet_UDP_Close(ipxClientSocket);
 	}
