@@ -20,7 +20,7 @@
 #include "hardware.h"
 #include "hardware/dma.h"
 #include "hardware/timer.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "util/math_utils.h"
 #include "misc/messages.h"
 #include "midi/midi.h"

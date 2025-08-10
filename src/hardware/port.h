@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_INOUT_H
-#define DOSBOX_INOUT_H
+#ifndef DOSBOX_PORT_H
+#define DOSBOX_PORT_H
 
 #include "dosbox.h"
 
@@ -149,4 +149,4 @@ constexpr io_port_t port_num_virtualbox = 0x5654u;
 constexpr io_port_t port_num_vmware    = 0x5658u;
 constexpr io_port_t port_num_vmware_hb = 0x5659u; // high bandwidth
 
-#endif
+#endif // DOSBOX_PORT_H

@@ -5,7 +5,7 @@
 
 #include "util/checks.h"
 #include "dosbox.h"
-#include "inout.h"
+#include "port.h"
 #include "mouse.h"
 #include "pci_bus.h"
 #include "config/setup.h"

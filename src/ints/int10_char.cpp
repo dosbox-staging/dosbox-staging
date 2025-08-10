@@ -8,7 +8,7 @@
 
 #include "ints/bios.h"
 #include "cpu/callback.h"
-#include "hardware/inout.h"
+#include "hardware/port.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "cpu/registers.h"

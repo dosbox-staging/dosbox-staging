@@ -6,7 +6,7 @@
 
 #include <cstring>
 
-#include "inout.h"
+#include "port.h"
 #include "cpu/paging.h"
 #include "pci_bus.h"
 #include "cpu/registers.h"

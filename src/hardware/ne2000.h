@@ -16,7 +16,7 @@
 
 #include "dosbox.h"
 
-#include "hardware/inout.h"
+#include "port.h"
 
 #define bx_bool int
 #define bx_param_c uint8_t
