@@ -10,6 +10,10 @@
 // values at the start of the build process, and a file `config.cpp` is
 // written to the build output directory.
 
+// Current DOSBox Staging version without 'v' prefix (e.g., 0.79.1,
+// 0.81.1-alpha)
+#define DOSBOX_VERSION "@version@"
+
 // Git hash of the build
 #define BUILD_GIT_HASH "@git_hash@"
 
