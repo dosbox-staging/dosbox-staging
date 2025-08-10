@@ -21,7 +21,7 @@
 #include "misc/ansi_code_markup.h"
 #include "ints/bios.h"
 #include "cpu/callback.h"
-#include "command_line.h"
+#include "shell/command_line.h"
 #include "config/config.h"
 #include "misc/cross.h"
 #include "dos/program/program_more_output.h"
