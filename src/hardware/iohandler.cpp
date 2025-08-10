@@ -10,7 +10,7 @@
 #include <unordered_map>
 
 #include "cpu/callback.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "cpu/lazyflags.h"
 #include "config/setup.h"
 

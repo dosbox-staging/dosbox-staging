@@ -5,7 +5,7 @@
 
 #include <cstring>
 
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "inout.h"
 #include "util/math_utils.h"
 #include "midi/midi.h"

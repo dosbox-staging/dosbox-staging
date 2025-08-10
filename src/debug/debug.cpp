@@ -17,8 +17,8 @@
 
 #include "audio/mixer.h"
 #include "cpu/callback.h"
-#include "cpu.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
+#include "cpu/cpu.h"
 #include "cpu/lazyflags.h"
 #include "misc/cross.h" //snprintf
 #include "debug.h"
