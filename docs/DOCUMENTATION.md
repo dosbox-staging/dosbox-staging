@@ -145,7 +145,7 @@ Once that's done, you can install MkDocs and the required dependencies with
 the following command:
 
 ``` shell
-pip install -r contrib/documentation/mkdocs-package-requirements.txt
+pip install -r extras/documentation/mkdocs-package-requirements.txt
 ```
 
 ### Generating the documentation

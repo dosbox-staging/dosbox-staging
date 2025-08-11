@@ -14,7 +14,7 @@
 # are not identified by file, e.g. bash-completion shell function script.
 
 extra_bash_files=(
-	contrib/linux/bash-completion/dosbox
+	extras/linux/bash-completion/dosbox
 )
 
 list_bash_files () {

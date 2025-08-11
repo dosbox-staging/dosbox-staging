@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // This header file is generated.
-// See "contrib/generate_tracy_header" for details.
+// See "extras/generate_tracy_header" for details.
 
 #ifndef DOSBOX_TRACY_H
 #define DOSBOX_TRACY_H
