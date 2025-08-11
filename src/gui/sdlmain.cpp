@@ -56,6 +56,7 @@
 #include "hardware/video/vga.h"
 #include "ints/int10.h"
 #include "misc/cross.h"
+#include "misc/notifications.h"
 #include "misc/pacer.h"
 #include "misc/tracy.h"
 #include "misc/video.h"
@@ -564,11 +565,30 @@ double GFX_GetHostRefreshRate()
 	return refresh_rate;
 }
 
+static void validate_vsync_and_presentation_mode_settings()
+{
+	const std::string vsync_pref = get_sdl_section()->GetString("vsync");
+
+	const std::string presentation_mode_pref = get_sdl_section()->GetString(
+	        "presentation_mode");
+
+	if (presentation_mode_pref == "dos-rate" &&
+	    (vsync_pref == "on" || vsync_pref == "fullscreen-only")) {
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "DISPLAY",
+		                      "DISPLAY_INVALID_VSYNC_SETTING",
+		                      vsync_pref.c_str());
+
+		set_section_property_value("sdl", "vsync", "off");
+	}
+}
+
 // Reset and populate the vsync settings from the config. This is called
 // on-demand after startup and on output mode changes (e.g., switching from
 // the 'texture' backend to 'opengl').
 //
-static void initialize_vsync_settings()
+static void init_vsync_settings()
 {
 	const std::string vsync_pref = get_sdl_section()->GetString("vsync");
 
@@ -588,7 +608,7 @@ static void initialize_vsync_settings()
 	}
 }
 
-static void initialize_presentation_mode_settings()
+static void init_presentation_mode_settings()
 {
 	const std::string presentation_mode_pref = get_sdl_section()->GetString(
 	        "presentation_mode");
@@ -3180,8 +3200,9 @@ static void sdl_section_init(Section* sec)
 		sdl.display_number = 0;
 	}
 
-	initialize_vsync_settings();
-	initialize_presentation_mode_settings();
+	validate_vsync_and_presentation_mode_settings();
+	init_vsync_settings();
+	init_presentation_mode_settings();
 
 	set_output(section, is_aspect_ratio_correction_enabled());
 
@@ -3949,7 +3970,7 @@ static std::vector<std::string> get_sdl_texture_renderers()
 	return drivers;
 }
 
-static void add_command_line_help_message()
+static void register_command_line_help_message()
 {
 	MSG_Add("DOSBOX_HELP",
 	        "Usage: %s [OPTION]... [PATH]\n"
@@ -4026,6 +4047,14 @@ static void add_command_line_help_message()
 	        "  -h, -?, --help           Print help message and exit.\n"
 	        "\n"
 	        "  -V, --version            Print version information and exit.\n");
+}
+
+static void register_sdl_text_messages()
+{
+	MSG_Add("DISPLAY_INVALID_VSYNC_SETTING",
+	        "Invalid [color=light-green]'vsync'[reset] setting: [color=white]'%s'[reset];\n"
+	        "vsync cannot be enabled in [color=white]'dos-rate'[reset] presentation mode, "
+	        "using [color=white]'off'[reset]");
 }
 
 // Callers:
@@ -4197,17 +4226,17 @@ static void init_sdl_config_section()
 	        "                    vsync might cause visible tearing in fast-paced games.\n"
 	        "  on:               Enable vsync in both windowed and fullscreen mode. This can\n"
 	        "                    prevent tearing in fast-paced games but will increase input\n"
-	        "                    lag. It might also impact performance (e.g., introduce audio\n"
-	        "                    glitches in some 70 Hz VGA games running on a 60 Hz fixed\n"
-	        "                    refresh rate monitor).\n"
+	        "                    lag. Vsync is only available with 'host-rate' presentation\n"
+	        "                    (see 'presentation_mode').\n"
 	        "  fullscreen-only:  Enable vsync in fullscreen mode only. This might be useful\n"
 	        "                    if your operating system enforces vsync in windowed mode and\n"
 	        "                    the 'on' setting causes audio glitches or other issues in\n"
-	        "                    windowed mode only.\n"
+	        "                    windowed mode only. Vsync is only available with 'host-rate'\n"
+	        "                    presentation (see 'presentation_mode').\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - For perfectly smooth scrolling in 2D games (e.g., in Pinball Dreams\n"
-	        "    and Epic Pinball), you'll need a VRR monitor running in VRR mode and vsync\n"
+	        "    and Epic Pinball), you'll need a VRR monitor running in VRR mode and 'vsync'\n"
 	        "    disabled. The scrolling in 70 Hz VGA games will always appear juddery on\n"
 	        "    60 Hz fixed refresh rate monitors even with vsync enabled.\n"
 	        "  - Usually, you'll only get perfectly smooth 2D scrolling in fullscreen mode,\n"
@@ -4219,14 +4248,17 @@ static void init_sdl_config_section()
 	pstring = sdl_sec->AddString("presentation_mode", Always, "auto");
 	pstring->SetHelp(
 	        "Select the frame presentation mode ('auto' by default):\n"
-	        "  auto:       Use 'host-rate' if vsync is enabled, otherwise use 'dos-rate'\n"
-	        "              (default).\n"
+	        "  auto:       Use 'host-rate' if 'vsync' is enabled, otherwise use 'dos-rate'\n"
+	        "              (default). See 'vsync' for further details.\n"
 	        "  dos-rate:   Present frames at the refresh rate of the emulated DOS video mode.\n"
-	        "              This is the best option on variable refresh rate (VRR) monitors\n"
-	        "              with vsync disabled (see 'vsync' for further details).\n"
-	        "  host-rate:  Present frames at the refresh rate of the host. Use this with\n"
-	        "              vsync enabled on fixed refresh monitor for fast-paced games where\n"
-	        "              tearing is a problem (see 'vsync').");
+	        "              This is the best option on variable refresh rate (VRR) monitors.\n"
+	        "              'vsync' is not availabe with 'dos-rate' presentation.\n"
+	        "  host-rate:  Present frames at the refresh rate of the host display. Use this\n"
+	        "              with 'vsync' enabled on fixed refresh rate monitors for fast-paced\n"
+	        "              games where tearing is a problem. 'host-rate' combined with\n"
+	        "              'vsync' disabled can be a good workaround on systems that always\n"
+	        "              enforce blocking vsync at the OS level (e.g., forced 60 Hz vsync\n"
+	        "              could cause problems with VGA games presenting frames at 70 Hz).");
 	pstring->SetValues({"auto", "dos-rate", "host-rate"});
 
 	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", Deprecated, ",");
@@ -4943,7 +4975,9 @@ int sdl_main(int argc, char* argv[])
 
 		// Register essential DOS messages needed by some command line
 		// switches and during startup or reboot
-		add_command_line_help_message();
+		register_command_line_help_message();
+
+		register_sdl_text_messages();
 
 		DOS_Locale_AddMessages();
 		RENDER_AddMessages();
