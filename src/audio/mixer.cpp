@@ -18,7 +18,8 @@
 #include "mverb/MVerb.h"
 #include "tal-chorus/ChorusEngine.h"
 
-#include "audio/compressor.h"
+#include "private/compressor.h"
+
 #include "capture/capture.h"
 #include "channel_names.h"
 #include "config/config.h"

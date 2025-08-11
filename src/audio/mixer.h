@@ -20,8 +20,9 @@
 
 #include <Iir.h>
 
-#include "audio/envelope.h"
-#include "audio/noise_gate.h"
+#include "private/envelope.h"
+#include "private/noise_gate.h"
+
 #include "audio_frame.h"
 #include "config/config.h"
 #include "utils/math_utils.h"
