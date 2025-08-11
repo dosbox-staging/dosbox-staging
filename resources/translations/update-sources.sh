@@ -9,7 +9,7 @@ set -euo pipefail
 
 PACKAGED_BUILD="build/lang"
 
-LNG_DIR="contrib/resources/translations"
+LNG_DIR="resources/translations"
 
 EN_LANG_PATH="$LNG_DIR/en.lng"
 
@@ -30,7 +30,7 @@ check_package() {
 	echo ""
 	echo "  4. ./scripts/packaging/create-package.sh -f -p linux build/full-static build/lang"
 	echo ""
-	echo "  5. cd contrib/resources/translations"
+	echo "  5. cd resources/translations"
 	echo ""
 	echo "  6. ./update-sources.sh"
 	exit 1

@@ -66,7 +66,7 @@ install_data('docs/AUTHORS', 'docs/THANKS', install_dir: doc_dir)
 
 subdir('contrib/linux')
 subdir('extras/icons')
-subdir('contrib/resources')
+subdir('resources')
 
 # Gather OS family type
 # ~~~~~~~~~~~~~~~~~~~~~

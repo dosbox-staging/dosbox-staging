@@ -15,7 +15,7 @@ project to skip building unit tests and get rid of the GTest dependency.
 
 DOSBox Staging ships with some binary files as a part of its assets:
 
-- `contrib/resources/drives/y` - important DOS commands which are not yet
+- `resources/drives/y` - important DOS commands which are not yet
   implemented internally.
   These are pre-built DOS executables, taken from the FreeDOS or other projects.
   To rebuild them, one might need legacy build tools, which are considered
@@ -26,7 +26,7 @@ DOSBox Staging ships with some binary files as a part of its assets:
   disadvantage for the end users is that they will have to provide them by
   themselves to run some game/software installers.
 
-- `contrib/resources/freedos-cpi` - DOS screen fonts (CodePage Information
+- `resources/freedos-cpi` - DOS screen fonts (CodePage Information
   files, CPI).
   These are bitmap fonts in a native MS-DOS format, taken from the FreeDOS
   project, painted by hand using a specialized font editor (so no source code
@@ -36,7 +36,7 @@ DOSBox Staging ships with some binary files as a part of its assets:
   Running DOSBox Staging without these files is completely unsupported; even if
   it seems to work for you, the internationalization features will malfunction.
 
-- `contrib/resources/freedos-keyboard` - DOS keyboard layout definitions.
+- `resources/freedos-keyboard` - DOS keyboard layout definitions.
   Despite their extensions suggesting a DOS device driver, these are data files,
   not executables. They are, too, taken from the FreeDOS project; the binaries
   were created from the source `*.KEY` text files, using specialized tools,

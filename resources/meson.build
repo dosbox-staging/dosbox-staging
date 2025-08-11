@@ -21,7 +21,7 @@ resources = [
 # under the provided data_dir (or prefix / share) area.
 
 # To add a new resources subdirectory, create a new directory
-# under ./contrib/resources/<here>.
+# under ./resources/<here>.
 #  - Add files to it including non-deliverables
 #  - Create a meson.build inside it containing a
 #    "resource_files = []" and/or "resource_dirs = []" list

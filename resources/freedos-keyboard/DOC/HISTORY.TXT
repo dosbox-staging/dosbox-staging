@@ -1,0 +1,245 @@
+Keyboard layouts for Keyb v2.0 pre3 and later
+
+Version          Description
+------------     -----------
+Prior to 2.0     Layouts for earlier versions of KEYB.
+
+2.0 (15/08/05)   Initial release for KEYB v2.0 pre3.
+
+2.1 (18/08/05)   Norwegian and  finnish/swedish  keyboards  can now type  all
+                 latin-alphabet-based saami languages and the romany language
+                 spoken in Finland. FreeDOS  enhancement: they can also  type
+                 karelian languages, livonian and ingrian.
+
+                 Support for the  saami  keyboards  based  on  the  norwegian
+                 ("SN" layout) and  finnish/swedish ("SE" layout)  keyboards.
+                 Important: these are different from the enhancements on  the
+                 norwegian and finnish/swedish layouts. FreeDOS  enhancement:
+                 they can also type karelian languages, livonian and ingrian.
+
+                 Support for the maltese language (based on UK  standard  and
+                 US keyboards) was moved into the layout of  those  keyboards
+                 themselves; the "MT" layout now refers to the real, physical
+                 keyboard, released on  Malta  on  February/2005.
+
+                 Support for esperanto is no longer on separate layouts ("EO"
+                 and "EO166"). It was moved to the layouts of the  keyboards
+                 they were based on: US and UK standard.
+
+                 The finnish/swedish keyboard now provides full support  for
+                 the finnish language: s/S and z/Z with caron.
+
+                 German keyboards can also type esperanto and polish.
+
+                 Polish keyboards can type kashubian.
+
+                 Turkish keyboards can type esperanto.
+
+                 US keyboard can now type maori, hawaiian, samoan, niuean and
+                 tokelauan.
+
+                 US and UK standard keyboards can now type afrikaans.
+   
+2.2 (15/10/05)   Norwegian and swedish/finnish keyboards: support for sami is
+                 now part of a secondary layer instead of a different layout;
+                 support for ingrian and livonian languages was removed.
+                 
+                 Full french support (AE/OE ligatures and  capital  "Y"  with
+                 umlaut on belgian, swiss-french and all canadian and  french
+                 keyboards.
+
+                 Belgium: keyboard can type german (sharp S), wallon, picard,
+                 champenois, gaumais and frankish.
+
+                 Canada: keyboards can type inuktitut, cree, dogrib,  slavey,
+                 chipewyan, inuvialuktun, inuinnaqtun and gwich'in.
+
+                 Denmark: keyboard can type faeroese, greenlandic and german.
+
+                 France: standard keyboard can type tahitian.
+  
+                 Georgia: keyboard can type abkhaz, ossetian and russian.
+
+                 Germany/Austria: keyboards can type croatian, czech, danish,
+                 frisian, hungarian, romani, slovak, slovenian, low saxon and
+                 sorbian. French native support expanded to full french.
+
+                 Italy:  keyboards  can  type  albanian,  catalan,  croatian,
+                 french, friulian, german, greek, latin,  occitan, provencal,
+                 sardinian and slovenian.
+
+                 Latin America: keyboard can type guarani.
+
+                 Macedonia: keyboard can type  albanian,  turkish  and balkan
+                 romani.
+  
+                 Netherlands: keyboard can type  low  saxon,  limburgish  and
+                 frisian.
+
+                 Nigeria: keyboard layout now available.
+
+                 Poland: keyboards can type belarussian and ukrainian.
+
+                 Romania: keyboards  can  type  gagauz, romanian  (cyrillic),
+                 russian and ukrainian.
+
+                 Russia:  Created  3  keyboard  layouts   for   29   official
+                 languages: Adyghe, Altai, Bashkir, Buryat, Chechen, Chukchi,
+                 Chuvash, Dolgan, Erzya, Evenki,  Ingush,  Kabardian, Kalmyk,
+                 Karachay-Balkar,  Karelian,  Khakas,  Khanty,  Komi-Permyak,
+                 Komi-Zyrian, Koryak, Mansi, Mari, Moksha, Nenets,  Ossetian,
+                 Tatar, Tuvin, Udmurt and Yakut. The tatar layout was already
+                 available actually but it now also supports the latin  tatar
+                 alphabet. 
+
+                 Serbia and Montenegro:  Cyrillic  (YC)  keyboards  can  type
+                 ruthenian.
+
+                 Spain: keyboard can type catalan (l with middle dot).
+
+                 Tajikistan: keyboard layout now available.
+
+                 Turkmenistan: keyboard layout now available.
+
+                 UK: keyboards can type breton, french, irish  gaelic,  manx,
+                 polish, scots, spanish and welsh; former IR and  GD  layouts
+                 were removed.
+
+                 US: keyboard can type chamorro, french, german, luxemburgish
+                 and spanish.
+
+                 UX: The US keyboard  (international  layout)  can  type  all
+                 official and co-official oceanic languages, namely:  French,
+                 Fijian, Marshallese, Kiribati,  Chuuk,  Kosraean,  Ponapean,
+                 Ulithian, Yapese,  Nauruan,  Palauan,  Sonsoralese,  Tobian,
+                 Angaur, Samoan, Tongan, Tuvaluan and Bislama.
+
+                 The following keyboard layouts were moved into KEYBRD2.SYS:
+
+                 - Bulgarian;
+                 - Greek;
+                 - Icelandic;
+                 - Romanian;
+                 - Russian;
+                 - Turkish;
+                 - "Yugoslavian cyrillic".
+
+                 The filipino keyboard layout was renamed from "TL" to "PH".
+
+2.3 (10/01/06)   US: keyboard can type all the other official and co-official
+                 languages in South Africa -  Venda,  Xhosa,  Zulu,   Tsonga,
+                 Tswana, Swazi, Ndelebe, Northern Sotho,  Sesotho,  Fanagalo,
+                 Lobedu, Pluthi, Khoe, Nama, San and Northern Ndebele.
+                 Support for Maltese was removed.
+
+                 UX ("US International"): keyboard can type all  the official,
+                 co-official and widely spoken languages on  Africa  enlisted
+                 on "AFRICA.TXT".
+
+                 Benin: keyboard layout now available.
+                 Types french, yoruba and fon.
+                 Free implementation based on a regular french keyboard.
+
+                 Niger: keyboard layout now available.
+                 Types french, hausa, zarma and tamajeq.
+                 Free implementation based on a regular french keyboard.
+
+                 Latin America: keyboard can type other  official  indigenous
+                 languages in addition to Guarani, all of  them  enlisted  on
+                 "LAT-AMER.TXT"; also venetian and low german mennonite.
+
+2.5 (26/08/06)   Ukraine: keyboards now can use codepage 866.
+                 Lithuania: keyboards do not echo the acute accent.
+                 Romania and Serbia: keyboards now can use codepage 1125.
+                 Bug fix: Combining <Alt> with keys on  non-QWERTY  keyboards
+                          worked as if they were  regular  QWERTY  keyboards.
+                          For  instance,  <Alt> + <Z>  on  german   keyboards
+                          (which are QWERTZ) worked as <Alt> + <Y>.
+                 Bug fix: Also concerning <Alt> combinations, some keys  were
+                          incorrectly handled (they sent incorrect scancodes)
+                          on the armenian, turkmen and vietnamese keyboards.
+                 Bug fix: <Shift> + <AltGr> + <C> now displays  C-cedilla  on
+                          the french keyboard when working with codepage 859.
+
+2.6 (28/05/09)   Spain: keyboard can now type spanish and french when working
+                        with cp30007 (previously only catalan could be  typed
+                        when working with that CP), now also being able to be
+                        used on Ecuatorial Guinea (where those two  languages
+                        are official).
+                 US: keyboard can  now  type  chamorro  and  carolinian  when
+                     working  with  cp30021  (previously  only  hawaiian  and
+                     samoan could type typed when working with that CP.)
+                 France: keyboard now types french when working with cp30021.
+                         Previously only tahitian could be typed when working
+                         with that CP.
+                 Belgium: keyboard can now  type  german  when  working  with
+                          cp30007 - previously only dutch, french  and picard
+                          could be typed when working with that CP.
+                 BX: An international layout for the belgian keyboard (ID120)
+                     was devised to type native african languages.
+                 FX: An international layout for the french keyboard  (ID189)
+                     was devised to type native african & oceanic languages.
+                 IX: International layouts for  the  italian  keyboards  were
+                     devised to type native african languages.
+                 PX: An international layout for the portuguese keyboard  was
+                     devised to type native african languages.
+                 SX: An international layout for  the  spanish  keyboard  was
+                     devised to type native african languages.
+                 KX: International layouts for  the  british  keyboards  were
+                      devised to type native african and oceanic languages.
+                 US: keyboard can now type cherokee.
+                 South Africa: keyboard layout now available.
+                 Bulgaria: keyboards can now use cp30033 (MIK).
+                           keyboards can now use cp849/cp1131.
+                           The bulgarian (US) phonetic keyboard was added.
+                 Bug fix: armenian and latvian (standard) keyboards were  not
+                          able to type the semicolon.
+                 Bug fix: Canadian layouts 445 and 501, actually parts of the
+                          same physical keyboard,  were merged into the  same
+                          layout (as 445).
+                 Brazil: Key <\> is now (redundantly) coded into  the  layout
+                         so to bypass a DOSEMU failure to handle that.
+                         Furthermore, two other keys, </>  and <NumPad.>  are
+                         now handled by DOSEMU thanks to the  work  of  Alain
+                         Mouette through a patch made available by him at:
+ http://sourceforge.net/tracker/?func=detail&aid=2797605&group_id=49784&atid=457449
+
+3.0 (12/08/11)   US: The cherokee layer was enhanced so to fully mimetize the
+                     cherokee solution as devised for Windows and Mac. Please
+                     refer to "Cherokee.txt" on the documentation for details.
+                     Still regarding cherokee support, <Alt> replaced  <Ctrl>
+                     as one of the keys on the necessary key combination used
+                     to switch layers.
+                 Ukraine: keyboards now able to type the hryvnia sign and the
+                          following languages when using:
+                          cp30033 - Crimean Tatar
+                          cp30039 - Ukrainian
+                          cp30040 - Russian
+                          Dropped support for belarusian codepages 849/1131.
+                 Bulgaria: MIK codepage was renamed from 30033 to 3021.
+                 Latvia: RusLat codepage was renamed from 61282 to 3012.
+                 Hungary: "Hungary-cp437" codepage was renamed from 57781  to
+                          3845.
+                 Brazil: ABNT layout now able  to use  codepage 860, formerly
+                         available only to the portuguese  keyboard  and  the
+                         characters "/", "?" and "ø" can now be typed through
+                         <AltGr> + <Q, W, E> on keyboards  where  the key </>
+                         is not available.
+                         Both keyboards able to use ABICOMP codepage 3848.
+                 Turkey: keyboards now able to  use  "Turkey-cp437" codepage,
+                         available as cp3846.
+                 Former yugoslavian-latin keyboard layout now also identified
+                 as "CG" (Montenegro) in addition to formerly available  two-
+                 letter codes for that layout: "BA", "HR" and "SI".
+		 Israeli, US/arabic and french/arabic keyboards (for use with
+                 Mined only).
+		 US: colemak layout.
+                 Czech: <CapsLock> now affects the accented letters in the
+                        first row (QWERTY and Standard layouts), according
+                        to major industry DOS standards.
+                        New: Czech for Programmers keyboard layout.
+                 All keyboards now able to type esperanto.
+                 All documentation was revised.
+
+3.1 (23/12/11)   Correction: israeli keyboard layout, previously left out of
+                             KEYBRD3.SYS, now included.
