@@ -4,7 +4,6 @@
 #ifndef DOSBOX_MIDI_MT32_H
 #define DOSBOX_MIDI_MT32_H
 
-#include "midi.h"
 #include "midi_device.h"
 
 #if C_MT32EMU
@@ -21,6 +20,7 @@
 #include <mt32emu/mt32emu.h>
 
 #include "audio/mixer.h"
+#include "midi/midi.h"
 #include "misc/std_filesystem.h"
 #include "utils/rwqueue.h"
 

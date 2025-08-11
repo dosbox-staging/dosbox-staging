@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightTextound  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "midi_soundcanvas.h"
+#include "private/midi_soundcanvas.h"
 
 #include <optional>
 #include <set>

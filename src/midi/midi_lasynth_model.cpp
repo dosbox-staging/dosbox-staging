@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "midi_lasynth_model.h"
+#include "private/midi_lasynth_model.h"
 
 #if C_MT32EMU
 

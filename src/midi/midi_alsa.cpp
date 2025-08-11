@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "midi_alsa.h"
+#include "private/midi_alsa.h"
 
 #if C_ALSA
 

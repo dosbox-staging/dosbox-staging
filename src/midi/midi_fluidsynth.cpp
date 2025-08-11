@@ -1,7 +1,7 @@
 //  SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 //  SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "midi_fluidsynth.h"
+#include "private/midi_fluidsynth.h"
 
 #include <bitset>
 #include <cassert>

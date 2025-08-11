@@ -5,7 +5,7 @@
 #ifndef DOSBOX_MIDI_DEVICE_H
 #define DOSBOX_MIDI_DEVICE_H
 
-#include "midi.h"
+#include "midi/midi.h"
 
 #include <cstdint>
 
