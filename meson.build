@@ -64,7 +64,7 @@ install_data(
 )
 install_data('docs/AUTHORS', 'docs/THANKS', install_dir: doc_dir)
 
-subdir('contrib/linux')
+subdir('extras/linux')
 subdir('extras/icons')
 subdir('resources')
 
@@ -842,7 +842,7 @@ can_trust_system_speexdsp = (
 # Test the library. Trust is dropped if the test fails.
 if can_trust_system_speexdsp
     system_speexdsp_test = cxx.run(
-        files('contrib/check-speexdsp/test_speexdsp_float_api.cpp'),
+        files('extras/check-speexdsp/test_speexdsp_float_api.cpp'),
         dependencies: speexdsp_dep,
         name: 'SpeexDSP system library has reliable floating-point API',
     )
