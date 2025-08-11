@@ -1,0 +1,135 @@
+HISTORY OF THE DOS CODEPAGE PACK
+================================
+
+Ver 1.0 - 30/Nov/2003
+          Initial release.
+
+Ver 1.1 - 02/Apr/2004
+          Updates on documentation.
+          Latin-1 with Euro (cp858) copied to EGA6 and EGA7.CPI files.
+          Greek codepage cp111 removed from EGA5.CPI file.
+
+Ver 1.2 - 04/Aug/2004
+          CPI files are now compressed (CPX) with UPX program.
+
+Ver 1.3 - 08/Jul/2005
+          Moved cp57781 (Hungarian) from EGA10 to EGA6.
+          New cp58335: Kashubian, included on EGA10.
+
+Ver 1.4 - 18/Aug/2005
+          New file: EGA11.CPX.
+          Contains cp30000 (Saami),
+          which is actually a superset of "SamTast",
+          which was a DOS encoding for some saami languages.
+
+Ver 1.5 - 15/Oct/2005
+          Major relocation (no changes on EGA, EGA3 and EGA8).
+          Affected files and codepages:
+          EGA2: Removed cp850 and 858
+                Included cp1118 and 1119
+          EGA4: Included new codepage: 30010 (Cyrillic Romanian and Gagauz)
+          EGA5: Removed cp850
+                Included cp113 and cp852
+          EGA6: Removed cp858, 113 and 57781
+                Included cp58210 and 60258
+                Included new codepage: 30008 (Abkhaz).
+          EGA7: Totally rebuilt. Contains new codepages:
+                30011 (Cyrillic Russian Southern District)
+                30013 (Cyrillic Russian Volga District - Turkic languages)
+                30014 (Cyrillic Russian Volga District - Finno-Ugric lang.)
+                30017 (Cyrillic Russian Northwestern District)
+                30018 (Cyrillic Russian and latin tatar)
+                30019 (Cyrillic Russian and latin chechen)
+          EGA9: Removed cp850
+                Included cp867 (czech)
+          EGA10: Removed cp867 and 58335.
+                 Included cp852 and cp57781
+          EGA11: Included cp858
+                 Included new codepages:
+                 30001 (Celtic)
+                 30004 (Greenlandic)
+                 30007 (Latin)
+                 30009 (Romani)
+
+          New files:
+          EGA12 - Contains codepages 858, 852 and 58335
+                  New codepages:
+                  30003 (Latin American)
+          EGA13 - Contains codepages 852, 895, 58152, 59234 and 62306.
+                   Contains new codepage: cp30002 (Tajik)
+          EGA14 - Contains new codepages:
+                  30006 (Vietnamese)
+                  30012 (Cyrillic Russian Siberian and Far Eastern Districts)
+                  30015 (Khanty)
+                  30016 (Mansi)
+                  30020 (Low saxon and frisian)
+                  30021 (Oceania)
+
+ver 2.0 - 10/Jan/2006
+          New files:
+          EGA15 - Contains new codepages:
+                   30023 - Southern Africa
+                   30024 - Northern and Eastern Africa
+                   30025 - Western Africa
+                   30026 - Central Africa
+                   30027 - Beninese
+                   30028 - Nigerien
+          Minor relocation:
+          EGA12 - Removed:
+                  30005 (Yoruba)
+                  30022 (Canadian First Nations)
+                  Included:
+                  30029 - Mexican
+                  30030 - Mexican II
+          New file:
+          EGA16 - Contains codepages:
+                    858 - Latin-1 with Euro
+                  30005 - Yoruba (now called "Nigerian")
+                  30022 - Canadian First Nations
+
+ver 2.1 - 26/Aug/2006
+          Corrections: Glyph #EFh on codepages 773 and 775
+                       was represented  as an acute accent
+                       when it should be  a  right  single
+                       quotation mark.
+                       IPA glyphs on codepages 777 and 778
+                       were redrawn; one of them was wrong
+                       and was corrected ("open e" is  now
+                       "reversed open e").
+                       Character O-acute  was  missing  on
+                       czech codepages 867/895  (character
+                       o-acute was encoded twice) when  in
+                       50-line text mode (8x8 font).
+                       Capital and small forms of cyrillic
+                       letter dzhe were misplaced  on  the
+                       8x14 font of codepage 30008.
+
+ver 2.3 - 03/Sep/2007
+          EGA16 - Contains new codepage:
+                  30033 - Cyrillic MIK Bulgarian
+          New file:
+          EGA17 - Contains codepages:
+                    858 - Latin-1 with Euro
+                  30034 - Cherokee
+
+ver 3.0 - 12/Aug/2011
+          EGA - Codepage 853 was enhanced:
+                Plus/minus sign and
+                5 currency signs (euro, cent, yen, maltese lira and spesmilo),
+                all inserted in previously empty codepoints.
+          EGA4 - Codepage 61282 renamed to 3012.
+          EGA10 - Codepage 57781 renamed to 3845.
+          EGA16 - Codepage 30033 renamed to 3021.
+          EGA17 - Included:
+		    862 - Hebrew
+                    864 - Arabic
+                  30033 - Formerly Cyrillic Bulgarian MIK,
+                          now Crimean Tatar with Hryvnia
+                  30039 - Ukrainian with Hryvnia
+                  30040 - Russian with Hryvnia
+          New file:
+          EGA18 - Contains codepages:
+                    856 - Hebrew II
+                   3846 - Turkish
+                   3848 - Brazilian ABICOMP
+

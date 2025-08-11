@@ -348,7 +348,7 @@ set(LICENSE_FILES
     licenses/Zlib.txt)
 
 # Set the directory with resources to bundle
-set(RESOURCES_PATH "contrib/resources")
+set(RESOURCES_PATH "resources")
 
 # Generate asset copy commands and add them as a dependency
 include(cmake/add_copy_assets.cmake)

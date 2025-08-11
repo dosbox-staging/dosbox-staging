@@ -1,0 +1,32 @@
+Support for official languages in Georgia
+=========================================
+
+According to information collected on the web, there are other three
+official languages in Georgia: abkhaz, ossetian and russian.
+
+The table below shows the cyrillic layer for the georgian keyboard;
+codepage 30008 must be previously prepared and selected.
+
+To switch between the latin and the cyrillic layer:
+
+<Alt> + <Left_Shift> = latin layer (default)
+<Alt> + <Right_Shift> = cyrillic layer
+
+                 зддддддддддддддддддддддддддддддддддд©
+                 Ё <Shift>     <Shift> + <Right_Alt> Ё
+                 Ё <Normal>    <Right_Alt>           Ё
+                 юддддддддддддддддддддддддддддддддддды
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддбдддбдддддбддддд©
+ЁП  Ё !   Ё "   Ё %   Ё ;   Ё :   Ё ,   Ё .   Ё *   Ё ( Ё ) Ё _   Ё +   Ё
+ЁЯ  Ё 1   Ё 2 @ Ё 3 # Ё 4   Ё 5   Ё 6 ^ Ё 7 & Ё 8 $ Ё 9 Ё 0 Ё -   Ё =   Ё
+юдддадбдддадбдддадбдддадбдддадбдддадбдддадбдддадбдддадбдадбдадбдддадбдддад©
+      Ё ┴   Ё √ В Ё ⌠ т Ё ┼ р Ё ┘   Ё █   Ё ┐ ╤ Ё ≤   Ё≥  Ё┤ пЁ ∙ ж Ё   У Ё
+      Ё     Ё     Ё     Ё     Ё   Щ Ё     Ё     Ё     Ё   Ё   Ё     Ё     Ё
+      юдбдддадбдддадбдддадбдддадбдддадбдддадбдддадбдддадбдадбдадбдддадбдддад©
+        Ё ■   Ё ⌡   Ё ┌   Ё ─ Ш Ё ▐ ь Ё ░   Ё ▌   Ё ▀   Ё└  Ё├ ╦Ё ²   Ё |   Ё
+        Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё   Ё   Ё   Ч Ё \   Ё
+        юдбдддадбдддадбдддадбдддадбдддадбдддадбдддадбдддадбдадбдадддбдаддддды
+          Ё ÷ г Ё ≈ ╬ Ё ▒ Ы Ё ▄   Ё ┬   Ё ▓ С Ё °   Ё │   Ё·  Ё ?   Ё
+          Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё   < Ё  >Ё /   Ё
+          юдддддадддддадддддадддддадддддадддддадддддадддддадддаддддды

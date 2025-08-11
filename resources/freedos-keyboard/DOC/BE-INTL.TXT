@@ -1,0 +1,73 @@
+Belgian keyboard - international layout ("BX")
+==============================================
+
+Linedraw, block and shade characters, the soft hyphen  and  the  non-breaking
+space characters are not available.
+
+Below is the drawing of the enhanced alphanumeric block.
+
+                 зддддддддддддддддддддддддддддддддддд©
+                 Ё <Shift>     <Shift> + <Right_Alt> Ё
+                 Ё <Normal>    <Right_Alt>           Ё
+                 юддддддддддддддддддддддддддддддддддды
+
+Variations
+==========
+
+* Official languages on Northern and Eastern Africa
+  French, Fula, Soninke, Wolof, Kirundi, Swahili,  Kinyarwanda,  Somali,
+  French Patois and Portuguese.
+  Widely spoken: Spanish, Italian, Dinka, Nuer, Afar, Oromo and Luganda.
+
+  Codepage: 30024
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё ▐ Ё 1   Ё 2   Ё 3   Ё 4   Ё 5   Ё 6   Ё 7   Ё 8 ╙ Ё 9   Ё 0   ЁЬ   Ё² _ Ё
+Ё   Ё & | Ё ┌ @ Ё " # Ё '   Ё ( ╕ Ё   ^ Ё ┼   Ё ! ╜ Ё ┤ { Ё ┘ } Ё) ╖ Ё  - Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё A ▓ Ё Z   Ё E Ш Ё R   Ё T   Ё Y М Ё U   Ё I   Ё O ╛ Ё P   Ё"   Ё* у Ё
+     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё^ [ Ё$ ] Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё Q   Ё S   Ё D я Ё F   Ё G ╦ Ё H   Ё J ╬ Ё K   Ё L   Ё M   Ё%   Ё    Ё
+      Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё≈ ' Ё  ` Ё
+   зддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+   Ё>  Ё W   Ё X   Ё C ─ Ё V   Ё B Х Ё N У Ё ? ╗ Ё . ╝ Ё / ╞ Ё +   Ё
+   Ё< \Ё     Ё     Ё     Ё     Ё     Ё     Ё , \ Ё ; < Ё : > Ё = ~ Ё
+   юдддадддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, N, O>
+    <^> for <A, E, I, O, U, S, Z> (Caron for S, Z)
+    Acute for <A, E, I, O, U>
+    Diaeresis for <A, E, ▐, I, O, ², U, Y>
+    Underline: <^> on <section_sign> for <A, I, O, ²>
+
+
+* Official languages on Central Africa
+  French, Portuguese, Spanish, Swahili, Lingala, Sango, Tshiluba, Kikongo,
+  Forro, Angolar and Principense.
+
+  Codepage: 30026
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё ▐ Ё 1   Ё 2   Ё 3   Ё 4   Ё 5   Ё 6   Ё 7   Ё 8 ╙ Ё 9   Ё 0   ЁЬ   Ё² _ Ё
+Ё   Ё & | Ё ┌ @ Ё " # Ё '   Ё ( ╕ Ё У ^ Ё ┼   Ё ! ╜ Ё ┤ { Ё ┘ } Ё) ╖ Ё  - Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё A ▓ Ё Z   Ё E   Ё R   Ё T   Ё Y   Ё U   Ё I   Ё O ╛ Ё P   Ё"   Ё* у Ё
+     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё^ [ Ё$ ] Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё Q   Ё S   Ё D   Ё F   Ё G   Ё H   Ё J   Ё K   Ё L   Ё M   Ё%   Ё°   Ё
+      Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё≈ ' ЁФ ` Ё
+   зддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+   Ё>  Ё W   Ё X   Ё C ─ Ё V   Ё B   Ё N   Ё ? ╗ Ё . ╝ Ё / ╞ Ё +   Ё
+   Ё< \Ё     Ё     Ё     Ё     Ё     Ё     Ё , \ Ё ; < Ё : > Ё = ~ Ё
+   юдддадддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, N, O>
+    <^> for <A, E, ▐, I, O, ², U>
+    Acute for <A, E, ▐, I, O, ², U>
+    Diaeresis for <A, E, I, O, U, Y>
+    Caron: <AltGr>+<У> for <A, E, ▐, I, O, ², S, Z>

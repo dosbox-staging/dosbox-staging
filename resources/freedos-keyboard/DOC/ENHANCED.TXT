@@ -1,0 +1,977 @@
+Support for official national/regional languages
+================================================
+
+
+The keyboards described in this document had their functionality enhanced for
+at least one of the following reasons:
+
+a) Official language(s) they are meant to assist is(are) not fully  supported
+   or not supported at all.
+
+b) There were user requests for supporting (a) particular language(s).
+   
+c) There is(are) (an-)other major-industry codepage(s) suitable for them.
+
+Nevertheless, it is important to  explain  that  all  enhancements  are  only
+accessed when the user is NOT using the default codepage. This  is  to  avoid
+sudden, unexpected discomfort when using them with their default codepage.
+
+There is an exception to case  (a) : Russia. There  are  many  more  official
+languages than what could be assisted into a single KEY file. A "RX.KEY" file
+("Russian international") was devised to assist that case and the details are
+in the "RUSSIA.TXT" file available on the documentation.
+
+Furthermore, it is expected (even though the mention to this case goes beyond
+the scope of this document), due to  cultural  ties  with  former  colonizing
+countries, that former colonies use the same keyboards (or at least sell them
+as an alternative to a keyboard devised on their own or to the US  keyboard).
+Fall in this case almost all non-european  countries. They  have  nonetheless
+other official languages and it would be impossible, on most cases, to encode
+all of them into a single keyboard layout. For example, encoding all official
+languages of the former french colonies into the french keyboard would not be
+viable. To solve such cases, "international" versions of the original french,
+UK, US, spanish, portuguese and belgian layouts were devised. Please refer to
+their particular documentation ("xx-INTL.TXT") for details.
+
+*********************************
+
+Below are the enhanced keyboards:
+
+1) Belgian
+
+   * Full french, Dutch and German
+     Codepage: 859
+
+     The capital Y with diaeresis is available.
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <A> = ë/í
+     <O> = oe/OE ligature
+
+     <AltGr> + <S> = ·
+     <AltGr> + <Z> = Æ
+     <AltGr> + <X> = Ø
+
+   * Walloon, Picard, Champenois, Gaumais, Frankish, full  French, Dutch  and
+     German
+     Codepage: 30007
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <A> = Ü/è
+     <E> = e/E with ring
+     <Z> = ë/í
+     <O> = oe/OE ligature
+
+     Deadkeys:
+     <`> for <A, E, U>
+     <~> for <N>
+     <^> for <A, E, I, O, U>
+     <Ô> for <E> and <C> (cedilla)
+     <˘> for <A, E, I, U, Y>
+
+     <AltGr> + <4> = ’
+     <AltGr> + <S> = ·
+     <AltGr> + <Z> = Æ
+     <AltGr> + <X> = Ø
+
+2) Beninese
+
+   | Free implementation based on a regular french keyboard. |
+
+   * Full French, Yoruba and Fon
+     Codepage: 30027
+
+     <˝> = open e/E
+     <*> = open o/O
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <A> = ë/í
+     <L> = oe/OE ligature
+     <N> = §/•
+     <W> = e/E with dot below and grave
+     <E> = e/E with dot below
+     <R> = e/E with dot below and acute
+     <I> = o/O with dot below and grave
+     <O> = o/O with dot below
+     <P> = o/O with dot below and acute
+     <S> = s/S with dot below
+     <D> = d/D with hook
+     <*> = */Ê
+
+     <Shift> + <AltGr> + <$> = ’
+     <Shift> + <AltGr> + <;> = Æ
+     <Shift> + <AltGr> + <:> = Ø
+
+     Deadkeys:
+     <`> for <A, E, I, O, U, open_E, open_O>
+     <^> for <A, E, I, O, U>
+     Acute/Cedilla: <'> for <A, E, I, O, U, N, open_E, open_O, C>
+     <˘> for <A, E, I, U, Y>
+     Breve: <%> for <A, E, I, O, U, open_E, open_O>
+
+3) Canadian (standard)
+
+   * Full french support
+     Codepage: 859
+
+     The capital Y with diaeresis is available.
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <A> = ë/í
+     <L> = oe/OE ligature
+
+   * Inuktitut, Inuvialuktun, Inuinnaqtun, Slavey (north/south),
+     Gwich'in, Dogrib, Cree, Chipewyan and full French
+     Codepage: 30022
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <Y> = small/capital glottal stop
+     <P> = oe/OE ligature
+     <A> = ë/í
+     <L> = l/L with slash
+
+     <AltGr> + <E> = ’
+
+     Deadkeys:
+     <`> for <A, E, I, O, U>
+     <^> for <A, E, I, O, U>
+     <Ô> for <A, E, I, O, U>
+     <˘> for <E, I, U, Y>
+     Ogonek/cedilla: <˜> for <A, E, I, O, U, C>
+     Macron/tilde: <-> for <A, E, I, O, N> (*)
+     Ogonek and grave: <<> for <A, E, I, O, U>
+     Ogonek and acute: <>> for <A, E, I, O, U>
+
+     (*) <AltGr> + <.>
+
+4) Canadian (/id: 445)
+
+   * Full french support
+     Codepage: 859
+
+     The capital Y with diaeresis is available.
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <O> = oe/OE ligature
+
+   * Inuktitut, Inuvialuktun, Inuinnaqtun, Slavey (north/south),
+     Gwich'in, Dogrib, Cree, Chipewyan and full French
+     Codepage: 30022
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <8> = small/capital glottal stop
+     <O> = oe/OE ligature
+     <A> = ë/í
+     <L> = l/L with slash
+
+     <AltGr> + <E> = ’
+
+     Deadkeys:
+     <`> for <A, E, I, O, U>
+     <^> for <A, E, I, O, U>
+     <'> for <A, E, I, O, U>
+     <˘> for <E, I, U, Y>
+     Macron/tilde: <~> for <A, E, I, O, N>
+     Ogonek: <"> for <A, E, I, O, U>
+     Ogonek and grave: <<> for <A, E, I, O, U>
+     Ogonek and acute: <>> for <A, E, I, O, U>
+
+5) Canadian (/id: 501)
+
+   * Full french support
+     Codepage: 859
+
+     The capital Y with diaeresis is available.
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <A> = ë/í
+     <I> = oe/OE ligature
+
+   * Inuktitut, Inuvialuktun, Inuinnaqtun, Slavey (north/south),
+     Gwich'in, Dogrib, Cree, Chipewyan and full French
+     Codepage: 30022
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <T> = small/capital glottal stop
+     <A> = ë/í
+     <I> = oe/OE ligature
+     <L> = l/L with slash
+
+     <AltGr> + <E> = ’
+
+     Deadkeys:
+     <`> for <A, E, I, O, U>
+     <^> for <A, E, I, O, U>
+     <Ô> for <A, E, I, O, U>
+     <˘> for <E, I, U, Y>
+     Macron/tilde: <~> for <A, E, I, O, N>
+     Ogonek/cedilla: <˜> for <A, E, I, O, U, C>
+     Ogonek and grave: <<> for <A, E, I, O, U>
+     Ogonek and acute: <>> for <A, E, I, O, U>
+
+6) Danish
+
+   * Greenlandic, Faeroese and German
+     Codepage: 30004
+
+     Deadkeys:
+     <~> for <A, I, U>
+     <^> for <A, E, I, O, U>
+     <Ô> for <A, E, I, O, U, Y>
+     <˘> for <A, O, U>
+
+     <AltGr> + <D> and <Shift> + <AltGr> + <D> = –/—
+
+     <AltGr> + <K> = KRA
+     <AltGr> + <S> = ·
+     <AltGr> + <Z> = Æ
+     <AltGr> + <X> = Ø
+ 
+7) French (standard)
+
+   * Full French support
+     Codepage: 859
+
+     The capital Y with diaeresis is available.
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <A> = ë/í
+     <O> = oe/OE ligature
+     <C> = á/Ä
+
+     <AltGr> + <Z> = Æ
+     <AltGr> + <X> = Ø
+     <Shift> + <AltGr> + <E> = ê
+     
+   * Tahitian and full French
+     Codepage: 30021
+
+     <^> works as deadkey for all 5 macron-accented vowels.
+
+8) Finnish/swedish and norwegian
+
+   * Full finnish support (finnish/swedish keyboard)
+     Codepage: 859
+
+     <AltGr> + <é> works as a deadkey for s/S and z/Z with caron.
+
+   * Saami languages and finnish Romani
+     Codepage: 30000
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <Q> = É/∂
+     <T> = t/T with stroke
+     <I> = ã/ÿ
+     <O> = ‰/Â
+     <A> = †/µ
+     <S> = s/S with caron
+     <D> = d/D with stroke
+     <F> = g/G with stroke
+     <G> = g/G with caron
+     <H> = h/H with caron
+     <K> = k/K with caron
+     <ô> = õ/ù (finnish/swedish keyboard)
+     <é> = ë/í (finnish/swedish keyboard)
+     <ù> = î/ô (norwegian keyboard)
+     <í> = Ñ/é (norwegian keyboard)
+     <Z> = z/Z with caron
+     <C> = c/C with caron
+     <V> = ezh/EZH with caron
+     <B> = ezh/EZH
+     <N> = eng/ENG
+
+     If <Alt> + <Right_Ctrl> is pressed, the secondary layer is selected
+     and the following keys are encoded as follows:
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <µ> = q/Q
+     <S with caron> = w/W
+     <T with stroke> = y/Y
+     <I> = ã/ÿ
+     <O> = ‰/Â
+     <A> = É/∂
+     <G> = g/G with caron
+     <H> = g/G with stroke
+     <K> = k/K with caron
+     <ô> = õ/ù (based on finnish/swedish keyboard)
+     <é> = ë/í (based on finnish/swedish keyboard)
+     <ù> = î/ô (based on norwegian keyboard)
+     <í> = Ñ/é (based on norwegian keyboard)
+     <D with stroke> (at the right side of <é>/<í>) = '/*
+     <Z with caron> = ezh/EZH with caron
+     <Z> = ezh/EZH
+     <C with caron> = x/X
+
+     There is the following key, to the right of <è>:
+     <ENG>
+
+     Both layers:
+     <AltGr> + <E> = ’
+     <Shift> + <AltGr> + <8> = Æ
+     <Shift> + <AltGr> + <9> = Ø
+
+9) German
+
+   * Polish, Slovenian, Croatian, Hungarian, Sorbian (upper/lower),
+     Czech and Slovak
+     Codepage: 852
+
+     Deadkeys:
+     <Ô> for all acute-accented letters.
+     <^> for all caron-accented letters and ì/‚ (Standard keyboard)
+     <`> for all caron-accented letters and ì/‚ (Keyboard /id: 453)
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <A> = a/A with ogonek
+     <E> = e/E with ogonek
+     <O> = o/O with double acute
+     <U> = u/U with double acute
+     <I> = u/U with ring
+     <D> = d/D with stroke
+     <L> = l/L with slash
+     <Z> = z/Z with dot above
+
+     <AltGr> + <4> = Euro sign
+     <Shift> + <AltGr> + <8> = Æ
+     <Shift> + <AltGr> + <9> = Ø
+
+   * Esperanto
+     Codepage: 853
+
+     Keyb /id:453: <Ô> works as deadkey for all 6 esperanto accented letters.
+     Standard keyb: <^> works as deadkey for all 6 esperanto accented letters.
+
+   * Danish and French
+     Codepage: 859
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <A> = Ü/è
+     <ô> = õ/ù
+     <é> = ë/í
+     <C> = á/Ä (standard keyboard)
+     <N> = §/• (standard keyboard)
+     <O> = oe/OE ligature
+
+     Deadkeys:
+     <^> for <A, E, I, O, U>
+     <Ô> for <A, E, O>
+     <`> for <A, E, U>
+     <"> for <A, E, I, O, U, Y>
+
+     <Shift> + <AltGr> + <8> = Æ
+     <Shift> + <AltGr> + <9> = Ø
+     <AltGr> + <E> = ’
+
+   * Low German and Frisian
+     Codepage: 30020
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <A> = Ü/è
+     <ô> = õ/ù
+     <é> = ë/í
+     <O> = oe/OE ligature
+     <I> = ij/IJ ligature
+
+     <AltGr> + <E> = ’
+
+     Deadkeys:
+     <^> for <A, E, I, O, U, Y>
+     <Ô> for <A, E, I, O, U, Y>
+     <"> for <A, E, I, O, U, Y>
+     <`> for <A, E, I, O, U>
+     Standard keyboard: <|> for <A, E, I, O, U> with macron
+                        <~> for <E, O, ô> with ogonek
+     Keyb /id:453: <~> for <A, E, I, O, U> with macron
+                   <˜> for <E, O, ô> with ogonek
+
+   * Romani
+     Codepage: 30009
+
+     Deadkeys:
+     <Ô> for all acute-accented letters
+     <^> for all circumflex- and caron-accented letters (Standard keyboard)
+     <`> for all circumflex- and caron-accented letters (Keyboard /id: 453)
+
+     Combining <AltGr> and <Shift> + <AltGr> with:
+     <A> = ∆/«
+     <I> = ã/ÿ
+     <é> = schwa/SCHWA
+
+     <AltGr> + <E> = Euro sign
+
+10) Italian
+ 
+    * German, French, Provenáal, Occitan, Friulian, Latin, Albanian, Catalan
+      and Sardinian
+      Codepage: 30007
+ 
+      Deadkeys:
+      <"> for <A, E, I, O, U, Y>
+      <'> for <A, E, I, O, U>
+      <^> for <A, E, I, O, U>
+      <`> for <A, E, I, O, U>
+      Macron: <¯> for <A, E, I, O, U>
+      Breve: <ı> for <A, E, I, O, U>
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <A> = ë/í
+      <O> = oe/OE ligature
+      <L> = l/L with middle dot
+      <C> = á/Ä
+      <N> = §/•
+
+      <AltGr> + <5> or <AltGr> + <E> = ’
+      <AltGr> + <S> = ·
+      <AltGr> + <\> = ˙
+      <AltGr> + <Z> = Æ
+      <AltGr> + <X> = Ø
+
+    * Croatian and Slovenian
+      Codepage: 852
+
+      Caron: <^> works as deadkey for <C, S, Z>
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <C> = c/C with acute
+      <D> = d/D with stroke
+
+      <AltGr> + <5> or <AltGr> + <E>: Euro sign
+
+    * Greek
+      Codepage: 869
+ 
+      Deadkeys:
+      Tonos: <ï> + <letters>
+      Diaeresis: <Ö> + <letters>
+      Dialytika Tonos: <ó> + <letters>
+
+      <Q> = Left/Right single quotation mark
+
+      <AltGr> + <E> = Euro sign
+
+11) Latin-american
+
+    * Achi, Akateko, Amuzgo, Awakateko, Aymara, Chinanteco, Chol, Chontal de
+      Oaxaca, Chontal de Tabasco, Chorti,  Chuj,  Cochimi,  Cora,  Garifuna,
+      Guarani, Huasteco, Huave, Huichol, Itza,  Ixil,  Jakalteko,  Kanjobal,
+      Kaqchiquel, Kekchi, Kiche, Lacandon, Mam, Maya Yucatan, Mayo, Mazahua,
+      Mazateco, Mixe, Mixteco,  Mopan,  Nahuatl,  Pima,  Pokomam,  Pokomchi,
+      Popoloca,  Purepecha,  Quechua,  Sakapulteko,  Sipakapense,   Spanish,
+      Tarahumara, Tektiteko, Tepehua, Tepehuan, Tojolabal, Tzeltal, Tzotzil,
+      Tzutujil, Uspanteko, Xinka, Yaqui, Zapoteco, Zoque, Cocopa,  Huarijio,
+      Kiliwa, Kumiai, Motozintleco, Paipai and Papago
+      Codepage: 30003
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <E> = e/E with slash
+      <I> = i/I with stroke
+      <L> = l/L with stroke
+      <N> = eng/ENG
+      <A> = turned v/V
+      <S> = turned v/V with acute
+
+      <AltGr> + <4> = Guarani sign
+      <AltGr> + <5> = ’
+      <AltGr> + <®> = Glottal stop
+      <AltGr> + <Z> = Æ
+      <AltGr> + <X> = Ø
+
+      Deadkeys:
+      <~> for <A, E, I, O, U, G, N, Y>
+      <Ô> for <A, E, I, O, U, Y>
+      <˘> for <A, E, I, O, U, N, X>
+      <`> for <A, E, I, O, U>
+      Circumflex/Macron: <^> for <A, E, I, O, U, C, S, Z, X>
+
+    * Chatino, Chichimeca Jonaz, Otomi, Pame, Popoluca, Seri,  Spanish,
+      Tlapaneco, Totonaco, Triqui, Cuicateco, Matlatzinca and Ocuilteco
+      Codepage: 30029
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <W> = open e/E with grave
+      <E> = open e/E
+      <R> = open e/E with acute
+      <S> = open e/E with grave and macron below
+      <D> = open e/E (Triqui)
+      <F> = open e/E with acute and macron below
+      <Y> = barred u/U
+      <U> = u/U with stroke
+      <I> = u/U with stroke and acute
+      <O> = o/O with slash
+      <N> = eng/ENG
+
+      <AltGr> + <3> = middle dot
+      <AltGr> + <5> = Euro
+      <AltGr> + <Z> = Æ
+      <AltGr> + <X> = Ø
+
+      Deadkeys:
+      <Ô> for <A, E, I, O, U>
+      <˘> for <A, E, I, O, U, S>
+      <`> for <A, E, I, O, U>
+      Macron below: <^> for <A, E, I, O, U>
+      Macron below and grave: <|> for <A, E, I, O, U>
+      Macron below and acute: <¯> for <A, E, I, O, U>
+
+    * Chochoteco, Kikapu, Low German Mennonite, Spanish, Venetian and Ixcateco
+      Codepage: 30030
+
+      Combining <AltGr> with:
+      <A, E, I, O, U> = a, e, i, o, u with ogonek
+      <C> = c with slash
+      <P> = barred p
+      <T> = theta
+      <®> = glottal stop
+      <S> = ·
+      <5> = ’
+      <Z, X> = Æ, Ø
+
+      Deadkeys:
+      <`> for <a, e, i, o, u, A, E, I, O, U>
+      <^> for <a, e, i, o, u>
+      Breve: <^> for <c, s, z>
+      Breve with dot below: <^> for <C, S, Z>
+      <Ô> for <a, e, i, o, u, A, E, I, O, U>
+      <˘> for <a, i, o, u, A, I, O, U>
+      Acute and ogonek: <'> for <a, e, i, o, u>
+      Grave and ogonek: <'> for <A, E, I, O, U>
+      Macron: <|> for <a, e, i, o, u>
+      Macron and ogonek: <|> for <A, E, I, O, U>
+      Macron-acute: <¯> for <a, e, i, o, u>
+      Macron-acute and ogonek: <¯> for <A, E, I, O, U>
+
+12) Macedonian
+
+    * Albanian, Turkish and balkan Romani
+      Codepage: 30009
+
+      Deadkeys:
+      <"> for <A, E, O, U>
+      <'> for <C, G>
+      Circumflex/Caron: <^> for <A, I, U, C, S, Z>
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <C> = á/Ä
+      <G> = g/G with breve
+      <S> = s/S with cedilla
+      <I> = small dotless i/capital dotted I
+
+      <AltGr> + <E> = ’
+
+13) Dutch
+
+    * Low Saxon, Limburgish and Frisian
+      Codepage: 30020
+
+      Deadkeys:
+      Macron: <~> works for <A, E, I, O, U>
+      Ogonek: <˜> works for <E, O>
+      <`> works for <A, E, I, O, U>
+      <Ô> works for <A, E, I, O, U, Y>
+      <^> works for <A, E, I, O, U, Y>
+      <˘> works for <A, E, I, O, U, Y>
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <A> = Ü/è
+      <Q> = ë/í
+      <P> = õ/ù
+      <I> = ij/IJ ligature
+      <O> = oe/OE ligature
+      <L> = o/O with diaeresis and ogonek
+
+      <AltGr> + <E> = ’
+
+14) Nigerian
+
+    | Modified version of the layout devised on Nigeria.    |
+    | <Q> and <X> are not sacrificed. English can be typed. |
+    | Deadkeys are the ones labeled on the keyboard.        |
+
+    * Yoruba, Igbo, Hausa
+      Codepage: 30005
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <W> = e/E with acute and dot below
+      <E> = e/E with grave and dot below
+      <Y> = u/U with acute and dot below
+      <U> = u/U with grave and dot below
+      <I> = i/I with grave and dot below
+      <J> = i/I with acute and dot below
+      <O> = o/O with grave and dot below
+      <P> = o/O with acute and dot below
+      <B> = b/B with hook
+      <D> = d/D with hook
+      <K> = k/K with hook
+      <N> = §/•
+
+      Deadkeys:
+      <`> for <A, E, I, O, U>
+      <'> for <A, E, I, O, U, N>
+      <^> for <A, E, I, O, U>
+      Dot: <~> for <E, I, O, U, N, S>
+
+      <Shift> + <4> = Naira sign
+      <AltGr> + <4> = $
+      <Shift> + <AltGr> + <4> = ú
+      <AltGr> + <5> = ’
+
+15) Nigerien
+
+    | Free implementation based on a regular french keyboard. |
+
+    * French, Hausa, Zarma and Tamajeq
+      Codepage: 30028
+
+      <˝> = Ç/ê
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <D, L, S, T, Z> = their underdotted counterparts
+      <A> = ë/í
+      <E> = inverted e/E
+      <Y> = y/Y with hook
+      <O> = oe/OE ligature
+      <Q> = a/A with breve
+      <F> = d/D with hook
+      <G> = gamma/GAMMA
+      <K> = k/K with hook
+      <C> = á/Ä
+      <B> = b/B with hook
+      <N> = eng/ENG
+      <,> = n/N with left hook
+
+      <Shift> + <AltGr> + <$> = ’
+      <Shift> + <AltGr> + <;> = Æ
+      <Shift> + <AltGr> + <:> = Ø
+
+      Deadkeys:
+      <~> for <A, E, I, O, U, N>
+      <`> for <A, E, U>
+      Circumflex/Caron: <^> for <A, E, I, O, U, G, J, S>
+      <˘> for <E, I, U, Y>
+
+16) Polish
+
+    * Kashubian
+      Codepage: 58335
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <Q> = a/A with tilde
+      <W> = e/E with acute
+      <E> = e/E with ogonek
+      <R> = e/E with diaeresis
+      <U> = u/U with grave
+      <I> = o/O with grave
+      <O> = o/O with acute
+      <P> = o/O with circumflex
+      <A> = a/A with ogonek
+      <S> = s/S with acute
+      <L> = l/L with slash
+      <Z> = z/Z with dot above
+      <X> = z/Z with acute
+      <C> = c/C with acute
+      <N> = n/N with acute
+
+      <AltGr> + <4> = zloty sign
+
+17) Romanian
+
+    * Russian, Gagauz and Romanian (all cyrillic)
+      Codepage: 30010
+
+      Diaeresis: <"> works as deadkey for cyrillic <A, E, O, U>.
+
+      <'> = SOFT SIGN
+      <AltGr> + <'> and <Shift> + <AltGr> + <'> = '/*
+
+      Standard romanian keyboard:
+      <]> = HARD SIGN
+      <AltGr> + <]> and <Shift> + <AltGr> + <]> = ]/[
+ 
+      Romanian keyboard (/id: 446):
+      <û> = HARD SIGN
+
+    * Gagauz (latin)
+      Codepage: 30009
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <E> = à/“
+      <O> = î/ô
+      <U> = Å/ö
+      <G> = g/G with breve
+
+      <AltGr> + <4> = ’
+
+      <û> = á/Ä (Romanian keyboard /id: 446)
+
+    * Ukrainian
+      Codepage: 848
+      Codepage: 1125 (same as 848 without Euro sign)
+
+      <'> = SOFT SIGN
+      <AltGr> + <'> and <Shift> + <AltGr> + <'> = '/*
+
+      Standard romanian keyboard:
+      <]> = ukrainian YE
+      <AltGr> + <]> and <Shift> + <AltGr> + <]> = ]/[
+
+      Romanian keyboard (/id: 446):
+      <û> = ukrainian YE
+
+18) Serbian
+
+    * Ruthenian
+      Codepage: 848
+      Codepage: 1125 (same as 848 without Euro sign)
+
+      <Q> = YA
+      <W> = YI
+      <DJERV> = YERY
+      <TJERV> = YU
+      <DZE> = Y
+      <DZHE> = KHA
+      <I> = SOFT SIGN (serbian standard)
+      <\> = SOFT SIGN (serbian /id:450)
+
+      <AltGr> + <E> = Euro sign
+
+19) Spanish
+
+    * Catalan, spanish, french
+      Codepage: 30007
+
+      Deadkeys:
+      <Ô> for <A, E, I, O, U>
+      <`> for <A, E, O, U>
+      <˘> for <E, I, U, Y>
+
+      Combining <AltGr> and <Shift> + <AltGr> with <L>: l/L with middle dot
+
+      <AltGr> + <Z> = Æ
+      <AltGr> + <X> = Ø
+      <AltGr> + <5> and <AltGr> + <E> = ’
+
+20) Swiss-french
+
+    * Full french support
+      Codepage: 859
+
+      The capital Y with diaeresis is available.
+
+      <AltGr> + <O> = oe ligature; <AltGr> + <I> = OE ligature
+      <AltGr> + <A> = ae ligature; <AltGr> + <Z> = AE ligature
+      <AltGr> + <Z> = Æ
+      <AltGr> + <X> = Ø
+
+21) Turkish
+ 
+    * Esperanto
+      Codepage: 853
+
+      <^> also works as a deadkey for all esperanto accented letters.
+
+22) Turkmen
+
+    * Turkmen - cyrillic alphabet
+      Codepage: 59234
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <`, -, =, [, ], ', \, /> = the labeled characters
+
+23) UK (standard)
+
+    * Polish
+      Codepage: 852
+
+      <`> works as deadkey for all 9 polish accented letters.
+ 
+      <AltGr> + <4> = ’
+
+    * Esperanto, Maltese and Afrikaans
+      Codepage: 853
+
+      Deadkeys:
+      <`> for <A, E, I, O, U>
+      <^> for <C, G, J, H, S, E, I, O, U>
+      <"> for <E, I>
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <C> = c/C with dot above
+      <G> = g/G with dot above
+      <H> = h/H with stroke
+      <Z> = z/Z with dot above
+      <U> = u/U with breve
+      <E> = Ç/ê
+
+      <AltGr> + <N> = 'n
+
+    * Scottish Gaelic, Irish Gaelic, Manx, Welsh, Breton and Scots
+      Codepage: 30001
+
+      Deadkeys:
+      <`> for all grave-accented letters
+      <"> for all diaeresis-accented letters
+      <^> for all circumflex-accented letters
+      <'> for all acute-accented letters
+      <~> for all overdotted consonants
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <C> = á/Ä
+      <N> = §/•
+      <Z> = yogh/YOGH
+
+      <AltGr> + <4> = ’
+      <AltGr> + <,> = Æ
+      <AltGr> + <.> = Ø
+
+    * French and Spanish
+      Codepage: 859
+
+      Deadkeys:
+      <^> for <A, E, I, O, U>
+      <`> for <A, E, U>
+      <"> for <E, I, O, U, Y>
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <Q> = ë/í
+      <P> = oe/OE ligature
+      <C> = á/Ä
+      <N> = §/•
+
+      <AltGr> + <,> = Æ
+      <AltGr> + <.> = Ø
+      <AltGr> + <4> = ’
+      <AltGr> + <1> = ≠
+      <Shift> + <AltGr> + </> = ®
+
+24) UK (/ID: 168)
+  
+    * Polish
+      Codepage: 852
+
+      <™> works as deadkey for all 9 polish accented letters.
+
+      <AltGr> + <E> = Euro sign
+
+    * Esperanto, Maltese and Afrikaans
+      Codepage: 853
+
+      Deadkeys:
+      <`> for <A, E, I, O, U>
+      <^> for <C, G, J, H, S, E, I, O, U>
+      <"> for <E, I>
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <C> = c/C with dot above
+      <G> = g/G with dot above
+      <H> = h/H with stroke
+      <Z> = z/Z with dot above
+      <U> = u/U with breve
+      <E> = Ç/ê
+
+      <AltGr> + <N> = 'n
+
+    * Scottish Gaelic, Irish Gaelic, Manx, Welsh, Breton and Scots
+      Codepage: 30001
+
+      Deadkeys:
+      <`> for all grave-accented letters
+      <"> for all diaeresis-accented letters
+      <#> for all circumflex-accented letters
+      <'> for all acute-accented letters
+      <Ó> for all overdotted consonants
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <C> = á/Ä
+      <N> = §/•
+      <Y> = yogh/YOGH
+
+      <AltGr> + <,> = Æ
+      <AltGr> + <.> = Ø
+      <AltGr> + <E> = ’
+
+    * French and Spanish
+      Codepage: 859
+
+      Deadkeys:
+      <^> for <A, E, I, O, U>
+      <`> for <A, E, U>
+      <"> for <E, I, O, U, Y>
+      <'> for <A, E, I, O, U>
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <A> = ë/í
+      <O> = oe/OE ligature
+      <C> = á/Ä
+      <N> = §/•
+
+      <AltGr> + <,> = Æ
+      <AltGr> + <.> = Ø
+      <AltGr> + <E> = ’
+      <AltGr> + </> = ®
+      <Shift> + <AltGr> + <1> = ≠
+
+25) US
+
+    * Hawaiian, Samoan, Maori, Niuean and Tokelauan
+      Codepage: 30021
+
+      <`> works as deadkey for all 5 macron-accented vowels.
+
+    * Spanish, French, Chamorro, German and Luxembourgish
+      Codepage: 859
+  
+      Deadkeys:
+      <`> for <A, E, U>
+      <~> for <N>
+      <^> for <A, E, I, O, U>
+      <'> for <A, E, I, O, U>
+      <"> for <A, E, I, O, U, Y>
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <A> = Ü/è
+      <C> = á/Ä
+      <E> = ë/í
+      <N> = §/•
+      <O> = oe/OE ligature
+
+      <AltGr> + <S> = ·
+      <AltGr> + <1> = ≠
+      <AltGr> + </> = ®
+      <AltGr> + <5> = ’
+      <AltGr> + <,> = Æ
+      <AltGr> + <.> = Ø
+
+    * Esperanto and Afrikaans
+      Codepage: 853
+
+      Deadkeys:
+      <^> for <C, G, J, H, S, E, I, O, U>
+      <"> for <E, I>
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <U> = u/U with breve
+      <E> = Ç/ê
+      <`> = ä/‘
+
+      <AltGr> + <N> = 'n
+
+    * Official and co-official languages in South Africa
+      Afrikaans, venda, xhosa, zulu, tsonga, tswana, ndebele, swazi, northern
+      sotho, sesotho, khoe, nama, san, fanagalo, lobedu, pluthi and  northern
+      ndebele
+      Codepage: 30023
+
+      Combining <AltGr> and <Shift> + <AltGr> with:
+      <O> = oe/OE ligature
+      <A> = ë/í
+      <C> = á/Ä
+
+      <AltGr> + <N> = 'n (as a single character)
+      <AltGr> + <E> = ’
+
+      Deadkeys:
+      <`> for <A, E, I, O, U>
+      <'> for <A, E, I, O, U>
+      <"> for <E, I, O>
+      Dot above: <~> for <N>
+      Circumflex/Caron: <^> for <A, E, I, O, U, D, L, N, T, S>
