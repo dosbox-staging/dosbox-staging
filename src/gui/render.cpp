@@ -703,6 +703,7 @@ static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
 		return AspectRatioCorrectionMode::Stretch;
 
 	} else {
+		// TODO convert to notification
 		LOG_WARNING("RENDER: Invalid 'aspect' setting: '%s', using 'auto'",
 		            mode.c_str());
 		return AspectRatioCorrectionMode::Auto;
@@ -731,6 +732,7 @@ static IntegerScalingMode get_integer_scaling_mode_setting()
 		return IntegerScalingMode::Vertical;
 
 	} else {
+		// TODO convert to notification
 		LOG_WARNING("RENDER: Invalid 'integer_scaling' setting: '%s', using 'auto'",
 		            mode.c_str());
 		return IntegerScalingMode::Auto;
@@ -747,6 +749,7 @@ static void log_invalid_viewport_setting_warning(
         const std::string& pref,
         const std::optional<const std::string> extra_info = {})
 {
+	// TODO convert to notification
 	LOG_WARNING("DISPLAY: Invalid 'viewport' setting: '%s'"
 	            "%s%s, using 'fit'",
 	            pref.c_str(),

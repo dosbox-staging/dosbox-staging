@@ -2727,6 +2727,7 @@ static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 		return {w, h};
 	}
 
+	// TODO convert to notification
 	LOG_WARNING(
 	        "DISPLAY: Invalid 'window_size' setting: '%s', "
 	        "using 'default'",
@@ -2768,6 +2769,7 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 			return 100;
 
 		} else {
+			// TODO convert to notification
 			LOG_WARNING(
 			        "DISPLAY: Invalid 'window_size' setting: '%s', "
 			        "using 'default'",
@@ -2802,6 +2804,7 @@ static void setup_initial_window_position_from_conf(const std::string& window_po
 	const auto was_parsed = (sscanf(window_position_val.c_str(), "%d,%d", &x, &y) ==
 	                         2);
 	if (!was_parsed) {
+		// TODO convert to notification
 		LOG_WARNING(
 		        "DISPLAY: Invalid 'window_position' setting: '%s'. "
 		        "Must be in X,Y format, using 'auto'.",
@@ -2814,6 +2817,7 @@ static void setup_initial_window_position_from_conf(const std::string& window_po
 	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
+		// TODO convert to notification
 		LOG_WARNING(
 		        "DISPLAY: Invalid 'window_position' setting: '%s'. "
 		        "Requested position is outside the bounds of the %dx%d "
@@ -2946,6 +2950,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 #endif
 
 	} else {
+		// TODO convert to notification
 		LOG_WARNING("SDL: Unsupported output device '%s', using 'texture' output mode",
 		            output.c_str());
 
@@ -2958,6 +2963,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	if (sdl.render_driver != "auto") {
 		if (SDL_SetHint(SDL_HINT_RENDER_DRIVER,
 		                sdl.render_driver.c_str()) == SDL_FALSE) {
+			// TODO convert to notification
 			LOG_WARNING(
 			        "SDL: Failed to set '%s' texture renderer driver; "
 			        "falling back to automatic selection",
@@ -2975,6 +2981,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 #if C_OPENGL
 	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
 		if (!set_default_window_mode()) {
+			// TODO convert to notification
 			LOG_WARNING(
 			        "OPENGL: Could not create OpenGL window, "
 			        "using 'texture' output mode");
@@ -2985,6 +2992,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 
 			if (sdl.opengl.context == nullptr) {
+				// TODO convert to notification
 				LOG_WARNING(
 				        "OPENGL: Could not create context, "
 				        "using 'texture' output mode");
@@ -3167,6 +3175,7 @@ static void sdl_section_init(Section* sec)
 	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
 		sdl.display_number = display;
 	} else {
+		// TODO convert to notification
 		LOG_WARNING("SDL: Display number out of bounds, using display 0");
 		sdl.display_number = 0;
 	}
@@ -4611,6 +4620,7 @@ static void maybe_write_primary_config(const CommandLineArguments& args)
 				LOG_MSG("CONFIG: Created primary config file '%s'",
 				        primary_config_path.string().c_str());
 			} else {
+				// TODO convert to notification
 				LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
 				            primary_config_path.string().c_str());
 			}
@@ -4751,6 +4761,7 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 		const char* result = control->SetProp(pvars);
 
 		if (strlen(result)) {
+			// TODO convert to notification
 			LOG_WARNING("CONFIG: %s", result);
 		} else {
 			Section* tsec = control->GetSection(pvars[0]);
@@ -4772,6 +4783,7 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 			bool change_success = tsec->HandleInputline(inputline);
 
 			if (!change_success && !value.empty()) {
+				// TODO convert to notification
 				LOG_WARNING("CONFIG: Cannot set '%s'",
 				            inputline.c_str());
 			}
