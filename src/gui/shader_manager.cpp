@@ -126,10 +126,12 @@ void ShaderManager::LoadShader(const std::string& shader_name)
 		current_shader.source.clear();
 
 		// List all the existing shaders for the user
+		// TODO convert to notification
 		LOG_ERR("RENDER: Shader file '%s' not found",
 		        new_shader_name.c_str());
 
 		for (const auto& line : GenerateShaderInventoryMessage()) {
+			// TODO convert to notification (maybe?)
 			LOG_WARNING("RENDER: %s", line.c_str());
 		}
 
@@ -286,6 +288,7 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 		if (it != legacy_name_mappings.end()) {
 			const auto new_name = it->second;
 
+			// TODO convert to notification
 			LOG_WARNING(
 			        "RENDER: Built-in shader '%s' has been renamed to '%s'; "
 			        "using '%s' instead.",
