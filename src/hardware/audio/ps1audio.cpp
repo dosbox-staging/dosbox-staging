@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "ps1audio.h"
+#include "private/ps1audio.h"
 
 #include <algorithm>
 #include <cassert>

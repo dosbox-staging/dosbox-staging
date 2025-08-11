@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "adlib_gold.h"
+#include "private/adlib_gold.h"
 
 #include "utils/checks.h"
 #include "utils/math_utils.h"

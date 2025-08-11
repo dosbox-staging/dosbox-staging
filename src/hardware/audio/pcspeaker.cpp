@@ -4,8 +4,9 @@
 // NOTE: a lot of this code assumes that the callback is called every emulated
 // millisecond
 
-#include "pcspeaker_discrete.h"
-#include "pcspeaker_impulse.h"
+#include "private/pcspeaker_discrete.h"
+#include "private/pcspeaker_impulse.h"
+
 #include "utils/math_utils.h"
 
 // The PC speaker managed pointer

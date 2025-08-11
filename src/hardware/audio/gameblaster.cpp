@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2017 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "gameblaster.h"
+#include "private/gameblaster.h"
 
 #include "audio/channel_names.h"
 #include "config/setup.h"

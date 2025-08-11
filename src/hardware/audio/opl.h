@@ -13,7 +13,8 @@
 #include "ESFMu/esfm.h"
 #include "nuked/opl3.h"
 
-#include "adlib_gold.h"
+#include "private/adlib_gold.h"
+
 #include "audio/mixer.h"
 #include "config/setup.h"
 #include "hardware/hardware.h"

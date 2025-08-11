@@ -6,10 +6,11 @@
 
 #include "dosbox.h"
 
+#include "private/covox.h"
+#include "private/disney.h"
+#include "private/ston1_dac.h"
+
 #include "config/setup.h"
-#include "hardware/audio/covox.h"
-#include "hardware/audio/disney.h"
-#include "hardware/audio/ston1_dac.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "misc/support.h"

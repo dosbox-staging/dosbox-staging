@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "pcspeaker_discrete.h"
+#include "private/pcspeaker_discrete.h"
 
 #include <algorithm>
 #include <array>

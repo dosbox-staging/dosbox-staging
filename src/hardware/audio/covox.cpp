@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "covox.h"
+#include "private/covox.h"
 
 #include <cassert>
 
