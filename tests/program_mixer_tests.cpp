@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "audio/channel_names.h"
-#include "dos/program/program_mixer.h"
+#include "dos/programs/program_mixer.h"
 
 #include <gtest/gtest.h>
 

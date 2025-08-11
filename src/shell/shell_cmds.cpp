@@ -24,7 +24,7 @@
 #include "shell/command_line.h"
 #include "config/config.h"
 #include "misc/cross.h"
-#include "dos/program/program_more_output.h"
+#include "dos/programs/program_more_output.h"
 #include "dos/dos_inc.h"
 #include "dos/drives.h"
 #include "hardware/timer.h"

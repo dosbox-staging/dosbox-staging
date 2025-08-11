@@ -19,7 +19,7 @@
 #include "hardware/pic.h"
 #include "hardware/serialport/serialport.h"
 #include "hardware/memory.h"
-#include "program/program_mount_common.h"
+#include "programs/program_mount_common.h"
 #include "cpu/registers.h"
 #include "config/setup.h"
 #include "util/string_utils.h"

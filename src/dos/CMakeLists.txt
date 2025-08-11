@@ -26,35 +26,35 @@ target_sources(libdosboxcommon PRIVATE
   drive_virtual.cpp
   drives.cpp
 
-  program/program_attrib.cpp
-  program/program_autotype.cpp
-  program/program_biostest.cpp
-  program/program_boot.cpp
-  program/program_choice.cpp
-  program/program_clip.cpp
-  program/program_help.cpp
-  program/program_imgmount.cpp
-  program/program_intro.cpp
-  program/program_keyb.cpp
-  program/program_loadfix.cpp
-  program/program_loadrom.cpp
-  program/program_ls.cpp
-  program/program_mem.cpp
-  program/program_mixer.cpp
-  program/program_mode.cpp
-  program/program_more.cpp
-  program/program_more_output.cpp
-  program/program_mount.cpp
-  program/program_mount_common.cpp
-  program/program_mouse.cpp
-  program/program_mousectl.cpp
-  program/program_move.cpp
-  program/program_placeholder.cpp
-  program/program_rescan.cpp
-  program/program_serial.cpp
-  program/program_setver.cpp
-  program/program_subst.cpp
-  program/program_tree.cpp
+  programs/program_attrib.cpp
+  programs/program_autotype.cpp
+  programs/program_biostest.cpp
+  programs/program_boot.cpp
+  programs/program_choice.cpp
+  programs/program_clip.cpp
+  programs/program_help.cpp
+  programs/program_imgmount.cpp
+  programs/program_intro.cpp
+  programs/program_keyb.cpp
+  programs/program_loadfix.cpp
+  programs/program_loadrom.cpp
+  programs/program_ls.cpp
+  programs/program_mem.cpp
+  programs/program_mixer.cpp
+  programs/program_mode.cpp
+  programs/program_more.cpp
+  programs/program_more_output.cpp
+  programs/program_mount.cpp
+  programs/program_mount_common.cpp
+  programs/program_mouse.cpp
+  programs/program_mousectl.cpp
+  programs/program_move.cpp
+  programs/program_placeholder.cpp
+  programs/program_rescan.cpp
+  programs/program_serial.cpp
+  programs/program_setver.cpp
+  programs/program_subst.cpp
+  programs/program_tree.cpp
 )
 
 target_sources(dosbox PRIVATE dos_files.cpp)
