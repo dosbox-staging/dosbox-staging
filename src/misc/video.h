@@ -7,8 +7,8 @@
 
 #include <string>
 
-#include "util/fraction.h"
-#include "util/rect.h"
+#include "utils/fraction.h"
+#include "utils/rect.h"
 #include "config/setup.h"
 #include "misc/types.h"
 

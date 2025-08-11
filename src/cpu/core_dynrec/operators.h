@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "cpu/flags.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 
 static uint8_t DRC_CALL_CONV dynrec_add_byte(uint8_t op1,uint8_t op2) DRC_FC;
 static uint8_t DRC_CALL_CONV dynrec_add_byte(uint8_t op1,uint8_t op2) {

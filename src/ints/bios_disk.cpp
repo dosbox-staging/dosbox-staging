@@ -13,7 +13,7 @@
 #include "dos/dos_inc.h" /* for Drives[] */
 #include "dos/drives.h"
 #include "gui/mapper.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 diskGeo DiskGeometryList[] = {
 	{ 160,  8, 1, 40, 0},	// SS/DD 5.25"

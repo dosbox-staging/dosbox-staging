@@ -11,11 +11,11 @@
 
 #include "dosbox.h"
 #include "dosbox_config.h"
-#include "util/dynlib.h"
+#include "utils/dynlib.h"
 #include "ethernet_slirp.h"
 #include "hardware/timer.h"
 #include "config/setup.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 /**
  * Platform specific libslirp shared library name

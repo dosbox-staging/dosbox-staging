@@ -16,7 +16,7 @@
 #include "misc/support.h"
 #include "misc/unicode.h"
 #include "misc/video.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

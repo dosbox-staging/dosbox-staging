@@ -18,10 +18,10 @@
 #include "hardware/reelmagic/reelmagic.h"
 #include "ints/int10.h"
 #include "misc/video.h"
-#include "util/bitops.h"
-#include "util/math_utils.h"
-#include "util/mem_unaligned.h"
-#include "util/rgb565.h"
+#include "utils/bitops.h"
+#include "utils/math_utils.h"
+#include "utils/mem_unaligned.h"
+#include "utils/rgb565.h"
 
 // #define DEBUG_VGA_DRAW
 

@@ -5,7 +5,7 @@
 
 #include <cassert>
 
-#include "util/checks.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

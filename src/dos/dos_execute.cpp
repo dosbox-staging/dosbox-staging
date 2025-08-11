@@ -17,7 +17,7 @@
 #include "programs/program_setver.h"
 #include "dos/programs.h"
 #include "cpu/registers.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/video.h"
 
 #ifdef _MSC_VER

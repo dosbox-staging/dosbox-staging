@@ -19,11 +19,11 @@
 #include "hardware/port.h"
 #include "hardware/reelmagic/reelmagic.h"
 #include "ints/int10.h"
-#include "util/bitops.h"
-#include "util/checks.h"
-#include "util/math_utils.h"
-#include "util/rgb888.h"
-#include "util/string_utils.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
+#include "utils/rgb888.h"
+#include "utils/string_utils.h"
 
 // CHECK_NARROWING();
 

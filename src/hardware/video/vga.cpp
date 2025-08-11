@@ -12,8 +12,8 @@
 #include "ints/int10.h"
 #include "misc/logging.h"
 #include "misc/video.h"
-#include "util/math_utils.h"
-#include "util/string_utils.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 VgaType vga;
 SVGA_Driver svga;

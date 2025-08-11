@@ -7,7 +7,7 @@
 #include <cstring>
 
 #include "misc/logging.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 [[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
 

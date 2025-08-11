@@ -11,7 +11,7 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "midi/midi.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 
 static void MPU401_Event(uint32_t);
 static void MPU401_Reset();

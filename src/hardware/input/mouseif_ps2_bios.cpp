@@ -18,9 +18,9 @@
 #include "hardware/pic.h"
 #include "ints/bios.h"
 #include "ints/int10.h"
-#include "util/bitops.h"
-#include "util/checks.h"
-#include "util/math_utils.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
 
 CHECK_NARROWING();
 

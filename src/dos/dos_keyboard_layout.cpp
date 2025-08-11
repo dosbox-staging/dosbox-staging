@@ -16,10 +16,10 @@
 #include "dos/drives.h"
 #include "ints/int10.h"
 #include "gui/mapper.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "cpu/registers.h"
 #include "config/setup.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 static const std::string ResourceDir = "freedos-keyboard";
 

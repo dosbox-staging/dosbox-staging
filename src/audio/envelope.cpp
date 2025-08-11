@@ -4,7 +4,7 @@
 #include "envelope.h"
 
 #include "audio/mixer.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 
 Envelope::Envelope(const char* name) : channel_name(name) {}
 

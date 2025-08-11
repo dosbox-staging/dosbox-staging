@@ -6,7 +6,7 @@
 #include <bit>
 #include <cstring>
 
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "misc/support.h"
 
 CHECK_NARROWING();

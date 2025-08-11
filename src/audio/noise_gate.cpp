@@ -7,7 +7,7 @@
 #include <cmath>
 
 #include "audio_frame.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

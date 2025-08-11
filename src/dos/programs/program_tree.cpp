@@ -4,7 +4,7 @@
 #include "program_tree.h"
 
 #include "cpu/callback.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "dos/dos_inc.h"
 #include "dos/drives.h"
 #include "ints/int10.h"

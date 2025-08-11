@@ -15,7 +15,7 @@
 
 #include "misc/logging.h"
 #include "dos/programs.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 #define ADDR_DELIM ".:"
 

@@ -3,13 +3,13 @@
 
 #include "program_more_output.h"
 
-#include "util/ascii.h"
+#include "utils/ascii.h"
 #include "cpu/callback.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "dos/dos_inc.h"
 #include "ints/int10.h"
 #include "shell/shell.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 #include <algorithm>
 #include <array>

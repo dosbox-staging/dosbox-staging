@@ -11,11 +11,11 @@
 #include "config/config.h"
 #include "dos/cdrom.h"
 #include "dos/drives.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "ints/int10.h"
 #include "program_more_output.h"
 #include "shell/shell.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 
 void MOUNT::ListMounts()

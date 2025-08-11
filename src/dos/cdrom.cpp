@@ -11,7 +11,7 @@
 #include "cpu/callback.h"
 #include "dosbox.h"
 #include "hardware/pic.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 namespace CDROM {
 std::array<std::unique_ptr<CDROM_Interface>, MaxNumDosDriveLetters> cdroms;

@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 #include "shell/shell.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 class FakeReader final : public LineReader {
 public:

@@ -12,9 +12,9 @@
 
 #include "serialmouse.h"
 
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "shell/command_line.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 
 #include "hardware/input/mouse_interfaces.h"
 

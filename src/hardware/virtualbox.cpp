@@ -12,7 +12,7 @@
 #include "hardware/pci_bus.h"
 #include "hardware/port.h"
 #include "misc/support.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

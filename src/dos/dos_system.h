@@ -10,9 +10,9 @@
 #include <string>
 #include <vector>
 
-#include "util/bit_view.h"
+#include "utils/bit_view.h"
 #include "misc/cross.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "hardware/memory.h"
 #include "misc/support.h"
 

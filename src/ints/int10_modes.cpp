@@ -11,16 +11,16 @@
 #include <optional>
 #include <vector>
 
-#include "util/bitops.h"
+#include "utils/bitops.h"
 #include "hardware/video/vga.h"
 #include "hardware/port.h"
 #include "hardware/pci_bus.h"
 #include "gui/render.h"
-#include "util/rgb888.h"
+#include "utils/rgb888.h"
 #include "config/setup.h"
-#include "util/math_utils.h"
-#include "util/rgb666.h"
-#include "util/string_utils.h"
+#include "utils/math_utils.h"
+#include "utils/rgb666.h"
+#include "utils/string_utils.h"
 #include "misc/video.h"
 
 // clang-format off

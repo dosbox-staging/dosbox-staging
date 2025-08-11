@@ -10,11 +10,11 @@
 #include "gui/render.h"
 #include "hardware/video/vga.h"
 #include "misc/support.h"
-#include "util/byteorder.h"
-#include "util/checks.h"
-#include "util/rgb555.h"
-#include "util/rgb565.h"
-#include "util/rgb888.h"
+#include "utils/byteorder.h"
+#include "utils/checks.h"
+#include "utils/rgb555.h"
+#include "utils/rgb565.h"
+#include "utils/rgb888.h"
 
 class ImageDecoder {
 public:

@@ -83,10 +83,10 @@
 #include "misc/cross.h"
 #include "misc/support.h"
 #include "simde/x86/sse2.h"
-#include "util/bitops.h"
-#include "util/byteorder.h"
-#include "util/fraction.h"
-#include "util/math_utils.h"
+#include "utils/bitops.h"
+#include "utils/byteorder.h"
+#include "utils/fraction.h"
+#include "utils/math_utils.h"
 
 #ifndef DOSBOX_VOODOO_TYPES_H
 #define DOSBOX_VOODOO_TYPES_H

@@ -9,14 +9,14 @@
 #include <vector>
 
 #include "misc/ansi_code_markup.h"
-#include "util/bitops.h"
-#include "util/checks.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
 #include "dos_keyboard_layout.h"
 #include "dos_locale.h"
 #include "misc/logging.h"
 #include "gui/mapper.h"
 #include "misc/host_locale.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/unicode.h"
 
 CHECK_NARROWING();

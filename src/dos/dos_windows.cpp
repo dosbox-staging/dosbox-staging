@@ -4,7 +4,7 @@
 #include "dos/dos_windows.h"
 
 #include "cpu/callback.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "cpu/cpu.h"
 #include "misc/logging.h"
 #include "hardware/input/mouse.h"

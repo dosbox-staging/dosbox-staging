@@ -8,7 +8,7 @@
 #include <cassert>
 #include <string>
 
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 namespace DosBox {
 

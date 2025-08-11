@@ -21,8 +21,8 @@
 #include "misc/cross.h"
 #include "misc/notifications.h"
 #include "misc/support.h"
-#include "util/fs_utils.h"
-#include "util/string_utils.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
 
 #if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))
 _CRTIMP extern char** _environ;

@@ -13,7 +13,7 @@
 
 #include "dosbox.h"
 #include "gui/mapper.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "program_more_output.h"
 #include "dos/programs.h"
 

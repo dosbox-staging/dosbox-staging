@@ -60,10 +60,10 @@
 #include "misc/video.h"
 #include "shell/command_line.h"
 #include "titlebar.h"
-#include "util/fs_utils.h"
-#include "util/math_utils.h"
-#include "util/rect.h"
-#include "util/string_utils.h"
+#include "utils/fs_utils.h"
+#include "utils/math_utils.h"
+#include "utils/rect.h"
+#include "utils/string_utils.h"
 
 static void switch_console_to_utf8()
 {

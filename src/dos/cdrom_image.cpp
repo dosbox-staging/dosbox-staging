@@ -26,10 +26,10 @@
 
 #include "audio/channel_names.h"
 #include "dos/drives.h"
-#include "util/fs_utils.h"
-#include "util/math_utils.h"
+#include "utils/fs_utils.h"
+#include "utils/math_utils.h"
 #include "config/setup.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 // String maximums, local to this file
 #define MAX_LINE_LENGTH 512

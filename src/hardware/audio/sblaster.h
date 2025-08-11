@@ -7,7 +7,7 @@
 #include "audio/mixer.h"
 #include "hardware/hardware.h"
 #include "hardware/port.h"
-#include "util/rwqueue.h"
+#include "utils/rwqueue.h"
 
 class SBLASTER final {
 public:

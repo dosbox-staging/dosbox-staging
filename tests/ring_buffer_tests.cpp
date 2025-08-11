@@ -3,7 +3,7 @@
 
 #include <cstdio>
 
-#include "util/ring_buffer.h"
+#include "utils/ring_buffer.h"
 
 #include <gtest/gtest.h>
 

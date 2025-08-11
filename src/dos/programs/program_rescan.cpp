@@ -4,7 +4,7 @@
 #include "program_rescan.h"
 
 #include "program_more_output.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 void RESCAN::Run(void)
 {

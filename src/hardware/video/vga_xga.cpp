@@ -14,7 +14,7 @@
 #include "cpu/callback.h"
 #include "cpu/cpu.h"		// for 0x3da delay
 #include "hardware/port.h"
-#include "util/bitops.h"
+#include "utils/bitops.h"
 
 constexpr auto &XGA_SCREEN_WIDTH = vga.s3.xga_screen_width;
 constexpr auto &XGA_COLOR_MODE = vga.s3.xga_color_mode;

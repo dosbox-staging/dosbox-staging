@@ -8,13 +8,13 @@
 #include <string>
 
 #include "misc/ansi_code_markup.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "ints/int10.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "program_more_output.h"
 #include "cpu/registers.h"
 #include "shell/shell.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 

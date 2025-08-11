@@ -10,7 +10,7 @@
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "dosbox.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "hardware/memory.h"
 
 /* Callback are located at 0xF000:0x1000  (see CB_SEG and CB_SOFFSET in callback.h)

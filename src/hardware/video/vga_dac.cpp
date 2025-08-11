@@ -13,7 +13,7 @@
 #include "hardware/port.h"
 #include "hardware/reelmagic/reelmagic.h"
 #include "ints/int10.h"
-#include "util/rgb.h"
+#include "utils/rgb.h"
 
 /*
 3C6h (R/W):  PEL Mask

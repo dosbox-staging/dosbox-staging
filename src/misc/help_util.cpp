@@ -7,7 +7,7 @@
 #include <string>
 
 #include "misc/help_util.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 
 static std::map<const std::string, HELP_Detail> help_list = {};

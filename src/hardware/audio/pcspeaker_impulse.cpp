@@ -8,8 +8,8 @@
 
 #include "pcspeaker_impulse.h"
 
-#include "util/checks.h"
-#include "util/math_utils.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
 
 CHECK_NARROWING();
 

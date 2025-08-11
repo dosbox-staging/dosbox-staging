@@ -20,14 +20,14 @@
 #include "audio/mixer.h"
 #include "config/config.h"
 #include "misc/cross.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "hardware/mpu401.h"
 #include "ints/int10.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "midi.h"
 #include "midi_lasynth_model.h"
 #include "hardware/pic.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 
 // #define DEBUG_MT32

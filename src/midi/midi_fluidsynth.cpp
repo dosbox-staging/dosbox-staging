@@ -16,13 +16,13 @@
 #include "audio/mixer.h"
 #include "config/config.h"
 #include "misc/cross.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "ints/int10.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "misc/notifications.h"
 #include "hardware/pic.h"
 #include "dos/programs.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 
 constexpr auto SoundFontExtension = ".sf2";

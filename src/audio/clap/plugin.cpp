@@ -7,7 +7,7 @@
 
 #include "clap/all.h"
 
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "event_list.h"
 #include "library.h"
 

@@ -14,8 +14,8 @@
 #include <vector>
 
 #include "audio/mixer.h"
-#include "util/dynlib.h"
-#include "util/rwqueue.h"
+#include "utils/dynlib.h"
+#include "utils/rwqueue.h"
 #include "misc/std_filesystem.h"
 
 namespace FluidSynth {

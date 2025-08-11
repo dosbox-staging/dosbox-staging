@@ -31,7 +31,7 @@
 #include "hardware/port.h"
 #include "ints/int10.h"
 #include "gui/mapper.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "midi/midi.h"
 #include "hardware/input/mouse.h"
 #include "hardware/pci_bus.h"

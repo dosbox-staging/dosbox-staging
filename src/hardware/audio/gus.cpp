@@ -22,9 +22,9 @@
 #include "misc/notifications.h"
 #include "shell/autoexec.h"
 #include "shell/shell.h"
-#include "util/bit_view.h"
-#include "util/math_utils.h"
-#include "util/string_utils.h"
+#include "utils/bit_view.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 #define LOG_GUS 0 // set to 1 for detailed logging
 

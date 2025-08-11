@@ -35,7 +35,7 @@
 #include "misc/support.h"
 #include "misc/video.h"
 #include "shell/shell.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 SDL_Window *GFX_GetSDLWindow(void);
 

@@ -11,9 +11,9 @@
 
 #include "misc/cross.h"
 #include "dos_inc.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "shell/shell.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 
 constexpr auto default_date = DOS_PackDate(2002, 10, 1);

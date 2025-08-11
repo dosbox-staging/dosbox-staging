@@ -23,7 +23,7 @@
 #include <string>
 
 #include "dos/programs.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 class MidiDeviceWin32 final : public MidiDevice {
 public:

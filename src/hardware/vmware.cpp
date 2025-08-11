@@ -11,8 +11,8 @@
 #include "hardware/input/mouse.h"
 #include "hardware/port.h"
 #include "misc/support.h"
-#include "util/checks.h"
-#include "util/string_utils.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 

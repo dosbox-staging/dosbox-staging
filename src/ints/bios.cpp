@@ -4,7 +4,7 @@
 
 #include "ints/bios.h"
 
-#include "util/bitops.h"
+#include "utils/bitops.h"
 #include "cpu/callback.h"
 #include "config/config.h"
 #include "cpu/cpu.h"
@@ -16,7 +16,7 @@
 #include "hardware/serialport/serialport.h"
 #include "hardware/port.h"
 #include "int10.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "hardware/memory.h"
 #include "hardware/input/mouse.h"
 #include "cpu/registers.h"

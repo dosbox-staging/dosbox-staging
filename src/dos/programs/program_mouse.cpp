@@ -4,7 +4,7 @@
 #include "program_mouse.h"
 
 #include "cpu/callback.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "dos/dos_inc.h"
 #include "dos/dos_windows.h"
 #include "hardware/input/mouse.h"

@@ -9,8 +9,8 @@
 
 #include "dosbox_config.h"
 #include "misc/support.h"
-#include "util/checks.h"
-#include "util/string_utils.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 

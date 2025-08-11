@@ -13,10 +13,10 @@
 #include <utility>
 
 #include "shell/command_line.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "serialport.h"
 #include "softmodem.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "misc_util.h"
 
 class PhonebookEntry {

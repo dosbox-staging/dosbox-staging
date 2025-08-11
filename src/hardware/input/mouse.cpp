@@ -18,8 +18,8 @@
 #include "cpu/cpu.h"
 #include "hardware/pic.h"
 #include "misc/video.h"
-#include "util/checks.h"
-#include "util/math_utils.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
 
 CHECK_NARROWING();
 

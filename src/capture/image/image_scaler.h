@@ -9,7 +9,7 @@
 #include "image_decoder.h"
 
 #include "gui/render.h"
-#include "util/rgb888.h"
+#include "utils/rgb888.h"
 
 enum class OutputPixelFormat { Indexed8, Rgb888 };
 

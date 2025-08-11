@@ -5,7 +5,7 @@
 #include "ints/bios.h"
 
 #include "cpu/callback.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "dosbox.h"
 #include "hardware/port.h"
 #include "hardware/pci_bus.h"

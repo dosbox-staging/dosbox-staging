@@ -9,12 +9,12 @@
 #include "misc/ansi_code_markup.h"
 #include "audio/audio_frame.h"
 #include "audio/channel_names.h"
-#include "util/checks.h"
-#include "util/math_utils.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
 #include "midi/midi.h"
 #include "misc/notifications.h"
 #include "program_more_output.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 

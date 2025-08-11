@@ -21,7 +21,7 @@
 #include <mt32emu/mt32emu.h>
 
 #include "audio/mixer.h"
-#include "util/rwqueue.h"
+#include "utils/rwqueue.h"
 #include "misc/std_filesystem.h"
 
 // forward declaration

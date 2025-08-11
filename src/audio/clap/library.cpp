@@ -8,9 +8,9 @@
 
 #include "clap/all.h"
 
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "misc/logging.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 
 CHECK_NARROWING();

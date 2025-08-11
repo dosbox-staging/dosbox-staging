@@ -11,7 +11,7 @@
 
 #include "config/config.h"
 #include "dosbox.h"
-#include "util/rect.h"
+#include "utils/rect.h"
 
 // ***************************************************************************
 // Initialization, configuration

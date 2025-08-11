@@ -13,7 +13,7 @@
 
 #include "dosbox_config.h"
 
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 
 #include "mp3_seek_table.h"
 #define DR_MP3_IMPLEMENTATION

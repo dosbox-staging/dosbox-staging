@@ -13,12 +13,12 @@
 
 #include "shell/autoexec.h"
 #include "ints/bios.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "dos_locale.h"
 #include "ints/int10.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "hardware/memory.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
 

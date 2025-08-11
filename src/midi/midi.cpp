@@ -25,7 +25,7 @@
 #include "hardware/pic.h"
 #include "dos/programs.h"
 #include "config/setup.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 // #define DEBUG_MIDI
 

@@ -27,7 +27,7 @@
 
 #include "shell/shell_cmds.cpp"
 #include "dosbox_test_fixture.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 namespace {
 

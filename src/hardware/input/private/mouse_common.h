@@ -6,7 +6,7 @@
 
 #include "hardware/input/mouse.h"
 
-#include "util/bit_view.h"
+#include "utils/bit_view.h"
 
 // ***************************************************************************
 // Common variables

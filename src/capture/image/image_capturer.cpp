@@ -8,8 +8,8 @@
 
 #include "config/setup.h"
 #include "misc/std_filesystem.h"
-#include "util/checks.h"
-#include "util/string_utils.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 

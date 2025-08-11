@@ -12,7 +12,7 @@
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 
 const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
 

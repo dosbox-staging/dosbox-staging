@@ -13,8 +13,8 @@
 #include "dos/dos_inc.h"
 #include "hardware/pic.h"
 #include "misc/unicode.h"
-#include "util/checks.h"
-#include "util/math_utils.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
 
 CHECK_NARROWING();
 

@@ -10,7 +10,7 @@
 #include <ctime>
 #include <array>
 
-#include "util/ascii.h"
+#include "utils/ascii.h"
 #include "ints/bios.h"
 #include "cpu/callback.h"
 #include "dos_locale.h"
@@ -22,7 +22,7 @@
 #include "programs/program_mount_common.h"
 #include "cpu/registers.h"
 #include "config/setup.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 
 #if defined(WIN32)

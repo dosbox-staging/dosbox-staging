@@ -5,11 +5,11 @@
 
 #include <fstream>
 
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "config/config.h"
 #include "dosbox.h"
-#include "util/fs_utils.h"
-#include "util/string_utils.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
 #include "misc/unicode.h"
 
 CHECK_NARROWING();

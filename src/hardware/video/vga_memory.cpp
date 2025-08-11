@@ -16,7 +16,7 @@
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
-#include "util/mem_host.h"
+#include "utils/mem_host.h"
 
 #ifndef C_VGARAM_CHECKED
 #define C_VGARAM_CHECKED 1

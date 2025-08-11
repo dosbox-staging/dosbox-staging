@@ -12,7 +12,7 @@
 #include "config/config.h"
 #include "dos/dos_windows.h"
 #include "dos/drives.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "hardware/dma.h"
 #include "hardware/virtualbox.h"
 #include "hardware/vmware.h"
@@ -20,7 +20,7 @@
 #include "hardware/input/mouse.h"
 #include "program_more_output.h"
 #include "cpu/registers.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/video.h"
 
 FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,

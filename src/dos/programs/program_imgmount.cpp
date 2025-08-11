@@ -13,14 +13,14 @@
 #include "misc/cross.h"
 #include "dos/cdrom.h"
 #include "dos/drives.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "hardware/ide.h"
 #include "ints/int10.h"
 #include "gui/mapper.h"
 #include "program_more_output.h"
 #include "program_mount_common.h"
 #include "shell/shell.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 void IMGMOUNT::ListImgMounts(void)
 {

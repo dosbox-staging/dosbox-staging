@@ -27,11 +27,11 @@
 #include "misc/support.h"
 #include "shell/autoexec.h"
 #include "shell/shell.h"
-#include "util/bit_view.h"
-#include "util/bitops.h"
-#include "util/math_utils.h"
-#include "util/rwqueue.h"
-#include "util/string_utils.h"
+#include "utils/bit_view.h"
+#include "utils/bitops.h"
+#include "utils/math_utils.h"
+#include "utils/rwqueue.h"
+#include "utils/string_utils.h"
 
 constexpr uint8_t MixerIndex = 0x04;
 constexpr uint8_t MixerData  = 0x05;

@@ -6,7 +6,7 @@
 
 #include "pcspeaker_discrete.h"
 #include "pcspeaker_impulse.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 
 // The PC speaker managed pointer
 std::unique_ptr<PcSpeaker> pc_speaker = {};

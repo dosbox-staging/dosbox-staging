@@ -9,7 +9,7 @@
 #include <sstream>
 
 #include "dos/programs.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 MidiDeviceCoreMidi::MidiDeviceCoreMidi(const char* conf)
         : MidiDevice(),

@@ -9,7 +9,7 @@
 
 #include "gui/render.h"
 #include "hardware/video/vga.h"
-#include "util/rect.h"
+#include "utils/rect.h"
 
 // forward references
 class Fraction;

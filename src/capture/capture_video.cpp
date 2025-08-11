@@ -10,7 +10,7 @@
 #include "gui/render.h"
 #include "hardware/memory.h"
 #include "misc/support.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 
 #include "zmbv/zmbv.h"
 

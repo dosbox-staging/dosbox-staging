@@ -13,7 +13,7 @@
 #include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "misc/support.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 
 LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
                std::set<ChannelFeature> extra_features)

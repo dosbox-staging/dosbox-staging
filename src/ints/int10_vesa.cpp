@@ -11,11 +11,11 @@
 #include "cpu/callback.h"
 #include "dos/dos_inc.h"
 #include "hardware/port.h"
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "hardware/memory.h"
 #include "hardware/pci_bus.h"
 #include "cpu/registers.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 #define VESA_SUCCESS          0x00
 #define VESA_FAIL             0x01

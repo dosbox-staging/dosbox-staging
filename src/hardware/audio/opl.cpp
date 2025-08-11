@@ -18,9 +18,9 @@
 #include "gui/mapper.h"
 #include "hardware/memory.h"
 #include "misc/support.h"
-#include "util/checks.h"
-#include "util/math_utils.h"
-#include "util/string_utils.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 

@@ -6,8 +6,8 @@
 #include <memory>
 
 #include "capture/capture.h"
-#include "util/byteorder.h"
-#include "util/checks.h"
+#include "utils/byteorder.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

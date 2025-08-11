@@ -17,9 +17,9 @@
 #include "gui/mapper.h"
 #include "image/image_capturer.h"
 #include "misc/support.h"
-#include "util/checks.h"
-#include "util/fs_utils.h"
-#include "util/string_utils.h"
+#include "utils/checks.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
 
 #include <SDL.h>
 

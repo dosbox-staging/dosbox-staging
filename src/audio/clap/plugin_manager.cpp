@@ -15,7 +15,7 @@
 
 #include "clap/all.h"
 
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "misc/cross.h"
 #include "misc/logging.h"
 #include "misc/support.h"

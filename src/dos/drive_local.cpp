@@ -21,9 +21,9 @@
 #include "misc/cross.h"
 #include "dos_inc.h"
 #include "dos_mscdex.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "hardware/port.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 bool localDrive::FileIsReadOnly(const char* name)
 {

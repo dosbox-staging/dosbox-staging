@@ -18,7 +18,7 @@
 #include "dos/drives.h"
 #include "misc/cross.h"
 #include "config/setup.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 
 #define DOS_FILESTART 4

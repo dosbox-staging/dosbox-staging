@@ -6,14 +6,14 @@
 
 #include "dos/dos_locale.h"
 #include "misc/ansi_code_markup.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "config/config.h"
 #include "misc/cross.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "host_locale.h"
 #include "config/setup.h"
 #include "misc/std_filesystem.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
 

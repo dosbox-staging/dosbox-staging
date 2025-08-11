@@ -6,9 +6,9 @@
 
 #include <cstdint>
 
-#include "util/rgb888.h"
+#include "utils/rgb888.h"
 #include "misc/support.h"
-#include "util/rgb.h"
+#include "utils/rgb.h"
 
 class Rgb555 {
 public:

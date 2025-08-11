@@ -10,9 +10,9 @@
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
-#include "util/bit_view.h"
-#include "util/bitops.h"
-#include "util/checks.h"
+#include "utils/bit_view.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

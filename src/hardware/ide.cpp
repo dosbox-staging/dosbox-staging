@@ -23,7 +23,7 @@
 #include "hardware/port.h"
 #include "hardware/timer.h"
 #include "ints/bios_disk.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 extern int bootdrive;
 extern bool bootguest, bootvm, use_quick_reboot;

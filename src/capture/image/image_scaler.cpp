@@ -6,10 +6,10 @@
 #include <cmath>
 
 #include "misc/support.h"
-#include "util/byteorder.h"
-#include "util/checks.h"
-#include "util/math_utils.h"
-#include "util/rgb.h"
+#include "utils/byteorder.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
+#include "utils/rgb.h"
 
 CHECK_NARROWING();
 

@@ -4,9 +4,9 @@
 #include "program_mousectl.h"
 
 #include "misc/ansi_code_markup.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "program_more_output.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 #include <set>
 

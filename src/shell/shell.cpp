@@ -16,11 +16,11 @@
 #include "config/config.h"
 #include "dos/programs/program_more_output.h"
 #include "dos/programs/program_setver.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "hardware/timer.h"
 #include "gui/mapper.h"
 #include "cpu/registers.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 
 callback_number_t call_shellstop = 0;

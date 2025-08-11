@@ -4,15 +4,15 @@
 
 #include "shell/autoexec.h"
 
-#include "util/checks.h"
+#include "utils/checks.h"
 #include "config/config.h"
 #include "dosbox.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "hardware/input/keyboard.h"
 #include "hardware/input/mouse.h"
 #include "config/setup.h"
 #include "shell/shell.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 #include "misc/unicode.h"
 
 #include <algorithm>

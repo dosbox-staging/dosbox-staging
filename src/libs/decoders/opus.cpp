@@ -26,7 +26,7 @@
 #include <opusfile.h>
 #include <SDL.h>
 
-#include "util/math_utils.h"
+#include "utils/math_utils.h"
 #include "misc/support.h"
 
 #include "SDL_sound.h"

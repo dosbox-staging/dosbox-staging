@@ -11,7 +11,7 @@
 #include "capture/capture.h"
 #include "misc/support.h"
 #include "png_writer.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

@@ -41,9 +41,9 @@
 #include "hardware/port.h"
 #include "hardware/timer.h"
 #include "ints/bios.h"
-#include "util/checks.h"
-#include "util/math_utils.h"
-#include "util/rwqueue.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
+#include "utils/rwqueue.h"
 
 CHECK_NARROWING();
 

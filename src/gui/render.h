@@ -11,8 +11,8 @@
 
 #include "gui/render_scalers.h"
 #include "hardware/video/vga.h"
-#include "util/fraction.h"
-#include "util/rect.h"
+#include "utils/fraction.h"
+#include "utils/rect.h"
 
 enum class ViewportMode { Fit, Relative };
 

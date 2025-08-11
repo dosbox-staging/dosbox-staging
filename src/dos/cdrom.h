@@ -19,7 +19,7 @@
 #include "audio/mixer.h"
 #include "hardware/memory.h"
 #include "misc/support.h"
-#include "util/rwqueue.h"
+#include "utils/rwqueue.h"
 
 #include "decoders/SDL_sound.h"
 

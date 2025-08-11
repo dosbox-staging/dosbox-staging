@@ -15,8 +15,8 @@
 #include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "misc/support.h"
-#include "util/bitops.h"
-#include "util/checks.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

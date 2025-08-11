@@ -17,7 +17,7 @@
 #include "debugger_inc.h"
 #include "misc/cross.h"
 #include "misc/support.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 #if !PDCURSES
 #error SYSTEM CURSES INCLUDED, SHOULD BE PDCURSES

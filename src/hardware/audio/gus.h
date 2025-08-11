@@ -4,7 +4,7 @@
 
 #include "audio/mixer.h"
 #include "hardware/dma.h"
-#include "util/rwqueue.h"
+#include "utils/rwqueue.h"
 
 #include <queue>
 

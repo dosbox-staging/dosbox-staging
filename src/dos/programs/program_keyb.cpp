@@ -8,7 +8,7 @@
 #include "ints/int10.h"
 #include "program_more_output.h"
 #include "shell/shell.h"
-#include "util/string_utils.h"
+#include "utils/string_utils.h"
 
 #include <iostream>
 

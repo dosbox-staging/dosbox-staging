@@ -27,9 +27,9 @@
 #include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "misc/video.h"
-#include "util/math_utils.h"
-#include "util/rgb888.h"
-#include "util/string_utils.h"
+#include "utils/math_utils.h"
+#include "utils/rgb888.h"
+#include "utils/string_utils.h"
 
 //  Status Colors
 //  ~~~~~~~~~~~~~

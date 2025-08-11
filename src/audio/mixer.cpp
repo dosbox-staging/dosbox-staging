@@ -33,10 +33,10 @@
 #include "misc/notifications.h"
 #include "misc/tracy.h"
 #include "misc/video.h"
-#include "util/checks.h"
-#include "util/math_utils.h"
-#include "util/rwqueue.h"
-#include "util/string_utils.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
+#include "utils/rwqueue.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 

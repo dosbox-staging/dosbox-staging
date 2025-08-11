@@ -8,7 +8,7 @@
 #include "config/setup.h"
 #include "hardware/pic.h"
 #include "misc/notifications.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

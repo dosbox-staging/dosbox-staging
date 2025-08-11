@@ -37,8 +37,8 @@
 #	include <pwd.h>
 #endif
 
-#include "util/fs_utils.h"
-#include "util/string_utils.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
 #include "misc/support.h"
 #include "dos/drives.h"
 

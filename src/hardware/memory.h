@@ -7,8 +7,8 @@
 
 #include "dosbox.h"
 
-#include "util/mem_host.h"
-#include "util/mem_unaligned.h"
+#include "utils/mem_host.h"
+#include "utils/mem_unaligned.h"
 #include "misc/types.h"
 
 constexpr uint16_t MemPageSize     = 4096;

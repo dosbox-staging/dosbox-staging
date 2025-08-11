@@ -20,9 +20,9 @@
 #include "misc/video.h"
 #include "shader_manager.h"
 #include "shell/shell.h"
-#include "util/fraction.h"
-#include "util/math_utils.h"
-#include "util/string_utils.h"
+#include "utils/fraction.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 Render render;
 ScalerLineHandler_t RENDER_DrawLine;

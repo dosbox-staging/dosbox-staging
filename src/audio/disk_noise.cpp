@@ -18,7 +18,7 @@
 #include "decoders/dr_flac.h"
 #include "hardware/timer.h"
 #include "mixer.h"
-#include "util/checks.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

@@ -16,14 +16,14 @@
 #include "cpu/callback.h"
 #include "dos/dos_system.h"
 #include "dos_inc.h"
-#include "util/fs_utils.h"
+#include "utils/fs_utils.h"
 #include "config/setup.h"
 #include "misc/support.h"
 #include "ints/bios_disk.h"
 #include "cpu/cpu.h"
 #include "cdrom.h"
-#include "util/math_utils.h"
-#include "util/string_utils.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 #define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
 //#define MSCDEX_LOG
