@@ -9,13 +9,14 @@
 
 #include "clap/all.h"
 
-#include "misc/ansi_code_markup.h"
 #include "audio/channel_names.h"
+#include "audio/clap/library.h"
 #include "audio/clap/plugin_manager.h"
-#include "utils/checks.h"
-#include "hardware/pic.h"
 #include "config/setup.h"
+#include "hardware/pic.h"
+#include "misc/ansi_code_markup.h"
 #include "misc/std_filesystem.h"
+#include "utils/checks.h"
 #include "utils/string_utils.h"
 
 CHECK_NARROWING();

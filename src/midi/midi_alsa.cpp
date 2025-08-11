@@ -13,8 +13,8 @@
 #include <sstream>
 #include <string>
 
-#include "misc/logging.h"
 #include "dos/programs.h"
+#include "misc/logging.h"
 #include "utils/string_utils.h"
 
 #define ADDR_DELIM ".:"

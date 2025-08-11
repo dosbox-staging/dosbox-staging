@@ -12,18 +12,18 @@
 #include <vector>
 
 #include "audio/channel_names.h"
-#include "misc/ansi_code_markup.h"
 #include "audio/mixer.h"
 #include "config/config.h"
-#include "misc/cross.h"
-#include "utils/fs_utils.h"
-#include "ints/int10.h"
-#include "utils/math_utils.h"
-#include "misc/notifications.h"
-#include "hardware/pic.h"
 #include "dos/programs.h"
-#include "utils/string_utils.h"
+#include "hardware/pic.h"
+#include "ints/int10.h"
+#include "misc/ansi_code_markup.h"
+#include "misc/cross.h"
+#include "misc/notifications.h"
 #include "misc/support.h"
+#include "utils/fs_utils.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 constexpr auto SoundFontExtension = ".sf2";
 

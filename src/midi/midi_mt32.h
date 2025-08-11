@@ -21,8 +21,8 @@
 #include <mt32emu/mt32emu.h>
 
 #include "audio/mixer.h"
-#include "utils/rwqueue.h"
 #include "misc/std_filesystem.h"
+#include "utils/rwqueue.h"
 
 // forward declaration
 class LASynthModel;

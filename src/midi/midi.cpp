@@ -14,17 +14,17 @@
 
 #include <SDL.h>
 
-#include "misc/ansi_code_markup.h"
 #include "capture/capture.h"
 #include "config/config.h"
-#include "misc/cross.h"
-#include "hardware/mpu401.h"
-#include "hardware/timer.h"
-#include "gui/mapper.h"
-#include "midi_device.h"
-#include "hardware/pic.h"
-#include "dos/programs.h"
 #include "config/setup.h"
+#include "dos/programs.h"
+#include "gui/mapper.h"
+#include "hardware/mpu401.h"
+#include "hardware/pic.h"
+#include "hardware/timer.h"
+#include "midi_device.h"
+#include "misc/ansi_code_markup.h"
+#include "misc/cross.h"
 #include "utils/string_utils.h"
 
 // #define DEBUG_MIDI
