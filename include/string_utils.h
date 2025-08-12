@@ -353,4 +353,10 @@ std::string replace_eol(const std::string& str, const std::string& new_eol);
 // Compares two pieces of text, insensitive to end-of-line encoding differences
 bool is_text_equal(const std::string& str_1, const std::string& str_2);
 
+// Wraps the supplied text on spaces given a maximum length and optional
+// additional wrap chars
+std::string wrap_text(const std::string& str, const std::size_t max_line_length,
+		      const std::vector<char>& additional_wrap_chars = {'-'},
+		      const size_t indent_length = 0);
+
 #endif

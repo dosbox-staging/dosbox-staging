@@ -4,6 +4,8 @@
 #include "string_utils.h"
 
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -437,4 +439,44 @@ bool is_text_equal(const std::string& str_1, const std::string& str_2)
 	}
 
 	return (index_1 == str_1.size()) && (index_2 == str_2.size());
+}
+
+std::string wrap_text(const std::string& str, const std::size_t max_line_length,
+                      const std::vector<char>& additional_wrap_chars,
+                      const std::size_t indent_length)
+{
+	std::ostringstream out_stream;
+	std::size_t line_len = 0;
+
+	const auto is_wrap_char = [additional_wrap_chars](const char c) {
+		return c == ' ' || std::ranges::find(additional_wrap_chars, c)
+		       != additional_wrap_chars.end();
+	};
+
+	std::string token;
+	for (const auto c : str) {
+		token.push_back(c);
+
+		if (is_wrap_char(c)) {
+			if (line_len + token.size() > max_line_length) {
+				out_stream << '\n' << std::string(
+					indent_length,
+					' ');
+				line_len = 0;
+			}
+			out_stream << token;
+			line_len += token.size();
+			token.clear();
+		}
+	}
+
+	if (!token.empty()) {
+		if (line_len + token.size() > max_line_length) {
+			out_stream << '\n' << std::string(indent_length, ' ');
+			line_len = 0;
+		}
+		out_stream << token;
+	}
+
+	return out_stream.str();
 }
