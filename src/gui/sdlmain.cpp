@@ -17,7 +17,7 @@
 #include <tuple>
 #include <unistd.h>
 
-#if C_DEBUG
+#if C_DEBUGGER
 #include <queue>
 #endif
 
@@ -36,33 +36,34 @@
 #include <SDL.h>
 #endif // C_OPENGL
 
-#include "../capture/capture.h"
-#include "../dos/dos_locale.h"
-#include "../ints/int10.h"
-#include "control.h"
-#include "cpu.h"
-#include "cross.h"
-#include "debug.h"
-#include "fs_utils.h"
+#include "audio/mixer.h"
+#include "capture/capture.h"
+#include "config/config.h"
+#include "config/setup.h"
+#include "cpu/cpu.h"
+#include "debugger/debugger.h"
+#include "dos/dos_locale.h"
+#include "gui/mapper.h"
+#include "gui/render.h"
+#include "gui/sdlmain.h"
 #include "gui_msgs.h"
-#include "joystick.h"
-#include "keyboard.h"
-#include "mapper.h"
-#include "math_utils.h"
-#include "mixer.h"
-#include "mouse.h"
-#include "pacer.h"
-#include "pic.h"
-#include "rect.h"
-#include "render.h"
-#include "sdlmain.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "timer.h"
+#include "hardware/input/keyboard.h"
+#include "hardware/input/mouse.h"
+#include "hardware/joystick.h"
+#include "hardware/pic.h"
+#include "hardware/timer.h"
+#include "hardware/video/vga.h"
+#include "ints/int10.h"
+#include "misc/cross.h"
+#include "misc/pacer.h"
+#include "misc/tracy.h"
+#include "misc/video.h"
+#include "shell/command_line.h"
 #include "titlebar.h"
-#include "tracy.h"
-#include "vga.h"
-#include "video.h"
+#include "utils/fs_utils.h"
+#include "utils/math_utils.h"
+#include "utils/rect.h"
+#include "utils/string_utils.h"
 
 static void switch_console_to_utf8()
 {
@@ -453,7 +454,7 @@ static const char* to_string(const VsyncMode mode)
 	}
 }
 
-#if C_DEBUG
+#if C_DEBUGGER
 extern SDL_Window* pdc_window;
 extern std::queue<SDL_Event> pdc_event_queue;
 
@@ -484,7 +485,7 @@ SDL_Window* GFX_GetSDLWindow()
 static void QuitSDL()
 {
 	if (sdl.initialized) {
-#if !C_DEBUG
+#if !C_DEBUGGER
 		SDL_Quit();
 #endif
 	}
@@ -3578,7 +3579,7 @@ static void read_gui_config(Section* sec)
 	                  "capmouse",
 	                  "Cap Mouse");
 
-#if C_DEBUG
+#if C_DEBUGGER
 /* Pause binds with activate-debugger */
 #elif defined(MACOSX)
 	// Pause/unpause is hardcoded to Command+P on macOS
@@ -4122,7 +4123,7 @@ bool GFX_Events()
 	}
 
 	while (SDL_PollEvent(&event)) {
-#if C_DEBUG
+#if C_DEBUGGER
 		if (is_debugger_event(event)) {
 			pdc_event_queue.push(event);
 			continue;
@@ -4650,7 +4651,7 @@ static int edit_primary_config()
 	return 1;
 }
 
-#if C_DEBUG
+#if C_DEBUGGER
 extern void DEBUG_ShutDown(Section* /*sec*/);
 #endif
 
@@ -4715,10 +4716,10 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 
 	GFX_RequestExit(true);
 
-#if C_DEBUG
+#if C_DEBUGGER
 	// shutdown curses
 	DEBUG_ShutDown(nullptr);
-#endif // C_DEBUG
+#endif // C_DEBUGGER
 
 #ifdef WIN32
 	// nullptr to parse from command line
@@ -5105,7 +5106,7 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 	}
 }
 
-#if defined(WIN32) && !(C_DEBUG)
+#if defined(WIN32) && !(C_DEBUGGER)
 static void apply_windows_debugger_workaround(const bool is_console_disabled)
 {
 	// Can't disable the console with debugger enabled
@@ -5289,7 +5290,7 @@ int sdl_main(int argc, char* argv[])
 			return *return_code;
 		}
 
-#if defined(WIN32) && !(C_DEBUG)
+#if defined(WIN32) && !(C_DEBUGGER)
 		apply_windows_debugger_workaround(arguments->noconsole);
 #endif
 
@@ -5336,7 +5337,7 @@ int sdl_main(int argc, char* argv[])
 
 		if (sdl.wait_on_error) {
 			// TODO Maybe look for some way to show message in linux?
-#if (C_DEBUG)
+#if (C_DEBUGGER)
 			GFX_ShowMsg("Press enter to continue");
 
 			fflush(nullptr);

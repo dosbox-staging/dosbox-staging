@@ -19,20 +19,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Disable the noisy narrowing and conversion warnings by default. Use the
 # CHECK_NARROWING() macro to opt-in these checks on a per-file basis. See
-# `include/checks.h` for details.
+# `src/util/checks.h` for details.
 if(MSVC)
   add_compile_options("/wd4244" "/MP")
-  
+
   # Disable cl/clangcl warnings about insecure C functions
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
   add_compile_options("-Wno-conversion" "-Wno-narrowing")
 endif()
 
-option(OPT_DEBUG "Enable debugging" OFF)
-option(OPT_HEAVY_DEBUG "Enable heavy debugging" OFF)
-if(OPT_HEAVY_DEBUG)
-  set(OPT_DEBUG ON CACHE INTERNAL "")
+option(OPT_DEBUGGER "Enable debugger" OFF)
+option(OPT_HEAVY_DEBUGGER "Enable heavy debugger" OFF)
+if(OPT_HEAVY_DEBUGGER)
+  set(OPT_DEBUGGER ON CACHE INTERNAL "")
 endif()
 
 include(CheckIncludeFile)
@@ -211,11 +211,11 @@ set(C_MT32EMU ON)       # TODO: Option
 set(C_TRACY OFF)        # TODO: Option
 set(C_DIRECTSERIAL ON)
 
-if(OPT_DEBUG)
-  set(C_DEBUG ON)
+if(OPT_DEBUGGER)
+  set(C_DEBUGGER ON)
 
-  if(OPT_HEAVY_DEBUG)
-    set(C_HEAVY_DEBUG ON)
+  if(OPT_HEAVY_DEBUGGER)
+    set(C_HEAVY_DEBUGGER ON)
   endif()
 endif()
 
@@ -304,7 +304,8 @@ set(project_name "${PROJECT_NAME}")
 set(version      "${PROJECT_VERSION}")
 
 configure_file(
-  src/config.h.in.cmake ${CMAKE_CURRENT_BINARY_DIR}/include/config.h
+  src/dosbox_config.h.in.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/include/dosbox_config.h
 )
 
 # Allow dynamically loading externalised vcpkg dependencies at runtime
@@ -357,13 +358,15 @@ add_copy_assets()
 #target_link_libraries(dosbox PRIVATE Tracy::TracyClient)
 
 include_directories(
-  include src/libs src/gui ${CMAKE_CURRENT_BINARY_DIR}/include
+  src
+  src/libs
+  ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
 add_library(libdosboxcommon STATIC)
 
 
-# Add tests before src so that the dosbox_tests target is 
+# Add tests before src so that the dosbox_tests target is
 # available for target_sources()
 if(OPT_TESTS)
   add_subdirectory(tests)
@@ -391,7 +394,7 @@ target_link_libraries(libdosboxcommon PRIVATE
   libdecoders
 )
 
-target_link_libraries(dosbox PRIVATE 
+target_link_libraries(dosbox PRIVATE
   libdosboxcommon
   $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>

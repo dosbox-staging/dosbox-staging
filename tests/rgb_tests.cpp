@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "bgrx8888.h"
-#include "rgb.h"
-#include "rgb565.h"
-#include "rgb888.h"
+#include "utils/bgrx8888.h"
+#include "utils/rgb888.h"
+#include "utils/rgb.h"
+#include "utils/rgb565.h"
 
 #include <gtest/gtest.h>
 

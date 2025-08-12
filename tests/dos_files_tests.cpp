@@ -18,21 +18,21 @@
  * 4. Additional dosbox-staging headers (if needed)
  */
 
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 
 #include <iterator>
 #include <string>
 
 #include <gtest/gtest.h>
 
-#include "control.h"
-#include "dos_system.h"
-#include "drives.h"
-#include "shell.h"
-#include "string_utils.h"
+#include "config/config.h"
+#include "dos/dos_system.h"
+#include "dos/drives.h"
+#include "shell/shell.h"
+#include "utils/string_utils.h"
 
 #include "dosbox_test_fixture.h"
-#include "../src/dos/dos_files.cpp"
+#include "dos/dos_files.cpp"
 
 namespace {
 

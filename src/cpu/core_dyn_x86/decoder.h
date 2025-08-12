@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "compiler.h"
+#include "misc/compiler.h"
 
-#include "inout.h"
+#include "hardware/port.h"
 
 #define X86_INLINED_MEMACCESS
 #define X86_DYNREC_MMX_ENABLED
@@ -341,7 +341,7 @@ static void dyn_check_bool_exception_al(void) {
 	++used_save_info;
 }
 
-#include "pic.h"
+#include "hardware/pic.h"
 
 static void dyn_check_irqrequest(void) {
 	gen_load_host(&PIC_IRQCheck,DREG(TMPB),4);
@@ -2682,7 +2682,7 @@ restart_prefix:
 		case 0xca:dyn_ret_far(decode_fetchw());goto finish_block;
 		case 0xcb:dyn_ret_far(0);goto finish_block;
 		/* Interrupt */
-#if !(C_DEBUG)
+#if !(C_DEBUGGER)
 		case 0xcd:dyn_interrupt(decode_fetchb());goto finish_block;
 #endif
 		/* IRET */

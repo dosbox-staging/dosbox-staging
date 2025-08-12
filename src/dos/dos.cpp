@@ -10,20 +10,20 @@
 #include <ctime>
 #include <array>
 
-#include "ascii.h"
-#include "bios.h"
-#include "callback.h"
+#include "utils/ascii.h"
+#include "ints/bios.h"
+#include "cpu/callback.h"
 #include "dos_locale.h"
-#include "dos_windows.h"
-#include "drives.h"
-#include "mem.h"
-#include "pic.h"
-#include "program_mount_common.h"
-#include "regs.h"
-#include "serialport.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "support.h"
+#include "dos/dos_windows.h"
+#include "dos/drives.h"
+#include "hardware/pic.h"
+#include "hardware/serialport/serialport.h"
+#include "hardware/memory.h"
+#include "programs/mount_common.h"
+#include "cpu/registers.h"
+#include "config/setup.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
 
 #if defined(WIN32)
 #include <winsock2.h> // for gethostname
@@ -125,7 +125,7 @@ static uint16_t DOS_GetAmount(void) {
 #ifdef DATA_TRANSFERS_TAKE_CYCLES
 
 #ifndef DOSBOX_CPU_H
-#include "cpu.h"
+#include "cpu/cpu.h"
 #endif
 
 void DOS_SetDiskSpeed(DiskSpeed disk_speed, DiskType disk_type)
@@ -382,7 +382,7 @@ static inline void modify_cycles(Bits /* value */) {
 #define DOS_OVERHEAD 1
 #ifdef DOS_OVERHEAD
 #ifndef DOSBOX_CPU_H
-#include "cpu.h"
+#include "cpu/cpu.h"
 #endif
 
 static inline void overhead() {

@@ -9,17 +9,18 @@
 #include <cstdio>
 #include <mutex>
 
-#include "capture_audio.h"
-#include "capture_midi.h"
-#include "capture_video.h"
-#include "checks.h"
-#include "control.h"
-#include "fs_utils.h"
+#include "private/capture_audio.h"
+#include "private/capture_midi.h"
+#include "private/capture_video.h"
+
+#include "config/config.h"
+#include "config/setup.h"
+#include "gui/mapper.h"
 #include "image/image_capturer.h"
-#include "mapper.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "support.h"
+#include "misc/support.h"
+#include "utils/checks.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
 
 #include <SDL.h>
 

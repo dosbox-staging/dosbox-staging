@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mouse_common.h"
+#include "private/mouse_common.h"
 
 #include <algorithm>
 
-#include "checks.h"
-#include "math_utils.h"
-#include "pic.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
+#include "hardware/pic.h"
 
 CHECK_NARROWING();
 

@@ -7,10 +7,10 @@
 #include <cassert>
 #include <cmath>
 
-#include "math_utils.h"
-#include "mem.h"
-#include "render.h"
-#include "support.h"
+#include "gui/render.h"
+#include "hardware/memory.h"
+#include "misc/support.h"
+#include "utils/math_utils.h"
 
 #include "zmbv/zmbv.h"
 

@@ -6,13 +6,13 @@
 #include <cmath>
 #include <ctime>
 
-#include "bios_disk.h"
-#include "cross.h"
-#include "inout.h"
-#include "mem.h"
-#include "pic.h"
-#include "setup.h"
-#include "timer.h"
+#include "hardware/port.h"
+#include "ints/bios_disk.h"
+#include "misc/cross.h"
+#include "hardware/timer.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
+#include "config/setup.h"
 
 static struct {
 	uint8_t regs[0x40];

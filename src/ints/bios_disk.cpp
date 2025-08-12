@@ -1,19 +1,19 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 
 #include <algorithm>
 #include <cassert>
 #include <utility>
 
-#include "callback.h"
-#include "regs.h"
-#include "mem.h"
-#include "dos_inc.h" /* for Drives[] */
-#include "drives.h"
-#include "mapper.h"
-#include "string_utils.h"
+#include "cpu/callback.h"
+#include "cpu/registers.h"
+#include "hardware/memory.h"
+#include "dos/dos_inc.h" /* for Drives[] */
+#include "dos/drives.h"
+#include "gui/mapper.h"
+#include "utils/string_utils.h"
 
 diskGeo DiskGeometryList[] = {
 	{ 160,  8, 1, 40, 0},	// SS/DD 5.25"

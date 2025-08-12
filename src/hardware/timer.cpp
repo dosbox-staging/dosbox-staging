@@ -7,12 +7,12 @@
 #include <cassert>
 #include <cmath>
 
-#include "inout.h"
-#include "pic.h"
-#include "mem.h"
-#include "math_utils.h"
-#include "mixer.h"
-#include "setup.h"
+#include "audio/mixer.h"
+#include "config/setup.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "utils/math_utils.h"
 
 const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
 

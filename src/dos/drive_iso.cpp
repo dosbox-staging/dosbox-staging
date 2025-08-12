@@ -1,16 +1,16 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "drives.h"
+#include "dos/drives.h"
 
 #include <cctype>
 #include <cstring>
 
 #include "cdrom.h"
 #include "dos_mscdex.h"
-#include "dos_system.h"
-#include "string_utils.h"
-#include "support.h"
+#include "dos/dos_system.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
 
 #define FLAGS1	((iso) ? de.fileFlags : de.timeZone)
 #define FLAGS2	((iso) ? de->fileFlags : de->timeZone)

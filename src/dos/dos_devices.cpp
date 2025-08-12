@@ -2,18 +2,18 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dos_system.h"
+#include "dos/dos_system.h"
 
 #include <cstring>
 
 #include "dosbox.h"
-#include "callback.h"
-#include "regs.h"
-#include "mem.h"
-#include "bios.h"
+#include "cpu/callback.h"
+#include "cpu/registers.h"
+#include "hardware/memory.h"
+#include "ints/bios.h"
 #include "dos_inc.h"
-#include "support.h"
-#include "drives.h"
+#include "misc/support.h"
+#include "dos/drives.h"
 #include "dev_con.h"
 
 DOS_Device * Devices[DOS_DEVICES];

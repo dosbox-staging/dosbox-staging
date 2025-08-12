@@ -1,18 +1,18 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "drives.h"
+#include "dos/drives.h"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 
-#include "bios.h"
-#include "bios_disk.h"
+#include "ints/bios.h"
+#include "ints/bios_disk.h"
 #include "dos_inc.h"
-#include "string_utils.h"
-#include "support.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
 
 #define IMGTYPE_FLOPPY 0
 #define IMGTYPE_ISO    1

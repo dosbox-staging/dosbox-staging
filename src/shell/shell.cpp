@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "shell.h"
+#include "shell/shell.h"
 
 #include <cstdarg>
 #include <cstdlib>
@@ -11,17 +11,17 @@
 #include <memory>
 #include <regex>
 
-#include "../dos/program_more_output.h"
-#include "../dos/program_setver.h"
-#include "autoexec.h"
-#include "callback.h"
-#include "control.h"
-#include "fs_utils.h"
-#include "mapper.h"
-#include "regs.h"
-#include "string_utils.h"
-#include "support.h"
-#include "timer.h"
+#include "config/config.h"
+#include "cpu/callback.h"
+#include "cpu/registers.h"
+#include "dos/programs/more_output.h"
+#include "dos/programs/setver.h"
+#include "gui/mapper.h"
+#include "hardware/timer.h"
+#include "misc/support.h"
+#include "shell/autoexec.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
 
 callback_number_t call_shellstop = 0;
 
@@ -447,13 +447,13 @@ void DOS_Shell::Run()
 	/* Start a normal shell and check for a first command init */
 	if (cmd->FindString("/INIT",line,true)) {
 		const bool wants_welcome_banner = control->GetStartupVerbosity() >=
-		                                  Verbosity::High;
+		                                  StartupVerbosity::High;
 		if (wants_welcome_banner) {
 			WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"),
 			         DOSBOX_GetDetailedVersion(), PRIMARY_MOD_NAME,
 			         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_PAD,
 			         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD);
-#if C_DEBUG
+#if C_DEBUGGER
 			WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"), MMOD2_NAME);
 #endif
 			if (is_machine_cga()) {

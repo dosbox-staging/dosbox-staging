@@ -4,18 +4,18 @@
 
 #include "dosbox.h"
 
-#include "../dos/dos_locale.h"
-#include "ansi_code_markup.h"
-#include "checks.h"
-#include "control.h"
-#include "cross.h"
-#include "fs_utils.h"
+#include "dos/dos_locale.h"
+#include "misc/ansi_code_markup.h"
+#include "utils/checks.h"
+#include "config/config.h"
+#include "misc/cross.h"
+#include "utils/fs_utils.h"
 #include "host_locale.h"
-#include "setup.h"
-#include "std_filesystem.h"
-#include "string_utils.h"
-#include "support.h"
-#include "unicode.h"
+#include "config/setup.h"
+#include "misc/std_filesystem.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
+#include "misc/unicode.h"
 
 #include <cctype>
 #include <fstream>

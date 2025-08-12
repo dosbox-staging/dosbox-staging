@@ -7,11 +7,11 @@
 #include <limits>
 #include <string>
 
-#include "callback.h"
-#include "cpu.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
 #include "dosbox.h"
-#include "math_utils.h"
-#include "mem.h"
+#include "utils/math_utils.h"
+#include "hardware/memory.h"
 
 /* Callback are located at 0xF000:0x1000  (see CB_SEG and CB_SOFFSET in callback.h)
    And they are 16 bytes each and you can define them to behave in certain ways like a

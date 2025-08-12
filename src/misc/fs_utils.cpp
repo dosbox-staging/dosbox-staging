@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "fs_utils.h"
+#include "utils/fs_utils.h"
 
 #include <algorithm>
 #include <cassert>
@@ -10,10 +10,10 @@
 #include <cstring>
 #include <fstream>
 
-#include "checks.h"
-#include "dos_inc.h"
-#include "dos_system.h"
-#include "std_filesystem.h"
+#include "utils/checks.h"
+#include "dos/dos_inc.h"
+#include "dos/dos_system.h"
+#include "misc/std_filesystem.h"
 
 CHECK_NARROWING();
 

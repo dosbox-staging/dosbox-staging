@@ -8,16 +8,16 @@
 #include <map>
 #include <vector>
 
-#include "../misc/host_locale.h"
-#include "ansi_code_markup.h"
-#include "bitops.h"
-#include "checks.h"
+#include "misc/ansi_code_markup.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
 #include "dos_keyboard_layout.h"
 #include "dos_locale.h"
-#include "logging.h"
-#include "mapper.h"
-#include "string_utils.h"
-#include "unicode.h"
+#include "misc/logging.h"
+#include "gui/mapper.h"
+#include "misc/host_locale.h"
+#include "utils/string_utils.h"
+#include "misc/unicode.h"
 
 CHECK_NARROWING();
 

@@ -5,8 +5,8 @@
 
 #if defined(WIN32)
 
-#include "checks.h"
-#include "string_utils.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
 
 #include <stringapiset.h>
 #include <unordered_map>

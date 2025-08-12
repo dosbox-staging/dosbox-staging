@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "shell.h"
+#include "shell/shell.h"
 
 #include <algorithm>
 #include <cstring>
 
-#include "logging.h"
-#include "string_utils.h"
+#include "misc/logging.h"
+#include "utils/string_utils.h"
 
 [[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
 

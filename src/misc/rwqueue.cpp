@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "rwqueue.h"
+#include "utils/rwqueue.h"
 
-#include "../capture/image/image_saver.h"
+#include "capture/image/image_saver.h"
 
 #include <cassert>
 
@@ -314,13 +314,13 @@ template class RWQueue<int>;
 template class RWQueue<std::vector<int16_t>>;
 
 // FluidSynth, MT-32, LPT DAC, SoundBlaster
-#include "audio_frame.h"
+#include "audio/audio_frame.h"
 template class RWQueue<AudioFrame>;
 
-#include "midi.h"
+#include "midi/midi.h"
 template class RWQueue<MidiWork>;
 
-#include "render.h"
+#include "gui/render.h"
 template class RWQueue<SaveImageTask>;
 
 //PC Speaker

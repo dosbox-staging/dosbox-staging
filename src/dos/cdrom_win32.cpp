@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "cdrom.h"
-#include "checks.h"
-#include "string_utils.h"
-#include "support.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
 
 #if defined(WIN32)
 

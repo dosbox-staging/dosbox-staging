@@ -3,9 +3,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mouse.h"
+
+#include "private/mouse_manymouse.h"
 #include "mouse_config.h"
 #include "mouse_interfaces.h"
-#include "mouse_manymouse.h"
 
 #include <algorithm>
 #include <cctype>
@@ -13,12 +14,12 @@
 #include <string>
 #include <vector>
 
-#include "callback.h"
-#include "checks.h"
-#include "cpu.h"
-#include "math_utils.h"
-#include "pic.h"
-#include "video.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "hardware/pic.h"
+#include "misc/video.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
 
 CHECK_NARROWING();
 

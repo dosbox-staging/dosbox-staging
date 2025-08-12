@@ -9,7 +9,7 @@
 // implementation of the provided driver API notes.
 //
 
-#include "reelmagic.h"
+#include "hardware/reelmagic/reelmagic.h"
 
 #include <cerrno>
 #include <cstdarg>
@@ -19,17 +19,17 @@
 #include <stack>
 #include <string>
 
-#include "../../dos/program_more_output.h"
-#include "callback.h"
-#include "channel_names.h"
-#include "dos_inc.h"
-#include "dos_system.h"
-#include "mapper.h"
-#include "math_utils.h"
-#include "mixer.h"
-#include "programs.h"
-#include "regs.h"
-#include "setup.h"
+#include "audio/channel_names.h"
+#include "audio/mixer.h"
+#include "config/setup.h"
+#include "cpu/callback.h"
+#include "cpu/registers.h"
+#include "dos/dos_inc.h"
+#include "dos/dos_system.h"
+#include "dos/programs.h"
+#include "dos/programs/more_output.h"
+#include "gui/mapper.h"
+#include "utils/math_utils.h"
 
 // note: Reported ReelMagic driver version 2.21 seems to be the most common...
 static const uint8_t REELMAGIC_DRIVER_VERSION_MAJOR = 2;
@@ -50,7 +50,7 @@ static uint8_t _installedInterruptNumber       = 0; // 0 means not currently ins
 static bool _unloadAllowed                     = true;
 
 // enable full API logging only when heavy debugging is on...
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 static bool _a204debug = true;
 static bool _a206debug = true;
 static inline bool IsDebugLogMessageFiltered(const uint8_t command, const uint16_t subfunc)
@@ -1311,7 +1311,7 @@ static bool RMDEV_SYS_int2fHandler()
 	return false;
 }
 
-// #include "inout.h"
+// #include "hardware/port.h"
 // static IO_ReadHandleObject   _readHandler;
 // static IO_WriteHandleObject  _writeHandler;
 // static Bitu read_rm(Bitu port, Bitu /*iolen*/) {
@@ -1440,7 +1440,7 @@ void ReelMagic_Init(Section* sec)
 		LOG_WARNING("REELMAGIC: Failed initializing ReelMagic MPEG playback card and/or driver");
 	}
 
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 	_a204debug = true;
 	_a206debug = true;
 #endif

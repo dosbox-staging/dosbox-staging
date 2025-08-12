@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "midi_lasynth_model.h"
+#include "private/midi_lasynth_model.h"
 
 #if C_MT32EMU
 
@@ -9,7 +9,7 @@
 #include <map>
 #include <set>
 
-#include "fs_utils.h"
+#include "utils/fs_utils.h"
 
 // Construct a new model and ensure both PCM and control ROM(s) are provided
 LASynthModel::LASynthModel(const std::string& rom_name, const Rom* pcm_rom_full,

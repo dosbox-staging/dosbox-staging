@@ -1,9 +1,11 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "fs_utils.h"
-#include "programs.h"
-#include "string_utils.h"
+#include "shell/command_line.h"
+
+#include "utils/fs_utils.h"
+#include "dos/programs.h"
+#include "utils/string_utils.h"
 
 bool CommandLine::FindExist(const std::string& name, bool remove)
 {

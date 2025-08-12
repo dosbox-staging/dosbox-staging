@@ -28,10 +28,10 @@ for a given scancode set. Just a simple (but quite large) converter.
 **mouse.cpp**
 
 Entry point for all the notifications and requests from external subsystems -
-see `include/mouse.h` for API definition. Interacts mainly with GFX subsystem
-(SDL-based at the moment of writing this code), but contains a configuration
-API (`MouseControlAPI` class) for interaction with command-line configuration
-tool and yet-to-be-written GUI.
+see `src/hardware/input/mouse.h` for API definition. Interacts mainly with GFX
+subsystem (SDL-based at the moment of writing this code), but contains a
+configuration API (`MouseControlAPI` class) for interaction with command-line
+configuration tool and yet-to-be-written GUI.
 
 **`../dos/program_mousectl.cpp`**
 

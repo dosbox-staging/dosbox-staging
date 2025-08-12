@@ -10,9 +10,9 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "midi.h"
-#include "pic.h"
-#include "support.h"
+#include "hardware/pic.h"
+#include "midi/midi.h"
+#include "misc/support.h"
 
 static struct {
 	FILE* handle = nullptr;

@@ -14,18 +14,35 @@
 
 #include <SDL.h>
 
-#include "../capture/capture.h"
-#include "ansi_code_markup.h"
-#include "control.h"
-#include "cross.h"
-#include "mapper.h"
-#include "midi_device.h"
-#include "mpu401.h"
-#include "pic.h"
-#include "programs.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "timer.h"
+#include "private/midi_device.h"
+#include "private/midi_fluidsynth.h"
+#include "private/midi_mt32.h"
+#include "private/midi_soundcanvas.h"
+
+#if defined(MACOSX)
+#include "private/midi_coreaudio.h"
+#include "private/midi_coremidi.h"
+
+#elif defined(WIN32)
+#include "private/midi_win32.h"
+#endif
+
+#if C_ALSA
+#include "private/midi_alsa.h"
+#endif
+
+#include "capture/capture.h"
+#include "config/config.h"
+#include "config/setup.h"
+#include "dos/programs.h"
+#include "gui/mapper.h"
+#include "hardware/mpu401.h"
+#include "hardware/pic.h"
+#include "hardware/timer.h"
+#include "misc/ansi_code_markup.h"
+#include "misc/cross.h"
+#include "utils/string_utils.h"
+
 
 // #define DEBUG_MIDI
 
@@ -55,22 +72,6 @@ uint8_t MIDI_message_len_by_status[256] = {
   0,2,3,2, 0,0,1,0, 1,0,1,1, 1,0,1,0   // 0xf0 -- System Exclusive
 };
 // clang-format on
-
-#include "midi_fluidsynth.h"
-#include "midi_mt32.h"
-#include "midi_soundcanvas.h"
-
-#if defined(MACOSX)
-#include "midi_coreaudio.h"
-#include "midi_coremidi.h"
-
-#elif defined(WIN32)
-#include "midi_win32.h"
-#endif
-
-#if C_ALSA
-#include "midi_alsa.h"
-#endif
 
 static std::unique_ptr<MidiDevice> create_device(
         [[maybe_unused]] const std::string& name,

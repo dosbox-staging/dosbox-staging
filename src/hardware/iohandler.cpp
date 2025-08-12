@@ -2,17 +2,17 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "inout.h"
-
 #include <cassert>
 #include <limits>
 #include <cstring>
 #include <unordered_map>
 
-#include "setup.h"
-#include "cpu.h"
-#include "../src/cpu/lazyflags.h"
-#include "callback.h"
+#include "config/setup.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "cpu/lazyflags.h"
+#include "hardware/port.h"
+
 
 //#define ENABLE_PORTLOG
 

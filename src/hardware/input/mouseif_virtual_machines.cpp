@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mouse.h"
+
 #include "mouse_config.h"
 #include "mouse_interfaces.h"
 
 #include <algorithm>
 
-#include "checks.h"
-#include "math_utils.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
 
 CHECK_NARROWING();
 

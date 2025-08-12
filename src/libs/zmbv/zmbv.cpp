@@ -9,10 +9,10 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "math_utils.h"
-#include "mem_unaligned.h"
-#include "support.h"
-#include "checks.h"
+#include "utils/math_utils.h"
+#include "utils/mem_unaligned.h"
+#include "misc/support.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

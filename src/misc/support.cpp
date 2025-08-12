@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "support.h"
+#include "misc/support.h"
 
 #include <algorithm>
 #include <cassert>
@@ -20,11 +20,11 @@
 #include <stdexcept>
 #include <string>
 
-#include "cross.h"
-#include "debug.h"
-#include "fs_utils.h"
-#include "string_utils.h"
-#include "video.h"
+#include "misc/cross.h"
+#include "debugger/debugger.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
+#include "misc/video.h"
 
 #include "whereami.h"
 
@@ -148,7 +148,7 @@ static char e_exit_buf[1024];
 
 void E_Exit(const char* format, ...)
 {
-#if C_DEBUG && C_HEAVY_DEBUG
+#if C_DEBUGGER && C_HEAVY_DEBUGGER
 	DEBUG_HeavyWriteLogInstruction();
 #endif
 	va_list msg;

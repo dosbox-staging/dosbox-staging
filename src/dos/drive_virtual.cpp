@@ -2,19 +2,19 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "drives.h"
+#include "dos/drives.h"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 
-#include "cross.h"
+#include "misc/cross.h"
 #include "dos_inc.h"
-#include "fs_utils.h"
-#include "shell.h"
-#include "string_utils.h"
-#include "support.h"
+#include "utils/fs_utils.h"
+#include "shell/shell.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
 
 constexpr auto default_date = DOS_PackDate(2002, 10, 1);
 constexpr auto default_time = DOS_PackTime(12, 34, 56);

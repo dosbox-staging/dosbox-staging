@@ -25,34 +25,36 @@ target_sources(libdosboxcommon PRIVATE
   drive_overlay.cpp
   drive_virtual.cpp
   drives.cpp
-  program_attrib.cpp
-  program_autotype.cpp
-  program_biostest.cpp
-  program_boot.cpp
-  program_choice.cpp
-  program_clip.cpp
-  program_help.cpp
-  program_imgmount.cpp
-  program_intro.cpp
-  program_keyb.cpp
-  program_loadfix.cpp
-  program_loadrom.cpp
-  program_ls.cpp
-  program_mem.cpp
-  program_mixer.cpp
-  program_mode.cpp
-  program_more.cpp
-  program_more_output.cpp
-  program_mount.cpp
-  program_mount_common.cpp
-  program_mouse.cpp
-  program_mousectl.cpp
-  program_move.cpp
-  program_placeholder.cpp
-  program_rescan.cpp
-  program_serial.cpp
-  program_setver.cpp
-  program_subst.cpp
-  program_tree.cpp)
+
+  programs/attrib.cpp
+  programs/autotype.cpp
+  programs/biostest.cpp
+  programs/boot.cpp
+  programs/choice.cpp
+  programs/clip.cpp
+  programs/help.cpp
+  programs/imgmount.cpp
+  programs/intro.cpp
+  programs/keyb.cpp
+  programs/loadfix.cpp
+  programs/loadrom.cpp
+  programs/ls.cpp
+  programs/mem.cpp
+  programs/mixer.cpp
+  programs/mode.cpp
+  programs/more.cpp
+  programs/more_output.cpp
+  programs/mount.cpp
+  programs/mount_common.cpp
+  programs/mouse.cpp
+  programs/mousectl.cpp
+  programs/move.cpp
+  programs/placeholder.cpp
+  programs/rescan.cpp
+  programs/serial.cpp
+  programs/setver.cpp
+  programs/subst.cpp
+  programs/tree.cpp
+)
 
 target_sources(dosbox PRIVATE dos_files.cpp)

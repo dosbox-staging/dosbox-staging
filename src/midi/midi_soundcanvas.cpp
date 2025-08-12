@@ -1,7 +1,7 @@
-// SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightTextound  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "midi_soundcanvas.h"
+#include "private/midi_soundcanvas.h"
 
 #include <optional>
 #include <set>
@@ -9,14 +9,15 @@
 
 #include "clap/all.h"
 
-#include "../audio/clap/plugin_manager.h"
-#include "ansi_code_markup.h"
-#include "channel_names.h"
-#include "checks.h"
-#include "pic.h"
-#include "setup.h"
-#include "std_filesystem.h"
-#include "string_utils.h"
+#include "audio/channel_names.h"
+#include "audio/clap/library.h"
+#include "audio/clap/plugin_manager.h"
+#include "config/setup.h"
+#include "hardware/pic.h"
+#include "misc/ansi_code_markup.h"
+#include "misc/std_filesystem.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 

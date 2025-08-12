@@ -11,9 +11,9 @@
  *    - dr_mp3:  http://mackron.github.io/dr_mp3.html (website)
  */
 
-#include "config.h"
+#include "dosbox_config.h"
 
-#include "math_utils.h"
+#include "utils/math_utils.h"
 
 #include "mp3_seek_table.h"
 #define DR_MP3_IMPLEMENTATION

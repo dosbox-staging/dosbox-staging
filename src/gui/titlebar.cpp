@@ -3,20 +3,20 @@
 
 #include "titlebar.h"
 
-#include "checks.h"
-#include "control.h"
-#include "cpu.h"
-#include "dosbox.h"
-#include "mapper.h"
-#include "sdlmain.h"
-#include "setup.h"
-#include "support.h"
-#include "unicode.h"
-#include "video.h"
-
 #include <SDL.h>
 #include <map>
 #include <vector>
+
+#include "config/config.h"
+#include "config/setup.h"
+#include "cpu/cpu.h"
+#include "dosbox.h"
+#include "gui/mapper.h"
+#include "gui/sdlmain.h"
+#include "misc/support.h"
+#include "misc/unicode.h"
+#include "misc/video.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

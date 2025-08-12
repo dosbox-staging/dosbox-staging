@@ -18,7 +18,7 @@
  * 4. Additional dosbox-staging headers (if needed)
  */
 
-#include "shell.h"
+#include "shell/shell.h"
 
 #include <string>
 

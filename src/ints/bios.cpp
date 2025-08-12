@@ -2,25 +2,25 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "bios.h"
+#include "ints/bios.h"
 
-#include "bitops.h"
-#include "callback.h"
-#include "control.h"
-#include "cpu.h"
+#include "utils/bitops.h"
+#include "cpu/callback.h"
+#include "config/config.h"
+#include "cpu/cpu.h"
+#include "dos/dos_memory.h"
 #include "dosbox.h"
-#include "dos_memory.h"
-#include "hardware.h"
-#include "inout.h"
+#include "hardware/hardware.h"
+#include "hardware/joystick.h"
+#include "hardware/pic.h"
+#include "hardware/serialport/serialport.h"
+#include "hardware/port.h"
 #include "int10.h"
-#include "joystick.h"
-#include "math_utils.h"
-#include "mem.h"
-#include "mouse.h"
-#include "pic.h"
-#include "regs.h"
-#include "serialport.h"
-#include "setup.h"
+#include "utils/math_utils.h"
+#include "hardware/memory.h"
+#include "hardware/input/mouse.h"
+#include "cpu/registers.h"
+#include "config/setup.h"
 
 #include <ctime>
 #include <memory>
@@ -987,7 +987,7 @@ static Bitu Default_IRQ_Handler()
 			IO_WriteB(0x21, IO_ReadB(0x21) | (primary_isr & ~4));
 		}
 		IO_WriteB(0x20, 0x20);
-#if C_DEBUG
+#if C_DEBUGGER
 		uint16_t irq = 0;
 		uint16_t isr = secondary_isr ? secondary_isr << 8 : primary_isr;
 		while (isr >>= 1)

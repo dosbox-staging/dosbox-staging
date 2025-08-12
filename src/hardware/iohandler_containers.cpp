@@ -10,8 +10,8 @@
 #include <limits>
 #include <unordered_map>
 
-#include "inout.h"
-#include "support.h"
+#include "hardware/port.h"
+#include "misc/support.h"
 
 void IO_ReadHandleObject::Uninstall(){
 	if(!installed) return;

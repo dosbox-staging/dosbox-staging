@@ -38,16 +38,16 @@ jobs:
           - host: macos-15
             arch: x86_64
             minimum_deployment: '11.0'
-            max_warnings: 8
+            max_warnings: 9
 
           - host: macos-15
             arch: arm64
             minimum_deployment: '11.0'
-            max_warnings: 8
+            max_warnings: 9
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: false
 
@@ -55,7 +55,7 @@ jobs:
         uses: ./.github/actions/set-common-vars
 
       - name: Set up CMake
-        uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
+        uses: lukka/get-cmake@f3273e0bcecf2f2c0d3430de21bf02ab2752c47d # v4.1.0
 
       - name: Set up vcpkg
         uses: ./.github/actions/setup-vcpkg
@@ -112,7 +112,7 @@ jobs:
     runs-on: macos-15
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: false
 

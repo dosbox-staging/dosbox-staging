@@ -4,8 +4,8 @@
 
 #include "int10.h"
 
-#include "mem.h"
-#include "inout.h"
+#include "hardware/memory.h"
+#include "hardware/port.h"
 
 // clang-format off
 static const std::vector<uint8_t> static_functionality = {

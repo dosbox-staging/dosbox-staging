@@ -6,7 +6,7 @@
 // This file contains the VGA/RENDER_ interception code...
 //
 
-#include "reelmagic.h"
+#include "hardware/reelmagic/reelmagic.h"
 
 #include <cassert>
 #include <cstdarg>
@@ -15,10 +15,10 @@
 #include <exception>
 #include <string>
 
-#include "../../gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
-#include "rgb565.h"
-#include "setup.h"
-#include "video.h"
+#include "gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
+#include "config/setup.h"
+#include "utils/rgb565.h"
+#include "misc/video.h"
 
 namespace {
 // XXX currently duplicating this in realmagic_*.cpp files to avoid header pollution... TDB if this

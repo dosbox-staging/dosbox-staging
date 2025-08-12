@@ -4,7 +4,7 @@
 #ifndef DOSBOX_LAZYFLAGS_H
 #define DOSBOX_LAZYFLAGS_H
 
-#include "cpu.h"
+#include "cpu/cpu.h"
 
 #include <cassert>
 
@@ -21,7 +21,7 @@ void FillFlagsNoCFOF(void);
 void DestroyConditionFlags(void);
 
 #ifndef DOSBOX_REGS_H
-#include "regs.h"
+#include "cpu/registers.h"
 #endif
 
 struct LazyFlags {

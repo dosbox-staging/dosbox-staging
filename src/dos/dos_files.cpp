@@ -12,14 +12,14 @@
 #include <ctime>
 
 #include "dosbox.h"
-#include "bios.h"
-#include "mem.h"
-#include "regs.h"
-#include "drives.h"
-#include "cross.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "support.h"
+#include "ints/bios.h"
+#include "hardware/memory.h"
+#include "cpu/registers.h"
+#include "dos/drives.h"
+#include "misc/cross.h"
+#include "config/setup.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
 
 #define DOS_FILESTART 4
 

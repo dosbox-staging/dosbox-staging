@@ -7,19 +7,18 @@
 #include <cctype>
 #include <cstring>
 
-#include "callback.h"
-#include "cpu.h"
-#include "debug.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "debugger/debugger.h"
 #include "dos_inc.h"
-#include "mem.h"
-#include "paging.h"
-#include "program_setver.h"
-#include "programs.h"
-#include "regs.h"
-#include "string_utils.h"
-#include "video.h"
-
-#include "../hardware/vmware.h"
+#include "hardware/vmware.h"
+#include "hardware/memory.h"
+#include "cpu/paging.h"
+#include "programs/setver.h"
+#include "dos/programs.h"
+#include "cpu/registers.h"
+#include "utils/string_utils.h"
+#include "misc/video.h"
 
 #ifdef _MSC_VER
 #pragma pack(1)
@@ -555,7 +554,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		reg_di=RealOffset(sssp);
 		reg_bp=0x91c;	/* DOS internal stack begin relict */
 		SegSet16(ds,pspseg);SegSet16(es,pspseg);
-#if C_DEBUG
+#if C_DEBUGGER
 		/* Started from debug.com, then set breakpoint at start */
 		DEBUG_CheckExecuteBreakpoint(RealSegment(csip),RealOffset(csip));
 #endif

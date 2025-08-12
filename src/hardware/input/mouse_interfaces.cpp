@@ -3,14 +3,14 @@
 
 #include "mouse_interfaces.h"
 
+#include "private/mouse_common.h"
+#include "private/mouse_manymouse.h"
+#include "mouse.h"
+#include "mouse_config.h"
+
 #include <memory>
 
-#include "mouse.h"
-#include "mouse_common.h"
-#include "mouse_config.h"
-#include "mouse_manymouse.h"
-
-#include "checks.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

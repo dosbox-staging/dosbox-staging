@@ -8,11 +8,11 @@
 
 #include "host_locale.h"
 
-#include "checks.h"
+#include "utils/checks.h"
 #include "dosbox.h"
-#include "fs_utils.h"
-#include "std_filesystem.h"
-#include "string_utils.h"
+#include "utils/fs_utils.h"
+#include "misc/std_filesystem.h"
+#include "utils/string_utils.h"
 
 #include <cstdio>
 #include <fstream>

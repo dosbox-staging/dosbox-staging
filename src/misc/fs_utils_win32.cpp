@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "fs_utils.h"
+#include "utils/fs_utils.h"
 
 #if defined(WIN32)
 
@@ -10,9 +10,9 @@
 #include <io.h>
 #include <sys/stat.h>
 
-#include "compiler.h"
-#include "dos_inc.h"
-#include "dos_system.h"
+#include "misc/compiler.h"
+#include "dos/dos_inc.h"
+#include "dos/dos_system.h"
 
 bool path_exists(const char *path) noexcept
 {

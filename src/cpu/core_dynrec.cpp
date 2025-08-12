@@ -31,17 +31,17 @@
 
 #endif // HAVE_MPROTECT
 
-#include "callback.h"
-#include "cpu.h"
-#include "debug.h"
-#include "inout.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "cpu/mmx.h"
+#include "cpu/paging.h"
+#include "cpu/registers.h"
+#include "debugger/debugger.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
 #include "lazyflags.h"
-#include "mem.h"
-#include "mmx.h"
-#include "paging.h"
-#include "pic.h"
-#include "regs.h"
-#include "tracy.h"
+#include "misc/tracy.h"
 
 #define CACHE_MAXSIZE	(4096*2)
 #define CACHE_TOTAL		(1024*1024*8)
@@ -98,7 +98,7 @@ enum BlockReturn {
 	BR_Cycles,
 	BR_Link1,BR_Link2,
 	BR_Opcode,
-#if (C_DEBUG)
+#if (C_DEBUGGER)
 	BR_OpcodeFull,
 #endif
 	BR_Iret,
@@ -224,7 +224,7 @@ Bits CPU_Core_Dynrec_Run() noexcept
 	for (;;) {
 		// Determine the linear address of CS:EIP
 		PhysPt ip_point=SegPhys(cs)+reg_eip;
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
 		if (DEBUG_HeavyIsBreakpoint())
 			return debugCallback;
 #endif
@@ -272,8 +272,8 @@ run_block:
 
 		switch (ret) {
 		case BR_Iret:
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+#if C_DEBUGGER
+#if C_HEAVY_DEBUGGER
 			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif
@@ -290,8 +290,8 @@ run_block:
 			// modifying instruction (like ret) or some nontrivial cpu state
 			// changing instruction (for example switch to/from pmode),
 			// or the maximum number of instructions to translate was reached
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+#if C_DEBUGGER
+#if C_HEAVY_DEBUGGER
 			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif
@@ -300,8 +300,8 @@ run_block:
 		case BR_Cycles:
 			// cycles went negative, return from the core to handle
 			// external events, schedule the pic...
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+#if C_DEBUGGER
+#if C_HEAVY_DEBUGGER
 			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif
@@ -326,7 +326,7 @@ run_block:
 			CPU_Cycles=1;
 			return CPU_Core_Normal_Run();
 
-#if (C_DEBUG)
+#if (C_DEBUGGER)
 		case BR_OpcodeFull:
 			CPU_CycleLeft+=CPU_Cycles;
 			CPU_Cycles=1;

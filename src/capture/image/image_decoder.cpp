@@ -3,7 +3,7 @@
 
 #include "image_scaler.h"
 
-#include "checks.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

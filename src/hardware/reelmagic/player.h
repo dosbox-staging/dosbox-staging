@@ -19,8 +19,8 @@
 #ifndef REELMAGIC_PLAYER_H
 #define REELMAGIC_PLAYER_H
 
-#include "mixer.h"
-#include "rwqueue.h"
+#include "audio/mixer.h"
+#include "utils/rwqueue.h"
 
 struct ReelMagicAudio {
 	MixerChannelPtr channel = nullptr;

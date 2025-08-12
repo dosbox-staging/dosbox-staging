@@ -4,9 +4,9 @@
 #ifndef DOSBOX_MOUSE_CONFIG_H
 #define DOSBOX_MOUSE_CONFIG_H
 
-#include "dosbox.h"
-
 #include "mouse.h"
+
+#include "dosbox.h"
 
 // ***************************************************************************
 // Predefined calibration

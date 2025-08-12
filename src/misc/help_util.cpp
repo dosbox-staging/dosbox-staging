@@ -6,9 +6,9 @@
 #include <map>
 #include <string>
 
-#include "help_util.h"
-#include "string_utils.h"
-#include "support.h"
+#include "misc/help_util.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
 
 static std::map<const std::string, HELP_Detail> help_list = {};
 

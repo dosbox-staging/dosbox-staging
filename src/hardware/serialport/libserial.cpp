@@ -3,7 +3,7 @@
 
 #include "libserial.h"
 
-#include "config.h"
+#include "dosbox_config.h"
 
 #ifdef WIN32
 // clang-format off
@@ -12,7 +12,7 @@
 #include <cstdio>
 // clang-format on
 
-#include "string_utils.h"
+#include "utils/string_utils.h"
 
 struct _COMPORT {
 	HANDLE porthandle;
@@ -247,7 +247,7 @@ bool SERIAL_setCommParameters(COMPORT port,
 
 #if defined (LINUX) || defined (MACOSX) || defined (BSD)
 
-#include "logging.h"
+#include "misc/logging.h"
 
 #include <cstdlib>
 #include <cstring> // safe_strlen

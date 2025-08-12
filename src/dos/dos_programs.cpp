@@ -2,38 +2,38 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "programs.h"
+#include "dos/programs.h"
 
-#include "autoexec.h"
-#include "program_attrib.h"
-#include "program_autotype.h"
-#include "program_boot.h"
-#include "program_choice.h"
-#include "program_clip.h"
-#include "program_help.h"
-#include "program_imgmount.h"
-#include "program_intro.h"
-#include "program_keyb.h"
-#include "program_loadfix.h"
-#include "program_loadrom.h"
-#include "program_ls.h"
-#include "program_mem.h"
-#include "program_mixer.h"
-#include "program_mode.h"
-#include "program_more.h"
-#include "program_mount.h"
-#include "program_mouse.h"
-#include "program_mousectl.h"
-#include "program_move.h"
-#include "program_placeholder.h"
-#include "program_rescan.h"
-#include "program_serial.h"
-#include "program_setver.h"
-#include "program_subst.h"
-#include "program_tree.h"
+#include "shell/autoexec.h"
+#include "programs/attrib.h"
+#include "programs/autotype.h"
+#include "programs/boot.h"
+#include "programs/choice.h"
+#include "programs/clip.h"
+#include "programs/help.h"
+#include "programs/imgmount.h"
+#include "programs/intro.h"
+#include "programs/keyb.h"
+#include "programs/loadfix.h"
+#include "programs/loadrom.h"
+#include "programs/ls.h"
+#include "programs/mem.h"
+#include "programs/mixer.h"
+#include "programs/mode.h"
+#include "programs/more.h"
+#include "programs/mount.h"
+#include "programs/mouse.h"
+#include "programs/mousectl.h"
+#include "programs/move.h"
+#include "programs/placeholder.h"
+#include "programs/rescan.h"
+#include "programs/serial.h"
+#include "programs/setver.h"
+#include "programs/subst.h"
+#include "programs/tree.h"
 
-#if C_DEBUG
-#include "program_biostest.h"
+#if C_DEBUGGER
+#include "programs/biostest.h"
 #endif
 
 extern uint32_t floppytype;
@@ -60,7 +60,7 @@ void Add_VFiles()
 
 	PROGRAMS_MakeFile("ATTRIB.COM", ProgramCreate<ATTRIB>);
 	PROGRAMS_MakeFile("AUTOTYPE.COM", ProgramCreate<AUTOTYPE>);
-#if C_DEBUG
+#if C_DEBUGGER
 	PROGRAMS_MakeFile("BIOSTEST.COM", ProgramCreate<BIOSTEST>);
 #endif
 	PROGRAMS_MakeFile("BOOT.COM", ProgramCreate<BOOT>);

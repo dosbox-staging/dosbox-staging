@@ -11,15 +11,15 @@
 #include <cstdio>
 #include <cstring>
 
-#include "callback.h"
-#include "cpu.h"
-#include "ethernet.h"
-#include "inout.h"
-#include "pic.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "support.h"
-#include "timer.h"
+#include "config/setup.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "hardware/timer.h"
+#include "misc/ethernet.h"
+#include "misc/support.h"
+#include "utils/string_utils.h"
 
 /* Couldn't find a real spec for the NE2000 out there, hence this is adapted heavily from Bochs */
 

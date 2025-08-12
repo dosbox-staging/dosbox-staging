@@ -7,11 +7,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "callback.h"
-#include "channel_names.h"
+#include "audio/channel_names.h"
+#include "cpu/callback.h"
 #include "dosbox.h"
-#include "pic.h"
-#include "string_utils.h"
+#include "hardware/pic.h"
+#include "utils/string_utils.h"
 
 namespace CDROM {
 std::array<std::unique_ptr<CDROM_Interface>, MaxNumDosDriveLetters> cdroms;

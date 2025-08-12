@@ -2,16 +2,16 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mem.h"
+#include "memory.h"
 
 #include <cstring>
 
-#include "inout.h"
-#include "paging.h"
-#include "pci_bus.h"
-#include "regs.h"
-#include "setup.h"
-#include "support.h"
+#include "config/setup.h"
+#include "cpu/paging.h"
+#include "cpu/registers.h"
+#include "hardware/pci_bus.h"
+#include "hardware/port.h"
+#include "misc/support.h"
 
 constexpr auto Megabyte = 1024 * 1024;
 
@@ -56,7 +56,7 @@ public:
 	}
 	uint8_t readb(PhysPt addr) override
 	{
-#if C_DEBUG
+#if C_DEBUGGER
 		LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 #else
 		static Bits lcount=0;
@@ -69,7 +69,7 @@ public:
 	}
 	void writeb(PhysPt addr, [[maybe_unused]] uint8_t val) override
 	{
-#if C_DEBUG
+#if C_DEBUGGER
 		LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 #else
 		static Bits lcount=0;

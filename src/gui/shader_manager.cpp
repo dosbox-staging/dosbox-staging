@@ -14,12 +14,12 @@
 
 #include <SDL.h>
 
-#include "checks.h"
-#include "cross.h"
 #include "dosbox.h"
-#include "math_utils.h"
-#include "string_utils.h"
-#include "video.h"
+#include "misc/cross.h"
+#include "misc/video.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 

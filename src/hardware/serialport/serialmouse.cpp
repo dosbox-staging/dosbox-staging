@@ -12,10 +12,11 @@
 
 #include "serialmouse.h"
 
-#include "checks.h"
-#include "math_utils.h"
+#include "utils/checks.h"
+#include "shell/command_line.h"
+#include "utils/math_utils.h"
 
-#include "../input/mouse_interfaces.h"
+#include "hardware/input/mouse_interfaces.h"
 
 CHECK_NARROWING();
 

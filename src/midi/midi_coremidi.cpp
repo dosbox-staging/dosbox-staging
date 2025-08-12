@@ -2,14 +2,14 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "midi_coremidi.h"
+#include "private/midi_coremidi.h"
 
 #if C_COREMIDI
 
 #include <sstream>
 
-#include "programs.h"
-#include "string_utils.h"
+#include "dos/programs.h"
+#include "utils/string_utils.h"
 
 MidiDeviceCoreMidi::MidiDeviceCoreMidi(const char* conf)
         : MidiDevice(),

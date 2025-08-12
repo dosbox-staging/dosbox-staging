@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "drives.h"
+#include "dos/drives.h"
 #include "drive_local.h"
 
 #include <algorithm>
@@ -14,13 +14,13 @@
 #include <string>
 #include <vector>
 
+#include "misc/cross.h"
 #include "dos_inc.h"
-#include "string_utils.h"
-#include "cross.h"
-#include "inout.h"
-#include "timer.h"
-#include "fs_utils.h"
-#include "std_filesystem.h"
+#include "utils/fs_utils.h"
+#include "hardware/timer.h"
+#include "hardware/port.h"
+#include "misc/std_filesystem.h"
+#include "utils/string_utils.h"
 
 #define OVERLAY_DIR 1
 bool logoverlay = false;

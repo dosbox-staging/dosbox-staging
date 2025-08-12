@@ -76,7 +76,7 @@
 #include <cmath>
 #include <climits>
 
-#include "mixer.h"
+#include "audio/mixer.h"
 
 #define LEFT    0x00
 #define RIGHT   0x01

@@ -10,13 +10,13 @@
 #include <cstring>
 #include <tuple>
 
-#include "../../capture/capture.h"
-#include "inout.h"
-#include "pic.h"
-#include "setup.h"
-#include "bios.h"					// SetComPorts(..)
-#include "callback.h"				// CALLBACK_Idle
-#include "string_utils.h"
+#include "ints/bios.h"					// SetComPorts(..)
+#include "cpu/callback.h"				// CALLBACK_Idle
+#include "capture/capture.h"
+#include "hardware/port.h"
+#include "hardware/pic.h"
+#include "config/setup.h"
+#include "utils/string_utils.h"
 
 #include "serialport.h"
 #include "directserial.h"
@@ -25,7 +25,7 @@
 #include "nullmodem.h"
 #include "serialmouse.h"
 
-#include "cpu.h"
+#include "cpu/cpu.h"
 
 #define LOG_SER(x) log_ser
 

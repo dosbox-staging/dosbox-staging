@@ -2,10 +2,10 @@
 // SPDX-FileCopyrightText:  2002-2022 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dosbox.h"
 #include "keyboard.h"
 
-#include "checks.h"
+#include "dosbox.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

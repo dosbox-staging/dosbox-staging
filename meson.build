@@ -415,9 +415,9 @@ add_project_arguments(cxx_supported_arguments, language: 'cpp')
 link_supported_arguments = cxx.get_supported_link_arguments(extra_link_flags)
 add_project_link_arguments(link_supported_arguments, language: 'cpp')
 
-# Gather data to populate config.h
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# The actual config.h file will be generated after interpreting
+# Gather data to populate dosbox_config.h
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# The actual dosbox_config.h file will be generated after interpreting
 # all the build files in all the subdirs.
 #
 git_hash = run_command(
@@ -442,11 +442,11 @@ conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
 
 if get_option('enable_debugger') != 'none'
-    conf_data.set10('C_DEBUG', true)
+    conf_data.set10('C_DEBUGGER', true)
 endif
 
 if get_option('enable_debugger') == 'heavy'
-    conf_data.set10('C_HEAVY_DEBUG', true)
+    conf_data.set10('C_HEAVY_DEBUGGER', true)
 endif
 
 foreach osdef : ['LINUX', 'WIN32', 'MACOSX', 'BSD']
@@ -1138,7 +1138,7 @@ endif
 
 # Set up include directories
 incdir = [
-    include_directories('include', '.'),
+    include_directories('src', '.'),
     include_directories('src/libs', is_system: true),
     include_directories('src/libs/include', is_system: true),
 ]
@@ -1193,6 +1193,7 @@ endif
 # internal libs
 subdir('src/audio')
 subdir('src/capture')
+subdir('src/config')
 subdir('src/cpu')
 subdir('src/dos')
 subdir('src/fpu')
@@ -1205,14 +1206,14 @@ subdir('src/shell')
 # debugger-specific libs
 if get_option('enable_debugger') != 'none'
     subdir('src/libs/PDCurses')
-    subdir('src/debug')
+    subdir('src/debugger')
     third_party_deps += libpdcurses_dep
 endif
 
-# generate config.h
+# generate dosbox_config.h
 configure_file(
-    input: 'src/config.h.in',
-    output: 'config.h',
+    input: 'src/dosbox_config.h.in',
+    output: 'dosbox_config.h',
     configuration: conf_data,
 )
 

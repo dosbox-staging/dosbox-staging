@@ -74,7 +74,7 @@ static const HostReg RegParams[] = {
 };
 
 #if C_FPU
-#include "fpu.h"
+#include "fpu/fpu.h"
 extern struct FPU_rec fpu;
 #endif
 
@@ -552,7 +552,7 @@ static void gen_fill_branch(const uint8_t* data)
 {
 	ptrdiff_t len = cache.pos - data;
 
-#if C_DEBUG
+#if C_DEBUGGER
 	if (len<0) len=-len;
 	if (len >= 0x8000) LOG_MSG("Big jump %d",len);
 #endif

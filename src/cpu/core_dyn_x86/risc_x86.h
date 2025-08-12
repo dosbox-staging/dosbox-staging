@@ -971,7 +971,7 @@ static const uint8_t * gen_create_branch(BranchTypes type) {
 }
 
 static void gen_fill_branch(const uint8_t * data,const uint8_t * from=cache.pos) {
-#if C_DEBUG
+#if C_DEBUGGER
 	Bits len=from-data;
 	if (len<0) len=-len;
 	if (len>126) LOG_MSG("Big jump %d",len);

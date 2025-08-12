@@ -2,15 +2,15 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "bios.h"
+#include "ints/bios.h"
 
-#include "callback.h"
-#include "checks.h"
+#include "cpu/callback.h"
+#include "utils/checks.h"
 #include "dosbox.h"
-#include "inout.h"
-#include "pci_bus.h"
-#include "regs.h"
-#include "support.h"
+#include "hardware/port.h"
+#include "hardware/pci_bus.h"
+#include "cpu/registers.h"
+#include "misc/support.h"
 
 CHECK_NARROWING();
 
