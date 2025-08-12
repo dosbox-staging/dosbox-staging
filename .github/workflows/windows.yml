@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: false
 
@@ -67,7 +67,7 @@ jobs:
           arch: "${{ matrix.conf.arch }}"
 
       - name: Set up CMake
-        uses: lukka/get-cmake@v4.0.3
+        uses: lukka/get-cmake@v4.1.0
 
       - name:  Log environment
         shell: pwsh
@@ -90,7 +90,7 @@ jobs:
         if:    ${{ matrix.conf.debugger }}
         shell: pwsh
         run: |
-          cmake --preset release-windows -DOPT_DEBUG=ON -DOPT_HEAVY_DEBUG=ON
+          cmake --preset release-windows -DOPT_DEBUGGER=ON -DOPT_HEAVY_DEBUGGER=ON
           cmake --build --preset release-windows 2>&1 | Tee-Object -FilePath build.log
 
       - name: Summarize warnings
@@ -193,7 +193,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: false
 
@@ -219,7 +219,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: false
 

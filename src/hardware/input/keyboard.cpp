@@ -3,19 +3,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "keyboard.h"
-#include "dosbox.h"
+
+#include "private/intel8042.h"
+#include "private/intel8255.h"
 
 #include <array>
 
-#include "bitops.h"
-#include "checks.h"
-#include "control.h"
-#include "cpu.h"
-#include "intel8042.h"
-#include "intel8255.h"
-#include "pic.h"
-#include "support.h"
-#include "timer.h"
+#include "config/config.h"
+#include "cpu/cpu.h"
+#include "dosbox.h"
+#include "hardware/pic.h"
+#include "hardware/timer.h"
+#include "misc/support.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

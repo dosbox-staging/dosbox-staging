@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#if C_DEBUG
+#if C_DEBUGGER
 #include <stdio.h>
 #include <stdarg.h>
 #endif
@@ -90,7 +90,7 @@ public:
 	}
 
 	void logerror([[maybe_unused]] const char* format, ...) {
-#if C_DEBUG
+#if C_DEBUGGER
 		char buf[512*2];
 		va_list msg;
 		va_start(msg,format);

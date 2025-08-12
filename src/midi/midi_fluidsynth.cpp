@@ -1,7 +1,7 @@
 //  SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 //  SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "midi_fluidsynth.h"
+#include "private/midi_fluidsynth.h"
 
 #include <bitset>
 #include <cassert>
@@ -11,19 +11,19 @@
 #include <tuple>
 #include <vector>
 
-#include "../ints/int10.h"
-#include "ansi_code_markup.h"
-#include "channel_names.h"
-#include "control.h"
-#include "cross.h"
-#include "fs_utils.h"
-#include "math_utils.h"
-#include "mixer.h"
-#include "notifications.h"
-#include "pic.h"
-#include "programs.h"
-#include "string_utils.h"
-#include "support.h"
+#include "audio/channel_names.h"
+#include "audio/mixer.h"
+#include "config/config.h"
+#include "dos/programs.h"
+#include "hardware/pic.h"
+#include "ints/int10.h"
+#include "misc/ansi_code_markup.h"
+#include "misc/cross.h"
+#include "misc/notifications.h"
+#include "misc/support.h"
+#include "utils/fs_utils.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 constexpr auto SoundFontExtension = ".sf2";
 

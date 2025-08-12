@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "bit_view.h"
-#include "byteorder.h"
+#include "utils/bit_view.h"
+#include "utils/byteorder.h"
 
 #include <gtest/gtest.h>
 #include <memory>

@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "math_utils.h"
+#include "utils/math_utils.h"
 
 #include "OscNoise.h"
 

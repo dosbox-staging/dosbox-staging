@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mouseif_dos_driver_state.h"
-
-#include "checks.h"
-#include "support.h"
+#include "private/mouseif_dos_driver_state.h"
 
 #include <bit>
 #include <cstring>
+
+#include "utils/checks.h"
+#include "misc/support.h"
 
 CHECK_NARROWING();
 

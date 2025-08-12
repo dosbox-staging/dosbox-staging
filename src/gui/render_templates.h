@@ -152,7 +152,7 @@
 #	elif DBPP == 32
 #		define PMAKE(_VAL) (_VAL)
 #	endif
-#	include "rgb888.h"
+#	include "utils/rgb888.h"
 #	define SRCTYPE Rgb888
 #endif
 

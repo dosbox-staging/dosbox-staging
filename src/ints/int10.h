@@ -9,9 +9,9 @@
 #include <optional>
 #include <vector>
 
-#include "bit_view.h"
-#include "mem.h"
-#include "vga.h"
+#include "utils/bit_view.h"
+#include "hardware/video/vga.h"
+#include "hardware/memory.h"
 
 // forward declarations
 class Rgb666;

@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "programs.h"
+#include "dos/programs.h"
 
 #include <algorithm>
 #include <array>
@@ -15,16 +15,16 @@
 #include <sstream>
 #include <vector>
 
-#include "../capture/capture.h"
-#include "../dos/program_more_output.h"
-#include "callback.h"
-#include "control.h"
-#include "cross.h"
-#include "mapper.h"
-#include "regs.h"
-#include "shell.h"
-#include "support.h"
-#include "unicode.h"
+#include "capture/capture.h"
+#include "config/config.h"
+#include "cpu/callback.h"
+#include "cpu/registers.h"
+#include "dos/programs/more_output.h"
+#include "gui/mapper.h"
+#include "misc/cross.h"
+#include "misc/support.h"
+#include "misc/unicode.h"
+#include "shell/shell.h"
 
 callback_number_t call_program = 0;
 
@@ -174,7 +174,7 @@ bool Program::SuppressWriteOut(const std::string& format) const
 		return false;
 	}
 
-	if (control->GetStartupVerbosity() >= Verbosity::Low) {
+	if (control->GetStartupVerbosity() >= StartupVerbosity::Low) {
 		return false;
 	}
 

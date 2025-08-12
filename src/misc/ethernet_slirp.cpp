@@ -1,8 +1,6 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "config.h"
-
 #include <algorithm>
 #include <map>
 #include <stdexcept>
@@ -12,11 +10,12 @@
 #endif
 
 #include "dosbox.h"
-#include "dynlib.h"
+#include "dosbox_config.h"
+#include "utils/dynlib.h"
 #include "ethernet_slirp.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "timer.h"
+#include "hardware/timer.h"
+#include "config/setup.h"
+#include "utils/string_utils.h"
 
 /**
  * Platform specific libslirp shared library name

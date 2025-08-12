@@ -3,8 +3,8 @@
 
 #include "dos_locale.h"
 
-#include "checks.h"
-#include "string_utils.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 

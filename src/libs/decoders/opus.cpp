@@ -19,15 +19,15 @@
 
 // #define DEBUG_CHATTER 1
 
-#include "config.h"
+#include "dosbox_config.h"
 
 #include <cassert>
 #include <cinttypes>
 #include <opusfile.h>
 #include <SDL.h>
 
-#include "math_utils.h"
-#include "support.h"
+#include "utils/math_utils.h"
+#include "misc/support.h"
 
 #include "SDL_sound.h"
 #define __SDL_SOUND_INTERNAL__

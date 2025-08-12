@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "drives.h"
+#include "dos/drives.h"
 
 #include <string_view>
 
-#include "bios_disk.h"
-#include "ide.h"
-#include "string_utils.h"
+#include "ints/bios_disk.h"
+#include "hardware/ide.h"
+#include "utils/string_utils.h"
 
 extern char sfn[DOS_NAMELENGTH_ASCII];
 

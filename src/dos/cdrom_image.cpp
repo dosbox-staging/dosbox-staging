@@ -24,12 +24,12 @@
 #include <cstring>
 #endif
 
-#include "channel_names.h"
-#include "drives.h"
-#include "fs_utils.h"
-#include "math_utils.h"
-#include "setup.h"
-#include "string_utils.h"
+#include "audio/channel_names.h"
+#include "dos/drives.h"
+#include "utils/fs_utils.h"
+#include "utils/math_utils.h"
+#include "config/setup.h"
+#include "utils/string_utils.h"
 
 // String maximums, local to this file
 #define MAX_LINE_LENGTH 512

@@ -18,9 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "console.h"
-#include "checks.h"
-#include "dos_inc.h"
+#include "misc/console.h"
+#include "utils/checks.h"
+#include "dos/dos_inc.h"
 
 CHECK_NARROWING();
 

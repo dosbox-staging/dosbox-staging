@@ -1,18 +1,18 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dos_system.h"
+#include "dos/dos_system.h"
 
 #include <algorithm>
 #include <cassert>
 #include <iterator>
 #include <vector>
 
-#include "cross.h"
+#include "misc/cross.h"
 #include "dos_inc.h"
-#include "drives.h"
-#include "string_utils.h"
-#include "support.h"
+#include "dos/drives.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
 
 int fileInfoCounter = 0;
 

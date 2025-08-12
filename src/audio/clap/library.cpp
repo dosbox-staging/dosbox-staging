@@ -8,10 +8,10 @@
 
 #include "clap/all.h"
 
-#include "checks.h"
-#include "logging.h"
-#include "string_utils.h"
-#include "support.h"
+#include "utils/checks.h"
+#include "misc/logging.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
 
 CHECK_NARROWING();
 

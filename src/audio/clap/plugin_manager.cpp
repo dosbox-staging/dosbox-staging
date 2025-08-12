@@ -15,10 +15,10 @@
 
 #include "clap/all.h"
 
-#include "checks.h"
-#include "cross.h"
-#include "logging.h"
-#include "support.h"
+#include "utils/checks.h"
+#include "misc/cross.h"
+#include "misc/logging.h"
+#include "misc/support.h"
 
 CHECK_NARROWING();
 

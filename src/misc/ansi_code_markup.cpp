@@ -4,9 +4,9 @@
 #include <regex>
 #include <unordered_map>
 
-#include "ansi_code_markup.h"
-#include "string_utils.h"
-#include "support.h"
+#include "misc/ansi_code_markup.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
 
 // Pre-defined markups to help creating strings
 

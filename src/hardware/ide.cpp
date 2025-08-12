@@ -7,26 +7,23 @@
 
 /* $Id: ide.cpp,v 1.49 2009-04-10 09:53:04 c2woody Exp $ */
 
-#include "dosbox.h"
+#include "ide.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cassert>
 
-#include "bios_disk.h"
-#include "callback.h"
-#include "control.h"
-#include "cpu.h"
-#include "ide.h"
-#include "inout.h"
-#include "mem.h"
-#include "mixer.h"
-#include "pic.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "timer.h"
-
-#include "../src/dos/cdrom.h"
+#include "audio/mixer.h"
+#include "config/config.h"
+#include "config/setup.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "dos/cdrom.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "hardware/timer.h"
+#include "ints/bios_disk.h"
+#include "utils/string_utils.h"
 
 extern int bootdrive;
 extern bool bootguest, bootvm, use_quick_reboot;

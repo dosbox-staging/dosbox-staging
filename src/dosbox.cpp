@@ -10,39 +10,39 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <thread>
 #include <unistd.h>
 
-#include "callback.h"
+#include "audio/mixer.h"
+#include "cpu/callback.h"
 #include "capture/capture.h"
-#include "control.h"
-#include "cpu.h"
-#include "cross.h"
-#include "debug.h"
+#include "config/config.h"
+#include "cpu/cpu.h"
+#include "misc/cross.h"
+#include "debugger/debugger.h"
 #include "dos/dos_locale.h"
-#include "dos_inc.h"
-#include "hardware.h"
-#include "hardware/voodoo.h"
-#include "inout.h"
+#include "dos/dos_inc.h"
+#include "hardware/hardware.h"
+#include "hardware/ne2000.h"
+#include "hardware/pic.h"
+#include "hardware/timer.h"
+#include "hardware/video/voodoo.h"
+#include "hardware/port.h"
 #include "ints/int10.h"
-#include "mapper.h"
-#include "math_utils.h"
-#include "memory.h"
-#include "midi.h"
-#include "mixer.h"
-#include "mouse.h"
-#include "ne2000.h"
-#include "pci_bus.h"
-#include "pic.h"
-#include "programs.h"
-#include "reelmagic.h"
-#include "render.h"
-#include "setup.h"
-#include "shell.h"
-#include "support.h"
-#include "timer.h"
-#include "tracy.h"
-#include "video.h"
+#include "gui/mapper.h"
+#include "utils/math_utils.h"
+#include "midi/midi.h"
+#include "hardware/input/mouse.h"
+#include "hardware/pci_bus.h"
+#include "dos/programs.h"
+#include "hardware/reelmagic/reelmagic.h"
+#include "gui/render.h"
+#include "config/setup.h"
+#include "shell/shell.h"
+#include "misc/support.h"
+#include "misc/tracy.h"
+#include "misc/video.h"
 
 bool shutdown_requested = false;
 
@@ -160,7 +160,7 @@ static Bitu Normal_Loop()
 					return blah;
 				}
 			}
-#if C_DEBUG
+#if C_DEBUGGER
 			if (DEBUG_ExitLoop()) {
 				return 0;
 			}
@@ -670,7 +670,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	pstring = secprop->AddPath("captures", deprecated, "capture");
 	pstring->SetHelp("Moved to [capture] section and renamed to 'capture_dir'.");
 
-#if C_DEBUG
+#if C_DEBUGGER
 	LOG_StartUp();
 #endif
 
@@ -891,7 +891,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	// startup time (e.g., by having `mididevice = mt32` in the config).
 	MIDI_AddConfigSection(control);
 
-#if C_DEBUG
+#if C_DEBUGGER
 	secprop = control->AddSectionProp("debug", &DEBUG_Init);
 #endif
 

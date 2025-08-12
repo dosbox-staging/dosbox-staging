@@ -1,13 +1,14 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dosbox.h"
-#include "inout.h"
-#include "cpu.h"
-#include "callback.h"
 #include "pic.h"
-#include "timer.h"
-#include "setup.h"
+
+#include "config/setup.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "hardware/timer.h"
 
 // PIC Controllers
 // ~~~~~~~~~~~~~~~

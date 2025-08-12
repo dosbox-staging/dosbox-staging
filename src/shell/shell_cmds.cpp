@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dos_system.h"
-#include "shell.h"
+#include "dos/dos_system.h"
+#include "shell/shell.h"
 
 #include <algorithm>
 #include <cassert>
@@ -18,20 +18,21 @@
 #include <string>
 #include <vector>
 
-#include "../dos/program_more_output.h"
-#include "../ints/int10.h"
-#include "ansi_code_markup.h"
-#include "bios.h"
-#include "callback.h"
-#include "control.h"
-#include "cross.h"
-#include "dos_inc.h"
-#include "drives.h"
-#include "paging.h"
-#include "regs.h"
-#include "string_utils.h"
-#include "support.h"
-#include "timer.h"
+#include "config/config.h"
+#include "cpu/callback.h"
+#include "cpu/paging.h"
+#include "cpu/registers.h"
+#include "dos/dos_inc.h"
+#include "dos/drives.h"
+#include "dos/programs/more_output.h"
+#include "hardware/timer.h"
+#include "ints/bios.h"
+#include "ints/int10.h"
+#include "misc/ansi_code_markup.h"
+#include "misc/cross.h"
+#include "misc/support.h"
+#include "shell/command_line.h"
+#include "utils/string_utils.h"
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {

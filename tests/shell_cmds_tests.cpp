@@ -18,16 +18,16 @@
  * 4. Additional dosbox-staging headers (if needed)
  */
 
-#include "shell.h"
+#include "shell/shell.h"
 
 #include <string>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "../src/shell/shell_cmds.cpp"
+#include "shell/shell_cmds.cpp"
 #include "dosbox_test_fixture.h"
-#include "string_utils.h"
+#include "utils/string_utils.h"
 
 namespace {
 

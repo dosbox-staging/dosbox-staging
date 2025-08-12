@@ -5,7 +5,7 @@
 #include "mp3_seek_table.h"
 
 // Local headers
-#include "math_utils.h"
+#include "utils/math_utils.h"
 
 // How many compressed MP3 frames should we skip between each recorded
 // time point.  The trade-off is as follows:

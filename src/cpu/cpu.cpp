@@ -2,25 +2,26 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "cpu.h"
+#include "cpu/cpu.h"
 
 #include <cassert>
 #include <cstddef>
 #include <sstream>
+#include <memory>
 
-#include "control.h"
-#include "debug.h"
+#include "config/config.h"
+#include "config/setup.h"
+#include "cpu/paging.h"
+#include "debugger/debugger.h"
+#include "dos/programs.h"
+#include "gui/mapper.h"
+#include "hardware/pic.h"
 #include "lazyflags.h"
-#include "mapper.h"
-#include "math_utils.h"
-#include "memory.h"
-#include "paging.h"
-#include "pic.h"
-#include "programs.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "support.h"
-#include "video.h"
+#include "misc/support.h"
+#include "misc/video.h"
+#include "shell/command_line.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 #if 1
 	#undef LOG
@@ -118,7 +119,7 @@ void CPU_Core_Dynrec_Cache_Close();
  * In non-debug mode dosbox doesn't do detection (and hence doesn't crash at
  * that point). (game might crash later due to the unhandled exception) */
 
-#if C_DEBUG
+#if C_DEBUGGER
 // #define CPU_CHECK_EXCEPT 1
 // #define CPU_CHECK_IGNORE 1
  /* Use CHECK_EXCEPT when something doesn't work to see if a exception is
@@ -126,7 +127,7 @@ void CPU_Core_Dynrec_Cache_Close();
 #else
 /* NORMAL NO CHECKING => More Speed */
 #define CPU_CHECK_IGNORE 1
-#endif /* C_DEBUG */
+#endif /* C_DEBUGGER */
 
 #if defined(CPU_CHECK_IGNORE)
 #define CPU_CHECK_COND(cond,msg,exc,sel) {	\
@@ -737,10 +738,10 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 	last_interrupt = num;
 
 	FillFlags();
-#if C_DEBUG
+#if C_DEBUGGER
 	switch (num) {
 	case 0xcd:
-#if C_HEAVY_DEBUG
+#if C_HEAVY_DEBUGGER
  		LOG(LOG_CPU,LOG_ERROR)("Call to interrupt 0xCD this is BAD");
 //		DEBUG_HeavyWriteLogInstruction();
 //		E_Exit("Call to interrupt 0xCD this is BAD");

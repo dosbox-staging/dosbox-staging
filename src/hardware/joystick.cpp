@@ -7,11 +7,11 @@
 #include <cmath>
 #include <cstring>
 
-#include "control.h"
-#include "inout.h"
-#include "math_utils.h"
-#include "mapper.h"
-#include "pic.h"
+#include "config/config.h"
+#include "gui/mapper.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "utils/math_utils.h"
 //TODO: higher axis can't be mapped. Find out why again
 
 //Set to true, to enable automated switching back to square on circle mode if the inputs are outside the cirle.
@@ -164,7 +164,7 @@ static bool write_active = false;
 static bool swap34 = false;
 bool button_wrapping_enabled = true;
 
-extern bool autofire; //sdl_mapper.cpp
+extern bool autofire; //mapper.cpp
 
 static uint8_t read_p201(io_port_t, io_width_t)
 {

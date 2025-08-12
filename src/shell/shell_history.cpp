@@ -1,16 +1,16 @@
 // SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "shell.h"
+#include "shell/shell.h"
 
 #include <fstream>
 
-#include "checks.h"
-#include "control.h"
+#include "utils/checks.h"
+#include "config/config.h"
 #include "dosbox.h"
-#include "fs_utils.h"
-#include "string_utils.h"
-#include "unicode.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
+#include "misc/unicode.h"
 
 CHECK_NARROWING();
 

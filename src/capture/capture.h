@@ -5,9 +5,9 @@
 #ifndef DOSBOX_CAPTURE_H
 #define DOSBOX_CAPTURE_H
 
-#include "render.h"
+#include "gui/render.h"
 
-#include "std_filesystem.h"
+#include "misc/std_filesystem.h"
 
 #include <optional>
 #include <string>

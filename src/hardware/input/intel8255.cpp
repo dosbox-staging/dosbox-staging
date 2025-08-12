@@ -2,14 +2,14 @@
 // SPDX-FileCopyrightText:  2002-2022 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "intel8255.h"
-#include "dosbox.h"
+#include "private/intel8255.h"
 
-#include "bitops.h"
-#include "checks.h"
-#include "inout.h"
-#include "mixer.h"
-#include "timer.h"
+#include "audio/mixer.h"
+#include "dosbox.h"
+#include "hardware/port.h"
+#include "hardware/timer.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

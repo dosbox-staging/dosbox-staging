@@ -10,7 +10,7 @@
 
 #include "library.h"
 #include "plugin.h"
-#include "std_filesystem.h"
+#include "misc/std_filesystem.h"
 
 namespace Clap {
 

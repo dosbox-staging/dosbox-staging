@@ -7,9 +7,9 @@
 #include <new>
 #include <type_traits>
 
-#include "mem_unaligned.h"
-#include "paging.h"
-#include "types.h"
+#include "utils/mem_unaligned.h"
+#include "cpu/paging.h"
+#include "misc/types.h"
 
 #if defined(HAVE_MMAP)
 #include <sys/mman.h>

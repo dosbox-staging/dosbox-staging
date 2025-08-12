@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mouse.h"
+
+#include "private/intel8042.h"
 #include "mouse_config.h"
 #include "mouse_interfaces.h"
 
@@ -10,17 +12,15 @@
 #include <cmath>
 #include <vector>
 
-#include "bios.h"
-#include "bitops.h"
-#include "callback.h"
-#include "checks.h"
-#include "cpu.h"
-#include "intel8042.h"
-#include "math_utils.h"
-#include "pic.h"
-#include "regs.h"
-
-#include "../../ints/int10.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "cpu/registers.h"
+#include "hardware/pic.h"
+#include "ints/bios.h"
+#include "ints/int10.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
 
 CHECK_NARROWING();
 

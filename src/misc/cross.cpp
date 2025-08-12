@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "cross.h"
+#include "misc/cross.h"
 
 #include <cerrno>
 #include <climits>
@@ -37,10 +37,10 @@
 #	include <pwd.h>
 #endif
 
-#include "fs_utils.h"
-#include "string_utils.h"
-#include "support.h"
-#include "drives.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
+#include "misc/support.h"
+#include "dos/drives.h"
 
 std::string GetPrimaryConfigName()
 {

@@ -20,7 +20,7 @@
 // This file contains the reelmagic MPEG player code...
 //
 
-#include "reelmagic.h"
+#include "hardware/reelmagic/reelmagic.h"
 
 #include <array>
 #include <cstdarg>
@@ -31,14 +31,14 @@
 #include <string>
 #include <vector>
 
-#include "channel_names.h"
-#include "dos_system.h"
-#include "logging.h"
-#include "mixer.h"
+#include "audio/channel_names.h"
+#include "audio/mixer.h"
+#include "dos/dos_system.h"
+#include "hardware/timer.h"
+#include "misc/logging.h"
 #include "player.h"
-#include "rwqueue.h"
-#include "setup.h"
-#include "timer.h"
+#include "utils/rwqueue.h"
+#include "config/setup.h"
 
 // bring in the MPEG-1 decoder library...
 #define PL_MPEG_IMPLEMENTATION

@@ -25,15 +25,15 @@
 
 #endif // HAVE_MPROTECT
 
-#include "callback.h"
-#include "cpu.h"
-#include "debug.h"
-#include "fpu.h"
-#include "inout.h"
-#include "mem.h"
-#include "paging.h"
-#include "regs.h"
-#include "tracy.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "cpu/paging.h"
+#include "cpu/registers.h"
+#include "debugger/debugger.h"
+#include "fpu/fpu.h"
+#include "hardware/memory.h"
+#include "hardware/port.h"
+#include "misc/tracy.h"
 
 #define CACHE_MAXSIZE	(4096*3)
 #define CACHE_TOTAL		(1024*1024*8)
@@ -309,8 +309,8 @@ Bits CPU_Core_Dyn_X86_Run() noexcept
 	/* Determine the linear address of CS:EIP */
 restart_core:
 	PhysPt ip_point=SegPhys(cs)+reg_eip;
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+#if C_DEBUGGER
+#if C_HEAVY_DEBUGGER
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif
@@ -344,13 +344,13 @@ restart_core:
 run_block:
 	cache.block.running=nullptr;
 	const auto ret = sync_normal_fpu_and_run_dyn_code(block->cache.start);
-#	if C_DEBUG
+#	if C_DEBUGGER
 	cycle_count += 32;
 #endif
 	switch (ret) {
 	case BR_Iret:
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+#if C_DEBUGGER
+#if C_HEAVY_DEBUGGER
 		if (DEBUG_HeavyIsBreakpoint()) {
 			return debugCallback;
 		}
@@ -366,15 +366,15 @@ run_block:
 		return CBRET_NONE;
 	case BR_Normal:
 		/* Maybe check if we staying in the same page? */
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+#if C_DEBUGGER
+#if C_HEAVY_DEBUGGER
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif
 		goto restart_core;
 	case BR_Cycles:
-#if C_DEBUG
-#if C_HEAVY_DEBUG			
+#if C_DEBUGGER
+#if C_HEAVY_DEBUGGER			
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif

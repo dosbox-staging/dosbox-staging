@@ -5,7 +5,7 @@
 // Uncomment to enable file-open diagnostic messages
 // #define DEBUG 1
 
-#include "drives.h"
+#include "dos/drives.h"
 #include "drive_local.h"
 
 #include <cerrno>
@@ -17,13 +17,13 @@
 #include <limits>
 #include <sys/types.h>
 
-#include "../hardware/disk_noise.h"
-#include "cross.h"
+#include "audio/disk_noise.h"
+#include "misc/cross.h"
 #include "dos_inc.h"
 #include "dos_mscdex.h"
-#include "fs_utils.h"
-#include "inout.h"
-#include "string_utils.h"
+#include "utils/fs_utils.h"
+#include "hardware/port.h"
+#include "utils/string_utils.h"
 
 bool localDrive::FileIsReadOnly(const char* name)
 {

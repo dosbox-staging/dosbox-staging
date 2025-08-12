@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "midi_alsa.h"
+#include "private/midi_alsa.h"
 
 #if C_ALSA
 
@@ -13,9 +13,9 @@
 #include <sstream>
 #include <string>
 
-#include "logging.h"
-#include "programs.h"
-#include "string_utils.h"
+#include "dos/programs.h"
+#include "misc/logging.h"
+#include "utils/string_utils.h"
 
 #define ADDR_DELIM ".:"
 

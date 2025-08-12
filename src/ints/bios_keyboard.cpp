@@ -2,14 +2,14 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "bios.h"
+#include "ints/bios.h"
 
-#include "callback.h"
-#include "mem.h"
-#include "keyboard.h"
-#include "regs.h"
-#include "inout.h"
-#include "dos_inc.h"
+#include "cpu/callback.h"
+#include "hardware/memory.h"
+#include "hardware/input/keyboard.h"
+#include "cpu/registers.h"
+#include "hardware/port.h"
+#include "dos/dos_inc.h"
 
 static callback_number_t call_int16 = 0;
 static callback_number_t call_irq1  = 0;

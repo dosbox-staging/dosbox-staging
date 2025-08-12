@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "midi_mt32.h"
+#include "private/midi_mt32.h"
 
 #if C_MT32EMU
 
@@ -15,20 +15,21 @@
 
 #include <SDL_endian.h>
 
-#include "../ints/int10.h"
-#include "ansi_code_markup.h"
-#include "channel_names.h"
-#include "control.h"
-#include "cross.h"
-#include "fs_utils.h"
-#include "math_utils.h"
+#include "private/midi_lasynth_model.h"
+
+#include "audio/channel_names.h"
+#include "audio/mixer.h"
+#include "config/config.h"
+#include "hardware/mpu401.h"
+#include "hardware/pic.h"
+#include "ints/int10.h"
 #include "midi.h"
-#include "midi_lasynth_model.h"
-#include "mixer.h"
-#include "mpu401.h"
-#include "pic.h"
-#include "string_utils.h"
-#include "support.h"
+#include "misc/ansi_code_markup.h"
+#include "misc/cross.h"
+#include "misc/support.h"
+#include "utils/fs_utils.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 // #define DEBUG_MT32
 

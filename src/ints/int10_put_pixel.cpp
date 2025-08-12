@@ -4,9 +4,9 @@
 
 #include "int10.h"
 
-#include "inout.h"
-#include "mem.h"
-#include "pci_bus.h"
+#include "hardware/port.h"
+#include "hardware/memory.h"
+#include "hardware/pci_bus.h"
 
 static uint8_t cga_masks[4]={0x3f,0xcf,0xf3,0xfc};
 static uint8_t cga_masks2[8]={0x7f,0xbf,0xdf,0xef,0xf7,0xfb,0xfd,0xfe};

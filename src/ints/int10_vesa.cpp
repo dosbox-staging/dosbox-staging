@@ -8,15 +8,14 @@
 #include <cstddef>
 #include <cstring>
 
-#include "callback.h"
-#include "dos_inc.h"
-#include "inout.h"
-#include "math_utils.h"
-#include "mem.h"
-#include "pci_bus.h"
-#include "regs.h"
-#include "string_utils.h"
-#include "version.h"
+#include "cpu/callback.h"
+#include "dos/dos_inc.h"
+#include "hardware/port.h"
+#include "utils/math_utils.h"
+#include "hardware/memory.h"
+#include "hardware/pci_bus.h"
+#include "cpu/registers.h"
+#include "utils/string_utils.h"
 
 #define VESA_SUCCESS          0x00
 #define VESA_FAIL             0x01

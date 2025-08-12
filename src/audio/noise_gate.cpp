@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "noise_gate.h"
+#include "private/noise_gate.h"
 
 #include <cassert>
 #include <cmath>
 
 #include "audio_frame.h"
-#include "checks.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

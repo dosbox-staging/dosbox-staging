@@ -94,7 +94,7 @@
             "CodeNext": 3299936121,
             "CodePrev": 2974951853,
             "ErrorCode": "V570",
-            "FileName": "mem.h",
+            "FileName": "hardware/memory.h",
             "Message": "The 'val' variable is assigned to itself."
         },
         {
@@ -102,7 +102,7 @@
             "CodeNext": 3299936121,
             "CodePrev": 2974951853,
             "ErrorCode": "V570",
-            "FileName": "mem.h",
+            "FileName": "hardware/memory.h",
             "Message": "The 'val' variable is assigned to itself."
         },
         {
@@ -110,7 +110,7 @@
             "CodeNext": 3299936121,
             "CodePrev": 2974951853,
             "ErrorCode": "V570",
-            "FileName": "mem.h",
+            "FileName": "hardware/memory.h",
             "Message": "The 'val' variable is assigned to itself."
         },
         {
@@ -118,7 +118,7 @@
             "CodeNext": 36027430,
             "CodePrev": 0,
             "ErrorCode": "V801",
-            "FileName": "sdl_mapper.cpp",
+            "FileName": "mapper.cpp",
             "Message": "Decreased performance. It is better to redefine the first function argument as a reference. Consider replacing 'const .. sequence' with 'const .. &sequence'."
         }
     ]

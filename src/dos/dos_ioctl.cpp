@@ -2,11 +2,11 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "dos_inc.h"
 #include "dosbox.h"
-#include "mem.h"
-#include "regs.h"
+#include "hardware/memory.h"
+#include "cpu/registers.h"
 #include <cstring>
 
 bool DOS_IOCTL(void) {

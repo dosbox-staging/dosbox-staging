@@ -11,19 +11,19 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "compiler.h"
-#include "regs.h"
-#include "callback.h"
-#include "dos_system.h"
+#include "misc/compiler.h"
+#include "cpu/registers.h"
+#include "cpu/callback.h"
+#include "dos/dos_system.h"
 #include "dos_inc.h"
-#include "fs_utils.h"
-#include "setup.h"
-#include "support.h"
-#include "bios_disk.h"
-#include "cpu.h"
+#include "utils/fs_utils.h"
+#include "config/setup.h"
+#include "misc/support.h"
+#include "ints/bios_disk.h"
+#include "cpu/cpu.h"
 #include "cdrom.h"
-#include "math_utils.h"
-#include "string_utils.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 #define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
 //#define MSCDEX_LOG

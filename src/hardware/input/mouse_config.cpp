@@ -2,16 +2,17 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mouse_config.h"
-#include "mouse_common.h"
+
+#include "private/mouse_common.h"
 #include "mouse_interfaces.h"
 
-#include "checks.h"
-#include "control.h"
-#include "math_utils.h"
-#include "setup.h"
-#include "string_utils.h"
-#include "support.h"
-#include "video.h"
+#include "config/config.h"
+#include "config/setup.h"
+#include "misc/support.h"
+#include "misc/video.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 #include <cmath>
 

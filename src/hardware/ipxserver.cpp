@@ -5,12 +5,13 @@
 
 #if C_IPX
 
+#include "ipx.h"
+
 #include <atomic>
 #include <thread>
 
-#include "ipx.h"
-#include "ipxserver.h"
-#include "timer.h"
+#include "hardware/ipxserver.h"
+#include "hardware/timer.h"
 
 static constexpr int UDP_UNICAST = -1; // SDLNet magic number
 

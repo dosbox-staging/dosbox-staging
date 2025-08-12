@@ -7,9 +7,10 @@
 */
 
 #include "dosbox.h"
-#include "cpu.h"
+
+#include "cpu/cpu.h"
+#include "hardware/pic.h"
 #include "lazyflags.h"
-#include "pic.h"
 
 LazyFlags lflags;
 

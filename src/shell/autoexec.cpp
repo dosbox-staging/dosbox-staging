@@ -2,18 +2,18 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "autoexec.h"
+#include "shell/autoexec.h"
 
-#include "checks.h"
-#include "control.h"
+#include "utils/checks.h"
+#include "config/config.h"
 #include "dosbox.h"
-#include "fs_utils.h"
-#include "keyboard.h"
-#include "mouse.h"
-#include "setup.h"
-#include "shell.h"
-#include "string_utils.h"
-#include "unicode.h"
+#include "utils/fs_utils.h"
+#include "hardware/input/keyboard.h"
+#include "hardware/input/mouse.h"
+#include "config/setup.h"
+#include "shell/shell.h"
+#include "utils/string_utils.h"
+#include "misc/unicode.h"
 
 #include <algorithm>
 #include <iostream>
@@ -737,7 +737,7 @@ void AutoExecModule::AddMessages()
 
 void AUTOEXEC_SetVariable(const std::string& name, const std::string& value)
 {
-#if C_DEBUG
+#if C_DEBUGGER
 	if (!std::all_of(name.cbegin(), name.cend(), is_printable_ascii)) {
 		E_Exit("AUTOEXEC: Variable name is not a printable ASCII");
 	}

@@ -5,9 +5,9 @@
 
 #include <cassert>
 
-#include "checks.h"
-#include "logging.h"
-#include "midi.h"
+#include "utils/checks.h"
+#include "misc/logging.h"
+#include "midi/midi.h"
 
 CHECK_NARROWING();
 

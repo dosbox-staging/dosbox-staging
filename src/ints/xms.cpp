@@ -4,18 +4,18 @@
 
 #include "dosbox.h"
 
-#include "bios.h"
-#include "bitops.h"
-#include "callback.h"
-#include "checks.h"
-#include "cpu.h"
-#include "dos_inc.h"
-#include "inout.h"
-#include "math_utils.h"
-#include "mem.h"
-#include "regs.h"
-#include "setup.h"
-#include "support.h"
+#include "ints/bios.h"
+#include "utils/bitops.h"
+#include "cpu/callback.h"
+#include "utils/checks.h"
+#include "cpu/cpu.h"
+#include "dos/dos_inc.h"
+#include "hardware/port.h"
+#include "utils/math_utils.h"
+#include "hardware/memory.h"
+#include "cpu/registers.h"
+#include "config/setup.h"
+#include "misc/support.h"
 
 #include <cstddef>
 #include <cstdlib>

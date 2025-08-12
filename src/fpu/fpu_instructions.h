@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_FPU_H
-#include "fpu.h"
+#include "fpu/fpu.h"
 #endif
 
-#include "math_utils.h"
+#include "utils/math_utils.h"
 
 static constexpr uint16_t PrecisionModeMask = 0x0300;
 
