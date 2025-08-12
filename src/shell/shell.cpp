@@ -11,17 +11,17 @@
 #include <memory>
 #include <regex>
 
-#include "shell/autoexec.h"
-#include "cpu/callback.h"
 #include "config/config.h"
-#include "dos/programs/program_more_output.h"
-#include "dos/programs/program_setver.h"
-#include "utils/fs_utils.h"
-#include "hardware/timer.h"
-#include "gui/mapper.h"
+#include "cpu/callback.h"
 #include "cpu/registers.h"
-#include "utils/string_utils.h"
+#include "dos/programs/more_output.h"
+#include "dos/programs/setver.h"
+#include "gui/mapper.h"
+#include "hardware/timer.h"
 #include "misc/support.h"
+#include "shell/autoexec.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
 
 callback_number_t call_shellstop = 0;
 

@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_rescan.h"
+#include "rescan.h"
 
-#include "program_more_output.h"
+#include "more_output.h"
 #include "utils/string_utils.h"
 
 void RESCAN::Run(void)

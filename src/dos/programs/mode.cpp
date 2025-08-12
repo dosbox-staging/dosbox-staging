@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_mode.h"
+#include "mode.h"
 
 #include <algorithm>
 #include <set>
@@ -11,7 +11,7 @@
 #include "utils/checks.h"
 #include "ints/int10.h"
 #include "utils/math_utils.h"
-#include "program_more_output.h"
+#include "more_output.h"
 #include "cpu/registers.h"
 #include "shell/shell.h"
 #include "utils/string_utils.h"

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_mixer.h"
+#include "mixer.h"
 
 #include <cctype>
 #include <optional>
@@ -13,7 +13,7 @@
 #include "utils/math_utils.h"
 #include "midi/midi.h"
 #include "misc/notifications.h"
-#include "program_more_output.h"
+#include "more_output.h"
 #include "utils/string_utils.h"
 
 CHECK_NARROWING();

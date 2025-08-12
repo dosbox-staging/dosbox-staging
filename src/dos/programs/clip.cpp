@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_clip.h"
+#include "clip.h"
 
 #include "utils/checks.h"
 #include "gui/clipboard.h"
 #include "dos/dos_inc.h"
 #include "utils/math_utils.h"
-#include "program_more_output.h"
+#include "more_output.h"
 
 CHECK_NARROWING();
 

@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_placeholder.h"
+#include "placeholder.h"
 
 extern unsigned int result_errorcode;
 
-#include "program_more_output.h"
+#include "more_output.h"
 
 void PLACEHOLDER::Run()
 {

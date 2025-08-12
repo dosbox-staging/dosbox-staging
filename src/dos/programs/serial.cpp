@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_serial.h"
+#include "serial.h"
 
 #include <map>
 
@@ -12,7 +12,7 @@
 #include "hardware/serialport/softmodem.h"
 
 #include "shell/command_line.h"
-#include "program_more_output.h"
+#include "more_output.h"
 
 // Map the serial port type enums to printable names
 static std::map<SERIAL_PORT_TYPE, const std::string> serial_type_names = {

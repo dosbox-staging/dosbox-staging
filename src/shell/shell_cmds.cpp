@@ -18,21 +18,21 @@
 #include <string>
 #include <vector>
 
-#include "misc/ansi_code_markup.h"
-#include "ints/bios.h"
-#include "cpu/callback.h"
-#include "shell/command_line.h"
 #include "config/config.h"
-#include "misc/cross.h"
-#include "dos/programs/program_more_output.h"
-#include "dos/dos_inc.h"
-#include "dos/drives.h"
-#include "hardware/timer.h"
-#include "ints/int10.h"
+#include "cpu/callback.h"
 #include "cpu/paging.h"
 #include "cpu/registers.h"
-#include "utils/string_utils.h"
+#include "dos/dos_inc.h"
+#include "dos/drives.h"
+#include "dos/programs/more_output.h"
+#include "hardware/timer.h"
+#include "ints/bios.h"
+#include "ints/int10.h"
+#include "misc/ansi_code_markup.h"
+#include "misc/cross.h"
 #include "misc/support.h"
+#include "shell/command_line.h"
+#include "utils/string_utils.h"
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {

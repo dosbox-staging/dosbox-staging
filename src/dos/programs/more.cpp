@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_more.h"
+#include "more.h"
 
-#include "program_more_output.h"
+#include "more_output.h"
 
 #include "cpu/callback.h"
 #include "utils/checks.h"

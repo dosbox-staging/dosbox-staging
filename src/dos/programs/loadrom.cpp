@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_loadrom.h"
+#include "loadrom.h"
 
 #include "dosbox.h"
 
@@ -11,7 +11,7 @@
 #include "cpu/callback.h"
 #include "dos/dos_windows.h"
 #include "dos/drives.h"
-#include "program_more_output.h"
+#include "more_output.h"
 #include "cpu/registers.h"
 
 void LOADROM::Run(void)

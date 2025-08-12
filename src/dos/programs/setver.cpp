@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_setver.h"
+#include "setver.h"
 
-#include "program_more_output.h"
+#include "more_output.h"
 
 #include "utils/checks.h"
 #include "config/config.h"

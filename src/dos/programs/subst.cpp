@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_move.h"
+#include "subst.h"
 
 #include <string>
 
 #include "shell/shell.h"
 #include "utils/string_utils.h"
 
-void MOVE::Run()
+void SUBST::Run()
 {
 	std::string tmp = "";
 	cmd->GetStringRemain(tmp);
@@ -19,5 +19,5 @@ void MOVE::Run()
 	auto shell = DOS_GetFirstShell();
 	assert(shell);
 
-	shell->CMD_MOVE(args);
+	shell->CMD_SUBST(args);
 }

@@ -2,10 +2,10 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_intro.h"
+#include "intro.h"
 
 #include "gui/mapper.h"
-#include "program_more_output.h"
+#include "more_output.h"
 
 void INTRO::WriteOutProgramIntroSpecial()
 {

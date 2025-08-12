@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_boot.h"
+#include "boot.h"
 
 #include <cstdio>
 #include <limits>
@@ -18,7 +18,7 @@
 #include "hardware/vmware.h"
 #include "gui/mapper.h"
 #include "hardware/input/mouse.h"
-#include "program_more_output.h"
+#include "more_output.h"
 #include "cpu/registers.h"
 #include "utils/string_utils.h"
 #include "misc/video.h"

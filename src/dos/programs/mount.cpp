@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_mount_common.h"
-#include "program_mount.h"
+#include "mount_common.h"
+#include "mount.h"
 
 #include "dosbox.h"
 
@@ -13,7 +13,7 @@
 #include "dos/drives.h"
 #include "utils/fs_utils.h"
 #include "ints/int10.h"
-#include "program_more_output.h"
+#include "more_output.h"
 #include "shell/shell.h"
 #include "utils/string_utils.h"
 

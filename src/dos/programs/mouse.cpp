@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_mouse.h"
+#include "mouse.h"
 
 #include "cpu/callback.h"
 #include "utils/checks.h"
 #include "dos/dos_inc.h"
 #include "dos/dos_windows.h"
 #include "hardware/input/mouse.h"
-#include "program_more_output.h"
+#include "more_output.h"
 #include "cpu/registers.h"
 
 CHECK_NARROWING();

@@ -21,15 +21,15 @@
 
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
+#include "config/setup.h"
 #include "cpu/callback.h"
-#include "dos/programs/program_more_output.h"
+#include "cpu/registers.h"
 #include "dos/dos_inc.h"
 #include "dos/dos_system.h"
+#include "dos/programs.h"
+#include "dos/programs/more_output.h"
 #include "gui/mapper.h"
 #include "utils/math_utils.h"
-#include "dos/programs.h"
-#include "cpu/registers.h"
-#include "config/setup.h"
 
 // note: Reported ReelMagic driver version 2.21 seems to be the most common...
 static const uint8_t REELMAGIC_DRIVER_VERSION_MAJOR = 2;

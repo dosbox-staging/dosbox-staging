@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_tree.h"
+#include "tree.h"
 
 #include "cpu/callback.h"
 #include "utils/checks.h"

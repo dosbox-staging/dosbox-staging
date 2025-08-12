@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_ls.h"
+#include "ls.h"
 
 #include <string>
 
 #include "misc/ansi_code_markup.h"
 #include "utils/checks.h"
 #include "ints/int10.h"
-#include "program_more_output.h"
+#include "more_output.h"
 #include "shell/shell.h"
 #include "utils/string_utils.h"
 

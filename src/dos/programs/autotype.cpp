@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_autotype.h"
+#include "autotype.h"
 
 #include <algorithm>
 #include <cmath>
@@ -14,7 +14,7 @@
 #include "dosbox.h"
 #include "gui/mapper.h"
 #include "utils/math_utils.h"
-#include "program_more_output.h"
+#include "more_output.h"
 #include "dos/programs.h"
 
 // Prints the key-names for the mapper's currently-bound events.

@@ -15,16 +15,16 @@
 #include <sstream>
 #include <vector>
 
-#include "cpu/callback.h"
 #include "capture/capture.h"
 #include "config/config.h"
-#include "misc/cross.h"
-#include "dos/programs/program_more_output.h"
-#include "gui/mapper.h"
+#include "cpu/callback.h"
 #include "cpu/registers.h"
-#include "shell/shell.h"
+#include "dos/programs/more_output.h"
+#include "gui/mapper.h"
+#include "misc/cross.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
+#include "shell/shell.h"
 
 callback_number_t call_program = 0;
 

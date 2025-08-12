@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_keyb.h"
+#include "keyb.h"
 
 #include "misc/ansi_code_markup.h"
 #include "dos/dos_locale.h"
 #include "ints/int10.h"
-#include "program_more_output.h"
+#include "more_output.h"
 #include "shell/shell.h"
 #include "utils/string_utils.h"
 

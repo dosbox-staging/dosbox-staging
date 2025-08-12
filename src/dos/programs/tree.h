@@ -6,7 +6,7 @@
 
 #include "dos/programs.h"
 
-#include "program_more_output.h"
+#include "more_output.h"
 
 class TREE final : public Program {
 public:

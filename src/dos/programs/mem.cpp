@@ -2,10 +2,10 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "program_mem.h"
+#include "mem.h"
 
 #include "cpu/callback.h"
-#include "program_more_output.h"
+#include "more_output.h"
 #include "cpu/registers.h"
 
 void MEM::Run(void)
