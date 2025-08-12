@@ -3,8 +3,7 @@
 
 ## Preparing a file with English strings
 
-Be sure you have the latest English messages file, `en.lng` (the one present
-in this directory is likely outdated), by running:
+Be sure you have the latest English messages file, `en.lng`, by running:
 
 ```
 dosbox -lang en -c "config -wl en.lng" -c "exit"
