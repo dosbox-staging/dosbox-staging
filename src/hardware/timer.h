@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -11,8 +12,7 @@
 #include <limits>
 #include <thread>
 
-/* underlying clock rate in HZ */
-
+// underlying clock rate in HZ
 constexpr int PIT_TICK_RATE = 1193182;
 
 // Short-hand unit conversions
@@ -24,19 +24,18 @@ constexpr auto PIT_TICK_RATE_KHZ = static_cast<double>(PIT_TICK_RATE) / 1000.0;
 constexpr auto period_of_1k_pit_ticks = 1000.0 / static_cast<double>(PIT_TICK_RATE);
 constexpr auto period_of_1k_pit_ticks_f = static_cast<float>(period_of_1k_pit_ticks);
 
-/* PIT operating modes represented in 3 bits:
-1 to 3       Operating mode :
-                0 0 0 = Mode 0 (interrupt on terminal count)
-                0 0 1 = Mode 1 (hardware re-triggerable one-shot)
-                0 1 0 = Mode 2 (rate generator)
-                0 1 1 = Mode 3 (square wave generator)
-                1 0 0 = Mode 4 (software triggered strobe)
-                1 0 1 = Mode 5 (hardware triggered strobe)
-                1 1 0 = Mode 2 (rate generator, same as 010b)
-                1 1 1 = Mode 3 (square wave generator, same as 011b)
-Refs: http://www.osdever.net/bkerndev/Docs/pit.htm
-      https://wiki.osdev.org/Programmable_Interval_Timer#Operating_Modes
-*/
+// PIT operating modes represented in 3 bits:
+// 1 to 3       Operating mode :
+//                 0 0 0 = Mode 0 (interrupt on terminal count)
+//                 0 0 1 = Mode 1 (hardware re-triggerable one-shot)
+//                 0 1 0 = Mode 2 (rate generator)
+//                 0 1 1 = Mode 3 (square wave generator)
+//                 1 0 0 = Mode 4 (software triggered strobe)
+//                 1 0 1 = Mode 5 (hardware triggered strobe)
+//                 1 1 0 = Mode 2 (rate generator, same as 010b)
+//                 1 1 1 = Mode 3 (square wave generator, same as 011b)
+// Refs: http://www.osdever.net/bkerndev/Docs/pit.htm
+//       https://wiki.osdev.org/Programmable_Interval_Timer#Operating_Modes
 enum class PitMode : uint8_t {
 	InterruptOnTerminalCount = 0b0'0'0,
 	OneShot                  = 0b0'0'1,
@@ -49,17 +48,17 @@ enum class PitMode : uint8_t {
 	Inactive,
 };
 
-/*  PPI Port B Control Register
-    Bit System   Description
-    ~~~ ~~~~~~   ~~~~~~~~~~~
-    0   XT & PC  Timer 2 gate to speaker output (read+write)
-    1   XT & PC  Speaker data state (read+write)
-    4   XT & PC  Toggles with each read
-    5   XT-only  Toggles with each read
-        PC-only  Mirrors timer 2 gate to speaker output
-    7   XT-only  Clear keyboard buffer
-*/
-
+//  PPI Port B Control Register
+//  Bit System   Description
+//  ~~~ ~~~~~~   ~~~~~~~~~~~
+//  0   XT & PC  Timer 2 gate to speaker output (read+write)
+//  1   XT & PC  Speaker data state (read+write)
+//  4   XT & PC  Toggles with each read
+//  5   XT-only  Toggles with each read
+//      PC-only  Mirrors timer 2 gate to speaker output
+//  7   XT-only  Clear keyboard buffer
+//
+//
 union PpiPortB {
 	uint8_t data = {0};
 	bit_view<0, 1> timer2_gating;
@@ -68,24 +67,25 @@ union PpiPortB {
 	bit_view<5, 1> xt_read_toggle;
 	bit_view<5, 1> timer2_gating_alias;
 	bit_view<7, 1> xt_clear_keyboard;
+
 	// virtual view of the timer and speaker output fields
 	bit_view<0, 2> timer2_gating_and_speaker_out;
 };
 
-const char *pit_mode_to_string(const PitMode mode);
+const char* pit_mode_to_string(const PitMode mode);
 
 // PC speaker functions, tightly related to the timer functions
 void PCSPEAKER_SetCounter(const int count, const PitMode pit_mode);
-void PCSPEAKER_SetType(const PpiPortB &port_b);
+void PCSPEAKER_SetType(const PpiPortB& port_b);
 void PCSPEAKER_SetPITControl(const PitMode pit_mode);
 
 typedef void (*TIMER_TickHandler)(void);
 
-/* Register a function that gets called every time if 1 or more ticks pass */
+// Register a function that gets called every time if 1 or more ticks pass
 void TIMER_AddTickHandler(TIMER_TickHandler handler);
 void TIMER_DelTickHandler(TIMER_TickHandler handler);
 
-/* This will add 1 milliscond to all timers */
+// This will add 1 milliscond to all timers
 void TIMER_AddTick(void);
 
 extern const std::chrono::steady_clock::time_point system_start_time;
