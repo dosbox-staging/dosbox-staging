@@ -102,16 +102,16 @@ For example `KEYBOARD_LAYOUT_NAME_US` or `KEYBOARD_LAYOUT_NAME_PL214`.
 After translating, check them by running DOSBox with `--list-layouts` command line
 argument, also check the `keyb /list` internal command output.
 
-# Scripts
+## Scripts
 
-## `normalize.sh` (Linux, macOS) or `normalize.bat` (Windows)
+### `normalize.sh` (Linux, macOS) or `normalize.bat` (Windows)
 
 UTF-8 can store the same exact text in several different ways. There are some standard
 ones, however, called _normalized forms_. These scripts convert the translation files
 to the NFC-normalized form (recommended by DOSBox Staging and used by default
 by most UTF-8 capable text editors), with Unix line endings.
 
-## `update-sources.sh` (Linux, macOS)
+### `update-sources.sh` (Linux, macOS)
 
 This script performs some updates on the translation files - creates an up to date
 `en.lng` file, removes obsolete strings from translation files, adds missing strings
