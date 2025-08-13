@@ -4450,7 +4450,7 @@ static void init_sdl_config_section()
 		                   "                      behaviour in this mode.");
 	
 	pstring->SetValues({"standard",
-#if WIN32
+#ifdef WIN32
 	                     "forced-borderless",
 #endif
 	                     "original"});
