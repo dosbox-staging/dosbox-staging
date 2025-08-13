@@ -15,18 +15,16 @@ extern char sfn[DOS_NAMELENGTH_ASCII];
 // places in code setting/expecting different format, so simple GetLabel() on
 // a drive object might not yield an expected result. Not sure how to sort it
 // out, but it will require some attention to detail.
-// Also: this function is too strict - it removes all punctuation when *some*
-// punctuation is acceptable in drive labels (e.g. '_' or '-').
 //
 std::string To_Label(const char* name) {
 	// Reformat the name per the DOS label specification:
-	// - Upper-case, up to 11 ASCII characters
-	// - Internal spaces allowed but no: tabs ? / \ | . , ; : + = [ ] < > " '
+	// The LABEL command disallows the use of a range special
+	// characters when updating the volume labels, but other
+	// commands and DOS itself doesn't seem to perform this
+	// validation, so we are intentionally lenient here.
 	std::string label(name);
 	trim(label); // strip front-and-back white-space
-	strip_punctuation(label); // strip all punctuation
 	label.resize(11); // collapse remainder to (at-most) 11 chars
-	upcase(label);
 	return label;
 }
 

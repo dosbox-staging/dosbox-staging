@@ -263,14 +263,6 @@ std::string strip_word(std::string& line)
 	return word;
 }
 
-void strip_punctuation(std::string &str)
-{
-	str.erase(std::remove_if(str.begin(),
-	                         str.end(),
-	                         [](unsigned char c) { return std::ispunct(c); }),
-	          str.end());
-}
-
 std::string strip_prefix(const std::string_view str, const std::string_view prefix) noexcept
 {
 	if (str.starts_with(prefix)) {
