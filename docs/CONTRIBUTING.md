@@ -425,7 +425,7 @@ missing Python 3 support.
 
 ### count-warnings
 
-Out gating mechanism tracks the number of warnings per OS/compiler. To see a
+Our quality gating mechanism tracks the number of warnings per OS/compiler. To see a
 summary of warnings in your build, do a clean build and then use the script
 `./scripts/ci/count-warnings.py`:
 
