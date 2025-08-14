@@ -88,7 +88,6 @@ debian
 # CMake
 CMakeUserPresets.json
 cmake-build-*/
-Resources
 
 # External deps for symlinking for local dev
 /lib

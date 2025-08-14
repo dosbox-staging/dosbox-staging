@@ -41,7 +41,7 @@ function(add_copy_assets)
   # Add a copy command for each resource file
   foreach(RESOURCE_FILE ${RESOURCE_FILES})
     add_to_copy_command(
-      "${CMAKE_CURRENT_SOURCE_DIR}/contrib/resources/${RESOURCE_FILE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/resources/${RESOURCE_FILE}"
       "${CMAKE_CURRENT_BINARY_DIR}${RESOURCE_COPY_PATH}/${RESOURCE_FILE}"
     )
   endforeach()

@@ -22,11 +22,11 @@ GPL-2.0-or-later terms, however there are some exceptions:
   LGPL-2.1-or-later terms.
 
 - Timothy Lottes' has dedicated his CRT-styled scan-line GLSL
-  shader, in file contrib/resources/glshaders/crt/fakelottes-flat.glsl,
+  shader, in file resources/glshaders/crt/fakelottes-flat.glsl,
   to the public domain.
 
 - DOS code pages to Unicode mapping definition files in the
-  contrib/resources/mapping-unicode.org directory are licensed under the
+  resources/mapping-unicode.org directory are licensed under the
   Unicode, Inc. License Agreement for Data Files and Software license.
 
 - Libraries in src/libs directory, are licensed as follows:
@@ -53,18 +53,18 @@ Bundled Binaries Licenses
 
 The following 3rd party binaries are shipped with DOSBox Staging:
 
-- DOS command binaries in contrib/resources/drives/y/dos, are licensed as follows:
+- DOS command binaries in resources/drives/y/dos, are licensed as follows:
    - debug.com: licenses/DEBUG.COM.txt, source code: https://github.com/Baron-von-Riedesel/DOS-debug
    - deltree.com: GPL-2.0, source code: https://gitlab.com/FreeDOS/base/deltree
    - xcopy.exe: GPL-2.0, source code: https://github.com/FDOS/xcopy/
 
-- FreeDOS CPI files in contrib/resources/freedos-cpi are GPL-2.0 licensed;
+- FreeDOS CPI files in resources/freedos-cpi are GPL-2.0 licensed;
   these are hand-drawn bitmap fonts, so they don't have a source code; original repositories:
    - https://gitlab.com/FreeDOS/base/cpidos (the main code page pack)
    - https://github.com/FDOS/cpi (ISO/KOI/MAC/WIN code page packs)
   The code page files were originally in the CPX format, they were decompressed into the CPI format.
 
-- FreeDOS keyboard layout files in contrib/resources/freedos-keyboard are GPL-2.0 licensed;
+- FreeDOS keyboard layout files in resources/freedos-keyboard are GPL-2.0 licensed;
   source code: https://gitlab.com/FreeDOS/base/keyb_lay
 
 

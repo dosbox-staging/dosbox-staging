@@ -40,7 +40,7 @@ There are plenty of tasks to work on all around. Here are some ideas:
 
 - Promote the project in gaming communities 😎
 
-- Provide translations (refer to our [translations guide](https://github.com/dosbox-staging/dosbox-staging/blob/main/contrib/resources/translations/README.md)).
+- Provide translations (refer to our [translations guide](https://github.com/dosbox-staging/dosbox-staging/blob/main/resources/translations/README.md)).
 
 - Look at warnings in the code (build with `-Wall -Weffc++` to see the long
   list of potential code improvements), and try to eliminate them.

@@ -157,7 +157,7 @@ sudo port install py-pip
 sudo port select --set pip  pip313
 sudo port select --set pip3 pip313
 
-pip install -r contrib/documentation/mkdocs-package-requirements.txt
+pip install -r extras/documentation/mkdocs-package-requirements.txt
 ```
 
 You'll also need to add the Python programs installed by pip to the path (so

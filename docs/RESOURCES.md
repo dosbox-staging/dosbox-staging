@@ -109,7 +109,7 @@ effort to filter them out.
 
 Q: How are the `"resources"` deployed into the build area by Meson?
 
-A: Read the `contrib/resources/meson.build` This meson file copies the resource
+A: Read the `resources/meson.build` This meson file copies the resource
 files into the build area.
 
 Q: How are the `"resources"` deployed into the build area by Visual Studio?
