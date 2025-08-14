@@ -655,15 +655,15 @@ TEST(WrapText, WrapsWithIndent)
 {
 	const std::string str      = "0123456789, 0123456789, 0123456789";
 	const std::string expected = "0123456789, "
-		"\n                  0123456789, "
-		"\n                  0123456789";
+		"\n      0123456789, "
+		"\n      0123456789";
 
 	const std::string actual =
 		wrap_text(
 			str,
 			20,
 			{'-'},
-			18);
+			6);
 
 	EXPECT_EQ(expected, actual);
 }
@@ -673,16 +673,16 @@ TEST(WrapText, WrapsWithIndentAndOptionalWrapChars)
 	const std::string str =
 		"0123456789, 012-3456789, 0123456789, 0123|456789";
 	const std::string expected = "0123456789, 012-"
-		"\n                  3456789,"
-		"\n                  0123456789, 0123|"
-		"\n                  456789";
+		"\n      3456789, "
+		"\n      0123456789, "
+		"\n      0123|456789";
 
 	const std::string actual =
 		wrap_text(
 			str,
 			20,
 			{'-', '|'},
-			18);
+			6);
 
 	EXPECT_EQ(expected, actual);
 }
