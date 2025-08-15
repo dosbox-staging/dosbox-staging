@@ -181,9 +181,12 @@ public:
 		const std::string formatted_string =
 			format_str(format, args...);
 		const std::uint16_t max_columns = GetMaxColumns();
-		const std::string wrapped_text  =
+		const int indent_length = get_label_width_in_cols(format);
+		const std::string wrapped_text =
 			wrap_text(formatted_string,
-			          max_columns);
+			          max_columns,
+			          {'-'},
+			          indent_length);
 		input_strings += wrapped_text;
 	}
 
