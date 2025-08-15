@@ -3,7 +3,11 @@
 
 #include "utils/string_utils.h"
 
+#include "support.h"
+
 #include <algorithm>
+#include <format>
+#include <iomanip>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -437,4 +441,90 @@ bool is_text_equal(const std::string& str_1, const std::string& str_2)
 	}
 
 	return (index_1 == str_1.size()) && (index_2 == str_2.size());
+}
+
+std::string wrap_text(const std::string& str,
+                      const int max_line_length,
+                      const std::vector<char>& additional_wrap_chars,
+                      const int indent_length)
+{
+	std::string out = {};
+	int line_len    = 0;
+
+	auto is_wrap_char = [&](const char c) {
+		return c == ' ' || contains(additional_wrap_chars, c);
+	};
+
+	std::string token;
+	const std::string indent_str(indent_length, ' ');
+	for (const auto c : str) {
+		token.push_back(c);
+
+		if (is_wrap_char(c)) {
+			if (line_len + token.size() > max_line_length) {
+				out.append("\n");
+				out.append(indent_str);
+				line_len = indent_length;
+			}
+			out.append(token);
+			line_len += token.size();
+			token.clear();
+		}
+	}
+
+	if (!token.empty()) {
+		if (line_len + token.size() > max_line_length) {
+			out.append("\n");
+			out.append(indent_str);
+			line_len = indent_length;
+		}
+		out.append(token);
+	}
+
+	return out;
+}
+
+int get_label_width_in_cols(const std::string& label_str)
+{
+	const auto is_escape_char = [](const u_char c) {
+		if (c == 0x1b) {
+			return true;
+		}
+		return false;
+	};
+	const auto is_end_of_escape_char = [](const u_char c) {
+		if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+			return true;
+		}
+		return false;
+	};
+	const auto is_displayable_char = [](const u_char c) {
+		if (c >= 0x20 && c <= 0x7f) {
+			return true;
+		}
+		return false;
+	};
+	const auto is_cstyle_formatter_char = [](const u_char c) {
+		if (c == '%') {
+			return true;
+		}
+		return false;
+	};
+
+	int count      = 0;
+	bool in_escape = false;
+	for (const u_char& c : label_str) {
+		if (is_escape_char(c)) {
+			in_escape = true;
+		} else if (in_escape) {
+			if (is_end_of_escape_char(c)) {
+				in_escape = false;
+			}
+		} else if (is_cstyle_formatter_char(c)) {
+			break;
+		} else if (is_displayable_char(c)) {
+			count++;
+		}
+	}
+	return count;
 }

@@ -176,6 +176,21 @@ public:
 	MoreOutputStrings(Program &program);
 
 	template <typename... Args>
+	void AddStringWrapped(const std::string& format, const Args&... args)
+	{
+		const std::string formatted_string =
+			format_str(format, args...);
+		const std::uint16_t max_columns = GetMaxColumns();
+		const int indent_length = get_label_width_in_cols(format);
+		const std::string wrapped_text =
+			wrap_text(formatted_string,
+			          max_columns,
+			          {'-'},
+			          indent_length);
+		input_strings += wrapped_text;
+	}
+
+	template <typename... Args>
 	void AddString(const std::string& format, const Args&... args)
 	{
 		input_strings += format_str(format, args...);
