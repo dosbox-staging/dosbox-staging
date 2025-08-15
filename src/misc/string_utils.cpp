@@ -450,12 +450,16 @@ std::string wrap_text(const std::string& str,
 	std::string out = {};
 	int line_len    = 0;
 
+	auto is_wrap_char = [&](const char c) {
+		return c == ' ' || contains(additional_wrap_chars, c);
+	};
+
 	std::string token;
 	const std::string indent_str(indent_length, ' ');
 	for (const auto c : str) {
 		token.push_back(c);
 
-		if (c == ' ' || contains(additional_wrap_chars, c)) {
+		if (is_wrap_char(c)) {
 			if (line_len + token.size() > max_line_length) {
 				out.append("\n");
 				out.append(indent_str);
