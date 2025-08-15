@@ -3,9 +3,10 @@
 
 #include "utils/string_utils.h"
 
+#include "support.h"
+
 #include <algorithm>
 #include <iomanip>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -442,29 +443,25 @@ bool is_text_equal(const std::string& str_1, const std::string& str_2)
 }
 
 std::string wrap_text(const std::string& str,
-                      const std::uint16_t max_line_length,
+                      const int max_line_length,
                       const std::vector<char>& additional_wrap_chars,
-                      const std::uint16_t indent_length)
+                      const int indent_length)
 {
-	std::ostringstream out_stream;
-	std::uint16_t line_len = 0;
-
-	const auto is_wrap_char = [additional_wrap_chars](const char c) {
-		return c == ' ' || std::ranges::find(additional_wrap_chars, c)
-		       != additional_wrap_chars.end();
-	};
+	std::string out = {};
+	int line_len    = 0;
 
 	std::string token;
 	const std::string indent_str(indent_length, ' ');
 	for (const auto c : str) {
 		token.push_back(c);
 
-		if (is_wrap_char(c)) {
+		if (c == ' ' || contains(additional_wrap_chars, c)) {
 			if (line_len + token.size() > max_line_length) {
-				out_stream << '\n' << indent_str;
+				out.append("\n");
+				out.append(indent_str);
 				line_len = indent_length;
 			}
-			out_stream << token;
+			out.append(token);
 			line_len += token.size();
 			token.clear();
 		}
@@ -472,11 +469,12 @@ std::string wrap_text(const std::string& str,
 
 	if (!token.empty()) {
 		if (line_len + token.size() > max_line_length) {
-			out_stream << '\n' << indent_str;
+			out.append("\n");
+			out.append(indent_str);
 			line_len = indent_length;
 		}
-		out_stream << token;
+		out.append(token);
 	}
 
-	return out_stream.str();
+	return out;
 }

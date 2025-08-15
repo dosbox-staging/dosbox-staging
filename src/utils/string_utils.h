@@ -356,8 +356,8 @@ bool is_text_equal(const std::string& str_1, const std::string& str_2);
 // Wraps the supplied text on spaces given a maximum length and optional
 // additional wrap chars and indent length.
 std::string wrap_text(const std::string& str,
-                      const std::uint16_t max_line_length,
+                      const int max_line_length,
                       const std::vector<char>& additional_wrap_chars = {'-'},
-                      const std::uint16_t indent_length = 0);
+                      const int indent_length                        = 0);
 
 #endif

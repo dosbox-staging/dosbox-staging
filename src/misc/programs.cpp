@@ -435,7 +435,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 
 				if (!p->IsDeprecated()) {
 					if (!possible_values.empty()) {
-						output.AddWrapString(
+						output.AddStringWrapped(
 						        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES"),
 						        possible_values.c_str());
 					}
