@@ -6,6 +6,7 @@
 #include "support.h"
 
 #include <algorithm>
+#include <format>
 #include <iomanip>
 #include <stdexcept>
 #include <string>
@@ -481,4 +482,49 @@ std::string wrap_text(const std::string& str,
 	}
 
 	return out;
+}
+
+int get_label_width_in_cols(const std::string& label_str)
+{
+	const auto is_escape_char = [](const u_char c) {
+		if (c == 0x1b) {
+			return true;
+		}
+		return false;
+	};
+	const auto is_end_of_escape_char = [](const u_char c) {
+		if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+			return true;
+		}
+		return false;
+	};
+	const auto is_displayable_char = [](const u_char c) {
+		if (c >= 0x20 && c <= 0x7f) {
+			return true;
+		}
+		return false;
+	};
+	const auto is_cstyle_formatter_char = [](const u_char c) {
+		if (c == '%') {
+			return true;
+		}
+		return false;
+	};
+
+	int count      = 0;
+	bool in_escape = false;
+	for (const u_char& c : label_str) {
+		if (is_escape_char(c)) {
+			in_escape = true;
+		} else if (in_escape) {
+			if (is_end_of_escape_char(c)) {
+				in_escape = false;
+			}
+		} else if (is_cstyle_formatter_char(c)) {
+			break;
+		} else if (is_displayable_char(c)) {
+			count++;
+		}
+	}
+	return count;
 }

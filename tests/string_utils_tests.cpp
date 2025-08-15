@@ -687,4 +687,14 @@ TEST(WrapText, WrapsWithIndentAndOptionalWrapChars)
 	EXPECT_EQ(expected, actual);
 }
 
+TEST(GetPrintableString, ReturnsExpected)
+{
+	const std::string label_str = "\x1b[37;1mPossible values:\x1b[0m  %s";
+
+	constexpr int expected = 18;
+	const int actual       = get_label_width_in_cols(label_str);
+
+	EXPECT_EQ(expected, actual);
+}
+
 } // namespace

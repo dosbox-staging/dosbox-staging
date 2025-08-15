@@ -176,8 +176,7 @@ public:
 	MoreOutputStrings(Program &program);
 
 	template <typename... Args>
-	void AddStringWrapped(const std::string& format,
-	                   const Args&... args)
+	void AddStringWrapped(const std::string& format, const Args&... args)
 	{
 		const std::string formatted_string =
 			format_str(format, args...);

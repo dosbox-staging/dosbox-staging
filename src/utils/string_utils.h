@@ -360,4 +360,6 @@ std::string wrap_text(const std::string& str,
                       const std::vector<char>& additional_wrap_chars = {'-'},
                       const int indent_length                        = 0);
 
+int get_label_width_in_cols(const std::string& label_str);
+
 #endif
