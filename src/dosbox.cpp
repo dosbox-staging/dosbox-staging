@@ -1405,8 +1405,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	secprop->AddInitFunction(&VIRTUALBOX_Init);
 	secprop->AddInitFunction(&VMWARE_Init);
 
-	// TODO ?
-	control->AddSectionLine("autoexec", &AUTOEXEC_Init);
+	control->AddAutoexecSection(&AUTOEXEC_Init);
 
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 	        "Each line in this section is executed at startup as a DOS command.\n"
