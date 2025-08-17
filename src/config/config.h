@@ -102,10 +102,11 @@ public:
 
 	~Config();
 
-	SectionProp* AddSection(const char* section_name, SectionFunction func,
+	SectionProp* AddSection(const char* section_name,
+	                        SectionInitHandler init_handler,
 	                        bool changeable_at_runtime = false);
 
-	SectionLine* AddAutoexecSection(SectionFunction init_func);
+	SectionLine* AddAutoexecSection(SectionInitHandler init_handler);
 
 	auto begin()
 	{
