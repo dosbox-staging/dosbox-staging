@@ -13472,9 +13472,7 @@ void IMFC_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	SectionProp* sec = conf->AddSectionProp("imfc",
-	                                          &imfc_init,
-	                                          changeable_at_runtime);
+	SectionProp* sec = conf->AddSection("imfc", &imfc_init, changeable_at_runtime);
 	assert(sec);
 	init_imfc_dosbox_settings(*sec);
 }

@@ -334,9 +334,9 @@ void INNOVATION_AddConfigSection(const ConfigPtr& conf)
 	assert(conf);
 
 	constexpr auto changeable_at_runtime = true;
-	SectionProp* sec = conf->AddSectionProp("innovation",
-	                                          &innovation_init,
-	                                          changeable_at_runtime);
+	SectionProp* sec                     = conf->AddSection("innovation",
+                                            &innovation_init,
+                                            changeable_at_runtime);
 	assert(sec);
 	init_innovation_dosbox_settings(*sec);
 }

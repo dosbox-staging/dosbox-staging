@@ -692,9 +692,9 @@ void CAPTURE_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	SectionProp* sec = conf->AddSectionProp("capture",
-	                                          &capture_init,
-	                                          changeable_at_runtime);
+	SectionProp* sec = conf->AddSection("capture",
+	                                    &capture_init,
+	                                    changeable_at_runtime);
 	assert(sec);
 	init_capture_dosbox_settings(*sec);
 	init_key_mappings();
