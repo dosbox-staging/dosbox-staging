@@ -1290,20 +1290,6 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	return true;
 }
 
-SectionProp* Config::AddInactiveSectionProp(const char* section_name)
-{
-	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
-	        "Only letters and digits are allowed in section name");
-
-	constexpr bool inactive = false;
-
-	auto s = std::make_unique<SectionProp>(section_name, inactive);
-
-	auto* section = s.get();
-	sectionlist.push_back(s.release());
-	return section;
-}
-
 SectionProp* Config::AddSectionProp(const char* section_name, SectionFunction func,
                                     bool changeable_at_runtime)
 {
