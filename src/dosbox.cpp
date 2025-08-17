@@ -635,9 +635,10 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	/* Setup all the different modules making up DOSBox */
 
-	secprop = control->AddSectionProp("dosbox",
-	                                  &DOSBOX_ConfigChanged,
-	                                  changeable_at_runtime);
+	secprop = control->AddSection("dosbox",
+	                              &DOSBOX_ConfigChanged,
+	                              changeable_at_runtime);
+
 	pstring = secprop->AddString("language", always, "auto");
 	pstring->SetHelp(
 	        "Select the DOS messages language:\n"
@@ -926,7 +927,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	MIDI_AddConfigSection(control);
 
 #if C_DEBUGGER
-	secprop = control->AddSectionProp("debug", &DEBUG_Init);
+	secprop = control->AddSection("debug", &DEBUG_Init);
 #endif
 
 	// Configure Sound Blaster and ESS
@@ -949,9 +950,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	DISKNOISE_AddConfigSection(control);
 
 	// PC speaker emulation
-	secprop = control->AddSectionProp("speaker",
-	                                  &PCSPEAKER_Init,
-	                                  changeable_at_runtime);
+	secprop = control->AddSection("speaker", &PCSPEAKER_Init, changeable_at_runtime);
 
 	pstring = secprop->AddString("pcspeaker", when_idle, "impulse");
 	pstring->SetHelp(
@@ -1054,9 +1053,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// ReelMagic Emulator
-	secprop = control->AddSectionProp("reelmagic",
-	                                  &ReelMagic_Init,
-	                                  changeable_at_runtime);
+	secprop = control->AddSection("reelmagic", &ReelMagic_Init, changeable_at_runtime);
 
 	pstring = secprop->AddString("reelmagic", when_idle, "off");
 	pstring->SetHelp(
@@ -1081,7 +1078,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
 
 	// Joystick emulation
-	secprop = control->AddSectionProp("joystick", &BIOS_Init);
+	secprop = control->AddSection("joystick", &BIOS_Init);
 
 	secprop->AddInitFunction(&INT10_Init);
 	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses
@@ -1159,7 +1156,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	pstring->SetHelp(
 	        "Apply Y-axis calibration parameters from the hotkeys ('auto' by default).");
 
-	secprop = control->AddSectionProp("serial", &SERIAL_Init, changeable_at_runtime);
+	secprop = control->AddSection("serial", &SERIAL_Init, changeable_at_runtime);
 	const std::vector<std::string> serials = {
 	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct"};
 
@@ -1212,7 +1209,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	// All the general DOS Related stuff, on real machines mostly located in
 	// CONFIG.SYS
 
-	secprop = control->AddSectionProp("dos", &DOS_Init);
+	secprop = control->AddSection("dos", &DOS_Init);
 	secprop->AddInitFunction(&XMS_Init, changeable_at_runtime);
 	pbool = secprop->AddBool("xms", when_idle, true);
 	pbool->SetHelp("Enable XMS support ('on' by default).");
@@ -1322,13 +1319,13 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	secprop->AddInitFunction(&CDROM_Image_Init);
 
 #if C_IPX
-	secprop = control->AddSectionProp("ipx", &IPX_Init, changeable_at_runtime);
+	secprop = control->AddSection("ipx", &IPX_Init, changeable_at_runtime);
 	pbool = secprop->AddBool("ipx", when_idle, false);
 	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation ('off' by default).");
 	pbool->SetEnabledOptions({"ipx"});
 #endif
 
-	secprop = control->AddSectionProp("ethernet", &NE2K_Init, changeable_at_runtime);
+	secprop = control->AddSection("ethernet", &NE2K_Init, changeable_at_runtime);
 
 	pbool = secprop->AddBool("ne2000", when_idle, false);
 	pbool->SetOptionHelp(

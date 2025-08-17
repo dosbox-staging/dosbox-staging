@@ -3387,7 +3387,7 @@ void CPU_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	SectionProp* sec = conf->AddSectionProp("cpu", &cpu_init, ChangeableAtRuntime);
+	SectionProp* sec = conf->AddSection("cpu", &cpu_init, ChangeableAtRuntime);
 	assert(sec);
 	init_cpu_dosbox_settings(*sec);
 }

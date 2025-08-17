@@ -3222,9 +3222,7 @@ void MIXER_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	SectionProp* sec = conf->AddSectionProp("mixer",
-	                                          &MIXER_Init,
-	                                          ChangeableAtRuntime);
+	SectionProp* sec = conf->AddSection("mixer", &MIXER_Init, ChangeableAtRuntime);
 	assert(sec);
 	init_mixer_dosbox_settings(*sec);
 

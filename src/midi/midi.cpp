@@ -939,7 +939,7 @@ void MIDI_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	SectionProp* sec = conf->AddSectionProp("midi", &midi_init, ChangeableAtRuntime);
+	SectionProp* sec = conf->AddSection("midi", &midi_init, ChangeableAtRuntime);
 	assert(sec);
 
 	init_midi_dosbox_settings(*sec);
