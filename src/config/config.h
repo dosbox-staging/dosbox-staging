@@ -61,9 +61,9 @@ public:
 	CommandLineArguments arguments = {};
 
 private:
-	std::deque<Section*> sectionlist          = {};
+	std::deque<Section*> sectionlist         = {};
 	SectionLine overwritten_autoexec_section = {};
-	std::string overwritten_autoexec_conf     = {};
+	std::string overwritten_autoexec_conf    = {};
 
 	void (*_start_function)(void) = nullptr;
 
@@ -89,17 +89,23 @@ public:
 	}
 
 	Config() = default;
-	Config(Config&& source) noexcept;            // move constructor
-	Config(const Config&) = delete;              // block construct-by-value
-	Config& operator=(Config&& source) noexcept; // move assignment
-	Config& operator=(const Config&) = delete;   // block assign-by-value
+
+	// move constructor
+	Config(Config&& source) noexcept;
+
+	// prevent copying
+	Config(const Config&) = delete;
+
+	// prevent assignment assignment
+	Config& operator=(Config&& source) noexcept;
+	Config& operator=(const Config&) = delete;
 
 	~Config();
 
 	SectionLine* AddSectionLine(const char* section_name, SectionFunction func);
 
 	SectionProp* AddSectionProp(const char* section_name, SectionFunction func,
-	                              bool changeable_at_runtime = false);
+	                            bool changeable_at_runtime = false);
 
 	auto begin()
 	{
@@ -150,6 +156,6 @@ public:
 using ConfigPtr = std::unique_ptr<Config>;
 extern ConfigPtr control;
 
-void DOSBOX_Restart(std::vector<std::string> &parameters = control->startup_params);
+void DOSBOX_Restart(std::vector<std::string>& parameters = control->startup_params);
 
 #endif // DOSBOX_CONFIG_H
