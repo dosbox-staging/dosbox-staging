@@ -98,8 +98,6 @@ public:
 
 	SectionLine* AddSectionLine(const char* section_name, SectionFunction func);
 
-	SectionProp* AddInactiveSectionProp(const char* section_name);
-
 	SectionProp* AddSectionProp(const char* section_name, SectionFunction func,
 	                              bool changeable_at_runtime = false);
 
