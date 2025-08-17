@@ -104,8 +104,8 @@ public:
 
 	SectionLine* AddSectionLine(const char* section_name, SectionFunction func);
 
-	SectionProp* AddSectionProp(const char* section_name, SectionFunction func,
-	                            bool changeable_at_runtime = false);
+	SectionProp* AddSection(const char* section_name, SectionFunction func,
+	                        bool changeable_at_runtime = false);
 
 	auto begin()
 	{

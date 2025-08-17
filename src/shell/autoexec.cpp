@@ -518,7 +518,7 @@ std::unique_ptr<Config> specify_drive_conf()
 	// Define the [drive] section
 	constexpr auto ChangeableAtRuntime = false;
 	const AutoMountSettings defaults   = {};
-	const auto prop = conf->AddSectionProp("drive", nullptr, ChangeableAtRuntime);
+	const auto prop = conf->AddSection("drive", nullptr, ChangeableAtRuntime);
 
 	// Define the allowed keys and types
 	constexpr auto OnStartup = Property::Changeable::OnlyAtStart;

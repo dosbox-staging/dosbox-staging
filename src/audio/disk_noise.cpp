@@ -583,9 +583,9 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	SectionProp* sec = conf->AddSectionProp("disknoise",
-	                                          &disknoise_init,
-	                                          ChangeableAtRuntime);
+	SectionProp* sec = conf->AddSection("disknoise",
+	                                    &disknoise_init,
+	                                    ChangeableAtRuntime);
 	assert(sec);
 	init_disknoise_dosbox_settings(*sec);
 }
