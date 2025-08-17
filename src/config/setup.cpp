@@ -1290,14 +1290,15 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	return true;
 }
 
-SectionProp* Config::AddSection(const char* section_name, SectionFunction func,
+SectionProp* Config::AddSection(const char* section_name,
+                                SectionInitHandler init_handler,
                                 bool changeable_at_runtime)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
 
 	SectionProp* s = new SectionProp(section_name);
-	s->AddInitFunction(func, changeable_at_runtime);
+	s->AddInitFunction(init_handler, changeable_at_runtime);
 	sectionlist.push_back(s);
 	return s;
 }
@@ -1314,10 +1315,10 @@ SectionProp::~SectionProp()
 	}
 }
 
-SectionLine* Config::AddAutoexecSection(SectionFunction init_func)
+SectionLine* Config::AddAutoexecSection(SectionInitHandler init_handler)
 {
 	SectionLine* section = new SectionLine("autoexec");
-	section->AddInitFunction(init_func);
+	section->AddInitFunction(init_handler);
 	sectionlist.push_back(section);
 
 	return section;
@@ -1369,14 +1370,14 @@ void Config::Init() const
 	}
 }
 
-void Section::AddInitFunction(SectionFunction func, bool changeable_at_runtime)
+void Section::AddInitFunction(SectionInitHandler func, bool changeable_at_runtime)
 {
 	if (func) {
 		init_functions.emplace_back(func, changeable_at_runtime);
 	}
 }
 
-void Section::AddDestroyFunction(SectionFunction func, bool changeable_at_runtime)
+void Section::AddDestroyFunction(SectionInitHandler func, bool changeable_at_runtime)
 {
 	destroyfunctions.emplace_front(func, changeable_at_runtime);
 }
