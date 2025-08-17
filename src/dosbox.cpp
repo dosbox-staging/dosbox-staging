@@ -1322,12 +1322,8 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 #if C_IPX
 	secprop = control->AddSectionProp("ipx", &IPX_Init, changeable_at_runtime);
-#else
-	secprop = control->AddInactiveSectionProp("ipx");
-#endif
 	pbool = secprop->AddBool("ipx", when_idle, false);
 	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation ('off' by default).");
-#if C_IPX
 	pbool->SetEnabledOptions({"ipx"});
 #endif
 
