@@ -262,7 +262,7 @@ void LOG_StartUp(void) {
 	loggrp[LOG_REELMAGIC].front="REELMAGIC";
 	
 	/* Register the log section */
-	SectionProp* sect   = control->AddSectionProp("log", LOG_Init);
+	SectionProp* sect   = control->AddSection("log", LOG_Init);
 	PropString* pstring = sect->AddString("logfile",
 	                                        Property::Changeable::Always,
 	                                        "");

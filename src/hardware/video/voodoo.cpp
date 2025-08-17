@@ -7967,7 +7967,7 @@ void VOODOO_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	SectionProp* sec = conf->AddSectionProp("voodoo", &voodoo_init);
+	SectionProp* sec = conf->AddSection("voodoo", &voodoo_init);
 	assert(sec);
 	init_voodoo_dosbox_settings(*sec);
 }

@@ -1297,9 +1297,9 @@ void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto ChangeableAtRuntime = true;
 
 	assert(conf);
-	SectionProp* sec = conf->AddSectionProp("fluidsynth",
-	                                          &fluidsynth_init,
-	                                          ChangeableAtRuntime);
+	SectionProp* sec = conf->AddSection("fluidsynth",
+	                                    &fluidsynth_init,
+	                                    ChangeableAtRuntime);
 	assert(sec);
 	init_fluidsynth_dosbox_settings(*sec);
 
