@@ -1622,7 +1622,7 @@ void GUS_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	SectionProp* sec = conf->AddSectionProp("gus", &gus_init, changeable_at_runtime);
+	SectionProp* sec = conf->AddSection("gus", &gus_init, changeable_at_runtime);
 	assert(sec);
 	init_gus_dosbox_settings(*sec);
 }

@@ -639,9 +639,7 @@ void MOUSE_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	SectionProp* sec = conf->AddSectionProp("mouse",
-	                                          &config_read,
-	                                          changeable_at_runtime);
+	SectionProp* sec = conf->AddSection("mouse", &config_read, changeable_at_runtime);
 	assert(sec);
 	config_init(*sec);
 }

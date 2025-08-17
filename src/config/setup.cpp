@@ -1290,8 +1290,8 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	return true;
 }
 
-SectionProp* Config::AddSectionProp(const char* section_name, SectionFunction func,
-                                    bool changeable_at_runtime)
+SectionProp* Config::AddSection(const char* section_name, SectionFunction func,
+                                bool changeable_at_runtime)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
