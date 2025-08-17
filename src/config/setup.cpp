@@ -1314,16 +1314,13 @@ SectionProp::~SectionProp()
 	}
 }
 
-SectionLine* Config::AddSectionLine(const char* section_name, SectionFunction func)
+SectionLine* Config::AddAutoexecSection(SectionFunction init_func)
 {
-	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
-	        "Only letters and digits are allowed in section name");
+	SectionLine* section = new SectionLine("autoexec");
+	section->AddInitFunction(init_func);
+	sectionlist.push_back(section);
 
-	SectionLine* blah = new SectionLine(section_name);
-	blah->AddInitFunction(func);
-	sectionlist.push_back(blah);
-
-	return blah;
+	return section;
 }
 
 // Move assignment operator
