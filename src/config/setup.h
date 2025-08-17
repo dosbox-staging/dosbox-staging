@@ -332,7 +332,7 @@ public:
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
 
-using SectionFunction = std::function<void(Section*)>;
+using SectionInitHandler = std::function<void(Section*)>;
 
 class Section {
 private:
@@ -340,10 +340,10 @@ private:
 	// changeable_at_runtime indicates it can be called on configuration
 	// changes
 	struct Function_wrapper {
-		SectionFunction function;
+		SectionInitHandler function;
 		bool changeable_at_runtime;
 
-		Function_wrapper(const SectionFunction fn, bool ch)
+		Function_wrapper(const SectionInitHandler fn, bool ch)
 		        : function(fn),
 		          changeable_at_runtime(ch)
 		{}
@@ -368,9 +368,10 @@ public:
 	// Children must call executedestroy!
 	virtual ~Section() = default;
 
-	void AddInitFunction(SectionFunction func, bool changeable_at_runtime = false);
+	void AddInitFunction(SectionInitHandler func,
+	                     bool changeable_at_runtime = false);
 
-	void AddDestroyFunction(SectionFunction func,
+	void AddDestroyFunction(SectionInitHandler func,
 	                        bool changeable_at_runtime = false);
 
 	void ExecuteInit(bool initall = true);
