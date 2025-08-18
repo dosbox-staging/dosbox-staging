@@ -1298,7 +1298,7 @@ SectionProp* Config::AddSection(const char* section_name,
 	        "Only letters and digits are allowed in section name");
 
 	SectionProp* s = new SectionProp(section_name);
-	s->AddInitFunction(init_handler, changeable_at_runtime);
+	s->AddInitHandler(init_handler, changeable_at_runtime);
 	sectionlist.push_back(s);
 	return s;
 }
@@ -1318,7 +1318,7 @@ SectionProp::~SectionProp()
 SectionLine* Config::AddAutoexecSection(SectionInitHandler init_handler)
 {
 	SectionLine* section = new SectionLine("autoexec");
-	section->AddInitFunction(init_handler);
+	section->AddInitHandler(init_handler);
 	sectionlist.push_back(section);
 
 	return section;
@@ -1370,10 +1370,10 @@ void Config::Init() const
 	}
 }
 
-void Section::AddInitFunction(SectionInitHandler func, bool changeable_at_runtime)
+void Section::AddInitHandler(SectionInitHandler init_handler, bool changeable_at_runtime)
 {
-	if (func) {
-		init_functions.emplace_back(func, changeable_at_runtime);
+	if (init_handler) {
+		init_handlers.emplace_back(init_handler, changeable_at_runtime);
 	}
 }
 
@@ -1384,19 +1384,19 @@ void Section::AddDestroyFunction(SectionInitHandler func, bool changeable_at_run
 
 void Section::ExecuteInit(const bool init_all)
 {
-	for (size_t i = 0; i < init_functions.size(); ++i) {
+	for (size_t i = 0; i < init_handlers.size(); ++i) {
 		// Can we skip calling this function?
-		if (!(init_all || init_functions[i].changeable_at_runtime)) {
+		if (!(init_all || init_handlers[i].changeable_at_runtime)) {
 			continue;
 		}
 
 		// Track the size of our container because it might grow.
-		const auto size_on_entry = init_functions.size();
+		const auto size_on_entry = init_handlers.size();
 
-		assert(init_functions[i].function);
-		init_functions[i].function(this);
+		assert(init_handlers[i].function);
+		init_handlers[i].function(this);
 
-		const auto size_on_exit = init_functions.size();
+		const auto size_on_exit = init_handlers.size();
 
 		if (size_on_exit > size_on_entry) {
 			//
@@ -1407,7 +1407,7 @@ void Section::ExecuteInit(const bool init_all)
 			//
 			const auto num_appended = size_on_exit - size_on_entry;
 			i += num_appended;
-			assert(i < init_functions.size());
+			assert(i < init_handlers.size());
 		}
 	}
 }
