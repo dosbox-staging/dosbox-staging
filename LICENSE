@@ -56,7 +56,7 @@ The following 3rd party binaries are shipped with DOSBox Staging:
 - DOS command binaries in resources/drives/y/dos, are licensed as follows:
    - debug.com: licenses/DEBUG.COM.txt, source code: https://github.com/Baron-von-Riedesel/DOS-debug
    - deltree.com: GPL-2.0, source code: https://gitlab.com/FreeDOS/base/deltree
-   - xcopy.exe: GPL-2.0, source code: https://github.com/FDOS/xcopy/
+   - xcopy.exe: GPL-2.0, source code: https://github.com/joncampbell123/dosbox-x/tree/master/src/builtin/xcopy
 
 - FreeDOS CPI files in resources/freedos-cpi are GPL-2.0 licensed;
   these are hand-drawn bitmap fonts, so they don't have a source code; original repositories:
