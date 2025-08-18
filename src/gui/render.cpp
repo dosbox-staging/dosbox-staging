@@ -1375,7 +1375,7 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	SectionProp* sec = conf->AddSection("render", &render_init, changeable_at_runtime);
+	SectionProp* sec = conf->AddSection("render", render_init, changeable_at_runtime);
 
 	MAPPER_AddHandler(toggle_stretch_axis,
 	                  SDL_SCANCODE_UNKNOWN,

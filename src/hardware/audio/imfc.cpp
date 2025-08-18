@@ -13432,7 +13432,7 @@ static void imfc_init(Section* sec)
 	imfc = std::make_unique<MusicFeatureCard>(std::move(channel), port, irq);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&imfc_destroy, changeable_at_runtime);
+	sec->AddDestroyFunction(imfc_destroy, changeable_at_runtime);
 
 	MIXER_UnlockMixerThread();
 }
@@ -13472,7 +13472,7 @@ void IMFC_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	SectionProp* sec = conf->AddSection("imfc", &imfc_init, changeable_at_runtime);
+	SectionProp* sec = conf->AddSection("imfc", imfc_init, changeable_at_runtime);
 	assert(sec);
 	init_imfc_dosbox_settings(*sec);
 }

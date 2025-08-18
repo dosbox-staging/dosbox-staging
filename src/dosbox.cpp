@@ -635,7 +635,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	/* Setup all the different modules making up DOSBox */
 
 	secprop = control->AddSection("dosbox",
-	                              &DOSBOX_ConfigChanged,
+	                              DOSBOX_ConfigChanged,
 	                              changeable_at_runtime);
 
 	pstring = secprop->AddString("language", always, "auto");
@@ -696,9 +696,9 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	LOG_StartUp();
 #endif
 
-	secprop->AddInitFunction(&IO_Init);
-	secprop->AddInitFunction(&PAGING_Init);
-	secprop->AddInitFunction(&MEM_Init);
+	secprop->AddInitFunction(IO_Init);
+	secprop->AddInitFunction(PAGING_Init);
+	secprop->AddInitFunction(MEM_Init);
 
 	pint = secprop->AddInt("memsize", only_at_start, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
@@ -810,11 +810,11 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "Please file a bug with the project if you find a game that fails\n"
 	        "when this is enabled so we will list them here.");
 
-	secprop->AddInitFunction(&CALLBACK_Init);
-	secprop->AddInitFunction(&PIC_Init);
-	secprop->AddInitFunction(&PROGRAMS_Init);
-	secprop->AddInitFunction(&TIMER_Init);
-	secprop->AddInitFunction(&CMOS_Init);
+	secprop->AddInitFunction(CALLBACK_Init);
+	secprop->AddInitFunction(PIC_Init);
+	secprop->AddInitFunction(PROGRAMS_Init);
+	secprop->AddInitFunction(TIMER_Init);
+	secprop->AddInitFunction(CMOS_Init);
 
 	pstring = secprop->AddString("autoexec_section", only_at_start, "join");
 	pstring->SetValues({"join", "overwrite"});
@@ -891,12 +891,12 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	CPU_AddConfigSection(control);
 
 #if C_FPU
-	secprop->AddInitFunction(&FPU_Init);
+	secprop->AddInitFunction(FPU_Init);
 #endif
-	secprop->AddInitFunction(&DMA_Init);
-	secprop->AddInitFunction(&VGA_Init);
-	secprop->AddInitFunction(&KEYBOARD_Init);
-	secprop->AddInitFunction(&PCI_Init); // PCI bus
+	secprop->AddInitFunction(DMA_Init);
+	secprop->AddInitFunction(VGA_Init);
+	secprop->AddInitFunction(KEYBOARD_Init);
+	secprop->AddInitFunction(PCI_Init); // PCI bus
 
 	// Configure 3dfx Voodoo settings
 	VOODOO_AddConfigSection(control);
@@ -926,7 +926,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	MIDI_AddConfigSection(control);
 
 #if C_DEBUGGER
-	secprop = control->AddSection("debug", &DEBUG_Init);
+	secprop = control->AddSection("debug", DEBUG_Init);
 #endif
 
 	// Configure Sound Blaster and ESS
@@ -949,7 +949,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	DISKNOISE_AddConfigSection(control);
 
 	// PC speaker emulation
-	secprop = control->AddSection("speaker", &PCSPEAKER_Init, changeable_at_runtime);
+	secprop = control->AddSection("speaker", PCSPEAKER_Init, changeable_at_runtime);
 
 	pstring = secprop->AddString("pcspeaker", when_idle, "impulse");
 	pstring->SetHelp(
@@ -974,7 +974,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "DC-offset is now eliminated globally from the master mixer output.");
 
 	// Tandy audio emulation
-	secprop->AddInitFunction(&TANDYSOUND_Init, changeable_at_runtime);
+	secprop->AddInitFunction(TANDYSOUND_Init, changeable_at_runtime);
 
 	pstring = secprop->AddString("tandy", when_idle, "auto");
 	pstring->SetValues({"auto", "on", "psg", "off"});
@@ -1010,7 +1010,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// LPT DAC device emulation
-	secprop->AddInitFunction(&LPT_DAC_Init, changeable_at_runtime);
+	secprop->AddInitFunction(LPT_DAC_Init, changeable_at_runtime);
 	pstring = secprop->AddString("lpt_dac", when_idle, "none");
 	pstring->SetHelp(
 	        "Type of DAC plugged into the parallel port:\n"
@@ -1032,7 +1032,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	pbool->SetHelp("Use 'lpt_dac = disney' to enable the Disney Sound Source.");
 
 	// IBM PS/1 Audio emulation
-	secprop->AddInitFunction(&PS1AUDIO_Init, changeable_at_runtime);
+	secprop->AddInitFunction(PS1AUDIO_Init, changeable_at_runtime);
 
 	pbool = secprop->AddBool("ps1audio", when_idle, false);
 	pbool->SetHelp("Enable IBM PS/1 Audio emulation ('off' by default).");
@@ -1052,7 +1052,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// ReelMagic Emulator
-	secprop = control->AddSection("reelmagic", &ReelMagic_Init, changeable_at_runtime);
+	secprop = control->AddSection("reelmagic", ReelMagic_Init, changeable_at_runtime);
 
 	pstring = secprop->AddString("reelmagic", when_idle, "off");
 	pstring->SetHelp(
@@ -1077,12 +1077,12 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
 
 	// Joystick emulation
-	secprop = control->AddSection("joystick", &BIOS_Init);
+	secprop = control->AddSection("joystick", BIOS_Init);
 
-	secprop->AddInitFunction(&INT10_Init);
-	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses
-	                                       // CurMode
-	secprop->AddInitFunction(&JOYSTICK_Init, changeable_at_runtime);
+	secprop->AddInitFunction(INT10_Init);
+	secprop->AddInitFunction(MOUSE_Init); // Must be after int10 as it uses
+	                                      // CurMode
+	secprop->AddInitFunction(JOYSTICK_Init, changeable_at_runtime);
 	pstring = secprop->AddString("joysticktype", when_idle, "auto");
 
 	pstring->SetValues(
@@ -1155,7 +1155,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	pstring->SetHelp(
 	        "Apply Y-axis calibration parameters from the hotkeys ('auto' by default).");
 
-	secprop = control->AddSection("serial", &SERIAL_Init, changeable_at_runtime);
+	secprop = control->AddSection("serial", SERIAL_Init, changeable_at_runtime);
 	const std::vector<std::string> serials = {
 	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct"};
 
@@ -1208,12 +1208,12 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	// All the general DOS Related stuff, on real machines mostly located in
 	// CONFIG.SYS
 
-	secprop = control->AddSection("dos", &DOS_Init);
-	secprop->AddInitFunction(&XMS_Init, changeable_at_runtime);
+	secprop = control->AddSection("dos", DOS_Init);
+	secprop->AddInitFunction(XMS_Init, changeable_at_runtime);
 	pbool = secprop->AddBool("xms", when_idle, true);
 	pbool->SetHelp("Enable XMS support ('on' by default).");
 
-	secprop->AddInitFunction(&EMS_Init, changeable_at_runtime);
+	secprop->AddInitFunction(EMS_Init, changeable_at_runtime);
 	pstring = secprop->AddString("ems", when_idle, "true");
 	pstring->SetValues({"true", "emsboard", "emm386", "off"});
 	pstring->SetHelp(
@@ -1241,7 +1241,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	// DOS locale settings
 
-	secprop->AddInitFunction(&DOS_Locale_Init, changeable_at_runtime);
+	secprop->AddInitFunction(DOS_Locale_Init, changeable_at_runtime);
 
 	pstring = secprop->AddString("locale_period", when_idle, "native");
 	pstring->SetHelp(
@@ -1303,7 +1303,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
 	        "(empty by default).");
 
-	secprop->AddInitFunction(&DOS_InitFileLocking, changeable_at_runtime);
+	secprop->AddInitFunction(DOS_InitFileLocking, changeable_at_runtime);
 	pbool = secprop->AddBool("file_locking", when_idle, true);
 	pbool->SetHelp(
 	        "Enable file locking (SHARE.EXE emulation; 'on' by default).\n"
@@ -1313,18 +1313,18 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "permissions, you can try disabling this.");
 
 	// Mscdex
-	secprop->AddInitFunction(&MSCDEX_Init);
-	secprop->AddInitFunction(&DRIVES_Init);
-	secprop->AddInitFunction(&CDROM_Image_Init);
+	secprop->AddInitFunction(MSCDEX_Init);
+	secprop->AddInitFunction(DRIVES_Init);
+	secprop->AddInitFunction(CDROM_Image_Init);
 
 #if C_IPX
-	secprop = control->AddSection("ipx", &IPX_Init, changeable_at_runtime);
+	secprop = control->AddSection("ipx", IPX_Init, changeable_at_runtime);
 	pbool = secprop->AddBool("ipx", when_idle, false);
 	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation ('off' by default).");
 	pbool->SetEnabledOptions({"ipx"});
 #endif
 
-	secprop = control->AddSection("ethernet", &NE2K_Init, changeable_at_runtime);
+	secprop = control->AddSection("ethernet", NE2K_Init, changeable_at_runtime);
 
 	pbool = secprop->AddBool("ne2000", when_idle, false);
 	pbool->SetOptionHelp(
@@ -1399,13 +1399,13 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	pstring->SetEnabledOptions({"SLIRP"});
 
-	//	secprop->AddInitFunction(&CREDITS_Init);
+	//	secprop->AddInitFunction(CREDITS_Init);
 
 	// VMM interfaces
-	secprop->AddInitFunction(&VIRTUALBOX_Init);
-	secprop->AddInitFunction(&VMWARE_Init);
+	secprop->AddInitFunction(VIRTUALBOX_Init);
+	secprop->AddInitFunction(VMWARE_Init);
 
-	control->AddAutoexecSection(&AUTOEXEC_Init);
+	control->AddAutoexecSection(AUTOEXEC_Init);
 
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 	        "Each line in this section is executed at startup as a DOS command.\n"

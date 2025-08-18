@@ -7102,7 +7102,8 @@ static int get_num_total_threads()
 /*-------------------------------------------------
     device start callback
 -------------------------------------------------*/
-static void voodoo_init() {
+static void initialise_voodoo()
+{
 	assert(!v);
 
 	// Deduct 1 because the main thread is always present
@@ -7863,7 +7864,7 @@ static void Voodoo_Startup() {
 		return;
 	}
 
-	voodoo_init();
+	initialise_voodoo();
 
 	v->draw = {};
 
@@ -7878,8 +7879,8 @@ PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu page) {
 	return (page >= (voodoo_current_lfb>>12) && page < (voodoo_current_lfb>>12) + VOODOO_PAGES ? voodoo_pagehandler : nullptr);
 }
 
-
-static void voodoo_destroy(Section* /*sec*/) {
+static void voodoo_destroy([[maybe_unused]] Section* sec)
+{
 	voodoo_shutdown();
 }
 
@@ -7897,7 +7898,7 @@ static void voodoo_init(Section* sec)
 
 	voodoo_bilinear_filtering = section->GetBool("voodoo_bilinear_filtering");
 
-	sec->AddDestroyFunction(&voodoo_destroy, false);
+	sec->AddDestroyFunction(voodoo_destroy, false);
 
 	// Check 64 KB alignment of LFB base
 	static_assert((PciVoodooLfbBase & 0xffff) == 0);
@@ -7967,7 +7968,7 @@ void VOODOO_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	SectionProp* sec = conf->AddSection("voodoo", &voodoo_init);
+	SectionProp* sec = conf->AddSection("voodoo", voodoo_init);
 	assert(sec);
 	init_voodoo_dosbox_settings(*sec);
 }

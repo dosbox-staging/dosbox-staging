@@ -196,7 +196,7 @@ void LPT_DAC_Init(Section* section)
 	lpt_dac->BindToPort(Lpt1Port);
 
 	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&LPT_DAC_ShutDown, changeable_at_runtime);
+	section->AddDestroyFunction(LPT_DAC_ShutDown, changeable_at_runtime);
 
 	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
 	// This provides a good size to avoid over-runs and stalls.

@@ -525,7 +525,7 @@ static void disknoise_init(Section* section)
 	                                           floppy_seek_samples);
 
 	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&disknoise_destroy, changeable_at_runtime);
+	section->AddDestroyFunction(disknoise_destroy, changeable_at_runtime);
 }
 
 static void init_disknoise_dosbox_settings(SectionProp& secprop)
@@ -552,7 +552,7 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto ChangeableAtRuntime = false;
 
 	SectionProp* sec = conf->AddSection("disknoise",
-	                                    &disknoise_init,
+	                                    disknoise_init,
 	                                    ChangeableAtRuntime);
 	assert(sec);
 	init_disknoise_dosbox_settings(*sec);

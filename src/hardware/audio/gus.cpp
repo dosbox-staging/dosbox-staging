@@ -1559,7 +1559,7 @@ static void gus_init(Section* sec)
 	gus = std::make_unique<Gus>(port, dma, irq, ultradir.c_str(), filter_prefs);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&gus_destroy, changeable_at_runtime);
+	sec->AddDestroyFunction(gus_destroy, changeable_at_runtime);
 }
 
 void init_gus_dosbox_settings(SectionProp& secprop)
@@ -1622,7 +1622,7 @@ void GUS_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	SectionProp* sec = conf->AddSection("gus", &gus_init, changeable_at_runtime);
+	SectionProp* sec = conf->AddSection("gus", gus_init, changeable_at_runtime);
 	assert(sec);
 	init_gus_dosbox_settings(*sec);
 }
