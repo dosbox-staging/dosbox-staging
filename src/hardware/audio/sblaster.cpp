@@ -3815,7 +3815,7 @@ void init_sblaster(Section* sec)
 	MIXER_UnlockMixerThread();
 
 	constexpr auto ChangeableAtRuntime = true;
-	sec->AddDestroyFunction(&shutdown_sblaster, ChangeableAtRuntime);
+	sec->AddDestroyFunction(shutdown_sblaster, ChangeableAtRuntime);
 }
 
 void shutdown_sblaster(Section* /*sec*/) {
@@ -3854,7 +3854,7 @@ void SB_AddConfigSection(const ConfigPtr& conf)
 
 	assert(conf);
 	SectionProp* secprop = conf->AddSection(SblasterSectionName,
-	                                        &init_sblaster,
+	                                        init_sblaster,
 	                                        changeable_at_runtime);
 	assert(secprop);
 	init_sblaster_dosbox_settings(*secprop);

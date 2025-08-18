@@ -1535,7 +1535,7 @@ void VGA_AddCompositeSettings(Config& conf)
 {
 	constexpr auto changeable_at_runtime = true;
 
-	auto sec = conf.AddSection("composite", &composite_init, changeable_at_runtime);
+	auto sec = conf.AddSection("composite", composite_init, changeable_at_runtime);
 	assert(sec);
 	composite_settings(*sec);
 }

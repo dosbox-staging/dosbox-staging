@@ -1052,7 +1052,7 @@ void OPL_Init(Section* sec, const OplMode oplmode)
 	opl = std::make_unique<Opl>(sec, oplmode);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&OPL_ShutDown, changeable_at_runtime);
+	sec->AddDestroyFunction(OPL_ShutDown, changeable_at_runtime);
 }
 
 // Must be called after SB_AddConfigSection

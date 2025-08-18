@@ -3171,7 +3171,7 @@ static void sdl_section_init(Section* sec)
 		return;
 	}
 
-	sec->AddDestroyFunction(&shutdown_gui);
+	sec->AddDestroyFunction(shutdown_gui);
 	SectionProp* section = static_cast<SectionProp*>(sec);
 
 	sdl.active          = false;
@@ -4057,9 +4057,9 @@ static void init_sdl_config_section()
 	constexpr bool ChangeableAtRuntime = true;
 
 	SectionProp* sdl_sec = control->AddSection("sdl",
-	                                           &sdl_section_init,
+	                                           sdl_section_init,
 	                                           ChangeableAtRuntime);
-	sdl_sec->AddInitFunction(&MAPPER_StartUp);
+	sdl_sec->AddInitFunction(MAPPER_StartUp);
 
 	using enum Property::Changeable::Value;
 
