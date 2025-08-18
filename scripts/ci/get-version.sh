@@ -30,15 +30,20 @@ fi
 ROOT=$(git rev-parse --show-toplevel)
 
 VERSION=$(
-    grep "#define\\s*DOSBOX_VERSION\\s*\"" "$ROOT/include/version.h" \
-        | cut -d"\"" -f2
+    grep "project(dosbox-staging" -A 2 "$ROOT/CMakeLists.txt" \
+        | grep "VERSION" | sed "s/\\s*VERSION\\s*//g" | cut -d"\"" -f2
+)
+
+SUFFIX=$(
+    grep "set(DOSBOX_VERSION" "$ROOT/CMakeLists.txt" | cut -d" " -f2 \
+        | sed "s/\${PROJECT_VERSION}//g" | sed "s/)//g"
 )
 
 GIT_HASH=$(git rev-parse --short=5 HEAD)
 
 case $1 in
-    version)          echo "$VERSION" ;;
+    version)          echo "$VERSION$SUFFIX" ;;
     hash)             echo "$GIT_HASH" ;;
-    version-and-hash) echo "$VERSION-$GIT_HASH" ;;
+    version-and-hash) echo "$VERSION$SUFFIX-$GIT_HASH" ;;
     *)                usage; exit 1 ;;
 esac
