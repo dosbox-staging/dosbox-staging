@@ -4068,7 +4068,7 @@ static void init_sdl_config_section()
 	SectionProp* sdl_sec = control->AddSection("sdl",
 	                                           sdl_section_init,
 	                                           ChangeableAtRuntime);
-	sdl_sec->AddInitFunction(MAPPER_StartUp);
+	sdl_sec->AddInitHandler(MAPPER_StartUp);
 
 	using enum Property::Changeable::Value;
 
