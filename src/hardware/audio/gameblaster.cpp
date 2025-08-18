@@ -312,5 +312,5 @@ void CMS_Init(Section* conf)
 	                 section->GetString("cms_filter"));
 
 	constexpr auto ChangeableAtRuntime = true;
-	section->AddDestroyFunction(&CMS_ShutDown, ChangeableAtRuntime);
+	section->AddDestroyFunction(CMS_ShutDown, ChangeableAtRuntime);
 }

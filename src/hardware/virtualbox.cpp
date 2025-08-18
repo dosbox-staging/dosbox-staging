@@ -630,7 +630,7 @@ void VIRTUALBOX_Init(Section* sec)
 
 	is_interface_enabled = has_feature_mouse;
 	if (is_interface_enabled) {
-		sec->AddDestroyFunction(&VIRTUALBOX_Destroy, false);
+		sec->AddDestroyFunction(VIRTUALBOX_Destroy, false);
 		PCI_AddDevice(new PCI_VirtualBoxDevice());
 		IO_RegisterWriteHandler(port_num_virtualbox,
 		                        port_write_virtualbox,

@@ -168,7 +168,7 @@ void VMWARE_Init(Section* sec)
 
 	is_interface_enabled = has_feature_mouse;
 	if (is_interface_enabled) {
-		sec->AddDestroyFunction(&VMWARE_Destroy, false);
+		sec->AddDestroyFunction(VMWARE_Destroy, false);
 		IO_RegisterReadHandler(port_num_vmware,
 		                       port_read_vmware,
 		                       io_width_t::dword);

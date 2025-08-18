@@ -1108,7 +1108,7 @@ void MT32_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto ChangeableAtRuntime = true;
 
 	assert(conf);
-	SectionProp* sec_prop = conf->AddSection("mt32", &mt32_init, ChangeableAtRuntime);
+	SectionProp* sec_prop = conf->AddSection("mt32", mt32_init, ChangeableAtRuntime);
 	assert(sec_prop);
 	init_mt32_dosbox_settings(*sec_prop);
 

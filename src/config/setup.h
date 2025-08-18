@@ -9,6 +9,7 @@
 
 #include <cstdio>
 #include <deque>
+#include <functional>
 #include <list>
 #include <map>
 #include <memory>
@@ -331,7 +332,7 @@ public:
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
 
-typedef void (*SectionFunction)(Section*);
+using SectionFunction = std::function<void(Section*)>;
 
 class Section {
 private:
