@@ -2947,7 +2947,7 @@ void MIXER_Init(Section* sec)
 		                               mixer.prebuffer_ms) /
 		                              1000;
 
-		sec->AddDestroyFunction(&stop_mixer);
+		sec->AddDestroyFunction(stop_mixer);
 
 		mixer.final_output.Resize(mixer.blocksize + prebuffer_frames);
 
@@ -3222,7 +3222,7 @@ void MIXER_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	SectionProp* sec = conf->AddSection("mixer", &MIXER_Init, ChangeableAtRuntime);
+	SectionProp* sec = conf->AddSection("mixer", MIXER_Init, ChangeableAtRuntime);
 	assert(sec);
 	init_mixer_dosbox_settings(*sec);
 

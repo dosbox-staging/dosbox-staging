@@ -746,7 +746,7 @@ static void midi_init([[maybe_unused]] Section* sec)
 	constexpr auto ChangeableAtRuntime = true;
 
 	assert(sec);
-	sec->AddDestroyFunction(&midi_destroy, ChangeableAtRuntime);
+	sec->AddDestroyFunction(midi_destroy, ChangeableAtRuntime);
 
 	// Retry loop
 	for (;;) {
@@ -939,7 +939,7 @@ void MIDI_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	SectionProp* sec = conf->AddSection("midi", &midi_init, ChangeableAtRuntime);
+	SectionProp* sec = conf->AddSection("midi", midi_init, ChangeableAtRuntime);
 	assert(sec);
 
 	init_midi_dosbox_settings(*sec);

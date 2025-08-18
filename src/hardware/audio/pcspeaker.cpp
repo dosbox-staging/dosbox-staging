@@ -81,7 +81,7 @@ void PCSPEAKER_Init(Section *section)
 	}
 
 	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&PCSPEAKER_ShutDown, changeable_at_runtime);
+	section->AddDestroyFunction(PCSPEAKER_ShutDown, changeable_at_runtime);
 
 	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
 	// This provides a good size to avoid over-runs and stalls.
