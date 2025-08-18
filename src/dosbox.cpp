@@ -696,9 +696,9 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	LOG_StartUp();
 #endif
 
-	secprop->AddInitFunction(IO_Init);
-	secprop->AddInitFunction(PAGING_Init);
-	secprop->AddInitFunction(MEM_Init);
+	secprop->AddInitHandler(IO_Init);
+	secprop->AddInitHandler(PAGING_Init);
+	secprop->AddInitHandler(MEM_Init);
 
 	pint = secprop->AddInt("memsize", only_at_start, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
@@ -810,11 +810,11 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "Please file a bug with the project if you find a game that fails\n"
 	        "when this is enabled so we will list them here.");
 
-	secprop->AddInitFunction(CALLBACK_Init);
-	secprop->AddInitFunction(PIC_Init);
-	secprop->AddInitFunction(PROGRAMS_Init);
-	secprop->AddInitFunction(TIMER_Init);
-	secprop->AddInitFunction(CMOS_Init);
+	secprop->AddInitHandler(CALLBACK_Init);
+	secprop->AddInitHandler(PIC_Init);
+	secprop->AddInitHandler(PROGRAMS_Init);
+	secprop->AddInitHandler(TIMER_Init);
+	secprop->AddInitHandler(CMOS_Init);
 
 	pstring = secprop->AddString("autoexec_section", only_at_start, "join");
 	pstring->SetValues({"join", "overwrite"});
@@ -891,12 +891,12 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	CPU_AddConfigSection(control);
 
 #if C_FPU
-	secprop->AddInitFunction(FPU_Init);
+	secprop->AddInitHandler(FPU_Init);
 #endif
-	secprop->AddInitFunction(DMA_Init);
-	secprop->AddInitFunction(VGA_Init);
-	secprop->AddInitFunction(KEYBOARD_Init);
-	secprop->AddInitFunction(PCI_Init); // PCI bus
+	secprop->AddInitHandler(DMA_Init);
+	secprop->AddInitHandler(VGA_Init);
+	secprop->AddInitHandler(KEYBOARD_Init);
+	secprop->AddInitHandler(PCI_Init); // PCI bus
 
 	// Configure 3dfx Voodoo settings
 	VOODOO_AddConfigSection(control);
@@ -974,7 +974,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "DC-offset is now eliminated globally from the master mixer output.");
 
 	// Tandy audio emulation
-	secprop->AddInitFunction(TANDYSOUND_Init, changeable_at_runtime);
+	secprop->AddInitHandler(TANDYSOUND_Init, changeable_at_runtime);
 
 	pstring = secprop->AddString("tandy", when_idle, "auto");
 	pstring->SetValues({"auto", "on", "psg", "off"});
@@ -1010,7 +1010,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// LPT DAC device emulation
-	secprop->AddInitFunction(LPT_DAC_Init, changeable_at_runtime);
+	secprop->AddInitHandler(LPT_DAC_Init, changeable_at_runtime);
 	pstring = secprop->AddString("lpt_dac", when_idle, "none");
 	pstring->SetHelp(
 	        "Type of DAC plugged into the parallel port:\n"
@@ -1032,7 +1032,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	pbool->SetHelp("Use 'lpt_dac = disney' to enable the Disney Sound Source.");
 
 	// IBM PS/1 Audio emulation
-	secprop->AddInitFunction(PS1AUDIO_Init, changeable_at_runtime);
+	secprop->AddInitHandler(PS1AUDIO_Init, changeable_at_runtime);
 
 	pbool = secprop->AddBool("ps1audio", when_idle, false);
 	pbool->SetHelp("Enable IBM PS/1 Audio emulation ('off' by default).");
@@ -1079,10 +1079,10 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	// Joystick emulation
 	secprop = control->AddSection("joystick", BIOS_Init);
 
-	secprop->AddInitFunction(INT10_Init);
-	secprop->AddInitFunction(MOUSE_Init); // Must be after int10 as it uses
-	                                      // CurMode
-	secprop->AddInitFunction(JOYSTICK_Init, changeable_at_runtime);
+	secprop->AddInitHandler(INT10_Init);
+	secprop->AddInitHandler(MOUSE_Init); // Must be after int10 as it uses
+	                                     // CurMode
+	secprop->AddInitHandler(JOYSTICK_Init, changeable_at_runtime);
 	pstring = secprop->AddString("joysticktype", when_idle, "auto");
 
 	pstring->SetValues(
@@ -1209,11 +1209,11 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	// CONFIG.SYS
 
 	secprop = control->AddSection("dos", DOS_Init);
-	secprop->AddInitFunction(XMS_Init, changeable_at_runtime);
+	secprop->AddInitHandler(XMS_Init, changeable_at_runtime);
 	pbool = secprop->AddBool("xms", when_idle, true);
 	pbool->SetHelp("Enable XMS support ('on' by default).");
 
-	secprop->AddInitFunction(EMS_Init, changeable_at_runtime);
+	secprop->AddInitHandler(EMS_Init, changeable_at_runtime);
 	pstring = secprop->AddString("ems", when_idle, "true");
 	pstring->SetValues({"true", "emsboard", "emm386", "off"});
 	pstring->SetHelp(
@@ -1241,7 +1241,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	// DOS locale settings
 
-	secprop->AddInitFunction(DOS_Locale_Init, changeable_at_runtime);
+	secprop->AddInitHandler(DOS_Locale_Init, changeable_at_runtime);
 
 	pstring = secprop->AddString("locale_period", when_idle, "native");
 	pstring->SetHelp(
@@ -1303,7 +1303,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
 	        "(empty by default).");
 
-	secprop->AddInitFunction(DOS_InitFileLocking, changeable_at_runtime);
+	secprop->AddInitHandler(DOS_InitFileLocking, changeable_at_runtime);
 	pbool = secprop->AddBool("file_locking", when_idle, true);
 	pbool->SetHelp(
 	        "Enable file locking (SHARE.EXE emulation; 'on' by default).\n"
@@ -1313,9 +1313,9 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "permissions, you can try disabling this.");
 
 	// Mscdex
-	secprop->AddInitFunction(MSCDEX_Init);
-	secprop->AddInitFunction(DRIVES_Init);
-	secprop->AddInitFunction(CDROM_Image_Init);
+	secprop->AddInitHandler(MSCDEX_Init);
+	secprop->AddInitHandler(DRIVES_Init);
+	secprop->AddInitHandler(CDROM_Image_Init);
 
 #if C_IPX
 	secprop = control->AddSection("ipx", IPX_Init, changeable_at_runtime);
@@ -1399,11 +1399,11 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	pstring->SetEnabledOptions({"SLIRP"});
 
-	//	secprop->AddInitFunction(CREDITS_Init);
+	//	secprop->AddInitHandler(&CREDITS_Init);
 
 	// VMM interfaces
-	secprop->AddInitFunction(VIRTUALBOX_Init);
-	secprop->AddInitFunction(VMWARE_Init);
+	secprop->AddInitHandler(VIRTUALBOX_Init);
+	secprop->AddInitHandler(VMWARE_Init);
 
 	control->AddAutoexecSection(AUTOEXEC_Init);
 

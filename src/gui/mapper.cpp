@@ -3253,8 +3253,8 @@ void MAPPER_StartUp(Section* sec)
 	// Runs after this function ends and for subsequent `config -set "sdl
 	// mapperfile=file.map"` commands
 	constexpr auto changeable_at_runtime = true;
-	section->AddInitFunction(MAPPER_BindKeys, changeable_at_runtime);
-	section->AddInitFunction(GFX_RegenerateWindow, changeable_at_runtime);
+	section->AddInitHandler(MAPPER_BindKeys, changeable_at_runtime);
+	section->AddInitHandler(GFX_RegenerateWindow, changeable_at_runtime);
 
 	// Runs one-time on shutdown
 	section->AddDestroyFunction(MAPPER_Destroy);

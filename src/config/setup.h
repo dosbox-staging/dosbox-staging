@@ -349,7 +349,7 @@ private:
 		{}
 	};
 
-	std::deque<Function_wrapper> init_functions   = {};
+	std::deque<Function_wrapper> init_handlers    = {};
 	std::deque<Function_wrapper> destroyfunctions = {};
 	std::string sectionname                       = {};
 	bool active                                   = true;
@@ -368,8 +368,8 @@ public:
 	// Children must call executedestroy!
 	virtual ~Section() = default;
 
-	void AddInitFunction(SectionInitHandler func,
-	                     bool changeable_at_runtime = false);
+	void AddInitHandler(SectionInitHandler init_handler,
+	                    bool changeable_at_runtime = false);
 
 	void AddDestroyFunction(SectionInitHandler func,
 	                        bool changeable_at_runtime = false);
