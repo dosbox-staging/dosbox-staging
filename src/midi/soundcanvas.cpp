@@ -857,7 +857,7 @@ void SOUNDCANVAS_AddConfigSection(const ConfigPtr& conf)
 
 	assert(conf);
 	SectionProp* sec_prop = conf->AddSection("soundcanvas",
-	                                         &soundcanvas_init,
+	                                         soundcanvas_init,
 	                                         ChangeableAtRuntime);
 	assert(sec_prop);
 	init_soundcanvas_dosbox_settings(*sec_prop);

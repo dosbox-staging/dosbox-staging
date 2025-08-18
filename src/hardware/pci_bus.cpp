@@ -427,7 +427,7 @@ void PCI_Init(Section* sec)
 	assert(sec);
 
 	pci_interface = new PCI(sec);
-	sec->AddDestroyFunction(&PCI_ShutDown);
+	sec->AddDestroyFunction(PCI_ShutDown);
 }
 
 void PCI_AddDevice(PCI_Device* dev) {

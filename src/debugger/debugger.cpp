@@ -2372,7 +2372,7 @@ void DEBUG_Init(Section* sec) {
 	debugCallback=CALLBACK_Allocate();
 	CALLBACK_Setup(debugCallback,DEBUG_EnableDebugger,CB_RETF,"debugger");
 	/* shutdown function */
-	sec->AddDestroyFunction(&DEBUG_ShutDown);
+	sec->AddDestroyFunction(DEBUG_ShutDown);
 }
 
 // DEBUGGING VAR STUFF

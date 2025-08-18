@@ -860,7 +860,7 @@ void mpu401_init([[maybe_unused]] Section* sec)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	get_midi_section()->AddDestroyFunction(&mpu401_destroy, ChangeableAtRuntime);
+	get_midi_section()->AddDestroyFunction(mpu401_destroy, ChangeableAtRuntime);
 }
 
 void MPU401_Init()

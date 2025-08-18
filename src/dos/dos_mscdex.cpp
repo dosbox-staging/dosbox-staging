@@ -1454,7 +1454,7 @@ void MSCDEX_Init(Section* sec)
 	assert(sec);
 
 	// AddDestroy func
-	sec->AddDestroyFunction(&MSCDEX_ShutDown);
+	sec->AddDestroyFunction(MSCDEX_ShutDown);
 
 	// Register the mscdex device
 	DOS_Device* newdev = new device_MSCDEX();
