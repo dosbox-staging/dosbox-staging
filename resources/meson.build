@@ -45,7 +45,7 @@ resources = [
 #         - https://github.com/mesonbuild/meson/issues/7067
 #
 relative_resources = (
-    target_machine.system() == 'darwin' ? '../../../Resources' : '../../resources'
+    target_machine.system() == 'darwin' ? '../../Resources' : '../resources'
 )
 
 # Top-level resources directory for the build and installation area
