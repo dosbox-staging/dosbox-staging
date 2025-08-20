@@ -1377,10 +1377,25 @@ void Section::AddInitHandler(SectionInitHandler init_handler, bool changeable_at
 	}
 }
 
+void Section::AddUpdateHandler(SectionUpdateHandler update_handler)
+{
+	update_handlers.emplace_back(update_handler);
+}
+
 void Section::AddDestroyHandler(SectionInitHandler destroy_handler,
                                 bool changeable_at_runtime)
 {
 	destroy_handlers.emplace_front(destroy_handler, changeable_at_runtime);
+}
+
+bool Section::IsChangeableAtRuntime()
+{
+	for (auto handler : init_handlers) {
+		if (handler.changeable_at_runtime) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void Section::ExecuteInit(const bool init_all)
@@ -1410,6 +1425,13 @@ void Section::ExecuteInit(const bool init_all)
 			i += num_appended;
 			assert(i < init_handlers.size());
 		}
+	}
+}
+
+void Section::ExecuteUpdate(const Property& property)
+{
+	for (auto handler : update_handlers) {
+		handler(dynamic_cast<SectionProp*>(this), property.propname);
 	}
 }
 
