@@ -8,7 +8,7 @@
 
 void MSG_NotifyNewCodePage() {}
 
-void MSG_Add(const std::string&, const std::string&) {}
+void MSG_Add(const std::string&, const std::string&, const MsgLocation&) {}
 
 std::string MSG_Get(const std::string&)
 {
