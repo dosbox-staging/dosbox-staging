@@ -28,7 +28,7 @@ pushd "$translation_dir" > /dev/null || exit
 
 echo "In directory $translation_dir:"
 
-file_list="*.lng"
+file_list="*.po"
 for f in $file_list
 do
 	nconv_t "$f"

@@ -13,7 +13,7 @@ IF NOT EXIST %script_dir%\tools\dos2unix.exe GOTO readme
 
 ECHO In directory %translation_dir%:
 
-FOR %%f IN (*.lng) DO (
+FOR %%f IN (*.po) DO (
 	CALL :nconv_t "%%f"
 )
 

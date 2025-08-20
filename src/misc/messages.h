@@ -7,6 +7,24 @@
 #include <cstdint>
 #include <string>
 
+class MessageLocation {
+public:
+	MessageLocation(const std::string& file_name, const size_t line_number)
+	        : file_name(file_name),
+	          line_number(line_number)
+	{}
+
+	bool operator==(const MessageLocation& other) const;
+
+	std::string GetUnified() const;
+
+private:
+	MessageLocation() = delete;
+
+	const std::string file_name = {};
+	const size_t line_number    = 0;
+};
+
 /*
  * Load translated messages according to the configuration.
  */
@@ -16,7 +34,12 @@ void MSG_LoadMessages();
  * Add English message to the translation system in UTF-8.
  * The message may contais ANSI markup tags (e.g., [white]CONFIG[reset]).
  */
-void MSG_Add(const std::string& name, const std::string& message);
+void MSG_Add(const std::string& message_key, const std::string& message,
+             const MessageLocation& location = {__builtin_FILE(), __builtin_LINE()});
+
+// TODO: Use 'std::source_location::current()' once all the supported compilers
+// implement this C++20 feature; it should be possible to move 'MsgLocation'
+// declaration to 'messages.cpp' then.
 
 /*
  * Get translated message preprocessed for output to the DOS console.
