@@ -3171,7 +3171,7 @@ static void sdl_section_init(Section* sec)
 		return;
 	}
 
-	sec->AddDestroyFunction(shutdown_gui);
+	sec->AddDestroyHandler(shutdown_gui);
 	SectionProp* section = static_cast<SectionProp*>(sec);
 
 	sdl.active          = false;

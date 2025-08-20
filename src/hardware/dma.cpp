@@ -644,7 +644,7 @@ void DMA_Destroy(Section* /*sec*/)
 void DMA_Init(Section* sec)
 {
 	DMA_SetWrapping(0xffff);
-	sec->AddDestroyFunction(DMA_Destroy);
+	sec->AddDestroyHandler(DMA_Destroy);
 	Bitu i;
 	for (i = 0; i < LINK_START; i++) {
 		ems_board_mapping[i] = i;

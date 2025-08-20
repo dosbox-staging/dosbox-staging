@@ -1559,7 +1559,7 @@ static void gus_init(Section* sec)
 	gus = std::make_unique<Gus>(port, dma, irq, ultradir.c_str(), filter_prefs);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(gus_destroy, changeable_at_runtime);
+	sec->AddDestroyHandler(gus_destroy, changeable_at_runtime);
 }
 
 void init_gus_dosbox_settings(SectionProp& secprop)
