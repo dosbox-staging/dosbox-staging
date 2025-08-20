@@ -7,4 +7,12 @@ resource_files = [
     'nl.lng',
     'pl.lng',
     'ru.lng',
+    'br.po',
+    'de.po',
+    'es.po',
+    'fr.po',
+    'it.po',
+    'nl.po',
+    'pl.po',
+    'ru.po',
 ]

@@ -24,6 +24,12 @@
 // Copyright string
 #define DOSBOX_COPYRIGHT "(C) " DOSBOX_TEAM
 
+// Address to report bugs
+#define DOSBOX_BUGS_TO "https://github.com/dosbox-staging/dosbox-staging/issues"
+
+// Address of the translation manual
+#define DOSBOX_MANUAL_TRANSLATION "https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/TRANSLATING.md"
+
 // Fully qualified application ID for the emulator; see
 // https://dbus.freedesktop.org/doc/dbus-specification.html#message-protocol-names
 // for more details

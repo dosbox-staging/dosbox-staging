@@ -5,7 +5,9 @@
 #define DOSBOX_MESSAGES_H
 
 #include <cstdint>
+#include <source_location>
 #include <string>
+
 
 /*
  * Load translated messages according to the configuration.
@@ -16,7 +18,9 @@ void MSG_LoadMessages();
  * Add English message to the translation system in UTF-8.
  * The message may contais ANSI markup tags (e.g., [white]CONFIG[reset]).
  */
-void MSG_Add(const std::string& name, const std::string& message);
+void MSG_Add(const std::string& message_key,
+             const std::string& message,
+             const std::source_location source_location = std::source_location::current());
 
 /*
  * Get translated message preprocessed for output to the DOS console.
