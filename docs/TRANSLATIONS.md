@@ -110,9 +110,3 @@ UTF-8 can store the same exact text in several different ways. There are some st
 ones, however, called _normalized forms_. These scripts convert the translation files
 to the NFC-normalized form (recommended by DOSBox Staging and used by default
 by most UTF-8 capable text editors), with Unix line endings.
-
-### `update-sources.sh` (Linux, macOS)
-
-This script performs some updates on the translation files - creates an up to date
-`en.lng` file, removes obsolete strings from translation files, adds missing strings
-(in English), reorders (sorts) translation file content, and finally normalizes them.
