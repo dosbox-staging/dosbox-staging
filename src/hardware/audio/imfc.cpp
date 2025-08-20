@@ -13432,7 +13432,7 @@ static void imfc_init(Section* sec)
 	imfc = std::make_unique<MusicFeatureCard>(std::move(channel), port, irq);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(imfc_destroy, changeable_at_runtime);
+	sec->AddDestroyHandler(imfc_destroy, changeable_at_runtime);
 
 	MIXER_UnlockMixerThread();
 }

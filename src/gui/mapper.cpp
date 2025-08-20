@@ -3258,6 +3258,6 @@ void MAPPER_StartUp(Section* sec)
 	section->AddInitHandler(GFX_RegenerateWindow, changeable_at_runtime);
 
 	// Runs one-time on shutdown
-	section->AddDestroyFunction(MAPPER_Destroy);
+	section->AddDestroyHandler(MAPPER_Destroy);
 	MAPPER_AddHandler(MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper", "Mapper");
 }

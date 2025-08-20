@@ -1106,5 +1106,5 @@ void PROGRAMS_Init(Section* sec)
 	CALLBACK_Setup(call_program, &PROGRAMS_Handler, CB_RETF, "internal program");
 
 	// TODO Cleanup -- allows unit tests to run indefinitely & cleanly
-	sec->AddDestroyFunction(PROGRAMS_Destroy);
+	sec->AddDestroyHandler(PROGRAMS_Destroy);
 }

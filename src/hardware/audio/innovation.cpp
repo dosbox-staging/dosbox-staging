@@ -273,7 +273,7 @@ static void innovation_init(Section *sec)
 	                channel_filter_choice);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(innovation_destroy, changeable_at_runtime);
+	sec->AddDestroyHandler(innovation_destroy, changeable_at_runtime);
 }
 
 static void init_innovation_dosbox_settings(SectionProp& sec_prop)
