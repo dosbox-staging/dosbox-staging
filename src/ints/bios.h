@@ -10,6 +10,8 @@
 
 #include <optional>
 
+#include "config/setup.h"
+
 #define BIOS_BASE_ADDRESS_COM1          0x400
 #define BIOS_BASE_ADDRESS_COM2          0x402
 #define BIOS_BASE_ADDRESS_COM3          0x404
@@ -122,6 +124,9 @@ void INT2A_StartUp(void);
 void INT2F_StartUp(void);
 void INT33_StartUp(void);
 void INT13_StartUp(void);
+
+void BIOS_Init(Section* section);
+void BIOS_Destroy();
 
 bool BIOS_AddKeyToBuffer(uint16_t code);
 
