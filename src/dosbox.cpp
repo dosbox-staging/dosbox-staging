@@ -588,15 +588,25 @@ static void DOSBOX_RealInit(Section* sec)
 	}
 }
 
-static void DOSBOX_ConfigChanged(Section* sec)
+static void dosbox_init(Section* sec)
 {
-	static bool first_time = true;
-	if (first_time) {
-		first_time = false;
-		DOSBOX_RealInit(sec);
-	}
-
+	DOSBOX_RealInit(sec);
 	MSG_LoadMessages();
+}
+
+static void notify_dosbox_setting_updated([[maybe_unused]] SectionProp* section,
+                                          const std::string prop_name)
+{
+	if (prop_name == "language") {
+		MSG_LoadMessages();
+
+	} else if (prop_name == "dos_rate") {
+		DOSBOX_RealInit(section);
+
+	} else if (prop_name == "shell_config_shortcuts") {
+		// No need to re-init anything; the setting is always queried when
+		// executing a command.
+	}
 }
 
 // Returns decimal seconds of elapsed uptime.
@@ -607,17 +617,17 @@ double DOSBOX_GetUptime()
 	return GetTicksSince(start_ms) / MillisInSecond;
 }
 
-static void add_dosbox_config_section()
+static void add_dosbox_config_section(const ConfigPtr& conf)
 {
+	assert(conf);
+
 	using enum Property::Changeable::Value;
 
-	constexpr auto changeable_at_runtime = true;
+	auto section = conf->AddSection("dosbox", dosbox_init);
 
-	auto secprop = control->AddSection("dosbox",
-	                                   DOSBOX_ConfigChanged,
-	                                   changeable_at_runtime);
+	auto pstring = section->AddString("language", Always, "auto");
+	section->AddUpdateHandler(notify_dosbox_setting_updated);
 
-	auto pstring = secprop->AddString("language", Always, "auto");
 	pstring->SetHelp(
 	        "Select the DOS messages language:\n"
 	        "  auto:     Detects the language from the host OS (default).\n"
@@ -628,7 +638,7 @@ static void add_dosbox_config_section()
 	        "  - English is built-in, the rest is stored in the bundled\n"
 	        "    'resources/translations' directory.");
 
-	pstring = secprop->AddString("machine", OnlyAtStart, "svga_s3");
+	pstring = section->AddString("machine", OnlyAtStart, "svga_s3");
 	pstring->SetValues({"hercules",
 	                    "cga_mono",
 	                    "cga",
@@ -668,18 +678,18 @@ static void add_dosbox_config_section()
 	        "  vesa_nolfb:     Same as 'svga_s3' (VESA VBE 2.0), plus the \"no linear\n"
 	        "                  framebuffer\" hack (needed only by a few games).");
 
-	pstring = secprop->AddPath("captures", Deprecated, "capture");
+	pstring = section->AddPath("captures", Deprecated, "capture");
 	pstring->SetHelp("Moved to [capture] section and renamed to 'capture_dir'.");
 
 #if C_DEBUGGER
 	LOG_StartUp();
 #endif
 
-	secprop->AddInitHandler(IO_Init);
-	secprop->AddInitHandler(PAGING_Init);
-	secprop->AddInitHandler(MEM_Init);
+	section->AddInitHandler(IO_Init);
+	section->AddInitHandler(PAGING_Init);
+	section->AddInitHandler(MEM_Init);
 
-	auto pint = secprop->AddInt("memsize", OnlyAtStart, 16);
+	auto pint = section->AddInt("memsize", OnlyAtStart, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
 	pint->SetHelp(
 	        "Amount of memory of the emulated machine has in MB (16 by default).\n"
@@ -687,7 +697,7 @@ static void add_dosbox_config_section()
 	        "though a few games might require a higher value.\n"
 	        "There is generally no speed advantage when raising this value.");
 
-	pstring = secprop->AddString("mcb_fault_strategy", OnlyAtStart, "repair");
+	pstring = section->AddString("mcb_fault_strategy", OnlyAtStart, "repair");
 	pstring->SetHelp(
 	        "How software-corrupted memory chain blocks should be handled:\n"
 	        "  repair:  Repair (and report) faults using adjacent blocks (default).\n"
@@ -698,7 +708,7 @@ static void add_dosbox_config_section()
 	pstring->SetValues({"repair", "report", "allow", "deny"});
 
 	static_assert(8192 * 1024 <= PciGfxLfbLimit - PciGfxLfbBase);
-	pstring = secprop->AddString("vmemsize", OnlyAtStart, "auto");
+	pstring = section->AddString("vmemsize", OnlyAtStart, "auto");
 
 	pstring->SetValues({"auto",
 	                    // values in MB
@@ -718,7 +728,7 @@ static void add_dosbox_config_section()
 	        "the selected video adapter ('auto' by default). See the 'machine' setting for\n"
 	        "the list of valid options and defaults per adapter.");
 
-	pstring = secprop->AddString("vmem_delay", OnlyAtStart, "off");
+	pstring = section->AddString("vmem_delay", OnlyAtStart, "off");
 	pstring->SetHelp(
 	        "Set video memory access delay emulation ('off' by default).\n"
 	        "  off:      Disable video memory access delay emulation (default).\n"
@@ -731,7 +741,7 @@ static void add_dosbox_config_section()
 	        "Note: Only set this on a per-game basis when necessary as it slows down\n"
 	        "      the whole emulator.");
 
-	pstring = secprop->AddString("dos_rate", WhenIdle, "default");
+	pstring = section->AddString("dos_rate", WhenIdle, "default");
 	pstring->SetHelp(
 	        "Override the emulated DOS video mode's refresh rate with a custom rate.\n"
 	        "  default:  Don't override; use the emulated DOS video mode's refresh rate\n"
@@ -752,7 +762,7 @@ static void add_dosbox_config_section()
 	        "      rate is a hack that only works acceptably with a small subset of all DOS\n"
 	        "      games (typically mid to late 1990s games).");
 
-	pstring = secprop->AddString("vesa_modes", OnlyAtStart, "compatible");
+	pstring = section->AddString("vesa_modes", OnlyAtStart, "compatible");
 	pstring->SetValues({"compatible", "all", "halfline"});
 	pstring->SetHelp(
 	        "Controls which VESA video modes are available:\n"
@@ -773,36 +783,36 @@ static void add_dosbox_config_section()
 	        "               modes available in this mode are often required by late '90s\n"
 	        "               demoscene productions.");
 
-	auto pbool = secprop->AddBool("vga_8dot_font", OnlyAtStart, false);
+	auto pbool = section->AddBool("vga_8dot_font", OnlyAtStart, false);
 	pbool->SetHelp("Use 8-pixel-wide fonts on VGA adapters ('off' by default).");
 
-	pbool = secprop->AddBool("vga_render_per_scanline", OnlyAtStart, true);
+	pbool = section->AddBool("vga_render_per_scanline", OnlyAtStart, true);
 	pbool->SetHelp(
 	        "Emulate accurate per-scanline VGA rendering ('on' by default).\n"
 	        "Currently, you need to disable this for a few games, otherwise they will crash\n"
 	        "at startup (e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors).");
 
-	pbool = secprop->AddBool("speed_mods", OnlyAtStart, true);
+	pbool = section->AddBool("speed_mods", OnlyAtStart, true);
 	pbool->SetHelp(
 	        "Permit changes known to improve performance ('on' by default).\n"
 	        "Currently, no games are known to be negatively affected by this.\n"
 	        "Please file a bug with the project if you find a game that fails\n"
 	        "when this is enabled so we will list them here.");
 
-	secprop->AddInitHandler(CALLBACK_Init);
-	secprop->AddInitHandler(PIC_Init);
-	secprop->AddInitHandler(PROGRAMS_Init);
-	secprop->AddInitHandler(TIMER_Init);
-	secprop->AddInitHandler(CMOS_Init);
+	section->AddInitHandler(CALLBACK_Init);
+	section->AddInitHandler(PIC_Init);
+	section->AddInitHandler(PROGRAMS_Init);
+	section->AddInitHandler(TIMER_Init);
+	section->AddInitHandler(CMOS_Init);
 
-	pstring = secprop->AddString("autoexec_section", OnlyAtStart, "join");
+	pstring = section->AddString("autoexec_section", OnlyAtStart, "join");
 	pstring->SetValues({"join", "overwrite"});
 	pstring->SetHelp(
 	        "How autoexec sections are handled from multiple config files:\n"
 	        "  join:       Combine them into one big section (legacy behavior; default).\n"
 	        "  overwrite:  Use the last one encountered, like other config settings.");
 
-	pbool = secprop->AddBool("automount", OnlyAtStart, true);
+	pbool = section->AddBool("automount", OnlyAtStart, true);
 	pbool->SetHelp(
 	        "Mount 'drives/[c]' directories as drives on startup, where [c] is a lower-case\n"
 	        "drive letter from 'a' to 'y' ('on' by default). The 'drives' folder can be\n"
@@ -817,7 +827,7 @@ static void add_dosbox_config_section()
 	        "  verbose  = on or off\n"
 	        "  readonly = on or off");
 
-	pstring = secprop->AddString("startup_verbosity", OnlyAtStart, "auto");
+	pstring = section->AddString("startup_verbosity", OnlyAtStart, "auto");
 	pstring->SetValues({"auto", "high", "low", "quiet"});
 	pstring->SetHelp(
 	        "Controls verbosity prior to displaying the program ('auto' by default):\n"
@@ -827,7 +837,7 @@ static void add_dosbox_config_section()
 	        "  quiet       |   no    |    no\n"
 	        "  auto        | 'low' if exec or dir is passed, otherwise 'high'");
 
-	pbool = secprop->AddBool("allow_write_protected_files", OnlyAtStart, true);
+	pbool = section->AddBool("allow_write_protected_files", OnlyAtStart, true);
 	pbool->SetHelp(
 	        "Many games open all their files with writable permissions; even files that they\n"
 	        "never modify. This setting lets you write-protect those files while still\n"
@@ -835,14 +845,14 @@ static void add_dosbox_config_section()
 	        "using a copy-on-write or network-based filesystem, this setting avoids\n"
 	        "triggering write operations for these write-protected files.");
 
-	pbool = secprop->AddBool("shell_config_shortcuts", WhenIdle, true);
+	pbool = section->AddBool("shell_config_shortcuts", WhenIdle, true);
 	pbool->SetHelp(
 	        "Allow shortcuts for simpler configuration management ('on' by default).\n"
 	        "E.g., instead of 'config -set sbtype sb16', it is enough to execute\n"
 	        "'sbtype sb16', and instead of 'config -get sbtype', you can just execute\n"
 	        "the 'sbtype' command.");
 
-	pstring = secprop->AddString("hard_disk_speed", OnlyAtStart, "maximum");
+	pstring = section->AddString("hard_disk_speed", OnlyAtStart, "maximum");
 	pstring->SetValues({"maximum", "fast", "medium", "slow"});
 	pstring->SetHelp(
 	        "Set the emulated hard disk speed ('maximum' by default).\n"
@@ -851,7 +861,7 @@ static void add_dosbox_config_section()
 	        "  medium:   Typical early 1990s hard disk speed (~2.5 MB/s)\n"
 	        "  slow:     Typical 1980s hard disk speed (~600 kB/s)");
 
-	pstring = secprop->AddString("floppy_disk_speed", OnlyAtStart, "maximum");
+	pstring = section->AddString("floppy_disk_speed", OnlyAtStart, "maximum");
 	pstring->SetValues({"maximum", "fast", "medium", "slow"});
 	pstring->SetHelp(
 	        "Set the emulated floppy disk speed ('maximum' by default).\n"
@@ -1365,7 +1375,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	// The [sdl] section gets initialised first in `sdlmain.cpp`, then
 	// this init method gets called.
 
-	add_dosbox_config_section();
+	add_dosbox_config_section(control);
 
 	RENDER_AddConfigSection(control);
 
