@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <string>
 #include <vector>
 
 #ifndef DOSBOX_INOUT_H
@@ -488,5 +489,7 @@ public:
 private:
 	CSerial *sclass = nullptr;
 };
+
+void SERIAL_Init(Section* sec);
 
 #endif
