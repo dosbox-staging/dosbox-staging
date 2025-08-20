@@ -3216,7 +3216,7 @@ static void cpu_init(Section* sec)
 	cpu_instance = std::make_unique<Cpu>(sec);
 
 	constexpr auto ChangeableAtRuntime = true;
-	sec->AddDestroyFunction(cpu_shutdown, ChangeableAtRuntime);
+	sec->AddDestroyHandler(cpu_shutdown, ChangeableAtRuntime);
 }
 
 void init_cpu_dosbox_settings(SectionProp& secprop)

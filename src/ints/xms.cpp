@@ -837,5 +837,5 @@ void XMS_Init(Section* sec)
 	}
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(XMS_ShutDown, changeable_at_runtime);
+	sec->AddDestroyHandler(XMS_ShutDown, changeable_at_runtime);
 }

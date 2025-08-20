@@ -1188,7 +1188,7 @@ void IPX_Init(Section* sec)
 	test = new IPX(sec);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(IPX_ShutDown, changeable_at_runtime);
+	sec->AddDestroyHandler(IPX_ShutDown, changeable_at_runtime);
 }
 
 //Initialize static members;

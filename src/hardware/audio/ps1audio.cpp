@@ -582,5 +582,5 @@ void PS1AUDIO_Init(Section* section)
 	LOG_MSG("PS1: Initialised IBM PS/1 Audio card");
 
 	constexpr auto ChangeableAtRuntime = true;
-	section->AddDestroyFunction(PS1AUDIO_ShutDown, ChangeableAtRuntime);
+	section->AddDestroyHandler(PS1AUDIO_ShutDown, ChangeableAtRuntime);
 }

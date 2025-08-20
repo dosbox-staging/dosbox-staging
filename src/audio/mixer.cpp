@@ -2947,7 +2947,7 @@ void MIXER_Init(Section* sec)
 		                               mixer.prebuffer_ms) /
 		                              1000;
 
-		sec->AddDestroyFunction(stop_mixer);
+		sec->AddDestroyHandler(stop_mixer);
 
 		mixer.final_output.Resize(mixer.blocksize + prebuffer_frames);
 
