@@ -2,32 +2,48 @@
 
 ## Preparing a file with English strings
 
-Be sure you have the latest English messages file, `en.lng`, by running:
+You need to be sure you have the latest English messages file — you need the
+latest version of DOSBox Staging for this purpose. Do one of the following:
+
+1. Run DOSBox Staging using the command:
+   `dosbox -lang en -c "config -wl en.lng" -c "exit"`
+2. Inside DOSBox Staging execute the following commands:
+   - `config -set language=en` — to make sure the English language is used
+   - `config -wl en.lng` — to write the language file
+   You can supply a full host OS path instead of simply `en.lng`.
+
+Any of these will produce a file with the current strings to translate; use it
+as a reference.
+
+## Cleaning up a translation file
+
+In the same way, you can create a cleaned-up translation file for the given
+language — i.e. for French (`fr`) this would be:
 
 ```
-dosbox -lang en -c "config -wl en.lng" -c "exit"
+dosbox -lang fr -c "config -wl fr.lng" -c "exit"
 ```
 
-or do the following:
+or, if you prefer to save the file from inside DOSBox Staging:
 
-1. In the configuration file, go to the `[dosbox]` section and set `language = en`.
-2. Run the most current version of DOSBox Staging.
-3. Inside DOSBox execute the command `config -wl en.lng` (you can supply a host OS
-  path, instead of simply `en.lng`).
+```
+config -set language=fr
+config -wl fr.lng
+```
 
-This will produce a file with the current strings to translate; use it as a
-reference.
+The cleaned-up language file is sorted, it has unused strings removed, and
+missing strings are replaced with their English counterparts.
 
 ## Updating the translation
 
 Update a given translation by editing the corresponding `*.lng` file with a text
 editor and saving it with UTF-8 encoding and Unix line endings.
 
-Suitable editors are often called ASCII editors, code editors, etc.—Microsoft Word
-is not suitable, but Notepad (Windows), Notepad++ (Windows), TextMate (macOS),
-or Kate (Linux) will do.
+Suitable editors are often called ASCII editors, code editors, etc. —
+Microsoft Word is not suitable, but Notepad (Windows), Notepad++ (Windows),
+TextMate (macOS), or Kate (Linux) will do.
 
-Please don't use tab characters—configure your editor to expand tabs to
+Please don't use tab characters — configure your editor to expand tabs to
 spaces. If you use tabs, there is a danger that the alignment of indented
 multi-line text will appear wrong.
 
@@ -102,7 +118,7 @@ For example `KEYBOARD_LAYOUT_NAME_US` or `KEYBOARD_LAYOUT_NAME_PL214`.
 After translating, check them by running DOSBox with `--list-layouts` command line
 argument, also check the `keyb /list` internal command output.
 
-## Scripts
+## Scripts - `extras/translations` directory
 
 ### `normalize.sh` (Linux, macOS) or `normalize.bat` (Windows)
 
