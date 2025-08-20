@@ -16,9 +16,9 @@
 #include "utils/string_utils.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
+#include "private/po_file_entry.h"
 
 #include <cctype>
-#include <fstream>
 #include <map>
 #include <set>
 #include <string>
@@ -36,25 +36,30 @@ class Message {
 public:
 	// Note: any message needs to be verified before it can be safely used!
 
-	Message(const std::string& message, const bool is_english);
+	Message(const std::string& message_english);
+	Message(const std::string& message_english,
+		const std::string& message_translated);
 
 	const std::string& Get();
-	const std::string& GetRaw();
+	const std::string& GetRaw() const;
 
-	bool IsValid() const
-	{
-		return is_verified && is_ok;
-	}
-	void MarkInvalid()
-	{
-		is_ok = false;
-	}
+	bool IsFuzzy() const;
+	bool IsValid() const;
+
+	// Call to mark the message as requiring manual check, i.e. if outdated
+	// translation is detected
+	void MarkFuzzy();
+
+	// Call to mark the message not suitable for usage, i.e. if C-style
+	// format string mismatch is detected
+	void MarkInvalid();
 
 	// Use this one for English messages only
 	void VerifyEnglish(const std::string& message_key);
 
 	// Use this one for translated messages
-	void VerifyTranslated(const std::string& message_key, const Message& english);
+	void VerifyTranslated(const std::string& message_key,
+	                      const Message& message_english);
 
 private:
 	Message() = delete;
@@ -65,10 +70,13 @@ private:
 	void VerifyFormatString(const std::string& message_key);
 
 	void VerifyFormatStringAgainst(const std::string& message_key,
-	                               const Message& english);
+	                               const Message& message_english);
+
+	void VerifyTranslationUpToDate(const Message& message_english);
 
 	const bool is_english;
 
+	bool is_fuzzy    = false;
 	bool is_verified = false;
 	bool is_ok       = true;
 
@@ -76,6 +84,9 @@ private:
 	std::string message_raw = {};
 	// Message in DOS encoding, markups converted to ANSI control codes
 	std::string message_dos_ansi = {};
+
+	// Previous English message, to detect outdated translations
+	std::string message_previous_english = {};
 
 	uint16_t code_page = 0;
 
@@ -93,10 +104,37 @@ private:
 	std::vector<FormatSpecifier> format_specifiers = {};
 };
 
-Message::Message(const std::string& message, const bool is_english)
-        : is_english(is_english),
-          message_raw(message)
+Message::Message(const std::string& message_english)
+        : is_english(true),
+          message_raw(message_english)
 {}
+
+Message::Message(const std::string& message_english,
+	         const std::string& message_translated)
+        : is_english(false),
+          message_raw(message_translated),
+          message_previous_english(message_english)
+{}
+
+bool Message::IsFuzzy() const
+{
+	return is_fuzzy;
+}
+
+bool Message::IsValid() const
+{
+	return is_verified && is_ok;
+}
+
+void Message::MarkFuzzy()
+{
+	is_fuzzy = true;
+}
+
+void Message::MarkInvalid()
+{
+	is_ok = false;
+}
 
 std::string Message::GetLogStart(const std::string& message_key) const
 {
@@ -124,7 +162,7 @@ const std::string& Message::Get()
 	return message_dos_ansi;
 }
 
-const std::string& Message::GetRaw()
+const std::string& Message::GetRaw() const
 {
 	return message_raw;
 }
@@ -145,7 +183,7 @@ void Message::VerifyMessage(const std::string& message_key)
 		LOG_WARNING("%s contains invalid character 0x%02x",
 		            GetLogStart(message_key).c_str(),
 		            item);
-		is_ok = false;
+		MarkInvalid();
 		break;
 	}
 }
@@ -181,7 +219,7 @@ void Message::VerifyFormatString(const std::string& message_key)
 		LOG_WARNING("%s contains an incorrect format specifier: %s",
 		            GetLogStart(message_key).c_str(),
 		            error.c_str());
-		is_ok = false;
+		MarkInvalid();
 	};
 
 	// Look for format specifier
@@ -274,23 +312,23 @@ void Message::VerifyFormatString(const std::string& message_key)
 }
 
 void Message::VerifyFormatStringAgainst(const std::string& message_key,
-                                        const Message& english)
+                                        const Message& message_english)
 {
 	if (!is_ok || is_verified) {
 		return;
 	}
 
 	// Check if the number of format specifiers match
-	if (format_specifiers.size() != english.format_specifiers.size()) {
+	if (format_specifiers.size() != message_english.format_specifiers.size()) {
 		LOG_WARNING(
 		        "%s has %d format specifier(s) "
 		        "while English has %d specifier(s)",
 		        GetLogStart(message_key).c_str(),
 		        static_cast<int>(format_specifiers.size()),
-		        static_cast<int>(english.format_specifiers.size()));
+		        static_cast<int>(message_english.format_specifiers.size()));
 
-		if (format_specifiers.size() < english.format_specifiers.size()) {
-			is_ok = false;
+		if (format_specifiers.size() < message_english.format_specifiers.size()) {
+			MarkInvalid();
 			return;
 		}
 	}
@@ -318,12 +356,12 @@ void Message::VerifyFormatStringAgainst(const std::string& message_key,
 	};
 
 	const auto index_limit = std::min(format_specifiers.size(),
-	                                  english.format_specifiers.size());
+	                                  message_english.format_specifiers.size());
 
 	for (size_t i = 0; i < index_limit; ++i) {
 		const auto& specifier = format_specifiers[i];
 
-		const auto& specifier_english = english.format_specifiers[i];
+		const auto& specifier_english = message_english.format_specifiers[i];
 
 		if (!are_compatible(specifier.format, specifier_english.format) ||
 		    (specifier.width == "*" && specifier_english.width != "*") ||
@@ -338,9 +376,19 @@ void Message::VerifyFormatStringAgainst(const std::string& message_key,
 			        specifier.AsString().c_str(),
 			        specifier_english.AsString().c_str());
 
-			is_ok = false;
+			MarkInvalid();
 			break;
 		}
+	}
+}
+
+void Message::VerifyTranslationUpToDate(const Message& message_english)
+{
+	assert(!is_english);
+
+	if (message_previous_english.empty() ||
+	    message_previous_english != message_english.GetRaw()) {
+		MarkFuzzy();
 	}
 }
 
@@ -356,22 +404,22 @@ void Message::VerifyEnglish(const std::string& message_key)
 	is_verified = true;
 }
 
-void Message::VerifyTranslated(const std::string& message_key, const Message& english)
+void Message::VerifyTranslated(const std::string& message_key,
+                               const Message& message_english)
 {
 	assert(!is_english);
 	if (is_verified) {
 		return;
 	}
 
-	const auto is_english_valid = english.IsValid();
-
 	VerifyFormatString(message_key);
-	if (is_english_valid) {
-		VerifyFormatStringAgainst(message_key, english);
+	if (message_english.IsValid()) {
+		VerifyTranslationUpToDate(message_english);
+		VerifyFormatStringAgainst(message_key, message_english);
 	}
 
 	VerifyMessage(message_key);
-	is_verified = is_english_valid;
+	is_verified = message_english.IsValid();
 }
 
 std::string Message::FormatSpecifier::AsString() const
@@ -392,10 +440,70 @@ std::string Message::FormatSpecifier::AsString() const
 }
 
 // ***************************************************************************
+// Single message location storage class
+// ***************************************************************************
+
+class Location
+{
+public:
+	Location(const std::source_location& source_location);
+
+	bool operator==(const Location& other) const;
+
+	std::string GetString() const;
+
+private:
+	Location() = delete;
+
+	const std::string file_name = {};
+	const size_t line_number    = 0;
+};
+
+Location::Location(const std::source_location& source_location) :
+	file_name(source_location.file_name()),
+	line_number(source_location.line())
+{
+}
+
+bool Location::operator==(const Location& other) const
+{
+	return file_name == other.file_name &&
+	       line_number == other.line_number;
+}
+
+std::string Location::GetString() const
+{
+	// Convert the path to Unix format - we need it to be uniform between
+	// all the platforms.  Strip the part before the 'src' directrory.
+
+	const std::string RootSourceDirectory = "src";
+
+	std::vector<std::string> path_elements = {};
+	for (const auto& token : std_fs::path(file_name)) {
+		if (token == RootSourceDirectory) {
+			path_elements.clear();
+		}
+		path_elements.emplace_back(token);
+	}
+
+	std::string unified_path = {};
+	for (const auto& token : path_elements) {
+		if (!unified_path.empty()) {
+			unified_path.push_back('/');
+		}
+		unified_path += token;
+	}
+
+	return unified_path + ":" + std::to_string(line_number);
+}
+
+// ***************************************************************************
 // Internal implementation
 // ***************************************************************************
 
 static std::vector<std::string> message_order = {};
+
+static std::map<std::string, Location> message_location = {};
 
 static std::map<std::string, Message> dictionary_english    = {};
 static std::map<std::string, Message> dictionary_translated = {};
@@ -405,9 +513,6 @@ static std::optional<Script> translation_script             = {};
 static bool is_code_page_compatible = true;
 
 static std::set<std::string> already_warned_not_found = {};
-
-// Metadata keys - for now only one is available, writing script type
-static const std::string KeyScript = "#SCRIPT ";
 
 // Check if currently set code page is compatible with the translation
 static void check_code_page()
@@ -470,18 +575,17 @@ static void clear_translated_messages()
 	translation_script = {};
 }
 
-static bool load_messages_from_path(const std_fs::path& file_path)
+// ***************************************************************************
+// Legacy file format support - TODO; to be removed
+// ***************************************************************************
+
+static const std::string ExtensionLegacy = ".lng";
+
+// Metadata keys - for now only one is available, writing script type
+static const std::string KeyScript = "#SCRIPT ";
+
+static bool load_messages_from_path_lng(const std_fs::path& file_path)
 {
-	if (file_path.empty()) {
-		return false;
-	}
-
-	if (!path_exists(file_path) || !is_readable(file_path)) {
-		return false;
-	}
-
-	clear_translated_messages();
-
 	std::ifstream in_file(file_path);
 
 	std::string line = {};
@@ -558,7 +662,7 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 			return false;
 		}
 
-		std::string text = {};
+		std::string translated = {};
 
 		bool is_text_terminated = false;
 		bool is_first_text_line = true;
@@ -573,10 +677,10 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 			if (is_first_text_line) {
 				is_first_text_line = false;
 			} else {
-				text += "\n";
+				translated += "\n";
 			}
 
-			text += line;
+			translated += line;
 		}
 
 		if (!is_text_terminated) {
@@ -585,7 +689,7 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 			return false;
 		}
 
-		if (text.empty()) {
+		if (translated.empty()) {
 			problem_with_message(message_key, "message text is empty");
 			return false;
 		}
@@ -596,14 +700,12 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 			return false;
 		}
 
-		constexpr bool IsEnglish = false;
-		dictionary_translated.try_emplace(message_key, Message(text, IsEnglish));
+		dictionary_translated.try_emplace(message_key, Message("", translated));
 
-		auto& translated = dictionary_translated.at(message_key);
-
+		auto& message = dictionary_translated.at(message_key);
 		if (dictionary_english.contains(message_key)) {
-			translated.VerifyTranslated(message_key,
-			                            dictionary_english.at(message_key));
+			message.VerifyTranslated(message_key,
+			                         dictionary_english.at(message_key));
 		}
 	}
 
@@ -628,12 +730,8 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 	return true;
 }
 
-static bool save_messages_to_path(const std_fs::path& file_path)
+static bool save_messages_to_path_lng(const std_fs::path& file_path)
 {
-	if (file_path.empty()) {
-		return false;
-	}
-
 	std::ofstream out_file(file_path);
 
 	// Output help line
@@ -701,11 +799,368 @@ static bool save_messages_to_path(const std_fs::path& file_path)
 }
 
 // ***************************************************************************
+// Messages loading/saving
+// ***************************************************************************
+
+// A generic key to identify DOSBox Staging metadata
+static constexpr std::string MetadataKey       = "#METADATA";
+// A sub-key to identify a type of metadata
+static constexpr std::string MetadataKeyScript = "#SCRIPT";
+
+static void write_header(std::ofstream &out_file, const std::string& language)
+{
+	if (out_file.fail()) {
+		return;
+	}
+
+	// Write DOSBox-specific comments
+	out_file << "# " DOSBOX_NAME " language file\n";
+	out_file << "#\n";
+	out_file << "# Before editing read the translation manual:\n";
+	out_file << "# " DOSBOX_MANUAL_TRANSLATION "\n";
+	out_file << "#\n";
+	out_file << "\n";
+
+	// Prepare standard file header metadata
+	std::string header_data = {};
+	auto add = [&header_data](const std::string &key,
+	                          const std::string &value) {
+		header_data += key + ": " + value + "\n";
+	};
+
+	add("Project-Id-Version",        DOSBOX_PROJECT_NAME);
+	add("Report-Msgid-Bugs-To",      DOSBOX_BUGS_TO);
+	add("Language",                  language);
+	add("Content-Type",              "text/plain; charset=UTF-8");
+	add("Content-Transfer-Encoding", "8bit");
+	add("MIME-Version",              "1.0");
+	add("X-Generator",               std::string(DOSBOX_NAME " ") +
+		                         DOSBOX_GetVersion());
+
+	// Write PO file header entry
+	PoEntry entry = {};
+	entry.SetTranslated(header_data);
+	entry.Write(out_file);
+}
+
+static void write_dosbox_metadata_entry(std::ofstream &out_file,
+                                        const std::string& key,
+	                                const std::string& value,
+	                                const std::vector<std::string>& help,
+	                                const bool is_fuzzy = false)
+{
+	if (out_file.fail()) {
+		return;
+	}
+
+	PoEntry entry = {};
+
+	entry.SetLocation(MetadataKey);
+	entry.SetContext(MetadataKey);
+
+	if (is_fuzzy) {
+		entry.AddFlag(PoEntry::FlagFuzzy);
+	}
+
+	entry.AddHelpLine("Do not translate this, set according to the instruction!");
+
+	auto english = key + "\n\n";
+	assertm(!help.empty(), "Metadata help is mandatory");
+	for (const auto& line : help) {
+		english += line + "\n";
+	}
+
+	// Strip the trailing newline characters to prevent Poedit from
+	// reporting an error
+	while (english.ends_with('\n')) {
+		english.pop_back();
+	}
+
+	entry.SetEnglish(english);
+	entry.SetTranslated(value);
+
+	entry.Write(out_file);
+}
+
+static void write_dosbox_metadata_script(std::ofstream &out_file)
+{
+	std::string script_name = {};
+	if (translation_script) {
+		// Writing translated messages, script is specified
+		assert(LocaleData::ScriptInfo.contains(*translation_script));
+		script_name = LocaleData::ScriptInfo.at(*translation_script).script_name;
+	} else if (dictionary_translated.empty()) {
+		// Writing English messages, script is always Latin
+		assert(LocaleData::ScriptInfo.contains(Script::Latin));
+		script_name = LocaleData::ScriptInfo.at(Script::Latin).script_name;
+	}
+
+	std::vector<std::string> help = {};
+	help.emplace_back("Writing script used in this language, can be one of:");
+	help.emplace_back();
+
+	for (const auto& entry : LocaleData::ScriptInfo) {
+		if (!help.back().empty()) {
+			help.back() += ", ";
+		}
+		help.back() += entry.second.script_name;
+	}
+
+	const bool is_fuzzy = script_name.empty();
+	write_dosbox_metadata_entry(out_file,
+		                    MetadataKeyScript,
+		                    script_name,
+		                    help,
+		                    is_fuzzy);
+}
+
+static void write_entries(std::ofstream &out_file)
+{
+	for (const auto& message_key : message_order) {
+		if (out_file.fail()) {
+			break;
+		}
+
+		assert(message_location.contains(message_key));
+		assert(dictionary_english.contains(message_key));
+
+		PoEntry entry = {};
+		entry.AddFlag(PoEntry::FlagCFormat);
+		entry.AddFlag(PoEntry::FlagNoWrap);
+		entry.SetContext(message_key);
+		entry.SetLocation(message_location.at(message_key).GetString());
+		entry.SetEnglish(dictionary_english.at(message_key).GetRaw());
+
+		bool is_fuzzy = false;
+		if (dictionary_translated.contains(message_key)) {
+			// Translated message exists
+			entry.SetTranslated(dictionary_translated.at(message_key).GetRaw());
+			if (dictionary_translated.at(message_key).IsFuzzy()) {
+				is_fuzzy = true;
+			}
+		} else {
+			// Translation is missing
+			is_fuzzy = true;
+		}
+
+		if (is_fuzzy) {
+			entry.AddFlag(PoEntry::FlagFuzzy);
+		}
+
+		entry.Write(out_file);
+	}
+}
+
+static void read_dosbox_metadata_script(const std::string &value)
+{
+	if (translation_script) {
+		// XXX warn about script already known
+		return;
+	}
+
+	for (const auto& entry : LocaleData::ScriptInfo) {
+		if (iequals(value, entry.second.script_name)) {
+			translation_script = entry.first;
+			break;
+		}
+	}
+	if (!translation_script) {
+		// XXX warn about unknown script
+		return;
+	}
+}
+
+static void read_dosbox_metadata(const PoEntry &entry)
+{
+	// Only check the first line - remaining ones are a help message
+	const auto tmp = entry.GetEnglish();
+	const auto key = tmp.substr(tmp.find('\n'));
+
+	if (key == MetadataKeyScript) {
+		read_dosbox_metadata_script(entry.GetTranslated());
+	} else {
+		// XXX warn about unknown metadata
+	}
+}
+
+static void read_message(const PoEntry &entry)
+{
+	const auto message_key = entry.GetContext();
+	if (message_key.empty()) {
+		// XXX warn about missing context
+	}
+
+	const auto translated = entry.GetTranslated();
+	if (translated.empty()) {
+		// Message was not translated, skip reading
+		return;
+	}
+
+	const auto english = entry.GetEnglish();
+	
+	dictionary_translated.try_emplace(message_key, Message(english, translated));
+
+	auto& message = dictionary_translated.at(message_key);
+	if (entry.HasFlag(PoEntry::FlagFuzzy)) {
+		message.MarkFuzzy();
+	}
+
+	if (dictionary_english.contains(message_key)) {
+		message.VerifyTranslated(message_key,
+		                         dictionary_english.at(message_key));
+	}
+}
+
+static bool validate_gettext_metadata(const std::string& metadata)
+{
+	bool found_non_utf8 = false;
+	bool found_charset  = false;
+
+	// Check that content is UTF-8 encoded
+	for (const auto& entry : split(metadata, "\n\r")) {
+		const auto separator_position = entry.find(':');
+		if (separator_position == std::string::npos) {
+			// XXX warn about syntax problem
+			continue;
+		}
+
+		if (entry.substr(separator_position) != "Content-Type") {
+			continue;
+		}
+
+		const auto values = entry.substr(separator_position + 1,
+		                                 std::string::npos);
+		for (auto value : split(values, ";")) {
+			trim(value);
+			if (!value.starts_with("charset=")) {
+				continue;
+			}
+
+			if (found_charset) {
+				// XXX warn about double charset
+			}
+			found_charset = true;
+
+			if (value != "charset=UTF-8") {
+				found_non_utf8 = true;
+				// XXX warn about incompatible charset
+			}
+		}
+	}
+
+	if (!found_charset) {
+		// XXX warn about charset info not present
+	}
+
+	return !found_non_utf8;
+}
+
+static bool load_messages_from_path(const std_fs::path& file_path)
+{
+	PoReader reader(file_path);
+	if (!reader.IsFileOk()) {
+		return false;
+	}
+
+	clear_translated_messages();
+
+	// Legacy translation file format support
+	if (file_path.string().ends_with(ExtensionLegacy)) {
+		return load_messages_from_path_lng(file_path);	
+	}
+
+	while (reader.ReadEntry() && !reader.IsEndOfFile()) {
+		auto Warn = [&](const std::string& error) {
+			reader.LogWarning(error); // XXX we need PoEntry internal line counter
+		};
+
+		// Skip empty entries (reserved for gettext standard metadata)
+		if (reader.GetEnglish().empty()) {
+			if (!reader.IsFirstEntry() && !reader.IsEndOfFile()) {
+				Warn("only the first entry is expected to be empty");
+			} else if (!validate_gettext_metadata(reader.GetTranslated())) {
+				break;
+			}
+			continue;
+		}
+
+		if (reader.IsFirstEntry()) {
+			Warn("first entry should be empty "
+			     "and only contain gettext metadata");
+		}
+
+		// Read metadata
+		if (reader.GetLocation() == MetadataKey) {
+			read_dosbox_metadata(reader);
+			continue;
+		}
+
+		// Read message
+		read_message(reader);
+	}
+
+	if (!reader.IsFileOk()) {
+		LOG_ERR("LOCALE: I/O error reading translation file");
+		clear_translated_messages();
+		return false;
+	}
+
+	// Check if current code page is suitable for this translation
+	if (dos.loaded_codepage) {
+		check_code_page();
+	}
+
+	return true;
+}
+
+static bool save_messages_to_path(const std_fs::path& file_path)
+{
+	if (file_path.empty()) {
+		return false;
+	}
+
+	// Legacy translation file format support
+	if (file_path.string().ends_with(ExtensionLegacy)) {
+		return save_messages_to_path_lng(file_path);	
+	}
+
+	const auto language = std_fs::path(file_path).stem().string();
+
+	std::ofstream out_file(file_path);
+
+	write_header(out_file, language);
+	out_file << "\n";
+	write_dosbox_metadata_script(out_file);
+	out_file << "\n";
+	write_entries(out_file);
+
+	if (out_file.fail()) {
+		LOG_ERR("LOCALE: I/O error writing translation file");
+		return false;
+	}
+
+	return true;
+}
+
+// ***************************************************************************
 // External interface
 // ***************************************************************************
 
-void MSG_Add(const std::string& message_key, const std::string& message)
+void MSG_Add(const std::string& message_key,
+             const std::string& message,
+             const std::source_location source_location)
 {
+	const auto location = Location(source_location);
+	if (message_location.contains(message_key)) {
+		if (message_location.at(message_key) != location) {
+			LOG_ERR("LOCALE: Text for '%s' defined in multiple locations",
+				message_key.c_str());
+			return;		
+		}
+	} else {
+		message_location.emplace(message_key, location);
+	}
+
 	if (dictionary_english.contains(message_key)) {
 		if (dictionary_english.at(message_key).GetRaw() != message) {
 			dictionary_english.at(message_key).MarkInvalid();
@@ -715,15 +1170,13 @@ void MSG_Add(const std::string& message_key, const std::string& message)
 		return;
 	}
 
-	constexpr bool IsEnglish = true;
-
 	message_order.push_back(message_key);
-	dictionary_english.try_emplace(message_key, Message(message, IsEnglish));
+	dictionary_english.try_emplace(message_key, Message(message));
 
-	auto& english = dictionary_english.at(message_key);
-	english.VerifyEnglish(message_key);
+	auto& message_english = dictionary_english.at(message_key);
+	message_english.VerifyEnglish(message_key);
 	if (dictionary_translated.contains(message_key)) {
-		dictionary_translated.at(message_key).VerifyTranslated(message_key, english);
+		dictionary_translated.at(message_key).VerifyTranslated(message_key, message_english);
 	}
 }
 
@@ -801,15 +1254,16 @@ void MSG_NotifyNewCodePage()
 //
 // 2. It also supports the more convenient syntax without needing to provide a
 //    filename or path: `-lang ru`. In this case, it constructs a path into the
-//    platform's config path/translations/<lang>.lng.
+//    platform's config path/translations/<lang>.po.
 
 static const std::string InternalLangauge = "en";
-static const std::string Extension        = ".lng";
+static const std::string Extension        = ".po";
 static const std_fs::path Subdirectory    = "translations";
 
 static std::string get_file_name_with_extension(const std::string& file_name)
 {
-	if (file_name.ends_with(Extension)) {
+	if (file_name.ends_with(Extension) ||
+	    file_name.ends_with(ExtensionLegacy)) {
 		return file_name;
 	} else {
 		return file_name + Extension;

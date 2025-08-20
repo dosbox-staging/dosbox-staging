@@ -1,3 +1,1 @@
-*.lng text eol=lf
-*.bat text eol=crlf
-*.sh  text eol=lf
+*.po text eol=lf

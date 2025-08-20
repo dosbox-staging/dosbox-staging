@@ -14,6 +14,7 @@ libmisc_nomsg_sources = [
     'host_locale_posix.cpp',
     'host_locale_win32.cpp',
     'programs.cpp',
+    'po_file_entry.cpp',
     'rwqueue.cpp',
     'string_utils.cpp',
     'support.cpp',
