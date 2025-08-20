@@ -600,7 +600,7 @@ static void capture_init(Section* sec)
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(capture_destroy, changeable_at_runtime);
+	sec->AddDestroyHandler(capture_destroy, changeable_at_runtime);
 }
 
 static void init_key_mappings()

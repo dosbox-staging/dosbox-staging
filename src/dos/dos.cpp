@@ -1834,5 +1834,5 @@ void DOS_Init(Section* sec)
 	assert(sec);
 	test = new DOS(sec);
 
-	sec->AddDestroyFunction(DOS_ShutDown);
+	sec->AddDestroyHandler(DOS_ShutDown);
 }

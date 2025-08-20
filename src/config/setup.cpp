@@ -1377,9 +1377,10 @@ void Section::AddInitHandler(SectionInitHandler init_handler, bool changeable_at
 	}
 }
 
-void Section::AddDestroyFunction(SectionInitHandler func, bool changeable_at_runtime)
+void Section::AddDestroyHandler(SectionInitHandler destroy_handler,
+                                bool changeable_at_runtime)
 {
-	destroyfunctions.emplace_front(func, changeable_at_runtime);
+	destroy_handlers.emplace_front(destroy_handler, changeable_at_runtime);
 }
 
 void Section::ExecuteInit(const bool init_all)
@@ -1416,12 +1417,12 @@ void Section::ExecuteDestroy(bool destroyall)
 {
 	typedef std::deque<Function_wrapper>::iterator func_it;
 
-	for (func_it tel = destroyfunctions.begin(); tel != destroyfunctions.end();) {
+	for (func_it tel = destroy_handlers.begin(); tel != destroy_handlers.end();) {
 		if (destroyall || (*tel).changeable_at_runtime) {
 			(*tel).function(this);
 
-			// Remove destroyfunctions once used
-			tel = destroyfunctions.erase(tel);
+			// Remove destroy_handlers once used
+			tel = destroy_handlers.erase(tel);
 		} else {
 			++tel;
 		}

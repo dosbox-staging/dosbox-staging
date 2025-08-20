@@ -681,5 +681,5 @@ void TANDYSOUND_Init(Section* section)
 	                                       prop->GetString("tandy_filter"));
 
 	constexpr auto ChangeableAtRuntime = true;
-	section->AddDestroyFunction(TANDYSOUND_ShutDown, ChangeableAtRuntime);
+	section->AddDestroyHandler(TANDYSOUND_ShutDown, ChangeableAtRuntime);
 }
