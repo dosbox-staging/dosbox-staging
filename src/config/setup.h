@@ -350,7 +350,7 @@ private:
 	};
 
 	std::deque<Function_wrapper> init_handlers    = {};
-	std::deque<Function_wrapper> destroyfunctions = {};
+	std::deque<Function_wrapper> destroy_handlers = {};
 	std::string sectionname                       = {};
 	bool active                                   = true;
 
@@ -371,8 +371,8 @@ public:
 	void AddInitHandler(SectionInitHandler init_handler,
 	                    bool changeable_at_runtime = false);
 
-	void AddDestroyFunction(SectionInitHandler func,
-	                        bool changeable_at_runtime = false);
+	void AddDestroyHandler(SectionInitHandler destroy_handler,
+	                       bool changeable_at_runtime = false);
 
 	void ExecuteInit(bool initall = true);
 	void ExecuteDestroy(bool destroyall = true);

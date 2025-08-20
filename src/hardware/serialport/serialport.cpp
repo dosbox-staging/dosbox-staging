@@ -1384,5 +1384,5 @@ void SERIAL_Init (Section* sec)
 	testSerialPortsBaseclass = new SERIALPORTS(sec);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(SERIAL_Destroy, changeable_at_runtime);
+	sec->AddDestroyHandler(SERIAL_Destroy, changeable_at_runtime);
 }

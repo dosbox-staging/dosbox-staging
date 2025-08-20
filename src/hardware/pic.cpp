@@ -695,5 +695,5 @@ void PIC_Destroy(Section* /*sec*/){
 
 void PIC_Init(Section* sec) {
 	test = new PIC_8259A(sec);
-	sec->AddDestroyFunction(PIC_Destroy);
+	sec->AddDestroyHandler(PIC_Destroy);
 }

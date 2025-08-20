@@ -7898,7 +7898,7 @@ static void voodoo_init(Section* sec)
 
 	voodoo_bilinear_filtering = section->GetBool("voodoo_bilinear_filtering");
 
-	sec->AddDestroyFunction(voodoo_destroy, false);
+	sec->AddDestroyHandler(voodoo_destroy, false);
 
 	// Check 64 KB alignment of LFB base
 	static_assert((PciVoodooLfbBase & 0xffff) == 0);

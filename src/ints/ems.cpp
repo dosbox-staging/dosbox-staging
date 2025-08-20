@@ -1548,5 +1548,5 @@ void EMS_Init(Section* sec)
 	test = new EMS(sec);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(EMS_ShutDown, changeable_at_runtime);
+	sec->AddDestroyHandler(EMS_ShutDown, changeable_at_runtime);
 }

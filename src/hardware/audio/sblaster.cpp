@@ -3815,7 +3815,7 @@ void init_sblaster(Section* sec)
 	MIXER_UnlockMixerThread();
 
 	constexpr auto ChangeableAtRuntime = true;
-	sec->AddDestroyFunction(shutdown_sblaster, ChangeableAtRuntime);
+	sec->AddDestroyHandler(shutdown_sblaster, ChangeableAtRuntime);
 }
 
 void shutdown_sblaster(Section* /*sec*/) {

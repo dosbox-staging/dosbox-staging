@@ -779,5 +779,5 @@ void MEM_Init(Section* sec)
 
 	/* shutdown function */
 	test = new MEMORY(sec);
-	sec->AddDestroyFunction(MEM_ShutDown);
+	sec->AddDestroyHandler(MEM_ShutDown);
 }
