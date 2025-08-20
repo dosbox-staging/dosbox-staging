@@ -1,10 +1,16 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_JOYSTICK_H
 #define DOSBOX_JOYSTICK_H
 
 #include "dosbox.h"
+
+#include <string>
+
+#include "config/setup.h"
+
+void JOYSTICK_Init(Section* sec);
 
 void JOYSTICK_Enable(uint8_t which, bool enabled);
 
@@ -40,4 +46,4 @@ enum JoystickType {
 extern JoystickType joytype;
 extern bool button_wrapping_enabled;
 
-#endif
+#endif // DOSBOX_JOYSTICK_H
