@@ -862,14 +862,23 @@ void CONFIG::Run(void)
 
 				std::string inputline = pvars[1] + "=" + value;
 
-				tsec->ExecuteDestroy(false);
-
 				const auto line_utf8 = dos_to_utf8(
 				        inputline,
 				        DosStringConvertMode::NoSpecialCharacters);
 
 				tsec->HandleInputline(line_utf8);
-				tsec->ExecuteInit(false);
+
+				if (tsec->IsChangeableAtRuntime()) {
+					// TODO This branch is temporary and
+					// will be removed a few commits later
+					// once the `changeable_at_runtime`
+					// concept is removed from the section
+					// init/destroy handling.
+					tsec->ExecuteDestroy(false);
+					tsec->ExecuteInit(false);
+				} else {
+					tsec->ExecuteUpdate(*property);
+				}
 			}
 			return;
 		}
