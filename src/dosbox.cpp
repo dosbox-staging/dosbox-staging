@@ -66,7 +66,6 @@ void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void LPT_DAC_Init(Section *);
 void PS1AUDIO_Init(Section *);
-void SERIAL_Init(Section*);
 
 #if C_IPX
 void IPX_Init(Section*);

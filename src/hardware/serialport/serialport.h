@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <string>
 #include <vector>
 
 #include "config/config.h"
