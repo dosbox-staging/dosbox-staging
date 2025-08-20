@@ -1369,14 +1369,13 @@ public:
 
 static SERIALPORTS *testSerialPortsBaseclass = nullptr;
 
-void SERIAL_Destroy(Section *sec)
+static void serial_destroy([[maybe_unused]] Section* sec)
 {
-	(void)sec; // unused, but required for API compliance
 	delete testSerialPortsBaseclass;
 	testSerialPortsBaseclass = nullptr;
 }
 
-void SERIAL_Init (Section* sec)
+void SERIAL_Init(Section* sec)
 {
 	assert(sec);
 
@@ -1384,5 +1383,14 @@ void SERIAL_Init (Section* sec)
 	testSerialPortsBaseclass = new SERIALPORTS(sec);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(SERIAL_Destroy, changeable_at_runtime);
+	sec->AddDestroyHandler(serial_destroy, changeable_at_runtime);
+}
+
+static void serial_setting_updated(SectionProp* secprop,
+                                   [[maybe_unused]] const std::string prop_name)
+{
+	assert(secprop);
+
+	delete testSerialPortsBaseclass;
+	testSerialPortsBaseclass = new SERIALPORTS(secprop);
 }
