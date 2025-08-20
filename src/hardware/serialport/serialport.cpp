@@ -2,12 +2,11 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dosbox.h"
-
 #include <algorithm>
 #include <cctype>
 #include <cstdarg>
 #include <cstring>
+#include <memory>
 #include <tuple>
 
 #include "directserial.h"
@@ -1274,9 +1273,9 @@ uint32_t CSerial::GetPortBaudRate() const {
 	return SerialMaxBaudRate / baud_divider;
 }
 
-class SERIALPORTS final : public ModuleBase {
+class SerialPorts final : public ModuleBase {
 public:
-	SERIALPORTS (Section * configuration):ModuleBase (configuration) {
+	SerialPorts (Section * configuration):ModuleBase (configuration) {
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};
 		SectionProp *section = static_cast <SectionProp*>(configuration);
 
@@ -1352,7 +1351,7 @@ public:
 		BIOS_SetComPorts (biosParameter);
 	}
 
-	~SERIALPORTS()
+	~SerialPorts()
 	{
 		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i) {
 			if (serialports[i]) {
@@ -1366,21 +1365,23 @@ public:
 	}
 };
 
-static SERIALPORTS *testSerialPortsBaseclass = nullptr;
+static std::unique_ptr<SerialPorts> serial_ports = {};
 
-static void serial_destroy(Section *sec)
+static void serial_init(Section* section)
 {
-	(void)sec; // unused, but required for API compliance
-	delete testSerialPortsBaseclass;
-	testSerialPortsBaseclass = nullptr;
+	serial_ports = std::make_unique<SerialPorts>(section);
 }
 
-static void serial_init(Section* sec)
+static void serial_destroy([[maybe_unused]] Section* section)
 {
-	assert(sec);
+	serial_ports = {};
+}
 
-	delete testSerialPortsBaseclass;
-	testSerialPortsBaseclass = new SERIALPORTS(sec);
+static void notify_serial_setting_updated(SectionProp* section,
+                                          [[maybe_unused]] const std::string& prop_name)
+{
+	serial_destroy(section);
+	serial_init(section);
 }
 
 void SERIAL_AddConfigSection(const ConfigPtr& conf)
@@ -1390,7 +1391,9 @@ void SERIAL_AddConfigSection(const ConfigPtr& conf)
 	using enum Property::Changeable::Value;
 
 	auto section = conf->AddSection("serial", serial_init);
+
 	section->AddDestroyHandler(serial_destroy);
+	section->AddUpdateHandler(notify_serial_setting_updated);
 
 	const std::vector<std::string> serials = {
 	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct"};
