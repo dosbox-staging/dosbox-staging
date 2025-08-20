@@ -4,6 +4,9 @@
 
 #include "ints/bios.h"
 
+#include <ctime>
+#include <memory>
+
 #include "config/config.h"
 #include "config/setup.h"
 #include "cpu/callback.h"
@@ -21,9 +24,6 @@
 #include "int10.h"
 #include "utils/bitops.h"
 #include "utils/math_utils.h"
-
-#include <ctime>
-#include <memory>
 
 // Constants
 constexpr uint32_t BiosMachineSignatureAddress = 0xfffff;
@@ -1534,19 +1534,16 @@ void BIOS_SetComPorts(uint16_t baseaddr[]) {
 	BIOS_SetEquipment(equipmentword);
 }
 
+static std::unique_ptr<BIOS> bios = {};
 
-static BIOS* test;
-
-void BIOS_Destroy(Section* /*sec*/){
-	delete test;
-}
-
-void BIOS_Init(Section* sec)
+void BIOS_Init(Section* section)
 {
-	assert(sec);
-
-	test = new BIOS(sec);
-
-	constexpr auto changeable_at_runtime = false;
-	sec->AddDestroyHandler(BIOS_Destroy, changeable_at_runtime);
+	assert(section);
+	bios = std::make_unique<BIOS>(section);
 }
+
+void BIOS_Destroy()
+{
+	bios = {};
+}
+

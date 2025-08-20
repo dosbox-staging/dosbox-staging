@@ -37,6 +37,7 @@
 #include "hardware/timer.h"
 #include "hardware/video/reelmagic/reelmagic.h"
 #include "hardware/video/voodoo.h"
+#include "ints/bios.h"
 #include "ints/int10.h"
 #include "midi/midi.h"
 #include "misc/cross.h"
@@ -60,7 +61,6 @@ void DOS_Init(Section*);
 void VIRTUALBOX_Init(Section*);
 void VMWARE_Init(Section*);
 
-void JOYSTICK_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void LPT_DAC_Init(Section *);
@@ -73,7 +73,6 @@ void IPX_Init(Section*);
 
 void PIC_Init(Section*);
 void TIMER_Init(Section*);
-void BIOS_Init(Section*);
 void DEBUG_Init(Section*);
 void CMOS_Init(Section*);
 
