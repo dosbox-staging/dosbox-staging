@@ -15,34 +15,36 @@
 #include <unistd.h>
 
 #include "audio/mixer.h"
-#include "cpu/callback.h"
 #include "capture/capture.h"
 #include "config/config.h"
+#include "config/setup.h"
+#include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "misc/cross.h"
 #include "debugger/debugger.h"
-#include "dos/dos_locale.h"
 #include "dos/dos_inc.h"
+#include "dos/dos_locale.h"
+#include "dos/programs.h"
+#include "gui/mapper.h"
+#include "gui/render.h"
 #include "hardware/hardware.h"
+#include "hardware/input/mouse.h"
+#include "hardware/joystick.h"
 #include "hardware/ne2000.h"
+#include "hardware/pci_bus.h"
 #include "hardware/pic.h"
+#include "hardware/port.h"
+#include "hardware/reelmagic/reelmagic.h"
 #include "hardware/timer.h"
 #include "hardware/video/voodoo.h"
-#include "hardware/port.h"
+#include "ints/bios.h"
 #include "ints/int10.h"
-#include "gui/mapper.h"
-#include "utils/math_utils.h"
 #include "midi/midi.h"
-#include "hardware/input/mouse.h"
-#include "hardware/pci_bus.h"
-#include "dos/programs.h"
-#include "hardware/reelmagic/reelmagic.h"
-#include "gui/render.h"
-#include "config/setup.h"
-#include "shell/shell.h"
+#include "misc/cross.h"
 #include "misc/support.h"
 #include "misc/tracy.h"
 #include "misc/video.h"
+#include "shell/shell.h"
+#include "utils/math_utils.h"
 
 MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
@@ -58,7 +60,6 @@ void DOS_Init(Section*);
 void VIRTUALBOX_Init(Section*);
 void VMWARE_Init(Section*);
 
-void JOYSTICK_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void LPT_DAC_Init(Section *);
@@ -71,7 +72,6 @@ void IPX_Init(Section*);
 
 void PIC_Init(Section*);
 void TIMER_Init(Section*);
-void BIOS_Init(Section*);
 void DEBUG_Init(Section*);
 void CMOS_Init(Section*);
 

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "joystick.h"
@@ -6,12 +6,15 @@
 #include <cfloat>
 #include <cmath>
 #include <cstring>
+#include <memory>
 
 #include "config/config.h"
+#include "config/setup.h"
 #include "gui/mapper.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "utils/math_utils.h"
+
 //TODO: higher axis can't be mapped. Find out why again
 
 //Set to true, to enable automated switching back to square on circle mode if the inputs are outside the cirle.
@@ -178,7 +181,7 @@ static uint8_t read_p201(io_port_t, io_width_t)
 //		LOG_MSG("reset by time %d %d",PIC_Ticks,last_write);
 	}
 
-	/**  Format of the byte to be returned:       
+	/**  Format of the byte to be returned:
 	**                        | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 	**                        +-------------------------------+
 	**                          |   |   |   |   |   |   |   |
@@ -325,7 +328,7 @@ void JOYSTICK_Move_X(uint8_t which, int16_t x_val)
 		return;
 	stick[which].xpos = x;
 	stick[which].transformed = false;
-//	if( which == 0 || joytype != JOY_FCS)  
+//	if( which == 0 || joytype != JOY_FCS)
 //		stick[which].applied_conversion; //todo
 }
 
@@ -596,19 +599,24 @@ public:
 	}
 };
 
-static JOYSTICK* test;
+static std::unique_ptr<JOYSTICK> joystick = nullptr;
 
-void JOYSTICK_Destroy([[maybe_unused]] Section *sec)
+static void joystick_destroy([[maybe_unused]] Section *sec)
 {
-	delete test;
+	joystick = nullptr;
+}
+
+static void notify_joystick_setting_updated(SectionProp* secprop, [[maybe_unused]] const std::string& prop_name)
+{
+	joystick = std::make_unique<JOYSTICK>(secprop);
 }
 
 void JOYSTICK_Init(Section* sec)
 {
 	assert(sec);
 
-	test = new JOYSTICK(sec);
+	joystick = std::make_unique<JOYSTICK>(sec);
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(JOYSTICK_Destroy, changeable_at_runtime); 
+	sec->AddUpdateHandler(notify_joystick_setting_updated);
+	sec->AddDestroyHandler(joystick_destroy);
 }
