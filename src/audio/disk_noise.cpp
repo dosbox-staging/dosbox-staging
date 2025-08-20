@@ -525,16 +525,20 @@ static void disknoise_init(Section* section)
 	const auto enable_hard_disk_noise = get_disk_noise_mode(
 	        prop->GetString("hard_disk_noise"));
 
-	const auto spin_up                        = "hdd_spinup.flac";
-	const auto spin                           = "hdd_spin.flac";
+	const auto spin_up = "hdd_spinup.flac";
+	const auto spin    = "hdd_spin.flac";
+
 	std::vector<std::string> hdd_seek_samples = {};
+
 	for (auto i = 1; i <= MaxNumSeekSamples; ++i) {
 		hdd_seek_samples.emplace_back("hdd_seek" + std::to_string(i) + ".flac");
 	}
 
-	const auto floppy_spin_up                    = "fdd_spinup.flac";
-	const auto floppy_spin                       = "fdd_spin.flac";
+	const auto floppy_spin_up = "fdd_spinup.flac";
+	const auto floppy_spin    = "fdd_spin.flac";
+
 	std::vector<std::string> floppy_seek_samples = {};
+
 	for (auto i = 1; i <= MaxNumSeekSamples; ++i) {
 		floppy_seek_samples.emplace_back("fdd_seek" +
 		                                 std::to_string(i) + ".flac");
