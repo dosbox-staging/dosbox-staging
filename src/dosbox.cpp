@@ -1350,32 +1350,25 @@ static void add_ethernet_section()
 
 void DOSBOX_InitAllModuleConfigsAndMessages()
 {
-	// Note the [sdl] section is initialised in sdlmain.cpp
+	// The [sdl] section gets initialised first in `sdlmain.cpp`, then
+	// this init method gets called.
 
 	add_dosbox_config_section();
 
-	// Configure render settings
 	RENDER_AddConfigSection(control);
 
-	// Configure composite video settings
 	VGA_AddCompositeSettings(*control);
 
-	// Configure CPU settings
 	CPU_AddConfigSection(control);
 
-	// Configure 3dfx Voodoo settings
 	VOODOO_AddConfigSection(control);
 
-	// Configure capture
 	CAPTURE_AddConfigSection(control);
 
-	// Configure mouse
 	MOUSE_AddConfigSection(control);
 
-	// Configure mixer
 	MIXER_AddConfigSection(control);
 
-	// Configure MIDI
 	FSYNTH_AddConfigSection(control);
 
 #if C_MT32EMU
@@ -1410,7 +1403,6 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	// Configure Innovation SSI-2001 emulation
 	INNOVATION_AddConfigSection(control);
 
-	// Configure Disk noise emulation
 	DISKNOISE_AddConfigSection(control);
 
 	add_speaker_section();
