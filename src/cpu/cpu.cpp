@@ -11,12 +11,18 @@
 
 #include "config/config.h"
 #include "config/setup.h"
+#include "cpu/cpu.h"
 #include "cpu/paging.h"
 #include "debugger/debugger.h"
 #include "dos/programs.h"
+#include "fpu/fpu.h"
 #include "gui/mapper.h"
 #include "gui/titlebar.h"
+#include "hardware/dma.h"
+#include "hardware/input/keyboard.h"
+#include "hardware/pci_bus.h"
 #include "hardware/pic.h"
+#include "hardware/video/vga.h"
 #include "lazyflags.h"
 #include "misc/support.h"
 #include "misc/video.h"
@@ -3379,6 +3385,14 @@ void init_cpu_dosbox_settings(SectionProp& secprop)
 	        format_str("Number of cycles to subtract with the 'Dec Cycles' hotkey (%d by default).\n"
 	                   "Values lower than 100 are treated as a percentage decrease.",
 	                   DefaultCpuCycleDown));
+
+#if C_FPU
+	secprop.AddInitHandler(FPU_Init);
+#endif
+	secprop.AddInitHandler(DMA_Init);
+	secprop.AddInitHandler(VGA_Init);
+	secprop.AddInitHandler(KEYBOARD_Init);
+	secprop.AddInitHandler(PCI_Init); // PCI bus
 }
 
 void CPU_AddConfigSection(const ConfigPtr& conf)
