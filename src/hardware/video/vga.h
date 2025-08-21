@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "config/config.h"
+#include "config/setup.h"
 #include "hardware/port.h"
 #include "misc/video.h"
 #include "utils/bgrx8888.h"
@@ -1117,6 +1118,8 @@ void VGA_ATTR_SetPalette(const uint8_t index, const PaletteRegister value);
 enum class EgaMonitorMode { Cga, Ega, Mono };
 
 void VGA_ATTR_SetEGAMonitorPalette(const EgaMonitorMode m);
+
+void VGA_Init(Section* sec);
 
 // The VGA subfunction startups
 void VGA_SetupAttr(void);
