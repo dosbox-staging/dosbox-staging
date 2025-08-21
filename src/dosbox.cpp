@@ -979,38 +979,6 @@ static void add_speaker_section()
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-static void add_reelmagic_section()
-{
-	using enum Property::Changeable::Value;
-
-	constexpr auto changeable_at_runtime = true;
-	auto secprop                         = control->AddSection("reelmagic",
-                                           ReelMagic_Init,
-                                           changeable_at_runtime);
-
-	auto pstring = secprop->AddString("reelmagic", WhenIdle, "off");
-	pstring->SetHelp(
-	        "ReelMagic (aka REALmagic) MPEG playback support:\n"
-	        "  off:       Disable support (default).\n"
-	        "  cardonly:  Initialize the card without loading the FMPDRV.EXE driver.\n"
-	        "  on:        Initialize the card and load the FMPDRV.EXE on startup.");
-
-	pstring = secprop->AddString("reelmagic_key", WhenIdle, "auto");
-	pstring->SetHelp(
-	        "Set the 32-bit magic key used to decode the game's videos:\n"
-	        "  auto:      Use the built-in routines to determine the key (default).\n"
-	        "  common:    Use the most commonly found key, which is 0x40044041.\n"
-	        "  thehorde:  Use The Horde's key, which is 0xC39D7088.\n"
-	        "  <custom>:  Set a custom key in hex format (e.g., 0x12345678).");
-
-	auto pint = secprop->AddInt("reelmagic_fcode", WhenIdle, 0);
-	pint->SetHelp(
-	        "Override the frame rate code used during video playback:\n"
-	        "  0:       No override: attempt automatic rate discovery (default).\n"
-	        "  1 to 7:  Override the frame rate to one the following (use 1 through 7):\n"
-	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
-}
-
 static void add_dos_section()
 {
 	using enum Property::Changeable::Value;
@@ -1286,7 +1254,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	add_speaker_section();
 
-	add_reelmagic_section();
+	REELMAGIC_AddConfigSection(control);
 
 	JOYSTICK_AddConfigSection(control);
 
