@@ -229,7 +229,9 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		minfo.NumberOfPlanes   = 0x4;
 		minfo.BitsPerPixel     = 4u;
 		minfo.MemoryModel      = 3u; // ega planar mode
-		modeAttributes = 0x1b; // Color, graphics, no linear buffer
+
+		// Color, graphics, no linear buffer
+		modeAttributes = 0x1b;
 		break;
 
 	case M_LIN8: {
@@ -273,10 +275,12 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		minfo.BlueMaskPos      = 0u;
 		minfo.ReservedMaskSize = 0x01;
 		minfo.ReservedMaskPos  = 0x0f;
-		modeAttributes         = 0x1b; // Color, graphics
 
+		// Color, graphics
+		modeAttributes = 0x1b;
 		if (!int10.vesa_nolfb) {
-			modeAttributes |= 0x80; // linear framebuffer
+			// Enable linear framebuffer
+			modeAttributes |= 0x80;
 		}
 		break;
 
@@ -292,10 +296,12 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		minfo.GreenMaskPos     = 5u;
 		minfo.BlueMaskSize     = 5u;
 		minfo.BlueMaskPos      = 0u;
-		modeAttributes         = 0x1b; // Color, graphics
 
+		// Color, graphics
+		modeAttributes = 0x1b;
 		if (!int10.vesa_nolfb) {
-			modeAttributes |= 0x80; // linear framebuffer
+			// Enable linear framebuffer
+			modeAttributes |= 0x80;
 		}
 		break;
 
@@ -318,10 +324,12 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		minfo.GreenMaskPos   = 0x8;
 		minfo.BlueMaskSize   = 0x8;
 		minfo.BlueMaskPos    = 0x0;
-		modeAttributes       = 0x1b; // Color, graphics
 
+		// Color, graphics
+		modeAttributes = 0x1b;
 		if (!int10.vesa_nolfb) {
-			modeAttributes |= 0x80; // linear framebuffer
+			// Enable linear framebuffer
+			modeAttributes |= 0x80;
 		}
 		break;
 
@@ -339,10 +347,12 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		minfo.BlueMaskPos      = 0x0;
 		minfo.ReservedMaskSize = 0x8;
 		minfo.ReservedMaskPos  = 0x18;
-		modeAttributes         = 0x1b; // Color, graphics
 
+		// Color, graphics
+		modeAttributes = 0x1b;
 		if (!int10.vesa_nolfb) {
-			modeAttributes |= 0x80; // linear framebuffer
+			// Enable linear framebuffer
+			modeAttributes |= 0x80;
 		}
 		break;
 
@@ -352,7 +362,9 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		minfo.NumberOfPlanes   = 0x4;
 		minfo.BitsPerPixel     = 4u;
 		minfo.MemoryModel      = 0u;   // text
-		modeAttributes         = 0x0f; // Color, text, bios output
+
+		// Color, text, bios output
+		modeAttributes = 0x0f;
 		break;
 
 	default: return VESA_FAIL;
@@ -399,7 +411,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 	minfo.XCharSize     = mblock.cwidth;
 	minfo.YCharSize     = mblock.cheight;
 
-	if (!int10.vesa_nolfb) {
+	if (modeAttributes & 0x80) {
 		minfo.PhysBasePtr = host_to_le32(PciGfxLfbBase);
 	}
 
@@ -734,6 +746,9 @@ uint8_t VESA_GetDisplayStart(uint16_t& x, uint16_t& y)
 	IO_Write(0x3c0, 0x13 | 0x20);
 
 	uint8_t panning = IO_Read(0x3c1);
+	if (CurMode->type == M_TEXT && panning > 7) {
+		panning = 0;
+	}
 
 	Bitu virtual_screen_width = vga.config.scan_len * pixels_per_offset;
 	Bitu start_pixel = vga.config.display_start * (pixels_per_offset / 2) +
