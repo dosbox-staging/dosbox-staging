@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2022 Jon Dennis
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -131,9 +132,6 @@ void ReelMagic_InitPlayer(Section* /*sec*/);
 void ReelMagic_ClearPlayers();
 ReelMagic_PlayerConfiguration& ReelMagic_GlobalDefaultPlayerConfig();
 
-//
-// driver and general stuff
-//
-void ReelMagic_Init(Section* /*sec*/);
+void REELMAGIC_AddConfigSection(const ConfigPtr& conf);
 
 #endif /* #ifndef DOSBOX_REELMAGIC_H */
