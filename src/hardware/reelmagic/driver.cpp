@@ -405,11 +405,12 @@ static bool FMPDRV_InstallINTHandler()
 	                            0x38, // GRP 4 + Extra Callback Instruction
 	                            _dosboxCallbackNumber,
 	                            upper_8_bits_of_callback};
-	// Note: checking against double CB_SIZE. This is because we allocate two
-	// callbacks to make this fit within the "callback ROM" region. See comment in
-	// ReelMagic_Init() function below
-	if (sizeof(isr_impl) > (CB_SIZE * 2))
+	// Note: checking against double CB_SIZE. This is because we allocate
+	// two callbacks to make this fit within the "callback ROM" region. See
+	// comment in reelmagic_init() function below
+	if (sizeof(isr_impl) > (CB_SIZE * 2)) {
 		E_Exit("CB_SIZE too small to fit ReelMagic driver IVT code. This means that DOSBox was not compiled correctly!");
+	}
 
 	CALLBACK_Setup(_dosboxCallbackNumber,
 	               &FMPDRV_INTHandler,
@@ -1374,7 +1375,7 @@ static void reelmagic_destroy([[maybe_unused]] Section* sec)
 		LOG_WARNING("REELMAGIC: Failed unloading ReelMagic MPEG playback driver");
 }
 
-void ReelMagic_Init(Section* sec)
+static void reelmagic_init(Section* sec)
 {
 	assert(sec);
 	const auto section = static_cast<SectionProp*>(sec);
@@ -1447,4 +1448,36 @@ void ReelMagic_Init(Section* sec)
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyHandler(reelmagic_destroy, changeable_at_runtime);
+}
+
+void REELMAGIC_AddConfigSection(const ConfigPtr& conf)
+{
+	using enum Property::Changeable::Value;
+
+	constexpr auto changeable_at_runtime = true;
+	auto secprop                         = control->AddSection("reelmagic",
+                                           reelmagic_init,
+                                           changeable_at_runtime);
+
+	auto pstring = secprop->AddString("reelmagic", WhenIdle, "off");
+	pstring->SetHelp(
+	        "ReelMagic (aka REALmagic) MPEG playback support:\n"
+	        "  off:       Disable support (default).\n"
+	        "  cardonly:  Initialize the card without loading the FMPDRV.EXE driver.\n"
+	        "  on:        Initialize the card and load the FMPDRV.EXE on startup.");
+
+	pstring = secprop->AddString("reelmagic_key", WhenIdle, "auto");
+	pstring->SetHelp(
+	        "Set the 32-bit magic key used to decode the game's videos:\n"
+	        "  auto:      Use the built-in routines to determine the key (default).\n"
+	        "  common:    Use the most commonly found key, which is 0x40044041.\n"
+	        "  thehorde:  Use The Horde's key, which is 0xC39D7088.\n"
+	        "  <custom>:  Set a custom key in hex format (e.g., 0x12345678).");
+
+	auto pint = secprop->AddInt("reelmagic_fcode", WhenIdle, 0);
+	pint->SetHelp(
+	        "Override the frame rate code used during video playback:\n"
+	        "  0:       No override: attempt automatic rate discovery (default).\n"
+	        "  1 to 7:  Override the frame rate to one the following (use 1 through 7):\n"
+	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
 }
