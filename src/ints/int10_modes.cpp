@@ -1266,50 +1266,45 @@ bool INT10_SetVideoMode(uint16_t mode)
 	uint8_t seq_data[NumVgaSequencerRegisters];
 	memset(seq_data, 0, NumVgaSequencerRegisters);
 
-	// 8 dot fonts by default
+	// 8-dot fonts by default
 	seq_data[1] |= 0x01;
 
-	if (CurMode->special & EGA_HALF_CLOCK)
-		seq_data[1] |= 0x08; // Check for half clock
-	if (is_machine_ega() && (CurMode->special & EGA_HALF_CLOCK))
-		seq_data[1] |= 0x02;
+	if (CurMode->special & EGA_HALF_CLOCK) {
+		seq_data[1] |= 0x08; // Double width
+		if (is_machine_ega()) {
+			seq_data[1] |= 0x02;
+		}
+	}
+
 	seq_data[4] |= 0x02; // More than 64kb
 	switch (CurMode->type) {
 	case M_TEXT:
-		if (CurMode->cwidth==9) seq_data[1] &= ~1;
-		seq_data[2]|=0x3;				//Enable plane 0 and 1
-		seq_data[4]|=0x01;				//Alpanumeric
-		if (is_machine_vga_or_better()) {
-			seq_data[4] |= 0x04; // odd/even enabled
+		if (CurMode->cwidth == 9) {
+			seq_data[1] &= ~1;
 		}
+		seq_data[2] |= 0x3;  // Enable plane 0 and 1
+		seq_data[4] |= 0x01; // Alphanumeric
 		break;
 	case M_CGA2:
-		// Enable plane 0 (this was 0xf, which is all planes)
-		seq_data[2] |= 0x01;
-		if (is_machine_ega()) {
-			seq_data[4] |= 0x04; // odd/even enabled
-		}
+		seq_data[2] |= 0x01; // Enable plane 0
+		seq_data[4] |= 0x04; // odd/even disabled
 		break;
 	case M_CGA4:
-		if (is_machine_ega()) {
-			seq_data[2] |= 0x03; //Enable plane 0 and 1
-		}
+		seq_data[2] |= 0x03; // Enable plane 0 and 1
 		break;
 	case M_LIN4:
 	case M_EGA:
-		seq_data[2]|=0xf;				//Enable all planes for writing
-		if (is_machine_ega()) {
-			seq_data[4] |= 0x04; // odd/even enabled
-		}
+		seq_data[2] |= 0xf;  // Enable all planes for writing
+		seq_data[4] |= 0x04; // odd/even disabled
 		break;
-	case M_LIN8:						//Seems to have the same reg layout from testing
+	case M_LIN8: // Seems to have the same reg layout from testing
 	case M_LIN15:
 	case M_LIN16:
 	case M_LIN24:
 	case M_LIN32:
 	case M_VGA:
-		seq_data[2]|=0xf;				//Enable all planes for writing
-		seq_data[4]|=0xc;				//Graphics - odd/even - Chained
+		seq_data[2] |= 0xf; // Enable all planes for writing
+		seq_data[4] |= 0xc; // Graphics - odd/even disabled - Chained
 		break;
 	case M_CGA16:
 	case M_CGA2_COMPOSITE:
@@ -2633,4 +2628,3 @@ void INT10_SetupPalette()
 	auto cga_colors = configure_cga_colors();
 	init_all_palettes(cga_colors);
 }
-
