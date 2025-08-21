@@ -636,15 +636,18 @@ void DMA_SetWrapping(const uint32_t wrap)
 	dma_wrapping = wrap;
 }
 
-void DMA_Destroy(Section* /*sec*/)
+void DMA_Destroy([[maybe_unused]] Section* sec)
 {
 	primary   = {};
 	secondary = {};
 }
+
 void DMA_Init(Section* sec)
 {
 	DMA_SetWrapping(0xffff);
+
 	sec->AddDestroyHandler(DMA_Destroy);
+
 	Bitu i;
 	for (i = 0; i < LINK_START; i++) {
 		ems_board_mapping[i] = i;
