@@ -95,12 +95,14 @@ void write_p3c5(io_port_t, io_val_t value, io_width_t)
 	break;
 	case 4: /* Memory Mode */
 		/*
-		        0  Set if in an alphanumeric mode, clear in graphics modes.
-		        1  Set if more than 64kbytes on the adapter.
-		        2  Enables Odd/Even addressing mode if set. Odd/Even mode places all odd
-		                bytes in plane 1&3, and all even bytes in plane 0&2.
-		        3  If set address bit 0-1 selects video memory planes (256 color mode),
-		                rather than the Map Mask and Read Map Select Registers.
+		  0  Set if in an alphanumeric mode, clear in graphics modes.
+		  1  Set if more than 64kbytes on the adapter.
+		  2  Disables Odd/Even addressing mode if set. Odd/Even mode
+		     places all odd bytes in plane 1&3, and all even bytes in
+		     plane 0&2.
+		  3  If set address bit 0-1 selects video memory planes (256
+		     color mode), rather than the Map Mask and Read Map Select
+		     Registers.
 		*/
 		seq(memory_mode)=val;
 		if (is_machine_vga_or_better()) {
