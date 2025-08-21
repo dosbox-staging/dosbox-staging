@@ -384,8 +384,12 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	}
 
 	spin.loop = loop_spin_sample;
-	LoadSample(spin_up_sample_path, spin.spin_up_sample);
-	LoadSample(spin_sample_path, spin.sample);
+
+	// Only attempt to load spin samples if disk noise mode is "on" instead of "seek-only"
+  	if (disk_noise_mode == DiskNoiseMode::On) {
+		LoadSample(spin_up_sample_path, spin.spin_up_sample);
+    	LoadSample(spin_sample_path, spin.sample);
+    }
 
 	// After loading spin_up_sample and sample:
 	if (!spin.spin_up_sample.empty()) {
