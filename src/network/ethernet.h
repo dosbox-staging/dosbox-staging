@@ -9,6 +9,7 @@
 #include <functional>
 #include <string>
 
+#include "config/config.h"
 #include "dosbox_config.h"
 
 /** A virtual Ethernet connection
@@ -75,4 +76,6 @@ public:
  */
 EthernetConnection *ETHERNET_OpenConnection(const std::string &backend);
 
-#endif
+void ETHERNET_AddConfigSection(const ConfigPtr& conf);
+
+#endif // DOSBOX_ETHERNET_H

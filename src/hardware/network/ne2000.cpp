@@ -10,6 +10,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <memory>
 
 #include "config/setup.h"
 #include "cpu/callback.h"
@@ -1511,7 +1512,8 @@ public:
 };
 
 static NE2K* instance;
-void NE2K_ShutDown(Section* /* sec */)
+
+static void ne2k_destroy([[maybe_unused]] Section* sec)
 {
 	delete instance;
 	instance = nullptr;
@@ -1525,7 +1527,7 @@ void NE2K_Init(Section* sec)
 	instance = new NE2K(sec);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(NE2K_ShutDown, changeable_at_runtime);
+	sec->AddDestroyHandler(ne2k_destroy, changeable_at_runtime);
 
 	if (!instance->load_success) {
 		delete instance;
