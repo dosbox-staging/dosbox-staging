@@ -298,7 +298,8 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks) {
 	DOS_MCB	mcb_next(segment+total);
 	if (*blocks<=total) {
 		if (*blocks == total) {
-			/* Nothing to do */
+			/* Size unchanged */
+			mcb.SetPSPSeg(dos.psp());
 			return true;
 		}
 		/* Shrinking MCB */
@@ -347,7 +348,11 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks) {
 	}
 	mcb.SetSize(total);
 	mcb.SetPSPSeg(dos.psp());
-	if (*blocks==total) return true;	/* block fit exactly */
+	if (*blocks == total) {
+		/* block fit exactly */
+		mcb.SetPSPSeg(dos.psp());
+		return true;
+	}
 
 	*blocks=total;	/* return maximum */
 	DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
