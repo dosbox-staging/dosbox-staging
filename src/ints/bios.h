@@ -6,6 +6,8 @@
 
 #include "dosbox.h"
 
+#include "config/setup.h"
+
 #include <optional>
 
 #define BIOS_BASE_ADDRESS_COM1          0x400
@@ -109,6 +111,8 @@ constexpr uint8_t MAX_SCAN_CODE = 115;
 //#define BIOS_MAX_DISK 10
 
 //#define MAX_SWAPPABLE_DISKS 20
+
+void BIOS_Init(Section* sec);
 
 void BIOS_ZeroExtendedSize(bool in);
 void char_out(uint8_t chr,uint32_t att,uint8_t page);
