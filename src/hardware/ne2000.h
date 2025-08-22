@@ -5,17 +5,16 @@
 // SPDX-FileCopyrightText:  2001-2003  MandrakeSoft S.A.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-//
 // An implementation of an ne2000 ISA ethernet adapter. This part uses
 // a National Semiconductor DS-8390 ethernet MAC chip, with some h/w
 // to provide a windowed memory region for the chip and a MAC address.
-//
 
 #ifndef DOSBOX_NE2000_H
 #define DOSBOX_NE2000_H
 
 #include "dosbox.h"
 
+#include "config/setup.h"
 #include "hardware/port.h"
 
 #define bx_bool int
@@ -223,10 +222,8 @@ public:
   uint32_t read(io_port_t address, io_width_t io_len);
   void   write(io_port_t address, io_val_t value, io_width_t io_len);
 #endif
-
-
 };
 
 void NE2K_Init(Section* sec);
 
-#endif
+#endif // DOSBOX_NE2000_H
