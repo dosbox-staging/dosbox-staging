@@ -6,6 +6,10 @@
 
 #include <string>
 
+#include "config/setup.h"
+
+void VMWARE_Init(Section* sec);
+
 void VMWARE_NotifyBooting();
 void VMWARE_NotifyProgramName(const std::string& segment_name);
 

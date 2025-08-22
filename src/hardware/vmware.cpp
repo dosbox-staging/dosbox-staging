@@ -146,7 +146,7 @@ void VMWARE_NotifyProgramName(const std::string& segment_name)
 // Lifecycle
 // ***************************************************************************
 
-void VMWARE_Destroy(Section*)
+static void vmware_destroy(Section*)
 {
 	if (is_interface_enabled) {
 		IO_FreeReadHandler(port_num_virtualbox, io_width_t::dword);
@@ -168,7 +168,8 @@ void VMWARE_Init(Section* sec)
 
 	is_interface_enabled = has_feature_mouse;
 	if (is_interface_enabled) {
-		sec->AddDestroyHandler(VMWARE_Destroy, false);
+		sec->AddDestroyHandler(vmware_destroy);
+
 		IO_RegisterReadHandler(port_num_vmware,
 		                       port_read_vmware,
 		                       io_width_t::dword);
