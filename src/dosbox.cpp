@@ -34,6 +34,7 @@
 #include "hardware/pci_bus.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
+#include "hardware/serialport/serialport.h"
 #include "hardware/timer.h"
 #include "hardware/video/reelmagic/reelmagic.h"
 #include "hardware/video/voodoo.h"
@@ -1011,62 +1012,6 @@ static void add_reelmagic_section()
 	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
 }
 
-static void add_serial_section()
-{
-	using enum Property::Changeable::Value;
-
-	constexpr auto changeable_at_runtime = true;
-	auto secprop = control->AddSection("serial", SERIAL_Init, changeable_at_runtime);
-	const std::vector<std::string> serials = {
-	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct"};
-
-	auto pmulti_remain = secprop->AddMultiValRemain("serial1", WhenIdle, " ");
-	auto pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "dummy");
-	pmulti_remain->SetValue("dummy");
-	pstring->SetValues(serials);
-	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
-	pmulti_remain->SetHelp(
-	        "Set type of device connected to the COM1 port.\n"
-	        "Can be disabled, dummy, mouse, modem, nullmodem, direct ('dummy' by default).\n"
-	        "Additional parameters must be on the same line in the form of\n"
-	        "parameter:value. The optional 'irq' parameter is common for all types.\n"
-	        "  - for 'mouse':      model (optional; overrides the 'com_mouse_model' setting).\n"
-	        "  - for 'direct':     realport (required), rxdelay (optional).\n"
-	        "                      (e.g., realport:COM1, realport:ttyS0).\n"
-	        "  - for 'modem':      listenport, sock, bps (all optional).\n"
-	        "  - for 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,\n"
-	        "                      transparent, port, inhsocket, sock (all optional).\n"
-	        "The 'sock' parameter specifies the protocol to use at both sides of the\n"
-	        "connection. Valid values are 0 for TCP, and 1 for ENet reliable UDP.\n"
-	        "Example: serial1=modem listenport:5000 sock:1");
-
-	pmulti_remain = secprop->AddMultiValRemain("serial2", WhenIdle, " ");
-	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "dummy");
-	pmulti_remain->SetValue("dummy");
-	pstring->SetValues(serials);
-	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
-	pmulti_remain->SetHelp("See 'serial1' ('dummy' by default).");
-
-	pmulti_remain = secprop->AddMultiValRemain("serial3", WhenIdle, " ");
-	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "disabled");
-	pmulti_remain->SetValue("disabled");
-	pstring->SetValues(serials);
-	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
-	pmulti_remain->SetHelp("See 'serial1' ('disabled' by default).");
-
-	pmulti_remain = secprop->AddMultiValRemain("serial4", WhenIdle, " ");
-	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "disabled");
-	pmulti_remain->SetValue("disabled");
-	pstring->SetValues(serials);
-	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
-	pmulti_remain->SetHelp("See 'serial1' ('disabled' by default).");
-
-	pstring = secprop->AddPath("phonebookfile", OnlyAtStart, "phonebook.txt");
-	pstring->SetHelp(
-	        "File used to map fake phone numbers to addresses\n"
-	        "('phonebook.txt' by default).");
-}
-
 static void add_dos_section()
 {
 	using enum Property::Changeable::Value;
@@ -1346,7 +1291,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	JOYSTICK_AddConfigSection(control);
 
-	add_serial_section();
+	SERIAL_AddConfigSection(control);
 
 	add_dos_section();
 

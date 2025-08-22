@@ -1,4 +1,4 @@
-//  SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+//  SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 //  SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_SERIALPORT_H
@@ -10,18 +10,11 @@
 #include <cassert>
 #include <vector>
 
-#ifndef DOSBOX_INOUT_H
-#include "hardware/port.h"
-#endif
-#ifndef DOSBOX_TIMER_H
-#include "hardware/timer.h"
-#endif
-#ifndef DOSBOX_DOS_INC_H
+#include "config/config.h"
 #include "dos/dos_inc.h"
-#endif
-#ifndef DOSBOX_PROGRAMS_H
 #include "dos/programs.h"
-#endif
+#include "hardware/port.h"
+#include "hardware/timer.h"
 
 // set this to 1 for serial debugging in release mode
 #define SERIAL_DBG_FORCED 0
@@ -489,4 +482,6 @@ private:
 	CSerial *sclass = nullptr;
 };
 
-#endif
+void SERIAL_AddConfigSection(const ConfigPtr& conf);
+
+#endif // DOSBOX_SERIALPORT_H

@@ -10,22 +10,21 @@
 #include <cstring>
 #include <tuple>
 
-#include "ints/bios.h"					// SetComPorts(..)
-#include "cpu/callback.h"				// CALLBACK_Idle
-#include "capture/capture.h"
-#include "hardware/port.h"
-#include "hardware/pic.h"
-#include "config/setup.h"
-#include "utils/string_utils.h"
-
-#include "serialport.h"
 #include "directserial.h"
-#include "serialdummy.h"
-#include "softmodem.h"
 #include "nullmodem.h"
+#include "serialdummy.h"
 #include "serialmouse.h"
+#include "serialport.h"
+#include "softmodem.h"
 
+#include "capture/capture.h"
+#include "config/setup.h"
+#include "cpu/callback.h"
 #include "cpu/cpu.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "ints/bios.h"
+#include "utils/string_utils.h"
 
 #define LOG_SER(x) log_ser
 
@@ -1369,20 +1368,76 @@ public:
 
 static SERIALPORTS *testSerialPortsBaseclass = nullptr;
 
-void SERIAL_Destroy(Section *sec)
+static void serial_destroy(Section *sec)
 {
 	(void)sec; // unused, but required for API compliance
 	delete testSerialPortsBaseclass;
 	testSerialPortsBaseclass = nullptr;
 }
 
-void SERIAL_Init (Section* sec)
+static void serial_init(Section* sec)
 {
 	assert(sec);
 
 	delete testSerialPortsBaseclass;
 	testSerialPortsBaseclass = new SERIALPORTS(sec);
+}
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(SERIAL_Destroy, changeable_at_runtime);
+void SERIAL_AddConfigSection(const ConfigPtr& conf)
+{
+	assert(conf);
+
+	using enum Property::Changeable::Value;
+
+	auto section = conf->AddSection("serial", serial_init);
+	section->AddDestroyHandler(serial_destroy);
+
+	const std::vector<std::string> serials = {
+	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct"};
+
+	auto pmulti_remain = section->AddMultiValRemain("serial1", WhenIdle, " ");
+	auto pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "dummy");
+	pmulti_remain->SetValue("dummy");
+	pstring->SetValues(serials);
+	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
+	pmulti_remain->SetHelp(
+	        "Set type of device connected to the COM1 port.\n"
+	        "Can be disabled, dummy, mouse, modem, nullmodem, direct ('dummy' by default).\n"
+	        "Additional parameters must be on the same line in the form of\n"
+	        "parameter:value. The optional 'irq' parameter is common for all types.\n"
+	        "  - for 'mouse':      model (optional; overrides the 'com_mouse_model' setting).\n"
+	        "  - for 'direct':     realport (required), rxdelay (optional).\n"
+	        "                      (e.g., realport:COM1, realport:ttyS0).\n"
+	        "  - for 'modem':      listenport, sock, bps (all optional).\n"
+	        "  - for 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,\n"
+	        "                      transparent, port, inhsocket, sock (all optional).\n"
+	        "The 'sock' parameter specifies the protocol to use at both sides of the\n"
+	        "connection. Valid values are 0 for TCP, and 1 for ENet reliable UDP.\n"
+	        "Example: serial1=modem listenport:5000 sock:1");
+
+	pmulti_remain = section->AddMultiValRemain("serial2", WhenIdle, " ");
+	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "dummy");
+	pmulti_remain->SetValue("dummy");
+	pstring->SetValues(serials);
+	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
+	pmulti_remain->SetHelp("See 'serial1' ('dummy' by default).");
+
+	pmulti_remain = section->AddMultiValRemain("serial3", WhenIdle, " ");
+	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "disabled");
+	pmulti_remain->SetValue("disabled");
+	pstring->SetValues(serials);
+	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
+	pmulti_remain->SetHelp("See 'serial1' ('disabled' by default).");
+
+	pmulti_remain = section->AddMultiValRemain("serial4", WhenIdle, " ");
+	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "disabled");
+	pmulti_remain->SetValue("disabled");
+	pstring->SetValues(serials);
+	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
+	pmulti_remain->SetHelp("See 'serial1' ('disabled' by default).");
+
+	pstring = section->AddPath("phonebookfile", OnlyAtStart, "phonebook.txt");
+	pstring->SetHelp(
+	        "File used to map fake phone numbers to addresses\n"
+	        "('phonebook.txt' by default).");
 }
