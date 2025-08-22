@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <memory>
 
 #include <SDL_net.h>
 
@@ -1175,21 +1176,29 @@ public:
 	}
 };
 
-static IPX* ipx;
+static std::unique_ptr<IPX> ipx = {};
+
+void notify_ipx_setting_updated(SectionProp* section,
+                                [[maybe_unused]] const std::string& prop_name)
+{
+	assert(section);
+
+	ipx = std::make_unique<IPX>(section);
+}
 
 static void ipx_destroy([[maybe_unused]] Section* sec)
 {
-	delete ipx;
+	ipx = {};
 }
 
 void IPX_Init(Section* sec)
 {
 	assert(sec);
 
-	ipx = new IPX(sec);
+	ipx = std::make_unique<IPX>(sec);
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(ipx_destroy, changeable_at_runtime);
+	sec->AddUpdateHandler(notify_ipx_setting_updated);
+	sec->AddDestroyHandler(ipx_destroy);
 }
 
 void IPX_AddConfigSection(const ConfigPtr& conf)
@@ -1198,10 +1207,9 @@ void IPX_AddConfigSection(const ConfigPtr& conf)
 
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
-	auto secprop = control->AddSection("ipx", IPX_Init, changeable_at_runtime);
+	auto section = control->AddSection("ipx", IPX_Init);
 
-	auto pbool = secprop->AddBool("ipx", WhenIdle, false);
+	auto pbool = section->AddBool("ipx", WhenIdle, false);
 	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation ('off' by default).");
 	pbool->SetEnabledOptions({"ipx"});
 }
