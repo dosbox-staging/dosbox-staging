@@ -515,9 +515,10 @@ static DiskNoiseMode get_disk_noise_mode(const std::string& mode)
 
 static void disknoise_init(Section* section)
 {
+	assert(section);
+
 	constexpr auto MaxNumSeekSamples = 9;
 
-	assert(section);
 	const auto prop = static_cast<SectionProp*>(section);
 
 	const auto enable_floppy_disk_noise = get_disk_noise_mode(
@@ -552,8 +553,7 @@ static void disknoise_init(Section* section)
 	                                           floppy_spin,
 	                                           floppy_seek_samples);
 
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyHandler(disknoise_destroy, changeable_at_runtime);
+	section->AddDestroyHandler(disknoise_destroy);
 }
 
 static void init_disknoise_dosbox_settings(SectionProp& secprop)
@@ -585,11 +585,7 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto ChangeableAtRuntime = true;
+	auto section = conf->AddSection("disknoise", disknoise_init);
 
-	SectionProp* sec = conf->AddSection("disknoise",
-	                                    disknoise_init,
-	                                    ChangeableAtRuntime);
-	assert(sec);
-	init_disknoise_dosbox_settings(*sec);
+	init_disknoise_dosbox_settings(*section);
 }
