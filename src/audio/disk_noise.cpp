@@ -493,9 +493,10 @@ static void disknoise_destroy([[maybe_unused]] Section* sec)
 
 static void disknoise_init(Section* section)
 {
+	assert(section);
+
 	constexpr auto MaxNumSeekSamples = 9;
 
-	assert(section);
 	const auto prop = static_cast<SectionProp*>(section);
 
 	const bool enable_floppy_disk_noise = prop->GetBool("floppy_disk_noise");
@@ -528,8 +529,7 @@ static void disknoise_init(Section* section)
 	                                           floppy_spin,
 	                                           floppy_seek_samples);
 
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyHandler(disknoise_destroy, changeable_at_runtime);
+	section->AddDestroyHandler(disknoise_destroy);
 }
 
 static void init_disknoise_dosbox_settings(SectionProp& secprop)
@@ -553,11 +553,7 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto ChangeableAtRuntime = false;
+	auto section = conf->AddSection("disknoise", disknoise_init);
 
-	SectionProp* sec = conf->AddSection("disknoise",
-	                                    disknoise_init,
-	                                    ChangeableAtRuntime);
-	assert(sec);
-	init_disknoise_dosbox_settings(*sec);
+	init_disknoise_dosbox_settings(*section);
 }
