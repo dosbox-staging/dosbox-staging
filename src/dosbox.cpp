@@ -29,7 +29,9 @@
 #include "gui/render.h"
 #include "hardware/hardware.h"
 #include "hardware/input/joystick.h"
+#include "hardware/input/joystick.h"
 #include "hardware/input/mouse.h"
+#include "hardware/network/ipx.h"
 #include "hardware/network/ne2000.h"
 #include "hardware/pci_bus.h"
 #include "hardware/pic.h"
@@ -66,10 +68,6 @@ void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void LPT_DAC_Init(Section *);
 void PS1AUDIO_Init(Section *);
-
-#if C_IPX
-void IPX_Init(Section*);
-#endif
 
 void PIC_Init(Section*);
 void TIMER_Init(Section*);
@@ -1096,18 +1094,6 @@ static void add_dos_section()
 	secprop->AddInitHandler(CDROM_Image_Init);
 }
 
-[[maybe_unused]] static void add_ipx_section()
-{
-	using enum Property::Changeable::Value;
-
-	constexpr auto changeable_at_runtime = true;
-	auto secprop = control->AddSection("ipx", IPX_Init, changeable_at_runtime);
-
-	auto pbool = secprop->AddBool("ipx", WhenIdle, false);
-	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation ('off' by default).");
-	pbool->SetEnabledOptions({"ipx"});
-}
-
 static void add_ethernet_section()
 {
 	using enum Property::Changeable::Value;
@@ -1263,7 +1249,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	add_dos_section();
 
 #if C_IPX
-	add_ipx_section();
+	IPX_AddConfigSection(control);
 #endif
 
 	add_ethernet_section();
