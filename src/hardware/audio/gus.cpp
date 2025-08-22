@@ -28,10 +28,7 @@
 
 #define LOG_GUS 0 // set to 1 for detailed logging
 
-static void GUS_TimerEvent(uint32_t t);
-static void GUS_DMA_Event(uint32_t val);
-
-std::unique_ptr<Gus> gus = nullptr;
+static std::unique_ptr<Gus> gus = {};
 
 Voice::Voice(uint8_t num, VoiceIrq& irq) noexcept
         : vol_ctrl{irq.vol_state},
@@ -305,19 +302,19 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 // becomes IRQ9), so we translate IRQ2 to 9 and vice-versa on this API
 // boundaries. This is also what DOSBox expects: it uses IRQ9 instead of IRQ2.
 
-constexpr uint8_t to_internal_irq(const uint8_t irq)
+static constexpr uint8_t to_internal_irq(const uint8_t irq)
 {
 	assert(irq != 9);
 	return irq == 2 ? 9 : irq;
 }
 
-constexpr uint8_t to_external_irq(const uint8_t irq)
+static constexpr uint8_t to_external_irq(const uint8_t irq)
 {
 	assert(irq != 2);
 	return irq == 9 ? 2 : irq;
 }
 
-static void GUS_PicCallback()
+static void gus_pic_callback()
 {
 	if (!gus || !gus->channel->is_enabled) {
 		return;
@@ -426,7 +423,7 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	SetupEnvironment(port_pref, ultradir);
 
 	output_queue.Resize(iceil(channel->GetFramesPerBlock() * 2.0f));
-	TIMER_AddTickHandler(GUS_PicCallback);
+	TIMER_AddTickHandler(gus_pic_callback);
 
 	LOG_MSG("GUS: Running on port %xh, IRQ %d, and DMA %d",
 	        port_pref,
@@ -730,17 +727,17 @@ bool Gus::IsDmaXfer16Bit() noexcept
 	return (dma_control_register.is_channel_16bit && dma1 >= 4);
 }
 
-static void GUS_DMA_Event(uint32_t)
+static void gus_dma_event(uint32_t)
 {
 	if (gus->PerformDmaTransfer()) {
-		PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
+		PIC_AddEvent(gus_dma_event, MS_PER_DMA_XFER);
 	}
 }
 
 void Gus::StartDmaTransfers()
 {
-	PIC_RemoveEvents(GUS_DMA_Event);
-	PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
+	PIC_RemoveEvents(gus_dma_event);
+	PIC_AddEvent(gus_dma_event, MS_PER_DMA_XFER);
 }
 
 void Gus::DmaCallback(const DmaChannel*, DmaEvent event)
@@ -1069,6 +1066,14 @@ void Gus::RegisterIoHandlers()
 	write_handlers.at(8).Install(0x20b + port_base, write_to, io_width_t::byte);
 }
 
+static void gus_timer_event(uint32_t t)
+{
+	if (gus->CheckTimer(t)) {
+		const auto& timer = t == 0 ? gus->timer_one : gus->timer_two;
+		PIC_AddEvent(gus_timer_event, timer.delay, t);
+	}
+}
+
 void Gus::Reset() noexcept
 {
 	// Halt playback before altering the DSP state
@@ -1102,18 +1107,10 @@ void Gus::Reset() noexcept
 	register_data         = 0;
 	selected_register     = 0;
 	should_change_irq_dma = false;
-	PIC_RemoveEvents(GUS_TimerEvent);
+	PIC_RemoveEvents(gus_timer_event);
 
 	reset_register.data = {};
 	mix_control_register.data = MixControlRegisterDefaultState;
-}
-
-static void GUS_TimerEvent(uint32_t t)
-{
-	if (gus->CheckTimer(t)) {
-		const auto& timer = t == 0 ? gus->timer_one : gus->timer_two;
-		PIC_AddEvent(GUS_TimerEvent, timer.delay, t);
-	}
 }
 
 static void gus_destroy(Section*);
@@ -1179,7 +1176,7 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 		timer_two.is_masked = (val & 0x20) > 0;
 		if (val & 0x1) {
 			if (!timer_one.is_counting_down) {
-				PIC_AddEvent(GUS_TimerEvent, timer_one.delay, 0);
+				PIC_AddEvent(gus_timer_event, timer_one.delay, 0);
 				timer_one.is_counting_down = true;
 			}
 		} else {
@@ -1187,7 +1184,7 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 		}
 		if (val & 0x2) {
 			if (!timer_two.is_counting_down) {
-				PIC_AddEvent(GUS_TimerEvent, timer_two.delay, 1);
+				PIC_AddEvent(gus_timer_event, timer_two.delay, 1);
 				timer_two.is_counting_down = true;
 			}
 		} else {
@@ -1488,7 +1485,7 @@ Gus::~Gus()
 		dma_channel->Reset();
 	}
 
-	TIMER_DelTickHandler(GUS_PicCallback);
+	TIMER_DelTickHandler(gus_pic_callback);
 
 	MIXER_UnlockMixerThread();
 }
@@ -1562,7 +1559,7 @@ static void gus_init(Section* sec)
 	sec->AddDestroyHandler(gus_destroy, changeable_at_runtime);
 }
 
-void init_gus_dosbox_settings(SectionProp& secprop)
+static void init_gus_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
