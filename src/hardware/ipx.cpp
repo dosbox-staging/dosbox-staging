@@ -1175,23 +1175,38 @@ public:
 	}
 };
 
-static IPX* test;
+static IPX* ipx;
 
-void IPX_ShutDown([[maybe_unused]] Section* sec) {
-	delete test;
+static void ipx_destroy([[maybe_unused]] Section* sec)
+{
+	delete ipx;
 }
 
 void IPX_Init(Section* sec)
 {
 	assert(sec);
 
-	test = new IPX(sec);
+	ipx = new IPX(sec);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(IPX_ShutDown, changeable_at_runtime);
+	sec->AddDestroyHandler(ipx_destroy, changeable_at_runtime);
 }
 
-//Initialize static members;
+void IPX_AddConfigSection(const ConfigPtr& conf)
+{
+	using enum Property::Changeable::Value;
+
+	assert(conf);
+
+	constexpr auto changeable_at_runtime = true;
+	auto secprop = control->AddSection("ipx", IPX_Init, changeable_at_runtime);
+
+	auto pbool = secprop->AddBool("ipx", WhenIdle, false);
+	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation ('off' by default).");
+	pbool->SetEnabledOptions({"ipx"});
+}
+
+// Initialize static members;
 uint16_t IPX::dospage = 0;
 
 #endif
