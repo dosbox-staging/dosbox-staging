@@ -154,7 +154,7 @@ static void vmware_destroy(Section*)
 	}
 }
 
-void VMWARE_Init(Section* sec)
+static void vmware_init(Section* sec, const bool add_destroy_handler)
 {
 	has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VmWare);
 
@@ -168,10 +168,27 @@ void VMWARE_Init(Section* sec)
 
 	is_interface_enabled = has_feature_mouse;
 	if (is_interface_enabled) {
-		sec->AddDestroyHandler(vmware_destroy);
+		if (add_destroy_handler) {
+			sec->AddDestroyHandler(vmware_destroy);
+		}
 
 		IO_RegisterReadHandler(port_num_vmware,
 		                       port_read_vmware,
 		                       io_width_t::dword);
 	}
+}
+
+void VMWARE_NotifySettingUpdated(Section* sec,
+                                 [[maybe_unused]] const std::string& prop_name)
+{
+	vmware_destroy(sec);
+
+	constexpr bool AddDestroyHandler = false;
+	vmware_init(sec, AddDestroyHandler);
+}
+
+void VMWARE_Init(Section* sec)
+{
+	constexpr bool AddDestroyHandler = true;
+	vmware_init(sec, AddDestroyHandler);
 }

@@ -616,7 +616,7 @@ static void virtualbox_destroy([[maybe_unused]] Section* sec)
 	}
 }
 
-void VIRTUALBOX_Init(Section* sec)
+static void virtualbox_init(Section* sec, const bool add_destroy_handler)
 {
 	assert(sec);
 
@@ -637,7 +637,9 @@ void VIRTUALBOX_Init(Section* sec)
 	is_interface_enabled = has_feature_mouse;
 
 	if (is_interface_enabled) {
-		sec->AddDestroyHandler(virtualbox_destroy);
+		if (add_destroy_handler) {
+			sec->AddDestroyHandler(virtualbox_destroy);
+		}
 
 		PCI_AddDevice(new PCI_VirtualBoxDevice());
 
@@ -645,4 +647,19 @@ void VIRTUALBOX_Init(Section* sec)
 		                        port_write_virtualbox,
 		                        io_width_t::dword);
 	}
+}
+
+void VIRTUALBOX_NotifySettingUpdated(Section* sec,
+                                     [[maybe_unused]] const std::string& prop_name)
+{
+	virtualbox_destroy(sec);
+
+	constexpr bool AddDestroyHandler = false;
+	virtualbox_init(sec, AddDestroyHandler);
+}
+
+void VIRTUALBOX_Init(Section* sec)
+{
+	constexpr bool AddDestroyHandler = true;
+	virtualbox_init(sec, AddDestroyHandler);
 }
