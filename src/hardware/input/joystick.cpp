@@ -9,8 +9,11 @@
 
 #include "config/config.h"
 #include "gui/mapper.h"
+#include "hardware/input/mouse.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
+#include "ints/bios.h"
+#include "ints/int10.h"
 #include "utils/math_utils.h"
 //TODO: higher axis can't be mapped. Find out why again
 
@@ -603,7 +606,7 @@ void JOYSTICK_Destroy([[maybe_unused]] Section *sec)
 	delete test;
 }
 
-void JOYSTICK_Init(Section* sec)
+void joystick_init(Section* sec)
 {
 	assert(sec);
 
@@ -611,4 +614,90 @@ void JOYSTICK_Init(Section* sec)
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyHandler(JOYSTICK_Destroy, changeable_at_runtime); 
+}
+
+void JOYSTICK_AddConfigSection(const ConfigPtr& conf)
+{
+	assert(conf);
+
+	using enum Property::Changeable::Value;
+
+	auto section = conf->AddSection("joystick", BIOS_Init);
+	section->AddInitHandler(INT10_Init);
+
+	// Must be after INT10 as it uses CurMode
+	section->AddInitHandler(MOUSE_Init);
+	section->AddInitHandler(joystick_init);
+
+	auto pstring = section->AddString("joysticktype", WhenIdle, "auto");
+
+	pstring->SetValues(
+	        {"auto", "2axis", "4axis", "4axis_2", "fcs", "ch", "hidden", "disabled"});
+
+	pstring->SetHelp(
+	        "Type of joystick to emulate:\n"
+	        "  auto:      Detect and use any joystick(s), if possible (default).\n"
+	        "             Joystick emulation is disabled if no joystick is found.\n"
+	        "  2axis:     Support up to two joysticks, each with 2 axis.\n"
+	        "  4axis:     Support the first joystick only, as a 4-axis type.\n"
+	        "  4axis_2:   Support the second joystick only, as a 4-axis type.\n"
+	        "  fcs:       Emulate joystick as an original Thrustmaster FCS.\n"
+	        "  ch:        Emulate joystick as an original CH Flightstick.\n"
+	        "  hidden:    Prevent DOS from seeing the joystick(s), but enable them\n"
+	        "             for mapping.\n"
+	        "  disabled:  Fully disable joysticks: won't be polled, mapped,\n"
+	        "             or visible in DOS.\n"
+	        "Remember to reset DOSBox's mapperfile if you saved it earlier.");
+
+	auto pbool = section->AddBool("timed", WhenIdle, true);
+	pbool->SetHelp(
+	        "Enable timed intervals for axis ('on' by default).\n"
+	        "Experiment with this option, if your joystick drifts away.");
+
+	pbool = section->AddBool("autofire", WhenIdle, false);
+	pbool->SetHelp("Fire continuously as long as the button is pressed ('off' by default)");
+
+	pbool = section->AddBool("swap34", WhenIdle, false);
+	pbool->SetHelp(
+	        "Swap the 3rd and the 4th axis ('off' by default). Can be useful for certain\n"
+	        "joysticks.");
+
+	pbool = section->AddBool("buttonwrap", WhenIdle, false);
+	pbool->SetHelp("Enable button wrapping at the number of emulated buttons ('off' by default).");
+
+	pbool = section->AddBool("circularinput", WhenIdle, false);
+	pbool->SetHelp(
+	        "Enable translation of circular input to square output ('off' by default).\n"
+	        "Try enabling this if your left analog stick can only move in a circle.");
+
+	auto pint = section->AddInt("deadzone", WhenIdle, 10);
+	pint->SetMinMax(0, 100);
+	pint->SetHelp(
+	        "Percentage of motion to ignore (10 by default).\n"
+	        "100 turns the stick into a digital one.");
+
+	pbool = section->AddBool("use_joy_calibration_hotkeys", WhenIdle, false);
+	pbool->SetHelp(
+	        "Enable hotkeys to allow realtime calibration of the joystick's X and Y axes\n"
+	        "('off' by default). Only consider this as a last resort if in-game calibration\n"
+	        "doesn't work correctly.\n"
+	        "  - Ctrl/Cmd+Arrow-keys adjust the axis' scalar value:\n"
+	        "      - Left and Right diminish or magnify the x-axis scalar, respectively.\n"
+	        "      - Down and Up diminish or magnify the y-axis scalar, respectively.\n"
+	        "  - Alt+Arrow-keys adjust the axis' offset position:\n"
+	        "      - Left and Right shift X-axis offset in the given direction.\n"
+	        "      - Down and Up shift the Y-axis offset in the given direction.\n"
+	        "  - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home,\n"
+	        "    respectively.\n"
+	        "Each tap will report X or Y calibration values you can set below. When you find\n"
+	        "parameters that work, quit the game, switch this setting back to disabled, and\n"
+	        "populate the reported calibration parameters.");
+
+	pstring = section->AddString("joy_x_calibration", WhenIdle, "auto");
+	pstring->SetHelp(
+	        "Apply X-axis calibration parameters from the hotkeys ('auto' by default).");
+
+	pstring = section->AddString("joy_y_calibration", WhenIdle, "auto");
+	pstring->SetHelp(
+	        "Apply Y-axis calibration parameters from the hotkeys ('auto' by default).");
 }
