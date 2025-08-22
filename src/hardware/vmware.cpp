@@ -22,9 +22,6 @@ CHECK_NARROWING();
 // - https://git.javispedro.com/cgit/vbados.git
 // - https://github.com/NattyNarwhal/vmwmouse (warning: release 0.1 is unstable)
 
-static bool is_interface_enabled = false;
-static bool has_feature_mouse    = false;
-
 static std::string program_segment_name = {};
 
 // ***************************************************************************
@@ -146,7 +143,10 @@ void VMWARE_NotifyProgramName(const std::string& segment_name)
 // Lifecycle
 // ***************************************************************************
 
-static void vmware_destroy(Section*)
+static bool is_interface_enabled = false;
+static bool has_feature_mouse    = false;
+
+static void vmware_destroy([[maybe_unused]] Section*)
 {
 	if (is_interface_enabled) {
 		IO_FreeReadHandler(port_num_virtualbox, io_width_t::dword);
@@ -154,7 +154,7 @@ static void vmware_destroy(Section*)
 	}
 }
 
-void VMWARE_Init(Section* sec)
+static void vmware_init([[maybe_unused]] Section* section)
 {
 	has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VmWare);
 
@@ -168,10 +168,23 @@ void VMWARE_Init(Section* sec)
 
 	is_interface_enabled = has_feature_mouse;
 	if (is_interface_enabled) {
-		sec->AddDestroyHandler(vmware_destroy);
-
 		IO_RegisterReadHandler(port_num_vmware,
 		                       port_read_vmware,
 		                       io_width_t::dword);
 	}
+}
+
+void VMWARE_NotifySettingUpdated(Section* section,
+                                 [[maybe_unused]] const std::string& prop_name)
+{
+	vmware_destroy(section);
+	vmware_init(section);
+}
+
+void VMWARE_Init(Section* section)
+{
+	assert(section);
+	section->AddDestroyHandler(vmware_destroy);
+
+	vmware_init(section);
 }

@@ -616,10 +616,8 @@ static void virtualbox_destroy([[maybe_unused]] Section* sec)
 	}
 }
 
-void VIRTUALBOX_Init(Section* sec)
+static void virtualbox_init([[maybe_unused]] Section* section)
 {
-	assert(sec);
-
 	has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VirtualBox);
 
 	if (has_feature_mouse) {
@@ -637,12 +635,25 @@ void VIRTUALBOX_Init(Section* sec)
 	is_interface_enabled = has_feature_mouse;
 
 	if (is_interface_enabled) {
-		sec->AddDestroyHandler(virtualbox_destroy);
-
 		PCI_AddDevice(new PCI_VirtualBoxDevice());
 
 		IO_RegisterWriteHandler(port_num_virtualbox,
 		                        port_write_virtualbox,
 		                        io_width_t::dword);
 	}
+}
+
+void VIRTUALBOX_NotifySettingUpdated(Section* section,
+                                     [[maybe_unused]] const std::string& prop_name)
+{
+	virtualbox_destroy(section);
+	virtualbox_init(section);
+}
+
+void VIRTUALBOX_Init(Section* section)
+{
+	assert(section);
+	section->AddDestroyHandler(virtualbox_destroy);
+
+	virtualbox_init(section);
 }

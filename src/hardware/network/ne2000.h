@@ -14,6 +14,8 @@
 
 #include "dosbox.h"
 
+#include <string>
+
 #include "config/setup.h"
 #include "hardware/port.h"
 
@@ -225,5 +227,7 @@ public:
 };
 
 void NE2K_Init(Section* sec);
+
+void NE2K_NotifySettingUpdated(Section* sec, const std::string& prop_name);
 
 #endif // DOSBOX_NE2000_H
