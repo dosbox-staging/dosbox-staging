@@ -8,9 +8,10 @@
 
 #include <string>
 
+#include "config/config.h"
 #include "config/setup.h"
 
-void JOYSTICK_Init(Section* sec);
+void JOYSTICK_AddConfigSection(const ConfigPtr& conf);
 
 void JOYSTICK_Enable(uint8_t which, bool enabled);
 
