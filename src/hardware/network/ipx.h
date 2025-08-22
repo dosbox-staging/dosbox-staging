@@ -20,7 +20,6 @@
 #include "dosbox.h"
 
 #include "config/config.h"
-#include "config/setup.h"
 #include "hardware/memory.h"
 
 // For the Uint8/16/32 types
@@ -139,7 +138,6 @@ public:
 void UnpackIP(PackedIP ipPack, IPaddress * ipAddr);
 void PackIP(IPaddress ipAddr, PackedIP *ipPack);
 
-void IPX_Init(Section* sec);
 void IPX_AddConfigSection(const ConfigPtr& conf);
 
 #ifdef _MSC_VER
