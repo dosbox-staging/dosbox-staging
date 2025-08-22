@@ -188,6 +188,7 @@ void DOS_ExecuteRegisteredCallbacks(DiskType disk_type)
 
 void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type)
 {
+	DOS_ExecuteRegisteredCallbacks(disk_type);
 	switch (disk_type) {
 	case DiskType::Floppy:
 		DOS_PerformFloppyIoDelay(data_transferred_bytes);

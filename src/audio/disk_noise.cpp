@@ -495,7 +495,7 @@ static void disknoise_destroy([[maybe_unused]] Section* sec)
 	MIXER_UnlockMixerThread();
 }
 
-static DiskNoiseMode get_harddisk_noise_mode(const std::string& mode)
+static DiskNoiseMode get_disk_noise_mode(const std::string& mode)
 {
 	if (has_false(mode)) {
 		return DiskNoiseMode::Off;
@@ -509,20 +509,6 @@ static DiskNoiseMode get_harddisk_noise_mode(const std::string& mode)
 	return DiskNoiseMode::Off;
 }
 
-static DiskNoiseMode get_floppy_noise_mode(const std::string& mode)
-{
-	if (has_false(mode)) {
-		return DiskNoiseMode::Off;
-	} else if (mode == "seek-only") {
-		return DiskNoiseMode::SeekOnly;
-	} else if (mode == "on") {
-		return DiskNoiseMode::On;
-	}
-	LOG_WARNING("DISKNOISE: Unknown floppy disk noise mode '%s', defaulting to 'off'",
-	            mode.c_str());
-	return DiskNoiseMode::Off;
-}
-
 static void disknoise_init(Section* section)
 {
 	constexpr auto MaxNumSeekSamples = 9;
@@ -530,8 +516,8 @@ static void disknoise_init(Section* section)
 	assert(section);
 	const auto prop = static_cast<SectionProp*>(section);
 
-	const auto enable_floppy_disk_noise = get_floppy_noise_mode(prop->GetString("floppy_disk_noise"));
-	const auto enable_hard_disk_noise = get_harddisk_noise_mode(prop->GetString("hard_disk_noise"));
+	const auto enable_floppy_disk_noise = get_disk_noise_mode(prop->GetString("floppy_disk_noise"));
+	const auto enable_hard_disk_noise = get_disk_noise_mode(prop->GetString("hard_disk_noise"));
 
 	const auto spin_up                        = "hdd_spinup.flac";
 	const auto spin                           = "hdd_spin.flac";
