@@ -4,6 +4,7 @@
 #include "ethernet.h"
 
 #include <cstring>
+#include <memory>
 
 #include "ethernet_slirp.h"
 
@@ -37,8 +38,15 @@ void ETHERNET_AddConfigSection(const ConfigPtr& conf)
 
 	using enum Property::Changeable::Value;
 
-	constexpr auto changeable_at_runtime = true;
-	auto secprop = conf->AddSection("ethernet", NE2K_Init, changeable_at_runtime);
+	auto secprop = conf->AddSection("ethernet", NE2K_Init);
+
+	// VMM interfaces
+	secprop->AddInitHandler(VIRTUALBOX_Init);
+	secprop->AddInitHandler(VMWARE_Init);
+
+	secprop->AddUpdateHandler(NE2K_NotifySettingUpdated);
+	secprop->AddUpdateHandler(VIRTUALBOX_NotifySettingUpdated);
+	secprop->AddUpdateHandler(VMWARE_NotifySettingUpdated);
 
 	auto pbool = secprop->AddBool("ne2000", WhenIdle, false);
 	pbool->SetOptionHelp(
@@ -112,8 +120,4 @@ void ETHERNET_AddConfigSection(const ConfigPtr& conf)
 	        "(unset by default). The format is the same as for TCP port forwards.");
 
 	pstring->SetEnabledOptions({"SLIRP"});
-
-	// VMM interfaces
-	secprop->AddInitHandler(VIRTUALBOX_Init);
-	secprop->AddInitHandler(VMWARE_Init);
 }
