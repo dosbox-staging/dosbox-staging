@@ -3588,19 +3588,29 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 	case SDL_WINDOWEVENT_RESIZED: {
 		// TODO pixels or logical units?
-		// LOG_DEBUG("SDL: Window has been resized to %dx%d",
-		// event.window.data1, event.window.data2);
+		LOG_DEBUG("SDL: Window has been resized to %dx%d",
+		          event.window.data1,
+		          event.window.data2);
 
-		// When going from an initial fullscreen to windowed state, this
-		// event will be called moments before SDL's windowed mode is
-		// engaged, so simply ensure the window size has already been
-		// established:
-		assert(sdl.desktop.window.width > 0 && sdl.desktop.window.height > 0);
+		static int last_width  = 0;
+		static int last_height = 0;
+
+		const auto width  = event.window.data1;
+		const auto height = event.window.data2;
 
 		// SDL_WINDOWEVENT_RESIZED events are sent twice when resizing
-		// the window, but maybe_log_display_properties() will only output
-		// a log entry if the image dimensions have actually changed.
-		maybe_log_display_properties();
+		// the window.
+		if (width != last_width && height != last_height) {
+			maybe_log_display_properties();
+
+			// Needed for aspect & viewport mode combinations where the
+			// pixel aspect ratio or viewport size is sized relatively
+			// to the window size.
+			VGA_SetupDrawing(0);
+
+			last_width  = width;
+			last_height = height;
+		}
 		return true;
 	}
 
