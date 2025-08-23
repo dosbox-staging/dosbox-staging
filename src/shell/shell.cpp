@@ -405,7 +405,8 @@ void DOS_Shell::ParseLine(char *line)
 void DOS_Shell::RunBatchFile()
 {
 	char input_line[CMD_MAXLINE] = {0};
-	while (!batchfiles.empty() && !shutdown_requested && !exit_cmd_called) {
+	while (!batchfiles.empty() && !DOSBOX_IsShutdownRequested() &&
+	       !exit_cmd_called) {
 		if (batchfiles.top().ReadLine(input_line)) {
 			if (batchfiles.top().Echo()) {
 				if (input_line[0] != '@') {
@@ -476,7 +477,7 @@ void DOS_Shell::Run()
 	} else {
 		WriteOut(MSG_Get("SHELL_STARTUP_SUB"), DOSBOX_GetDetailedVersion());
 	}
-	while (!exit_cmd_called && !shutdown_requested) {
+	while (!exit_cmd_called && !DOSBOX_IsShutdownRequested()) {
 		if (!batchfiles.empty()){
 			RunBatchFile();
 		} else {

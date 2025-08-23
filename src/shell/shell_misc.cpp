@@ -115,7 +115,7 @@ std::string DOS_Shell::ReadCommand()
 
 	CommandPrompt prompt;
 
-	while (!shutdown_requested) {
+	while (!DOSBOX_IsShutdownRequested()) {
 		assert(history_index < history_clone.size());
 		assert(completion.empty() || completion_index < completion.size());
 		assert(command.empty() || cursor_position <= command.size());

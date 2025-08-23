@@ -39,9 +39,11 @@
 
 int sdl_main(int argc, char *argv[]);
 
-// The shutdown_requested bool is a conditional break in the parse-loop and
-// machine-loop. Set it to true to gracefully quit in expected circumstances.
-extern bool shutdown_requested;
+// Must be called to break out of the emulator loop and exit gracefully from
+// all emulation layers.
+void DOSBOX_RequestShutdown();
+
+bool DOSBOX_IsShutdownRequested();
 
 // The E_Exit function throws an exception to quit. Call it in unexpected
 // circumstances.

@@ -85,7 +85,7 @@ void LS::Run()
 	DOS_DTA dta(dos.dta());
 
 	for (const auto& pattern : patterns) {
-		if (shutdown_requested) {
+		if (DOSBOX_IsShutdownRequested()) {
 			break;
 		}
 
@@ -100,11 +100,11 @@ void LS::Run()
 				continue;
 			}
 			dir_contents.push_back(result);
-		} while (!shutdown_requested && DOS_FindNext());
+		} while (!DOSBOX_IsShutdownRequested() && DOS_FindNext());
 	}
 
 	dos.dta(original_dta);
-	if (shutdown_requested) {
+	if (DOSBOX_IsShutdownRequested()) {
 		return;
 	}
 
