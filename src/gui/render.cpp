@@ -286,8 +286,7 @@ static SectionProp* get_render_section()
 {
 	assert(control);
 
-	auto render_section = static_cast<SectionProp*>(
-	        control->GetSection("render"));
+	auto render_section = static_cast<SectionProp*>(control->GetSection("render"));
 	assert(render_section);
 
 	return render_section;
@@ -530,7 +529,8 @@ static void set_scan_and_pixel_doubling()
 	} break;
 
 	case RenderingBackend::OpenGl: {
-		const auto shader_info = ShaderManager::GetInstance().GetCurrentShaderInfo();
+		const auto shader_info =
+		        ShaderManager::GetInstance().GetCurrentShaderInfo();
 		force_vga_single_scan = shader_info.settings.force_single_scan;
 		force_no_pixel_doubling = shader_info.settings.force_no_pixel_doubling;
 	} break;
@@ -548,7 +548,7 @@ static void render_init(Section* section);
 
 void RENDER_Reinit()
 {
-    if (!render_initialised) {
+	if (!render_initialised) {
 		return;
 	};
 
@@ -718,11 +718,12 @@ static void log_invalid_viewport_setting_warning(
         const std::optional<const std::string> extra_info = {})
 {
 	// TODO convert to notification
-	LOG_WARNING("DISPLAY: Invalid 'viewport' setting: '%s'"
-	            "%s%s, using 'fit'",
-	            pref.c_str(),
-	            (extra_info ? ". " : ""),
-	            (extra_info ? extra_info->c_str() : ""));
+	LOG_WARNING(
+	        "DISPLAY: Invalid 'viewport' setting: '%s'"
+	        "%s%s, using 'fit'",
+	        pref.c_str(),
+	        (extra_info ? ". " : ""),
+	        (extra_info ? extra_info->c_str() : ""));
 }
 
 std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s)
@@ -732,7 +733,9 @@ std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s
 		const auto w = parse_int(parts[0]);
 		const auto h = parse_int(parts[1]);
 		if (w && h) {
-			return {{*w, *h}};
+			return {
+			        {*w, *h}
+                        };
 		}
 	}
 	return {};
@@ -1072,8 +1075,7 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 		switch (render.integer_scaling_mode) {
 		case IntegerScalingMode::Off: return draw_size_fit_px;
 
-		case IntegerScalingMode::Auto:
-			return handle_auto_mode();
+		case IntegerScalingMode::Auto: return handle_auto_mode();
 
 		case IntegerScalingMode::Horizontal:
 			return calc_horiz_integer_scaling_dims_in_pixels();
@@ -1094,7 +1096,6 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 	return draw_size_px.CenterTo(canvas_size_px.cx(), canvas_size_px.cy());
 }
 
-
 std::string RENDER_GetCgaColorsSetting()
 {
 	return get_render_section()->GetString("cga_colors");
@@ -1105,8 +1106,7 @@ static void init_render_settings(SectionProp& secprop)
 	using enum Property::Changeable::Value;
 
 	auto* int_prop = secprop.AddInt("frameskip", Deprecated, 0);
-	int_prop->SetHelp(
-	        "Consider capping frame rates using the 'host_rate' setting.");
+	int_prop->SetHelp("Consider capping frame rates using the 'host_rate' setting.");
 
 	auto* string_prop = secprop.AddString("glshader", Always, "crt-auto");
 	string_prop->SetOptionHelp(
@@ -1155,7 +1155,7 @@ static void init_render_settings(SectionProp& secprop)
 	        "a file. In all cases, you may omit the shader's '.glsl' file extension.");
 	string_prop->SetEnabledOptions({
 #if C_OPENGL
-		"glshader",
+	        "glshader",
 #endif
 	});
 
@@ -1235,17 +1235,17 @@ static void init_render_settings(SectionProp& secprop)
 	        "    actions to set the stretch in 'relative' mode in real-time.");
 
 	string_prop = secprop.AddString("monochrome_palette",
-	                                 Always,
-	                                 MonochromePaletteAmber);
+	                                Always,
+	                                MonochromePaletteAmber);
 	string_prop->SetHelp(
 	        "Set the palette for monochrome display emulation ('amber' by default).\n"
 	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
 
 	string_prop->SetValues({MonochromePaletteAmber,
-	                         MonochromePaletteGreen,
-	                         MonochromePaletteWhite,
-	                         MonochromePalettePaperwhite});
+	                        MonochromePaletteGreen,
+	                        MonochromePaletteWhite,
+	                        MonochromePalettePaperwhite});
 
 	string_prop = secprop.AddString("cga_colors", OnlyAtStart, "default");
 	string_prop->SetHelp(
@@ -1298,8 +1298,9 @@ static constexpr auto StretchIncrement = 0.01f;
 
 static void log_stretch_hotkeys_viewport_mode_warning()
 {
-	LOG_WARNING("RENDER: Viewport stretch hotkeys are only supported in 'relative' "
-	            "viewport mode");
+	LOG_WARNING(
+	        "RENDER: Viewport stretch hotkeys are only supported in 'relative' "
+	        "viewport mode");
 }
 
 static void toggle_stretch_axis(const bool pressed)
