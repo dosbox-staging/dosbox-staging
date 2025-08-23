@@ -1063,7 +1063,7 @@ static Bitu reboot_handler()
 			CALLBACK_Idle();
 			// Bail out if the user closes the window.
 			// Otherwise we get stuck in an infinite loop.
-			if (shutdown_requested) {
+			if (DOSBOX_IsShutdownRequested()) {
 				return CBRET_NONE;
 			}
 		}

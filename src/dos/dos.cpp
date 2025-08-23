@@ -522,11 +522,13 @@ static Bitu DOS_21Handler(void) {
 			for(;;) {
 				DOS_ReadFile(STDIN,&c,&n);
 				// gracefully exit potentially endless loop
-				if (shutdown_requested) {
-					break;
-				}
-				if (n == 0)				// End of file
-					E_Exit("DOS:0x0a:Redirected input reached EOF");
+			        if (DOSBOX_IsShutdownRequested()) {
+				        break;
+			        }
+			        if (n == 0) {
+						// End of file
+						E_Exit("DOS:0x0a:Redirected input reached EOF");
+					}
 				if (c == 10)			// Line feed
 					continue;
 				if (c == 8) {			// Backspace
@@ -571,10 +573,10 @@ static Bitu DOS_21Handler(void) {
 					DOS_ReadFile(STDIN,&c,&n);
 
 					// gracefully exit potentially endless loop
-					if (shutdown_requested) {
-						break;
-					}
-				}
+				        if (DOSBOX_IsShutdownRequested()) {
+					        break;
+				        }
+			        }
 			}
 			switch (reg_al) {
 			case 0x1:
@@ -1656,8 +1658,9 @@ static Bitu DOS_26Handler(void) {
 
 bool DOS_IsCancelRequest()
 {
-	if (shutdown_requested)
+	if (DOSBOX_IsShutdownRequested()) {
 		return true;
+	}
 
 	CALLBACK_Idle();
 	while (!(Files[STDIN]->GetInformation() & (1 << 6))) {
@@ -1667,14 +1670,14 @@ bool DOS_IsCancelRequest()
 		DOS_ReadFile(STDIN, &code, &count);
 
 		// Check if user requested to cancel
-		if (shutdown_requested || count == 0 || code == 'q' ||
+		if (DOSBOX_IsShutdownRequested() || count == 0 || code == 'q' ||
 		    code == 'Q' || code == Ascii::CtrlC || code == Ascii::Escape) {
 			return true;
 		}
 	}
 
 	// Return control if no key pressed
-	return shutdown_requested;
+	return DOSBOX_IsShutdownRequested();
 }
 
 DOS_Version DOS_ParseVersion(const char *word, const char *args)

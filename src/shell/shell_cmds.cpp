@@ -2051,8 +2051,9 @@ void DOS_Shell::CMD_CHOICE(char * args){
 			choice = static_cast<char>(toupper(choice));
 		if (using_auto_type)
 			MAPPER_StopAutoTyping();
-		if (shutdown_requested)
+		if (DOSBOX_IsShutdownRequested()) {
 			break;
+		}
 		if (choice == ctrl_c)
 			break;
 	}
