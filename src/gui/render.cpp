@@ -293,14 +293,6 @@ static SectionProp* get_render_section()
 	return render_section;
 }
 
-// forward declaration
-static void render_init(Section* sec);
-
-void RENDER_Reinit()
-{
-	render_init(get_render_section());
-}
-
 static uint8_t get_best_mode(const uint8_t flags)
 {
 	return (flags & GFX_CAN_32) & ~(GFX_CAN_8 | GFX_CAN_15 | GFX_CAN_16);
@@ -508,9 +500,6 @@ void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second)
 	render_reset();
 }
 
-static bool force_vga_single_scan   = false;
-static bool force_no_pixel_doubling = false;
-
 // Double-scan VGA modes and pixel-double all video modes by default unless:
 //
 //  1) Single scanning or no pixel doubling is requested by the OpenGL shader.
@@ -526,8 +515,11 @@ static bool force_no_pixel_doubling = false;
 // The same reasoning applies to nearest-neighbour interpolation in texture
 // output mode.
 //
-static void setup_scan_and_pixel_doubling()
+static void set_scan_and_pixel_doubling()
 {
+	bool force_vga_single_scan   = false;
+	bool force_no_pixel_doubling = false;
+
 	switch (GFX_GetRenderingBackend()) {
 	case RenderingBackend::Texture: {
 		const auto nearest_neighbour_on = (GFX_GetTextureInterpolationMode() ==
@@ -550,6 +542,22 @@ static void setup_scan_and_pixel_doubling()
 	VGA_AllowPixelDoubling(!force_no_pixel_doubling);
 }
 
+static bool render_initialised = false;
+
+static void render_init(Section* section);
+
+void RENDER_Reinit()
+{
+    if (!render_initialised) {
+		return;
+	};
+
+	render_init(get_render_section());
+
+	render_callback(GFX_CallbackReset);
+	VGA_SetupDrawing(0);
+}
+
 bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
                                   [[maybe_unused]] const VideoMode& video_mode,
                                   [[maybe_unused]] const bool reinit_render)
@@ -570,18 +578,18 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_siz
 
 	if (changed_shader) {
 		if (reinit_render) {
-			render_init(get_render_section());
+			RENDER_Reinit();
 
 			// We can't set the new shader name here yet because
 			// then the "shader changed" reinit path wouldn't be
-			// trigger in render_init()
+			// trigger in RENDER_Reinit()
 		} else {
-			setup_scan_and_pixel_doubling();
+			set_scan_and_pixel_doubling();
 
 			// We must set the new shader name here as we're
-			// bypassing a full render reinit (render_init() is the
-			// only other place where 'render.current_shader_name'
-			// can be set).
+			// bypassing a full render reinit (RENDER_Reinit() is
+			// the only other place where
+			// 'render.current_shader_name' can be set).
 			render.current_shader_name = new_shader_name;
 		}
 	}
@@ -629,7 +637,7 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 	}
 
 	render.force_reload_shader = true;
-	render_init(get_render_section());
+	RENDER_Reinit();
 
 	// The shader settings might have been changed (e.g. force_single_scan,
 	// force_no_pixel_doubling), so force re-rendering the image using the
@@ -674,9 +682,9 @@ static const char* to_string(const enum MonochromePalette palette)
 
 static AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
 
-static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
+static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting(SectionProp* section)
 {
-	const std::string mode = get_render_section()->GetString("aspect");
+	const std::string mode = section->GetString("aspect");
 
 	if (has_true(mode) || mode == "auto") {
 		return AspectRatioCorrectionMode::Auto;
@@ -695,39 +703,14 @@ static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
 	}
 }
 
+static void set_aspect_ratio_correction(SectionProp* section)
+{
+	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting(section);
+}
+
 AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode()
 {
 	return aspect_ratio_correction_mode;
-}
-
-static IntegerScalingMode get_integer_scaling_mode_setting()
-{
-	const std::string mode = get_render_section()->GetString("integer_scaling");
-
-	if (has_false(mode)) {
-		return IntegerScalingMode::Off;
-
-	} else if (mode == "auto") {
-		return IntegerScalingMode::Auto;
-
-	} else if (mode == "horizontal") {
-		return IntegerScalingMode::Horizontal;
-
-	} else if (mode == "vertical") {
-		return IntegerScalingMode::Vertical;
-
-	} else {
-		// TODO convert to notification
-		LOG_WARNING("RENDER: Invalid 'integer_scaling' setting: '%s', using 'auto'",
-		            mode.c_str());
-		return IntegerScalingMode::Auto;
-	}
-}
-
-static void set_default_viewport_setting()
-{
-	const auto string_prop = get_render_section()->GetStringProp("viewport");
-	string_prop->SetValue("fit");
 }
 
 static void log_invalid_viewport_setting_warning(
@@ -914,14 +897,45 @@ static std::optional<ViewportSettings> parse_viewport_settings(const std::string
 
 static ViewportSettings viewport_settings = {};
 
-static ViewportSettings get_default_viewport_settings()
+static void set_viewport(SectionProp* section)
 {
-	ViewportSettings viewport = {};
+	if (const auto& settings = parse_viewport_settings(
+	            section->GetString("viewport"));
+	    settings) {
+		viewport_settings = *settings;
+	} else {
+		viewport_settings = {};
+		set_section_property_value("render", "viewport", "fit");
+	}
+}
 
-	viewport      = {};
-	viewport.mode = ViewportMode::Fit;
+static IntegerScalingMode get_integer_scaling_mode_setting(SectionProp* section)
+{
+	const std::string mode = section->GetString("integer_scaling");
 
-	return viewport;
+	if (has_false(mode)) {
+		return IntegerScalingMode::Off;
+
+	} else if (mode == "auto") {
+		return IntegerScalingMode::Auto;
+
+	} else if (mode == "horizontal") {
+		return IntegerScalingMode::Horizontal;
+
+	} else if (mode == "vertical") {
+		return IntegerScalingMode::Vertical;
+
+	} else {
+		// TODO convert to notification
+		LOG_WARNING("RENDER: Invalid 'integer_scaling' setting: '%s', using 'auto'",
+		            mode.c_str());
+		return IntegerScalingMode::Auto;
+	}
+}
+
+static void set_integer_scaling(SectionProp* section)
+{
+	render.integer_scaling_mode = get_integer_scaling_mode_setting(section);
 }
 
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
@@ -1354,13 +1368,107 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
+static void set_shader(SectionProp* section)
+{
+	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
+		return;
+	}
+
+	auto& shader_manager = ShaderManager::GetInstance();
+
+	constexpr auto GlshaderSettingName = "glshader";
+
+	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
+		const auto mapped_shader_name = shader_manager.MapShaderName(
+		        section->GetString(GlshaderSettingName));
+
+		shader_manager.NotifyGlshaderSettingChanged(mapped_shader_name);
+
+		set_section_property_value("render", "glshader", mapped_shader_name);
+	}
+
+	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
+
+	if (render.force_reload_shader) {
+		shader_manager.ReloadCurrentShader();
+		render.force_reload_shader = false;
+	}
+
+	render.current_shader_name = new_shader_name;
+}
+
+static void set_monochrome_palette(SectionProp* section)
+{
+	const auto mono_palette = to_monochrome_palette_enum(
+	        section->GetString("monochrome_palette").c_str());
+
+	VGA_SetMonochromePalette(mono_palette);
+}
+
+void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
+{
+	set_section_property_value("render", "monochrome_palette", to_string(palette));
+}
+
+static void render_init(Section* sec)
+{
+	SectionProp* section = static_cast<SectionProp*>(sec);
+	assert(section);
+
+	set_aspect_ratio_correction(section);
+	set_viewport(section);
+	set_integer_scaling(section);
+
+	set_shader(section);
+	set_scan_and_pixel_doubling();
+
+	set_monochrome_palette(section);
+
+	render_initialised = true;
+}
+
+static void notify_render_setting_updated(SectionProp* section,
+                                          const std::string& prop_name)
+{
+	auto reinit_drawing = []() {
+		render_callback(GFX_CallbackReset);
+		VGA_SetupDrawing(0);
+	};
+
+	if (prop_name == "aspect") {
+		set_aspect_ratio_correction(section);
+		reinit_drawing();
+
+	} else if (prop_name == "cga_colors") {
+		// TODO Support switching custom CGA colors at runtime. This is
+		// somewhat complicated and needs experimentation.
+
+	} else if (prop_name == "glshader") {
+		set_shader(section);
+		set_scan_and_pixel_doubling();
+		reinit_drawing();
+
+	} else if (prop_name == "integer_scaling") {
+		set_integer_scaling(section);
+		reinit_drawing();
+
+	} else if (prop_name == "monochrome_palette") {
+		set_monochrome_palette(section);
+
+	} else if (prop_name == "viewport") {
+		set_viewport(section);
+		reinit_drawing();
+	}
+}
+
 void RENDER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
+	auto sec = conf->AddSection("render", render_init);
+	assert(sec);
 
-	SectionProp* sec = conf->AddSection("render", render_init, changeable_at_runtime);
+	sec->AddUpdateHandler(notify_render_setting_updated);
 
 	MAPPER_AddHandler(toggle_stretch_axis,
 	                  SDL_SCANCODE_UNKNOWN,
@@ -1380,118 +1488,11 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 	                  "decstretch",
 	                  "Dec Stretch");
 
-	assert(sec);
-	init_render_settings(*sec);
-}
-
-void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
-{
-	set_section_property_value("render", "monochrome_palette", to_string(palette));
-}
-
-static bool handle_shader_changes()
-{
-	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
-		return false;
-	}
-
-	auto& shader_manager = ShaderManager::GetInstance();
-
-	constexpr auto glshader_setting_name = "glshader";
-
-	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
-		const auto section     = get_render_section();
-		const auto shader_name = shader_manager.MapShaderName(
-		        section->GetString(glshader_setting_name));
-
-		shader_manager.NotifyGlshaderSettingChanged(shader_name);
-
-		const auto string_prop = section->GetStringProp(glshader_setting_name);
-		string_prop->SetValue(shader_name);
-	}
-	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
-
-	render.integer_scaling_mode = get_integer_scaling_mode_setting();
-
-	const auto shader_changed = render.force_reload_shader ||
-	                            (new_shader_name != render.current_shader_name);
-
-	if (render.force_reload_shader) {
-		shader_manager.ReloadCurrentShader();
-	}
-
-	render.force_reload_shader = false;
-	render.current_shader_name = new_shader_name;
-
-	return shader_changed;
-}
-
-static void render_init(Section* sec)
-{
-	SectionProp* section = static_cast<SectionProp*>(sec);
-	assert(section);
-
-	// For restarting the renderer
-	static auto running = false;
-
-	// Store previous values of settings that should trigger a reinit
-	const auto prev_scale_size              = render.scale.size;
-	const auto prev_force_vga_single_scan   = force_vga_single_scan;
-	const auto prev_force_no_pixel_doubling = force_no_pixel_doubling;
-	const auto prev_integer_scaling_mode    = render.integer_scaling_mode;
-	const auto prev_viewport_settings       = viewport_settings;
-	const auto prev_aspect_ratio_correction_mode = aspect_ratio_correction_mode;
-
-	render.pal.first = 256;
-	render.pal.last  = 0;
-
-	// Get aspect ratio correction mode & force square pixels if requested
-	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting();
-
-	if (const auto& settings = parse_viewport_settings(
-	            section->GetString("viewport"));
-	    settings) {
-		viewport_settings = *settings;
-	} else {
-		viewport_settings = get_default_viewport_settings();
-		set_default_viewport_setting();
-	}
-
-	// Set monochrome palette
-	const auto mono_palette = to_monochrome_palette_enum(
-	        section->GetString("monochrome_palette").c_str());
-	VGA_SetMonochromePalette(mono_palette);
-
-	// Only use the default 1x rendering scaler
-	render.scale.size = 1;
-
-	auto shader_changed = handle_shader_changes();
-
-	setup_scan_and_pixel_doubling();
-
-	const auto needs_reinit =
-	        ((aspect_ratio_correction_mode != prev_aspect_ratio_correction_mode) ||
-	         (viewport_settings != prev_viewport_settings) ||
-	         (render.scale.size != prev_scale_size) ||
-	         (render.integer_scaling_mode != prev_integer_scaling_mode) ||
-	         shader_changed ||
-	         (prev_force_vga_single_scan != force_vga_single_scan) ||
-	         (prev_force_no_pixel_doubling != force_no_pixel_doubling));
-
-	if (running && needs_reinit) {
-		render_callback(GFX_CallbackReset);
-		VGA_SetupDrawing(0);
-	}
-
-	if (!running) {
-		render.updating = true;
-	}
-
-	running = true;
-
 	MAPPER_AddHandler(reload_shader,
 	                  SDL_SCANCODE_F2,
 	                  PRIMARY_MOD,
 	                  "reloadshader",
 	                  "Reload Shader");
+
+	init_render_settings(*sec);
 }

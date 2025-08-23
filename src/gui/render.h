@@ -17,7 +17,7 @@
 enum class ViewportMode { Fit, Relative };
 
 struct ViewportSettings {
-	ViewportMode mode = {};
+	ViewportMode mode = ViewportMode::Fit;
 
 	// Either parameter can be set in Fit mode (but not both at the
 	// same time), or none
