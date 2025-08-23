@@ -639,8 +639,8 @@ static void init_presentation_mode_settings()
 
 static void gfx_request_exit(const bool pressed)
 {
-	shutdown_requested = pressed;
-	if (shutdown_requested) {
+	if (pressed) {
+		DOSBOX_RequestShutdown();
 		LOG_DEBUG("SDL: Exit requested");
 	}
 }
@@ -677,7 +677,7 @@ static bool is_command_pressed(const SDL_Event event)
 
 	// NOTE: This is one of the few places where we use SDL key codes with
 	// SDL 2.0, rather than scan codes. Is that the correct behavior?
-	while (sdl.is_paused && !shutdown_requested) {
+	while (sdl.is_paused && !DOSBOX_IsShutdownRequested()) {
 		// since we're not polling, CPU usage drops to 0.
 		SDL_WaitEvent(&event);
 
@@ -3486,7 +3486,7 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 		// samples we're not going to play anyway.
 		MIXER_LockMixerThread();
 
-		while (paused && !shutdown_requested) {
+		while (paused && !DOSBOX_IsShutdownRequested()) {
 			// WaitEvent() waits for an event rather than
 			// polling, so CPU usage drops to zero.
 			SDL_WaitEvent(&ev);
@@ -3902,7 +3902,7 @@ bool DOSBOX_PollAndHandleEvents()
 		default: MAPPER_CheckEvent(&event);
 		}
 	}
-	return !shutdown_requested;
+	return !DOSBOX_IsShutdownRequested();
 }
 
 #if defined(WIN32)

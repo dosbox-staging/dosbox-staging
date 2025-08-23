@@ -45,8 +45,6 @@
 #include "shell/shell.h"
 #include "utils/math_utils.h"
 
-bool shutdown_requested = false;
-
 MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
 
@@ -428,13 +426,26 @@ void DOSBOX_SetNormalLoop()
 	loop = normal_loop;
 }
 
+static bool is_shutdown_requested = false;
+
 void DOSBOX_RunMachine()
 {
-	while ((*loop)() == 0 && !shutdown_requested)
+	while ((*loop)() == 0 && !is_shutdown_requested)
 		;
 }
 
-static void DOSBOX_UnlockSpeed( bool pressed ) {
+void DOSBOX_RequestShutdown()
+{
+	is_shutdown_requested = true;
+}
+
+bool DOSBOX_IsShutdownRequested()
+{
+	return is_shutdown_requested;
+}
+
+static void DOSBOX_UnlockSpeed(bool pressed)
+{
 	static bool autoadjust = false;
 
 	if (pressed) {

@@ -767,7 +767,7 @@ static std::unique_ptr<AutoExecModule> autoexec_module{};
 void AUTOEXEC_RefreshFile()
 {
 	// No need to do anything during the shutdown
-	if (shutdown_requested) {
+	if (DOSBOX_IsShutdownRequested()) {
 		return;
 	}
 
