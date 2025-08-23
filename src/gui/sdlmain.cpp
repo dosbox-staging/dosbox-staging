@@ -436,8 +436,6 @@ SDL_Block sdl;
 
 static SDL_Point FallbackWindowSize = {640, 480};
 
-static bool first_window = true;
-
 static DosBox::Rect to_rect(const SDL_Rect r)
 {
 	return {r.x, r.y, r.w, r.h};
@@ -2519,7 +2517,7 @@ void GFX_Start()
 	sdl.active = true;
 }
 
-static void shutdown_gui(Section*)
+static void sdl_destroy([[maybe_unused]] Section* section)
 {
 	gfx_stop();
 
@@ -3171,7 +3169,6 @@ static void sdl_section_init(Section* sec)
 		return;
 	}
 
-	sec->AddDestroyHandler(shutdown_gui);
 	SectionProp* section = static_cast<SectionProp*>(sec);
 
 	sdl.active          = false;
@@ -3266,6 +3263,34 @@ static void sdl_section_init(Section* sec)
 	TITLEBAR_ReadConfig(*conf);
 }
 
+static void recreate_window(Section* sec)
+{
+	gfx_stop();
+
+	if (sdl.draw.callback) {
+		(sdl.draw.callback)(GFX_CallbackStop);
+	}
+
+	remove_window();
+	set_output(sec, is_aspect_ratio_correction_enabled());
+	GFX_ResetScreen();
+}
+
+static void notify_sdl_setting_updated(SectionProp* section,
+                                       const std::string& prop_name)
+{
+	if (prop_name == "mapperfile") {
+		MAPPER_BindKeys(section);
+
+	} else if (prop_name == "output") {
+		recreate_window(section);
+	
+	} else {
+		// TODO add support for the rest of the settings later
+		sdl_section_init(section);
+	}
+}
+
 static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
 	MOUSE_EventMoved(static_cast<float>(motion->xrel),
@@ -3308,17 +3333,6 @@ void GFX_LosingFocus()
 bool GFX_IsFullscreen()
 {
 	return sdl.desktop.is_fullscreen;
-}
-
-void GFX_RegenerateWindow(Section* sec)
-{
-	if (first_window) {
-		first_window = false;
-		return;
-	}
-	remove_window();
-	set_output(sec, is_aspect_ratio_correction_enabled());
-	GFX_ResetScreen();
 }
 
 // TODO check if this workaround is still needed
@@ -4054,12 +4068,11 @@ static void register_sdl_text_messages()
 //
 static void init_sdl_config_section()
 {
-	constexpr bool ChangeableAtRuntime = true;
+	SectionProp* sdl_sec = control->AddSection("sdl", sdl_section_init);
 
-	SectionProp* sdl_sec = control->AddSection("sdl",
-	                                           sdl_section_init,
-	                                           ChangeableAtRuntime);
-	sdl_sec->AddInitHandler(MAPPER_StartUp);
+	sdl_sec->AddInitHandler(MAPPER_Init);
+	sdl_sec->AddUpdateHandler(notify_sdl_setting_updated);
+	sdl_sec->AddDestroyHandler(sdl_destroy);
 
 	using enum Property::Changeable::Value;
 
@@ -5035,7 +5048,6 @@ int sdl_main(int argc, char* argv[])
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
 		MAPPER_BindKeys(get_sdl_section());
-		GFX_RegenerateWindow(get_sdl_section());
 
 		if (arguments->startmapper) {
 			MAPPER_DisplayUI();
