@@ -87,8 +87,8 @@ struct RenderPal_t {
 };
 
 struct Render {
-	ImageInfo src = {};
-	uint32_t src_start   = 0;
+	ImageInfo src      = {};
+	uint32_t src_start = 0;
 
 	// Frames per second
 	double fps = 0;
