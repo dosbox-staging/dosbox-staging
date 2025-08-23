@@ -570,7 +570,7 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_siz
 
 	if (changed_shader) {
 		if (reinit_render) {
-			RENDER_Reinit();
+			render_init(get_render_section());
 
 			// We can't set the new shader name here yet because
 			// then the "shader changed" reinit path wouldn't be
@@ -629,7 +629,7 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 	}
 
 	render.force_reload_shader = true;
-	RENDER_Reinit();
+	render_init(get_render_section());
 
 	// The shader settings might have been changed (e.g. force_single_scan,
 	// force_no_pixel_doubling), so force re-rendering the image using the
