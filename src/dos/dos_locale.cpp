@@ -8,16 +8,16 @@
 #include <map>
 #include <vector>
 
-#include "misc/ansi_code_markup.h"
-#include "utils/bitops.h"
-#include "utils/checks.h"
 #include "dos_keyboard_layout.h"
 #include "dos_locale.h"
-#include "misc/logging.h"
 #include "gui/mapper.h"
+#include "misc/ansi_code_markup.h"
 #include "misc/host_locale.h"
-#include "utils/string_utils.h"
+#include "misc/logging.h"
 #include "misc/unicode.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 
@@ -1598,7 +1598,7 @@ DOS_Locale::~DOS_Locale() {}
 
 static std::unique_ptr<DOS_Locale> Locale = {};
 
-void DOS_Locale_ShutDown(Section*)
+void DOS_Locale_Destroy([[maybe_unused]]Section* sec)
 {
 	Locale.reset();
 }
@@ -1608,8 +1608,7 @@ void DOS_Locale_Init(Section* sec)
 	assert(sec);
 	Locale = std::make_unique<DOS_Locale>(sec);
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(DOS_Locale_ShutDown, changeable_at_runtime);
+	sec->AddDestroyHandler(DOS_Locale_Destroy);
 }
 
 void DOS_Locale_AddMessages()

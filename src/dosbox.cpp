@@ -40,8 +40,9 @@
 #include "hardware/timer.h"
 #include "hardware/video/reelmagic/reelmagic.h"
 #include "hardware/video/voodoo.h"
-#include "ints/bios.h"
+#include "ints/ems.h"
 #include "ints/int10.h"
+#include "ints/xms.h"
 #include "midi/midi.h"
 #include "misc/cross.h"
 #include "misc/support.h"
@@ -60,8 +61,6 @@ void PAGING_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);
 
-void DOS_Init(Section*);
-
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void LPT_DAC_Init(Section *);
@@ -75,10 +74,6 @@ void CMOS_Init(Section*);
 void MSCDEX_Init(Section*);
 void DRIVES_Init(Section*);
 void CDROM_Image_Init(Section*);
-
-// DOS internals mostly
-void EMS_Init(Section*);
-void XMS_Init(Section*);
 
 void AUTOEXEC_Init(Section*);
 void SHELL_Init();
@@ -984,12 +979,11 @@ static void add_dos_section()
 
 	auto secprop = control->AddSection("dos", DOS_Init);
 
-	constexpr auto changeable_at_runtime = true;
-	secprop->AddInitHandler(XMS_Init, changeable_at_runtime);
+	secprop->AddInitHandler(XMS_Init);
 	auto pbool = secprop->AddBool("xms", WhenIdle, true);
 	pbool->SetHelp("Enable XMS support ('on' by default).");
 
-	secprop->AddInitHandler(EMS_Init, changeable_at_runtime);
+	secprop->AddInitHandler(EMS_Init);
 	auto pstring = secprop->AddString("ems", WhenIdle, "true");
 	pstring->SetValues({"true", "emsboard", "emm386", "off"});
 	pstring->SetHelp(
@@ -1017,7 +1011,7 @@ static void add_dos_section()
 
 	// DOS locale settings
 
-	secprop->AddInitHandler(DOS_Locale_Init, changeable_at_runtime);
+	secprop->AddInitHandler(DOS_Locale_Init);
 
 	pstring = secprop->AddString("locale_period", WhenIdle, "native");
 	pstring->SetHelp(
@@ -1077,7 +1071,7 @@ static void add_dos_section()
 	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
 	        "(empty by default).");
 
-	secprop->AddInitHandler(DOS_InitFileLocking, changeable_at_runtime);
+	secprop->AddInitHandler(DOS_InitFileLocking);
 	pbool = secprop->AddBool("file_locking", WhenIdle, true);
 	pbool->SetHelp(
 	        "Enable file locking (SHARE.EXE emulation; 'on' by default).\n"
