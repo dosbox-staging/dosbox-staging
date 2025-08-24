@@ -3203,7 +3203,13 @@ public:
 // Initialise static members
 bool Cpu::initialised = false;
 
-static std::unique_ptr<Cpu> cpu_instance = nullptr;
+static std::unique_ptr<Cpu> cpu_instance = {};
+
+static void cpu_init(Section* sec)
+{
+	assert(sec);
+	cpu_instance = std::make_unique<Cpu>(sec);
+}
 
 static void cpu_shutdown([[maybe_unused]] Section* sec)
 {
@@ -3216,20 +3222,16 @@ static void cpu_shutdown([[maybe_unused]] Section* sec)
 	cpu_instance.reset();
 }
 
-static void cpu_init(Section* sec)
+static void notify_cpu_setting_updated(SectionProp* section,
+                                       [[maybe_unused]] const std::string& prop_name)
 {
-	assert(sec);
-	cpu_instance = std::make_unique<Cpu>(sec);
-
-	constexpr auto ChangeableAtRuntime = true;
-	sec->AddDestroyHandler(cpu_shutdown, ChangeableAtRuntime);
+	cpu_shutdown(section);
+	cpu_init(section);
 }
 
 void init_cpu_dosbox_settings(SectionProp& secprop)
 {
-	constexpr auto Always   = Property::Changeable::Always;
-	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
-	constexpr auto DeprecatedButAllowed = Property::Changeable::DeprecatedButAllowed;
+	using enum Property::Changeable::Value;
 
 	auto pstring = secprop.AddString("core", WhenIdle, "auto");
 	pstring->SetValues({
@@ -3398,9 +3400,9 @@ void CPU_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto ChangeableAtRuntime = true;
+	auto sec = conf->AddSection("cpu", cpu_init);
+	sec->AddDestroyHandler(cpu_shutdown);
+	sec->AddUpdateHandler(notify_cpu_setting_updated);
 
-	SectionProp* sec = conf->AddSection("cpu", cpu_init, ChangeableAtRuntime);
-	assert(sec);
 	init_cpu_dosbox_settings(*sec);
 }
