@@ -658,7 +658,33 @@ static void log_crt_knob_value()
 	case CRT_KNOB::ENUM_END: assertm(false, "Should not reach CRT knob end marker"); break;
 	}
 }
-static void turn_crt_knob(bool pressed, const int amount);
+
+static void turn_crt_knob(bool pressed, const int amount)
+{
+	if (!pressed) {
+		return;
+	}
+
+	switch (crt_knob) {
+	case CRT_KNOB::ERA: is_composite_new_era = !is_composite_new_era; break;
+	case CRT_KNOB::HUE: hue.turn(amount); break;
+	case CRT_KNOB::SATURATION: saturation.turn(amount); break;
+	case CRT_KNOB::CONTRAST: contrast.turn(amount); break;
+	case CRT_KNOB::BRIGHTNESS: brightness.turn(amount); break;
+	case CRT_KNOB::CONVERGENCE: convergence.turn(amount); break;
+	case CRT_KNOB::ENUM_END:
+		assertm(false, "Should not reach CRT knob end marker");
+		break;
+	}
+
+	if (is_machine_pcjr()) {
+		update_cga16_color_pcjr();
+	} else {
+		update_cga16_color();
+	}
+
+	log_crt_knob_value();
+}
 
 static void turn_crt_knob_positive(bool pressed)
 {
@@ -1425,12 +1451,14 @@ void VGA_SetupOther()
 	}
 }
 
-static void composite_init(Section *sec)
+static void composite_init(Section* sec)
 {
 	assert(sec);
-	const auto conf = static_cast<SectionProp *>(sec);
-	assert(conf);
-	const std::string state = conf->GetString("composite");
+
+	const auto section = static_cast<SectionProp*>(sec);
+	assert(section);
+
+	const auto state = section->GetString("composite");
 
 	if (state == "auto") {
 		cga_comp = COMPOSITE_STATE::AUTO;
@@ -1446,29 +1474,39 @@ static void composite_init(Section *sec)
 		}
 	}
 
-	const std::string era_choice = conf->GetString("era");
-	is_composite_new_era = era_choice == "new" ||
+	const auto era_choice = section->GetString("era");
+	is_composite_new_era  = era_choice == "new" ||
 	                       (is_machine_pcjr() && era_choice == "auto");
 
-	hue.set(conf->GetInt("hue"));
-	saturation.set(conf->GetInt("saturation"));
-	contrast.set(conf->GetInt("contrast"));
-	brightness.set(conf->GetInt("brightness"));
-	convergence.set(conf->GetInt("convergence"));
+	hue.set(section->GetInt("hue"));
+	saturation.set(section->GetInt("saturation"));
+	contrast.set(section->GetInt("contrast"));
+	brightness.set(section->GetInt("brightness"));
+	convergence.set(section->GetInt("convergence"));
 
 	if (cga_comp == COMPOSITE_STATE::ON) {
 		LOG_MSG("COMPOSITE: %s-era enabled with settings: hue %d, saturation %d,"
 		        " contrast %d, brightness %d, and convergence %d",
-		        is_composite_new_era ? "New" : "Old", hue.get(), saturation.get(), contrast.get(),
-		        brightness.get(), convergence.get());
+		        (is_composite_new_era ? "New" : "Old"),
+		        hue.get(),
+		        saturation.get(),
+		        contrast.get(),
+		        brightness.get(),
+		        convergence.get());
 	}
 }
 
-static void composite_settings(SectionProp& secprop)
+static void notify_composite_setting_updated(SectionProp* section,
+                                             const std::string& prop_name)
 {
-	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	composite_init(section);
+}
 
-	auto str_prop = secprop.AddString("composite", when_idle, "auto");
+static void init_composite_settings(SectionProp& section)
+{
+	using enum Property::Changeable::Value;
+
+	auto str_prop = section.AddString("composite", WhenIdle, "auto");
 	str_prop->SetValues({"auto", "on", "off"});
 	str_prop->SetHelp(
 	        "Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine\n"
@@ -1476,66 +1514,45 @@ static void composite_settings(SectionProp& secprop)
 	        "Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,\n"
 	        "      then copy the new settings from the logs into your config.");
 
-	str_prop           = secprop.AddString("era", when_idle, "auto");
+	str_prop = section.AddString("era", WhenIdle, "auto");
 	str_prop->SetValues({"auto", "old", "new"});
-	str_prop->SetHelp("Era of composite technology ('auto' by default).\n"
-	                   "When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.");
+	str_prop->SetHelp(
+	        "Era of composite technology ('auto' by default).\n"
+	        "When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.");
 
-	auto int_prop = secprop.AddInt("hue", when_idle, hue.get_default());
+	auto int_prop = section.AddInt("hue", WhenIdle, hue.get_default());
 	int_prop->SetMinMax(hue.get_min(), hue.get_max());
-	int_prop->SetHelp(format_str("Hue of the RGB palette (%d by default).\n"
-	                                 "For example, adjust until the sky is blue.",
-	                                 hue.get_default()));
+	int_prop->SetHelp(
+	        format_str("Hue of the RGB palette (%d by default).\n"
+	                   "For example, adjust until the sky is blue.",
+	                   hue.get_default()));
 
-	int_prop = secprop.AddInt("saturation", when_idle, saturation.get_default());
+	int_prop = section.AddInt("saturation", WhenIdle, saturation.get_default());
 	int_prop->SetMinMax(saturation.get_min(), saturation.get_max());
 	int_prop->SetHelp(format_str("Intensity of colors, from washed out to vivid (%d by default).",
-	                                 saturation.get_default()));
+	                             saturation.get_default()));
 
-	int_prop = secprop.AddInt("contrast", when_idle, contrast.get_default());
+	int_prop = section.AddInt("contrast", WhenIdle, contrast.get_default());
 	int_prop->SetMinMax(contrast.get_min(), contrast.get_max());
 	int_prop->SetHelp(format_str("Ratio between the dark and light area (%d by default).",
-	                                 contrast.get_default()));
+	                             contrast.get_default()));
 
-	int_prop = secprop.AddInt("brightness", when_idle, brightness.get_default());
+	int_prop = section.AddInt("brightness", WhenIdle, brightness.get_default());
 	int_prop->SetMinMax(brightness.get_min(), brightness.get_max());
 	int_prop->SetHelp(format_str("Luminosity of the image, from dark to light (%d by default).",
-	                                 brightness.get_default()));
+	                             brightness.get_default()));
 
-	int_prop = secprop.AddInt("convergence", when_idle, convergence.get_default());
+	int_prop = section.AddInt("convergence", WhenIdle, convergence.get_default());
 	int_prop->SetMinMax(convergence.get_min(), convergence.get_max());
 	int_prop->SetHelp(format_str("Convergence of subpixel elements, from blurry to sharp (%d by default).",
-	                                 convergence.get_default()));
-}
-
-static void turn_crt_knob(bool pressed, const int amount)
-{
-	if (!pressed)
-		return;
-	switch (crt_knob) {
-	case CRT_KNOB::ERA: is_composite_new_era = !is_composite_new_era; break;
-	case CRT_KNOB::HUE: hue.turn(amount); break;
-	case CRT_KNOB::SATURATION: saturation.turn(amount); break;
-	case CRT_KNOB::CONTRAST: contrast.turn(amount); break;
-	case CRT_KNOB::BRIGHTNESS: brightness.turn(amount); break;
-	case CRT_KNOB::CONVERGENCE: convergence.turn(amount); break;
-	case CRT_KNOB::ENUM_END: assertm(false, "Should not reach CRT knob end marker"); break;
-	}
-
-	if (is_machine_pcjr()) {
-		update_cga16_color_pcjr();
-	} else {
-		update_cga16_color();
-	}
-
-	log_crt_knob_value();
+	                             convergence.get_default()));
 }
 
 void VGA_AddCompositeSettings(Config& conf)
 {
-	constexpr auto changeable_at_runtime = true;
-
-	auto sec = conf.AddSection("composite", composite_init, changeable_at_runtime);
+	auto sec = conf.AddSection("composite", composite_init);
+	sec->AddUpdateHandler(notify_composite_setting_updated);
 	assert(sec);
-	composite_settings(*sec);
+
+	init_composite_settings(*sec);
 }
