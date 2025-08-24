@@ -411,14 +411,15 @@ CrossfeedPreset MIXER_GetCrossfeedPreset()
 
 void MIXER_SetCrossfeedPreset(const CrossfeedPreset new_preset)
 {
-	MIXER_LockMixerThread();
-
 	auto& c = mixer.crossfeed; // short-hand reference
 
 	// Unchanged?
 	if (new_preset == c.preset) {
 		return;
 	}
+
+	MIXER_LockMixerThread();
+
 	// Set new
 	assert(c.preset != new_preset);
 	c.preset = new_preset;
@@ -605,14 +606,15 @@ ChorusPreset MIXER_GetChorusPreset()
 
 void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 {
-	MIXER_LockMixerThread();
-
 	auto& c = mixer.chorus; // short-hand reference
 
 	// Unchanged?
 	if (new_preset == c.preset) {
 		return;
 	}
+
+	MIXER_LockMixerThread();
+
 	// Set new
 	assert(c.preset != new_preset);
 	c.preset = new_preset;
