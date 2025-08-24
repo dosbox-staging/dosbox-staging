@@ -7,18 +7,19 @@
 #include <algorithm>
 #include <cstring>
 #include <cstdlib>
+#include <memory>
 
-#include "ints/bios.h"
+#include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "dos/dos_inc.h"
-#include "hardware/dma.h"
-#include "hardware/port.h"
-#include "hardware/input/keyboard.h"
-#include "hardware/memory.h"
 #include "cpu/paging.h"
 #include "cpu/registers.h"
-#include "config/setup.h"
+#include "dos/dos_inc.h"
+#include "hardware/dma.h"
+#include "hardware/input/keyboard.h"
+#include "hardware/memory.h"
+#include "hardware/port.h"
+#include "ints/bios.h"
 #include "misc/support.h"
 
 #define EMM_PAGEFRAME	0xE000
@@ -1535,18 +1536,17 @@ public:
 	}
 };
 
-static EMS* test;
+static std::unique_ptr<EMS> emd = {};
 
-void EMS_ShutDown(Section* /*sec*/) {
-	delete test;
+static void ems_destroy([[maybe_unused]] Section* sec)
+{
+	ems = {};
 }
 
 void EMS_Init(Section* sec)
 {
 	assert(sec);
 
-	test = new EMS(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(EMS_ShutDown, changeable_at_runtime);
+	ems = std::make_unique<EMS>(sec);
+	sec->AddDestroyHandler(ems_destroy);
 }
