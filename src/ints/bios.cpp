@@ -1022,10 +1022,13 @@ static Bitu reboot_handler()
 
 	// Prepare the text to display
 	std::vector<std::string> conunter_text = {};
-	conunter_text.push_back(MSG_Get("BIOS_REBOOTING_1"));
-	conunter_text.push_back(MSG_Get("BIOS_REBOOTING_2"));
-	conunter_text.push_back(MSG_Get("BIOS_REBOOTING_3"));
+
+	conunter_text.emplace_back(MSG_Get("BIOS_REBOOTING_1"));
+	conunter_text.emplace_back(MSG_Get("BIOS_REBOOTING_2"));
+	conunter_text.emplace_back(MSG_Get("BIOS_REBOOTING_3"));
+
 	size_t max_length = 0;
+
 	for (auto& entry : conunter_text) {
 		max_length = std::max(max_length, entry.length());
 	}
