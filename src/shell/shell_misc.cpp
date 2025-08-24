@@ -549,9 +549,9 @@ std::string DOS_Shell::ResolvePath(const std::string_view name) const
 			}
 		}
 
-		prefixes.insert(prefixes.end(),
+		prefixes.insert(prefixes.end(), //-V823
 		                std::make_move_iterator(path_directories.begin()),
-		                std::make_move_iterator(path_directories.end())); //-V823
+		                std::make_move_iterator(path_directories.end()));
 	}
 
 	const bool has_extension = !get_executable_extension(name).empty();

@@ -108,7 +108,7 @@ static srgb8_to_lin_lut_t generate_srgb8_to_lin_lut()
 	srgb8_to_lin_lut_t lut = {};
 
 	for (uint16_t i = 0; i < lut.size(); ++i) {
-		const auto srgb = static_cast<float>(i) / (lut.size() - 1);
+		const auto srgb = static_cast<float>(i) / (lut.size() - 1); //-V609
 
 		lut[i] = srgb_to_linear(srgb);
 	}
