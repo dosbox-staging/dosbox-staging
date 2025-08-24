@@ -14,6 +14,7 @@
 #include <string>
 #include <type_traits>
 
+#include "config/setup.h"
 #include "dos/dos_system.h"
 #include "hardware/memory.h"
 
@@ -121,6 +122,8 @@ bool DOS_IsGuestOsBooted();
 
 enum { STDIN=0,STDOUT=1,STDERR=2,STDAUX=3,STDPRN=4};
 enum { HAND_NONE=0,HAND_FILE,HAND_DEVICE};
+
+void DOS_Init(Section*);
 
 void DOS_SetupFiles (void);
 bool DOS_ReadFile(uint16_t handle,uint8_t * data,uint16_t * amount, bool fcb = false);
@@ -1062,4 +1065,4 @@ char DOS_GetLocaleThousandsSeparator();
 char DOS_GetLocaleDecimalSeparator();
 char DOS_GetLocaleListSeparator();
 
-#endif
+#endif // DOSBOX_DOS_INC_H
