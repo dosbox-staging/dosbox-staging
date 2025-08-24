@@ -240,6 +240,8 @@ public:
 	// Always destroy the object once it is not needed anymore
 	// (configuration tool finishes it's job) and we are returning
 	// to normal code execution!
+	//
+	// TODO consider using a singleton instead
 
 	MouseControlAPI();
 	~MouseControlAPI();
