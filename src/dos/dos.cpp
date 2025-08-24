@@ -4,26 +4,30 @@
 
 #include "dos_inc.h"
 
+#include <array>
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <array>
+#include <memory>
 
-#include "utils/ascii.h"
-#include "ints/bios.h"
+#include "config/setup.h"
 #include "cpu/callback.h"
-#include "dos_locale.h"
+#include "cpu/registers.h"
+#include "dos/dos_locale.h"
 #include "dos/dos_windows.h"
 #include "dos/drives.h"
+#include "dos_locale.h"
+#include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/serialport/serialport.h"
-#include "hardware/memory.h"
-#include "programs/mount_common.h"
-#include "cpu/registers.h"
-#include "config/setup.h"
-#include "utils/string_utils.h"
+#include "ints/bios.h"
+#include "ints/ems.h"
+#include "ints/xms.h"
 #include "misc/support.h"
+#include "programs/mount_common.h"
+#include "utils/ascii.h"
+#include "utils/string_utils.h"
 
 #if defined(WIN32)
 #include <winsock2.h> // for gethostname
@@ -1807,16 +1811,38 @@ public:
 	}
 };
 
-static DOS* test;
+static std::unique_ptr<DOS> dos_module = {};
 
-void DOS_ShutDown(Section* /*sec*/) {
-	delete test;
+static void dos_destroy([[maybe_unused]] Section* sec) {
+	dos_module = {};
+}
+
+static void notify_dos_setting_updated(SectionProp* section,
+                                       const std::string& prop_name)
+{
+	if (prop_name == "expand_shell_variable") {
+		// Always evaluated on command execution
+
+	} else {
+		// Do not reinit the DOS module itself, only the other modules
+		XMS_Destroy(section);
+		XMS_Init(section);
+
+		EMS_Destroy(section);
+		EMS_Init(section);
+
+		DOS_Locale_Destroy(section);
+		DOS_Locale_Init(section);
+
+		DOS_InitFileLocking(section);
+	}
 }
 
 void DOS_Init(Section* sec)
 {
 	assert(sec);
-	test = new DOS(sec);
+	dos_module = std::make_unique<DOS>(sec);
 
-	sec->AddDestroyHandler(DOS_ShutDown);
+	sec->AddUpdateHandler(notify_dos_setting_updated);
+	sec->AddDestroyHandler(dos_destroy);
 }
