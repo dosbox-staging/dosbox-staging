@@ -2978,7 +2978,7 @@ static void mixer_init(Section* sec)
 }
 
 static void notify_mixer_setting_updated(SectionProp* section,
-                                         [[maybe_unused]] const std::string& prop_name)
+                                         const std::string& prop_name)
 {
 	MIXER_LockMixerThread();
 
@@ -3086,8 +3086,7 @@ static void init_mixer_dosbox_settings(SectionProp& sec_prop)
 	constexpr bool DefaultAllowNegotiate = true;
 #endif
 
-	constexpr auto WhenIdle    = Property::Changeable::WhenIdle;
-	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
+	using enum Property::Changeable::Value;
 
 	auto bool_prop = sec_prop.AddBool("nosound", OnlyAtStart, false);
 	assert(bool_prop);
@@ -3245,8 +3244,6 @@ void MIXER_AddConfigSection(const ConfigPtr& conf)
 
 	sec->AddUpdateHandler(notify_mixer_setting_updated);
 	sec->AddDestroyHandler(stop_mixer);
-
-	assert(sec);
 
 	init_mixer_dosbox_settings(*sec);
 
