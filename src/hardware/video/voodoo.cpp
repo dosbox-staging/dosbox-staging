@@ -3012,7 +3012,7 @@ iterated W    = 18.32 [48 bits]
 
 **************************************************************************/
 
-static voodoo_state* v = nullptr;
+static voodoo_state* v = nullptr; //-V707
 static auto vtype = VOODOO_1;
 
 static auto voodoo_bilinear_filtering = false;
