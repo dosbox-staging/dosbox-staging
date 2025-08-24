@@ -180,7 +180,7 @@ struct MixerSettings {
 
 	SDL_AudioDeviceID sdl_device = 0;
 
-	std::atomic<MixerState> state = MixerState::Uninitialized;
+	std::atomic<MixerState> state = {};
 
 	HighpassFilter highpass_filter = {};
 	Compressor compressor          = {};
@@ -674,6 +674,7 @@ static void init_compressor(const bool compressor_enabled)
 	                           rms_window_ms);
 
 	MIXER_UnlockMixerThread();
+
 	LOG_MSG("MIXER: Master compressor enabled");
 }
 
@@ -2602,7 +2603,6 @@ static void mixer_thread_loop()
 	double last_mixed = 0.0;
 	while (!mixer.thread_should_quit) {
 		std::unique_lock lock(mixer.mutex);
-		assert(mixer.state != MixerState::Uninitialized);
 
 		// This code is mostly for the fast-forward button (hold Alt + F12)
 		const double now         = PIC_AtomicIndex();
@@ -2705,17 +2705,15 @@ static void stop_mixer([[maybe_unused]] Section* sec)
 [[maybe_unused]] static const char* to_string(const MixerState s)
 {
 	switch (s) {
-	case MixerState::Uninitialized: return "Uninitialized";
 	case MixerState::NoSound: return "No sound";
 	case MixerState::On: return "On";
 	case MixerState::Muted: return "Mute";
+	default: assertm(false, "Invalid MixerState"); return "";
 	}
-	return "unknown!";
 }
 
 static void set_mixer_state(const MixerState new_state)
 {
-	// Only Muted <-> On state transitions are allowed
 	assert(new_state == MixerState::Muted || new_state == MixerState::On);
 
 #ifdef DEBUG_MIXER
@@ -2723,18 +2721,6 @@ static void set_mixer_state(const MixerState new_state)
 	        to_string(mixer.state),
 	        to_string(new_state));
 #endif
-
-	if (mixer.state == MixerState::Uninitialized) {
-		mixer.final_output.Start();
-		if (mixer.sdl_device > 0) {
-			// SDL starts out paused so unpause it when we first set
-			// the mixer state. We always keep SDL running in the
-			// future. When the mixer becomes muted, we just write
-			// silence.
-			constexpr int Unpause = 0;
-			SDL_PauseAudioDevice(mixer.sdl_device, Unpause);
-		}
-	}
 
 	if (new_state == MixerState::Muted) {
 		// Clear out any audio in the queue to avoid a stutter on un-mute
@@ -2762,7 +2748,6 @@ void MIXER_CloseAudioDevice()
 		SDL_CloseAudioDevice(mixer.sdl_device);
 		mixer.sdl_device = 0;
 	}
-	mixer.state = MixerState::Uninitialized;
 }
 
 // Sets `mixer.sample_rate_hz` and `mixer.blocksize` on success
@@ -2900,99 +2885,133 @@ static void init_denoiser(bool enabled)
 	}
 }
 
-void MIXER_Init(Section* sec)
+static void mixer_init(Section* sec)
 {
-	SectionProp* secprop = static_cast<SectionProp*>(sec);
-	assert(secprop);
+	auto section = static_cast<SectionProp*>(sec);
+	assert(section);
 
 	MIXER_LockMixerThread();
 
-	if (mixer.state == MixerState::Uninitialized) {
-		// Initialize the 8-bit to 16-bit lookup table
-		fill_8to16_lut();
+	// Initialize the 8-bit to 16-bit lookup table
+	fill_8to16_lut();
 
-		const auto mixer_state = secprop->GetBool("nosound")
-		                               ? MixerState::NoSound
-		                               : MixerState::On;
+	const auto mixer_state = section->GetBool("nosound") ? MixerState::NoSound
+	                                                     : MixerState::On;
 
-		auto set_no_sound = [&] {
-			assert(mixer.sdl_device == 0);
+	auto set_no_sound = [&] {
+		assert(mixer.sdl_device == 0);
 
-			LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
+		LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
 
-			mixer.state = MixerState::NoSound;
-		};
+		mixer.state = MixerState::NoSound;
+	};
 
-		mixer.sample_rate_hz = secprop->GetInt("rate");
-		mixer.blocksize      = secprop->GetInt("blocksize");
+	mixer.sample_rate_hz = section->GetInt("rate");
+	mixer.blocksize      = section->GetInt("blocksize");
 
-		if (mixer_state == MixerState::NoSound) {
-			set_no_sound();
+	if (mixer_state == MixerState::NoSound) {
+		set_no_sound();
 
+	} else {
+		if (init_sdl_sound(section->GetInt("rate"),
+		                   section->GetInt("blocksize"),
+		                   section->GetBool("negotiate"))) {
+
+			mixer.final_output.Start();
+
+			// SDL starts out paused so unpause it when we first set
+			// the mixer state. We always keep SDL running in the
+			// future. When the mixer becomes muted, we just write
+			// silence.
+			constexpr int Unpause = 0;
+			SDL_PauseAudioDevice(mixer.sdl_device, Unpause);
+
+			set_mixer_state(MixerState::On);
 		} else {
-			if (init_sdl_sound(secprop->GetInt("rate"),
-			                   secprop->GetInt("blocksize"),
-			                   secprop->GetBool("negotiate"))) {
-
-				// This also unpauses the audio device which is
-				// opened in paused mode by SDL.
-				set_mixer_state(MixerState::On);
-			} else {
-				set_no_sound();
-			}
+			set_no_sound();
 		}
-
-		const auto requested_prebuffer_ms = secprop->GetInt("prebuffer");
-		mixer.prebuffer_ms = clamp(requested_prebuffer_ms, 1, MaxPrebufferMs);
-
-		const auto prebuffer_frames = (mixer.sample_rate_hz *
-		                               mixer.prebuffer_ms) /
-		                              1000;
-
-		sec->AddDestroyHandler(stop_mixer);
-
-		mixer.final_output.Resize(mixer.blocksize + prebuffer_frames);
-
-		// One second of audio
-		mixer.capture_queue.Resize(mixer.sample_rate_hz * 2);
-
-		mixer.thread = std::thread(mixer_thread_loop);
-		set_thread_name(mixer.thread, "dosbox:mixer");
-
-		TIMER_AddTickHandler(capture_callback);
 	}
 
-	// Initialise crossfeed
-	const auto new_crossfeed_preset = crossfeed_pref_to_preset(
-	        secprop->GetString("crossfeed"));
+	const auto requested_prebuffer_ms = section->GetInt("prebuffer");
+	mixer.prebuffer_ms = clamp(requested_prebuffer_ms, 1, MaxPrebufferMs);
 
-	if (mixer.crossfeed.preset != new_crossfeed_preset) {
-		MIXER_SetCrossfeedPreset(new_crossfeed_preset);
-	}
+	const auto prebuffer_frames = (mixer.sample_rate_hz * mixer.prebuffer_ms) /
+	                              1000;
 
-	// Initialise reverb
-	const auto new_reverb_preset = reverb_pref_to_preset(
-	        secprop->GetString("reverb"));
+	mixer.final_output.Resize(mixer.blocksize + prebuffer_frames);
 
-	if (mixer.reverb.preset != new_reverb_preset) {
-		MIXER_SetReverbPreset(new_reverb_preset);
-	}
+	// One second of audio
+	mixer.capture_queue.Resize(mixer.sample_rate_hz * 2);
 
-	// Initialise chorus
-	const auto new_chorus_preset = chorus_pref_to_preset(
-	        secprop->GetString("chorus"));
+	mixer.thread = std::thread(mixer_thread_loop);
+	set_thread_name(mixer.thread, "dosbox:mixer");
 
-	if (mixer.chorus.preset != new_chorus_preset) {
-		MIXER_SetChorusPreset(new_chorus_preset);
-	}
-
-	// Init per-channel denoisers
-	init_denoiser(secprop->GetBool("denoiser"));
+	TIMER_AddTickHandler(capture_callback);
 
 	init_master_highpass_filter();
 
+	// Initialise reverb
+	const auto new_reverb_preset = reverb_pref_to_preset(
+	        section->GetString("reverb"));
+
+	MIXER_SetReverbPreset(new_reverb_preset);
+
+	// Initialise chorus
+	const auto new_chorus_preset = chorus_pref_to_preset(
+	        section->GetString("chorus"));
+
+	MIXER_SetChorusPreset(new_chorus_preset);
+
+	// Init per-channel denoisers
+	init_denoiser(section->GetBool("denoiser"));
+
 	// Initialise master compressor
-	init_compressor(secprop->GetBool("compressor"));
+	init_compressor(section->GetBool("compressor"));
+
+	// Initialise crossfeed
+	const auto new_crossfeed_preset = crossfeed_pref_to_preset(
+	        section->GetString("crossfeed"));
+
+	MIXER_SetCrossfeedPreset(new_crossfeed_preset);
+
+	MIXER_UnlockMixerThread();
+}
+
+static void notify_mixer_setting_updated(SectionProp* section,
+                                         [[maybe_unused]] const std::string& prop_name)
+{
+	MIXER_LockMixerThread();
+
+	if (prop_name == "chorus") {
+		const auto new_chorus_preset = chorus_pref_to_preset(
+		        section->GetString("chorus"));
+
+		if (mixer.chorus.preset != new_chorus_preset) {
+			MIXER_SetChorusPreset(new_chorus_preset);
+		}
+
+	} else if (prop_name == "compressor") {
+		init_compressor(section->GetBool("compressor"));
+
+	} else if (prop_name == "crossfeed") {
+		const auto new_crossfeed_preset = crossfeed_pref_to_preset(
+		        section->GetString("crossfeed"));
+
+		if (mixer.crossfeed.preset != new_crossfeed_preset) {
+			MIXER_SetCrossfeedPreset(new_crossfeed_preset);
+		}
+
+	} else if (prop_name == "denoiser") {
+		init_denoiser(section->GetBool("denoiser"));
+
+	} else if (prop_name == "reverb") {
+		const auto new_reverb_preset = reverb_pref_to_preset(
+		        section->GetString("reverb"));
+
+		if (mixer.reverb.preset != new_reverb_preset) {
+			MIXER_SetReverbPreset(new_reverb_preset);
+		}
+	}
 
 	MIXER_UnlockMixerThread();
 }
@@ -3222,10 +3241,13 @@ void MIXER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto ChangeableAtRuntime = true;
+	auto sec = conf->AddSection("mixer", mixer_init);
 
-	SectionProp* sec = conf->AddSection("mixer", MIXER_Init, ChangeableAtRuntime);
+	sec->AddUpdateHandler(notify_mixer_setting_updated);
+	sec->AddDestroyHandler(stop_mixer);
+
 	assert(sec);
+
 	init_mixer_dosbox_settings(*sec);
 
 	register_mixer_text_messages();
