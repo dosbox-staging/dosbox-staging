@@ -1333,17 +1333,19 @@ static bool RMDEV_SYS_int2fHandler()
 static void reelmagic_destroy([[maybe_unused]] Section* sec)
 {
 	// Assess the state prior to destruction
-	bool card_is_shutdown   = _dosboxCallbackNumber == 0;
-	bool driver_is_shutdown = _installedInterruptNumber == 0;
+	bool card_is_shutdown   = (_dosboxCallbackNumber == 0);
+	bool driver_is_shutdown = (_installedInterruptNumber == 0);
 
 	// Already shutdown, no work to do.
-	if (card_is_shutdown && driver_is_shutdown)
+	if (card_is_shutdown && driver_is_shutdown) {
 		return;
+	}
 
-	if (!card_is_shutdown && !driver_is_shutdown)
+	if (!card_is_shutdown && !driver_is_shutdown) {
 		LOG_MSG("REELMAGIC: Shutting down ReelMagic MPEG playback card and driver");
-	else {
-		// Ensure the only valid alternate state is a running card but not driver
+	} else {
+		// Ensure the only valid alternate state is a running card but
+		// not driver
 		assert(!card_is_shutdown && driver_is_shutdown);
 		LOG_MSG("REELMAGIC: Shutting down ReelMagic MPEG playback card");
 	}
@@ -1361,8 +1363,8 @@ static void reelmagic_destroy([[maybe_unused]] Section* sec)
 	// un-register the audio channel
 	ReelMagic_EnableAudioChannel(false);
 
-	// un-register the callbacks. The presence of a non-zero callback number indicates the card
-	// is currently active
+	// un-register the callbacks. The presence of a non-zero callback number
+	// indicates the card is currently active
 	if (_dosboxCallbackNumber != 0) {
 		CALLBACK_DeAllocate(_dosboxCallbackNumber + 1);
 		CALLBACK_DeAllocate(_dosboxCallbackNumber);
@@ -1371,8 +1373,9 @@ static void reelmagic_destroy([[maybe_unused]] Section* sec)
 
 	// Re-assess the driver's state after destruction
 	driver_is_shutdown = _installedInterruptNumber == 0;
-	if (!driver_is_shutdown)
+	if (!driver_is_shutdown) {
 		LOG_WARNING("REELMAGIC: Failed unloading ReelMagic MPEG playback driver");
+	}
 }
 
 static void reelmagic_init(Section* sec)
@@ -1406,13 +1409,14 @@ static void reelmagic_init(Section* sec)
 
 	// Driver/Hardware Initialization...
 	if (_dosboxCallbackNumber == 0) {
-		_dosboxCallbackNumber                       = CALLBACK_Allocate();
+		_dosboxCallbackNumber = CALLBACK_Allocate();
 		[[maybe_unused]] const auto second_callback = CALLBACK_Allocate();
 		assert(second_callback == _dosboxCallbackNumber + 1);
-		// this is so damn hacky! basically the code that the IVT points to for
-		// this driver needs more than 32-bytes of code to fit the check strings
-		// therefore, we are allocating two adjacent callbacks... seems kinda
-		// wasteful... need to explore a better way of doing this...
+		// this is so damn hacky! basically the code that the IVT points
+		// to for this driver needs more than 32-bytes of code to fit
+		// the check strings therefore, we are allocating two adjacent
+		// callbacks... seems kinda wasteful... need to explore a better
+		// way of doing this...
 	}
 	DOS_AddMultiplexHandler(&RMDEV_SYS_int2fHandler);
 	LOG(LOG_REELMAGIC, LOG_NORMAL)("\"RMDEV.SYS\" successfully installed");
@@ -1431,11 +1435,11 @@ static void reelmagic_init(Section* sec)
 	const bool card_initialized   = _dosboxCallbackNumber != 0;
 	const bool driver_initialized = _installedInterruptNumber != 0;
 
-	if (card_initialized && driver_initialized)
+	if (card_initialized && driver_initialized) {
 		LOG_MSG("REELMAGIC: Initialised ReelMagic MPEG playback card and driver");
-	else if (card_initialized)
+	} else if (card_initialized) {
 		LOG_MSG("REELMAGIC: Initialised ReelMagic MPEG playback card");
-	else {
+	} else {
 		// Should be impossible to initialize the driver without the card
 		assert(driver_initialized == false);
 		LOG_WARNING("REELMAGIC: Failed initializing ReelMagic MPEG playback card and/or driver");
@@ -1445,28 +1449,27 @@ static void reelmagic_init(Section* sec)
 	_a204debug = true;
 	_a206debug = true;
 #endif
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(reelmagic_destroy, changeable_at_runtime);
 }
 
-void REELMAGIC_AddConfigSection(const ConfigPtr& conf)
+static void notify_reelmagic_setting_updated(SectionProp* section,
+                                             const std::string& prop_name)
+{
+	reelmagic_destroy(section);
+	reelmagic_init(section);
+}
+
+static void init_reelmagic_dosbox_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
-	constexpr auto changeable_at_runtime = true;
-	auto secprop                         = control->AddSection("reelmagic",
-                                           reelmagic_init,
-                                           changeable_at_runtime);
-
-	auto pstring = secprop->AddString("reelmagic", WhenIdle, "off");
+	auto pstring = section.AddString("reelmagic", WhenIdle, "off");
 	pstring->SetHelp(
 	        "ReelMagic (aka REALmagic) MPEG playback support:\n"
 	        "  off:       Disable support (default).\n"
 	        "  cardonly:  Initialize the card without loading the FMPDRV.EXE driver.\n"
 	        "  on:        Initialize the card and load the FMPDRV.EXE on startup.");
 
-	pstring = secprop->AddString("reelmagic_key", WhenIdle, "auto");
+	pstring = section.AddString("reelmagic_key", WhenIdle, "auto");
 	pstring->SetHelp(
 	        "Set the 32-bit magic key used to decode the game's videos:\n"
 	        "  auto:      Use the built-in routines to determine the key (default).\n"
@@ -1474,10 +1477,19 @@ void REELMAGIC_AddConfigSection(const ConfigPtr& conf)
 	        "  thehorde:  Use The Horde's key, which is 0xC39D7088.\n"
 	        "  <custom>:  Set a custom key in hex format (e.g., 0x12345678).");
 
-	auto pint = secprop->AddInt("reelmagic_fcode", WhenIdle, 0);
+	auto pint = section.AddInt("reelmagic_fcode", WhenIdle, 0);
 	pint->SetHelp(
 	        "Override the frame rate code used during video playback:\n"
 	        "  0:       No override: attempt automatic rate discovery (default).\n"
 	        "  1 to 7:  Override the frame rate to one the following (use 1 through 7):\n"
 	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
+}
+
+void REELMAGIC_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)
+{
+	auto section = control->AddSection("reelmagic", reelmagic_init);
+	section->AddUpdateHandler(notify_reelmagic_setting_updated);
+	section->AddDestroyHandler(reelmagic_destroy);
+
+	init_reelmagic_dosbox_settings(*section);
 }
