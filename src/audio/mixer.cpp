@@ -294,7 +294,7 @@ void MIXER_UnlockMixerThread()
 	mixer.mutex.unlock();
 }
 
-MixerChannel::MixerChannel(MIXER_Handler _handler, const char* _name,
+MixerChannel::MixerChannel(MIXER_Handler _handler, const std::string& _name,
                            const std::set<ChannelFeature>& _features)
         : sleeper(*this),
           name(_name),
@@ -707,7 +707,7 @@ void MIXER_DeregisterChannel(MixerChannelPtr& channel_to_remove)
 }
 
 MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
-                                 const int sample_rate_hz, const char* name,
+                                 const int sample_rate_hz, const std::string& name,
                                  const std::set<ChannelFeature>& features)
 {
 	// We allow 0 for the UseMixerRate special value
@@ -719,10 +719,10 @@ MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
 
 	const auto chan_rate_hz = chan->GetSampleRate();
 	if (chan_rate_hz == mixer.sample_rate_hz) {
-		LOG_MSG("%s: Operating at %d Hz without resampling", name, chan_rate_hz);
+		LOG_MSG("%s: Operating at %d Hz without resampling", name.c_str(), chan_rate_hz);
 	} else {
 		LOG_MSG("%s: Operating at %d Hz and %s to the output rate",
-		        name,
+		        name.c_str(),
 		        chan_rate_hz,
 		        chan_rate_hz > mixer.sample_rate_hz ? "downsampling"
 		                                            : "upsampling");
