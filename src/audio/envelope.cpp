@@ -6,7 +6,7 @@
 #include "audio/mixer.h"
 #include "utils/math_utils.h"
 
-Envelope::Envelope(const char* name) : channel_name(name) {}
+Envelope::Envelope(const std::string& name) : channel_name(name) {}
 
 void Envelope::Reactivate()
 {
