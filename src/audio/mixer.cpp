@@ -650,13 +650,13 @@ void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 
 static void init_compressor(const bool compressor_enabled)
 {
-	MIXER_LockMixerThread();
 	mixer.do_compressor = compressor_enabled;
 	if (!mixer.do_compressor) {
-		MIXER_UnlockMixerThread();
 		LOG_MSG("MIXER: Master compressor disabled");
 		return;
 	}
+
+	MIXER_LockMixerThread();
 
 	const auto _0dbfs_sample_value = Max16BitSampleValue;
 	const auto threshold_db        = -6.0f;
