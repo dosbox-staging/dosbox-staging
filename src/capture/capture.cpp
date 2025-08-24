@@ -553,16 +553,40 @@ static void handle_capture_video_event(bool pressed)
 	}
 }
 
-static void capture_destroy(Section* /*sec*/)
+static void capture_init(Section* sec)
+{
+	assert(sec);
+	const auto section = dynamic_cast<SectionProp*>(sec);
+
+	auto capture_path = section->GetPath("capture_dir");
+
+	// We can safely change the capture output path even if capturing of any
+	// type is in progress.
+	capture.path = capture_path->realpath;
+	if (capture.path.empty()) {
+		LOG_WARNING(
+		        "CAPTURE: No value specified for `capture_dir`; "
+		        "defaulting to 'capture' in the current working directory");
+		capture.path = "capture";
+	}
+
+	const auto prefs = section->GetString("default_image_capture_formats");
+
+	image_capturer = std::make_unique<ImageCapturer>(prefs);
+}
+
+static void capture_destroy([[maybe_unused]] Section* section)
 {
 	if (capture.state.audio == CaptureState::InProgress) {
 		capture_audio_finalise();
 		capture.state.audio = CaptureState::Off;
 	}
+
 	if (capture.state.midi == CaptureState::InProgress) {
 		capture_midi_finalise();
 		capture.state.midi = CaptureState::Off;
 	}
+
 	// When destructed, the threaded image capturer instances do a blocking
 	// wait until all pending capture tasks are processed.
 	image_capturer = {};
@@ -575,32 +599,11 @@ static void capture_destroy(Section* /*sec*/)
 	capture.reset();
 }
 
-static void capture_init(Section* sec)
+static void notify_capture_setting_updated(SectionProp* section,
+                                           const std::string& prop_name)
 {
-	assert(sec);
-	const SectionProp* secprop = dynamic_cast<SectionProp*>(sec);
-	if (!secprop) {
-		return;
-	}
-
-	PropPath* capture_path = secprop->GetPath("capture_dir");
-	assert(capture_path);
-
-	// We can safely change the capture output path even if capturing of any
-	// type is in progress.
-	capture.path = capture_path->realpath;
-	if (capture.path.empty()) {
-		LOG_WARNING("CAPTURE: No value specified for `capture_dir`; defaulting to 'capture' "
-		            "in the current working directory");
-		capture.path = "capture";
-	}
-
-	const std::string prefs = secprop->GetString("default_image_capture_formats");
-
-	image_capturer = std::make_unique<ImageCapturer>(prefs);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(capture_destroy, changeable_at_runtime);
+	capture_destroy(section);
+	capture_init(section);
 }
 
 static void init_key_mappings()
@@ -648,20 +651,19 @@ static void init_key_mappings()
 	                  "Rec. Video");
 }
 
-static void init_capture_dosbox_settings(SectionProp& secprop)
+static void init_capture_dosbox_settings(SectionProp& section)
 {
-	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	using enum Property::Changeable::Value;
 
-	auto* path_prop = secprop.AddPath("capture_dir", when_idle, "capture");
+	auto path_prop = section.AddPath("capture_dir", WhenIdle, "capture");
 	path_prop->SetHelp(
 	        "Directory where the various captures are saved, such as audio, video, MIDI\n"
 	        "and screenshot captures. ('capture' in the current working directory by\n"
 	        "default).");
-	assert(path_prop);
 
-	auto* str_prop = secprop.AddString("default_image_capture_formats",
-	                                    when_idle,
-	                                    "upscaled");
+	auto* str_prop = section.AddString("default_image_capture_formats",
+	                                   WhenIdle,
+	                                   "upscaled");
 	str_prop->SetHelp(
 	        "Set the capture format of the default screenshot action ('upscaled' by\n"
 	        "default):\n"
@@ -683,20 +685,16 @@ static void init_capture_dosbox_settings(SectionProp& secprop)
 	        "screenshot action will save multiple images in the specified formats.\n"
 	        "Keybindings for taking single screenshots in specific formats are also\n"
 	        "available.");
-	assert(str_prop);
 }
 
 void CAPTURE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
+	auto section = conf->AddSection("capture", capture_init);
+	section->AddUpdateHandler(notify_capture_setting_updated);
+	section->AddDestroyHandler(capture_destroy);
 
-	SectionProp* sec = conf->AddSection("capture",
-	                                    capture_init,
-	                                    changeable_at_runtime);
-	assert(sec);
-	init_capture_dosbox_settings(*sec);
+	init_capture_dosbox_settings(*section);
 	init_key_mappings();
 }
-
