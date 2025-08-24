@@ -748,7 +748,7 @@ bool PropMultiVal::SetValue(const std::string& _value)
 		}
 
 		prevtype     = p->GetType();
-		prevargument = curr_value;
+		prevargument = std::move(curr_value);
 	}
 
 	return is_valid;
