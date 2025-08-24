@@ -46,7 +46,7 @@ typedef struct AudioFrame AudioFrame_;
 
 class Envelope {
 public:
-	Envelope(const char* name);
+	Envelope(const std::string& name);
 
 	void Process(const bool is_stereo, AudioFrame& frame);
 
