@@ -157,7 +157,7 @@ typedef SpeexResamplerState_ SpeexResamplerState;
 
 class MixerChannel {
 public:
-	MixerChannel(MIXER_Handler _handler, const char* name,
+	MixerChannel(MIXER_Handler _handler, const std::string& name,
 	             const std::set<ChannelFeature>& features);
 	~MixerChannel();
 
@@ -448,7 +448,7 @@ private:
 using MixerChannelPtr = std::shared_ptr<MixerChannel>;
 
 MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
-                                 const int sample_rate_hz, const char* name,
+                                 const int sample_rate_hz, const std::string& name,
                                  const std::set<ChannelFeature>& features);
 
 MixerChannelPtr MIXER_FindChannel(const char* name);
