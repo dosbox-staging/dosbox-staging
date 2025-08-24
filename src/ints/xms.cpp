@@ -4,22 +4,23 @@
 
 #include "dosbox.h"
 
-#include "ints/bios.h"
-#include "utils/bitops.h"
-#include "cpu/callback.h"
-#include "utils/checks.h"
-#include "cpu/cpu.h"
-#include "dos/dos_inc.h"
-#include "hardware/port.h"
-#include "utils/math_utils.h"
-#include "hardware/memory.h"
-#include "cpu/registers.h"
-#include "config/setup.h"
-#include "misc/support.h"
-
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
+
+#include "config/setup.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "cpu/registers.h"
+#include "dos/dos_inc.h"
+#include "hardware/memory.h"
+#include "hardware/port.h"
+#include "ints/bios.h"
+#include "misc/support.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
 
 CHECK_NARROWING();
 
@@ -821,21 +822,20 @@ XMS::~XMS()
 // Lifecycle
 // ***************************************************************************
 
-static std::unique_ptr<XMS> instance = {};
+static std::unique_ptr<XMS> xms_module = {};
 
-static void XMS_ShutDown(Section* /* sec */)
+void XMS_Destroy([[maybe_unused]] Section* sec)
 {
-	instance = {};
+	xms_module = {};
 }
 
 void XMS_Init(Section* sec)
 {
 	assert(sec);
 
-	if (!instance) {
-		instance = std::make_unique<XMS>(sec);
+	if (!xms_module) {
+		xms_module = std::make_unique<XMS>(sec);
 	}
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(XMS_ShutDown, changeable_at_runtime);
+	sec->AddDestroyHandler(XMS_Destroy);
 }
