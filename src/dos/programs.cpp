@@ -397,7 +397,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 					PropInt* pint = dynamic_cast<PropInt*>(p);
 					assert(pint);
 
-					if (pint->GetMin() != pint->GetMax()) {
+					if (pint && pint->GetMin() != pint->GetMax()) {
 						std::ostringstream oss;
 						oss << pint->GetMin();
 						oss << "..";
@@ -718,7 +718,9 @@ void CONFIG::Run(void)
 						        dynamic_cast<SectionLine*>(sec);
 						assert(pline);
 
-						WriteOut("%s", pline->data.c_str());
+						if (pline) {
+							WriteOut("%s", pline->data.c_str());
+						}
 						break;
 					}
 					while (true) {
