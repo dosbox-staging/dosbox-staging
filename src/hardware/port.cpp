@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "port.h"
+
 #include <cassert>
 #include <cstring>
 #include <limits>
@@ -12,7 +14,6 @@
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "cpu/lazyflags.h"
-#include "hardware/port.h"
 
 //#define ENABLE_PORTLOG
 

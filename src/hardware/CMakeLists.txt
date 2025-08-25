@@ -65,7 +65,6 @@ target_sources(libdosboxcommon PRIVATE
   cmos.cpp
   dma.cpp
   ide.cpp
-  iohandler.cpp
   ipx.cpp
   ipxserver.cpp
   joystick.cpp
@@ -74,6 +73,7 @@ target_sources(libdosboxcommon PRIVATE
   ne2000.cpp
   pci_bus.cpp
   pic.cpp
+  port.cpp
   timer.cpp
   virtualbox.cpp
   vmware.cpp
