@@ -1,7 +1,10 @@
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "pic.h"
+
+#include <memory>
 
 #include "config/setup.h"
 #include "cpu/callback.h"
@@ -687,13 +690,15 @@ public:
 	}
 };
 
-static PIC_8259A* test;
+static std::unique_ptr<PIC_8259A> pic = {};
 
-void PIC_Destroy(Section* /*sec*/){
-	delete test;
+static void pic_destroy([[maybe_unused]] Section* sec)
+{
+	pic = {};
 }
 
-void PIC_Init(Section* sec) {
-	test = new PIC_8259A(sec);
-	sec->AddDestroyHandler(PIC_Destroy);
+void PIC_Init(Section* sec)
+{
+	pic = std::make_unique<PIC_8259A>(sec);
+	sec->AddDestroyHandler(pic_destroy);
 }
