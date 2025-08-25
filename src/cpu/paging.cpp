@@ -1011,7 +1011,7 @@ public:
 	}
 };
 
-static std::unique_ptr<PAGING> paging_instance = nullptr;
+static std::unique_ptr<PAGING> paging_instance = {};
 
 void PAGING_Init(Section *sec)
 {
