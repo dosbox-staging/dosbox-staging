@@ -489,7 +489,10 @@ static uint8_t EMM_GetPagesForAllHandles(PhysPt table,uint16_t & handles) {
 }
 
 static uint8_t EMM_PartialPageMapping(void) {
-	PhysPt list,data;uint16_t count;
+	PhysPt list;
+	PhysPt data;
+	uint16_t count;
+	uint16_t page;
 	switch (reg_al) {
 	case 0x00:	/* Save Partial Page Map */
 		list = SegPhys(ds)+reg_si;
@@ -499,38 +502,57 @@ static uint8_t EMM_PartialPageMapping(void) {
 		for (;count>0;count--) {
 			uint16_t segment=mem_readw(list);list+=2;
 			if ((segment>=EMM_PAGEFRAME) && (segment<EMM_PAGEFRAME+0x1000)) {
-				uint16_t page = (segment-EMM_PAGEFRAME) / (EMM_PAGE_SIZE>>4);
-				mem_writew(data,segment);data+=2;
-				MEM_BlockWrite(data,&emm_mappings[page],sizeof(EMM_Mapping));
-				data+=sizeof(EMM_Mapping);
-			} else if ((ems_type==1) || (ems_type==3) || ((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME)) || ((segment>=0xa000) && (segment<0xb000))) {
-				mem_writew(data,segment);data+=2;
-				MEM_BlockWrite(data,&emm_segmentmappings[segment>>10],sizeof(EMM_Mapping));
-				data+=sizeof(EMM_Mapping);
+				page = (segment - EMM_PAGEFRAME) >> 10;
+				mem_writeb(data, static_cast<uint8_t>(page));
+				data++;
+				mem_writeb(data,
+				           static_cast<uint8_t>(
+				                   emm_mappings[page].handle));
+				data++;
+				mem_writew(data, emm_mappings[page].page);
+			} else if ((ems_type == 1) || (ems_type == 3) ||
+			           ((segment >= EMM_PAGEFRAME - 0x1000) &&
+			            (segment < EMM_PAGEFRAME)) ||
+			           ((segment >= 0xa000) && (segment < 0xb000))) {
+				page = segment >> 10;
+				mem_writeb(data, static_cast<uint8_t>(page));
+				data++;
+				mem_writeb(data,
+				           static_cast<uint8_t>(
+				                   emm_segmentmappings[page].handle));
+				data++;
+				mem_writew(data, emm_segmentmappings[page].page);
 			} else {
 				return EMM_ILL_PHYS;
 			}
+			data += 2;
 		}
 		break;
 	case 0x01:	/* Restore Partial Page Map */
 		data = SegPhys(ds)+reg_si;
 		count= mem_readw(data);data+=2;
 		for (;count>0;count--) {
-			uint16_t segment=mem_readw(data);data+=2;
-			if ((segment>=EMM_PAGEFRAME) && (segment<EMM_PAGEFRAME+0x1000)) {
-				uint16_t page = (segment-EMM_PAGEFRAME) / (EMM_PAGE_SIZE>>4);
-				MEM_BlockRead(data,&emm_mappings[page],sizeof(EMM_Mapping));
-			} else if ((ems_type==1) || (ems_type==3) || ((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME)) || ((segment>=0xa000) && (segment<0xb000))) {
-				MEM_BlockRead(data,&emm_segmentmappings[segment>>10],sizeof(EMM_Mapping));
+			page = static_cast<uint16_t>(mem_readb(data));
+			data++;
+			if (page < EMM_MAX_PHYS) {
+				emm_mappings[page].handle = static_cast<uint16_t>(
+				        mem_readb(data));
+				data++;
+				emm_mappings[page].page = mem_readw(data);
+			} else if (page < 0x40) {
+				emm_segmentmappings[page].handle =
+				        static_cast<uint16_t>(mem_readb(data));
+				data++;
+				emm_segmentmappings[page].page = mem_readw(data);
 			} else {
 				return EMM_ILL_PHYS;
 			}
-			data+=sizeof(EMM_Mapping);
+			data += 2;
 		}
 		return EMM_RestoreMappingTable();
 		break;
 	case 0x02:	/* Get Partial Page Map Array Size */
-		reg_al=(uint8_t)(2+reg_bx*(2+sizeof(EMM_Mapping)));
+		reg_al = static_cast<uint8_t>(2 + reg_bx * 4);
 		break;
 	default:
 		LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
@@ -932,7 +954,7 @@ static Bitu INT67_Handler(void) {
 				/* adjust paging entries for page frame (if mapped) */
 				for (ct=0; ct<4; ct++) {
 					uint16_t handle=emm_mappings[ct].handle;
-					if (handle!=0xffff) {
+					if (handle != NULL_HANDLE) {
 						auto memh=(uint16_t)MEM_NextHandleAt(emm_handles[handle].mem,emm_mappings[ct].page*4);
 						uint16_t entry_addr=reg_di+(EMM_PAGEFRAME>>6)+(ct*0x10);
 						real_writew(SegValue(es),entry_addr+0x00+0x01,(memh+0)*0x10);		// mapping of 1/4 of page
@@ -993,7 +1015,7 @@ static Bitu INT67_Handler(void) {
 					else if (mem_seg<EMM_PAGEFRAME+0xc00) phys_page=2;
 					else phys_page=3;
 					uint16_t handle=emm_mappings[phys_page].handle;
-					if (handle==0xffff) {
+					if (handle == NULL_HANDLE) {
 						reg_ah=EMM_ILL_PHYS;
 						break;
 					} else {
