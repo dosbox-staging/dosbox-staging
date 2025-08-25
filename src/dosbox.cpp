@@ -66,7 +66,6 @@ void TANDYSOUND_Init(Section*);
 void LPT_DAC_Init(Section *);
 void PS1AUDIO_Init(Section *);
 
-void PIC_Init(Section*);
 void TIMER_Init(Section*);
 void DEBUG_Init(Section*);
 
