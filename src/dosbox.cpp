@@ -27,12 +27,14 @@
 #include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/render.h"
+#include "hardware//network/ipx.h"
 #include "hardware/cmos.h"
 #include "hardware/hardware.h"
 #include "hardware/input/joystick.h"
 #include "hardware/input/joystick.h"
+#include "hardware/input/joystick.h"
 #include "hardware/input/mouse.h"
-#include "hardware/network/ipx.h"
+#include "hardware/memory.h"
 #include "hardware/network/ne2000.h"
 #include "hardware/pci_bus.h"
 #include "hardware/pic.h"
@@ -55,7 +57,6 @@ MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
 
 void LOG_StartUp();
-void MEM_Init(Section *);
 void PAGING_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);
