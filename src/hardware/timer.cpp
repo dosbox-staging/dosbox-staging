@@ -7,6 +7,7 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <memory>
 
 #include "audio/mixer.h"
 #include "config/setup.h"
@@ -757,15 +758,15 @@ public:
 	}
 };
 
-static TIMER* test;
+static std::unique_ptr<TIMER> timer = {};
 
-void TIMER_Destroy(Section*)
+static void timer_destroy([[maybe_unused]] Section* sec)
 {
-	delete test;
+	timer = {};
 }
 
 void TIMER_Init(Section* sec)
 {
-	test = new TIMER(sec);
-	sec->AddDestroyHandler(TIMER_Destroy);
+	timer = std::make_unique<TIMER>(sec);
+	sec->AddDestroyHandler(timer_destroy);
 }
