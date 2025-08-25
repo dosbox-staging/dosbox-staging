@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -11,6 +12,7 @@
 #include <cmath>
 #include <cstdint>
 
+#include "config/setup.h"
 #include "cpu/cpu.h"
 
 typedef void(PIC_EOIHandler)();
@@ -63,6 +65,8 @@ static inline void PIC_UpdateAtomicIndex()
 	atomic_pic_index.store(PIC_FullIndex(), std::memory_order_release);
 }
 
+void PIC_Init(Section*);
+
 void PIC_ActivateIRQ(uint8_t irq);
 void PIC_DeActivateIRQ(uint8_t irq);
 
@@ -75,4 +79,5 @@ void PIC_RemoveEvents(PIC_EventHandler handler);
 void PIC_RemoveSpecificEvents(PIC_EventHandler handler, uint32_t val);
 
 void PIC_SetIRQMask(uint32_t irq, bool masked);
-#endif
+
+#endif // DOSBOX_PIC_H
