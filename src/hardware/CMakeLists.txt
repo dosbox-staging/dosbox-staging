@@ -69,10 +69,10 @@ target_sources(libdosboxcommon PRIVATE
   cmos.cpp
   dma.cpp
   ide.cpp
-  iohandler.cpp
   memory.cpp
   pci_bus.cpp
   pic.cpp
+  port.cpp
   timer.cpp
   virtualbox.cpp
   vmware.cpp
