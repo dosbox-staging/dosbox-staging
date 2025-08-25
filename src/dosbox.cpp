@@ -20,6 +20,7 @@
 #include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
+#include "cpu/paging.h"
 #include "debugger/debugger.h"
 #include "dos/dos_inc.h"
 #include "dos/dos_locale.h"
@@ -54,7 +55,6 @@ MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
 
 void LOG_StartUp();
-void PAGING_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);
 
