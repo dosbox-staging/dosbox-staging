@@ -31,6 +31,7 @@
 #include "hardware/input/mouse.h"
 #include "hardware/ipx.h"
 #include "hardware/joystick.h"
+#include "hardware/memory.h"
 #include "hardware/ne2000.h"
 #include "hardware/pci_bus.h"
 #include "hardware/pic.h"
@@ -53,7 +54,6 @@ MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
 
 void LOG_StartUp();
-void MEM_Init(Section *);
 void PAGING_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);

@@ -7,9 +7,10 @@
 
 #include "dosbox.h"
 
+#include "config/setup.h"
+#include "misc/types.h"
 #include "utils/mem_host.h"
 #include "utils/mem_unaligned.h"
-#include "misc/types.h"
 
 constexpr uint16_t MemPageSize     = 4096;
 constexpr uint8_t  RealSegmentSize = 16;
@@ -37,6 +38,8 @@ using RealAddress = struct RealAddress {
 
 extern HostPt MemBase;
 HostPt GetMemBase();
+
+void MEM_Init(Section* sec);
 
 uint16_t MEM_GetMinMegabytes();
 uint16_t MEM_GetMaxMegabytes();
