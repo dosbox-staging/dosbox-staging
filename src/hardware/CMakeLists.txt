@@ -79,7 +79,7 @@ target_sources(libdosboxcommon PRIVATE
   vmware.cpp
 )
 
-target_sources(dosbox PRIVATE iohandler_containers.cpp)
+target_sources(dosbox PRIVATE port_containers.cpp)
 
 target_link_libraries(libdosboxcommon PRIVATE
   libesfmu
