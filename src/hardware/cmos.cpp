@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -5,14 +6,15 @@
 
 #include <cmath>
 #include <ctime>
+#include <memory>
 
-#include "hardware/port.h"
-#include "ints/bios_disk.h"
-#include "misc/cross.h"
-#include "hardware/timer.h"
+#include "config/setup.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
-#include "config/setup.h"
+#include "hardware/port.h"
+#include "hardware/timer.h"
+#include "ints/bios_disk.h"
+#include "misc/cross.h"
 
 static struct {
 	uint8_t regs[0x40];
@@ -360,18 +362,17 @@ public:
 	}
 };
 
-static CMOS* test;
+static std::unique_ptr<CMOS> cmos_module = {};
 
-void CMOS_Destroy(Section* /*sec*/){
-	delete test;
+void cmos_destroy([[maybe_unused]] Section* sec){
+	cmos_module = {};
 }
 
 void CMOS_Init(Section* sec)
 {
 	assert(sec);
 
-	test = new CMOS(sec);
+	cmos_module = std::make_unique<CMOS>(sec);
 
-	constexpr auto changeable_at_runtime = false;
-	sec->AddDestroyHandler(CMOS_Destroy, changeable_at_runtime);
+	sec->AddDestroyHandler(cmos_destroy);
 }

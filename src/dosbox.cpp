@@ -27,6 +27,7 @@
 #include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/render.h"
+#include "hardware/cmos.h"
 #include "hardware/hardware.h"
 #include "hardware/input/joystick.h"
 #include "hardware/input/joystick.h"
@@ -67,7 +68,6 @@ void PS1AUDIO_Init(Section *);
 void PIC_Init(Section*);
 void TIMER_Init(Section*);
 void DEBUG_Init(Section*);
-void CMOS_Init(Section*);
 
 void AUTOEXEC_Init(Section*);
 void SHELL_Init();
