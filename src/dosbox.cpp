@@ -55,7 +55,6 @@ MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
 
 void LOG_StartUp();
-void IO_Init(Section * );
 
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
