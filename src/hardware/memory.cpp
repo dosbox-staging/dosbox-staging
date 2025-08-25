@@ -5,6 +5,7 @@
 #include "memory.h"
 
 #include <cstring>
+#include <memory>
 
 #include "config/setup.h"
 #include "cpu/paging.h"
@@ -766,18 +767,17 @@ public:
 	}
 };
 
-static MEMORY* test;
+static std::unique_ptr<MEMORY> memory_module = {};
 
-static void MEM_ShutDown([[maybe_unused]] Section *sec)
+static void mem_destroy([[maybe_unused]] Section* sec)
 {
-	delete test;
+	memory_module = {};
 }
 
 void MEM_Init(Section* sec)
 {
 	assert(sec);
 
-	/* shutdown function */
-	test = new MEMORY(sec);
-	sec->AddDestroyHandler(MEM_ShutDown);
+	memory_module = std::make_unique<MEMORY>(sec);
+	sec->AddDestroyHandler(mem_destroy);
 }
