@@ -10,7 +10,7 @@
 #include <initializer_list>
 
 #include "cpu/callback.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "hardware/pic.h"
 #include "misc/unicode.h"
 #include "utils/checks.h"

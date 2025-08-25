@@ -10,9 +10,9 @@
 #include <io.h>
 #include <sys/stat.h>
 
-#include "misc/compiler.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/dos_system.h"
+#include "misc/compiler.h"
 
 bool path_exists(const char *path) noexcept
 {

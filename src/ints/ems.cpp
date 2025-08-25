@@ -14,7 +14,7 @@
 #include "cpu/cpu.h"
 #include "cpu/paging.h"
 #include "cpu/registers.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "hardware/dma.h"
 #include "hardware/input/keyboard.h"
 #include "hardware/memory.h"
