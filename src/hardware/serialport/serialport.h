@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "config/config.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/programs.h"
 #include "hardware/port.h"
 #include "hardware/timer.h"

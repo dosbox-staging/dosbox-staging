@@ -11,17 +11,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "misc/compiler.h"
-#include "cpu/registers.h"
-#include "cpu/callback.h"
-#include "dos/dos_system.h"
-#include "dos_inc.h"
-#include "utils/fs_utils.h"
-#include "config/setup.h"
-#include "misc/support.h"
-#include "ints/bios_disk.h"
-#include "cpu/cpu.h"
 #include "cdrom.h"
+#include "config/setup.h"
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "cpu/registers.h"
+#include "dos.h"
+#include "dos/dos_system.h"
+#include "ints/bios_disk.h"
+#include "misc/compiler.h"
+#include "misc/support.h"
+#include "utils/fs_utils.h"
 #include "utils/math_utils.h"
 #include "utils/string_utils.h"
 

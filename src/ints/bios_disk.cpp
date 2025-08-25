@@ -9,10 +9,10 @@
 
 #include "cpu/callback.h"
 #include "cpu/registers.h"
-#include "hardware/memory.h"
-#include "dos/dos_inc.h" /* for Drives[] */
+#include "dos/dos.h" /* for Drives[] */
 #include "dos/drives.h"
 #include "gui/mapper.h"
+#include "hardware/memory.h"
 #include "utils/string_utils.h"
 
 diskGeo DiskGeometryList[] = {

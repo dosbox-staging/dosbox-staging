@@ -13,7 +13,7 @@
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "cpu/registers.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "hardware/memory.h"
 #include "hardware/port.h"
 #include "ints/bios.h"

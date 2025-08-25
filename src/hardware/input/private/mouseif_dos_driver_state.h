@@ -6,7 +6,7 @@
 
 #include "mouse_common.h"
 
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/dos_windows.h"
 
 static constexpr auto MaxMouseButtons  = 3;

@@ -24,7 +24,7 @@
 #include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/registers.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/dos_system.h"
 #include "dos/programs.h"
 #include "dos/programs/more_output.h"

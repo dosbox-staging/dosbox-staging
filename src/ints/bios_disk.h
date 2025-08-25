@@ -10,9 +10,9 @@
 #include <array>
 #include <memory>
 
-#include "ints/bios.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "hardware/memory.h"
+#include "ints/bios.h"
 
 /* The Section handling Bios Disk Access */
 #define BIOS_MAX_DISK 10
