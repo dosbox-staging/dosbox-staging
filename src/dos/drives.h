@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "config/setup.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/dos_system.h"
 
 // GCC throws a warning about non-virtual destructor for std::enable_shared_from_this

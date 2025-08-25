@@ -3,10 +3,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "cpu/callback.h"
-#include "dos_inc.h"
+#include "cpu/registers.h"
+#include "dos.h"
 #include "dosbox.h"
 #include "hardware/memory.h"
-#include "cpu/registers.h"
 #include <cstring>
 
 bool DOS_IOCTL(void) {

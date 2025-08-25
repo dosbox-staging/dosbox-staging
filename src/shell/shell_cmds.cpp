@@ -22,7 +22,7 @@
 #include "cpu/callback.h"
 #include "cpu/paging.h"
 #include "cpu/registers.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/drives.h"
 #include "dos/programs/more_output.h"
 #include "hardware/timer.h"
