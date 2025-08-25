@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dosbox.h"
+#include "port.h"
 
 #include <cassert>
 #include <cstring>
@@ -10,7 +10,6 @@
 #include <limits>
 #include <unordered_map>
 
-#include "hardware/port.h"
 #include "misc/support.h"
 
 void IO_ReadHandleObject::Uninstall(){
