@@ -18,11 +18,11 @@
 #include <sys/types.h>
 
 #include "audio/disk_noise.h"
-#include "misc/cross.h"
-#include "dos_inc.h"
+#include "dos.h"
 #include "dos_mscdex.h"
-#include "utils/fs_utils.h"
 #include "hardware/port.h"
+#include "misc/cross.h"
+#include "utils/fs_utils.h"
 #include "utils/string_utils.h"
 
 bool localDrive::FileIsReadOnly(const char* name)

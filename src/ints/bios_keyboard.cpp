@@ -5,11 +5,11 @@
 #include "ints/bios.h"
 
 #include "cpu/callback.h"
-#include "hardware/memory.h"
-#include "hardware/input/keyboard.h"
 #include "cpu/registers.h"
+#include "dos/dos.h"
+#include "hardware/input/keyboard.h"
+#include "hardware/memory.h"
 #include "hardware/port.h"
-#include "dos/dos_inc.h"
 
 static callback_number_t call_int16 = 0;
 static callback_number_t call_irq1  = 0;

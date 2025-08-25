@@ -6,9 +6,9 @@
 #include "more_output.h"
 
 #include "cpu/callback.h"
-#include "utils/checks.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "ints/int10.h"
+#include "utils/checks.h"
 #include "utils/string_utils.h"
 
 #include <algorithm>

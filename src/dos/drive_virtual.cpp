@@ -9,12 +9,12 @@
 #include <cstring>
 #include <ctime>
 
+#include "dos.h"
 #include "misc/cross.h"
-#include "dos_inc.h"
-#include "utils/fs_utils.h"
-#include "shell/shell.h"
-#include "utils/string_utils.h"
 #include "misc/support.h"
+#include "shell/shell.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
 
 constexpr auto default_date = DOS_PackDate(2002, 10, 1);
 constexpr auto default_time = DOS_PackTime(12, 34, 56);

@@ -14,12 +14,12 @@
 #include <string>
 #include <vector>
 
-#include "misc/cross.h"
-#include "dos_inc.h"
-#include "utils/fs_utils.h"
-#include "hardware/timer.h"
+#include "dos.h"
 #include "hardware/port.h"
+#include "hardware/timer.h"
+#include "misc/cross.h"
 #include "misc/std_filesystem.h"
+#include "utils/fs_utils.h"
 #include "utils/string_utils.h"
 
 #define OVERLAY_DIR 1

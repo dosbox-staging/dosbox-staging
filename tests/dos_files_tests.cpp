@@ -18,7 +18,7 @@
  * 4. Additional dosbox-staging headers (if needed)
  */
 
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 
 #include <iterator>
 #include <string>
@@ -264,7 +264,7 @@ TEST_F(DOS_FilesTest, DOS_MakeName_Colon_Illegal_Paths)
 // ensures a fix for dark forces installer
 TEST_F(DOS_FilesTest, DOS_FindFirst_Ending_Slash)
 {
-	// `dos` comes from dos_inc.h
+	// `dos` comes from dos.h
 	dos.errorcode = DOSERR_NONE;
 	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\LFD\\", FatAttributeFlags::Volume, false));
 	EXPECT_EQ(dos.errorcode, DOSERR_NO_MORE_FILES);

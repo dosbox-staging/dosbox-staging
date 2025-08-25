@@ -8,17 +8,17 @@
 #include <memory>
 #include <string_view>
 
-#include "ints/bios_disk.h"
-#include "cpu/callback.h"
-#include "dos_code_page.h"
-#include "dos_inc.h"
-#include "dos_locale.h"
-#include "dos/drives.h"
-#include "ints/int10.h"
-#include "gui/mapper.h"
-#include "utils/math_utils.h"
-#include "cpu/registers.h"
 #include "config/setup.h"
+#include "cpu/callback.h"
+#include "cpu/registers.h"
+#include "dos.h"
+#include "dos/drives.h"
+#include "dos_code_page.h"
+#include "dos_locale.h"
+#include "gui/mapper.h"
+#include "ints/bios_disk.h"
+#include "ints/int10.h"
+#include "utils/math_utils.h"
 #include "utils/string_utils.h"
 
 static const std::string ResourceDir = "freedos-keyboard";

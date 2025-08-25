@@ -10,10 +10,10 @@
 #include <cstring>
 #include <fstream>
 
-#include "utils/checks.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/dos_system.h"
 #include "misc/std_filesystem.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

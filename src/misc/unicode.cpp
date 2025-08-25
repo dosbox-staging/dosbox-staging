@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "misc/private/unicode_encodings.h"
 #include "misc/unicode.h"
 #include "utils/checks.h"
