@@ -2,13 +2,11 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
 #ifndef DOSBOX_CALLBACK_H
 #define DOSBOX_CALLBACK_H
 
-#ifndef DOSBOX_MEM_H
+#include "config/setup.h"
 #include "hardware/memory.h"
-#endif
 
 typedef Bitu (*Callback_Handler)();
 extern Callback_Handler Callback_Handlers[];
@@ -67,11 +65,12 @@ static inline PhysPt CALLBACK_GetBase() {
 	return (CB_SEG << 4) + CB_SOFFSET;
 }
 
+void CALLBACK_Init(Section* sec);
+
 callback_number_t CALLBACK_Allocate();
 void CALLBACK_DeAllocate(const callback_number_t in);
 
 void CALLBACK_Idle();
-
 
 void CALLBACK_RunRealInt(uint8_t intnum);
 void CALLBACK_RunRealFar(uint16_t seg,uint16_t off);
@@ -121,4 +120,5 @@ public:
 	}
 	void Set_RealVec(uint8_t vec);
 };
-#endif
+
+#endif // DOSBOX_CALLBACK_H
