@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "hardware/iohandler_containers.cpp"
+#include "hardware/port_containers.cpp"
 
 #include <cassert>
 #include <cstdint>
@@ -55,7 +55,7 @@ static void write_dword_new(io_port_t, uint32_t val, io_width_t)
 
 namespace {
 
-TEST(iohandler_containers, valid_bytes)
+TEST(port_containers, valid_bytes)
 {
 	for (uint32_t p = byte_port_start; p <= UINT16_MAX; p += port_step_size) {
 		const auto port = static_cast<uint16_t>(p);
@@ -72,7 +72,7 @@ TEST(iohandler_containers, valid_bytes)
 	}
 }
 
-TEST(iohandler_containers, valid_words)
+TEST(port_containers, valid_words)
 {
 	for (uint32_t p = word_port_start; p <= UINT16_MAX; p += port_step_size) {
 		const auto port = static_cast<uint16_t>(p);
@@ -89,7 +89,7 @@ TEST(iohandler_containers, valid_words)
 	}
 }
 
-TEST(iohandler_containers, valid_dwords)
+TEST(port_containers, valid_dwords)
 {
 	for (uint32_t p = dword_port_start; p <= UINT16_MAX; p += port_step_size) {
 		const auto port = static_cast<uint16_t>(p);
@@ -106,7 +106,7 @@ TEST(iohandler_containers, valid_dwords)
 	}
 }
 
-TEST(iohandler_containers, empty_reads)
+TEST(port_containers, empty_reads)
 {
 	constexpr uint16_t unregistered = 0;
 	EXPECT_EQ(static_cast<uint16_t>(-1),
@@ -116,7 +116,7 @@ TEST(iohandler_containers, empty_reads)
 	          read_dword_from_port(unregistered));
 }
 
-TEST(iohandler_containers, empty_writes)
+TEST(port_containers, empty_writes)
 {
 	constexpr uint16_t unregistered = 0;
 	write_byte_to_port(unregistered, 0);
@@ -130,7 +130,7 @@ TEST(iohandler_containers, empty_writes)
 // TODO: Fix test cases so they are independent of other 
 // test cases.
 
-TEST(iohandler_containers, DISABLED_adjacent_word_read)
+TEST(port_containers, DISABLED_adjacent_word_read)
 {
 	constexpr uint8_t val = 0x1;
 
@@ -155,7 +155,7 @@ TEST(iohandler_containers, DISABLED_adjacent_word_read)
 	EXPECT_EQ(read_dword_from_port(byte_port_start - 3), expected);
 }
 
-TEST(iohandler_containers, DISABLED_adjacent_dword_read)
+TEST(port_containers, DISABLED_adjacent_dword_read)
 {
 	constexpr uint16_t val = 0x1;
 
@@ -168,7 +168,7 @@ TEST(iohandler_containers, DISABLED_adjacent_dword_read)
 	EXPECT_EQ(read_dword_from_port(word_port_start - 2), expected);
 }
 
-TEST(iohandler_containers, DISABLED_adjacent_word_write)
+TEST(port_containers, DISABLED_adjacent_word_write)
 {
 	constexpr uint16_t val = 2 << 8;
 
@@ -177,7 +177,7 @@ TEST(iohandler_containers, DISABLED_adjacent_word_write)
 	EXPECT_EQ(read_byte_from_port(byte_port_start), val >> 8);
 }
 
-TEST(iohandler_containers, DISABLED_adjacent_dword_write)
+TEST(port_containers, DISABLED_adjacent_dword_write)
 {
 	constexpr uint32_t val = 2 << 16;
 
