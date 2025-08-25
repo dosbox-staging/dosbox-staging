@@ -22,7 +22,7 @@
 #include "cpu/cpu.h"
 #include "cpu/paging.h"
 #include "debugger/debugger.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/dos_locale.h"
 #include "dos/programs.h"
 #include "gui/mapper.h"

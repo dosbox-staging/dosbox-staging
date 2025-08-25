@@ -4,12 +4,12 @@
 #include "mouse.h"
 
 #include "cpu/callback.h"
-#include "utils/checks.h"
-#include "dos/dos_inc.h"
+#include "cpu/registers.h"
+#include "dos/dos.h"
 #include "dos/dos_windows.h"
 #include "hardware/input/mouse.h"
 #include "more_output.h"
-#include "cpu/registers.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

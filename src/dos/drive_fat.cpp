@@ -8,11 +8,11 @@
 #include <cstring>
 #include <ctime>
 
+#include "dos.h"
 #include "ints/bios.h"
 #include "ints/bios_disk.h"
-#include "dos_inc.h"
-#include "utils/string_utils.h"
 #include "misc/support.h"
+#include "utils/string_utils.h"
 
 #define IMGTYPE_FLOPPY 0
 #define IMGTYPE_ISO    1

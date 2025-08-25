@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "mixer.h"
 
 enum DiskNoiseIoType { Read, Write };

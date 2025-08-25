@@ -12,9 +12,9 @@
 #include <string>
 #include <vector>
 
-#include "utils/checks.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "misc/unicode.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

@@ -8,11 +8,11 @@
 #include <iterator>
 #include <vector>
 
-#include "misc/cross.h"
-#include "dos_inc.h"
+#include "dos.h"
 #include "dos/drives.h"
-#include "utils/string_utils.h"
+#include "misc/cross.h"
 #include "misc/support.h"
+#include "utils/string_utils.h"
 
 int fileInfoCounter = 0;
 

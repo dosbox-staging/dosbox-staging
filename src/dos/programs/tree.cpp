@@ -4,12 +4,12 @@
 #include "tree.h"
 
 #include "cpu/callback.h"
-#include "utils/checks.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/drives.h"
 #include "ints/int10.h"
-#include "shell/shell.h"
 #include "misc/unicode.h"
+#include "shell/shell.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 

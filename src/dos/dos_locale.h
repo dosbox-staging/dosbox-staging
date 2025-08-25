@@ -5,8 +5,8 @@
 #ifndef DOSBOX_DOS_LOCALE_H
 #define DOSBOX_DOS_LOCALE_H
 
-#include "dos_inc.h"
 #include "config/setup.h"
+#include "dos.h"
 
 #include <cstdint>
 #include <optional>
