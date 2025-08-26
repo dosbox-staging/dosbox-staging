@@ -1044,8 +1044,23 @@ void CDROM_Interface_Image::CDAudioCallback(const int desired_track_frames)
 		// This particular CDDA track has come to an end, but the
 		// program has requested we continue playing for a longer
 		// period. So keep going!
-		player.cd->PlayNextAudioTrack();
-		return;
+		const auto frames_remaining = (player.playedTrackFrames <
+		                               player.totalTrackFrames)
+		                                    ? (player.totalTrackFrames -
+		                                       player.playedTrackFrames)
+		                                    : 0;
+		const auto num_frames_in_two_seconds = track_file->getRate() * 2;
+		if (frames_remaining < num_frames_in_two_seconds) {
+			// Less than 2 seconds remain of requested playback.
+			// Stop the audio rather than playing the next track for
+			// only a few seconds. Fixes Alone in the Dark 2:
+			// https://github.com/dosbox-staging/dosbox-staging/issues/4445
+			player.cd->StopAudio();
+			return;
+		} else {
+			player.cd->PlayNextAudioTrack();
+			return;
+		}
 	}
 
 	// Use the stereo or mono and native or nonnative AddSamples call
