@@ -499,16 +499,14 @@ static void disknoise_destroy([[maybe_unused]] Section* sec)
 
 static DiskNoiseMode get_disk_noise_mode(const std::string& mode)
 {
-	if (has_false(mode)) {
-		return DiskNoiseMode::Off;
+    if (has_true(mode)) {
+		return DiskNoiseMode::On;
 	} else if (mode == "seek-only") {
 		return DiskNoiseMode::SeekOnly;
-	} else if (mode == "on") {
-		return DiskNoiseMode::On;
+	} else {
+        assert(mode == "off");
+		return DiskNoiseMode::Off;
 	}
-	LOG_WARNING("DISKNOISE: Unknown disk noise mode '%s', defaulting to 'off'",
-	            mode.c_str());
-	return DiskNoiseMode::Off;
 }
 
 static void disknoise_init(Section* section)
@@ -555,6 +553,7 @@ static void init_disknoise_dosbox_settings(SectionProp& secprop)
 	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
 
 	auto* str_prop = secprop.AddString("hard_disk_noise", OnlyAtStart, "off");
+	str_prop->SetValues({"off", "seek-only", "on"});
 	str_prop->SetHelp(
 	        "Enable emulated hard disk noises ('off' by default).\n"
 	        "Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
@@ -562,8 +561,9 @@ static void init_disknoise_dosbox_settings(SectionProp& secprop)
 	        "  off:           No hard disk noises (default).\n"
 	        "  seek-only:     Play hard disk seek noises only, no spin noises.\n"
 	        "  on:            Play both hard disk seek and spin noises.");
-
+	
 	str_prop = secprop.AddString("floppy_disk_noise", OnlyAtStart, "off");
+	str_prop->SetValues({"off", "seek-only", "on"});
 	str_prop->SetHelp(
 	        "Enable emulated floppy disk noises ('off' by default).\n"
 	        "Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
