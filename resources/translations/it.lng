@@ -1272,18 +1272,6 @@ Il percorso '%s' non contiene shader
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
 Il percorso '%s' contiene:
 .
-:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
-Sezione o proprietà non trovata: %s
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-La proprietà '%s' non è presente nella sezione [%s]
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Utilizzo: [color=light-green]config [reset]-set [color=light-cyan][SEZIONE][reset] [color=white]PROPRIETÀ[reset][=][color=white]VALORE[reset]
-
-.
 :TITLEBAR_CYCLES_MS
 cicli/ms
 .
@@ -1324,7 +1312,7 @@ mouse senza soluzione di continuità, %s+F10 o pulsante centrale del mouse per c
 Modalità di uscita video da utilizzare (predefinito 'opengl').
 Solo la modalità 'opengl' ha il supporto per gli shader ed è quindi l'opzione
 consigliata. La modalità 'texture' viene fornita solo come ultima risorsa
-per driver OpenGL difettosi o inesistenti (circostanza estremamente rara).
+per driver OpenGL 2.1+ difettosi o inesistenti (circostanza estremamente rara).
 .
 :CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
 Modalità di uscita video da utilizzare (predefinito 'texture').
@@ -1350,16 +1338,45 @@ Numero dello schermo da utilizzare; Il valore dipende dal sistema operativo
 e dalle impostazioni dell'utente (predefinito 0).
 .
 :CONFIG_FULLSCREEN
-Avvia direttamente a schermo intero (predefinito 'off').
-Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
-scelta rapida per il controllo della finestra.
+Avvia in modalità a schermo intero (predefinito 'off').
 .
 :CONFIG_FULLRESOLUTION
-Risoluzione da utilizzare in modalità schermo intero: 'original', 'desktop' o
-dimensione fissa, es. 1024x768 (predefinito 'desktop').
+L'opzione [color=light-green]'fullresolution'[reset] è deprecata ma ancora consentita; si prega invece
+di utilizzare l'opzione [color=light-green]'fullscreen_mode'[reset].
+.
+:CONFIG_FULLSCREEN_MODE
+Imposta il tipo di modalità a schermo intero (predefinito 'standard'):
+.
+:CONFIGITEM_FULLSCREEN_MODE_STANDARD
+  standard:          Utilizza la modalità a schermo intero standard del sistema
+                     operativo in uso (predefinito).
+.
+:CONFIGITEM_FULLSCREEN_MODE_FORCED-BORDERLESS
+  forced-borderless: Forza la modalità in finestra senza bordi se il driver
+                     della scheda video decide di disabilitare le
+                     ottimizzazioni a schermo intero su Windows, con
+                     conseguente utilizzo della modalità a schermo intero
+                     esclusivo. Forzare la modalità senza bordi potrebbe
+                     comportare un calo delle prestazioni e un leggero
+                     peggioramento della fluidità di gioco (ad esempio, lo
+                     scorrimento dell'immagine nei giochi 2D non risulta
+                     perfettamente fluido).
+.
+:CONFIGITEM_FULLSCREEN_MODE_ORIGINAL
+  original:          Utilizza la modalità a schermo intero esclusivo con la
+                     risoluzione originale del gioco o con quella più vicina
+                     disponibile. Questa opzione è consigliata solo nel caso
+                     in cui si voglia utilizzare DOSBox Staging con un
+                     monitor CRT. In questa modalità, la commutazione da
+                     schermo intero a finestra e viceversa potrebbe causare
+                     strani comportamenti.
 .
 :CONFIG_WINDOWRESOLUTION
-Imposta le dimensioni iniziali della finestra per la modalità finestra.
+L'opzione [color=light-green]'windowresolution'[reset] è deprecata ma ancora consentita; si prega invece
+di utilizzare l'opzione [color=light-green]'window_size'[reset].
+.
+:CONFIG_WINDOW_SIZE
+Imposta le dimensioni iniziali della finestra per la modalità in finestra.
 Inoltre è possibile ridimensionare la finestra dopo l'avvio dell'emulatore.
   default:   Seleziona l'opzione migliore in base al tuo sistema e ad altre
              impostazioni (ad esempio se la correzione delle proporzioni è
@@ -1378,7 +1395,8 @@ Imposta la posizione iniziale della finestra per la modalità finestra:
              0,0 è l'angolo in alto a sinistra dello schermo.
 .
 :CONFIG_WINDOW_DECORATIONS
-Abilita le decorazioni delle finestre in modalità finestra (predefinito 'on').
+Abilita le decorazioni delle finestre in modalità in finestra
+(predefinito 'on').
 .
 :CONFIG_WINDOW_TITLEBAR
 Elenco di informazioni, separate da spazi, da visualizzare nella barra del
@@ -1435,68 +1453,77 @@ Imposta la trasparenza della finestra di DOSBox Staging (predefinito 0).
 Da 0 (nessuna trasparenza) a 90 (trasparenza elevata).
 .
 :CONFIG_MAX_RESOLUTION
-Spostato nella sezione [render] e rinominato in 'viewport'.
+Spostato nella sezione [color=light-cyan][render][reset] e rinominato in [color=light-green]'viewport'[reset].
 .
 :CONFIG_VIEWPORT_RESOLUTION
-Spostato nella sezione [render] e rinominato in 'viewport'.
-.
-:CONFIG_HOST_RATE
-Imposta la frequenza di aggiornamento dello schermo:
-  auto:      Utilizza le frequenze SDI oppure, su uno schermo ad alta frequenza
-             di aggiornamento, le frequenze VRR quando si è in modalità
-             schermo intero (predefinito).
-  sdi:       Utilizza le frequenze dell'interfaccia del dispositivo seriale
-             (SDI), senza ulteriori regolazioni.
-  vrr:       Sottrae 3 Hz dalla frequenza riportata (consigliato per gli
-             schermi con frequenza di aggiornamento variabile, cosiddetti VRR).
-  N:         Specifica una frequenza di aggiornamento personalizzata in Hz
-             (sono ammessi valori decimali; 23.000 è il minimo consentito).
+Spostato nella sezione [color=light-cyan][render][reset] e rinominato in [color=light-green]'viewport'[reset].
 .
 :CONFIG_VSYNC
-Imposta la modalità di sincronizzazione verticale (vsync) del driver video:
-  auto:      Limita il vsync solo in casi d'uso vantaggiosi, come quando si
-             utilizza uno schermo VRR con funzionalità di interpolazione in
-             modalità schermo intero (predefinito).
-  on:        Abilita il vsync. Ciò può impedire gli strappi dell'immagine su
-             schermo (tearing), ma può influire sulle prestazioni o causare
-             perdite di fotogrammi quando la frequenza DOS supera la frequenza
-             dello schermo (es. frequenza DOS di 70 Hz rispetto a quella dello
-             schermo di 60 Hz).
-  adaptive:  Abilita il vsync quando la frequenza dei fotogrammi è superiore
-             a quella dello schermo, ma lo disabilita quando la frequenza dei
-             fotogrammi scende al di sotto della frequenza dello schermo.
-             Questa è una valida alternativa su MacOS invece di 'on'.
-             Nota: valido solo nelle modalità di uscita OpenGL; altrimenti
-             equivalente ad 'on'.
-  off:       Prova a disabilitare il vsync per consentire una presentazione più
-             rapida dei fotogrammi con il rischio di strappi dell'immagine su
-             schermo in alcuni giochi.
-  yield:     Consente al driver video del sistema operativo primario di
-             controllare la sincronizzazione video.
-.
-:CONFIG_VSYNC_SKIP
-Numero di microsecondi per consentire il blocco del rendering prima di saltare
-al fotogramma successivo. Ad esempio, un valore di 7000 è circa la metà della
-durata del fotogramma a 70 hz. 0 disabilita questa funzione (predefinito).
+Imposta la modalità di sincronizzazione verticale del driver video:
+  off:             Disabilita la sincronizzazione verticale sia in modalità
+                   a schermo intero che in finestra (predefinito). Questa è
+                   l'opzione consigliata sui monitor con frequenza di
+                   aggiornamento variabile (VRR) in modalità VRR per ottenere
+                   una perfetta fluidità di gioco, nessuno strappo
+                   dell'immagine e latenza ridotta.
+                   Sui monitor con frequenza di aggiornamento fissa (o monitor
+                   VRR in modalità di aggiornamento fissa), disabilitare la
+                   sincronizzazione verticale potrebbe causare strappi
+                   dell'immagine visibili nei giochi più frenetici.
+  on:              Abilita la sincronizzazione verticale sia in modalità a
+                   schermo intero che in finestra. Questo può prevenire lo
+                   strappo dell'immagine nei giochi più frenetici, ma aumenterà
+                   la latenza. La sincronizzazione verticale è disponibile solo
+                   con la modalità di presentazione 'host-rate' (fare
+                   riferimento all'opzione 'presentation_mode').
+  fullscreen-only: Abilita la sincronizzazione verticale solo in modalità a
+                   schermo intero. Potrebbe essere utile nel caso in cui il
+                   sistema operativo forzasse la sincronizzazione verticale
+                   in modalità in finestra e l'opzione 'on' causasse problemi
+                   audio o di altro genere esclusivamente in questa modalità.
+                   La sincronizzazione verticale è disponibile solo con la
+                   modalità di presentazione 'host-rate' (fare riferimento
+                   all'opzione 'presentation_mode').
+Note:
+  - Per uno scorrimento perfettamente fluido nei giochi 2D (ad esempio, in
+    Pinball Dreams ed Epic Pinball), è necessario un monitor VRR in modalità
+    VRR e con la sincronizzazione verticale disabilitata. Lo scorrimento
+    dell'immagine nei giochi VGA a 70 Hz apparirà sempre a scatti sui monitor
+    a 60 Hz con frequenza di aggiornamento fissa, anche con la sincronizzazione
+    verticale abilitata.
+  - Otterrai lo scorrimento 2D perfettamente fluido solo in modalità a schermo
+    intero, anche sui monitor VRR.
+  - Per ottenere i migliori risultati, disabilita il limitatore dei fotogrammmi
+    e la sincronizzazione verticale forzati a livello globale nel driver video.
 .
 :CONFIG_PRESENTATION_MODE
-Seleziona la modalità di presentazione dei fotogrammi:
-  auto:      Determina la durata e taglia i fotogrammi in modo intelligente per
-             prevenire lo stallo dell'emulazione, in base alla frequenza dei
-             fotogrammi DOS e alla frequenza di aggiornamento dello schermo
-             (predefinito).
-  cfr:       Visualizza sempre i fotogrammi DOS ad una frequenza costante.
-  vfr:       Visualizza sempre i fotogrammi DOS modificati ad una frequenza
-             variabile.
+Seleziona la modalità di presentazione dei fotogrammi (predefinito 'auto'):
+  auto:      Utilizza 'host-rate' se 'vsync' è abilitato, altrimenti 'dos-rate'
+             (predefinito). Per ulteriori dettagli, fare riferimento
+             all'opzione 'vsync'.
+  dos-rate:  Visualizza i fotogrammi in base alla frequenza di aggiornamento
+             della modalità video DOS emulata. Questa è l'opzione migliore sui
+             monitor a frequenza di aggiornamento variabile (VRR). 'vsync' non
+             è disponibile con la modalità di presentazione 'dos-rate'.
+  host-rate: Visualizza i fotogrammi in base alla frequenza di aggiornamento
+             dello schermo in uso. Sui monitor a frequenza di aggiornamento
+             fissa, si consiglia di utilizzare questa opzione con 'vsync'
+             abilitato per i giochi più frenetici dove si verifica lo strappo
+             dell'immagine. 'host-rate' unito a 'vsync' disabilitato può
+             essere una buona soluzione alternativa sui sistemi operativi che
+             forzano sempre la sincronizzazione verticale (Forzare, ad esempio,
+             la sincronizzazione verticale su uno schermo a 60 Hz potrebbe
+             causare problemi con i giochi VGA che visualizzano i fotogrammi
+             a 70 Hz).
 .
 :CONFIG_CAPTURE_MOUSE
-Spostato nella sezione [mouse] e rinominato in 'mouse_capture'.
+Spostato nella sezione [color=light-cyan][mouse][reset] e rinominato in [color=light-green]'mouse_capture'[reset].
 .
 :CONFIG_SENSITIVITY
-Spostato nella sezione [mouse] e rinominato in 'mouse_sensitivity'.
+Spostato nella sezione [color=light-cyan][mouse][reset] e rinominato in [color=light-green]'mouse_sensitivity'[reset].
 .
 :CONFIG_RAW_MOUSE_INPUT
-Spostato nella sezione [mouse] e rinominato in 'mouse_raw_input'.
+Spostato nella sezione [color=light-cyan][mouse][reset] e rinominato in [color=light-green]'mouse_raw_input'[reset].
 .
 :CONFIG_WAITONERROR
 Mantiene la console aperta se si verifica un errore (predefinito 'on').
@@ -1511,6 +1538,13 @@ Disattiva il suono quando la finestra è inattiva (predefinito 'off').
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
 Mette in pausa l'emulazione quando la finestra è inattiva (predefinito 'off').
+.
+:CONFIG_KEYBOARD_CAPTURE
+Cattura i tasti di scelta rapida di sistema (predefinito 'off').
+Se abilitata, la maggior parte delle scorciatoie da tastiera come Alt+Tab viene
+catturata e inviata a DOSBox Staging. Questa opzione è utile per Windows 3.1x e
+alcuni programmi DOS con scorciatoie da tastiera non modificabili, che entrano
+in conflitto con quelle di sistema.
 .
 :CONFIG_MAPPERFILE
 Percorso del file di mappatura (predefinito 'mapper-sdl2-XYZ.map', dove XYZ è
@@ -1604,15 +1638,30 @@ Nota: Si consiglia di abilitare questa opzione solamente per quei giochi che
       lo rendono necessario, dal momento che rallenta l'intero emulatore.
 .
 :CONFIG_DOS_RATE
-Personalizza la frequenza dei fotogrammi della modalità video emulata:
-  default:   La frequenza è determinata dalla modalità video DOS
-             (predefinito).
-  host:      Abbina la frequenza DOS alla frequenza di aggiornamento dello
-             schermo (vedi opzione 'host_rate').
-  <valore>:  Imposta la frequenza su un valore intero o decimale compreso
-             tra 24.000 e 1000.000 Hz.
-Nota: Si consiglia la frequenza dei fotogrammi predefinita ('default'),
-      altrimenti è possibile provare a regolarla in base al gioco.
+Modifica la frequenza di aggiornamento della modalità video DOS emulata
+con una frequenza personalizzata.
+  default:   Non modificare; usa la frequenza di aggiornamento della modalità
+             video DOS emulata (predefinito).
+  host:      Modifica la frequenza di aggiornamento di tutte le modalità
+             video DOS con la frequenza di aggiornamento del monitor in uso.
+             Questo potrebbe consentire di giocare ad alcuni giochi VGA a 70 Hz
+             con una sincronizzazione verticale perfetta sui monitor a 60 Hz
+             a frequenza di aggiornamento fissa (per ulteriori dettagli, fare
+             riferimento all'opzione 'vsync').
+  <valore>:  Modifica la frequenza di aggiornamento di tutte le modalità
+             video DOS con una personalizzata specificata in Hz (l'intervallo
+             valido è compreso tra 24,000 e 1000,000). Questa è un'opzione
+             destinata solo ad alcuni giochi 3D di metà o fine anni '90, che
+             possono funzionare con una frequenza di aggiornamento elevata
+             senza alcun problema.
+Nota: Molti giochi si comporteranno in modo anomalo se si modifica la frequenza
+      di aggiornamento della modalità video DOS con valori non standard.
+      Potrebbero manifestarsi problemi come video difettoso, audio accelerato o
+      rallentato, movimenti del mouse a scatti, pressioni dei pulsanti del
+      mouse non registrate e persino bug di gioco. Modificare la frequenza di
+      aggiornamento DOS è un "trucco" che funziona in modo accettabile solo in
+      un numero ristretto di giochi DOS (in genere, in quelli di metà o fine
+      anni '90).
 .
 :CONFIG_VESA_MODES
 Controlla quali modalità video VESA sono disponibili:
@@ -1695,6 +1744,20 @@ comandi in formato abbreviato (predefinito 'on'). Ad esempio invece di
 'config -set sbtype sb16', è sufficiente eseguire 'sbtype sb16'; allo stesso
 modo invece di 'config -get sbtype' è sufficiente eseguire il comando 'sbtype'.
 .
+:CONFIG_HARD_DISK_SPEED
+Imposta la velocità del disco rigido emulato (predefinito 'maximum').
+  maximum:  Il più veloce possibile, senza rallentamenti (predefinito)
+  fast:     Velocità tipica dei dischi rigidi di metà anni '90 (~15 MB/s)
+  medium:   Velocità tipica dei dischi rigidi dei primi anni '90 (~2,5 MB/s)
+  slow:     Velocità tipica dei dischi rigidi degli anni '80 (~600 kB/s)
+.
+:CONFIG_FLOPPY_DISK_SPEED
+Imposta la velocità dell'unità a dischi floppy emulata (predefinito 'maximum').
+  maximum:  Il più veloce possibile, senza rallentamenti (predefinito)
+  fast:     Velocità dei floppy ad altissima densità (ED) (~120 kB/s)
+  medium:   Velocità dei floppy ad alta densità (HD) (~60 kB/s)
+  slow:     Velocità dei floppy a doppia densità (DD) (~30 kB/s)
+.
 :CONFIG_FRAMESKIP
 Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
 utilizzando l'opzione 'host_rate'.
@@ -1704,47 +1767,53 @@ Imposta uno shader CRT adattivo, che cerca di simulare il modo in cui uno
 schermo a tubo catodico visualizza le immagini, o un normale shader GLSL nella
 modalità di uscita OpenGL (predefinito 'crt-auto').
 Opzioni shader CRT adattivo:
-  crt-auto:              Shader CRT che dà priorità all'intento dello
+  crt-auto:              Shader CRT adattivo che dà priorità all'intento dello
                          sviluppatore e al modo in cui le persone hanno
-                         sperimentato il gioco al momento del rilascio
+                         sperimentato i giochi al momento del rilascio
                          (predefinito). La variante di shader appropriata viene
                          selezionata automaticamente in base allo standard
                          grafico della modalità video corrente e alla
                          dimensione dell'area di visualizzazione,
                          indipendentemente dall'opzione 'machine'.
-                         Ciò significa che anche su una scheda grafica VGA
-                         emulata, otterrai un'autentica emulazione di un
-                         monitor EGA a scansione singola con "linee di
-                         scansione spesse" visibili nei giochi EGA.
-  crt-auto-machine:      Simile a 'crt-auto', ma viene selezionato il
-                         monitor CRT appropriato in base alla scheda grafica
-                         configurata tramite l'opzione 'machine'. Ad esempio,
-                         i giochi CGA e EGA utilizzeranno la modalità di
-                         visualizzazione a doppia scansione su una scheda
-                         grafica VGA emulata.
+                         Ciò significa che otterrai l'aspetto autentico dei
+                         monitor CGA ed EGA a scansione singola, con linee di
+                         scansione visibili nei giochi progettati per questi
+                         tipi di schermi, anche se si sta emulando una scheda
+                         grafica VGA. Con una scala verticale inferiore a 3,0x,
+                         sarà utilizzato lo shader 'sharp'.                         
+  crt-auto-machine:      Variante di 'crt-auto'; Emula il monitor CRT
+                         appropriato in base alla scheda grafica configurata
+                         tramite l'opzione 'machine'. Ad esempio, i giochi CGA
+                         ed EGA saranno visualizzati con linee di scansione
+                         doppie se si sta emulando una scheda grafica VGA.
   crt-auto-arcade:       Emulazione di un monitor di un cabinato arcade o di un
-                         computer domestico (es. Commodore 64, Amiga), meno
-                         nitido rispetto ad un tipico monitor per PC, con linee
-                         di scansione spesse nelle modalità a bassa
-                         risoluzione. Questa opzione di fantasia non esiste
-                         nella vita reale, ma può essere molto divertente,
-                         specialmente con le conversioni DOS dei giochi Amiga.
+                         computer domestico dell'era 8-16 bit, con una 
+                         visualizzazione meno nitida delle immagini e linee di
+                         scansione spesse nelle modalità video a bassa
+                         risoluzione. Questa è un'opzione di fantasia che non è
+                         mai esistita nella vita reale, ma può essere molto
+                         divertente, specialmente con le conversioni DOS dei
+                         giochi Amiga.
   crt-auto-arcade-sharp: Variante più nitida dello shader arcade per coloro che
                          amano le linee di scansione spesse ma allo stesso
-                         tempo vogliono mantenere la nitidezza orizzonatale di
-                         un tipico monitor per PC.
+                         tempo vogliono mantenere la nitidezza di un tipico
+                         monitor per PC.
 
 Possono essere utilizzati anche i seguenti shader (elenco non esaustivo):
-  sharp:                 Ridimensiona l'immagine trattando i pixel come
-                         rettangoli. Il risultato sarà un'immagine nitida con
-                         sfocatura minima.
+  sharp:                 Ridimensiona l'immagine trattando i pixel come piccoli
+                         rettangoli, ottenendo così un'immagine nitida con
+                         sfocatura minima e mantenendo al contempo il rapporto
+                         d'aspetto corretto dei pixel. Questa è l'opzione
+                         consigliata per chi non desidera utilizzare gli
+                         shader CRT adattivi.
   bilinear:              Ridimensiona l'immagine utilizzando il metodo di
                          ricampionamento bilineare. Il risultato sarà
                          un'immagine sfocata.
   nearest:               Ridimensiona l'immagine utilizzando il metodo di
-                         ricampionamento vicino più prossimo. Il risultato sarà
-                         un'immagine il più nitida possibile a scapito di
-                         eventuali pixel irregolari (questo è un problema
+                         ricampionamento vicino più prossimo. Ciò si traduce
+                         nell'immagine più nitida possibile a scapito di
+                         eventuali pixel irregolari, soprattutto con rapporti
+                         d'aspetto con pixel non quadrati (questo è un problema
                          minore sugli schermi ad alta risoluzione).
 
 Avviare DOSBox Staging con l'argomento della riga di comando '--list-glshaders'
@@ -1764,7 +1833,7 @@ Imposta la modalità di correzione delle proporzioni (predefinito 'auto'):
                       Le modalità video a pixel quadrati (ad esempio 320x240,
                       640x480 e 800x600) verranno visualizzate così come sono.
   square-pixels, off: Non applica la correzione delle proporzioni; tutte le
-                      modalità video DOS vengono visualizzate con pixel
+                      modalità video DOS saranno visualizzate con pixel
                       quadrati. La maggior parte dei giochi 320x200 appariranno
                       allungati orizzontalmente, ma alcuni titoli (ad esempio
                       le conversioni DOS dei giochi PAL Amiga) necessitano di
@@ -1772,9 +1841,9 @@ Imposta la modalità di correzione delle proporzioni (predefinito 'auto'):
   stretch:            Calcola le proporzioni in base alle dimensioni dell'area
                       di visualizzazione. Combinata con l'opzione 'viewport',
                       questa modalità è utile per forzare determinati rapporti
-                      d'aspetto (ad esempio visualizzando i giochi DOS a
-                      schermo intero su uno schermo con rapporto
-                      d'aspetto 16:9) e per emulare i controlli per la
+                      d'aspetto (ad esempio per visualizzare i giochi DOS a
+                      schermo intero su uno schermo 16:9, seppur perdendo le
+                      proporzioni corrette) e per emulare i controlli per la
                       dimensione orizzontale e verticale dell'immagine dei
                       monitor CRT.
 .
@@ -1782,16 +1851,20 @@ Imposta la modalità di correzione delle proporzioni (predefinito 'auto'):
 Vincola il fattore di scala orizzontale o verticale al valore intero più grande
 in modo che l'immagine possa adattarsi all'area di visualizzazione
 (predefinito 'auto'). Sarà mantenuto sempre il rapporto d'aspetto specificato
-in base alle impostazioni 'aspect' e 'viewport', il che può comportare un
-fattore di scala non intero nell'altra dimensione. Se l'immagine è più grande
+in base alle opzioni 'aspect' e 'viewport', il che può comportare un fattore
+di scala non intero nell'altra dimensione. Se l'immagine è più grande
 dell'area di visualizzazione, il ridimensionamento dei numeri interi viene
 disabilitato automaticamente (equivalente ad 'off'). Valori possibili:
-  auto:       Modalità 'vertical' abilitata automaticamente solo per gli shader
-              CRT adattivi (vedi opzione 'glshader'), altrimenti 'off'
-              (predefinito).
+  auto:       Speciale modalità per il ridimensionamento verticale, abilitata
+              automaticamente solo per gli shader CRT adattivi (fare
+              riferimento all'opzione 'glshader'). Questa modalità presenta
+              delle migliorie rispetto al normale ridimensionamento verticale
+              dei numeri interi: sono consentiti anche fattori di scala di 3,5x
+              e 4,5x, mentre il ridimensionamento dei numeri interi viene
+              disabilitato oltre il fattore di scala 5,0x.
   vertical:   Vincola il fattore di scala verticale a valori interi.
-              Questa è l'impostazione consigliata per gli shader CRT per
-              evitare linee di scansione irregolari e artefatti.
+              Questa è la modalità consigliata per gli shader di terze parti
+              per evitare linee di scansione irregolari e artefatti.
   horizontal: Vincola il fattore di scala orizzontale a valori interi.
   off:        Nessun ridimensionamento dei numeri interi; l'immagine riempie
               l'area di visualizzazione mantenendo le proporzioni specificate.
@@ -1804,21 +1877,21 @@ di quest'area, tenendo conto delle proporzioni specificate (vedi opzione
   fit:              Adatta l'area di visualizzazione alla finestra/schermo
                     disponibile (predefinito). Con l'opzione 'integer_scaling'
                     abilitata, potrebbero essere visualizzate delle barre nere
-                    orizzontali e/o verticali attorno all'immmagine.
+                    attorno all'immmagine.
   LxA:              Imposta le dimensioni dell'area di visualizzazione nel
                     formato LxA (ad esempio 960x720). La dimensione specificata
                     non deve essere maggiore della risoluzione del desktop.
-                    Se più grande della finestra, l'immagine viene
+                    Se più grande della finestra, l'immagine sarà
                     ridimensionata per adattarsi alla finestra.
-  N%%:               Simile a 'LxA' ma la dimensione è specificata come
+  N%%:               Simile a 'LxA', ma la dimensione è specificata come
                     percentuale della risoluzione del desktop.
   relative O%% V%%:   L'area di visualizzazione è impostata su un rettangolo con
-                    rapporto d'aspetto 4:3, adattato alla finestra/schermo
+                    rapporto d'aspetto 4:3, adattato alla finestra o schermo
                     disponibile, e quindi ridimensionato in base ai fattori di
                     scala orizzontale e verticale O e V (l'intervallo valido va
                     dal 20%% al 300%%). L'area di visualizzazione risultante può
-                    estendersi oltre la finestra/schermo. Questo è utile per
-                    forzare determinati rapporti d'aspetto con
+                    estendersi oltre i limiti della finestra o schermo. Questo
+                    è utile per forzare determinati rapporti d'aspetto con
                     'aspect = stretch' o per ingrandire l'immagine. Ciò emula
                     efficacemente i controlli per la dimensione orizzontale e
                     verticale dell'immagine dei monitor CRT.
@@ -1874,23 +1947,23 @@ sono rispettivamente:
   #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff
 .
 :CONFIG_SCALER
-Gli scaler software sono deprecati a favore delle soluzioni con accelerazione
+Gli scaler software sono deprecati in favore delle soluzioni con accelerazione
 hardware:
- - Se hai utilizzato in passato gli scaler normal2x/3x, imposta invece
-   le opzioni 'windowresolution' o 'viewport', oppure considera l'utilizzo
-   dell'opzione 'integer_scaling'.
- - Se hai utilizzato in passato uno scaler avanzato, considera invece una
-   delle opzioni 'glshader'.
+ - Se in passato hai utilizzato gli scaler normal2x/3x, considera l'uso
+   dell'opzione 'integer_scaling' con 'glshader = sharp' e imposta, in modo
+   facoltativo, la dimensione di 'window_size' o 'viewport'.
+ - Se in passato hai utilizzato uno scaler avanzato, considera una delle
+   opzioni 'glshader'.
 .
 :CONFIG_COMPOSITE
-Abilita la modalità composita all'avvio (predefinito 'auto').
-'auto' lascia decidere al programma.
+Abilita la modalità composita all'avvio (solo per i tipi di macchine 'cga',
+'pcjr' e 'tandy'; predefinito 'auto'). 'auto' lascia decidere al programma.
 Nota: Regola le impostazioni di seguito (es. tonalità) usando gli appositi
-      tasti di scelta rapida, quindi leggi le nuove impostazioni dalla
-      tua console e inseriscile qui.
+      tasti di scelta rapida, quindi copia i nuovi valori dal registro
+      di DOSBox alle rispettive opzioni di configurazione.
 .
 :CONFIG_ERA
-Era della tecnologia composita (predefinito 'auto').
+Periodo della tecnologia composita (predefinito 'auto').
 Quando impostato su 'auto', PCjr usa 'new' e CGA/Tandy usa 'old'.
 .
 :CONFIG_HUE
@@ -1918,23 +1991,24 @@ Tipo di core di emulazione della CPU da utilizzare (predefinito 'auto').
   normal:   Il programma DOS viene interpretato istruzione per istruzione.
             Questo fa sì che la temporizzazione sia più accurata, ma pone un
             carico sulla CPU di sistema da 3 a 5 volte maggiore rispetto a
-            'dynamic'. Pertanto, è consigliabile utilizzare questa opzione
-            solo per i programmi eseguiti in modalità reale che non hanno
+            'dynamic'. Pertanto è consigliabile utilizzare questa opzione
+            solo per i programmi eseguiti in modalità reale, che non hanno
             bisogno di una CPU (emulata) veloce, o che sono sensibili alla
             temporizzazione. Questa opzione è inoltre necessaria per programmi
             che modificano il proprio codice.
   simple:   Simile al core 'normal', ma ottimizzata per i vecchi programmi
-            eseguiti in modalità reale; potrebbe risultare in una compatibilità
+            eseguiti in modalità reale; potrebbe offrire una compatibilità
             migliore con i giochi più vecchi. Passa automaticamente al core
             'normal' con i programmi in modalità protetta.
-  dynamic:  Le istruzioni del programma DOS sono tradotte in istruzioni della
-            CPU di sistema in blocchi e quindi eseguite direttamente. Ciò pone
-            un carico sulla CPU di sistema da 3 a 5 volte minore rispetto al
-            core 'normal', ma la temporizzazione potrebbe essere meno accurata.
-            Il core 'dynamic' è una necessità per i giochi esigenti in termini
-            di CPU (es. giochi 3D SVGA). I programmi che modificano il proprio
-            codice potrebbero comportarsi in modo anomalo o bloccarsi con questa
-            opzione; in tal caso utilizzare il core 'normal'.
+  dynamic:  Le istruzioni del programma DOS sono tradotte, in blocchi, in
+            istruzioni comprensibili per la CPU di sistema e quindi eseguite
+            direttamente. Ciò pone un carico sulla CPU di sistema da 3 a
+            5 volte minore rispetto al core 'normal', ma la temporizzazione
+            potrebbe essere meno accurata. Il core 'dynamic' è una necessità
+            per programmi DOS esigenti in termini di CPU (es. giochi 3D SVGA).
+            I programmi che modificano il proprio codice potrebbero comportarsi
+            in modo anomalo o bloccarsi con questa opzione; in tal caso
+            utilizzare il core 'normal'.
 .
 :CONFIG_CPUTYPE
 Tipo di CPU usata nell'emulazione (predefinito 'auto').
@@ -1969,9 +2043,8 @@ programma non funzioni correttamente in modalità 'auto'.
                  opzione è per lo più utile solo per le produzioni demoscene.
 .
 :CONFIG_CYCLES
-L'opzione 'cycles' è deprecata ma ancora consentita; si prega invece di
-utilizzare le opzioni 'cpu_cycles', 'cpu_cycles_protected' e 'cpu_throttle'
-poiché il supporto a 'cycles' verrà rimosso in futuro.
+L'opzione [color=light-green]'cycles'[reset] è deprecata ma ancora consentita; si prega invece di
+utilizzare le opzioni [color=light-green]'cpu_cycles'[reset], [color=light-green]'cpu_cycles_protected'[reset] e [color=light-green]'cpu_throttle'[reset].
 .
 :CONFIG_CPU_CYCLES
 Velocità della CPU emulata (predefinito '3000'). Se 'cpu_cycles_protected' è
@@ -2125,12 +2198,12 @@ occuperà anche di catturarlo (predefinito 'on').
 .
 :CONFIG_MOUSE_MULTI_DISPLAY_AWARE
 Consente il funzionamento della modalità mouse senza soluzione di continuità
-e il rilascio del puntatore del mouse in modalità schermo intero nei sistemi
+e il rilascio del puntatore del mouse in modalità a schermo intero nei sistemi
 multischermo (predefinito 'on').
 Nota: Dovresti disabilitarlo nel caso in cui vengano rilevati erroneamente
       schermi multipli, quando in realtà ne è presente solo uno. Ciò potrebbe
       accadere se si utilizza la modalità di visualizzazione speculare o
-      l'ingresso HDMI di un ricevitore AV per l'ascolto dell'audio.
+      l'ingresso HDMI di un ricevitore AV per la riproduzione audio.
 .
 :CONFIG_MOUSE_SENSITIVITY
 Sensibilità del mouse a livello globale per gli assi orizzontale e verticale,
@@ -2143,30 +2216,36 @@ utilizzando lo strumento interno MOUSECTL.COM disponibile sull'unità Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Abilita questa opzione per bypassare le impostazioni di sensibilità e
-accelerazione del mouse del tuo sistema operativo (predefinito 'on').
-Funziona in modalità schermo intero o quando il mouse viene catturato
+accelerazione del mouse del sistema operativo in uso (predefinito 'on').
+Funziona in modalità a schermo intero o quando il mouse viene catturato
 in modalità finestra.
 .
 :CONFIG_BUILTIN_DOS_MOUSE_DRIVER
-Abilita il driver del mouse DOS incluso in DOSBox (predefinito 'on').
-Esso assicura la latenza più bassa possibile e il movimento del mouse più
-fluido, quindi si consiglia di disabilitarlo e caricare un driver DOS esterno
-solo se realmente necessario (ad esempio, se un gioco non è compatibile con
-il driver integrato).
-  on:   Abilita il driver del mouse integrato. Le opzioni `ps2_mouse_model` e
-        `com_mouse_model` non hanno alcun effetto se si utilizza il driver
-        integrato.
-  off:  Disabilita il driver del mouse integrato (se non è necessaro il
-        supporto del mouse o se si vuole caricare un driver DOS esterno).
-        Per utilizzare un driver DOS esterno (ad es. MOUSE.COM o CTMOUSE.EXE),
-        configurare il tipo di mouse nelle opzioni `ps2_mouse_model` o
-        `com_mouse_model`, quindi caricare il driver.
-        Un driver DOS esterno potrebbe aumentare la compatibilità con alcuni
-        programmi, ma introdurrà una maggiore latenza.
-Nota: Se si avvia una versione di MS-DOS o Windows 9x all'interno di DOSBox,
-      il driver integrato verrà disabilitato automaticamente. Se si utilzza
-      Windows 3.x, il driver integrato non verrà disabilitato ma quello di
-      Windows prenderà il sopravvento.
+Modalità del driver del mouse DOS incluso in DOSBox (predefinito 'on').
+Esso aggira le porte seriali (COM) e PS/2 e comunica direttamente con il mouse.
+Ciò si traduce in una latenza inferiore, movimenti più fluidi e una maggiore
+reattività del mouse, quindi si consiglia di disabilitarlo e caricare un
+driver DOS esterno solo se realmente necessario (ad esempio, se un gioco non
+è compatibile con il driver integrato).
+  on:      Abilita il driver del mouse simulando un programma TSR, caricato da
+           AUTOEXEC.BAT (predefinito). È il modo più compatibile per emulare il
+           driver del mouse DOS. In caso di problemi con un determinato gioco,
+           provare la modalità 'no-tsr'.
+  no-tsr:  Abilita il driver del mouse senza simulare un programma TSR.
+           Fateci sapere se questo risolve i problemi con quei software che non
+           funzionano con la modalità 'on'.
+  off:     Disabilita il driver del mouse integrato. È possibile comunque
+           abilitarlo durante l'esecuzione dell'emulatore eseguendo il
+           programma MOUSE.COM incluso nell'unità Z.
+Note:
+  - Le opzioni `ps2_mouse_model` e `com_mouse_model` non hanno alcun effetto
+    sul driver integrato.
+  - Se si avvia una versione di MS-DOS o Windows 9x all'interno di DOSBox,
+    il driver verrà disabilitato automaticamente. Se si avvia Windows 3.x, il
+    driver non verrà disabilitato ma quello di Windows prenderà il sopravvento.
+  - Per utilizzare un driver del mouse DOS esterno (ad esempio MOUSE.COM o
+    CTMOUSE.EXE), configurare il tipo di mouse nell'opzione `ps2_mouse_model` o
+    `com_mouse_model`, quindi caricare il driver.
 .
 :CONFIG_DOS_MOUSE_DRIVER
 Rinominato in 'builtin_dos_mouse_driver'.
@@ -2348,6 +2427,31 @@ fastidioso.
         qualità del suono; rimuove solo il rumore residuo appena udibile nei
         momenti di silenzo.
 .
+:MIXER_INVALID_CUSTOM_FILTER
+Definizione di filtro personalizzato non valida: [color=white]'%s'[reset].
+Deve essere specificato nel formato [color=light-cyan]'lpf|hpf ORDINE FREQUENZA_DI_TAGLIO'[reset].
+.
+:MIXER_INVALID_CUSTOM_FILTER_ORDER
+Ordine del filtro %s non valido: [color=white]'%s'[reset].
+Deve essere un numero intero compreso tra 1 e %d.
+.
+:MIXER_INVALID_CUSTOM_FILTER_CUTOFF
+Frequenza di taglio del filtro %s non valida: [color=white]'%s'[reset].
+Deve essere un numero positivo.
+.
+:MIXER_INVALID_CUSTOM_FILTER_TYPE
+Tipo di filtro non valido: [color=white]'%s'[reset]. Deve essere 'hpf' o 'lpf'.
+.
+:MIXER_INVALID_CUSTOM_FILTER_DUPLICATE
+Definizione di filtro personalizzato non valida: [color=white]'%s'[reset].
+I due filtri devono essere di tipo diverso.
+.
+:MIXER_INVALID_CUSTOM_FADEOUT
+Definizione di dissolvenza personalizzata non valida: [color=white]'%s'[reset].
+Deve essere specificato nel formato [color=light-cyan]'ATTESA DISSOLVENZA'[reset] dove [color=light-cyan]ATTESA[reset] è
+compreso tra %d e %d (in millisecondi) e [color=light-cyan]DISSOLVENZA[reset] è compreso tra %d e %d
+(in millisecondi). Reimpostato a [color=white]'off'[reset].
+.
 :CONFIG_SOUNDFONT
 Nome o percorso del file SoundFont da utilizzare (predefinito 'default.sf2').
 Il SoundFont verrà ricercato nelle seguenti posizioni, rispettivamente:
@@ -2382,7 +2486,7 @@ Configura l'effetto coro di FluidSynth. Valori possibili:
                       - livello:           Numero decimale da 0.0 a 10.0
                       - velocità:          Numero decimale da 0.1 a 5.0 (in Hz)
                       - profondità:        Numero decimale da 0.0 a 21.0
-                      - modulazione onda:  'sine' o 'triangle'
+                      - forma d'onda:      'sine' o 'triangle'
                     Per esempio: 'fsynth_chorus = 3 1.2 0.3 8.0 sine'
 Nota: È possibile disabilitare l'effetto coro di FluidSynth e abilitare invece
       il coro a livello del mixer sul canale FluidSynth, oppure abilitare
@@ -2415,6 +2519,18 @@ Filtro per l'uscita audio di FluidSynth:
 .
 :FLUIDSYNTH_NO_SOUNDFONTS
 Nessun SoundFont disponibile
+.
+:FLUIDSYNTH_INVALID_EFFECT_PARAMETER
+Parametro del sintetizzatore [color=light-green]'%s'[reset] non valido (%s): [color=white]%s[reset];
+deve essere compreso tra %.2f e %.2f. Reimpostato a [color=white]'%s'[reset]
+.
+:FLUIDSYNTH_INVALID_CHORUS_WAVE
+Parametro del sintetizzatore [color=light-green]'fsynth_chorus'[reset] non valido (tipo di forma
+d'onda): [color=white]%s[reset]; deve essere [color=white]'sine'[reset] o [color=white]'triangle'[reset]
+.
+:FLUIDSYNTH_INVALID_NUM_EFFECT_PARAMS
+Numero di parametri [color=light-green]'%s'[reset] non valido: [color=white]%d[reset];
+devono essere %d valori separati da spazi. Reimpostato a [color=white]'auto'[reset]
 .
 :CONFIG_MODEL
 Modello di Roland MT-32/CM-32ML da utilizzare.
@@ -2506,12 +2622,14 @@ Imposta dove l'interfaccia MPU-401 emulata invia i dati MIDI
                alla sezione [mt32]).
 .
 :CONFIGITEM_MIDIDEVICE_SOUNDCANVAS
-  soundcanvas: Sintetizzatore Roland SC-55 incluso in DOSBox (fare riferimento
+  soundcanvas: Sintetizzatore Roland SC-55 incluso in DOSBox (richiede un
+               modulo audio CLAP che emuli un Sound Canvas; fare riferimento
                alla sezione [soundcanvas]).
 .
 :CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
   fluidsynth:  Sintetizzatore MIDI FluidSynth incluso in DOSBox (necessita di
-               un SoundFont) (fare riferimento alla sezione [fluidsynth]).
+               un SoundFont) (richiede la libreria di collegamento dinamico
+               di FluidSynth; fare riferimento alla sezione [fluidsynth]).
 .
 :CONFIGITEM_MIDIDEVICE_NONE
   none:        Disabilita l'uscita MIDI.
@@ -2658,6 +2776,21 @@ Sound Blaster:
 Forza il filtro della scheda Sound Blaster Pro 2 ad essere sempre attivo
 (predefinito 'off'). Gli altri modelli di Sound Blaster non consentono di
 attivare/disattivare il filtro nel software.
+.
+:SBLASTER_INVALID_ESS_OPLMODE
+Opzione [color=light-green]'%s'[reset] non valida per la scheda ESS: [color=white]'%s'[reset].
+Reimpostato a [color=white]'%s'[reset]
+.
+:SBLASTER_CMS_OPLMODE_DEPRECATED
+L'opzione [color=white]'cms'[reset] per [color=light-green]'oplmode'[reset] è deprecata; utilizzare invece [color=white]'cms = on'[reset]
+.
+:SBLASTER_CMS_FORCED_AUTO
+L'opzione [color=light-green]'%s'[reset] è impostata ad [color=white]'off'[reset], ma nella scheda Game Blaster è
+forzata a [color=white]'%s'[reset]
+.
+:SBLASTER_CMS_FORCED_OFF
+L'opzione [color=light-green]'%s'[reset] impostata ad [color=white]'on'[reset] non è supportata su questa scheda.
+Reimpostato a [color=white]'%s'[reset]
 .
 :CONFIG_OPLRATE
 L'uscita OPL viene ora ricampionata alla frequenza di riproduzione del mixer.
@@ -2826,6 +2959,18 @@ Filtro per l'uscita audio della scheda Innovation:
   off:              Non filtra l'uscita audio (predefinito).
   <personalizzato>: Definizione di filtri personalizzati;
                     per ulteriori dettagli, fare riferimento a 'sb_filter'.
+.
+:CONFIG_HARD_DISK_NOISE
+Abilita il rumore del disco rigido emulato (predefinito 'off').
+Se abilitato, verranno riprodotti i suoni di rotazione del disco e dello
+spostamento della testina. Per un'esperienza autentica, si consiglia di
+impostare 'hard_disk_speed' ad un valore inferiore a 'maximum'.
+.
+:CONFIG_FLOPPY_DISK_NOISE
+Abilita il rumore dell'unità a dischi floppy emulata (predefinito 'off').
+Se abilitato, verranno riprodotti i suoni di rotazione del disco e dello
+spostamento della testina. Per un'esperienza autentica, si consiglia di
+impostare 'floppy_disk_speed' ad un valore inferiore a 'maximum'.
 .
 :CONFIG_PCSPEAKER
 Modello di emulazione dell'altoparlante interno del PC (PC speaker):
@@ -3128,16 +3273,16 @@ Abilita l'emulazione IPX tramite UDP/IP (predefinito 'off').
 .
 :CONFIGITEM_NE2000_SLIRP
 Abilita l'emulazione della scheda di rete Novell NE2000 su una rete basata su
-software (usando libslirp) con le seguenti proprietà (predefinito 'on'):
-  - 255.255.255.0:  Maschera di sottorete della LAN virtuale 10.0.2.0.
-  - 10.0.2.2:       IP del gateway e del servizio DHCP.
-  - 10.0.2.3:       IP del server DNS virtuale.
-  - 10.0.2.15:      Primo IP fornito dal DHCP, il tuo IP!
-Nota: All'interno del DOS, la configurazione richiede un driver di pacchetto
-      NE2000, un client DHCP e una pila TCP/IP. Potrebbe essere necessario
-      inoltrare le porte dal sistema operativo primario all'emulatore DOS
-      e dal router al sistema stesso, quando quest'ultimo funge da server per
-      i giochi multigiocatore.
+software con le seguenti proprietà (predefinito 'off'):
+  - 255.255.255.0   Maschera di sottorete della LAN virtuale 10.0.2.0.
+  - 10.0.2.2        IP del gateway e del servizio DHCP.
+  - 10.0.2.3        IP del server DNS virtuale.
+  - 10.0.2.15       Primo IP fornito dal DHCP (è il tuo IP)
+Nota: Per utilizzare questa funzionalità è necessario configurare in DOS un
+      driver di pacchetto NE2000, un client DHCP e una pila TCP/IP. Potrebbe
+      essere necessario inoltrare le porte dal sistema operativo primario a
+      DOSBox e dal router al sistema primario, quando quest'ultimo funge da
+      server per i giochi multigiocatore.
 .
 :CONFIGITEM_NICBASE_SLIRP
 Indirizzo di base della scheda NE2000 (predefinito 300).
@@ -3192,12 +3337,6 @@ del file di configurazione!
 # Questo è il file di configurazione di DOSBox Staging (%s).
 # Le righe che iniziano con il carattere '#' sono commenti.
 
-.
-:PROGRAM_CONFIG_VALID_VALUES
-Valori possibili
-.
-:CONFIG_DEPRECATION_WARNING
-Valori deprecati
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
 Nessun file di configurazione caricato
@@ -3340,11 +3479,7 @@ Operazione non consentita in modalità sicura.
 
 .
 :PROGRAM_CONFIG_SECTION_ERROR
-La sezione [%s] non esiste.
-
-.
-:PROGRAM_CONFIG_INVALID_SETTING
-'%s' non è un valore valido per l'opzione '%s'.
+La sezione [color=light-cyan][%s][reset] non esiste.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -3379,10 +3514,46 @@ dell'emulatore con il comando 'CONFIG -r' o tramite l'apposito tasto di
 scelta rapida.
 
 .
-:PROGRAM_CONFIG_DEPRECATED
+:PROGRAM_CONFIG_DEPRECATION_WARNING
 [color=light-red]Questa opzione è deprecata, ed è supportata solo per compatibilità con i vecchi
 file di configurazione. Si prega di utilizzare le alternative suggerite;
 il supporto a questa opzione sarà rimosso in futuro.[reset]
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+La proprietà [color=light-green]'%s'[reset] non è presente nella sezione [color=light-cyan][%s][reset]
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Utilizzo: [color=light-green]config [reset]-set [color=light-cyan][SEZIONE][reset] [color=white]PROPRIETÀ[reset][=][color=white]VALORE[reset]
+
+.
+:PROGRAM_CONFIG_INVALID_SETTING
+Opzione [color=light-green]'%s'[reset] non valida: [color=white]'%s'[reset];
+reimpostato a [color=white]'%s'[reset]
+.
+:PROGRAM_CONFIG_DEPRECATED_SETTING_VALUE
+Opzione [color=light-green]'%s'[reset] deprecata: [color=white]'%s'[reset];
+reimpostato a [color=white]'%s'[reset]
+.
+:PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE
+Opzione [color=light-green]'%s'[reset] non valida: [color=white]'%s'[reset];
+deve essere compreso tra %s-%s. Reimpostato a [color=white]'%s'[reset]
+.
+:PROGRAM_CONFIG_NO_HELP
+Nessuna guida disponibile per l'opzione [color=light-green]'%s'[reset].
+.
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
+Non esiste alcuna sezione di configurazione o opzione con il nome [color=light-green]'%s'[reset]
+
+.
+:PROGRAM_CONFIG_DEPRECATED_SETTING
+Opzione deprecata [color=light-green]'%s'[reset]
+.
+:PROGRAM_CONFIG_VALID_VALUES
+Valori possibili
+.
+:PROGRAM_CONFIG_DEPRECATED_VALUES
+Valori deprecati
 .
 :BIOS_REBOOTING_3
 Riavvio tra 3 secondi...
@@ -3839,7 +4010,7 @@ Inoltre puoi usare [color=light-blue]imgmount[reset] per montare immagini ISO o 
 Queste sono le combinazioni di tasti predefinite.
 Possono essere modificate nel [color=brown]mappatore dei tasti[reset].
 
-[color=yellow]%s+Invio[reset]  Passa dalla modalità a schermo intero a quella a finestra
+[color=yellow]%s+Invio[reset]  Passa dalla modalità a schermo intero a quella in finestra
            e viceversa.
 [color=yellow]%s+Pausa[reset]  Mette in Pausa/Riprende l'emulazione.
 [color=yellow]%s+F1[reset]   %s Avvia il [color=brown]mappatore dei tasti[reset].
@@ -4182,61 +4353,64 @@ Il canale [color=light-cyan]%s[reset] non è attivo
 Comando globale non valido: [color=white]%s[reset]
 .
 :SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND
-Volume non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset] (per aiuto, esegui MIXER /?)
+Volume non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]
 .
 :SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH
-Intensità alimentazione incrociata non valida per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]
-(deve essere compresa tra 0 e 100)
+Intensità alimentazione incrociata non valida per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset];
+deve essere un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL
-Livello di coro non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]
-(deve essere compreso tra 0 e 100)
+Livello di coro non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset];
+deve essere un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_INVALID_REVERB_LEVEL
-Livello di riverbero non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]
-(deve essere compreso tra 0 e 100)
+Livello di riverbero non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset];
+deve essere un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH
-Intensità alimentazione incrociata mancante dopo [color=white]x[reset] per il canale [color=light-cyan]%s[reset]
-(deve essere compresa tra 0 e 100)
+Intensità alimentazione incrociata mancante dopo [color=white]x[reset] per il canale [color=light-cyan]%s[reset];
+è necessario fornire un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL
-Livello di coro mancante dopo [color=white]c[reset] per il canale [color=light-cyan]%s[reset]
-(deve essere compreso tra 0 e 100)
+Livello di coro mancante dopo [color=white]c[reset] per il canale [color=light-cyan]%s[reset];
+è necessario fornire un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_MISSING_REVERB_LEVEL
-Livello di riverbero mancante dopo [color=white]r[reset] per il canale [color=light-cyan]%s[reset]
-(deve essere compreso tra 0 e 100)
+Livello di riverbero mancante dopo [color=white]r[reset] per il canale [color=light-cyan]%s[reset];
+è necessario fornire un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
-Intensità alimentazione incrociata a livello globale non valida [color=white]%s[reset]
-(deve essere compresa tra 0 e 100)
+Intensità alimentazione incrociata a livello globale non valida [color=white]%s[reset];
+deve essere un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL
-Livello di coro a livello globale non valido [color=white]%s[reset]
-(deve essere compreso tra 0 e 100)
+Livello di coro a livello globale non valido [color=white]%s[reset];
+deve essere un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL
-Livello di riverbero a livello globale non valido [color=white]%s[reset]
-(deve essere compreso tra 0 e 100)
+Livello di riverbero a livello globale non valido [color=white]%s[reset];
+deve essere un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
-Intensità alimentazione incrociata a livello globale mancante dopo [color=white]x[reset]
-(deve essere compresa tra 0 e 100)
+Intensità alimentazione incrociata a livello globale mancante dopo [color=white]x[reset];
+è necessario fornire un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
-Livello di coro a livello globale mancante dopo [color=white]c[reset]
-(deve essere compreso tra 0 e 100)
+Livello di coro a livello globale mancante dopo [color=white]c[reset];
+è necessario fornire un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL
-Livello di riverbero a livello globale mancante dopo [color=white]r[reset]
-(deve essere compreso tra 0 e 100)
+Livello di riverbero a livello globale mancante dopo [color=white]r[reset];
+è necessario fornire un numero compreso tra 0 e 100
 .
 :SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND
 Comando mancante per il canale [color=light-cyan]%s[reset]
 .
 :SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND
 Comando non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_DEPRECATED
+Il nome del canale [color=light-cyan]%s[reset] è stato deprecato; utilizzare invece [color=light-cyan]%s[reset]
 .
 :PROGRAM_MODE_HELP_LONG
 Imposta la modalità di visualizzazione o la frequenza tipomatica.
@@ -4388,7 +4562,6 @@ Note:
   - '-t overlay' reindirizza le scritture per l'unità montata in un'altra
     directory.
   - '-ro' monta l'unità in sola lettura.
-  - Ulteriori opzioni sono descritte nel manuale (file README, capitolo 4).
 
 Esempi:
 
@@ -4483,6 +4656,43 @@ Qualcosa è andato storto.
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
 Sovrapposizione %s nell'unità %c montata.
+
+.
+:PROGRAM_MOUSE_HELP_LONG
+Carica il driver del mouse integrato.
+
+Utilizzo:
+  [color=light-green]mouse[reset] [on] [/e] [/q]
+
+Parametri:
+  on    carica il driver (azione predefinita)
+  /e    carica il driver nella memoria convenzionale
+  /q    modalità silenziosa (salta i messaggi di conferma)
+
+Note:
+  Il driver integrato aggira le porte seriali (COM) e PS/2 e comunica
+  direttamente con il mouse. Ciò si traduce in una latenza inferiore, movimenti
+  più fluidi e una maggiore reattività del mouse.
+.
+:PROGRAM_MOUSE_INSTALLED
+Driver del mouse installato.
+
+.
+:PROGRAM_MOUSE_ALREADY_INSTALLED
+Il driver del mouse è già installato.
+
+.
+:PROGRAM_MOUSE_COULD_NOT_INSTALL
+Impossibile installare il driver del mouse.
+
+.
+:PROGRAM_MOUSE_PORT_SELECTION
+Selezione della porta non supportata, il driver utilizza sempre il mouse di
+sistema.
+
+.
+:PROGRAM_MOUSE_HARDWARE_CURSOR
+Cursore hardware del mouse non supportato.
 
 .
 :PROGRAM_MOUSECTL_HELP_LONG
@@ -4906,6 +5116,10 @@ Errore durante la lettura del file - '%s'
 Errore durante la scrittura del file - '%s'
 
 .
+:SHELL_CANT_RUN_UNDER_WINDOWS
+Questo comando non può essere eseguito in Microsoft Windows.
+
+.
 :SHELL_CMD_HELP
 Per una lista di tutti i comandi supportati, esegui [color=yellow]help /all[reset].
 Segue una breve lista dei comandi più comuni:
@@ -5165,7 +5379,6 @@ Si noti che è possibile utilizzare SUBST solo su unità locali.
 ║                                                                      ║
 ║ Per regolare la velocità della CPU emulata, usa [color=light-red]%s+F11[color=white] e [color=light-red]%s+F12[color=white].%s%s ║
 ║ Per attivare il mappatore dei tasti, usa [color=light-red]%s+F1[color=white].%s                    ║
-║ Ulteriori informazioni nel file [color=light-cyan]README[color=white] nella directory di DOSBox.    ║
 ║                                                                      ║
 
 .
