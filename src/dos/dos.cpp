@@ -164,7 +164,8 @@ void DOS_RegisterIoCallback(std::function<void()> callback, DiskType disk_type)
 	}
 }
 
-// Unregister a given callback reference
+// TODO: Unregister should work on particular callbacks instead of all of a
+// given disk type
 void DOS_UnregisterIoCallback(DiskType disk_type)
 {
 	switch (disk_type) {
