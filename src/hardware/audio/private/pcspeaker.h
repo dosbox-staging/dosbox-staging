@@ -28,4 +28,4 @@ public:
 	virtual void PicCallback(const int requested_frames)            = 0;
 };
 
-#endif
+#endif // DOSBOX_PCSPEAKER_H

@@ -126,4 +126,4 @@ private:
 	std::unique_ptr<StereoProcessor> stereo_processor     = {};
 };
 
-#endif
+#endif // DOSBOX_ADLIB_GOLD_H

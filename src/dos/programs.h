@@ -87,4 +87,4 @@ std::unique_ptr<Program> ProgramCreate()
 	return std::make_unique<P>();
 }
 
-#endif
+#endif // DOSBOX_PROGRAMS_H
