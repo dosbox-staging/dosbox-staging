@@ -550,9 +550,9 @@ static void disknoise_init(Section* section)
 
 static void init_disknoise_dosbox_settings(SectionProp& secprop)
 {
-	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
+	constexpr auto Always = Property::Changeable::Always;
 
-	auto* str_prop = secprop.AddString("hard_disk_noise", OnlyAtStart, "off");
+	auto* str_prop = secprop.AddString("hard_disk_noise", Always, "off");
 	str_prop->SetValues({"off", "seek-only", "on"});
 	str_prop->SetHelp(
 	        "Enable emulated hard disk noises ('off' by default).\n"
@@ -562,7 +562,7 @@ static void init_disknoise_dosbox_settings(SectionProp& secprop)
 	        "  seek-only:     Play hard disk seek noises only, no spin noises.\n"
 	        "  on:            Play both hard disk seek and spin noises.");
 	
-	str_prop = secprop.AddString("floppy_disk_noise", OnlyAtStart, "off");
+	str_prop = secprop.AddString("floppy_disk_noise", Always, "off");
 	str_prop->SetValues({"off", "seek-only", "on"});
 	str_prop->SetHelp(
 	        "Enable emulated floppy disk noises ('off' by default).\n"
