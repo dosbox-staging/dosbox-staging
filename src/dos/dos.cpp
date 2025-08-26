@@ -14,10 +14,12 @@
 #include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/registers.h"
+#include "dos/cdrom_image.h"
+#include "dos/dos_files.h"
 #include "dos/dos_locale.h"
+#include "dos/dos_mscdex.h"
 #include "dos/dos_windows.h"
 #include "dos/drives.h"
-#include "dos_locale.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/serialport/serialport.h"
@@ -1813,36 +1815,145 @@ public:
 
 static std::unique_ptr<DOS> dos_module = {};
 
-static void dos_destroy([[maybe_unused]] Section* sec) {
+static void dos_destroy([[maybe_unused]] Section* section)
+{
 	dos_module = {};
 }
 
-static void notify_dos_setting_updated(SectionProp* section,
-                                       const std::string& prop_name)
+void dos_init(Section* section)
 {
-	if (prop_name == "expand_shell_variable") {
-		// Always evaluated on command execution
-
-	} else {
-		// Do not reinit the DOS module itself, only the other modules
-		XMS_Destroy(section);
-		XMS_Init(section);
-
-		EMS_Destroy(section);
-		EMS_Init(section);
-
-		DOS_Locale_Destroy(section);
-		DOS_Locale_Init(section);
-
-		DOS_InitFileLocking(section);
-	}
+	dos_module = std::make_unique<DOS>(section);
 }
 
-void DOS_Init(Section* sec)
+static void init_dos_settings(SectionProp& section)
 {
-	assert(sec);
-	dos_module = std::make_unique<DOS>(sec);
 
-	sec->AddUpdateHandler(notify_dos_setting_updated);
-	sec->AddDestroyHandler(dos_destroy);
+	using enum Property::Changeable::Value;
+
+	// All the general DOS Related stuff, on real machines mostly located in
+	// CONFIG.SYS
+
+	auto pbool = section.AddBool("xms", WhenIdle, true);
+	pbool->SetHelp("Enable XMS support ('on' by default).");
+
+	auto pstring = section.AddString("ems", WhenIdle, "true");
+	pstring->SetValues({"true", "emsboard", "emm386", "off"});
+	pstring->SetHelp(
+	        "Enable EMS support ('on' by default). Enabled provides the best compatibility\n"
+	        "but certain applications may run better with other choices, or require EMS\n"
+	        "support to be disabled to work at all.");
+
+	pbool = section.AddBool("umb", WhenIdle, true);
+	pbool->SetHelp("Enable UMB support ('on' by default).");
+
+	pstring = section.AddString("pcjr_memory_config", OnlyAtStart, "expanded");
+	pstring->SetValues({"expanded", "standard"});
+	pstring->SetHelp(
+	        "PCjr memory layout ('expanded' by default).\n"
+	        "  expanded:  640 KB total memory with applications residing above 128 KB.\n"
+	        "             Compatible with most games.\n"
+	        "  standard:  128 KB total memory with applications residing below 96 KB.\n"
+	        "             Required for some older games (e.g., Jumpman, Troll).");
+
+	pstring = section.AddString("ver", WhenIdle, "5.0");
+	pstring->SetHelp(
+	        "Set DOS version (5.0 by default). Specify in major.minor format.\n"
+	        "A single number is treated as the major version.\n"
+	        "Common settings are 3.3, 5.0, 6.22, and 7.1.");
+
+	// DOS locale settings
+
+	pstring = section.AddString("locale_period", WhenIdle, "native");
+	pstring->SetHelp(
+	        "Set locale epoch ('native' by default).\n"
+	        "  historic:  If data is available for the given country, mimic old DOS behavior\n"
+	        "             when displaying time, dates, or numbers.\n"
+	        "  modern:    Follow current day practices for user experience more consistent\n"
+	        "             with typical host systems.\n"
+	        "  native:    Re-use current host OS settings, regardless of the country set;\n"
+	        "             use 'modern' data to fill-in the gaps when the DOS locale system\n"
+	        "             is too limited to follow the desktop settings.");
+	pstring->SetValues({"historic", "modern", "native"});
+
+	pstring = section.AddString("country", WhenIdle, "auto");
+	pstring->SetHelp(
+	        "Set DOS country code ('auto' by default).\n"
+	        "This affects country-specific information such as date, time, and decimal\n"
+	        "formats. If set to 'auto', selects the country code reflecting the host\n"
+	        "OS settings.\n"
+	        "The list of country codes can be displayed using '--list-countries'\n"
+	        "command-line argument.");
+
+	pstring = section.AddString("keyboardlayout", Deprecated, "");
+	pstring->SetHelp("Renamed to 'keyboard_layout'.");
+
+	pstring = section.AddString("keyboard_layout", OnlyAtStart, "auto");
+	pstring->SetHelp(
+	        "Keyboard layout code ('auto' by default).\n"
+	        "The list of supported keyboard layout codes can be displayed using the\n"
+	        "'--list-layouts' command-line argument, e.g., 'uk' is the British English\n"
+	        "layout. The layout can be followed by the code page number, e.g., 'uk 850'\n"
+	        "selects a Western European screen font.\n"
+	        "Set to 'auto' to guess the values from the host OS settings.\n"
+	        "After startup, use the 'KEYB' command to manage keyboard layouts and code pages\n"
+	        "(run 'HELP KEYB' for details).");
+
+	// COMMAND.COM settings
+
+	pstring = section.AddString("expand_shell_variable", WhenIdle, "auto");
+	pstring->SetValues({"auto", "on", "off"});
+	pstring->SetHelp(
+	        "Enable expanding environment variables such as %%PATH%% in the DOS command shell\n"
+	        "(auto by default, enabled if DOS version >= 7.0).\n"
+	        "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
+
+	pstring = section.AddPath("shell_history_file", OnlyAtStart, "shell_history.txt");
+
+	pstring->SetHelp(
+	        "File containing persistent command line history ('shell_history.txt'\n"
+	        "by default). Setting it to empty disables persistent shell history.");
+
+	// Misc DOS command settings
+
+	pstring = section.AddPath("setver_table_file", OnlyAtStart, "");
+	pstring->SetHelp(
+	        "File containing the list of applications and assigned DOS versions, in a\n"
+	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
+	        "(empty by default).");
+
+	pbool = section.AddBool("file_locking", WhenIdle, true);
+	pbool->SetHelp(
+	        "Enable file locking (SHARE.EXE emulation; 'on' by default).\n"
+	        "This is required for some Windows 3.1x applications to work properly.\n"
+	        "It generally does not cause problems for DOS games except in rare cases\n"
+	        "(e.g., Astral Blur demo). If you experience crashes related to file\n"
+	        "permissions, you can try disabling this.");
+}
+
+void DOS_AddConfigSection(const ConfigPtr& conf)
+{
+	assert(conf);
+
+	auto section = control->AddSection("dos", dos_init);
+
+	section->AddDestroyHandler(dos_destroy);
+
+	// We don't reinit the DOS module itself when a setting changes, but the
+	// XMS, EMS, DOS_Files, and DOS_Locale modules will be re-initialised
+	// (they register their own "notify on setting changed" handlers on init).
+	//
+	// The MSCDEX, DRIVES, and CDROM_Image modules don't need to be
+	// re-initialised either.
+
+	section->AddInitHandler(XMS_Init);
+	section->AddInitHandler(EMS_Init);
+
+	section->AddInitHandler(DOS_Files_Init);
+	section->AddInitHandler(DOS_Locale_Init);
+
+	section->AddInitHandler(MSCDEX_Init);
+	section->AddInitHandler(DRIVES_Init);
+	section->AddInitHandler(CDROM_Image_Init);
+
+	init_dos_settings(*section);
 }

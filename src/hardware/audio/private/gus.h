@@ -6,6 +6,7 @@
 
 #include "audio/mixer.h"
 #include "hardware/dma.h"
+#include "utils/bit_view.h"
 #include "utils/rwqueue.h"
 
 // Global Constants

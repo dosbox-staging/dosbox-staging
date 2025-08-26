@@ -4,6 +4,8 @@
 
 #include "private/midi_coreaudio.h"
 
+#include "dos/programs.h"
+
 #if C_COREAUDIO
 
 void COREAUDIO_ListDevices([[maybe_unused]] MidiDeviceCoreAudio* device,
