@@ -4,11 +4,13 @@
 
 #include "dos_inc.h"
 
+#include <array>
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <array>
+#include <functional>
+#include <optional>
 
 #include "utils/ascii.h"
 #include "ints/bios.h"
@@ -144,42 +146,57 @@ void DOS_SetDiskSpeed(DiskSpeed disk_speed, DiskType disk_type)
 	}
 }
 
-static std::vector<std::function<void()>> io_callbacks_floppy;
-static std::vector<std::function<void()>> io_callbacks_harddisk;
-static std::vector<std::function<void()>> io_callbacks_cdrom;
+static std::optional<std::function<void()>> io_callback_floppy;
+static std::optional<std::function<void()>> io_callback_harddisk;
+static std::optional<std::function<void()>> io_callback_cdrom;
 
 void DOS_RegisterIoCallback(std::function<void()> callback, DiskType disk_type)
 {
 	switch (disk_type) {
-	case DiskType::Floppy: io_callbacks_floppy.push_back(callback); break;
+	case DiskType::Floppy: io_callback_floppy = std::move(callback); break;
 	case DiskType::HardDisk:
-		io_callbacks_harddisk.push_back(callback);
+		io_callback_harddisk = std::move(callback);
 		break;
-	case DiskType::CdRom: io_callbacks_cdrom.push_back(callback); break;
+	case DiskType::CdRom: io_callback_cdrom = std::move(callback); break;
 	default:
 		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
 		return;
 	}
 }
 
+// Unregister a given callback reference
+void DOS_UnregisterIoCallback(DiskType disk_type)
+{
+	switch (disk_type) {
+	case DiskType::Floppy: io_callback_floppy.reset(); break;
+	case DiskType::HardDisk: io_callback_harddisk.reset(); break;
+	case DiskType::CdRom: io_callback_cdrom.reset(); break;
+	default: break;
+	}
+}
+
 // Call any registered callbacks in the supplied callback vector
 void DOS_ExecuteRegisteredCallbacks(DiskType disk_type)
 {
-	std::vector<std::function<void()>> io_callbacks;
-
 	switch (disk_type) {
-	case DiskType::Floppy: io_callbacks = io_callbacks_floppy; break;
-	case DiskType::HardDisk: io_callbacks = io_callbacks_harddisk; break;
-	case DiskType::CdRom: io_callbacks = io_callbacks_cdrom; break;
+	case DiskType::Floppy:
+		if (io_callback_floppy.has_value()) {
+			(*io_callback_floppy)();
+		}
+		break;
+	case DiskType::HardDisk:
+		if (io_callback_harddisk.has_value()) {
+			(*io_callback_harddisk)();
+		}
+		break;
+	case DiskType::CdRom:
+		if (io_callback_cdrom.has_value()) {
+			(*io_callback_cdrom)();
+		}
+		break;
 	default:
 		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
 		return;
-	}
-
-	if (!io_callbacks.empty()) {
-		for (auto& callback : io_callbacks) {
-			callback();
-		}
 	}
 }
 
