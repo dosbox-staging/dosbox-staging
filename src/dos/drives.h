@@ -12,6 +12,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "config/setup.h"
 #include "dos/dos_inc.h"
 #include "dos/dos_system.h"
 
@@ -536,4 +537,6 @@ private:
 
 #pragma GCC diagnostic pop
 
-#endif
+void DRIVES_Init(Section* sec);
+
+#endif // DOSBOX_DRIVES_H

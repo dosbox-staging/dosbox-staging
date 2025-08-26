@@ -1452,13 +1452,13 @@ static void reelmagic_init(Section* sec)
 }
 
 static void notify_reelmagic_setting_updated(SectionProp* section,
-                                             const std::string& prop_name)
+                                             [[maybe_unused]] const std::string& prop_name)
 {
 	reelmagic_destroy(section);
 	reelmagic_init(section);
 }
 
-void REELMAGIC_AddConfigSection(const ConfigPtr& conf)
+void REELMAGIC_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)
 {
 	using enum Property::Changeable::Value;
 
