@@ -1,6 +1,9 @@
 // SPDX-FileSPDText:X Identifier: GPL-2.0-or-later
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#ifndef DOSBOX_PCSPEAKER_IMPULSE_H
+#define DOSBOX_PCSPEAKER_IMPULSE_H
+
 #include "pcspeaker.h"
 
 #include <array>
@@ -101,3 +104,6 @@ private:
 
 	int tally_of_silence = 0;
 };
+
+
+#endif // DOSBOX_PCSPEAKER_IMPULSE_H

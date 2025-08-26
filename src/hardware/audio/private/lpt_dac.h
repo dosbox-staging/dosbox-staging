@@ -70,5 +70,4 @@ private:
 	int frames_rendered_this_tick = 0;
 };
 
-
-#endif
+#endif // DOSBOX_LPT_DAC_H

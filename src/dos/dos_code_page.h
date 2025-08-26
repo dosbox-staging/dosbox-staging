@@ -3,8 +3,8 @@
 
 #include "dos_keyboard_layout.h"
 
-#ifndef DOSBOX_SCREEN_FONTS_H
-#define DOSBOX_SCREEN_FONTS_H
+#ifndef DOSBOX_DOS_CODE_PAGE_H
+#define DOSBOX_DOS_CODE_PAGE_H
 
 // Returns 'true' if the emulated hardware allows to change the screen font
 bool DOS_CanLoadScreenFonts();
@@ -19,4 +19,4 @@ KeyboardLayoutResult DOS_LoadScreenFont(const uint16_t code_page,
 // Only to be called from within the keyboard layout handling code!
 void DOS_SetRomScreenFont();
 
-#endif // DOSBOX_SCREEN_FONTS_H
+#endif // DOSBOX_DOS_CODE_PAGE_H

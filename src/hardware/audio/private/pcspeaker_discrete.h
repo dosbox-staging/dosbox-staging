@@ -1,6 +1,9 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#ifndef DOSBOX_PCSPEAKER_DISCRETE_H
+#define DOSBOX_PCSPEAKER_DISCRETE_H
+
 #include "pcspeaker.h"
 
 #include <queue>
@@ -73,3 +76,5 @@ private:
 	int sample_rate_hz    = 0;
 	int minimum_tick_rate = 0;
 };
+
+#endif // DOSBOX_PCSPEAKER_DISCRETE_H

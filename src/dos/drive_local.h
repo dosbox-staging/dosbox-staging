@@ -43,4 +43,4 @@ private:
 	bool set_archive_on_close   = false;
 };
 
-#endif
+#endif // DOSBOX_DRIVE_LOCAL_H
