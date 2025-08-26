@@ -2,6 +2,9 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#ifndef DOSBOX_DOS_CON_H
+#define DOSBOX_DOS_CON_H
+
 #include "dos.h"
 
 #include <cstring>
@@ -537,3 +540,5 @@ void device_CON::Output(uint8_t chr)
 		INT10_TeletypeOutputViaInterrupt(chr, 7);
 	}
 }
+
+#endif // DOSBOX_DOS_CON_H

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef SBLASTER_H
-#define SBLASTER_H
+#ifndef DOSBOX_SBLASTER_H
+#define DOSBOX_SBLASTER_H
 
 #include "audio/mixer.h"
 #include "hardware/hardware.h"
@@ -38,4 +38,4 @@ private:
 	void MixerCallback(const int frames_requested);
 };
 
-#endif
+#endif // DOSBOX_SBLASTER_H
