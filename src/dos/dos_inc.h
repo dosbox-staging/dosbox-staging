@@ -134,6 +134,7 @@ bool DOS_GetFileDate(uint16_t entry, uint16_t* otime, uint16_t* odate);
 bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate);
 void DOS_SetDiskSpeed(DiskSpeed disk_speed, DiskType disk_type);
 void DOS_RegisterIoCallback(std::function<void()> callback, DiskType disk_type);
+void DOS_UnregisterIoCallback(DiskType disk_type);
 DiskType DOS_GetDiskTypeFromMediaByte(uint8_t media_byte);
 void DOS_ExecuteRegisteredCallbacks(DiskType disk_type);
 void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type);

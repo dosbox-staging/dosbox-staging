@@ -410,17 +410,21 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	seek.current_sample.clear();
 	seek.current_it = seek.current_sample.end();
 
-	DOS_RegisterIoCallback(
-	        [this]() {
-		        // This callback is called from the DOS code
-		        // to trigger the spin and seek sounds
-		        ActivateSpin();
-		        PlaySeek();
-	        },
-	        disk_type);
+	auto io_callback = [this]() {
+		// This callback is called from the DOS code
+		// to trigger the spin and seek sounds
+		ActivateSpin();
+		PlaySeek();
+	};
+
+	DOS_RegisterIoCallback(io_callback, disk_type);
 }
 
-DiskNoiseDevice::~DiskNoiseDevice() = default;
+// Destructor unregisters the callbacks
+DiskNoiseDevice::~DiskNoiseDevice()
+{
+	DOS_UnregisterIoCallback(disk_type);
+}
 
 void DiskNoiseDevice::ActivateSpin()
 {
@@ -561,7 +565,7 @@ static void init_disknoise_dosbox_settings(SectionProp& secprop)
 	        "  off:           No hard disk noises (default).\n"
 	        "  seek-only:     Play hard disk seek noises only, no spin noises.\n"
 	        "  on:            Play both hard disk seek and spin noises.");
-	
+
 	str_prop = secprop.AddString("floppy_disk_noise", Always, "off");
 	str_prop->SetValues({"off", "seek-only", "on"});
 	str_prop->SetHelp(
@@ -577,7 +581,7 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto ChangeableAtRuntime = false;
+	constexpr auto ChangeableAtRuntime = true;
 
 	SectionProp* sec = conf->AddSectionProp("disknoise",
 	                                          &disknoise_init,
