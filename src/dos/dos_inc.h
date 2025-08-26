@@ -14,7 +14,7 @@
 #include <string>
 #include <type_traits>
 
-#include "config/setup.h"
+#include "config/config.h"
 #include "dos/dos_system.h"
 #include "hardware/memory.h"
 
@@ -1056,6 +1056,8 @@ enum class DosCurrencyFormat : uint8_t {
 	// replace decimal point; so far it is unknown which (if any)
 	// COUNTRY.SYS uses this bit, most likely no DOS software uses it.
 };
+
+void DOS_AddConfigSection(const ConfigPtr& conf);
 
 DosDateFormat DOS_GetLocaleDateFormat();
 DosTimeFormat DOS_GetLocaleTimeFormat();
