@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_Covox_H
-#define DOSBOX_Covox_H
+#ifndef DOSBOX_COVOX_H
+#define DOSBOX_COVOX_H
 
 #include "dosbox.h"
 
@@ -27,4 +27,4 @@ private:
 	void WriteControl(const io_port_t, const io_val_t, const io_width_t) {}
 };
 
-#endif
+#endif // DOSBOX_COVOX_H

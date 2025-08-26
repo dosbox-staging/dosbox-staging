@@ -51,4 +51,4 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 
 std::string DOS_GetLoadedLayout();
 
-#endif
+#endif // DOSBOX_DOS_KEYBOARD_LAYOUT_H

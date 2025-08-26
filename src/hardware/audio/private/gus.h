@@ -2,6 +2,9 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#ifndef DOSBOX_GUS_H
+#define DOSBOX_GUS_H
+
 #include <queue>
 
 #include "audio/mixer.h"
@@ -373,3 +376,5 @@ private:
 	bool irq_previously_interrupted = false;
 	bool should_change_irq_dma      = false;
 };
+
+#endif // DOSBOX_GUS_H

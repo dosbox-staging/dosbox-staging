@@ -55,4 +55,4 @@ private:
 	bool is_open            = false;
 };
 
-#endif
+#endif // DOSBOX_INNOVATION_H

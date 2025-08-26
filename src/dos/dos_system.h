@@ -407,4 +407,4 @@ void VFILE_Register(const char* name, const std::vector<uint8_t>& data,
 bool VFILE_Update(const char* name, const std::vector<uint8_t> &data, const char* dir = "");
 void VFILE_Remove(const char* name, const char* dir = "");
 
-#endif
+#endif // DOSBOX_DOS_SYSTEM_H
