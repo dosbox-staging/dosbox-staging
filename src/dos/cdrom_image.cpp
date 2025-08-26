@@ -25,10 +25,10 @@
 #endif
 
 #include "audio/channel_names.h"
+#include "config/setup.h"
 #include "dos/drives.h"
 #include "utils/fs_utils.h"
 #include "utils/math_utils.h"
-#include "config/setup.h"
 #include "utils/string_utils.h"
 
 // String maximums, local to this file

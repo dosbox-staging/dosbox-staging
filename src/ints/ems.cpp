@@ -1538,15 +1538,23 @@ public:
 
 static std::unique_ptr<EMS> ems_module = {};
 
-void EMS_Destroy(Section* sec)
+static void ems_destroy([[maybe_unused]] Section* section)
 {
 	ems_module = {};
 }
 
-void EMS_Init(Section* sec)
+static void notify_ems_setting_updated(SectionProp* section,
+                                       [[maybe_unused]] const std::string& prop_name)
 {
-	assert(sec);
+	ems_module = std::make_unique<EMS>(section);
+}
 
-	ems_module = std::make_unique<EMS>(sec);
-	sec->AddDestroyHandler(EMS_Destroy);
+void EMS_Init(Section* section)
+{
+	assert(section);
+
+	ems_module = std::make_unique<EMS>(section);
+
+	section->AddDestroyHandler(ems_destroy);
+	section->AddUpdateHandler(notify_ems_setting_updated);
 }

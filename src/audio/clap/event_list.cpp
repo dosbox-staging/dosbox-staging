@@ -8,6 +8,7 @@
 #include "utils/checks.h"
 #include "misc/logging.h"
 #include "midi/midi.h"
+#include "misc/support.h"
 
 CHECK_NARROWING();
 

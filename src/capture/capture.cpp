@@ -600,7 +600,7 @@ static void capture_destroy([[maybe_unused]] Section* section)
 }
 
 static void notify_capture_setting_updated(SectionProp* section,
-                                           const std::string& prop_name)
+                                           [[maybe_unused]] const std::string& prop_name)
 {
 	capture_destroy(section);
 	capture_init(section);

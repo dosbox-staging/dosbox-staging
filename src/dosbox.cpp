@@ -40,9 +40,7 @@
 #include "hardware/timer.h"
 #include "hardware/video/reelmagic/reelmagic.h"
 #include "hardware/video/voodoo.h"
-#include "ints/ems.h"
 #include "ints/int10.h"
-#include "ints/xms.h"
 #include "midi/midi.h"
 #include "misc/cross.h"
 #include "misc/support.h"
@@ -70,10 +68,6 @@ void PIC_Init(Section*);
 void TIMER_Init(Section*);
 void DEBUG_Init(Section*);
 void CMOS_Init(Section*);
-
-void MSCDEX_Init(Section*);
-void DRIVES_Init(Section*);
-void CDROM_Image_Init(Section*);
 
 void AUTOEXEC_Init(Section*);
 void SHELL_Init();
@@ -970,122 +964,6 @@ static void add_speaker_section()
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-static void add_dos_section()
-{
-	using enum Property::Changeable::Value;
-
-	// All the general DOS Related stuff, on real machines mostly located in
-	// CONFIG.SYS
-
-	auto secprop = control->AddSection("dos", DOS_Init);
-
-	secprop->AddInitHandler(XMS_Init);
-	auto pbool = secprop->AddBool("xms", WhenIdle, true);
-	pbool->SetHelp("Enable XMS support ('on' by default).");
-
-	secprop->AddInitHandler(EMS_Init);
-	auto pstring = secprop->AddString("ems", WhenIdle, "true");
-	pstring->SetValues({"true", "emsboard", "emm386", "off"});
-	pstring->SetHelp(
-	        "Enable EMS support ('on' by default). Enabled provides the best compatibility\n"
-	        "but certain applications may run better with other choices, or require EMS\n"
-	        "support to be disabled to work at all.");
-
-	pbool = secprop->AddBool("umb", WhenIdle, true);
-	pbool->SetHelp("Enable UMB support ('on' by default).");
-
-	pstring = secprop->AddString("pcjr_memory_config", OnlyAtStart, "expanded");
-	pstring->SetValues({"expanded", "standard"});
-	pstring->SetHelp(
-	        "PCjr memory layout ('expanded' by default).\n"
-	        "  expanded:  640 KB total memory with applications residing above 128 KB.\n"
-	        "             Compatible with most games.\n"
-	        "  standard:  128 KB total memory with applications residing below 96 KB.\n"
-	        "             Required for some older games (e.g., Jumpman, Troll).");
-
-	pstring = secprop->AddString("ver", WhenIdle, "5.0");
-	pstring->SetHelp(
-	        "Set DOS version (5.0 by default). Specify in major.minor format.\n"
-	        "A single number is treated as the major version.\n"
-	        "Common settings are 3.3, 5.0, 6.22, and 7.1.");
-
-	// DOS locale settings
-
-	secprop->AddInitHandler(DOS_Locale_Init);
-
-	pstring = secprop->AddString("locale_period", WhenIdle, "native");
-	pstring->SetHelp(
-	        "Set locale epoch ('native' by default).\n"
-	        "  historic:  If data is available for the given country, mimic old DOS behavior\n"
-	        "             when displaying time, dates, or numbers.\n"
-	        "  modern:    Follow current day practices for user experience more consistent\n"
-	        "             with typical host systems.\n"
-	        "  native:    Re-use current host OS settings, regardless of the country set;\n"
-	        "             use 'modern' data to fill-in the gaps when the DOS locale system\n"
-	        "             is too limited to follow the desktop settings.");
-	pstring->SetValues({"historic", "modern", "native"});
-
-	pstring = secprop->AddString("country", WhenIdle, "auto");
-	pstring->SetHelp(
-	        "Set DOS country code ('auto' by default).\n"
-	        "This affects country-specific information such as date, time, and decimal\n"
-	        "formats. If set to 'auto', selects the country code reflecting the host\n"
-	        "OS settings.\n"
-	        "The list of country codes can be displayed using '--list-countries'\n"
-	        "command-line argument.");
-
-	pstring = secprop->AddString("keyboardlayout", Deprecated, "");
-	pstring->SetHelp("Renamed to 'keyboard_layout'.");
-
-	pstring = secprop->AddString("keyboard_layout", OnlyAtStart, "auto");
-	pstring->SetHelp(
-	        "Keyboard layout code ('auto' by default).\n"
-	        "The list of supported keyboard layout codes can be displayed using the\n"
-	        "'--list-layouts' command-line argument, e.g., 'uk' is the British English\n"
-	        "layout. The layout can be followed by the code page number, e.g., 'uk 850'\n"
-	        "selects a Western European screen font.\n"
-	        "Set to 'auto' to guess the values from the host OS settings.\n"
-	        "After startup, use the 'KEYB' command to manage keyboard layouts and code pages\n"
-	        "(run 'HELP KEYB' for details).");
-
-	// COMMAND.COM settings
-
-	pstring = secprop->AddString("expand_shell_variable", WhenIdle, "auto");
-	pstring->SetValues({"auto", "on", "off"});
-	pstring->SetHelp(
-	        "Enable expanding environment variables such as %%PATH%% in the DOS command shell\n"
-	        "(auto by default, enabled if DOS version >= 7.0).\n"
-	        "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
-
-	pstring = secprop->AddPath("shell_history_file", OnlyAtStart, "shell_history.txt");
-
-	pstring->SetHelp(
-	        "File containing persistent command line history ('shell_history.txt'\n"
-	        "by default). Setting it to empty disables persistent shell history.");
-
-	// Misc DOS command settings
-
-	pstring = secprop->AddPath("setver_table_file", OnlyAtStart, "");
-	pstring->SetHelp(
-	        "File containing the list of applications and assigned DOS versions, in a\n"
-	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
-	        "(empty by default).");
-
-	secprop->AddInitHandler(DOS_InitFileLocking);
-	pbool = secprop->AddBool("file_locking", WhenIdle, true);
-	pbool->SetHelp(
-	        "Enable file locking (SHARE.EXE emulation; 'on' by default).\n"
-	        "This is required for some Windows 3.1x applications to work properly.\n"
-	        "It generally does not cause problems for DOS games except in rare cases\n"
-	        "(e.g., Astral Blur demo). If you experience crashes related to file\n"
-	        "permissions, you can try disabling this.");
-
-	// Mscdex
-	secprop->AddInitHandler(MSCDEX_Init);
-	secprop->AddInitHandler(DRIVES_Init);
-	secprop->AddInitHandler(CDROM_Image_Init);
-}
-
 void DOSBOX_InitAllModuleConfigsAndMessages()
 {
 	// The [sdl] section gets initialised first in `sdlmain.cpp`, then
@@ -1151,7 +1029,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	SERIAL_AddConfigSection(control);
 
-	add_dos_section();
+	DOS_AddConfigSection(control);
 
 #if C_IPX
 	IPX_AddConfigSection(control);

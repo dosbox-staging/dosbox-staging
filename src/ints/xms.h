@@ -6,7 +6,6 @@
 
 #include "config/setup.h"
 
-void XMS_Init(Section* sec);
-void XMS_Destroy(Section* sec);
+void XMS_Init(Section* section);
 
 #endif // DOSBOX_XMS_H

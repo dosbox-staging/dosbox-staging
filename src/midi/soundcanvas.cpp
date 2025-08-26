@@ -13,6 +13,7 @@
 #include "audio/clap/library.h"
 #include "audio/clap/plugin_manager.h"
 #include "config/setup.h"
+#include "dos/programs.h"
 #include "hardware/pic.h"
 #include "misc/ansi_code_markup.h"
 #include "misc/std_filesystem.h"

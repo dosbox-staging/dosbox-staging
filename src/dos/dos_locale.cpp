@@ -1596,21 +1596,6 @@ DOS_Locale::DOS_Locale(Section* configuration) : ModuleBase(configuration)
 
 DOS_Locale::~DOS_Locale() {}
 
-static std::unique_ptr<DOS_Locale> Locale = {};
-
-void DOS_Locale_Destroy([[maybe_unused]]Section* sec)
-{
-	Locale.reset();
-}
-
-void DOS_Locale_Init(Section* sec)
-{
-	assert(sec);
-	Locale = std::make_unique<DOS_Locale>(sec);
-
-	sec->AddDestroyHandler(DOS_Locale_Destroy);
-}
-
 void DOS_Locale_AddMessages()
 {
 	MSG_Add("DOSBOX_HELP_LIST_COUNTRIES_1",
@@ -1658,4 +1643,27 @@ void DOS_Locale_AddMessages()
 
 	MSG_Add("KEYBOARD_MOD_ADJECTIVE_LEFT",  "Left");
 	MSG_Add("KEYBOARD_MOD_ADJECTIVE_RIGHT", "Right");
+}
+
+static std::unique_ptr<DOS_Locale> Locale = {};
+
+static void dos_locale_destroy([[maybe_unused]] Section* section)
+{
+	Locale = {};
+}
+
+static void notify_dos_locale_setting_updated(SectionProp* section,
+                                              [[maybe_unused]] const std::string& prop_name)
+{
+	Locale = std::make_unique<DOS_Locale>(section);
+}
+
+void DOS_Locale_Init(Section* section)
+{
+	assert(section);
+
+	Locale = std::make_unique<DOS_Locale>(section);
+
+	section->AddDestroyHandler(dos_locale_destroy);
+	section->AddUpdateHandler(notify_dos_locale_setting_updated);
 }

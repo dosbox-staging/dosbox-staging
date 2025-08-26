@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_EMS_H
-#define DOSBOX_EMS_H
-
 #include "config/setup.h"
 
-void EMS_Init(Section* section);
+#ifndef DOSBOX_DOS_FILES_H
+#define DOSBOX_DOS_FILES_H
 
-#endif // DOSBOX_EMS_H
+void DOS_Files_Init(Section* section);
+
+#endif // DOSBOX_DOS_FILES_H
