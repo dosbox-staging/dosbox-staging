@@ -61,10 +61,13 @@
 #include "misc/tracy.h"
 #include "misc/video.h"
 #include "shell/command_line.h"
+#include "utils/checks.h"
 #include "utils/fs_utils.h"
 #include "utils/math_utils.h"
 #include "utils/rect.h"
 #include "utils/string_utils.h"
+
+CHECK_NARROWING();
 
 constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
 {
