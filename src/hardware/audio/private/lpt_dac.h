@@ -8,11 +8,13 @@
 
 #include <queue>
 #include <set>
+#include <string>
 #include <string_view>
 
 #include "audio/mixer.h"
-#include "hardware/port.h"
+#include "config/setup.h"
 #include "hardware/lpt.h"
+#include "hardware/port.h"
 #include "utils/rwqueue.h"
 
 // Provides mandatory scafolding for derived LPT DAC devices
@@ -69,5 +71,7 @@ protected:
 private:
 	int frames_rendered_this_tick = 0;
 };
+
+void LPT_DAC_AddConfigSection(Section* sec);
 
 #endif // DOSBOX_LPT_DAC_H

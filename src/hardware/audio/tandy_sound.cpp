@@ -22,7 +22,7 @@
 // Tandy+SB combo configuration as well. Note that the Tandy DAC BIOS routine
 // only exists if the Tandy Card is enabled (either 'tandy=on' or 'tandy=psg').
 
-#include "private/tandy_sound.h"
+#include "tandy_sound.h"
 
 #include <algorithm>
 #include <array>
@@ -627,23 +627,50 @@ void TANDYSOUND_PicCallback()
 	tandy_dac->PicCallback(requested_frames);
 }
 
-void TANDYSOUND_ShutDown(Section*)
+static void init_tandysound_settings(SectionProp& section)
 {
-	TIMER_DelTickHandler(TANDYSOUND_PicCallback);
-	if (tandy_psg || tandy_dac) {
-		BIOS_ConfigureTandyDacCallbacks(false);
-		LOG_MSG("TANDY: Shutting down");
-		tandy_dac.reset();
-		tandy_psg.reset();
-	}
+	using enum Property::Changeable::Value;
+
+	auto pstring = section.AddString("tandy", WhenIdle, "auto");
+	pstring->SetValues({"auto", "on", "psg", "off"});
+	pstring->SetHelp(
+	        "Set the Tandy/PCjr 3 Voice sound emulation:\n"
+	        "  auto:  Automatically enable Tandy/PCjr sound for the 'tandy' and 'pcjr'\n"
+	        "         machine types only (default).\n"
+	        "  on:    Enable Tandy/PCjr sound with DAC support, when possible.\n"
+	        "         Most games also need the machine set to 'tandy' or 'pcjr' to work.\n"
+	        "  psg:   Only enable the card's three-voice programmable sound generator\n"
+	        "         without DAC to avoid conflicts with other cards using DMA 1.\n"
+	        "  off:   Disable Tandy/PCjr sound.");
+
+	pstring = section.AddString("tandy_fadeout", WhenIdle, "off");
+	pstring->SetHelp(
+	        "Fade out the Tandy synth output after the last IO port write:\n"
+	        "  off:       Don't fade out; residual output will play forever (default).\n"
+	        "  on:        Wait 0.5s before fading out over a 0.5s period.\n"
+	        "  <custom>:  Custom fade out definition; see 'opl_fadeout' for details.");
+
+	pstring = section.AddString("tandy_filter", WhenIdle, "on");
+	pstring->SetHelp(
+	        "Filter for the Tandy synth output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
+
+	pstring = section.AddString("tandy_dac_filter", WhenIdle, "on");
+	pstring->SetHelp(
+	        "Filter for the Tandy DAC output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-void TANDYSOUND_Init(Section* section)
+static void tandysound_init([[maybe_unused]] Section* sec)
 {
-	assert(section);
+	assert(sec);
+	const auto section = static_cast<SectionProp*>(sec);
 
-	const auto prop = static_cast<SectionProp*>(section);
-	const auto pref = prop->GetString("tandy");
+	const auto pref = section->GetString("tandy");
 
 	if (has_false(pref) || (!is_machine_pcjr_or_tandy() && pref == "auto")) {
 		BIOS_ConfigureTandyDacCallbacks(false);
@@ -653,7 +680,7 @@ void TANDYSOUND_Init(Section* section)
 	ConfigProfile cfg;
 
 	switch (machine) {
-	case MachineType::Pcjr:  cfg = ConfigProfile::PcjrSystem; break;
+	case MachineType::Pcjr: cfg = ConfigProfile::PcjrSystem; break;
 	case MachineType::Tandy: cfg = ConfigProfile::TandySystem; break;
 	default: cfg = ConfigProfile::SoundCardOnly; break;
 	}
@@ -664,10 +691,12 @@ void TANDYSOUND_Init(Section* section)
 	//
 	DMA_ShutdownSecondaryController();
 
-	const auto wants_dac = has_true(pref) || (is_machine_pcjr_or_tandy() && pref == "auto");
+	const auto wants_dac = has_true(pref) ||
+	                       (is_machine_pcjr_or_tandy() && pref == "auto");
 	if (wants_dac) {
 		tandy_dac = std::make_unique<TandyDAC>(
-		        cfg, prop->GetString("tandy_dac_filter"));
+		        cfg, section->GetString("tandy_dac_filter"));
+
 		TIMER_AddTickHandler(TANDYSOUND_PicCallback);
 	}
 
@@ -677,9 +706,48 @@ void TANDYSOUND_Init(Section* section)
 
 	tandy_psg = std::make_unique<TandyPSG>(cfg,
 	                                       wants_dac,
-	                                       prop->GetString("tandy_fadeout"),
-	                                       prop->GetString("tandy_filter"));
+	                                       section->GetString("tandy_fadeout"),
+	                                       section->GetString("tandy_filter"));
+}
 
-	constexpr auto ChangeableAtRuntime = true;
-	section->AddDestroyHandler(TANDYSOUND_ShutDown, ChangeableAtRuntime);
+void TANDYSOUND_Destroy([[maybe_unused]] Section* section)
+{
+	TIMER_DelTickHandler(TANDYSOUND_PicCallback);
+
+	if (tandy_psg || tandy_dac) {
+		BIOS_ConfigureTandyDacCallbacks(false);
+		LOG_MSG("TANDY: Shutting down");
+
+		tandy_dac.reset();
+		tandy_psg.reset();
+	}
+}
+
+static void notify_tandysound_setting_updated(SectionProp* section,
+                                              [[maybe_unused]] const std::string& prop_name)
+{
+	// The [speaker] section controls multiple audio devices, so we want to
+	// make sure to only restart the device affected by the setting.
+	//
+	if (prop_name == "tandy" || prop_name == "tandy_fadeout" ||
+	    prop_name == "tandy_filter" || prop_name == "tandy_dac_filter") {
+
+		TANDYSOUND_Destroy(section);
+		tandysound_init(section);
+	}
+
+	// TODO support changing filter params without restarting the device
+}
+
+void TANDYSOUND_AddConfigSection(Section* sec)
+{
+	assert(sec);
+
+	const auto section = static_cast<SectionProp*>(sec);
+
+	section->AddInitHandler(tandysound_init);
+	section->AddDestroyHandler(TANDYSOUND_Destroy);
+	section->AddUpdateHandler(notify_tandysound_setting_updated);
+
+	init_tandysound_settings(*section);
 }

@@ -4,6 +4,7 @@
 #ifndef PARALLEL_PORT_H_
 #define PARALLEL_PORT_H_
 
+#include "hardware/port.h"
 #include "utils/bit_view.h"
 
 // There are three hexadecimal addresses commonly
