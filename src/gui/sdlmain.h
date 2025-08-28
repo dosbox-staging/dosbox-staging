@@ -271,12 +271,12 @@ struct SDL_Block {
 		PresentationMode windowed_mode =   {};
 		PresentationMode fullscreen_mode = {};
 
-		int frame_time_us           = 0;
-		int early_present_window_us = 0;
-		int last_present_time_us    = 0;
+		int frame_time_us            = 0;
+		int early_present_window_us  = 0;
+		int64_t last_present_time_us = 0;
 
-        present_frame_f* present      = present_frame_noop;
-        update_frame_buffer_f* update = update_frame_noop;
+		present_frame_f* present      = present_frame_noop;
+		update_frame_buffer_f* update = update_frame_noop;
 	} presentation = {};
 
 	bool use_exact_window_resolution = false;
