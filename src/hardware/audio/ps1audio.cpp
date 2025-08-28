@@ -545,6 +545,7 @@ void PS1DAC_NotifyLockMixer()
 		ps1_dac->output_queue.Stop();
 	}
 }
+
 void PS1DAC_NotifyUnlockMixer()
 {
 	if (ps1_dac) {
@@ -552,36 +553,88 @@ void PS1DAC_NotifyUnlockMixer()
 	}
 }
 
-static void PS1AUDIO_ShutDown([[maybe_unused]] Section* sec)
-{
-	LOG_MSG("PS1: Shutting down IBM PS/1 Audio card");
-	ps1_dac.reset();
-	ps1_synth.reset();
-}
-
 bool PS1AUDIO_IsEnabled()
 {
 	const auto section = control->GetSection("speaker");
 	assert(section);
+
 	const auto properties = static_cast<SectionProp*>(section);
 	return properties->GetBool("ps1audio");
 }
 
-void PS1AUDIO_Init(Section* section)
+static void init_ps1audio_settings(SectionProp& section)
 {
-	assert(section);
-	const auto prop = static_cast<SectionProp*>(section);
+	using enum Property::Changeable::Value;
+
+	auto pbool = section.AddBool("ps1audio", WhenIdle, false);
+	pbool->SetHelp("Enable IBM PS/1 Audio emulation ('off' by default).");
+
+	auto pstring = section.AddString("ps1audio_filter", WhenIdle, "on");
+	pstring->SetHelp(
+	        "Filter for the PS/1 Audio synth output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
+
+	pstring = section.AddString("ps1audio_dac_filter", WhenIdle, "on");
+	pstring->SetHelp(
+	        "Filter for the PS/1 Audio DAC output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
+}
+
+static void ps1audio_init(Section* sec)
+{
+	assert(sec);
+	const auto section = static_cast<SectionProp*>(sec);
 
 	if (!PS1AUDIO_IsEnabled()) {
 		return;
 	}
 
-	ps1_dac = std::make_unique<Ps1Dac>(prop->GetString("ps1audio_dac_filter"));
+	ps1_dac = std::make_unique<Ps1Dac>(section->GetString("ps1audio_dac_filter"));
 
-	ps1_synth = std::make_unique<Ps1Synth>(prop->GetString("ps1audio_filter"));
+	ps1_synth = std::make_unique<Ps1Synth>(section->GetString("ps1audio_filter"));
 
 	LOG_MSG("PS1: Initialised IBM PS/1 Audio card");
+}
 
-	constexpr auto ChangeableAtRuntime = true;
-	section->AddDestroyHandler(PS1AUDIO_ShutDown, ChangeableAtRuntime);
+static void ps1audio_destroy([[maybe_unused]] Section* sec)
+{
+	if (ps1_dac || ps1_synth) {
+		LOG_MSG("PS1: Shutting down IBM PS/1 Audio card");
+
+		ps1_dac.reset();
+		ps1_synth.reset();
+	}
+}
+
+static void notify_ps1audio_setting_updated(SectionProp* section,
+                                            [[maybe_unused]] const std::string& prop_name)
+{
+	// The [speaker] section controls multiple audio devices, so we want to
+	// make sure to only restart the device affected by the setting.
+	//
+	if (prop_name == "ps1audio" || prop_name == "ps1audio_filter" ||
+	    prop_name == "ps1audio_dac_filter") {
+
+		ps1audio_destroy(section);
+		ps1audio_init(section);
+	}
+
+	// TODO support changing filter params without restarting the device
+}
+
+void PS1AUDIO_AddConfigSection(Section* sec)
+{
+	assert(sec);
+
+	const auto section = static_cast<SectionProp*>(sec);
+
+	section->AddInitHandler(ps1audio_init);
+	section->AddDestroyHandler(ps1audio_destroy);
+	section->AddUpdateHandler(notify_ps1audio_setting_updated);
+
+	init_ps1audio_settings(*section);
 }

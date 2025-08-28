@@ -134,22 +134,46 @@ static void LPT_DAC_PicCallback()
 	lpt_dac->PicCallback(requested_frames);
 }
 
-void LPT_DAC_ShutDown([[maybe_unused]] Section *sec)
+void LPTDAC_NotifyLockMixer()
 {
-	MIXER_LockMixerThread();
-	TIMER_DelTickHandler(LPT_DAC_PicCallback);
-	lpt_dac.reset();
-	MIXER_UnlockMixerThread();
+	if (lpt_dac) {
+		lpt_dac->output_queue.Stop();
+	}
 }
 
-void LPT_DAC_Init(Section* section)
+void LPTDAC_NotifyUnlockMixer()
 {
-	assert(section);
+	if (lpt_dac) {
+		lpt_dac->output_queue.Start();
+	}
+}
 
-	// Always reset on changes
-	LPT_DAC_ShutDown(nullptr);
+static void init_lpt_dac_settings(SectionProp& section)
+{
+	using enum Property::Changeable::Value;
 
-	// Get the user's LPT DAC choices
+	auto pstring = section.AddString("lpt_dac", WhenIdle, "none");
+	pstring->SetHelp(
+	        "Type of DAC plugged into the parallel port:\n"
+	        "  disney:    Disney Sound Source.\n"
+	        "  covox:     Covox Speech Thing.\n"
+	        "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
+	        "  none/off:  Don't use a parallel port DAC (default).");
+	pstring->SetValues({"none", "disney", "covox", "ston1", "off"});
+
+	pstring = section.AddString("lpt_dac_filter", WhenIdle, "on");
+	pstring->SetHelp(
+	        "Filter for the LPT DAC audio device(s):\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
+
+	auto pbool = section.AddBool("disney", Deprecated, false);
+	pbool->SetHelp("Use 'lpt_dac = disney' to enable the Disney Sound Source.");
+}
+
+static void lpt_dac_init(Section* section)
+{
 	assert(section);
 	const auto prop = static_cast<SectionProp*>(section);
 
@@ -158,12 +182,15 @@ void LPT_DAC_Init(Section* section)
 	if (dac_choice == "disney") {
 		MIXER_LockMixerThread();
 		lpt_dac = std::make_unique<Disney>();
+
 	} else if (dac_choice == "covox") {
 		MIXER_LockMixerThread();
 		lpt_dac = std::make_unique<Covox>();
+
 	} else if (dac_choice == "ston1") {
 		MIXER_LockMixerThread();
 		lpt_dac = std::make_unique<StereoOn1>();
+
 	} else {
 		// The remaining setting is to turn the LPT DAC off
 		const auto dac_choice_has_bool = parse_bool_setting(dac_choice);
@@ -174,7 +201,7 @@ void LPT_DAC_Init(Section* section)
 		return;
 	}
 
-	// Let the DAC apply its own filter type
+	// Apply LPT DAC filter
 	const std::string filter_choice = prop->GetString("lpt_dac_filter");
 	assert(lpt_dac);
 
@@ -195,27 +222,51 @@ void LPT_DAC_Init(Section* section)
 
 	lpt_dac->BindToPort(Lpt1Port);
 
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyHandler(LPT_DAC_ShutDown, changeable_at_runtime);
-
 	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
 	// This provides a good size to avoid over-runs and stalls.
-	lpt_dac->output_queue.Resize(iceil(lpt_dac->channel->GetFramesPerBlock() * 2.0f));
+	lpt_dac->output_queue.Resize(
+	        iceil(lpt_dac->channel->GetFramesPerBlock() * 2.0f));
+
 	TIMER_AddTickHandler(LPT_DAC_PicCallback);
 
 	MIXER_UnlockMixerThread();
 }
 
-void LPTDAC_NotifyLockMixer()
+static void lpt_dac_destroy([[maybe_unused]] Section* sec)
 {
 	if (lpt_dac) {
-		lpt_dac->output_queue.Stop();
+		MIXER_LockMixerThread();
+
+		TIMER_DelTickHandler(LPT_DAC_PicCallback);
+		lpt_dac.reset();
+
+		MIXER_UnlockMixerThread();
 	}
 }
 
-void LPTDAC_NotifyUnlockMixer()
+static void notify_lpt_dac_setting_updated(SectionProp* section,
+                                           [[maybe_unused]] const std::string& prop_name)
 {
-	if (lpt_dac) {
-		lpt_dac->output_queue.Start();
+	// The [speaker] section controls multiple audio devices, so we want to
+	// make sure to only restart the device affected by the setting.
+	//
+	if (prop_name == "lpt_dac" || prop_name == "lpt_dac_filter") {
+		lpt_dac_destroy(section);
+		lpt_dac_init(section);
 	}
+
+	// TODO support changing filter params without restarting the device
+}
+
+void LPT_DAC_AddConfigSection(Section* sec)
+{
+	assert(sec);
+
+	const auto section = static_cast<SectionProp*>(sec);
+
+	section->AddInitHandler(lpt_dac_init);
+	section->AddDestroyHandler(lpt_dac_destroy);
+	section->AddUpdateHandler(notify_lpt_dac_setting_updated);
+
+	init_lpt_dac_settings(*section);
 }
