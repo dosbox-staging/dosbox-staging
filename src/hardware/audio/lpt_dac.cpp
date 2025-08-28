@@ -105,7 +105,7 @@ void LptDac::PicCallback(const int requested_frames)
 
 LptDac::~LptDac()
 {
-	LOG_MSG("%s: Shutting down DAC", dac_name.c_str());
+	LOG_MSG("%s: Shutting down", dac_name.c_str());
 
 	// Update our status to indicate we're no longer ready
 	status_reg.error = true;
