@@ -1642,8 +1642,9 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 
 		image.is_flipped_vertically = false;
 
-		image.pitch = image.params.width *
-		              (get_bits_per_pixel(image.params.pixel_format) / 8);
+		image.pitch = check_cast<uint16_t>(
+		        image.params.width *
+		        (get_bits_per_pixel(image.params.pixel_format) / 8));
 
 		image.palette_data = nullptr;
 

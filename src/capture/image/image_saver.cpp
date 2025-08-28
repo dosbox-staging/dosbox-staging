@@ -238,8 +238,8 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 	// rendered images as the "non-squaredness" is "baked into" the image
 	// data.
 	if (!png_writer.InitRgb888(outfile,
-	                           src.width,
-	                           src.height,
+	                           check_cast<uint16_t>(src.width),
+	                           check_cast<uint16_t>(src.height),
 	                           square_pixel_aspect_ratio,
 	                           src.video_mode)) {
 		return;

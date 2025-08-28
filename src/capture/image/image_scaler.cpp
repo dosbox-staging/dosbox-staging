@@ -79,8 +79,8 @@ void ImageScaler::UpdateOutputParamsUpscale()
 		output.horiz_scale = horiz_scale_fract.ToFloat();
 		output.one_per_horiz_scale = horiz_scale_fract.Inverse().ToFloat();
 
-		output.width = static_cast<uint16_t>(
-		        roundf(input.params.width * output.horiz_scale));
+		output.width = static_cast<uint16_t>(roundf(
+		        static_cast<float>(input.params.width) * output.horiz_scale));
 
 		output.height = static_cast<uint16_t>(video_mode.height *
 		                                      output.vert_scale);
