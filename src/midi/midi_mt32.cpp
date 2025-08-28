@@ -1106,13 +1106,11 @@ static void mt32_init([[maybe_unused]] Section* sec)
 
 void MT32_AddConfigSection(const ConfigPtr& conf)
 {
-	constexpr auto ChangeableAtRuntime = true;
-
 	assert(conf);
-	SectionProp* sec_prop = conf->AddSection("mt32", mt32_init, ChangeableAtRuntime);
-	assert(sec_prop);
-	init_mt32_dosbox_settings(*sec_prop);
 
+	auto section = conf->AddSection("mt32", mt32_init);
+
+	init_mt32_dosbox_settings(*section);
 	register_mt32_text_messages();
 }
 
