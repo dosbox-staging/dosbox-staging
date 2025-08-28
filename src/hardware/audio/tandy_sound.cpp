@@ -154,8 +154,9 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		LOG_WARNING(
-		        "TANDYDAC: Invalid 'tandy_dac_filter' setting: '%s', "
+		        "%s: Invalid 'tandy_dac_filter' setting: '%s', "
 		        "using 'on'",
+		        ChannelName::TandyDac,
 		        filter_choice.c_str());
 
 		const auto filter_enabled = true;
@@ -219,7 +220,9 @@ TandyDAC::~TandyDAC()
 
 void TandyDAC::DmaCallback([[maybe_unused]] const DmaChannel*, DmaEvent event)
 {
-	// LOG_MSG("TANDYDAC: DMA event %d", event);
+#if 0
+	LOG_DEBUG("%s: DMA event %d", ChannelName::TandyDac, event);
+#endif
 	if (event != DmaEvent::ReachedTerminalCount) {
 		return;
 	}
@@ -240,7 +243,9 @@ void TandyDAC::ChangeMode()
 	//
 	constexpr auto DacMaxSampleRateHz = 49000;
 
-	// LOG_MSG("TANDYDAC: Mode changed to %d", regs.mode);
+#if 0
+	LOG_DEBUG("%s: Mode changed to %d", ChannelName::TandyDac, regs.mode);
+#endif
 	switch (regs.mode & 3) {
 	case 0: // joystick mode
 	case 1:
@@ -273,7 +278,8 @@ void TandyDAC::ChangeMode()
 
 					channel->WakeUp();
 #if 0
-					LOG_MSG("TANDYDAC: playback started with freqency %i, volume %f",
+					LOG_DEBUG("%s: playback started with freqency %i, volume %f",
+							ChannelName::TandyDac,
 					        sample_rate_hz,
 					        vol);
 #endif
@@ -287,7 +293,7 @@ void TandyDAC::ChangeMode()
 uint8_t TandyDAC::ReadFromPort(io_port_t port, io_width_t)
 {
 #if 0
-	LOG_MSG("TANDYDAC: Read from port %04x", port);
+	LOG_DEBUG("%s: Read from port %04x", ChannelName::TandyDac, port);
 #endif
 	switch (port) {
 	case 0xc4:
@@ -299,7 +305,9 @@ uint8_t TandyDAC::ReadFromPort(io_port_t port, io_width_t)
 		return static_cast<uint8_t>(((regs.clock_divider >> 8) & 0xf) |
 		                            (regs.amplitude << 5));
 	}
-	LOG_MSG("TANDYDAC: Read from unknown %x", port);
+#if 0
+	LOG_DEBUG("%s: Read from unknown %x", ChannelName::TandyDac, port);
+#endif
 	return 0xff;
 }
 
@@ -360,8 +368,9 @@ void TandyDAC::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 		break;
 	}
 #if 0
-	LOG_MSG("TANDYDAC: Write %02x to port %04x", data, port);
-	LOG_MSG("TANDYDAC: Mode %02x, Control %02x, clock divider %04x, Amplitude %02x",
+	LOG_TRACE("%s: Write %02x to port %04x", ChannelName::TandyDac, data, port);
+	LOG_TRACE("%s: Mode %02x, Control %02x, clock divider %04x, Amplitude %02x",
+	        ChannelName::TandyDac,
 	        regs.mode,
 	        regs.control,
 	        regs.clock_divider,
@@ -372,7 +381,8 @@ void TandyDAC::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 void TandyDAC::PicCallback(const int requested)
 {
 	if (!channel || !dma.channel) {
-		LOG_DEBUG("TANDY: Skipping update until the DAC is initialized");
+		LOG_DEBUG("%s: Skipping update until the DAC is initialized",
+		          ChannelName::TandyDac);
 		return;
 	}
 
@@ -464,8 +474,9 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		LOG_WARNING(
-		        "TANDY: Invalid 'tandy_filter' value: '%s', "
+		        "%s: Invalid 'tandy_filter' value: '%s', "
 		        "using 'on'",
+		        ChannelName::TandyPsg,
 		        filter_choice.c_str());
 
 		const auto filter_enabled = true;
@@ -481,8 +492,10 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 
 	device->convert_samplerate(RenderRateHz);
 
-	LOG_MSG("TANDY: Initialised audio card with a TI %s PSG",
+	LOG_MSG("%s: Initialised audio card with a TI %s PSG",
+	        ChannelName::TandyPsg,
 	        base_device->shortName);
+
 	MIXER_UnlockMixerThread();
 }
 
@@ -556,7 +569,9 @@ void TandyPSG::AudioCallback(const int requested_frames)
 
 #if 0
 	if (fifo.size()) {
-		LOG_MSG("TANDY: Queued %2lu cycle-accurate frames", fifo.size());
+		LOG_TRACE("%s: Queued %2lu cycle-accurate frames",
+		        ChannelName::TandyPsd,
+		        fifo.size());
 	}
 #endif
 
@@ -612,7 +627,7 @@ bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma)
 static void shutdown_dac(Section*)
 {
 	if (tandy_dac) {
-		LOG_MSG("TANDY: Shutting down DAC");
+		LOG_MSG("%s: Shutting down", ChannelName::TandyDac);
 		tandy_dac.reset();
 	}
 }
