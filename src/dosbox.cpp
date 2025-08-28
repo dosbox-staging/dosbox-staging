@@ -28,7 +28,7 @@
 #include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/render.h"
-#include "hardware//network/ipx.h"
+#include "hardware/audio/speaker.h"
 #include "hardware/cmos.h"
 #include "hardware/hardware.h"
 #include "hardware/input/joystick.h"
@@ -36,6 +36,7 @@
 #include "hardware/input/joystick.h"
 #include "hardware/input/mouse.h"
 #include "hardware/memory.h"
+#include "hardware/network/ipx.h"
 #include "hardware/network/ne2000.h"
 #include "hardware/pci_bus.h"
 #include "hardware/pic.h"
@@ -58,11 +59,6 @@ MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
 
 void LOG_StartUp();
-
-void PCSPEAKER_Init(Section*);
-void TANDYSOUND_Init(Section*);
-void LPT_DAC_Init(Section *);
-void PS1AUDIO_Init(Section *);
 
 void DEBUG_Init(Section*);
 
@@ -851,116 +847,6 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "  slow:     Double density (DD) floppy speed (~30 kB/s)");
 }
 
-static void add_speaker_section()
-{
-	using enum Property::Changeable::Value;
-
-	constexpr auto changeable_at_runtime = true;
-	auto secprop                         = control->AddSection("speaker",
-                                           PCSPEAKER_Init,
-                                           changeable_at_runtime);
-
-	auto pstring = secprop->AddString("pcspeaker", WhenIdle, "impulse");
-	pstring->SetHelp(
-	        "PC speaker emulation model:\n"
-	        "  impulse:   A very faithful emulation of the PC speaker's output (default).\n"
-	        "             Works with most games, but may result in garbled sound or silence\n"
-	        "             in a small number of programs.\n"
-	        "  discrete:  Legacy simplified PC speaker emulation; only use this on specific\n"
-	        "             titles that give you problems with the 'impulse' model.\n"
-	        "  none/off:  Don't emulate the PC speaker.");
-	pstring->SetValues({"impulse", "discrete", "none", "off"});
-
-	pstring = secprop->AddString("pcspeaker_filter", WhenIdle, "on");
-	pstring->SetHelp(
-	        "Filter for the PC speaker output:\n"
-	        "  on:        Filter the output (default).\n"
-	        "  off:       Don't filter the output.\n"
-	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
-
-	pstring = secprop->AddString("zero_offset", Deprecated, "");
-	pstring->SetHelp(
-	        "DC-offset is now eliminated globally from the master mixer output.");
-
-	// Tandy audio emulation
-	secprop->AddInitHandler(TANDYSOUND_Init, changeable_at_runtime);
-
-	pstring = secprop->AddString("tandy", WhenIdle, "auto");
-	pstring->SetValues({"auto", "on", "psg", "off"});
-	pstring->SetHelp(
-	        "Set the Tandy/PCjr 3 Voice sound emulation:\n"
-	        "  auto:  Automatically enable Tandy/PCjr sound for the 'tandy' and 'pcjr'\n"
-	        "         machine types only (default).\n"
-	        "  on:    Enable Tandy/PCjr sound with DAC support, when possible.\n"
-	        "         Most games also need the machine set to 'tandy' or 'pcjr' to work.\n"
-	        "  psg:   Only enable the card's three-voice programmable sound generator\n"
-	        "         without DAC to avoid conflicts with other cards using DMA 1.\n"
-	        "  off:   Disable Tandy/PCjr sound.");
-
-	pstring = secprop->AddString("tandy_fadeout", WhenIdle, "off");
-	pstring->SetHelp(
-	        "Fade out the Tandy synth output after the last IO port write:\n"
-	        "  off:       Don't fade out; residual output will play forever (default).\n"
-	        "  on:        Wait 0.5s before fading out over a 0.5s period.\n"
-	        "  <custom>:  Custom fade out definition; see 'opl_fadeout' for details.");
-
-	pstring = secprop->AddString("tandy_filter", WhenIdle, "on");
-	pstring->SetHelp(
-	        "Filter for the Tandy synth output:\n"
-	        "  on:        Filter the output (default).\n"
-	        "  off:       Don't filter the output.\n"
-	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
-
-	pstring = secprop->AddString("tandy_dac_filter", WhenIdle, "on");
-	pstring->SetHelp(
-	        "Filter for the Tandy DAC output:\n"
-	        "  on:        Filter the output (default).\n"
-	        "  off:       Don't filter the output.\n"
-	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
-
-	// LPT DAC device emulation
-	secprop->AddInitHandler(LPT_DAC_Init, changeable_at_runtime);
-	pstring = secprop->AddString("lpt_dac", WhenIdle, "none");
-	pstring->SetHelp(
-	        "Type of DAC plugged into the parallel port:\n"
-	        "  disney:    Disney Sound Source.\n"
-	        "  covox:     Covox Speech Thing.\n"
-	        "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
-	        "  none/off:  Don't use a parallel port DAC (default).");
-	pstring->SetValues({"none", "disney", "covox", "ston1", "off"});
-
-	pstring = secprop->AddString("lpt_dac_filter", WhenIdle, "on");
-	pstring->SetHelp(
-	        "Filter for the LPT DAC audio device(s):\n"
-	        "  on:        Filter the output (default).\n"
-	        "  off:       Don't filter the output.\n"
-	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
-
-	// Deprecate the overloaded Disney setting
-	auto pbool = secprop->AddBool("disney", Deprecated, false);
-	pbool->SetHelp("Use 'lpt_dac = disney' to enable the Disney Sound Source.");
-
-	// IBM PS/1 Audio emulation
-	secprop->AddInitHandler(PS1AUDIO_Init, changeable_at_runtime);
-
-	pbool = secprop->AddBool("ps1audio", WhenIdle, false);
-	pbool->SetHelp("Enable IBM PS/1 Audio emulation ('off' by default).");
-
-	pstring = secprop->AddString("ps1audio_filter", WhenIdle, "on");
-	pstring->SetHelp(
-	        "Filter for the PS/1 Audio synth output:\n"
-	        "  on:        Filter the output (default).\n"
-	        "  off:       Don't filter the output.\n"
-	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
-
-	pstring = secprop->AddString("ps1audio_dac_filter", WhenIdle, "on");
-	pstring->SetHelp(
-	        "Filter for the PS/1 Audio DAC output:\n"
-	        "  on:        Filter the output (default).\n"
-	        "  off:       Don't filter the output.\n"
-	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
-}
-
 void DOSBOX_InitAllModuleConfigsAndMessages()
 {
 	// The [sdl] section gets initialised first in `sdlmain.cpp`, then
@@ -1018,7 +904,8 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	DISKNOISE_AddConfigSection(control);
 
-	add_speaker_section();
+	// Configure PS/1, Tandy/PCjr , LPT DAC, and PC speaker audio emulation
+	SPEAKER_AddConfigSection(control);
 
 	REELMAGIC_AddConfigSection(control);
 
