@@ -139,8 +139,8 @@ struct VideoMode {
 	// 640x400 at the signal level. Similarly, all 200-line CGA and EGA
 	// modes are effectively emulated on VGA adapters and are output width
 	// and height doubled.
-	uint16_t width  = 0;
-	uint16_t height = 0;
+	int width  = 0;
+	int height = 0;
 
 	// The intended pixel aspect ratio of the video mode. Note this is not
 	// simply calculated by stretching 'width x height' to a 4:3 aspect
