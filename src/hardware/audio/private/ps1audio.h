@@ -100,5 +100,6 @@ private:
 	bool can_trigger_irq = false;
 };
 
+void PS1AUDIO_AddConfigSection(Section* sec);
 
 #endif // DOSBOX_PS1AUDIO_H

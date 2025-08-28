@@ -23,91 +23,26 @@ static void PCSPEAKER_PicCallback()
 	pc_speaker->PicCallback(requested_frames);
 }
 
-void PCSPEAKER_ShutDown([[maybe_unused]] Section *sec)
-{
-	MIXER_LockMixerThread();
-	TIMER_DelTickHandler(PCSPEAKER_PicCallback);
-	pc_speaker.reset();
-	MIXER_UnlockMixerThread();
-}
-
-void PCSPEAKER_Init(Section *section)
-{
-	// Always reset the speaker on changes
-	PCSPEAKER_ShutDown(nullptr);
-
-	assert(section);
-	const auto prop = static_cast<SectionProp *>(section);
-
-	// Get the user's PC speaker model choice
-	const std::string model_choice = prop->GetString("pcspeaker");
-
-	const auto model_choice_has_bool = parse_bool_setting(model_choice);
-
-	if (model_choice_has_bool && *model_choice_has_bool == false) {
-		return;
-
-	} else if (model_choice == "discrete") {
-		MIXER_LockMixerThread();
-		pc_speaker = std::make_unique<PcSpeakerDiscrete>();
-
-	} else if (model_choice == "impulse") {
-		MIXER_LockMixerThread();
-		pc_speaker = std::make_unique<PcSpeakerImpulse>();
-
-	} else {
-		LOG_ERR("PCSPEAKER: Invalid PC speaker model: %s",
-		        model_choice.c_str());
-		return;
-	}
-	assert(pc_speaker);
-
-	// Get the user's filering choice
-	const std::string filter_choice = prop->GetString("pcspeaker_filter");
-
-	if (!pc_speaker->TryParseAndSetCustomFilter(filter_choice)) {
-		if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
-			pc_speaker->SetFilterState(*maybe_bool ? FilterState::On
-			                                       : FilterState::Off);
-		} else {
-			LOG_WARNING(
-			        "PCSPEAKER: Invalid 'pcspeaker_filter' setting: '%s', "
-			        "using 'on'",
-			        filter_choice.c_str());
-
-			pc_speaker->SetFilterState(FilterState::On);
-			set_section_property_value("speaker", "pcspeaker_filter", "on");
-		}
-	}
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyHandler(PCSPEAKER_ShutDown, changeable_at_runtime);
-
-	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
-	// This provides a good size to avoid over-runs and stalls.
-	pc_speaker->output_queue.Resize(iceil(pc_speaker->channel->GetFramesPerBlock() * 2.0f));
-	TIMER_AddTickHandler(PCSPEAKER_PicCallback);
-
-	MIXER_UnlockMixerThread();
-}
-
 // PC speaker external API, used by the PIT timer and keyboard
 void PCSPEAKER_SetCounter(const int counter, const PitMode pit_mode)
 {
-	if (pc_speaker)
+	if (pc_speaker) {
 		pc_speaker->SetCounter(counter, pit_mode);
+	}
 }
 
 void PCSPEAKER_SetPITControl(const PitMode pit_mode)
 {
-	if (pc_speaker)
+	if (pc_speaker) {
 		pc_speaker->SetPITControl(pit_mode);
+	}
 }
 
-void PCSPEAKER_SetType(const PpiPortB &port_b)
+void PCSPEAKER_SetType(const PpiPortB& port_b)
 {
-	if (pc_speaker)
+	if (pc_speaker) {
 		pc_speaker->SetType(port_b);
+	}
 }
 
 void PCSPEAKER_NotifyLockMixer()
@@ -116,9 +51,129 @@ void PCSPEAKER_NotifyLockMixer()
 		pc_speaker->output_queue.Stop();
 	}
 }
+
 void PCSPEAKER_NotifyUnlockMixer()
 {
 	if (pc_speaker) {
 		pc_speaker->output_queue.Start();
 	}
+}
+
+static void init_pcspeaker_settings(SectionProp& section)
+{
+	using enum Property::Changeable::Value;
+
+	auto pstring = section.AddString("pcspeaker", WhenIdle, "impulse");
+	pstring->SetHelp(
+	        "PC speaker emulation model:\n"
+	        "  impulse:    A very faithful emulation of the PC speaker's output (default).\n"
+	        "              Works with most games, but may result in garbled sound or silence\n"
+	        "              in a small number of programs.\n"
+	        "  discrete:   Legacy simplified PC speaker emulation; only use this on specific\n"
+	        "              titles that give you problems with the 'impulse' model.\n"
+	        "  none, off:  Don't emulate the PC speaker.");
+	pstring->SetValues({"impulse", "discrete", "none", "off"});
+
+	pstring = section.AddString("pcspeaker_filter", WhenIdle, "on");
+	pstring->SetHelp(
+	        "Filter for the PC speaker output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
+}
+
+static void set_filter(SectionProp& section)
+{
+	assert(pc_speaker);
+
+	const std::string filter_pref = section.GetString("pcspeaker_filter");
+
+	if (!pc_speaker->TryParseAndSetCustomFilter(filter_pref)) {
+		if (const auto maybe_bool = parse_bool_setting(filter_pref)) {
+			pc_speaker->SetFilterState(*maybe_bool ? FilterState::On
+			                                       : FilterState::Off);
+		} else {
+			LOG_WARNING(
+			        "PCSPEAKER: Invalid 'pcspeaker_filter' setting: '%s', "
+			        "using 'on'",
+			        filter_pref.c_str());
+
+			pc_speaker->SetFilterState(FilterState::On);
+			set_section_property_value("speaker", "pcspeaker_filter", "on");
+		}
+	}
+}
+
+static void pcspeaker_init(Section* sec)
+{
+	assert(sec);
+	const auto section = static_cast<SectionProp*>(sec);
+
+	const std::string pcspeaker_pref = section->GetString("pcspeaker");
+
+	if (has_false(pcspeaker_pref)) {
+		return;
+
+	} else if (pcspeaker_pref == "discrete") {
+		MIXER_LockMixerThread();
+		pc_speaker = std::make_unique<PcSpeakerDiscrete>();
+
+	} else if (pcspeaker_pref == "impulse") {
+		MIXER_LockMixerThread();
+		pc_speaker = std::make_unique<PcSpeakerImpulse>();
+	}
+
+	set_filter(*section);
+
+	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
+	// This provides a good size to avoid over-runs and stalls.
+	pc_speaker->output_queue.Resize(
+	        iceil(pc_speaker->channel->GetFramesPerBlock() * 2.0f));
+
+	TIMER_AddTickHandler(PCSPEAKER_PicCallback);
+
+	MIXER_UnlockMixerThread();
+}
+
+static void pcspeaker_destroy([[maybe_unused]] Section* sec)
+{
+	if (pc_speaker) {
+		MIXER_LockMixerThread();
+
+		TIMER_DelTickHandler(PCSPEAKER_PicCallback);
+		pc_speaker = {};
+
+		MIXER_UnlockMixerThread();
+	}
+}
+
+
+static void notify_pcspeaker_setting_updated(SectionProp* section,
+                                             const std::string& prop_name)
+{
+	// The [speaker] section controls multiple audio devices, so we want to
+	// make sure to only restart the device affected by the setting.
+	//
+	if (prop_name == "pcspeaker") {
+		pcspeaker_destroy(section);
+		pcspeaker_init(section);
+
+	} else if (prop_name == "pcspeaker_filter") {
+		if (pc_speaker) {
+			set_filter(*section);
+		}
+	}
+}
+
+void PCSPEAKER_AddConfigSection(Section* sec)
+{
+	assert(sec);
+
+	const auto section = static_cast<SectionProp*>(sec);
+
+	section->AddInitHandler(pcspeaker_init);
+	section->AddDestroyHandler(pcspeaker_destroy);
+	section->AddUpdateHandler(notify_pcspeaker_setting_updated);
+
+	init_pcspeaker_settings(*section);
 }
