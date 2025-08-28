@@ -1035,8 +1035,8 @@ static void notify_new_mouse_screen_params()
 	int abs_y = 0;
 	SDL_GetMouseState(&abs_x, &abs_y);
 
-	params.x_abs = check_cast<int32_t>(abs_x);
-	params.y_abs = check_cast<int32_t>(abs_y);
+	params.x_abs = static_cast<float>(abs_x);
+	params.y_abs = static_cast<float>(abs_y);
 
 	params.is_fullscreen    = sdl.desktop.is_fullscreen;
 	params.is_multi_display = (SDL_GetNumVideoDisplays() > 1);
@@ -1106,7 +1106,9 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	const auto canvas_size_px = get_canvas_size_in_pixels(rendering_backend);
 
 	assert(width_in_logical_units > 0);
-	const auto new_dpi_scale = canvas_size_px.w / width_in_logical_units;
+
+	const auto new_dpi_scale = static_cast<float>(canvas_size_px.w) /
+	                           static_cast<float>(width_in_logical_units);
 
 	if (std::abs(new_dpi_scale - sdl.desktop.dpi_scale) < DBL_EPSILON) {
 		// LOG_MSG("SDL: DPI scale hasn't changed (still %f)",
@@ -3264,8 +3266,8 @@ static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
 	MOUSE_EventMoved(static_cast<float>(motion->xrel),
 	                 static_cast<float>(motion->yrel),
-	                 check_cast<int32_t>(motion->x),
-	                 check_cast<int32_t>(motion->y));
+	                 static_cast<float>(motion->x),
+	                 static_cast<float>(motion->y));
 }
 
 static void handle_mouse_wheel(SDL_MouseWheelEvent* wheel)
@@ -3766,7 +3768,7 @@ void GFX_MaybePresentFrame()
 	// Frame-timing always fluctuates due to load spikes within DOSBox
 	// itself and at the OS level, so allow frames to be late by twice the
 	// ideal frame time.
-	const auto max_frame_time_us = sdl.presentation.frame_time_us * 2.0;
+	const auto max_frame_time_us = sdl.presentation.frame_time_us * 2;
 
 	if (force_present || (curr_frame_time_us < max_frame_time_us)) {
 
