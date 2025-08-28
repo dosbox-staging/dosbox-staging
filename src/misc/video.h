@@ -272,11 +272,11 @@ uint8_t get_bits_per_pixel(const PixelFormat pf);
 struct ImageInfo {
 	// The image data has this many pixels per image row (so this is the
 	// image width prior to optional width-doubling).
-	uint16_t width = 0;
+	int width = 0;
 
 	// The image data has this many rows (so this is the image height prior
 	// to optional height-doubling).
-	uint16_t height = 0;
+	int height = 0;
 
 	// If true, the final image should be doubled horizontally via a scaler
 	// before outputting it (e.g. to achieve pixel-doubling).
