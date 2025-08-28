@@ -55,8 +55,9 @@ void ImageScaler::UpdateOutputParamsUpscale()
 
 	// Calculate initial integer vertical scaling factor so the resulting
 	// output image height is roughly around 1200px.
-	output.vert_scale = static_cast<uint8_t>(roundf(
-	        static_cast<float>(target_output_height) / video_mode.height));
+	output.vert_scale = static_cast<uint8_t>(
+	        roundf(static_cast<float>(target_output_height) /
+	               static_cast<float>(video_mode.height)));
 
 	output.vert_scaling_mode = PerAxisScaling::Integer;
 
