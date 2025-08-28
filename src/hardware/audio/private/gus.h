@@ -253,6 +253,8 @@ public:
 
 	virtual ~Gus();
 
+	void SetFilter(const std::string& filter_prefs);
+
 	bool CheckTimer(size_t t);
 	void MirrorAdLibCommandRegister(const uint8_t reg_value);
 	void PrintStats();

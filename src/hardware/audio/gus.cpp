@@ -383,6 +383,31 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	constexpr auto rms_squared = static_cast<float>(M_SQRT1_2);
 	channel->Set0dbScalar(rms_squared);
 
+	SetFilter(filter_prefs);
+
+	ms_per_render = MillisInSecond / channel->GetSampleRate();
+
+	UpdatePlaybackDmaAddress(dma_pref);
+	UpdateRecordingDmaAddress(dma_pref);
+
+	// Populate the volume, pan, and auto-exec arrays
+	PopulateVolScalars();
+	PopulatePanScalars();
+	SetupEnvironment(port_pref, ultradir);
+
+	output_queue.Resize(iceil(channel->GetFramesPerBlock() * 2.0f));
+	TIMER_AddTickHandler(gus_pic_callback);
+
+	LOG_MSG("GUS: Running on port %xh, IRQ %d, and DMA %d",
+	        port_pref,
+	        to_external_irq(irq1),
+	        dma1);
+
+	MIXER_UnlockMixerThread();
+}
+
+void Gus::SetFilter(const std::string& filter_prefs)
+{
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings of the GUS Classic (GF1 chip).
 	//
@@ -411,26 +436,6 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 		set_section_property_value("gus", "gus_filter", "on");
 		enable_filter();
 	}
-
-	ms_per_render = MillisInSecond / channel->GetSampleRate();
-
-	UpdatePlaybackDmaAddress(dma_pref);
-	UpdateRecordingDmaAddress(dma_pref);
-
-	// Populate the volume, pan, and auto-exec arrays
-	PopulateVolScalars();
-	PopulatePanScalars();
-	SetupEnvironment(port_pref, ultradir);
-
-	output_queue.Resize(iceil(channel->GetFramesPerBlock() * 2.0f));
-	TIMER_AddTickHandler(gus_pic_callback);
-
-	LOG_MSG("GUS: Running on port %xh, IRQ %d, and DMA %d",
-	        port_pref,
-	        to_external_irq(irq1),
-	        dma1);
-
-	MIXER_UnlockMixerThread();
 }
 
 void Gus::ActivateVoices(uint8_t requested_voices)
@@ -1514,51 +1519,6 @@ void GUS_NotifyUnlockMixer()
 	}
 }
 
-static void gus_destroy([[maybe_unused]] Section* sec)
-{
-	// GUS destroy is run when the user wants to deactivate the GUS:
-	// C:\> config -set gus=false
-	// TODO: therefore, this function should also remove the
-	//       ULTRASND and ULTRADIR environment variables.
-
-	if (gus) {
-		MIXER_LockMixerThread();
-		gus->PrintStats();
-		gus.reset();
-		MIXER_UnlockMixerThread();
-	}
-}
-
-static void gus_init(Section* sec)
-{
-	assert(sec);
-	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
-	if (!conf || !conf->GetBool("gus")) {
-		return;
-	}
-
-	// Read the GUS config settings
-	const auto port = static_cast<uint16_t>(conf->GetHex("gusbase"));
-
-	const auto dma = static_cast<uint8_t>(conf->GetInt("gusdma"));
-	// The conf system handles invalid settings, so just assert validity
-	assert(contains(DmaAddresses, dma));
-
-	auto irq = static_cast<uint8_t>(conf->GetInt("gusirq"));
-	// The conf system handles invalid settings, so just assert validity
-	assert(contains(IrqAddresses, irq));
-
-	const std::string ultradir = conf->GetString("ultradir");
-
-	const std::string filter_prefs = conf->GetString("gus_filter");
-
-	// Instantiate the GUS with the settings
-	gus = std::make_unique<Gus>(port, dma, irq, ultradir.c_str(), filter_prefs);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(gus_destroy, changeable_at_runtime);
-}
-
 static void init_gus_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
@@ -1613,13 +1573,72 @@ static void init_gus_dosbox_settings(SectionProp& secprop)
 	        "instead.");
 }
 
+static void gus_init(Section* sec)
+{
+	assert(sec);
+	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
+	if (!conf || !conf->GetBool("gus")) {
+		return;
+	}
+
+	// Read the GUS config settings
+	const auto port = static_cast<uint16_t>(conf->GetHex("gusbase"));
+
+	const auto dma = static_cast<uint8_t>(conf->GetInt("gusdma"));
+	// The conf system handles invalid settings, so just assert validity
+	assert(contains(DmaAddresses, dma));
+
+	auto irq = static_cast<uint8_t>(conf->GetInt("gusirq"));
+	// The conf system handles invalid settings, so just assert validity
+	assert(contains(IrqAddresses, irq));
+
+	const std::string ultradir = conf->GetString("ultradir");
+
+	const std::string filter_prefs = conf->GetString("gus_filter");
+
+	// Instantiate the GUS with the settings
+	gus = std::make_unique<Gus>(port, dma, irq, ultradir.c_str(), filter_prefs);
+}
+
+static void gus_destroy([[maybe_unused]] Section* sec)
+{
+	// GUS destroy is run when the user wants to deactivate the GUS:
+	// C:\> config -set gus=false
+	// TODO: therefore, this function should also remove the
+	//       ULTRASND and ULTRADIR environment variables.
+
+	if (gus) {
+		MIXER_LockMixerThread();
+
+		gus->PrintStats();
+		gus.reset();
+
+		MIXER_UnlockMixerThread();
+	}
+}
+
+static void notify_gus_setting_updated(SectionProp* section,
+                                       const std::string& prop_name)
+{
+	if (prop_name == "gus_filter") {
+		if (gus) {
+			gus->SetFilter(section->GetString("gus_filter"));
+		}
+
+	} else {
+		gus_destroy(section);
+		gus_init(section);
+	}
+}
+
 void GUS_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
+	auto section = conf->AddSection("gus", gus_init);
 
-	SectionProp* sec = conf->AddSection("gus", gus_init, changeable_at_runtime);
-	assert(sec);
-	init_gus_dosbox_settings(*sec);
+	section->AddDestroyHandler(gus_destroy);
+	section->AddUpdateHandler(notify_gus_setting_updated);
+
+	init_gus_dosbox_settings(*section);
 }
