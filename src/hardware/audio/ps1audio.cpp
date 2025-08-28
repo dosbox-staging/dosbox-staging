@@ -90,8 +90,9 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		LOG_WARNING(
-		        "PS1DAC: Invalid 'ps1audio_dac_filter' setting: '%s', "
+		        "%s: Invalid 'ps1audio_dac_filter' setting: '%s', "
 		        "using 'on'",
+		        ChannelName::Ps1AudioCardDac,
 		        filter_choice.c_str());
 
 		const auto filter_enabled = true;
@@ -433,8 +434,9 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		LOG_WARNING(
-		        "PS1: Invalid 'ps1audio_filter' setting: '%s', "
+		        "%s: Invalid 'ps1audio_filter' setting: '%s', "
 		        "using 'on'",
+		        ChannelName::Ps1AudioCardPsg,
 		        filter_choice.c_str());
 
 		const auto filter_enabled = true;
@@ -499,8 +501,13 @@ void Ps1Synth::AudioCallback(const int requested_frames)
 
 	std::lock_guard lock(mutex);
 
-	// if (fifo.size())
-	//	LOG_MSG("PS1: Queued %2lu cycle-accurate frames", fifo.size());
+#if 0
+	if (fifo.size()) {
+		LOG_MSG("%s: Queued %2lu cycle-accurate frames",
+		        ChannelName::Ps1AudioCardPsg,
+		        fifo.size());
+	}
+#endif
 
 	auto frames_remaining = requested_frames;
 
@@ -596,13 +603,14 @@ static void ps1audio_init(Section* sec)
 
 	ps1_synth = std::make_unique<Ps1Synth>(section->GetString("ps1audio_filter"));
 
-	LOG_MSG("PS1: Initialised IBM PS/1 Audio card");
+	LOG_MSG("%s: Initialised IBM PS/1 Audio card", ChannelName::Ps1AudioCardPsg);
 }
 
 static void ps1audio_destroy([[maybe_unused]] Section* sec)
 {
 	if (ps1_dac || ps1_synth) {
-		LOG_MSG("PS1: Shutting down IBM PS/1 Audio card");
+		LOG_MSG("%s: Shutting down IBM PS/1 Audio card",
+		        ChannelName::Ps1AudioCardPsg);
 
 		ps1_dac.reset();
 		ps1_synth.reset();
