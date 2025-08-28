@@ -25,8 +25,12 @@ void Disney::BindToPort(const io_port_t lpt_port)
 	const auto write_data = std::bind(&Disney::WriteData, this, _1, _2, _3);
 	const auto read_status = std::bind(&Disney::ReadStatus, this, _1, _2);
 	const auto write_control = std::bind(&Disney::WriteControl, this, _1, _2, _3);
+
 	BindHandlers(lpt_port, write_data, read_status, write_control);
-	LOG_MSG("LPT_DAC: Initialised Disney Sound Source on LPT port %03xh", lpt_port);
+
+	LOG_MSG("%s: Initialised Disney Sound Source on LPT port %03xh",
+	        ChannelName::DisneySoundSourceDac,
+	        lpt_port);
 }
 
 void Disney::ConfigureFilters(const FilterState state)
