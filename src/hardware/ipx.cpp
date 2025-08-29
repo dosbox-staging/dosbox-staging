@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <thread>
 
 #include <SDL_net.h>
 
@@ -29,6 +30,10 @@
 #include "misc/cross.h"
 #include "utils/string_utils.h"
 
+constexpr int SocketWaitMs = 1000;
+
+static std::thread ipx_client_thread = {};
+
 #define SOCKTABLESIZE	150 // DOS IPX driver was limited to 150 open sockets
 
 struct ipxnetaddr {
@@ -43,6 +48,7 @@ IPaddress ipxServConnIp;			// IPAddress for client connection to server
 UDPsocket ipxClientSocket;
 int UDPChannel;						// Channel used by UDP connection
 uint8_t recvBuffer[IPXBUFFERSIZE];	// Incoming packet buffer
+static bool is_pinging = false;
 
 static RealPt ipx_callback;
 
@@ -592,24 +598,36 @@ static void receivePacket(uint8_t *buffer, int16_t bufSize) {
 	LOG_IPX("IPX: RX Packet loss!");
 }
 
-static void IPX_ClientLoop(void) {
-	int numrecv;
+void IPX_UdpClientListener() {
 	UDPpacket inPacket;
 	inPacket.data = (Uint8 *)recvBuffer;
 	inPacket.maxlen = IPXBUFFERSIZE;
 	inPacket.channel = UDPChannel;
 
-	// Its amazing how much simpler UDP is than TCP
-	numrecv = SDLNet_UDP_Recv(ipxClientSocket, &inPacket);
-	if(numrecv) receivePacket(inPacket.data, inPacket.len);
-}
+	SDLNet_SocketSet socketset = SDLNet_AllocSocketSet(1);
+	SDLNet_UDP_AddSocket(socketset, ipxClientSocket);
 
+	while(socketset && incomingPacket.connected) {
+		if(!is_pinging) {
+			if(SDLNet_CheckSockets(socketset, SocketWaitMs) == 1) {
+				if(SDLNet_UDP_Recv(ipxClientSocket, &inPacket)) {
+					receivePacket(inPacket.data, inPacket.len);
+				}
+			}
+		}
+	}
+
+	if(socketset)
+		SDLNet_FreeSocketSet(socketset);
+}
 
 void DisconnectFromServer(bool unexpected) {
 	if(unexpected) LOG_MSG("IPX: Server disconnected unexpectedly");
 	if(incomingPacket.connected) {
 		incomingPacket.connected = false;
-		TIMER_DelTickHandler(&IPX_ClientLoop);
+		if(ipx_client_thread.joinable()) {
+			ipx_client_thread.join();
+		}
 		SDLNet_UDP_Close(ipxClientSocket);
 	}
 }
@@ -811,7 +829,8 @@ bool ConnectToServer(const char* strAddr)
 				LOG_MSG("IPX: Connected to server.  IPX address is %d:%d:%d:%d:%d:%d", CONVIPX(localIpxAddr.netnode));
 
 				incomingPacket.connected = true;
-				TIMER_AddTickHandler(&IPX_ClientLoop);
+				ipx_client_thread = std::thread(IPX_UdpClientListener);
+				set_thread_name(ipx_client_thread, "ipx:udp-client-listener");
 				return true;
 			}
 		} else {
@@ -1030,7 +1049,7 @@ public:
 					WriteOut("IPX Tunneling Client not connected.\n");
 					return;
 				}
-				TIMER_DelTickHandler(&IPX_ClientLoop);
+				is_pinging = true;
 				WriteOut("Sending broadcast ping:\n\n");
 				pingSend();
 				const auto ticks = GetTicks();
@@ -1044,7 +1063,7 @@ public:
 						        GetTicksSince(ticks));
 					}
 				}
-				TIMER_AddTickHandler(&IPX_ClientLoop);
+				is_pinging = false;
 				return;
 			}
 		}
