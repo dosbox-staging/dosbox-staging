@@ -17,8 +17,11 @@
 
 #include "gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
 #include "config/setup.h"
+#include "utils/checks.h"
 #include "utils/rgb565.h"
 #include "misc/video.h"
+
+CHECK_NARROWING();
 
 namespace {
 // XXX currently duplicating this in realmagic_*.cpp files to avoid header pollution... TDB if this
