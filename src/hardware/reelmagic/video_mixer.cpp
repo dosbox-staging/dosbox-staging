@@ -489,11 +489,12 @@ static void setup_video_mixer(const bool update_render_mode)
 
 	// check to make sure we have enough horizontal line buffer for the
 	// current VGA mode...
-	[[maybe_unused]] const Bitu maxRenderWidth =
+	[[maybe_unused]] constexpr auto MaxRenderWidth =
+	        check_cast<int>(
 	        sizeof(_finalMixedRenderLineBuffer) /
-	        sizeof(_finalMixedRenderLineBuffer[0]);
+	        sizeof(_finalMixedRenderLineBuffer[0]));
 
-	assert(_vgaImageInfo.width <= maxRenderWidth);
+	assert(_vgaImageInfo.width <= MaxRenderWidth);
 
 	// set the RENDER mode only if requested...
 	if (update_render_mode) {
@@ -527,21 +528,21 @@ static void setup_video_mixer(const bool update_render_mode)
 	const bool vgaOver  = mpeg->GetConfig().UnderVga;
 	const char* modeStr = "UNKNOWN";
 
-	if ((_vgaImageInfo.width == _mpegPictureWidth) &&
-	    (_vgaImageInfo.height == _mpegPictureHeight)) {
+	if ((check_cast<uint32_t>(_vgaImageInfo.width) == _mpegPictureWidth) &&
+	    (check_cast<uint32_t>(_vgaImageInfo.height) == _mpegPictureHeight)) {
 		modeStr = "Matching Sized MPEG to VGA Pictures";
 		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAMPEGSameSize,
 		                             _vgaImageInfo.pixel_format,
 		                             vgaOver);
 
-	} else if ((_vgaImageInfo.width == (_mpegPictureWidth * 2)) &&
-	           (_vgaImageInfo.height == ((_mpegPictureHeight * 2)))) {
+	} else if ((check_cast<uint32_t>(_vgaImageInfo.width) == (_mpegPictureWidth * 2)) &&
+	           (check_cast<uint32_t>(_vgaImageInfo.height) == ((_mpegPictureHeight * 2)))) {
 		modeStr = "Double Sized MPEG to VGA Pictures";
 		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_MPEGDoubleVGASize,
 		                             _vgaImageInfo.pixel_format,
 		                             vgaOver);
 
-	} else if ((_vgaImageInfo.width == _mpegPictureWidth) &&
+	} else if ((check_cast<uint32_t>(_vgaImageInfo.width) == _mpegPictureWidth) &&
 	           ((_mpegPictureHeight /
 	             (_mpegPictureHeight - _vgaImageInfo.height)) == 6)) {
 		modeStr = "Matching Sized MPEG to VGA Pictures, skipping every 6th MPEG line";
@@ -549,7 +550,7 @@ static void setup_video_mixer(const bool update_render_mode)
 		                             _vgaImageInfo.pixel_format,
 		                             vgaOver);
 
-	} else if ((_vgaImageInfo.width == (_mpegPictureWidth * 2)) &&
+	} else if ((check_cast<uint32_t>(_vgaImageInfo.width) == (_mpegPictureWidth * 2)) &&
 	           (((_mpegPictureHeight * 2) /
 	             ((_mpegPictureHeight * 2) - _vgaImageInfo.height)) == 6)) {
 		modeStr = "Double Sized MPEG to VGA Pictures, skipping every 6th MPEG line";
