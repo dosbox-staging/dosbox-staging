@@ -26,7 +26,7 @@ if(MSVC)
   # Disable cl/clangcl warnings about insecure C functions
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
-  add_compile_options("-Wno-conversion" "-Wno-narrowing")
+  add_compile_options("-Wall" "-Wextra" "-Wno-unknown-pragmas" "-Wno-conversion" "-Wno-narrowing")
 endif()
 
 option(OPT_DEBUGGER "Enable debugger" OFF)
