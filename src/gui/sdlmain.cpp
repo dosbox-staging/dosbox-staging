@@ -74,7 +74,7 @@ constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
 	return (version.major << 16) + (version.minor << 8) + version.patch;
 }
 
-static bool is_runtime_sdl_version_at_least(const SDL_version min_version)
+[[maybe_unused]] static bool is_runtime_sdl_version_at_least(const SDL_version min_version)
 {
 	SDL_version version = {};
 	SDL_GetVersion(&version);
