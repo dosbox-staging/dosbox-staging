@@ -2462,12 +2462,12 @@ static struct {
                    {"kp_period", SDL_SCANCODE_KP_PERIOD},
                    {"kp_enter", SDL_SCANCODE_KP_ENTER},
 
-                   // ABNT-arrangement, key between Left-Shift and Z: SDL
+                   // ABNT-arrangement, key between Left-Shift and Z:, SDL
                    // scancode 100 (0x64) maps to OEM102 key with scancode 86
                    // (0x56)
                    {"oem102", SDL_SCANCODE_NONUSBACKSLASH},
 
-                   // ABNT-arrangement, key between Left-Shift and Z: SDL
+                   // ABNT-arrangement, key to the left of Right-Shift, SDL
                    // scancode 135 (0x87) maps to first ABNT key with scancode
                    // 115 (0x73)
                    {"abnt1", SDL_SCANCODE_INTERNATIONAL1},
