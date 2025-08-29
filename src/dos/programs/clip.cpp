@@ -3,11 +3,11 @@
 
 #include "clip.h"
 
-#include "utils/checks.h"
+#include "dos/dos.h"
 #include "gui/clipboard.h"
-#include "dos/dos_inc.h"
-#include "utils/math_utils.h"
 #include "more_output.h"
+#include "utils/checks.h"
+#include "utils/math_utils.h"
 
 CHECK_NARROWING();
 

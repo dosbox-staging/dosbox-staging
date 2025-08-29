@@ -9,6 +9,7 @@
 #include <optional>
 #include <vector>
 
+#include "config/setup.h"
 #include "utils/bit_view.h"
 #include "hardware/video/vga.h"
 #include "hardware/memory.h"
@@ -317,6 +318,8 @@ inline uint8_t CURSOR_POS_ROW(const uint8_t page)
 	const auto cursor_offset = static_cast<uint16_t>(page * 2 + 1);
 	return real_readb(BIOSMEM_SEG, BIOSMEM_CURSOR_POS + cursor_offset);
 }
+
+void INT10_Init(Section* sec);
 
 void INT10_SetupPalette();
 

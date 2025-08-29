@@ -4,26 +4,26 @@
 
 #include "ints/bios.h"
 
-#include "utils/bitops.h"
-#include "cpu/callback.h"
+#include <ctime>
+#include <memory>
+
 #include "config/config.h"
+#include "config/setup.h"
+#include "cpu/callback.h"
 #include "cpu/cpu.h"
+#include "cpu/registers.h"
 #include "dos/dos_memory.h"
 #include "dosbox.h"
 #include "hardware/hardware.h"
-#include "hardware/joystick.h"
-#include "hardware/pic.h"
-#include "hardware/serialport/serialport.h"
-#include "hardware/port.h"
-#include "int10.h"
-#include "utils/math_utils.h"
-#include "hardware/memory.h"
 #include "hardware/input/mouse.h"
-#include "cpu/registers.h"
-#include "config/setup.h"
-
-#include <ctime>
-#include <memory>
+#include "hardware/joystick.h"
+#include "hardware/memory.h"
+#include "hardware/pic.h"
+#include "hardware/port.h"
+#include "hardware/serialport/serialport.h"
+#include "int10.h"
+#include "utils/bitops.h"
+#include "utils/math_utils.h"
 
 // Constants
 constexpr uint32_t BiosMachineSignatureAddress = 0xfffff;
@@ -1022,10 +1022,13 @@ static Bitu reboot_handler()
 
 	// Prepare the text to display
 	std::vector<std::string> conunter_text = {};
-	conunter_text.push_back(MSG_Get("BIOS_REBOOTING_1"));
-	conunter_text.push_back(MSG_Get("BIOS_REBOOTING_2"));
-	conunter_text.push_back(MSG_Get("BIOS_REBOOTING_3"));
+
+	conunter_text.emplace_back(MSG_Get("BIOS_REBOOTING_1"));
+	conunter_text.emplace_back(MSG_Get("BIOS_REBOOTING_2"));
+	conunter_text.emplace_back(MSG_Get("BIOS_REBOOTING_3"));
+
 	size_t max_length = 0;
+
 	for (auto& entry : conunter_text) {
 		max_length = std::max(max_length, entry.length());
 	}
@@ -1063,7 +1066,7 @@ static Bitu reboot_handler()
 			CALLBACK_Idle();
 			// Bail out if the user closes the window.
 			// Otherwise we get stuck in an infinite loop.
-			if (shutdown_requested) {
+			if (DOSBOX_IsShutdownRequested()) {
 				return CBRET_NONE;
 			}
 		}
@@ -1534,19 +1537,18 @@ void BIOS_SetComPorts(uint16_t baseaddr[]) {
 	BIOS_SetEquipment(equipmentword);
 }
 
+static std::unique_ptr<BIOS> bios = nullptr;
 
-static BIOS* test;
-
-void BIOS_Destroy(Section* /*sec*/){
-	delete test;
+static void bios_destroy([[maybe_unused]] Section* sec)
+{
+	bios = nullptr;
 }
 
 void BIOS_Init(Section* sec)
 {
 	assert(sec);
 
-	test = new BIOS(sec);
+	bios = std::make_unique<BIOS>(sec);
 
-	constexpr auto changeable_at_runtime = false;
-	sec->AddDestroyFunction(&BIOS_Destroy, changeable_at_runtime);
+	sec->AddDestroyHandler(bios_destroy);
 }

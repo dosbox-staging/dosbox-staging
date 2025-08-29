@@ -3011,7 +3011,7 @@ iterated W    = 18.32 [48 bits]
 
 **************************************************************************/
 
-static voodoo_state* v = nullptr;
+static voodoo_state* v = nullptr; //-V707
 static auto vtype = VOODOO_1;
 
 static auto voodoo_bilinear_filtering = false;
@@ -7102,7 +7102,8 @@ static int get_num_total_threads()
 /*-------------------------------------------------
     device start callback
 -------------------------------------------------*/
-static void voodoo_init() {
+static void initialise_voodoo()
+{
 	assert(!v);
 
 	// Deduct 1 because the main thread is always present
@@ -7863,7 +7864,7 @@ static void Voodoo_Startup() {
 		return;
 	}
 
-	voodoo_init();
+	initialise_voodoo();
 
 	v->draw = {};
 
@@ -7878,8 +7879,8 @@ PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu page) {
 	return (page >= (voodoo_current_lfb>>12) && page < (voodoo_current_lfb>>12) + VOODOO_PAGES ? voodoo_pagehandler : nullptr);
 }
 
-
-static void voodoo_destroy(Section* /*sec*/) {
+static void voodoo_destroy([[maybe_unused]] Section* sec)
+{
 	voodoo_shutdown();
 }
 
@@ -7896,8 +7897,6 @@ static void voodoo_init(Section* sec)
 	vtype = (memsize_pref == "4" ? VOODOO_1 : VOODOO_1_DTMU);
 
 	voodoo_bilinear_filtering = section->GetBool("voodoo_bilinear_filtering");
-
-	sec->AddDestroyFunction(&voodoo_destroy, false);
 
 	// Check 64 KB alignment of LFB base
 	static_assert((PciVoodooLfbBase & 0xffff) == 0);
@@ -7917,13 +7916,13 @@ static void voodoo_init(Section* sec)
 	        (voodoo_bilinear_filtering ? "" : "no "));
 }
 
-static void init_voodoo_dosbox_settings(SectionProp& secprop)
+static void init_voodoo_dosbox_settings(SectionProp& section)
 {
 	constexpr auto Deprecated  = Property::Changeable::Deprecated;
 	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
 	constexpr auto WhenIdle    = Property::Changeable::WhenIdle;
 
-	auto* bool_prop = secprop.AddBool("voodoo", WhenIdle, true);
+	auto* bool_prop = section.AddBool("voodoo", WhenIdle, true);
 	bool_prop->SetHelp(
 	        "Enable 3dfx Voodoo emulation ('on' by default). This is authentic low-level\n"
 	        "emulation of the Voodoo card without any OpenGL passthrough, so it requires a\n"
@@ -7933,7 +7932,7 @@ static void init_voodoo_dosbox_settings(SectionProp& secprop)
 	        "A small number of games integrate the Glide driver into their code, so they\n"
 	        "don't need 'GLIDE2X.OVL'.");
 
-	auto* str_prop = secprop.AddString("voodoo_memsize", OnlyAtStart, "4");
+	auto* str_prop = section.AddString("voodoo_memsize", OnlyAtStart, "4");
 	str_prop->SetValues({"4", "12"});
 	str_prop->SetHelp(
 	        "Set the amount of video memory for 3dfx Voodoo graphics. The memory is used by\n"
@@ -7942,10 +7941,10 @@ static void init_voodoo_dosbox_settings(SectionProp& secprop)
 	        "  12: 4 MB for the FBI and two TMUs, each with 4 MB.");
 
 	// Deprecate the boolean Voodoo multithreading setting
-	bool_prop = secprop.AddBool("voodoo_multithreading", Deprecated, false);
+	bool_prop = section.AddBool("voodoo_multithreading", Deprecated, false);
 	bool_prop->SetHelp("Renamed to 'voodoo_threads'");
 
-	str_prop = secprop.AddString("voodoo_threads", OnlyAtStart, "auto");
+	str_prop = section.AddString("voodoo_threads", OnlyAtStart, "auto");
 	str_prop->SetHelp(
 	        "Use threads to improve 3dfx Voodoo performance:\n"
 	        "  auto:     Use up to 16 threads based on available CPU cores (default).\n"
@@ -7956,7 +7955,7 @@ static void init_voodoo_dosbox_settings(SectionProp& secprop)
 	        "      on a many-core CPU. If you have a Threadripper or similar CPU, please\n"
 	        "      let us know how it goes.");
 
-	bool_prop = secprop.AddBool("voodoo_bilinear_filtering", OnlyAtStart, true);
+	bool_prop = section.AddBool("voodoo_bilinear_filtering", OnlyAtStart, true);
 	bool_prop->SetHelp(
 	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing effect\n"
 	        "('on' by default). Bilinear filtering can impact frame rates on slower systems;\n"
@@ -7967,8 +7966,9 @@ void VOODOO_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	SectionProp* sec = conf->AddSectionProp("voodoo", &voodoo_init);
-	assert(sec);
-	init_voodoo_dosbox_settings(*sec);
+	auto section = conf->AddSection("voodoo", voodoo_init);
+	section->AddDestroyHandler(voodoo_destroy);
+
+	init_voodoo_dosbox_settings(*section);
 }
 

@@ -33,7 +33,7 @@
 // 48000 Hz, that's 48 frames.
 using MIXER_Handler = std::function<void(int frames)>;
 
-enum class MixerState { Uninitialized, NoSound, On, Muted };
+enum class MixerState { NoSound, On, Muted };
 
 static constexpr int MixerBufferByteSize = 16 * 1024;
 static constexpr int MixerBufferMask     = MixerBufferByteSize - 1;
@@ -157,7 +157,7 @@ typedef SpeexResamplerState_ SpeexResamplerState;
 
 class MixerChannel {
 public:
-	MixerChannel(MIXER_Handler _handler, const char* name,
+	MixerChannel(MIXER_Handler _handler, const std::string& name,
 	             const std::set<ChannelFeature>& features);
 	~MixerChannel();
 
@@ -448,7 +448,7 @@ private:
 using MixerChannelPtr = std::shared_ptr<MixerChannel>;
 
 MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
-                                 const int sample_rate_hz, const char* name,
+                                 const int sample_rate_hz, const std::string& name,
                                  const std::set<ChannelFeature>& features);
 
 MixerChannelPtr MIXER_FindChannel(const char* name);

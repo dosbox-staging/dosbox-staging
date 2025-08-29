@@ -12,12 +12,16 @@
 
 #include <SDL.h>
 
+#include "config/config.h"
+#include "config/setup.h"
+
 #define MAPPERFILE "mapper-sdl2-" DOSBOX_VERSION ".map"
 
 constexpr uint32_t MMOD1 = 0x1;
-#define MMOD1_NAME "Ctrl"
 constexpr uint32_t MMOD2 = 0x2;
 constexpr uint32_t MMOD3 = 0x4;
+
+#define MMOD1_NAME "Ctrl"
 
 // Linux, Windows, BSD, etc.
 #if !defined(MACOSX)
@@ -26,6 +30,7 @@ constexpr uint32_t MMOD3 = 0x4;
 #define PRIMARY_MOD      MMOD1
 #define PRIMARY_MOD_PAD  ""
 #define PRIMARY_MOD_NAME MMOD1_NAME
+
 // macOS
 #else
 #define MMOD2_NAME       "Opt"
@@ -53,16 +58,21 @@ void MAPPER_AddHandler(MAPPER_Handler *handler,
                        const char *event_name,
                        const char *button_name);
 
+void MAPPER_Init(Section *sec);
+
 void MAPPER_BindKeys(Section *sec);
-void MAPPER_StartUp(Section *sec);
+
 void MAPPER_Run(bool pressed);
 void MAPPER_DisplayUI();
 void MAPPER_LosingFocus();
 bool MAPPER_IsUsingJoysticks();
+
 std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix);
+
 void MAPPER_AutoType(std::vector<std::string> &sequence,
                      const uint32_t wait_ms,
                      const uint32_t pacing_ms);
+
 void MAPPER_CheckEvent(SDL_Event *event);
 
 // Screen fits ~89 characters total without clipping. Allocate a few more bytes
@@ -82,4 +92,4 @@ constexpr int MaxBindNameLength = 100;
  */
 void MAPPER_HandleJoyDeviceEvent(SDL_JoyDeviceEvent* event);
 
-#endif
+#endif // DOSBOX_MAPPER_H

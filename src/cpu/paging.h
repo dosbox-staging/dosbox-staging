@@ -1,13 +1,15 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
 
 #include "dosbox.h"
-#include "debugger/debugger.h"
+
 #include <vector>
 
+#include "config/setup.h"
+#include "debugger/debugger.h"
 #include "hardware/memory.h"
 
 // disable this to reduce the size of the TLB
@@ -68,7 +70,9 @@ public:
 	uint_fast8_t flags = 0x0;
 };
 
-/* Some other functions */
+void PAGING_Init(Section* sec);
+
+// Some other functions
 void PAGING_Enable(bool enabled);
 bool PAGING_Enabled();
 
@@ -519,4 +523,4 @@ static inline bool mem_writeq_checked(PhysPt address, uint64_t val)
 	}
 }
 
-#endif
+#endif // DOSBOX_PAGING_H

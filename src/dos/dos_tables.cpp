@@ -2,11 +2,10 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
+#include "cpu/callback.h"
+#include "dos.h"
 #include "dosbox.h"
 #include "hardware/memory.h"
-#include "dos_inc.h"
-#include "cpu/callback.h"
 
 #ifdef _MSC_VER
 #pragma pack(1)

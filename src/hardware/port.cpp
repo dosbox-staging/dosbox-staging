@@ -2,17 +2,18 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "port.h"
+
 #include <cassert>
-#include <limits>
 #include <cstring>
+#include <limits>
+#include <memory>
 #include <unordered_map>
 
 #include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "cpu/lazyflags.h"
-#include "hardware/port.h"
-
 
 //#define ENABLE_PORTLOG
 
@@ -385,13 +386,15 @@ public:
 	}
 };
 
-static IO* test;
+static std::unique_ptr<IO> io_module = {};
 
-void IO_Destroy(Section*) {
-	delete test;
+static void io_destroy(Section*)
+{
+	io_module = {};
 }
 
-void IO_Init(Section * sect) {
-	test = new IO(sect);
-	sect->AddDestroyFunction(&IO_Destroy);
+void IO_Init(Section* sec)
+{
+	io_module = std::make_unique<IO>(sec);
+	sec->AddDestroyHandler(io_destroy);
 }

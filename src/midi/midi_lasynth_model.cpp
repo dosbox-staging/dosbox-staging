@@ -90,7 +90,7 @@ std::optional<std_fs::path> LASynthModel::FindRom(MT32Emu::Service& service,
 
 		// Add the ROM identifier and path to the cache
 		auto rom_id = info.pcm_rom_id ? info.pcm_rom_id : info.control_rom_id;
-		roms_cache.emplace(std::move(rom_id), std::move(canonical_path));
+		roms_cache.try_emplace(std::move(rom_id), std::move(canonical_path));
 	}
 
 	return find_rom_in_cache(roms_cache);

@@ -12,6 +12,7 @@
 #include "misc/support.h"
 #include "utils/byteorder.h"
 #include "utils/checks.h"
+#include "utils/mem_host.h"
 #include "utils/rgb555.h"
 #include "utils/rgb565.h"
 #include "utils/rgb888.h"

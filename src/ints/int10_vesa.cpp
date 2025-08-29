@@ -9,12 +9,12 @@
 #include <cstring>
 
 #include "cpu/callback.h"
-#include "dos/dos_inc.h"
-#include "hardware/port.h"
-#include "utils/math_utils.h"
+#include "cpu/registers.h"
+#include "dos/dos.h"
 #include "hardware/memory.h"
 #include "hardware/pci_bus.h"
-#include "cpu/registers.h"
+#include "hardware/port.h"
+#include "utils/math_utils.h"
 #include "utils/string_utils.h"
 
 #define VESA_SUCCESS          0x00
