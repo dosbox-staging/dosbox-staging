@@ -29,6 +29,12 @@ else()
   add_compile_options("-Wall" "-Wextra" "-Wno-unknown-pragmas" "-Wno-conversion" "-Wno-narrowing")
 endif()
 
+# TODO: These are sprintf deprecated warnings.
+# We probably do want to remove sprintf usage at some point.
+if(APPLE)
+  add_compile_options("-Wno-deprecated-declarations")
+endif()
+
 option(OPT_DEBUGGER "Enable debugger" OFF)
 option(OPT_HEAVY_DEBUGGER "Enable heavy debugger" OFF)
 if(OPT_HEAVY_DEBUGGER)
