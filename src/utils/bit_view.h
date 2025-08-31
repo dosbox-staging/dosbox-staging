@@ -88,6 +88,27 @@ big-endian.
 #include "utils/bitops.h"
 #include "misc/support.h"
 
+// Clang does not have -Wmaybe-uninitialized so it needs -Wunknown-warning-option
+// to supress a warning about unknown warnings.
+
+// We can't just remove the pragma clang stuff because from testing,
+// Clang accepts pragma GCC but GCC does not accept pragma clang.
+
+// Also, GCC does not have -Wunknown-warning-option,
+// so if we *only* have pragma GCC, we get warned about
+// an unkown warning that's supposed to supress unkown warnings.
+// Sheesh...
+
+// All of this is needed because "data_type data;" is explcitly left uninitialized.
+// See comment below.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
+#pragma clang diagnostic ignored "-Wuninitialized"
+#pragma clang diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+
 template <int view_index, int view_width>
 class bit_view {
 private:
@@ -280,5 +301,8 @@ public:
 		return static_cast<data_type>(*this);
 	}
 };
+
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 
 #endif
