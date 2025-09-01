@@ -38,12 +38,12 @@ jobs:
           - host: macos-15
             arch: x86_64
             minimum_deployment: '11.0'
-            max_warnings: 9
+            max_warnings: 0
 
           - host: macos-15
             arch: arm64
             minimum_deployment: '11.0'
-            max_warnings: 9
+            max_warnings: 0
 
     steps:
       - name: Check out repository
