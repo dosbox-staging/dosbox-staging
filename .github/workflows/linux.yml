@@ -76,7 +76,7 @@ jobs:
         uses: ./.github/actions/set-common-vars
 
       - name: Set up CMake
-        uses: lukka/get-cmake@f3273e0bcecf2f2c0d3430de21bf02ab2752c47d # v4.1.0
+        uses: lukka/get-cmake@2ecc21724e5215b0e567bc399a2602d2ecb48541 # v4.1.1
 
       - name: Install dependencies
         run: |
@@ -127,7 +127,7 @@ jobs:
         uses: ./.github/actions/set-common-vars
 
       - name: Set up CMake
-        uses: lukka/get-cmake@f3273e0bcecf2f2c0d3430de21bf02ab2752c47d # v4.1.0
+        uses: lukka/get-cmake@2ecc21724e5215b0e567bc399a2602d2ecb48541 # v4.1.1
 
       - name: Install all dependencies
         run: |
