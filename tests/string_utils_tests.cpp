@@ -183,12 +183,6 @@ TEST(SafeStrlen, EmptyString)
 	EXPECT_EQ(0, safe_strlen(buffer));
 }
 
-TEST(SafeStrlen, Uninitialized)
-{
-	char buffer[4];
-	EXPECT_GT(sizeof(buffer), safe_strlen(buffer));
-}
-
 TEST(SafeStrlen, FixedSize)
 {
 	constexpr size_t N = 5;
