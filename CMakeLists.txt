@@ -21,7 +21,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # CHECK_NARROWING() macro to opt-in these checks on a per-file basis. See
 # `src/util/checks.h` for details.
 if(MSVC)
-  add_compile_options("/wd4244" "/MP")
+  # /W4 displays level 1, level 2, and level 3 warnings, and all level 4 (informational) warnings that aren't off by default.
+  add_compile_options("/wd4244" "/MP" "/W4")
 
   # Disable cl/clangcl warnings about insecure C functions
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
