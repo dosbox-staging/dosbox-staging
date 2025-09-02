@@ -3765,48 +3765,31 @@ void GFX_MaybePresentFrame()
 	const auto curr_frame_time_us =
 	        GetTicksDiff(start_us, sdl.presentation.last_present_time_us);
 
-	// Frame-timing always fluctuates due to load spikes within DOSBox
-	// itself and at the OS level, so allow frames to be late by twice the
-	// ideal frame time.
-	const auto max_frame_time_us = sdl.presentation.frame_time_us * 2;
+	const auto present_window_start_us = sdl.presentation.frame_time_us -
+	                                     sdl.presentation.early_present_window_us;
 
-	if (force_present || (curr_frame_time_us < max_frame_time_us)) {
+	if (force_present || (curr_frame_time_us >= present_window_start_us)) {
 
-		const auto present_window_start_us = sdl.presentation.frame_time_us -
-		                                     sdl.presentation.early_present_window_us;
+		[[maybe_unused]] const auto t0 = GetTicksUs();
 
-		if (force_present || (curr_frame_time_us >= present_window_start_us)) {
+		sdl.presentation.update();
+		sdl.presentation.present();
 
-			[[maybe_unused]] const auto t0 = GetTicksUs();
-
-			sdl.presentation.update();
-			sdl.presentation.present();
-
-			const auto t1 = GetTicksUs();
+		const auto t1 = GetTicksUs();
 #if 0
-			LOG_TRACE("DISPLAY: present took %2.4f ms", 0.001 * GetTicksDiff(t1, t0));
+		LOG_TRACE("DISPLAY: present took %2.4f ms", 0.001 * GetTicksDiff(t1, t0));
 
-			const auto measured_frame_time_us = GetTicksDiff(
-				t1, sdl.presentation.last_present_time_us);
+		const auto measured_frame_time_us = GetTicksDiff(
+			t1, sdl.presentation.last_present_time_us);
 
-			LOG_TRACE("DISPLAY: frame time: %2.4f ms", 0.001 * measured_frame_time_us);
+		LOG_TRACE("DISPLAY: frame time: %2.4f ms", 0.001 * measured_frame_time_us);
 
-			if (measured_frame_time_us >
-			    sdl.presentation.frame_time_us * 1.5) {
-				LOG_WARNING("DISPLAY: missed vsync (long frame)");
-			}
-#endif
-			sdl.presentation.last_present_time_us = t1;
+		if (measured_frame_time_us >
+			sdl.presentation.frame_time_us * 1.5) {
+			LOG_WARNING("DISPLAY: missed vsync (long frame)");
 		}
-	} else {
-#if 0
-		LOG_TRACE("DISPLAY: frame time: %2.4f ms, curr frame time: %2.4f ms",
-		          0.001 * sdl.presentation.frame_time_us,
-		          0.001 * curr_frame_time_us);
-
-		LOG_WARNING("DISPLAY: dropped frame (arrived too late)");
 #endif
-		sdl.presentation.last_present_time_us = start_us;
+		sdl.presentation.last_present_time_us = t1;
 	}
 
 	// Adjust "ticks done" counter by the time it took to present the frame
