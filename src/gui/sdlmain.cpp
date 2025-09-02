@@ -3770,17 +3770,15 @@ void GFX_MaybePresentFrame()
 
 	if (force_present || (curr_frame_time_us >= present_window_start_us)) {
 
-		[[maybe_unused]] const auto t0 = GetTicksUs();
-
 		sdl.presentation.update();
 		sdl.presentation.present();
 
-		const auto t1 = GetTicksUs();
+		const auto end_us = GetTicksUs();
 #if 0
-		LOG_TRACE("DISPLAY: present took %2.4f ms", 0.001 * GetTicksDiff(t1, t0));
+		LOG_TRACE("DISPLAY: present took %2.4f ms", 0.001 * GetTicksDiff(end_us, start_us));
 
 		const auto measured_frame_time_us = GetTicksDiff(
-			t1, sdl.presentation.last_present_time_us);
+			end_us, sdl.presentation.last_present_time_us);
 
 		LOG_TRACE("DISPLAY: frame time: %2.4f ms", 0.001 * measured_frame_time_us);
 
@@ -3789,11 +3787,11 @@ void GFX_MaybePresentFrame()
 			LOG_WARNING("DISPLAY: missed vsync (long frame)");
 		}
 #endif
-		sdl.presentation.last_present_time_us = t1;
-	}
+		sdl.presentation.last_present_time_us = end_us;
 
-	// Adjust "ticks done" counter by the time it took to present the frame
-	adjust_ticks_after_present_frame(GetTicksUsSince(start_us));
+		// Adjust "ticks done" counter by the time it took to present the frame
+		adjust_ticks_after_present_frame(GetTicksDiff(end_us, start_us));
+	}
 }
 
 // Returns:
