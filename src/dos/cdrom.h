@@ -469,4 +469,4 @@ private:
 
 #endif // Linux / WIN32
 
-#endif
+#endif // DOSBOX_CDROM_H

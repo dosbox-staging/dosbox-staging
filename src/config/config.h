@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "config/setup.h"
-#include "dos/programs.h"
+#include "shell/command_line.h"
 #include "misc/std_filesystem.h"
 
 // clang-format off
@@ -61,9 +61,9 @@ public:
 	CommandLineArguments arguments = {};
 
 private:
-	std::deque<Section*> sectionlist          = {};
+	std::deque<Section*> sectionlist         = {};
 	SectionLine overwritten_autoexec_section = {};
-	std::string overwritten_autoexec_conf     = {};
+	std::string overwritten_autoexec_conf    = {};
 
 	void (*_start_function)(void) = nullptr;
 
@@ -89,21 +89,24 @@ public:
 	}
 
 	Config() = default;
-	Config(Config&& source) noexcept;            // move constructor
-	Config(const Config&) = delete;              // block construct-by-value
-	Config& operator=(Config&& source) noexcept; // move assignment
-	Config& operator=(const Config&) = delete;   // block assign-by-value
+
+	// move constructor
+	Config(Config&& source) noexcept;
+
+	// prevent copying
+	Config(const Config&) = delete;
+
+	// prevent assignment assignment
+	Config& operator=(Config&& source) noexcept;
+	Config& operator=(const Config&) = delete;
 
 	~Config();
 
-	SectionProp* AddEarlySectionProp(const char* name, SectionFunction func,
-	                                  bool changeable_at_runtime = false);
+	SectionProp* AddSection(const char* section_name,
+	                        SectionInitHandler init_handler,
+	                        bool changeable_at_runtime = false);
 
-	SectionLine* AddSectionLine(const char* section_name, SectionFunction func);
-
-	SectionProp* AddInactiveSectionProp(const char* section_name);
-	SectionProp* AddSectionProp(const char* section_name, SectionFunction func,
-	                              bool changeable_at_runtime = false);
+	SectionLine* AddAutoexecSection(SectionInitHandler init_handler);
 
 	auto begin()
 	{
@@ -154,6 +157,6 @@ public:
 using ConfigPtr = std::unique_ptr<Config>;
 extern ConfigPtr control;
 
-void DOSBOX_Restart(std::vector<std::string> &parameters = control->startup_params);
+void DOSBOX_Restart(std::vector<std::string>& parameters = control->startup_params);
 
 #endif // DOSBOX_CONFIG_H

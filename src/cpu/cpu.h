@@ -7,6 +7,8 @@
 
 #include "dosbox.h"
 
+#include <string>
+
 #include "config/config.h"
 #include "misc/support.h"
 

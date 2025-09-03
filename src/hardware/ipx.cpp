@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <memory>
 
 #include <SDL_net.h>
 
@@ -1175,23 +1176,45 @@ public:
 	}
 };
 
-static IPX* test;
+static std::unique_ptr<IPX> ipx = {};
 
-void IPX_ShutDown([[maybe_unused]] Section* sec) {
-	delete test;
+void notify_ipx_setting_updated(SectionProp* section,
+                                [[maybe_unused]] const std::string& prop_name)
+{
+	assert(section);
+
+	ipx = std::make_unique<IPX>(section);
+}
+
+static void ipx_destroy([[maybe_unused]] Section* sec)
+{
+	ipx = {};
 }
 
 void IPX_Init(Section* sec)
 {
 	assert(sec);
 
-	test = new IPX(sec);
+	ipx = std::make_unique<IPX>(sec);
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&IPX_ShutDown, changeable_at_runtime);
+	sec->AddUpdateHandler(notify_ipx_setting_updated);
+	sec->AddDestroyHandler(ipx_destroy);
 }
 
-//Initialize static members;
+void IPX_AddConfigSection(const ConfigPtr& conf)
+{
+	using enum Property::Changeable::Value;
+
+	assert(conf);
+
+	auto section = control->AddSection("ipx", IPX_Init);
+
+	auto pbool = section->AddBool("ipx", WhenIdle, false);
+	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation ('off' by default).");
+	pbool->SetEnabledOptions({"ipx"});
+}
+
+// Initialize static members;
 uint16_t IPX::dospage = 0;
 
 #endif

@@ -22,7 +22,7 @@
 #include "cpu/callback.h"
 #include "cpu/paging.h"
 #include "cpu/registers.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/drives.h"
 #include "dos/programs/more_output.h"
 #include "hardware/timer.h"
@@ -1787,13 +1787,15 @@ void DOS_Shell::CMD_TIME(char* args)
 {
 	const char time_separator = DOS_GetLocaleTimeSeparator();
 
-	const auto format  = format_str("hh%cmm%css", time_separator, time_separator);
-	const auto example = format_str("13%c14%c15", time_separator, time_separator);
+	const auto format = format_str("hh%cmm%css", time_separator, time_separator);
 
 	if (scan_and_remove_cmdline_switch(args, "?")) {
 		MoreOutputStrings output(*this);
 		output.AddString(MSG_Get("SHELL_CMD_TIME_HELP"));
 		output.AddString("\n");
+
+		const auto example = format_str("13%c14%c15", time_separator, time_separator);
+
 		output.AddString(MSG_Get("SHELL_CMD_TIME_HELP_LONG"),
 		                 format.c_str(),
 		                 example.c_str());
@@ -2051,8 +2053,9 @@ void DOS_Shell::CMD_CHOICE(char * args){
 			choice = static_cast<char>(toupper(choice));
 		if (using_auto_type)
 			MAPPER_StopAutoTyping();
-		if (shutdown_requested)
+		if (DOSBOX_IsShutdownRequested()) {
 			break;
+		}
 		if (choice == ctrl_c)
 			break;
 	}

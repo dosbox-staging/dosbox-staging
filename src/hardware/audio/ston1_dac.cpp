@@ -19,7 +19,9 @@ void StereoOn1::BindToPort(const io_port_t lpt_port)
 
 	BindHandlers(lpt_port, write_data, read_status, write_control);
 
-	LOG_MSG("LPT_DAC: Initialised Stereo-On-1 DAC on LPT port %03xh", lpt_port);
+	LOG_MSG("%s: Initialised Stereo-On-1 DAC on LPT port %03xh",
+	        ChannelName::StereoOn1Dac,
+	        lpt_port);
 }
 
 void StereoOn1::ConfigureFilters(const FilterState state)

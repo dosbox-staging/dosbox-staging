@@ -9,12 +9,12 @@
 #include "dosbox.h"
 #include "cpu/callback.h"
 #include "cpu/registers.h"
+#include "dev_con.h"
+#include "dos.h"
+#include "dos/drives.h"
 #include "hardware/memory.h"
 #include "ints/bios.h"
-#include "dos_inc.h"
 #include "misc/support.h"
-#include "dos/drives.h"
-#include "dev_con.h"
 
 DOS_Device * Devices[DOS_DEVICES];
 

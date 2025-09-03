@@ -1,12 +1,17 @@
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dos_inc.h"
+#ifndef DOSBOX_DOS_CON_H
+#define DOSBOX_DOS_CON_H
+
+#include "dos.h"
 
 #include <cstring>
 
-#include "utils/ascii.h"
+#include "ints/bios.h"
 #include "ints/int10.h"
+#include "utils/ascii.h"
 
 #define NUMBER_ANSI_DATA 10
 
@@ -535,3 +540,5 @@ void device_CON::Output(uint8_t chr)
 		INT10_TeletypeOutputViaInterrupt(chr, 7);
 	}
 }
+
+#endif // DOSBOX_DOS_CON_H

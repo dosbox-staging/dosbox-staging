@@ -8,16 +8,16 @@
 #include <map>
 #include <vector>
 
-#include "misc/ansi_code_markup.h"
-#include "utils/bitops.h"
-#include "utils/checks.h"
 #include "dos_keyboard_layout.h"
 #include "dos_locale.h"
-#include "misc/logging.h"
 #include "gui/mapper.h"
+#include "misc/ansi_code_markup.h"
 #include "misc/host_locale.h"
-#include "utils/string_utils.h"
+#include "misc/logging.h"
 #include "misc/unicode.h"
+#include "utils/bitops.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 
@@ -1672,22 +1672,6 @@ DOS_Locale::DOS_Locale(Section* configuration) : ModuleBase(configuration)
 
 DOS_Locale::~DOS_Locale() {}
 
-static std::unique_ptr<DOS_Locale> Locale = {};
-
-void DOS_Locale_ShutDown(Section*)
-{
-	Locale.reset();
-}
-
-void DOS_Locale_Init(Section* sec)
-{
-	assert(sec);
-	Locale = std::make_unique<DOS_Locale>(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&DOS_Locale_ShutDown, changeable_at_runtime);
-}
-
 void DOS_Locale_AddMessages()
 {
 	MSG_Add("DOSBOX_HELP_LIST_COUNTRIES_1",
@@ -1735,4 +1719,27 @@ void DOS_Locale_AddMessages()
 
 	MSG_Add("KEYBOARD_MOD_ADJECTIVE_LEFT",  "Left");
 	MSG_Add("KEYBOARD_MOD_ADJECTIVE_RIGHT", "Right");
+}
+
+static std::unique_ptr<DOS_Locale> Locale = {};
+
+static void dos_locale_destroy([[maybe_unused]] Section* section)
+{
+	Locale = {};
+}
+
+static void notify_dos_locale_setting_updated(SectionProp* section,
+                                              [[maybe_unused]] const std::string& prop_name)
+{
+	Locale = std::make_unique<DOS_Locale>(section);
+}
+
+void DOS_Locale_Init(Section* section)
+{
+	assert(section);
+
+	Locale = std::make_unique<DOS_Locale>(section);
+
+	section->AddDestroyHandler(dos_locale_destroy);
+	section->AddUpdateHandler(notify_dos_locale_setting_updated);
 }

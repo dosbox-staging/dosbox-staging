@@ -602,20 +602,24 @@ void VIRTUALBOX_NotifyBooting()
 // Lifecycle
 // ***************************************************************************
 
-void VIRTUALBOX_Destroy(Section*)
+static void virtualbox_destroy([[maybe_unused]] Section* sec)
 {
 	if (is_interface_enabled) {
 		client_disconnect();
+
 		PCI_RemoveDevice(PCI_VirtualBoxDevice::vendor,
 		                 PCI_VirtualBoxDevice::device);
+
 		IO_FreeWriteHandler(port_num_virtualbox, io_width_t::dword);
+
 		is_interface_enabled = false;
 	}
 }
 
-void VIRTUALBOX_Init(Section* sec)
+static void virtualbox_init([[maybe_unused]] Section* section)
 {
 	has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VirtualBox);
+
 	if (has_feature_mouse) {
 		state.mouse_features.SetInitialValue();
 	}
@@ -629,11 +633,27 @@ void VIRTUALBOX_Init(Section* sec)
 	//   https://github.com/JHRobotics/softgpu
 
 	is_interface_enabled = has_feature_mouse;
+
 	if (is_interface_enabled) {
-		sec->AddDestroyFunction(&VIRTUALBOX_Destroy, false);
 		PCI_AddDevice(new PCI_VirtualBoxDevice());
+
 		IO_RegisterWriteHandler(port_num_virtualbox,
 		                        port_write_virtualbox,
 		                        io_width_t::dword);
 	}
+}
+
+void VIRTUALBOX_NotifySettingUpdated(Section* section,
+                                     [[maybe_unused]] const std::string& prop_name)
+{
+	virtualbox_destroy(section);
+	virtualbox_init(section);
+}
+
+void VIRTUALBOX_Init(Section* section)
+{
+	assert(section);
+	section->AddDestroyHandler(virtualbox_destroy);
+
+	virtualbox_init(section);
 }

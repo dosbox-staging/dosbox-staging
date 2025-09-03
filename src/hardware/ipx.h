@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_IPX_H
@@ -17,12 +17,14 @@
 #endif
 #endif
 
-#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
-#endif
-#ifndef DOSBOX_MEM_H
+
+#include "config/config.h"
+#include "config/setup.h"
 #include "hardware/memory.h"
-#endif
+
+// For the Uint8/16/32 types
+#include <SDL_net.h>
 
 // In Use Flag codes
 #define USEFLAG_AVAILABLE  0x00
@@ -52,9 +54,6 @@
 #ifdef _MSC_VER
 #pragma pack(1)
 #endif
-
-// For Uint8 type
-#include <SDL_net.h>
 
 struct PackedIP {
 	Uint32 host;
@@ -139,6 +138,9 @@ public:
 
 void UnpackIP(PackedIP ipPack, IPaddress * ipAddr);
 void PackIP(IPaddress ipAddr, PackedIP *ipPack);
+
+void IPX_Init(Section* sec);
+void IPX_AddConfigSection(const ConfigPtr& conf);
 
 #ifdef _MSC_VER
 #pragma pack()

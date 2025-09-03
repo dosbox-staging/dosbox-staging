@@ -421,13 +421,15 @@ void PcSpeakerDiscrete::SetFilterState(const FilterState filter_state)
 		// reflects people's actual experience of the PC speaker
 		// sound than the raw unfiltered output, and it's a lot
 		// more pleasant to listen to, especially in headphones.
-		constexpr auto hp_order       = 3;
+		constexpr auto hp_order          = 3;
 		constexpr auto hp_cutoff_freq_hz = 120;
+
 		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
 		channel->SetHighPassFilter(FilterState::On);
 
-		constexpr auto lp_order       = 2;
+		constexpr auto lp_order          = 2;
 		constexpr auto lp_cutoff_freq_hz = 4800;
+
 		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 		channel->SetLowPassFilter(FilterState::On);
 	} else {
@@ -445,12 +447,14 @@ bool PcSpeakerDiscrete::TryParseAndSetCustomFilter(const std::string& filter_cho
 PcSpeakerDiscrete::PcSpeakerDiscrete()
 {
 	// Register the sound channel
-	constexpr bool Stereo = false;
-	constexpr bool SignedData = true;
+	constexpr bool Stereo      = false;
+	constexpr bool SignedData  = true;
 	constexpr bool NativeOrder = true;
-	const auto callback = std::bind(MIXER_PullFromQueueCallback<PcSpeakerDiscrete, float, Stereo, SignedData, NativeOrder>,
-	                                std::placeholders::_1,
-	                                this);
+
+	const auto callback = std::bind(
+	        MIXER_PullFromQueueCallback<PcSpeakerDiscrete, float, Stereo, SignedData, NativeOrder>,
+	        std::placeholders::_1,
+	        this);
 
 	channel = MIXER_AddChannel(callback,
 	                           UseMixerRate,

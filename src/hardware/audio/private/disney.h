@@ -38,4 +38,4 @@ private:
 	std::queue<uint8_t> fifo = {};
 };
 
-#endif
+#endif // DOSBOX_DISNEY_H

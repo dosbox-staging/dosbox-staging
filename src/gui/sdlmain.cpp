@@ -436,8 +436,6 @@ SDL_Block sdl;
 
 static SDL_Point FallbackWindowSize = {640, 480};
 
-static bool first_window = true;
-
 static DosBox::Rect to_rect(const SDL_Rect r)
 {
 	return {r.x, r.y, r.w, r.h};
@@ -639,8 +637,8 @@ static void init_presentation_mode_settings()
 
 void GFX_RequestExit(const bool pressed)
 {
-	shutdown_requested = pressed;
-	if (shutdown_requested) {
+	if (pressed) {
+		DOSBOX_RequestShutdown();
 		LOG_DEBUG("SDL: Exit requested");
 	}
 }
@@ -677,7 +675,7 @@ static bool is_command_pressed(const SDL_Event event)
 
 	// NOTE: This is one of the few places where we use SDL key codes with
 	// SDL 2.0, rather than scan codes. Is that the correct behavior?
-	while (sdl.is_paused && !shutdown_requested) {
+	while (sdl.is_paused && !DOSBOX_IsShutdownRequested()) {
 		// since we're not polling, CPU usage drops to 0.
 		SDL_WaitEvent(&event);
 
@@ -2519,7 +2517,7 @@ void GFX_Start()
 	sdl.active = true;
 }
 
-static void shutdown_gui(Section*)
+static void sdl_destroy([[maybe_unused]] Section* section)
 {
 	GFX_Stop();
 
@@ -3171,7 +3169,6 @@ static void sdl_section_init(Section* sec)
 		return;
 	}
 
-	sec->AddDestroyFunction(&shutdown_gui);
 	SectionProp* section = static_cast<SectionProp*>(sec);
 
 	sdl.active          = false;
@@ -3262,6 +3259,34 @@ static void sdl_section_init(Section* sec)
 	TITLEBAR_ReadConfig(*conf);
 }
 
+static void recreate_window(Section* sec)
+{
+	GFX_Stop();
+
+	if (sdl.draw.callback) {
+		(sdl.draw.callback)(GFX_CallbackStop);
+	}
+
+	remove_window();
+	set_output(sec, is_aspect_ratio_correction_enabled());
+	GFX_ResetScreen();
+}
+
+static void notify_sdl_setting_updated(SectionProp* section,
+                                       const std::string& prop_name)
+{
+	if (prop_name == "mapperfile") {
+		MAPPER_BindKeys(section);
+
+	} else if (prop_name == "output") {
+		recreate_window(section);
+
+	} else {
+		// TODO add support for the rest of the settings later
+		sdl_section_init(section);
+	}
+}
+
 static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
 	MOUSE_EventMoved(static_cast<float>(motion->xrel),
@@ -3304,17 +3329,6 @@ void GFX_LosingFocus()
 bool GFX_IsFullscreen()
 {
 	return sdl.desktop.is_fullscreen;
-}
-
-void GFX_RegenerateWindow(Section* sec)
-{
-	if (first_window) {
-		first_window = false;
-		return;
-	}
-	remove_window();
-	set_output(sec, is_aspect_ratio_correction_enabled());
-	GFX_ResetScreen();
 }
 
 // TODO check if this workaround is still needed
@@ -3482,7 +3496,7 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 		// samples we're not going to play anyway.
 		MIXER_LockMixerThread();
 
-		while (paused && !shutdown_requested) {
+		while (paused && !DOSBOX_IsShutdownRequested()) {
 			// WaitEvent() waits for an event rather than
 			// polling, so CPU usage drops to zero.
 			SDL_WaitEvent(&ev);
@@ -3564,19 +3578,29 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 	case SDL_WINDOWEVENT_RESIZED: {
 		// TODO pixels or logical units?
-		// LOG_DEBUG("SDL: Window has been resized to %dx%d",
-		// event.window.data1, event.window.data2);
+		LOG_DEBUG("SDL: Window has been resized to %dx%d",
+		          event.window.data1,
+		          event.window.data2);
 
-		// When going from an initial fullscreen to windowed state, this
-		// event will be called moments before SDL's windowed mode is
-		// engaged, so simply ensure the window size has already been
-		// established:
-		assert(sdl.desktop.window.width > 0 && sdl.desktop.window.height > 0);
+		static int last_width  = 0;
+		static int last_height = 0;
+
+		const auto width  = event.window.data1;
+		const auto height = event.window.data2;
 
 		// SDL_WINDOWEVENT_RESIZED events are sent twice when resizing
-		// the window, but maybe_log_display_properties() will only output
-		// a log entry if the image dimensions have actually changed.
-		maybe_log_display_properties();
+		// the window.
+		if (width != last_width && height != last_height) {
+			maybe_log_display_properties();
+
+			// Needed for aspect & viewport mode combinations where the
+			// pixel aspect ratio or viewport size is sized relatively
+			// to the window size.
+			VGA_SetupDrawing(0);
+
+			last_width  = width;
+			last_height = height;
+		}
 		return true;
 	}
 
@@ -3898,7 +3922,7 @@ bool DOSBOX_PollAndHandleEvents()
 		default: MAPPER_CheckEvent(&event);
 		}
 	}
-	return !shutdown_requested;
+	return !DOSBOX_IsShutdownRequested();
 }
 
 #if defined(WIN32)
@@ -4050,12 +4074,11 @@ static void register_sdl_text_messages()
 //
 static void init_sdl_config_section()
 {
-	constexpr bool ChangeableAtRuntime = true;
+	SectionProp* section = control->AddSection("sdl", sdl_section_init);
 
-	SectionProp* sdl_sec = control->AddSectionProp("sdl",
-	                                               &sdl_section_init,
-	                                               ChangeableAtRuntime);
-	sdl_sec->AddInitFunction(&MAPPER_StartUp);
+	section->AddInitHandler(MAPPER_Init);
+	section->AddUpdateHandler(notify_sdl_setting_updated);
+	section->AddDestroyHandler(sdl_destroy);
 
 	using enum Property::Changeable::Value;
 
@@ -4064,7 +4087,7 @@ static void init_sdl_config_section()
 #else
 	const std::string default_output = "texture";
 #endif
-	auto pstring = sdl_sec->AddString("output", Always, default_output.c_str());
+	auto pstring = section->AddString("output", Always, default_output.c_str());
 
 	pstring->SetOptionHelp(
 	        "opengl_default",
@@ -4109,26 +4132,26 @@ static void init_sdl_config_section()
 	        "texturenb",
 	});
 
-	pstring = sdl_sec->AddString("texture_renderer", Always, "auto");
+	pstring = section->AddString("texture_renderer", Always, "auto");
 	pstring->SetHelp(
 	        "Render driver to use in 'texture' output mode ('auto' by default).\n"
 	        "Use 'texture_renderer = auto' for an automatic choice.");
 	pstring->SetValues(get_sdl_texture_renderers());
 
-	auto pint = sdl_sec->AddInt("display", OnlyAtStart, 0);
+	auto pint = section->AddInt("display", OnlyAtStart, 0);
 	pint->SetHelp(
 	        "Number of display to use; values depend on OS and user "
 	        "settings (0 by default).");
 
-	auto pbool = sdl_sec->AddBool("fullscreen", Always, false);
+	auto pbool = section->AddBool("fullscreen", Always, false);
 	pbool->SetHelp("Start in fullscreen mode ('off' by default).");
 
-	pstring = sdl_sec->AddString("fullresolution", DeprecatedButAllowed, "");
+	pstring = section->AddString("fullresolution", DeprecatedButAllowed, "");
 	pstring->SetHelp(
 	        "The [color=light-green]'fullresolution'[reset] setting is deprecated but still accepted;\n"
 	        "please use [color=light-green]'fullscreen_mode'[reset] instead.");
 
-	pstring = sdl_sec->AddString("fullscreen_mode", Always, "standard");
+	pstring = section->AddString("fullscreen_mode", Always, "standard");
 	pstring->SetHelp("Set the fullscreen mode ('standard' by default):");
 
 	pstring->SetOptionHelp("standard",
@@ -4159,12 +4182,12 @@ static void init_sdl_config_section()
 
 	pstring->SetDeprecatedWithAlternateValue("desktop", "standard");
 
-	pstring = sdl_sec->AddString("windowresolution", DeprecatedButAllowed, "");
+	pstring = section->AddString("windowresolution", DeprecatedButAllowed, "");
 	pstring->SetHelp(
 	        "The [color=light-green]'windowresolution'[reset] setting is deprecated but still accepted;\n"
 	        "please use [color=light-green]'window_size'[reset] instead.");
 
-	pstring = sdl_sec->AddString("window_size", OnlyAtStart, "default");
+	pstring = section->AddString("window_size", OnlyAtStart, "default");
 	pstring->SetHelp(
 	        "Set initial window size for windowed mode. You can still resize the window\n"
 	        "after startup.\n"
@@ -4175,34 +4198,34 @@ static void init_sdl_config_section()
 	        "  WxH:       Specify window size in WxH format in logical units\n"
 	        "             (e.g., 1024x768).");
 
-	pstring = sdl_sec->AddString("window_position", Always, "auto");
+	pstring = section->AddString("window_position", Always, "auto");
 	pstring->SetHelp(
 	        "Set initial window position for windowed mode:\n"
 	        "  auto:      Let the window manager decide the position (default).\n"
 	        "  X,Y:       Set window position in X,Y format in logical units (e.g., 250,100).\n"
 	        "             0,0 is the top-left corner of the screen.");
 
-	pbool = sdl_sec->AddBool("window_decorations", Always, true);
+	pbool = section->AddBool("window_decorations", Always, true);
 	pbool->SetHelp("Enable window decorations in windowed mode ('on' by default).");
 
-	TITLEBAR_AddConfig(*sdl_sec);
+	TITLEBAR_AddConfig(*section);
 
-	pint = sdl_sec->AddInt("transparency", Always, 0);
+	pint = section->AddInt("transparency", Always, 0);
 	pint->SetHelp(
 	        "Set the transparency of the DOSBox Staging screen (0 by default).\n"
 	        "From 0 (no transparency) to 90 (high transparency).");
 
-	pstring = sdl_sec->AddString("max_resolution", Deprecated, "");
+	pstring = section->AddString("max_resolution", Deprecated, "");
 	pstring->SetHelp(
 	        "Moved to [color=light-cyan][render][reset] section "
 	        "and renamed to [color=light-green]'viewport'[reset].");
 
-	pstring = sdl_sec->AddString("viewport_resolution", Deprecated, "");
+	pstring = section->AddString("viewport_resolution", Deprecated, "");
 	pstring->SetHelp(
 	        "Moved to [color=light-cyan][render][reset] section "
 	        "and renamed to [color=light-green]'viewport'[reset].");
 
-	pstring = sdl_sec->AddString("vsync", Always, "off");
+	pstring = section->AddString("vsync", Always, "off");
 	pstring->SetHelp(
 	        "Set the host video driver's vertical synchronization (vsync) mode:\n"
 	        "  off:              Disable vsync in both windowed and fullscreen mode\n"
@@ -4232,7 +4255,7 @@ static void init_sdl_config_section()
 	        "    in your video driver settings.");
 	pstring->SetValues({"off", "on", "fullscreen-only"});
 
-	pstring = sdl_sec->AddString("presentation_mode", Always, "auto");
+	pstring = section->AddString("presentation_mode", Always, "auto");
 	pstring->SetHelp(
 	        "Select the frame presentation mode ('auto' by default):\n"
 	        "  auto:       Use 'host-rate' if 'vsync' is enabled, otherwise use 'dos-rate'\n"
@@ -4248,25 +4271,25 @@ static void init_sdl_config_section()
 	        "              could cause problems with VGA games presenting frames at 70 Hz).");
 	pstring->SetValues({"auto", "dos-rate", "host-rate"});
 
-	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", Deprecated, ",");
+	auto pmulti = section->AddMultiVal("capture_mouse", Deprecated, ",");
 	pmulti->SetHelp(
 	        "Moved to [color=light-cyan][mouse][reset] section and "
 	        "renamed to [color=light-green]'mouse_capture'[reset].");
 
-	pmulti = sdl_sec->AddMultiVal("sensitivity", Deprecated, ",");
+	pmulti = section->AddMultiVal("sensitivity", Deprecated, ",");
 	pmulti->SetHelp(
 	        "Moved to [color=light-cyan][mouse][reset] section and "
 	        "renamed to [color=light-green]'mouse_sensitivity'[reset].");
 
-	pbool = sdl_sec->AddBool("raw_mouse_input", Deprecated, false);
+	pbool = section->AddBool("raw_mouse_input", Deprecated, false);
 	pbool->SetHelp(
 	        "Moved to [color=light-cyan][mouse][reset] section and "
 	        "renamed to [color=light-green]'mouse_raw_input'[reset].");
 
-	pbool = sdl_sec->AddBool("waitonerror", Always, true);
+	pbool = section->AddBool("waitonerror", Always, true);
 	pbool->SetHelp("Keep the console open if an error has occurred ('on' by default).");
 
-	pmulti = sdl_sec->AddMultiVal("priority", Always, " ");
+	pmulti = section->AddMultiVal("priority", Always, " ");
 	pmulti->SetValue("auto auto");
 	pmulti->SetHelp(
 	        "Priority levels to apply when active and inactive, respectively.\n"
@@ -4279,20 +4302,20 @@ static void init_sdl_config_section()
 	psection->AddString("inactive", Always, "auto")
 	        ->SetValues({"auto", "lowest", "lower", "normal", "higher", "highest"});
 
-	pbool = sdl_sec->AddBool("mute_when_inactive", OnlyAtStart, false);
+	pbool = section->AddBool("mute_when_inactive", OnlyAtStart, false);
 	pbool->SetHelp("Mute the sound when the window is inactive ('off' by default).");
 
-	pbool = sdl_sec->AddBool("pause_when_inactive", OnlyAtStart, false);
+	pbool = section->AddBool("pause_when_inactive", OnlyAtStart, false);
 	pbool->SetHelp("Pause emulation when the window is inactive ('off' by default).");
 
-	pbool = sdl_sec->AddBool("keyboard_capture", Always, false);
+	pbool = section->AddBool("keyboard_capture", Always, false);
 	pbool->SetHelp(
 	        "Capture system keyboard shortcuts ('off' by default).\n"
 	        "When enabled, most system shortcuts such as Alt+Tab are captured and sent to\n"
 	        "DOSBox Staging. This is useful for Windows 3.1x and some DOS programs with\n"
 	        "unchangeable keyboard shortcuts that conflict with system shortcuts.");
 
-	pstring = sdl_sec->AddPath("mapperfile", Always, MAPPERFILE);
+	pstring = section->AddPath("mapperfile", Always, MAPPERFILE);
 	pstring->SetHelp(
 	        "Path to the mapper file ('mapper-sdl2-XYZ.map' by default, where XYZ is the\n"
 	        "current version). Pre-configured maps are bundled in 'resources/mapperfiles'.\n"
@@ -4300,7 +4323,7 @@ static void init_sdl_config_section()
 	        "Note: The '--resetmapper' command line option only deletes the default mapper\n"
 	        "      file.");
 
-	pstring = sdl_sec->AddString("screensaver", OnlyAtStart, "auto");
+	pstring = section->AddString("screensaver", OnlyAtStart, "auto");
 	pstring->SetHelp(
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
 	        "variable which usually blocks the OS screensaver while the emulator is\n"
@@ -4353,7 +4376,7 @@ static int edit_primary_config()
 }
 
 #if C_DEBUGGER
-extern void DEBUG_ShutDown(Section* /*sec*/);
+extern void DEBUG_ShutDown([[maybe_unused]] Section* sec);
 #endif
 
 static void remove_waitpid(std::vector<std::string>& parameters)
@@ -5020,7 +5043,6 @@ int sdl_main(int argc, char* argv[])
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
 		MAPPER_BindKeys(get_sdl_section());
-		GFX_RegenerateWindow(get_sdl_section());
 
 		if (arguments->startmapper) {
 			MAPPER_DisplayUI();

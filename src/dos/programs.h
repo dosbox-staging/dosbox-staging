@@ -10,10 +10,10 @@
 #include <memory>
 #include <string>
 
-#include "shell/command_line.h"
+#include "dos/dos.h"
 #include "misc/console.h"
-#include "dos/dos_inc.h"
 #include "misc/help_util.h"
+#include "shell/command_line.h"
 
 #define WIKI_URL "https://github.com/dosbox-staging/dosbox-staging/wiki"
 
@@ -87,4 +87,4 @@ std::unique_ptr<Program> ProgramCreate()
 	return std::make_unique<P>();
 }
 
-#endif
+#endif // DOSBOX_PROGRAMS_H

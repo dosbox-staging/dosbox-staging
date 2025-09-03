@@ -2,10 +2,14 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#ifndef DOSBOX_GUS_H
+#define DOSBOX_GUS_H
+
 #include <queue>
 
 #include "audio/mixer.h"
 #include "hardware/dma.h"
+#include "utils/bit_view.h"
 #include "utils/rwqueue.h"
 
 // Global Constants
@@ -249,6 +253,8 @@ public:
 
 	virtual ~Gus();
 
+	void SetFilter(const std::string& filter_prefs);
+
 	bool CheckTimer(size_t t);
 	void MirrorAdLibCommandRegister(const uint8_t reg_value);
 	void PrintStats();
@@ -372,3 +378,5 @@ private:
 	bool irq_previously_interrupted = false;
 	bool should_change_irq_dma      = false;
 };
+
+#endif // DOSBOX_GUS_H
