@@ -164,6 +164,14 @@ uint8_t imageDisk::Read_AbsoluteSector(uint32_t sectnum, void *data)
 	current_fpos=bytenum+ret;
 	last_action=READ;
 
+	// Call disk noise callbacks depending on image type
+	DiskType disk_type = DiskType::Floppy;
+	if (hardDrive) {
+		disk_type = DiskType::HardDisk;
+	}
+	DOS_ExecuteRegisteredCallbacks(disk_type);
+	DOS_PerformDiskIoDelay(check_cast<uint16_t>(ret), disk_type);
+
 	return 0x00;
 }
 
@@ -194,8 +202,15 @@ uint8_t imageDisk::Write_AbsoluteSector(uint32_t sectnum, void *data) {
 	current_fpos=bytenum+ret;
 	last_action=WRITE;
 
-	return ((ret>0)?0x00:0x05);
+	// Call disk noise callbacks depending on image type
+	DiskType disk_type = DiskType::Floppy;
+	if (hardDrive) {
+		disk_type = DiskType::HardDisk;
+	}
+	DOS_ExecuteRegisteredCallbacks(disk_type);
+	DOS_PerformDiskIoDelay(check_cast<uint16_t>(ret), disk_type);
 
+	return ((ret > 0) ? 0x00 : 0x05);
 }
 
 imageDisk::imageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k, bool is_hdd)
