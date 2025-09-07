@@ -2324,7 +2324,9 @@ MSCDEX: Unbekannter Fehler.
 .
 :MSCDEX_WARNING_NO_OPTION
 MSCDEX: Warnung: Ignoriere nicht unterstützte Option '%s'.
-
+.
+:PROGRAM_MOUNT_READONLY
+Laufwerk mit Lesezugriff eingebunden
 .
 :PROGRAM_MOUNT_STATUS_DRIVE
 Laufwerk
