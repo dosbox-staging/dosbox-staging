@@ -1,4 +1,10 @@
-# auto-normalize any added text files to LF
+# auto-normalize any added text files to LF on checkin
 *	text=auto
-# github linguist 
+
+# use Windows line endings for DOS/Windows shell scripts
+*.bat	text eol=crlf
+# use Unix line endings for Linux/macOS shell scripts
+*.sh 	text eol=lf
+
+# for github linguist 
 *.h	linguist-language=C++
