@@ -31,7 +31,7 @@ ROOT=$(git rev-parse --show-toplevel)
 
 VERSION=$(
     grep "project(dosbox-staging" -A 2 "$ROOT/CMakeLists.txt" \
-        | grep "VERSION" | sed "s/\\s*VERSION\\s*//g" | cut -d"\"" -f2
+        | grep "VERSION" | sed "s/ *VERSION *//g" | cut -d"\"" -f2
 )
 
 SUFFIX=$(
