@@ -555,231 +555,6 @@ static void clear_translated_messages()
 }
 
 // ***************************************************************************
-// Legacy file format support - TODO; to be removed
-// ***************************************************************************
-
-static const std::string ExtensionLegacy = ".lng";
-
-// Metadata keys - for now only one is available, writing script type
-static const std::string KeyScript = "#SCRIPT ";
-
-static bool load_messages_from_path_lng(const std_fs::path& file_path)
-{
-	std::ifstream in_file(file_path);
-
-	std::string line = {};
-	int line_number  = -1;
-
-	auto problem_generic = [&](const std::string& error) {
-		LOG_ERR("LOCALE: Translation file '%s' error in line %d: %s",
-		        file_path.string().c_str(),
-		        static_cast<int>(line_number),
-		        error.c_str());
-
-		clear_translated_messages();
-	};
-
-	auto problem_with_message = [&](const std::string& message_key,
-	                                const std::string& error) {
-		LOG_ERR("LOCALE: Translation file '%s' error in line %d, "
-		        "message '%s': %s",
-		        file_path.string().c_str(),
-		        static_cast<int>(line_number),
-		        message_key.c_str(),
-		        error.c_str());
-
-		clear_translated_messages();
-	};
-
-	bool reading_metadata = true;
-	while (std::getline(in_file, line)) {
-		++line_number;
-		if (line.empty() || line.starts_with("//")) {
-			continue;
-		}
-
-		auto trimmed_line = line;
-		trim(trimmed_line);
-
-		if (trimmed_line.starts_with(KeyScript)) {
-			if (!reading_metadata) {
-				problem_generic("metadata not at the start of file");
-				return false;
-			}
-			if (translation_script) {
-				problem_generic("script already specified");
-				return false;
-			}
-
-			std::string value = trimmed_line.substr(KeyScript.length());
-			trim(value);
-
-			for (const auto& entry : LocaleData::ScriptInfo) {
-				if (iequals(value, entry.second.script_name)) {
-					translation_script = entry.first;
-					is_translation_script_fuzzy = false;
-					break;
-				}
-			}
-			if (!translation_script) {
-				problem_generic("unknown script");
-				return false;
-			}
-			continue;
-		}
-
-		reading_metadata = false;
-
-		if (!line.starts_with(':')) {
-			problem_generic("wrong syntax");
-			return false;
-		}
-
-		const std::string message_key = line.substr(1);
-
-		if (message_key.empty()) {
-			problem_generic("message message_key is empty");
-			return false;
-		}
-
-		std::string translated = {};
-
-		bool is_text_terminated = false;
-		bool is_first_text_line = true;
-
-		while (std::getline(in_file, line)) {
-			++line_number;
-			if (line == ".") {
-				is_text_terminated = true;
-				break;
-			}
-
-			if (is_first_text_line) {
-				is_first_text_line = false;
-			} else {
-				translated += "\n";
-			}
-
-			translated += line;
-		}
-
-		if (!is_text_terminated) {
-			problem_with_message(message_key,
-			                     "message text not terminated");
-			return false;
-		}
-
-		if (translated.empty()) {
-			problem_with_message(message_key, "message text is empty");
-			return false;
-		}
-
-		if (dictionary_translated.contains(message_key)) {
-			problem_with_message(message_key,
-			                     "duplicated message message_key");
-			return false;
-		}
-
-		dictionary_translated.try_emplace(message_key,
-		                                  Message("", translated));
-
-		auto& message = dictionary_translated.at(message_key);
-		if (dictionary_english.contains(message_key)) {
-			message.VerifyTranslated(message_key,
-			                         dictionary_english.at(message_key));
-		}
-	}
-
-	++line_number;
-
-	if (in_file.bad()) {
-		problem_generic("I/O error");
-		return false;
-	} else if (dictionary_translated.empty()) {
-		problem_generic("file has no content");
-		return false;
-	}
-
-	if (!translation_script) {
-		LOG_WARNING("LOCALE: Translation file did not specify the language script");
-	}
-
-	if (dos.loaded_codepage) {
-		check_code_page();
-	}
-
-	return true;
-}
-
-static bool save_messages_to_path_lng(const std_fs::path& file_path)
-{
-	std::ofstream out_file(file_path);
-
-	// Output help line
-	out_file << "// Writing script used in this translation, can be one of:\n";
-	out_file << "// ";
-
-	bool is_first_script = true;
-
-	for (const auto& entry : LocaleData::ScriptInfo) {
-		if (is_first_script) {
-			is_first_script = false;
-		} else {
-			out_file << ", ";
-		}
-		out_file << entry.second.script_name;
-	}
-
-	out_file << "\n";
-
-	// Output script definition
-	std::string script_name = {};
-	if (translation_script) {
-		// Saving translated messages, script is specified
-		assert(LocaleData::ScriptInfo.contains(*translation_script));
-		script_name = LocaleData::ScriptInfo.at(*translation_script).script_name;
-
-	} else {
-		// Saving English messages, script is always Latin
-		assert(LocaleData::ScriptInfo.contains(Script::Latin));
-		script_name = LocaleData::ScriptInfo.at(Script::Latin).script_name;
-	}
-
-	if (translation_script || dictionary_translated.empty()) {
-		out_file << KeyScript << script_name;
-	} else {
-		// Script was not specified in the input file
-		out_file << "// " << KeyScript << script_name;
-	}
-
-	out_file << "\n\n";
-
-	// Save all the messages, in the original order
-	for (const auto& message_key : message_order) {
-		if (out_file.fail()) {
-			break;
-		}
-
-		std::string text = {};
-		if (dictionary_translated.contains(message_key)) {
-			text = dictionary_translated.at(message_key).GetRaw();
-		} else {
-			assert(dictionary_english.contains(message_key));
-			text = dictionary_english.at(message_key).GetRaw();
-		}
-
-		out_file << ":" << message_key << "\n" << text << "\n.\n";
-	}
-
-	if (out_file.fail()) {
-		LOG_ERR("LOCALE: I/O error writing translation file");
-		return false;
-	}
-
-	return true;
-}
-
-// ***************************************************************************
 // Messages loading/saving
 // ***************************************************************************
 
@@ -929,11 +704,6 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 
 	clear_translated_messages();
 
-	// Legacy translation file format support
-	if (file_path.string().ends_with(ExtensionLegacy)) {
-		return load_messages_from_path_lng(file_path);
-	}
-
 	bool found_message = false;
 	while (reader.ReadEntry()) {
 		// Check if gettext metadata indicates file suitable for reading
@@ -983,11 +753,6 @@ static bool save_messages_to_path(const std_fs::path& file_path)
 {
 	if (file_path.empty()) {
 		return false;
-	}
-
-	// Legacy translation file format support
-	if (file_path.string().ends_with(ExtensionLegacy)) {
-		return save_messages_to_path_lng(file_path);
 	}
 
 	const auto language = std_fs::path(file_path).stem().string();
@@ -1123,7 +888,7 @@ static const std_fs::path Subdirectory    = "translations";
 
 static std::string get_file_name_with_extension(const std::string& file_name)
 {
-	if (file_name.ends_with(Extension) || file_name.ends_with(ExtensionLegacy)) {
+	if (file_name.ends_with(Extension)) {
 		return file_name;
 	} else {
 		return file_name + Extension;
