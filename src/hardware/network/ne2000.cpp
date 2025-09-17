@@ -5,7 +5,7 @@
 // SPDX-FileCopyrightText:  2001-2004  MandrakeSoft S.A.
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
-#include "ne2000.h"
+#include "hardware/network/ne2000.h"
 
 #include <cstdarg>
 #include <cstdio>

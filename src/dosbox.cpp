@@ -29,7 +29,7 @@
 #include "gui/render.h"
 #include "hardware/hardware.h"
 #include "hardware/input/mouse.h"
-#include "hardware/ne2000.h"
+#include "hardware/network/ne2000.h"
 #include "hardware/pci_bus.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
