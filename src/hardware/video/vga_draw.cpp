@@ -12,6 +12,7 @@
 
 #include "vga.h"
 
+#include "gui/common.h"
 #include "gui/render.h"
 #include "gui/render_scalers.h"
 #include "hardware/pic.h"

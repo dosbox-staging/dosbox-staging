@@ -20,6 +20,7 @@
 #include "audio/mixer.h"
 #include "config/config.h"
 #include "config/setup.h"
+#include "gui/common.h"
 #include "gui/mapper.h"
 #include "hardware/input/joystick.h"
 #include "hardware/input/keyboard.h"

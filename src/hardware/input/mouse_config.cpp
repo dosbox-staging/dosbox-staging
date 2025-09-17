@@ -8,6 +8,7 @@
 
 #include "config/config.h"
 #include "config/setup.h"
+#include "gui/common.h"
 #include "hardware/video/video.h"
 #include "misc/support.h"
 #include "utils/checks.h"

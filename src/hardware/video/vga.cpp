@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 
+#include "gui/common.h"
 #include "hardware/pic.h"
 #include "hardware/video/video.h"
 #include "ints/int10.h"
