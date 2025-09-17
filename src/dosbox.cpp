@@ -24,6 +24,7 @@
 #include "dos/dos_inc.h"
 #include "dos/dos_locale.h"
 #include "dos/programs.h"
+#include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/render.h"
 #include "hardware/hardware.h"

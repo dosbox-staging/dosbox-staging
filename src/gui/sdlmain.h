@@ -15,6 +15,7 @@
 #include <SDL_opengl.h>
 #endif
 
+#include "gui/common.h"
 #include "gui/render.h"
 #include "gui/shader_manager.h"
 #include "hardware/video/video.h"
