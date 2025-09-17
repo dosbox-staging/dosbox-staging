@@ -15,11 +15,11 @@
 #include <exception>
 #include <string>
 
-#include "gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
 #include "config/setup.h"
+#include "gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
+#include "hardware/video/video.h"
 #include "utils/checks.h"
 #include "utils/rgb565.h"
-#include "misc/video.h"
 
 CHECK_NARROWING();
 

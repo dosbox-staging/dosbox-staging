@@ -7,21 +7,21 @@
 #include <cstdio>
 #include <limits>
 
-#include "ints/bios_disk.h"
-#include "cpu/callback.h"
 #include "config/config.h"
+#include "cpu/callback.h"
+#include "cpu/registers.h"
 #include "dos/dos_windows.h"
 #include "dos/drives.h"
-#include "utils/fs_utils.h"
+#include "gui/mapper.h"
 #include "hardware/dma.h"
+#include "hardware/input/mouse.h"
+#include "hardware/video/video.h"
 #include "hardware/virtualbox.h"
 #include "hardware/vmware.h"
-#include "gui/mapper.h"
-#include "hardware/input/mouse.h"
+#include "ints/bios_disk.h"
 #include "more_output.h"
-#include "cpu/registers.h"
+#include "utils/fs_utils.h"
 #include "utils/string_utils.h"
-#include "misc/video.h"
 
 FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
                               uint32_t* bsize, uint8_t* error)

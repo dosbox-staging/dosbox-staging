@@ -8,8 +8,8 @@
 
 #include "config/config.h"
 #include "config/setup.h"
+#include "hardware/video/video.h"
 #include "misc/support.h"
-#include "misc/video.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
 #include "utils/string_utils.h"

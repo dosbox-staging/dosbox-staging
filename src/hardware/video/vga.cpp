@@ -9,9 +9,9 @@
 #include <utility>
 
 #include "hardware/pic.h"
+#include "hardware/video/video.h"
 #include "ints/int10.h"
 #include "misc/logging.h"
-#include "misc/video.h"
 #include "utils/math_utils.h"
 #include "utils/string_utils.h"
 
