@@ -4,6 +4,15 @@
 #ifndef DOSBOX_GUI_COMMON_H
 #define DOSBOX_GUI_COMMON_H
 
+#include "SDL.h"
+
+#include "hardware/video/video.h"
+#include "utils/fraction.h"
+#include "utils/rect.h"
+
+struct ShaderInfo;
+class Fraction;
+
 enum class PresentationMode {
 	// In DOS rate presentation mode, the video frames are presented at the
 	// emulated DOS refresh rate, irrespective of the host operating system's
@@ -41,5 +50,64 @@ enum class PresentationMode {
 };
 
 enum class RenderingBackend { Texture, OpenGl };
+
+// TODO We should improve this interface over time (e.g., remove the GFX_
+// prefix, move the functions to more appropriate places, like the renderer,
+// etc.)
+
+SDL_Window* GFX_GetSDLWindow();
+
+// Let the presentation layer safely call no-op functions.
+// Useful during output initialization or transitions.
+void GFX_DisengageRendering();
+
+uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue);
+
+void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_source);
+
+InterpolationMode GFX_GetTextureInterpolationMode();
+
+uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
+                    const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
+                    const VideoMode& video_mode, GFX_Callback_t callback);
+
+void GFX_ResetScreen();
+
+void GFX_Start();
+
+// Called at the start of every unique frame (when there have been changes to
+// the framebuffer).
+bool GFX_StartUpdate(uint8_t*& pixels, int& pitch);
+
+// Called at the end of every frame, regardless of whether there have been
+// changes to the framebuffer or not.
+void GFX_EndUpdate(const uint16_t* changed_lines);
+
+void GFX_LosingFocus();
+void GFX_RegenerateWindow(Section* sec);
+
+void GFX_CenterMouse();
+
+void GFX_SetMouseHint(const MouseHint requested_hint_id);
+void GFX_SetMouseCapture(const bool requested_capture);
+void GFX_SetMouseVisibility(const bool requested_visible);
+void GFX_SetMouseRawInput(const bool requested_raw_input);
+
+// Detects the presence of a desktop environment or window manager
+bool GFX_HaveDesktopEnvironment();
+
+DosBox::Rect GFX_GetCanvasSizeInPixels();
+DosBox::Rect GFX_GetViewportSizeInPixels();
+DosBox::Rect GFX_GetDesktopSize();
+
+float GFX_GetDpiScaleFactor();
+
+RenderingBackend GFX_GetRenderingBackend();
+
+double GFX_GetHostRefreshRate();
+
+PresentationMode GFX_GetPresentationMode();
+
+void GFX_MaybePresentFrame();
 
 #endif // DOSBOX_GUI_COMMON_H

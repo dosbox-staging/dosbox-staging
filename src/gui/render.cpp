@@ -13,6 +13,7 @@
 #include "capture/capture.h"
 #include "config/config.h"
 #include "config/setup.h"
+#include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/render.h"
 #include "hardware/video/vga.h"

@@ -8,10 +8,8 @@
 #include <string>
 
 #include "config/setup.h"
-#include "gui/common.h"
 #include "misc/types.h"
 #include "utils/fraction.h"
-#include "utils/rect.h"
 
 // Pixels and logical units
 // ========================
@@ -323,52 +321,6 @@ constexpr uint8_t GFX_CAN_RANDOM = 1 << 6; // interface can also do random acces
 // TODO this hardly belongs to `video.h`...
 bool DOSBOX_PollAndHandleEvents();
 
-// TODO move to sdlmain
-// Let the presentation layer safely call no-op functions.
-// Useful during output initialization or transitions.
-void GFX_DisengageRendering();
-
-// TODO move to sdlmain
-uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue);
-
-struct ShaderInfo;
-
-// TODO move to sdlmain
-void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_source);
-
-// TODO move to sdlmain
-InterpolationMode GFX_GetTextureInterpolationMode();
-
-struct VideoMode;
-class Fraction;
-
-// TODO move to sdlmain
-uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
-                    const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
-                    const VideoMode& video_mode, GFX_Callback_t callback);
-
-// TODO move to sdlmain
-void GFX_ResetScreen(void);
-
-// TODO move to sdlmain
-void GFX_Start(void);
-
-// TODO move to sdlmain
-// Called at the start of every unique frame (when there have been changes to
-// the framebuffer).
-bool GFX_StartUpdate(uint8_t * &pixels, int &pitch);
-
-// TODO move to sdlmain
-// Called at the end of every frame, regardless of whether there have been
-// changes to the framebuffer or not.
-void GFX_EndUpdate(const uint16_t *changed_lines);
-
-// TODO move to sdlmain
-void GFX_LosingFocus();
-
-// TODO move to sdlmain
-void GFX_RegenerateWindow(Section* sec);
-
 // TODO move to titlebar, change prefix
 void GFX_RefreshTitle();
 
@@ -405,48 +357,5 @@ enum class MouseHint {
 	SeamlessHotkey,          // seamless, hotkey to capture
 	SeamlessHotkeyMiddle,    // seamless, hotkey or middle-click to capture
 };
-
-// TODO move to sdlmain
-void GFX_CenterMouse();
-
-// TODO move to titlebar
-void GFX_SetMouseHint(const MouseHint requested_hint_id);
-
-// TODO move to sdlmain
-void GFX_SetMouseCapture(const bool requested_capture);
-
-// TODO move to sdlmain
-void GFX_SetMouseVisibility(const bool requested_visible);
-
-// TODO move to sdlmain
-void GFX_SetMouseRawInput(const bool requested_raw_input);
-
-// Detects the presence of a desktop environment or window manager
-// TODO move to sdlmain
-bool GFX_HaveDesktopEnvironment();
-
-// TODO move to sdlmain
-DosBox::Rect GFX_GetCanvasSizeInPixels();
-
-// TODO move to sdlmain
-DosBox::Rect GFX_GetViewportSizeInPixels();
-
-// TODO move to sdlmain
-DosBox::Rect GFX_GetDesktopSize();
-
-// TODO move to sdlmain
-float GFX_GetDpiScaleFactor();
-
-// TODO move to sdlmain
-RenderingBackend GFX_GetRenderingBackend();
-
-// TODO move to sdlmain
-double GFX_GetHostRefreshRate();
-
-// TODO move to sdlmain
-PresentationMode GFX_GetPresentationMode();
-
-// TODO move to sdlmain
-void GFX_MaybePresentFrame();
 
 #endif // DOSBOX_VIDEO_H

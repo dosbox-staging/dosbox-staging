@@ -16,6 +16,7 @@
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
+#include "gui/common.h"
 #include "hardware/pic.h"
 #include "hardware/video/video.h"
 #include "utils/checks.h"

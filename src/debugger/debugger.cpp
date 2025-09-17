@@ -24,6 +24,7 @@
 #include "debugger.h"
 #include "debugger_inc.h"
 #include "dos/programs.h"
+#include "gui/common.h"
 #include "gui/mapper.h"
 #include "hardware/input/keyboard.h"
 #include "hardware/pic.h"
@@ -35,8 +36,6 @@
 #include "misc/support.h"
 #include "shell/shell.h"
 #include "utils/string_utils.h"
-
-SDL_Window *GFX_GetSDLWindow(void);
 
 int old_cursor_state;
 
