@@ -58,11 +58,16 @@ void MAPPER_StartUp(Section *sec);
 void MAPPER_Run(bool pressed);
 void MAPPER_DisplayUI();
 void MAPPER_LosingFocus();
+
 bool MAPPER_IsUsingJoysticks();
-std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix);
+void MAPPER_UpdateJoysticks();
+
+std::vector<std::string> MAPPER_GetEventNames(const std::string& prefix);
+
 void MAPPER_AutoType(std::vector<std::string> &sequence,
                      const uint32_t wait_ms,
                      const uint32_t pacing_ms);
+
 void MAPPER_CheckEvent(SDL_Event *event);
 
 // Screen fits ~89 characters total without clipping. Allocate a few more bytes
