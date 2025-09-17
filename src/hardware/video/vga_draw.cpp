@@ -16,7 +16,7 @@
 #include "gui/render.h"
 #include "gui/render_scalers.h"
 #include "hardware/pic.h"
-#include "hardware/reelmagic/reelmagic.h"
+#include "hardware/video/reelmagic/reelmagic.h"
 #include "hardware/video/video.h"
 #include "ints/int10.h"
 #include "utils/bitops.h"
