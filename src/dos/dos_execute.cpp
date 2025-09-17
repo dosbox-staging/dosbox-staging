@@ -9,16 +9,16 @@
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "debugger/debugger.h"
-#include "dos_inc.h"
-#include "hardware/vmware.h"
-#include "hardware/memory.h"
 #include "cpu/paging.h"
-#include "programs/setver.h"
-#include "dos/programs.h"
 #include "cpu/registers.h"
+#include "debugger/debugger.h"
+#include "dos/programs.h"
+#include "dos_inc.h"
+#include "hardware/memory.h"
+#include "hardware/video/video.h"
+#include "hardware/vmware.h"
+#include "programs/setver.h"
 #include "utils/string_utils.h"
-#include "misc/video.h"
 
 #ifdef _MSC_VER
 #pragma pack(1)

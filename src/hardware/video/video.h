@@ -7,10 +7,10 @@
 
 #include <string>
 
-#include "utils/fraction.h"
-#include "utils/rect.h"
 #include "config/setup.h"
 #include "misc/types.h"
+#include "utils/fraction.h"
+#include "utils/rect.h"
 
 // Pixels and logical units
 // ========================

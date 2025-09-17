@@ -12,7 +12,7 @@
 
 #include "config/config.h"
 #include "hardware/port.h"
-#include "misc/video.h"
+#include "hardware/video/video.h"
 #include "utils/bgrx8888.h"
 #include "utils/bit_view.h"
 #include "utils/fraction.h"

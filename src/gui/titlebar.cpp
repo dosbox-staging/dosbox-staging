@@ -13,9 +13,9 @@
 #include "dosbox.h"
 #include "gui/mapper.h"
 #include "gui/sdlmain.h"
+#include "hardware/video/video.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
-#include "misc/video.h"
 #include "utils/checks.h"
 
 CHECK_NARROWING();

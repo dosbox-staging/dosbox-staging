@@ -19,7 +19,6 @@
 #include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "cpu/cpu.h"
 #include "cpu/lazyflags.h"
 #include "cpu/paging.h"
 #include "debugger.h"
@@ -30,10 +29,10 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "hardware/timer.h"
+#include "hardware/video/video.h"
 #include "misc/cross.h" //snprintf
 #include "misc/std_filesystem.h"
 #include "misc/support.h"
-#include "misc/video.h"
 #include "shell/shell.h"
 #include "utils/string_utils.h"
 
