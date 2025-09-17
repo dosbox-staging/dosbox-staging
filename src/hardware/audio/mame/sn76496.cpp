@@ -137,8 +137,8 @@
 
 ***************************************************************************/
 
-#include "emu.h"
-#include "sn76496.h"
+#include "hardware/audio/private/mame/emu.h"
+#include "hardware/audio/private/mame/sn76496.h"
 
 #include <algorithm>
 #include <cassert>

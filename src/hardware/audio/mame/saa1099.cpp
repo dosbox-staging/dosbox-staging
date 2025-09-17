@@ -68,8 +68,8 @@
 
 ***************************************************************************/
 
-#include "emu.h"
-#include "saa1099.h"
+#include "hardware/audio/private/mame/emu.h"
+#include "hardware/audio/private/mame/saa1099.h"
 
 #include <cassert>
 #include <cfloat>

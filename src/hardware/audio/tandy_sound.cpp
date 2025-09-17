@@ -23,6 +23,8 @@
 // only exists if the Tandy Card is enabled (either 'tandy=on' or 'tandy=psg').
 
 #include "private/tandy_sound.h"
+#include "private/mame/emu.h"
+#include "private/mame/sn76496.h"
 
 #include <algorithm>
 #include <array>
@@ -34,8 +36,6 @@
 #include "dosbox.h"
 #include "hardware/dma.h"
 #include "hardware/hardware.h"
-#include "hardware/mame/emu.h"
-#include "hardware/mame/sn76496.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"

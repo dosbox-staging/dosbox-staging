@@ -4,7 +4,7 @@
 #ifndef DOSBOX_GAMEBLASTER_H
 #define DOSBOX_GAMEBLASTER_H
 
-#include "dosbox.h"
+#include "mame/saa1099.h"
 
 #include <array>
 #include <memory>
@@ -12,13 +12,11 @@
 #include <string>
 #include <vector>
 
-#include "audio/mixer.h"
 #include "audio/audio_frame.h"
-#include "hardware/mame/emu.h"
-#include "hardware/mame/saa1099.h"
+#include "audio/mixer.h"
 #include "hardware/port.h"
-#include "utils/math_utils.h"
 #include "misc/support.h"
+#include "utils/math_utils.h"
 
 class GameBlaster {
 public:
