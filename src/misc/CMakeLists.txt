@@ -2,8 +2,6 @@ target_sources(libdosboxcommon PRIVATE
   ansi_code_markup.cpp
   console.cpp
   cross.cpp
-  ethernet.cpp
-  ethernet_slirp.cpp
   fs_utils.cpp
   fs_utils_posix.cpp
   fs_utils_win32.cpp
@@ -16,7 +14,8 @@ target_sources(libdosboxcommon PRIVATE
   rwqueue.cpp
   string_utils.cpp
   support.cpp
-  unicode.cpp)
+  unicode.cpp
+)
 
 target_sources(dosbox PRIVATE messages.cpp)
 
