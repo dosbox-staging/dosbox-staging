@@ -10,6 +10,7 @@ add_subdirectory(hardware)
 add_subdirectory(ints)
 add_subdirectory(libs)
 add_subdirectory(midi)
+add_subdirectory(network)
 add_subdirectory(misc)
 add_subdirectory(shell)
 
