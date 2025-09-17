@@ -57,7 +57,6 @@
 #include "ints/int10.h"
 #include "misc/cross.h"
 #include "misc/notifications.h"
-#include "misc/pacer.h"
 #include "misc/tracy.h"
 #include "misc/video.h"
 #include "shell/command_line.h"
