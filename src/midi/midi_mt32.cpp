@@ -20,7 +20,6 @@
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
 #include "config/config.h"
-#include "hardware/mpu401.h"
 #include "hardware/pic.h"
 #include "ints/int10.h"
 #include "midi.h"
