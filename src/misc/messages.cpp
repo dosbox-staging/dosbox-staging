@@ -289,10 +289,8 @@ void Message::VerifyFormatStringAgainst(const std::string& message_key,
 		        static_cast<int>(format_specifiers.size()),
 		        static_cast<int>(english.format_specifiers.size()));
 
-		if (format_specifiers.size() < english.format_specifiers.size()) {
-			is_ok = false;
-			return;
-		}
+		is_ok = false;
+		return;
 	}
 
 	// Check if format specifiers are compatible to each other
