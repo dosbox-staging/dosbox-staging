@@ -396,9 +396,6 @@ void GFX_ResetScreen(void);
 // TODO move to sdlmain
 void GFX_Start(void);
 
-// TODO private to sdlmain
-void GFX_Stop(void);
-
 // TODO move to sdlmain
 // Called at the start of every unique frame (when there have been changes to
 // the framebuffer).

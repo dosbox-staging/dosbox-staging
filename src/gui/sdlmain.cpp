@@ -738,9 +738,17 @@ void GFX_DisengageRendering()
 	sdl.presentation.present = present_frame_noop;
 }
 
+static void gfx_stop()
+{
+	if (sdl.updating) {
+		GFX_EndUpdate(nullptr);
+	}
+	sdl.active = false;
+}
+
 void GFX_ResetScreen()
 {
-	GFX_Stop();
+	gfx_stop();
 	if (sdl.draw.callback) {
 		(sdl.draw.callback)(GFX_CallbackReset);
 	}
@@ -2505,14 +2513,6 @@ uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 	return 0;
 }
 
-void GFX_Stop()
-{
-	if (sdl.updating) {
-		GFX_EndUpdate(nullptr);
-	}
-	sdl.active = false;
-}
-
 void GFX_Start()
 {
 	sdl.active = true;
@@ -2520,7 +2520,7 @@ void GFX_Start()
 
 static void shutdown_gui(Section*)
 {
-	GFX_Stop();
+	gfx_stop();
 
 	if (sdl.draw.callback) {
 		(sdl.draw.callback)(GFX_CallbackStop);
