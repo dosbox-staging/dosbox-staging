@@ -3,6 +3,9 @@
 
 #include "private/ps1audio.h"
 
+#include "private/mame/emu.h"
+#include "private/mame/sn76496.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cstring>
@@ -14,8 +17,6 @@
 #include "config/setup.h"
 #include "dosbox.h"
 #include "hardware/dma.h"
-#include "hardware/mame/emu.h"
-#include "hardware/mame/sn76496.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"

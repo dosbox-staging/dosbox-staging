@@ -7,6 +7,8 @@ target_sources(libdosboxcommon PRIVATE
   audio/imfc.cpp
   audio/innovation.cpp
   audio/lpt_dac.cpp
+  audio/mame/saa1099.cpp
+  audio/mame/sn76496.cpp
   audio/mpu401.cpp
   audio/opl.cpp
   audio/pcspeaker.cpp
@@ -31,9 +33,6 @@ target_sources(libdosboxcommon PRIVATE
   input/mouseif_dos_driver_state.cpp
   input/mouseif_ps2_bios.cpp
   input/mouseif_virtual_machines.cpp
-
-  mame/saa1099.cpp
-  mame/sn76496.cpp
 
   network/ipx.cpp
   network/ipxserver.cpp
