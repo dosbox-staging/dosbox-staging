@@ -52,17 +52,20 @@
 //   postfixes is highly recommended in such cases to remove ambiguity.
 //
 
+// TODO render
 enum class RenderingBackend {
 	Texture,
 	OpenGl
 };
 
+// TODO render
 typedef enum {
 	GFX_CallbackReset,
 	GFX_CallbackStop,
 	GFX_CallbackRedraw
 } GFX_CallbackFunctions_t;
 
+// TODO sdlmain
 enum class PresentationMode {
 	// In DOS rate presentation mode, the video frames are presented at the
 	// emulated DOS refresh rate, irrespective of the host operating system's
@@ -254,6 +257,7 @@ enum class PixelFormat : uint8_t {
 
 const char* to_string(const PixelFormat pf);
 
+// TODO defined in render.cpp
 uint8_t get_bits_per_pixel(const PixelFormat pf);
 
 // Extra information about a bitmap image that represents a single frame of
@@ -362,51 +366,84 @@ constexpr uint8_t GFX_CAN_RANDOM = 1 << 6; // interface can also do random acces
 // TODO this hardly belongs to `video.h`...
 bool DOSBOX_PollAndHandleEvents();
 
+// TODO move to sdlmain
 // Let the presentation layer safely call no-op functions.
 // Useful during output initialization or transitions.
 void GFX_DisengageRendering();
 
+// TODO move to sdlmain
 uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue);
 
 struct ShaderInfo;
 
+// TODO move to sdlmain
 void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_source);
 
+// TODO move to sdlmain
 InterpolationMode GFX_GetTextureInterpolationMode();
 
 struct VideoMode;
 class Fraction;
 
+// TODO move to sdlmain
 uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_Callback_t callback);
 
+// TODO move to sdlmain
 void GFX_ResetScreen(void);
+
+// TODO private to sdlmain
 void GFX_RequestExit(const bool requested);
+
+// TODO move to sdlmain
 void GFX_Start(void);
+
+// TODO private to sdlmain
 void GFX_Stop(void);
 
+// TODO move to sdlmain
 // Called at the start of every unique frame (when there have been changes to
 // the framebuffer).
 bool GFX_StartUpdate(uint8_t * &pixels, int &pitch);
 
+// TODO move to sdlmain
 // Called at the end of every frame, regardless of whether there have been
 // changes to the framebuffer or not.
 void GFX_EndUpdate(const uint16_t *changed_lines);
 
+// TODO move to sdlmain
 void GFX_LosingFocus();
-void GFX_RegenerateWindow(Section *sec);
 
+// TODO move to sdlmain
+void GFX_RegenerateWindow(Section* sec);
+
+// TODO move to titlebar, change prefix
 void GFX_RefreshTitle();
+
+// TODO move to titlebar, change prefix
 void GFX_RefreshAnimatedTitle();
+
+// TODO move to titlebar, change prefix
 void GFX_NotifyBooting();
+
+// TODO move to titlebar, change prefix
 void GFX_NotifyAudioCaptureStatus(const bool is_capturing);
+
+// TODO move to titlebar, change prefix
 void GFX_NotifyVideoCaptureStatus(const bool is_capturing);
+
+// TODO move to titlebar, change prefix
 void GFX_NotifyAudioMutedStatus(const bool is_muted);
+
+// TODO move to titlebar, change prefix
 void GFX_NotifyProgramName(const std::string& segment_name,
                            const std::string& canonical_name);
+
+// TODO move to titlebar, change prefix
 void GFX_NotifyCyclesChanged();
 
+// TODO move to mouse
 enum class MouseHint {
 	None,                    // no hint to display
 	CapturedHotkey,          // captured, hotkey to release
@@ -418,26 +455,47 @@ enum class MouseHint {
 	SeamlessHotkeyMiddle,    // seamless, hotkey or middle-click to capture
 };
 
+// TODO move to sdlmain
 void GFX_CenterMouse();
+
+// TODO move to titlebar
 void GFX_SetMouseHint(const MouseHint requested_hint_id);
+
+// TODO move to sdlmain
 void GFX_SetMouseCapture(const bool requested_capture);
+
+// TODO move to sdlmain
 void GFX_SetMouseVisibility(const bool requested_visible);
+
+// TODO move to sdlmain
 void GFX_SetMouseRawInput(const bool requested_raw_input);
 
 // Detects the presence of a desktop environment or window manager
+// TODO move to sdlmain
 bool GFX_HaveDesktopEnvironment();
 
+// TODO move to sdlmain
 DosBox::Rect GFX_GetCanvasSizeInPixels();
+
+// TODO move to sdlmain
 DosBox::Rect GFX_GetViewportSizeInPixels();
+
+// TODO move to sdlmain
 DosBox::Rect GFX_GetDesktopSize();
 
+// TODO move to sdlmain
 float GFX_GetDpiScaleFactor();
 
+// TODO move to sdlmain
 RenderingBackend GFX_GetRenderingBackend();
 
+// TODO move to sdlmain
 double GFX_GetHostRefreshRate();
 
+// TODO move to sdlmain
 PresentationMode GFX_GetPresentationMode();
+
+// TODO move to sdlmain
 void GFX_MaybePresentFrame();
 
 #endif
