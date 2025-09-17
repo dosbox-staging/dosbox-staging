@@ -14,21 +14,21 @@
 
 #include <SDL.h>
 
+#include "private/fluidsynth.h"
 #include "private/midi_device.h"
-#include "private/midi_fluidsynth.h"
-#include "private/midi_mt32.h"
-#include "private/midi_soundcanvas.h"
+#include "private/mt32.h"
+#include "private/soundcanvas.h"
 
 #if defined(MACOSX)
-#include "private/midi_coreaudio.h"
-#include "private/midi_coremidi.h"
+#include "private/coreaudio.h"
+#include "private/coremidi.h"
 
 #elif defined(WIN32)
-#include "private/midi_win32.h"
+#include "private/win32.h"
 #endif
 
 #if C_ALSA
-#include "private/midi_alsa.h"
+#include "private/alsa.h"
 #endif
 
 #include "capture/capture.h"

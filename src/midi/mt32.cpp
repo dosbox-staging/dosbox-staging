@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "private/midi_mt32.h"
+#include "private/mt32.h"
 
 #if C_MT32EMU
 
@@ -15,7 +15,7 @@
 
 #include <SDL_endian.h>
 
-#include "private/midi_lasynth_model.h"
+#include "private/mt32_lasynth_model.h"
 
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
