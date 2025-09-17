@@ -228,4 +228,4 @@ void COREAUDIO_ListDevices(MidiDeviceCoreAudio* device, Program* caller);
 
 #endif // C_COREAUDIO
 
-#endif
+#endif // DOSBOX_MIDI_COREAUDIO_H

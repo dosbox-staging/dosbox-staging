@@ -44,4 +44,4 @@ void COREMIDI_ListDevices(MidiDeviceCoreMidi* device, Program* caller);
 
 #endif // C_COREMIDI
 
-#endif
+#endif // DOSBOX_MIDI_COREMIDI_H

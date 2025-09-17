@@ -161,4 +161,4 @@ void MIDI_WIN32_ListDevices(MidiDeviceWin32* device, Program* caller);
 
 #endif // WIN32
 
-#endif
+#endif // DOSBOX_MIDI_WIN32_H
