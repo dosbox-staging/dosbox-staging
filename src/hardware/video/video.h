@@ -393,9 +393,6 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 // TODO move to sdlmain
 void GFX_ResetScreen(void);
 
-// TODO private to sdlmain
-void GFX_RequestExit(const bool requested);
-
 // TODO move to sdlmain
 void GFX_Start(void);
 
