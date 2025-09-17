@@ -36,7 +36,7 @@
 #include "config/setup.h"
 #include "dos/programs.h"
 #include "gui/mapper.h"
-#include "hardware/mpu401.h"
+#include "hardware/audio/mpu401.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "misc/ansi_code_markup.h"
