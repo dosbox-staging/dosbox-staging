@@ -18,6 +18,7 @@ target_sources(libdosboxcommon PRIVATE
 
   input/intel8042.cpp
   input/intel8255.cpp
+  input/joystick.cpp
   input/keyboard.cpp
   input/keyboard_scancodes.cpp
   input/mouse.cpp
@@ -68,7 +69,6 @@ target_sources(libdosboxcommon PRIVATE
   iohandler.cpp
   ipx.cpp
   ipxserver.cpp
-  joystick.cpp
   memory.cpp
   mpu401.cpp
   ne2000.cpp
