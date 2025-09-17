@@ -35,6 +35,10 @@ libhardware_sources = files(
     'mame/saa1099.cpp',
     'mame/sn76496.cpp',
 
+    'network/ipx.cpp',
+    'network/ipxserver.cpp',
+    'network/ne2000.cpp',
+
     'reelmagic/driver.cpp',
     'reelmagic/player.cpp',
     'reelmagic/video_mixer.cpp',
@@ -69,10 +73,7 @@ libhardware_sources = files(
     'ide.cpp',
     'iohandler.cpp',
     'iohandler_containers.cpp',
-    'ipx.cpp',
-    'ipxserver.cpp',
     'memory.cpp',
-    'ne2000.cpp',
     'pci_bus.cpp',
     'pic.cpp',
     'timer.cpp',

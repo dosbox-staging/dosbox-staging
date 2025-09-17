@@ -6,6 +6,8 @@
 
 #if C_IPX
 
+#include "hardware/network/ipx.h"
+
 #include <cinttypes>
 #include <cstdio>
 #include <cstring>
@@ -20,9 +22,8 @@
 #include "debugger/debugger.h"
 #include "dos/dos_system.h"
 #include "dos/programs.h"
-#include "hardware/ipx.h"
-#include "hardware/ipxserver.h"
 #include "hardware/memory.h"
+#include "hardware/network/ipxserver.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "hardware/timer.h"

@@ -35,6 +35,10 @@ target_sources(libdosboxcommon PRIVATE
   mame/saa1099.cpp
   mame/sn76496.cpp
 
+  network/ipx.cpp
+  network/ipxserver.cpp
+  network/ne2000.cpp
+
   reelmagic/driver.cpp
   reelmagic/player.cpp
   reelmagic/video_mixer.cpp
@@ -68,10 +72,7 @@ target_sources(libdosboxcommon PRIVATE
   dma.cpp
   ide.cpp
   iohandler.cpp
-  ipx.cpp
-  ipxserver.cpp
   memory.cpp
-  ne2000.cpp
   pci_bus.cpp
   pic.cpp
   timer.cpp
