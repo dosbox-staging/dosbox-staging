@@ -46,9 +46,10 @@ public:
 	void TearDown() override
 	{
 		std::vector<std::string>::reverse_iterator r = sections.rbegin();
-		for (; r != sections.rend(); ++r)
+
+		for (; r != sections.rend(); ++r) {
 			control->GetSection(*r)->ExecuteDestroy();
-		GFX_RequestExit(true);
+		}
 	}
 
 private:

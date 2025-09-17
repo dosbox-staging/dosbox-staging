@@ -636,7 +636,7 @@ static void init_presentation_mode_settings()
 	}
 }
 
-void GFX_RequestExit(const bool pressed)
+static void gfx_request_exit(const bool pressed)
 {
 	shutdown_requested = pressed;
 	if (shutdown_requested) {
@@ -681,7 +681,7 @@ static bool is_command_pressed(const SDL_Event event)
 		SDL_WaitEvent(&event);
 
 		switch (event.type) {
-		case SDL_QUIT: GFX_RequestExit(true); break;
+		case SDL_QUIT: gfx_request_exit(true); break;
 
 		case SDL_WINDOWEVENT:
 			if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
@@ -721,7 +721,7 @@ static bool is_command_pressed(const SDL_Event event)
 			    event.key.keysym.sym == SDLK_q) {
 				// On macOS, Command+Q is the default key to
 				// close an application
-				GFX_RequestExit(true);
+				gfx_request_exit(true);
 				break;
 			}
 #endif
@@ -3219,7 +3219,11 @@ static void sdl_section_init(Section* sec)
 		SDL_DisableScreenSaver();
 	}
 
-	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown", "Shutdown");
+	MAPPER_AddHandler(gfx_request_exit,
+	                  SDL_SCANCODE_F9,
+	                  PRIMARY_MOD,
+	                  "shutdown",
+	                  "Shutdown");
 
 	MAPPER_AddHandler(switch_fullscreen_handler, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
 	MAPPER_AddHandler(restart_hotkey_handler,
@@ -3487,7 +3491,7 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 			SDL_WaitEvent(&ev);
 
 			switch (ev.type) {
-			case SDL_QUIT: GFX_RequestExit(true); break;
+			case SDL_QUIT: gfx_request_exit(true); break;
 			case SDL_WINDOWEVENT: {
 				const auto we = ev.window.event;
 
@@ -3714,7 +3718,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	case SDL_WINDOWEVENT_CLOSE:
 		// LOG_DEBUG("SDL: The window manager requests that the window
 		// be closed");
-		GFX_RequestExit(true);
+		gfx_request_exit(true);
 		return false;
 
 	case SDL_WINDOWEVENT_TAKE_FOCUS:
@@ -3853,7 +3857,7 @@ bool DOSBOX_PollAndHandleEvents()
 			handle_mouse_button(&event.button);
 			break;
 
-		case SDL_QUIT: GFX_RequestExit(true); break;
+		case SDL_QUIT: gfx_request_exit(true); break;
 #ifdef WIN32
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -3889,7 +3893,7 @@ bool DOSBOX_PollAndHandleEvents()
 			// application
 			if (is_command_pressed(event) &&
 			    event.key.keysym.sym == SDLK_q) {
-				GFX_RequestExit(true);
+				gfx_request_exit(true);
 				break;
 			}
 			[[fallthrough]];
@@ -4414,7 +4418,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 	newargs[parameters.size()] = nullptr;
 #endif // WIN32
 
-	GFX_RequestExit(true);
+	gfx_request_exit(true);
 
 #if C_DEBUGGER
 	// shutdown curses
@@ -4481,8 +4485,8 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 		break;
 	}
 	// Original (parent) process continues execution here.
-	// It will proceed to do a normal shutdown due to GFX_RequestExit(true);
-	// above.
+	// It will proceed to do a normal shutdown due to
+	// gfx_request_exit(true); above.
 	delete[] newargs;
 #endif // WIN32
 }
