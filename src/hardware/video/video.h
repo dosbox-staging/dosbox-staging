@@ -427,10 +427,6 @@ void GFX_SetMouseRawInput(const bool requested_raw_input);
 // Detects the presence of a desktop environment or window manager
 bool GFX_HaveDesktopEnvironment();
 
-DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
-                                      const DosBox::Rect& render_size_px,
-                                      const Fraction& render_pixel_aspect_ratio);
-
 DosBox::Rect GFX_GetCanvasSizeInPixels();
 DosBox::Rect GFX_GetViewportSizeInPixels();
 DosBox::Rect GFX_GetDesktopSize();
