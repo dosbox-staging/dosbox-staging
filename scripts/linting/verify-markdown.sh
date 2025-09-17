@@ -20,7 +20,7 @@ list_markdown_files () {
 	  ':!:.github/*.md' \
 	  ':!:.github/**/*.md' \
 	  ':!:src/libs/*.md' \
-	  ':!:src/hardware/reelmagic/docs/*.md' \
+	  ':!:src/hardware/video/reelmagic/docs/*.md' \
 	  ':!:resources/*.md' \
 	  ':!:resources/translations/*.md'
 }

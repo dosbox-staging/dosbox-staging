@@ -17,7 +17,7 @@
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
-#include "hardware/reelmagic/reelmagic.h"
+#include "hardware/video/reelmagic/reelmagic.h"
 #include "ints/int10.h"
 #include "utils/bitops.h"
 #include "utils/checks.h"

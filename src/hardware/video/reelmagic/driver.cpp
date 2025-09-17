@@ -9,7 +9,7 @@
 // implementation of the provided driver API notes.
 //
 
-#include "hardware/reelmagic/reelmagic.h"
+#include "hardware/video/reelmagic/reelmagic.h"
 
 #include <cerrno>
 #include <cstdarg>

@@ -38,10 +38,6 @@ target_sources(libdosboxcommon PRIVATE
   network/ipxserver.cpp
   network/ne2000.cpp
 
-  reelmagic/driver.cpp
-  reelmagic/player.cpp
-  reelmagic/video_mixer.cpp
-
   serialport/directserial.cpp
   serialport/libserial.cpp
   serialport/misc_util.cpp
@@ -51,6 +47,9 @@ target_sources(libdosboxcommon PRIVATE
   serialport/serialport.cpp
   serialport/softmodem.cpp
 
+  video/reelmagic/driver.cpp
+  video/reelmagic/player.cpp
+  video/reelmagic/video_mixer.cpp
   video/vga.cpp
   video/vga_attr.cpp
   video/vga_crtc.cpp
