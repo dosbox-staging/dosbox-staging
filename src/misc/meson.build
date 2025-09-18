@@ -13,7 +13,6 @@ libmisc_nomsg_sources = [
     'host_locale_win32.cpp',
     'programs.cpp',
     'rwqueue.cpp',
-    'string_utils.cpp',
     'support.cpp',
     'unicode.cpp',
     'video.cpp',
