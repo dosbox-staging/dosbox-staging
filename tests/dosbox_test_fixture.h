@@ -12,7 +12,7 @@
 #define SDL_MAIN_HANDLED
 
 #include "config/config.h"
-#include "hardware/video/video.h"
+#include "misc/video.h"
 
 class DOSBoxTestFixture : public ::testing::Test {
 public:

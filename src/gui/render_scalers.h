@@ -5,7 +5,7 @@
 #define _RENDER_SCALERS_H
 
 //#include "gui/render.h"
-#include "hardware/video/video.h"
+#include "misc/video.h"
 
 // Allow double-width and double-height scaling for low resolution modes
 #define SCALER_MAX_MUL_WIDTH  2

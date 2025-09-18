@@ -21,8 +21,8 @@
 #include <string>
 
 #include "debugger/debugger.h"
-#include "hardware/video/video.h"
 #include "misc/cross.h"
+#include "misc/video.h"
 #include "utils/fs_utils.h"
 #include "utils/string_utils.h"
 

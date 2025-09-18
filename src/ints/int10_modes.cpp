@@ -16,7 +16,7 @@
 #include "hardware/pci_bus.h"
 #include "hardware/port.h"
 #include "hardware/video/vga.h"
-#include "hardware/video/video.h"
+#include "misc/video.h"
 #include "utils/bitops.h"
 #include "utils/math_utils.h"
 #include "utils/rgb666.h"

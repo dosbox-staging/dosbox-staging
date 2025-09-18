@@ -18,7 +18,7 @@
 #include "cpu/cpu.h"
 #include "gui/common.h"
 #include "hardware/pic.h"
-#include "hardware/video/video.h"
+#include "misc/video.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
 
