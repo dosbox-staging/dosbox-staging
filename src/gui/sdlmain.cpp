@@ -48,7 +48,6 @@
 #include "gui/mapper.h"
 #include "gui/render.h"
 #include "gui/titlebar.h"
-#include "gui_msgs.h"
 #include "hardware/input/joystick.h"
 #include "hardware/input/keyboard.h"
 #include "hardware/input/mouse.h"
@@ -4650,6 +4649,17 @@ static void maybe_write_primary_config(const CommandLineArguments& args)
 		}
 	}
 }
+
+constexpr char version_msg[] =
+        R"(%s, version %s
+
+Copyright (C) 2020-2025 The DOSBox Staging Team
+License: GNU GPL-2.0-or-later <https://www.gnu.org/licenses/gpl-2.0.html>
+
+This is free software, and you are welcome to change and redistribute it under
+certain conditions; please read the COPYING file thoroughly before doing so.
+There is NO WARRANTY, to the extent permitted by law.
+)";
 
 static std::optional<int> maybe_handle_command_line_output_only_actions(
         const CommandLineArguments& args, const char* program_name)
