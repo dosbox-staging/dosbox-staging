@@ -3001,7 +3001,7 @@ void MIXER_Mute()
 		set_mixer_state(MixerState::Muted);
 		MIDI_Mute();
 
-		GFX_NotifyAudioMutedStatus(true);
+		TITLEBAR_NotifyAudioMutedStatus(true);
 		LOG_MSG("MIXER: Muted audio output");
 	}
 }
@@ -3012,7 +3012,7 @@ void MIXER_Unmute()
 		set_mixer_state(MixerState::On);
 		MIDI_Unmute();
 
-		GFX_NotifyAudioMutedStatus(false);
+		TITLEBAR_NotifyAudioMutedStatus(false);
 		LOG_MSG("MIXER: Unmuted audio output");
 	}
 }

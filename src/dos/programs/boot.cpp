@@ -13,6 +13,7 @@
 #include "dos/dos_windows.h"
 #include "dos/drives.h"
 #include "gui/mapper.h"
+#include "gui/titlebar.h"
 #include "hardware/dma.h"
 #include "hardware/input/mouse.h"
 #include "hardware/video/video.h"
@@ -521,7 +522,7 @@ void BOOT::Run(void)
 void BOOT::NotifyBooting()
 {
 	DOS_NotifyBooting();
-	GFX_NotifyBooting();
+	TITLEBAR_NotifyBooting();
 	MOUSE_NotifyBooting();
 	VIRTUALBOX_NotifyBooting();
 	VMWARE_NotifyBooting();

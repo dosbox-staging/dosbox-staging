@@ -8,6 +8,7 @@
 #include <cstdlib>
 
 #include "config/setup.h"
+#include "gui/titlebar.h"
 #include "hardware/memory.h"
 #include "hardware/video/video.h"
 
@@ -75,11 +76,11 @@ void capture_audio_add_data(const uint32_t sample_rate_hz,
                             const int16_t* sample_frames)
 {
 	if (!wave.handle) {
-		GFX_NotifyAudioCaptureStatus(true);
+		TITLEBAR_NotifyAudioCaptureStatus(true);
 		create_wave_file(sample_rate_hz);
 	}
 	if (!wave.handle) {
-		GFX_NotifyAudioCaptureStatus(false);
+		TITLEBAR_NotifyAudioCaptureStatus(false);
 		return;
 	}
 
@@ -148,5 +149,5 @@ void capture_audio_finalise()
 
 	wave = {};
 
-	GFX_NotifyAudioCaptureStatus(false);
+	TITLEBAR_NotifyAudioCaptureStatus(false);
 }
