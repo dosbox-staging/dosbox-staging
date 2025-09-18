@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "shader_manager.h"
+#include "private/shader_manager.h"
 
 #include <algorithm>
 #include <cassert>

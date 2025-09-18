@@ -4,6 +4,8 @@
 #ifndef DOSBOX_SDLMAIN_H
 #define DOSBOX_SDLMAIN_H
 
+#include "gui/private/shader_manager.h"
+
 #include "SDL.h"
 
 #include <cstring>
@@ -17,7 +19,6 @@
 
 #include "gui/common.h"
 #include "gui/render.h"
-#include "gui/shader_manager.h"
 #include "hardware/video/video.h"
 #include "utils/fraction.h"
 #include "utils/rect.h"

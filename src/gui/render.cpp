@@ -4,6 +4,8 @@
 
 #include "dosbox.h"
 
+#include "private/shader_manager.h"
+
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -19,7 +21,6 @@
 #include "hardware/video/vga.h"
 #include "hardware/video/video.h"
 #include "misc/support.h"
-#include "shader_manager.h"
 #include "shell/shell.h"
 #include "utils/fraction.h"
 #include "utils/math_utils.h"
