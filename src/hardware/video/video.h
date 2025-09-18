@@ -206,7 +206,6 @@ enum class PixelFormat : uint8_t {
 
 const char* to_string(const PixelFormat pf);
 
-// TODO defined in render.cpp
 uint8_t get_bits_per_pixel(const PixelFormat pf);
 
 // Extra information about a bitmap image that represents a single frame of

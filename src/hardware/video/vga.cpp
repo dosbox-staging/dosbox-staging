@@ -120,6 +120,23 @@ const char* to_string(const ColorDepth c)
 	}
 }
 
+const char* to_string(const PixelFormat pf)
+{
+	switch (pf) {
+	case PixelFormat::Indexed8: return "Indexed8";
+	case PixelFormat::RGB555_Packed16: return "RGB555_Packed16";
+	case PixelFormat::RGB565_Packed16: return "RGB565_Packed16";
+	case PixelFormat::BGR24_ByteArray: return "BGR24_ByteArray";
+	case PixelFormat::BGRX32_ByteArray: return "BGRX32_ByteArray";
+	default: assertm(false, "Invalid pixel format"); return {};
+	}
+}
+
+uint8_t get_bits_per_pixel(const PixelFormat pf)
+{
+	return enum_val(pf);
+}
+
 // Return a human-readable description of the video mode, e.g.:
 //   - "CGA 640x200 16-colour text mode 03h"
 //   - "EGA 640x350 16-colour graphics mode 10h"
