@@ -660,7 +660,7 @@ static bool is_command_pressed(const SDL_Event event)
 	const auto inkeymod = static_cast<uint16_t>(SDL_GetModState());
 
 	sdl.is_paused = true;
-	GFX_RefreshTitle();
+	TITLEBAR_RefreshTitle();
 
 	SDL_Event event;
 
@@ -712,7 +712,7 @@ static bool is_command_pressed(const SDL_Event event)
 					// of scancodes.
 				}
 				sdl.is_paused = false;
-				GFX_RefreshTitle();
+				TITLEBAR_RefreshTitle();
 				break;
 			}
 
@@ -1397,7 +1397,7 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 		}
 #endif
 		check_and_handle_dpi_change(sdl.window, rendering_backend);
-		GFX_RefreshTitle();
+		TITLEBAR_RefreshTitle();
 
 		SDL_RaiseWindow(sdl.window);
 
@@ -3054,7 +3054,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 
 	SDL_SetWindowOpacity(sdl.window, alpha);
-	GFX_RefreshTitle();
+	TITLEBAR_RefreshTitle();
 
 	RENDER_Reinit();
 }
@@ -3453,7 +3453,7 @@ static void handle_user_event(const SDL_Event& event)
 
 	switch (static_cast<SDL_DosBoxEvents>(id)) {
 	case SDL_DosBoxEvents::RefreshAnimatedTitle:
-		GFX_RefreshAnimatedTitle();
+		TITLEBAR_RefreshAnimatedTitle();
 		break;
 
 	default: assert(false);
@@ -3509,7 +3509,7 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 					    (we == SDL_WINDOWEVENT_EXPOSED)) {
 
 						sdl.is_paused = false;
-						GFX_RefreshTitle();
+						TITLEBAR_RefreshTitle();
 
 						if (we == SDL_WINDOWEVENT_FOCUS_GAINED) {
 							paused = false;

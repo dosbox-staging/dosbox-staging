@@ -15,6 +15,7 @@
 #include "debugger/debugger.h"
 #include "dos/programs.h"
 #include "gui/mapper.h"
+#include "gui/titlebar.h"
 #include "hardware/pic.h"
 #include "hardware/video/video.h"
 #include "lazyflags.h"
@@ -261,7 +262,7 @@ void CPU_RestoreRealModeCyclesConfig()
 		}
 
 		is_protected_mode_program = false;
-		GFX_NotifyCyclesChanged();
+		TITLEBAR_NotifyCyclesChanged();
 	}
 #if C_DYNAMIC_X86 || C_DYNREC
 	if (auto_determine_mode.auto_core) {
@@ -1780,18 +1781,18 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 					CPU_Cycles          = 0;
 					old_cycle_max       = CPU_CycleMax;
 
-					GFX_NotifyCyclesChanged();
+					TITLEBAR_NotifyCyclesChanged();
 					maybe_display_max_cycles_warning();
 
 				} else {
-					GFX_RefreshTitle();
+					TITLEBAR_RefreshTitle();
 				}
 			} else {
 				// Modern cycles mode
 				if (auto_determine_mode.auto_cycles) {
 					set_modern_cycles_config(CpuMode::Protected);
 
-					GFX_NotifyCyclesChanged();
+					TITLEBAR_NotifyCyclesChanged();
 				}
 			}
 
@@ -2481,7 +2482,7 @@ static void cpu_increase_cycles(bool pressed)
 		cpu_increase_cycles_modern();
 	}
 
-	GFX_NotifyCyclesChanged();
+	TITLEBAR_NotifyCyclesChanged();
 }
 
 static int calc_cycles_decrease(const int cycles, const int cycle_down)
@@ -2573,7 +2574,7 @@ static void cpu_decrease_cycles(bool pressed)
 		cpu_decrease_cycles_modern();
 	}
 
-	GFX_NotifyCyclesChanged();
+	TITLEBAR_NotifyCyclesChanged();
 }
 
 void CPU_ResetAutoAdjust()
@@ -3188,7 +3189,7 @@ public:
 		cpu_cycle_up   = secprop->GetInt("cycleup");
 		cpu_cycle_down = secprop->GetInt("cycledown");
 
-		GFX_NotifyCyclesChanged();
+		TITLEBAR_NotifyCyclesChanged();
 
 		return true;
 	}

@@ -14,6 +14,7 @@
 #include "debugger/debugger.h"
 #include "dos/programs.h"
 #include "dos_inc.h"
+#include "gui/titlebar.h"
 #include "hardware/memory.h"
 #include "hardware/video/video.h"
 #include "hardware/vmware.h"
@@ -82,7 +83,7 @@ void DOS_UpdateCurrentProgramName()
 		}
 	}
 
-	GFX_NotifyProgramName(segment_name, canonical_name);
+	TITLEBAR_NotifyProgramName(segment_name, canonical_name);
 	VMWARE_NotifyProgramName(segment_name);
 }
 

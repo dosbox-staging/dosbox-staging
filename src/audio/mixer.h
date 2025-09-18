@@ -23,8 +23,9 @@
 #include "private/envelope.h"
 #include "private/noise_gate.h"
 
-#include "audio_frame.h"
+#include "audio/audio_frame.h"
 #include "config/config.h"
+#include "gui/titlebar.h"
 #include "utils/math_utils.h"
 
 // The mixer callback can accept a static function or a member function

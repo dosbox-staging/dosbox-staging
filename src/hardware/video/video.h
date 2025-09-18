@@ -321,31 +321,6 @@ constexpr uint8_t GFX_CAN_RANDOM = 1 << 6; // interface can also do random acces
 // TODO this hardly belongs to `video.h`...
 bool DOSBOX_PollAndHandleEvents();
 
-// TODO move to titlebar, change prefix
-void GFX_RefreshTitle();
-
-// TODO move to titlebar, change prefix
-void GFX_RefreshAnimatedTitle();
-
-// TODO move to titlebar, change prefix
-void GFX_NotifyBooting();
-
-// TODO move to titlebar, change prefix
-void GFX_NotifyAudioCaptureStatus(const bool is_capturing);
-
-// TODO move to titlebar, change prefix
-void GFX_NotifyVideoCaptureStatus(const bool is_capturing);
-
-// TODO move to titlebar, change prefix
-void GFX_NotifyAudioMutedStatus(const bool is_muted);
-
-// TODO move to titlebar, change prefix
-void GFX_NotifyProgramName(const std::string& segment_name,
-                           const std::string& canonical_name);
-
-// TODO move to titlebar, change prefix
-void GFX_NotifyCyclesChanged();
-
 // TODO move to mouse
 enum class MouseHint {
 	None,                    // no hint to display

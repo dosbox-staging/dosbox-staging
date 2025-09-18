@@ -318,7 +318,7 @@ static void set_window_title()
 	}
 }
 
-void GFX_RefreshAnimatedTitle()
+void TITLEBAR_RefreshAnimatedTitle()
 {
 	if (!is_animation_running()) {
 		return;
@@ -328,7 +328,7 @@ void GFX_RefreshAnimatedTitle()
 	set_window_title();
 }
 
-void GFX_RefreshTitle()
+void TITLEBAR_RefreshTitle()
 {
 	// Running program name
 	state.title_no_tags = get_running_program_name();
@@ -378,38 +378,38 @@ void GFX_RefreshTitle()
 // External notifications and setter functions
 // ***************************************************************************
 
-void GFX_NotifyBooting()
+void TITLEBAR_NotifyBooting()
 {
 	state.is_guest_os_booted = true;
-	GFX_RefreshTitle();
+	TITLEBAR_RefreshTitle();
 }
 
-void GFX_NotifyAudioCaptureStatus(const bool is_capturing)
+void TITLEBAR_NotifyAudioCaptureStatus(const bool is_capturing)
 {
 	if (state.is_capturing_audio != is_capturing) {
 		state.is_capturing_audio = is_capturing;
-		GFX_RefreshTitle();
+		TITLEBAR_RefreshTitle();
 	}
 }
 
-void GFX_NotifyVideoCaptureStatus(const bool is_capturing)
+void TITLEBAR_NotifyVideoCaptureStatus(const bool is_capturing)
 {
 	if (state.is_capturing_video != is_capturing) {
 		state.is_capturing_video = is_capturing;
-		GFX_RefreshTitle();
+		TITLEBAR_RefreshTitle();
 	}
 }
 
-void GFX_NotifyAudioMutedStatus(const bool is_muted)
+void TITLEBAR_NotifyAudioMutedStatus(const bool is_muted)
 {
 	if (state.is_audio_muted != is_muted) {
 		state.is_audio_muted = is_muted;
-		GFX_RefreshTitle();
+		TITLEBAR_RefreshTitle();
 	}
 }
 
-void GFX_NotifyProgramName(const std::string& segment_name,
-                           const std::string& canonical_name)
+void TITLEBAR_NotifyProgramName(const std::string& segment_name,
+                                const std::string& canonical_name)
 {
 	constexpr auto ConvertMode = DosStringConvertMode::ScreenCodesOnly;
 
@@ -426,19 +426,19 @@ void GFX_NotifyProgramName(const std::string& segment_name,
 	// Store new names as UTF-8, refresh titlebar
 	state.segment_name   = dos_to_utf8(segment_name_dos, ConvertMode);
 	state.canonical_name = dos_to_utf8(canonical_name, ConvertMode);
-	GFX_RefreshTitle();
+	TITLEBAR_RefreshTitle();
 }
 
-void GFX_NotifyCyclesChanged()
+void TITLEBAR_NotifyCyclesChanged()
 {
-	GFX_RefreshTitle();
+	TITLEBAR_RefreshTitle();
 }
 
 void GFX_SetMouseHint(const MouseHint hint_id)
 {
 	if (hint_id != state.mouse_hint_id) {
 		state.mouse_hint_id = hint_id;
-		GFX_RefreshTitle();
+		TITLEBAR_RefreshTitle();
 	}
 }
 
@@ -699,7 +699,7 @@ void TITLEBAR_ReadConfig(const SectionProp& secprop)
 {
 	parse_config(secprop.GetString("window_titlebar"));
 
-	GFX_RefreshTitle();
+	TITLEBAR_RefreshTitle();
 }
 
 void TITLEBAR_AddConfig(SectionProp& secprop)
