@@ -10,7 +10,6 @@ target_sources(libdosboxcommon PRIVATE
   host_locale_macos.cpp
   host_locale_posix.cpp
   host_locale_win32.cpp
-  programs.cpp
   rwqueue.cpp
   support.cpp
   unicode.cpp
