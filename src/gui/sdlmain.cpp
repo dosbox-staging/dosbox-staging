@@ -36,6 +36,7 @@
 #include <SDL.h>
 #endif // C_OPENGL
 
+#include "private/common.h"
 #include "private/sdlmain.h"
 
 #include "audio/mixer.h"

@@ -299,24 +299,6 @@ struct ImageInfo {
 	}
 };
 
-enum class InterpolationMode { Bilinear, NearestNeighbour };
-
-typedef enum {
-	GFX_CallbackReset,
-	GFX_CallbackStop,
-	GFX_CallbackRedraw
-} GFX_CallbackFunctions_t;
-
-typedef void (*GFX_Callback_t)(GFX_CallbackFunctions_t function);
-
-constexpr uint8_t GFX_CAN_8      = 1 << 0;
-constexpr uint8_t GFX_CAN_15     = 1 << 1;
-constexpr uint8_t GFX_CAN_16     = 1 << 2;
-constexpr uint8_t GFX_CAN_32     = 1 << 3;
-constexpr uint8_t GFX_DBL_H      = 1 << 4; // double-width  flag
-constexpr uint8_t GFX_DBL_W      = 1 << 5; // double-height flag
-constexpr uint8_t GFX_CAN_RANDOM = 1 << 6; // interface can also do random acces
-
 // TODO this hardly belongs to `video.h`...
 bool DOSBOX_PollAndHandleEvents();
 
