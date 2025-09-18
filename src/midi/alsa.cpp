@@ -137,38 +137,38 @@ void MidiDeviceAlsa::SendMidiMessage(const MidiMessage& msg)
 
 	switch (status) {
 	case MidiStatus::NoteOff:
-		snd_seq_ev_set_noteoff(&ev, channel, msg[1], msg[2]);
+		snd_seq_ev_set_noteoff(&ev, channel, msg[1], msg[2]); //-V684
 		send_event(1);
 		break;
 
 	case MidiStatus::NoteOn:
-		snd_seq_ev_set_noteon(&ev, channel, msg[1], msg[2]);
+		snd_seq_ev_set_noteon(&ev, channel, msg[1], msg[2]); //-V684
 		send_event(1);
 		break;
 
 	case MidiStatus::PolyKeyPressure:
-		snd_seq_ev_set_keypress(&ev, channel, msg[1], msg[2]);
+		snd_seq_ev_set_keypress(&ev, channel, msg[1], msg[2]); //-V684
 		send_event(1);
 		break;
 
 	case MidiStatus::ControlChange:
-		snd_seq_ev_set_controller(&ev, channel, msg[1], msg[2]);
+		snd_seq_ev_set_controller(&ev, channel, msg[1], msg[2]); //-V684
 		send_event(1);
 		break;
 
 	case MidiStatus::ProgramChange:
-		snd_seq_ev_set_pgmchange(&ev, channel, msg[1]);
+		snd_seq_ev_set_pgmchange(&ev, channel, msg[1]); //-V684
 		send_event(0);
 		break;
 
 	case MidiStatus::ChannelPressure:
-		snd_seq_ev_set_chanpress(&ev, channel, msg[1]);
+		snd_seq_ev_set_chanpress(&ev, channel, msg[1]); //-V684
 		send_event(0);
 		break;
 
 	case MidiStatus::PitchBend: {
 		long theBend = ((long)msg[1] + (long)(msg[2] << 7)) - 0x2000;
-		snd_seq_ev_set_pitchbend(&ev, channel, theBend);
+		snd_seq_ev_set_pitchbend(&ev, channel, theBend); //-V684
 		send_event(1);
 		break;
 	}
