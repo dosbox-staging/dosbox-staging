@@ -299,7 +299,4 @@ struct ImageInfo {
 	}
 };
 
-// TODO this hardly belongs to `video.h`...
-bool DOSBOX_PollAndHandleEvents();
-
 #endif // DOSBOX_VIDEO_H
