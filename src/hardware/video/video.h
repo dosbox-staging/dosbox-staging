@@ -321,16 +321,4 @@ constexpr uint8_t GFX_CAN_RANDOM = 1 << 6; // interface can also do random acces
 // TODO this hardly belongs to `video.h`...
 bool DOSBOX_PollAndHandleEvents();
 
-// TODO move to mouse
-enum class MouseHint {
-	None,                    // no hint to display
-	CapturedHotkey,          // captured, hotkey to release
-	CapturedHotkeyMiddle,    // captured, hotkey or middle-click release
-	ReleasedHotkey,          // released, hotkey to capture
-	ReleasedHotkeyMiddle,    // released, hotkey or middle-click to capture
-	ReleasedHotkeyAnyButton, // released, hotkey or any click to capture
-	SeamlessHotkey,          // seamless, hotkey to capture
-	SeamlessHotkeyMiddle,    // seamless, hotkey or middle-click to capture
-};
-
 #endif // DOSBOX_VIDEO_H

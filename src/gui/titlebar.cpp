@@ -13,6 +13,7 @@
 #include "dosbox.h"
 #include "gui/mapper.h"
 #include "gui/sdlmain.h"
+#include "hardware/input/mouse.h"
 #include "hardware/video/video.h"
 #include "misc/support.h"
 #include "misc/unicode.h"

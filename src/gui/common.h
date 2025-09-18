@@ -6,6 +6,7 @@
 
 #include "SDL.h"
 
+#include "hardware/input/mouse.h"
 #include "hardware/video/video.h"
 #include "utils/fraction.h"
 #include "utils/rect.h"
