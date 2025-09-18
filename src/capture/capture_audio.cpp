@@ -10,7 +10,7 @@
 #include "config/setup.h"
 #include "gui/titlebar.h"
 #include "hardware/memory.h"
-#include "hardware/video/video.h"
+#include "misc/video.h"
 
 static constexpr auto SampleFrameSize   = 4;
 static constexpr auto NumFramesInBuffer = 16 * 1024;

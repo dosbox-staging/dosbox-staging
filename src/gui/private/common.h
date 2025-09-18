@@ -6,7 +6,7 @@
 
 #include "SDL.h"
 
-#include "hardware/video/video.h"
+#include "misc/video.h"
 #include "utils/fraction.h"
 #include "utils/rect.h"
 

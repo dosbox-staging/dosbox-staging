@@ -16,8 +16,8 @@
 #include "dos_inc.h"
 #include "gui/titlebar.h"
 #include "hardware/memory.h"
-#include "hardware/video/video.h"
 #include "hardware/vmware.h"
+#include "misc/video.h"
 #include "programs/setver.h"
 #include "utils/string_utils.h"
 

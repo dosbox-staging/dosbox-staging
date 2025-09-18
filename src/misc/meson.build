@@ -16,6 +16,7 @@ libmisc_nomsg_sources = [
     'string_utils.cpp',
     'support.cpp',
     'unicode.cpp',
+    'video.cpp',
 ]
 
 # Full sources

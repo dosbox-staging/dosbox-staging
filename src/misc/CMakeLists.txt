@@ -15,6 +15,7 @@ target_sources(libdosboxcommon PRIVATE
   string_utils.cpp
   support.cpp
   unicode.cpp
+  video.cpp
 )
 
 target_sources(dosbox PRIVATE messages.cpp)

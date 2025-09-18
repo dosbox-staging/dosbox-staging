@@ -27,7 +27,7 @@
 #include "hardware/input/mouse.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"
-#include "hardware/video/video.h"
+#include "misc/video.h"
 #include "utils/math_utils.h"
 #include "utils/rgb888.h"
 #include "utils/string_utils.h"
