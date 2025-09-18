@@ -36,4 +36,6 @@ PresentationMode GFX_GetPresentationMode();
 
 void GFX_MaybePresentFrame();
 
+bool DOSBOX_PollAndHandleEvents();
+
 #endif // DOSBOX_GUI_COMMON_H
