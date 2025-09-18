@@ -214,26 +214,26 @@
 #if (SBPP != 9) || (DBPP != 8)
 
 /* Simple scalers */
-#	define SCALERNAME   Normal1x
-#	define SCALERWIDTH  1
-#	define SCALERHEIGHT 1
-#	define SCALERFUNC   line0[0] = P;
-#include "private/render_simple.h"
+#define SCALERNAME   Normal1x
+#define SCALERWIDTH  1
+#define SCALERHEIGHT 1
+#define SCALERFUNC   line0[0] = P;
+#include "gui/private/render_simple.h"
 
-#	undef SCALERNAME
-#	undef SCALERWIDTH
-#	undef SCALERHEIGHT
-#	undef SCALERFUNC
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
 
-#	define SCALERNAME   Normal2x
-#	define SCALERWIDTH  2
-#	define SCALERHEIGHT 2
-#	define SCALERFUNC \
-       line0[0] = P; \
-       line0[1] = P; \
-       line1[0] = P;                                                           \
-       line1[1] = P;
-#include "private/render_simple.h"
+#define SCALERNAME   Normal2x
+#define SCALERWIDTH  2
+#define SCALERHEIGHT 2
+#define SCALERFUNC \
+	line0[0] = P; \
+	line0[1] = P; \
+	line1[0] = P; \
+	line1[1] = P;
+#include "gui/private/render_simple.h"
 
 #	undef SCALERNAME
 #	undef SCALERWIDTH
@@ -246,7 +246,7 @@
 #	define SCALERFUNC \
 		line0[0] = P; \
 		line0[1] = P;
-#include "private/render_simple.h"
+#	include "gui/private/render_simple.h"
 
 #	undef SCALERNAME
 #	undef SCALERWIDTH
@@ -259,7 +259,7 @@
 #	define SCALERFUNC \
 		line0[0] = P; \
 		line1[0] = P;
-#include "private/render_simple.h"
+#	include "gui/private/render_simple.h"
 #	undef SCALERNAME
 #	undef SCALERWIDTH
 #	undef SCALERHEIGHT
