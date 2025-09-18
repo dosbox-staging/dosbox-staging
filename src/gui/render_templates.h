@@ -218,7 +218,7 @@
 #	define SCALERWIDTH  1
 #	define SCALERHEIGHT 1
 #	define SCALERFUNC   line0[0] = P;
-#	include "render_simple.h"
+#include "private/render_simple.h"
 
 #	undef SCALERNAME
 #	undef SCALERWIDTH
@@ -233,7 +233,7 @@
        line0[1] = P; \
        line1[0] = P;                                                           \
        line1[1] = P;
-#	include "render_simple.h"
+#include "private/render_simple.h"
 
 #	undef SCALERNAME
 #	undef SCALERWIDTH
@@ -246,7 +246,7 @@
 #	define SCALERFUNC \
 		line0[0] = P; \
 		line0[1] = P;
-#	include "render_simple.h"
+#include "private/render_simple.h"
 
 #	undef SCALERNAME
 #	undef SCALERWIDTH
@@ -259,7 +259,7 @@
 #	define SCALERFUNC \
 		line0[0] = P; \
 		line1[0] = P;
-#	include "render_simple.h"
+#include "private/render_simple.h"
 #	undef SCALERNAME
 #	undef SCALERWIDTH
 #	undef SCALERHEIGHT
