@@ -3,6 +3,8 @@
 
 #include "titlebar.h"
 
+#include "private/sdlmain.h"
+
 #include <SDL.h>
 #include <map>
 #include <vector>
@@ -12,7 +14,6 @@
 #include "cpu/cpu.h"
 #include "dosbox.h"
 #include "gui/mapper.h"
-#include "gui/sdlmain.h"
 #include "hardware/input/mouse.h"
 #include "hardware/video/video.h"
 #include "misc/support.h"

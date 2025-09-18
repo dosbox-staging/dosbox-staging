@@ -36,6 +36,8 @@
 #include <SDL.h>
 #endif // C_OPENGL
 
+#include "private/sdlmain.h"
+
 #include "audio/mixer.h"
 #include "capture/capture.h"
 #include "config/config.h"
@@ -45,7 +47,6 @@
 #include "dos/dos_locale.h"
 #include "gui/mapper.h"
 #include "gui/render.h"
-#include "gui/sdlmain.h"
 #include "gui/titlebar.h"
 #include "gui_msgs.h"
 #include "hardware/input/joystick.h"
