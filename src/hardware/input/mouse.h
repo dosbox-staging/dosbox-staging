@@ -61,6 +61,17 @@ enum class MouseButtonId : uint8_t {
 	None  = UINT8_MAX,
 };
 
+enum class MouseHint {
+	None,                    // no hint to display
+	CapturedHotkey,          // captured, hotkey to release
+	CapturedHotkeyMiddle,    // captured, hotkey or middle-click release
+	ReleasedHotkey,          // released, hotkey to capture
+	ReleasedHotkeyMiddle,    // released, hotkey or middle-click to capture
+	ReleasedHotkeyAnyButton, // released, hotkey or any click to capture
+	SeamlessHotkey,          // seamless, hotkey to capture
+	SeamlessHotkeyMiddle,    // seamless, hotkey or middle-click to capture
+};
+
 // ***************************************************************************
 // Notifications from external subsystems - all should go via these methods
 // ***************************************************************************
@@ -153,6 +164,7 @@ void MOUSEDOS_HandleWindowsCallout();
 
 // Notify if Windows goes to the background, DOS instance goes fullscreen
 void MOUSEDOS_NotifyWindowsBackground();
+
 // Notify if Windows goes to the foreground back again
 void MOUSEDOS_NotifyWindowsForeground();
 
