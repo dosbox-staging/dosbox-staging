@@ -90,7 +90,6 @@ static dynlib_handle fsynth_lib = {};
 	FSFUNC(int, fluid_synth_set_reverb_group_damp, (fluid_synth_t *synth, int fx_group, double damping)) \
 	FSFUNC(int, fluid_synth_set_reverb_group_width, (fluid_synth_t *synth, int fx_group, double width)) \
 	FSFUNC(int, fluid_synth_set_reverb_group_level, (fluid_synth_t *synth, int fx_group, double level)) \
-	FSFUNC(int, fluid_synth_sfcount, (fluid_synth_t *synth)) \
 	FSFUNC(int, fluid_synth_sfload, (fluid_synth_t *synth, const char *filename, int reset_presets)) \
 	FSFUNC(void, fluid_synth_set_gain, (fluid_synth_t *synth, float gain)) \
 	FSFUNC(int, fluid_synth_set_interp_method, (fluid_synth_t *synth, int chan, int interp_method)) \
@@ -788,28 +787,24 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		throw std::runtime_error(msg);
 	}
 
-	synth    = std::move(fluid_synth);
-	settings = std::move(fluid_settings);
-
 	// Load the requested SoundFont or quit if none provided
 	const auto sf_name = section->GetString("soundfont");
 	const auto sf_path = find_sf_file(sf_name);
 
-	if (!sf_path.empty() &&
-	    FluidSynth::fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		constexpr auto ResetPresets = true;
-		FluidSynth::fluid_synth_sfload(fluid_synth.get(),
-		                               sf_path.string().c_str(),
-		                               ResetPresets);
-	}
+	constexpr auto ResetPresets = true;
+	if (FluidSynth::fluid_synth_sfload(fluid_synth.get(),
+	                                   sf_path.string().c_str(),
+	                                   ResetPresets) == FLUID_FAILED) {
 
-	if (FluidSynth::fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		const auto msg = format_str("FSYNTH: Error loading SoundFont '%s'",
 		                            sf_name.c_str());
 
 		LOG_ERR("%s", msg.c_str());
 		throw std::runtime_error(msg);
 	}
+
+	synth    = std::move(fluid_synth);
+	settings = std::move(fluid_settings);
 
 	auto sf_volume_percent = section->GetInt("soundfont_volume");
 	FluidSynth::fluid_synth_set_gain(fluid_synth.get(),
