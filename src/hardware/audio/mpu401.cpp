@@ -838,10 +838,10 @@ static SectionProp* get_midi_section()
 {
 	assert(control);
 
-	auto sec = static_cast<SectionProp*>(control->GetSection("midi"));
-	assert(sec);
+	auto section = static_cast<SectionProp*>(control->GetSection("midi"));
+	assert(section);
 
-	return sec;
+	return section;
 }
 
 void mpu401_destroy([[maybe_unused]] Section* sec)
@@ -851,16 +851,14 @@ void mpu401_destroy([[maybe_unused]] Section* sec)
 
 void MPU401_Destroy()
 {
-	mpu401_destroy(get_midi_section());
+	mpu401 = {};
 }
 
-void mpu401_init([[maybe_unused]] Section* sec)
+void mpu401_init([[maybe_unused]] Section* section)
 {
 	mpu401 = std::make_unique<MPU401>(get_midi_section());
 
-	constexpr auto ChangeableAtRuntime = true;
-
-	get_midi_section()->AddDestroyHandler(mpu401_destroy, ChangeableAtRuntime);
+	section->AddDestroyHandler(mpu401_destroy);
 }
 
 void MPU401_Init()

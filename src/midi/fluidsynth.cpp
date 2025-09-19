@@ -708,6 +708,12 @@ void MidiDeviceFluidSynth::SetReverb()
 	}
 }
 
+void MidiDeviceFluidSynth::SetVolume(const int volume_percent)
+{
+	const auto gain = static_cast<float>(volume_percent) / 100.0f;
+	FluidSynth::fluid_synth_set_gain(synth.get(), gain);
+}
+
 void MidiDeviceFluidSynth::TryInitSynth()
 {
 	std::string sym_err_msg;
@@ -803,18 +809,16 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	synth    = std::move(fluid_synth);
 	settings = std::move(fluid_settings);
 
-	auto sf_volume_percent = section->GetInt("soundfont_volume");
-	FluidSynth::fluid_synth_set_gain(fluid_synth.get(),
-	                                 static_cast<float>(sf_volume_percent) /
-	                                         100.0f);
+	const auto volume_percent = section->GetInt("soundfont_volume");
+	SetVolume(volume_percent);
 
 	// Let the user know that the SoundFont was loaded
-	if (sf_volume_percent == 100) {
+	if (volume_percent == 100) {
 		LOG_MSG("FSYNTH: Using SoundFont '%s'", sf_path.string().c_str());
 	} else {
 		LOG_MSG("FSYNTH: Using SoundFont '%s' with volume scaled to %d%%",
 		        sf_path.string().c_str(),
-		        sf_volume_percent);
+		        volume_percent);
 	}
 
 	// Applies setting to all groups
@@ -1284,6 +1288,42 @@ static void fluidsynth_init([[maybe_unused]] Section* sec)
 	}
 }
 
+static void notify_fluidsynth_setting_updated([[maybe_unused]] SectionProp* section,
+                                              const std::string& prop_name)
+{
+	const auto device = dynamic_cast<MidiDeviceFluidSynth*>(
+	        MIDI_GetCurrentDevice());
+
+	if (prop_name == ChorusSettingName) {
+		if (device) {
+			device->SetChorus();
+		}
+
+	} else if (prop_name == ReverbSettingName) {
+		if (device) {
+			device->SetReverb();
+		}
+
+	} else if (prop_name == "fsynth_filter") {
+		if (device) {
+			device->SetFilter();
+		}
+
+	} else if (prop_name == "soundfont_volume") {
+		if (device) {
+			device->SetVolume(section->GetInt("soundfont_volume"));
+		}
+
+	} else if (prop_name == "soundfont_dir") {
+		// no-op; will take effect when loading a SoundFont
+
+	} else {
+		if (device) {
+			MIDI_Init();
+		}
+	}
+}
+
 static void register_fluidsynth_text_messages()
 {
 	MSG_Add("FLUIDSYNTH_NO_SOUNDFONTS", "No available SoundFonts");
@@ -1310,14 +1350,12 @@ static void register_fluidsynth_text_messages()
 
 void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 {
-	constexpr auto ChangeableAtRuntime = true;
-
 	assert(conf);
-	SectionProp* sec = conf->AddSection("fluidsynth",
-	                                    fluidsynth_init,
-	                                    ChangeableAtRuntime);
-	assert(sec);
-	init_fluidsynth_dosbox_settings(*sec);
 
+	auto section = conf->AddSection("fluidsynth", fluidsynth_init);
+
+	section->AddUpdateHandler(notify_fluidsynth_setting_updated);
+
+	init_fluidsynth_dosbox_settings(*section);
 	register_fluidsynth_text_messages();
 }

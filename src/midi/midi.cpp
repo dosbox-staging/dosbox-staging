@@ -735,18 +735,12 @@ static std::unique_ptr<MIDI> midi_instance = nullptr;
 
 static void midi_destroy([[maybe_unused]] Section* sec)
 {
-	midi.device.reset();
+	midi.device = {};
 }
 
 static void midi_init([[maybe_unused]] Section* sec)
 {
-	// This works because the registered destroy functions are always only
-	// called once (they're deleted or "consumed" after they were invoked,
-	// so you need to re-register them if you re-init the module).
-	constexpr auto ChangeableAtRuntime = true;
-
 	assert(sec);
-	sec->AddDestroyHandler(midi_destroy, ChangeableAtRuntime);
 
 	// Retry loop
 	for (;;) {
@@ -790,6 +784,12 @@ static void midi_init([[maybe_unused]] Section* sec)
 			}
 		}
 	}
+}
+
+static void notify_midi_setting_updated([[maybe_unused]] SectionProp* section,
+                                        [[maybe_unused]] const std::string& prop_name)
+{
+	midi_init(get_midi_section());
 }
 
 void MIDI_Init()
@@ -937,12 +937,11 @@ void MIDI_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto ChangeableAtRuntime = true;
+	auto section = conf->AddSection("midi", midi_init);
 
-	SectionProp* sec = conf->AddSection("midi", midi_init, ChangeableAtRuntime);
-	assert(sec);
+	section->AddDestroyHandler(midi_destroy);
+	section->AddUpdateHandler(notify_midi_setting_updated);
 
-	init_midi_dosbox_settings(*sec);
-
+	init_midi_dosbox_settings(*section);
 	register_midi_text_messages();
 }
