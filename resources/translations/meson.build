@@ -1,10 +1,10 @@
 resource_files = [
-    'br.lng',
-    'de.lng',
-    'es.lng',
-    'fr.lng',
-    'it.lng',
-    'nl.lng',
-    'pl.lng',
-    'ru.lng',
+    'br.po',
+    'de.po',
+    'es.po',
+    'fr.po',
+    'it.po',
+    'nl.po',
+    'pl.po',
+    'ru.po',
 ]
