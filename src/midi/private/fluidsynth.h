@@ -69,6 +69,8 @@ public:
 	void SetReverb();
 	void SetFilter();
 
+	void SetVolume(const int volume_percent);
+
 private:
 	void TryInitSynth();
 
