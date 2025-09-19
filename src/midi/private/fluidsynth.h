@@ -25,6 +25,21 @@ extern void (*delete_fluid_synth)(fluid_synth_t*);
 
 } // namespace FluidSynth
 
+struct ChorusParameters {
+	int voice_count = {};
+	double level    = {};
+	double speed    = {};
+	double depth    = {};
+	int mod_wave    = {};
+};
+
+struct ReverbParameters {
+	double room_size = {};
+	double damping   = {};
+	double width     = {};
+	double level     = {};
+};
+
 class MidiDeviceFluidSynth final : public MidiDevice {
 public:
 	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
@@ -49,7 +64,17 @@ public:
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
 	std_fs::path GetSoundFontPath();
+
+	void SetChorus();
+	void SetReverb();
+	void SetFilter();
+
 private:
+	void TryInitSynth();
+
+	void SetChorusParams(const ChorusParameters& params);
+	void SetReverbParams(const ReverbParameters& params);
+
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
 	void ApplySysExMessage(const std::vector<uint8_t>& msg);
 	void MixerCallback(const int requested_audio_frames);
