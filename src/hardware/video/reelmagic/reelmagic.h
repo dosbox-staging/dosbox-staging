@@ -134,4 +134,7 @@ ReelMagic_PlayerConfiguration& ReelMagic_GlobalDefaultPlayerConfig();
 
 void REELMAGIC_AddConfigSection(const ConfigPtr& conf);
 
+void REELMAGIC_NotifyLockMixer();
+void REELMAGIC_NotifyUnlockMixer();
+
 #endif /* #ifndef DOSBOX_REELMAGIC_H */
