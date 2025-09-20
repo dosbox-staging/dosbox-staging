@@ -5,6 +5,7 @@
 // #define DEBUG 1
 
 #include "cdrom.h"
+#include "cdrom_mds.h"
 
 #include <cassert>
 #include <cctype>
@@ -515,7 +516,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 bool CDROM_Interface_Image::SetDevice(const char* path)
 {
 	std::lock_guard lock(player.mutex);
-	const bool result = LoadCueSheet(path) || LoadIsoFile(path);
+	const bool result = LoadMdsFile(path) || LoadCueSheet(path) || LoadIsoFile(path);
 	if (!result) {
 		// print error message on dosbox console
 		char buf[MAX_LINE_LENGTH];
@@ -1173,6 +1174,255 @@ static std::string dirname(char* file)
 	}
 }
 #endif
+
+static std::optional<MdsHeader> read_and_validate_mds_header(std::ifstream &file)
+{
+	const auto mds_header = read_mds_header(file);
+	if (!mds_header) {
+		return {};
+	}
+
+	constexpr uint8_t MdsSignature[] = {'M', 'E', 'D', 'I', 'A', ' ', 'D', 'E', 'S', 'C', 'R', 'I', 'P', 'T', 'O', 'R'};
+	static_assert(sizeof(mds_header->signature) == sizeof(MdsSignature));
+
+	if (memcmp(mds_header->signature, MdsSignature, sizeof(MdsSignature))) {
+		// Not an MDS file. Fall through to CUE/ISO handlers.
+		return {};
+	}
+
+	// Version field is a 2 character array in the format of major.minor.
+	// We don't care about the minor version but the major version must be one.
+	// This is what is produced by Alcohol 120%.
+	if (mds_header->version[0] != 1) {
+		LOG_ERR("CDROM: Invalid MDS version: %hhu.%hhu", mds_header->version[0], mds_header->version[1]);
+		return {};
+	}
+
+	if (mds_header->num_sessions == 0) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return {};
+	}
+	if (mds_header->num_sessions > 1) {
+		LOG_WARNING("CDROM: MDS/MDF file contains %hu sessions. Only the first will be used.", mds_header->num_sessions);
+	}
+	if (mds_header->session_block_offset == 0) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return {};
+	}
+
+	return mds_header;
+}
+
+static std::optional<MdsSessionBlock> read_and_validate_mds_session_block(std::ifstream &file, const std::ifstream::pos_type pos)
+{
+	const auto session_block = read_mds_session_block(file, pos);
+	if (!session_block) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return {};
+	}
+	if (session_block->num_all_blocks == 0) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return {};
+	}
+	if (session_block->track_block_offset == 0) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return {};
+	}
+
+	return session_block;
+}
+
+static bool set_track_mode(CDROM_Interface_Image::Track &track, uint8_t mode)
+{
+	mode &= 0x0F;
+	if (mode >= 8) {
+		// Modes 8-15 are duplicates of modes 0-7
+		mode -= 8;
+	}
+	switch (mode) {
+		// Audio track
+		case 1:
+			track.attr = 0;
+			track.mode2 = false;
+			break;
+		// Mode 2 Form 1
+		case 4:
+		// Mode 2 Form 2
+		case 5:
+		// Unknown
+		case 6:
+			// Form 1/2 are CDROM-XA modes which will need deeper integration to support.
+			LOG_ERR("CDROM: Unsupported mode: %hhu", mode);
+			return false;
+
+		// Mode 1 data track
+		case 2:
+			track.attr = 0x40;
+			track.mode2 = false;
+			break;
+
+		// Mode 2 data track (0, 3, 7 appear to have the same meaning)
+		case 0:
+		case 3:
+		case 7:
+			track.attr = 0x40;
+			track.mode2 = true;
+			break;
+		default:
+			assertm(false, "Unhandled case (should never happen due to *mode &= 0x0F)");
+			return false;
+	}
+
+	return true;
+}
+
+static std_fs::path read_mdf_filename(std::ifstream &file, const MdsFooter footer)
+{
+	file.seekg(footer.filename_offset);
+	if (file.fail()) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return {};
+	}
+	if (footer.widechar_filename) {
+		std::u16string utf16_string = {};
+		while (true) {
+			uint16_t wide_char = 0;
+			file.read(reinterpret_cast<char*>(&wide_char), sizeof(wide_char));
+			if (wide_char == 0) {
+				return utf16_string;
+			}
+			utf16_string.push_back(le16_to_host(wide_char));
+		}
+	} else {
+		std::string ascii_string = {};
+		while (true) {
+			char c = 0;
+			file.read(reinterpret_cast<char*>(&c), sizeof(c));
+			if (c == 0) {
+				return ascii_string;
+			}
+			ascii_string.push_back(c);
+		}
+	}
+}
+
+// Simplified version of an MDS parser.
+// Does not handle copy protection.
+// Credit to reverse engineering efforts by cdemu/libmirage.
+// Code is not taken directly from the project but I read their code:
+// https://github.com/cdemu/cdemu/blob/master/libmirage/images/image-mds/parser.c
+bool CDROM_Interface_Image::LoadMdsFile(const char *mds_filename)
+{
+	const std_fs::path mds_path(to_native_path(mds_filename));
+	std::ifstream file(mds_path, std::ios::in | std::ios::binary);
+
+	const auto mds_header = read_and_validate_mds_header(file);
+	if (!mds_header) {
+		return false;
+	}
+
+	const auto session_block = read_and_validate_mds_session_block(file, mds_header->session_block_offset);
+	if (!session_block) {
+		return false;
+	}
+
+	std::unordered_map<std_fs::path, std::shared_ptr<TrackFile>> track_map = {};
+	for (uint32_t i = 0; i < session_block->num_all_blocks; ++i) {
+		const auto track_block = read_mds_track_block(file, session_block->track_block_offset + (sizeof(MdsTrackBlock) * i));
+		if (!track_block) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		if (track_block->point < 1 || track_block->point > 99) {
+			// This is a non-track block. cdemu simply skips these.
+			continue;
+		}
+		Track track = {};
+		track.number = track_block->point;
+		set_track_mode(track, track_block->mode);
+		switch (track_block->subchannel) {
+			case 0:
+				track.subchannel_size = 0;
+				break;
+			case 8:
+				track.subchannel_size = 96;
+				break;
+			default:
+				LOG_WARNING("CDROM: Unknown subchannel type %hhu assuming subchannel size of 0", track_block->subchannel);
+				track.subchannel_size = 0;
+				break;
+		}
+		track.sector_size = track_block->sector_size;
+		if (track.subchannel_size >= track.sector_size) {
+			LOG_ERR("CDROM: Invalid sector/subchannel size. Sector size: %hu Subchannel size: %hu", track.sector_size, track.subchannel_size);
+			return false;
+		}
+		track.start = track_block->start_sector;
+		track.skip = check_cast<uint32_t>(track_block->start_offset);
+		if (track_block->number_of_files != 1) {
+			// According to comments in cdemu, DVD tracks can be split into multiple files.
+			// We don't care about DVDs and CDROM should always be 1 file per track.
+			LOG_ERR("CDROM: %u files in track %hhu. Must be exactly 1.", track_block->number_of_files, track.number);
+			return false;
+		}
+		if (track_block->footer_offset == 0 || track_block->extra_offset == 0) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		const auto extra_block = read_mds_extra_block(file, track_block->extra_offset);
+		if (!extra_block) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		track.length = extra_block->length;
+		const auto footer = read_mds_footer(file, track_block->footer_offset);
+		if (!footer) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		if (footer->filename_offset == 0) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		const uint8_t prev_track = tracks.empty() ? 0 : tracks.back().number; //-V807
+		const uint32_t prev_sector = tracks.empty() ? 0 : tracks.back().start + tracks.back().length;
+		if (track.number != prev_track + 1 || track.start < prev_sector) {
+			LOG_ERR("CDROM: Non-contigious track found in MDS file");
+			return false;
+		}
+		auto mdf_filename = read_mdf_filename(file, *footer);
+		if (mdf_filename.empty()) {
+			LOG_ERR("CDROM: Missing MDF filename");
+			return false;
+		}
+		if (mdf_filename == "*.mdf") {
+			mdf_filename = mds_path;
+			mdf_filename.replace_extension("mdf");
+		} else {
+			mdf_filename = mds_path.parent_path() / mdf_filename;
+		}
+		if (const auto iter = track_map.find(mdf_filename); iter != track_map.end()) {
+			track.file = iter->second;
+		} else {
+			bool error = false;
+			track.file = std::make_shared<BinaryFile>(mdf_filename, error);
+			if (error) { //-V547
+				LOG_ERR("CDROM: Failed to open MDF file: %s", mdf_filename.string().c_str());
+				return false;
+			}
+			track_map.try_emplace(mdf_filename, track.file);
+		}
+		tracks.push_back(track);
+	}
+	if (tracks.empty()) {
+		LOG_ERR("CDROM: Failed to find any tracks");
+		return false;
+	}
+	Track lead_out = {};
+	lead_out.start = tracks.back().start + tracks.back().length;
+	tracks.push_back(lead_out);
+	return true;
+}
 
 bool CDROM_Interface_Image::LoadCueSheet(const char *cuefile)
 {
