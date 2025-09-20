@@ -14,6 +14,7 @@
 #include <thread>
 #include <unistd.h>
 
+#include "audio/disk_noise.h"
 #include "audio/mixer.h"
 #include "capture/capture.h"
 #include "config/config.h"
