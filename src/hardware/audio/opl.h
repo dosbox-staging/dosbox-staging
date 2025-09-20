@@ -21,6 +21,8 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 
+enum class OplMode { None, Opl2, DualOpl2, Opl3, Opl3Gold, Esfm };
+
 class Timer {
 public:
 	Timer(const int micros);
@@ -78,9 +80,6 @@ public:
 // The cache for two OPL chips (Dual OPL2) or an OPL3 (stereo)
 typedef uint8_t OplRegisterCache[512];
 
-// Internal class used for DRO capturing
-class OplCapture;
-
 enum class EsfmMode { Legacy, Native };
 
 class Opl {
@@ -88,8 +87,6 @@ public:
 	MixerChannelPtr channel = {};
 
 	OplRegisterCache cache = {};
-
-	std::unique_ptr<OplCapture> capture = {};
 
 	Opl(Section* configuration, const OplMode opl_mode);
 	~Opl();
@@ -165,5 +162,11 @@ private:
 
 	void EsfmSetLegacyMode();
 };
+
+void OPL_Init(Section *sec, OplMode mode);
+void OPL_ShutDown(Section* sec = nullptr);
+
+// CMS/Game Blaster, OPL, and ESFM configuration and initialisation
+void OPL_AddConfigSettings(const ConfigPtr &conf);
 
 #endif // DOSBOX_OPL_H

@@ -4,6 +4,8 @@
 #ifndef DOSBOX_SBLASTER_H
 #define DOSBOX_SBLASTER_H
 
+#include "hardware/audio/opl.h"
+
 #include "audio/mixer.h"
 #include "hardware/hardware.h"
 #include "hardware/port.h"
