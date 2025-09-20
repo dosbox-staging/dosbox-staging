@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_GUS_H
-#define DOSBOX_GUS_H
+#ifndef DOSBOX_PRIVATE_GUS_H
+#define DOSBOX_PRIVATE_GUS_H
 
 #include <queue>
 
@@ -379,4 +379,10 @@ private:
 	bool should_change_irq_dma      = false;
 };
 
-#endif // DOSBOX_GUS_H
+// The Gravis UltraSound mirrors the AdLib's command register (written to the
+// command port 388h) on its own port 20Ah. This function passes the command
+// onto the GUS (if available)
+void GUS_MirrorAdLibCommandPortWrite(const io_port_t port, const io_val_t reg_value,
+                                     const io_width_t = io_width_t::byte);
+
+#endif // DOSBOX_PRIVATE_GUS_H

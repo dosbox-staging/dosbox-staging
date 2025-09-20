@@ -24,15 +24,6 @@ void SB_AddConfigSection(const ConfigPtr &conf);
 
 bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 
-// Gravis UltraSound configuration and initialisation
-void GUS_AddConfigSection(const ConfigPtr &conf);
-
-// The Gravis UltraSound mirrors the AdLib's command register (written to the
-// command port 388h) on its own port 20Ah. This function passes the command
-// onto the GUS (if available)
-void GUS_MirrorAdLibCommandPortWrite(const io_port_t port, const io_val_t reg_value,
-                                     const io_width_t = io_width_t::byte);
-
 // IBM Music Feature Card configuration and initialisation
 void IMFC_AddConfigSection(const ConfigPtr& conf);
 
@@ -51,9 +42,6 @@ void TANDYDAC_NotifyUnlockMixer();
 
 void PS1DAC_NotifyLockMixer();
 void PS1DAC_NotifyUnlockMixer();
-
-void GUS_NotifyLockMixer();
-void GUS_NotifyUnlockMixer();
 
 void SBLASTER_NotifyLockMixer();
 void SBLASTER_NotifyUnlockMixer();

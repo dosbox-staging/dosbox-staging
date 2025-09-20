@@ -3,6 +3,8 @@
 
 #include "opl.h"
 
+#include "private/gus.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <cstring>

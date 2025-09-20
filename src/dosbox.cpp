@@ -28,6 +28,7 @@
 #include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/render.h"
+#include "hardware/audio/gus.h"
 #include "hardware/audio/opl.h"
 #include "hardware/audio/speaker.h"
 #include "hardware/cmos.h"
