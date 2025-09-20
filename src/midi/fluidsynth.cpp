@@ -555,9 +555,7 @@ void MidiDeviceFluidSynth::SetChorus()
 			LOG_INFO(
 			        "FSYNTH: Chorus auto-disabled due to known issues with "
 			        "the '%s' soundfont",
-			        get_fluidsynth_section()
-			                ->GetString("soundfont")
-			                .c_str());
+			        get_fluidsynth_section()->GetString("soundfont").c_str());
 		} else {
 			SetChorusParams(DefaultChorusParameters);
 			enable_chorus(true);
@@ -839,13 +837,13 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	                                      std::placeholders::_1);
 
 	mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                           sample_rate_hz,
-	                                           ChannelName::FluidSynth,
-	                                           {ChannelFeature::Sleep,
-	                                            ChannelFeature::Stereo,
-	                                            ChannelFeature::ReverbSend,
-	                                            ChannelFeature::ChorusSend,
-	                                            ChannelFeature::Synthesizer});
+	                                 sample_rate_hz,
+	                                 ChannelName::FluidSynth,
+	                                 {ChannelFeature::Sleep,
+	                                  ChannelFeature::Stereo,
+	                                  ChannelFeature::ReverbSend,
+	                                  ChannelFeature::ChorusSend,
+	                                  ChannelFeature::Synthesizer});
 
 	// FluidSynth renders float audio frames between -1.0f and
 	// +1.0f, so we ask the channel to scale all the samples up to
