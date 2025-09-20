@@ -23,10 +23,6 @@ void IMFC_AddConfigSection(const ConfigPtr& conf);
 // Innovation SSI-2001 configuration and initialisation
 void INNOVATION_AddConfigSection(const ConfigPtr &conf);
 
-// Common lock notification calls used by the mixer
-void PCSPEAKER_NotifyLockMixer();
-void PCSPEAKER_NotifyUnlockMixer();
-
 void PS1DAC_NotifyLockMixer();
 void PS1DAC_NotifyUnlockMixer();
 

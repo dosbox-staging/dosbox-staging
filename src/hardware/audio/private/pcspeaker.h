@@ -1,15 +1,14 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_PCSPEAKER_H
-#define DOSBOX_PCSPEAKER_H
+#ifndef DOSBOX_PRIVATE_PCSPEAKER_H
+#define DOSBOX_PRIVATE_PCSPEAKER_H
 
 #include "dosbox.h"
 
 #include <string>
 
 #include "audio/mixer.h"
-#include "config/setup.h"
 #include "hardware/timer.h"
 #include "utils/rwqueue.h"
 
@@ -31,6 +30,4 @@ public:
 	virtual void PicCallback(const int requested_frames)            = 0;
 };
 
-void PCSPEAKER_AddConfigSection(Section* sec);
-
-#endif // DOSBOX_PCSPEAKER_H
+#endif // DOSBOX_PRIVATE_PCSPEAKER_H
