@@ -5,6 +5,7 @@
 #include "private/sblaster.h"
 
 #include "private/gameblaster.h"
+#include "private/gus.h"
 
 #include <array>
 #include <cmath>
