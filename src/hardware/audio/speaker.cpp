@@ -3,10 +3,10 @@
 
 #include "hardware/audio/speaker.h"
 
-#include "private/lpt_dac.h"
 #include "private/pcspeaker.h"
 #include "private/ps1audio.h"
 
+#include "lpt_dac.h"
 #include "ps1audio.h"
 #include "pcspeaker.h"
 #include "tandy_sound.h"
