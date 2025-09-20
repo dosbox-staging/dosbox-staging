@@ -30,6 +30,7 @@
 #include "gui/mapper.h"
 #include "gui/render.h"
 #include "hardware/audio/gus.h"
+#include "hardware/audio/innovation.h"
 #include "hardware/audio/opl.h"
 #include "hardware/audio/pcspeaker.h"
 #include "hardware/audio/sblaster.h"
