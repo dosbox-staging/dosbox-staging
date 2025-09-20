@@ -16,7 +16,6 @@
 #include "config/config.h"
 #include "config/setup.h"
 #include "dosbox.h"
-#include "hardware/hardware.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "misc/notifications.h"
