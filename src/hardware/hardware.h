@@ -18,9 +18,6 @@ class Section;
 // IBM Music Feature Card configuration and initialisation
 void IMFC_AddConfigSection(const ConfigPtr& conf);
 
-// Innovation SSI-2001 configuration and initialisation
-void INNOVATION_AddConfigSection(const ConfigPtr &conf);
-
 void LPTDAC_NotifyLockMixer();
 void LPTDAC_NotifyUnlockMixer();
 

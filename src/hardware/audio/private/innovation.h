@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_INNOVATION_H
-#define DOSBOX_INNOVATION_H
+#ifndef DOSBOX_PRIVATE_INNOVATION_H
+#define DOSBOX_PRIVATE_INNOVATION_H
 
 #include "dosbox.h"
 
@@ -55,4 +55,4 @@ private:
 	bool is_open            = false;
 };
 
-#endif // DOSBOX_INNOVATION_H
+#endif // DOSBOX_PRIVATE_INNOVATION_H
