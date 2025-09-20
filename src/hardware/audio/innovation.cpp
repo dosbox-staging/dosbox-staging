@@ -4,6 +4,8 @@
 
 #include "private/innovation.h"
 
+#include <memory>
+
 #include "audio/channel_names.h"
 #include "config/config.h"
 #include "hardware/pic.h"
@@ -13,21 +15,13 @@
 
 CHECK_NARROWING();
 
-void Innovation::Open(const std::string_view model_choice,
-                      const std::string_view clock_choice,
-                      const int filter_strength_6581,
-                      const int filter_strength_8580, const int port_choice,
-                      const std::string& channel_filter_choice)
+Innovation::Innovation(const std::string_view model_choice,
+                       const std::string_view clock_choice,
+                       const int filter_strength_6581,
+                       const int filter_strength_8580, const int port_choice,
+                       const std::string& channel_filter_choice)
 {
 	using namespace std::placeholders;
-
-	Close();
-
-	// Sentinel
-	const auto model_choice_has_bool = parse_bool_setting(model_choice);
-	if (model_choice_has_bool && *model_choice_has_bool == false) {
-		return;
-	}
 
 	int filter_strength = 0;
 	auto sid_service    = std::make_unique<reSIDfp::SID>();
@@ -136,17 +130,11 @@ void Innovation::Open(const std::string_view model_choice,
 		        filter_strength);
 	}
 
-	is_open = true;
-
 	MIXER_UnlockMixerThread();
 }
 
-void Innovation::Close()
+Innovation::~Innovation()
 {
-	if (!is_open) {
-		return;
-	}
-
 	LOG_MSG("INNOVATION: Shutting down");
 
 	MIXER_LockMixerThread();
@@ -168,7 +156,6 @@ void Innovation::Close()
 	// Reset the members
 	channel.reset();
 	service.reset();
-	is_open = false;
 
 	MIXER_UnlockMixerThread();
 }
@@ -234,7 +221,7 @@ void Innovation::AudioCallback(const int requested_frames)
 
 	// if (fifo.size())
 	//	LOG_MSG("INNOVATION: Queued %2lu cycle-accurate frames",
-	//fifo.size());
+	// fifo.size());
 
 	auto frames_remaining = requested_frames;
 
@@ -254,16 +241,11 @@ void Innovation::AudioCallback(const int requested_frames)
 	last_rendered_ms = PIC_AtomicIndex();
 }
 
-Innovation innovation;
-static void innovation_destroy([[maybe_unused]] Section* sec)
-{
-	innovation.Close();
-}
+static std::unique_ptr<Innovation> innovation = {};
 
 static void innovation_init(Section* sec)
 {
-	assert(sec);
-	SectionProp* conf = static_cast<SectionProp*>(sec);
+	const auto conf = static_cast<SectionProp*>(sec);
 
 	const auto model_choice          = conf->GetString("sidmodel");
 	const auto clock_choice          = conf->GetString("sidclock");
@@ -272,15 +254,28 @@ static void innovation_init(Section* sec)
 	const auto filter_strength_8580  = conf->GetInt("8580filter");
 	const auto channel_filter_choice = conf->GetString("innovation_filter");
 
-	innovation.Open(model_choice,
-	                clock_choice,
-	                filter_strength_6581,
-	                filter_strength_8580,
-	                port_choice,
-	                channel_filter_choice);
+	if (has_false(model_choice)) {
+		return;
+	}
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(innovation_destroy, changeable_at_runtime);
+	innovation = std::make_unique<Innovation>(model_choice,
+	                                          clock_choice,
+	                                          filter_strength_6581,
+	                                          filter_strength_8580,
+	                                          port_choice,
+	                                          channel_filter_choice);
+}
+
+static void innovation_destroy([[maybe_unused]] Section* sec)
+{
+	innovation = {};
+}
+
+static void notify_innovation_setting_updated(SectionProp* section,
+                                              [[maybe_unused]] const std::string& prop_name)
+{
+	innovation_destroy(section);
+	innovation_init(section);
 }
 
 static void init_innovation_dosbox_settings(SectionProp& sec_prop)
@@ -341,11 +336,10 @@ void INNOVATION_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
+	auto section = conf->AddSection("innovation", innovation_init);
 
-	SectionProp* sec = conf->AddSection("innovation",
-	                                    innovation_init,
-	                                    changeable_at_runtime);
-	assert(sec);
-	init_innovation_dosbox_settings(*sec);
+	section->AddDestroyHandler(innovation_destroy);
+	section->AddUpdateHandler(notify_innovation_setting_updated);
+
+	init_innovation_dosbox_settings(*section);
 }
