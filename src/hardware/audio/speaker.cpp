@@ -6,6 +6,8 @@
 #include "private/lpt_dac.h"
 #include "private/pcspeaker.h"
 #include "private/ps1audio.h"
+
+#include "pcspeaker.h"
 #include "tandy_sound.h"
 
 #include "config/config.h"
