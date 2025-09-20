@@ -17,11 +17,6 @@ class Section;
 
 bool PS1AUDIO_IsEnabled();
 
-bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
-
-// Sound Blaster and ESS configuration and initialisation
-void SB_AddConfigSection(const ConfigPtr &conf);
-
 // IBM Music Feature Card configuration and initialisation
 void IMFC_AddConfigSection(const ConfigPtr& conf);
 
@@ -37,9 +32,6 @@ void PCSPEAKER_NotifyUnlockMixer();
 
 void PS1DAC_NotifyLockMixer();
 void PS1DAC_NotifyUnlockMixer();
-
-void SBLASTER_NotifyLockMixer();
-void SBLASTER_NotifyUnlockMixer();
 
 void REELMAGIC_NotifyLockMixer();
 void REELMAGIC_NotifyUnlockMixer();
