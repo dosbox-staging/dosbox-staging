@@ -820,7 +820,7 @@ void MixerChannel::SetAppVolume(const AudioFrame gain)
 	app_volume_gain = {clamp_to_unity(gain.left), clamp_to_unity(gain.right)};
 	UpdateCombinedVolume();
 
-#ifdef DEBUG
+#ifdef DEBUG_MIXER
 	LOG_MSG("MIXER: %-7s channel: application requested volume "
 	        "{%3.0f%%, %3.0f%%}, and was set to {%3.0f%%, %3.0f%%}",
 	        name,
@@ -850,7 +850,7 @@ void MixerChannel::SetChannelMap(const StereoLine map)
 
 	channel_map = map;
 
-#ifdef DEBUG
+#ifdef DEBUG_MIXER
 	LOG_MSG("MIXER: %-7s channel: application changed audio channel mapping to left=>%s and right=>%s",
 	        name,
 	        channel_map.left == Left ? "left" : "right",
