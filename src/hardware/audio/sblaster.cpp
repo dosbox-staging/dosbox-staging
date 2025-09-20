@@ -4,6 +4,8 @@
 
 #include "private/sblaster.h"
 
+#include "private/gameblaster.h"
+
 #include <array>
 #include <cmath>
 #include <cstring>
