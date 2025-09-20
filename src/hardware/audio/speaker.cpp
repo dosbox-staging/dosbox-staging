@@ -7,6 +7,7 @@
 #include "private/pcspeaker.h"
 #include "private/ps1audio.h"
 
+#include "ps1audio.h"
 #include "pcspeaker.h"
 #include "tandy_sound.h"
 
