@@ -806,7 +806,7 @@ void CONFIG::Run(void)
 				pvars.push_back(rest);
 			}
 
-			const char* result = control->SetProp(pvars);
+			const char* result = control->SetProperty(pvars);
 
 			if (strlen(result)) {
 				WriteOut(result);

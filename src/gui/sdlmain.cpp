@@ -4792,7 +4792,7 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 
 		std::vector<std::string> pvars(1, std::move(command));
 
-		const char* result = control->SetProp(pvars);
+		const char* result = control->SetProperty(pvars);
 
 		if (strlen(result)) {
 			// TODO convert to notification
