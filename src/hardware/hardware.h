@@ -15,9 +15,6 @@
 
 class Section;
 
-void CMS_Init(Section *sec);
-void CMS_ShutDown(Section* sec = nullptr);
-
 bool PS1AUDIO_IsEnabled();
 
 bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);

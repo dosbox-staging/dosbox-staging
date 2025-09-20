@@ -79,4 +79,7 @@ private:
 	uint8_t cms_detect_register    = 0xff;
 };
 
+void CMS_Init(Section *sec);
+void CMS_ShutDown(Section* sec = nullptr);
+
 #endif
