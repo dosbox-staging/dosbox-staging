@@ -25,6 +25,7 @@
 #include "config/config.h"
 #include "config/setup.h"
 #include "gui/mapper.h"
+#include "hardware/audio/gus.h"
 #include "hardware/hardware.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
