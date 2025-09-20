@@ -6,6 +6,6 @@
 
 #include "config/setup.h"
 
-void INNOVATION_AddConfigSection(const ConfigPtr &conf);
+void INNOVATION_AddConfigSection(const ConfigPtr& conf);
 
 #endif // DOSBOX_INNOVATION_H
