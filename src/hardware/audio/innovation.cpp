@@ -50,14 +50,15 @@ void Innovation::Open(const std::string_view model_choice,
 	}
 
 	// Determine chip clock frequency
-	if (clock_choice == "default")
+	if (clock_choice == "default") {
 		chip_clock = 894886.25;
-	else if (clock_choice == "c64ntsc")
+	} else if (clock_choice == "c64ntsc") {
 		chip_clock = 1022727.14;
-	else if (clock_choice == "c64pal")
+	} else if (clock_choice == "c64pal") {
 		chip_clock = 985250.0;
-	else if (clock_choice == "hardsid")
+	} else if (clock_choice == "hardsid") {
 		chip_clock = 1000000.0;
+	}
 	assert(chip_clock);
 
 	ms_per_clock = MillisInSecond / chip_clock;
@@ -108,7 +109,7 @@ void Innovation::Open(const std::string_view model_choice,
 	// Setup and assign the port address
 	const auto read_from = std::bind(&Innovation::ReadFromPort, this, _1, _2);
 	const auto write_to = std::bind(&Innovation::WriteToPort, this, _1, _2, _3);
-	base_port           = check_cast<io_port_t>(port_choice);
+	base_port = check_cast<io_port_t>(port_choice);
 	read_handler.Install(base_port, read_from, io_width_t::byte, 0x20);
 	write_handler.Install(base_port, write_to, io_width_t::byte, 0x20);
 
@@ -120,19 +121,20 @@ void Innovation::Open(const std::string_view model_choice,
 	last_rendered_ms = 0.0;
 
 	// Variable model_name is only used for logging, so use a const char* here
-	const char* model_name = model_choice == "8580" ? "8580" : "6581";
+	const char* model_name  = model_choice == "8580" ? "8580" : "6581";
 	constexpr auto us_per_s = 1'000'000.0;
-	if (filter_strength == 0)
+	if (filter_strength == 0) {
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz",
 		        base_port,
 		        model_name,
 		        chip_clock / us_per_s);
-	else
+	} else {
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz filtering at %d%%",
 		        base_port,
 		        model_name,
 		        chip_clock / us_per_s,
 		        filter_strength);
+	}
 
 	is_open = true;
 
@@ -141,16 +143,18 @@ void Innovation::Open(const std::string_view model_choice,
 
 void Innovation::Close()
 {
-	if (!is_open)
+	if (!is_open) {
 		return;
+	}
 
 	LOG_MSG("INNOVATION: Shutting down");
 
 	MIXER_LockMixerThread();
 
 	// Stop playback
-	if (channel)
+	if (channel) {
 		channel->Enable(false);
+	}
 
 	// Remove the IO handlers before removing the SID device
 	read_handler.Uninstall();
@@ -182,7 +186,7 @@ void Innovation::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 
 	RenderUpToNow();
 
-	const auto data = check_cast<uint8_t>(value);
+	const auto data     = check_cast<uint8_t>(value);
 	const auto sid_port = static_cast<io_port_t>(port - base_port);
 	service->write(sid_port, data);
 }
@@ -200,12 +204,13 @@ void Innovation::RenderUpToNow()
 	// Keep rendering until we're current
 	while (last_rendered_ms < now) {
 		last_rendered_ms += ms_per_clock;
-		if (float frame = 0.0f; MaybeRenderFrame(frame))
+		if (float frame = 0.0f; MaybeRenderFrame(frame)) {
 			fifo.emplace(frame);
+		}
 	}
 }
 
-bool Innovation::MaybeRenderFrame(float &frame)
+bool Innovation::MaybeRenderFrame(float& frame)
 {
 	assert(service);
 
@@ -214,8 +219,9 @@ bool Innovation::MaybeRenderFrame(float &frame)
 	const auto frame_is_ready = service->clock(1, &sample);
 
 	// Get the frame
-	if (frame_is_ready)
+	if (frame_is_ready) {
 		frame = static_cast<float>(sample * 2);
+	}
 
 	return frame_is_ready;
 }
@@ -226,8 +232,9 @@ void Innovation::AudioCallback(const int requested_frames)
 
 	std::lock_guard lock(mutex);
 
-	//if (fifo.size())
-	//	LOG_MSG("INNOVATION: Queued %2lu cycle-accurate frames", fifo.size());
+	// if (fifo.size())
+	//	LOG_MSG("INNOVATION: Queued %2lu cycle-accurate frames",
+	//fifo.size());
 
 	auto frames_remaining = requested_frames;
 
@@ -248,15 +255,15 @@ void Innovation::AudioCallback(const int requested_frames)
 }
 
 Innovation innovation;
-static void innovation_destroy([[maybe_unused]] Section *sec)
+static void innovation_destroy([[maybe_unused]] Section* sec)
 {
 	innovation.Close();
 }
 
-static void innovation_init(Section *sec)
+static void innovation_init(Section* sec)
 {
 	assert(sec);
-	SectionProp *conf = static_cast<SectionProp *>(sec);
+	SectionProp* conf = static_cast<SectionProp*>(sec);
 
 	const auto model_choice          = conf->GetString("sidmodel");
 	const auto clock_choice          = conf->GetString("sidclock");
@@ -303,7 +310,7 @@ static void init_innovation_dosbox_settings(SectionProp& sec_prop)
 	        "  hardsid:  1.000 MHz, available on the DuoSID.");
 
 	// IO Address
-	auto* hex_prop          = sec_prop.AddHex("sidport", when_idle, 0x280);
+	auto* hex_prop = sec_prop.AddHex("sidport", when_idle, 0x280);
 	hex_prop->SetValues({"240", "260", "280", "2a0", "2c0"});
 	hex_prop->SetHelp(
 	        "The IO port address of the Innovation SSI-2001 (280 by default).");
@@ -318,8 +325,9 @@ static void init_innovation_dosbox_settings(SectionProp& sec_prop)
 
 	int_prop = sec_prop.AddInt("8580filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
-	int_prop->SetHelp("Adjusts the 8580's filtering strength as a percentage from 0 to 100\n"
-	                   "(50 by default).");
+	int_prop->SetHelp(
+	        "Adjusts the 8580's filtering strength as a percentage from 0 to 100\n"
+	        "(50 by default).");
 
 	str_prop = sec_prop.AddString("innovation_filter", when_idle, "off");
 	assert(str_prop);
