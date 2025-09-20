@@ -802,7 +802,11 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		const auto msg = format_str("FSYNTH: Error loading SoundFont '%s'",
 		                            sf_name.c_str());
 
-		LOG_ERR("%s", msg.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "FSYNTH",
+		                      "FLUIDSYNTH_ERROR_LOADING_SOUNDFONT",
+		                      sf_name.c_str());
+
 		throw std::runtime_error(msg);
 	}
 
@@ -1331,6 +1335,9 @@ static void register_fluidsynth_text_messages()
 	MSG_Add("FLUIDSYNTH_INVALID_SOUNDFONT_DIR",
 	        "Invalid [color=light-green]soundfont_dir[reset] setting; "
 	        "cannot open directory [color=white]'%s'[reset], using ''");
+
+	MSG_Add("FLUIDSYNTH_ERROR_LOADING_SOUNDFONT",
+	        "Error loading SoundFont [color=white]'%s'[reset]");
 
 	MSG_Add("FLUIDSYNTH_INVALID_EFFECT_PARAMETER",
 	        "Invalid [color=light-green]'%s'[reset] synth parameter (%s): "

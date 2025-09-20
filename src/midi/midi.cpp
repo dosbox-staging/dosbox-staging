@@ -41,8 +41,8 @@
 #include "hardware/timer.h"
 #include "misc/ansi_code_markup.h"
 #include "misc/cross.h"
+#include "misc/notifications.h"
 #include "utils/string_utils.h"
-
 
 // #define DEBUG_MIDI
 
@@ -758,11 +758,12 @@ static void midi_init([[maybe_unused]] Section* sec)
 
 		} catch (const std::runtime_error& ex) {
 			const auto mididevice_pref = get_mididevice_setting();
+
 			if (mididevice_pref == MidiDevicePortPref) {
-				LOG_WARNING(
-				        "MIDI: Error opening device '%s'; "
-				        "using 'mididevice = none' and disabling MIDI output",
-				        mididevice_pref.c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MIDI",
+				                      "MIDI_DEVICE_ERROR_OPENING_DEVICE_NO_MIDI",
+				                      MidiDevicePortPref);
 
 				set_section_property_value("midi", "mididevice", "none");
 
@@ -774,9 +775,11 @@ static void midi_init([[maybe_unused]] Section* sec)
 				// If 'mididevice' was set to a concrete value
 				// and the device could not be initialiased,
 				// we'll try 'port' as a fallback.
-				LOG_WARNING("MIDI: Error opening device '%s'; using '%s'",
-				            mididevice_pref.c_str(),
-				            DefaultMidiDevicePref);
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MIDI",
+				                      "MIDI_DEVICE_ERROR_OPENING_DEVICE",
+				                      mididevice_pref.c_str(),
+				                      DefaultMidiDevicePref);
 
 				set_section_property_value("midi",
 				                           "mididevice",
@@ -926,6 +929,14 @@ void init_midi_dosbox_settings(SectionProp& secprop)
 
 static void register_midi_text_messages()
 {
+	MSG_Add("MIDI_DEVICE_ERROR_OPENING_DEVICE",
+	        "Error opening MIDI device [color=white]'%s'[reset]; "
+	        "using [color=white]'%s'[reset]");
+
+	MSG_Add("MIDI_DEVICE_ERROR_OPENING_DEVICE_NO_MIDI",
+	        "Error opening MIDI device [color=white]'%s'[reset]; "
+	        "using 'none' (disabling MIDI output)");
+
 	MSG_Add("MIDI_DEVICE_LIST_NOT_SUPPORTED", "Listing not supported");
 	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "Device not configured");
 	MSG_Add("MIDI_DEVICE_NO_PORTS", "No available ports");
