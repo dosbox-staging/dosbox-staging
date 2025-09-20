@@ -91,4 +91,6 @@ private:
 	void AudioCallback(int frames);
 };
 
+void DISKNOISE_AddConfigSection(const ConfigPtr& conf);
+
 #endif // DOSBOX_DISK_NOISE_H
