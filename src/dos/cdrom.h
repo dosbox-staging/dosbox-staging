@@ -351,6 +351,8 @@ private:
 	void PlayNextAudioTrack();
 	bool PlayAudioTrack(const Track& track, const uint32_t sector_offset);
 
+	bool LoadMdsFile(const char *filename);
+
 	// Private functions for cue sheet processing
 	bool  LoadCueSheet(const char *cuefile);
 	bool  GetRealFileName(std::string& filename, std::string& pathname);
