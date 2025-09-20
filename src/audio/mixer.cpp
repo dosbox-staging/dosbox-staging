@@ -32,7 +32,6 @@
 #include "hardware/audio/sblaster.h"
 #include "hardware/audio/tandy_sound.h"
 #include "hardware/video/reelmagic/reelmagic.h"
-#include "hardware/hardware.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"

@@ -17,7 +17,6 @@
 
 #include "audio/mixer.h"
 #include "config/setup.h"
-#include "hardware/hardware.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
 

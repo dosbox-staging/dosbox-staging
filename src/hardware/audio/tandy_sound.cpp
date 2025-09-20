@@ -36,7 +36,6 @@
 #include "config/setup.h"
 #include "dosbox.h"
 #include "hardware/dma.h"
-#include "hardware/hardware.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"

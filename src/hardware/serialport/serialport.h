@@ -24,10 +24,6 @@
 #define SERIAL_DEBUG 1
 #endif
 
-#if SERIAL_DEBUG
-#include "hardware/hardware.h"
-#endif
-
 constexpr uint32_t SerialMinBaudRate = 300u;
 constexpr uint32_t SerialMaxBaudRate = 115200u;
 
