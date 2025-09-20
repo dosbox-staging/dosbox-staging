@@ -7,7 +7,6 @@
 #include "hardware/audio/opl.h"
 
 #include "audio/mixer.h"
-#include "hardware/hardware.h"
 #include "hardware/port.h"
 #include "utils/rwqueue.h"
 
