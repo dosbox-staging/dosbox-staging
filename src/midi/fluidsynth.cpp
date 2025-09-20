@@ -359,6 +359,7 @@ static std_fs::path find_sf_file(const std::string& sf_name)
 	if (path_exists(sf_path)) {
 		return sf_path;
 	}
+
 	for (const auto& dir : get_data_dirs()) {
 		for (const auto& sf :
 		     {dir / sf_name, dir / (sf_name + SoundFontExtension)}) {
@@ -728,8 +729,10 @@ void MidiDeviceFluidSynth::TryInitSynth()
 
 	FsynthVersion vers = {};
 	FluidSynth::fluid_version(&vers.major, &vers.minor, &vers.micro);
+
 	if (vers < min_fsynth_version || vers >= max_fsynth_version_exclusive) {
 		const auto msg = "FSYNTH: FluidSynth version must be at least 2.2.3 and less than 3.0.0";
+
 		LOG_ERR("%s. Version loaded is %d.%d.%d",
 		        msg,
 		        vers.major,
@@ -747,6 +750,12 @@ void MidiDeviceFluidSynth::TryInitSynth()
 MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 {
 	TryInitSynth();
+
+#ifdef NDEBUG
+	FluidSynth::fluid_set_log_function(FLUID_ERR, NULL, NULL);
+	FluidSynth::fluid_set_log_function(FLUID_WARN, NULL, NULL);
+	FluidSynth::fluid_set_log_function(FLUID_DBG, NULL, NULL);
+#endif
 
 	FluidSynthSettingsPtr fluid_settings(FluidSynth::new_fluid_settings(),
 	                                     FluidSynth::delete_fluid_settings);
