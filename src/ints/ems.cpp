@@ -7,18 +7,19 @@
 #include <algorithm>
 #include <cstring>
 #include <cstdlib>
+#include <memory>
 
-#include "ints/bios.h"
+#include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "dos/dos_inc.h"
-#include "hardware/dma.h"
-#include "hardware/port.h"
-#include "hardware/input/keyboard.h"
-#include "hardware/memory.h"
 #include "cpu/paging.h"
 #include "cpu/registers.h"
-#include "config/setup.h"
+#include "dos/dos.h"
+#include "hardware/dma.h"
+#include "hardware/input/keyboard.h"
+#include "hardware/memory.h"
+#include "hardware/port.h"
+#include "ints/bios.h"
 #include "misc/support.h"
 
 #define EMM_PAGEFRAME	0xE000
@@ -1535,18 +1536,25 @@ public:
 	}
 };
 
-static EMS* test;
+static std::unique_ptr<EMS> ems_module = {};
 
-void EMS_ShutDown(Section* /*sec*/) {
-	delete test;
+static void ems_destroy([[maybe_unused]] Section* section)
+{
+	ems_module = {};
 }
 
-void EMS_Init(Section* sec)
+static void notify_ems_setting_updated(SectionProp* section,
+                                       [[maybe_unused]] const std::string& prop_name)
 {
-	assert(sec);
+	ems_module = std::make_unique<EMS>(section);
+}
 
-	test = new EMS(sec);
+void EMS_Init(Section* section)
+{
+	assert(section);
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&EMS_ShutDown, changeable_at_runtime);
+	ems_module = std::make_unique<EMS>(section);
+
+	section->AddDestroyHandler(ems_destroy);
+	section->AddUpdateHandler(notify_ems_setting_updated);
 }

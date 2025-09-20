@@ -397,7 +397,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 					PropInt* pint = dynamic_cast<PropInt*>(p);
 					assert(pint);
 
-					if (pint->GetMin() != pint->GetMax()) {
+					if (pint && pint->GetMin() != pint->GetMax()) {
 						std::ostringstream oss;
 						oss << pint->GetMin();
 						oss << "..";
@@ -718,7 +718,9 @@ void CONFIG::Run(void)
 						        dynamic_cast<SectionLine*>(sec);
 						assert(pline);
 
-						WriteOut("%s", pline->data.c_str());
+						if (pline) {
+							WriteOut("%s", pline->data.c_str());
+						}
 						break;
 					}
 					while (true) {
@@ -806,7 +808,7 @@ void CONFIG::Run(void)
 				pvars.push_back(rest);
 			}
 
-			const char* result = control->SetProp(pvars);
+			const char* result = control->SetProperty(pvars);
 
 			if (strlen(result)) {
 				WriteOut(result);
@@ -862,14 +864,23 @@ void CONFIG::Run(void)
 
 				std::string inputline = pvars[1] + "=" + value;
 
-				tsec->ExecuteDestroy(false);
-
 				const auto line_utf8 = dos_to_utf8(
 				        inputline,
 				        DosStringConvertMode::NoSpecialCharacters);
 
 				tsec->HandleInputline(line_utf8);
-				tsec->ExecuteInit(false);
+
+				if (tsec->IsChangeableAtRuntime()) {
+					// TODO This branch is temporary and
+					// will be removed a few commits later
+					// once the `changeable_at_runtime`
+					// concept is removed from the section
+					// init/destroy handling.
+					tsec->ExecuteDestroy(false);
+					tsec->ExecuteInit(false);
+				} else {
+					tsec->ExecuteUpdate(*property);
+				}
 			}
 			return;
 		}
@@ -1106,5 +1117,5 @@ void PROGRAMS_Init(Section* sec)
 	CALLBACK_Setup(call_program, &PROGRAMS_Handler, CB_RETF, "internal program");
 
 	// TODO Cleanup -- allows unit tests to run indefinitely & cleanly
-	sec->AddDestroyFunction(&PROGRAMS_Destroy);
+	sec->AddDestroyHandler(PROGRAMS_Destroy);
 }

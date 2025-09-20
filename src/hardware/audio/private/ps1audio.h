@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef PS1AUDIO_H
-#define PS1AUDIO_H
+#ifndef DOSBOX_PRIVATE_PS1AUDIO_H
+#define DOSBOX_PRIVATE_PS1AUDIO_H
 
 #include "dosbox.h"
 
@@ -99,4 +99,4 @@ private:
 	bool can_trigger_irq = false;
 };
 
-#endif
+#endif // DOSBOX_PRIVATE_PS1AUDIO_H

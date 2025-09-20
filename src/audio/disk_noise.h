@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "dos/dos.h"
 #include "mixer.h"
 
 enum DiskNoiseIoType { Read, Write };
@@ -89,5 +90,7 @@ private:
 
 	void AudioCallback(int frames);
 };
+
+void DISKNOISE_AddConfigSection(const ConfigPtr& conf);
 
 #endif // DOSBOX_DISK_NOISE_H

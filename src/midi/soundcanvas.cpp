@@ -13,6 +13,7 @@
 #include "audio/clap/library.h"
 #include "audio/clap/plugin_manager.h"
 #include "config/setup.h"
+#include "dos/programs.h"
 #include "hardware/pic.h"
 #include "misc/ansi_code_markup.h"
 #include "misc/std_filesystem.h"
@@ -853,14 +854,10 @@ static void soundcanvas_init([[maybe_unused]] Section* sec)
 
 void SOUNDCANVAS_AddConfigSection(const ConfigPtr& conf)
 {
-	constexpr auto ChangeableAtRuntime = true;
-
 	assert(conf);
-	SectionProp* sec_prop = conf->AddSectionProp("soundcanvas",
-	                                               &soundcanvas_init,
-	                                               ChangeableAtRuntime);
-	assert(sec_prop);
-	init_soundcanvas_dosbox_settings(*sec_prop);
 
+	auto section = conf->AddSection("soundcanvas", soundcanvas_init);
+
+	init_soundcanvas_dosbox_settings(*section);
 	register_soundcanvas_text_messages();
 }

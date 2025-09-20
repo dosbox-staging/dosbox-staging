@@ -90,7 +90,6 @@ static dynlib_handle fsynth_lib = {};
 	FSFUNC(int, fluid_synth_set_reverb_group_damp, (fluid_synth_t *synth, int fx_group, double damping)) \
 	FSFUNC(int, fluid_synth_set_reverb_group_width, (fluid_synth_t *synth, int fx_group, double width)) \
 	FSFUNC(int, fluid_synth_set_reverb_group_level, (fluid_synth_t *synth, int fx_group, double level)) \
-	FSFUNC(int, fluid_synth_sfcount, (fluid_synth_t *synth)) \
 	FSFUNC(int, fluid_synth_sfload, (fluid_synth_t *synth, const char *filename, int reset_presets)) \
 	FSFUNC(void, fluid_synth_set_gain, (fluid_synth_t *synth, float gain)) \
 	FSFUNC(int, fluid_synth_set_interp_method, (fluid_synth_t *synth, int chan, int interp_method)) \
@@ -158,21 +157,6 @@ constexpr auto NumChorusParams      = 5;
 constexpr auto ReverbSettingName    = "fsynth_reverb";
 constexpr auto DefaultReverbSetting = "auto";
 constexpr auto NumReverbParams      = 4;
-
-struct ChorusParameters {
-	int voice_count = {};
-	double level    = {};
-	double speed    = {};
-	double depth    = {};
-	int mod_wave    = {};
-};
-
-struct ReverbParameters {
-	double room_size = {};
-	double damping   = {};
-	double width     = {};
-	double level     = {};
-};
 
 // clang-format off
 
@@ -243,6 +227,7 @@ static void init_fluidsynth_dosbox_settings(SectionProp& secprop)
 	        "               - depth:            Decimal from 0.0 to 21.0\n"
 	        "               - modulation-wave:  'sine' or 'triangle'\n"
 	        "             For example: 'fsynth_chorus = 3 1.2 0.3 8.0 sine'\n"
+	        "\n"
 	        "Note: You can disable the FluidSynth chorus and enable the mixer-level chorus\n"
 	        "      on the FluidSynth channel instead, or enable both chorus effects at the\n"
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
@@ -261,6 +246,7 @@ static void init_fluidsynth_dosbox_settings(SectionProp& secprop)
 	        "               - width:      Decimal from 0.0 to 100.0\n"
 	        "               - level:      Decimal from 0.0 to 1.0\n"
 	        "             For example: 'fsynth_reverb = 0.61 0.23 0.76 0.56'\n"
+	        "\n"
 	        "Note: You can disable the FluidSynth reverb and enable the mixer-level reverb\n"
 	        "      on the FluidSynth channel instead, or enable both reverb effects at the\n"
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
@@ -357,11 +343,6 @@ static std::vector<std_fs::path> get_data_dirs()
 			                      "FLUIDSYNTH_INVALID_SOUNDFONT_DIR",
 			                      sf_dir.c_str());
 
-			LOG_WARNING(
-			        "Invalid 'soundfont_dir' setting; "
-			        "cannot open directory '%s', using ''",
-			        sf_dir.c_str());
-
 			set_section_property_value("fluidsynth", "soundfont_dir", "");
 		}
 	}
@@ -374,6 +355,7 @@ static std_fs::path find_sf_file(const std::string& sf_name)
 	if (path_exists(sf_path)) {
 		return sf_path;
 	}
+
 	for (const auto& dir : get_data_dirs()) {
 		for (const auto& sf :
 		     {dir / sf_name, dir / (sf_name + SoundFontExtension)}) {
@@ -510,16 +492,30 @@ std::optional<ChorusParameters> parse_custom_chorus_params(const std::string& ch
 	                        *mod_wave_opt};
 }
 
-static void set_chorus_params(fluid_synth_t* synth, const ChorusParameters& params)
+void MidiDeviceFluidSynth::SetChorusParams(const ChorusParameters& params)
 {
 	// Apply setting to all groups
 	constexpr int FxGroup = -1;
 
-	FluidSynth::fluid_synth_set_chorus_group_nr(synth, FxGroup, params.voice_count);
-	FluidSynth::fluid_synth_set_chorus_group_level(synth, FxGroup, params.level);
-	FluidSynth::fluid_synth_set_chorus_group_speed(synth, FxGroup, params.speed);
-	FluidSynth::fluid_synth_set_chorus_group_depth(synth, FxGroup, params.depth);
-	FluidSynth::fluid_synth_set_chorus_group_type(synth, FxGroup, params.mod_wave);
+	FluidSynth::fluid_synth_set_chorus_group_nr(synth.get(),
+	                                            FxGroup,
+	                                            params.voice_count);
+
+	FluidSynth::fluid_synth_set_chorus_group_level(synth.get(),
+	                                               FxGroup,
+	                                               params.level);
+
+	FluidSynth::fluid_synth_set_chorus_group_speed(synth.get(),
+	                                               FxGroup,
+	                                               params.speed);
+
+	FluidSynth::fluid_synth_set_chorus_group_depth(synth.get(),
+	                                               FxGroup,
+	                                               params.depth);
+
+	FluidSynth::fluid_synth_set_chorus_group_type(synth.get(),
+	                                              FxGroup,
+	                                              params.mod_wave);
 
 	LOG_MSG("FSYNTH: Chorus enabled with %d voices at level %.2f, "
 	        "%.2f Hz speed, %.2f depth, and %s-wave modulation",
@@ -532,17 +528,15 @@ static void set_chorus_params(fluid_synth_t* synth, const ChorusParameters& para
 	                 : "triangle"));
 }
 
-static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
+void MidiDeviceFluidSynth::SetChorus()
 {
-	assert(synth);
-
 	const auto chorus_pref = get_fluidsynth_section()->GetString(ChorusSettingName);
 	const auto chorus_enabled_opt = parse_bool_setting(chorus_pref);
 
 	auto enable_chorus = [&](const bool enabled) {
 		// Apply setting to all groups
 		constexpr int FxGroup = -1;
-		FluidSynth::fluid_synth_chorus_on(synth, FxGroup, enabled);
+		FluidSynth::fluid_synth_chorus_on(synth.get(), FxGroup, enabled);
 
 		if (!enabled) {
 			LOG_MSG("FSYNTH: Chorus disabled");
@@ -552,8 +546,8 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 	auto handle_auto_setting = [&]() {
 		// Does the SoundFont have known-issues with chorus?
 		const auto is_problematic_font =
-		        find_in_case_insensitive("FluidR3", sf_path.string()) ||
-		        find_in_case_insensitive("zdoom", sf_path.string());
+		        find_in_case_insensitive("FluidR3", soundfont_path.string()) ||
+		        find_in_case_insensitive("zdoom", soundfont_path.string());
 
 		if (is_problematic_font) {
 			enable_chorus(false);
@@ -561,11 +555,9 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 			LOG_INFO(
 			        "FSYNTH: Chorus auto-disabled due to known issues with "
 			        "the '%s' soundfont",
-			        get_fluidsynth_section()
-			                ->GetString("soundfont")
-			                .c_str());
+			        get_fluidsynth_section()->GetString("soundfont").c_str());
 		} else {
-			set_chorus_params(synth, DefaultChorusParameters);
+			SetChorusParams(DefaultChorusParameters);
 			enable_chorus(true);
 
 			// TODO setting the recommended chorus setting for
@@ -576,7 +568,7 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 	if (chorus_enabled_opt) {
 		const auto enabled = *chorus_enabled_opt;
 		if (enabled) {
-			set_chorus_params(synth, DefaultChorusParameters);
+			SetChorusParams(DefaultChorusParameters);
 		}
 		enable_chorus(enabled);
 
@@ -587,7 +579,7 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 		if (const auto chorus_params = parse_custom_chorus_params(chorus_pref);
 		    chorus_params) {
 
-			set_chorus_params(synth, *chorus_params);
+			SetChorusParams(*chorus_params);
 			enable_chorus(true);
 
 		} else {
@@ -639,19 +631,26 @@ std::optional<ReverbParameters> parse_custom_reverb_params(const std::string& re
 	return ReverbParameters{*room_size_opt, *damping_opt, *width_opt, *level_opt};
 }
 
-static void set_reverb_params(fluid_synth_t* synth, const ReverbParameters& params)
-
+void MidiDeviceFluidSynth::SetReverbParams(const ReverbParameters& params)
 {
 	// Apply setting to all groups
 	constexpr int FxGroup = -1;
 
-	FluidSynth::fluid_synth_set_reverb_group_roomsize(synth,
+	FluidSynth::fluid_synth_set_reverb_group_roomsize(synth.get(),
 	                                                  FxGroup,
 	                                                  params.room_size);
 
-	FluidSynth::fluid_synth_set_reverb_group_damp(synth, FxGroup, params.damping);
-	FluidSynth::fluid_synth_set_reverb_group_width(synth, FxGroup, params.width);
-	FluidSynth::fluid_synth_set_reverb_group_level(synth, FxGroup, params.level);
+	FluidSynth::fluid_synth_set_reverb_group_damp(synth.get(),
+	                                              FxGroup,
+	                                              params.damping);
+
+	FluidSynth::fluid_synth_set_reverb_group_width(synth.get(),
+	                                               FxGroup,
+	                                               params.width);
+
+	FluidSynth::fluid_synth_set_reverb_group_level(synth.get(),
+	                                               FxGroup,
+	                                               params.level);
 
 	LOG_MSG("FSYNTH: Reverb enabled with a %.2f room size, "
 	        "%.2f damping, %.2f width, and level %.2f",
@@ -661,17 +660,15 @@ static void set_reverb_params(fluid_synth_t* synth, const ReverbParameters& para
 	        params.level);
 }
 
-static void setup_reverb(fluid_synth_t* synth)
+void MidiDeviceFluidSynth::SetReverb()
 {
-	assert(synth);
-
 	const auto reverb_pref = get_fluidsynth_section()->GetString(ReverbSettingName);
 	const auto reverb_enabled_opt = parse_bool_setting(reverb_pref);
 
 	auto enable_reverb = [&](const bool enabled) {
 		// Apply setting to all groups
 		constexpr int FxGroup = -1;
-		FluidSynth::fluid_synth_reverb_on(synth, FxGroup, enabled);
+		FluidSynth::fluid_synth_reverb_on(synth.get(), FxGroup, enabled);
 
 		if (!enabled) {
 			LOG_MSG("FSYNTH: Reverb disabled");
@@ -681,12 +678,14 @@ static void setup_reverb(fluid_synth_t* synth)
 	auto handle_auto_setting = [&]() {
 		// TODO setting the recommended reverb setting for GeneralUserGS
 		// will happen here
+		SetReverbParams(DefaultReverbParameters);
+		enable_reverb(true);
 	};
 
 	if (reverb_enabled_opt) {
 		const auto enabled = *reverb_enabled_opt;
 		if (enabled) {
-			set_reverb_params(synth, DefaultReverbParameters);
+			SetReverbParams(DefaultReverbParameters);
 		}
 		enable_reverb(enabled);
 
@@ -697,7 +696,7 @@ static void setup_reverb(fluid_synth_t* synth)
 		if (const auto reverb_params = parse_custom_reverb_params(reverb_pref);
 		    reverb_params) {
 
-			set_reverb_params(synth, *reverb_params);
+			SetReverbParams(*reverb_params);
 			enable_reverb(true);
 
 		} else {
@@ -709,10 +708,17 @@ static void setup_reverb(fluid_synth_t* synth)
 	}
 }
 
-MidiDeviceFluidSynth::MidiDeviceFluidSynth()
+void MidiDeviceFluidSynth::SetVolume(const int volume_percent)
+{
+	const auto gain = static_cast<float>(volume_percent) / 100.0f;
+	FluidSynth::fluid_synth_set_gain(synth.get(), gain);
+}
+
+void MidiDeviceFluidSynth::TryInitSynth()
 {
 	std::string sym_err_msg;
 	DynLibResult res = load_fsynth_dynlib(sym_err_msg);
+
 	switch (res) {
 	case DynLibResult::Success: break;
 	case DynLibResult::LibOpenErr:
@@ -725,8 +731,10 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	FsynthVersion vers = {};
 	FluidSynth::fluid_version(&vers.major, &vers.minor, &vers.micro);
+
 	if (vers < min_fsynth_version || vers >= max_fsynth_version_exclusive) {
 		const auto msg = "FSYNTH: FluidSynth version must be at least 2.2.3 and less than 3.0.0";
+
 		LOG_ERR("%s. Version loaded is %d.%d.%d",
 		        msg,
 		        vers.major,
@@ -739,6 +747,17 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		        vers.minor,
 		        vers.micro);
 	}
+}
+
+MidiDeviceFluidSynth::MidiDeviceFluidSynth()
+{
+	TryInitSynth();
+
+#ifdef NDEBUG
+	FluidSynth::fluid_set_log_function(FLUID_ERR, NULL, NULL);
+	FluidSynth::fluid_set_log_function(FLUID_WARN, NULL, NULL);
+	FluidSynth::fluid_set_log_function(FLUID_DBG, NULL, NULL);
+#endif
 
 	FluidSynthSettingsPtr fluid_settings(FluidSynth::new_fluid_settings(),
 	                                     FluidSynth::delete_fluid_settings);
@@ -775,34 +794,35 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	const auto sf_name = section->GetString("soundfont");
 	const auto sf_path = find_sf_file(sf_name);
 
-	if (!sf_path.empty() &&
-	    FluidSynth::fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		constexpr auto ResetPresets = true;
-		FluidSynth::fluid_synth_sfload(fluid_synth.get(),
-		                               sf_path.string().c_str(),
-		                               ResetPresets);
-	}
+	constexpr auto ResetPresets = true;
+	if (FluidSynth::fluid_synth_sfload(fluid_synth.get(),
+	                                   sf_path.string().c_str(),
+	                                   ResetPresets) == FLUID_FAILED) {
 
-	if (FluidSynth::fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		const auto msg = format_str("FSYNTH: Error loading SoundFont '%s'",
 		                            sf_name.c_str());
 
-		LOG_ERR("%s", msg.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "FSYNTH",
+		                      "FLUIDSYNTH_ERROR_LOADING_SOUNDFONT",
+		                      sf_name.c_str());
+
 		throw std::runtime_error(msg);
 	}
 
-	auto sf_volume_percent = section->GetInt("soundfont_volume");
-	FluidSynth::fluid_synth_set_gain(fluid_synth.get(),
-	                                 static_cast<float>(sf_volume_percent) /
-	                                         100.0f);
+	synth    = std::move(fluid_synth);
+	settings = std::move(fluid_settings);
+
+	const auto volume_percent = section->GetInt("soundfont_volume");
+	SetVolume(volume_percent);
 
 	// Let the user know that the SoundFont was loaded
-	if (sf_volume_percent == 100) {
+	if (volume_percent == 100) {
 		LOG_MSG("FSYNTH: Using SoundFont '%s'", sf_path.string().c_str());
 	} else {
 		LOG_MSG("FSYNTH: Using SoundFont '%s' with volume scaled to %d%%",
 		        sf_path.string().c_str(),
-		        sf_volume_percent);
+		        volume_percent);
 	}
 
 	// Applies setting to all groups
@@ -814,8 +834,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	                                          FxGroup,
 	                                          FLUID_INTERP_HIGHEST);
 
-	setup_chorus(fluid_synth.get(), sf_path);
-	setup_reverb(fluid_synth.get());
+	SetChorus();
+	SetReverb();
 
 	MIXER_LockMixerThread();
 
@@ -824,37 +844,21 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	                                      this,
 	                                      std::placeholders::_1);
 
-	auto fluidsynth_channel = MIXER_AddChannel(mixer_callback,
-	                                           sample_rate_hz,
-	                                           ChannelName::FluidSynth,
-	                                           {ChannelFeature::Sleep,
-	                                            ChannelFeature::Stereo,
-	                                            ChannelFeature::ReverbSend,
-	                                            ChannelFeature::ChorusSend,
-	                                            ChannelFeature::Synthesizer});
+	mixer_channel = MIXER_AddChannel(mixer_callback,
+	                                 sample_rate_hz,
+	                                 ChannelName::FluidSynth,
+	                                 {ChannelFeature::Sleep,
+	                                  ChannelFeature::Stereo,
+	                                  ChannelFeature::ReverbSend,
+	                                  ChannelFeature::ChorusSend,
+	                                  ChannelFeature::Synthesizer});
 
 	// FluidSynth renders float audio frames between -1.0f and
 	// +1.0f, so we ask the channel to scale all the samples up to
 	// its 0db level.
-	fluidsynth_channel->Set0dbScalar(Max16BitSampleValue);
+	mixer_channel->Set0dbScalar(Max16BitSampleValue);
 
-	const std::string filter_prefs = section->GetString("fsynth_filter");
-
-	if (!fluidsynth_channel->TryParseAndSetCustomFilter(filter_prefs)) {
-		if (filter_prefs != "off") {
-			NOTIFY_DisplayWarning(Notification::Source::Console,
-			                      "FSYNTH",
-			                      "PROGRAM_CONFIG_INVALID_SETTING",
-			                      "fsynth_filter",
-			                      filter_prefs.c_str(),
-			                      "off");
-		}
-
-		fluidsynth_channel->SetHighPassFilter(FilterState::Off);
-		fluidsynth_channel->SetLowPassFilter(FilterState::Off);
-
-		set_section_property_value("fluidsynth", "fsynth_filter", "off");
-	}
+	SetFilter();
 
 	// Double the baseline PCM prebuffer because MIDI is demanding
 	// and bursty. The mixer's default of ~20 ms becomes 40 ms here,
@@ -871,12 +875,6 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	// Size the in-bound work FIFO
 	work_fifo.Resize(MaxMidiWorkFifoSize);
-
-	// If we haven't failed yet, then we're ready to begin so move
-	// the local objects into the member variables.
-	settings      = std::move(fluid_settings);
-	synth         = std::move(fluid_synth);
-	mixer_channel = std::move(fluidsynth_channel);
 
 	soundfont_path = sf_path;
 
@@ -921,6 +919,28 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 	mixer_channel.reset();
 
 	MIXER_UnlockMixerThread();
+}
+
+void MidiDeviceFluidSynth::SetFilter()
+{
+	const std::string filter_prefs = get_fluidsynth_section()->GetString(
+	        "fsynth_filter");
+
+	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		if (filter_prefs != "off") {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      "fsynth_filter",
+			                      filter_prefs.c_str(),
+			                      "off");
+		}
+
+		mixer_channel->SetHighPassFilter(FilterState::Off);
+		mixer_channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("fluidsynth", "fsynth_filter", "off");
+	}
 }
 
 int MidiDeviceFluidSynth::GetNumPendingAudioFrames()
@@ -1272,9 +1292,52 @@ static void fluidsynth_init([[maybe_unused]] Section* sec)
 	}
 }
 
+static void notify_fluidsynth_setting_updated([[maybe_unused]] SectionProp* section,
+                                              const std::string& prop_name)
+{
+	const auto device = dynamic_cast<MidiDeviceFluidSynth*>(
+	        MIDI_GetCurrentDevice());
+
+	if (prop_name == ChorusSettingName) {
+		if (device) {
+			device->SetChorus();
+		}
+
+	} else if (prop_name == ReverbSettingName) {
+		if (device) {
+			device->SetReverb();
+		}
+
+	} else if (prop_name == "fsynth_filter") {
+		if (device) {
+			device->SetFilter();
+		}
+
+	} else if (prop_name == "soundfont_volume") {
+		if (device) {
+			device->SetVolume(section->GetInt("soundfont_volume"));
+		}
+
+	} else if (prop_name == "soundfont_dir") {
+		// no-op; will take effect when loading a SoundFont
+
+	} else {
+		if (device) {
+			MIDI_Init();
+		}
+	}
+}
+
 static void register_fluidsynth_text_messages()
 {
 	MSG_Add("FLUIDSYNTH_NO_SOUNDFONTS", "No available SoundFonts");
+
+	MSG_Add("FLUIDSYNTH_INVALID_SOUNDFONT_DIR",
+	        "Invalid [color=light-green]soundfont_dir[reset] setting; "
+	        "cannot open directory [color=white]'%s'[reset], using ''");
+
+	MSG_Add("FLUIDSYNTH_ERROR_LOADING_SOUNDFONT",
+	        "Error loading SoundFont [color=white]'%s'[reset]");
 
 	MSG_Add("FLUIDSYNTH_INVALID_EFFECT_PARAMETER",
 	        "Invalid [color=light-green]'%s'[reset] synth parameter (%s): "
@@ -1294,14 +1357,12 @@ static void register_fluidsynth_text_messages()
 
 void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 {
-	constexpr auto ChangeableAtRuntime = true;
-
 	assert(conf);
-	SectionProp* sec = conf->AddSectionProp("fluidsynth",
-	                                          &fluidsynth_init,
-	                                          ChangeableAtRuntime);
-	assert(sec);
-	init_fluidsynth_dosbox_settings(*sec);
 
+	auto section = conf->AddSection("fluidsynth", fluidsynth_init);
+
+	section->AddUpdateHandler(notify_fluidsynth_setting_updated);
+
+	init_fluidsynth_dosbox_settings(*section);
 	register_fluidsynth_text_messages();
 }

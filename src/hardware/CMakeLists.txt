@@ -16,6 +16,7 @@ target_sources(libdosboxcommon PRIVATE
   audio/pcspeaker_impulse.cpp
   audio/ps1audio.cpp
   audio/sblaster.cpp
+  audio/speaker.cpp
   audio/ston1_dac.cpp
   audio/tandy_sound.cpp
 
@@ -69,16 +70,16 @@ target_sources(libdosboxcommon PRIVATE
   cmos.cpp
   dma.cpp
   ide.cpp
-  iohandler.cpp
   memory.cpp
   pci_bus.cpp
   pic.cpp
+  port.cpp
   timer.cpp
   virtualbox.cpp
   vmware.cpp
 )
 
-target_sources(dosbox PRIVATE iohandler_containers.cpp)
+target_sources(dosbox PRIVATE port_containers.cpp)
 
 target_link_libraries(libdosboxcommon PRIVATE
   libesfmu

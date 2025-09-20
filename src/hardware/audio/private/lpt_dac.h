@@ -1,18 +1,19 @@
 // SPDX-FileSPDText:X Identifier: GPL-2.0-or-later
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_LPT_DAC_H
-#define DOSBOX_LPT_DAC_H
+#ifndef DOSBOX_PRIVATE_LPT_DAC_H
+#define DOSBOX_PRIVATE_LPT_DAC_H
 
 #include "dosbox.h"
 
 #include <queue>
 #include <set>
+#include <string>
 #include <string_view>
 
 #include "audio/mixer.h"
-#include "hardware/port.h"
 #include "hardware/lpt.h"
+#include "hardware/port.h"
 #include "utils/rwqueue.h"
 
 // Provides mandatory scafolding for derived LPT DAC devices
@@ -70,5 +71,4 @@ private:
 	int frames_rendered_this_tick = 0;
 };
 
-
-#endif
+#endif // DOSBOX_PRIVATE_LPT_DAC_H

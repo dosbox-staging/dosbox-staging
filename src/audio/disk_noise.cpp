@@ -515,9 +515,10 @@ static DiskNoiseMode get_disk_noise_mode(const std::string& mode)
 
 static void disknoise_init(Section* section)
 {
+	assert(section);
+
 	constexpr auto MaxNumSeekSamples = 9;
 
-	assert(section);
 	const auto prop = static_cast<SectionProp*>(section);
 
 	const auto enable_floppy_disk_noise = get_disk_noise_mode(
@@ -525,16 +526,20 @@ static void disknoise_init(Section* section)
 	const auto enable_hard_disk_noise = get_disk_noise_mode(
 	        prop->GetString("hard_disk_noise"));
 
-	const auto spin_up                        = "hdd_spinup.flac";
-	const auto spin                           = "hdd_spin.flac";
+	const auto spin_up = "hdd_spinup.flac";
+	const auto spin    = "hdd_spin.flac";
+
 	std::vector<std::string> hdd_seek_samples = {};
+
 	for (auto i = 1; i <= MaxNumSeekSamples; ++i) {
 		hdd_seek_samples.emplace_back("hdd_seek" + std::to_string(i) + ".flac");
 	}
 
-	const auto floppy_spin_up                    = "fdd_spinup.flac";
-	const auto floppy_spin                       = "fdd_spin.flac";
+	const auto floppy_spin_up = "fdd_spinup.flac";
+	const auto floppy_spin    = "fdd_spin.flac";
+
 	std::vector<std::string> floppy_seek_samples = {};
+
 	for (auto i = 1; i <= MaxNumSeekSamples; ++i) {
 		floppy_seek_samples.emplace_back("fdd_seek" +
 		                                 std::to_string(i) + ".flac");
@@ -548,8 +553,7 @@ static void disknoise_init(Section* section)
 	                                           floppy_spin,
 	                                           floppy_seek_samples);
 
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&disknoise_destroy, changeable_at_runtime);
+	section->AddDestroyHandler(disknoise_destroy);
 }
 
 static void init_disknoise_dosbox_settings(SectionProp& secprop)
@@ -581,11 +585,7 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto ChangeableAtRuntime = true;
+	auto section = conf->AddSection("disknoise", disknoise_init);
 
-	SectionProp* sec = conf->AddSectionProp("disknoise",
-	                                          &disknoise_init,
-	                                          ChangeableAtRuntime);
-	assert(sec);
-	init_disknoise_dosbox_settings(*sec);
+	init_disknoise_dosbox_settings(*section);
 }

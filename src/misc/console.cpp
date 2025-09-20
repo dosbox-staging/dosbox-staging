@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "misc/console.h"
+#include "dos/dos.h"
 #include "utils/checks.h"
-#include "dos/dos_inc.h"
 
 CHECK_NARROWING();
 

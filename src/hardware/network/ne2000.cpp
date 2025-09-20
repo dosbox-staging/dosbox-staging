@@ -10,6 +10,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <memory>
 
 #include "config/setup.h"
 #include "cpu/callback.h"
@@ -1510,25 +1511,33 @@ public:
 	}
 };
 
-static NE2K* instance;
-void NE2K_ShutDown(Section* /* sec */)
+static std::unique_ptr<NE2K> ne2000 = {};
+
+void NE2K_NotifySettingUpdated(Section* section,
+                               [[maybe_unused]] const std::string& prop_name)
 {
-	delete instance;
-	instance = nullptr;
+	ne2000 = std::make_unique<NE2K>(section);
+
+	if (!ne2000->load_success) {
+		ne2000 = {};
+	}
 }
 
-void NE2K_Init(Section* sec)
+static void ne2k_destroy([[maybe_unused]] Section* section)
 {
-	assert(sec);
+	ne2000 = {};
+}
+
+void NE2K_Init(Section* section)
+{
+	assert(section);
 	// LOG(LOG_MISC,LOG_DEBUG)("Initializing NE2000 network card emulation");
 
-	instance = new NE2K(sec);
+	ne2000 = std::make_unique<NE2K>(section);
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&NE2K_ShutDown, changeable_at_runtime);
+	section->AddDestroyHandler(ne2k_destroy);
 
-	if (!instance->load_success) {
-		delete instance;
-		instance = nullptr;
+	if (!ne2000->load_success) {
+		ne2000 = {};
 	}
 }

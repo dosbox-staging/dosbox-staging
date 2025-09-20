@@ -218,7 +218,7 @@ static void LOG_Init(Section * sec) {
 	} else {
 		debuglog = nullptr;
 	}
-	sect->AddDestroyFunction(&LOG_Destroy);
+	sect->AddDestroyHandler(LOG_Destroy);
 	char buf[64];
 	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) { //Skip LOG_ALL, it is always enabled
 		safe_strcpy(buf, loggrp[i].front);
@@ -262,7 +262,7 @@ void LOG_StartUp(void) {
 	loggrp[LOG_REELMAGIC].front="REELMAGIC";
 	
 	/* Register the log section */
-	SectionProp* sect   = control->AddSectionProp("log", LOG_Init);
+	SectionProp* sect   = control->AddSection("log", LOG_Init);
 	PropString* pstring = sect->AddString("logfile",
 	                                        Property::Changeable::Always,
 	                                        "");

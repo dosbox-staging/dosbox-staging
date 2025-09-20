@@ -17,7 +17,7 @@
 enum class ViewportMode { Fit, Relative };
 
 struct ViewportSettings {
-	ViewportMode mode = {};
+	ViewportMode mode = ViewportMode::Fit;
 
 	// Either parameter can be set in Fit mode (but not both at the
 	// same time), or none
@@ -87,8 +87,8 @@ struct RenderPal_t {
 };
 
 struct Render {
-	ImageInfo src = {};
-	uint32_t src_start   = 0;
+	ImageInfo src      = {};
+	uint32_t src_start = 0;
 
 	// Frames per second
 	double fps = 0;

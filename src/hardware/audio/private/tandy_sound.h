@@ -2,10 +2,11 @@
 // SPDX-FileCopyrightText:  2002-2018 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef TANDY_SOUND_H
-#define TANDY_SOUND_H
+#ifndef DOSBOX_PRIVATE_TANDY_SOUND_H
+#define DOSBOX_PRIVATE_TANDY_SOUND_H
 
 #include "audio/mixer.h"
+#include "config/setup.h"
 #include "hardware/dma.h"
 #include "utils/rwqueue.h"
 
@@ -38,7 +39,7 @@ public:
 		bool irq_activated     = false;
 	};
 
-    RWQueue<uint8_t> output_queue{1};
+	RWQueue<uint8_t> output_queue{1};
 	MixerChannelPtr channel = nullptr;
 	float frame_counter     = 0.0f;
 
@@ -69,4 +70,4 @@ private:
 	int sample_rate_hz = 0;
 };
 
-#endif
+#endif // DOSBOX_PRIVATE_TANDY_SOUND_H

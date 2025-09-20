@@ -20,6 +20,8 @@
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
 #include "config/config.h"
+#include "dos/programs.h"
+#include "hardware/audio/mpu401.h"
 #include "hardware/pic.h"
 #include "ints/int10.h"
 #include "midi.h"
@@ -1104,15 +1106,11 @@ static void mt32_init([[maybe_unused]] Section* sec)
 
 void MT32_AddConfigSection(const ConfigPtr& conf)
 {
-	constexpr auto ChangeableAtRuntime = true;
-
 	assert(conf);
-	SectionProp* sec_prop = conf->AddSectionProp("mt32",
-	                                               &mt32_init,
-	                                               ChangeableAtRuntime);
-	assert(sec_prop);
-	init_mt32_dosbox_settings(*sec_prop);
 
+	auto section = conf->AddSection("mt32", mt32_init);
+
+	init_mt32_dosbox_settings(*section);
 	register_mt32_text_messages();
 }
 

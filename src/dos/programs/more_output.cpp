@@ -3,12 +3,12 @@
 
 #include "more_output.h"
 
-#include "utils/ascii.h"
 #include "cpu/callback.h"
-#include "utils/checks.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "ints/int10.h"
 #include "shell/shell.h"
+#include "utils/ascii.h"
+#include "utils/checks.h"
 #include "utils/string_utils.h"
 
 #include <algorithm>
@@ -446,7 +446,7 @@ MoreOutputBase::UserDecision MoreOutputBase::PromptUser()
 
 MoreOutputBase::UserDecision MoreOutputBase::PromptUserIfNeeded()
 {
-	if (shutdown_requested) {
+	if (DOSBOX_IsShutdownRequested()) {
 		return UserDecision::Cancel;
 	}
 	if (screen_line_counter >= lines_to_display) {
@@ -463,7 +463,7 @@ uint32_t MoreOutputBase::GetNumLinesFromUser(UserDecision& decision)
 	WriteOut(" ");
 
 	std::string number_str = {};
-	while (!shutdown_requested) {
+	while (!DOSBOX_IsShutdownRequested()) {
 		CALLBACK_Idle();
 
 		// Try to read the key
@@ -509,7 +509,7 @@ MoreOutputBase::UserDecision MoreOutputBase::WaitForCancelContinue()
 MoreOutputBase::UserDecision MoreOutputBase::WaitForCancelContinueNext()
 {
 	auto decision = UserDecision::Cancel;
-	while (!shutdown_requested) {
+	while (!DOSBOX_IsShutdownRequested()) {
 		CALLBACK_Idle();
 
 		// Try to read the key
@@ -518,8 +518,9 @@ MoreOutputBase::UserDecision MoreOutputBase::WaitForCancelContinueNext()
 		DOS_ReadFile(STDIN, &tmp, &count);
 		const char code = static_cast<char>(tmp);
 
-		if (shutdown_requested || count == 0 || ciequals(code, 'q') ||
-		    code == Ascii::CtrlC || code == Ascii::Escape) {
+		if (DOSBOX_IsShutdownRequested() || count == 0 ||
+		    ciequals(code, 'q') || code == Ascii::CtrlC ||
+		    code == Ascii::Escape) {
 			decision = UserDecision::Cancel;
 			break;
 		} else if (code == ' ') {

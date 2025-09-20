@@ -279,14 +279,21 @@ static void maybe_add_path(const std_fs::path& path, std::vector<std_fs::path>& 
 	if (!std_fs::is_directory(path, ec)) {
 		return;
 	}
+
 	// Filter out duplicates by first canonicalizing the path
 	// and then checking if it already exists in the paths vector.
-	// Ex: /usr/share/dosbox-staging and get_executable_path() /../share can point to the same location
+	// Ex: /usr/share/dosbox-staging and get_executable_path() /../share can
+	// point to the same location
 	const auto canonical_path = std_fs::canonical(path, ec);
+
 	if (ec) {
-		LOG_ERR("RESOURCE: Failed to canonicalize path '%s': %s", path.string().c_str(), ec.message().c_str());
-	} else if (std::find(paths.begin(), paths.end(), canonical_path) == paths.end()) {
-		paths.emplace_back(std::move(canonical_path));
+		LOG_ERR("RESOURCE: Failed to canonicalize path '%s': %s",
+		        path.string().c_str(),
+		        ec.message().c_str());
+
+	} else if (std::find(paths.begin(), paths.end(), canonical_path) ==
+	           paths.end()) {
+		paths.emplace_back(canonical_path);
 	}
 }
 

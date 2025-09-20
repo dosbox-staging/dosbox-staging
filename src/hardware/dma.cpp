@@ -10,6 +10,7 @@
 
 #include "config/setup.h"
 #include "cpu/paging.h"
+#include "hardware/audio/tandy_sound.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
@@ -96,8 +97,6 @@ static void perform_dma_io(const DmaDirection direction, const PhysPt spage,
 	} while (remaining_bytes);
 }
 
-void TANDYSOUND_ShutDown(Section* = nullptr);
-
 static bool activate_primary()
 {
 	assert(!primary);
@@ -115,7 +114,7 @@ static bool activate_secondary()
 	// conflict, so we explicitly shutdown the TandySound device (if
 	// it happens to be running) to meet this request.
 	//
-	TANDYSOUND_ShutDown();
+	TANDYSOUND_Destroy(nullptr);
 
 	constexpr uint8_t secondary_index = 1;
 	secondary = std::make_unique<DmaController>(secondary_index);
@@ -636,15 +635,18 @@ void DMA_SetWrapping(const uint32_t wrap)
 	dma_wrapping = wrap;
 }
 
-void DMA_Destroy(Section* /*sec*/)
+void DMA_Destroy([[maybe_unused]] Section* sec)
 {
 	primary   = {};
 	secondary = {};
 }
+
 void DMA_Init(Section* sec)
 {
 	DMA_SetWrapping(0xffff);
-	sec->AddDestroyFunction(&DMA_Destroy);
+
+	sec->AddDestroyHandler(DMA_Destroy);
+
 	Bitu i;
 	for (i = 0; i < LINK_START; i++) {
 		ems_board_mapping[i] = i;

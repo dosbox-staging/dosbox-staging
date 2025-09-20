@@ -9,6 +9,7 @@
 
 #include <cstdio>
 #include <deque>
+#include <functional>
 #include <list>
 #include <map>
 #include <memory>
@@ -331,7 +332,10 @@ public:
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
 
-typedef void (*SectionFunction)(Section*);
+using SectionInitHandler = std::function<void(Section*)>;
+
+using SectionUpdateHandler =
+        std::function<void(SectionProp*, const std::string& prop_name)>;
 
 class Section {
 private:
@@ -339,17 +343,19 @@ private:
 	// changeable_at_runtime indicates it can be called on configuration
 	// changes
 	struct Function_wrapper {
-		SectionFunction function;
+		SectionInitHandler function;
 		bool changeable_at_runtime;
 
-		Function_wrapper(const SectionFunction fn, bool ch)
+		Function_wrapper(const SectionInitHandler fn, bool ch)
 		        : function(fn),
 		          changeable_at_runtime(ch)
 		{}
 	};
 
-	std::deque<Function_wrapper> init_functions   = {};
-	std::deque<Function_wrapper> destroyfunctions = {};
+	std::deque<Function_wrapper> init_handlers    = {};
+	std::deque<Function_wrapper> destroy_handlers = {};
+	std::vector<SectionUpdateHandler> update_handlers = {};
+
 	std::string sectionname                       = {};
 	bool active                                   = true;
 
@@ -364,15 +370,27 @@ public:
 	Section(Section&& other)            = default;
 	Section& operator=(Section&& other) = default;
 
-	// Children must call executedestroy!
+	// Children must call ExecuteDestroy()
 	virtual ~Section() = default;
 
-	void AddInitFunction(SectionFunction func, bool changeable_at_runtime = false);
+	// TODO comments
+	void AddInitHandler(SectionInitHandler init_handler,
+	                    bool changeable_at_runtime = false);
 
-	void AddDestroyFunction(SectionFunction func,
-	                        bool changeable_at_runtime = false);
+	// TODO comments
+	void AddUpdateHandler(SectionUpdateHandler update_handler);
+
+	// TODO comments
+	void AddDestroyHandler(SectionInitHandler destroy_handler,
+	                       bool changeable_at_runtime = false);
+
+	// TODO This is temporary and will be removed a few commits later once
+	// the `changeable_at_runtime` concept is removed from the section
+	// init/destroy handling.
+	bool IsChangeableAtRuntime();
 
 	void ExecuteInit(bool initall = true);
+	void ExecuteUpdate(const Property& property);
 	void ExecuteDestroy(bool destroyall = true);
 
 	bool IsActive() const

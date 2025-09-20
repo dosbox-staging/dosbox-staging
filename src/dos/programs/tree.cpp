@@ -4,12 +4,12 @@
 #include "tree.h"
 
 #include "cpu/callback.h"
-#include "utils/checks.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "dos/drives.h"
 #include "ints/int10.h"
-#include "shell/shell.h"
 #include "misc/unicode.h"
+#include "shell/shell.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 
@@ -294,7 +294,7 @@ bool TREE::DisplayTree(MoreOutputStrings& output, const std::string& path,
 	bool has_next_entry = DOS_FindFirst(pattern.c_str(), flags._data);
 	size_t space_needed = 7; // length of indentation + ellipsis
 
-	while (!shutdown_requested && has_next_entry) {
+	while (!DOSBOX_IsShutdownRequested() && has_next_entry) {
 		DOS_DTA::Result result = {};
 
 		const DOS_DTA dta(dos.dta());
@@ -377,7 +377,7 @@ bool TREE::DisplayTree(MoreOutputStrings& output, const std::string& path,
 		skip_empty_line = false;
 
 		CALLBACK_Idle();
-		if (shutdown_requested) {
+		if (DOSBOX_IsShutdownRequested()) {
 			break;
 		}
 

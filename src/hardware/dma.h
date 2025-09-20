@@ -10,6 +10,7 @@
 #include <cassert>
 #include <functional>
 
+#include "config/setup.h"
 #include "hardware/port.h"
 #include "misc/support.h"
 
@@ -112,6 +113,8 @@ public:
 	uint16_t ReadControllerReg(io_port_t reg, io_width_t width);
 	void ResetChannel(const uint8_t channel_num) const;
 };
+
+void DMA_Init(Section* sec);
 
 DmaChannel* DMA_GetChannel(uint8_t chan);
 

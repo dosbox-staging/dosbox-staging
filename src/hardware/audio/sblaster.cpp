@@ -4,6 +4,9 @@
 
 #include "private/sblaster.h"
 
+#include "private/gameblaster.h"
+#include "private/gus.h"
+
 #include <array>
 #include <cmath>
 #include <cstring>
@@ -3815,7 +3818,7 @@ void init_sblaster(Section* sec)
 	MIXER_UnlockMixerThread();
 
 	constexpr auto ChangeableAtRuntime = true;
-	sec->AddDestroyFunction(&shutdown_sblaster, ChangeableAtRuntime);
+	sec->AddDestroyHandler(shutdown_sblaster, ChangeableAtRuntime);
 }
 
 void shutdown_sblaster(Section* /*sec*/) {
@@ -3853,9 +3856,9 @@ void SB_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto changeable_at_runtime = true;
 
 	assert(conf);
-	SectionProp* secprop = conf->AddSectionProp(SblasterSectionName,
-	                                              &init_sblaster,
-	                                              changeable_at_runtime);
+	SectionProp* secprop = conf->AddSection(SblasterSectionName,
+	                                        init_sblaster,
+	                                        changeable_at_runtime);
 	assert(secprop);
 	init_sblaster_dosbox_settings(*secprop);
 

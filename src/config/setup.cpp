@@ -748,7 +748,7 @@ bool PropMultiVal::SetValue(const std::string& _value)
 		}
 
 		prevtype     = p->GetType();
-		prevargument = curr_value;
+		prevargument = std::move(curr_value);
 	}
 
 	return is_valid;
@@ -1290,28 +1290,15 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	return true;
 }
 
-SectionProp* Config::AddInactiveSectionProp(const char* section_name)
-{
-	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
-	        "Only letters and digits are allowed in section name");
-
-	constexpr bool inactive = false;
-
-	auto s = std::make_unique<SectionProp>(section_name, inactive);
-
-	auto* section = s.get();
-	sectionlist.push_back(s.release());
-	return section;
-}
-
-SectionProp* Config::AddSectionProp(const char* section_name, SectionFunction func,
-                                    bool changeable_at_runtime)
+SectionProp* Config::AddSection(const char* section_name,
+                                SectionInitHandler init_handler,
+                                bool changeable_at_runtime)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
 
 	SectionProp* s = new SectionProp(section_name);
-	s->AddInitFunction(func, changeable_at_runtime);
+	s->AddInitHandler(init_handler, changeable_at_runtime);
 	sectionlist.push_back(s);
 	return s;
 }
@@ -1328,16 +1315,13 @@ SectionProp::~SectionProp()
 	}
 }
 
-SectionLine* Config::AddSectionLine(const char* section_name, SectionFunction func)
+SectionLine* Config::AddAutoexecSection(SectionInitHandler init_handler)
 {
-	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
-	        "Only letters and digits are allowed in section name");
+	SectionLine* section = new SectionLine("autoexec");
+	section->AddInitHandler(init_handler);
+	sectionlist.push_back(section);
 
-	SectionLine* blah = new SectionLine(section_name);
-	blah->AddInitFunction(func);
-	sectionlist.push_back(blah);
-
-	return blah;
+	return section;
 }
 
 // Move assignment operator
@@ -1386,33 +1370,49 @@ void Config::Init() const
 	}
 }
 
-void Section::AddInitFunction(SectionFunction func, bool changeable_at_runtime)
+void Section::AddInitHandler(SectionInitHandler init_handler, bool changeable_at_runtime)
 {
-	if (func) {
-		init_functions.emplace_back(func, changeable_at_runtime);
+	if (init_handler) {
+		init_handlers.emplace_back(init_handler, changeable_at_runtime);
 	}
 }
 
-void Section::AddDestroyFunction(SectionFunction func, bool changeable_at_runtime)
+void Section::AddUpdateHandler(SectionUpdateHandler update_handler)
 {
-	destroyfunctions.emplace_front(func, changeable_at_runtime);
+	update_handlers.emplace_back(update_handler);
+}
+
+void Section::AddDestroyHandler(SectionInitHandler destroy_handler,
+                                bool changeable_at_runtime)
+{
+	destroy_handlers.emplace_front(destroy_handler, changeable_at_runtime);
+}
+
+bool Section::IsChangeableAtRuntime()
+{
+	for (auto handler : init_handlers) {
+		if (handler.changeable_at_runtime) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void Section::ExecuteInit(const bool init_all)
 {
-	for (size_t i = 0; i < init_functions.size(); ++i) {
+	for (size_t i = 0; i < init_handlers.size(); ++i) {
 		// Can we skip calling this function?
-		if (!(init_all || init_functions[i].changeable_at_runtime)) {
+		if (!(init_all || init_handlers[i].changeable_at_runtime)) {
 			continue;
 		}
 
 		// Track the size of our container because it might grow.
-		const auto size_on_entry = init_functions.size();
+		const auto size_on_entry = init_handlers.size();
 
-		assert(init_functions[i].function);
-		init_functions[i].function(this);
+		assert(init_handlers[i].function);
+		init_handlers[i].function(this);
 
-		const auto size_on_exit = init_functions.size();
+		const auto size_on_exit = init_handlers.size();
 
 		if (size_on_exit > size_on_entry) {
 			//
@@ -1423,8 +1423,15 @@ void Section::ExecuteInit(const bool init_all)
 			//
 			const auto num_appended = size_on_exit - size_on_entry;
 			i += num_appended;
-			assert(i < init_functions.size());
+			assert(i < init_handlers.size());
 		}
+	}
+}
+
+void Section::ExecuteUpdate(const Property& property)
+{
+	for (auto handler : update_handlers) {
+		handler(dynamic_cast<SectionProp*>(this), property.propname);
 	}
 }
 
@@ -1432,12 +1439,12 @@ void Section::ExecuteDestroy(bool destroyall)
 {
 	typedef std::deque<Function_wrapper>::iterator func_it;
 
-	for (func_it tel = destroyfunctions.begin(); tel != destroyfunctions.end();) {
+	for (func_it tel = destroy_handlers.begin(); tel != destroy_handlers.end();) {
 		if (destroyall || (*tel).changeable_at_runtime) {
 			(*tel).function(this);
 
-			// Remove destroyfunctions once used
-			tel = destroyfunctions.erase(tel);
+			// Remove destroy_handlers once used
+			tel = destroy_handlers.erase(tel);
 		} else {
 			++tel;
 		}
@@ -1844,7 +1851,7 @@ void Config::ParseConfigFiles(const std_fs::path& config_dir)
 }
 
 static char return_msg[200];
-const char* Config::SetProp(std::vector<std::string>& pvars)
+const char* Config::SetProperty(std::vector<std::string>& pvars)
 {
 	*return_msg = 0;
 

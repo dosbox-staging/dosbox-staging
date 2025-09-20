@@ -33,4 +33,4 @@ private:
 	uint8_t stereo_data[2] = {data_reg, data_reg};
 };
 
-#endif
+#endif // DOSBOX_STEREO_ON_1_H

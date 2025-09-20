@@ -6,9 +6,9 @@
 #include "more_output.h"
 
 #include "cpu/callback.h"
-#include "utils/checks.h"
-#include "dos/dos_inc.h"
+#include "dos/dos.h"
 #include "ints/int10.h"
+#include "utils/checks.h"
 #include "utils/string_utils.h"
 
 #include <algorithm>
@@ -32,7 +32,7 @@ void MORE::Run()
 
 	MoreOutputFiles output(*this);
 	if (!ParseCommandLine(output) || !FindInputFiles(output) ||
-	    shutdown_requested) {
+	    DOSBOX_IsShutdownRequested()) {
 		return;
 	}
 	output.Display();
@@ -117,7 +117,7 @@ bool MORE::FindInputFiles(MoreOutputFiles &output)
 		}
 
 		found = true;
-		while (!shutdown_requested) {
+		while (!DOSBOX_IsShutdownRequested()) {
 			CALLBACK_Idle();
 
 			DOS_DTA::Result search_result = {};
@@ -141,7 +141,7 @@ bool MORE::FindInputFiles(MoreOutputFiles &output)
 
 	dos.dta(save_dta);
 
-	if (!shutdown_requested && !found) {
+	if (!DOSBOX_IsShutdownRequested() && !found) {
 		result_errorcode = DOSERR_FILE_NOT_FOUND;
 		WriteOut(MSG_Get("PROGRAM_MORE_NO_FILE"));
 		WriteOut("\n");
