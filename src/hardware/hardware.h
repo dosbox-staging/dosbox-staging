@@ -22,8 +22,6 @@ bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
 // Sound Blaster and ESS configuration and initialisation
 void SB_AddConfigSection(const ConfigPtr &conf);
 
-bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
-
 // IBM Music Feature Card configuration and initialisation
 void IMFC_AddConfigSection(const ConfigPtr& conf);
 
@@ -36,9 +34,6 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf);
 // Common lock notification calls used by the mixer
 void PCSPEAKER_NotifyLockMixer();
 void PCSPEAKER_NotifyUnlockMixer();
-
-void TANDYDAC_NotifyLockMixer();
-void TANDYDAC_NotifyUnlockMixer();
 
 void PS1DAC_NotifyLockMixer();
 void PS1DAC_NotifyUnlockMixer();
