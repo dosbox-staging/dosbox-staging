@@ -22,7 +22,7 @@
 // Tandy+SB combo configuration as well. Note that the Tandy DAC BIOS routine
 // only exists if the Tandy Card is enabled (either 'tandy=on' or 'tandy=psg').
 
-#include "tandy_sound.h"
+#include "private/tandy_sound.h"
 
 #include "private/mame/emu.h"
 #include "private/mame/sn76496.h"
