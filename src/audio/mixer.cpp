@@ -27,6 +27,7 @@
 #include "gui/mapper.h"
 #include "hardware/audio/gus.h"
 #include "hardware/audio/pcspeaker.h"
+#include "hardware/audio/ps1audio.h"
 #include "hardware/audio/sblaster.h"
 #include "hardware/audio/tandy_sound.h"
 #include "hardware/hardware.h"
