@@ -28,6 +28,8 @@ constexpr auto OplSampleRateHz = 49716;
 
 static std::unique_ptr<Opl> opl = {};
 
+static std::unique_ptr<OplCapture> opl_capture = {};
+
 static const char* to_string(const OplMode opl_mode)
 {
 	// clang-format off
@@ -458,8 +460,8 @@ void Opl::AudioCallback(const int requested_frames)
 void Opl::CacheWrite(const io_port_t port, const uint8_t val)
 {
 	// capturing?
-	if (capture) {
-		capture->DoWrite(port, val);
+	if (opl_capture) {
+		opl_capture->DoWrite(port, val);
 	}
 
 	// Store it into the cache
@@ -635,7 +637,7 @@ void Opl::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				if (reg.normal == 0x105 && (val & 0x80)) {
 					esfm.mode = EsfmMode::Native;
 
-					if (capture) {
+					if (opl_capture) {
 						LOG_WARNING(
 						        "OPL: ESFM native mode has been enabled "
 						        "which is not supported by the raw OPL "
@@ -796,12 +798,12 @@ static void OPL_SaveRawEvent(const bool pressed)
 	}
 
 	// Are we already recording? If so, close the stream
-	if (opl->capture) {
-		opl->capture.reset();
+	if (opl_capture) {
+		opl_capture.reset();
 
 	} else {
 		// Otherwise start a new recording
-		opl->capture = std::make_unique<OplCapture>(&opl->cache);
+		opl_capture = std::make_unique<OplCapture>(&opl->cache);
 	}
 }
 

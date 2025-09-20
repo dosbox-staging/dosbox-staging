@@ -15,11 +15,6 @@
 
 class Section;
 
-enum class OplMode { None, Opl2, DualOpl2, Opl3, Opl3Gold, Esfm };
-
-void OPL_Init(Section *sec, OplMode mode);
-void OPL_ShutDown(Section* sec = nullptr);
-
 void CMS_Init(Section *sec);
 void CMS_ShutDown(Section* sec = nullptr);
 
@@ -29,9 +24,6 @@ bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
 
 // Sound Blaster and ESS configuration and initialisation
 void SB_AddConfigSection(const ConfigPtr &conf);
-
-// CMS/Game Blaster, OPL, and ESFM configuration and initialisation
-void OPL_AddConfigSettings(const ConfigPtr &conf);
 
 bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 
