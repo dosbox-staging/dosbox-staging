@@ -685,6 +685,8 @@ void MidiDeviceFluidSynth::SetReverb()
 	auto handle_auto_setting = [&]() {
 		// TODO setting the recommended reverb setting for GeneralUserGS
 		// will happen here
+		SetReverbParams(DefaultReverbParameters);
+		enable_reverb(true);
 	};
 
 	if (reverb_enabled_opt) {
