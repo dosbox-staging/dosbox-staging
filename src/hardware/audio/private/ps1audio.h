@@ -1,13 +1,12 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_PS1AUDIO_H
-#define DOSBOX_PS1AUDIO_H
+#ifndef DOSBOX_PRIVATE_PS1AUDIO_H
+#define DOSBOX_PRIVATE_PS1AUDIO_H
 
 #include "dosbox.h"
 
 #include "audio/mixer.h"
-#include "config/setup.h"
 #include "hardware/port.h"
 #include "utils/math_utils.h"
 #include "utils/rwqueue.h"
@@ -100,6 +99,4 @@ private:
 	bool can_trigger_irq = false;
 };
 
-void PS1AUDIO_AddConfigSection(Section* sec);
-
-#endif // DOSBOX_PS1AUDIO_H
+#endif // DOSBOX_PRIVATE_PS1AUDIO_H
