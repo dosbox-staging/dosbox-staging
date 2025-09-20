@@ -137,7 +137,7 @@ public:
 
 	void ParseEnv();
 	void ParseConfigFiles(const std_fs::path& config_path);
-	const char* SetProp(std::vector<std::string>& pvars);
+	const char* SetProperty(std::vector<std::string>& pvars);
 
 	const std::string& GetArgumentLanguage();
 

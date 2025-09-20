@@ -1851,7 +1851,7 @@ void Config::ParseConfigFiles(const std_fs::path& config_dir)
 }
 
 static char return_msg[200];
-const char* Config::SetProp(std::vector<std::string>& pvars)
+const char* Config::SetProperty(std::vector<std::string>& pvars)
 {
 	*return_msg = 0;
 
