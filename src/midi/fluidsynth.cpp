@@ -343,11 +343,6 @@ static std::vector<std_fs::path> get_data_dirs()
 			                      "FLUIDSYNTH_INVALID_SOUNDFONT_DIR",
 			                      sf_dir.c_str());
 
-			LOG_WARNING(
-			        "Invalid 'soundfont_dir' setting; "
-			        "cannot open directory '%s', using ''",
-			        sf_dir.c_str());
-
 			set_section_property_value("fluidsynth", "soundfont_dir", "");
 		}
 	}
@@ -1294,6 +1289,10 @@ static void fluidsynth_init([[maybe_unused]] Section* sec)
 static void register_fluidsynth_text_messages()
 {
 	MSG_Add("FLUIDSYNTH_NO_SOUNDFONTS", "No available SoundFonts");
+
+	MSG_Add("FLUIDSYNTH_INVALID_SOUNDFONT_DIR",
+	        "Invalid [color=light-green]soundfont_dir[reset] setting; "
+	        "cannot open directory [color=white]'%s'[reset], using ''");
 
 	MSG_Add("FLUIDSYNTH_INVALID_EFFECT_PARAMETER",
 	        "Invalid [color=light-green]'%s'[reset] synth parameter (%s): "
