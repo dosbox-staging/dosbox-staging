@@ -15,7 +15,7 @@
 #include "dos/dos_memory.h"
 #include "dosbox.h"
 #include "hardware/audio/ps1audio.h"
-#include "hardware/audio/sblaster.h"
+#include "hardware/audio/soundblaster.h"
 #include "hardware/audio/tandy_sound.h"
 #include "hardware/input/joystick.h"
 #include "hardware/input/mouse.h"
