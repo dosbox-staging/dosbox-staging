@@ -25,8 +25,7 @@ enum class DmaEvent {
 	IsUnmasked,
 };
 
-class Section;
-using DMA_ReservationCallback = std::function<void(Section*)>;
+using DMA_EvictCallback = std::function<void(Section*)>;
 
 class DmaChannel;
 using DMA_Callback = std::function<void(const DmaChannel* chan, DmaEvent event)>;
@@ -34,7 +33,7 @@ using DMA_Callback = std::function<void(const DmaChannel* chan, DmaEvent event)>
 class DmaChannel {
 public:
 	// Defaults at the time of initialization
-	uint32_t page_base  = 0;
+	uint32_t page_base = 0;
 	uint32_t curr_addr = 0;
 
 	uint16_t base_addr  = 0;
@@ -42,7 +41,7 @@ public:
 	uint16_t curr_count = 0;
 
 	const uint8_t chan_num = 0;
-	uint8_t page_num = 0;
+	uint8_t page_num       = 0;
 	const uint8_t is_16bit = 0;
 
 	bool is_incremented             = true;
@@ -71,19 +70,26 @@ public:
 	void Reset();
 
 	// Reserves the channel for the owner. If a subsequent reservation is
-	// made then the previously held reservation callback is run to
-	// cleanup/remove that reserver (see the EvictReserver call below).
-	void ReserveFor(const std::string& new_owner,
-	                const DMA_ReservationCallback new_cb);
+	// made then the previously held eviction callback function is run to
+	// remove that reserver (see EvictReserver()).
+	//
+	// The callback should shut down the current owner and set the
+	// associated config setting to disabled (e.g., shutting down the Sound
+	// Blaster and setting `sbtype` to `none` when enabling Tandy sound with
+	// the same DMA).
+	//
+	void ReserveFor(const std::string& owner_name,
+	                const DMA_EvictCallback evict_cb);
 
 private:
 	void EvictReserver();
 	bool HasReservation() const;
+
 	size_t ReadOrWrite(DmaDirection direction, size_t words,
 	                   uint8_t* const buffer);
 
-	DMA_ReservationCallback reservation_callback = {};
-	std::string reservation_owner                = {};
+	DMA_EvictCallback evict_callback   = {};
+	std::string reservation_owner_name = {};
 };
 
 class DmaController {
