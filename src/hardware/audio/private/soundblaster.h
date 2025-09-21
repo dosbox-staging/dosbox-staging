@@ -27,16 +27,18 @@ public:
 	std::atomic<int> frames_needed = 0;
 
 private:
-	IO_ReadHandleObject read_handlers[0x10]   = {};
-	IO_WriteHandleObject write_handlers[0x10] = {};
+	void SetupEnvironment();
+	void ClearEnvironment();
+
+	void MixerCallback(const int frames_requested);
 
 	static constexpr auto BlasterEnvVar = "BLASTER";
 
-	OplMode oplmode = OplMode::None;
+	IO_ReadHandleObject read_handlers[0x10]   = {};
+	IO_WriteHandleObject write_handlers[0x10] = {};
 
-	void SetupEnvironment();
-	void ClearEnvironment();
-	void MixerCallback(const int frames_requested);
+	OplMode oplmode  = OplMode::None;
+	bool cms_enabled = false;
 };
 
 #endif // DOSBOX_PRIVATE_SBLASTER_H

@@ -3396,7 +3396,7 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 	}
 }
 
-static bool is_cms_enabled(const SbType sbtype)
+static bool maybe_enable_cms(const SbType sbtype)
 {
 	const auto* sect = static_cast<SectionProp*>(
 	        control->GetSection(SblasterSectionName));
@@ -3446,6 +3446,7 @@ static bool is_cms_enabled(const SbType sbtype)
 		}
 		// Game Blaster is CMS
 		return true;
+
 	default:
 		if (cms_enabled) {
 			constexpr auto SettingName  = "cms";
@@ -3465,7 +3466,7 @@ static bool is_cms_enabled(const SbType sbtype)
 	return false;
 }
 
-void shutdown_sblaster(Section*);
+static void sblaster_destroy(Section*);
 
 void SoundBlaster::SetupEnvironment()
 {
@@ -3566,8 +3567,9 @@ SoundBlaster::SoundBlaster(Section* conf)
 	} break;
 	}
 
-	if (is_cms_enabled(sb.type)) {
+	if (maybe_enable_cms(sb.type)) {
 		CMS_Init(section);
+		cms_enabled = true;
 	}
 
 	// The CMS/Adlib (sbtype=none) and GameBlaster don't have DACs
@@ -3598,7 +3600,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 	//
 	auto dma_channel = DMA_GetChannel(sb.hw.dma8);
 	assert(dma_channel);
-	dma_channel->ReserveFor(sb_log_prefix(), shutdown_sblaster);
+	dma_channel->ReserveFor(sb_log_prefix(), sblaster_destroy);
 
 	// Only Sound Blaster 16 uses a 16-bit DMA channel.
 	if (sb.type == SbType::SB16) {
@@ -3608,7 +3610,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 		if (sb.hw.dma16 != sb.hw.dma8) {
 			dma_channel = DMA_GetChannel(sb.hw.dma16);
 			assert(dma_channel);
-			dma_channel->ReserveFor(sb_log_prefix(), shutdown_sblaster);
+			dma_channel->ReserveFor(sb_log_prefix(), sblaster_destroy);
 		}
 	}
 
@@ -3666,6 +3668,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 
 	ProcessDMATransfer = &play_dma_transfer;
 
+	// Allow discovery of the Sound Blaster via the `BLASTER` env var
 	SetupEnvironment();
 
 	// Sound Blaster MIDI interface
@@ -3695,43 +3698,40 @@ SoundBlaster::~SoundBlaster()
 {
 	callback_type.SetNone();
 
-	// Prevent discovery of the Sound Blaster via the environment
+	// Prevent discovery of the Sound Blaster via the `BLASTER` env var
 	ClearEnvironment();
 
-	// Shutdown any FM Synth devices
+	// Stop OPL/CMS synth
 	if (oplmode != OplMode::None) {
-		OPL_ShutDown();
+		OPL_Destroy();
 	}
-
-	// No-op if not running
-	CMS_ShutDown();
-
+	if (cms_enabled) {
+		CMS_Destroy();
+	}
 	if (sb.type == SbType::None || sb.type == SbType::GameBlaster) {
 		return;
 	}
 
+	// Stop SB DAC
 	LOG_MSG("%s: Shutting down", sb_log_prefix());
 
-	// Stop playback
-	if (channel) {
-		output_queue.Stop();
-		channel->Enable(false);
-	}
-	// Stop the game from accessing the IO ports
+	output_queue.Stop();
+
+	assert(channel);
+	channel->Enable(false);
+
 	for (auto& rh : read_handlers) {
 		rh.Uninstall();
 	}
 	for (auto& wh : write_handlers) {
 		wh.Uninstall();
 	}
-	dsp_reset(); // Stop everything
+
+	dsp_reset();
 	sb.dsp.reset_tally = 0;
 
-	// Deregister the mixer channel and remove it
-	assert(channel);
 	MIXER_DeregisterChannel(channel);
 
-	// Reset the DMA channels as the mixer is no longer reading samples
 	DMA_ResetChannel(sb.hw.dma8);
 	if (sb.type == SbType::SB16) {
 		DMA_ResetChannel(sb.hw.dma16);
@@ -3840,23 +3840,27 @@ void init_sblaster_dosbox_settings(SectionProp& secprop)
 	        "Other Sound Blaster models don't allow toggling the filter in software.");
 }
 
-void init_sblaster(Section* sec)
+static void sblaster_init(Section* sec)
 {
-	assert(sec);
-
 	MIXER_LockMixerThread();
 	sblaster = std::make_unique<SoundBlaster>(sec);
 	MIXER_UnlockMixerThread();
-
-	constexpr auto ChangeableAtRuntime = true;
-	sec->AddDestroyHandler(shutdown_sblaster, ChangeableAtRuntime);
 }
 
-void shutdown_sblaster(Section* /*sec*/)
+static void sblaster_destroy([[maybe_unused]] Section* sec)
 {
-	MIXER_LockMixerThread();
-	sblaster = {};
-	MIXER_UnlockMixerThread();
+	if (sblaster) {
+		MIXER_LockMixerThread();
+		sblaster = {};
+		MIXER_UnlockMixerThread();
+	}
+}
+
+static void notify_sblaster_setting_updated(SectionProp* section,
+                                            [[maybe_unused]] const std::string& prop_name)
+{
+	sblaster_destroy(section);
+	sblaster_init(section);
 }
 
 static void register_sblaster_text_messages()
@@ -3884,14 +3888,14 @@ static void register_sblaster_text_messages()
 
 void SBLASTER_AddConfigSection(const ConfigPtr& conf)
 {
-	constexpr auto changeable_at_runtime = true;
-
 	assert(conf);
-	SectionProp* secprop = conf->AddSection(SblasterSectionName,
-	                                        init_sblaster,
-	                                        changeable_at_runtime);
-	assert(secprop);
-	init_sblaster_dosbox_settings(*secprop);
+
+	auto section = conf->AddSection(SblasterSectionName, sblaster_init);
+
+	section->AddDestroyHandler(sblaster_destroy);
+	section->AddUpdateHandler(notify_sblaster_setting_updated);
+
+	init_sblaster_dosbox_settings(*section);
 
 	register_sblaster_text_messages();
 }

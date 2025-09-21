@@ -1045,7 +1045,7 @@ static void init_opl_dosbox_settings(SectionProp& secprop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-void OPL_ShutDown([[maybe_unused]] Section* sec)
+void OPL_Destroy()
 {
 	opl = {};
 }
@@ -1054,9 +1054,6 @@ void OPL_Init(Section* sec, const OplMode oplmode)
 {
 	assert(sec);
 	opl = std::make_unique<Opl>(sec, oplmode);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(OPL_ShutDown, changeable_at_runtime);
 }
 
 // Must be called after SB_AddConfigSection

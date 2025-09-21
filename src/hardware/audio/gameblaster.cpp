@@ -4,6 +4,8 @@
 
 #include "private/gameblaster.h"
 
+#include <memory>
+
 #include "audio/channel_names.h"
 #include "config/setup.h"
 #include "hardware/pic.h"
@@ -12,17 +14,12 @@
 
 CHECK_NARROWING();
 
-// The Game Blaster is nothing else than a rebranding of Creative's first PC
-// sound card, the Creative Music System (C/MS).
-void GameBlaster::Open(const int port_choice, const std::string& card_choice,
-                       const std::string& filter_choice)
+GameBlaster::GameBlaster(const int port_choice, const std::string& card_choice,
+                         const std::string& filter_choice)
 {
 	using namespace std::placeholders;
 
 	MIXER_LockMixerThread();
-
-	Close();
-	assert(!is_open);
 
 	is_standalone_gameblaster = (card_choice == "gb");
 
@@ -139,7 +136,35 @@ void GameBlaster::Open(const int port_choice, const std::string& card_choice,
 	assert(devices[0]);
 	assert(devices[1]);
 
-	is_open = true;
+	MIXER_UnlockMixerThread();
+}
+
+GameBlaster::~GameBlaster()
+{
+	LOG_INFO("CMS: Shutting down");
+
+	MIXER_LockMixerThread();
+
+	// Drop access to the IO ports
+	for (auto& w : write_handlers) {
+		w.Uninstall();
+	}
+	write_handler_for_detection.Uninstall();
+	read_handler_for_detection.Uninstall();
+
+	// Stop playback
+	if (channel) {
+		channel->Enable(false);
+	}
+
+	// Deregister the mixer channel and remove it
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
+	channel.reset();
+
+	// Remove the SAA-1099 devices
+	devices[0].reset();
+	devices[1].reset();
 
 	MIXER_UnlockMixerThread();
 }
@@ -259,58 +284,20 @@ uint8_t GameBlaster::ReadFromDetectionPort(io_port_t port, io_width_t) const
 	return retval;
 }
 
-void GameBlaster::Close()
+static std::unique_ptr<GameBlaster> gameblaster = {};
+
+void CMS_Destroy()
 {
-	if (!is_open) {
-		return;
-	}
-
-	LOG_INFO("CMS: Shutting down");
-
-	MIXER_LockMixerThread();
-
-	// Drop access to the IO ports
-	for (auto& w : write_handlers) {
-		w.Uninstall();
-	}
-	write_handler_for_detection.Uninstall();
-	read_handler_for_detection.Uninstall();
-
-	// Stop playback
-	if (channel) {
-		channel->Enable(false);
-	}
-
-	// Deregister the mixer channel and remove it
-	assert(channel);
-	MIXER_DeregisterChannel(channel);
-	channel.reset();
-
-	// Remove the SAA-1099 devices
-	devices[0].reset();
-	devices[1].reset();
-
-	is_open = false;
-
-	MIXER_UnlockMixerThread();
-}
-
-GameBlaster gameblaster;
-
-void CMS_ShutDown([[maybe_unused]] Section* conf)
-{
-	gameblaster.Close();
+	gameblaster = {};
 }
 
 void CMS_Init(Section* conf)
 {
 	assert(conf);
 
-	SectionProp* section = static_cast<SectionProp*>(conf);
-	gameblaster.Open(section->GetHex("sbbase"),
-	                 section->GetString("sbtype"),
-	                 section->GetString("cms_filter"));
+	auto section = static_cast<SectionProp*>(conf);
 
-	constexpr auto ChangeableAtRuntime = true;
-	section->AddDestroyHandler(CMS_ShutDown, ChangeableAtRuntime);
+	gameblaster = std::make_unique<GameBlaster>(section->GetHex("sbbase"),
+	                                            section->GetString("sbtype"),
+	                                            section->GetString("cms_filter"));
 }
