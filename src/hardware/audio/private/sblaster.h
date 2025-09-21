@@ -10,10 +10,10 @@
 #include "hardware/port.h"
 #include "utils/rwqueue.h"
 
-class SBLASTER final {
+class SoundBlaster final {
 public:
-	SBLASTER(Section* conf);
-	~SBLASTER();
+	SoundBlaster(Section* conf);
+	~SoundBlaster();
 
 	void SetChannelRateHz(const int requested_rate_hz);
 
