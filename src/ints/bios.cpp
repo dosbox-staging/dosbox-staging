@@ -93,7 +93,7 @@ static bool Tandy_InitializeSB() {
 	uint16_t sbport;
 	uint8_t sbirq;
 	uint8_t sbdma;
-	if (SB_GetAddress(sbport, sbirq, sbdma)) {
+	if (SBLASTER_GetAddress(sbport, sbirq, sbdma)) {
 		tandy_sb.port = sbport;
 		tandy_sb.irq = sbirq;
 		tandy_sb.dma = sbdma;
