@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_GAMEBLASTER_H
-#define DOSBOX_GAMEBLASTER_H
+#ifndef DOSBOX_PRIVATE_GAMEBLASTER_H
+#define DOSBOX_PRIVATE_GAMEBLASTER_H
 
 #include "mame/saa1099.h"
 
@@ -18,20 +18,17 @@
 #include "misc/support.h"
 #include "utils/math_utils.h"
 
+// The Game Blaster is nothing else than a rebranding of Creative's first PC
+// sound card, the Creative Music System (CMS or C/MS).
+
 class GameBlaster {
 public:
-	void Open(const int port_choice, const std::string& card_choice,
-	          const std::string& filter_choice);
+	GameBlaster(const int port_choice, const std::string& card_choice,
+	            const std::string& filter_choice);
 
-	void Close();
-
-	~GameBlaster()
-	{
-		Close();
-	}
+	~GameBlaster();
 
 private:
-	// Audio rendering
 	AudioFrame RenderFrame();
 	void AudioCallback(const int requested_frames);
 	void RenderUpToNow();
@@ -75,11 +72,10 @@ private:
 	double last_rendered_ms        = 0;
 	io_port_t base_port            = 0;
 	bool is_standalone_gameblaster = false;
-	bool is_open                   = false;
 	uint8_t cms_detect_register    = 0xff;
 };
 
-void CMS_Init(Section *sec);
-void CMS_ShutDown(Section* sec = nullptr);
+void CMS_Init(Section* sec);
+void CMS_Destroy();
 
-#endif
+#endif // DOSBOX_PRIVATE_GAMEBLASTER_H

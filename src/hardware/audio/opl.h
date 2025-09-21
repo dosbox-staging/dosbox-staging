@@ -163,7 +163,7 @@ private:
 };
 
 void OPL_Init(Section *sec, OplMode mode);
-void OPL_ShutDown(Section* sec = nullptr);
+void OPL_Destroy();
 
 // CMS/Game Blaster, OPL, and ESFM configuration and initialisation
 void OPL_AddConfigSettings(const ConfigPtr &conf);
