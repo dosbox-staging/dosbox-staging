@@ -29,7 +29,7 @@
 #include "hardware/audio/lpt_dac.h"
 #include "hardware/audio/pcspeaker.h"
 #include "hardware/audio/ps1audio.h"
-#include "hardware/audio/sblaster.h"
+#include "hardware/audio/soundblaster.h"
 #include "hardware/audio/tandy_sound.h"
 #include "hardware/video/reelmagic/reelmagic.h"
 #include "hardware/memory.h"

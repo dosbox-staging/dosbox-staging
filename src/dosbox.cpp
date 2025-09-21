@@ -34,7 +34,7 @@
 #include "hardware/audio/imfc.h"
 #include "hardware/audio/opl.h"
 #include "hardware/audio/pcspeaker.h"
-#include "hardware/audio/sblaster.h"
+#include "hardware/audio/soundblaster.h"
 #include "hardware/audio/speaker.h"
 #include "hardware/cmos.h"
 #include "hardware/input/joystick.h"

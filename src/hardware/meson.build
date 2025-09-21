@@ -15,7 +15,7 @@ libhardware_sources = files(
     'audio/pcspeaker_discrete.cpp',
     'audio/pcspeaker_impulse.cpp',
     'audio/ps1audio.cpp',
-    'audio/sblaster.cpp',
+    'audio/soundblaster.cpp',
     'audio/speaker.cpp',
     'audio/ston1_dac.cpp',
     'audio/tandy_sound.cpp',
