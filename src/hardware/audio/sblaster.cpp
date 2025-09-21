@@ -269,7 +269,7 @@ struct SbInfo {
 
 static SbInfo sb = {};
 
-std::unique_ptr<SBLASTER> sblaster = {};
+static std::unique_ptr<SoundBlaster> sblaster = {};
 
 class CallbackType {
 public:
@@ -1074,8 +1074,8 @@ static uint32_t read_dma_16bit(const uint32_t words_to_read,
 	}
 
 	// In dma.cpp, if sb.dma.chan->is_16bit is set, we're dealing with
-	// 16-bit words. Otherwise, we're dealing with 8-bit words (bytes). Calling
-	// code handles this case and conditionally divides by two.
+	// 16-bit words. Otherwise, we're dealing with 8-bit words (bytes).
+	// Calling code handles this case and conditionally divides by two.
 	uint32_t bytes_requested = words_to_read;
 	if (sb.dma.chan->is_16bit) {
 		bytes_requested *= 2;
@@ -1475,7 +1475,7 @@ void CallbackType::SetPerFrame()
 	}
 }
 
-void SBLASTER::SetChannelRateHz(const int requested_rate_hz)
+void SoundBlaster::SetChannelRateHz(const int requested_rate_hz)
 {
 	const auto rate_hz = std::clamp(requested_rate_hz,
 	                                MinPlaybackRateHz,
@@ -1487,7 +1487,7 @@ void SBLASTER::SetChannelRateHz(const int requested_rate_hz)
 }
 
 // Wake up the queue and channel to resume processing and playback
-bool SBLASTER::MaybeWakeUp()
+bool SoundBlaster::MaybeWakeUp()
 {
 	output_queue.Start();
 	return channel->WakeUp();
@@ -3279,7 +3279,7 @@ static void per_frame_callback(uint32_t)
 	add_next_frame_callback();
 }
 
-void SBLASTER::MixerCallback(const int frames_requested)
+void SoundBlaster::MixerCallback(const int frames_requested)
 {
 	constexpr bool Stereo      = true;
 	constexpr bool SignedData  = true;
@@ -3296,7 +3296,8 @@ void SBLASTER::MixerCallback(const int frames_requested)
 		                             0),
 		                    std::memory_order_release);
 	}
-	MIXER_PullFromQueueCallback<SBLASTER, AudioFrame, Stereo, SignedData, NativeOrder>(
+
+	MIXER_PullFromQueueCallback<SoundBlaster, AudioFrame, Stereo, SignedData, NativeOrder>(
 	        frames_requested, this);
 }
 
@@ -3466,7 +3467,7 @@ static bool is_cms_enabled(const SbType sbtype)
 
 void shutdown_sblaster(Section*);
 
-void SBLASTER::SetupEnvironment()
+void SoundBlaster::SetupEnvironment()
 {
 	// Ensure our port and addresses will fit in our format widths.
 	// The config selection controls their actual values, so this is
@@ -3504,12 +3505,12 @@ void SBLASTER::SetupEnvironment()
 	AUTOEXEC_SetVariable(BlasterEnvVar, blaster_env_val);
 }
 
-void SBLASTER::ClearEnvironment()
+void SoundBlaster::ClearEnvironment()
 {
 	AUTOEXEC_SetVariable(BlasterEnvVar, "");
 }
 
-SBLASTER::SBLASTER(Section* conf)
+SoundBlaster::SoundBlaster(Section* conf)
 {
 	assert(conf);
 
@@ -3621,7 +3622,7 @@ SBLASTER::SBLASTER(Section* conf)
 		channel_features.insert(ChannelFeature::Stereo);
 	}
 
-	const auto callback = std::bind(&SBLASTER::MixerCallback,
+	const auto callback = std::bind(&SoundBlaster::MixerCallback,
 	                                this,
 	                                std::placeholders::_1);
 
@@ -3690,7 +3691,7 @@ SBLASTER::SBLASTER(Section* conf)
 	output_queue.Resize(iceil(channel->GetFramesPerBlock() * 2.0f));
 }
 
-SBLASTER::~SBLASTER()
+SoundBlaster::~SoundBlaster()
 {
 	callback_type.SetNone();
 
@@ -3844,7 +3845,7 @@ void init_sblaster(Section* sec)
 	assert(sec);
 
 	MIXER_LockMixerThread();
-	sblaster = std::make_unique<SBLASTER>(sec);
+	sblaster = std::make_unique<SoundBlaster>(sec);
 	MIXER_UnlockMixerThread();
 
 	constexpr auto ChangeableAtRuntime = true;
