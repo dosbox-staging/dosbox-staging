@@ -3148,7 +3148,7 @@ static void write_sb(const io_port_t port, const io_val_t value, const io_width_
 	}
 }
 
-bool SB_GetAddress(uint16_t& sbaddr, uint8_t& sbirq, uint8_t& sbdma)
+bool SBLASTER_GetAddress(uint16_t& sbaddr, uint8_t& sbirq, uint8_t& sbdma)
 {
 	sbaddr = 0;
 	sbirq  = 0;
@@ -3882,7 +3882,7 @@ static void register_sblaster_text_messages()
 	        "this card, forcing [color=white]'%s'[reset]");
 }
 
-void SB_AddConfigSection(const ConfigPtr& conf)
+void SBLASTER_AddConfigSection(const ConfigPtr& conf)
 {
 	constexpr auto changeable_at_runtime = true;
 

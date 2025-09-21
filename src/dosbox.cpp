@@ -891,10 +891,10 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 #endif
 
 	// Configure Sound Blaster and ESS
-	SB_AddConfigSection(control);
+	SBLASTER_AddConfigSection(control);
 
 	// Configure CMS/Game Blaster, OPL and ESFM
-	// Must be called after SB_AddConfigSection
+	// Must be called after SBLASTER_AddConfigSection
 	OPL_AddConfigSettings(control);
 
 	// Configure Gravis UltraSound emulation
