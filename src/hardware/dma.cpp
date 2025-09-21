@@ -68,9 +68,9 @@ static void perform_dma_io(const DmaDirection direction, const PhysPt spage,
 		}
 
 		// Calculate the offset within the page
-		const auto pos_in_page       = mem_address & (DosPageSize - 1);
-		const auto bytes_to_page_end = check_cast<uint16_t>(
-		        DosPageSize - pos_in_page);
+		const auto pos_in_page = mem_address & (DosPageSize - 1);
+		const auto bytes_to_page_end = check_cast<uint16_t>(DosPageSize -
+		                                                    pos_in_page);
 		const auto chunk_start = check_cast<PhysPt>(page * DosPageSize +
 		                                            pos_in_page);
 
@@ -340,8 +340,8 @@ uint16_t DmaController::ReadControllerReg(const io_port_t reg, io_width_t)
 		}
 		return ret;
 	default:
-		LOG(LOG_DMACONTROL, LOG_NORMAL)
-		("Trying to read undefined DMA port %x", reg);
+		LOG(LOG_DMACONTROL,
+		    LOG_NORMAL)("Trying to read undefined DMA port %x", reg);
 		break;
 	}
 	return 0xffff;
@@ -390,7 +390,7 @@ void DmaChannel::ReachedTerminalCount()
 
 void DmaChannel::SetPage(const uint8_t val)
 {
-	page_num = val;
+	page_num  = val;
 	page_base = (page_num >> is_16bit) << (16 + is_16bit);
 }
 
@@ -456,42 +456,42 @@ again:
 
 bool DmaChannel::HasReservation() const
 {
-	return (reservation_callback && !reservation_owner.empty());
+	return (evict_callback && !reservation_owner_name.empty());
 }
 
 void DmaChannel::EvictReserver()
 {
 	assert(HasReservation());
 
-	reservation_callback(nullptr);
+	evict_callback(nullptr);
 
-	reservation_callback = {};
-	reservation_owner    = {};
+	evict_callback         = {};
+	reservation_owner_name = {};
 }
 
-void DmaChannel::ReserveFor(const std::string& new_owner,
-                            const DMA_ReservationCallback new_cb)
+void DmaChannel::ReserveFor(const std::string& owner_name,
+                            const DMA_EvictCallback evict_cb)
 {
-	assert(new_cb);
-	assert(!new_owner.empty());
+	assert(evict_cb);
+	assert(!owner_name.empty());
 
 	if (HasReservation()) {
 		LOG_MSG("DMA: %s is replacing %s on %d-bit DMA channel %u",
-		        new_owner.c_str(),
-		        reservation_owner.c_str(),
+		        owner_name.c_str(),
+		        reservation_owner_name.c_str(),
 		        is_16bit == 1 ? 16 : 8,
 		        chan_num);
 		EvictReserver();
 	}
 	Reset();
-	reservation_callback = new_cb;
-	reservation_owner    = new_owner;
+	evict_callback         = evict_cb;
+	reservation_owner_name = owner_name;
 }
 
 void DmaChannel::Reset()
 {
 	// Defaults at the time of initialization
-	page_base  = 0;
+	page_base = 0;
 	curr_addr = 0;
 
 	base_addr  = 0;
@@ -506,9 +506,9 @@ void DmaChannel::Reset()
 	has_reached_terminal_count = false;
 	has_raised_request         = false;
 
-	callback             = {};
-	reservation_callback = {};
-	reservation_owner    = {};
+	callback               = {};
+	evict_callback         = {};
+	reservation_owner_name = {};
 }
 
 void DmaChannel::LogDetails() const
@@ -518,7 +518,7 @@ void DmaChannel::LogDetails() const
 	        "current count:%4u, is auto-init: %d, is masked: %d, "
 	        " has reached TC: %d, has raised IRQ request: %d",
 	        chan_num,
-	        reservation_owner.c_str(),
+	        reservation_owner_name.c_str(),
 	        is_16bit == 1 ? 16 : 8,
 	        base_count,
 	        curr_count,
@@ -532,7 +532,7 @@ DmaChannel::~DmaChannel()
 {
 	if (HasReservation()) {
 		LOG_MSG("DMA: Shutting down %s on %d-bit DMA channel %d",
-		        reservation_owner.c_str(),
+		        reservation_owner_name.c_str(),
 		        is_16bit == 1 ? 16 : 8,
 		        chan_num);
 		EvictReserver();
