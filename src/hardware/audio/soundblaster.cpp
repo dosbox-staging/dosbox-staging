@@ -3466,8 +3466,6 @@ static bool maybe_enable_cms(const SbType sbtype)
 	return false;
 }
 
-static void sblaster_destroy(Section*);
-
 void SoundBlaster::SetupEnvironment()
 {
 	// Ensure our port and addresses will fit in our format widths.
@@ -3510,6 +3508,8 @@ void SoundBlaster::ClearEnvironment()
 {
 	AUTOEXEC_SetVariable(BlasterEnvVar, "");
 }
+
+static void sblaster_evict(Section*);
 
 SoundBlaster::SoundBlaster(Section* conf)
 {
@@ -3600,7 +3600,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 	//
 	auto dma_channel = DMA_GetChannel(sb.hw.dma8);
 	assert(dma_channel);
-	dma_channel->ReserveFor(sb_log_prefix(), sblaster_destroy);
+	dma_channel->ReserveFor(sb_log_prefix(), sblaster_evict);
 
 	// Only Sound Blaster 16 uses a 16-bit DMA channel.
 	if (sb.type == SbType::SB16) {
@@ -3610,7 +3610,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 		if (sb.hw.dma16 != sb.hw.dma8) {
 			dma_channel = DMA_GetChannel(sb.hw.dma16);
 			assert(dma_channel);
-			dma_channel->ReserveFor(sb_log_prefix(), sblaster_destroy);
+			dma_channel->ReserveFor(sb_log_prefix(), sblaster_evict);
 		}
 	}
 
@@ -3854,6 +3854,12 @@ static void sblaster_destroy([[maybe_unused]] Section* sec)
 		sblaster = {};
 		MIXER_UnlockMixerThread();
 	}
+}
+
+static void sblaster_evict([[maybe_unused]] Section* sec)
+{
+	sblaster_destroy(sec);
+	set_section_property_value(SblasterSectionName, "sbtype", "none");
 }
 
 static void notify_sblaster_setting_updated(SectionProp* section,
