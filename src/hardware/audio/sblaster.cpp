@@ -81,9 +81,7 @@ constexpr auto MinPlaybackRateHz         = 5000;
 constexpr auto NativeDacRateHz           = 45454;
 constexpr uint16_t DefaultPlaybackRateHz = 22050;
 
-enum class DspState {
-	Reset, ResetWait, Normal, HighSpeed
-};
+enum class DspState { Reset, ResetWait, Normal, HighSpeed };
 
 enum class SbType {
 	None        = 0,
@@ -135,8 +133,8 @@ private:
 	static constexpr float PercentDifferenceThreshold = 0.01f;
 	static constexpr int SequentialChangesThreshold   = 10;
 
-	float last_write_ms = {};
-	int current_rate_hz = MinPlaybackRateHz;
+	float last_write_ms          = {};
+	int current_rate_hz          = MinPlaybackRateHz;
 	int sequential_changes_tally = {};
 };
 
@@ -429,11 +427,10 @@ static void init_speaker_state()
 {
 	if (sb.type == SbType::SB16 || sb.ess_type != EssType::None) {
 
-		// Speaker output (DAC output) is always enabled on the SB16 and ESS
-		// cards. Because the channel is active, we treat this as a startup
-		// event.
-		const bool is_cold_start = sb.dsp.reset_tally <=
-		                           DspInitialResetLimit;
+		// Speaker output (DAC output) is always enabled on the SB16 and
+		// ESS cards. Because the channel is active, we treat this as a
+		// startup event.
+		const bool is_cold_start = sb.dsp.reset_tally <= DspInitialResetLimit;
 
 		sb.dsp.warmup_remaining_ms = is_cold_start ? sb.dsp.cold_warmup_ms
 		                                           : sb.dsp.hot_warmup_ms;
@@ -708,8 +705,7 @@ static void configure_opl_filter_for_model(MixerChannelPtr opl_channel,
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the real
 	// thing by ear only.
-	switch (filter_type)
-	{
+	switch (filter_type) {
 	case FilterType::None:
 	case FilterType::SB16:
 	case FilterType::Modern: break;
@@ -743,7 +739,7 @@ static void sb_raise_irq(const SbIrq irq_type)
 	LOG(LOG_SB, LOG_NORMAL)("Raising IRQ");
 
 	switch (irq_type) {
-		case SbIrq::Irq8:
+	case SbIrq::Irq8:
 		if (sb.irq.pending_8bit) {
 			// LOG_MSG("SB: 8bit irq pending");
 			return;
@@ -752,7 +748,7 @@ static void sb_raise_irq(const SbIrq irq_type)
 		PIC_ActivateIRQ(sb.hw.irq);
 		break;
 
-		case SbIrq::Irq16:
+	case SbIrq::Irq16:
 		if (sb.irq.pending_16bit) {
 			// LOG_MSG("SB: 16bit irq pending");
 			return;
@@ -790,8 +786,8 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 			auto s = static_cast<uint32_t>(sb.dma.rate * t / 1000.0);
 
 			if (s > sb.dma.min) {
-				LOG(LOG_SB, LOG_NORMAL)
-				("limiting amount masked to sb.dma.min");
+				LOG(LOG_SB, LOG_NORMAL)(
+				        "limiting amount masked to sb.dma.min");
 				s = sb.dma.min;
 			}
 
@@ -818,8 +814,8 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 			sb.mode = DspMode::DmaMasked;
 
 			// dsp_change_mode(DspMode::DmaMasked);
-			LOG(LOG_SB, LOG_NORMAL)
-			("DMA masked,stopping output, left %d", chan->curr_count);
+			LOG(LOG_SB, LOG_NORMAL)("DMA masked,stopping output, left %d",
+			                        chan->curr_count);
 		}
 		break;
 
@@ -830,27 +826,30 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 			// sb.mode=DspMode::Dma;
 			flush_remaining_dma_transfer();
 
-			LOG(LOG_SB, LOG_NORMAL)
-			("DMA unmasked,starting output, auto %d block %d",
-			 static_cast<int>(chan->is_autoiniting),
-			 chan->base_count);
+			LOG(LOG_SB,
+			    LOG_NORMAL)("DMA unmasked,starting output, auto %d block %d",
+			                static_cast<int>(chan->is_autoiniting),
+			                chan->base_count);
 
-			// Unmasking the DMA channel is the point when the software has
-			// finished setting up the Sound Blaster's state (frequency, bit
-			// depth, stereo, etc) as well as the DMA controller, and is finally
-			// ready for playback. This is when we set the callback running to
+			// Unmasking the DMA channel is the point when the
+			// software has finished setting up the Sound Blaster's
+			// state (frequency, bit depth, stereo, etc) as well as
+			// the DMA controller, and is finally ready for
+			// playback. This is when we set the callback running to
 			// play the data.
 			sblaster->MaybeWakeUp();
 
-			// If the DMA transfer is setup with a base count of fewer than
-			// three elements (which is four bytes given one 16-bit stereo frame
-			// held in an 8-bit DMA channel), then we know the software intends
-			// to overwrite the DMA content on the fly instead of pre-generating
-			// large chunks of DMA audio. In these cases we prefer the
-			// fine-grained per-frame callback. (The minus one is because DMA
-			// counts are in addition to one; so a base count of zero is one
-			// element).
-			constexpr auto MaxSingleFrameBaseCount = sizeof(int16_t) * 2 - 1;
+			// If the DMA transfer is setup with a base count of
+			// fewer than three elements (which is four bytes given
+			// one 16-bit stereo frame held in an 8-bit DMA
+			// channel), then we know the software intends to
+			// overwrite the DMA content on the fly instead of
+			// pre-generating large chunks of DMA audio. In these
+			// cases we prefer the fine-grained per-frame callback.
+			// (The minus one is because DMA counts are in addition
+			// to one; so a base count of zero is one element).
+			constexpr auto MaxSingleFrameBaseCount = sizeof(int16_t) * 2 -
+			                                         1;
 
 			(chan->base_count <= MaxSingleFrameBaseCount)
 			        ? callback_type.SetPerFrame()
@@ -1027,55 +1026,67 @@ static std::vector<AudioFrame>& maybe_silence(const T* samples,
 	return frames;
 }
 
-static uint32_t read_dma_8bit(const uint32_t bytes_to_read, const uint32_t buffer_index = 0)
+static uint32_t read_dma_8bit(const uint32_t bytes_to_read,
+                              const uint32_t buffer_index = 0)
 {
 	static_assert(sizeof(sb.dma.buf.b8[0]) == 1);
 
 	if (buffer_index >= DmaBufSize) {
 		// Should never happen as the code is currently written.
-		// Calling code has buffer_index either 0 or 1 to handle a dangling sample from the last read.
-		// This is to solve an edge case for stereo sound when the DMA buffer has an odd number of samples.
-		assertm(false, "SBLASTER: Read requested out of bounds of sb.dma.buf.b8");
+		// Calling code has buffer_index either 0 or 1 to handle a
+		// dangling sample from the last read. This is to solve an edge
+		// case for stereo sound when the DMA buffer has an odd number
+		// of samples.
+		assertm(false,
+		        "SBLASTER: Read requested out of bounds of sb.dma.buf.b8");
 		return 0;
 	}
 
 	// Assert that the DMA controller is configured for 8-bit reads,
 	// so we don't have to do the whole song and dance we do for 16-bit.
 	// We should always be dealing with bytes here.
-	assertm(!sb.dma.chan->is_16bit, "SBLASTER: read_dma_8bit() called but DMA controller is configured for 8-bit reads");
+	assertm(!sb.dma.chan->is_16bit,
+	        "SBLASTER: read_dma_8bit() called but DMA controller is configured for 8-bit reads");
 
 	const uint32_t bytes_available = DmaBufSize - buffer_index;
 	const uint32_t clamped_bytes = std::min(bytes_to_read, bytes_available);
-	const auto bytes_read = sb.dma.chan->Read(clamped_bytes, sb.dma.buf.b8 + buffer_index);
+	const auto bytes_read        = sb.dma.chan->Read(clamped_bytes,
+                                                  sb.dma.buf.b8 + buffer_index);
 	assert(bytes_read <= clamped_bytes);
 
 	return check_cast<uint32_t>(bytes_read);
 }
 
-static uint32_t read_dma_16bit(const uint32_t words_to_read, const uint32_t buffer_index = 0)
+static uint32_t read_dma_16bit(const uint32_t words_to_read,
+                               const uint32_t buffer_index = 0)
 {
 	static_assert(sizeof(sb.dma.buf.b16[0]) == 2);
 
 	if (buffer_index >= DmaBufSize) {
 		// Should never happen as the code is currently written.
-		// Calling code has buffer_index either 0 or 1 to handle a dangling sample from the last read.
-		// This is to solve an edge case for stereo sound when the DMA buffer has an odd number of samples.
-		assertm(false, "SBLASTER: Read requested out of bounds of sb.dma.buf.b16");
+		// Calling code has buffer_index either 0 or 1 to handle a
+		// dangling sample from the last read. This is to solve an edge
+		// case for stereo sound when the DMA buffer has an odd number
+		// of samples.
+		assertm(false,
+		        "SBLASTER: Read requested out of bounds of sb.dma.buf.b16");
 		return 0;
 	}
 
-	// In dma.cpp, if sb.dma.chan->is_16bit is set, we're dealing with 16-bit words.
-	// Otherwise, we're dealing with 8-bit words (bytes).
-	// Calling code handles this case and conditionally divides by two.
+	// In dma.cpp, if sb.dma.chan->is_16bit is set, we're dealing with
+	// 16-bit words. Otherwise, we're dealing with 8-bit words (bytes). Calling
+	// code handles this case and conditionally divides by two.
 	uint32_t bytes_requested = words_to_read;
 	if (sb.dma.chan->is_16bit) {
 		bytes_requested *= 2;
 		// Calling code uses these internal SoundBlaster variables.
-		// sb.dma.chan->is_16bit is the source of truth in terms of memory safety.
-		// Assert that these two always match up.
-		assertm(sb.dma.mode == DmaMode::Pcm16Bit, "SoundBlaster expected 8-bit read but DMA controller is 16-bit");
+		// sb.dma.chan->is_16bit is the source of truth in terms of
+		// memory safety. Assert that these two always match up.
+		assertm(sb.dma.mode == DmaMode::Pcm16Bit,
+		        "SoundBlaster expected 8-bit read but DMA controller is 16-bit");
 	} else {
-		assertm(sb.dma.mode == DmaMode::Pcm16BitAliased, "SoundBlaster expected 16-bit read but DMA controller is 8-bit");
+		assertm(sb.dma.mode == DmaMode::Pcm16BitAliased,
+		        "SoundBlaster expected 16-bit read but DMA controller is 8-bit");
 	}
 
 	// Clamp words to read so we don't overflow our buffer.
@@ -1085,7 +1096,8 @@ static uint32_t read_dma_16bit(const uint32_t words_to_read, const uint32_t buff
 		clamped_words /= 2;
 	}
 
-	const auto unsigned_buf = reinterpret_cast<uint8_t*>(sb.dma.buf.b16 + buffer_index);
+	const auto unsigned_buf = reinterpret_cast<uint8_t*>(sb.dma.buf.b16 +
+	                                                     buffer_index);
 	const auto words_read = sb.dma.chan->Read(clamped_words, unsigned_buf);
 	assert(words_read <= clamped_words);
 
@@ -1149,7 +1161,8 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			constexpr auto NumDecoded = check_cast<uint8_t>(
 			        decoded.size());
 
-			enqueue_frames(maybe_silence<FrameType::Mono>(decoded.data(), NumDecoded));
+			enqueue_frames(maybe_silence<FrameType::Mono>(decoded.data(),
+			                                              NumDecoded));
 			num_samples += NumDecoded;
 			i++;
 		}
@@ -1186,10 +1199,13 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			// therefore user-space data.
 			if (frames) {
 				if (sb.dma.sign) {
-					const auto signed_buf = reinterpret_cast<int8_t*>(sb.dma.buf.b8);
-					enqueue_frames(maybe_silence<FrameType::Stereo>(signed_buf, samples));
+					const auto signed_buf = reinterpret_cast<int8_t*>(
+					        sb.dma.buf.b8);
+					enqueue_frames(maybe_silence<FrameType::Stereo>(
+					        signed_buf, samples));
 				} else {
-					enqueue_frames(maybe_silence<FrameType::Stereo>(sb.dma.buf.b8, samples));
+					enqueue_frames(maybe_silence<FrameType::Stereo>(
+					        sb.dma.buf.b8, samples));
 				}
 			}
 			// Otherwise there's an unhandled dangling sample from
@@ -1207,10 +1223,14 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			// mono sanity-check
 			assert(channels == 1);
 			if (sb.dma.sign) {
-				const auto signed_buf = reinterpret_cast<int8_t*>(sb.dma.buf.b8);
-				enqueue_frames(maybe_silence<FrameType::Mono>(signed_buf, samples));
+				const auto signed_buf = reinterpret_cast<int8_t*>(
+				        sb.dma.buf.b8);
+				enqueue_frames(
+				        maybe_silence<FrameType::Mono>(signed_buf,
+				                                       samples));
 			} else {
-				enqueue_frames(maybe_silence<FrameType::Mono>(sb.dma.buf.b8, samples));
+				enqueue_frames(maybe_silence<FrameType::Mono>(
+				        sb.dma.buf.b8, samples));
 			}
 		}
 		break;
@@ -1229,10 +1249,14 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			// Only add whole frames when in stereo DMA mode
 			if (frames) {
 				if (sb.dma.sign) {
-					enqueue_frames(maybe_silence<FrameType::Stereo>(sb.dma.buf.b16, samples));
+					enqueue_frames(maybe_silence<FrameType::Stereo>(
+					        sb.dma.buf.b16, samples));
 				} else {
-					const auto unsigned_buf = reinterpret_cast<uint16_t*>(sb.dma.buf.b16);
-					enqueue_frames(maybe_silence<FrameType::Stereo>(unsigned_buf, samples));
+					const auto unsigned_buf =
+					        reinterpret_cast<uint16_t*>(
+					                sb.dma.buf.b16);
+					enqueue_frames(maybe_silence<FrameType::Stereo>(
+					        unsigned_buf, samples));
 				}
 			}
 			if (samples & 1) {
@@ -1252,10 +1276,14 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			assert(channels == 1);
 
 			if (sb.dma.sign) {
-				enqueue_frames(maybe_silence<FrameType::Mono>(sb.dma.buf.b16, samples));
+				enqueue_frames(maybe_silence<FrameType::Mono>(
+				        sb.dma.buf.b16, samples));
 			} else {
-				const auto unsigned_buf = reinterpret_cast<uint16_t*>(sb.dma.buf.b16);
-				enqueue_frames(maybe_silence<FrameType::Mono>(unsigned_buf, samples));
+				const auto unsigned_buf = reinterpret_cast<uint16_t*>(
+				        sb.dma.buf.b16);
+				enqueue_frames(
+				        maybe_silence<FrameType::Mono>(unsigned_buf,
+				                                       samples));
 			}
 		}
 		break;
@@ -1271,12 +1299,14 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 	// Sanity check
 	assertm(frames <= samples, "Frames should never exceed samples");
 
-	// If the first DMA transfer after a reset contains a single sample, it should be ignored.
-	// Quake and SBTEST.EXE have this behavior. If not ignored, the channels will be incorrectly reversed.
+	// If the first DMA transfer after a reset contains a single sample, it
+	// should be ignored. Quake and SBTEST.EXE have this behavior. If not
+	// ignored, the channels will be incorrectly reversed.
 	// https://github.com/dosbox-staging/dosbox-staging/issues/2942
 	// https://www.vogons.org/viewtopic.php?p=536104#p536104
 	if (sb.dma.first_transfer && samples == 1) {
-		// Forget any "dangling sample" that would otherwise be carried over to the next transfer.
+		// Forget any "dangling sample" that would otherwise be carried
+		// over to the next transfer.
 		sb.dma.remain_size = 0;
 	}
 	sb.dma.first_transfer = false;
@@ -1296,8 +1326,7 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 		if (!sb.dma.autoinit) {
 			// Not new single cycle transfer waiting?
 			if (!sb.dma.singlesize) {
-				LOG(LOG_SB, LOG_NORMAL)
-				("Single cycle transfer ended");
+				LOG(LOG_SB, LOG_NORMAL)("Single cycle transfer ended");
 				sb.mode     = DspMode::None;
 				sb.dma.mode = DmaMode::None;
 			} else {
@@ -1305,13 +1334,13 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 				// handle that now
 				sb.dma.left       = sb.dma.singlesize;
 				sb.dma.singlesize = 0;
-				LOG(LOG_SB, LOG_NORMAL)
-				("Switch to Single cycle transfer begun");
+				LOG(LOG_SB, LOG_NORMAL)(
+				        "Switch to Single cycle transfer begun");
 			}
 		} else {
 			if (!sb.dma.autosize) {
-				LOG(LOG_SB, LOG_NORMAL)
-				("Auto-init transfer with 0 size");
+				LOG(LOG_SB,
+				    LOG_NORMAL)("Auto-init transfer with 0 size");
 				sb.mode = DspMode::None;
 			}
 			// Continue with a new auto init transfer
@@ -1381,18 +1410,16 @@ static void flush_remaining_dma_transfer()
 
 		PIC_AddEvent(suppress_dma_transfer, delay, num_bytes);
 
-		LOG(LOG_SB, LOG_NORMAL)
-		("%s: Silent DMA Transfer scheduling IRQ in %.3f milliseconds",
-		 sb_log_prefix(),
-		 delay);
+		LOG(LOG_SB, LOG_NORMAL)("%s: Silent DMA Transfer scheduling IRQ in %.3f milliseconds",
+		                        sb_log_prefix(),
+		                        delay);
 
 	} else if (sb.dma.left < sb.dma.min) {
 		const double delay = (sb.dma.left * 1000.0) / sb.dma.rate;
 
-		LOG(LOG_SB, LOG_NORMAL)
-		("%s: Short transfer scheduling IRQ in %.3f milliseconds",
-		 sb_log_prefix(),
-		 delay);
+		LOG(LOG_SB, LOG_NORMAL)("%s: Short transfer scheduling IRQ in %.3f milliseconds",
+		                        sb_log_prefix(),
+		                        delay);
 
 		PIC_AddEvent(ProcessDMATransfer, delay, sb.dma.left);
 	}
@@ -1552,7 +1579,8 @@ static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq_hz,
 	case DmaMode::Pcm16Bit: sb.dma.mul = (1 << SbShift); break;
 	case DmaMode::Pcm16BitAliased: sb.dma.mul = (1 << SbShift) * 2; break;
 	default:
-		LOG(LOG_SB, LOG_ERROR)("DSP:Illegal transfer mode %d", static_cast<int>(mode));
+		LOG(LOG_SB, LOG_ERROR)("DSP:Illegal transfer mode %d",
+		                       static_cast<int>(mode));
 		return;
 	}
 
@@ -1590,14 +1618,13 @@ static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq_hz,
 	sb.dma.chan->RegisterCallback(dsp_dma_callback);
 
 #if (C_DEBUGGER)
-	LOG(LOG_SB, LOG_NORMAL)
-	("DMA Transfer:%s %s %s freq_hz %d rate %d size %d",
-	 get_dma_mode_name(),
-	 stereo ? "Stereo" : "Mono",
-	 autoinit ? "Auto-Init" : "Single-Cycle",
-	 freq_hz,
-	 sb.dma.rate,
-	 sb.dma.left);
+	LOG(LOG_SB, LOG_NORMAL)("DMA Transfer:%s %s %s freq_hz %d rate %d size %d",
+	                        get_dma_mode_name(),
+	                        stereo ? "Stereo" : "Mono",
+	                        autoinit ? "Auto-Init" : "Single-Cycle",
+	                        freq_hz,
+	                        sb.dma.rate,
+	                        sb.dma.left);
 #endif
 }
 
@@ -1793,8 +1820,7 @@ static void dsp_change_rate(const uint32_t freq_hz)
 static bool check_sb16_only()
 {
 	if (sb.type != SbType::SB16) {
-		LOG(LOG_SB, LOG_ERROR)
-		("DSP:Command %2X requires SB16", sb.dsp.cmd);
+		LOG(LOG_SB, LOG_ERROR)("DSP:Command %2X requires SB16", sb.dsp.cmd);
 		return false;
 	}
 	return true;
@@ -1803,8 +1829,8 @@ static bool check_sb16_only()
 static bool check_sb2_or_above()
 {
 	if (sb.type <= SbType::SB1) {
-		LOG(LOG_SB, LOG_ERROR)
-		("DSP:Command %2X requires SB2 or above", sb.dsp.cmd);
+		LOG(LOG_SB, LOG_ERROR)("DSP:Command %2X requires SB2 or above",
+		                       sb.dsp.cmd);
 		return false;
 	}
 	return true;
@@ -1814,8 +1840,8 @@ static void dsp_do_command()
 {
 	if (sb.ess_type != EssType::None && sb.dsp.cmd >= 0xa0 && sb.dsp.cmd <= 0xcf) {
 		LOG_TRACE("ESS: Command: %02xh", sb.dsp.cmd);
-		// ESS DSP commands overlap with SB16 commands. We handle them here,
-		// not mucking up the switch statement.
+		// ESS DSP commands overlap with SB16 commands. We handle them
+		// here, not mucking up the switch statement.
 
 		if (sb.dsp.cmd == 0xc6 || sb.dsp.cmd == 0xc7) {
 			// set(0xc6) clear(0xc7) extended mode
@@ -1842,10 +1868,9 @@ static void dsp_do_command()
 				asp_init_in_progress = false;
 			}
 
-			LOG(LOG_SB, LOG_NORMAL)
-			("DSP Unhandled SB16ASP command %X (set mode register to %X)",
-			 sb.dsp.cmd,
-			 sb.dsp.in.data[0]);
+			LOG(LOG_SB, LOG_NORMAL)("DSP Unhandled SB16ASP command %X (set mode register to %X)",
+			                        sb.dsp.cmd,
+			                        sb.dsp.in.data[0]);
 
 		} else {
 			// DSP Status SB 2.0/pro version. NOT SB16.
@@ -1853,7 +1878,8 @@ static void dsp_do_command()
 			if (sb.type == SbType::SB2) {
 				dsp_add_data(0x88);
 
-			} else if ((sb.type == SbType::SBPro1) || (sb.type == SbType::SBPro2)) {
+			} else if ((sb.type == SbType::SBPro1) ||
+			           (sb.type == SbType::SBPro2)) {
 				dsp_add_data(0x7b);
 
 			} else {
@@ -1864,16 +1890,14 @@ static void dsp_do_command()
 		break;
 
 	case 0x05: // SB16 ASP set codec parameter
-		LOG(LOG_SB, LOG_NORMAL)
-		("DSP Unhandled SB16ASP command %X (set codec parameter)",
-		 sb.dsp.cmd);
+		LOG(LOG_SB, LOG_NORMAL)("DSP Unhandled SB16ASP command %X (set codec parameter)",
+		                        sb.dsp.cmd);
 		break;
 
 	case 0x08: // SB16 ASP get version
-		LOG(LOG_SB, LOG_NORMAL)
-		("DSP Unhandled SB16ASP command %X sub %X",
-		 sb.dsp.cmd,
-		 sb.dsp.in.data[0]);
+		LOG(LOG_SB, LOG_NORMAL)("DSP Unhandled SB16ASP command %X sub %X",
+		                        sb.dsp.cmd,
+		                        sb.dsp.in.data[0]);
 
 		if (sb.type == SbType::SB16) {
 			switch (sb.dsp.in.data[0]) {
@@ -1882,17 +1906,15 @@ static void dsp_do_command()
 				break;
 
 			default:
-				LOG(LOG_SB, LOG_NORMAL)
-				("DSP Unhandled SB16ASP command %X sub %X",
-				 sb.dsp.cmd,
-				 sb.dsp.in.data[0]);
+				LOG(LOG_SB, LOG_NORMAL)("DSP Unhandled SB16ASP command %X sub %X",
+				                        sb.dsp.cmd,
+				                        sb.dsp.in.data[0]);
 				break;
 			}
 		} else {
-			LOG(LOG_SB, LOG_NORMAL)
-			("DSP Unhandled SB16ASP command %X sub %X",
-			 sb.dsp.cmd,
-			 sb.dsp.in.data[0]);
+			LOG(LOG_SB, LOG_NORMAL)("DSP Unhandled SB16ASP command %X sub %X",
+			                        sb.dsp.cmd,
+			                        sb.dsp.in.data[0]);
 		}
 		break;
 
@@ -1906,9 +1928,8 @@ static void dsp_do_command()
 #endif
 			asp_regs[sb.dsp.in.data[0]] = sb.dsp.in.data[1];
 		} else {
-			LOG(LOG_SB, LOG_NORMAL)
-			("DSP Unhandled SB16ASP command %X (set register)",
-			 sb.dsp.cmd);
+			LOG(LOG_SB, LOG_NORMAL)("DSP Unhandled SB16ASP command %X (set register)",
+			                        sb.dsp.cmd);
 		}
 		break;
 
@@ -1925,18 +1946,18 @@ static void dsp_do_command()
 #endif
 			dsp_add_data(asp_regs[sb.dsp.in.data[0]]);
 		} else {
-			LOG(LOG_SB, LOG_NORMAL)
-			("DSP Unhandled SB16ASP command %X (get register)",
-			 sb.dsp.cmd);
+			LOG(LOG_SB, LOG_NORMAL)("DSP Unhandled SB16ASP command %X (get register)",
+			                        sb.dsp.cmd);
 		}
 		break;
 
 	case 0x10: // Direct DAC
 		dsp_change_mode(DspMode::Dac);
 		if (sblaster->MaybeWakeUp()) {
-			// If we're waking up, then the DAC hasn't been running (or maybe
-			// wasn't running at all), so start with a fresh DAC state and
-			// ensure we're using per-frame callback timing.
+			// If we're waking up, then the DAC hasn't been running
+			// (or maybe wasn't running at all), so start with a
+			// fresh DAC state and ensure we're using per-frame
+			// callback timing.
 			sb.dac = {};
 			callback_type.SetPerFrame();
 		}
@@ -1950,8 +1971,7 @@ static void dsp_do_command()
 		// Directly write to left?
 		sb.dma.left = 1 + sb.dsp.in.data[0] + (sb.dsp.in.data[1] << 8);
 		sb.dma.sign = false;
-		LOG(LOG_SB, LOG_ERROR)
-		("DSP:Faked ADC for %u bytes", sb.dma.left);
+		LOG(LOG_SB, LOG_ERROR)("DSP:Faked ADC for %u bytes", sb.dma.left);
 		DMA_GetChannel(sb.hw.dma8)->RegisterCallback(dsp_adc_callback);
 		break;
 
@@ -1997,13 +2017,15 @@ static void dsp_do_command()
 	case 0x42: // Set Input Samplerate
 		// Note: 0x42 is handled like 0x41, needed by Fasttracker II
 		if (check_sb16_only()) {
-			dsp_change_rate((sb.dsp.in.data[0] << 8) | sb.dsp.in.data[1]);
+			dsp_change_rate((sb.dsp.in.data[0] << 8) |
+			                sb.dsp.in.data[1]);
 		}
 		break;
 
 	case 0x48: // Set DMA Block Size
 		if (check_sb2_or_above()) {
-			sb.dma.autosize = 1 + sb.dsp.in.data[0] + (sb.dsp.in.data[1] << 8);
+			sb.dma.autosize = 1 + sb.dsp.in.data[0] +
+			                  (sb.dsp.in.data[1] << 8);
 		}
 		break;
 
@@ -2045,7 +2067,7 @@ static void dsp_do_command()
 		              sb.freq_hz));
 		break;
 
-	// clang-format off
+		// clang-format off
 	// 0xb0 to 0xbf
 	case 0xb0: case 0xb1: case 0xb2: case 0xb3:
 	case 0xb4: case 0xb5: case 0xb6: case 0xb7:
@@ -2158,7 +2180,7 @@ static void dsp_do_command()
 		dsp_flush_data();
 
 		switch (sb.type) {
-			case SbType::SB1:
+		case SbType::SB1:
 			dsp_add_data(0x01);
 			dsp_add_data(0x05);
 			break;
@@ -2264,8 +2286,8 @@ static void dsp_do_command()
 
 	case 0x30:
 	case 0x31:
-		LOG(LOG_SB, LOG_ERROR)
-		("DSP:Unimplemented MIDI I/O command %2X", sb.dsp.cmd);
+		LOG(LOG_SB, LOG_ERROR)("DSP:Unimplemented MIDI I/O command %2X",
+		                       sb.dsp.cmd);
 		break;
 
 	case 0x34:
@@ -2273,16 +2295,16 @@ static void dsp_do_command()
 	case 0x36:
 	case 0x37:
 		if (check_sb2_or_above()) {
-			LOG(LOG_SB, LOG_ERROR)
-			("DSP:Unimplemented MIDI UART command %2X", sb.dsp.cmd);
+			LOG(LOG_SB, LOG_ERROR)("DSP:Unimplemented MIDI UART command %2X",
+			                       sb.dsp.cmd);
 		}
 		break;
 
 	case 0x7f:
 	case 0x1f:
 		if (check_sb2_or_above()) {
-			LOG(LOG_SB, LOG_ERROR)
-			("DSP:Unimplemented auto-init DMA ADPCM command %2X", sb.dsp.cmd);
+			LOG(LOG_SB, LOG_ERROR)("DSP:Unimplemented auto-init DMA ADPCM command %2X",
+			                       sb.dsp.cmd);
 		}
 		break;
 
@@ -2295,14 +2317,14 @@ static void dsp_do_command()
 	case 0x99: // Documented only for DSP 2.x and 3.x
 	case 0xa0:
 	case 0xa8: // Documented only for DSP 3.x
-		LOG(LOG_SB, LOG_ERROR)
-		("DSP:Unimplemented input command %2X", sb.dsp.cmd);
+		LOG(LOG_SB, LOG_ERROR)("DSP:Unimplemented input command %2X",
+		                       sb.dsp.cmd);
 		break;
 
 	case 0xf9: // SB16 ASP ???
 		if (sb.type == SbType::SB16) {
-			LOG(LOG_SB, LOG_NORMAL)
-			("SB16 ASP unknown function %x", sb.dsp.in.data[0]);
+			LOG(LOG_SB, LOG_NORMAL)("SB16 ASP unknown function %x",
+			                        sb.dsp.in.data[0]);
 
 			// Just feed it what it expects
 			switch (sb.dsp.in.data[0]) {
@@ -2318,14 +2340,14 @@ static void dsp_do_command()
 			default: dsp_add_data(0x00); break;
 			}
 		} else {
-			LOG(LOG_SB, LOG_NORMAL)
-			("SB16 ASP unknown function %X", sb.dsp.cmd);
+			LOG(LOG_SB, LOG_NORMAL)("SB16 ASP unknown function %X",
+			                        sb.dsp.cmd);
 		}
 		break;
 
 	default:
-		LOG(LOG_SB, LOG_ERROR)
-		("DSP:Unhandled (undocumented) command %2X", sb.dsp.cmd);
+		LOG(LOG_SB, LOG_ERROR)("DSP:Unhandled (undocumented) command %2X",
+		                       sb.dsp.cmd);
 		break;
 	}
 
@@ -2453,8 +2475,8 @@ static void ctmixer_reset()
 
 static void write_sb_pro_volume(uint8_t* dest, const uint8_t value)
 {
-	dest[0] = ((((value)&0xf0) >> 3) | (sb.type == SbType::SB16 ? 1 : 3));
-	dest[1] = ((((value)&0x0f) << 1) | (sb.type == SbType::SB16 ? 1 : 3));
+	dest[0] = ((((value) & 0xf0) >> 3) | (sb.type == SbType::SB16 ? 1 : 3));
+	dest[1] = ((((value) & 0x0f) << 1) | (sb.type == SbType::SB16 ? 1 : 3));
 }
 
 static uint8_t read_sb_pro_volume(const uint8_t* src)
@@ -2548,8 +2570,8 @@ static void ctmixer_write(const uint8_t val)
 		ctmixer_update_volumes();
 
 		if (val & 0x60) {
-			LOG(LOG_SB, LOG_WARN)
-			("Turned FM one channel off. not implemented %X", val);
+			LOG(LOG_SB, LOG_WARN)("Turned FM one channel off. not implemented %X",
+			                      val);
 		}
 		// TODO Change FM Mode if only 1 fm channel is selected
 	} break;
@@ -2613,8 +2635,8 @@ static void ctmixer_write(const uint8_t val)
 
 		dsp_change_stereo(sb.mixer.stereo_enabled);
 
-		LOG(LOG_SB, LOG_WARN)
-		("Mixer set to %s", sb.dma.stereo ? "STEREO" : "MONO");
+		LOG(LOG_SB, LOG_WARN)("Mixer set to %s",
+		                      sb.dma.stereo ? "STEREO" : "MONO");
 	} break;
 
 	case 0x14: // Audio 1 Play Volume (ESS)
@@ -2777,8 +2799,9 @@ static void ctmixer_write(const uint8_t val)
 			sb.hw.dma16 = 7;
 		}
 
-		LOG(LOG_SB, LOG_NORMAL)
-		("Mixer select dma8:%x dma16:%x", sb.hw.dma8, sb.hw.dma16);
+		LOG(LOG_SB, LOG_NORMAL)("Mixer select dma8:%x dma16:%x",
+		                        sb.hw.dma8,
+		                        sb.hw.dma16);
 		break;
 
 	default:
@@ -2789,8 +2812,9 @@ static void ctmixer_write(const uint8_t val)
 			sb.mixer.unhandled[sb.mixer.index] = val;
 		}
 
-		LOG(LOG_SB, LOG_WARN)
-		("MIXER:Write %X to unhandled index %X", val, sb.mixer.index);
+		LOG(LOG_SB, LOG_WARN)("MIXER:Write %X to unhandled index %X",
+		                      val,
+		                      sb.mixer.index);
 	}
 }
 
@@ -2828,7 +2852,8 @@ static uint8_t ctmixer_read()
 		if (sb.type == SbType::SB2) {
 			return (sb.mixer.dac[0] >> 2);
 		} else {
-			return ((sb.mixer.mic >> 2) & (sb.type == SbType::SB16 ? 7 : 6));
+			return ((sb.mixer.mic >> 2) &
+			        (sb.type == SbType::SB16 ? 7 : 6));
 		}
 
 	case 0x0e: // Output/Stereo Select
@@ -2957,7 +2982,7 @@ static uint8_t ctmixer_read()
 		default:
 			ret = 0xa;
 			LOG_WARNING("ESS: Identification function 0x%x is not implemented",
-						sb.mixer.index);
+			            sb.mixer.index);
 		}
 		break;
 
@@ -2999,8 +3024,8 @@ static uint8_t ctmixer_read()
 		} else {
 			ret = 0xa;
 		}
-		LOG(LOG_SB, LOG_WARN)
-		("MIXER:Read from unhandled index %X", sb.mixer.index);
+		LOG(LOG_SB, LOG_WARN)("MIXER:Read from unhandled index %X",
+		                      sb.mixer.index);
 	}
 	return ret;
 }
@@ -3098,8 +3123,7 @@ static uint8_t read_sb(const io_port_t port, const io_width_t)
 	case DspReset: return 0xff;
 
 	default:
-		LOG(LOG_SB, LOG_NORMAL)
-		("Unhandled read from SB Port %4X", port);
+		LOG(LOG_SB, LOG_NORMAL)("Unhandled read from SB Port %4X", port);
 		break;
 	}
 	return 0xff;
@@ -3124,7 +3148,7 @@ static void write_sb(const io_port_t port, const io_val_t value, const io_width_
 	}
 }
 
-bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
+bool SB_GetAddress(uint16_t& sbaddr, uint8_t& sbirq, uint8_t& sbdma)
 {
 	sbaddr = 0;
 	sbirq  = 0;
@@ -3155,18 +3179,18 @@ static void generate_frames(const int frames_requested)
 	} break;
 
 	case DspMode::Dac:
-		// DAC mode typically renders one frame at a time because the DOS
-		// program will be writing to the DAC register at the playback
-		// rate.
-		// In a mixer underflow situation, we render the current frame multiple times.
+		// DAC mode typically renders one frame at a time because the
+		// DOS program will be writing to the DAC register at the
+		// playback rate. In a mixer underflow situation, we render the
+		// current frame multiple times.
 		for (int i = 0; i < frames_requested; ++i) {
-			sblaster->output_queue.NonblockingEnqueue(sb.dac.RenderFrame());
+			sblaster->output_queue.NonblockingEnqueue(
+			        sb.dac.RenderFrame());
 		}
 		frames_added_this_tick += frames_requested;
 		break;
 
-	case DspMode::Dma:
-	{
+	case DspMode::Dma: {
 		// This is a no-op if the channel is already running. DMA
 		// processing can go for some time using auto-init mode without
 		// having to send IO calls to the card; so we keep it awake when
@@ -3208,9 +3232,9 @@ static void per_tick_callback()
 
 	static float frame_counter = 0.0f;
 
-	frame_counter += std::max(
-		static_cast<float>(sblaster->frames_needed.exchange(0, std::memory_order_acq_rel)),
-		sblaster->channel->GetFramesPerTick());
+	frame_counter += std::max(static_cast<float>(sblaster->frames_needed.exchange(
+	                                  0, std::memory_order_acq_rel)),
+	                          sblaster->channel->GetFramesPerTick());
 	const int total_frames = ifloor(frame_counter);
 	frame_counter -= static_cast<float>(total_frames);
 
@@ -3241,12 +3265,12 @@ static void per_frame_callback(uint32_t)
 	}
 
 	int mixer_needs = std::max(
-		sblaster->frames_needed.exchange(0, std::memory_order_acq_rel),
-		1);
+	        sblaster->frames_needed.exchange(0, std::memory_order_acq_rel), 1);
 
-	// Frames added this tick is only useful when we're in an underflow situation with the mixer.
-	// generate_frames() may not give us everything we need in a single call.
-	// We're not concerned about over-filling while in this mode so just zero it out.
+	// Frames added this tick is only useful when we're in an underflow
+	// situation with the mixer. generate_frames() may not give us
+	// everything we need in a single call. We're not concerned about
+	// over-filling while in this mode so just zero it out.
 	frames_added_this_tick = 0;
 	while (frames_added_this_tick < mixer_needs) {
 		generate_frames(mixer_needs - frames_added_this_tick);
@@ -3262,12 +3286,18 @@ void SBLASTER::MixerCallback(const int frames_requested)
 	constexpr bool NativeOrder = true;
 
 	// Fast forward mode can cause the mixer to get very far behind.
-	// In extreme cases, it can cause SoundBlaster code to integer overflow and get stuck in an infinte loop.
-	// Avoid that by not setting frames_needed and just letting the mixer block.
+	// In extreme cases, it can cause SoundBlaster code to integer overflow
+	// and get stuck in an infinte loop. Avoid that by not setting
+	// frames_needed and just letting the mixer block.
 	if (!MIXER_FastForwardModeEnabled()) {
-		frames_needed.store(std::max(frames_requested - check_cast<int>(output_queue.Size()), 0), std::memory_order_release);
+		frames_needed.store(std::max(frames_requested -
+		                                     check_cast<int>(
+		                                             output_queue.Size()),
+		                             0),
+		                    std::memory_order_release);
 	}
-	MIXER_PullFromQueueCallback<SBLASTER, AudioFrame, Stereo, SignedData, NativeOrder>(frames_requested, this);
+	MIXER_PullFromQueueCallback<SBLASTER, AudioFrame, Stereo, SignedData, NativeOrder>(
+	        frames_requested, this);
 }
 
 static SbType determine_sb_type(const std::string& pref)
@@ -3306,7 +3336,8 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 {
 	if (ess_type == EssType::None) {
 		if (pref == "cms") {
-			// Skip for backward compatibility with existing configurations
+			// Skip for backward compatibility with existing
+			// configurations
 			return OplMode::None;
 
 		} else if (pref == "opl2") {
@@ -3333,7 +3364,7 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 			case SbType::SBPro1: return OplMode::DualOpl2;
 			case SbType::SBPro2:
 				return ess_type == EssType::None ? OplMode::Opl3
-												 : OplMode::Esfm;
+				                                 : OplMode::Esfm;
 			case SbType::SB16: return OplMode::Opl3;
 			case SbType::None: return OplMode::None;
 			}
@@ -3590,10 +3621,9 @@ SBLASTER::SBLASTER(Section* conf)
 		channel_features.insert(ChannelFeature::Stereo);
 	}
 
-	const auto callback = std::bind(
-	        &SBLASTER::MixerCallback,
-	        this,
-	        std::placeholders::_1);
+	const auto callback = std::bind(&SBLASTER::MixerCallback,
+	                                this,
+	                                std::placeholders::_1);
 
 	channel = MIXER_AddChannel(callback,
 	                           DefaultPlaybackRateHz,
@@ -3821,12 +3851,12 @@ void init_sblaster(Section* sec)
 	sec->AddDestroyHandler(shutdown_sblaster, ChangeableAtRuntime);
 }
 
-void shutdown_sblaster(Section* /*sec*/) {
+void shutdown_sblaster(Section* /*sec*/)
+{
 	MIXER_LockMixerThread();
 	sblaster = {};
 	MIXER_UnlockMixerThread();
 }
-
 
 static void register_sblaster_text_messages()
 {

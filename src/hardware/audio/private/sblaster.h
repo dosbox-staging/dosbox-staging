@@ -23,7 +23,7 @@ public:
 
 	// Public members used by MIXER_PullFromQueueCallback
 	RWQueue<AudioFrame> output_queue{1};
-	MixerChannelPtr channel = nullptr;
+	MixerChannelPtr channel        = nullptr;
 	std::atomic<int> frames_needed = 0;
 
 private:
