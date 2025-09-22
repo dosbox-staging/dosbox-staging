@@ -51,7 +51,7 @@ CHECK_NARROWING();
 constexpr uint16_t CardBaseOffset = 288;
 constexpr auto TandyPsgClockHz    = 14318180 / 4;
 
-static void shutdown_dac(Section*);
+static void tandy_dac_evict(Section*);
 
 class TandyPSG {
 public:
@@ -180,7 +180,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter
 
 	// Reserve the DMA channel
 	if (dma.channel = DMA_GetChannel(io.dma); dma.channel) {
-		dma.channel->ReserveFor("Tandy DAC", shutdown_dac);
+		dma.channel->ReserveFor("Tandy DAC", tandy_dac_evict);
 	}
 
 	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
@@ -623,12 +623,18 @@ bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma)
 	return true;
 }
 
-static void shutdown_dac(Section*)
+static void tandy_dac_destroy([[maybe_unused]] Section* section)
 {
 	if (tandy_dac) {
 		LOG_MSG("%s: Shutting down", ChannelName::TandyDac);
 		tandy_dac.reset();
 	}
+}
+
+static void tandy_dac_evict(Section* section)
+{
+	tandy_dac_destroy(section);
+	set_section_property_value("speaker", "tandy", "off");
 }
 
 void TANDYSOUND_PicCallback()
