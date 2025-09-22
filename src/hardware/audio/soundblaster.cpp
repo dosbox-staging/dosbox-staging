@@ -4,7 +4,7 @@
 
 #include "private/soundblaster.h"
 
-#include "private/gameblaster.h"
+#include "private/cms.h"
 #include "private/gus.h"
 
 #include <array>

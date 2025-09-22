@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_PRIVATE_GAMEBLASTER_H
-#define DOSBOX_PRIVATE_GAMEBLASTER_H
+#ifndef DOSBOX_PRIVATE_CMS_H
+#define DOSBOX_PRIVATE_CMS_H
 
 #include "mame/saa1099.h"
 
@@ -18,15 +18,16 @@
 #include "misc/support.h"
 #include "utils/math_utils.h"
 
-// The Game Blaster is nothing else than a rebranding of Creative's first PC
-// sound card, the Creative Music System (CMS or C/MS).
+// The CMS (alternatively spelled as C/MS), Creative's first PC sound card,
+// was later rebranded as the Game Blaster. It was exactly the same sound
+// card, just under a different name.
 
-class GameBlaster {
+class Cms {
 public:
-	GameBlaster(const int port_choice, const std::string& card_choice,
+	Cms(const int port_choice, const std::string& card_choice,
 	            const std::string& filter_choice);
 
-	~GameBlaster();
+	~Cms();
 
 private:
 	AudioFrame RenderFrame();

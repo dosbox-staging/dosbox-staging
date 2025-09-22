@@ -1,8 +1,8 @@
 target_sources(libdosboxcommon PRIVATE 
   audio/adlib_gold.cpp
+  audio/cms.cpp
   audio/covox.cpp
   audio/disney.cpp
-  audio/gameblaster.cpp
   audio/gus.cpp
   audio/imfc.cpp
   audio/innovation.cpp

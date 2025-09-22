@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2017 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "private/gameblaster.h"
+#include "private/cms.h"
 
 #include <memory>
 
@@ -14,8 +14,8 @@
 
 CHECK_NARROWING();
 
-GameBlaster::GameBlaster(const int port_choice, const std::string& card_choice,
-                         const std::string& filter_choice)
+Cms::Cms(const int port_choice, const std::string& card_choice,
+         const std::string& filter_choice)
 {
 	using namespace std::placeholders;
 
@@ -48,17 +48,16 @@ GameBlaster::GameBlaster(const int port_choice, const std::string& card_choice,
 	// compatibility, and the Sound Blaster 2.0 had sockets for them as
 	// optional add-ons. Therefore, we always set up these handlers, even if
 	// the card type isn't a Game Blaster.
-	const auto data_to_left =
-	        std::bind(&GameBlaster::WriteDataToLeftDevice, this, _1, _2, _3);
+	const auto data_to_left = std::bind(&Cms::WriteDataToLeftDevice, this, _1, _2, _3);
 
-	const auto control_to_left = std::bind(
-	        &GameBlaster::WriteControlToLeftDevice, this, _1, _2, _3);
+	const auto control_to_left =
+	        std::bind(&Cms::WriteControlToLeftDevice, this, _1, _2, _3);
 
 	const auto data_to_right =
-	        std::bind(&GameBlaster::WriteDataToRightDevice, this, _1, _2, _3);
+	        std::bind(&Cms::WriteDataToRightDevice, this, _1, _2, _3);
 
-	const auto control_to_right = std::bind(
-	        &GameBlaster::WriteControlToRightDevice, this, _1, _2, _3);
+	const auto control_to_right =
+	        std::bind(&Cms::WriteControlToRightDevice, this, _1, _2, _3);
 
 	write_handlers[0].Install(base_port, data_to_left, io_width_t::byte);
 	write_handlers[1].Install(base_port + 1, control_to_left, io_width_t::byte);
@@ -70,11 +69,11 @@ GameBlaster::GameBlaster(const int port_choice, const std::string& card_choice,
 	// set up those handlers for this chip only if the card type is a Game
 	// Blaster:
 	if (is_standalone_gameblaster) {
-		const auto read_from_detection_port = std::bind(
-		        &GameBlaster::ReadFromDetectionPort, this, _1, _2);
+		const auto read_from_detection_port =
+		        std::bind(&Cms::ReadFromDetectionPort, this, _1, _2);
 
-		const auto write_to_detection_port = std::bind(
-		        &GameBlaster::WriteToDetectionPort, this, _1, _2, _3);
+		const auto write_to_detection_port =
+		        std::bind(&Cms::WriteToDetectionPort, this, _1, _2, _3);
 
 		read_handler_for_detection.Install(base_port,
 		                                   read_from_detection_port,
@@ -88,7 +87,7 @@ GameBlaster::GameBlaster(const int port_choice, const std::string& card_choice,
 	}
 
 	// Set up the mixer and level controls
-	const auto audio_callback = std::bind(&GameBlaster::AudioCallback, this, _1);
+	const auto audio_callback = std::bind(&Cms::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(audio_callback,
 	                           RenderRateHz,
@@ -139,7 +138,7 @@ GameBlaster::GameBlaster(const int port_choice, const std::string& card_choice,
 	MIXER_UnlockMixerThread();
 }
 
-GameBlaster::~GameBlaster()
+Cms::~Cms()
 {
 	LOG_INFO("CMS: Shutting down");
 
@@ -169,7 +168,7 @@ GameBlaster::~GameBlaster()
 	MIXER_UnlockMixerThread();
 }
 
-AudioFrame GameBlaster::RenderFrame()
+AudioFrame Cms::RenderFrame()
 {
 	// left and right
 	static std::array<int16_t, 2> buf = {};
@@ -193,7 +192,7 @@ AudioFrame GameBlaster::RenderFrame()
 	return {static_cast<float>(left_accum), static_cast<float>(right_accum)};
 }
 
-void GameBlaster::RenderUpToNow()
+void Cms::RenderUpToNow()
 {
 	std::lock_guard lock(mutex);
 
@@ -212,31 +211,31 @@ void GameBlaster::RenderUpToNow()
 	}
 }
 
-void GameBlaster::WriteDataToLeftDevice(io_port_t, io_val_t value, io_width_t)
+void Cms::WriteDataToLeftDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
 	devices[0]->data_w(0, 0, check_cast<uint8_t>(value));
 }
 
-void GameBlaster::WriteControlToLeftDevice(io_port_t, io_val_t value, io_width_t)
+void Cms::WriteControlToLeftDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
 	devices[0]->control_w(0, 0, check_cast<uint8_t>(value));
 }
 
-void GameBlaster::WriteDataToRightDevice(io_port_t, io_val_t value, io_width_t)
+void Cms::WriteDataToRightDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
 	devices[1]->data_w(0, 0, check_cast<uint8_t>(value));
 }
 
-void GameBlaster::WriteControlToRightDevice(io_port_t, io_val_t value, io_width_t)
+void Cms::WriteControlToRightDevice(io_port_t, io_val_t value, io_width_t)
 {
 	RenderUpToNow();
 	devices[1]->control_w(0, 0, check_cast<uint8_t>(value));
 }
 
-void GameBlaster::AudioCallback(const int requested_frames)
+void Cms::AudioCallback(const int requested_frames)
 {
 	assert(channel);
 
@@ -265,7 +264,7 @@ void GameBlaster::AudioCallback(const int requested_frames)
 	last_rendered_ms = PIC_AtomicIndex();
 }
 
-void GameBlaster::WriteToDetectionPort(io_port_t port, io_val_t value, io_width_t)
+void Cms::WriteToDetectionPort(io_port_t port, io_val_t value, io_width_t)
 {
 	switch (port - base_port) {
 	case 0x6:
@@ -273,7 +272,7 @@ void GameBlaster::WriteToDetectionPort(io_port_t port, io_val_t value, io_width_
 	}
 }
 
-uint8_t GameBlaster::ReadFromDetectionPort(io_port_t port, io_width_t) const
+uint8_t Cms::ReadFromDetectionPort(io_port_t port, io_width_t) const
 {
 	uint8_t retval = 0xff;
 	switch (port - base_port) {
@@ -284,11 +283,11 @@ uint8_t GameBlaster::ReadFromDetectionPort(io_port_t port, io_width_t) const
 	return retval;
 }
 
-static std::unique_ptr<GameBlaster> gameblaster = {};
+static std::unique_ptr<Cms> cms = {};
 
 void CMS_Destroy()
 {
-	gameblaster = {};
+	cms = {};
 }
 
 void CMS_Init(Section* conf)
@@ -297,7 +296,7 @@ void CMS_Init(Section* conf)
 
 	auto section = static_cast<SectionProp*>(conf);
 
-	gameblaster = std::make_unique<GameBlaster>(section->GetHex("sbbase"),
-	                                            section->GetString("sbtype"),
-	                                            section->GetString("cms_filter"));
+	cms = std::make_unique<Cms>(section->GetHex("sbbase"),
+	                            section->GetString("sbtype"),
+	                            section->GetString("cms_filter"));
 }
