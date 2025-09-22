@@ -33,6 +33,11 @@ else()
                       "-Wdisabled-optimization")
 endif()
 
+# GCC needs more memory reserved to fully optimize the CPU emulation code
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options("--param" "max-gcse-memory=250000")
+endif()
+
 # TODO: These are sprintf deprecated warnings.
 # We probably do want to remove sprintf usage at some point.
 if(APPLE)
