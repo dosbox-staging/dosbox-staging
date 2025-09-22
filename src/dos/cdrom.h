@@ -210,7 +210,7 @@ private:
 
 	class BinaryFile final : public TrackFile {
 	public:
-		BinaryFile(const char* filename, bool& error);
+		BinaryFile(const std_fs::path &filename, bool &error);
 		~BinaryFile() override;
 
 		BinaryFile()                  = delete;
