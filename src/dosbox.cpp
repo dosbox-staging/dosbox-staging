@@ -56,6 +56,7 @@
 #include "misc/tracy.h"
 #include "misc/video.h"
 #include "network/ethernet.h"
+#include "shell/autoexec.h"
 #include "shell/shell.h"
 #include "utils/math_utils.h"
 
@@ -66,7 +67,6 @@ void LOG_StartUp();
 
 void DEBUG_Init(Section*);
 
-void AUTOEXEC_Init(Section*);
 void SHELL_Init();
 
 static LoopHandler * loop;
