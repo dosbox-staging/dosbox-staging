@@ -1117,7 +1117,7 @@ void Gus::Reset() noexcept
 	mix_control_register.data = MixControlRegisterDefaultState;
 }
 
-static void gus_destroy(Section*);
+static void gus_evict(Section* sec);
 
 void Gus::UpdateRecordingDmaAddress(const uint8_t new_address)
 {
@@ -1148,8 +1148,10 @@ void Gus::UpdatePlaybackDmaAddress(const uint8_t new_address)
 	dma1        = new_address;
 	dma_channel = DMA_GetChannel(dma1);
 	assert(dma_channel);
-	dma_channel->ReserveFor(ChannelName::GravisUltrasound, gus_destroy);
+
+	dma_channel->ReserveFor(ChannelName::GravisUltrasound, gus_evict);
 	dma_channel->RegisterCallback(std::bind(&Gus::DmaCallback, this, _1, _2));
+
 #if LOG_GUS
 	LOG_MSG("GUS: Assigned playback DMA address to %u", dma1);
 #endif
@@ -1614,6 +1616,12 @@ static void gus_destroy([[maybe_unused]] Section* sec)
 
 		MIXER_UnlockMixerThread();
 	}
+}
+
+static void gus_evict(Section* sec)
+{
+	gus_destroy(sec);
+	set_section_property_value("gus", "gus", "off");
 }
 
 static void notify_gus_setting_updated(SectionProp* section,
