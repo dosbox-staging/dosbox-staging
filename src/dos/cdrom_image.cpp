@@ -80,7 +80,7 @@ uint32_t CDROM_Interface_Image::TrackFile::adjustOverRead(const uint32_t offset,
 	return adjusted_bytes;
 }
 
-CDROM_Interface_Image::BinaryFile::BinaryFile(const char *filename, bool &error)
+CDROM_Interface_Image::BinaryFile::BinaryFile(const std_fs::path &filename, bool &error)
         : TrackFile(BYTES_PER_RAW_REDBOOK_FRAME),
           file(nullptr)
 {
@@ -1264,7 +1264,7 @@ bool CDROM_Interface_Image::LoadCueSheet(const char *cuefile)
 			bool error = true;
 			if (type == "BINARY") {
 				track.file = std::make_shared<BinaryFile>(
-				        filename.c_str(), error);
+				        filename, error);
 			} else {
 				track.file = std::make_shared<AudioFile>(
 				        filename.c_str(), error);
