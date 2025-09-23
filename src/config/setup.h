@@ -334,30 +334,20 @@ public:
 
 using SectionInitHandler = std::function<void(Section*)>;
 
+using SectionDestroyHandler = std::function<void(Section*)>;
+
 using SectionUpdateHandler =
         std::function<void(SectionProp*, const std::string& prop_name)>;
 
 class Section {
 private:
-	// Wrapper class around startup and shutdown functions. the variable
-	// changeable_at_runtime indicates it can be called on configuration
-	// changes
-	struct Function_wrapper {
-		SectionInitHandler function;
-		bool changeable_at_runtime;
+	std::deque<SectionInitHandler> init_handlers       = {};
+	std::deque<SectionDestroyHandler> destroy_handlers = {};
+	std::vector<SectionUpdateHandler> update_handlers  = {};
 
-		Function_wrapper(const SectionInitHandler fn, bool ch)
-		        : function(fn),
-		          changeable_at_runtime(ch)
-		{}
-	};
+	std::string sectionname = {};
 
-	std::deque<Function_wrapper> init_handlers    = {};
-	std::deque<Function_wrapper> destroy_handlers = {};
-	std::vector<SectionUpdateHandler> update_handlers = {};
-
-	std::string sectionname                       = {};
-	bool active                                   = true;
+	bool active = true;
 
 public:
 	Section() = default;
@@ -373,25 +363,13 @@ public:
 	// Children must call ExecuteDestroy()
 	virtual ~Section() = default;
 
-	// TODO comments
-	void AddInitHandler(SectionInitHandler init_handler,
-	                    bool changeable_at_runtime = false);
-
-	// TODO comments
+	void AddInitHandler(SectionInitHandler init_handler);
 	void AddUpdateHandler(SectionUpdateHandler update_handler);
+	void AddDestroyHandler(SectionInitHandler destroy_handler);
 
-	// TODO comments
-	void AddDestroyHandler(SectionInitHandler destroy_handler,
-	                       bool changeable_at_runtime = false);
-
-	// TODO This is temporary and will be removed a few commits later once
-	// the `changeable_at_runtime` concept is removed from the section
-	// init/destroy handling.
-	bool IsChangeableAtRuntime();
-
-	void ExecuteInit(bool initall = true);
+	void ExecuteInit();
 	void ExecuteUpdate(const Property& property);
-	void ExecuteDestroy(bool destroyall = true);
+	void ExecuteDestroy();
 
 	bool IsActive() const
 	{
@@ -545,7 +523,7 @@ public:
 
 	~SectionLine() override
 	{
-		ExecuteDestroy(true);
+		ExecuteDestroy();
 	}
 
 	std::string GetPropertyValue(const std::string& property) const override;
