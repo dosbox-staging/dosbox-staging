@@ -497,7 +497,7 @@ public:
 	}
 };
 
-static PCI* pci_interface = nullptr;
+static std::unique_ptr<PCI> pci_interface = {};
 
 PhysPt PCI_GetPModeInterface(void)
 {
@@ -513,20 +513,6 @@ bool PCI_IsInitialized()
 		return pci_interface->IsInitialized();
 	}
 	return false;
-}
-
-void PCI_ShutDown([[maybe_unused]] Section* sec)
-{
-	delete pci_interface;
-	pci_interface = nullptr;
-}
-
-void PCI_Init(Section* sec)
-{
-	assert(sec);
-
-	pci_interface = new PCI(sec);
-	sec->AddDestroyHandler(PCI_ShutDown);
 }
 
 void PCI_AddDevice(PCI_Device* dev)
@@ -551,3 +537,15 @@ uint8_t PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, uint8_t regnum)
 {
 	return pci_cfg_data[pci_id][pci_subfunction][regnum];
 }
+
+void PCI_Destroy()
+{
+	pci_interface = {};
+}
+
+void PCI_Init(Section* section)
+{
+	assert(section);
+	pci_interface = std::make_unique<PCI>(section);
+}
+

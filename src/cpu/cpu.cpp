@@ -3206,14 +3206,24 @@ bool Cpu::initialised = false;
 
 static std::unique_ptr<Cpu> cpu_instance = {};
 
-static void cpu_init(Section* sec)
+static void cpu_init(Section* section)
 {
-	assert(sec);
-	cpu_instance = std::make_unique<Cpu>(sec);
+	cpu_instance = std::make_unique<Cpu>(section);
+
+#if C_FPU
+	FPU_Init(section);
+#endif
+	VGA_Init(section);
+	DMA_Init();
+	KEYBOARD_Init();
+	PCI_Init(section);
 }
 
-static void cpu_shutdown([[maybe_unused]] Section* sec)
+static void cpu_shutdown([[maybe_unused]] Section* section)
 {
+	PCI_Destroy();
+	DMA_Destroy();
+
 #if C_DYNAMIC_X86
 	CPU_Core_Dyn_X86_Cache_Close();
 #elif C_DYNREC
@@ -3388,13 +3398,6 @@ void init_cpu_dosbox_settings(SectionProp& secprop)
 	                   "Values lower than 100 are treated as a percentage decrease.",
 	                   DefaultCpuCycleDown));
 
-#if C_FPU
-	secprop.AddInitHandler(FPU_Init);
-#endif
-	secprop.AddInitHandler(DMA_Init);
-	secprop.AddInitHandler(VGA_Init);
-	secprop.AddInitHandler(KEYBOARD_Init);
-	secprop.AddInitHandler(PCI_Init); // PCI bus
 }
 
 void CPU_AddConfigSection(const ConfigPtr& conf)

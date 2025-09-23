@@ -635,17 +635,15 @@ void DMA_SetWrapping(const uint32_t wrap)
 	dma_wrapping = wrap;
 }
 
-void DMA_Destroy([[maybe_unused]] Section* sec)
+void DMA_Destroy()
 {
 	primary   = {};
 	secondary = {};
 }
 
-void DMA_Init(Section* sec)
+void DMA_Init()
 {
 	DMA_SetWrapping(0xffff);
-
-	sec->AddDestroyHandler(DMA_Destroy);
 
 	Bitu i;
 	for (i = 0; i < LINK_START; i++) {

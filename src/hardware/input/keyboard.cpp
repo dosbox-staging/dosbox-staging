@@ -714,7 +714,7 @@ void KEYBOARD_ClrBuffer()
 // Initialization
 // ***************************************************************************
 
-void KEYBOARD_Init([[maybe_unused]] Section* sec)
+void KEYBOARD_Init()
 {
 	I8042_Init();
 	I8255_Init();
