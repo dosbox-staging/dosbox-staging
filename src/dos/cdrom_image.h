@@ -7,5 +7,6 @@
 #include "config/setup.h"
 
 void CDROM_Image_Init(Section* sec);
+void CDROM_Image_Destroy(Section* sec);
 
 #endif // DOSBOX_CDROM_IMAGE_H

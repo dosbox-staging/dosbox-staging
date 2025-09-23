@@ -1473,14 +1473,12 @@ bool CDROM_Interface_Image::GetCueString(std::string& str, std::istream& in)
 	return true;
 }
 
-void CDROM_Image_Destroy(Section*) {
+void CDROM_Image_Init(Section* sec)
+{
+	Sound_Init();
+}
+
+void CDROM_Image_Destroy([[maybe_unused]] Section* sec) {
 	Sound_Quit();
 }
 
-void CDROM_Image_Init(Section* sec)
-{
-	if (sec != nullptr) {
-		sec->AddDestroyHandler(CDROM_Image_Destroy);
-	}
-	Sound_Init();
-}

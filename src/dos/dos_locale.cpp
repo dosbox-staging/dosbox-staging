@@ -1645,25 +1645,17 @@ void DOS_Locale_AddMessages()
 	MSG_Add("KEYBOARD_MOD_ADJECTIVE_RIGHT", "Right");
 }
 
-static std::unique_ptr<DOS_Locale> Locale = {};
-
-static void dos_locale_destroy([[maybe_unused]] Section* section)
-{
-	Locale = {};
-}
-
-static void notify_dos_locale_setting_updated(SectionProp* section,
-                                              [[maybe_unused]] const std::string& prop_name)
-{
-	Locale = std::make_unique<DOS_Locale>(section);
-}
+static std::unique_ptr<DOS_Locale> dos_locale = {};
 
 void DOS_Locale_Init(Section* section)
 {
 	assert(section);
 
-	Locale = std::make_unique<DOS_Locale>(section);
-
-	section->AddDestroyHandler(dos_locale_destroy);
-	section->AddUpdateHandler(notify_dos_locale_setting_updated);
+	dos_locale = std::make_unique<DOS_Locale>(section);
 }
+
+void DOS_Locale_Destroy([[maybe_unused]] Section* section)
+{
+	dos_locale = {};
+}
+

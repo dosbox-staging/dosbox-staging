@@ -21,6 +21,7 @@ bool MSCDEX_GetVolumeName(uint8_t subUnit, char* name);
 bool MSCDEX_HasMediaChanged(uint8_t subUnit);
 
 void MSCDEX_Init(Section* sec);
+void MSCDEX_Destroy(Section* sec);
 
 #endif // DOSBOX_DOS_MSCDEX_H
 

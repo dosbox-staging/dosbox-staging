@@ -824,23 +824,15 @@ XMS::~XMS()
 
 static std::unique_ptr<XMS> xms_module = {};
 
-static void xms_destroy([[maybe_unused]] Section* section)
-{
-	xms_module = {};
-}
-
-static void notify_xms_setting_updated(SectionProp* section,
-                                       [[maybe_unused]] const std::string& prop_name)
-{
-	xms_module = std::make_unique<XMS>(section);
-}
-
 void XMS_Init(Section* section)
 {
 	assert(section);
 
 	xms_module = std::make_unique<XMS>(section);
-
-	section->AddDestroyHandler(xms_destroy);
-	section->AddUpdateHandler(notify_xms_setting_updated);
 }
+
+void XMS_Destroy([[maybe_unused]] Section* section)
+{
+	xms_module = {};
+}
+
