@@ -11,11 +11,13 @@
 #include "hardware/memory.h"
 
 // Start of PCI address space
-constexpr uint32_t PciMemoryBase     = 0xc000'0000; // gives 3072 MB max RAM
+constexpr uint32_t PciMemoryBase = 0xc000'0000; // 3072 MB max
+
 // Graphics card
-constexpr uint32_t PciGfxLfbBase     = 0xc000'0000;
-constexpr uint32_t PciGfxLfbLimit    = 0xc100'0000; // 16 MB max
-constexpr uint32_t PciGfxMmioBase    = 0xc100'0000;
+constexpr uint32_t PciGfxLfbBase  = 0xc000'0000;
+constexpr uint32_t PciGfxLfbLimit = 0xc100'0000; // 16 MB max
+constexpr uint32_t PciGfxMmioBase = 0xc100'0000;
+
 // 3dfx Voodoo 3D accelerator
 constexpr uint32_t PciVoodooLfbBase  = 0xd000'0000;
 constexpr uint32_t PciVoodooLfbLimit = 0xd100'0000; // 16 MB max
@@ -103,7 +105,6 @@ bool PCI_IsInitialized();
 RealPt PCI_GetPModeInterface();
 
 void PCI_AddDevice(PCI_Device* dev);
-
 void PCI_RemoveDevice(uint16_t vendor_id, uint16_t device_id);
 
 uint8_t PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, uint8_t regnum);
