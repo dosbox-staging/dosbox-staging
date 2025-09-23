@@ -6,8 +6,9 @@
 
 #include <cassert>
 #include <cstddef>
-#include <sstream>
 #include <memory>
+#include <sstream>
+#include <thread>
 
 #include "config/config.h"
 #include "config/setup.h"
@@ -50,6 +51,8 @@ int CPU_CycleLimit    = -1;
 
 static int old_cycle_max       = CpuCyclesRealModeDefault;
 static bool legacy_cycles_mode = false;
+
+static bool should_idle_on_hlt = false;
 
 // Cycles settings for 'modern mode' only
 static struct {
@@ -2267,6 +2270,9 @@ static Bits hlt_decode()
 	} else {
 		CPU_IODelayRemoved += CPU_Cycles;
 		CPU_Cycles = 0;
+		if (should_idle_on_hlt) {
+			std::this_thread::yield();
+		}
 	}
 	return 0;
 }
@@ -2767,14 +2773,17 @@ public:
 
 		if (cpu_cycles_pref == "max") {
 			modern_cycles_config.real_mode = {};
+			should_idle_on_hlt = true;
 
 		} else if (const auto maybe_int = parse_int(cpu_cycles_pref)) {
 			const auto new_cycles = *maybe_int;
 			modern_cycles_config.real_mode =
 			        clamp_and_sync_cycles(new_cycles, "cpu_cycles");
+			should_idle_on_hlt = false;
 
 		} else {
 			modern_cycles_config.real_mode = CpuCyclesRealModeDefault;
+			should_idle_on_hlt = false;
 
 			LOG_WARNING("CPU: Invalid 'cpu_cycles' setting: '%s', using '%d'",
 			            cpu_cycles_pref.c_str(),
