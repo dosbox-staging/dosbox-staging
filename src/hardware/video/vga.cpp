@@ -317,8 +317,12 @@ void VGA_AllowPixelDoubling(const bool allow)
 void VGA_Init(Section* sec)
 {
 	vga.draw.resizing = false;
-	vga.mode          = M_ERROR; // For first init
+
+	// For first init
+	vga.mode = M_ERROR;
+
 	SVGA_Setup_Driver();
+
 	VGA_SetupMemory(sec);
 	VGA_SetupMisc();
 	VGA_SetupDAC();
@@ -327,80 +331,71 @@ void VGA_Init(Section* sec)
 	VGA_SetupAttr();
 	VGA_SetupOther();
 	VGA_SetupXGA();
-	VGA_SetClock(0,CLK_25);
-	VGA_SetClock(1,CLK_28);
-/* Generate tables */
-	VGA_SetCGA2Table(0,1);
-	VGA_SetCGA4Table(0,1,2,3);
-	Bitu i,j;
-	for (i=0;i<256;i++) {
-		ExpandTable[i]=i | (i << 8)| (i <<16) | (i << 24);
+	VGA_SetClock(0, CLK_25);
+	VGA_SetClock(1, CLK_28);
+
+	// Generate tables
+	VGA_SetCGA2Table(0, 1);
+	VGA_SetCGA4Table(0, 1, 2, 3);
+
+	Bitu i, j;
+	for (i = 0; i < 256; i++) {
+		ExpandTable[i] = i | (i << 8) | (i << 16) | (i << 24);
 	}
-	for (i=0;i<16;i++) {
-		TXT_FG_Table[i]=i | (i << 8)| (i <<16) | (i << 24);
-		TXT_BG_Table[i]=i | (i << 8)| (i <<16) | (i << 24);
+
+	for (i = 0; i < 16; i++) {
+		TXT_FG_Table[i] = i | (i << 8) | (i << 16) | (i << 24);
+		TXT_BG_Table[i] = i | (i << 8) | (i << 16) | (i << 24);
 #ifdef WORDS_BIGENDIAN
-		FillTable[i]=
-			((i & 1) ? 0xff000000 : 0) |
-			((i & 2) ? 0x00ff0000 : 0) |
-			((i & 4) ? 0x0000ff00 : 0) |
-			((i & 8) ? 0x000000ff : 0) ;
-		TXT_Font_Table[i]=
-			((i & 1) ? 0x000000ff : 0) |
-			((i & 2) ? 0x0000ff00 : 0) |
-			((i & 4) ? 0x00ff0000 : 0) |
-			((i & 8) ? 0xff000000 : 0) ;
-#else 
-		FillTable[i]=
-			((i & 1) ? 0x000000ff : 0) |
-			((i & 2) ? 0x0000ff00 : 0) |
-			((i & 4) ? 0x00ff0000 : 0) |
-			((i & 8) ? 0xff000000 : 0) ;
-		TXT_Font_Table[i]=	
-			((i & 1) ? 0xff000000 : 0) |
-			((i & 2) ? 0x00ff0000 : 0) |
-			((i & 4) ? 0x0000ff00 : 0) |
-			((i & 8) ? 0x000000ff : 0) ;
+		FillTable[i] = ((i & 1) ? 0xff000000 : 0) |
+		               ((i & 2) ? 0x00ff0000 : 0) |
+		               ((i & 4) ? 0x0000ff00 : 0) |
+		               ((i & 8) ? 0x000000ff : 0);
+
+		TXT_Font_Table[i] = ((i & 1) ? 0x000000ff : 0) |
+		                    ((i & 2) ? 0x0000ff00 : 0) |
+		                    ((i & 4) ? 0x00ff0000 : 0) |
+		                    ((i & 8) ? 0xff000000 : 0);
+#else
+		FillTable[i] = ((i & 1) ? 0x000000ff : 0) |
+		               ((i & 2) ? 0x0000ff00 : 0) |
+		               ((i & 4) ? 0x00ff0000 : 0) |
+		               ((i & 8) ? 0xff000000 : 0);
+
+		TXT_Font_Table[i] = ((i & 1) ? 0xff000000 : 0) |
+		                    ((i & 2) ? 0x00ff0000 : 0) |
+		                    ((i & 4) ? 0x0000ff00 : 0) |
+		                    ((i & 8) ? 0x000000ff : 0);
 #endif
 	}
-	for (j=0;j<4;j++) {
-		for (i=0;i<16;i++) {
+
+	for (j = 0; j < 4; j++) {
+		for (i = 0; i < 16; i++) {
 #ifdef WORDS_BIGENDIAN
-			Expand16Table[j][i] =
-				((i & 1) ? 1 << j : 0) |
-				((i & 2) ? 1 << (8 + j) : 0) |
-				((i & 4) ? 1 << (16 + j) : 0) |
-				((i & 8) ? 1 << (24 + j) : 0);
+			Expand16Table[j][i] = ((i & 1) ? 1 << j : 0) |
+			                      ((i & 2) ? 1 << (8 + j) : 0) |
+			                      ((i & 4) ? 1 << (16 + j) : 0) |
+			                      ((i & 8) ? 1 << (24 + j) : 0);
 #else
-			Expand16Table[j][i] =
-				((i & 1) ? 1 << (24 + j) : 0) |
-				((i & 2) ? 1 << (16 + j) : 0) |
-				((i & 4) ? 1 << (8 + j) : 0) |
-				((i & 8) ? 1 << j : 0);
+			Expand16Table[j][i] = ((i & 1) ? 1 << (24 + j) : 0) |
+			                      ((i & 2) ? 1 << (16 + j) : 0) |
+			                      ((i & 4) ? 1 << (8 + j) : 0) |
+			                      ((i & 8) ? 1 << j : 0);
 #endif
 		}
 	}
 }
 
-void SVGA_Setup_Driver(void) {
+void SVGA_Setup_Driver(void)
+{
 	memset(&svga, 0, sizeof(SVGA_Driver));
 
-	switch(svga_type) {
-	case SvgaType::S3:
-		SVGA_Setup_S3();
-		break;
-	case SvgaType::TsengEt3k:
-		SVGA_Setup_TsengEt3k();
-		break;
-	case SvgaType::TsengEt4k:
-		SVGA_Setup_TsengEt4k();
-		break;
-	case SvgaType::Paradise:
-		SVGA_Setup_Paradise();
-		break;
-	default:
-		vga.vmemsize = vga.vmemwrap = 256*1024;
-		break;
+	switch (svga_type) {
+	case SvgaType::S3: SVGA_Setup_S3(); break;
+	case SvgaType::TsengEt3k: SVGA_Setup_TsengEt3k(); break;
+	case SvgaType::TsengEt4k: SVGA_Setup_TsengEt4k(); break;
+	case SvgaType::Paradise: SVGA_Setup_Paradise(); break;
+	default: vga.vmemsize = vga.vmemwrap = 256 * 1024; break;
 	}
 }
 
