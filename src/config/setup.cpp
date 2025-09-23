@@ -1291,14 +1291,16 @@ bool Config::WriteConfig(const std_fs::path& path) const
 }
 
 SectionProp* Config::AddSection(const char* section_name,
-                                SectionInitHandler init_handler,
-                                bool changeable_at_runtime)
+                                SectionInitHandler init_handler)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
 
 	SectionProp* s = new SectionProp(section_name);
-	s->AddInitHandler(init_handler, changeable_at_runtime);
+
+	if (init_handler) {
+		s->AddInitHandler(init_handler);
+	}
 	sectionlist.push_back(s);
 	return s;
 }
@@ -1307,7 +1309,7 @@ SectionProp::~SectionProp()
 {
 	// ExecuteDestroy should be here else the destroy functions use
 	// destroyed properties
-	ExecuteDestroy(true);
+	ExecuteDestroy();
 
 	// Delete properties themself (properties stores the pointer of a prop
 	for (it prop = properties.begin(); prop != properties.end(); ++prop) {
@@ -1370,84 +1372,42 @@ void Config::Init() const
 	}
 }
 
-void Section::AddInitHandler(SectionInitHandler init_handler, bool changeable_at_runtime)
+void Section::AddInitHandler(SectionInitHandler init_handler)
 {
-	if (init_handler) {
-		init_handlers.emplace_back(init_handler, changeable_at_runtime);
-	}
+	assert(init_handler);
+	init_handlers.emplace_back(init_handler);
 }
 
 void Section::AddUpdateHandler(SectionUpdateHandler update_handler)
 {
+	assert(update_handler);
 	update_handlers.emplace_back(update_handler);
 }
 
-void Section::AddDestroyHandler(SectionInitHandler destroy_handler,
-                                bool changeable_at_runtime)
+void Section::AddDestroyHandler(SectionInitHandler destroy_handler)
 {
-	destroy_handlers.emplace_front(destroy_handler, changeable_at_runtime);
+	assert(destroy_handler);
+	destroy_handlers.emplace_front(destroy_handler);
 }
 
-bool Section::IsChangeableAtRuntime()
+void Section::ExecuteInit()
 {
-	for (auto handler : init_handlers) {
-		if (handler.changeable_at_runtime) {
-			return true;
-		}
-	}
-	return false;
-}
-
-void Section::ExecuteInit(const bool init_all)
-{
-	for (size_t i = 0; i < init_handlers.size(); ++i) {
-		// Can we skip calling this function?
-		if (!(init_all || init_handlers[i].changeable_at_runtime)) {
-			continue;
-		}
-
-		// Track the size of our container because it might grow.
-		const auto size_on_entry = init_handlers.size();
-
-		assert(init_handlers[i].function);
-		init_handlers[i].function(this);
-
-		const auto size_on_exit = init_handlers.size();
-
-		if (size_on_exit > size_on_entry) {
-			//
-			// If the above function call appended items then we
-			// need to avoid calling them immediately in this
-			// current pass by advancing our index across them. The
-			// setup class will call the added function itself.
-			//
-			const auto num_appended = size_on_exit - size_on_entry;
-			i += num_appended;
-			assert(i < init_handlers.size());
-		}
+	for (const auto& handler : init_handlers) {
+		handler(this);
 	}
 }
 
 void Section::ExecuteUpdate(const Property& property)
 {
-	for (auto handler : update_handlers) {
+	for (const auto& handler : update_handlers) {
 		handler(dynamic_cast<SectionProp*>(this), property.propname);
 	}
 }
 
-void Section::ExecuteDestroy(bool destroyall)
+void Section::ExecuteDestroy()
 {
-	typedef std::deque<Function_wrapper>::iterator func_it;
-
-	for (func_it tel = destroy_handlers.begin(); tel != destroy_handlers.end();) {
-		if (destroyall || (*tel).changeable_at_runtime) {
-			(*tel).function(this);
-
-			// Remove destroy_handlers once used
-			tel = destroy_handlers.erase(tel);
-		} else {
-			++tel;
-		}
+	for (const auto& handler : destroy_handlers) {
+		handler(this);
 	}
 }
 

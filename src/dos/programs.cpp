@@ -870,17 +870,7 @@ void CONFIG::Run(void)
 
 				tsec->HandleInputline(line_utf8);
 
-				if (tsec->IsChangeableAtRuntime()) {
-					// TODO This branch is temporary and
-					// will be removed a few commits later
-					// once the `changeable_at_runtime`
-					// concept is removed from the section
-					// init/destroy handling.
-					tsec->ExecuteDestroy(false);
-					tsec->ExecuteInit(false);
-				} else {
-					tsec->ExecuteUpdate(*property);
-				}
+				tsec->ExecuteUpdate(*property);
 			}
 			return;
 		}
