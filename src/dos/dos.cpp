@@ -1834,14 +1834,50 @@ public:
 
 static std::unique_ptr<DOS> dos_module = {};
 
-static void dos_destroy([[maybe_unused]] Section* section)
-{
-	dos_module = {};
-}
-
 void dos_init(Section* section)
 {
 	dos_module = std::make_unique<DOS>(section);
+
+	XMS_Init(section);
+	EMS_Init(section);
+
+	DOS_Files_Init(section);
+	DOS_Locale_Init(section);
+
+	MSCDEX_Init(section);
+	DRIVES_Init(section);
+	CDROM_Image_Init(section);
+}
+
+static void dos_destroy([[maybe_unused]] Section* section)
+{
+	CDROM_Image_Destroy(section);
+	MSCDEX_Destroy(section);
+
+	DOS_Locale_Destroy(section);
+
+	EMS_Destroy(section);
+	XMS_Destroy(section);
+
+	dos_module = {};
+}
+
+static void notify_dos_setting_updated(SectionProp* section,
+                                       const std::string& prop_name)
+{
+	DOS_Locale_Destroy(section);
+	DOS_Locale_Init(section);
+
+	DOS_Files_Init(section);
+
+	EMS_Destroy(section);
+	EMS_Init(section);
+
+	XMS_Destroy(section);
+	XMS_Init(section);
+
+	// The MSCDEX, DRIVES, and CDROM_Image modules are only initalised
+	// once at startup.
 }
 
 static void init_dos_settings(SectionProp& section)
@@ -1956,23 +1992,7 @@ void DOS_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)
 	auto section = control->AddSection("dos", dos_init);
 
 	section->AddDestroyHandler(dos_destroy);
-
-	// We don't reinit the DOS module itself when a setting changes, but the
-	// XMS, EMS, DOS_Files, and DOS_Locale modules will be re-initialised
-	// (they register their own "notify on setting changed" handlers on init).
-	//
-	// The MSCDEX, DRIVES, and CDROM_Image modules don't need to be
-	// re-initialised either.
-
-	section->AddInitHandler(XMS_Init);
-	section->AddInitHandler(EMS_Init);
-
-	section->AddInitHandler(DOS_Files_Init);
-	section->AddInitHandler(DOS_Locale_Init);
-
-	section->AddInitHandler(MSCDEX_Init);
-	section->AddInitHandler(DRIVES_Init);
-	section->AddInitHandler(CDROM_Image_Init);
+	section->AddUpdateHandler(notify_dos_setting_updated);
 
 	init_dos_settings(*section);
 }

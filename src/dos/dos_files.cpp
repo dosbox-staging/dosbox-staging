@@ -1882,18 +1882,11 @@ bool DOS_IsFileLocking()
 	return emulate_file_locking;
 }
 
-static void notify_dos_files_setting_updated(SectionProp* section,
-                                             [[maybe_unused]] const std::string& prop_name)
-{
-	emulate_file_locking = section->GetBool("file_locking");
-}
-
 void DOS_Files_Init(Section* sec)
 {
 	assert(sec);
 
 	auto section = static_cast<SectionProp*>(sec);
-	section->AddUpdateHandler(notify_dos_files_setting_updated);
 
 	emulate_file_locking = section->GetBool("file_locking");
 }
