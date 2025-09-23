@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <vector>
 
-#include "config/setup.h"
-
 enum KBD_KEYS {
 	// clang-format off
 	KBD_NONE,
@@ -202,7 +200,7 @@ enum class ScanCode : uint8_t {
 	AltTab = 0xA5,
 };
 
-void KEYBOARD_Init(Section* sec);
+void KEYBOARD_Init();
 
 // After calling, it drops all the input until secure mode is enabled - safety
 // measure to prevent malicious user from possibily interupting AUTOEXEC.BAT
