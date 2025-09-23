@@ -23,6 +23,10 @@ static void init_speaker_settings(SectionProp& section)
 	        "DC-offset is now eliminated globally from the master mixer output.");
 }
 
+// TODO The LPT DAC, PS/1 Audio, and Tandy sound emulations will be moved out
+// of the [speaker] section into their own respective sections. Until then,
+// the lifecycle of these devices are managed here at the top level.
+//
 void SPEAKER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
