@@ -12,9 +12,10 @@
 #include <string>
 #include <vector>
 
-#include "utils/checks.h"
 #include "dos/dos_inc.h"
+#include "misc/private/unicode_encodings.h"
 #include "misc/unicode.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 
@@ -25,7 +26,7 @@ CHECK_NARROWING();
 // Note: Most of the Unicode engine data is stored in external files, loaded and
 // parsed during runtime
 
-using box_drawing_set_t = std::array<uint16_t, 40>;
+using box_drawing_set_t = std::array<char32_t, 40>;
 
 // List of box drawing characters, ordered as in code page 437
 static constexpr box_drawing_set_t BoxDrawingSetRegular = {
@@ -119,8 +120,8 @@ static constexpr box_drawing_set_t BoxDrawingSetLight = {
 // Additional box drawing fallback data - each group of aliases is applied as
 // a whole, even if the code page actually have some characters
 
-using alias_t                         = std::pair<uint16_t, uint16_t>;
-using alias_groups_t                  = std::vector<std::vector<alias_t>>;
+using alias_t        = std::pair<char32_t, char32_t>;
+using alias_groups_t = std::vector<std::vector<alias_t>>;
 
 const alias_groups_t box_alias_groups = {
 	// Note: If you compare horizontal and vertical, the groups might seem
@@ -181,23 +182,21 @@ const alias_groups_t box_alias_groups = {
 // Unicode engine
 // ***************************************************************************
 
-using wide_string = std::vector<uint16_t>;
-
 // Class representing a grapheme - one main code point + optionally a number
 // os code points represening combining marks
 class Grapheme final {
 public:
 	Grapheme() = default;
-	Grapheme(const uint16_t code_point);
+	Grapheme(const char32_t code_point);
 
 	[[nodiscard]] bool IsEmpty() const;
 	[[nodiscard]] bool IsValid() const;
 	[[nodiscard]] bool HasMark() const;
-	[[nodiscard]] uint16_t GetCodePoint() const;
-	void PushInto(wide_string& str_out) const;
+	[[nodiscard]] char32_t GetCodePoint() const;
+	void PushInto(std::u32string& str_out) const;
 
 	void Invalidate();
-	void AddMark(const uint16_t code_point);
+	void AddMark(const char32_t code_point);
 	void CopyMarksFrom(const Grapheme& other);
 	void StripMarks();
 	void Decompose();
@@ -207,10 +206,10 @@ public:
 
 private:
 	// Unicode code point
-	uint16_t code_point = static_cast<uint16_t>(' ');
+	char32_t code_point = static_cast<char32_t>(' ');
 	// Combining marks
-	wide_string marks        = {};
-	wide_string marks_sorted = {};
+	std::u32string marks        = {};
+	std::u32string marks_sorted = {};
 
 	bool is_empty = true;
 	bool is_valid = true;
@@ -223,17 +222,20 @@ using map_dos_to_grapheme_t = std::map<uint8_t, Grapheme>;
 
 // Mapping between Unicode box character code point and fallback code point
 // supported by given code page
-using map_box_code_points_t = std::map<uint16_t, uint16_t>;
+using map_box_code_points_t = std::map<char32_t, char32_t>;
 
 // Mapping between lowercase and uppercase code points
-using map_code_point_case_t    = std::map<uint16_t, uint16_t>;
+using map_code_point_case_t    = std::map<char32_t, char32_t>;
 using map_dos_character_case_t = std::vector<uint8_t>;
 
 // Rules how to decompose code points to split-out all the combining marks
-using decomposition_rules_t = std::map<uint16_t, Grapheme>;
+using decomposition_rules_t = std::map<char32_t, Grapheme>;
 
+// Type for storing code pages which are exact duplicates
 using config_duplicates_t = std::map<uint16_t, uint16_t>;
-using config_aliases_t    = std::vector<alias_t>;
+
+// Type for storing code point aliases from the configuration file
+using config_aliases_t = std::vector<alias_t>;
 
 struct config_mapping_entry_t {
 	bool valid                    = false;
@@ -251,18 +253,7 @@ static const std::string file_name_case          = "CAPITAL_SMALL.TXT";
 static const std::string file_name_decomposition = "DECOMPOSITION.TXT";
 static const std::string dir_name_mapping        = "mapping";
 
-// Thresholds for UTF-8 decoding/encoding
-constexpr uint8_t DecodeThresholdNonAscii = 0b1'000'0000;
-constexpr uint8_t DecodeThreshold2Bytes   = 0b1'100'0000;
-constexpr uint8_t DecodeThreshold3Bytes   = 0b1'110'0000;
-constexpr uint8_t DecodeThreshold4Bytes   = 0b1'111'0000;
-constexpr uint8_t DecodeThreshold5Bytes   = 0b1'111'1000;
-constexpr uint8_t DecodeThreshold6Bytes   = 0b1'111'1100;
-constexpr uint16_t EncodeThreshold2Bytes  = 0x0080;
-constexpr uint16_t EncodeThreshold3Bytes  = 0x0800;
-
-// Use the character below if there is no sane way to handle the Unicode glyph
-constexpr uint8_t UnknownCharacter = 0x3f; // '?'
+constexpr uint8_t ThresholdNonAscii = 0b1'000'0000;
 
 // End of file marking, use in some files from unicode.org
 constexpr uint8_t EndOfFileMarking = 0x1a;
@@ -312,10 +303,10 @@ static std::map<uint16_t, code_page_maps_t> per_code_page_mappings = {};
 // ***************************************************************************
 
 // Check for combining characters within the supported Unicode blocks
-static bool is_combining_mark(const uint32_t code_point)
+static bool is_combining_mark(const char32_t code_point)
 {
 	// clang-format off
-	static constexpr std::pair<uint16_t, uint16_t> Ranges[] = {
+	static constexpr std::pair<char32_t, char32_t> Ranges[] = {
 		// 0x02b0 - 0x02ff     Spacing Modifier Letters
 		// Not a real combining mark, but due to engine limitations
 		// we need this definition for U+1E9A decomposition rules, and
@@ -368,7 +359,7 @@ static bool is_combining_mark(const uint32_t code_point)
 	return std::any_of(std::begin(Ranges), std::end(Ranges), in_range);
 }
 
-Grapheme::Grapheme(const uint16_t initial_code_point)
+Grapheme::Grapheme(const char32_t initial_code_point)
         : code_point(initial_code_point),
           is_empty(false)
 {
@@ -396,12 +387,12 @@ bool Grapheme::HasMark() const
 	return !marks.empty();
 }
 
-uint16_t Grapheme::GetCodePoint() const
+char32_t Grapheme::GetCodePoint() const
 {
 	return code_point;
 }
 
-void Grapheme::PushInto(wide_string& str_out) const
+void Grapheme::PushInto(std::u32string& str_out) const
 {
 	if (is_empty || !is_valid) {
 		return;
@@ -423,7 +414,7 @@ void Grapheme::Invalidate()
 	marks_sorted.clear();
 }
 
-void Grapheme::AddMark(const uint16_t in_code_point)
+void Grapheme::AddMark(const char32_t in_code_point)
 {
 	if (!is_valid) {
 		// Can't add combining mark to invalid grapheme
@@ -529,23 +520,23 @@ constexpr uint8_t ControlCodeThreshold = 0x20;
 
 // Unicode code points for screen codes from 0x00 to 0x1f
 // see: https://en.wikipedia.org/wiki/Code_page_437
-constexpr std::array<uint16_t, 0x20> ScreenCodesWide = {
-	// clang-format off
+constexpr std::array<char32_t, 0x20> ScreenCodesWide = {
+        // clang-format off
 	0x0020, 0x263a, 0x263b, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022, // 00-07
 	0x25d8, 0x25cb, 0x25d9, 0x2642, 0x2640, 0x266a, 0x266b, 0x263c, // 08-13
 	0x25ba, 0x25c4, 0x2195, 0x203c, 0x00b6, 0x00a7, 0x25ac, 0x21a8, // 10-17
 	0x2191, 0x2193, 0x2192, 0x2190, 0x221f, 0x2194, 0x25b2, 0x25bc  // 18-1f
-	// clang-format on
+        // clang-format on
 };
 
-constexpr uint16_t ScreenCodeWide7f = 0x2302; // 'del' character
+constexpr char32_t ScreenCodeWide7f = 0x2302; // 'del' character
 
-static bool is_control_code(const uint16_t value)
+static bool is_control_code(const char32_t value)
 {
 	return (value < ControlCodeThreshold) || (value == ControlCodeDelete);
 }
 
-static std::optional<uint16_t> control_code_to_wide(const uint8_t byte,
+static std::optional<char32_t> control_code_to_wide(const uint8_t byte,
                                                     const DosStringConvertMode convert_mode)
 {
 
@@ -618,163 +609,9 @@ static std::optional<uint8_t> grapheme_to_screen_code(const Grapheme& grapheme,
 // Conversion routines
 // ***************************************************************************
 
-static wide_string utf8_to_wide(const std::string& str)
+static void warn_code_point(const char32_t code_point)
 {
-	// Convert UTF-8 string to a sequence of decoded integers
-
-	// For UTF-8 encoding explanation see here:
-	// -
-	// https://www.codeproject.com/Articles/38242/Reading-UTF-8-with-C-streams
-	// - https://en.wikipedia.org/wiki/UTF-8#Encoding
-
-	bool already_warned = false;
-	auto warn_decode_problem = [&already_warned](const size_t position) {
-		if (already_warned) {
-			return;
-
-		}
-		LOG_WARNING("UNICODE: Problem decoding UTF8 string, position %u",
-		            static_cast<unsigned int>(position));
-		already_warned = true;
-	};
-
-	wide_string str_out = {};
-	str_out.reserve(str.size());
-
-	for (size_t i = 0; i < str.size(); ++i) {
-		const size_t remaining = str.size() - i - 1;
-		const uint8_t byte_1   = static_cast<uint8_t>(str[i]);
-		const uint8_t byte_2   = (remaining >= 1)
-		                               ? static_cast<uint8_t>(str[i + 1]) : 0;
-		const uint8_t byte_3   = (remaining >= 2)
-		                               ? static_cast<uint8_t>(str[i + 2]) : 0;
-
-		auto advance = [&](const size_t bytes) {
-			auto counter = std::min(remaining, bytes);
-			while (counter--) {
-				const auto byte_next = static_cast<uint8_t>(str[i + 1]);
-				if (byte_next < DecodeThresholdNonAscii ||
-				    byte_next >= DecodeThreshold2Bytes) {
-					break;
-				}
-				++i;
-			}
-
-			// advance without decoding
-			warn_decode_problem(i);
-		};
-
-		// Retrieve code point
-		uint32_t code_point = UnknownCharacter;
-
-		// Support code point needing up to 3 bytes to encode; this
-		// includes Latin, Greek, Cyrillic, Hebrew, Arabic, VGA charset
-		// symbols, etc. More bytes are needed mainly for historic
-		// scripts, emoji, etc.
-
-		if (byte_1 >= DecodeThreshold6Bytes) {
-			// 6-byte code point (>= 31 bits), no support
-			advance(5);
-		} else if (byte_1 >= DecodeThreshold5Bytes) {
-			// 5-byte code point (>= 26 bits), no support
-			advance(4);
-		} else if (byte_1 >= DecodeThreshold4Bytes) {
-			// 4-byte code point (>= 21 bits), no support
-			advance(3);
-		} else if (byte_1 >= DecodeThreshold3Bytes) {
-			// 3-byte code point - decode 1st byte
-			code_point = static_cast<uint8_t>(byte_1 -
-			                                  DecodeThreshold3Bytes);
-			// Decode 2nd byte
-			code_point = code_point << 6;
-			if (byte_2 >= DecodeThresholdNonAscii &&
-			    byte_2 < DecodeThreshold2Bytes) {
-				++i;
-				code_point = code_point + byte_2 -
-				             DecodeThresholdNonAscii;
-			} else {
-				// code point encoding too short
-				warn_decode_problem(i);
-			}
-			// Decode 3rd byte
-			code_point = code_point << 6;
-			if (byte_2 >= DecodeThresholdNonAscii &&
-			    byte_2 < DecodeThreshold2Bytes &&
-			    byte_3 >= DecodeThresholdNonAscii &&
-			    byte_3 < DecodeThreshold2Bytes) {
-				++i;
-				code_point = code_point + byte_3 -
-				             DecodeThresholdNonAscii;
-			} else {
-				// code point encoding too short
-				warn_decode_problem(i);
-			}
-		} else if (byte_1 >= DecodeThreshold2Bytes) {
-			// 2-byte code point - decode 1st byte
-			code_point = static_cast<uint8_t>(byte_1 -
-			                                  DecodeThreshold2Bytes);
-			// Decode 2nd byte
-			code_point = code_point << 6;
-			if (byte_2 >= DecodeThresholdNonAscii &&
-			    byte_2 < DecodeThreshold2Bytes) {
-				++i;
-				code_point = code_point + byte_2 -
-				             DecodeThresholdNonAscii;
-			} else {
-				// code point encoding too short
-				warn_decode_problem(i);
-			}
-		} else if (byte_1 < DecodeThresholdNonAscii) {
-			// 1-byte code point, ASCII compatible
-			code_point = byte_1;
-		} else {
-			warn_decode_problem(i); // not UTF8 encoding
-		}
-
-		str_out.push_back(static_cast<uint16_t>(code_point));
-	}
-
-	return str_out;
-}
-
-static std::string wide_to_utf8(const wide_string& str)
-{
-	std::string str_out = {};
-	str_out.reserve(str.size() * 2);
-
-	auto push = [&](const int value) {
-		const auto byte = static_cast<uint8_t>(value);
-		str_out.push_back(static_cast<char>(byte));
-	};
-
-	for (const auto code_point : str) {
-		if (code_point < EncodeThreshold2Bytes) {
-			// Encode using 1 byte
-			push(code_point);
-		} else if (code_point < EncodeThreshold3Bytes) {
-			// Encode using 2 bytes
-			const auto to_byte_1 = code_point >> 6;
-			const auto to_byte_2 = 0b0'011'1111 & code_point;
-			push(to_byte_1 | 0b1'100'0000);
-			push(to_byte_2 | 0b1'000'0000);
-		} else {
-			// Encode using 3 bytes
-			const auto to_byte_1 = code_point >> 12;
-			const auto to_byte_2 = 0b0'011'1111 & (code_point >> 6);
-			const auto to_byte_3 = 0b0'011'1111 & code_point;
-			push(to_byte_1 | 0b1'110'0000);
-			push(to_byte_2 | 0b1'000'0000);
-			push(to_byte_3 | 0b1'000'0000);
-		}
-	}
-
-	str_out.shrink_to_fit();
-	return str_out;
-}
-
-static void warn_code_point(const uint16_t code_point)
-{
-	static std::set<uint16_t> already_warned;
+	static std::set<char32_t> already_warned;
 	if (already_warned.contains(code_point)) {
 		return;
 	}
@@ -792,7 +629,7 @@ static void warn_code_page(const uint16_t code_page)
 	LOG_WARNING("UNICODE: Requested unknown code page %d", code_page);
 }
 
-static std::string wide_to_dos(const wide_string& str,
+static std::string wide_to_dos(const std::u32string& str,
                                const DosStringConvertMode convert_mode,
                                const UnicodeFallback fallback,
                                const uint16_t code_page)
@@ -830,7 +667,7 @@ static std::string wide_to_dos(const wide_string& str,
 		}
 
 		const auto code_point = grapheme.GetCodePoint();
-		if (code_point >= DecodeThresholdNonAscii) {
+		if (code_point >= ThresholdNonAscii) {
 			return false; // not a 7-bit ASCII character
 		}
 
@@ -868,7 +705,7 @@ static std::string wide_to_dos(const wide_string& str,
 		}
 
 		const auto alias_code_point = mapping_box->at(code_point);
-		if (alias_code_point >= DecodeThresholdNonAscii) {
+		if (alias_code_point >= ThresholdNonAscii) {
 			str_out.push_back(static_cast<char>(mapping->at(alias_code_point)));
 		} else {
 			str_out.push_back(static_cast<char>(alias_code_point));
@@ -919,7 +756,7 @@ static std::string wide_to_dos(const wide_string& str,
 	};
 
 	// Handle unknown code points
-	auto push_unknown = [&](const uint16_t code_point) {
+	auto push_unknown = [&](const char32_t code_point) {
 		if (fallback == UnicodeFallback::EmptyString) {
 			return false;
 		}
@@ -1000,16 +837,16 @@ static std::string wide_to_dos(const wide_string& str,
 	return str_out;
 }
 
-static wide_string dos_to_wide(const std::string& str,
-                               const DosStringConvertMode convert_mode,
-                               const uint16_t code_page)
+static std::u32string dos_to_wide(const std::string& str,
+                                  const DosStringConvertMode convert_mode,
+                                  const uint16_t code_page)
 {
-	wide_string str_out = {};
+	std::u32string str_out = {};
 	str_out.reserve(str.size());
 
 	for (const auto character : str) {
 		const auto byte = static_cast<uint8_t>(character);
-		if (byte >= DecodeThresholdNonAscii) {
+		if (byte >= ThresholdNonAscii) {
 			// Take from code page mapping
 			auto& mappings = per_code_page_mappings[code_page];
 
@@ -1120,8 +957,13 @@ static bool get_tokens(const std::string& line, std::vector<std::string>& tokens
 
 static bool get_hex_8bit(const std::string& token, uint8_t& out)
 {
-	if (token.size() != 4 || token[0] != '0' || token[1] != 'x' ||
-	    !isxdigit(token[2]) || !isxdigit(token[3])) {
+	if (!token.starts_with("0x")) {
+		return false;
+	}
+
+	// To prevent mistakes, we require the 8-bit value to have exactly 2 hex
+	// digits, i.e. '0xab'
+	if (token.size() != 4 || !isxdigit(token[2]) || !isxdigit(token[3])) {
 		return false;
 	}
 
@@ -1129,15 +971,31 @@ static bool get_hex_8bit(const std::string& token, uint8_t& out)
 	return true;
 }
 
-static bool get_hex_16bit(const std::string& token, uint16_t& out)
+static bool get_hex_32bit(const std::string& token, char32_t& out)
 {
+	if (!token.starts_with("0x")) {
+		return false;
+	}
+
+	// To prevent mistakes, we require the 32-bit value to have 6 or 8 hex
+	// digits, i.e. '0xabcd' or '0xabcdef'; values needing more digits to
+	// represent are out of Unicode range nevertheless
+	if (token.size() != 6 && token.size() != 8) {
+		return false;
+	}
+	for (size_t pos = 2; pos < token.size(); ++pos) {
+		if (!isxdigit(token[pos])) {
+			return false;
+		}
+	}
+
 	if (token.size() != 6 || token[0] != '0' || token[1] != 'x' ||
 	    !isxdigit(token[2]) || !isxdigit(token[3]) || !isxdigit(token[4]) ||
 	    !isxdigit(token[5])) {
 		return false;
 	}
 
-	out = static_cast<uint16_t>(strtoul(token.c_str() + 2, nullptr, 16));
+	out = static_cast<char32_t>(strtoul(token.c_str() + 2, nullptr, 16));
 	return true;
 }
 
@@ -1181,22 +1039,22 @@ static bool get_code_page(const std::string& token, uint16_t& code_page)
 
 static bool get_grapheme(const std::vector<std::string>& tokens, Grapheme& grapheme)
 {
-	uint16_t code_point = 0;
-	if (tokens.size() < 2 || !get_hex_16bit(tokens[1], code_point)) {
+	char32_t code_point = 0;
+	if (tokens.size() < 2 || !get_hex_32bit(tokens[1], code_point)) {
 		return false;
 	}
 
 	Grapheme new_grapheme(code_point);
 
 	if (tokens.size() >= 3) {
-		if (!get_hex_16bit(tokens[2], code_point)) {
+		if (!get_hex_32bit(tokens[2], code_point)) {
 			return false;
 		}
 		new_grapheme.AddMark(code_point);
 	}
 
 	if (tokens.size() >= 4) {
-		if (!get_hex_16bit(tokens[3], code_point)) {
+		if (!get_hex_32bit(tokens[3], code_point)) {
 			return false;
 		}
 		new_grapheme.AddMark(code_point);
@@ -1221,13 +1079,13 @@ static void error_parsing(const std::string& file_name, const size_t line_num,
 	}
 }
 
-static void error_code_point_found_twice(const uint16_t code_point,
+static void error_code_point_found_twice(const char32_t code_point,
                                          const std::string& file_name,
                                          const size_t line_num)
 {
 	std::stringstream details;
-	details << std::string("code point U+") << std::hex << code_point
-	        << " found twice";
+	details << std::string("code point U+") << std::hex
+	        << static_cast<uint32_t>(code_point) << " found twice";
 
 	error_parsing(file_name, line_num, details.str());
 }
@@ -1322,14 +1180,14 @@ static bool import_mapping_code_page(const std_fs::path& path_root,
 		if (tokens.size() == 1) {
 			// Handle undefined character entry, ignore 7-bit ASCII
 			// codes
-			if (character_code >= DecodeThresholdNonAscii) {
+			if (character_code >= ThresholdNonAscii) {
 				Grapheme grapheme;
 				add_if_not_mapped(new_mapping, character_code, grapheme);
 			}
 
 		} else if (tokens.size() <= 4) {
 			// Handle mapping entry, ignore 7-bit ASCII codes
-			if (character_code >= DecodeThresholdNonAscii) {
+			if (character_code >= ThresholdNonAscii) {
 				Grapheme grapheme;
 				if (!get_grapheme(tokens, grapheme)) {
 					error_parsing(file_name, line_num);
@@ -1407,10 +1265,10 @@ static void import_config_main(const std_fs::path& path_root)
 				return;
 			}
 
-			uint16_t code_point_1 = 0;
-			uint16_t code_point_2 = 0;
-			if (!get_hex_16bit(tokens[1], code_point_1) ||
-			    !get_hex_16bit(tokens[2], code_point_2)) {
+			char32_t code_point_1 = 0;
+			char32_t code_point_2 = 0;
+			if (!get_hex_32bit(tokens[1], code_point_1) ||
+			    !get_hex_32bit(tokens[2], code_point_2)) {
 				error_parsing(file_name, line_num);
 				return;
 			}
@@ -1507,7 +1365,7 @@ static void import_config_main(const std_fs::path& path_root)
 
 			if (tokens.size() == 1) {
 				// Handle undefined character entry
-				if (character_code >= DecodeThresholdNonAscii) {
+				if (character_code >= ThresholdNonAscii) {
 					// ignore 7-bit ASCII codes
 					Grapheme grapheme; // placeholder
 					add_if_not_mapped(new_mapping,
@@ -1519,7 +1377,7 @@ static void import_config_main(const std_fs::path& path_root)
 
 			} else if (tokens.size() <= 4) {
 				// Handle mapping entry
-				if (character_code >= DecodeThresholdNonAscii) {
+				if (character_code >= ThresholdNonAscii) {
 					// ignore 7-bit ASCII codes
 					Grapheme grapheme; // placeholder
 					if (!get_grapheme(tokens, grapheme)) {
@@ -1586,20 +1444,20 @@ static void import_decomposition(const std_fs::path& path_root)
 			continue; // empty line
 		}
 
-		uint16_t code_point_1 = 0;
-		uint16_t code_point_2 = 0;
+		char32_t code_point_1 = 0;
+		char32_t code_point_2 = 0;
 
-		if (tokens.size() < 3 || !get_hex_16bit(tokens[0], code_point_1) ||
-		    !get_hex_16bit(tokens[1], code_point_2)) {
+		if (tokens.size() < 3 || !get_hex_32bit(tokens[0], code_point_1) ||
+		    !get_hex_32bit(tokens[1], code_point_2)) {
 			error_parsing(file_name, line_num);
 			return;
 		}
 
 		new_rules[code_point_1] = code_point_2;
 		for (size_t idx = 2; idx < tokens.size(); ++idx) {
-			if (!get_hex_16bit(tokens[idx], code_point_2)) {
-					error_parsing(file_name, line_num);
-					return;
+			if (!get_hex_32bit(tokens[idx], code_point_2)) {
+				error_parsing(file_name, line_num);
+				return;
 			}
 			if (!is_combining_mark(code_point_2)) {
 					error_not_combining_mark(idx + 1,
@@ -1645,10 +1503,10 @@ static void import_mapping_ascii(const std_fs::path& path_root)
 			continue; // empty line
 		}
 
-		uint16_t code_point = 0;
+		char32_t code_point = 0;
 		uint8_t character   = 0;
 
-		if (tokens.size() != 2 || !get_hex_16bit(tokens[0], code_point) ||
+		if (tokens.size() != 2 || !get_hex_32bit(tokens[0], code_point) ||
 		    !get_ascii(tokens[1], character)) {
 			error_parsing(file_name, line_num);
 			return;
@@ -1684,8 +1542,8 @@ static void import_mapping_case(const std_fs::path& path_root)
 	size_t line_num      = 0;
 
 	// All the encountered uppercase/lowercase code points
-	std::set<uint16_t> all_uppercase = {};
-	std::set<uint16_t> all_lowercase = {};
+	std::set<char32_t> all_uppercase = {};
+	std::set<char32_t> all_lowercase = {};
 
 	map_code_point_case_t new_uppercase = {};
 	map_code_point_case_t new_lowercase = {};
@@ -1701,8 +1559,8 @@ static void import_mapping_case(const std_fs::path& path_root)
 			return;
 		}
 
-		uint16_t code_point_upper = 0;
-		uint16_t code_point_lower = 0;
+		char32_t code_point_upper = 0;
+		char32_t code_point_lower = 0;
 
 		// Skip code points which do not have corresponding upper/lower
 		// case characters - they would be needed if we were providing
@@ -1710,9 +1568,9 @@ static void import_mapping_case(const std_fs::path& path_root)
 
 		if (tokens[0] == "NNN") {
 			// Retrieve code point
-			if (!get_hex_16bit(tokens[1], code_point_lower)) {
-					error_parsing(file_name, line_num);
-					return;
+			if (!get_hex_32bit(tokens[1], code_point_lower)) {
+				error_parsing(file_name, line_num);
+				return;
 			}
 
 			// Make sure there are no repetitions
@@ -1731,9 +1589,9 @@ static void import_mapping_case(const std_fs::path& path_root)
 
 		if (tokens[1] == "NNN") {
 			// Retrieve code point
-			if (!get_hex_16bit(tokens[0], code_point_upper)) {
-					error_parsing(file_name, line_num);
-					return;
+			if (!get_hex_32bit(tokens[0], code_point_upper)) {
+				error_parsing(file_name, line_num);
+				return;
 			}
 
 			// Make sure there are no repetitions
@@ -1751,8 +1609,8 @@ static void import_mapping_case(const std_fs::path& path_root)
 		}
 
 		// Retrieve code points
-		if (!get_hex_16bit(tokens[0], code_point_upper) ||
-		    !get_hex_16bit(tokens[1], code_point_lower)) {
+		if (!get_hex_32bit(tokens[0], code_point_upper) ||
+		    !get_hex_32bit(tokens[1], code_point_lower)) {
 			error_parsing(file_name, line_num);
 			return;
 		}
@@ -1921,8 +1779,7 @@ static void construct_case_mapping(const map_code_point_case_t& map_case_global,
 {
 	out_map_case.resize(UINT8_MAX + 1);
 	for (uint16_t idx = 0; idx < UINT8_MAX + 1; ++idx) {
-		if (idx < DecodeThresholdNonAscii &&
-		    map_case_global.contains(idx)) {
+		if (idx < ThresholdNonAscii && map_case_global.contains(idx)) {
 			out_map_case[idx] = static_cast<uint8_t>(
 			        map_case_global.at(idx));
 		} else {
@@ -1969,7 +1826,7 @@ static bool construct_mapping(const uint16_t code_page)
 	map_dos_to_grapheme_t new_mapping_reverse = {};
 
 	auto add_to_mappings = [&](const uint8_t first, const Grapheme& second) {
-		if (first < DecodeThresholdNonAscii) {
+		if (first < ThresholdNonAscii) {
 			return;
 		}
 		if (!add_if_not_mapped(new_mapping_reverse, first, second)) {
@@ -2223,7 +2080,7 @@ std::string fs_utf8_to_dos_437(const std::string& str)
 			return {};
 		}
 
-		if (code_point < DecodeThresholdNonAscii) {
+		if (code_point < ThresholdNonAscii) {
 			// 7-bit ASCII character
 			str_out.push_back(static_cast<char>(code_point));
 			continue;
@@ -2246,6 +2103,26 @@ std::string dos_437_to_fs_utf8(const std::string& str)
 	constexpr uint16_t CodePage = 437;
 
 	return dos_to_utf8(str, DosStringConvertMode::NoSpecialCharacters, CodePage);
+}
+
+std::string utf16_to_utf8(const std::u16string& str)
+{
+	return wide_to_utf8(utf16_to_wide(str));
+}
+
+std::u16string utf8_to_utf16(const std::string& str)
+{
+	return wide_to_utf16(utf8_to_wide(str));
+}
+
+std::string ucs2_to_utf8(const std::u16string& str)
+{
+	return wide_to_utf8(ucs2_to_wide(str));
+}
+
+std::u16string utf8_to_ucs2(const std::string& str)
+{
+	return wide_to_ucs2(utf8_to_wide(str));
 }
 
 static std::string lowercase_dos_common(const std::string& str, const uint16_t code_page)

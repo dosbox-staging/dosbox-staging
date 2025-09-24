@@ -14,6 +14,7 @@ target_sources(libdosboxcommon PRIVATE
   rwqueue.cpp
   support.cpp
   unicode.cpp
+  unicode_encodings.cpp
   video.cpp
 )
 
