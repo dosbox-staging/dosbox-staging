@@ -1473,12 +1473,11 @@ bool CDROM_Interface_Image::GetCueString(std::string& str, std::istream& in)
 	return true;
 }
 
-void CDROM_Image_Init(Section* sec)
+void CDROM_Image_Init()
 {
 	Sound_Init();
 }
 
-void CDROM_Image_Destroy([[maybe_unused]] Section* sec) {
+void CDROM_Image_Destroy() {
 	Sound_Quit();
 }
-

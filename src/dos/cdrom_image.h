@@ -4,9 +4,7 @@
 #ifndef DOSBOX_CDROM_IMAGE_H
 #define DOSBOX_CDROM_IMAGE_H
 
-#include "config/setup.h"
-
-void CDROM_Image_Init(Section* sec);
-void CDROM_Image_Destroy(Section* sec);
+void CDROM_Image_Init();
+void CDROM_Image_Destroy();
 
 #endif // DOSBOX_CDROM_IMAGE_H

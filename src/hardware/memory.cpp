@@ -769,15 +769,13 @@ public:
 
 static std::unique_ptr<MEMORY> memory_module = {};
 
-static void mem_destroy([[maybe_unused]] Section* sec)
+void MEM_Init(Section* section)
 {
-	memory_module = {};
+	assert(section);
+	memory_module = std::make_unique<MEMORY>(section);
 }
 
-void MEM_Init(Section* sec)
+void MEM_Destroy()
 {
-	assert(sec);
-
-	memory_module = std::make_unique<MEMORY>(sec);
-	sec->AddDestroyHandler(mem_destroy);
+	memory_module = {};
 }

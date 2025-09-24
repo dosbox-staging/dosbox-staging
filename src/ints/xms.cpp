@@ -827,11 +827,10 @@ static std::unique_ptr<XMS> xms_module = {};
 void XMS_Init(Section* section)
 {
 	assert(section);
-
 	xms_module = std::make_unique<XMS>(section);
 }
 
-void XMS_Destroy([[maybe_unused]] Section* section)
+void XMS_Destroy()
 {
 	xms_module = {};
 }

@@ -760,13 +760,13 @@ public:
 
 static std::unique_ptr<TIMER> timer = {};
 
-static void timer_destroy([[maybe_unused]] Section* sec)
+void TIMER_Init(Section* section)
 {
-	timer = {};
+	assert(section);
+	timer = std::make_unique<TIMER>(section);
 }
 
-void TIMER_Init(Section* sec)
+void TIMER_Destroy()
 {
-	timer = std::make_unique<TIMER>(sec);
-	sec->AddDestroyHandler(timer_destroy);
+	timer = {};
 }

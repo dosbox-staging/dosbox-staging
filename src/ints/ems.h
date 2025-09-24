@@ -7,6 +7,6 @@
 #include "config/setup.h"
 
 void EMS_Init(Section* section);
-void EMS_Destroy(Section* section);
+void EMS_Destroy();
 
 #endif // DOSBOX_EMS_H

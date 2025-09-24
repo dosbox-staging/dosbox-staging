@@ -39,7 +39,8 @@ using RealAddress = struct RealAddress {
 extern HostPt MemBase;
 HostPt GetMemBase();
 
-void MEM_Init(Section* sec);
+void MEM_Init(Section* section);
+void MEM_Destroy();
 
 uint16_t MEM_GetMinMegabytes();
 uint16_t MEM_GetMaxMegabytes();

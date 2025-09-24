@@ -388,13 +388,13 @@ public:
 
 static std::unique_ptr<IO> io_module = {};
 
-static void io_destroy(Section*)
+void IO_Init(Section* section)
 {
-	io_module = {};
+	assert(section);
+	io_module = std::make_unique<IO>(section);
 }
 
-void IO_Init(Section* sec)
+void IO_Destroy()
 {
-	io_module = std::make_unique<IO>(sec);
-	sec->AddDestroyHandler(io_destroy);
+	io_module = {};
 }

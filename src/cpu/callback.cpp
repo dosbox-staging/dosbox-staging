@@ -629,7 +629,8 @@ void CALLBACK_HandlerObject::Set_RealVec(uint8_t vec){
 	} else E_Exit ("double usage of vector handler");
 }
 
-void CALLBACK_Init(Section* /*sec*/) {
+void CALLBACK_Init([[maybe_unused]] Section* section)
+{
 	for (callback_number_t i = 0; i < CB_MAX; ++i) {
 		Callback_Handlers[i]=&illegal_handler;
 	}

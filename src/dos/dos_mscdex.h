@@ -10,7 +10,6 @@
 #include <memory>
 
 #include "cdrom.h"
-#include "config/setup.h"
 
 int MSCDEX_AddDrive(char driveLetter, const char* physicalPath, uint8_t& subUnit);
 int MSCDEX_RemoveDrive(char driveLetter);
@@ -20,8 +19,8 @@ uint8_t MSCDEX_GetSubUnit(char driveLetter);
 bool MSCDEX_GetVolumeName(uint8_t subUnit, char* name);
 bool MSCDEX_HasMediaChanged(uint8_t subUnit);
 
-void MSCDEX_Init(Section* sec);
-void MSCDEX_Destroy(Section* sec);
+void MSCDEX_Init();
+void MSCDEX_Destroy();
 
 #endif // DOSBOX_DOS_MSCDEX_H
 

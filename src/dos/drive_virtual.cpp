@@ -660,7 +660,7 @@ void Virtual_Drive::EmptyCache()
 		first_file = first_file->next;
 	}
 	vfile_pos = 1;
-	PROGRAMS_Destroy(nullptr);
+	PROGRAMS_Destroy();
 	vfilenames = {Filename{"", ""}};
 	Add_VFiles();
 }
