@@ -7880,14 +7880,9 @@ PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu page) {
 	return (page >= (voodoo_current_lfb>>12) && page < (voodoo_current_lfb>>12) + VOODOO_PAGES ? voodoo_pagehandler : nullptr);
 }
 
-static void voodoo_destroy([[maybe_unused]] Section* sec)
+void VOODOO_Init()
 {
-	voodoo_shutdown();
-}
-
-static void voodoo_init(Section* sec)
-{
-	auto* section = dynamic_cast<SectionProp*>(sec);
+	auto section = get_section("voodoo");
 
 	// Only activate on SVGA machines and when requested
 	if (!is_machine_svga() || !section || !section->GetBool("voodoo")) {
@@ -7915,6 +7910,11 @@ static void voodoo_init(Section* sec)
 	        num_threads,
 	        num_threads == 1 ? "thread" : "threads",
 	        (voodoo_bilinear_filtering ? "" : "no "));
+}
+
+void VOODOO_Destroy()
+{
+	voodoo_shutdown();
 }
 
 static void init_voodoo_dosbox_settings(SectionProp& section)
@@ -7967,8 +7967,7 @@ void VOODOO_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("voodoo", voodoo_init);
-	section->AddDestroyHandler(voodoo_destroy);
+	auto section = conf->AddSection("voodoo");
 
 	init_voodoo_dosbox_settings(*section);
 }

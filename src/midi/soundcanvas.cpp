@@ -832,7 +832,7 @@ static void register_soundcanvas_text_messages()
 	MSG_Add("SOUNDCANVAS_ACTIVE_MODEL_LABEL", "Active model:    ");
 }
 
-static void soundcanvas_init([[maybe_unused]] Section* sec)
+void SOUNDCANVAS_Init()
 {
 	const auto device = MIDI_GetCurrentDevice();
 
@@ -856,7 +856,7 @@ void SOUNDCANVAS_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("soundcanvas", soundcanvas_init);
+	auto section = conf->AddSection("soundcanvas");
 
 	init_soundcanvas_dosbox_settings(*section);
 	register_soundcanvas_text_messages();

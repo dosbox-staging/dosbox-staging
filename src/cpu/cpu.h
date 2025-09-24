@@ -61,6 +61,9 @@ extern Bitu CPU_PrefetchQueueSize;
 
 void CPU_AddConfigSection(const ConfigPtr& conf);
 
+void CPU_Init();
+void CPU_Destroy();
+
 uint8_t CPU_GetLastInterrupt();
 
 void CPU_RestoreRealModeCyclesConfig();

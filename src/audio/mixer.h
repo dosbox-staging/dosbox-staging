@@ -459,6 +459,9 @@ void MIXER_DeregisterChannel(MixerChannelPtr& channel);
 
 // Mixer configuration and initialization
 void MIXER_AddConfigSection(const ConfigPtr& conf);
+void MIXER_Init();
+void MIXER_Destroy();
+
 int MIXER_GetSampleRate();
 int MIXER_GetPreBufferMs();
 

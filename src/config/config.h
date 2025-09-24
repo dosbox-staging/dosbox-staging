@@ -102,10 +102,8 @@ public:
 
 	~Config();
 
-	SectionProp* AddSection(const char* section_name,
-	                        SectionInitHandler init_handler);
-
-	SectionLine* AddAutoexecSection(SectionInitHandler init_handler);
+	SectionProp* AddSection(const char* section_name);
+	SectionLine* AddAutoexecSection();
 
 	auto begin()
 	{
@@ -125,10 +123,7 @@ public:
 
 	void ApplyQueuedValuesToCli(std::vector<std::string>& args) const;
 
-	void SetStartUp(void (*_function)(void));
 	void Init() const;
-	void ShutDown();
-	void StartUp();
 
 	bool WriteConfig(const std_fs::path& path) const;
 	bool ParseConfigFile(const std::string& type,

@@ -110,15 +110,18 @@ static void init_ethernet_dosbox_settings(SectionProp& section)
 	pstring->SetEnabledOptions({"SLIRP"});
 }
 
-static void ethernet_init(Section* section)
+void ETHERNET_Init()
 {
+	auto section = get_section("ethernet");
+	assert(section);
+
 	NE2K_Init(section);
 
 	VIRTUALBOX_Init();
 	VMWARE_Init();
 }
 
-static void ethernet_destroy([[maybe_unused]] Section* section)
+void ETHERNET_Destroy()
 {
 	VMWARE_Destroy();
 	VIRTUALBOX_Destroy();
@@ -137,9 +140,7 @@ void ETHERNET_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("ethernet", ethernet_init);
-
-	section->AddDestroyHandler(ethernet_destroy);
+	auto section = conf->AddSection("ethernet");
 	section->AddUpdateHandler(notify_ethernet_setting_updated);
 
 	init_ethernet_dosbox_settings(*section);

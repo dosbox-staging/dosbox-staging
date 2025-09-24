@@ -77,5 +77,7 @@ public:
 EthernetConnection *ETHERNET_OpenConnection(const std::string &backend);
 
 void ETHERNET_AddConfigSection(const ConfigPtr& conf);
+void ETHERNET_Init();
+void ETHERNET_Destroy();
 
 #endif // DOSBOX_ETHERNET_H

@@ -1284,7 +1284,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 	caller->WriteOut("\n");
 }
 
-static void fluidsynth_init([[maybe_unused]] Section* sec)
+void FSYNTH_Init()
 {
 	if (const auto device = MIDI_GetCurrentDevice();
 	    device && device->GetName() == MidiDeviceName::FluidSynth) {
@@ -1359,8 +1359,7 @@ void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("fluidsynth", fluidsynth_init);
-
+	auto section = conf->AddSection("fluidsynth");
 	section->AddUpdateHandler(notify_fluidsynth_setting_updated);
 
 	init_fluidsynth_dosbox_settings(*section);

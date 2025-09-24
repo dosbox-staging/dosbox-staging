@@ -16,7 +16,7 @@
 #include "private/adlib_gold.h"
 
 #include "audio/mixer.h"
-#include "config/setup.h"
+#include "config/config.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
 
@@ -162,10 +162,10 @@ private:
 	void EsfmSetLegacyMode();
 };
 
-void OPL_Init(Section *sec, OplMode mode);
+void OPL_Init(OplMode mode);
 void OPL_Destroy();
 
 // CMS/Game Blaster, OPL, and ESFM configuration and initialisation
-void OPL_AddConfigSettings(const ConfigPtr &conf);
+void OPL_AddConfigSettings();
 
 #endif // DOSBOX_OPL_H

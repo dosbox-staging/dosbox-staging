@@ -1132,7 +1132,9 @@ void VGA_SetupGFX(void);
 void VGA_SetupSEQ(void);
 void VGA_SetupOther(void);
 void VGA_SetupXGA(void);
-void VGA_AddCompositeSettings(Config& conf);
+
+void COMPOSITE_AddConfigSection(Config& conf);
+void COMPOSITE_Init();
 
 void VGA_DestroyMemory();
 

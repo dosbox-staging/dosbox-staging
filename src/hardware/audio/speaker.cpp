@@ -27,16 +27,20 @@ static void init_speaker_settings(SectionProp& section)
 // of the [speaker] section into their own respective sections. Until then,
 // the lifecycle of these devices are managed here at the top level.
 
-static void speaker_init(Section* section)
+void SPEAKER_Init()
 {
+	const auto section = get_section("speaker");
+
 	LPTDAC_Init(section);
 	PCSPEAKER_Init(section);
 	PS1AUDIO_Init(section);
 	TANDYSOUND_Init(section);
 }
 
-static void speaker_destroy(Section* section)
+void SPEAKER_Destroy()
 {
+	const auto section = get_section("speaker");
+
 	TANDYSOUND_Destroy(section);
 	PS1AUDIO_Destroy(section);
 	PCSPEAKER_Destroy(section);
@@ -56,9 +60,7 @@ void SPEAKER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("speaker", speaker_init);
-
-	section->AddDestroyHandler(speaker_destroy);
+	auto section = conf->AddSection("speaker");
 	section->AddUpdateHandler(notify_speaker_setting_updated);
 
 	LPTDAC_AddConfigSection(section);

@@ -1834,8 +1834,11 @@ public:
 
 static std::unique_ptr<DOS> dos_module = {};
 
-void dos_init(Section* section)
+void DOS_Init()
 {
+	auto section = get_section("dos");
+	assert(section);
+
 	dos_module = std::make_unique<DOS>(section);
 
 	XMS_Init(section);
@@ -1849,7 +1852,7 @@ void dos_init(Section* section)
 	CDROM_Image_Init();
 }
 
-static void dos_destroy([[maybe_unused]] Section* section)
+void DOS_Destroy()
 {
 	CDROM_Image_Destroy();
 	MSCDEX_Destroy();
@@ -1882,7 +1885,7 @@ static void notify_dos_setting_updated(SectionProp* section,
 
 void DOS_NotifySettingUpdated(const std::string& prop_name)
 {
-	auto section = static_cast<SectionProp*>(control->GetSection("dos"));
+	auto section = get_section("dos");
 	assert(section);
 
 	notify_dos_setting_updated(section, prop_name);
@@ -1997,9 +2000,7 @@ void DOS_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = control->AddSection("dos", dos_init);
-
-	section->AddDestroyHandler(dos_destroy);
+	auto section = control->AddSection("dos");
 	section->AddUpdateHandler(notify_dos_setting_updated);
 
 	init_dos_settings(*section);

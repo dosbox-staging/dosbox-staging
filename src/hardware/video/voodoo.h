@@ -8,4 +8,7 @@
 
 void VOODOO_AddConfigSection(const ConfigPtr& conf);
 
+void VOODOO_Init();
+void VOODOO_Destroy();
+
 #endif // DOSBOX_VOODOO_H

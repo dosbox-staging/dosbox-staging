@@ -1084,7 +1084,7 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	caller->WriteOut("\n");
 }
 
-static void mt32_init([[maybe_unused]] Section* sec)
+void MT32_Init()
 {
 	const auto device = MIDI_GetCurrentDevice();
 
@@ -1108,7 +1108,7 @@ void MT32_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("mt32", mt32_init);
+	auto section = conf->AddSection("mt32");
 
 	init_mt32_dosbox_settings(*section);
 	register_mt32_text_messages();

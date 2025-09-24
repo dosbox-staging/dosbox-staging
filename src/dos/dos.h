@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_DOS_INC_H
-#define DOSBOX_DOS_INC_H
+#ifndef DOSBOX_DOS_H
+#define DOSBOX_DOS_H
 
 #include "dosbox.h"
 
@@ -1058,6 +1058,8 @@ enum class DosCurrencyFormat : uint8_t {
 };
 
 void DOS_AddConfigSection(const ConfigPtr& conf);
+void DOS_Init();
+void DOS_Destroy();
 
 void DOS_NotifySettingUpdated(const std::string& prop_name);
 
@@ -1069,4 +1071,4 @@ char DOS_GetLocaleThousandsSeparator();
 char DOS_GetLocaleDecimalSeparator();
 char DOS_GetLocaleListSeparator();
 
-#endif // DOSBOX_DOS_INC_H
+#endif // DOSBOX_DOS_H

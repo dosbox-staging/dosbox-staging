@@ -59,6 +59,9 @@ void DOSBOX_SetNormalLoop();
 
 void DOSBOX_InitAllModuleConfigsAndMessages(void);
 
+void DOSBOX_Init();
+void DOSBOX_Destroy();
+
 void DOSBOX_SetMachineTypeFromConfig(SectionProp* section);
 
 int64_t DOSBOX_GetTicksDone();

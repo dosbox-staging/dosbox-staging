@@ -139,6 +139,8 @@ void UnpackIP(PackedIP ipPack, IPaddress * ipAddr);
 void PackIP(IPaddress ipAddr, PackedIP *ipPack);
 
 void IPX_AddConfigSection(const ConfigPtr& conf);
+void IPX_Init();
+void IPX_Destroy();
 
 #ifdef _MSC_VER
 #pragma pack()

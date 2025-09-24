@@ -407,7 +407,7 @@ static bool FMPDRV_InstallINTHandler()
 	                            upper_8_bits_of_callback};
 	// Note: checking against double CB_SIZE. This is because we allocate
 	// two callbacks to make this fit within the "callback ROM" region. See
-	// comment in reelmagic_init() function below
+	// comment in REELMAGIC_Init() function below
 	if (sizeof(isr_impl) > (CB_SIZE * 2)) {
 		E_Exit("CB_SIZE too small to fit ReelMagic driver IVT code. This means that DOSBox was not compiled correctly!");
 	}
@@ -1312,25 +1312,76 @@ static bool RMDEV_SYS_int2fHandler()
 	return false;
 }
 
-// #include "hardware/port.h"
-// static IO_ReadHandleObject   _readHandler;
-// static IO_WriteHandleObject  _writeHandler;
-// static Bitu read_rm(Bitu port, Bitu /*iolen*/) {
-//   LOG(LOG_REELMAGIC, LOG_WARN)("Caught port I/O read @ addr %04X", (unsigned)port);
-//   switch (port & 0xff) {
-//   case 0x02:
-//     return 'R'; //no idea what this does... choosing a value from the magic number... might as
-//     well be random
-//   case 0x03:
-//     return 'M'; //no idea what this does... choosing a value from the magic number... might as
-//     well be random
-//   }
-//   return 0;
-// }
-// static void write_rm(Bitu port, Bitu val, Bitu /*iolen*/) {
-//   LOG(LOG_REELMAGIC, LOG_WARN)("Caught port I/O write @ addr %04X", (unsigned)port);
-// }
-static void reelmagic_destroy([[maybe_unused]] Section* sec)
+void REELMAGIC_Init()
+{
+	const auto section = get_section("reelmagic");
+
+	// Does the user want ReelMagic emulation?
+	const auto reelmagic_choice = section->GetString("reelmagic");
+
+	const auto wants_card_only = (reelmagic_choice == "cardonly");
+
+	const auto reelmagic_choice_has_bool = parse_bool_setting(reelmagic_choice);
+
+	const auto wants_card_and_driver = (reelmagic_choice_has_bool &&
+	                                    *reelmagic_choice_has_bool == true);
+
+	if (!wants_card_only && !wants_card_and_driver) {
+		if (!reelmagic_choice_has_bool) {
+			LOG_WARNING("REELMAGIC: Invalid 'reelmagic' value: '%s', shutting down.",
+			            reelmagic_choice.c_str());
+		}
+		return;
+	}
+
+	ReelMagic_InitPlayer(section);
+	ReelMagic_InitVideoMixer(section);
+
+	// Driver/Hardware Initialization...
+	if (_dosboxCallbackNumber == 0) {
+		_dosboxCallbackNumber = CALLBACK_Allocate();
+		[[maybe_unused]] const auto second_callback = CALLBACK_Allocate();
+		assert(second_callback == _dosboxCallbackNumber + 1);
+		// this is so damn hacky! basically the code that the IVT points
+		// to for this driver needs more than 32-bytes of code to fit
+		// the check strings therefore, we are allocating two adjacent
+		// callbacks... seems kinda wasteful... need to explore a better
+		// way of doing this...
+	}
+	DOS_AddMultiplexHandler(&RMDEV_SYS_int2fHandler);
+	LOG(LOG_REELMAGIC, LOG_NORMAL)("\"RMDEV.SYS\" successfully installed");
+
+	//_readHandler.Install(REELMAGIC_BASE_IO_PORT,   &read_rm, IO_MB,  0x3);
+	//_writeHandler.Install(REELMAGIC_BASE_IO_PORT,  &write_rm, IO_MB, 0x3);
+
+	REELMAGIC_MaybeCreateFmpdrvExecutable();
+
+	if (wants_card_and_driver) {
+		_unloadAllowed = false;
+		FMPDRV_InstallINTHandler();
+	}
+
+	// Assess the state and inform the user
+	const bool card_initialized   = _dosboxCallbackNumber != 0;
+	const bool driver_initialized = _installedInterruptNumber != 0;
+
+	if (card_initialized && driver_initialized) {
+		LOG_MSG("REELMAGIC: Initialised ReelMagic MPEG playback card and driver");
+	} else if (card_initialized) {
+		LOG_MSG("REELMAGIC: Initialised ReelMagic MPEG playback card");
+	} else {
+		// Should be impossible to initialize the driver without the card
+		assert(driver_initialized == false);
+		LOG_WARNING("REELMAGIC: Failed initializing ReelMagic MPEG playback card and/or driver");
+	}
+
+#if C_HEAVY_DEBUGGER
+	_a204debug = true;
+	_a206debug = true;
+#endif
+}
+
+void REELMAGIC_Destroy()
 {
 	// Assess the state prior to destruction
 	bool card_is_shutdown   = (_dosboxCallbackNumber == 0);
@@ -1378,84 +1429,11 @@ static void reelmagic_destroy([[maybe_unused]] Section* sec)
 	}
 }
 
-static void reelmagic_init(Section* sec)
-{
-	assert(sec);
-	const auto section = static_cast<SectionProp*>(sec);
-
-	// Does the user want ReelMagic emulation?
-	const auto reelmagic_choice = section->GetString("reelmagic");
-
-	const auto wants_card_only = (reelmagic_choice == "cardonly");
-
-	const auto reelmagic_choice_has_bool = parse_bool_setting(reelmagic_choice);
-
-	const auto wants_card_and_driver = (reelmagic_choice_has_bool &&
-	                                    *reelmagic_choice_has_bool == true);
-
-	if (!wants_card_only && !wants_card_and_driver) {
-		if (!reelmagic_choice_has_bool) {
-			LOG_WARNING("REELMAGIC: Invalid 'reelmagic' value: '%s', shutting down.",
-			            reelmagic_choice.c_str());
-		}
-		return;
-	}
-
-	// Player Initialization...
-	ReelMagic_InitPlayer(sec);
-
-	// Video Mixer Initialization...
-	ReelMagic_InitVideoMixer(sec);
-
-	// Driver/Hardware Initialization...
-	if (_dosboxCallbackNumber == 0) {
-		_dosboxCallbackNumber = CALLBACK_Allocate();
-		[[maybe_unused]] const auto second_callback = CALLBACK_Allocate();
-		assert(second_callback == _dosboxCallbackNumber + 1);
-		// this is so damn hacky! basically the code that the IVT points
-		// to for this driver needs more than 32-bytes of code to fit
-		// the check strings therefore, we are allocating two adjacent
-		// callbacks... seems kinda wasteful... need to explore a better
-		// way of doing this...
-	}
-	DOS_AddMultiplexHandler(&RMDEV_SYS_int2fHandler);
-	LOG(LOG_REELMAGIC, LOG_NORMAL)("\"RMDEV.SYS\" successfully installed");
-
-	//_readHandler.Install(REELMAGIC_BASE_IO_PORT,   &read_rm, IO_MB,  0x3);
-	//_writeHandler.Install(REELMAGIC_BASE_IO_PORT,  &write_rm, IO_MB, 0x3);
-
-	REELMAGIC_MaybeCreateFmpdrvExecutable();
-
-	if (wants_card_and_driver) {
-		_unloadAllowed = false;
-		FMPDRV_InstallINTHandler();
-	}
-
-	// Assess the state and inform the user
-	const bool card_initialized   = _dosboxCallbackNumber != 0;
-	const bool driver_initialized = _installedInterruptNumber != 0;
-
-	if (card_initialized && driver_initialized) {
-		LOG_MSG("REELMAGIC: Initialised ReelMagic MPEG playback card and driver");
-	} else if (card_initialized) {
-		LOG_MSG("REELMAGIC: Initialised ReelMagic MPEG playback card");
-	} else {
-		// Should be impossible to initialize the driver without the card
-		assert(driver_initialized == false);
-		LOG_WARNING("REELMAGIC: Failed initializing ReelMagic MPEG playback card and/or driver");
-	}
-
-#if C_HEAVY_DEBUGGER
-	_a204debug = true;
-	_a206debug = true;
-#endif
-}
-
-static void notify_reelmagic_setting_updated(SectionProp* section,
+static void notify_reelmagic_setting_updated([[maybe_unused]] SectionProp* section,
                                              [[maybe_unused]] const std::string& prop_name)
 {
-	reelmagic_destroy(section);
-	reelmagic_init(section);
+	REELMAGIC_Destroy();
+	REELMAGIC_Init();
 }
 
 static void init_reelmagic_dosbox_settings(SectionProp& section)
@@ -1487,9 +1465,10 @@ static void init_reelmagic_dosbox_settings(SectionProp& section)
 
 void REELMAGIC_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)
 {
-	auto section = control->AddSection("reelmagic", reelmagic_init);
+	assert(conf);
+
+	auto section = conf->AddSection("reelmagic");
 	section->AddUpdateHandler(notify_reelmagic_setting_updated);
-	section->AddDestroyHandler(reelmagic_destroy);
 
 	init_reelmagic_dosbox_settings(*section);
 }

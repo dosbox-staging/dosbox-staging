@@ -28,6 +28,9 @@ enum class CaptureState { Off, Pending, InProgress };
 
 void CAPTURE_AddConfigSection(const ConfigPtr& conf);
 
+void CAPTURE_Init();
+void CAPTURE_Destroy();
+
 // TODO move raw OPL and serial log capture into the capture module too
 
 // Create a new empty capture file of the request type. If `path` is not

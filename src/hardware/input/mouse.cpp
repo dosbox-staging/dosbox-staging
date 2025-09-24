@@ -1138,7 +1138,7 @@ void MOUSE_NotifyReadyGFX()
 	MOUSE_StartupIfReady();
 }
 
-void MOUSE_Init(Section * /*sec*/)
+void MOUSE_Init([[maybe_unused]] Section* section)
 {
 	// Start mouse emulation if ready
 	mouse_shared.ready_init = true;

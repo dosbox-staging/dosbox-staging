@@ -92,5 +92,7 @@ private:
 };
 
 void DISKNOISE_AddConfigSection(const ConfigPtr& conf);
+void DISKNOISE_Init();
+void DISKNOISE_Destroy();
 
 #endif // DOSBOX_DISK_NOISE_H

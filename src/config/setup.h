@@ -332,18 +332,12 @@ public:
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
 
-using SectionInitHandler = std::function<void(Section*)>;
-
-using SectionDestroyHandler = std::function<void(Section*)>;
-
 using SectionUpdateHandler =
         std::function<void(SectionProp*, const std::string& prop_name)>;
 
 class Section {
 private:
-	std::deque<SectionInitHandler> init_handlers       = {};
-	std::deque<SectionDestroyHandler> destroy_handlers = {};
-	std::vector<SectionUpdateHandler> update_handlers  = {};
+	std::vector<SectionUpdateHandler> update_handlers = {};
 
 	std::string sectionname = {};
 
@@ -360,16 +354,10 @@ public:
 	Section(Section&& other)            = default;
 	Section& operator=(Section&& other) = default;
 
-	// Children must call ExecuteDestroy()
 	virtual ~Section() = default;
 
-	void AddInitHandler(SectionInitHandler init_handler);
 	void AddUpdateHandler(SectionUpdateHandler update_handler);
-	void AddDestroyHandler(SectionInitHandler destroy_handler);
-
-	void ExecuteInit();
 	void ExecuteUpdate(const Property& property);
-	void ExecuteDestroy();
 
 	bool IsActive() const
 	{
@@ -520,11 +508,6 @@ public:
 	// Construct and assign by std::move
 	SectionLine(SectionLine&& other)            = default;
 	SectionLine& operator=(SectionLine&& other) = default;
-
-	~SectionLine() override
-	{
-		ExecuteDestroy();
-	}
 
 	std::string GetPropertyValue(const std::string& property) const override;
 	bool HandleInputline(const std::string& line) override;

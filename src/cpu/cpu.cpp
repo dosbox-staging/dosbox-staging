@@ -3206,8 +3206,10 @@ bool Cpu::initialised = false;
 
 static std::unique_ptr<Cpu> cpu_instance = {};
 
-static void cpu_init(Section* section)
+void CPU_Init()
 {
+	auto section = get_section("cpu");
+
 	cpu_instance = std::make_unique<Cpu>(section);
 
 #if C_FPU
@@ -3219,7 +3221,7 @@ static void cpu_init(Section* section)
 	PCI_Init(section);
 }
 
-static void cpu_shutdown([[maybe_unused]] Section* section)
+void CPU_Destroy()
 {
 	PCI_Destroy();
 	VGA_Destroy();
@@ -3234,11 +3236,11 @@ static void cpu_shutdown([[maybe_unused]] Section* section)
 	cpu_instance.reset();
 }
 
-static void notify_cpu_setting_updated(SectionProp* section,
+static void notify_cpu_setting_updated([[maybe_unused]] SectionProp* section,
                                        [[maybe_unused]] const std::string& prop_name)
 {
-	cpu_shutdown(section);
-	cpu_init(section);
+	CPU_Destroy();
+	CPU_Init();
 }
 
 void init_cpu_dosbox_settings(SectionProp& secprop)
@@ -3405,9 +3407,9 @@ void CPU_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto sec = conf->AddSection("cpu", cpu_init);
-	sec->AddDestroyHandler(cpu_shutdown);
-	sec->AddUpdateHandler(notify_cpu_setting_updated);
+	auto section = conf->AddSection("cpu");
 
-	init_cpu_dosbox_settings(*sec);
+	section->AddUpdateHandler(notify_cpu_setting_updated);
+
+	init_cpu_dosbox_settings(*section);
 }

@@ -7,6 +7,7 @@
 
 #include "dosbox.h"
 
+#include "config/config.h"
 #include "dos/dos.h"
 #include "gui/render.h"
 #include "utils/fraction.h"
@@ -133,6 +134,8 @@ void ReelMagic_ClearPlayers();
 ReelMagic_PlayerConfiguration& ReelMagic_GlobalDefaultPlayerConfig();
 
 void REELMAGIC_AddConfigSection(const ConfigPtr& conf);
+void REELMAGIC_Init();
+void REELMAGIC_Destroy();
 
 void REELMAGIC_NotifyLockMixer();
 void REELMAGIC_NotifyUnlockMixer();

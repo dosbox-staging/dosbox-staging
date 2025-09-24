@@ -1290,37 +1290,28 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	return true;
 }
 
-SectionProp* Config::AddSection(const char* section_name,
-                                SectionInitHandler init_handler)
+SectionProp* Config::AddSection(const char* section_name)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
 
 	SectionProp* s = new SectionProp(section_name);
 
-	if (init_handler) {
-		s->AddInitHandler(init_handler);
-	}
 	sectionlist.push_back(s);
 	return s;
 }
 
 SectionProp::~SectionProp()
 {
-	// ExecuteDestroy should be here else the destroy functions use
-	// destroyed properties
-	ExecuteDestroy();
-
 	// Delete properties themself (properties stores the pointer of a prop
 	for (it prop = properties.begin(); prop != properties.end(); ++prop) {
 		delete (*prop);
 	}
 }
 
-SectionLine* Config::AddAutoexecSection(SectionInitHandler init_handler)
+SectionLine* Config::AddAutoexecSection()
 {
 	SectionLine* section = new SectionLine("autoexec");
-	section->AddInitHandler(init_handler);
 	sectionlist.push_back(section);
 
 	return section;
@@ -1365,49 +1356,16 @@ Config::Config(Config&& source) noexcept
 	*this = std::move(source);
 }
 
-void Config::Init() const
-{
-	for (const auto& sec : sectionlist) {
-		sec->ExecuteInit();
-	}
-}
-
-void Section::AddInitHandler(SectionInitHandler init_handler)
-{
-	assert(init_handler);
-	init_handlers.emplace_back(init_handler);
-}
-
 void Section::AddUpdateHandler(SectionUpdateHandler update_handler)
 {
 	assert(update_handler);
 	update_handlers.emplace_back(update_handler);
 }
 
-void Section::AddDestroyHandler(SectionInitHandler destroy_handler)
-{
-	assert(destroy_handler);
-	destroy_handlers.emplace_front(destroy_handler);
-}
-
-void Section::ExecuteInit()
-{
-	for (const auto& handler : init_handlers) {
-		handler(this);
-	}
-}
-
 void Section::ExecuteUpdate(const Property& property)
 {
 	for (const auto& handler : update_handlers) {
 		handler(dynamic_cast<SectionProp*>(this), property.propname);
-	}
-}
-
-void Section::ExecuteDestroy()
-{
-	for (const auto& handler : destroy_handlers) {
-		handler(this);
 	}
 }
 
@@ -1724,16 +1682,6 @@ void Config::ParseEnv()
 		const auto prop_name_and_value = std::get<1>(set_prop_desc);
 		sec->HandleInputline(prop_name_and_value);
 	}
-}
-
-void Config::SetStartUp(void (*_function)(void))
-{
-	_start_function = _function;
-}
-
-void Config::StartUp()
-{
-	(*_start_function)();
 }
 
 StartupVerbosity Config::GetStartupVerbosity() const

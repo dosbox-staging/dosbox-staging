@@ -4,8 +4,10 @@
 #ifndef DOSBOX_INNOVATION_H
 #define DOSBOX_INNOVATION_H
 
-#include "config/setup.h"
+#include "config/config.h"
 
 void INNOVATION_AddConfigSection(const ConfigPtr& conf);
+void INNOVATION_Init();
+void INNOVATION_Destroy();
 
 #endif // DOSBOX_INNOVATION_H
