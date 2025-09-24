@@ -470,30 +470,43 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp* section)
 
 	if (machine_str == "cga") {
 		machine = MachineType::CgaColor;
+
 	} else if (machine_str == "cga_mono") {
 		machine = MachineType::CgaMono;
+
 	} else if (machine_str == "tandy") {
 		machine = MachineType::Tandy;
+
 	} else if (machine_str == "pcjr") {
 		machine = MachineType::Pcjr;
+
 	} else if (machine_str == "hercules") {
 		machine = MachineType::Hercules;
+
 	} else if (machine_str == "ega") {
 		machine = MachineType::Ega;
+
 	} else if (machine_str == "svga_s3") {
 		svga_type = SvgaType::S3;
+
 	} else if (machine_str == "vesa_nolfb") {
 		svga_type = SvgaType::S3;
+
 		int10.vesa_nolfb = true;
 	} else if (machine_str == "vesa_oldvbe") {
+
 		svga_type = SvgaType::S3;
 		int10.vesa_oldvbe = true;
+
 	} else if (machine_str == "svga_et3000") {
 		svga_type = SvgaType::TsengEt3k;
+
 	} else if (machine_str == "svga_et4000") {
 		svga_type = SvgaType::TsengEt4k;
+
 	} else if (machine_str == "svga_paradise") {
 		svga_type = SvgaType::Paradise;
+
 	} else {
 		E_Exit("DOSBOX: Invalid machine type '%s'", machine_str.c_str());
 	}
