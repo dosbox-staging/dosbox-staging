@@ -4,6 +4,7 @@
 #ifndef DOSBOX_UNICODE_H
 #define DOSBOX_UNICODE_H
 
+#include <cstdint>
 #include <string>
 
 // Get recommended DOS code page to render the UTF-8 strings to. This
@@ -70,6 +71,16 @@ std::string dos_to_utf8(const std::string& str,
 
 std::string fs_utf8_to_dos_437(const std::string& str);
 std::string dos_437_to_fs_utf8(const std::string& str);
+
+// Conversion between UTF-8 and UTF-16
+
+std::string utf16_to_utf8(const std::u16string& str);
+std::u16string utf8_to_utf16(const std::string& str);
+
+// Conversion between UTF-8 and UCS-2 (used in FAT long file names)
+
+std::string ucs2_to_utf8(const std::u16string& str);
+std::u16string utf8_to_ucs2(const std::string& str);
 
 // Convert DOS code page string to lower/upper case; converters are aware of all
 // the national characters. Functions without 'code_page' parameter use current

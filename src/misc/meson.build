@@ -14,6 +14,7 @@ libmisc_nomsg_sources = [
     'rwqueue.cpp',
     'support.cpp',
     'unicode.cpp',
+    'unicode_encodings.cpp',
     'video.cpp',
 ]
 

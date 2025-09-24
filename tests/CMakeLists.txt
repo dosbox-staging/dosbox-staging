@@ -28,6 +28,7 @@ add_executable(dosbox_tests
     string_utils_tests.cpp
     # stubs.cpp
     support_tests.cpp
+    unicode_tests.cpp
 )
 
 # Disable some warnings for deliberately flawed test cases
