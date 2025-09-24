@@ -13344,11 +13344,10 @@ static void IMFC_Mixer_Callback(const int requested_frames)
 	imfc->mixerCallback(requested_frames);
 }
 
-static void imfc_init(Section* sec)
+void IMFC_Init()
 {
-	assert(sec);
-	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
-	if (!conf || !conf->GetBool("imfc")) {
+	const auto section = get_section("imfc");
+	if (!section->GetBool("imfc")) {
 		return;
 	}
 
@@ -13390,7 +13389,7 @@ static void imfc_init(Section* sec)
 		channel->SetLowPassFilter(FilterState::On);
 	};
 
-	const std::string filter_choice = conf->GetString("imfc_filter");
+	const std::string filter_choice = section->GetString("imfc_filter");
 
 	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
 		if (*maybe_bool) {
@@ -13410,9 +13409,9 @@ static void imfc_init(Section* sec)
 		enable_filter();
 	}
 
-	const auto port = static_cast<io_port_t>(conf->GetHex("imfc_base"));
+	const auto port = static_cast<io_port_t>(section->GetHex("imfc_base"));
 
-	const auto irq = clamp(static_cast<uint8_t>(conf->GetInt("imfc_irq")),
+	const auto irq = clamp(static_cast<uint8_t>(section->GetInt("imfc_irq")),
 	                       MinIrqAddress,
 	                       MaxIrqAddress);
 
@@ -13421,7 +13420,7 @@ static void imfc_init(Section* sec)
 	MIXER_UnlockMixerThread();
 }
 
-static void imfc_destroy([[maybe_unused]] Section* section)
+void IMFC_Destroy()
 {
 	if (!imfc) {
 		return;
@@ -13438,11 +13437,11 @@ static void imfc_destroy([[maybe_unused]] Section* section)
 	MIXER_UnlockMixerThread();
 }
 
-static void notify_imfc_setting_updated(SectionProp* section,
+static void notify_imfc_setting_updated([[maybe_unused]] SectionProp* section,
                                         [[maybe_unused]] const std::string& prop_name)
 {
-	imfc_destroy(section);
-	imfc_init(section);
+	IMFC_Destroy();
+	IMFC_Init();
 }
 
 static void init_imfc_dosbox_settings(SectionProp& secprop)
@@ -13478,9 +13477,7 @@ void IMFC_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("imfc", imfc_init);
-
-	section->AddDestroyHandler(imfc_destroy);
+	auto section = conf->AddSection("imfc");
 	section->AddUpdateHandler(notify_imfc_setting_updated);
 
 	init_imfc_dosbox_settings(*section);

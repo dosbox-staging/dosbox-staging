@@ -359,36 +359,34 @@ static void set_sensitivity(const std::string_view sensitivity_str)
 	return;
 }
 
-static void mouse_init(Section* section)
+void MOUSE_Init()
 {
+	const auto section = get_section("mouse");
 	assert(section);
 
-	const auto conf = dynamic_cast<SectionProp*>(section);
-	assert(conf);
+	set_capture_type(section->GetString("mouse_capture"));
+	set_sensitivity(section->GetString("mouse_sensitivity"));
 
-	set_capture_type(conf->GetString("mouse_capture"));
-	set_sensitivity(conf->GetString("mouse_sensitivity"));
+	mouse_config.multi_display_aware = section->GetBool("mouse_multi_display_aware");
 
-	mouse_config.multi_display_aware = conf->GetBool("mouse_multi_display_aware");
+	mouse_config.middle_release = section->GetBool("mouse_middle_release");
+	mouse_config.raw_input      = section->GetBool("mouse_raw_input");
 
-	mouse_config.middle_release = conf->GetBool("mouse_middle_release");
-	mouse_config.raw_input      = conf->GetBool("mouse_raw_input");
-
-	set_dos_driver_model(conf->GetString("builtin_dos_mouse_driver_model"));
-	set_dos_driver_options(conf->GetString("builtin_dos_mouse_driver_options"));
+	set_dos_driver_model(section->GetString("builtin_dos_mouse_driver_model"));
+	set_dos_driver_options(section->GetString("builtin_dos_mouse_driver_options"));
 
 	// Built-in DOS driver configuration
-	set_dos_driver_mode(conf->GetString("builtin_dos_mouse_driver"));
+	set_dos_driver_mode(section->GetString("builtin_dos_mouse_driver"));
 
 	// PS/2 AUX port mouse configuration
-	set_ps2_mouse_model(conf->GetString("ps2_mouse_model"));
+	set_ps2_mouse_model(section->GetString("ps2_mouse_model"));
 
 	// COM port mouse configuration
-	set_serial_mouse_model(conf->GetString("com_mouse_model"));
+	set_serial_mouse_model(section->GetString("com_mouse_model"));
 
 	// VMM PCI interfaces
-	mouse_config.is_vmware_mouse_enabled = conf->GetBool("vmware_mouse");
-	mouse_config.is_virtualbox_mouse_enabled = conf->GetBool("virtualbox_mouse");
+	mouse_config.is_vmware_mouse_enabled = section->GetBool("vmware_mouse");
+	mouse_config.is_virtualbox_mouse_enabled = section->GetBool("virtualbox_mouse");
 
 	if (!GFX_HaveDesktopEnvironment() && mouse_config.is_virtualbox_mouse_enabled) {
 		// VirtualBox guest side driver is able to request us to re-use
@@ -404,6 +402,7 @@ static void mouse_init(Section* section)
 
 	// Start mouse emulation if everything is ready
 	mouse_shared.ready_config = true;
+	mouse_shared.ready_init   = true;
 	MOUSE_StartupIfReady();
 }
 
@@ -653,8 +652,8 @@ void MOUSE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto sec = conf->AddSection("mouse", mouse_init);
-	sec->AddUpdateHandler(notify_mouse_setting_updated);
+	auto section = conf->AddSection("mouse");
+	section->AddUpdateHandler(notify_mouse_setting_updated);
 
-	init_mouse_dosbox_settings(*sec);
+	init_mouse_dosbox_settings(*section);
 }

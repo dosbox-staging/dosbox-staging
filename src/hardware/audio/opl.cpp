@@ -1050,18 +1050,19 @@ void OPL_Destroy()
 	opl = {};
 }
 
-void OPL_Init(Section* sec, const OplMode oplmode)
+void OPL_Init(const OplMode oplmode)
 {
-	assert(sec);
-	opl = std::make_unique<Opl>(sec, oplmode);
+	auto section = get_section("sblaster");
+	assert(section);
+
+	opl = std::make_unique<Opl>(section, oplmode);
 }
 
 // Must be called after SB_AddConfigSection
-void OPL_AddConfigSettings(const ConfigPtr& conf)
+void OPL_AddConfigSettings()
 {
-	assert(conf);
-	auto secprop = static_cast<SectionProp*>(conf->GetSection("sblaster"));
+	auto section = get_section("sblaster");
+	assert(section);
 
-	assert(secprop);
-	init_opl_dosbox_settings(*secprop);
+	init_opl_dosbox_settings(*section);
 }

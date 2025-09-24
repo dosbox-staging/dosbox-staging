@@ -1179,14 +1179,15 @@ public:
 
 static std::unique_ptr<IPX> ipx = {};
 
-static void ipx_init(Section* section)
+void IPX_Init()
 {
+	auto section = get_section("ipx");
 	assert(section);
 
 	ipx = std::make_unique<IPX>(section);
 }
 
-static void ipx_destroy([[maybe_unused]] Section* section)
+void IPX_Destroy()
 {
 	ipx = {};
 }
@@ -1199,14 +1200,12 @@ void notify_ipx_setting_updated(SectionProp* section,
 
 void IPX_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)
 {
-	using enum Property::Changeable::Value;
-
 	assert(conf);
 
-	auto section = control->AddSection("ipx", ipx_init);
-
-	section->AddDestroyHandler(ipx_destroy);
+	auto section = control->AddSection("ipx");
 	section->AddUpdateHandler(notify_ipx_setting_updated);
+
+	using enum Property::Changeable::Value;
 
 	auto pbool = section->AddBool("ipx", WhenIdle, false);
 	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation ('off' by default).");

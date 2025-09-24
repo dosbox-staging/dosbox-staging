@@ -12,7 +12,8 @@
 #if C_DEBUGGER
 
 void DEBUG_AddConfigSection(const ConfigPtr& conf);
-void DEBUG_Destroy(Section* section);
+void DEBUG_Init();
+void DEBUG_Destroy();
 
 void DEBUG_DrawScreen();
 bool DEBUG_Breakpoint();
@@ -24,6 +25,8 @@ void DEBUG_RefreshPage(int scroll);
 Bitu DEBUG_EnableDebugger();
 
 void LOG_StartUp();
+void LOG_Init();
+void LOG_Destroy();
 
 extern Bitu cycle_count;
 extern Bitu debugCallback;

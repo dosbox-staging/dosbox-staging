@@ -9,8 +9,6 @@
 
 #include <gtest/gtest.h>
 
-#define SDL_MAIN_HANDLED
-
 #include "config/config.h"
 #include "misc/video.h"
 
@@ -19,9 +17,9 @@ public:
 	DOSBoxTestFixture()
 	        : arg_c_str("-conf tests/files/dosbox-staging-tests.conf\0"),
 	          argv{arg_c_str},
-	          com_line(1, argv)
+	          command_line(1, argv)
 	{
-		control = std::make_unique<Config>(&com_line);
+		control = std::make_unique<Config>(&command_line);
 	}
 
 	void SetUp() override
@@ -33,34 +31,21 @@ public:
 		const auto config_path = GetConfigDir();
 		control->ParseConfigFiles(config_path);
 
-		Section *_sec;
-		// This will register all the init functions, but won't run them
-		DOSBOX_InitAllModuleConfigsAndMessages();
-
-		for (auto section_name : sections) {
-			_sec = control->GetSection(section_name);
-			_sec->ExecuteInit();
-		}
+		DOSBOX_InitModuleConfigsAndMessages();
+		DOSBOX_InitModules();
 	}
 
 	void TearDown() override
 	{
-		std::vector<std::string>::reverse_iterator r = sections.rbegin();
-
-		for (; r != sections.rend(); ++r) {
-			control->GetSection(*r)->ExecuteDestroy();
-		}
+		DOSBOX_DestroyModules();
 	}
 
 private:
-	char const *arg_c_str;
-	const char *argv[1];
-	CommandLine com_line;
+	const char* arg_c_str;
+	const char* argv[1];
+
+	CommandLine command_line;
 	ConfigPtr config;
-	// Only init these sections for our tests
-	std::vector<std::string> sections{"dosbox", "cpu",      "mixer",
-	                                  "midi",   "sblaster", "speaker",
-	                                  "serial", "dos",      "autoexec"};
 };
 
 #endif

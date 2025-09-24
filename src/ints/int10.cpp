@@ -926,7 +926,7 @@ static void SetupTandyBios()
 	}
 }
 
-void INT10_Init([[maybe_unused]] Section* sec)
+void INT10_Init()
 {
 	INT10_SetupPalette();
 

@@ -280,7 +280,7 @@ static Bitu num_rqueued_devices = 0;
 
 static PCI_Device* rqueued_devices[max_rqueued_devices];
 
-class PCI final : public ModuleBase {
+class PCI {
 private:
 	bool initialized = false;
 
@@ -290,18 +290,18 @@ private:
 	CALLBACK_HandlerObject callback_pci;
 
 public:
-	PhysPt GetPModeCallbackPointer(void)
+	PhysPt GetPModeCallbackPointer()
 	{
 		return RealToPhysical(callback_pci.Get_RealPointer());
 	}
 
-	bool IsInitialized(void)
+	bool IsInitialized()
 	{
 		return initialized;
 	}
 
 	// Set up port handlers and configuration data
-	void InitializePCI(void)
+	void InitializePCI()
 	{
 		// Install PCI-addressing ports
 		PCI_WriteHandler[0].Install(port_num_pci_config_address,
@@ -389,7 +389,7 @@ public:
 		return -1;
 	}
 
-	void Deinitialize(void)
+	void Deinitialize()
 	{
 		initialized           = false;
 		pci_devices_installed = 0;
@@ -471,7 +471,7 @@ public:
 		}
 	}
 
-	PCI(Section* configuration) : ModuleBase(configuration), callback_pci{}
+	PCI() : callback_pci{}
 	{
 		pci_devices_installed = 0;
 
@@ -499,7 +499,7 @@ public:
 
 static std::unique_ptr<PCI> pci_interface = {};
 
-PhysPt PCI_GetPModeInterface(void)
+PhysPt PCI_GetPModeInterface()
 {
 	if (pci_interface) {
 		return pci_interface->GetPModeCallbackPointer();
@@ -543,9 +543,8 @@ void PCI_Destroy()
 	pci_interface = {};
 }
 
-void PCI_Init(Section* section)
+void PCI_Init()
 {
-	assert(section);
-	pci_interface = std::make_unique<PCI>(section);
+	pci_interface = std::make_unique<PCI>();
 }
 

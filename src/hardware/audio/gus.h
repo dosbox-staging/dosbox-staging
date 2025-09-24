@@ -4,7 +4,11 @@
 #ifndef DOSBOX_GUS_H
 #define DOSBOX_GUS_H
 
-void GUS_AddConfigSection(const ConfigPtr &conf);
+#include "config/config.h"
+
+void GUS_AddConfigSection(const ConfigPtr& conf);
+void GUS_Init();
+void GUS_Destroy();
 
 void GUS_NotifyLockMixer();
 void GUS_NotifyUnlockMixer();

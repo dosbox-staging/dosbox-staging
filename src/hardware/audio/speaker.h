@@ -7,5 +7,7 @@
 #include "config/config.h"
 
 void SPEAKER_AddConfigSection(const ConfigPtr& conf);
+void SPEAKER_Init();
+void SPEAKER_Destroy();
 
 #endif // DOSBOX_SPEAKER_H

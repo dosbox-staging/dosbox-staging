@@ -553,10 +553,9 @@ static void handle_capture_video_event(bool pressed)
 	}
 }
 
-static void capture_init(Section* sec)
+void CAPTURE_Init()
 {
-	assert(sec);
-	const auto section = dynamic_cast<SectionProp*>(sec);
+	const auto section = get_section("capture");
 
 	auto capture_path = section->GetPath("capture_dir");
 
@@ -575,7 +574,7 @@ static void capture_init(Section* sec)
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
 }
 
-static void capture_destroy([[maybe_unused]] Section* section)
+void CAPTURE_Destroy()
 {
 	if (capture.state.audio == CaptureState::InProgress) {
 		capture_audio_finalise();
@@ -599,11 +598,11 @@ static void capture_destroy([[maybe_unused]] Section* section)
 	capture.reset();
 }
 
-static void notify_capture_setting_updated(SectionProp* section,
+static void notify_capture_setting_updated([[maybe_unused]] SectionProp* section,
                                            [[maybe_unused]] const std::string& prop_name)
 {
-	capture_destroy(section);
-	capture_init(section);
+	CAPTURE_Destroy();
+	CAPTURE_Init();
 }
 
 static void init_key_mappings()
@@ -691,9 +690,8 @@ void CAPTURE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("capture", capture_init);
+	auto section = conf->AddSection("capture");
 	section->AddUpdateHandler(notify_capture_setting_updated);
-	section->AddDestroyHandler(capture_destroy);
 
 	init_capture_dosbox_settings(*section);
 	init_key_mappings();

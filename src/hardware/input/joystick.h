@@ -12,7 +12,8 @@
 #include "config/setup.h"
 
 void JOYSTICK_AddConfigSection(const ConfigPtr& conf);
-void JOYSTICK_Init(Section* sec);
+void JOYSTICK_Init();
+void JOYSTICK_Destroy();
 
 void JOYSTICK_Enable(uint8_t which, bool enabled);
 

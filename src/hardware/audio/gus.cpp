@@ -1574,34 +1574,33 @@ static void init_gus_dosbox_settings(SectionProp& secprop)
 	        "instead.");
 }
 
-static void gus_init(Section* sec)
+void GUS_Init()
 {
-	assert(sec);
-	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
-	if (!conf || !conf->GetBool("gus")) {
+	const auto section = get_section("gus");
+	if (!section->GetBool("gus")) {
 		return;
 	}
 
 	// Read the GUS config settings
-	const auto port = static_cast<uint16_t>(conf->GetHex("gusbase"));
+	const auto port = static_cast<uint16_t>(section->GetHex("gusbase"));
 
-	const auto dma = static_cast<uint8_t>(conf->GetInt("gusdma"));
-	// The conf system handles invalid settings, so just assert validity
+	const auto dma = static_cast<uint8_t>(section->GetInt("gusdma"));
+	// The section system handles invalid settings, so just assert validity
 	assert(contains(DmaAddresses, dma));
 
-	auto irq = static_cast<uint8_t>(conf->GetInt("gusirq"));
-	// The conf system handles invalid settings, so just assert validity
+	auto irq = static_cast<uint8_t>(section->GetInt("gusirq"));
+	// The section system handles invalid settings, so just assert validity
 	assert(contains(IrqAddresses, irq));
 
-	const std::string ultradir = conf->GetString("ultradir");
+	const std::string ultradir = section->GetString("ultradir");
 
-	const std::string filter_prefs = conf->GetString("gus_filter");
+	const std::string filter_prefs = section->GetString("gus_filter");
 
 	// Instantiate the GUS with the settings
 	gus = std::make_unique<Gus>(port, dma, irq, ultradir.c_str(), filter_prefs);
 }
 
-static void gus_destroy([[maybe_unused]] Section* sec)
+void GUS_Destroy()
 {
 	// GUS destroy is run when the user wants to deactivate the GUS:
 	// C:\> config -set gus=false
@@ -1618,9 +1617,9 @@ static void gus_destroy([[maybe_unused]] Section* sec)
 	}
 }
 
-static void gus_evict(Section* sec)
+static void gus_evict([[maybe_unused]] Section* sec)
 {
-	gus_destroy(sec);
+	GUS_Destroy();
 	set_section_property_value("gus", "gus", "off");
 }
 
@@ -1633,8 +1632,8 @@ static void notify_gus_setting_updated(SectionProp* section,
 		}
 
 	} else {
-		gus_destroy(section);
-		gus_init(section);
+		GUS_Destroy();
+		GUS_Init();
 	}
 }
 
@@ -1642,9 +1641,7 @@ void GUS_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("gus", gus_init);
-
-	section->AddDestroyHandler(gus_destroy);
+	auto section = conf->AddSection("gus");
 	section->AddUpdateHandler(notify_gus_setting_updated);
 
 	init_gus_dosbox_settings(*section);

@@ -3558,7 +3558,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 	case OplMode::Opl3:
 	case OplMode::Opl3Gold:
 	case OplMode::Esfm: {
-		OPL_Init(section, oplmode);
+		OPL_Init(oplmode);
 		auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
 		assert(opl_channel);
 
@@ -3840,14 +3840,14 @@ void init_sblaster_dosbox_settings(SectionProp& secprop)
 	        "Other Sound Blaster models don't allow toggling the filter in software.");
 }
 
-static void sblaster_init(Section* sec)
+void SBLASTER_Init()
 {
 	MIXER_LockMixerThread();
-	sblaster = std::make_unique<SoundBlaster>(sec);
+	sblaster = std::make_unique<SoundBlaster>(get_section("sblaster"));
 	MIXER_UnlockMixerThread();
 }
 
-static void sblaster_destroy([[maybe_unused]] Section* sec)
+void SBLASTER_Destroy()
 {
 	if (sblaster) {
 		MIXER_LockMixerThread();
@@ -3858,15 +3858,15 @@ static void sblaster_destroy([[maybe_unused]] Section* sec)
 
 static void sblaster_evict([[maybe_unused]] Section* sec)
 {
-	sblaster_destroy(sec);
+	SBLASTER_Destroy();
 	set_section_property_value(SblasterSectionName, "sbtype", "none");
 }
 
-static void notify_sblaster_setting_updated(SectionProp* section,
+static void notify_sblaster_setting_updated([[maybe_unused]] SectionProp* section,
                                             [[maybe_unused]] const std::string& prop_name)
 {
-	sblaster_destroy(section);
-	sblaster_init(section);
+	SBLASTER_Destroy();
+	SBLASTER_Init();
 }
 
 static void register_sblaster_text_messages()
@@ -3896,9 +3896,7 @@ void SBLASTER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection(SblasterSectionName, sblaster_init);
-
-	section->AddDestroyHandler(sblaster_destroy);
+	auto section = conf->AddSection(SblasterSectionName);
 	section->AddUpdateHandler(notify_sblaster_setting_updated);
 
 	init_sblaster_dosbox_settings(*section);

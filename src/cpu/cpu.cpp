@@ -18,11 +18,7 @@
 #include "fpu/fpu.h"
 #include "gui/mapper.h"
 #include "gui/titlebar.h"
-#include "hardware/dma.h"
-#include "hardware/input/keyboard.h"
-#include "hardware/pci_bus.h"
 #include "hardware/pic.h"
-#include "hardware/video/vga.h"
 #include "lazyflags.h"
 #include "misc/support.h"
 #include "misc/video.h"
@@ -3206,25 +3202,15 @@ bool Cpu::initialised = false;
 
 static std::unique_ptr<Cpu> cpu_instance = {};
 
-static void cpu_init(Section* section)
+void CPU_Init()
 {
-	cpu_instance = std::make_unique<Cpu>(section);
+	auto section = get_section("cpu");
 
-#if C_FPU
-	FPU_Init(section);
-#endif
-	DMA_Init();
-	VGA_Init();
-	KEYBOARD_Init();
-	PCI_Init(section);
+	cpu_instance = std::make_unique<Cpu>(section);
 }
 
-static void cpu_shutdown([[maybe_unused]] Section* section)
+void CPU_Destroy()
 {
-	PCI_Destroy();
-	VGA_Destroy();
-	DMA_Destroy();
-
 #if C_DYNAMIC_X86
 	CPU_Core_Dyn_X86_Cache_Close();
 #elif C_DYNREC
@@ -3234,16 +3220,11 @@ static void cpu_shutdown([[maybe_unused]] Section* section)
 	cpu_instance.reset();
 }
 
-static void notify_cpu_setting_updated(SectionProp* section,
+static void notify_cpu_setting_updated([[maybe_unused]] SectionProp* section,
                                        [[maybe_unused]] const std::string& prop_name)
 {
-#if C_DYNAMIC_X86
-	CPU_Core_Dyn_X86_Cache_Close();
-#elif C_DYNREC
-	CPU_Core_Dynrec_Cache_Close();
-#endif
-
-	cpu_instance = std::make_unique<Cpu>(section);
+	CPU_Destroy();
+	CPU_Init();
 }
 
 void init_cpu_dosbox_settings(SectionProp& secprop)
@@ -3410,9 +3391,9 @@ void CPU_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto sec = conf->AddSection("cpu", cpu_init);
-	sec->AddDestroyHandler(cpu_shutdown);
-	sec->AddUpdateHandler(notify_cpu_setting_updated);
+	auto section = conf->AddSection("cpu");
 
-	init_cpu_dosbox_settings(*sec);
+	section->AddUpdateHandler(notify_cpu_setting_updated);
+
+	init_cpu_dosbox_settings(*section);
 }

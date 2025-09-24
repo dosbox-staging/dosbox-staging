@@ -604,22 +604,17 @@ public:
 
 static std::unique_ptr<JOYSTICK> joystick = nullptr;
 
-void joystick_init(Section* section)
+void JOYSTICK_Init()
 {
-	BIOS_Init(section);
-	INT10_Init(section);
-
-	// Must be after INT10 as it uses CurMode
-	MOUSE_Init(section);
+	const auto section = get_section("joystick");
+	assert(section);
 
 	joystick = std::make_unique<JOYSTICK>(section);
 }
 
-static void joystick_destroy([[maybe_unused]] Section *section)
+void JOYSTICK_Destroy()
 {
 	joystick = {};
-
-	BIOS_Destroy();
 }
 
 static void notify_joystick_setting_updated(SectionProp* section, [[maybe_unused]] const std::string& prop_name)
@@ -708,9 +703,7 @@ void JOYSTICK_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("joystick", joystick_init);
-
-	section->AddDestroyHandler(joystick_destroy);
+	auto section = conf->AddSection("joystick");
 	section->AddUpdateHandler(notify_joystick_setting_updated);
 
 	init_joystick_dosbox_settings(*section);

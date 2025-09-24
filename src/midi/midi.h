@@ -250,13 +250,18 @@ struct MidiWork {
 };
 
 void FSYNTH_AddConfigSection(const ConfigPtr& conf);
+void FSYNTH_Init();
 
 #if C_MT32EMU
 void MT32_AddConfigSection(const ConfigPtr& conf);
+void MT32_Init();
 #endif
 
 void SOUNDCANVAS_AddConfigSection(const ConfigPtr& conf);
+void SOUNDCANVAS_Init();
 
 void MIDI_AddConfigSection(const ConfigPtr& conf);
+void MIDI_Init();
+void MIDI_Destroy();
 
 #endif

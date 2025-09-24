@@ -26,18 +26,21 @@
 #include "dos/dos.h"
 #include "dos/dos_locale.h"
 #include "dos/programs.h"
+#include "fpu/fpu.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/render.h"
 #include "hardware/audio/gus.h"
-#include "hardware/audio/innovation.h"
 #include "hardware/audio/imfc.h"
+#include "hardware/audio/innovation.h"
 #include "hardware/audio/opl.h"
 #include "hardware/audio/pcspeaker.h"
 #include "hardware/audio/soundblaster.h"
 #include "hardware/audio/speaker.h"
 #include "hardware/cmos.h"
+#include "hardware/dma.h"
 #include "hardware/input/joystick.h"
+#include "hardware/input/keyboard.h"
 #include "hardware/input/mouse.h"
 #include "hardware/memory.h"
 #include "hardware/network/ipx.h"
@@ -48,7 +51,9 @@
 #include "hardware/serialport/serialport.h"
 #include "hardware/timer.h"
 #include "hardware/video/reelmagic/reelmagic.h"
+#include "hardware/video/vga.h"
 #include "hardware/video/voodoo.h"
+#include "ints/bios.h"
 #include "ints/int10.h"
 #include "midi/midi.h"
 #include "misc/cross.h"
@@ -62,8 +67,6 @@
 
 MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
-
-void SHELL_Init();
 
 static LoopHandler * loop;
 
@@ -577,8 +580,11 @@ static void DOSBOX_RealInit(Section* sec)
 	}
 }
 
-static void dosbox_init(Section* section)
+static void dosbox_init()
 {
+	auto section = get_section("dosbox");
+	assert(section);
+
 	DOSBOX_RealInit(section);
 
 	MSG_LoadMessages();
@@ -593,7 +599,7 @@ static void dosbox_init(Section* section)
 	CMOS_Init(section);
 }
 
-static void dosbox_shutdown([[maybe_unused]] Section* section)
+static void dosbox_destroy()
 {
 	CMOS_Destroy();
 	TIMER_Destroy();
@@ -632,10 +638,8 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 
 	using enum Property::Changeable::Value;
 
-	auto section = conf->AddSection("dosbox", dosbox_init);
-
+	auto section = conf->AddSection("dosbox");
 	section->AddUpdateHandler(notify_dosbox_setting_updated);
-	section->AddDestroyHandler(dosbox_shutdown);
 
 	auto pstring = section->AddString("language", Always, "auto");
 
@@ -691,10 +695,6 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 
 	pstring = section->AddPath("captures", Deprecated, "capture");
 	pstring->SetHelp("Moved to [capture] section and renamed to 'capture_dir'.");
-
-#if C_DEBUGGER
-	LOG_StartUp();
-#endif
 
 	auto pint = section->AddInt("memsize", OnlyAtStart, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
@@ -872,7 +872,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "  slow:     Double density (DD) floppy speed (~30 kB/s)");
 }
 
-void DOSBOX_InitAllModuleConfigsAndMessages()
+void DOSBOX_InitModuleConfigsAndMessages()
 {
 	// The [sdl] section gets initialised first in `sdlmain.cpp`, then
 	// this init method gets called.
@@ -880,25 +880,17 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	add_dosbox_config_section(control);
 
 	RENDER_AddConfigSection(control);
-
-	VGA_AddCompositeSettings(*control);
-
+	COMPOSITE_AddConfigSection(*control);
 	CPU_AddConfigSection(control);
-
 	VOODOO_AddConfigSection(control);
-
 	CAPTURE_AddConfigSection(control);
-
 	MOUSE_AddConfigSection(control);
-
 	MIXER_AddConfigSection(control);
-
-	FSYNTH_AddConfigSection(control);
 
 #if C_MT32EMU
 	MT32_AddConfigSection(control);
 #endif
-
+	FSYNTH_AddConfigSection(control);
 	SOUNDCANVAS_AddConfigSection(control);
 
 	// The MIDI section must be added *after* the FluidSynth, MT-32 and
@@ -911,33 +903,17 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	DEBUG_AddConfigSection(control);
 #endif
 
-	// Configure Sound Blaster and ESS
 	SBLASTER_AddConfigSection(control);
-
-	// Configure CMS/Game Blaster, OPL and ESFM
-	// Must be called after SBLASTER_AddConfigSection
-	OPL_AddConfigSettings(control);
-
-	// Configure Gravis UltraSound emulation
+	OPL_AddConfigSettings();
 	GUS_AddConfigSection(control);
-
-	// Configure the IBM Music Feature emulation
 	IMFC_AddConfigSection(control);
-
-	// Configure Innovation SSI-2001 emulation
 	INNOVATION_AddConfigSection(control);
-
-	DISKNOISE_AddConfigSection(control);
-
-	// Configure PS/1, Tandy/PCjr , LPT DAC, and PC speaker audio emulation
 	SPEAKER_AddConfigSection(control);
 
+	DISKNOISE_AddConfigSection(control);
 	REELMAGIC_AddConfigSection(control);
-
 	JOYSTICK_AddConfigSection(control);
-
 	SERIAL_AddConfigSection(control);
-
 	DOS_AddConfigSection(control);
 
 #if C_IPX
@@ -946,7 +922,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	ETHERNET_AddConfigSection(control);
 
-	control->AddAutoexecSection(AUTOEXEC_Init);
+	control->AddAutoexecSection();
 
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 	        "Each line in this section is executed at startup as a DOS command.\n"
@@ -959,11 +935,110 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	// Needs to be initialised early before the config settings get applied
 	PROGRAMS_AddMessages();
+}
 
-	// Initialize the uptime counter when launching the first shell. This
-	// ensures that slow-performing configurable tasks (like loading MIDI
-	// SF2 files) have already been performed and won't affect this time.
-	DOSBOX_GetUptime();
+void DOSBOX_InitModules()
+{
+	dosbox_init();
 
-	control->SetStartUp(&SHELL_Init);
+#if C_DEBUGGER
+	LOG_StartUp();
+	LOG_Init();
+#endif
+
+	RENDER_Init();
+	COMPOSITE_Init();
+
+	CPU_Init();
+#if C_FPU
+	FPU_Init();
+#endif
+	DMA_Init();
+	VGA_Init();
+	KEYBOARD_Init();
+	PCI_Init();
+
+	VOODOO_Init();
+	CAPTURE_Init();
+
+	MIXER_Init();
+#if C_MT32EMU
+	MT32_Init();
+#endif
+	FSYNTH_Init();
+	SOUNDCANVAS_Init();
+	MIDI_Init();
+
+#if C_DEBUGGER
+	DEBUG_Init();
+#endif
+
+	SBLASTER_Init();
+	GUS_Init();
+	IMFC_Init();
+	INNOVATION_Init();
+	SPEAKER_Init();
+
+	REELMAGIC_Init();
+
+	BIOS_Init();
+	INT10_Init();
+	MOUSE_Init();
+	JOYSTICK_Init();
+
+	DISKNOISE_Init();
+	SERIAL_Init();
+	DOS_Init();
+
+#if C_IPX
+	IPX_Init();
+#endif
+	ETHERNET_Init();
+
+	AUTOEXEC_Init();
+}
+
+void DOSBOX_DestroyModules()
+{
+	ETHERNET_Destroy();
+#if C_IPX
+	IPX_Destroy();
+#endif
+
+	DOS_Destroy();
+	SERIAL_Destroy();
+	DISKNOISE_Destroy();
+
+	JOYSTICK_Destroy();
+	BIOS_Destroy();
+
+	REELMAGIC_Destroy();
+
+	SPEAKER_Destroy();
+	INNOVATION_Destroy();
+	IMFC_Destroy();
+	GUS_Destroy();
+	SBLASTER_Destroy();
+
+#if C_DEBUGGER
+	DEBUG_Destroy();
+#endif
+	MIDI_Destroy();
+	MIXER_Destroy();
+
+	CAPTURE_Destroy();
+	VOODOO_Destroy();
+
+	PCI_Destroy();
+	VGA_Destroy();
+	DMA_Destroy();
+	CPU_Destroy();
+
+#if C_DEBUGGER
+	LOG_Destroy();
+#endif
+
+	dosbox_destroy();
+
+	control = {};
 }

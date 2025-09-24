@@ -2703,11 +2703,6 @@ static void mixer_thread_loop()
 	}
 }
 
-static void stop_mixer([[maybe_unused]] Section* sec)
-{
-	MIXER_CloseAudioDevice();
-}
-
 [[maybe_unused]] static const char* to_string(const MixerState s)
 {
 	switch (s) {
@@ -2891,9 +2886,9 @@ static void init_denoiser(bool enabled)
 	}
 }
 
-static void mixer_init(Section* sec)
+void MIXER_Init()
 {
-	auto section = static_cast<SectionProp*>(sec);
+	auto section = get_section("mixer");
 	assert(section);
 
 	MIXER_LockMixerThread();
@@ -2981,6 +2976,11 @@ static void mixer_init(Section* sec)
 	MIXER_SetCrossfeedPreset(new_crossfeed_preset);
 
 	MIXER_UnlockMixerThread();
+}
+
+void MIXER_Destroy()
+{
+	MIXER_CloseAudioDevice();
 }
 
 static void notify_mixer_setting_updated(SectionProp* section,
@@ -3246,12 +3246,9 @@ void MIXER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto sec = conf->AddSection("mixer", mixer_init);
+	auto section = conf->AddSection("mixer");
+	section->AddUpdateHandler(notify_mixer_setting_updated);
 
-	sec->AddUpdateHandler(notify_mixer_setting_updated);
-	sec->AddDestroyHandler(stop_mixer);
-
-	init_mixer_dosbox_settings(*sec);
-
+	init_mixer_dosbox_settings(*section);
 	register_mixer_text_messages();
 }

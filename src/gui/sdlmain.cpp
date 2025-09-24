@@ -2546,7 +2546,7 @@ static void gui_destroy()
 	remove_window();
 }
 
-static void sdl_section_destroy([[maybe_unused]] Section* section)
+static void sdl_section_destroy()
 {
 	gui_destroy();
 	MAPPER_Destroy();
@@ -3166,11 +3166,9 @@ static void set_fullscreen_mode()
 	}
 }
 
-static void sdl_section_init(Section* sec)
+static void sdl_section_init()
 {
-	assert(sec);
-
-	SectionProp* section = static_cast<SectionProp*>(sec);
+	auto section = get_section("sdl");
 
 	sdl.active          = false;
 	sdl.updating        = false;
@@ -3263,8 +3261,7 @@ static void sdl_section_init(Section* sec)
 	// Notify MOUSE subsystem that it can start now
 	MOUSE_NotifyReadyGFX();
 
-	auto conf = dynamic_cast<SectionProp*>(sec);
-	TITLEBAR_ReadConfig(*conf);
+	TITLEBAR_ReadConfig(*section);
 }
 
 void GFX_RegenerateWindow(Section* sec)
@@ -3293,7 +3290,7 @@ static void notify_sdl_setting_updated(SectionProp* section,
 	} else {
 		// TODO add support for the rest of the settings later
 		gui_destroy();
-		sdl_section_init(section);
+		sdl_section_init();
 	}
 }
 
@@ -4084,10 +4081,8 @@ static void register_sdl_text_messages()
 //
 static void init_sdl_config_section()
 {
-	auto section = control->AddSection("sdl", sdl_section_init);
-
+	auto section = control->AddSection("sdl");
 	section->AddUpdateHandler(notify_sdl_setting_updated);
-	section->AddDestroyHandler(sdl_section_destroy);
 
 	using enum Property::Changeable::Value;
 
@@ -4447,7 +4442,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 
 #if C_DEBUGGER
 	// shutdown curses
-	DEBUG_Destroy(nullptr);
+	DEBUG_Destroy();
 #endif // C_DEBUGGER
 
 #ifdef WIN32
@@ -5014,13 +5009,13 @@ int sdl_main(int argc, char* argv[])
 
 		// Register the config sections and messages of all the other
 		// modules
-		DOSBOX_InitAllModuleConfigsAndMessages();
+		DOSBOX_InitModuleConfigsAndMessages();
 
 		maybe_write_primary_config(*arguments);
 
-		// After DOSBOX_InitAllModuleConfigsAndMessages() is done, all
-		// the config sections have been registered, so we're ready to
-		// parse the config files.
+		// After DOSBOX_InitModuleConfigsAndMessages() all the config
+		// sections have been registered, so we're ready to parse the
+		// config files.
 		//
 		control->ParseConfigFiles(GetConfigDir());
 
@@ -5053,8 +5048,8 @@ int sdl_main(int argc, char* argv[])
 
 		control->ParseEnv();
 
-		// Execute all registered section init functions
-		control->Init();
+		sdl_section_init();
+		DOSBOX_InitModules();
 
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
@@ -5064,11 +5059,18 @@ int sdl_main(int argc, char* argv[])
 			MAPPER_DisplayUI();
 		}
 
-		// Start emulation and run it until shutdown
-		control->StartUp();
+		// Initialize the uptime counter when launching the first shell.
+		// This ensures that slow-performing configurable tasks (like
+		// loading MIDI SF2 files) have already been performed and won't
+		// affect this time.
+		DOSBOX_GetUptime();
+
+		// Start emulation
+		SHELL_InitAndRun();
 
 		// Shutdown and release
-		control.reset();
+		sdl_section_destroy();
+		DOSBOX_DestroyModules();
 
 	} catch (char* error) {
 		return_code = 1;

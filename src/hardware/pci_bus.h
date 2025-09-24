@@ -7,7 +7,6 @@
 
 #include "dosbox.h"
 
-#include "config/setup.h"
 #include "hardware/memory.h"
 
 // Start of PCI address space
@@ -99,7 +98,7 @@ public:
 	virtual Bits ParseWriteRegister(uint8_t regnum, uint8_t value) = 0;
 };
 
-void PCI_Init(Section* section);
+void PCI_Init();
 void PCI_Destroy();
 
 bool PCI_IsInitialized();

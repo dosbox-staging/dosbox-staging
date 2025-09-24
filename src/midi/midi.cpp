@@ -733,15 +733,8 @@ void MIDI_ListDevices(Program* caller)
 
 static std::unique_ptr<MIDI> midi_instance = nullptr;
 
-static void midi_destroy([[maybe_unused]] Section* sec)
+void MIDI_Init()
 {
-	midi.device = {};
-}
-
-static void midi_init([[maybe_unused]] Section* sec)
-{
-	assert(sec);
-
 	// Retry loop
 	for (;;) {
 		MPU401_Destroy();
@@ -789,15 +782,16 @@ static void midi_init([[maybe_unused]] Section* sec)
 	}
 }
 
+void MIDI_Destroy()
+{
+	midi.device = {};
+	MPU401_Destroy();
+}
+
 static void notify_midi_setting_updated([[maybe_unused]] SectionProp* section,
                                         [[maybe_unused]] const std::string& prop_name)
 {
-	midi_init(get_midi_section());
-}
-
-void MIDI_Init()
-{
-	midi_init(get_midi_section());
+	MIDI_Init();
 }
 
 static void init_mididevice_settings(SectionProp& secprop)
@@ -948,9 +942,8 @@ void MIDI_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("midi", midi_init);
+	auto section = conf->AddSection("midi");
 
-	section->AddDestroyHandler(midi_destroy);
 	section->AddUpdateHandler(notify_midi_setting_updated);
 
 	init_midi_dosbox_settings(*section);

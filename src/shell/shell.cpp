@@ -536,7 +536,8 @@ static const char* const comspec_string = "COMSPEC=Z:\\COMMAND.COM";
 static const char* const full_name      = "Z:\\COMMAND.COM";
 static const char* const init_line      = "/INIT AUTOEXEC.BAT";
 
-void SHELL_Init() {
+void SHELL_InitAndRun()
+{
 	// Generic messages, to be used by any command or DOS program
 	MSG_Add("SHELL_ILLEGAL_PATH", "Illegal path.\n");
 	MSG_Add("SHELL_ILLEGAL_FILE_NAME", "Illegal filename.\n");

@@ -1451,11 +1451,9 @@ void VGA_SetupOther()
 	}
 }
 
-static void composite_init(Section* sec)
+void COMPOSITE_Init()
 {
-	assert(sec);
-
-	const auto section = static_cast<SectionProp*>(sec);
+	const auto section = get_section("composite");
 	assert(section);
 
 	const auto state = section->GetString("composite");
@@ -1496,10 +1494,10 @@ static void composite_init(Section* sec)
 	}
 }
 
-static void notify_composite_setting_updated(SectionProp* section,
+static void notify_composite_setting_updated([[maybe_unused]] SectionProp* section,
                                              [[maybe_unused]] const std::string& prop_name)
 {
-	composite_init(section);
+	COMPOSITE_Init();
 }
 
 static void init_composite_settings(SectionProp& section)
@@ -1548,11 +1546,11 @@ static void init_composite_settings(SectionProp& section)
 	                             convergence.get_default()));
 }
 
-void VGA_AddCompositeSettings(Config& conf)
+void COMPOSITE_AddConfigSection(Config& conf)
 {
-	auto sec = conf.AddSection("composite", composite_init);
-	sec->AddUpdateHandler(notify_composite_setting_updated);
-	assert(sec);
+	auto section = conf.AddSection("composite");
 
-	init_composite_settings(*sec);
+	section->AddUpdateHandler(notify_composite_setting_updated);
+
+	init_composite_settings(*section);
 }

@@ -17,8 +17,8 @@
 // Initialization, configuration
 // ***************************************************************************
 
-void MOUSE_Init(Section *);
 void MOUSE_AddConfigSection(const ConfigPtr &);
+void MOUSE_Init();
 
 // ***************************************************************************
 // Data types

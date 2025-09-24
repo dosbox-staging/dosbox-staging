@@ -18,6 +18,6 @@ void AUTOEXEC_RefreshFile();
 // The 'name' and 'value' have to be a printable, 7-bit ASCII variables.
 void AUTOEXEC_SetVariable(const std::string& name, const std::string& value);
 
-void AUTOEXEC_Init(Section* sec);
+void AUTOEXEC_Init();
 
 #endif

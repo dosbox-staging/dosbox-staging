@@ -243,16 +243,16 @@ void Innovation::AudioCallback(const int requested_frames)
 
 static std::unique_ptr<Innovation> innovation = {};
 
-static void innovation_init(Section* sec)
+void INNOVATION_Init()
 {
-	const auto conf = static_cast<SectionProp*>(sec);
+	const auto section = get_section("innovation");
 
-	const auto model_choice          = conf->GetString("sidmodel");
-	const auto clock_choice          = conf->GetString("sidclock");
-	const auto port_choice           = conf->GetHex("sidport");
-	const auto filter_strength_6581  = conf->GetInt("6581filter");
-	const auto filter_strength_8580  = conf->GetInt("8580filter");
-	const auto channel_filter_choice = conf->GetString("innovation_filter");
+	const auto model_choice         = section->GetString("sidmodel");
+	const auto clock_choice         = section->GetString("sidclock");
+	const auto port_choice          = section->GetHex("sidport");
+	const auto filter_strength_6581 = section->GetInt("6581filter");
+	const auto filter_strength_8580 = section->GetInt("8580filter");
+	const auto channel_filter_choice = section->GetString("innovation_filter");
 
 	if (has_false(model_choice)) {
 		return;
@@ -266,16 +266,16 @@ static void innovation_init(Section* sec)
 	                                          channel_filter_choice);
 }
 
-static void innovation_destroy([[maybe_unused]] Section* sec)
+void INNOVATION_Destroy()
 {
 	innovation = {};
 }
 
-static void notify_innovation_setting_updated(SectionProp* section,
+static void notify_innovation_setting_updated([[maybe_unused]] SectionProp* section,
                                               [[maybe_unused]] const std::string& prop_name)
 {
-	innovation_destroy(section);
-	innovation_init(section);
+	INNOVATION_Destroy();
+	INNOVATION_Init();
 }
 
 static void init_innovation_dosbox_settings(SectionProp& sec_prop)
@@ -336,9 +336,7 @@ void INNOVATION_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("innovation", innovation_init);
-
-	section->AddDestroyHandler(innovation_destroy);
+	auto section = conf->AddSection("innovation");
 	section->AddUpdateHandler(notify_innovation_setting_updated);
 
 	init_innovation_dosbox_settings(*section);

@@ -242,9 +242,10 @@ static void MakePairs()
 	init_pair(PAIR_GREY_RED, COLOR_WHITE /*| FOREGROUND_INTENSITY */, COLOR_RED);
 }
 
-static void log_init(Section* sec)
+void LOG_Init()
 {
-	auto section = static_cast<SectionProp*>(sec);
+	auto section = get_section("log");
+	assert(section);
 
 	std::string logfile = section->GetString("logfile");
 
@@ -264,7 +265,7 @@ static void log_init(Section* sec)
 	}
 }
 
-static void log_destroy([[maybe_unused]] Section* sec)
+void LOG_Destroy()
 {
 	if (debuglog) {
 		fclose(debuglog);
@@ -307,8 +308,7 @@ void LOG_StartUp()
 	loggrp[LOG_REELMAGIC].front = "REELMAGIC";
 
 	// Register the log section
-	auto sect = control->AddSection("log", log_init);
-	sect->AddDestroyHandler(log_destroy);
+	auto sect = control->AddSection("log");
 
 	PropString* pstring = sect->AddString("logfile",
 	                                      Property::Changeable::Always,

@@ -844,24 +844,12 @@ static SectionProp* get_midi_section()
 	return section;
 }
 
-void mpu401_destroy([[maybe_unused]] Section* sec)
-{
-	mpu401 = {};
-}
-
 void MPU401_Destroy()
 {
 	mpu401 = {};
 }
 
-void mpu401_init([[maybe_unused]] Section* section)
-{
-	mpu401 = std::make_unique<MPU401>(get_midi_section());
-
-	section->AddDestroyHandler(mpu401_destroy);
-}
-
 void MPU401_Init()
 {
-	mpu401_init(get_midi_section());
+	mpu401 = std::make_unique<MPU401>(get_midi_section());
 }

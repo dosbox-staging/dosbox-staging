@@ -1367,38 +1367,34 @@ public:
 
 static std::unique_ptr<SerialPorts> serial_ports = {};
 
-static void serial_init(Section* section)
+void SERIAL_Init()
 {
+	auto section = get_section("serial");
+	assert(section);
+
 	serial_ports = std::make_unique<SerialPorts>(section);
 }
 
-static void serial_destroy([[maybe_unused]] Section* section)
+void SERIAL_Destroy()
 {
 	serial_ports = {};
 }
 
-static void notify_serial_setting_updated(SectionProp* section,
+static void notify_serial_setting_updated([[maybe_unused]] SectionProp* section,
                                           [[maybe_unused]] const std::string& prop_name)
 {
-	serial_destroy(section);
-	serial_init(section);
+	SERIAL_Destroy();
+	SERIAL_Init();
 }
 
-void SERIAL_AddConfigSection(const ConfigPtr& conf)
+static void add_serial_dosbox_settings(SectionProp& section)
 {
-	assert(conf);
-
 	using enum Property::Changeable::Value;
-
-	auto section = conf->AddSection("serial", serial_init);
-
-	section->AddDestroyHandler(serial_destroy);
-	section->AddUpdateHandler(notify_serial_setting_updated);
 
 	const std::vector<std::string> serials = {
 	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct"};
 
-	auto pmulti_remain = section->AddMultiValRemain("serial1", WhenIdle, " ");
+	auto pmulti_remain = section.AddMultiValRemain("serial1", WhenIdle, " ");
 	auto pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "dummy");
 	pmulti_remain->SetValue("dummy");
 	pstring->SetValues(serials);
@@ -1418,29 +1414,39 @@ void SERIAL_AddConfigSection(const ConfigPtr& conf)
 	        "connection. Valid values are 0 for TCP, and 1 for ENet reliable UDP.\n"
 	        "Example: serial1=modem listenport:5000 sock:1");
 
-	pmulti_remain = section->AddMultiValRemain("serial2", WhenIdle, " ");
+	pmulti_remain = section.AddMultiValRemain("serial2", WhenIdle, " ");
 	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "dummy");
 	pmulti_remain->SetValue("dummy");
 	pstring->SetValues(serials);
 	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
 	pmulti_remain->SetHelp("See 'serial1' ('dummy' by default).");
 
-	pmulti_remain = section->AddMultiValRemain("serial3", WhenIdle, " ");
+	pmulti_remain = section.AddMultiValRemain("serial3", WhenIdle, " ");
 	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "disabled");
 	pmulti_remain->SetValue("disabled");
 	pstring->SetValues(serials);
 	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
 	pmulti_remain->SetHelp("See 'serial1' ('disabled' by default).");
 
-	pmulti_remain = section->AddMultiValRemain("serial4", WhenIdle, " ");
+	pmulti_remain = section.AddMultiValRemain("serial4", WhenIdle, " ");
 	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "disabled");
 	pmulti_remain->SetValue("disabled");
 	pstring->SetValues(serials);
 	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
 	pmulti_remain->SetHelp("See 'serial1' ('disabled' by default).");
 
-	pstring = section->AddPath("phonebookfile", OnlyAtStart, "phonebook.txt");
+	pstring = section.AddPath("phonebookfile", OnlyAtStart, "phonebook.txt");
 	pstring->SetHelp(
 	        "File used to map fake phone numbers to addresses\n"
 	        "('phonebook.txt' by default).");
+}
+
+void SERIAL_AddConfigSection(const ConfigPtr& conf)
+{
+	assert(conf);
+
+	auto section = conf->AddSection("serial");
+	section->AddUpdateHandler(notify_serial_setting_updated);
+
+	add_serial_dosbox_settings(*section);
 }

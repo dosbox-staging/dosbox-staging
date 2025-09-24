@@ -2345,21 +2345,9 @@ Bitu DEBUG_EnableDebugger()
 	return 0;
 }
 
-void DEBUG_Destroy([[maybe_unused]] Section* section)
-{
-	CBreakpoint::DeleteAll();
-	CDebugVar::DeleteAll();
-
-	curs_set(old_cursor_state);
-
-	if (pdc_window) {
-		endwin();
-	}
-}
-
 Bitu debugCallback;
 
-static void debug_init([[maybe_unused]] Section* sec)
+void DEBUG_Init()
 {
 	DEBUG_DrawScreen();
 
@@ -2379,14 +2367,24 @@ static void debug_init([[maybe_unused]] Section* sec)
 	CALLBACK_Setup(debugCallback, DEBUG_EnableDebugger, CB_RETF, "debugger");
 }
 
+void DEBUG_Destroy()
+{
+	CBreakpoint::DeleteAll();
+	CDebugVar::DeleteAll();
+
+	curs_set(old_cursor_state);
+
+	if (pdc_window) {
+		endwin();
+	}
+}
+
 void DEBUG_AddConfigSection(const ConfigPtr& conf)
 {
    assert(conf);
 
    // TODO the [debug] section has no settings, so what's the point?
-   auto section = conf->AddSection("debug", debug_init);
-
-   section->AddDestroyHandler(DEBUG_Destroy);
+   conf->AddSection("debug");
 }
 
 // DEBUGGING VAR STUFF

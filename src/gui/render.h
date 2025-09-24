@@ -194,6 +194,7 @@ struct RenderedImage {
 extern Render render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 
+void RENDER_Init();
 void RENDER_Reinit();
 
 void RENDER_AddConfigSection(const ConfigPtr& conf);

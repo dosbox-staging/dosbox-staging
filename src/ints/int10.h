@@ -319,7 +319,7 @@ inline uint8_t CURSOR_POS_ROW(const uint8_t page)
 	return real_readb(BIOSMEM_SEG, BIOSMEM_CURSOR_POS + cursor_offset);
 }
 
-void INT10_Init(Section* sec);
+void INT10_Init();
 
 void INT10_SetupPalette();
 

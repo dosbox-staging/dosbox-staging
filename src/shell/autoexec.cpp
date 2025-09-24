@@ -518,7 +518,7 @@ std::unique_ptr<Config> specify_drive_conf()
 	// Define the [drive] section
 	const AutoMountSettings defaults = {};
 
-	const auto prop = conf->AddSection("drive", nullptr);
+	const auto prop = conf->AddSection("drive");
 
 	// Define the allowed keys and types
 	constexpr auto OnStartup = Property::Changeable::OnlyAtStart;
@@ -798,8 +798,11 @@ void AUTOEXEC_RefreshFile()
 	}
 }
 
-void AUTOEXEC_Init(Section* sec)
+void AUTOEXEC_Init()
 {
-	autoexec_module = std::make_unique<AutoExecModule>(sec);
+	auto section = get_section("autoexec");
+	assert(section);
+
+	autoexec_module = std::make_unique<AutoExecModule>(section);
 	AUTOEXEC_RefreshFile();
 }

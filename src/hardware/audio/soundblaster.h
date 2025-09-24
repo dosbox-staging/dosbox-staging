@@ -4,10 +4,13 @@
 #ifndef DOSBOX_SBLASTER_H
 #define DOSBOX_SBLASTER_H
 
-#include "config/setup.h"
+#include "config/config.h"
 
-bool SBLASTER_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
 void SBLASTER_AddConfigSection(const ConfigPtr &conf);
+void SBLASTER_Init();
+void SBLASTER_Destroy();
+
+bool SBLASTER_GetAddress(uint16_t& sbaddr, uint8_t& sbirq, uint8_t& sbdma);
 
 void SBLASTER_NotifyLockMixer();
 void SBLASTER_NotifyUnlockMixer();

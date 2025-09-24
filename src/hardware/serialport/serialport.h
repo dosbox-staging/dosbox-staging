@@ -480,5 +480,7 @@ private:
 };
 
 void SERIAL_AddConfigSection(const ConfigPtr& conf);
+void SERIAL_Init();
+void SERIAL_Destroy();
 
 #endif // DOSBOX_SERIALPORT_H

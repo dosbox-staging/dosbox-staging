@@ -494,13 +494,6 @@ void DiskNoises::SetLastIoPath(const std::string& path,
 	}
 }
 
-static void disknoise_destroy([[maybe_unused]] Section* sec)
-{
-	MIXER_LockMixerThread();
-	disk_noises.reset();
-	MIXER_UnlockMixerThread();
-}
-
 static DiskNoiseMode get_disk_noise_mode(const std::string& mode)
 {
     if (has_true(mode)) {
@@ -513,8 +506,9 @@ static DiskNoiseMode get_disk_noise_mode(const std::string& mode)
 	}
 }
 
-static void disknoise_init(Section* section)
+void DISKNOISE_Init()
 {
+	const auto section = get_section("disknoise");
 	assert(section);
 
 	constexpr auto MaxNumSeekSamples = 9;
@@ -552,8 +546,13 @@ static void disknoise_init(Section* section)
 	                                           floppy_spin_up,
 	                                           floppy_spin,
 	                                           floppy_seek_samples);
+}
 
-	section->AddDestroyHandler(disknoise_destroy);
+void DISKNOISE_Destroy()
+{
+	MIXER_LockMixerThread();
+	disk_noises.reset();
+	MIXER_UnlockMixerThread();
 }
 
 static void init_disknoise_dosbox_settings(SectionProp& secprop)
@@ -585,7 +584,7 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("disknoise", disknoise_init);
+	auto section = conf->AddSection("disknoise");
 
 	init_disknoise_dosbox_settings(*section);
 }

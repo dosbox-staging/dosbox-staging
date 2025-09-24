@@ -544,15 +544,13 @@ static void set_scan_and_pixel_doubling()
 
 static bool render_initialised = false;
 
-static void render_init(Section* section);
-
 void RENDER_Reinit()
 {
 	if (!render_initialised) {
 		return;
 	};
 
-	render_init(get_render_section());
+	RENDER_Init();
 
 	render_callback(GFX_CallbackReset);
 	VGA_SetupDrawing(0);
@@ -1411,9 +1409,9 @@ void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
 	set_section_property_value("render", "monochrome_palette", to_string(palette));
 }
 
-static void render_init(Section* sec)
+void RENDER_Init()
 {
-	SectionProp* section = static_cast<SectionProp*>(sec);
+	auto section = get_section("render");
 	assert(section);
 
 	set_aspect_ratio_correction(section);
@@ -1466,10 +1464,9 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto sec = conf->AddSection("render", render_init);
-	assert(sec);
+	auto section = conf->AddSection("render");
 
-	sec->AddUpdateHandler(notify_render_setting_updated);
+	section->AddUpdateHandler(notify_render_setting_updated);
 
 	MAPPER_AddHandler(toggle_stretch_axis,
 	                  SDL_SCANCODE_UNKNOWN,
@@ -1495,5 +1492,5 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 	                  "reloadshader",
 	                  "Reload Shader");
 
-	init_render_settings(*sec);
+	init_render_settings(*section);
 }
