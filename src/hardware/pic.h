@@ -65,7 +65,8 @@ static inline void PIC_UpdateAtomicIndex()
 	atomic_pic_index.store(PIC_FullIndex(), std::memory_order_release);
 }
 
-void PIC_Init(Section*);
+void PIC_Init(Section* section);
+void PIC_Destroy();
 
 void PIC_ActivateIRQ(uint8_t irq);
 void PIC_DeActivateIRQ(uint8_t irq);

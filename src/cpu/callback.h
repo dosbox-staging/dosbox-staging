@@ -65,7 +65,7 @@ static inline PhysPt CALLBACK_GetBase() {
 	return (CB_SEG << 4) + CB_SOFFSET;
 }
 
-void CALLBACK_Init(Section* sec);
+void CALLBACK_Init(Section* section);
 
 callback_number_t CALLBACK_Allocate();
 void CALLBACK_DeAllocate(const callback_number_t in);

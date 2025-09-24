@@ -913,12 +913,6 @@ std::unique_ptr<Program> CONFIG_ProgramCreate()
 	return ProgramCreate<CONFIG>();
 }
 
-void PROGRAMS_Destroy([[maybe_unused]] Section* sec)
-{
-	internal_progs_comdata.clear();
-	internal_progs.clear();
-}
-
 void PROGRAMS_AddMessages()
 {
 	// List config
@@ -1100,12 +1094,15 @@ void PROGRAMS_AddMessages()
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED_VALUES", "Deprecated values");
 }
 
-void PROGRAMS_Init(Section* sec)
+void PROGRAMS_Init()
 {
-	// Setup a special callback to start virtual programs
+	// Set up a special callback to start virtual programs
 	call_program = CALLBACK_Allocate();
 	CALLBACK_Setup(call_program, &PROGRAMS_Handler, CB_RETF, "internal program");
+}
 
-	// TODO Cleanup -- allows unit tests to run indefinitely & cleanly
-	sec->AddDestroyHandler(PROGRAMS_Destroy);
+void PROGRAMS_Destroy()
+{
+	internal_progs_comdata.clear();
+	internal_progs.clear();
 }

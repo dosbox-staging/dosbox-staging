@@ -190,4 +190,6 @@ std::string format_number(const size_t num);
 
 std::string shorten_path(const std::string& path, const size_t max_len);
 
+void SHELL_Init();
+
 #endif

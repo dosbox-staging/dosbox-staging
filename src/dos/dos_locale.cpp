@@ -1654,7 +1654,7 @@ void DOS_Locale_Init(Section* section)
 	dos_locale = std::make_unique<DOS_Locale>(section);
 }
 
-void DOS_Locale_Destroy([[maybe_unused]] Section* section)
+void DOS_Locale_Destroy()
 {
 	dos_locale = {};
 }

@@ -1439,10 +1439,8 @@ bool MSCDEX_HasMediaChanged(uint8_t subUnit)
 	return has_changed;
 }
 
-void MSCDEX_Init(Section* sec)
+void MSCDEX_Init()
 {
-	assert(sec);
-
 	// Register the mscdex device
 	DOS_Device* newdev = new device_MSCDEX();
 	DOS_AddDevice(newdev);
@@ -1455,7 +1453,7 @@ void MSCDEX_Init(Section* sec)
 	mscdex = new CMscdex;
 }
 
-void MSCDEX_Destroy([[maybe_unused]] Section* section)
+void MSCDEX_Destroy()
 {
 	std::for_each(CDROM::cdroms.begin(),
 	              CDROM::cdroms.end(),

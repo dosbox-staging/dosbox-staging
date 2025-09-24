@@ -1844,36 +1844,36 @@ void dos_init(Section* section)
 	DOS_Files_Init(section);
 	DOS_Locale_Init(section);
 
-	MSCDEX_Init(section);
+	MSCDEX_Init();
 	DRIVES_Init(section);
-	CDROM_Image_Init(section);
+	CDROM_Image_Init();
 }
 
 static void dos_destroy([[maybe_unused]] Section* section)
 {
-	CDROM_Image_Destroy(section);
-	MSCDEX_Destroy(section);
+	CDROM_Image_Destroy();
+	MSCDEX_Destroy();
 
-	DOS_Locale_Destroy(section);
+	DOS_Locale_Destroy();
 
-	EMS_Destroy(section);
-	XMS_Destroy(section);
+	EMS_Destroy();
+	XMS_Destroy();
 
 	dos_module = {};
 }
 
 static void notify_dos_setting_updated(SectionProp* section,
-                                       const std::string& prop_name)
+                                       [[maybe_unused]] const std::string& prop_name)
 {
-	DOS_Locale_Destroy(section);
+	DOS_Locale_Destroy();
 	DOS_Locale_Init(section);
 
 	DOS_Files_Init(section);
 
-	EMS_Destroy(section);
+	EMS_Destroy();
 	EMS_Init(section);
 
-	XMS_Destroy(section);
+	XMS_Destroy();
 	XMS_Init(section);
 
 	// The MSCDEX, DRIVES, and CDROM_Image modules are only initalised

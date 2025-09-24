@@ -3237,8 +3237,13 @@ static void cpu_shutdown([[maybe_unused]] Section* section)
 static void notify_cpu_setting_updated(SectionProp* section,
                                        [[maybe_unused]] const std::string& prop_name)
 {
-	cpu_shutdown(section);
-	cpu_init(section);
+#if C_DYNAMIC_X86
+	CPU_Core_Dyn_X86_Cache_Close();
+#elif C_DYNREC
+	CPU_Core_Dynrec_Cache_Close();
+#endif
+
+	cpu_instance = std::make_unique<Cpu>(section);
 }
 
 void init_cpu_dosbox_settings(SectionProp& secprop)

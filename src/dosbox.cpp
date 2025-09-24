@@ -67,8 +67,6 @@ void LOG_StartUp();
 
 void DEBUG_Init(Section*);
 
-void SHELL_Init();
-
 static LoopHandler * loop;
 
 static struct {
@@ -581,10 +579,30 @@ static void DOSBOX_RealInit(Section* sec)
 	}
 }
 
-static void dosbox_init(Section* sec)
+static void dosbox_init(Section* section)
 {
-	DOSBOX_RealInit(sec);
+	DOSBOX_RealInit(section);
+
 	MSG_LoadMessages();
+
+	IO_Init(section);
+	PAGING_Init(section);
+	MEM_Init(section);
+	CALLBACK_Init(section);
+	PIC_Init(section);
+	PROGRAMS_Init();
+	TIMER_Init(section);
+	CMOS_Init(section);
+}
+
+static void dosbox_shutdown([[maybe_unused]] Section* section)
+{
+	CMOS_Destroy();
+	TIMER_Destroy();
+	PROGRAMS_Destroy();
+	PIC_Destroy();
+	MEM_Destroy();
+	IO_Destroy();
 }
 
 static void notify_dosbox_setting_updated([[maybe_unused]] SectionProp* section,
@@ -618,8 +636,10 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 
 	auto section = conf->AddSection("dosbox", dosbox_init);
 
-	auto pstring = section->AddString("language", Always, "auto");
 	section->AddUpdateHandler(notify_dosbox_setting_updated);
+	section->AddDestroyHandler(dosbox_shutdown);
+
+	auto pstring = section->AddString("language", Always, "auto");
 
 	pstring->SetHelp(
 	        "Select the DOS messages language:\n"
@@ -677,10 +697,6 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 #if C_DEBUGGER
 	LOG_StartUp();
 #endif
-
-	section->AddInitHandler(IO_Init);
-	section->AddInitHandler(PAGING_Init);
-	section->AddInitHandler(MEM_Init);
 
 	auto pint = section->AddInt("memsize", OnlyAtStart, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
@@ -791,12 +807,6 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "Currently, no games are known to be negatively affected by this.\n"
 	        "Please file a bug with the project if you find a game that fails\n"
 	        "when this is enabled so we will list them here.");
-
-	section->AddInitHandler(CALLBACK_Init);
-	section->AddInitHandler(PIC_Init);
-	section->AddInitHandler(PROGRAMS_Init);
-	section->AddInitHandler(TIMER_Init);
-	section->AddInitHandler(CMOS_Init);
 
 	pstring = section->AddString("autoexec_section", OnlyAtStart, "join");
 	pstring->SetValues({"join", "overwrite"});

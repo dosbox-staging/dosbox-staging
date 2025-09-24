@@ -70,7 +70,7 @@ public:
 	uint_fast8_t flags = 0x0;
 };
 
-void PAGING_Init(Section* sec);
+void PAGING_Init(Section* section);
 
 // Some other functions
 void PAGING_Enable(bool enabled);

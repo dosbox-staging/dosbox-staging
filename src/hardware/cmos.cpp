@@ -364,15 +364,13 @@ public:
 
 static std::unique_ptr<CMOS> cmos_module = {};
 
-void cmos_destroy([[maybe_unused]] Section* sec){
-	cmos_module = {};
+void CMOS_Init(Section* section)
+{
+	assert(section);
+	cmos_module = std::make_unique<CMOS>(section);
 }
 
-void CMOS_Init(Section* sec)
+void CMOS_Destroy()
 {
-	assert(sec);
-
-	cmos_module = std::make_unique<CMOS>(sec);
-
-	sec->AddDestroyHandler(cmos_destroy);
+	cmos_module = {};
 }

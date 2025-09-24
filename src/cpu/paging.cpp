@@ -1013,7 +1013,8 @@ public:
 
 static std::unique_ptr<PAGING> paging_instance = {};
 
-void PAGING_Init(Section *sec)
+void PAGING_Init(Section* section)
 {
-	paging_instance = std::make_unique<PAGING>(sec);
+	assert(section);
+	paging_instance = std::make_unique<PAGING>(section);
 }

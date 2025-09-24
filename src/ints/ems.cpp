@@ -1545,7 +1545,7 @@ void EMS_Init(Section* section)
 	ems_module = std::make_unique<EMS>(section);
 }
 
-void EMS_Destroy([[maybe_unused]] Section* section)
+void EMS_Destroy()
 {
 	ems_module = {};
 }

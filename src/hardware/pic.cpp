@@ -692,13 +692,13 @@ public:
 
 static std::unique_ptr<PIC_8259A> pic = {};
 
-static void pic_destroy([[maybe_unused]] Section* sec)
+void PIC_Init(Section* section)
 {
-	pic = {};
+	assert(section);
+	pic = std::make_unique<PIC_8259A>(section);
 }
 
-void PIC_Init(Section* sec)
+void PIC_Destroy()
 {
-	pic = std::make_unique<PIC_8259A>(sec);
-	sec->AddDestroyHandler(pic_destroy);
+	pic = {};
 }

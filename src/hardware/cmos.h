@@ -6,6 +6,7 @@
 
 #include "config/setup.h"
 
-void CMOS_Init(Section* sec);
+void CMOS_Init(Section* section);
+void CMOS_Destroy();
 
 #endif // DOSBOX_CMOS_H
