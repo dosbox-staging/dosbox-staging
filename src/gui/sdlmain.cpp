@@ -2519,7 +2519,7 @@ void GFX_Start()
 	sdl.active = true;
 }
 
-static void shutdown_gui(Section*)
+static void gui_destroy()
 {
 	gfx_stop();
 
@@ -2544,6 +2544,12 @@ static void shutdown_gui(Section*)
 #endif
 
 	remove_window();
+}
+
+static void sdl_section_destroy([[maybe_unused]] Section* section)
+{
+	gui_destroy();
+	MAPPER_Destroy();
 }
 
 static void set_priority(PRIORITY_LEVELS level)
@@ -3164,14 +3170,6 @@ static void sdl_section_init(Section* sec)
 {
 	assert(sec);
 
-	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
-	assert(conf);
-
-	if (!conf) {
-		return;
-	}
-
-	sec->AddDestroyHandler(shutdown_gui);
 	SectionProp* section = static_cast<SectionProp*>(sec);
 
 	sdl.active          = false;
@@ -3220,6 +3218,8 @@ static void sdl_section_init(Section* sec)
 		SDL_DisableScreenSaver();
 	}
 
+	MAPPER_AddHandler(MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper", "Mapper");
+
 	MAPPER_AddHandler(gfx_request_exit,
 	                  SDL_SCANCODE_F9,
 	                  PRIMARY_MOD,
@@ -3263,7 +3263,35 @@ static void sdl_section_init(Section* sec)
 	// Notify MOUSE subsystem that it can start now
 	MOUSE_NotifyReadyGFX();
 
+	auto conf = dynamic_cast<SectionProp*>(sec);
 	TITLEBAR_ReadConfig(*conf);
+}
+
+void GFX_RegenerateWindow(Section* sec)
+{
+	if (first_window) {
+		first_window = false;
+		return;
+	}
+	remove_window();
+	set_output(sec, is_aspect_ratio_correction_enabled());
+	GFX_ResetScreen();
+}
+
+static void notify_sdl_setting_updated(SectionProp* section,
+                                       const std::string& prop_name)
+{
+	if (prop_name == "mapperfile") {
+		MAPPER_BindKeys(section);
+
+	} else if (prop_name == "output") {
+		GFX_RegenerateWindow(section);
+
+	} else {
+		// TODO add support for the rest of the settings later
+		gui_destroy();
+		sdl_section_init(section);
+	}
 }
 
 static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
@@ -3308,17 +3336,6 @@ void GFX_LosingFocus()
 bool GFX_IsFullscreen()
 {
 	return sdl.desktop.is_fullscreen;
-}
-
-void GFX_RegenerateWindow(Section* sec)
-{
-	if (first_window) {
-		first_window = false;
-		return;
-	}
-	remove_window();
-	set_output(sec, is_aspect_ratio_correction_enabled());
-	GFX_ResetScreen();
 }
 
 // TODO check if this workaround is still needed
@@ -4054,12 +4071,10 @@ static void register_sdl_text_messages()
 //
 static void init_sdl_config_section()
 {
-	constexpr bool ChangeableAtRuntime = true;
+	auto sdl_sec = control->AddSection("sdl", sdl_section_init);
 
-	SectionProp* sdl_sec = control->AddSection("sdl",
-	                                           sdl_section_init,
-	                                           ChangeableAtRuntime);
-	sdl_sec->AddInitHandler(MAPPER_StartUp);
+	sdl_sec->AddUpdateHandler(notify_sdl_setting_updated);
+	sdl_sec->AddDestroyHandler(sdl_section_destroy);
 
 	using enum Property::Changeable::Value;
 
@@ -5035,7 +5050,6 @@ int sdl_main(int argc, char* argv[])
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
 		MAPPER_BindKeys(get_sdl_section());
-		GFX_RegenerateWindow(get_sdl_section());
 
 		if (arguments->startmapper) {
 			MAPPER_DisplayUI();

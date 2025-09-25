@@ -3144,7 +3144,7 @@ void MAPPER_DisplayUI() {
 	MOUSE_NotifyTakeOver(false);
 }
 
-static void MAPPER_Destroy([[maybe_unused]] Section *sec) {
+void MAPPER_Destroy() {
 	// Stop any ongoing typing as soon as possible (because it access events)
 	MAPPER_StopAutoTyping();
 
@@ -3244,20 +3244,4 @@ std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix) {
 		}
 	}
 	return key_names;
-}
-
-void MAPPER_StartUp(Section* sec)
-{
-	assert(sec);
-	SectionProp* section = static_cast<SectionProp*>(sec);
-
-	// Runs after this function ends and for subsequent `config -set "sdl
-	// mapperfile=file.map"` commands
-	constexpr auto changeable_at_runtime = true;
-	section->AddInitHandler(MAPPER_BindKeys, changeable_at_runtime);
-	section->AddInitHandler(GFX_RegenerateWindow, changeable_at_runtime);
-
-	// Runs one-time on shutdown
-	section->AddDestroyHandler(MAPPER_Destroy);
-	MAPPER_AddHandler(MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper", "Mapper");
 }

@@ -54,13 +54,14 @@ void MAPPER_AddHandler(MAPPER_Handler *handler,
                        const char *button_name);
 
 void MAPPER_BindKeys(Section *sec);
-void MAPPER_StartUp(Section *sec);
 void MAPPER_Run(bool pressed);
 void MAPPER_DisplayUI();
 void MAPPER_LosingFocus();
 
 bool MAPPER_IsUsingJoysticks();
 void MAPPER_UpdateJoysticks();
+
+void MAPPER_Destroy();
 
 std::vector<std::string> MAPPER_GetEventNames(const std::string& prefix);
 
@@ -87,4 +88,4 @@ constexpr int MaxBindNameLength = 100;
  */
 void MAPPER_HandleJoyDeviceEvent(SDL_JoyDeviceEvent* event);
 
-#endif
+#endif // DOSBOX_MAPPER_H
