@@ -627,18 +627,11 @@ static void notify_joystick_setting_updated(SectionProp* section, [[maybe_unused
 	joystick = std::make_unique<JOYSTICK>(section);
 }
 
-void JOYSTICK_AddConfigSection(const ConfigPtr& conf)
+static void init_joystick_dosbox_settings(SectionProp& secprop)
 {
-	assert(conf);
-
 	using enum Property::Changeable::Value;
 
-	auto section = conf->AddSection("joystick", joystick_init);
-
-	section->AddDestroyHandler(joystick_destroy);
-	section->AddUpdateHandler(notify_joystick_setting_updated);
-
-	auto pstring = section->AddString("joysticktype", WhenIdle, "auto");
+	auto pstring = secprop.AddString("joysticktype", WhenIdle, "auto");
 
 	pstring->SetValues(
 	        {"auto", "2axis", "4axis", "4axis_2", "fcs", "ch", "hidden", "disabled"});
@@ -658,34 +651,34 @@ void JOYSTICK_AddConfigSection(const ConfigPtr& conf)
 	        "             or visible in DOS.\n"
 	        "Remember to reset DOSBox's mapperfile if you saved it earlier.");
 
-	auto pbool = section->AddBool("timed", WhenIdle, true);
+	auto pbool = secprop.AddBool("timed", WhenIdle, true);
 	pbool->SetHelp(
 	        "Enable timed intervals for axis ('on' by default).\n"
 	        "Experiment with this option, if your joystick drifts away.");
 
-	pbool = section->AddBool("autofire", WhenIdle, false);
+	pbool = secprop.AddBool("autofire", WhenIdle, false);
 	pbool->SetHelp("Fire continuously as long as the button is pressed ('off' by default)");
 
-	pbool = section->AddBool("swap34", WhenIdle, false);
+	pbool = secprop.AddBool("swap34", WhenIdle, false);
 	pbool->SetHelp(
 	        "Swap the 3rd and the 4th axis ('off' by default). Can be useful for certain\n"
 	        "joysticks.");
 
-	pbool = section->AddBool("buttonwrap", WhenIdle, false);
+	pbool = secprop.AddBool("buttonwrap", WhenIdle, false);
 	pbool->SetHelp("Enable button wrapping at the number of emulated buttons ('off' by default).");
 
-	pbool = section->AddBool("circularinput", WhenIdle, false);
+	pbool = secprop.AddBool("circularinput", WhenIdle, false);
 	pbool->SetHelp(
 	        "Enable translation of circular input to square output ('off' by default).\n"
 	        "Try enabling this if your left analog stick can only move in a circle.");
 
-	auto pint = section->AddInt("deadzone", WhenIdle, 10);
+	auto pint = secprop.AddInt("deadzone", WhenIdle, 10);
 	pint->SetMinMax(0, 100);
 	pint->SetHelp(
 	        "Percentage of motion to ignore (10 by default).\n"
 	        "100 turns the stick into a digital one.");
 
-	pbool = section->AddBool("use_joy_calibration_hotkeys", WhenIdle, false);
+	pbool = secprop.AddBool("use_joy_calibration_hotkeys", WhenIdle, false);
 	pbool->SetHelp(
 	        "Enable hotkeys to allow realtime calibration of the joystick's X and Y axes\n"
 	        "('off' by default). Only consider this as a last resort if in-game calibration\n"
@@ -702,11 +695,23 @@ void JOYSTICK_AddConfigSection(const ConfigPtr& conf)
 	        "parameters that work, quit the game, switch this setting back to disabled, and\n"
 	        "populate the reported calibration parameters.");
 
-	pstring = section->AddString("joy_x_calibration", WhenIdle, "auto");
+	pstring = secprop.AddString("joy_x_calibration", WhenIdle, "auto");
 	pstring->SetHelp(
 	        "Apply X-axis calibration parameters from the hotkeys ('auto' by default).");
 
-	pstring = section->AddString("joy_y_calibration", WhenIdle, "auto");
+	pstring = secprop.AddString("joy_y_calibration", WhenIdle, "auto");
 	pstring->SetHelp(
 	        "Apply Y-axis calibration parameters from the hotkeys ('auto' by default).");
+}
+
+void JOYSTICK_AddConfigSection(const ConfigPtr& conf)
+{
+	assert(conf);
+
+	auto section = conf->AddSection("joystick", joystick_init);
+
+	section->AddDestroyHandler(joystick_destroy);
+	section->AddUpdateHandler(notify_joystick_setting_updated);
+
+	init_joystick_dosbox_settings(*section);
 }
