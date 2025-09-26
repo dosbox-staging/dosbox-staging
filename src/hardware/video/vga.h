@@ -1119,11 +1119,12 @@ enum class EgaMonitorMode { Cga, Ega, Mono };
 
 void VGA_ATTR_SetEGAMonitorPalette(const EgaMonitorMode m);
 
-void VGA_Init(Section* sec);
+void VGA_Init();
+void VGA_Destroy();
 
 // The VGA subfunction startups
 void VGA_SetupAttr(void);
-void VGA_SetupMemory(Section* sec);
+void VGA_SetupMemory();
 void VGA_SetupDAC(void);
 void VGA_SetupCRTC(void);
 void VGA_SetupMisc(void);
@@ -1132,6 +1133,8 @@ void VGA_SetupSEQ(void);
 void VGA_SetupOther(void);
 void VGA_SetupXGA(void);
 void VGA_AddCompositeSettings(Config& conf);
+
+void VGA_DestroyMemory();
 
 // Some support functions
 struct VideoModeBlock;
