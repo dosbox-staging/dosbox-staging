@@ -32,21 +32,39 @@ EthernetConnection* ETHERNET_OpenConnection([[maybe_unused]] const std::string& 
 	return conn;
 }
 
+static void ethernet_init(Section* section)
+{
+	NE2K_Init(section);
+
+	VIRTUALBOX_Init();
+	VMWARE_Init();
+}
+
+static void ethernet_destroy([[maybe_unused]] Section* section)
+{
+	VMWARE_Destroy();
+	VIRTUALBOX_Destroy();
+
+	NE2K_Destroy();
+}
+
+static void notify_ethernet_setting_updated(SectionProp* section,
+                                            [[maybe_unused]] const std::string& prop_name)
+{
+	NE2K_Destroy();
+	NE2K_Init(section);
+}
+
 void ETHERNET_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
 	using enum Property::Changeable::Value;
 
-	auto secprop = conf->AddSection("ethernet", NE2K_Init);
+	auto secprop = conf->AddSection("ethernet", ethernet_init);
 
-	// VMM interfaces
-	secprop->AddInitHandler(VIRTUALBOX_Init);
-	secprop->AddInitHandler(VMWARE_Init);
-
-	secprop->AddUpdateHandler(NE2K_NotifySettingUpdated);
-	secprop->AddUpdateHandler(VIRTUALBOX_NotifySettingUpdated);
-	secprop->AddUpdateHandler(VMWARE_NotifySettingUpdated);
+	secprop->AddDestroyHandler(ethernet_destroy);
+	secprop->AddUpdateHandler(notify_ethernet_setting_updated);
 
 	auto pbool = secprop->AddBool("ne2000", WhenIdle, false);
 	pbool->SetOptionHelp(

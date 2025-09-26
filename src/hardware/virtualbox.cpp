@@ -602,21 +602,7 @@ void VIRTUALBOX_NotifyBooting()
 // Lifecycle
 // ***************************************************************************
 
-static void virtualbox_destroy([[maybe_unused]] Section* sec)
-{
-	if (is_interface_enabled) {
-		client_disconnect();
-
-		PCI_RemoveDevice(PCI_VirtualBoxDevice::vendor,
-		                 PCI_VirtualBoxDevice::device);
-
-		IO_FreeWriteHandler(port_num_virtualbox, io_width_t::dword);
-
-		is_interface_enabled = false;
-	}
-}
-
-static void virtualbox_init([[maybe_unused]] Section* section)
+void VIRTUALBOX_Init()
 {
 	has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VirtualBox);
 
@@ -643,17 +629,16 @@ static void virtualbox_init([[maybe_unused]] Section* section)
 	}
 }
 
-void VIRTUALBOX_NotifySettingUpdated(Section* section,
-                                     [[maybe_unused]] const std::string& prop_name)
+void VIRTUALBOX_Destroy()
 {
-	virtualbox_destroy(section);
-	virtualbox_init(section);
-}
+	if (is_interface_enabled) {
+		client_disconnect();
 
-void VIRTUALBOX_Init(Section* section)
-{
-	assert(section);
-	section->AddDestroyHandler(virtualbox_destroy);
+		PCI_RemoveDevice(PCI_VirtualBoxDevice::vendor,
+		                 PCI_VirtualBoxDevice::device);
 
-	virtualbox_init(section);
+		IO_FreeWriteHandler(port_num_virtualbox, io_width_t::dword);
+
+		is_interface_enabled = false;
+	}
 }

@@ -1513,31 +1513,16 @@ public:
 
 static std::unique_ptr<NE2K> ne2000 = {};
 
-void NE2K_NotifySettingUpdated(Section* section,
-                               [[maybe_unused]] const std::string& prop_name)
-{
-	ne2000 = std::make_unique<NE2K>(section);
-
-	if (!ne2000->load_success) {
-		ne2000 = {};
-	}
-}
-
-static void ne2k_destroy([[maybe_unused]] Section* section)
-{
-	ne2000 = {};
-}
-
 void NE2K_Init(Section* section)
 {
-	assert(section);
-	// LOG(LOG_MISC,LOG_DEBUG)("Initializing NE2000 network card emulation");
-
 	ne2000 = std::make_unique<NE2K>(section);
-
-	section->AddDestroyHandler(ne2k_destroy);
 
 	if (!ne2000->load_success) {
 		ne2000 = {};
 	}
+}
+
+void NE2K_Destroy()
+{
+	ne2000 = {};
 }
