@@ -3213,8 +3213,8 @@ static void cpu_init(Section* section)
 #if C_FPU
 	FPU_Init(section);
 #endif
-	VGA_Init(section);
 	DMA_Init();
+	VGA_Init();
 	KEYBOARD_Init();
 	PCI_Init(section);
 }
@@ -3222,6 +3222,7 @@ static void cpu_init(Section* section)
 static void cpu_shutdown([[maybe_unused]] Section* section)
 {
 	PCI_Destroy();
+	VGA_Destroy();
 	DMA_Destroy();
 
 #if C_DYNAMIC_X86

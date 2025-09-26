@@ -314,7 +314,7 @@ void VGA_AllowPixelDoubling(const bool allow)
 	vga.draw.pixel_doubling_allowed = allow;
 }
 
-void VGA_Init(Section* sec)
+void VGA_Init()
 {
 	vga.draw.resizing = false;
 
@@ -323,7 +323,7 @@ void VGA_Init(Section* sec)
 
 	SVGA_Setup_Driver();
 
-	VGA_SetupMemory(sec);
+	VGA_SetupMemory();
 	VGA_SetupMisc();
 	VGA_SetupDAC();
 	VGA_SetupGFX();
@@ -384,6 +384,11 @@ void VGA_Init(Section* sec)
 #endif
 		}
 	}
+}
+
+void VGA_Destroy()
+{
+   VGA_DestroyMemory();
 }
 
 void SVGA_Setup_Driver(void)
