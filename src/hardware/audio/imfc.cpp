@@ -13344,19 +13344,6 @@ static void IMFC_Mixer_Callback(const int requested_frames)
 	imfc->mixerCallback(requested_frames);
 }
 
-void imfc_destroy(Section* /*sec*/)
-{
-	MIXER_LockMixerThread();
-	imfc = {};
-
-#if IMFC_VERBOSE_LOGGING
-	assert(m_loggerMutex);
-	SDL_DestroyMutex(m_loggerMutex);
-	m_loggerMutex = nullptr;
-#endif
-	MIXER_UnlockMixerThread();
-}
-
 static void imfc_init(Section* sec)
 {
 	assert(sec);
@@ -13431,13 +13418,34 @@ static void imfc_init(Section* sec)
 
 	imfc = std::make_unique<MusicFeatureCard>(std::move(channel), port, irq);
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyHandler(imfc_destroy, changeable_at_runtime);
-
 	MIXER_UnlockMixerThread();
 }
 
-void init_imfc_dosbox_settings(SectionProp& secprop)
+static void imfc_destroy([[maybe_unused]] Section* section)
+{
+	if (!imfc) {
+		return;
+	}
+
+	MIXER_LockMixerThread();
+	imfc = {};
+
+#if IMFC_VERBOSE_LOGGING
+	assert(m_loggerMutex);
+	SDL_DestroyMutex(m_loggerMutex);
+	m_loggerMutex = nullptr;
+#endif
+	MIXER_UnlockMixerThread();
+}
+
+static void notify_imfc_setting_updated(SectionProp* section,
+                                        [[maybe_unused]] const std::string& prop_name)
+{
+	imfc_destroy(section);
+	imfc_init(section);
+}
+
+static void init_imfc_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -13470,9 +13478,10 @@ void IMFC_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
+	auto section = conf->AddSection("imfc", imfc_init);
 
-	SectionProp* sec = conf->AddSection("imfc", imfc_init, changeable_at_runtime);
-	assert(sec);
-	init_imfc_dosbox_settings(*sec);
+	section->AddDestroyHandler(imfc_destroy);
+	section->AddUpdateHandler(notify_imfc_setting_updated);
+
+	init_imfc_dosbox_settings(*section);
 }
