@@ -146,15 +146,7 @@ void VMWARE_NotifyProgramName(const std::string& segment_name)
 static bool is_interface_enabled = false;
 static bool has_feature_mouse    = false;
 
-static void vmware_destroy([[maybe_unused]] Section*)
-{
-	if (is_interface_enabled) {
-		IO_FreeReadHandler(port_num_virtualbox, io_width_t::dword);
-		is_interface_enabled = false;
-	}
-}
-
-static void vmware_init([[maybe_unused]] Section* section)
+void VMWARE_Init()
 {
 	has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VmWare);
 
@@ -174,17 +166,10 @@ static void vmware_init([[maybe_unused]] Section* section)
 	}
 }
 
-void VMWARE_NotifySettingUpdated(Section* section,
-                                 [[maybe_unused]] const std::string& prop_name)
+void VMWARE_Destroy()
 {
-	vmware_destroy(section);
-	vmware_init(section);
-}
-
-void VMWARE_Init(Section* section)
-{
-	assert(section);
-	section->AddDestroyHandler(vmware_destroy);
-
-	vmware_init(section);
+	if (is_interface_enabled) {
+		IO_FreeReadHandler(port_num_virtualbox, io_width_t::dword);
+		is_interface_enabled = false;
+	}
 }

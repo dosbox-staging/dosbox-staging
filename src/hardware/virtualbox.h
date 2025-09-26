@@ -8,9 +8,8 @@
 
 #include "config/setup.h"
 
-void VIRTUALBOX_Init(Section* sec);
-
-void VIRTUALBOX_NotifySettingUpdated(Section* sec, const std::string& prop_name);
+void VIRTUALBOX_Init();
+void VIRTUALBOX_Destroy();
 
 void VIRTUALBOX_NotifyBooting();
 

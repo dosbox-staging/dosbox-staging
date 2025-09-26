@@ -226,8 +226,7 @@ public:
 #endif
 };
 
-void NE2K_Init(Section* sec);
-
-void NE2K_NotifySettingUpdated(Section* sec, const std::string& prop_name);
+void NE2K_Init(Section* section);
+void NE2K_Destroy();
 
 #endif // DOSBOX_NE2000_H
