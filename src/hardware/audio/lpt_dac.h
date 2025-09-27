@@ -8,7 +8,12 @@
 
 void LPT_DAC_AddConfigSection(Section* sec);
 
+void LPT_DAC_Init(Section* sec);
+void LPT_DAC_Destroy(Section* sec);
+
+void LPT_DAC_NotifySettingUpdated(SectionProp* section, const std::string& prop_name);
+
 void LPTDAC_NotifyLockMixer();
 void LPTDAC_NotifyUnlockMixer();
 
-#endif // DOSBOX_PRIVATE_LPT_DAC_H
+#endif // DOSBOX_LPT_DAC_H

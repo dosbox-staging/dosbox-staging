@@ -172,7 +172,7 @@ static void init_lpt_dac_settings(SectionProp& section)
 	pbool->SetHelp("Use 'lpt_dac = disney' to enable the Disney Sound Source.");
 }
 
-static void lpt_dac_init(Section* section)
+void LPT_DAC_Init(Section* section)
 {
 	assert(section);
 	const auto prop = static_cast<SectionProp*>(section);
@@ -232,7 +232,7 @@ static void lpt_dac_init(Section* section)
 	MIXER_UnlockMixerThread();
 }
 
-static void lpt_dac_destroy([[maybe_unused]] Section* sec)
+void LPT_DAC_Destroy([[maybe_unused]] Section* sec)
 {
 	if (lpt_dac) {
 		MIXER_LockMixerThread();
@@ -244,15 +244,15 @@ static void lpt_dac_destroy([[maybe_unused]] Section* sec)
 	}
 }
 
-static void notify_lpt_dac_setting_updated(SectionProp* section,
-                                           [[maybe_unused]] const std::string& prop_name)
+void LPT_DAC_NotifySettingUpdated(SectionProp* section,
+                                  [[maybe_unused]] const std::string& prop_name)
 {
 	// The [speaker] section controls multiple audio devices, so we want to
 	// make sure to only restart the device affected by the setting.
 	//
 	if (prop_name == "lpt_dac" || prop_name == "lpt_dac_filter") {
-		lpt_dac_destroy(section);
-		lpt_dac_init(section);
+		LPT_DAC_Destroy(section);
+		LPT_DAC_Init(section);
 	}
 
 	// TODO support changing filter params without restarting the device
@@ -263,10 +263,6 @@ void LPT_DAC_AddConfigSection(Section* sec)
 	assert(sec);
 
 	const auto section = static_cast<SectionProp*>(sec);
-
-	section->AddInitHandler(lpt_dac_init);
-	section->AddDestroyHandler(lpt_dac_destroy);
-	section->AddUpdateHandler(notify_lpt_dac_setting_updated);
 
 	init_lpt_dac_settings(*section);
 }

@@ -686,7 +686,7 @@ static void init_tandysound_settings(SectionProp& section)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-static void tandysound_init([[maybe_unused]] Section* sec)
+void TANDYSOUND_Init([[maybe_unused]] Section* sec)
 {
 	assert(sec);
 	const auto section = static_cast<SectionProp*>(sec);
@@ -747,8 +747,8 @@ void TANDYSOUND_Destroy([[maybe_unused]] Section* section)
 	}
 }
 
-static void notify_tandysound_setting_updated(SectionProp* section,
-                                              [[maybe_unused]] const std::string& prop_name)
+void TANDYSOUND_NotifySettingUpdated(SectionProp* section,
+                                     [[maybe_unused]] const std::string& prop_name)
 {
 	// The [speaker] section controls multiple audio devices, so we want to
 	// make sure to only restart the device affected by the setting.
@@ -757,7 +757,7 @@ static void notify_tandysound_setting_updated(SectionProp* section,
 	    prop_name == "tandy_filter" || prop_name == "tandy_dac_filter") {
 
 		TANDYSOUND_Destroy(section);
-		tandysound_init(section);
+		TANDYSOUND_Init(section);
 	}
 
 	// TODO support changing filter params without restarting the device
@@ -768,10 +768,6 @@ void TANDYSOUND_AddConfigSection(Section* sec)
 	assert(sec);
 
 	const auto section = static_cast<SectionProp*>(sec);
-
-	section->AddInitHandler(tandysound_init);
-	section->AddDestroyHandler(TANDYSOUND_Destroy);
-	section->AddUpdateHandler(notify_tandysound_setting_updated);
 
 	init_tandysound_settings(*section);
 }
