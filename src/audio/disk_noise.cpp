@@ -103,7 +103,7 @@ DiskNoises::~DiskNoises()
 	hdd_noise.reset();
 	active_devices.clear();
 
-	if (active_devices.empty() && mix_channel) {
+	if (mix_channel) {
 		mix_channel->Enable(false);
 		MIXER_DeregisterChannel(mix_channel);
 		mix_channel.reset();
