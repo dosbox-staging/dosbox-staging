@@ -761,7 +761,7 @@ MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
 
 MixerChannelPtr MIXER_FindChannel(const char* name)
 {
-	auto it = mixer.channels.find(name);
+	auto it = mixer.channels.find(name); //-V838
 
 	const auto chan = (it != mixer.channels.end()) ? it->second : nullptr;
 

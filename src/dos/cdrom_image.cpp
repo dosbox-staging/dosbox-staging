@@ -1087,7 +1087,7 @@ bool CDROM_Interface_Image::LoadIsoFile(const char* filename)
 	bool error  = false;
 	track.file  = std::make_shared<BinaryFile>(filename, error);
 
-	if (error) {
+	if (error) { //-V547
 		return false;
 	}
 	track.number = 1;
@@ -1274,7 +1274,7 @@ bool CDROM_Interface_Image::LoadCueSheet(const char *cuefile)
 				 *  trying each decoder before finally giving up.
 				 */
 			}
-			if (error) {
+			if (error) { //-V547
 				success = false;
 			}
 		}

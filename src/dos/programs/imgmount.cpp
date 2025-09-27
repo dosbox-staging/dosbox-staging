@@ -488,7 +488,7 @@ void IMGMOUNT::Run(void)
 
 			iso_images.push_back(std::make_shared<isoDrive>(
 			        drive, iso_path.c_str(), mediaid, error));
-			switch (error) {
+			switch (error) { //-V785
 			case 0: break;
 			case 1:
 				WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));
@@ -511,7 +511,7 @@ void IMGMOUNT::Run(void)
 				break;
 			}
 			// error: clean up and leave
-			if (error) {
+			if (error) { //-V547
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
 				return;
 			}
