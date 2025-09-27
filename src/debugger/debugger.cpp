@@ -39,7 +39,7 @@
 
 int old_cursor_state;
 
-// Forwards
+// forward declarations
 static void DrawCode(void);
 static void DEBUG_RaiseTimerIrq(void);
 static void SaveMemory(uint16_t seg, uint32_t ofs1, uint32_t num);
@@ -2345,34 +2345,48 @@ Bitu DEBUG_EnableDebugger()
 	return 0;
 }
 
-void DEBUG_ShutDown(Section * /*sec*/) {
+void DEBUG_Destroy([[maybe_unused]] Section* section)
+{
 	CBreakpoint::DeleteAll();
 	CDebugVar::DeleteAll();
+
 	curs_set(old_cursor_state);
 
-	if (pdc_window)
+	if (pdc_window) {
 		endwin();
+	}
 }
 
 Bitu debugCallback;
 
-void DEBUG_Init(Section* sec) {
-
-//	MSG_Add("DEBUG_CONFIGFILE_HELP","Debugger related options.\n");
+static void debug_init([[maybe_unused]] Section* sec)
+{
 	DEBUG_DrawScreen();
-	/* Add some keyhandlers */
-	MAPPER_AddHandler(DEBUG_Enable, SDL_SCANCODE_PAUSE, MMOD2, "debugger",
-	                  "Debugger");
-	/* Reset code overview and input line */
+
+	// Add some keyhandlers
+	MAPPER_AddHandler(DEBUG_Enable, SDL_SCANCODE_PAUSE, MMOD2, "debugger", "Debugger");
+
+	// Reset code overview and input line
 	codeViewData = {};
-	/* setup debug.com */
-	PROGRAMS_MakeFile("DEBUG.COM",ProgramCreate<DEBUG>);
-	PROGRAMS_MakeFile("DBXDEBUG.COM",ProgramCreate<DEBUG>);
-	/* Setup callback */
-	debugCallback=CALLBACK_Allocate();
-	CALLBACK_Setup(debugCallback,DEBUG_EnableDebugger,CB_RETF,"debugger");
-	/* shutdown function */
-	sec->AddDestroyHandler(DEBUG_ShutDown);
+
+	// setup debug.com
+	PROGRAMS_MakeFile("DEBUG.COM", ProgramCreate<DEBUG>);
+	PROGRAMS_MakeFile("DBXDEBUG.COM", ProgramCreate<DEBUG>);
+
+	// Setup callback
+	debugCallback = CALLBACK_Allocate();
+
+	CALLBACK_Setup(debugCallback, DEBUG_EnableDebugger, CB_RETF, "debugger");
+}
+
+void DEBUG_AddConfigSection(const ConfigPtr& conf)
+{
+   assert(conf);
+
+   // TODO the [debug] section has no settings, so what's the point?
+   auto section = conf->AddSection("debug", debug_init);
+
+   section->AddDestroyHandler(DEBUG_Destroy);
 }
 
 // DEBUGGING VAR STUFF

@@ -4384,10 +4384,6 @@ static int edit_primary_config()
 	return 1;
 }
 
-#if C_DEBUGGER
-extern void DEBUG_ShutDown([[maybe_unused]] Section* sec);
-#endif
-
 static void remove_waitpid(std::vector<std::string>& parameters)
 {
 	auto it = parameters.begin();
@@ -4451,7 +4447,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 
 #if C_DEBUGGER
 	// shutdown curses
-	DEBUG_ShutDown(nullptr);
+	DEBUG_Destroy(nullptr);
 #endif // C_DEBUGGER
 
 #ifdef WIN32

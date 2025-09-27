@@ -241,7 +241,30 @@ static void MakePairs()
 	init_pair(PAIR_BLACK_GREY, COLOR_BLACK /*| FOREGROUND_INTENSITY */, COLOR_WHITE);
 	init_pair(PAIR_GREY_RED, COLOR_WHITE /*| FOREGROUND_INTENSITY */, COLOR_RED);
 }
-static void LOG_Destroy(Section*)
+
+static void log_init(Section* sec)
+{
+	auto section = static_cast<SectionProp*>(sec);
+
+	std::string logfile = section->GetString("logfile");
+
+	if (!logfile.empty() && (debuglog = fopen(logfile.c_str(), "wt+"))) {
+		;
+	} else {
+		debuglog = nullptr;
+	}
+
+	char buf[64];
+
+	// Skip LOG_ALL, it is always enabled
+	for (Bitu i = LOG_ALL + 1; i < LOG_MAX; i++) {
+		safe_strcpy(buf, loggrp[i].front);
+		lowcase(buf);
+		loggrp[i].enabled = section->GetBool(buf);
+	}
+}
+
+static void log_destroy([[maybe_unused]] Section* sec)
 {
 	if (debuglog) {
 		fclose(debuglog);
@@ -249,28 +272,9 @@ static void LOG_Destroy(Section*)
 	debuglog = nullptr;
 }
 
-static void LOG_Init(Section* sec)
+void LOG_StartUp()
 {
-	SectionProp* sect = static_cast<SectionProp*>(sec);
-	std::string blah  = sect->GetString("logfile");
-	if (!blah.empty() && (debuglog = fopen(blah.c_str(), "wt+"))) {
-		;
-	} else {
-		debuglog = nullptr;
-	}
-	sect->AddDestroyHandler(LOG_Destroy);
-	char buf[64];
-	for (Bitu i = LOG_ALL + 1; i < LOG_MAX; i++) { // Skip LOG_ALL, it is
-		                                       // always enabled
-		safe_strcpy(buf, loggrp[i].front);
-		lowcase(buf);
-		loggrp[i].enabled = sect->GetBool(buf);
-	}
-}
-
-void LOG_StartUp(void)
-{
-	/* Setup logging groups */
+	// Setup logging groups
 	loggrp[LOG_ALL].front        = "ALL";
 	loggrp[LOG_VGA].front        = "VGA";
 	loggrp[LOG_VGAGFX].front     = "VGAGFX";
@@ -302,12 +306,16 @@ void LOG_StartUp(void)
 	loggrp[LOG_PCI].front       = "PCI";
 	loggrp[LOG_REELMAGIC].front = "REELMAGIC";
 
-	/* Register the log section */
-	SectionProp* sect   = control->AddSection("log", LOG_Init);
+	// Register the log section
+	auto sect = control->AddSection("log", log_init);
+	sect->AddDestroyHandler(log_destroy);
+
 	PropString* pstring = sect->AddString("logfile",
 	                                      Property::Changeable::Always,
 	                                      "");
+
 	pstring->SetHelp("Path of the log file.");
+
 	char buf[64];
 	for (Bitu i = LOG_ALL + 1; i < LOG_MAX; i++) {
 		safe_strcpy(buf, loggrp[i].front);

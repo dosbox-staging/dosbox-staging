@@ -63,9 +63,7 @@
 MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
 
-void LOG_StartUp();
-
-void DEBUG_Init(Section*);
+void SHELL_Init();
 
 static LoopHandler * loop;
 
@@ -910,7 +908,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	MIDI_AddConfigSection(control);
 
 #if C_DEBUGGER
-	control->AddSection("debug", DEBUG_Init);
+	DEBUG_AddConfigSection(control);
 #endif
 
 	// Configure Sound Blaster and ESS
