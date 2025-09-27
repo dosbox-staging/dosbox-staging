@@ -29,7 +29,7 @@ static void init_speaker_settings(SectionProp& section)
 
 static void speaker_init(Section* section)
 {
-	LPT_DAC_Init(section);
+	LPTDAC_Init(section);
 	PCSPEAKER_Init(section);
 	PS1AUDIO_Init(section);
 	TANDYSOUND_Init(section);
@@ -40,13 +40,13 @@ static void speaker_destroy(Section* section)
 	TANDYSOUND_Destroy(section);
 	PS1AUDIO_Destroy(section);
 	PCSPEAKER_Destroy(section);
-	LPT_DAC_Destroy(section);
+	LPTDAC_Destroy(section);
 }
 
 void notify_speaker_setting_updated(SectionProp* section,
                                     const std::string& prop_name)
 {
-	LPT_DAC_NotifySettingUpdated(section, prop_name);
+	LPTDAC_NotifySettingUpdated(section, prop_name);
 	PCSPEAKER_NotifySettingUpdated(section, prop_name);
 	PS1AUDIO_NotifySettingUpdated(section, prop_name);
 	TANDYSOUND_NotifySettingUpdated(section, prop_name);
@@ -61,7 +61,7 @@ void SPEAKER_AddConfigSection(const ConfigPtr& conf)
 	section->AddDestroyHandler(speaker_destroy);
 	section->AddUpdateHandler(notify_speaker_setting_updated);
 
-	LPT_DAC_AddConfigSection(section);
+	LPTDAC_AddConfigSection(section);
 	PCSPEAKER_AddConfigSection(section);
 	PS1AUDIO_AddConfigSection(section);
 	TANDYSOUND_AddConfigSection(section);
