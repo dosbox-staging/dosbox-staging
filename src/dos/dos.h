@@ -1059,6 +1059,8 @@ enum class DosCurrencyFormat : uint8_t {
 
 void DOS_AddConfigSection(const ConfigPtr& conf);
 
+void DOS_NotifySettingUpdated(const std::string& prop_name);
+
 DosDateFormat DOS_GetLocaleDateFormat();
 DosTimeFormat DOS_GetLocaleTimeFormat();
 char DOS_GetLocaleDateSeparator();
