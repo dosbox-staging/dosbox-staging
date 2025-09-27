@@ -402,6 +402,7 @@ void MOUSE_Init()
 
 	// Start mouse emulation if everything is ready
 	mouse_shared.ready_config = true;
+	mouse_shared.ready_init = true;
 	MOUSE_StartupIfReady();
 }
 
@@ -652,7 +653,6 @@ void MOUSE_AddConfigSection(const ConfigPtr& conf)
 	assert(conf);
 
 	auto section = conf->AddSection("mouse");
-
 	section->AddUpdateHandler(notify_mouse_setting_updated);
 
 	init_mouse_dosbox_settings(*section);

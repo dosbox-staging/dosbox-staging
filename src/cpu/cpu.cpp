@@ -3212,9 +3212,6 @@ void CPU_Init()
 
 	cpu_instance = std::make_unique<Cpu>(section);
 
-#if C_FPU
-	FPU_Init(section);
-#endif
 	DMA_Init();
 	VGA_Init();
 	KEYBOARD_Init();

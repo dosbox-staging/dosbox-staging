@@ -26,12 +26,13 @@
 #include "dos/dos.h"
 #include "dos/dos_locale.h"
 #include "dos/programs.h"
+#include "fpu/fpu.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/render.h"
 #include "hardware/audio/gus.h"
-#include "hardware/audio/innovation.h"
 #include "hardware/audio/imfc.h"
+#include "hardware/audio/innovation.h"
 #include "hardware/audio/opl.h"
 #include "hardware/audio/pcspeaker.h"
 #include "hardware/audio/soundblaster.h"
@@ -49,6 +50,7 @@
 #include "hardware/timer.h"
 #include "hardware/video/reelmagic/reelmagic.h"
 #include "hardware/video/voodoo.h"
+#include "ints/bios.h"
 #include "ints/int10.h"
 #include "midi/midi.h"
 #include "misc/cross.h"
@@ -949,12 +951,15 @@ void DOSBOX_Init()
 
 	RENDER_Init();
 	COMPOSITE_Init();
+
 	CPU_Init();
+#if C_FPU
+	FPU_Init();
+#endif
 	VOODOO_Init();
 	CAPTURE_Init();
-	MOUSE_Init();
-	MIXER_Init();
 
+	MIXER_Init();
 #if C_MT32EMU
 	MT32_Init();
 #endif
@@ -973,7 +978,12 @@ void DOSBOX_Init()
 	SPEAKER_Init();
 
 	REELMAGIC_Init();
+
+	BIOS_Init();
+	INT10_Init();
+	MOUSE_Init();
 	JOYSTICK_Init();
+
 	DISKNOISE_Init();
 	SERIAL_Init();
 	DOS_Init();
@@ -997,7 +1007,10 @@ void DOSBOX_Destroy()
 	DOS_Destroy();
 	SERIAL_Destroy();
 	DISKNOISE_Destroy();
+
 	JOYSTICK_Destroy();
+	BIOS_Destroy();
+
 	REELMAGIC_Destroy();
 
 	SPEAKER_Destroy();
@@ -1011,8 +1024,10 @@ void DOSBOX_Destroy()
 #endif
 	MIDI_Destroy();
 	MIXER_Destroy();
+
 	CAPTURE_Destroy();
 	VOODOO_Destroy();
+
 	CPU_Destroy();
 
 #if C_DEBUGGER

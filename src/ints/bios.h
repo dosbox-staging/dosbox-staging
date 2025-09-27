@@ -125,7 +125,7 @@ void INT2F_StartUp(void);
 void INT33_StartUp(void);
 void INT13_StartUp(void);
 
-void BIOS_Init(Section* section);
+void BIOS_Init();
 void BIOS_Destroy();
 
 bool BIOS_AddKeyToBuffer(uint16_t code);

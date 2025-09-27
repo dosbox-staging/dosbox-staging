@@ -16,7 +16,6 @@
 #include "hardware/memory.h"
 #endif
 
-#include "config/setup.h"
 #include "cpu/mmx.h"
 
 void FPU_ESC0_Normal(Bitu rm);
@@ -169,7 +168,7 @@ static inline void FPU_LOG_WARN(unsigned tree, bool ea, uintptr_t group, uintptr
 	                       tree, ea ? " EA" : "", group, sub);
 }
 
-void FPU_Init(Section*);
+void FPU_Init();
 
 #define DB_FPU_STACK_CHECK_NONE 0
 #define DB_FPU_STACK_CHECK_LOG  1

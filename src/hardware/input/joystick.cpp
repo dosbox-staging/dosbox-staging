@@ -607,12 +607,7 @@ static std::unique_ptr<JOYSTICK> joystick = nullptr;
 void JOYSTICK_Init()
 {
 	const auto section = get_section("joystick");
-
-	BIOS_Init(section);
-	INT10_Init(section);
-
-	// Must be after INT10 as it uses CurMode
-	MOUSE_Init();
+	assert(section);
 
 	joystick = std::make_unique<JOYSTICK>(section);
 }
@@ -620,8 +615,6 @@ void JOYSTICK_Init()
 void JOYSTICK_Destroy()
 {
 	joystick = {};
-
-	BIOS_Destroy();
 }
 
 static void notify_joystick_setting_updated(SectionProp* section, [[maybe_unused]] const std::string& prop_name)

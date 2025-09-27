@@ -1231,12 +1231,12 @@ bool BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac
 void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
-class BIOS final : public ModuleBase{
+class BIOS final {
 private:
 	CALLBACK_HandlerObject callback[11];
 	void AddMessages();
 public:
-	BIOS(Section* configuration) : ModuleBase(configuration)
+	BIOS()
 	{
 		AddMessages();
 
@@ -1541,10 +1541,9 @@ void BIOS_SetComPorts(uint16_t baseaddr[]) {
 
 static std::unique_ptr<BIOS> bios = {};
 
-void BIOS_Init(Section* section)
+void BIOS_Init()
 {
-	assert(section);
-	bios = std::make_unique<BIOS>(section);
+	bios = std::make_unique<BIOS>();
 }
 
 void BIOS_Destroy()
