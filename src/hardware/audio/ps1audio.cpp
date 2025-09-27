@@ -591,7 +591,7 @@ static void init_ps1audio_settings(SectionProp& section)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-static void ps1audio_init(Section* sec)
+void PS1AUDIO_Init(Section* sec)
 {
 	assert(sec);
 	const auto section = static_cast<SectionProp*>(sec);
@@ -607,7 +607,7 @@ static void ps1audio_init(Section* sec)
 	LOG_MSG("%s: Initialised IBM PS/1 Audio card", ChannelName::Ps1AudioCardPsg);
 }
 
-static void ps1audio_destroy([[maybe_unused]] Section* sec)
+void PS1AUDIO_Destroy([[maybe_unused]] Section* sec)
 {
 	if (ps1_dac || ps1_synth) {
 		LOG_MSG("%s: Shutting down IBM PS/1 Audio card",
@@ -618,8 +618,8 @@ static void ps1audio_destroy([[maybe_unused]] Section* sec)
 	}
 }
 
-static void notify_ps1audio_setting_updated(SectionProp* section,
-                                            [[maybe_unused]] const std::string& prop_name)
+void PS1AUDIO_NotifySettingUpdated(SectionProp* section,
+                                   [[maybe_unused]] const std::string& prop_name)
 {
 	// The [speaker] section controls multiple audio devices, so we want to
 	// make sure to only restart the device affected by the setting.
@@ -627,8 +627,8 @@ static void notify_ps1audio_setting_updated(SectionProp* section,
 	if (prop_name == "ps1audio" || prop_name == "ps1audio_filter" ||
 	    prop_name == "ps1audio_dac_filter") {
 
-		ps1audio_destroy(section);
-		ps1audio_init(section);
+		PS1AUDIO_Destroy(section);
+		PS1AUDIO_Init(section);
 	}
 
 	// TODO support changing filter params without restarting the device
@@ -639,10 +639,6 @@ void PS1AUDIO_AddConfigSection(Section* sec)
 	assert(sec);
 
 	const auto section = static_cast<SectionProp*>(sec);
-
-	section->AddInitHandler(ps1audio_init);
-	section->AddDestroyHandler(ps1audio_destroy);
-	section->AddUpdateHandler(notify_ps1audio_setting_updated);
 
 	init_ps1audio_settings(*section);
 }

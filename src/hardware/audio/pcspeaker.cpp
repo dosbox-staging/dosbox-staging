@@ -104,7 +104,7 @@ static void set_filter(SectionProp& section)
 	}
 }
 
-static void pcspeaker_init(Section* sec)
+void PCSPEAKER_Init(Section* sec)
 {
 	assert(sec);
 	const auto section = static_cast<SectionProp*>(sec);
@@ -135,7 +135,7 @@ static void pcspeaker_init(Section* sec)
 	MIXER_UnlockMixerThread();
 }
 
-static void pcspeaker_destroy([[maybe_unused]] Section* sec)
+void PCSPEAKER_Destroy([[maybe_unused]] Section* sec)
 {
 	if (pc_speaker) {
 		MIXER_LockMixerThread();
@@ -147,16 +147,14 @@ static void pcspeaker_destroy([[maybe_unused]] Section* sec)
 	}
 }
 
-
-static void notify_pcspeaker_setting_updated(SectionProp* section,
-                                             const std::string& prop_name)
+void PCSPEAKER_NotifySettingUpdated(SectionProp* section, const std::string& prop_name)
 {
 	// The [speaker] section controls multiple audio devices, so we want to
 	// make sure to only restart the device affected by the setting.
 	//
 	if (prop_name == "pcspeaker") {
-		pcspeaker_destroy(section);
-		pcspeaker_init(section);
+		PCSPEAKER_Destroy(section);
+		PCSPEAKER_Init(section);
 
 	} else if (prop_name == "pcspeaker_filter") {
 		if (pc_speaker) {
@@ -170,10 +168,6 @@ void PCSPEAKER_AddConfigSection(Section* sec)
 	assert(sec);
 
 	const auto section = static_cast<SectionProp*>(sec);
-
-	section->AddInitHandler(pcspeaker_init);
-	section->AddDestroyHandler(pcspeaker_destroy);
-	section->AddUpdateHandler(notify_pcspeaker_setting_updated);
 
 	init_pcspeaker_settings(*section);
 }

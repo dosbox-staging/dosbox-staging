@@ -7,8 +7,8 @@
 #include "private/ps1audio.h"
 
 #include "lpt_dac.h"
-#include "ps1audio.h"
 #include "pcspeaker.h"
+#include "ps1audio.h"
 #include "tandy_sound.h"
 
 #include "config/config.h"
@@ -26,12 +26,40 @@ static void init_speaker_settings(SectionProp& section)
 // TODO The LPT DAC, PS/1 Audio, and Tandy sound emulations will be moved out
 // of the [speaker] section into their own respective sections. Until then,
 // the lifecycle of these devices are managed here at the top level.
-//
+
+static void speaker_init(Section* section)
+{
+	LPT_DAC_Init(section);
+	PCSPEAKER_Init(section);
+	PS1AUDIO_Init(section);
+	TANDYSOUND_Init(section);
+}
+
+static void speaker_destroy(Section* section)
+{
+	TANDYSOUND_Destroy(section);
+	PS1AUDIO_Destroy(section);
+	PCSPEAKER_Destroy(section);
+	LPT_DAC_Destroy(section);
+}
+
+void notify_speaker_setting_updated(SectionProp* section,
+                                    const std::string& prop_name)
+{
+	LPT_DAC_NotifySettingUpdated(section, prop_name);
+	PCSPEAKER_NotifySettingUpdated(section, prop_name);
+	PS1AUDIO_NotifySettingUpdated(section, prop_name);
+	TANDYSOUND_NotifySettingUpdated(section, prop_name);
+}
+
 void SPEAKER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	auto section = conf->AddSection("speaker", nullptr);
+	auto section = conf->AddSection("speaker", speaker_init);
+
+	section->AddDestroyHandler(speaker_destroy);
+	section->AddUpdateHandler(notify_speaker_setting_updated);
 
 	LPT_DAC_AddConfigSection(section);
 	PCSPEAKER_AddConfigSection(section);

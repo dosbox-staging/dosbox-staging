@@ -8,6 +8,12 @@
 
 void PCSPEAKER_AddConfigSection(Section* sec);
 
+void PCSPEAKER_Init(Section* sec);
+void PCSPEAKER_Destroy(Section* sec);
+
+void PCSPEAKER_NotifySettingUpdated(SectionProp* section,
+                                    const std::string& prop_name);
+
 void PCSPEAKER_NotifyLockMixer();
 void PCSPEAKER_NotifyUnlockMixer();
 

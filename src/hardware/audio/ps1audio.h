@@ -7,6 +7,12 @@
 #include "config/setup.h"
 
 void PS1AUDIO_AddConfigSection(Section* sec);
+
+void PS1AUDIO_Init(Section* sec);
+void PS1AUDIO_Destroy(Section* sec);
+
+void PS1AUDIO_NotifySettingUpdated(SectionProp* section, const std::string& prop_name);
+
 bool PS1AUDIO_IsEnabled();
 
 void PS1DAC_NotifyLockMixer();
