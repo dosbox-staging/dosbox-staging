@@ -1880,6 +1880,14 @@ static void notify_dos_setting_updated(SectionProp* section,
 	// once at startup.
 }
 
+void DOS_NotifySettingUpdated(const std::string& prop_name)
+{
+	auto section = static_cast<SectionProp*>(control->GetSection("dos"));
+	assert(section);
+
+	notify_dos_setting_updated(section, prop_name);
+}
+
 static void init_dos_settings(SectionProp& section)
 {
 

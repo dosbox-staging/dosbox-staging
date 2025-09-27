@@ -128,26 +128,15 @@ void BOOT::printError(void)
 	WriteOut(MSG_Get("PROGRAM_BOOT_PRINT_ERROR"), PRIMARY_MOD_NAME);
 }
 
-void BOOT::disable_umb_ems_xms(void)
+void BOOT::DisableUmbXmsEms(void)
 {
-	// TODO use notify setting updated?
-	
-	Section *dos_sec = control->GetSection("dos");
+	set_section_property_value("dos", "umb", "false");
+	set_section_property_value("dos", "xms", "false");
+	set_section_property_value("dos", "ems", "false");
 
-	dos_sec->ExecuteDestroy();
-
-	char test[20];
-	safe_strcpy(test, "umb=false");
-
-	dos_sec->HandleInputline(test);
-	safe_strcpy(test, "xms=false");
-
-	dos_sec->HandleInputline(test);
-	safe_strcpy(test, "ems=false");
-
-	dos_sec->HandleInputline(test);
-
-	dos_sec->ExecuteInit();
+	DOS_NotifySettingUpdated("umb");
+	DOS_NotifySettingUpdated("xms");
+	DOS_NotifySettingUpdated("ems");
 }
 
 void BOOT::Run(void)
@@ -383,7 +372,7 @@ void BOOT::Run(void)
 				}
 			}
 
-			disable_umb_ems_xms();
+			DisableUmbXmsEms();
 			MEM_PreparePCJRCartRom();
 
 			if (usefile_1 == nullptr)
@@ -496,10 +485,12 @@ void BOOT::Run(void)
 			}
 		}
 	} else {
-		disable_umb_ems_xms();
+		DisableUmbXmsEms();
 		MEM_RemoveEMSPageFrame();
+
 		NotifyBooting();
 		WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
+
 		for (i = 0; i < 512; i++)
 			real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
 
