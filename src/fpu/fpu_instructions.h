@@ -433,18 +433,44 @@ static void FPU_FST(Bitu st, Bitu other){
 }
 
 static void FPU_FCOM(Bitu st, Bitu other){
-	if(((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) || 
-		((fpu.tags[other] != TAG_Valid) && (fpu.tags[other] != TAG_Zero))){
-		FPU_SET_C3(1);FPU_SET_C2(1);FPU_SET_C0(1);return;
+	if (((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) ||
+	    ((fpu.tags[other] != TAG_Valid) && (fpu.tags[other] != TAG_Zero))) {
+		FPU_SET_C3(1);
+		FPU_SET_C2(1);
+		FPU_SET_C0(1);
+		return;
 	}
-	if(fpu.regs[st].d == fpu.regs[other].d){
-		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C0(0);return;
+
+	const auto st_val    = fpu.regs[st].d;
+	const auto other_val = fpu.regs[other].d;
+
+	bool are_equal = false;
+	
+	const auto prec_mode = fpu.cw & PrecisionModeMask;
+	if (prec_mode == ExtendedPrecisionMode) {
+		are_equal = are_almost_equal_relative(st_val, other_val);
+	} else {
+		are_equal = (st_val == other_val);
 	}
-	if(fpu.regs[st].d < fpu.regs[other].d){
-		FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C0(1);return;
+
+	if (are_equal) {
+		FPU_SET_C3(1);
+		FPU_SET_C2(0);
+		FPU_SET_C0(0);
+		return;
 	}
+
+	if (st_val < other_val) {
+		FPU_SET_C3(0);
+		FPU_SET_C2(0);
+		FPU_SET_C0(1);
+		return;
+	}
+
 	// st > other
-	FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C0(0);return;
+	FPU_SET_C3(0);
+	FPU_SET_C2(0);
+	FPU_SET_C0(0);
 }
 
 static void FPU_FUCOM(Bitu st, Bitu other){

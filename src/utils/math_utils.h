@@ -111,6 +111,16 @@ inline bool are_almost_equal_relative(
         const double a, const double b,
         const double epsilon = std::numeric_limits<double>::epsilon())
 {
+	if (a == b) {
+		return true;
+	}
+
+	// algorithm below is only expecting finite numbers, e.g.,
+	// it will consider +inf and -inf equal
+	if (!std::isfinite(a) || !std::isfinite(b)) {
+		return a == b;
+	}
+
 	const auto diff    = std::fabs(a - b);
 	const auto largest = std::max(std::fabs(a), std::fabs(b));
 
