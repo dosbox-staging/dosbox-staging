@@ -15,6 +15,10 @@ add_subdirectory(misc)
 add_subdirectory(shell)
 add_subdirectory(utils)
 
+if(WIN32)
+  add_subdirectory(platform/windows)
+endif()
+
 if(OPT_TESTS)
     target_sources(dosbox_tests PRIVATE dosbox.cpp)
 endif()
