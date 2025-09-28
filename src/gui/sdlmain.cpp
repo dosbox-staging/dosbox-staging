@@ -5009,13 +5009,12 @@ int sdl_main(int argc, char* argv[])
 
 		// Register the config sections and messages of all the other
 		// modules
-		DOSBOX_InitAllModuleConfigsAndMessages();
+		DOSBOX_InitModuleConfigsAndMessages();
 
 		maybe_write_primary_config(*arguments);
 
-		// After DOSBOX_InitAllModuleConfigsAndMessages() is done, all
-		// the config sections have been registered, so we're ready to
-		// parse the config files.
+		// After DOSBOX_InitModuleConfigsAndMessages() all the config sections
+		// have been registered, so we're ready to parse the config files.
 		//
 		control->ParseConfigFiles(GetConfigDir());
 
@@ -5049,7 +5048,7 @@ int sdl_main(int argc, char* argv[])
 		control->ParseEnv();
 
 		sdl_section_init();
-		DOSBOX_Init();
+		DOSBOX_InitModules();
 
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
@@ -5069,7 +5068,7 @@ int sdl_main(int argc, char* argv[])
 
 		// Shutdown and release
 		sdl_section_destroy();
-		DOSBOX_Destroy();
+		DOSBOX_DestroyModules();
 
 	} catch (char* error) {
 		return_code = 1;

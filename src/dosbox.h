@@ -48,6 +48,10 @@ class SectionProp;
 
 typedef Bitu (LoopHandler)(void);
 
+void DOSBOX_InitModuleConfigsAndMessages();
+void DOSBOX_InitModules();
+void DOSBOX_DestroyModules();
+
 const char* DOSBOX_GetVersion() noexcept;
 const char* DOSBOX_GetDetailedVersion() noexcept;
 
@@ -56,11 +60,6 @@ double DOSBOX_GetUptime();
 void DOSBOX_RunMachine();
 void DOSBOX_SetLoop(LoopHandler * handler);
 void DOSBOX_SetNormalLoop();
-
-void DOSBOX_InitAllModuleConfigsAndMessages(void);
-
-void DOSBOX_Init();
-void DOSBOX_Destroy();
 
 void DOSBOX_SetMachineTypeFromConfig(SectionProp* section);
 

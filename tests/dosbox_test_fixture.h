@@ -31,8 +31,7 @@ public:
 		const auto config_path = GetConfigDir();
 		control->ParseConfigFiles(config_path);
 
-		// This will register all the init functions, but won't run them
-		DOSBOX_InitAllModuleConfigsAndMessages();
+		DOSBOX_InitModuleConfigsAndMessages();
 
 		for (const auto& section_name : sections) {
 			auto section = control->GetSection(section_name);

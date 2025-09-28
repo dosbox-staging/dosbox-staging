@@ -577,7 +577,7 @@ static void DOSBOX_RealInit(Section* sec)
 	}
 }
 
-static void dosbox_section_init()
+static void dosbox_init()
 {
 	auto section = get_section("dosbox");
 	assert(section);
@@ -596,7 +596,7 @@ static void dosbox_section_init()
 	CMOS_Init(section);
 }
 
-static void dosbox_section_destroy()
+static void dosbox_destroy()
 {
 	auto section = get_section("dosbox");
 	assert(section);
@@ -872,7 +872,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "  slow:     Double density (DD) floppy speed (~30 kB/s)");
 }
 
-void DOSBOX_InitAllModuleConfigsAndMessages()
+void DOSBOX_InitModuleConfigsAndMessages()
 {
 	// The [sdl] section gets initialised first in `sdlmain.cpp`, then
 	// this init method gets called.
@@ -937,17 +937,14 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	PROGRAMS_AddMessages();
 }
 
-void DOSBOX_Init()
+void DOSBOX_InitModules()
 {
-	dosbox_section_init();
+	dosbox_init();
 
 #if C_DEBUGGER
 	LOG_StartUp();
 	LOG_Init();
 #endif
-
-	// Execute all registered section init functions
-//	control->Init();
 
 	RENDER_Init();
 	COMPOSITE_Init();
@@ -991,15 +988,14 @@ void DOSBOX_Init()
 #if C_IPX
 	IPX_Init();
 #endif
-
 	ETHERNET_Init();
+
 	AUTOEXEC_Init();
 }
 
-void DOSBOX_Destroy()
+void DOSBOX_DestroyModules()
 {
 	ETHERNET_Destroy();
-
 #if C_IPX
 	IPX_Destroy();
 #endif
@@ -1034,7 +1030,7 @@ void DOSBOX_Destroy()
 	LOG_Destroy();
 #endif
 
-	dosbox_section_destroy();
+	dosbox_destroy();
 
 	control = {};
 }
