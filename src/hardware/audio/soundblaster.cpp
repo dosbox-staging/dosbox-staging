@@ -3900,6 +3900,5 @@ void SBLASTER_AddConfigSection(const ConfigPtr& conf)
 	section->AddUpdateHandler(notify_sblaster_setting_updated);
 
 	init_sblaster_dosbox_settings(*section);
-
 	register_sblaster_text_messages();
 }

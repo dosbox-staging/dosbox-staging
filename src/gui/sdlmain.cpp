@@ -4075,15 +4075,8 @@ static void register_sdl_text_messages()
 	        "using [color=white]'off'[reset]");
 }
 
-// Callers:
-//
-//   sdl_main()
-//
-static void init_sdl_config_section()
+static void init_sdl_dosbox_settings(SectionProp& section)
 {
-	auto section = control->AddSection("sdl");
-	section->AddUpdateHandler(notify_sdl_setting_updated);
-
 	using enum Property::Changeable::Value;
 
 #if C_OPENGL
@@ -4091,7 +4084,7 @@ static void init_sdl_config_section()
 #else
 	const std::string default_output = "texture";
 #endif
-	auto pstring = section->AddString("output", Always, default_output.c_str());
+	auto pstring = section.AddString("output", Always, default_output.c_str());
 
 	pstring->SetOptionHelp(
 	        "opengl_default",
@@ -4136,26 +4129,26 @@ static void init_sdl_config_section()
 	        "texturenb",
 	});
 
-	pstring = section->AddString("texture_renderer", Always, "auto");
+	pstring = section.AddString("texture_renderer", Always, "auto");
 	pstring->SetHelp(
 	        "Render driver to use in 'texture' output mode ('auto' by default).\n"
 	        "Use 'texture_renderer = auto' for an automatic choice.");
 	pstring->SetValues(get_sdl_texture_renderers());
 
-	auto pint = section->AddInt("display", OnlyAtStart, 0);
+	auto pint = section.AddInt("display", OnlyAtStart, 0);
 	pint->SetHelp(
 	        "Number of display to use; values depend on OS and user "
 	        "settings (0 by default).");
 
-	auto pbool = section->AddBool("fullscreen", Always, false);
+	auto pbool = section.AddBool("fullscreen", Always, false);
 	pbool->SetHelp("Start in fullscreen mode ('off' by default).");
 
-	pstring = section->AddString("fullresolution", DeprecatedButAllowed, "");
+	pstring = section.AddString("fullresolution", DeprecatedButAllowed, "");
 	pstring->SetHelp(
 	        "The [color=light-green]'fullresolution'[reset] setting is deprecated but still accepted;\n"
 	        "please use [color=light-green]'fullscreen_mode'[reset] instead.");
 
-	pstring = section->AddString("fullscreen_mode", Always, "standard");
+	pstring = section.AddString("fullscreen_mode", Always, "standard");
 	pstring->SetHelp("Set the fullscreen mode ('standard' by default):");
 
 	pstring->SetOptionHelp("standard",
@@ -4186,12 +4179,12 @@ static void init_sdl_config_section()
 
 	pstring->SetDeprecatedWithAlternateValue("desktop", "standard");
 
-	pstring = section->AddString("windowresolution", DeprecatedButAllowed, "");
+	pstring = section.AddString("windowresolution", DeprecatedButAllowed, "");
 	pstring->SetHelp(
 	        "The [color=light-green]'windowresolution'[reset] setting is deprecated but still accepted;\n"
 	        "please use [color=light-green]'window_size'[reset] instead.");
 
-	pstring = section->AddString("window_size", OnlyAtStart, "default");
+	pstring = section.AddString("window_size", OnlyAtStart, "default");
 	pstring->SetHelp(
 	        "Set initial window size for windowed mode. You can still resize the window\n"
 	        "after startup.\n"
@@ -4202,34 +4195,34 @@ static void init_sdl_config_section()
 	        "  WxH:       Specify window size in WxH format in logical units\n"
 	        "             (e.g., 1024x768).");
 
-	pstring = section->AddString("window_position", Always, "auto");
+	pstring = section.AddString("window_position", Always, "auto");
 	pstring->SetHelp(
 	        "Set initial window position for windowed mode:\n"
 	        "  auto:      Let the window manager decide the position (default).\n"
 	        "  X,Y:       Set window position in X,Y format in logical units (e.g., 250,100).\n"
 	        "             0,0 is the top-left corner of the screen.");
 
-	pbool = section->AddBool("window_decorations", Always, true);
+	pbool = section.AddBool("window_decorations", Always, true);
 	pbool->SetHelp("Enable window decorations in windowed mode ('on' by default).");
 
-	TITLEBAR_AddConfig(*section);
+	TITLEBAR_AddConfigSettings(section);
 
-	pint = section->AddInt("transparency", Always, 0);
+	pint = section.AddInt("transparency", Always, 0);
 	pint->SetHelp(
 	        "Set the transparency of the DOSBox Staging screen (0 by default).\n"
 	        "From 0 (no transparency) to 90 (high transparency).");
 
-	pstring = section->AddString("max_resolution", Deprecated, "");
+	pstring = section.AddString("max_resolution", Deprecated, "");
 	pstring->SetHelp(
 	        "Moved to [color=light-cyan][render][reset] section "
 	        "and renamed to [color=light-green]'viewport'[reset].");
 
-	pstring = section->AddString("viewport_resolution", Deprecated, "");
+	pstring = section.AddString("viewport_resolution", Deprecated, "");
 	pstring->SetHelp(
 	        "Moved to [color=light-cyan][render][reset] section "
 	        "and renamed to [color=light-green]'viewport'[reset].");
 
-	pstring = section->AddString("vsync", Always, "off");
+	pstring = section.AddString("vsync", Always, "off");
 	pstring->SetHelp(
 	        "Set the host video driver's vertical synchronization (vsync) mode:\n"
 	        "  off:              Disable vsync in both windowed and fullscreen mode\n"
@@ -4259,7 +4252,7 @@ static void init_sdl_config_section()
 	        "    in your video driver settings.");
 	pstring->SetValues({"off", "on", "fullscreen-only"});
 
-	pstring = section->AddString("presentation_mode", Always, "auto");
+	pstring = section.AddString("presentation_mode", Always, "auto");
 	pstring->SetHelp(
 	        "Select the frame presentation mode ('auto' by default):\n"
 	        "  auto:       Use 'host-rate' if 'vsync' is enabled, otherwise use 'dos-rate'\n"
@@ -4275,25 +4268,25 @@ static void init_sdl_config_section()
 	        "              could cause problems with VGA games presenting frames at 70 Hz).");
 	pstring->SetValues({"auto", "dos-rate", "host-rate"});
 
-	auto pmulti = section->AddMultiVal("capture_mouse", Deprecated, ",");
+	auto pmulti = section.AddMultiVal("capture_mouse", Deprecated, ",");
 	pmulti->SetHelp(
 	        "Moved to [color=light-cyan][mouse][reset] section and "
 	        "renamed to [color=light-green]'mouse_capture'[reset].");
 
-	pmulti = section->AddMultiVal("sensitivity", Deprecated, ",");
+	pmulti = section.AddMultiVal("sensitivity", Deprecated, ",");
 	pmulti->SetHelp(
 	        "Moved to [color=light-cyan][mouse][reset] section and "
 	        "renamed to [color=light-green]'mouse_sensitivity'[reset].");
 
-	pbool = section->AddBool("raw_mouse_input", Deprecated, false);
+	pbool = section.AddBool("raw_mouse_input", Deprecated, false);
 	pbool->SetHelp(
 	        "Moved to [color=light-cyan][mouse][reset] section and "
 	        "renamed to [color=light-green]'mouse_raw_input'[reset].");
 
-	pbool = section->AddBool("waitonerror", Always, true);
+	pbool = section.AddBool("waitonerror", Always, true);
 	pbool->SetHelp("Keep the console open if an error has occurred ('on' by default).");
 
-	pmulti = section->AddMultiVal("priority", Always, " ");
+	pmulti = section.AddMultiVal("priority", Always, " ");
 	pmulti->SetValue("auto auto");
 	pmulti->SetHelp(
 	        "Priority levels to apply when active and inactive, respectively.\n"
@@ -4306,20 +4299,20 @@ static void init_sdl_config_section()
 	psection->AddString("inactive", Always, "auto")
 	        ->SetValues({"auto", "lowest", "lower", "normal", "higher", "highest"});
 
-	pbool = section->AddBool("mute_when_inactive", OnlyAtStart, false);
+	pbool = section.AddBool("mute_when_inactive", OnlyAtStart, false);
 	pbool->SetHelp("Mute the sound when the window is inactive ('off' by default).");
 
-	pbool = section->AddBool("pause_when_inactive", OnlyAtStart, false);
+	pbool = section.AddBool("pause_when_inactive", OnlyAtStart, false);
 	pbool->SetHelp("Pause emulation when the window is inactive ('off' by default).");
 
-	pbool = section->AddBool("keyboard_capture", Always, false);
+	pbool = section.AddBool("keyboard_capture", Always, false);
 	pbool->SetHelp(
 	        "Capture system keyboard shortcuts ('off' by default).\n"
 	        "When enabled, most system shortcuts such as Alt+Tab are captured and sent to\n"
 	        "DOSBox Staging. This is useful for Windows 3.1x and some DOS programs with\n"
 	        "unchangeable keyboard shortcuts that conflict with system shortcuts.");
 
-	pstring = section->AddPath("mapperfile", Always, MAPPERFILE);
+	pstring = section.AddPath("mapperfile", Always, MAPPERFILE);
 	pstring->SetHelp(
 	        "Path to the mapper file ('mapper-sdl2-XYZ.map' by default, where XYZ is the\n"
 	        "current version). Pre-configured maps are bundled in 'resources/mapperfiles'.\n"
@@ -4327,12 +4320,27 @@ static void init_sdl_config_section()
 	        "Note: The '--resetmapper' command line option only deletes the default mapper\n"
 	        "      file.");
 
-	pstring = section->AddString("screensaver", OnlyAtStart, "auto");
+	pstring = section.AddString("screensaver", OnlyAtStart, "auto");
 	pstring->SetHelp(
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
 	        "variable which usually blocks the OS screensaver while the emulator is\n"
 	        "running ('auto' by default).");
 	pstring->SetValues({"auto", "allow", "block"});
+}
+
+// Callers:
+//
+//   sdl_main()
+//
+static void init_sdl_config_section()
+{
+	auto section = control->AddSection("sdl");
+	section->AddUpdateHandler(notify_sdl_setting_updated);
+
+	init_sdl_dosbox_settings(*section);
+
+	TITLEBAR_AddMessages();
+	register_sdl_text_messages();
 }
 
 static int edit_primary_config()
@@ -4998,11 +5006,14 @@ int sdl_main(int argc, char* argv[])
 		// switches and during startup or reboot
 		register_command_line_help_message();
 
-		register_sdl_text_messages();
-
+		// We need to call this before initialising the modules to to
+		// support the '--list-countries' and '--list-layouts' command
+		// line options.
 		DOS_Locale_AddMessages();
+
+		// We need to call this before initialising the modules to to
+		// support the '--list-glshaders' command line option.
 		RENDER_AddMessages();
-		TITLEBAR_AddMessages();
 
 		// Add [sdl] config section
 		init_sdl_config_section();

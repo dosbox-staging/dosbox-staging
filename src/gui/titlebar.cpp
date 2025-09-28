@@ -697,22 +697,22 @@ static void parse_config(const std::string& new_setting_str)
 	}
 }
 
-void TITLEBAR_ReadConfig(const SectionProp& secprop)
+void TITLEBAR_ReadConfig(const SectionProp& section)
 {
-	parse_config(secprop.GetString("window_titlebar"));
+	parse_config(section.GetString("window_titlebar"));
 
 	TITLEBAR_RefreshTitle();
 }
 
-void TITLEBAR_AddConfig(SectionProp& secprop)
+void TITLEBAR_AddConfigSettings(SectionProp& section)
 {
 	constexpr auto always = Property::Changeable::Always;
 
 	PropString* prop_str = nullptr;
 
-	prop_str = secprop.AddString("window_titlebar",
-	                              always,
-	                              "program=name dosbox=auto cycles=on mouse=full");
+	prop_str = section.AddString("window_titlebar",
+	                             always,
+	                             "program=name dosbox=auto cycles=on mouse=full");
 	prop_str->SetHelp(
 	        "Space separated list of information to be displayed in the window's titlebar\n"
 	        "('program=name dosbox=auto cycles=on mouse=full' by default). If a parameter\n"
