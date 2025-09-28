@@ -32,7 +32,7 @@ EthernetConnection* ETHERNET_OpenConnection([[maybe_unused]] const std::string& 
 	return conn;
 }
 
-static void init_ethernet_dosbox_settings(SectionProp& section)
+static void init_ethernet_config_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
@@ -143,5 +143,5 @@ void ETHERNET_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("ethernet");
 	section->AddUpdateHandler(notify_ethernet_setting_updated);
 
-	init_ethernet_dosbox_settings(*section);
+	init_ethernet_config_settings(*section);
 }

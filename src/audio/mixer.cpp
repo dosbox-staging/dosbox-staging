@@ -3077,7 +3077,7 @@ static void handle_toggle_mute(const bool was_pressed)
 	};
 }
 
-static void init_mixer_dosbox_settings(SectionProp& sec_prop)
+static void init_mixer_config_settings(SectionProp& sec_prop)
 {
 #if defined(WIN32)
 	// Longstanding known-good defaults for Windows
@@ -3249,6 +3249,6 @@ void MIXER_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("mixer");
 	section->AddUpdateHandler(notify_mixer_setting_updated);
 
-	init_mixer_dosbox_settings(*section);
+	init_mixer_config_settings(*section);
 	register_mixer_text_messages();
 }

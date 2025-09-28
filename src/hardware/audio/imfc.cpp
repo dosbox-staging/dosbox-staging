@@ -13444,7 +13444,7 @@ static void notify_imfc_setting_updated([[maybe_unused]] SectionProp* section,
 	IMFC_Init();
 }
 
-static void init_imfc_dosbox_settings(SectionProp& secprop)
+static void init_imfc_config_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -13480,5 +13480,5 @@ void IMFC_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("imfc");
 	section->AddUpdateHandler(notify_imfc_setting_updated);
 
-	init_imfc_dosbox_settings(*section);
+	init_imfc_config_settings(*section);
 }

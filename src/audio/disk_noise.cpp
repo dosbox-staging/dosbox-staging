@@ -555,7 +555,7 @@ void DISKNOISE_Destroy()
 	MIXER_UnlockMixerThread();
 }
 
-static void init_disknoise_dosbox_settings(SectionProp& secprop)
+static void init_disknoise_config_settings(SectionProp& secprop)
 {
 	constexpr auto Always = Property::Changeable::Always;
 
@@ -586,5 +586,5 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
 
 	auto section = conf->AddSection("disknoise");
 
-	init_disknoise_dosbox_settings(*section);
+	init_disknoise_config_settings(*section);
 }

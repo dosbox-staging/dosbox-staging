@@ -338,7 +338,7 @@ constexpr auto Mt32New = "mt32_new";
 constexpr auto Cm32l   = "cm32l";
 } // namespace BestModelAlias
 
-static void init_mt32_dosbox_settings(SectionProp& sec_prop)
+static void init_mt32_config_settings(SectionProp& sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -1110,7 +1110,7 @@ void MT32_AddConfigSection(const ConfigPtr& conf)
 
 	auto section = conf->AddSection("mt32");
 
-	init_mt32_dosbox_settings(*section);
+	init_mt32_config_settings(*section);
 	register_mt32_text_messages();
 }
 

@@ -177,7 +177,7 @@ constexpr ReverbParameters DefaultReverbParameters = {
 };
 // clang-format on
 
-static void init_fluidsynth_dosbox_settings(SectionProp& secprop)
+static void init_fluidsynth_config_settings(SectionProp& secprop)
 {
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
@@ -1362,6 +1362,6 @@ void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("fluidsynth");
 	section->AddUpdateHandler(notify_fluidsynth_setting_updated);
 
-	init_fluidsynth_dosbox_settings(*section);
+	init_fluidsynth_config_settings(*section);
 	register_fluidsynth_text_messages();
 }

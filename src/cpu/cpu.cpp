@@ -3227,7 +3227,7 @@ static void notify_cpu_setting_updated([[maybe_unused]] SectionProp* section,
 	CPU_Init();
 }
 
-void init_cpu_dosbox_settings(SectionProp& secprop)
+void init_cpu_config_settings(SectionProp& secprop)
 {
 	using enum Property::Changeable::Value;
 
@@ -3395,5 +3395,5 @@ void CPU_AddConfigSection(const ConfigPtr& conf)
 
 	section->AddUpdateHandler(notify_cpu_setting_updated);
 
-	init_cpu_dosbox_settings(*section);
+	init_cpu_config_settings(*section);
 }

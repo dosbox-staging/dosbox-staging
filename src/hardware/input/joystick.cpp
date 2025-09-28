@@ -622,7 +622,7 @@ static void notify_joystick_setting_updated(SectionProp* section, [[maybe_unused
 	joystick = std::make_unique<JOYSTICK>(section);
 }
 
-static void init_joystick_dosbox_settings(SectionProp& secprop)
+static void init_joystick_config_settings(SectionProp& secprop)
 {
 	using enum Property::Changeable::Value;
 
@@ -706,5 +706,5 @@ void JOYSTICK_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("joystick");
 	section->AddUpdateHandler(notify_joystick_setting_updated);
 
-	init_joystick_dosbox_settings(*section);
+	init_joystick_config_settings(*section);
 }

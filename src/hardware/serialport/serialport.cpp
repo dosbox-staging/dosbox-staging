@@ -1387,7 +1387,7 @@ static void notify_serial_setting_updated([[maybe_unused]] SectionProp* section,
 	SERIAL_Init();
 }
 
-static void add_serial_dosbox_settings(SectionProp& section)
+static void add_serial_config_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
@@ -1448,5 +1448,5 @@ void SERIAL_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("serial");
 	section->AddUpdateHandler(notify_serial_setting_updated);
 
-	add_serial_dosbox_settings(*section);
+	add_serial_config_settings(*section);
 }

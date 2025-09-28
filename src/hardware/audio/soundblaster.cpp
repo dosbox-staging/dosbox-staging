@@ -3754,7 +3754,7 @@ void SBLASTER_NotifyUnlockMixer()
 	}
 }
 
-void init_sblaster_dosbox_settings(SectionProp& secprop)
+void init_sblaster_config_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -3899,6 +3899,6 @@ void SBLASTER_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection(SblasterSectionName);
 	section->AddUpdateHandler(notify_sblaster_setting_updated);
 
-	init_sblaster_dosbox_settings(*section);
+	init_sblaster_config_settings(*section);
 	register_sblaster_text_messages();
 }

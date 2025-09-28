@@ -4075,7 +4075,7 @@ static void register_sdl_text_messages()
 	        "using [color=white]'off'[reset]");
 }
 
-static void init_sdl_dosbox_settings(SectionProp& section)
+static void init_sdl_config_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
@@ -4337,7 +4337,7 @@ static void init_sdl_config_section()
 	auto section = control->AddSection("sdl");
 	section->AddUpdateHandler(notify_sdl_setting_updated);
 
-	init_sdl_dosbox_settings(*section);
+	init_sdl_config_settings(*section);
 
 	TITLEBAR_AddMessages();
 	register_sdl_text_messages();

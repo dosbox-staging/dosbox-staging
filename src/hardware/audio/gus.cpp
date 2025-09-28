@@ -1520,7 +1520,7 @@ void GUS_NotifyUnlockMixer()
 	}
 }
 
-static void init_gus_dosbox_settings(SectionProp& secprop)
+static void init_gus_config_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -1644,5 +1644,5 @@ void GUS_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("gus");
 	section->AddUpdateHandler(notify_gus_setting_updated);
 
-	init_gus_dosbox_settings(*section);
+	init_gus_config_settings(*section);
 }

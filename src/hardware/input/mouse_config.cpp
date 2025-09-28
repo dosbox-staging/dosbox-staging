@@ -443,7 +443,7 @@ static void notify_mouse_setting_updated(SectionProp* section,
 	}
 }
 
-static void init_mouse_dosbox_settings(SectionProp& secprop)
+static void init_mouse_config_settings(SectionProp& secprop)
 {
 	using enum Property::Changeable::Value;
 
@@ -655,5 +655,5 @@ void MOUSE_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("mouse");
 	section->AddUpdateHandler(notify_mouse_setting_updated);
 
-	init_mouse_dosbox_settings(*section);
+	init_mouse_config_settings(*section);
 }

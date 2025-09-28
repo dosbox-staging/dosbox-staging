@@ -967,7 +967,7 @@ Opl::~Opl()
 	MIXER_UnlockMixerThread();
 }
 
-static void init_opl_dosbox_settings(SectionProp& secprop)
+static void init_opl_config_settings(SectionProp& secprop)
 {
 	constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto when_idle  = Property::Changeable::WhenIdle;
@@ -1064,5 +1064,5 @@ void OPL_AddConfigSettings()
 	auto section = get_section("sblaster");
 	assert(section);
 
-	init_opl_dosbox_settings(*section);
+	init_opl_config_settings(*section);
 }

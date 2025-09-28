@@ -7917,7 +7917,7 @@ void VOODOO_Destroy()
 	voodoo_shutdown();
 }
 
-static void init_voodoo_dosbox_settings(SectionProp& section)
+static void init_voodoo_config_settings(SectionProp& section)
 {
 	constexpr auto Deprecated  = Property::Changeable::Deprecated;
 	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
@@ -7969,6 +7969,6 @@ void VOODOO_AddConfigSection(const ConfigPtr& conf)
 
 	auto section = conf->AddSection("voodoo");
 
-	init_voodoo_dosbox_settings(*section);
+	init_voodoo_config_settings(*section);
 }
 

@@ -278,7 +278,7 @@ static void notify_innovation_setting_updated([[maybe_unused]] SectionProp* sect
 	INNOVATION_Init();
 }
 
-static void init_innovation_dosbox_settings(SectionProp& sec_prop)
+static void init_innovation_config_settings(SectionProp& sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -339,5 +339,5 @@ void INNOVATION_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("innovation");
 	section->AddUpdateHandler(notify_innovation_setting_updated);
 
-	init_innovation_dosbox_settings(*section);
+	init_innovation_config_settings(*section);
 }

@@ -784,7 +784,7 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	caller->WriteOut("\n");
 }
 
-static void init_soundcanvas_dosbox_settings(SectionProp& sec_prop)
+static void init_soundcanvas_config_settings(SectionProp& sec_prop)
 {
 	using namespace SoundCanvas;
 
@@ -858,6 +858,6 @@ void SOUNDCANVAS_AddConfigSection(const ConfigPtr& conf)
 
 	auto section = conf->AddSection("soundcanvas");
 
-	init_soundcanvas_dosbox_settings(*section);
+	init_soundcanvas_config_settings(*section);
 	register_soundcanvas_text_messages();
 }

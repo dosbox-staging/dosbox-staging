@@ -897,7 +897,7 @@ static void init_midiconfig_settings(SectionProp& secprop)
 	});
 }
 
-void init_midi_dosbox_settings(SectionProp& secprop)
+void init_midi_config_settings(SectionProp& secprop)
 {
 	init_mididevice_settings(secprop);
 	init_midiconfig_settings(secprop);
@@ -946,6 +946,6 @@ void MIDI_AddConfigSection(const ConfigPtr& conf)
 
 	section->AddUpdateHandler(notify_midi_setting_updated);
 
-	init_midi_dosbox_settings(*section);
+	init_midi_config_settings(*section);
 	register_midi_text_messages();
 }

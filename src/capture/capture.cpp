@@ -650,7 +650,7 @@ static void init_key_mappings()
 	                  "Rec. Video");
 }
 
-static void init_capture_dosbox_settings(SectionProp& section)
+static void init_capture_config_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
@@ -693,6 +693,6 @@ void CAPTURE_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("capture");
 	section->AddUpdateHandler(notify_capture_setting_updated);
 
-	init_capture_dosbox_settings(*section);
+	init_capture_config_settings(*section);
 	init_key_mappings();
 }

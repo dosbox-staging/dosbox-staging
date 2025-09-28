@@ -1436,7 +1436,7 @@ static void notify_reelmagic_setting_updated([[maybe_unused]] SectionProp* secti
 	REELMAGIC_Init();
 }
 
-static void init_reelmagic_dosbox_settings(SectionProp& section)
+static void init_reelmagic_config_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
@@ -1470,5 +1470,5 @@ void REELMAGIC_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)
 	auto section = conf->AddSection("reelmagic");
 	section->AddUpdateHandler(notify_reelmagic_setting_updated);
 
-	init_reelmagic_dosbox_settings(*section);
+	init_reelmagic_config_settings(*section);
 }
