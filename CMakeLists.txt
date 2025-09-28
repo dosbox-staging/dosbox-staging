@@ -389,10 +389,6 @@ endif()
 
 add_subdirectory(src)
 
-if(WIN32)
-  target_sources(dosbox PRIVATE src/platform/windows/winres.rc)
-endif()
-
 # libatomic is part of the GCC runtime library.
 # This is used by GCC and Clang by default on Linux.
 # Mac and Windows don't need this except for maybe MSYS2.
