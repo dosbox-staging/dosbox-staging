@@ -118,9 +118,8 @@ bool lookup_shell_cmd(std::string name, SHELL_Cmd &shell_cmd)
 
 bool DOS_Shell::ExecuteConfigChange(const char* const property_name, const std::string _args)
 {
-	assert(control);
-	const auto section_dosbox = static_cast<SectionProp*>(
-	        control->GetSection("dosbox"));
+	const auto section_dosbox = get_section("dosbox");
+	assert(section_dosbox);
 
 	auto args = _args;
 	trim(args);

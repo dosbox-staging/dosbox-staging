@@ -106,8 +106,7 @@ void MOUNT::Run(void) {
 		return;
 	}
 
-	const SectionProp* section = static_cast<SectionProp*>(
-	        control->GetSection("dosbox"));
+	const auto section = get_section("dosbox");
 	assert(section);
 
 	std::string type="dir";

@@ -284,12 +284,10 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 
 static SectionProp* get_render_section()
 {
-	assert(control);
+	auto section = get_section("render");
+	assert(section);
 
-	auto render_section = static_cast<SectionProp*>(control->GetSection("render"));
-	assert(render_section);
-
-	return render_section;
+	return section;
 }
 
 static uint8_t get_best_mode(const uint8_t flags)

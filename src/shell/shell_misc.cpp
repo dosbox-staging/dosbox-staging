@@ -66,8 +66,7 @@ void DOS_Shell::InputCommand(char* line)
 
 	history->Append(command, get_utf8_code_page());
 
-	const auto* const dos_section = dynamic_cast<SectionProp*>(
-	        control->GetSection("dos"));
+	const auto dos_section = get_section("dos");
 	if (dos_section == nullptr) {
 		assert(false);
 		return;

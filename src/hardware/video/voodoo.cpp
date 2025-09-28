@@ -7065,7 +7065,9 @@ static int get_num_total_threads()
 	constexpr auto SettingName = "voodoo_threads";
 	constexpr auto AutoSetting = "auto";
 
-	const auto sec = dynamic_cast<SectionProp*>(control->GetSection(SectionName));
+	const auto sec = get_section(SectionName);
+	assert(sec);
+
 	const auto user_setting = sec ? sec->GetString(SettingName) : AutoSetting;
 
 	if (const auto maybe_int = parse_int(user_setting)) {

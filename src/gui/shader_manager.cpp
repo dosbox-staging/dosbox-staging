@@ -569,8 +569,7 @@ std::string ShaderManager::FindShaderAutoMachine() const
 	// DOSBOX_RealInit may have not been run yet.
 	// If not, go ahead and set the globals from the config.
 	if (machine == MachineType::None) {
-		DOSBOX_SetMachineTypeFromConfig(
-		        static_cast<SectionProp*>(control->GetSection("dosbox")));
+		DOSBOX_SetMachineTypeFromConfig(get_section("dosbox"));
 	}
 
 	switch (machine) {

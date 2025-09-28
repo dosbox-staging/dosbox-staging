@@ -836,9 +836,7 @@ static std::unique_ptr<MPU401> mpu401 = nullptr;
 
 static SectionProp* get_midi_section()
 {
-	assert(control);
-
-	auto section = static_cast<SectionProp*>(control->GetSection("midi"));
+	auto section = get_section("midi");
 	assert(section);
 
 	return section;

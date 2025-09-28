@@ -513,7 +513,7 @@ void DOS_SetupMemory(void) {
 		constexpr auto video_memory_start =
 			kilobytes_to_segment(PcjrStandardMemorySizeKb - PcjrVideoMemorySizeKb);
 
-		const SectionProp* section = static_cast<SectionProp*>(control->GetSection("dos"));
+		const auto section = get_section("dos");
 		assert(section);
 		const std::string pcjr_memory_config = section->GetString("pcjr_memory_config");
 		if (pcjr_memory_config == "expanded") {

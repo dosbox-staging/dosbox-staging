@@ -1130,10 +1130,10 @@ void VGA_DestroyMemory()
 
 static uint32_t determine_vmem_delay_ns()
 {
-	const auto sect = static_cast<SectionProp*>(control->GetSection("dosbox"));
-	assert(sect);
+	const auto section = get_section("dosbox");
+	assert(section);
 
-	const auto vmem_delay_str = sect->GetString("vmem_delay");
+	const auto vmem_delay_str = section->GetString("vmem_delay");
 
 	constexpr auto MinDelayNs = 0;
 	constexpr auto MaxDelayNs = 20000;

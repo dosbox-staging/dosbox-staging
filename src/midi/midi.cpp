@@ -591,12 +591,10 @@ bool MIDI_IsAvailable()
 
 static SectionProp* get_midi_section()
 {
-	assert(control);
+	auto section = get_section("midi");
+	assert(section);
 
-	auto sec = static_cast<SectionProp*>(control->GetSection("midi"));
-	assert(sec);
-
-	return sec;
+	return section;
 }
 
 static std::string get_mididevice_setting()

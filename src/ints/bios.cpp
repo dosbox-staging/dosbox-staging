@@ -1274,9 +1274,11 @@ public:
 			   at the end of the conventional 640k) */
 			mem_writew(BIOS_MEMORY_SIZE, 624);
 			mem_writew(BIOS_TRUE_MEMORY_SIZE, ConventionalMemorySizeKb);
+
 		} else if (is_machine_pcjr()) {
-			const SectionProp* section = static_cast<SectionProp*>(control->GetSection("dos"));
+			const auto section = get_section("dos");
 			assert(section);
+
 			const std::string pcjr_memory_config = section->GetString("pcjr_memory_config");
 			if (pcjr_memory_config == "expanded") {
 				mem_writew(BIOS_MEMORY_SIZE, ConventionalMemorySizeKb);

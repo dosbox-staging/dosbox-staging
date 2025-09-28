@@ -3398,8 +3398,7 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 
 static bool maybe_enable_cms(const SbType sbtype)
 {
-	const auto* sect = static_cast<SectionProp*>(
-	        control->GetSection(SblasterSectionName));
+	const auto sect = get_section(SblasterSectionName);
 	assert(sect);
 
 	const bool cms_enabled = [sect, sbtype]() {
