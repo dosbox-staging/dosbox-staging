@@ -53,6 +53,8 @@
 #include "hardware/video/reelmagic/reelmagic.h"
 #include "hardware/video/vga.h"
 #include "hardware/video/voodoo.h"
+#include "hardware/virtualbox.h"
+#include "hardware/vmware.h"
 #include "ints/bios.h"
 #include "ints/int10.h"
 #include "midi/midi.h"
@@ -989,12 +991,16 @@ void DOSBOX_InitModules()
 	IPX_Init();
 #endif
 	ETHERNET_Init();
+	VIRTUALBOX_Init();
+	VMWARE_Init();
 
 	AUTOEXEC_Init();
 }
 
 void DOSBOX_DestroyModules()
 {
+	VMWARE_Destroy();
+	VIRTUALBOX_Destroy();
 	ETHERNET_Destroy();
 #if C_IPX
 	IPX_Destroy();

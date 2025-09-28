@@ -10,8 +10,6 @@
 
 #include "config/config.h"
 #include "hardware/network/ne2000.h"
-#include "hardware/virtualbox.h"
-#include "hardware/vmware.h"
 
 EthernetConnection* ETHERNET_OpenConnection([[maybe_unused]] const std::string& backend)
 {
@@ -116,16 +114,10 @@ void ETHERNET_Init()
 	assert(section);
 
 	NE2K_Init(section);
-
-	VIRTUALBOX_Init();
-	VMWARE_Init();
 }
 
 void ETHERNET_Destroy()
 {
-	VMWARE_Destroy();
-	VIRTUALBOX_Destroy();
-
 	NE2K_Destroy();
 }
 
