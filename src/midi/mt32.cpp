@@ -452,16 +452,21 @@ static std::deque<std_fs::path> get_platform_rom_dirs()
 
 #endif
 
-static std::deque<std_fs::path> get_rom_dirs()
+static SectionProp* get_mt32_section()
 {
-	const auto section = static_cast<SectionProp*>(control->GetSection("mt32"));
+	const auto section = get_section("mt32");
 	assert(section);
 
+	return section;
+}
+
+static std::deque<std_fs::path> get_rom_dirs()
+{
 	// Get potential ROM directories from the environment and/or system
 	auto rom_dirs = get_platform_rom_dirs();
 
 	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
-	std::string selected_romdir = section->GetString("romdir");
+	std::string selected_romdir = get_mt32_section()->GetString("romdir");
 
 	if (selected_romdir.empty()) { // already trimmed
 		selected_romdir = DefaultMt32RomsDir;
@@ -477,9 +482,7 @@ static std::deque<std_fs::path> get_rom_dirs()
 
 static std::string get_model_setting()
 {
-	const auto section = static_cast<SectionProp*>(control->GetSection("mt32"));
-	assert(section);
-	return section->GetString("model");
+	return get_mt32_section()->GetString("model");
 }
 
 static std::set<const LASynthModel*> find_models(MT32Emu::Service& service,
@@ -710,10 +713,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	// ask the channel to scale all the samples up to its 0db level.
 	mixer_channel->Set0dbScalar(Max16BitSampleValue);
 
-	const auto section = static_cast<SectionProp*>(control->GetSection("mt32"));
-	assert(section);
-
-	const std::string filter_prefs = section->GetString("mt32_filter");
+	const std::string filter_prefs = get_mt32_section()->GetString("mt32_filter");
 
 	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {
@@ -1084,23 +1084,25 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	caller->WriteOut("\n");
 }
 
-void MT32_Init()
+static void notify_mt32_setting_updated([[maybe_unused]] SectionProp* section,
+                                        const std::string& prop_name)
 {
-	const auto device = MIDI_GetCurrentDevice();
+	const auto device = dynamic_cast<MidiDeviceMt32*>(MIDI_GetCurrentDevice());
 
-	if (device && device->GetName() == MidiDeviceName::Mt32) {
-		const auto mt32_device = dynamic_cast<MidiDeviceMt32*>(device);
+	if (!device) {
+		return;
+	}
 
-		const auto curr_model_setting =
-		        mt32_device
-		                ? mt32_device->GetModelAndDir().first->GetName()
-		                : "";
+	if (prop_name == "model") {
+		const auto curr_model = device->GetModelAndDir().first->GetName();
+		const auto new_model = get_model_setting();
 
-		const auto new_model_setting = get_model_setting();
-
-		if (curr_model_setting != new_model_setting) {
+		if (curr_model != new_model) {
 			MIDI_Init();
 		}
+
+	} else {
+		MIDI_Init();
 	}
 }
 
@@ -1109,6 +1111,7 @@ void MT32_AddConfigSection(const ConfigPtr& conf)
 	assert(conf);
 
 	auto section = conf->AddSection("mt32");
+	section->AddUpdateHandler(notify_mt32_setting_updated);
 
 	init_mt32_config_settings(*section);
 	register_mt32_text_messages();

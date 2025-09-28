@@ -313,12 +313,10 @@ static std::vector<std_fs::path> get_platform_data_dirs()
 
 static SectionProp* get_fluidsynth_section()
 {
-	assert(control);
+	auto section = get_section("fluidsynth");
+	assert(section);
 
-	auto sec = static_cast<SectionProp*>(control->GetSection("fluidsynth"));
-	assert(sec);
-
-	return sec;
+	return section;
 }
 
 static std::vector<std_fs::path> get_data_dirs()
@@ -1298,33 +1296,27 @@ static void notify_fluidsynth_setting_updated([[maybe_unused]] SectionProp* sect
 	const auto device = dynamic_cast<MidiDeviceFluidSynth*>(
 	        MIDI_GetCurrentDevice());
 
+	if (!device) {
+		return;
+	}
+
 	if (prop_name == ChorusSettingName) {
-		if (device) {
-			device->SetChorus();
-		}
+		device->SetChorus();
 
 	} else if (prop_name == ReverbSettingName) {
-		if (device) {
-			device->SetReverb();
-		}
+		device->SetReverb();
 
 	} else if (prop_name == "fsynth_filter") {
-		if (device) {
-			device->SetFilter();
-		}
+		device->SetFilter();
 
 	} else if (prop_name == "soundfont_volume") {
-		if (device) {
-			device->SetVolume(section->GetInt("soundfont_volume"));
-		}
+		device->SetVolume(section->GetInt("soundfont_volume"));
 
 	} else if (prop_name == "soundfont_dir") {
 		// no-op; will take effect when loading a SoundFont
 
 	} else {
-		if (device) {
-			MIDI_Init();
-		}
+		MIDI_Init();
 	}
 }
 

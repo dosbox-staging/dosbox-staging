@@ -832,23 +832,26 @@ static void register_soundcanvas_text_messages()
 	MSG_Add("SOUNDCANVAS_ACTIVE_MODEL_LABEL", "Active model:    ");
 }
 
-void SOUNDCANVAS_Init()
+static void notify_soundcanvas_setting_updated([[maybe_unused]] SectionProp* section,
+                                               const std::string& prop_name)
 {
-	const auto device = MIDI_GetCurrentDevice();
+	const auto device = dynamic_cast<MidiDeviceSoundCanvas*>(
+	        MIDI_GetCurrentDevice());
 
-	if (device && device->GetName() == MidiDeviceName::SoundCanvas) {
-		const auto soundcanvas_device = dynamic_cast<MidiDeviceSoundCanvas*>(
-		        device);
+	if (!device) {
+		return;
+	}
 
-		const auto curr_model_setting =
-		        soundcanvas_device ? soundcanvas_device->GetModel().config_name
-		                           : "";
+	if (prop_name == "soundcanvas_model") {
+		const auto curr_model = device->GetModel().config_name;
+		const auto new_model  = get_model_setting();
 
-		const auto new_model_setting = get_model_setting();
-
-		if (curr_model_setting != new_model_setting) {
+		if (curr_model != new_model) {
 			MIDI_Init();
 		}
+
+	} else {
+		MIDI_Init();
 	}
 }
 
@@ -857,6 +860,7 @@ void SOUNDCANVAS_AddConfigSection(const ConfigPtr& conf)
 	assert(conf);
 
 	auto section = conf->AddSection("soundcanvas");
+	section->AddUpdateHandler(notify_soundcanvas_setting_updated);
 
 	init_soundcanvas_config_settings(*section);
 	register_soundcanvas_text_messages();

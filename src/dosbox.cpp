@@ -962,11 +962,6 @@ void DOSBOX_InitModules()
 	CAPTURE_Init();
 
 	MIXER_Init();
-#if C_MT32EMU
-	MT32_Init();
-#endif
-	FSYNTH_Init();
-	SOUNDCANVAS_Init();
 	MIDI_Init();
 
 #if C_DEBUGGER
