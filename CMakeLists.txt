@@ -138,7 +138,7 @@ endif()
 check_include_file("unistd.h" HAS_UNISTD)
 if(NOT HAS_UNISTD)
   configure_file(
-    src/platform/visualc/unistd.h
+    src/platform/windows/visualc/unistd.h
     ${CMAKE_CURRENT_BINARY_DIR}/include/unistd.h
   )
 endif()
@@ -390,7 +390,7 @@ endif()
 add_subdirectory(src)
 
 if(WIN32)
-  target_sources(dosbox PRIVATE src/winres.rc)
+  target_sources(dosbox PRIVATE src/platform/windows/winres.rc)
 endif()
 
 # libatomic is part of the GCC runtime library.
