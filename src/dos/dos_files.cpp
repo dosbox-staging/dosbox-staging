@@ -1882,11 +1882,7 @@ bool DOS_IsFileLocking()
 	return emulate_file_locking;
 }
 
-void DOS_Files_Init(Section* sec)
+void DOS_Files_Init(SectionProp& section)
 {
-	assert(sec);
-
-	auto section = static_cast<SectionProp*>(sec);
-
-	emulate_file_locking = section->GetBool("file_locking");
+	emulate_file_locking = section.GetBool("file_locking");
 }

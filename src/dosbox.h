@@ -68,7 +68,7 @@ void DOSBOX_RunMachine();
 void DOSBOX_SetLoop(LoopHandler * handler);
 void DOSBOX_SetNormalLoop();
 
-void DOSBOX_SetMachineTypeFromConfig(SectionProp* section);
+void DOSBOX_SetMachineTypeFromConfig(SectionProp& section);
 
 int64_t DOSBOX_GetTicksDone();
 void DOSBOX_SetTicksDone(const int64_t ticks_done);

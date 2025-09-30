@@ -2983,36 +2983,36 @@ void MIXER_Destroy()
 	MIXER_CloseAudioDevice();
 }
 
-static void notify_mixer_setting_updated(SectionProp* section,
+static void notify_mixer_setting_updated(SectionProp& section,
                                          const std::string& prop_name)
 {
 	MIXER_LockMixerThread();
 
 	if (prop_name == "chorus") {
 		const auto new_chorus_preset = chorus_pref_to_preset(
-		        section->GetString("chorus"));
+		        section.GetString("chorus"));
 
 		if (mixer.chorus.preset != new_chorus_preset) {
 			MIXER_SetChorusPreset(new_chorus_preset);
 		}
 
 	} else if (prop_name == "compressor") {
-		init_compressor(section->GetBool("compressor"));
+		init_compressor(section.GetBool("compressor"));
 
 	} else if (prop_name == "crossfeed") {
 		const auto new_crossfeed_preset = crossfeed_pref_to_preset(
-		        section->GetString("crossfeed"));
+		        section.GetString("crossfeed"));
 
 		if (mixer.crossfeed.preset != new_crossfeed_preset) {
 			MIXER_SetCrossfeedPreset(new_crossfeed_preset);
 		}
 
 	} else if (prop_name == "denoiser") {
-		init_denoiser(section->GetBool("denoiser"));
+		init_denoiser(section.GetBool("denoiser"));
 
 	} else if (prop_name == "reverb") {
 		const auto new_reverb_preset = reverb_pref_to_preset(
-		        section->GetString("reverb"));
+		        section.GetString("reverb"));
 
 		if (mixer.reverb.preset != new_reverb_preset) {
 			MIXER_SetReverbPreset(new_reverb_preset);

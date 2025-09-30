@@ -3861,7 +3861,7 @@ static void sblaster_evict([[maybe_unused]] Section* sec)
 	set_section_property_value(SblasterSectionName, "sbtype", "none");
 }
 
-static void notify_sblaster_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_sblaster_setting_updated([[maybe_unused]] SectionProp& section,
                                             [[maybe_unused]] const std::string& prop_name)
 {
 	SBLASTER_Destroy();

@@ -1077,25 +1077,26 @@ Bitu IPX_ESRHandler(void) {
 
 bool NetWrapper_InitializeSDLNet(); // from misc_util.cpp
 
-class IPX final : public ModuleBase {
+class IPX {
 private:
 	CALLBACK_HandlerObject callback_ipx = {};
 	CALLBACK_HandlerObject callback_esr = {};
 	CALLBACK_HandlerObject callback_ipxint = {};
 	RealPt old_73_vector = 0;
 	static uint16_t dospage;
+	SectionProp& section;
 
 public:
-	IPX(Section *configuration) : ModuleBase(configuration)
+	IPX(SectionProp& _section) : section(_section)
 	{
 		ECBList = nullptr;
 		ESRList = nullptr;
 		isIpxServer = false;
 		isIpxConnected = false;
 
-		SectionProp *section = static_cast<SectionProp *>(configuration);
-		if (section && !section->GetBool("ipx"))
+		if (!section.GetBool("ipx")) {
 			return;
+		}
 
 		if (!NetWrapper_InitializeSDLNet())
 			return;
@@ -1154,10 +1155,12 @@ public:
 		PROGRAMS_MakeFile("IPXNET.COM",ProgramCreate<IPXNET>);
 	}
 
-	~IPX() {
-		SectionProp * section = static_cast<SectionProp *>(m_configuration);
+	~IPX()
+	{
 		PIC_RemoveEvents(IPX_AES_EventHandler);
-		if(!section->GetBool("ipx")) return;
+		if (!section.GetBool("ipx")) {
+			return;
+		}
 
 		if(isIpxServer) {
 			isIpxServer = false;
@@ -1184,7 +1187,7 @@ void IPX_Init()
 	auto section = get_section("ipx");
 	assert(section);
 
-	ipx = std::make_unique<IPX>(section);
+	ipx = std::make_unique<IPX>(*section);
 }
 
 void IPX_Destroy()
@@ -1192,7 +1195,7 @@ void IPX_Destroy()
 	ipx = {};
 }
 
-void notify_ipx_setting_updated(SectionProp* section,
+void notify_ipx_setting_updated(SectionProp& section,
                                 [[maybe_unused]] const std::string& prop_name)
 {
 	ipx = std::make_unique<IPX>(section);

@@ -3275,17 +3275,17 @@ void GFX_RegenerateWindow(Section* sec)
 	GFX_ResetScreen();
 }
 
-static void notify_sdl_setting_updated(SectionProp* section,
+static void notify_sdl_setting_updated(SectionProp& section,
                                        const std::string& prop_name)
 {
 	if (prop_name == "mapperfile") {
-		MAPPER_BindKeys(section);
+		MAPPER_BindKeys(&section);
 
 	} else if (prop_name == "output") {
-		GFX_RegenerateWindow(section);
+		GFX_RegenerateWindow(&section);
 
 	} else if (prop_name == "window_titlebar") {
-		TITLEBAR_ReadConfig(*section);
+		TITLEBAR_ReadConfig(section);
 
 	} else {
 		// TODO add support for the rest of the settings later

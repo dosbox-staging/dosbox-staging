@@ -6,6 +6,6 @@
 #ifndef DOSBOX_DOS_FILES_H
 #define DOSBOX_DOS_FILES_H
 
-void DOS_Files_Init(Section* section);
+void DOS_Files_Init(SectionProp& section);
 
 #endif // DOSBOX_DOS_FILES_H

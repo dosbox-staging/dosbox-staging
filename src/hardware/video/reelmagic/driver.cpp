@@ -1429,7 +1429,7 @@ void REELMAGIC_Destroy()
 	}
 }
 
-static void notify_reelmagic_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_reelmagic_setting_updated([[maybe_unused]] SectionProp& section,
                                              [[maybe_unused]] const std::string& prop_name)
 {
 	REELMAGIC_Destroy();

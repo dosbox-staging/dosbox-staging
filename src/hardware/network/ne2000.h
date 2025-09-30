@@ -226,7 +226,7 @@ public:
 #endif
 };
 
-void NE2K_Init(Section* section);
+void NE2K_Init(SectionProp& section);
 void NE2K_Destroy();
 
 #endif // DOSBOX_NE2000_H

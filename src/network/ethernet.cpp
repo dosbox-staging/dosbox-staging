@@ -113,7 +113,7 @@ void ETHERNET_Init()
 	auto section = get_section("ethernet");
 	assert(section);
 
-	NE2K_Init(section);
+	NE2K_Init(*section);
 }
 
 void ETHERNET_Destroy()
@@ -121,7 +121,7 @@ void ETHERNET_Destroy()
 	NE2K_Destroy();
 }
 
-static void notify_ethernet_setting_updated(SectionProp* section,
+static void notify_ethernet_setting_updated(SectionProp& section,
                                             [[maybe_unused]] const std::string& prop_name)
 {
 	NE2K_Destroy();

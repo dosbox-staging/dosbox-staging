@@ -598,7 +598,7 @@ void CAPTURE_Destroy()
 	capture.reset();
 }
 
-static void notify_capture_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_capture_setting_updated([[maybe_unused]] SectionProp& section,
                                            [[maybe_unused]] const std::string& prop_name)
 {
 	CAPTURE_Destroy();

@@ -1494,7 +1494,7 @@ void COMPOSITE_Init()
 	}
 }
 
-static void notify_composite_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_composite_setting_updated([[maybe_unused]] SectionProp& section,
                                              [[maybe_unused]] const std::string& prop_name)
 {
 	COMPOSITE_Init();

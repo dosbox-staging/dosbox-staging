@@ -832,7 +832,7 @@ static void register_soundcanvas_text_messages()
 	MSG_Add("SOUNDCANVAS_ACTIVE_MODEL_LABEL", "Active model:    ");
 }
 
-static void notify_soundcanvas_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_soundcanvas_setting_updated([[maybe_unused]] SectionProp& section,
                                                const std::string& prop_name)
 {
 	const auto device = dynamic_cast<MidiDeviceSoundCanvas*>(

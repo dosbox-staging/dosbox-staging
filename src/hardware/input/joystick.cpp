@@ -538,13 +538,13 @@ static void configure_calibration(const SectionProp &settings)
 	calibrated_axis_rates.y = axis_rates_from_pref(y_cal_pref, default_axis_rates.y);
 }
 
-class JOYSTICK final : public ModuleBase {
+class JOYSTICK {
 private:
 	IO_ReadHandleObject ReadHandler = {};
 	IO_WriteHandleObject WriteHandler = {};
 
 public:
-	JOYSTICK(Section *configuration) : ModuleBase(configuration)
+	JOYSTICK(SectionProp& section)
 	{
 		JOYSTICK_ParseConfiguredType();
 
@@ -552,18 +552,14 @@ public:
 		if (joytype == JOY_DISABLED)
 			return;
 
-		// Get the [joystock] conf section
-		const auto section = static_cast<SectionProp *>(configuration);
-		assert(section);
-
 		// Get and apply configuration settings
-		autofire = section->GetBool("autofire");
-		button_wrapping_enabled = section->GetBool("buttonwrap");
-		stick[0].deadzone = section->GetInt("deadzone");
-		swap34 = section->GetBool("swap34");
-		stick[0].mapstate = section->GetBool("circularinput") ? MovementType::JOYMAP_CIRCLE
+		autofire = section.GetBool("autofire");
+		button_wrapping_enabled = section.GetBool("buttonwrap");
+		stick[0].deadzone = section.GetInt("deadzone");
+		swap34 = section.GetBool("swap34");
+		stick[0].mapstate = section.GetBool("circularinput") ? MovementType::JOYMAP_CIRCLE
 		                                                       : MovementType::JOYMAP_SQUARE;
-		configure_calibration(*section);
+		configure_calibration(section);
 
 		// Set initial time and position states
 		const auto ticks = PIC_FullIndex();
@@ -586,7 +582,7 @@ public:
 		// Setup the joystick IO port handlers, which lets DOS games
 		// detect and use them
 		if (is_visible) {
-			const bool wants_timed = section->GetBool("timed");
+			const bool wants_timed = section.GetBool("timed");
 			ReadHandler.Install(0x201,
 			                    wants_timed ? read_p201_timed : read_p201,
 			                    io_width_t::byte);
@@ -609,7 +605,7 @@ void JOYSTICK_Init()
 	const auto section = get_section("joystick");
 	assert(section);
 
-	joystick = std::make_unique<JOYSTICK>(section);
+	joystick = std::make_unique<JOYSTICK>(*section);
 }
 
 void JOYSTICK_Destroy()
@@ -617,7 +613,7 @@ void JOYSTICK_Destroy()
 	joystick = {};
 }
 
-static void notify_joystick_setting_updated(SectionProp* section, [[maybe_unused]] const std::string& prop_name)
+static void notify_joystick_setting_updated(SectionProp& section, [[maybe_unused]] const std::string& prop_name)
 {
 	joystick = std::make_unique<JOYSTICK>(section);
 }

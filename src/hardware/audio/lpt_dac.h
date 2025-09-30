@@ -8,10 +8,10 @@
 
 void LPTDAC_AddConfigSection(Section* sec);
 
-void LPTDAC_Init(Section* sec);
-void LPTDAC_Destroy(Section* sec);
+void LPTDAC_Init(SectionProp& section);
+void LPTDAC_Destroy();
 
-void LPTDAC_NotifySettingUpdated(SectionProp* section, const std::string& prop_name);
+void LPTDAC_NotifySettingUpdated(SectionProp& section, const std::string& prop_name);
 
 void LPTDAC_NotifyLockMixer();
 void LPTDAC_NotifyUnlockMixer();

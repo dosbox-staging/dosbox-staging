@@ -533,7 +533,7 @@ void DOS_RepopulateCountryInfo();
 
 // Lifecycle
 
-void DOS_Locale_Init(Section* section);
+void DOS_Locale_Init(SectionProp& section);
 void DOS_Locale_Destroy();
 
 // Separate function to support '--list-countries' and '--list-layouts' command

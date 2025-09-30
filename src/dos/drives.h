@@ -54,7 +54,8 @@ public:
 	static void CycleDisks(int drive, bool notify);
 	static void CycleAllDisks(void);
 	static char *GetDrivePosition(int drive);
-	static void Init(Section* sec);
+
+	static void Init();
 
 private:
 	static drive_infos_t drive_infos;
@@ -537,6 +538,6 @@ private:
 
 #pragma GCC diagnostic pop
 
-void DRIVES_Init(Section* sec);
+void DRIVES_Init();
 
 #endif // DOSBOX_DRIVES_H

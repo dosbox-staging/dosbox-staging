@@ -8,10 +8,10 @@
 
 void PS1AUDIO_AddConfigSection(Section* sec);
 
-void PS1AUDIO_Init(Section* sec);
-void PS1AUDIO_Destroy(Section* sec);
+void PS1AUDIO_Init(SectionProp& section);
+void PS1AUDIO_Destroy();
 
-void PS1AUDIO_NotifySettingUpdated(SectionProp* section, const std::string& prop_name);
+void PS1AUDIO_NotifySettingUpdated(SectionProp& section, const std::string& prop_name);
 
 bool PS1AUDIO_IsEnabled();
 

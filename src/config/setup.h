@@ -333,7 +333,7 @@ public:
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
 
 using SectionUpdateHandler =
-        std::function<void(SectionProp*, const std::string& prop_name)>;
+        std::function<void(SectionProp&, const std::string& prop_name)>;
 
 class Section {
 private:

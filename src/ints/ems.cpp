@@ -1355,9 +1355,11 @@ static Bitu INT4B_Handler() {
 	return CBRET_NONE;
 }
 
-Bitu GetEMSType(SectionProp * section) {
+Bitu GetEMSType(SectionProp& section)
+{
 	Bitu rtype = 0;
-	const std::string ems_pref = section->GetString("ems");
+
+	const std::string ems_pref = section.GetString("ems");
 
 	const auto ems_pref_has_bool = parse_bool_setting(ems_pref);
 
@@ -1373,7 +1375,7 @@ Bitu GetEMSType(SectionProp * section) {
 	return rtype;
 }
 
-class EMS final : public ModuleBase {
+class EMS {
 private:
 	uint16_t ems_baseseg = 0;
 	DOS_Device *emm_device = nullptr;
@@ -1384,11 +1386,7 @@ private:
 	callback_number_t call_int67 = 0;
 
 public:
-	EMS(Section *configuration)
-	        : ModuleBase(configuration),
-	          call_vdma(),
-	          call_vcpi(),
-	          call_v86mon()
+	EMS(SectionProp& section) : call_vdma(), call_vcpi(), call_v86mon()
 	{
 		ems_type=0;
 
@@ -1399,9 +1397,10 @@ public:
 		vcpi.enabled=false;
 		GEMMIS_seg=0;
 
-		SectionProp * section=static_cast<SectionProp *>(configuration);
-		ems_type=GetEMSType(section);
-		if (ems_type<=0) return;
+		ems_type = GetEMSType(section);
+		if (ems_type <= 0) {
+			return;
+		}
 
 		if (is_machine_pcjr()) {
 			ems_type=0;
@@ -1538,10 +1537,8 @@ public:
 
 static std::unique_ptr<EMS> ems_module = {};
 
-void EMS_Init(Section* section)
+void EMS_Init(SectionProp& section)
 {
-	assert(section);
-
 	ems_module = std::make_unique<EMS>(section);
 }
 

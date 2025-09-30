@@ -13437,7 +13437,7 @@ void IMFC_Destroy()
 	MIXER_UnlockMixerThread();
 }
 
-static void notify_imfc_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_imfc_setting_updated([[maybe_unused]] SectionProp& section,
                                         [[maybe_unused]] const std::string& prop_name)
 {
 	IMFC_Destroy();

@@ -1422,7 +1422,7 @@ static void NE2000_Poller(void) {
 	});
 }
 
-class NE2K final : public ModuleBase {
+class NE2K {
 private:
 	// Data
 	IO_ReadHandleObject ReadHandler8[0x20];
@@ -1432,12 +1432,9 @@ private:
 
 public:
 	bool load_success;
-	NE2K(Section *configuration)
-	        : ModuleBase(configuration),
-	          load_success(true)
+	NE2K(SectionProp& section) : load_success(true)
 	{
-		SectionProp *section = static_cast<SectionProp *>(configuration);
-		if (!section->GetBool("ne2000")) {
+		if (!section.GetBool("ne2000")) {
 			load_success = false;
 			return;
 		}
@@ -1454,12 +1451,12 @@ public:
 		}
 
 		// get irq and base
-		auto irq = check_cast<uint8_t>(section->GetInt("nicirq"));
+		auto irq = check_cast<uint8_t>(section.GetInt("nicirq"));
 		if(!(irq==3 || irq==4  || irq==5  || irq==6 ||irq==7 ||
 			irq==9 || irq==10 || irq==11 || irq==12 ||irq==14 ||irq==15)) {
 			irq=3;
 		}
-		auto base = static_cast<io_port_t>(section->GetHex("nicbase"));
+		auto base = static_cast<io_port_t>(section.GetHex("nicbase"));
 		if(!(base==0x260||base==0x280||base==0x300||base==0x320||base==0x340||base==0x380)) {
 			base=0x300;
 		}
@@ -1467,21 +1464,31 @@ public:
         LOG_MSG("NE2000: Initialised on port %xh and IRQ %u", base, irq);
 
 		// mac address
-		std::string macstring = section->GetString("macaddr");
-		unsigned int macint[6];
-		uint8_t mac[6];
-		if(sscanf(macstring.c_str(),"%02x:%02x:%02x:%02x:%02x:%02x",
-			&macint[0],&macint[1],&macint[2],&macint[3],&macint[4],&macint[5]) != 6) {
-			mac[0]=0xac;mac[1]=0xde;mac[2]=0x48;
-			mac[3]=0x88;mac[4]=0xbb;mac[5]=0xaa;
-		} else {
-			mac[0] = check_cast<uint8_t>(macint[0]);
-      mac[1] = check_cast<uint8_t>(macint[1]);
-			mac[2] = check_cast<uint8_t>(macint[2]);
-      mac[3] = check_cast<uint8_t>(macint[3]);
-			mac[4] = check_cast<uint8_t>(macint[4]);
-      mac[5] = check_cast<uint8_t>(macint[5]);
-		}
+	std::string macstring = section.GetString("macaddr");
+	unsigned int macint[6];
+	uint8_t mac[6];
+	if (sscanf(macstring.c_str(),
+		   "%02x:%02x:%02x:%02x:%02x:%02x",
+		   &macint[0],
+		   &macint[1],
+		   &macint[2],
+		   &macint[3],
+		   &macint[4],
+		   &macint[5]) != 6) {
+		mac[0] = 0xac;
+		mac[1] = 0xde;
+		mac[2] = 0x48;
+		mac[3] = 0x88;
+		mac[4] = 0xbb;
+		mac[5] = 0xaa;
+	} else {
+		mac[0] = check_cast<uint8_t>(macint[0]);
+		mac[1] = check_cast<uint8_t>(macint[1]);
+		mac[2] = check_cast<uint8_t>(macint[2]);
+		mac[3] = check_cast<uint8_t>(macint[3]);
+		mac[4] = check_cast<uint8_t>(macint[4]);
+		mac[5] = check_cast<uint8_t>(macint[5]);
+	}
 
 		// create the bochs NIC class
 		theNE2kDevice = new bx_ne2k_c ();
@@ -1513,7 +1520,7 @@ public:
 
 static std::unique_ptr<NE2K> ne2000 = {};
 
-void NE2K_Init(Section* section)
+void NE2K_Init(SectionProp& section)
 {
 	ne2000 = std::make_unique<NE2K>(section);
 

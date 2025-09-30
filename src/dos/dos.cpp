@@ -1841,14 +1841,14 @@ void DOS_Init()
 
 	dos_module = std::make_unique<DOS>(section);
 
-	XMS_Init(section);
-	EMS_Init(section);
+	XMS_Init(*section);
+	EMS_Init(*section);
 
-	DOS_Files_Init(section);
-	DOS_Locale_Init(section);
+	DOS_Files_Init(*section);
+	DOS_Locale_Init(*section);
 
 	MSCDEX_Init();
-	DRIVES_Init(section);
+	DRIVES_Init();
 	CDROM_Image_Init();
 }
 
@@ -1865,7 +1865,7 @@ void DOS_Destroy()
 	dos_module = {};
 }
 
-static void notify_dos_setting_updated(SectionProp* section,
+static void notify_dos_setting_updated(SectionProp& section,
                                        [[maybe_unused]] const std::string& prop_name)
 {
 	DOS_Locale_Destroy();
@@ -1888,7 +1888,7 @@ void DOS_NotifySettingUpdated(const std::string& prop_name)
 	auto section = get_section("dos");
 	assert(section);
 
-	notify_dos_setting_updated(section, prop_name);
+	notify_dos_setting_updated(*section, prop_name);
 }
 
 static void init_dos_settings(SectionProp& section)

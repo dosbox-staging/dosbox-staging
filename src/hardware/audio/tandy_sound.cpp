@@ -686,12 +686,9 @@ static void init_tandysound_settings(SectionProp& section)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-void TANDYSOUND_Init([[maybe_unused]] Section* sec)
+void TANDYSOUND_Init([[maybe_unused]] SectionProp& section)
 {
-	assert(sec);
-	const auto section = static_cast<SectionProp*>(sec);
-
-	const auto pref = section->GetString("tandy");
+	const auto pref = section.GetString("tandy");
 
 	if (has_false(pref) || (!is_machine_pcjr_or_tandy() && pref == "auto")) {
 		BIOS_ConfigureTandyDacCallbacks(false);
@@ -716,7 +713,7 @@ void TANDYSOUND_Init([[maybe_unused]] Section* sec)
 	                       (is_machine_pcjr_or_tandy() && pref == "auto");
 	if (wants_dac) {
 		tandy_dac = std::make_unique<TandyDAC>(
-		        cfg, section->GetString("tandy_dac_filter"));
+		        cfg, section.GetString("tandy_dac_filter"));
 
 		TIMER_AddTickHandler(TANDYSOUND_PicCallback);
 	}
@@ -727,11 +724,11 @@ void TANDYSOUND_Init([[maybe_unused]] Section* sec)
 
 	tandy_psg = std::make_unique<TandyPSG>(cfg,
 	                                       wants_dac,
-	                                       section->GetString("tandy_fadeout"),
-	                                       section->GetString("tandy_filter"));
+	                                       section.GetString("tandy_fadeout"),
+	                                       section.GetString("tandy_filter"));
 }
 
-void TANDYSOUND_Destroy([[maybe_unused]] Section* section)
+void TANDYSOUND_Destroy()
 {
 	if (tandy_psg || tandy_dac) {
 		LOG_MSG("%s: Shutting down", ChannelName::TandyPsg);
@@ -747,7 +744,7 @@ void TANDYSOUND_Destroy([[maybe_unused]] Section* section)
 	}
 }
 
-void TANDYSOUND_NotifySettingUpdated(SectionProp* section,
+void TANDYSOUND_NotifySettingUpdated(SectionProp& section,
                                      [[maybe_unused]] const std::string& prop_name)
 {
 	// The [speaker] section controls multiple audio devices, so we want to
@@ -756,7 +753,7 @@ void TANDYSOUND_NotifySettingUpdated(SectionProp* section,
 	if (prop_name == "tandy" || prop_name == "tandy_fadeout" ||
 	    prop_name == "tandy_filter" || prop_name == "tandy_dac_filter") {
 
-		TANDYSOUND_Destroy(section);
+		TANDYSOUND_Destroy();
 		TANDYSOUND_Init(section);
 	}
 

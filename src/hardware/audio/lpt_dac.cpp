@@ -172,12 +172,9 @@ static void init_lpt_dac_settings(SectionProp& section)
 	pbool->SetHelp("Use 'lpt_dac = disney' to enable the Disney Sound Source.");
 }
 
-void LPTDAC_Init(Section* section)
+void LPTDAC_Init(SectionProp& section)
 {
-	assert(section);
-	const auto prop = static_cast<SectionProp*>(section);
-
-	const std::string dac_choice = prop->GetString("lpt_dac");
+	const std::string dac_choice = section.GetString("lpt_dac");
 
 	if (dac_choice == "disney") {
 		MIXER_LockMixerThread();
@@ -202,7 +199,7 @@ void LPTDAC_Init(Section* section)
 	}
 
 	// Apply LPT DAC filter
-	const std::string filter_choice = prop->GetString("lpt_dac_filter");
+	const std::string filter_choice = section.GetString("lpt_dac_filter");
 	assert(lpt_dac);
 
 	if (!lpt_dac->TryParseAndSetCustomFilter(filter_choice)) {
@@ -232,7 +229,7 @@ void LPTDAC_Init(Section* section)
 	MIXER_UnlockMixerThread();
 }
 
-void LPTDAC_Destroy([[maybe_unused]] Section* sec)
+void LPTDAC_Destroy()
 {
 	if (lpt_dac) {
 		MIXER_LockMixerThread();
@@ -244,14 +241,14 @@ void LPTDAC_Destroy([[maybe_unused]] Section* sec)
 	}
 }
 
-void LPTDAC_NotifySettingUpdated(SectionProp* section,
+void LPTDAC_NotifySettingUpdated(SectionProp& section,
                                  [[maybe_unused]] const std::string& prop_name)
 {
 	// The [speaker] section controls multiple audio devices, so we want to
 	// make sure to only restart the device affected by the setting.
 	//
 	if (prop_name == "lpt_dac" || prop_name == "lpt_dac_filter") {
-		LPTDAC_Destroy(section);
+		LPTDAC_Destroy();
 		LPTDAC_Init(section);
 	}
 

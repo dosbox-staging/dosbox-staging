@@ -311,7 +311,8 @@ char *DriveManager::GetDrivePosition(int drive)
 	return swap_position;
 }
 
-void DriveManager::Init(Section* /* sec */) {
+void DriveManager::Init()
+{
 	// setup drive_infos structure
 	for(int i = 0; i < DOS_DRIVES; i++) {
 		drive_infos.at(i).current_disk = 0;
@@ -323,6 +324,7 @@ void DriveManager::Init(Section* /* sec */) {
 	//                   "cycledrive", "Cycle Drv");
 }
 
-void DRIVES_Init(Section* sec) {
-	DriveManager::Init(sec);
+void DRIVES_Init()
+{
+	DriveManager::Init();
 }

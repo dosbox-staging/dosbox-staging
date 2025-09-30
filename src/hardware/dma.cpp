@@ -114,7 +114,7 @@ static bool activate_secondary()
 	// conflict, so we explicitly shutdown the TandySound device (if
 	// it happens to be running) to meet this request.
 	//
-	TANDYSOUND_Destroy(nullptr);
+	TANDYSOUND_Destroy();
 
 	constexpr uint8_t secondary_index = 1;
 	secondary = std::make_unique<DmaController>(secondary_index);

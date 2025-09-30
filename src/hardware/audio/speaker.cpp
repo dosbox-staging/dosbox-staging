@@ -31,24 +31,21 @@ void SPEAKER_Init()
 {
 	const auto section = get_section("speaker");
 
-	LPTDAC_Init(section);
-	PCSPEAKER_Init(section);
-	PS1AUDIO_Init(section);
-	TANDYSOUND_Init(section);
+	LPTDAC_Init(*section);
+	PCSPEAKER_Init(*section);
+	PS1AUDIO_Init(*section);
+	TANDYSOUND_Init(*section);
 }
 
 void SPEAKER_Destroy()
 {
-	const auto section = get_section("speaker");
-
-	TANDYSOUND_Destroy(section);
-	PS1AUDIO_Destroy(section);
-	PCSPEAKER_Destroy(section);
-	LPTDAC_Destroy(section);
+	TANDYSOUND_Destroy();
+	PS1AUDIO_Destroy();
+	PCSPEAKER_Destroy();
+	LPTDAC_Destroy();
 }
 
-void notify_speaker_setting_updated(SectionProp* section,
-                                    const std::string& prop_name)
+void notify_speaker_setting_updated(SectionProp& section, const std::string& prop_name)
 {
 	LPTDAC_NotifySettingUpdated(section, prop_name);
 	PCSPEAKER_NotifySettingUpdated(section, prop_name);

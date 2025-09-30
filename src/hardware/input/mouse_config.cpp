@@ -406,19 +406,19 @@ void MOUSE_Init()
 	MOUSE_StartupIfReady();
 }
 
-static void notify_mouse_setting_updated(SectionProp* section,
+static void notify_mouse_setting_updated(SectionProp& section,
                                          const std::string& prop_name)
 {
 	if (prop_name == "builtin_dos_mouse_driver_model") {
 		set_dos_driver_model(
-		        section->GetString("builtin_dos_mouse_driver_model"));
+		        section.GetString("builtin_dos_mouse_driver_model"));
 
 	} else if (prop_name == "builtin_dos_mouse_driver_options") {
 		set_dos_driver_options(
-		        section->GetString("builtin_dos_mouse_driver_options"));
+		        section.GetString("builtin_dos_mouse_driver_options"));
 
 	} else if (prop_name == "mouse_capture") {
-		set_capture_type(section->GetString("mouse_capture"));
+		set_capture_type(section.GetString("mouse_capture"));
 
 		if (mouse_config.capture == MouseCapture::NoMouse) {
 			// If NoMouse got configured at runtime,
@@ -429,17 +429,17 @@ static void notify_mouse_setting_updated(SectionProp* section,
 		MOUSE_UpdateGFX();
 
 	} else if (prop_name == "mouse_middle_release") {
-		mouse_config.middle_release = section->GetBool("mouse_middle_release");
+		mouse_config.middle_release = section.GetBool("mouse_middle_release");
 
 	} else if (prop_name == "mouse_multi_display_aware") {
-		mouse_config.multi_display_aware = section->GetBool(
+		mouse_config.multi_display_aware = section.GetBool(
 		        "mouse_multi_display_aware");
 
 	} else if (prop_name == "mouse_raw_input") {
-		mouse_config.raw_input = section->GetBool("mouse_raw_input");
+		mouse_config.raw_input = section.GetBool("mouse_raw_input");
 
 	} else if (prop_name == "mouse_sensitivity") {
-		set_sensitivity(section->GetString("mouse_sensitivity"));
+		set_sensitivity(section.GetString("mouse_sensitivity"));
 	}
 }
 

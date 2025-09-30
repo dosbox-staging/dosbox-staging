@@ -282,12 +282,12 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 	return linesadded;
 }
 
-static SectionProp* get_render_section()
+static SectionProp& get_render_section()
 {
 	auto section = get_section("render");
 	assert(section);
 
-	return section;
+	return *section;
 }
 
 static uint8_t get_best_mode(const uint8_t flags)
@@ -678,9 +678,9 @@ static const char* to_string(const enum MonochromePalette palette)
 
 static AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
 
-static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting(SectionProp* section)
+static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting(SectionProp& section)
 {
-	const std::string mode = section->GetString("aspect");
+	const std::string mode = section.GetString("aspect");
 
 	if (has_true(mode) || mode == "auto") {
 		return AspectRatioCorrectionMode::Auto;
@@ -699,7 +699,7 @@ static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting(Sectio
 	}
 }
 
-static void set_aspect_ratio_correction(SectionProp* section)
+static void set_aspect_ratio_correction(SectionProp& section)
 {
 	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting(section);
 }
@@ -896,10 +896,10 @@ static std::optional<ViewportSettings> parse_viewport_settings(const std::string
 
 static ViewportSettings viewport_settings = {};
 
-static void set_viewport(SectionProp* section)
+static void set_viewport(SectionProp& section)
 {
 	if (const auto& settings = parse_viewport_settings(
-	            section->GetString("viewport"));
+	            section.GetString("viewport"));
 	    settings) {
 		viewport_settings = *settings;
 	} else {
@@ -908,9 +908,9 @@ static void set_viewport(SectionProp* section)
 	}
 }
 
-static IntegerScalingMode get_integer_scaling_mode_setting(SectionProp* section)
+static IntegerScalingMode get_integer_scaling_mode_setting(SectionProp& section)
 {
-	const std::string mode = section->GetString("integer_scaling");
+	const std::string mode = section.GetString("integer_scaling");
 
 	if (has_false(mode)) {
 		return IntegerScalingMode::Off;
@@ -932,7 +932,7 @@ static IntegerScalingMode get_integer_scaling_mode_setting(SectionProp* section)
 	}
 }
 
-static void set_integer_scaling(SectionProp* section)
+static void set_integer_scaling(SectionProp& section)
 {
 	render.integer_scaling_mode = get_integer_scaling_mode_setting(section);
 }
@@ -1094,17 +1094,17 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 
 std::string RENDER_GetCgaColorsSetting()
 {
-	return get_render_section()->GetString("cga_colors");
+	return get_render_section().GetString("cga_colors");
 }
 
-static void init_render_settings(SectionProp& secprop)
+static void init_render_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
-	auto* int_prop = secprop.AddInt("frameskip", Deprecated, 0);
+	auto* int_prop = section.AddInt("frameskip", Deprecated, 0);
 	int_prop->SetHelp("Consider capping frame rates using the 'host_rate' setting.");
 
-	auto* string_prop = secprop.AddString("glshader", Always, "crt-auto");
+	auto* string_prop = section.AddString("glshader", Always, "crt-auto");
 	string_prop->SetOptionHelp(
 	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
 	        "output modes ('crt-auto' by default). Adaptive CRT shader options:\n"
@@ -1155,7 +1155,7 @@ static void init_render_settings(SectionProp& secprop)
 #endif
 	});
 
-	string_prop = secprop.AddString("aspect", Always, "auto");
+	string_prop = section.AddString("aspect", Always, "auto");
 	string_prop->SetHelp(
 	        "Set the aspect ratio correction mode ('auto' by default):\n"
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
@@ -1180,7 +1180,7 @@ static void init_render_settings(SectionProp& secprop)
 
 	string_prop->SetValues({"auto", "on", "square-pixels", "off", "stretch"});
 
-	string_prop = secprop.AddString("integer_scaling", Always, "auto");
+	string_prop = section.AddString("integer_scaling", Always, "auto");
 	string_prop->SetHelp(
 	        "Constrain the horizontal or vertical scaling factor to the largest integer\n"
 	        "value so the image still fits into the viewport ('auto' by default). The\n"
@@ -1201,7 +1201,7 @@ static void init_render_settings(SectionProp& secprop)
 
 	string_prop->SetValues({"auto", "vertical", "horizontal", "off"});
 
-	string_prop = secprop.AddString("viewport", Always, "fit");
+	string_prop = section.AddString("viewport", Always, "fit");
 	string_prop->SetHelp(
 	        "Set the viewport size ('fit' by default). This is the maximum drawable area;\n"
 	        "the video output is always contained within the viewport while taking the\n"
@@ -1230,7 +1230,7 @@ static void init_render_settings(SectionProp& secprop)
 	        "  - You can use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey\n"
 	        "    actions to set the stretch in 'relative' mode in real-time.");
 
-	string_prop = secprop.AddString("monochrome_palette",
+	string_prop = section.AddString("monochrome_palette",
 	                                Always,
 	                                MonochromePaletteAmber);
 	string_prop->SetHelp(
@@ -1243,7 +1243,7 @@ static void init_render_settings(SectionProp& secprop)
 	                        MonochromePaletteWhite,
 	                        MonochromePalettePaperwhite});
 
-	string_prop = secprop.AddString("cga_colors", OnlyAtStart, "default");
+	string_prop = section.AddString("cga_colors", OnlyAtStart, "default");
 	string_prop->SetHelp(
 	        "Set the interpretation of CGA RGBI colours ('default' by default). Affects all\n"
 	        "machine types capable of displaying CGA or better graphics. Built-in presets:\n"
@@ -1278,7 +1278,7 @@ static void init_render_settings(SectionProp& secprop)
 	        "  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa\n"
 	        "  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff");
 
-	string_prop = secprop.AddString("scaler", Deprecated, "none");
+	string_prop = section.AddString("scaler", Deprecated, "none");
 	string_prop->SetHelp(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
 	        "  - If you used the normal2x/3x scalers, consider using 'integer_scaling'\n"
@@ -1365,7 +1365,7 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
-static void set_shader(SectionProp* section)
+static void set_shader(SectionProp& section)
 {
 	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
 		return;
@@ -1377,7 +1377,7 @@ static void set_shader(SectionProp* section)
 
 	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
 		const auto mapped_shader_name = shader_manager.MapShaderName(
-		        section->GetString(GlshaderSettingName));
+		        section.GetString(GlshaderSettingName));
 
 		shader_manager.NotifyGlshaderSettingChanged(mapped_shader_name);
 
@@ -1394,10 +1394,10 @@ static void set_shader(SectionProp* section)
 	render.current_shader_name = new_shader_name;
 }
 
-static void set_monochrome_palette(SectionProp* section)
+static void set_monochrome_palette(SectionProp& section)
 {
 	const auto mono_palette = to_monochrome_palette_enum(
-	        section->GetString("monochrome_palette").c_str());
+	        section.GetString("monochrome_palette").c_str());
 
 	VGA_SetMonochromePalette(mono_palette);
 }
@@ -1412,19 +1412,19 @@ void RENDER_Init()
 	auto section = get_section("render");
 	assert(section);
 
-	set_aspect_ratio_correction(section);
-	set_viewport(section);
-	set_integer_scaling(section);
+	set_aspect_ratio_correction(*section);
+	set_viewport(*section);
+	set_integer_scaling(*section);
 
-	set_shader(section);
+	set_shader(*section);
 	set_scan_and_pixel_doubling();
 
-	set_monochrome_palette(section);
+	set_monochrome_palette(*section);
 
 	render_initialised = true;
 }
 
-static void notify_render_setting_updated(SectionProp* section,
+static void notify_render_setting_updated(SectionProp& section,
                                           const std::string& prop_name)
 {
 	auto reinit_drawing = []() {

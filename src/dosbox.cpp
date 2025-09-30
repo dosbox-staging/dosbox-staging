@@ -452,16 +452,15 @@ static void DOSBOX_UnlockSpeed(bool pressed)
 	}
 }
 
-void DOSBOX_SetMachineTypeFromConfig(SectionProp* section)
+void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 {
 	const auto arguments = &control->arguments;
 	if (!arguments->machine.empty()) {
 		//update value in config (else no matching against suggested values
-		section->HandleInputline(std::string("machine=") +
-		                         arguments->machine);
+		section.HandleInputline(std::string("machine=") + arguments->machine);
 	}
 
-	const auto machine_str = section->GetString("machine");
+	const auto machine_str = section.GetString("machine");
 
 	svga_type = SvgaType::None;
 	machine   = MachineType::Vga;
@@ -517,10 +516,8 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp* section)
 	       (machine != MachineType::Vga && svga_type == SvgaType::None));
 }
 
-static void DOSBOX_RealInit(Section* sec)
+static void dosbox_realinit(SectionProp& section)
 {
-	SectionProp* section = static_cast<SectionProp*>(sec);
-
 	// Initialize some dosbox internals
 	ticks.remain = 0;
 	ticks.last   = GetTicks();
@@ -533,10 +530,10 @@ static void DOSBOX_RealInit(Section* sec)
 	DOSBOX_SetMachineTypeFromConfig(section);
 
 	// Set the user's prefered MCB fault handling strategy
-	DOS_SetMcbFaultStrategy(section->GetString("mcb_fault_strategy").c_str());
+	DOS_SetMcbFaultStrategy(section.GetString("mcb_fault_strategy").c_str());
 
 	// Convert the users video memory in either MB or KB to bytes
-	const std::string vmemsize_string = section->GetString("vmemsize");
+	const std::string vmemsize_string = section.GetString("vmemsize");
 
 	// If auto, then default to 0 and let the adapter's setup rountine set
 	// the size
@@ -546,7 +543,7 @@ static void DOSBOX_RealInit(Section* sec)
 	vmemsize *= (vmemsize <= 8) ? 1024 * 1024 : 1024;
 	vga.vmemsize = check_cast<uint32_t>(vmemsize);
 
-	const std::string pref = section->GetString("vesa_modes");
+	const std::string pref = section.GetString("vesa_modes");
 	if (pref == "compatible") {
 		int10.vesa_modes = VesaModes::Compatible;
 	} else if (pref == "halfline") {
@@ -555,10 +552,10 @@ static void DOSBOX_RealInit(Section* sec)
 		int10.vesa_modes = VesaModes::All;
 	}
 
-	VGA_SetRefreshRateMode(section->GetString("dos_rate"));
+	VGA_SetRefreshRateMode(section.GetString("dos_rate"));
 
 	// Set the disk IO data rate
-	const auto hdd_io_speed = section->GetString("hard_disk_speed");
+	const auto hdd_io_speed = section.GetString("hard_disk_speed");
 	if (hdd_io_speed == "fast") {
 		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::HardDisk);
 	} else if (hdd_io_speed == "medium") {
@@ -570,7 +567,7 @@ static void DOSBOX_RealInit(Section* sec)
 	}
 
 	// Set the floppy disk IO data rate
-	const auto floppy_io_speed = section->GetString("floppy_disk_speed");
+	const auto floppy_io_speed = section.GetString("floppy_disk_speed");
 	if (floppy_io_speed == "fast") {
 		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::Floppy);
 	} else if (floppy_io_speed == "medium") {
@@ -587,7 +584,7 @@ static void dosbox_init()
 	auto section = get_section("dosbox");
 	assert(section);
 
-	DOSBOX_RealInit(section);
+	dosbox_realinit(*section);
 
 	MSG_LoadMessages();
 
@@ -611,14 +608,14 @@ static void dosbox_destroy()
 	IO_Destroy();
 }
 
-static void notify_dosbox_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_dosbox_setting_updated([[maybe_unused]] SectionProp& section,
                                           const std::string prop_name)
 {
 	if (prop_name == "language") {
 		MSG_LoadMessages();
 
 	} else if (prop_name == "dos_rate") {
-		DOSBOX_RealInit(section);
+		dosbox_realinit(section);
 
 	} else if (prop_name == "shell_config_shortcuts") {
 		// No need to re-init anything; the setting is always queried when

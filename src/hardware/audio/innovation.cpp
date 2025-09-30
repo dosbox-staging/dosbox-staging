@@ -271,7 +271,7 @@ void INNOVATION_Destroy()
 	innovation = {};
 }
 
-static void notify_innovation_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_innovation_setting_updated([[maybe_unused]] SectionProp& section,
                                               [[maybe_unused]] const std::string& prop_name)
 {
 	INNOVATION_Destroy();

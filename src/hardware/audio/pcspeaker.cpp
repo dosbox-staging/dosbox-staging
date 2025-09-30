@@ -104,12 +104,9 @@ static void set_filter(SectionProp& section)
 	}
 }
 
-void PCSPEAKER_Init(Section* sec)
+void PCSPEAKER_Init(SectionProp& section)
 {
-	assert(sec);
-	const auto section = static_cast<SectionProp*>(sec);
-
-	const std::string pcspeaker_pref = section->GetString("pcspeaker");
+	const std::string pcspeaker_pref = section.GetString("pcspeaker");
 
 	if (has_false(pcspeaker_pref)) {
 		return;
@@ -123,7 +120,7 @@ void PCSPEAKER_Init(Section* sec)
 		pc_speaker = std::make_unique<PcSpeakerImpulse>();
 	}
 
-	set_filter(*section);
+	set_filter(section);
 
 	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
 	// This provides a good size to avoid over-runs and stalls.
@@ -135,7 +132,7 @@ void PCSPEAKER_Init(Section* sec)
 	MIXER_UnlockMixerThread();
 }
 
-void PCSPEAKER_Destroy([[maybe_unused]] Section* sec)
+void PCSPEAKER_Destroy()
 {
 	if (pc_speaker) {
 		MIXER_LockMixerThread();
@@ -147,18 +144,18 @@ void PCSPEAKER_Destroy([[maybe_unused]] Section* sec)
 	}
 }
 
-void PCSPEAKER_NotifySettingUpdated(SectionProp* section, const std::string& prop_name)
+void PCSPEAKER_NotifySettingUpdated(SectionProp& section, const std::string& prop_name)
 {
 	// The [speaker] section controls multiple audio devices, so we want to
 	// make sure to only restart the device affected by the setting.
 	//
 	if (prop_name == "pcspeaker") {
-		PCSPEAKER_Destroy(section);
+		PCSPEAKER_Destroy();
 		PCSPEAKER_Init(section);
 
 	} else if (prop_name == "pcspeaker_filter") {
 		if (pc_speaker) {
-			set_filter(*section);
+			set_filter(section);
 		}
 	}
 }

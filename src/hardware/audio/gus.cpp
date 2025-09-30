@@ -1623,12 +1623,12 @@ static void gus_evict([[maybe_unused]] Section* sec)
 	set_section_property_value("gus", "gus", "off");
 }
 
-static void notify_gus_setting_updated(SectionProp* section,
+static void notify_gus_setting_updated(SectionProp& section,
                                        const std::string& prop_name)
 {
 	if (prop_name == "gus_filter") {
 		if (gus) {
-			gus->SetFilter(section->GetString("gus_filter"));
+			gus->SetFilter(section.GetString("gus_filter"));
 		}
 
 	} else {

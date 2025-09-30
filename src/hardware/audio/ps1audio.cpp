@@ -591,23 +591,19 @@ static void init_ps1audio_settings(SectionProp& section)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-void PS1AUDIO_Init(Section* sec)
+void PS1AUDIO_Init(SectionProp& section)
 {
-	assert(sec);
-	const auto section = static_cast<SectionProp*>(sec);
-
 	if (!PS1AUDIO_IsEnabled()) {
 		return;
 	}
 
-	ps1_dac = std::make_unique<Ps1Dac>(section->GetString("ps1audio_dac_filter"));
-
-	ps1_synth = std::make_unique<Ps1Synth>(section->GetString("ps1audio_filter"));
+	ps1_dac = std::make_unique<Ps1Dac>(section.GetString("ps1audio_dac_filter"));
+	ps1_synth = std::make_unique<Ps1Synth>(section.GetString("ps1audio_filter"));
 
 	LOG_MSG("%s: Initialised IBM PS/1 Audio card", ChannelName::Ps1AudioCardPsg);
 }
 
-void PS1AUDIO_Destroy([[maybe_unused]] Section* sec)
+void PS1AUDIO_Destroy()
 {
 	if (ps1_dac || ps1_synth) {
 		LOG_MSG("%s: Shutting down IBM PS/1 Audio card",
@@ -618,7 +614,7 @@ void PS1AUDIO_Destroy([[maybe_unused]] Section* sec)
 	}
 }
 
-void PS1AUDIO_NotifySettingUpdated(SectionProp* section,
+void PS1AUDIO_NotifySettingUpdated(SectionProp& section,
                                    [[maybe_unused]] const std::string& prop_name)
 {
 	// The [speaker] section controls multiple audio devices, so we want to
@@ -627,7 +623,7 @@ void PS1AUDIO_NotifySettingUpdated(SectionProp* section,
 	if (prop_name == "ps1audio" || prop_name == "ps1audio_filter" ||
 	    prop_name == "ps1audio_dac_filter") {
 
-		PS1AUDIO_Destroy(section);
+		PS1AUDIO_Destroy();
 		PS1AUDIO_Init(section);
 	}
 

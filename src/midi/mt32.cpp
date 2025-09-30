@@ -1084,7 +1084,7 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	caller->WriteOut("\n");
 }
 
-static void notify_mt32_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_mt32_setting_updated([[maybe_unused]] SectionProp& section,
                                         const std::string& prop_name)
 {
 	const auto device = dynamic_cast<MidiDeviceMt32*>(MIDI_GetCurrentDevice());

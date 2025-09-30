@@ -1365,7 +1365,7 @@ void Section::AddUpdateHandler(SectionUpdateHandler update_handler)
 void Section::ExecuteUpdate(const Property& property)
 {
 	for (const auto& handler : update_handlers) {
-		handler(dynamic_cast<SectionProp*>(this), property.propname);
+		handler(dynamic_cast<SectionProp&>(*this), property.propname);
 	}
 }
 

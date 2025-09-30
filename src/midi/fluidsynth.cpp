@@ -1290,7 +1290,7 @@ void FSYNTH_Init()
 	}
 }
 
-static void notify_fluidsynth_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_fluidsynth_setting_updated([[maybe_unused]] SectionProp& section,
                                               const std::string& prop_name)
 {
 	const auto device = dynamic_cast<MidiDeviceFluidSynth*>(
@@ -1310,7 +1310,7 @@ static void notify_fluidsynth_setting_updated([[maybe_unused]] SectionProp* sect
 		device->SetFilter();
 
 	} else if (prop_name == "soundfont_volume") {
-		device->SetVolume(section->GetInt("soundfont_volume"));
+		device->SetVolume(section.GetInt("soundfont_volume"));
 
 	} else if (prop_name == "soundfont_dir") {
 		// no-op; will take effect when loading a SoundFont

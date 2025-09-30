@@ -1541,17 +1541,14 @@ static void load_keyboard_layout()
 // Lifecycle
 // ***************************************************************************
 
-class DOS_Locale final : public ModuleBase {
+class DOS_Locale {
 public:
-	DOS_Locale(Section* configuration);
+	DOS_Locale(SectionProp& section);
 	~DOS_Locale();
 };
 
-DOS_Locale::DOS_Locale(Section* configuration) : ModuleBase(configuration)
+DOS_Locale::DOS_Locale(SectionProp& section)
 {
-	auto section = static_cast<SectionProp*>(configuration);
-	assert(section);
-
 	if (!config.is_config_loaded) {
 		dos.loaded_codepage    = DefaultCodePage;
 		// Make sure the locale detection is done in a predictable place
@@ -1560,7 +1557,7 @@ DOS_Locale::DOS_Locale(Section* configuration) : ModuleBase(configuration)
 
 	LocalePeriod locale_period = {};
 
-	const auto period_str = section->GetString("locale_period");
+	const auto period_str = section.GetString("locale_period");
 	if (period_str == "native") {
 		locale_period = LocalePeriod::Native;
 	} else if (period_str == "modern") {
@@ -1572,7 +1569,7 @@ DOS_Locale::DOS_Locale(Section* configuration) : ModuleBase(configuration)
 	}
 
 	// Apply country and locale period
-	const auto country_str = section->GetString("country");
+	const auto country_str = section.GetString("country");
 	if (!config.is_config_loaded || country_str != config.country_str) {
 		config.country_str   = country_str;
 		config.locale_period = locale_period;
@@ -1587,7 +1584,7 @@ DOS_Locale::DOS_Locale(Section* configuration) : ModuleBase(configuration)
 		// Has to be done after the country is detected and set up,
 		// as the usage of EUR currency might affect code page
 		// selection
-		config.keyboard_str = section->GetString("keyboard_layout");
+		config.keyboard_str = section.GetString("keyboard_layout");
 		load_keyboard_layout();
 	}
 
@@ -1647,10 +1644,8 @@ void DOS_Locale_AddMessages()
 
 static std::unique_ptr<DOS_Locale> dos_locale = {};
 
-void DOS_Locale_Init(Section* section)
+void DOS_Locale_Init(SectionProp& section)
 {
-	assert(section);
-
 	dos_locale = std::make_unique<DOS_Locale>(section);
 }
 

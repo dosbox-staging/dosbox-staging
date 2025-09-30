@@ -1380,7 +1380,7 @@ void SERIAL_Destroy()
 	serial_ports = {};
 }
 
-static void notify_serial_setting_updated([[maybe_unused]] SectionProp* section,
+static void notify_serial_setting_updated([[maybe_unused]] SectionProp& section,
                                           [[maybe_unused]] const std::string& prop_name)
 {
 	SERIAL_Destroy();

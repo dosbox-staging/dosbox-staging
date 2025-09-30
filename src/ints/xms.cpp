@@ -713,25 +713,23 @@ static Bitu XMS_Handler()
 // Module object
 // ***************************************************************************
 
-Bitu GetEMSType(SectionProp* section);
+Bitu GetEMSType(SectionProp& section);
 
-class XMS final : public ModuleBase {
+class XMS {
 private:
 	CALLBACK_HandlerObject callbackhandler;
 
 public:
-	XMS(Section* configuration);
-	~XMS() override;
+	XMS(SectionProp& section);
+	~XMS();
 };
 
-XMS::XMS(Section* configuration) : ModuleBase(configuration), callbackhandler{}
+XMS::XMS(SectionProp& section) : callbackhandler{}
 {
-	SectionProp* section = static_cast<SectionProp*>(configuration);
-
 	umb = {};
 	a20 = {};
 
-	if (!section->GetBool("xms")) {
+	if (!section.GetBool("xms")) {
 		return;
 	}
 
@@ -780,9 +778,9 @@ XMS::XMS(Section* configuration) : ModuleBase(configuration), callbackhandler{}
 	xms.handles[0].is_free = false;
 
 	// Set up UMB chain
-	umb.is_available = section->GetBool("umb");
+	umb.is_available         = section.GetBool("umb");
 	const bool ems_available = GetEMSType(section) > 0;
-	DOS_BuildUMBChain(section->GetBool("umb"), ems_available);
+	DOS_BuildUMBChain(section.GetBool("umb"), ems_available);
 
 	// TODO: If implementing CP/M compatibility, mirror the JMP
 	//       instruction in HMA
@@ -824,9 +822,8 @@ XMS::~XMS()
 
 static std::unique_ptr<XMS> xms_module = {};
 
-void XMS_Init(Section* section)
+void XMS_Init(SectionProp& section)
 {
-	assert(section);
 	xms_module = std::make_unique<XMS>(section);
 }
 

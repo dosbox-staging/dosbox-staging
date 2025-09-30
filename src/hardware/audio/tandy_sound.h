@@ -9,10 +9,10 @@
 
 void TANDYSOUND_AddConfigSection(Section* sec);
 
-void TANDYSOUND_Init(Section* sec);
-void TANDYSOUND_Destroy(Section* sec);
+void TANDYSOUND_Init(SectionProp& section);
+void TANDYSOUND_Destroy();
 
-void TANDYSOUND_NotifySettingUpdated(SectionProp* section,
+void TANDYSOUND_NotifySettingUpdated(SectionProp& section,
                                      const std::string& prop_name);
 
 bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
