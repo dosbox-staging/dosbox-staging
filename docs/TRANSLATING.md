@@ -273,9 +273,29 @@ editor.
 > Don't try to convert the `PO` file to the binary `MO` format, it is not
 > supported by DOSBox Staging.
 
-Once you've done these steps and you've tested your translations (see the next
+Once you've done these steps and you've tested your translations (see the last
 chapter for some tips), you can submit the updated translation for inclusion
 into DOSBox Staging.
+
+## Language-specific remarks
+
+Sometimes the DOS code page does not contain all the characters needed by the
+translation. Contrary to most Unicode engines, the DOSBox Staging internal one
+was specially designed to be able to replace the missing characters with sane
+alternatives (if it does not work correctly for your language — let us know,
+the rules can be tweaked to some extent).
+
+But it, too, has some limitations. For example it can only replace a single
+character with another single character; it can't replace a digraph with two
+characters, as this could break the message layout — make the line too long to
+display or break the indentation.
+
+## French
+
+DOS code page 850 does not contain `Œ` and `œ` digraphs — please replace them
+with `OE` and `oe`, respectively.
+The digraphs are present on the modified code page 859, but we want to stay
+compatible with the standard MS-DOS code page.
 
 ## Message-specific remarks
 
