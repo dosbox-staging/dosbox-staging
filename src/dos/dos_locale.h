@@ -527,9 +527,7 @@ uint16_t DOS_GetCountry();
 std::string DOS_GetBundledCpiFileName(const uint16_t code_page);
 uint16_t DOS_GetBundledCodePage(const std::string& keyboard_layout);
 
-// Tries to find better code page than the given one. Currently only checks if
-// the country uses euro currency - if so, proposes euro variant of the original
-// code page, for example 858 instead of 850.
+// Tries to find better code page than the given one.
 std::vector<uint16_t> DOS_SuggestBetterCodePages(const uint16_t code_page,
                                                  const std::string& keyboard_layout);
 // Puts the country-related locale information into DOS memory;

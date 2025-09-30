@@ -45,7 +45,6 @@ static struct {
 static struct Populated {
 	bool is_country_international = false;
 	bool is_country_overriden     = false;
-	bool is_using_euro_currency   = false;
 	bool is_using_fallback_period = false;
 	bool is_using_native_numeric  = false;
 	bool is_using_native_time     = false;
@@ -82,8 +81,6 @@ constexpr size_t InfoOffsetReserved           = 0x18;
 constexpr size_t MaxCurrencySymbolLength = 4;
 constexpr size_t MaxCurrencyPrecision    = 4;
 constexpr size_t ReservedAreaSize        = 10;
-
-const std::string EuroCurrencyCode = "EUR";
 
 static DosCountry get_default_country()
 {
@@ -296,7 +293,6 @@ static bool try_override_date_format(const StdLibLocale& locale)
 static void populate_currency_format(const LocaleInfoEntry& source)
 {
 	const auto& destination = dos.tables.country;
-	populated.is_using_euro_currency = (source.currency_code == EuroCurrencyCode);
 
 	assert(source.currency_code.size() < MaxCurrencySymbolLength);
 	memset(&destination[InfoOffsetCurrencySymbol], 0, MaxCurrencySymbolLength + 1);
@@ -359,7 +355,6 @@ static bool try_override_currency_format(const StdLibLocale& locale)
 
 	// Yes, this is suitable for using - populate
 	const auto& destination = dos.tables.country;
-	populated.is_using_euro_currency = (currency == EuroCurrencyCode);
 
 	memset(&destination[InfoOffsetCurrencySymbol], 0, MaxCurrencySymbolLength + 1);
 
@@ -1045,21 +1040,6 @@ std::vector<uint16_t> DOS_SuggestBetterCodePages(const uint16_t code_page,
         if ((code_page == 850 || code_page == 858) &&
             (keyboard_layout == "be" || keyboard_layout == "fr")) {
                 suggestions.emplace_back(859);
-        }
-
-        // Suggest replacing certain code pages with EUR currency variants
-        if (populated.is_using_euro_currency) {
-                switch (code_page) {
-                case 819:  suggestions.emplace_back(61235); break;
-                case 850:  suggestions.emplace_back(858);   break;
-                case 855:  suggestions.emplace_back(872);   break;
-                case 866:  suggestions.emplace_back(808);   break;
-                case 914:  suggestions.emplace_back(58258); break;
-                case 921:  suggestions.emplace_back(901);   break;
-                case 922:  suggestions.emplace_back(902);   break;
-                case 1125: suggestions.emplace_back(848);   break;
-                default: break;
-                }
         }
 
 	return suggestions;
