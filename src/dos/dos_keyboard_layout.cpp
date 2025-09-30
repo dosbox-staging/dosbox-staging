@@ -832,33 +832,20 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 
 	auto new_layout = std::make_unique<KeyboardLayout>();
 
-	std::vector<uint16_t> code_pages = {};
-
 	if (!DOS_CanLoadScreenFonts()) {
 		// Can't set custom code page on pre-EGA display adapters
 		if (code_page_autodetect) {
-			code_pages.push_back(DefaultCodePage);
+			code_page = DefaultCodePage;
 		} else if (code_page != DefaultCodePage || !cpi_file.empty()) {
 			return KeyboardLayoutResult::IncompatibleMachine;
 		}
 	} else if (code_page_autodetect) {
 		// Get the preferred code page
-		const auto bundled = DOS_GetBundledCodePage(keyboard_layout);
-		code_pages = DOS_SuggestBetterCodePages(bundled, keyboard_layout);
-		code_pages.push_back(bundled);
-	} else {
-		code_pages.push_back(code_page);
+		code_page = DOS_GetBundledCodePage(keyboard_layout);
 	}
 
 	// Try to read the keyboard layout
-	KeyboardLayoutResult result = KeyboardLayoutResult::LayoutNotKnown;
-	for (const auto try_code_page : code_pages) {
-		code_page = try_code_page;
-		result = new_layout->ReadKeyboardFile(keyboard_layout, code_page);
-		if (result == KeyboardLayoutResult::OK) {
-			break;
-		}
-	}
+	auto result = new_layout->ReadKeyboardFile(keyboard_layout, code_page);
 
 	// Allow using 'us' layout with any code page
 	if ((result == KeyboardLayoutResult::LayoutNotKnown ||

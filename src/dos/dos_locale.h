@@ -527,9 +527,6 @@ uint16_t DOS_GetCountry();
 std::string DOS_GetBundledCpiFileName(const uint16_t code_page);
 uint16_t DOS_GetBundledCodePage(const std::string& keyboard_layout);
 
-// Tries to find better code page than the given one.
-std::vector<uint16_t> DOS_SuggestBetterCodePages(const uint16_t code_page,
-                                                 const std::string& keyboard_layout);
 // Puts the country-related locale information into DOS memory;
 // should be called when code page changes
 void DOS_RepopulateCountryInfo();
