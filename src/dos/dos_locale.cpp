@@ -1023,28 +1023,6 @@ uint16_t DOS_GetBundledCodePage(const std::string& keyboard_layout)
 	return assert_code_page(DefaultCodePage);
 }
 
-std::vector<uint16_t> DOS_SuggestBetterCodePages(const uint16_t code_page,
-                                                 const std::string& keyboard_layout)
-{
-        // We are only suggesting code pages which did not exist in the original
-        // MS-DOS, don't do it if the user requested historic locale settings
-	if (config.locale_period == LocalePeriod::Historic) {
-                return {};
-        }
-
-	std::vector<uint16_t> suggestions = {};
-
-        // According to FreeDOS keyboard layouts package documentation, for the
-        // French and Belgian keyboard layouts there is now a better code page,
-        // which provides more national characters than the original MS-DOS one
-        if ((code_page == 850 || code_page == 858) &&
-            (keyboard_layout == "be" || keyboard_layout == "fr")) {
-                suggestions.emplace_back(859);
-        }
-
-	return suggestions;
-}
-
 // ***************************************************************************
 // Locale loading
 // ***************************************************************************
@@ -1177,7 +1155,8 @@ static void change_locale_period()
 	log_country_locale(only_changed_period);
 }
 
-static void preprocess_layouts_arabic(std::vector<KeyboardLayoutMaybeCodepage>& keyboard_layouts)
+static void preprocess_arabic_keyboard_layouts(
+        std::vector<KeyboardLayoutMaybeCodepage>& keyboard_layouts)
 {
 	// Arabic keyboard layouts 'ar462' and 'ar470' differs in one important
 	// aspect: 'ar462' provides Latin layout AZERTY, 'ar470' QWERTY.
@@ -1246,41 +1225,6 @@ static void preprocess_layouts_arabic(std::vector<KeyboardLayoutMaybeCodepage>& 
 	}
 
 	keyboard_layouts = processed;
-}
-
-static void preprocess_layouts_better_code_pages(
-        std::vector<KeyboardLayoutMaybeCodepage>& keyboard_layouts)
-{
-	// Sometimes (depending on various conditions, like other user settings)
-	// we can propose a better code page than default one. There is
-	// no guarantee it will be compatible with the given keyboard layout,
-	// but let's add them to testing/
-	// For code pages left for autodetection, better code page proposals
-	// will be evaluated later/
-
-	std::vector<KeyboardLayoutMaybeCodepage> processed = {};
-
-	for (const auto& source : keyboard_layouts) {
-		if (source.code_page) {
-			for (const auto code_page :
-			     DOS_SuggestBetterCodePages(*source.code_page,
-			                                source.keyboard_layout)) {
-
-				processed.emplace_back(KeyboardLayoutMaybeCodepage{
-				        source.keyboard_layout, code_page});
-			}
-		}
-		processed.emplace_back(source);
-	}
-
-	keyboard_layouts = processed;
-}
-
-static void preprocess_detected_keyboard_layouts(
-        std::vector<KeyboardLayoutMaybeCodepage>& keyboard_layouts)
-{
-	preprocess_layouts_arabic(keyboard_layouts);
-	preprocess_layouts_better_code_pages(keyboard_layouts);
 }
 
 static void sort_detected_keyboard_layouts(
@@ -1501,7 +1445,7 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_detected_keyboard_layouts()
 
 	sort_detected_keyboard_layouts(keyboard_layouts,
 	                               host_locale.is_layout_list_sorted);
-	preprocess_detected_keyboard_layouts(keyboard_layouts);
+	preprocess_arabic_keyboard_layouts(keyboard_layouts);
 
 	return keyboard_layouts;
 }
