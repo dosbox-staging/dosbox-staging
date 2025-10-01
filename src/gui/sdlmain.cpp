@@ -3384,7 +3384,7 @@ bool GFX_IsFullscreen()
 #define DB_POLLSKIP 1
 #endif
 
-static void handle_video_resize(int width, int height)
+static void maybe_handle_screen_rotation(const int new_width, const int new_height)
 {
 	// Maybe a screen rotation has just occurred, so we simply resize.
 	// There may be a different cause for a forced resized, though.
@@ -3393,16 +3393,20 @@ static void handle_video_resize(int width, int height)
 		// Note: We should not use get_display_dimensions()
 		// (SDL_GetDisplayBounds) on Android after a screen rotation:
 		// The older values from application startup are returned.
-		sdl.desktop.fullscreen.width  = width;
-		sdl.desktop.fullscreen.height = height;
+		sdl.desktop.fullscreen.width  = new_width;
+		sdl.desktop.fullscreen.height = new_height;
 	}
+}
 
+static void update_viewport()
+{
 	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
-
 	sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_size_px));
 
 	if (sdl.rendering_backend == RenderingBackend::Texture) {
-		SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px);
+		if (SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px) < 0) {
+			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
+		}
 	}
 #if C_OPENGL
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
@@ -3413,17 +3417,7 @@ static void handle_video_resize(int width, int height)
 
 		update_uniforms_gl();
 	}
-#endif // C_OPENGL
-
-	if (!sdl.desktop.is_fullscreen) {
-		// If the window was resized, it might have been
-		// triggered by the OS setting DPI scale, so recalculate
-		// that based on the incoming logical width.
-		check_and_handle_dpi_change(sdl.window, sdl.rendering_backend, width);
-	}
-
-	// Ensure mouse emulation knows the current parameters
-	notify_new_mouse_screen_params();
+#endif
 }
 
 // TODO: Properly set window parameters and remove this routine.
@@ -3738,25 +3732,8 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		sdl.display_number = event.window.data1;
 
-		const auto canvas_size_px = get_canvas_size_in_pixels(
-		        sdl.rendering_backend);
-
-		sdl.draw_rect_px = to_sdl_rect(
-		        calc_draw_rect_in_pixels(canvas_size_px));
-
-		if (sdl.rendering_backend == RenderingBackend::Texture) {
-			SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px);
-		}
-#if C_OPENGL
-		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-			glViewport(sdl.draw_rect_px.x,
-			           sdl.draw_rect_px.y,
-			           sdl.draw_rect_px.w,
-			           sdl.draw_rect_px.h);
-		}
-
+		update_viewport();
 		maybe_auto_switch_shader();
-#endif
 		notify_new_mouse_screen_params();
 		return true;
 	}
@@ -3769,9 +3746,14 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		const auto new_width  = event.window.data1;
 		const auto new_height = event.window.data2;
 
-		handle_video_resize(new_width, new_height);
-		finalise_window_state();
+		check_and_handle_dpi_change(sdl.window, sdl.rendering_backend, new_width);
+
+		maybe_handle_screen_rotation(new_width, new_height);
+		update_viewport();
 		maybe_auto_switch_shader();
+		notify_new_mouse_screen_params();
+
+		finalise_window_state();
 		return true;
 	}
 
