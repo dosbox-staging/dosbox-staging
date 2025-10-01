@@ -441,9 +441,9 @@ SDL_Window* GFX_GetSDLWindow()
 static void quit_sdl()
 {
 #if !C_DEBUGGER
-		SDL_Quit();
+	SDL_Quit();
 #endif
-	        restore_console_encoding();
+	restore_console_encoding();
 }
 
 // Globals for keyboard initialisation
@@ -833,7 +833,7 @@ static void maybe_log_display_properties()
 	assert(sdl.draw.render_width_px > 0 && sdl.draw.render_height_px > 0);
 
 	const auto canvas_size_px = get_canvas_size_in_pixels();
-	const auto draw_size_px = calc_draw_rect_in_pixels(canvas_size_px);
+	const auto draw_size_px   = calc_draw_rect_in_pixels(canvas_size_px);
 
 	assert(draw_size_px.HasPositiveSize());
 
@@ -870,7 +870,8 @@ static void maybe_log_display_properties()
 				case PresentationMode::DosRate:
 					return "DOS rate";
 				case PresentationMode::HostRate:
-					return format_str("%2.5g Hz host rate", GFX_GetHostRefreshRate());
+					return format_str("%2.5g Hz host rate",
+					                  GFX_GetHostRefreshRate());
 				default:
 					assertm(false, "Invalid PresentationMode");
 					return "";
@@ -931,14 +932,15 @@ static void setup_presentation_mode()
 	case PresentationMode::HostRate: {
 		update_frame_time(GFX_GetHostRefreshRate());
 
-		// The primary use case for the 'host-rate' mode is a fixed refresh
-		// rate monitor running at 60 Hz with vsync enabled (with vsync off,
-		// we might as well just use 'dos-rate'). In this scenario, we need to
-		// present the frame a bit before the vsync happens, otherwise we'd
-		// "miss the train" and would have to wait for an extra frame period.
-		// This would increase latency and possibly cause audio glitches
-		// because it's a blocking wait, so it's better to be a bit generous
-		// with the time window.
+		// The primary use case for the 'host-rate' mode is a fixed
+		// refresh rate monitor running at 60 Hz with vsync enabled
+		// (with vsync off, we might as well just use 'dos-rate'). In
+		// this scenario, we need to present the frame a bit before the
+		// vsync happens, otherwise we'd "miss the train" and would have
+		// to wait for an extra frame period. This would increase
+		// latency and possibly cause audio glitches because it's a
+		// blocking wait, so it's better to be a bit generous with the
+		// time window.
 		//
 		// This value was determined by experimentation on our supported
 		// OSes. We might turn this a config setting if there's enough
@@ -1817,12 +1819,12 @@ static bool read_backbuffer_gl(DosBox::Rect output_rect_px, RenderedImage& image
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	glReadPixels(iroundf(output_rect_px.x),
-				 iroundf(output_rect_px.y),
-				 image_out.params.width,
-				 image_out.params.height,
-				 GL_BGR,
-				 GL_UNSIGNED_BYTE,
-				 image_out.image_data);
+	             iroundf(output_rect_px.y),
+	             image_out.params.width,
+	             image_out.params.height,
+	             GL_BGR,
+	             GL_UNSIGNED_BYTE,
+	             image_out.image_data);
 
 	image_out.is_flipped_vertically = true;
 	return true;
@@ -2724,7 +2726,8 @@ static void setup_window_sizes_from_conf(const bool wants_aspect_ratio_correctio
 {
 
 	const auto window_size_pref = []() {
-		const auto legacy_pref = get_sdl_section()->GetString("windowresolution");
+		const auto legacy_pref = get_sdl_section()->GetString(
+		        "windowresolution");
 		if (!legacy_pref.empty()) {
 			set_section_property_value("sdl", "windowresolution", "");
 			set_section_property_value("sdl", "window_size", legacy_pref);
@@ -2734,9 +2737,10 @@ static void setup_window_sizes_from_conf(const bool wants_aspect_ratio_correctio
 
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
-	SDL_Point coarse_size  = FallbackWindowSize;
+	SDL_Point coarse_size = FallbackWindowSize;
 
-	sdl.use_exact_window_resolution = window_size_pref.find('x') != std::string::npos;
+	sdl.use_exact_window_resolution = window_size_pref.find('x') !=
+	                                  std::string::npos;
 
 	if (sdl.use_exact_window_resolution) {
 		coarse_size = parse_window_resolution_from_conf(window_size_pref);
@@ -2845,8 +2849,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 	sdl.desktop.window.show_decorations = section->GetBool("window_decorations");
 
-	setup_initial_window_position_from_conf(
-	        section->GetString("window_position"));
+	setup_initial_window_position_from_conf(section->GetString("window_position"));
 
 	setup_window_sizes_from_conf(wants_aspect_ratio_correction);
 
@@ -3035,7 +3038,11 @@ static void sdl_section_init(Section* sec)
 	                  "shutdown",
 	                  "Shutdown");
 
-	MAPPER_AddHandler(switch_fullscreen_handler, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
+	MAPPER_AddHandler(switch_fullscreen_handler,
+	                  SDL_SCANCODE_RETURN,
+	                  MMOD2,
+	                  "fullscr",
+	                  "Fullscreen");
 	MAPPER_AddHandler(restart_hotkey_handler,
 	                  SDL_SCANCODE_HOME,
 	                  PRIMARY_MOD | MMOD2,
@@ -3049,7 +3056,7 @@ static void sdl_section_init(Section* sec)
 	                  "Cap Mouse");
 
 #if C_DEBUGGER
-// Pause binds with activate-debugger
+	// Pause binds with activate-debugger
 
 #elif defined(MACOSX)
 	// Pause/unpause is hardcoded to Command+P on macOS
@@ -3286,8 +3293,9 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		assert(sdl.desktop.window.width > 0 && sdl.desktop.window.height > 0);
 
 		// SDL_WINDOWEVENT_RESIZED events are sent twice when resizing
-		// the window, but maybe_log_display_properties() will only output
-		// a log entry if the image dimensions have actually changed.
+		// the window, but maybe_log_display_properties() will only
+		// output a log entry if the image dimensions have actually
+		// changed.
 		maybe_log_display_properties();
 
 		set_section_property_value("sdl",
@@ -3446,7 +3454,7 @@ static void adjust_ticks_after_present_frame(int64_t elapsed_us)
 	if (cumulative_time_rendered_us >= MicrosInMillisecond) {
 		// 1 tick == 1 millisecond
 		const auto cumulative_ticks_rendered = cumulative_time_rendered_us /
-			                               MicrosInMillisecond;
+		                                       MicrosInMillisecond;
 
 		DOSBOX_SetTicksDone(DOSBOX_GetTicksDone() - cumulative_ticks_rendered);
 
@@ -3493,7 +3501,8 @@ void GFX_MaybePresentFrame()
 #endif
 		sdl.presentation.last_present_time_us = end_us;
 
-		// Adjust "ticks done" counter by the time it took to present the frame
+		// Adjust "ticks done" counter by the time it took to present
+		// the frame
 		adjust_ticks_after_present_frame(GetTicksDiff(end_us, start_us));
 	}
 }
