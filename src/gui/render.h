@@ -141,7 +141,7 @@ struct RenderedImage {
 	bool is_flipped_vertically = false;
 
 	// Bytes per row
-	uint16_t pitch = 0;
+	int pitch = 0;
 
 	// (width * height) number of pixels stored in the pixel format defined
 	// by pixel_format
