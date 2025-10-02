@@ -819,6 +819,23 @@ PresentationMode GFX_GetPresentationMode()
 	                                 : sdl.presentation.windowed_mode;
 }
 
+static void log_presentation_and_vsync_mode()
+{
+	const auto presentation_rate = []() -> std::string {
+		switch (GFX_GetPresentationMode()) {
+		case PresentationMode::DosRate: return "DOS rate";
+		case PresentationMode::HostRate:
+			return format_str("%2.5g Hz host rate",
+			                  GFX_GetHostRefreshRate());
+		default: assertm(false, "Invalid PresentationMode"); return "";
+		}
+	}();
+
+	LOG_MSG("DISPLAY: Presenting at %s %s vsync",
+	        presentation_rate.c_str(),
+	        (is_vsync_enabled() ? "with" : "without"));
+}
+
 // TODO(BASE)
 static void maybe_log_display_properties()
 {
@@ -857,21 +874,7 @@ static void maybe_log_display_properties()
 			        static_cast<int32_t>(par.Num()),
 			        static_cast<int32_t>(par.Denom()));
 
-			const auto presentation_rate = []() -> std::string {
-				switch (GFX_GetPresentationMode()) {
-				case PresentationMode::DosRate:
-					return "DOS rate";
-				case PresentationMode::HostRate:
-					return format_str("%2.5g Hz host rate", GFX_GetHostRefreshRate());
-				default:
-					assertm(false, "Invalid PresentationMode");
-					return "";
-				}
-			}();
-
-			LOG_MSG("DISPLAY: Presenting at %s %s vsync",
-			        presentation_rate.c_str(),
-			        (is_vsync_enabled() ? "with" : "without"));
+			log_presentation_and_vsync_mode();
 
 			last_video_mode        = video_mode;
 			last_refresh_rate      = refresh_rate;
@@ -3022,6 +3025,17 @@ static void notify_sdl_setting_updated(SectionProp& section,
 	} else if (prop_name == "mapperfile") {
 		MAPPER_BindKeys(&section);
 
+	} else if (prop_name == "vsync") {
+		validate_vsync_and_presentation_mode_settings();
+		init_vsync_settings();
+
+		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+			set_vsync_gl(is_vsync_enabled());
+		} else {
+			set_vsync_sdl_texture(is_vsync_enabled());
+		}
+		log_presentation_and_vsync_mode();
+
 	} else if (prop_name == "window_position") {
 		save_window_position(parse_window_position_conf(
 		        section.GetString("window_position")));
@@ -3046,8 +3060,6 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		//   fullscreen_mode
 		//   window_size
 		//   window_decorations
-		//   vsync
-		//   presentation_mode
 		//   keyboard_capture
 
 		regenerate_window(&section);
