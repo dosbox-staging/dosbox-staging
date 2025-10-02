@@ -3041,7 +3041,16 @@ static void regenerate_window(Section* sec)
 static void notify_sdl_setting_updated(SectionProp& section,
                                        const std::string& prop_name)
 {
-	if (prop_name == "mapperfile") {
+	if (prop_name == "fullscreen") {
+		auto fullscreen_requested = section.GetBool("fullscreen");
+
+		if (sdl.desktop.is_fullscreen && !fullscreen_requested) {
+			exit_fullscreen();
+		} else if (!sdl.desktop.is_fullscreen && fullscreen_requested) {
+			enter_fullscreen();
+		}
+
+	} else if (prop_name == "mapperfile") {
 		MAPPER_BindKeys(&section);
 
 	} else if (prop_name == "window_titlebar") {
@@ -3053,7 +3062,6 @@ static void notify_sdl_setting_updated(SectionProp& section,
 	} else {
 		// TODO add more granular support for these settings:
 		//   texture_renderer
-		//   fullscreen
 		//   fullscreen_mode
 		//   window_size
 		//   window_position
