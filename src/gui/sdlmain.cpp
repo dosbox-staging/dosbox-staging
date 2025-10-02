@@ -2522,22 +2522,6 @@ static SDL_Point refine_window_size(const SDL_Point size,
 	return FallbackWindowSize;
 }
 
-// Callers:
-//
-//   parse_window_resolution_from_conf()
-//     setup_window_sizes_from_conf()
-//       set_output()
-//         sdl_section_init()
-//           init_sdl_config_section()
-//             sdl_main()
-//         GFX_RegenerateWindow()
-//           sdl_main()
-//		     MAPPER_StartUp() (from sdl_mapper.cpp)
-//
-//   sdl_section_init()
-//     init_sdl_config_section()
-//       sdl_main()
-//
 static void maybe_limit_requested_resolution(int& w, int& h,
                                              const char* size_description)
 {
@@ -2577,10 +2561,6 @@ static void maybe_limit_requested_resolution(int& w, int& h,
 	}
 }
 
-// Callers:
-//
-//   setup_window_sizes_from_conf()
-//
 static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 {
 	int w = 0;
@@ -2605,17 +2585,6 @@ static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 	return FallbackWindowSize;
 }
 
-// Callers:
-//
-//    setup_window_sizes_from_conf()
-//    set_output()
-//       sdl_section_init()
-//         init_sdl_config_section()
-//           sdl_main()
-//       GFX_RegenerateWindow()
-//         sdl_main()
-//	         MAPPER_StartUp() (from sdl_mapper.cpp)
-//
 static SDL_Point window_bounds_from_label(const std::string& pref,
                                           const SDL_Rect desktop)
 {
@@ -2786,16 +2755,6 @@ InterpolationMode GFX_GetTextureInterpolationMode()
 // TODO(BASE)
 // TODO(OPENGL)
 // TODO(TEXTURE)
-// Callers:
-//
-//   sdl_section_init()
-//     init_sdl_config_section()
-//       sdl_main()
-//
-//   GFX_RegenerateWindow()
-//     sdl_main()
-//     MAPPER_StartUp() (from sdl_mapper.cpp)
-//
 
 /**
  * Responsible for setup/switching renderer (e.g. SDL, OpenGL).
@@ -4076,10 +4035,6 @@ static void init_sdl_config_settings(SectionProp& section)
 	pstring->SetValues({"auto", "allow", "block"});
 }
 
-// Callers:
-//
-//   sdl_main()
-//
 static void init_sdl_config_section()
 {
 	auto section = control->AddSection("sdl");
