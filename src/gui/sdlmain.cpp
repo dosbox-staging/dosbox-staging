@@ -3287,6 +3287,9 @@ static void notify_sdl_setting_updated(SectionProp* section,
 	} else if (prop_name == "output") {
 		GFX_RegenerateWindow(section);
 
+	} else if (prop_name == "window_titlebar") {
+		TITLEBAR_ReadConfig(*section);
+
 	} else {
 		// TODO add support for the rest of the settings later
 		gui_destroy();
