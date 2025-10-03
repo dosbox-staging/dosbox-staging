@@ -2758,6 +2758,13 @@ InterpolationMode GFX_GetTextureInterpolationMode()
 	return sdl.texture.interpolation_mode;
 }
 
+static void set_window_transparency(const int transparency)
+{
+	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
+
+	SDL_SetWindowOpacity(sdl.window, alpha);
+}
+
 // TODO(BASE)
 // TODO(OPENGL)
 // TODO(TEXTURE)
@@ -2834,10 +2841,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		E_Exit("SDL: Could not initialize video: %s", SDL_GetError());
 	}
 
-	const auto transparency = clamp(section->GetInt("window_transparency"), 0, 90);
-	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
-
-	SDL_SetWindowOpacity(sdl.window, alpha);
+	set_window_transparency(section->GetInt("window_transparency"));
 
 	// TODO needed?
 	TITLEBAR_RefreshTitle();
@@ -3058,6 +3062,9 @@ static void notify_sdl_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "window_titlebar") {
 		TITLEBAR_ReadConfig(section);
+
+	} else if (prop_name == "window_transparency") {
+		set_window_transparency(section.GetInt("window_transparency"));
 
 	} else {
 		// TODO add more granular support for these settings:
@@ -3881,6 +3888,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	pint->SetHelp(
 	        "Set the transparency of the DOSBox Staging window (0 by default).\n"
 	        "From 0 (no transparency) to 90 (high transparency).");
+	pint->SetMinMax(0, 90);
 
 	pstring = section.AddString("max_resolution", Deprecated, "");
 	pstring->SetHelp(
