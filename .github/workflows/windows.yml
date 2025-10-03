@@ -67,7 +67,7 @@ jobs:
           arch: "${{ matrix.conf.arch }}"
 
       - name: Set up CMake
-        uses: lukka/get-cmake@v4.1.1
+        uses: lukka/get-cmake@v4.1.2
 
       - name:  Log environment
         shell: pwsh
