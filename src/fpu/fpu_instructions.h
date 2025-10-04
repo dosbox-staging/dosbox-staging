@@ -5,6 +5,7 @@
 #include "fpu/fpu.h"
 #endif
 
+#include <bit>
 #include "utils/math_utils.h"
 
 static constexpr uint16_t PrecisionModeMask = 0x0300;
@@ -106,23 +107,7 @@ static double FROUND(double in)
 	case ROUND_Nearest: return std::nearbyint(in);
 	case ROUND_Down: return std::floor(in);
 	case ROUND_Up: return std::ceil(in);
-	case ROUND_Chop: {
-		// This is a fix for rounding to a close integer in extended
-		// precision mode, e.g. 7.999999999999994; an example can be
-		// seen in the Quake options screen size slider. In this case,
-		// what is almost certainly wanted is 8.0, so return the closer
-		// integer instead of chopping to the lower value.
-		if (prec_mode == ExtendedPrecisionMode) {
-			if (const auto lower = std::floor(in);
-			    are_almost_equal_relative(in, lower)) {
-				return lower;
-			} else if (const auto upper = std::ceil(in);
-			           are_almost_equal_relative(upper, in)) {
-				return upper;
-			}
-		}
-		return std::trunc(in);
-	}
+	case ROUND_Chop: return std::trunc(in);
 	default: return in;
 	}
 }
@@ -130,32 +115,136 @@ static double FROUND(double in)
 #define BIAS80 16383
 #define BIAS64 1023
 
-static Real64 FPU_FLD80(PhysPt addr) {
-	struct {
-		int16_t begin = 0;
-		FPU_Reg eind  = {};
-	} test = {};
+// Rounds x to nearest even, shifting right by s bits
+static inline uint64_t round_to_nearest_even(uint64_t x, unsigned s)
+{
+    if (s == 0)
+        return x;
+    // add = (2^(s-1) - 1) + LSB(target) implements ties-to-even
+    const uint64_t add = ((1ULL << (s - 1)) - 1) + ((x >> s) & 1ULL);
+    return (x + add) >> s;
+}
 
-	test.eind.ll = mem_readq(addr);
-	test.begin = mem_readw(addr+8);
-   
-	int64_t exp64 = (((test.begin&0x7fff) - BIAS80));
-	int64_t blah = ((exp64 >0)?exp64:-exp64)&0x3ff;
-	int64_t exp64final = ((exp64 >0)?blah:-blah) +BIAS64;
+static Real64 FPU_FLD80(PhysPt addr)
+{
+    const auto raw_mant  = mem_readq(addr);
+    const auto raw_exp = mem_readw(addr + 8);
 
-	int64_t mant64 = (test.eind.ll >> 11) & LONGTYPE(0xfffffffffffff);
-	int64_t sign = (test.begin&0x8000)?1:0;
-	FPU_Reg result;
-	result.ll = (sign <<63)|(exp64final << 52)| mant64;
+    const auto sign = static_cast<uint16_t>(raw_exp) >> 15;
+    const auto exp80 = static_cast<uint16_t>(raw_exp) & 0x7fff;
+	// J bit is at bit 63 for normals
+    uint64_t sig64 = raw_mant;
 
-	if (test.eind.l.lower == 0 && test.eind.l.upper == INT32_MIN &&
-	    (test.begin & INT16_MAX) == INT16_MAX) {
-		//Detect INF and -INF (score 3.11 when drawing a slur.)
-		result.d = sign?-HUGE_VAL:HUGE_VAL;
-	}
-	return result.d;
+    uint64_t out = 0;
 
-	//mant64= test.mant80/2***64    * 2 **53 
+    // Special cases
+    if (exp80 == 0x7fff) {
+        // Inf or NaN
+		// J==1, frac==0
+        const bool is_inf = (sig64 & 0x7fffffffffffffffULL) == 0;
+        if (is_inf) {
+            out = (uint64_t(sign) << 63) | (0x7ffULL << 52);
+            return std::bit_cast<double>(out);
+        }
+        // Quiet NaN
+        out = (uint64_t(sign) << 63) | (0x7ffULL << 52) | (1ULL << 51);
+        return std::bit_cast<double>(out);
+    }
+
+    if (exp80 == 0) {
+        // Zero or subnormal (J==0)
+        if (sig64 == 0) {
+			// signed zero
+            out = (uint64_t(sign) << 63);
+            return std::bit_cast<double>(out);
+        }
+        // Normalize the subnormal significand so that J lands in bit 63
+        const auto lz = std::countl_zero(sig64);
+        sig64 <<= lz;
+        // Unbiased exponent for subnormals is 1 - BIAS80, minus the shifts
+        int64_t E = (1 - BIAS80) - lz + BIAS64;
+
+        // Will be subnormal or underflow to zero in double
+        if (E <= 0) {
+            // Shift so that the implicit 1 would align just above the fraction
+            const auto s = static_cast<unsigned>(12 - E); // 11 + (1 - E)
+            uint64_t q = (s >= 64) ? 0 : round_to_nearest_even(sig64, s);
+            if (q == 0) {
+				// underflow to signed zero
+                out = (uint64_t(sign) << 63);
+                return std::bit_cast<double>(out);
+            }
+            // If rounding created a carry into the hidden-1 place, it became the smallest normal
+            if (q == (1ULL << 53)) {
+                out = (uint64_t(sign) << 63) | (1ULL << 52); // exponent=1, mantissa=0
+                return std::bit_cast<double>(out);
+            }
+            const uint64_t mant = q & ((1ULL << 52) - 1);
+			// exponent=0 (subnormal)
+            out = (uint64_t(sign) << 63) | mant;
+            return std::bit_cast<double>(out);
+        }
+        // Else it turned normal; fall through to normal path with E >= 1
+        int64_t exp64 = E;
+        const auto sig53 = round_to_nearest_even(sig64, 11);
+        uint64_t mant = sig53 & ((1ULL << 52) - 1);
+        // Carry from rounding?
+        if (sig53 == (1ULL << 53)) {
+            mant = 0;
+            ++exp64;
+        }
+        if (exp64 >= 0x7ff) {
+            out = (uint64_t(sign) << 63) | (0x7ffULL << 52);
+            return std::bit_cast<double>(out);
+        }
+        out = (uint64_t(sign) << 63) | (static_cast<uint64_t>(exp64) << 52) | mant;
+        return std::bit_cast<double>(out);
+    }
+
+    // Normal finite: ensure J bit set (defensive against pseudo-denorms)
+    if ((sig64 >> 63) == 0)
+        sig64 |= (1ULL << 63);
+
+    auto exp64 = static_cast<int64_t>(exp80) - BIAS80 + BIAS64;
+
+    // Subnormal result?
+    if (exp64 <= 0) {
+		// 11 + (1 - exp64)
+        const unsigned s = static_cast<unsigned>(12 - exp64);
+        uint64_t q = (s >= 64) ? 0 : round_to_nearest_even(sig64, s);
+        if (q == 0) {
+            out = (uint64_t(sign) << 63);
+            return std::bit_cast<double>(out);
+        }
+        if (q == (1ULL << 53)) {
+            // Rounded up to the smallest normal
+            out = (uint64_t(sign) << 63) | (1ULL << 52);
+            return std::bit_cast<double>(out);
+        }
+        const uint64_t mant = q & ((1ULL << 52) - 1);
+        // exponent=0
+		out = (uint64_t(sign) << 63) | mant;
+        return std::bit_cast<double>(out);
+    }
+
+    // Normal result
+    const uint64_t sig53 = round_to_nearest_even(sig64, 11);
+    uint64_t mant = sig53 & ((1ULL << 52) - 1);
+
+    // Carry from rounding?
+    if (sig53 == (1ULL << 53)) {
+        mant = 0;
+        ++exp64;
+    }
+    // Overflow?
+    if (exp64 >= 0x7ff) {
+        out = (uint64_t(sign) << 63) | (0x7ffULL << 52);
+        return std::bit_cast<double>(out);
+    }
+
+    out = (uint64_t(sign) << 63) | (static_cast<uint64_t>(exp64) << 52) | mant;
+
+    return std::bit_cast<double>(out);
 }
 
 static void FPU_ST80(PhysPt addr,Bitu reg) {
