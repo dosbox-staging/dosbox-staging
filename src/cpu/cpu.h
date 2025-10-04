@@ -585,4 +585,8 @@ void CPU_SetFlags(const uint32_t word, uint32_t mask);
 void CPU_SetFlagsd(const uint32_t word);
 void CPU_SetFlagsw(const uint32_t word);
 
+// Whether the emulator should execute HLT instruction upon detecting the guest
+// program is idle
+bool CPU_ShouldHltOnIdle();
+
 #endif

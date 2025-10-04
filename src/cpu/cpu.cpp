@@ -82,6 +82,8 @@ static constexpr auto DefaultCpuCycleDown = 20;
 static int cpu_cycle_up   = 0;
 static int cpu_cycle_down = 0;
 
+static bool should_hlt_on_idle = false;
+
 int64_t CPU_IODelayRemoved = 0;
 
 CPU_Decoder* cpudecoder;
@@ -3191,6 +3193,8 @@ public:
 		cpu_cycle_up   = secprop->GetInt("cycleup");
 		cpu_cycle_down = secprop->GetInt("cycledown");
 
+		should_hlt_on_idle = secprop->GetBool("cpu_idle");
+
 		TITLEBAR_NotifyCyclesChanged();
 
 		return true;
@@ -3385,7 +3389,20 @@ void init_cpu_config_settings(SectionProp& secprop)
 	                   "Values lower than 100 are treated as a percentage decrease.",
 	                   DefaultCpuCycleDown));
 
+	pbool = secprop.AddBool("cpu_idle", Always, true);
+	pbool->SetHelp(
+	        "Reduce the CPU usage in the DOS shell and in some applications when DOSBox is\n"
+	        "idle ('on' by default). This is done by emulating the HLT CPU instruction, so\n"
+	        "it might interfere with other power management tools such as DOSidle and FDAPM\n"
+	        "when enabled.");
 }
+
+bool CPU_ShouldHltOnIdle()
+{
+	// We should only execute the power-saving HLT if configured AND if the
+	// interrupts are enabled
+	return should_hlt_on_idle && (reg_flags & FLAG_IF);
+};
 
 void CPU_AddConfigSection(const ConfigPtr& conf)
 {
