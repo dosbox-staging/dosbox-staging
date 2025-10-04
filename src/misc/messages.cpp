@@ -698,7 +698,8 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 {
 	PoReader reader(file_path);
 	if (!reader.IsFileOk()) {
-		LOG_ERR("LOCALE: I/O error opening the translation file");
+		LOG_ERR("LOCALE: Error opening the translation file '%s'",
+		        file_path.string().c_str());
 		return false;
 	}
 
@@ -906,6 +907,12 @@ static bool load_messages_by_name(const std::string& language_file)
 	const auto file_with_extension = get_file_name_with_extension(language_file);
 	const auto file_path = get_resource_path(Subdirectory, file_with_extension);
 
+	if (file_path.empty()) {
+		LOG_WARNING("LOCALE: Translation file '%s' not found",
+		            file_with_extension.c_str());
+		return false;
+	}
+
 	const auto result = load_messages_from_path(file_path);
 	if (!result) {
 		LOG_MSG("LOCALE: Could not load language file '%s', "
@@ -1002,6 +1009,9 @@ void MSG_LoadMessages()
 		        detected_file);
 		const auto file_path = get_resource_path(Subdirectory,
 		                                         file_with_extension);
+		if (file_path.empty()) {
+			continue;
+		}
 
 		if (load_messages_from_path(file_path)) {
 			LOG_MSG("LOCALE: Loaded language file '%s' "
