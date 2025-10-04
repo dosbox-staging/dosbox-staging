@@ -9,6 +9,7 @@
 
 #include <cstring>
 
+#include "dos/dos_windows.h"
 #include "ints/bios.h"
 #include "ints/int10.h"
 #include "utils/ascii.h"
@@ -79,9 +80,26 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 		readcache = 0;
 	}
 	while (*size > count) {
-		reg_ah = is_machine_ega_or_better() ? 0x10 : 0x0;
+		// If running under guest Windows, check if any key is ready;
+		// until then keep releasing our time slice - this allows the
+		// guest Windows to do more processing while we are waiting.
+		// Do not do this if Windows is not running - that would negate
+		// the benefit of running the HLT instruction by our BIOS.
+		if (WINDOWS_IsStarted()) {
+			while (true) {
+				reg_ah = is_machine_ega_or_better() ? 0x11 : 0x1;
+				CALLBACK_RunRealInt(0x16);
+				if (reg_ax != 0) {
+					break;
+				}
+				WINDOWS_ReleaseTimeSlice();
+			}
+		}
 
+		// Read the key from the buffer
+		reg_ah = is_machine_ega_or_better() ? 0x10 : 0x0;
 		CALLBACK_RunRealInt(0x16);
+
 		switch (reg_al) {
 		case Ascii::CarriageReturn:
 			data[count++] = Ascii::CarriageReturn;
