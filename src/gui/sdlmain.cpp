@@ -969,7 +969,7 @@ static void notify_new_mouse_screen_params()
 	params.x_abs = static_cast<float>(abs_x);
 	params.y_abs = static_cast<float>(abs_y);
 
-	params.is_fullscreen = (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN);
+	params.is_fullscreen = sdl.desktop.is_fullscreen;
 	params.is_multi_display = (SDL_GetNumVideoDisplays() > 1);
 
 	MOUSE_NewScreenParams(params);
@@ -1138,9 +1138,18 @@ static SDL_Window* create_window()
 	}
 
 	if (sdl.desktop.is_fullscreen) {
-		flags |= (sdl.desktop.fullscreen.mode == FullscreenMode::Standard)
-		               ? SDL_WINDOW_FULLSCREEN_DESKTOP
-		               : SDL_WINDOW_FULLSCREEN;
+		switch (sdl.desktop.fullscreen.mode) {
+		case FullscreenMode::Standard:
+			flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+			break;
+		case FullscreenMode::Original:
+			flags |= SDL_WINDOW_FULLSCREEN;
+			break;
+		case FullscreenMode::ForcedBorderless:
+			// no-op
+			break;
+		default: assertm(false, "Invalid FullscreenMode");
+		}
 	}
 
 	auto window = SDL_CreateWindow(DOSBOX_NAME,
@@ -1181,34 +1190,36 @@ static SDL_Window* create_window()
 	}
 
 	// Set fullscreen display mode
-	SDL_DisplayMode fullscreen_mode = {};
+	if (sdl.desktop.fullscreen.mode != FullscreenMode::ForcedBorderless) {
+		SDL_DisplayMode fullscreen_mode = {};
 
-	const SDL_DisplayMode requested_mode = {0,
-	                                        sdl.desktop.fullscreen.width,
-	                                        sdl.desktop.fullscreen.height,
-	                                        0,
-	                                        nullptr};
+		const SDL_DisplayMode requested_mode = {0,
+												sdl.desktop.fullscreen.width,
+												sdl.desktop.fullscreen.height,
+												0,
+												nullptr};
 
-	if (!SDL_GetClosestDisplayMode(sdl.display_number,
-	                               &requested_mode,
-	                               &fullscreen_mode)) {
+		if (!SDL_GetClosestDisplayMode(sdl.display_number,
+									   &requested_mode,
+									   &fullscreen_mode)) {
 
-		LOG_WARNING(
-		        "SDL: Failed to set fullscreen mode to %dx%d, "
-		        "falling back to desktop mode",
-		        requested_mode.w,
-		        requested_mode.h);
+			LOG_WARNING(
+					"SDL: Failed to set fullscreen mode to %dx%d, "
+					"falling back to desktop mode",
+					requested_mode.w,
+					requested_mode.h);
 
-		if (SDL_GetDesktopDisplayMode(sdl.display_number,
-		                              &fullscreen_mode) < 0) {
-			LOG_WARNING("SDL: Failed to retrieve desktop display mode: %s",
-			            SDL_GetError());
+			if (SDL_GetDesktopDisplayMode(sdl.display_number,
+										  &fullscreen_mode) < 0) {
+				LOG_WARNING("SDL: Failed to retrieve desktop display mode: %s",
+							SDL_GetError());
+			}
 		}
-	}
 
-	if (SDL_SetWindowDisplayMode(window, &fullscreen_mode) < 0) {
-		LOG_ERR("SDL: Failed to set fullscreen display mode: %s",
-		        SDL_GetError());
+		if (SDL_SetWindowDisplayMode(window, &fullscreen_mode) < 0) {
+			LOG_ERR("SDL: Failed to set fullscreen display mode: %s",
+					SDL_GetError());
+		}
 	}
 
 	SDL_SetWindowMinimumSize(window,
@@ -2244,7 +2255,7 @@ static void switch_fullscreen()
 	// so we simply apply the bool of the mode we're switching out-of.
 	sticky_keys(sdl.desktop.is_fullscreen);
 #endif
-	if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN) {
+	if (sdl.desktop.is_fullscreen) {
 		exit_fullscreen();
 	} else {
 		enter_fullscreen();
@@ -3001,6 +3012,10 @@ static void sdl_section_init()
 	MOUSE_NotifyReadyGFX();
 
 	TITLEBAR_ReadConfig(*section);
+
+	if (sdl.desktop.is_fullscreen && sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+		enter_fullscreen();
+	}
 }
 
 static void regenerate_window(Section* sec)
