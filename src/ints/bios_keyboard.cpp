@@ -5,6 +5,7 @@
 #include "ints/bios.h"
 
 #include "cpu/callback.h"
+#include "cpu/cpu.h"
 #include "cpu/registers.h"
 #include "dos/dos.h"
 #include "hardware/input/keyboard.h"
@@ -528,7 +529,10 @@ static Bitu INT16_Handler(void) {
 			reg_ax=temp;
 		} else {
 			/* enter small idle loop to allow for irqs to happen */
-			reg_ip+=1;
+			if (CPU_ShouldHltOnIdle()) {
+				CPU_HLT(reg_eip);
+			}
+			reg_ip += 1;
 		}
 		break;
 	case 0x10: /* GET KEYSTROKE (enhanced keyboards only) */
@@ -540,7 +544,10 @@ static Bitu INT16_Handler(void) {
 			reg_ax=temp;
 		} else {
 			/* enter small idle loop to allow for irqs to happen */
-			reg_ip+=1;
+			if (CPU_ShouldHltOnIdle()) {
+				CPU_HLT(reg_eip);
+			}
+			reg_ip += 1;
 		}
 		break;
 	case 0x01: /* CHECK FOR KEYSTROKE */
