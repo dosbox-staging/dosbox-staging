@@ -1481,19 +1481,6 @@ static bool update_textures()
 		return false;
 	}
 
-#if !SDL_VERSION_ATLEAST(2, 0, 12)
-	// Compatibility with Ubuntu 20.04.
-	switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
-	case TextureFilterMode::Nearest:
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-		break;
-	case TextureFilterMode::Linear:
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-		break;
-	default: assertm(false, "Invalid TextureFilterMode"); return 0;
-	}
-#endif
-
 	SDL_Texture* texture = SDL_CreateTexture(sdl.renderer,
 	                                         renderer_info.texture_formats[0],
 	                                         SDL_TEXTUREACCESS_STREAMING,
@@ -1504,7 +1491,6 @@ static bool update_textures()
 		return false;
 	}
 
-#if SDL_VERSION_ATLEAST(2, 0, 12)
 	switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
 	case TextureFilterMode::Nearest:
 		if (SDL_SetTextureScaleMode(texture,
@@ -1524,7 +1510,6 @@ static bool update_textures()
 
 	default: assertm(false, "Invalid TextureFilterMode"); return 0;
 	}
-#endif
 
 	// unused; must be 0
 	constexpr auto Flags    = 0;
