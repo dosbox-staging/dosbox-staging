@@ -2908,6 +2908,15 @@ static void set_fullscreen_mode()
 	}
 }
 
+static void set_allow_screensaver() {
+	const std::string screensaver = get_sdl_section()->GetString("screensaver");
+	if (screensaver == "allow") {
+		SDL_EnableScreenSaver();
+	} else {
+		SDL_DisableScreenSaver();
+	}
+}
+
 static void sdl_section_init()
 {
 	auto section = get_section("sdl");
@@ -2944,13 +2953,7 @@ static void sdl_section_init()
 
 	set_output(section, is_aspect_ratio_correction_enabled());
 	check_and_handle_dpi_change(sdl.window);
-
-	const std::string screensaver = section->GetString("screensaver");
-	if (screensaver == "allow") {
-		SDL_EnableScreenSaver();
-	} else {
-		SDL_DisableScreenSaver();
-	}
+	set_allow_screensaver();
 
 	MAPPER_AddHandler(MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper", "Mapper");
 
@@ -3025,6 +3028,9 @@ static void notify_sdl_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "mapperfile") {
 		MAPPER_BindKeys(&section);
+
+	} else if (prop_name == "screensaver") {
+		set_allow_screensaver();
 
 	} else if (prop_name == "vsync") {
 		validate_vsync_and_presentation_mode_settings();
@@ -3994,7 +4000,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "Note: The '--resetmapper' command line option only deletes the default mapper\n"
 	        "      file.");
 
-	pstring = section.AddString("screensaver", OnlyAtStart, "auto");
+	pstring = section.AddString("screensaver", Always, "auto");
 	pstring->SetHelp(
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
 	        "variable which usually blocks the OS screensaver while the emulator is\n"
