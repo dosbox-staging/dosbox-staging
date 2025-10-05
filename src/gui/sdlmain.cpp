@@ -1650,6 +1650,8 @@ static void enter_fullscreen()
 
 		sdl.desktop.fullscreen.is_forced_borderless_fullscreen = true;
 
+		set_window_transparency(0);
+
 		maybe_log_display_properties();
 
 	} else {
@@ -1683,6 +1685,9 @@ static void exit_fullscreen()
 		SDL_SetWindowPosition(sdl.window,
 		                      sdl.desktop.fullscreen.prev_window.x_pos,
 		                      sdl.desktop.fullscreen.prev_window.y_pos);
+
+		set_window_transparency(
+		        get_sdl_section()->GetInt("window_transparency"));
 
 		sdl.desktop.fullscreen.is_forced_borderless_fullscreen = false;
 
