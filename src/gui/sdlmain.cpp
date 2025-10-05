@@ -2823,20 +2823,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			sdl.want_rendering_backend = RenderingBackend::Texture;
 		} else {
 			sdl.rendering_backend = RenderingBackend::OpenGl;
-
-			// We don't need a render reinit here when starting in
-			// OpenGL mode. But when starting in `texture` mode and
-			// later switching to `opengl` output, the function
-			// `GFX_SetShader()` wouldn't get called which will
-			// result in no shader being loaded and a black screen.
-			//
-			// It's pretty hard to get around this due to how shader
-			// auto-switching works, so the cleanest and simplest
-			// way is to always do a render reinit here. Doing the
-			// init twice in the normal `output = opengl` case has
-			// no ill effects.
-			//
-			RENDER_Reinit();
 			return;
 		}
 	}
@@ -3777,7 +3763,7 @@ static void init_sdl_config_settings(SectionProp& section)
 #else
 	const std::string default_output = "texture";
 #endif
-	auto pstring = section.AddString("output", Always, default_output.c_str());
+	auto pstring = section.AddString("output", OnlyAtStart, default_output.c_str());
 
 	pstring->SetOptionHelp(
 	        "opengl_default",
@@ -3822,7 +3808,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "texturenb",
 	});
 
-	pstring = section.AddString("texture_renderer", Always, "auto");
+	pstring = section.AddString("texture_renderer", OnlyAtStart, "auto");
 	pstring->SetHelp(
 	        "Render driver to use in 'texture' output mode ('auto' by default).\n"
 	        "Use 'texture_renderer = auto' for an automatic choice.");
