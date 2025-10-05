@@ -2920,6 +2920,14 @@ static void set_allow_screensaver() {
 	}
 }
 
+static void configure_pause_and_mute_when_inactive_settings()
+{
+	sdl.pause_when_inactive = get_sdl_section()->GetBool("pause_when_inactive");
+
+	sdl.mute_when_inactive = (!sdl.pause_when_inactive) &&
+	                         get_sdl_section()->GetBool("mute_when_inactive");
+}
+
 static void sdl_section_init()
 {
 	auto section = get_section("sdl");
@@ -2930,10 +2938,7 @@ static void sdl_section_init()
 	sdl.desktop.is_fullscreen = control->arguments.fullscreen ||
 	                            section->GetBool("fullscreen");
 
-	sdl.pause_when_inactive = section->GetBool("pause_when_inactive");
-
-	sdl.mute_when_inactive = (!sdl.pause_when_inactive) &&
-	                         section->GetBool("mute_when_inactive");
+	configure_pause_and_mute_when_inactive_settings();
 
 	// Assume focus on startup
 	apply_active_settings();
@@ -3034,6 +3039,9 @@ static void notify_sdl_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "mapperfile") {
 		MAPPER_BindKeys(&section);
+
+	} else if (prop_name == "mute_when_inactive") {
+		configure_pause_and_mute_when_inactive_settings();
 
 	} else if (prop_name == "screensaver") {
 		set_allow_screensaver();
@@ -3984,7 +3992,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	pstring->SetHelp(
 	        "The [color=light-green]'priority'[reset] setting has been removed.");
 
-	pbool = section.AddBool("mute_when_inactive", OnlyAtStart, false);
+	pbool = section.AddBool("mute_when_inactive", Always, false);
 	pbool->SetHelp("Mute the sound when the window is inactive ('off' by default).");
 
 	pbool = section.AddBool("pause_when_inactive", OnlyAtStart, false);
