@@ -2842,6 +2842,13 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	sdl.rendering_backend = RenderingBackend::Texture;
 }
 
+static void set_keyboard_capture()
+{
+	const auto capture_keyboard = get_sdl_section()->GetBool("keyboard_capture");
+
+	SDL_SetWindowKeyboardGrab(sdl.window, capture_keyboard ? SDL_TRUE : SDL_FALSE);
+}
+
 static void apply_active_settings()
 {
 	MOUSE_NotifyWindowActive(true);
@@ -2853,11 +2860,7 @@ static void apply_active_settings()
 	// At least on some platforms grabbing the keyboard has to be repeated
 	// each time we regain focus
 	if (sdl.window) {
-		const auto capture_keyboard = get_sdl_section()->GetBool(
-		        "keyboard_capture");
-
-		SDL_SetWindowKeyboardGrab(sdl.window,
-		                          capture_keyboard ? SDL_TRUE : SDL_FALSE);
+		set_keyboard_capture();
 	}
 }
 
@@ -3026,6 +3029,9 @@ static void notify_sdl_setting_updated(SectionProp& section,
 			enter_fullscreen();
 		}
 
+	} else if (prop_name == "keyboard_capture") {
+		set_keyboard_capture();
+
 	} else if (prop_name == "mapperfile") {
 		MAPPER_BindKeys(&section);
 
@@ -3067,7 +3073,6 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		//   fullscreen_mode
 		//   window_size
 		//   window_decorations
-		//   keyboard_capture
 
 		regenerate_window(&section);
 	}
