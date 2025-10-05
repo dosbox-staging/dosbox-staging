@@ -3043,6 +3043,9 @@ static void notify_sdl_setting_updated(SectionProp& section,
 	} else if (prop_name == "mute_when_inactive") {
 		configure_pause_and_mute_when_inactive_settings();
 
+	} else if (prop_name == "pause_when_inactive") {
+		configure_pause_and_mute_when_inactive_settings();
+
 	} else if (prop_name == "screensaver") {
 		set_allow_screensaver();
 
@@ -3995,7 +3998,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	pbool = section.AddBool("mute_when_inactive", Always, false);
 	pbool->SetHelp("Mute the sound when the window is inactive ('off' by default).");
 
-	pbool = section.AddBool("pause_when_inactive", OnlyAtStart, false);
+	pbool = section.AddBool("pause_when_inactive", Always, false);
 	pbool->SetHelp("Pause emulation when the window is inactive ('off' by default).");
 
 	pbool = section.AddBool("keyboard_capture", Always, false);
