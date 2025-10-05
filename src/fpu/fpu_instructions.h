@@ -14,7 +14,12 @@ static constexpr uint16_t SinglePrecisionMode   = 0x0000;
 static constexpr uint16_t DoublePrecisionMode   = 0x0200;
 static constexpr uint16_t ExtendedPrecisionMode = 0x0300;
 
-static void FPU_FINIT(void) {
+static constexpr uint16_t InvalidArithmeticFlag = 0x0001;
+static constexpr uint16_t ZeroDivideFlag        = 0x0004;
+static constexpr uint16_t PrecisionFlag         = 0x0020;
+
+static void FPU_FINIT(void)
+{
 	FPU_SetCW(0x37F);
 	fpu.sw = 0;
 	TOP=FPU_GET_TOP();
@@ -522,16 +527,67 @@ static void FPU_FPTAN(void){
 	//flags and such :)
 	return;
 }
+
 static void FPU_FDIV(Bitu st, Bitu other){
-	fpu.regs[st].d= fpu.regs[st].d/fpu.regs[other].d;
-	//flags and such :)
-	return;
+	const auto a = fpu.regs[st].d;
+	const auto b = fpu.regs[other].d;
+
+	const auto fpclass_a = std::fpclassify(a);
+	const auto fpclass_b = std::fpclassify(b);
+
+	if (fpclass_a == FP_NAN || fpclass_b == FP_NAN) {
+		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
+
+	if (fpclass_b == FP_ZERO &&
+	    (fpclass_a == FP_NORMAL || fpclass_a == FP_SUBNORMAL)) {
+		fpu.sw |= ZeroDivideFlag;
+		fpu.regs[st].d = std::copysign(
+		        std::numeric_limits<double>::infinity(),
+		        std::signbit(a) ^ std::signbit(b) ? -1.0 : 1.0);
+		return;
+	}
+
+	if ((fpclass_a == FP_ZERO && fpclass_b == FP_ZERO) ||
+	    (fpclass_a == FP_INFINITE && fpclass_b == FP_INFINITE)) {
+		fpu.sw |= InvalidArithmeticFlag;
+		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
+
+	fpu.regs[st].d = a / b;
 }
 
 static void FPU_FDIVR(Bitu st, Bitu other){
-	fpu.regs[st].d= fpu.regs[other].d/fpu.regs[st].d;
-	// flags and such :)
-	return;
+	const auto a = fpu.regs[other].d;
+	const auto b = fpu.regs[st].d;
+
+	const auto fpclass_a = std::fpclassify(a);
+	const auto fpclass_b = std::fpclassify(b);
+
+	if (fpclass_a == FP_NAN || fpclass_b == FP_NAN) {
+		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
+
+	if (fpclass_b == FP_ZERO &&
+	    (fpclass_a == FP_NORMAL || fpclass_a == FP_SUBNORMAL)) {
+		fpu.sw |= ZeroDivideFlag;
+		fpu.regs[st].d = std::copysign(
+		        std::numeric_limits<double>::infinity(),
+		        std::signbit(a) ^ std::signbit(b) ? -1.0 : 1.0);
+		return;
+	}
+
+	if ((fpclass_a == FP_ZERO && fpclass_b == FP_ZERO) ||
+	    (fpclass_a == FP_INFINITE && fpclass_b == FP_INFINITE)) {
+		fpu.sw |= InvalidArithmeticFlag;
+		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
+
+	fpu.regs[st].d = a / b;
 }
 
 static void FPU_FMUL(Bitu st, Bitu other){
@@ -592,9 +648,8 @@ static void FPU_FUCOM(Bitu st, Bitu other){
 
 static void FPU_FRNDINT(void){
 	const auto rounded  = FROUND(fpu.regs[TOP].d);
-	if (fpu.cw&0x20) { //As we don't generate exceptions; only do it when masked
-		if (rounded != fpu.regs[TOP].d)
-			fpu.sw |= 0x20; //Set Precision Exception
+	if (rounded != fpu.regs[TOP].d) {
+		fpu.sw |= PrecisionFlag;
 	}
 	fpu.regs[TOP].d = rounded;
 }
