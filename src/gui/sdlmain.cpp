@@ -3093,6 +3093,23 @@ static void notify_sdl_setting_updated(SectionProp& section,
 			                      sdl.desktop.window.y_pos);
 		}
 
+	} else if (prop_name == "window_size") {
+		configure_window_size();
+
+		if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless &&
+		    sdl.desktop.is_fullscreen) {
+
+			sdl.desktop.fullscreen.prev_window.width =
+			        sdl.desktop.window.width;
+
+			sdl.desktop.fullscreen.prev_window.height =
+			        sdl.desktop.window.height;
+		} else {
+			SDL_SetWindowSize(sdl.window,
+			                  sdl.desktop.window.width,
+			                  sdl.desktop.window.height);
+		}
+
 	} else if (prop_name == "window_titlebar") {
 		TITLEBAR_ReadConfig(section);
 
@@ -3102,11 +3119,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		}
 
 	} else {
-		// TODO add more granular support for these settings:
-		//   texture_renderer
-		//   window_size
-
-		regenerate_window();
+		assertm(false, "Unhandled [sdl] section setting");
 	}
 }
 
