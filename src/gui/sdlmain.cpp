@@ -1491,8 +1491,8 @@ static bool update_textures()
 		return false;
 	}
 
-	switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
-	case TextureFilterMode::Nearest:
+	switch (sdl.texture.interpolation_mode) {
+	case InterpolationMode::NearestNeighbour:
 		if (SDL_SetTextureScaleMode(texture,
 		                            SDL_ScaleMode::SDL_ScaleModeNearest) < 0) {
 			LOG_WARNING("SDL: Failed to set texture filtering mode: %s",
@@ -1500,7 +1500,7 @@ static bool update_textures()
 		}
 		break;
 
-	case TextureFilterMode::Linear:
+	case InterpolationMode::Bilinear:
 		if (SDL_SetTextureScaleMode(texture,
 		                            SDL_ScaleMode::SDL_ScaleModeLinear) < 0) {
 			LOG_WARNING("SDL: Failed to set texture filtering mode: %s",
@@ -1508,7 +1508,7 @@ static bool update_textures()
 		}
 		break;
 
-	default: assertm(false, "Invalid TextureFilterMode"); return 0;
+	default: assertm(false, "Invalid InterpolationMode"); return 0;
 	}
 
 	// unused; must be 0
@@ -2752,13 +2752,9 @@ static void setup_rendering_backend_and_create_window()
 		sdl.want_rendering_backend     = RenderingBackend::Texture;
 		sdl.texture.interpolation_mode = InterpolationMode::Bilinear;
 
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-
 	} else if (output == "texturenb") {
 		sdl.want_rendering_backend = RenderingBackend::Texture;
 		sdl.texture.interpolation_mode = InterpolationMode::NearestNeighbour;
-
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 
 #if C_OPENGL
 	} else if (output == "opengl") {
