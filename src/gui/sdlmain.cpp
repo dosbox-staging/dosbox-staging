@@ -3031,6 +3031,18 @@ static void notify_sdl_setting_updated(SectionProp& section,
 			enter_fullscreen();
 		}
 
+	} else if (prop_name == "fullscreen_mode") {
+		const auto was_in_fullscreen = sdl.desktop.is_fullscreen;
+		if (sdl.desktop.is_fullscreen) {
+			exit_fullscreen();
+		}
+
+		configure_fullscreen_mode();
+
+		if (was_in_fullscreen) {
+			enter_fullscreen();
+		}
+
 	} else if (prop_name == "keyboard_capture") {
 		configure_keyboard_capture();
 
@@ -3091,7 +3103,6 @@ static void notify_sdl_setting_updated(SectionProp& section,
 	} else {
 		// TODO add more granular support for these settings:
 		//   texture_renderer
-		//   fullscreen_mode
 		//   window_size
 
 		regenerate_window();
