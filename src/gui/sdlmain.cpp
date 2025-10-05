@@ -1689,12 +1689,16 @@ static void exit_fullscreen()
 		constexpr auto WindowedMode = 0;
 		SDL_SetWindowFullscreen(sdl.window, WindowedMode);
 
-		// On macOS, SDL_SetWindowSize() calls in fullscreen mode are no-ops,
-		// so we need to set the potentially changed window size when exiting
-		// fullscreen mode.
+		// On macOS, SDL_SetWindowSize() and SDL_SetWindowPosition() calls in
+		// fullscreen mode are no-ops, so we need to set the potentially
+		// changed window size and position when exiting fullscreen mode.
 		SDL_SetWindowSize(sdl.window,
 		                  sdl.desktop.window.width,
 		                  sdl.desktop.window.height);
+
+		SDL_SetWindowPosition(sdl.window,
+		                      sdl.desktop.window.x_pos,
+		                      sdl.desktop.window.y_pos);
 	}
 
 	// We need to disable transparency in fullscreen on macOS
@@ -2570,13 +2574,10 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 	return {w, h};
 }
 
-static void setup_initial_window_position_from_conf(const std::string& window_position_val)
+static std::optional<SDL_Point> parse_window_position_conf(const std::string& window_position_val)
 {
-	sdl.desktop.window.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
-	sdl.desktop.window.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
-
 	if (window_position_val == "auto") {
-		return;
+		return {};
 	}
 
 	int x, y;
@@ -2588,7 +2589,7 @@ static void setup_initial_window_position_from_conf(const std::string& window_po
 		        "DISPLAY: Invalid 'window_position' setting: '%s'. "
 		        "Must be in X,Y format, using 'auto'.",
 		        window_position_val.c_str());
-		return;
+		return {};
 	}
 
 	const auto desktop = get_desktop_size();
@@ -2604,11 +2605,37 @@ static void setup_initial_window_position_from_conf(const std::string& window_po
 		        window_position_val.c_str(),
 		        desktop.w,
 		        desktop.h);
-		return;
+		return {};
 	}
 
-	sdl.desktop.window.x_pos = x;
-	sdl.desktop.window.y_pos = y;
+	return SDL_Point{x, y};
+}
+
+static void save_window_position(const std::optional<SDL_Point> pos)
+{
+	if (pos) {
+		if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+			sdl.desktop.fullscreen.prev_window.x_pos = pos->x;
+			sdl.desktop.fullscreen.prev_window.y_pos = pos->y;
+		} else {
+			sdl.desktop.window.x_pos = pos->x;
+			sdl.desktop.window.y_pos = pos->y;
+		}
+	} else {
+		if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+			sdl.desktop.fullscreen.prev_window.x_pos =
+			        SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
+
+			sdl.desktop.fullscreen.prev_window.y_pos =
+			        SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
+		} else {
+			sdl.desktop.window.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+			        sdl.display_number);
+
+			sdl.desktop.window.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+			        sdl.display_number);
+		}
+	}
 }
 
 // Writes to the window-size member should be done via this function
@@ -2756,8 +2783,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 	sdl.desktop.window.show_decorations = section->GetBool("window_decorations");
 
-	setup_initial_window_position_from_conf(
-	        section->GetString("window_position"));
+	save_window_position(
+	        parse_window_position_conf(section->GetString("window_position")));
 
 	setup_window_sizes_from_conf(wants_aspect_ratio_correction);
 
@@ -2986,6 +3013,16 @@ static void notify_sdl_setting_updated(SectionProp& section,
 	if (prop_name == "mapperfile") {
 		MAPPER_BindKeys(&section);
 
+	} else if (prop_name == "window_position") {
+		save_window_position(parse_window_position_conf(
+		        section.GetString("window_position")));
+
+		if (!sdl.desktop.is_fullscreen) {
+			SDL_SetWindowPosition(sdl.window,
+			                      sdl.desktop.window.x_pos,
+			                      sdl.desktop.window.y_pos);
+		}
+
 	} else if (prop_name == "window_titlebar") {
 		TITLEBAR_ReadConfig(section);
 
@@ -3000,7 +3037,6 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		//   fullscreen
 		//   fullscreen_mode
 		//   window_size
-		//   window_position
 		//   window_decorations
 		//   vsync
 		//   presentation_mode
