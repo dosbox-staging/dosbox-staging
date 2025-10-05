@@ -3012,7 +3012,7 @@ static void sdl_section_init()
 	}
 }
 
-static void regenerate_window(Section* sec)
+static void regenerate_window()
 {
 	clean_up_sdl_resources();
 	setup_rendering_backend_and_create_window();
@@ -3047,7 +3047,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		validate_vsync_and_presentation_mode_settings();
 		configure_vsync();
 		configure_presentation_mode();
-		regenerate_window(&section);
+		regenerate_window();
 
 	} else if (prop_name == "screensaver") {
 		configure_allow_screensaver();
@@ -3094,7 +3094,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		//   fullscreen_mode
 		//   window_size
 
-		regenerate_window(&section);
+		regenerate_window();
 	}
 }
 
