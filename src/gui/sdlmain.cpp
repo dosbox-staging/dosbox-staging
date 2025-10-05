@@ -2750,11 +2750,13 @@ InterpolationMode GFX_GetTextureInterpolationMode()
  * Make sure to call CleanupSDLResources() before calling this.
  * (TODO: Or perhaps just do it here unconditionally?)
  */
-static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
+static void setup_rendering_backend_and_create_window()
 {
 	// Apply the user's mouse settings
-	const auto section = static_cast<const SectionProp*>(sec);
-	std::string output = section->GetString("output");
+	const auto section = get_sdl_section();
+	assert(section);
+
+	const std::string output = section->GetString("output");
 
 	// It's the job of everything after this to re-engage it.
 	GFX_DisengageRendering();
@@ -2803,7 +2805,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	save_window_position(
 	        parse_window_position_conf(section->GetString("window_position")));
 
-	configure_window_size(wants_aspect_ratio_correction);
+	configure_window_size(is_aspect_ratio_correction_enabled());
 
 	sdl.draw.render_width_px  = FallbackWindowSize.x;
 	sdl.draw.render_height_px = FallbackWindowSize.y;
@@ -2962,7 +2964,7 @@ static void sdl_section_init()
 	configure_vsync();
 	configure_presentation_mode();
 
-	set_output(section, is_aspect_ratio_correction_enabled());
+	setup_rendering_backend_and_create_window();
 	check_and_handle_dpi_change(sdl.window);
 	configure_allow_screensaver();
 
@@ -3021,7 +3023,7 @@ static void sdl_section_init()
 static void regenerate_window(Section* sec)
 {
 	clean_up_sdl_resources();
-	set_output(sec, is_aspect_ratio_correction_enabled());
+	setup_rendering_backend_and_create_window();
 	GFX_ResetScreen();
 }
 
