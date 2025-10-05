@@ -3039,6 +3039,12 @@ static void notify_sdl_setting_updated(SectionProp& section,
 	} else if (prop_name == "pause_when_inactive") {
 		configure_pause_and_mute_when_inactive();
 
+	} else if (prop_name == "presentation_mode") {
+		validate_vsync_and_presentation_mode_settings();
+		configure_vsync();
+		configure_presentation_mode();
+		regenerate_window(&section);
+
 	} else if (prop_name == "screensaver") {
 		configure_allow_screensaver();
 
