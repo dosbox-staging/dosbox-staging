@@ -3191,11 +3191,11 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 		// the window to regain window or input focus.
 		//
 		apply_inactive_settings();
-		SDL_Event ev;
 
 		KEYBOARD_ClrBuffer();
 
-		bool paused = true;
+		sdl.is_paused = true;
+		TITLEBAR_RefreshTitle();
 
 		// Prevent the mixer from running while in our pause loop.
 		// Muting is not ideal for some sound devices such as GUS that
@@ -3203,7 +3203,9 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 		// samples we're not going to play anyway.
 		MIXER_LockMixerThread();
 
-		while (paused && !DOSBOX_IsShutdownRequested()) {
+		SDL_Event ev;
+
+		while (sdl.is_paused && !DOSBOX_IsShutdownRequested()) {
 			// WaitEvent() waits for an event rather than
 			// polling, so CPU usage drops to zero.
 			SDL_WaitEvent(&ev);
@@ -3230,7 +3232,7 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 						TITLEBAR_RefreshTitle();
 
 						if (we == SDL_WINDOWEVENT_FOCUS_GAINED) {
-							paused = false;
+							sdl.is_paused = false;
 							apply_active_settings();
 						}
 					}
