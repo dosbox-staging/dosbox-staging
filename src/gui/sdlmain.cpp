@@ -544,7 +544,7 @@ static void validate_vsync_and_presentation_mode_settings()
 // on-demand after startup and on output mode changes (e.g., switching from
 // the 'texture' backend to 'opengl').
 //
-static void init_vsync_settings()
+static void configure_vsync()
 {
 	const std::string vsync_pref = get_sdl_section()->GetString("vsync");
 
@@ -565,7 +565,7 @@ static void init_vsync_settings()
 }
 
 // TODO(BASE)
-static void init_presentation_mode_settings()
+static void configure_presentation_mode()
 {
 	const std::string presentation_mode_pref = get_sdl_section()->GetString(
 	        "presentation_mode");
@@ -2682,9 +2682,8 @@ static void save_window_size(const int w, const int h)
 //
 //  - 'sdl.desktop.window', with the refined size.
 //
-static void setup_window_sizes_from_conf(const bool wants_aspect_ratio_correction)
+static void configure_window_size(const bool wants_aspect_ratio_correction)
 {
-
 	const auto window_size_pref = []() {
 		const auto legacy_pref = get_sdl_section()->GetString("windowresolution");
 		if (!legacy_pref.empty()) {
@@ -2800,7 +2799,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	save_window_position(
 	        parse_window_position_conf(section->GetString("window_position")));
 
-	setup_window_sizes_from_conf(wants_aspect_ratio_correction);
+	configure_window_size(wants_aspect_ratio_correction);
 
 	sdl.draw.render_width_px  = FallbackWindowSize.x;
 	sdl.draw.render_height_px = FallbackWindowSize.y;
@@ -2842,7 +2841,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	sdl.rendering_backend = RenderingBackend::Texture;
 }
 
-static void set_keyboard_capture()
+static void configure_keyboard_capture()
 {
 	const auto capture_keyboard = get_sdl_section()->GetBool("keyboard_capture");
 
@@ -2860,7 +2859,7 @@ static void apply_active_settings()
 	// At least on some platforms grabbing the keyboard has to be repeated
 	// each time we regain focus
 	if (sdl.window) {
-		set_keyboard_capture();
+		configure_keyboard_capture();
 	}
 }
 
@@ -2878,7 +2877,7 @@ static void restart_hotkey_handler([[maybe_unused]] bool pressed)
 	DOSBOX_Restart();
 }
 
-static void set_fullscreen_mode()
+static void configure_fullscreen_mode()
 {
 	const auto fullscreen_mode_pref = [] {
 		auto legacy_pref = get_sdl_section()->GetString("fullresolution");
@@ -2911,7 +2910,7 @@ static void set_fullscreen_mode()
 	}
 }
 
-static void set_allow_screensaver() {
+static void configure_allow_screensaver() {
 	const std::string screensaver = get_sdl_section()->GetString("screensaver");
 	if (screensaver == "allow") {
 		SDL_EnableScreenSaver();
@@ -2920,7 +2919,7 @@ static void set_allow_screensaver() {
 	}
 }
 
-static void configure_pause_and_mute_when_inactive_settings()
+static void configure_pause_and_mute_when_inactive()
 {
 	sdl.pause_when_inactive = get_sdl_section()->GetBool("pause_when_inactive");
 
@@ -2938,12 +2937,12 @@ static void sdl_section_init()
 	sdl.desktop.is_fullscreen = control->arguments.fullscreen ||
 	                            section->GetBool("fullscreen");
 
-	configure_pause_and_mute_when_inactive_settings();
+	configure_pause_and_mute_when_inactive();
 
 	// Assume focus on startup
 	apply_active_settings();
 
-	set_fullscreen_mode();
+	configure_fullscreen_mode();
 
 	const int display = section->GetInt("display");
 
@@ -2956,12 +2955,12 @@ static void sdl_section_init()
 	}
 
 	validate_vsync_and_presentation_mode_settings();
-	init_vsync_settings();
-	init_presentation_mode_settings();
+	configure_vsync();
+	configure_presentation_mode();
 
 	set_output(section, is_aspect_ratio_correction_enabled());
 	check_and_handle_dpi_change(sdl.window);
-	set_allow_screensaver();
+	configure_allow_screensaver();
 
 	MAPPER_AddHandler(MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper", "Mapper");
 
@@ -3035,23 +3034,23 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		}
 
 	} else if (prop_name == "keyboard_capture") {
-		set_keyboard_capture();
+		configure_keyboard_capture();
 
 	} else if (prop_name == "mapperfile") {
 		MAPPER_BindKeys(&section);
 
 	} else if (prop_name == "mute_when_inactive") {
-		configure_pause_and_mute_when_inactive_settings();
+		configure_pause_and_mute_when_inactive();
 
 	} else if (prop_name == "pause_when_inactive") {
-		configure_pause_and_mute_when_inactive_settings();
+		configure_pause_and_mute_when_inactive();
 
 	} else if (prop_name == "screensaver") {
-		set_allow_screensaver();
+		configure_allow_screensaver();
 
 	} else if (prop_name == "vsync") {
 		validate_vsync_and_presentation_mode_settings();
-		init_vsync_settings();
+		configure_vsync();
 
 		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 			set_vsync_gl(is_vsync_enabled());
