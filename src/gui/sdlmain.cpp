@@ -2686,10 +2686,11 @@ static void save_window_size(const int w, const int h)
 //
 //  - 'sdl.desktop.window', with the refined size.
 //
-static void configure_window_size(const bool wants_aspect_ratio_correction)
+static void configure_window_size()
 {
 	const auto window_size_pref = []() {
-		const auto legacy_pref = get_sdl_section()->GetString("windowresolution");
+		const auto legacy_pref = get_sdl_section()->GetString(
+		        "windowresolution");
 		if (!legacy_pref.empty()) {
 			set_section_property_value("sdl", "windowresolution", "");
 			set_section_property_value("sdl", "window_size", legacy_pref);
@@ -2699,9 +2700,10 @@ static void configure_window_size(const bool wants_aspect_ratio_correction)
 
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
-	SDL_Point coarse_size  = FallbackWindowSize;
+	SDL_Point coarse_size = FallbackWindowSize;
 
-	sdl.use_exact_window_resolution = window_size_pref.find('x') != std::string::npos;
+	sdl.use_exact_window_resolution = window_size_pref.find('x') !=
+	                                  std::string::npos;
 
 	if (sdl.use_exact_window_resolution) {
 		coarse_size = parse_window_resolution_from_conf(window_size_pref);
@@ -2718,7 +2720,7 @@ static void configure_window_size(const bool wants_aspect_ratio_correction)
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
 		refined_size = refine_window_size(coarse_size,
-		                                  wants_aspect_ratio_correction);
+		                                  is_aspect_ratio_correction_enabled());
 	}
 
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
@@ -2805,7 +2807,7 @@ static void setup_rendering_backend_and_create_window()
 	save_window_position(
 	        parse_window_position_conf(section->GetString("window_position")));
 
-	configure_window_size(is_aspect_ratio_correction_enabled());
+	configure_window_size();
 
 	sdl.draw.render_width_px  = FallbackWindowSize.x;
 	sdl.draw.render_height_px = FallbackWindowSize.y;
