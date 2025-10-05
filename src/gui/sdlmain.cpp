@@ -1713,6 +1713,10 @@ static void exit_fullscreen()
 	set_window_transparency(
 			get_sdl_section()->GetInt("window_transparency"));
 
+	SDL_SetWindowBordered(sdl.window,
+	                      sdl.desktop.window.show_decorations ? SDL_TRUE
+	                                                          : SDL_FALSE);
+
 	sdl.desktop.is_fullscreen = false;
 }
 
@@ -3059,6 +3063,13 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		}
 		log_presentation_and_vsync_mode();
 
+	} else if (prop_name == "window_decorations") {
+		sdl.desktop.window.show_decorations = section.GetBool("window_decorations");
+		SDL_SetWindowBordered(sdl.window,
+		                      sdl.desktop.window.show_decorations
+		                              ? SDL_TRUE
+		                              : SDL_FALSE);
+
 	} else if (prop_name == "window_position") {
 		save_window_position(parse_window_position_conf(
 		        section.GetString("window_position")));
@@ -3082,7 +3093,6 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		//   texture_renderer
 		//   fullscreen_mode
 		//   window_size
-		//   window_decorations
 
 		regenerate_window(&section);
 	}
