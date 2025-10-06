@@ -214,12 +214,12 @@ bool RENDER_StartUpdate()
 static void halt_render()
 {
 	RENDER_DrawLine = empty_line_handler;
-	GFX_EndUpdate(nullptr);
+	GFX_EndUpdate();
 	render.updating = false;
 	render.active   = false;
 }
 
-void RENDER_EndUpdate(bool abort)
+void RENDER_EndUpdate([[maybe_unused]] bool abort)
 {
 	if (!render.updating) {
 		return;
@@ -253,12 +253,8 @@ void RENDER_EndUpdate(bool abort)
 		CAPTURE_AddFrame(image, frames_per_second);
 	}
 
-	if (render.scale.outWrite) {
-		GFX_EndUpdate(abort ? nullptr : Scaler_ChangedLines);
-	} else {
-		// If we made it here, then there's nothing new to render.
-		GFX_EndUpdate(nullptr);
-	}
+	GFX_EndUpdate();
+
 	render.updating = false;
 }
 
@@ -474,7 +470,7 @@ static void render_callback(GFX_CallbackFunctions_t function)
 		render.scale.clearCache = true;
 		return;
 	} else if (function == GFX_CallbackReset) {
-		GFX_EndUpdate(nullptr);
+		GFX_EndUpdate();
 		render_reset();
 	} else {
 		E_Exit("Unhandled GFX_CallbackReset %d", function);

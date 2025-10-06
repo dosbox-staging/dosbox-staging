@@ -90,6 +90,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 void GFX_ResetScreen();
 
 void GFX_Start();
+void GFX_Stop();
 
 // Called at the start of every unique frame (when there have been changes to
 // the framebuffer).
@@ -97,14 +98,17 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch);
 
 // Called at the end of every frame, regardless of whether there have been
 // changes to the framebuffer or not.
-void GFX_EndUpdate(const uint16_t* changed_lines);
+void GFX_EndUpdate();
 
-// Let the presentation layer safely call no-op functions.
-// Useful during output initialization or transitions.
-void GFX_DisengageRendering();
+void GFX_CaptureRenderedImage();
 
 DosBox::Rect GFX_GetDesktopSize();
 
 float GFX_GetDpiScaleFactor();
+
+DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px);
+
+DosBox::Rect to_rect(const SDL_Rect r);
+SDL_Rect to_sdl_rect(const DosBox::Rect& r);
 
 #endif // DOSBOX_GUI_COMMON_H

@@ -1659,7 +1659,7 @@ int32_t DEBUG_Run(int32_t amount,bool quickexit) {
 		// ensure all breakpoints are activated
 		CBreakpoint::ActivateBreakpoints();
 
-		const auto graphics_window = GFX_GetSDLWindow();
+		const auto graphics_window = GFX_GetWindow();
 		SDL_RaiseWindow(graphics_window);
 		SDL_SetWindowInputFocus(graphics_window);
 
