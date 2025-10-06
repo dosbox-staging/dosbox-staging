@@ -97,7 +97,7 @@ static void FPU_FPOP(void){
 	return;
 }
 
-static double FROUND(double in)
+static inline double FROUND(double in)
 {
 	switch (fpu.round) {
 	case ROUND_Nearest: return std::nearbyint(in);
@@ -646,10 +646,15 @@ static void FPU_FUCOM(Bitu st, Bitu other){
 }
 
 static void FPU_FRNDINT(void){
-	const auto rounded  = FROUND(fpu.regs[TOP].d);
-	if (rounded != fpu.regs[TOP].d) {
+	const auto val = fpu.regs[TOP].d;
+	if (std::isnan(val) || std::isinf(val)) {
+		return;
+	}
+	const auto rounded = FROUND(val);
+	if (rounded != val) {
 		fpu.sw |= PrecisionFlag;
 	}
+	FPU_SET_C1(rounded > val ? 1 : 0);
 	fpu.regs[TOP].d = rounded;
 }
 
