@@ -118,25 +118,17 @@ static inline uint64_t round_to_nearest_even(uint64_t sig, unsigned s)
 		return sig;
 	}
 
-	if (s < 64) {
-		const uint64_t hi   = sig >> s;
-		const uint64_t rem  = sig & ((1ULL << s) - 1);
-		const uint64_t half = 1ULL << (s - 1);
-		const uint64_t lsb  = hi & 1ULL;
-		const bool round_up = (rem > half) || (rem == half && lsb);
-		return hi + (round_up ? 1ULL : 0ULL);
+	const bool big     = (s >= 64);
+	const uint64_t hi  = big ? 0 : (sig >> s);
+	const uint64_t rem = big ? sig : (sig & ((1ULL << s) - 1));
+	if (!rem) {
+		return hi;
 	}
 
-	if (s == 64) {
-		const uint64_t hi   = 0;
-		const uint64_t rem  = sig;
-		const uint64_t half = 1ULL << 63;
-		const uint64_t lsb  = 0;
-		const bool round_up = (rem > half) || (rem == half && lsb);
-		return hi + (round_up ? 1ULL : 0ULL);
-	}
-
-	return 0;
+	const uint64_t half = big ? (1ULL << 63) : (1ULL << (s - 1));
+	const uint64_t lsb  = hi & 1ULL;
+	const bool round_up = (rem > half) || (rem == half && lsb);
+	return hi + (round_up ? 1ULL : 0ULL);
 }
 
 static Real64 FPU_FLD80(PhysPt addr)
