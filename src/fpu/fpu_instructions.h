@@ -681,30 +681,58 @@ static void FPU_FPREM1(void){
 	FPU_SET_C2(0);
 }
 
-static void FPU_FXAM(void){
-	if(fpu.regs[TOP].ll & LONGTYPE(0x8000000000000000))	//sign
-	{ 
-		FPU_SET_C1(1);
-	} 
-	else 
-	{
-		FPU_SET_C1(0);
-	}
-	if(fpu.tags[TOP] == TAG_Empty)
-	{
-		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C0(1);
+static void FPU_FXAM(void)
+{
+	const auto st0 = fpu.regs[TOP].d;
+
+	FPU_SET_C1(std::signbit(st0));
+
+	if (fpu.tags[TOP] == TAG_Empty) {
+		FPU_SET_C3(1);
+		FPU_SET_C2(0);
+		FPU_SET_C0(1);
 		return;
 	}
-	if(fpu.regs[TOP].d == 0.0)		//zero or normalized number.
-	{ 
-		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C0(0);
-	}
-	else
-	{
-		FPU_SET_C3(0);FPU_SET_C2(1);FPU_SET_C0(0);
+
+	switch (std::fpclassify(st0)) {
+	case FP_NORMAL:
+		FPU_SET_C3(0);
+		FPU_SET_C2(1);
+		FPU_SET_C0(0);
+		break;
+
+	case FP_ZERO:
+		FPU_SET_C3(1);
+		FPU_SET_C2(0);
+		FPU_SET_C0(0);
+		break;
+
+	case FP_NAN:
+		FPU_SET_C3(0);
+		FPU_SET_C2(0);
+		FPU_SET_C0(1);
+		break;
+
+	case FP_INFINITE:
+		FPU_SET_C3(0);
+		FPU_SET_C2(1);
+		FPU_SET_C0(1);
+		break;
+
+	case FP_SUBNORMAL:
+		FPU_SET_C3(1);
+		FPU_SET_C2(1);
+		FPU_SET_C0(0);
+		break;
+
+	// Unsupported
+	default:
+		FPU_SET_C3(0);
+		FPU_SET_C2(0);
+		FPU_SET_C0(0);
+		break;
 	}
 }
-
 
 static void FPU_F2XM1(void){
 	fpu.regs[TOP].d = std::pow(2.0, fpu.regs[TOP].d) - 1.0;
