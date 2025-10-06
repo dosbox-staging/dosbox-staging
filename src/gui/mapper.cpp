@@ -3005,12 +3005,12 @@ void MAPPER_DisplayUI() {
 	// The mapper is about to take-over SDL's surface and rendering
 	// functions, so disengage the main ones. When the mapper closes, SDL
 	// main will recreate its rendering pipeline.
-	GFX_DisengageRendering();
+	GFX_Stop();
 
 	MIXER_LockMixerThread();
 
 	// Be sure that there is no update in progress
-	GFX_EndUpdate( nullptr );
+	GFX_EndUpdate();
 	mapper.window = GFX_GetWindow();
 
 	if (mapper.window == nullptr) {

@@ -9,19 +9,16 @@
 #include "SDL.h"
 
 #include <cstring>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 
-#if C_OPENGL
-#include <SDL_opengl.h>
-#endif
-
 #include "gui/common.h"
 #include "gui/render/render.h"
+#include "gui/render/render_backend.h"
 #include "misc/video.h"
 #include "utils/fraction.h"
-#include "utils/rect.h"
 
 // The image rendered in the emulated computer's raw framebuffer as raw pixels
 // goes through a number of transformations until it gets shown on the host
@@ -127,8 +124,12 @@ struct SDL_Block {
 
 	bool is_paused = false;
 
-	RenderingBackend rendering_backend      = RenderingBackend::Texture;
+	// TODO rename to RenderBackend, move intoe `render_backend.h`
+	RenderingBackend rendering_backend = RenderingBackend::Texture;
 	RenderingBackend want_rendering_backend = RenderingBackend::Texture;
+	InterpolationMode interpolation_mode   = {};
+
+	std::unique_ptr<RenderBackend> renderer = {};
 
 	struct {
 		int render_width_px                = 0;
@@ -136,7 +137,7 @@ struct SDL_Block {
 		Fraction render_pixel_aspect_ratio = {1};
 
 		bool has_changed        = false;
-		GFX_Callback_t callback = nullptr;
+		GFX_Callback_t callback = {};
 		bool width_was_doubled  = false;
 		bool height_was_doubled = false;
 	} draw = {};
@@ -154,10 +155,10 @@ struct SDL_Block {
 			bool is_forced_borderless_fullscreen = false;
 
 			struct {
-				int width     = 0;
-				int height    = 0;
-				int x_pos     = 0;
-				int y_pos     = 0;
+				int width  = 0;
+				int height = 0;
+				int x_pos  = 0;
+				int y_pos  = 0;
 			} prev_window;
 		} fullscreen = {};
 
@@ -168,7 +169,6 @@ struct SDL_Block {
 			int x_pos  = SDL_WINDOWPOS_UNDEFINED;
 			int y_pos  = SDL_WINDOWPOS_UNDEFINED;
 
-			bool show_decorations      = true;
 			bool adjusted_initial_size = false;
 
 			// Instantaneous canvas size of the window
@@ -188,63 +188,15 @@ struct SDL_Block {
 		bool fullscreen = false;
 	} vsync = {};
 
-#if C_OPENGL
-	struct {
-		SDL_GLContext context = {};
-
-		int pitch = 0;
-
-		// The current framebuffer the emulation is rendering the video
-		// output into (contains the "work-in-progress" next frame).
-		std::vector<uint8_t> curr_framebuf = {};
-
-		// Contains the last fully rendered frame, waiting to be presented.
-		std::vector<uint8_t> last_framebuf = {};
-
-		bool is_framebuffer_srgb_capable = false;
-
-		GLuint texture            = 0;
-		GLint max_texture_size_px = 0;
-
-		GLuint program_object = 0;
-
-		ShaderInfo shader_info    = {};
-		std::string shader_source = {};
-
-		struct {
-			GLint texture_size = 0;
-			GLint input_size   = 0;
-			GLint output_size  = 0;
-			GLint frame_count  = 0;
-		} ruby = {};
-
-		GLuint actual_frame_count  = 0;
-		GLfloat vertex_data[2 * 3] = {};
-	} opengl = {};
-#endif // C_OPENGL
-
 	bool mute_when_inactive  = false;
 	bool pause_when_inactive = false;
 
-	SDL_Rect draw_rect_px     = {};
-	SDL_Window* window        = nullptr;
-	SDL_Renderer* renderer    = nullptr;
-	std::string render_driver = "";
-	int display_number        = 0;
-	uint8_t gfx_flags         = 0;
+	SDL_Rect draw_rect_px = {};
+	SDL_Window* window    = {};
+	int display_number    = 0;
 
 	struct {
-		SDL_Surface* curr_framebuf   = nullptr;
-		SDL_Surface* last_framebuf   = nullptr;
-
-		SDL_PixelFormat* pixel_format = nullptr;
-		SDL_Texture* texture          = nullptr;
-
-		InterpolationMode interpolation_mode = InterpolationMode::Bilinear;
-	} texture = {};
-
-	struct {
-		PresentationMode windowed_mode =   {};
+		PresentationMode windowed_mode   = {};
 		PresentationMode fullscreen_mode = {};
 
 		int frame_time_us            = 0;

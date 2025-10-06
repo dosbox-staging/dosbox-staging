@@ -5,8 +5,10 @@ target_sources(libdosboxcommon PRIVATE
   shader_manager.cpp
   titlebar.cpp
 
+  render/opengl_renderer.cpp
   render/render.cpp
   render/scaler/scalers.cpp
+  render/sdl_renderer.cpp
 )
 
 target_link_libraries(libdosboxcommon PRIVATE
