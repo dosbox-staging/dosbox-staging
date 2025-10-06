@@ -6,8 +6,6 @@
 
 #include "private/common.h"
 
-#include "SDL.h"
-
 #include "hardware/input/mouse.h"
 #include "utils/rect.h"
 
