@@ -35,18 +35,37 @@ void FPU_ESC6_EA(Bitu func,PhysPt ea);
 void FPU_ESC7_Normal(Bitu rm);
 void FPU_ESC7_EA(Bitu func,PhysPt ea);
 
-union FPU_Reg {
-	double d = 0.0;
-	struct {
-#ifndef WORDS_BIGENDIAN
-		uint32_t lower;
-		int32_t upper;
-#else
-		int32_t upper;
-		uint32_t lower;
-#endif
-	} l;
-	int64_t ll;
+#include <bit>
+#include <optional>
+
+struct FPU_Reg {
+	double d;
+
+	constexpr FPU_Reg() noexcept : d(0.0) {}
+	constexpr FPU_Reg(double v) noexcept : d(v) {}
+	constexpr explicit FPU_Reg(uint64_t bits) noexcept
+	        : d(std::bit_cast<double>(bits))
+	{}
+
+	constexpr uint64_t bits(void) const noexcept
+	{
+		return std::bit_cast<uint64_t>(d);
+	}
+	constexpr void set_bits(uint64_t val) noexcept
+	{
+		d = std::bit_cast<double>(val);
+	}
+
+	constexpr FPU_Reg& operator=(uint64_t val) noexcept
+	{
+		d = std::bit_cast<double>(val);
+		return *this;
+	}
+	constexpr FPU_Reg& operator=(double val) noexcept
+	{
+		d = val;
+		return *this;
+	}
 };
 
 struct FPU_P_Reg {
