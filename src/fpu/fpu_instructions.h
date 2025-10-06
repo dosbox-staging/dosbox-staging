@@ -99,15 +99,6 @@ static void FPU_FPOP(void){
 
 static double FROUND(double in)
 {
-	const auto prec_mode = fpu.cw & PrecisionModeMask;
-
-	// If the fpu is in single precision mode, cast to a float first
-	// to correct any double values that aren't valid single precision
-	// values.
-	if (prec_mode == SinglePrecisionMode) {
-		in = static_cast<float>(in);
-	}
-
 	switch (fpu.round) {
 	case ROUND_Nearest: return std::nearbyint(in);
 	case ROUND_Down: return std::floor(in);
