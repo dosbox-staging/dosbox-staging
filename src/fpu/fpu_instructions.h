@@ -613,18 +613,52 @@ static void FPU_FST(Bitu st, Bitu other){
 }
 
 static void FPU_FCOM(Bitu st, Bitu other){
-	if(((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) || 
-		((fpu.tags[other] != TAG_Valid) && (fpu.tags[other] != TAG_Zero))){
-		FPU_SET_C3(1);FPU_SET_C2(1);FPU_SET_C0(1);return;
+	const auto a = fpu.regs[st].d;
+	const auto b = fpu.regs[other].d;
+
+	/*
+	Table 3-21. FCOM/FCOMP/FCOMPP Results
+	+----------------+----+----+----+
+	|   Condition    | C3 | C2 | C0 |
+	+----------------+----+----+----+
+	| ST(0) > SRC    |  0 |  0 |  0 |
+	| ST(0) < SRC    |  0 |  0 |  1 |
+	| ST(0) = SRC    |  1 |  0 |  0 |
+	| Unordered (*)  |  1 |  1 |  1 |
+	+----------------+----+----+----+
+
+	Notes:
+	(*) Flags are not set if an unmasked invalid-arithmetic-operand (#IA)
+	exception is generated.
+
+	FPU Flags Affected:
+	C1 Set to 0.
+	C0, C2, C3 See table.
+	*/
+
+	FPU_SET_C1(0);
+
+	if (((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) ||
+	    ((fpu.tags[other] != TAG_Valid) && (fpu.tags[other] != TAG_Zero))) {
+		FPU_SET_C3(1);
+		FPU_SET_C2(1);
+		FPU_SET_C0(1);
+		return;
 	}
-	if(fpu.regs[st].d == fpu.regs[other].d){
-		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C0(0);return;
+
+	if (std::isunordered(a, b)) {
+		fpu.sw |= InvalidArithmeticFlag;
+		if (fpu.cw & InvalidArithmeticFlag) {
+			FPU_SET_C3(1);
+			FPU_SET_C2(1);
+			FPU_SET_C0(1);
+		}
+		return;
 	}
-	if(fpu.regs[st].d < fpu.regs[other].d){
-		FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C0(1);return;
-	}
-	// st > other
-	FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C0(0);return;
+
+	FPU_SET_C3(a == b);
+	FPU_SET_C2(0);
+	FPU_SET_C0(a < b);
 }
 
 static void FPU_FUCOM(Bitu st, Bitu other){
