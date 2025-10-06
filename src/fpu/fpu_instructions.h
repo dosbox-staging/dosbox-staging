@@ -261,7 +261,7 @@ static Real64 FPU_FLD80(PhysPt addr)
 
 static void FPU_ST80(PhysPt addr, Bitu reg)
 {
-	const uint64_t val64 = fpu.regs[reg].ll;
+	const uint64_t val64 = fpu.regs[reg].bits();
 
 	const uint64_t sign64 = val64 >> 63;
 	const uint64_t exp64  = (val64 >> 52) & 0x7ff;
@@ -309,16 +309,13 @@ static void FPU_ST80(PhysPt addr, Bitu reg)
 }
 
 static void FPU_FLD_F32(PhysPt addr,Bitu store_to) {
-	union {
-		float f;
-		uint32_t l;
-	}	blah;
-	blah.l = mem_readd(addr);
-	fpu.regs[store_to].d = static_cast<Real64>(blah.f);
+	const auto val       = mem_readd(addr);
+	const auto f         = std::bit_cast<float>(val);
+	fpu.regs[store_to].d = static_cast<Real64>(f);
 }
 
 static void FPU_FLD_F64(PhysPt addr,Bitu store_to) {
-	fpu.regs[store_to].ll = mem_readq(addr);
+	fpu.regs[store_to].set_bits(mem_readq(addr));
 }
 
 static void FPU_FLD_F80(PhysPt addr) {
@@ -387,17 +384,13 @@ static inline void FPU_FLD_I16_EA(PhysPt addr) {
 
 
 static void FPU_FST_F32(PhysPt addr) {
-	union {
-		float f;
-		uint32_t l;
-	}	blah;
-	//should depend on rounding method
-	blah.f = static_cast<float>(fpu.regs[TOP].d);
-	mem_writed(addr,blah.l);
+	const auto f   = static_cast<float>(fpu.regs[TOP].d);
+	const auto val = std::bit_cast<uint32_t>(f);
+	mem_writed(addr, val);
 }
 
 static void FPU_FST_F64(PhysPt addr) {
-	mem_writeq(addr, fpu.regs[TOP].ll);
+	mem_writeq(addr, fpu.regs[TOP].bits());
 }
 
 static void FPU_FST_F80(PhysPt addr) {
@@ -434,10 +427,12 @@ static void FPU_FST_I64(PhysPt addr)
 
 static void FPU_FBST(PhysPt addr) {
 	FPU_Reg val = fpu.regs[TOP];
-	if(val.ll & LONGTYPE(0x8000000000000000)) { // MSB = sign
+	if (val.bits() & LONGTYPE(0x8000000000000000)) { // MSB = sign
 		mem_writeb(addr+9,0x80);
 		val.d = -val.d;
-	} else mem_writeb(addr+9,0);
+	} else {
+		mem_writeb(addr + 9, 0);
+	}
 
 	uint64_t rndint = static_cast<uint64_t>(FROUND(val.d));
 	// BCD (18 decimal digits) overflow? (0x0DE0B6B3A763FFFF max)
