@@ -493,8 +493,16 @@ static void FPU_FCOS(void){
 }
 
 static void FPU_FSQRT(void){
-	fpu.regs[TOP].d = std::sqrt(fpu.regs[TOP].d);
-	//flags and such :)
+	const auto val = fpu.regs[TOP].d;
+
+	if (val < 0.0) {
+		fpu.sw |= InvalidArithmeticFlag;
+		fpu.regs[TOP].d = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
+
+	fpu.regs[TOP].d = std::sqrt(val);
+	// flags and such :)
 	return;
 }
 static void FPU_FPATAN(void){
