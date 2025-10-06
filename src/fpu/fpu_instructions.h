@@ -97,17 +97,8 @@ static void FPU_FPOP(void){
 	return;
 }
 
-static double FROUND(double in)
+static inline double FROUND(double in)
 {
-	const auto prec_mode = fpu.cw & PrecisionModeMask;
-
-	// If the fpu is in single precision mode, cast to a float first
-	// to correct any double values that aren't valid single precision
-	// values.
-	if (prec_mode == SinglePrecisionMode) {
-		in = static_cast<float>(in);
-	}
-
 	switch (fpu.round) {
 	case ROUND_Nearest: return std::nearbyint(in);
 	case ROUND_Down: return std::floor(in);
@@ -638,12 +629,17 @@ static void FPU_FUCOM(Bitu st, Bitu other){
 	FPU_FCOM(st,other);
 }
 
-static void FPU_FRNDINT(void){
-	const auto rounded  = FROUND(fpu.regs[TOP].d);
-	if (fpu.cw&0x20) { //As we don't generate exceptions; only do it when masked
-		if (rounded != fpu.regs[TOP].d)
-			fpu.sw |= 0x20; //Set Precision Exception
+static void FPU_FRNDINT(void)
+{
+	const auto val = fpu.regs[TOP].d;
+	if (std::isnan(val) || std::isinf(val)) {
+		return;
 	}
+	const auto rounded = FROUND(val);
+	if (rounded != val) {
+		fpu.sw |= PrecisionFlag;
+	}
+	FPU_SET_C1(rounded > val ? 1 : 0);
 	fpu.regs[TOP].d = rounded;
 }
 
