@@ -27,8 +27,6 @@
 #include <windows.h>
 #endif // WIN32
 
-#include <SDL.h>
-
 #include "private/common.h"
 #include "private/sdlmain.h"
 
@@ -39,6 +37,7 @@
 #include "cpu/cpu.h"
 #include "debugger/debugger.h"
 #include "dos/dos_locale.h"
+#include "dosbox_config.h"
 #include "gui/mapper.h"
 #include "gui/render/opengl_renderer.h"
 #include "gui/render/sdl_renderer.h"
@@ -61,6 +60,9 @@
 #include "utils/math_utils.h"
 #include "utils/rect.h"
 #include "utils/string_utils.h"
+
+// must be included after dosbox_config.h
+#include <SDL.h>
 
 CHECK_NARROWING();
 
@@ -1139,7 +1141,7 @@ static void sticky_keys(bool restore)
 		SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(STICKYKEYS), &s, 0);
 	}
 }
-#endif
+#endif // WIN32
 
 static void switch_fullscreen()
 {
@@ -2763,6 +2765,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	pstring->SetDeprecatedWithAlternateValue("surface", "texture");
 #endif
 	pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
+
 	pstring->SetValues({
 #if C_OPENGL
 	        "opengl",
@@ -3094,7 +3097,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 #if C_DEBUGGER
 	// shutdown curses
 	DEBUG_Destroy();
-#endif // C_DEBUGGER
+#endif
 
 #ifdef WIN32
 	// nullptr to parse from command line
@@ -3585,7 +3588,7 @@ int sdl_main(int argc, char* argv[])
 			}
 			Delay(50);
 		}
-#endif
+#endif // WIN32
 	}
 
 	switch_console_to_utf8();

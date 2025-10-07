@@ -31,6 +31,9 @@
 #ifndef _INCLUDE_SDL_SOUND_H_
 #define _INCLUDE_SDL_SOUND_H_
 
+#include "dosbox_config.h"
+
+// must be included after dosbox_config.h
 #include <SDL.h>
 #include <SDL_endian.h>
 

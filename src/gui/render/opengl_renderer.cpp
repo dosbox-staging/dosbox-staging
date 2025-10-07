@@ -16,6 +16,8 @@
 
 // Glad must be included before SDL
 #include "glad/gl.h"
+
+// must be included after dosbox_config.h
 #include <SDL.h>
 #include <SDL_opengl.h>
 

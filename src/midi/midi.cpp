@@ -12,8 +12,6 @@
 #include <memory>
 #include <string>
 
-#include <SDL.h>
-
 #include "private/fluidsynth.h"
 #include "private/midi_device.h"
 #include "private/mt32.h"
@@ -35,6 +33,7 @@
 #include "config/config.h"
 #include "config/setup.h"
 #include "dos/programs.h"
+#include "dosbox_config.h"
 #include "gui/mapper.h"
 #include "hardware/audio/mpu401.h"
 #include "hardware/pic.h"
@@ -43,6 +42,9 @@
 #include "misc/cross.h"
 #include "misc/notifications.h"
 #include "utils/string_utils.h"
+
+// must be included after dosbox_config.h
+#include <SDL.h>
 
 // #define DEBUG_MIDI
 

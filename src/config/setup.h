@@ -540,4 +540,4 @@ SectionProp* get_joystick_section();
 SectionProp* get_sdl_section();
 SectionProp* get_mixer_section();
 
-#endif
+#endif // DOSBOX_SETUP_H
