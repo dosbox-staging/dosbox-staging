@@ -272,14 +272,15 @@ private:
 public:
 	// Nested struct definition
 	struct Track {
-		std::shared_ptr<TrackFile> file        = nullptr;
-		uint32_t                   start       = 0;
-		uint32_t                   length      = 0;
-		uint32_t                   skip        = 0;
-		uint16_t                   sector_size = 0;
-		uint8_t                    number      = 0;
-		uint8_t                    attr        = 0;
-		bool                       mode2       = false;
+		std::shared_ptr<TrackFile> file            = nullptr;
+		uint32_t                   start           = 0;
+		uint32_t                   length          = 0;
+		uint32_t                   skip            = 0;
+		uint16_t                   sector_size     = 0;
+		uint16_t                   subchannel_size = 0;
+		uint8_t                    number          = 0;
+		uint8_t                    attr            = 0;
+		bool                       mode2           = false;
 	};
 
 	CDROM_Interface_Image();
