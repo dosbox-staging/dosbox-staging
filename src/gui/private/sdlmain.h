@@ -6,19 +6,21 @@
 
 #include "gui/private/shader_manager.h"
 
-#include "SDL.h"
-
 #include <cstring>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 
+#include "dosbox_config.h"
 #include "gui/common.h"
 #include "gui/render/render.h"
 #include "gui/render/render_backend.h"
 #include "misc/video.h"
 #include "utils/fraction.h"
+
+// must be included after dosbox_config.h
+#include "SDL.h"
 
 // The image rendered in the emulated computer's raw framebuffer as raw pixels
 // goes through a number of transformations until it gets shown on the host

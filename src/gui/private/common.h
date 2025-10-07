@@ -4,11 +4,13 @@
 #ifndef DOSBOX_GUI_PRIVATE_COMMON_H
 #define DOSBOX_GUI_PRIVATE_COMMON_H
 
-#include "SDL.h"
-
+#include "dosbox_config.h"
 #include "misc/video.h"
 #include "utils/fraction.h"
 #include "utils/rect.h"
+
+// must be included after dosbox_config.h
+#include "SDL.h"
 
 constexpr uint8_t GFX_CAN_8      = 1 << 0;
 constexpr uint8_t GFX_CAN_15     = 1 << 1;

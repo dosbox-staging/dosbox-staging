@@ -2,8 +2,11 @@
 #ifndef PDC_SDL2_QUEUE_H
 #define PDC_SDL2_QUEUE_H
 
+#include "dosbox_config.h"
+
 #include <queue>
 
+// must be included after dosbox_config.h
 #include <SDL.h>
 #ifdef PDC_WIDE
 # include <SDL_ttf.h>

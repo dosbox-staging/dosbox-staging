@@ -13,10 +13,13 @@
 #ifndef _INCLUDE_SDL_SOUND_INTERNAL_H_
 #define _INCLUDE_SDL_SOUND_INTERNAL_H_
 
+#include "dosbox_config.h"
+
 #ifndef __SDL_SOUND_INTERNAL__
 #error Do not include this header from your applications.
 #endif
 
+// must be included after dosbox_config.h
 #include <SDL.h>
 
 /* SDL 1.2.4 defines this, but better safe than sorry. */
