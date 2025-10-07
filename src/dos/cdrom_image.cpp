@@ -1173,7 +1173,7 @@ bool CDROM_Interface_Image::LoadCueSheet(const char *cuefile)
 {
 	tracks.clear();
 
-	Track track;
+	Track track = {};
 	uint32_t shift = 0;
 	uint32_t currPregap = 0;
 	uint32_t totalPregap = 0;
