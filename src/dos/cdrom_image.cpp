@@ -693,7 +693,7 @@ bool CDROM_Interface_Image::PlayAudioTrack(const Track& track, const uint32_t se
 		return false;
 	}
 
-	const auto byte_offset = track.skip + sector_offset * track.sectorSize;
+	const auto byte_offset = track.skip + sector_offset * track.sector_size;
 
 	// Guard: Bail if our track could not be seeked
 	if (!track_file->seek(byte_offset)) {
@@ -863,9 +863,9 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
                                         const uint32_t sector,
                                         const uint16_t num)
 {
-	const uint16_t sectorSize = (raw ? BYTES_PER_RAW_REDBOOK_FRAME
+	const uint16_t sector_size = (raw ? BYTES_PER_RAW_REDBOOK_FRAME
 	                                 : BYTES_PER_COOKED_REDBOOK_FRAME);
-	const uint32_t requested_bytes = num * sectorSize;
+	const uint32_t requested_bytes = num * sector_size;
 
 	// Resize our underlying vector if it's not big enough
 	if (readBuffer.size() < requested_bytes)
@@ -883,8 +883,8 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
 		if (!success)
 			break;
 		current_sector++;
-		bytes_read += sectorSize;
-		buffer_position += sectorSize;
+		bytes_read += sector_size;
+		buffer_position += sector_size;
 	}
 	// Write only the successfully read bytes
 	MEM_BlockWrite(buffer, readBuffer.data(), bytes_read);
@@ -893,7 +893,7 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
 	        "%s after %u sectors (%u bytes)",
 	        num, raw ? "raw" : "cooked", sector,
 	        success ? "Succeeded" : "Failed",
-	        ceil_udivide(bytes_read, sectorSize), bytes_read);
+	        ceil_udivide(bytes_read, sector_size), bytes_read);
 #endif
 	return success;
 }
@@ -964,12 +964,12 @@ bool CDROM_Interface_Image::ReadSector(uint8_t *buffer, const bool raw, const ui
 #endif
 		return false;
 	}
-	uint32_t offset = track->skip + (sector - track->start) * track->sectorSize;
+	uint32_t offset = track->skip + (sector - track->start) * track->sector_size;
 	const uint16_t length = (raw ? BYTES_PER_RAW_REDBOOK_FRAME : BYTES_PER_COOKED_REDBOOK_FRAME);
-	if (track->sectorSize != BYTES_PER_RAW_REDBOOK_FRAME && raw) {
+	if (track->sector_size != BYTES_PER_RAW_REDBOOK_FRAME && raw) {
 		return false;
 	}
-	if (track->sectorSize == BYTES_PER_RAW_REDBOOK_FRAME && !track->mode2 && !raw)
+	if (track->sector_size == BYTES_PER_RAW_REDBOOK_FRAME && !track->mode2 && !raw)
 		offset += 16;
 	if (track->mode2 && !raw)
 		offset += 24;
@@ -988,10 +988,10 @@ bool CDROM_Interface_Image::ReadSector(uint8_t *buffer, const bool raw, const ui
 
 bool CDROM_Interface_Image::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
 {
-	unsigned int sectorSize = raw ? BYTES_PER_RAW_REDBOOK_FRAME : BYTES_PER_COOKED_REDBOOK_FRAME;
+	unsigned int sector_size = raw ? BYTES_PER_RAW_REDBOOK_FRAME : BYTES_PER_COOKED_REDBOOK_FRAME;
 	bool success = true; //Gobliiins reads 0 sectors
 	for(unsigned long i = 0; i < num; i++) {
-		success = ReadSector((uint8_t*)buffer + (i * (Bitu)sectorSize), raw, sector + i);
+		success = ReadSector((uint8_t*)buffer + (i * (Bitu)sector_size), raw, sector + i);
 		if (!success) break;
 	}
 
@@ -1095,16 +1095,16 @@ bool CDROM_Interface_Image::LoadIsoFile(const char* filename)
 
 	// try to detect iso type
 	if (CanReadPVD(track.file.get(), BYTES_PER_COOKED_REDBOOK_FRAME, false)) {
-		track.sectorSize = BYTES_PER_COOKED_REDBOOK_FRAME;
+		track.sector_size = BYTES_PER_COOKED_REDBOOK_FRAME;
 		assert(track.mode2 == false);
 	} else if (CanReadPVD(track.file.get(), BYTES_PER_RAW_REDBOOK_FRAME, false)) {
-		track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
+		track.sector_size = BYTES_PER_RAW_REDBOOK_FRAME;
 		assert(track.mode2 == false);
 	} else if (CanReadPVD(track.file.get(), 2336, true)) {
-		track.sectorSize = 2336;
+		track.sector_size = 2336;
 		track.mode2 = true;
 	} else if (CanReadPVD(track.file.get(), BYTES_PER_RAW_REDBOOK_FRAME, true)) {
-		track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
+		track.sector_size = BYTES_PER_RAW_REDBOOK_FRAME;
 		track.mode2 = true;
 	} else {
 		return false;
@@ -1113,12 +1113,12 @@ bool CDROM_Interface_Image::LoadIsoFile(const char* filename)
 	if (track_bytes < 0)
 		return false;
 
-	track.length = static_cast<uint32_t>(track_bytes) / track.sectorSize;
+	track.length = static_cast<uint32_t>(track_bytes) / track.sector_size;
 
 #ifdef DEBUG
-	LOG_MSG("LoadIsoFile parsed %s => track 1, 0x40, sectorSize %d, mode2 is %s",
+	LOG_MSG("LoadIsoFile parsed %s => track 1, 0x40, sector_size %d, mode2 is %s",
 	        filename,
-	        track.sectorSize,
+	        track.sector_size,
 	        track.mode2 ? "true":"false");
 #endif
 
@@ -1133,7 +1133,7 @@ bool CDROM_Interface_Image::LoadIsoFile(const char* filename)
 }
 
 bool CDROM_Interface_Image::CanReadPVD(TrackFile *file,
-                                       const uint16_t sectorSize,
+                                       const uint16_t sector_size,
                                        const bool mode2)
 {
 	// Guard: Bail if our file pointer is empty
@@ -1142,8 +1142,8 @@ bool CDROM_Interface_Image::CanReadPVD(TrackFile *file,
 	// Initialize our array in the event file->read() doesn't fully write it
 	uint8_t pvd[BYTES_PER_COOKED_REDBOOK_FRAME] = {0};
 
-	uint32_t seek = 16 * sectorSize;  // first vd is located at sector 16
-	if (sectorSize == BYTES_PER_RAW_REDBOOK_FRAME && !mode2) seek += 16;
+	uint32_t seek = 16 * sector_size;  // first vd is located at sector 16
+	if (sector_size == BYTES_PER_RAW_REDBOOK_FRAME && !mode2) seek += 16;
 	if (mode2) seek += 24;
 	file->read(pvd, seek, BYTES_PER_COOKED_REDBOOK_FRAME);
 	// pvd[0] = descriptor type, pvd[1..5] = standard identifier,
@@ -1217,23 +1217,23 @@ bool CDROM_Interface_Image::LoadCueSheet(const char *cuefile)
 			GetCueKeyword(type, line);
 
 			if (type == "AUDIO") {
-				track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
+				track.sector_size = BYTES_PER_RAW_REDBOOK_FRAME;
 				track.attr = 0;
 				track.mode2 = false;
 			} else if (type == "MODE1/2048") {
-				track.sectorSize = BYTES_PER_COOKED_REDBOOK_FRAME;
+				track.sector_size = BYTES_PER_COOKED_REDBOOK_FRAME;
 				track.attr = 0x40;
 				track.mode2 = false;
 			} else if (type == "MODE1/2352") {
-				track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
+				track.sector_size = BYTES_PER_RAW_REDBOOK_FRAME;
 				track.attr = 0x40;
 				track.mode2 = false;
 			} else if (type == "MODE2/2336") {
-				track.sectorSize = 2336;
+				track.sector_size = 2336;
 				track.attr = 0x40;
 				track.mode2 = true;
 			} else if (type == "MODE2/2352") {
-				track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
+				track.sector_size = BYTES_PER_RAW_REDBOOK_FRAME;
 				track.attr = 0x40;
 				track.mode2 = true;
 			} else success = false;
@@ -1334,7 +1334,7 @@ bool CDROM_Interface_Image::AddTrack(Track &curr,
 	// Add the first track, if our vector is empty
 	if (tracks.empty()) {
 		assertm(curr.number == 1, "The first track must be labelled number 1 [BUG!]");
-		curr.skip = skip * curr.sectorSize;
+		curr.skip = skip * curr.sector_size;
 		curr.start += currPregap;
 		totalPregap = currPregap;
 		tracks.push_back(curr);
@@ -1351,19 +1351,19 @@ bool CDROM_Interface_Image::AddTrack(Track &curr,
 		if (!prev.length) {
 			prev.length = curr.start + totalPregap - prev.start - skip;
 		}
-		curr.skip += prev.skip + prev.length * prev.sectorSize + skip * curr.sectorSize;
+		curr.skip += prev.skip + prev.length * prev.sector_size + skip * curr.sector_size;
 		totalPregap += currPregap;
 		curr.start += totalPregap;
 	// current track uses a different file as the previous track
 	} else {
 		const uint32_t tmp = static_cast<uint32_t>
 		                     (prev.file->getLength()) - prev.skip;
-		prev.length = tmp / prev.sectorSize;
-		if (tmp % prev.sectorSize != 0)
+		prev.length = tmp / prev.sector_size;
+		if (tmp % prev.sector_size != 0)
 			prev.length++; // padding
 
 		curr.start += prev.start + prev.length + currPregap;
-		curr.skip = skip * curr.sectorSize;
+		curr.skip = skip * curr.sector_size;
 		shift += prev.start + prev.length;
 		totalPregap = currPregap;
 	}
