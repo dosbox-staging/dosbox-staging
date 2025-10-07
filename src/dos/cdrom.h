@@ -272,14 +272,14 @@ private:
 public:
 	// Nested struct definition
 	struct Track {
-		std::shared_ptr<TrackFile> file       = nullptr;
-		uint32_t                   start      = 0;
-		uint32_t                   length     = 0;
-		uint32_t                   skip       = 0;
-		uint16_t                   sectorSize = 0;
-		uint8_t                    number     = 0;
-		uint8_t                    attr       = 0;
-		bool                       mode2      = false;
+		std::shared_ptr<TrackFile> file        = nullptr;
+		uint32_t                   start       = 0;
+		uint32_t                   length      = 0;
+		uint32_t                   skip        = 0;
+		uint16_t                   sector_size = 0;
+		uint8_t                    number      = 0;
+		uint8_t                    attr        = 0;
+		bool                       mode2       = false;
 	};
 
 	CDROM_Interface_Image();
@@ -343,7 +343,7 @@ private:
 	// Private utility functions
 	bool  LoadIsoFile(const char *filename);
 	bool  CanReadPVD(TrackFile *file,
-	                 const uint16_t sectorSize,
+	                 const uint16_t sector_size,
 	                 const bool mode2);
 	std::vector<Track>::iterator GetTrack(const uint32_t sector);
 	void CDAudioCallback(const int desired_track_frames);
