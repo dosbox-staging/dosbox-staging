@@ -966,10 +966,15 @@ bool CDROM_Interface_Image::ReadSector(uint8_t *buffer, const bool raw, const ui
 	}
 	uint32_t offset = track->skip + (sector - track->start) * track->sector_size;
 	const uint16_t length = (raw ? BYTES_PER_RAW_REDBOOK_FRAME : BYTES_PER_COOKED_REDBOOK_FRAME);
-	if (track->sector_size != BYTES_PER_RAW_REDBOOK_FRAME && raw) {
+	// Subchannel is trailing meta-data only used by MDS/MDF files.
+	// Its size is part of the sector for the purposes of calculating stride.
+	// We don't ever read this data so for the purposes of this code, we need the size excluding the subchannel.
+	assert(track->subchannel_size < track->sector_size);
+	const auto sector_size_without_subchannel = track->sector_size - track->subchannel_size;
+	if (sector_size_without_subchannel != BYTES_PER_RAW_REDBOOK_FRAME && raw) {
 		return false;
 	}
-	if (track->sector_size == BYTES_PER_RAW_REDBOOK_FRAME && !track->mode2 && !raw)
+	if (sector_size_without_subchannel == BYTES_PER_RAW_REDBOOK_FRAME && !track->mode2 && !raw)
 		offset += 16;
 	if (track->mode2 && !raw)
 		offset += 24;
