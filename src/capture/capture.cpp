@@ -15,6 +15,7 @@
 
 #include "config/config.h"
 #include "config/setup.h"
+#include "dosbox_config.h"
 #include "gui/mapper.h"
 #include "gui/titlebar.h"
 #include "image/image_capturer.h"
@@ -23,6 +24,7 @@
 #include "utils/fs_utils.h"
 #include "utils/string_utils.h"
 
+// must be included after dosbox_config.h
 #include <SDL.h>
 
 CHECK_NARROWING();

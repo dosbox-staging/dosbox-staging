@@ -15,6 +15,8 @@
  *    - Moved from sample-based logic to frame-based (channel-agnostic)
  */
 
+#include "dosbox_config.h"
+
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -24,6 +26,7 @@
 #  include <config.h>
 #endif
 
+// must be included after dosbox_config.h
 #include <SDL.h>
 #include <SDL_thread.h>
 #include "SDL_sound.h"

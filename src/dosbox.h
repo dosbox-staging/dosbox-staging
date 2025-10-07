@@ -178,4 +178,4 @@ constexpr auto BytesPerKilobyte    = 1024;
 
 enum class DiskSpeed { Maximum, Fast, Medium, Slow };
 
-#endif /* DOSBOX_DOSBOX_H */
+#endif // DOSBOX_DOSBOX_H

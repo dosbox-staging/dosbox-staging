@@ -24,10 +24,9 @@
 
 #else
 
+// must be included after dosbox_config.h
 #include "SDL.h"
 #endif // C_OPENGL
-
-#include "utils/rect.h"
 
 class OpenGlRenderer : public RenderBackend {
 

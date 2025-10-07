@@ -12,7 +12,6 @@
 #include <optional>
 #include <sys/types.h>
 
-#include <SDL.h>
 #include <speex/speex_resampler.h>
 
 #include "mverb/MVerb.h"
@@ -24,6 +23,7 @@
 #include "channel_names.h"
 #include "config/config.h"
 #include "config/setup.h"
+#include "dosbox_config.h"
 #include "gui/mapper.h"
 #include "hardware/audio/gus.h"
 #include "hardware/audio/lpt_dac.h"
@@ -31,10 +31,10 @@
 #include "hardware/audio/ps1audio.h"
 #include "hardware/audio/soundblaster.h"
 #include "hardware/audio/tandy_sound.h"
-#include "hardware/video/reelmagic/reelmagic.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"
+#include "hardware/video/reelmagic/reelmagic.h"
 #include "midi/midi.h"
 #include "misc/cross.h"
 #include "misc/notifications.h"
@@ -44,6 +44,9 @@
 #include "utils/math_utils.h"
 #include "utils/rwqueue.h"
 #include "utils/string_utils.h"
+
+// must be included after dosbox_config.h
+#include <SDL.h>
 
 CHECK_NARROWING();
 

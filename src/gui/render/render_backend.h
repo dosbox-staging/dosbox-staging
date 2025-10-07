@@ -8,6 +8,7 @@
 
 #include <string>
 
+#include "dosbox_config.h"
 #include "utils/rect.h"
 
 struct SDL_Window;

@@ -4,11 +4,13 @@
 #include "gui/clipboard.h"
 
 #include "config/config.h"
+#include "dosbox_config.h"
 #include "misc/logging.h"
 #include "misc/unicode.h"
 #include "utils/checks.h"
 #include "utils/string_utils.h"
 
+// must be included after dosbox_config.h
 #include <SDL.h>
 
 CHECK_NARROWING();
