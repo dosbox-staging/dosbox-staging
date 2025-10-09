@@ -2212,6 +2212,9 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 
 	case SDL_WINDOWEVENT_RESIZED: {
+		static int last_width  = 0;
+		static int last_height = 0;
+
 		// Window dimensions in logical coordinates
 		const auto width  = event.window.data1;
 		const auto height = event.window.data2;
@@ -2230,6 +2233,18 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 			set_section_property_value("sdl",
 			                           "window_size",
 			                           format_str("%dx%d", width, height));
+		}
+
+		if (width != last_width && height != last_height) {
+			maybe_log_display_properties();
+
+			// Needed for aspect & viewport mode combinations where
+			// the pixel aspect ratio or viewport size is sized
+			// relatively to the window size.
+			VGA_SetupDrawing(0);
+
+			last_width  = width;
+			last_height = height;
 		}
 		return true;
 	}
