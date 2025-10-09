@@ -66,6 +66,8 @@
 
 CHECK_NARROWING();
 
+// #define DEBUG_WINDOW_EVENTS
+
 constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
 {
 	return (version.major << 16) + (version.minor << 8) + version.patch;
@@ -2184,14 +2186,20 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 	}
 }
 
-// TODO(OPENGL)
-// TODO(BASE)
-// TODO(TEXTURE)
+template <typename... Args>
+void log_window_event([[maybe_unused]] const char* message,
+                      [[maybe_unused]] const Args&... args) noexcept
+{
+#ifdef DEBUG_WINDOW_EVENTS
+	LOG_DEBUG(message, args...);
+#endif
+}
+
 static bool handle_sdl_windowevent(const SDL_Event& event)
 {
 	switch (event.window.event) {
 	case SDL_WINDOWEVENT_RESTORED:
-		// LOG_DEBUG("SDL: Window has been restored");
+		log_window_event("SDL: Window has been restored");
 
 		// We may need to re-create a texture and more on Android.
 		// Another case: Update surface while using X11.
@@ -2201,8 +2209,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 #if C_OPENGL && defined(MACOSX)
 		// TODO check if this workaround is still needed
 
-		// LOG_DEBUG("SDL: Reset macOS's GL viewport after
-		// window-restore");
+		log_window_event("SDL: Reset macOS's GL viewport after window-restore");
 
 		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 			update_viewport();
@@ -2212,14 +2219,14 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 
 	case SDL_WINDOWEVENT_RESIZED: {
-		static int last_width  = 0;
-		static int last_height = 0;
-
 		// Window dimensions in logical coordinates
 		const auto width  = event.window.data1;
 		const auto height = event.window.data2;
 
-		LOG_DEBUG("SDL: Window has been resized to %dx%d", width, height);
+		log_window_event("SDL: Window has been resized to %dx%d", width, height);
+
+		static int last_width  = 0;
+		static int last_height = 0;
 
 		// SDL_WINDOWEVENT_RESIZED events are sent twice when resizing
 		// the window, but maybe_log_display_properties() will only
@@ -2250,11 +2257,13 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	}
 
 	case SDL_WINDOWEVENT_FOCUS_GAINED:
+		log_window_event("SDL: Window has gained keyboard focus");
+
 		apply_active_settings();
 		[[fallthrough]];
 
 	case SDL_WINDOWEVENT_EXPOSED:
-		// LOG_DEBUG("SDL: Window has been exposed and should be redrawn");
+		log_window_event("SDL: Window has been exposed and should be redrawn");
 
 		// TODO: below is not consistently true :( seems incorrect on
 		// KDE and sometimes on MATE
@@ -2265,8 +2274,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// Framebuffer); therefore we rely on the FOCUS_GAINED event to
 		// catch window startup and size toggles.
 
-		// LOG_DEBUG("SDL: Window has gained keyboard focus");
-
 		if (sdl.draw.callback) {
 			sdl.draw.callback(GFX_CallbackRedraw);
 		}
@@ -2274,8 +2281,8 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 
 	case SDL_WINDOWEVENT_FOCUS_LOST:
-		// LOG_DEBUG("SDL: Window has lost keyboard
-		// focus");
+		log_window_event("SDL: Window has lost keyboard focus");
+
 #ifdef WIN32
 		// TODO is this still needed?
 		if (sdl.desktop.is_fullscreen) {
@@ -2292,27 +2299,27 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return false;
 
 	case SDL_WINDOWEVENT_ENTER:
-		// LOG_DEBUG("SDL: Window has gained mouse focus");
+		log_window_event("SDL: Window has gained mouse focus");
 		return true;
 
 	case SDL_WINDOWEVENT_LEAVE:
-		// LOG_DEBUG("SDL: Window has lost mouse focus");
+		log_window_event("SDL: Window has lost mouse focus");
 		return true;
 
 	case SDL_WINDOWEVENT_SHOWN:
-		// LOG_DEBUG("SDL: Window has been shown");
+		log_window_event("SDL: Window has been shown");
 		maybe_autoswitch_shader();
 		return true;
 
 	case SDL_WINDOWEVENT_HIDDEN:
-		// LOG_DEBUG("SDL: Window has been hidden");
+		log_window_event("SDL: Window has been hidden");
 		return true;
 
 	case SDL_WINDOWEVENT_MOVED: {
 		const auto x = event.window.data1;
 		const auto y = event.window.data2;
 
-		// LOG_DEBUG("SDL: Window has been moved to %d, %d", x, y);
+		log_window_event("SDL: Window has been moved to %d, %d", x, y);
 
 #if C_OPENGL && defined(MACOSX)
 		// TODO This workaround is still needed on macOS 15.6. We'll be
@@ -2340,16 +2347,20 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	}
 
 	case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
+		const auto new_display_number = event.window.data1;
+		log_window_event("SDL: Window has been moved to display %d",
+		                 new_display_number);
+
 		// New display might have a different resolution and DPI scaling
 		// set, so recalculate that and set viewport
 		check_and_handle_dpi_change(sdl.window);
 
 		SDL_Rect display_bounds = {};
-		SDL_GetDisplayBounds(event.window.data1, &display_bounds);
+		SDL_GetDisplayBounds(new_display_number, &display_bounds);
 		sdl.desktop.fullscreen.width  = display_bounds.w;
 		sdl.desktop.fullscreen.height = display_bounds.h;
 
-		sdl.display_number = event.window.data1;
+		sdl.display_number = new_display_number;
 
 		update_viewport();
 		maybe_autoswitch_shader();
@@ -2358,7 +2369,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	}
 
 	case SDL_WINDOWEVENT_SIZE_CHANGED: {
-		// LOG_DEBUG("SDL: The window size has changed");
+		log_window_event("SDL: The window size has changed");
 
 		// The window size has changed either as a result of an API call
 		// or through the system or user changing the window size.
@@ -2376,28 +2387,32 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	}
 
 	case SDL_WINDOWEVENT_MINIMIZED:
-		// LOG_DEBUG("SDL: Window has been minimized");
+		log_window_event("SDL: Window has been minimized");
+
 		apply_inactive_settings();
 		return false;
 
 	case SDL_WINDOWEVENT_MAXIMIZED:
-		// LOG_DEBUG("SDL: Window has been maximized");
+		log_window_event("SDL: Window has been maximized");
 		return true;
 
 	case SDL_WINDOWEVENT_CLOSE:
-		// LOG_DEBUG("SDL: The window manager requests that the window
-		// be closed");
+		log_window_event(
+		        "SDL: The window manager requests that the window be closed");
+
 		gfx_request_exit(true);
 		return false;
 
 	case SDL_WINDOWEVENT_TAKE_FOCUS:
+		log_window_event("SDL: Window is being offered a focus");
+
 		focus_input();
 		apply_active_settings();
 		return true;
 
 	case SDL_WINDOWEVENT_HIT_TEST:
-		// LOG_DEBUG("SDL: Window had a hit test that wasn't
-		// SDL_HITTEST_NORMAL");
+		log_window_event(
+		        "SDL: Window had a hit test that wasn't SDL_HITTEST_NORMAL");
 		return true;
 
 	default: return false;
