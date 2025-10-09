@@ -460,6 +460,7 @@ void GFX_ResetScreen()
 		(sdl.draw.callback)(GFX_CallbackReset);
 	}
 	GFX_Start();
+
 	CPU_ResetAutoAdjust();
 
 	VGA_SetupDrawing(0);
@@ -525,12 +526,18 @@ static void maybe_log_display_properties()
 		static double last_refresh_rate                = 0.0;
 		static PresentationMode last_presentation_mode = {};
 		static DosBox::Rect last_draw_size_px          = {};
+		static bool last_width_was_doubled             = false;
+		static bool last_height_was_doubled            = false;
+		static Fraction last_pixel_aspect_ratio        = {};
 
 		if (last_video_mode != video_mode ||
 		    last_refresh_rate != refresh_rate ||
 		    last_presentation_mode != GFX_GetPresentationMode() ||
 		    last_draw_size_px.w != draw_size_px.w ||
-		    last_draw_size_px.h != draw_size_px.h) {
+		    last_draw_size_px.h != draw_size_px.h ||
+		    last_width_was_doubled != sdl.draw.width_was_doubled ||
+		    last_height_was_doubled != sdl.draw.height_was_doubled ||
+		    last_pixel_aspect_ratio != sdl.draw.render_pixel_aspect_ratio) {
 
 			const auto& par = video_mode.pixel_aspect_ratio;
 
@@ -546,10 +553,13 @@ static void maybe_log_display_properties()
 
 			log_presentation_and_vsync_mode();
 
-			last_video_mode        = video_mode;
-			last_refresh_rate      = refresh_rate;
-			last_presentation_mode = GFX_GetPresentationMode();
-			last_draw_size_px      = draw_size_px;
+			last_video_mode         = video_mode;
+			last_refresh_rate       = refresh_rate;
+			last_presentation_mode  = GFX_GetPresentationMode();
+			last_draw_size_px       = draw_size_px;
+			last_width_was_doubled  = sdl.draw.width_was_doubled;
+			last_height_was_doubled = sdl.draw.height_was_doubled;
+			last_pixel_aspect_ratio = sdl.draw.render_pixel_aspect_ratio;
 		}
 
 	} else {
@@ -988,14 +998,6 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	const bool double_width  = flags & GFX_DBL_W;
 	const bool double_height = flags & GFX_DBL_H;
 
-	sdl.draw.has_changed = (sdl.maybe_video_mode != video_mode ||
-	                        sdl.draw.render_width_px != render_width_px ||
-	                        sdl.draw.render_height_px != render_height_px ||
-	                        sdl.draw.width_was_doubled != double_width ||
-	                        sdl.draw.height_was_doubled != double_height ||
-	                        sdl.draw.render_pixel_aspect_ratio !=
-	                                render_pixel_aspect_ratio);
-
 	sdl.draw.render_width_px           = render_width_px;
 	sdl.draw.render_height_px          = render_height_px;
 	sdl.draw.width_was_doubled         = double_width;
@@ -1030,9 +1032,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	// Ensure mouse emulation knows the current parameters
 	notify_new_mouse_screen_params();
 
-	if (sdl.draw.has_changed) {
-		maybe_log_display_properties();
-	}
+	maybe_log_display_properties();
 
 	const auto gfx_flags = sdl.renderer->GetGfxFlags();
 	if (gfx_flags) {
