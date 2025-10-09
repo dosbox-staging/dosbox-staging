@@ -751,6 +751,8 @@ static void configure_window_decorations()
 
 static void enter_fullscreen()
 {
+	sdl.desktop.is_fullscreen = true;
+
 	if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
 
 		// enter_fullscreen() can be called multiple times in a row by
@@ -794,7 +796,7 @@ static void enter_fullscreen()
 		sdl.desktop.fullscreen.is_forced_borderless_fullscreen = true;
 
 		// Disable transparency in fullscreen mode
-		SDL_SetWindowOpacity(sdl.window, 0);
+		SDL_SetWindowOpacity(sdl.window, 100);
 
 		maybe_log_display_properties();
 
@@ -808,13 +810,13 @@ static void enter_fullscreen()
 	}
 
 	// We need to disable transparency in fullscreen on macOS
-	SDL_SetWindowOpacity(sdl.window, 0);
-
-	sdl.desktop.is_fullscreen = true;
+	SDL_SetWindowOpacity(sdl.window, 100);
 }
 
 static void exit_fullscreen()
 {
+	sdl.desktop.is_fullscreen = false;
+
 	if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
 		// Restore the previous window state when exiting our "fake"
 		// borderless fullscreen mode.
@@ -857,8 +859,6 @@ static void exit_fullscreen()
 	configure_window_transparency();
 
 	configure_window_decorations();
-
-	sdl.desktop.is_fullscreen = false;
 }
 
 // Returns the current window; used for mapper UI.
@@ -2314,11 +2314,13 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		const auto new_x = std::max(x, 0);
 		const auto new_y = std::max(y, 0);
 
-		save_window_position(SDL_Point{new_x, new_y});
+		if (!sdl.desktop.is_fullscreen) {
+			save_window_position(SDL_Point{new_x, new_y});
 
-		set_section_property_value("sdl",
-		                           "window_position",
-		                           format_str("%d,%d", new_x, new_y));
+			set_section_property_value("sdl",
+			                           "window_position",
+			                           format_str("%d,%d", new_x, new_y));
+		}
 		return true;
 	}
 
