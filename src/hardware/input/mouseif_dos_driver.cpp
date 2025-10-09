@@ -2246,7 +2246,7 @@ static void prepare_driver_info()
 	static_assert(high_nibble(DriverVersionMajor) <= 9);
 
 	std::string str_version = "version ";
-	if (high_nibble(DriverVersionMajor) > 0) {
+	if constexpr(high_nibble(DriverVersionMajor) > 0) {
 		str_version = str_version + high_nibble_str(DriverVersionMajor);
 	}
 
