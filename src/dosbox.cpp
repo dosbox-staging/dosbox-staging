@@ -144,7 +144,7 @@ static Bitu normal_loop()
 				GFX_MaybePresentFrame();
 			}
 
-			if (!DOSBOX_PollAndHandleEvents()) {
+			if (!GFX_PollAndHandleEvents()) {
 				return 0;
 			}
 			if (ticks.remain > 0) {
