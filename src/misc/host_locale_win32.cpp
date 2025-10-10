@@ -532,15 +532,17 @@ static HostLanguages get_host_languages()
 {
 	HostLanguages result = {};
 
-	auto get_language_file = [&](const std::string& input) -> std::string {
+	auto get_language_files =
+	        [&](const std::string& input) -> std::vector<std::string> {
+
 		const auto tokens = split(input, "-");
 		if (tokens.empty()) {
 			return {};
 		}
 		if (tokens.size() == 1) {
-			return iso_to_language_file(tokens.at(0), "");
+			return iso_to_language_files(tokens.at(0));
 		}
-		return iso_to_language_file(tokens.at(0), tokens.at(1));
+		return iso_to_language_files(tokens.at(0), tokens.at(1));
 	};
 
 	// Get the list of preferred languages
@@ -550,7 +552,10 @@ static HostLanguages get_host_languages()
 		}
 		result.log_info += entry;
 
-		result.language_files.push_back(get_language_file(entry));
+		const auto files = get_language_files(entry);
+		result.language_files.insert(result.language_files.end(),
+		                             files.begin(),
+		                             files.end());
 	}
 
 	// Get the default GUI language
@@ -571,7 +576,7 @@ static HostLanguages get_host_languages()
 	result.log_info += "GUI: ";
 	result.log_info += language_territory;
 
-	result.language_file_gui = get_language_file(language_territory);
+	result.language_files_gui = get_language_files(language_territory);
 	return result;
 }
 

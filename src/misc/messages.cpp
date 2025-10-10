@@ -977,9 +977,9 @@ void MSG_LoadMessages()
 
 	// Get the list of autodetected languages
 	auto language_files = host_languages.language_files;
-	if (!host_languages.language_file_gui.empty()) {
-		language_files.push_back(host_languages.language_file_gui);
-	}
+	language_files.insert(language_files.end(),
+	                      host_languages.language_files_gui.begin(),
+	                      host_languages.language_files_gui.end());
 
 	// If autodetection failed, use internal English messages
 	if (language_files.empty()) {

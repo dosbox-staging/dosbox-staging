@@ -3068,7 +3068,7 @@ msgstr ""
 "  <język>:  Loads a translation from the given file.\n"
 "Uwagi:\n"
 "  - Dostępne są następujące języki:\n"
-"    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', oraz 'ru'.\n"
+"    'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'pt_BR', oraz 'ru'.\n"
 "  - Język angielski jest wbudowany; tłumaczenia umieszczone są w katalogu\n"
 "    'resources/translations'."
 

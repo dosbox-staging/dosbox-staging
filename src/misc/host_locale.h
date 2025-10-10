@@ -10,15 +10,15 @@
 #include <optional>
 #include <vector>
 
-// Convert language and territory (using 'ISO 3166-1 alpha-2' codes) to a DOS
-// country code
+// Convert language ('ISO 639' code) and territory ('ISO 3166-1 alpha-2' code)
+// to a DOS country code
 std::optional<DosCountry> iso_to_dos_country(const std::string& language,
-                                             const std::string& territory);
+                                             const std::string& territory = "");
 
-// Convert language and territory (using 'ISO 3166-1 alpha-2' codes, also
-// supports POSIX dummy languages) to a language file name (without extension)
-std::string iso_to_language_file(const std::string& language,
-                                 const std::string& territory);
+// Convert language ('ISO 639' code) and territory ('ISO 3166-1 alpha-2' code)
+// to a language file names (without extensions) to search for
+std::vector<std::string> iso_to_language_files(const std::string& language,
+                                               const std::string& territory = "");
 
 struct KeyboardLayoutMaybeCodepage {
 	// Keyboard layout, as supported by the FreeDOS
@@ -125,9 +125,9 @@ struct HostKeyboardLayouts {
 };
 
 struct HostLanguages {
-	// Put here the name of the language file corresponding to the host UI
+	// Put here the names of the language files corresponding to the host UI
 	// language. Leave empty if it can't be determined.
-	std::string language_file_gui = {};
+	std::vector<std::string> language_files_gui = {};
 
 	// If the OS allows to get the list of UI languages preferred by the
 	// user, put it here.

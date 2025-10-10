@@ -56,6 +56,16 @@ standard.
 This will create a `xx.po` file containing all the English messages, ready for
 translating.
 
+> [!NOTE]
+>
+> If justifiable, it is allowed to use a _xx\_XX_ form (`config -wl xx_XX.po`),
+> where _XX_ is a two-letter country or territory code according to the
+> [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+> standard.
+> Example: the Brazilian Portuguese language differs significantly from the
+> Portuguese spoken in Europe, therefore it is reasonable to use a `pt_BR.po`
+> name for the translation file.
+
 ## Updating existing translation
 
 Before you start editing any current `PO` file, you'll need to refresh its
