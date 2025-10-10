@@ -8,6 +8,7 @@
 #include "dos/dos.h"
 #include "dos/dos_windows.h"
 #include "hardware/input/mouse.h"
+#include "misc/notifications.h"
 #include "more_output.h"
 #include "utils/checks.h"
 
@@ -29,12 +30,6 @@ void MOUSE::Run()
 	// TODO: Add support for mouse driver unloading: 'off' (as in Microsoft
 	// driver) or /U switch (drivers from DR-DOS, Mouse Systems, CtMouse).
 
-	// TODO: Implement options to change mouse sensitivity: /Vn (vertical),
-	// /Hn (horizontal), /Sn (both), Microsoft accepts values 5-100.
-
-	// TODO: Implement option /Rn to change interrupt rate; n can be
-	// 1 (30Hz), 2 (50Hz), 3 (100Hz), or 4 (200Hz).
-
 	// TODO: Find out what /Mn option of the Microsoft driver exactly does.
 
 	// TODO: Implement missing mouse driver functions and the relevant
@@ -43,10 +38,7 @@ void MOUSE::Run()
 	// cursor delay (/Nn, values 0-255), ballistic curve selection (/Pn,
 	// values 1-4), double speed threshold setting (/Dn).
 
-	// TODO: Implementing original options to change the driver language
-	// value: /LD (German), /LE (Spanish), /LF (French), /LI (Italian),
-	// /LK (Korean), /LJ (Japanese), /LNL (Dutch), /LP (Portuguese),
-	// /LS (Swedish), /LSF (Finnish)
+	RemoveUnsupportedOptions();
 
 	// The quiet mode should not inhibit error messages - checked with
 	// Microsoft Mouse Driver v9.01
@@ -55,25 +47,6 @@ void MOUSE::Run()
 	// Microsoft option to load the driver, currently the only supported
 	// action
 	cmd->FindExistRemoveAll("on");
-
-	// Check if user requested to proble for mouse port
-	bool warn_port_selection = cmd->FindExistRemoveAll("/f");
-	// Check if user requested PS/2 (/z), bus (/b), inport (/i1, /i2), or
-	// serial (/c1 - /c4) mouse port
-	for (const auto option : { "/z", "/b", "/i1", "/i2",
-	                           "/c1", "/c2", "/c3", "/c4" }) {
-		if (cmd->FindExistRemoveAll(option)) {
-			warn_port_selection = true;
-		}		
-	}
-	if (warn_port_selection) {
-		WriteOut(MSG_Get("PROGRAM_MOUSE_PORT_SELECTION"));	
-	}
-
-	// This option disables hardware mouse cursor on some cards
-	if (cmd->FindExistRemoveAll("/y")) {
-		WriteOut(MSG_Get("PROGRAM_MOUSE_HARDWARE_CURSOR"));
-	}
 
 	const bool has_option_low_memory = cmd->FindExistRemoveAll("/e");
 
@@ -115,6 +88,80 @@ void MOUSE::Run()
 	}
 }
 
+void MOUSE::RemoveUnsupportedOptions()
+{
+	// Due to the nature of DOSBox host mouse driver, these options are
+	// probably never going to be supported
+
+	// Mouse hardware port selection: probe (/f), PS/2 (/z), bus (/b),
+	// inport (/i1, /i2), or serial (/c1 - /c4).
+	// Not feasible to be implemented, we are a virtual (host) mouse driver.
+	if (cmd->FindExistRemoveAll(
+	            "/f", "/z", "/b", "/i1", "/i2", "/c1", "/c2", "/c3", "/c4")) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "DOS",
+		                      "PROGRAM_MOUSE_PORT_SELECTION");
+	}
+
+	// Disable hardware mouse cursor on some cards, we are not emulating
+	// anything like this.
+	if (cmd->FindExistRemoveAll("/y")) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "DOS",
+		                      "PROGRAM_MOUSE_HARDWARE_CURSOR");
+	}
+
+	// Language selection: German (/LD), Spanish (/LE), French (/LF),
+	// Italian (/LI), Korean (/LK), Japanese (/LJ), Dutch (/LNL),
+	// Portuguese (/LP), Swedish (/LS), Finnish (/LSF).
+	// We offer a more flexible, system-wide translation support instead.
+	if (cmd->FindExistRemoveAll(
+	            "/LD", "/LE", "/LF", "/LI", "/LK", "/LJ",
+	            "/LNL", "/LP", "/LS", "/LSF")) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "DOS",
+		                      "PROGRAM_MOUSE_LANGUAGE");
+	}
+
+	// Switches below are not implemented, because our driver accepts wider
+	// range of values; thus they are skipped, mainly to avoid confusion
+
+	// Mouse sensitivity: vertical (/Vn), horizontal (/Hn), both (/Sn);
+	// Microsoft mouse driver accepts values 5-100
+	auto check_remove_numeric = [&](const std::string& begin) {
+
+		std::string value = {};
+		if (cmd->FindStringCaseInsensitiveBegin(begin, value) &&
+		    is_digits(value)) {
+
+			// Found an argument with a numeric value
+			constexpr bool Remove = true;
+			cmd->FindStringCaseInsensitiveBegin(begin, value, Remove);
+			return true;
+		}
+
+		return false;
+	};
+
+	const bool found_vertical   = check_remove_numeric("/V");
+	const bool found_horizontal = check_remove_numeric("/H");
+	const bool found_both       = check_remove_numeric("/S");
+
+	if (found_vertical || found_horizontal || found_both) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "DOS",
+		                      "PROGRAM_MOUSE_SENSITIVITY");
+	}
+
+	// Mouse interrupt rate - /Rn when n is one of:
+	// 1 (30Hz), 2 (50Hz), 3 (100Hz), or 4 (200Hz).
+	if (cmd->FindExistRemoveAll("/R1", "/R2", "/R3", "/R4")) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "DOS",
+		                      "PROGRAM_MOUSE_HINTERRUPT_RATE");
+	}
+}
+
 void MOUSE::AddMessages()
 {
 	MSG_Add("PROGRAM_MOUSE_HELP_LONG",
@@ -141,7 +188,19 @@ void MOUSE::AddMessages()
 	        "Could not install the mouse driver.\n");
 
 	MSG_Add("PROGRAM_MOUSE_PORT_SELECTION",
-	        "Port selection not supported, driver always uses the host mouse.\n");
+	        "Mouse port selection not supported, driver always uses the host mouse.");
 	MSG_Add("PROGRAM_MOUSE_HARDWARE_CURSOR",
-	        "Hardware mouse cursor not supported.\n");
+	        "Hardware mouse cursor not supported.");
+	MSG_Add("PROGRAM_MOUSE_LANGUAGE",
+	        "Mouse driver language selection not supported.\n"
+	        "Use the '[color=light-green]config[reset]'"
+	        " command to change the system language.");
+	MSG_Add("PROGRAM_MOUSE_SENSITIVITY",
+	        "Mouse sensitivity selection ignored.\n"
+	        "Use the '[color=light-green]mousectl[reset]'"
+	        " command to change the mouse sensitivity.");
+	MSG_Add("PROGRAM_MOUSE_HINTERRUPT_RATE",
+	        "Mouse interrupt rate selection ignored.\n"
+	        "Use the '[color=light-green]mousectl[reset]'"
+	        " command to change the interrupt rate.");
 }
