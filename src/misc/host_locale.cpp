@@ -335,7 +335,7 @@ std::string iso_to_language_file(const std::string& language,
 
 	if (language_lower_case == "pt" && territory_upper_case == "BR") {
 		// We have a dedicated Brazilian translation
-		return "br";
+		return "pt_BR";
 	} else if (language_lower_case == "c" || language_lower_case == "posix") {
 		// Default (dummy) language, used on POSIX systems
 		return "en";

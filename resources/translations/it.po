@@ -3154,7 +3154,7 @@ msgstr ""
 "  <valore>:  Carica la traduzione dal file specificato.            \n"
 "Note:\n"
 "  - Sono disponibili i seguenti file di lingua:\n"
-"    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl' e 'ru'.\n"
+"    'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'pt_BR' e 'ru'.\n"
 "  - La lingua inglese è integrata nell'emulatore, le altre sono invece\n"
 "    archiviate nella directory 'resources/translations' inclusa nel pacchetto."
 

@@ -3075,7 +3075,7 @@ msgstr ""
 "<waarde>: laadt een vertaling van het opgegeven bestand.\n"
 "Opmerkingen:\n"
 "  - De volgende taalbestanden zijn beschikbaar:\n"
-"    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl' en 'ru'.\n"
+"    'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'pt_BR' en 'ru'.\n"
 "  - Engels is ingebouwd, de rest is opgeslagen in de gebundelde map\n"
 "    'resources/translations'."
 
