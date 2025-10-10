@@ -13,6 +13,17 @@
 // prefix, move the functions to more appropriate places, like the renderer,
 // etc.)
 
+void GFX_SetWmClass();
+void GFX_AddConfigSection();
+
+void GFX_InitSdl();
+void GFX_Init();
+void GFX_Destroy();
+
+void GFX_RequestExit(const bool pressed);
+
+void GFX_Quit();
+
 void GFX_LosingFocus();
 
 void GFX_CenterMouse();

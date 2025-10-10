@@ -10,6 +10,7 @@
 #include "misc/messages.h"
 #include "misc/types.h"
 
+#include <functional>
 #include <memory>
 
 // Project name, lower-case and without spaces
@@ -36,8 +37,6 @@
 // for more details
 #define DOSBOX_APP_ID "org.dosbox_staging.dosbox_staging"
 
-
-int sdl_main(int argc, char *argv[]);
 
 // Must be called to break out of the emulator loop and exit gracefully from
 // all emulation layers.
@@ -73,6 +72,12 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section);
 int64_t DOSBOX_GetTicksDone();
 void DOSBOX_SetTicksDone(const int64_t ticks_done);
 void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled);
+
+using DosboxRestartFunction = std::function<void(std::vector<std::string>& parameters)>;
+void DOSBOX_SetRestartFunction(DosboxRestartFunction func);
+
+void DOSBOX_Restart();
+void DOSBOX_Restart(std::vector<std::string>& parameters);
 
 enum class MachineType {
 	// Value not set yet

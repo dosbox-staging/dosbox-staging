@@ -5,8 +5,6 @@
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
 
-#include "dosbox.h"
-
 #include <cstdio>
 #include <deque>
 #include <functional>
@@ -331,6 +329,8 @@ public:
 };
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
+
+class SectionProp;
 
 using SectionUpdateHandler =
         std::function<void(SectionProp&, const std::string& prop_name)>;
