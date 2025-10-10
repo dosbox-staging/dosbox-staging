@@ -19,6 +19,8 @@ public:
 	void Run() override;
 
 private:
+	void RemoveUnsupportedOptions();
+
 	static void AddMessages();
 };
 
