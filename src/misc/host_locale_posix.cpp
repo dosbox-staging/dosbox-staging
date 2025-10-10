@@ -931,9 +931,9 @@ static HostLanguages get_host_languages()
 {
 	HostLanguages result = {};
 
-	auto get_language_file = [](const std::string& input) {
+	auto get_language_files = [](const std::string& input) {
 		const auto [language, teritory] = split_posix_locale(input);
-		return iso_to_language_file(language, teritory);
+		return iso_to_language_files(language, teritory);
 	};
 
 	// First try the LANGUAGE variable, according to specification:
@@ -942,7 +942,10 @@ static HostLanguages get_host_languages()
 	if (!values.empty()) {
 		result.log_info = VariableLanguage + "=" + values;
 		for (const auto& entry : split(values, ":")) {
-			result.language_files.push_back(get_language_file(entry));
+			const auto files = get_language_files(entry);
+			result.language_files.insert(result.language_files.end(),
+			                             files.begin(),
+			                             files.end());
 		}
 		return result;
 	}
@@ -961,7 +964,7 @@ static HostLanguages get_host_languages()
 	}
 	result.log_info = variable + "=" + value;
 
-	result.language_file_gui = get_language_file(value);
+	result.language_files_gui = get_language_files(value);
 	return result;
 }
 
