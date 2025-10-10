@@ -333,23 +333,28 @@ void OpenGlRenderer::EndFrame()
 	// frame.
 
 	last_framebuf = curr_framebuf;
+	last_framebuf_dirty = true;
 }
 
 void OpenGlRenderer::PrepareFrame()
 {
 	assert(!last_framebuf.empty());
 
-	glTexSubImage2D(GL_TEXTURE_2D,
-	                0,
-	                0,
-	                0,
-	                render_width_px,
-	                render_height_px,
-	                GL_BGRA_EXT,
-	                GL_UNSIGNED_INT_8_8_8_8_REV,
-	                last_framebuf.data());
+	if (last_framebuf_dirty) {
+		glTexSubImage2D(GL_TEXTURE_2D,
+		                0,
+		                0,
+		                0,
+		                render_width_px,
+		                render_height_px,
+		                GL_BGRA_EXT,
+		                GL_UNSIGNED_INT_8_8_8_8_REV,
+		                last_framebuf.data());
 
-	++actual_frame_count;
+		++actual_frame_count;
+
+		last_framebuf_dirty = false;
+	}
 }
 
 void OpenGlRenderer::PresentFrame()

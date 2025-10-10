@@ -87,6 +87,9 @@ private:
 	// Contains the last fully rendered frame, waiting to be presented.
 	std::vector<uint8_t> last_framebuf = {};
 
+	// True if the last framebuffer has been updated since the last present
+	bool last_framebuf_dirty = false;
+
 	int render_width_px  = 0;
 	int render_height_px = 0;
 

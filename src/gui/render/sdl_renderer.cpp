@@ -316,6 +316,8 @@ void SdlRenderer::EndFrame()
 	std::memcpy(last_framebuf->pixels,
 	            curr_framebuf->pixels,
 	            (curr_framebuf->h * curr_framebuf->pitch));
+
+	last_framebuf_dirty = true;
 }
 
 void SdlRenderer::PrepareFrame()
@@ -327,10 +329,14 @@ void SdlRenderer::PrepareFrame()
 		SDL_UnlockSurface(last_framebuf);
 	}
 
-	SDL_UpdateTexture(texture,
-					  nullptr, // entire texture
-					  last_framebuf->pixels,
-					  last_framebuf->pitch);
+	if (last_framebuf_dirty) {
+		SDL_UpdateTexture(texture,
+		                  nullptr, // entire texture
+		                  last_framebuf->pixels,
+		                  last_framebuf->pitch);
+
+		last_framebuf_dirty = false;
+	}
 }
 
 void SdlRenderer::PresentFrame()
