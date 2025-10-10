@@ -1934,7 +1934,7 @@ uint32_t DEBUG_CheckKeys(void) {
 
 Bitu DEBUG_Loop(void) {
 //TODO Disable sound
-	DOSBOX_PollAndHandleEvents();
+	GFX_PollAndHandleEvents();
 	// Interrupt started ? - then skip it
 	uint16_t oldCS	= SegValue(cs);
 	uint32_t oldEIP	= reg_eip;

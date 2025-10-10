@@ -2484,7 +2484,7 @@ void GFX_MaybePresentFrame()
 // Returns:
 //   true  - event loop can keep running
 //   false - event loop wants to quit
-bool DOSBOX_PollAndHandleEvents()
+bool GFX_PollAndHandleEvents()
 {
 	SDL_Event event;
 
