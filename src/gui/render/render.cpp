@@ -51,7 +51,7 @@ static void check_palette()
 			uint8_t g = render.pal.rgb[i].green;
 			uint8_t b = render.pal.rgb[i].blue;
 
-			uint16_t new_pal = GFX_GetRGB(r, g, b);
+			uint16_t new_pal = GFX_GetRgb(r, g, b);
 			if (new_pal != render.pal.lut.b16[i]) {
 				render.pal.changed     = true;
 				render.pal.modified[i] = 1;
@@ -66,7 +66,7 @@ static void check_palette()
 			uint8_t g = render.pal.rgb[i].green;
 			uint8_t b = render.pal.rgb[i].blue;
 
-			uint32_t new_pal = GFX_GetRGB(r, g, b);
+			uint32_t new_pal = GFX_GetRgb(r, g, b);
 			if (new_pal != render.pal.lut.b32[i]) {
 				render.pal.changed     = true;
 				render.pal.modified[i] = 1;

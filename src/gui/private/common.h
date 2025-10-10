@@ -81,7 +81,7 @@ struct ShaderInfo;
 
 void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_source);
 
-uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue);
+uint32_t GFX_GetRgb(const uint8_t red, const uint8_t green, const uint8_t blue);
 
 InterpolationMode GFX_GetTextureInterpolationMode();
 
