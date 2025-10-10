@@ -516,6 +516,23 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 	       (machine != MachineType::Vga && svga_type == SvgaType::None));
 }
 
+static DosboxRestartFunction restart_func = {};
+
+void DOSBOX_SetRestartFunction(DosboxRestartFunction func)
+{
+	restart_func = func;
+}
+
+void DOSBOX_Restart()
+{
+	restart_func(control->startup_params);
+}
+
+void DOSBOX_Restart(std::vector<std::string>& parameters)
+{
+	restart_func(parameters);
+}
+
 static void dosbox_realinit(SectionProp& section)
 {
 	// Initialize some dosbox internals

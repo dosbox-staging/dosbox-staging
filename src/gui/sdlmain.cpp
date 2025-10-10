@@ -2,9 +2,10 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dosbox.h"
+#include "private/sdlmain.h"
 
-#include <array>
+#include "private/common.h"
+
 #include <cassert>
 #include <cerrno>
 #include <cmath>
@@ -13,22 +14,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
-#include <signal.h>
 #include <sys/types.h>
-#include <tuple>
 #include <unistd.h>
 
 #if C_DEBUGGER
 #include <queue>
 #endif
-
-#ifdef WIN32
-#include <process.h>
-#include <windows.h>
-#endif // WIN32
-
-#include "private/common.h"
-#include "private/sdlmain.h"
 
 #include "audio/mixer.h"
 #include "capture/capture.h"
@@ -36,7 +27,7 @@
 #include "config/setup.h"
 #include "cpu/cpu.h"
 #include "debugger/debugger.h"
-#include "dos/dos_locale.h"
+#include "dosbox.h"
 #include "dosbox_config.h"
 #include "gui/mapper.h"
 #include "gui/render/opengl_renderer.h"
@@ -54,7 +45,6 @@
 #include "misc/support.h"
 #include "misc/tracy.h"
 #include "misc/video.h"
-#include "shell/command_line.h"
 #include "utils/checks.h"
 #include "utils/fs_utils.h"
 #include "utils/math_utils.h"
@@ -81,36 +71,6 @@ constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
 
 	return curr_version >= sdl_version_to_uint32(min_version);
 }
-
-static void switch_console_to_utf8()
-{
-#ifdef WIN32
-	constexpr uint16_t CodePageUtf8 = 65001;
-	if (!sdl.original_code_page) {
-		sdl.original_code_page = GetConsoleOutputCP();
-		// Don't do anything if we couldn't get the original code page
-		if (sdl.original_code_page) {
-			SetConsoleOutputCP(CodePageUtf8);
-		}
-	}
-#endif
-}
-
-static void restore_console_encoding()
-{
-#ifdef WIN32
-	if (sdl.original_code_page) {
-		SetConsoleOutputCP(sdl.original_code_page);
-		sdl.original_code_page = 0;
-	}
-#endif
-}
-
-#ifdef WIN32
-#include <winuser.h>
-#define STDOUT_FILE "stdout.txt"
-#define STDERR_FILE "stderr.txt"
-#endif
 
 SDL_Block sdl;
 
@@ -155,14 +115,6 @@ SDL_Window* GFX_GetSDLWindow()
 	return sdl.window;
 }
 #endif
-
-static void quit_sdl()
-{
-#if !C_DEBUGGER
-	SDL_Quit();
-#endif
-	restore_console_encoding();
-}
 
 // Globals for keyboard initialisation
 static bool startup_state_numlock  = false;
@@ -340,7 +292,7 @@ static void configure_renderer()
 	}
 }
 
-static void gfx_request_exit(const bool pressed)
+void GFX_RequestExit(const bool pressed)
 {
 	if (pressed) {
 		DOSBOX_RequestShutdown();
@@ -385,7 +337,7 @@ static bool is_command_pressed(const SDL_Event event)
 		SDL_WaitEvent(&event);
 
 		switch (event.type) {
-		case SDL_QUIT: gfx_request_exit(true); break;
+		case SDL_QUIT: GFX_RequestExit(true); break;
 
 		case SDL_WINDOWEVENT:
 			if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
@@ -425,7 +377,7 @@ static bool is_command_pressed(const SDL_Event event)
 			    event.key.keysym.sym == SDLK_q) {
 				// On macOS, Command+Q is the default key to
 				// close an application
-				gfx_request_exit(true);
+				GFX_RequestExit(true);
 				break;
 			}
 #endif
@@ -1290,7 +1242,7 @@ static void gui_destroy()
 	// don't need to attempt to do a manual cleanup.
 }
 
-static void sdl_section_destroy()
+void GFX_Destroy()
 {
 	gui_destroy();
 	MAPPER_Destroy();
@@ -1809,7 +1761,7 @@ static void configure_pause_and_mute_when_inactive()
 	                         get_sdl_section()->GetBool("mute_when_inactive");
 }
 
-static void sdl_section_init()
+void GFX_Init()
 {
 	auto section = get_sdl_section();
 
@@ -1857,11 +1809,7 @@ static void sdl_section_init()
 
 	MAPPER_AddHandler(MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper", "Mapper");
 
-	MAPPER_AddHandler(gfx_request_exit,
-	                  SDL_SCANCODE_F9,
-	                  PRIMARY_MOD,
-	                  "shutdown",
-	                  "Shutdown");
+	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown", "Shutdown");
 
 	MAPPER_AddHandler(switch_fullscreen_handler,
 	                  SDL_SCANCODE_RETURN,
@@ -2140,7 +2088,7 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 			SDL_WaitEvent(&ev);
 
 			switch (ev.type) {
-			case SDL_QUIT: gfx_request_exit(true); break;
+			case SDL_QUIT: GFX_RequestExit(true); break;
 			case SDL_WINDOWEVENT: {
 				const auto we = ev.window.event;
 
@@ -2402,7 +2350,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		log_window_event(
 		        "SDL: The window manager requests that the window be closed");
 
-		gfx_request_exit(true);
+		GFX_RequestExit(true);
 		return false;
 
 	case SDL_WINDOWEVENT_TAKE_FOCUS:
@@ -2571,7 +2519,7 @@ bool DOSBOX_PollAndHandleEvents()
 			handle_mouse_button(&event.button);
 			break;
 
-		case SDL_QUIT: gfx_request_exit(true); break;
+		case SDL_QUIT: GFX_RequestExit(true); break;
 #ifdef WIN32
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -2607,7 +2555,7 @@ bool DOSBOX_PollAndHandleEvents()
 			// application
 			if (is_command_pressed(event) &&
 			    event.key.keysym.sym == SDLK_q) {
-				gfx_request_exit(true);
+				GFX_RequestExit(true);
 				break;
 			}
 			[[fallthrough]];
@@ -2616,44 +2564,6 @@ bool DOSBOX_PollAndHandleEvents()
 		}
 	}
 	return !DOSBOX_IsShutdownRequested();
-}
-
-// TODO keep stuff below this line in `sdlmain.cpp`;
-// move the rest above this line into `sdlgui.cpp`
-
-#if defined(WIN32)
-static BOOL WINAPI console_event_handler(DWORD event)
-{
-	switch (event) {
-	case CTRL_SHUTDOWN_EVENT:
-	case CTRL_LOGOFF_EVENT:
-	case CTRL_CLOSE_EVENT:
-	case CTRL_BREAK_EVENT: raise(SIGTERM); return TRUE;
-	case CTRL_C_EVENT:
-	default:
-		// pass to the next handler
-		return FALSE;
-	}
-}
-#endif
-
-// Static variable to signal whether there is a valid stdout available. Fixes
-// some bugs when --noconsole is used in a read only directory.
-static bool no_stdout = false;
-
-void GFX_ShowMsg(const char* format, ...)
-{
-	char buf[512];
-
-	va_list msg;
-	va_start(msg, format);
-	safe_sprintf(buf, format, msg);
-	va_end(msg);
-
-	buf[sizeof(buf) - 1] = '\0';
-	if (!no_stdout) {
-		puts(buf); // Else buf is parsed again. (puts adds end of line)
-	}
 }
 
 static std::vector<std::string> get_sdl_texture_renderers()
@@ -2675,85 +2585,6 @@ static std::vector<std::string> get_sdl_texture_renderers()
 		}
 	}
 	return drivers;
-}
-
-static void register_command_line_help_message()
-{
-	MSG_Add("DOSBOX_HELP",
-	        "Usage: %s [OPTION]... [PATH]\n"
-	        "\n"
-	        "PATH                       If PATH is a directory, it's mounted as C:.\n"
-	        "                           If PATH is a bootable disk image (IMA/IMG), it's booted.\n"
-	        "                           If PATH is a CD-ROM image (CUE/ISO), it's mounted as D:.\n"
-	        "                           If PATH is a DOS executable (BAT/COM/EXE), it's parent\n"
-	        "                           path is mounted as C: and the executable is run. When\n"
-	        "                           the executable exits, DOSBox Staging quits.\n"
-	        "\n"
-	        "List of available options:\n"
-	        "\n"
-	        "  --conf <config_file>     Start with the options specified in <config_file>.\n"
-	        "                           Multiple configuration files can be specified.\n"
-	        "                           Example: --conf conf1.conf --conf conf2.conf\n"
-	        "\n"
-	        "  --printconf              Print the location of the primary configuration file.\n"
-	        "\n"
-	        "  --editconf               Open the primary configuration file in a text editor.\n"
-	        "\n"
-	        "  --eraseconf              Delete the primary configuration file.\n"
-	        "\n"
-	        "  --noprimaryconf          Don't load or create the primary configuration file.\n"
-	        "\n"
-	        "  --nolocalconf            Don't load the local 'dosbox.conf' configuration file\n"
-	        "                           if present in the current working directory.\n"
-	        "\n"
-	        "  --set <setting>=<value>  Set a configuration setting. Multiple configuration\n"
-	        "                           settings can be specified. Example:\n"
-	        "                           --set mididevice=fluidsynth --set soundfont=mysoundfont.sf2\n"
-	        "\n"
-	        "  --working-dir <path>     Set working directory to <path>. DOSBox will act as if\n"
-	        "                           started from this directory.\n"
-	        "\n"
-	        "  --list-countries         List all supported countries with their numeric codes.\n"
-	        "                           Codes are to be used in the 'country' config setting.\n"
-	        "\n"
-	        "  --list-layouts           List all supported keyboard layouts with their codes.\n"
-	        "                           Codes are to be used in the 'keyboard_layout' config setting.\n"
-	        "\n"
-	        "  --list-code-pages        List all bundled code pages (screen fonts).\n"
-	        "\n"
-	        "  --list-glshaders         List all available OpenGL shaders and their paths.\n"
-	        "                           Shaders are to be used in the 'glshader' config setting.\n"
-	        "\n"
-	        "  --fullscreen             Start in fullscreen mode.\n"
-	        "\n"
-	        "  --lang <lang_file>       Start with the language specified in <lang_file>. If set to\n"
-	        "                           'auto', tries to detect the language from the host OS.\n"
-	        "\n"
-	        "  --machine <type>         Emulate a specific type of machine. The machine type has\n"
-	        "                           influence on both the emulated video and sound cards.\n"
-	        "                           Valid choices are: hercules, cga, cga_mono, tandy,\n"
-	        "                           pcjr, ega, svga_s3 (default), svga_et3000, svga_et4000,\n"
-	        "                           svga_paradise, vesa_nolfb, vesa_oldvbe.\n"
-	        "\n"
-	        "  -c <command>             Run the specified DOS command before handling the PATH.\n"
-	        "                           Multiple commands can be specified.\n"
-	        "\n"
-	        "  --noautoexec             Don't run DOS commands from any [autoexec] sections.\n"
-	        "\n"
-	        "  --exit                   Exit after running '-c <command>'s and [autoexec] sections.\n"
-	        "\n"
-	        "  --startmapper            Run the mapper GUI.\n"
-	        "\n"
-	        "  --erasemapper            Delete the default mapper file.\n"
-	        "\n"
-	        "  --securemode             Enable secure mode by disabling the MOUNT and IMGMOUNT\n"
-	        "                           commands.\n"
-	        "\n"
-	        "  --socket <num>           Run nullmodem on the specified socket number.\n"
-	        "\n"
-	        "  -h, -?, --help           Print help message and exit.\n"
-	        "\n"
-	        "  -V, --version            Print version information and exit.\n");
 }
 
 static void register_sdl_text_messages()
@@ -3013,7 +2844,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	pstring->SetValues({"auto", "allow", "block"});
 }
 
-static void init_sdl_config_section()
+void GFX_AddConfigSection()
 {
 	auto section = control->AddSection("sdl");
 	section->AddUpdateHandler(notify_sdl_setting_updated);
@@ -3024,276 +2855,7 @@ static void init_sdl_config_section()
 	register_sdl_text_messages();
 }
 
-static int edit_primary_config()
-{
-	const auto path = GetPrimaryConfigPath();
-
-	if (!path_exists(path)) {
-		printf("Primary config does not exist at path '%s'\n",
-		       path.string().c_str());
-		return 1;
-	}
-
-	auto replace_with_process = [&](const std::string& prog) {
-#ifdef WIN32
-		_execlp(prog.c_str(), prog.c_str(), path.string().c_str(), (char*)nullptr);
-#else
-		execlp(prog.c_str(), prog.c_str(), path.string().c_str(), (char*)nullptr);
-#endif
-	};
-
-	// Loop until one succeeds
-	const auto arguments = &control->arguments;
-
-	if (arguments->editconf) {
-		for (const auto& editor : *arguments->editconf) {
-			replace_with_process(editor);
-		}
-	}
-
-	const char* env_editor = getenv("EDITOR");
-	if (env_editor) {
-		replace_with_process(env_editor);
-	}
-
-	replace_with_process("nano");
-	replace_with_process("vim");
-	replace_with_process("vi");
-	replace_with_process("notepad++.exe");
-	replace_with_process("notepad.exe");
-
-	LOG_ERR("Can't find any text editors; please set the EDITOR env variable "
-	        "to your preferred text editor.\n");
-
-	return 1;
-}
-
-static void remove_waitpid(std::vector<std::string>& parameters)
-{
-	auto it = parameters.begin();
-	while (it != parameters.end()) {
-		if (*it == "-waitpid" || *it == "--waitpid") {
-			it = parameters.erase(it);
-			if (it != parameters.end()) {
-				auto& pid = *it;
-				if (!pid.empty() && std::isdigit(pid[0])) {
-					// The integer value should be the next
-					// element following "--waitpid". If we
-					// found an integer, remove it as well.
-					it = parameters.erase(it);
-				}
-			}
-		} else {
-			++it;
-		}
-	}
-}
-
-void DOSBOX_Restart(std::vector<std::string>& parameters)
-{
-
-	control->ApplyQueuedValuesToCli(parameters);
-
-	// Remove any existing --waitpid parameters.
-	// This can happen with multiple restarts.
-	remove_waitpid(parameters);
-
-#ifdef WIN32
-	parameters.emplace_back("--waitpid");
-	parameters.emplace_back(std::to_string(GetCurrentProcessId()));
-	std::string command_line = {};
-
-	bool first = true;
-
-	for (const auto& arg : parameters) {
-		if (!first) {
-			command_line.push_back(' ');
-		}
-		command_line.append(arg);
-		first = false;
-	}
-#else
-	parameters.emplace_back("--waitpid");
-	parameters.emplace_back(std::to_string(getpid()));
-
-	char** newargs = new char*[parameters.size() + 1];
-
-	// parameter 0 is the executable path
-	// contents of the vector follow
-	// last one is NULL
-	for (size_t i = 0; i < parameters.size(); i++) {
-		newargs[i] = parameters[i].data();
-	}
-	newargs[parameters.size()] = nullptr;
-#endif // WIN32
-
-	gfx_request_exit(true);
-
-#if C_DEBUGGER
-	// shutdown curses
-	DEBUG_Destroy();
-#endif
-
-#ifdef WIN32
-	// nullptr to parse from command line
-	const LPCSTR application_name = nullptr;
-
-	// nullptr for default
-	const LPSECURITY_ATTRIBUTES process_attributes = nullptr;
-
-	// nullptr for default
-	const LPSECURITY_ATTRIBUTES thread_attributes = nullptr;
-
-	const BOOL inherit_handles = FALSE;
-
-	// CREATE_NEW_CONSOLE fixes a bug where the parent process exiting kills
-	// the child process. This can manifest when you use the "restart"
-	// hotkey action to restart DOSBox.
-	// https://github.com/dosbox-staging/dosbox-staging/issues/3346
-	const DWORD creation_flags = CREATE_NEW_CONSOLE;
-
-	// nullptr to use parent's environment
-	const LPVOID environment_variables = nullptr;
-
-	// nullptr to use parent's current directory
-	const LPCSTR current_directory = nullptr;
-
-	// Input structure with a bunch of stuff we probably don't care about.
-	// Zero it out to use defaults save for the size field.
-	STARTUPINFO startup_info = {};
-	startup_info.cb          = sizeof(startup_info);
-
-	// Output structure we also don't care about.
-	PROCESS_INFORMATION process_information = {};
-
-	if (!CreateProcess(application_name,
-	                   const_cast<char*>(command_line.c_str()),
-	                   process_attributes,
-	                   thread_attributes,
-	                   inherit_handles,
-	                   creation_flags,
-	                   environment_variables,
-	                   current_directory,
-	                   &startup_info,
-	                   &process_information)) {
-		LOG_ERR("Restart failed: CreateProcess failed");
-	}
-#else
-	int ret = fork();
-	switch (ret) {
-	case -1:
-		LOG_ERR("Restart failed: fork failed: %s", strerror(errno));
-		break;
-	case 0:
-		// Newly created child process immediately executes a new
-		// instance of DOSBox. It is not safe for a child process in a
-		// multi-threaded program to do much else.
-		if (execvp(newargs[0], newargs) == -1) {
-			E_Exit("Restart failed: execvp failed: %s", strerror(errno));
-		}
-		break;
-	}
-	// Original (parent) process continues execution here.
-	// It will proceed to do a normal shutdown due to
-	// gfx_request_exit(true); above.
-	delete[] newargs;
-#endif // WIN32
-}
-
-static void list_glshaders()
-{
-#if C_OPENGL
-	for (const auto& line : RENDER_GenerateShaderInventoryMessage()) {
-		printf("%s\n", line.c_str());
-	}
-#else
-	fprintf(stderr,
-	        "OpenGL is not supported by this executable "
-	        "and is missing the functionality to list shaders.");
-#endif
-}
-
-static void list_countries()
-{
-	const auto message_utf8 = DOS_GenerateListCountriesMessage();
-	printf("%s\n", message_utf8.c_str());
-}
-
-static void list_keyboard_layouts()
-{
-	const auto message_utf8 = DOS_GenerateListKeyboardLayoutsMessage();
-	printf("%s\n", message_utf8.c_str());
-}
-
-static void list_code_pages()
-{
-	const auto message_utf8 = DOS_GenerateListCodePagesMessage();
-	printf("%s\n", message_utf8.c_str());
-}
-
-static int print_primary_config_location()
-{
-	const auto path = GetPrimaryConfigPath();
-
-	if (!path_exists(path)) {
-		printf("Primary config does not exist at path '%s'\n",
-		       path.string().c_str());
-		return 1;
-	}
-
-	printf("%s\n", path.string().c_str());
-	return 0;
-}
-
-static int erase_primary_config_file()
-{
-	const auto path = GetPrimaryConfigPath();
-
-	if (!path_exists(path)) {
-		printf("Primary config does not exist at path '%s'\n",
-		       path.string().c_str());
-		return 1;
-	}
-
-	if (!delete_file(path)) {
-		fprintf(stderr,
-		        "Cannot delete primary config '%s'",
-		        path.string().c_str());
-		return 1;
-	}
-
-	printf("Primary config '%s' deleted.\n", path.string().c_str());
-	return 0;
-}
-
-static int erase_mapper_file()
-{
-	const auto path = GetConfigDir() / MAPPERFILE;
-
-	if (!path_exists(path)) {
-		printf("Default mapper file does not exist at path '%s'\n",
-		       path.string().c_str());
-		return 1;
-	}
-
-	if (path_exists("dosbox.conf")) {
-		printf("Local 'dosbox.conf' exists in current working directory; "
-		       "mappings will not be reset if the local config specifies "
-		       "a custom mapper file.\n");
-	}
-
-	if (!delete_file(path)) {
-		fprintf(stderr,
-		        "Cannot delete mapper file '%s'",
-		        path.string().c_str());
-		return 1;
-	}
-
-	printf("Mapper file '%s' deleted.\n", path.string().c_str());
-	return 0;
-}
-
-static void set_wm_class()
+void GFX_SetWmClass()
 {
 #if (SDL_VERSION_ATLEAST(3, 0, 0))
 	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
@@ -3307,114 +2869,7 @@ static void set_wm_class()
 #endif
 }
 
-static void init_logger(const CommandLineArguments& args, int argc, char* argv[])
-{
-	loguru::g_preamble_date    = true;
-	loguru::g_preamble_time    = true;
-	loguru::g_preamble_uptime  = false;
-	loguru::g_preamble_thread  = false;
-	loguru::g_preamble_file    = false;
-	loguru::g_preamble_verbose = false;
-	loguru::g_preamble_pipe    = true;
-
-	if (args.version || args.help || args.printconf || args.editconf ||
-	    args.eraseconf || args.list_countries || args.list_layouts ||
-	    args.list_code_pages || args.list_glshaders || args.erasemapper) {
-
-		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
-	}
-
-	loguru::init(argc, argv);
-}
-
-static void maybe_write_primary_config(const CommandLineArguments& args)
-{
-	// Before loading any configs, write the default primary config if it
-	// doesn't exist when:
-	//
-	// - secure mode is NOT enabled with the '--securemode' option,
-	//
-	// - AND we're not in portable mode (portable mode is enabled when
-	//   'dosbox-staging.conf' exists in the executable directory)
-	//
-	// - AND the primary config is NOT disabled with the
-	//   '--noprimaryconf' option.
-	//
-	if (!args.securemode && !args.noprimaryconf) {
-		const auto primary_config_path = GetPrimaryConfigPath();
-
-		if (!config_file_is_valid(primary_config_path)) {
-			// No config is loaded at this point, so we're
-			// writing the default settings to the primary
-			// config.
-			if (control->WriteConfig(primary_config_path)) {
-				LOG_MSG("CONFIG: Created primary config file '%s'",
-				        primary_config_path.string().c_str());
-			} else {
-				// TODO convert to notification
-				LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
-				            primary_config_path.string().c_str());
-			}
-		}
-	}
-}
-
-constexpr char version_msg[] =
-        R"(%s, version %s
-
-Copyright (C) 2020-2025 The DOSBox Staging Team
-License: GNU GPL-2.0-or-later <https://www.gnu.org/licenses/gpl-2.0.html>
-
-This is free software, and you are welcome to change and redistribute it under
-certain conditions; please read the COPYING file thoroughly before doing so.
-There is NO WARRANTY, to the extent permitted by law.
-)";
-
-static std::optional<int> maybe_handle_command_line_output_only_actions(
-        const CommandLineArguments& args, const char* program_name)
-{
-	if (args.version) {
-		printf(version_msg, DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
-		return 0;
-	}
-	if (args.help) {
-		const auto help = format_str(MSG_GetTranslatedRaw("DOSBOX_HELP"),
-		                             program_name);
-		printf("%s", help.c_str());
-		return 0;
-	}
-	if (args.editconf) {
-		return edit_primary_config();
-	}
-	if (args.eraseconf) {
-		return erase_primary_config_file();
-	}
-	if (args.erasemapper) {
-		return erase_mapper_file();
-	}
-	if (args.printconf) {
-		return print_primary_config_location();
-	}
-	if (args.list_countries) {
-		list_countries();
-		return 0;
-	}
-	if (args.list_layouts) {
-		list_keyboard_layouts();
-		return 0;
-	}
-	if (args.list_code_pages) {
-		list_code_pages();
-		return 0;
-	}
-	if (args.list_glshaders) {
-		list_glshaders();
-		return 0;
-	}
-	return {};
-}
-
-static void init_sdl()
+void GFX_InitSdl()
 {
 #if defined(WIN32)
 	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
@@ -3469,310 +2924,17 @@ static void init_sdl()
 #endif
 }
 
-static void handle_cli_set_commands(const std::vector<std::string>& set_args)
+void GFX_Quit()
 {
-	for (auto command : set_args) {
-		trim(command);
-
-		if (command.empty() || command[0] == '%' || command[0] == '\0' ||
-		    command[0] == '#' || command[0] == '\n') {
-			continue;
-		}
-
-		std::vector<std::string> pvars(1, std::move(command));
-
-		const char* result = control->SetProperty(pvars);
-
-		if (strlen(result)) {
-			// TODO convert to notification
-			LOG_WARNING("CONFIG: %s", result);
-		} else {
-			Section* tsec = control->GetSection(pvars[0]);
-			std::string value(pvars[2]);
-
-			// Due to parsing, there can be a '=' at the
-			// start of the value.
-			while (value.size() &&
-			       (value.at(0) == ' ' || value.at(0) == '=')) {
-				value.erase(0, 1);
-			}
-
-			for (size_t i = 3; i < pvars.size(); i++) {
-				value += (std::string(" ") + pvars[i]);
-			}
-
-			std::string inputline = pvars[1] + "=" + value;
-
-			bool change_success = tsec->HandleInputline(inputline);
-
-			if (!change_success && !value.empty()) {
-				// TODO convert to notification
-				LOG_WARNING("CONFIG: Cannot set '%s'",
-				            inputline.c_str());
-			}
-		}
-	}
-}
-
-#if defined(WIN32) && !(C_DEBUGGER)
-static void apply_windows_debugger_workaround(const bool is_console_disabled)
-{
-	// Can't disable the console with debugger enabled
-	if (is_console_disabled) {
-		FreeConsole();
-		// Redirect standard input and standard output
-		//
-		if (freopen(STDOUT_FILE, "w", stdout) == NULL) {
-			// No stdout so don't write messages
-			no_stdout = true;
-		}
-		freopen(STDERR_FILE, "w", stderr);
-
-		// Line buffered
-		setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
-		// No buffering
-		setvbuf(stderr, NULL, _IONBF, BUFSIZ);
-
-	} else {
-		if (AllocConsole()) {
-			fclose(stdin);
-			fclose(stdout);
-			fclose(stderr);
-			freopen("CONIN$", "r", stdin);
-			freopen("CONOUT$", "w", stdout);
-			freopen("CONOUT$", "w", stderr);
-		}
-		SetConsoleTitle("DOSBox Status Window");
-	}
-}
+#if !C_DEBUGGER
+	SDL_Quit();
 #endif
-
-static void maybe_create_resource_directories()
-{
-	const auto plugins_dir = GetConfigDir() / PluginsDir;
-
-	if (create_dir(plugins_dir, 0700, OK_IF_EXISTS) != 0) {
-		LOG_WARNING("CONFIG: Can't create directory '%s': %s",
-		            plugins_dir.string().c_str(),
-		            safe_strerror(errno).c_str());
-	}
-
-#if C_OPENGL
-	const auto glshaders_dir = GetConfigDir() / GlShadersDir;
-
-	if (create_dir(glshaders_dir, 0700, OK_IF_EXISTS) != 0) {
-		LOG_WARNING("CONFIG: Can't create directory '%s': %s",
-		            glshaders_dir.string().c_str(),
-		            safe_strerror(errno).c_str());
-	}
-#endif
-
-	const auto soundfonts_dir = GetConfigDir() / DefaultSoundfontsDir;
-
-	if (create_dir(soundfonts_dir, 0700, OK_IF_EXISTS) != 0) {
-		LOG_WARNING("CONFIG: Can't create directory '%s': %s",
-		            soundfonts_dir.string().c_str(),
-		            safe_strerror(errno).c_str());
-	}
-
-#if C_MT32EMU
-	const auto mt32_rom_dir = GetConfigDir() / DefaultMt32RomsDir;
-
-	if (create_dir(mt32_rom_dir, 0700, OK_IF_EXISTS) != 0) {
-		LOG_WARNING("CONFIG: Can't create directory '%s': %s",
-		            mt32_rom_dir.string().c_str(),
-		            safe_strerror(errno).c_str());
-	}
-#endif
-}
-
-int sdl_main(int argc, char* argv[])
-{
-	// Ensure we perform SDL cleanup and restore console settings
-	atexit(quit_sdl);
-
-	CommandLine command_line(argc, argv);
-	control = std::make_unique<Config>(&command_line);
-
-	const auto arguments = &control->arguments;
-
-	if (arguments->wait_pid) {
-#ifdef WIN32
-		// Synchronize permission is all we need for WaitForSingleObject()
-		constexpr DWORD DesiredAccess = SYNCHRONIZE;
-		constexpr BOOL InheritHandles = FALSE;
-		HANDLE process                = OpenProcess(DesiredAccess,
-                                             InheritHandles,
-                                             *arguments->wait_pid);
-		if (process) {
-			// Waits for the process to terminate.
-			// If we failed to open it, it's probably already dead.
-			constexpr DWORD Timeout = INFINITE;
-			WaitForSingleObject(process, Timeout);
-			CloseHandle(process);
-		}
-#else
-		for (;;) {
-			// Signal of 0 does not actually send a signal.
-			// It only checks for existance and permissions of the PID.
-			constexpr int Signal = 0;
-			int ret = kill(*arguments->wait_pid, Signal);
-			// ESRCH means PID does not exist.
-			if (ret == -1 && errno == ESRCH) {
-				break;
-			}
-			Delay(50);
-		}
-#endif // WIN32
-	}
-
-	switch_console_to_utf8();
-
-	// Set up logging after command line was parsed and trivial arguments
-	// have been handled
-	init_logger(*arguments, argc, argv);
-
-	LOG_MSG("%s version %s", DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
-	LOG_MSG("---");
-
-	LOG_MSG("Loguru version %d.%d.%d initialised",
-	        LOGURU_VERSION_MAJOR,
-	        LOGURU_VERSION_MINOR,
-	        LOGURU_VERSION_PATCH);
-
-	int return_code = 0;
-
-	try {
-		if (!arguments->working_dir.empty()) {
-			std::error_code ec;
-			std_fs::current_path(arguments->working_dir, ec);
-			if (ec) {
-				LOG_ERR("Cannot set working directory to %s",
-				        arguments->working_dir.c_str());
-			}
-		}
-
-		// Before SDL2/SDL3 video subsystem is initialised
-		set_wm_class();
-
-		// Create or determine the location of the config directory
-		// (e.g., in portable mode, the config directory is the
-		// executable dir).
-		//
-		// TODO Consider forcing portable mode in secure mode (this
-		// could be accomplished by passing a flag to InitConfigDir);.
-		//
-		InitConfigDir();
-
-		// Register essential DOS messages needed by some command line
-		// switches and during startup or reboot
-		register_command_line_help_message();
-
-		// We need to call this before initialising the modules to to
-		// support the '--list-countries' and '--list-layouts' command
-		// line options.
-		DOS_Locale_AddMessages();
-
-		// We need to call this before initialising the modules to to
-		// support the '--list-glshaders' command line option.
-		RENDER_AddMessages();
-
-		// Add [sdl] config section
-		init_sdl_config_section();
-
-		// Register the config sections and messages of all the other
-		// modules
-		DOSBOX_InitModuleConfigsAndMessages();
-
-		maybe_write_primary_config(*arguments);
-
-		// After DOSBOX_InitModuleConfigsAndMessages() all the config
-		// sections have been registered, so we're ready to parse the
-		// config files.
-		//
-		control->ParseConfigFiles(GetConfigDir());
-
-		// Handle command line options that don't start the emulator but
-		// only perform some actions and print the results to the console.
-		assert(argv && argv[0]);
-		const auto program_name = argv[0];
-
-		if (const auto return_code = maybe_handle_command_line_output_only_actions(
-		            *arguments, program_name);
-		    return_code) {
-			return *return_code;
-		}
-
-#if defined(WIN32) && !(C_DEBUGGER)
-		apply_windows_debugger_workaround(arguments->noconsole);
-#endif
-
-#if defined(WIN32)
-		SetConsoleCtrlHandler((PHANDLER_ROUTINE)console_event_handler, TRUE);
-#endif
-
-		init_sdl();
-
-		// Handle configuration settings passed with `--set` commands
-		// from the CLI.
-		handle_cli_set_commands(arguments->set);
-
-		maybe_create_resource_directories();
-
-		control->ParseEnv();
-
-		sdl_section_init();
-		DOSBOX_InitModules();
-
-		// All subsystems' hotkeys need to be registered at this point
-		// to ensure their hotkeys appear in the graphical mapper.
-		MAPPER_BindKeys(get_sdl_section());
-
-		if (arguments->startmapper) {
-			MAPPER_DisplayUI();
-		}
-
-		// Initialize the uptime counter when launching the first shell.
-		// This ensures that slow-performing configurable tasks (like
-		// loading MIDI SF2 files) have already been performed and won't
-		// affect this time.
-		DOSBOX_GetUptime();
-
-		// Start emulation
-		SHELL_InitAndRun();
-
-		// Shutdown and release
-		sdl_section_destroy();
-		DOSBOX_DestroyModules();
-
-	} catch (char* error) {
-		// TODO Maybe show popup dialog with the error in addition to
-		// logging it (use the tiny osdialog lib).
-		LOG_ERR("Unexpected error: %s", error);
-		return_code = 1;
-
-	} catch (const std::exception& e) {
-		// TODO Maybe show popup dialog with the error in addition to
-		// logging it (use the tiny osdialog lib).
-		LOG_ERR("Standard library exception: %s", e.what());
-		return_code = 1;
-
-	} catch (...) {
-		return_code = 1;
-	}
 
 #if defined(WIN32)
 	// Might not be needed if the shutdown function switches to windowed
-	// mode, but it doesn't hurt
+	// mode, but it doesn't hurt.
 	// TODO is this still needed on current SDL?
 	sticky_keys(true);
 #endif
-
-	// We already do this at exit, but do cleanup earlier in case of normal
-	// exit; this works around problems when atexit order clashes with SDL2
-	// cleanup order. Happens with SDL_VIDEODRIVER=wayland as of SDL 2.0.12.
-	quit_sdl();
-
-	return return_code;
 }
 
