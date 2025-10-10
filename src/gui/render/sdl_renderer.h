@@ -71,6 +71,9 @@ private:
 	// Contains the last fully rendered frame, waiting to be presented.
 	SDL_Surface* last_framebuf = {};
 
+	// True if the last framebuffer has been updated since the last present
+	bool last_framebuf_dirty = false;
+
 	SDL_PixelFormat* pixel_format = {};
 	SDL_Texture* texture          = {};
 
