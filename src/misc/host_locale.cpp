@@ -324,8 +324,8 @@ std::optional<DosCountry> iso_to_dos_country(const std::string& language,
 	return {};
 }
 
-std::string iso_to_language_file(const std::string& language,
-                                 const std::string& territory)
+std::vector<std::string> iso_to_language_files(const std::string& language,
+                                               const std::string& territory)
 {
 	std::string language_lower_case  = language;
 	std::string territory_upper_case = territory;
@@ -333,15 +333,25 @@ std::string iso_to_language_file(const std::string& language,
 	lowcase(language_lower_case);
 	upcase(territory_upper_case);
 
-	if (language_lower_case == "pt" && territory_upper_case == "BR") {
-		// We have a dedicated Brazilian translation
-		return "pt_BR";
-	} else if (language_lower_case == "c" || language_lower_case == "posix") {
+	if (language_lower_case == "c" || language_lower_case == "posix") {
 		// Default (dummy) language, used on POSIX systems
-		return "en";
+		return {"en"};
 	}
-	
-	return language_lower_case;
+
+	std::vector<std::string> result = {};
+
+	if (!territory_upper_case.empty()) {
+		result.emplace_back(language_lower_case + "_" + territory_upper_case);
+	}
+
+	if (language_lower_case == "pt" && territory_upper_case == "BR") {
+		// Brazilian Portuguese differs a lot from the regular one,
+		// they can't be substituted
+		return result;
+	}
+
+	result.push_back(language_lower_case);
+	return result;
 }
 
 // ***************************************************************************
