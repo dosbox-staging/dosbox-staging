@@ -159,9 +159,9 @@ SDL_Window* GFX_GetSDLWindow()
 static void quit_sdl()
 {
 #if !C_DEBUGGER
-		SDL_Quit();
+	SDL_Quit();
 #endif
-	        restore_console_encoding();
+	restore_console_encoding();
 }
 
 // Globals for keyboard initialisation
@@ -594,14 +594,15 @@ static void setup_presentation_mode()
 	case PresentationMode::HostRate: {
 		update_frame_time(GFX_GetHostRefreshRate());
 
-		// The primary use case for the 'host-rate' mode is a fixed refresh
-		// rate monitor running at 60 Hz with vsync enabled (with vsync off,
-		// we might as well just use 'dos-rate'). In this scenario, we need to
-		// present the frame a bit before the vsync happens, otherwise we'd
-		// "miss the train" and would have to wait for an extra frame period.
-		// This would increase latency and possibly cause audio glitches
-		// because it's a blocking wait, so it's better to be a bit generous
-		// with the time window.
+		// The primary use case for the 'host-rate' mode is a fixed
+		// refresh rate monitor running at 60 Hz with vsync enabled
+		// (with vsync off, we might as well just use 'dos-rate'). In
+		// this scenario, we need to present the frame a bit before the
+		// vsync happens, otherwise we'd "miss the train" and would have
+		// to wait for an extra frame period. This would increase
+		// latency and possibly cause audio glitches because it's a
+		// blocking wait, so it's better to be a bit generous with the
+		// time window.
 		//
 		// This value was determined by experimentation on our supported
 		// OSes. We might turn this a config setting if there's enough
@@ -637,7 +638,7 @@ static void notify_new_mouse_screen_params()
 	params.x_abs = static_cast<float>(abs_x);
 	params.y_abs = static_cast<float>(abs_y);
 
-	params.is_fullscreen = sdl.desktop.is_fullscreen;
+	params.is_fullscreen    = sdl.desktop.is_fullscreen;
 	params.is_multi_display = (SDL_GetNumVideoDisplays() > 1);
 
 	MOUSE_NewScreenParams(params);
@@ -807,7 +808,7 @@ static void enter_fullscreen()
 		                   FullscreenMode::Standard)
 		                        ? SDL_WINDOW_FULLSCREEN_DESKTOP
 		                        : SDL_WINDOW_FULLSCREEN;
- 
+
 		SDL_SetWindowFullscreen(sdl.window, mode); //-V2006
 	}
 
@@ -845,9 +846,10 @@ static void exit_fullscreen()
 		constexpr auto WindowedMode = 0;
 		SDL_SetWindowFullscreen(sdl.window, WindowedMode);
 
-		// On macOS, SDL_SetWindowSize() and SDL_SetWindowPosition() calls in
-		// fullscreen mode are no-ops, so we need to set the potentially
-		// changed window size and position when exiting fullscreen mode.
+		// On macOS, SDL_SetWindowSize() and SDL_SetWindowPosition()
+		// calls in fullscreen mode are no-ops, so we need to set the
+		// potentially changed window size and position when exiting
+		// fullscreen mode.
 		SDL_SetWindowSize(sdl.window,
 		                  sdl.desktop.window.width,
 		                  sdl.desktop.window.height);
@@ -2429,7 +2431,7 @@ static void adjust_ticks_after_present_frame(int64_t elapsed_us)
 	if (cumulative_time_rendered_us >= MicrosInMillisecond) {
 		// 1 tick == 1 millisecond
 		const auto cumulative_ticks_rendered = cumulative_time_rendered_us /
-			                               MicrosInMillisecond;
+		                                       MicrosInMillisecond;
 
 		DOSBOX_SetTicksDone(DOSBOX_GetTicksDone() - cumulative_ticks_rendered);
 
@@ -2503,7 +2505,8 @@ void GFX_MaybePresentFrame()
 #endif
 		sdl.presentation.last_present_time_us = end_us;
 
-		// Adjust "ticks done" counter by the time it took to present the frame
+		// Adjust "ticks done" counter by the time it took to present
+		// the frame
 		adjust_ticks_after_present_frame(GetTicksDiff(end_us, start_us));
 	}
 }
