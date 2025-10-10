@@ -648,7 +648,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "  <value>:  Loads a translation from the given file.\n"
 	        "Notes:\n"
 	        "  - The following language files are available:\n"
-	        "    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl' and 'ru'.\n"
+	        "    'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'pt_BR' and 'ru'.\n"
 	        "  - English is built-in, the rest is stored in the bundled\n"
 	        "    'resources/translations' directory.");
 
