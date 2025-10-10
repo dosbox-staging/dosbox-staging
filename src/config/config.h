@@ -5,8 +5,6 @@
 #ifndef DOSBOX_CONFIG_H
 #define DOSBOX_CONFIG_H
 
-#include "dosbox.h"
-
 #include <cassert>
 #include <deque>
 #include <functional>
@@ -150,7 +148,5 @@ public:
 
 using ConfigPtr = std::unique_ptr<Config>;
 extern ConfigPtr control;
-
-void DOSBOX_Restart(std::vector<std::string>& parameters = control->startup_params);
 
 #endif // DOSBOX_CONFIG_H

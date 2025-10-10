@@ -11,6 +11,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "dosbox_config.h"
 #include "gui/common.h"
@@ -86,10 +87,6 @@
 
 #define SDL_NOFRAME 0x00000020
 
-// Texture buffer and presentation functions and type-defines
-using update_frame_buffer_f = void();
-using present_frame_f       = void();
-
 constexpr void update_frame_noop()
 {
 	// no-op
@@ -119,10 +116,6 @@ struct SDL_Block {
 	bool wait_on_error = false;
 
 	uint32_t start_event_id = UINT32_MAX;
-
-#ifdef WIN32
-	uint16_t original_code_page = 0;
-#endif
 
 	bool is_paused = false;
 
@@ -204,9 +197,6 @@ struct SDL_Block {
 		int frame_time_us            = 0;
 		int early_present_window_us  = 0;
 		int64_t last_present_time_us = 0;
-
-		present_frame_f* present      = present_frame_noop;
-		update_frame_buffer_f* update = update_frame_noop;
 	} presentation = {};
 
 	bool use_exact_window_resolution = false;
