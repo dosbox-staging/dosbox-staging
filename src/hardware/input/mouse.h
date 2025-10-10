@@ -156,6 +156,10 @@ bool MOUSEDOS_StartDriver(const bool force_low_memory = false);
 void MOUSEDOS_BeforeNewVideoMode();
 void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing);
 
+// Mouse driver options, changeable when the driver is running
+void MOUSEDOS_SetImmediate(const bool state);
+void MOUSEDOS_SetModern(const bool state);
+
 // Handle communication of the simulated DOS driver with Windows via multiplex
 // functions 0x1605/0x1606//0x1607
 void MOUSEDOS_HandleWindowsStartup();

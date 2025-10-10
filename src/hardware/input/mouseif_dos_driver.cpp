@@ -81,12 +81,17 @@ static bool delay_running  = false;
 // true = delay timer expired, event can be sent immediately
 static bool delay_finished = true;
 
-// These values represent 'hardware' state, not driver state
+// Global state, to be shared by all the mouse driver instances
 
 // true = ignore absolute mouse position
 static bool use_relative = true;
 // true = no host mouse acceleration pre-applied
 static bool is_input_raw = true;
+
+// Whether to update mouse counters immediately
+static bool is_driver_immediate = false;
+// Whether to simulate v7.0+ driver version behavior
+static bool is_driver_modern = false;
 
 // true = rate was set by DOS application
 static bool rate_is_set     = false;
@@ -201,7 +206,7 @@ static bool is_immediate_mode()
 	// receiving notificaion, without event delay - but this is not
 	// compatible with Windows running as a guest sysystem, as we can only
 	// update the mouse driver state in a proper Windows VM context
-	return mouse_config.dos_driver_immediate && !is_win386_mode;
+	return is_driver_immediate && !is_win386_mode;
 }
 
 static bool has_pending_event()
@@ -1939,7 +1944,7 @@ static Bitu int33_handler()
 		// MS MOUSE v6.0+ - enable mouse driver
 		state.SetEnabled(true);
 		state.SetOldHidden(state.GetHidden());
-		if (mouse_config.dos_driver_modern) {
+		if (is_driver_modern) {
 			// Checked that MS driver alters AX this way starting
 			// from version 7.
 			reg_ax = 0xffff;
@@ -2597,6 +2602,30 @@ static Bitu win386_callout_handler()
 	return CBRET_NONE;
 }
 
+void MOUSEDOS_SetImmediate(const bool state)
+{
+	if (!MOUSEDOS_IsDriverStarted() || state == is_driver_immediate) {
+		// Nothing to do
+		return;
+	}
+
+	is_driver_immediate = state;
+	LOG_INFO("MOUSE (DOS): Built-in driver immediate mode %s",
+                 state ? "enabled" : "disabled");
+}
+
+void MOUSEDOS_SetModern(const bool state)
+{
+	if (!MOUSEDOS_IsDriverStarted() || state == is_driver_modern) {
+		// Nothing to do
+		return;
+	}
+
+	is_driver_modern = state;
+	LOG_INFO("MOUSE (DOS): Built-in driver immediate mode %s",
+                 state ? "enabled" : "disabled");
+}
+
 bool MOUSEDOS_NeedsAutoexecEntry()
 {
 	return mouse_config.dos_driver_autoexec;
@@ -2648,6 +2677,9 @@ static void start_driver()
 	state.SetUserCallbackSegment(0x6362); // magic value
 	state.SetHidden(1);                   // hide cursor on startup
 	state.SetBiosScreenMode(UINT8_MAX);   // non-existing mode
+
+	is_driver_immediate = false;
+	is_driver_modern    = false;
 
 	set_sensitivity(50, 50, 50);
 	reset_hardware();

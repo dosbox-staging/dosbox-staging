@@ -40,6 +40,9 @@ void MOUSE::Run()
 
 	RemoveUnsupportedOptions();
 
+	const std::string SwitchImmediate = "/immediate";
+	const std::string SwitchModern    = "/modern";
+
 	// The quiet mode should not inhibit error messages - checked with
 	// Microsoft Mouse Driver v9.01
 	const bool has_option_quiet = cmd->FindExistRemoveAll("/q");
@@ -49,6 +52,9 @@ void MOUSE::Run()
 	cmd->FindExistRemoveAll("on");
 
 	const bool has_option_low_memory = cmd->FindExistRemoveAll("/e");
+
+	const auto option_immediate = GetBoolOption(SwitchImmediate);
+	const auto option_modern    = GetBoolOption(SwitchModern);
 
 	// Check for unsupported/errorneous arguments
 	const auto params = cmd->GetArguments();
@@ -63,29 +69,100 @@ void MOUSE::Run()
 		return;
 	}
 
-	// Check if our simulated mouse driver is started
-	if (MOUSEDOS_IsDriverStarted()) {
+	// Check if we have a mouse driver running
+	const auto is_builtin_driver_started  = MOUSEDOS_IsDriverStarted();
+	const auto is_3rdparty_driver_started = !is_builtin_driver_started &&
+                                                IsAnyMouseDriverStarted();
+
+	const auto is_driver_started = is_builtin_driver_started ||
+	                               is_3rdparty_driver_started;
+
+	// Whether we have something to do after the driver is startup
+        const bool has_post_startup_job = option_immediate || option_modern;
+
+        // Quit with warning if we don't have anything to do
+        if (is_driver_started && !has_post_startup_job) {
 		WriteOut(MSG_Get("PROGRAM_MOUSE_ALREADY_INSTALLED"));
+		return;    	
+        }
+
+        // Start the driver if necessary
+        if (!is_driver_started) {
+		if (!MOUSEDOS_StartDriver(has_option_low_memory)) {
+			WriteOut(MSG_Get("PROGRAM_MOUSE_COULD_NOT_INSTALL"));
+			return;
+		}
+		if (!has_option_quiet) {
+			WriteOut(MSG_Get("PROGRAM_MOUSE_INSTALLED"));
+		}
+        }
+
+        // Driver already started, quit if no settings to apply
+	if (!has_post_startup_job) {
 		return;
 	}
 
-	// Check if 3rd party mouse driver is started
+	// Set it when settings are passed to the running driver
+	bool are_settings_updated = false;
+
+	// Set 'immediate' driver option if requested
+	if (option_immediate) {
+		if (is_3rdparty_driver_started) {
+			WriteOut(MSG_Get("PROGRAM_MOUSE_3RDPARTY_NO_EFFECT"),
+			         SwitchImmediate.c_str());
+		} else {
+			MOUSEDOS_SetImmediate(*option_immediate);
+			are_settings_updated = true;
+		}
+	}
+
+	// Set 'modern' driver option if requested
+	if (option_modern) {
+		if (is_3rdparty_driver_started) {
+			WriteOut(MSG_Get("PROGRAM_MOUSE_3RDPARTY_NO_EFFECT"),
+			         SwitchModern.c_str());
+		} else {
+			MOUSEDOS_SetModern(*option_modern);
+			are_settings_updated = true;
+		}
+	}
+
+	// Display confirmation message if necessary
+	if (!has_option_quiet && is_driver_started && are_settings_updated) {
+		WriteOut(MSG_Get("PROGRAM_MOUSE_SETTINGS_UPDATED"));	
+	}
+}
+
+bool MOUSE::IsAnyMouseDriverStarted()
+{
 	reg_ax = 0x00;
 	CALLBACK_RunRealInt(0x33);
-	if (reg_ax == 0xFFFF) {
-		WriteOut(MSG_Get("PROGRAM_MOUSE_ALREADY_INSTALLED"));
-		return;
+	return reg_ax == 0xFFFF;
+}
+
+std::optional<bool> MOUSE::GetBoolOption(const std::string& begin)
+{
+	std::optional<bool> result = {};
+
+	// In case of two opposite option, the later one wins - just like with
+	// the original Microsoft mouse driver
+	while (true) {
+		std::string value = {};
+		if (!cmd->FindStringCaseInsensitiveBegin(begin, value)) {
+			break;
+		}
+
+		if (value.empty() || iequals(value, ":on")) {
+			result = true;
+		} else if (iequals(value, ":off")) {
+			result = false;
+		}
+
+		constexpr bool Remove = true;
+		cmd->FindStringCaseInsensitiveBegin(begin, value, Remove);
 	}
 
-	// Try to start the driver
-	if (!MOUSEDOS_StartDriver(has_option_low_memory)) {
-		WriteOut(MSG_Get("PROGRAM_MOUSE_COULD_NOT_INSTALL"));
-		return;
-	}
-
-	if (!has_option_quiet) {
-		WriteOut(MSG_Get("PROGRAM_MOUSE_INSTALLED"));
-	}
+	return result;
 }
 
 void MOUSE::RemoveUnsupportedOptions()
@@ -168,17 +245,37 @@ void MOUSE::AddMessages()
 	        "Load the built-in mouse driver.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=light-green]mouse[reset] [on] [/e] [/q]\n"
+	        "  [color=light-green]mouse[reset] [on] [/e] [/q]"
+	        " [/immediate[:[color=white]on[reset]|:[color=white]off[reset]]]"
+	        " [/modern[:[color=white]on[reset]|:[color=white]off[reset]]]\n"
 	        "\n"
 	        "Parameters:\n"
-	        "  on    load driver (default action)\n"
-	        "  /e    load driver into low (conventional) memory\n"
-	        "  /q    quiet mode (skip confirmation messages)\n"
+	        "  on                    load driver (default action)\n"
+	        "  /e                    load driver into low (conventional) memory\n"
+	        "  /q                    quiet mode (skip confirmation messages)\n"
+	        "  /immediate[:[color=white]on[reset]|:[color=white]off[reset]]"
+	        "  if [color=white]on[reset], update movement counters immediately,\n"
+	        "                        without waiting for interrupt\n"
+	        "  /modern[:[color=white]on[reset]|:[color=white]off[reset]]   "
+	        "  if [color=white]on[reset], emulate Microsoft mouse driver v7.0+ behaviour,\n"
+	        "                        otherwise emulate the v6.0 and earlier behaviour\n"
 	        "\n"
 	        "Notes:\n"
-	        "  The built-in driver bypasses the PS/2 and serial (COM) ports and communicates\n"
-	        "  with the mouse directly. This results in lower input lag, smoother movement,\n"
-	        "  and increased mouse responsiveness.\n");
+	        "  - The built-in driver bypasses the PS/2 and serial (COM) ports and\n"
+	        "    communicates with the mouse directly. This results in lower input lag,\n"
+	        "    smoother movement, and increased mouse responsiveness.\n"
+	        "  - The immediate mode may improve mouse latency in fast-paced games (arcade,\n"
+	        "    FPS, etc.), but might cause issues in some titles.\n"
+	        "    List of known incompatible games:\n"
+	        "      - Ultima Underworld: The Stygian Abyss\n"
+	        "      - Ultima Underworld II: Labyrinth of Worlds\n"
+                "  - Descent II with the official Voodoo patch is the only game found so far\n"
+                "    to require the modern (v7.0+) behaviour.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=light-green]mouse[reset] /immediate"
+	        "    ; load the built-in mouse driver if necessary,\n"
+	        "                      ; enable the immediate mode");
 
 	MSG_Add("PROGRAM_MOUSE_INSTALLED", "Mouse driver installed.\n");
 
@@ -186,6 +283,12 @@ void MOUSE::AddMessages()
 	        "Mouse driver is already installed.\n");
 	MSG_Add("PROGRAM_MOUSE_COULD_NOT_INSTALL",
 	        "Could not install the mouse driver.\n");
+
+	MSG_Add("PROGRAM_MOUSE_SETTINGS_UPDATED",
+	        "Mouse driver settings updated.\n");
+
+	MSG_Add("PROGRAM_MOUSE_3RDPARTY_NO_EFFECT",
+		"The '%s' switch has no effect on 3rd party mouse drivers.\n");
 
 	MSG_Add("PROGRAM_MOUSE_PORT_SELECTION",
 	        "Mouse port selection not supported, driver always uses the host mouse.");

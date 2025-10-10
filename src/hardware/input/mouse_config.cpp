@@ -83,8 +83,6 @@ static const std::vector<uint16_t> list_rates = {
         // issues.
 };
 
-constexpr auto DefaultBuiltinDosMouseDriverOptions = "";
-
 const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 {
 	return list_rates;
@@ -202,65 +200,6 @@ static void set_serial_mouse_model(const std::string_view model_str)
 	assert(result);
 }
 
-static void set_dos_driver_options(const std::string_view options_str)
-{
-	const std::string OptionImmediate = "immediate";
-	const std::string OptionModern    = "modern";
-
-	auto& last_options_str = mouse_config.dos_driver_last_options_str;
-	if (last_options_str == options_str) {
-		return;
-	}
-	last_options_str = options_str;
-
-	mouse_config.dos_driver_immediate = false;
-	mouse_config.dos_driver_modern    = false;
-
-	for (const auto& token : split(options_str, " ,")) {
-		if (token == OptionImmediate) {
-			mouse_config.dos_driver_immediate = true;
-		} else if (token == OptionModern) {
-			mouse_config.dos_driver_modern = true;
-		} else {
-			LOG_WARNING(
-			        "MOUSE: Invalid 'builtin_dos_mouse_driver_options' "
-			        "parameter: '%s', using defaults",
-			        token.c_str());
-
-			set_section_property_value("mouse",
-			                           "builtin_dos_mouse_driver_options",
-			                           DefaultBuiltinDosMouseDriverOptions);
-
-			set_dos_driver_options(DefaultBuiltinDosMouseDriverOptions);
-			return;
-		}
-	}
-
-	// Log new config options
-	static std::string last_logged_str = "";
-	if (options_str == last_logged_str) {
-		return;
-	}
-
-	std::string log_options = {};
-	if (mouse_config.dos_driver_immediate) {
-		log_options = OptionImmediate;
-	}
-	if (mouse_config.dos_driver_modern) {
-		if (!log_options.empty()) {
-			log_options += ", ";
-		}
-		log_options += OptionModern;
-	}
-
-	if (log_options.empty()) {
-		log_options = "none";
-	}
-
-	LOG_INFO("MOUSE (DOS): Driver options: %s", log_options.c_str());
-	last_logged_str = options_str;
-}
-
 static void set_sensitivity(const std::string_view sensitivity_str)
 {
 	// Coefficient to convert percentage in integer to float
@@ -373,7 +312,6 @@ void MOUSE_Init()
 	mouse_config.raw_input      = section->GetBool("mouse_raw_input");
 
 	set_dos_driver_model(section->GetString("builtin_dos_mouse_driver_model"));
-	set_dos_driver_options(section->GetString("builtin_dos_mouse_driver_options"));
 
 	// Built-in DOS driver configuration
 	set_dos_driver_mode(section->GetString("builtin_dos_mouse_driver"));
@@ -412,10 +350,6 @@ static void notify_mouse_setting_updated(SectionProp& section,
 	if (prop_name == "builtin_dos_mouse_driver_model") {
 		set_dos_driver_model(
 		        section.GetString("builtin_dos_mouse_driver_model"));
-
-	} else if (prop_name == "builtin_dos_mouse_driver_options") {
-		set_dos_driver_options(
-		        section.GetString("builtin_dos_mouse_driver_options"));
 
 	} else if (prop_name == "mouse_capture") {
 		set_capture_type(section.GetString("mouse_capture"));
@@ -527,12 +461,15 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "  off:     Disable the built-in mouse driver. You can still start it at runtime\n"
 	        "           by executing the bundled MOUSE.COM from drive Z.\n"
 	        "Notes:\n"
+	        "  - The MOUSE.COM and MOUSECTL.COM tools available on drive Z can be used to\n"
+	        "    tune the mouse behaviour, i.e. to work around compatibility problems or\n"
+	        "    to get a smoother movement in certain games.\n"
 	        "  - The `ps2_mouse_model` and `com_mouse_model` settings have no effect on the\n"
 	        "    built-in driver.\n"
 	        "  - The driver is auto-disabled if you boot into real MS-DOS or Windows 9x\n"
 	        "    under DOSBox. Under Windows 3.x, the driver is not disabled, but the\n"
 	        "    Windows 3.x mouse driver takes over.\n"
-	        "  - To use a real DOS mouse driver (e.g., MOUSE.COM or CTMOUSE.EXE), configure\n"
+	        "  - To use a real DOS mouse driver (e.g., MOUSE.EXE or CTMOUSE.EXE), configure\n"
 	        "    the mouse type with `ps2_mouse_model` or `com_mouse_model`, then load the\n"
 	        "    driver.\n");
 
@@ -560,27 +497,8 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "            No DOS game uses the mouse wheel, only a handful of DOS applications\n"
 	        "            and Windows 3.x with special third-party drivers.");
 
-	prop_str = secprop.AddString("builtin_dos_mouse_driver_options",
-	                             Always,
-	                             DefaultBuiltinDosMouseDriverOptions);
-	assert(prop_str);
-	prop_str->SetHelp(
-	        "Additional built-in DOS mouse driver settings as a list of space or comma\n"
-	        "separated options (unset by default).\n"
-	        "  immediate:  Update mouse movement counters immediately, without waiting for\n"
-	        "              interrupt. May improve mouse latency in fast-paced games (arcade,\n"
-	        "              FPS, etc.), but might cause issues in some titles.\n"
-	        "              List of known incompatible games:\n"
-	        "                - Ultima Underworld: The Stygian Abyss\n"
-	        "                - Ultima Underworld II: Labyrinth of Worlds\n"
-	        "              Please report other incompatible games so we can update this list.\n"
-	        "  modern:     If provided, v7.0+ Microsoft mouse driver behaviour is emulated,\n"
-	        "              otherwise the v6.0 and earlier behaviour (the two are slightly\n"
-	        "              incompatible). Only Descent II with the official Voodoo patch has\n"
-	        "              been found to require the v7.0+ behaviour so far.");
-
 	prop_bool = secprop.AddBool("dos_mouse_immediate", Deprecated, false);
-	prop_bool->SetHelp("Configure using 'builtin_dos_mouse_driver_options'.");
+	prop_bool->SetHelp("Use the internal 'mouse' tool to configure.");
 
 	// Physical mice configuration
 

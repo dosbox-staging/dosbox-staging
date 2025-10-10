@@ -79,9 +79,6 @@ struct MouseConfig {
 	bool dos_driver_autoexec = false;
 	bool dos_driver_no_tsr   = false;
 
-	bool dos_driver_modern    = false;
-	bool dos_driver_immediate = false;
-
 	std::string dos_driver_last_options_str = {};
 
 	MouseModelDos model_dos = MouseModelDos::TwoButton;

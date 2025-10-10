@@ -6,6 +6,8 @@
 
 #include "dos/programs.h"
 
+#include <optional>
+
 class MOUSE final : public Program {
 public:
 	MOUSE()
@@ -19,6 +21,10 @@ public:
 	void Run() override;
 
 private:
+	bool IsAnyMouseDriverStarted();
+
+	std::optional<bool> GetBoolOption(const std::string& begin);
+
 	void RemoveUnsupportedOptions();
 
 	static void AddMessages();
