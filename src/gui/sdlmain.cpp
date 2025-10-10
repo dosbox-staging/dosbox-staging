@@ -6,10 +6,6 @@
 
 #include "private/common.h"
 
-#include <cassert>
-#include <cerrno>
-#include <cmath>
-#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -26,27 +22,21 @@
 #include "config/config.h"
 #include "config/setup.h"
 #include "cpu/cpu.h"
-#include "debugger/debugger.h"
 #include "dosbox.h"
-#include "dosbox_config.h"
 #include "gui/mapper.h"
 #include "gui/render/opengl_renderer.h"
 #include "gui/render/sdl_renderer.h"
 #include "gui/titlebar.h"
-#include "hardware/input/joystick.h"
 #include "hardware/input/keyboard.h"
 #include "hardware/input/mouse.h"
-#include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "hardware/video/vga.h"
-#include "ints/int10.h"
 #include "misc/cross.h"
 #include "misc/notifications.h"
 #include "misc/support.h"
 #include "misc/tracy.h"
 #include "misc/video.h"
 #include "utils/checks.h"
-#include "utils/fs_utils.h"
 #include "utils/math_utils.h"
 #include "utils/rect.h"
 #include "utils/string_utils.h"

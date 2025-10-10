@@ -5,14 +5,11 @@
 #include "dosbox.h"
 
 #include <chrono>
-#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <memory>
-#include <thread>
-#include <unistd.h>
 
 #include "audio/disk_noise.h"
 #include "audio/mixer.h"
