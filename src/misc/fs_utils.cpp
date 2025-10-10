@@ -169,3 +169,59 @@ int64_t get_native_file_position(const NativeFileHandle handle)
 {
 	return seek_native_file(handle, 0, NativeSeek::Current);
 }
+
+std::optional<uint8_t> read_u8_at(std::ifstream &stream, std::ifstream::pos_type pos)
+{
+	stream.seekg(pos);
+	if (stream.fail()) {
+		return {};
+	}
+	uint8_t ret = 0;
+	stream.read(reinterpret_cast<char *>(&ret), sizeof(uint8_t));
+	if (stream.fail()) {
+		return {};
+	}
+	return ret;
+}
+
+std::optional<uint16_t> read_native_u16_at(std::ifstream &stream, std::ifstream::pos_type pos)
+{
+	stream.seekg(pos);
+	if (stream.fail()) {
+		return {};
+	}
+	uint16_t ret = 0;
+	stream.read(reinterpret_cast<char *>(&ret), sizeof(uint16_t));
+	if (stream.fail()) {
+		return {};
+	}
+	return le16_to_host(ret);
+}
+
+std::optional<uint32_t> read_native_u32_at(std::ifstream &stream, std::ifstream::pos_type pos)
+{
+	stream.seekg(pos);
+	if (stream.fail()) {
+		return {};
+	}
+	uint32_t ret = 0;
+	stream.read(reinterpret_cast<char *>(&ret), sizeof(uint32_t));
+	if (stream.fail()) {
+		return {};
+	}
+	return le32_to_host(ret);
+}
+
+std::optional<uint64_t> read_native_u64_at(std::ifstream &stream, std::ifstream::pos_type pos)
+{
+	stream.seekg(pos);
+	if (stream.fail()) {
+		return {};
+	}
+	uint32_t ret = 0;
+	stream.read(reinterpret_cast<char *>(&ret), sizeof(uint64_t));
+	if (stream.fail()) {
+		return {};
+	}
+	return le64_to_host(ret);
+}
