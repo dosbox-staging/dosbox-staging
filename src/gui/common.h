@@ -13,7 +13,6 @@
 // prefix, move the functions to more appropriate places, like the renderer,
 // etc.)
 
-void GFX_SetWmClass();
 void GFX_AddConfigSection();
 
 void GFX_InitSdl();

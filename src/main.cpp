@@ -742,9 +742,6 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		// Before SDL2/SDL3 video subsystem is initialised
-		GFX_SetWmClass();
-
 		// Create or determine the location of the config directory
 		// (e.g., in portable mode, the config directory is the
 		// executable dir).
