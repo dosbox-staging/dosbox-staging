@@ -15,7 +15,6 @@
 
 void GFX_AddConfigSection();
 
-void GFX_InitSdl();
 void GFX_Init();
 void GFX_Destroy();
 

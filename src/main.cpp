@@ -804,8 +804,6 @@ int main(int argc, char* argv[])
 		SetConsoleCtrlHandler((PHANDLER_ROUTINE)console_event_handler, TRUE);
 #endif
 
-		GFX_InitSdl();
-
 		// Handle configuration settings passed with `--set` commands
 		// from the CLI.
 		handle_cli_set_commands(arguments->set);
@@ -814,6 +812,7 @@ int main(int argc, char* argv[])
 
 		control->ParseEnv();
 
+		// Initialise the GUI
 		GFX_Init();
 
 		DOSBOX_InitModules();
