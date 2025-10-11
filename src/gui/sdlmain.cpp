@@ -381,7 +381,7 @@ void GFX_Stop()
 	if (sdl.updating_framebuffer) {
 		GFX_EndUpdate();
 	}
-	sdl.active = false;
+	sdl.draw.active = false;
 }
 
 void GFX_ResetScreen()
@@ -1125,7 +1125,7 @@ static void switch_fullscreen_handler(bool pressed)
 //
 bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 {
-	if (!sdl.active || sdl.updating_framebuffer) {
+	if (!sdl.draw.active || sdl.updating_framebuffer) {
 		return false;
 	}
 
@@ -1201,7 +1201,7 @@ uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 
 void GFX_Start()
 {
-	sdl.active = true;
+	sdl.draw.active = true;
 }
 
 static void gui_destroy()
@@ -2486,7 +2486,7 @@ void GFX_MaybePresentFrame()
 
 	if (force_present || (curr_frame_time_us >= present_window_start_us)) {
 
-		if (sdl.active) {
+		if (sdl.draw.active) {
 			sdl.renderer->PrepareFrame();
 			sdl.renderer->PresentFrame();
 		}
