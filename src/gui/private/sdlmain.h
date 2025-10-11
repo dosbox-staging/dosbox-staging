@@ -128,40 +128,35 @@ struct SDL_Block {
 	std::optional<VideoMode> maybe_video_mode = {};
 
 	struct {
-		struct {
-			FullscreenMode mode = {};
+		FullscreenMode mode = {};
 
-			int width  = 0;
-			int height = 0;
+		int width  = 0;
+		int height = 0;
 
-			bool is_forced_borderless_fullscreen = false;
-
-			struct {
-				int width  = 0;
-				int height = 0;
-				int x_pos  = 0;
-				int y_pos  = 0;
-			} prev_window;
-		} fullscreen = {};
+		bool is_forced_borderless_fullscreen = false;
 
 		struct {
-			// User-configured window size
 			int width  = 0;
 			int height = 0;
-			int x_pos  = SDL_WINDOWPOS_UNDEFINED;
-			int y_pos  = SDL_WINDOWPOS_UNDEFINED;
+			int x_pos  = 0;
+			int y_pos  = 0;
+		} prev_window;
+	} fullscreen = {};
 
-			// Instantaneous canvas size of the window
-			SDL_Rect canvas_size = {};
-		} window = {};
+	struct {
 
-		PixelFormat pixel_format = {};
+		// User-configured window size
+		int width  = 0;
+		int height = 0;
+		int x_pos  = SDL_WINDOWPOS_UNDEFINED;
+		int y_pos  = SDL_WINDOWPOS_UNDEFINED;
 
-		float dpi_scale = 1.0f;
+		// Instantaneous canvas size of the window
+		SDL_Rect canvas_size = {};
+	} windowed = {};
 
-		bool is_fullscreen = false;
-
-	} desktop = {};
+	float dpi_scale    = 1.0f;
+	bool is_fullscreen = false;
 
 	struct {
 		bool windowed   = false;
