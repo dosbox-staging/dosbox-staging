@@ -101,8 +101,6 @@ struct SDL_Block {
 	float dpi_scale    = 1.0f;
 	bool is_fullscreen = false;
 
-	bool use_exact_window_resolution = false;
-
 	// If this isn't set don't draw
 	bool active = false;
 
