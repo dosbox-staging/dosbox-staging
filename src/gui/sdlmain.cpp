@@ -399,13 +399,13 @@ void GFX_ResetScreen()
 
 static bool is_vsync_enabled()
 {
-	return sdl.desktop.is_fullscreen ? sdl.vsync.fullscreen : sdl.vsync.windowed;
+	return sdl.is_fullscreen ? sdl.vsync.fullscreen : sdl.vsync.windowed;
 }
 
 PresentationMode GFX_GetPresentationMode()
 {
-	return sdl.desktop.is_fullscreen ? sdl.presentation.fullscreen_mode
-	                                 : sdl.presentation.windowed_mode;
+	return sdl.is_fullscreen ? sdl.presentation.fullscreen_mode
+	                         : sdl.presentation.windowed_mode;
 }
 
 DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px)
@@ -570,8 +570,7 @@ static void notify_new_mouse_screen_params()
 
 	// It is important to scale not just the size of the rectangle but also
 	// its starting point by the inverse of the DPI scale factor.
-	params.draw_rect =
-	        to_rect(sdl.draw_rect_px).Copy().Scale(1.0f / sdl.desktop.dpi_scale);
+	params.draw_rect = to_rect(sdl.draw_rect_px).Copy().Scale(1.0f / sdl.dpi_scale);
 
 	int abs_x = 0;
 	int abs_y = 0;
@@ -580,7 +579,7 @@ static void notify_new_mouse_screen_params()
 	params.x_abs = static_cast<float>(abs_x);
 	params.y_abs = static_cast<float>(abs_y);
 
-	params.is_fullscreen    = sdl.desktop.is_fullscreen;
+	params.is_fullscreen    = sdl.is_fullscreen;
 	params.is_multi_display = (SDL_GetNumVideoDisplays() > 1);
 
 	MOUSE_NewScreenParams(params);
@@ -651,14 +650,14 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	const auto new_dpi_scale = canvas_size_px.w /
 	                           static_cast<float>(width_in_logical_units);
 
-	if (std::abs(new_dpi_scale - sdl.desktop.dpi_scale) < DBL_EPSILON) {
+	if (std::abs(new_dpi_scale - sdl.dpi_scale) < DBL_EPSILON) {
 		// LOG_MSG("SDL: DPI scale hasn't changed (still %f)",
-		//         sdl.desktop.dpi_scale);
+		//         sdl.dpi_scale);
 		return;
 	}
-	sdl.desktop.dpi_scale = new_dpi_scale;
+	sdl.dpi_scale = new_dpi_scale;
 	// LOG_MSG("SDL: DPI scale updated from %f to %f",
-	//         sdl.desktop.dpi_scale,
+	//         sdl.dpi_scale,
 	//         new_dpi_scale);
 
 	apply_new_dpi_scale(new_dpi_scale);
@@ -668,13 +667,13 @@ static void maybe_handle_screen_rotation(const int new_width, const int new_heig
 {
 	// Maybe a screen rotation has just occurred, so we simply resize.
 	// There may be a different cause for a forced resized, though.
-	if (sdl.desktop.is_fullscreen) {
+	if (sdl.is_fullscreen) {
 
 		// Note: We should not use get_display_dimensions()
 		// (SDL_GetDisplayBounds) on Android after a screen rotation:
 		// The older values from application startup are returned.
-		sdl.desktop.fullscreen.width  = new_width;
-		sdl.desktop.fullscreen.height = new_height;
+		sdl.fullscreen.width  = new_width;
+		sdl.fullscreen.height = new_height;
 	}
 }
 
@@ -696,9 +695,9 @@ static void configure_window_decorations()
 
 static void enter_fullscreen()
 {
-	sdl.desktop.is_fullscreen = true;
+	sdl.is_fullscreen = true;
 
-	if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
 
 		// enter_fullscreen() can be called multiple times in a row by
 		// the existing code while still in fullscreen mode. That would
@@ -711,7 +710,7 @@ static void enter_fullscreen()
 		// Once enter_fullscreen() and exit_fullscreen() are always
 		// called in pairs, this workaround can be removed.
 		//
-		if (sdl.desktop.fullscreen.is_forced_borderless_fullscreen) {
+		if (sdl.fullscreen.is_forced_borderless_fullscreen) {
 			return;
 		}
 
@@ -723,22 +722,22 @@ static void enter_fullscreen()
 		// fullscreen optimisation won't kick in.
 		//
 		SDL_GetWindowSize(sdl.window,
-		                  &sdl.desktop.fullscreen.prev_window.width,
-		                  &sdl.desktop.fullscreen.prev_window.height);
+		                  &sdl.fullscreen.prev_window.width,
+		                  &sdl.fullscreen.prev_window.height);
 
 		SDL_GetWindowPosition(sdl.window,
-		                      &sdl.desktop.fullscreen.prev_window.x_pos,
-		                      &sdl.desktop.fullscreen.prev_window.y_pos);
+		                      &sdl.fullscreen.prev_window.x_pos,
+		                      &sdl.fullscreen.prev_window.y_pos);
 
 		SDL_SetWindowBordered(sdl.window, SDL_FALSE);
 		SDL_SetWindowResizable(sdl.window, SDL_FALSE);
 		SDL_SetWindowPosition(sdl.window, 0, 0);
 
 		SDL_SetWindowSize(sdl.window,
-		                  sdl.desktop.fullscreen.width + 1,
-		                  sdl.desktop.fullscreen.height);
+		                  sdl.fullscreen.width + 1,
+		                  sdl.fullscreen.height);
 
-		sdl.desktop.fullscreen.is_forced_borderless_fullscreen = true;
+		sdl.fullscreen.is_forced_borderless_fullscreen = true;
 
 		// Disable transparency in fullscreen mode
 		SDL_SetWindowOpacity(sdl.window, 100);
@@ -746,8 +745,7 @@ static void enter_fullscreen()
 		maybe_log_display_properties();
 
 	} else {
-		const auto mode = (sdl.desktop.fullscreen.mode ==
-		                   FullscreenMode::Standard)
+		const auto mode = (sdl.fullscreen.mode == FullscreenMode::Standard)
 		                        ? SDL_WINDOW_FULLSCREEN_DESKTOP
 		                        : SDL_WINDOW_FULLSCREEN;
 
@@ -760,9 +758,9 @@ static void enter_fullscreen()
 
 static void exit_fullscreen()
 {
-	sdl.desktop.is_fullscreen = false;
+	sdl.is_fullscreen = false;
 
-	if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
 		// Restore the previous window state when exiting our "fake"
 		// borderless fullscreen mode.
 		//
@@ -771,16 +769,16 @@ static void exit_fullscreen()
 		SDL_SetWindowResizable(sdl.window, SDL_TRUE);
 
 		SDL_SetWindowSize(sdl.window,
-		                  sdl.desktop.fullscreen.prev_window.width,
-		                  sdl.desktop.fullscreen.prev_window.height);
+		                  sdl.fullscreen.prev_window.width,
+		                  sdl.fullscreen.prev_window.height);
 
 		SDL_SetWindowPosition(sdl.window,
-		                      sdl.desktop.fullscreen.prev_window.x_pos,
-		                      sdl.desktop.fullscreen.prev_window.y_pos);
+		                      sdl.fullscreen.prev_window.x_pos,
+		                      sdl.fullscreen.prev_window.y_pos);
 
 		configure_window_transparency();
 
-		sdl.desktop.fullscreen.is_forced_borderless_fullscreen = false;
+		sdl.fullscreen.is_forced_borderless_fullscreen = false;
 
 		maybe_log_display_properties();
 
@@ -792,13 +790,11 @@ static void exit_fullscreen()
 		// calls in fullscreen mode are no-ops, so we need to set the
 		// potentially changed window size and position when exiting
 		// fullscreen mode.
-		SDL_SetWindowSize(sdl.window,
-		                  sdl.desktop.window.width,
-		                  sdl.desktop.window.height);
+		SDL_SetWindowSize(sdl.window, sdl.windowed.width, sdl.windowed.height);
 
 		SDL_SetWindowPosition(sdl.window,
-		                      sdl.desktop.window.x_pos,
-		                      sdl.desktop.window.y_pos);
+		                      sdl.windowed.x_pos,
+		                      sdl.windowed.y_pos);
 	}
 
 	// We need to disable transparency in fullscreen on macOS
@@ -865,7 +861,7 @@ DosBox::Rect GFX_GetViewportSizeInPixels()
 
 float GFX_GetDpiScaleFactor()
 {
-	return sdl.desktop.dpi_scale;
+	return sdl.dpi_scale;
 }
 
 static bool is_using_kmsdrm_driver()
@@ -937,7 +933,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	sdl.draw.callback = callback;
 
 	// Update fullscreen display mode.
-	if (!sdl.desktop.is_fullscreen) {
+	if (!sdl.is_fullscreen) {
 		SDL_DisplayMode desired = {};
 		SDL_GetDesktopDisplayMode(sdl.display_number, &desired);
 
@@ -1039,7 +1035,7 @@ static void focus_input()
 #endif
 
 	// Ensure we have input focus when in fullscreen
-	if (!sdl.desktop.is_fullscreen) {
+	if (!sdl.is_fullscreen) {
 		return;
 	}
 	// Do we already have focus?
@@ -1087,27 +1083,25 @@ static void sticky_keys(bool restore)
 static void switch_fullscreen()
 {
 	// Record the window's current canvas size if we're departing window-mode
-	if (!sdl.desktop.is_fullscreen) {
-		sdl.desktop.window.canvas_size = to_sdl_rect(
+	if (!sdl.is_fullscreen) {
+		sdl.windowed.canvas_size = to_sdl_rect(
 		        sdl.renderer->GetCanvasSizeInPixels());
 	}
 
 #if defined(WIN32)
 	// We are about to switch to the opposite of our current mode
-	// (ie: opposite of whatever sdl.desktop.is_fullscreen holds).
+	// (ie: opposite of whatever `sdl.is_fullscreen` holds).
 	// Sticky-keys should be set to the opposite of fullscreen,
 	// so we simply apply the bool of the mode we're switching out-of.
-	sticky_keys(sdl.desktop.is_fullscreen);
+	sticky_keys(sdl.is_fullscreen);
 #endif
-	if (sdl.desktop.is_fullscreen) {
+	if (sdl.is_fullscreen) {
 		exit_fullscreen();
 	} else {
 		enter_fullscreen();
 	}
 
-	set_section_property_value("sdl",
-	                           "fullscreen",
-	                           sdl.desktop.is_fullscreen ? "on" : "off");
+	set_section_property_value("sdl", "fullscreen", sdl.is_fullscreen ? "on" : "off");
 
 	focus_input();
 	setup_presentation_mode();
@@ -1413,25 +1407,25 @@ static std::optional<SDL_Point> parse_window_position_conf(const std::string& wi
 static void save_window_position(const std::optional<SDL_Point> pos)
 {
 	if (pos) {
-		if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
-			sdl.desktop.fullscreen.prev_window.x_pos = pos->x;
-			sdl.desktop.fullscreen.prev_window.y_pos = pos->y;
+		if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+			sdl.fullscreen.prev_window.x_pos = pos->x;
+			sdl.fullscreen.prev_window.y_pos = pos->y;
 		} else {
-			sdl.desktop.window.x_pos = pos->x;
-			sdl.desktop.window.y_pos = pos->y;
+			sdl.windowed.x_pos = pos->x;
+			sdl.windowed.y_pos = pos->y;
 		}
 	} else {
-		if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
-			sdl.desktop.fullscreen.prev_window.x_pos =
-			        SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
-
-			sdl.desktop.fullscreen.prev_window.y_pos =
-			        SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
-		} else {
-			sdl.desktop.window.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+		if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+			sdl.fullscreen.prev_window.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
 			        sdl.display_number);
 
-			sdl.desktop.window.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+			sdl.fullscreen.prev_window.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+			        sdl.display_number);
+		} else {
+			sdl.windowed.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+			        sdl.display_number);
+
+			sdl.windowed.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
 			        sdl.display_number);
 		}
 	}
@@ -1442,14 +1436,14 @@ static void save_window_size(const int w, const int h)
 {
 	assert(w > 0 && h > 0);
 
-	// The desktop.window size stores the user-configured window size.
-	// During runtime, the actual SDL window size might differ from this
-	// depending on the aspect ratio, window DPI, or manual resizing.
-	sdl.desktop.window.width  = w;
-	sdl.desktop.window.height = h;
+	// `sdl.window` size stores the user-configured window size. During
+	// runtime, the actual SDL window size might differ from this depending
+	// on the aspect ratio, window DPI, or manual resizing.
+	sdl.windowed.width  = w;
+	sdl.windowed.height = h;
 
 	// Initialize the window's canvas size if it hasn't yet been set.
-	auto& window_canvas_size = sdl.desktop.window.canvas_size;
+	auto& window_canvas_size = sdl.windowed.canvas_size;
 
 	if (window_canvas_size.w <= 0 || window_canvas_size.h <= 0) {
 		window_canvas_size.w = w;
@@ -1465,7 +1459,7 @@ static void save_window_size(const int w, const int h)
 // This function returns a refined size and additionally populates the
 // following struct members:
 //
-//  - 'sdl.desktop.window', with the refined size.
+//  - 'sdl.window', with the refined size.
 //
 static void configure_window_size()
 {
@@ -1538,8 +1532,8 @@ static int get_sdl_window_flags()
 		flags |= SDL_WINDOW_BORDERLESS;
 	}
 
-	if (sdl.desktop.is_fullscreen) {
-		switch (sdl.desktop.fullscreen.mode) {
+	if (sdl.is_fullscreen) {
+		switch (sdl.fullscreen.mode) {
 		case FullscreenMode::Standard:
 			flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 			break;
@@ -1559,12 +1553,12 @@ static int get_sdl_window_flags()
 static void setup_fullscreen_mode()
 {
 	// Set fullscreen display mode
-	if (sdl.desktop.fullscreen.mode != FullscreenMode::ForcedBorderless) {
+	if (sdl.fullscreen.mode != FullscreenMode::ForcedBorderless) {
 		SDL_DisplayMode fullscreen_mode = {};
 
 		const SDL_DisplayMode requested_mode = {0,
-		                                        sdl.desktop.fullscreen.width,
-		                                        sdl.desktop.fullscreen.height,
+		                                        sdl.fullscreen.width,
+		                                        sdl.fullscreen.height,
 		                                        0,
 		                                        nullptr};
 
@@ -1600,10 +1594,10 @@ static void create_window_and_renderer()
 
 		try {
 			sdl.renderer = std::make_unique<OpenGlRenderer>(
-			        sdl.desktop.window.x_pos,
-			        sdl.desktop.window.y_pos,
-			        sdl.desktop.window.width,
-			        sdl.desktop.window.height,
+			        sdl.windowed.x_pos,
+			        sdl.windowed.y_pos,
+			        sdl.windowed.width,
+			        sdl.windowed.height,
 			        get_sdl_window_flags());
 
 		} catch (const std::runtime_error& ex) {
@@ -1625,10 +1619,10 @@ static void create_window_and_renderer()
 			lowcase(render_driver);
 
 			sdl.renderer = std::make_unique<SdlRenderer>(
-			        sdl.desktop.window.x_pos,
-			        sdl.desktop.window.y_pos,
-			        sdl.desktop.window.width,
-			        sdl.desktop.window.height,
+			        sdl.windowed.x_pos,
+			        sdl.windowed.y_pos,
+			        sdl.windowed.width,
+			        sdl.windowed.height,
 			        get_sdl_window_flags(),
 			        render_driver,
 			        sdl.interpolation_mode);
@@ -1681,8 +1675,8 @@ static void configure_fullscreen_mode()
 {
 	const auto section = get_sdl_section();
 
-	sdl.desktop.is_fullscreen = control->arguments.fullscreen ||
-	                            section->GetBool("fullscreen");
+	sdl.is_fullscreen = control->arguments.fullscreen ||
+	                    section->GetBool("fullscreen");
 
 	const auto fullscreen_mode_pref = [&] {
 		auto legacy_pref = section->GetString("fullresolution");
@@ -1697,21 +1691,21 @@ static void configure_fullscreen_mode()
 		SDL_Rect bounds;
 		SDL_GetDisplayBounds(sdl.display_number, &bounds);
 
-		sdl.desktop.fullscreen.width  = bounds.w;
-		sdl.desktop.fullscreen.height = bounds.h;
+		sdl.fullscreen.width  = bounds.w;
+		sdl.fullscreen.height = bounds.h;
 	};
 
 	if (fullscreen_mode_pref == "standard") {
 		set_screen_bounds();
-		sdl.desktop.fullscreen.mode = FullscreenMode::Standard;
+		sdl.fullscreen.mode = FullscreenMode::Standard;
 
 	} else if (fullscreen_mode_pref == "forced-borderless") {
 		set_screen_bounds();
-		sdl.desktop.fullscreen.mode = FullscreenMode::ForcedBorderless;
+		sdl.fullscreen.mode = FullscreenMode::ForcedBorderless;
 
 	} else if (fullscreen_mode_pref == "original") {
 		set_screen_bounds();
-		sdl.desktop.fullscreen.mode = FullscreenMode::Original;
+		sdl.fullscreen.mode = FullscreenMode::Original;
 	}
 }
 
@@ -1918,8 +1912,8 @@ void GFX_Init()
 
 	TITLEBAR_ReadConfig(*section);
 
-	if (sdl.desktop.is_fullscreen &&
-	    sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+	if (sdl.is_fullscreen &&
+	    sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
 		enter_fullscreen();
 	}
 }
@@ -1942,15 +1936,15 @@ static void notify_sdl_setting_updated(SectionProp& section,
 	if (prop_name == "fullscreen") {
 		auto fullscreen_requested = section.GetBool("fullscreen");
 
-		if (sdl.desktop.is_fullscreen && !fullscreen_requested) {
+		if (sdl.is_fullscreen && !fullscreen_requested) {
 			exit_fullscreen();
-		} else if (!sdl.desktop.is_fullscreen && fullscreen_requested) {
+		} else if (!sdl.is_fullscreen && fullscreen_requested) {
 			enter_fullscreen();
 		}
 
 	} else if (prop_name == "fullscreen_mode") {
-		const auto was_in_fullscreen = sdl.desktop.is_fullscreen;
-		if (sdl.desktop.is_fullscreen) {
+		const auto was_in_fullscreen = sdl.is_fullscreen;
+		if (sdl.is_fullscreen) {
 			exit_fullscreen();
 		}
 
@@ -1999,34 +1993,32 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		save_window_position(parse_window_position_conf(
 		        section.GetString("window_position")));
 
-		if (!sdl.desktop.is_fullscreen) {
+		if (!sdl.is_fullscreen) {
 			SDL_SetWindowPosition(sdl.window,
-			                      sdl.desktop.window.x_pos,
-			                      sdl.desktop.window.y_pos);
+			                      sdl.windowed.x_pos,
+			                      sdl.windowed.y_pos);
 		}
 
 	} else if (prop_name == "window_size") {
 		configure_window_size();
 
-		if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless &&
-		    sdl.desktop.is_fullscreen) {
+		if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless &&
+		    sdl.is_fullscreen) {
 
-			sdl.desktop.fullscreen.prev_window.width =
-			        sdl.desktop.window.width;
+			sdl.fullscreen.prev_window.width = sdl.windowed.width;
 
-			sdl.desktop.fullscreen.prev_window.height =
-			        sdl.desktop.window.height;
+			sdl.fullscreen.prev_window.height = sdl.windowed.height;
 		} else {
 			SDL_SetWindowSize(sdl.window,
-			                  sdl.desktop.window.width,
-			                  sdl.desktop.window.height);
+			                  sdl.windowed.width,
+			                  sdl.windowed.height);
 		}
 
 	} else if (prop_name == "window_titlebar") {
 		TITLEBAR_ReadConfig(section);
 
 	} else if (prop_name == "window_transparency") {
-		if (!sdl.desktop.is_fullscreen) {
+		if (!sdl.is_fullscreen) {
 			configure_window_transparency();
 		}
 
@@ -2076,7 +2068,7 @@ void GFX_LosingFocus()
 
 bool GFX_IsFullscreen()
 {
-	return sdl.desktop.is_fullscreen;
+	return sdl.is_fullscreen;
 }
 
 static bool maybe_autoswitch_shader()
@@ -2248,7 +2240,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// changed.
 		maybe_log_display_properties();
 
-		if (!sdl.desktop.is_fullscreen) {
+		if (!sdl.is_fullscreen) {
 			save_window_size(width, height);
 
 			set_section_property_value("sdl",
@@ -2299,11 +2291,11 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 #ifdef WIN32
 		// TODO is this still needed?
-		if (sdl.desktop.is_fullscreen) {
+		if (sdl.is_fullscreen) {
 			VGA_KillDrawing();
 
 			// Force-exit fullscreen
-			sdl.desktop.is_fullscreen = false;
+			sdl.is_fullscreen = false;
 			set_section_property_value("sdl", "fullscreen", "off");
 			GFX_ResetScreen();
 		}
@@ -2350,7 +2342,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		const auto new_x = std::max(x, 0);
 		const auto new_y = std::max(y, 0);
 
-		if (!sdl.desktop.is_fullscreen) {
+		if (!sdl.is_fullscreen) {
 			save_window_position(SDL_Point{new_x, new_y});
 
 			set_section_property_value("sdl",
@@ -2371,8 +2363,8 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		SDL_Rect display_bounds = {};
 		SDL_GetDisplayBounds(new_display_number, &display_bounds);
-		sdl.desktop.fullscreen.width  = display_bounds.w;
-		sdl.desktop.fullscreen.height = display_bounds.h;
+		sdl.fullscreen.width  = display_bounds.w;
+		sdl.fullscreen.height = display_bounds.h;
 
 		sdl.display_number = new_display_number;
 
