@@ -885,11 +885,6 @@ static bool is_using_kmsdrm_driver()
 
 static bool check_kmsdrm_setting()
 {
-	// Simple pre-check to see if we're using kmsdrm
-	if (!is_using_kmsdrm_driver()) {
-		return true;
-	}
-
 	// Do we have read access to the event subsystem
 	if (auto f = fopen("/dev/input/event0", "r"); f) {
 		fclose(f);
@@ -1283,7 +1278,7 @@ static void maybe_limit_requested_resolution(int& w, int& h,
 
 	// Add any driver / platform / operating system limits in succession:
 
-	// SDL KMSDRM limitations:
+	// SDL KMSDRM limitations
 	if (is_using_kmsdrm_driver()) {
 		w = desktop.w;
 		h = desktop.h;
@@ -1751,8 +1746,81 @@ static void configure_pause_and_mute_when_inactive()
 	                         get_sdl_section()->GetBool("mute_when_inactive");
 }
 
+static void set_sdl_hints()
+{
+#if (SDL_VERSION_ATLEAST(3, 0, 0))
+	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
+#else
+#if !defined(WIN32) && !defined(MACOSX)
+	constexpr int Overwrite = 0;
+
+	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, Overwrite);
+	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, Overwrite);
+#endif
+#endif
+
+#if defined(WIN32)
+	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
+		LOG_WARNING("SDL: Failed to set DPI awareness flag");
+	}
+	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE) {
+		LOG_WARNING("SDL: Failed to set DPI scaling flag");
+	}
+#endif
+
+	// Seamless mouse integration feels more 'seamless' if mouse
+	// clicks on unfocused windows are passed to the guest.
+	SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+
+	// We have a keyboard shortcut to exit the fullscreen mode,
+	// so we don't necessary need the ALT+TAB shortcut
+	SDL_SetHint(SDL_HINT_ALLOW_ALT_TAB_WHILE_GRABBED, "0");
+
+#if defined SDL_HINT_APP_NAME
+	// For KDE 6 volume applet and PipeWire audio driver; further
+	// SetHint calls have no effect in the GUI, only the first
+	// advertised name is used.
+	SDL_SetHint(SDL_HINT_APP_NAME, DOSBOX_NAME);
+#endif
+
+#if defined SDL_HINT_AUDIO_DEVICE_STREAM_NAME
+	// Useful for 'pw-top' and possibly other PipeWire CLI tools.
+	SDL_SetHint(SDL_HINT_AUDIO_DEVICE_STREAM_NAME, DOSBOX_NAME);
+#endif
+}
+
 void GFX_Init()
 {
+	set_sdl_hints();
+
+	if (is_using_kmsdrm_driver() && !check_kmsdrm_setting()) {
+		E_Exit("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.\n"
+		       "Please run: 'sudo usermod -aG input $(whoami)', then re-login and try again.");
+	}
+
+	// Initialise SDL (timer is needed for title bar animations)
+	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
+		E_Exit("SDL: Can't init SDL %s", SDL_GetError());
+	}
+
+	// Register custom SDL events
+	sdl.start_event_id = SDL_RegisterEvents(enum_val(SDL_DosBoxEvents::NumEvents));
+	if (sdl.start_event_id == UINT32_MAX) {
+		E_Exit("SDL: Failed to allocate event IDs");
+	}
+
+	// Log runtime SDL version
+	SDL_version sdl_version = {};
+	SDL_GetVersion(&sdl_version);
+
+	LOG_MSG("SDL: Version %d.%d.%d initialised (%s video and %s audio)",
+	        sdl_version.major,
+	        sdl_version.minor,
+	        sdl_version.patch,
+	        SDL_GetCurrentVideoDriver(),
+	        SDL_GetCurrentAudioDriver());
+
+	// Start GUI init
 	auto section = get_sdl_section();
 
 	configure_pause_and_mute_when_inactive();
@@ -2843,72 +2911,6 @@ void GFX_AddConfigSection()
 
 	TITLEBAR_AddMessages();
 	register_sdl_text_messages();
-}
-
-void GFX_InitSdl()
-{
-#if (SDL_VERSION_ATLEAST(3, 0, 0))
-	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
-#else
-#if !defined(WIN32) && !defined(MACOSX)
-	constexpr int Overwrite = 0;
-
-	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, Overwrite);
-	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, Overwrite);
-#endif
-#endif
-
-#if defined(WIN32)
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
-		LOG_WARNING("SDL: Failed to set DPI awareness flag");
-	}
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE) {
-		LOG_WARNING("SDL: Failed to set DPI scaling flag");
-	}
-#endif
-
-	// Seamless mouse integration feels more 'seamless' if mouse
-	// clicks on unfocused windows are passed to the guest.
-	SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-
-	// We have a keyboard shortcut to exit the fullscreen mode,
-	// so we don't necessary need the ALT+TAB shortcut
-	SDL_SetHint(SDL_HINT_ALLOW_ALT_TAB_WHILE_GRABBED, "0");
-
-	if (!check_kmsdrm_setting()) {
-		E_Exit("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.\n"
-		       "Please run: 'sudo usermod -aG input $(whoami)', then re-login and try again.");
-	}
-
-	// Timer is needed for title bar animations
-	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
-		E_Exit("SDL: Can't init SDL %s", SDL_GetError());
-	}
-	sdl.start_event_id = SDL_RegisterEvents(enum_val(SDL_DosBoxEvents::NumEvents));
-	if (sdl.start_event_id == UINT32_MAX) {
-		E_Exit("SDL: Failed to alocate event IDs");
-	}
-
-	SDL_version sdl_version = {};
-	SDL_GetVersion(&sdl_version);
-
-	LOG_MSG("SDL: Version %d.%d.%d initialised (%s video and %s audio)",
-	        sdl_version.major,
-	        sdl_version.minor,
-	        sdl_version.patch,
-	        SDL_GetCurrentVideoDriver(),
-	        SDL_GetCurrentAudioDriver());
-
-#if defined SDL_HINT_APP_NAME
-	// For KDE 6 volume applet and PipeWire audio driver; further
-	// SetHint calls have no effect in the GUI, only the first
-	// advertised name is used.
-	SDL_SetHint(SDL_HINT_APP_NAME, DOSBOX_NAME);
-#endif
-#if defined SDL_HINT_AUDIO_DEVICE_STREAM_NAME
-	// Useful for 'pw-top' and possibly other PipeWire CLI tools.
-	SDL_SetHint(SDL_HINT_AUDIO_DEVICE_STREAM_NAME, DOSBOX_NAME);
-#endif
 }
 
 void GFX_Quit()
