@@ -560,11 +560,12 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 
 		std::vector<std::string> pvars(1, std::move(command));
 
-		const char* result = control->SetProperty(pvars);
+		const auto warning_message = control->SetProperty(pvars);
 
-		if (strlen(result)) {
+		if (!warning_message.empty()) {
 			// TODO convert to notification
-			LOG_WARNING("CONFIG: %s", result);
+			LOG_WARNING("CONFIG: %s", warning_message.c_str());
+
 		} else {
 			Section* tsec = control->GetSection(pvars[0]);
 			std::string value(pvars[2]);
