@@ -947,7 +947,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 	if (!sdl.renderer->UpdateRenderSize(sdl.draw.render_width_px,
 	                                    sdl.draw.render_height_px)) {
-		LOG_ERR("SDL: Failed to update texture");
+		LOG_ERR("SDL: Error updating texture");
 	}
 
 	update_viewport();
@@ -1002,8 +1002,8 @@ void GFX_SetMouseRawInput(const bool requested_raw_input)
 	                            requested_raw_input ? "0" : "1",
 	                            SDL_HINT_OVERRIDE) != SDL_TRUE) {
 
-		LOG_WARNING("SDL: Failed to %s raw mouse input",
-		            requested_raw_input ? "enable" : "disable");
+		LOG_WARNING("SDL: Error %s raw mouse input",
+		            requested_raw_input ? "enabling" : "disabling");
 	}
 }
 
@@ -1013,9 +1013,9 @@ void GFX_SetMouseCapture(const bool requested_capture)
 	if (SDL_SetRelativeMouseMode(param) != 0) {
 		SDL_ShowCursor(SDL_ENABLE);
 
-		E_Exit("SDL: Failed to %s relative-mode [SDL Bug]",
-		       requested_capture ? "put the mouse in"
-		                         : "take the mouse out of");
+		E_Exit("SDL: Error %s relative mode",
+		       requested_capture ? "putting the mouse into"
+		                         : "taking the mouse out of");
 	}
 }
 
@@ -1023,7 +1023,7 @@ void GFX_SetMouseVisibility(const bool requested_visible)
 {
 	const auto param = requested_visible ? SDL_ENABLE : SDL_DISABLE;
 	if (SDL_ShowCursor(param) < 0) {
-		E_Exit("SDL: Failed to make mouse cursor %s [SDL Bug]",
+		E_Exit("SDL: Error making mouse cursor %s",
 		       requested_visible ? "visible" : "invisible");
 	}
 }
@@ -1565,20 +1565,20 @@ static void setup_fullscreen_mode()
 		                               &fullscreen_mode)) {
 
 			LOG_WARNING(
-			        "SDL: Failed to set fullscreen mode to %dx%d, "
+			        "SDL: Error setting fullscreen mode to %dx%d, "
 			        "falling back to desktop mode",
 			        requested_mode.w,
 			        requested_mode.h);
 
 			if (SDL_GetDesktopDisplayMode(sdl.display_number,
 			                              &fullscreen_mode) < 0) {
-				LOG_WARNING("SDL: Failed to retrieve desktop display mode: %s",
+				LOG_WARNING("SDL: Error retrieving desktop display mode: %s",
 				            SDL_GetError());
 			}
 		}
 
 		if (SDL_SetWindowDisplayMode(sdl.window, &fullscreen_mode) < 0) {
-			LOG_ERR("SDL: Failed to set fullscreen display mode: %s",
+			LOG_ERR("SDL: Error setting fullscreen display mode: %s",
 			        SDL_GetError());
 		}
 	}
@@ -1600,7 +1600,7 @@ static void create_window_and_renderer()
 
 		} catch (const std::runtime_error& ex) {
 			LOG_WARNING(
-			        "OPENGL: Could not create OpenGL context, "
+			        "OPENGL: Error initialising OpenGL renderer, "
 			        "falling back to SDL renderer");
 
 			sdl.want_rendering_backend = RenderingBackend::Texture;
@@ -1753,10 +1753,10 @@ static void set_sdl_hints()
 
 #if defined(WIN32)
 	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
-		LOG_WARNING("SDL: Failed to set DPI awareness flag");
+		LOG_WARNING("SDL: Error setting DPI awareness flag");
 	}
 	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE) {
-		LOG_WARNING("SDL: Failed to set DPI scaling flag");
+		LOG_WARNING("SDL: Error setting DPI scaling flag");
 	}
 #endif
 
@@ -1833,7 +1833,7 @@ void GFX_Init()
 	// Register custom SDL events
 	sdl.start_event_id = SDL_RegisterEvents(enum_val(SDL_DosBoxEvents::NumEvents));
 	if (sdl.start_event_id == UINT32_MAX) {
-		E_Exit("SDL: Failed to allocate event IDs");
+		E_Exit("SDL: Error allocating event IDs");
 	}
 
 	// Log runtime SDL version
