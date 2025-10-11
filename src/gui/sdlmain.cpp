@@ -1789,6 +1789,41 @@ static void set_sdl_hints()
 #endif
 }
 
+static void add_default_sdl_section_mapper_bindings()
+{
+	MAPPER_AddHandler(MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper", "Mapper");
+
+	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown", "Shutdown");
+
+	MAPPER_AddHandler(switch_fullscreen_handler,
+	                  SDL_SCANCODE_RETURN,
+	                  MMOD2,
+	                  "fullscr",
+	                  "Fullscreen");
+	MAPPER_AddHandler(restart_hotkey_handler,
+	                  SDL_SCANCODE_HOME,
+	                  PRIMARY_MOD | MMOD2,
+	                  "restart",
+	                  "Restart");
+
+	MAPPER_AddHandler(MOUSE_ToggleUserCapture,
+	                  SDL_SCANCODE_F10,
+	                  PRIMARY_MOD,
+	                  "capmouse",
+	                  "Cap Mouse");
+
+#if C_DEBUGGER
+	// Pause binds with activate-debugger
+
+#elif defined(MACOSX)
+	// Pause/unpause is hardcoded to Command+P on macOS
+	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_P, PRIMARY_MOD, "pause", "Pause Emu.");
+#else
+	// Pause/unpause is hardcoded to Alt+Pause on Window & Linux
+	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_PAUSE, MMOD2, "pause", "Pause Emu.");
+#endif
+}
+
 void GFX_Init()
 {
 	set_sdl_hints();
@@ -1865,37 +1900,8 @@ void GFX_Init()
 	check_and_handle_dpi_change(sdl.window);
 	configure_allow_screensaver();
 
-	MAPPER_AddHandler(MAPPER_Run, SDL_SCANCODE_F1, PRIMARY_MOD, "mapper", "Mapper");
+	add_default_sdl_section_mapper_bindings();
 
-	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown", "Shutdown");
-
-	MAPPER_AddHandler(switch_fullscreen_handler,
-	                  SDL_SCANCODE_RETURN,
-	                  MMOD2,
-	                  "fullscr",
-	                  "Fullscreen");
-	MAPPER_AddHandler(restart_hotkey_handler,
-	                  SDL_SCANCODE_HOME,
-	                  PRIMARY_MOD | MMOD2,
-	                  "restart",
-	                  "Restart");
-
-	MAPPER_AddHandler(MOUSE_ToggleUserCapture,
-	                  SDL_SCANCODE_F10,
-	                  PRIMARY_MOD,
-	                  "capmouse",
-	                  "Cap Mouse");
-
-#if C_DEBUGGER
-	// Pause binds with activate-debugger
-
-#elif defined(MACOSX)
-	// Pause/unpause is hardcoded to Command+P on macOS
-	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_P, PRIMARY_MOD, "pause", "Pause Emu.");
-#else
-	// Pause/unpause is hardcoded to Alt+Pause on Window & Linux
-	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_PAUSE, MMOD2, "pause", "Pause Emu.");
-#endif
 	// Get keyboard state of NumLock and CapsLock
 	SDL_Keymod keystate = SDL_GetModState();
 
