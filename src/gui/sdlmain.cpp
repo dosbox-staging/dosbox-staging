@@ -378,7 +378,7 @@ static bool is_command_pressed(const SDL_Event event)
 
 void GFX_Stop()
 {
-	if (sdl.updating_framebuffer) {
+	if (sdl.draw.updating_framebuffer) {
 		GFX_EndUpdate();
 	}
 	sdl.draw.active = false;
@@ -560,7 +560,7 @@ static void setup_presentation_mode()
 
 static void notify_new_mouse_screen_params()
 {
-	if (sdl.draw_rect_px.w <= 0 || sdl.draw_rect_px.h <= 0) {
+	if (sdl.draw.draw_rect_px.w <= 0 || sdl.draw.draw_rect_px.h <= 0) {
 		// Filter out unusual parameters, which can be the result
 		// of window minimized due to ALT+TAB, for example
 		return;
@@ -570,7 +570,7 @@ static void notify_new_mouse_screen_params()
 
 	// It is important to scale not just the size of the rectangle but also
 	// its starting point by the inverse of the DPI scale factor.
-	params.draw_rect = to_rect(sdl.draw_rect_px).Copy().Scale(1.0f / sdl.dpi_scale);
+	params.draw_rect = to_rect(sdl.draw.draw_rect_px).Copy().Scale(1.0f / sdl.dpi_scale);
 
 	int abs_x = 0;
 	int abs_y = 0;
@@ -902,7 +902,7 @@ static void update_viewport()
 	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
 	const auto draw_rect_px   = GFX_CalcDrawRectInPixels(canvas_size_px);
 
-	sdl.draw_rect_px = to_sdl_rect(draw_rect_px);
+	sdl.draw.draw_rect_px = to_sdl_rect(draw_rect_px);
 
 	sdl.renderer->UpdateViewport(draw_rect_px);
 }
@@ -911,7 +911,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_Callback_t callback)
 {
-	if (sdl.updating_framebuffer) {
+	if (sdl.draw.updating_framebuffer) {
 		GFX_EndUpdate();
 	}
 
@@ -1125,21 +1125,21 @@ static void switch_fullscreen_handler(bool pressed)
 //
 bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 {
-	if (!sdl.draw.active || sdl.updating_framebuffer) {
+	if (!sdl.draw.active || sdl.draw.updating_framebuffer) {
 		return false;
 	}
 
 	sdl.renderer->StartFrame(pixels, pitch);
 
-	sdl.updating_framebuffer = true;
+	sdl.draw.updating_framebuffer = true;
 	return true;
 }
 
 void GFX_EndUpdate()
 {
-	if (sdl.updating_framebuffer) {
-		// `sdl.updating_framebuffer` is true when the contents of the
-		// framebuffer has been changed in the current frame.
+	if (sdl.draw.updating_framebuffer) {
+		// `sdl.draw.updating_framebuffer` is true when the contents of
+		// the framebuffer has been changed in the current frame.
 		//
 		// We're making a copy of the framebuffer as we might present it
 		// a bit later in 'host-rate' mode, otherwise the VGA emulation
@@ -1188,7 +1188,7 @@ void GFX_EndUpdate()
 	// 'host-rate' present is handled in `normal_loop()` in `dosbox.cpp` in
 	// a "cooperative-multitasking" fashion at the end of each emulated 1ms
 	// tick.
-	sdl.updating_framebuffer = false;
+	sdl.draw.updating_framebuffer = false;
 
 	FrameMark;
 }
@@ -2457,7 +2457,7 @@ void GFX_CaptureRenderedImage()
 	canvas_rect_px.y    = 0.0f;
 
 	const auto output_rect_px = canvas_rect_px.Copy().Intersect(
-	        to_rect(sdl.draw_rect_px));
+	        to_rect(sdl.draw.draw_rect_px));
 
 	auto image = sdl.renderer->ReadPixelsPostShader(output_rect_px);
 
