@@ -813,10 +813,10 @@ void CONFIG::Run(void)
 				pvars.push_back(rest);
 			}
 
-			const char* result = control->SetProperty(pvars);
+			const auto warning_message = control->SetProperty(pvars);
 
-			if (strlen(result)) {
-				WriteOut(result);
+			if (!warning_message.empty()) {
+				WriteOut(warning_message);
 
 			} else {
 				auto* tsec = dynamic_cast<SectionProp*>(

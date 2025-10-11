@@ -1758,17 +1758,15 @@ void Config::ParseConfigFiles(const std_fs::path& config_dir)
 	MSG_LoadMessages();
 }
 
-static char return_msg[200];
-const char* Config::SetProperty(std::vector<std::string>& pvars)
+std::string Config::SetProperty(std::vector<std::string>& pvars)
 {
-	*return_msg = 0;
-
 	// Attempt to split off the first word
 	std::string::size_type spcpos = pvars[0].find_first_of(' ');
 	std::string::size_type equpos = pvars[0].find_first_of('=');
 
 	if ((equpos != std::string::npos) &&
 	    ((spcpos == std::string::npos) || (equpos < spcpos))) {
+
 		// If we have a '=' possibly before a ' ' split on the =
 		pvars.emplace(pvars.begin() + 1, pvars[0].substr(equpos + 1));
 		pvars[0].erase(equpos);
@@ -1779,16 +1777,15 @@ const char* Config::SetProperty(std::vector<std::string>& pvars)
 		if (sec) {
 			pvars.emplace(pvars.begin(), std::string(sec->GetName()));
 		} else {
-			safe_sprintf(return_msg,
-			             MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND")
-			                     .c_str(),
-			             pvars[0].c_str());
-			return return_msg;
+			return format_str(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
+			                  pvars[0].c_str());
 		}
 		// Order in the vector should be ok now
+
 	} else {
 		if ((spcpos != std::string::npos) &&
 		    ((equpos == std::string::npos) || (spcpos < equpos))) {
+
 			// ' ' before a possible '=', split on the ' '
 			pvars.emplace(pvars.begin() + 1,
 			              pvars[0].substr(spcpos + 1));
@@ -1806,19 +1803,14 @@ const char* Config::SetProperty(std::vector<std::string>& pvars)
 				pvars.emplace(pvars.begin(),
 				              std::string(secprop->GetName()));
 			} else {
-				safe_sprintf(return_msg,
-				             MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND")
-				                     .c_str(),
-				             pvars[0].c_str());
-				return return_msg;
+				return format_str(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
+				                  pvars[0].c_str());
 			}
 		} else {
 			// First of pvars is most likely a section, but could
 			// still be gus have a look at the second parameter
 			if (pvars.size() < 2) {
-				safe_strcpy(return_msg,
-				            MSG_Get("PROGRAM_CONFIG_SET_SYNTAX").c_str());
-				return return_msg;
+				return MSG_Get("PROGRAM_CONFIG_SET_SYNTAX");
 			}
 
 			std::string::size_type spcpos2 = pvars[1].find_first_of(' ');
@@ -1859,22 +1851,18 @@ const char* Config::SetProperty(std::vector<std::string>& pvars)
 	}
 
 	if (pvars.size() < 3) {
-		safe_strcpy(return_msg,
-		            MSG_Get("PROGRAM_CONFIG_SET_SYNTAX").c_str());
-		return return_msg;
+		return MSG_Get("PROGRAM_CONFIG_SET_SYNTAX");
 	}
 
 	// Check if the property actually exists in the section
-	Section* sec2 = GetSectionFromProperty(pvars[1].c_str());
+	const auto sec2 = GetSectionFromProperty(pvars[1].c_str());
 	if (!sec2) {
-		safe_sprintf(return_msg,
-		             MSG_Get("PROGRAM_CONFIG_NO_PROPERTY").c_str(),
-		             pvars[1].c_str(),
-		             pvars[0].c_str());
-		return return_msg;
+		return format_str(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
+		                  pvars[1].c_str(),
+		                  pvars[0].c_str());
 	}
 
-	return return_msg;
+	return "";
 }
 
 void Config::ParseArguments()
