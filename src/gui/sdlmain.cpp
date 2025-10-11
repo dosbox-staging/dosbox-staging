@@ -2845,7 +2845,7 @@ void GFX_AddConfigSection()
 	register_sdl_text_messages();
 }
 
-void GFX_SetWmClass()
+void GFX_InitSdl()
 {
 #if (SDL_VERSION_ATLEAST(3, 0, 0))
 	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
@@ -2857,10 +2857,7 @@ void GFX_SetWmClass()
 	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, Overwrite);
 #endif
 #endif
-}
 
-void GFX_InitSdl()
-{
 #if defined(WIN32)
 	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
 		LOG_WARNING("SDL: Failed to set DPI awareness flag");
