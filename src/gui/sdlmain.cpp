@@ -1443,11 +1443,9 @@ static void save_window_size(const int w, const int h)
 	sdl.windowed.height = h;
 
 	// Initialize the window's canvas size if it hasn't yet been set.
-	auto& window_canvas_size = sdl.windowed.canvas_size;
-
-	if (window_canvas_size.w <= 0 || window_canvas_size.h <= 0) {
-		window_canvas_size.w = w;
-		window_canvas_size.h = h;
+	if (sdl.windowed.canvas_size.w <= 0 || sdl.windowed.canvas_size.h <= 0) {
+		sdl.windowed.canvas_size.w = w;
+		sdl.windowed.canvas_size.h = h;
 	}
 }
 
