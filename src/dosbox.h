@@ -61,8 +61,6 @@ void DOSBOX_DestroyModules();
 const char* DOSBOX_GetVersion() noexcept;
 const char* DOSBOX_GetDetailedVersion() noexcept;
 
-double DOSBOX_GetUptime();
-
 void DOSBOX_RunMachine();
 void DOSBOX_SetLoop(LoopHandler * handler);
 void DOSBOX_SetNormalLoop();

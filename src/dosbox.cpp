@@ -637,14 +637,6 @@ static void notify_dosbox_setting_updated([[maybe_unused]] SectionProp& section,
 	}
 }
 
-// Returns decimal seconds of elapsed uptime.
-// The first call starts the uptime counter (and returns 0.0 seconds of uptime).
-double DOSBOX_GetUptime()
-{
-	static auto start_ms = GetTicks();
-	return GetTicksSince(start_ms) / MillisInSecond;
-}
-
 static void add_dosbox_config_section(const ConfigPtr& conf)
 {
 	assert(conf);
