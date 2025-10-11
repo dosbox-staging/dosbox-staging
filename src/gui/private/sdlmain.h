@@ -131,6 +131,7 @@ struct SDL_Block {
 		int width  = 0;
 		int height = 0;
 
+		// TODO try to remove this
 		bool is_forced_borderless_fullscreen = false;
 
 		struct {

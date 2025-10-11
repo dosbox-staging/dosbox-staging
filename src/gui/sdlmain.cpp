@@ -712,6 +712,8 @@ static void enter_fullscreen()
 
 	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
 
+		// TODO try to remove this
+		//
 		// enter_fullscreen() can be called multiple times in a row by
 		// the existing code while still in fullscreen mode. That would
 		// throw off the window state restoring logic of the forced
