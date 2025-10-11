@@ -93,6 +93,16 @@ enum class SDL_DosBoxEvents : uint8_t {
 };
 
 struct SDL_Block {
+	uint32_t start_event_id = UINT32_MAX;
+
+	SDL_Window* window = {};
+	int display_number = 0;
+
+	float dpi_scale    = 1.0f;
+	bool is_fullscreen = false;
+
+	bool use_exact_window_resolution = false;
+
 	// If this isn't set don't draw
 	bool active = false;
 
@@ -101,11 +111,17 @@ struct SDL_Block {
 	// is true in GFX_EndUpdate().
 	bool updating_framebuffer = false;
 
-	bool wait_on_error = false;
+	bool is_paused           = false;
+	bool mute_when_inactive  = false;
+	bool pause_when_inactive = false;
 
-	uint32_t start_event_id = UINT32_MAX;
+	SDL_Rect draw_rect_px = {};
 
-	bool is_paused = false;
+	// Key state for certain special handlings
+	struct {
+		SDL_EventType left_alt_state  = SDL_KEYUP;
+		SDL_EventType right_alt_state = SDL_KEYUP;
+	} key = {};
 
 	// TODO rename to RenderBackend, move intoe `render_backend.h`
 	RenderingBackend rendering_backend = RenderingBackend::Texture;
@@ -128,6 +144,16 @@ struct SDL_Block {
 	std::optional<VideoMode> maybe_video_mode = {};
 
 	struct {
+		int width  = 0;
+		int height = 0;
+		int x_pos  = SDL_WINDOWPOS_UNDEFINED;
+		int y_pos  = SDL_WINDOWPOS_UNDEFINED;
+
+		// Instantaneous canvas size of the window
+		SDL_Rect canvas_size = {};
+	} windowed = {};
+
+	struct {
 		FullscreenMode mode = {};
 
 		int width  = 0;
@@ -144,33 +170,6 @@ struct SDL_Block {
 	} fullscreen = {};
 
 	struct {
-
-		// User-configured window size
-		int width  = 0;
-		int height = 0;
-		int x_pos  = SDL_WINDOWPOS_UNDEFINED;
-		int y_pos  = SDL_WINDOWPOS_UNDEFINED;
-
-		// Instantaneous canvas size of the window
-		SDL_Rect canvas_size = {};
-	} windowed = {};
-
-	float dpi_scale    = 1.0f;
-	bool is_fullscreen = false;
-
-	struct {
-		bool windowed   = false;
-		bool fullscreen = false;
-	} vsync = {};
-
-	bool mute_when_inactive  = false;
-	bool pause_when_inactive = false;
-
-	SDL_Rect draw_rect_px = {};
-	SDL_Window* window    = {};
-	int display_number    = 0;
-
-	struct {
 		PresentationMode windowed_mode   = {};
 		PresentationMode fullscreen_mode = {};
 
@@ -179,7 +178,10 @@ struct SDL_Block {
 		int64_t last_present_time_us = 0;
 	} presentation = {};
 
-	bool use_exact_window_resolution = false;
+	struct {
+		bool windowed   = false;
+		bool fullscreen = false;
+	} vsync = {};
 
 #if defined(WIN32)
 	// TODO check of this workaround is still needed
