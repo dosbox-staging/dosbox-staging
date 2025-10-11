@@ -85,18 +85,6 @@
 //   image is centered and the overhanging areas are clipped.
 //
 
-#define SDL_NOFRAME 0x00000020
-
-constexpr void update_frame_noop()
-{
-	// no-op
-}
-
-static inline void present_frame_noop()
-{
-	// no-op
-}
-
 enum class FullscreenMode { Standard, Original, ForcedBorderless };
 
 enum class SDL_DosBoxEvents : uint8_t {
@@ -131,7 +119,6 @@ struct SDL_Block {
 		int render_height_px               = 0;
 		Fraction render_pixel_aspect_ratio = {1};
 
-		bool has_changed        = false;
 		GFX_Callback_t callback = {};
 		bool width_was_doubled  = false;
 		bool height_was_doubled = false;
@@ -163,8 +150,6 @@ struct SDL_Block {
 			int height = 0;
 			int x_pos  = SDL_WINDOWPOS_UNDEFINED;
 			int y_pos  = SDL_WINDOWPOS_UNDEFINED;
-
-			bool adjusted_initial_size = false;
 
 			// Instantaneous canvas size of the window
 			SDL_Rect canvas_size = {};
