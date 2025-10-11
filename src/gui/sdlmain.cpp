@@ -2594,6 +2594,8 @@ bool GFX_PollAndHandleEvents()
 			    (event.key.keysym.mod & KMOD_ALT)) {
 				break;
 			}
+
+			// TODO check of this workaround is still needed
 			// Ignore tab events that arrive just after regaining
 			// focus. Likely the result of Alt+Tab.
 			if ((event.key.keysym.sym == SDLK_TAB) &&

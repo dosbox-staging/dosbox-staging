@@ -182,6 +182,7 @@ struct SDL_Block {
 	bool use_exact_window_resolution = false;
 
 #if defined(WIN32)
+	// TODO check of this workaround is still needed
 	// Time when sdl regains focus (Alt+Tab) in windowed mode
 	int64_t focus_ticks = 0;
 #endif
