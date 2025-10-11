@@ -101,9 +101,6 @@ struct SDL_Block {
 	float dpi_scale    = 1.0f;
 	bool is_fullscreen = false;
 
-	// If this isn't set don't draw
-	bool active = false;
-
 	// True when the contents of the framebuffer has been changed in the
 	// current frame. We only need to upload new texture data when this flag
 	// is true in GFX_EndUpdate().
@@ -136,6 +133,8 @@ struct SDL_Block {
 		GFX_Callback_t callback = {};
 		bool width_was_doubled  = false;
 		bool height_was_doubled = false;
+
+		bool active = false;
 	} draw = {};
 
 	// The DOS video mode is populated after we set up the SDL window.
