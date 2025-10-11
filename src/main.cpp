@@ -827,12 +827,6 @@ int main(int argc, char* argv[])
 			MAPPER_DisplayUI();
 		}
 
-		// Initialize the uptime counter when launching the first shell.
-		// This ensures that slow-performing configurable tasks (like
-		// loading MIDI SF2 files) have already been performed and won't
-		// affect this time.
-		DOSBOX_GetUptime();
-
 		// Start emulation
 		SHELL_InitAndRun();
 
