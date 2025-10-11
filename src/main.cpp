@@ -673,6 +673,39 @@ static void quit_func()
 #endif
 }
 
+static void wait_for_pid(const int wait_pid)
+{
+#ifdef WIN32
+	// Synchronize permission is all we need for WaitForSingleObject()
+	constexpr DWORD DesiredAccess = SYNCHRONIZE;
+	constexpr BOOL InheritHandles = FALSE;
+
+	HANDLE process = OpenProcess(DesiredAccess, InheritHandles, wait_pid);
+	if (process) {
+		// Waits for the process to terminate.
+		// If we failed to open it, it's probably already dead.
+		constexpr DWORD Timeout = INFINITE;
+		WaitForSingleObject(process, Timeout);
+		CloseHandle(process);
+	}
+#else
+	for (;;) {
+		// Signal of 0 does not actually send a signal.
+		// It only checks for existance and permissions of the PID.
+		constexpr int Signal = 0;
+
+		int ret = kill(wait_pid, Signal);
+
+		// ESRCH means PID does not exist.
+		if (ret == -1 && errno == ESRCH) {
+			break;
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
+#endif
+}
+
 int main(int argc, char* argv[])
 {
 	// Ensure we perform SDL cleanup and restore console settings at exit
@@ -684,34 +717,7 @@ int main(int argc, char* argv[])
 	const auto arguments = &control->arguments;
 
 	if (arguments->wait_pid) {
-#ifdef WIN32
-		// Synchronize permission is all we need for WaitForSingleObject()
-		constexpr DWORD DesiredAccess = SYNCHRONIZE;
-		constexpr BOOL InheritHandles = FALSE;
-		HANDLE process                = OpenProcess(DesiredAccess,
-                                             InheritHandles,
-                                             *arguments->wait_pid);
-		if (process) {
-			// Waits for the process to terminate.
-			// If we failed to open it, it's probably already dead.
-			constexpr DWORD Timeout = INFINITE;
-			WaitForSingleObject(process, Timeout);
-			CloseHandle(process);
-		}
-#else
-		for (;;) {
-			// Signal of 0 does not actually send a signal.
-			// It only checks for existance and permissions of the PID.
-			constexpr int Signal = 0;
-			int ret = kill(*arguments->wait_pid, Signal);
-			// ESRCH means PID does not exist.
-			if (ret == -1 && errno == ESRCH) {
-				break;
-			}
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
-		}
-#endif // WIN32
+		wait_for_pid(*arguments->wait_pid);
 	}
 
 #ifdef WIN32
