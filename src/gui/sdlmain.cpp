@@ -1475,10 +1475,10 @@ static void configure_window_size()
 	// refined scaling mode if an exact resolution is desired.
 	SDL_Point coarse_size = FallbackWindowSize;
 
-	sdl.use_exact_window_resolution = window_size_pref.find('x') !=
-	                                  std::string::npos;
+	const auto use_exact_window_resolution = window_size_pref.find('x') !=
+	                                         std::string::npos;
 
-	if (sdl.use_exact_window_resolution) {
+	if (use_exact_window_resolution) {
 		coarse_size = parse_window_resolution_from_conf(window_size_pref);
 	} else {
 		const auto desktop = get_desktop_size();
@@ -1489,7 +1489,7 @@ static void configure_window_size()
 	// Refine the coarse resolution and save it in the SDL struct.
 	auto refined_size = coarse_size;
 
-	if (sdl.use_exact_window_resolution) {
+	if (use_exact_window_resolution) {
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
 		refined_size = refine_window_size(coarse_size,
