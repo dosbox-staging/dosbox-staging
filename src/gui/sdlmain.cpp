@@ -2078,8 +2078,9 @@ static void handle_mouse_button(SDL_MouseButtonEvent* button)
 
 void GFX_LosingFocus()
 {
-	sdl.laltstate = SDL_KEYUP;
-	sdl.raltstate = SDL_KEYUP;
+	sdl.key.left_alt_state  = SDL_KEYUP;
+	sdl.key.right_alt_state = SDL_KEYUP;
+
 	MAPPER_LosingFocus();
 }
 
@@ -2621,14 +2622,16 @@ bool GFX_PollAndHandleEvents()
 		case SDL_KEYUP:
 			// ignore event alt+tab
 			if (event.key.keysym.sym == SDLK_LALT) {
-				sdl.laltstate = (SDL_EventType)event.key.type;
+				sdl.key.left_alt_state = (SDL_EventType)
+				                                 event.key.type;
 			}
 			if (event.key.keysym.sym == SDLK_RALT) {
-				sdl.raltstate = (SDL_EventType)event.key.type;
+				sdl.key.right_alt_state =
+				        (SDL_EventType)event.key.type;
 			}
 			if (((event.key.keysym.sym == SDLK_TAB)) &&
-			    ((sdl.laltstate == SDL_KEYDOWN) ||
-			     (sdl.raltstate == SDL_KEYDOWN))) {
+			    ((sdl.key.left_alt_state == SDL_KEYDOWN) ||
+			     (sdl.key.right_alt_state == SDL_KEYDOWN))) {
 				break;
 			}
 			// This can happen as well.

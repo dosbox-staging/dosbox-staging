@@ -101,8 +101,6 @@ struct SDL_Block {
 	// is true in GFX_EndUpdate().
 	bool updating_framebuffer = false;
 
-	bool wait_on_error = false;
-
 	uint32_t start_event_id = UINT32_MAX;
 
 	bool is_paused = false;
@@ -191,9 +189,11 @@ struct SDL_Block {
 	int64_t focus_ticks = 0;
 #endif
 
-	// State of Alt keys for certain special handlings
-	SDL_EventType laltstate = SDL_KEYUP;
-	SDL_EventType raltstate = SDL_KEYUP;
+	// Key state for certain special handlings
+	struct {
+		SDL_EventType left_alt_state  = SDL_KEYUP;
+		SDL_EventType right_alt_state = SDL_KEYUP;
+	} key = {};
 };
 
 // TODO should be private; introduce SDL_* API calls instead
