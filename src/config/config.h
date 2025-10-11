@@ -5,8 +5,6 @@
 #ifndef DOSBOX_CONFIG_H
 #define DOSBOX_CONFIG_H
 
-#include "dosbox.h"
-
 #include <cassert>
 #include <deque>
 #include <functional>
@@ -131,7 +129,8 @@ public:
 
 	void ParseEnv();
 	void ParseConfigFiles(const std_fs::path& config_path);
-	const char* SetProperty(std::vector<std::string>& pvars);
+
+	std::string SetProperty(std::vector<std::string>& pvars);
 
 	const std::string& GetArgumentLanguage();
 
@@ -150,7 +149,5 @@ public:
 
 using ConfigPtr = std::unique_ptr<Config>;
 extern ConfigPtr control;
-
-void DOSBOX_Restart(std::vector<std::string>& parameters = control->startup_params);
 
 #endif // DOSBOX_CONFIG_H

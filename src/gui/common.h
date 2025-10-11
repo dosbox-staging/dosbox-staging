@@ -6,14 +6,21 @@
 
 #include "private/common.h"
 
-#include "SDL.h"
-
 #include "hardware/input/mouse.h"
 #include "utils/rect.h"
 
 // TODO We should improve this interface over time (e.g., remove the GFX_
 // prefix, move the functions to more appropriate places, like the renderer,
 // etc.)
+
+void GFX_AddConfigSection();
+
+void GFX_Init();
+void GFX_Destroy();
+
+void GFX_RequestExit(const bool pressed);
+
+void GFX_Quit();
 
 void GFX_LosingFocus();
 
@@ -36,6 +43,6 @@ PresentationMode GFX_GetPresentationMode();
 
 void GFX_MaybePresentFrame();
 
-bool DOSBOX_PollAndHandleEvents();
+bool GFX_PollAndHandleEvents();
 
 #endif // DOSBOX_GUI_COMMON_H

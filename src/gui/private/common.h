@@ -4,11 +4,13 @@
 #ifndef DOSBOX_GUI_PRIVATE_COMMON_H
 #define DOSBOX_GUI_PRIVATE_COMMON_H
 
-#include "SDL.h"
-
+#include "dosbox_config.h"
 #include "misc/video.h"
 #include "utils/fraction.h"
 #include "utils/rect.h"
+
+// must be included after dosbox_config.h
+#include "SDL.h"
 
 constexpr uint8_t GFX_CAN_8      = 1 << 0;
 constexpr uint8_t GFX_CAN_15     = 1 << 1;
@@ -79,7 +81,7 @@ struct ShaderInfo;
 
 void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_source);
 
-uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue);
+uint32_t GFX_GetRgb(const uint8_t red, const uint8_t green, const uint8_t blue);
 
 InterpolationMode GFX_GetTextureInterpolationMode();
 
@@ -90,6 +92,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 void GFX_ResetScreen();
 
 void GFX_Start();
+void GFX_Stop();
 
 // Called at the start of every unique frame (when there have been changes to
 // the framebuffer).
@@ -97,14 +100,17 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch);
 
 // Called at the end of every frame, regardless of whether there have been
 // changes to the framebuffer or not.
-void GFX_EndUpdate(const uint16_t* changed_lines);
+void GFX_EndUpdate();
 
-// Let the presentation layer safely call no-op functions.
-// Useful during output initialization or transitions.
-void GFX_DisengageRendering();
+void GFX_CaptureRenderedImage();
 
 DosBox::Rect GFX_GetDesktopSize();
 
 float GFX_GetDpiScaleFactor();
+
+DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px);
+
+DosBox::Rect to_rect(const SDL_Rect r);
+SDL_Rect to_sdl_rect(const DosBox::Rect& r);
 
 #endif // DOSBOX_GUI_COMMON_H

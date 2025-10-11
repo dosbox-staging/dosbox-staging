@@ -6,8 +6,10 @@ libgui_sources = files(
     'shader_manager.cpp',
     'titlebar.cpp',
 
+    'render/opengl_renderer.cpp',
     'render/render.cpp',
     'render/scaler/scalers.cpp',
+    'render/sdl_renderer.cpp'
 )
 
 libgui = static_library(

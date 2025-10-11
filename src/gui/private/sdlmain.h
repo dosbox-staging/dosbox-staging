@@ -6,22 +6,22 @@
 
 #include "gui/private/shader_manager.h"
 
-#include "SDL.h"
-
 #include <cstring>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
-#if C_OPENGL
-#include <SDL_opengl.h>
-#endif
-
+#include "dosbox_config.h"
 #include "gui/common.h"
 #include "gui/render/render.h"
+#include "gui/render/render_backend.h"
 #include "misc/video.h"
 #include "utils/fraction.h"
-#include "utils/rect.h"
+
+// must be included after dosbox_config.h
+#include "SDL.h"
 
 // The image rendered in the emulated computer's raw framebuffer as raw pixels
 // goes through a number of transformations until it gets shown on the host
@@ -85,22 +85,6 @@
 //   image is centered and the overhanging areas are clipped.
 //
 
-#define SDL_NOFRAME 0x00000020
-
-// Texture buffer and presentation functions and type-defines
-using update_frame_buffer_f = void();
-using present_frame_f       = void();
-
-constexpr void update_frame_noop()
-{
-	// no-op
-}
-
-static inline void present_frame_noop()
-{
-	// no-op
-}
-
 enum class FullscreenMode { Standard, Original, ForcedBorderless };
 
 enum class SDL_DosBoxEvents : uint8_t {
@@ -109,162 +93,102 @@ enum class SDL_DosBoxEvents : uint8_t {
 };
 
 struct SDL_Block {
-	// If this isn't set don't draw
-	bool active = false;
-
-	// True when the contents of the framebuffer has been changed in the
-	// current frame. We only need to upload new texture data when this flag
-	// is true in GFX_EndUpdate().
-	bool updating_framebuffer = false;
-
-	bool wait_on_error = false;
-
 	uint32_t start_event_id = UINT32_MAX;
 
-#ifdef WIN32
-	uint16_t original_code_page = 0;
-#endif
+	SDL_Window* window = {};
+	int display_number = 0;
 
-	bool is_paused = false;
+	float dpi_scale    = 1.0f;
+	bool is_fullscreen = false;
 
-	RenderingBackend rendering_backend      = RenderingBackend::Texture;
+	bool is_paused           = false;
+	bool mute_when_inactive  = false;
+	bool pause_when_inactive = false;
+
+	// Key state for certain special handlings
+	struct {
+		SDL_EventType left_alt_state  = SDL_KEYUP;
+		SDL_EventType right_alt_state = SDL_KEYUP;
+	} key = {};
+
+	// TODO rename to RenderBackend, move into `render_backend.h`
+	RenderingBackend rendering_backend = RenderingBackend::Texture;
+
+	// TODO remove
 	RenderingBackend want_rendering_backend = RenderingBackend::Texture;
+	InterpolationMode interpolation_mode   = {};
+
+	std::unique_ptr<RenderBackend> renderer = {};
 
 	struct {
 		int render_width_px                = 0;
 		int render_height_px               = 0;
 		Fraction render_pixel_aspect_ratio = {1};
 
-		bool has_changed        = false;
-		GFX_Callback_t callback = nullptr;
+		GFX_Callback_t callback = {};
 		bool width_was_doubled  = false;
 		bool height_was_doubled = false;
+
+		bool active = false;
+
+		SDL_Rect draw_rect_px = {};
+
+		// True when the contents of the framebuffer has been changed in the
+		// current frame. We only need to upload new texture data when this flag
+		// is true in GFX_EndUpdate().
+		bool updating_framebuffer = false;
 	} draw = {};
 
 	// The DOS video mode is populated after we set up the SDL window.
 	std::optional<VideoMode> maybe_video_mode = {};
 
 	struct {
-		struct {
-			FullscreenMode mode = {};
+		int width  = 0;
+		int height = 0;
+		int x_pos  = SDL_WINDOWPOS_UNDEFINED;
+		int y_pos  = SDL_WINDOWPOS_UNDEFINED;
 
+		// Instantaneous canvas size of the window
+		SDL_Rect canvas_size = {};
+	} windowed = {};
+
+	struct {
+		FullscreenMode mode = {};
+
+		int width  = 0;
+		int height = 0;
+
+		// TODO try to remove this
+		bool is_forced_borderless_fullscreen = false;
+
+		struct {
 			int width  = 0;
 			int height = 0;
+			int x_pos  = 0;
+			int y_pos  = 0;
+		} prev_window;
+	} fullscreen = {};
 
-			bool is_forced_borderless_fullscreen = false;
+	struct {
+		PresentationMode windowed_mode   = {};
+		PresentationMode fullscreen_mode = {};
 
-			struct {
-				int width     = 0;
-				int height    = 0;
-				int x_pos     = 0;
-				int y_pos     = 0;
-			} prev_window;
-		} fullscreen = {};
-
-		struct {
-			// User-configured window size
-			int width  = 0;
-			int height = 0;
-			int x_pos  = SDL_WINDOWPOS_UNDEFINED;
-			int y_pos  = SDL_WINDOWPOS_UNDEFINED;
-
-			bool show_decorations      = true;
-			bool adjusted_initial_size = false;
-
-			// Instantaneous canvas size of the window
-			SDL_Rect canvas_size = {};
-		} window = {};
-
-		PixelFormat pixel_format = {};
-
-		float dpi_scale = 1.0f;
-
-		bool is_fullscreen = false;
-
-	} desktop = {};
+		int frame_time_us            = 0;
+		int early_present_window_us  = 0;
+		int64_t last_present_time_us = 0;
+	} presentation = {};
 
 	struct {
 		bool windowed   = false;
 		bool fullscreen = false;
 	} vsync = {};
 
-#if C_OPENGL
-	struct {
-		SDL_GLContext context = {};
-
-		int pitch = 0;
-
-		// The current framebuffer the emulation is rendering the video
-		// output into (contains the "work-in-progress" next frame).
-		std::vector<uint8_t> curr_framebuf = {};
-
-		// Contains the last fully rendered frame, waiting to be presented.
-		std::vector<uint8_t> last_framebuf = {};
-
-		bool is_framebuffer_srgb_capable = false;
-
-		GLuint texture            = 0;
-		GLint max_texture_size_px = 0;
-
-		GLuint program_object = 0;
-
-		ShaderInfo shader_info    = {};
-		std::string shader_source = {};
-
-		struct {
-			GLint texture_size = 0;
-			GLint input_size   = 0;
-			GLint output_size  = 0;
-			GLint frame_count  = 0;
-		} ruby = {};
-
-		GLuint actual_frame_count  = 0;
-		GLfloat vertex_data[2 * 3] = {};
-	} opengl = {};
-#endif // C_OPENGL
-
-	bool mute_when_inactive  = false;
-	bool pause_when_inactive = false;
-
-	SDL_Rect draw_rect_px     = {};
-	SDL_Window* window        = nullptr;
-	SDL_Renderer* renderer    = nullptr;
-	std::string render_driver = "";
-	int display_number        = 0;
-	uint8_t gfx_flags         = 0;
-
-	struct {
-		SDL_Surface* curr_framebuf   = nullptr;
-		SDL_Surface* last_framebuf   = nullptr;
-
-		SDL_PixelFormat* pixel_format = nullptr;
-		SDL_Texture* texture          = nullptr;
-
-		InterpolationMode interpolation_mode = InterpolationMode::Bilinear;
-	} texture = {};
-
-	struct {
-		PresentationMode windowed_mode =   {};
-		PresentationMode fullscreen_mode = {};
-
-		int frame_time_us            = 0;
-		int early_present_window_us  = 0;
-		int64_t last_present_time_us = 0;
-
-		present_frame_f* present      = present_frame_noop;
-		update_frame_buffer_f* update = update_frame_noop;
-	} presentation = {};
-
-	bool use_exact_window_resolution = false;
-
 #if defined(WIN32)
+	// TODO check of this workaround is still needed
 	// Time when sdl regains focus (Alt+Tab) in windowed mode
 	int64_t focus_ticks = 0;
 #endif
 
-	// State of Alt keys for certain special handlings
-	SDL_EventType laltstate = SDL_KEYUP;
-	SDL_EventType raltstate = SDL_KEYUP;
 };
 
 // TODO should be private; introduce SDL_* API calls instead

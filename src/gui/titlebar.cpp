@@ -5,7 +5,6 @@
 
 #include "private/sdlmain.h"
 
-#include <SDL.h>
 #include <map>
 #include <vector>
 
@@ -13,12 +12,16 @@
 #include "config/setup.h"
 #include "cpu/cpu.h"
 #include "dosbox.h"
+#include "dosbox_config.h"
 #include "gui/mapper.h"
 #include "hardware/input/mouse.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
 #include "misc/video.h"
 #include "utils/checks.h"
+
+// must be included after dosbox_config.h
+#include <SDL.h>
 
 CHECK_NARROWING();
 

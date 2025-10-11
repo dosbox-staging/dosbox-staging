@@ -5,14 +5,11 @@
 #include "dosbox.h"
 
 #include <chrono>
-#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <memory>
-#include <thread>
-#include <unistd.h>
 
 #include "audio/disk_noise.h"
 #include "audio/mixer.h"
@@ -147,7 +144,7 @@ static Bitu normal_loop()
 				GFX_MaybePresentFrame();
 			}
 
-			if (!DOSBOX_PollAndHandleEvents()) {
+			if (!GFX_PollAndHandleEvents()) {
 				return 0;
 			}
 			if (ticks.remain > 0) {
@@ -516,6 +513,23 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 	       (machine != MachineType::Vga && svga_type == SvgaType::None));
 }
 
+static DosboxRestartFunction restart_func = {};
+
+void DOSBOX_SetRestartFunction(DosboxRestartFunction func)
+{
+	restart_func = func;
+}
+
+void DOSBOX_Restart()
+{
+	restart_func(control->startup_params);
+}
+
+void DOSBOX_Restart(std::vector<std::string>& parameters)
+{
+	restart_func(parameters);
+}
+
 static void dosbox_realinit(SectionProp& section)
 {
 	// Initialize some dosbox internals
@@ -621,14 +635,6 @@ static void notify_dosbox_setting_updated([[maybe_unused]] SectionProp& section,
 		// No need to re-init anything; the setting is always queried when
 		// executing a command.
 	}
-}
-
-// Returns decimal seconds of elapsed uptime.
-// The first call starts the uptime counter (and returns 0.0 seconds of uptime).
-double DOSBOX_GetUptime()
-{
-	static auto start_ms = GetTicks();
-	return GetTicksSince(start_ms) / MillisInSecond;
 }
 
 static void add_dosbox_config_section(const ConfigPtr& conf)
