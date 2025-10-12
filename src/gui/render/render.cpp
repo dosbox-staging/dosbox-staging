@@ -514,7 +514,7 @@ static void set_scan_and_pixel_doubling()
 	bool force_no_pixel_doubling = false;
 
 	switch (GFX_GetRenderBackendType()) {
-	case RenderBackendType::Texture: {
+	case RenderBackendType::Sdl: {
 		const auto nearest_neighbour_on = (GFX_GetTextureFilterMode() ==
 		                                   TextureFilterMode::NearestNeighbour);
 
