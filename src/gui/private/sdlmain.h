@@ -109,8 +109,6 @@ struct SDL_Block {
 	// TODO rename to RenderBackend, move into `render_backend.h`
 	RenderingBackend rendering_backend = RenderingBackend::Texture;
 
-	// TODO remove
-	RenderingBackend want_rendering_backend = RenderingBackend::Texture;
 	InterpolationMode interpolation_mode   = {};
 
 	std::unique_ptr<RenderBackend> renderer = {};
