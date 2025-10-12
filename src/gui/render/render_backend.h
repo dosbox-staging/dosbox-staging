@@ -4,6 +4,7 @@
 #ifndef DOSBOX_RENDER_BACKEND_H
 #define DOSBOX_RENDER_BACKEND_H
 
+#include "gui/private/common.h"
 #include "gui/private/shader_manager.h"
 
 #include <string>
@@ -11,6 +12,7 @@
 #include "dosbox_config.h"
 #include "utils/rect.h"
 
+// forward declaration
 struct SDL_Window;
 
 class RenderBackend {

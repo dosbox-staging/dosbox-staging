@@ -378,7 +378,7 @@ static void render_reset()
 
 	auto& shader_manager = ShaderManager::GetInstance();
 
-	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
+	if (GFX_GetRenderBackendType() == RenderBackendType::OpenGl) {
 		GFX_SetShader(shader_manager.GetCurrentShaderInfo(),
 		              shader_manager.GetCurrentShaderSource());
 	}
@@ -513,8 +513,8 @@ static void set_scan_and_pixel_doubling()
 	bool force_vga_single_scan   = false;
 	bool force_no_pixel_doubling = false;
 
-	switch (GFX_GetRenderingBackend()) {
-	case RenderingBackend::Texture: {
+	switch (GFX_GetRenderBackendType()) {
+	case RenderBackendType::Texture: {
 		const auto nearest_neighbour_on = (GFX_GetTextureInterpolationMode() ==
 		                                   InterpolationMode::NearestNeighbour);
 
@@ -522,7 +522,7 @@ static void set_scan_and_pixel_doubling()
 		force_no_pixel_doubling = nearest_neighbour_on;
 	} break;
 
-	case RenderingBackend::OpenGl: {
+	case RenderBackendType::OpenGl: {
 		const auto shader_info =
 		        ShaderManager::GetInstance().GetCurrentShaderInfo();
 		force_vga_single_scan = shader_info.settings.force_single_scan;
@@ -558,7 +558,7 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_siz
 	assert(!canvas_size_px.IsEmpty());
 	assert(video_mode.width > 0 && video_mode.height > 0);
 
-	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
+	if (GFX_GetRenderBackendType() != RenderBackendType::OpenGl) {
 		return false;
 	}
 
@@ -620,7 +620,7 @@ void RENDER_AddMessages()
 
 static void reload_shader([[maybe_unused]] const bool pressed)
 {
-	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
+	if (GFX_GetRenderBackendType() != RenderBackendType::OpenGl) {
 		return;
 	}
 
@@ -1031,7 +1031,7 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 		// artifacts in 99% of cases, so it's very much worth it for
 		// better viewport utilisation.
 		//
-		if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
+		if (GFX_GetRenderBackendType() != RenderBackendType::OpenGl) {
 			return draw_size_fit_px;
 		}
 
@@ -1363,7 +1363,7 @@ static void decrease_viewport_stretch(const bool pressed)
 
 static void set_shader(SectionProp& section)
 {
-	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
+	if (GFX_GetRenderBackendType() != RenderBackendType::OpenGl) {
 		return;
 	}
 
@@ -1371,7 +1371,7 @@ static void set_shader(SectionProp& section)
 
 	constexpr auto GlshaderSettingName = "glshader";
 
-	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
+	if (GFX_GetRenderBackendType() == RenderBackendType::OpenGl) {
 		const auto mapped_shader_name = shader_manager.MapShaderName(
 		        section.GetString(GlshaderSettingName));
 

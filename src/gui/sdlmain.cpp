@@ -261,16 +261,16 @@ static void configure_renderer()
 	const std::string output = get_sdl_section()->GetString("output");
 
 	if (output == "texture") {
-		sdl.rendering_backend      = RenderingBackend::Texture;
 		sdl.interpolation_mode     = InterpolationMode::Bilinear;
+		sdl.render_backend_type    = RenderBackendType::Texture;
 
 	} else if (output == "texturenb") {
-		sdl.rendering_backend  = RenderingBackend::Texture;
 		sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
+		sdl.render_backend_type = RenderBackendType::Texture;
 
 #if C_OPENGL
 	} else if (output == "opengl") {
-		sdl.rendering_backend = RenderingBackend::OpenGl;
+		sdl.render_backend_type = RenderBackendType::OpenGl;
 #endif
 
 	} else {
@@ -278,7 +278,7 @@ static void configure_renderer()
 		LOG_WARNING("SDL: Unsupported output device '%s', using 'texture' output mode",
 		            output.c_str());
 
-		sdl.rendering_backend = RenderingBackend::Texture;
+		sdl.render_backend_type = RenderBackendType::Texture;
 	}
 }
 
@@ -813,9 +813,9 @@ DosBox::Rect GFX_GetCanvasSizeInPixels()
 	return sdl.renderer->GetCanvasSizeInPixels();
 }
 
-RenderingBackend GFX_GetRenderingBackend()
+RenderBackendType GFX_GetRenderBackendType()
 {
-	return sdl.rendering_backend;
+	return sdl.render_backend_type;
 }
 
 static SDL_Rect get_desktop_size()
@@ -1586,7 +1586,7 @@ static void setup_fullscreen_mode()
 static void create_window_and_renderer()
 {
 #if C_OPENGL
-	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+	if (sdl.render_backend_type == RenderBackendType::OpenGl) {
 		try {
 			sdl.renderer = std::make_unique<OpenGlRenderer>(
 			        sdl.windowed.x_pos,
@@ -1600,13 +1600,13 @@ static void create_window_and_renderer()
 			        "OPENGL: Error initialising OpenGL renderer, "
 			        "falling back to SDL renderer");
 
-			sdl.rendering_backend = RenderingBackend::Texture;
+			sdl.render_backend_type = RenderBackendType::Texture;
 			set_section_property_value("sdl", "output", "texture");
 		}
 	}
 #endif
 
-	if (sdl.rendering_backend == RenderingBackend::Texture) {
+	if (sdl.render_backend_type == RenderBackendType::Texture) {
 		try {
 			std::string render_driver = get_sdl_section()->GetString(
 			        "texture_renderer");
@@ -2216,7 +2216,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		log_window_event("SDL: Reset macOS's GL viewport after window-restore");
 
-		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+		if (sdl.render_backend_type == RenderBackendType::OpenGl) {
 			update_viewport();
 		}
 #endif
@@ -2332,7 +2332,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// the full window (supporting overlay images and the OSD will
 		// necessitate this).
 		//
-		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+		if (sdl.render_backend_type == RenderBackendType::OpenGl) {
 			update_viewport();
 		}
 #endif

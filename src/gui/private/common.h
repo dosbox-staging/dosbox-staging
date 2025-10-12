@@ -69,10 +69,9 @@ enum class PresentationMode {
 };
 
 enum class InterpolationMode { Bilinear, NearestNeighbour };
+enum class RenderBackendType { OpenGl, Texture };
 
-enum class RenderingBackend { Texture, OpenGl };
-
-RenderingBackend GFX_GetRenderingBackend();
+RenderBackendType GFX_GetRenderBackendType();
 
 SDL_Window* GFX_GetWindow();
 
