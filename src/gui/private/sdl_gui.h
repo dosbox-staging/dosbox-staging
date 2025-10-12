@@ -100,12 +100,6 @@ struct SDL_Block {
 	bool mute_when_inactive  = false;
 	bool pause_when_inactive = false;
 
-	// Key state for certain special handlings
-	struct {
-		SDL_EventType left_alt_state  = SDL_KEYUP;
-		SDL_EventType right_alt_state = SDL_KEYUP;
-	} key = {};
-
 	RenderBackendType render_backend_type = RenderBackendType::Sdl;
 
 	TextureFilterMode texture_filter_mode = {};
@@ -171,16 +165,6 @@ struct SDL_Block {
 		bool windowed   = false;
 		bool fullscreen = false;
 	} vsync = {};
-
-#if defined(WIN32)
-	// TODO check of this workaround is still needed
-	// Time when sdl regains focus (Alt+Tab) in windowed mode
-	int64_t focus_ticks = 0;
-#endif
-
-	// State of Alt keys for certain special handlings
-	SDL_EventType laltstate = SDL_KEYUP;
-	SDL_EventType raltstate = SDL_KEYUP;
 };
 
 #endif
