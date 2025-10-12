@@ -74,7 +74,7 @@ enum class RenderingBackend { Texture, OpenGl };
 
 RenderingBackend GFX_GetRenderingBackend();
 
-SDL_Window* GFX_GetSDLWindow();
+SDL_Window* GFX_GetWindow();
 
 // forward declaration
 struct ShaderInfo;
@@ -112,5 +112,14 @@ DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px);
 
 DosBox::Rect to_rect(const SDL_Rect r);
 SDL_Rect to_sdl_rect(const DosBox::Rect& r);
+
+enum class DosBoxSdlEvent {
+	RefreshAnimatedTitle,
+	NumEvents // dummy, keep last, do not use
+};
+
+int GFX_GetUserSdlEventId(DosBoxSdlEvent event);
+
+bool GFX_IsPaused();
 
 #endif // DOSBOX_GUI_COMMON_H

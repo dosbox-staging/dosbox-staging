@@ -3,7 +3,7 @@
 
 #include "titlebar.h"
 
-#include "private/sdlmain.h"
+#include "private/common.h"
 
 #include <map>
 #include <vector>
@@ -123,11 +123,11 @@ static bool is_animation_running()
 	return state.timer_id != 0;
 }
 
-static uint32_t animation_tick(uint32_t /* interval */, void* /* name */)
+static uint32_t animation_tick([[maybe_unused]] uint32_t interval,
+                               [[maybe_unused]] void* name)
 {
 	SDL_Event event = {};
-	event.user.type = enum_val(SDL_DosBoxEvents::RefreshAnimatedTitle);
-	event.user.type += sdl.start_event_id;
+	event.user.type = GFX_GetUserSdlEventId(DosBoxSdlEvent::RefreshAnimatedTitle);
 
 	// We are outside of the main thread; we can't update the window title
 	// here, SDL does not like it - we have to go through the event queue
@@ -276,7 +276,7 @@ static std::string get_mouse_hint()
 static void maybe_add_muted_mark(std::string& title_str)
 {
 	// Do not add 'mute' tag if emulator is paused
-	if (state.is_audio_muted && !sdl.is_paused) {
+	if (state.is_audio_muted && !GFX_IsPaused()) {
 		title_str = BeginTag + MSG_GetTranslatedRaw("TITLEBAR_MUTED") +
 		            EndTag + title_str;
 	}
@@ -284,7 +284,7 @@ static void maybe_add_muted_mark(std::string& title_str)
 
 static void maybe_add_recording_pause_mark(std::string& title_str)
 {
-	if (sdl.is_paused) {
+	if (GFX_IsPaused()) {
 		title_str = BeginTag + MSG_GetTranslatedRaw("TITLEBAR_PAUSED") +
 		            EndTag + title_str;
 		return;
@@ -318,7 +318,7 @@ static void set_window_title()
 	maybe_add_recording_pause_mark(new_title_str);
 
 	if (new_title_str != last_title_str) {
-		SDL_SetWindowTitle(sdl.window, new_title_str.c_str());
+		SDL_SetWindowTitle(GFX_GetWindow(), new_title_str.c_str());
 		last_title_str = new_title_str;
 	}
 }
@@ -369,7 +369,7 @@ void TITLEBAR_RefreshTitle()
 
 	// Start/stop animation if needed
 	const bool is_capturing = state.is_capturing_audio || state.is_capturing_video;
-	if (config.animated_record_mark && !sdl.is_paused && is_capturing) {
+	if (config.animated_record_mark && !GFX_IsPaused() && is_capturing) {
 		maybe_start_animation();
 	} else {
 		maybe_stop_animation();
@@ -765,9 +765,11 @@ void TITLEBAR_AddMessages()
 	MSG_Add("TITLEBAR_HINT_CAPTURED_HOTKEY", "mouse captured, %s+F10 to release");
 	MSG_Add("TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE",
 	        "mouse captured, %s+F10 or middle-click to release");
+
 	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY", "to capture the mouse press %s+F10");
 	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE",
 	        "to capture the mouse press %s+F10 or middle-click");
+
 	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON",
 	        "to capture the mouse press %s+F10 or click any button");
 	MSG_Add("TITLEBAR_HINT_SEAMLESS_HOTKEY", "seamless mouse, %s+F10 to capture");
