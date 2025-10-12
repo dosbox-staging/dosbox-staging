@@ -108,7 +108,7 @@ struct SDL_Block {
 
 	RenderBackendType render_backend_type = RenderBackendType::Texture;
 
-	InterpolationMode interpolation_mode   = {};
+	TextureFilterMode texture_filter_mode = {};
 
 	std::unique_ptr<RenderBackend> renderer = {};
 

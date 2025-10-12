@@ -248,8 +248,8 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 
 	const int filter_param = [&] {
 		switch (shader_info.settings.texture_filter_mode) {
-		case TextureFilterMode::Nearest: return GL_NEAREST;
-		case TextureFilterMode::Linear: return GL_LINEAR;
+		case TextureFilterMode::NearestNeighbour: return GL_NEAREST;
+		case TextureFilterMode::Bilinear: return GL_LINEAR;
 		default: assertm(false, "Invalid TextureFilterMode"); return 0;
 		}
 	}();

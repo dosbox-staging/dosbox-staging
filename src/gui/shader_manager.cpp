@@ -363,7 +363,7 @@ ShaderSettings ShaderManager::ParseShaderSettings(const std::string& shader_name
 				settings.force_no_pixel_doubling = true;
 
 			} else if (pragma == "use_nearest_texture_filter") {
-				settings.texture_filter_mode = TextureFilterMode::Nearest;
+				settings.texture_filter_mode = TextureFilterMode::NearestNeighbour;
 			}
 			++next;
 		}

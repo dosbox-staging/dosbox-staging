@@ -16,8 +16,8 @@ CHECK_NARROWING();
 SdlRenderer::SdlRenderer(const int x, const int y, const int width,
                          const int height, const uint32_t sdl_window_flags,
                          const std::string& render_driver,
-                         InterpolationMode interpolation_mode)
-        : interpolation_mode(interpolation_mode)
+                         TextureFilterMode texture_filter_mode)
+        : texture_filter_mode(texture_filter_mode)
 {
 	auto flags = sdl_window_flags | OpenGlDriverCrashWorkaround(render_driver);
 
@@ -232,8 +232,8 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 		return false;
 	}
 
-	switch (interpolation_mode) {
-	case InterpolationMode::NearestNeighbour:
+	switch (texture_filter_mode) {
+	case TextureFilterMode::NearestNeighbour:
 		if (SDL_SetTextureScaleMode(texture,
 		                            SDL_ScaleMode::SDL_ScaleModeNearest) < 0) {
 			LOG_ERR("SDL: Error setting texture filtering mode: %s",
@@ -241,7 +241,7 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 		}
 		break;
 
-	case InterpolationMode::Bilinear:
+	case TextureFilterMode::Bilinear:
 		if (SDL_SetTextureScaleMode(texture,
 		                            SDL_ScaleMode::SDL_ScaleModeLinear) < 0) {
 			LOG_ERR("SDL: Error setting texture filtering mode: %s",
@@ -249,7 +249,7 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 		}
 		break;
 
-	default: assertm(false, "Invalid InterpolationMode"); return false;
+	default: assertm(false, "Invalid TextureFilterMode"); return 0;
 	}
 
 	// unused; must be 0

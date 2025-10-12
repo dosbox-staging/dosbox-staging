@@ -515,8 +515,8 @@ static void set_scan_and_pixel_doubling()
 
 	switch (GFX_GetRenderBackendType()) {
 	case RenderBackendType::Texture: {
-		const auto nearest_neighbour_on = (GFX_GetTextureInterpolationMode() ==
-		                                   InterpolationMode::NearestNeighbour);
+		const auto nearest_neighbour_on = (GFX_GetTextureFilterMode() ==
+		                                   TextureFilterMode::NearestNeighbour);
 
 		force_vga_single_scan   = nearest_neighbour_on;
 		force_no_pixel_doubling = nearest_neighbour_on;
@@ -525,6 +525,7 @@ static void set_scan_and_pixel_doubling()
 	case RenderBackendType::OpenGl: {
 		const auto shader_info =
 		        ShaderManager::GetInstance().GetCurrentShaderInfo();
+
 		force_vga_single_scan = shader_info.settings.force_single_scan;
 		force_no_pixel_doubling = shader_info.settings.force_no_pixel_doubling;
 	} break;
