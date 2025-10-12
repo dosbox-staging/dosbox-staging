@@ -700,21 +700,6 @@ static void enter_fullscreen()
 
 	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
 
-		// enter_fullscreen() can be called multiple times in a row by
-		// the existing code while still in fullscreen mode. That would
-		// throw off the window state restoring logic of the forced
-		// borderless mode. This a long-standing issue and needs to be
-		// fixed, eventually, but it's not so simple. In the meantime,
-		// the easy solution to make borderless fullscreen work
-		// correctly is to maintain its own fullscreen state flag.
-		//
-		// Once enter_fullscreen() and exit_fullscreen() are always
-		// called in pairs, this workaround can be removed.
-		//
-		if (sdl.fullscreen.is_forced_borderless_fullscreen) {
-			return;
-		}
-
 		// "Emulate" SDL's built-in borderless fullscreen mode by
 		// turning off window decorations and resizing the window to
 		// cover the entire desktop. But this would trigger exclusive
@@ -737,8 +722,6 @@ static void enter_fullscreen()
 		SDL_SetWindowSize(sdl.window,
 		                  sdl.fullscreen.width + 1,
 		                  sdl.fullscreen.height);
-
-		sdl.fullscreen.is_forced_borderless_fullscreen = true;
 
 		// Disable transparency in fullscreen mode
 		SDL_SetWindowOpacity(sdl.window, 100);
@@ -778,8 +761,6 @@ static void exit_fullscreen()
 		                      sdl.fullscreen.prev_window.y_pos);
 
 		configure_window_transparency();
-
-		sdl.fullscreen.is_forced_borderless_fullscreen = false;
 
 		maybe_log_display_properties();
 

@@ -150,8 +150,6 @@ struct SDL_Block {
 		int width  = 0;
 		int height = 0;
 
-		bool is_forced_borderless_fullscreen = false;
-
 		struct {
 			int width  = 0;
 			int height = 0;
