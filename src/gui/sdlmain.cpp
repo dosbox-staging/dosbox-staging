@@ -99,11 +99,6 @@ static bool is_debugger_event(const SDL_Event& event)
 	default: return false;
 	}
 }
-
-SDL_Window* GFX_GetSDLWindow()
-{
-	return sdl.window;
-}
 #endif
 
 // Globals for keyboard initialisation
@@ -150,6 +145,11 @@ bool GFX_HaveDesktopEnvironment()
 	// Assume we have a desktop environment on all other systems
 	return true;
 #endif
+}
+
+SDL_Window* GFX_GetWindow()
+{
+	return sdl.window;
 }
 
 double GFX_GetHostRefreshRate()
@@ -374,6 +374,11 @@ static bool is_command_pressed(const SDL_Event event)
 		}
 	}
 	MIXER_UnlockMixerThread();
+}
+
+bool GFX_IsPaused()
+{
+	return sdl.is_paused;
 }
 
 void GFX_Stop()
@@ -801,12 +806,6 @@ static void exit_fullscreen()
 	configure_window_transparency();
 
 	configure_window_decorations();
-}
-
-// Returns the current window; used for mapper UI.
-SDL_Window* GFX_GetWindow()
-{
-	return sdl.window;
 }
 
 DosBox::Rect GFX_GetCanvasSizeInPixels()
@@ -1831,7 +1830,7 @@ void GFX_Init()
 	}
 
 	// Register custom SDL events
-	sdl.start_event_id = SDL_RegisterEvents(enum_val(SDL_DosBoxEvents::NumEvents));
+	sdl.start_event_id = SDL_RegisterEvents(enum_val(DosBoxSdlEvent::NumEvents));
 	if (sdl.start_event_id == UINT32_MAX) {
 		E_Exit("SDL: Error allocating event IDs");
 	}
@@ -2091,7 +2090,7 @@ static bool maybe_autoswitch_shader()
 static bool is_user_event(const SDL_Event& event)
 {
 	const auto start_id = sdl.start_event_id;
-	const auto end_id   = start_id + enum_val(SDL_DosBoxEvents::NumEvents);
+	const auto end_id   = start_id + enum_val(DosBoxSdlEvent::NumEvents);
 
 	return (event.common.type >= start_id && event.common.type < end_id);
 }
@@ -2100,13 +2099,18 @@ static void handle_user_event(const SDL_Event& event)
 {
 	const auto id = event.common.type - sdl.start_event_id;
 
-	switch (static_cast<SDL_DosBoxEvents>(id)) {
-	case SDL_DosBoxEvents::RefreshAnimatedTitle:
+	switch (static_cast<DosBoxSdlEvent>(id)) {
+	case DosBoxSdlEvent::RefreshAnimatedTitle:
 		TITLEBAR_RefreshAnimatedTitle();
 		break;
 
 	default: assert(false);
 	}
+}
+
+int GFX_GetUserSdlEventId(DosBoxSdlEvent event)
+{
+	return sdl.start_event_id + enum_val(event);
 }
 
 static void handle_pause_when_inactive(const SDL_Event& event)

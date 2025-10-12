@@ -1877,8 +1877,6 @@ static void SetActiveEvent(CEvent * event) {
 	}
 }
 
-extern SDL_Window* GFX_GetWindow();
-
 static void DrawButtons() {
 	SDL_SetRenderDrawColor(mapper.renderer,
 	                       color_black.red,

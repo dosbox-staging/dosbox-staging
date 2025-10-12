@@ -87,11 +87,6 @@
 
 enum class FullscreenMode { Standard, Original, ForcedBorderless };
 
-enum class SDL_DosBoxEvents : uint8_t {
-	RefreshAnimatedTitle,
-	NumEvents // dummy, keep last, do not use
-};
-
 struct SDL_Block {
 	uint32_t start_event_id = UINT32_MAX;
 
@@ -192,8 +187,5 @@ struct SDL_Block {
 	SDL_EventType laltstate = SDL_KEYUP;
 	SDL_EventType raltstate = SDL_KEYUP;
 };
-
-// TODO should be private; introduce SDL_* API calls instead
-extern SDL_Block sdl;
 
 #endif
