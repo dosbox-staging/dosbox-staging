@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "gui/private/common.h"
+
 #include "gui/render/render.h"
 #include "hardware/video/vga.h"
 #include "utils/rect.h"
@@ -87,14 +89,6 @@ enum class ShaderMode {
 	AutoArcadeSharp
 };
 
-enum TextureFilterMode {
-	// Nearest-neighbour interpolation
-	Nearest,
-
-	// Bilinear interpolation
-	Linear
-};
-
 // The default setttings are important; these are the settings we get if the
 // shader doesn't override them via custom pragmas.
 struct ShaderSettings {
@@ -104,7 +98,7 @@ struct ShaderSettings {
 	bool force_single_scan       = false;
 	bool force_no_pixel_doubling = false;
 
-	TextureFilterMode texture_filter_mode = TextureFilterMode::Linear;
+	TextureFilterMode texture_filter_mode = TextureFilterMode::Bilinear;
 };
 
 struct ShaderInfo {

@@ -261,12 +261,12 @@ static void configure_renderer()
 	const std::string output = get_sdl_section()->GetString("output");
 
 	if (output == "texture") {
-		sdl.interpolation_mode     = InterpolationMode::Bilinear;
-		sdl.render_backend_type    = RenderBackendType::Texture;
+		sdl.render_backend_type = RenderBackendType::Texture;
+		sdl.texture_filter_mode = TextureFilterMode::Bilinear;
 
 	} else if (output == "texturenb") {
-		sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
 		sdl.render_backend_type = RenderBackendType::Texture;
+		sdl.texture_filter_mode = TextureFilterMode::NearestNeighbour;
 
 #if C_OPENGL
 	} else if (output == "opengl") {
@@ -1516,9 +1516,9 @@ static void configure_window()
 	configure_window_size();
 }
 
-InterpolationMode GFX_GetTextureInterpolationMode()
+TextureFilterMode GFX_GetTextureFilterMode()
 {
-	return sdl.interpolation_mode;
+	return sdl.texture_filter_mode;
 }
 
 static int get_sdl_window_flags()
@@ -1619,7 +1619,7 @@ static void create_window_and_renderer()
 			        sdl.windowed.height,
 			        get_sdl_window_flags(),
 			        render_driver,
-			        sdl.interpolation_mode);
+			        sdl.texture_filter_mode);
 
 		} catch (const std::runtime_error& ex) {
 			E_Exit("SDL: Could not initialize SDL render backend");

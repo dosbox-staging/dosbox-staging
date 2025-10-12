@@ -68,10 +68,11 @@ enum class PresentationMode {
 	HostRate
 };
 
-enum class InterpolationMode { Bilinear, NearestNeighbour };
 enum class RenderBackendType { OpenGl, Texture };
 
 RenderBackendType GFX_GetRenderBackendType();
+
+enum class TextureFilterMode { NearestNeighbour, Bilinear };
 
 SDL_Window* GFX_GetWindow();
 
@@ -82,7 +83,7 @@ void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_sour
 
 uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue);
 
-InterpolationMode GFX_GetTextureInterpolationMode();
+TextureFilterMode GFX_GetTextureFilterMode();
 
 uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,

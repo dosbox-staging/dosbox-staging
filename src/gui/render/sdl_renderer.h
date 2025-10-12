@@ -21,7 +21,7 @@ class SdlRenderer : public RenderBackend {
 public:
 	SdlRenderer(const int x, const int y, const int width, const int height,
 	            const uint32_t sdl_window_flags, const std::string& render_driver,
-	            InterpolationMode interpolation_mode);
+	            TextureFilterMode texture_filter_mode);
 
 	~SdlRenderer() override;
 
@@ -77,7 +77,7 @@ private:
 	SDL_PixelFormat* pixel_format = {};
 	SDL_Texture* texture          = {};
 
-	InterpolationMode interpolation_mode = InterpolationMode::Bilinear;
+	TextureFilterMode texture_filter_mode = TextureFilterMode::Bilinear;
 };
 
 #endif // DOSBOX_SDL_RENDERER_H
