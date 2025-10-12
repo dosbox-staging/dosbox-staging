@@ -20,7 +20,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Disable the noisy narrowing and conversion warnings by default. Use the
 # CHECK_NARROWING() macro to opt-in these checks on a per-file basis. See
 # `src/util/checks.h` for details.
-if(MSVC)
+if (MSVC)
   # /W4 displays level 1, level 2, and level 3 warnings, and all level 4
   #(informational) warnings that aren't off by default.
   add_compile_options("/wd4244" "/MP" "/W4")
@@ -40,13 +40,13 @@ endif()
 
 # TODO: These are sprintf deprecated warnings.
 # We probably do want to remove sprintf usage at some point.
-if(APPLE)
+if (APPLE)
   add_compile_options("-Wno-deprecated-declarations")
 endif()
 
 option(OPT_DEBUGGER "Enable debugger" OFF)
 option(OPT_HEAVY_DEBUGGER "Enable heavy debugger" OFF)
-if(OPT_HEAVY_DEBUGGER)
+if (OPT_HEAVY_DEBUGGER)
   set(OPT_DEBUGGER ON CACHE INTERNAL "")
 endif()
 
@@ -56,14 +56,14 @@ include(CheckCXXSourceCompiles)
 include(CheckSymbolExists)
 include(GNUInstallDirs)
 
-if(WIN32)
+if (WIN32)
   set(DOSBOX_PLATFORM_WINDOWS ON)
 
-elseif(APPLE)
+elseif (APPLE)
   set(DOSBOX_PLATFORM_MACOS ON)
   set(MACOSX ON)
 
-elseif(LINUX)
+elseif (LINUX)
   set(DOSBOX_PLATFORM_LINUX ON)
 
 else()
@@ -74,30 +74,31 @@ endif()
 option(OPT_SANITIZER        "Enable general sanitizer checks")
 option(OPT_THREAD_SANITIZER "Enable thread sanitizer")
 
-if(OPT_SANITIZER AND OPT_THREAD_SANITIZER)
+if (OPT_SANITIZER AND OPT_THREAD_SANITIZER)
   message(FATAL_ERROR
           "-DOPT_SANITIZER and -DOPT_THREAD_SANITIZER are mutually exclusive")
 endif()
 
-if(OPT_SANITIZER)
-  if(DOSBOX_PLATFORM_MACOS)
+if (OPT_SANITIZER)
+  if (DOSBOX_PLATFORM_MACOS)
     set(SANITIZER_FLAGS "address,pointer-compare,pointer-subtract,undefined")
   else()
     set(SANITIZER_FLAGS "address,pointer-compare,pointer-subtract,leak,undefined")
   endif()
-elseif(OPT_THREAD_SANITIZER)
-  if(DOSBOX_PLATFORM_MACOS)
+
+elseif (OPT_THREAD_SANITIZER)
+  if (DOSBOX_PLATFORM_MACOS)
     message(WARNING "Thread sanitizer does not work well on macOS")
   endif()
   set(SANITIZER_FLAGS "thread")
 endif()
 
-if(OPT_SANITIZER OR OPT_THREAD_SANITIZER)
-  if(MSVC)
+if (OPT_SANITIZER OR OPT_THREAD_SANITIZER)
+  if (MSVC)
     message(FATAL_ERROR "Sanitizers are only supported for CLANG and GCC compilers")
   endif()
 
-  if(DOSBOX_PLATFORM_WINDOWS)
+  if (DOSBOX_PLATFORM_WINDOWS)
     message(WARNING "Sanitizers were not tested on Windows")
   endif()
 
@@ -124,7 +125,7 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 find_package(Git)
 
-if(Git_FOUND)
+if (Git_FOUND)
   execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse --short=5 HEAD
     WORKING_DIRECTORY         ${CMAKE_CURRENT_LIST_DIR}
@@ -136,7 +137,7 @@ else()
 endif()
 
 check_include_file("unistd.h" HAS_UNISTD)
-if(NOT HAS_UNISTD)
+if (NOT HAS_UNISTD)
   configure_file(
     src/platform/windows/visualc/unistd.h
     ${CMAKE_CURRENT_BINARY_DIR}/include/unistd.h
@@ -146,7 +147,7 @@ endif()
 # File-descriptor manipulation routines, such as FD_ZERO, are used
 # by Enet, slirp, and ManyMouse's X11 interface. Unfortunately these
 # routines aren't universally available.
-if(DOSBOX_PLATFORM_WINDOWS)
+if (DOSBOX_PLATFORM_WINDOWS)
   check_symbol_exists(FD_ZERO "winsock2.h"   HAVE_FD_ZERO)
 else()
   check_symbol_exists(FD_ZERO "sys/select.h" HAVE_FD_ZERO)
@@ -175,9 +176,9 @@ int main() {
 check_cxx_source_compiles("${TEST_CODE_BUILTIN_CLEAR_CACHE}"
                           HAVE_BUILTIN_CLEAR_CACHE)
 
-if(CMAKE_SYSTEM_PROCESSOR  STREQUAL "AMD64"  OR
-   CMAKE_SYSTEM_PROCESSOR  STREQUAL "x86_64" OR
-   CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
+if (CMAKE_SYSTEM_PROCESSOR  STREQUAL "AMD64"  OR
+    CMAKE_SYSTEM_PROCESSOR  STREQUAL "x86_64" OR
+    CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
 
   set(C_TARGETCPU        "X86_64")
   set(C_DYNAMIC_X86      ON)
@@ -185,9 +186,9 @@ if(CMAKE_SYSTEM_PROCESSOR  STREQUAL "AMD64"  OR
   set(C_FPU_X86          ON)
   set(C_UNALIGNED_MEMORY ON)
 
-elseif(CMAKE_SYSTEM_PROCESSOR  STREQUAL "arm64"   OR
-       CMAKE_SYSTEM_PROCESSOR  STREQUAL "aarch64" OR
-       CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
+elseif (CMAKE_SYSTEM_PROCESSOR  STREQUAL "arm64"   OR
+        CMAKE_SYSTEM_PROCESSOR  STREQUAL "aarch64" OR
+        CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
 
   set(C_TARGETCPU        "ARMV8LE")
   set(C_DYNAMIC_X86      OFF)
@@ -209,7 +210,7 @@ check_include_file("sys/xattr.h"  HAVE_SYS_XATTR_H)
 
 check_symbol_exists(getpeername  sys/socket.h  HAVE_GETPEERNAME)
 check_symbol_exists(getsockname  sys/socket.h  HAVE_GETSOCKNAME)
-if(HAVE_GETPEERNAME AND HAVE_GETSOCKNAME)
+if (HAVE_GETPEERNAME AND HAVE_GETSOCKNAME)
   set(HAVE_SYS_SOCKET_H ON)
 endif()
 
@@ -226,10 +227,10 @@ set(C_MT32EMU ON)       # TODO: Option
 set(C_TRACY OFF)        # TODO: Option
 set(C_DIRECTSERIAL ON)
 
-if(OPT_DEBUGGER)
+if (OPT_DEBUGGER)
   set(C_DEBUGGER ON)
 
-  if(OPT_HEAVY_DEBUGGER)
+  if (OPT_HEAVY_DEBUGGER)
     set(C_HEAVY_DEBUGGER ON)
   endif()
 endif()
@@ -250,13 +251,15 @@ option(OPT_XINPUT
 if (OPT_MANYMOUSE)
   if (NOT HAVE_FD_ZERO)
     message(WARNING "ManyMouse requires FD_ZERO support")
-  elseif(DOSBOX_PLATFORM_MACOS)
+
+  elseif (DOSBOX_PLATFORM_MACOS)
     include (${CMAKE_CURRENT_SOURCE_DIR}/src/libs/manymouse/cmake/FindIOKit.cmake)
     if (NOT ${IOKit_FOUND})
       message(WARNING "ManyMouse requires IOKit")
     else()
       set(C_MANYMOUSE ON)
     endif()
+
   else()
     set(C_MANYMOUSE ON)
   endif()
@@ -275,7 +278,7 @@ endif()
 # Tests
 option(OPT_TESTS "Enable tests" ON)
 
-if(OPT_TESTS)
+if (OPT_TESTS)
   enable_testing()
 endif()
 
@@ -289,7 +292,7 @@ set(C_CORESERVICES   "${DOSBOX_PLATFORM_MACOS}")
 set(C_ALSA "${DOSBOX_PLATFORM_LINUX}")
 
 # Windows
-if(DOSBOX_PLATFORM_WINDOWS)
+if (DOSBOX_PLATFORM_WINDOWS)
   # Prevent <windows.h> from clobbering std::min and std::max
   set(NOMINMAX ON)
   # Enable mathematical constants (such as M_PI) in Windows math.h header
@@ -383,7 +386,7 @@ add_library(libdosboxcommon STATIC)
 
 # Add tests before src so that the dosbox_tests target is
 # available for target_sources()
-if(OPT_TESTS)
+if (OPT_TESTS)
   add_subdirectory(tests)
 endif()
 
