@@ -101,10 +101,6 @@ static bool is_debugger_event(const SDL_Event& event)
 }
 #endif
 
-// Globals for keyboard initialisation
-static bool startup_state_numlock  = false;
-static bool startup_state_capslock = false;
-
 // Detects if we're running within a desktop environment (or window manager).
 bool GFX_HaveDesktopEnvironment()
 {
@@ -1889,17 +1885,6 @@ void GFX_Init()
 	configure_allow_screensaver();
 
 	add_default_sdl_section_mapper_bindings();
-
-	// Get keyboard state of NumLock and CapsLock
-	SDL_Keymod keystate = SDL_GetModState();
-
-	// TODO is this still needed on current SDL?
-	//
-	// A long-standing SDL1 and SDL2 bug prevents it from detecting the
-	// NumLock and CapsLock states on startup. Instead, these states must
-	// be toggled by the user /after/ starting DOSBox.
-	startup_state_numlock  = keystate & KMOD_NUM;
-	startup_state_capslock = keystate & KMOD_CAPS;
 
 	// Notify MOUSE subsystem that it can start now
 	MOUSE_NotifyReadyGFX();
