@@ -257,11 +257,11 @@ static void configure_renderer()
 	const std::string output = get_sdl_section()->GetString("output");
 
 	if (output == "texture") {
-		sdl.render_backend_type = RenderBackendType::Texture;
+		sdl.render_backend_type = RenderBackendType::Sdl;
 		sdl.texture_filter_mode = TextureFilterMode::Bilinear;
 
 	} else if (output == "texturenb") {
-		sdl.render_backend_type = RenderBackendType::Texture;
+		sdl.render_backend_type = RenderBackendType::Sdl;
 		sdl.texture_filter_mode = TextureFilterMode::NearestNeighbour;
 
 #if C_OPENGL
@@ -274,7 +274,7 @@ static void configure_renderer()
 		LOG_WARNING("SDL: Unsupported output device '%s', using 'texture' output mode",
 		            output.c_str());
 
-		sdl.render_backend_type = RenderBackendType::Texture;
+		sdl.render_backend_type = RenderBackendType::Sdl;
 	}
 }
 
@@ -1596,13 +1596,13 @@ static void create_window_and_renderer()
 			        "OPENGL: Error initialising OpenGL renderer, "
 			        "falling back to SDL renderer");
 
-			sdl.render_backend_type = RenderBackendType::Texture;
+			sdl.render_backend_type = RenderBackendType::Sdl;
 			set_section_property_value("sdl", "output", "texture");
 		}
 	}
 #endif
 
-	if (sdl.render_backend_type == RenderBackendType::Texture) {
+	if (sdl.render_backend_type == RenderBackendType::Sdl) {
 		try {
 			std::string render_driver = get_sdl_section()->GetString(
 			        "texture_renderer");

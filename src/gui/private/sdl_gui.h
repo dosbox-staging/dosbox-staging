@@ -106,7 +106,7 @@ struct SDL_Block {
 		SDL_EventType right_alt_state = SDL_KEYUP;
 	} key = {};
 
-	RenderBackendType render_backend_type = RenderBackendType::Texture;
+	RenderBackendType render_backend_type = RenderBackendType::Sdl;
 
 	TextureFilterMode texture_filter_mode = {};
 
