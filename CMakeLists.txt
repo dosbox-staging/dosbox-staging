@@ -221,7 +221,11 @@ set(C_FPU ON)
 set(C_MODEM ON)
 set(C_IPX ON)
 
-set(C_OPENGL ON)
+option(OPT_OPENGL "Enable OpenGL render backend" ON)
+if (OPT_OPENGL)
+  set(C_OPENGL ON)
+endif()
+
 set(C_MT32EMU ON)       # TODO: Option
 
 set(C_TRACY OFF)        # TODO: Option
