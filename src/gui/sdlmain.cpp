@@ -261,16 +261,16 @@ static void configure_renderer()
 	const std::string output = get_sdl_section()->GetString("output");
 
 	if (output == "texture") {
-		sdl.want_rendering_backend = RenderingBackend::Texture;
+		sdl.rendering_backend      = RenderingBackend::Texture;
 		sdl.interpolation_mode     = InterpolationMode::Bilinear;
 
 	} else if (output == "texturenb") {
-		sdl.want_rendering_backend = RenderingBackend::Texture;
+		sdl.rendering_backend  = RenderingBackend::Texture;
 		sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
 
 #if C_OPENGL
 	} else if (output == "opengl") {
-		sdl.want_rendering_backend = RenderingBackend::OpenGl;
+		sdl.rendering_backend = RenderingBackend::OpenGl;
 #endif
 
 	} else {
@@ -278,7 +278,7 @@ static void configure_renderer()
 		LOG_WARNING("SDL: Unsupported output device '%s', using 'texture' output mode",
 		            output.c_str());
 
-		sdl.want_rendering_backend = RenderingBackend::Texture;
+		sdl.rendering_backend = RenderingBackend::Texture;
 	}
 }
 
@@ -1586,9 +1586,7 @@ static void setup_fullscreen_mode()
 static void create_window_and_renderer()
 {
 #if C_OPENGL
-	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
-		sdl.rendering_backend = RenderingBackend::OpenGl;
-
+	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		try {
 			sdl.renderer = std::make_unique<OpenGlRenderer>(
 			        sdl.windowed.x_pos,
@@ -1602,14 +1600,13 @@ static void create_window_and_renderer()
 			        "OPENGL: Error initialising OpenGL renderer, "
 			        "falling back to SDL renderer");
 
-			sdl.want_rendering_backend = RenderingBackend::Texture;
+			sdl.rendering_backend = RenderingBackend::Texture;
+			set_section_property_value("sdl", "output", "texture");
 		}
 	}
 #endif
 
-	if (sdl.want_rendering_backend == RenderingBackend::Texture) {
-		sdl.rendering_backend = RenderingBackend::Texture;
-
+	if (sdl.rendering_backend == RenderingBackend::Texture) {
 		try {
 			std::string render_driver = get_sdl_section()->GetString(
 			        "texture_renderer");
