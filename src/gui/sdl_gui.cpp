@@ -1024,7 +1024,7 @@ static void focus_input()
 	SDL_SetWindowInputFocus(sdl.window);
 }
 
-static void switch_fullscreen()
+static void toggle_fullscreen()
 {
 	// Record the window's current canvas size if we're departing window-mode
 	if (!sdl.is_fullscreen) {
@@ -1046,10 +1046,10 @@ static void switch_fullscreen()
 	maybe_log_display_properties();
 }
 
-static void switch_fullscreen_handler(bool pressed)
+static void toggle_fullscreen_handler(bool pressed)
 {
 	if (pressed) {
-		switch_fullscreen();
+		toggle_fullscreen();
 	}
 }
 
@@ -1721,7 +1721,7 @@ static void add_default_sdl_section_mapper_bindings()
 
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown", "Shutdown");
 
-	MAPPER_AddHandler(switch_fullscreen_handler,
+	MAPPER_AddHandler(toggle_fullscreen_handler,
 	                  SDL_SCANCODE_RETURN,
 	                  MMOD2,
 	                  "fullscr",
