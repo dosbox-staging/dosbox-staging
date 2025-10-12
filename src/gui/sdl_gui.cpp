@@ -1024,38 +1024,6 @@ static void focus_input()
 	SDL_SetWindowInputFocus(sdl.window);
 }
 
-#if defined(WIN32)
-STICKYKEYS stick_keys = {sizeof(STICKYKEYS), 0};
-
-static void sticky_keys(bool restore)
-{
-	static bool inited = false;
-
-	if (!inited) {
-		inited = true;
-		SystemParametersInfo(SPI_GETSTICKYKEYS,
-		                     sizeof(STICKYKEYS),
-		                     &stick_keys,
-		                     0);
-	}
-	if (restore) {
-		SystemParametersInfo(SPI_SETSTICKYKEYS,
-		                     sizeof(STICKYKEYS),
-		                     &stick_keys,
-		                     0);
-		return;
-	}
-	// Get current sticky keys layout:
-	STICKYKEYS s = {sizeof(STICKYKEYS), 0};
-	SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(STICKYKEYS), &s, 0);
-
-	if (!(s.dwFlags & SKF_STICKYKEYSON)) { // Not on already
-		s.dwFlags &= ~SKF_HOTKEYACTIVE;
-		SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(STICKYKEYS), &s, 0);
-	}
-}
-#endif // WIN32
-
 static void switch_fullscreen()
 {
 	// Record the window's current canvas size if we're departing window-mode
@@ -1064,13 +1032,6 @@ static void switch_fullscreen()
 		        sdl.renderer->GetCanvasSizeInPixels());
 	}
 
-#if defined(WIN32)
-	// We are about to switch to the opposite of our current mode
-	// (ie: opposite of whatever `sdl.is_fullscreen` holds).
-	// Sticky-keys should be set to the opposite of fullscreen,
-	// so we simply apply the bool of the mode we're switching out-of.
-	sticky_keys(sdl.is_fullscreen);
-#endif
 	if (sdl.is_fullscreen) {
 		exit_fullscreen();
 	} else {
@@ -2871,13 +2832,6 @@ void GFX_Quit()
 {
 #if !C_DEBUGGER
 	SDL_Quit();
-#endif
-
-#if defined(WIN32)
-	// Might not be needed if the shutdown function switches to windowed
-	// mode, but it doesn't hurt.
-	// TODO is this still needed on current SDL?
-	sticky_keys(true);
 #endif
 }
 
