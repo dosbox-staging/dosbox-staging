@@ -483,6 +483,7 @@ static std::unordered_map<std::string, MessageLocation> message_location = {};
 static std::unordered_map<std::string, Message> dictionary_english    = {};
 static std::unordered_map<std::string, Message> dictionary_translated = {};
 
+static std::string translation_language         = {};
 static std::optional<Script> translation_script = {};
 static bool is_translation_script_fuzzy         = false;
 
@@ -550,6 +551,7 @@ static void clear_translated_messages()
 {
 	dictionary_translated.clear();
 
+	translation_language        = {};
 	translation_script          = {};
 	is_translation_script_fuzzy = false;
 }
@@ -712,6 +714,10 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 			if (!reader.ValidateGettextMetadata()) {
 				break;
 			}
+			const auto language = reader.GetLanguageFromMetadata();
+			if (!language.empty()) {
+				translation_language = language;
+			}
 			continue;
 		}
 
@@ -740,6 +746,11 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 
 	if (!found_message) {
 		reader.LogWarning("no messages found in the file");
+	}
+
+	// If no language was found in the metadata, use the file name instead
+	if (translation_language.empty()) {
+		translation_language = std_fs::path(file_path).stem().string();
 	}
 
 	// Check if current code page is suitable for this translation
@@ -861,6 +872,15 @@ std::string MSG_GetTranslatedRaw(const std::string& message_key)
 bool MSG_Exists(const std::string& message_key)
 {
 	return dictionary_english.contains(message_key);
+}
+
+std::string MSG_GetLanguage()
+{
+	if (!translation_language.empty()) {
+		return translation_language;
+	}
+
+	return "en";
 }
 
 bool MSG_WriteToFile(const std::string& file_name)

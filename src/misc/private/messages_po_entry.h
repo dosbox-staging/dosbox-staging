@@ -81,6 +81,7 @@ public:
 	}
 
 	bool ValidateGettextMetadata() const;
+	std::string GetLanguageFromMetadata() const;
 
 	void LogWarning(const std::string& error) const;
 

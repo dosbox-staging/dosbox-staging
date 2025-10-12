@@ -18,6 +18,7 @@
 #include "hardware/pic.h"
 #include "ints/bios.h"
 #include "ints/int10.h"
+#include "misc/messages.h"
 #include "utils/bitops.h"
 #include "utils/byteorder.h"
 #include "utils/checks.h"
@@ -40,6 +41,19 @@ CHECK_NARROWING();
 // Versions are stored in BCD code - 0x09 = version 9, 0x10 = version 10, etc.
 static constexpr uint8_t DriverVersionMajor = 0x08;
 static constexpr uint8_t DriverVersionMinor = 0x05;
+
+// Mouse driver languages known by 'msd.exe' (the Microsoft Diagnostics tool)
+static const std::unordered_map<std::string, uint16_t> LanguageMap = {
+        {"en", 0x00}, // English
+        {"fr", 0x01}, // French
+        {"nl", 0x02}, // Dutch
+        {"de", 0x03}, // German
+        {"sv", 0x04}, // Swedish
+        {"fi", 0x05}, // Finnish
+        {"es", 0x06}, // Spanish
+        {"pt", 0x07}, // Portuguese
+        {"it", 0x08}, // Italian
+};
 
 static constexpr auto CharToPixelRatio = 8;
 
@@ -97,6 +111,9 @@ static bool is_driver_modern = false;
 static bool rate_is_set     = false;
 static uint16_t rate_hz     = 0;
 static uint16_t min_rate_hz = 0;
+
+// Driver messages language set by the guest code
+static std::optional<uint16_t> driver_language = {};
 
 // Data from mouse events which were already received,
 // but not necessary visible to the application
@@ -194,6 +211,30 @@ static void maybe_disable_wheel_api()
 
 		pending.disable_wheel_api = false;
 	}
+}
+
+static uint16_t get_driver_language()
+{
+	if (driver_language) {
+		// Driver messages language was set by the guest code
+		return *driver_language;
+	}
+
+	// Get the translation language
+	auto language = MSG_GetLanguage();
+	// Strip the territory part
+	auto underscore_location = language.find('_');
+	if (underscore_location != std::string::npos) {
+		language = language.substr(0, underscore_location);
+	}
+
+	// Return the language code
+	if (LanguageMap.contains(language)) {
+		return LanguageMap.at(language);
+	}
+
+	// Couldn't match the language, return a dummy value
+	return 0x00;
 }
 
 // ***************************************************************************
@@ -1952,15 +1993,12 @@ static Bitu int33_handler()
 		break;
 	case 0x22:
 		// MS MOUSE v6.0+ - set language for messages
-		//
-		// 00h = English, 01h = French, 02h = Dutch, 03h = German, 04h =
-		// Swedish 05h = Finnish, 06h = Spanish, 07h = Portugese, 08h =
-		// Italian
-		state.SetLanguage(reg_bx);
+		LOG_WARNING("MOUSE (DOS): Changing driver language not supported");
+		driver_language = reg_bx;
 		break;
 	case 0x23:
 		// MS MOUSE v6.0+ - get language for messages
-		reg_bx = state.GetLanguage();
+		reg_bx = get_driver_language();
 		break;
 	case 0x24:
 		// MS MOUSE v6.26+ - get software version, mouse type, and IRQ

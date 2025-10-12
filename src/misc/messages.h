@@ -77,6 +77,8 @@ std::string MSG_GetEnglishRaw(const std::string& message_key);
  */
 std::string MSG_GetTranslatedRaw(const std::string& message_key);
 
+std::string MSG_GetLanguage();
+
 /*
  * Return true if a message with this key exists.
  */

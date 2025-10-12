@@ -703,16 +703,6 @@ void MouseDriverState::SetUpdateRegionY(const size_t index, const int16_t value)
 	SET_INT16_ARRAY(update_region_y, index, value);
 }
 
-uint16_t MouseDriverState::GetLanguage() const
-{
-	return GET_UINT16(language);
-}
-
-void MouseDriverState::SetLanguage(const uint16_t value)
-{
-	SET_UINT16(language, value);
-}
-
 uint8_t MouseDriverState::GetBiosScreenMode() const
 {
 	return GET_UINT8(bios_screen_mode);
