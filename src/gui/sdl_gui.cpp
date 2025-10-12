@@ -2254,17 +2254,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	case SDL_WINDOWEVENT_FOCUS_LOST:
 		log_window_event("SDL: Window has lost keyboard focus");
 
-#ifdef WIN32
-		// TODO is this still needed?
-		if (sdl.is_fullscreen) {
-			VGA_KillDrawing();
-
-			// Force-exit fullscreen
-			sdl.is_fullscreen = false;
-			set_section_property_value("sdl", "fullscreen", "off");
-			GFX_ResetScreen();
-		}
-#endif
 		apply_inactive_settings();
 		GFX_LosingFocus();
 		return false;
