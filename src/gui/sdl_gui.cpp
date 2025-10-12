@@ -1006,10 +1006,6 @@ void GFX_SetMouseVisibility(const bool requested_visible)
 
 static void focus_input()
 {
-#if defined(WIN32)
-	sdl.focus_ticks = GetTicks();
-#endif
-
 	// Ensure we have input focus when in fullscreen
 	if (!sdl.is_fullscreen) {
 		return;
@@ -1982,8 +1978,6 @@ static void handle_mouse_button(SDL_MouseButtonEvent* button)
 
 void GFX_LosingFocus()
 {
-	sdl.laltstate = SDL_KEYUP;
-	sdl.raltstate = SDL_KEYUP;
 	MAPPER_LosingFocus();
 }
 
@@ -2491,36 +2485,6 @@ bool GFX_PollAndHandleEvents()
 			break;
 
 		case SDL_QUIT: GFX_RequestExit(true); break;
-#ifdef WIN32
-		case SDL_KEYDOWN:
-		case SDL_KEYUP:
-			// ignore event alt+tab
-			if (event.key.keysym.sym == SDLK_LALT) {
-				sdl.laltstate = (SDL_EventType)event.key.type;
-			}
-			if (event.key.keysym.sym == SDLK_RALT) {
-				sdl.raltstate = (SDL_EventType)event.key.type;
-			}
-			if (((event.key.keysym.sym == SDLK_TAB)) &&
-			    ((sdl.laltstate == SDL_KEYDOWN) ||
-			     (sdl.raltstate == SDL_KEYDOWN))) {
-				break;
-			}
-			// This can happen as well.
-			if (((event.key.keysym.sym == SDLK_TAB)) &&
-			    (event.key.keysym.mod & KMOD_ALT)) {
-				break;
-			}
-
-			// TODO check of this workaround is still needed
-			// Ignore tab events that arrive just after regaining
-			// focus. Likely the result of Alt+Tab.
-			if ((event.key.keysym.sym == SDLK_TAB) &&
-			    (GetTicksSince(sdl.focus_ticks) < 2)) {
-				break;
-			}
-			[[fallthrough]];
-#endif
 #if defined(MACOSX)
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
