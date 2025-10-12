@@ -19,7 +19,7 @@
 // *pixels* is essential. We fully support high-DPI in DOSBox Staging, so a
 // good grasp of this topic essential when dealing with anything rendering
 // related.
-// 
+//
 // The idea behind logical units is that a rectangle of say 200x300 *logical
 // units* in size should have the same physical dimensions when measured with
 // a ruler on a 1080p, a 4k, and an 8k screen (assuming that the physical
@@ -33,16 +33,17 @@
 // coordinates and dimensions in logical units (e.g., window sizes, total
 // desktop size, mouse position, etc.). But OpenGL only deals with pixels,
 // never logical units, and in the core emulation layers we're only dealing
-// with "raw emulated pixels" too. Consequently, in `sdlmain.cpp` we'll always
-// be dealing with a mixture of logical units and pixels, so it's essential to
-// make the distinction between them clear:
+// with "raw emulated pixels" too. Consequently, we'll always be dealing with
+// a mixture of logical units and pixels, so it's essential to make the
+// distinction between them clear:
 //
-// - In `sdlmain.cpp`, we postfix every variable that holds a pixel dimension
-//   with `_px` (e.g., `render_size_px`, `width_px`). Logical units get no
-//   postfix (e.g., `window_size`, `mouse_pos`).
+// - We postfix every variable that holds a pixel dimension with `_px` (e.g.,
+//   `render_size_px`, `width_px`). Logical units get no postfix (e.g.,
+//   `window_size`, `mouse_pos`).
 //
 // - Functions and methods that return pixel dimensions are postfixed with
-//   `_in_pixels` and `InPixels`, respectively (e.g., `GFX_GetViewportSizeInPixels()`).
+//   `_in_pixels` and `InPixels`, respectively (e.g.,
+//   `GFX_GetViewportSizeInPixels()`).
 //
 // - We're always dealing with pixels in the core emulation layers (e.g., VGA
 //   code), so pixel postfixes are not necessary there in general. The exception
@@ -245,21 +246,22 @@ struct ImageInfo {
 	// equality criteria. E.g., the render dimensions of the double-scanned
 	// 320x200 VGA mode (mode 13h) and 320x400 (non-VESA Mode X variant) are
 	// both 320x400, so they would be considered equal if this flag was not
-	// included. This would throw off the adaptive shader switching logic when
-	// such video mode transitions happen.
+	// included. This would throw off the adaptive shader switching logic
+	// when such video mode transitions happen.
 	bool forced_single_scan = false;
 
 	// If true, we're dealing with "baked-in" double scanning, i.e., when
-	// 320x200 is rendered as 320x400. This can happen for non-VESA VGA modes
-	// and for EGA modes on VGA. Every other double-scanned mode on VGA (all
-	// CGA modes and all double-scanned VESA modes) are "fake-double scanned"
-	// (doubled post-render by setting `double_height` to true).
+	// 320x200 is rendered as 320x400. This can happen for non-VESA VGA
+	// modes and for EGA modes on VGA. Every other double-scanned mode on
+	// VGA (all CGA modes and all double-scanned VESA modes) are
+	// "fake-double scanned" (doubled post-render by setting `double_height`
+	// to true).
 	bool rendered_double_scan = false;
 
-	// If true, the image has been rendered doubled horizontally. This is only
-	// used to "normalise" the 160x200 16-colour Tandy and PCjr modes to
-	// 320-pixel-wide rendered output (it simplifies rendering the host video
-	// output downstream, but slightly complicates raw captures).
+	// If true, the image has been rendered doubled horizontally. This is
+	// only used to "normalise" the 160x200 16-colour Tandy and PCjr modes
+	// to 320-pixel-wide rendered output (it simplifies rendering the host
+	// video output downstream, but slightly complicates raw captures).
 	bool rendered_pixel_doubling = false;
 
 	// Pixel aspect ratio to be applied to the final image, *after*
