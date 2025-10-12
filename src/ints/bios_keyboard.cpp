@@ -621,10 +621,6 @@ static Bitu INT16_Handler(void) {
 	return CBRET_NONE;
 }
 
-//Keyboard initialisation. src/gui/sdlmain.cpp
-extern bool startup_state_numlock;
-extern bool startup_state_capslock;
-
 static void InitBiosSegment(void) {
 	/* Setup the variables for keyboard in the bios data segment */
 	mem_writew(BIOS_KEYBOARD_BUFFER_START,0x1e);
