@@ -106,8 +106,7 @@ struct SDL_Block {
 		SDL_EventType right_alt_state = SDL_KEYUP;
 	} key = {};
 
-	// TODO rename to RenderBackend, move into `render_backend.h`
-	RenderingBackend rendering_backend = RenderingBackend::Texture;
+	RenderBackendType render_backend_type = RenderBackendType::Texture;
 
 	InterpolationMode interpolation_mode   = {};
 
