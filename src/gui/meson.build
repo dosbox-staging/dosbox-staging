@@ -2,7 +2,7 @@ libgui_sources = files(
     'clipboard.cpp',
     'mapper.cpp',
     'mapper.cpp',
-    'sdlmain.cpp',
+    'sdl_gui.cpp',
     'shader_manager.cpp',
     'titlebar.cpp',
 

@@ -1,7 +1,7 @@
 target_sources(libdosboxcommon PRIVATE
   clipboard.cpp
   mapper.cpp
-  sdlmain.cpp
+  sdl_gui.cpp
   shader_manager.cpp
   titlebar.cpp
 

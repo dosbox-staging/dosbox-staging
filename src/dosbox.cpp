@@ -879,7 +879,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 
 void DOSBOX_InitModuleConfigsAndMessages()
 {
-	// The [sdl] section gets initialised first in `sdlmain.cpp`, then
+	// The [sdl] section gets initialised first in `sdl_gui.cpp`, then
 	// this init method gets called.
 
 	add_dosbox_config_section(control);
