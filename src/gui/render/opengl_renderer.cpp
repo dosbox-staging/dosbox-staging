@@ -677,8 +677,8 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	return image;
 }
 
-uint32_t OpenGlRenderer::GetRgb(const uint8_t red, const uint8_t green,
-                                const uint8_t blue)
+uint32_t OpenGlRenderer::MakePixel(const uint8_t red, const uint8_t green,
+                                   const uint8_t blue)
 {
 	return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
 }

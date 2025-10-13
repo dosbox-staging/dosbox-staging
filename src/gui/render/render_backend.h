@@ -87,9 +87,9 @@ public:
 	// framebuffer.
 	virtual RenderedImage ReadPixelsPostShader(const DosBox::Rect output_rect_px) = 0;
 
-	// TODO
-	virtual uint32_t GetRgb(const uint8_t red, const uint8_t green,
-	                        const uint8_t blue) = 0;
+	// Create an RGB pixel in the internal format of the render backend.
+	virtual uint32_t MakePixel(const uint8_t red, const uint8_t green,
+	                           const uint8_t blue) = 0;
 };
 
 #endif // DOSBOX_RENDER_BACKEND_H
