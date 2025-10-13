@@ -12,6 +12,7 @@
 
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "dosbox_config.h"
@@ -40,14 +41,20 @@ public:
 	bool UpdateRenderSize(const int new_render_width_px,
 	                      const int new_render_height_px) override;
 
+	bool SetShader(const std::string& shader_name) override;
+
+	bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
+	                           const VideoMode& video_mode) override;
+
+	bool ForceReloadCurrentShader() override;
+
+	ShaderInfo GetCurrentShaderInfo() override;
+
 	void StartFrame(uint8_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
 
 	void PrepareFrame() override;
 	void PresentFrame() override;
-
-	void SetShader(const ShaderInfo& shader_info,
-	               const std::string& shader_source) override;
 
 	void SetVsync(const bool is_enabled) override;
 
@@ -62,17 +69,28 @@ public:
 	OpenGlRenderer& operator=(const OpenGlRenderer&) = delete;
 
 private:
+	struct Shader {
+		GLuint program_object = 0;
+		ShaderInfo info       = {};
+	};
+
 	SDL_Window* CreateSdlWindow(const int x, const int y, const int width,
 	                            const int height,
 	                            const uint32_t sdl_window_flags);
 
 	bool InitRenderer();
 
+	bool SwitchShader(const std::string& shader_name);
+
+	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& shader_name);
+
 	void GetUniformLocations();
 	void UpdateUniforms() const;
 
-	GLuint BuildShader(const GLenum type, const std::string& source) const;
-	GLuint BuildShaderProgram(const std::string& source);
+	std::optional<GLuint> BuildShaderProgram(const std::string& source);
+
+	std::optional<GLuint> BuildShader(const GLenum type,
+	                                  const std::string& source) const;
 
 	SDL_Window* window    = {};
 	SDL_GLContext context = {};
@@ -100,11 +118,6 @@ private:
 
 	bool is_framebuffer_srgb_capable = false;
 
-	ShaderInfo shader_info    = {};
-	std::string shader_source = {};
-
-	GLuint program_object = 0;
-
 	struct {
 		GLint texture_size = 0;
 		GLint input_size   = 0;
@@ -112,8 +125,12 @@ private:
 		GLint frame_count  = 0;
 	} uniform = {};
 
-	GLuint actual_frame_count  = 0;
-	GLfloat vertex_data[2 * 3] = {};
+	GLuint frame_count         = 0;
+	GLfloat vertex_data[2 * 3] = {}; // 2 triangles
+
+	std::unordered_map<std::string, Shader> shader_cache = {};
+
+	Shader current_shader = {};
 };
 
 #endif // C_OPENGL

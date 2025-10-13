@@ -4,7 +4,9 @@
 #ifndef DOSBOX_SHADER_MANAGER_H
 #define DOSBOX_SHADER_MANAGER_H
 
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "gui/private/common.h"
@@ -12,9 +14,6 @@
 #include "gui/render/render.h"
 #include "hardware/video/vga.h"
 #include "utils/rect.h"
-
-// forward references
-class Fraction;
 
 constexpr auto BilinearShaderName = "interpolation/bilinear";
 constexpr auto SharpShaderName    = "interpolation/sharp";
@@ -102,27 +101,27 @@ struct ShaderSettings {
 };
 
 struct ShaderInfo {
-	std::string name        = {};
+	// Actual shader name, as stored on disk minus the .glsl extension
+	std::string name = {};
+
 	ShaderSettings settings = {};
 	bool is_adaptive        = false;
 };
 
-// Shader manager that picks the best shader to use based on various criteria.
-// Its main function is to handle shader auto-switching in the adaptive CRT
-// shader modes.
+// Shader manager for loading shader sources, parsing shader metadata, and
+// handling shader auto-switching for the adaptive CRT shaders.
 //
 // Usage:
 //
 // - Notify the shader manager about changes that could potentially trigger
 //   shader switching with the `Notify*` methods.
 //
-// - Query information about the current shader with `GetCurrentShaderInfo()`.
+// - Query the name of the new shader shader with `GetCurrentShaderName()`.
+//   The caller is responsible for implementing lazy shader switching (only
+//   activate the new shader if the current shader has changed).
 //
-// - Fetch the source of the current shader with `GetCurrentShaderSource()`.
-//
-// The caller is responsible for compiling the shader source to the OpenGL
-// backend and to implement lazy shader switching (only when the shader has
-// really changed).
+// - Read the shader source code with `LoadShader()`, then compile and
+//   activate it in the rendering backend.
 //
 class ShaderManager {
 public:
@@ -132,22 +131,23 @@ public:
 		return instance;
 	}
 
+	static void AddMessages();
+
 	// Generate a human-readable shader inventory message (one list element
 	// per line).
 	std::deque<std::string> GenerateShaderInventoryMessage() const;
-	static void AddMessages();
 
 	std::string MapShaderName(const std::string& name) const;
 
-	void NotifyGlshaderSettingChanged(const std::string& shader_name);
+	std::optional<std::pair<ShaderInfo, std::string>> LoadShader(
+	        const std::string& shader_name);
+
+	void NotifyShaderNameChanged(const std::string& shader_name);
 
 	void NotifyRenderParametersChanged(const DosBox::Rect canvas_size_px,
 	                                   const VideoMode& video_mode);
 
-	const ShaderInfo& GetCurrentShaderInfo() const;
-	const std::string& GetCurrentShaderSource() const;
-
-	void ReloadCurrentShader();
+	std::string GetCurrentShaderName() const;
 
 private:
 	ShaderManager()  = default;
@@ -158,8 +158,7 @@ private:
 	// prevent assignment
 	ShaderManager& operator=(const ShaderManager&) = delete;
 
-	void LoadShader(const std::string& shader_name);
-	bool ReadShaderSource(const std::string& shader_name, std::string& source);
+	std::optional<std::string> FindShaderAndReadSource(const std::string& shader_name);
 
 	ShaderSettings ParseShaderSettings(const std::string& shader_name,
 	                                   const std::string& source) const;
@@ -177,19 +176,17 @@ private:
 	std::string GetEgaShader() const;
 	std::string GetVgaShader() const;
 
-	ShaderMode mode = ShaderMode::Single;
+	std::string shader_name_from_config = {};
 
 	struct {
-		ShaderInfo info    = {};
-		std::string source = {};
+		std::string name = {};
+		ShaderMode mode  = ShaderMode::Single;
 	} current_shader = {};
 
-	std::string shader_name_from_config = {};
+	VideoMode video_mode = {};
 
 	int pixels_per_scanline                   = 1;
 	int pixels_per_scanline_force_single_scan = 1;
-
-	VideoMode video_mode = {};
 };
 
 #endif // DOSBOX_SHADER_MANAGER_H

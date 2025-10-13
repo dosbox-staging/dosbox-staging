@@ -284,6 +284,31 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 	return true;
 }
 
+bool SdlRenderer::SetShader([[maybe_unused]] const std::string& shader_name)
+{
+	// no shader support
+	return false;
+}
+
+bool SdlRenderer::MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
+                                        [[maybe_unused]] const VideoMode& video_mode)
+{
+	// no shader support
+	return false;
+}
+
+bool SdlRenderer::ForceReloadCurrentShader()
+{
+	// no shader support
+	return false;
+}
+
+ShaderInfo SdlRenderer::GetCurrentShaderInfo()
+{
+	// no shader support
+	return {};
+}
+
 void SdlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
 {
 	assert(curr_framebuf);
@@ -356,12 +381,6 @@ void SdlRenderer::PresentFrame()
 	}
 
 	SDL_RenderPresent(renderer);
-}
-
-void SdlRenderer::SetShader([[maybe_unused]] const ShaderInfo& shader_info,
-                            [[maybe_unused]] const std::string& shader_source)
-{
-	// no-op
 }
 
 void SdlRenderer::SetVsync(const bool is_enabled)

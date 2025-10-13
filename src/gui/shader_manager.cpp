@@ -15,6 +15,7 @@
 #include <SDL.h>
 
 #include "dosbox.h"
+#include "gui/render/render_backend.h"
 #include "misc/cross.h"
 #include "misc/video.h"
 #include "utils/checks.h"
@@ -23,38 +24,37 @@
 
 CHECK_NARROWING();
 
-void ShaderManager::NotifyGlshaderSettingChanged(const std::string& shader_name)
+void ShaderManager::NotifyShaderNameChanged(const std::string& shader_name)
 {
 	if (shader_name == AutoGraphicsStandardShaderName) {
-		if (mode != ShaderMode::AutoGraphicsStandard) {
-			mode = ShaderMode::AutoGraphicsStandard;
-
+		if (current_shader.mode != ShaderMode::AutoGraphicsStandard) {
+			current_shader.mode = ShaderMode::AutoGraphicsStandard;
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the graphics "
 			        "standard of the video mode");
 		}
 	} else if (shader_name == AutoMachineShaderName) {
-		if (mode != ShaderMode::AutoMachine) {
-			mode = ShaderMode::AutoMachine;
+		if (current_shader.mode != ShaderMode::AutoMachine) {
+			current_shader.mode = ShaderMode::AutoMachine;
 
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the "
 			        "configured graphics adapter");
 		}
 	} else if (shader_name == AutoArcadeShaderName) {
-		if (mode != ShaderMode::AutoArcade) {
-			mode = ShaderMode::AutoArcade;
+		if (current_shader.mode != ShaderMode::AutoArcade) {
+			current_shader.mode = ShaderMode::AutoArcade;
 
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
 			        "CRT shader (normal variant)");
 		}
 	} else if (shader_name == AutoArcadeSharpShaderName) {
-		if (mode != ShaderMode::AutoArcadeSharp) {
-			mode = ShaderMode::AutoArcadeSharp;
+		if (current_shader.mode != ShaderMode::AutoArcadeSharp) {
+			current_shader.mode = ShaderMode::AutoArcadeSharp;
 
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
 			        "CRT shader (sharp variant)");
 		}
 	} else {
-		mode = ShaderMode::Single;
+		current_shader.mode = ShaderMode::Single;
 	}
 
 	shader_name_from_config = shader_name;
@@ -118,64 +118,46 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_
 	MaybeAutoSwitchShader();
 }
 
-void ShaderManager::LoadShader(const std::string& shader_name)
+std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
+        const std::string& _shader_name)
 {
-	auto new_shader_name = shader_name;
+	auto shader_name = _shader_name;
 
-	if (!ReadShaderSource(new_shader_name, current_shader.source)) {
-		current_shader.source.clear();
-
+	auto maybe_source = FindShaderAndReadSource(shader_name);
+	if (!maybe_source) {
 		// List all the existing shaders for the user
 		// TODO convert to notification
-		LOG_ERR("RENDER: Shader file '%s' not found",
-		        new_shader_name.c_str());
+		LOG_ERR("RENDER: Shader file '%s' not found", shader_name.c_str());
 
 		for (const auto& line : GenerateShaderInventoryMessage()) {
 			// TODO convert to notification (maybe?)
 			LOG_WARNING("RENDER: %s", line.c_str());
 		}
-
-		// Fallback to the 'none' shader and otherwise fail
-		if (ReadShaderSource(FallbackShaderName, current_shader.source)) {
-			new_shader_name = FallbackShaderName;
-		} else {
-			E_Exit("RENDER: Fallback shader file '%s' not found and is mandatory",
-			       FallbackShaderName);
-		}
+		return {};
 	}
 
-	const auto settings = ParseShaderSettings(new_shader_name,
-	                                          current_shader.source);
+	const auto source   = *maybe_source;
+	const auto settings = ParseShaderSettings(shader_name, source);
 
 	const bool is_adaptive = [&] {
-		if (mode == ShaderMode::Single) {
+		if (current_shader.mode == ShaderMode::Single) {
 			return false;
 
 		} else {
 			// This will turn off vertical integer scaling for the
 			// 'sharp' shader in 'integer_scaling = auto' mode
-			return (new_shader_name != SharpShaderName);
+			return (shader_name != SharpShaderName);
 		}
 	}();
 
-	current_shader.info = {new_shader_name, settings, is_adaptive};
+	const ShaderInfo shader_info = {shader_name, settings, is_adaptive};
+
+	return std::pair{shader_info, source};
 }
 
-const ShaderInfo& ShaderManager::GetCurrentShaderInfo() const
+std::string ShaderManager::GetCurrentShaderName() const
 {
-	return current_shader.info;
-}
-
-const std::string& ShaderManager::GetCurrentShaderSource() const
-{
-	return current_shader.source;
-}
-
-void ShaderManager::ReloadCurrentShader()
-{
-	LoadShader(current_shader.info.name);
-	LOG_MSG("RENDER: Reloaded current shader '%s'",
-	        current_shader.info.name.c_str());
+	return current_shader.name;
 }
 
 std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
@@ -284,7 +266,8 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 		shader_path.replace_extension("");
 
 		const auto old_name = shader_path.string();
-		const auto it       = legacy_name_mappings.find(old_name);
+
+		const auto it = legacy_name_mappings.find(old_name);
 		if (it != legacy_name_mappings.end()) {
 			const auto new_name = it->second;
 
@@ -304,29 +287,28 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 	return name;
 }
 
-bool ShaderManager::ReadShaderSource(const std::string& shader_name, std::string& source)
+std::optional<std::string> ShaderManager::FindShaderAndReadSource(const std::string& shader_name)
 {
-	auto read_shader = [&](const std_fs::path& path) {
+	auto read_shader = [&](const std_fs::path& path) -> std::optional<std::string> {
 		std::ifstream fshader(path, std::ios_base::binary);
 		if (!fshader.is_open()) {
-			return false;
+			return {};
 		}
 		std::stringstream buf;
 		buf << fshader.rdbuf();
 		fshader.close();
 
-		source = buf.str() + '\n';
-		return true;
+		return buf.str() + '\n';
 	};
 
-	constexpr auto glsl_ext = ".glsl";
+	constexpr auto GlslExt = ".glsl";
 
 	// Start with the name as-is and then try from resources
 	const auto candidate_paths = {std_fs::path(shader_name),
-	                              std_fs::path(shader_name + glsl_ext),
+	                              std_fs::path(shader_name + GlslExt),
 	                              get_resource_path(GlShadersDir, shader_name),
 	                              get_resource_path(GlShadersDir,
-	                                                shader_name + glsl_ext)};
+	                                                shader_name + GlslExt)};
 
 	for (const auto& path : candidate_paths) {
 		if (std_fs::exists(path) &&
@@ -334,7 +316,7 @@ bool ShaderManager::ReadShaderSource(const std::string& shader_name, std::string
 			return read_shader(path);
 		}
 	}
-	return false;
+	return {};
 }
 
 ShaderSettings ShaderManager::ParseShaderSettings(const std::string& shader_name,
@@ -377,54 +359,41 @@ ShaderSettings ShaderManager::ParseShaderSettings(const std::string& shader_name
 
 void ShaderManager::MaybeAutoSwitchShader()
 {
-	auto maybe_load_shader = [&](const std::string& shader_name) {
-		if (current_shader.info.name == shader_name) {
-			return false;
-		}
-		LoadShader(shader_name);
-		return true;
-	};
+	const auto shader_name = [&] {
+		switch (current_shader.mode) {
+		case ShaderMode::Single: return shader_name_from_config;
 
-	if (mode == ShaderMode::Single) {
-		const auto shader_changed = maybe_load_shader(shader_name_from_config);
-		if (shader_changed) {
-			LOG_MSG("RENDER: Using shader '%s'",
-			        current_shader.info.name.c_str());
-		}
-
-	} else {
-		auto shader_changed = false;
-
-		switch (mode) {
 		case ShaderMode::AutoGraphicsStandard:
-			shader_changed = maybe_load_shader(
-			        FindShaderAutoGraphicsStandard());
-			break;
+			return FindShaderAutoGraphicsStandard();
 
-		case ShaderMode::AutoMachine:
-			shader_changed = maybe_load_shader(FindShaderAutoMachine());
-			break;
+		case ShaderMode::AutoMachine: return FindShaderAutoMachine();
 
-		case ShaderMode::AutoArcade:
-			shader_changed = maybe_load_shader(FindShaderAutoArcade());
-			break;
+		case ShaderMode::AutoArcade: return FindShaderAutoArcade();
 
 		case ShaderMode::AutoArcadeSharp:
-			shader_changed = maybe_load_shader(
-			        FindShaderAutoArcadeSharp());
-			break;
+			return FindShaderAutoArcadeSharp();
 
-		default: assertm(false, "Invalid ShaderMode value");
+		default:
+			assertm(false, "Invalid ShaderMode value");
+			return std::string{""};
 		}
+	}();
 
-		if (shader_changed) {
-			if (video_mode.has_vga_colors) {
-				LOG_MSG("RENDER: EGA mode with custom 18-bit VGA palette "
-				        "detected; auto-switching to VGA shader");
-			}
-			LOG_MSG("RENDER: Auto-switched to shader '%s'",
-			        current_shader.info.name.c_str());
+	if (current_shader.name == shader_name) {
+		return;
+	}
+
+	current_shader.name = shader_name;
+
+	if (current_shader.mode == ShaderMode::Single) {
+		LOG_MSG("RENDER: Using shader '%s'", current_shader.name.c_str());
+	} else {
+		if (video_mode.has_vga_colors) {
+			LOG_MSG("RENDER: EGA mode with custom 18-bit VGA palette "
+			        "detected; auto-switching to VGA shader");
 		}
+		LOG_MSG("RENDER: Auto-switched to shader '%s'",
+		        current_shader.name.c_str());
 	}
 }
 

@@ -6,6 +6,7 @@
 #if C_OPENGL
 
 #include "gui/private/common.h"
+#include "gui/private/shader_manager.h"
 
 #include "capture/capture.h"
 #include "dosbox_config.h"
@@ -33,7 +34,9 @@ static void maybe_log_opengl_error(const char* message)
 	if (r == GL_NO_ERROR) {
 		return;
 	}
+
 	LOG_ERR("OPENGL: Errors from %s", message);
+
 	do {
 		LOG_ERR("OPENGL: %X", r);
 	} while ((r = glGetError()) != GL_NO_ERROR);
@@ -113,7 +116,7 @@ bool OpenGlRenderer::InitRenderer()
 {
 	auto new_context = SDL_GL_CreateContext(window);
 	if (!new_context) {
-		LOG_ERR("SDL: Error createing OpenGL context: %s", SDL_GetError());
+		LOG_ERR("SDL: Error creating OpenGL context: %s", SDL_GetError());
 		return false;
 	}
 
@@ -166,10 +169,12 @@ OpenGlRenderer::~OpenGlRenderer()
 		glDeleteTextures(1, &texture);
 		texture = 0;
 	}
-	if (program_object) {
-		glDeleteProgram(program_object);
-		program_object = 0;
+
+	for (auto& [_, shader] : shader_cache) {
+		glDeleteProgram(shader.program_object);
 	}
+	shader_cache.clear();
+
 	if (context) {
 		SDL_GL_DeleteContext(context);
 		context = {};
@@ -221,9 +226,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	if (new_render_width_px > max_texture_size_px ||
 	    new_render_height_px > max_texture_size_px) {
 
-		LOG_WARNING(
-		        "OPENGL: No support for texture size of %dx%d pixels, "
-		        "falling back to texture",
+		LOG_ERR("OPENGL: No support for texture size of %dx%d pixels",
 		        new_render_width_px,
 		        new_render_height_px);
 		return false;
@@ -246,8 +249,10 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+	const auto& shader_settings = current_shader.info.settings;
+
 	const int filter_param = [&] {
-		switch (shader_info.settings.texture_filter_mode) {
+		switch (shader_settings.texture_filter_mode) {
 		case TextureFilterMode::NearestNeighbour: return GL_NEAREST;
 		case TextureFilterMode::Bilinear: return GL_LINEAR;
 		default: assertm(false, "Invalid TextureFilterMode"); return 0;
@@ -257,8 +262,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_param);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_param);
 
-	if ((shader_info.settings.use_srgb_framebuffer ||
-	     shader_info.settings.use_srgb_texture) &&
+	if ((shader_settings.use_srgb_framebuffer || shader_settings.use_srgb_texture) &&
 	    !is_framebuffer_srgb_capable) {
 
 		LOG_WARNING("OPENGL: sRGB framebuffer not supported");
@@ -266,7 +270,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 
 	// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
 	// with Mesa drivers on certain integrated Intel GPUs
-	const auto texture_format = shader_info.settings.use_srgb_texture &&
+	const auto texture_format = shader_settings.use_srgb_texture &&
 	                                            is_framebuffer_srgb_capable
 	                                  ? GL_SRGB8_ALPHA8
 	                                  : GL_RGB8;
@@ -281,7 +285,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	             GL_UNSIGNED_BYTE,
 	             nullptr);
 
-	if (shader_info.settings.use_srgb_framebuffer && is_framebuffer_srgb_capable) {
+	if (shader_settings.use_srgb_framebuffer && is_framebuffer_srgb_capable) {
 		glEnable(GL_FRAMEBUFFER_SRGB);
 #if 0
 			LOG_MSG("OPENGL: Using sRGB framebuffer");
@@ -332,7 +336,7 @@ void OpenGlRenderer::EndFrame()
 	// emulation only writes the changed pixels to the framebuffer in each
 	// frame.
 
-	last_framebuf = curr_framebuf;
+	last_framebuf       = curr_framebuf;
 	last_framebuf_dirty = true;
 }
 
@@ -351,7 +355,7 @@ void OpenGlRenderer::PrepareFrame()
 		                GL_UNSIGNED_INT_8_8_8_8_REV,
 		                last_framebuf.data());
 
-		++actual_frame_count;
+		++frame_count;
 
 		last_framebuf_dirty = false;
 	}
@@ -361,7 +365,7 @@ void OpenGlRenderer::PresentFrame()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	actual_frame_count++;
+	frame_count++;
 	UpdateUniforms();
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -381,13 +385,17 @@ void OpenGlRenderer::PresentFrame()
 void OpenGlRenderer::GetUniformLocations()
 {
 	// Get uniform locations
-	uniform.texture_size = glGetUniformLocation(program_object, "rubyTextureSize");
+	uniform.texture_size = glGetUniformLocation(current_shader.program_object,
+	                                            "rubyTextureSize");
 
-	uniform.input_size = glGetUniformLocation(program_object, "rubyInputSize");
+	uniform.input_size = glGetUniformLocation(current_shader.program_object,
+	                                          "rubyInputSize");
 
-	uniform.output_size = glGetUniformLocation(program_object, "rubyOutputSize");
+	uniform.output_size = glGetUniformLocation(current_shader.program_object,
+	                                           "rubyOutputSize");
 
-	uniform.frame_count = glGetUniformLocation(program_object, "rubyFrameCount");
+	uniform.frame_count = glGetUniformLocation(current_shader.program_object,
+	                                           "rubyFrameCount");
 }
 
 void OpenGlRenderer::UpdateUniforms() const
@@ -404,18 +412,11 @@ void OpenGlRenderer::UpdateUniforms() const
 	            static_cast<GLfloat>(draw_rect_px.w),
 	            static_cast<GLfloat>(draw_rect_px.h));
 
-	glUniform1i(uniform.frame_count, actual_frame_count);
+	glUniform1i(uniform.frame_count, frame_count);
 }
 
-// Create a GLSL shader object, load the shader source, and compile the
-// shader.
-//
-// `type` is an OpenGL shader stage enum, either GL_VERTEX_SHADER or
-// GL_FRAGMENT_SHADER. Other shader types are not supported.
-//
-// Returns the compiled shader object, or zero on failure.
-//
-GLuint OpenGlRenderer::BuildShader(const GLenum type, const std::string& source) const
+std::optional<GLuint> OpenGlRenderer::BuildShader(const GLenum type,
+                                                  const std::string& source) const
 {
 	GLuint shader            = 0;
 	GLint is_shader_compiled = 0;
@@ -445,7 +446,7 @@ GLuint OpenGlRenderer::BuildShader(const GLenum type, const std::string& source)
 	// Create the shader object
 	shader = glCreateShader(type);
 	if (shader == 0) {
-		return 0;
+		return {};
 	}
 
 	// Load the shader source
@@ -474,12 +475,12 @@ GLuint OpenGlRenderer::BuildShader(const GLenum type, const std::string& source)
 		}
 	}
 
-	if (is_shader_compiled) {
-		return shader;
-	} else {
+	if (!is_shader_compiled) {
 		glDeleteShader(shader);
-		return 0;
+		return {};
 	}
+
+	return shader;
 }
 
 // Build a OpenGL shader program.
@@ -487,27 +488,29 @@ GLuint OpenGlRenderer::BuildShader(const GLenum type, const std::string& source)
 // Input GLSL source must contain both vertex and fragment stages inside their
 // respective preprocessor definitions.
 //
-// Returns a ready to use OpenGL shader program, or zero on failure.
+// Returns a ready to use OpenGL shader program on success.
 //
-GLuint OpenGlRenderer::BuildShaderProgram(const std::string& source)
+std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& source)
 {
 	if (source.empty()) {
 		LOG_ERR("OPENGL: No shader source present");
-		return 0;
+		return {};
 	}
 
-	auto vertex_shader = BuildShader(GL_VERTEX_SHADER, source);
-	if (!vertex_shader) {
+	const auto maybe_vertex_shader = BuildShader(GL_VERTEX_SHADER, source);
+	if (!maybe_vertex_shader) {
 		LOG_ERR("OPENGL: Error compiling vertex shader");
-		return 0;
+		return {};
 	}
+	const auto vertex_shader = *maybe_vertex_shader;
 
-	auto fragment_shader = BuildShader(GL_FRAGMENT_SHADER, source);
-	if (!fragment_shader) {
+	const auto maybe_fragment_shader = BuildShader(GL_FRAGMENT_SHADER, source);
+	if (!maybe_fragment_shader) {
 		LOG_ERR("OPENGL: Error compiling fragment shader");
 		glDeleteShader(vertex_shader);
-		return 0;
+		return {};
 	}
+	const auto fragment_shader = *maybe_fragment_shader;
 
 	const GLuint shader_program = glCreateProgram();
 
@@ -515,7 +518,7 @@ GLuint OpenGlRenderer::BuildShaderProgram(const std::string& source)
 		LOG_ERR("OPENGL: Error creating shader program");
 		glDeleteShader(vertex_shader);
 		glDeleteShader(fragment_shader);
-		return 0;
+		return {};
 	}
 
 	glAttachShader(shader_program, vertex_shader);
@@ -554,19 +557,17 @@ GLuint OpenGlRenderer::BuildShaderProgram(const std::string& source)
 
 	if (!is_program_linked) {
 		glDeleteProgram(shader_program);
-		return 0;
+		return {};
 	}
 
-	glUseProgram(shader_program);
-
-	// Set vertex data. Vertices in counter-clockwise order.
+	// Set vertex data. Vertices are in counter-clockwise order.
 	const GLint vertex_attrib_location = glGetAttribLocation(shader_program,
 	                                                         "a_position");
 
 	if (vertex_attrib_location == -1) {
 		LOG_ERR("OPENGL: Error retrieving vertex position attribute location");
 		glDeleteProgram(shader_program);
-		return 0;
+		return {};
 	}
 
 	// Lower left
@@ -605,21 +606,94 @@ GLuint OpenGlRenderer::BuildShaderProgram(const std::string& source)
 	return shader_program;
 }
 
-void OpenGlRenderer::SetShader(const ShaderInfo& _shader_info,
-                               const std::string& _shader_source)
+bool OpenGlRenderer::SetShader(const std::string& symbolic_shader_name)
 {
-	shader_info   = _shader_info;
-	shader_source = _shader_source;
+	auto& shader_manager = ShaderManager::GetInstance();
 
-	if (program_object) {
-		glDeleteProgram(program_object);
+	const auto prev_actual_shader_name = shader_manager.GetCurrentShaderName();
 
-		program_object = 0;
+	shader_manager.NotifyShaderNameChanged(
+	        shader_manager.MapShaderName(symbolic_shader_name));
+
+	const auto new_actual_shader_name = shader_manager.GetCurrentShaderName();
+
+	if (prev_actual_shader_name == new_actual_shader_name) {
+		return false;
 	}
 
-	program_object = BuildShaderProgram(shader_source);
+	if (!SwitchShader(new_actual_shader_name)) {
+		return false;
+	}
 
+	return UpdateRenderSize(render_width_px, render_height_px);
+}
+
+bool OpenGlRenderer::ForceReloadCurrentShader()
+{
+	shader_cache.erase(current_shader.info.name);
+
+	return SwitchShader(current_shader.info.name);
+}
+
+bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
+                                           const VideoMode& video_mode)
+{
+	// We always expect a valid canvas and DOS video mode
+	assert(!canvas_size_px.IsEmpty());
+	assert(video_mode.width > 0 && video_mode.height > 0);
+
+	auto& shader_manager = ShaderManager::GetInstance();
+
+	const auto curr_shader_name = shader_manager.GetCurrentShaderName();
+
+	shader_manager.NotifyRenderParametersChanged(canvas_size_px, video_mode);
+
+	const auto new_shader_name = shader_manager.GetCurrentShaderName();
+
+	if (new_shader_name == curr_shader_name) {
+		return false;
+	}
+
+	return SwitchShader(new_shader_name);
+}
+
+bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
+{
+	const auto maybe_shader = GetOrLoadAndCacheShader(shader_name);
+	if (!maybe_shader) {
+		return false;
+	}
+
+	current_shader = *maybe_shader;
+
+	glUseProgram(current_shader.program_object);
 	GetUniformLocations();
+
+	return true;
+}
+
+std::optional<OpenGlRenderer::Shader> OpenGlRenderer::GetOrLoadAndCacheShader(
+        const std::string& shader_name)
+{
+	if (!shader_cache.contains(shader_name)) {
+		const auto result = ShaderManager::GetInstance().LoadShader(shader_name);
+		if (!result) {
+			return {};
+		}
+
+		const auto [shader_info, source] = *result;
+
+		const auto maybe_shader_program = BuildShaderProgram(source);
+
+		if (!maybe_shader_program) {
+			return {};
+		}
+		assert(shader_info.name == shader_name);
+
+		shader_cache[shader_info.name] = {*maybe_shader_program, shader_info};
+	}
+
+	return shader_cache[shader_name];
 }
 
 void OpenGlRenderer::SetVsync(const bool is_enabled)
@@ -632,6 +706,11 @@ void OpenGlRenderer::SetVsync(const bool is_enabled)
 		            (is_enabled ? "enabling" : "disabling"),
 		            SDL_GetError());
 	}
+}
+
+ShaderInfo OpenGlRenderer::GetCurrentShaderInfo()
+{
+	return current_shader.info;
 }
 
 RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_px)

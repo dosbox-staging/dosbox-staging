@@ -72,14 +72,14 @@ enum class RenderBackendType { OpenGl, Sdl };
 
 RenderBackendType GFX_GetRenderBackendType();
 
+// forward declaration
+class RenderBackend;
+
+RenderBackend* GFX_GetRenderer();
+
 enum class TextureFilterMode { NearestNeighbour, Bilinear };
 
 SDL_Window* GFX_GetWindow();
-
-// forward declaration
-struct ShaderInfo;
-
-void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_source);
 
 uint32_t GFX_MakePixel(const uint8_t red, const uint8_t green, const uint8_t blue);
 

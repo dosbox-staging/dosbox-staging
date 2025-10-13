@@ -121,9 +121,6 @@ struct Render {
 	bool active    = false;
 	bool fullFrame = true;
 
-	std::string current_shader_name = {};
-	bool force_reload_shader        = false;
-
 	IntegerScalingMode integer_scaling_mode = {};
 };
 
@@ -201,6 +198,8 @@ void RENDER_Init();
 void RENDER_Reinit();
 
 void RENDER_AddConfigSection(const ConfigPtr& conf);
+
+void RENDER_SetShaderWithFallback();
 
 AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode();
 
