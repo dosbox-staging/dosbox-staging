@@ -34,14 +34,19 @@ public:
 	bool UpdateRenderSize(const int new_render_width_px,
 	                      const int new_render_height_px) override;
 
+	bool SetShader([[maybe_unused]] const std::string& shader_name) override;
+
+	bool MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
+	                           [[maybe_unused]] const VideoMode& video_mode) override;
+
+	bool ForceReloadCurrentShader() override;
+	ShaderInfo GetCurrentShaderInfo() override;
+
 	void StartFrame(uint8_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
 
 	void PrepareFrame() override;
 	void PresentFrame() override;
-
-	void SetShader(const ShaderInfo& shader_info,
-	               const std::string& shader_source) override;
 
 	void SetVsync(const bool is_enabled) override;
 

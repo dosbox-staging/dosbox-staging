@@ -4,8 +4,6 @@
 
 #include "dosbox.h"
 
-#include "gui/private/shader_manager.h"
-
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -18,6 +16,7 @@
 #include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/render/render.h"
+#include "gui/render/render_backend.h"
 #include "hardware/video/vga.h"
 #include "misc/support.h"
 #include "misc/video.h"
@@ -295,6 +294,12 @@ static uint8_t get_best_mode(const uint8_t flags)
 	return (flags & GFX_CAN_32) & ~(GFX_CAN_8 | GFX_CAN_15 | GFX_CAN_16);
 }
 
+static void reinit_drawing()
+{
+	render_callback(GFX_CallbackReset);
+	VGA_SetupDrawing(0);
+}
+
 static void render_reset()
 {
 	static std::mutex render_reset_mutex;
@@ -378,13 +383,6 @@ static void render_reset()
 	}
 	if (double_width) {
 		gfx_flags |= GFX_DBL_W;
-	}
-
-	auto& shader_manager = ShaderManager::GetInstance();
-
-	if (GFX_GetRenderBackendType() == RenderBackendType::OpenGl) {
-		GFX_SetShader(shader_manager.GetCurrentShaderInfo(),
-		              shader_manager.GetCurrentShaderSource());
 	}
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
@@ -527,8 +525,7 @@ static void set_scan_and_pixel_doubling()
 	} break;
 
 	case RenderBackendType::OpenGl: {
-		const auto shader_info =
-		        ShaderManager::GetInstance().GetCurrentShaderInfo();
+		const auto shader_info = GFX_GetRenderer()->GetCurrentShaderInfo();
 
 		force_vga_single_scan = shader_info.settings.force_single_scan;
 		force_no_pixel_doubling = shader_info.settings.force_no_pixel_doubling;
@@ -541,56 +538,20 @@ static void set_scan_and_pixel_doubling()
 	VGA_AllowPixelDoubling(!force_no_pixel_doubling);
 }
 
-static bool render_initialised = false;
-
-void RENDER_Reinit()
+bool RENDER_MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
+                                  const VideoMode& video_mode,
+                                  const bool reinit_render)
 {
-	if (!render_initialised) {
-		return;
-	};
+	const auto shader_changed = GFX_GetRenderer()->MaybeAutoSwitchShader(
+	        canvas_size_px, video_mode);
 
-	RENDER_Init();
-
-	render_callback(GFX_CallbackReset);
-	VGA_SetupDrawing(0);
-}
-
-bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
-                                  [[maybe_unused]] const VideoMode& video_mode,
-                                  [[maybe_unused]] const bool reinit_render)
-{
-	// We always expect a valid canvas and DOS video mode
-	assert(!canvas_size_px.IsEmpty());
-	assert(video_mode.width > 0 && video_mode.height > 0);
-
-	if (GFX_GetRenderBackendType() != RenderBackendType::OpenGl) {
-		return false;
-	}
-
-	auto& shader_manager = ShaderManager::GetInstance();
-	shader_manager.NotifyRenderParametersChanged(canvas_size_px, video_mode);
-
-	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
-	const auto changed_shader = (new_shader_name != render.current_shader_name);
-
-	if (changed_shader) {
+	if (shader_changed) {
+		set_scan_and_pixel_doubling();
 		if (reinit_render) {
-			RENDER_Reinit();
-
-			// We can't set the new shader name here yet because
-			// then the "shader changed" reinit path wouldn't be
-			// trigger in RENDER_Reinit()
-		} else {
-			set_scan_and_pixel_doubling();
-
-			// We must set the new shader name here as we're
-			// bypassing a full render reinit (RENDER_Reinit() is
-			// the only other place where
-			// 'render.current_shader_name' can be set).
-			render.current_shader_name = new_shader_name;
+			reinit_drawing();
 		}
 	}
-	return changed_shader;
+	return shader_changed;
 }
 
 void RENDER_NotifyEgaModeWithVgaPalette()
@@ -605,11 +566,11 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 		video_mode.has_vga_colors = true;
 
 		// We are potentially auto-switching to a VGA shader now.
-		constexpr auto reinit_render = true;
+		constexpr auto ReinitRender = true;
 
 		RENDER_MaybeAutoSwitchShader(GFX_GetCanvasSizeInPixels(),
 		                             video_mode,
-		                             reinit_render);
+		                             ReinitRender);
 	}
 }
 
@@ -625,22 +586,27 @@ void RENDER_AddMessages()
 
 static void reload_shader([[maybe_unused]] const bool pressed)
 {
-	if (GFX_GetRenderBackendType() != RenderBackendType::OpenGl) {
-		return;
-	}
-
 	if (!pressed) {
 		return;
 	}
 
-	render.force_reload_shader = true;
-	RENDER_Reinit();
+	const auto shader_name = ShaderManager::GetInstance().GetCurrentShaderName();
+	if (shader_name.empty()) {
+		return;
+	}
+
+	LOG_MSG("RENDER: Reloading shader '%s'", shader_name.c_str());
+
+	GFX_GetRenderer()->ForceReloadCurrentShader();
+
+	set_scan_and_pixel_doubling();
 
 	// The shader settings might have been changed (e.g. force_single_scan,
 	// force_no_pixel_doubling), so force re-rendering the image using the
 	// new settings. Without this, the altered settings would only take
 	// effect on the next video mode change.
-	VGA_SetupDrawing(0);
+	//
+	reinit_drawing();
 }
 
 constexpr auto MonochromePaletteAmber      = "amber";
@@ -1040,7 +1006,7 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 			return draw_size_fit_px;
 		}
 
-		if (ShaderManager::GetInstance().GetCurrentShaderInfo().is_adaptive) {
+		if (GFX_GetRenderer()->GetCurrentShaderInfo().is_adaptive) {
 			auto integer_scale_factor = [&] {
 				const auto factor = draw_size_fit_px.h /
 				                    render_size_px.h;
@@ -1349,7 +1315,7 @@ static void adjust_viewport_stretch(const float increment)
 	         iroundf(r.width_scale * 100.0f),
 	         iroundf(r.height_scale * 100.0f));
 
-	VGA_SetupDrawing(0);
+	reinit_drawing();
 }
 
 static void increase_viewport_stretch(const bool pressed)
@@ -1366,33 +1332,26 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
-static void set_shader(SectionProp& section)
+bool set_shader(const std::string& shader_name)
 {
-	if (GFX_GetRenderBackendType() != RenderBackendType::OpenGl) {
+	if (!GFX_GetRenderer()->SetShader(shader_name)) {
+		return false;
+	}
+
+	set_scan_and_pixel_doubling();
+	return true;
+}
+
+void RENDER_SetShaderWithFallback()
+{
+	if (set_shader(get_render_section().GetString("glshader"))) {
 		return;
 	}
-
-	auto& shader_manager = ShaderManager::GetInstance();
-
-	constexpr auto GlshaderSettingName = "glshader";
-
-	if (GFX_GetRenderBackendType() == RenderBackendType::OpenGl) {
-		const auto mapped_shader_name = shader_manager.MapShaderName(
-		        section.GetString(GlshaderSettingName));
-
-		shader_manager.NotifyGlshaderSettingChanged(mapped_shader_name);
-
-		set_section_property_value("render", "glshader", mapped_shader_name);
+	if (set_shader("crt-auto")) {
+		set_section_property_value("render", "glshader", "crt-aut");
+		return;
 	}
-
-	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
-
-	if (render.force_reload_shader) {
-		shader_manager.ReloadCurrentShader();
-		render.force_reload_shader = false;
-	}
-
-	render.current_shader_name = new_shader_name;
+	E_Exit("RENDER: Error setting default 'crt-auto' shader");
 }
 
 static void set_monochrome_palette(SectionProp& section)
@@ -1417,22 +1376,12 @@ void RENDER_Init()
 	set_viewport(*section);
 	set_integer_scaling(*section);
 
-	set_shader(*section);
-	set_scan_and_pixel_doubling();
-
 	set_monochrome_palette(*section);
-
-	render_initialised = true;
 }
 
 static void notify_render_setting_updated(SectionProp& section,
                                           const std::string& prop_name)
 {
-	auto reinit_drawing = []() {
-		render_callback(GFX_CallbackReset);
-		VGA_SetupDrawing(0);
-	};
-
 	if (prop_name == "aspect") {
 		set_aspect_ratio_correction(section);
 		reinit_drawing();
@@ -1442,8 +1391,7 @@ static void notify_render_setting_updated(SectionProp& section,
 		// somewhat complicated and needs experimentation.
 
 	} else if (prop_name == "glshader") {
-		set_shader(section);
-		set_scan_and_pixel_doubling();
+		set_shader(section.GetString("glshader"));
 		reinit_drawing();
 
 	} else if (prop_name == "integer_scaling") {
