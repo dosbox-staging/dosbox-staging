@@ -9,6 +9,7 @@
     "libmt32emu",
     "libpng",
     "opusfile",
+    "fluidsynth",
     {
       "name": "sdl2",
       "platform": "linux",
