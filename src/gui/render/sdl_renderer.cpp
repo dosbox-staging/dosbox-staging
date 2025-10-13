@@ -426,7 +426,8 @@ RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_p
 	return image;
 }
 
-uint32_t SdlRenderer::GetRgb(const uint8_t red, const uint8_t green, const uint8_t blue)
+uint32_t SdlRenderer::MakePixel(const uint8_t red, const uint8_t green,
+                                const uint8_t blue)
 {
 	assert(pixel_format);
 

@@ -47,8 +47,8 @@ public:
 
 	RenderedImage ReadPixelsPostShader(const DosBox::Rect output_rect_px) override;
 
-	uint32_t GetRgb(const uint8_t red, const uint8_t green,
-	                const uint8_t blue) override;
+	uint32_t MakePixel(const uint8_t red, const uint8_t green,
+	                   const uint8_t blue) override;
 
 	// prevent copying
 	SdlRenderer(const SdlRenderer&) = delete;

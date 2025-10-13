@@ -1126,10 +1126,9 @@ void GFX_EndUpdate()
 	FrameMark;
 }
 
-// TODO rename to GFX_GetRgb
-uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
+uint32_t GFX_MakePixel(const uint8_t red, const uint8_t green, const uint8_t blue)
 {
-	return sdl.renderer->GetRgb(red, green, blue);
+	return sdl.renderer->MakePixel(red, green, blue);
 }
 
 void GFX_Start()
