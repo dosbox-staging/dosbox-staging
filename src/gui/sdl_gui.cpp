@@ -357,16 +357,6 @@ static bool is_command_pressed(const SDL_Event event)
 				TITLEBAR_RefreshTitle();
 				break;
 			}
-
-#if defined(MACOSX)
-			if (is_command_pressed(event) &&
-			    event.key.keysym.sym == SDLK_q) {
-				// On macOS, Command+Q is the default key to
-				// close an application
-				GFX_RequestExit(true);
-				break;
-			}
-#endif
 		}
 	}
 	MIXER_UnlockMixerThread();
@@ -2484,18 +2474,6 @@ bool GFX_PollAndHandleEvents()
 			break;
 
 		case SDL_QUIT: GFX_RequestExit(true); break;
-#if defined(MACOSX)
-		case SDL_KEYDOWN:
-		case SDL_KEYUP:
-			// On macOS, Command+Q is the default key to close an
-			// application
-			if (is_command_pressed(event) &&
-			    event.key.keysym.sym == SDLK_q) {
-				GFX_RequestExit(true);
-				break;
-			}
-			[[fallthrough]];
-#endif
 		default: MAPPER_CheckEvent(&event);
 		}
 	}
