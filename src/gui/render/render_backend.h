@@ -41,6 +41,28 @@ public:
 	virtual bool UpdateRenderSize(const int new_render_width_px,
 	                              const int new_render_height_px) = 0;
 
+	// Set a shader by its symbolic shader name. The render backend should
+	// load the shader via the `ShaderManager` if it's not in its shader cache
+	// (caching is optional but recommended).
+	//
+	// E.g., `crt-auto-machine` is a symbolic name that will get mapped to
+	// actual shaders that implement the Hercules, CGA, EGA, and VGA CRT
+	// emulations, respectively.
+	//
+	// Similarly, `sharp` is mapped to `interpolation/sharp.glsl`, etc.
+	//
+	virtual bool SetShader(const std::string& symbolic_shader_name) = 0;
+
+	// Can be a no-op if the backend does't support shaders.
+	virtual bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
+	                                   const VideoMode& video_mode) = 0;
+
+	// Reload the currently active shader from disk.
+	virtual bool ForceReloadCurrentShader() = 0;
+
+	// Get information about the currently active shader.
+	virtual ShaderInfo GetCurrentShaderInfo() = 0;
+
 	// Called at the start of every unique frame (when there have been
 	// changes to the DOS framebuffer).
 	//
@@ -74,11 +96,6 @@ public:
 
 	// Presents the frame prepared for presentation by PrepareFrame().
 	virtual void PresentFrame() = 0;
-
-	// Sets the current shader (can be a no-op on backends that don't
-	// support shaders).
-	virtual void SetShader(const ShaderInfo& shader_info,
-	                       const std::string& shader_source) = 0;
 
 	// Enables or disables vsync.
 	virtual void SetVsync(const bool is_enabled) = 0;

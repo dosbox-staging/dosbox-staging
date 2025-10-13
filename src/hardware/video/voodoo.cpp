@@ -7503,8 +7503,11 @@ static void Voodoo_UpdateScreen()
 			const auto frames_per_second = static_cast<float>(
 			        1000.0 / v->draw.frame_period_ms);
 
-			constexpr auto reinit_render = false;
-			RENDER_MaybeAutoSwitchShader(GFX_GetCanvasSizeInPixels(), video_mode, reinit_render);
+			constexpr auto ReinitRender = false;
+
+			RENDER_MaybeAutoSwitchShader(GFX_GetCanvasSizeInPixels(),
+			                             video_mode,
+			                             ReinitRender);
 
 			RENDER_SetSize(image_info, frames_per_second);
 		}
