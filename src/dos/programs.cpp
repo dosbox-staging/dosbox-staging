@@ -813,9 +813,9 @@ void CONFIG::Run(void)
 				pvars.push_back(rest);
 			}
 
-			const auto warning_message = control->SetProperty(pvars);
+			if (const auto warning_message = control->SetProperty(pvars);
+			    !warning_message.empty()) {
 
-			if (!warning_message.empty()) {
 				WriteOut(warning_message);
 
 			} else {
