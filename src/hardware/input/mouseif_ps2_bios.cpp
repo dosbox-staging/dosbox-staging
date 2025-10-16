@@ -685,13 +685,6 @@ void MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel)
 	vmm_needs_dummy_event = false;
 }
 
-void MOUSEPS2_NotifyMovedDummy()
-{
-	if (should_report()) {
-		vmm_needs_dummy_event = true;
-	}
-}
-
 void MOUSEPS2_NotifyButton(const MouseButtons12S new_buttons_12S,
                            const MouseButtonsAll new_buttons_all)
 {
@@ -733,6 +726,15 @@ void MOUSEPS2_NotifyWheel(const float w_rel)
 void MOUSEPS2_SetDelay(const uint8_t new_delay_ms)
 {
 	delay_ms = new_delay_ms;
+}
+
+void MOUSEPS2_NotifyInterruptNeeded(const bool immediately)
+{
+	if (immediately) {
+		I8042_TriggerAuxInterrupt();
+	} else if (should_report()) {
+		vmm_needs_dummy_event = true;
+	}
 }
 
 // ***************************************************************************

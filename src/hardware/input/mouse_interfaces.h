@@ -57,10 +57,12 @@ void MOUSEPS2_UpdateButtonSquish();
 // - understands up to 3 buttons in other modes
 
 void MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel);
-void MOUSEPS2_NotifyMovedDummy(); // for virtual machine interfaces
 void MOUSEPS2_NotifyButton(const MouseButtons12S buttons_12S,
                            const MouseButtonsAll buttons_all);
 void MOUSEPS2_NotifyWheel(const float w_rel);
+
+// For the VirtualBox and VMware seamless mouse protocol emulation
+void MOUSEPS2_NotifyInterruptNeeded(const bool immediately);
 
 // ***************************************************************************
 // BIOS mouse interface for PS/2 mouse

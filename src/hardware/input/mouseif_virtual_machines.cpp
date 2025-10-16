@@ -45,8 +45,12 @@ static struct {
 	float delta_wheel = 0.0f;   // accumulated mouse wheel movement
 } vmware;
 
-static bool use_relative = true; // true = ignore absolute mouse position, use relative
-static bool is_input_raw = true; // true = no host mouse acceleration pre-applied
+// true = ignore absolute mouse position, use relative
+static bool use_relative = true;
+// true = no host mouse acceleration pre-applied
+static bool is_input_raw = true;
+// true = trigger interrupt without waiting and creating the data packet
+static bool immediate_interrupts = false;
 
 static float pos_x = 0.0f; // absolute mouse position in guest-side pixels
 static float pos_y = 0.0f;
@@ -103,6 +107,11 @@ bool MOUSEVMM_IsSupported(const MouseVmmProtocol protocol)
 	return false;
 }
 
+void MOUSEVMM_EnableImmediateInterrupts(const bool enable)
+{
+	immediate_interrupts = enable;
+}
+
 void MOUSEVMM_Activate(const MouseVmmProtocol protocol)
 {
 	bool is_activating = false;
@@ -130,7 +139,7 @@ void MOUSEVMM_Activate(const MouseVmmProtocol protocol)
 			pos_y = static_cast<float>(mouse_shared.resolution_y) / 2.0f;
 			scaled_x = 0;
 			scaled_y = 0;
-			MOUSEPS2_NotifyMovedDummy();
+			MOUSEPS2_NotifyInterruptNeeded(immediate_interrupts);
 		}
 	}
 
@@ -283,7 +292,7 @@ void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
 	}
 
 	vmware.updated = vmware.is_active;
-	MOUSEPS2_NotifyMovedDummy();
+	MOUSEPS2_NotifyInterruptNeeded(immediate_interrupts);
 }
 
 void MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S)
@@ -305,7 +314,7 @@ void MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S)
 	}
 
 	vmware.updated = vmware.is_active;
-	MOUSEPS2_NotifyMovedDummy();
+	MOUSEPS2_NotifyInterruptNeeded(immediate_interrupts);
 }
 
 void MOUSEVMM_NotifyWheel(const float w_rel)
@@ -327,7 +336,7 @@ void MOUSEVMM_NotifyWheel(const float w_rel)
 	}
 
 	vmware.updated = vmware.is_active;
-	MOUSEPS2_NotifyMovedDummy();
+	MOUSEPS2_NotifyInterruptNeeded(immediate_interrupts);
 }
 
 void MOUSEVMM_NewScreenParams(const float x_abs, const float y_abs)

@@ -252,7 +252,7 @@ static void warn_unsupported_request(const VBoxRequestType request_type)
 {
 	static std::set<VBoxRequestType> already_warned = {};
 	if (already_warned.contains(request_type)) {
-		LOG_WARNING("VIRTUALBOX: unimplemented request #%d",
+		LOG_WARNING("VIRTUALBOX: Unimplemented request #%d",
 		            enum_val(request_type));
 		already_warned.insert(request_type);
 	}
@@ -263,7 +263,7 @@ static void warn_unsupported_struct_version(const RequestHeader& header)
 	static std::map<VBoxRequestType, std::set<uint32_t>> already_warned = {};
 	auto& already_warned_set = already_warned[header.request_type];
 	if (already_warned_set.contains(header.struct_version)) {
-		LOG_WARNING("VIRTUALBOX: unimplemented request #%d structure v%d.%02d",
+		LOG_WARNING("VIRTUALBOX: Unimplemented request #%d structure v%d.%02d",
 		            enum_val(header.request_type),
 		            header.struct_version >> 16,
 		            header.struct_version & 0xffff);
@@ -469,7 +469,7 @@ static void handle_report_guest_info(const RequestHeader& header,
 		const VirtualBox_GuestInfo_1_01 payload(struct_pointer);
 
 		if (payload.interface_version != ver_1_04) {
-			LOG_WARNING("VIRTUALBOX: unimplemented protocol v%d.%02d",
+			LOG_WARNING("VIRTUALBOX: Unimplemented protocol v%d.%02d",
 			            payload.interface_version >> 16,
 			            payload.interface_version & 0xffff);
 			client_disconnect();

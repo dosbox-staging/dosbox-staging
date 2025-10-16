@@ -192,6 +192,8 @@ struct MouseVmWarePointerStatus {
 
 bool MOUSEVMM_IsSupported(const MouseVmmProtocol protocol);
 
+void MOUSEVMM_EnableImmediateInterrupts(const bool enable);
+
 void MOUSEVMM_Activate(const MouseVmmProtocol protocol);
 void MOUSEVMM_Deactivate(const MouseVmmProtocol protocol);
 void MOUSEVMM_DeactivateAll();
