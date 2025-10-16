@@ -638,7 +638,7 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	prop_bool = secprop.AddBool("vmware_mouse", OnlyAtStart, true);
 	prop_bool->SetHelp(
 	        "VMware mouse interface ('on' by default).\n"
-	        "with experimental 3rd party Windows 3.1x driver.\n"
+	        "Fully compatible only with 3rd party Windows 3.1x driver.\n"
 	        "Note: Requires PS/2 mouse to be enabled.");
 
 	prop_bool = secprop.AddBool("virtualbox_mouse", OnlyAtStart, true);

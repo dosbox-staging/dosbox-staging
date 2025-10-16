@@ -21,6 +21,8 @@ void I8042_AddKbdFrame(const std::vector<uint8_t>& bytes);
 bool I8042_IsReadyForAuxFrame();
 bool I8042_IsReadyForKbdFrame();
 
+void I8042_TriggerAuxInterrupt();
+
 // The following routines needs to be implemented by keyboard/mouse
 // emulation code:
 
