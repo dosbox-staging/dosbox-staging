@@ -9,6 +9,7 @@
 #include <cinttypes>
 #include <ctime>
 #include <deque>
+#include <fstream>
 #include <optional>
 #include <string>
 #include <vector>
@@ -215,5 +216,10 @@ bool delete_native_file(const std_fs::path& path);
 // Simple file/directory removal routines, without MS-DOS compatibility hacks
 bool delete_file(const std_fs::path& path);
 bool remove_dir(const std_fs::path& path);
+
+std::optional<uint8_t> read_u8_at(std::ifstream &stream, std::ifstream::pos_type pos);
+std::optional<uint16_t> read_native_u16_at(std::ifstream &stream, std::ifstream::pos_type pos);
+std::optional<uint32_t> read_native_u32_at(std::ifstream &stream, std::ifstream::pos_type pos);
+std::optional<uint64_t> read_native_u64_at(std::ifstream &stream, std::ifstream::pos_type pos);
 
 #endif
