@@ -411,10 +411,21 @@ DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px)
 	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
 
-static void log_presentation_and_vsync_mode()
+static void maybe_log_presentation_and_vsync_mode()
 {
-	const auto presentation_rate = []() -> std::string {
-		switch (GFX_GetPresentationMode()) {
+	static std::optional<PresentationMode> last_presentation_mode = {};
+	static std::optional<bool> last_vsync_enabled                 = {};
+
+	const auto presentation_mode = GFX_GetPresentationMode();
+	const auto vsync_enabled     = is_vsync_enabled();
+
+	if (presentation_mode == last_presentation_mode &&
+	    vsync_enabled == last_vsync_enabled) {
+		return;
+	}
+
+	const auto presentation_rate = [&]() -> std::string {
+		switch (presentation_mode) {
 		case PresentationMode::DosRate: return "DOS rate";
 
 		case PresentationMode::HostRate:
@@ -427,7 +438,10 @@ static void log_presentation_and_vsync_mode()
 
 	LOG_MSG("DISPLAY: Presenting at %s %s vsync",
 	        presentation_rate.c_str(),
-	        (is_vsync_enabled() ? "with" : "without"));
+	        (vsync_enabled ? "with" : "without"));
+
+	last_presentation_mode = presentation_mode;
+	last_vsync_enabled     = vsync_enabled;
 }
 
 static void maybe_log_display_properties()
@@ -473,7 +487,7 @@ static void maybe_log_display_properties()
 			        static_cast<int32_t>(par.Num()),
 			        static_cast<int32_t>(par.Denom()));
 
-			log_presentation_and_vsync_mode();
+			maybe_log_presentation_and_vsync_mode();
 
 			last_video_mode         = video_mode;
 			last_refresh_rate       = refresh_rate;
@@ -780,6 +794,11 @@ DosBox::Rect GFX_GetCanvasSizeInPixels()
 	return sdl.renderer->GetCanvasSizeInPixels();
 }
 
+RenderBackend* GFX_GetRenderer()
+{
+	return sdl.renderer.get();
+}
+
 RenderBackendType GFX_GetRenderBackendType()
 {
 	return sdl.render_backend_type;
@@ -877,6 +896,11 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_Callback_t callback)
 {
+	if (!sdl.video_initialised) {
+		RENDER_SetShaderWithFallback();
+		sdl.video_initialised = true;
+	}
+
 	if (sdl.draw.updating_framebuffer) {
 		GFX_EndUpdate();
 	}
@@ -930,12 +954,6 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	}
 
 	return gfx_flags;
-}
-
-void GFX_SetShader([[maybe_unused]] const ShaderInfo& shader_info,
-                   [[maybe_unused]] const std::string& shader_source)
-{
-	sdl.renderer->SetShader(shader_info, shader_source);
 }
 
 void GFX_CenterMouse()
@@ -1886,7 +1904,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		configure_vsync();
 
 		sdl.renderer->SetVsync(is_vsync_enabled());
-		log_presentation_and_vsync_mode();
+		maybe_log_presentation_and_vsync_mode();
 
 	} else if (prop_name == "window_decorations") {
 		configure_window_decorations();
@@ -1977,8 +1995,13 @@ bool GFX_IsFullscreen()
 
 static bool maybe_autoswitch_shader()
 {
+	if (!sdl.video_initialised) {
+		return false;
+	}
+
 	// The shaders need a canvas size as their target resolution
 	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
+
 	if (canvas_size_px.IsEmpty()) {
 		return false;
 	}
