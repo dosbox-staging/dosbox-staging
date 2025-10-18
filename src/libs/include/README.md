@@ -14,16 +14,6 @@ and only updated when new features of the API are used.
 
 Notes about each library are provided in the next sections.
 
-## Fluidsynth
-
-Headers are sourced from the automated GitHub archive from the 2.2.3 release. 
-The contents of the `include` directory have been copied into this directory.
-
-The original `fluidsynth.cmake` file has been renamed to `fluidsynth.h` and 
-the conditional logic for `BUILD_SHARED_LIBS` was removed and replaced with a 
-bare `#define FLUIDSYNTH_API`. Additionally, `#include "fluidsynth/version.h"` 
-has been commented out.
-
 ## Slirp
 
 Headers are sourced from the dist archive for the 4.8.0 release. 

@@ -81,6 +81,7 @@ DOSBox Staging has the following library dependencies:
 
 | Dependency                                               | Provides feature                                | vcpkg package name | vcpkg version   | Optional?           |
 | -------------------------------------------------------- | ----------------------------------------------- | ------------------ | --------------- | ------------------- |
+| [FluidSynth](https://www.fluidsynth.org/)                | General MIDI playback                           | fluidsynth         | 2.5.0 (overlay) | **no** :red_circle: |
 | [GoogleTest](https://github.com/google/googletest)       | Unit testing (development)                      | gtest              | 1.70.0#1        | yes :green_circle:  |
 | [IIR](https://github.com/berndporr/iir1)                 | Audio filtering                                 | iir1               | 1.10.0          | **no** :red_circle: |
 | [libpng](http://www.libpng.org/pub/png/libpng.html)      | PNG encoding of screen captures                 | libpng             | 1.6.50          | yes :green_circle:  |
@@ -95,10 +96,10 @@ DOSBox Staging has the following library dependencies:
 
 ### Dynamically loaded dependencies
 
-**FluidSynth** and **Slirp** are built separately as dynamic libraries (via
-vcpkg) and are loaded on-demand at runtime if available. Please refer to the
+**Slirp** is built separately as a dynamic library (via
+vcpkg) and is loaded on-demand at runtime if available. Please refer to the
 [dosbox-staging-ext](https://github.com/dosbox-staging/dosbox-staging-ext)
-project for further details. To check the versions of these dependencies
+project for further details. To check the version of this dependency 
 included in our stable and dev build packages, check out the comments of the
 [releases packages](https://github.com/dosbox-staging/dosbox-staging-ext/releases) of
 the [dosbox-staging-ext](https://github.com/dosbox-staging/dosbox-staging-ext)

@@ -27,129 +27,6 @@
 
 constexpr auto SoundFontExtension = ".sf2";
 
-/**
- * Platform specific FluidSynth shared library name
- */
-#if defined(WIN32)
-constexpr const char* fsynth_dynlib_file = "libfluidsynth-3.dll";
-#elif defined(MACOSX)
-constexpr const char* fsynth_dynlib_file = "libfluidsynth.3.dylib";
-#else
-constexpr const char* fsynth_dynlib_file = "libfluidsynth.so.3";
-#endif
-
-struct FsynthVersion {
-	int major = 0;
-	int minor = 0;
-	int micro = 0;
-
-// Workaround for clang bug
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
-	auto operator<=>(const FsynthVersion&) const = default;
-#pragma clang diagnostic pop
-};
-
-constexpr FsynthVersion min_fsynth_version           = {2, 2, 3};
-constexpr FsynthVersion max_fsynth_version_exclusive = {3, 0, 0};
-
-namespace FluidSynth {
-/**
- * FluidSynth dynamic library handle
- */
-static dynlib_handle fsynth_lib = {};
-
-// The following function pointers will be set to their corresponding symbols in
-// the FluidSynth library
-
-/**
- * A 'X-Macro' to generate a list of function pointers to symbols in the
- * Fluidsynth library. While hacky, this ensures that all symbols will
- * be declared and resolved without risk of accidentally forgetting one or more.
- *
- * The FSFUNC macro should have the signature (return_type, symbol_name,
- * signature)
- */
-// clang-format off
-#define FSYNTH_FUNC_LIST(FSFUNC) \
-	FSFUNC(void, delete_fluid_settings, (fluid_settings_t*)) \
-	FSFUNC(void, delete_fluid_synth, (fluid_synth_t*)) \
-	FSFUNC(void, fluid_version, (int *major, int *minor, int *micro)) \
-	FSFUNC(fluid_settings_t*, new_fluid_settings, (void)) \
-	FSFUNC(fluid_synth_t*, new_fluid_synth, (fluid_settings_t *settings)) \
-	FSFUNC(fluid_log_function_t, fluid_set_log_function, (int level, fluid_log_function_t fun, void *data)) \
-	FSFUNC(int, fluid_settings_setnum, (fluid_settings_t *settings, const char *name, double val)) \
-	FSFUNC(int, fluid_synth_chorus_on, (fluid_synth_t *synth, int fx_group, int on)) \
-	FSFUNC(int, fluid_synth_set_chorus_group_nr, (fluid_synth_t *synth, int fx_group, int nr)) \
-	FSFUNC(int, fluid_synth_set_chorus_group_level, (fluid_synth_t *synth, int fx_group, double level)) \
-	FSFUNC(int, fluid_synth_set_chorus_group_speed, (fluid_synth_t *synth, int fx_group, double speed)) \
-	FSFUNC(int, fluid_synth_set_chorus_group_depth, (fluid_synth_t *synth, int fx_group, double depth_ms)) \
-	FSFUNC(int, fluid_synth_set_chorus_group_type, (fluid_synth_t *synth, int fx_group, int type)) \
-	FSFUNC(int, fluid_synth_reverb_on, (fluid_synth_t *synth, int fx_group, int on)) \
-	FSFUNC(int, fluid_synth_set_reverb_group_roomsize, (fluid_synth_t *synth, int fx_group, double roomsize)) \
-	FSFUNC(int, fluid_synth_set_reverb_group_damp, (fluid_synth_t *synth, int fx_group, double damping)) \
-	FSFUNC(int, fluid_synth_set_reverb_group_width, (fluid_synth_t *synth, int fx_group, double width)) \
-	FSFUNC(int, fluid_synth_set_reverb_group_level, (fluid_synth_t *synth, int fx_group, double level)) \
-	FSFUNC(int, fluid_synth_sfload, (fluid_synth_t *synth, const char *filename, int reset_presets)) \
-	FSFUNC(void, fluid_synth_set_gain, (fluid_synth_t *synth, float gain)) \
-	FSFUNC(int, fluid_synth_set_interp_method, (fluid_synth_t *synth, int chan, int interp_method)) \
-	FSFUNC(int, fluid_synth_noteoff, (fluid_synth_t *synth, int chan, int key)) \
-	FSFUNC(int, fluid_synth_noteon, (fluid_synth_t *synth, int chan, int key, int vel)) \
-	FSFUNC(int, fluid_synth_key_pressure, (fluid_synth_t *synth, int chan, int key, int val)) \
-	FSFUNC(int, fluid_synth_cc, (fluid_synth_t *synth, int chan, int ctrl, int val)) \
-	FSFUNC(int, fluid_synth_program_change, (fluid_synth_t *synth, int chan, int program)) \
-	FSFUNC(int, fluid_synth_channel_pressure, (fluid_synth_t *synth, int chan, int val)) \
-	FSFUNC(int, fluid_synth_pitch_bend, (fluid_synth_t *synth, int chan, int val)) \
-	FSFUNC(int, fluid_synth_sysex, (fluid_synth_t *synth, const char *data, int len, char *response, int *response_len, int *handled, int dryrun)) \
-	FSFUNC(int, fluid_synth_write_float, (fluid_synth_t *synth, int len, void *lout,  int loff, int lincr, void *rout, int roff, int rincr))
-// clang-format on
-
-/**
- * Macro to declare function pointers
- */
-#define FSYNTH_FUNC_DECLARE(ret_type, name, sig) ret_type(*name) sig = nullptr;
-
-FSYNTH_FUNC_LIST(FSYNTH_FUNC_DECLARE)
-
-} // namespace FluidSynth
-
-/**
- * A filthy macro to resolve fluidsynth symbols, and return from the
- * calling function below on error.
- */
-#define FSYNTH_FUNC_GET_SYM(ret_type, name, sig) \
-	FluidSynth::name = (decltype(FluidSynth::name)) \
-	        dynlib_get_symbol(FluidSynth::fsynth_lib, #name); \
-	if (!FluidSynth::name) { \
-		dynlib_close(FluidSynth::fsynth_lib); \
-		err_str = "FSYNTH: Failed to get symbol: '" #ret_type \
-		          " " #name #sig "'"; \
-		return DynLibResult::ResolveSymErr; \
-	}
-
-/**
- * Load the FluidSynth library and resolve all required symbols.
- *
- * If the library is already loaded, does nothing.
- */
-static DynLibResult load_fsynth_dynlib(std::string& err_str)
-{
-	if (!FluidSynth::fsynth_lib) {
-		FluidSynth::fsynth_lib = dynlib_open(fsynth_dynlib_file);
-		if (!FluidSynth::fsynth_lib) {
-			err_str = "FSYNTH: Failed to load FluidSynth library";
-			return DynLibResult::LibOpenErr;
-		}
-		FSYNTH_FUNC_LIST(FSYNTH_FUNC_GET_SYM)
-
-		// Keep ERR and PANIC logging only
-		for (auto level : {FLUID_DBG, FLUID_INFO, FLUID_WARN}) {
-			FluidSynth::fluid_set_log_function(level, nullptr, nullptr);
-		}
-	}
-	return DynLibResult::Success;
-}
-
 constexpr auto ChorusSettingName    = "fsynth_chorus";
 constexpr auto DefaultChorusSetting = "auto";
 constexpr auto NumChorusParams      = 5;
@@ -495,25 +372,25 @@ void MidiDeviceFluidSynth::SetChorusParams(const ChorusParameters& params)
 	// Apply setting to all groups
 	constexpr int FxGroup = -1;
 
-	FluidSynth::fluid_synth_set_chorus_group_nr(synth.get(),
-	                                            FxGroup,
-	                                            params.voice_count);
+	fluid_synth_set_chorus_group_nr(synth.get(),
+									FxGroup,
+									params.voice_count);
 
-	FluidSynth::fluid_synth_set_chorus_group_level(synth.get(),
-	                                               FxGroup,
-	                                               params.level);
+	fluid_synth_set_chorus_group_level(synth.get(),
+									   FxGroup,
+									   params.level);
 
-	FluidSynth::fluid_synth_set_chorus_group_speed(synth.get(),
-	                                               FxGroup,
-	                                               params.speed);
+	fluid_synth_set_chorus_group_speed(synth.get(),
+									   FxGroup,
+									   params.speed);
 
-	FluidSynth::fluid_synth_set_chorus_group_depth(synth.get(),
-	                                               FxGroup,
-	                                               params.depth);
+	fluid_synth_set_chorus_group_depth(synth.get(),
+	                                   FxGroup,
+	                                   params.depth);
 
-	FluidSynth::fluid_synth_set_chorus_group_type(synth.get(),
-	                                              FxGroup,
-	                                              params.mod_wave);
+	fluid_synth_set_chorus_group_type(synth.get(),
+	                                  FxGroup,
+	                                  params.mod_wave);
 
 	LOG_MSG("FSYNTH: Chorus enabled with %d voices at level %.2f, "
 	        "%.2f Hz speed, %.2f depth, and %s-wave modulation",
@@ -534,7 +411,7 @@ void MidiDeviceFluidSynth::SetChorus()
 	auto enable_chorus = [&](const bool enabled) {
 		// Apply setting to all groups
 		constexpr int FxGroup = -1;
-		FluidSynth::fluid_synth_chorus_on(synth.get(), FxGroup, enabled);
+		fluid_synth_chorus_on(synth.get(), FxGroup, enabled);
 
 		if (!enabled) {
 			LOG_MSG("FSYNTH: Chorus disabled");
@@ -634,21 +511,21 @@ void MidiDeviceFluidSynth::SetReverbParams(const ReverbParameters& params)
 	// Apply setting to all groups
 	constexpr int FxGroup = -1;
 
-	FluidSynth::fluid_synth_set_reverb_group_roomsize(synth.get(),
-	                                                  FxGroup,
-	                                                  params.room_size);
+	fluid_synth_set_reverb_group_roomsize(synth.get(),
+	                                      FxGroup,
+	                                      params.room_size);
 
-	FluidSynth::fluid_synth_set_reverb_group_damp(synth.get(),
-	                                              FxGroup,
-	                                              params.damping);
+	fluid_synth_set_reverb_group_damp(synth.get(),
+	                                  FxGroup,
+	                                  params.damping);
 
-	FluidSynth::fluid_synth_set_reverb_group_width(synth.get(),
-	                                               FxGroup,
-	                                               params.width);
+	fluid_synth_set_reverb_group_width(synth.get(),
+	                                   FxGroup,
+	                                   params.width);
 
-	FluidSynth::fluid_synth_set_reverb_group_level(synth.get(),
-	                                               FxGroup,
-	                                               params.level);
+	fluid_synth_set_reverb_group_level(synth.get(),
+	                                   FxGroup,
+	                                   params.level);
 
 	LOG_MSG("FSYNTH: Reverb enabled with a %.2f room size, "
 	        "%.2f damping, %.2f width, and level %.2f",
@@ -666,7 +543,7 @@ void MidiDeviceFluidSynth::SetReverb()
 	auto enable_reverb = [&](const bool enabled) {
 		// Apply setting to all groups
 		constexpr int FxGroup = -1;
-		FluidSynth::fluid_synth_reverb_on(synth.get(), FxGroup, enabled);
+		fluid_synth_reverb_on(synth.get(), FxGroup, enabled);
 
 		if (!enabled) {
 			LOG_MSG("FSYNTH: Reverb disabled");
@@ -709,56 +586,19 @@ void MidiDeviceFluidSynth::SetReverb()
 void MidiDeviceFluidSynth::SetVolume(const int volume_percent)
 {
 	const auto gain = static_cast<float>(volume_percent) / 100.0f;
-	FluidSynth::fluid_synth_set_gain(synth.get(), gain);
-}
-
-void MidiDeviceFluidSynth::TryInitSynth()
-{
-	std::string sym_err_msg;
-	DynLibResult res = load_fsynth_dynlib(sym_err_msg);
-
-	switch (res) {
-	case DynLibResult::Success: break;
-	case DynLibResult::LibOpenErr:
-	case DynLibResult::ResolveSymErr: {
-		LOG_ERR("%s", sym_err_msg.c_str());
-		throw std::runtime_error(sym_err_msg);
-		break;
-	}
-	}
-
-	FsynthVersion vers = {};
-	FluidSynth::fluid_version(&vers.major, &vers.minor, &vers.micro);
-
-	if (vers < min_fsynth_version || vers >= max_fsynth_version_exclusive) {
-		const auto msg = "FSYNTH: FluidSynth version must be at least 2.2.3 and less than 3.0.0";
-
-		LOG_ERR("%s. Version loaded is %d.%d.%d",
-		        msg,
-		        vers.major,
-		        vers.minor,
-		        vers.micro);
-		throw std::runtime_error(msg);
-	} else {
-		LOG_MSG("FSYNTH: Successfully loaded FluidSynth %d.%d.%d",
-		        vers.major,
-		        vers.minor,
-		        vers.micro);
-	}
+	fluid_synth_set_gain(synth.get(), gain);
 }
 
 MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 {
-	TryInitSynth();
-
 #ifdef NDEBUG
-	FluidSynth::fluid_set_log_function(FLUID_ERR, NULL, NULL);
-	FluidSynth::fluid_set_log_function(FLUID_WARN, NULL, NULL);
-	FluidSynth::fluid_set_log_function(FLUID_DBG, NULL, NULL);
+	fluid_set_log_function(FLUID_ERR, NULL, NULL);
+	fluid_set_log_function(FLUID_WARN, NULL, NULL);
+	fluid_set_log_function(FLUID_DBG, NULL, NULL);
 #endif
 
-	FluidSynthSettingsPtr fluid_settings(FluidSynth::new_fluid_settings(),
-	                                     FluidSynth::delete_fluid_settings);
+	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
+	                                     delete_fluid_settings);
 	if (!fluid_settings) {
 		const auto msg = "FSYNTH: Failed to initialise the FluidSynth settings";
 		LOG_ERR("%s", msg);
@@ -776,12 +616,12 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	const auto sample_rate_hz = MIXER_GetSampleRate();
 	ms_per_audio_frame        = MillisInSecond / sample_rate_hz;
 
-	FluidSynth::fluid_settings_setnum(fluid_settings.get(),
-	                                  "synth.sample-rate",
-	                                  sample_rate_hz);
+	fluid_settings_setnum(fluid_settings.get(),
+						  "synth.sample-rate",
+						  sample_rate_hz);
 
-	FluidSynthPtr fluid_synth(FluidSynth::new_fluid_synth(fluid_settings.get()),
-	                          FluidSynth::delete_fluid_synth);
+	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
+	                          delete_fluid_synth);
 	if (!fluid_synth) {
 		const auto msg = "FSYNTH: Failed to create the FluidSynth synthesizer";
 		LOG_ERR("%s", msg);
@@ -793,9 +633,9 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	const auto sf_path = find_sf_file(sf_name);
 
 	constexpr auto ResetPresets = true;
-	if (FluidSynth::fluid_synth_sfload(fluid_synth.get(),
-	                                   sf_path.string().c_str(),
-	                                   ResetPresets) == FLUID_FAILED) {
+	if (fluid_synth_sfload(fluid_synth.get(),
+						   sf_path.string().c_str(),
+						   ResetPresets) == FLUID_FAILED) {
 
 		const auto msg = format_str("FSYNTH: Error loading SoundFont '%s'",
 		                            sf_name.c_str());
@@ -828,9 +668,9 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel
 	// waveforms
-	FluidSynth::fluid_synth_set_interp_method(fluid_synth.get(),
-	                                          FxGroup,
-	                                          FLUID_INTERP_HIGHEST);
+	fluid_synth_set_interp_method(fluid_synth.get(),
+								  FxGroup,
+								  FLUID_INTERP_HIGHEST);
 
 	SetChorus();
 	SetReverb();
@@ -999,9 +839,9 @@ void MidiDeviceFluidSynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 
 	// clang-format off
 	switch (status) {
-	case MidiStatus::NoteOff:         FluidSynth::fluid_synth_noteoff(     synth.get(), channel, msg[1]);         break;
-	case MidiStatus::NoteOn:          FluidSynth::fluid_synth_noteon(      synth.get(), channel, msg[1], msg[2]); break;
-	case MidiStatus::PolyKeyPressure: FluidSynth::fluid_synth_key_pressure(synth.get(), channel, msg[1], msg[2]); break;
+	case MidiStatus::NoteOff:         fluid_synth_noteoff(     synth.get(), channel, msg[1]);         break;
+	case MidiStatus::NoteOn:          fluid_synth_noteon(      synth.get(), channel, msg[1], msg[2]); break;
+	case MidiStatus::PolyKeyPressure: fluid_synth_key_pressure(synth.get(), channel, msg[1], msg[2]); break;
 
 	case MidiStatus::ControlChange: {
 		const auto controller = msg[1];
@@ -1046,13 +886,13 @@ void MidiDeviceFluidSynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 			// used rarely and usually only to add some subtle flair to the
 			// start of the notes in synth-oriented soundtracks.
 		} else {
-			FluidSynth::fluid_synth_cc(synth.get(), channel, controller, value);
+			fluid_synth_cc(synth.get(), channel, controller, value);
 		}
 	} break;
 
-	case MidiStatus::ProgramChange:   FluidSynth::fluid_synth_program_change(  synth.get(), channel, msg[1]);                 break;
-	case MidiStatus::ChannelPressure: FluidSynth::fluid_synth_channel_pressure(synth.get(), channel, msg[1]);                 break;
-	case MidiStatus::PitchBend:       FluidSynth::fluid_synth_pitch_bend(      synth.get(), channel, msg[1] + (msg[2] << 7)); break;
+	case MidiStatus::ProgramChange:   fluid_synth_program_change(  synth.get(), channel, msg[1]);                 break;
+	case MidiStatus::ChannelPressure: fluid_synth_channel_pressure(synth.get(), channel, msg[1]);                 break;
+	case MidiStatus::PitchBend:       fluid_synth_pitch_bend(      synth.get(), channel, msg[1] + (msg[2] << 7)); break;
 	default: log_unknown_midi_message(msg); break;
 	}
 	// clang-format on
@@ -1064,7 +904,7 @@ void MidiDeviceFluidSynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 	const char* data = reinterpret_cast<const char*>(msg.data());
 	const auto n     = static_cast<int>(msg.size());
 
-	FluidSynth::fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
+	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
 }
 
 // The callback operates at the audio frame-level, steadily adding
@@ -1112,14 +952,14 @@ void MidiDeviceFluidSynth::RenderAudioFramesToFifo(const int num_audio_frames)
 		audio_frames.resize(num_audio_frames);
 	}
 
-	FluidSynth::fluid_synth_write_float(synth.get(),
-	                                    num_audio_frames,
-	                                    &audio_frames[0][0],
-	                                    0,
-	                                    2,
-	                                    &audio_frames[0][0],
-	                                    1,
-	                                    2);
+	fluid_synth_write_float(synth.get(),
+							num_audio_frames,
+							&audio_frames[0][0],
+							0,
+							2,
+							&audio_frames[0][0],
+							1,
+							2);
 
 	audio_frame_fifo.BulkEnqueue(audio_frames, num_audio_frames);
 }
