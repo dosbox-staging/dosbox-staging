@@ -250,13 +250,8 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 		{"advinterp3x", "scaler/advinterp3x"},
 		{"advmame2x",   "scaler/advmame2x"},
 		{"advmame3x",   "scaler/advmame3x"},
-		{"default",     "interpolation/sharp"},
-		{"rgb2x",       "scaler/rgb2x"},
-		{"rgb3x",       "scaler/rgb3x"},
-		{"scan2x",      "scaler/scan2x"},
-		{"scan3x",      "scaler/scan3x"},
-		{"tv2x",        "scaler/tv2x"},
-		{"tv3x",        "scaler/tv3x"}};
+		{"default",     "interpolation/sharp"}
+	};
 	// clang-format on
 
 	std_fs::path shader_path = name;
