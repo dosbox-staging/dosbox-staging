@@ -704,16 +704,16 @@ HostPt GetMemBase(void)
 	return MemBase;
 }
 
-class MEMORY final : public ModuleBase {
+class MEMORY {
 private:
 	IO_ReadHandleObject ReadHandler   = {};
 	IO_WriteHandleObject WriteHandler = {};
 
 public:
-	MEMORY(Section *configuration) : ModuleBase(configuration)
+	MEMORY(Section* sec)
 	{
 		// Get the users memory size preference
-		const auto section = static_cast<SectionProp*>(configuration);
+		const auto section       = static_cast<SectionProp*>(sec);
 		const auto num_megabytes = section->GetInt("memsize");
 		check_num_megabytes(num_megabytes);
 
