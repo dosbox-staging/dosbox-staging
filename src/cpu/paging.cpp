@@ -9,7 +9,6 @@
 #include <cstring>
 #include <memory>
 
-#include "config/setup.h"
 #include "cpu/cpu.h"
 #include "cpu/registers.h"
 #include "debugger/debugger.h"
@@ -258,8 +257,7 @@ static inline bool InitPage_CheckUseraccess(uint32_t u1,uint32_t u2) {
 	}
 }
 
-
-class InitPageHandler final : public PageHandler {
+class InitPageHandler : public PageHandler {
 public:
 	InitPageHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
@@ -557,7 +555,7 @@ public:
 	}
 };
 
-class InitPageUserROHandler final : public PageHandler {
+class InitPageUserROHandler : public PageHandler {
 public:
 	InitPageUserROHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
@@ -715,7 +713,6 @@ public:
 		PAGING_LinkPage(lin_page,phys_page);
 	}
 };
-
 
 bool PAGING_MakePhysPage(Bitu & page) {
 	assert(page <= UINT32_MAX);
@@ -998,9 +995,10 @@ bool PAGING_Enabled()
 	return paging.enabled;
 }
 
-class PAGING final : public ModuleBase{
+class PAGING final {
 public:
-	PAGING(Section* configuration):ModuleBase(configuration){
+	PAGING()
+	{
 		/* Setup default Page Directory, force it to update */
 		paging.enabled=false;
 		PAGING_InitTLB();
@@ -1013,8 +1011,7 @@ public:
 
 static std::unique_ptr<PAGING> paging_instance = {};
 
-void PAGING_Init(Section* section)
+void PAGING_Init()
 {
-	assert(section);
-	paging_instance = std::make_unique<PAGING>(section);
+	paging_instance = std::make_unique<PAGING>();
 }

@@ -8,7 +8,6 @@
 
 #include <vector>
 
-#include "config/setup.h"
 #include "debugger/debugger.h"
 #include "hardware/memory.h"
 
@@ -70,7 +69,7 @@ public:
 	uint_fast8_t flags = 0x0;
 };
 
-void PAGING_Init(Section* section);
+void PAGING_Init();
 
 // Some other functions
 void PAGING_Enable(bool enabled);

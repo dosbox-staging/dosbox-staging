@@ -726,7 +726,7 @@ static void dosbox_init()
 	MSG_LoadMessages();
 
 	IO_Init(section);
-	PAGING_Init(section);
+	PAGING_Init();
 	MEM_Init(section);
 	CALLBACK_Init(section);
 	PIC_Init(section);
