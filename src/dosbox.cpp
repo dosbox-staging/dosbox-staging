@@ -605,7 +605,7 @@ static void dosbox_init()
 	IO_Init();
 	PAGING_Init();
 	MEM_Init(section);
-	CALLBACK_Init(section);
+	CALLBACK_Init();
 	PIC_Init();
 	PROGRAMS_Init();
 	TIMER_Init();
