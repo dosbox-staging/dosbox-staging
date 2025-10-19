@@ -134,7 +134,10 @@ bool OpenGlRenderer::InitRenderer()
 			            SDL_GetError());
 		}
 
-		// TODO use glad
+		// TODO GL_ARB_framebuffer_sRGB & GL_EXT_framebuffer_sRGB are
+		// OpenGL 3.0 Core Profile features. There will be no need for
+		// these checks once we're on core profile 3.3
+		//
 		return (GLAD_VERSION_MAJOR(version) >= 3 ||
 		        // TODO use glad
 		        SDL_GL_ExtensionSupported("GL_ARB_framebuffer_sRGB") ||
