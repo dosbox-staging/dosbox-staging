@@ -13,6 +13,13 @@ option(
 )
 
 option(
+    'use_fluidsynth',
+    type: 'boolean',
+    value: true,
+    description: 'Enable built-in MIDI support via FluidSynth',
+)
+
+option(
     'use_mt32emu',
     type: 'boolean',
     value: true,

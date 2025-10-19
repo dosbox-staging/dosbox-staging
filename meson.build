@@ -927,6 +927,29 @@ if get_option('use_opengl')
 endif
 conf_data.set10('C_OPENGL', opengl_dep.found())
 
+# FluidSynth (depends on glib)
+fluid_dep = optional_dep
+if get_option('use_fluidsynth')
+    fluid_dep = dependency(
+        'fluidsynth',
+        version: ['>= 2.2.3', '< 3'],
+        modules: ['FluidSynth::libfluidsynth'],
+        static: ('fluidsynth' in static_libs_list or prefers_static_libs),
+        not_found_message: msg.format('use_fluidsynth'),
+        default_options: [
+            'default_library=static',
+            'try-static-deps=true',
+            'enable-floats=true',
+            'openmp=disabled',
+            'enable-threads=false',
+            'tests=' + wants_tests.to_string(),
+            'warning_level=0',
+        ],
+        include_type: 'system',
+    )
+endif
+summary('FluidSynth support', fluid_dep.found())
+
 # mt32emu
 mt32emu_dep = optional_dep
 if get_option('use_mt32emu')
