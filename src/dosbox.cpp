@@ -731,7 +731,7 @@ static void dosbox_init()
 	CALLBACK_Init(section);
 	PIC_Init();
 	PROGRAMS_Init();
-	TIMER_Init(section);
+	TIMER_Init();
 	CMOS_Init();
 }
 

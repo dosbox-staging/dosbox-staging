@@ -10,7 +10,6 @@
 #include <memory>
 
 #include "audio/mixer.h"
-#include "config/setup.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
@@ -696,13 +695,13 @@ bool TIMER_GetOutput2()
 	return counter_output(channel_2);
 }
 
-class TIMER final : public ModuleBase {
+class TIMER {
 private:
 	IO_ReadHandleObject ReadHandler[4];
 	IO_WriteHandleObject WriteHandler[4];
 
 public:
-	TIMER(Section* configuration) : ModuleBase(configuration)
+	TIMER()
 	{
 		WriteHandler[0].Install(0x40, write_latch, io_width_t::byte);
 		//	WriteHandler[1].Install(0x41,write_latch,io_width_t::byte);
@@ -760,10 +759,9 @@ public:
 
 static std::unique_ptr<TIMER> timer = {};
 
-void TIMER_Init(Section* section)
+void TIMER_Init()
 {
-	assert(section);
-	timer = std::make_unique<TIMER>(section);
+	timer = std::make_unique<TIMER>();
 }
 
 void TIMER_Destroy()

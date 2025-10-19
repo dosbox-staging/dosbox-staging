@@ -5,7 +5,6 @@
 #ifndef DOSBOX_TIMER_H
 #define DOSBOX_TIMER_H
 
-#include "config/setup.h"
 #include "utils/bit_view.h"
 
 #include <cassert>
@@ -82,7 +81,7 @@ void PCSPEAKER_SetPITControl(const PitMode pit_mode);
 
 typedef void (*TIMER_TickHandler)(void);
 
-void TIMER_Init(Section* section);
+void TIMER_Init();
 void TIMER_Destroy();
 
 // Register a function that gets called every time if 1 or more ticks pass
