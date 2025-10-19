@@ -1273,11 +1273,12 @@ uint32_t CSerial::GetPortBaudRate() const {
 	return SerialMaxBaudRate / baud_divider;
 }
 
-class SerialPorts final : public ModuleBase {
+class SerialPorts {
 public:
-	SerialPorts (Section * configuration):ModuleBase (configuration) {
+	SerialPorts(Section* sec)
+	{
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};
-		SectionProp *section = static_cast <SectionProp*>(configuration);
+		SectionProp* section = static_cast<SectionProp*>(sec);
 
 #if C_MODEM
 		const PropPath *pbFilename = section->GetPath("phonebookfile");
