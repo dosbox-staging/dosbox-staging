@@ -24,6 +24,8 @@
 
 CHECK_NARROWING();
 
+// #define DEBUG_OPENGL
+
 // Define to report OpenGL errors
 // #define DEBUG_OPENGL_ERROR
 
@@ -694,6 +696,16 @@ std::optional<OpenGlRenderer::Shader> OpenGlRenderer::GetOrLoadAndCacheShader(
 		assert(shader_info.name == shader_name);
 
 		shader_cache[shader_info.name] = {*maybe_shader_program, shader_info};
+
+#ifdef DEBUG_OPENGL
+		LOG_DEBUG("OPENGL: Built and cached shader '%s'",
+		          shader_name.c_str());
+#endif
+
+	} else {
+#ifdef DEBUG_OPENGL
+		LOG_DEBUG("OPENGL: Using cached shader '%s'", shader_name.c_str());
+#endif
 	}
 
 	return shader_cache[shader_name];
