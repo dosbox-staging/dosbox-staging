@@ -516,20 +516,6 @@ public:
 	std::string data = {};
 };
 
-// Base for all hardware and software "devices"
-class ModuleBase {
-protected:
-	Section* m_configuration;
-
-public:
-	ModuleBase(Section* conf_section) : m_configuration(conf_section) {}
-
-	ModuleBase(const ModuleBase&)            = delete; // prevent copying
-	ModuleBase& operator=(const ModuleBase&) = delete; // prevent assignment
-
-	virtual ~ModuleBase() = default;
-};
-
 bool config_file_is_valid(const std_fs::path& path);
 
 // Helper functions for retrieving configuration sections
