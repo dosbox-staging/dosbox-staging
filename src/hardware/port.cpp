@@ -359,12 +359,13 @@ uint32_t IO_ReadD(io_port_t port)
 	return retval;
 }
 
-
-class IO final : public ModuleBase {
+class IO {
 public:
-	IO(Section* configuration):ModuleBase(configuration){
+	IO()
+	{
 		iof_queue.used = 0;
 	}
+
 	~IO()
 	{
 		[[maybe_unused]] size_t total_bytes = 0u;
@@ -388,10 +389,9 @@ public:
 
 static std::unique_ptr<IO> io_module = {};
 
-void IO_Init(Section* section)
+void IO_Init()
 {
-	assert(section);
-	io_module = std::make_unique<IO>(section);
+	io_module = std::make_unique<IO>();
 }
 
 void IO_Destroy()
