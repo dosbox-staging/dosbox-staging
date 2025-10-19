@@ -381,11 +381,11 @@ void GFX_ResetScreen()
 	if (sdl.draw.callback) {
 		(sdl.draw.callback)(GFX_CallbackReset);
 	}
-	GFX_Start();
 
 	CPU_ResetAutoAdjust();
 
 	VGA_SetupDrawing(0);
+	GFX_Start();
 }
 
 static bool is_vsync_enabled()
