@@ -732,7 +732,7 @@ static void dosbox_init()
 	PIC_Init(section);
 	PROGRAMS_Init();
 	TIMER_Init(section);
-	CMOS_Init(section);
+	CMOS_Init();
 }
 
 static void dosbox_destroy()

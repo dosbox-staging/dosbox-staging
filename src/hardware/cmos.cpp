@@ -8,7 +8,6 @@
 #include <ctime>
 #include <memory>
 
-#include "config/setup.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
@@ -324,13 +323,13 @@ void CMOS_SetRegister(Bitu regNr, uint8_t val) {
 	cmos.regs[regNr] = val;
 }
 
-
-class CMOS final : public ModuleBase{
+class CMOS {
 private:
 	IO_ReadHandleObject ReadHandler[2];
 	IO_WriteHandleObject WriteHandler[2];
 public:
-	CMOS(Section* configuration):ModuleBase(configuration){
+	CMOS()
+	{
 		constexpr io_port_t port_0x70 = 0x70;
 		constexpr io_port_t port_0x71 = 0x71;
 
@@ -364,10 +363,9 @@ public:
 
 static std::unique_ptr<CMOS> cmos_module = {};
 
-void CMOS_Init(Section* section)
+void CMOS_Init()
 {
-	assert(section);
-	cmos_module = std::make_unique<CMOS>(section);
+	cmos_module = std::make_unique<CMOS>();
 }
 
 void CMOS_Destroy()

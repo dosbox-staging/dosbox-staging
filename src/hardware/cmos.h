@@ -4,9 +4,7 @@
 #ifndef DOSBOX_CMOS_H
 #define DOSBOX_CMOS_H
 
-#include "config/setup.h"
-
-void CMOS_Init(Section* section);
+void CMOS_Init();
 void CMOS_Destroy();
 
 #endif // DOSBOX_CMOS_H
