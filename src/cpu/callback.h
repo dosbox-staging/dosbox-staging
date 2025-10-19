@@ -5,7 +5,6 @@
 #ifndef DOSBOX_CALLBACK_H
 #define DOSBOX_CALLBACK_H
 
-#include "config/setup.h"
 #include "hardware/memory.h"
 
 typedef Bitu (*Callback_Handler)();
@@ -65,7 +64,7 @@ static inline PhysPt CALLBACK_GetBase() {
 	return (CB_SEG << 4) + CB_SOFFSET;
 }
 
-void CALLBACK_Init(Section* section);
+void CALLBACK_Init();
 
 callback_number_t CALLBACK_Allocate();
 void CALLBACK_DeAllocate(const callback_number_t in);
