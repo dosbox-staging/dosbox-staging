@@ -6,7 +6,6 @@
 
 #include <memory>
 
-#include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "hardware/pic.h"
@@ -626,12 +625,13 @@ void TIMER_AddTick(void) {
 }
 
 /* Use full name to avoid name clash with compile option for position-independent code */
-class PIC_8259A final : public ModuleBase {
+class PIC_8259A {
 private:
 	IO_ReadHandleObject ReadHandler[4];
 	IO_WriteHandleObject WriteHandler[4];
 public:
-	PIC_8259A(Section* configuration):ModuleBase(configuration){
+	PIC_8259A()
+	{
 		/* Setup pic0 and pic1 with initial values like DOS has normally */
 		PIC_IRQCheck = 0;
 		PIC_Ticks = 0;
@@ -692,10 +692,9 @@ public:
 
 static std::unique_ptr<PIC_8259A> pic = {};
 
-void PIC_Init(Section* section)
+void PIC_Init()
 {
-	assert(section);
-	pic = std::make_unique<PIC_8259A>(section);
+	pic = std::make_unique<PIC_8259A>();
 }
 
 void PIC_Destroy()

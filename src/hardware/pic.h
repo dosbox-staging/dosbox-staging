@@ -12,7 +12,6 @@
 #include <cmath>
 #include <cstdint>
 
-#include "config/setup.h"
 #include "cpu/cpu.h"
 
 typedef void(PIC_EOIHandler)();
@@ -65,7 +64,7 @@ static inline void PIC_UpdateAtomicIndex()
 	atomic_pic_index.store(PIC_FullIndex(), std::memory_order_release);
 }
 
-void PIC_Init(Section* section);
+void PIC_Init();
 void PIC_Destroy();
 
 void PIC_ActivateIRQ(uint8_t irq);
