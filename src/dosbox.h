@@ -71,9 +71,6 @@ int64_t DOSBOX_GetTicksDone();
 void DOSBOX_SetTicksDone(const int64_t ticks_done);
 void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled);
 
-using DosboxRestartFunction = std::function<void(std::vector<std::string>& parameters)>;
-void DOSBOX_SetRestartFunction(DosboxRestartFunction func);
-
 void DOSBOX_Restart();
 void DOSBOX_Restart(std::vector<std::string>& parameters);
 
