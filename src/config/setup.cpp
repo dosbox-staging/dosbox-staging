@@ -838,60 +838,60 @@ void Property::SetEnabledOptions(const std::vector<std::string>& options)
 PropInt* SectionProp::AddInt(const std::string& _propname,
                              Property::Changeable::Value when, int _value)
 {
-	PropInt* test = new PropInt(_propname, when, _value);
-	properties.push_back(test);
-	return test;
+	const auto prop = new PropInt(_propname, when, _value);
+	properties.push_back(prop);
+	return prop;
 }
 
 PropString* SectionProp::AddString(const std::string& _propname,
                                    Property::Changeable::Value when,
                                    const char* _value)
 {
-	PropString* test = new PropString(_propname, when, _value);
-	properties.push_back(test);
-	return test;
+	const auto prop = new PropString(_propname, when, _value);
+	properties.push_back(prop);
+	return prop;
 }
 
 PropPath* SectionProp::AddPath(const std::string& _propname,
                                Property::Changeable::Value when, const char* _value)
 {
-	PropPath* test = new PropPath(_propname, when, _value);
-	properties.push_back(test);
-	return test;
+	const auto prop = new PropPath(_propname, when, _value);
+	properties.push_back(prop);
+	return prop;
 }
 
 PropBool* SectionProp::AddBool(const std::string& _propname,
                                Property::Changeable::Value when, bool _value)
 {
-	PropBool* test = new PropBool(_propname, when, _value);
-	properties.push_back(test);
-	return test;
+	const auto prop = new PropBool(_propname, when, _value);
+	properties.push_back(prop);
+	return prop;
 }
 
 PropHex* SectionProp::AddHex(const std::string& _propname,
                              Property::Changeable::Value when, Hex _value)
 {
-	PropHex* test = new PropHex(_propname, when, _value);
-	properties.push_back(test);
-	return test;
+	const auto prop = new PropHex(_propname, when, _value);
+	properties.push_back(prop);
+	return prop;
 }
 
 PropMultiVal* SectionProp::AddMultiVal(const std::string& _propname,
                                        Property::Changeable::Value when,
                                        const std::string& sep)
 {
-	PropMultiVal* test = new PropMultiVal(_propname, when, sep);
-	properties.push_back(test);
-	return test;
+	const auto prop = new PropMultiVal(_propname, when, sep);
+	properties.push_back(prop);
+	return prop;
 }
 
 PropMultiValRemain* SectionProp::AddMultiValRemain(const std::string& _propname,
                                                    Property::Changeable::Value when,
                                                    const std::string& sep)
 {
-	PropMultiValRemain* test = new PropMultiValRemain(_propname, when, sep);
-	properties.push_back(test);
-	return test;
+	const auto prop = new PropMultiValRemain(_propname, when, sep);
+	properties.push_back(prop);
+	return prop;
 }
 
 int SectionProp::GetInt(const std::string& _propname) const
