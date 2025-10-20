@@ -27,10 +27,50 @@ if (MSVC)
 
   # Disable cl/clangcl warnings about insecure C functions
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+
 else()
-  add_compile_options("-Wall" "-Wextra"
-                      "-Wno-unknown-pragmas" "-Wno-conversion" "-Wno-narrowing"
-                      "-Wdisabled-optimization")
+
+  # TODO: GCC 12 (still used in our CI workflow) complains about unrecognized
+  # command line options; after switching to a newer release, enable the
+  # following warning flags:
+  #     -Winvalid-utf8
+  #     -Wtrivial-auto-var-init
+  #     -Wdeprecated-non-prototype (C only)
+  #     -Wflex-array-member-not-at-end (C only)
+  #     -Wfree-labels (C only)
+
+  # Warning flags common to C and C++ code
+  set(WARNING_FLAGS_COMMON
+      "-Wall" "-Wextra" "-Wdeprecated"
+      "-Wno-unknown-warning-option" "-Wno-unknown-pragmas"
+      "-Wno-conversion" "-Wno-narrowing"
+      "-Wdisabled-optimization" "-Wduplicated-branches" "-Wtrampolines" "-Wvla"
+      "-Wlogical-op" "-Wduplicated-cond" "-Wpointer-arith"
+      "-Wredundant-decls" "-Wfloat-conversion"
+  )
+
+  # Warning flags only valid for the C code
+  set(WARNING_FLAGS_C
+      ${WARNING_FLAGS_COMMON}
+      "-Wjump-misses-init"
+      "-Wnested-externs"
+      "-Wold-style-definition"
+      "-Wstrict-prototypes"
+      "-Wvariadic-macros"
+  )
+
+  # Warning flags only valid for the C++ code
+  set(WARNING_FLAGS_CXX
+      ${WARNING_FLAGS_COMMON}
+      "-Weffc++"
+      "-Wextra-semi"
+  )
+
+  add_compile_options(
+    "$<$<COMPILE_LANGUAGE:C>:${WARNING_FLAGS_C}>"
+    "$<$<COMPILE_LANGUAGE:CXX>:${WARNING_FLAGS_CXX}>"
+  )
+
 endif()
 
 # GCC needs more memory reserved to fully optimize the CPU emulation code
