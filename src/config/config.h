@@ -42,12 +42,14 @@ struct CommandLineArguments {
 	bool exit;
 	bool securemode;
 	bool noautoexec;
+
 	std::string working_dir;
 	std::string lang;
 	std::string machine;
 	std::vector<std::string> conf;
 	std::vector<std::string> set;
 	std::optional<std::vector<std::string>> editconf;
+
 	std::optional<int> socket;
 	std::optional<int> wait_pid;
 };
@@ -149,5 +151,7 @@ public:
 
 using ConfigPtr = std::unique_ptr<Config>;
 extern ConfigPtr control;
+
+extern std_fs::path current_config_dir;
 
 #endif // DOSBOX_CONFIG_H
