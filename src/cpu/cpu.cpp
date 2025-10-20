@@ -3402,7 +3402,7 @@ bool CPU_ShouldHltOnIdle()
 	// We should only execute the power-saving HLT if configured AND if the
 	// interrupts are enabled
 	return should_hlt_on_idle && (reg_flags & FLAG_IF);
-};
+}
 
 void CPU_AddConfigSection(const ConfigPtr& conf)
 {
