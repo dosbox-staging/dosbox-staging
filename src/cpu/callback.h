@@ -99,7 +99,14 @@ private:
 	callback_number_t m_cb_number = 0;
 
 public:
-	CALLBACK_HandlerObject() : installed(false), m_type(NONE), vectorhandler{0, 0, false}, m_cb_number(0) {}
+	CALLBACK_HandlerObject()
+	        : installed(false),
+	          m_type(NONE),
+	          vectorhandler{0, 0, false},
+	          m_cb_number(0)
+	{}
+
+	CALLBACK_HandlerObject(const CALLBACK_HandlerObject& other) = default;
 
 	virtual ~CALLBACK_HandlerObject();
 
