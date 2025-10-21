@@ -209,10 +209,10 @@ void MOUNT::Run(void) {
 			return;
 		}
 
-		if (path_relative_to_last_config && control->configfiles.size() &&
+		if (path_relative_to_last_config && control->config_files.size() &&
 		    !std_fs::path(temp_line).is_absolute()) {
 			std::string lastconfigdir =
-			        control->configfiles[control->configfiles.size() - 1];
+			        control->config_files[control->config_files.size() - 1];
 
 			std::string::size_type pos = lastconfigdir.rfind(
 			        CROSS_FILESPLIT);
