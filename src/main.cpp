@@ -680,8 +680,6 @@ int main(int argc, char* argv[])
 
 		maybe_create_resource_directories();
 
-		control->ParseEnv();
-
 		// Initialise the GUI
 		GFX_Init();
 

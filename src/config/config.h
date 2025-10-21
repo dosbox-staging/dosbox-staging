@@ -127,7 +127,6 @@ public:
 	bool ParseConfigFile(const std::string& type,
 	                     const std::string& config_file_name);
 
-	void ParseEnv();
 	void ParseConfigFiles(const std_fs::path& config_path);
 
 	std::string SetProperty(std::vector<std::string>& pvars);
