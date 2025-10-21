@@ -71,7 +71,7 @@ public:
 	                   const std::list<std::string_view>& post_args) const;
 
 	void Shift(unsigned int amount = 1);
-	uint16_t Get_arglength();
+	int GetNumArguments();
 
 	bool FindRemoveBoolArgument(const std::string& name, char short_letter = 0);
 

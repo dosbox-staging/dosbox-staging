@@ -154,7 +154,7 @@ void Program::ChangeToLongCmd()
 	// be longer then 127 characters. imgmount with lot's of parameters
 	// Length of arguments can be ~120. but switch when above 100 to be sure
 
-	if (/*control->SecureMode() ||*/ cmd->Get_arglength() > 100) {
+	if (/*control->SecureMode() ||*/ cmd->GetNumArguments() > 100) {
 		CommandLine* temp = new CommandLine(cmd->GetFileName(),
 		                                    full_arguments);
 		delete cmd;
