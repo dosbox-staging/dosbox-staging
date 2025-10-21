@@ -70,9 +70,9 @@ private:
 	void ParseArguments();
 
 public:
-	std::vector<std::string> startup_params        = {};
-	std::vector<std::string> configfiles           = {};
-	std::vector<std_fs::path> configFilesCanonical = {};
+	std::vector<std::string> startup_params                 = {};
+	std::vector<std::string> configfiles                    = {};
+	std::vector<std_fs::path> loaded_config_paths_canonical = {};
 
 	Config(CommandLine* cmd)
 	        : cmdline(cmd),
