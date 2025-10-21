@@ -41,7 +41,7 @@ LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
 	// Setup the mixer callback
 	channel = MIXER_AddChannel(audio_callback,
 	                           channel_rate_hz,
-	                           dac_name.c_str(),
+	                           dac_name,
 	                           features);
 
 	ms_per_frame = MillisInSecond / channel->GetSampleRate();

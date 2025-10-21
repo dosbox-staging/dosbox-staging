@@ -686,8 +686,7 @@ public:
 		pic_queue.next_entry=nullptr;
 	}
 
-	~PIC_8259A(){
-	}
+	~PIC_8259A() = default;
 };
 
 static std::unique_ptr<PIC_8259A> pic = {};
