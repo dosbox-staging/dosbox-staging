@@ -204,19 +204,19 @@ Config& Config::operator=(Config&& source) noexcept
 	startup_params  = std::move(source.startup_params);
 	configfiles     = std::move(source.configfiles);
 
-	configFilesCanonical = std::move(source.configFilesCanonical);
+	loaded_config_paths_canonical = std::move(source.loaded_config_paths_canonical);
 
 	overwritten_autoexec_section = std::move(source.overwritten_autoexec_section);
 	overwritten_autoexec_conf = std::move(source.overwritten_autoexec_conf);
 
 	// Hollow-out the source
-	source.cmdline                      = {};
-	source.overwritten_autoexec_section = {};
-	source.overwritten_autoexec_conf    = {};
-	source.secure_mode                  = {};
-	source.startup_params               = {};
-	source.configfiles                  = {};
-	source.configFilesCanonical         = {};
+	source.cmdline                       = {};
+	source.overwritten_autoexec_section  = {};
+	source.overwritten_autoexec_conf     = {};
+	source.secure_mode                   = {};
+	source.startup_params                = {};
+	source.configfiles                   = {};
+	source.loaded_config_paths_canonical = {};
 
 	return *this;
 }
@@ -286,8 +286,8 @@ bool Config::ParseConfigFile(const std::string& type,
 		return false;
 	}
 
-	if (contains(configFilesCanonical, canonical_path)) {
-		LOG_INFO("CONFIG: Skipping duplicate config file '%s'",
+	if (contains(loaded_config_paths_canonical, canonical_path)) {
+		LOG_INFO("CONFIG: Skipping already loaded config file '%s'",
 		         config_file_name.c_str());
 		return true;
 	}
@@ -298,7 +298,7 @@ bool Config::ParseConfigFile(const std::string& type,
 	}
 
 	configfiles.push_back(config_file_name);
-	configFilesCanonical.push_back(canonical_path);
+	loaded_config_paths_canonical.push_back(canonical_path);
 
 	// Get directory from config_file_name, used with relative paths.
 	current_config_dir = canonical_path.parent_path();
