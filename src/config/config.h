@@ -65,8 +65,6 @@ private:
 	SectionLine overwritten_autoexec_section = {};
 	std::string overwritten_autoexec_conf    = {};
 
-	void (*_start_function)(void) = nullptr;
-
 	bool secure_mode = false;
 
 	void ParseArguments();

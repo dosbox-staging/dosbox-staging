@@ -206,7 +206,6 @@ Config& Config::operator=(Config&& source) noexcept
 	// Move each member
 	cmdline         = std::move(source.cmdline);
 	sectionlist     = std::move(source.sectionlist);
-	_start_function = std::move(source._start_function);
 	secure_mode     = std::move(source.secure_mode);
 	startup_params  = std::move(source.startup_params);
 	configfiles     = std::move(source.configfiles);
@@ -220,7 +219,6 @@ Config& Config::operator=(Config&& source) noexcept
 	source.cmdline                      = {};
 	source.overwritten_autoexec_section = {};
 	source.overwritten_autoexec_conf    = {};
-	source._start_function              = {};
 	source.secure_mode                  = {};
 	source.startup_params               = {};
 	source.configfiles                  = {};
