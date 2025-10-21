@@ -41,7 +41,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	fprintf(outfile, MSG_GetTranslatedRaw("CONFIGFILE_INTRO").c_str(), DOSBOX_VERSION);
 	fprintf(outfile, "\n");
 
-	for (auto tel = sectionlist.cbegin(); tel != sectionlist.cend(); ++tel) {
+	for (auto tel = sections.cbegin(); tel != sections.cend(); ++tel) {
 		// Print section header
 		safe_strcpy(temp, (*tel)->GetName());
 		lowcase(temp);
@@ -178,14 +178,14 @@ SectionProp* Config::AddSection(const char* section_name)
 
 	SectionProp* s = new SectionProp(section_name);
 
-	sectionlist.push_back(s);
+	sections.push_back(s);
 	return s;
 }
 
 SectionLine* Config::AddAutoexecSection()
 {
 	SectionLine* section = new SectionLine("autoexec");
-	sectionlist.push_back(section);
+	sections.push_back(section);
 
 	return section;
 }
@@ -199,10 +199,10 @@ Config& Config::operator=(Config&& source) noexcept
 
 	// Move each member
 	cmdline         = std::move(source.cmdline);
-	sectionlist     = std::move(source.sectionlist);
+	sections        = std::move(source.sections);
 	secure_mode     = std::move(source.secure_mode);
 	startup_params  = std::move(source.startup_params);
-	configfiles     = std::move(source.configfiles);
+	config_files    = std::move(source.config_files);
 
 	loaded_config_paths_canonical = std::move(source.loaded_config_paths_canonical);
 
@@ -215,7 +215,7 @@ Config& Config::operator=(Config&& source) noexcept
 	source.overwritten_autoexec_conf     = {};
 	source.secure_mode                   = {};
 	source.startup_params                = {};
-	source.configfiles                   = {};
+	source.config_files                  = {};
 	source.loaded_config_paths_canonical = {};
 
 	return *this;
@@ -229,14 +229,14 @@ Config::Config(Config&& source) noexcept
 
 Config::~Config()
 {
-	for (auto cnt = sectionlist.rbegin(); cnt != sectionlist.rend(); ++cnt) {
+	for (auto cnt = sections.rbegin(); cnt != sections.rend(); ++cnt) {
 		delete (*cnt);
 	}
 }
 
 Section* Config::GetSection(const std::string_view section_name) const
 {
-	for (auto* el : sectionlist) {
+	for (auto* el : sections) {
 		if (iequals(el->GetName(), section_name)) {
 			return el;
 		}
@@ -246,7 +246,7 @@ Section* Config::GetSection(const std::string_view section_name) const
 
 Section* Config::GetSectionFromProperty(const char* prop) const
 {
-	for (auto* el : sectionlist) {
+	for (auto* el : sections) {
 		if (el->GetPropertyValue(prop) != NO_SUCH_PROPERTY) {
 			return el;
 		}
@@ -297,7 +297,7 @@ bool Config::ParseConfigFile(const std::string& type,
 		return false;
 	}
 
-	configfiles.push_back(config_file_name);
+	config_files.push_back(config_file_name);
 	loaded_config_paths_canonical.push_back(canonical_path);
 
 	// Get directory from config_file_name, used with relative paths.
@@ -395,7 +395,7 @@ bool Config::ParseConfigFile(const std::string& type,
 // CLI args.
 void Config::ApplyQueuedValuesToCli(std::vector<std::string>& args) const
 {
-	for (const auto section : sectionlist) {
+	for (const auto section : sections) {
 		const auto properties = dynamic_cast<SectionProp*>(section);
 		if (!properties) {
 			continue;

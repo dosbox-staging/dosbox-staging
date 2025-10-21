@@ -61,7 +61,7 @@ public:
 	CommandLineArguments arguments = {};
 
 private:
-	std::deque<Section*> sectionlist         = {};
+	std::deque<Section*> sections            = {};
 	SectionLine overwritten_autoexec_section = {};
 	std::string overwritten_autoexec_conf    = {};
 
@@ -71,7 +71,7 @@ private:
 
 public:
 	std::vector<std::string> startup_params                 = {};
-	std::vector<std::string> configfiles                    = {};
+	std::vector<std::string> config_files                   = {};
 	std::vector<std_fs::path> loaded_config_paths_canonical = {};
 
 	Config(CommandLine* cmd)
@@ -105,11 +105,11 @@ public:
 
 	auto begin()
 	{
-		return sectionlist.begin();
+		return sections.begin();
 	}
 	auto end()
 	{
-		return sectionlist.end();
+		return sections.end();
 	}
 
 	Section* GetSection(const std::string_view section_name) const;

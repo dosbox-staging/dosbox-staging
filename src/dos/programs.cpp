@@ -540,7 +540,7 @@ void CONFIG::Run(void)
 			return;
 
 		case P_LISTCONF: {
-			auto size = control->configfiles.size();
+			auto size = control->config_files.size();
 			const std_fs::path config_path = GetConfigDir();
 
 			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"),
@@ -552,7 +552,7 @@ void CONFIG::Run(void)
 
 			} else {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRIMARY_CONF"),
-				         control->configfiles.front().c_str());
+				         control->config_files.front().c_str());
 
 				if (size > 1) {
 					WriteOut(MSG_Get(
@@ -560,7 +560,8 @@ void CONFIG::Run(void)
 
 					for (size_t i = 1; i < size; ++i) {
 						WriteOut("%s\n",
-						         control->configfiles[i].c_str());
+						         control->config_files[i]
+						                 .c_str());
 					}
 				}
 			}
@@ -609,7 +610,7 @@ void CONFIG::Run(void)
 			} else {
 				// -wc without parameter: write dosbox.conf to
 				// startup directory
-				if (control->configfiles.size()) {
+				if (control->config_files.size()) {
 					WriteConfig("dosbox.conf");
 				} else {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NOCONFIGFILE"));
