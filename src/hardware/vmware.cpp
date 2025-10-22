@@ -35,6 +35,14 @@ static std::string program_segment_name = {};
 // Queued data, waiting to be fectehd by the guest side driver
 static std::vector<uint32_t> abs_pointer_queue = {};
 
+enum class QueueContent {
+	None,
+	CommandResponse,
+	MouseStatus,
+};
+
+static QueueContent abs_pointer_queue_content = QueueContent::None;
+
 // ***************************************************************************
 // Various common constants and type definitions
 // ***************************************************************************
@@ -48,6 +56,13 @@ static std::set<std::string> SegmentBlackList = {
 
 // Magic number for all VMware calls
 static constexpr uint32_t VmWareMagic = 0x564d5868u;
+
+// Not 100% sure if the meaning is correct, values were deducted by observing
+// the VMware Workstation Player behavior
+static constexpr uint32_t VmWareUnimplemented = 0xffffffffu;
+static constexpr uint32_t VmWareAcknowledged  = 0x01u;
+
+static constexpr size_t VmWareMouseStatusSize = 4;
 
 // The exact meaning of the version ID below is unknown - so far we know that:
 // - Linux kernel requires precisely this particular version ID, otherwise
@@ -76,6 +91,12 @@ enum class VmMouseCommand : uint32_t {
 // Mouse queue and commands
 // ***************************************************************************
 
+static void clear_abs_pointer_queue()
+{
+	abs_pointer_queue.clear();
+	abs_pointer_queue_content = QueueContent::None;
+}
+
 static uint32_t fetch_from_abs_pointer_queue()
 {
 	if (abs_pointer_queue.empty()) {
@@ -84,47 +105,56 @@ static uint32_t fetch_from_abs_pointer_queue()
 
 	const auto result = abs_pointer_queue.back();
 	abs_pointer_queue.pop_back();
+	if (abs_pointer_queue.empty()) {
+		abs_pointer_queue_content = QueueContent::None;
+	}
 
 	return result;
 }
 
 static void mouse_status_to_abs_pointer_queue()
 {
-	if (!MOUSEVMM_CheckIfUpdated_VmWare()) {
+	if (abs_pointer_queue_content == QueueContent::CommandResponse) {
+		// Queue contains a command response, do not override it
 		return;
 	}
 
-	if (abs_pointer_queue.size() == 1) {
-		// We have a status response waiting in the queue, do not
-		// override it
+	if (abs_pointer_queue_content == QueueContent::MouseStatus &&
+	    abs_pointer_queue.size() != VmWareMouseStatusSize) {
+		// Queue contains a mouse status, which is already being read,
+		// we can't override it right now withut distrupting the guest
+		// side driver
+		return;
+	}
+
+	if (!MOUSEVMM_CheckIfUpdated_VmWare()) {
 		return;
 	}
 
 	MouseVmWarePointerStatus status = {};
 	MOUSEVMM_GetPointerStatus(status);
 
-	abs_pointer_queue.clear();
+	clear_abs_pointer_queue();
 	abs_pointer_queue.push_back(status.wheel_counter);
 	abs_pointer_queue.push_back(status.absolute_y);
 	abs_pointer_queue.push_back(status.absolute_x);
 	abs_pointer_queue.push_back(status.buttons);
+	abs_pointer_queue_content = QueueContent::MouseStatus;
 }
 
 static void execute_command(const VmMouseCommand command)
 {
-	abs_pointer_queue.clear();
+	clear_abs_pointer_queue();
 	switch (command) {
 	case VmMouseCommand::Enable:
-		abs_pointer_queue = {VmMouseVersionId};
-		break;
-	case VmMouseCommand::Disable:
-		MOUSEVMM_Deactivate(MouseVmmProtocol::VmWare);
+		// We can ignore it
 		break;
 	case VmMouseCommand::Absolute:
 		MOUSEVMM_Activate(MouseVmmProtocol::VmWare);
 		break;
+	case VmMouseCommand::Disable:
 	case VmMouseCommand::Relative:
-		LOG_WARNING("VMWARE: Relative mouse packets not implemented");
+		MOUSEVMM_Deactivate(MouseVmmProtocol::VmWare);
 		break;
 	default:
 		LOG_WARNING("VMWARE: Unimplemented mouse subcommand 0x%08x", reg_ebx);
@@ -142,8 +172,10 @@ static void command_get_version()
 	// only implement  mouse support, hide the interface from software which
 	// is known to misbehave with our limited implementation
 	if (!SegmentBlackList.contains(program_segment_name)) {
-		reg_eax = 0; // protocol version
 		reg_ebx = VmWareMagic;
+		// Return same protocol version as the VMware Workstation Player
+		reg_eax = 6;
+		reg_ecx = 4;
 	}
 }
 
@@ -157,7 +189,7 @@ static void command_abs_pointer_data()
 	} else {
 		// Should not happen with a properly functioning guest driver
 		LOG_WARNING("VMWARE: No valid mouse pointer status in the queue");
-		abs_pointer_queue.clear();
+		clear_abs_pointer_queue();
 		reg_eax = 0;
 		reg_ebx = 0;
 		reg_ecx = 0;
@@ -174,15 +206,14 @@ static void command_abs_pointer_status()
 static void command_abs_pointer()
 {
 	const auto command = static_cast<VmMouseCommand>(reg_ebx);
+
 	if (command == VmMouseCommand::Enable) {
 		// For the standard VMware port interface we need regular PS/2
 		// auxilary (mouse) interrupt handling
 		MOUSEVMM_EnableImmediateInterrupts(false);
 	}
+
 	execute_command(command);
-	if (abs_pointer_queue.size() == 1) {
-		reg_eax = fetch_from_abs_pointer_queue();
-	}
 }
 
 static uint32_t port_read_vmware(const io_port_t, const io_width_t)
@@ -190,6 +221,8 @@ static uint32_t port_read_vmware(const io_port_t, const io_width_t)
 	if (reg_eax != VmWareMagic) {
 		return 0;
 	}
+
+	reg_eax = VmWareAcknowledged;
 
 	switch (static_cast<VmWareCommand>(reg_cx)) {
 	case VmWareCommand::GetVersion:
@@ -206,9 +239,11 @@ static uint32_t port_read_vmware(const io_port_t, const io_width_t)
 		break;
 	case VmWareCommand::AbsPointerRestrict:
 		LOG_WARNING("VMWARE: Mouse pointer restrictions not implemented");
+		reg_eax = VmWareUnimplemented;
 		break;
 	default:
 		LOG_WARNING("VMWARE: Unimplemented command 0x%08x", reg_ecx);
+		reg_eax = VmWareUnimplemented;
 		break;
 	}
 
@@ -227,17 +262,23 @@ bool VMWARE_I8042_ReadTakeover()
 uint32_t VMWARE_I8042_ReadStatusRegister()
 {
 	// Port 0x64 read handler
-
 	assert(is_i8042_unlocked);
 
 	mouse_status_to_abs_pointer_queue();
-	return check_cast<uint32_t>(abs_pointer_queue.size());
+
+	uint32_t result = check_cast<uint16_t>(abs_pointer_queue.size());
+	if (abs_pointer_queue_content == QueueContent::CommandResponse) {
+		// Wild guess - there seems to be no specification available,
+		// but this matches the VMware Workstation Player behavior
+		result |= VmWareAcknowledged << 16;
+	}
+
+	return result;
 }
 
 uint32_t VMWARE_I8042_ReadDataPort()
 {
 	// Port 0x60 read handler
-
 	assert(is_i8042_unlocked);
 
 	return fetch_from_abs_pointer_queue();
@@ -246,7 +287,6 @@ uint32_t VMWARE_I8042_ReadDataPort()
 bool VMWARE_I8042_WriteCommandPort(const uint32_t value)
 {
 	// Port 0x64 write handler
-
 	if (!has_feature_mouse) {
 		return false;
 	}
@@ -262,17 +302,23 @@ bool VMWARE_I8042_WriteCommandPort(const uint32_t value)
 		MOUSEVMM_EnableImmediateInterrupts(true);
 	}
 
-	const auto was_taken_over = is_i8042_unlocked;
-	if (is_i8042_unlocked) {
-		execute_command(command);
+	if (!is_i8042_unlocked) {
+		return false;
 	}
 
-	if (command == VmMouseCommand::Disable) {
+	execute_command(command);
+
+	if (command == VmMouseCommand::Enable) {
+		// Required by the official Windows 9x VMware mouse driver
+		abs_pointer_queue         = {VmMouseVersionId};
+		abs_pointer_queue_content = QueueContent::CommandResponse;
+
+	} else if (command == VmMouseCommand::Disable) {
 		is_i8042_unlocked = false;
 		MOUSEVMM_EnableImmediateInterrupts(false);
 	}
 
-	return was_taken_over;
+	return true;
 }
 
 // ***************************************************************************
