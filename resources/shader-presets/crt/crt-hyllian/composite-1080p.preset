@@ -1,0 +1,17 @@
+[settings]
+force_single_scan = yes
+force_no_pixel_doubling = yes
+
+[parameters]
+BEAM_PROFILE        = 0.00
+HFILTER_PROFILE     = 0.00
+BEAM_MIN_WIDTH      = 0.90
+BEAM_MAX_WIDTH      = 1.15
+SCANLINES_STRENGTH  = 0.62
+COLOR_BOOST         = 2.10
+SHARPNESS_HACK      = 1.00
+PHOSPHOR_LAYOUT     = 4.00
+MASK_INTENSITY      = 0.65
+CRT_ANTI_RINGING    = 1.00
+INPUT_GAMMA         = 2.40
+OUTPUT_GAMMA        = 2.40
