@@ -1519,7 +1519,7 @@ std::optional<int> Dac::MeasureDacRateHz()
 
 	if (sequential_changes_tally > SequentialChangesThreshold) {
 		sequential_changes_tally = 0;
-		current_rate_hz          = iroundf(measured_rate);
+		current_rate_hz          = iround(measured_rate);
 		return current_rate_hz;
 	}
 
