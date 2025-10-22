@@ -1956,11 +1956,13 @@ static void dsp_do_command()
 		if (sblaster->MaybeWakeUp()) {
 			// If we're waking up, then the DAC hasn't been running
 			// (or maybe wasn't running at all), so start with a
-			// fresh DAC state and ensure we're using per-frame
-			// callback timing.
+			// fresh DAC state.
 			sb.dac = {};
-			callback_type.SetPerFrame();
 		}
+
+		// Ensure we're using per-frame callback timing because DAC samples
+		// are sent one after another with sub-millisecond timing.
+		callback_type.SetPerFrame();
 
 		if (const auto dac_rate_hz = sb.dac.MeasureDacRateHz(); dac_rate_hz) {
 			sblaster->SetChannelRateHz(*dac_rate_hz);
