@@ -1,0 +1,12 @@
+[settings]
+force_single_scan = 1
+
+[parameters]
+PHOSPHOR_LAYOUT       = 2.00
+SCANLINE_STRENGTH_MIN = 0.80
+SCANLINE_STRENGTH_MAX = 0.85
+COLOR_BOOST_EVEN      = 4.80
+COLOR_BOOST_ODD       = 1.40
+MASK_STRENGTH         = 0.10
+GAMMA_INPUT           = 2.40
+GAMMA_OUTPUT          = 2.62
