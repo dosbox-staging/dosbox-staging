@@ -1,0 +1,11 @@
+[parameters]
+SPOT_WIDTH             = 0.85
+SPOT_HEIGHT            = 0.80
+PHOSPHOR_LAYOUT        = 2.00
+SCANLINE_STRENGTH_MIN  = 0.72
+SCANLINE_STRENGTH_MAX  = 0.83
+COLOR_BOOST_EVEN       = 4.45
+COLOR_BOOST_ODD        = 1.65
+MASK_STRENGTH          = 0.10
+GAMMA_INPUT            = 2.15
+GAMMA_OUTPUT           = 2.45
