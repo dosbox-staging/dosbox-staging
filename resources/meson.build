@@ -4,6 +4,7 @@ resources = [
     'freedos-cpi',
     'freedos-keyboard',
     'glshaders',
+    'shader-presets',
     'mapping',
     'mapping-freedos.org',
     'mapping-unicode.org',
