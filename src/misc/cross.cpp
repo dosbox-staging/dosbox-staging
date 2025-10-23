@@ -183,7 +183,7 @@ static std_fs::path get_or_create_config_dir()
 
 static std_fs::path cached_config_dir = {};
 
-void InitConfigDir()
+void init_config_dir()
 {
 	if (cached_config_dir.empty()) {
 		// Check if a portable layout exists
