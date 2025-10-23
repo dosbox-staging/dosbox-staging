@@ -476,7 +476,7 @@ void Config::ParseConfigFiles(const std_fs::path& config_dir)
 	const bool load_primary_config = !arguments.noprimaryconf;
 
 	if (load_primary_config) {
-		const auto config_path = config_dir / GetPrimaryConfigName();
+		const auto config_path = config_dir / get_primary_config_name();
 		ParseConfigFile("primary", config_path.string());
 	}
 
