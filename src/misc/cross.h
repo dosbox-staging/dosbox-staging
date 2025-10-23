@@ -96,7 +96,7 @@ void InitConfigDir();
 
 std_fs::path get_config_dir();
 std::string get_primary_config_name();
-std_fs::path GetPrimaryConfigPath();
+std_fs::path get_primary_config_path();
 
 std_fs::path resolve_home(const std::string &str) noexcept;
 

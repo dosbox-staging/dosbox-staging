@@ -590,7 +590,7 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
 				return;
 			}
-			WriteConfig(GetPrimaryConfigPath().string());
+			WriteConfig(get_primary_config_path().string());
 			break;
 		}
 
