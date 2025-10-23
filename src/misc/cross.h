@@ -132,7 +132,7 @@ void close_directory(DirInformation* dirp);
 FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly);
 
 bool wild_match(const char *haystack, const char *needle);
-bool WildFileCmp(const char *file, const char *wild, bool long_compare = false);
+bool wild_file_cmp(const char* file, const char* wild, bool long_compare = false);
 
 bool get_expanded_files(const std::string &path,
                         std::vector<std::string> &files,

@@ -1344,7 +1344,9 @@ nextfile:
 	}
 
 	/* Compare name to search pattern */
-	if(!WildFileCmp(find_name, search_pattern)) goto nextfile;
+	if (!wild_file_cmp(find_name, search_pattern)) {
+		goto nextfile;
+	}
 
 	copyDirEntry(&sectbuf[entryoffset], foundEntry);
 

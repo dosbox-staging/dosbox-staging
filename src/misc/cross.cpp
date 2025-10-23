@@ -423,7 +423,7 @@ static bool wildcard_matches_hidden_file(const std::string_view filename,
 	return is_wildcard_first && is_hidden_file;
 }
 
-bool WildFileCmp(const char* file, const char* wild, bool long_compare)
+bool wild_file_cmp(const char* file, const char* wild, bool long_compare)
 {
 	if (!file || !wild || (*file && !*wild) || strlen(wild) > LFN_NAMELENGTH)
 		return false;
@@ -576,9 +576,9 @@ bool get_expanded_files(const std::string &path,
 		const auto filename = entry.path().filename();
 
 		constexpr auto long_compare = true;
-		if (WildFileCmp(filename.string().c_str(),
-		                p.filename().string().c_str(),
-		                long_compare)) {
+		if (wild_file_cmp(filename.string().c_str(),
+		                  p.filename().string().c_str(),
+		                  long_compare)) {
 			files.emplace_back((dir / filename).string());
 		}
 	}
