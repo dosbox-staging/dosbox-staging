@@ -235,7 +235,7 @@ void VFILE_GetPathZDrive(std::string &path, const std::string &dirname)
 		}
 		if (!path.length() || result == -1 || (cstat.st_mode & S_IFDIR) == 0) {
 			path.clear();
-			path = (GetConfigDir() / dirname).string();
+			path   = (get_config_dir() / dirname).string();
 			result = stat(path.c_str(), &cstat);
 			if (result == -1 || (cstat.st_mode & S_IFDIR) == 0)
 				path.clear();

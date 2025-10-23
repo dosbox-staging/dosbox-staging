@@ -557,7 +557,7 @@ bool PropPath::SetValue(const std::string& input)
 	}
 
 	if (current_config_dir.empty()) {
-		realpath = GetConfigDir() / temp_path;
+		realpath = get_config_dir() / temp_path;
 	} else {
 		realpath = current_config_dir / temp_path;
 	}

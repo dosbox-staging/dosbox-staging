@@ -49,7 +49,7 @@ std::string GetPrimaryConfigName()
 
 std_fs::path GetPrimaryConfigPath()
 {
-	return GetConfigDir() / GetPrimaryConfigName();
+	return get_config_dir() / GetPrimaryConfigName();
 }
 
 #if defined(MACOSX)
@@ -204,7 +204,7 @@ void InitConfigDir()
 	}
 }
 
-std_fs::path GetConfigDir()
+std_fs::path get_config_dir()
 {
 	assert(!cached_config_dir.empty());
 	return cached_config_dir;
