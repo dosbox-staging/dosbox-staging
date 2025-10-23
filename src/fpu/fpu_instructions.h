@@ -518,25 +518,25 @@ static void FPU_FDIV(Bitu st, Bitu other){
 	const auto a = fpu.regs[st].d;
 	const auto b = fpu.regs[other].d;
 
-	const auto fpclass_a = std::fpclassify(a);
-	const auto fpclass_b = std::fpclassify(b);
+	if (b != 0.0 && std::isfinite(a) && std::isfinite(b)) {
+		fpu.regs[st].d = a / b;
+		return;
+	}
 
-	if (fpclass_a == FP_NAN || fpclass_b == FP_NAN) {
+	if (b == 0.0 && (std::isfinite(a) && a != 0.0)) {
+		fpu.sw |= ZeroDivideFlag;
+		fpu.regs[st].d = std::copysign(
+		        std::numeric_limits<double>::infinity(),
+		        (std::signbit(a) ^ std::signbit(b)) ? -1.0 : 1.0);
+		return;
+	}
+
+	if (std::isnan(a) || std::isnan(b)) {
 		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
 		return;
 	}
 
-	if (fpclass_b == FP_ZERO &&
-	    (fpclass_a == FP_NORMAL || fpclass_a == FP_SUBNORMAL)) {
-		fpu.sw |= ZeroDivideFlag;
-		fpu.regs[st].d = std::copysign(
-		        std::numeric_limits<double>::infinity(),
-		        std::signbit(a) ^ std::signbit(b) ? -1.0 : 1.0);
-		return;
-	}
-
-	if ((fpclass_a == FP_ZERO && fpclass_b == FP_ZERO) ||
-	    (fpclass_a == FP_INFINITE && fpclass_b == FP_INFINITE)) {
+	if ((a == 0.0 && b == 0.0) || (std::isinf(a) && std::isinf(b))) {
 		fpu.sw |= InvalidArithmeticFlag;
 		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
 		return;
@@ -549,25 +549,25 @@ static void FPU_FDIVR(Bitu st, Bitu other){
 	const auto a = fpu.regs[other].d;
 	const auto b = fpu.regs[st].d;
 
-	const auto fpclass_a = std::fpclassify(a);
-	const auto fpclass_b = std::fpclassify(b);
+	if (b != 0.0 && std::isfinite(a) && std::isfinite(b)) {
+		fpu.regs[st].d = a / b;
+		return;
+	}
 
-	if (fpclass_a == FP_NAN || fpclass_b == FP_NAN) {
+	if (b == 0.0 && (std::isfinite(a) && a != 0.0)) {
+		fpu.sw |= ZeroDivideFlag;
+		fpu.regs[st].d = std::copysign(
+		        std::numeric_limits<double>::infinity(),
+		        (std::signbit(a) ^ std::signbit(b)) ? -1.0 : 1.0);
+		return;
+	}
+
+	if (std::isnan(a) || std::isnan(b)) {
 		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
 		return;
 	}
 
-	if (fpclass_b == FP_ZERO &&
-	    (fpclass_a == FP_NORMAL || fpclass_a == FP_SUBNORMAL)) {
-		fpu.sw |= ZeroDivideFlag;
-		fpu.regs[st].d = std::copysign(
-		        std::numeric_limits<double>::infinity(),
-		        std::signbit(a) ^ std::signbit(b) ? -1.0 : 1.0);
-		return;
-	}
-
-	if ((fpclass_a == FP_ZERO && fpclass_b == FP_ZERO) ||
-	    (fpclass_a == FP_INFINITE && fpclass_b == FP_INFINITE)) {
+	if ((a == 0.0 && b == 0.0) || (std::isinf(a) && std::isinf(b))) {
 		fpu.sw |= InvalidArithmeticFlag;
 		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
 		return;
