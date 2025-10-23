@@ -676,7 +676,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 	std::vector<std::string>::iterator i;
 	std::string::size_type const prefix_lengh = special_prefix.length();
 	if (read_directory_contents) {
-		dir_information* dirp = open_directory(overlaydir);
+		DirInformation* dirp = open_directory(overlaydir);
 		if (dirp == nullptr) return;
 		// Read complete directory
 		char dir_name[CROSS_LEN];

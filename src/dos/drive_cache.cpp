@@ -815,7 +815,7 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, uint16_t& id) 
 	// open dir
 	if (dirSearch[id]) {
 		// open dir
-		dir_information* dirp = open_directory(expandcopy);
+		DirInformation* dirp = open_directory(expandcopy);
 		if (dirp || dir->isOverlayDir) { 
 			// Reset it..
 			if (dirp) close_directory(dirp);
@@ -883,7 +883,7 @@ bool DOS_Drive_Cache::ReadDir(uint16_t id, char* &result) {
 
 	if (!IsCachedIn(dirSearch[id])) {
 		// Try to open directory
-		dir_information* dirp = open_directory(dirPath);
+		DirInformation* dirp = open_directory(dirPath);
 		if (!dirp) {
 			if (dirSearch[id]) {
 				dirSearch[id]->id = MAX_OPENDIRS;

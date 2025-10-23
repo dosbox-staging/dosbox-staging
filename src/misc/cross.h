@@ -110,7 +110,7 @@ typedef struct dir_struct {
 	HANDLE          handle;
 	char            base_path[MAX_PATH+4];
 	WIN32_FIND_DATA search_data;
-} dir_information;
+} DirInformation;
 
 #else
 
@@ -120,14 +120,14 @@ typedef struct dir_struct {
 typedef struct dir_struct { 
 	DIR*  dir;
 	char base_path[CROSS_LEN];
-} dir_information;
+} DirInformation;
 
 #endif
 
-dir_information* open_directory(const char* dirname);
-bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory);
-bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory);
-void close_directory(dir_information* dirp);
+DirInformation* open_directory(const char* dirname);
+bool read_directory_first(DirInformation* dirp, char* entry_name, bool& is_directory);
+bool read_directory_next(DirInformation* dirp, char* entry_name, bool& is_directory);
+void close_directory(DirInformation* dirp);
 
 FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly);
 

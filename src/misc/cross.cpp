@@ -234,13 +234,13 @@ std_fs::path resolve_home(const std::string &str) noexcept
 
 #if defined(WIN32)
 
-dir_information* open_directory(const char* dirname) {
+DirInformation* open_directory(const char* dirname) {
 	if (dirname == nullptr) return nullptr;
 
 	size_t len = strlen(dirname);
 	if (len == 0) return nullptr;
 
-	static dir_information dir;
+	static DirInformation dir;
 
 	safe_strncpy(dir.base_path,dirname,MAX_PATH);
 
@@ -254,7 +254,7 @@ dir_information* open_directory(const char* dirname) {
 	return (path_exists(dirname) ? &dir : nullptr);
 }
 
-bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_first(DirInformation* dirp, char* entry_name, bool& is_directory) {
 	if (!dirp) return false;
 	dirp->handle = FindFirstFile(dirp->base_path, &dirp->search_data);
 	if (INVALID_HANDLE_VALUE == dirp->handle) {
@@ -269,7 +269,7 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 	return true;
 }
 
-bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_next(DirInformation* dirp, char* entry_name, bool& is_directory) {
 	if (!dirp) return false;
 	int result = FindNextFile(dirp->handle, &dirp->search_data);
 	if (result==0) return false;
@@ -282,7 +282,7 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 	return true;
 }
 
-void close_directory(dir_information* dirp) {
+void close_directory(DirInformation* dirp) {
 	if (dirp && dirp->handle != INVALID_HANDLE_VALUE) {
 		FindClose(dirp->handle);
 		dirp->handle = INVALID_HANDLE_VALUE;
@@ -291,19 +291,19 @@ void close_directory(dir_information* dirp) {
 
 #else
 
-dir_information* open_directory(const char* dirname) {
-	static dir_information dir;
+DirInformation* open_directory(const char* dirname) {
+	static DirInformation dir;
 	dir.dir=opendir(dirname);
 	safe_strcpy(dir.base_path, dirname);
 	return dir.dir?&dir:nullptr;
 }
 
-bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_first(DirInformation* dirp, char* entry_name, bool& is_directory) {
 	if (!dirp) return false;
 	return read_directory_next(dirp,entry_name,is_directory);
 }
 
-bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_next(DirInformation* dirp, char* entry_name, bool& is_directory) {
 	if (!dirp) return false;
 	struct dirent* dentry = readdir(dirp->dir);
 	if (dentry==nullptr) {
@@ -345,7 +345,7 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 	return true;
 }
 
-void close_directory(dir_information* dirp) {
+void close_directory(DirInformation* dirp) {
 	if (dirp) closedir(dirp->dir);
 }
 
