@@ -857,7 +857,9 @@ again:
 		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
 	}
-	if(!WildFileCmp(dir_ent, search_pattern)) goto again;
+	if (!wild_file_cmp(dir_ent, search_pattern)) {
+		goto again;
+	}
 
 	safe_strcpy(full_name, srchInfo[id].srch_dir);
 	safe_strcat(full_name, dir_ent);

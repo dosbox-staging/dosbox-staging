@@ -497,12 +497,12 @@ bool Virtual_Drive::FindFirst(const char *_dir, DOS_DTA &dta, bool fcb_findfirst
 		dta.SetResult(GetLabel(), 0, 0, 0, FatAttributeFlags::Volume);
 		return true;
 	} else if (attr.volume && !fcb_findfirst) {
-		if (WildFileCmp(GetLabel(), pattern)) {
+		if (wild_file_cmp(GetLabel(), pattern)) {
 			dta.SetResult(GetLabel(), 0, 0, 0, FatAttributeFlags::Volume);
 			return true;
 		}
 	} else if (attr.directory && position > 0) {
-		if (WildFileCmp(".", pattern)) {
+		if (wild_file_cmp(".", pattern)) {
 			dta.SetResult(".",
 			              0,
 			              default_date,
@@ -521,7 +521,7 @@ vfile_block_t find_vfile_by_atribute_pattern_and_pos(vfile_block_t head_file,
 {
 	return find_vfile_by_predicate(head_file, [pos, attr, pattern](vfile_block_t vfile) {
 		return pos == vfile->position && (attr.directory || !vfile->isdir) &&
-		       WildFileCmp(vfile->name.c_str(), pattern);
+		       wild_file_cmp(vfile->name.c_str(), pattern);
 	});
 }
 
@@ -532,7 +532,7 @@ bool Virtual_Drive::FindNext(DOS_DTA& dta)
 	dta.GetSearchParams(attr, pattern);
 	unsigned int pos = dta.GetDirID();
 	if (search_file == parent_dir) {
-		bool cmp = WildFileCmp("..", pattern);
+		bool cmp = wild_file_cmp("..", pattern);
 		if (cmp)
 			dta.SetResult("..",
 			              0,

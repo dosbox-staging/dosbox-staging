@@ -302,7 +302,7 @@ bool localDrive::FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 			// should check for a valid leading directory instead of
 			// 0 exists==true if the volume label matches the
 			// searchmask and the path is valid
-			if (WildFileCmp(dirCache.GetLabel(), tempDir)) {
+			if (wild_file_cmp(dirCache.GetLabel(), tempDir)) {
 				dta.SetResult(dirCache.GetLabel(),
 				              0,
 				              0,
@@ -333,7 +333,7 @@ bool localDrive::FindNext(DOS_DTA& dta)
 			DOS_SetError(DOSERR_NO_MORE_FILES);
 			return false;
 		}
-		if (!WildFileCmp(dir_ent, search_pattern)) {
+		if (!wild_file_cmp(dir_ent, search_pattern)) {
 			continue;
 		}
 
