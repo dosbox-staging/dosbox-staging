@@ -42,14 +42,14 @@
 #include "misc/support.h"
 #include "dos/drives.h"
 
-std::string GetPrimaryConfigName()
+std::string get_primary_config_name()
 {
 	return DOSBOX_PROJECT_NAME ".conf";
 }
 
 std_fs::path GetPrimaryConfigPath()
 {
-	return get_config_dir() / GetPrimaryConfigName();
+	return get_config_dir() / get_primary_config_name();
 }
 
 #if defined(MACOSX)
@@ -119,13 +119,13 @@ static std_fs::path get_or_create_config_dir()
 	const auto conf_path = get_xdg_config_home() / "dosbox";
 	std::error_code ec   = {};
 
-	if (std_fs::exists(conf_path / GetPrimaryConfigName())) {
+	if (std_fs::exists(conf_path / get_primary_config_name())) {
 		return conf_path;
 	}
 
 	auto fallback_to_deprecated = []() {
 		const auto old_conf_path = resolve_home("~/.dosbox");
-		if (path_exists(old_conf_path / GetPrimaryConfigName())) {
+		if (path_exists(old_conf_path / get_primary_config_name())) {
 			LOG_WARNING("CONFIG: Falling back to deprecated path (~/.dosbox) due to errors");
 			LOG_WARNING("CONFIG: Please investigate the problems and try again");
 		}
@@ -188,7 +188,7 @@ void InitConfigDir()
 	if (cached_config_dir.empty()) {
 		// Check if a portable layout exists
 		const auto portable_conf_path = get_executable_path() /
-		                                GetPrimaryConfigName();
+		                                get_primary_config_name();
 
 		std::error_code ec = {};
 		if (std_fs::is_regular_file(portable_conf_path, ec)) {
