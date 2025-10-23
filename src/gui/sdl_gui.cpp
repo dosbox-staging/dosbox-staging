@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <memory>
 #include <sys/types.h>
 #include <unistd.h>
@@ -1753,6 +1754,62 @@ static void add_default_sdl_section_mapper_bindings()
 #endif
 }
 
+#ifdef MACOSX
+// Check if a path is a .dosbox document package (directory with .dosbox extension)
+static bool is_dosbox_package(const std::string& path)
+{
+	if (path.empty()) {
+		return false;
+	}
+
+	std::error_code ec;
+	std_fs::path pkg_path(path);
+
+	// Check if path exists and is a directory
+	if (!std_fs::is_directory(pkg_path, ec)) {
+		return false;
+	}
+
+	// Check if it has .dosbox extension
+	const auto extension = pkg_path.extension().string();
+	return iequals(extension, ".dosbox");
+}
+
+// Handle .dosbox package drops from Finder
+static void handle_macos_dosbox_package_drop(const std::string& dropped_file_path)
+{
+	LOG_MSG("CONFIG: Received dropped file via SDL_DROPFILE: '%s'",
+	        dropped_file_path.c_str());
+
+	// Check if it's a .dosbox package
+	if (!is_dosbox_package(dropped_file_path)) {
+		LOG_WARNING("CONFIG: Dropped file is not a .dosbox package, ignoring");
+		return;
+	}
+
+	LOG_MSG("CONFIG: Detected .dosbox package");
+
+	// Convert to absolute path
+	std::error_code ec;
+	std_fs::path pkg_path = std_fs::absolute(dropped_file_path, ec);
+	if (ec) {
+		LOG_WARNING("CONFIG: Failed to convert package path to absolute");
+		return;
+	}
+
+	// Build new startup parameters with expanded package
+	auto new_params = control->startup_params;
+
+	// Add --working-dir to set the package directory
+	new_params.push_back("--working-dir");
+	new_params.push_back(pkg_path.string());
+
+	// Use the standard restart mechanism to launch with expanded package
+	LOG_MSG("CONFIG: Restarting with expanded package arguments");
+	DOSBOX_Restart(new_params);
+}
+#endif
+
 void GFX_Init()
 {
 	set_sdl_hints();
@@ -1783,6 +1840,23 @@ void GFX_Init()
 	        sdl_version.patch,
 	        SDL_GetCurrentVideoDriver(),
 	        SDL_GetCurrentAudioDriver());
+
+#ifdef MACOSX
+	// Check for .dosbox document packages dropped from Finder
+	// (double-click to open or drag-and-drop onto the app icon)
+
+	// Sleep briefly to allow the OS time to queue the drop event before we poll.
+	SDL_Delay(100);
+
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		if (event.type == SDL_DROPFILE && event.drop.file != nullptr) {
+			const std::string dropped_file_path = event.drop.file;
+			SDL_free(event.drop.file);
+			handle_macos_dosbox_package_drop(dropped_file_path);
+		}
+	}
+#endif
 
 	// Start GUI init
 	auto section = get_sdl_section();

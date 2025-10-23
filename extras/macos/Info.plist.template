@@ -52,5 +52,45 @@
 	<key>x86_64</key>
 	<string>10.10.0</string>
 	</dict>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>dosbox</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>DOSBox Staging Package</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.dosbox-staging.dosbox-package</string>
+			</array>
+			<key>LSTypeIsPackage</key>
+			<true/>
+		</dict>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.apple.package</string>
+				<string>public.directory</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>DOSBox Staging Package</string>
+			<key>UTTypeIdentifier</key>
+			<string>org.dosbox-staging.dosbox-package</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>dosbox</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
 </dict>
 </plist>
