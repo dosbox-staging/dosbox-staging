@@ -91,10 +91,10 @@ constexpr auto localtime_r = ::localtime_r;
 
 // Create or determine the location of the config directory (e.g., in portable
 // mode, the config directory is the executable dir). Must be called before
-// calling GetConfigDir().
+// calling get_config_dir().
 void InitConfigDir();
 
-std_fs::path GetConfigDir();
+std_fs::path get_config_dir();
 std::string GetPrimaryConfigName();
 std_fs::path GetPrimaryConfigPath();
 

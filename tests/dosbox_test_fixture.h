@@ -28,7 +28,7 @@ public:
 		// pre-requisite that's asserted during the Init process.
 		//
 		InitConfigDir();
-		const auto config_path = GetConfigDir();
+		const auto config_path = get_config_dir();
 		control->ParseConfigFiles(config_path);
 
 		DOSBOX_InitModuleConfigsAndMessages();

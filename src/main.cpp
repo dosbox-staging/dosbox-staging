@@ -285,7 +285,7 @@ static int erase_primary_config_file()
 
 static int erase_mapper_file()
 {
-	const auto path = GetConfigDir() / MAPPERFILE;
+	const auto path = get_config_dir() / MAPPERFILE;
 
 	if (!path_exists(path)) {
 		printf("Default mapper file does not exist at path '%s'\n",
@@ -498,7 +498,7 @@ static void apply_windows_debugger_workaround(const bool is_console_disabled)
 
 static void maybe_create_resource_directories()
 {
-	const auto plugins_dir = GetConfigDir() / PluginsDir;
+	const auto plugins_dir = get_config_dir() / PluginsDir;
 
 	if (create_dir(plugins_dir, 0700, OK_IF_EXISTS) != 0) {
 		LOG_WARNING("CONFIG: Can't create directory '%s': %s",
@@ -507,7 +507,7 @@ static void maybe_create_resource_directories()
 	}
 
 #if C_OPENGL
-	const auto glshaders_dir = GetConfigDir() / GlShadersDir;
+	const auto glshaders_dir = get_config_dir() / GlShadersDir;
 
 	if (create_dir(glshaders_dir, 0700, OK_IF_EXISTS) != 0) {
 		LOG_WARNING("CONFIG: Can't create directory '%s': %s",
@@ -516,7 +516,7 @@ static void maybe_create_resource_directories()
 	}
 #endif
 
-	const auto soundfonts_dir = GetConfigDir() / DefaultSoundfontsDir;
+	const auto soundfonts_dir = get_config_dir() / DefaultSoundfontsDir;
 
 	if (create_dir(soundfonts_dir, 0700, OK_IF_EXISTS) != 0) {
 		LOG_WARNING("CONFIG: Can't create directory '%s': %s",
@@ -525,7 +525,7 @@ static void maybe_create_resource_directories()
 	}
 
 #if C_MT32EMU
-	const auto mt32_rom_dir = GetConfigDir() / DefaultMt32RomsDir;
+	const auto mt32_rom_dir = get_config_dir() / DefaultMt32RomsDir;
 
 	if (create_dir(mt32_rom_dir, 0700, OK_IF_EXISTS) != 0) {
 		LOG_WARNING("CONFIG: Can't create directory '%s': %s",
@@ -651,7 +651,7 @@ int main(int argc, char* argv[])
 		// After DOSBOX_InitModuleConfigsAndMessages() all the config
 		// sections have been registered, so we're ready to parse the
 		// config files.
-		control->ParseConfigFiles(GetConfigDir());
+		control->ParseConfigFiles(get_config_dir());
 
 		// Handle command line options that don't start the emulator but
 		// only perform some actions and print the results to the console.

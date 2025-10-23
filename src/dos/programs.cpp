@@ -541,7 +541,7 @@ void CONFIG::Run(void)
 
 		case P_LISTCONF: {
 			auto size = control->config_files.size();
-			const std_fs::path config_path = GetConfigDir();
+			const std_fs::path config_path = get_config_dir();
 
 			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"),
 			         DOSBOX_GetVersion(),
