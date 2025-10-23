@@ -53,6 +53,19 @@ static bool is_valid_codepoint(const char32_t code_point)
 		return false;
 	}
 
+	if (code_point >= static_cast<char32_t>(Utf16::LowSurrogateBase) &&
+	    code_point < static_cast<char32_t>(Utf16::PostSurrogateBase)) {
+		// These values are reserved for UTF-16 surrogate pairs encoding
+		return false;
+	}
+
+	return true;
+}
+
+static bool is_valid_codepoint(const char16_t code_point)
+{
+	// A 16-bit code point can never exceed the maximum Unicode code point
+
 	if (code_point >= Utf16::LowSurrogateBase &&
 	    code_point < Utf16::PostSurrogateBase) {
 		// These values are reserved for UTF-16 surrogate pairs encoding
