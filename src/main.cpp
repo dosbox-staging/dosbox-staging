@@ -623,9 +623,9 @@ int main(int argc, char* argv[])
 		// executable dir).
 		//
 		// TODO Consider forcing portable mode in secure mode (this
-		// could be accomplished by passing a flag to InitConfigDir);.
+		// could be accomplished by passing a flag to init_config_dir);.
 		//
-		InitConfigDir();
+		init_config_dir();
 
 		// Register essential DOS messages needed by some command line
 		// switches and during startup or reboot.
