@@ -646,33 +646,45 @@ static void FPU_FRNDINT(void)
 	fpu.regs[TOP].d = rounded;
 }
 
-static void FPU_FPREM(void){
-	Real64 valtop = fpu.regs[TOP].d;
-	Real64 valdiv = fpu.regs[STV(1)].d;
-	int64_t ressaved = static_cast<int64_t>( (valtop/valdiv) );
-// Some backups
-//	Real64 res=valtop - ressaved*valdiv; 
-//      res= fmod(valtop,valdiv);
-	fpu.regs[TOP].d = valtop - ressaved*valdiv;
-	FPU_SET_C0(static_cast<Bitu>(ressaved&4));
-	FPU_SET_C3(static_cast<Bitu>(ressaved&2));
-	FPU_SET_C1(static_cast<Bitu>(ressaved&1));
+static void FPU_FPREM(void)
+{
+	const auto st0 = fpu.regs[TOP].d;
+	const auto st1 = fpu.regs[STV(1)].d;
+
+	if (std::isnan(st0) || std::isnan(st1)) {
+		fpu.regs[TOP].d = std::numeric_limits<double>::quiet_NaN();
+		fpu.sw |= InvalidArithmeticFlag;
+		FPU_SET_C2(0);
+		return;
+	}
+
+	const auto q    = static_cast<int64_t>(st0 / st1);
+	fpu.regs[TOP].d = std::fmod(st0, st1);
+
+	FPU_SET_C0((q >> 2) & 1);
+	FPU_SET_C3((q >> 1) & 1);
+	FPU_SET_C1(q & 1);
 	FPU_SET_C2(0);
 }
 
-static void FPU_FPREM1(void){
-	Real64 valtop = fpu.regs[TOP].d;
-	Real64 valdiv = fpu.regs[STV(1)].d;
-	double quot = valtop/valdiv;
-	double quotf = floor(quot);
-	int64_t ressaved;
-	if (quot-quotf>0.5) ressaved = static_cast<int64_t>(quotf+1);
-	else if (quot-quotf<0.5) ressaved = static_cast<int64_t>(quotf);
-	else ressaved = static_cast<int64_t>((((static_cast<int64_t>(quotf))&1)!=0)?(quotf+1):(quotf));
-	fpu.regs[TOP].d = valtop - ressaved*valdiv;
-	FPU_SET_C0(static_cast<Bitu>(ressaved&4));
-	FPU_SET_C3(static_cast<Bitu>(ressaved&2));
-	FPU_SET_C1(static_cast<Bitu>(ressaved&1));
+static void FPU_FPREM1(void)
+{
+	const auto st0 = fpu.regs[TOP].d;
+	const auto st1 = fpu.regs[STV(1)].d;
+
+	if (std::isnan(st0) || std::isnan(st1)) {
+		fpu.regs[TOP].d = std::numeric_limits<double>::quiet_NaN();
+		fpu.sw |= InvalidArithmeticFlag;
+		FPU_SET_C2(0);
+		return;
+	}
+
+	const auto q    = static_cast<int64_t>(std::nearbyint(st0 / st1));
+	fpu.regs[TOP].d = std::remainder(st0, st1);
+
+	FPU_SET_C0((q >> 2) & 1);
+	FPU_SET_C3((q >> 1) & 1);
+	FPU_SET_C1(q & 1);
 	FPU_SET_C2(0);
 }
 
