@@ -175,7 +175,7 @@ static void register_command_line_help_message()
 
 static int edit_primary_config()
 {
-	const auto path = GetPrimaryConfigPath();
+	const auto path = get_primary_config_path();
 
 	if (!path_exists(path)) {
 		printf("Primary config does not exist at path '%s'\n",
@@ -250,7 +250,7 @@ static void list_code_pages()
 
 static int print_primary_config_location()
 {
-	const auto path = GetPrimaryConfigPath();
+	const auto path = get_primary_config_path();
 
 	if (!path_exists(path)) {
 		printf("Primary config does not exist at path '%s'\n",
@@ -264,7 +264,7 @@ static int print_primary_config_location()
 
 static int erase_primary_config_file()
 {
-	const auto path = GetPrimaryConfigPath();
+	const auto path = get_primary_config_path();
 
 	if (!path_exists(path)) {
 		printf("Primary config does not exist at path '%s'\n",
@@ -344,7 +344,7 @@ static void maybe_write_primary_config(const CommandLineArguments& args)
 	//   '--noprimaryconf' option.
 	//
 	if (!args.securemode && !args.noprimaryconf) {
-		const auto primary_config_path = GetPrimaryConfigPath();
+		const auto primary_config_path = get_primary_config_path();
 
 		if (!config_file_is_valid(primary_config_path)) {
 			// No config is loaded at this point, so we're

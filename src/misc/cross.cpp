@@ -47,7 +47,7 @@ std::string get_primary_config_name()
 	return DOSBOX_PROJECT_NAME ".conf";
 }
 
-std_fs::path GetPrimaryConfigPath()
+std_fs::path get_primary_config_path()
 {
 	return get_config_dir() / get_primary_config_name();
 }
