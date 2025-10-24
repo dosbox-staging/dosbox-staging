@@ -594,6 +594,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	fluid_set_log_function(FLUID_DBG, NULL, NULL);
 
 #ifdef NDEBUG
+	fluid_set_log_function(FLUID_INFO, NULL, NULL);
 	fluid_set_log_function(FLUID_ERR, NULL, NULL);
 	fluid_set_log_function(FLUID_WARN, NULL, NULL);
 #endif
