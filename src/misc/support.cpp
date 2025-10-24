@@ -407,6 +407,7 @@ template std::function<int16_t()> create_randomizer<int16_t>(const int16_t,
 
 template std::function<float()> create_randomizer<float>(const float, const float);
 
+// TODO should return optional
 // Return the first existing resource
 std_fs::path get_resource_path(const std_fs::path& name)
 {
