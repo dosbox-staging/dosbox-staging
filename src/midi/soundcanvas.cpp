@@ -1,6 +1,5 @@
 // SPDX-FileCopyrightTextound  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
-
 #include "private/soundcanvas.h"
 
 #include <optional>
@@ -19,6 +18,7 @@
 #include "misc/std_filesystem.h"
 #include "utils/checks.h"
 #include "utils/string_utils.h"
+#include "utils/env_utils.h"
 
 CHECK_NARROWING();
 
@@ -280,9 +280,88 @@ static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 	}
 }
 
+#if defined(WIN32)
+
+static std::deque<std_fs::path> get_platform_rom_dirs()
+{
+	return {
+	        get_config_dir() / DefaultSoundCanvasRomsDir,
+	};
+}
+
+#elif defined(MACOSX)
+
+static std::deque<std_fs::path> get_platform_rom_dirs()
+{
+	return {
+	        get_config_dir() / DefaultSoundCanvasRomsDir,
+	};
+}
+#else
+
+static std::deque<std_fs::path> get_platform_rom_dirs()
+{
+	// First priority is user-specific data location
+	const auto xdg_data_home = get_xdg_data_home();
+
+	std::deque<std_fs::path> dirs = {
+	        xdg_data_home / "dosbox" / DefaultSoundCanvasRomsDir,
+	        xdg_data_home / "soundcanvas-rom-data",
+	};
+
+	// Second priority are the $XDG_DATA_DIRS
+	for (const auto& data_dir : get_xdg_data_dirs()) {
+		dirs.emplace_back(data_dir / "soundcanvas-rom-data");
+	}
+
+	// Third priority is $XDG_CONF_HOME, for convenience
+	dirs.emplace_back(get_config_dir() / DefaultSoundCanvasRomsDir);
+
+	return dirs;
+}
+
+#endif
+
+static std::deque<std_fs::path> get_rom_dirs()
+{
+	// Get potential ROM directories from the environment and/or system
+	auto rom_dirs = get_platform_rom_dirs();
+
+	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
+	std_fs::path selected_romdir = get_soundcanvas_section()->GetString("soundcanvas_rom_dir");
+
+	if (selected_romdir.empty()) { // already trimmed
+		selected_romdir = DefaultSoundCanvasRomsDir;
+	}
+
+	// Make sure we search the user's configured directory first
+	rom_dirs.emplace_front(resolve_home(selected_romdir.string()));
+	return rom_dirs;
+}
+
 MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 {
 	using namespace SoundCanvas;
+
+	// Get potential ROM directory candidates, these will be added to a 
+	// SOUNDCANVAS_ROM_PATH environment variable which may be used by 
+	// a plugin to search for ROM files
+	std::error_code ec;
+	std::string env_list = {};
+	for (auto rom_dir : get_rom_dirs()) {
+		if (std_fs::is_directory(rom_dir, ec) && !ec) {
+			const auto canonical_rom_dir = std_fs::canonical(rom_dir, ec);
+			if (ec) {
+				continue;
+			}
+			if (env_list.size() > 0) {
+				env_list.append(env_path_separator);
+			}
+			env_list.append(canonical_rom_dir.string());
+		}
+	}
+	LOG_MSG("SOUNDCANVAS: Setting SOUNDCANVAS_ROM_PATH env variable to '%s'", env_list.c_str());
+	set_env_var("SOUNDCANVAS_ROM_PATH", env_list.c_str(), Env::Overwrite);
 
 	const auto model_name = get_model_setting();
 
@@ -816,6 +895,13 @@ static void init_soundcanvas_config_settings(SectionProp& sec_prop)
 	        "  sc55:       Pick the best available original SC-55 model.\n"
 	        "  sc55mk2:    Pick the best available SC-55mk2 model.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'sc55_121').");
+	
+	str_prop = sec_prop.AddString("soundcanvas_rom_dir", when_idle, "");
+	str_prop->SetHelp(
+	        "The directory containing the Roland Sound Canvas ROMs (unset by default).\n"
+	        "The directory can be absolute or relative, or leave it unset to use the\n"
+	        "'soundcanvas-roms' directory in your DOSBox configuration directory. Other\n"
+	        "common system locations will be checked as well.");
 
 	str_prop = sec_prop.AddString("soundcanvas_filter", when_idle, "on");
 	assert(str_prop);
