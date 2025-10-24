@@ -34,9 +34,10 @@
 //    github:audinowho   Dougall Johnson     David Reid
 //    github:Clownacy    Pedro J. Estebanez  Remi Verschelde
 //    AnthoFoxo          github:morlat       Gabriel Ravier
-//    Alice Rowan
+//    Alice Rowan        Jörn Heusipp
 //
 // Partial history:
+//                         - fix undefined behavior in end of stream detection
 //    1.22    - 2021-07-11 - various small fixes
 //    1.21    - 2021-07-02 - fix bug for files with no comments
 //    1.20    - 2020-07-11 - several small fixes
@@ -1495,7 +1496,7 @@ static int set_file_offset(stb_vorbis *f, unsigned int loc)
    #endif
    f->eof = 0;
    if (USE_MEMORY(f)) {
-      if (f->stream_start + loc >= f->stream_end || f->stream_start + loc < f->stream_start) {
+      if (loc >= f->stream_len) {
          f->stream = f->stream_end;
          f->eof = 1;
          return 0;
