@@ -1,4 +1,5 @@
 libutils_sources = [
+    'env_utils.cpp',
     'string_utils.cpp',
 ]
 
