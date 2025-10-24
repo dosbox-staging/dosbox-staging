@@ -167,11 +167,12 @@ inline bool is_machine_hercules() {
 #include "misc/logging.h"
 #endif // the logging system.
 
-constexpr auto DefaultMt32RomsDir   = "mt32-roms";
-constexpr auto DefaultSoundfontsDir = "soundfonts";
-constexpr auto GlShadersDir         = "glshaders";
-constexpr auto DiskNoiseDir         = "disknoises";
-constexpr auto PluginsDir           = "plugins";
+constexpr auto DefaultMt32RomsDir   	 = "mt32-roms";
+constexpr auto DefaultSoundCanvasRomsDir = "soundcanvas-roms";
+constexpr auto DefaultSoundfontsDir 	 = "soundfonts";
+constexpr auto GlShadersDir         	 = "glshaders";
+constexpr auto DiskNoiseDir         	 = "disknoises";
+constexpr auto PluginsDir           	 = "plugins";
 
 constexpr auto MicrosInMillisecond = 1000;
 constexpr auto BytesPerKilobyte    = 1024;
