@@ -591,10 +591,11 @@ void MidiDeviceFluidSynth::SetVolume(const int volume_percent)
 
 MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 {
+	fluid_set_log_function(FLUID_DBG, NULL, NULL);
+
 #ifdef NDEBUG
 	fluid_set_log_function(FLUID_ERR, NULL, NULL);
 	fluid_set_log_function(FLUID_WARN, NULL, NULL);
-	fluid_set_log_function(FLUID_DBG, NULL, NULL);
 #endif
 
 	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
