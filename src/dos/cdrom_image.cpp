@@ -5,6 +5,7 @@
 // #define DEBUG 1
 
 #include "cdrom.h"
+#include "cdrom_mds.h"
 
 #include <cassert>
 #include <cctype>
@@ -80,7 +81,7 @@ uint32_t CDROM_Interface_Image::TrackFile::adjustOverRead(const uint32_t offset,
 	return adjusted_bytes;
 }
 
-CDROM_Interface_Image::BinaryFile::BinaryFile(const char *filename, bool &error)
+CDROM_Interface_Image::BinaryFile::BinaryFile(const std_fs::path &filename, bool &error)
         : TrackFile(BYTES_PER_RAW_REDBOOK_FRAME),
           file(nullptr)
 {
@@ -515,7 +516,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 bool CDROM_Interface_Image::SetDevice(const char* path)
 {
 	std::lock_guard lock(player.mutex);
-	const bool result = LoadCueSheet(path) || LoadIsoFile(path);
+	const bool result = LoadMdsFile(path) || LoadCueSheet(path) || LoadIsoFile(path);
 	if (!result) {
 		// print error message on dosbox console
 		char buf[MAX_LINE_LENGTH];
@@ -693,7 +694,7 @@ bool CDROM_Interface_Image::PlayAudioTrack(const Track& track, const uint32_t se
 		return false;
 	}
 
-	const auto byte_offset = track.skip + sector_offset * track.sectorSize;
+	const auto byte_offset = track.skip + sector_offset * track.sector_size;
 
 	// Guard: Bail if our track could not be seeked
 	if (!track_file->seek(byte_offset)) {
@@ -863,9 +864,9 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
                                         const uint32_t sector,
                                         const uint16_t num)
 {
-	const uint16_t sectorSize = (raw ? BYTES_PER_RAW_REDBOOK_FRAME
+	const uint16_t sector_size = (raw ? BYTES_PER_RAW_REDBOOK_FRAME
 	                                 : BYTES_PER_COOKED_REDBOOK_FRAME);
-	const uint32_t requested_bytes = num * sectorSize;
+	const uint32_t requested_bytes = num * sector_size;
 
 	// Resize our underlying vector if it's not big enough
 	if (readBuffer.size() < requested_bytes)
@@ -883,8 +884,8 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
 		if (!success)
 			break;
 		current_sector++;
-		bytes_read += sectorSize;
-		buffer_position += sectorSize;
+		bytes_read += sector_size;
+		buffer_position += sector_size;
 	}
 	// Write only the successfully read bytes
 	MEM_BlockWrite(buffer, readBuffer.data(), bytes_read);
@@ -893,7 +894,7 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer,
 	        "%s after %u sectors (%u bytes)",
 	        num, raw ? "raw" : "cooked", sector,
 	        success ? "Succeeded" : "Failed",
-	        ceil_udivide(bytes_read, sectorSize), bytes_read);
+	        ceil_udivide(bytes_read, sector_size), bytes_read);
 #endif
 	return success;
 }
@@ -964,12 +965,17 @@ bool CDROM_Interface_Image::ReadSector(uint8_t *buffer, const bool raw, const ui
 #endif
 		return false;
 	}
-	uint32_t offset = track->skip + (sector - track->start) * track->sectorSize;
+	uint32_t offset = track->skip + (sector - track->start) * track->sector_size;
 	const uint16_t length = (raw ? BYTES_PER_RAW_REDBOOK_FRAME : BYTES_PER_COOKED_REDBOOK_FRAME);
-	if (track->sectorSize != BYTES_PER_RAW_REDBOOK_FRAME && raw) {
+	// Subchannel is trailing meta-data only used by MDS/MDF files.
+	// Its size is part of the sector for the purposes of calculating stride.
+	// We don't ever read this data so for the purposes of this code, we need the size excluding the subchannel.
+	assert(track->subchannel_size < track->sector_size);
+	const auto sector_size_without_subchannel = track->sector_size - track->subchannel_size;
+	if (sector_size_without_subchannel != BYTES_PER_RAW_REDBOOK_FRAME && raw) {
 		return false;
 	}
-	if (track->sectorSize == BYTES_PER_RAW_REDBOOK_FRAME && !track->mode2 && !raw)
+	if (sector_size_without_subchannel == BYTES_PER_RAW_REDBOOK_FRAME && !track->mode2 && !raw)
 		offset += 16;
 	if (track->mode2 && !raw)
 		offset += 24;
@@ -988,10 +994,10 @@ bool CDROM_Interface_Image::ReadSector(uint8_t *buffer, const bool raw, const ui
 
 bool CDROM_Interface_Image::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
 {
-	unsigned int sectorSize = raw ? BYTES_PER_RAW_REDBOOK_FRAME : BYTES_PER_COOKED_REDBOOK_FRAME;
+	unsigned int sector_size = raw ? BYTES_PER_RAW_REDBOOK_FRAME : BYTES_PER_COOKED_REDBOOK_FRAME;
 	bool success = true; //Gobliiins reads 0 sectors
 	for(unsigned long i = 0; i < num; i++) {
-		success = ReadSector((uint8_t*)buffer + (i * (Bitu)sectorSize), raw, sector + i);
+		success = ReadSector((uint8_t*)buffer + (i * (Bitu)sector_size), raw, sector + i);
 		if (!success) break;
 	}
 
@@ -1095,16 +1101,16 @@ bool CDROM_Interface_Image::LoadIsoFile(const char* filename)
 
 	// try to detect iso type
 	if (CanReadPVD(track.file.get(), BYTES_PER_COOKED_REDBOOK_FRAME, false)) {
-		track.sectorSize = BYTES_PER_COOKED_REDBOOK_FRAME;
+		track.sector_size = BYTES_PER_COOKED_REDBOOK_FRAME;
 		assert(track.mode2 == false);
 	} else if (CanReadPVD(track.file.get(), BYTES_PER_RAW_REDBOOK_FRAME, false)) {
-		track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
+		track.sector_size = BYTES_PER_RAW_REDBOOK_FRAME;
 		assert(track.mode2 == false);
 	} else if (CanReadPVD(track.file.get(), 2336, true)) {
-		track.sectorSize = 2336;
+		track.sector_size = 2336;
 		track.mode2 = true;
 	} else if (CanReadPVD(track.file.get(), BYTES_PER_RAW_REDBOOK_FRAME, true)) {
-		track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
+		track.sector_size = BYTES_PER_RAW_REDBOOK_FRAME;
 		track.mode2 = true;
 	} else {
 		return false;
@@ -1113,12 +1119,12 @@ bool CDROM_Interface_Image::LoadIsoFile(const char* filename)
 	if (track_bytes < 0)
 		return false;
 
-	track.length = static_cast<uint32_t>(track_bytes) / track.sectorSize;
+	track.length = static_cast<uint32_t>(track_bytes) / track.sector_size;
 
 #ifdef DEBUG
-	LOG_MSG("LoadIsoFile parsed %s => track 1, 0x40, sectorSize %d, mode2 is %s",
+	LOG_MSG("LoadIsoFile parsed %s => track 1, 0x40, sector_size %d, mode2 is %s",
 	        filename,
-	        track.sectorSize,
+	        track.sector_size,
 	        track.mode2 ? "true":"false");
 #endif
 
@@ -1133,7 +1139,7 @@ bool CDROM_Interface_Image::LoadIsoFile(const char* filename)
 }
 
 bool CDROM_Interface_Image::CanReadPVD(TrackFile *file,
-                                       const uint16_t sectorSize,
+                                       const uint16_t sector_size,
                                        const bool mode2)
 {
 	// Guard: Bail if our file pointer is empty
@@ -1142,8 +1148,8 @@ bool CDROM_Interface_Image::CanReadPVD(TrackFile *file,
 	// Initialize our array in the event file->read() doesn't fully write it
 	uint8_t pvd[BYTES_PER_COOKED_REDBOOK_FRAME] = {0};
 
-	uint32_t seek = 16 * sectorSize;  // first vd is located at sector 16
-	if (sectorSize == BYTES_PER_RAW_REDBOOK_FRAME && !mode2) seek += 16;
+	uint32_t seek = 16 * sector_size;  // first vd is located at sector 16
+	if (sector_size == BYTES_PER_RAW_REDBOOK_FRAME && !mode2) seek += 16;
 	if (mode2) seek += 24;
 	file->read(pvd, seek, BYTES_PER_COOKED_REDBOOK_FRAME);
 	// pvd[0] = descriptor type, pvd[1..5] = standard identifier,
@@ -1169,11 +1175,230 @@ static std::string dirname(char* file)
 }
 #endif
 
+// Simplified version of an MDS parser.
+// Does not handle copy protection.
+// Credit to reverse engineering efforts by cdemu/libmirage.
+// Code is not taken directly from the project but I read their code:
+// https://github.com/cdemu/cdemu/blob/master/libmirage/images/image-mds/parser.c
+bool CDROM_Interface_Image::LoadMdsFile(const char *mds_filename)
+{
+	const std_fs::path mds_path(to_native_path(mds_filename));
+	std::ifstream file(mds_path, std::ios::in | std::ios::binary);
+
+	const auto mds_header = read_mds_header(file, 0);
+	if (!mds_header) {
+		return false;
+	}
+
+	constexpr uint8_t MdsSignature[] = {'M', 'E', 'D', 'I', 'A', ' ', 'D', 'E', 'S', 'C', 'R', 'I', 'P', 'T', 'O', 'R'};
+	static_assert(sizeof(mds_header->signature) == sizeof(MdsSignature));
+
+	if (memcmp(mds_header->signature, MdsSignature, sizeof(MdsSignature))) {
+		// Not an MDS file. Fall through to CUE/ISO handlers.
+		return false;
+	}
+
+	// Version field is an 2 character array in the format of major.minor.
+	// We don't care about the minor version but the major version must be one.
+	// This is what is produced by Alcohol 120%.
+	if (mds_header->version[0] != 1) {
+		return false;
+	}
+
+	if (mds_header->num_sessions == 0) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return false;
+	}
+	if (mds_header->num_sessions > 1) {
+		LOG_WARNING("CDROM: MDS/MDF file contains %hu sessions. Only the first will be used.", mds_header->num_sessions);
+	}
+	if (mds_header->session_block_offset == 0) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return false;
+	}
+
+	const auto session_block = read_mds_session_block(file, mds_header->session_block_offset);
+	if (!session_block) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return false;
+	}
+	if (session_block->num_all_blocks == 0) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return false;
+	}
+	if (session_block->track_block_offset == 0) {
+		LOG_ERR("CDROM: Invalid MDS file");
+		return false;
+	}
+
+	std::unordered_map<std_fs::path, std::shared_ptr<TrackFile>> track_map = {};
+	for (uint32_t i = 0; i < session_block->num_all_blocks; ++i) {
+		const auto track_block = read_mds_track_block(file, session_block->track_block_offset + (sizeof(MdsTrackBlock) * i));
+		if (!track_block) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		if (track_block->point < 1 || track_block->point > 99) {
+			// This is a non-track block. cdemu simply skips these.
+			continue;
+		}
+		Track track = {};
+		track.number = track_block->point;
+		uint8_t mode = track_block->mode & 0x0F;
+		if (mode >= 8) {
+			// Modes 8-15 are duplicates of modes 0-7
+			mode -= 8;
+		}
+		switch (mode) {
+			// Audio track
+			case 1:
+				track.attr = 0;
+				track.mode2 = false;
+				break;
+			// Mode 2 Form 1
+			case 4:
+			// Mode 2 Form 2
+			case 5:
+			// Unknown
+			case 6:
+				// Form 1/2 are CDROM-XA modes which will need deeper integration to support.
+				LOG_ERR("CDROM: Unsupported mode: %hhu", mode);
+				return false;
+
+			// Mode 1 data track
+			case 2:
+				track.attr = 0x40;
+				track.mode2 = false;
+				break;
+
+			// Mode 2 data track (0, 3, 7 appear to have the same meaning)
+			case 0:
+			case 3:
+			case 7:
+				track.attr = 0x40;
+				track.mode2 = true;
+				break;
+			default:
+				assertm(false, "Unhandled case (should never happen due to *mode &= 0x0F)");
+				return false;
+		}
+		switch (track_block->subchannel) {
+			case 0:
+				track.subchannel_size = 0;
+				break;
+			case 8:
+				track.subchannel_size = 96;
+				break;
+			default:
+				LOG_WARNING("CDROM: Unknown subchannel type %hhu assuming subchannel size of 0", track_block->subchannel);
+				track.subchannel_size = 0;
+				break;
+		}
+		track.sector_size = track_block->sector_size;
+		if (track.subchannel_size >= track.sector_size) {
+			LOG_ERR("CDROM: Invalid sector/subchannel size. Sector size: %hu Subchannel size: %hu", track.sector_size, track.subchannel_size);
+			return false;
+		}
+		track.start = track_block->start_sector;
+		track.skip = check_cast<uint32_t>(track_block->start_offset);
+		if (track_block->number_of_files != 1) {
+			// According to comments in cdemu, DVD tracks can be split into multiple files.
+			// We don't care about DVDs and CDROM should always be 1 file per track.
+			LOG_ERR("CDROM: %u files in track %hhu. Must be exactly 1.", track_block->number_of_files, track.number);
+			return false;
+		}
+		if (track_block->footer_offset == 0 || track_block->extra_offset == 0) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		const auto extra_block = read_mds_extra_block(file, track_block->extra_offset);
+		if (!extra_block) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		track.length = extra_block->length;
+		const auto footer = read_mds_footer(file, track_block->footer_offset);
+		if (!footer) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		if (footer->filename_offset == 0) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		uint32_t prev_track = tracks.empty() ? 0 : tracks.back().number; //-V807
+		uint32_t prev_sector = tracks.empty() ? 0 : tracks.back().start + tracks.back().length;
+		if (track.number != prev_track + 1 || track.start < prev_sector) {
+			LOG_ERR("CDROM: Non-contigious track found in MDS file");
+			return false;
+		}
+		file.seekg(footer->filename_offset);
+		if (file.fail()) {
+			LOG_ERR("CDROM: Invalid MDS file");
+			return false;
+		}
+		std_fs::path mdf_filename = {};
+		if (footer->widechar_filename) {
+			std::u16string utf16_string = {};
+			while (true) {
+				uint16_t wide_char = 0;
+				file.read(reinterpret_cast<char*>(&wide_char), sizeof(wide_char));
+				if (wide_char == 0) {
+					break;
+				}
+				utf16_string.push_back(le16_to_host(wide_char));
+			}
+			mdf_filename = std::move(utf16_string);
+		} else {
+			std::string ascii_string = {};
+			while (true) {
+				char c = 0;
+				file.read(reinterpret_cast<char*>(&c), sizeof(c));
+				if (c == 0) {
+					break;
+				}
+				ascii_string.push_back(c);
+			}
+			mdf_filename = std::move(ascii_string);
+		}
+		if (mdf_filename.empty()) {
+			LOG_ERR("CDROM: Missing MDF filename");
+			return false;
+		}
+		if (mdf_filename == "*.mdf") {
+			mdf_filename = mds_path;
+			mdf_filename.replace_extension("mdf");
+		} else {
+			mdf_filename = mds_path.parent_path() / mdf_filename;
+		}
+		if (const auto iter = track_map.find(mdf_filename); iter != track_map.end()) {
+			track.file = iter->second;
+		} else {
+			bool error = false;
+			track.file = std::make_shared<BinaryFile>(mdf_filename, error);
+			if (error) { //-V547
+				LOG_ERR("CDROM: Failed to open MDF file: %s", mdf_filename.string().c_str());
+				return false;
+			}
+			track_map.try_emplace(mdf_filename, track.file);
+		}
+		tracks.push_back(track);
+	}
+	if (tracks.empty()) {
+		LOG_ERR("CDROM: Failed to find any tracks");
+		return false;
+	}
+	Track lead_out = {};
+	lead_out.start = tracks.back().start + tracks.back().length;
+	tracks.push_back(lead_out);
+	return true;
+}
+
 bool CDROM_Interface_Image::LoadCueSheet(const char *cuefile)
 {
 	tracks.clear();
 
-	Track track;
+	Track track = {};
 	uint32_t shift = 0;
 	uint32_t currPregap = 0;
 	uint32_t totalPregap = 0;
@@ -1217,23 +1442,23 @@ bool CDROM_Interface_Image::LoadCueSheet(const char *cuefile)
 			GetCueKeyword(type, line);
 
 			if (type == "AUDIO") {
-				track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
+				track.sector_size = BYTES_PER_RAW_REDBOOK_FRAME;
 				track.attr = 0;
 				track.mode2 = false;
 			} else if (type == "MODE1/2048") {
-				track.sectorSize = BYTES_PER_COOKED_REDBOOK_FRAME;
+				track.sector_size = BYTES_PER_COOKED_REDBOOK_FRAME;
 				track.attr = 0x40;
 				track.mode2 = false;
 			} else if (type == "MODE1/2352") {
-				track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
+				track.sector_size = BYTES_PER_RAW_REDBOOK_FRAME;
 				track.attr = 0x40;
 				track.mode2 = false;
 			} else if (type == "MODE2/2336") {
-				track.sectorSize = 2336;
+				track.sector_size = 2336;
 				track.attr = 0x40;
 				track.mode2 = true;
 			} else if (type == "MODE2/2352") {
-				track.sectorSize = BYTES_PER_RAW_REDBOOK_FRAME;
+				track.sector_size = BYTES_PER_RAW_REDBOOK_FRAME;
 				track.attr = 0x40;
 				track.mode2 = true;
 			} else success = false;
@@ -1264,7 +1489,7 @@ bool CDROM_Interface_Image::LoadCueSheet(const char *cuefile)
 			bool error = true;
 			if (type == "BINARY") {
 				track.file = std::make_shared<BinaryFile>(
-				        filename.c_str(), error);
+				        filename, error);
 			} else {
 				track.file = std::make_shared<AudioFile>(
 				        filename.c_str(), error);
@@ -1334,7 +1559,7 @@ bool CDROM_Interface_Image::AddTrack(Track &curr,
 	// Add the first track, if our vector is empty
 	if (tracks.empty()) {
 		assertm(curr.number == 1, "The first track must be labelled number 1 [BUG!]");
-		curr.skip = skip * curr.sectorSize;
+		curr.skip = skip * curr.sector_size;
 		curr.start += currPregap;
 		totalPregap = currPregap;
 		tracks.push_back(curr);
@@ -1351,19 +1576,19 @@ bool CDROM_Interface_Image::AddTrack(Track &curr,
 		if (!prev.length) {
 			prev.length = curr.start + totalPregap - prev.start - skip;
 		}
-		curr.skip += prev.skip + prev.length * prev.sectorSize + skip * curr.sectorSize;
+		curr.skip += prev.skip + prev.length * prev.sector_size + skip * curr.sector_size;
 		totalPregap += currPregap;
 		curr.start += totalPregap;
 	// current track uses a different file as the previous track
 	} else {
 		const uint32_t tmp = static_cast<uint32_t>
 		                     (prev.file->getLength()) - prev.skip;
-		prev.length = tmp / prev.sectorSize;
-		if (tmp % prev.sectorSize != 0)
+		prev.length = tmp / prev.sector_size;
+		if (tmp % prev.sector_size != 0)
 			prev.length++; // padding
 
 		curr.start += prev.start + prev.length + currPregap;
-		curr.skip = skip * curr.sectorSize;
+		curr.skip = skip * curr.sector_size;
 		shift += prev.start + prev.length;
 		totalPregap = currPregap;
 	}
