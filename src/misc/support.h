@@ -253,9 +253,15 @@ int64_t stdio_size_kb(FILE* f);
 int64_t stdio_num_sectors(FILE* f);
 
 const std_fs::path& get_executable_path();
+
+// TODO should return optional
 std_fs::path get_resource_path(const std_fs::path& name);
+
+// TODO should return optional
 std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& name);
+
 const std::vector<std_fs::path>& get_resource_parent_paths();
+
 std::vector<std_fs::path> get_plugin_paths();
 
 std::vector<std_fs::path> get_directory_entries(
