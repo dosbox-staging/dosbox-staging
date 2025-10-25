@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -111,7 +112,13 @@ struct ShaderInfo {
 	std::string name = {};
 
 	ShaderSettings settings = {};
-	bool is_adaptive        = false;
+
+	bool is_adaptive = false;
+};
+
+struct ShaderPreset {
+	ShaderSettings settings                            = {};
+	std::unordered_map<std::string, double> parameters = {};
 };
 
 // Shader manager for loading shader sources, parsing shader metadata, and
@@ -167,8 +174,13 @@ private:
 
 	std::optional<std::string> FindShaderAndReadSource(const std::string& mapped_name);
 
-	ShaderSettings ParseShaderSettings(const std::string& shader_name,
-	                                   const std::string& source) const;
+	ShaderPreset ParseDefaultShaderPreset(const std::string& mapped_name,
+	                                      const std::string& source) const;
+
+	std::optional<std::pair<std::string, float>> ParseParameterPragma(
+	        const std::string& pragma) const;
+
+	std::optional<ShaderPreset> ReadShaderPreset(const std::string& preset_name);
 
 	void MaybeAutoSwitchShader();
 
