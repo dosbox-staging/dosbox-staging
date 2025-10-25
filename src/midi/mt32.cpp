@@ -31,8 +31,13 @@
 #include "utils/fs_utils.h"
 #include "utils/math_utils.h"
 #include "utils/string_utils.h"
+#include "utils/rom_dir.h"
 
 // #define DEBUG_MT32
+
+// MT-32 ROM locations
+constexpr auto mt32_platform_rom_dir_name = "mt32-rom-data";
+constexpr auto mt32_platform_rom_dir_name_macos = "MT32-Roms";
 
 // mt32emu Settings
 // ----------------
@@ -406,78 +411,12 @@ static void register_mt32_text_messages()
 	MSG_Add("MT32_SOURCE_DIR_LABEL", "ROM path      ");
 }
 
-#if defined(WIN32)
-
-static std::deque<std_fs::path> get_platform_rom_dirs()
-{
-	return {
-	        GetConfigDir() / DefaultMt32RomsDir,
-	        "C:\\mt32-rom-data\\",
-	};
-}
-
-#elif defined(MACOSX)
-
-static std::deque<std_fs::path> get_platform_rom_dirs()
-{
-	return {
-	        GetConfigDir() / DefaultMt32RomsDir,
-	        resolve_home("~/Library/Audio/Sounds/MT32-Roms/"),
-	        "/usr/local/share/mt32-rom-data/",
-	        "/usr/share/mt32-rom-data/",
-	};
-}
-#else
-
-static std::deque<std_fs::path> get_platform_rom_dirs()
-{
-	// First priority is user-specific data location
-	const auto xdg_data_home = get_xdg_data_home();
-
-	std::deque<std_fs::path> dirs = {
-	        xdg_data_home / "dosbox" / DefaultMt32RomsDir,
-	        xdg_data_home / "mt32-rom-data",
-	};
-
-	// Second priority are the $XDG_DATA_DIRS
-	for (const auto& data_dir : get_xdg_data_dirs()) {
-		dirs.emplace_back(data_dir / "mt32-rom-data");
-	}
-
-	// Third priority is $XDG_CONF_HOME, for convenience
-	dirs.emplace_back(GetConfigDir() / DefaultMt32RomsDir);
-
-	return dirs;
-}
-
-#endif
-
 static SectionProp* get_mt32_section()
 {
 	const auto section = get_section("mt32");
 	assert(section);
 
 	return section;
-}
-
-static std::deque<std_fs::path> get_rom_dirs()
-{
-	// Get potential ROM directories from the environment and/or system
-	auto rom_dirs = get_platform_rom_dirs();
-
-	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
-	std::string selected_romdir = get_mt32_section()->GetString("romdir");
-
-	if (selected_romdir.empty()) { // already trimmed
-		selected_romdir = DefaultMt32RomsDir;
-	}
-	if (selected_romdir.back() != '/' && selected_romdir.back() != '\\') {
-		selected_romdir += CROSS_FILESPLIT;
-	}
-
-	// Make sure we search the user's configured directory first
-	rom_dirs.emplace_front(resolve_home(selected_romdir));
-	return rom_dirs;
 }
 
 static std::string get_model_setting()
@@ -634,7 +573,10 @@ static std::set<const LASynthModel*> find_available_models(MT32Emu::Service& ser
 {
 	std::set<const LASynthModel*> available_models;
 
-	for (const auto& dir : get_rom_dirs()) {
+	for (const auto& dir : get_rom_dirs(get_mt32_section()->GetString("romdir"), 
+										DefaultMt32RomsDir, 
+										mt32_platform_rom_dir_name,
+										mt32_platform_rom_dir_name_macos)) {
 		const auto models = find_models(service, dir);
 		if (!models.empty()) {
 			dirs_with_models[dir] = models;
@@ -648,7 +590,10 @@ MidiDeviceMt32::MidiDeviceMt32()
 {
 	auto mt32_service     = create_mt32_service();
 	const auto model_name = get_model_setting();
-	const auto rom_dirs   = get_rom_dirs();
+	const auto rom_dirs   = get_rom_dirs(get_mt32_section()->GetString("romdir"), 
+										 DefaultMt32RomsDir, 
+										 mt32_platform_rom_dir_name,
+										 mt32_platform_rom_dir_name_macos);
 
 	// Load the selected model and print info about it
 	auto loaded_model_and_dir = load_model(*mt32_service, model_name, rom_dirs);

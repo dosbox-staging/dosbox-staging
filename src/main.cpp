@@ -29,6 +29,7 @@
 #include "shell/command_line.h"
 #include "shell/shell.h"
 #include "utils/checks.h"
+#include "utils/env_utils.h"
 
 CHECK_NARROWING();
 
@@ -200,8 +201,8 @@ static int edit_primary_config()
 		}
 	}
 
-	const char* env_editor = getenv("EDITOR");
-	if (env_editor) {
+	std::string env_editor = get_env_var("EDITOR");
+	if (!env_editor.empty()) {
 		replace_with_process(env_editor);
 	}
 

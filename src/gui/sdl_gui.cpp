@@ -38,6 +38,7 @@
 #include "misc/tracy.h"
 #include "misc/video.h"
 #include "utils/checks.h"
+#include "utils/env_utils.h"
 #include "utils/math_utils.h"
 #include "utils/rect.h"
 #include "utils/string_utils.h"
@@ -854,15 +855,14 @@ static bool is_using_kmsdrm_driver()
 {
 	const bool is_initialized = SDL_WasInit(SDL_INIT_VIDEO);
 
-	const auto driver = is_initialized ? SDL_GetCurrentVideoDriver()
-	                                   : getenv("SDL_VIDEODRIVER");
-	if (!driver) {
+	auto driver = is_initialized ? SDL_GetCurrentVideoDriver()
+	                             : get_env_var("SDL_VIDEODRIVER");
+	if (driver.empty()) {
 		return false;
 	}
 
-	std::string driver_str = driver;
-	lowcase(driver_str);
-	return driver_str == "kmsdrm";
+	lowcase(driver);
+	return driver == "kmsdrm";
 }
 
 static bool check_kmsdrm_setting()
@@ -1684,8 +1684,8 @@ static void set_sdl_hints()
 #if !defined(WIN32) && !defined(MACOSX)
 	constexpr int Overwrite = 0;
 
-	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, Overwrite);
-	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, Overwrite);
+	set_env_var("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, Overwrite);
+	set_env_var("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, Overwrite);
 #endif
 #endif
 
