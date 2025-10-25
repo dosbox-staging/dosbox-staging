@@ -169,9 +169,10 @@ inline bool is_machine_hercules() {
 
 constexpr auto DefaultMt32RomsDir   = "mt32-roms";
 constexpr auto DefaultSoundfontsDir = "soundfonts";
-constexpr auto GlShadersDir         = "glshaders";
 constexpr auto DiskNoiseDir         = "disknoises";
+constexpr auto GlShadersDir         = "glshaders";
 constexpr auto PluginsDir           = "plugins";
+constexpr auto ShaderPresets        = "shader-presets";
 
 constexpr auto MicrosInMillisecond = 1000;
 constexpr auto BytesPerKilobyte    = 1024;

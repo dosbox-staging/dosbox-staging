@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -101,11 +102,19 @@ struct ShaderSettings {
 };
 
 struct ShaderInfo {
-	// Actual shader name, as stored on disk minus the .glsl extension
+	// The "canonical" shader name is the shader name without extension,
+	// optionally preceded by a relative or absolute directory path.
 	std::string name = {};
+
+	// TODO use path for equality comparison purposes
 
 	ShaderSettings settings = {};
 	bool is_adaptive        = false;
+};
+
+struct ShaderPreset {
+	std::unordered_map<std::string, std::string> settings = {};
+	std::unordered_map<std::string, double> parameters    = {};
 };
 
 // Shader manager for loading shader sources, parsing shader metadata, and
@@ -162,6 +171,8 @@ private:
 
 	ShaderSettings ParseShaderSettings(const std::string& shader_name,
 	                                   const std::string& source) const;
+
+	std::optional<ShaderPreset> ReadShaderPreset(const std::string& preset_name);
 
 	void MaybeAutoSwitchShader();
 

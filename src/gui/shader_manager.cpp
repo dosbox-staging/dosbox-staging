@@ -13,6 +13,7 @@
 #include <utility>
 
 #include <SDL.h>
+#include <simpleini/SimpleIni.h>
 
 #include "dosbox.h"
 #include "gui/render/render_backend.h"
@@ -360,6 +361,26 @@ ShaderSettings ShaderManager::ParseShaderSettings(const std::string& shader_name
 		        e.code());
 	}
 	return settings;
+}
+
+std::optional<ShaderPreset> ShaderManager::ReadShaderPreset(const std::string& preset_name)
+{
+	CSimpleIniA ini;
+	ini.SetUnicode();
+
+	const auto result = ini.LoadFile("example.ini");
+	if (result < 0) {
+		return {};
+	}
+
+	const auto section = ini.GetSection("settings");
+	if (section) {
+		for (auto it = section->begin(); it != section->end(); ++it) {
+			const auto [key, val] = *it;
+		}
+	}
+
+	return {};
 }
 
 void ShaderManager::MaybeAutoSwitchShader()
