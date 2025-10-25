@@ -621,19 +621,20 @@ bool OpenGlRenderer::SetShader(const std::string& symbolic_shader_name)
 
 	auto& shader_manager = ShaderManager::GetInstance();
 
-	const auto prev_actual_shader_name = shader_manager.GetCurrentShaderName();
+	const auto prev_mapped_shader_name = shader_manager.GetCurrentMappedShaderName();
 
 	shader_manager.NotifyShaderNameChanged(
 	        shader_manager.MapShaderName(symbolic_shader_name, GlslExtension));
 
-	// The actual shader name might or might not have the ".glsl" extension.
-	const auto new_actual_shader_name = shader_manager.GetCurrentShaderName();
+	// The mapped actual shader name might or might not have the ".glsl"
+	// extension.
+	const auto new_mapped_shader_name = shader_manager.GetCurrentMappedShaderName();
 
-	if (prev_actual_shader_name == new_actual_shader_name) {
+	if (prev_mapped_shader_name == new_mapped_shader_name) {
 		return false;
 	}
 
-	if (!SwitchShader(new_actual_shader_name)) {
+	if (!SwitchShader(new_mapped_shader_name)) {
 		return false;
 	}
 
@@ -656,11 +657,11 @@ bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
 
 	auto& shader_manager = ShaderManager::GetInstance();
 
-	const auto curr_shader_name = shader_manager.GetCurrentShaderName();
+	const auto curr_shader_name = shader_manager.GetCurrentMappedShaderName();
 
 	shader_manager.NotifyRenderParametersChanged(canvas_size_px, video_mode);
 
-	const auto new_shader_name = shader_manager.GetCurrentShaderName();
+	const auto new_shader_name = shader_manager.GetCurrentMappedShaderName();
 
 	if (new_shader_name == curr_shader_name) {
 		return false;
@@ -669,18 +670,18 @@ bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
 	return SwitchShader(new_shader_name);
 }
 
-bool OpenGlRenderer::SwitchShader(const std::string& _shader_name)
+bool OpenGlRenderer::SwitchShader(const std::string& _mapped_name)
 {
-	const auto shader_name = [&] {
+	const auto mapped_name = [&] {
 		// Add the .glsl extension if it wasn't provided
-		auto path = std_fs::path(_shader_name);
+		auto path = std_fs::path(_mapped_name);
 		if (path.extension() != GlslExtension) {
 			path += GlslExtension;
 		}
 		return path.string();
 	}();
 
-	const auto maybe_shader = GetOrLoadAndCacheShader(shader_name);
+	const auto maybe_shader = GetOrLoadAndCacheShader(mapped_name);
 	if (!maybe_shader) {
 		return false;
 	}
@@ -694,10 +695,10 @@ bool OpenGlRenderer::SwitchShader(const std::string& _shader_name)
 }
 
 std::optional<OpenGlRenderer::Shader> OpenGlRenderer::GetOrLoadAndCacheShader(
-        const std::string& shader_name)
+        const std::string& mapped_name)
 {
-	if (!shader_cache.contains(shader_name)) {
-		const auto result = ShaderManager::GetInstance().LoadShader(shader_name);
+	if (!shader_cache.contains(mapped_name)) {
+		const auto result = ShaderManager::GetInstance().LoadShader(mapped_name);
 		if (!result) {
 			return {};
 		}
@@ -709,22 +710,22 @@ std::optional<OpenGlRenderer::Shader> OpenGlRenderer::GetOrLoadAndCacheShader(
 		if (!maybe_shader_program) {
 			return {};
 		}
-		assert(shader_info.name == shader_name);
+		assert(shader_info.name == mapped_name);
 
 		shader_cache[shader_info.name] = {*maybe_shader_program, shader_info};
 
 #ifdef DEBUG_OPENGL
 		LOG_DEBUG("OPENGL: Built and cached shader '%s'",
-		          shader_name.c_str());
+		          mapped_name.c_str());
 #endif
 
 	} else {
 #ifdef DEBUG_OPENGL
-		LOG_DEBUG("OPENGL: Using cached shader '%s'", shader_name.c_str());
+		LOG_DEBUG("OPENGL: Using cached shader '%s'", mapped_name.c_str());
 #endif
 	}
 
-	return shader_cache[shader_name];
+	return shader_cache[mapped_name];
 }
 
 void OpenGlRenderer::SetVsync(const bool is_enabled)

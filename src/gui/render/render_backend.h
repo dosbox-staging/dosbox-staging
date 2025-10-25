@@ -51,7 +51,7 @@ public:
 	//
 	// Similarly, `sharp` is mapped to `interpolation/sharp.glsl`, etc.
 	//
-	virtual bool SetShader(const std::string& symbolic_shader_name) = 0;
+	virtual bool SetShader(const std::string& symbolic_name) = 0;
 
 	// Can be a no-op if the backend does't support shaders.
 	virtual bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
