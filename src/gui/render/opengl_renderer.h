@@ -41,7 +41,7 @@ public:
 	bool UpdateRenderSize(const int new_render_width_px,
 	                      const int new_render_height_px) override;
 
-	bool SetShader(const std::string& shader_name) override;
+	bool SetShader(const std::string& symbolic_name) override;
 
 	bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
 	                           const VideoMode& video_mode) override;
@@ -80,9 +80,9 @@ private:
 
 	bool InitRenderer();
 
-	bool SwitchShader(const std::string& shader_name);
+	bool SwitchShader(const std::string& mapped_name);
 
-	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& shader_name);
+	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& mapped_name);
 
 	void GetUniformLocations();
 	void UpdateUniforms() const;
@@ -130,6 +130,7 @@ private:
 	// 2 triangles
 	GLfloat vertex_data[2 * 3] = {};
 
+	// Keys are the mapped shader names
 	std::unordered_map<std::string, Shader> shader_cache = {};
 
 	Shader current_shader = {};

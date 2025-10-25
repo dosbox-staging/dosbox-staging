@@ -15,14 +15,19 @@
 #include "hardware/video/vga.h"
 #include "utils/rect.h"
 
-constexpr auto BilinearShaderName = "interpolation/bilinear";
-constexpr auto SharpShaderName    = "interpolation/sharp";
-constexpr auto FallbackShaderName = BilinearShaderName;
+namespace SymbolicShaderName {
 
-constexpr auto AutoGraphicsStandardShaderName = "crt-auto";
-constexpr auto AutoMachineShaderName          = "crt-auto-machine";
-constexpr auto AutoArcadeShaderName           = "crt-auto-arcade";
-constexpr auto AutoArcadeSharpShaderName      = "crt-auto-arcade-sharp";
+constexpr auto AutoGraphicsStandard = "crt-auto";
+constexpr auto AutoMachine          = "crt-auto-machine";
+constexpr auto AutoArcade           = "crt-auto-arcade";
+constexpr auto AutoArcadeSharp      = "crt-auto-arcade-sharp";
+} // namespace SymbolicShaderName
+
+namespace MappedShaderName {
+
+constexpr auto Bilinear = "interpolation/bilinear";
+constexpr auto Sharp    = "interpolation/sharp";
+} // namespace MappedShaderName
 
 enum class ShaderMode {
 	// No shader auto-switching; the 'glshader' setting always contains the
@@ -101,7 +106,8 @@ struct ShaderSettings {
 };
 
 struct ShaderInfo {
-	// Actual shader name, as stored on disk minus the .glsl extension
+	// The mapped shader name without the file extension. The name might
+	// optionally contain a relative or absolute directory path.
 	std::string name = {};
 
 	ShaderSettings settings = {};
@@ -137,18 +143,18 @@ public:
 	// per line).
 	std::deque<std::string> GenerateShaderInventoryMessage() const;
 
-	std::string MapShaderName(const std::string& name,
-	                          const std::string& shader_extension) const;
+	std::string MapShaderName(const std::string& symbolic_name,
+	                          const std::string& file_extension) const;
 
 	std::optional<std::pair<ShaderInfo, std::string>> LoadShader(
-	        const std::string& shader_name);
+	        const std::string& mapped_name);
 
-	void NotifyShaderNameChanged(const std::string& shader_name);
+	void NotifyShaderNameChanged(const std::string& symbolic_name);
 
 	void NotifyRenderParametersChanged(const DosBox::Rect canvas_size_px,
 	                                   const VideoMode& video_mode);
 
-	std::string GetCurrentShaderName() const;
+	std::string GetCurrentMappedShaderName() const;
 
 private:
 	ShaderManager()  = default;
@@ -159,7 +165,7 @@ private:
 	// prevent assignment
 	ShaderManager& operator=(const ShaderManager&) = delete;
 
-	std::optional<std::string> FindShaderAndReadSource(const std::string& shader_name);
+	std::optional<std::string> FindShaderAndReadSource(const std::string& mapped_name);
 
 	ShaderSettings ParseShaderSettings(const std::string& shader_name,
 	                                   const std::string& source) const;
@@ -177,11 +183,11 @@ private:
 	std::string GetEgaShader() const;
 	std::string GetVgaShader() const;
 
-	std::string shader_name_from_config = {};
-
 	struct {
-		std::string name = {};
-		ShaderMode mode  = ShaderMode::Single;
+		std::string symbolic_name = {};
+		std::string mapped_name   = {};
+
+		ShaderMode mode = ShaderMode::Single;
 	} current_shader = {};
 
 	VideoMode video_mode = {};

@@ -590,12 +590,12 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 		return;
 	}
 
-	const auto shader_name = ShaderManager::GetInstance().GetCurrentShaderName();
-	if (shader_name.empty()) {
+	const auto mapped_name = ShaderManager::GetInstance().GetCurrentMappedShaderName();
+	if (mapped_name.empty()) {
 		return;
 	}
 
-	LOG_MSG("RENDER: Reloading shader '%s'", shader_name.c_str());
+	LOG_MSG("RENDER: Reloading shader '%s'", mapped_name.c_str());
 
 	GFX_GetRenderer()->ForceReloadCurrentShader();
 
