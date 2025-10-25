@@ -40,7 +40,11 @@ public:
 	                           [[maybe_unused]] const VideoMode& video_mode) override;
 
 	bool ForceReloadCurrentShader() override;
+
 	ShaderInfo GetCurrentShaderInfo() override;
+	ShaderPreset GetCurrentShaderPreset() override;
+
+	std::string GetCurrentShaderDescriptorString() override;
 
 	void StartFrame(uint8_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;

@@ -525,10 +525,10 @@ static void set_scan_and_pixel_doubling()
 	} break;
 
 	case RenderBackendType::OpenGl: {
-		const auto shader_info = GFX_GetRenderer()->GetCurrentShaderInfo();
+		const auto shader_preset = GFX_GetRenderer()->GetCurrentShaderPreset();
 
-		force_vga_single_scan = shader_info.settings.force_single_scan;
-		force_no_pixel_doubling = shader_info.settings.force_no_pixel_doubling;
+		force_vga_single_scan = shader_preset.settings.force_single_scan;
+		force_no_pixel_doubling = shader_preset.settings.force_no_pixel_doubling;
 	} break;
 
 	default: assertm(false, "Invalid RenderindBackend value");
@@ -542,13 +542,28 @@ bool RENDER_MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
                                   const VideoMode& video_mode,
                                   const bool reinit_render)
 {
+	const auto curr_preset = GFX_GetRenderer()->GetCurrentShaderPreset(); //-V821
+
 	const auto shader_changed = GFX_GetRenderer()->MaybeAutoSwitchShader(
 	        canvas_size_px, video_mode);
 
 	if (shader_changed) {
 		set_scan_and_pixel_doubling();
+
+		const auto new_preset = GFX_GetRenderer()->GetCurrentShaderPreset(); //-V821
+
 		if (reinit_render) {
-			reinit_drawing();
+			// No need to reinit the renderer if the double scaning
+			// / pixel doubling settings have not been changed.
+			const auto render_params_changed =
+			        ((curr_preset.settings.force_single_scan !=
+			          new_preset.settings.force_single_scan) ||
+			         (curr_preset.settings.force_no_pixel_doubling !=
+			          new_preset.settings.force_no_pixel_doubling));
+
+			if (render_params_changed) {
+				reinit_drawing();
+			}
 		}
 	}
 	return shader_changed;
@@ -584,20 +599,67 @@ void RENDER_AddMessages()
 	ShaderManager::AddMessages();
 }
 
+static bool set_shader(const std::string& descriptor)
+{
+	if (!GFX_GetRenderer()->SetShader(descriptor)) {
+		return false;
+	}
+
+	set_scan_and_pixel_doubling();
+	return true;
+}
+
+static void set_fallback_shader_or_exit()
+{
+	if (set_shader(SymbolicShaderName::AutoGraphicsStandard)) {
+		set_section_property_value("render",
+		                           "glshader",
+		                           SymbolicShaderName::AutoGraphicsStandard);
+		return;
+	}
+
+	LOG_ERR("RENDER: Error setting shader '%s', falling back to '%s'",
+	        SymbolicShaderName::AutoGraphicsStandard,
+	        ShaderName::Sharp);
+
+	if (set_shader(ShaderName::Sharp)) {
+		set_section_property_value("render", "glshader", ShaderName::Sharp);
+		return;
+	}
+
+	E_Exit("RENDER: Error loading fallback shaders, exiting");
+}
+
+static void set_shader_with_fallback_or_exit(const std::string& shader_descriptor)
+{
+	if (!set_shader(shader_descriptor)) {
+		LOG_ERR("RENDER: Error setting shader '%s', falling back to '%s'",
+		        shader_descriptor.c_str(),
+		        SymbolicShaderName::AutoGraphicsStandard);
+
+		set_fallback_shader_or_exit();
+	}
+}
+
 static void reload_shader([[maybe_unused]] const bool pressed)
 {
 	if (!pressed) {
 		return;
 	}
 
-	const auto shader_name = ShaderManager::GetInstance().GetCurrentShaderName();
-	if (shader_name.empty()) {
-		return;
+	const auto shader_descriptor =
+	        ShaderManager::GetInstance().GetCurrentShaderDescriptor();
+
+	LOG_MSG("RENDER: Reloading shader '%s'",
+	        shader_descriptor.ToString().c_str());
+
+	if (!GFX_GetRenderer()->ForceReloadCurrentShader()) {
+		LOG_ERR("RENDER: Error reloading shader '%s', falling back to '%s'",
+		        SymbolicShaderName::AutoGraphicsStandard,
+		        ShaderName::Sharp);
+
+		set_fallback_shader_or_exit();
 	}
-
-	LOG_MSG("RENDER: Reloading shader '%s'", shader_name.c_str());
-
-	GFX_GetRenderer()->ForceReloadCurrentShader();
 
 	set_scan_and_pixel_doubling();
 
@@ -1073,8 +1135,10 @@ static void init_render_settings(SectionProp& section)
 
 	auto* string_prop = section.AddString("glshader", Always, "crt-auto");
 	string_prop->SetOptionHelp(
-	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
-	        "output modes ('crt-auto' by default). Adaptive CRT shader options:\n"
+	        "Set an adaptive CRT monitor emulation shader or a regular shader ('crt-auto' by\n"
+	        "default). Shaders are only supported in the OpenGL output mode (see 'output').\n"
+	        "Adaptive CRT shader options:\n"
+	        "\n"
 	        "  crt-auto:               Adaptive CRT shader that prioritises developer intent\n"
 	        "                          and how people experienced the games at the time of\n"
 	        "                          release (default). An appropriate shader variant is\n"
@@ -1332,26 +1396,9 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
-bool set_shader(const std::string& shader_name)
-{
-	if (!GFX_GetRenderer()->SetShader(shader_name)) {
-		return false;
-	}
-
-	set_scan_and_pixel_doubling();
-	return true;
-}
-
 void RENDER_SetShaderWithFallback()
 {
-	if (set_shader(get_render_section().GetString("glshader"))) {
-		return;
-	}
-	if (set_shader("crt-auto")) {
-		set_section_property_value("render", "glshader", "crt-auto");
-		return;
-	}
-	E_Exit("RENDER: Error setting default 'crt-auto' shader");
+	set_shader_with_fallback_or_exit(get_render_section().GetString("glshader"));
 }
 
 static void set_monochrome_palette(SectionProp& section)
@@ -1391,8 +1438,14 @@ static void notify_render_setting_updated(SectionProp& section,
 		// somewhat complicated and needs experimentation.
 
 	} else if (prop_name == "glshader") {
-		set_shader(section.GetString("glshader"));
-		reinit_drawing();
+		if (set_shader(section.GetString("glshader"))) {
+			reinit_drawing();
+		} else {
+			set_section_property_value(
+			        "render",
+			        "glshader",
+			        GFX_GetRenderer()->GetCurrentShaderDescriptorString());
+		}
 
 	} else if (prop_name == "integer_scaling") {
 		set_integer_scaling(section);
