@@ -122,23 +122,32 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_
 std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
         const std::string& _shader_name)
 {
-	auto shader_name = _shader_name;
+	const auto shader_name_with_extension = [&] {
+		constexpr auto GlslExt = ".glsl";
 
-	auto maybe_source = FindShaderAndReadSource(shader_name);
+		// Add the .glsl extension if it wasn't provided
+		auto path = std_fs::path(_shader_name);
+		if (path.extension() != GlslExt) {
+			path += GlslExt;
+		}
+		return path.string();
+	}();
+
+	auto maybe_source = FindShaderAndReadSource(shader_name_with_extension);
 	if (!maybe_source) {
 		// List all the existing shaders for the user
 		// TODO convert to notification
-		LOG_ERR("RENDER: Shader file '%s' not found", shader_name.c_str());
+		LOG_ERR("RENDER: Shader file '%s' not found", shader_name_with_extension.c_str());
 
-		for (const auto& line : GenerateShaderInventoryMessage()) {
-			// TODO convert to notification (maybe?)
-			LOG_WARNING("RENDER: %s", line.c_str());
-		}
+//		for (const auto& line : GenerateShaderInventoryMessage()) {
+//			// TODO convert to notification (maybe?)
+//			LOG_WARNING("RENDER: %s", line.c_str());
+//		}
 		return {};
 	}
 
 	const auto source   = *maybe_source;
-	const auto settings = ParseShaderSettings(shader_name, source);
+	const auto settings = ParseShaderSettings(shader_name_with_extension, source);
 
 	const bool is_adaptive = [&] {
 		if (current_shader.mode == ShaderMode::Single) {
@@ -147,11 +156,18 @@ std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
 		} else {
 			// This will turn off vertical integer scaling for the
 			// 'sharp' shader in 'integer_scaling = auto' mode
-			return (shader_name != SharpShaderName);
+			return (shader_name_with_extension!= SharpShaderName);
 		}
 	}();
 
-	const ShaderInfo shader_info = {shader_name, settings, is_adaptive};
+	// The "canonical" shader name is the shader name without extension,
+	// optionally preceded by a relative or absolute directory path
+	const auto shader_name_without_extension =
+	        std_fs::path(shader_name_with_extension).replace_extension("").string();
+
+	const ShaderInfo shader_info = {shader_name_without_extension,
+	                                settings,
+	                                is_adaptive};
 
 	return std::pair{shader_info, source};
 }
@@ -297,19 +313,11 @@ std::optional<std::string> ShaderManager::FindShaderAndReadSource(const std::str
 		return buf.str() + '\n';
 	};
 
-	constexpr auto GlslExt = ".glsl";
-
-	// Add the .glsl extension if it wasn't provided
-	auto shader_path = std_fs::path(shader_name);
-	if (shader_path.extension() != GlslExt) {
-		shader_path += GlslExt;
-	}
-
 	// Start with the provided path...
-	std::vector<std_fs::path> candidate_paths = {shader_path};
+	std::vector<std_fs::path> candidate_paths = {shader_name};
 
 	// ...and then try from resources
-	const auto resource_shader_path = get_resource_path(GlShadersDir, shader_path);
+	const auto resource_shader_path = get_resource_path(GlShadersDir, shader_name);
 
 	// TODO get_resource_path() should return optional
 	if (!resource_shader_path.empty()) {
