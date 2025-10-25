@@ -20,6 +20,7 @@
 
 #include "dos/dos.h"
 #include "misc/logging.h"
+#include "utils/env_utils.h"
 #include "utils/string_utils.h"
 
 bool path_exists(const char *path) noexcept
@@ -107,22 +108,22 @@ int create_dir(const std_fs::path& path, uint32_t mode, uint32_t flags) noexcept
 
 std_fs::path get_xdg_config_home() noexcept
 {
-	const char* var       = getenv("XDG_CONFIG_HOME");
-	const char* conf_home = ((var && var[0]) ? var : "~/.config");
+	const auto var       = get_env_var("XDG_CONFIG_HOME");
+	const auto conf_home = ((var.size() > 0) ? var : "~/.config");
 	return resolve_home(conf_home);
 }
 
 std_fs::path get_xdg_data_home() noexcept
 {
-	const char* var       = getenv("XDG_DATA_HOME");
-	const char* data_home = ((var && var[0]) ? var : "~/.local/share");
+	const auto var       = get_env_var("XDG_DATA_HOME");
+	const auto data_home = ((var.size() > 0) ? var : "~/.local/share");
 	return resolve_home(data_home);
 }
 
 std::deque<std_fs::path> get_xdg_data_dirs() noexcept
 {
-	const char* var       = getenv("XDG_DATA_DIRS");
-	const char* data_dirs = ((var && var[0]) ? var : "/usr/local/share:/usr/share");
+	const auto var       = get_env_var("XDG_DATA_DIRS");
+	const auto data_dirs = ((var.size() > 0) ? var : "/usr/local/share:/usr/share");
 
 	std::deque<std_fs::path> paths{};
 	for (auto& dir : split_with_empties(data_dirs, ':')) {

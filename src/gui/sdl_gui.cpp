@@ -38,6 +38,7 @@
 #include "misc/tracy.h"
 #include "misc/video.h"
 #include "utils/checks.h"
+#include "utils/env_utils.h"
 #include "utils/math_utils.h"
 #include "utils/rect.h"
 #include "utils/string_utils.h"
@@ -1681,8 +1682,8 @@ static void set_sdl_hints()
 #if !defined(WIN32) && !defined(MACOSX)
 	constexpr int Overwrite = 0;
 
-	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, Overwrite);
-	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, Overwrite);
+	set_env_var("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, Overwrite);
+	set_env_var("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, Overwrite);
 #endif
 #endif
 
