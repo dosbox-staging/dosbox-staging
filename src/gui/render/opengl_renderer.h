@@ -125,8 +125,10 @@ private:
 		GLint frame_count  = 0;
 	} uniform = {};
 
-	GLuint frame_count         = 0;
-	GLfloat vertex_data[2 * 3] = {}; // 2 triangles
+	GLuint frame_count = 0;
+
+	// 2 triangles
+	GLfloat vertex_data[2 * 3] = {};
 
 	std::unordered_map<std::string, Shader> shader_cache = {};
 
