@@ -174,6 +174,10 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 
 	for (const auto& parent : get_resource_parent_paths()) {
 		const auto dir = parent / GlShadersDir;
+
+		// TODO Handling the optional extensions should be probably
+		// handled by the render backend once we add more backends with
+		// shader support.
 		auto shaders = get_directory_entries(dir, ".glsl", OnlyRegularFiles);
 
 		const auto dir_exists      = std_fs::is_directory(dir, ec);
@@ -225,7 +229,8 @@ void ShaderManager::AddMessages()
 	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_LIST", "Path '%s' has:");
 }
 
-std::string ShaderManager::MapShaderName(const std::string& name) const
+std::string ShaderManager::MapShaderName(const std::string& name,
+                                         const std::string& shader_extension) const
 {
 	// Handle empty glshader setting case
 	if (name.empty()) {
@@ -255,27 +260,25 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 	// clang-format on
 
 	std_fs::path shader_path = name;
-	std_fs::path ext         = shader_path.extension();
-
-	if (ext == "" || ext == ".glsl") {
+	if (shader_path.extension() == shader_extension) {
 		shader_path.replace_extension("");
+	}
 
-		const auto old_name = shader_path.string();
+	const auto legacy_name = shader_path.string();
 
-		const auto it = legacy_name_mappings.find(old_name);
-		if (it != legacy_name_mappings.end()) {
-			const auto new_name = it->second;
+	const auto it = legacy_name_mappings.find(legacy_name);
+	if (it != legacy_name_mappings.end()) {
+		const auto new_name = it->second;
 
-			// TODO convert to notification
-			LOG_WARNING(
-			        "RENDER: Built-in shader '%s' has been renamed to '%s'; "
-			        "using '%s' instead.",
-			        old_name.c_str(),
-			        new_name.c_str(),
-			        new_name.c_str());
+		// TODO convert to notification
+		LOG_WARNING(
+		        "RENDER: Built-in shader '%s' has been renamed to '%s'; "
+		        "using '%s' instead.",
+		        legacy_name.c_str(),
+		        new_name.c_str(),
+		        new_name.c_str());
 
-			return new_name;
-		}
+		return new_name;
 	}
 
 	// No mapping required
@@ -296,19 +299,11 @@ std::optional<std::string> ShaderManager::FindShaderAndReadSource(const std::str
 		return buf.str() + '\n';
 	};
 
-	constexpr auto GlslExt = ".glsl";
-
-	// Add the .glsl extension if it wasn't provided
-	auto shader_path = std_fs::path(shader_name);
-	if (shader_path.extension() != GlslExt) {
-		shader_path += GlslExt;
-	}
-
 	// Start with the provided path...
-	std::vector<std_fs::path> candidate_paths = {shader_path};
+	std::vector<std_fs::path> candidate_paths = {shader_name};
 
 	// ...and then try from resources
-	const auto resource_shader_path = get_resource_path(GlShadersDir, shader_path);
+	const auto resource_shader_path = get_resource_path(GlShadersDir, shader_name);
 
 	// TODO get_resource_path() should return optional
 	if (!resource_shader_path.empty()) {
