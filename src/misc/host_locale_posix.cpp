@@ -10,6 +10,7 @@
 
 #include "utils/checks.h"
 #include "dosbox.h"
+#include "utils/env_utils.h"
 #include "utils/fs_utils.h"
 #include "misc/std_filesystem.h"
 #include "utils/string_utils.h"
@@ -785,17 +786,11 @@ static std::vector<std::string> get_command_output(const std::string& command)
 	return result;
 }
 
-static std::string get_env_variable(const std::string& variable)
-{
-	const auto result = getenv(variable.c_str());
-	return result ? result : "";
-}
-
 static std::pair<std::string, std::string> get_env_variable_from_list(
         const std::vector<std::string>& list)
 {
 	for (const auto& variable : list) {
-		const auto value = get_env_variable(variable);
+		const auto value = get_env_var(variable);
 		if (!value.empty()) {
 			return {variable, value};
 		}
@@ -816,7 +811,7 @@ static bool is_xdg_desktop_session(const XdgDesktopSession session)
 	// New mechanism to detect desktop environment, it seems it isn't
 	// universally available yet (mid 2024)
 	auto get_xdg_current_desktop = []() {
-		auto variable = get_env_variable(XdgCurrentDesktop);
+		auto variable = get_env_var(XdgCurrentDesktop);
 		upcase(variable);
 		const auto tmp = split(variable, ":");
 		return std::set<std::string>(tmp.begin(), tmp.end());
@@ -824,7 +819,7 @@ static bool is_xdg_desktop_session(const XdgDesktopSession session)
 
 	// Older mechanism to detect desktop environment
 	auto get_xdg_session_desktop = []() {
-		auto variable = get_env_variable(XdgSessionDesktop);
+		auto variable = get_env_var(XdgSessionDesktop);
 		upcase(variable);
 		return variable;
 	};
@@ -938,7 +933,7 @@ static HostLanguages get_host_languages()
 
 	// First try the LANGUAGE variable, according to specification:
 	// https://www.gnu.org/software/gettext/manual/html_node/The-LANGUAGE-variable.html
-	const auto values = get_env_variable(VariableLanguage);
+	const auto values = get_env_var(VariableLanguage);
 	if (!values.empty()) {
 		result.log_info = VariableLanguage + "=" + values;
 		for (const auto& entry : split(values, ":")) {
@@ -1050,7 +1045,7 @@ static DesktopKeyboardLayouts get_keyboard_layouts_kde()
 
 static DesktopKeyboardLayouts get_keyboard_layouts_wayfire()
 {
-	auto config_file = get_env_variable(WayfireConfigFile);
+	auto config_file = get_env_var(WayfireConfigFile);
 	if (config_file.empty()) {
 		// I have seen the Raspberry Pi OS sometimes does not populate
 		// the config file location to the environment variable; in such
@@ -1058,7 +1053,7 @@ static DesktopKeyboardLayouts get_keyboard_layouts_wayfire()
 		config_file = (get_xdg_config_home() / "wayfire.ini").string();
 	}
 
-	return get_keyboard_layouts_ini(get_env_variable(WayfireConfigFile),
+	return get_keyboard_layouts_ini(get_env_var(WayfireConfigFile),
 	                                "[input]",
 	                                "xkb_model",
 	                                "xkb_layout",
