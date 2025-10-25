@@ -12,6 +12,7 @@ target_sources(libdosboxcommon PRIVATE
   host_locale_posix.cpp
   host_locale_win32.cpp
   messages_po_entry.cpp
+  rom_dirs.cpp
   rwqueue.cpp
   support.cpp
   unicode.cpp
