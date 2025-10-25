@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "misc/cross.h"
+#include "utils/env_utils.h"
 
 #include <cerrno>
 #include <climits>
@@ -217,8 +218,8 @@ std_fs::path resolve_home(const std::string &str) noexcept
 
 	std::string temp_line = str;
 	if(temp_line.size() == 1 || temp_line[1] == CROSS_FILESPLIT) { //The ~ and ~/ variant
-		char * home = getenv("HOME");
-		if(home) temp_line.replace(0,1,std::string(home));
+		auto home = get_env_var("HOME");
+		if(!home.empty()) temp_line.replace(0, 1, home);
 
 #if defined(HAVE_SYS_TYPES_H) && defined(HAVE_PWD_H)
 	} else { // The ~username variant
