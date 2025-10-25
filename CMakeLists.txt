@@ -242,7 +242,6 @@ endif()
 
 check_include_file("libgen.h"     HAVE_LIBGEN_H)
 check_include_file("netinet/in.h" HAVE_NETINET_IN_H)
-check_include_file("pwd.h"        HAVE_PWD_H)
 check_include_file("stdlib.h"     HAVE_STDLIB_H)
 check_include_file("strings.h"    HAVE_STRINGS_H)
 check_include_file("sys/types.h"  HAVE_SYS_TYPES_H)

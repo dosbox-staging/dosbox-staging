@@ -34,10 +34,6 @@
 #	endif
 #endif
 
-#if defined(HAVE_PWD_H)
-#	include <pwd.h>
-#endif
-
 #include "utils/fs_utils.h"
 #include "utils/string_utils.h"
 #include "misc/support.h"
@@ -220,15 +216,6 @@ std_fs::path resolve_home(const std::string &str) noexcept
 	if(temp_line.size() == 1 || temp_line[1] == CROSS_FILESPLIT) { //The ~ and ~/ variant
 		auto home = get_env_var("HOME");
 		if(!home.empty()) temp_line.replace(0, 1, home);
-
-#if defined(HAVE_SYS_TYPES_H) && defined(HAVE_PWD_H)
-	} else { // The ~username variant
-		std::string::size_type namelen = temp_line.find(CROSS_FILESPLIT);
-		if(namelen == std::string::npos) namelen = temp_line.size();
-		std::string username = temp_line.substr(1,namelen - 1);
-		struct passwd* pass = getpwnam(username.c_str());
-		if(pass) temp_line.replace(0,namelen,pass->pw_dir); //namelen -1 +1(for the ~)
-#endif // USERNAME lookup code
 	}
 	return temp_line;
 }
