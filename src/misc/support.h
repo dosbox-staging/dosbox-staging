@@ -169,7 +169,7 @@ template <typename T>
 std::function<T()> create_randomizer(const T min_value, const T max_value);
 
 // Include a message in assert, similar to static_assert:
-#define assertm(exp, msg) assert(((void)msg, exp))
+#define assertm(exp, msg) assert(((void)(msg), exp))
 // Use (void) to silent unused warnings.
 // https://en.cppreference.com/w/cpp/error/assert
 
