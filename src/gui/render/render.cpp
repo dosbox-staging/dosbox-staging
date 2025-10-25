@@ -1348,7 +1348,7 @@ void RENDER_SetShaderWithFallback()
 		return;
 	}
 	if (set_shader("crt-auto")) {
-		set_section_property_value("render", "glshader", "crt-aut");
+		set_section_property_value("render", "glshader", "crt-auto");
 		return;
 	}
 	E_Exit("RENDER: Error setting default 'crt-auto' shader");
