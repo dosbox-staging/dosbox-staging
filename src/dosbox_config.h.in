@@ -175,7 +175,6 @@
 
 #mesondefine HAVE_LIBGEN_H
 #mesondefine HAVE_NETINET_IN_H
-#mesondefine HAVE_PWD_H
 #define HAVE_STDLIB_H 1
 #mesondefine HAVE_STRINGS_H
 #mesondefine HAVE_SYS_SOCKET_H

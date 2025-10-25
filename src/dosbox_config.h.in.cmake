@@ -172,7 +172,6 @@
 
 #cmakedefine HAVE_LIBGEN_H
 #cmakedefine HAVE_NETINET_IN_H
-#cmakedefine HAVE_PWD_H
 #cmakedefine HAVE_STDLIB_H
 #cmakedefine HAVE_STRINGS_H
 #cmakedefine HAVE_SYS_SOCKET_H
