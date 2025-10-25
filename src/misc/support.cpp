@@ -343,7 +343,7 @@ const std::vector<std_fs::path>& get_resource_parent_paths()
 #endif
 
 	// Last priority is the user's configuration directory
-	maybe_add_path(GetConfigDir(), paths);
+	maybe_add_path(get_config_dir(), paths);
 
 	return paths;
 }
@@ -375,7 +375,7 @@ std::vector<std_fs::path> get_plugin_paths()
 	maybe_add_path(get_executable_path() / "../share" / DOSBOX_PROJECT_NAME / PluginsDir, paths);
 #endif
 
-	maybe_add_path(GetConfigDir() / PluginsDir, paths);
+	maybe_add_path(get_config_dir() / PluginsDir, paths);
 
 	return paths;
 }

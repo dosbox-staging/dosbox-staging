@@ -91,12 +91,12 @@ constexpr auto localtime_r = ::localtime_r;
 
 // Create or determine the location of the config directory (e.g., in portable
 // mode, the config directory is the executable dir). Must be called before
-// calling GetConfigDir().
-void InitConfigDir();
+// calling get_config_dir().
+void init_config_dir();
 
-std_fs::path GetConfigDir();
-std::string GetPrimaryConfigName();
-std_fs::path GetPrimaryConfigPath();
+std_fs::path get_config_dir();
+std::string get_primary_config_name();
+std_fs::path get_primary_config_path();
 
 std_fs::path resolve_home(const std::string &str) noexcept;
 
@@ -110,7 +110,7 @@ typedef struct dir_struct {
 	HANDLE          handle;
 	char            base_path[MAX_PATH+4];
 	WIN32_FIND_DATA search_data;
-} dir_information;
+} DirInformation;
 
 #else
 
@@ -120,19 +120,19 @@ typedef struct dir_struct {
 typedef struct dir_struct { 
 	DIR*  dir;
 	char base_path[CROSS_LEN];
-} dir_information;
+} DirInformation;
 
 #endif
 
-dir_information* open_directory(const char* dirname);
-bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory);
-bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory);
-void close_directory(dir_information* dirp);
+DirInformation* open_directory(const char* dirname);
+bool read_directory_first(DirInformation* dirp, char* entry_name, bool& is_directory);
+bool read_directory_next(DirInformation* dirp, char* entry_name, bool& is_directory);
+void close_directory(DirInformation* dirp);
 
 FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly);
 
 bool wild_match(const char *haystack, const char *needle);
-bool WildFileCmp(const char *file, const char *wild, bool long_compare = false);
+bool wild_file_cmp(const char* file, const char* wild, bool long_compare = false);
 
 bool get_expanded_files(const std::string &path,
                         std::vector<std::string> &files,

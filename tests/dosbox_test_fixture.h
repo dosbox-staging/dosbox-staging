@@ -27,8 +27,8 @@ public:
 		// Create DOSBox Staging's config directory, which is a
 		// pre-requisite that's asserted during the Init process.
 		//
-		InitConfigDir();
-		const auto config_path = GetConfigDir();
+		init_config_dir();
+		const auto config_path = get_config_dir();
 		control->ParseConfigFiles(config_path);
 
 		DOSBOX_InitModuleConfigsAndMessages();

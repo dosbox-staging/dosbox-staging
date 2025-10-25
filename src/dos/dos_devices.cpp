@@ -384,7 +384,8 @@ uint8_t DOS_FindDevice(const char* name)
 	for (int index = DOS_DEVICES - 1; index >= 0; index--) {
 		if (Devices[index]) {
 			if (Devices[index]->GetInformation() & EXT_DEVICE_BIT) {
-				if (WildFileCmp(name_part, Devices[index]->name.c_str())) {
+				if (wild_file_cmp(name_part,
+				                  Devices[index]->name.c_str())) {
 					if (DOS_CheckExtDevice(name_part, false) != 0) {
 						return index;
 					} else {
@@ -412,8 +413,9 @@ uint8_t DOS_FindDevice(const char* name)
 	/* loop through devices */
 	for(uint8_t index = 0;index < DOS_DEVICES;index++) {
 		if (Devices[index]) {
-			if (WildFileCmp(name_part, Devices[index]->GetName()))
+			if (wild_file_cmp(name_part, Devices[index]->GetName())) {
 				return index;
+			}
 		}
 	}
 	return DOS_DEVICES;

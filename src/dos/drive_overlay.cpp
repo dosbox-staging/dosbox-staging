@@ -676,7 +676,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 	std::vector<std::string>::iterator i;
 	std::string::size_type const prefix_lengh = special_prefix.length();
 	if (read_directory_contents) {
-		dir_information* dirp = open_directory(overlaydir);
+		DirInformation* dirp = open_directory(overlaydir);
 		if (dirp == nullptr) return;
 		// Read complete directory
 		char dir_name[CROSS_LEN];
@@ -857,7 +857,9 @@ again:
 		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
 	}
-	if(!WildFileCmp(dir_ent, search_pattern)) goto again;
+	if (!wild_file_cmp(dir_ent, search_pattern)) {
+		goto again;
+	}
 
 	safe_strcpy(full_name, srchInfo[id].srch_dir);
 	safe_strcat(full_name, dir_ent);

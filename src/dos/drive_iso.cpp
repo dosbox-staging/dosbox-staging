@@ -266,7 +266,7 @@ bool isoDrive::FindFirst(const char* dir, DOS_DTA& dta, bool fcb_findfirst)
 		dta.SetResult(discLabel, 0, 0, 0, FatAttributeFlags::Volume);
 		return true;
 	} else if (attr.volume && isRoot && !fcb_findfirst) {
-		if (WildFileCmp(discLabel,pattern)) {
+		if (wild_file_cmp(discLabel, pattern)) {
 			// Get Volume Label and only in basedir and if it
 			// matches the searchstring
 			dta.SetResult(discLabel, 0, 0, 0, FatAttributeFlags::Volume);
@@ -298,7 +298,7 @@ bool isoDrive::FindNext(DOS_DTA& dta)
 		findAttr.hidden            = IS_HIDDEN(FLAGS1);
 
 		if (!IS_ASSOC(FLAGS1) && !(isRoot && de.ident[0] == '.') &&
-		    WildFileCmp((char*)de.ident, pattern) &&
+		    wild_file_cmp((char*)de.ident, pattern) &&
 		    !(~(attr._data) & findAttr._data & attr_mask._data)) {
 			/* file is okay, setup everything to be copied in DTA
 			 * Block */

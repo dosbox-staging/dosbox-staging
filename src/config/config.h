@@ -42,12 +42,14 @@ struct CommandLineArguments {
 	bool exit;
 	bool securemode;
 	bool noautoexec;
+
 	std::string working_dir;
 	std::string lang;
 	std::string machine;
 	std::vector<std::string> conf;
 	std::vector<std::string> set;
 	std::optional<std::vector<std::string>> editconf;
+
 	std::optional<int> socket;
 	std::optional<int> wait_pid;
 };
@@ -59,20 +61,18 @@ public:
 	CommandLineArguments arguments = {};
 
 private:
-	std::deque<Section*> sectionlist         = {};
+	std::deque<Section*> sections            = {};
 	SectionLine overwritten_autoexec_section = {};
 	std::string overwritten_autoexec_conf    = {};
-
-	void (*_start_function)(void) = nullptr;
 
 	bool secure_mode = false;
 
 	void ParseArguments();
 
 public:
-	std::vector<std::string> startup_params        = {};
-	std::vector<std::string> configfiles           = {};
-	std::vector<std_fs::path> configFilesCanonical = {};
+	std::vector<std::string> startup_params                 = {};
+	std::vector<std::string> config_files                   = {};
+	std::vector<std_fs::path> loaded_config_paths_canonical = {};
 
 	Config(CommandLine* cmd)
 	        : cmdline(cmd),
@@ -105,11 +105,11 @@ public:
 
 	auto begin()
 	{
-		return sectionlist.begin();
+		return sections.begin();
 	}
 	auto end()
 	{
-		return sectionlist.end();
+		return sections.end();
 	}
 
 	Section* GetSection(const std::string_view section_name) const;
@@ -127,7 +127,6 @@ public:
 	bool ParseConfigFile(const std::string& type,
 	                     const std::string& config_file_name);
 
-	void ParseEnv();
 	void ParseConfigFiles(const std_fs::path& config_path);
 
 	std::string SetProperty(std::vector<std::string>& pvars);
@@ -149,5 +148,7 @@ public:
 
 using ConfigPtr = std::unique_ptr<Config>;
 extern ConfigPtr control;
+
+extern std_fs::path current_config_dir;
 
 #endif // DOSBOX_CONFIG_H

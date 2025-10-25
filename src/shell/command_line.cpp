@@ -339,7 +339,7 @@ CommandLine::CommandLine(int argc, const char* const argv[])
 	}
 }
 
-uint16_t CommandLine::Get_arglength()
+int CommandLine::GetNumArguments()
 {
 	if (cmds.empty()) {
 		return 0;
@@ -350,12 +350,7 @@ uint16_t CommandLine::Get_arglength()
 		total_length += cmd.size() + 1;
 	}
 
-	if (total_length > UINT16_MAX) {
-		LOG_WARNING("CONFIG: Command line length too long, truncating");
-		total_length = UINT16_MAX;
-	}
-
-	return static_cast<uint16_t>(total_length);
+	return total_length;
 }
 
 CommandLine::CommandLine(const std::string_view name, const std::string_view cmdline)

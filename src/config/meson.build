@@ -1,4 +1,5 @@
 libconfig_sources = files(
+    'config.cpp',
     'setup.cpp',
 )
 

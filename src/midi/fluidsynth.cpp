@@ -142,7 +142,7 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 static std::vector<std_fs::path> get_platform_data_dirs()
 {
 	return {
-	        GetConfigDir() / DefaultSoundfontsDir,
+	        get_config_dir() / DefaultSoundfontsDir,
 
 	        // C:\soundfonts is the default place where FluidSynth places
 	        // default.sf2
@@ -156,7 +156,7 @@ static std::vector<std_fs::path> get_platform_data_dirs()
 static std::vector<std_fs::path> get_platform_data_dirs()
 {
 	return {
-	        GetConfigDir() / DefaultSoundfontsDir,
+	        get_config_dir() / DefaultSoundfontsDir,
 	        resolve_home("~/Library/Audio/Sounds/Banks"),
 	};
 }
@@ -181,7 +181,7 @@ static std::vector<std_fs::path> get_platform_data_dirs()
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience
-	dirs.emplace_back(GetConfigDir() / DefaultSoundfontsDir);
+	dirs.emplace_back(get_config_dir() / DefaultSoundfontsDir);
 
 	return dirs;
 }

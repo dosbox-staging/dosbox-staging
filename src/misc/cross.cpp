@@ -42,14 +42,14 @@
 #include "misc/support.h"
 #include "dos/drives.h"
 
-std::string GetPrimaryConfigName()
+std::string get_primary_config_name()
 {
 	return DOSBOX_PROJECT_NAME ".conf";
 }
 
-std_fs::path GetPrimaryConfigPath()
+std_fs::path get_primary_config_path()
 {
-	return GetConfigDir() / GetPrimaryConfigName();
+	return get_config_dir() / get_primary_config_name();
 }
 
 #if defined(MACOSX)
@@ -119,13 +119,13 @@ static std_fs::path get_or_create_config_dir()
 	const auto conf_path = get_xdg_config_home() / "dosbox";
 	std::error_code ec   = {};
 
-	if (std_fs::exists(conf_path / GetPrimaryConfigName())) {
+	if (std_fs::exists(conf_path / get_primary_config_name())) {
 		return conf_path;
 	}
 
 	auto fallback_to_deprecated = []() {
 		const auto old_conf_path = resolve_home("~/.dosbox");
-		if (path_exists(old_conf_path / GetPrimaryConfigName())) {
+		if (path_exists(old_conf_path / get_primary_config_name())) {
 			LOG_WARNING("CONFIG: Falling back to deprecated path (~/.dosbox) due to errors");
 			LOG_WARNING("CONFIG: Please investigate the problems and try again");
 		}
@@ -183,12 +183,12 @@ static std_fs::path get_or_create_config_dir()
 
 static std_fs::path cached_config_dir = {};
 
-void InitConfigDir()
+void init_config_dir()
 {
 	if (cached_config_dir.empty()) {
 		// Check if a portable layout exists
 		const auto portable_conf_path = get_executable_path() /
-		                                GetPrimaryConfigName();
+		                                get_primary_config_name();
 
 		std::error_code ec = {};
 		if (std_fs::is_regular_file(portable_conf_path, ec)) {
@@ -204,7 +204,7 @@ void InitConfigDir()
 	}
 }
 
-std_fs::path GetConfigDir()
+std_fs::path get_config_dir()
 {
 	assert(!cached_config_dir.empty());
 	return cached_config_dir;
@@ -234,13 +234,13 @@ std_fs::path resolve_home(const std::string &str) noexcept
 
 #if defined(WIN32)
 
-dir_information* open_directory(const char* dirname) {
+DirInformation* open_directory(const char* dirname) {
 	if (dirname == nullptr) return nullptr;
 
 	size_t len = strlen(dirname);
 	if (len == 0) return nullptr;
 
-	static dir_information dir;
+	static DirInformation dir;
 
 	safe_strncpy(dir.base_path,dirname,MAX_PATH);
 
@@ -254,7 +254,7 @@ dir_information* open_directory(const char* dirname) {
 	return (path_exists(dirname) ? &dir : nullptr);
 }
 
-bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_first(DirInformation* dirp, char* entry_name, bool& is_directory) {
 	if (!dirp) return false;
 	dirp->handle = FindFirstFile(dirp->base_path, &dirp->search_data);
 	if (INVALID_HANDLE_VALUE == dirp->handle) {
@@ -269,7 +269,7 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 	return true;
 }
 
-bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_next(DirInformation* dirp, char* entry_name, bool& is_directory) {
 	if (!dirp) return false;
 	int result = FindNextFile(dirp->handle, &dirp->search_data);
 	if (result==0) return false;
@@ -282,7 +282,7 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 	return true;
 }
 
-void close_directory(dir_information* dirp) {
+void close_directory(DirInformation* dirp) {
 	if (dirp && dirp->handle != INVALID_HANDLE_VALUE) {
 		FindClose(dirp->handle);
 		dirp->handle = INVALID_HANDLE_VALUE;
@@ -291,19 +291,19 @@ void close_directory(dir_information* dirp) {
 
 #else
 
-dir_information* open_directory(const char* dirname) {
-	static dir_information dir;
+DirInformation* open_directory(const char* dirname) {
+	static DirInformation dir;
 	dir.dir=opendir(dirname);
 	safe_strcpy(dir.base_path, dirname);
 	return dir.dir?&dir:nullptr;
 }
 
-bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_first(DirInformation* dirp, char* entry_name, bool& is_directory) {
 	if (!dirp) return false;
 	return read_directory_next(dirp,entry_name,is_directory);
 }
 
-bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
+bool read_directory_next(DirInformation* dirp, char* entry_name, bool& is_directory) {
 	if (!dirp) return false;
 	struct dirent* dentry = readdir(dirp->dir);
 	if (dentry==nullptr) {
@@ -345,7 +345,7 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 	return true;
 }
 
-void close_directory(dir_information* dirp) {
+void close_directory(DirInformation* dirp) {
 	if (dirp) closedir(dirp->dir);
 }
 
@@ -423,7 +423,7 @@ static bool wildcard_matches_hidden_file(const std::string_view filename,
 	return is_wildcard_first && is_hidden_file;
 }
 
-bool WildFileCmp(const char* file, const char* wild, bool long_compare)
+bool wild_file_cmp(const char* file, const char* wild, bool long_compare)
 {
 	if (!file || !wild || (*file && !*wild) || strlen(wild) > LFN_NAMELENGTH)
 		return false;
@@ -576,9 +576,9 @@ bool get_expanded_files(const std::string &path,
 		const auto filename = entry.path().filename();
 
 		constexpr auto long_compare = true;
-		if (WildFileCmp(filename.string().c_str(),
-		                p.filename().string().c_str(),
-		                long_compare)) {
+		if (wild_file_cmp(filename.string().c_str(),
+		                  p.filename().string().c_str(),
+		                  long_compare)) {
 			files.emplace_back((dir / filename).string());
 		}
 	}

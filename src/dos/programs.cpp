@@ -154,7 +154,7 @@ void Program::ChangeToLongCmd()
 	// be longer then 127 characters. imgmount with lot's of parameters
 	// Length of arguments can be ~120. but switch when above 100 to be sure
 
-	if (/*control->SecureMode() ||*/ cmd->Get_arglength() > 100) {
+	if (/*control->SecureMode() ||*/ cmd->GetNumArguments() > 100) {
 		CommandLine* temp = new CommandLine(cmd->GetFileName(),
 		                                    full_arguments);
 		delete cmd;
@@ -540,8 +540,8 @@ void CONFIG::Run(void)
 			return;
 
 		case P_LISTCONF: {
-			auto size = control->configfiles.size();
-			const std_fs::path config_path = GetConfigDir();
+			auto size = control->config_files.size();
+			const std_fs::path config_path = get_config_dir();
 
 			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"),
 			         DOSBOX_GetVersion(),
@@ -552,7 +552,7 @@ void CONFIG::Run(void)
 
 			} else {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRIMARY_CONF"),
-				         control->configfiles.front().c_str());
+				         control->config_files.front().c_str());
 
 				if (size > 1) {
 					WriteOut(MSG_Get(
@@ -560,7 +560,8 @@ void CONFIG::Run(void)
 
 					for (size_t i = 1; i < size; ++i) {
 						WriteOut("%s\n",
-						         control->configfiles[i].c_str());
+						         control->config_files[i]
+						                 .c_str());
 					}
 				}
 			}
@@ -589,7 +590,7 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
 				return;
 			}
-			WriteConfig(GetPrimaryConfigPath().string());
+			WriteConfig(get_primary_config_path().string());
 			break;
 		}
 
@@ -609,7 +610,7 @@ void CONFIG::Run(void)
 			} else {
 				// -wc without parameter: write dosbox.conf to
 				// startup directory
-				if (control->configfiles.size()) {
+				if (control->config_files.size()) {
 					WriteConfig("dosbox.conf");
 				} else {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NOCONFIGFILE"));
