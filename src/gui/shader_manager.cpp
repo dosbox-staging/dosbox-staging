@@ -298,12 +298,22 @@ std::optional<std::string> ShaderManager::FindShaderAndReadSource(const std::str
 
 	constexpr auto GlslExt = ".glsl";
 
-	// Start with the name as-is and then try from resources
-	const auto candidate_paths = {std_fs::path(shader_name),
-	                              std_fs::path(shader_name + GlslExt),
-	                              get_resource_path(GlShadersDir, shader_name),
-	                              get_resource_path(GlShadersDir,
-	                                                shader_name + GlslExt)};
+	// Add the .glsl extension if it wasn't provided
+	auto shader_path = std_fs::path(shader_name);
+	if (shader_path.extension() != GlslExt) {
+		shader_path += GlslExt;
+	}
+
+	// Start with the provided path...
+	std::vector<std_fs::path> candidate_paths = {shader_path};
+
+	// ...and then try from resources
+	const auto resource_shader_path = get_resource_path(GlShadersDir, shader_path);
+
+	// TODO get_resource_path() should return optional
+	if (!resource_shader_path.empty()) {
+		candidate_paths.emplace_back(resource_shader_path);
+	}
 
 	for (const auto& path : candidate_paths) {
 		if (std_fs::exists(path) &&
