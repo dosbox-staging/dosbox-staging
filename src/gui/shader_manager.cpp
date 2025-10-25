@@ -13,6 +13,7 @@
 #include <utility>
 
 #include <SDL.h>
+#include <simpleini/SimpleIni.h>
 
 #include "dosbox.h"
 #include "gui/render/render_backend.h"
@@ -136,8 +137,8 @@ std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
 		return {};
 	}
 
-	const auto source   = *maybe_source;
-	const auto settings = ParseShaderSettings(mapped_name, source);
+	const auto source = *maybe_source;
+	const auto default_preset = ParseDefaultShaderPreset(mapped_name, source);
 
 	const bool is_adaptive = [&] {
 		if (current_shader.mode == ShaderMode::Single) {
@@ -150,7 +151,7 @@ std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
 		}
 	}();
 
-	const ShaderInfo shader_info = {mapped_name, settings, is_adaptive};
+	const ShaderInfo shader_info = {mapped_name, default_preset.settings, is_adaptive};
 
 	return std::pair{shader_info, source};
 }
@@ -320,34 +321,51 @@ std::optional<std::string> ShaderManager::FindShaderAndReadSource(const std::str
 	return {};
 }
 
-ShaderSettings ShaderManager::ParseShaderSettings(const std::string& mapped_name,
-                                                  const std::string& source) const
+ShaderPreset ShaderManager::ParseDefaultShaderPreset(const std::string& mapped_name,
+                                                     const std::string& source) const
 {
-	ShaderSettings settings = {};
+	ShaderPreset preset = {};
+
 	try {
-		const std::regex re("\\s*#pragma\\s+(\\w+)");
+		const std::regex re("\\s*#pragma\\s+(.+)");
+
 		std::sregex_iterator next(source.begin(), source.end(), re);
 		const std::sregex_iterator end;
 
 		while (next != end) {
 			std::smatch match = *next;
-			auto pragma       = match[1].str();
+
+			auto pragma = match[1].str();
 
 			if (pragma == "use_srgb_texture") {
-				settings.use_srgb_texture = true;
+				preset.settings.use_srgb_texture = true;
 
 			} else if (pragma == "use_srgb_framebuffer") {
-				settings.use_srgb_framebuffer = true;
+				preset.settings.use_srgb_framebuffer = true;
 
 			} else if (pragma == "force_single_scan") {
-				settings.force_single_scan = true;
+				preset.settings.force_single_scan = true;
 
 			} else if (pragma == "force_no_pixel_doubling") {
-				settings.force_no_pixel_doubling = true;
+				preset.settings.force_no_pixel_doubling = true;
 
 			} else if (pragma == "use_nearest_texture_filter") {
-				settings.texture_filter_mode = TextureFilterMode::NearestNeighbour;
+				preset.settings.texture_filter_mode = TextureFilterMode::NearestNeighbour;
+
+			} else if (pragma.starts_with("parameter")) {
+				if (const auto maybe_result = ParseParameterPragma(pragma);
+				    maybe_result) {
+
+					const auto [param_name,
+					            default_value] = *maybe_result;
+
+					preset.parameters[param_name] = default_value;
+				} else {
+					LOG_ERR("RENDER: Invalid shader pragma: '%s'",
+					        pragma.c_str());
+				}
 			}
+
 			++next;
 		}
 	} catch (std::regex_error& e) {
@@ -355,7 +373,63 @@ ShaderSettings ShaderManager::ParseShaderSettings(const std::string& mapped_name
 		        mapped_name.c_str(),
 		        e.code());
 	}
-	return settings;
+
+	return preset;
+}
+
+std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma(
+        const std::string& pragma) const
+{
+	// Parameter format example:
+	//
+	//   #pragma parameter OUTPUT_GAMMA "OUTPUT GAMMA" 2.2 0.0 5.0 0.1
+	//
+	const auto parts = split(strip_prefix(pragma, "parameter"), "\"");
+	if (parts.size() != 3) {
+		return {};
+	}
+	// parts[0] - param (variable) name (OUTPUT_GAMMA)
+	// parts[1] - display name (OUTPUT GAMMA)
+	// parts[2] - values (space separated)
+
+	auto param_name = parts[0];
+	trim(param_name);
+
+	const auto params = split(parts[2]);
+	if (params.size() != 4) {
+		return {};
+	}
+	// params[0] - default value (2.2)
+	// params[1] - min value     (0.0)
+	// params[2] - max value     (5.0)
+	// params[3] - value step    (0.1)
+	
+	const auto maybe_default_val = parse_float(params[1].c_str());
+	if (!maybe_default_val) {
+		return {};
+	}
+
+	return {{param_name, *maybe_default_val}};
+}
+
+std::optional<ShaderPreset> ShaderManager::ReadShaderPreset(const std::string& preset_name)
+{
+	CSimpleIniA ini;
+	ini.SetUnicode();
+
+	const auto result = ini.LoadFile("example.ini");
+	if (result < 0) {
+		return {};
+	}
+
+	const auto section = ini.GetSection("settings");
+	if (section) {
+		for (auto it = section->begin(); it != section->end(); ++it) {
+			const auto [key, val] = *it;
+		}
+	}
+
+	return {};
 }
 
 void ShaderManager::MaybeAutoSwitchShader()
