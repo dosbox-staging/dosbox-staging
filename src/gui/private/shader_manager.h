@@ -137,7 +137,8 @@ public:
 	// per line).
 	std::deque<std::string> GenerateShaderInventoryMessage() const;
 
-	std::string MapShaderName(const std::string& name) const;
+	std::string MapShaderName(const std::string& name,
+	                          const std::string& shader_extension) const;
 
 	std::optional<std::pair<ShaderInfo, std::string>> LoadShader(
 	        const std::string& shader_name);

@@ -63,6 +63,8 @@ static const char* safe_gl_get_string(const GLenum requested_name,
 	return result ? reinterpret_cast<const char*>(result) : default_result;
 }
 
+constexpr auto GlslExtension = ".glsl";
+
 OpenGlRenderer::OpenGlRenderer(const int x, const int y, const int width,
                                const int height, uint32_t sdl_window_flags)
 {
@@ -613,13 +615,18 @@ std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& sour
 
 bool OpenGlRenderer::SetShader(const std::string& symbolic_shader_name)
 {
+	// Symbolic shader names never contain the ".glsl" extension (e.g.,
+	// `crt-auto`, or `sharp`). But the user might have provided a shader
+	// name with the extension already included.
+
 	auto& shader_manager = ShaderManager::GetInstance();
 
 	const auto prev_actual_shader_name = shader_manager.GetCurrentShaderName();
 
 	shader_manager.NotifyShaderNameChanged(
-	        shader_manager.MapShaderName(symbolic_shader_name));
+	        shader_manager.MapShaderName(symbolic_shader_name, GlslExtension));
 
+	// The actual shader name might or might not have the ".glsl" extension.
 	const auto new_actual_shader_name = shader_manager.GetCurrentShaderName();
 
 	if (prev_actual_shader_name == new_actual_shader_name) {
@@ -662,8 +669,17 @@ bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
 	return SwitchShader(new_shader_name);
 }
 
-bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
+bool OpenGlRenderer::SwitchShader(const std::string& _shader_name)
 {
+	const auto shader_name = [&] {
+		// Add the .glsl extension if it wasn't provided
+		auto path = std_fs::path(_shader_name);
+		if (path.extension() != GlslExtension) {
+			path += GlslExtension;
+		}
+		return path.string();
+	}();
+
 	const auto maybe_shader = GetOrLoadAndCacheShader(shader_name);
 	if (!maybe_shader) {
 		return false;
