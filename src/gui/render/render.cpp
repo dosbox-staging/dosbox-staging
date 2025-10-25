@@ -1391,8 +1391,9 @@ static void notify_render_setting_updated(SectionProp& section,
 		// somewhat complicated and needs experimentation.
 
 	} else if (prop_name == "glshader") {
-		set_shader(section.GetString("glshader"));
-		reinit_drawing();
+		if (set_shader(section.GetString("glshader"))) {
+			reinit_drawing();
+		}
 
 	} else if (prop_name == "integer_scaling") {
 		set_integer_scaling(section);
