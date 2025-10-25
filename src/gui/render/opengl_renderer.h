@@ -41,7 +41,7 @@ public:
 	bool UpdateRenderSize(const int new_render_width_px,
 	                      const int new_render_height_px) override;
 
-	bool SetShader(const std::string& shader_name) override;
+	bool SetShader(const std::string& shader_descriptor) override;
 
 	bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
 	                           const VideoMode& video_mode) override;
@@ -49,6 +49,9 @@ public:
 	bool ForceReloadCurrentShader() override;
 
 	ShaderInfo GetCurrentShaderInfo() override;
+	ShaderPreset GetCurrentShaderPreset() override;
+
+	std::string GetCurrentShaderDescriptorString() override;
 
 	void StartFrame(uint8_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
@@ -70,8 +73,8 @@ public:
 
 private:
 	struct Shader {
-		GLuint program_object = 0;
 		ShaderInfo info       = {};
+		GLuint program_object = 0;
 	};
 
 	SDL_Window* CreateSdlWindow(const int x, const int y, const int width,
@@ -80,12 +83,23 @@ private:
 
 	bool InitRenderer();
 
+	bool SetShaderInternal(const std::string& shader_descriptor,
+	                       const bool force_reload = false);
+
+	bool MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_descriptor,
+	                                const ShaderDescriptor& new_descriptor);
+
 	bool SwitchShader(const std::string& shader_name);
 
 	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& shader_name);
 
-	void GetUniformLocations();
-	void UpdateUniforms() const;
+	void SwitchShaderPresetOrSetDefault(const ShaderDescriptor& descriptor);
+
+	std::optional<ShaderPreset> GetOrLoadAndCacheShaderPreset(
+	        const ShaderDescriptor& descriptor);
+
+	void GetUniformLocations(const ShaderParameters& params);
+	void UpdateUniforms();
 
 	std::optional<GLuint> BuildShaderProgram(const std::string& source);
 
@@ -124,14 +138,34 @@ private:
 		GLint output_size   = -1;
 		GLint frame_count   = -1;
 		GLint input_texture = -1;
-	} uniform = {};
 
-	GLuint frame_count         = 0;
-	GLfloat vertex_data[2 * 3] = {}; // 2 triangles
+		std::unordered_map<std::string, GLint> params = {};
+	} uniforms = {};
 
+	GLuint frame_count = 0;
+
+	// 2 triangles
+	GLfloat vertex_data[2 * 3] = {};
+
+	// Keys are the shader names including the path part but without the
+	// .glsl file extension
 	std::unordered_map<std::string, Shader> shader_cache = {};
 
-	Shader current_shader = {};
+	// Keys are the shader names including the path part but without the
+	// .glsl file extension
+	std::unordered_map<std::string, ShaderPreset> shader_preset_cache = {};
+
+	Shader current_shader              = {};
+	ShaderPreset current_shader_preset = {};
+
+	// Current shader descriptor string as set by the user (e.g., if the
+	// user set `crt-auto`, this will stay `crt-auto`; it won't be synced to
+	// the actual shader & preset combo in use, such as
+	// `crt/crt-hyllian:vga-4k`).
+	//
+	// Might contain the .glsl file extension if set by the user.
+	//
+	std::string current_shader_descriptor_string = {};
 };
 
 #endif // C_OPENGL

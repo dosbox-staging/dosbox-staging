@@ -288,6 +288,18 @@ ShaderInfo SdlRenderer::GetCurrentShaderInfo()
 	return {};
 }
 
+ShaderPreset SdlRenderer::GetCurrentShaderPreset()
+{
+	// no shader support
+	return {};
+}
+
+std::string SdlRenderer::GetCurrentShaderDescriptorString()
+{
+	// no shader support
+	return {};
+}
+
 void SdlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
 {
 	assert(curr_framebuf);

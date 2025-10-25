@@ -51,7 +51,7 @@ public:
 	//
 	// Similarly, `sharp` is mapped to `interpolation/sharp.glsl`, etc.
 	//
-	virtual bool SetShader(const std::string& symbolic_shader_name) = 0;
+	virtual bool SetShader(const std::string& symbolic_name) = 0;
 
 	// Can be a no-op if the backend does't support shaders.
 	virtual bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
@@ -62,6 +62,13 @@ public:
 
 	// Get information about the currently active shader.
 	virtual ShaderInfo GetCurrentShaderInfo() = 0;
+
+	// Get current shader preset.
+	virtual ShaderPreset GetCurrentShaderPreset() = 0;
+
+	// Get the shader descriptor string of the currently active shader.
+	// (see `ShaderManager::NotifyShaderChanged()`.
+	virtual std::string GetCurrentShaderDescriptorString() = 0;
 
 	// Called at the start of every unique frame (when there have been
 	// changes to the DOS framebuffer).

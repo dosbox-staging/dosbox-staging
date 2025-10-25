@@ -50,6 +50,8 @@ static void maybe_log_opengl_error(const char* message)
 }
 #endif
 
+constexpr auto GlslExtension = ".glsl";
+
 // A safe wrapper around that returns the default result on failure
 static const char* safe_gl_get_string(const GLenum requested_name,
                                       const char* default_result = "")
@@ -270,7 +272,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	const auto& shader_settings = current_shader.info.settings;
+	const auto& shader_settings = current_shader_preset.settings;
 
 	const int filter_param = [&] {
 		switch (shader_settings.texture_filter_mode) {
@@ -386,7 +388,6 @@ void OpenGlRenderer::PresentFrame()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	frame_count++;
 	UpdateUniforms();
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -403,51 +404,78 @@ void OpenGlRenderer::PresentFrame()
 	SDL_GL_SwapWindow(window);
 }
 
-void OpenGlRenderer::GetUniformLocations()
+void OpenGlRenderer::GetUniformLocations(const ShaderParameters& params)
 {
 	// Get uniform locations
-	uniform.texture_size = glGetUniformLocation(current_shader.program_object,
-	                                            "rubyTextureSize");
+	uniforms.texture_size = glGetUniformLocation(current_shader.program_object,
+	                                             "rubyTextureSize");
 
-	uniform.input_size = glGetUniformLocation(current_shader.program_object,
-	                                          "rubyInputSize");
+	uniforms.input_size = glGetUniformLocation(current_shader.program_object,
+	                                           "rubyInputSize");
 
-	uniform.output_size = glGetUniformLocation(current_shader.program_object,
-	                                           "rubyOutputSize");
+	uniforms.output_size = glGetUniformLocation(current_shader.program_object,
+	                                            "rubyOutputSize");
 
-	uniform.frame_count = glGetUniformLocation(current_shader.program_object,
-	                                           "rubyFrameCount");
+	uniforms.frame_count = glGetUniformLocation(current_shader.program_object,
+	                                            "rubyFrameCount");
 
-	uniform.input_texture = glGetUniformLocation(current_shader.program_object,
-	                                             "rubyTexture");
+	uniforms.input_texture = glGetUniformLocation(current_shader.program_object,
+	                                              "rubyTexture");
+
+	for (const auto& [name, value] : params) {
+		const auto location = glGetUniformLocation(current_shader.program_object,
+		                                           name.c_str());
+
+		if (location == -1) {
+			LOG_WARNING("OPENGL: Error retrieving location of uniform '%s'",
+			            name.c_str());
+		} else {
+			uniforms.params[name] = location;
+		}
+	}
 }
 
-void OpenGlRenderer::UpdateUniforms() const
+void OpenGlRenderer::UpdateUniforms()
 {
-	if (uniform.texture_size > -1) {
-		glUniform2f(uniform.texture_size,
+	if (uniforms.texture_size > -1) {
+		glUniform2f(uniforms.texture_size,
 		            static_cast<GLfloat>(render_width_px),
 		            static_cast<GLfloat>(render_height_px));
 	}
 
-	if (uniform.input_size > -1) {
-		glUniform2f(uniform.input_size,
+	if (uniforms.input_size > -1) {
+		glUniform2f(uniforms.input_size,
 		            static_cast<GLfloat>(render_width_px),
 		            static_cast<GLfloat>(render_height_px));
 	}
 
-	if (uniform.output_size > -1) {
-		glUniform2f(uniform.output_size,
+	if (uniforms.output_size > -1) {
+		glUniform2f(uniforms.output_size,
 		            static_cast<GLfloat>(draw_rect_px.w),
 		            static_cast<GLfloat>(draw_rect_px.h));
 	}
 
-	if (uniform.frame_count > -1) {
-		glUniform1i(uniform.frame_count, frame_count);
+	if (uniforms.frame_count > -1) {
+		glUniform1i(uniforms.frame_count, frame_count);
 	}
 
-	if (uniform.input_texture > -1) {
-		glUniform1i(uniform.input_texture, 0);
+	if (uniforms.input_texture > -1) {
+		glUniform1i(uniforms.input_texture, 0);
+	}
+
+	for (const auto& [uniform_name, value] : current_shader_preset.params) {
+		if (auto it = uniforms.params.find(uniform_name);
+		    it != uniforms.params.end()) {
+
+			const auto& [_, location] = *it;
+
+			if (location > -1) {
+				glUniform1f(location, value);
+			}
+		} else {
+			LOG_WARNING("OPENGL: Unknown uniform name: '%s'",
+			            uniform_name.c_str());
+		}
 	}
 }
 
@@ -526,21 +554,22 @@ std::optional<GLuint> OpenGlRenderer::BuildShader(const GLenum type,
 //
 // Returns a ready to use OpenGL shader program on success.
 //
-std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& source)
+std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& shader_source)
 {
-	if (source.empty()) {
+	if (shader_source.empty()) {
 		LOG_ERR("OPENGL: No shader source present");
 		return {};
 	}
 
-	const auto maybe_vertex_shader = BuildShader(GL_VERTEX_SHADER, source);
+	const auto maybe_vertex_shader = BuildShader(GL_VERTEX_SHADER, shader_source);
 	if (!maybe_vertex_shader) {
 		LOG_ERR("OPENGL: Error compiling vertex shader");
 		return {};
 	}
 	const auto vertex_shader = *maybe_vertex_shader;
 
-	const auto maybe_fragment_shader = BuildShader(GL_FRAGMENT_SHADER, source);
+	const auto maybe_fragment_shader = BuildShader(GL_FRAGMENT_SHADER,
+	                                               shader_source);
 	if (!maybe_fragment_shader) {
 		LOG_ERR("OPENGL: Error compiling fragment shader");
 		glDeleteShader(vertex_shader);
@@ -636,33 +665,46 @@ std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& sour
 	return shader_program;
 }
 
-bool OpenGlRenderer::SetShader(const std::string& symbolic_shader_name)
+bool OpenGlRenderer::SetShader(const std::string& shader_descriptor)
+{
+	return SetShaderInternal(shader_descriptor);
+}
+
+bool OpenGlRenderer::SetShaderInternal(const std::string& shader_descriptor,
+                                       const bool force_reload)
 {
 	auto& shader_manager = ShaderManager::GetInstance();
 
-	const auto prev_actual_shader_name = shader_manager.GetCurrentShaderName();
+	const auto curr_descriptor = force_reload
+	                                   ? ShaderDescriptor{"", ""}
+	                                   : shader_manager.GetCurrentShaderDescriptor();
 
-	shader_manager.NotifyShaderNameChanged(
-	        shader_manager.MapShaderName(symbolic_shader_name));
+	shader_manager.NotifyShaderChanged(shader_descriptor, GlslExtension);
 
-	const auto new_actual_shader_name = shader_manager.GetCurrentShaderName();
+	const auto new_descriptor = shader_manager.GetCurrentShaderDescriptor();
 
-	if (prev_actual_shader_name == new_actual_shader_name) {
+	if (!MaybeSwitchShaderAndPreset(curr_descriptor, new_descriptor)) {
 		return false;
 	}
 
-	if (!SwitchShader(new_actual_shader_name)) {
-		return false;
-	}
-
-	return UpdateRenderSize(render_width_px, render_height_px);
+	current_shader_descriptor_string = shader_descriptor;
+	return true;
 }
 
 bool OpenGlRenderer::ForceReloadCurrentShader()
 {
+	assert(shader_cache.contains(current_shader.info.name));
+
+	const auto& shader = shader_cache[current_shader.info.name];
+	glDeleteProgram(shader.program_object);
+
 	shader_cache.erase(current_shader.info.name);
 
-	return SwitchShader(current_shader.info.name);
+	const auto descriptor = ShaderManager::GetInstance().GetCurrentShaderDescriptor();
+	shader_preset_cache.erase(descriptor.ToString());
+
+	constexpr auto ForceReload = true;
+	return SetShaderInternal(current_shader_descriptor_string, ForceReload);
 }
 
 bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
@@ -673,18 +715,35 @@ bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
 	assert(video_mode.width > 0 && video_mode.height > 0);
 
 	auto& shader_manager = ShaderManager::GetInstance();
-
-	const auto curr_shader_name = shader_manager.GetCurrentShaderName();
+	const auto curr_descriptor = shader_manager.GetCurrentShaderDescriptor();
 
 	shader_manager.NotifyRenderParametersChanged(canvas_size_px, video_mode);
 
-	const auto new_shader_name = shader_manager.GetCurrentShaderName();
+	const auto new_descriptor = shader_manager.GetCurrentShaderDescriptor();
 
-	if (new_shader_name == curr_shader_name) {
-		return false;
+	return MaybeSwitchShaderAndPreset(curr_descriptor, new_descriptor);
+}
+
+bool OpenGlRenderer::MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_descriptor,
+                                                const ShaderDescriptor& new_descriptor)
+{
+	const auto changed_shader = (curr_descriptor.shader_name !=
+	                             new_descriptor.shader_name);
+	if (changed_shader) {
+		if (!SwitchShader(new_descriptor.shader_name)) {
+			return false;
+		}
 	}
 
-	return SwitchShader(new_shader_name);
+	const auto& shader_info = shader_cache[new_descriptor.shader_name].info;
+
+	if (changed_shader ||
+	    (curr_descriptor.preset_name != new_descriptor.preset_name)) {
+
+		SwitchShaderPresetOrSetDefault(new_descriptor);
+	}
+
+	return UpdateRenderSize(render_width_px, render_height_px);
 }
 
 bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
@@ -697,30 +756,100 @@ bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
 	current_shader = *maybe_shader;
 
 	glUseProgram(current_shader.program_object);
-	GetUniformLocations();
+	GetUniformLocations(current_shader.info.default_preset.params);
 
 	return true;
+}
+
+void OpenGlRenderer::SwitchShaderPresetOrSetDefault(const ShaderDescriptor& descriptor)
+{
+	assert(!descriptor.shader_name.empty());
+
+	auto set_default_preset = [&]() {
+#ifdef DEBUG_OPENGL
+		LOG_DEBUG("OPENGL: Using default shader preset",
+		          descriptor.ToString().c_str());
+#endif
+		assert(shader_cache.contains(descriptor.shader_name));
+		auto& default_preset = shader_cache[descriptor.shader_name].info.default_preset;
+
+		current_shader_preset = default_preset;
+	};
+
+	if (descriptor.preset_name.empty()) {
+		set_default_preset();
+
+	} else {
+		const auto maybe_preset = GetOrLoadAndCacheShaderPreset(descriptor);
+
+		if (maybe_preset) {
+			current_shader_preset = *maybe_preset;
+		} else {
+			LOG_WARNING(
+			        "OPENGL: Error loading shader preset '%s'; "
+			        "using default preset",
+			        descriptor.ToString().c_str());
+
+			set_default_preset();
+		}
+	}
+}
+
+std::optional<ShaderPreset> OpenGlRenderer::GetOrLoadAndCacheShaderPreset(
+        const ShaderDescriptor& descriptor)
+{
+	assert(!descriptor.shader_name.empty());
+
+	assert(shader_cache.contains(descriptor.shader_name));
+	const auto& default_preset = shader_cache[descriptor.shader_name].info.default_preset;
+
+	const auto cache_key = descriptor.ToString();
+
+	if (!shader_preset_cache.contains(cache_key)) {
+		const auto maybe_preset = ShaderManager::GetInstance().LoadShaderPreset(
+		        descriptor, default_preset);
+
+		if (!maybe_preset) {
+			return {};
+		}
+
+		shader_preset_cache[cache_key] = *maybe_preset;
+
+#ifdef DEBUG_OPENGL
+		LOG_DEBUG("OPENGL: Loaded and cached shader preset '%s'",
+		          descriptor.ToString().c_str());
+#endif
+
+	} else {
+#ifdef DEBUG_OPENGL
+		LOG_DEBUG("OPENGL: Using cached shader preset '%s'",
+		          descriptor.ToString().c_str());
+#endif
+	}
+
+	return shader_preset_cache[cache_key];
 }
 
 std::optional<OpenGlRenderer::Shader> OpenGlRenderer::GetOrLoadAndCacheShader(
         const std::string& shader_name)
 {
 	if (!shader_cache.contains(shader_name)) {
-		const auto result = ShaderManager::GetInstance().LoadShader(shader_name);
-		if (!result) {
+		const auto maybe_result = ShaderManager::GetInstance().LoadShader(
+		        shader_name, GlslExtension);
+
+		if (!maybe_result) {
 			return {};
 		}
 
-		const auto [shader_info, source] = *result;
+		const auto& [shader_info, shader_source] = *maybe_result;
+		assert(shader_info.name == shader_name);
 
-		const auto maybe_shader_program = BuildShaderProgram(source);
-
+		const auto maybe_shader_program = BuildShaderProgram(shader_source);
 		if (!maybe_shader_program) {
 			return {};
 		}
-		assert(shader_info.name == shader_name);
 
-		shader_cache[shader_info.name] = {*maybe_shader_program, shader_info};
+		shader_cache[shader_info.name] = {shader_info, *maybe_shader_program};
 
 #ifdef DEBUG_OPENGL
 		LOG_DEBUG("OPENGL: Built and cached shader '%s'",
@@ -751,6 +880,16 @@ void OpenGlRenderer::SetVsync(const bool is_enabled)
 ShaderInfo OpenGlRenderer::GetCurrentShaderInfo()
 {
 	return current_shader.info;
+}
+
+ShaderPreset OpenGlRenderer::GetCurrentShaderPreset()
+{
+	return current_shader_preset;
+}
+
+std::string OpenGlRenderer::GetCurrentShaderDescriptorString()
+{
+	return current_shader_descriptor_string;
 }
 
 RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_px)
