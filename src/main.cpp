@@ -521,6 +521,9 @@ static void maybe_create_resource_directories()
 	const auto mt32_rom_dir = get_config_dir() / DefaultMt32RomsDir;
 	try_create_resource_dir(mt32_rom_dir);
 #endif
+
+	const auto soundcanvas_rom_dir = get_config_dir() / DefaultSoundCanvasRomsDir;
+	try_create_resource_dir(soundcanvas_rom_dir);
 }
 
 static void quit_func()
