@@ -1393,6 +1393,11 @@ static void notify_render_setting_updated(SectionProp& section,
 	} else if (prop_name == "glshader") {
 		if (set_shader(section.GetString("glshader"))) {
 			reinit_drawing();
+		} else {
+			set_section_property_value(
+			        "render",
+			        "glshader",
+			        GFX_GetRenderer()->GetCurrentSymbolicShaderName());
 		}
 
 	} else if (prop_name == "integer_scaling") {

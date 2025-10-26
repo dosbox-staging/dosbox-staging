@@ -312,6 +312,12 @@ ShaderInfo SdlRenderer::GetCurrentShaderInfo()
 	return {};
 }
 
+std::string SdlRenderer::GetCurrentSymbolicShaderName()
+{
+	// no shader support
+	return {};
+}
+
 void SdlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
 {
 	assert(curr_framebuf);
