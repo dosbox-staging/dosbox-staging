@@ -50,6 +50,8 @@ public:
 
 	ShaderInfo GetCurrentShaderInfo() override;
 
+	std::string GetCurrentSymbolicShaderName() override;
+
 	void StartFrame(uint8_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
 
@@ -72,6 +74,7 @@ private:
 	struct Shader {
 		GLuint program_object = 0;
 		ShaderInfo info       = {};
+		std::string symbolic_name = {};
 	};
 
 	SDL_Window* CreateSdlWindow(const int x, const int y, const int width,
@@ -80,7 +83,8 @@ private:
 
 	bool InitRenderer();
 
-	bool SwitchShader(const std::string& mapped_name);
+	bool SwitchShader(const std::string& symbolic_name,
+	                  const std::string& mapped_name);
 
 	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& mapped_name);
 

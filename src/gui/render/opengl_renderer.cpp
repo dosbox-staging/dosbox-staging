@@ -634,7 +634,7 @@ bool OpenGlRenderer::SetShader(const std::string& symbolic_shader_name)
 		return false;
 	}
 
-	if (!SwitchShader(new_mapped_shader_name)) {
+	if (!SwitchShader(symbolic_shader_name, new_mapped_shader_name)) {
 		return false;
 	}
 
@@ -645,7 +645,7 @@ bool OpenGlRenderer::ForceReloadCurrentShader()
 {
 	shader_cache.erase(current_shader.info.name);
 
-	return SwitchShader(current_shader.info.name);
+	return SwitchShader(current_shader.symbolic_name, current_shader.info.name);
 }
 
 bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
@@ -667,10 +667,11 @@ bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
 		return false;
 	}
 
-	return SwitchShader(new_shader_name);
+	return SwitchShader(current_shader.symbolic_name, new_shader_name);
 }
 
-bool OpenGlRenderer::SwitchShader(const std::string& _mapped_name)
+bool OpenGlRenderer::SwitchShader(const std::string& symbolic_name,
+                                  const std::string& _mapped_name)
 {
 	const auto mapped_name = [&] {
 		// Add the .glsl extension if it wasn't provided
@@ -687,6 +688,7 @@ bool OpenGlRenderer::SwitchShader(const std::string& _mapped_name)
 	}
 
 	current_shader = *maybe_shader;
+	current_shader.symbolic_name = symbolic_name;
 
 	glUseProgram(current_shader.program_object);
 	GetUniformLocations();
@@ -743,6 +745,11 @@ void OpenGlRenderer::SetVsync(const bool is_enabled)
 ShaderInfo OpenGlRenderer::GetCurrentShaderInfo()
 {
 	return current_shader.info;
+}
+
+std::string OpenGlRenderer::GetCurrentSymbolicShaderName()
+{
+	return current_shader.symbolic_name;
 }
 
 RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_px)
