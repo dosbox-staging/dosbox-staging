@@ -106,20 +106,20 @@ struct ShaderSettings {
 	TextureFilterMode texture_filter_mode = TextureFilterMode::Bilinear;
 };
 
+struct ShaderPreset {
+	ShaderSettings settings = {};
+
+	std::unordered_map<std::string, float> parameters = {};
+};
+
 struct ShaderInfo {
 	// The mapped shader name without the file extension. The name might
 	// optionally contain a relative or absolute directory path.
 	std::string name = {};
 
-	ShaderSettings settings = {};
+	ShaderSettings default_preset = {};
 
 	bool is_adaptive = false;
-};
-
-struct ShaderPreset {
-	ShaderSettings settings = {};
-
-	std::unordered_map<std::string, float> parameters = {};
 };
 
 // Shader manager for loading shader sources, parsing shader metadata, and

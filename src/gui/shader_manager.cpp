@@ -151,7 +151,7 @@ std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
 		}
 	}();
 
-	const ShaderInfo shader_info = {mapped_name, default_preset.settings, is_adaptive};
+	const ShaderInfo shader_info = {mapped_name, default_preset, is_adaptive};
 
 	return std::pair{shader_info, source};
 }
