@@ -137,7 +137,11 @@ private:
 	// Keys are the mapped shader names
 	std::unordered_map<std::string, Shader> shader_cache = {};
 
-	Shader current_shader = {};
+	// Keys are the mapped shader names
+	std::unordered_map<std::string, ShaderPreset> shader_preset_cache = {};
+
+	Shader current_shader              = {};
+	ShaderPreset current_shader_preset = {}
 };
 
 #endif // C_OPENGL

@@ -621,6 +621,7 @@ bool OpenGlRenderer::SetShader(const std::string& symbolic_shader_name)
 	auto& shader_manager = ShaderManager::GetInstance();
 
 	const auto prev_mapped_shader_name = shader_manager.GetCurrentMappedShaderName();
+	const auto prev_preset_name = shader_manager.GetCurrentPresetName();
 
 	shader_manager.NotifyShaderNameChanged(
 	        shader_manager.MapShaderName(symbolic_shader_name, GlslExtension));
@@ -628,13 +629,18 @@ bool OpenGlRenderer::SetShader(const std::string& symbolic_shader_name)
 	// The mapped actual shader name might or might not have the ".glsl"
 	// extension.
 	const auto new_mapped_shader_name = shader_manager.GetCurrentMappedShaderName();
+	const auto new_preset_name = shader_manager.GetCurrentPresetName();
 
-	if (prev_mapped_shader_name == new_mapped_shader_name) {
-		return false;
+	if (prev_mapped_shader_name != new_mapped_shader_name) {
+		if (!SwitchShader(symbolic_shader_name, new_mapped_shader_name)) {
+			return false;
+		}
 	}
 
-	if (!SwitchShader(symbolic_shader_name, new_mapped_shader_name)) {
-		return false;
+	if (prev_preset_name != new_preset_name) {
+		if (!SwitchShaderPreset(new_mapped_shader_name, new_preset_name)) {
+			return false;
+		}
 	}
 
 	return UpdateRenderSize(render_width_px, render_height_px);
@@ -693,6 +699,21 @@ bool OpenGlRenderer::SwitchShader(const std::string& symbolic_name,
 	GetUniformLocations();
 
 	return true;
+}
+
+bool OpenGlRenderer::SwitchShaderPreset(const std::string& mapped_shader_name,
+                                        const std::string& preset_name)
+{
+	const auto maybe_preset = GetOrLoadAndShaderPreset(mapped_shader_name, preset_name);
+	if (!maybe_preset) {
+		return false;
+	}
+
+	current_shader = *maybe_preset;
+	current_shader.symbolic_name = symbolic_name;
+
+	glUseProgram(current_shader.program_object);
+	GetUniformLocations();
 }
 
 std::optional<OpenGlRenderer::Shader> OpenGlRenderer::GetOrLoadAndCacheShader(

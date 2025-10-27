@@ -169,13 +169,12 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 	inventory.emplace_back("");
 
 	const std::string file_prefix = "        ";
-	std::error_code ec            = {};
+
+	std::error_code ec = {};
 
 	constexpr auto OnlyRegularFiles = true;
 
 	for (const auto& parent : get_resource_parent_paths()) {
-		const auto dir = parent / GlShadersDir;
-
 		// TODO Handling the optional extensions should be probably
 		// handled by the render backend once we add more backends with
 		// shader support.
@@ -322,14 +321,16 @@ std::optional<std::string> ShaderManager::FindShaderAndReadSource(const std::str
 }
 
 ShaderPreset ShaderManager::ParseDefaultShaderPreset(const std::string& mapped_name,
-                                                     const std::string& source) const
+                                                     const std::string& shader_source) const
 {
 	ShaderPreset preset = {};
 
 	try {
 		const std::regex re("\\s*#pragma\\s+(.+)");
 
-		std::sregex_iterator next(source.begin(), source.end(), re);
+		std::sregex_iterator next(shader_source.begin(),
+		                          shader_source.end(),
+		                          re);
 		const std::sregex_iterator end;
 
 		while (next != end) {
@@ -337,22 +338,7 @@ ShaderPreset ShaderManager::ParseDefaultShaderPreset(const std::string& mapped_n
 
 			auto pragma = match[1].str();
 
-			if (pragma == "use_srgb_texture") {
-				preset.settings.use_srgb_texture = true;
-
-			} else if (pragma == "use_srgb_framebuffer") {
-				preset.settings.use_srgb_framebuffer = true;
-
-			} else if (pragma == "force_single_scan") {
-				preset.settings.force_single_scan = true;
-
-			} else if (pragma == "force_no_pixel_doubling") {
-				preset.settings.force_no_pixel_doubling = true;
-
-			} else if (pragma == "use_nearest_texture_filter") {
-				preset.settings.texture_filter_mode = TextureFilterMode::NearestNeighbour;
-
-			} else if (pragma.starts_with("parameter")) {
+			if (pragma.starts_with("parameter")) {
 				if (const auto maybe_result = ParseParameterPragma(pragma);
 				    maybe_result) {
 
@@ -361,9 +347,11 @@ ShaderPreset ShaderManager::ParseDefaultShaderPreset(const std::string& mapped_n
 
 					preset.parameters[param_name] = default_value;
 				} else {
-					LOG_ERR("RENDER: Invalid shader pragma: '%s'",
+					LOG_ERR("RENDER: Invalid shader parameter: '%s'",
 					        pragma.c_str());
 				}
+			} else {
+				SetShaderSetting(pragma, "on", preset.settings);
 			}
 
 			++next;
@@ -377,9 +365,40 @@ ShaderPreset ShaderManager::ParseDefaultShaderPreset(const std::string& mapped_n
 	return preset;
 }
 
+void ShaderManager::SetShaderSetting(const std::string& name, const std::string& value,
+                                     ShaderSettings& settings) const
+{
+	assert(!name.empty());
+
+	const auto is_true = (value == "1") || has_true(value);
+
+	if (name == "use_srgb_texture") {
+		settings.use_srgb_texture = is_true;
+
+	} else if (name == "use_srgb_framebuffer") {
+		settings.use_srgb_framebuffer = is_true;
+
+	} else if (name == "force_single_scan") {
+		settings.force_single_scan = is_true;
+
+	} else if (name == "force_no_pixel_doubling") {
+		settings.force_no_pixel_doubling = is_true;
+
+	} else if (name == "use_nearest_texture_filter") {
+		settings.texture_filter_mode = is_true ? TextureFilterMode::NearestNeighbour
+		                                       : TextureFilterMode::Bilinear;
+
+	} else {
+		LOG_WARNING("RENDER: Unknown shader setting pragma: '%s'", name.c_str());
+	}
+}
+
+
 std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma(
         const std::string& pragma) const
 {
+	assert(!pragma.empty());
+
 	// Parameter format example:
 	//
 	//   #pragma parameter OUTPUT_GAMMA "OUTPUT GAMMA" 2.2 0.0 5.0 0.1
@@ -390,7 +409,7 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
 	}
 	// parts[0] - param (variable) name (OUTPUT_GAMMA)
 	// parts[1] - display name (OUTPUT GAMMA)
-	// parts[2] - values (space separated)
+	// parts[2] - values (4 space-separated floats)
 
 	auto param_name = parts[0];
 	trim(param_name);
@@ -412,24 +431,71 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
 	return {{param_name, *maybe_default_val}};
 }
 
-std::optional<ShaderPreset> ShaderManager::ReadShaderPreset(const std::string& preset_name)
+std::optional<ShaderPreset> ShaderManager::ReadShaderPreset(
+        const std::string& shader_name, const std::string& preset_name,
+        const ShaderPreset& default_preset) const
 {
+	assert(!shader_name.empty());
+	assert(!preset_name.empty());
+
+	const auto path = get_resource_path(ShaderPresetsDir,
+	                                    std::path{shader_name} / preset_name);
+
+	// TODO get_resource_path() should return optional
+	if (path.empty()) {
+		return {};
+	}
+
+	const auto file_exists = std_fs::exists(path) &&
+	                         (std_fs::is_regular_file(path) ||
+	                          std_fs::is_symlink(path));
+	if (!file_exists) {
+		return {};
+	}
+
 	CSimpleIniA ini;
 	ini.SetUnicode();
 
-	const auto result = ini.LoadFile("example.ini");
+	const auto result = ini.LoadFile(path.string().c_str());
 	if (result < 0) {
 		return {};
 	}
 
-	const auto section = ini.GetSection("settings");
-	if (section) {
-		for (auto it = section->begin(); it != section->end(); ++it) {
-			const auto [key, val] = *it;
+	ShaderPreset preset = default_preset;
+
+	const auto settings = ini.GetSection("settings");
+	if (settings) {
+		for (auto it = settings->begin(); it != settings->end(); ++it) {
+			const auto [name, value] = *it;
+			SetShaderSetting(name, value, preset);
 		}
 	}
 
-	return {};
+	const auto parameters = ini.GetSection("parameters");
+	if (parameters) {
+		for (auto it = parameters->begin(); it != parameters->end(); ++it) {
+			const auto [name, value_str] = *it;
+			SetShaderSetting(name, value, preset);
+
+			if (!default_preset.parameters.contains(name)) {
+				LOG_WARNING("RENDER: Invalid shader parameter name: '%s'",
+				            name.c_str());
+			} else {
+				const auto value = parse_float(value_str);
+				if (!value) {
+					LOG_WARNING(
+					        "RENDER: Invalid value for shader parameter '%s' "
+					        "(must be float): '%s'",
+					        name.c_str(),
+					        value_str.c_str());
+				} else {
+					shader.parameters[name] = value;
+				}
+			}
+		}
+	}
+
+	return preset;
 }
 
 void ShaderManager::MaybeAutoSwitchShader()
