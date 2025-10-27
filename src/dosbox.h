@@ -172,7 +172,7 @@ constexpr auto DefaultSoundfontsDir = "soundfonts";
 constexpr auto DiskNoiseDir         = "disknoises";
 constexpr auto GlShadersDir         = "glshaders";
 constexpr auto PluginsDir           = "plugins";
-constexpr auto ShaderPresets        = "shader-presets";
+constexpr auto ShaderPresetsDir     = "shader-presets";
 
 constexpr auto MicrosInMillisecond = 1000;
 constexpr auto BytesPerKilobyte    = 1024;

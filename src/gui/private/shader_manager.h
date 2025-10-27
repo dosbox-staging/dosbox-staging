@@ -117,8 +117,9 @@ struct ShaderInfo {
 };
 
 struct ShaderPreset {
-	ShaderSettings settings                            = {};
-	std::unordered_map<std::string, double> parameters = {};
+	ShaderSettings settings = {};
+
+	std::unordered_map<std::string, float> parameters = {};
 };
 
 // Shader manager for loading shader sources, parsing shader metadata, and
@@ -175,12 +176,17 @@ private:
 	std::optional<std::string> FindShaderAndReadSource(const std::string& mapped_name);
 
 	ShaderPreset ParseDefaultShaderPreset(const std::string& mapped_name,
-	                                      const std::string& source) const;
+	                                      const std::string& shader_source) const;
+
+	std::optional<ShaderPreset> ReadShaderPreset(
+	        const std::string& mapped_name, const std::string& preset_name,
+	        const ShaderPreset& default_preset) const;
+
+	void SetShaderSetting(const std::string& name, const std::string& value,
+	                      ShaderSettings& settings) const;
 
 	std::optional<std::pair<std::string, float>> ParseParameterPragma(
-	        const std::string& pragma) const;
-
-	std::optional<ShaderPreset> ReadShaderPreset(const std::string& preset_name);
+	        const std::string& pragma_value) const;
 
 	void MaybeAutoSwitchShader();
 
