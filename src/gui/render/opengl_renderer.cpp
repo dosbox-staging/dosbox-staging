@@ -372,7 +372,6 @@ void OpenGlRenderer::PresentFrame()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	frame_count++;
 	UpdateUniforms();
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
