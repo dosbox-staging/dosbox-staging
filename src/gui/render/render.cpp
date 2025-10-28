@@ -527,8 +527,8 @@ static void set_scan_and_pixel_doubling()
 	case RenderBackendType::OpenGl: {
 		const auto shader_info = GFX_GetRenderer()->GetCurrentShaderInfo();
 
-		force_vga_single_scan = shader_info.settings.force_single_scan;
-		force_no_pixel_doubling = shader_info.settings.force_no_pixel_doubling;
+		force_vga_single_scan = shader_info.default_preset.settings.force_single_scan;
+		force_no_pixel_doubling = shader_info.default_preset.settings.force_no_pixel_doubling;
 	} break;
 
 	default: assertm(false, "Invalid RenderindBackend value");

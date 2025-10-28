@@ -88,7 +88,15 @@ private:
 
 	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& mapped_name);
 
-	void GetUniformLocations();
+	bool SwitchShaderPreset(const std::string& mapped_shader_name,
+											const std::string& preset_name,
+											const ShaderPreset& default_preset);
+
+	std::optional<Shader> GetOrLoadAndShaderPreset(
+	        const std::string& mapped_shader_name,
+	        const std::string& preset_name, const ShaderPreset& default_preset);
+
+	void GetUniformLocations(const ShaderParameters& params);
 	void UpdateUniforms() const;
 
 	std::optional<GLuint> BuildShaderProgram(const std::string& source);
@@ -127,6 +135,8 @@ private:
 		GLint input_size   = 0;
 		GLint output_size  = 0;
 		GLint frame_count  = 0;
+
+		std::unordered_map<std::string, GLint> params = {};
 	} uniform = {};
 
 	GLuint frame_count = 0;
@@ -141,7 +151,7 @@ private:
 	std::unordered_map<std::string, ShaderPreset> shader_preset_cache = {};
 
 	Shader current_shader              = {};
-	ShaderPreset current_shader_preset = {}
+	ShaderPreset current_shader_preset = {};
 };
 
 #endif // C_OPENGL

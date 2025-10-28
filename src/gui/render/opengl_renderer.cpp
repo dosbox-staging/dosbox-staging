@@ -256,7 +256,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	const auto& shader_settings = current_shader.info.settings;
+	const auto& shader_settings = current_shader_preset.settings;
 
 	const int filter_param = [&] {
 		switch (shader_settings.texture_filter_mode) {
@@ -388,7 +388,7 @@ void OpenGlRenderer::PresentFrame()
 	SDL_GL_SwapWindow(window);
 }
 
-void OpenGlRenderer::GetUniformLocations()
+void OpenGlRenderer::GetUniformLocations(const ShaderParameters& params)
 {
 	// Get uniform locations
 	uniform.texture_size = glGetUniformLocation(current_shader.program_object,
@@ -402,6 +402,17 @@ void OpenGlRenderer::GetUniformLocations()
 
 	uniform.frame_count = glGetUniformLocation(current_shader.program_object,
 	                                           "rubyFrameCount");
+
+	for (const auto& [name, value] : params) {
+		const auto location = glGetUniformLocation(current_shader.program_object,
+		                                           name.c_str());
+
+		if (location == -1) {
+			LOG_WARNING("OPENGL: Error retrieving location of uniform '%s'", name.c_str());
+		} else {
+			uniform.params[name] = location;
+		}
+	}
 }
 
 void OpenGlRenderer::UpdateUniforms() const
@@ -419,6 +430,16 @@ void OpenGlRenderer::UpdateUniforms() const
 	            static_cast<GLfloat>(draw_rect_px.h));
 
 	glUniform1i(uniform.frame_count, frame_count);
+
+	for (const auto& [uniform_name, value] : current_shader_preset.params) {
+		if (uniform.params.contains(uniform_name)) {
+			const auto location = uniform.params[uniform_name];
+			glUniform1f(location, value);
+		} else {
+			LOG_WARNING("OPENGL: Unknown uniform name: '%s'",
+			            uniform_name.c_str());
+		}
+	}
 }
 
 std::optional<GLuint> OpenGlRenderer::BuildShader(const GLenum type,
@@ -612,7 +633,7 @@ std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& sour
 	return shader_program;
 }
 
-bool OpenGlRenderer::SetShader(const std::string& symbolic_shader_name)
+bool OpenGlRenderer::SetShader(const std::string& shader_name)
 {
 	// Symbolic shader names never contain the ".glsl" extension (e.g.,
 	// `crt-auto`, or `sharp`). But the user might have provided a shader
@@ -623,8 +644,7 @@ bool OpenGlRenderer::SetShader(const std::string& symbolic_shader_name)
 	const auto prev_mapped_shader_name = shader_manager.GetCurrentMappedShaderName();
 	const auto prev_preset_name = shader_manager.GetCurrentPresetName();
 
-	shader_manager.NotifyShaderNameChanged(
-	        shader_manager.MapShaderName(symbolic_shader_name, GlslExtension));
+	shader_manager.NotifyShaderNameChanged(shader_name, GlslExtension);
 
 	// The mapped actual shader name might or might not have the ".glsl"
 	// extension.
@@ -632,7 +652,8 @@ bool OpenGlRenderer::SetShader(const std::string& symbolic_shader_name)
 	const auto new_preset_name = shader_manager.GetCurrentPresetName();
 
 	if (prev_mapped_shader_name != new_mapped_shader_name) {
-		if (!SwitchShader(symbolic_shader_name, new_mapped_shader_name)) {
+		if (!SwitchShader(shader_manager.GetCurrentSymbolicShaderName(),
+		                  new_mapped_shader_name)) {
 			return false;
 		}
 	}
@@ -662,15 +683,20 @@ bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
 
 	auto& shader_manager = ShaderManager::GetInstance();
 
-	const auto curr_shader_name = shader_manager.GetCurrentMappedShaderName();
+	const auto prev_mapped_shader_name = shader_manager.GetCurrentMappedShaderName();
+	const auto prev_preset_name = shader_manager.GetCurrentPresetName();
 
 	shader_manager.NotifyRenderParametersChanged(canvas_size_px, video_mode);
 
-	const auto new_shader_name = shader_manager.GetCurrentMappedShaderName();
+	const auto new_mapped_shader_name = shader_manager.GetCurrentMappedShaderName();
+	const auto new_preset_name = shader_manager.GetCurrentPresetName();
 
-	if (new_shader_name == curr_shader_name) {
-		return false;
-	}
+	// TODO
+//	if (prev_mapped_shader_name != new_mapped_shader_name) {
+//		if (!SwitchShader(symbolic_shader_name, new_mapped_shader_name)) {
+//			return false;
+//		}
+//	}
 
 	return SwitchShader(current_shader.symbolic_name, new_shader_name);
 }
@@ -696,24 +722,55 @@ bool OpenGlRenderer::SwitchShader(const std::string& symbolic_name,
 	current_shader.symbolic_name = symbolic_name;
 
 	glUseProgram(current_shader.program_object);
-	GetUniformLocations();
+	GetUniformLocations(current_shader.info.params);
 
 	return true;
 }
 
 bool OpenGlRenderer::SwitchShaderPreset(const std::string& mapped_shader_name,
-                                        const std::string& preset_name)
+                                        const std::string& preset_name,
+										const ShaderPreset& default_preset)
 {
-	const auto maybe_preset = GetOrLoadAndShaderPreset(mapped_shader_name, preset_name);
+	const auto maybe_preset = GetOrLoadAndShaderPreset(mapped_shader_name,
+	                                                   preset_name,
+	                                                   default_preset);
 	if (!maybe_preset) {
 		return false;
 	}
 
-	current_shader = *maybe_preset;
-	current_shader.symbolic_name = symbolic_name;
+	current_shader_preset = *maybe_preset;
+}
 
-	glUseProgram(current_shader.program_object);
-	GetUniformLocations();
+std::optional<OpenGlRenderer::Shader> OpenGlRenderer::GetOrLoadAndShaderPreset(
+        const std::string& mapped_shader_name, const std::string& preset_name,
+        const ShaderPreset& default_preset)
+{
+	const auto cache_key = format_str("%s:%s", mapped_shader_name, preset_name);
+
+	if (!shader_preset_cache.contains(cache_key)) {
+
+		const auto maybe_preset = ShaderManager::GetInstance().LoadShaderPreset(
+		        mapped_shader_name, preset_name, default_preset);
+
+		if (!maybe_preset) {
+			return {};
+		}
+
+		shader_cache[cache_key] = *maybe_preset;
+
+#ifdef DEBUG_OPENGL
+		LOG_DEBUG("OPENGL: Loaded and cached shader preset '%s'",
+		          preset_name.c_str());
+#endif
+
+	} else {
+#ifdef DEBUG_OPENGL
+		LOG_DEBUG("OPENGL: Using cached shader preset '%s'",
+		          preset_name.c_str());
+#endif
+	}
+
+	return shader_cache[key];
 }
 
 std::optional<OpenGlRenderer::Shader> OpenGlRenderer::GetOrLoadAndCacheShader(

@@ -26,8 +26,8 @@ constexpr auto AutoArcadeSharp      = "crt-auto-arcade-sharp";
 
 namespace MappedShaderName {
 
-constexpr auto Bilinear = "interpolation/bilinear";
-constexpr auto Sharp    = "interpolation/sharp";
+constexpr auto CrtHyllian = "crt/crt-hyllian";
+constexpr auto Sharp      = "interpolation/sharp";
 } // namespace MappedShaderName
 
 enum class ShaderMode {
@@ -106,10 +106,11 @@ struct ShaderSettings {
 	TextureFilterMode texture_filter_mode = TextureFilterMode::Bilinear;
 };
 
+using ShaderParameters = std::unordered_map<std::string, float>;
+
 struct ShaderPreset {
 	ShaderSettings settings = {};
-
-	std::unordered_map<std::string, float> parameters = {};
+	ShaderParameters params = {};
 };
 
 struct ShaderInfo {
@@ -117,7 +118,7 @@ struct ShaderInfo {
 	// optionally contain a relative or absolute directory path.
 	std::string name = {};
 
-	ShaderSettings default_preset = {};
+	ShaderPreset default_preset = {};
 
 	bool is_adaptive = false;
 };
@@ -151,18 +152,21 @@ public:
 	// per line).
 	std::deque<std::string> GenerateShaderInventoryMessage() const;
 
-	std::string MapShaderName(const std::string& symbolic_name,
-	                          const std::string& file_extension) const;
-
 	std::optional<std::pair<ShaderInfo, std::string>> LoadShader(
 	        const std::string& mapped_name);
 
-	void NotifyShaderNameChanged(const std::string& symbolic_name);
+	std::optional<ShaderPreset> LoadShaderPreset(
+	        const std::string& mapped_name, const std::string& preset_name,
+	        const ShaderPreset& default_preset) const;
+
+	void NotifyShaderNameChanged(const std::string& shader_name);
 
 	void NotifyRenderParametersChanged(const DosBox::Rect canvas_size_px,
 	                                   const VideoMode& video_mode);
 
 	std::string GetCurrentMappedShaderName() const;
+
+	std::string GetCurrentPresetName() const;
 
 private:
 	ShaderManager()  = default;
@@ -173,14 +177,16 @@ private:
 	// prevent assignment
 	ShaderManager& operator=(const ShaderManager&) = delete;
 
+	std::pair<std::string, std::string> ShaderManager::SplitShaderName(
+			const std::string& shader_name) const;
+
+	std::string MapShaderName(const std::string& symbolic_name,
+	                          const std::string& file_extension) const;
+
 	std::optional<std::string> FindShaderAndReadSource(const std::string& mapped_name);
 
 	ShaderPreset ParseDefaultShaderPreset(const std::string& mapped_name,
 	                                      const std::string& shader_source) const;
-
-	std::optional<ShaderPreset> ReadShaderPreset(
-	        const std::string& mapped_name, const std::string& preset_name,
-	        const ShaderPreset& default_preset) const;
 
 	void SetShaderSetting(const std::string& name, const std::string& value,
 	                      ShaderSettings& settings) const;
@@ -190,20 +196,26 @@ private:
 
 	void MaybeAutoSwitchShader();
 
-	std::string FindShaderAutoGraphicsStandard() const;
-	std::string FindShaderAutoMachine() const;
-	std::string FindShaderAutoArcade() const;
-	std::string FindShaderAutoArcadeSharp() const;
+	struct ShaderAndPreset {
+		std::string mapped_name   = {};
+		std::string preset_name   = {};
+	}
 
-	std::string GetHerculesShader() const;
-	std::string GetCgaShader() const;
-	std::string GetCompositeShader() const;
-	std::string GetEgaShader() const;
-	std::string GetVgaShader() const;
+	ShaderAndPreset FindShaderAutoGraphicsStandard() const;
+	ShaderAndPreset FindShaderAutoMachine() const;
+	ShaderAndPreset FindShaderAutoArcade() const;
+	ShaderAndPreset FindShaderAutoArcadeSharp() const;
+
+	ShaderAndPreset GetHerculesShader() const;
+	ShaderAndPreset GetCgaShader() const;
+	ShaderAndPreset GetCompositeShader() const;
+	ShaderAndPreset GetEgaShader() const;
+	ShaderAndPreset GetVgaShader() const;
 
 	struct {
 		std::string symbolic_name = {};
 		std::string mapped_name   = {};
+		std::string preset_name   = {};
 
 		ShaderMode mode = ShaderMode::Single;
 	} current_shader = {};

@@ -25,8 +25,14 @@
 
 CHECK_NARROWING();
 
-void ShaderManager::NotifyShaderNameChanged(const std::string& symbolic_name)
+void ShaderManager::NotifyShaderNameChanged(const std::string& _shader_name)
 {
+	const auto [shader_name, preset_name] = SplitShaderName(_shader_name);
+
+	// TODO
+	constexpr auto GlslExtension = ".glsl";
+	const auto symbolic_name = MapShaderName(symbolic_name, GlslExtension);
+
 	if (symbolic_name == SymbolicShaderName::AutoGraphicsStandard) {
 		if (current_shader.mode != ShaderMode::AutoGraphicsStandard) {
 			current_shader.mode = ShaderMode::AutoGraphicsStandard;
@@ -59,6 +65,7 @@ void ShaderManager::NotifyShaderNameChanged(const std::string& symbolic_name)
 	}
 
 	current_shader.symbolic_name = symbolic_name;
+	current_shader.preset_name   = preset_name;
 
 	MaybeAutoSwitchShader();
 }
@@ -156,6 +163,74 @@ std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
 	return std::pair{shader_info, source};
 }
 
+std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
+        const std::string& mapped_shader_name, const std::string& preset_name,
+        const ShaderPreset& default_preset) const
+{
+	assert(!mapped_shader_name.empty());
+	assert(!preset_name.empty());
+
+	const auto path = get_resource_path(ShaderPresetsDir,
+	                                    std_fs::path{mapped_shader_name} /
+	                                            preset_name);
+
+	// TODO get_resource_path() should return optional
+	if (path.empty()) {
+		return {};
+	}
+
+	const auto file_exists = std_fs::exists(path) &&
+	                         (std_fs::is_regular_file(path) ||
+	                          std_fs::is_symlink(path));
+	if (!file_exists) {
+		return {};
+	}
+
+	CSimpleIniA ini;
+	ini.SetUnicode();
+
+	const auto result = ini.LoadFile(path.string().c_str());
+	if (result < 0) {
+		return {};
+	}
+
+	ShaderPreset preset = default_preset;
+
+	const auto settings = ini.GetSection("settings");
+	if (settings) {
+		for (auto it = settings->begin(); it != settings->end(); ++it) {
+			const auto [name, value] = *it;
+			SetShaderSetting(name.pItem, value, preset.settings);
+		}
+	}
+
+	const auto params = ini.GetSection("parameters");
+	if (params) {
+		for (const auto& [key, value_str] : params) {
+			const auto name = key.pItem;
+			SetShaderSetting(name, value_str, preset.settings);
+
+			if (!default_preset.params.contains(name)) {
+				LOG_WARNING("RENDER: Invalid shader parameter name: '%s'",
+				            name);
+			} else {
+				const auto value = parse_float(value_str);
+				if (!value) {
+					LOG_WARNING(
+					        "RENDER: Invalid value for shader parameter '%s' "
+					        "(must be float): '%s'",
+					        name,
+					        value_str.c_str());
+				} else {
+					shader.params[name] = value;
+				}
+			}
+		}
+	}
+
+	return preset;
+}
+
 std::string ShaderManager::GetCurrentMappedShaderName() const
 {
 	return current_shader.mapped_name;
@@ -229,6 +304,20 @@ void ShaderManager::AddMessages()
 	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_LIST", "Path '%s' has:");
 }
 
+std::pair<std::string, std::string> ShaderManager::SplitShaderName(
+        const std::string& shader_name) const
+{
+	const auto parts = split(shader_name, ":");
+
+	const auto shader_name  = parts[0];
+	std::string preset_name = "";
+
+	if (parts.size() > 1) {
+		preset_name = parts[1];
+	}
+	return {shader_name, preset_name};
+}
+
 std::string ShaderManager::MapShaderName(const std::string& symbolic_name,
                                          const std::string& file_extension) const
 {
@@ -243,7 +332,7 @@ std::string ShaderManager::MapShaderName(const std::string& symbolic_name,
 		return MappedShaderName::Sharp;
 
 	} else if (symbolic_name == "bilinear" || symbolic_name == "none") {
-		return MappedShaderName::Bilinear;
+		return "interpolation/bilinear";
 
 	} else if (symbolic_name == "nearest") {
 		return "interpolation/nearest";
@@ -345,7 +434,7 @@ ShaderPreset ShaderManager::ParseDefaultShaderPreset(const std::string& mapped_n
 					const auto [param_name,
 					            default_value] = *maybe_result;
 
-					preset.parameters[param_name] = default_value;
+					preset.params[param_name] = default_value;
 				} else {
 					LOG_ERR("RENDER: Invalid shader parameter: '%s'",
 					        pragma.c_str());
@@ -389,10 +478,10 @@ void ShaderManager::SetShaderSetting(const std::string& name, const std::string&
 		                                       : TextureFilterMode::Bilinear;
 
 	} else {
-		LOG_WARNING("RENDER: Unknown shader setting pragma: '%s'", name.c_str());
+		LOG_WARNING("RENDER: Unknown shader setting pragma: '%s'",
+		            name.c_str());
 	}
 }
-
 
 std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma(
         const std::string& pragma) const
@@ -422,7 +511,7 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
 	// params[1] - min value     (0.0)
 	// params[2] - max value     (5.0)
 	// params[3] - value step    (0.1)
-	
+
 	const auto maybe_default_val = parse_float(params[1].c_str());
 	if (!maybe_default_val) {
 		return {};
@@ -431,78 +520,12 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
 	return {{param_name, *maybe_default_val}};
 }
 
-std::optional<ShaderPreset> ShaderManager::ReadShaderPreset(
-        const std::string& shader_name, const std::string& preset_name,
-        const ShaderPreset& default_preset) const
-{
-	assert(!shader_name.empty());
-	assert(!preset_name.empty());
-
-	const auto path = get_resource_path(ShaderPresetsDir,
-	                                    std::path{shader_name} / preset_name);
-
-	// TODO get_resource_path() should return optional
-	if (path.empty()) {
-		return {};
-	}
-
-	const auto file_exists = std_fs::exists(path) &&
-	                         (std_fs::is_regular_file(path) ||
-	                          std_fs::is_symlink(path));
-	if (!file_exists) {
-		return {};
-	}
-
-	CSimpleIniA ini;
-	ini.SetUnicode();
-
-	const auto result = ini.LoadFile(path.string().c_str());
-	if (result < 0) {
-		return {};
-	}
-
-	ShaderPreset preset = default_preset;
-
-	const auto settings = ini.GetSection("settings");
-	if (settings) {
-		for (auto it = settings->begin(); it != settings->end(); ++it) {
-			const auto [name, value] = *it;
-			SetShaderSetting(name, value, preset);
-		}
-	}
-
-	const auto parameters = ini.GetSection("parameters");
-	if (parameters) {
-		for (auto it = parameters->begin(); it != parameters->end(); ++it) {
-			const auto [name, value_str] = *it;
-			SetShaderSetting(name, value, preset);
-
-			if (!default_preset.parameters.contains(name)) {
-				LOG_WARNING("RENDER: Invalid shader parameter name: '%s'",
-				            name.c_str());
-			} else {
-				const auto value = parse_float(value_str);
-				if (!value) {
-					LOG_WARNING(
-					        "RENDER: Invalid value for shader parameter '%s' "
-					        "(must be float): '%s'",
-					        name.c_str(),
-					        value_str.c_str());
-				} else {
-					shader.parameters[name] = value;
-				}
-			}
-		}
-	}
-
-	return preset;
-}
-
 void ShaderManager::MaybeAutoSwitchShader()
 {
-	const auto mapped_name = [&] {
+	const auto new_shader = [&] {
 		switch (current_shader.mode) {
-		case ShaderMode::Single: return current_shader.symbolic_name;
+		case ShaderMode::Single:
+			return {current_shader.symbolic_name, ""};
 
 		case ShaderMode::AutoGraphicsStandard:
 			return FindShaderAutoGraphicsStandard();
@@ -520,11 +543,13 @@ void ShaderManager::MaybeAutoSwitchShader()
 		}
 	}();
 
-	if (current_shader.mapped_name == mapped_name) {
+	if (current_shader.mapped_name == new_shader.mapped_name &&
+	    current_shader.preset_name == new_shader.preset_name) {
 		return;
 	}
 
-	current_shader.mapped_name = mapped_name;
+	current_shader.mapped_name = new_shader.mapped_name;
+	current_shader.preset_name = new_shader.preset_name;
 
 	if (current_shader.mode == ShaderMode::Single) {
 		LOG_MSG("RENDER: Using shader '%s'",
@@ -539,73 +564,73 @@ void ShaderManager::MaybeAutoSwitchShader()
 	}
 }
 
-std::string ShaderManager::GetHerculesShader() const
+ShaderAndPreset ShaderManager::GetHerculesShader() const
 {
-	return "crt/hercules";
+	return {MappedShaderName::CrtHyllian, "hercules"};
 }
 
-std::string ShaderManager::GetCgaShader() const
+ShaderAndPreset ShaderManager::GetCgaShader() const
 {
 	if (video_mode.color_depth == ColorDepth::Monochrome) {
 		if (video_mode.width < 640) {
-			return "crt/monochrome-lowres";
+			return {MappedShaderName::CrtHyllian, "monochrome-lowres"};
 		} else {
-			return "crt/monochrome-hires";
+			return {MappedShaderName::CrtHyllian, "monochrome-hires"};
 		}
 	}
 	if (pixels_per_scanline_force_single_scan >= 8) {
-		return "crt/cga-4k";
+		return {MappedShaderName::CrtHyllian, "cga-4k"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 5) {
-		return "crt/cga-1440p";
+		return {MappedShaderName::CrtHyllian, "cga-1440p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 4) {
-		return "crt/cga-1080p";
+		return {MappedShaderName::CrtHyllian, "cga-1080p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 3) {
-		return "crt/cga-720p";
+		return {MappedShaderName::CrtHyllian, "cga-720p"};
 	}
-	return MappedShaderName::Sharp;
+	return {MappedShaderName::Sharp, ""};
 }
 
-std::string ShaderManager::GetCompositeShader() const
+ShaderAndPreset ShaderManager::GetCompositeShader() const
 {
 	if (pixels_per_scanline >= 8) {
-		return "crt/composite-4k";
+		return {MappedShaderName::CrtHyllian, "composite-4k"};
 	}
 	if (pixels_per_scanline >= 5) {
-		return "crt/composite-1440p";
+		return {MappedShaderName::CrtHyllian, "composite-1440p"};
 	}
 	if (pixels_per_scanline >= 3) {
-		return "crt/composite-1080p";
+		return {MappedShaderName::CrtHyllian, "composite-1080p"};
 	}
-	return MappedShaderName::Sharp;
+	return {MappedShaderName::Sharp, ""};
 }
 
-std::string ShaderManager::GetEgaShader() const
+ShaderAndPreset ShaderManager::GetEgaShader() const
 {
 	if (pixels_per_scanline_force_single_scan >= 8) {
-		return "crt/ega-4k";
+		return {MappedShaderName::CrtHyllian, "ega-4k"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 5) {
-		return "crt/ega-1440p";
+		return {MappedShaderName::CrtHyllian, "ega-1440p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 4) {
-		return "crt/ega-1080p";
+		return {MappedShaderName::CrtHyllian, "ega-1080p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 3) {
-		return "crt/ega-720p";
+		return {MappedShaderName::CrtHyllian, "ega-720p"};
 	}
-	return MappedShaderName::Sharp;
+	return {MappedShaderName::Sharp, ""};
 }
 
-std::string ShaderManager::GetVgaShader() const
+ShaderAndPreset ShaderManager::GetVgaShader() const
 {
 	if (pixels_per_scanline >= 4) {
-		return "crt/vga-4k";
+		return {MappedShaderName::CrtHyllian, "vga-4k"};
 	}
 	if (pixels_per_scanline >= 3) {
-		return "crt/vga-1440p";
+		return {MappedShaderName::CrtHyllian, "vga-1440p"};
 	}
 	if (pixels_per_scanline >= 2) {
 		// Up to 1080/5 = 216-line double-scanned VGA modes can be
@@ -624,7 +649,8 @@ std::string ShaderManager::GetVgaShader() const
 
 		if (video_mode.is_double_scanned_mode &&
 		    video_mode.height <= MaxFakeDoubleScanVideoModeHeight) {
-			return "crt/vga-1080p-fake-double-scan";
+			return {"crt/vga-1080p-fake-double-scan", ""};
+
 		} else {
 			// This shader works correctly only with exact 2x
 			// vertical scaling to make the best out of the very
@@ -637,13 +663,13 @@ std::string ShaderManager::GetVgaShader() const
 			// Double-scanned 216 to 270 line modes are also handled
 			// by this shader.
 			//
-			return "crt/vga-1080p";
+			return {"crt/vga-1080p", ""};
 		}
 	}
-	return MappedShaderName::Sharp;
+	return {MappedShaderName::Sharp, ""};
 }
 
-std::string ShaderManager::FindShaderAutoGraphicsStandard() const
+ShaderAndPreset ShaderManager::FindShaderAutoGraphicsStandard() const
 {
 	if (video_mode.color_depth == ColorDepth::Composite) {
 		return GetCompositeShader();
@@ -671,12 +697,13 @@ std::string ShaderManager::FindShaderAutoGraphicsStandard() const
 	}
 }
 
-std::string ShaderManager::FindShaderAutoMachine() const
+ShaderAndPreset ShaderManager::FindShaderAutoMachine() const
 {
 	if (video_mode.color_depth == ColorDepth::Composite) {
 		return GetCompositeShader();
 	}
 
+	// TODO still needed?
 	// DOSBOX_RealInit may have not been run yet.
 	// If not, go ahead and set the globals from the config.
 	if (machine == MachineType::None) {
@@ -698,30 +725,30 @@ std::string ShaderManager::FindShaderAutoMachine() const
 	};
 }
 
-std::string ShaderManager::FindShaderAutoArcade() const
+ShaderAndPreset ShaderManager::FindShaderAutoArcade() const
 {
 	if (pixels_per_scanline_force_single_scan >= 8) {
-		return "crt/arcade-4k";
+		return {MappedShaderName::CrtHyllian, "arcade-4k"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 5) {
-		return "crt/arcade-1440p";
+		return {MappedShaderName::CrtHyllian, "arcade-1440p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 3) {
-		return "crt/arcade-1080p";
+		return {MappedShaderName::CrtHyllian, "arcade-1080p"};
 	}
-	return MappedShaderName::Sharp;
+	return {MappedShaderName::Sharp, ""};
 }
 
-std::string ShaderManager::FindShaderAutoArcadeSharp() const
+ShaderAndPreset ShaderManager::FindShaderAutoArcadeSharp() const
 {
 	if (pixels_per_scanline_force_single_scan >= 8) {
-		return "crt/arcade-sharp-4k";
+		return {MappedShaderName::CrtHyllian, "arcade-sharp-4k"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 5) {
-		return "crt/arcade-sharp-1440p";
+		return {MappedShaderName::CrtHyllian, "arcade-sharp-1440p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 3) {
-		return "crt/arcade-sharp-1080p";
+		return {MappedShaderName::CrtHyllian, "arcade-sharp-1080p"};
 	}
-	return MappedShaderName::Sharp;
+	return {MappedShaderName::Sharp, ""};
 }
