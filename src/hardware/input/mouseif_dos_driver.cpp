@@ -1803,11 +1803,11 @@ static Bitu int33_handler()
 		if (is_win386_mode && WINDOWS_GetVmId() == WindowsKernelVmId) {
 			// The only software, which probes for the wheel API
 			// while running in the context of Microsoft Windows
-			// kernel, is a VBADOS driver. Our Windows support is
+			// kernel, is the VBADOS driver. Our Windows support is
 			// not yet compatible with this driver, so switch back
 			// to normal operation - this way at least there is
-			// going to be a working mouse in the GUI (MS-DOS prompt
-			// won't work for now).
+			// going to be a working mouse in the GUI (windowed
+			// MS-DOS prompt won't work for now).
 			MOUSEDOS_HandleWindowsShutdown();
 			constexpr bool IsModeChanging = true;
 			MOUSEDOS_BeforeNewVideoMode();
@@ -2360,7 +2360,17 @@ void MOUSEDOS_DoCallback(const uint8_t mask)
 	// - https://github.com/dosemu2/dosemu2/issues/1552#issuecomment-1100777880
 	// - https://github.com/dosemu2/dosemu2/commit/cd9d2dbc8e3d58dc7cbc92f172c0d447881526be
 	// - https://github.com/joncampbell123/dosbox-x/commit/aec29ce28eb4b520f21ead5b2debf370183b9f28
-	reg_ah = (!use_relative && mouse_moved && !is_win386_foreground) ? 1 : 0;
+	if (WINDOWS_IsStarted() && !is_win386_mode) {
+		// Windows is runnning, but due to VBADOS Int33 driver detected
+		// we have shut down our Windows/386 compatibility mode
+		reg_ah = (!use_relative && mouse_moved) ? 1 : 0;
+	} else {
+		// Do not manifest the extension:
+		// - besides the VBADOS Int33 Windows driver nothing uses it
+		// - setting any bit the game does not know about is always a
+		//   slight risk of incompatibility
+		reg_ah = 0;
+	}
 
 	reg_al = mask;
 	reg_bl = state.GetButtons()._data;
