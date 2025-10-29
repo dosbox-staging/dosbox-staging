@@ -296,14 +296,14 @@ bool SdlRenderer::SetShader([[maybe_unused]] const std::string& shader_name)
 bool SdlRenderer::MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
                                         [[maybe_unused]] const VideoMode& video_mode)
 {
-	// no shader support
+	// no shader support; always report no change
 	return false;
 }
 
 bool SdlRenderer::ForceReloadCurrentShader()
 {
-	// no shader support
-	return false;
+	// no shader support; always report success
+	return true;
 }
 
 ShaderInfo SdlRenderer::GetCurrentShaderInfo()
