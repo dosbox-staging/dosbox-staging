@@ -153,9 +153,6 @@ public:
 	void SetUpdateRegionX(const size_t index, const int16_t value);
 	void SetUpdateRegionY(const size_t index, const int16_t value);
 
-	uint16_t GetLanguage() const;
-	void SetLanguage(const uint16_t value);
-
 	uint8_t GetBiosScreenMode() const;
 	void SetBiosScreenMode(const uint8_t value);
 
@@ -315,9 +312,6 @@ public:
 
 		int16_t update_region_x[MaxUpdateRegions] = {0};
 		int16_t update_region_y[MaxUpdateRegions] = {0};
-
-		// Language of driver messages, not used
-		uint16_t language = 0;
 
 		uint8_t bios_screen_mode = 0;
 

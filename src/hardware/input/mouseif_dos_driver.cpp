@@ -93,6 +93,9 @@ static bool rate_is_set     = false;
 static uint16_t rate_hz     = 0;
 static uint16_t min_rate_hz = 0;
 
+// Language of messages displayed by the driver - fake value, not used
+static uint16_t driver_language = 0;
+
 // Data from mouse events which were already received,
 // but not necessary visible to the application
 
@@ -1951,11 +1954,11 @@ static Bitu int33_handler()
 		// 00h = English, 01h = French, 02h = Dutch, 03h = German, 04h =
 		// Swedish 05h = Finnish, 06h = Spanish, 07h = Portugese, 08h =
 		// Italian
-		state.SetLanguage(reg_bx);
+		driver_language = reg_bx;
 		break;
 	case 0x23:
 		// MS MOUSE v6.0+ - get language for messages
-		reg_bx = state.GetLanguage();
+		reg_bx = driver_language;
 		break;
 	case 0x24:
 		// MS MOUSE v6.26+ - get software version, mouse type, and IRQ
@@ -2662,6 +2665,8 @@ static void start_driver()
 	set_sensitivity(50, 50, 50);
 	reset_hardware();
 	reset();
+
+	driver_language = 0;
 
 	MouseInterface::GetDOS()->NotifyDosDriverStartup();
 }
