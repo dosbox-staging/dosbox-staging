@@ -286,8 +286,11 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 
 bool SdlRenderer::SetShader([[maybe_unused]] const std::string& shader_name)
 {
-	// no shader support
-	return false;
+	// no shader support; always report success
+	//
+	// If we didn't, the rendering backend agnostic fallback mechanism would
+	// fail and we'd hard exit.
+	return true;
 }
 
 bool SdlRenderer::MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
