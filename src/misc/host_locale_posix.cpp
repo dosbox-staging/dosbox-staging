@@ -868,39 +868,6 @@ struct DesktopKeyboardLayouts {
 	std::vector<DesktopKeyboardLayoutEntry> list = {};
 };
 
-static bool is_language_generic(const std::string& language)
-{
-	return iequals(language, "C") || iequals(language, "POSIX");
-}
-
-// Split locale string into language and territory, drop the rest
-static std::pair<std::string, std::string> split_posix_locale(const std::string& value)
-{
-	// Format: language[_TERRITORY][.codeset][@modifier]
-	std::string tmp = value;
-
-	// Strip the modifier and the codeset
-	tmp = tmp.substr(0, tmp.rfind('@'));
-	tmp = tmp.substr(0, tmp.rfind('.'));
-
-	std::pair<std::string, std::string> result = {};
-
-	// Get the language
-	result.first = tmp.substr(0, tmp.find('_'));
-	trim(result.first);
-	lowcase(result.first);
-
-	const auto position = tmp.rfind('_');
-	if (position != std::string::npos) {
-		// Get the territory
-		result.second = tmp.substr(position + 1);
-		trim(result.second);
-		upcase(result.second);
-	}
-
-	return result;
-}
-
 static HostLocaleElement get_dos_country(const std::string& category)
 {
 	HostLocaleElement result = {};
@@ -913,12 +880,13 @@ static HostLocaleElement get_dos_country(const std::string& category)
 	}
 	result.log_info = variable + "=" + value;
 
-	const auto [language, teritory] = split_posix_locale(value);
-	if (is_language_generic(language)) {
+	const auto country_code = LanguageTerritory(value).GetDosCountryCode();
+	if (!country_code) {
+		// Country not recognized
 		return {};
 	}
 
-	result.country_code = iso_to_dos_country(language, teritory);
+	result.country_code = country_code;
 	return result;
 }
 
@@ -926,9 +894,11 @@ static HostLanguages get_host_languages()
 {
 	HostLanguages result = {};
 
-	auto get_language_files = [](const std::string& input) {
-		const auto [language, teritory] = split_posix_locale(input);
-		return iso_to_language_files(language, teritory);
+	auto try_add_gui_language = [&](const std::string& input) {
+		const auto language = LanguageTerritory(input);
+		if (!language.IsEmpty()) {
+			result.gui_languages.push_back(language);
+		}
 	};
 
 	// First try the LANGUAGE variable, according to specification:
@@ -937,16 +907,14 @@ static HostLanguages get_host_languages()
 	if (!values.empty()) {
 		result.log_info = VariableLanguage + "=" + values;
 		for (const auto& entry : split(values, ":")) {
-			const auto files = get_language_files(entry);
-			result.language_files.insert(result.language_files.end(),
-			                             files.begin(),
-			                             files.end());
+			try_add_gui_language(entry);
 		}
+
 		return result;
 	}
 
-	// If variable is not present, try the others - they store at most one
-	// value
+	// If LANGUAGE variable is not present, try the others; they are easier
+	// to parse, they store at most one value
 	const std::vector<std::string> Variables = {
 	        LcAll,
 	        LcMessages,
@@ -959,7 +927,7 @@ static HostLanguages get_host_languages()
 	}
 	result.log_info = variable + "=" + value;
 
-	result.language_files_gui = get_language_files(value);
+	try_add_gui_language(value);
 	return result;
 }
 

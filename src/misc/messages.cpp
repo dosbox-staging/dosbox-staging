@@ -976,10 +976,20 @@ void MSG_LoadMessages()
 	}
 
 	// Get the list of autodetected languages
-	auto language_files = host_languages.language_files;
-	language_files.insert(language_files.end(),
-	                      host_languages.language_files_gui.begin(),
-	                      host_languages.language_files_gui.end());
+	auto languages = host_languages.app_languages;
+	languages.insert(languages.end(),
+	                 host_languages.gui_languages.begin(),
+	                 host_languages.gui_languages.end());
+
+	std::vector<std::string> language_files = {};
+	for (const auto& language : languages) {
+		for (const auto& language_file : language.GetLanguageFiles()) {
+			if (contains(language_files, language_file)) {
+				continue;
+			}
+			language_files.push_back(language_file);
+		}
+	}
 
 	// If autodetection failed, use internal English messages
 	if (language_files.empty()) {
