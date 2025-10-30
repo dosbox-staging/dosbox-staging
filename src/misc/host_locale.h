@@ -8,17 +8,39 @@
 
 #include <cstdint>
 #include <optional>
+#include <set>
 #include <vector>
 
-// Convert language ('ISO 639' code) and territory ('ISO 3166-1 alpha-2' code)
-// to a DOS country code
-std::optional<DosCountry> iso_to_dos_country(const std::string& language,
-                                             const std::string& territory = "");
+// Language and territory according to 'ISO 639' and 'ISO 3166-1 alpha-2' norms
+struct LanguageTerritory {
+public:
+	// Language and territory casing is auto-adapted by the constructior.
+	LanguageTerritory(const std::string& language, const std::string& territory);
 
-// Convert language ('ISO 639' code) and territory ('ISO 3166-1 alpha-2' code)
-// to a language file names (without extensions) to search for
-std::vector<std::string> iso_to_language_files(const std::string& language,
-                                               const std::string& territory = "");
+	// Input string format: language[(_|-)TERRITORY][.codeset][@modifier]
+	// Language and territory casing is auto-adapted by the constructior.
+	LanguageTerritory(const std::string& input);
+
+	// Checks if the language is empty or not recognized
+	bool IsEmpty() const;
+	// Checks if the language is 'C' or 'POSIX' or empty
+	bool IsGeneric() const;
+	// Checks if the language is English
+	bool IsEnglish() const;
+
+	// Convert data to a DOS country code
+	std::optional<DosCountry> GetDosCountryCode() const;
+
+	// Convert data	to a list of language file names (without extensions)
+	// to search for
+	std::vector<std::string> GetLanguageFiles() const;
+
+private:
+	void Normalize();
+
+	std::string language  = {};
+	std::string territory = {};
+};
 
 struct KeyboardLayoutMaybeCodepage {
 	// Keyboard layout, as supported by the FreeDOS
@@ -125,17 +147,16 @@ struct HostKeyboardLayouts {
 };
 
 struct HostLanguages {
-	// Put here the names of the language files corresponding to the host UI
-	// language. Leave empty if it can't be determined.
-	std::vector<std::string> language_files_gui = {};
+	// A list of the host OS GUI languages
+	std::vector<LanguageTerritory> gui_languages = {};
 
-	// If the OS allows to get the list of UI languages preferred by the
-	// user, put it here.
-	std::vector<std::string> language_files = {};
+	// A list of the application languages preferred by user;
+	// only fill-in if the host OS contains a separate setting
+	std::vector<LanguageTerritory> app_languages = {};
 
 	// If detection was successful, always provide info for the log output,
 	// telling which host OS properties/values were used to determine the
-	// language.
+	// languages
 	std::string log_info = {};
 };
 
