@@ -3,6 +3,7 @@
 
 #include "host_locale.h"
 
+#include "private/iso_locale_codes.h"
 #include "utils/checks.h"
 #include "utils/string_utils.h"
 
@@ -19,287 +20,331 @@ CHECK_NARROWING();
 // ISO country/territory conversion to DOS country code
 // ***************************************************************************
 
-// Mapping from the 'ISO 3166-1 alpha-2' norm to DOS country code. Also contains
-// several historic countries and territories. Reference:
-// - https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+// Mapping from 'ISO 639' and ISO 3166-1 alpha-2' norms to DOS country codes
+
 // clang-format off
 static const std::unordered_map<std::string, DosCountry> IsoToDosCountryMap = {
-	// List ordered by DOS country code, primary ISO country code first
-	{ "AQ",    DosCountry::International  }, // Antarctica
-	{ "EU",    DosCountry::International  }, // European Union
-	{ "EZ",    DosCountry::International  }, // Eurozone
-	{ "QO",    DosCountry::International  }, // Outlying Oceania
-	{ "UN",    DosCountry::International  }, // United Nations
-	{ "XX",    DosCountry::International  }, // unknown state
-	{ "XZ",    DosCountry::International  }, // international waters
-	{ "US",    DosCountry::UnitedStates   },
-	{ "AS",    DosCountry::UnitedStates   }, // American Samoa
-	{ "GU",    DosCountry::UnitedStates   }, // Guam
-	{ "JT",    DosCountry::UnitedStates   }, // Johnston Island
-	{ "MI",    DosCountry::UnitedStates   }, // Midway Islands
-	{ "PU",    DosCountry::UnitedStates   }, // United States Miscellaneous Pacific Islands
-	{ "QM",    DosCountry::UnitedStates   }, // used by ISRC
-	{ "UM",    DosCountry::UnitedStates   }, // United States Minor Outlying  Islands
-	{ "VI",    DosCountry::UnitedStates   }, // Virgin Islands (US)
-	{ "WK",    DosCountry::UnitedStates   }, // Wake Island
-	{ "fr_CA", DosCountry::CanadaFrench   },
-	{ "AG",    DosCountry::LatinAmerica   }, // Antigua and Barbuda
-	{ "AI",    DosCountry::LatinAmerica   }, // Anguilla
-	{ "AW",    DosCountry::LatinAmerica   }, // Aruba
-	{ "BB",    DosCountry::LatinAmerica   }, // Barbados
-	{ "BM",    DosCountry::LatinAmerica   }, // Bermuda
-	{ "BS",    DosCountry::LatinAmerica   }, // Bahamas
-	{ "BZ",    DosCountry::LatinAmerica   }, // Belize
-	{ "CU",    DosCountry::LatinAmerica   }, // Cuba
-	{ "CW",    DosCountry::LatinAmerica   }, // Curaçao
-	{ "DM",    DosCountry::LatinAmerica   }, // Dominica
-	{ "DO",    DosCountry::LatinAmerica   }, // Dominican Republic
-	{ "FK",    DosCountry::LatinAmerica   }, // Falkland Islands
-	{ "FM",    DosCountry::LatinAmerica   }, // Micronesia
-	{ "GD",    DosCountry::LatinAmerica   }, // Grenada
-	{ "GP",    DosCountry::LatinAmerica   }, // Guadeloupe
-	{ "GY",    DosCountry::LatinAmerica   }, // Guyana
-	{ "HT",    DosCountry::LatinAmerica   }, // Haiti
-	{ "JM",    DosCountry::LatinAmerica   }, // Jamaica
-	{ "KN",    DosCountry::LatinAmerica   }, // St. Kitts and Nevis
-	{ "KY",    DosCountry::LatinAmerica   }, // Cayman Islands
-	{ "LC",    DosCountry::LatinAmerica   }, // St. Lucia
-	{ "MS",    DosCountry::LatinAmerica   }, // Montserrat
-	{ "PE",    DosCountry::LatinAmerica   }, // Peru
-	{ "PG",    DosCountry::LatinAmerica   }, // Papua New Guinea
-	{ "PR",    DosCountry::LatinAmerica   }, // Puerto Rico
-	{ "SR",    DosCountry::LatinAmerica   }, // Suriname
-	{ "TC",    DosCountry::LatinAmerica   }, // Turks and Caicos
-	{ "TT",    DosCountry::LatinAmerica   }, // Trinidad and Tobago
-	{ "VC",    DosCountry::LatinAmerica   }, // St. Vincent and Grenadines
-	{ "CA",    DosCountry::CanadaEnglish  },
-	{ "RU",    DosCountry::Russia         },
-	{ "SU",    DosCountry::Russia         }, // Soviet Union
-	{ "EG",    DosCountry::Egypt          },
-	{ "ZA",    DosCountry::SouthAfrica    },
-	{ "GR",    DosCountry::Greece         },
-	{ "NL",    DosCountry::Netherlands    },
-	{ "AN",    DosCountry::Netherlands    }, // Netherlands Antilles
-	{ "BQ",    DosCountry::Netherlands    }, // Bonaire, Sint Eustatius and Saba
-	{ "SX",    DosCountry::Netherlands    }, // Sint Maarten (Dutch part)
-	{ "BE",    DosCountry::Belgium        },
-	{ "FR",    DosCountry::France         },
-	{ "BL",    DosCountry::France         }, // Saint Barthélemy
-	{ "CP",    DosCountry::France         }, // Clipperton Island
-	{ "GF",    DosCountry::France         }, // French Guiana
-	{ "FQ",    DosCountry::France         }, // French Southern and Antarctic Territories
-	{ "FX",    DosCountry::France         }, // France, Metropolitan
-	{ "MF",    DosCountry::France         }, // Saint Martin (French part)
-	{ "MQ",    DosCountry::France         }, // Martinique / French Antilles
-	{ "NC",    DosCountry::France         }, // New Caledonia
-	{ "PF",    DosCountry::France         }, // French Polynesia
-	{ "PM",    DosCountry::France         }, // St. Pierre and Miquelon
-	{ "TF",    DosCountry::France         }, // French Southern Territories
-	{ "ES",    DosCountry::Spain          },
-	{ "EA",    DosCountry::Spain          }, // Ceuta, Melilla
-	{ "IC",    DosCountry::Spain          }, // Canary Islands
-	{ "XA",    DosCountry::Spain          }, // Canary Islands, code used in Switzerland
-	{ "HU",    DosCountry::Hungary        },
-	{ "YU",    DosCountry::Yugoslavia     },
-	{ "IT",    DosCountry::Italy          },
-	{ "SM",    DosCountry::Italy          }, // San Marino
-	{ "VA",    DosCountry::Italy          }, // Vatican City
-	{ "RO",    DosCountry::Romania        },
-	{ "CH",    DosCountry::Switzerland    },
-	{ "CZ",    DosCountry::Czechia        },
-	{ "CS",    DosCountry::Czechia        }, // Czechoslovakia
-	{ "AT",    DosCountry::Austria        },
-	{ "GB",    DosCountry::UnitedKingdom  },
-	{ "UK",    DosCountry::UnitedKingdom  },
-	{ "AC",    DosCountry::UnitedKingdom  }, // Ascension Island
-	{ "CQ",    DosCountry::UnitedKingdom  }, // Island of Sark
-	{ "DG",    DosCountry::UnitedKingdom  }, // Diego Garcia
-	{ "GG",    DosCountry::UnitedKingdom  }, // Guernsey
-	{ "GS",    DosCountry::UnitedKingdom  }, // South Georgia and the South Sandwich Islands
-	{ "IM",    DosCountry::UnitedKingdom  }, // Isle of Man
-	{ "IO",    DosCountry::UnitedKingdom  }, // British Indian Ocean Territory
-	{ "JE",    DosCountry::UnitedKingdom  }, // Jersey
-	{ "SH",    DosCountry::UnitedKingdom  }, // Saint Helena
-	{ "TA",    DosCountry::UnitedKingdom  }, // Tristan da Cunha
-	{ "VG",    DosCountry::UnitedKingdom  }, // Virgin Islands (British)
-	{ "XI",    DosCountry::UnitedKingdom  }, // Northern Ireland
-	{ "DK",    DosCountry::Denmark        },
-	{ "GL",    DosCountry::Denmark        }, // Greenland
-	{ "SE",    DosCountry::Sweden         },
-	{ "NO",    DosCountry::Norway         },
-	{ "BV",    DosCountry::Norway         }, // Bouvet Island
-	{ "NQ",    DosCountry::Norway         }, // Dronning Maud Land
-	{ "SJ",    DosCountry::Norway         }, // Svalbard and Jan Mayen
-	{ "PL",    DosCountry::Poland         },
-	{ "DE",    DosCountry::Germany        },
-	{ "DD",    DosCountry::Germany        }, // German Democratic Republic
-	{ "MX",    DosCountry::Mexico         },
-	{ "AR",    DosCountry::Argentina      },
-	{ "BR",    DosCountry::Brazil         },
-	{ "CL",    DosCountry::Chile          },
-	{ "CO",    DosCountry::Colombia       },
-	{ "VE",    DosCountry::Venezuela      },
-	{ "MY",    DosCountry::Malaysia       },
-	{ "AU",    DosCountry::Australia      },
-	{ "CC",    DosCountry::Australia      }, // Cocos (Keeling) Islands
-	{ "CX",    DosCountry::Australia      }, // Christmas Island
-	{ "HM",    DosCountry::Australia      }, // Heard Island and McDonald Islands
-	{ "NF",    DosCountry::Australia      }, // Norfolk Island
-	{ "ID",    DosCountry::Indonesia      },
-	{ "PH",    DosCountry::Philippines    },
-	{ "NZ",    DosCountry::NewZealand     },
-	{ "PN",    DosCountry::NewZealand     }, // Pitcairn
-	{ "TK",    DosCountry::NewZealand     }, // Tokealu
-	{ "SG",    DosCountry::Singapore      },
-	{ "TH",    DosCountry::Thailand       },
-	{ "KZ",    DosCountry::Kazakhstan     },
-	{ "JP",    DosCountry::Japan          },
-	{ "KR",    DosCountry::SouthKorea     },
-	{ "VN",    DosCountry::Vietnam        },
-	{ "VD",    DosCountry::Vietnam        }, // North Vietnam
-	{ "CN",    DosCountry::China          },
-	{ "MO",    DosCountry::China          }, // Macao
-	{ "TR",    DosCountry::Turkey         },
-	{ "IN",    DosCountry::India          },
-	{ "PK",    DosCountry::Pakistan       },
-	{ "en_AE", DosCountry::AsiaEnglish    }, // United Arab Emirates (English)
-	{ "en_AM", DosCountry::AsiaEnglish    }, // Armenia (English)
-	{ "en_AZ", DosCountry::AsiaEnglish    }, // Azerbaijan (English)
-	{ "en_BH", DosCountry::AsiaEnglish    }, // Bahrain (English)
-	{ "en_BD", DosCountry::AsiaEnglish    }, // Bangladesh (English)
-	{ "en_BN", DosCountry::AsiaEnglish    }, // Brunei (English)
-	{ "en_BT", DosCountry::AsiaEnglish    }, // Bhutan (English)
-	{ "en_BU", DosCountry::AsiaEnglish    }, // Burma (English)
-	{ "en_CN", DosCountry::AsiaEnglish    }, // China (English)
-	{ "en_CY", DosCountry::AsiaEnglish    }, // Cyprus (English)
-	{ "en_GE", DosCountry::AsiaEnglish    }, // Georgia (English)
-	{ "en_ID", DosCountry::AsiaEnglish    }, // Indonesia (English)
-	{ "en_IL", DosCountry::AsiaEnglish    }, // Israel (English)
-	{ "en_IN", DosCountry::AsiaEnglish    }, // India (English)
-	{ "en_IR", DosCountry::AsiaEnglish    }, // Iran (English)
-	{ "en_IQ", DosCountry::AsiaEnglish    }, // Iraq (English)
-	{ "en_JO", DosCountry::AsiaEnglish    }, // Jordan (English)
-	{ "en_JP", DosCountry::AsiaEnglish    }, // Japan (English)
-	{ "en_KG", DosCountry::AsiaEnglish    }, // Kyrgyzstan (English)
-	{ "en_KH", DosCountry::AsiaEnglish    }, // Cambodia (English)
-	{ "en_KP", DosCountry::AsiaEnglish    }, // North Korea (English)
-	{ "en_KR", DosCountry::AsiaEnglish    }, // South Korea (English)
-	{ "en_KW", DosCountry::AsiaEnglish    }, // Kuwait (English)
-	{ "en_KZ", DosCountry::AsiaEnglish    }, // Kazakhstan (English)
-	{ "en_LA", DosCountry::AsiaEnglish    }, // Laos (English)
-	{ "en_LB", DosCountry::AsiaEnglish    }, // Lebanon (English)
-	{ "en_LK", DosCountry::AsiaEnglish    }, // Sri Lanka (English)
-	{ "en_MM", DosCountry::AsiaEnglish    }, // Myanmar (English)
-	{ "en_MN", DosCountry::AsiaEnglish    }, // Mongolia (English)
-	{ "en_MO", DosCountry::AsiaEnglish    }, // Macao (English)
-	{ "en_MV", DosCountry::AsiaEnglish    }, // Maldives (English)
-	{ "en_MY", DosCountry::AsiaEnglish    }, // Malaysia (English)
-	{ "en_NP", DosCountry::AsiaEnglish    }, // Nepal (English)
-	{ "en_OM", DosCountry::AsiaEnglish    }, // Oman (English)
-	{ "en_PH", DosCountry::AsiaEnglish    }, // Philippines (English)
-	{ "en_PK", DosCountry::AsiaEnglish    }, // Pakistan (English)
-	{ "en_PS", DosCountry::AsiaEnglish    }, // Palestine (English)
-	{ "en_QA", DosCountry::AsiaEnglish    }, // Qatar (English)
-	{ "en_RU", DosCountry::AsiaEnglish    }, // Russia (English)
-	{ "en_SA", DosCountry::AsiaEnglish    }, // Saudi Arabia (English)
-	{ "en_SG", DosCountry::AsiaEnglish    }, // Singapore (English)
-	{ "en_SU", DosCountry::AsiaEnglish    }, // Soviet Union (English)
-	{ "en_SY", DosCountry::AsiaEnglish    }, // Syria (English)
-	{ "en_TH", DosCountry::AsiaEnglish    }, // Thailand (English)
-	{ "en_TJ", DosCountry::AsiaEnglish    }, // Tajikistan (English)
-	{ "en_TL", DosCountry::AsiaEnglish    }, // Timor-Leste (English)
-	{ "en_TM", DosCountry::AsiaEnglish    }, // Turkmenistan (English)
-	{ "en_TP", DosCountry::AsiaEnglish    }, // East Timor (English)
-	{ "en_TR", DosCountry::AsiaEnglish    }, // Turkey (English)
-	{ "en_TW", DosCountry::AsiaEnglish    }, // Taiwan (English)
-	{ "en_UZ", DosCountry::AsiaEnglish    }, // Uzbekistan (English)
-	{ "en_VD", DosCountry::AsiaEnglish    }, // North Vietnam (English)
-	{ "en_VN", DosCountry::AsiaEnglish    }, // South Vietnam (English)
-	{ "en_YD", DosCountry::AsiaEnglish    }, // South Yemen (English)
-	{ "en_YE", DosCountry::AsiaEnglish    }, // Yemen (English)
-	{ "BD",    DosCountry::AsiaEnglish    }, // Bangladesh
-	{ "BT",    DosCountry::AsiaEnglish    }, // Bhutan
-	{ "BU",    DosCountry::AsiaEnglish    }, // Burma
-	{ "KH",    DosCountry::AsiaEnglish    }, // Cambodia
-	{ "LA",    DosCountry::AsiaEnglish    }, // Laos
-	{ "LK",    DosCountry::AsiaEnglish    }, // Sri Lanka
-	{ "MM",    DosCountry::AsiaEnglish    }, // Myanmar
-	{ "MV",    DosCountry::AsiaEnglish    }, // Maldives
-	{ "NP",    DosCountry::AsiaEnglish    }, // Nepal
-	{ "MA",    DosCountry::Morocco        },
-	{ "DZ",    DosCountry::Algeria        },
-	{ "TN",    DosCountry::Tunisia        },
-	{ "NE",    DosCountry::Niger          },
-	{ "BJ",    DosCountry::Benin          },
-	{ "DY",    DosCountry::Benin          }, // Dahomey
-	{ "NG",    DosCountry::Nigeria        },
-	{ "FO",    DosCountry::FaroeIslands   },
-	{ "PT",    DosCountry::Portugal       },
-	{ "LU",    DosCountry::Luxembourg     },
-	{ "IE",    DosCountry::Ireland        },
-	{ "IS",    DosCountry::Iceland        },
-	{ "AL",    DosCountry::Albania        },
-	{ "MT",    DosCountry::Malta          },
-	{ "FI",    DosCountry::Finland        },
-	{ "AX",    DosCountry::Finland        }, // Åland Islands
-	{ "BG",    DosCountry::Bulgaria       },
-	{ "LT",    DosCountry::Lithuania      },
-	{ "LV",    DosCountry::Latvia         },
-	{ "EE",    DosCountry::Estonia        },
-	{ "AM",    DosCountry::Armenia        },
-	{ "BY",    DosCountry::Belarus        },
-	{ "UA",    DosCountry::Ukraine        },
-	{ "RS",    DosCountry::Serbia         },
-	{ "ME",    DosCountry::Montenegro     },
-	{ "SI",    DosCountry::Slovenia       },
-	{ "BA",    DosCountry::BosniaLatin    },
+
+	// International codes
+	{ Iso3166::UnknownState,        DosCountry::International },
+	{ Iso3166::InternationalWaters, DosCountry::International },
+	{ Iso3166::OutlyingOceania,     DosCountry::International },
+	{ Iso3166::UnitedNations,       DosCountry::International },
+	{ Iso3166::Antarctica,          DosCountry::International },
+	{ Iso3166::EuropeanUnion,       DosCountry::International },
+	{ Iso3166::EuroZone,            DosCountry::International },
+
+	// United States of America and associated
+	{ Iso3166::UnitedStates,           DosCountry::UnitedStates },
+	{ Iso3166::UnitedStates_ISRC,      DosCountry::UnitedStates },
+	{ Iso3166::AmericanSamoa,          DosCountry::UnitedStates },
+	{ Iso3166::Guam,                   DosCountry::UnitedStates },
+	{ Iso3166::JohnstonIsland,         DosCountry::UnitedStates },
+	{ Iso3166::MidwayIslands,          DosCountry::UnitedStates },
+	{ Iso3166::MinorOutlyingIslands,   DosCountry::UnitedStates },
+	{ Iso3166::MiscPacificIslands,     DosCountry::UnitedStates },
+	{ Iso3166::NorthernMarianaIslands, DosCountry::UnitedStates },
+	{ Iso3166::PuertoRico,             DosCountry::UnitedStates },
+	{ Iso3166::VirginIslandsUS,        DosCountry::UnitedStates },
+	{ Iso3166::WakeIsland,             DosCountry::UnitedStates },
+
+	// Canada (English/French)
+	{ Iso3166::Canada,                        DosCountry::CanadaEnglish },
+	{ Iso639::French + "_" + Iso3166::Canada, DosCountry::CanadaFrench  },
+
+	// United Kingdom of Great Britain and Northern Ireland and associated
+	{ Iso3166::UnitedKingdom,               DosCountry::UnitedKingdom },
+	{ Iso3166::UnitedKingdom_Alternative,   DosCountry::UnitedKingdom },
+	{ Iso3166::AscensionIsland,             DosCountry::UnitedKingdom },
+	{ Iso3166::Anguilla,                    DosCountry::LatinAmerica  },
+	{ Iso3166::Bermuda,                     DosCountry::LatinAmerica  },
+	{ Iso3166::BritishIndianOceanTerritory, DosCountry::UnitedKingdom },
+	{ Iso3166::CaymanIslands,               DosCountry::LatinAmerica  },
+	{ Iso3166::DiegoGarcia,                 DosCountry::UnitedKingdom },
+	{ Iso3166::FalklandIslands,             DosCountry::LatinAmerica  },
+	{ Iso3166::Gibraltar,                   DosCountry::UnitedKingdom },
+	{ Iso3166::Guernsey,                    DosCountry::UnitedKingdom },
+	{ Iso3166::IslandOfSark,                DosCountry::UnitedKingdom },
+	{ Iso3166::IsleOfMan,                   DosCountry::UnitedKingdom },
+	{ Iso3166::Jersey,                      DosCountry::UnitedKingdom },
+	{ Iso3166::Montserrat,                  DosCountry::LatinAmerica  },
+	{ Iso3166::NorthernIreland,             DosCountry::UnitedKingdom },
+	{ Iso3166::Pitcairn,                    DosCountry::UnitedKingdom },
+	{ Iso3166::SaintHelena,                 DosCountry::UnitedKingdom },
+	{ Iso3166::SouthGeorgia,                DosCountry::UnitedKingdom },
+	{ Iso3166::TristanDaCunha,              DosCountry::UnitedKingdom },
+	{ Iso3166::TurksAndCaicosIslands,       DosCountry::LatinAmerica  },
+	{ Iso3166::VirginIslandsUK,             DosCountry::UnitedKingdom },
+
+	// France and associated
+	{ Iso3166::France,                     DosCountry::France },
+	{ Iso3166::France_Metropolitan,        DosCountry::France },
+	{ Iso3166::ClippertonIsland,           DosCountry::France },
+	{ Iso3166::FrenchAntarcticTerritories, DosCountry::France },
+	{ Iso3166::FrenchGuiana,               DosCountry::France },
+	{ Iso3166::FrenchPolynesia,            DosCountry::France },
+	{ Iso3166::FrenchSouthernTerritories,  DosCountry::France },
+	{ Iso3166::Guadeloupe,                 DosCountry::France },
+	{ Iso3166::Martinique,                 DosCountry::France },
+	{ Iso3166::Mayotte,                    DosCountry::France },
+	{ Iso3166::NewCaledonia,               DosCountry::France },
+	{ Iso3166::Reunion,                    DosCountry::France },
+	{ Iso3166::SaintBarthelemy,            DosCountry::France },
+	{ Iso3166::SaintMartin,                DosCountry::France },
+	{ Iso3166::SaintPierreAndMiquelon,     DosCountry::France },
+	{ Iso3166::WallisAndFutuna,            DosCountry::France },
+
+	// Spain and associated
+	{ Iso3166::Spain,                      DosCountry::Spain },
+	{ Iso3166::CanaryIslands,              DosCountry::Spain },
+	{ Iso3166::CanaryIslands_Alternative,  DosCountry::Spain },
+	{ Iso3166::CeutaAndMelilla,            DosCountry::Spain },
+
+	// Netherlands and associated
+	{ Iso3166::Netherlands,   DosCountry::Netherlands  },
+	{ Iso3166::Aruba,         DosCountry::LatinAmerica },
+	{ Iso3166::Bonaire,       DosCountry::Netherlands  },
+	{ Iso3166::Curacao,       DosCountry::LatinAmerica },
+	{ Iso3166::DutchAntilles, DosCountry::LatinAmerica },
+	{ Iso3166::SintMaarten,   DosCountry::Netherlands  },
+
+	// Denmark and associated
+	{ Iso3166::Denmark,       DosCountry::Denmark      },
+	{ Iso3166::FaroeIslands,  DosCountry::FaroeIslands },
+	{ Iso3166::Greenland,     DosCountry::Denmark      },
+
+	// Finland and associated
+	{ Iso3166::Finland,       DosCountry::Finland      },
+	{ Iso3166::AlandIslands,  DosCountry::Finland      },
+
+	// Norway and associated
+	{ Iso3166::Norway,              DosCountry::Norway },
+	{ Iso3166::BouvetIsland,        DosCountry::Norway },
+	{ Iso3166::DronningMaudLand,    DosCountry::Norway },
+	{ Iso3166::SvalbardAndJanMayen, DosCountry::Norway },
+
+	// Australia and associated
+	{ Iso3166::Australia,               DosCountry::Australia },
+	{ Iso3166::ChristmasIsland,         DosCountry::Australia },
+	{ Iso3166::CocosIslands,            DosCountry::Australia },
+	{ Iso3166::HeardAndMcDonaldIslands, DosCountry::Australia },
+	{ Iso3166::NorfolkIsland,           DosCountry::Australia },
+
+	// New Zealand and associated
+	{ Iso3166::NewZealand,  DosCountry::NewZealand },
+	{ Iso3166::CookIslands, DosCountry::NewZealand },
+	{ Iso3166::Niue,        DosCountry::NewZealand },
+	{ Iso3166::Tokelau,     DosCountry::NewZealand },
+
+	// China and associated
+	{ Iso3166::China,       DosCountry::China    },
+	{ Iso3166::HongKong,    DosCountry::HongKong },
+	{ Iso3166::Macao,       DosCountry::China    },
+
+	// Europe
+	{ Iso3166::Albania,              DosCountry::Albania        },
+	{ Iso3166::Andorra,              DosCountry::France         },
+	{ Iso3166::Armenia,              DosCountry::Armenia        },
+	{ Iso3166::Austria,              DosCountry::Austria        },
+	{ Iso3166::Azerbaijan,           DosCountry::Azerbaijan     },
+	{ Iso3166::Belarus,              DosCountry::Belarus        },
+	{ Iso3166::Belgium,              DosCountry::Belgium        },
+	{ Iso3166::BosniaAndHerzegovina, DosCountry::BosniaLatin    },
 	// TODO: Find a way to detect DosCountry::BosniaCyrillic
-	{ "MK",    DosCountry::NorthMacedonia },
-	{ "SK",    DosCountry::Slovakia       },
-	{ "GT",    DosCountry::Guatemala      },
-	{ "SV",    DosCountry::ElSalvador     },
-	{ "HN",    DosCountry::Honduras       },
-	{ "NI",    DosCountry::Nicaragua      },
-	{ "CR",    DosCountry::CostaRica      },
-	{ "PA",    DosCountry::Panama         },
-	{ "PZ",    DosCountry::Panama         }, // Panama Canal Zone
-	{ "BO",    DosCountry::Bolivia        },
-	{ "EC",    DosCountry::Ecuador        },
-	{ "PY",    DosCountry::Paraguay       },
-	{ "UY",    DosCountry::Uruguay        },
-	{ "AF",    DosCountry::Arabic         }, // Afghanistan
-	{ "DJ",    DosCountry::Arabic         }, // Djibouti
-	{ "EH",    DosCountry::Arabic         }, // Western Sahara
-	{ "IR",    DosCountry::Arabic         }, // Iran
-	{ "IQ",    DosCountry::Arabic         }, // Iraq
-	{ "LY",    DosCountry::Arabic         }, // Libya
-	{ "MR",    DosCountry::Arabic         }, // Mauritania
-	{ "NT",    DosCountry::Arabic         }, // Neutral Zone
-	{ "PS",    DosCountry::Arabic         }, // Palestine
-	{ "SD",    DosCountry::Arabic         }, // Sudan
-	{ "SO",    DosCountry::Arabic         }, // Somalia
-	{ "TD",    DosCountry::Arabic         }, // Chad
-	{ "YD",    DosCountry::Arabic         }, // South Yemen
-	{ "HK",    DosCountry::HongKong       },
-	{ "TW",    DosCountry::Taiwan         },
-	{ "LB",    DosCountry::Lebanon        },
-	{ "JO",    DosCountry::Jordan         },
-	{ "SY",    DosCountry::Syria          },
-	{ "KW",    DosCountry::Kuwait         },
-	{ "SA",    DosCountry::SaudiArabia    },
-	{ "YE",    DosCountry::Yemen          },
-	{ "OM",    DosCountry::Oman           },
-	{ "AE",    DosCountry::Emirates       },
-	{ "IL",    DosCountry::Israel         },
-	{ "BH",    DosCountry::Bahrain        },
-	{ "QA",    DosCountry::Qatar          },
-	{ "MN",    DosCountry::Mongolia       },
-	{ "TJ",    DosCountry::Tajikistan     },
-	{ "TM",    DosCountry::Turkmenistan   },
-	{ "AZ",    DosCountry::Azerbaijan     },
-	{ "GE",    DosCountry::Georgia        },
-	{ "KG",    DosCountry::Kyrgyzstan     },
-	{ "UZ",    DosCountry::Uzbekistan     },
+	{ Iso3166::Bulgaria,             DosCountry::Bulgaria       },
+	{ Iso3166::Croatia,              DosCountry::Croatia        },
+	{ Iso3166::Czechia,              DosCountry::Czechia        },
+	{ Iso3166::Czechoslovakia,       DosCountry::Czechia        },
+	{ Iso3166::EastGermany,          DosCountry::Germany        },
+	{ Iso3166::Estonia,              DosCountry::Estonia        },
+	{ Iso3166::Georgia,              DosCountry::Georgia        },
+	{ Iso3166::Germany,              DosCountry::Germany        },
+	{ Iso3166::Greece,               DosCountry::Greece         },
+	{ Iso3166::Hungary,              DosCountry::Hungary        },
+	{ Iso3166::Iceland,              DosCountry::Iceland        },
+	{ Iso3166::Ireland,              DosCountry::Ireland        },
+	{ Iso3166::Italy,                DosCountry::Italy          },
+	{ Iso3166::Kazakhstan,           DosCountry::Kazakhstan     },
+	{ Iso3166::Latvia,               DosCountry::Latvia         },
+	{ Iso3166::Lithuania,            DosCountry::Lithuania      },
+	{ Iso3166::Luxembourg,           DosCountry::Luxembourg     },
+	{ Iso3166::Malta,                DosCountry::Malta          },
+	{ Iso3166::Monaco,               DosCountry::France         },
+	{ Iso3166::Montenegro,           DosCountry::Montenegro     },
+	{ Iso3166::NorthMacedonia,       DosCountry::NorthMacedonia },
+	{ Iso3166::Poland,               DosCountry::Poland         },
+	{ Iso3166::Portugal,             DosCountry::Portugal       },
+	{ Iso3166::Romania,              DosCountry::Romania        },
+	{ Iso3166::Russia,               DosCountry::Russia         },
+	{ Iso3166::SanMarino,            DosCountry::Italy          },
+	{ Iso3166::Serbia,               DosCountry::Serbia         },
+	{ Iso3166::Slovakia,             DosCountry::Slovakia       },
+	{ Iso3166::Slovenia,             DosCountry::Slovenia       },
+	{ Iso3166::SovietUnion,          DosCountry::Russia         },
+	{ Iso3166::Sweden,               DosCountry::Sweden         },
+	{ Iso3166::Switzerland,          DosCountry::Switzerland    },
+	{ Iso3166::Turkey,               DosCountry::Turkey         },
+	{ Iso3166::Ukraine,              DosCountry::Ukraine        },
+	{ Iso3166::VaticanCity,          DosCountry::Italy          },
+	{ Iso3166::Yugoslavia,           DosCountry::Yugoslavia     },
+
+	// Asia
+	{ Iso3166::Bahrain,            DosCountry::Bahrain      },
+	{ Iso3166::Emirates,           DosCountry::Emirates     },
+	{ Iso3166::India,              DosCountry::India        },
+	{ Iso3166::Indonesia,          DosCountry::Indonesia    },
+	{ Iso3166::Israel,             DosCountry::Israel       },
+	{ Iso3166::Japan,              DosCountry::Japan        },
+	{ Iso3166::Jordan,             DosCountry::Jordan       },
+	{ Iso3166::Kuwait,             DosCountry::Kuwait       },
+	{ Iso3166::Kyrgyzstan,         DosCountry::Kyrgyzstan   },
+	{ Iso3166::Lebanon,            DosCountry::Lebanon      },
+	{ Iso3166::Malaysia,           DosCountry::Malaysia     },
+	{ Iso3166::Mongolia,           DosCountry::Mongolia     },
+	{ Iso3166::NorthVietnam,       DosCountry::Vietnam      },
+	{ Iso3166::Oman,               DosCountry::Oman         },
+	{ Iso3166::Pakistan,           DosCountry::Pakistan     },
+	{ Iso3166::Philippines,        DosCountry::Philippines  },
+	{ Iso3166::Qatar,              DosCountry::Qatar        },
+	{ Iso3166::SaudiArabia,        DosCountry::SaudiArabia  },
+	{ Iso3166::Singapore,          DosCountry::Singapore    },
+	{ Iso3166::SouthKorea,         DosCountry::SouthKorea   },
+	{ Iso3166::SouthYemen,         DosCountry::Yemen        },
+	{ Iso3166::Syria,              DosCountry::Syria        },
+	{ Iso3166::Taiwan,             DosCountry::Taiwan       },
+	{ Iso3166::Tajikistan,         DosCountry::Tajikistan   },
+	{ Iso3166::Thailand,           DosCountry::Thailand     },
+	{ Iso3166::Turkmenistan,       DosCountry::Turkmenistan },
+	{ Iso3166::Uzbekistan,         DosCountry::Uzbekistan   },
+	{ Iso3166::Yemen,              DosCountry::Yemen        },
+	{ Iso3166::Vietnam,            DosCountry::Vietnam      },
+
+	// Africa
+	{ Iso3166::Algeria,     DosCountry::Algeria     },
+	{ Iso3166::Benin,       DosCountry::Benin       },
+	{ Iso3166::Dahomey,     DosCountry::Benin       },
+	{ Iso3166::Egypt,       DosCountry::Egypt       },
+	{ Iso3166::Morocco,     DosCountry::Morocco     },
+	{ Iso3166::Niger,       DosCountry::Niger       },
+	{ Iso3166::Nigeria,     DosCountry::Nigeria     },
+	{ Iso3166::SouthAfrica, DosCountry::SouthAfrica },
+	{ Iso3166::Tunisia,     DosCountry::Tunisia     },
+
+	// Americas
+	{ Iso3166::Argentina,       DosCountry::Argentina  },
+	{ Iso3166::Bolivia,         DosCountry::Bolivia    },
+	{ Iso3166::Brazil,          DosCountry::Brazil     },
+	{ Iso3166::Chile,           DosCountry::Chile      },
+	{ Iso3166::Colombia,        DosCountry::Colombia   },
+	{ Iso3166::CostaRica,       DosCountry::CostaRica  },
+	{ Iso3166::Ecuador,         DosCountry::Ecuador    },
+	{ Iso3166::ElSalvador,      DosCountry::ElSalvador },
+	{ Iso3166::Guatemala,       DosCountry::Guatemala  },
+	{ Iso3166::Honduras,        DosCountry::Honduras   },
+	{ Iso3166::Mexico,          DosCountry::Mexico     },
+	{ Iso3166::Nicaragua,       DosCountry::Nicaragua  },
+	{ Iso3166::Panama,          DosCountry::Panama     },
+	{ Iso3166::PanamaCanalZone, DosCountry::Panama     },
+	{ Iso3166::Paraguay,        DosCountry::Paraguay   },
+	{ Iso3166::Uruguay,         DosCountry::Uruguay    },
+	{ Iso3166::Venezuela,       DosCountry::Venezuela  },
+
+	// We do not have DOS country codes for these territories - but they
+	// are feasible to be assigned to the generic Asia English country code,
+	// as English is one of the main language spoken there
+	{ Iso3166::Bangladesh, DosCountry::AsiaEnglish },
+	{ Iso3166::Bhutan,     DosCountry::AsiaEnglish },
+	{ Iso3166::Maldives,   DosCountry::AsiaEnglish },
+	{ Iso3166::SriLanka,   DosCountry::AsiaEnglish },
+
+	// We do not have DOS country codes for these territories - but they
+	// are feasible to be assigned to the generic Arabic country code
+	{ Iso3166::Afghanistan,   DosCountry::Arabic },
+	{ Iso3166::Brunei,        DosCountry::Arabic },
+	{ Iso3166::Chad,          DosCountry::Arabic },
+	{ Iso3166::Djibouti,      DosCountry::Arabic },
+	{ Iso3166::Iran,          DosCountry::Arabic },
+	{ Iso3166::Iraq,          DosCountry::Arabic },
+	{ Iso3166::Libya,         DosCountry::Arabic },
+	{ Iso3166::Mauritania,    DosCountry::Arabic },
+	{ Iso3166::NeutralZone,   DosCountry::Arabic },
+	{ Iso3166::Palestine,     DosCountry::Arabic },
+	{ Iso3166::Sudan,         DosCountry::Arabic },
+	{ Iso3166::Somalia,       DosCountry::Arabic },
+	{ Iso3166::WesternSahara, DosCountry::Arabic },
+
+	// We do not have DOS country codes for these territories - but they
+	// are feasible to be assigned to the generic Latin America country code
+	{ Iso3166::AntiguaAndBarbuda,         DosCountry::LatinAmerica },
+	{ Iso3166::Bahamas,                   DosCountry::LatinAmerica },
+	{ Iso3166::Barbados,                  DosCountry::LatinAmerica },
+	{ Iso3166::Belize,                    DosCountry::LatinAmerica },
+	{ Iso3166::Cuba,                      DosCountry::LatinAmerica },
+	{ Iso3166::Dominica,                  DosCountry::LatinAmerica },
+	{ Iso3166::Dominicana,                DosCountry::LatinAmerica },
+	{ Iso3166::Grenada,                   DosCountry::LatinAmerica },
+	{ Iso3166::Guyana,                    DosCountry::LatinAmerica },
+	{ Iso3166::Haiti,                     DosCountry::LatinAmerica },
+	{ Iso3166::Jamaica,                   DosCountry::LatinAmerica },
+	{ Iso3166::SaintKittsAndNevis,        DosCountry::LatinAmerica },
+	{ Iso3166::SaintLucia,                DosCountry::LatinAmerica },
+	{ Iso3166::PapuaNewGuinea,            DosCountry::LatinAmerica },
+	{ Iso3166::Peru,                      DosCountry::LatinAmerica },
+	{ Iso3166::SaintVincentAndGrenadines, DosCountry::LatinAmerica },
+	{ Iso3166::Suriname,                  DosCountry::LatinAmerica },
+	{ Iso3166::TrinidadAndTobago,         DosCountry::LatinAmerica },
+
+	// Asian countries with English language is selected
+	{ Iso639::English + "_" + Iso3166::Afghanistan,  DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Armenia,      DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Azerbaijan,   DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Bahrain,      DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Brunei,       DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Burma,        DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Cambodia,     DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::China,        DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::EastTimor,    DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Emirates,     DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Georgia,      DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::HongKong,     DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::India,        DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Indonesia,    DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Iran,         DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Iraq,         DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Israel,       DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Japan,        DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Jordan,       DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Kazakhstan,   DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Kuwait,       DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Kyrgyzstan,   DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Laos,         DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Lebanon,      DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Macao,        DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Malaysia,     DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Mongolia,     DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Myanmar,      DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Nepal,        DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::NorthKorea,   DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::NorthVietnam, DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Oman,         DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Pakistan,     DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Palestine,    DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Philippines,  DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Qatar,        DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::SaudiArabia,  DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Singapore,    DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::SouthKorea,   DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::SouthYemen,   DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Syria,        DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Taiwan,       DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Tajikistan,   DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Thailand,     DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::TimorLeste,   DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Turkey,       DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Turkmenistan, DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Uzbekistan,   DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Yemen,        DosCountry::AsiaEnglish },
+	{ Iso639::English + "_" + Iso3166::Vietnam,      DosCountry::AsiaEnglish },
 };
 // clang-format on
 
