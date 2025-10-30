@@ -605,8 +605,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "es", "sp" }, "Spanish (QWERTY)",
-		// Not sure if the layout is popular, low priority for now
-		AutodetectionPriority::Low,
+		// Not sure if the layout is popular, high priority for now
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwerty,
 	},
@@ -819,8 +819,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "la" }, "Latin American (QWERTY)",
-		// Not sure if the layout is popular, low priority for now
-		AutodetectionPriority::Low,
+		// Not sure if the layout is popular, high priority for now
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwerty,
 	},
@@ -1020,8 +1020,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "po" }, "Portuguese (QWERTY)",
-		// Not sure if the layout is popular, low priority for now
-		AutodetectionPriority::Low,
+		// Not sure if the layout is popular, high priority for now
+		AutodetectionPriority::High,
 		860, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinQwerty,
 	},
