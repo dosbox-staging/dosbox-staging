@@ -17,10 +17,10 @@
 CHECK_NARROWING();
 
 // ***************************************************************************
-// ISO country/territory conversion to DOS country code
+// ISO country/territory to DOS mapping data
 // ***************************************************************************
 
-// Mapping from 'ISO 639' and ISO 3166-1 alpha-2' norms to DOS country codes
+// Mapping from the ISO format data to DOS country codes
 
 // clang-format off
 static const std::unordered_map<std::string, DosCountry> IsoToDosCountryMap = {
@@ -348,54 +348,118 @@ static const std::unordered_map<std::string, DosCountry> IsoToDosCountryMap = {
 };
 // clang-format on
 
-std::optional<DosCountry> iso_to_dos_country(const std::string& language,
-                                             const std::string& territory)
+// ***************************************************************************
+// LanguageTerritory structure
+// ***************************************************************************
+
+LanguageTerritory::LanguageTerritory(const std::string& language,
+                                     const std::string& territory)
+        : language(language),
+          territory(territory)
 {
-	std::string language_lower_case  = language;
-	std::string territory_upper_case = territory;
+	Normalize();
+}
 
-	lowcase(language_lower_case);
-	upcase(territory_upper_case);
+LanguageTerritory::LanguageTerritory(const std::string& input)
+{
+	std::string tmp = input;
 
-	const auto key = language_lower_case + "_" + territory_upper_case;
+	// Strip the modifier and the codeset
+	tmp = tmp.substr(0, tmp.rfind('@'));
+	tmp = tmp.substr(0, tmp.rfind('.'));
 
+	const auto tokens = split(tmp, "_-");
+	if (tokens.empty() || tokens.size() >= 3) {
+		// Invalid format
+		return;
+	}
+
+	language = tokens[0];
+	if (!IsEmpty() && !IsGeneric() && tokens.size() == 2) {
+		territory = tokens[1];
+	}
+
+	Normalize();
+}
+
+void LanguageTerritory::Normalize()
+{
+	auto check_characters = [&](const std::string& input) {
+		for (const auto c : input) {
+			if (!is_printable_ascii(c) || std::isdigit(c)) {
+				// Found invalid character
+				language.clear();
+				territory.clear();
+				return;
+			}
+		}
+	};
+
+	check_characters(language);
+	check_characters(territory);
+
+	lowcase(language);
+	upcase(territory);
+
+	if (IsEmpty() || IsGeneric()) {
+		territory = {};
+	}
+}
+
+bool LanguageTerritory::IsEmpty() const
+{
+	return language.empty();
+}
+
+bool LanguageTerritory::IsGeneric() const
+{
+	return language == "c" || language == "posix";
+}
+
+bool LanguageTerritory::IsEnglish() const
+{
+	return language == Iso639::English;
+}
+
+std::optional<DosCountry> LanguageTerritory::GetDosCountryCode() const
+{
+	if (IsEmpty() || IsGeneric()) {
+		return {};
+	}
+
+	const auto key = language + "_" + territory;
 	if (IsoToDosCountryMap.contains(key)) {
 		return IsoToDosCountryMap.at(key);
 	}
-	if (IsoToDosCountryMap.contains(territory_upper_case)) {
-		return IsoToDosCountryMap.at(territory_upper_case);
+
+	if (IsoToDosCountryMap.contains(territory)) {
+		return IsoToDosCountryMap.at(territory);
 	}
 
 	return {};
 }
 
-std::vector<std::string> iso_to_language_files(const std::string& language,
-                                               const std::string& territory)
+std::vector<std::string> LanguageTerritory::GetLanguageFiles() const
 {
-	std::string language_lower_case  = language;
-	std::string territory_upper_case = territory;
-
-	lowcase(language_lower_case);
-	upcase(territory_upper_case);
-
-	if (language_lower_case == "c" || language_lower_case == "posix") {
-		// Default (dummy) language, used on POSIX systems
-		return {"en"};
+	if (IsEmpty()) {
+		return {};
+	} else if (IsGeneric()) {
+		return {Iso639::English};
 	}
 
 	std::vector<std::string> result = {};
 
-	if (!territory_upper_case.empty()) {
-		result.emplace_back(language_lower_case + "_" + territory_upper_case);
+	if (!territory.empty()) {
+		result.emplace_back(language + "_" + territory);
 	}
 
-	if (language_lower_case == "pt" && territory_upper_case == "BR") {
+	if (language == Iso639::Portuguese && territory == Iso3166::Brazil) {
 		// Brazilian Portuguese differs a lot from the regular one,
 		// they can't be substituted
 		return result;
 	}
 
-	result.push_back(language_lower_case);
+	result.push_back(language);
 	return result;
 }
 
