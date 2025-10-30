@@ -1152,14 +1152,6 @@ static void gui_destroy()
 	if (sdl.draw.callback) {
 		(sdl.draw.callback)(GFX_CallbackStop);
 	}
-
-	// Let SDL cleanup up after itself (exit fullscreen, restore mouse
-	// state, etc.) instead of us attempting to do it manually. That is
-	// unnecessary and a moving target with each SDL library upgrade.
-	//
-	// Similarly, all GPU resources (textures, compiled shaders, etc.) will
-	// be cleaned up by the driver automatically. That's the best way, we
-	// don't need to attempt to do a manual cleanup.
 }
 
 void GFX_Destroy()
@@ -2869,6 +2861,11 @@ void GFX_AddConfigSection()
 void GFX_Quit()
 {
 #if !C_DEBUGGER
+	// Renderer must be destoryed before SDL_Quit() is called.
+	// Otherwise we can get segfaults and sadness.
+	sdl.renderer = {};
+	sdl.window = nullptr;
+
 	SDL_Quit();
 #endif
 }
