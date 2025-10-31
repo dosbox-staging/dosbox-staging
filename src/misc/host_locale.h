@@ -35,6 +35,9 @@ public:
 	// to search for
 	std::vector<std::string> GetLanguageFiles() const;
 
+	// Convert data	to a set of matching DOS keyboard layouts
+	const std::set<std::string>& GetMatchingKeyboardLayouts() const;
+
 private:
 	void Normalize();
 

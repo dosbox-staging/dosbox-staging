@@ -1247,6 +1247,58 @@ static void sort_detected_keyboard_layouts(
 		assert(info_map.contains(detected_deduplicated));
 	}
 
+	// Fetch the keyboard layouts matching the GUI language
+	std::vector<std::set<std::string>> layouts_matching_gui = {};
+	auto maybe_add_matching_language = [&](const LanguageTerritory& language) {
+		constexpr size_t MaxMatchingSets = 30;
+
+		if (layouts_matching_gui.size() >= MaxMatchingSets) {
+			return;
+		}
+
+		// Skip this criteria if the host GUI language is either generic
+		// or English; tech-savvy folks often prefer the original GUI
+		// than a translated one
+		if (language.IsEmpty() || language.IsEnglish() || language.IsGeneric()) {
+			return;
+		}
+
+		layouts_matching_gui.emplace_back();
+		for (const auto &layout : language.GetMatchingKeyboardLayouts()) {
+			layouts_matching_gui.back().emplace(deduplicate_layout(layout));
+		}
+	};
+
+	// Always try to match the loaded translation language
+	maybe_add_matching_language(MSG_GetLanguage());
+
+	// If the host OS does not allow the user to prioritize the keyboard
+	// layouts, try to also match the GUI language(s)
+	if (!is_layout_list_sorted) {
+		for (const auto& language : GetHostLanguages().gui_languages) {
+			maybe_add_matching_language(language);
+		}
+	}
+
+	// The highest value returned, the better the keyboard layout matches
+	// the GUI language settings
+	auto get_gui_match_score = [&](const KeyboardLayoutMaybeCodepage& entry) {
+		uint32_t score = 0;
+
+		const auto& info_entry = info_map.at(deduplicate_layout(entry.keyboard_layout));
+		assert(!info_entry.layout_codes.empty());
+		const auto layout_code = deduplicate_layout(info_entry.layout_codes[0]);
+
+		for (const auto& layouts : layouts_matching_gui) {
+			score = score * 2;
+			if (layouts.contains(layout_code)) {
+				score++;
+			}
+		}
+
+		return score;
+	};
+
 	auto get_layout_priority = [&](const KeyboardLayoutMaybeCodepage& entry) {
 		const auto& info_entry = info_map.at(
 		        deduplicate_layout(entry.keyboard_layout));
@@ -1332,6 +1384,13 @@ static void sort_detected_keyboard_layouts(
 				return true;
 			} else if (l.is_mapping_fuzzy && !r.is_mapping_fuzzy) {
 				return false;
+			}
+
+			// Prefer keyboard layouts matching the GUI language
+			const auto l_gui_match_score = get_gui_match_score(l);
+			const auto r_gui_match_score = get_gui_match_score(r);
+			if (l_gui_match_score != r_gui_match_score) {
+				return (l_gui_match_score > r_gui_match_score);
 			}
 
 			// Skip remaining criteria if the host OS provided us
