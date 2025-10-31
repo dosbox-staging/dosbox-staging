@@ -1247,6 +1247,28 @@ static void sort_detected_keyboard_layouts(
 		assert(info_map.contains(detected_deduplicated));
 	}
 
+	// Fetch the keyboard layouts matching the GUI language
+	std::set<std::string> layouts_matching_gui = {};
+	for (const auto& language : GetHostLanguages().gui_languages) {
+		// Skip this criteria if the host GUI language is either generic
+		// or English; tech-savvy folks often prefer the original GUI
+		// than a translated one
+		if (language.IsEmpty() || language.IsEnglish() || language.IsGeneric()) {
+			continue;
+		}
+
+		const auto layouts = language.GetMatchingKeyboardLayouts();
+		layouts_matching_gui.insert(layouts.begin(), layouts.end());
+	}
+
+	auto matches_gui_language = [&](const KeyboardLayoutMaybeCodepage& entry) {
+		const auto& info_entry = info_map.at(
+		        deduplicate_layout(entry.keyboard_layout));
+
+		assert(!info_entry.layout_codes.empty());
+		return layouts_matching_gui.contains(info_entry.layout_codes[0]);
+	};
+
 	auto get_layout_priority = [&](const KeyboardLayoutMaybeCodepage& entry) {
 		const auto& info_entry = info_map.at(
 		        deduplicate_layout(entry.keyboard_layout));
@@ -1337,6 +1359,15 @@ static void sort_detected_keyboard_layouts(
 			// Skip remaining criteria if the host OS provided us
 			// with the list already sorted by user preference
 			if (is_layout_list_sorted) {
+				return false;
+			}
+
+			// Prefer keyboard layouts matching the host GUI language
+			const auto l_matches_language = matches_gui_language(l);
+			const auto r_matches_language = matches_gui_language(r);
+			if (l_matches_language && !r_matches_language) {
+				return true;
+			} else if (!l_matches_language && r_matches_language) {
 				return false;
 			}
 

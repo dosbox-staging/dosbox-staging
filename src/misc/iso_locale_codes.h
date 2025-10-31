@@ -11,7 +11,7 @@
 // ***************************************************************************
 
 // Two-letter ISO 3166 country/territory codes, also contains several historic
-// codes. References:
+// and unofficial codes. References:
 // - https://en.wikipedia.org/wiki/ISO_3166-1
 // - https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 
@@ -350,15 +350,21 @@ extern const std::string Vanuatu;
 // ISO language definitions
 // ***************************************************************************
 
-// Two-letter ISO 639 language codes. References:
+// Two-letter ISO 639 language codes. Also contains some three-letter codes,
+// for the languages supported by the FreeDOS code pages and keyboard layouts,
+// which do not have two-letter codes.
+//
+// References:
 // - https://en.wikipedia.org/wiki/ISO_639
 // - https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
-
+// - https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
+// - https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
 
 namespace Iso639 {
 
 extern const std::string English;
 
+// Two-letter codes
 extern const std::string Abkhazian;
 extern const std::string Afar;
 extern const std::string Afrikaans;
@@ -372,7 +378,7 @@ extern const std::string Assamese;
 extern const std::string Avaric;
 extern const std::string Avestan;
 extern const std::string Aymara;
-extern const std::string Azerbaijani;
+extern const std::string Azerbaijani; // a.k.a. Azeri
 extern const std::string Bambara;
 extern const std::string Bashkir;
 extern const std::string Basque;
@@ -386,7 +392,7 @@ extern const std::string Burmese;
 extern const std::string Catalan;
 extern const std::string Chamorro;
 extern const std::string Chechen;
-extern const std::string Chichewa;
+extern const std::string Chichewa; // a.k.a. Nyanja
 extern const std::string Chinese;
 extern const std::string ChurchSlavonic;
 extern const std::string Chuvash;
@@ -407,10 +413,10 @@ extern const std::string Fijian;
 extern const std::string Finnish;
 extern const std::string French;
 extern const std::string WesternFrisian;
-extern const std::string Fulah;
+extern const std::string Fulah; // a.k.a. Fula
 extern const std::string Gaelic;
 extern const std::string Galician;
-extern const std::string Ganda;
+extern const std::string Ganda; // a.k.a. Luganda
 extern const std::string Georgian;
 extern const std::string German;
 extern const std::string Greek;
@@ -445,7 +451,7 @@ extern const std::string Kikuyu;
 extern const std::string Kinyarwanda;
 extern const std::string Kyrgyz;
 extern const std::string Komi;
-extern const std::string Kongo;
+extern const std::string Kongo; // a.k.a. Kikongo
 extern const std::string Korean;
 extern const std::string Kuanyama;
 extern const std::string Kurdish;
@@ -467,7 +473,7 @@ extern const std::string Maori;
 extern const std::string Marathi;
 extern const std::string Marshallese;
 extern const std::string Mongolian;
-extern const std::string Nauru;
+extern const std::string Nauruan;
 extern const std::string Navajo;
 extern const std::string NorthNdebele;
 extern const std::string SouthNdebele;
@@ -504,7 +510,7 @@ extern const std::string Sinhala;
 extern const std::string Slovak;
 extern const std::string Slovenian;
 extern const std::string Somali;
-extern const std::string SouthernSotho;
+extern const std::string SouthSotho;
 extern const std::string Spanish;
 extern const std::string Sundanese;
 extern const std::string Swahili;
@@ -541,6 +547,86 @@ extern const std::string Yiddish;
 extern const std::string Yoruba;
 extern const std::string Zhuang;
 extern const std::string Zulu;
+
+// Three-letter codes
+
+extern const std::string Adyghe;
+extern const std::string Altai;
+extern const std::string Angolar;
+extern const std::string Buryat;
+extern const std::string Cheremiss; // a.k.a. Mari
+extern const std::string Cherokee;
+extern const std::string Chukchi;
+extern const std::string Chuukese;
+extern const std::string Dagaare;
+extern const std::string Dagbani;
+extern const std::string Dangme;
+extern const std::string Dinka;
+extern const std::string Dolgan;
+extern const std::string Dyula;
+extern const std::string Erzya;
+extern const std::string Evenki;
+extern const std::string Fanagalo;
+extern const std::string Fon; // a.k.a. Dahomean
+extern const std::string Forro;
+extern const std::string Frankish;
+extern const std::string Ga;
+extern const std::string Gilbertese; // a.k.a. Kiribati
+extern const std::string Gonja;
+extern const std::string Ingush;
+extern const std::string Kabardian;
+extern const std::string Kabuverdianu; // (see note below)
+extern const std::string Kalmyk;
+extern const std::string KarachayBalkar;
+extern const std::string Karelian;
+extern const std::string Kasem;
+extern const std::string Kashubian;
+extern const std::string Khakas;
+extern const std::string Khanty;
+extern const std::string Khoisan; // a.k.a. San
+extern const std::string Khwe; // a.k.a. Khoe
+extern const std::string Koryak;
+extern const std::string Kosraean;
+extern const std::string Krio;
+extern const std::string LubaKasai; // a.k.a. Tshiluba
+extern const std::string Mandinka;
+extern const std::string Mansi;
+extern const std::string Maore; // dialect of Shikomor (Comorian)
+extern const std::string Moksha;
+extern const std::string Moore;
+extern const std::string Mwali; // dialect of Shikomor (Comorian)
+extern const std::string Nama; // a.k.a. Khoekhoe
+extern const std::string Ndzwani; // a.k.a. Anjouani, dialect of Shikomor (Comorian)
+extern const std::string Neuer;
+extern const std::string Ngazidja; // dialect of Shikomor (Comorian)
+extern const std::string NorthSotho; // also covers Lobedu
+extern const std::string Nzema;
+extern const std::string Palauan; // also covers Angaur
+extern const std::string Picard;
+extern const std::string Pohnpeian; // a.k.a. Ponapean
+extern const std::string Principense;
+extern const std::string Sakha; // a.k.a Yakut
+extern const std::string Soninke;
+extern const std::string Sonsoralese;
+extern const std::string Tobian;
+extern const std::string Tuvaluan;
+extern const std::string Tuvin;
+extern const std::string Udmurt;
+extern const std::string Ulithian;
+extern const std::string Yapese;
+extern const std::string Yurak; // a.k.a. Nenets
+extern const std::string Zarma;
+
+// NOTE: The ISO-639 Kabuverdianu covers the following Cape Verde languages
+// specified in the FreeDOS coumentation:
+// - Badiu
+// - Boavista
+// - Brava
+// - Criol d'Soncente
+// - Fogo
+// - Maio
+// - Santo Anto
+// - So Nicolau
 
 }
 

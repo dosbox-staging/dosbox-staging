@@ -353,6 +353,7 @@ namespace Iso639 {
 
 const std::string English          = "en";
 
+// Two-letter codes
 const std::string Abkhazian        = "ab";
 const std::string Afar             = "aa";
 const std::string Afrikaans        = "af";
@@ -461,7 +462,7 @@ const std::string Maori            = "mi";
 const std::string Marathi          = "mr";
 const std::string Marshallese      = "mh";
 const std::string Mongolian        = "mn";
-const std::string Nauru            = "na";
+const std::string Nauruan          = "na";
 const std::string Navajo           = "nv";
 const std::string NorthNdebele     = "nd";
 const std::string SouthNdebele     = "nr";
@@ -498,7 +499,7 @@ const std::string Sinhala          = "si";
 const std::string Slovak           = "sk";
 const std::string Slovenian        = "sl";
 const std::string Somali           = "so";
-const std::string SouthernSotho    = "st";
+const std::string SouthSotho       = "st";
 const std::string Spanish          = "es";
 const std::string Sundanese        = "su";
 const std::string Swahili          = "sw";
@@ -535,6 +536,78 @@ const std::string Yiddish          = "yi";
 const std::string Yoruba           = "yo";
 const std::string Zhuang           = "za";
 const std::string Zulu             = "zu";
+
+// Three-letter codes
+
+const std::string Adyghe           = "ady";
+const std::string Altai            = "alt";
+const std::string Angolar          = "aoa";
+const std::string Buryat           = "bua";
+const std::string Cheremiss        = "chm";
+const std::string Cherokee         = "chr";
+const std::string Chukchi          = "ckt";
+const std::string Chuukese         = "chk";
+const std::string Dagaare          = "dga";
+const std::string Dagbani          = "dag";
+const std::string Dangme           = "ada";
+const std::string Dinka            = "din";
+const std::string Dolgan           = "dlg";
+const std::string Dyula            = "dyu";
+const std::string Erzya            = "myv";
+const std::string Evenki           = "evn";
+const std::string Fanagalo         = "fng";
+const std::string Fon              = "fon";
+const std::string Forro            = "cri";
+const std::string Frankish         = "frk";
+const std::string Ga               = "gaa";
+const std::string Gilbertese       = "gil";
+const std::string Gonja            = "gjn";
+const std::string Ingush           = "inh";
+const std::string Kabardian        = "kbd";
+const std::string Kabuverdianu     = "kea";
+const std::string Kalmyk           = "xal";
+const std::string KarachayBalkar   = "krc";
+const std::string Karelian         = "krl";
+const std::string Kasem            = "xsm";
+const std::string Kashubian        = "csb";
+const std::string Khakas           = "kjh";
+const std::string Khanty           = "kca";
+const std::string Khoisan          = "khi";
+const std::string Khwe             = "xuu";
+const std::string Koryak           = "kpy";
+const std::string Kosraean         = "kos";
+const std::string Krio             = "kri";
+const std::string LubaKasai        = "lua";
+const std::string Mandinka         = "mnk";
+const std::string Mansi            = "mns";
+const std::string Maore            = "swb";
+const std::string Moksha           = "mdf";
+const std::string Moore            = "mos";
+const std::string Mwali            = "wlc";
+const std::string Nama             = "naq";
+const std::string Ndzwani          = "wni";
+const std::string Neuer            = "nus";
+const std::string Ngazidja         = "zdj";
+const std::string NorthSotho       = "nso";
+const std::string Nzema            = "nzi";
+const std::string Palauan          = "pau";
+const std::string Picard           = "pcd";
+const std::string Pohnpeian        = "pon";
+const std::string Principense      = "pre";
+const std::string Sakha            = "sah";
+const std::string Soninke          = "snk";
+const std::string Sonsoralese      = "sov";
+const std::string Tobian           = "tox";
+const std::string Tuvaluan         = "tvl";
+const std::string Tuvin            = "tyv";
+const std::string Udmurt           = "udm";
+const std::string Ulithian         = "uli";
+const std::string Yapese           = "yap";
+const std::string Yurak            = "yrk";
+const std::string Zarma            = "dje";
+
+
+
 
 }
 // clang-format on
