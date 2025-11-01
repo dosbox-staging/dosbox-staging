@@ -548,6 +548,8 @@ bool RENDER_MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
 	if (shader_changed) {
 		set_scan_and_pixel_doubling();
 		if (reinit_render) {
+			// TODO do not reinit if only the preset parameters have changed,
+			// but not the settings
 			reinit_drawing();
 		}
 	}
@@ -590,12 +592,14 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 		return;
 	}
 
-	const auto mapped_name = ShaderManager::GetInstance().GetCurrentMappedShaderName();
-	if (mapped_name.empty()) {
+	const auto shader_name =
+	        ShaderManager::GetInstance().GetCurrentShaderDescriptor().shader_name;
+
+	if (shader_name.empty()) {
 		return;
 	}
 
-	LOG_MSG("RENDER: Reloading shader '%s'", mapped_name.c_str());
+	LOG_MSG("RENDER: Reloading shader '%s'", shader_name.c_str());
 
 	GFX_GetRenderer()->ForceReloadCurrentShader();
 

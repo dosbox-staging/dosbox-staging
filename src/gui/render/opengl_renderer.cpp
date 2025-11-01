@@ -633,25 +633,16 @@ std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& sour
 	return shader_program;
 }
 
-bool OpenGlRenderer::SetShader(const std::string& shader_name)
+bool OpenGlRenderer::SetShader(const std::string& shader_descriptor)
 {
-	// Symbolic shader names never contain the ".glsl" extension (e.g.,
-	// `crt-auto`, or `sharp`). But the user might have provided a shader
-	// name with the extension already included.
-
 	auto& shader_manager = ShaderManager::GetInstance();
+	const auto prev = shader_manager.GetCurrentShaderDescriptor();
 
-	const auto prev_mapped_shader_name = shader_manager.GetCurrentMappedShaderName();
-	const auto prev_preset_name = shader_manager.GetCurrentPresetName();
+	shader_manager.NotifyShaderChanged(shader_descriptor, GlslExtension);
 
-	shader_manager.NotifyShaderNameChanged(shader_name, GlslExtension);
+	const auto curr = shader_manager.GetCurrentShaderDescriptor();
 
-	// The mapped actual shader name might or might not have the ".glsl"
-	// extension.
-	const auto new_mapped_shader_name = shader_manager.GetCurrentMappedShaderName();
-	const auto new_preset_name = shader_manager.GetCurrentPresetName();
-
-	if (prev_mapped_shader_name != new_mapped_shader_name) {
+	if (prev.shader_name != curr.shader_name) {
 		if (!SwitchShader(shader_manager.GetCurrentSymbolicShaderName(),
 		                  new_mapped_shader_name)) {
 			return false;

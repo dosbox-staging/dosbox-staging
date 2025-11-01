@@ -2972,6 +2972,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		constexpr auto ReinitRender = false;
 
+		// TODO shader_settings_changed
 		const auto shader_changed =
 		        RENDER_MaybeAutoSwitchShader(GFX_GetCanvasSizeInPixels(),
 		                                     image_info.video_mode,
