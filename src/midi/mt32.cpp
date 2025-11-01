@@ -466,17 +466,14 @@ static std::deque<std_fs::path> get_rom_dirs()
 	auto rom_dirs = get_platform_rom_dirs();
 
 	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
-	std::string selected_romdir = get_mt32_section()->GetString("romdir");
+	std_fs::path selected_romdir = get_mt32_section()->GetString("romdir");
 
 	if (selected_romdir.empty()) { // already trimmed
 		selected_romdir = DefaultMt32RomsDir;
 	}
-	if (selected_romdir.back() != '/' && selected_romdir.back() != '\\') {
-		selected_romdir += CROSS_FILESPLIT;
-	}
 
 	// Make sure we search the user's configured directory first
-	rom_dirs.emplace_front(resolve_home(selected_romdir));
+	rom_dirs.emplace_front(resolve_home(selected_romdir.string()));
 	return rom_dirs;
 }
 
