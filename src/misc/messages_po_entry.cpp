@@ -420,6 +420,28 @@ bool PoReader::ValidateGettextMetadata() const
 	return !found_non_utf8;
 }
 
+std::string PoReader::GetLanguageFromMetadata() const
+{
+	assert(IsGettextMetadataEntry());
+
+	for (const auto& entry : split(GetTranslated(), "\n\r")) {
+		auto tokens = split(entry, ":");
+		if (tokens.size() != 2) {
+			continue;
+		}
+
+		trim(tokens[0]);
+		if (tokens[0] != "Language") {
+			continue;
+		}
+
+		trim(tokens[1]);
+		return tokens[1];
+	}
+
+	return {};
+}
+
 // ***************************************************************************
 // PO file writer
 // ***************************************************************************

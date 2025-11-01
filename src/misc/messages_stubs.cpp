@@ -25,6 +25,11 @@ std::string MSG_GetTranslatedRaw(const std::string&)
 	return {};
 }
 
+std::string MSG_GetLanguage()
+{
+	return "en";
+}
+
 bool MSG_Exists(const std::string&)
 {
 	return true;
