@@ -31,7 +31,7 @@ void ShaderManager::NotifyShaderNameChanged(const std::string& _shader_name)
 
 	// TODO
 	constexpr auto GlslExtension = ".glsl";
-	const auto symbolic_name = MapShaderName(symbolic_name, GlslExtension);
+	const auto symbolic_name = MapShaderName(shader_name, GlslExtension);
 
 	if (symbolic_name == SymbolicShaderName::AutoGraphicsStandard) {
 		if (current_shader.mode != ShaderMode::AutoGraphicsStandard) {
@@ -206,7 +206,8 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 
 	const auto params = ini.GetSection("parameters");
 	if (params) {
-		for (const auto& [key, value_str] : params) {
+		for (auto it = params->begin(); it != params->end(); ++it) {
+			const auto [key, value_str] = *it;
 			const auto name = key.pItem;
 			SetShaderSetting(name, value_str, preset.settings);
 
@@ -220,7 +221,7 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 					        "RENDER: Invalid value for shader parameter '%s' "
 					        "(must be float): '%s'",
 					        name,
-					        value_str.c_str());
+					        value_str);
 				} else {
 					shader.params[name] = value;
 				}
@@ -522,7 +523,7 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
 
 void ShaderManager::MaybeAutoSwitchShader()
 {
-	const auto new_shader = [&] {
+	const auto new_shader = [&] -> ShaderManager::ShaderAndPreset {
 		switch (current_shader.mode) {
 		case ShaderMode::Single:
 			return {current_shader.symbolic_name, ""};
@@ -564,12 +565,12 @@ void ShaderManager::MaybeAutoSwitchShader()
 	}
 }
 
-ShaderAndPreset ShaderManager::GetHerculesShader() const
+ShaderManager::ShaderAndPreset ShaderManager::GetHerculesShader() const
 {
 	return {MappedShaderName::CrtHyllian, "hercules"};
 }
 
-ShaderAndPreset ShaderManager::GetCgaShader() const
+ShaderManager::ShaderAndPreset ShaderManager::GetCgaShader() const
 {
 	if (video_mode.color_depth == ColorDepth::Monochrome) {
 		if (video_mode.width < 640) {
@@ -593,7 +594,7 @@ ShaderAndPreset ShaderManager::GetCgaShader() const
 	return {MappedShaderName::Sharp, ""};
 }
 
-ShaderAndPreset ShaderManager::GetCompositeShader() const
+ShaderManager::ShaderAndPreset ShaderManager::GetCompositeShader() const
 {
 	if (pixels_per_scanline >= 8) {
 		return {MappedShaderName::CrtHyllian, "composite-4k"};
@@ -607,7 +608,7 @@ ShaderAndPreset ShaderManager::GetCompositeShader() const
 	return {MappedShaderName::Sharp, ""};
 }
 
-ShaderAndPreset ShaderManager::GetEgaShader() const
+ShaderManager::ShaderAndPreset ShaderManager::GetEgaShader() const
 {
 	if (pixels_per_scanline_force_single_scan >= 8) {
 		return {MappedShaderName::CrtHyllian, "ega-4k"};
@@ -624,7 +625,7 @@ ShaderAndPreset ShaderManager::GetEgaShader() const
 	return {MappedShaderName::Sharp, ""};
 }
 
-ShaderAndPreset ShaderManager::GetVgaShader() const
+ShaderManager::ShaderAndPreset ShaderManager::GetVgaShader() const
 {
 	if (pixels_per_scanline >= 4) {
 		return {MappedShaderName::CrtHyllian, "vga-4k"};
@@ -669,7 +670,7 @@ ShaderAndPreset ShaderManager::GetVgaShader() const
 	return {MappedShaderName::Sharp, ""};
 }
 
-ShaderAndPreset ShaderManager::FindShaderAutoGraphicsStandard() const
+ShaderManager::ShaderAndPreset ShaderManager::FindShaderAutoGraphicsStandard() const
 {
 	if (video_mode.color_depth == ColorDepth::Composite) {
 		return GetCompositeShader();
@@ -697,7 +698,7 @@ ShaderAndPreset ShaderManager::FindShaderAutoGraphicsStandard() const
 	}
 }
 
-ShaderAndPreset ShaderManager::FindShaderAutoMachine() const
+ShaderManager::ShaderAndPreset ShaderManager::FindShaderAutoMachine() const
 {
 	if (video_mode.color_depth == ColorDepth::Composite) {
 		return GetCompositeShader();
@@ -725,7 +726,7 @@ ShaderAndPreset ShaderManager::FindShaderAutoMachine() const
 	};
 }
 
-ShaderAndPreset ShaderManager::FindShaderAutoArcade() const
+ShaderManager::ShaderAndPreset ShaderManager::FindShaderAutoArcade() const
 {
 	if (pixels_per_scanline_force_single_scan >= 8) {
 		return {MappedShaderName::CrtHyllian, "arcade-4k"};
@@ -739,7 +740,7 @@ ShaderAndPreset ShaderManager::FindShaderAutoArcade() const
 	return {MappedShaderName::Sharp, ""};
 }
 
-ShaderAndPreset ShaderManager::FindShaderAutoArcadeSharp() const
+ShaderManager::ShaderAndPreset ShaderManager::FindShaderAutoArcadeSharp() const
 {
 	if (pixels_per_scanline_force_single_scan >= 8) {
 		return {MappedShaderName::CrtHyllian, "arcade-sharp-4k"};

@@ -177,8 +177,8 @@ private:
 	// prevent assignment
 	ShaderManager& operator=(const ShaderManager&) = delete;
 
-	std::pair<std::string, std::string> ShaderManager::SplitShaderName(
-			const std::string& shader_name) const;
+	std::pair<std::string, std::string> SplitShaderName(
+	        const std::string& shader_name) const;
 
 	std::string MapShaderName(const std::string& symbolic_name,
 	                          const std::string& file_extension) const;
@@ -199,7 +199,7 @@ private:
 	struct ShaderAndPreset {
 		std::string mapped_name   = {};
 		std::string preset_name   = {};
-	}
+	};
 
 	ShaderAndPreset FindShaderAutoGraphicsStandard() const;
 	ShaderAndPreset FindShaderAutoMachine() const;
