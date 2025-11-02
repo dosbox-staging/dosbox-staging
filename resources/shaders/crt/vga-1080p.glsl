@@ -1,18 +1,18 @@
 #version 120
 
-// SPDX-FileCopyrightText:  2020-2024 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: MIT
 
-#define SPOT_WIDTH             0.85
-#define SPOT_HEIGHT            0.80
-#define PHOSPHOR_LAYOUT        2.00
-#define SCANLINE_STRENGTH_MIN  0.72
-#define SCANLINE_STRENGTH_MAX  0.83
-#define COLOR_BOOST_EVEN       4.45
-#define COLOR_BOOST_ODD        1.65
-#define MASK_STRENGTH          0.10
-#define GAMMA_INPUT            2.15
-#define GAMMA_OUTPUT           2.45
+#pragma parameter SPOT_WIDTH "Spot Width" 0.85 0.0 1.0 0.05
+#pragma parameter SPOT_HEIGHT "Spot Height" 0.80 0.0 1.0 0.05
+#pragma parameter PHOSPHOR_LAYOUT "Phosphor Layout" 2.0 0.0 19.0 1.0
+#pragma parameter SCANLINE_STRENGTH_MIN "Scanline Strength Min" 0.80 0.0 1.0 0.05
+#pragma parameter SCANLINE_STRENGTH_MAX "Scanline Strength Max" 0.85 0.0 1.0 0.05
+#pragma parameter COLOR_BOOST_EVEN "Color Boost Even" 4.80 1.0 2.0 0.05
+#pragma parameter COLOR_BOOST_ODD "Color Boost Odd" 1.40 1.0 2.0 0.05
+#pragma parameter MASK_STRENGTH "Mask Strength" 0.10 0.0 1.0 0.1
+#pragma parameter GAMMA_INPUT "Gamma Input" 2.4 0.0 5.0 0.1
+#pragma parameter GAMMA_OUTPUT "Gamma Output" 2.62 0.0 5.0 0.1
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,29 @@ void main() {
 
 #elif defined(FRAGMENT)
 
+#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+#define PRECISION mediump
+#else
+#define PRECISION
+#endif
+
 uniform sampler2D rubyTexture;
+
+uniform PRECISION float SPOT_WIDTH;
+uniform PRECISION float SPOT_HEIGHT;
+uniform PRECISION float PHOSPHOR_LAYOUT;
+uniform PRECISION float SCANLINE_STRENGTH_MIN;
+uniform PRECISION float SCANLINE_STRENGTH_MAX;
+uniform PRECISION float COLOR_BOOST_EVEN;
+uniform PRECISION float COLOR_BOOST_ODD;
+uniform PRECISION float MASK_STRENGTH;
+uniform PRECISION float GAMMA_INPUT;
+uniform PRECISION float GAMMA_OUTPUT;
 
 #define GAMMA_IN(color)     pow(color, vec4(GAMMA_INPUT))
 #define TEX2D(coords)       GAMMA_IN(texture2D(rubyTexture, coords))
