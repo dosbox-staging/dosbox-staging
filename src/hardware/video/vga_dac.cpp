@@ -56,7 +56,7 @@ static bool is_ega_color(const Rgb666 color)
 	       palette.ega.cend();
 }
 
-// In the automatic "video mode specific" CRT emulation mode (`glshader =
+// In the automatic "video mode specific" CRT emulation mode (`shader =
 // crt-auto`), we want "true EGA" games on emulated VGA adapters to use the
 // single scanline EGA shader. "True EGA" games set up an EGA mode and don't
 // change the palette to use 18-bit VGA colours. These games look identical on

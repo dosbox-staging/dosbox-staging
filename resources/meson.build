@@ -3,7 +3,7 @@ resources = [
     'disknoises',
     'freedos-cpi',
     'freedos-keyboard',
-    'glshaders',
+    'shaders',
     'shader-presets',
     'mapping',
     'mapping-freedos.org',

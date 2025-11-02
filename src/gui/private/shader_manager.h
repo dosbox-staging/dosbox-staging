@@ -31,13 +31,13 @@ constexpr auto Sharp      = "interpolation/sharp";
 } // namespace ShaderName
 
 enum class ShaderMode {
-	// No shader auto-switching; the 'glshader' setting always contains the
+	// No shader auto-switching; the 'shader' setting always contains the
 	// name of the shader in use.
 	//
 	Single,
 
 	// Graphics-standard-based adaptive CRT shader mode.
-	// Enabled with the 'crt-auto' magic 'glshader' setting.
+	// Enabled with the 'crt-auto' magic 'shader' setting.
 	//
 	// The most appropriate shader is auto-selected based on the graphic
 	// standard of the current video mode and the viewport resolution. E.g.,
@@ -62,7 +62,7 @@ enum class ShaderMode {
 	AutoGraphicsStandard,
 
 	// Machine-based adaptive CRT shader mode.
-	// Enabled via the 'crt-machine-auto' magic 'glshader' setting.
+	// Enabled via the 'crt-machine-auto' magic 'shader' setting.
 	//
 	// This mode emulates a computer (machine) equipped with the configured
 	// video adapter and a matching monitor. The auto-switching picks the most
@@ -76,7 +76,7 @@ enum class ShaderMode {
 	AutoMachine,
 
 	// 15 kHz arcade / home computer monitor adaptive CRT shader mode.
-	// Enabled via the 'crt-machine-arcade' magic 'glshader' setting.
+	// Enabled via the 'crt-machine-arcade' magic 'shader' setting.
 	//
 	// This basically forces single scanning of all double-scanned VGA modes
 	// and no pixel doubling in all modes to achieve a somewhat less sharp
