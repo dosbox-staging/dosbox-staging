@@ -613,7 +613,7 @@ static void set_fallback_shader_or_exit()
 {
 	if (set_shader(SymbolicShaderName::AutoGraphicsStandard)) {
 		set_section_property_value("render",
-		                           "glshader",
+		                           "shader",
 		                           SymbolicShaderName::AutoGraphicsStandard);
 		return;
 	}
@@ -623,7 +623,7 @@ static void set_fallback_shader_or_exit()
 	        ShaderName::Sharp);
 
 	if (set_shader(ShaderName::Sharp)) {
-		set_section_property_value("render", "glshader", ShaderName::Sharp);
+		set_section_property_value("render", "shader", ShaderName::Sharp);
 		return;
 	}
 
@@ -1133,7 +1133,7 @@ static void init_render_settings(SectionProp& section)
 	auto* int_prop = section.AddInt("frameskip", Deprecated, 0);
 	int_prop->SetHelp("Consider capping frame rates using the 'host_rate' setting.");
 
-	auto* string_prop = section.AddString("glshader", Always, "crt-auto");
+	auto* string_prop = section.AddString("shader", Always, "crt-auto");
 	string_prop->SetOptionHelp(
 	        "Set an adaptive CRT monitor emulation shader or a regular shader ('crt-auto' by\n"
 	        "default). Shaders are only supported in the OpenGL output mode (see 'output').\n"
@@ -1177,12 +1177,12 @@ static void init_render_settings(SectionProp& section)
 	        "                          aspect ratios (this is less of an issue on high\n"
 	        "                          resolution monitors).\n"
 	        "\n"
-	        "Start DOSBox Staging with the '--list-glshaders' command line option to see the\n"
+	        "Start DOSBox Staging with the '--list-shaders' command line option to see the\n"
 	        "full list of available shaders. You can also use an absolute or relative path to\n"
 	        "a file. In all cases, you may omit the shader's '.glsl' file extension.");
 	string_prop->SetEnabledOptions({
 #if C_OPENGL
-	        "glshader",
+	        "shader",
 #endif
 	});
 
@@ -1220,7 +1220,7 @@ static void init_render_settings(SectionProp& section)
 	        "other dimension. If the image is larger than the viewport, the integer scaling\n"
 	        "constraint is auto-disabled (same as 'off'). Possible values:\n"
 	        "  auto:        A special vertical mode auto-enabled only for the adaptive CRT\n"
-	        "               shaders (see `glshader`). This mode has refinements over standard\n"
+	        "               shaders (see `shader`). This mode has refinements over standard\n"
 	        "               vertical integer scaling: 3.5x and 4.5x scaling factors are also\n"
 	        "               allowed, and integer scaling is disabled above 5.0x scaling.\n"
 	        "  vertical:    Constrain the vertical scaling factor to integer values.\n"
@@ -1313,9 +1313,9 @@ static void init_render_settings(SectionProp& section)
 	string_prop->SetHelp(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
 	        "  - If you used the normal2x/3x scalers, consider using 'integer_scaling'\n"
-	        "    with `glshader = sharp` and optionally setting the desired 'window_size'\n"
+	        "    with `shader = sharp` and optionally setting the desired 'window_size'\n"
 	        "    or 'viewport' size.\n"
-	        "  - If you used an advanced scaler, consider one of the 'glshader' options.");
+	        "  - If you used an advanced scaler, consider one of the 'shader' options.");
 }
 
 enum { Horiz, Vert };
@@ -1437,13 +1437,13 @@ static void notify_render_setting_updated(SectionProp& section,
 		// TODO Support switching custom CGA colors at runtime. This is
 		// somewhat complicated and needs experimentation.
 
-	} else if (prop_name == "glshader") {
-		if (set_shader(section.GetString("glshader"))) {
+	} else if (prop_name == "shader") {
+		if (set_shader(section.GetString("shader"))) {
 			reinit_drawing();
 		} else {
 			set_section_property_value(
 			        "render",
-			        "glshader",
+			        "shader",
 			        GFX_GetRenderer()->GetCurrentShaderDescriptorString());
 		}
 
