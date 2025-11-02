@@ -25,35 +25,33 @@
 
 CHECK_NARROWING();
 
-void ShaderManager::NotifyShaderNameChanged(const std::string& _shader_name)
+void ShaderManager::NotifyShaderChanged(const std::string& shader_descriptor)
 {
-	const auto [shader_name, preset_name] = SplitShaderName(_shader_name);
+	const auto descriptor = ParseShaderDescriptor(shader_descriptor);
 
-	// TODO
-	constexpr auto GlslExtension = ".glsl";
-	const auto symbolic_name = MapShaderName(shader_name, GlslExtension);
+	const auto shader_name = MapShaderName(descriptor.shader_name);
 
-	if (symbolic_name == SymbolicShaderName::AutoGraphicsStandard) {
+	if (shader_name == SymbolicShaderName::AutoGraphicsStandard) {
 		if (current_shader.mode != ShaderMode::AutoGraphicsStandard) {
 			current_shader.mode = ShaderMode::AutoGraphicsStandard;
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the graphics "
 			        "standard of the video mode");
 		}
-	} else if (symbolic_name == SymbolicShaderName::AutoMachine) {
+	} else if (shader_name == SymbolicShaderName::AutoMachine) {
 		if (current_shader.mode != ShaderMode::AutoMachine) {
 			current_shader.mode = ShaderMode::AutoMachine;
 
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the "
 			        "configured graphics adapter");
 		}
-	} else if (symbolic_name == SymbolicShaderName::AutoArcade) {
+	} else if (shader_name == SymbolicShaderName::AutoArcade) {
 		if (current_shader.mode != ShaderMode::AutoArcade) {
 			current_shader.mode = ShaderMode::AutoArcade;
 
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
 			        "CRT shader (normal variant)");
 		}
-	} else if (symbolic_name == SymbolicShaderName::AutoArcadeSharp) {
+	} else if (shader_name == SymbolicShaderName::AutoArcadeSharp) {
 		if (current_shader.mode != ShaderMode::AutoArcadeSharp) {
 			current_shader.mode = ShaderMode::AutoArcadeSharp;
 
@@ -64,8 +62,8 @@ void ShaderManager::NotifyShaderNameChanged(const std::string& _shader_name)
 		current_shader.mode = ShaderMode::Single;
 	}
 
-	current_shader.symbolic_name = symbolic_name;
-	current_shader.preset_name   = preset_name;
+	current_shader.descriptor_string = shader_descriptor;
+	current_shader.descriptor = {shader_name, descriptor.shader_preset};
 
 	MaybeAutoSwitchShader();
 }
@@ -127,11 +125,9 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_
 }
 
 std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
-        const std::string& _mapped_name)
+        const std::string& shader_name)
 {
-	auto mapped_name = _mapped_name;
-
-	auto maybe_source = FindShaderAndReadSource(mapped_name);
+	auto maybe_source = FindShaderAndReadSource(shader_name);
 	if (!maybe_source) {
 		// List all the existing shaders for the user
 		// TODO convert to notification
@@ -145,7 +141,7 @@ std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
 	}
 
 	const auto source = *maybe_source;
-	const auto default_preset = ParseDefaultShaderPreset(mapped_name, source);
+	const auto default_preset = ParseDefaultShaderPreset(shader_name, source);
 
 	const bool is_adaptive = [&] {
 		if (current_shader.mode == ShaderMode::Single) {
@@ -154,25 +150,24 @@ std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
 		} else {
 			// This will turn off vertical integer scaling for the
 			// 'sharp' shader in 'integer_scaling = auto' mode
-			return (mapped_name != MappedShaderName::Sharp);
+			return (shader_name != ShaderName::Sharp);
 		}
 	}();
 
-	const ShaderInfo shader_info = {mapped_name, default_preset, is_adaptive};
+	const ShaderInfo shader_info = {shader_name, default_preset, is_adaptive};
 
 	return std::pair{shader_info, source};
 }
 
 std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
-        const std::string& mapped_shader_name, const std::string& preset_name,
+        const std::string& shader_name, const std::string& preset_name,
         const ShaderPreset& default_preset) const
 {
-	assert(!mapped_shader_name.empty());
+	assert(!shader_name.empty());
 	assert(!preset_name.empty());
 
 	const auto path = get_resource_path(ShaderPresetsDir,
-	                                    std_fs::path{mapped_shader_name} /
-	                                            preset_name);
+	                                    std_fs::path{shader_name} / preset_name);
 
 	// TODO get_resource_path() should return optional
 	if (path.empty()) {
@@ -232,9 +227,14 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 	return preset;
 }
 
-std::string ShaderManager::GetCurrentMappedShaderName() const
+std::string ShaderManager::GetCurrentShaderDescriptorString() const
 {
-	return current_shader.mapped_name;
+	return current_shader.descriptor_string;
+}
+
+ShaderDescriptor ShaderManager::GetCurrentShaderDescriptor() const
+{
+	return current_shader.descriptor;
 }
 
 std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
@@ -306,34 +306,36 @@ void ShaderManager::AddMessages()
 	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_LIST", "Path '%s' has:");
 }
 
-std::pair<std::string, std::string> ShaderManager::SplitShaderName(
-        const std::string& shader_name) const
+ShaderDescriptor ShaderManager::ParseShaderDescriptor(const std::string& descriptor) const
 {
-	const auto parts = split(shader_name, ":");
+	const auto parts = split(descriptor, ":");
+	auto shader_name = parts[0];
 
-	const auto shader_name  = parts[0];
-	std::string preset_name = "";
-
-	if (parts.size() > 1) {
-		preset_name = parts[1];
+	// Drop optional .glsl extension
+	// TODO this should probably be backend-dependent
+	std_fs::path path = shader_name;
+	if (path.extension() == ".glsl") {
+		path.replace_extension("");
 	}
+
+	const auto preset_name = (parts.size() > 1) ? "" : parts[1];
+
 	return {shader_name, preset_name};
 }
 
-std::string ShaderManager::MapShaderName(const std::string& symbolic_name,
-                                         const std::string& file_extension) const
+std::string ShaderManager::MapShaderName(const std::string& name) const
 {
 	// Handle empty glshader setting case
-	if (symbolic_name.empty()) {
+	if (name.empty()) {
 		// Fallback to the sharp shader
-		return MappedShaderName::Sharp;
+		return ShaderName::Sharp;
 	}
 
 	// Map shader aliases
-	if (symbolic_name == "sharp") {
-		return MappedShaderName::Sharp;
+	if (name == "sharp") {
+		return ShaderName::Sharp;
 
-	} else if (symbolic_name == "bilinear" || symbolic_name == "none") {
+	} else if (name == "bilinear" || name == "none") {
 		return "interpolation/bilinear";
 
 	} else if (symbolic_name == "nearest") {
@@ -350,11 +352,6 @@ std::string ShaderManager::MapShaderName(const std::string& symbolic_name,
 		{"default",     "interpolation/sharp"}
 	};
 	// clang-format on
-
-	std_fs::path shader_path = symbolic_name;
-	if (shader_path.extension() == file_extension) {
-		shader_path.replace_extension("");
-	}
 
 	const auto legacy_name = shader_path.string();
 
@@ -377,7 +374,8 @@ std::string ShaderManager::MapShaderName(const std::string& symbolic_name,
 	return symbolic_name;
 }
 
-std::optional<std::string> ShaderManager::FindShaderAndReadSource(const std::string& mapped_name)
+// TODO add extension arg
+std::optional<std::string> ShaderManager::FindShaderAndReadSource(const std::string& shader_name)
 {
 	auto read_shader = [&](const std_fs::path& path) -> std::optional<std::string> {
 		std::ifstream fshader(path, std::ios_base::binary);
@@ -392,10 +390,10 @@ std::optional<std::string> ShaderManager::FindShaderAndReadSource(const std::str
 	};
 
 	// Start with the provided path...
-	std::vector<std_fs::path> candidate_paths = {mapped_name};
+	std::vector<std_fs::path> candidate_paths = {shader_name};
 
 	// ...and then try from resources
-	const auto resource_shader_path = get_resource_path(GlShadersDir, mapped_name);
+	const auto resource_shader_path = get_resource_path(GlShadersDir, shader_name);
 
 	// TODO get_resource_path() should return optional
 	if (!resource_shader_path.empty()) {
@@ -412,7 +410,6 @@ std::optional<std::string> ShaderManager::FindShaderAndReadSource(const std::str
 }
 
 ShaderPreset ShaderManager::ParseDefaultShaderPreset(const std::string& mapped_name,
-                                                     const std::string& shader_source) const
 {
 	ShaderPreset preset = {};
 
@@ -524,10 +521,10 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
 
 void ShaderManager::MaybeAutoSwitchShader()
 {
-	const auto new_shader = [&]() -> ShaderManager::ShaderAndPreset {
+	const auto new_shader_descriptor = [&] > ShaderDescriptor {
 		switch (current_shader.mode) {
 		case ShaderMode::Single:
-			return {current_shader.symbolic_name, ""};
+			return {current_shader.descriptor.shader_name, ""};
 
 		case ShaderMode::AutoGraphicsStandard:
 			return FindShaderAutoGraphicsStandard();
@@ -545,17 +542,15 @@ void ShaderManager::MaybeAutoSwitchShader()
 		}
 	}();
 
-	if (current_shader.mapped_name == new_shader.mapped_name &&
-	    current_shader.preset_name == new_shader.preset_name) {
+	if (current_shader.descriptor == new_shader_descriptor) {
 		return;
 	}
 
-	current_shader.mapped_name = new_shader.mapped_name;
-	current_shader.preset_name = new_shader.preset_name;
+	current_shader.descriptor = new_shader_descriptor;
 
 	if (current_shader.mode == ShaderMode::Single) {
 		LOG_MSG("RENDER: Using shader '%s'",
-		        current_shader.mapped_name.c_str());
+		        current_shader.descriptor.shader_name.c_str());
 	} else {
 		if (video_mode.has_vga_colors) {
 			LOG_MSG("RENDER: EGA mode with custom 18-bit VGA palette "
@@ -626,13 +621,73 @@ ShaderManager::ShaderAndPreset ShaderManager::GetEgaShader() const
 	return {MappedShaderName::Sharp, ""};
 }
 
-ShaderManager::ShaderAndPreset ShaderManager::GetVgaShader() const
+ShaderDescriptor ShaderManager::GetHerculesShader() const
 {
-	if (pixels_per_scanline >= 4) {
-		return {MappedShaderName::CrtHyllian, "vga-4k"};
+	return {ShaderName::CrtHyllian, "hercules"};
+}
+
+ShaderDescriptor ShaderManager::GetCgaShader() const
+{
+	if (video_mode.color_depth == ColorDepth::Monochrome) {
+		if (video_mode.width < 640) {
+			return {ShaderName::CrtHyllian, "monochrome-lowres"};
+		} else {
+			return {ShaderName::CrtHyllian, "monochrome-hires"};
+		}
+	}
+	if (pixels_per_scanline_force_single_scan >= 8) {
+		return {ShaderName::CrtHyllian, "cga-4k"};
+	}
+	if (pixels_per_scanline_force_single_scan >= 5) {
+		return {ShaderName::CrtHyllian, "cga-1440p"};
+	}
+	if (pixels_per_scanline_force_single_scan >= 4) {
+		return {ShaderName::CrtHyllian, "cga-1080p"};
+	}
+	if (pixels_per_scanline_force_single_scan >= 3) {
+		return {ShaderName::CrtHyllian, "cga-720p"};
+	}
+	return {ShaderName::Sharp, ""};
+}
+
+ShaderDescriptor ShaderManager::GetCompositeShader() const
+{
+	if (pixels_per_scanline >= 8) {
+		return {ShaderName::CrtHyllian, "composite-4k"};
+	}
+	if (pixels_per_scanline >= 5) {
+		return {ShaderName::CrtHyllian, "composite-1440p"};
 	}
 	if (pixels_per_scanline >= 3) {
-		return {MappedShaderName::CrtHyllian, "vga-1440p"};
+		return {ShaderName::CrtHyllian, "composite-1080p"};
+	}
+	return {ShaderName::Sharp, ""};
+}
+
+ShaderDescriptor ShaderManager::GetEgaShader() const
+{
+	if (pixels_per_scanline_force_single_scan >= 8) {
+		return {ShaderName::CrtHyllian, "ega-4k"};
+	}
+	if (pixels_per_scanline_force_single_scan >= 5) {
+		return {ShaderName::CrtHyllian, "ega-1440p"};
+	}
+	if (pixels_per_scanline_force_single_scan >= 4) {
+		return {ShaderName::CrtHyllian, "ega-1080p"};
+	}
+	if (pixels_per_scanline_force_single_scan >= 3) {
+		return {ShaderName::CrtHyllian, "ega-720p"};
+	}
+	return {ShaderName::Sharp, ""};
+}
+
+ShaderDescriptor ShaderManager::GetVgaShader() const
+{
+	if (pixels_per_scanline >= 4) {
+		return {ShaderName::CrtHyllian, "vga-4k"};
+	}
+	if (pixels_per_scanline >= 3) {
+		return {ShaderName::CrtHyllian, "vga-1440p"};
 	}
 	if (pixels_per_scanline >= 2) {
 		// Up to 1080/5 = 216-line double-scanned VGA modes can be
@@ -671,7 +726,7 @@ ShaderManager::ShaderAndPreset ShaderManager::GetVgaShader() const
 	return {MappedShaderName::Sharp, ""};
 }
 
-ShaderManager::ShaderAndPreset ShaderManager::FindShaderAutoGraphicsStandard() const
+ShaderDescriptor ShaderManager::FindShaderAutoGraphicsStandard() const
 {
 	if (video_mode.color_depth == ColorDepth::Composite) {
 		return GetCompositeShader();
@@ -699,7 +754,7 @@ ShaderManager::ShaderAndPreset ShaderManager::FindShaderAutoGraphicsStandard() c
 	}
 }
 
-ShaderManager::ShaderAndPreset ShaderManager::FindShaderAutoMachine() const
+ShaderDescriptor ShaderManager::FindShaderAutoMachine() const
 {
 	if (video_mode.color_depth == ColorDepth::Composite) {
 		return GetCompositeShader();
@@ -727,30 +782,30 @@ ShaderManager::ShaderAndPreset ShaderManager::FindShaderAutoMachine() const
 	};
 }
 
-ShaderManager::ShaderAndPreset ShaderManager::FindShaderAutoArcade() const
+ShaderDescriptor ShaderManager::FindShaderAutoArcade() const
 {
 	if (pixels_per_scanline_force_single_scan >= 8) {
-		return {MappedShaderName::CrtHyllian, "arcade-4k"};
+		return {ShaderName::CrtHyllian, "arcade-4k"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 5) {
-		return {MappedShaderName::CrtHyllian, "arcade-1440p"};
+		return {ShaderName::CrtHyllian, "arcade-1440p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 3) {
-		return {MappedShaderName::CrtHyllian, "arcade-1080p"};
+		return {ShaderName::CrtHyllian, "arcade-1080p"};
 	}
-	return {MappedShaderName::Sharp, ""};
+	return {ShaderName::Sharp, ""};
 }
 
-ShaderManager::ShaderAndPreset ShaderManager::FindShaderAutoArcadeSharp() const
+ShaderDescriptor ShaderManager::FindShaderAutoArcadeSharp() const
 {
 	if (pixels_per_scanline_force_single_scan >= 8) {
-		return {MappedShaderName::CrtHyllian, "arcade-sharp-4k"};
+		return {ShaderName::CrtHyllian, "arcade-sharp-4k"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 5) {
-		return {MappedShaderName::CrtHyllian, "arcade-sharp-1440p"};
+		return {ShaderName::CrtHyllian, "arcade-sharp-1440p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 3) {
-		return {MappedShaderName::CrtHyllian, "arcade-sharp-1080p"};
+		return {ShaderName::CrtHyllian, "arcade-sharp-1080p"};
 	}
-	return {MappedShaderName::Sharp, ""};
+	return {ShaderName::Sharp, ""};
 }
