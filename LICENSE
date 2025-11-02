@@ -21,10 +21,6 @@ GPL-2.0-or-later terms, however there are some exceptions:
   src/hardware/ne2000.cpp, which is licensed under the
   LGPL-2.1-or-later terms.
 
-- Timothy Lottes' has dedicated his CRT-styled scan-line GLSL
-  shader, in file resources/glshaders/crt/fakelottes-flat.glsl,
-  to the public domain.
-
 - DOS code pages to Unicode mapping definition files in the
   resources/mapping-unicode.org directory are licensed under the
   Unicode, Inc. License Agreement for Data Files and Software license.
