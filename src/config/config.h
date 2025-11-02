@@ -32,7 +32,7 @@ struct CommandLineArguments {
 	bool list_countries;
 	bool list_layouts;
 	bool list_code_pages;
-	bool list_glshaders;
+	bool list_shaders;
 	bool version;
 	bool help;
 	bool eraseconf;

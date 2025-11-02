@@ -623,7 +623,7 @@ void Config::ParseArguments()
 	arguments.list_countries = cmdline->FindRemoveBoolArgument("list-countries");
 	arguments.list_layouts = cmdline->FindRemoveBoolArgument("list-layouts");
 	arguments.list_code_pages = cmdline->FindRemoveBoolArgument("list-code-pages");
-	arguments.list_glshaders = cmdline->FindRemoveBoolArgument("list-glshaders");
+	arguments.list_shaders = cmdline->FindRemoveBoolArgument("list-shaders");
 	arguments.noconsole   = cmdline->FindRemoveBoolArgument("noconsole");
 	arguments.startmapper = cmdline->FindRemoveBoolArgument("startmapper");
 	arguments.exit        = cmdline->FindRemoveBoolArgument("exit");

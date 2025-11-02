@@ -139,8 +139,8 @@ static void register_command_line_help_message()
 	        "\n"
 	        "  --list-code-pages        List all bundled code pages (screen fonts).\n"
 	        "\n"
-	        "  --list-glshaders         List all available OpenGL shaders and their paths.\n"
-	        "                           Shaders are to be used in the 'glshader' config setting.\n"
+	        "  --list-shaders           List all available shaders and their paths.\n"
+	        "                           Shaders are to be used in the 'shader' config setting.\n"
 	        "\n"
 	        "  --fullscreen             Start in fullscreen mode.\n"
 	        "\n"
@@ -218,7 +218,7 @@ static int edit_primary_config()
 	return 1;
 }
 
-static void list_glshaders()
+static void list_shaders()
 {
 #if C_OPENGL
 	for (const auto& line : RENDER_GenerateShaderInventoryMessage()) {
@@ -323,7 +323,7 @@ static void init_logger(const CommandLineArguments& args, int argc, char* argv[]
 
 	if (args.version || args.help || args.printconf || args.editconf ||
 	    args.eraseconf || args.list_countries || args.list_layouts ||
-	    args.list_code_pages || args.list_glshaders || args.erasemapper) {
+	    args.list_code_pages || args.list_shaders || args.erasemapper) {
 
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
@@ -411,8 +411,8 @@ static std::optional<int> maybe_handle_command_line_output_only_actions(
 		list_code_pages();
 		return 0;
 	}
-	if (args.list_glshaders) {
-		list_glshaders();
+	if (args.list_shaders) {
+		list_shaders();
 		return 0;
 	}
 	return {};
@@ -510,8 +510,8 @@ static void maybe_create_resource_directories()
 	try_create_resource_dir(plugins_dir);
 
 #if C_OPENGL
-	const auto glshaders_dir = get_config_dir() / GlShadersDir;
-	try_create_resource_dir(glshaders_dir);
+	const auto shaders_dir = get_config_dir() / ShadersDir;
+	try_create_resource_dir(shaders_dir);
 #endif
 
 	const auto soundfonts_dir = get_config_dir() / DefaultSoundfontsDir;
@@ -628,7 +628,7 @@ int main(int argc, char* argv[])
 		DOS_Locale_AddMessages();
 
 		// We need to call this before initialising the modules to to
-		// support the '--list-glshaders' command line option.
+		// support the '--list-shaders' command line option.
 		RENDER_AddMessages();
 
 		GFX_AddConfigSection();
