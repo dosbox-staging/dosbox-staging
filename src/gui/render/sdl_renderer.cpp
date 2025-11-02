@@ -312,7 +312,7 @@ ShaderInfo SdlRenderer::GetCurrentShaderInfo()
 	return {};
 }
 
-std::string SdlRenderer::GetCurrentSymbolicShaderName()
+std::string SdlRenderer::GetCurrentShaderDescriptorString()
 {
 	// no shader support
 	return {};

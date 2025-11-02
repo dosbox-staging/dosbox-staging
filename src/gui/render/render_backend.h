@@ -63,9 +63,8 @@ public:
 	// Get information about the currently active shader.
 	virtual ShaderInfo GetCurrentShaderInfo() = 0;
 
-	// Get the symbolic name of the currently active shader (e.g.,
-	// `crt-auto`).
-	virtual std::string GetCurrentSymbolicShaderName() = 0;
+	// Get the shader descriptor string of the currently active shader.
+	virtual std::string GetCurrentShaderDescriptorString() = 0;
 
 	// Called at the start of every unique frame (when there have been
 	// changes to the DOS framebuffer).

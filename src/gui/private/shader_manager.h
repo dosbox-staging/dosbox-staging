@@ -97,6 +97,26 @@ enum class ShaderMode {
 struct ShaderDescriptor {
 	std::string shader_name = {};
 	std::string preset_name = {};
+
+	constexpr bool operator==(const ShaderDescriptor& that) const
+	{
+		return (shader_name == that.shader_name &&
+		        preset_name == that.preset_name);
+	}
+
+	constexpr bool operator!=(const ShaderDescriptor& that) const
+	{
+		return !operator==(that);
+	}
+
+	constexpr std::string to_string() const
+	{
+		if (preset_name.empty()) {
+			return shader_name;
+		} else {
+			return format_str("%s:%s", shader_name.c_str(), preset_name.c_str());
+		}
+	}
 };
 
 // The default setttings are important; these are the settings we get if the
@@ -161,11 +181,7 @@ public:
 	        const std::string& mapped_name);
 
 	std::optional<ShaderPreset> LoadShaderPreset(
-	        const std::string& mapped_name, const std::string& preset_name,
-	        const ShaderPreset& default_preset) const;
-
-	std::optional<ShaderPreset> LoadShaderPreset(
-	        const std::string& shader_name, const std::string& preset_name,
+	        const ShaderDescriptor& descriptor,
 	        const ShaderPreset& default_preset) const;
 
 	/*
@@ -261,8 +277,7 @@ private:
 	ShaderDescriptor GetVgaShader() const;
 
 	struct {
-		std::string descriptor_string = {};
-		ShaderDescriptor descriptor   = {};
+		ShaderDescriptor descriptor = {};
 
 		ShaderMode mode = ShaderMode::Single;
 	} current_shader = {};

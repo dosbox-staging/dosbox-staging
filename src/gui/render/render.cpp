@@ -599,7 +599,7 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 		return;
 	}
 
-	LOG_MSG("RENDER: Reloading shader '%s'", mapped_name.c_str());
+	LOG_MSG("RENDER: Reloading shader '%s'", shader_name.c_str());
 
 	GFX_GetRenderer()->ForceReloadCurrentShader();
 
@@ -1336,9 +1336,9 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
-bool set_shader(const std::string& shader_name)
+bool set_shader(const std::string& shader_descriptor)
 {
-	if (!GFX_GetRenderer()->SetShader(shader_name)) {
+	if (!GFX_GetRenderer()->SetShader(shader_descriptor)) {
 		return false;
 	}
 
@@ -1401,7 +1401,7 @@ static void notify_render_setting_updated(SectionProp& section,
 			set_section_property_value(
 			        "render",
 			        "glshader",
-			        GFX_GetRenderer()->GetCurrentSymbolicShaderName());
+			        GFX_GetRenderer()->GetCurrentShaderDescriptorString());
 		}
 
 	} else if (prop_name == "integer_scaling") {
