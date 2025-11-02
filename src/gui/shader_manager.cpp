@@ -215,15 +215,15 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 				LOG_WARNING("RENDER: Invalid shader parameter name: '%s'",
 				            name);
 			} else {
-				const auto value = parse_float(value_str);
-				if (!value) {
+				const auto maybe_float = parse_float(value_str);
+				if (!maybe_float) {
 					LOG_WARNING(
 					        "RENDER: Invalid value for shader parameter '%s' "
 					        "(must be float): '%s'",
 					        name,
 					        value_str);
 				} else {
-					shader.params[name] = value;
+					preset.params[name] = *maybe_float;
 				}
 			}
 		}
@@ -254,6 +254,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 		// TODO Handling the optional extensions should be probably
 		// handled by the render backend once we add more backends with
 		// shader support.
+		const auto dir = parent / GlShadersDir;
 		auto shaders = get_directory_entries(dir, ".glsl", OnlyRegularFiles);
 
 		const auto dir_exists      = std_fs::is_directory(dir, ec);
@@ -523,7 +524,7 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
 
 void ShaderManager::MaybeAutoSwitchShader()
 {
-	const auto new_shader = [&] -> ShaderManager::ShaderAndPreset {
+	const auto new_shader = [&]() -> ShaderManager::ShaderAndPreset {
 		switch (current_shader.mode) {
 		case ShaderMode::Single:
 			return {current_shader.symbolic_name, ""};
@@ -540,7 +541,7 @@ void ShaderManager::MaybeAutoSwitchShader()
 
 		default:
 			assertm(false, "Invalid ShaderMode value");
-			return std::string{""};
+			return {};
 		}
 	}();
 

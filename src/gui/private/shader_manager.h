@@ -197,8 +197,8 @@ private:
 	void MaybeAutoSwitchShader();
 
 	struct ShaderAndPreset {
-		std::string mapped_name   = {};
-		std::string preset_name   = {};
+		std::string mapped_name = {};
+		std::string preset_name = {};
 	};
 
 	ShaderAndPreset FindShaderAutoGraphicsStandard() const;
