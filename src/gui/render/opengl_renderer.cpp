@@ -68,7 +68,7 @@ OpenGlRenderer::OpenGlRenderer(const int x, const int y, const int width,
 {
 	window = CreateSdlWindow(x, y, width, height, sdl_window_flags);
 	if (!window) {
-		const auto msg = format_str("OPENGL: Error creating window");
+		const auto msg = format_str("OPENGL: Error creating window: %s", SDL_GetError());
 		LOG_ERR("%s", msg.c_str());
 		throw std::runtime_error(msg);
 	}
