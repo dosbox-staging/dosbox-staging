@@ -699,14 +699,16 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 		{ "hu" }, "Hungarian (101-key, QWERTY)",
 		// Priority approved by a native speaker
 		AutodetectionPriority::Low,
-		3845, // CWI-2 encoding
+		// Code page approved by a native speaker
+		852,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "hu208" }, "Hungarian (102-key, QWERTZ)",
 		// Priority approved by a native speaker
 		AutodetectionPriority::Low,
-		3845, // CWI-2 encoding
+		// Code page approved by a native speaker
+		852,
 		KeyboardScript::LatinQwertz,
 	},
 	{
