@@ -1534,6 +1534,12 @@ static void create_window_and_renderer()
 			        "OPENGL: Error initialising OpenGL renderer, "
 			        "falling back to SDL renderer");
 
+			// GL attributes are global and can affect SDL's texture renderer
+			// as it can use OpenGL internally as a backend.
+			// This is done in OpenGlRenderer's destructor but we caught an exception during construction
+			// so the destructor will not be run here.
+			SDL_GL_ResetAttributes();
+
 			sdl.render_backend_type = RenderBackendType::Sdl;
 			set_section_property_value("sdl", "output", "texture");
 		}
