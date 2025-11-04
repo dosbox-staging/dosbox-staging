@@ -852,10 +852,9 @@ float GFX_GetDpiScaleFactor()
 
 static bool is_using_kmsdrm_driver()
 {
-	const bool is_initialized = SDL_WasInit(SDL_INIT_VIDEO);
+	assert(SDL_WasInit(SDL_INIT_VIDEO));
 
-	const auto driver = is_initialized ? SDL_GetCurrentVideoDriver()
-	                                   : getenv("SDL_VIDEODRIVER");
+	const auto driver = SDL_GetCurrentVideoDriver();
 	if (!driver) {
 		return false;
 	}
@@ -1812,14 +1811,14 @@ void GFX_Init()
 {
 	set_sdl_hints();
 
-	if (is_using_kmsdrm_driver() && !check_kmsdrm_setting()) {
-		E_Exit("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.\n"
-		       "Please run: 'sudo usermod -aG input $(whoami)', then re-login and try again.");
-	}
-
 	// Initialise SDL (timer is needed for title bar animations)
 	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
 		E_Exit("SDL: Can't init SDL %s", SDL_GetError());
+	}
+
+	if (is_using_kmsdrm_driver() && !check_kmsdrm_setting()) {
+		E_Exit("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.\n"
+		       "Please run: 'sudo usermod -aG input $(whoami)', then re-login and try again.");
 	}
 
 	// Register custom SDL events
