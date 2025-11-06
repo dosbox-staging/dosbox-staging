@@ -339,10 +339,8 @@ static std::deque<std_fs::path> get_rom_dirs()
 	return rom_dirs;
 }
 
-MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
+static void set_soundcanvas_rom_dir_env_var()
 {
-	using namespace SoundCanvas;
-
 	// Get potential ROM directory candidates, these will be added to a 
 	// SOUNDCANVAS_ROM_PATH environment variable which may be used by 
 	// a plugin to search for ROM files
@@ -362,6 +360,13 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	}
 	LOG_MSG("SOUNDCANVAS: Setting SOUNDCANVAS_ROM_PATH env variable to '%s'", env_list.c_str());
 	set_env_var("SOUNDCANVAS_ROM_PATH", env_list.c_str(), Env::Overwrite);
+}
+
+MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
+{
+	using namespace SoundCanvas;
+
+	set_soundcanvas_rom_dir_env_var();
 
 	const auto model_name = get_model_setting();
 
@@ -761,6 +766,8 @@ static bool available_models_initialised = false;
 void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 {
 	using namespace SoundCanvas;
+
+	set_soundcanvas_rom_dir_env_var();
 
 	// Table layout constants
 	constexpr auto ColumnDelim = " ";
