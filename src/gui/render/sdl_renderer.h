@@ -79,7 +79,6 @@ private:
 	// True if the last framebuffer has been updated since the last present
 	bool last_framebuf_dirty = false;
 
-	SDL_PixelFormat* pixel_format = {};
 	SDL_Texture* texture          = {};
 
 	TextureFilterMode texture_filter_mode = TextureFilterMode::Bilinear;

@@ -161,6 +161,8 @@ bool OpenGlRenderer::InitRenderer()
 	         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION, "unknown"),
 	         safe_gl_get_string(GL_VENDOR, "unknown"));
 
+	// TODO: GFX_CAN_32 | GFX_CAN_RANDOM is always set for both SDL and OpenGL backends.
+	// Opportunity to remove dead code from render.cpp.
 	gfx_flags = GFX_CAN_32 | GFX_CAN_RANDOM;
 
 	return true;
