@@ -13,6 +13,8 @@
 
 CHECK_NARROWING();
 
+static constexpr uint32_t SdlPixelFormat = SDL_PIXELFORMAT_ARGB8888;
+
 SdlRenderer::SdlRenderer(const int x, const int y, const int width,
                          const int height, const uint32_t sdl_window_flags,
                          const std::string& render_driver,
@@ -118,24 +120,10 @@ bool SdlRenderer::InitRenderer(const std::string& render_driver)
 	}
 	LOG_MSG("SDL: Using '%s' SDL render driver", info.name);
 
-	pixel_format = SDL_AllocFormat(info.texture_formats[0]);
-	if (!pixel_format) {
-		LOG_ERR("SDL: Error allocating pixel format: %s", SDL_GetError());
-		SDL_DestroyRenderer(renderer);
-		return false;
-	}
-
-	switch (SDL_BITSPERPIXEL(info.texture_formats[0])) {
-	case 8: gfx_flags = GFX_CAN_8; break;
-	case 15: gfx_flags = GFX_CAN_15; break;
-	case 16: gfx_flags = GFX_CAN_16; break;
-	case 24: // SDL_BYTESPERPIXEL is probably 4, though
-	case 32: gfx_flags = GFX_CAN_32; break;
-	}
-
-	if (!(info.flags & SDL_RENDERER_ACCELERATED)) {
-		gfx_flags |= GFX_CAN_RANDOM;
-	}
+	// TODO: GFX_CAN_32 | GFX_CAN_RANDOM is always set for both SDL and OpenGL backends.
+	// Opportunity to remove dead code from render.cpp.
+	static_assert(SDL_PIXELTYPE(SdlPixelFormat) == SDL_PIXELTYPE_PACKED32);
+	gfx_flags = GFX_CAN_32 | GFX_CAN_RANDOM;
 
 	if (SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE) < 0) {
 		LOG_ERR("SDL: Error setting render clear color: %s", SDL_GetError());
@@ -146,10 +134,6 @@ bool SdlRenderer::InitRenderer(const std::string& render_driver)
 
 SdlRenderer::~SdlRenderer()
 {
-	if (pixel_format) {
-		SDL_FreeFormat(pixel_format);
-		pixel_format = {};
-	}
 	if (renderer) {
 		// Frees associated textures automatically.
 		SDL_DestroyRenderer(renderer);
@@ -210,20 +194,12 @@ void SdlRenderer::UpdateViewport(const DosBox::Rect draw_rect_px)
 
 bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_height_px)
 {
-	// Retrieve available texture formats.
-	SDL_RendererInfo renderer_info;
-	if (SDL_GetRendererInfo(renderer, &renderer_info) < 0) {
-		LOG_ERR("SDL: Error retrieving SDL renderer info: %s",
-		        SDL_GetError());
-		return false;
-	}
-
 	if (texture) {
 		SDL_DestroyTexture(texture);
 	}
 
 	texture = SDL_CreateTexture(renderer,
-	                            renderer_info.texture_formats[0],
+	                            SdlPixelFormat,
 	                            SDL_TEXTUREACCESS_STREAMING,
 	                            render_width_px,
 	                            render_height_px);
@@ -267,13 +243,13 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 	                                               render_width_px,
 	                                               render_height_px,
 	                                               BitDepth,
-	                                               renderer_info.texture_formats[0]);
+	                                               SdlPixelFormat);
 
 	last_framebuf = SDL_CreateRGBSurfaceWithFormat(Flags,
 	                                               render_width_px,
 	                                               render_height_px,
 	                                               BitDepth,
-	                                               renderer_info.texture_formats[0]);
+	                                               SdlPixelFormat);
 
 	if (!curr_framebuf || !last_framebuf) {
 		SDL_DestroyTexture(texture);
@@ -451,7 +427,6 @@ RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_p
 uint32_t SdlRenderer::MakePixel(const uint8_t red, const uint8_t green,
                                 const uint8_t blue)
 {
-	assert(pixel_format);
-
-	return SDL_MapRGB(pixel_format, red, green, blue);
+	static_assert(SdlPixelFormat == SDL_PIXELFORMAT_ARGB8888);
+	return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
 }
