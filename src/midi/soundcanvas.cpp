@@ -774,6 +774,7 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	constexpr auto Indent      = "  ";
 
 	if (!available_models_initialised) {
+		available_models.clear();
 		for (auto m : all_models) {
 			if (const auto p = try_load_plugin(*m); p.plugin) {
 				available_models.insert(m);
@@ -928,6 +929,10 @@ static void register_soundcanvas_text_messages()
 static void notify_soundcanvas_setting_updated([[maybe_unused]] SectionProp& section,
                                                const std::string& prop_name)
 {
+	if (prop_name == "soundcanvas_rom_dir") {
+		available_models_initialised = false;
+	}
+
 	const auto device = dynamic_cast<MidiDeviceSoundCanvas*>(
 	        MIDI_GetCurrentDevice());
 
