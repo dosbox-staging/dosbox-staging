@@ -171,8 +171,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path,
 
 	const auto candidate_paths = {std_fs::path(path),
 	                              std_fs::path(path + SampleExtension),
-	                              get_resource_path(DiskNoiseDir, path),
-	                              get_resource_path(DiskNoiseDir,
+	                              get_resource_path(DiskNoisesDir, path),
+	                              get_resource_path(DiskNoisesDir,
 	                                                path + SampleExtension)};
 
 	for (const auto& candidate : candidate_paths) {

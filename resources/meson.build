@@ -1,16 +1,16 @@
 resources = [
+    'disk-noises',
     'drives',
-    'disknoises',
     'freedos-cpi',
     'freedos-keyboard',
-    'shaders',
-    'shader-presets',
+    'mapperfiles',
     'mapping',
     'mapping-freedos.org',
     'mapping-unicode.org',
     'mapping-wikipedia.org',
+    'shader-presets',
+    'shaders',
     'translations',
-    'mapperfiles',
     # insert new resource subdirectory names here
 ]
 
