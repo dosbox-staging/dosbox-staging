@@ -95,6 +95,10 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+	// SDL_GL_SetAttribute() is not a reliable error point.
+	// SDL mostly only does sanity checks to ensure we pass valid values.
+	// Success does not mean we will actually get an sRGB framebuffer.
+	// We won't know if it actually worked until after we create the window.
 	if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
 		LOG_ERR("OPENGL: Error requesting an sRGB framebuffer: %s",
 		        SDL_GetError());
@@ -111,7 +115,17 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	auto flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
-	return SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
+	SDL_Window *window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
+	if (!window) {
+		// Try again without sRGB. This has been a problem with KMSDRM.
+		SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 0);
+		window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
+		if (window) {
+			LOG_ERR("OPENGL: Failed to create an sRGB framebuffer. Falling back to non-sRGB.");
+		}
+	}
+
+	return window;
 }
 
 bool OpenGlRenderer::InitRenderer()
