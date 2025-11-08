@@ -1133,7 +1133,12 @@ static void init_render_settings(SectionProp& section)
 	auto* int_prop = section.AddInt("frameskip", Deprecated, 0);
 	int_prop->SetHelp("Consider capping frame rates using the 'host_rate' setting.");
 
-	auto* string_prop = section.AddString("shader", Always, "crt-auto");
+	auto string_prop = section.AddString("glshader", DeprecatedButAllowed, "");
+	string_prop->SetHelp(
+	        "The [color=light-green]'glshader'[reset] setting is deprecated but still accepted;\n"
+	        "please use [color=light-green]'shader'[reset] instead.");
+
+	string_prop = section.AddString("shader", Always, "crt-auto");
 	string_prop->SetOptionHelp(
 	        "Set an adaptive CRT monitor emulation shader or a regular shader ('crt-auto' by\n"
 	        "default). Shaders are only supported in the OpenGL output mode (see 'output').\n"
@@ -1396,9 +1401,20 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
+static std::string get_shader_setting_value()
+{
+	const auto legacy_pref = get_render_section().GetString("glshader");
+
+	if (!legacy_pref.empty()) {
+		set_section_property_value("render", "glshader", "");
+		set_section_property_value("render", "shader", legacy_pref);
+	}
+	return get_render_section().GetString("shader");
+}
+
 void RENDER_SetShaderWithFallback()
 {
-	set_shader_with_fallback_or_exit(get_render_section().GetString("glshader"));
+	set_shader_with_fallback_or_exit(get_shader_setting_value());
 }
 
 static void set_monochrome_palette(SectionProp& section)
@@ -1437,15 +1453,14 @@ static void notify_render_setting_updated(SectionProp& section,
 		// TODO Support switching custom CGA colors at runtime. This is
 		// somewhat complicated and needs experimentation.
 
-	} else if (prop_name == "shader") {
-		if (set_shader(section.GetString("shader"))) {
-			reinit_drawing();
-		} else {
-			set_section_property_value(
-			        "render",
-			        "shader",
-			        GFX_GetRenderer()->GetCurrentShaderDescriptorString());
-		}
+	} else if (prop_name == "glshader" || prop_name == "shader") {
+		set_shader_with_fallback_or_exit(get_shader_setting_value());
+		reinit_drawing();
+
+		set_section_property_value(
+		        "render",
+		        "shader",
+		        GFX_GetRenderer()->GetCurrentShaderDescriptorString());
 
 	} else if (prop_name == "integer_scaling") {
 		set_integer_scaling(section);
