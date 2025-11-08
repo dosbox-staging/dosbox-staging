@@ -7948,7 +7948,7 @@ static void init_voodoo_config_settings(SectionProp& section)
 
 	// Deprecate the boolean Voodoo multithreading setting
 	bool_prop = section.AddBool("voodoo_multithreading", Deprecated, false);
-	bool_prop->SetHelp("Renamed to 'voodoo_threads'");
+	bool_prop->SetHelp("Renamed to [color=light-green]'voodoo_threads'.[reset]");
 
 	str_prop = section.AddString("voodoo_threads", OnlyAtStart, "auto");
 	str_prop->SetHelp(

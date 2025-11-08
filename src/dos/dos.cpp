@@ -1952,7 +1952,7 @@ static void init_dos_settings(SectionProp& section)
 	        "command-line argument.");
 
 	pstring = section.AddString("keyboardlayout", Deprecated, "");
-	pstring->SetHelp("Renamed to 'keyboard_layout'.");
+	pstring->SetHelp("Renamed to [color=light-green]'keyboard_layout'[reset].");
 
 	pstring = section.AddString("keyboard_layout", OnlyAtStart, "auto");
 	pstring->SetHelp(
