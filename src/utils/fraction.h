@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <numeric>
 
+#include <utils/string_utils.h>
+
 // Class to represent simple fractions. The fraction is always simplified
 // after construction or after any operation. The sign always is normalised so
 // the numerator carries the sign and the denominator is always positive.
@@ -147,6 +149,12 @@ public:
 	constexpr Fraction operator/(const Fraction& that) const
 	{
 		return {num * that.denom, denom * that.num};
+	}
+
+	// Return a string representation of the fraction (e.g. `4:3 (1.333333)`)
+	std::string ToString() const
+	{
+		return format_str("%d:%d (%g)", num, denom, ToFloat());
 	}
 
 private:
