@@ -822,7 +822,9 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "                  framebuffer\" hack (needed only by a few games).");
 
 	pstring = section->AddPath("captures", Deprecated, "capture");
-	pstring->SetHelp("Moved to [capture] section and renamed to 'capture_dir'.");
+	pstring->SetHelp(
+	        "Moved to [color=light-cyan][capture][reset] section and "
+	        "renamed to [color=light-green]'capture_dir'[reset].");
 
 	auto pint = section->AddInt("memsize", OnlyAtStart, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());

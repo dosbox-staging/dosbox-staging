@@ -3304,8 +3304,10 @@ void init_cpu_config_settings(SectionProp& secprop)
 	                                               DeprecatedButAllowed,
 	                                               " ");
 	pmulti_remain->SetHelp(
-	        "The 'cycles' setting is deprecated but still accepted;\n"
-	        "please use 'cpu_cycles', 'cpu_cycles_protected' and 'cpu_throttle' instead.");
+	        "The [color=light-green]'cycles'[reset] setting is deprecated but still accepted;\n"
+	        "please use [color=light-green]'cpu_cycles'[reset], "
+	        "[color=light-green]'cpu_cycles_protected'[reset] and "
+	        "[color=light-green]'cpu_throttle'[reset] instead.");
 
 	pstring = pmulti_remain->GetSection()->AddString("type", Always, "auto");
 	pmulti_remain->SetValue(" ");
