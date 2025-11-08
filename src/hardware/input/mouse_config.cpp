@@ -537,7 +537,7 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "    driver.\n");
 
 	prop_bool = secprop.AddBool("dos_mouse_driver", Deprecated, true);
-	prop_bool->SetHelp("Renamed to 'builtin_dos_mouse_driver'.");
+	prop_bool->SetHelp("Renamed to [color=light-green]'builtin_dos_mouse_driver'[reset].");
 
 	prop_str = secprop.AddString("builtin_dos_mouse_driver_model",
 	                             Always,
@@ -580,7 +580,7 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "              been found to require the v7.0+ behaviour so far.");
 
 	prop_bool = secprop.AddBool("dos_mouse_immediate", Deprecated, false);
-	prop_bool->SetHelp("Configure using 'builtin_dos_mouse_driver_options'.");
+	prop_bool->SetHelp("Configure using [color=light-green]'builtin_dos_mouse_driver_options'[reset].");
 
 	// Physical mice configuration
 

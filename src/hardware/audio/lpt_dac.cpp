@@ -169,7 +169,9 @@ static void init_lpt_dac_settings(SectionProp& section)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	auto pbool = section.AddBool("disney", Deprecated, false);
-	pbool->SetHelp("Use 'lpt_dac = disney' to enable the Disney Sound Source.");
+	pbool->SetHelp(
+	        "Use [color=light-green]'lpt_dac = disney'[reset] to "
+	        "enable the Disney Sound Source.");
 }
 
 void LPTDAC_Init(SectionProp& section)
