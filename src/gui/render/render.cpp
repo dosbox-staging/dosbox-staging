@@ -1130,8 +1130,11 @@ static void init_render_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
-	auto* int_prop = section.AddInt("frameskip", Deprecated, 0);
-	int_prop->SetHelp("Consider capping frame rates using the 'host_rate' setting.");
+	auto int_prop = section.AddInt("frameskip", Deprecated, 0);
+	int_prop->SetHelp(
+	        "The [color=light-green]'frameskip'[reset] setting has been removed; "
+	        "consider capping frame rates using the\n"
+	        "[color=light-green]'host_rate'[reset] setting instead.");
 
 	auto string_prop = section.AddString("glshader", DeprecatedButAllowed, "");
 	string_prop->SetHelp(
