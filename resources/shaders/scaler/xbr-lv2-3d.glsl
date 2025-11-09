@@ -1,6 +1,6 @@
 #version 120
 
-// SPDX-FileCopyrightText:  2020-2024 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2011-2015 Hyllian <sergiogdb@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -10,16 +10,11 @@
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
 
-/*
-
 #pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
 #pragma parameter XBR_EQ_THRESHOLD "Eq Threshold" 15.0 0.0 50.0 1.0
-#pragma parameter XBR_LV1_COEFFICIENT "Lv1 Coefficient" 0.5 0.0 30.0 0.5
 #pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
 #pragma parameter XBR_RES "Internal Res Multiplier" 2.0 1.0 8.0 1.0
 #pragma parameter XBR_SCALE "xBR Scale" 3.0 1.0 5.0 1.0
-
-*/
 
 #define mul(a,b) (b*a)
 #define saturate(c) clamp(c, 0.0, 1.0)
@@ -60,21 +55,11 @@ uniform COMPAT_PRECISION vec2 rubyInputSize;
 #define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
 #define OutSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
 
-#ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float XBR_Y_WEIGHT;
 uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD;
-uniform COMPAT_PRECISION float XBR_LV1_COEFFICIENT;
 uniform COMPAT_PRECISION float XBR_LV2_COEFFICIENT;
 uniform COMPAT_PRECISION float XBR_RES;
 uniform COMPAT_PRECISION float XBR_SCALE;
-#else
-#define XBR_Y_WEIGHT 48.0
-#define XBR_EQ_THRESHOLD 15.0
-#define XBR_LV1_COEFFICIENT 0.5
-#define XBR_LV2_COEFFICIENT 2.0
-#define XBR_RES 1.0
-#define XBR_SCALE 3.0
-#endif
 
 void main()
 {
@@ -124,21 +109,11 @@ COMPAT_VARYING vec4 t1;
 #define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
 #define OutSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
 
-#ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float XBR_Y_WEIGHT;
 uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD;
-uniform COMPAT_PRECISION float XBR_LV1_COEFFICIENT;
 uniform COMPAT_PRECISION float XBR_LV2_COEFFICIENT;
 uniform COMPAT_PRECISION float XBR_RES;
 uniform COMPAT_PRECISION float XBR_SCALE;
-#else
-#define XBR_Y_WEIGHT 48.0
-#define XBR_EQ_THRESHOLD 15.0
-#define XBR_LV1_COEFFICIENT 0.5
-#define XBR_LV2_COEFFICIENT 2.0
-#define XBR_RES 1.0
-#define XBR_SCALE 3.0
-#endif
 
 // Uncomment just one of the three params below to choose the corner detection
 //#define CORNER_A

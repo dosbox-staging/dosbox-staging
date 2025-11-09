@@ -1,6 +1,6 @@
 #version 120
 
-// SPDX-FileCopyrightText:  2020-2024 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2011-2015 Hyllian <sergiogdb@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -13,16 +13,11 @@
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
 
-/*
-
-// Parameter lines go here:
 #pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
 #pragma parameter XBR_EQ_THRESHOLD "EQ Threshold" 10.0 0.0 50.0 1.0
 #pragma parameter XBR_EQ_THRESHOLD2 "EQ Threshold 2" 2.0 0.0 4.0 1.0
 #pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 1.0
-#pragma parameter corner_type "Corner Calculation" 3.0 1.0 3.0 1.0
-
-*/
+#pragma parameter XBR_CORNER_TYPE "Corner Calculation" 3.0 1.0 3.0 1.0
 
 #if defined(VERTEX)
 
@@ -128,19 +123,11 @@ COMPAT_VARYING vec4 t7;
 #define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
 
-#ifdef PARAMETER_UNIFORM
 uniform COMPAT_PRECISION float XBR_Y_WEIGHT;
 uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD;
 uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD2;
 uniform COMPAT_PRECISION float XBR_LV2_COEFFICIENT;
-uniform COMPAT_PRECISION float corner_type;
-#else
-#define XBR_Y_WEIGHT 48.0
-#define XBR_EQ_THRESHOLD 10.0
-#define XBR_EQ_THRESHOLD2 2.0
-#define XBR_LV2_COEFFICIENT 2.0
-#define corner_type 1.0
-#endif
+uniform COMPAT_PRECISION float XBR_CORNER_TYPE;
 
 const mat3 yuv = mat3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
 const vec4 delta = vec4(0.4, 0.4, 0.4, 0.4);
@@ -263,27 +250,29 @@ void main()
 	fx3_up  = (Aw*fp.y+Bw*fp.x);
 
 	// It uses CORNER_C if none of the others are defined.
-if(corner_type == 1.0)
-	{interp_restriction_lv1 = and(notEqual(e, f), notEqual(e, h));}
-else if(corner_type == 2.0)
-	{interp_restriction_lv1      = and(and(notEqual(e,f) , notEqual(e,h))  ,
+    if (XBR_CORNER_TYPE == 1.0) {
+		interp_restriction_lv1 = and(notEqual(e, f), notEqual(e, h));
+
+	} else if (XBR_CORNER_TYPE == 2.0) {
+		interp_restriction_lv1 = and(and(notEqual(e,f) , notEqual(e,h))  ,
 									( or(or(and(and(or(and(not(eq(f,b)) ,  not(eq(h,d))) ,
-									eq(e,i)) , not(eq(f,i4))) , not(eq(h,i5))) , eq(e,g)) , eq(e,c)) ) );}
-//commenting this one out because something got broken
-/*else if(corner_type == 6.0)
-	{interp_restriction_lv1      = and(and(and(notEqual(e,f) , notEqual(e,h))  ,
+									eq(e,i)) , not(eq(f,i4))) , not(eq(h,i5))) , eq(e,g)) , eq(e,c)) ) );
+	//commenting this one out because something got broken
+	/*else if(XBR_CORNER_TYPE == 6.0)
+		{interp_restriction_lv1 = and(and(and(notEqual(e,f) , notEqual(e,h))  ,
 									( or(or(and(and(or(and(not(eq(f,b)) , not(eq(h,d))) ,
 									eq(e,i)) , not(eq(f,i4))) , not(eq(h,i5))) , eq(e,g)) ,
 									eq(e,c)) )) , (and(or(or(or(or(and(notEqual(f,f4) , notEqual(f,i)) ,
 									and(notEqual(h,h5) , notEqual(h,i))) , notEqual(h,g)) , notEqual(f,c)) ,
 									eq(b,c1)) , eq(d,g0))));} */
-else
-	{interp_restriction_lv1 = and(and(notEqual(e, f), notEqual(e, h)),
+	} else {
+		interp_restriction_lv1 = and(and(notEqual(e, f), notEqual(e, h)),
 								 or(or(and(not(eq(f,b)), not(eq(f,c))),
 									   and(not(eq(h,d)), not(eq(h,g)))),
 									or(and(eq(e,i), or(and(not(eq(f,f4)), not(eq(f,i4))),
 													   and(not(eq(h,h5)), not(eq(h,i5))))),
-									   or(eq(e,g), eq(e,c)))));}
+									   or(eq(e,g), eq(e,c)))));
+	}
 
 	interp_restriction_lv2_left = and(notEqual(e, g), notEqual(d, g));
 	interp_restriction_lv2_up   = and(notEqual(e, c), notEqual(b, c));
@@ -319,6 +308,12 @@ else
 	vec4 final75 = vec4(nc75) * fx75;
 
 	vec4 maximo = max(max(max(final15, final75),max(final30, final60)), final45);
+
+	// Just to get rid of the uninitialised warnings
+	blend1 = 0;
+	blend2 = 0;
+	pix1 = vec3(0);
+	pix2 = vec3(0);
 
 		 if (nc.x) {pix1 = px.x ? F : H; blend1 = maximo.x;}
 	else if (nc.y) {pix1 = px.y ? B : F; blend1 = maximo.y;}
