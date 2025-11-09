@@ -16,8 +16,6 @@ constexpr uint8_t GFX_CAN_8      = 1 << 0;
 constexpr uint8_t GFX_CAN_15     = 1 << 1;
 constexpr uint8_t GFX_CAN_16     = 1 << 2;
 constexpr uint8_t GFX_CAN_32     = 1 << 3;
-constexpr uint8_t GFX_DBL_H      = 1 << 4; // double-width  flag
-constexpr uint8_t GFX_DBL_W      = 1 << 5; // double-height flag
 
 typedef enum {
 	GFX_CallbackReset,
@@ -85,7 +83,8 @@ uint32_t GFX_MakePixel(const uint8_t red, const uint8_t green, const uint8_t blu
 TextureFilterMode GFX_GetTextureFilterMode();
 
 void GFX_SetSize(const int render_width_px, const int render_height_px,
-                 const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
+                 const Fraction& render_pixel_aspect_ratio,
+                 const bool double_width, const bool double_height,
                  const VideoMode& video_mode, GFX_Callback_t callback);
 
 void GFX_ResetScreen();
