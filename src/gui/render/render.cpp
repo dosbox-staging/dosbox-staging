@@ -18,6 +18,7 @@
 #include "gui/render/render.h"
 #include "gui/render/render_backend.h"
 #include "hardware/video/vga.h"
+#include "misc/notifications.h"
 #include "misc/support.h"
 #include "misc/video.h"
 #include "shell/shell.h"
@@ -618,9 +619,11 @@ static void set_fallback_shader_or_exit()
 		return;
 	}
 
-	LOG_ERR("RENDER: Error setting shader '%s', falling back to '%s'",
-	        SymbolicShaderName::AutoGraphicsStandard,
-	        ShaderName::Sharp);
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "RENDER",
+	                      "RENDER_SHADER_FALLBACK",
+	                      SymbolicShaderName::AutoGraphicsStandard,
+	                      ShaderName::Sharp);
 
 	if (set_shader(ShaderName::Sharp)) {
 		set_section_property_value("render", "shader", ShaderName::Sharp);
@@ -633,9 +636,11 @@ static void set_fallback_shader_or_exit()
 static void set_shader_with_fallback_or_exit(const std::string& shader_descriptor)
 {
 	if (!set_shader(shader_descriptor)) {
-		LOG_ERR("RENDER: Error setting shader '%s', falling back to '%s'",
-		        shader_descriptor.c_str(),
-		        SymbolicShaderName::AutoGraphicsStandard);
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "RENDER_SHADER_FALLBACK",
+		                      shader_descriptor.c_str(),
+		                      SymbolicShaderName::AutoGraphicsStandard);
 
 		set_fallback_shader_or_exit();
 	}
@@ -654,9 +659,11 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 	        shader_descriptor.ToString().c_str());
 
 	if (!GFX_GetRenderer()->ForceReloadCurrentShader()) {
-		LOG_ERR("RENDER: Error reloading shader '%s', falling back to '%s'",
-		        SymbolicShaderName::AutoGraphicsStandard,
-		        ShaderName::Sharp);
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "RENDER_SHADER_FALLBACK",
+		                      shader_descriptor.ToString().c_str(),
+		                      SymbolicShaderName::AutoGraphicsStandard);
 
 		set_fallback_shader_or_exit();
 	}
@@ -721,9 +728,16 @@ static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting(Sectio
 		return AspectRatioCorrectionMode::Stretch;
 
 	} else {
-		// TODO convert to notification
-		LOG_WARNING("RENDER: Invalid 'aspect' setting: '%s', using 'auto'",
-		            mode.c_str());
+		constexpr auto SettingName  = "aspect";
+		constexpr auto DefaultValue = "auto";
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      SettingName,
+		                      mode.c_str(),
+		                      DefaultValue);
+
 		return AspectRatioCorrectionMode::Auto;
 	}
 }
@@ -742,13 +756,25 @@ static void log_invalid_viewport_setting_warning(
         const std::string& pref,
         const std::optional<const std::string> extra_info = {})
 {
-	// TODO convert to notification
-	LOG_WARNING(
-	        "DISPLAY: Invalid 'viewport' setting: '%s'"
-	        "%s%s, using 'fit'",
-	        pref.c_str(),
-	        (extra_info ? ". " : ""),
-	        (extra_info ? extra_info->c_str() : ""));
+	constexpr auto SettingName  = "viewport";
+	constexpr auto DefaultValue = "fit";
+
+	if (extra_info) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING_WITH_DETAILS",
+		                      SettingName,
+		                      pref.c_str(),
+		                      extra_info->c_str(),
+		                      DefaultValue);
+	} else {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      SettingName,
+		                      pref.c_str(),
+		                      DefaultValue);
+	}
 }
 
 std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s)
@@ -954,9 +980,16 @@ static IntegerScalingMode get_integer_scaling_mode_setting(SectionProp& section)
 		return IntegerScalingMode::Vertical;
 
 	} else {
-		// TODO convert to notification
-		LOG_WARNING("RENDER: Invalid 'integer_scaling' setting: '%s', using 'auto'",
-		            mode.c_str());
+		constexpr auto SettingName  = "integer_scaling";
+		constexpr auto DefaultValue = "auto";
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      SettingName,
+		                      mode.c_str(),
+		                      DefaultValue);
+
 		return IntegerScalingMode::Auto;
 	}
 }
@@ -1504,6 +1537,13 @@ static void notify_render_setting_updated(SectionProp& section,
 	}
 }
 
+static void register_render_text_messages()
+{
+	MSG_Add("RENDER_SHADER_FALLBACK",
+	        "Error setting shader [color=white]'%s'[reset], "
+	        "falling back to [color=white]'%s'[reset]");
+}
+
 void RENDER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
@@ -1537,4 +1577,5 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 	                  "Reload Shader");
 
 	init_render_settings(*section);
+	register_render_text_messages();
 }

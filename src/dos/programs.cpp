@@ -1082,6 +1082,10 @@ void PROGRAMS_AddMessages()
 	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
 	        "using [color=white]'%s'[reset]");
 
+	MSG_Add("PROGRAM_CONFIG_INVALID_SETTING_WITH_DETAILS",
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset].\n"
+	        "%s; using [color=white]'%s'[reset]");
+
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED_SETTING_VALUE",
 	        "Deprecated [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
 	        "using [color=white]'%s'[reset]");

@@ -482,7 +482,7 @@ static ReverbPreset reverb_pref_to_preset(const std::string& pref)
 		return ReverbPreset::Huge;
 	}
 
-	// the conf system programmatically guarantees only the above prefs are
+	// The conf system programmatically guarantees only the above prefs are
 	// used
 	constexpr auto SettingName  = "reverb";
 	constexpr auto DefaultValue = "off";
