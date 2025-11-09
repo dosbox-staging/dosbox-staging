@@ -18,6 +18,7 @@
 #include "dosbox.h"
 #include "gui/render/render_backend.h"
 #include "misc/cross.h"
+#include "misc/notifications.h"
 #include "misc/video.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
@@ -360,14 +361,12 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 	if (it != legacy_name_mappings.end()) {
 		const auto new_name = it->second;
 
-		// TODO convert to notification
-		LOG_WARNING(
-		        "RENDER: Built-in shader '%s' has been renamed to '%s'; "
-		        "using '%s' instead.",
-		        name.c_str(),
-		        new_name.c_str(),
-		        new_name.c_str());
-
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "RENDER_SHADER_RENAMED",
+		                      name.c_str(),
+		                      new_name.c_str(),
+		                      new_name.c_str());
 		return new_name;
 	}
 

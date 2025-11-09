@@ -1539,6 +1539,10 @@ static void notify_render_setting_updated(SectionProp& section,
 
 static void register_render_text_messages()
 {
+	MSG_Add("RENDER_SHADER_RENAMED",
+	        "Built-in shader [color=white]'%s'[reset] has been renamed to "
+	        "[color=white]'%s'[reset]; using [color=white]'%s'[reset]");
+
 	MSG_Add("RENDER_SHADER_FALLBACK",
 	        "Error setting shader [color=white]'%s'[reset], "
 	        "falling back to [color=white]'%s'[reset]");
