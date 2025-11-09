@@ -1,0 +1,3 @@
+[parameters]
+ODD_LINE_INTENSITY  = 1.10
+EVEN_LINE_INTENSITY = 0.90
