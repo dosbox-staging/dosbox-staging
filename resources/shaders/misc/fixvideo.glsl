@@ -1,6 +1,6 @@
 #version 120
 
-// SPDX-FileCopyrightText:  2020-2024 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2015-2015 Ove Kaaven
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -8,34 +8,32 @@
 // Kavven with some improvements and an intelligent scanline-doubling method
 // added by John Novak.
 
-
 // Deinterlace method
 // ------------------
 //   0.0 = Mode 0: vertical average + brightness-boost
 //   1.0 = Mode 1: intelligent scanline-doubling
-#define DEINTERLACE_METHOD 1.0
+#pragma parameter DEINTERLACE_METHOD "Deinterlace Method" 1.0 0.0 1.0 1.0
 
 // Mode 0 params
 // -------------
 //   Brightness boost (0.00 to 1.00)
-#define BRIGHT_BOOST 0.50
+#pragma parameter BRIGHT_BOOST "Brightness Boost" 0.50 0.0 1.0 0.05
 
 // Mode 1 params
 // -------------
 //   4 sample points to check if the scanline above the current is black;
 //   might need to tweak it a bit per game
 //   0.00 = leftmost pixel; 0.50 = middle pixel; 1.0 = rightmost pixel
-#define SAMPLE_POINT_1 0.00
-#define SAMPLE_POINT_2 0.25
-#define SAMPLE_POINT_3 0.75
-#define SAMPLE_POINT_4 1.00
+#pragma parameter SAMPLE_POINT_1 "Sample Point 1" 0.00 0.0 1.0 0.05
+#pragma parameter SAMPLE_POINT_2 "Sample Point 2" 0.25 0.0 1.0 0.05
+#pragma parameter SAMPLE_POINT_3 "Sample Point 3" 0.75 0.0 1.0 0.05
+#pragma parameter SAMPLE_POINT_4 "Sample Point 4" 1.00 0.0 1.0 0.05
 
 //   Intensity of the deinterlaced odd & even scanlines.
 //   Use values above 1.0 for extra brightness boost.
 //   1.00 = full intensity, 0.0 = zero intensity (black)
-#define ODD_LINE_INTENSITY  1.00
-#define EVEN_LINE_INTENSITY 1.00
-
+#pragma parameter ODD_LINE_INTENSITY  "Odd Line Intensity"  1.10 0.0 1.0 0.10
+#pragma parameter EVEN_LINE_INTENSITY "Even Line Intensity" 0.90 0.0 1.0 0.10
 
 #define texCoord v_texCoord
 
@@ -102,6 +100,15 @@ uniform PRECISION vec2 rubyInputSize;
 uniform PRECISION vec2 rubyOutputSize;
 uniform PRECISION vec2 rubyTextureSize;
 uniform sampler2D s_p;
+
+uniform PRECISION float DEINTERLACE_METHOD;
+uniform PRECISION float BRIGHT_BOOST;
+uniform PRECISION float SAMPLE_POINT_1;
+uniform PRECISION float SAMPLE_POINT_2;
+uniform PRECISION float SAMPLE_POINT_3;
+uniform PRECISION float SAMPLE_POINT_4;
+uniform PRECISION float ODD_LINE_INTENSITY;
+uniform PRECISION float EVEN_LINE_INTENSITY;
 
 void main() {
     vec2 dx = vec2(1.0/rubyTextureSize.x, 0.0);
