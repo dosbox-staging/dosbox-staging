@@ -367,25 +367,17 @@ static void render_reset()
 	                                                yscale,
 	                                                yscale);
 
-	uint8_t gfx_flags = GFX_CAN_32;
-
-	// Set up scaler variables
-	if (double_height) {
-		gfx_flags |= GFX_DBL_H;
-	}
-	if (double_width) {
-		gfx_flags |= GFX_DBL_W;
-	}
-
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
 
 	GFX_SetSize(render_width_px,
 	            render_height_px,
 	            render_pixel_aspect_ratio,
-	            gfx_flags,
+	            double_width,
+	            double_height,
 	            render.src.video_mode,
 	            &render_callback);
 
+	// Set up scaler variables
 	render.scale.outMode = scalerMode32;
 
 	const auto lineBlock = &simpleBlock->Random;
@@ -430,7 +422,7 @@ static void render_reset()
 	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
 	render.scale.inHeight  = render.src.height;
 
-	// Reset the palette change detection to it's initial value
+	// Reset the palette change detection to its initial value
 	render.pal.first   = 0;
 	render.pal.last    = 255;
 	render.pal.changed = false;
