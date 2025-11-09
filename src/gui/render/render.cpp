@@ -318,7 +318,7 @@ static void render_reset()
 	bool double_width        = render.src.double_width;
 	bool double_height       = render.src.double_height;
 
-	uint8_t gfx_flags, xscale, yscale;
+	uint8_t xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
 
 	// Don't do software scaler sizes larger than 4k
@@ -342,7 +342,6 @@ static void render_reset()
 		simpleBlock = &ScaleNormal1x;
 	}
 
-	gfx_flags = simpleBlock->gfxFlags;
 	xscale    = simpleBlock->xscale;
 	yscale    = simpleBlock->yscale;
 	//		LOG_MSG("Scaler:%s",simpleBlock->name);
@@ -354,29 +353,21 @@ static void render_reset()
 	case PixelFormat::RGB555_Packed16:
 	case PixelFormat::RGB565_Packed16:
 		render.src_start = (render.src.width * 2) / src_pixel_bytes;
-		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	case PixelFormat::BGR24_ByteArray:
 		render.src_start = (render.src.width * 3) / src_pixel_bytes;
-		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	case PixelFormat::BGRX32_ByteArray:
 		render.src_start = (render.src.width * 4) / src_pixel_bytes;
-		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	}
 
-	gfx_flags = get_best_mode(gfx_flags);
-
-	if (!gfx_flags) {
-		if (simpleBlock == &ScaleNormal1x) {
-			E_Exit("Failed to create a rendering output");
-		}
-	}
 	render_width_px *= xscale;
 	const auto render_height_px = make_aspect_table(render.src.height,
 	                                                yscale,
 	                                                yscale);
+
+	uint8_t gfx_flags = GFX_CAN_32;
 
 	// Set up scaler variables
 	if (double_height) {
