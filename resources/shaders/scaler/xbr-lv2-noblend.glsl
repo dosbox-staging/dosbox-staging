@@ -1,6 +1,6 @@
 #version 120
 
-// SPDX-FileCopyrightText:  2020-2024 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2011-2016 Hyllian <sergiogdb@gmail.com>
 // SPDX-License-Identifier: MIT
 
@@ -10,22 +10,11 @@
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
 
-/*
-
 #pragma parameter XBR_EQ_THRESHOLD "Eq Threshold" 0.6 0.0 2.0 0.1
 #pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
-
-*/
+#pragma parameter XBR_CORNER_TYPE "Corner Calculation" 1.0 1.0 4.0 1.0
 
 #define mul(a,b) (b*a)
-
-// Uncomment just one of the three params below to choose the corner detection
-#define CORNER_A
-//#define CORNER_B
-//#define CORNER_C
-//#define CORNER_D
-
-#define lv2_cf XBR_LV2_COEFFICIENT
 
 #if defined(VERTEX)
 
@@ -117,14 +106,9 @@ IN vec4 t5;
 IN vec4 t6;
 IN vec4 t7;
 
-#ifdef PARAMETER_UNIFORM
 uniform PRECISION float XBR_EQ_THRESHOLD;
 uniform PRECISION float XBR_LV2_COEFFICIENT;
-#else
-#define XBR_EQ_THRESHOLD 0.6
-#define XBR_LV2_COEFFICIENT 2.0
-#endif
-// END PARAMETERS //
+uniform PRECISION float XBR_CORNER_TYPE;
 
 const vec3 Y = vec3(0.2126, 0.7152, 0.0722);
 
@@ -229,20 +213,20 @@ void main()
 	fx_l   = vec4(greaterThan(Ax*fp.y+Bx*fp.x, Cx));
 	fx_u   = vec4(greaterThan(Ay*fp.y+By*fp.x, Cy));
 
-#ifdef CORNER_A
-	irlv1      = diff(e,f) * diff(e,h);
-#endif
-#ifdef CORNER_B
-	irlv1      = (neq(f,b) * neq(h,d) + eq(e,i) * neq(f,i4) * neq(h,i5) + eq(e,g) + eq(e,c));
-#endif
-#ifdef CORNER_D
-	vec4 c1 = i4.yzwx;
-	vec4 g0 = i5.wxyz;
-	irlv1     = (neq(f,b) * neq(h,d) + eq(e,i) * neq(f,i4) * neq(h,i5) + eq(e,g) + eq(e,c) ) * (diff(f,f4) * diff(f,i) + diff(h,h5) * diff(h,i) + diff(h,g) + diff(f,c) + eq(b,c1) * eq(d,g0));
-#endif
-#ifdef CORNER_C
-	irlv1     = (neq(f,b) * neq(f,c) + neq(h,d) * neq(h,g) + eq(e,i) * (neq(f,f4) * neq(f,i4) + neq(h,h5) * neq(h,i5)) + eq(e,g) + eq(e,c));
-#endif
+	if (XBR_CORNER_TYPE == 1.0) {
+		irlv1 = diff(e,f) * diff(e,h);
+
+	} else if (XBR_CORNER_TYPE == 2.0) {
+		irlv1 = (neq(f,b) * neq(h,d) + eq(e,i) * neq(f,i4) * neq(h,i5) + eq(e,g) + eq(e,c));
+
+	} else if (XBR_CORNER_TYPE == 3.0) {
+		vec4 c1 = i4.yzwx;
+		vec4 g0 = i5.wxyz;
+		irlv1 = (neq(f,b) * neq(h,d) + eq(e,i) * neq(f,i4) * neq(h,i5) + eq(e,g) + eq(e,c) ) * (diff(f,f4) * diff(f,i) + diff(h,h5) * diff(h,i) + diff(h,g) + diff(f,c) + eq(b,c1) * eq(d,g0));
+
+	} else { // XBR_CORNER_TYPE == 4.0
+		irlv1 = (neq(f,b) * neq(f,c) + neq(h,d) * neq(h,g) + eq(e,i) * (neq(f,f4) * neq(f,i4) + neq(h,h5) * neq(h,i5)) + eq(e,g) + eq(e,c));
+	}
 
 	irlv2l = diff(e,g) * diff(d,g);
 	irlv2u = diff(e,c) * diff(b,c);
@@ -252,8 +236,8 @@ void main()
 
 	edri  = step(wd1, wd2) * irlv1;
 	edr   = step(wd1 + vec4(0.1, 0.1, 0.1, 0.1), wd2) * step(vec4(0.5, 0.5, 0.5, 0.5), irlv1);
-	edr_l = step( lv2_cf*df(f,g), df(h,c) ) * irlv2l * edr;
-	edr_u = step( lv2_cf*df(h,c), df(f,g) ) * irlv2u * edr;
+	edr_l = step( XBR_LV2_COEFFICIENT *df(f,g), df(h,c) ) * irlv2l * edr;
+	edr_u = step( XBR_LV2_COEFFICIENT *df(h,c), df(f,g) ) * irlv2u * edr;
 
 	nc = bvec4( edr * ( fx + edr_l * (fx_l)) + edr_u * fx_u);
 
