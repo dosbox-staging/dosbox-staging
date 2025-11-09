@@ -58,17 +58,19 @@ void ShaderManager::NotifyShaderChanged(const std::string& shader_descriptor,
 		MaybeAutoSwitchShader();
 	};
 
+	using enum ShaderMode;
+
 	if (shader_name == SymbolicShaderName::AutoGraphicsStandard) {
-		if (current_shader.mode != ShaderMode::AutoGraphicsStandard) {
-			current_shader.mode = ShaderMode::AutoGraphicsStandard;
+		if (current_shader.mode != AutoGraphicsStandard) {
+			current_shader.mode = AutoGraphicsStandard;
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the graphics "
 			        "standard of the video mode");
 
 			store_descriptor_and_maybe_autoswitch();
 		}
 	} else if (shader_name == SymbolicShaderName::AutoMachine) {
-		if (current_shader.mode != ShaderMode::AutoMachine) {
-			current_shader.mode = ShaderMode::AutoMachine;
+		if (current_shader.mode != AutoMachine) {
+			current_shader.mode = AutoMachine;
 
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the "
 			        "configured graphics adapter");
@@ -76,8 +78,8 @@ void ShaderManager::NotifyShaderChanged(const std::string& shader_descriptor,
 			store_descriptor_and_maybe_autoswitch();
 		}
 	} else if (shader_name == SymbolicShaderName::AutoArcade) {
-		if (current_shader.mode != ShaderMode::AutoArcade) {
-			current_shader.mode = ShaderMode::AutoArcade;
+		if (current_shader.mode != AutoArcade) {
+			current_shader.mode = AutoArcade;
 
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
 			        "CRT shader (normal variant)");
@@ -85,8 +87,8 @@ void ShaderManager::NotifyShaderChanged(const std::string& shader_descriptor,
 			store_descriptor_and_maybe_autoswitch();
 		}
 	} else if (shader_name == SymbolicShaderName::AutoArcadeSharp) {
-		if (current_shader.mode != ShaderMode::AutoArcadeSharp) {
-			current_shader.mode = ShaderMode::AutoArcadeSharp;
+		if (current_shader.mode != AutoArcadeSharp) {
+			current_shader.mode = AutoArcadeSharp;
 
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
 			        "CRT shader (sharp variant)");
@@ -94,7 +96,7 @@ void ShaderManager::NotifyShaderChanged(const std::string& shader_descriptor,
 			store_descriptor_and_maybe_autoswitch();
 		}
 	} else {
-		current_shader.mode = ShaderMode::Single;
+		current_shader.mode       = Single;
 		current_shader.descriptor = {shader_name, descriptor.preset_name};
 
 		LOG_MSG("RENDER: Using shader '%s'",
@@ -525,19 +527,19 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
 
 void ShaderManager::MaybeAutoSwitchShader()
 {
+	using enum ShaderMode;
+
 	const auto new_shader_descriptor = [&]() -> ShaderDescriptor {
 		switch (current_shader.mode) {
-		case ShaderMode::Single: return current_shader.descriptor;
+		case Single: return current_shader.descriptor;
 
-		case ShaderMode::AutoGraphicsStandard:
+		case AutoGraphicsStandard:
 			return FindShaderAutoGraphicsStandard();
 
-		case ShaderMode::AutoMachine: return FindShaderAutoMachine();
+		case AutoMachine: return FindShaderAutoMachine();
 
-		case ShaderMode::AutoArcade: return FindShaderAutoArcade();
-
-		case ShaderMode::AutoArcadeSharp:
-			return FindShaderAutoArcadeSharp();
+		case AutoArcade: return FindShaderAutoArcade();
+		case AutoArcadeSharp: return FindShaderAutoArcadeSharp();
 
 		default: assertm(false, "Invalid ShaderMode value"); return {};
 		}
@@ -564,66 +566,74 @@ ShaderDescriptor ShaderManager::GetHerculesShader() const
 
 ShaderDescriptor ShaderManager::GetCgaShader() const
 {
+	using namespace ShaderName;
+
 	if (video_mode.color_depth == ColorDepth::Monochrome) {
 		if (video_mode.width < 640) {
-			return {ShaderName::CrtHyllian, "monochrome-lowres"};
+			return {CrtHyllian, "monochrome-lowres"};
 		} else {
-			return {ShaderName::CrtHyllian, "monochrome-hires"};
+			return {CrtHyllian, "monochrome-hires"};
 		}
 	}
 	if (pixels_per_scanline_force_single_scan >= 8) {
-		return {ShaderName::CrtHyllian, "cga-4k"};
+		return {CrtHyllian, "cga-4k"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 5) {
-		return {ShaderName::CrtHyllian, "cga-1440p"};
+		return {CrtHyllian, "cga-1440p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 4) {
-		return {ShaderName::CrtHyllian, "cga-1080p"};
+		return {CrtHyllian, "cga-1080p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 3) {
-		return {ShaderName::CrtHyllian, "cga-720p"};
+		return {CrtHyllian, "cga-720p"};
 	}
-	return {ShaderName::Sharp, ""};
+	return {Sharp, ""};
 }
 
 ShaderDescriptor ShaderManager::GetCompositeShader() const
 {
+	using namespace ShaderName;
+
 	if (pixels_per_scanline >= 8) {
-		return {ShaderName::CrtHyllian, "composite-4k"};
+		return {CrtHyllian, "composite-4k"};
 	}
 	if (pixels_per_scanline >= 5) {
-		return {ShaderName::CrtHyllian, "composite-1440p"};
+		return {CrtHyllian, "composite-1440p"};
 	}
 	if (pixels_per_scanline >= 3) {
-		return {ShaderName::CrtHyllian, "composite-1080p"};
+		return {CrtHyllian, "composite-1080p"};
 	}
-	return {ShaderName::Sharp, ""};
+	return {Sharp, ""};
 }
 
 ShaderDescriptor ShaderManager::GetEgaShader() const
 {
+	using namespace ShaderName;
+
 	if (pixels_per_scanline_force_single_scan >= 8) {
-		return {ShaderName::CrtHyllian, "ega-4k"};
+		return {CrtHyllian, "ega-4k"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 5) {
-		return {ShaderName::CrtHyllian, "ega-1440p"};
+		return {CrtHyllian, "ega-1440p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 4) {
-		return {ShaderName::CrtHyllian, "ega-1080p"};
+		return {CrtHyllian, "ega-1080p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 3) {
-		return {ShaderName::CrtHyllian, "ega-720p"};
+		return {CrtHyllian, "ega-720p"};
 	}
-	return {ShaderName::Sharp, ""};
+	return {Sharp, ""};
 }
 
 ShaderDescriptor ShaderManager::GetVgaShader() const
 {
+	using namespace ShaderName;
+
 	if (pixels_per_scanline >= 4) {
-		return {ShaderName::CrtHyllian, "vga-4k"};
+		return {CrtHyllian, "vga-4k"};
 	}
 	if (pixels_per_scanline >= 3) {
-		return {ShaderName::CrtHyllian, "vga-1440p"};
+		return {CrtHyllian, "vga-1440p"};
 	}
 	if (pixels_per_scanline >= 2) {
 		// Up to 1080/5 = 216-line double-scanned VGA modes can be
@@ -659,7 +669,7 @@ ShaderDescriptor ShaderManager::GetVgaShader() const
 			return {"crt/vga-1080p", ""};
 		}
 	}
-	return {ShaderName::Sharp, ""};
+	return {Sharp, ""};
 }
 
 ShaderDescriptor ShaderManager::FindShaderAutoGraphicsStandard() const
@@ -668,23 +678,25 @@ ShaderDescriptor ShaderManager::FindShaderAutoGraphicsStandard() const
 		return GetCompositeShader();
 	}
 
+	using enum GraphicsStandard;
+
 	switch (video_mode.graphics_standard) {
-	case GraphicsStandard::Hercules: return GetHerculesShader();
+	case Hercules: return GetHerculesShader();
 
-	case GraphicsStandard::Cga:
-	case GraphicsStandard::Pcjr: return GetCgaShader();
+	case Cga:
+	case Pcjr: return GetCgaShader();
 
-	case GraphicsStandard::Tga: return GetEgaShader();
+	case Tga: return GetEgaShader();
 
-	case GraphicsStandard::Ega:
+	case Ega:
 		// Use VGA shaders for VGA games that use EGA modes with an
 		// 18-bit VGA palette (these games won't even work on an EGA
 		// card).
 		return video_mode.has_vga_colors ? GetVgaShader() : GetEgaShader();
 
-	case GraphicsStandard::Vga:
-	case GraphicsStandard::Svga:
-	case GraphicsStandard::Vesa: return GetVgaShader();
+	case Vga:
+	case Svga:
+	case Vesa: return GetVgaShader();
 
 	default: assertm(false, "Invalid GraphicsStandard value"); return {};
 	}
@@ -696,45 +708,51 @@ ShaderDescriptor ShaderManager::FindShaderAutoMachine() const
 		return GetCompositeShader();
 	}
 
+	using enum MachineType;
+
 	switch (machine) {
-	case MachineType::Hercules: return GetHerculesShader();
+	case Hercules: return GetHerculesShader();
 
-	case MachineType::CgaMono:
-	case MachineType::CgaColor:
-	case MachineType::Pcjr: return GetCgaShader();
+	case CgaMono:
+	case CgaColor:
+	case Pcjr: return GetCgaShader();
 
-	case MachineType::Tandy:
-	case MachineType::Ega: return GetEgaShader();
+	case Tandy:
+	case Ega: return GetEgaShader();
 
-	case MachineType::Vga: return GetVgaShader();
+	case Vga: return GetVgaShader();
 	default: assertm(false, "Invalid MachineType value"); return {};
 	};
 }
 
 ShaderDescriptor ShaderManager::FindShaderAutoArcade() const
 {
+	using namespace ShaderName;
+
 	if (pixels_per_scanline_force_single_scan >= 8) {
-		return {ShaderName::CrtHyllian, "arcade-4k"};
+		return {CrtHyllian, "arcade-4k"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 5) {
-		return {ShaderName::CrtHyllian, "arcade-1440p"};
+		return {CrtHyllian, "arcade-1440p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 3) {
-		return {ShaderName::CrtHyllian, "arcade-1080p"};
+		return {CrtHyllian, "arcade-1080p"};
 	}
-	return {ShaderName::Sharp, ""};
+	return {Sharp, ""};
 }
 
 ShaderDescriptor ShaderManager::FindShaderAutoArcadeSharp() const
 {
+	using namespace ShaderName;
+
 	if (pixels_per_scanline_force_single_scan >= 8) {
-		return {ShaderName::CrtHyllian, "arcade-sharp-4k"};
+		return {CrtHyllian, "arcade-sharp-4k"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 5) {
-		return {ShaderName::CrtHyllian, "arcade-sharp-1440p"};
+		return {CrtHyllian, "arcade-sharp-1440p"};
 	}
 	if (pixels_per_scanline_force_single_scan >= 3) {
-		return {ShaderName::CrtHyllian, "arcade-sharp-1080p"};
+		return {CrtHyllian, "arcade-sharp-1080p"};
 	}
-	return {ShaderName::Sharp, ""};
+	return {Sharp, ""};
 }
