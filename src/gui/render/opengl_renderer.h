@@ -33,7 +33,6 @@ public:
 	~OpenGlRenderer() override;
 
 	SDL_Window* GetWindow() override;
-	uint8_t GetGfxFlags() override;
 
 	DosBox::Rect GetCanvasSizeInPixels() override;
 	void UpdateViewport(const DosBox::Rect draw_rect_px) override;
@@ -108,7 +107,6 @@ private:
 
 	SDL_Window* window    = {};
 	SDL_GLContext context = {};
-	uint8_t gfx_flags     = 0;
 
 	int pitch = 0;
 

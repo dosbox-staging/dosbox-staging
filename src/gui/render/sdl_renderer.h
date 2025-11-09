@@ -26,7 +26,6 @@ public:
 	~SdlRenderer() override;
 
 	SDL_Window* GetWindow() override;
-	uint8_t GetGfxFlags() override;
 
 	DosBox::Rect GetCanvasSizeInPixels() override;
 	void UpdateViewport(const DosBox::Rect draw_rect_px) override;
@@ -71,7 +70,6 @@ private:
 
 	SDL_Window* window     = {};
 	SDL_Renderer* renderer = {};
-	uint8_t gfx_flags      = 0;
 
 	// The current framebuffer we render the emulated video output into
 	// (contains the "work-in-progress" next frame).
