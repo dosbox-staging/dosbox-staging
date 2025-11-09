@@ -25,9 +25,6 @@ public:
 	// Return the SDL window.
 	virtual SDL_Window* GetWindow() = 0;
 
-	// Return the "gfx flags".
-	virtual uint8_t GetGfxFlags() = 0;
-
 	// Get the unrestricted total available drawing area of the emulator
 	// window or the screen in fullscreen in pixels.
 	virtual DosBox::Rect GetCanvasSizeInPixels() = 0;

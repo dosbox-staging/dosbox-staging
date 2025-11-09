@@ -949,12 +949,9 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 	maybe_log_display_properties();
 
-	const auto gfx_flags = sdl.renderer->GetGfxFlags();
-	if (gfx_flags) {
-		GFX_Start();
-	}
+	GFX_Start();
 
-	return gfx_flags;
+	return (GFX_CAN_32 | GFX_CAN_RANDOM);
 }
 
 void GFX_CenterMouse()

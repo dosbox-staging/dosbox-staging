@@ -120,11 +120,6 @@ bool SdlRenderer::InitRenderer(const std::string& render_driver)
 	}
 	LOG_MSG("SDL: Using '%s' SDL render driver", info.name);
 
-	// TODO: GFX_CAN_32 | GFX_CAN_RANDOM is always set for both SDL and OpenGL backends.
-	// Opportunity to remove dead code from render.cpp.
-	static_assert(SDL_PIXELTYPE(SdlPixelFormat) == SDL_PIXELTYPE_PACKED32);
-	gfx_flags = GFX_CAN_32 | GFX_CAN_RANDOM;
-
 	if (SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE) < 0) {
 		LOG_ERR("SDL: Error setting render clear color: %s", SDL_GetError());
 	}
@@ -157,11 +152,6 @@ SdlRenderer::~SdlRenderer()
 SDL_Window* SdlRenderer::GetWindow()
 {
 	return window;
-}
-
-uint8_t SdlRenderer::GetGfxFlags()
-{
-	return gfx_flags;
 }
 
 DosBox::Rect SdlRenderer::GetCanvasSizeInPixels()
