@@ -894,7 +894,8 @@ static void update_viewport()
 }
 
 void GFX_SetSize(const int render_width_px, const int render_height_px,
-                 const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
+                 const Fraction& render_pixel_aspect_ratio,
+                 const bool double_width, const bool double_height,
                  const VideoMode& video_mode, GFX_Callback_t callback)
 {
 	if (!sdl.video_initialised) {
@@ -909,9 +910,6 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
 	GFX_Stop();
 	// The rendering objects are recreated below with new sizes, after which
 	// frame rendering is re-engaged with the output-type specific calls.
-
-	const bool double_width  = flags & GFX_DBL_W;
-	const bool double_height = flags & GFX_DBL_H;
 
 	sdl.draw.render_width_px           = render_width_px;
 	sdl.draw.render_height_px          = render_height_px;
