@@ -388,27 +388,17 @@ static void render_reset()
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
 
-	gfx_flags = GFX_SetSize(render_width_px,
-	                        render_height_px,
-	                        render_pixel_aspect_ratio,
-	                        gfx_flags,
-	                        render.src.video_mode,
-	                        &render_callback);
+	GFX_SetSize(render_width_px,
+	            render_height_px,
+	            render_pixel_aspect_ratio,
+	            gfx_flags,
+	            render.src.video_mode,
+	            &render_callback);
 
-	if (gfx_flags & GFX_CAN_8) {
-		render.scale.outMode = scalerMode8;
-	} else if (gfx_flags & GFX_CAN_15) {
-		render.scale.outMode = scalerMode15;
-	} else if (gfx_flags & GFX_CAN_16) {
-		render.scale.outMode = scalerMode16;
-	} else if (gfx_flags & GFX_CAN_32) {
-		render.scale.outMode = scalerMode32;
-	} else {
-		E_Exit("Failed to create a rendering output");
-	}
+	render.scale.outMode = scalerMode32;
 
-	const auto lineBlock = gfx_flags & GFX_CAN_RANDOM ? &simpleBlock->Random
-	                                                  : &simpleBlock->Linear;
+	const auto lineBlock = &simpleBlock->Random;
+
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
 		render.scale.lineHandler = (*lineBlock)[0][render.scale.outMode];

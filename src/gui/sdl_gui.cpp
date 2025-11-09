@@ -893,9 +893,9 @@ static void update_viewport()
 	sdl.renderer->UpdateViewport(draw_rect_px);
 }
 
-uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
-                    const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
-                    const VideoMode& video_mode, GFX_Callback_t callback)
+void GFX_SetSize(const int render_width_px, const int render_height_px,
+                 const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
+                 const VideoMode& video_mode, GFX_Callback_t callback)
 {
 	if (!sdl.video_initialised) {
 		RENDER_SetShaderWithFallback();
@@ -950,8 +950,6 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	maybe_log_display_properties();
 
 	GFX_Start();
-
-	return (GFX_CAN_32 | GFX_CAN_RANDOM);
 }
 
 void GFX_CenterMouse()
