@@ -37,12 +37,15 @@ uniform float XBR_RES;
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
-	v_texCoord.xy = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize / rubyTextureSize;
-	vec2 ps = XBR_RES/SourceSize.xy;
+
+	v_texCoord.xy = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 *
+	                rubyInputSize / rubyTextureSize;
+
+	vec2 ps  = XBR_RES / SourceSize.xy;
 	float dx = ps.x;
 	float dy = ps.y;
 
-	t1 = vec4( dx, 0, 0, dy); // F H
+	t1 = vec4(dx, 0, 0, dy); // F H
 }
 
 #elif defined(FRAGMENT)
@@ -119,7 +122,11 @@ float c_df(vec3 c1, vec3 c2)
 void main()
 {
 	bvec4 edri, edr, edr_left, edr_up, px; // px = pixel, edr = edge detection rule
-	bvec4 interp_restriction_lv0, interp_restriction_lv1, interp_restriction_lv2_left, interp_restriction_lv2_up, block_3d, block_3d_left, block_3d_up;
+
+	bvec4 interp_restriction_lv0, interp_restriction_lv1,
+	        interp_restriction_lv2_left, interp_restriction_lv2_up,
+	        block_3d, block_3d_left, block_3d_up;
+
 	vec4 fx, fx_left, fx_up; // inequations of straight lines.
 
 	vec4 delta  = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
@@ -130,7 +137,8 @@ void main()
 
 	vec2 fp = fract(vTexCoord*SourceSize.xy/XBR_RES);
 
-	vec2 tex = (floor(vTexCoord*SourceSize.xy/XBR_RES) + vec2(0.5, 0.5))*XBR_RES/SourceSize.xy;
+	vec2 tex = (floor(vTexCoord * SourceSize.xy / XBR_RES) + vec2(0.5, 0.5)) *
+	           XBR_RES / SourceSize.xy;
 
 	vec2 dx = t1.xy;
 	vec2 dy = t1.zw;
