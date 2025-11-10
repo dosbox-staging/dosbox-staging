@@ -296,7 +296,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	             render_width_px,
 	             render_height_px,
 	             0,
-	             GL_BGRA_EXT,
+	             GL_BGRA,
 	             GL_UNSIGNED_BYTE,
 	             nullptr);
 
@@ -366,7 +366,7 @@ void OpenGlRenderer::PrepareFrame()
 		                0,
 		                render_width_px,
 		                render_height_px,
-		                GL_BGRA_EXT,
+		                GL_BGRA,
 		                GL_UNSIGNED_INT_8_8_8_8_REV,
 		                last_framebuf.data());
 

@@ -1,6 +1,6 @@
-libglad = static_library('glad', ['src/gl.c'], include_directories: 'include')
+libglad = static_library('glad', ['release/src/gl.c'], include_directories: 'release/include')
 
 libglad_dep = declare_dependency(
   link_with: libglad,
-  include_directories: 'include',
+  include_directories: 'release/include',
 )
