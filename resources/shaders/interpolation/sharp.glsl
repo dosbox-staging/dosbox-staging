@@ -12,7 +12,7 @@
 
 #if defined(VERTEX)
 
-layout (location = 0) in vec2 a_position;
+layout(location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
 out vec2 prescale;
@@ -40,15 +40,17 @@ uniform sampler2D rubyTexture;
 
 void main()
 {
-	const vec2 halfp = vec2(0.5);
+	const vec2 halfp   = vec2(0.5);
 	vec2 texel_floored = floor(v_texCoord);
-	vec2 s = fract(v_texCoord);
-	vec2 region_range = halfp - halfp / prescale;
+	vec2 s             = fract(v_texCoord);
+	vec2 region_range  = halfp - halfp / prescale;
 
 	vec2 center_dist = s - halfp;
-	vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) * prescale + halfp;
+	vec2 f = (center_dist - clamp(center_dist, -region_range, region_range)) *
+	                 prescale + halfp;
 
 	vec2 mod_texel = min(texel_floored + f, rubyInputSize - halfp);
+
 	FragColor = texture(rubyTexture, mod_texel / rubyTextureSize);
 }
 
