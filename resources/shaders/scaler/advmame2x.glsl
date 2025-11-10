@@ -64,12 +64,14 @@ void main()
 {
 	vec2 coord = v_texCoord;
 	coord -= 0.5;
+
 	vec3 c0 = getadvmame2xtexel(coord);
 	vec3 c1 = getadvmame2xtexel(coord + vec2(1.0, 0.0));
 	vec3 c2 = getadvmame2xtexel(coord + vec2(0.0, 1.0));
 	vec3 c3 = getadvmame2xtexel(coord + vec2(1.0));
 
 	coord = fract(max(coord, 0.0));
+
 	FragColor = vec4(mix(mix(c0, c1, coord.x), mix(c2, c3, coord.x), coord.y), 1.0);
 }
 #endif
