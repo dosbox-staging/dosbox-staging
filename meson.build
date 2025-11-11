@@ -290,7 +290,8 @@ simd_instruction_sets = []
 
 zlib_ng_options = get_option('use_zlib_ng')
 zlib_ng_wants_native = zlib_ng_options.contains('native')
-zlib_ng_wants_native and cc.has_argument('-march=native')
+zlib_ng_is_native = zlib_ng_wants_native and cc.has_argument('-march=native')
+
 if is_optimized_buildtype and zlib_ng_is_native
     extra_flags += '-march=native'
     simd_instruction_sets += 'native'
