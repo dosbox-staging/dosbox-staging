@@ -105,6 +105,15 @@ public:
 	// Enables or disables vsync.
 	virtual void SetVsync(const bool is_enabled) = 0;
 
+	// Sets the color space of the video output.
+	virtual void SetColorSpace(const ColorSpace color_space) = 0;
+
+	// Sets an optional colour profile for CRT colour emulation.
+	virtual void SetCrtColorProfile(const CrtColorProfile profile) = 0;
+
+	// Sets image adjustment settings.
+	virtual void SetImageSettings(const ImageSettings& settings) = 0;
+
 	// Read the specified rectangle of the post-shader from the window's
 	// framebuffer.
 	virtual RenderedImage ReadPixelsPostShader(const DosBox::Rect output_rect_px) = 0;

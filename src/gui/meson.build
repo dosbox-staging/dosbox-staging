@@ -1,5 +1,6 @@
 libgui_sources = files(
     'clipboard.cpp',
+    'image_settings_manager.cpp',
     'mapper.cpp',
     'mapper.cpp',
     'sdl_gui.cpp',

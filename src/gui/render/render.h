@@ -13,6 +13,7 @@
 #include "hardware/video/vga.h"
 #include "utils/fraction.h"
 #include "utils/rect.h"
+#include "utils/rgb888.h"
 
 enum class ViewportMode { Fit, Relative };
 
@@ -191,6 +192,87 @@ struct RenderedImage {
 	}
 };
 
+// Settings to mimic the image adjustment options of a real CRT monitor.
+//
+struct ImageSettings {
+
+	// Valid range between 0.0 and 1.0; 0.0 means no change
+	float crt_black = 0.0;
+
+	// Valid range between -1.5 and 1.5; 0.0 means no change
+	float brightness = 0.0;
+
+	// Valid range between -1.5 and 1.5; 0.0 means no change
+	float contrast = 0.0;
+
+	// Valid range between -0.4 and 1.4; 0.0 means no change
+	float gamma = 0.0;
+
+	// Valid range between -1.0 and 1.0; 0.0 means no change
+	float saturation = 0.0;
+
+	// Valid range between 0.0 and 0.5; 0.0 means no change
+	float black_level = 0.0;
+
+	// Used in CGA mono and Hercules modes to tint the raised black level
+	// (as true monochrome monitors can't display pure gray).
+	Rgb888 black_level_tint = {};
+
+	// White point in Kelvin (K); valid range is from 1000 K to 12,000 K
+	float white_point_kelvin = 6500;
+};
+
+enum class ColorSpace {
+	// Standard sRGB with D65 (6500K) whitepoint and sRGB gamma
+	Srgb = 0,
+
+	// DCI-P3 colour space with DCI whitepoint (~6300K) and 2.6 gamma
+	DciP3 = 1,
+
+	// DCI-P3 colour space variant with D65 whitepoint (6500K) and 2.6 gamma
+	DciP3_D65 = 2,
+
+	// Display P3 with D65 whitepoint (6500K) and sRGB gamma
+	DisplayP3 = 3,
+
+	// "Modern" DCI-P3 variant for average consumer/gamer displays with ~90%
+	// P3 colour space coverage (D65 whitepoint and sRGB gamma)
+	ModernP3 = 4,
+
+	// AdobeRgb 2020 with D65 whitepoint (6500K) and 2.2 gamma
+	AdobeRgb = 5,
+
+	// Rec.2020 with D65 whitepoint (6500K) and 2.2 gamma
+	Rec2020 = 6
+};
+
+enum class CrtColorProfile {
+	// Auto-select in adaptive CRT shader mode, otherwise None
+	Auto = -1,
+
+	// Raw RGB colours
+	None = 0,
+
+	// EBU standard phosphor emulation, used in high-end professional CRT
+	// monitors, such as the Sony BVM/PVM series (6500K white point)
+	Ebu = 1,
+
+	// P22 phosphor emulation, the most commonly used in lower-end CRT
+	// monitors (6500K white point)
+	P22 = 2,
+
+	// SMPT "C" phosphor emulation, the standard for American broadcast video
+	// monitors (6500K white point)
+	SmpteC = 3,
+
+	// 1980s Philips home computer monitor colours (e.g., Commodore 1084,
+	// Philips CM8833-II)
+	Philips = 4,
+
+	// Sony Trinitron CRT TV and monitor colours (~9300K whitepoint)
+	Trinitron = 5
+};
+
 extern Render render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 
@@ -224,7 +306,7 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue);
 
 bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode,
-                                   const bool reinit_render);
+                                   const bool reinit_renderer);
 
 void RENDER_NotifyEgaModeWithVgaPalette();
 

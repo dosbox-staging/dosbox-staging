@@ -1,5 +1,6 @@
 target_sources(libdosboxcommon PRIVATE
   clipboard.cpp
+  image_settings_manager.cpp
   mapper.cpp
   sdl_gui.cpp
   shader_manager.cpp

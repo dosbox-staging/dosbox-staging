@@ -10,6 +10,8 @@
 #include <memory>
 #include <mutex>
 
+#include "gui/private/image_settings_manager.h"
+
 #include "capture/capture.h"
 #include "config/config.h"
 #include "config/setup.h"
@@ -515,7 +517,99 @@ static void set_scan_and_pixel_doubling()
 	VGA_AllowPixelDoubling(!force_no_pixel_doubling);
 }
 
-bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode, const bool reinit_render)
+static CrtColorProfile curr_crt_color_profile = {};
+static ImageSettings curr_image_settings      = {};
+
+static void set_image_settings()
+{
+	GFX_GetRenderer()->SetImageSettings(curr_image_settings);
+}
+
+static CrtColorProfile to_crt_color_profile_enum(const std::string& setting)
+{
+	using enum CrtColorProfile;
+
+	if (setting == "auto") {
+		return Auto;
+
+	} else if (setting == "none") {
+		return None;
+
+	} else if (setting == "ebu") {
+		return Ebu;
+
+	} else if (setting == "p22") {
+		return P22;
+
+	} else if (setting == "smpte-c") {
+		return SmpteC;
+
+	} else if (setting == "philips") {
+		return Philips;
+
+	} else if (setting == "trinitron") {
+		return Trinitron;
+
+	} else {
+		assertm(false, "Invalid monochrome_palette setting");
+		return None;
+	}
+}
+
+static const char* to_setting_name(const CrtColorProfile profile)
+{
+	using enum CrtColorProfile;
+
+	switch (profile) {
+	case Auto: return "auto";
+	case None: return "none";
+	case Ebu: return "ebu";
+	case P22: return "p22";
+	case SmpteC: return "smpte-c";
+	case Philips: return "philips";
+	case Trinitron: return "trinitron";
+	default:
+		assertm(false, "Invalid CrtColorProfile enum value");
+		return "auto";
+	}
+}
+
+static void handle_auto_image_settings(const VideoMode& video_mode)
+{
+	const auto maybe_auto_settings = ImageSettingsManager::GetInstance().GetSettings(
+	        video_mode);
+
+	if (maybe_auto_settings) {
+		const auto settings = *maybe_auto_settings;
+
+		if (get_render_section().GetString("crt_color_profile") == "auto") {
+			if (curr_crt_color_profile != settings.crt_color_profile) {
+
+				curr_crt_color_profile = settings.crt_color_profile;
+				GFX_GetRenderer()->SetCrtColorProfile(
+				        curr_crt_color_profile);
+
+				LOG_INFO("RENDER: Auto-switched to '%s' CRT color profile",
+				         to_setting_name(settings.crt_color_profile));
+			}
+		}
+
+		if (get_render_section().GetString("white_point") == "auto") {
+			if (curr_image_settings.white_point_kelvin !=
+			    settings.white_point_kelvin) {
+
+				curr_image_settings.white_point_kelvin = settings.white_point_kelvin;
+				set_image_settings();
+
+				LOG_INFO("RENDER: Auto-switched to %dK white point",
+				         settings.white_point_kelvin);
+			}
+		}
+	}
+}
+
+static bool handle_shader_auto_switching(const VideoMode& video_mode,
+                                         const bool reinit_renderer)
 {
 	const auto renderer = GFX_GetRenderer();
 
@@ -530,25 +624,33 @@ bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode, const bool reini
 	const auto shader_changed = (curr_shader.name != new_shader.name) ||
 	                            (curr_preset.name != new_preset.name);
 
-	if (shader_changed) {
-		set_scan_and_pixel_doubling();
-
-		if (reinit_render) {
-			// No need to reinit the renderer if the double scaning
-			// / pixel doubling settings have not been changed.
-			const auto render_params_changed =
-			        ((curr_preset.settings.force_single_scan !=
-			          new_preset.settings.force_single_scan) ||
-			         (curr_preset.settings.force_no_pixel_doubling !=
-			          new_preset.settings.force_no_pixel_doubling));
-
-			if (render_params_changed) {
-				reinit_drawing();
-			}
-		}
+	if (!shader_changed) {
+		return false;
 	}
 
-	return shader_changed;
+	set_scan_and_pixel_doubling();
+
+	if (reinit_renderer) {
+		// No need to reinit the renderer if the double scaning
+		// / pixel doubling settings have not been changed.
+		const auto render_params_changed =
+		        ((curr_preset.settings.force_single_scan !=
+		          new_preset.settings.force_single_scan) ||
+		         (curr_preset.settings.force_no_pixel_doubling !=
+		          new_preset.settings.force_no_pixel_doubling));
+
+		if (render_params_changed) {
+			reinit_drawing();
+		}
+	}
+	return true;
+}
+
+// TODO remove reinit_renderer flag from public interface
+bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode, const bool reinit_renderer)
+{
+	handle_auto_image_settings(video_mode);
+	return handle_shader_auto_switching(video_mode, reinit_renderer);
 }
 
 void RENDER_NotifyEgaModeWithVgaPalette()
@@ -563,8 +665,8 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 		video_mode.has_vga_colors = true;
 
 		// We are potentially auto-switching to a VGA shader now.
-		constexpr auto ReinitRender = true;
-		RENDER_NotifyVideoModeChanged(video_mode, ReinitRender);
+		constexpr auto ReinitRenderer = true;
+		RENDER_NotifyVideoModeChanged(video_mode, ReinitRenderer);
 	}
 }
 
@@ -1150,6 +1252,28 @@ std::string RENDER_GetCgaColorsSetting()
 	return get_render_section().GetString("cga_colors");
 }
 
+constexpr auto CrtBlackMin = 0;
+constexpr auto CrtBlackMax = 100;
+
+constexpr auto BrightnessMin = -50;
+constexpr auto BrightnessMax = 50;
+
+constexpr auto ContrastMin = -50;
+constexpr auto ContrastMax = 50;
+
+constexpr auto GammaMin = -50;
+constexpr auto GammaMax = 50;
+
+constexpr auto BlackLevelMin = 0;
+constexpr auto BlackLevelMax = 50;
+
+constexpr auto SaturationMin = -50;
+constexpr auto SaturationMax = 50;
+
+constexpr auto WhitePointNeutral = 6500;
+constexpr auto WhitePointMin     = 3000;
+constexpr auto WhitePointMax     = 10000;
+
 static void init_render_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
@@ -1388,6 +1512,205 @@ static void init_render_settings(SectionProp& section)
 	        "    or [color=light-green]'viewport'[reset] size.\n"
 	        "\n"
 	        "  - If you used an advanced scaler, consider one of the [color=light-green]'shader'[reset] options.");
+
+	string_prop = section.AddString("color_space", Always, "srgb");
+	string_prop->SetValues(
+	        {"srgb", "dci-p3", "dci-p3-d65", "display-p3", "modern-p3", "adobe-rgb", "rec-2020"});
+
+	string_prop->SetOptionHelp("color_space_srgb_option",
+	        "Set the colour space of the video output ('srgb' by default). This setting\n"
+	        "allows to take advantage of wide color gamut monitors to display more vivid but\n"
+	        "accurate colors and to more authentically emulate CRT colors. Possible value:\n"
+	        "\n"
+	        "  srgb:        The lowest common denominator non-wide-gamut sRGB colour space\n"
+	        "               with 6500K white point and sRGB gamma (default).");
+
+	string_prop->SetOptionHelp("color_space_wide_gamut_options",
+			"\n"
+	        "  dci-p3:      Standard DCI-P3 wide-gamut colour space with DCI white point\n"
+	        "               (~6300K) and a 2.6 gamma. Use 'dci-p3-d65' instead if the whites\n"
+	        "               and grays have a greenish tint with your monitor in DCI-P3 mode.\n"
+	        "\n"
+	        "  dci-p3-d65:  DCI-P3 variant with modified D65 white point (6500K) and 2.6\n"
+	        "               gamma. Use 'dci-p3' instead if the whites and grays have a\n"
+	        "               yellowish tint with your monitor in DCI-P3 mode.\n"
+	        "\n"
+	        "  display-p3:  Display P3 wide-gamut colour space with 6500K white point and\n"
+	        "               sRGB gamma. This is the default profile on Apple monitors and\n"
+	        "               built-in MacBook displays.\n"
+	        "\n"
+	        "  modern-p3:   Setting for average consumer/gaming monitors that only reach\n"
+	        "               around 90%% DCI-P3 colour space gamut coverage (6500K white\n"
+	        "               point, sRGB gamma). Use the other DCI-P3 colour spaces if your\n"
+	        "               monitor's DCI-P3 coverage is close to 100%%.\n"
+	        "\n"
+	        "  adobe-rgb:   AdobeRGB 2020 wide-gamut colour space with 6500K white point\n"
+	        "               and 2.2 gamma.\n"
+	        "\n"
+	        "  rec-2020:    Rec.2020 wide-gamut colour space with 6500K white point and 2.2\n"
+	        "               gamma.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - The feature only works in OpenGL output mode.\n"
+	        "\n"
+	        "  - The setting must match the colour space set on your monitor.\n"
+	        "\n"
+	        "  - You must disable all OS and graphics driver level colour management, and you\n"
+	        "    must not use any 3rd party colour management programs for DOSBox Staging,\n"
+	        "    otherwise you'll get incorrect colours.\n"
+	        "\n"
+	        "  - Colour space transforms are applied to rendered screenshots, but not to raw\n"
+	        "    and upscaled screenshots and video captures.");
+
+	string_prop->SetValues({
+			"color_space_srgb_option",
+#if defined(WIN32) || defined(LINUX)
+			"color_space_wide_gamut_options",
+#endif
+			});
+
+	string_prop = section.AddString("crt_color_profile", Always, "auto");
+	string_prop->SetValues(
+	        {"auto", "none", "ebu", "p22", "smpte-c", "philips", "trinitron"});
+	string_prop->SetHelp(
+	        "Set a CRT colour profile for more authentic video output emulation ('none' by\n"
+	        "default). All profiles have a built-in white point that you can tweak further\n"
+	        "with the 'white_point' setting. Possible values:\n"
+	        "\n"
+	        "  auto:       For adaptive CRT shaders, an authentic color profile for the\n"
+	        "              currently active shader variant is selected; for any other shader,\n"
+	        "              'none' is used (default).\n"
+	        "\n"
+	        "  none:       Display raw colours without any colour profile transformations.\n"
+	        "\n"
+	        "  ebu:        EBU standard phosphor emulation, used in high-end professional CRT\n"
+	        "              monitors, such as the Sony BVM/PVM series (6500K white point).\n"
+	        "\n"
+	        "  p22:        P22 phosphor emulation, the most commonly used in lower-end CRT\n"
+	        "              monitors (6500K white point).\n"
+	        "\n"
+	        "  smpte-c:    SMPT \"C\" phosphor emulation, the standard for American broadcast\n"
+	        "              video monitors (6500K white point).\n"
+	        "\n"
+	        "  philips:    Philips CRT monitor colours typical to 15 kHz home computer\n"
+	        "              monitors, such as the Commodore 1084S (~6100K white point).\n"
+	        "              Needs a wide-gamut DCI-P3 display for the best results.\n"
+	        "\n"
+	        "  trinitron:  Typical Sony Trinitron CRT TV and monitor colours (~9300K\n"
+	        "              white point). Needs a wide-gamut DCI-P3 display for the best\n"
+	        "              results.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - The feature only works in OpenGL output mode.\n"
+	        "\n"
+	        "  - Colour profiles are applied to rendered screenshots, but not to raw and\n"
+	        "    upscaled screenshots and video captures.");
+
+	constexpr int DefaultCrtBlack = 65;
+
+	int_prop = section.AddInt("crt_black", Always, DefaultCrtBlack);
+	int_prop->SetMinMax(CrtBlackMin, CrtBlackMax);
+	int_prop->SetHelp(format_str(
+	        "TODO (%d by default). Valid range is %d to %de.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - Image adjustments only work in OpenGL output mode.\n"
+	        "\n"
+	        "  - Adjustments are applied to rendered screenshots, but not to raw and upscaled\n"
+	        "    screenshots and video captures.\n"
+	        "\n"
+	        "  - Use the 'Sel Knob', 'Inc Knob', and 'Dec Knob' hotkey actions to adjust the\n"
+	        "    setting in real-time, then copy the new settings from the logs into your\n"
+	        "    config.",
+	        DefaultCrtBlack,
+	        CrtBlackMin,
+	        CrtBlackMax));
+
+	constexpr int DefaultBrightness = 0;
+
+	int_prop = section.AddInt("brightness", Always, DefaultBrightness);
+	int_prop->SetMinMax(BrightnessMin, BrightnessMax);
+	int_prop->SetHelp(format_str(
+	        "Set the brightness of the video output (%d by default). Valid range is %d to %de.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - Image adjustments only work in OpenGL output mode.\n"
+	        "\n"
+	        "  - Adjustments are applied to rendered screenshots, but not to raw and upscaled\n"
+	        "    screenshots and video captures.\n"
+	        "\n"
+	        "  - Use the 'Sel Knob', 'Inc Knob', and 'Dec Knob' hotkey actions to adjust the\n"
+	        "    setting in real-time, then copy the new settings from the logs into your\n"
+	        "    config.",
+	        DefaultBrightness,
+	        BrightnessMin,
+	        BrightnessMax));
+
+	constexpr int DefaultContrast = 0;
+
+	int_prop = section.AddInt("contrast", Always, DefaultContrast);
+	int_prop->SetMinMax(ContrastMin, ContrastMax);
+	int_prop->SetHelp(
+	        format_str("Set the contrast of the video output (%d by default). Valid range is %d to %d.\n"
+	                   "Notes: See 'brightness' for further details.",
+	                   DefaultContrast,
+	                   ContrastMin,
+	                   ContrastMax));
+
+	constexpr int DefaultGamma = 0;
+
+	int_prop = section.AddInt("gamma", Always, DefaultGamma);
+	int_prop->SetMinMax(GammaMin, GammaMax);
+	int_prop->SetHelp(
+	        format_str("Set the gamma of the video output (%d by default). Valid range is %d to %d.\n"
+	                   "Notes: See 'brightness' for further details.",
+	                   DefaultGamma,
+	                   GammaMin,
+	                   GammaMax));
+
+	constexpr int DefaultBlackLevel = 0;
+
+	int_prop = section.AddInt("black_level", Always, DefaultBlackLevel);
+	int_prop->SetMinMax(BlackLevelMin, BlackLevelMax);
+	int_prop->SetHelp(
+	        format_str("Set the black level of the video output (%d by default).\n"
+	                   "Valid range is %d to %d.\n"
+	                   "Notes: See 'brightness' for further details.",
+	                   DefaultBlackLevel,
+	                   BlackLevelMin,
+	                   BlackLevelMax));
+
+	constexpr int DefaultSaturation = 0;
+
+	int_prop = section.AddInt("saturation", Always, DefaultSaturation);
+	int_prop->SetMinMax(SaturationMin, SaturationMax);
+	int_prop->SetHelp(
+	        format_str("Set the saturation of the video output (%d by default). Valid range is %d to %d.\n"
+	                   "Notes: See 'brightness' for further details.",
+	                   DefaultSaturation,
+	                   SaturationMin,
+	                   SaturationMax));
+
+	constexpr auto DefaultWhitePoint = "auto";
+
+	string_prop = section.AddString("white_point", Always, DefaultWhitePoint);
+	string_prop->SetHelp(format_str(
+	        "Set the white point of the video output (%d by default). Possible values:\n"
+	        "\n"
+	        "  auto:     For adaptive CRT shaders, an authentic white point for the currently\n"
+	        "            active shader variant is selected; for any other shader, 6500 is\n"
+	        "            used (default).\n"
+	        "\n"
+	        "  <value>:  White point in Kelvin (K). Valid range is %d to %d. The Kelvin\n"
+	        "            value only make sense if 'crt_color_profile' is set to 'none' or one\n"
+	        "            of the profiles with 6500K white point, otherwise it acts as a\n"
+	        "            relative white point adjustment (less than 6500 results in warmer\n"
+	        "            colors, more than 6500 results in cooler colors).\n"
+	        "\n"
+	        "Notes: See 'brightness' for further details.",
+	        DefaultWhitePoint,
+	        WhitePointMin,
+	        WhitePointMax));
 }
 
 enum { Horiz, Vert };
@@ -1468,6 +1791,424 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
+static ColorSpace to_color_space_enum(const std::string& setting)
+{
+	using enum ColorSpace;
+
+	if (setting == "srgb") {
+		return Srgb;
+
+	} else if (setting == "dci-p3") {
+		return DciP3;
+
+	} else if (setting == "dci-p3-d65") {
+		return DciP3_D65;
+
+	} else if (setting == "display-p3") {
+		return DisplayP3;
+
+	} else if (setting == "modern-p3") {
+		return ModernP3;
+
+	} else if (setting == "adobe-rgb") {
+		return AdobeRgb;
+
+	} else if (setting == "rec-2020") {
+		return Rec2020;
+
+	} else {
+		assertm(false, "Invalid color_space setting");
+		return Srgb;
+	}
+}
+
+static const char* to_setting_name(const ColorSpace color_space)
+{
+	using enum ColorSpace;
+
+	switch (color_space) {
+	case Srgb: return "srgb";
+	case DciP3: return "dci-p3";
+	case DciP3_D65: return "dci-p3-d65";
+	case DisplayP3: return "display-p3";
+	case ModernP3: return "modern-p3";
+	case AdobeRgb: return "adobe-rgb";
+	case Rec2020: return "rec-2020";
+
+	default: assertm(false, "Invalid ColorSpace enum value"); return "srgb";
+	}
+}
+
+static void update_color_space_setting()
+{
+	const auto color_space = to_color_space_enum(
+	        get_render_section().GetString("color_space"));
+
+	GFX_GetRenderer()->SetColorSpace(color_space);
+}
+
+static void update_crt_color_profile_setting()
+{
+	curr_crt_color_profile = to_crt_color_profile_enum(
+	        get_render_section().GetString("crt_color_profile"));
+
+	GFX_GetRenderer()->SetCrtColorProfile(curr_crt_color_profile);
+}
+
+static void update_crt_black_setting()
+{
+	curr_image_settings.crt_black = remap(
+	        static_cast<float>(CrtBlackMin),
+	        static_cast<float>(CrtBlackMax),
+	        0.0f,
+	        1.0f,
+	        static_cast<float>(get_render_section().GetInt("crt_black")));
+}
+
+static void update_brightness_setting()
+{
+	const auto brightness_pref = static_cast<float>(
+	        get_render_section().GetInt("brightness"));
+
+	if (brightness_pref <= 0) {
+		// Map the [-50, 0] setting range to [0.01f, 1.0f] in the shader using
+		// an sRGB-like gamma curve. This is needed so we get perceptually
+		// linear brightness adjustment steps over the [-50, 0] setting range.
+		const auto ValueMax = 0.0f;
+
+		const auto x = remap(static_cast<float>(BrightnessMin),
+		                     ValueMax,
+		                     0.0f,
+		                     1.0f,
+		                     brightness_pref);
+
+		const auto MinimumBrightness = 0.01f;
+		const auto SrgbGamma         = 2.2f;
+
+		curr_image_settings.brightness = std::min(std::pow(x, SrgbGamma) +
+		                                                  MinimumBrightness,
+		                                          1.0f);
+
+	} else {
+		// Map the (0, 50] setting range to (1.0f, 3.0f] in the shader using a
+		// linear scale. This will give us roughly perceptually linear
+		// brightness adjustment steps when raising the brightness.
+		curr_image_settings.brightness = remap(0.0f,
+		                                       static_cast<float>(BrightnessMax),
+		                                       1.0f,
+		                                       3.0f,
+		                                       brightness_pref);
+	}
+}
+
+static void update_contrast_setting()
+{
+	curr_image_settings.contrast =
+	        remap(static_cast<float>(ContrastMin),
+	              static_cast<float>(ContrastMax),
+	              -1.5f,
+	              2.0f,
+	              static_cast<float>(get_render_section().GetInt("contrast")));
+}
+
+static void update_gamma_setting()
+{
+	curr_image_settings.gamma = remap(static_cast<float>(GammaMin),
+	                             static_cast<float>(GammaMax),
+	                             -1.0f,
+	                             1.0f,
+	                             static_cast<float>(
+	                                     get_render_section().GetInt("gamma")));
+}
+
+static void update_black_level_setting()
+{
+	curr_image_settings.black_level = remap(
+	        static_cast<float>(BlackLevelMin),
+	        static_cast<float>(BlackLevelMax),
+	        0.0f,
+	        0.50f,
+	        static_cast<float>(get_render_section().GetInt("black_level")));
+
+	curr_image_settings.black_level_tint = VGA_GetBlackLevelTint();
+}
+
+static void update_saturation_setting()
+{
+	curr_image_settings.saturation = remap(
+	        static_cast<float>(SaturationMin),
+	        static_cast<float>(SaturationMax),
+	        -1.0f,
+	        1.0f,
+	        static_cast<float>(get_render_section().GetInt("saturation")));
+}
+
+static std::optional<int> get_white_point_setting_value()
+{
+	const std::string pref = get_render_section().GetString("white_point");
+
+	if (pref == "auto") {
+		return {};
+	}
+
+	if (const auto maybe_int = parse_int(pref); maybe_int) {
+		return *maybe_int;
+	} else {
+		constexpr auto SettingName  = "aspect";
+		constexpr auto DefaultValue = "auto";
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+							  "RENDER",
+							  "PROGRAM_CONFIG_INVALID_SETTING",
+							  SettingName,
+							  pref.c_str(),
+							  DefaultValue);
+
+		set_section_property_value("render", SettingName, DefaultValue);
+		return {};
+	}
+}
+
+static void update_white_point_setting()
+{
+	if (const auto maybe_white_point = get_white_point_setting_value();
+	    maybe_white_point) {
+
+		curr_image_settings.white_point_kelvin = *maybe_white_point;
+	} else {
+		curr_image_settings.white_point_kelvin = WhitePointNeutral;
+	}
+}
+
+enum class ImageSettingControl {
+	ColorSpace   = 0,
+	ColorProfile,
+
+	CrtBlack,
+	Brightness,
+	Contrast,
+	Gamma,
+	BlackLevel,
+	Saturation,
+	WhitePoint,
+};
+
+enum class Direction { Dec, Inc };
+
+static ImageSettingControl curr_image_setting_control = ImageSettingControl::ColorSpace;
+
+template <typename T>
+T adjust_enum(const T curr_val, const Direction dir, const T min_val, const T max_val)
+{
+	const auto curr_int = enum_val(curr_val);
+	const auto min_int  = enum_val(min_val);
+	const auto max_int  = enum_val(max_val);
+
+	int new_int = wrap(curr_int + ((dir == Direction::Dec) ? -1 : 1),
+	                   min_int,
+	                   max_int);
+
+	return static_cast<T>(new_int);
+}
+
+static void select_image_setting_control(const Direction dir)
+{
+	using enum ImageSettingControl;
+
+	const auto min_val = ColorSpace;
+	const auto max_val = WhitePoint;
+
+	curr_image_setting_control =
+	        adjust_enum(curr_image_setting_control, dir, min_val, max_val);
+
+	const auto name = [] {
+		switch (curr_image_setting_control) {
+		case ColorSpace: return "color space"; break;
+		case ColorProfile: return "color profile"; break;
+
+		case CrtBlack: return "CRT black"; break;
+		case Brightness: return "brightness"; break;
+		case Contrast: return "contrast"; break;
+		case Gamma: return "gamma"; break;
+		case BlackLevel: return "black level"; break;
+		case Saturation: return "saturation"; break;
+
+		case WhitePoint: return "white point"; break;
+
+		default: assertm(false, "Invalid ImageSettingControl value");
+		}
+	}();
+
+	LOG_INFO("RENDER: Selected %s video setting", name);
+}
+
+static void select_prev_image_setting_control(const bool pressed)
+{
+	if (pressed) {
+		select_image_setting_control(Direction::Dec);
+	}
+}
+
+static void select_next_image_setting_control(const bool pressed)
+{
+	if (pressed) {
+		select_image_setting_control(Direction::Inc);
+	}
+}
+
+static void adjust_image_setting(const Direction dir)
+{
+	auto set_setting = [](const char* setting_name, const std::string& new_value) {
+		set_section_property_value("render", setting_name, new_value);
+
+		LOG_INFO("RENDER: %s = %s", setting_name, new_value.c_str());
+	};
+
+	auto adjust_setting = [&](const char* setting_name,
+	                          const int minval,
+	                          const int maxval,
+	                          const int delta) {
+		const auto curr_value = get_render_section().GetInt(setting_name);
+		const auto new_value = clamp(curr_value + delta, minval, maxval);
+
+		set_setting(setting_name, format_str("%d", new_value));
+	};
+
+	using enum ImageSettingControl;
+
+	switch (curr_image_setting_control) {
+	case ColorSpace: {
+		// Only `srgb` is supported on macOS, so we only allow cycling
+		// through the other color space settings on Windows and Linux.
+		//
+#if defined(WIN32) || defined(LINUX)
+		const auto setting_name = "color_space";
+
+		const auto curr_color_space = to_color_space_enum(
+		        get_render_section().GetString(setting_name));
+
+		const auto min_val = ColorSpace::Srgb;
+		const auto max_val = ColorSpace::Rec2020;
+
+		const auto new_color_space =
+		        adjust_enum(curr_color_space, dir, min_val, max_val);
+
+		set_setting(setting_name, to_setting_name(new_color_space));
+		update_color_space_setting();
+#endif
+	} break;
+
+	case ColorProfile: {
+		const auto setting_name = "crt_color_profile";
+
+		const auto curr_profile = to_crt_color_profile_enum(
+		        get_render_section().GetString(setting_name));
+
+		const auto min_val = CrtColorProfile::Auto;
+		const auto max_val = CrtColorProfile::Trinitron;
+
+		const auto new_profile = adjust_enum(curr_profile, dir, min_val, max_val);
+
+		set_setting(setting_name, to_setting_name(new_profile));
+		update_crt_color_profile_setting();
+	} break;
+
+	case CrtBlack:
+		adjust_setting("crt_black",
+		               CrtBlackMin,
+		               CrtBlackMax,
+		               (dir == Direction::Dec) ? -3 : 3);
+
+		update_crt_black_setting();
+		set_image_settings();
+		break;
+
+
+	case Brightness:
+		adjust_setting("brightness",
+		               BrightnessMin,
+		               BrightnessMax,
+		               (dir == Direction::Dec) ? -1 : 1);
+
+		update_brightness_setting();
+		set_image_settings();
+		break;
+
+	case Contrast:
+		adjust_setting("contrast",
+		               ContrastMin,
+		               ContrastMax,
+		               (dir == Direction::Dec) ? -1 : 1);
+
+		update_contrast_setting();
+		set_image_settings();
+		break;
+
+	case Gamma:
+		adjust_setting("gamma",
+		               GammaMin,
+		               GammaMax,
+		               (dir == Direction::Dec) ? -1 : 1);
+
+		update_gamma_setting();
+		set_image_settings();
+		break;
+
+	case BlackLevel:
+		adjust_setting("black_level",
+		               BlackLevelMin,
+		               BlackLevelMax,
+		               (dir == Direction::Dec) ? -1 : 1);
+
+		update_black_level_setting();
+		set_image_settings();
+		break;
+
+	case Saturation:
+		adjust_setting("saturation",
+		               SaturationMin,
+		               SaturationMax,
+		               (dir == Direction::Dec) ? -1 : 1);
+
+		update_saturation_setting();
+		set_image_settings();
+		break;
+
+	case WhitePoint: {
+		const auto maybe_white_point = get_white_point_setting_value();
+
+		const auto curr_value = maybe_white_point ? *maybe_white_point
+		                                          : WhitePointNeutral;
+
+		const auto delta     = (dir == Direction::Dec) ? -100 : 100;
+		const auto new_value = clamp(curr_value + delta,
+		                             WhitePointMin,
+		                             WhitePointMax);
+
+		set_setting("white_point", format_str("%d", new_value));
+
+		update_white_point_setting();
+		set_image_settings();
+	} break;
+
+	default: assertm(false, "Invalid ImageSettingControl value");
+	}
+}
+
+static void decrease_image_setting_control(const bool pressed)
+{
+	if (pressed) {
+		adjust_image_setting(Direction::Dec);
+	}
+}
+
+static void increase_image_setting_control(const bool pressed)
+{
+	if (pressed) {
+		adjust_image_setting(Direction::Inc);
+	}
+}
+
 static std::string get_shader_setting_value()
 {
 	const auto legacy_pref = get_render_section().GetString("glshader");
@@ -1495,6 +2236,9 @@ static void set_monochrome_palette(SectionProp& section)
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
 {
 	set_section_property_value("render", "monochrome_palette", to_string(palette));
+
+	update_black_level_setting();
+	set_image_settings();
 }
 
 void RENDER_Init()
@@ -1507,6 +2251,18 @@ void RENDER_Init()
 	set_integer_scaling(*section);
 
 	set_monochrome_palette(*section);
+
+	update_color_space_setting();
+	update_crt_color_profile_setting();
+
+	update_crt_black_setting();
+	update_brightness_setting();
+	update_contrast_setting();
+	update_gamma_setting();
+	update_black_level_setting();
+	update_saturation_setting();
+	update_white_point_setting();
+	set_image_settings();
 }
 
 static void notify_render_setting_updated(SectionProp& section,
@@ -1539,6 +2295,40 @@ static void notify_render_setting_updated(SectionProp& section,
 	} else if (prop_name == "viewport") {
 		set_viewport(section);
 		reinit_drawing();
+
+	} else if (prop_name == "color_space") {
+		update_color_space_setting();
+
+	} else if (prop_name == "crt_color_profile") {
+		update_crt_color_profile_setting();
+
+	} else if (prop_name == "crt_black") {
+		update_crt_black_setting();
+		set_image_settings();
+
+	} else if (prop_name == "brightness") {
+		update_brightness_setting();
+		set_image_settings();
+
+	} else if (prop_name == "contrast") {
+		update_contrast_setting();
+		set_image_settings();
+
+	} else if (prop_name == "gamma") {
+		update_gamma_setting();
+		set_image_settings();
+
+	} else if (prop_name == "black_level") {
+		update_black_level_setting();
+		set_image_settings();
+
+	} else if (prop_name == "saturation") {
+		update_saturation_setting();
+		set_image_settings();
+
+	} else if (prop_name == "white_point") {
+		update_white_point_setting();
+		set_image_settings();
 	}
 }
 
@@ -1588,6 +2378,30 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 	                  PRIMARY_MOD,
 	                  "reloadshader",
 	                  "Reload Shader");
+
+	MAPPER_AddHandler(select_prev_image_setting_control,
+	                  SDL_SCANCODE_UNKNOWN,
+	                  0,
+	                  "previmagectrl",
+	                  "PrevImageCtrl");
+
+	MAPPER_AddHandler(select_next_image_setting_control,
+	                  SDL_SCANCODE_UNKNOWN,
+	                  0,
+	                  "nextimagectrl",
+	                  "NextImageCtrl");
+
+	MAPPER_AddHandler(decrease_image_setting_control,
+	                  SDL_SCANCODE_UNKNOWN,
+	                  0,
+	                  "decimagectrl",
+	                  "DecImageCtrl ");
+
+	MAPPER_AddHandler(increase_image_setting_control,
+	                  SDL_SCANCODE_UNKNOWN,
+	                  0,
+	                  "incimagectrl",
+	                  "IncImageCtrl ");
 
 	init_render_settings(*section);
 	register_render_text_messages();
