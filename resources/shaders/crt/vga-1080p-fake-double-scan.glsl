@@ -1,4 +1,4 @@
-#version 120
+#version 330 core
 
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: MIT
@@ -16,24 +16,20 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
+#if defined(VERTEX)
+
+layout (location = 0) in vec2 a_position;
+
+out vec2 v_texCoord;
+out vec2 prescale;
+
 uniform vec2 rubyInputSize;
 uniform vec2 rubyOutputSize;
 uniform vec2 rubyTextureSize;
 
-varying vec2 v_texCoord_lores;
-varying vec2 prescale;
-
-#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize)
-
-
-#if defined(VERTEX)
-
-attribute vec4 a_position;
-
 void main() {
-    gl_Position = a_position;
-
-    v_texCoord_lores = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize;
+	gl_Position = vec4(a_position, 0.0, 1.0);
+    v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize;
 
     prescale = ceil(rubyOutputSize / rubyInputSize);
 }
@@ -41,27 +37,23 @@ void main() {
 
 #elif defined(FRAGMENT)
 
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
+in vec2 v_texCoord;
+in vec2 prescale;
 
+out vec4 FragColor;
+
+uniform vec2 rubyInputSize;
+uniform vec2 rubyTextureSize;
 uniform sampler2D rubyTexture;
 
-uniform PRECISION float PHOSPHOR_LAYOUT;
-uniform PRECISION float SCANLINE_STRENGTH_MIN;
-uniform PRECISION float SCANLINE_STRENGTH_MAX;
-uniform PRECISION float COLOR_BOOST_EVEN;
-uniform PRECISION float COLOR_BOOST_ODD;
-uniform PRECISION float MASK_STRENGTH;
-uniform PRECISION float GAMMA_INPUT;
-uniform PRECISION float GAMMA_OUTPUT;
+uniform float PHOSPHOR_LAYOUT;
+uniform float SCANLINE_STRENGTH_MIN;
+uniform float SCANLINE_STRENGTH_MAX;
+uniform float COLOR_BOOST_EVEN;
+uniform float COLOR_BOOST_ODD;
+uniform float MASK_STRENGTH;
+uniform float GAMMA_INPUT;
+uniform float GAMMA_OUTPUT;
 
 #define GAMMA_IN(color)   pow(color, vec4(GAMMA_INPUT))
 
@@ -95,7 +87,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout){
       // 2x2 shadow mask for RGB panels; good for 1080p, too small for 4K+
       // aka delta_1_2x1_bgr
       vec3 inverse_aperture = mix(green, magenta, floor(mod(coord.x, 2.0)));
-      weights               = mix(aperture_weights, inverse_aperture, floor(mod(coord.y, 2.0)));
+      weights = mix(aperture_weights, inverse_aperture, floor(mod(coord.y, 2.0)));
       return weights;
 
    } else {
@@ -103,7 +95,10 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout){
    }
 }
 
-vec4 add_vga_overlay(vec4 color, float scanlineStrengthMin, float scanlineStrengthMax, float color_boost_even, float color_boost_odd, float mask_strength) {
+vec4 add_vga_overlay(vec4 color,
+				     float scanlineStrengthMin, float scanlineStrengthMax,
+					 float color_boost_even, float color_boost_odd,
+					 float mask_strength) {
   // scanlines
   vec2 mask_coords = gl_FragCoord.xy;
 
@@ -141,10 +136,10 @@ vec4 tex2D_linear(in sampler2D sampler, in vec2 uv) {
     vec2 s1t1 = s0t0 + vec2(1.0);
 
     vec2 invTexSize = 1.0 / rubyTextureSize;
-    vec4 c_s0t0 = GAMMA_IN(texture2D(sampler, s0t0 * invTexSize));
-    vec4 c_s0t1 = GAMMA_IN(texture2D(sampler, s0t1 * invTexSize));
-    vec4 c_s1t0 = GAMMA_IN(texture2D(sampler, s1t0 * invTexSize));
-    vec4 c_s1t1 = GAMMA_IN(texture2D(sampler, s1t1 * invTexSize));
+    vec4 c_s0t0 = GAMMA_IN(texture(sampler, s0t0 * invTexSize));
+    vec4 c_s0t1 = GAMMA_IN(texture(sampler, s0t1 * invTexSize));
+    vec4 c_s1t0 = GAMMA_IN(texture(sampler, s1t0 * invTexSize));
+    vec4 c_s1t1 = GAMMA_IN(texture(sampler, s1t1 * invTexSize));
 
     vec2 weight = fract(texCoord);
 
@@ -157,8 +152,8 @@ vec4 tex2D_linear(in sampler2D sampler, in vec2 uv) {
 void main()
 {
   const vec2 halfp = vec2(0.5);
-  vec2 texel_floored = floor(v_texCoord_lores);
-  vec2 s = fract(v_texCoord_lores);
+  vec2 texel_floored = floor(v_texCoord);
+  vec2 s = fract(v_texCoord);
   vec2 region_range = halfp - halfp / prescale;
 
   vec2 center_dist = s - halfp;
@@ -175,7 +170,7 @@ void main()
   );
 
   color = pow(color, vec4(1.0 / GAMMA_OUTPUT));
-  gl_FragColor = clamp(color, 0.0, 1.0);
+  FragColor = clamp(color, 0.0, 1.0);
 }
 
 #endif
