@@ -1,4 +1,4 @@
-#version 120
+#version 330 core
 
 // SPDX-FileCopyrightText:  2020-2024 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2004-2020 The DOSBox Team
@@ -7,35 +7,41 @@
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
 
-varying vec2 v_texCoord;
-uniform sampler2D rubyTexture;
-uniform vec2 rubyInputSize;
-uniform vec2 rubyOutputSize;
-uniform vec2 rubyTextureSize;
-
 #if defined(VERTEX)
-attribute vec4 a_position;
+
+layout (location = 0) in vec2 a_position;
+
+out vec2 v_texCoord;
+
+uniform vec2 rubyInputSize;
 
 void main()
 {
-	gl_Position = a_position;
+	gl_Position = vec4(a_position, 0.0, 1.0);
 	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize * 3.0;
 }
 
 #elif defined(FRAGMENT)
 
+in vec2 v_texCoord;
+
+out vec4 FragColor;
+
+uniform vec2 rubyTextureSize;
+uniform sampler2D rubyTexture;
+
 vec3 getadvinterp3xtexel(vec2 coord)
 {
 	vec2 base = floor(coord / vec2(3.0)) + vec2(0.5);
-	vec3 c0 = texture2D(rubyTexture, (base - vec2(1.0, 1.0)) / rubyTextureSize).xyz;
-	vec3 c1 = texture2D(rubyTexture, (base - vec2(0.0, 1.0)) / rubyTextureSize).xyz;
-	vec3 c2 = texture2D(rubyTexture, (base - vec2(-1.0, 1.0)) / rubyTextureSize).xyz;
-	vec3 c3 = texture2D(rubyTexture, (base - vec2(1.0, 0.0)) / rubyTextureSize).xyz;
-	vec3 c4 = texture2D(rubyTexture, base / rubyTextureSize).xyz;
-	vec3 c5 = texture2D(rubyTexture, (base + vec2(1.0, 0.0)) / rubyTextureSize).xyz;
-	vec3 c6 = texture2D(rubyTexture, (base + vec2(-1.0, 1.0)) / rubyTextureSize).xyz;
-	vec3 c7 = texture2D(rubyTexture, (base + vec2(0.0, 1.0)) / rubyTextureSize).xyz;
-	vec3 c8 = texture2D(rubyTexture, (base + vec2(1.0, 1.0)) / rubyTextureSize).xyz;
+	vec3 c0 = texture(rubyTexture, (base - vec2(1.0, 1.0)) / rubyTextureSize).xyz;
+	vec3 c1 = texture(rubyTexture, (base - vec2(0.0, 1.0)) / rubyTextureSize).xyz;
+	vec3 c2 = texture(rubyTexture, (base - vec2(-1.0, 1.0)) / rubyTextureSize).xyz;
+	vec3 c3 = texture(rubyTexture, (base - vec2(1.0, 0.0)) / rubyTextureSize).xyz;
+	vec3 c4 = texture(rubyTexture, base / rubyTextureSize).xyz;
+	vec3 c5 = texture(rubyTexture, (base + vec2(1.0, 0.0)) / rubyTextureSize).xyz;
+	vec3 c6 = texture(rubyTexture, (base + vec2(-1.0, 1.0)) / rubyTextureSize).xyz;
+	vec3 c7 = texture(rubyTexture, (base + vec2(0.0, 1.0)) / rubyTextureSize).xyz;
+	vec3 c8 = texture(rubyTexture, (base + vec2(1.0, 1.0)) / rubyTextureSize).xyz;
 
 	bool outer = c1 != c7 && c3 != c5;
 
@@ -79,6 +85,6 @@ void main()
 	vec3 c3 = getadvinterp3xtexel(coord + vec2(1.0));
 
 	coord = fract(max(coord, 0.0));
-	gl_FragColor = vec4(mix(mix(c0, c1, coord.x), mix(c2, c3, coord.x), coord.y), 1.0);
+	FragColor = vec4(mix(mix(c0, c1, coord.x), mix(c2, c3, coord.x), coord.y), 1.0);
 }
 #endif

@@ -1,4 +1,4 @@
-#version 120
+#version 330 core
 
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: MIT
@@ -16,60 +16,54 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-uniform vec2 rubyInputSize;
-uniform vec2 rubyOutputSize;
-uniform vec2 rubyTextureSize;
-
-varying vec2 v_texCoord;
-varying vec2 onex;
-varying vec2 oney;
-
-#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize)
-
-
 #if defined(VERTEX)
 
-attribute vec4 a_position;
+layout (location = 0) in vec2 a_position;
+
+out vec2 v_texCoord;
+out vec4 sourceSize;
+out vec2 onex;
+out vec2 oney;
+
+uniform vec2 rubyInputSize;
+uniform vec2 rubyTextureSize;
 
 void main() {
-  gl_Position = a_position;
+	gl_Position = vec4(a_position, 0.0, 1.0);
 
-  v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize;
-  v_texCoord /= rubyTextureSize;
+	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize;
+	v_texCoord /= rubyTextureSize;
 
-  onex = vec2(SourceSize.z, 0.0);
-  oney = vec2(0.0, SourceSize.w);
+	sourceSize = vec4(rubyTextureSize, 1.0 / rubyTextureSize);
+	onex = vec2(sourceSize.z, 0.0);
+	oney = vec2(0.0, sourceSize.w);
 }
 
 
 #elif defined(FRAGMENT)
 
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
+in vec2 v_texCoord;
+in vec4 sourceSize;
+in vec2 onex;
+in vec2 oney;
+
+out vec4 FragColor;
 
 uniform sampler2D rubyTexture;
 
-uniform PRECISION float SPOT_WIDTH;
-uniform PRECISION float SPOT_HEIGHT;
-uniform PRECISION float PHOSPHOR_LAYOUT;
-uniform PRECISION float SCANLINE_STRENGTH_MIN;
-uniform PRECISION float SCANLINE_STRENGTH_MAX;
-uniform PRECISION float COLOR_BOOST_EVEN;
-uniform PRECISION float COLOR_BOOST_ODD;
-uniform PRECISION float MASK_STRENGTH;
-uniform PRECISION float GAMMA_INPUT;
-uniform PRECISION float GAMMA_OUTPUT;
+uniform float SPOT_WIDTH;
+uniform float SPOT_HEIGHT;
+uniform float PHOSPHOR_LAYOUT;
+uniform float SCANLINE_STRENGTH_MIN;
+uniform float SCANLINE_STRENGTH_MAX;
+uniform float COLOR_BOOST_EVEN;
+uniform float COLOR_BOOST_ODD;
+uniform float MASK_STRENGTH;
+uniform float GAMMA_INPUT;
+uniform float GAMMA_OUTPUT;
 
 #define GAMMA_IN(color)     pow(color, vec4(GAMMA_INPUT))
-#define TEX2D(coords)       GAMMA_IN(texture2D(rubyTexture, coords))
+#define TEX2D(coords)       GAMMA_IN(texture(rubyTexture, coords))
 
 // Macro for weights computing
 #define WEIGHT(w) \
@@ -139,9 +133,9 @@ vec4 add_vga_overlay(vec4 color, float scanlineStrengthMin, float scanlineStreng
 
 void main()
 {
-  vec2 coords = v_texCoord.xy * SourceSize.xy;
+  vec2 coords = v_texCoord.xy * sourceSize.xy;
   vec2 pixel_center = floor(coords) + vec2(0.5, 0.5);
-  vec2 texture_coords = pixel_center * SourceSize.zw;
+  vec2 texture_coords = pixel_center * sourceSize.zw;
 
   vec4 color = TEX2D(texture_coords);
 
@@ -203,7 +197,7 @@ void main()
   );
 
   color = pow(color, vec4(1.0 / GAMMA_OUTPUT));
-  gl_FragColor = clamp(color, 0.0, 1.0);
+  FragColor = clamp(color, 0.0, 1.0);
 }
 
 #endif

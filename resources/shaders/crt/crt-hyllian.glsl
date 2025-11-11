@@ -1,4 +1,4 @@
-#version 120
+#version 330 core
 
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2021-2020 Hyllian <sergiogdb@gmail.com>
@@ -24,93 +24,51 @@
 #pragma parameter OUTPUT_GAMMA "OUTPUT GAMMA" 2. 0.0 5.0 0.1
 #pragma parameter VSCANLINES "VERTICAL SCANLINES [ OFF | ON ]" 0.0 0.0 1.0 1.0
 
+/////////////////////////////////////////////////////////////////////////////
+
 #define GAMMA_IN(color)   pow(color, vec4(INPUT_GAMMA, INPUT_GAMMA, INPUT_GAMMA, INPUT_GAMMA))
 #define GAMMA_OUT(color)  pow(color, vec4(1.0 / OUTPUT_GAMMA, 1.0 / OUTPUT_GAMMA, 1.0 / OUTPUT_GAMMA, 1.0 / OUTPUT_GAMMA))
 
-
-#define texCoord v_texCoord
-
 #if defined(VERTEX)
 
-#if __VERSION__ >= 130
-#define OUT out
-#define IN  in
-#define tex2D texture
-#else
-#define OUT varying
-#define IN attribute
-#define tex2D texture2D
-#endif
+layout (location = 0) in vec2 a_position;
 
-#ifdef GL_ES
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
+out vec2 v_texCoord;
 
-
-IN  vec4 a_position;
-IN  vec4 Color;
-IN  vec2 TexCoord;
-OUT vec4 color;
-OUT vec2 texCoord;
-
-uniform PRECISION vec2 rubyOutputSize;
-uniform PRECISION vec2 rubyTextureSize;
-uniform PRECISION vec2 rubyInputSize;
+uniform vec2 rubyOutputSize;
+uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 
 void main()
 {
-    gl_Position = a_position;
-    v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize / rubyTextureSize;
+	gl_Position = vec4(a_position, 0.0, 1.0);
+    v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 *
+				 rubyInputSize / rubyTextureSize;
 }
 
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define IN in
-#define tex2D texture
+in vec2 v_texCoord;
+
 out vec4 FragColor;
-#else
-#define IN varying
-#define FragColor gl_FragColor
-#define tex2D texture2D
-#endif
 
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
-
-uniform PRECISION vec2 rubyOutputSize;
-uniform PRECISION vec2 rubyTextureSize;
-uniform PRECISION vec2 rubyInputSize;
+uniform vec2 rubyTextureSize;
 uniform sampler2D s_p;
-IN vec2 texCoord;
 
-uniform PRECISION float BEAM_PROFILE;
-uniform PRECISION float HFILTER_PROFILE;
-uniform PRECISION float BEAM_MIN_WIDTH;
-uniform PRECISION float BEAM_MAX_WIDTH;
-uniform PRECISION float SCANLINES_STRENGTH;
-uniform PRECISION float COLOR_BOOST;
-uniform PRECISION float SHARPNESS_HACK;
-uniform PRECISION float PHOSPHOR_LAYOUT;
-uniform PRECISION float MASK_INTENSITY;
-uniform PRECISION float CRT_ANTI_RINGING;
-uniform PRECISION float INPUT_GAMMA;
-uniform PRECISION float OUTPUT_GAMMA;
-uniform PRECISION float VSCANLINES;
-
-// END PARAMETERS //
-
+uniform float BEAM_PROFILE;
+uniform float HFILTER_PROFILE;
+uniform float BEAM_MIN_WIDTH;
+uniform float BEAM_MAX_WIDTH;
+uniform float SCANLINES_STRENGTH;
+uniform float COLOR_BOOST;
+uniform float SHARPNESS_HACK;
+uniform float PHOSPHOR_LAYOUT;
+uniform float MASK_INTENSITY;
+uniform float CRT_ANTI_RINGING;
+uniform float INPUT_GAMMA;
+uniform float OUTPUT_GAMMA;
+uniform float VSCANLINES;
 
 /*
     A collection of CRT mask effects that work with LCD subpixel structures for
@@ -493,7 +451,7 @@ void main()
     vec2 dx = mix(vec2(1.0/TextureSize.x, 0.0), vec2(0.0, 1.0/TextureSize.y), VSCANLINES);
     vec2 dy = mix(vec2(0.0, 1.0/TextureSize.y), vec2(1.0/TextureSize.x, 0.0), VSCANLINES);
 
-    vec2 pix_coord = texCoord.xy * TextureSize + vec2(-0.5, 0.5);
+    vec2 pix_coord = v_texCoord.xy * TextureSize + vec2(-0.5, 0.5);
 
     vec2 tc = mix(
         (floor(pix_coord) + vec2(0.5,  0.5)) / TextureSize,
@@ -503,15 +461,15 @@ void main()
 
     vec2 fp = mix(fract(pix_coord), fract(pix_coord.yx), VSCANLINES);
 
-    vec4 c00 = GAMMA_IN(tex2D(s_p, tc     - dx - dy).xyzw);
-    vec4 c01 = GAMMA_IN(tex2D(s_p, tc          - dy).xyzw);
-    vec4 c02 = GAMMA_IN(tex2D(s_p, tc     + dx - dy).xyzw);
-    vec4 c03 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx - dy).xyzw);
+    vec4 c00 = GAMMA_IN(texture(s_p, tc     - dx - dy).xyzw);
+    vec4 c01 = GAMMA_IN(texture(s_p, tc          - dy).xyzw);
+    vec4 c02 = GAMMA_IN(texture(s_p, tc     + dx - dy).xyzw);
+    vec4 c03 = GAMMA_IN(texture(s_p, tc + 2.0*dx - dy).xyzw);
 
-    vec4 c10 = GAMMA_IN(tex2D(s_p, tc     - dx).xyzw);
-    vec4 c11 = GAMMA_IN(tex2D(s_p, tc         ).xyzw);
-    vec4 c12 = GAMMA_IN(tex2D(s_p, tc     + dx).xyzw);
-    vec4 c13 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx).xyzw);
+    vec4 c10 = GAMMA_IN(texture(s_p, tc     - dx).xyzw);
+    vec4 c11 = GAMMA_IN(texture(s_p, tc         ).xyzw);
+    vec4 c12 = GAMMA_IN(texture(s_p, tc     + dx).xyzw);
+    vec4 c13 = GAMMA_IN(texture(s_p, tc + 2.0*dx).xyzw);
 
     mat4 invX = get_hfilter_profile();
 
@@ -551,7 +509,7 @@ void main()
     vec4 color = color_boost * (color0*d0 + color1*d1);
 
     // Mask
-    vec2 mask_coords = gl_FragCoord.xy; //texCoord.xy * OutputSize.xy;
+    vec2 mask_coords = gl_FragCoord.xy; // v_texCoord.xy * OutputSize.xy;
     mask_coords = mix(mask_coords.xy, mask_coords.yx, VSCANLINES);
     color.rgb *= mask_weights(mask_coords, MASK_INTENSITY, int(PHOSPHOR_LAYOUT));
 
@@ -560,4 +518,5 @@ void main()
 
     FragColor = vec4(color.rgb, 1.0);
 }
+
 #endif
