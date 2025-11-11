@@ -1,4 +1,4 @@
-#version 120
+#version 330 core
 
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2011-2016 Hyllian <sergiogdb@gmail.com>
@@ -18,48 +18,33 @@
 
 #if defined(VERTEX)
 
-#if __VERSION__ >= 130
-#define OUT out
-#define IN  in
-#define tex2D texture
-#else
-#define OUT varying
-#define IN attribute
-#define tex2D texture2D
-#endif
+layout (location = 0) in vec2 a_position;
 
-#ifdef GL_ES
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
+out vec2 v_texCoord;
+out vec4 t1;
+out vec4 t2;
+out vec4 t3;
+out vec4 t4;
+out vec4 t5;
+out vec4 t6;
+out vec4 t7;
 
-
-IN vec4 a_position;
-
-OUT vec2 texCoord;
-OUT vec4 t1;
-OUT vec4 t2;
-OUT vec4 t3;
-OUT vec4 t4;
-OUT vec4 t5;
-OUT vec4 t6;
-OUT vec4 t7;
-
-uniform PRECISION vec2 rubyOutputSize;
-uniform PRECISION vec2 rubyTextureSize;
-uniform PRECISION vec2 rubyInputSize;
+uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 
 void main()
 {
-	gl_Position = a_position;
+	gl_Position = vec4(a_position, 0.0, 1.0);
 
 	float dx = (1.0/rubyTextureSize.x);
 	float dy = (1.0/rubyTextureSize.y);
 
-	vec2 TexCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize / rubyTextureSize;
-	texCoord     = TexCoord;
-	texCoord.x *= 1.00000001;
+	vec2 TexCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 *
+	                rubyInputSize / rubyTextureSize;
+
+	v_texCoord     = TexCoord;
+	v_texCoord.x *= 1.00000001;
+
 	t1 = TexCoord.xxxy + vec4( -dx, 0, dx,-2.0*dy); // A1 B1 C1
 	t2 = TexCoord.xxxy + vec4( -dx, 0, dx,    -dy); //  A  B  C
 	t3 = TexCoord.xxxy + vec4( -dx, 0, dx,      0); //  D  E  F
@@ -72,43 +57,23 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define IN in
-#define tex2D texture
+in vec2 v_texCoord;
+in vec4 t1;
+in vec4 t2;
+in vec4 t3;
+in vec4 t4;
+in vec4 t5;
+in vec4 t6;
+in vec4 t7;
+
 out vec4 FragColor;
-#else
-#define IN varying
-#define FragColor gl_FragColor
-#define tex2D texture2D
-#endif
 
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
-
-uniform PRECISION vec2 rubyOutputSize;
-uniform PRECISION vec2 rubyTextureSize;
-uniform PRECISION vec2 rubyInputSize;
+uniform vec2 rubyTextureSize;
 uniform sampler2D rubyTexture;
-IN vec2 texCoord;
-IN vec4 t1;
-IN vec4 t2;
-IN vec4 t3;
-IN vec4 t4;
-IN vec4 t5;
-IN vec4 t6;
-IN vec4 t7;
 
-uniform PRECISION float XBR_EQ_THRESHOLD;
-uniform PRECISION float XBR_LV2_COEFFICIENT;
-uniform PRECISION float XBR_CORNER_TYPE;
+uniform float XBR_EQ_THRESHOLD;
+uniform float XBR_LV2_COEFFICIENT;
+uniform float XBR_CORNER_TYPE;
 
 const vec3 Y = vec3(0.2126, 0.7152, 0.0722);
 
@@ -160,29 +125,29 @@ void main()
 	bvec4 nc, px;
 	vec4 fx, fx_l, fx_u; // inequations of straight lines.
 
-	vec2 fp  = fract(texCoord*rubyTextureSize);
+	vec2 fp  = fract(v_texCoord*rubyTextureSize);
 
-	vec3 A1 = tex2D(rubyTexture, t1.xw ).xyz;
-	vec3 B1 = tex2D(rubyTexture, t1.yw ).xyz;
-	vec3 C1 = tex2D(rubyTexture, t1.zw ).xyz;
-	vec3 A  = tex2D(rubyTexture, t2.xw ).xyz;
-	vec3 B  = tex2D(rubyTexture, t2.yw ).xyz;
-	vec3 C  = tex2D(rubyTexture, t2.zw ).xyz;
-	vec3 D  = tex2D(rubyTexture, t3.xw ).xyz;
-	vec3 E  = tex2D(rubyTexture, t3.yw ).xyz;
-	vec3 F  = tex2D(rubyTexture, t3.zw ).xyz;
-	vec3 G  = tex2D(rubyTexture, t4.xw ).xyz;
-	vec3 H  = tex2D(rubyTexture, t4.yw ).xyz;
-	vec3 I  = tex2D(rubyTexture, t4.zw ).xyz;
-	vec3 G5 = tex2D(rubyTexture, t5.xw ).xyz;
-	vec3 H5 = tex2D(rubyTexture, t5.yw ).xyz;
-	vec3 I5 = tex2D(rubyTexture, t5.zw ).xyz;
-	vec3 A0 = tex2D(rubyTexture, t6.xy ).xyz;
-	vec3 D0 = tex2D(rubyTexture, t6.xz ).xyz;
-	vec3 G0 = tex2D(rubyTexture, t6.xw ).xyz;
-	vec3 C4 = tex2D(rubyTexture, t7.xy ).xyz;
-	vec3 F4 = tex2D(rubyTexture, t7.xz ).xyz;
-	vec3 I4 = tex2D(rubyTexture, t7.xw ).xyz;
+	vec3 A1 = texture(rubyTexture, t1.xw ).xyz;
+	vec3 B1 = texture(rubyTexture, t1.yw ).xyz;
+	vec3 C1 = texture(rubyTexture, t1.zw ).xyz;
+	vec3 A  = texture(rubyTexture, t2.xw ).xyz;
+	vec3 B  = texture(rubyTexture, t2.yw ).xyz;
+	vec3 C  = texture(rubyTexture, t2.zw ).xyz;
+	vec3 D  = texture(rubyTexture, t3.xw ).xyz;
+	vec3 E  = texture(rubyTexture, t3.yw ).xyz;
+	vec3 F  = texture(rubyTexture, t3.zw ).xyz;
+	vec3 G  = texture(rubyTexture, t4.xw ).xyz;
+	vec3 H  = texture(rubyTexture, t4.yw ).xyz;
+	vec3 I  = texture(rubyTexture, t4.zw ).xyz;
+	vec3 G5 = texture(rubyTexture, t5.xw ).xyz;
+	vec3 H5 = texture(rubyTexture, t5.yw ).xyz;
+	vec3 I5 = texture(rubyTexture, t5.zw ).xyz;
+	vec3 A0 = texture(rubyTexture, t6.xy ).xyz;
+	vec3 D0 = texture(rubyTexture, t6.xz ).xyz;
+	vec3 G0 = texture(rubyTexture, t6.xw ).xyz;
+	vec3 C4 = texture(rubyTexture, t7.xy ).xyz;
+	vec3 F4 = texture(rubyTexture, t7.xz ).xyz;
+	vec3 I4 = texture(rubyTexture, t7.xw ).xyz;
 
 	vec4 b = mul( mat4x3(B, D, H, F), Y );
 	vec4 c = mul( mat4x3(C, A, G, I), Y );
@@ -209,9 +174,9 @@ void main()
 	vec4 Cy = vec4( 2.0,  0.0, -1.0, 0.5 );
 
 	// These inequations define the line below which interpolation occurs.
-	fx     = vec4(greaterThan(Ao*fp.y+Bo*fp.x, Co));
-	fx_l   = vec4(greaterThan(Ax*fp.y+Bx*fp.x, Cx));
-	fx_u   = vec4(greaterThan(Ay*fp.y+By*fp.x, Cy));
+	fx   = vec4(greaterThan(Ao * fp.y + Bo * fp.x, Co));
+	fx_l = vec4(greaterThan(Ax * fp.y + Bx * fp.x, Cx));
+	fx_u = vec4(greaterThan(Ay * fp.y + By * fp.x, Cy));
 
 	if (XBR_CORNER_TYPE == 1.0) {
 		irlv1 = diff(e,f) * diff(e,h);
@@ -252,4 +217,5 @@ void main()
 
 	FragColor.xyz = res;
 }
+
 #endif

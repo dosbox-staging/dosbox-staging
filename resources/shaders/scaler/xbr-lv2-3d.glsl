@@ -1,4 +1,4 @@
-#version 120
+#version 330 core
 
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2011-2015 Hyllian <sergiogdb@gmail.com>
@@ -15,55 +15,28 @@
 #pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
 #pragma parameter XBR_RES "Internal Res Multiplier" 2.0 1.0 8.0 1.0
 #pragma parameter XBR_SCALE "xBR Scale" 3.0 1.0 5.0 1.0
-
-#define mul(a,b) (b*a)
-#define saturate(c) clamp(c, 0.0, 1.0)
+#pragma parameter XBR_CORNER_TYPE "Corner Calculation" 3.0 1.0 4.0 1.0
 
 #if defined(VERTEX)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING out
-#define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_VARYING varying
-#define COMPAT_ATTRIBUTE attribute
-#define COMPAT_TEXTURE texture2D
-#endif
+layout (location = 0) in vec2 a_position;
 
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
+out vec2 v_texCoord;
+out vec4 t1;
 
-COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 TexCoord;
+uniform vec2 rubyOutputSize;
+uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 
-COMPAT_ATTRIBUTE vec4 a_position;
-COMPAT_VARYING vec2 v_texCoord;
-COMPAT_VARYING vec4 t1;
-
-vec4 _oPosition1;
-uniform mat4 MVPMatrix;
-uniform COMPAT_PRECISION vec2 rubyOutputSize;
-uniform COMPAT_PRECISION vec2 rubyTextureSize;
-uniform COMPAT_PRECISION vec2 rubyInputSize;
+uniform float XBR_RES;
 
 // compatibility #defines
-#define vTexCoord v_texCoord
 #define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
 #define OutSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
 
-uniform COMPAT_PRECISION float XBR_Y_WEIGHT;
-uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD;
-uniform COMPAT_PRECISION float XBR_LV2_COEFFICIENT;
-uniform COMPAT_PRECISION float XBR_RES;
-uniform COMPAT_PRECISION float XBR_SCALE;
-
 void main()
 {
-	gl_Position = a_position;
+	gl_Position = vec4(a_position, 0.0, 1.0);
 	v_texCoord.xy = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize / rubyTextureSize;
 	vec2 ps = XBR_RES/SourceSize.xy;
 	float dx = ps.x;
@@ -74,77 +47,49 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
+in vec2 v_texCoord;
+in vec4 t1;
+
 out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
 
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
-uniform COMPAT_PRECISION vec2 rubyOutputSize;
-uniform COMPAT_PRECISION vec2 rubyTextureSize;
-uniform COMPAT_PRECISION vec2 rubyInputSize;
+uniform vec2 rubyOutputSize;
+uniform vec2 rubyTextureSize;
 uniform sampler2D rubyTexture;
-COMPAT_VARYING vec2 v_texCoord;
-COMPAT_VARYING vec4 t1;
 
-// compatibility #defines
+uniform float XBR_Y_WEIGHT;
+uniform float XBR_EQ_THRESHOLD;
+uniform float XBR_LV2_COEFFICIENT;
+uniform float XBR_RES;
+uniform float XBR_SCALE;
+uniform float XBR_CORNER_TYPE;
+
 #define Source rubyTexture
-#define vTexCoord v_texCoord.xy
-
 #define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
 #define OutSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
 
-uniform COMPAT_PRECISION float XBR_Y_WEIGHT;
-uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD;
-uniform COMPAT_PRECISION float XBR_LV2_COEFFICIENT;
-uniform COMPAT_PRECISION float XBR_RES;
-uniform COMPAT_PRECISION float XBR_SCALE;
-
-// Uncomment just one of the three params below to choose the corner detection
-//#define CORNER_A
-//#define CORNER_B
-#define CORNER_C
-//#define CORNER_D
-
-#ifndef CORNER_A
-	#define SMOOTH_TIPS
-#endif
+#define mul(a,b) (b*a)
+#define saturate(c) clamp(c, 0.0, 1.0)
 
 #define lv2_cf XBR_LV2_COEFFICIENT
 
-const   float coef          = 2.0;
-const   vec3  rgbw          = vec3(14.352, 28.176, 5.472);
-const   vec4  eq_threshold  = vec4(15.0, 15.0, 15.0, 15.0);
+const float coef = 2.0;
+const vec3 rgbw = vec3(14.352, 28.176, 5.472);
+const vec4 eq_threshold  = vec4(15.0, 15.0, 15.0, 15.0);
 
 vec4 delta   = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
 vec4 delta_l = vec4(0.5/XBR_SCALE, 1.0/XBR_SCALE, 0.5/XBR_SCALE, 1.0/XBR_SCALE);
 vec4 delta_u = delta_l.yxwz;
 
-const  vec4 Ao = vec4( 1.0, -1.0, -1.0, 1.0 );
-const  vec4 Bo = vec4( 1.0,  1.0, -1.0,-1.0 );
-const  vec4 Co = vec4( 1.5,  0.5, -0.5, 0.5 );
-const  vec4 Ax = vec4( 1.0, -1.0, -1.0, 1.0 );
-const  vec4 Bx = vec4( 0.5,  2.0, -0.5,-2.0 );
-const  vec4 Cx = vec4( 1.0,  1.0, -0.5, 0.0 );
-const  vec4 Ay = vec4( 1.0, -1.0, -1.0, 1.0 );
-const  vec4 By = vec4( 2.0,  0.5, -2.0,-0.5 );
-const  vec4 Cy = vec4( 2.0,  0.0, -1.0, 0.5 );
-const  vec4 Ci = vec4(0.25, 0.25, 0.25, 0.25);
+const vec4 Ao = vec4( 1.0, -1.0, -1.0, 1.0 );
+const vec4 Bo = vec4( 1.0,  1.0, -1.0,-1.0 );
+const vec4 Co = vec4( 1.5,  0.5, -0.5, 0.5 );
+const vec4 Ax = vec4( 1.0, -1.0, -1.0, 1.0 );
+const vec4 Bx = vec4( 0.5,  2.0, -0.5,-2.0 );
+const vec4 Cx = vec4( 1.0,  1.0, -0.5, 0.0 );
+const vec4 Ay = vec4( 1.0, -1.0, -1.0, 1.0 );
+const vec4 By = vec4( 2.0,  0.5, -2.0,-0.5 );
+const vec4 Cy = vec4( 2.0,  0.0, -1.0, 0.5 );
+const vec4 Ci = vec4(0.25, 0.25, 0.25, 0.25);
 
 const vec3 Y = vec3(0.2126, 0.7152, 0.0722);
 
@@ -177,9 +122,11 @@ void main()
 	bvec4 interp_restriction_lv0, interp_restriction_lv1, interp_restriction_lv2_left, interp_restriction_lv2_up, block_3d, block_3d_left, block_3d_up;
 	vec4 fx, fx_left, fx_up; // inequations of straight lines.
 
-	vec4 delta         = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
-	vec4 deltaL        = vec4(0.5/XBR_SCALE, 1.0/XBR_SCALE, 0.5/XBR_SCALE, 1.0/XBR_SCALE);
-	vec4 deltaU        = deltaL.yxwz;
+	vec4 delta  = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
+	vec4 deltaL = vec4(0.5/XBR_SCALE, 1.0/XBR_SCALE, 0.5/XBR_SCALE, 1.0/XBR_SCALE);
+	vec4 deltaU = deltaL.yxwz;
+
+	vec2 vTexCoord = v_texCoord.xy;
 
 	vec2 fp = fract(vTexCoord*SourceSize.xy/XBR_RES);
 
@@ -188,48 +135,48 @@ void main()
 	vec2 dx = t1.xy;
 	vec2 dy = t1.zw;
 
-	vec3 A = COMPAT_TEXTURE(Source, vTexCoord -dx -dy).xyz;
-	vec3 B = COMPAT_TEXTURE(Source, vTexCoord     -dy).xyz;
-	vec3 C = COMPAT_TEXTURE(Source, vTexCoord +dx -dy).xyz;
-	vec3 D = COMPAT_TEXTURE(Source, vTexCoord -dx    ).xyz;
-	vec3 E = COMPAT_TEXTURE(Source, vTexCoord        ).xyz;
-	vec3 F = COMPAT_TEXTURE(Source, vTexCoord +dx    ).xyz;
-	vec3 G = COMPAT_TEXTURE(Source, vTexCoord -dx +dy).xyz;
-	vec3 H = COMPAT_TEXTURE(Source, vTexCoord     +dy).xyz;
-	vec3 I = COMPAT_TEXTURE(Source, vTexCoord +dx +dy).xyz;
+	vec3 A = texture(Source, vTexCoord -dx -dy).xyz;
+	vec3 B = texture(Source, vTexCoord     -dy).xyz;
+	vec3 C = texture(Source, vTexCoord +dx -dy).xyz;
+	vec3 D = texture(Source, vTexCoord -dx    ).xyz;
+	vec3 E = texture(Source, vTexCoord        ).xyz;
+	vec3 F = texture(Source, vTexCoord +dx    ).xyz;
+	vec3 G = texture(Source, vTexCoord -dx +dy).xyz;
+	vec3 H = texture(Source, vTexCoord     +dy).xyz;
+	vec3 I = texture(Source, vTexCoord +dx +dy).xyz;
 
-	vec3  A1 = COMPAT_TEXTURE(Source, vTexCoord     -dx -2.0*dy).xyz;
-	vec3  B1 = COMPAT_TEXTURE(Source, vTexCoord         -2.0*dy).xyz;
-	vec3  C1 = COMPAT_TEXTURE(Source, vTexCoord     +dx -2.0*dy).xyz;
-	vec3  G5 = COMPAT_TEXTURE(Source, vTexCoord     -dx +2.0*dy).xyz;
-	vec3  H5 = COMPAT_TEXTURE(Source, vTexCoord         +2.0*dy).xyz;
-	vec3  I5 = COMPAT_TEXTURE(Source, vTexCoord     +dx +2.0*dy).xyz;
-	vec3  A0 = COMPAT_TEXTURE(Source, vTexCoord -2.0*dx     -dy).xyz;
-	vec3  D0 = COMPAT_TEXTURE(Source, vTexCoord -2.0*dx        ).xyz;
-	vec3  G0 = COMPAT_TEXTURE(Source, vTexCoord -2.0*dx     +dy).xyz;
-	vec3  C4 = COMPAT_TEXTURE(Source, vTexCoord +2.0*dx     -dy).xyz;
-	vec3  F4 = COMPAT_TEXTURE(Source, vTexCoord +2.0*dx        ).xyz;
-	vec3  I4 = COMPAT_TEXTURE(Source, vTexCoord +2.0*dx     +dy).xyz;
+	vec3  A1 = texture(Source, vTexCoord     -dx -2.0*dy).xyz;
+	vec3  B1 = texture(Source, vTexCoord         -2.0*dy).xyz;
+	vec3  C1 = texture(Source, vTexCoord     +dx -2.0*dy).xyz;
+	vec3  G5 = texture(Source, vTexCoord     -dx +2.0*dy).xyz;
+	vec3  H5 = texture(Source, vTexCoord         +2.0*dy).xyz;
+	vec3  I5 = texture(Source, vTexCoord     +dx +2.0*dy).xyz;
+	vec3  A0 = texture(Source, vTexCoord -2.0*dx     -dy).xyz;
+	vec3  D0 = texture(Source, vTexCoord -2.0*dx        ).xyz;
+	vec3  G0 = texture(Source, vTexCoord -2.0*dx     +dy).xyz;
+	vec3  C4 = texture(Source, vTexCoord +2.0*dx     -dy).xyz;
+	vec3  F4 = texture(Source, vTexCoord +2.0*dx        ).xyz;
+	vec3  I4 = texture(Source, vTexCoord +2.0*dx     +dy).xyz;
 
-	vec3 F6 = COMPAT_TEXTURE(Source,  tex +dx+0.25*dx+0.25*dy).xyz;
-	vec3 F7 = COMPAT_TEXTURE(Source,  tex +dx+0.25*dx-0.25*dy).xyz;
-	vec3 F8 = COMPAT_TEXTURE(Source,  tex +dx-0.25*dx-0.25*dy).xyz;
-	vec3 F9 = COMPAT_TEXTURE(Source,  tex +dx-0.25*dx+0.25*dy).xyz;
+	vec3 F6 = texture(Source,  tex +dx+0.25*dx+0.25*dy).xyz;
+	vec3 F7 = texture(Source,  tex +dx+0.25*dx-0.25*dy).xyz;
+	vec3 F8 = texture(Source,  tex +dx-0.25*dx-0.25*dy).xyz;
+	vec3 F9 = texture(Source,  tex +dx-0.25*dx+0.25*dy).xyz;
 
-	vec3 B6 = COMPAT_TEXTURE(Source,  tex +0.25*dx+0.25*dy-dy).xyz;
-	vec3 B7 = COMPAT_TEXTURE(Source,  tex +0.25*dx-0.25*dy-dy).xyz;
-	vec3 B8 = COMPAT_TEXTURE(Source,  tex -0.25*dx-0.25*dy-dy).xyz;
-	vec3 B9 = COMPAT_TEXTURE(Source,  tex -0.25*dx+0.25*dy-dy).xyz;
+	vec3 B6 = texture(Source,  tex +0.25*dx+0.25*dy-dy).xyz;
+	vec3 B7 = texture(Source,  tex +0.25*dx-0.25*dy-dy).xyz;
+	vec3 B8 = texture(Source,  tex -0.25*dx-0.25*dy-dy).xyz;
+	vec3 B9 = texture(Source,  tex -0.25*dx+0.25*dy-dy).xyz;
 
-	vec3 D6 = COMPAT_TEXTURE(Source,  tex -dx+0.25*dx+0.25*dy).xyz;
-	vec3 D7 = COMPAT_TEXTURE(Source,  tex -dx+0.25*dx-0.25*dy).xyz;
-	vec3 D8 = COMPAT_TEXTURE(Source,  tex -dx-0.25*dx-0.25*dy).xyz;
-	vec3 D9 = COMPAT_TEXTURE(Source,  tex -dx-0.25*dx+0.25*dy).xyz;
+	vec3 D6 = texture(Source,  tex -dx+0.25*dx+0.25*dy).xyz;
+	vec3 D7 = texture(Source,  tex -dx+0.25*dx-0.25*dy).xyz;
+	vec3 D8 = texture(Source,  tex -dx-0.25*dx-0.25*dy).xyz;
+	vec3 D9 = texture(Source,  tex -dx-0.25*dx+0.25*dy).xyz;
 
-	vec3 H6 = COMPAT_TEXTURE(Source,  tex +0.25*dx+0.25*dy+dy).xyz;
-	vec3 H7 = COMPAT_TEXTURE(Source,  tex +0.25*dx-0.25*dy+dy).xyz;
-	vec3 H8 = COMPAT_TEXTURE(Source,  tex -0.25*dx-0.25*dy+dy).xyz;
-	vec3 H9 = COMPAT_TEXTURE(Source,  tex -0.25*dx+0.25*dy+dy).xyz;
+	vec3 H6 = texture(Source,  tex +0.25*dx+0.25*dy+dy).xyz;
+	vec3 H7 = texture(Source,  tex +0.25*dx-0.25*dy+dy).xyz;
+	vec3 H8 = texture(Source,  tex -0.25*dx-0.25*dy+dy).xyz;
+	vec3 H9 = texture(Source,  tex -0.25*dx+0.25*dy+dy).xyz;
 
 	float y_weight = XBR_Y_WEIGHT;
 
@@ -262,29 +209,30 @@ void main()
 	fx_left = (Ax*fp.y+Bx*fp.x);
 	fx_up   = (Ay*fp.y+By*fp.x);
 
-	block_3d.x    =  ((f0.x==f1.x && f1.x==f2.x && f2.x==f3.x) && (h0.x==h1.x && h1.x==h2.x && h2.x==h3.x));
-	block_3d.y    =  ((f0.y==f1.y && f1.y==f2.y && f2.y==f3.y) && (h0.y==h1.y && h1.y==h2.y && h2.y==h3.y));
-	block_3d.z    =  ((f0.z==f1.z && f1.z==f2.z && f2.z==f3.z) && (h0.z==h1.z && h1.z==h2.z && h2.z==h3.z));
-	block_3d.w    =  ((f0.w==f1.w && f1.w==f2.w && f2.w==f3.w) && (h0.w==h1.w && h1.w==h2.w && h2.w==h3.w));
+	block_3d.x = ((f0.x==f1.x && f1.x==f2.x && f2.x==f3.x) && (h0.x==h1.x && h1.x==h2.x && h2.x==h3.x));
+	block_3d.y = ((f0.y==f1.y && f1.y==f2.y && f2.y==f3.y) && (h0.y==h1.y && h1.y==h2.y && h2.y==h3.y));
+	block_3d.z = ((f0.z==f1.z && f1.z==f2.z && f2.z==f3.z) && (h0.z==h1.z && h1.z==h2.z && h2.z==h3.z));
+	block_3d.w = ((f0.w==f1.w && f1.w==f2.w && f2.w==f3.w) && (h0.w==h1.w && h1.w==h2.w && h2.w==h3.w));
+
 	interp_restriction_lv1.x = interp_restriction_lv0.x = ((e.x!=f.x) && (e.x!=h.x) && block_3d.x);
 	interp_restriction_lv1.y = interp_restriction_lv0.y = ((e.y!=f.y) && (e.y!=h.y) && block_3d.y);
 	interp_restriction_lv1.z = interp_restriction_lv0.z = ((e.z!=f.z) && (e.z!=h.z) && block_3d.z);
 	interp_restriction_lv1.w = interp_restriction_lv0.w = ((e.w!=f.w) && (e.w!=h.w) && block_3d.w);
 
-#ifdef CORNER_B
-	interp_restriction_lv1      = (interp_restriction_lv0  &&  ( !eq(f,b) && !eq(h,d) || eq(e,i) && !eq(f,i4) && !eq(h,i5) || eq(e,g) || eq(e,c) ) );
-#endif
-#ifdef CORNER_D
-	vec4 c1 = i4.yzwx;
-	vec4 g0 = i5.wxyz;
-	interp_restriction_lv1      = (interp_restriction_lv0  &&  ( !eq(f,b) && !eq(h,d) || eq(e,i) && !eq(f,i4) && !eq(h,i5) || eq(e,g) || eq(e,c) ) && (f!=f4 && f!=i || h!=h5 && h!=i || h!=g || f!=c || eq(b,c1) && eq(d,g0)));
-#endif
-#ifdef CORNER_C
-	interp_restriction_lv1.x    = (interp_restriction_lv0.x  && ( !eq(f,b).x && !eq(f,c).x || !eq(h,d).x && !eq(h,g).x || eq(e,i).x && (!eq(f,f4).x && !eq(f,i4).x || !eq(h,h5).x && !eq(h,i5).x) || eq(e,g).x || eq(e,c).x) );
-	interp_restriction_lv1.y    = (interp_restriction_lv0.y  && ( !eq(f,b).y && !eq(f,c).y || !eq(h,d).y && !eq(h,g).y || eq(e,i).y && (!eq(f,f4).y && !eq(f,i4).y || !eq(h,h5).y && !eq(h,i5).y) || eq(e,g).y || eq(e,c).y) );
-	interp_restriction_lv1.z    = (interp_restriction_lv0.z  && ( !eq(f,b).z && !eq(f,c).z || !eq(h,d).z && !eq(h,g).z || eq(e,i).z && (!eq(f,f4).z && !eq(f,i4).z || !eq(h,h5).z && !eq(h,i5).z) || eq(e,g).z || eq(e,c).z) );
-	interp_restriction_lv1.w    = (interp_restriction_lv0.w  && ( !eq(f,b).w && !eq(f,c).w || !eq(h,d).w && !eq(h,g).w || eq(e,i).w && (!eq(f,f4).w && !eq(f,i4).w || !eq(h,h5).w && !eq(h,i5).w) || eq(e,g).w || eq(e,c).w) );
-#endif
+	if (XBR_CORNER_TYPE == 2.0) {
+		interp_restriction_lv1 = (interp_restriction_lv0  &&  ( !eq(f,b) && !eq(h,d) || eq(e,i) && !eq(f,i4) && !eq(h,i5) || eq(e,g) || eq(e,c) ) );
+
+	} else if (XBR_CORNER_TYPE == 4.0) {
+		vec4 c1 = i4.yzwx;
+		vec4 g0 = i5.wxyz;
+		interp_restriction_lv1 = (interp_restriction_lv0  &&  ( !eq(f,b) && !eq(h,d) || eq(e,i) && !eq(f,i4) && !eq(h,i5) || eq(e,g) || eq(e,c) ) && (!eq(f,f4) && !eq(f,i) || !eq(h,h5) && !eq(h,i) || !eq(h,g) || !eq(f,c) || eq(b,c1) && eq(d,g0)));
+
+	} else if (XBR_CORNER_TYPE == 3.0) {
+		interp_restriction_lv1.x = (interp_restriction_lv0.x  && ( !eq(f,b).x && !eq(f,c).x || !eq(h,d).x && !eq(h,g).x || eq(e,i).x && (!eq(f,f4).x && !eq(f,i4).x || !eq(h,h5).x && !eq(h,i5).x) || eq(e,g).x || eq(e,c).x) );
+		interp_restriction_lv1.y = (interp_restriction_lv0.y  && ( !eq(f,b).y && !eq(f,c).y || !eq(h,d).y && !eq(h,g).y || eq(e,i).y && (!eq(f,f4).y && !eq(f,i4).y || !eq(h,h5).y && !eq(h,i5).y) || eq(e,g).y || eq(e,c).y) );
+		interp_restriction_lv1.z = (interp_restriction_lv0.z  && ( !eq(f,b).z && !eq(f,c).z || !eq(h,d).z && !eq(h,g).z || eq(e,i).z && (!eq(f,f4).z && !eq(f,i4).z || !eq(h,h5).z && !eq(h,i5).z) || eq(e,g).z || eq(e,c).z) );
+		interp_restriction_lv1.w = (interp_restriction_lv0.w  && ( !eq(f,b).w && !eq(f,c).w || !eq(h,d).w && !eq(h,g).w || eq(e,i).w && (!eq(f,f4).w && !eq(f,i4).w || !eq(h,h5).w && !eq(h,i5).w) || eq(e,g).w || eq(e,c).w) );
+	}
 
 	interp_restriction_lv2_left.x = ((e.x!=g.x) && (d.x!=g.x));
 	interp_restriction_lv2_left.y = ((e.y!=g.y) && (d.y!=g.y));
@@ -330,11 +278,12 @@ void main()
 	px.z = (df(e,f3).z <= df(e,h1).z);
 	px.w = (df(e,f3).w <= df(e,h1).w);
 
-#ifdef SMOOTH_TIPS
-	vec4 maximos = max(max(fx30, fx60), max(fx45, fx45i));
-#else
-	vec4 maximos = max(max(fx30, fx60), fx45);
-#endif
+	vec4 maximos;
+	if (XBR_CORNER_TYPE == 1.0) {
+		maximos = max(max(fx30, fx60), max(fx45, fx45i));
+	} else {
+		maximos = max(max(fx30, fx60), fx45);
+	}
 
 	vec3 res1 = E;
 	res1 = mix(res1, mix(H, F, float(px.x)), maximos.x);
@@ -348,4 +297,5 @@ void main()
 
 	FragColor = vec4(res, 1.0);
 }
+
 #endif
