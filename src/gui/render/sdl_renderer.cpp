@@ -372,6 +372,21 @@ void SdlRenderer::SetVsync(const bool is_enabled)
 	}
 }
 
+void SdlRenderer::SetColorSpace(const ColorSpace color_space)
+{
+	// no color space support
+}
+
+void SdlRenderer::SetCrtColorProfile(const CrtColorProfile profile)
+{
+	// no color profile support
+}
+
+void SdlRenderer::SetImageSettings(const ImageSettings& settings)
+{
+	// no image adjustment support
+}
+
 RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_px)
 {
 	// Create new image

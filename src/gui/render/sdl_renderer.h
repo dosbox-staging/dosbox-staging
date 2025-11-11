@@ -53,6 +53,12 @@ public:
 
 	void SetVsync(const bool is_enabled) override;
 
+	void SetColorSpace(const ColorSpace color_space) override;
+
+	void SetCrtColorProfile(const CrtColorProfile profile) override;
+
+	void SetImageSettings(const ImageSettings& settings) override;
+
 	RenderedImage ReadPixelsPostShader(const DosBox::Rect output_rect_px) override;
 
 	uint32_t MakePixel(const uint8_t red, const uint8_t green,
