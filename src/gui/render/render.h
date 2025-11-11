@@ -191,6 +191,49 @@ struct RenderedImage {
 	}
 };
 
+// The settings mimic the image adjustment settings of a real CRT monitor
+// (available either via physical knobs or via the monitor's digital OSD).
+//
+// These settings are applied to the emulated image as a post-processing step.
+//
+struct ImageAdjustmentSettings {
+	// 1.0 means original colours (no adjustment)
+	float brightness = 1.0;
+	float contrast   = 1.0;
+	float saturation = 1.0;
+
+	// 0.0 means original colours (no adjustment)
+	float rgb_offset   = 0.0;
+	float red_offset   = 0.0;
+	float green_offset = 0.0;
+	float blue_offset  = 0.0;
+
+	// White balance in Kelvin (K); valid range is from 1000 K to 12,000 K
+	float white_balance = 6500;
+};
+
+enum class ColourSpace {
+	// sRGB
+	sRGB,
+
+	// DCI-P3 with DCI whitepoint and gamma 1.4
+	DciP3,
+
+	// DCI-P3 with sRGB D65 whitepoint and gamma 1.4
+	DciP3_D65,
+
+	// DCI-P3 with DCI whitepoint and gamma 2.4
+	DisplayP3,
+
+	// DCI-P3 with sRGB D65 whitepoint and gamma 2.4
+	DisplayP3_D65,
+
+	// AdobeRgb
+	AdobeRgb,
+
+	Rec2020
+};
+
 extern Render render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 

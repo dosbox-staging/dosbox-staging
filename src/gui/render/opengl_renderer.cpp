@@ -27,6 +27,7 @@ CHECK_NARROWING();
 // #define DEBUG_OPENGL
 
 constexpr auto GlslExtension = ".glsl";
+constexpr auto ImageAdjustmentShaderName = "misc/image-adjustment";
 
 // A safe wrapper around that returns the default result on failure
 static const char* safe_gl_get_string(const GLenum requested_name,
@@ -76,8 +77,7 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-	                    SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	// Request an OpenGL-ready window
 	auto flags = sdl_window_flags;
@@ -88,13 +88,11 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 
 bool OpenGlRenderer::InitRenderer()
 {
-	auto new_context = SDL_GL_CreateContext(window);
-	if (!new_context) {
+	auto context = SDL_GL_CreateContext(window);
+	if (!context) {
 		LOG_ERR("SDL: Error creating OpenGL context: %s", SDL_GetError());
 		return false;
 	}
-
-	context = new_context;
 
 	const auto version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
 
@@ -109,8 +107,7 @@ bool OpenGlRenderer::InitRenderer()
 	         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION, "unknown"),
 	         safe_gl_get_string(GL_VENDOR, "unknown"));
 
-	// Vertex data (1 triangle)
-	// ------------------------
+	// Vertex data of a single oversized triangle encompassing the viewport
 	// Lower left
 	vertex_data[0] = -1.0f;
 	vertex_data[1] = -1.0f;
@@ -145,6 +142,18 @@ bool OpenGlRenderer::InitRenderer()
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+	// We don't care about depth testing; we'll just apply the shaders in 2D
+	// space
+	glDisable(GL_DEPTH_TEST);
+
+	// Create off-screen framebuffer
+	glGenFramebuffers(1, &render_pass_1.framebuffer);
+
+	if (!GetOrLoadAndCacheShader(ImageAdjustmentShaderName)) {
+		E_Exit("OPENGL: Cannot load '%s' shader, exiting",
+		       ImageAdjustmentShaderName);
+	}
+
 	return true;
 }
 
@@ -152,18 +161,24 @@ OpenGlRenderer::~OpenGlRenderer()
 {
 	SDL_GL_ResetAttributes();
 
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(1, &vbo);
+
 	if (texture) {
 		glDeleteTextures(1, &texture);
 		texture = 0;
 	}
 
+	if (render_pass_1.texture) {
+		glDeleteTextures(1, &render_pass_1.texture);
+		render_pass_1.texture = 0;
+	}
+	glDeleteFramebuffers(1, &render_pass_1.framebuffer);
+
 	for (auto& [_, shader] : shader_cache) {
 		glDeleteProgram(shader.program_object);
 	}
 	shader_cache.clear();
-
-	glDeleteVertexArrays(1, &vao);
-	glDeleteBuffers(1, &vbo);
 
 	if (context) {
 		SDL_GL_DeleteContext(context);
@@ -199,6 +214,46 @@ void OpenGlRenderer::UpdateViewport(const DosBox::Rect _draw_rect_px)
 {
 	draw_rect_px = _draw_rect_px;
 
+	// (Re-)create color attachment texture for off-screen rendering
+	glActiveTexture(GL_TEXTURE0);
+
+	if (render_pass_1.texture) {
+		glDeleteTextures(1, &render_pass_1.texture);
+	}
+	glGenTextures(1, &render_pass_1.texture);
+	glBindTexture(GL_TEXTURE_2D, render_pass_1.texture);
+
+	glTexImage2D(GL_TEXTURE_2D,
+	             0,
+	             GL_RGB8,
+	             static_cast<GLsizei>(draw_rect_px.w),
+	             static_cast<GLsizei>(draw_rect_px.h),
+	             0,
+	             GL_BGRA,
+	             GL_UNSIGNED_BYTE, // GL_HALF_FLOAT,
+	             nullptr);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Set up off-screen framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, render_pass_1.framebuffer);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER,
+	                       GL_COLOR_ATTACHMENT0,
+	                       GL_TEXTURE_2D,
+	                       render_pass_1.texture,
+	                       0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		LOG_ERR("OPENGL: Framebuffer is not complete");
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Set up viewport
 	glViewport(static_cast<GLsizei>(draw_rect_px.x),
 	           static_cast<GLsizei>(draw_rect_px.y),
 	           static_cast<GLsizei>(draw_rect_px.w),
@@ -230,7 +285,6 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 
 	glBindTexture(GL_TEXTURE_2D, new_texture);
 
-	// No borders
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -312,6 +366,12 @@ void OpenGlRenderer::PrepareFrame()
 	assert(!last_framebuf.empty());
 
 	if (last_framebuf_dirty) {
+		glBindFramebuffer(GL_FRAMEBUFFER, render_pass_1.framebuffer);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+
 		glTexSubImage2D(GL_TEXTURE_2D,
 		                0,                // mimap level (0 = base image)
 		                0,                // x offset
@@ -329,15 +389,72 @@ void OpenGlRenderer::PrepareFrame()
 	}
 }
 
-void OpenGlRenderer::PresentFrame()
+void OpenGlRenderer::RenderPass1()
 {
+	// Pass 1
+	// ------
+	// Apply user-configured shader and render the output into an off-screen
+	// buffer
+
+	glBindFramebuffer(GL_FRAMEBUFFER, render_pass_1.framebuffer);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	glUseProgram(current_shader.program_object);
 	UpdateUniforms();
 
+	// Bind input texture containing the raw framebuffer data of the
+	// emulated video card
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	// Apply shader by drawing an oversized triangle
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
+	// Reset binds
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
+}
+
+void OpenGlRenderer::RenderPass2()
+{
+	// Pass 2
+	// ------
+	// Apply image adjustment post-processing shader and render into the
+	// default framebuffer visible on the screen.
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	const auto maybe_shader = GetOrLoadAndCacheShader(ImageAdjustmentShaderName);
+	assert(maybe_shader);
+	const auto shader = *maybe_shader;
+
+	glUseProgram(shader.program_object);
+
+	const GLint input_texture = glGetUniformLocation(shader.program_object,
+	                                                 "inputTexture");
+	glUniform1i(input_texture, 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, render_pass_1.texture);
+
+	// Apply shader by drawing an oversized triangle
+	glBindVertexArray(vao);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	// Reset binds
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
+}
+
+void OpenGlRenderer::PresentFrame()
+{
+	RenderPass1();
+	RenderPass2();
+
+	// Optionally capture frame
 	if (CAPTURE_IsCapturingPostRenderImage()) {
 		// glReadPixels() implicitly blocks until all pipelined
 		// rendering commands have finished, so we're guaranteed to
@@ -347,6 +464,7 @@ void OpenGlRenderer::PresentFrame()
 		GFX_CaptureRenderedImage();
 	}
 
+	// Present frame
 	SDL_GL_SwapWindow(window);
 }
 
@@ -675,6 +793,7 @@ bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
 	current_shader = *maybe_shader;
 
 	glUseProgram(current_shader.program_object);
+	// TODO should do it at runtime
 	GetUniformLocations(current_shader.info.default_preset.params);
 
 	return true;

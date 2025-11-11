@@ -105,6 +105,9 @@ private:
 	std::optional<GLuint> BuildShader(const GLenum type,
 	                                  const std::string& source) const;
 
+	void RenderPass1();
+	void RenderPass2();
+
 	SDL_Window* window    = {};
 	SDL_GLContext context = {};
 
@@ -148,6 +151,11 @@ private:
 
 	// Vertex data for an oversized triangle
 	GLfloat vertex_data[2 * 3] = {};
+
+	struct {
+		GLuint framebuffer = 0;
+		GLuint texture     = 0;
+	} render_pass_1 = {};
 
 	// Keys are the shader names including the path part but without the
 	// .glsl file extension
