@@ -60,6 +60,8 @@ public:
 
 	void SetVsync(const bool is_enabled) override;
 
+	void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings);
+
 	RenderedImage ReadPixelsPostShader(const DosBox::Rect output_rect_px) override;
 
 	uint32_t MakePixel(const uint8_t red, const uint8_t green,
@@ -90,6 +92,7 @@ private:
 
 	bool SwitchShader(const std::string& shader_name);
 
+	std::optional<Shader> LoadAndBuildShader(const std::string& shader_name);
 	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& shader_name);
 
 	void SwitchShaderPresetOrSetDefault(const ShaderDescriptor& descriptor);
@@ -97,18 +100,31 @@ private:
 	std::optional<ShaderPreset> GetOrLoadAndCacheShaderPreset(
 	        const ShaderDescriptor& descriptor);
 
-	void GetUniformLocations(const ShaderParameters& params);
-	void UpdateUniforms();
-
 	std::optional<GLuint> BuildShaderProgram(const std::string& source);
 
 	std::optional<GLuint> BuildShader(const GLenum type,
 	                                  const std::string& source) const;
 
+	void GetPass1UniformLocations();
+	void UpdatePass1Uniforms();
+
+	void GetPass2UniformLocations(const ShaderParameters& params);
+	void UpdatePass2Uniforms();
+
+	void RecreatePass1InputTextureAndRenderBuffer();
+	void RecreatePass1OutputTexture();
+
+	void RenderPass1();
+	void RenderPass2();
+
+	// ---------------------------------------------------------------------
+	// Common
+	// ---------------------------------------------------------------------
+
 	SDL_Window* window    = {};
 	SDL_GLContext context = {};
 
-	int pitch = 0;
+	GLint max_texture_size_px = 0;
 
 	// The current framebuffer we render the emulated video output into
 	// (contains the "work-in-progress" next frame).
@@ -120,23 +136,7 @@ private:
 	// True if the last framebuffer has been updated since the last present
 	bool last_framebuf_dirty = false;
 
-	int render_width_px  = 0;
-	int render_height_px = 0;
-
-	DosBox::Rect draw_rect_px = {};
-
-	GLuint texture            = 0;
-	GLint max_texture_size_px = 0;
-
-	struct {
-		GLint texture_size  = -1;
-		GLint input_size    = -1;
-		GLint output_size   = -1;
-		GLint frame_count   = -1;
-		GLint input_texture = -1;
-
-		std::unordered_map<std::string, GLint> params = {};
-	} uniforms = {};
+	DosBox::Rect viewport_rect_px = {};
 
 	GLuint frame_count = 0;
 
@@ -149,6 +149,60 @@ private:
 	// Vertex data for an oversized triangle
 	GLfloat vertex_data[2 * 3] = {};
 
+	// ---------------------------------------------------------------------
+	// Render passes
+	// ---------------------------------------------------------------------
+
+	struct {
+		Shader shader = {};
+
+		GLuint in_texture    = 0;
+		int in_texture_pitch = 0;
+
+		GLuint out_fbo     = 0;
+		GLuint out_texture = 0;
+
+		int width  = 0;
+		int height = 0;
+
+		struct {
+			GLint input_texture = -1;
+
+			GLint brightness  = -1;
+			GLint contrast    = -1;
+			GLint saturation  = -1;
+			GLint black_level = -1;
+
+			GLint whitepoint_adjust      = -1;
+			GLint whitepoint_temperature = -1;
+
+			GLint red_offset   = -1;
+			GLint green_offset = -1;
+			GLint blue_offset  = -1;
+		} uniforms = {};
+
+		ImageAdjustmentSettings settings = {};
+	} pass1 = {};
+
+	struct {
+		Shader shader              = {};
+		ShaderPreset shader_preset = {};
+
+		struct {
+			GLint texture_size  = -1;
+			GLint input_size    = -1;
+			GLint output_size   = -1;
+			GLint frame_count   = -1;
+			GLint input_texture = -1;
+
+			std::unordered_map<std::string, GLint> params = {};
+		} uniforms = {};
+	} pass2 = {};
+
+	// ---------------------------------------------------------------------
+	// Shader caching & preset management
+	// ---------------------------------------------------------------------
+
 	// Keys are the shader names including the path part but without the
 	// .glsl file extension
 	std::unordered_map<std::string, Shader> shader_cache = {};
@@ -156,9 +210,6 @@ private:
 	// Keys are the shader names including the path part but without the
 	// .glsl file extension
 	std::unordered_map<std::string, ShaderPreset> shader_preset_cache = {};
-
-	Shader current_shader              = {};
-	ShaderPreset current_shader_preset = {};
 
 	ShaderDescriptor current_shader_descriptor = {};
 
