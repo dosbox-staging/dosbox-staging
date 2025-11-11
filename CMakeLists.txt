@@ -236,6 +236,18 @@ elseif (CMAKE_SYSTEM_PROCESSOR  STREQUAL "arm64"   OR
   set(C_FPU_X86          OFF)
   set(C_UNALIGNED_MEMORY OFF)
 
+elseif (CMAKE_SYSTEM_PROCESSOR  STREQUAL "powerpc64"   OR
+        CMAKE_SYSTEM_PROCESSOR  STREQUAL "powerpc64le"   OR
+        CMAKE_SYSTEM_PROCESSOR  STREQUAL "ppc64"   OR
+        CMAKE_SYSTEM_PROCESSOR  STREQUAL "ppc64le" OR
+        CMAKE_OSX_ARCHITECTURES STREQUAL "ppc64")
+
+   set(C_TARGETCPU        "PPC64")
+   set(C_DYNAMIC_X86      OFF)
+   set(C_DYNREC           ON)
+   set(C_FPU_X86          OFF)
+   set(C_UNALIGNED_MEMORY ON)
+
 else()
   message(FATAL_ERROR "Unknown processor ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
