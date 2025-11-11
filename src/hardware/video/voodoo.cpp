@@ -7503,8 +7503,8 @@ static void Voodoo_UpdateScreen()
 			const auto frames_per_second = static_cast<float>(
 			        1000.0 / v->draw.frame_period_ms);
 
-			constexpr auto ReinitRender = false;
-			RENDER_NotifyVideoModeChanged(video_mode, ReinitRender);
+			constexpr auto ReinitRenderer = false;
+			RENDER_NotifyVideoModeChanged(video_mode, ReinitRenderer);
 
 			RENDER_SetSize(image_info, frames_per_second);
 		}
