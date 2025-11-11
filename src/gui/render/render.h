@@ -191,6 +191,26 @@ struct RenderedImage {
 	}
 };
 
+// The settings mimic the image adjustment settings of a real CRT monitor
+// (available either via physical knobs or via the monitor's digital OSD).
+//
+// These settings are applied to the emulated image as a post-processing step.
+//
+struct ImageAdjustmentSettings {
+	// 1.0 means original colours (no adjustment)
+	float brightness = 1.0;
+	float contrast   = 1.0;
+	float saturation = 1.0;
+
+	// 0.0 means original colours (no adjustment)
+	float rgb_gain   = 0.0;
+	float red_gain   = 0.0;
+	float green_gain = 0.0;
+	float blue_gain  = 0.0;
+
+	float white_balance = 
+};
+
 extern Render render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 
