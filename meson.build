@@ -82,7 +82,6 @@ os_family_name = {
     'dragonfly': 'BSD',
 }.get(host_machine.system(), 'UNKNOWN_OS')
 
-host_cpu_family = host_machine.cpu_family()
 
 # Gather compiler settings
 # ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -261,17 +260,13 @@ endif
 if get_option('autovec_info')
     # At least O2 is needed enable auto-vectorizion
     extra_flags += [
+        '-march=native',
         '-O2',
         '-Wno-system-headers',
         '-Rpass-analysis=loop-vectorize',
         '-fopt-info-vec-missed',
         '-fopt-info-vec',
     ]
-    if host_cpu_family == 'powerpc64' or host_cpu_family == 'ppc64'
-            extra_flags += ['-mcpu=native']
-    else
-            extra_flags += ['-march=native']
-    endif
 endif
 
 # Tag BSD executables with the WX-needed bit
@@ -295,21 +290,11 @@ simd_instruction_sets = []
 
 zlib_ng_options = get_option('use_zlib_ng')
 zlib_ng_wants_native = zlib_ng_options.contains('native')
-if zlib_ng_wants_native and cc.has_argument('-march=native')
-    zlib_ng_is_native = true
-    if is_optimized_buildtype and zlib_ng_is_native
-        extra_flags += '-march=native'
-        simd_instruction_sets += 'native'
-        message('Enabling native SIMD optimizations')
-    endif
-else
-zlib_ng_wants_native and cc.has_argument('-mcpu=native')
-    zlib_ng_is_native = true
-    if is_optimized_buildtype and zlib_ng_is_native
-        extra_flags += '-mcpu=native'
-        simd_instruction_sets += 'native'
-        message('Enabling native SIMD optimizations')
-    endif
+zlib_ng_wants_native and cc.has_argument('-march=native')
+if is_optimized_buildtype and zlib_ng_is_native
+    extra_flags += '-march=native'
+    simd_instruction_sets += 'native'
+    message('Enabling native SIMD optimizations')
 endif
 
 # ALTIVEC on PowerPC64
