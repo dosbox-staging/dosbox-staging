@@ -107,11 +107,11 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	}
 
 	// Explicitly request an OpenGL 2.1 compatibility context
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-	                    SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+	                    SDL_GL_CONTEXT_PROFILE_CORE);
 
 	// Request an OpenGL-ready window
 	auto flags = sdl_window_flags;
@@ -142,40 +142,58 @@ bool OpenGlRenderer::InitRenderer()
 
 	const auto version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
 
-	is_framebuffer_srgb_capable = [&] {
-		int gl_framebuffer_srgb_capable = 0;
-
-		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-		                        &gl_framebuffer_srgb_capable)) {
-
-			LOG_WARNING("OPENGL: Error getting the framebuffer's sRGB status: %s",
-			            SDL_GetError());
-		}
-
-		// TODO GL_ARB_framebuffer_sRGB & GL_EXT_framebuffer_sRGB are
-		// OpenGL 3.0 Core Profile features. There will be no need for
-		// these checks once we're on core profile 3.3
-		//
-		return (GLAD_VERSION_MAJOR(version) >= 3 ||
-		        // TODO use glad
-		        SDL_GL_ExtensionSupported("GL_ARB_framebuffer_sRGB") ||
-		        // TODO use glad
-		        SDL_GL_ExtensionSupported("GL_EXT_framebuffer_sRGB")) &&
-		       (gl_framebuffer_srgb_capable > 0);
-	}();
-
 	GLint size = 0;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
 
 	max_texture_size_px = size;
-
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	LOG_INFO("OPENGL: Version: %d.%d, GLSL version: %s, vendor: %s",
 	         GLAD_VERSION_MAJOR(version),
 	         GLAD_VERSION_MINOR(version),
 	         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION, "unknown"),
 	         safe_gl_get_string(GL_VENDOR, "unknown"));
+
+	// Vertex data (1 triangle)
+	// ------------------------
+	// Lower left
+	vertex_data[0] = -1.0f;
+	vertex_data[1] = -1.0f;
+
+	// Lower right
+	vertex_data[2] = 3.0f;
+	vertex_data[3] = -1.0f;
+
+	// Upper left
+	vertex_data[4] = -1.0f;
+	vertex_data[5] = 3.0f;
+
+	// Create VBO & VAO
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
+
+	constexpr GLint AttributeIndex          = 0;
+	constexpr GLint NumComponents           = 2; // vec2(x, y)
+	constexpr GLenum ComponentDataType      = GL_FLOAT;
+	constexpr GLboolean NormalizeFixedPoint = GL_FALSE;
+	constexpr GLsizei DataStride            = 0; // packed
+
+	glVertexAttribPointer(AttributeIndex,
+	                      NumComponents,
+	                      ComponentDataType,
+	                      NormalizeFixedPoint,
+	                      DataStride,
+	                      static_cast<GLvoid*>(0));
+
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	return true;
 }
@@ -193,6 +211,9 @@ OpenGlRenderer::~OpenGlRenderer()
 		glDeleteProgram(shader.program_object);
 	}
 	shader_cache.clear();
+
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(1, &vbo);
 
 	if (context) {
 		SDL_GL_DeleteContext(context);
@@ -276,12 +297,6 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_param);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_param);
 
-	if ((shader_settings.use_srgb_framebuffer || shader_settings.use_srgb_texture) &&
-	    !is_framebuffer_srgb_capable) {
-
-		LOG_WARNING("OPENGL: sRGB framebuffer not supported");
-	}
-
 	// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
 	// with Mesa drivers on certain integrated Intel GPUs
 	const auto texture_format = shader_settings.use_srgb_texture &&
@@ -295,7 +310,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	             render_width_px,
 	             render_height_px,
 	             0,
-	             GL_BGRA_EXT,
+	             GL_BGRA,
 	             GL_UNSIGNED_BYTE,
 	             nullptr);
 
@@ -365,7 +380,7 @@ void OpenGlRenderer::PrepareFrame()
 		                0,
 		                render_width_px,
 		                render_height_px,
-		                GL_BGRA_EXT,
+		                GL_BGRA,
 		                GL_UNSIGNED_INT_8_8_8_8_REV,
 		                last_framebuf.data());
 
@@ -381,6 +396,7 @@ void OpenGlRenderer::PresentFrame()
 
 	UpdateUniforms();
 
+	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {
@@ -595,43 +611,6 @@ std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& shad
 		glDeleteProgram(shader_program);
 		return {};
 	}
-
-	// Set vertex data. Vertices are in counter-clockwise order.
-	const GLint vertex_attrib_location = glGetAttribLocation(shader_program,
-	                                                         "a_position");
-
-	if (vertex_attrib_location == -1) {
-		LOG_ERR("OPENGL: Error retrieving vertex position attribute location");
-		glDeleteProgram(shader_program);
-		return {};
-	}
-
-	// Lower left
-	vertex_data[0] = -1.0f;
-	vertex_data[1] = -1.0f;
-
-	// Lower right
-	vertex_data[2] = 3.0f;
-	vertex_data[3] = -1.0f;
-
-	// Upper left
-	vertex_data[4] = -1.0f;
-	vertex_data[5] = 3.0f;
-
-	// Load the vertices' positions
-	constexpr GLint NumComponents           = 2; // vec2(x, y)
-	constexpr GLenum ComponentDataType      = GL_FLOAT;
-	constexpr GLboolean NormalizeFixedPoint = GL_FALSE;
-	constexpr GLsizei DataStride            = 0;
-
-	glVertexAttribPointer(static_cast<GLuint>(vertex_attrib_location),
-	                      NumComponents,
-	                      ComponentDataType,
-	                      NormalizeFixedPoint,
-	                      DataStride,
-	                      vertex_data);
-
-	glEnableVertexAttribArray(static_cast<GLuint>(vertex_attrib_location));
 
 	// Set texture slot
 	const GLint texture_uniform = glGetUniformLocation(shader_program,
