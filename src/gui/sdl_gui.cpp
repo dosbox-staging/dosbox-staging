@@ -2512,8 +2512,8 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "opengl_default",
 	        "Rendering backend to use for graphics output ('opengl' by default).\n"
 	        "Only the 'opengl' backend has shader support and is thus the preferred option.\n"
-	        "The 'texture' backend is only provided as a last resort fallback for buggy or\n"
-	        "non-existent OpenGL 2.1+ drivers (this is extremely rare).");
+	        "The 'texture' backend is only provided as a last resort fallback if OpenGL is\n"
+	        "not available or the OpenGL driver is not Core Profile 3.3 compliant.");
 
 	pstring->SetOptionHelp("texture_default",
 	                       "Rendering backend to use for graphics output ('texture' by default).");
