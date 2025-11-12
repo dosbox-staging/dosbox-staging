@@ -417,23 +417,38 @@ void OpenGlRenderer::GetUniformLocations()
 
 	uniform.frame_count = glGetUniformLocation(current_shader.program_object,
 	                                           "rubyFrameCount");
+
+	uniform.input_texture = glGetUniformLocation(current_shader.program_object,
+	                                             "rubyTexture");
 }
 
 void OpenGlRenderer::UpdateUniforms() const
 {
-	glUniform2f(uniform.texture_size,
-	            static_cast<GLfloat>(render_width_px),
-	            static_cast<GLfloat>(render_height_px));
+	if (uniform.texture_size > -1) {
+		glUniform2f(uniform.texture_size,
+		            static_cast<GLfloat>(render_width_px),
+		            static_cast<GLfloat>(render_height_px));
+	}
 
-	glUniform2f(uniform.input_size,
-	            static_cast<GLfloat>(render_width_px),
-	            static_cast<GLfloat>(render_height_px));
+	if (uniform.input_size > -1) {
+		glUniform2f(uniform.input_size,
+		            static_cast<GLfloat>(render_width_px),
+		            static_cast<GLfloat>(render_height_px));
+	}
 
-	glUniform2f(uniform.output_size,
-	            static_cast<GLfloat>(draw_rect_px.w),
-	            static_cast<GLfloat>(draw_rect_px.h));
+	if (uniform.output_size > -1) {
+		glUniform2f(uniform.output_size,
+		            static_cast<GLfloat>(draw_rect_px.w),
+		            static_cast<GLfloat>(draw_rect_px.h));
+	}
 
-	glUniform1i(uniform.frame_count, frame_count);
+	if (uniform.frame_count > -1) {
+		glUniform1i(uniform.frame_count, frame_count);
+	}
+
+	if (uniform.input_texture > -1) {
+		glUniform1i(uniform.input_texture, 0);
+	}
 }
 
 std::optional<GLuint> OpenGlRenderer::BuildShader(const GLenum type,
@@ -617,12 +632,6 @@ std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& sour
 	                      vertex_data);
 
 	glEnableVertexAttribArray(static_cast<GLuint>(vertex_attrib_location));
-
-	// Set texture slot
-	const GLint texture_uniform = glGetUniformLocation(shader_program,
-	                                                   "rubyTexture");
-
-	glUniform1i(texture_uniform, 0);
 
 	return shader_program;
 }

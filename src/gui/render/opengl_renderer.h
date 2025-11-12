@@ -119,10 +119,11 @@ private:
 	bool is_framebuffer_srgb_capable = false;
 
 	struct {
-		GLint texture_size = 0;
-		GLint input_size   = 0;
-		GLint output_size  = 0;
-		GLint frame_count  = 0;
+		GLint texture_size  = -1;
+		GLint input_size    = -1;
+		GLint output_size   = -1;
+		GLint frame_count   = -1;
+		GLint input_texture = -1;
 	} uniform = {};
 
 	GLuint frame_count         = 0;
