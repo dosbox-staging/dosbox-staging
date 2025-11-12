@@ -51,6 +51,7 @@ static void maybe_log_opengl_error(const char* message)
 #endif
 
 constexpr auto GlslExtension = ".glsl";
+constexpr auto ImageAdjustmentShaderName = "misc/image-adjustment";
 
 // A safe wrapper around that returns the default result on failure
 static const char* safe_gl_get_string(const GLenum requested_name,
@@ -70,7 +71,8 @@ OpenGlRenderer::OpenGlRenderer(const int x, const int y, const int width,
 {
 	window = CreateSdlWindow(x, y, width, height, sdl_window_flags);
 	if (!window) {
-		const auto msg = format_str("OPENGL: Error creating window: %s", SDL_GetError());
+		const auto msg = format_str("OPENGL: Error creating window: %s",
+		                            SDL_GetError());
 		LOG_ERR("%s", msg.c_str());
 		throw std::runtime_error(msg);
 	}
@@ -110,14 +112,13 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-	                    SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	// Request an OpenGL-ready window
 	auto flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
-	SDL_Window *window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
+	SDL_Window* window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
 	if (!window) {
 		// Try again without sRGB. This has been a problem with KMSDRM.
 		SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 0);
@@ -195,6 +196,13 @@ bool OpenGlRenderer::InitRenderer()
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+	glDisable(GL_DEPTH_TEST);
+
+	if (!GetOrLoadAndCacheShader(ImageAdjustmentShaderName)) {
+		E_Exit("OPENGL: Cannot load '%s' shader, exiting",
+		       ImageAdjustmentShaderName);
+	}
+
 	return true;
 }
 
@@ -205,6 +213,10 @@ OpenGlRenderer::~OpenGlRenderer()
 	if (texture) {
 		glDeleteTextures(1, &texture);
 		texture = 0;
+	}
+	if (textureColorbuffer) {
+		glDeleteTextures(1, &textureColorbuffer);
+		textureColorbuffer = 0;
 	}
 
 	for (auto& [_, shader] : shader_cache) {
@@ -249,6 +261,44 @@ void OpenGlRenderer::UpdateViewport(const DosBox::Rect _draw_rect_px)
 {
 	draw_rect_px = _draw_rect_px;
 
+	// Create off-screen framebuffer
+	glGenFramebuffers(1, &framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+	// Create a color attachment texture
+	if (textureColorbuffer) {
+		glDeleteTextures(1, &textureColorbuffer);
+	}
+	glGenTextures(1, &textureColorbuffer);
+
+	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+
+	glTexImage2D(GL_TEXTURE_2D,
+	             0,
+	             GL_RGB16F,
+	             draw_rect_px.w,
+	             draw_rect_px.h,
+	             0,
+	             GL_BGRA,
+	             GL_UNSIGNED_BYTE,
+	             nullptr);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER,
+	                       GL_COLOR_ATTACHMENT0,
+	                       GL_TEXTURE_2D,
+	                       textureColorbuffer,
+	                       0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		LOG_ERR("OPENGL: Framebuffer is not complete");
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Set viewport
 	glViewport(static_cast<GLsizei>(draw_rect_px.x),
 	           static_cast<GLsizei>(draw_rect_px.y),
 	           static_cast<GLsizei>(draw_rect_px.w),
@@ -392,13 +442,41 @@ void OpenGlRenderer::PrepareFrame()
 
 void OpenGlRenderer::PresentFrame()
 {
+	glBindVertexArray(vao);
+
+	// Apply user-configured shader and render into an off-screen buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glUseProgram(current_shader.program_object);
 	UpdateUniforms();
 
-	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
+	// Apply image adjustments post-processing shader and render into the
+	// framebuffer visible on the screen
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// Set texture slot
+//	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+
+//	const auto maybe_shader = GetOrLoadAndCacheShader(ImageAdjustmentShaderName);
+//	assert(maybe_shader);
+//	const auto shader = *maybe_shader;
+
+//	glUseProgram(shader.program_object);
+	// TODO set uniforms
+
+//	const GLint texture_uniform = glGetUniformLocation(shader.program_object,
+//	                                                   "inputTexture");
+//	glUniform1i(texture_uniform, 0);
+
+//	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	// Optionally capture frame
 	if (CAPTURE_IsCapturingPostRenderImage()) {
 		// glReadPixels() implicitly blocks until all pipelined
 		// rendering commands have finished, so we're guaranteed to
@@ -408,6 +486,7 @@ void OpenGlRenderer::PresentFrame()
 		GFX_CaptureRenderedImage();
 	}
 
+	// Present frame
 	SDL_GL_SwapWindow(window);
 }
 
@@ -712,6 +791,7 @@ bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
 	current_shader = *maybe_shader;
 
 	glUseProgram(current_shader.program_object);
+	// TODO should do it at runtime
 	GetUniformLocations(current_shader.info.default_preset.params);
 
 	return true;

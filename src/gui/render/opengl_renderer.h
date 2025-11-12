@@ -141,6 +141,9 @@ private:
 
 	GLuint frame_count = 0;
 
+	GLuint framebuffer = 0;
+	GLuint textureColorbuffer = 0;
+
 	// Vertex buffer object
 	GLuint vbo = 0;
 
