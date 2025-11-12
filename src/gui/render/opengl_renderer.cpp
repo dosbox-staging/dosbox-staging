@@ -26,30 +26,6 @@ CHECK_NARROWING();
 
 // #define DEBUG_OPENGL
 
-// Define to report OpenGL errors
-// #define DEBUG_OPENGL_ERROR
-
-#ifdef DEBUG_OPENGL_ERROR
-static void maybe_log_opengl_error(const char* message)
-{
-	GLenum r = glGetError();
-	if (r == GL_NO_ERROR) {
-		return;
-	}
-
-	LOG_ERR("OPENGL: Errors from %s", message);
-
-	do {
-		LOG_ERR("OPENGL: %X", r);
-	} while ((r = glGetError()) != GL_NO_ERROR);
-}
-#else
-[[maybe_unused]] static void maybe_log_opengl_error(const char*)
-{
-	return;
-}
-#endif
-
 constexpr auto GlslExtension = ".glsl";
 
 // A safe wrapper around that returns the default result on failure
