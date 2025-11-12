@@ -203,12 +203,35 @@ struct ImageAdjustmentSettings {
 	float saturation = 1.0;
 
 	// 0.0 means original colours (no adjustment)
-	float rgb_gain   = 0.0;
-	float red_gain   = 0.0;
-	float green_gain = 0.0;
-	float blue_gain  = 0.0;
+	float rgb_offset   = 0.0;
+	float red_offset   = 0.0;
+	float green_offset = 0.0;
+	float blue_offset  = 0.0;
 
-	float white_balance = 
+	// White balance in Kelvin (K); valid range is from 1000 K to 12,000 K
+	float white_balance = 6500;
+};
+
+enum class ColourSpace {
+	// sRGB
+	sRGB,
+
+	// DCI-P3 with DCI whitepoint and gamma 1.4
+	DciP3,
+
+	// DCI-P3 with sRGB D65 whitepoint and gamma 1.4
+	DciP3_D65,
+
+	// DCI-P3 with DCI whitepoint and gamma 2.4
+	DisplayP3,
+
+	// DCI-P3 with sRGB D65 whitepoint and gamma 2.4
+	DisplayP3_D65,
+
+	// AdobeRgb
+	AdobeRgb,
+
+	Rec2020
 };
 
 extern Render render;
