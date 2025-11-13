@@ -422,6 +422,8 @@ void DOS_Shell::RunBatchFile()
 	}
 }
 
+static bool is_shell_running = false;
+
 void DOS_Shell::Run()
 {
 	// COMMAND.COM's /C and /INIT spawn sub-commands. When parsing help, we need
@@ -477,15 +479,26 @@ void DOS_Shell::Run()
 	} else {
 		WriteOut(MSG_Get("SHELL_STARTUP_SUB"), DOSBOX_GetDetailedVersion());
 	}
+
+	is_shell_running = true;
+
 	while (!exit_cmd_called && !DOSBOX_IsShutdownRequested()) {
-		if (!batchfiles.empty()){
+
+		if (!batchfiles.empty()) {
 			RunBatchFile();
 		} else {
-			if (echo) ShowPrompt();
+			if (echo) {
+				ShowPrompt();
+			}
 			InputCommand(input_line);
 			ParseLine(input_line);
 		}
 	}
+}
+
+bool SHELL_IsRunning()
+{
+	return is_shell_running;
 }
 
 void DOS_Shell::SyntaxError()
