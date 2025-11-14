@@ -70,7 +70,8 @@ OpenGlRenderer::OpenGlRenderer(const int x, const int y, const int width,
 {
 	window = CreateSdlWindow(x, y, width, height, sdl_window_flags);
 	if (!window) {
-		const auto msg = format_str("OPENGL: Error creating window: %s", SDL_GetError());
+		const auto msg = format_str("OPENGL: Error creating window: %s",
+		                            SDL_GetError());
 		LOG_ERR("%s", msg.c_str());
 		throw std::runtime_error(msg);
 	}
@@ -117,7 +118,7 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	auto flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
-	SDL_Window *window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
+	SDL_Window* window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
 	if (!window) {
 		// Try again without sRGB. This has been a problem with KMSDRM.
 		SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 0);
@@ -656,14 +657,16 @@ std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& shad
 	return shader_program;
 }
 
-bool OpenGlRenderer::SetShader(const std::string& shader_descriptor)
+OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShader(const std::string& shader_descriptor)
 {
 	return SetShaderInternal(shader_descriptor);
 }
 
-bool OpenGlRenderer::SetShaderInternal(const std::string& shader_descriptor,
-                                       const bool force_reload)
+OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
+        const std::string& shader_descriptor, const bool force_reload)
 {
+	using enum OpenGlRenderer::SetShaderResult;
+
 	auto& shader_manager = ShaderManager::GetInstance();
 
 	const auto curr_descriptor = force_reload
@@ -675,11 +678,20 @@ bool OpenGlRenderer::SetShaderInternal(const std::string& shader_descriptor,
 	const auto new_descriptor = shader_manager.GetCurrentShaderDescriptor();
 
 	if (!MaybeSwitchShaderAndPreset(curr_descriptor, new_descriptor)) {
-		return false;
+		return ShaderError;
+	}
+
+	if (!new_descriptor.preset_name.empty() &&
+	    current_shader_descriptor.preset_name.empty()) {
+
+		current_shader_descriptor_string = current_shader_descriptor.shader_name;
+
+		// We could set the shader but not the preset.
+		return PresetError;
 	}
 
 	current_shader_descriptor_string = shader_descriptor;
-	return true;
+	return Ok;
 }
 
 bool OpenGlRenderer::ForceReloadCurrentShader()
@@ -695,7 +707,8 @@ bool OpenGlRenderer::ForceReloadCurrentShader()
 	shader_preset_cache.erase(descriptor.ToString());
 
 	constexpr auto ForceReload = true;
-	return SetShaderInternal(current_shader_descriptor_string, ForceReload);
+	return (SetShaderInternal(current_shader_descriptor_string, ForceReload) ==
+	        OpenGlRenderer::SetShaderResult::Ok);
 }
 
 bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
@@ -725,8 +738,6 @@ bool OpenGlRenderer::MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_des
 			return false;
 		}
 	}
-
-	const auto& shader_info = shader_cache[new_descriptor.shader_name].info;
 
 	if (changed_shader ||
 	    (curr_descriptor.preset_name != new_descriptor.preset_name)) {
@@ -767,21 +778,20 @@ void OpenGlRenderer::SwitchShaderPresetOrSetDefault(const ShaderDescriptor& desc
 		current_shader_preset = default_preset;
 	};
 
+	current_shader_descriptor = descriptor;
+
 	if (descriptor.preset_name.empty()) {
 		set_default_preset();
 
 	} else {
-		const auto maybe_preset = GetOrLoadAndCacheShaderPreset(descriptor);
+		if (const auto maybe_preset = GetOrLoadAndCacheShaderPreset(descriptor);
+		    maybe_preset) {
 
-		if (maybe_preset) {
 			current_shader_preset = *maybe_preset;
-		} else {
-			LOG_WARNING(
-			        "OPENGL: Error loading shader preset '%s'; "
-			        "using default preset",
-			        descriptor.ToString().c_str());
 
+		} else {
 			set_default_preset();
+			current_shader_descriptor.preset_name.clear();
 		}
 	}
 }

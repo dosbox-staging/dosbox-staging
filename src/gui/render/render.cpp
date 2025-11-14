@@ -575,12 +575,25 @@ void RENDER_AddMessages()
 
 static bool set_shader(const std::string& descriptor)
 {
-	if (!GFX_GetRenderer()->SetShader(descriptor)) {
-		return false;
-	}
+	using enum RenderBackend::SetShaderResult;
 
-	set_scan_and_pixel_doubling();
-	return true;
+	switch (GFX_GetRenderer()->SetShader(descriptor)) {
+	case ShaderError: return false;
+
+	case PresetError:
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "RENDER_DEFAULT_SHADER_PRESET_FALLBACK",
+		                      descriptor.c_str(),
+		                      ShaderName::Sharp);
+
+		set_scan_and_pixel_doubling();
+		return true;
+
+	case Ok: set_scan_and_pixel_doubling(); return true;
+
+	default: assertm(false, "Invalid SetShaderResult value"); return false;
+	}
 }
 
 static void set_fallback_shader_or_exit()
@@ -1513,12 +1526,16 @@ static void notify_render_setting_updated(SectionProp& section,
 static void register_render_text_messages()
 {
 	MSG_Add("RENDER_SHADER_RENAMED",
-	        "Built-in shader [color=white]'%s'[reset] has been renamed to "
-	        "[color=white]'%s'[reset]; using [color=white]'%s'[reset]");
+	        "Built-in shader [color=white]'%s'[reset] has been renamed to [color=white]'%s'[reset];\n"
+	        "using [color=white]'%s'[reset]");
 
 	MSG_Add("RENDER_SHADER_FALLBACK",
-	        "Error setting shader [color=white]'%s'[reset], "
+	        "Error setting shader [color=white]'%s'[reset],\n"
 	        "falling back to [color=white]'%s'[reset]");
+
+	MSG_Add("RENDER_DEFAULT_SHADER_PRESET_FALLBACK",
+	        "Error setting shader preset [color=white]'%s'[reset],\n"
+	        "falling back to default preset");
 }
 
 void RENDER_AddConfigSection(const ConfigPtr& conf)
