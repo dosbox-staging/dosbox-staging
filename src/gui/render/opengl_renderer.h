@@ -40,7 +40,7 @@ public:
 	bool UpdateRenderSize(const int new_render_width_px,
 	                      const int new_render_height_px) override;
 
-	bool SetShader(const std::string& shader_descriptor) override;
+	SetShaderResult SetShader(const std::string& shader_descriptor) override;
 
 	bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
 	                           const VideoMode& video_mode) override;
@@ -82,8 +82,8 @@ private:
 
 	bool InitRenderer();
 
-	bool SetShaderInternal(const std::string& shader_descriptor,
-	                       const bool force_reload = false);
+	SetShaderResult SetShaderInternal(const std::string& shader_descriptor,
+	                                  const bool force_reload = false);
 
 	bool MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_descriptor,
 	                                const ShaderDescriptor& new_descriptor);
@@ -155,6 +155,8 @@ private:
 
 	Shader current_shader              = {};
 	ShaderPreset current_shader_preset = {};
+
+	ShaderDescriptor current_shader_descriptor = {};
 
 	// Current shader descriptor string as set by the user (e.g., if the
 	// user set `crt-auto`, this will stay `crt-auto`; it won't be synced to
