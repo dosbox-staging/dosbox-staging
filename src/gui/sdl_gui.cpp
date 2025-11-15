@@ -664,20 +664,6 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	apply_new_dpi_scale(new_dpi_scale);
 }
 
-static void maybe_handle_screen_rotation(const int new_width, const int new_height)
-{
-	// Maybe a screen rotation has just occurred, so we simply resize.
-	// There may be a different cause for a forced resized, though.
-	if (sdl.is_fullscreen) {
-
-		// Note: We should not use get_display_dimensions()
-		// (SDL_GetDisplayBounds) on Android after a screen rotation:
-		// The older values from application startup are returned.
-		sdl.fullscreen.width  = new_width;
-		sdl.fullscreen.height = new_height;
-	}
-}
-
 static void configure_window_transparency()
 {
 	const auto transparency = get_sdl_section()->GetInt("window_transparency");
@@ -707,6 +693,8 @@ static void enter_fullscreen()
 		// is to size the window one pixel wider than the desktop so
 		// fullscreen optimisation won't kick in.
 		//
+		SDL_Rect display_bounds = {};
+		SDL_GetDisplayBounds(sdl.display_number, &display_bounds);
 		SDL_GetWindowSize(sdl.window,
 		                  &sdl.fullscreen.prev_window.width,
 		                  &sdl.fullscreen.prev_window.height);
@@ -720,8 +708,8 @@ static void enter_fullscreen()
 		SDL_SetWindowPosition(sdl.window, 0, 0);
 
 		SDL_SetWindowSize(sdl.window,
-		                  sdl.fullscreen.width + 1,
-		                  sdl.fullscreen.height);
+		                  display_bounds.w + 1,
+		                  display_bounds.h);
 
 		// Disable transparency in fullscreen mode
 		SDL_SetWindowOpacity(sdl.window, 100);
@@ -1549,19 +1537,9 @@ static void configure_fullscreen_mode()
 
 	const auto fullscreen_mode_pref = section->GetString("fullscreen_mode");
 
-	auto set_screen_bounds = [] {
-		SDL_Rect bounds;
-		SDL_GetDisplayBounds(sdl.display_number, &bounds);
-
-		sdl.fullscreen.width  = bounds.w;
-		sdl.fullscreen.height = bounds.h;
-	};
-
 	if (fullscreen_mode_pref == "standard") {
-		set_screen_bounds();
 		sdl.fullscreen.mode = FullscreenMode::Standard;
 	} else if (fullscreen_mode_pref == "forced-borderless") {
-		set_screen_bounds();
 		sdl.fullscreen.mode = FullscreenMode::ForcedBorderless;
 	}
 }
@@ -2275,11 +2253,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// set, so recalculate that and set viewport
 		check_and_handle_dpi_change(sdl.window);
 
-		SDL_Rect display_bounds = {};
-		SDL_GetDisplayBounds(new_display_number, &display_bounds);
-		sdl.fullscreen.width  = display_bounds.w;
-		sdl.fullscreen.height = display_bounds.h;
-
 		sdl.display_number = new_display_number;
 
 		update_viewport();
@@ -2294,11 +2267,10 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// The window size has changed either as a result of an API call
 		// or through the system or user changing the window size.
 		const auto new_width  = event.window.data1;
-		const auto new_height = event.window.data2;
+		[[maybe_unused]] const auto new_height = event.window.data2;
 
 		check_and_handle_dpi_change(sdl.window, new_width);
 
-		maybe_handle_screen_rotation(new_width, new_height);
 		update_viewport();
 		maybe_autoswitch_shader();
 
