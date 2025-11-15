@@ -1452,42 +1452,6 @@ static int get_sdl_window_flags()
 	return check_cast<int>(flags);
 }
 
-static void setup_fullscreen_mode()
-{
-	// Set fullscreen display mode
-	if (sdl.fullscreen.mode != FullscreenMode::ForcedBorderless) {
-		SDL_DisplayMode fullscreen_mode = {};
-
-		const SDL_DisplayMode requested_mode = {0,
-		                                        sdl.fullscreen.width,
-		                                        sdl.fullscreen.height,
-		                                        0,
-		                                        nullptr};
-
-		if (!SDL_GetClosestDisplayMode(sdl.display_number,
-		                               &requested_mode,
-		                               &fullscreen_mode)) {
-
-			LOG_WARNING(
-			        "SDL: Error setting fullscreen mode to %dx%d, "
-			        "falling back to desktop mode",
-			        requested_mode.w,
-			        requested_mode.h);
-
-			if (SDL_GetDesktopDisplayMode(sdl.display_number,
-			                              &fullscreen_mode) < 0) {
-				LOG_WARNING("SDL: Error retrieving desktop display mode: %s",
-				            SDL_GetError());
-			}
-		}
-
-		if (SDL_SetWindowDisplayMode(sdl.window, &fullscreen_mode) < 0) {
-			LOG_ERR("SDL: Error setting fullscreen display mode: %s",
-			        SDL_GetError());
-		}
-	}
-}
-
 static void create_window_and_renderer()
 {
 #if C_OPENGL
@@ -1846,8 +1810,6 @@ void GFX_Init()
 	//
 	configure_window_decorations();
 #endif
-
-	setup_fullscreen_mode();
 
 	SDL_SetWindowMinimumSize(sdl.window,
 	                         FallbackWindowSize.x,
