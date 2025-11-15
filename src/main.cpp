@@ -19,6 +19,8 @@
 #include <windows.h>
 #endif
 
+#include <sentry.h>
+
 #include "config/config.h"
 #include "config/setup.h"
 #include "debugger/debugger.h"
@@ -572,6 +574,15 @@ int main(int argc, char* argv[])
 	// Ensure we perform SDL cleanup and restore console settings at exit
 	atexit(quit_func);
 
+	sentry_options_t *options = sentry_options_new();
+	sentry_options_set_dsn(options, "https://45dac403f9d6353a636617f5dacfce12@o4510349357678592.ingest.de.sentry.io/4510366461263952");
+	// This is also the default-path. For further information and recommendations:
+	// https://docs.sentry.io/platforms/native/configuration/options/#database-path
+	sentry_options_set_database_path(options, ".sentry-native");
+	sentry_options_set_release(options, "dosbox-staging@0.83.0-alpha");
+	sentry_options_set_debug(options, 0);
+	sentry_init(options);
+
 	CommandLine command_line(argc, argv);
 	control = std::make_unique<Config>(&command_line);
 
@@ -711,6 +722,8 @@ int main(int argc, char* argv[])
 	// exit; this works around problems when 'atexit()' order clashes with SDL
 	// 2 cleanup order. Happens with SDL_VIDEODRIVER=wayland as of SDL 2.0.12.
 	GFX_Quit();
+
+	sentry_close();
 
 	return return_code;
 }

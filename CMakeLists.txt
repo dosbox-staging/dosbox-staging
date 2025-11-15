@@ -385,6 +385,7 @@ find_package(SDL2_net REQUIRED)
 find_package(iir REQUIRED)
 find_package(PNG REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(sentry CONFIG REQUIRED)
 find_package(MT32Emu REQUIRED)
 find_package(FluidSynth REQUIRED CONFIG)
 if (C_ALSA)
@@ -453,6 +454,17 @@ target_link_libraries(dosbox PRIVATE
   libdosboxcommon
   $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+  sentry::sentry
+)
+
+set(CRASHPAD_HANDLER_SRC
+    "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/tools/sentry-native/crashpad_handler${CMAKE_EXECUTABLE_SUFFIX}"
+)
+
+add_custom_command(TARGET dosbox POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CRASHPAD_HANDLER_SRC}"
+        "$<TARGET_FILE_DIR:dosbox>"
 )
 
 # Add installation rules
