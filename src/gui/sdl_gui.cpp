@@ -664,20 +664,6 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	apply_new_dpi_scale(new_dpi_scale);
 }
 
-static void maybe_handle_screen_rotation(const int new_width, const int new_height)
-{
-	// Maybe a screen rotation has just occurred, so we simply resize.
-	// There may be a different cause for a forced resized, though.
-	if (sdl.is_fullscreen) {
-
-		// Note: We should not use get_display_dimensions()
-		// (SDL_GetDisplayBounds) on Android after a screen rotation:
-		// The older values from application startup are returned.
-		sdl.fullscreen.width  = new_width;
-		sdl.fullscreen.height = new_height;
-	}
-}
-
 static void configure_window_transparency()
 {
 	const auto transparency = get_sdl_section()->GetInt("window_transparency");
@@ -707,6 +693,8 @@ static void enter_fullscreen()
 		// is to size the window one pixel wider than the desktop so
 		// fullscreen optimisation won't kick in.
 		//
+		SDL_Rect display_bounds = {};
+		SDL_GetDisplayBounds(sdl.display_number, &display_bounds);
 		SDL_GetWindowSize(sdl.window,
 		                  &sdl.fullscreen.prev_window.width,
 		                  &sdl.fullscreen.prev_window.height);
@@ -720,8 +708,8 @@ static void enter_fullscreen()
 		SDL_SetWindowPosition(sdl.window, 0, 0);
 
 		SDL_SetWindowSize(sdl.window,
-		                  sdl.fullscreen.width + 1,
-		                  sdl.fullscreen.height);
+		                  display_bounds.w + 1,
+		                  display_bounds.h);
 
 		// Disable transparency in fullscreen mode
 		SDL_SetWindowOpacity(sdl.window, 100);
@@ -914,19 +902,6 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
 	sdl.maybe_video_mode = video_mode;
 
 	sdl.draw.callback = callback;
-
-	// Update fullscreen display mode.
-	if (!sdl.is_fullscreen) {
-		SDL_DisplayMode desired = {};
-		SDL_GetDesktopDisplayMode(sdl.display_number, &desired);
-
-		desired.w = sdl.draw.render_width_px;
-		desired.h = sdl.draw.render_height_px;
-
-		SDL_DisplayMode closest = {};
-		SDL_GetClosestDisplayMode(sdl.display_number, &desired, &closest);
-		SDL_SetWindowDisplayMode(sdl.window, &closest);
-	}
 
 	if (!sdl.renderer->UpdateRenderSize(sdl.draw.render_width_px,
 	                                    sdl.draw.render_height_px)) {
@@ -1455,9 +1430,6 @@ static int get_sdl_window_flags()
 		case FullscreenMode::Standard:
 			flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 			break;
-		case FullscreenMode::Original:
-			flags |= SDL_WINDOW_FULLSCREEN;
-			break;
 		case FullscreenMode::ForcedBorderless:
 			// no-op
 			break;
@@ -1466,42 +1438,6 @@ static int get_sdl_window_flags()
 	}
 
 	return check_cast<int>(flags);
-}
-
-static void setup_fullscreen_mode()
-{
-	// Set fullscreen display mode
-	if (sdl.fullscreen.mode != FullscreenMode::ForcedBorderless) {
-		SDL_DisplayMode fullscreen_mode = {};
-
-		const SDL_DisplayMode requested_mode = {0,
-		                                        sdl.fullscreen.width,
-		                                        sdl.fullscreen.height,
-		                                        0,
-		                                        nullptr};
-
-		if (!SDL_GetClosestDisplayMode(sdl.display_number,
-		                               &requested_mode,
-		                               &fullscreen_mode)) {
-
-			LOG_WARNING(
-			        "SDL: Error setting fullscreen mode to %dx%d, "
-			        "falling back to desktop mode",
-			        requested_mode.w,
-			        requested_mode.h);
-
-			if (SDL_GetDesktopDisplayMode(sdl.display_number,
-			                              &fullscreen_mode) < 0) {
-				LOG_WARNING("SDL: Error retrieving desktop display mode: %s",
-				            SDL_GetError());
-			}
-		}
-
-		if (SDL_SetWindowDisplayMode(sdl.window, &fullscreen_mode) < 0) {
-			LOG_ERR("SDL: Error setting fullscreen display mode: %s",
-			        SDL_GetError());
-		}
-	}
 }
 
 static void create_window_and_renderer()
@@ -1599,34 +1535,12 @@ static void configure_fullscreen_mode()
 	sdl.is_fullscreen = control->arguments.fullscreen ||
 	                    section->GetBool("fullscreen");
 
-	const auto fullscreen_mode_pref = [&] {
-		auto legacy_pref = section->GetString("fullresolution");
-		if (!legacy_pref.empty()) {
-			set_section_property_value("sdl", "fullresolution", "");
-			set_section_property_value("sdl", "fullscreen_mode", legacy_pref);
-		}
-		return section->GetString("fullscreen_mode");
-	}();
-
-	auto set_screen_bounds = [] {
-		SDL_Rect bounds;
-		SDL_GetDisplayBounds(sdl.display_number, &bounds);
-
-		sdl.fullscreen.width  = bounds.w;
-		sdl.fullscreen.height = bounds.h;
-	};
+	const auto fullscreen_mode_pref = section->GetString("fullscreen_mode");
 
 	if (fullscreen_mode_pref == "standard") {
-		set_screen_bounds();
 		sdl.fullscreen.mode = FullscreenMode::Standard;
-
 	} else if (fullscreen_mode_pref == "forced-borderless") {
-		set_screen_bounds();
 		sdl.fullscreen.mode = FullscreenMode::ForcedBorderless;
-
-	} else if (fullscreen_mode_pref == "original") {
-		set_screen_bounds();
-		sdl.fullscreen.mode = FullscreenMode::Original;
 	}
 }
 
@@ -1875,8 +1789,6 @@ void GFX_Init()
 	configure_window_decorations();
 #endif
 
-	setup_fullscreen_mode();
-
 	SDL_SetWindowMinimumSize(sdl.window,
 	                         FallbackWindowSize.x,
 	                         FallbackWindowSize.y);
@@ -2006,7 +1918,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		}
 
 	} else {
-		assertm(false, "Unhandled [sdl] section setting");
+		LOG_WARNING("SDL: Runtime change unhandled for property: '%s'", prop_name.c_str());
 	}
 }
 
@@ -2341,11 +2253,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// set, so recalculate that and set viewport
 		check_and_handle_dpi_change(sdl.window);
 
-		SDL_Rect display_bounds = {};
-		SDL_GetDisplayBounds(new_display_number, &display_bounds);
-		sdl.fullscreen.width  = display_bounds.w;
-		sdl.fullscreen.height = display_bounds.h;
-
 		sdl.display_number = new_display_number;
 
 		update_viewport();
@@ -2360,11 +2267,10 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// The window size has changed either as a result of an API call
 		// or through the system or user changing the window size.
 		const auto new_width  = event.window.data1;
-		const auto new_height = event.window.data2;
+		[[maybe_unused]] const auto new_height = event.window.data2;
 
 		check_and_handle_dpi_change(sdl.window, new_width);
 
-		maybe_handle_screen_rotation(new_width, new_height);
 		update_viewport();
 		maybe_autoswitch_shader();
 
@@ -2662,8 +2568,8 @@ static void init_sdl_config_settings(SectionProp& section)
 
 	pstring = section.AddString("fullresolution", DeprecatedButAllowed, "");
 	pstring->SetHelp(
-	        "The [color=light-green]'fullresolution'[reset] setting is deprecated but still accepted;\n"
-	        "please use [color=light-green]'fullscreen_mode'[reset] instead.");
+	        "The [color=light-green]'fullresolution'[reset] setting has been removed.\n"
+	        "Please use [color=light-green]'fullscreen_mode'[reset] instead.");
 
 	pstring = section.AddString("fullscreen_mode", Always, "standard");
 	pstring->SetHelp("Set the fullscreen mode ('standard' by default):");
@@ -2680,19 +2586,11 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "                      borderless mode might result in decreased performance\n"
 	        "                      and slightly worse frame pacing (e.g., scrolling in 2D\n"
 	        "                      games not appearing perfectly smooth).");
-
-	pstring->SetOptionHelp(
-	        "original",
-	        "  original:           Exclusive fullscreen mode at the game's original\n"
-	        "                      resolution, or at the closest available resolution. This\n"
-	        "                      is a niche option for using DOSBox Staging with a CRT\n"
-	        "                      monitor. Toggling fullscreen might result in janky\n"
-	        "                      behaviour in this mode.");
 	pstring->SetValues({"standard",
 #ifdef WIN32
 	                    "forced-borderless",
 #endif
-	                    "original"});
+	                    });
 
 	pstring->SetDeprecatedWithAlternateValue("desktop", "standard");
 
