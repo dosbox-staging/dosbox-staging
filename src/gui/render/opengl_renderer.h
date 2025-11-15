@@ -128,8 +128,6 @@ private:
 	GLuint texture            = 0;
 	GLint max_texture_size_px = 0;
 
-	bool is_framebuffer_srgb_capable = false;
-
 	struct {
 		GLint texture_size  = -1;
 		GLint input_size    = -1;
