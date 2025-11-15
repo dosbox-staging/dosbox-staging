@@ -26,30 +26,6 @@ CHECK_NARROWING();
 
 // #define DEBUG_OPENGL
 
-// Define to report OpenGL errors
-// #define DEBUG_OPENGL_ERROR
-
-#ifdef DEBUG_OPENGL_ERROR
-static void maybe_log_opengl_error(const char* message)
-{
-	GLenum r = glGetError();
-	if (r == GL_NO_ERROR) {
-		return;
-	}
-
-	LOG_ERR("OPENGL: Errors from %s", message);
-
-	do {
-		LOG_ERR("OPENGL: %X", r);
-	} while ((r = glGetError()) != GL_NO_ERROR);
-}
-#else
-[[maybe_unused]] static void maybe_log_opengl_error(const char*)
-{
-	return;
-}
-#endif
-
 constexpr auto GlslExtension = ".glsl";
 
 // A safe wrapper around that returns the default result on failure
@@ -89,46 +65,25 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
                                             const int width, const int height,
                                             const uint32_t sdl_window_flags)
 {
-	// TODO Ideally, all of these calls should be checked for failure.
-
-	// Request 24-bits sRGB framebuffer, don't care about depth buffer
+	// Request 24-bits framebuffer, don't care about depth buffer
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	// SDL_GL_SetAttribute() is not a reliable error point.
-	// SDL mostly only does sanity checks to ensure we pass valid values.
-	// Success does not mean we will actually get an sRGB framebuffer.
-	// We won't know if it actually worked until after we create the window.
-	if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
-		LOG_ERR("OPENGL: Error requesting an sRGB framebuffer: %s",
-		        SDL_GetError());
-	}
-
-	// Explicitly request an OpenGL 2.1 compatibility context
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	// Request an OpenGL 3.3 core profile context
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-	                    SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+	                    SDL_GL_CONTEXT_PROFILE_CORE);
 
 	// Request an OpenGL-ready window
 	auto flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
-	SDL_Window* window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
-	if (!window) {
-		// Try again without sRGB. This has been a problem with KMSDRM.
-		SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 0);
-		window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
-		if (window) {
-			LOG_ERR("OPENGL: Failed to create an sRGB framebuffer. Falling back to non-sRGB.");
-		}
-	}
-
-	return window;
+	return SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
 }
 
 bool OpenGlRenderer::InitRenderer()
@@ -143,40 +98,52 @@ bool OpenGlRenderer::InitRenderer()
 
 	const auto version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
 
-	is_framebuffer_srgb_capable = [&] {
-		int gl_framebuffer_srgb_capable = 0;
-
-		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-		                        &gl_framebuffer_srgb_capable)) {
-
-			LOG_WARNING("OPENGL: Error getting the framebuffer's sRGB status: %s",
-			            SDL_GetError());
-		}
-
-		// TODO GL_ARB_framebuffer_sRGB & GL_EXT_framebuffer_sRGB are
-		// OpenGL 3.0 Core Profile features. There will be no need for
-		// these checks once we're on core profile 3.3
-		//
-		return (GLAD_VERSION_MAJOR(version) >= 3 ||
-		        // TODO use glad
-		        SDL_GL_ExtensionSupported("GL_ARB_framebuffer_sRGB") ||
-		        // TODO use glad
-		        SDL_GL_ExtensionSupported("GL_EXT_framebuffer_sRGB")) &&
-		       (gl_framebuffer_srgb_capable > 0);
-	}();
-
 	GLint size = 0;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
 
 	max_texture_size_px = size;
-
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	LOG_INFO("OPENGL: Version: %d.%d, GLSL version: %s, vendor: %s",
 	         GLAD_VERSION_MAJOR(version),
 	         GLAD_VERSION_MINOR(version),
 	         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION, "unknown"),
 	         safe_gl_get_string(GL_VENDOR, "unknown"));
+
+	// Vertex data (1 triangle)
+	// ------------------------
+	// Lower left
+	vertex_data[0] = -1.0f;
+	vertex_data[1] = -1.0f;
+
+	// Lower right
+	vertex_data[2] = 3.0f;
+	vertex_data[3] = -1.0f;
+
+	// Upper left
+	vertex_data[4] = -1.0f;
+	vertex_data[5] = 3.0f;
+
+	// Create VBO & VAO
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0,        // attribute index,
+	                      2,        // num components (vec2),
+	                      GL_FLOAT, // component data type,
+	                      GL_FALSE, // do not normalise fixed point,
+	                      0,        // data stride (0=packed),
+	                      static_cast<GLvoid*>(0));
+
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	return true;
 }
@@ -194,6 +161,9 @@ OpenGlRenderer::~OpenGlRenderer()
 		glDeleteProgram(shader.program_object);
 	}
 	shader_cache.clear();
+
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(1, &vbo);
 
 	if (context) {
 		SDL_GL_DeleteContext(context);
@@ -277,37 +247,19 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_param);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_param);
 
-	if ((shader_settings.use_srgb_framebuffer || shader_settings.use_srgb_texture) &&
-	    !is_framebuffer_srgb_capable) {
-
-		LOG_WARNING("OPENGL: sRGB framebuffer not supported");
-	}
-
-	// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
-	// with Mesa drivers on certain integrated Intel GPUs
-	const auto texture_format = shader_settings.use_srgb_texture &&
-	                                            is_framebuffer_srgb_capable
-	                                  ? GL_SRGB8_ALPHA8
-	                                  : GL_RGB8;
-
+	// Just create the texture; we'll copy the image data later with
+	// `glTexSubImage2D()`
+	//
 	glTexImage2D(GL_TEXTURE_2D,
-	             0,
-	             texture_format,
-	             render_width_px,
-	             render_height_px,
-	             0,
-	             GL_BGRA_EXT,
-	             GL_UNSIGNED_BYTE,
-	             nullptr);
-
-	if (shader_settings.use_srgb_framebuffer && is_framebuffer_srgb_capable) {
-		glEnable(GL_FRAMEBUFFER_SRGB);
-#if 0
-			LOG_MSG("OPENGL: Using sRGB framebuffer");
-#endif
-	} else {
-		glDisable(GL_FRAMEBUFFER_SRGB);
-	}
+	             0,                // mimap level (0 = base image)
+	             GL_RGB8,          // internal format
+	             render_width_px,  // width
+	             render_height_px, // height
+	             0,                // border (must be always 0)
+	             GL_BGRA,          // pixel data format
+	             GL_UNSIGNED_BYTE, // pixel data type
+	             nullptr           // pointer to image data
+	);
 
 	constexpr auto BytesPerPixel = 4;
 
@@ -361,14 +313,15 @@ void OpenGlRenderer::PrepareFrame()
 
 	if (last_framebuf_dirty) {
 		glTexSubImage2D(GL_TEXTURE_2D,
-		                0,
-		                0,
-		                0,
-		                render_width_px,
-		                render_height_px,
-		                GL_BGRA_EXT,
-		                GL_UNSIGNED_INT_8_8_8_8_REV,
-		                last_framebuf.data());
+		                0,                // mimap level (0 = base image)
+		                0,                // x offset
+		                0,                // y offset
+		                render_width_px,  // width
+		                render_height_px, // height
+		                GL_BGRA,          // pixel data format
+		                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
+		                last_framebuf.data() // pointer to image data
+		);
 
 		++frame_count;
 
@@ -382,6 +335,7 @@ void OpenGlRenderer::PresentFrame()
 
 	UpdateUniforms();
 
+	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {
@@ -616,43 +570,6 @@ std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& shad
 		glDeleteProgram(shader_program);
 		return {};
 	}
-
-	// Set vertex data. Vertices are in counter-clockwise order.
-	const GLint vertex_attrib_location = glGetAttribLocation(shader_program,
-	                                                         "a_position");
-
-	if (vertex_attrib_location == -1) {
-		LOG_ERR("OPENGL: Error retrieving vertex position attribute location");
-		glDeleteProgram(shader_program);
-		return {};
-	}
-
-	// Lower left
-	vertex_data[0] = -1.0f;
-	vertex_data[1] = -1.0f;
-
-	// Lower right
-	vertex_data[2] = 3.0f;
-	vertex_data[3] = -1.0f;
-
-	// Upper left
-	vertex_data[4] = -1.0f;
-	vertex_data[5] = 3.0f;
-
-	// Load the vertices' positions
-	constexpr GLint NumComponents           = 2; // vec2(x, y)
-	constexpr GLenum ComponentDataType      = GL_FLOAT;
-	constexpr GLboolean NormalizeFixedPoint = GL_FALSE;
-	constexpr GLsizei DataStride            = 0;
-
-	glVertexAttribPointer(static_cast<GLuint>(vertex_attrib_location),
-	                      NumComponents,
-	                      ComponentDataType,
-	                      NormalizeFixedPoint,
-	                      DataStride,
-	                      vertex_data);
-
-	glEnableVertexAttribArray(static_cast<GLuint>(vertex_attrib_location));
 
 	return shader_program;
 }

@@ -1,4 +1,4 @@
-#version 120
+#version 330 core
 
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2021-2020 Hyllian <sergiogdb@gmail.com>
@@ -24,93 +24,50 @@
 #pragma parameter OUTPUT_GAMMA "OUTPUT GAMMA" 2. 0.0 5.0 0.1
 #pragma parameter VSCANLINES "VERTICAL SCANLINES [ OFF | ON ]" 0.0 0.0 1.0 1.0
 
+/////////////////////////////////////////////////////////////////////////////
+
 #define GAMMA_IN(color)   pow(color, vec4(INPUT_GAMMA, INPUT_GAMMA, INPUT_GAMMA, INPUT_GAMMA))
 #define GAMMA_OUT(color)  pow(color, vec4(1.0 / OUTPUT_GAMMA, 1.0 / OUTPUT_GAMMA, 1.0 / OUTPUT_GAMMA, 1.0 / OUTPUT_GAMMA))
 
-
-#define texCoord v_texCoord
-
 #if defined(VERTEX)
 
-#if __VERSION__ >= 130
-#define OUT out
-#define IN  in
-#define tex2D texture
-#else
-#define OUT varying
-#define IN attribute
-#define tex2D texture2D
-#endif
+layout (location = 0) in vec2 a_position;
 
-#ifdef GL_ES
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
+out vec2 v_texCoord;
 
-
-IN  vec4 a_position;
-IN  vec4 Color;
-IN  vec2 TexCoord;
-OUT vec4 color;
-OUT vec2 texCoord;
-
-uniform PRECISION vec2 rubyOutputSize;
-uniform PRECISION vec2 rubyTextureSize;
-uniform PRECISION vec2 rubyInputSize;
+uniform vec2 rubyOutputSize;
+uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 
 void main()
 {
-    gl_Position = a_position;
-    v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize / rubyTextureSize;
+	gl_Position = vec4(a_position, 0.0, 1.0);
+	v_texCoord  = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 *
+	             rubyInputSize / rubyTextureSize;
 }
-
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define IN in
-#define tex2D texture
+in vec2 v_texCoord;
+
 out vec4 FragColor;
-#else
-#define IN varying
-#define FragColor gl_FragColor
-#define tex2D texture2D
-#endif
 
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
-
-uniform PRECISION vec2 rubyOutputSize;
-uniform PRECISION vec2 rubyTextureSize;
-uniform PRECISION vec2 rubyInputSize;
+uniform vec2 rubyTextureSize;
 uniform sampler2D s_p;
-IN vec2 texCoord;
 
-uniform PRECISION float BEAM_PROFILE;
-uniform PRECISION float HFILTER_PROFILE;
-uniform PRECISION float BEAM_MIN_WIDTH;
-uniform PRECISION float BEAM_MAX_WIDTH;
-uniform PRECISION float SCANLINES_STRENGTH;
-uniform PRECISION float COLOR_BOOST;
-uniform PRECISION float SHARPNESS_HACK;
-uniform PRECISION float PHOSPHOR_LAYOUT;
-uniform PRECISION float MASK_INTENSITY;
-uniform PRECISION float CRT_ANTI_RINGING;
-uniform PRECISION float INPUT_GAMMA;
-uniform PRECISION float OUTPUT_GAMMA;
-uniform PRECISION float VSCANLINES;
-
-// END PARAMETERS //
-
+uniform float BEAM_PROFILE;
+uniform float HFILTER_PROFILE;
+uniform float BEAM_MIN_WIDTH;
+uniform float BEAM_MAX_WIDTH;
+uniform float SCANLINES_STRENGTH;
+uniform float COLOR_BOOST;
+uniform float SHARPNESS_HACK;
+uniform float PHOSPHOR_LAYOUT;
+uniform float MASK_INTENSITY;
+uniform float CRT_ANTI_RINGING;
+uniform float INPUT_GAMMA;
+uniform float OUTPUT_GAMMA;
+uniform float VSCANLINES;
 
 /*
     A collection of CRT mask effects that work with LCD subpixel structures for
@@ -144,7 +101,8 @@ uniform PRECISION float VSCANLINES;
     we're commenting out the branches that are not used by the adaptive CRT
     shaders.
 */
-vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
+vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout)
+{
     vec3 weights = vec3(1.,1.,1.);
 
     float on = 1.;
@@ -473,91 +431,102 @@ mat4x4 get_hfilter_profile()
 
 vec4 get_beam_profile()
 {
-    vec4 bp = vec4(SCANLINES_STRENGTH, BEAM_MIN_WIDTH, BEAM_MAX_WIDTH, COLOR_BOOST);
+	vec4 bp = vec4(SCANLINES_STRENGTH, BEAM_MIN_WIDTH, BEAM_MAX_WIDTH, COLOR_BOOST);
 
-    if (BEAM_PROFILE == 1.0)  bp = vec4(0.62, 1.00, 1.00, 1.40); // Catmull-rom
-    if (BEAM_PROFILE == 2.0)  bp = vec4(0.72, 1.00, 1.00, 1.20); // Catmull-rom
+	if (BEAM_PROFILE == 1.0) {
+		bp = vec4(0.62, 1.00, 1.00, 1.40); // Catmull-rom
+	}
+	if (BEAM_PROFILE == 2.0) {
+		bp = vec4(0.72, 1.00, 1.00, 1.20); // Catmull-rom
+	}
 
-    return bp;
+	return bp;
 }
 
 void main()
 {
-    vec4 profile = get_beam_profile();
+	vec4 profile = get_beam_profile();
 
-    vec2 TextureSize = mix(
-        vec2(rubyTextureSize.x * SHARPNESS_HACK, rubyTextureSize.y),
-        vec2(rubyTextureSize.x, rubyTextureSize.y * SHARPNESS_HACK), VSCANLINES
-    );
+	vec2 TextureSize =
+	        mix(vec2(rubyTextureSize.x * SHARPNESS_HACK, rubyTextureSize.y),
+	            vec2(rubyTextureSize.x, rubyTextureSize.y * SHARPNESS_HACK),
+	            VSCANLINES);
 
-    vec2 dx = mix(vec2(1.0/TextureSize.x, 0.0), vec2(0.0, 1.0/TextureSize.y), VSCANLINES);
-    vec2 dy = mix(vec2(0.0, 1.0/TextureSize.y), vec2(1.0/TextureSize.x, 0.0), VSCANLINES);
+	vec2 dx = mix(vec2(1.0 / TextureSize.x, 0.0),
+	              vec2(0.0, 1.0 / TextureSize.y),
+	              VSCANLINES);
+	vec2 dy = mix(vec2(0.0, 1.0 / TextureSize.y),
+	              vec2(1.0 / TextureSize.x, 0.0),
+	              VSCANLINES);
 
-    vec2 pix_coord = texCoord.xy * TextureSize + vec2(-0.5, 0.5);
+	vec2 pix_coord = v_texCoord.xy * TextureSize + vec2(-0.5, 0.5);
 
-    vec2 tc = mix(
-        (floor(pix_coord) + vec2(0.5,  0.5)) / TextureSize,
-        (floor(pix_coord) + vec2(1.0, -0.5)) / TextureSize,
-        VSCANLINES
-    );
+	vec2 tc = mix((floor(pix_coord) + vec2(0.5, 0.5)) / TextureSize,
+	              (floor(pix_coord) + vec2(1.0, -0.5)) / TextureSize,
+	              VSCANLINES);
 
-    vec2 fp = mix(fract(pix_coord), fract(pix_coord.yx), VSCANLINES);
+	vec2 fp = mix(fract(pix_coord), fract(pix_coord.yx), VSCANLINES);
 
-    vec4 c00 = GAMMA_IN(tex2D(s_p, tc     - dx - dy).xyzw);
-    vec4 c01 = GAMMA_IN(tex2D(s_p, tc          - dy).xyzw);
-    vec4 c02 = GAMMA_IN(tex2D(s_p, tc     + dx - dy).xyzw);
-    vec4 c03 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx - dy).xyzw);
+	vec4 c00 = GAMMA_IN(texture(s_p, tc - dx - dy).xyzw);
+	vec4 c01 = GAMMA_IN(texture(s_p, tc - dy).xyzw);
+	vec4 c02 = GAMMA_IN(texture(s_p, tc + dx - dy).xyzw);
+	vec4 c03 = GAMMA_IN(texture(s_p, tc + 2.0 * dx - dy).xyzw);
 
-    vec4 c10 = GAMMA_IN(tex2D(s_p, tc     - dx).xyzw);
-    vec4 c11 = GAMMA_IN(tex2D(s_p, tc         ).xyzw);
-    vec4 c12 = GAMMA_IN(tex2D(s_p, tc     + dx).xyzw);
-    vec4 c13 = GAMMA_IN(tex2D(s_p, tc + 2.0*dx).xyzw);
+	vec4 c10 = GAMMA_IN(texture(s_p, tc - dx).xyzw);
+	vec4 c11 = GAMMA_IN(texture(s_p, tc).xyzw);
+	vec4 c12 = GAMMA_IN(texture(s_p, tc + dx).xyzw);
+	vec4 c13 = GAMMA_IN(texture(s_p, tc + 2.0 * dx).xyzw);
 
-    mat4 invX = get_hfilter_profile();
+	mat4 invX = get_hfilter_profile();
 
-    mat4 color_matrix0 = mat4(c00, c01, c02, c03);
-    mat4 color_matrix1 = mat4(c10, c11, c12, c13);
+	mat4 color_matrix0 = mat4(c00, c01, c02, c03);
+	mat4 color_matrix1 = mat4(c10, c11, c12, c13);
 
-    vec4 invX_Px = vec4(fp.x*fp.x*fp.x, fp.x*fp.x, fp.x, 1.0) * invX;
-    vec4 color0  = color_matrix0 * invX_Px;
-    vec4 color1  = color_matrix1 * invX_Px;
+	vec4 invX_Px = vec4(fp.x * fp.x * fp.x, fp.x * fp.x, fp.x, 1.0) * invX;
+	vec4 color0  = color_matrix0 * invX_Px;
+	vec4 color1  = color_matrix1 * invX_Px;
 
-    //  Get min/max samples
-    vec4 min_sample0 = min(c01, c02);
-    vec4 max_sample0 = max(c01, c02);
-    vec4 min_sample1 = min(c11, c12);
-    vec4 max_sample1 = max(c11, c12);
+	//  Get min/max samples
+	vec4 min_sample0 = min(c01, c02);
+	vec4 max_sample0 = max(c01, c02);
+	vec4 min_sample1 = min(c11, c12);
+	vec4 max_sample1 = max(c11, c12);
 
-    // Anti-ringing
-    vec4 aux = color0;
-    color0 = clamp(color0, min_sample0, max_sample0);
-    color0 = mix(aux, color0, CRT_ANTI_RINGING * step(0.0, (c00-c01)*(c02-c03)));
-    aux = color1;
-    color1 = clamp(color1, min_sample1, max_sample1);
-    color1 = mix(aux, color1, CRT_ANTI_RINGING * step(0.0, (c10-c11)*(c12-c13)));
+	// Anti-ringing
+	vec4 aux = color0;
+	color0   = clamp(color0, min_sample0, max_sample0);
+	color0   = mix(aux,
+                     color0,
+                     CRT_ANTI_RINGING * step(0.0, (c00 - c01) * (c02 - c03)));
+	aux      = color1;
+	color1   = clamp(color1, min_sample1, max_sample1);
+	color1   = mix(aux,
+                     color1,
+                     CRT_ANTI_RINGING * step(0.0, (c10 - c11) * (c12 - c13)));
 
-    float pos0 = fp.y;
-    float pos1 = 1.0 - fp.y;
+	float pos0 = fp.y;
+	float pos1 = 1.0 - fp.y;
 
-    vec4 lum0 = mix(vec4(beam_min_width), vec4(beam_max_width), color0);
-    vec4 lum1 = mix(vec4(beam_min_width), vec4(beam_max_width), color1);
+	vec4 lum0 = mix(vec4(beam_min_width), vec4(beam_max_width), color0);
+	vec4 lum1 = mix(vec4(beam_min_width), vec4(beam_max_width), color1);
 
-    vec4 d0 = scanlines_strength * pos0 / (lum0 + 0.0000001);
-    vec4 d1 = scanlines_strength * pos1 / (lum1 + 0.0000001);
+	vec4 d0 = scanlines_strength * pos0 / (lum0 + 0.0000001);
+	vec4 d1 = scanlines_strength * pos1 / (lum1 + 0.0000001);
 
-    d0 = exp(-d0*d0);
-    d1 = exp(-d1*d1);
+	d0 = exp(-d0 * d0);
+	d1 = exp(-d1 * d1);
 
-    vec4 color = color_boost * (color0*d0 + color1*d1);
+	vec4 color = color_boost * (color0 * d0 + color1 * d1);
 
-    // Mask
-    vec2 mask_coords = gl_FragCoord.xy; //texCoord.xy * OutputSize.xy;
-    mask_coords = mix(mask_coords.xy, mask_coords.yx, VSCANLINES);
-    color.rgb *= mask_weights(mask_coords, MASK_INTENSITY, int(PHOSPHOR_LAYOUT));
+	// Mask
+	vec2 mask_coords = gl_FragCoord.xy; // v_texCoord.xy * OutputSize.xy;
+	mask_coords      = mix(mask_coords.xy, mask_coords.yx, VSCANLINES);
+	color.rgb *= mask_weights(mask_coords, MASK_INTENSITY, int(PHOSPHOR_LAYOUT));
 
-    // Output gamma
-    color = clamp(GAMMA_OUT(color), 0.0, 1.0);
+	// Output gamma
+	color = clamp(GAMMA_OUT(color), 0.0, 1.0);
 
-    FragColor = vec4(color.rgb, 1.0);
+	FragColor = vec4(color.rgb, 1.0);
 }
+
 #endif

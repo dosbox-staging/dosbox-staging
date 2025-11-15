@@ -1,6 +1,6 @@
-#version 120
+#version 330 core
 
-// SPDX-FileCopyrightText:  2020-2024 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /*
@@ -18,68 +18,62 @@
  *	more details
  */
 
-#pragma use_srgb_texture
-#pragma use_srgb_framebuffer
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
 
 #if defined(VERTEX)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING out
-#define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_VARYING varying
-#define COMPAT_ATTRIBUTE attribute
-#define COMPAT_TEXTURE texture2D
-#endif
-
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
-
 uniform vec2 rubyTextureSize;
 uniform vec2 rubyInputSize;
 
-COMPAT_ATTRIBUTE vec4 a_position;
-COMPAT_VARYING vec2 vTexCoord;
+layout (location = 0) in vec2 a_position;
+
+out vec2 v_texCoord;
 
 void main()
 {
-	gl_Position = a_position;
-	vTexCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize / rubyTextureSize;
+	gl_Position = vec4(a_position, 0.0, 1.0);
+	v_texCoord  = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 *
+	             rubyInputSize / rubyTextureSize;
 }
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
+in vec2 v_texCoord;
 
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define COMPAT_PRECISION highp
-#else
-#define COMPAT_PRECISION
-#endif
+out vec4 FragColor;
 
 uniform vec2 rubyTextureSize;
 uniform sampler2D rubyTexture;
 
-COMPAT_VARYING vec2 vTexCoord;
+#define GAMMA             2.2
+#define GAMMA_IN(color)   pow(color, vec4(GAMMA))
+#define GAMMA_OUT(color)  pow(color, vec4(1.0 / GAMMA))
+
+vec4 texture_linear(in sampler2D sampler, in vec2 uv)
+{
+	// subtract 0.5 here and add it again after the floor to centre the texel
+	vec2 texCoord = uv * rubyTextureSize - vec2(0.5);
+
+	vec2 s0t0 = floor(texCoord) + vec2(0.5);
+	vec2 s0t1 = s0t0 + vec2(0.0, 1.0);
+	vec2 s1t0 = s0t0 + vec2(1.0, 0.0);
+	vec2 s1t1 = s0t0 + vec2(1.0);
+
+	vec2 invTexSize = 1.0 / rubyTextureSize;
+
+	vec4 c_s0t0 = GAMMA_IN(texture(sampler, s0t0 * invTexSize));
+	vec4 c_s0t1 = GAMMA_IN(texture(sampler, s0t1 * invTexSize));
+	vec4 c_s1t0 = GAMMA_IN(texture(sampler, s1t0 * invTexSize));
+	vec4 c_s1t1 = GAMMA_IN(texture(sampler, s1t1 * invTexSize));
+
+	vec2 weight = fract(texCoord);
+
+	vec4 c0 = c_s0t0 + (c_s1t0 - c_s0t0) * weight.x;
+	vec4 c1 = c_s0t1 + (c_s1t1 - c_s0t1) * weight.x;
+
+	return (c0 + (c1 - c0) * weight.y);
+}
 
 void main()
 {
@@ -87,7 +81,7 @@ void main()
 	// UV coordinate. We'll do this by rounding down the sample location to
 	// get the exact center of our "starting" texel. The starting texel will
 	// be at location [1, 1] in the grid, where [0, 0] is the top left corner.
-	vec2 samplePos = vTexCoord * rubyTextureSize;
+	vec2 samplePos = v_texCoord * rubyTextureSize;
 	vec2 texCoord1 = floor(samplePos - 0.5) + 0.5;
 
 	// Compute the fractional offset from our starting texel to our original
@@ -107,29 +101,31 @@ void main()
 	// Work out weighting factors and sampling offsets that will let us use
 	// bilinear filtering to simultaneously evaluate the middle 2 samples
 	// from the 4x4 grid.
-	vec2 w12 = w1 + w2;
+	vec2 w12      = w1 + w2;
 	vec2 offset12 = w2 / (w1 + w2);
 
 	// Compute the final UV coordinates we'll use for sampling the texture
-	vec2 texCoord0 = texCoord1 - 1.0;
-	vec2 texCoord3 = texCoord1 + 2.0;
+	vec2 texCoord0  = texCoord1 - 1.0;
+	vec2 texCoord3  = texCoord1 + 2.0;
 	vec2 texCoord12 = texCoord1 + offset12;
 
 	texCoord0 /= rubyTextureSize;
 	texCoord3 /= rubyTextureSize;
 	texCoord12 /= rubyTextureSize;
 
-	FragColor = COMPAT_TEXTURE(rubyTexture, vec2(texCoord0.x, texCoord0.y)) * w0.x * w0.y
-		+ COMPAT_TEXTURE(rubyTexture, vec2(texCoord12.x, texCoord0.y)) * w12.x * w0.y
-		+ COMPAT_TEXTURE(rubyTexture, vec2(texCoord3.x, texCoord0.y)) * w3.x * w0.y
+	vec4 color = texture_linear(rubyTexture, vec2(texCoord0.x, texCoord0.y)) * w0.x * w0.y +
+	             texture_linear(rubyTexture, vec2(texCoord12.x, texCoord0.y)) * w12.x * w0.y +
+	             texture_linear(rubyTexture, vec2(texCoord3.x, texCoord0.y)) * w3.x * w0.y
 
-		+ COMPAT_TEXTURE(rubyTexture, vec2(texCoord0.x, texCoord12.y)) * w0.x * w12.y
-		+ COMPAT_TEXTURE(rubyTexture, vec2(texCoord12.x, texCoord12.y)) * w12.x * w12.y
-		+ COMPAT_TEXTURE(rubyTexture, vec2(texCoord3.x, texCoord12.y)) * w3.x * w12.y
+	           + texture_linear(rubyTexture, vec2(texCoord0.x, texCoord12.y)) * w0.x * w12.y +
+	             texture_linear(rubyTexture, vec2(texCoord12.x, texCoord12.y)) * w12.x * w12.y +
+	             texture_linear(rubyTexture, vec2(texCoord3.x, texCoord12.y)) * w3.x * w12.y
 
-		+ COMPAT_TEXTURE(rubyTexture, vec2(texCoord0.x, texCoord3.y)) * w0.x * w3.y
-		+ COMPAT_TEXTURE(rubyTexture, vec2(texCoord12.x, texCoord3.y)) * w12.x * w3.y
-		+ COMPAT_TEXTURE(rubyTexture, vec2(texCoord3.x, texCoord3.y)) * w3.x * w3.y;
+	           + texture_linear(rubyTexture, vec2(texCoord0.x, texCoord3.y)) * w0.x * w3.y +
+	             texture_linear(rubyTexture, vec2(texCoord12.x, texCoord3.y)) * w12.x * w3.y +
+	             texture_linear(rubyTexture, vec2(texCoord3.x, texCoord3.y)) * w3.x * w3.y;
+
+	FragColor = GAMMA_OUT(color);
 }
 
 #endif

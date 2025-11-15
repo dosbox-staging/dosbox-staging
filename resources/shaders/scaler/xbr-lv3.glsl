@@ -1,4 +1,4 @@
-#version 120
+#version 330 core
 
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2011-2015 Hyllian <sergiogdb@gmail.com>
@@ -21,46 +21,30 @@
 
 #if defined(VERTEX)
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING out
-#define COMPAT_ATTRIBUTE in
-#define COMPAT_TEXTURE texture
-#else
-#define COMPAT_VARYING varying
-#define COMPAT_ATTRIBUTE attribute
-#define COMPAT_TEXTURE texture2D
-#endif
+layout (location = 0) in vec2 a_position;
 
-#ifdef GL_ES
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
+out vec2 v_texCoord;
+out vec4 t1;
+out vec4 t2;
+out vec4 t3;
+out vec4 t4;
+out vec4 t5;
+out vec4 t6;
+out vec4 t7;
 
-COMPAT_ATTRIBUTE vec4 VertexCoord;
-COMPAT_ATTRIBUTE vec4 TexCoord;
-
-COMPAT_ATTRIBUTE vec4 a_position;
-COMPAT_VARYING vec2 v_texCoord;
-
-COMPAT_VARYING vec4 t1;
-COMPAT_VARYING vec4 t2;
-COMPAT_VARYING vec4 t3;
-COMPAT_VARYING vec4 t4;
-COMPAT_VARYING vec4 t5;
-COMPAT_VARYING vec4 t6;
-COMPAT_VARYING vec4 t7;
-
-vec4 _oPosition1;
-uniform COMPAT_PRECISION vec2 rubyOutputSize;
-uniform COMPAT_PRECISION vec2 rubyTextureSize;
-uniform COMPAT_PRECISION vec2 rubyInputSize;
+uniform vec2 rubyOutputSize;
+uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 
 void main()
 {
-	gl_Position = a_position;
-	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize / rubyTextureSize;
+	gl_Position = vec4(a_position, 0.0, 1.0);
+
+	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 *
+	             rubyInputSize / rubyTextureSize;
+
 	vec2 ps = vec2(1.0) / rubyTextureSize.xy;
+
 	float dx = ps.x;
 	float dy = ps.y;
 
@@ -81,39 +65,21 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define COMPAT_PRECISION mediump
-#else
-#define COMPAT_PRECISION
-#endif
+in vec2 v_texCoord;
+in vec4 t1;
+in vec4 t2;
+in vec4 t3;
+in vec4 t4;
+in vec4 t5;
+in vec4 t6;
+in vec4 t7;
 
-#if __VERSION__ >= 130
-#define COMPAT_VARYING in
-#define COMPAT_TEXTURE texture
-out COMPAT_PRECISION vec4 FragColor;
-#else
-#define COMPAT_VARYING varying
-#define FragColor gl_FragColor
-#define COMPAT_TEXTURE texture2D
-#endif
+out vec4 FragColor;
 
-uniform COMPAT_PRECISION vec2 rubyOutputSize;
-uniform COMPAT_PRECISION vec2 rubyTextureSize;
-uniform COMPAT_PRECISION vec2 rubyInputSize;
+uniform vec2 rubyOutputSize;
+uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 uniform sampler2D rubyTexture;
-COMPAT_VARYING vec2 v_texCoord;
-COMPAT_VARYING vec4 t1;
-COMPAT_VARYING vec4 t2;
-COMPAT_VARYING vec4 t3;
-COMPAT_VARYING vec4 t4;
-COMPAT_VARYING vec4 t5;
-COMPAT_VARYING vec4 t6;
-COMPAT_VARYING vec4 t7;
 
 // compatibility #defines
 
@@ -123,11 +89,11 @@ COMPAT_VARYING vec4 t7;
 #define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
 #define OutputSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
 
-uniform COMPAT_PRECISION float XBR_Y_WEIGHT;
-uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD;
-uniform COMPAT_PRECISION float XBR_EQ_THRESHOLD2;
-uniform COMPAT_PRECISION float XBR_LV2_COEFFICIENT;
-uniform COMPAT_PRECISION float XBR_CORNER_TYPE;
+uniform float XBR_Y_WEIGHT;
+uniform float XBR_EQ_THRESHOLD;
+uniform float XBR_EQ_THRESHOLD2;
+uniform float XBR_LV2_COEFFICIENT;
+uniform float XBR_CORNER_TYPE;
 
 const mat3 yuv = mat3(0.299, 0.587, 0.114, -0.169, -0.331, 0.499, 0.499, -0.418, -0.0813);
 const vec4 delta = vec4(0.4, 0.4, 0.4, 0.4);
@@ -179,33 +145,33 @@ void main()
 
 	vec2 fp = fract(vTexCoord * SourceSize.xy);
 
-	vec3 A1 = COMPAT_TEXTURE(rubyTexture, t1.xw).rgb;
-	vec3 B1 = COMPAT_TEXTURE(rubyTexture, t1.yw).rgb;
-	vec3 C1 = COMPAT_TEXTURE(rubyTexture, t1.zw).rgb;
+	vec3 A1 = texture(rubyTexture, t1.xw).rgb;
+	vec3 B1 = texture(rubyTexture, t1.yw).rgb;
+	vec3 C1 = texture(rubyTexture, t1.zw).rgb;
 
-	vec3 A = COMPAT_TEXTURE(rubyTexture, t2.xw).rgb;
-	vec3 B = COMPAT_TEXTURE(rubyTexture, t2.yw).rgb;
-	vec3 C = COMPAT_TEXTURE(rubyTexture, t2.zw).rgb;
+	vec3 A = texture(rubyTexture, t2.xw).rgb;
+	vec3 B = texture(rubyTexture, t2.yw).rgb;
+	vec3 C = texture(rubyTexture, t2.zw).rgb;
 
-	vec3 D = COMPAT_TEXTURE(rubyTexture, t3.xw).rgb;
-	vec3 E = COMPAT_TEXTURE(rubyTexture, t3.yw).rgb;
-	vec3 F = COMPAT_TEXTURE(rubyTexture, t3.zw).rgb;
+	vec3 D = texture(rubyTexture, t3.xw).rgb;
+	vec3 E = texture(rubyTexture, t3.yw).rgb;
+	vec3 F = texture(rubyTexture, t3.zw).rgb;
 
-	vec3 G = COMPAT_TEXTURE(rubyTexture, t4.xw).rgb;
-	vec3 H = COMPAT_TEXTURE(rubyTexture, t4.yw).rgb;
-	vec3 I = COMPAT_TEXTURE(rubyTexture, t4.zw).rgb;
+	vec3 G = texture(rubyTexture, t4.xw).rgb;
+	vec3 H = texture(rubyTexture, t4.yw).rgb;
+	vec3 I = texture(rubyTexture, t4.zw).rgb;
 
-	vec3 G5 = COMPAT_TEXTURE(rubyTexture, t5.xw).rgb;
-	vec3 H5 = COMPAT_TEXTURE(rubyTexture, t5.yw).rgb;
-	vec3 I5 = COMPAT_TEXTURE(rubyTexture, t5.zw).rgb;
+	vec3 G5 = texture(rubyTexture, t5.xw).rgb;
+	vec3 H5 = texture(rubyTexture, t5.yw).rgb;
+	vec3 I5 = texture(rubyTexture, t5.zw).rgb;
 
-	vec3 A0 = COMPAT_TEXTURE(rubyTexture, t6.xy).rgb;
-	vec3 D0 = COMPAT_TEXTURE(rubyTexture, t6.xz).rgb;
-	vec3 G0 = COMPAT_TEXTURE(rubyTexture, t6.xw).rgb;
+	vec3 A0 = texture(rubyTexture, t6.xy).rgb;
+	vec3 D0 = texture(rubyTexture, t6.xz).rgb;
+	vec3 G0 = texture(rubyTexture, t6.xw).rgb;
 
-	vec3 C4 = COMPAT_TEXTURE(rubyTexture, t7.xy).rgb;
-	vec3 F4 = COMPAT_TEXTURE(rubyTexture, t7.xz).rgb;
-	vec3 I4 = COMPAT_TEXTURE(rubyTexture, t7.xw).rgb;
+	vec3 C4 = texture(rubyTexture, t7.xy).rgb;
+	vec3 F4 = texture(rubyTexture, t7.xz).rgb;
+	vec3 I4 = texture(rubyTexture, t7.xw).rgb;
 
 	vec4 b = transpose(mat4x3(B, D, H, F)) * (XBR_Y_WEIGHT * yuv[0]);
 	vec4 c = transpose(mat4x3(C, A, G, I)) * (XBR_Y_WEIGHT * yuv[0]);

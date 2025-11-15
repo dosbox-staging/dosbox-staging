@@ -464,13 +464,7 @@ void ShaderManager::SetShaderSetting(const std::string& name, const std::string&
 
 	const auto is_true = (value == "1") || has_true(value);
 
-	if (name == "use_srgb_texture") {
-		settings.use_srgb_texture = is_true;
-
-	} else if (name == "use_srgb_framebuffer") {
-		settings.use_srgb_framebuffer = is_true;
-
-	} else if (name == "force_single_scan") {
+	if (name == "force_single_scan") {
 		settings.force_single_scan = is_true;
 
 	} else if (name == "force_no_pixel_doubling") {
