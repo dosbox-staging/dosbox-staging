@@ -197,20 +197,26 @@ struct RenderedImage {
 // These settings are applied to the emulated image as a post-processing step.
 //
 struct ImageAdjustmentSettings {
-	// 1.0 means original colours (no adjustment)
-	float brightness = 1.0;
-	float contrast   = 1.0;
-	float saturation = 1.0;
-
-	// 0.0 means original colours (no adjustment)
-	float red_gain   = 0.0;
-	float green_gain = 0.0;
-	float blue_gain  = 0.0;
-
 	bool adjust_white_balance = false;
 
 	// White balance in Kelvin (K); valid range is from 1000 K to 12,000 K
-	float white_balance = 6500;
+	float white_balance_temperature = 6500;
+
+	float red_offset   = 0.0;
+	float green_offset = 0.0;
+	float blue_offset  = 0.0;
+
+	// 0.0 - 2.0, default 1.0
+	float brightness = 1.0;
+
+	// -2.0 - 2.0, default 0.0
+	float contrast = 0.0;
+
+	// 0.0 2.0, default 1.0
+	float saturation = 1.0;
+
+	// -100.0 25.0, default 0.0
+	float black_level = 0.0;
 };
 
 enum class ColourSpace {

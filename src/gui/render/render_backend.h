@@ -106,6 +106,9 @@ public:
 	// Enables or disables vsync.
 	virtual void SetVsync(const bool is_enabled) = 0;
 
+	// TODO
+	virtual void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings) = 0;
+
 	// Read the specified rectangle of the post-shader from the window's
 	// framebuffer.
 	virtual RenderedImage ReadPixelsPostShader(const DosBox::Rect output_rect_px) = 0;

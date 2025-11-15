@@ -374,6 +374,9 @@ void SdlRenderer::SetVsync(const bool is_enabled)
 	}
 }
 
+void SdlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings)
+{}
+
 RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_px)
 {
 	// Create new image

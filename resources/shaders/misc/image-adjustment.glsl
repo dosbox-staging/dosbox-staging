@@ -6,7 +6,7 @@
 // Most of the code was taken from various sources with minor adjustments:
 //
 //  - White point mapping: Dogway, Neil Bartlett, Tanner Helland
-//  - Colur space transforms: Guest, DrVenom
+//  - Colur space transforms & the rest: guest(r), Dr. Venom
 //
 
 #pragma parameter WP_ADJUST "White Point Adjustments [ OFF | ON ]" 0.0 0.0 1.0 1.0
@@ -18,8 +18,7 @@
 #pragma parameter BRIGHTNESS "Brightness" 1.0 0.0 2.0 0.01
 #pragma parameter CONTRAST "Contrast" 0.0 -2.0 2.0 0.05
 #pragma parameter SATURATION "Saturation" 1.0 0.0 2.0 0.05
-#pragma parameter BLACK_POINT "Black Point" 0.0 -100.0 25.0 1.0
-#pragma parameter OUTPUT_GAMMA "OUTPUT GAMMA" 2.4 0.0 5.0 0.1
+#pragma parameter BLACK_LEVEL "Black Level" 0.0 -100.0 25.0 1.0
 
 #if defined(VERTEX)
 
@@ -50,7 +49,10 @@ uniform float WP_RED_OFFSET;
 uniform float WP_GREEN_OFFSET;
 uniform float WP_BLUE_OFFSET;
 
-uniform float OUTPUT_GAMMA;
+uniform float BRIGHTNESS;
+uniform float CONTRAST;
+uniform float SATURATION;
+uniform float BLACK_LEVEL;
 
 #define WP_LUMA_PRESERVE 1.0
 
@@ -153,35 +155,12 @@ vec3 plant(vec3 tar, float r)
 // From guest-advanced
 float contrast(float x)
 {
-	return max(mix(x, smoothstep(0.0, 1.0, x), params.contr), 0.0);
+	return max(mix(x, smoothstep(0.0, 1.0, x), CONTRAST), 0.0);
 }
 
 void main()
 {
 	vec3 color = texture(inputTexture, v_texCoord).rgb;
-
-	// Saturation (from guest-advanced)
-	vec3 scolor1 = plant(pow(color, vec3(SATURATION)),
-	                     max(max(color.r, color.g), color.b));
-
-	float luma   = dot(color, vec3(0.299, 0.587, 0.114));
-	vec3 scolor2 = mix(vec3(luma), color, SATURATION);
-	color        = (SATURATION > 1.0) ? scolor1 : scolor2;
-
-	// Contrast
-	color = plant(color, contrast(max(max(color.r, color.g), color.b)));
-
-	// Black point
-	if (BLACK_POINT > -0.5) {
-		color = color + aftglow.rgb + BLACK_POINT;
-	} else {
-		color = max(color + BLACK_POINT / 255.0, 0.0) /
-		        (1.0 + BLACK_POINT / 255.0 *
-		                       step(-BLACK_POINT / 255.0,
-		                            max(max(color.r, color.g), color.b)));
-	}
-
-	color *= BRIGHTNESS;
 
 	// Colour temperature
 	if (WP_ADJUST == 1.0) {
@@ -197,9 +176,28 @@ void main()
 		color = XYZ_to_sRGB(YxytoXYZ(wp_adjusted));
 	}
 
+	// Saturation (from guest-advanced)
+	vec3 scolor1 = plant(pow(color, vec3(SATURATION)),
+	                     max(max(color.r, color.g), color.b));
 
-	// Output gamma
-//	color = clamp(pow(color, vec4(1.0 / OUTPUT_GAMMA)), 0.0, 1.0);
+	float luma   = dot(color, vec3(0.299, 0.587, 0.114));
+	vec3 scolor2 = mix(vec3(luma), color, SATURATION);
+	color        = (SATURATION > 1.0) ? scolor1 : scolor2;
+
+	// Contrast
+	color = plant(color, contrast(max(max(color.r, color.g), color.b)));
+
+	// Black point
+	if (BLACK_LEVEL > -0.5) {
+		color = color + BLACK_LEVEL;
+	} else {
+		color = max(color + BLACK_LEVEL / 255.0, 0.0) /
+		        (1.0 + BLACK_LEVEL / 255.0 *
+		                       step(-BLACK_LEVEL / 255.0,
+		                            max(max(color.r, color.g), color.b)));
+	}
+
+	color *= BRIGHTNESS;
 
 	FragColor = vec4(color, 1.0);
 }

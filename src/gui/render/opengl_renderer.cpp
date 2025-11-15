@@ -433,6 +433,9 @@ void OpenGlRenderer::RenderPass2()
 
 	glUseProgram(shader.program_object);
 
+	const ImageAdjustmentSettings settings = {};
+	SetImageAdjustmentSettings(settings);
+
 	const GLint input_texture = glGetUniformLocation(shader.program_object,
 	                                                 "inputTexture");
 	glUniform1i(input_texture, 0);
@@ -914,6 +917,42 @@ void OpenGlRenderer::SetVsync(const bool is_enabled)
 		            (is_enabled ? "enabling" : "disabling"),
 		            SDL_GetError());
 	}
+}
+
+void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings)
+{
+	const auto maybe_shader = GetOrLoadAndCacheShader(ImageAdjustmentShaderName);
+	assert(maybe_shader);
+	const auto shader = *maybe_shader;
+
+	glUseProgram(shader.program_object);
+
+	glUniform1f(glGetUniformLocation(shader.program_object, "WP_ADJUST"),
+	            settings.adjust_white_balance ? 1.0 : 0.0);
+
+	glUniform1f(glGetUniformLocation(shader.program_object, "WP_TEMPERATURE"),
+	            settings.white_balance_temperature);
+
+	glUniform1f(glGetUniformLocation(shader.program_object, "WP_RED_OFFSET"),
+	            settings.red_offset);
+
+	glUniform1f(glGetUniformLocation(shader.program_object, "WP_GREEN_OFFSET"),
+	            settings.green_offset);
+
+	glUniform1f(glGetUniformLocation(shader.program_object, "WP_BLUE_OFFSET"),
+	            settings.blue_offset);
+
+	glUniform1f(glGetUniformLocation(shader.program_object, "BRIGHTNESS"),
+	            settings.brightness);
+
+	glUniform1f(glGetUniformLocation(shader.program_object, "CONTRAST"),
+	            settings.contrast);
+
+	glUniform1f(glGetUniformLocation(shader.program_object, "SATURATION"),
+	            settings.saturation);
+
+	glUniform1f(glGetUniformLocation(shader.program_object, "BLACK_LEVEL"),
+	            settings.black_level);
 }
 
 ShaderInfo OpenGlRenderer::GetCurrentShaderInfo()
