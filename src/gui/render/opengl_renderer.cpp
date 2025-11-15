@@ -65,25 +65,14 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
                                             const int width, const int height,
                                             const uint32_t sdl_window_flags)
 {
-	// TODO Ideally, all of these calls should be checked for failure.
-
-	// Request 24-bits sRGB framebuffer, don't care about depth buffer
+	// Request 24-bits framebuffer, don't care about depth buffer
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	// SDL_GL_SetAttribute() is not a reliable error point.
-	// SDL mostly only does sanity checks to ensure we pass valid values.
-	// Success does not mean we will actually get an sRGB framebuffer.
-	// We won't know if it actually worked until after we create the window.
-	if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
-		LOG_ERR("OPENGL: Error requesting an sRGB framebuffer: %s",
-		        SDL_GetError());
-	}
-
-	// Explicitly request an OpenGL 2.1 compatibility context
+	// Request an OpenGL 3.3 core profile context
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
@@ -94,17 +83,7 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	auto flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
-	SDL_Window* window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
-	if (!window) {
-		// Try again without sRGB. This has been a problem with KMSDRM.
-		SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 0);
-		window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
-		if (window) {
-			LOG_ERR("OPENGL: Failed to create an sRGB framebuffer. Falling back to non-sRGB.");
-		}
-	}
-
-	return window;
+	return SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
 }
 
 bool OpenGlRenderer::InitRenderer()
@@ -268,13 +247,6 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_param);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_param);
 
-	// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
-	// with Mesa drivers on certain integrated Intel GPUs
-	const auto texture_format = shader_settings.use_srgb_texture &&
-	                                            is_framebuffer_srgb_capable
-	                                  ? GL_SRGB8_ALPHA8
-	                                  : GL_RGB8;
-
 	// Just create the texture; we'll copy the image data later with
 	// `glTexSubImage2D()`
 	//
@@ -288,15 +260,6 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	             GL_UNSIGNED_BYTE, // pixel data type
 	             nullptr           // pointer to image data
 	);
-
-	if (shader_settings.use_srgb_framebuffer && is_framebuffer_srgb_capable) {
-		glEnable(GL_FRAMEBUFFER_SRGB);
-#if 0
-			LOG_MSG("OPENGL: Using sRGB framebuffer");
-#endif
-	} else {
-		glDisable(GL_FRAMEBUFFER_SRGB);
-	}
 
 	constexpr auto BytesPerPixel = 4;
 
