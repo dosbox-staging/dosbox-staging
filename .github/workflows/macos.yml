@@ -95,7 +95,9 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: dosbox-${{ matrix.conf.arch }}
-          path: build/release-macos-${{ matrix.conf.arch }}/Release/dosbox
+          path: |
+            build/release-macos-${{ matrix.conf.arch }}/Release/dosbox
+            build/release-macos-${{ matrix.conf.arch }}/Release/crashpad_handler
           overwrite: true
 
       - name: Upload resources

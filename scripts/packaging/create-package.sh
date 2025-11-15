@@ -152,9 +152,11 @@ pkg_macos()
     # Create universal binary from both architectures
     mkdir dosbox-universal
     lipo dosbox-x86_64/dosbox dosbox-arm64/dosbox -create -output dosbox-universal/dosbox
+    lipo dosbox-x86_64/crashpad_handler dosbox-arm64/crashpad_handler -create -output dosbox-universal/crashpad_handler
 
     install -d   "${macos_content_dir}/MacOS/"
-    install      dosbox-universal/dosbox                 "${macos_content_dir}/MacOS/"
+    install      dosbox-universal/dosbox                "${macos_content_dir}/MacOS/"
+    install      dosbox-universal/crashpad_handler      "${macos_content_dir}/MacOS/"
     install_file extras/macos/Info.plist.template       "${macos_content_dir}/Info.plist"
     install_file extras/macos/PkgInfo                   "${macos_content_dir}/PkgInfo"
     install_file extras/icons/macos/dosbox-staging.icns "${macos_content_dir}/Resources/"
