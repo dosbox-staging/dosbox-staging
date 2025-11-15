@@ -915,19 +915,6 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
 
 	sdl.draw.callback = callback;
 
-	// Update fullscreen display mode.
-	if (!sdl.is_fullscreen) {
-		SDL_DisplayMode desired = {};
-		SDL_GetDesktopDisplayMode(sdl.display_number, &desired);
-
-		desired.w = sdl.draw.render_width_px;
-		desired.h = sdl.draw.render_height_px;
-
-		SDL_DisplayMode closest = {};
-		SDL_GetClosestDisplayMode(sdl.display_number, &desired, &closest);
-		SDL_SetWindowDisplayMode(sdl.window, &closest);
-	}
-
 	if (!sdl.renderer->UpdateRenderSize(sdl.draw.render_width_px,
 	                                    sdl.draw.render_height_px)) {
 		LOG_ERR("SDL: Error updating texture");
