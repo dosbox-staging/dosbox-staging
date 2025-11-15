@@ -51,7 +51,8 @@ static void maybe_log_opengl_error(const char* message)
 #endif
 
 constexpr auto GlslExtension = ".glsl";
-constexpr auto ImageAdjustmentShaderName = "misc/image-adjustment";
+//constexpr auto ImageAdjustmentShaderName = "misc/image-adjustment";
+constexpr auto ImageAdjustmentShaderName = "misc/screen";
 
 // A safe wrapper around that returns the default result on failure
 static const char* safe_gl_get_string(const GLenum requested_name,
@@ -198,6 +199,9 @@ bool OpenGlRenderer::InitRenderer()
 
 	glDisable(GL_DEPTH_TEST);
 
+	// Create off-screen framebuffer
+	glGenFramebuffers(1, &framebuffer);
+	
 	if (!GetOrLoadAndCacheShader(ImageAdjustmentShaderName)) {
 		E_Exit("OPENGL: Cannot load '%s' shader, exiting",
 		       ImageAdjustmentShaderName);
@@ -261,31 +265,33 @@ void OpenGlRenderer::UpdateViewport(const DosBox::Rect _draw_rect_px)
 {
 	draw_rect_px = _draw_rect_px;
 
-	// Create off-screen framebuffer
-	glGenFramebuffers(1, &framebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
 	// Create a color attachment texture
+	glActiveTexture(GL_TEXTURE0);
+
 	if (textureColorbuffer) {
 		glDeleteTextures(1, &textureColorbuffer);
 	}
 	glGenTextures(1, &textureColorbuffer);
-
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 
 	glTexImage2D(GL_TEXTURE_2D,
 	             0,
-	             GL_RGB16F,
-	             draw_rect_px.w,
-	             draw_rect_px.h,
+	             GL_RGB8,
+	             static_cast<GLsizei>(draw_rect_px.w),
+	             static_cast<GLsizei>(draw_rect_px.h),
 	             0,
 	             GL_BGRA,
-	             GL_UNSIGNED_BYTE,
+	             GL_UNSIGNED_BYTE, //GL_HALF_FLOAT,
 	             nullptr);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
+	// Set up framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 	glFramebufferTexture2D(GL_FRAMEBUFFER,
 	                       GL_COLOR_ATTACHMENT0,
 	                       GL_TEXTURE_2D,
@@ -295,7 +301,6 @@ void OpenGlRenderer::UpdateViewport(const DosBox::Rect _draw_rect_px)
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		LOG_ERR("OPENGL: Framebuffer is not complete");
 	}
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// Set viewport
@@ -424,6 +429,12 @@ void OpenGlRenderer::PrepareFrame()
 	assert(!last_framebuf.empty());
 
 	if (last_framebuf_dirty) {
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+
 		glTexSubImage2D(GL_TEXTURE_2D,
 		                0,
 		                0,
@@ -442,17 +453,17 @@ void OpenGlRenderer::PrepareFrame()
 
 void OpenGlRenderer::PresentFrame()
 {
-	glBindVertexArray(vao);
 
 	// Apply user-configured shader and render into an off-screen buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 	glClear(GL_COLOR_BUFFER_BIT);
-
-	glBindTexture(GL_TEXTURE_2D, texture);
 
 	glUseProgram(current_shader.program_object);
 	UpdateUniforms();
 
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	// Apply image adjustments post-processing shader and render into the
@@ -461,20 +472,20 @@ void OpenGlRenderer::PresentFrame()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Set texture slot
-//	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+	const auto maybe_shader = GetOrLoadAndCacheShader(ImageAdjustmentShaderName);
+	assert(maybe_shader);
+	const auto shader = *maybe_shader;
 
-//	const auto maybe_shader = GetOrLoadAndCacheShader(ImageAdjustmentShaderName);
-//	assert(maybe_shader);
-//	const auto shader = *maybe_shader;
+	glUseProgram(shader.program_object);
 
-//	glUseProgram(shader.program_object);
-	// TODO set uniforms
+	const GLint texture_uniform = glGetUniformLocation(shader.program_object,
+	                                                   "inputTexture");
+	glUniform1i(texture_uniform, 0);
 
-//	const GLint texture_uniform = glGetUniformLocation(shader.program_object,
-//	                                                   "inputTexture");
-//	glUniform1i(texture_uniform, 0);
-
-//	glDrawArrays(GL_TRIANGLES, 0, 3);
+//	glActiveTexture(GL_TEXTURE0);
+	glBindVertexArray(vao);
+	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	// Optionally capture frame
 	if (CAPTURE_IsCapturingPostRenderImage()) {
