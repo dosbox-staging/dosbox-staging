@@ -2006,7 +2006,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		}
 
 	} else {
-		assertm(false, "Unhandled [sdl] section setting");
+		LOG_WARNING("SDL: Runtime change unhandled for property: '%s'", prop_name.c_str());
 	}
 }
 
