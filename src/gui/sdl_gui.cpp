@@ -152,37 +152,31 @@ SDL_Window* GFX_GetWindow()
 
 double GFX_GetHostRefreshRate()
 {
-	auto refresh_rate = [] {
-		SDL_DisplayMode mode = {};
+	SDL_DisplayMode mode = {};
 
-		const auto sdl_rate = mode.refresh_rate;
+	assert(sdl.window);
+	const auto display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
 
-		assert(sdl.window);
-		const auto display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
+	constexpr auto DefaultHostRefreshRateHz = 60;
 
-		constexpr auto DefaultHostRefreshRateHz = 60;
+	if (display_in_use < 0) {
+		LOG_ERR("SDL: Could not get the current window index: %s",
+				SDL_GetError());
+		return DefaultHostRefreshRateHz;
+	}
+	if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
+		LOG_ERR("SDL: Could not get the current display mode: %s",
+				SDL_GetError());
+		return DefaultHostRefreshRateHz;
+	}
+	if (mode.refresh_rate < RefreshRateMin) {
+		LOG_WARNING("SDL: Got a strange refresh rate of %d Hz",
+					mode.refresh_rate);
+		return DefaultHostRefreshRateHz;
+	}
 
-		if (display_in_use < 0) {
-			LOG_ERR("SDL: Could not get the current window index: %s",
-			        SDL_GetError());
-			return DefaultHostRefreshRateHz;
-		}
-		if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
-			LOG_ERR("SDL: Could not get the current display mode: %s",
-			        SDL_GetError());
-			return DefaultHostRefreshRateHz;
-		}
-		if (sdl_rate < RefreshRateMin) {
-			LOG_WARNING("SDL: Got a strange refresh rate of %d Hz",
-			            sdl_rate);
-			return DefaultHostRefreshRateHz;
-		}
-
-		assert(sdl_rate >= RefreshRateMin);
-		return sdl_rate;
-	}();
-
-	return refresh_rate;
+	assert(mode.refresh_rate >= RefreshRateMin);
+	return mode.refresh_rate;
 }
 
 static void validate_vsync_and_presentation_mode_settings()
