@@ -1455,9 +1455,6 @@ static int get_sdl_window_flags()
 		case FullscreenMode::Standard:
 			flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 			break;
-		case FullscreenMode::Original:
-			flags |= SDL_WINDOW_FULLSCREEN;
-			break;
 		case FullscreenMode::ForcedBorderless:
 			// no-op
 			break;
@@ -1612,14 +1609,9 @@ static void configure_fullscreen_mode()
 	if (fullscreen_mode_pref == "standard") {
 		set_screen_bounds();
 		sdl.fullscreen.mode = FullscreenMode::Standard;
-
 	} else if (fullscreen_mode_pref == "forced-borderless") {
 		set_screen_bounds();
 		sdl.fullscreen.mode = FullscreenMode::ForcedBorderless;
-
-	} else if (fullscreen_mode_pref == "original") {
-		set_screen_bounds();
-		sdl.fullscreen.mode = FullscreenMode::Original;
 	}
 }
 
@@ -2673,19 +2665,11 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "                      borderless mode might result in decreased performance\n"
 	        "                      and slightly worse frame pacing (e.g., scrolling in 2D\n"
 	        "                      games not appearing perfectly smooth).");
-
-	pstring->SetOptionHelp(
-	        "original",
-	        "  original:           Exclusive fullscreen mode at the game's original\n"
-	        "                      resolution, or at the closest available resolution. This\n"
-	        "                      is a niche option for using DOSBox Staging with a CRT\n"
-	        "                      monitor. Toggling fullscreen might result in janky\n"
-	        "                      behaviour in this mode.");
 	pstring->SetValues({"standard",
 #ifdef WIN32
 	                    "forced-borderless",
 #endif
-	                    "original"});
+	                    });
 
 	pstring->SetDeprecatedWithAlternateValue("desktop", "standard");
 
