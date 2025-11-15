@@ -95,7 +95,7 @@ libcpu = static_library(
         tracy_dep,
         libloguru_dep,
     ],
-    cpp_args: warnings,
+    cpp_args: [ warnings, '-fpermissive' ]
 )
 
 libcpu_dep = declare_dependency(link_with: libcpu)

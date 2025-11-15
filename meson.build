@@ -298,6 +298,14 @@ if is_optimized_buildtype and zlib_ng_is_native
     message('Enabling native SIMD optimizations')
 endif
 
+# ALTIVEC on PowerPC64
+# ~~~~~~~~~~~~~~~
+if target_machine.cpu_family() == 'ppc64'
+    zlib_ng_options += 'altivec'
+    simd_instruction_sets += 'ALTIVEC'
+    message('Using the ALTIVEC instruction set')
+endif
+
 # NEON on Aarch64
 # ~~~~~~~~~~~~~~~
 if target_machine.cpu_family() == 'aarch64'
