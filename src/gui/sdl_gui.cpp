@@ -1599,14 +1599,7 @@ static void configure_fullscreen_mode()
 	sdl.is_fullscreen = control->arguments.fullscreen ||
 	                    section->GetBool("fullscreen");
 
-	const auto fullscreen_mode_pref = [&] {
-		auto legacy_pref = section->GetString("fullresolution");
-		if (!legacy_pref.empty()) {
-			set_section_property_value("sdl", "fullresolution", "");
-			set_section_property_value("sdl", "fullscreen_mode", legacy_pref);
-		}
-		return section->GetString("fullscreen_mode");
-	}();
+	const auto fullscreen_mode_pref = section->GetString("fullscreen_mode");
 
 	auto set_screen_bounds = [] {
 		SDL_Rect bounds;
@@ -2660,10 +2653,10 @@ static void init_sdl_config_settings(SectionProp& section)
 	auto pbool = section.AddBool("fullscreen", Always, false);
 	pbool->SetHelp("Start in fullscreen mode ('off' by default).");
 
-	pstring = section.AddString("fullresolution", DeprecatedButAllowed, "");
+	pstring = section.AddString("fullresolution", Deprecated, "");
 	pstring->SetHelp(
-	        "The [color=light-green]'fullresolution'[reset] setting is deprecated but still accepted;\n"
-	        "please use [color=light-green]'fullscreen_mode'[reset] instead.");
+	        "The [color=light-green]'fullresolution'[reset] setting has been removed.\n"
+	        "Please use [color=light-green]'fullscreen_mode'[reset] instead.");
 
 	pstring = section.AddString("fullscreen_mode", Always, "standard");
 	pstring->SetHelp("Set the fullscreen mode ('standard' by default):");
