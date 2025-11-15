@@ -225,12 +225,12 @@ void OpenGlRenderer::UpdateViewport(const DosBox::Rect _draw_rect_px)
 
 	glTexImage2D(GL_TEXTURE_2D,
 	             0,
-	             GL_RGB8,
+	             GL_RGB32F,
 	             static_cast<GLsizei>(draw_rect_px.w),
 	             static_cast<GLsizei>(draw_rect_px.h),
 	             0,
 	             GL_BGRA,
-	             GL_UNSIGNED_BYTE, // GL_HALF_FLOAT,
+	             GL_FLOAT,
 	             nullptr);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -436,6 +436,8 @@ void OpenGlRenderer::RenderPass2()
 	const GLint input_texture = glGetUniformLocation(shader.program_object,
 	                                                 "inputTexture");
 	glUniform1i(input_texture, 0);
+	
+	UpdateUniforms();
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, render_pass_1.texture);

@@ -11,11 +11,14 @@
 
 #pragma parameter WP_ADJUST "White Point Adjustments [ OFF | ON ]" 0.0 0.0 1.0 1.0
 #pragma parameter WP_TEMPERATURE "White Point" 9300.0 1000.0 12000.0 72.0
-#pragma parameter WP_LUMA_PRESERVE "Preserve Luminance [ OFF | ON ]" 1.0 0.0 1.0 1.0
 #pragma parameter WP_RED "Red Shift" 0.0 -1.0 1.0 0.01
 #pragma parameter WP_GREEN "Green Shift" 0.0 -1.0 1.0 0.01
 #pragma parameter WP_BLUE "Blue Shift" 0.0 -1.0 1.0 0.01
 
+#pragma parameter BRIGHTNESS "Brightness" 1.0 0.0 2.0 0.01
+#pragma parameter CONTRAST "Contrast" 0.0 -2.0 2.0 0.05
+#pragma parameter SATURATION "Saturation" 1.0 0.0 2.0 0.05
+#pragma parameter BLACK_POINT "Black Point" 0.0 -100.0 25.0 1.0
 #pragma parameter OUTPUT_GAMMA "OUTPUT GAMMA" 2.4 0.0 5.0 0.1
 
 #if defined(VERTEX)
@@ -30,7 +33,7 @@ void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 }
 
 #elif defined(FRAGMENT)
@@ -43,12 +46,13 @@ uniform sampler2D inputTexture;
 
 uniform float WP_ADJUST;
 uniform float WP_TEMPERATURE;
-uniform float WP_LUMA_PRESERVE;
 uniform float WP_RED_OFFSET;
 uniform float WP_GREEN_OFFSET;
 uniform float WP_BLUE_OFFSET;
 
 uniform float OUTPUT_GAMMA;
+
+#define WP_LUMA_PRESERVE 1.0
 
 // White Point Mapping
 //          ported by Dogway
@@ -139,14 +143,50 @@ vec3 YxytoXYZ(vec3 Yxy) {
     return XYZ;
 }
 
+// From guest-advanced
+vec3 plant(vec3 tar, float r)
+{
+	float t = max(max(tar.r, tar.g), tar.b) + 0.00001;
+	return tar * r / t;
+}
+
+// From guest-advanced
+float contrast(float x)
+{
+	return max(mix(x, smoothstep(0.0, 1.0, x), params.contr), 0.0);
+}
+
 void main()
 {
 	vec3 color = texture(inputTexture, v_texCoord).rgb;
 
-/*	// Colour temperature
+	// Saturation (from guest-advanced)
+	vec3 scolor1 = plant(pow(color, vec3(SATURATION)),
+	                     max(max(color.r, color.g), color.b));
+
+	float luma   = dot(color, vec3(0.299, 0.587, 0.114));
+	vec3 scolor2 = mix(vec3(luma), color, SATURATION);
+	color        = (SATURATION > 1.0) ? scolor1 : scolor2;
+
+	// Contrast
+	color = plant(color, contrast(max(max(color.r, color.g), color.b)));
+
+	// Black point
+	if (BLACK_POINT > -0.5) {
+		color = color + aftglow.rgb + BLACK_POINT;
+	} else {
+		color = max(color + BLACK_POINT / 255.0, 0.0) /
+		        (1.0 + BLACK_POINT / 255.0 *
+		                       step(-BLACK_POINT / 255.0,
+		                            max(max(color.r, color.g), color.b)));
+	}
+
+	color *= BRIGHTNESS;
+
+	// Colour temperature
 	if (WP_ADJUST == 1.0) {
-		vec3 wp_adjusted   = wp_adjust(color.rgb);
-		vec3 base_luma     = XYZtoYxy(sRGB_to_XYZ(color.rgb));
+		vec3 wp_adjusted   = wp_adjust(color);
+		vec3 base_luma     = XYZtoYxy(sRGB_to_XYZ(color));
 		vec3 adjusted_luma = XYZtoYxy(sRGB_to_XYZ(wp_adjusted));
 
 		wp_adjusted = (WP_LUMA_PRESERVE == 1.0)
@@ -154,13 +194,14 @@ void main()
 		                                       vec3(adjusted_luma.r, 0., 0.))
 		                    : adjusted_luma;
 
-		color = vec4(XYZ_to_sRGB(YxytoXYZ(wp_adjusted)), 1.0);
+		color = XYZ_to_sRGB(YxytoXYZ(wp_adjusted));
 	}
 
-	// Output gamma
-	color = clamp(pow(color, vec4(1.0 / OUTPUT_GAMMA)), 0.0, 1.0); */
 
-	FragColor = vec4(color.rgb, 1.0);
+	// Output gamma
+//	color = clamp(pow(color, vec4(1.0 / OUTPUT_GAMMA)), 0.0, 1.0);
+
+	FragColor = vec4(color, 1.0);
 }
 
 #endif

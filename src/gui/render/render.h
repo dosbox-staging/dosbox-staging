@@ -203,10 +203,11 @@ struct ImageAdjustmentSettings {
 	float saturation = 1.0;
 
 	// 0.0 means original colours (no adjustment)
-	float rgb_offset   = 0.0;
-	float red_offset   = 0.0;
-	float green_offset = 0.0;
-	float blue_offset  = 0.0;
+	float red_gain   = 0.0;
+	float green_gain = 0.0;
+	float blue_gain  = 0.0;
+
+	bool adjust_white_balance = false;
 
 	// White balance in Kelvin (K); valid range is from 1000 K to 12,000 K
 	float white_balance = 6500;
