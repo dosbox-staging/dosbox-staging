@@ -25,6 +25,7 @@
 CHECK_NARROWING();
 
 // #define DEBUG_OPENGL
+// #define USE_DEBUG_CONTEXT
 
 constexpr auto GlslExtension = ".glsl";
 
@@ -72,9 +73,19 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+#ifdef USE_DEBUG_CONTEXT
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+
+	// Request an OpenGL 4.3 core profile context (debug output became a
+	// core part of OpenGL since version 4.3). Note the macOS doesn't seem
+	// to support debug contexts at all.
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+#else
 	// Request an OpenGL 3.3 core profile context
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+#endif
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
 	                    SDL_GL_CONTEXT_PROFILE_CORE);
@@ -85,6 +96,14 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 
 	return SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
 }
+
+#ifdef USE_DEBUG_CONTEXT
+void glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity,
+                   GLsizei length, const char* message, const void* userParam)
+{
+	LOG_DEBUG("OPENGL: %s", message);
+}
+#endif
 
 bool OpenGlRenderer::InitRenderer()
 {
@@ -97,6 +116,20 @@ bool OpenGlRenderer::InitRenderer()
 	context = new_context;
 
 	const auto version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+
+#ifdef USE_DEBUG_CONTEXT
+	GLint flags;
+	glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+	if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(glDebugOutput, nullptr);
+		glDebugMessageControl(
+		        GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+	} else {
+		LOG_WARNING("OPENGL: Could not initialise debug context");
+	}
+#endif
 
 	GLint size = 0;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
