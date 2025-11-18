@@ -56,7 +56,10 @@ uniform float CONTRAST;
 uniform float SATURATION;
 uniform float BLACK_LEVEL;
 
-#define WP_LUMA_PRESERVE 1.0
+uniform float BLACK_LEVEL;
+
+uniform float COLORSPACE 1.0
+uniform float COLOR_PRESET 1.0
 
 // White Point Mapping
 //          ported by Dogway
@@ -145,6 +148,82 @@ vec3 YxytoXYZ(vec3 Yxy) {
     float Xsz = (Yxy.r <= 0.0) ? 0 : 1;
     vec3 XYZ = vec3(Xsz,Xsz,Xsz) * vec3(Xs, Yxy.r, (Xs/Yxy.g)-Xs-Yxy.r);
     return XYZ;
+}
+
+vec3 apply_color_profile(vec3 color, int profile)
+{
+	const mat3x3 profile1 = mat3x3(0.412391, 0.357584, 0.180481,
+	                               0.212639, 0.715169, 0.072192,
+	                               0.019331, 0.119195, 0.950532);
+
+	const mat3x3 profile2 = mat3x3(0.430554, 0.341550, 0.178352,
+	                               0.222004, 0.706655, 0.071341,
+	                               0.020182, 0.129553, 0.939322);
+
+	const mat3x3 profile3 = mat3x3(0.396686, 0.372504, 0.181266,
+	                               0.210299, 0.713766, 0.075936,
+	                               0.006131, 0.115356, 0.967571);
+
+	const mat3x3 profile4 = mat3x3(0.393521, 0.365258, 0.191677,
+	                               0.212376, 0.701060, 0.086564,
+	                               0.018739, 0.111934, 0.958385);
+
+	const mat3x3 profile5 = mat3x3(0.392258, 0.351135, 0.166603,
+	                               0.209410, 0.725680, 0.064910,
+	                               0.016061, 0.093636, 0.850324);
+
+	const mat3x3 profile6 = mat3x3(0.377923, 0.317366, 0.207738,
+	                               0.195679, 0.722319, 0.082002,
+	                               0.010514, 0.097826, 1.076960);
+
+	if      (profile == 1) color *= profile1
+	else if (profile == 2) color *= profile2
+	else if (profile == 3) color *= profile3
+	else if (profile == 4) color *= profile4
+	else if (profile == 5) color *= profile5
+	else if (profile == 6) color *= profile7
+	else { // no transform }
+
+	return color;
+}
+
+vec3 linear_to_colorspace(vec3 color, int colorspace)
+{
+	// gamma 2.2
+	const mat3x3 to_srgb = mat3x3(
+	 3.240970, -1.537383, -0.498611,
+	-0.969244,  1.875968,  0.041555,
+	 0.055630, -0.203977,  1.056972
+	);
+
+	// gamma 2.6
+	const mat3x3 to_dci_p3 = mat3x3(
+	 2.725394,  -1.018003,  -0.440163,
+	-0.795168,   1.689732,   0.022647,
+	 0.041242,  -0.087639,   1.100929
+	);
+
+	// gamma 2.2
+	const mat3x3 to_adobe_2020 = mat3x3(
+	 2.041588, -0.565007, -0.344731,
+	-0.969244,  1.875968,  0.041555,
+	 0.013444, -0.118362,  1.015175
+	);
+
+	// gamma 2.2
+	const mat3x3 to_rec_2020 = mat3x3(
+	 1.716651, -0.355671, -0.253366,
+	-0.666684,  1.616481,  0.015769,
+	 0.017640, -0.042771,  0.942103
+	);
+
+	if      (colorspace == 1) color *= to_srgb;
+	else if (colorspace == 2) color *= to_dci_p3;
+	else if (colorspace == 3) color *= to_adobe_2020;
+	else if (colorspace == 4) color *= to_rec_2020;
+	else { // no transform }
+
+	return color;
 }
 
 // From guest-advanced

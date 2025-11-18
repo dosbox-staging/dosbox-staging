@@ -1364,11 +1364,61 @@ static void init_render_settings(SectionProp& section)
 
 	string_prop = section.AddString("scaler", Deprecated, "none");
 	string_prop->SetHelp(
-	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
-	        "  - If you used the normal2x/3x scalers, consider using [color=light-green]'integer_scaling'[reset]\n"
-	        "    with [color=light-green]'shader = sharp'[reset] and optionally setting the desired [color=light-green]'window_size'[reset]\n"
-	        "    or [color=light-green]'viewport'[reset] size.\n"
-	        "  - If you used an advanced scaler, consider one of the [color=light-green]'shader'[reset] options.");
+
+	string_prop = section.AddString("color_space", Always, "srgb");
+	string_prop->SetHelp(
+			"Set the colour space to use for rendering the video output ('srgb' by default).\n"
+			"This setting allows you take advantage of your wide-gamut monitor to more\n"
+			"authentically emulate CRT colours that tend to fall outside of the sRGB colour\n"
+			"gamut. Possible values:\n"
+			"\n"
+			"  srgb:        The lowest common denominator non-wide-gamut sRGB colour space\n"
+			"               (6500K whitepoint, sRGB gamma).\n"
+			"\n"
+			"  dci-p3:      Standard DCI-P3 wide-gamut colour space with DCI whitepoint\n"
+			"               (6100K, 2.6 gamma). Use 'dci-p3-d65' instead if the whites have a\n"
+			"               greenish tint with your monitor in \"DCI-P3\" mode.\n"
+			"\n"
+			"  dci-p3-d65:  DCI-P3 variant with modified D65 whitepoint (6500K whitepoint,\n"
+			"               2.6 gamma). Use 'dci-p3' instead if the whites have a\n"
+			"               yellowish tint with your monitor in \"DCI-P3\" mode.\n"
+			"\n"
+			"  display-p3:  Display P3 wide-gamut colour space (6500K whitepoint, sRGB\n"
+			"               gamma).\n"
+			"\n"
+			"  adobe-rgb:   AdobeRGB 2020 wide-gamut colour space (6500K whitepoint, 2.2\n"
+			"               gamma)\n"
+			"\n"
+			"  rec-2020:    Rec.2020 wide-gamut colour space (6500K whitepoint, 2.2 gamma)."
+	        "\n"
+			"Notes:\n"
+			"  - The setting must match the colour space set on your monitor.\n"
+			"  - You must disable all colour management performed by your OS, GPU driver, and\n"
+			"    any 3rd party programs for DOSBox Staging, otherwise you'll get incorrect\n"
+			"    colours.");
+
+	string_prop = section.AddString("color_profile", Always, "srgb");
+	string_prop->SetHelp("
+		    "Set a colour profile for more authentic CRT monitor colour emulation ('none' by\n"
+			"default). All profiles have a built-in whitepoint that you can tweak further\n"
+			"with the 'white_balance' setting. Possible values:\n"
+			"\n"
+		    "  none:       Display raw colours without any colour profile transform.\n"
+			"\n"
+			"  ebu:        EBU standard phosphor emulation, used in high-end professional CRT\n"
+			"              monitors, such as the Sony BVM/PVM series (6500K whitepoint).\n"
+			"\n"
+			"  p22:        P22 phosphor emulation, the most commonly used in lower-end CRT\n"
+			"              monitors (6500K whitepoint).\n"
+			"\n"
+			"  smpte-c:    SMPT \"C\" phosphor emulation, the standard for American broadcast\n"
+			"              video monitors (6500K whitepoint).\n"
+			"\n"
+			"  philips:    Philips CRT monitor colours typical to 15 kHz home computer\n"
+			"              monitors, such as the Commodore 1084S (~6100K whitepoint).\n"
+			"\n"
+			"  trinitron:  Typical Sony Trinitron CRT TV and monitor colours (~9300K\n"
+			"              whitepoint).");
 }
 
 enum { Horiz, Vert };
