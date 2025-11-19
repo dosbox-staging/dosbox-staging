@@ -2302,10 +2302,10 @@ static void CreateLayout() {
 //	new CTextButton(pos_x(6), 0, 124, 20, "Keyboard Layout");
 //	new CTextButton(pos_x(17), 0, 124, 20, "Joystick Layout");
 
-	bind_but.action = new CCaptionButton(0, 335, 0, 0);
+	bind_but.action = new CCaptionButton(0, 355, 0, 0);
 
-	bind_but.event_title=new CCaptionButton(0,350,0,0);
-	bind_but.bind_title=new CCaptionButton(0,365,0,0);
+	bind_but.event_title=new CCaptionButton(0,370,0,0);
+	bind_but.bind_title=new CCaptionButton(0,385,0,0);
 
 	/* Create binding support buttons */
 
@@ -2314,11 +2314,11 @@ static void CreateLayout() {
 	bind_but.mod3 = new CCheckButton(20, 454, 110, 20, "Mod3", BC_Mod3);
 	bind_but.hold = new CCheckButton(150, 410, 60, 20, "Hold", BC_Hold);
 
-	bind_but.add = new CBindButton(250, 380, 100, 20, "Add bind", BB_Add);
-	bind_but.del = new CBindButton(250, 400, 100, 20, "Remove bind", BB_Del);
-	bind_but.next = new CBindButton(250, 420, 100, 20, "Next bind", BB_Next);
+	bind_but.add = new CBindButton(250, 410, 100, 20, "Add bind", BB_Add);
+	bind_but.del = new CBindButton(250, 432, 100, 20, "Remove bind", BB_Del);
+	bind_but.next = new CBindButton(250, 454, 100, 20, "Next bind", BB_Next);
 
-	bind_but.exit=new CBindButton(450,450,50,20,"Exit",BB_Exit);
+	bind_but.exit=new CBindButton(450,454,50,20,"Exit",BB_Exit);
 
 	bind_but.bind_title->Change("Bind Title");
 }
