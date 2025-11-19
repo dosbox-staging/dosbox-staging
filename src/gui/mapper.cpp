@@ -2288,7 +2288,7 @@ static void CreateLayout() {
 	/* Create Handler buttons */
 	int32_t xpos = 0;
 	int32_t ypos = 10;
-	constexpr auto bw = button_width + 5;
+	constexpr auto bw = button_width + 8;
 	for (const auto &handler_event : handlergroup) {
 		new CEventButton(200 + xpos * 3 * bw, pos_y(ypos), bw * 3, button_height,
 		                 handler_event->button_name.c_str(), handler_event);
