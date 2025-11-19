@@ -1301,8 +1301,9 @@ static void init_render_settings(SectionProp& section)
 	        "Notes:\n"
 	        "  - Using 'relative' mode with 'integer_scaling' enabled could lead to\n"
 	        "    surprising (but correct) results.\n"
-	        "  - You can use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey\n"
-	        "    actions to set the stretch in 'relative' mode in real-time.");
+	        "  - Use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey actions to\n"
+	        "    adjust the image size in 'relative' mode in real-time, then copy the new\n"
+	        "    settings from the logs into your config.");
 
 	string_prop = section.AddString("monochrome_palette",
 	                                Always,
