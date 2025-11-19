@@ -2176,33 +2176,36 @@ static void CreateLayout() {
 
 #define XO 10
 #define YO 7
+
+	const auto y_offs = 10;
+
 	/* Joystick Buttons/Texts */
 	/* Buttons 1+2 of 1st Joystick */
-	AddJButtonButton(pos_x(XO), pos_y(YO), button_width, button_height, "1", 0, 0);
-	AddJButtonButton(pos_x(XO + 2), pos_y(YO), button_width, button_height, "2", 0, 1);
+	AddJButtonButton(pos_x(XO), pos_y(YO) + y_offs, button_width, button_height, "1", 0, 0);
+	AddJButtonButton(pos_x(XO + 2), pos_y(YO) + y_offs, button_width, button_height, "2", 0, 1);
 	/* Axes 1+2 (X+Y) of 1st Joystick */
-	CJAxisEvent* cjaxis = AddJAxisButton(pos_x(XO + 1), pos_y(YO), button_width, button_height, "Y-", 0, 1, false, nullptr);
-	AddJAxisButton(pos_x(XO + 1), pos_y(YO + 1), button_width, button_height, "Y+", 0, 1, true, cjaxis);
-	cjaxis = AddJAxisButton(pos_x(XO), pos_y(YO + 1), button_width, button_height, "X-", 0, 0, false, nullptr);
-	AddJAxisButton(pos_x(XO + 2), pos_y(YO + 1), button_width, button_height, "X+", 0, 0, true, cjaxis);
+	CJAxisEvent* cjaxis = AddJAxisButton(pos_x(XO + 1), pos_y(YO) + y_offs, button_width, button_height, "Y-", 0, 1, false, nullptr);
+	AddJAxisButton(pos_x(XO + 1), pos_y(YO + 1) + y_offs, button_width, button_height, "Y+", 0, 1, true, cjaxis);
+	cjaxis = AddJAxisButton(pos_x(XO), pos_y(YO + 1) + y_offs, button_width, button_height, "X-", 0, 0, false, nullptr);
+	AddJAxisButton(pos_x(XO + 2), pos_y(YO + 1) + y_offs, button_width, button_height, "X+", 0, 0, true, cjaxis);
 
 	CJAxisEvent * tmp_ptr;
 
 	assert(joytype != JOY_UNSET);
 	if (joytype == JOY_2AXIS) {
 		/* Buttons 1+2 of 2nd Joystick */
-		AddJButtonButton(pos_x(XO + 4), pos_y(YO), button_width, button_height, "1", 1, 0);
-		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO), button_width, button_height, "2", 1, 1);
+		AddJButtonButton(pos_x(XO + 4), pos_y(YO) + y_offs, button_width, button_height, "1", 1, 0);
+		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO) + y_offs, button_width, button_height, "2", 1, 1);
 		/* Buttons 3+4 of 1st Joystick, not accessible */
 		AddJButtonButton_hidden(0,2);
 		AddJButtonButton_hidden(0,3);
 
 		/* Axes 1+2 (X+Y) of 2nd Joystick */
-		cjaxis  = AddJAxisButton(pos_x(XO + 4), pos_y(YO + 1), button_width, button_height, "X-", 1, 0, false, nullptr);
-		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 2), pos_y(YO + 1), button_width, button_height, "X+", 1, 0, true, cjaxis);
+		cjaxis  = AddJAxisButton(pos_x(XO + 4), pos_y(YO + 1) + y_offs, button_width, button_height, "X-", 1, 0, false, nullptr);
+		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 2), pos_y(YO + 1) + y_offs, button_width, button_height, "X+", 1, 0, true, cjaxis);
 		(void)tmp_ptr;
-		cjaxis  = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 0), button_width, button_height, "Y-", 1, 1, false, nullptr);
-		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 1), button_width, button_height, "Y+", 1, 1, true, cjaxis);
+		cjaxis  = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 0) + y_offs, button_width, button_height, "Y-", 1, 1, false, nullptr);
+		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 1) + y_offs, button_width, button_height, "Y+", 1, 1, true, cjaxis);
 		(void)tmp_ptr;
 		/* Axes 3+4 (X+Y) of 1st Joystick, not accessible */
 		cjaxis  = AddJAxisButton_hidden(0, 2, false, nullptr);
@@ -2213,18 +2216,18 @@ static void CreateLayout() {
 		(void)tmp_ptr;
 	} else {
 		/* Buttons 3+4 of 1st Joystick */
-		AddJButtonButton(pos_x(XO + 4), pos_y(YO), button_width, button_height, "3", 0, 2);
-		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO), button_width, button_height, "4", 0, 3);
+		AddJButtonButton(pos_x(XO + 4), pos_y(YO) + y_offs, button_width, button_height, "3", 0, 2);
+		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO) + y_offs, button_width, button_height, "4", 0, 3);
 		/* Buttons 1+2 of 2nd Joystick, not accessible */
 		AddJButtonButton_hidden(1, 0);
 		AddJButtonButton_hidden(1, 1);
 
 		/* Axes 3+4 (X+Y) of 1st Joystick */
-		cjaxis  = AddJAxisButton(pos_x(XO + 4), pos_y(YO + 1), button_width, button_height, "X-", 0, 2, false, nullptr);
-		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 2), pos_y(YO + 1), button_width, button_height, "X+", 0, 2, true, cjaxis);
+		cjaxis  = AddJAxisButton(pos_x(XO + 4), pos_y(YO + 1) + y_offs, button_width, button_height, "X-", 0, 2, false, nullptr);
+		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 2), pos_y(YO + 1) + y_offs, button_width, button_height, "X+", 0, 2, true, cjaxis);
 		(void)tmp_ptr;
-		cjaxis  = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 0), button_width, button_height, "Y-", 0, 3, false, nullptr);
-		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 1), button_width, button_height, "Y+", 0, 3, true, cjaxis);
+		cjaxis  = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 0) + y_offs, button_width, button_height, "Y-", 0, 3, false, nullptr);
+		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 1) + y_offs, button_width, button_height, "Y+", 0, 3, true, cjaxis);
 		(void)tmp_ptr;
 		/* Axes 1+2 (X+Y) of 2nd Joystick , not accessible*/
 		cjaxis  = AddJAxisButton_hidden(1, 0, false, nullptr);
@@ -2237,8 +2240,8 @@ static void CreateLayout() {
 
 	if (joytype == JOY_CH) {
 		/* Buttons 5+6 of 1st Joystick */
-		AddJButtonButton(pos_x(XO + 8), pos_y(YO), button_width, button_height, "5", 0, 4);
-		AddJButtonButton(pos_x(XO + 8 + 2), pos_y(YO), button_width, button_height, "6", 0, 5);
+		AddJButtonButton(pos_x(XO + 8), pos_y(YO) + y_offs, button_width, button_height, "5", 0, 4);
+		AddJButtonButton(pos_x(XO + 8 + 2), pos_y(YO) + y_offs, button_width, button_height, "6", 0, 5);
 	} else {
 		/* Buttons 5+6 of 1st Joystick, not accessible */
 		AddJButtonButton_hidden(0, 4);
@@ -2246,37 +2249,37 @@ static void CreateLayout() {
 	}
 
 	/* Hat directions up, left, down, right */
-	AddJHatButton(pos_x(XO + 8 + 1), pos_y(YO), button_width, button_height, "UP", 0, 0, 0);
-	AddJHatButton(pos_x(XO + 8 + 0), pos_y(YO + 1), button_width, button_height, "LFT", 0, 0, 3);
-	AddJHatButton(pos_x(XO + 8 + 1), pos_y(YO + 1), button_width, button_height, "DWN", 0, 0, 2);
-	AddJHatButton(pos_x(XO + 8 + 2), pos_y(YO + 1), button_width, button_height, "RGT", 0, 0, 1);
+	AddJHatButton(pos_x(XO + 8 + 1), pos_y(YO) + y_offs, button_width, button_height, "UP", 0, 0, 0);
+	AddJHatButton(pos_x(XO + 8 + 0), pos_y(YO + 1) + y_offs, button_width, button_height, "LFT", 0, 0, 3);
+	AddJHatButton(pos_x(XO + 8 + 1), pos_y(YO + 1) + y_offs, button_width, button_height, "DWN", 0, 0, 2);
+	AddJHatButton(pos_x(XO + 8 + 2), pos_y(YO + 1) + y_offs, button_width, button_height, "RGT", 0, 0, 1);
 
 	/* Labels for the joystick */
 	CTextButton * btn;
 	if (joytype == JOY_2AXIS) {
-		new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Joystick 1");
-		new CTextButton(pos_x(XO + 4), pos_y(YO - 1), 3 * button_width, 20, "Joystick 2");
-		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1), 3 * button_width, 20, "Disabled");
+		new CTextButton(pos_x(XO + 0), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Joystick 1");
+		new CTextButton(pos_x(XO + 4), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Joystick 2");
+		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Disabled");
 		btn->SetColor(color_grey);
 	} else if(joytype == JOY_4AXIS || joytype == JOY_4AXIS_2) {
-		new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Axis 1/2");
-		new CTextButton(pos_x(XO + 4), pos_y(YO - 1), 3 * button_width, 20, "Axis 3/4");
-		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1), 3 * button_width, 20, "Disabled");
+		new CTextButton(pos_x(XO + 0), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 1/2");
+		new CTextButton(pos_x(XO + 4), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 3/4");
+		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Disabled");
 		btn->SetColor(color_grey);
 	} else if(joytype == JOY_CH) {
-		new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Axis 1/2");
-		new CTextButton(pos_x(XO + 4), pos_y(YO - 1), 3 * button_width, 20, "Axis 3/4");
-		new CTextButton(pos_x(XO + 8), pos_y(YO - 1), 3 * button_width, 20, "Hat/D-pad");
+		new CTextButton(pos_x(XO + 0), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 1/2");
+		new CTextButton(pos_x(XO + 4), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 3/4");
+		new CTextButton(pos_x(XO + 8), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Hat/D-pad");
 	} else if ( joytype == JOY_FCS) {
-		new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Axis 1/2");
-		new CTextButton(pos_x(XO + 4), pos_y(YO - 1), 3 * button_width, 20, "Axis 3");
-		new CTextButton(pos_x(XO + 8), pos_y(YO - 1), 3 * button_width, 20, "Hat/D-pad");
+		new CTextButton(pos_x(XO + 0), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 1/2");
+		new CTextButton(pos_x(XO + 4), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 3");
+		new CTextButton(pos_x(XO + 8), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Hat/D-pad");
 	} else if (joytype == JOY_DISABLED) {
-		btn = new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Disabled");
+		btn = new CTextButton(pos_x(XO + 0), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Disabled");
 		btn->SetColor(color_grey);
-		btn = new CTextButton(pos_x(XO + 4), pos_y(YO - 1), 3 * button_width, 20, "Disabled");
+		btn = new CTextButton(pos_x(XO + 4), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Disabled");
 		btn->SetColor(color_grey);
-		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1), 3 * button_width, 20, "Disabled");
+		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Disabled");
 		btn->SetColor(color_grey);
 	}
 
