@@ -1453,13 +1453,28 @@ void VGA_SetupOther()
 	}
 	// Add composite hotkeys for CGA, Tandy, and PCjr
 	if (is_machine_cga_color() || is_machine_pcjr_or_tandy()) {
-		MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10, 0,
-		                  "select", "Sel Knob");
-		MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11, 0,
-		                  "incval", "Inc Knob");
-		MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11,
-		                  MMOD2, "decval", "Dec Knob");
-		MAPPER_AddHandler(toggle_cga_composite_mode, SDL_SCANCODE_F12, 0, "cgacomp",
+		MAPPER_AddHandler(select_next_crt_knob,
+		                  SDL_SCANCODE_F10,
+		                  0,
+		                  "comp_sel",
+		                  "CompSelKnob");
+
+		MAPPER_AddHandler(turn_crt_knob_positive,
+		                  SDL_SCANCODE_F11,
+		                  0,
+		                  "comp_inc",
+		                  "CompIncKnob");
+
+		MAPPER_AddHandler(turn_crt_knob_negative,
+		                  SDL_SCANCODE_F11,
+		                  MMOD2,
+		                  "comp_dec",
+		                  "CompDecKnob");
+
+		MAPPER_AddHandler(toggle_cga_composite_mode,
+		                  SDL_SCANCODE_F12,
+		                  0,
+		                  "cgacomp",
 		                  "CGA Comp");
 	}
 
