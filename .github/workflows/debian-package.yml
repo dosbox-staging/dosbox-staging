@@ -27,7 +27,7 @@ jobs:
           - amd64
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
