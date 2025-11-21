@@ -35,7 +35,7 @@ jobs:
             distro: ubuntu22.04
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: false
 
