@@ -24,6 +24,9 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 
+////////////
+#include <blend2d.h>
+
 class OpenGlRenderer : public RenderBackend {
 
 public:
@@ -170,6 +173,10 @@ private:
 	// Might contain the .glsl file extension if set by the user.
 	//
 	std::string current_shader_descriptor_string = {};
+
+	////////////
+	BLImage img;
+	BLContext ctx;
 };
 
 #endif // C_OPENGL

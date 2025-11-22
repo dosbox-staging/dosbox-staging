@@ -265,6 +265,11 @@ if (OPT_OPENGL)
   set(C_OPENGL ON)
 endif()
 
+option(OPT_OSD "Enable on-screen display (OSD) support" ON)
+if (OPT_OSD)
+  set(C_OSD ON)
+endif()
+
 set(C_MT32EMU ON)       # TODO: Option
 
 set(C_TRACY OFF)        # TODO: Option
