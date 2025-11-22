@@ -286,7 +286,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	BLImageData image_data = {};
 	img.getData(&image_data);
 
-	LOG_TRACE("BLEND2D: BLImage: width: %d, height: %d, stride: %d",
+	LOG_TRACE("OSD: BLImage: width: %d, height: %d, stride: %d",
 	          image_data.size.w,
 	          image_data.size.h,
 	          image_data.stride);
@@ -295,6 +295,13 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 
 	ctx.clearAll();
 
+	BLResult result = face.createFromFile("resources/fonts/Roboto-Bold.ttf");
+	if (result != BL_SUCCESS) {
+		LOG_ERR("OSD: Failed to load a face (err=%u)\n", result);
+	}
+
+	BLFont font;
+	font.createFromFace(face, 24.0f);
 
 	// First shape filled with a radial gradient.
 	// By default, SRC_OVER composition is used.
@@ -307,6 +314,9 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	BLGradient linear(BLLinearGradientValues(195, 195, 470, 470));
 	linear.addStop(0.0, BLRgba32(0xFFFFFFFF));
 	linear.addStop(1.0, BLRgba32(0xFF3F9FFF));
+
+	ctx.setFillStyle(BLRgba32(0xFFFFFFFF));
+	ctx.fillUtf8Text(BLPoint(60, 280), font, "CPU cycles: 12000");
 
 	// Use 'set_comp_op()' to change a composition operator.
 	ctx.setCompOp(BL_COMP_OP_DIFFERENCE);
@@ -372,6 +382,9 @@ void OpenGlRenderer::PrepareFrame()
 	img.getData(&image_data);
 
 	if (last_framebuf_dirty) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+
 		glTexSubImage2D(GL_TEXTURE_2D,
 		                0,                // mimap level (0 = base image)
 		                0,                // x offset
@@ -381,10 +394,14 @@ void OpenGlRenderer::PrepareFrame()
 		                GL_BGRA,          // pixel data format
 		                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
 		                last_framebuf.data() // pointer to image data */
+	    );
 		++frame_count;
 
 		last_framebuf_dirty = false;
 	}
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, osd_texture);
 
 	glTexSubImage2D(GL_TEXTURE_2D,
 					0,                // mimap level (0 = base image)
@@ -405,6 +422,15 @@ void OpenGlRenderer::PresentFrame()
 	UpdateUniforms();
 
 	glBindVertexArray(vao);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+
+	glBindTexture(GL_TEXTURE_2D, osd_texture);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {

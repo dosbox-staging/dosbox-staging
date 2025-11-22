@@ -177,6 +177,7 @@ private:
 	////////////
 	BLImage img;
 	BLContext ctx;
+	BLFontFace face;
 
 	GLuint osd_texture = 0;
 };
