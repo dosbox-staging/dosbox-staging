@@ -177,6 +177,8 @@ private:
 	////////////
 	BLImage img;
 	BLContext ctx;
+
+	GLuint osd_texture = 0;
 };
 
 #endif // C_OPENGL

@@ -278,6 +278,63 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 
 	texture = new_texture;
 
+
+
+	///////////////
+	img = BLImage(render_width_px, render_height_px, BL_FORMAT_PRGB32);
+
+	BLImageData image_data = {};
+	img.getData(&image_data);
+
+	LOG_TRACE("BLEND2D: BLImage: width: %d, height: %d, stride: %d",
+	          image_data.size.w,
+	          image_data.size.h,
+	          image_data.stride);
+
+	ctx = BLContext(img);
+
+	ctx.clearAll();
+
+
+	// First shape filled with a radial gradient.
+	// By default, SRC_OVER composition is used.
+	BLGradient radial(BLRadialGradientValues(180, 180, 180, 180, 180));
+	radial.addStop(0.0, BLRgba32(0xFFFFFFFF));
+	radial.addStop(1.0, BLRgba32(0xFFFF6F3F));
+	ctx.fillCircle(new_render_width_px / 2, render_height_px / 2, new_render_width_px / 5, radial);
+
+	// Second shape filled with a linear gradient.
+	BLGradient linear(BLLinearGradientValues(195, 195, 470, 470));
+	linear.addStop(0.0, BLRgba32(0xFFFFFFFF));
+	linear.addStop(1.0, BLRgba32(0xFF3F9FFF));
+
+	// Use 'set_comp_op()' to change a composition operator.
+	ctx.setCompOp(BL_COMP_OP_DIFFERENCE);
+	ctx.fillRoundRect(BLRoundRect(new_render_width_px / 2, new_render_height_px / 2, new_render_width_px / 3, new_render_height_px / 3, 25), linear);
+
+	ctx.end();
+
+
+
+	glGenTextures(1, &osd_texture);
+	glBindTexture(GL_TEXTURE_2D, osd_texture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage2D(GL_TEXTURE_2D,
+	             0,                // mimap level (0 = base image)
+	             GL_RGB8,          // internal format
+	             render_width_px,  // width
+	             render_height_px, // height
+	             0,                // border (must be always 0)
+	             GL_BGRA,          // pixel data format
+	             GL_UNSIGNED_BYTE, // pixel data type
+	             nullptr           // pointer to image data
+	);
+
 	return true;
 }
 
@@ -311,6 +368,9 @@ void OpenGlRenderer::PrepareFrame()
 {
 	assert(!last_framebuf.empty());
 
+	BLImageData image_data = {};
+	img.getData(&image_data);
+
 	if (last_framebuf_dirty) {
 		glTexSubImage2D(GL_TEXTURE_2D,
 		                0,                // mimap level (0 = base image)
@@ -320,13 +380,22 @@ void OpenGlRenderer::PrepareFrame()
 		                render_height_px, // height
 		                GL_BGRA,          // pixel data format
 		                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
-		                last_framebuf.data() // pointer to image data
-		);
-
+		                last_framebuf.data() // pointer to image data */
 		++frame_count;
 
 		last_framebuf_dirty = false;
 	}
+
+	glTexSubImage2D(GL_TEXTURE_2D,
+					0,                // mimap level (0 = base image)
+					0,                // x offset
+					0,                // y offset
+					render_width_px,  // width
+					render_height_px, // height
+					GL_BGRA,          // pixel data format
+					GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
+					image_data.pixelData // pointer to image data
+	);
 }
 
 void OpenGlRenderer::PresentFrame()
