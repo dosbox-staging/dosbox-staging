@@ -631,19 +631,19 @@ static void init_key_mappings()
 	                  SDL_SCANCODE_UNKNOWN,
 	                  PRIMARY_MOD,
 	                  "rawshot",
-	                  "Raw Screenshot");
+	                  "Raw Scrnshot");
 
 	MAPPER_AddHandler(handle_capture_single_upscaled_screenshot_event,
 	                  SDL_SCANCODE_UNKNOWN,
 	                  PRIMARY_MOD,
 	                  "upscshot",
-	                  "Upsc Screenshot");
+	                  "Upsc Scrnshot");
 
 	MAPPER_AddHandler(handle_capture_single_rendered_screenshot_event,
 	                  SDL_SCANCODE_F5,
 	                  MMOD2,
 	                  "rendshot",
-	                  "Rend Screenshot");
+	                  "Rend Scrnshot");
 
 	MAPPER_AddHandler(handle_capture_video_event,
 	                  SDL_SCANCODE_F7,
