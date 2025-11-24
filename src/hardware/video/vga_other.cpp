@@ -1507,44 +1507,79 @@ static void init_composite_settings(SectionProp& section)
 	auto str_prop = section.AddString("composite", WhenIdle, "auto");
 	str_prop->SetValues({"auto", "on", "off"});
 	str_prop->SetHelp(
-	        "Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine\n"
-	        "types; 'auto' by default). 'auto' lets the program decide.\n"
+	        "Enable CGA composite monitor emulation ('auto' by default). Only available for\n"
+	        "'cga', 'pcjr', and 'tandy' machine types. This allows the emulation of NTSC\n"
+	        "artifact colours from the raw CGA RBGI image data, just like on a real NTSC CGA\n"
+	        "composite monitor. Possible values:\n"
 	        "\n"
-	        "Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,\n"
-	        "      then copy the new settings from the logs into your config.");
+	        "  off:   Disable composite emulation.\n"
+	        "\n"
+	        "  on:    Enable composite emulation in all video modes.\n"
+	        "\n"
+	        "  auto:  Automatically enable composite emulation for the 640x400 composite\n"
+	        "         mode if the game uses it (default). You need to enable composite mode\n"
+	        "         manually for the 320x200 mode.\n"
+	        "\n"
+	        "Note: Fine-tune the composite emulation settings (e.g., 'composite_hue') using\n"
+	        "      the composite hotkeys, then copy the new settings from the logs into your\n"
+	        "      config.");
 
 	str_prop = section.AddString("era", WhenIdle, "auto");
 	str_prop->SetValues({"auto", "old", "new"});
 	str_prop->SetHelp(
-	        "Era of composite technology ('auto' by default).\n"
-	        "When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.");
+	        "Era of CGA composite monitor to emulate ('auto' by default).\n"
+	        "Possible values:\n"
+	        "\n"
+	        "  auto:  PCjr uses 'new', and CGA/Tandy use 'old' (default)\n"
+	        "  old:   Emulate an early NTSC IBM CGA composite monitor model.\n"
+	        "  new:   Emulate a late NTSC IBM CGA composite monitor model.");
 
 	auto int_prop = section.AddInt("hue", WhenIdle, hue.get_default());
 	int_prop->SetMinMax(hue.get_min(), hue.get_max());
-	int_prop->SetHelp(
-	        format_str("Hue of the RGB palette (%d by default).\n"
-	                   "For example, adjust until the sky is blue.",
-	                   hue.get_default()));
+	int_prop->SetHelp(format_str(
+	        "Set the hue of the CGA composite colours (%d by default).\n"
+	        "Valid range is %d to %d. For example, adjust until the sky appears blue and\n"
+	        "the grass green in the game. This emulates the tint knob of CGA composite\n"
+	        "monitors which often had to be adjusted for each game.",
+	        hue.get_default(),
+	        hue.get_min(),
+	        hue.get_max()));
 
 	int_prop = section.AddInt("saturation", WhenIdle, saturation.get_default());
 	int_prop->SetMinMax(saturation.get_min(), saturation.get_max());
-	int_prop->SetHelp(format_str("Intensity of colors, from washed out to vivid (%d by default).",
-	                             saturation.get_default()));
+	int_prop->SetHelp(
+	        format_str("Set the saturation of the CGA composite colours (%d by default).\n"
+	                   "Valid range is %d to %d.",
+	                   saturation.get_default(),
+	                   saturation.get_min(),
+	                   saturation.get_max()));
 
 	int_prop = section.AddInt("contrast", WhenIdle, contrast.get_default());
 	int_prop->SetMinMax(contrast.get_min(), contrast.get_max());
-	int_prop->SetHelp(format_str("Ratio between the dark and light area (%d by default).",
-	                             contrast.get_default()));
+	int_prop->SetHelp(
+	        format_str("Set the contrast of the CGA composite colours (%d by default).\n"
+	                   "Valid range is %d to %d.",
+	                   contrast.get_default(),
+	                   contrast.get_min(),
+	                   contrast.get_max()));
 
 	int_prop = section.AddInt("brightness", WhenIdle, brightness.get_default());
 	int_prop->SetMinMax(brightness.get_min(), brightness.get_max());
-	int_prop->SetHelp(format_str("Luminosity of the image, from dark to light (%d by default).",
-	                             brightness.get_default()));
+	int_prop->SetHelp(
+	        format_str("Set the brightness of the CGA composite colours (%d by default).\n"
+	                   "Valid range is %d to %d.",
+	                   brightness.get_default(),
+	                   brightness.get_min(),
+	                   brightness.get_max()));
 
 	int_prop = section.AddInt("convergence", WhenIdle, convergence.get_default());
 	int_prop->SetMinMax(convergence.get_min(), convergence.get_max());
-	int_prop->SetHelp(format_str("Convergence of subpixel elements, from blurry to sharp (%d by default).",
-	                             convergence.get_default()));
+	int_prop->SetHelp(
+	        format_str("Set the sharpness of the CGA composite image (%d by default).\n"
+	                   "Valid range is %d to %d.",
+	                   convergence.get_default(),
+	                   convergence.get_min(),
+	                   convergence.get_max()));
 }
 
 void COMPOSITE_AddConfigSection(Config& conf)
