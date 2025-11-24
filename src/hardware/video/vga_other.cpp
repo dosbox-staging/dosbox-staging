@@ -1508,18 +1508,25 @@ void COMPOSITE_Init()
 	const auto section = get_section("composite");
 	assert(section);
 
-	const auto state = section->GetString("composite");
+	const auto composite_mode = [&]() {
+		const auto legacy_pref = section->GetString("composite");
+		if (!legacy_pref.empty()) {
+			set_section_property_value("composite", "composite", "");
+			set_section_property_value("composite", "composite_mode", legacy_pref);
+		}
+		return section->GetString("composite_mode");
+	}();
 
-	if (state == "auto") {
+	if (composite_mode == "auto") {
 		cga_comp = CompositeState::Auto;
 	} else {
-		const auto state_has_bool = parse_bool_setting(state);
+		const auto state_has_bool = parse_bool_setting(composite_mode);
 		if (state_has_bool) {
 			cga_comp = *state_has_bool ? CompositeState::On
 			                           : CompositeState::Off;
 		} else {
-			LOG_WARNING("COMPOSITE: Invalid 'composite' setting: '%s', using 'off'",
-			            state.c_str());
+			LOG_WARNING("COMPOSITE: Invalid 'composite_mode' setting: '%s', using 'off'",
+			            composite_mode.c_str());
 			cga_comp = CompositeState::Off;
 		}
 	}
@@ -1550,7 +1557,12 @@ static void init_composite_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
-	auto str_prop = section.AddString("composite", WhenIdle, "auto");
+	auto str_prop = section.AddString("composite", DeprecatedButAllowed, "");
+	str_prop->SetHelp(
+	        "The [color=light-green]'composite'[reset] setting is deprecated but still accepted;\n"
+	        "please use [color=light-green]'composite_mode'[reset] instead.");
+
+	str_prop = section.AddString("composite_mode", WhenIdle, "auto");
 	str_prop->SetValues({"auto", "on", "off"});
 	str_prop->SetHelp(
 	        "Enable CGA composite monitor emulation ('auto' by default). Only available for\n"
