@@ -650,12 +650,30 @@ static void log_crt_knob_value()
 		LOG_MSG("COMPOSITE: %s-era CGA selected",
 		        is_composite_new_era ? "New" : "Old");
 		break;
-	case CRT_KNOB::HUE: LOG_MSG("COMPOSITE: Hue is %d", hue.get()); break;
-	case CRT_KNOB::SATURATION: LOG_MSG("COMPOSITE: Saturation is %d", saturation.get()); break;
-	case CRT_KNOB::CONTRAST: LOG_MSG("COMPOSITE: Contrast is %d", contrast.get()); break;
-	case CRT_KNOB::BRIGHTNESS: LOG_MSG("COMPOSITE: Brightness is %d", brightness.get()); break;
-	case CRT_KNOB::CONVERGENCE: LOG_MSG("COMPOSITE: Convergence is %d", convergence.get()); break;
-	case CRT_KNOB::ENUM_END: assertm(false, "Should not reach CRT knob end marker"); break;
+
+	case CRT_KNOB::HUE:
+		LOG_MSG("COMPOSITE: composite_hue =  %d", hue.get());
+		break;
+
+	case CRT_KNOB::SATURATION:
+		LOG_MSG("COMPOSITE: composite_saturation = %d", saturation.get());
+		break;
+
+	case CRT_KNOB::CONTRAST:
+		LOG_MSG("COMPOSITE: composite_contrast = %d", contrast.get());
+		break;
+
+	case CRT_KNOB::BRIGHTNESS:
+		LOG_MSG("COMPOSITE: composite_brightness = %d", brightness.get());
+		break;
+
+	case CRT_KNOB::CONVERGENCE:
+		LOG_MSG("COMPOSITE: composite_convergence =  %d", convergence.get());
+		break;
+
+	case CRT_KNOB::ENUM_END:
+		assertm(false, "Should not reach CRT knob end marker");
+		break;
 	}
 }
 
@@ -1483,14 +1501,8 @@ void COMPOSITE_Init()
 	convergence.set(section->GetInt("convergence"));
 
 	if (cga_comp == COMPOSITE_STATE::ON) {
-		LOG_MSG("COMPOSITE: %s-era enabled with settings: hue %d, saturation %d,"
-		        " contrast %d, brightness %d, and convergence %d",
-		        (is_composite_new_era ? "New" : "Old"),
-		        hue.get(),
-		        saturation.get(),
-		        contrast.get(),
-		        brightness.get(),
-		        convergence.get());
+		LOG_MSG("COMPOSITE: %s-era composite mode enabled",
+		        (is_composite_new_era ? "New" : "Old"));
 	}
 }
 
