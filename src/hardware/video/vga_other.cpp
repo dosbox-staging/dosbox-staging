@@ -1524,15 +1524,15 @@ void COMPOSITE_Init()
 		}
 	}
 
-	const auto era_choice = section->GetString("era");
+	const auto era_choice = section->GetString("composite_era");
 	is_composite_new_era  = era_choice == "new" ||
 	                       (is_machine_pcjr() && era_choice == "auto");
 
-	hue.set(section->GetInt("hue"));
-	saturation.set(section->GetInt("saturation"));
-	contrast.set(section->GetInt("contrast"));
-	brightness.set(section->GetInt("brightness"));
-	convergence.set(section->GetInt("convergence"));
+	hue.set(section->GetInt("composite_hue"));
+	saturation.set(section->GetInt("composite_saturation"));
+	contrast.set(section->GetInt("composite_contrast"));
+	brightness.set(section->GetInt("composite_brightness"));
+	convergence.set(section->GetInt("composite_convergence"));
 
 	if (cga_comp == CompositeState::On) {
 		LOG_MSG("COMPOSITE: %s-era composite mode enabled",
@@ -1570,7 +1570,7 @@ static void init_composite_settings(SectionProp& section)
 	        "      the composite hotkeys, then copy the new settings from the logs into your\n"
 	        "      config.");
 
-	str_prop = section.AddString("era", WhenIdle, "auto");
+	str_prop = section.AddString("composite_era", WhenIdle, "auto");
 	str_prop->SetValues({"auto", "old", "new"});
 	str_prop->SetHelp(
 	        "Era of CGA composite monitor to emulate ('auto' by default).\n"
@@ -1580,7 +1580,7 @@ static void init_composite_settings(SectionProp& section)
 	        "  old:   Emulate an early NTSC IBM CGA composite monitor model.\n"
 	        "  new:   Emulate a late NTSC IBM CGA composite monitor model.");
 
-	auto int_prop = section.AddInt("hue", WhenIdle, hue.GetDefaultValue());
+	auto int_prop = section.AddInt("composite_hue", WhenIdle, hue.GetDefaultValue());
 	int_prop->SetMinMax(hue.GetMinValue(), hue.GetMaxValue());
 	int_prop->SetHelp(format_str(
 	        "Set the hue of the CGA composite colours (%d by default).\n"
@@ -1591,7 +1591,7 @@ static void init_composite_settings(SectionProp& section)
 	        hue.GetMinValue(),
 	        hue.GetMaxValue()));
 
-	int_prop = section.AddInt("saturation", WhenIdle, saturation.GetDefaultValue());
+	int_prop = section.AddInt("composite_saturation", WhenIdle, saturation.GetDefaultValue());
 	int_prop->SetMinMax(saturation.GetMinValue(), saturation.GetMaxValue());
 	int_prop->SetHelp(
 	        format_str("Set the saturation of the CGA composite colours (%d by default).\n"
@@ -1600,7 +1600,7 @@ static void init_composite_settings(SectionProp& section)
 	                   saturation.GetMinValue(),
 	                   saturation.GetMaxValue()));
 
-	int_prop = section.AddInt("contrast", WhenIdle, contrast.GetDefaultValue());
+	int_prop = section.AddInt("composite_contrast", WhenIdle, contrast.GetDefaultValue());
 	int_prop->SetMinMax(contrast.GetMinValue(), contrast.GetMaxValue());
 	int_prop->SetHelp(
 	        format_str("Set the contrast of the CGA composite colours (%d by default).\n"
@@ -1609,7 +1609,7 @@ static void init_composite_settings(SectionProp& section)
 	                   contrast.GetMinValue(),
 	                   contrast.GetMaxValue()));
 
-	int_prop = section.AddInt("brightness", WhenIdle, brightness.GetDefaultValue());
+	int_prop = section.AddInt("composite_brightness", WhenIdle, brightness.GetDefaultValue());
 	int_prop->SetMinMax(brightness.GetMinValue(), brightness.GetMaxValue());
 	int_prop->SetHelp(
 	        format_str("Set the brightness of the CGA composite colours (%d by default).\n"
