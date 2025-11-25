@@ -1813,18 +1813,6 @@ void GFX_Init()
 	}
 }
 
-static void regenerate_window()
-{
-	GFX_Stop();
-
-	sdl.renderer = {};
-	sdl.window   = nullptr;
-
-	create_window_and_renderer();
-
-	GFX_ResetScreen();
-}
-
 static void notify_sdl_setting_updated(SectionProp& section,
                                        const std::string& prop_name)
 {
@@ -1865,7 +1853,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		validate_vsync_and_presentation_mode_settings();
 		configure_vsync();
 		configure_presentation_mode();
-		regenerate_window();
+		GFX_ResetScreen();
 
 	} else if (prop_name == "screensaver") {
 		configure_allow_screensaver();
