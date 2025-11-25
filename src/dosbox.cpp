@@ -745,7 +745,7 @@ static void dosbox_destroy()
 	IO_Destroy();
 }
 
-static void notify_dosbox_setting_updated([[maybe_unused]] SectionProp& section,
+static void notify_dosbox_setting_updated(const SectionProp& section,
                                           const std::string prop_name)
 {
 	if (prop_name == "language") {
