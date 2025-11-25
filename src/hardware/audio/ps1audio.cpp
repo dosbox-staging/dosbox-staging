@@ -578,14 +578,16 @@ static void init_ps1audio_settings(SectionProp& section)
 
 	auto pstring = section.AddString("ps1audio_filter", WhenIdle, "on");
 	pstring->SetHelp(
-	        "Filter for the PS/1 Audio synth output:\n"
+	        "Filter for the PS/1 Audio synth output ('on' by default). Possible values:\n"
+	        "\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	pstring = section.AddString("ps1audio_dac_filter", WhenIdle, "on");
 	pstring->SetHelp(
-	        "Filter for the PS/1 Audio DAC output:\n"
+	        "Filter for the PS/1 Audio DAC output ('on' by default). Possible values:\n"
+	        "\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");

@@ -65,18 +65,22 @@ static void init_pcspeaker_settings(SectionProp& section)
 
 	auto pstring = section.AddString("pcspeaker", WhenIdle, "impulse");
 	pstring->SetHelp(
-	        "PC speaker emulation model:\n"
+	        "PC speaker emulation model ('impulse' by default). Possible values:\n"
+	        "\n"
 	        "  impulse:    A very faithful emulation of the PC speaker's output (default).\n"
 	        "              Works with most games, but may result in garbled sound or silence\n"
 	        "              in a small number of programs.\n"
+	        "\n"
 	        "  discrete:   Legacy simplified PC speaker emulation; only use this on specific\n"
 	        "              titles that give you problems with the 'impulse' model.\n"
+	        "\n"
 	        "  none, off:  Don't emulate the PC speaker.");
 	pstring->SetValues({"impulse", "discrete", "none", "off"});
 
 	pstring = section.AddString("pcspeaker_filter", WhenIdle, "on");
 	pstring->SetHelp(
-	        "Filter for the PC speaker output:\n"
+	        "Filter for the PC speaker output ('on' by default). Possible values:\n"
+	        "\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");

@@ -1401,19 +1401,33 @@ static void add_serial_config_settings(SectionProp& section)
 	pstring->SetValues(serials);
 	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
 	pmulti_remain->SetHelp(
-	        "Set type of device connected to the COM1 port.\n"
-	        "Can be disabled, dummy, mouse, modem, nullmodem, direct ('dummy' by default).\n"
-	        "Additional parameters must be on the same line in the form of\n"
-	        "parameter:value. The optional 'irq' parameter is common for all types.\n"
+	        "Set type of device connected to the COM1 port ('dummy' by default).\n"
+	        "Possible values:\n"
+	        "\n"
+	        "  disabled:  Disables the port.\n"
+	        "  dummy:     Emulates the port without a device attached to it.\n"
+	        "  mouse:     Emulates a serial mouse attached to the port.\n"
+	        "  modem:     Emulates a modem attached to the port.\n"
+	        "  nullmodem: Emulates a nullmoden attached to the port.\n"
+	        "  direct:    Emulates a direct serial link.\n"
+	        "\n"
+	        "Additional parameters must be on the same line in the form of PARAMETER:VALUE.\n"
+	        "The optional 'irq' parameter is common for all types. Available parameters:\n"
+	        "\n"
 	        "  - for 'mouse':      model (optional; overrides the 'com_mouse_model' setting).\n"
+	        "\n"
 	        "  - for 'direct':     realport (required), rxdelay (optional).\n"
 	        "                      (e.g., realport:COM1, realport:ttyS0).\n"
+	        "\n"
 	        "  - for 'modem':      listenport, sock, bps (all optional).\n"
+	        "\n"
 	        "  - for 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,\n"
 	        "                      transparent, port, inhsocket, sock (all optional).\n"
+	        "\n"
 	        "The 'sock' parameter specifies the protocol to use at both sides of the\n"
 	        "connection. Valid values are 0 for TCP, and 1 for ENet reliable UDP.\n"
-	        "Example: serial1=modem listenport:5000 sock:1");
+	        "Example:\n"
+	        "  serial1=modem listenport:5000 sock:1");
 
 	pmulti_remain = section.AddMultiValRemain("serial2", WhenIdle, " ");
 	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "dummy");

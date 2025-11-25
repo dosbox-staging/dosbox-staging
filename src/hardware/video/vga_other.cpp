@@ -1509,6 +1509,7 @@ static void init_composite_settings(SectionProp& section)
 	str_prop->SetHelp(
 	        "Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine\n"
 	        "types; 'auto' by default). 'auto' lets the program decide.\n"
+	        "\n"
 	        "Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,\n"
 	        "      then copy the new settings from the logs into your config.");
 

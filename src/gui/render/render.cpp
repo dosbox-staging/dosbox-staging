@@ -1193,6 +1193,7 @@ static void init_render_settings(SectionProp& section)
 	        "                          typical PC monitor.\n"
 	        "\n"
 	        "Other shader options include (non-exhaustive list):\n"
+	        "\n"
 	        "  sharp:     Upscale the image treating the pixels as small rectangles,\n"
 	        "             resulting in a sharp image with minimum blur while maintaining\n"
 	        "             the correct pixel aspect ratio. This is the recommended option for\n"
@@ -1218,7 +1219,8 @@ static void init_render_settings(SectionProp& section)
 
 	string_prop = section.AddString("aspect", Always, "auto");
 	string_prop->SetHelp(
-	        "Set the aspect ratio correction mode ('auto' by default):\n"
+	        "Set the aspect ratio correction mode ('auto' by default). Possible values:\n"
+	        "\n"
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
 	        "                       flat-screen displays, so DOS video modes with non-square\n"
 	        "                       pixels appear as they would on a 4:3 display aspect\n"
@@ -1307,7 +1309,13 @@ static void init_render_settings(SectionProp& section)
 	                                MonochromePaletteAmber);
 	string_prop->SetHelp(
 	        "Set the palette for monochrome display emulation ('amber' by default).\n"
-	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
+	        "Works only with the 'hercules' and 'cga_mono' machine types. Possible values:\n"
+	        "\n"
+	        "  amber:       Amber palette (default).\n"
+	        "  green:       Green palette.\n"
+	        "  white:       White palette.\n"
+	        "  paperwhite:  Paperwhite palette.\n"
+	        "\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
 
 	string_prop->SetValues({MonochromePaletteAmber,

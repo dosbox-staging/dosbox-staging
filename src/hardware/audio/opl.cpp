@@ -979,15 +979,19 @@ static void init_opl_config_settings(SectionProp& secprop)
 	pstring->SetValues(
 	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "esfm", "none"});
 	pstring->SetHelp(
-	        "OPL model to emulate ('auto' by default).\n"
+	        "OPL model to emulate ('auto' by default). Possible values:\n"
+	        "\n"
 	        "  auto:      Use the appropriate model determined by 'sbtype'.\n"
 	        "  opl2:      Yamaha OPL2 (YM3812, mono).\n"
 	        "  dualopl2:  Dual OPL2 (two OPL2 chips in stereo configuration).\n"
 	        "  opl3:      Yamaha OPL3 (YMF262, stereo).\n"
+	        "\n"
 	        "  opl3gold:  OPL3 and the optional AdLib Gold Surround module.\n"
 	        "             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.\n"
+	        "\n"
 	        "  esfm:      ESS ESFM (enhanced Yamaha OPL3 compatible FM synth).\n"
 	        "  none/off:  Disable OPL emulation.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.\n"
 	        "  - Only 'oplmode = esfm' is not enough to get ESS Enhanced FM music in games;\n"
@@ -996,10 +1000,13 @@ static void init_opl_config_settings(SectionProp& secprop)
 
 	pstring = secprop.AddString("opl_fadeout", when_idle, "off");
 	pstring->SetHelp(
-	        "Fade out hanging notes on the OPL synth:\n"
+	        "Fade out hanging notes on the OPL synth ('off' by default). Possible values:\n"
+	        "\n"
 	        "  off:       Don't fade out hanging notes (default).\n"
+	        "\n"
 	        "  fade:      Fade out hanging notes. You should only enable this in games that\n"
 	        "             sometimes play hanging notes that never stop (e.g., Bard's Tale).\n"
+	        "\n"
 	        "  <custom>:  A custom fade-out definition in the following format:\n"
 	        "               WAIT FADE\n"
 	        "             Where WAIT is how long after the last I/O port write fading begins\n"
@@ -1011,35 +1018,42 @@ static void init_opl_config_settings(SectionProp& secprop)
 
 	auto pbool = secprop.AddBool("opl_remove_dc_bias", when_idle, false);
 	pbool->SetHelp(
-	        "Remove DC bias from the OPL output. This should only be used as a last resort\n"
-	        "to fix popping in games that play PCM audio using the OPL synthesiser on a\n"
-	        "Sound Blaster or AdLib card, such as in: Golden Eagle (1991), Wizardry 6\n"
-	        "(1990), and Wizardry 7 (1992). Please open an issue ticket if you find other\n"
-	        "affected games.");
+	        "Remove DC bias from the OPL output ('off' by default). This should only be used\n"
+	        "as a last resort to fix popping in games that play PCM audio using the OPL\n"
+	        "synthesiser on a Sound Blaster or AdLib card, such as in: Golden Eagle (1991),\n"
+	        "Wizardry 6 (1990), and Wizardry 7 (1992). Please open an issue ticket if you\n"
+	        "find other affected games.");
 
 	pstring = secprop.AddString("oplemu", deprecated, "");
 	pstring->SetHelp("Only 'nuked' OPL emulation is supported now.");
 
 	pstring = secprop.AddString("opl_filter", when_idle, "auto");
 	pstring->SetHelp(
-	        "Type of filter to emulate for the Sound Blaster OPL output:\n"
+	        "Type of filter to emulate for the Sound Blaster OPL output ('auto' by default).\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  auto:      Use the appropriate filter determined by 'sbtype' (default).\n"
+	        "\n"
 	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
 	        "             Use the filter of this Sound Blaster model.\n"
+	        "\n"
 	        "  off:       Don't filter the output.\n"
+	        "\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	pstring = secprop.AddString("cms", when_idle, "auto");
 	pstring->SetValues({"on", "off", "auto"});
 	pstring->SetHelp(
-	        "Enable CMS emulation ('auto' by default).\n"
+	        "Enable CMS emulation ('auto' by default). Possible values:\n"
+	        "\n"
 	        "  off:   Disable CMS emulation (except when the Game Blaster is selected).\n"
 	        "  on:    Enable CMS emulation on Sound Blaster 1 and 2.\n"
 	        "  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.");
 
 	pstring = secprop.AddString("cms_filter", when_idle, "on");
 	pstring->SetHelp(
-	        "Filter for the Sound Blaster CMS output:\n"
+	        "Filter for the Sound Blaster CMS output ('on' by default). Possible values:\n"
+	        "\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");

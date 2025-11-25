@@ -659,7 +659,7 @@ static void init_capture_config_settings(SectionProp& section)
 	auto path_prop = section.AddPath("capture_dir", WhenIdle, "capture");
 	path_prop->SetHelp(
 	        "Directory where the various captures are saved, such as audio, video, MIDI\n"
-	        "and screenshot captures. ('capture' in the current working directory by\n"
+	        "and screenshot captures ('capture' in the current working directory by\n"
 	        "default).");
 
 	auto* str_prop = section.AddString("default_image_capture_formats",
@@ -667,7 +667,8 @@ static void init_capture_config_settings(SectionProp& section)
 	                                   "upscaled");
 	str_prop->SetHelp(
 	        "Set the capture format of the default screenshot action ('upscaled' by\n"
-	        "default):\n"
+	        "default). Possible values:\n"
+	        "\n"
 	        "  upscaled:  The image is bilinear-sharp upscaled and the correct aspect\n"
 	        "             ratio is maintained, depending on the 'aspect' setting. The\n"
 	        "             vertical scaling factor is always an integer. For example,\n"
@@ -676,12 +677,15 @@ static void init_capture_config_settings(SectionProp& section)
 	        "             1400x1050 (2.1875:3 scaling; fractional horizontally and\n"
 	        "             integer vertically). The filenames of upscaled screenshots\n"
 	        "             have no postfix (e.g. 'image0001.png').\n"
+	        "\n"
 	        "  rendered:  The post-rendered, post-shader image shown on the screen is\n"
 	        "             captured. The filenames of rendered screenshots end with\n"
 	        "             '-rendered' (e.g. 'image0001-rendered.png').\n"
+	        "\n"
 	        "  raw:       The contents of the raw framebuffer is captured (this always\n"
 	        "             results in square pixels). The filenames of raw screenshots\n"
 	        "             end with '-raw' (e.g. 'image0001-raw.png').\n"
+	        "\n"
 	        "If multiple formats are specified separated by spaces, the default\n"
 	        "screenshot action will save multiple images in the specified formats.\n"
 	        "Keybindings for taking single screenshots in specific formats are also\n"

@@ -801,31 +801,31 @@ static void init_mididevice_settings(SectionProp& secprop)
 	auto str_prop = secprop.AddString("mididevice", WhenIdle, DefaultMidiDevicePref);
 	str_prop->SetHelp(
 	        format_str("Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
-	                   "('%s' by default):",
+	                   "('%s' by default). Possible values:\n",
 	                   DefaultMidiDevicePref));
 
 	str_prop->SetOptionHelp(DefaultMidiDevicePref,
 	                        "  port:         A MIDI port of the host operating system's MIDI interface\n"
 	                        "                (default). You can configure the port to use with the\n"
-	                        "                'midiconfig' setting.");
+	                        "                'midiconfig' setting.\n");
 
 	str_prop->SetOptionHelp(
 	        MidiDeviceName::CoreAudio,
 	        "  coreaudio:    The built-in macOS MIDI synthesiser. The SoundFont to use can\n"
-	        "                be specified with the 'midiconfig' setting.");
+	        "                be specified with the 'midiconfig' setting.\n");
 
 	str_prop->SetOptionHelp(MidiDeviceName::Mt32,
-	                        "  mt32:         The internal Roland MT-32 synthesizer (see the [mt32] section).");
+	                        "  mt32:         The internal Roland MT-32 synthesizer (see the [mt32] section).\n");
 
 	str_prop->SetOptionHelp(MidiDeviceName::SoundCanvas,
 	                        "  soundcanvas:  The internal Roland SC-55 synthesiser (requires a CLAP audio\n"
 	                        "                plugin that implements the Sound Canvas to be available;\n"
-	                        "                see the [soundcanvas] section).");
+	                        "                see the [soundcanvas] section).\n");
 
 	str_prop->SetOptionHelp(MidiDeviceName::FluidSynth,
 	                        "  fluidsynth:   The internal FluidSynth MIDI synthesizer (SoundFont player)\n"
 	                        "                (requires the FluidSynth dynamic-link library to be available;\n"
-	                        "                see the [fluidsynth] section).");
+	                        "                see the [fluidsynth] section).\n");
 
 	str_prop->SetOptionHelp("none", "  none:         Disable MIDI output.");
 
@@ -853,29 +853,29 @@ static void init_midiconfig_settings(SectionProp& secprop)
 	auto str_prop = secprop.AddString("midiconfig", WhenIdle, "");
 	str_prop->SetHelp(
 	        "Configuration options for the selected MIDI device (unset by default).\n"
-	        "Notes:");
+	        "Notes:\n");
 
 	str_prop->SetOptionHelp(
 	        "windows_or_macos",
 	        "  - When using 'mididevice = port', find the ID or name of the MIDI port you\n"
 	        "    want to use with the DOS command 'MIXER /LISTMIDI', then set either the ID\n"
 	        "    or a substring of the name (e.g., to use the port called \"loopMIDI Port A\"\n"
-	        "    with ID 2, set 'midiconfig = 2' or 'midiconfig = port a').");
+	        "    with ID 2, set 'midiconfig = 2' or 'midiconfig = port a').\n");
 
 	str_prop->SetOptionHelp(
 	        "coreaudio",
 	        "  - When using 'mididevice = coreaudio', this setting specifies the SoundFont\n"
-	        "    to use. You must use the absolute path of the SoundFont file.");
+	        "    to use. You must use the absolute path of the SoundFont file.\n");
 
 	str_prop->SetOptionHelp("linux",
 	                        "  - When using 'mididevice = port', use the Linux command 'aconnect -l' to list\n"
 	                        "    all open MIDI ports and select one (e.g., 'midiconfig = 14:0' for sequencer\n"
-	                        "    client 14, port 0).");
+	                        "    client 14, port 0).\n");
 
 	str_prop->SetOptionHelp(
 	        "internal_synth",
 	        "  - The setting has no effect when using the internal synthesizers\n"
-	        "    ('mididevice = fluidsynth', 'mt32', or 'soundcanvas').");
+	        "    ('mididevice = fluidsynth', 'mt32', or 'soundcanvas').\n");
 
 	str_prop->SetOptionHelp(
 	        "physical_mt32",
@@ -910,15 +910,16 @@ void init_midi_config_settings(SectionProp& secprop)
 
 	auto bool_prop = secprop.AddBool("raw_midi_output", WhenIdle, false);
 	bool_prop->SetHelp(
-	        "Enable raw, unaltered MIDI output ('off' by default).\n"
-	        "The MIDI drivers of many games don't fully conform to the MIDI standard,\n"
-	        "which makes editing the MIDI recordings of these games very error-prone and\n"
-	        "cumbersome in MIDI sequencers, often resulting in hanging or missing notes.\n"
-	        "DOSBox corrects the MIDI output of such games by default. This results in no\n"
-	        "audible difference whatsoever; it only affects the representation of the MIDI\n"
-	        "data. You should only enable 'raw_midi_output' if you really need to capture\n"
-	        "the raw, unaltered MIDI output of a program, e.g. when working with music\n"
-	        "applications, or when debugging MIDI issues.");
+	        "Enable raw, unaltered MIDI output ('off' by default). The MIDI drivers of many\n"
+	        "games don't fully conform to the MIDI standard, which makes editing the MIDI\n"
+	        "recordings of these games very error-prone and cumbersome in MIDI sequencers,\n"
+	        "often resulting in hanging or missing notes. DOSBox corrects the MIDI output of\n"
+	        "such games by default. This results in no audible difference whatsoever; it only\n"
+	        "affects the representation of the MIDI data.\n"
+	        "\n"
+	        "You should only enable 'raw_midi_output' if you really need to capture the raw,\n"
+	        "unaltered MIDI output of a program, e.g. when working with music applications,\n"
+	        "or when debugging MIDI issues.");
 }
 
 static void register_midi_text_messages()

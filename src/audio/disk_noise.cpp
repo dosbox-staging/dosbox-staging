@@ -562,9 +562,10 @@ static void init_disknoise_config_settings(SectionProp& secprop)
 	auto* str_prop = secprop.AddString("hard_disk_noise", Always, "off");
 	str_prop->SetValues({"off", "seek-only", "on"});
 	str_prop->SetHelp(
-	        "Enable emulated hard disk noises ('off' by default).\n"
-	        "Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
-	        "set 'hard_disk_speed' to lower than 'maximum' for an authentic experience.\n"
+	        "Enable emulated hard disk noises ('off' by default). Plays spinning disk and\n"
+	        "seek noise sounds when enabled. It's recommended to set 'hard_disk_speed' to\n"
+	        "lower than 'maximum' for an authentic experience. Possible values:\n"
+	        "\n"
 	        "  off:           No hard disk noises (default).\n"
 	        "  seek-only:     Play hard disk seek noises only, no spin noises.\n"
 	        "  on:            Play both hard disk seek and spin noises.");
@@ -572,9 +573,10 @@ static void init_disknoise_config_settings(SectionProp& secprop)
 	str_prop = secprop.AddString("floppy_disk_noise", Always, "off");
 	str_prop->SetValues({"off", "seek-only", "on"});
 	str_prop->SetHelp(
-	        "Enable emulated floppy disk noises ('off' by default).\n"
-	        "Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
-	        "set 'floppy_disk_speed' to lower than 'maximum' for an authentic experience.\n"
+	        "Enable emulated floppy disk noises ('off' by default). Plays spinning disk and\n"
+	        "seek noise sounds when enabled. It's recommended to set 'floppy_disk_speed' to\n"
+	        "lower than 'maximum' for an authentic experience. Possible values:\n"
+	        "\n"
 	        "  off:           No floppy disk noises (default).\n"
 	        "  seek-only:     Play floppy disk seek noises only, no spin noises.\n"
 	        "  on:            Play both floppy disk seek and spin noises.");

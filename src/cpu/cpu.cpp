@@ -3245,19 +3245,23 @@ void init_cpu_config_settings(SectionProp& secprop)
 	});
 
 	pstring->SetHelp(
-	        "Type of CPU emulation core to use ('auto' by default).\n"
+	        "Type of CPU emulation core to use ('auto' by default). Possible values:\n"
+	        "\n"
 	        "  auto:     'normal' core for real mode programs, 'dynamic' core for protected\n"
 	        "            mode programs (default). Most programs will run correctly with this\n"
 	        "            setting.\n"
+	        "\n"
 	        "  normal:   The DOS program is interpreted instruction by instruction. This\n"
 	        "            yields the most accurate timings, but puts 3-5 times more load on\n"
 	        "            the host CPU compared to the 'dynamic' core. Therefore, it's\n"
 	        "            generally only recommended for real mode programs that don't need\n"
 	        "            a fast emulated CPU or are timing-sensitive. The 'normal' core is\n"
 	        "            also necessary for programs that self-modify their code.\n"
+	        "\n"
 	        "  simple:   The 'normal' core optimised for old real mode programs; it might\n"
 	        "            give you slightly better compatibility with older games. Auto-\n"
 	        "            switches to the 'normal' core in protected mode.\n"
+	        "\n"
 	        "  dynamic:  The instructions of the DOS program are translated to host CPU\n"
 	        "            instructions in blocks and are then executed directly. This puts\n"
 	        "            3-5 times less load on the host CPU compared to the 'normal' core,\n"
@@ -3271,25 +3275,32 @@ void init_cpu_config_settings(SectionProp& secprop)
 	        {"auto", "386", "386_fast", "386_prefetch", "486", "pentium", "pentium_mmx"});
 
 	pstring->SetHelp(
-	        "CPU type to emulate ('auto' by default).\n"
-	        "You should only change this if the program doesn't run correctly on 'auto'.\n"
+	        "CPU type to emulate ('auto' by default). You should only change this if the\n"
+	        "program doesn't run correctly on 'auto'. Possible values:\n"
+	        "\n"
 	        "  auto:          The fastest and most compatible setting (default).\n"
 	        "                 Technically, this is '386_fast' plus 486 CPUID, 486 CR\n"
 	        "                 register behaviour, and extra 486 instructions.\n"
+	        "\n"
 	        "  386:           386 CPUID and 386 specific page access level calculation.\n"
+	        "\n"
 	        "  386_fast:      Same as '386' but with loose page privilege checks which is\n"
 	        "                 much faster.\n"
+	        "\n"
 	        "  386_prefetch:  Same as '386_fast' plus accurate CPU prefetch queue emulation.\n"
 	        "                 Requires 'core = normal'. This setting is necessary for\n"
 	        "                 programs that self-modify their code or employ anti-debugging\n"
 	        "                 tricks. Games that require '386_prefetch' include Contra, FIFA\n"
 	        "                 International Soccer (1994), Terminator 1, and X-Men: Madness\n"
 	        "                 in The Murderworld.\n"
+	        "\n"
 	        "  486:           486 CPUID, 486+ specific page access level calculation, 486 CR\n"
 	        "                 register behaviour, and extra 486 instructions.\n"
+	        "\n"
 	        "  pentium:       Same as '486' but with Pentium CPUID, Pentium CR register\n"
 	        "                 behaviour, and RDTSC instruction support. Recommended for\n"
 	        "                 Windows 3.x games (e.g., Betrayal in Antara).\n"
+	        "\n"
 	        "  pentium_mmx:   Same as 'pentium' plus MMX instruction set support. Very few\n"
 	        "                 games use MMX instructions; it's mostly only useful for\n"
 	        "                 demoscene productions.");
@@ -3322,18 +3333,24 @@ void init_cpu_config_settings(SectionProp& secprop)
 	pstring->SetHelp(format_str(
 	        "Speed of the emulated CPU ('%d' by default). If 'cpu_cycles_protected' is on\n"
 	        "'auto', this sets the cycles for both real and protected mode programs.\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  <number>:  Emulate a fixed number of cycles per millisecond (roughly\n"
 	        "             equivalent to MIPS). Valid range is from %d to %d.\n"
+	        "\n"
 	        "  max:       Emulate as many cycles as your host CPU can handle on a single\n"
 	        "             core. The number of cycles per millisecond can vary; this might\n"
 	        "             cause issues in some DOS programs.\n"
 	        "Notes:\n"
 	        "  - Setting the CPU speed to 'max' or to high fixed values may result in sound\n"
 	        "    drop-outs and general lagginess.\n"
+	        "\n"
 	        "  - Set the lowest fixed cycles value that runs the game at an acceptable speed\n"
 	        "    for the best results.\n"
+	        "\n"
 	        "  - Ballpark cycles values for common CPUs. DOSBox does not do cycle-accurate\n"
 	        "    CPU emulation, so treat these as starting points, then fine-tune per game.\n"
+	        "\n"
 	        "      8088 (4.77 MHz)     300\n"
 	        "      286-8               700\n"
 	        "      286-12             1500\n"
@@ -3356,26 +3373,30 @@ void init_cpu_config_settings(SectionProp& secprop)
 	                             Always,
 	                             cpu_cycles_protected_default.c_str());
 	pstring->SetHelp(format_str(
-	        "Speed of the emulated CPU for protected mode programs only\n"
-	        "('%d' by default).\n"
+	        "Speed of the emulated CPU for protected mode programs only ('%d' by\n"
+	        "default). Possible values:\n"
+	        "\n"
 	        "  auto:      Use the `cpu_cycles' setting.\n"
+	        "\n"
 	        "  <number>:  Emulate a fixed number of cycles per millisecond (roughly\n"
 	        "             equivalent to MIPS). Valid range is from %d to %d.\n"
+	        "\n"
 	        "  max:       Emulate as many cycles as your host CPU can handle on a single\n"
 	        "             core. The number of cycles per millisecond can vary; this might\n"
 	        "             cause issues in some DOS programs.\n"
+	        "\n"
 	        "Note: See 'cpu_cycles' setting for further info.",
 	        CpuCyclesProtectedModeDefault,
 	        CpuCyclesMin,
 	        CpuCyclesMax));
 
 	auto pbool = secprop.AddBool("cpu_throttle", Always, CpuThrottleDefault);
-	pbool->SetHelp(format_str(
-	        "Throttle down the number of emulated CPU cycles dynamically if your host CPU\n"
-	        "cannot keep up (%s by default).\n"
-	        "Only affects fixed cycles settings. When enabled, the number of cycles per\n"
-	        "millisecond can vary; this might cause issues in some DOS programs.",
-	        (CpuThrottleDefault ? "'on'" : "'off'")));
+	pbool->SetHelp(
+	        format_str("Throttle down the number of emulated CPU cycles dynamically if your host CPU\n"
+	                   "cannot keep up (%s by default). Only affects fixed cycles settings. When\n"
+	                   "enabled, the number of cycles per millisecond can vary; this might cause issues\n"
+	                   "in some DOS programs.",
+	                   (CpuThrottleDefault ? "'on'" : "'off'")));
 
 	auto pint = secprop.AddInt("cycleup", Always, DefaultCpuCycleUp);
 	pint->SetMinMax(CpuCycleStepMin, CpuCycleStepMax);

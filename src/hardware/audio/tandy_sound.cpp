@@ -655,32 +655,40 @@ static void init_tandysound_settings(SectionProp& section)
 	auto pstring = section.AddString("tandy", WhenIdle, "auto");
 	pstring->SetValues({"auto", "on", "psg", "off"});
 	pstring->SetHelp(
-	        "Set the Tandy/PCjr 3 Voice sound emulation:\n"
+	        "Set the Tandy/PCjr 3 Voice sound emulation ('auto') by default. Possible values:\n"
+	        "\n"
 	        "  auto:  Automatically enable Tandy/PCjr sound for the 'tandy' and 'pcjr'\n"
 	        "         machine types only (default).\n"
+	        "\n"
 	        "  on:    Enable Tandy/PCjr sound with DAC support, when possible.\n"
 	        "         Most games also need the machine set to 'tandy' or 'pcjr' to work.\n"
+	        "\n"
 	        "  psg:   Only enable the card's three-voice programmable sound generator\n"
 	        "         without DAC to avoid conflicts with other cards using DMA 1.\n"
+	        "\n"
 	        "  off:   Disable Tandy/PCjr sound.");
 
 	pstring = section.AddString("tandy_fadeout", WhenIdle, "off");
 	pstring->SetHelp(
-	        "Fade out the Tandy synth output after the last IO port write:\n"
+	        "Fade out the Tandy synth output after the last IO port write ('off' by default).\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  off:       Don't fade out; residual output will play forever (default).\n"
 	        "  on:        Wait 0.5s before fading out over a 0.5s period.\n"
 	        "  <custom>:  Custom fade out definition; see 'opl_fadeout' for details.");
 
 	pstring = section.AddString("tandy_filter", WhenIdle, "on");
 	pstring->SetHelp(
-	        "Filter for the Tandy synth output:\n"
+	        "Filter for the Tandy synth output ('on' by default). Possible values:\n"
+	        "\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	pstring = section.AddString("tandy_dac_filter", WhenIdle, "on");
 	pstring->SetHelp(
-	        "Filter for the Tandy DAC output:\n"
+	        "Filter for the Tandy DAC output ('on' by default). Possible values:\n"
+	        "\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
