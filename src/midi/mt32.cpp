@@ -365,17 +365,20 @@ static void init_mt32_config_settings(SectionProp& sec_prop)
 	                      mt32_204_model.GetName(),
 	                      mt32_203_model.GetName()});
 	str_prop->SetHelp(
-	        "The Roland MT-32/CM-32ML model to use.\n"
-	        "You must have the ROM files for the selected model available (see 'romdir').\n"
-	        "The lookup for the best models is performed in order as listed.\n"
+	        "Roland MT-32/CM-32ML model to use ('auto' by default). You must have the ROM\n"
+	        "files for the selected model available (see 'romdir'). The lookup for the best\n"
+	        "models is performed in order as listed. Possible values:\n"
+	        "\n"
 	        "  auto:       Pick the best available model (default).\n"
 	        "  cm32l:      Pick the best available CM-32L model.\n"
 	        "  mt32_old:   Pick the best available \"old\" MT-32 model (v1.0x).\n"
 	        "  mt32_new:   Pick the best available \"new\" MT-32 model (v2.0x).\n"
 	        "  mt32:       Pick the best available MT-32 model.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'mt32_204').\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - Run `MIXER /LISTMIDI` to see the list of available models.\n"
+	        "\n"
 	        "  - This is *NOT* a General MIDI compatible MIDI device; only use it if the\n"
 	        "    game is known to support Roland MT-32 MIDI (which predates General MIDI).\n");
 
@@ -385,15 +388,19 @@ static void init_mt32_config_settings(SectionProp& sec_prop)
 	        "The directory can be absolute or relative, or leave it unset to use the\n"
 	        "'mt32-roms' directory in your DOSBox configuration directory. Other common\n"
 	        "system locations will be checked as well.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - The file names of the ROM files do not matter; the ROMS are identified\n"
 	        "    by their checksums.\n"
+	        "\n"
 	        "  - Both interleaved and non-interlaved ROM files are supported.");
 
 	str_prop = sec_prop.AddString("mt32_filter", when_idle, "off");
 	assert(str_prop);
 	str_prop->SetHelp(
-	        "Filter for the Roland MT-32/CM-32L audio output:\n"
+	        "Filter for the Roland MT-32/CM-32L audio output ('off' by default).\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  off:       Don't filter the output (default).\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }

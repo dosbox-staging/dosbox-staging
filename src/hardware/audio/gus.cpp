@@ -1527,11 +1527,10 @@ static void init_gus_config_settings(SectionProp& secprop)
 	auto* bool_prop = secprop.AddBool("gus", when_idle, false);
 	assert(bool_prop);
 	bool_prop->SetHelp(
-	        "Enable Gravis UltraSound emulation ('off' by default).\n"
-	        "Many games and all demos upload their own sounds, but some rely on the\n"
-	        "instrument patch files included with the GUS for MIDI playback (see 'ultradir'\n"
-	        "for details). Some games also require ULTRAMID.EXE to be loaded prior to\n"
-	        "starting the game.\n"
+	        "Enable Gravis UltraSound emulation ('off' by default). Many games and all demos\n"
+	        "upload their own sounds, but some rely on the instrument patch files included\n"
+	        "with the GUS for MIDI playback (see 'ultradir' for details). Some games also\n"
+	        "require ULTRAMID.EXE to be loaded prior to starting the game.\n"
 	        "\n"
 	        "Note: The default settings of base address 240, IRQ 5, and DMA 3 have been\n"
 	        "      chosen so the GUS can coexist with a Sound Blaster card. This works fine\n"
@@ -1559,7 +1558,9 @@ static void init_gus_config_settings(SectionProp& secprop)
 	auto* str_prop = secprop.AddString("gus_filter", when_idle, "on");
 	assert(str_prop);
 	str_prop->SetHelp(
-	        "Filter for the Gravis UltraSound audio output:\n"
+	        "Filter for the Gravis UltraSound audio output ('on' by default).\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
@@ -1567,11 +1568,10 @@ static void init_gus_config_settings(SectionProp& secprop)
 	str_prop = secprop.AddString("ultradir", when_idle, "C:\\ULTRASND");
 	assert(str_prop);
 	str_prop->SetHelp(
-	        "Path to the UltraSound directory ('C:\\ULTRASND' by default).\n"
-	        "This should have a 'MIDI' subdirectory containing the patches (instrument\n"
-	        "files) required by some games for MIDI music playback. Not all games need these\n"
-	        "patches; many GUS-native games and all demos upload their own custom sounds\n"
-	        "instead.");
+	        "Path to the UltraSound directory ('C:\\ULTRASND' by default). This should have a\n"
+	        "'MIDI' subdirectory containing the patches (instrument files) required by some\n"
+	        "games for MIDI music playback. Not all games need these patches; many GUS-native\n"
+	        "games and all demos upload their own custom sounds instead.");
 }
 
 void GUS_Init()

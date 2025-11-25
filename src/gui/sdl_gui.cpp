@@ -2499,10 +2499,11 @@ static void init_sdl_config_settings(SectionProp& section)
 
 	pstring->SetOptionHelp(
 	        "opengl_default",
-	        "Rendering backend to use for graphics output ('opengl' by default).\n"
-	        "Only the 'opengl' backend has shader support and is thus the preferred option.\n"
-	        "The 'texture' backend is only provided as a last resort fallback if OpenGL is\n"
-	        "not available or the OpenGL driver is not Core Profile 3.3 compliant.");
+	        "Rendering backend to use for graphics output ('opengl' by default). Only the\n"
+	        "'opengl' backend has shader support and is thus the preferred option. The\n"
+	        "'texture' backend is only provided as a last resort fallback if OpenGL is not\n"
+	        "available or the OpenGL driver is not Core Profile 3.3 compliant. Possible\n"
+	        "values:\n");
 
 	pstring->SetOptionHelp("texture_default",
 	                       "Rendering backend to use for graphics output ('texture' by default).");
@@ -2561,11 +2562,12 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "Please use [color=light-green]'fullscreen_mode'[reset] instead.");
 
 	pstring = section.AddString("fullscreen_mode", Always, "standard");
-	pstring->SetHelp("Set the fullscreen mode ('standard' by default):");
+	pstring->SetHelp(
+	        "Set fullscreen mode ('standard' by default). Possible values:\n");
 
 	pstring->SetOptionHelp("standard",
 	                       "  standard:           Use the standard fullscreen mode of your operating system\n"
-	                       "                      (default).");
+	                       "                      (default).\n");
 
 	pstring->SetOptionHelp(
 	        "forced-borderless",
@@ -2590,19 +2592,25 @@ static void init_sdl_config_settings(SectionProp& section)
 
 	pstring = section.AddString("window_size", Always, "default");
 	pstring->SetHelp(
-	        "Set initial window size for windowed mode. You can still resize the window\n"
-	        "after startup.\n"
+	        "Set initial window size for windowed mode ('default' by default). You can still\n"
+	        "resize the window after startup. Possible values:\n"
+	        "\n"
 	        "  default:   Select the best option based on your environment and other\n"
 	        "             settings (such as whether aspect ratio correction is enabled).\n"
+	        "\n"
 	        "  small, medium, large (s, m, l):\n"
 	        "             Size the window relative to the desktop.\n"
+	        "\n"
 	        "  WxH:       Specify window size in WxH format in logical units\n"
 	        "             (e.g., 1024x768).");
 
 	pstring = section.AddString("window_position", Always, "auto");
 	pstring->SetHelp(
-	        "Set initial window position for windowed mode:\n"
+	        "Set initial window position for windowed mode ('auto' by default).\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  auto:      Let the window manager decide the position (default).\n"
+	        "\n"
 	        "  X,Y:       Set window position in X,Y format in logical units (e.g., 250,100).\n"
 	        "             0,0 is the top-left corner of the screen.");
 
@@ -2617,7 +2625,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	pint = section.AddInt("window_transparency", Always, 0);
 	pint->SetHelp(
 	        "Set the transparency of the DOSBox Staging window (0 by default).\n"
-	        "From 0 (no transparency) to 90 (high transparency).");
+	        "Valid range from 0 (no transparency) to 90 (high transparency).");
 	pint->SetMinMax(0, 90);
 
 	pstring = section.AddString("max_resolution", Deprecated, "");
@@ -2632,17 +2640,21 @@ static void init_sdl_config_settings(SectionProp& section)
 
 	pstring = section.AddString("vsync", Always, "off");
 	pstring->SetHelp(
-	        "Set the host video driver's vertical synchronization (vsync) mode:\n"
+	        "Set the host video driver's vertical synchronization (vsync) mode.\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  off:              Disable vsync in both windowed and fullscreen mode\n"
 	        "                    (default). This is the best option on variable refresh rate\n"
 	        "                    (VRR) monitors running in VRR mode to get perfect frame\n"
 	        "                    pacing, no tearing, and low input lag. On fixed refresh rate\n"
 	        "                    monitors (or VRR monitors in fixed refresh mode), disabling\n"
 	        "                    vsync might cause visible tearing in fast-paced games.\n"
+	        "\n"
 	        "  on:               Enable vsync in both windowed and fullscreen mode. This can\n"
 	        "                    prevent tearing in fast-paced games but will increase input\n"
 	        "                    lag. Vsync is only available with 'host-rate' presentation\n"
 	        "                    (see 'presentation_mode').\n"
+	        "\n"
 	        "  fullscreen-only:  Enable vsync in fullscreen mode only. This might be useful\n"
 	        "                    if your operating system enforces vsync in windowed mode and\n"
 	        "                    the 'on' setting causes audio glitches or other issues in\n"
@@ -2654,20 +2666,25 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "    and Epic Pinball), you'll need a VRR monitor running in VRR mode and 'vsync'\n"
 	        "    disabled. The scrolling in 70 Hz VGA games will always appear juddery on\n"
 	        "    60 Hz fixed refresh rate monitors even with vsync enabled.\n"
+	        "\n"
 	        "  - Usually, you'll only get perfectly smooth 2D scrolling in fullscreen mode,\n"
 	        "    even on a VRR monitor.\n"
+	        "\n"
 	        "  - For the best results, disable all frame cappers and global vsync overrides\n"
 	        "    in your video driver settings.");
 	pstring->SetValues({"off", "on", "fullscreen-only"});
 
 	pstring = section.AddString("presentation_mode", Always, "auto");
 	pstring->SetHelp(
-	        "Select the frame presentation mode ('auto' by default):\n"
+	        "Set the frame presentation mode ('auto' by default). Possible values:\n"
+	        "\n"
 	        "  auto:       Use 'host-rate' if 'vsync' is enabled, otherwise use 'dos-rate'\n"
 	        "              (default). See 'vsync' for further details.\n"
+	        "\n"
 	        "  dos-rate:   Present frames at the refresh rate of the emulated DOS video mode.\n"
 	        "              This is the best option on variable refresh rate (VRR) monitors.\n"
 	        "              'vsync' is not availabe with 'dos-rate' presentation.\n"
+	        "\n"
 	        "  host-rate:  Present frames at the refresh rate of the host display. Use this\n"
 	        "              with 'vsync' enabled on fixed refresh rate monitors for fast-paced\n"
 	        "              games where tearing is a problem. 'host-rate' combined with\n"
@@ -2716,6 +2733,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "Path to the mapper file ('mapper-sdl2-XYZ.map' by default, where XYZ is the\n"
 	        "current version). Pre-configured maps are bundled in 'resources/mapperfiles'.\n"
 	        "These can be loaded by name, e.g., with 'mapperfile = xbox/xenon2.map'.\n"
+	        "\n"
 	        "Note: The '--resetmapper' command line option only deletes the default mapper\n"
 	        "      file.");
 

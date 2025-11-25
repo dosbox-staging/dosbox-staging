@@ -772,12 +772,15 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	auto pstring = section->AddString("language", Always, "auto");
 
 	pstring->SetHelp(
-	        "Select the DOS messages language:\n"
+	        "Select the DOS messages language ('auto' by default). Possible values:\n"
+	        "\n"
 	        "  auto:     Detects the language from the host OS (default).\n"
 	        "  <value>:  Loads a translation from the given file.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - The following language files are available:\n"
 	        "    'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'pt_BR' and 'ru'.\n"
+	        "\n"
 	        "  - English is built-in, the rest is stored in the bundled\n"
 	        "    'resources/translations' directory.");
 
@@ -797,27 +800,40 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 
 	pstring->SetDeprecatedWithAlternateValue("vgaonly", "svga_paradise");
 	pstring->SetHelp(
-	        "Set the video adapter or machine to emulate:\n"
+	        "Set the video adapter or machine to emulate ('svga_s3' by default).\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  hercules:       Hercules Graphics Card (HGC) (see 'monochrome_palette').\n"
+	        "\n"
 	        "  cga_mono:       CGA adapter connected to a monochrome monitor (see\n"
 	        "                  'monochrome_palette').\n"
+	        "\n"
 	        "  cga:            IBM Color Graphics Adapter (CGA). Also enables composite\n"
 	        "                  video emulation (see [composite] section).\n"
+	        "\n"
 	        "  pcjr:           An IBM PCjr machine. Also enables PCjr sound and composite\n"
 	        "                  video emulation (see [composite] section).\n"
+	        "\n"
 	        "  tandy:          A Tandy 1000 machine with TGA graphics. Also enables Tandy\n"
 	        "                  sound and composite video emulation (see [composite]\n"
 	        "                  section).\n"
+	        "\n"
 	        "  ega:            IBM Enhanced Graphics Adapter (EGA).\n"
+	        "\n"
 	        "  svga_paradise:  Paradise PVGA1A SVGA card (no VESA VBE; 512K vmem by default,\n"
 	        "                  can be set to 256K or 1MB with 'vmemsize'). This is the\n"
 	        "                  closest to IBM's original VGA adapter.\n"
+	        "\n"
 	        "  svga_et3000:    Tseng Labs ET3000 SVGA card (no VESA VBE; fixed 512K vmem).\n"
+	        "\n"
 	        "  svga_et4000:    Tseng Labs ET4000 SVGA card (no VESA VBE; 1MB vmem by\n"
 	        "                  default, can be set to 256K or 512K with 'vmemsize').\n"
+	        "\n"
 	        "  svga_s3:        S3 Trio64 (VESA VBE 2.0; 4MB vmem by default, can be set to\n"
 	        "                  512K, 1MB, 2MB, or 8MB with 'vmemsize') (default)\n"
+	        "\n"
 	        "  vesa_oldvbe:    Same as 'svga_s3' but limited to VESA VBE 1.2.\n"
+	        "\n"
 	        "  vesa_nolfb:     Same as 'svga_s3' (VESA VBE 2.0), plus the \"no linear\n"
 	        "                  framebuffer\" hack (needed only by a few games).");
 
@@ -829,14 +845,16 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	auto pint = section->AddInt("memsize", OnlyAtStart, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
 	pint->SetHelp(
-	        "Amount of memory of the emulated machine has in MB (16 by default).\n"
-	        "Best leave at the default setting to avoid problems with some games,\n"
-	        "though a few games might require a higher value.\n"
-	        "There is generally no speed advantage when raising this value.");
+	        "Amount of memory of the emulated machine has in MB (16 by default). Best leave\n"
+	        "at the default setting to avoid problems with some games, though a few games\n"
+	        "might require a higher value. There is generally no speed advantage when raising\n"
+	        "this value.");
 
 	pstring = section->AddString("mcb_fault_strategy", OnlyAtStart, "repair");
 	pstring->SetHelp(
-	        "How software-corrupted memory chain blocks should be handled:\n"
+	        "How software-corrupted memory chain blocks should be handled ('repair' by\n"
+	        "default). Possible values:\n"
+	        "\n"
 	        "  repair:  Repair (and report) faults using adjacent blocks (default).\n"
 	        "  report:  Report faults but otherwise proceed as-is.\n"
 	        "  allow:   Allow faults to go unreported (hardware behavior).\n"
@@ -867,26 +885,34 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 
 	pstring = section->AddString("vmem_delay", OnlyAtStart, "off");
 	pstring->SetHelp(
-	        "Set video memory access delay emulation ('off' by default).\n"
+	        "Set video memory access delay emulation ('off' by default). Possible values:\n"
+	        "\n"
 	        "  off:      Disable video memory access delay emulation (default).\n"
 	        "            This is preferable for most games to avoid slowdowns.\n"
+	        "\n"
 	        "  on:       Enable video memory access delay emulation (3000 ns).\n"
 	        "            This can help reduce or eliminate flicker in Hercules,\n"
 	        "            CGA, EGA, and early VGA games.\n"
+	        "\n"
 	        "  <value>:  Set access delay in nanoseconds. Valid range is 0 to 20000 ns;\n"
 	        "            500 to 5000 ns is the most useful range.\n"
+	        "\n"
 	        "Note: Only set this on a per-game basis when necessary as it slows down\n"
 	        "      the whole emulator.");
 
 	pstring = section->AddString("dos_rate", WhenIdle, "default");
 	pstring->SetHelp(format_str(
-	        "Override the emulated DOS video mode's refresh rate with a custom rate.\n"
+	        "Override the emulated DOS video mode's refresh rate with a custom rate\n"
+	        "('default' by default). Possible values:\n"
+	        "\n"
 	        "  default:  Don't override; use the emulated DOS video mode's refresh rate\n"
 	        "            (default).\n"
+	        "\n"
 	        "  host:     Override the refresh rate of all DOS video modes with the refresh\n"
 	        "            rate of your monitor. This might allow you to play some 70 Hz VGA\n"
 	        "            games with perfect vsync on a 60 Hz fixed refresh rate monitor (see\n"
 	        "            'vsync' for further details).\n"
+	        "\n"
 	        "  <value>:  Override the refresh rate of all DOS video modes with a fixed rate\n"
 	        "            specified in Hz (valid range is from %d.000 to %d.000). This is a\n"
 	        "            niche option for a select few fast-paced mid to late 1990s 3D games\n"
@@ -904,7 +930,9 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	pstring = section->AddString("vesa_modes", OnlyAtStart, "compatible");
 	pstring->SetValues({"compatible", "all", "halfline"});
 	pstring->SetHelp(
-	        "Controls which VESA video modes are available:\n"
+	        "Controls which VESA video modes are available ('compatible' by default).\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  compatible:  Only the most compatible VESA modes for the configured video\n"
 	        "               memory size (default). Recommended with 4 or 8 MB of video\n"
 	        "               memory ('vmemsize') for the widest compatiblity with games.\n"
@@ -912,9 +940,11 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "               properly supported until the late '90s. The 256-colour linear\n"
 	        "               framebuffer 320x240, 400x300, and 512x384 modes are also\n"
 	        "               excluded as they cause timing problems in Build Engine games.\n"
+	        "\n"
 	        "  halfline:    Same as 'compatible', but the 120h VESA mode is replaced with\n"
 	        "               a special halfline mode used by Extreme Assault. Use only if\n"
 	        "               needed.\n"
+	        "\n"
 	        "  all:         All modes are available, including extra DOSBox-specific VESA\n"
 	        "               modes. Use 8 MB of video memory for the best results. Some\n"
 	        "               games misbehave in the presence of certain VESA modes; try\n"
@@ -927,9 +957,9 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 
 	pbool = section->AddBool("vga_render_per_scanline", OnlyAtStart, true);
 	pbool->SetHelp(
-	        "Emulate accurate per-scanline VGA rendering ('on' by default).\n"
-	        "Currently, you need to disable this for a few games, otherwise they will crash\n"
-	        "at startup (e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors).");
+	        "Emulate accurate per-scanline VGA rendering ('on' by default). Currently, you\n"
+	        "need to disable this for a few games, otherwise they will crash at startup\n"
+	        "(e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors).");
 
 	pbool = section->AddBool("speed_mods", OnlyAtStart, true);
 	pbool->SetHelp(
@@ -941,8 +971,10 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	pstring = section->AddString("autoexec_section", OnlyAtStart, "join");
 	pstring->SetValues({"join", "overwrite"});
 	pstring->SetHelp(
-	        "How autoexec sections are handled from multiple config files:\n"
-	        "  join:       Combine them into one big section (legacy behavior; default).\n"
+	        "How autoexec sections are handled from multiple config files ('join' by\n"
+	        "default). Possible values:\n"
+	        "\n"
+	        "  join:       Combine them into one big section (default).\n"
 	        "  overwrite:  Use the last one encountered, like other config settings.");
 
 	pbool = section->AddBool("automount", OnlyAtStart, true);
@@ -952,6 +984,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "provided relative to the current directory or via built-in resources.\n"
 	        "Mount settings can be optionally provided using a [c].conf file along-side\n"
 	        "the drive's directory, with content as follows:\n"
+	        "\n"
 	        "  [drive]\n"
 	        "  type     = dir, overlay, floppy, or cdrom\n"
 	        "  label    = custom_label\n"
@@ -964,6 +997,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	pstring->SetValues({"auto", "high", "low", "quiet"});
 	pstring->SetHelp(
 	        "Controls verbosity prior to displaying the program ('auto' by default):\n"
+	        "\n"
 	        "  Verbosity   | Welcome | Early stdout\n"
 	        "  high        |   yes   |    yes\n"
 	        "  low         |   no    |    yes\n"
@@ -988,7 +1022,8 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	pstring = section->AddString("hard_disk_speed", OnlyAtStart, "maximum");
 	pstring->SetValues({"maximum", "fast", "medium", "slow"});
 	pstring->SetHelp(
-	        "Set the emulated hard disk speed ('maximum' by default).\n"
+	        "Set the emulated hard disk speed ('maximum' by default). Possible values:\n"
+	        "\n"
 	        "  maximum:  As fast as possible, no slowdown (default)\n"
 	        "  fast:     Typical mid-1990s hard disk speed (~15 MB/s)\n"
 	        "  medium:   Typical early 1990s hard disk speed (~2.5 MB/s)\n"
@@ -997,7 +1032,8 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	pstring = section->AddString("floppy_disk_speed", OnlyAtStart, "maximum");
 	pstring->SetValues({"maximum", "fast", "medium", "slow"});
 	pstring->SetHelp(
-	        "Set the emulated floppy disk speed ('maximum' by default).\n"
+	        "Set the emulated floppy disk speed ('maximum' by default). Possible values:\n"
+	        "\n"
 	        "  maximum:  As fast as possible, no slowdown (default)\n"
 	        "  fast:     Extra-high density (ED) floppy speed (~120 kB/s)\n"
 	        "  medium:   High density (HD) floppy speed (~60 kB/s)\n"

@@ -13467,7 +13467,8 @@ static void init_imfc_config_settings(SectionProp& secprop)
 	const auto str_prop = secprop.AddString("imfc_filter", when_idle, "on");
 	assert(str_prop);
 	str_prop->SetHelp(
-	        "Filter for the IBM Music Feature Card output:\n"
+	        "Filter for the IBM Music Feature Card output ('on' by default). Possible values:\n"
+	        "\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
