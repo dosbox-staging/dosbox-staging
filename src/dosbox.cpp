@@ -752,7 +752,7 @@ static void notify_dosbox_setting_updated([[maybe_unused]] SectionProp& section,
 		MSG_LoadMessages();
 
 	} else if (prop_name == "dos_rate") {
-		dosbox_realinit(section);
+		VGA_SetRefreshRateMode(section.GetString("dos_rate"));
 
 	} else if (prop_name == "shell_config_shortcuts") {
 		// No need to re-init anything; the setting is always queried when
