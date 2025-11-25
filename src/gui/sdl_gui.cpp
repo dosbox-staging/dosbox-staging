@@ -1861,9 +1861,11 @@ static void notify_sdl_setting_updated(SectionProp& section,
 	} else if (prop_name == "vsync") {
 		validate_vsync_and_presentation_mode_settings();
 		configure_vsync();
+		configure_presentation_mode();
 
 		sdl.renderer->SetVsync(is_vsync_enabled());
 		maybe_log_presentation_and_vsync_mode();
+		GFX_ResetScreen();
 
 	} else if (prop_name == "window_decorations") {
 		configure_window_decorations();
