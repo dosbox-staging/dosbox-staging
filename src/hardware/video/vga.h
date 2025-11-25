@@ -123,7 +123,7 @@ constexpr uint16_t EGA_LINE_DOUBLE = 1 << 1;
 constexpr uint16_t VGA_PIXEL_DOUBLE = 1 << 2;
 
 // Refresh rate constants
-constexpr auto RefreshRateMin        = 23;
+constexpr auto RefreshRateMin        = 24;
 constexpr auto RefreshRateDosDefault = 70;
 constexpr auto RefreshRateMax        = 1000;
 

@@ -879,7 +879,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "      the whole emulator.");
 
 	pstring = section->AddString("dos_rate", WhenIdle, "default");
-	pstring->SetHelp(
+	pstring->SetHelp(format_str(
 	        "Override the emulated DOS video mode's refresh rate with a custom rate.\n"
 	        "  default:  Don't override; use the emulated DOS video mode's refresh rate\n"
 	        "            (default).\n"
@@ -888,7 +888,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "            games with perfect vsync on a 60 Hz fixed refresh rate monitor (see\n"
 	        "            'vsync' for further details).\n"
 	        "  <value>:  Override the refresh rate of all DOS video modes with a fixed rate\n"
-	        "            specified in Hz (valid range is from 24.000 to 1000.000). This is a\n"
+	        "            specified in Hz (valid range is from %d.000 to %d.000). This is a\n"
 	        "            niche option for a select few fast-paced mid to late 1990s 3D games\n"
 	        "            for high refresh rate gaming.\n"
 	        "\n"
@@ -897,7 +897,9 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "      sped-up or slowed-down audio, jerky mouse movement, mouse button presses\n"
 	        "      not being registered, and even gameplay bugs. Overriding the DOS refresh\n"
 	        "      rate is a hack that only works acceptably with a small subset of all DOS\n"
-	        "      games (typically mid to late 1990s games).");
+	        "      games (typically mid to late 1990s games).",
+	        RefreshRateMin,
+	        RefreshRateMax));
 
 	pstring = section->AddString("vesa_modes", OnlyAtStart, "compatible");
 	pstring->SetValues({"compatible", "all", "halfline"});
