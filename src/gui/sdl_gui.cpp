@@ -2257,7 +2257,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// The window size has changed either as a result of an API call
 		// or through the system or user changing the window size.
 		const auto new_width  = event.window.data1;
-		[[maybe_unused]] const auto new_height = event.window.data2;
 
 		check_and_handle_dpi_change(sdl.window, new_width);
 
