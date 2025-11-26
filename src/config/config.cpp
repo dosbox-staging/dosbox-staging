@@ -27,6 +27,49 @@
 // Set by parseconfigfile so PropPath can use it to construct the realpath
 std_fs::path current_config_dir;
 
+static void write_property(const Property& prop, FILE* outfile, const int max_width)
+{
+	auto help = prop.GetHelpRaw();
+
+	std::string::size_type pos = std::string::npos;
+
+	char prefix[80];
+	safe_sprintf(prefix, "\n# %*s  ", max_width, "");
+
+	while ((pos = help.find('\n', pos + 1)) != std::string::npos) {
+		help.replace(pos, 1, prefix);
+	}
+
+	// Percentage signs are encoded as '%%' in the
+	// config descriptions because they are sent
+	// through printf-like functions (e.g.,
+	// WriteOut()). So we need to de-escape them
+	// before writing them into the config.
+	auto s = format_str(help);
+
+	fprintf(outfile, "# %*s: %s", max_width, prop.propname.c_str(), s.c_str());
+
+	fprintf(outfile, "\n");
+	fprintf(outfile, "#\n");
+}
+
+static void write_section(SectionProp& sec, FILE* outfile)
+{
+	size_t maxwidth = 0;
+
+	for (size_t i = 0; const auto prop = sec.GetProperty(i); ++i) {
+		maxwidth = std::max(maxwidth, prop->propname.length());
+	}
+
+	const int max_width = std::min<int>(60, check_cast<int>(maxwidth));
+
+	for (size_t i = 0; const auto prop = sec.GetProperty(i); ++i) {
+		if (!prop->IsDeprecated()) {
+			write_property(*prop, outfile, max_width);
+		}
+	}
+}
+
 bool Config::WriteConfig(const std_fs::path& path) const
 {
 	char temp[50];
@@ -41,59 +84,16 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	fprintf(outfile, MSG_GetTranslatedRaw("CONFIGFILE_INTRO").c_str(), DOSBOX_VERSION);
 	fprintf(outfile, "\n");
 
-	for (auto tel = sections.cbegin(); tel != sections.cend(); ++tel) {
+	for (auto section = sections.cbegin(); section != sections.cend(); ++section) {
 		// Print section header
-		safe_strcpy(temp, (*tel)->GetName());
+		safe_strcpy(temp, (*section)->GetName());
 		lowcase(temp);
 		fprintf(outfile, "[%s]\n", temp);
 
-		SectionProp* sec = dynamic_cast<SectionProp*>(*tel);
+		auto sec = dynamic_cast<SectionProp*>(*section);
 		if (sec) {
-			Property* p;
-			int i = 0;
+			write_section(*sec, outfile);
 
-			size_t maxwidth = 0;
-
-			while ((p = sec->GetProperty(i++))) {
-				maxwidth = std::max(maxwidth, p->propname.length());
-			}
-
-			i = 0;
-
-			char prefix[80];
-			int intmaxwidth = std::min<int>(60, check_cast<int>(maxwidth));
-			safe_sprintf(prefix, "\n# %*s  ", intmaxwidth, "");
-
-			while ((p = sec->GetProperty(i++))) {
-				if (p->IsDeprecated()) {
-					continue;
-				}
-
-				auto help = p->GetHelpRaw();
-
-				std::string::size_type pos = std::string::npos;
-
-				while ((pos = help.find('\n', pos + 1)) !=
-				       std::string::npos) {
-					help.replace(pos, 1, prefix);
-				}
-
-				// Percentage signs are encoded as '%%' in the
-				// config descriptions because they are sent
-				// through printf-like functions (e.g.,
-				// WriteOut()). So we need to de-escape them
-				// before writing them into the config.
-				auto s = format_str(help);
-
-				fprintf(outfile,
-				        "# %*s: %s",
-				        intmaxwidth,
-				        p->propname.c_str(),
-				        s.c_str());
-
-				fprintf(outfile, "\n");
-				fprintf(outfile, "#\n");
-			}
 		} else {
 			upcase(temp);
 			strcat(temp, "_CONFIGFILE_HELP");
@@ -122,7 +122,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 		}
 
 		fprintf(outfile, "\n");
-		(*tel)->PrintData(outfile);
+		(*section)->PrintData(outfile);
 
 		// Always add empty line between sections
 		fprintf(outfile, "\n");
