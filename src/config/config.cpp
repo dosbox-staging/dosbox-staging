@@ -91,45 +91,6 @@ bool Config::WriteConfig(const std_fs::path& path) const
 				        p->propname.c_str(),
 				        s.c_str());
 
-				auto print_values = [&](const char* values_msg_key,
-				                        const std::vector<Value>& values) {
-					if (values.empty()) {
-						return;
-					}
-					fprintf(outfile,
-					        "%s%s:",
-					        prefix,
-					        MSG_GetTranslatedRaw(values_msg_key)
-					                .c_str());
-
-					std::vector<Value>::const_iterator it =
-					        values.begin();
-
-					while (it != values.end()) {
-						if ((*it).ToString() != "%u") {
-							// Hack hack hack. else
-							// we need to modify
-							// GetValues, but that
-							// one is const...
-							if (it != values.begin()) {
-								fputs(",", outfile);
-							}
-
-							fprintf(outfile,
-							        " %s",
-							        (*it).ToString().c_str());
-						}
-						++it;
-					}
-					fprintf(outfile, ".");
-				};
-
-				print_values("PROGRAM_CONFIG_VALID_VALUES",
-				             p->GetValues());
-
-				print_values("PROGRAM_CONFIG_DEPRECATED_VALUES",
-				             p->GetDeprecatedValues());
-
 				fprintf(outfile, "\n");
 				fprintf(outfile, "#\n");
 			}
