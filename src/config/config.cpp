@@ -40,17 +40,20 @@ static void write_property(const Property& prop, FILE* outfile, const int max_wi
 		help.replace(pos, 1, prefix);
 	}
 
-	// Percentage signs are encoded as '%%' in the
-	// config descriptions because they are sent
-	// through printf-like functions (e.g.,
-	// WriteOut()). So we need to de-escape them
-	// before writing them into the config.
+	// Percentage signs are encoded as '%%' in the config descriptions
+	// because they are sent through printf-like functions (e.g.,
+	// WriteOut()). So we need to de-escape them before writing them into
+	// the config.
 	auto s = format_str(help);
 
-	fprintf(outfile, "# %*s: %s", max_width, prop.propname.c_str(), s.c_str());
+	// Write help text
+	fprintf(outfile, "# %*s: %s\n", max_width, prop.propname.c_str(), s.c_str());
 
-	fprintf(outfile, "\n");
-	fprintf(outfile, "#\n");
+	// Write 'setting = value' pair
+	fprintf(outfile,
+	        "%s = %s\n\n",
+	        prop.propname.c_str(),
+	        prop.GetValue().ToString().c_str());
 }
 
 static void write_section(SectionProp& sec, FILE* outfile)
@@ -121,10 +124,11 @@ bool Config::WriteConfig(const std_fs::path& path) const
 			}
 		}
 
-		fprintf(outfile, "\n");
+		// This will effectively only print the autoexec section
+		// TODO Do this in a nicer way and get rid of PrintData()
+		// altogether.
 		(*section)->PrintData(outfile);
 
-		// Always add empty line between sections
 		fprintf(outfile, "\n");
 	}
 
