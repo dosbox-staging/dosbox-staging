@@ -232,7 +232,7 @@ public:
 	AutoExecModule(Section* configuration);
 
 private:
-	void ProcessConfigFile(const SectionLine& section,
+	void ProcessConfigFile(const AutoExecSection& section,
 	                       const std::string& source_name);
 
 	void AddLine(const Placement placement, const std::string& line);
@@ -415,7 +415,8 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	// Fetch [autoexec] sections
 	if (!has_option_no_autoexec) {
 		if (should_join_autoexecs) {
-			ProcessConfigFile(*static_cast<const SectionLine*>(configuration),
+			ProcessConfigFile(*static_cast<const AutoExecSection*>(
+			                          configuration),
 			                  "one or more joined sections");
 		} else if (!has_dir_or_command) {
 			ProcessConfigFile(control->GetOverwrittenAutoexecSection(),
@@ -446,7 +447,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	}
 }
 
-void AutoExecModule::ProcessConfigFile(const SectionLine& section,
+void AutoExecModule::ProcessConfigFile(const AutoExecSection& section,
                                        const std::string& source_name)
 {
 	if (section.data.empty()) {

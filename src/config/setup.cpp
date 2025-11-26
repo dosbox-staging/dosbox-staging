@@ -1117,7 +1117,7 @@ std::string SectionProp::GetPropertyValue(const std::string& _property) const
 	return NO_SUCH_PROPERTY;
 }
 
-bool SectionLine::HandleInputline(const std::string& line)
+bool AutoExecSection::HandleInputline(const std::string& line)
 {
 	if (!data.empty()) {
 		// Add return to previous line in buffer
@@ -1127,12 +1127,12 @@ bool SectionLine::HandleInputline(const std::string& line)
 	return true;
 }
 
-void SectionLine::PrintData(FILE* outfile) const
+void AutoExecSection::PrintData(FILE* outfile) const
 {
 	fprintf(outfile, "%s", data.c_str());
 }
 
-std::string SectionLine::GetPropertyValue(const std::string&) const
+std::string AutoExecSection::GetPropertyValue(const std::string&) const
 {
 	return NO_SUCH_PROPERTY;
 }

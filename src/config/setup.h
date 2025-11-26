@@ -500,14 +500,14 @@ public:
 	bool SetValue(const std::string& input) override;
 };
 
-class SectionLine final : public Section {
+class AutoExecSection final : public Section {
 public:
-	SectionLine() = default;
-	SectionLine(const std::string& name) : Section(name), data() {}
+	AutoExecSection() = default;
+	AutoExecSection(const std::string& name) : Section(name), data() {}
 
 	// Construct and assign by std::move
-	SectionLine(SectionLine&& other)            = default;
-	SectionLine& operator=(SectionLine&& other) = default;
+	AutoExecSection(AutoExecSection&& other)            = default;
+	AutoExecSection& operator=(AutoExecSection&& other) = default;
 
 	std::string GetPropertyValue(const std::string& property) const override;
 	bool HandleInputline(const std::string& line) override;

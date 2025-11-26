@@ -631,7 +631,7 @@ void CONFIG::Run(void)
 		case P_HELP3: HandleHelpCommand(pvars); return;
 
 		case P_AUTOEXEC_CLEAR: {
-			SectionLine* sec = dynamic_cast<SectionLine*>(
+			AutoExecSection* sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 			if (!sec) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
@@ -646,7 +646,7 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
 				return;
 			}
-			SectionLine* sec = dynamic_cast<SectionLine*>(
+			AutoExecSection* sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 			if (!sec) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
@@ -661,7 +661,7 @@ void CONFIG::Run(void)
 		}
 
 		case P_AUTOEXEC_TYPE: {
-			SectionLine* sec = dynamic_cast<SectionLine*>(
+			AutoExecSection* sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 
 			if (!sec) {
@@ -719,9 +719,9 @@ void CONFIG::Run(void)
 					        dynamic_cast<SectionProp*>(sec);
 
 					if (psec == nullptr) {
-						// autoexec section
-						SectionLine* pline =
-						        dynamic_cast<SectionLine*>(sec);
+						AutoExecSection* pline =
+						        dynamic_cast<AutoExecSection*>(
+						                sec);
 						assert(pline);
 
 						if (pline) {
