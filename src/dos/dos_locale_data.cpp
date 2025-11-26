@@ -1712,9 +1712,7 @@ const std::map<DosCountry, CountryInfoEntry> LocaleData::CountryInfo = {
 			// bg_BG
 			DosDateFormat::DayMonthYear, LocaleSeparator::Period,
 			DosTimeFormat::Time24H,      LocaleSeparator::Colon,
-			// TODO: Bulgaria is expected to switch currency to EUR
-                        // soon - adapt this when it happens
-			{ "лв.", "lv." }, "BGN", 2,
+			{ "€" }, "EUR", 2,
 			DosCurrencyFormat::AmountSpaceSymbol,
 			LocaleSeparator::Space,         // thousands separator
 			LocaleSeparator::Comma,         // decimal separator
