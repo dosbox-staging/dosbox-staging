@@ -143,9 +143,9 @@ SectionProp* Config::AddSection(const char* section_name)
 	return s;
 }
 
-SectionLine* Config::AddAutoexecSection()
+AutoExecSection* Config::AddAutoexecSection()
 {
-	SectionLine* section = new SectionLine("autoexec");
+	AutoExecSection* section = new AutoExecSection("autoexec");
 	sections.push_back(section);
 
 	return section;
@@ -231,7 +231,7 @@ const std::string& Config::GetOverwrittenAutoexecConf() const
 	return overwritten_autoexec_conf;
 }
 
-const SectionLine& Config::GetOverwrittenAutoexecSection() const
+const AutoExecSection& Config::GetOverwrittenAutoexecSection() const
 {
 	return overwritten_autoexec_section;
 }

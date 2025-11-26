@@ -62,7 +62,7 @@ public:
 
 private:
 	std::deque<Section*> sections            = {};
-	SectionLine overwritten_autoexec_section = {};
+	AutoExecSection overwritten_autoexec_section = {};
 	std::string overwritten_autoexec_conf    = {};
 
 	bool secure_mode = false;
@@ -101,7 +101,7 @@ public:
 	~Config();
 
 	SectionProp* AddSection(const char* section_name);
-	SectionLine* AddAutoexecSection();
+	AutoExecSection* AddAutoexecSection();
 
 	auto begin()
 	{
@@ -116,7 +116,7 @@ public:
 	Section* GetSectionFromProperty(const char* prop) const;
 
 	void OverwriteAutoexec(const std::string& conf, const std::string& line);
-	const SectionLine& GetOverwrittenAutoexecSection() const;
+	const AutoExecSection& GetOverwrittenAutoexecSection() const;
 	const std::string& GetOverwrittenAutoexecConf() const;
 
 	void ApplyQueuedValuesToCli(std::vector<std::string>& args) const;
