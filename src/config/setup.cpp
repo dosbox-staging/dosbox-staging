@@ -1083,29 +1083,7 @@ bool SectionProp::HandleInputline(const std::string& line)
 	return false;
 }
 
-void SectionProp::PrintData(FILE* outfile) const
-{
-	// Now print out the individual section entries
-
-	// Determine maximum length of the props in this section
-	int len = 0;
-	for (const auto& tel : properties) {
-		const auto prop_length = check_cast<int>(tel->propname.length());
-		len = std::max<int>(len, prop_length);
-	}
-
-	for (const auto& tel : properties) {
-		if (tel->IsDeprecated()) {
-			continue;
-		}
-
-		fprintf(outfile,
-		        "%-*s = %s\n",
-		        std::min<int>(40, len),
-		        tel->propname.c_str(),
-		        tel->GetValue().ToString().c_str());
-	}
-}
+void SectionProp::PrintData(FILE* outfile) const {}
 
 std::string SectionProp::GetPropertyValue(const std::string& _property) const
 {
