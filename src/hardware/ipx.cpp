@@ -44,12 +44,12 @@ struct ipxnetaddr {
 } localIpxAddr;
 
 struct IpxPacket {
-	UDPpacket udp;
-	uint8_t recv_buffer[IPXBUFFERSIZE];
-	std::atomic_bool available;
+	UDPpacket udp = {};
+	std::vector<uint8_t> recv_buffer;
+	std::atomic_bool available = {};
 };
 
-static IpxPacket ipx_packet_queue[PacketQueueSize];
+static std::vector<IpxPacket> ipx_packet_queue(PacketQueueSize);
 
 uint32_t udpPort;
 bool isIpxServer;
@@ -605,53 +605,54 @@ static void receivePacket(uint8_t *buffer, int16_t bufSize) {
 	LOG_IPX("IPX: RX Packet loss!");
 }
 
-static void IPX_InitializePacketQueue()
+static void initialize_packet_queue()
 {
-	for (int i = 0; i < PacketQueueSize; i++) {
-		ipx_packet_queue[i].available = true;
+	for (auto& ipx_packet : ipx_packet_queue) {
+		ipx_packet.available = true;
 	}
 }
 
-static void IPX_ClientLoop(void)
+static void client_loop()
 {
-	UDPpacket in_packet;
+	UDPpacket in_packet = {};
 
-	for (int i = 0; i < PacketQueueSize; i++) {
-		if (!ipx_packet_queue[i].available) {
-			in_packet = ipx_packet_queue[i].udp;
+	for (auto& ipx_packet : ipx_packet_queue) {
+		if (!ipx_packet.available) {
+			in_packet = ipx_packet.udp;
 			receivePacket(in_packet.data, in_packet.len);
-			ipx_packet_queue[i].available = true;
+			ipx_packet.available = true;
 		}
 	}
 }
 
-void IPX_UdpClientListener()
+static void ipx_client_listen()
 {
-	SDLNet_SocketSet socketset = SDLNet_AllocSocketSet(1);
-	SDLNet_UDP_AddSocket(socketset, ipxClientSocket);
+	constexpr int thread_wait_ms  = 1;
+	constexpr int num_sockets = 1;
 
-	while (socketset && ipx_connected) {
-		if (!is_pinging) {
-			if (SDLNet_CheckSockets(socketset, SocketWaitMs) == 1) {
-				for (int i = 0; i < PacketQueueSize; i++) {
-					if (ipx_packet_queue[i].available) {
-						if (SDLNet_UDP_Recv(
-						            ipxClientSocket,
-						            &ipx_packet_queue[i].udp)) {
-							ipx_packet_queue[i].available = false;
+	SDLNet_SocketSet socket_set = SDLNet_AllocSocketSet(num_sockets);
+	SDLNet_UDP_AddSocket(socket_set, ipxClientSocket);
+
+	while (socket_set && ipx_connected) {
+		if (is_pinging) {
+			can_wait_for_ping_response = true;
+			std::this_thread::sleep_for(std::chrono::milliseconds(thread_wait_ms));
+		} else {
+			if (SDLNet_CheckSockets(socket_set, SocketWaitMs) == num_sockets) {
+				for (auto& ipx_packet : ipx_packet_queue) {
+					if (ipx_packet.available) {
+						if (SDLNet_UDP_Recv(ipxClientSocket, &ipx_packet.udp)) {
+							ipx_packet.available = false;
 						}
 						break;
 					}
 				}
-			}
-		} else {
-			can_wait_for_ping_response = true;
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			}			
 		}
 	}
 
-	if (socketset) {
-		SDLNet_FreeSocketSet(socketset);
+	if (socket_set) {
+		SDLNet_FreeSocketSet(socket_set);
 	}
 }
 
@@ -662,7 +663,7 @@ void DisconnectFromServer(bool unexpected) {
 		if (ipx_client_thread.joinable()) {
 			ipx_client_thread.join();
 		}
-		TIMER_DelTickHandler(&IPX_ClientLoop);
+		TIMER_DelTickHandler(&client_loop);
 		SDLNet_UDP_Close(ipxClientSocket);
 	}
 }
@@ -864,10 +865,10 @@ bool ConnectToServer(const char* strAddr)
 				LOG_MSG("IPX: Connected to server.  IPX address is %d:%d:%d:%d:%d:%d", CONVIPX(localIpxAddr.netnode));
 
 				ipx_connected = true;
-				IPX_InitializePacketQueue();
-				TIMER_AddTickHandler(&IPX_ClientLoop);
-				ipx_client_thread = std::thread(IPX_UdpClientListener);
-				set_thread_name(ipx_client_thread, "ipx:udp-client-listener");
+				initialize_packet_queue();
+				TIMER_AddTickHandler(&client_loop);
+				ipx_client_thread = std::thread(ipx_client_listen);
+				set_thread_name(ipx_client_thread, "dosbox:ipxclient");
 				return true;
 			}
 		} else {
@@ -1068,7 +1069,7 @@ public:
 				if(isIpxServer) {
 					WriteOut("List of active connections:\n\n");
 					IPaddress *ptrAddr;
-					for (int i = 0; i < SOCKETTABLESIZE; i++) {
+					for (int i = 0; i < SOCKETTABLESIZE; ++i) {
 						if(IPX_isConnectedToServer(i,&ptrAddr)) {
 							WriteOut("     %d.%d.%d.%d from port %d\n", CONVIP(ptrAddr->host), SDLNet_Read16(&ptrAddr->port));
 						}
@@ -1158,9 +1159,10 @@ public:
 
 		// initialize incoming packet queue UDP packet buffers
 		UDPpacket* in_packet;
-		for (int i = 0; i < PacketQueueSize; i++) {
-			in_packet = &ipx_packet_queue[i].udp;
-			in_packet->data = (uint8_t*)ipx_packet_queue[i].recv_buffer;
+		for (auto& ipx_packet : ipx_packet_queue) {
+			ipx_packet.recv_buffer.resize(IPXBUFFERSIZE);
+			in_packet = &ipx_packet.udp;			
+			in_packet->data = reinterpret_cast<uint8_t*>(&ipx_packet.recv_buffer[0]);
 			in_packet->maxlen  = IPXBUFFERSIZE;
 			in_packet->channel = UDPChannel;
 		}
