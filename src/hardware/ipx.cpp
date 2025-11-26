@@ -1162,7 +1162,7 @@ public:
 		for (auto& ipx_packet : ipx_packet_queue) {
 			ipx_packet.recv_buffer.resize(IPXBUFFERSIZE);
 			in_packet = &ipx_packet.udp;			
-			in_packet->data = reinterpret_cast<uint8_t*>(&ipx_packet.recv_buffer[0]);
+			in_packet->data = &ipx_packet.recv_buffer[0];
 			in_packet->maxlen  = IPXBUFFERSIZE;
 			in_packet->channel = UDPChannel;
 		}
