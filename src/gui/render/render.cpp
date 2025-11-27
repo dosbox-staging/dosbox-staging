@@ -1171,8 +1171,9 @@ constexpr auto BlackLevelMax = 50;
 constexpr auto SaturationMin = -50;
 constexpr auto SaturationMax = 50;
 
-constexpr auto WhitePointMin = 3000;
-constexpr auto WhitePointMax = 10000;
+constexpr auto WhitePointNeutral = 6500;
+constexpr auto WhitePointMin     = 3000;
+constexpr auto WhitePointMax     = 10000;
 
 static void init_render_settings(SectionProp& section)
 {
@@ -1465,8 +1466,9 @@ static void init_render_settings(SectionProp& section)
 	        "default). All profiles have a built-in white point that you can tweak further\n"
 	        "with the 'white_point' setting. Possible values:\n"
 	        "\n"
-	        "  auto:       Select an authentic profile for the adaptive CRT shaders,\n"
-	        "              otherwise use 'none' (default).\n"
+	        "  auto:       For adaptive CRT shaders, an authentic color profile for the\n"
+	        "              currently active shader variant is selected; for any other shader,\n"
+	        "              'none' is used (default).\n"
 	        "\n"
 	        "  none:       Display raw colours without any colour profile transformations.\n"
 	        "\n"
@@ -1498,10 +1500,13 @@ static void init_render_settings(SectionProp& section)
 	int_prop->SetMinMax(BrightnessMin, BrightnessMax);
 	int_prop->SetHelp(format_str(
 	        "Set the brightness of the video output (%d by default). Valid range is %d to %de.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - Image adjustments only work in OpenGL output mode.\n"
+	        "\n"
 	        "  - Adjustments are applied to rendered screenshots, but not to raw and upscaled\n"
 	        "    screenshots and video captures.\n"
+	        "\n"
 	        "  - Use the 'Sel Knob', 'Inc Knob', and 'Dec Knob' hotkey actions to adjust the\n"
 	        "    setting in real-time, then copy the new settings from the logs into your\n"
 	        "    config.",
@@ -1515,7 +1520,7 @@ static void init_render_settings(SectionProp& section)
 	int_prop->SetMinMax(ContrastMin, ContrastMax);
 	int_prop->SetHelp(
 	        format_str("Set the contrast of the video output (%d by default). Valid range is %d to %d.\n"
-	                   "Notes: See 'brightness'",
+	                   "Notes: See 'brightness' for further details.",
 	                   DefaultContrast,
 	                   ContrastMin,
 	                   ContrastMax));
@@ -1526,7 +1531,7 @@ static void init_render_settings(SectionProp& section)
 	int_prop->SetMinMax(GammaMin, GammaMax);
 	int_prop->SetHelp(
 	        format_str("Set the gamma of the video output (%d by default). Valid range is %d to %d.\n"
-	                   "Notes: See 'brightness'",
+	                   "Notes: See 'brightness' for further details.",
 	                   DefaultGamma,
 	                   GammaMin,
 	                   GammaMax));
@@ -1537,7 +1542,7 @@ static void init_render_settings(SectionProp& section)
 	int_prop->SetMinMax(BlackLevelMin, BlackLevelMax);
 	int_prop->SetHelp(
 	        format_str("Set the black level of the video output (%d by default). Valid range is %d to %d.\n"
-	                   "Notes: See 'brightness'",
+	                   "Notes: See 'brightness' for further details.",
 	                   DefaultBlackLevel,
 	                   BlackLevelMin,
 	                   BlackLevelMax));
@@ -1548,21 +1553,28 @@ static void init_render_settings(SectionProp& section)
 	int_prop->SetMinMax(SaturationMin, SaturationMax);
 	int_prop->SetHelp(
 	        format_str("Set the saturation of the video output (%d by default). Valid range is %d to %d.\n"
-	                   "Notes: See 'brightness'",
+	                   "Notes: See 'brightness'.",
 	                   DefaultSaturation,
 	                   SaturationMin,
 	                   SaturationMax));
 
-	constexpr int DefaultWhitePoint = 6500;
+	constexpr auto DefaultWhitePoint = "auto";
 
-	int_prop = section.AddInt("white_point", Always, DefaultWhitePoint);
-	int_prop->SetMinMax(WhitePointMin, WhitePointMax);
-	int_prop->SetHelp(format_str(
-	        "Set the white point of the video output in Kelvin (%d by default).\n"
-	        "Valid range is %d to %d. The Kelvin values only make sense if\n"
-	        "'crt_color_profile' is set to 'none' or one of the profiles with 6500K white\n"
-	        "point, otherwise it acts as a relative white point adjuster.\n"
-	        "Notes: See 'brightness'",
+	string_prop = section.AddString("white_point", Always, DefaultWhitePoint);
+	string_prop->SetHelp(format_str(
+	        "Set the white point of the video output (%d by default). Possible values:\n"
+	        "\n"
+	        "  auto:     For adaptive CRT shaders, an authentic white point for the currently\n"
+	        "            active shader variant is selected; for any other shader, 6500 is\n"
+	        "            used (default).\n"
+	        "\n"
+	        "  <value>:  White point in Kelvin (K). Valid range is %d to %d. The Kelvin\n"
+	        "            value only make sense if 'crt_color_profile' is set to 'none' or one\n"
+	        "            of the profiles with 6500K white point, otherwise it acts as a\n"
+	        "            relative white point adjustment (less than 6500 results in warmer\n"
+	        "            colors, more than 6500 results in cooler colors).\n"
+	        "\n"
+	        "Notes: See 'brightness' for further details.",
 	        DefaultWhitePoint,
 	        WhitePointMin,
 	        WhitePointMax));
@@ -1817,7 +1829,34 @@ static void update_saturation_setting()
 
 static void update_white_point_setting()
 {
-	image_settings.white_point_kelvin = get_render_section().GetInt("white_point");
+	const auto white_point = []() -> float {
+		const std::string pref = get_render_section().GetString("white_point");
+
+		if (pref == "auto") {
+			return WhitePointNeutral;
+		} else {
+			if (const auto maybe_float = parse_float(pref); maybe_float) {
+				return *maybe_float;
+			} else {
+				constexpr auto SettingName  = "aspect";
+				constexpr auto DefaultValue = "auto";
+
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "RENDER",
+				                      "PROGRAM_CONFIG_INVALID_SETTING",
+				                      SettingName,
+				                      pref.c_str(),
+				                      DefaultValue);
+
+				set_section_property_value("render",
+				                           SettingName,
+				                           DefaultValue);
+				return WhitePointNeutral;
+			}
+		}
+	}();
+
+	image_settings.white_point_kelvin = white_point;
 }
 
 static void set_image_settings()
