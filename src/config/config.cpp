@@ -84,7 +84,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 		// Print section header
 		safe_strcpy(temp, (*section)->GetName());
 		lowcase(temp);
-		fprintf(outfile, "[%s]\n", temp);
+		fprintf(outfile, "[%s]\n\n", temp);
 
 		auto sec = dynamic_cast<SectionProp*>(*section);
 		if (sec) {
