@@ -214,8 +214,9 @@
 # the Unicode bidirectional algorithm is not implemented!
 #
 #
-# Code pages supported by the engine, despite not present in the bundled CPI files (18 code pages):
+# Code pages supported by the engine, despite not present in the bundled CPI files (19 code pages):
 #
+# 111   - Greek                                                     [AST Research]
 # 112   - Turkish                                                   [AST Research]
 # 220   - Spanish and Catalan                                       [DEC, Olivetti]
 # 708   - Arabic, ASMO 708 encoding                                 [IBM, Microsoft]
@@ -565,6 +566,7 @@ ALIAS 0x1cb6 0x10f6 #GEORGIAN MTAVRULI CAPITAL LETTER FI
 # - U+2208 - ELEMENT OF
 # - U+025B - LATIN SMALL LETTER OPEN E
 # - U+0138 - LATIN SMALL LETTER KRA
+# - U+03D5 - GREEK PHI SYMBOL
 # can be substituted by:
 # - U+03B2 - GREEK SMALL LETTER BETA
 # - U+03A3 - GREEK CAPITAL LETTER SIGMA
@@ -572,6 +574,7 @@ ALIAS 0x1cb6 0x10f6 #GEORGIAN MTAVRULI CAPITAL LETTER FI
 # - U+03A9 - GREEK CAPITAL LETTER OMEGA
 # - U+03B5 - GREEK SMALL LETTER EPSILON
 # - U+03BA - GREEK SMALL LETTER KAPPA
+# - U+03C6 - GREEK SMALL LETTER PHI
 
 ALIAS 0x00df 0x03b2 BIDIRECTIONAL
 ALIAS 0x2211 0x03a3 BIDIRECTIONAL
@@ -580,6 +583,7 @@ ALIAS 0x2126 0x03a9 BIDIRECTIONAL
 ALIAS 0x2208 0x03b5 BIDIRECTIONAL
 ALIAS 0x025b 0x03b5 BIDIRECTIONAL
 ALIAS 0x0138 0x03ba BIDIRECTIONAL
+ALIAS 0x03d5 0x03c6 BIDIRECTIONAL
 
 # Some code pages with Greek letters do not have all the accented characters,
 # like the CP 851 which misses capital Iota and Upsilon with Dialytika
@@ -733,6 +737,28 @@ ALIAS 0x01fe 0x00d8 #LATIN CAPITAL LETTER O WITH STROKE AND ACUTE
 
 # If the codepage data set is particulary large, put it in a separate file,
 # as a full (0x80-0xff characters, codes up to 0x7f are ignored) code page.
+
+CODEPAGE 111 # Greek
+# Used by AST Premium Exec DOS, very similar to 737, but with a couple more
+# characters same as in code page 437
+0xea 0x2126        #OHM SIGN
+0xeb 0x00a3        #POUND SIGN
+# NOTE: The official code page 437 to Unicode mapping is a bit controversial
+# (see: https://en.wikipedia.org/wiki/Code_page_437):
+# - 0xed is mapped officially mapped as U+03C6 (GREEK SMALL LETTER PHI),
+#   while IBM maps it as U+03D5 (GREEK PHI SYMBOL)
+# - 0xee is mapped as U+03B5 (GREEK SMALL LETTER EPSILON),
+#   while it rather resembles U+2208 (ELEMENT OF)
+# Since the code page 111 places Greek letters elsewhere, these alternative
+# symbols are used here to prevent duplicated mapping.
+0xec 0x221e        #INFINITY
+0xed 0x03d5        #GREEK PHI SYMBOL
+0xee 0x2208        #ELEMENT OF
+0xef 0x2229        #INTERSECTION
+0xf0 0x2261        #IDENTICAL TO
+0xf4 0x2320        #TOP HALF INTEGRAL
+0xf5 0x2321        #BOTTOM HALF INTEGRAL
+EXTENDS CODEPAGE 737
 
 CODEPAGE 112 # Turkish
 # reference: https://en.wikibooks.org/wiki/Character_Encodings/Code_Tables/MS-DOS/Code_page_112
