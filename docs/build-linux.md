@@ -36,17 +36,6 @@ DOSBox Staging ships with some binary files as a part of its assets:
   Running DOSBox Staging without these files is completely unsupported; even if
   it seems to work for you, the internationalization features will malfunction.
 
-- `resources/freedos-keyboard` — DOS keyboard layout definitions.
-  Despite their extensions suggesting a DOS device driver, these are data files,
-  not executables. They are, too, taken from the FreeDOS project; the binaries
-  were created from the source `*.KEY` text files, using specialized tools,
-  written in Pascal — they are, too, part of the FreeDOS project; search for
-  `KEYB200S.ZIP`, `KEYB200X.ZIP`, `KC200S.ZIP`, and `KC200X.ZIP` files.
-  Probably all the other DOSBox forks use such files in some form; it's just
-  most store them as an array of binary data, like [original DOSBox does](https://sourceforge.net/p/dosbox/code-0/HEAD/tree/dosbox/tags/RELEASE_0_74_3/src/dos/dos_keyboard_layout_data.h).
-  Running DOSBox Staging without these files is completely unsupported; even if
-  it seems to work for you, the internationalization features will malfunction.
-
 ## Building using system libraries
 
 These are generic, distro-independent building instructions.
