@@ -25,6 +25,10 @@ GPL-2.0-or-later terms, however there are some exceptions:
   resources/mapping-unicode.org directory are licensed under the
   Unicode, Inc. License Agreement for Data Files and Software license.
 
+- FreeDOS keyboard layout files in resources/freedos-keyboard are GPL-2.0
+  licensed; DOSBox Staging uses the source files directly. Full snapshots of the
+  original repository is stored in the extras/dos-programs directory.
+
 - Libraries in src/libs directory, are licensed as follows:
    - stb.h and stb_vorbis.h: Public Domain
    - decoders/dr_flac.h, dr_mp3.h, and dr_wav.h: Public Domain or MIT
@@ -59,9 +63,6 @@ The following 3rd party binaries are shipped with DOSBox Staging:
    - https://gitlab.com/FreeDOS/base/cpidos (the main code page pack)
    - https://github.com/FDOS/cpi (ISO/KOI/MAC/WIN code page packs)
   The code page files were originally in the CPX format, they were decompressed into the CPI format.
-
-- FreeDOS keyboard layout files in resources/freedos-keyboard are GPL-2.0 licensed;
-  source code: https://gitlab.com/FreeDOS/base/keyb_lay
 
 The DOSBox Staging repository contains full snapshots of the original
 repositories in the extras/dos-programs directory.
