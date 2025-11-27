@@ -961,13 +961,6 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "need to disable this for a few games, otherwise they will crash at startup\n"
 	        "(e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors).");
 
-	pbool = section->AddBool("speed_mods", OnlyAtStart, true);
-	pbool->SetHelp(
-	        "Permit changes known to improve performance ('on' by default).\n"
-	        "Currently, no games are known to be negatively affected by this.\n"
-	        "Please file a bug with the project if you find a game that fails\n"
-	        "when this is enabled so we will list them here.");
-
 	pstring = section->AddString("autoexec_section", OnlyAtStart, "join");
 	pstring->SetValues({"join", "overwrite"});
 	pstring->SetHelp(
