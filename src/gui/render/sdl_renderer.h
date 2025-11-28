@@ -30,8 +30,8 @@ public:
 	DosBox::Rect GetCanvasSizeInPixels() override;
 	void UpdateViewport(const DosBox::Rect draw_rect_px) override;
 
-	bool UpdateRenderSize(const int new_render_width_px,
-	                      const int new_render_height_px) override;
+	bool NotifyRenderSizeChanged(const int new_render_width_px,
+	                             const int new_render_height_px) override;
 
 	void NotifyVideoModeChanged(const VideoMode& video_mode) override;
 
