@@ -242,13 +242,13 @@ static knob_t contrast(100, 0, 360);
 static knob_t brightness(0, -100, 100);
 static knob_t convergence(0, -50, 50);
 
-enum class COMPOSITE_STATE : uint8_t {
-	AUTO = 0,
-	ON,
-	OFF,
+enum class CompositeState {
+	Auto = 0,
+	On,
+	Off,
 };
 
-static COMPOSITE_STATE cga_comp = COMPOSITE_STATE::AUTO;
+static CompositeState cga_comp   = CompositeState::Auto;
 static bool is_composite_new_era = false;
 
 static MonochromePalette hercules_palette = {};
@@ -775,9 +775,8 @@ static void write_cga(io_port_t port, io_val_t value, io_width_t)
 		vga.attr.disabled = (val&0x8)? 0: 1;
 		if (vga.tandy.mode.is_graphics_enabled) {
 			if (vga.tandy.mode.is_tandy_640_dot_graphics) {
-				if (cga_comp == COMPOSITE_STATE::ON ||
-				    ((cga_comp == COMPOSITE_STATE::AUTO &&
-				      !(val & 0x4)) &&
+				if (cga_comp == CompositeState::On ||
+				    ((cga_comp == CompositeState::Auto && !(val & 0x4)) &&
 				     !is_machine_cga_mono())) {
 
 					// composite ntsc 640x200 16 color mode
@@ -791,7 +790,7 @@ static void write_cga(io_port_t port, io_val_t value, io_width_t)
 					VGA_SetMode(M_TANDY2);
 				}
 			} else {							// lowres mode
-				if (cga_comp == COMPOSITE_STATE::ON) {
+				if (cga_comp == CompositeState::On) {
 					// composite ntsc 640x200 16 color mode
 					if (is_machine_pcjr()) {
 						VGA_SetMode(M_CGA16);
@@ -806,7 +805,7 @@ static void write_cga(io_port_t port, io_val_t value, io_width_t)
 
 			write_cga_color_select(vga.tandy.color_select);
 		} else {
-			if (cga_comp == COMPOSITE_STATE::ON) { // composite display
+			if (cga_comp == CompositeState::On) { // composite display
 				VGA_SetMode(M_CGA_TEXT_COMPOSITE);
 				update_cga16_color();
 			} else {
@@ -850,18 +849,18 @@ static void toggle_cga_composite_mode(bool pressed)
 	}
 
 	// Step through the composite modes
-	if (cga_comp == COMPOSITE_STATE::AUTO) {
-		cga_comp = COMPOSITE_STATE::ON;
-	} else if (cga_comp == COMPOSITE_STATE::ON) {
-		cga_comp = COMPOSITE_STATE::OFF;
+	if (cga_comp == CompositeState::Auto) {
+		cga_comp = CompositeState::On;
+	} else if (cga_comp == CompositeState::On) {
+		cga_comp = CompositeState::Off;
 	} else {
-		cga_comp = COMPOSITE_STATE::AUTO;
+		cga_comp = CompositeState::Auto;
 	}
 
 	LOG_MSG("COMPOSITE: State is %s",
-	        (cga_comp == COMPOSITE_STATE::AUTO
+	        (cga_comp == CompositeState::Auto
 	                 ? "auto"
-	                 : (cga_comp == COMPOSITE_STATE::ON ? "on" : "off")));
+	                 : (cga_comp == CompositeState::On ? "on" : "off")));
 
 	apply_composite_state();
 }
@@ -936,7 +935,7 @@ static void TANDY_FindMode()
 				VGA_SetModeNow(M_TANDY16);
 			} else VGA_SetMode(M_TANDY16);
 		} else if (vga.tandy.mode_control.is_tandy_640x200_4_color_graphics) {
-			if (cga_comp == COMPOSITE_STATE::ON) {
+			if (cga_comp == CompositeState::On) {
 				// composite ntsc 640x200 16 color mode
 				VGA_SetMode(M_CGA4_COMPOSITE);
 				update_cga16_color();
@@ -944,7 +943,7 @@ static void TANDY_FindMode()
 				VGA_SetMode(M_TANDY4);
 			}
 		} else if (vga.tandy.mode.is_tandy_640_dot_graphics) {
-			if (cga_comp == COMPOSITE_STATE::ON) {
+			if (cga_comp == CompositeState::On) {
 				// composite ntsc 640x200 16 color mode
 				VGA_SetMode(M_CGA2_COMPOSITE);
 				update_cga16_color();
@@ -953,9 +952,9 @@ static void TANDY_FindMode()
 			}
 		} else {
 			// otherwise some 4-colour graphics mode
-			const auto new_mode = (cga_comp == COMPOSITE_STATE::ON)
-			                              ? M_CGA4_COMPOSITE
-			                              : M_TANDY4;
+			const auto new_mode = (cga_comp == CompositeState::On)
+			                            ? M_CGA4_COMPOSITE
+			                            : M_TANDY4;
 			if (vga.mode == M_TANDY16) {
 				VGA_SetModeNow(new_mode);
 			} else {
@@ -981,8 +980,8 @@ static void PCJr_FindMode()
 			}
 		} else if (vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics) {
 			// bit3 of mode control 2 signals 2 colour graphics mode
-			if (cga_comp == COMPOSITE_STATE::ON ||
-			    (cga_comp == COMPOSITE_STATE::AUTO &&
+			if (cga_comp == CompositeState::On ||
+			    (cga_comp == CompositeState::Auto &&
 			     !(vga.tandy.mode.is_black_and_white_mode))) {
 				VGA_SetMode(M_CGA16);
 			} else {
@@ -990,7 +989,9 @@ static void PCJr_FindMode()
 			}
 		} else {
 			// otherwise some 4-colour graphics mode
-			const auto new_mode = (cga_comp == COMPOSITE_STATE::ON) ? M_CGA16 : M_TANDY4;
+			const auto new_mode = (cga_comp == CompositeState::On)
+			                            ? M_CGA16
+			                            : M_TANDY4;
 			if (vga.mode == M_TANDY16) {
 				VGA_SetModeNow(new_mode);
 			} else {
@@ -1101,8 +1102,9 @@ static void write_tandy(io_port_t port, io_val_t value, io_width_t)
 		vga.tandy.color_select=val;
 		tandy_update_palette();
 		// Re-apply the composite mode after updating the palette
-		if (cga_comp == COMPOSITE_STATE::ON)
+		if (cga_comp == CompositeState::On) {
 			apply_composite_state();
+		}
 		break;
 	case 0x3da:
 		vga.tandy.reg_index = val;
@@ -1477,16 +1479,16 @@ void COMPOSITE_Init()
 	const auto state = section->GetString("composite");
 
 	if (state == "auto") {
-		cga_comp = COMPOSITE_STATE::AUTO;
+		cga_comp = CompositeState::Auto;
 	} else {
 		const auto state_has_bool = parse_bool_setting(state);
 		if (state_has_bool) {
-			cga_comp = *state_has_bool ? COMPOSITE_STATE::ON
-			                           : COMPOSITE_STATE::OFF;
+			cga_comp = *state_has_bool ? CompositeState::On
+			                           : CompositeState::Off;
 		} else {
 			LOG_WARNING("COMPOSITE: Invalid 'composite' setting: '%s', using 'off'",
 			            state.c_str());
-			cga_comp = COMPOSITE_STATE::OFF;
+			cga_comp = CompositeState::Off;
 		}
 	}
 
@@ -1500,7 +1502,7 @@ void COMPOSITE_Init()
 	brightness.set(section->GetInt("brightness"));
 	convergence.set(section->GetInt("convergence"));
 
-	if (cga_comp == COMPOSITE_STATE::ON) {
+	if (cga_comp == CompositeState::On) {
 		LOG_MSG("COMPOSITE: %s-era composite mode enabled",
 		        (is_composite_new_era ? "New" : "Old"));
 	}
