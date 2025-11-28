@@ -52,8 +52,8 @@ public:
 
 	virtual SetShaderResult SetShader(const std::string& symbolic_name) = 0;
 
-	// Can be a no-op if the backend does't support shaders.
-	virtual bool MaybeAutoSwitchShader(const VideoMode& video_mode) = 0;
+	// Notify the renderer of video mode changes.
+	virtual bool NotifyVideoModeChanged(const VideoMode& video_mode) = 0;
 
 	// Reload the currently active shader from disk.
 	virtual bool ForceReloadCurrentShader() = 0;

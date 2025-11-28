@@ -35,7 +35,7 @@ public:
 
 	SetShaderResult SetShader(const std::string& shader_name) override;
 
-	bool MaybeAutoSwitchShader(const VideoMode& video_mode) override;
+	bool NotifyVideoModeChanged(const VideoMode& video_mode) override;
 
 	bool ForceReloadCurrentShader() override;
 

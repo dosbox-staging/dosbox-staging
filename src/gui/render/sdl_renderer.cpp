@@ -260,7 +260,7 @@ SdlRenderer::SetShaderResult SdlRenderer::SetShader(
 	return SetShaderResult::Ok;
 }
 
-bool SdlRenderer::MaybeAutoSwitchShader([[maybe_unused]] const VideoMode& video_mode)
+bool SdlRenderer::NotifyVideoModeChanged([[maybe_unused]] const VideoMode& video_mode)
 {
 	// no shader support; always report no change
 	return false;
