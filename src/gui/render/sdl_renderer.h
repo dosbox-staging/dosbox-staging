@@ -33,10 +33,9 @@ public:
 	bool UpdateRenderSize(const int new_render_width_px,
 	                      const int new_render_height_px) override;
 
-	SetShaderResult SetShader([[maybe_unused]] const std::string& shader_name) override;
+	SetShaderResult SetShader(const std::string& shader_name) override;
 
-	bool MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
-	                           [[maybe_unused]] const VideoMode& video_mode) override;
+	bool MaybeAutoSwitchShader(const VideoMode& video_mode) override;
 
 	bool ForceReloadCurrentShader() override;
 

@@ -1960,22 +1960,13 @@ static bool maybe_autoswitch_shader()
 		return false;
 	}
 
-	// The shaders need a canvas size as their target resolution
-	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
-
-	if (canvas_size_px.IsEmpty()) {
-		return false;
-	}
-
 	// The shaders need the DOS mode to be set as their source resolution
 	if (!sdl.maybe_video_mode) {
 		return false;
 	}
 
 	constexpr auto ReinitRender = true;
-	return RENDER_MaybeAutoSwitchShader(canvas_size_px,
-	                                    *sdl.maybe_video_mode,
-	                                    ReinitRender);
+	return RENDER_MaybeAutoSwitchShader(*sdl.maybe_video_mode, ReinitRender);
 }
 
 static bool is_user_event(const SDL_Event& event)

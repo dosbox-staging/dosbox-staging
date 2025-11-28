@@ -260,8 +260,7 @@ SdlRenderer::SetShaderResult SdlRenderer::SetShader(
 	return SetShaderResult::Ok;
 }
 
-bool SdlRenderer::MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
-                                        [[maybe_unused]] const VideoMode& video_mode)
+bool SdlRenderer::MaybeAutoSwitchShader([[maybe_unused]] const VideoMode& video_mode)
 {
 	// no shader support; always report no change
 	return false;
