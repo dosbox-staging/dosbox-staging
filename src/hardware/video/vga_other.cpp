@@ -648,46 +648,47 @@ static void update_cga16_color()
 	vga.composite.sharpness = convergence.get() * 256 / 100;
 }
 
-enum CRT_KNOB : uint8_t {
-	ERA = 0,
-	HUE,
-	SATURATION,
-	CONTRAST,
-	BRIGHTNESS,
-	CONVERGENCE,
-	ENUM_END
+enum CrtKnob {
+	Era = 0,
+	Hue,
+	Saturation,
+	Contrast,
+	Brightness,
+	Convergence,
+	LastValue
 };
-static auto crt_knob = CRT_KNOB::ERA;
+
+static auto crt_knob = CrtKnob::Era;
 
 static void log_crt_knob_value()
 {
 	switch (crt_knob) {
-	case CRT_KNOB::ERA:
+	case CrtKnob::Era:
 		LOG_MSG("COMPOSITE: %s-era CGA selected",
 		        is_composite_new_era ? "New" : "Old");
 		break;
 
-	case CRT_KNOB::HUE:
+	case CrtKnob::Hue:
 		LOG_MSG("COMPOSITE: composite_hue =  %d", hue.get());
 		break;
 
-	case CRT_KNOB::SATURATION:
+	case CrtKnob::Saturation:
 		LOG_MSG("COMPOSITE: composite_saturation = %d", saturation.get());
 		break;
 
-	case CRT_KNOB::CONTRAST:
+	case CrtKnob::Contrast:
 		LOG_MSG("COMPOSITE: composite_contrast = %d", contrast.get());
 		break;
 
-	case CRT_KNOB::BRIGHTNESS:
+	case CrtKnob::Brightness:
 		LOG_MSG("COMPOSITE: composite_brightness = %d", brightness.get());
 		break;
 
-	case CRT_KNOB::CONVERGENCE:
+	case CrtKnob::Convergence:
 		LOG_MSG("COMPOSITE: composite_convergence =  %d", convergence.get());
 		break;
 
-	case CRT_KNOB::ENUM_END:
+	case CrtKnob::LastValue:
 		assertm(false, "Should not reach CRT knob end marker");
 		break;
 	}
@@ -700,13 +701,13 @@ static void turn_crt_knob(bool pressed, const int amount)
 	}
 
 	switch (crt_knob) {
-	case CRT_KNOB::ERA: is_composite_new_era = !is_composite_new_era; break;
-	case CRT_KNOB::HUE: hue.turn(amount); break;
-	case CRT_KNOB::SATURATION: saturation.turn(amount); break;
-	case CRT_KNOB::CONTRAST: contrast.turn(amount); break;
-	case CRT_KNOB::BRIGHTNESS: brightness.turn(amount); break;
-	case CRT_KNOB::CONVERGENCE: convergence.turn(amount); break;
-	case CRT_KNOB::ENUM_END:
+	case CrtKnob::Era: is_composite_new_era = !is_composite_new_era; break;
+	case CrtKnob::Hue: hue.turn(amount); break;
+	case CrtKnob::Saturation: saturation.turn(amount); break;
+	case CrtKnob::Contrast: contrast.turn(amount); break;
+	case CrtKnob::Brightness: brightness.turn(amount); break;
+	case CrtKnob::Convergence: convergence.turn(amount); break;
+	case CrtKnob::LastValue:
 		assertm(false, "Should not reach CRT knob end marker");
 		break;
 	}
@@ -738,11 +739,11 @@ static void select_next_crt_knob(bool pressed)
 	auto next_knob = static_cast<uint8_t>(crt_knob) + 1;
 
 	// PCjr doesn't have a convergence knob
-	if (is_machine_pcjr() && next_knob >= CRT_KNOB::CONVERGENCE) {
+	if (is_machine_pcjr() && next_knob >= CrtKnob::Convergence) {
 		next_knob++;
 	}
 
-	crt_knob = static_cast<CRT_KNOB>(next_knob % CRT_KNOB::ENUM_END);
+	crt_knob = static_cast<CrtKnob>(next_knob % CrtKnob::LastValue);
 
 	log_crt_knob_value();
 }
