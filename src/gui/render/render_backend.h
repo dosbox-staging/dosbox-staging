@@ -32,18 +32,18 @@ public:
 	// Update the drawing area (viewport) of the renderer.
 	virtual void UpdateViewport(const DosBox::Rect draw_rect_px) = 0;
 
-	// Update the size of the image rendered by the video emulation (the
-	// size of the DOS framebuffer). Always called at least once before the
-	// first StartUpdate() call.
-	virtual bool UpdateRenderSize(const int new_render_width_px,
-	                              const int new_render_height_px) = 0;
+	// Notify the renderer that the size of the image rendered by the video
+	// emulation has changed (the size of the DOS framebuffer). Always
+	// called at least once before the first StartUpdate() call.
+	virtual bool NotifyRenderSizeChanged(const int new_render_width_px,
+	                                     const int new_render_height_px) = 0;
 
 	// Notify the renderer of video mode changes.
 	virtual void NotifyVideoModeChanged(const VideoMode& video_mode) = 0;
 
 	// Set a shader by its symbolic shader name. The render backend should
-	// load the shader via the `ShaderManager` if it's not in its shader cache
-	// (caching is optional but recommended).
+	// load the shader via the `ShaderManager` if it's not in its shader
+	// cache (caching is optional but recommended).
 	//
 	// E.g., `crt-auto-machine` is a symbolic name that will get mapped to
 	// actual shaders that implement the Hercules, CGA, EGA, and VGA CRT
