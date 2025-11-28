@@ -29,8 +29,8 @@ public:
 	// window or the screen in fullscreen in pixels.
 	virtual DosBox::Rect GetCanvasSizeInPixels() = 0;
 
-	// Update the drawing area (viewport) of the renderer.
-	virtual void UpdateViewport(const DosBox::Rect draw_rect_px) = 0;
+	// Notify the renderer that the drawing area (viewport) size has changed.
+	virtual void NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px) = 0;
 
 	// Notify the renderer that the size of the image rendered by the video
 	// emulation has changed (the size of the DOS framebuffer). Always
