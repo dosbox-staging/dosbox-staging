@@ -42,8 +42,7 @@ public:
 
 	SetShaderResult SetShader(const std::string& shader_descriptor) override;
 
-	bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
-	                           const VideoMode& video_mode) override;
+	bool MaybeAutoSwitchShader(const VideoMode& video_mode) override;
 
 	bool ForceReloadCurrentShader() override;
 

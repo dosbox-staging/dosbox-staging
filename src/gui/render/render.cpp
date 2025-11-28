@@ -515,14 +515,11 @@ static void set_scan_and_pixel_doubling()
 	VGA_AllowPixelDoubling(!force_no_pixel_doubling);
 }
 
-bool RENDER_MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
-                                  const VideoMode& video_mode,
-                                  const bool reinit_render)
+bool RENDER_MaybeAutoSwitchShader(const VideoMode& video_mode, const bool reinit_render)
 {
 	const auto curr_preset = GFX_GetRenderer()->GetCurrentShaderPreset(); //-V821
 
-	const auto shader_changed = GFX_GetRenderer()->MaybeAutoSwitchShader(
-	        canvas_size_px, video_mode);
+	const auto shader_changed = GFX_GetRenderer()->MaybeAutoSwitchShader(video_mode);
 
 	if (shader_changed) {
 		set_scan_and_pixel_doubling();
@@ -559,10 +556,7 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 
 		// We are potentially auto-switching to a VGA shader now.
 		constexpr auto ReinitRender = true;
-
-		RENDER_MaybeAutoSwitchShader(GFX_GetCanvasSizeInPixels(),
-		                             video_mode,
-		                             ReinitRender);
+		RENDER_MaybeAutoSwitchShader(video_mode, ReinitRender);
 	}
 }
 

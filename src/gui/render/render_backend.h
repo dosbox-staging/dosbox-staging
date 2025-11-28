@@ -53,8 +53,7 @@ public:
 	virtual SetShaderResult SetShader(const std::string& symbolic_name) = 0;
 
 	// Can be a no-op if the backend does't support shaders.
-	virtual bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
-	                                   const VideoMode& video_mode) = 0;
+	virtual bool MaybeAutoSwitchShader(const VideoMode& video_mode) = 0;
 
 	// Reload the currently active shader from disk.
 	virtual bool ForceReloadCurrentShader() = 0;
