@@ -628,9 +628,10 @@ bool OpenGlRenderer::ForceReloadCurrentShader()
 	        OpenGlRenderer::SetShaderResult::Ok);
 }
 
-bool OpenGlRenderer::MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
-                                           const VideoMode& video_mode)
+bool OpenGlRenderer::MaybeAutoSwitchShader(const VideoMode& video_mode)
 {
+	const auto canvas_size_px = GetCanvasSizeInPixels();
+
 	// We always expect a valid canvas and DOS video mode
 	assert(!canvas_size_px.IsEmpty());
 	assert(video_mode.width > 0 && video_mode.height > 0);
