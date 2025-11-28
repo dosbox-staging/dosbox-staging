@@ -25,7 +25,7 @@
 #include "utils/rgb888.h"
 #include "utils/string_utils.h"
 
-// CHECK_NARROWING();
+CHECK_NARROWING();
 
 static void write_crtc_index_other(io_port_t, io_val_t value, io_width_t)
 {
