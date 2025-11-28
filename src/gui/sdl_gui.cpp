@@ -1951,15 +1951,15 @@ bool GFX_IsFullscreen()
 	return sdl.is_fullscreen;
 }
 
-static bool maybe_autoswitch_shader()
+static void maybe_autoswitch_shader()
 {
 	// The shaders need the DOS mode to be set as their source resolution
 	if (!sdl.maybe_video_mode) {
-		return false;
+		return;
 	}
 
 	constexpr auto ReinitRender = true;
-	return RENDER_MaybeAutoSwitchShader(*sdl.maybe_video_mode, ReinitRender);
+	RENDER_MaybeAutoSwitchShader(*sdl.maybe_video_mode, ReinitRender);
 }
 
 static bool is_user_event(const SDL_Event& event)
