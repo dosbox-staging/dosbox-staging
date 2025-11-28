@@ -37,8 +37,8 @@ public:
 	DosBox::Rect GetCanvasSizeInPixels() override;
 	void UpdateViewport(const DosBox::Rect draw_rect_px) override;
 
-	bool UpdateRenderSize(const int new_render_width_px,
-	                      const int new_render_height_px) override;
+	bool NotifyRenderSizeChanged(const int new_render_width_px,
+	                             const int new_render_height_px) override;
 
 	void NotifyVideoModeChanged(const VideoMode& video_mode) override;
 
@@ -80,6 +80,8 @@ private:
 	                            const uint32_t sdl_window_flags);
 
 	bool InitRenderer();
+
+	bool UpdateRenderSize(const int render_width_px, const int render_height_px);
 
 	SetShaderResult SetShaderInternal(const std::string& shader_descriptor,
 	                                  const bool force_reload = false);
