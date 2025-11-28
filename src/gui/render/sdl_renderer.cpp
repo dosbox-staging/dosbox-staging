@@ -182,7 +182,8 @@ void SdlRenderer::UpdateViewport(const DosBox::Rect draw_rect_px)
 	}
 }
 
-bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_height_px)
+bool SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
+                                          const int render_height_px)
 {
 	if (texture) {
 		SDL_DestroyTexture(texture);

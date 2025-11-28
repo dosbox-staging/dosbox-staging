@@ -205,6 +205,12 @@ void OpenGlRenderer::UpdateViewport(const DosBox::Rect _draw_rect_px)
 	           static_cast<GLsizei>(draw_rect_px.h));
 }
 
+bool OpenGlRenderer::NotifyRenderSizeChanged(const int new_render_width_px,
+                                             const int new_render_height_px)
+{
+	return UpdateRenderSize(new_render_width_px, new_render_height_px);
+}
+
 bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
                                       const int new_render_height_px)
 {

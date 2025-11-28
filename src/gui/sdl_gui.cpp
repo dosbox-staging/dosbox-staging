@@ -898,8 +898,8 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
 
 	sdl.draw.callback = callback;
 
-	if (!sdl.renderer->UpdateRenderSize(sdl.draw.render_width_px,
-	                                    sdl.draw.render_height_px)) {
+	if (!sdl.renderer->NotifyRenderSizeChanged(sdl.draw.render_width_px,
+	                                           sdl.draw.render_height_px)) {
 		LOG_ERR("SDL: Error updating texture");
 	}
 
