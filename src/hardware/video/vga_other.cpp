@@ -204,10 +204,10 @@ static void write_lightpen(io_port_t port, io_val_t, io_width_t)
 	}
 }
 
-class knob_t {
+class Knob {
 public:
-	knob_t() = delete;
-	knob_t(const int default_value, const int min_value, const int max_value)
+	Knob() = delete;
+	Knob(const int default_value, const int min_value, const int max_value)
 	        : def(default_value),
 	          min(min_value),
 	          max(max_value),
@@ -224,10 +224,23 @@ public:
 	void reset() { set(def); }
 
 	// read-only functions to get constraints
-	float as_float() const { return static_cast<float>(val); }
-	int get_default() const { return def; }
-	int get_min() const { return min; }
-	int get_max() const { return max; }
+	float AsFloat() const
+	{
+		return static_cast<float>(val);
+	}
+
+	int GetDefaultValue() const
+	{
+		return def;
+	}
+	int GetMinValue() const
+	{
+		return min;
+	}
+	int GetMaxValue() const
+	{
+		return max;
+	}
 
 private:
 	const int def; // "default" is a C++ keyword (don't use it)
@@ -236,11 +249,11 @@ private:
 	int val;
 };
 
-static knob_t hue(0, -360, 360);
-static knob_t saturation(100, 0, 360);
-static knob_t contrast(100, 0, 360);
-static knob_t brightness(0, -100, 100);
-static knob_t convergence(0, -50, 50);
+static Knob hue(0, -360, 360);
+static Knob saturation(100, 0, 360);
+static Knob contrast(100, 0, 360);
+static Knob brightness(0, -100, 100);
+static Knob convergence(0, -50, 50);
 
 enum class CompositeState {
 	Auto = 0,
@@ -340,9 +353,9 @@ static void update_cga16_color_pcjr()
 	constexpr auto tau = 6.28318531f;    // == 2*pi
 	constexpr auto ns = 567.0f / 440.0f; // degrees of hue shift per nanosecond
 
-	const auto tv_brightness = brightness.as_float() / 100.0f;
-	const auto tv_saturation = saturation.as_float() / 100.0f;
-	const auto tv_contrast = (1 - tv_brightness) * contrast.as_float() / 100.0f;
+	const auto tv_brightness = brightness.AsFloat() / 100.0f;
+	const auto tv_saturation = saturation.AsFloat() / 100.0f;
+	const auto tv_contrast = (1 - tv_brightness) * contrast.AsFloat() / 100.0f;
 
 	const bool bw = vga.tandy.mode.is_black_and_white_mode;
 	const bool bpp1 = vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics;
@@ -378,7 +391,8 @@ static void update_cga16_color_pcjr()
 	                                        (chroma_coefficient + rgbi_d) +
 	                                burst_delay + color_delay;
 
-	const float hue_adjust = (-(90.0f - 33.0f) - hue.as_float() + pixel_clock_delay) * tau / 360.0f;
+	const float hue_adjust = (-(90.0f - 33.0f) - hue.AsFloat() + pixel_clock_delay) *
+	                         tau / 360.0f;
 	float chroma_signals[8][4];
 	for (uint8_t i = 0; i < 4; i++) {
 		chroma_signals[0][i] = 0;
@@ -554,15 +568,17 @@ static void update_cga16_color()
 	                           ? new_cga_v(chroma_multiplexer[255], i3, i3, i3, i3)
 	                           : chroma_multiplexer[255] + i3;
 
-	const auto mode_contrast = 2.56f * contrast.as_float() / (max_v - min_v);
+	const auto mode_contrast = 2.56f * contrast.AsFloat() / (max_v - min_v);
 
-	const auto mode_brightness = brightness.as_float() * 5 - 256 * min_v / (max_v - min_v);
+	const auto mode_brightness = brightness.AsFloat() * 5 -
+	                             256 * min_v / (max_v - min_v);
 
 	const bool in_tandy_text_mode = (vga.mode == M_CGA_TEXT_COMPOSITE) &&
 	                                (vga.tandy.mode.is_high_bandwidth);
 	const auto mode_hue = in_tandy_text_mode ? 14.0f : 4.0f;
 
-	const auto mode_saturation = saturation.as_float() * (is_composite_new_era ? 5.8f : 2.9f) / 100;
+	const auto mode_saturation = saturation.AsFloat() *
+	                             (is_composite_new_era ? 5.8f : 2.9f) / 100;
 
 	// Update the Composite CGA palette
 	const bool in_tandy_mode_4 = vga.tandy.mode.is_black_and_white_mode;
@@ -602,7 +618,7 @@ static void update_cga16_color()
 	const auto q = static_cast<float>(CGA_Composite_Table[6 * 68 + 1] -
 	                                  CGA_Composite_Table[6 * 68 + 3]);
 
-	const auto a = tau * (33 + 90 + hue.as_float() + mode_hue) / 360.0f;
+	const auto a = tau * (33 + 90 + hue.AsFloat() + mode_hue) / 360.0f;
 	const auto c = cosf(a);
 	const auto s = sinf(a);
 
@@ -1548,52 +1564,54 @@ static void init_composite_settings(SectionProp& section)
 	        "  old:   Emulate an early NTSC IBM CGA composite monitor model.\n"
 	        "  new:   Emulate a late NTSC IBM CGA composite monitor model.");
 
-	auto int_prop = section.AddInt("hue", WhenIdle, hue.get_default());
-	int_prop->SetMinMax(hue.get_min(), hue.get_max());
+	auto int_prop = section.AddInt("hue", WhenIdle, hue.GetDefaultValue());
+	int_prop->SetMinMax(hue.GetMinValue(), hue.GetMaxValue());
 	int_prop->SetHelp(format_str(
 	        "Set the hue of the CGA composite colours (%d by default).\n"
 	        "Valid range is %d to %d. For example, adjust until the sky appears blue and\n"
 	        "the grass green in the game. This emulates the tint knob of CGA composite\n"
 	        "monitors which often had to be adjusted for each game.",
-	        hue.get_default(),
-	        hue.get_min(),
-	        hue.get_max()));
+	        hue.GetDefaultValue(),
+	        hue.GetMinValue(),
+	        hue.GetMaxValue()));
 
-	int_prop = section.AddInt("saturation", WhenIdle, saturation.get_default());
-	int_prop->SetMinMax(saturation.get_min(), saturation.get_max());
+	int_prop = section.AddInt("saturation", WhenIdle, saturation.GetDefaultValue());
+	int_prop->SetMinMax(saturation.GetMinValue(), saturation.GetMaxValue());
 	int_prop->SetHelp(
 	        format_str("Set the saturation of the CGA composite colours (%d by default).\n"
 	                   "Valid range is %d to %d.",
-	                   saturation.get_default(),
-	                   saturation.get_min(),
-	                   saturation.get_max()));
+	                   saturation.GetDefaultValue(),
+	                   saturation.GetMinValue(),
+	                   saturation.GetMaxValue()));
 
-	int_prop = section.AddInt("contrast", WhenIdle, contrast.get_default());
-	int_prop->SetMinMax(contrast.get_min(), contrast.get_max());
+	int_prop = section.AddInt("contrast", WhenIdle, contrast.GetDefaultValue());
+	int_prop->SetMinMax(contrast.GetMinValue(), contrast.GetMaxValue());
 	int_prop->SetHelp(
 	        format_str("Set the contrast of the CGA composite colours (%d by default).\n"
 	                   "Valid range is %d to %d.",
-	                   contrast.get_default(),
-	                   contrast.get_min(),
-	                   contrast.get_max()));
+	                   contrast.GetDefaultValue(),
+	                   contrast.GetMinValue(),
+	                   contrast.GetMaxValue()));
 
-	int_prop = section.AddInt("brightness", WhenIdle, brightness.get_default());
-	int_prop->SetMinMax(brightness.get_min(), brightness.get_max());
+	int_prop = section.AddInt("brightness", WhenIdle, brightness.GetDefaultValue());
+	int_prop->SetMinMax(brightness.GetMinValue(), brightness.GetMaxValue());
 	int_prop->SetHelp(
 	        format_str("Set the brightness of the CGA composite colours (%d by default).\n"
 	                   "Valid range is %d to %d.",
-	                   brightness.get_default(),
-	                   brightness.get_min(),
-	                   brightness.get_max()));
+	                   brightness.GetDefaultValue(),
+	                   brightness.GetMinValue(),
+	                   brightness.GetMaxValue()));
 
-	int_prop = section.AddInt("convergence", WhenIdle, convergence.get_default());
-	int_prop->SetMinMax(convergence.get_min(), convergence.get_max());
+	int_prop = section.AddInt("convergence",
+	                          WhenIdle,
+	                          convergence.GetDefaultValue());
+	int_prop->SetMinMax(convergence.GetMinValue(), convergence.GetMaxValue());
 	int_prop->SetHelp(
 	        format_str("Set the sharpness of the CGA composite image (%d by default).\n"
 	                   "Valid range is %d to %d.",
-	                   convergence.get_default(),
-	                   convergence.get_min(),
-	                   convergence.get_max()));
+	                   convergence.GetDefaultValue(),
+	                   convergence.GetMinValue(),
+	                   convergence.GetMaxValue()));
 }
 
 void COMPOSITE_AddConfigSection(Config& conf)
