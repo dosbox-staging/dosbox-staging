@@ -872,7 +872,7 @@ static void update_viewport()
 
 	sdl.draw.draw_rect_px = to_sdl_rect(draw_rect_px);
 
-	sdl.renderer->UpdateViewport(draw_rect_px);
+	sdl.renderer->NotifyViewportSizeChanged(draw_rect_px);
 }
 
 void GFX_SetSize(const int render_width_px, const int render_height_px,

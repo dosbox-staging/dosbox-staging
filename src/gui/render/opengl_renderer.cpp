@@ -195,7 +195,7 @@ DosBox::Rect OpenGlRenderer::GetCanvasSizeInPixels()
 	return r;
 }
 
-void OpenGlRenderer::UpdateViewport(const DosBox::Rect _draw_rect_px)
+void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect _draw_rect_px)
 {
 	draw_rect_px = _draw_rect_px;
 

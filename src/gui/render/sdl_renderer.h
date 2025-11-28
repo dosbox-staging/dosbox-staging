@@ -28,7 +28,8 @@ public:
 	SDL_Window* GetWindow() override;
 
 	DosBox::Rect GetCanvasSizeInPixels() override;
-	void UpdateViewport(const DosBox::Rect draw_rect_px) override;
+
+	void NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px) override;
 
 	bool NotifyRenderSizeChanged(const int new_render_width_px,
 	                             const int new_render_height_px) override;

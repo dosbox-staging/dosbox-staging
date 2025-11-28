@@ -173,7 +173,7 @@ DosBox::Rect SdlRenderer::GetCanvasSizeInPixels()
 	return r;
 }
 
-void SdlRenderer::UpdateViewport(const DosBox::Rect draw_rect_px)
+void SdlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 {
 	const auto sdl_draw_rect_px = to_sdl_rect(draw_rect_px);
 
