@@ -519,7 +519,8 @@ bool RENDER_MaybeAutoSwitchShader(const VideoMode& video_mode, const bool reinit
 {
 	const auto curr_preset = GFX_GetRenderer()->GetCurrentShaderPreset(); //-V821
 
-	const auto shader_changed = GFX_GetRenderer()->MaybeAutoSwitchShader(video_mode);
+	const auto shader_changed = GFX_GetRenderer()->NotifyVideoModeChanged(
+	        video_mode);
 
 	if (shader_changed) {
 		set_scan_and_pixel_doubling();
