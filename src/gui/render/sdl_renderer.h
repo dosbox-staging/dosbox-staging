@@ -31,7 +31,7 @@ public:
 
 	void NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px) override;
 
-	bool NotifyRenderSizeChanged(const int new_render_width_px,
+	void NotifyRenderSizeChanged(const int new_render_width_px,
 	                             const int new_render_height_px) override;
 
 	void NotifyVideoModeChanged(const VideoMode& video_mode) override;
