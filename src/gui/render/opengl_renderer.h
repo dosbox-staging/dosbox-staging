@@ -40,9 +40,9 @@ public:
 	bool UpdateRenderSize(const int new_render_width_px,
 	                      const int new_render_height_px) override;
 
-	SetShaderResult SetShader(const std::string& shader_descriptor) override;
+	void NotifyVideoModeChanged(const VideoMode& video_mode) override;
 
-	bool NotifyVideoModeChanged(const VideoMode& video_mode) override;
+	SetShaderResult SetShader(const std::string& shader_descriptor) override;
 
 	bool ForceReloadCurrentShader() override;
 
