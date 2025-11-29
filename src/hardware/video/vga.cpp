@@ -404,7 +404,7 @@ void SVGA_Setup_Driver(void)
 	}
 }
 
-const VideoMode& VGA_GetCurrentVideoMode()
+VideoMode VGA_GetCurrentVideoMode()
 {
 	// This function is only 100% safe to call from *outside* of the VGA
 	// code! Outside of the VGA and video BIOS related code, this function
