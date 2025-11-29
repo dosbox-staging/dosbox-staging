@@ -1950,11 +1950,6 @@ bool GFX_IsFullscreen()
 
 static void notify_video_mode_changed()
 {
-	// The shaders need the DOS mode to be set as their source resolution
-	if (!sdl.maybe_video_mode) {
-		return;
-	}
-
 	constexpr auto ReinitRender = true;
 	RENDER_NotifyVideoModeChanged(*sdl.maybe_video_mode, ReinitRender);
 }
