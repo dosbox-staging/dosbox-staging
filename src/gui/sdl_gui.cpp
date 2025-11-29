@@ -2177,7 +2177,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 	case SDL_WINDOWEVENT_SHOWN:
 		log_window_event("SDL: Window has been shown");
-		maybe_autoswitch_shader();
 		return true;
 
 	case SDL_WINDOWEVENT_HIDDEN:
