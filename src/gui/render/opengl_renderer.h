@@ -82,7 +82,8 @@ private:
 
 	bool InitRenderer();
 
-	void UpdateRenderSize(const int render_width_px, const int render_height_px);
+	void MaybeUpdateRenderSize(const int new_render_width_px,
+	                           const int new_render_height_px);
 
 	SetShaderResult SetShaderInternal(const std::string& shader_descriptor,
 	                                  const bool force_reload = false);
