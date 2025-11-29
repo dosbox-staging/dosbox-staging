@@ -1948,7 +1948,7 @@ bool GFX_IsFullscreen()
 	return sdl.is_fullscreen;
 }
 
-static void maybe_autoswitch_shader()
+static void notify_video_mode_changed()
 {
 	// The shaders need the DOS mode to be set as their source resolution
 	if (!sdl.maybe_video_mode) {
@@ -1956,7 +1956,7 @@ static void maybe_autoswitch_shader()
 	}
 
 	constexpr auto ReinitRender = true;
-	RENDER_MaybeAutoSwitchShader(*sdl.maybe_video_mode, ReinitRender);
+	RENDER_NotifyVideoModeChanged(*sdl.maybe_video_mode, ReinitRender);
 }
 
 static bool is_user_event(const SDL_Event& event)
@@ -2226,7 +2226,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		sdl.display_number = new_display_number;
 
 		update_viewport();
-		maybe_autoswitch_shader();
+		notify_video_mode_changed();
 		notify_new_mouse_screen_params();
 		return true;
 	}
@@ -2241,7 +2241,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		check_and_handle_dpi_change(sdl.window, new_width);
 
 		update_viewport();
-		maybe_autoswitch_shader();
+		notify_video_mode_changed();
 
 		notify_new_mouse_screen_params();
 		return true;
