@@ -241,11 +241,11 @@ void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect _draw_rect_px)
 void OpenGlRenderer::NotifyRenderSizeChanged(const int new_render_width_px,
                                              const int new_render_height_px)
 {
-	UpdateRenderSize(new_render_width_px, new_render_height_px);
+	MaybeUpdateRenderSize(new_render_width_px, new_render_height_px);
 }
 
-void OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
-                                      const int new_render_height_px)
+void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
+                                           const int new_render_height_px)
 {
 	if (new_render_width_px > max_texture_size_px ||
 	    new_render_height_px > max_texture_size_px) {
@@ -702,7 +702,7 @@ bool OpenGlRenderer::MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_des
 		SwitchShaderPresetOrSetDefault(new_descriptor);
 	}
 
-	UpdateRenderSize(render_width_px, render_height_px);
+	MaybeUpdateRenderSize(render_width_px, render_height_px);
 	return true;
 }
 
