@@ -661,7 +661,7 @@ bool OpenGlRenderer::ForceReloadCurrentShader()
 	        OpenGlRenderer::SetShaderResult::Ok);
 }
 
-bool OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
+void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 {
 	const auto canvas_size_px = GetCanvasSizeInPixels();
 

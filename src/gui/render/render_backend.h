@@ -38,6 +38,9 @@ public:
 	virtual bool UpdateRenderSize(const int new_render_width_px,
 	                              const int new_render_height_px) = 0;
 
+	// Notify the renderer of video mode changes.
+	virtual void NotifyVideoModeChanged(const VideoMode& video_mode) = 0;
+
 	// Set a shader by its symbolic shader name. The render backend should
 	// load the shader via the `ShaderManager` if it's not in its shader cache
 	// (caching is optional but recommended).
@@ -51,9 +54,6 @@ public:
 	enum class SetShaderResult { Ok, ShaderError, PresetError };
 
 	virtual SetShaderResult SetShader(const std::string& symbolic_name) = 0;
-
-	// Notify the renderer of video mode changes.
-	virtual bool NotifyVideoModeChanged(const VideoMode& video_mode) = 0;
 
 	// Reload the currently active shader from disk.
 	virtual bool ForceReloadCurrentShader() = 0;
