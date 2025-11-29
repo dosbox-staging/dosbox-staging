@@ -195,14 +195,34 @@ DosBox::Rect OpenGlRenderer::GetCanvasSizeInPixels()
 	return r;
 }
 
-void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect _draw_rect_px)
+void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect new_draw_rect_px)
 {
-	draw_rect_px = _draw_rect_px;
+	draw_rect_px = new_draw_rect_px;
 
 	glViewport(static_cast<GLsizei>(draw_rect_px.x),
 	           static_cast<GLsizei>(draw_rect_px.y),
 	           static_cast<GLsizei>(draw_rect_px.w),
 	           static_cast<GLsizei>(draw_rect_px.h));
+
+	// If the viewport size has changed, the canvas size might have changed
+	// too.
+	const auto canvas_size_px = GetCanvasSizeInPixels();
+
+	// The video mode hasn't changed, but the ShaderManager call expects it.
+	const auto video_mode = VGA_GetCurrentVideoMode();
+
+	// We always expect a valid canvas and DOS video mode
+	assert(!canvas_size_px.IsEmpty());
+	assert(video_mode.width > 0 && video_mode.height > 0);
+
+	auto& shader_manager = ShaderManager::GetInstance();
+	const auto curr_descriptor = shader_manager.GetCurrentShaderDescriptor();
+
+	shader_manager.NotifyRenderParametersChanged(canvas_size_px, video_mode);
+
+	const auto new_descriptor = shader_manager.GetCurrentShaderDescriptor();
+
+	MaybeSwitchShaderAndPreset(curr_descriptor, new_descriptor);
 }
 
 void OpenGlRenderer::NotifyRenderSizeChanged(const int new_render_width_px,
@@ -655,19 +675,23 @@ bool OpenGlRenderer::MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_des
 {
 	const auto changed_shader = (curr_descriptor.shader_name !=
 	                             new_descriptor.shader_name);
+
+	const auto changed_preset = (curr_descriptor.preset_name !=
+	                             new_descriptor.preset_name);
+
+	if (!changed_shader && !changed_preset) {
+		return false;
+	}
+
 	if (changed_shader) {
 		if (!SwitchShader(new_descriptor.shader_name)) {
 			return false;
 		}
 	}
 
-	if (changed_shader ||
-	    (curr_descriptor.preset_name != new_descriptor.preset_name)) {
-
-		SwitchShaderPresetOrSetDefault(new_descriptor);
-	}
-
+	SwitchShaderPresetOrSetDefault(new_descriptor);
 	MaybeUpdateRenderSize(render_width_px, render_height_px);
+
 	return true;
 }
 
