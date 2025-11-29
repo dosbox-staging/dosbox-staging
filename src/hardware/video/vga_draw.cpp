@@ -2972,7 +2972,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		constexpr auto ReinitRender = false;
 
-		const auto shader_changed = RENDER_MaybeAutoSwitchShader(
+		const auto shader_changed = RENDER_NotifyVideoModeChanged(
 		        image_info.video_mode, ReinitRender);
 
 		if (shader_changed) {
