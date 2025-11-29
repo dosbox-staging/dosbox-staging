@@ -517,15 +517,21 @@ static void set_scan_and_pixel_doubling()
 
 bool RENDER_MaybeAutoSwitchShader(const VideoMode& video_mode, const bool reinit_render)
 {
-	const auto curr_preset = GFX_GetRenderer()->GetCurrentShaderPreset(); //-V821
+	const auto renderer = GFX_GetRenderer();
 
-	const auto shader_changed = GFX_GetRenderer()->NotifyVideoModeChanged(
-	        video_mode);
+	const auto curr_shader = renderer->GetCurrentShaderInfo();
+	const auto curr_preset = renderer->GetCurrentShaderPreset(); //-V821
+
+	renderer->NotifyVideoModeChanged(video_mode);
+
+	const auto new_shader = renderer->GetCurrentShaderInfo();
+	const auto new_preset = renderer->GetCurrentShaderPreset(); //-V821
+
+	const auto shader_changed = (curr_shader.name != new_shader.name) ||
+	                            (curr_preset.name != new_preset.name);
 
 	if (shader_changed) {
 		set_scan_and_pixel_doubling();
-
-		const auto new_preset = GFX_GetRenderer()->GetCurrentShaderPreset(); //-V821
 
 		if (reinit_render) {
 			// No need to reinit the renderer if the double scaning
@@ -541,6 +547,7 @@ bool RENDER_MaybeAutoSwitchShader(const VideoMode& video_mode, const bool reinit
 			}
 		}
 	}
+
 	return shader_changed;
 }
 

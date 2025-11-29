@@ -628,7 +628,7 @@ bool OpenGlRenderer::ForceReloadCurrentShader()
 	        OpenGlRenderer::SetShaderResult::Ok);
 }
 
-bool OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
+void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 {
 	const auto canvas_size_px = GetCanvasSizeInPixels();
 
@@ -643,7 +643,7 @@ bool OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 
 	const auto new_descriptor = shader_manager.GetCurrentShaderDescriptor();
 
-	return MaybeSwitchShaderAndPreset(curr_descriptor, new_descriptor);
+	MaybeSwitchShaderAndPreset(curr_descriptor, new_descriptor);
 }
 
 bool OpenGlRenderer::MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_descriptor,
