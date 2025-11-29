@@ -2975,6 +2975,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		const auto shader_changed = RENDER_MaybeAutoSwitchShader(
 		        image_info.video_mode, ReinitRender);
 
+		LOG_TRACE("VGA DRAW: shader changed %d", shader_changed);
 		if (shader_changed) {
 			image_info = setup_drawing();
 		}

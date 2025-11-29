@@ -517,12 +517,16 @@ static void set_scan_and_pixel_doubling()
 
 bool RENDER_MaybeAutoSwitchShader(const VideoMode& video_mode, const bool reinit_render)
 {
+	LOG_TRACE("RENDER_MaybeAutoSwitchShader: video_mode: %s, reinit_render: %d", to_string(video_mode).c_str(), reinit_render);
 	const auto curr_preset = GFX_GetRenderer()->GetCurrentShaderPreset(); //-V821
 
 	const auto shader_changed = GFX_GetRenderer()->NotifyVideoModeChanged(
 	        video_mode);
 
+	LOG_TRACE("shader_changed: %d", shader_changed);
+
 	if (shader_changed) {
+		LOG_ERR(" RENDER shader / preset changed");
 		set_scan_and_pixel_doubling();
 
 		const auto new_preset = GFX_GetRenderer()->GetCurrentShaderPreset(); //-V821
@@ -537,6 +541,7 @@ bool RENDER_MaybeAutoSwitchShader(const VideoMode& video_mode, const bool reinit
 			          new_preset.settings.force_no_pixel_doubling));
 
 			if (render_params_changed) {
+				LOG_ERR(" RENDER REINIT");
 				reinit_drawing();
 			}
 		}

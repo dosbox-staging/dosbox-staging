@@ -671,10 +671,12 @@ bool OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 
 	auto& shader_manager = ShaderManager::GetInstance();
 	const auto curr_descriptor = shader_manager.GetCurrentShaderDescriptor();
+	LOG_ERR(">>>>> curr_descriptor: %s", curr_descriptor.ToString().c_str());
 
 	shader_manager.NotifyRenderParametersChanged(canvas_size_px, video_mode);
 
 	const auto new_descriptor = shader_manager.GetCurrentShaderDescriptor();
+	LOG_ERR(">>>>> new_descriptor: %s", new_descriptor.ToString().c_str());
 
 	return MaybeSwitchShaderAndPreset(curr_descriptor, new_descriptor);
 }
@@ -739,6 +741,7 @@ void OpenGlRenderer::SwitchShaderPresetOrSetDefault(const ShaderDescriptor& desc
 		    maybe_preset) {
 
 			current_shader_preset = *maybe_preset;
+			LOG_ERR(">>>>> changed_preset: %s", current_shader_preset.name.c_str());
 
 		} else {
 			set_default_preset();
