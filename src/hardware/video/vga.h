@@ -1105,7 +1105,7 @@ void VGA_SetupDrawing(uint32_t val);
 void VGA_CheckScanLength(void);
 void VGA_ChangedBank(void);
 
-const VideoMode& VGA_GetCurrentVideoMode();
+VideoMode VGA_GetCurrentVideoMode();
 
 // DAC/Attribute functions
 void VGA_DAC_CombineColor(const uint8_t palette_idx, const uint8_t color_idx);
