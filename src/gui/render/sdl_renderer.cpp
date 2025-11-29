@@ -182,7 +182,7 @@ void SdlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 	}
 }
 
-bool SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
+void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
                                           const int render_height_px)
 {
 	if (texture) {
@@ -196,7 +196,7 @@ bool SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 	                            render_height_px);
 	if (!texture) {
 		LOG_ERR("SDL: Error creating SDL texture: %s", SDL_GetError());
-		return false;
+		return;
 	}
 
 	switch (texture_filter_mode) {
@@ -216,7 +216,7 @@ bool SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 		}
 		break;
 
-	default: assertm(false, "Invalid TextureFilterMode"); return 0;
+	default: assertm(false, "Invalid TextureFilterMode"); return;
 	}
 
 	// unused; must be 0
@@ -245,10 +245,8 @@ bool SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 	if (!curr_framebuf || !last_framebuf) {
 		SDL_DestroyTexture(texture);
 		LOG_ERR("SDL: Error creating input surface: %s", SDL_GetError());
-		return false;
+		return;
 	}
-
-	return true;
 }
 
 SdlRenderer::SetShaderResult SdlRenderer::SetShader(

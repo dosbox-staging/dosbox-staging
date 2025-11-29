@@ -205,13 +205,13 @@ void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect _draw_rect_px)
 	           static_cast<GLsizei>(draw_rect_px.h));
 }
 
-bool OpenGlRenderer::NotifyRenderSizeChanged(const int new_render_width_px,
+void OpenGlRenderer::NotifyRenderSizeChanged(const int new_render_width_px,
                                              const int new_render_height_px)
 {
-	return UpdateRenderSize(new_render_width_px, new_render_height_px);
+	UpdateRenderSize(new_render_width_px, new_render_height_px);
 }
 
-bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
+void OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
                                       const int new_render_height_px)
 {
 	if (new_render_width_px > max_texture_size_px ||
@@ -220,7 +220,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 		LOG_ERR("OPENGL: No support for texture size of %dx%d pixels",
 		        new_render_width_px,
 		        new_render_height_px);
-		return false;
+		return;
 	}
 
 	render_width_px  = new_render_width_px;
@@ -231,7 +231,7 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 
 	if (!new_texture) {
 		LOG_ERR("OPENGL: Error generating texture");
-		return false;
+		return;
 	}
 
 	glBindTexture(GL_TEXTURE_2D, new_texture);
@@ -283,8 +283,6 @@ bool OpenGlRenderer::UpdateRenderSize(const int new_render_width_px,
 	}
 
 	texture = new_texture;
-
-	return true;
 }
 
 void OpenGlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
@@ -669,7 +667,8 @@ bool OpenGlRenderer::MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_des
 		SwitchShaderPresetOrSetDefault(new_descriptor);
 	}
 
-	return UpdateRenderSize(render_width_px, render_height_px);
+	UpdateRenderSize(render_width_px, render_height_px);
+	return true;
 }
 
 bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
