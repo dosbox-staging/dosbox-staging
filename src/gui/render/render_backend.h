@@ -35,7 +35,7 @@ public:
 	// Notify the renderer that the size of the image rendered by the video
 	// emulation has changed (the size of the DOS framebuffer). Always
 	// called at least once before the first StartUpdate() call.
-	virtual bool NotifyRenderSizeChanged(const int new_render_width_px,
+	virtual void NotifyRenderSizeChanged(const int new_render_width_px,
 	                                     const int new_render_height_px) = 0;
 
 	// Notify the renderer of video mode changes.
