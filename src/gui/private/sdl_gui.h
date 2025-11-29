@@ -104,8 +104,6 @@ struct SDL_Block {
 
 	TextureFilterMode texture_filter_mode = {};
 
-	bool video_initialised = false;
-
 	std::unique_ptr<RenderBackend> renderer = {};
 
 	struct {
