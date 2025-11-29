@@ -231,6 +231,8 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 
 	ShaderPreset preset = default_preset;
 
+	preset.name = descriptor.preset_name;
+
 	if (const auto settings = ini.GetSection("settings"); settings) {
 		for (const auto& [name, value] : *settings) {
 			SetShaderSetting(name.pItem, value, preset.settings);
@@ -416,6 +418,9 @@ ShaderPreset ShaderManager::ParseDefaultShaderPreset(const std::string& shader_n
                                                      const std::string& shader_source) const
 {
 	ShaderPreset preset = {};
+
+	// The default preset has no name
+	preset.name.clear();
 
 	try {
 		const std::regex re("\\s*#pragma\\s+(.+)");
