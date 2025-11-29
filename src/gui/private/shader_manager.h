@@ -169,6 +169,7 @@ struct ShaderSettings {
 using ShaderParameters = std::unordered_map<std::string, float>;
 
 struct ShaderPreset {
+	std::string name        = {};
 	ShaderSettings settings = {};
 	ShaderParameters params = {};
 };
