@@ -107,6 +107,7 @@ void ShaderManager::NotifyShaderChanged(const std::string& shader_descriptor,
 void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_size_px,
                                                   const VideoMode& new_video_mode)
 {
+	LOG_WARNING("ShaderManager::NotifyRenderParametersChanged");
 	// We need to calculate the scale factors for two eventualities: 1)
 	// potentially double-scanned, and 2) forced single-scanned output. Then
 	// we need to pick the best outcome based on shader availability for the
@@ -531,6 +532,7 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
 
 void ShaderManager::MaybeAutoSwitchShader()
 {
+	LOG_TRACE("ShaderManager::MaybeAutoSwitchShader");
 	using enum ShaderMode;
 
 	const auto new_shader_descriptor = [&]() -> ShaderDescriptor {

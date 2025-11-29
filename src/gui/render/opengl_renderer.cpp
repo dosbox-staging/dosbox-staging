@@ -281,6 +281,7 @@ DosBox::Rect OpenGlRenderer::GetCanvasSizeInPixels()
 
 void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 {
+	LOG_TRACE("NotifyViewportSizeChanged: %s", draw_rect_px.ToString().c_str());
 	viewport_rect_px = draw_rect_px;
 
 	// If the viewport size has changed, the canvas size might have changed
@@ -313,6 +314,8 @@ void OpenGlRenderer::NotifyRenderSizeChanged(const int new_render_width_px,
 void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
                                            const int new_render_height_px)
 {
+	LOG_TRACE("UpdateRenderSize: %d %d", render_width_px, render_height_px);
+
 	// TODO check if this is still true
 	//
 	// At startup we set the shader before receiving the first
@@ -326,6 +329,7 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
 	// dimensions.
 	//
 	if (new_render_width_px == 0 && new_render_height_px == 0) {
+		LOG_ERR("  UpdateRenderSize - NOOP");
 		// no-op
 		return;
 	}
@@ -333,6 +337,7 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
 	// Size hasn't changed, don't recreate the texture
 	if (new_render_width_px == pass1.width &&
 	    new_render_height_px == pass1.height) {
+		LOG_ERR("  UpdateRenderSize - NOOP");
 		// no-op
 		return;
 	}
@@ -796,6 +801,7 @@ bool OpenGlRenderer::ForceReloadCurrentShader()
 
 void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 {
+	LOG_TRACE("NotifyVideoModeChanged %s", to_string(video_mode).c_str());
 	const auto canvas_size_px = GetCanvasSizeInPixels();
 
 	// We always expect a valid canvas and DOS video mode
@@ -815,6 +821,10 @@ void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 bool OpenGlRenderer::MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_descriptor,
                                                 const ShaderDescriptor& new_descriptor)
 {
+	LOG_TRACE("MaybeSwitchShaderAndPreset: curr: %s, new: %s",
+	          curr_descriptor.ToString().c_str(),
+	          new_descriptor.ToString().c_str());
+
 	const auto changed_shader = (curr_descriptor.shader_name !=
 	                             new_descriptor.shader_name);
 
