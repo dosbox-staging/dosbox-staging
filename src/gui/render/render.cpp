@@ -515,9 +515,9 @@ static void set_scan_and_pixel_doubling()
 	VGA_AllowPixelDoubling(!force_no_pixel_doubling);
 }
 
-bool RENDER_MaybeAutoSwitchShader(const VideoMode& video_mode, const bool reinit_render)
+bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode, const bool reinit_render)
 {
-	LOG_TRACE("RENDER_MaybeAutoSwitchShader: video_mode: %s, reinit_render: %d",
+	LOG_TRACE("RENDER_NotifyVideoModeChanged: video_mode: %s, reinit_render: %d",
 	          to_string(video_mode).c_str(),
 	          reinit_render);
 
@@ -570,7 +570,7 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 
 		// We are potentially auto-switching to a VGA shader now.
 		constexpr auto ReinitRender = true;
-		RENDER_MaybeAutoSwitchShader(video_mode, ReinitRender);
+		RENDER_NotifyVideoModeChanged(video_mode, ReinitRender);
 	}
 }
 

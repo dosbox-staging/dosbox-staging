@@ -7504,7 +7504,7 @@ static void Voodoo_UpdateScreen()
 			        1000.0 / v->draw.frame_period_ms);
 
 			constexpr auto ReinitRender = false;
-			RENDER_MaybeAutoSwitchShader(video_mode, ReinitRender);
+			RENDER_NotifyVideoModeChanged(video_mode, ReinitRender);
 
 			RENDER_SetSize(image_info, frames_per_second);
 		}
