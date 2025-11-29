@@ -880,11 +880,6 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
                  const bool double_width, const bool double_height,
                  const VideoMode& video_mode, GFX_Callback_t callback)
 {
-	if (!sdl.video_initialised) {
-		RENDER_SetShaderWithFallback();
-		sdl.video_initialised = true;
-	}
-
 	if (sdl.draw.updating_framebuffer) {
 		GFX_EndUpdate();
 	}
@@ -1779,6 +1774,8 @@ void GFX_Init()
 
 	create_window_and_renderer();
 
+	RENDER_SetShaderWithFallback();
+
 #if defined(MACOSX)
 	// Setting the SDL_WINDOW_BORDERLESS flag on window creation doesn't
 	// work on macOS.
@@ -1956,10 +1953,6 @@ bool GFX_IsFullscreen()
 
 static bool maybe_autoswitch_shader()
 {
-	if (!sdl.video_initialised) {
-		return false;
-	}
-
 	// The shaders need the DOS mode to be set as their source resolution
 	if (!sdl.maybe_video_mode) {
 		return false;
