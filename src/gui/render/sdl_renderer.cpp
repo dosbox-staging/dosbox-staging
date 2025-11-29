@@ -173,7 +173,7 @@ DosBox::Rect SdlRenderer::GetCanvasSizeInPixels()
 	return r;
 }
 
-void SdlRenderer::UpdateViewport(const DosBox::Rect draw_rect_px)
+void SdlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 {
 	const auto sdl_draw_rect_px = to_sdl_rect(draw_rect_px);
 
@@ -182,7 +182,8 @@ void SdlRenderer::UpdateViewport(const DosBox::Rect draw_rect_px)
 	}
 }
 
-bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_height_px)
+void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
+                                          const int render_height_px)
 {
 	if (texture) {
 		SDL_DestroyTexture(texture);
@@ -195,7 +196,7 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 	                            render_height_px);
 	if (!texture) {
 		LOG_ERR("SDL: Error creating SDL texture: %s", SDL_GetError());
-		return false;
+		return;
 	}
 
 	switch (texture_filter_mode) {
@@ -215,7 +216,7 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 		}
 		break;
 
-	default: assertm(false, "Invalid TextureFilterMode"); return 0;
+	default: assertm(false, "Invalid TextureFilterMode"); return;
 	}
 
 	// unused; must be 0
@@ -244,10 +245,8 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 	if (!curr_framebuf || !last_framebuf) {
 		SDL_DestroyTexture(texture);
 		LOG_ERR("SDL: Error creating input surface: %s", SDL_GetError());
-		return false;
+		return;
 	}
-
-	return true;
 }
 
 SdlRenderer::SetShaderResult SdlRenderer::SetShader(
@@ -260,11 +259,10 @@ SdlRenderer::SetShaderResult SdlRenderer::SetShader(
 	return SetShaderResult::Ok;
 }
 
-bool SdlRenderer::MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
-                                        [[maybe_unused]] const VideoMode& video_mode)
+void SdlRenderer::NotifyVideoModeChanged([[maybe_unused]] const VideoMode& video_mode)
 {
-	// no shader support; always report no change
-	return false;
+	// no shader support
+	return;
 }
 
 bool SdlRenderer::ForceReloadCurrentShader()

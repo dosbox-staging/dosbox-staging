@@ -29,18 +29,21 @@ public:
 	// window or the screen in fullscreen in pixels.
 	virtual DosBox::Rect GetCanvasSizeInPixels() = 0;
 
-	// Update the drawing area (viewport) of the renderer.
-	virtual void UpdateViewport(const DosBox::Rect draw_rect_px) = 0;
+	// Notify the renderer that the drawing area (viewport) size has changed.
+	virtual void NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px) = 0;
 
-	// Update the size of the image rendered by the video emulation (the
-	// size of the DOS framebuffer). Always called at least once before the
-	// first StartUpdate() call.
-	virtual bool UpdateRenderSize(const int new_render_width_px,
-	                              const int new_render_height_px) = 0;
+	// Notify the renderer that the size of the image rendered by the video
+	// emulation has changed (the size of the DOS framebuffer). Always
+	// called at least once before the first StartUpdate() call.
+	virtual void NotifyRenderSizeChanged(const int new_render_width_px,
+	                                     const int new_render_height_px) = 0;
+
+	// Notify the renderer of video mode changes.
+	virtual void NotifyVideoModeChanged(const VideoMode& video_mode) = 0;
 
 	// Set a shader by its symbolic shader name. The render backend should
-	// load the shader via the `ShaderManager` if it's not in its shader cache
-	// (caching is optional but recommended).
+	// load the shader via the `ShaderManager` if it's not in its shader
+	// cache (caching is optional but recommended).
 	//
 	// E.g., `crt-auto-machine` is a symbolic name that will get mapped to
 	// actual shaders that implement the Hercules, CGA, EGA, and VGA CRT
@@ -51,10 +54,6 @@ public:
 	enum class SetShaderResult { Ok, ShaderError, PresetError };
 
 	virtual SetShaderResult SetShader(const std::string& symbolic_name) = 0;
-
-	// Can be a no-op if the backend does't support shaders.
-	virtual bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
-	                                   const VideoMode& video_mode) = 0;
 
 	// Reload the currently active shader from disk.
 	virtual bool ForceReloadCurrentShader() = 0;

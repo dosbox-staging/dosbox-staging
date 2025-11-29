@@ -872,7 +872,7 @@ static void update_viewport()
 
 	sdl.draw.draw_rect_px = to_sdl_rect(draw_rect_px);
 
-	sdl.renderer->UpdateViewport(draw_rect_px);
+	sdl.renderer->NotifyViewportSizeChanged(draw_rect_px);
 }
 
 void GFX_SetSize(const int render_width_px, const int render_height_px,
@@ -880,11 +880,6 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
                  const bool double_width, const bool double_height,
                  const VideoMode& video_mode, GFX_Callback_t callback)
 {
-	if (!sdl.video_initialised) {
-		RENDER_SetShaderWithFallback();
-		sdl.video_initialised = true;
-	}
-
 	if (sdl.draw.updating_framebuffer) {
 		GFX_EndUpdate();
 	}
@@ -903,11 +898,8 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
 
 	sdl.draw.callback = callback;
 
-	if (!sdl.renderer->UpdateRenderSize(sdl.draw.render_width_px,
-	                                    sdl.draw.render_height_px)) {
-		LOG_ERR("SDL: Error updating texture");
-	}
-
+	sdl.renderer->NotifyRenderSizeChanged(sdl.draw.render_width_px,
+	                                      sdl.draw.render_height_px);
 	update_viewport();
 	setup_presentation_mode();
 
@@ -1779,6 +1771,8 @@ void GFX_Init()
 
 	create_window_and_renderer();
 
+	RENDER_SetShaderWithFallback();
+
 #if defined(MACOSX)
 	// Setting the SDL_WINDOW_BORDERLESS flag on window creation doesn't
 	// work on macOS.
@@ -1952,30 +1946,6 @@ void GFX_LosingFocus()
 bool GFX_IsFullscreen()
 {
 	return sdl.is_fullscreen;
-}
-
-static bool maybe_autoswitch_shader()
-{
-	if (!sdl.video_initialised) {
-		return false;
-	}
-
-	// The shaders need a canvas size as their target resolution
-	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
-
-	if (canvas_size_px.IsEmpty()) {
-		return false;
-	}
-
-	// The shaders need the DOS mode to be set as their source resolution
-	if (!sdl.maybe_video_mode) {
-		return false;
-	}
-
-	constexpr auto ReinitRender = true;
-	return RENDER_MaybeAutoSwitchShader(canvas_size_px,
-	                                    *sdl.maybe_video_mode,
-	                                    ReinitRender);
 }
 
 static bool is_user_event(const SDL_Event& event)
@@ -2196,7 +2166,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 	case SDL_WINDOWEVENT_SHOWN:
 		log_window_event("SDL: Window has been shown");
-		maybe_autoswitch_shader();
 		return true;
 
 	case SDL_WINDOWEVENT_HIDDEN:
@@ -2246,7 +2215,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		sdl.display_number = new_display_number;
 
 		update_viewport();
-		maybe_autoswitch_shader();
 		notify_new_mouse_screen_params();
 		return true;
 	}
@@ -2259,10 +2227,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		const auto new_width  = event.window.data1;
 
 		check_and_handle_dpi_change(sdl.window, new_width);
-
 		update_viewport();
-		maybe_autoswitch_shader();
-
 		notify_new_mouse_screen_params();
 		return true;
 	}
