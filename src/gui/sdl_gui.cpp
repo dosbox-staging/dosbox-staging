@@ -1948,12 +1948,6 @@ bool GFX_IsFullscreen()
 	return sdl.is_fullscreen;
 }
 
-static void notify_video_mode_changed()
-{
-	constexpr auto ReinitRender = true;
-	RENDER_NotifyVideoModeChanged(*sdl.maybe_video_mode, ReinitRender);
-}
-
 static bool is_user_event(const SDL_Event& event)
 {
 	const auto start_id = sdl.start_event_id;
@@ -2221,7 +2215,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		sdl.display_number = new_display_number;
 
 		update_viewport();
-		notify_video_mode_changed();
 		notify_new_mouse_screen_params();
 		return true;
 	}
@@ -2234,10 +2227,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		const auto new_width  = event.window.data1;
 
 		check_and_handle_dpi_change(sdl.window, new_width);
-
 		update_viewport();
-		notify_video_mode_changed();
-
 		notify_new_mouse_screen_params();
 		return true;
 	}
