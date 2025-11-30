@@ -25,6 +25,7 @@ runs:
       run: |
         echo "VCPKG_ROOT=${VCPKG_INSTALLATION_ROOT}" >> $GITHUB_ENV
         echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_bin_cache" >> $GITHUB_ENV
+        echo "DOSBOX_VCPKG_BASELINE=$(jq -r .\"builtin-baseline\" ./vcpkg.json)" >> $GITHUB_ENV
 
     - name: Set vcpkg cache env variable (Windows)
       if: ${{ runner.os == 'Windows'}}
@@ -32,6 +33,16 @@ runs:
       run: |
         Write-Output "VCPKG_ROOT=$Env:VCPKG_INSTALLATION_ROOT" >> $Env:GITHUB_ENV
         Write-Output "VCPKG_DEFAULT_BINARY_CACHE=C:\vcpkg_bin_cache" >> $Env:GITHUB_ENV
+        $baseline = (Get-Content .\vcpkg.json | ConvertFrom-Json)."builtin-baseline"
+        Write-Output "DOSBOX_VCPKG_BASELINE=${baseline}" >> $Env:GITHUB_ENV
+
+    - name: Checkout VCPKG to baseline
+      shell: bash
+      run: |
+        cd "${VCPKG_ROOT}"
+        git reset --hard
+        git fetch
+        git checkout "$DOSBOX_VCPKG_BASELINE"
 
     - name: Get vcpkg commit
       shell: bash
