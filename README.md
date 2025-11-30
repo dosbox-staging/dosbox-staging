@@ -79,19 +79,19 @@ First-time users and people migrating from other DOSBox variants should start by
 
 DOSBox Staging has the following library dependencies:
 
-| Dependency                                               | Provides feature                                | vcpkg package name | vcpkg version   | Optional?           |
-| -------------------------------------------------------- | ----------------------------------------------- | ------------------ | --------------- | ------------------- |
-| [FluidSynth](https://www.fluidsynth.org/)                | General MIDI playback                           | fluidsynth         | 2.5.0 (overlay) | **no** :red_circle: |
-| [GoogleTest](https://github.com/google/googletest)       | Unit testing (development)                      | gtest              | 1.70.0#1        | yes :green_circle:  |
-| [IIR](https://github.com/berndporr/iir1)                 | Audio filtering                                 | iir1               | 1.10.0          | **no** :red_circle: |
-| [libpng](http://www.libpng.org/pub/png/libpng.html)      | PNG encoding of screen captures                 | libpng             | 1.6.50          | yes :green_circle:  |
-| [Munt](https://github.com/munt/munt)                     | Roland MT-32 and CM-32L emulation               | libmt32emu         | 2.7.1           | yes :green_circle:  |
-| [Opus File](https://opus-codec.org/)                     | CD Audio playback for Opus-encoded audio tracks | opusfile           | 0.12+20221121#1 | **no** :red_circle: |
-| [SDL 2](https://github.com/libsdl-org/SDL)               | OS-agnostic API for video, audio, and eventing  | sdl2               | 2.32.10         | **no** :red_circle: |
-| [SDL_net 2](https://github.com/libsdl-org/SDL_net)       | Network API for emulated serial and IPX         | sdl2-net           | 2.2.0#3         | yes :green_circle:  |
-| [SpeexDSP](https://github.com/xiph/speexdsp)             | Audio resampling                                | speexdsp           | 1.2.1#1         | **no** :red_circle: |
-| [Tracy Profiler](https://github.com/wolfpld/tracy)       | Event profiler (development)                    | tracy              | 0.11.1#2        | yes :green_circle:  |
-| [zlib-ng](https://github.com/zlib-ng/zlib-ng)            | ZMBV video capture                              | zlib-ng            | 2.2.5           | yes :green_circle:  |
+| Dependency                                               | Provides feature                                | vcpkg package name | vcpkg version     | Optional?           |
+| -------------------------------------------------------- | ----------------------------------------------- | ------------------ | -------  -------- | ------------------- |
+| [FluidSynth](https://www.fluidsynth.org/)                | General MIDI playback                           | fluidsynth         | 2.5.1             | **no** :red_circle: |
+| [GoogleTest](https://github.com/google/googletest)       | Unit testing (development)                      | gtest              | 1.70.0#2          | yes :green_circle:  |
+| [IIR](https://github.com/berndporr/iir1)                 | Audio filtering                                 | iir1               | 1.10.0            | **no** :red_circle: |
+| [libpng](http://www.libpng.org/pub/png/libpng.html)      | PNG encoding of screen captures                 | libpng             | 1.6.53            | yes :green_circle:  |
+| [Munt](https://github.com/munt/munt)                     | Roland MT-32 and CM-32L emulation               | libmt32emu         | 2.7.1             | yes :green_circle:  |
+| [Opus File](https://opus-codec.org/)                     | CD Audio playback for Opus-encoded audio tracks | opusfile           | 0.12+20221121#1   | **no** :red_circle: |
+| [SDL 2](https://github.com/libsdl-org/SDL)               | OS-agnostic API for video, audio, and eventing  | sdl2               | 2.32.10 (overlay) | **no** :red_circle: |
+| [SDL_net 2](https://github.com/libsdl-org/SDL_net)       | Network API for emulated serial and IPX         | sdl2-net           | 2.2.0#3           | yes :green_circle:  |
+| [SpeexDSP](https://github.com/xiph/speexdsp)             | Audio resampling                                | speexdsp           | 1.2.1#1           | **no** :red_circle: |
+| [Tracy Profiler](https://github.com/wolfpld/tracy)       | Event profiler (development)                    | tracy              | 0.11.1#2          | yes :green_circle:  |
+| [zlib-ng](https://github.com/zlib-ng/zlib-ng)            | ZMBV video capture                              | zlib-ng            | 2.3.2             | yes :green_circle:  |
 
 
 ### Dynamically loaded dependencies
