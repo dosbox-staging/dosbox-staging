@@ -1298,6 +1298,7 @@ static void init_render_settings(SectionProp& section)
 	        "Notes:\n"
 	        "  - Using 'relative' mode with 'integer_scaling' enabled could lead to\n"
 	        "    surprising (but correct) results.\n"
+	        "\n"
 	        "  - Use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey actions to\n"
 	        "    adjust the image size in 'relative' mode in real-time, then copy the new\n"
 	        "    settings from the logs into your config.");
@@ -1349,7 +1350,9 @@ static void init_render_settings(SectionProp& section)
 	        "                 AGI-interpreter.\n"
 	        "\n"
 	        "  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.\n"
+	        "\n"
 	        "  colodore:      Commodore 64 inspired colours based on the Colodore palette.\n"
+	        "\n"
 	        "  colodore-sat:  Colodore palette with 20%% more saturation.\n"
 	        "\n"
 	        "  dga16:         A modern take on the canonical CGA palette with dialed back\n"
@@ -1371,9 +1374,11 @@ static void init_render_settings(SectionProp& section)
 	string_prop = section.AddString("scaler", Deprecated, "none");
 	string_prop->SetHelp(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
+	        "\n"
 	        "  - If you used the normal2x/3x scalers, consider using [color=light-green]'integer_scaling'[reset]\n"
 	        "    with [color=light-green]'shader = sharp'[reset] and optionally setting the desired [color=light-green]'window_size'[reset]\n"
 	        "    or [color=light-green]'viewport'[reset] size.\n"
+	        "\n"
 	        "  - If you used an advanced scaler, consider one of the [color=light-green]'shader'[reset] options.");
 }
 
