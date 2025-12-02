@@ -680,11 +680,13 @@ bool OpenGlRenderer::MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_des
 	                             new_descriptor.preset_name);
 
 	if (!changed_shader && !changed_preset) {
-		return false;
+		// No change; report success
+		return true;
 	}
 
 	if (changed_shader) {
 		if (!SwitchShader(new_descriptor.shader_name)) {
+			// Loading shader failed; report error
 			return false;
 		}
 	}
@@ -758,6 +760,7 @@ std::optional<ShaderPreset> OpenGlRenderer::GetOrLoadAndCacheShaderPreset(
 		        descriptor, default_preset);
 
 		if (!maybe_preset) {
+			// Error loading preset; report error
 			return {};
 		}
 
