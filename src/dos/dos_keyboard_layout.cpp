@@ -23,6 +23,8 @@
 
 static const std::string ResourceDir = "freedos-keyboard";
 
+/*
+
 // A common pattern in the keyboard layout file is to try opening the requested
 // file first within DOS, then from the local path.
 // This function performs those in order and returns the first hit.
@@ -577,13 +579,13 @@ bool KeyboardLayout::SetLayoutKey(const uint8_t key, const uint8_t flags1,
 	if (diacritics_character>0) {
 		// ignore state-changing keys
 		switch(key) {
-			case 0x1d:			/* Ctrl Pressed */
-			case 0x2a:			/* Left Shift Pressed */
-			case 0x36:			/* Right Shift Pressed */
-			case 0x38:			/* Alt Pressed */
-			case 0x3a:			/* Caps Lock */
-			case 0x45:			/* Num Lock */
-			case 0x46:			/* Scroll Lock */
+			case 0x1d:			// Ctrl Pressed
+			case 0x2a:			// Left Shift Pressed
+			case 0x36:			// Right Shift Pressed
+			case 0x38:			// Alt Pressed
+			case 0x3a:			// Caps Lock
+			case 0x45:			// Num Lock
+			case 0x46:			// Scroll Lock
 				break;
 			default:
 			        if (diacritics_character >= diacritics_entries + 200) {
@@ -804,9 +806,120 @@ std::string KeyboardLayout::GetLayoutName() const
 	return current_keyboard_layout;
 }
 
-static std::unique_ptr<KeyboardLayout> loaded_layout = {};
+*/
 
-// called by int9-handler
+class KeyboardLayout
+{
+public:
+
+	std::string GetLayoutName() const;
+
+	bool HasCodePage(const uint16_t code_page) const;
+
+
+
+	// XXX legacy definitions
+
+	KeyboardLayoutResult SwitchKeyboardLayout(const std::string& keyboard_layout,
+	                                          KeyboardLayout*& created_layout);
+
+	void Reset();
+
+	bool SetLayoutKey(const uint8_t key, const uint8_t flags1,
+	                  const uint8_t flags2, const uint8_t flags3);
+
+	// XXX
+
+private:
+	std::string layout_name = ""; // XXX load this
+	// XXX
+};
+
+std::string KeyboardLayout::GetLayoutName() const
+{
+	return layout_name;
+}
+
+bool KeyboardLayout::HasCodePage(const uint16_t code_page) const
+{
+	// XXX
+	return false;
+}
+
+KeyboardLayoutResult SwitchKeyboardLayout(const std::string& keyboard_layout,
+                                          KeyboardLayout*& created_layout)
+{
+	// XXX
+	return KeyboardLayoutResult::IncompatibleMachine;	
+}
+
+void KeyboardLayout::Reset()
+{
+	// XXX
+}
+
+bool KeyboardLayout::SetLayoutKey(const uint8_t key, const uint8_t flags1,
+                                  const uint8_t flags2, const uint8_t flags3)
+{
+	// XXX
+	return false;
+}
+
+static KeyboardLayout* loaded_layout = nullptr; // XXX activated
+
+
+
+
+using KeyboardLayouts = std::unordered_map<std::string, KeyboardLayout>;
+
+static KeyboardLayouts keyboard_layout_storage = {};
+
+
+static KeyboardLayoutResult load_keyboard_layout(const std::string& keyboard_layout)
+{
+	// XXX
+
+	return KeyboardLayoutResult::LayoutNotKnown;
+}
+
+static KeyboardLayoutResult get_keyboard_layout(const std::string& keyboard_layout, // XXX use this
+                                                const uint16_t code_page)
+{
+	auto result = KeyboardLayoutResult::OK;
+
+	// XXX fix casing support!
+	if (!keyboard_layout_storage.contains(keyboard_layout)) {
+		result = load_keyboard_layout(keyboard_layout);
+	}
+
+	// Check if the keyboard layout supports requested code page
+	if (result == KeyboardLayoutResult::OK &&
+	    !keyboard_layout_storage.at(keyboard_layout).HasCodePage(code_page)) {
+		
+		result = KeyboardLayoutResult::NoLayoutForCodePage;	
+	}
+
+	// Allow using 'us' layout with any code page
+	if (result == KeyboardLayoutResult::NoLayoutForCodePage &&
+	    iequals(keyboard_layout, "US")) {
+
+	    	result = KeyboardLayoutResult::OK;
+	}
+
+	return result;
+}
+
+static void activate_keyboard_layout(const std::string& keyboard_layout, // XXX use this
+                                     const uint16_t code_page)
+{
+	// XXX
+
+	return;
+}
+
+
+
+// Called by the INT9 handler
 bool DOS_LayoutKey(const uint8_t key, const uint8_t flags1,
                    const uint8_t flags2, const uint8_t flags3)
 {
@@ -830,7 +943,7 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 		return KeyboardLayoutResult::NoCodePageInCpiFile;
 	}
 
-	auto new_layout = std::make_unique<KeyboardLayout>();
+	auto new_layout = new KeyboardLayout(); // XXX temporary, currently leaks memory!
 
 	if (!DOS_CanLoadScreenFonts()) {
 		// Can't set custom code page on pre-EGA display adapters
@@ -845,16 +958,7 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 	}
 
 	// Try to read the keyboard layout
-	auto result = new_layout->ReadKeyboardFile(keyboard_layout, code_page);
-
-	// Allow using 'us' layout with any code page
-	if ((result == KeyboardLayoutResult::LayoutNotKnown ||
-	     result == KeyboardLayoutResult::NoLayoutForCodePage) &&
-	    iequals(keyboard_layout, "US")) {
-		// Allow using 'us' layout with any code page
-		result = new_layout->ReadKeyboardFile(keyboard_layout,
-		                                      DefaultCodePage);
-	}
+	auto result = get_keyboard_layout(keyboard_layout, code_page);
 
 	// If no suitable code page found, terminate
 	if (result != KeyboardLayoutResult::OK) {
@@ -888,7 +992,11 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 	}
 	if (changed_layout) {
 		// Remove old layout, activate new layout
-		loaded_layout.reset(changed_layout);
+		// XXX loaded_layout.reset(changed_layout);
+
+		// XXX probably sould look like this
+		loaded_layout = changed_layout;
+		loaded_layout->Reset();
 	}
 
 	// Log loaded keyboard layout
