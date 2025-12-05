@@ -222,6 +222,9 @@ struct ImageSettings {
 	// 1000 K to 12,000 K
 	float color_temperature_kelvin = 6500.0f;
 
+	// TODO
+	float color_temperature_luma_preserve = 0.0f;
+
 	// Valid range between 0.0 and 1.0; 1.0 means no change
 	float red_gain = 1.0f;
 

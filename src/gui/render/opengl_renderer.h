@@ -189,7 +189,8 @@ private:
 			GLint black_level        = -1;
 			GLint black_level_tint   = -1;
 
-			GLint color_temperature_kelvin = -1;
+			GLint color_temperature_kelvin        = -1;
+			GLint color_temperature_luma_preserve = -1;
 
 			GLint red_gain   = -1;
 			GLint green_gain = -1;

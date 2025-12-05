@@ -1025,7 +1025,10 @@ void OpenGlRenderer::GetPass1UniformLocations()
 	u.black_level      = glGetUniformLocation(po, "BLACK_LEVEL");
 	u.black_level_tint = glGetUniformLocation(po, "BLACK_LEVEL_TINT");
 
-	u.color_temperature_kelvin = glGetUniformLocation(po, "WHITE_POINT_KELVIN");
+	u.color_temperature_kelvin = glGetUniformLocation(po, "COLOR_TEMPERATURE_KELVIN");
+
+	u.color_temperature_luma_preserve =
+	        glGetUniformLocation(po, "COLOR_TEMPERATURE_LUMA_PRESERVE");
 
 	u.red_gain   = glGetUniformLocation(po, "RED_GAIN");
 	u.green_gain = glGetUniformLocation(po, "GREEN_GAIN");
@@ -1056,6 +1059,9 @@ void OpenGlRenderer::UpdatePass1Uniforms()
 
 	glUniform1f(u.color_temperature_kelvin,
 	            static_cast<GLfloat>(s.color_temperature_kelvin));
+
+	glUniform1f(u.color_temperature_luma_preserve,
+	            static_cast<GLfloat>(s.color_temperature_luma_preserve));
 
 	glUniform1f(u.red_gain, static_cast<GLfloat>(s.red_gain));
 	glUniform1f(u.green_gain, static_cast<GLfloat>(s.green_gain));

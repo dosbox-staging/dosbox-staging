@@ -1274,6 +1274,9 @@ constexpr auto ColorTemperatureNeutral = 6500;
 constexpr auto ColorTemperatureMin     = 3000;
 constexpr auto ColorTemperatureMax     = 10000;
 
+constexpr auto ColorTemperatureLumaPreserveMin = 0;
+constexpr auto ColorTemperatureLumaPreserveMax = 100;
+
 constexpr auto RgbGainMin = 0;
 constexpr auto RgbGainMax = 100;
 
@@ -1583,8 +1586,8 @@ static void init_render_settings(SectionProp& section)
 	        {"auto", "none", "ebu", "p22", "smpte-c", "philips", "trinitron"});
 	string_prop->SetHelp(
 	        "Set a CRT colour profile for more authentic video output emulation ('none' by\n"
-	        "default). All profiles have a built-in white point that you can tweak further\n"
-	        "with the 'color_temperature' setting. Possible values:\n"
+	        "default). All profiles have a built-in color temperature (white point) that you\n"
+			"can tweak further with the 'color_temperature' setting. Possible values:\n"
 	        "\n"
 	        "  auto:       For adaptive CRT shaders, an authentic color profile for the\n"
 	        "              currently active shader variant is selected; for any other shader,\n"
@@ -1704,22 +1707,39 @@ static void init_render_settings(SectionProp& section)
 
 	string_prop = section.AddString("color_temperature", Always, DefaultColorTemperature);
 	string_prop->SetHelp(format_str(
-	        "Set the white point of the video output (%d by default). Possible values:\n"
+	        "Set the color temperature (white point) of the video output (%d by default).\n"
+			"Possible values:\n"
 	        "\n"
-	        "  auto:     For adaptive CRT shaders, an authentic white point for the currently\n"
-	        "            active shader variant is selected; for any other shader, 6500 is\n"
-	        "            used (default).\n"
+	        "  auto:     For adaptive CRT shaders, an authentic color temperature for the\n"
+	        "            currently active shader variant is selected; for any other shader,\n"
+			"            6500 is used (default).\n"
 	        "\n"
-	        "  <value>:  White point in Kelvin (K). Valid range is %d to %d. The Kelvin\n"
+	        "  <value>:  Color temperature in Kelvin (K). Valid range is %d to %d. The Kelvin\n"
 	        "            value only make sense if 'crt_color_profile' is set to 'none' or one\n"
 	        "            of the profiles with 6500K white point, otherwise it acts as a\n"
-	        "            relative white point adjustment (less than 6500 results in warmer\n"
+	        "            relative color temperature adjustment (less than 6500 results in warmer\n"
 	        "            colors, more than 6500 results in cooler colors).\n"
 	        "\n"
 	        "Notes: See 'brightness' for further details.",
 	        DefaultColorTemperature,
 	        ColorTemperatureMin,
 	        ColorTemperatureMax));
+
+	constexpr auto DefaultColorTemperatureLumaPreserve = 0;
+
+	int_prop = section.AddInt("color_temperature_luma_preserve",
+	                          Always,
+	                          DefaultColorTemperatureLumaPreserve);
+
+	int_prop->SetMinMax(ColorTemperatureLumaPreserveMin,
+	                    ColorTemperatureLumaPreserveMax);
+
+	int_prop->SetHelp(
+	        format_str("TODO (%d by default). Valid range is %d to %d.\n"
+	                   "Notes: See 'brightness' for further details.",
+	                   DefaultColorTemperatureLumaPreserve,
+	                   ColorTemperatureLumaPreserveMin,
+	                   ColorTemperatureLumaPreserveMax));
 
 	constexpr int DefaultRgbGain = 100;
 
@@ -2021,6 +2041,17 @@ static void update_color_temperature_setting()
 	}
 }
 
+static void update_color_temperature_luma_preserve_setting()
+{
+	curr_image_settings.color_temperature_luma_preserve =
+	        remap(static_cast<float>(ColorTemperatureLumaPreserveMin),
+	              static_cast<float>(ColorTemperatureLumaPreserveMax),
+	              0.0f,
+	              1.0f,
+	              static_cast<float>(get_render_section().GetInt(
+	                      "color_temperature_luma_preserve")));
+}
+
 static void update_red_gain_setting()
 {
 	curr_image_settings.red_gain =
@@ -2062,6 +2093,7 @@ enum class ImageSettingControl {
 	BlackLevel,
 	Saturation,
 	ColorTemperature,
+	ColorTemperatureLumaPreserve,
 
 	RedGain,
 	GreenGain,
@@ -2108,7 +2140,8 @@ static void select_image_setting_control(const Direction dir)
 		case BlackLevel: return "black level"; break;
 		case Saturation: return "saturation"; break;
 
-		case ColorTemperature: return "white point"; break;
+		case ColorTemperature: return "color temperature"; break;
+		case ColorTemperatureLumaPreserve: return "luma preserve"; break;
 
 		case RedGain: return "red gain"; break;
 		case GreenGain: return "green gain"; break;
@@ -2372,6 +2405,7 @@ void RENDER_Init()
 	update_black_level_setting();
 
 	update_color_temperature_setting();
+	update_color_temperature_luma_preserve_setting();
 
 	update_red_gain_setting();
 	update_green_gain_setting();
@@ -2443,6 +2477,10 @@ static void notify_render_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "color_temperature") {
 		update_color_temperature_setting();
+		set_image_settings();
+
+	} else if (prop_name == "color_temperature_luma_preserve") {
+		update_color_temperature_luma_preserve_setting();
 		set_image_settings();
 
 	} else if (prop_name == "red_gain") {

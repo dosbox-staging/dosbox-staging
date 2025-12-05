@@ -42,11 +42,47 @@ uniform float BLACK_LEVEL;
 uniform vec3  BLACK_LEVEL_TINT;
 uniform float SATURATION;
 
-uniform float WHITE_POINT_KELVIN;
+uniform float COLOR_TEMPERATURE_KELVIN;
+uniform float COLOR_TEMPERATURE_LUMA_PRESERVE;
 
 uniform float RED_GAIN;
 uniform float GREEN_GAIN;
 uniform float BLUE_GAIN;
+
+// Expects linear RGB 
+vec3 brightness(vec3 color, float b)
+{
+	return clamp(color * b, vec3(0.0), vec3(1.0));
+}
+
+// Tone-mapping curve to darken the darkest parts of the image to achieve more
+// CRT-like near-black detail.
+
+// See the curve here: https://www.desmos.com/calculator/ligpt73p0e
+//
+float crt_black(float color)
+{
+	if (color < 0.4) {
+		float c = color - 0.81822;
+		return -1.2*c*c + 0.61;
+	} else {
+		return color;
+	}
+}
+
+vec3 crt_black(vec3 color)
+{
+	return clamp(vec3(crt_black(color.r),
+	                  crt_black(color.g),
+	                  crt_black(color.b)),
+	             vec3(0.0),
+	             vec3(1.0));
+}
+
+// From 'WinUaeColor.fx'
+// https://github.com/guestrr/WinUAE-Shaders/
+//
+// Copyright (C) 2020 guest(r), Dr. Venom - guest.r@gmail.com
 
 // Color profile transforms (sRGB to XYZ)
 
@@ -143,20 +179,18 @@ vec3 Yxy_to_XYZ(vec3 Yxy)
 	return XYZ;
 }
 
-// From `PR80_00_Base_Effects.fxh` by prod80 (Bas Veth)
-// https://github.com/prod80/prod80-ReShade-Repository/
-//
-// MIT License, Copyright (c) 2020 prod80
-//
 float luminance(vec3 x)
 {
 	return dot(x, vec3(0.212656, 0.715158, 0.072186));
 }
 
-// Expects linear RGB 
-vec3 brightness(vec3 color, float b)
+// Expects gamma-encoded RGB
+float contrast(vec3 color, float c)
 {
-	return clamp(color * b, vec3(0.0), vec3(1.0));
+	float mx  = max(max(color.r, color.g), color.b);
+	float mxc = mix(mx, mx * mx * (3.0 - 2.0 * mx), mx);
+	mxc       = mix(mx, mxc, c);
+	return mxc / (mx + 0.00001);
 }
 
 // Expects gamma-encoded RGB
@@ -165,17 +199,47 @@ vec3 saturation(vec3 color, float s)
 	return clamp(mix(vec3(luminance(color)), color, s + 1.0), 0.0, 1.0);
 }
 
-// From 'WinUaeColor.fx'
-// https://github.com/guestrr/WinUAE-Shaders/
+// From `PR80_00_Base_Effects.fxh` by prod80 (Bas Veth)
+// https://github.com/prod80/prod80-ReShade-Repository/
 //
-// Copyright (C) 2020 guest(r), Dr. Venom - guest.r@gmail.com
+// MIT License, Copyright (c) 2020 prod80
 //
-float contrast(vec3 color, float c)
+
+vec3 rgb_to_hcv(vec3 color)
 {
-	float mx  = max(max(color.r, color.g), color.b);
-	float mxc = mix(mx, mx * mx * (3.0 - 2.0 * mx), mx);
-	mxc       = mix(mx, mxc, c);
-	return mxc / (mx + 0.00001);
+	// Based on work by Sam Hocevar and Emil Persson
+	vec4 p = (color.g < color.b) ? vec4(color.bg, -1.0, 2.0 / 3.0)
+	                             : vec4(color.gb, 0.0, -1.0 / 3.0);
+
+	vec4 q1 = (color.r < p.x) ? vec4(p.xyw, color.r) : vec4(color.r, p.yzx);
+	float c = q1.x - min(q1.w, q1.y);
+	float h = abs((q1.w - q1.y) / (6.0 * c + 0.000001) + q1.z);
+	return vec3(h, c, q1.x);
+}
+
+vec3 rgb_to_hsl(vec3 color)
+{
+	color    = max(color, 0.000001);
+	vec3 hcv = rgb_to_hcv(color);
+	float l  = hcv.z - hcv.y * 0.5;
+	float s  = hcv.y / (1.0 - abs(l * 2.0 - 1.0) + 0.000001);
+	return vec3(hcv.x, s, l);
+}
+
+vec3 hue_to_rgb(float hue)
+{
+	return clamp(vec3(abs(hue * 6.0 - 3.0) - 1.0,
+	                  2.0 - abs(hue * 6.0 - 2.0),
+	                  2.0 - abs(hue * 6.0 - 4.0)),
+	             0.0,
+	             1.0);
+}
+
+vec3 hsl_to_rgb(in vec3 hsl)
+{
+	vec3 color = hue_to_rgb(hsl.x);
+	float c    = (1.0 - abs(2.0 * hsl.z - 1.0)) * hsl.y;
+	return (color - 0.5f) * c + hsl.z;
 }
 
 // Expects gamma-encoded values
@@ -217,33 +281,13 @@ vec3 kelvin_to_rgb(float k)
 }
 
 // Expects gamma-encoded values
-vec3 whitepoint(vec3 color, float kelvin)
+vec3 color_temperature(vec3 color, float kelvin, float luma_preserve)
 {
-	return color * kelvin_to_rgb(kelvin);
-}
+	float orig_luma = rgb_to_hsl(color).z;
+	color *= kelvin_to_rgb(kelvin);
+	vec3 color2 = hsl_to_rgb(vec3(rgb_to_hsl(color).xy, orig_luma));
 
-// Tone-mapping curve to darken the darkest parts of the image to achieve more
-// CRT-like near-black detail.
-
-// See the curve here: https://www.desmos.com/calculator/ligpt73p0e
-//
-float crt_black(float color)
-{
-	if (color < 0.4) {
-		float c = color - 0.81822;
-		return -1.2*c*c + 0.61;
-	} else {
-		return color;
-	}
-}
-
-vec3 crt_black(vec3 color)
-{
-	return clamp(vec3(crt_black(color.r),
-	                  crt_black(color.g),
-	                  crt_black(color.b)),
-	             vec3(0.0),
-	             vec3(1.0));
+	return mix(color, color2, luma_preserve);
 }
 
 void main()
@@ -297,7 +341,9 @@ void main()
 
 	color = max(color, (BLACK_LEVEL_TINT * 0.02) * (BLACK_LEVEL * 100));
 
-	color = whitepoint(color, WHITE_POINT_KELVIN);
+	color = color_temperature(color,
+	                          COLOR_TEMPERATURE_KELVIN,
+	                          COLOR_TEMPERATURE_LUMA_PRESERVE);
 
 	FragColor = vec4(clamp(color, vec3(0.0), vec3(1.0)), 1.0);
 }
