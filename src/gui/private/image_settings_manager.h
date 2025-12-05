@@ -11,7 +11,7 @@
 
 struct AutoImageSettings {
 	CrtColorProfile crt_color_profile = {};
-	int white_point_kelvin          = {};
+	int color_temperature_kelvin      = {};
 };
 
 class ImageSettingsManager {

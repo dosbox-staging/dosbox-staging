@@ -1017,14 +1017,19 @@ void OpenGlRenderer::GetPass1UniformLocations()
 	u.color_space   = glGetUniformLocation(po, "COLOR_SPACE");
 	u.color_profile = glGetUniformLocation(po, "COLOR_PROFILE");
 
-	u.crt_black          = glGetUniformLocation(po, "CRT_BLACK");
-	u.brightness         = glGetUniformLocation(po, "BRIGHTNESS");
-	u.contrast           = glGetUniformLocation(po, "CONTRAST");
-	u.gamma              = glGetUniformLocation(po, "GAMMA");
-	u.black_level        = glGetUniformLocation(po, "BLACK_LEVEL");
-	u.black_level_tint   = glGetUniformLocation(po, "BLACK_LEVEL_TINT");
-	u.saturation         = glGetUniformLocation(po, "SATURATION");
-	u.white_point_kelvin = glGetUniformLocation(po, "WHITE_POINT_KELVIN");
+	u.crt_black        = glGetUniformLocation(po, "CRT_BLACK");
+	u.brightness       = glGetUniformLocation(po, "BRIGHTNESS");
+	u.contrast         = glGetUniformLocation(po, "CONTRAST");
+	u.saturation       = glGetUniformLocation(po, "SATURATION");
+	u.gamma            = glGetUniformLocation(po, "GAMMA");
+	u.black_level      = glGetUniformLocation(po, "BLACK_LEVEL");
+	u.black_level_tint = glGetUniformLocation(po, "BLACK_LEVEL_TINT");
+
+	u.color_temperature_kelvin = glGetUniformLocation(po, "WHITE_POINT_KELVIN");
+
+	u.red_gain   = glGetUniformLocation(po, "RED_GAIN");
+	u.green_gain = glGetUniformLocation(po, "GREEN_GAIN");
+	u.blue_gain  = glGetUniformLocation(po, "BLUE_GAIN");
 }
 
 void OpenGlRenderer::UpdatePass1Uniforms()
@@ -1040,6 +1045,7 @@ void OpenGlRenderer::UpdatePass1Uniforms()
 	glUniform1f(u.crt_black, static_cast<GLfloat>(s.crt_black));
 	glUniform1f(u.brightness, static_cast<GLfloat>(s.brightness));
 	glUniform1f(u.contrast, static_cast<GLfloat>(s.contrast));
+	glUniform1f(u.saturation, static_cast<GLfloat>(s.saturation));
 	glUniform1f(u.gamma, static_cast<GLfloat>(s.gamma));
 
 	glUniform1f(u.black_level, static_cast<GLfloat>(s.black_level));
@@ -1048,9 +1054,12 @@ void OpenGlRenderer::UpdatePass1Uniforms()
 	            static_cast<GLfloat>(s.black_level_tint.green) / 255.0f,
 	            static_cast<GLfloat>(s.black_level_tint.blue) / 255.0f);
 
-	glUniform1f(u.saturation, static_cast<GLfloat>(s.saturation));
+	glUniform1f(u.color_temperature_kelvin,
+	            static_cast<GLfloat>(s.color_temperature_kelvin));
 
-	glUniform1f(u.white_point_kelvin, static_cast<GLfloat>(s.white_point_kelvin));
+	glUniform1f(u.red_gain, static_cast<GLfloat>(s.red_gain));
+	glUniform1f(u.green_gain, static_cast<GLfloat>(s.green_gain));
+	glUniform1f(u.blue_gain, static_cast<GLfloat>(s.blue_gain));
 }
 
 void OpenGlRenderer::GetPass2UniformLocations(const ShaderParameters& params)

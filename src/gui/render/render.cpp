@@ -594,15 +594,15 @@ static void handle_auto_image_settings(const VideoMode& video_mode)
 			}
 		}
 
-		if (get_render_section().GetString("white_point") == "auto") {
-			if (curr_image_settings.white_point_kelvin !=
-			    settings.white_point_kelvin) {
+		if (get_render_section().GetString("color_temperature") == "auto") {
+			if (curr_image_settings.color_temperature_kelvin !=
+			    settings.color_temperature_kelvin) {
 
-				curr_image_settings.white_point_kelvin = settings.white_point_kelvin;
+				curr_image_settings.color_temperature_kelvin = settings.color_temperature_kelvin;
 				set_image_settings();
 
-				LOG_INFO("RENDER: Auto-switched to %dK white point",
-				         settings.white_point_kelvin);
+				LOG_INFO("RENDER: Auto-switched to %dK color temperature",
+				         settings.color_temperature_kelvin);
 			}
 		}
 	}
@@ -1261,18 +1261,21 @@ constexpr auto BrightnessMax = 50;
 constexpr auto ContrastMin = -50;
 constexpr auto ContrastMax = 50;
 
+constexpr auto SaturationMin = -50;
+constexpr auto SaturationMax = 50;
+
 constexpr auto GammaMin = -50;
 constexpr auto GammaMax = 50;
 
 constexpr auto BlackLevelMin = 0;
 constexpr auto BlackLevelMax = 50;
 
-constexpr auto SaturationMin = -50;
-constexpr auto SaturationMax = 50;
+constexpr auto ColorTemperatureNeutral = 6500;
+constexpr auto ColorTemperatureMin     = 3000;
+constexpr auto ColorTemperatureMax     = 10000;
 
-constexpr auto WhitePointNeutral = 6500;
-constexpr auto WhitePointMin     = 3000;
-constexpr auto WhitePointMax     = 10000;
+constexpr auto RgbGainMin = 0;
+constexpr auto RgbGainMax = 100;
 
 static void init_render_settings(SectionProp& section)
 {
@@ -1472,14 +1475,14 @@ static void init_render_settings(SectionProp& section)
 	        "\n"
 	        "  tandy-warm:    Emulation of the actual colour output of an unknown Tandy\n"
 	        "                 monitor. Inteded to be used with 'crt_color_profile = none' and\n"
-	        "                 'white_point = 6500'.\n"
+	        "                 'color_temperature = 6500'.\n"
 	        "\n"
 	        "  ibm5153 <c>:   Emulation of the actual colour output of an IBM 5153 monitor\n"
 	        "                 with a unique contrast control that dims non-bright colours\n"
 	        "                 only. The contrast can be optionally provided as a second\n"
 	        "                 parameter (0 to 100; defaults to 100), e.g. ibm5153 60.\n"
 	        "                 Inteded to be used with 'crt_color_profile = none' and\n"
-	        "                 'white_point = 6500'.\n"
+	        "                 'color_temperature = 6500'.\n"
 	        "\n"
 	        "  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:\n"
 	        "                 Palettes used by the Amiga ports of Sierra AGI games.\n"
@@ -1581,7 +1584,7 @@ static void init_render_settings(SectionProp& section)
 	string_prop->SetHelp(
 	        "Set a CRT colour profile for more authentic video output emulation ('none' by\n"
 	        "default). All profiles have a built-in white point that you can tweak further\n"
-	        "with the 'white_point' setting. Possible values:\n"
+	        "with the 'color_temperature' setting. Possible values:\n"
 	        "\n"
 	        "  auto:       For adaptive CRT shaders, an authentic color profile for the\n"
 	        "              currently active shader variant is selected; for any other shader,\n"
@@ -1663,6 +1666,17 @@ static void init_render_settings(SectionProp& section)
 	                   ContrastMin,
 	                   ContrastMax));
 
+	constexpr int DefaultSaturation = 0;
+
+	int_prop = section.AddInt("saturation", Always, DefaultSaturation);
+	int_prop->SetMinMax(SaturationMin, SaturationMax);
+	int_prop->SetHelp(
+	        format_str("Set the saturation of the video output (%d by default). Valid range is %d to %d.\n"
+	                   "Notes: See 'brightness' for further details.",
+	                   DefaultSaturation,
+	                   SaturationMin,
+	                   SaturationMax));
+
 	constexpr int DefaultGamma = 0;
 
 	int_prop = section.AddInt("gamma", Always, DefaultGamma);
@@ -1686,20 +1700,9 @@ static void init_render_settings(SectionProp& section)
 	                   BlackLevelMin,
 	                   BlackLevelMax));
 
-	constexpr int DefaultSaturation = 0;
+	constexpr auto DefaultColorTemperature = "auto";
 
-	int_prop = section.AddInt("saturation", Always, DefaultSaturation);
-	int_prop->SetMinMax(SaturationMin, SaturationMax);
-	int_prop->SetHelp(
-	        format_str("Set the saturation of the video output (%d by default). Valid range is %d to %d.\n"
-	                   "Notes: See 'brightness' for further details.",
-	                   DefaultSaturation,
-	                   SaturationMin,
-	                   SaturationMax));
-
-	constexpr auto DefaultWhitePoint = "auto";
-
-	string_prop = section.AddString("white_point", Always, DefaultWhitePoint);
+	string_prop = section.AddString("color_temperature", Always, DefaultColorTemperature);
 	string_prop->SetHelp(format_str(
 	        "Set the white point of the video output (%d by default). Possible values:\n"
 	        "\n"
@@ -1714,9 +1717,41 @@ static void init_render_settings(SectionProp& section)
 	        "            colors, more than 6500 results in cooler colors).\n"
 	        "\n"
 	        "Notes: See 'brightness' for further details.",
-	        DefaultWhitePoint,
-	        WhitePointMin,
-	        WhitePointMax));
+	        DefaultColorTemperature,
+	        ColorTemperatureMin,
+	        ColorTemperatureMax));
+
+	constexpr int DefaultRgbGain = 100;
+
+	int_prop = section.AddInt("red_gain", Always, DefaultRgbGain);
+	int_prop->SetMinMax(RgbGainMin, RgbGainMax);
+	int_prop->SetHelp(
+	        format_str("TODO (%d by default).\n"
+	                   "Valid range is %d to %d.\n"
+	                   "Notes: See 'brightness' for further details.",
+	                   DefaultRgbGain,
+	                   RgbGainMin,
+	                   RgbGainMax));
+
+	int_prop = section.AddInt("green_gain", Always, DefaultRgbGain);
+	int_prop->SetMinMax(RgbGainMin, RgbGainMax);
+	int_prop->SetHelp(
+	        format_str("TODO (%d by default).\n"
+	                   "Valid range is %d to %d.\n"
+	                   "Notes: See 'brightness' for further details.",
+	                   DefaultRgbGain,
+	                   RgbGainMin,
+	                   RgbGainMax));
+
+	int_prop = section.AddInt("blue_gain", Always, DefaultRgbGain);
+	int_prop->SetMinMax(RgbGainMin, RgbGainMax);
+	int_prop->SetHelp(
+	        format_str("TODO (%d by default).\n"
+	                   "Valid range is %d to %d.\n"
+	                   "Notes: See 'brightness' for further details.",
+	                   DefaultRgbGain,
+	                   RgbGainMin,
+	                   RgbGainMax));
 }
 
 enum { Horiz, Vert };
@@ -1917,6 +1952,16 @@ static void update_contrast_setting()
 	              static_cast<float>(get_render_section().GetInt("contrast")));
 }
 
+static void update_saturation_setting()
+{
+	curr_image_settings.saturation = remap(
+	        static_cast<float>(SaturationMin),
+	        static_cast<float>(SaturationMax),
+	        -1.0f,
+	        1.0f,
+	        static_cast<float>(get_render_section().GetInt("saturation")));
+}
+
 static void update_gamma_setting()
 {
 	curr_image_settings.gamma = remap(static_cast<float>(GammaMin),
@@ -1939,19 +1984,9 @@ static void update_black_level_setting()
 	curr_image_settings.black_level_tint = VGA_GetBlackLevelTint();
 }
 
-static void update_saturation_setting()
+static std::optional<int> get_color_temperature_setting_value()
 {
-	curr_image_settings.saturation = remap(
-	        static_cast<float>(SaturationMin),
-	        static_cast<float>(SaturationMax),
-	        -1.0f,
-	        1.0f,
-	        static_cast<float>(get_render_section().GetInt("saturation")));
-}
-
-static std::optional<int> get_white_point_setting_value()
-{
-	const std::string pref = get_render_section().GetString("white_point");
+	const std::string pref = get_render_section().GetString("color_temperature");
 
 	if (pref == "auto") {
 		return {};
@@ -1975,15 +2010,45 @@ static std::optional<int> get_white_point_setting_value()
 	}
 }
 
-static void update_white_point_setting()
+static void update_color_temperature_setting()
 {
-	if (const auto maybe_white_point = get_white_point_setting_value();
-	    maybe_white_point) {
+	if (const auto maybe_color_temperature = get_color_temperature_setting_value();
+	    maybe_color_temperature) {
 
-		curr_image_settings.white_point_kelvin = *maybe_white_point;
+		curr_image_settings.color_temperature_kelvin = *maybe_color_temperature;
 	} else {
-		curr_image_settings.white_point_kelvin = WhitePointNeutral;
+		curr_image_settings.color_temperature_kelvin = ColorTemperatureNeutral;
 	}
+}
+
+static void update_red_gain_setting()
+{
+	curr_image_settings.red_gain =
+	        remap(static_cast<float>(RgbGainMin),
+	              static_cast<float>(RgbGainMax),
+	              0.0f,
+	              1.0f,
+	              static_cast<float>(get_render_section().GetInt("red_gain")));
+}
+
+static void update_green_gain_setting()
+{
+	curr_image_settings.green_gain =
+	        remap(static_cast<float>(RgbGainMin),
+	              static_cast<float>(RgbGainMax),
+	              0.0f,
+	              1.0f,
+	              static_cast<float>(get_render_section().GetInt("green_gain")));
+}
+
+static void update_blue_gain_setting()
+{
+	curr_image_settings.blue_gain =
+	        remap(static_cast<float>(RgbGainMin),
+	              static_cast<float>(RgbGainMax),
+	              0.0f,
+	              1.0f,
+	              static_cast<float>(get_render_section().GetInt("blue_gain")));
 }
 
 enum class ImageSettingControl {
@@ -1996,7 +2061,11 @@ enum class ImageSettingControl {
 	Gamma,
 	BlackLevel,
 	Saturation,
-	WhitePoint,
+	ColorTemperature,
+
+	RedGain,
+	GreenGain,
+	BlueGain,
 };
 
 enum class Direction { Dec, Inc };
@@ -2022,7 +2091,7 @@ static void select_image_setting_control(const Direction dir)
 	using enum ImageSettingControl;
 
 	const auto min_val = ColorSpace;
-	const auto max_val = WhitePoint;
+	const auto max_val = ColorTemperature;
 
 	curr_image_setting_control =
 	        adjust_enum(curr_image_setting_control, dir, min_val, max_val);
@@ -2039,7 +2108,11 @@ static void select_image_setting_control(const Direction dir)
 		case BlackLevel: return "black level"; break;
 		case Saturation: return "saturation"; break;
 
-		case WhitePoint: return "white point"; break;
+		case ColorTemperature: return "white point"; break;
+
+		case RedGain: return "red gain"; break;
+		case GreenGain: return "green gain"; break;
+		case BlueGain: return "blue gain"; break;
 
 		default: assertm(false, "Invalid ImageSettingControl value");
 		}
@@ -2150,6 +2223,16 @@ static void adjust_image_setting(const Direction dir)
 		set_image_settings();
 		break;
 
+	case Saturation:
+		adjust_setting("saturation",
+		               SaturationMin,
+		               SaturationMax,
+		               (dir == Direction::Dec) ? -1 : 1);
+
+		update_saturation_setting();
+		set_image_settings();
+		break;
+
 	case Gamma:
 		adjust_setting("gamma",
 		               GammaMin,
@@ -2170,32 +2253,52 @@ static void adjust_image_setting(const Direction dir)
 		set_image_settings();
 		break;
 
-	case Saturation:
-		adjust_setting("saturation",
-		               SaturationMin,
-		               SaturationMax,
-		               (dir == Direction::Dec) ? -1 : 1);
+	case ColorTemperature: {
+		const auto maybe_color_temperature = get_color_temperature_setting_value();
 
-		update_saturation_setting();
-		set_image_settings();
-		break;
-
-	case WhitePoint: {
-		const auto maybe_white_point = get_white_point_setting_value();
-
-		const auto curr_value = maybe_white_point ? *maybe_white_point
-		                                          : WhitePointNeutral;
+		const auto curr_value = maybe_color_temperature ? *maybe_color_temperature
+		                                          : ColorTemperatureNeutral;
 
 		const auto delta     = (dir == Direction::Dec) ? -100 : 100;
 		const auto new_value = clamp(curr_value + delta,
-		                             WhitePointMin,
-		                             WhitePointMax);
+		                             ColorTemperatureMin,
+		                             ColorTemperatureMax);
 
-		set_setting("white_point", format_str("%d", new_value));
+		set_setting("color_temperature", format_str("%d", new_value));
 
-		update_white_point_setting();
+		update_color_temperature_setting();
 		set_image_settings();
 	} break;
+
+	case RedGain:
+		adjust_setting("red_gain",
+		               RgbGainMin,
+		               RgbGainMax,
+		               (dir == Direction::Dec) ? -1 : 1);
+
+		update_red_gain_setting();
+		set_image_settings();
+		break;
+
+	case GreenGain:
+		adjust_setting("green_gain",
+		               RgbGainMin,
+		               RgbGainMax,
+		               (dir == Direction::Dec) ? -1 : 1);
+
+		update_green_gain_setting();
+		set_image_settings();
+		break;
+
+	case BlueGain:
+		adjust_setting("blue_gain",
+		               RgbGainMin,
+		               RgbGainMax,
+		               (dir == Direction::Dec) ? -1 : 1);
+
+		update_blue_gain_setting();
+		set_image_settings();
+		break;
 
 	default: assertm(false, "Invalid ImageSettingControl value");
 	}
@@ -2264,10 +2367,16 @@ void RENDER_Init()
 	update_crt_black_setting();
 	update_brightness_setting();
 	update_contrast_setting();
+	update_saturation_setting();
 	update_gamma_setting();
 	update_black_level_setting();
-	update_saturation_setting();
-	update_white_point_setting();
+
+	update_color_temperature_setting();
+
+	update_red_gain_setting();
+	update_green_gain_setting();
+	update_blue_gain_setting();
+
 	set_image_settings();
 }
 
@@ -2320,6 +2429,10 @@ static void notify_render_setting_updated(SectionProp& section,
 		update_contrast_setting();
 		set_image_settings();
 
+	} else if (prop_name == "saturation") {
+		update_saturation_setting();
+		set_image_settings();
+
 	} else if (prop_name == "gamma") {
 		update_gamma_setting();
 		set_image_settings();
@@ -2328,12 +2441,20 @@ static void notify_render_setting_updated(SectionProp& section,
 		update_black_level_setting();
 		set_image_settings();
 
-	} else if (prop_name == "saturation") {
-		update_saturation_setting();
+	} else if (prop_name == "color_temperature") {
+		update_color_temperature_setting();
 		set_image_settings();
 
-	} else if (prop_name == "white_point") {
-		update_white_point_setting();
+	} else if (prop_name == "red_gain") {
+		update_red_gain_setting();
+		set_image_settings();
+
+	} else if (prop_name == "green_gain") {
+		update_green_gain_setting();
+		set_image_settings();
+
+	} else if (prop_name == "blue_gain") {
+		update_blue_gain_setting();
 		set_image_settings();
 	}
 }

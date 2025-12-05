@@ -44,6 +44,10 @@ uniform float SATURATION;
 
 uniform float WHITE_POINT_KELVIN;
 
+uniform float RED_GAIN;
+uniform float GREEN_GAIN;
+uniform float BLUE_GAIN;
+
 // Color profile transforms (sRGB to XYZ)
 
 const mat3 sRGB_to_XYZ_sRGB = mat3(
@@ -282,6 +286,8 @@ void main()
 
 	// XYZ => linear RGB
 	color = XYZ_to_linear_RGB * color;
+
+	color *= vec3(RED_GAIN, GREEN_GAIN, BLUE_GAIN);
 
 	// linear RGB => sRGB
 	color = pow(color, vec3(1.0 / (gamma + GAMMA)));

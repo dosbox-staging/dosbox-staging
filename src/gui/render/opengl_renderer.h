@@ -184,11 +184,16 @@ private:
 			GLint crt_black          = -1;
 			GLint brightness         = -1;
 			GLint contrast           = -1;
+			GLint saturation         = -1;
 			GLint gamma              = -1;
 			GLint black_level        = -1;
 			GLint black_level_tint   = -1;
-			GLint saturation         = -1;
-			GLint white_point_kelvin = -1;
+
+			GLint color_temperature_kelvin = -1;
+
+			GLint red_gain   = -1;
+			GLint green_gain = -1;
+			GLint blue_gain  = -1;
 		} uniforms = {};
 
 		ImageSettings settings = {};

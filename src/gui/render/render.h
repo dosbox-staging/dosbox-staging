@@ -197,29 +197,39 @@ struct RenderedImage {
 struct ImageSettings {
 
 	// Valid range between 0.0 and 1.0; 0.0 means no change
-	float crt_black = 0.0;
+	float crt_black = 0.0f;
 
 	// Valid range between -1.5 and 1.5; 0.0 means no change
-	float brightness = 0.0;
+	float brightness = 0.0f;
 
 	// Valid range between -1.5 and 1.5; 0.0 means no change
-	float contrast = 0.0;
-
-	// Valid range between -0.4 and 1.4; 0.0 means no change
-	float gamma = 0.0;
+	float contrast = 0.0f;
 
 	// Valid range between -1.0 and 1.0; 0.0 means no change
-	float saturation = 0.0;
+	float saturation = 0.0f;
+
+	// Valid range between -0.4 and 1.4; 0.0 means no change
+	float gamma = 0.0f;
 
 	// Valid range between 0.0 and 0.5; 0.0 means no change
-	float black_level = 0.0;
+	float black_level = 0.0f;
 
 	// Used in CGA mono and Hercules modes to tint the raised black level
 	// (as true monochrome monitors can't display pure gray).
 	Rgb888 black_level_tint = {};
 
-	// White point in Kelvin (K); valid range is from 1000 K to 12,000 K
-	float white_point_kelvin = 6500;
+	// Color temperature (white point) in Kelvin (K); valid range is from
+	// 1000 K to 12,000 K
+	float color_temperature_kelvin = 6500.0f;
+
+	// Valid range between 0.0 and 1.0; 1.0 means no change
+	float red_gain = 1.0f;
+
+	// Valid range between 0.0 and 1.0; 1.0 means no change
+	float green_gain = 1.0f;
+
+	// Valid range between 0.0 and 1.0; 1.0 means no change
+	float blue_gain = 1.0f;
 };
 
 enum class ColorSpace {
