@@ -229,6 +229,15 @@ void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type)
 	}
 }
 
+DiskType DOS_GetDiskTypeFromDriveNumber(uint8_t drive_number)
+{
+	// Drive A (0) and B (1) are floppy drives
+	if (drive_number <= 1) {
+		return DiskType::Floppy;
+	}
+	return DiskType::HardDisk;
+}
+
 DiskType DOS_GetDiskTypeFromMediaByte(uint8_t media_byte)
 {
 	switch (media_byte) {
@@ -264,8 +273,7 @@ void DOS_ExecuteRegisteredCallbacksByHandle(uint16_t reg_handle)
 		if (drive >= Drives.size()) {
 			return;
 		}
-		DOS_ExecuteRegisteredCallbacks(DOS_GetDiskTypeFromMediaByte(
-		        Drives[drive]->GetMediaByte()));
+		DOS_ExecuteRegisteredCallbacks(DOS_GetDiskTypeFromDriveNumber(drive));
 	}
 }
 
@@ -279,8 +287,7 @@ static void DOS_PerformDiskIoDelayByHandle(uint16_t data_transferred_bytes,
 			return;
 		}
 		DOS_PerformDiskIoDelay(data_transferred_bytes,
-		                       DOS_GetDiskTypeFromMediaByte(
-		                               Drives[drive]->GetMediaByte()));
+		                       DOS_GetDiskTypeFromDriveNumber(drive));
 	}
 }
 
