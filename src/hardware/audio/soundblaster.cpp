@@ -3845,7 +3845,7 @@ void init_sblaster_config_settings(SectionProp& secprop)
 	        "             (1st order = 6dB/oct slope, 2nd order = 12dB/oct, etc.),\n"
 	        "             and FREQ is the cutoff frequency in Hz. Examples:\n"
 	        "                lpf 2 12000\n"
-	        "                hpf 3 120 lfp 1 6500");
+	        "                hpf 3 120 lpf 1 6500");
 
 	pbool = secprop.AddBool("sb_filter_always_on", when_idle, false);
 	pbool->SetHelp(

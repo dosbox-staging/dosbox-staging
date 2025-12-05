@@ -3242,7 +3242,7 @@ static void register_mixer_text_messages()
 	MSG_Add("MIXER_INVALID_CUSTOM_FILTER",
 	        "Invalid custom filter definition: [color=white]'%s'[reset].\n"
 	        "Must be specified in [color=light-cyan]"
-	        "'lfp|hpf ORDER CUTOFF_FREQUENCY'[reset] format.");
+	        "'lpf|hpf ORDER CUTOFF_FREQUENCY'[reset] format.");
 
 	MSG_Add("MIXER_INVALID_CUSTOM_FILTER_ORDER",
 	        "Invalid %s filter order: [color=white]'%s'[reset]. "
