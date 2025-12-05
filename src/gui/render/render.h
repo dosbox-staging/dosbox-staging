@@ -197,7 +197,7 @@ struct RenderedImage {
 struct ImageSettings {
 
 	// Valid range between 0.0 and 1.0; 0.0 means no change
-	float crt_black = 0.0f;
+	float crt_black = 0.65f;
 
 	// Valid range between -1.5 and 1.5; 0.0 means no change
 	float brightness = 0.0f;
@@ -223,7 +223,7 @@ struct ImageSettings {
 	float color_temperature_kelvin = 6500.0f;
 
 	// TODO
-	float color_temperature_luma_preserve = 0.0f;
+	float color_temperature_luma_preserve = 0.7f;
 
 	// Valid range between 0.0 and 1.0; 1.0 means no change
 	float red_gain = 1.0f;

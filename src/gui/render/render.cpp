@@ -1725,7 +1725,7 @@ static void init_render_settings(SectionProp& section)
 	        ColorTemperatureMin,
 	        ColorTemperatureMax));
 
-	constexpr auto DefaultColorTemperatureLumaPreserve = 0;
+	constexpr auto DefaultColorTemperatureLumaPreserve = 70;
 
 	int_prop = section.AddInt("color_temperature_luma_preserve",
 	                          Always,
