@@ -291,9 +291,6 @@ void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3) {
 
 void VGA_AllowVgaScanDoubling(const bool allow)
 {
-	if (!is_machine_vga_or_better()) {
-		return;
-	}
 	if (allow && !vga.draw.scan_doubling_allowed) {
 		LOG_MSG("VGA: Double scanning VGA video modes enabled");
 	}
