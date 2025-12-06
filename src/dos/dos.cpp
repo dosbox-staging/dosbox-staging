@@ -238,30 +238,22 @@ DiskType DOS_GetDiskTypeFromDriveNumber(uint8_t drive_number)
 	return DiskType::HardDisk;
 }
 
-DiskType DOS_GetDiskTypeFromMediaByte(uint8_t media_byte)
+uint8_t DOS_GetDriveNumberFromPointer(const DOS_Drive* drive)
 {
-	switch (media_byte) {
-	case 0xF0:
-		// 3.5" 1.44MB floppy
-		return DiskType::Floppy;
-	case 0xF9:
-		// 5.25" 1.2MB floppy or 3.5" 720KB floppy
-		return DiskType::Floppy;
-	case 0xFD:
-		// 5.25" 360KB floppy
-		return DiskType::Floppy;
-	case 0xFF:
-		// 5.25" 320KB floppy
-		return DiskType::Floppy;
-	case 0xFC:
-		// 5.25" 180KB floppy
-		return DiskType::Floppy;
-	case 0xFE:
-		// 5.25" 160KB floppy
-		return DiskType::Floppy;
-	case 0xF8: return DiskType::HardDisk;
-	default: return DiskType::HardDisk;
+	// Invalid drive
+	if (drive == nullptr) {
+		return 0xFF;
 	}
+
+	for (int i = 0; i < DOS_DRIVES; i++) {
+		// Compare the raw pointer from the global shared_ptr array
+		// against the pointer passed in.
+		if (Drives[i].get() == drive) {
+			return static_cast<uint8_t>(i);
+		}
+	}
+
+	return 0xFF;
 }
 
 void DOS_ExecuteRegisteredCallbacksByHandle(uint16_t reg_handle)
