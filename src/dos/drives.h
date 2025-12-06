@@ -88,6 +88,7 @@ public:
 	                    uint16_t* _free_clusters) override;
 	bool FileExists(const char* name) override;
 	uint8_t GetMediaByte(void) override;
+	const char* GetDriveLetter(void) const;
 	bool IsReadOnly() const override { return readonly; }
 	bool IsRemote(void) override;
 	bool IsRemovable(void) override;

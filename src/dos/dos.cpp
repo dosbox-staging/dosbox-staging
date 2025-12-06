@@ -229,30 +229,31 @@ void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type)
 	}
 }
 
-DiskType DOS_GetDiskTypeFromMediaByte(uint8_t media_byte)
+DiskType DOS_GetDiskTypeFromDriveNumber(uint8_t drive_number)
 {
-	switch (media_byte) {
-	case 0xF0:
-		// 3.5" 1.44MB floppy
+	// Drive A (0) and B (1) are floppy drives
+	if (drive_number <= 1) {
 		return DiskType::Floppy;
-	case 0xF9:
-		// 5.25" 1.2MB floppy or 3.5" 720KB floppy
-		return DiskType::Floppy;
-	case 0xFD:
-		// 5.25" 360KB floppy
-		return DiskType::Floppy;
-	case 0xFF:
-		// 5.25" 320KB floppy
-		return DiskType::Floppy;
-	case 0xFC:
-		// 5.25" 180KB floppy
-		return DiskType::Floppy;
-	case 0xFE:
-		// 5.25" 160KB floppy
-		return DiskType::Floppy;
-	case 0xF8: return DiskType::HardDisk;
-	default: return DiskType::HardDisk;
 	}
+	return DiskType::HardDisk;
+}
+
+uint8_t DOS_GetDriveNumberFromPointer(const DOS_Drive* drive)
+{
+	// Invalid drive
+	if (drive == nullptr) {
+		return 0xFF;
+	}
+
+	for (int i = 0; i < DOS_DRIVES; i++) {
+		// Compare the raw pointer from the global shared_ptr array
+		// against the pointer passed in.
+		if (Drives[i].get() == drive) {
+			return static_cast<uint8_t>(i);
+		}
+	}
+
+	return 0xFF;
 }
 
 void DOS_ExecuteRegisteredCallbacksByHandle(uint16_t reg_handle)
@@ -264,8 +265,7 @@ void DOS_ExecuteRegisteredCallbacksByHandle(uint16_t reg_handle)
 		if (drive >= Drives.size()) {
 			return;
 		}
-		DOS_ExecuteRegisteredCallbacks(DOS_GetDiskTypeFromMediaByte(
-		        Drives[drive]->GetMediaByte()));
+		DOS_ExecuteRegisteredCallbacks(DOS_GetDiskTypeFromDriveNumber(drive));
 	}
 }
 
@@ -279,8 +279,7 @@ static void DOS_PerformDiskIoDelayByHandle(uint16_t data_transferred_bytes,
 			return;
 		}
 		DOS_PerformDiskIoDelay(data_transferred_bytes,
-		                       DOS_GetDiskTypeFromMediaByte(
-		                               Drives[drive]->GetMediaByte()));
+		                       DOS_GetDiskTypeFromDriveNumber(drive));
 	}
 }
 
