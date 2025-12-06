@@ -1618,26 +1618,6 @@ static void init_render_settings(SectionProp& section)
 	        "  - Colour profiles are applied to rendered screenshots, but not to raw and\n"
 	        "    upscaled screenshots and video captures.");
 
-	constexpr int DefaultCrtBlack = 65;
-
-	int_prop = section.AddInt("crt_black", Always, DefaultCrtBlack);
-	int_prop->SetMinMax(CrtBlackMin, CrtBlackMax);
-	int_prop->SetHelp(format_str(
-	        "TODO (%d by default). Valid range is %d to %de.\n"
-	        "\n"
-	        "Notes:\n"
-	        "  - Image adjustments only work in OpenGL output mode.\n"
-	        "\n"
-	        "  - Adjustments are applied to rendered screenshots, but not to raw and upscaled\n"
-	        "    screenshots and video captures.\n"
-	        "\n"
-	        "  - Use the 'Sel Knob', 'Inc Knob', and 'Dec Knob' hotkey actions to adjust the\n"
-	        "    setting in real-time, then copy the new settings from the logs into your\n"
-	        "    config.",
-	        DefaultCrtBlack,
-	        CrtBlackMin,
-	        CrtBlackMax));
-
 	constexpr int DefaultBrightness = 0;
 
 	int_prop = section.AddInt("brightness", Always, DefaultBrightness);
@@ -1916,19 +1896,16 @@ static void update_crt_color_profile_setting()
 	GFX_GetRenderer()->SetCrtColorProfile(curr_crt_color_profile);
 }
 
-static void update_crt_black_setting()
-{
-	curr_image_settings.crt_black = remap(
-	        static_cast<float>(CrtBlackMin),
-	        static_cast<float>(CrtBlackMax),
-	        0.0f,
-	        1.0f,
-	        static_cast<float>(get_render_section().GetInt("crt_black")));
-}
-
 static void update_brightness_setting()
 {
-	const auto brightness_pref = static_cast<float>(
+	curr_image_settings.brightness = remap(
+	        static_cast<float>(BrightnessMin),
+	        static_cast<float>(BrightnessMax),
+	        0.0f,
+	        100.0f,
+	        static_cast<float>(get_render_section().GetInt("brightness")));
+
+/*	const auto brightness_pref = static_cast<float>(
 	        get_render_section().GetInt("brightness"));
 
 	if (brightness_pref <= 0) {
@@ -1940,7 +1917,7 @@ static void update_brightness_setting()
 		const auto x = remap(static_cast<float>(BrightnessMin),
 		                     ValueMax,
 		                     0.0f,
-		                     1.0f,
+		                     100.0f,
 		                     brightness_pref);
 
 		const auto MinimumBrightness = 0.01f;
@@ -1959,7 +1936,7 @@ static void update_brightness_setting()
 		                                       1.0f,
 		                                       3.0f,
 		                                       brightness_pref);
-	}
+	} */
 }
 
 static void update_contrast_setting()
@@ -1967,8 +1944,8 @@ static void update_contrast_setting()
 	curr_image_settings.contrast =
 	        remap(static_cast<float>(ContrastMin),
 	              static_cast<float>(ContrastMax),
-	              -1.5f,
-	              2.0f,
+	              0.0f,
+	              100.0f,
 	              static_cast<float>(get_render_section().GetInt("contrast")));
 }
 
@@ -1994,13 +1971,6 @@ static void update_gamma_setting()
 
 static void update_black_level_setting()
 {
-	curr_image_settings.black_level = remap(
-	        static_cast<float>(BlackLevelMin),
-	        static_cast<float>(BlackLevelMax),
-	        0.0f,
-	        0.50f,
-	        static_cast<float>(get_render_section().GetInt("black_level")));
-
 	curr_image_settings.black_level_tint = VGA_GetBlackLevelTint();
 }
 
@@ -2086,11 +2056,9 @@ enum class ImageSettingControl {
 	ColorSpace   = 0,
 	ColorProfile,
 
-	CrtBlack,
 	Brightness,
 	Contrast,
 	Gamma,
-	BlackLevel,
 	Saturation,
 	ColorTemperature,
 	ColorTemperatureLumaPreserve,
@@ -2133,11 +2101,9 @@ static void select_image_setting_control(const Direction dir)
 		case ColorSpace: return "color space"; break;
 		case ColorProfile: return "color profile"; break;
 
-		case CrtBlack: return "CRT black"; break;
 		case Brightness: return "brightness"; break;
 		case Contrast: return "contrast"; break;
 		case Gamma: return "gamma"; break;
-		case BlackLevel: return "black level"; break;
 		case Saturation: return "saturation"; break;
 
 		case ColorTemperature: return "color temperature"; break;
@@ -2225,17 +2191,6 @@ static void adjust_image_setting(const Direction dir)
 		update_crt_color_profile_setting();
 	} break;
 
-	case CrtBlack:
-		adjust_setting("crt_black",
-		               CrtBlackMin,
-		               CrtBlackMax,
-		               (dir == Direction::Dec) ? -3 : 3);
-
-		update_crt_black_setting();
-		set_image_settings();
-		break;
-
-
 	case Brightness:
 		adjust_setting("brightness",
 		               BrightnessMin,
@@ -2273,16 +2228,6 @@ static void adjust_image_setting(const Direction dir)
 		               (dir == Direction::Dec) ? -1 : 1);
 
 		update_gamma_setting();
-		set_image_settings();
-		break;
-
-	case BlackLevel:
-		adjust_setting("black_level",
-		               BlackLevelMin,
-		               BlackLevelMax,
-		               (dir == Direction::Dec) ? -1 : 1);
-
-		update_black_level_setting();
 		set_image_settings();
 		break;
 
@@ -2397,7 +2342,6 @@ void RENDER_Init()
 	update_color_space_setting();
 	update_crt_color_profile_setting();
 
-	update_crt_black_setting();
 	update_brightness_setting();
 	update_contrast_setting();
 	update_saturation_setting();
@@ -2451,10 +2395,6 @@ static void notify_render_setting_updated(SectionProp& section,
 	} else if (prop_name == "crt_color_profile") {
 		update_crt_color_profile_setting();
 
-	} else if (prop_name == "crt_black") {
-		update_crt_black_setting();
-		set_image_settings();
-
 	} else if (prop_name == "brightness") {
 		update_brightness_setting();
 		set_image_settings();
@@ -2469,10 +2409,6 @@ static void notify_render_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "gamma") {
 		update_gamma_setting();
-		set_image_settings();
-
-	} else if (prop_name == "black_level") {
-		update_black_level_setting();
 		set_image_settings();
 
 	} else if (prop_name == "color_temperature") {

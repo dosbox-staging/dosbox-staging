@@ -34,11 +34,9 @@ uniform sampler2D inputTexture;
 uniform int COLOR_SPACE;
 uniform int COLOR_PROFILE;
 
-uniform float CRT_BLACK;
 uniform float BRIGHTNESS;
 uniform float CONTRAST;
 uniform float GAMMA;
-uniform float BLACK_LEVEL;
 uniform vec3  BLACK_LEVEL_TINT;
 uniform float SATURATION;
 
@@ -49,35 +47,6 @@ uniform float RED_GAIN;
 uniform float GREEN_GAIN;
 uniform float BLUE_GAIN;
 
-// Expects linear RGB 
-vec3 brightness(vec3 color, float b)
-{
-	return clamp(color * b, vec3(0.0), vec3(1.0));
-}
-
-// Tone-mapping curve to darken the darkest parts of the image to achieve more
-// CRT-like near-black detail.
-
-// See the curve here: https://www.desmos.com/calculator/ligpt73p0e
-//
-float crt_black(float color)
-{
-	if (color < 0.4) {
-		float c = color - 0.81822;
-		return -1.2*c*c + 0.61;
-	} else {
-		return color;
-	}
-}
-
-vec3 crt_black(vec3 color)
-{
-	return clamp(vec3(crt_black(color.r),
-	                  crt_black(color.g),
-	                  crt_black(color.b)),
-	             vec3(0.0),
-	             vec3(1.0));
-}
 
 // From 'WinUaeColor.fx'
 // https://github.com/guestrr/WinUAE-Shaders/
@@ -185,15 +154,6 @@ float luminance(vec3 x)
 }
 
 // Expects gamma-encoded RGB
-float contrast(vec3 color, float c)
-{
-	float mx  = max(max(color.r, color.g), color.b);
-	float mxc = mix(mx, mx * mx * (3.0 - 2.0 * mx), mx);
-	mxc       = mix(mx, mxc, c);
-	return mxc / (mx + 0.00001);
-}
-
-// Expects gamma-encoded RGB
 vec3 saturation(vec3 color, float s)
 {
 	return clamp(mix(vec3(luminance(color)), color, s + 1.0), 0.0, 1.0);
@@ -290,12 +250,56 @@ vec3 color_temperature(vec3 color, float kelvin, float luma_preserve)
 	return mix(color, color2, luma_preserve);
 }
 
+// From 'pre-shaders-afterglow-grade.slang'
+// Copyright (C) 2020-2023 Dogway (Jose Linares)
+// Source: https://github.com/libretro/slang-shaders/blob/cf5c768ffda2520d4938df68d33fd63fff276c0c/crt/shaders/guest/advanced/grade/pre-shaders-afterglow-grade.slang
+//
+float EOTF_1886a(float color, float bl, float brightness, float contrast) {
+
+    // Defaults:
+    //  Black Level = 0.1
+    //  Brightness  = 0
+    //  Contrast    = 100
+
+    const float wl = 100.0;
+          float b  = pow(bl, 1./2.4);
+          float a  = pow(wl, 1./2.4)-b;
+                b  = (brightness-50.) / 250. + b/a;                   // -0.20 to +0.20
+                a  = contrast!=50. ? pow(2.,(contrast-50.)/50.) : 1.; //  0.50 to +2.00
+
+    const float Vc = 0.35;                           // Offset
+          float Lw = wl/100. * a;                    // White level
+          float Lb = min( b  * a,Vc);                // Black level
+    const float a1 = 2.6;                            // Shoulder gamma
+    const float a2 = 3.0;                            // Knee gamma
+          float k  = Lw /pow(1. + Lb,    a1);
+          float sl = k * pow(Vc + Lb, a1-a2);        // Slope for knee gamma
+
+    color = color >= Vc ? k * pow(color + Lb, a1 ) : sl * pow(color + Lb, a2 );
+
+    // Black lift compensation
+    float bc = 0.00446395*pow(bl,1.23486);
+    color    = min(max(color-bc,0.0)*(1.0/(1.0-bc)), 1.0);  // Undo Lift
+    color    = pow(color,1.0-0.00843283*pow(bl,1.22744));   // Restore Gamma from 'Undo Lift'
+
+    return color;
+}
+
+vec3 EOTF_1886a_f3( vec3 color, float BlackLevel, float brightness, float contrast) {
+
+    color.r = EOTF_1886a( color.r, BlackLevel, brightness, contrast);
+    color.g = EOTF_1886a( color.g, BlackLevel, brightness, contrast);
+    color.b = EOTF_1886a( color.b, BlackLevel, brightness, contrast);
+    return color.rgb;
+ }
+
+#define BLACK_LIFT_APPROX_GAMMA 2.5
+
+#define CRT_l -(100000.*log((72981.-500000./(3.*max(2.3,BLACK_LIFT_APPROX_GAMMA)))/9058.))/945461.
+
 void main()
 {
 	vec3 color = texture(inputTexture, v_texCoord).rgb;
-
-	// "CRT black" tone mapping
-	color = mix(color, crt_black(color), CRT_BLACK);
 
 	color = saturation(color, SATURATION);
 
@@ -323,8 +327,6 @@ void main()
 	// sRGB => linear RGB
 	color = pow(color, vec3(2.2));
 
-	color = brightness(color, BRIGHTNESS);
-
 	// linear RGB => XYZ (with optional color profile transform)
 	color = sRGB_to_XYZ * color;
 
@@ -336,10 +338,15 @@ void main()
 	// linear RGB => sRGB
 	color = pow(color, vec3(1.0 / (gamma + GAMMA)));
 
-	color *= contrast(color, CONTRAST);
-	color = clamp(color, vec3(0.0), vec3(1.0));
-
-	color = max(color, (BLACK_LEVEL_TINT * 0.02) * (BLACK_LEVEL * 100));
+	// From 'pre-shaders-afterglow-grade.slang'
+	// Copyright (C) 2020-2023 Dogway (Jose Linares)
+	// Source: https://github.com/libretro/slang-shaders/blob/cf5c768ffda2520d4938df68d33fd63fff276c0c/crt/shaders/guest/advanced/grade/pre-shaders-afterglow-grade.slang
+	//
+	// CRT EOTF. To display referred linear: undo developer baked CRT gamma
+	// (from 2.40 at default 0.1 CRT black level, to 2.60 at 0.0 CRT black
+	// level)
+	color = EOTF_1886a_f3(color, CRT_l, BRIGHTNESS, CONTRAST);
+	color = pow(color, vec3(1.0 / (gamma + GAMMA)));
 
 	color = color_temperature(color,
 	                          COLOR_TEMPERATURE_KELVIN,

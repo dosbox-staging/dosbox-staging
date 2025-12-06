@@ -196,9 +196,6 @@ struct RenderedImage {
 //
 struct ImageSettings {
 
-	// Valid range between 0.0 and 1.0; 0.0 means no change
-	float crt_black = 0.65f;
-
 	// Valid range between -1.5 and 1.5; 0.0 means no change
 	float brightness = 0.0f;
 
@@ -210,9 +207,6 @@ struct ImageSettings {
 
 	// Valid range between -0.4 and 1.4; 0.0 means no change
 	float gamma = 0.0f;
-
-	// Valid range between 0.0 and 0.5; 0.0 means no change
-	float black_level = 0.0f;
 
 	// Used in CGA mono and Hercules modes to tint the raised black level
 	// (as true monochrome monitors can't display pure gray).
