@@ -2970,10 +2970,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	    vga.draw.image_info != image_info || fps_changed) {
 		VGA_KillDrawing();
 
-		constexpr auto ReinitRender = false;
+		constexpr auto ReinitRenderer = false;
 
 		const auto shader_changed = RENDER_NotifyVideoModeChanged(
-		        image_info.video_mode, ReinitRender);
+		        image_info.video_mode, ReinitRenderer);
 
 		if (shader_changed) {
 			image_info = setup_drawing();

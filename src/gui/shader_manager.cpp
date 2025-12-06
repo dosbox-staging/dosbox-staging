@@ -269,6 +269,11 @@ ShaderDescriptor ShaderManager::GetCurrentShaderDescriptor() const
 	return current_shader.descriptor;
 }
 
+ShaderMode ShaderManager::GetCurrentShaderMode() const
+{
+	return current_shader.mode;
+}
+
 std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 {
 	std::deque<std::string> inventory;

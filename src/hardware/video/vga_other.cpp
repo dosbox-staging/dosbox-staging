@@ -272,7 +272,7 @@ static MonochromePalette mono_cga_palette = {};
 // Monochrome CGA palettes with contrast optimised for 4-colour CGA graphics modes
 static constexpr Rgb888 mono_cga_graphics_palettes[NumMonochromePalettes][NumCgaColors] = {
 	{
-		// 0 - Amber,
+		// 0 - Amber
 		{0x00, 0x00, 0x00}, {0x15, 0x05, 0x00}, {0x20, 0x0b, 0x00}, {0x24, 0x0d, 0x00},
 		{0x33, 0x18, 0x00}, {0x37, 0x1b, 0x00}, {0x3f, 0x26, 0x01}, {0x3f, 0x2b, 0x06},
 		{0x0b, 0x02, 0x00}, {0x1b, 0x08, 0x00}, {0x29, 0x11, 0x00}, {0x2e, 0x14, 0x00},
@@ -1211,6 +1211,26 @@ static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
+static constexpr int NumHerculesColors = 2;
+
+// clang-format off
+static Rgb888 hercules_palettes[NumMonochromePalettes][NumHerculesColors] = {
+	{
+		// 0 - Amber
+		{0x34, 0x20, 0x00}, {0x3f, 0x34, 0x00}
+	}, {
+		// 1 - Green
+		{0x00, 0x26, 0x00}, {0x00, 0x3f, 0x00}
+	}, {
+		// 2 - White
+		{0x2a, 0x2a, 0x2a}, {0x3f, 0x3f, 0x3f}
+	}, {
+		// 3 - Paperwhite
+		{0x2d, 0x2e, 0x2d}, {0x3f, 0x3f, 0x3b}
+	}
+};
+// clang-format on
+
 void VGA_SetMonochromePalette(const enum MonochromePalette _palette)
 {
 	if (is_machine_hercules()) {
@@ -1272,28 +1292,36 @@ static void cycle_hercules_palette(bool pressed)
 
 void VGA_SetHerculesPalette()
 {
-	switch (hercules_palette) {
-	case MonochromePalette::Amber:
-		VGA_DAC_SetEntry(0x7, 0x34, 0x20, 0x00);
-		VGA_DAC_SetEntry(0xf, 0x3f, 0x34, 0x00);
-		break;
-	case MonochromePalette::Green:
-		VGA_DAC_SetEntry(0x7, 0x00, 0x26, 0x00);
-		VGA_DAC_SetEntry(0xf, 0x00, 0x3f, 0x00);
-		break;
-	case MonochromePalette::White:
-		VGA_DAC_SetEntry(0x7, 0x2a, 0x2a, 0x2a);
-		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3f);
-		break;
-	case MonochromePalette::Paperwhite:
-		VGA_DAC_SetEntry(0x7, 0x2d, 0x2e, 0x2d);
-		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3b);
-		break;
-	default: assertm(false, "Invalid MonochromePalette value");
-	}
+	const auto palette_idx = enum_val(hercules_palette);
+	const auto dark_color  = hercules_palettes[palette_idx][0];
+	const auto light_color = hercules_palettes[palette_idx][1];
+
+	VGA_DAC_SetEntry(0x7, dark_color.red, dark_color.green, dark_color.blue);
+	VGA_DAC_SetEntry(0xf, light_color.red, light_color.green, light_color.blue);
 
 	VGA_DAC_CombineColor(0, 0);
 	VGA_DAC_CombineColor(1, 7);
+}
+
+Rgb888 VGA_GetBlackLevelTint()
+{
+	if (is_machine_hercules()) {
+		const auto palette_idx = enum_val(hercules_palette);
+		const auto dark_color  = hercules_palettes[palette_idx][0];
+		return dark_color;
+
+	} else if (is_machine_cga_mono()) {
+		const auto palette_idx = enum_val(mono_cga_palette);
+		// The colour at index 5 has the same average luminosity as the
+		// "dark" Hercules colour
+		const auto color = mono_cga_graphics_palettes[palette_idx][5];
+		return color;
+
+	} else {
+		// Use dark grey for all other video standards (same luminosity
+		// as the "dark" Hercules color)
+		return Rgb888{0x2a, 0x2a, 0x2a};
+	}
 }
 
 static void write_hercules(io_port_t port, io_val_t value, io_width_t)
@@ -1453,13 +1481,28 @@ void VGA_SetupOther()
 	}
 	// Add composite hotkeys for CGA, Tandy, and PCjr
 	if (is_machine_cga_color() || is_machine_pcjr_or_tandy()) {
-		MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10, 0,
-		                  "select", "Sel Knob");
-		MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11, 0,
-		                  "incval", "Inc Knob");
-		MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11,
-		                  MMOD2, "decval", "Dec Knob");
-		MAPPER_AddHandler(toggle_cga_composite_mode, SDL_SCANCODE_F12, 0, "cgacomp",
+		MAPPER_AddHandler(select_next_crt_knob,
+		                  SDL_SCANCODE_F10,
+		                  0,
+		                  "comp_sel",
+		                  "Comp. Sel Knob");
+
+		MAPPER_AddHandler(turn_crt_knob_positive,
+		                  SDL_SCANCODE_F11,
+		                  0,
+		                  "comp_inc",
+		                  "Comp. Inc Knob");
+
+		MAPPER_AddHandler(turn_crt_knob_negative,
+		                  SDL_SCANCODE_F11,
+		                  MMOD2,
+		                  "comp_dec",
+		                  "Comp. Dec Knob");
+
+		MAPPER_AddHandler(toggle_cga_composite_mode,
+		                  SDL_SCANCODE_F12,
+		                  0,
+		                  "cgacomp",
 		                  "CGA Comp");
 	}
 
@@ -1493,31 +1536,38 @@ void COMPOSITE_Init()
 	const auto section = get_section("composite");
 	assert(section);
 
-	const auto state = section->GetString("composite");
+	const auto composite_mode = [&]() {
+		const auto legacy_pref = section->GetString("composite");
+		if (!legacy_pref.empty()) {
+			set_section_property_value("composite", "composite", "");
+			set_section_property_value("composite", "composite_mode", legacy_pref);
+		}
+		return section->GetString("composite_mode");
+	}();
 
-	if (state == "auto") {
+	if (composite_mode == "auto") {
 		cga_comp = CompositeState::Auto;
 	} else {
-		const auto state_has_bool = parse_bool_setting(state);
+		const auto state_has_bool = parse_bool_setting(composite_mode);
 		if (state_has_bool) {
 			cga_comp = *state_has_bool ? CompositeState::On
 			                           : CompositeState::Off;
 		} else {
-			LOG_WARNING("COMPOSITE: Invalid 'composite' setting: '%s', using 'off'",
-			            state.c_str());
+			LOG_WARNING("COMPOSITE: Invalid 'composite_mode' setting: '%s', using 'off'",
+			            composite_mode.c_str());
 			cga_comp = CompositeState::Off;
 		}
 	}
 
-	const auto era_choice = section->GetString("era");
+	const auto era_choice = section->GetString("composite_era");
 	is_composite_new_era  = era_choice == "new" ||
 	                       (is_machine_pcjr() && era_choice == "auto");
 
-	hue.set(section->GetInt("hue"));
-	saturation.set(section->GetInt("saturation"));
-	contrast.set(section->GetInt("contrast"));
-	brightness.set(section->GetInt("brightness"));
-	convergence.set(section->GetInt("convergence"));
+	hue.set(section->GetInt("composite_hue"));
+	saturation.set(section->GetInt("composite_saturation"));
+	contrast.set(section->GetInt("composite_contrast"));
+	brightness.set(section->GetInt("composite_brightness"));
+	convergence.set(section->GetInt("composite_convergence"));
 
 	if (cga_comp == CompositeState::On) {
 		LOG_MSG("COMPOSITE: %s-era composite mode enabled",
@@ -1535,7 +1585,12 @@ static void init_composite_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
-	auto str_prop = section.AddString("composite", WhenIdle, "auto");
+	auto str_prop = section.AddString("composite", DeprecatedButAllowed, "");
+	str_prop->SetHelp(
+	        "The [color=light-green]'composite'[reset] setting is deprecated but still accepted;\n"
+	        "please use [color=light-green]'composite_mode'[reset] instead.");
+
+	str_prop = section.AddString("composite_mode", WhenIdle, "auto");
 	str_prop->SetValues({"auto", "on", "off"});
 	str_prop->SetHelp(
 	        "Enable CGA composite monitor emulation ('auto' by default). Only available for\n"
@@ -1555,7 +1610,7 @@ static void init_composite_settings(SectionProp& section)
 	        "      the composite hotkeys, then copy the new settings from the logs into your\n"
 	        "      config.");
 
-	str_prop = section.AddString("era", WhenIdle, "auto");
+	str_prop = section.AddString("composite_era", WhenIdle, "auto");
 	str_prop->SetValues({"auto", "old", "new"});
 	str_prop->SetHelp(
 	        "Era of CGA composite monitor to emulate ('auto' by default).\n"
@@ -1565,7 +1620,7 @@ static void init_composite_settings(SectionProp& section)
 	        "  old:   Emulate an early NTSC IBM CGA composite monitor model.\n"
 	        "  new:   Emulate a late NTSC IBM CGA composite monitor model.");
 
-	auto int_prop = section.AddInt("hue", WhenIdle, hue.GetDefaultValue());
+	auto int_prop = section.AddInt("composite_hue", WhenIdle, hue.GetDefaultValue());
 	int_prop->SetMinMax(hue.GetMinValue(), hue.GetMaxValue());
 	int_prop->SetHelp(format_str(
 	        "Set the hue of the CGA composite colours (%d by default).\n"
@@ -1576,7 +1631,7 @@ static void init_composite_settings(SectionProp& section)
 	        hue.GetMinValue(),
 	        hue.GetMaxValue()));
 
-	int_prop = section.AddInt("saturation", WhenIdle, saturation.GetDefaultValue());
+	int_prop = section.AddInt("composite_saturation", WhenIdle, saturation.GetDefaultValue());
 	int_prop->SetMinMax(saturation.GetMinValue(), saturation.GetMaxValue());
 	int_prop->SetHelp(
 	        format_str("Set the saturation of the CGA composite colours (%d by default).\n"
@@ -1585,7 +1640,7 @@ static void init_composite_settings(SectionProp& section)
 	                   saturation.GetMinValue(),
 	                   saturation.GetMaxValue()));
 
-	int_prop = section.AddInt("contrast", WhenIdle, contrast.GetDefaultValue());
+	int_prop = section.AddInt("composite_contrast", WhenIdle, contrast.GetDefaultValue());
 	int_prop->SetMinMax(contrast.GetMinValue(), contrast.GetMaxValue());
 	int_prop->SetHelp(
 	        format_str("Set the contrast of the CGA composite colours (%d by default).\n"
@@ -1594,7 +1649,7 @@ static void init_composite_settings(SectionProp& section)
 	                   contrast.GetMinValue(),
 	                   contrast.GetMaxValue()));
 
-	int_prop = section.AddInt("brightness", WhenIdle, brightness.GetDefaultValue());
+	int_prop = section.AddInt("composite_brightness", WhenIdle, brightness.GetDefaultValue());
 	int_prop->SetMinMax(brightness.GetMinValue(), brightness.GetMaxValue());
 	int_prop->SetHelp(
 	        format_str("Set the brightness of the CGA composite colours (%d by default).\n"
