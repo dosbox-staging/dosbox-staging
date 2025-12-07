@@ -595,17 +595,38 @@ static void receivePacket(uint8_t *buffer, int16_t bufSize) {
 }
 
 static void IPX_ClientLoop(void) {
-	int numrecv;
-	UDPpacket inPacket;
-	inPacket.data = (Uint8 *)recvBuffer;
-	inPacket.maxlen = IPXBUFFERSIZE;
-	inPacket.channel = UDPChannel;
+	UDPpacket inPacket = {
+	        .channel = UDPChannel,
+	        .data    = (Uint8*)recvBuffer,
+	        .maxlen  = IPXBUFFERSIZE,
+	};
 
-	// Its amazing how much simpler UDP is than TCP
-	numrecv = SDLNet_UDP_Recv(ipxClientSocket, &inPacket);
-	if(numrecv) receivePacket(inPacket.data, inPacket.len);
+	// It's amazing how much simpler UDP is than TCP
+	bool running = true;
+	while (running) {
+		const int result = SDLNet_UDP_Recv(ipxClientSocket, &inPacket);
+		switch (result) {
+		case 0:
+			// No more packets
+			running = false;
+			break;
+		case 1:
+			// Packet(s) received: process current packet
+			receivePacket(inPacket.data, inPacket.len);
+			break;
+		case -1:
+			LOG_WARNING("IPX: IPX_ClientLoop UDP receive error %s",
+			            SDLNet_GetError());
+			running = false;
+			break;
+		default:
+			LOG_ERR("IPX: IPX_ClientLoop unexpected return value %d",
+			            result);
+			running = false;
+			break;
+		}
+	}
 }
-
 
 void DisconnectFromServer(bool unexpected) {
 	if(unexpected) LOG_MSG("IPX: Server disconnected unexpectedly");
