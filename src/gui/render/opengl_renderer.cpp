@@ -208,12 +208,29 @@ void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect new_draw_rect_
 	// too.
 	const auto canvas_size_px = GetCanvasSizeInPixels();
 
+	// We always expect a valid canvas
+	assert(!canvas_size_px.IsEmpty());
+
 	// The video mode hasn't changed, but the ShaderManager call expects it.
 	const auto video_mode = VGA_GetCurrentVideoMode();
 
-	// We always expect a valid canvas and DOS video mode
-	assert(!canvas_size_px.IsEmpty());
-	assert(video_mode.width > 0 && video_mode.height > 0);
+	if (video_mode.width <= 0 && video_mode.height <= 0) {
+		// On Windows at least, this method gets called before the video
+		// mode is initialised if fullscreen is enabled in the config.
+		// The problem is that the exact invocation order of the
+		// graphics init code is still somewhat platform dependent as
+		// certain actions are triggered in response to windowing events
+		// which are not 100% standardised across platforms in SDL2.
+		// SDL3 promises more cross-platform consistency in this regard,
+		// so let's hope that will get us closer to the "test once, run
+		// anywhere" paradigm.
+		//
+		// It's rather tricky to solve this in a more elegant way, so
+		// this solution will do for now. This method will get called a
+		// second time after the video mode has been initialised which
+		// won't be a no-op.
+		return;
+	}
 
 	auto& shader_manager = ShaderManager::GetInstance();
 	const auto curr_descriptor = shader_manager.GetCurrentShaderDescriptor();
