@@ -88,6 +88,7 @@ DOSBox Staging has the following library dependencies:
 | [Munt](https://github.com/munt/munt)                     | Roland MT-32 and CM-32L emulation               | libmt32emu         | 2.7.1             | yes :green_circle:  |
 | [Opus File](https://opus-codec.org/)                     | CD Audio playback for Opus-encoded audio tracks | opusfile           | 0.12+20221121#1   | **no** :red_circle: |
 | [SDL 2](https://github.com/libsdl-org/SDL)               | OS-agnostic API for video, audio, and eventing  | sdl2               | 2.32.10 (overlay) | **no** :red_circle: |
+| [SDL_image 2](https://github.com/libsdl-org/SDL_image)   | Image decoding for many popular formats         | sdl2-image         | 2.8.8#2           | **no** :red_circle: |
 | [SDL_net 2](https://github.com/libsdl-org/SDL_net)       | Network API for emulated serial and IPX         | sdl2-net           | 2.2.0#3           | yes :green_circle:  |
 | [SpeexDSP](https://github.com/xiph/speexdsp)             | Audio resampling                                | speexdsp           | 1.2.1#1           | **no** :red_circle: |
 | [Tracy Profiler](https://github.com/wolfpld/tracy)       | Event profiler (development)                    | tracy              | 0.11.1#2          | yes :green_circle:  |
