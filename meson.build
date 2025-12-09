@@ -895,6 +895,15 @@ if get_option('use_sdl2_net')
 endif
 summary('SDL_net 2.0 support', sdl2_net_summary_msg)
 
+# SDL Image
+sdl2_image_dep = dependency(
+    'SDL2_image',
+    version: ['>= 2.6.3', '< 3'],
+    static: ('sdl2_image' in static_libs_list or prefers_static_libs),
+    default_options: default_wrap_options,
+    include_type: 'system',
+)
+
 # slirp (depends on glib)
 libslirp_dep = optional_dep
 libslirp_summary_msg = 'Disabled'

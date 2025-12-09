@@ -380,6 +380,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 # Find common external dependencies
 find_package(PkgConfig REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
+find_package(SDL2_image CONFIG REQUIRED)
 find_package(SDL2_net REQUIRED)
 find_package(iir REQUIRED)
 find_package(PNG REQUIRED)

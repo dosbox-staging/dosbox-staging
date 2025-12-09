@@ -18,6 +18,7 @@
       "name": "sdl2",
       "platform": "!linux"
     },
+    "sdl2-image",
     "sdl2-net",
     "speexdsp",
     "zlib-ng",
