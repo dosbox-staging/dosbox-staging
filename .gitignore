@@ -94,3 +94,6 @@ cmake-build-*/
 
 # Tests
 /Testing
+
+# VS Code CMake Tools test discovery cache
+cmake_test_discovery_*.json
