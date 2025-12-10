@@ -75,11 +75,9 @@ static size_t SDLCALL dos_rwops_read(struct SDL_RWops* rw, void* ptr,
 			uint16_t num_bytes_read = num_bytes;
 
 			if (!DOS_ReadFile(handle, dest, &num_bytes_read)) {
-				LOG_ERR("return -1");
 				return -1;
 			}
 			if (num_bytes_read != num_bytes) {
-				LOG_ERR("return num_read: %d", num_read);
 				return num_read;
 			}
 
