@@ -50,7 +50,6 @@ target_sources(libdosboxcommon PRIVATE
   programs/mouse.cpp
   programs/mousectl.cpp
   programs/move.cpp
-  programs/placeholder.cpp
   programs/rescan.cpp
   programs/serial.cpp
   programs/setver.cpp

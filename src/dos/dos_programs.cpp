@@ -25,7 +25,6 @@
 #include "programs/mouse.h"
 #include "programs/mousectl.h"
 #include "programs/move.h"
-#include "programs/placeholder.h"
 #include "programs/rescan.h"
 #include "programs/serial.h"
 #include "programs/setver.h"
