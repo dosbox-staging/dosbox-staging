@@ -214,14 +214,25 @@ int PDC_scr_open(void)
 
     SP->mono = FALSE;
 #else
+    SDL_PixelFormat *format = SDL_AllocFormat(SDL_PIXELFORMAT_INDEX8);
     if (!pdc_font)
     {
         const char *fname = getenv("PDC_FONT");
-        pdc_font = SDL_LoadBMP(fname ? fname : "pdcfont.bmp");
+        SDL_Surface *temp = SDL_LoadBMP(fname ? fname : "pdcfont.bmp");
+        if (temp) {
+            pdc_font = SDL_ConvertSurface(temp, format, 0);
+            SDL_FreeSurface(temp);
+        }
     }
 
-    if (!pdc_font)
-        pdc_font = SDL_LoadBMP_RW(SDL_RWFromMem(font437, sizeof(font437)), 0);
+    if (!pdc_font) {
+        SDL_Surface *temp = SDL_LoadBMP_RW(SDL_RWFromMem(font437, sizeof(font437)), 0);
+        if (temp) {
+            pdc_font = SDL_ConvertSurface(temp, format, 0);
+            SDL_FreeSurface(temp);
+        }
+    }
+    SDL_FreeFormat(format);
 
     if (!pdc_font)
     {
