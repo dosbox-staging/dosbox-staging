@@ -1978,9 +1978,9 @@ static void init_dos_settings(SectionProp& section)
 	        "('auto' by default). FreeDOS and MS-DOS 7.0+ COMMAND.COM supports this behavior.\n"
 	        "Possible values:\n"
 	        "\n"
-	        "  auto:   Enabled if DOS version is 7.0 or above (default).\n"
-	        "  on:     Disable expansion of environment variables.\n"
-	        "  off:    Enable expansion of environment variables.");
+	        "  auto:  Enabled if DOS version is 7.0 or above (default).\n"
+	        "  on:    Enable expansion of environment variables.\n"
+	        "  off:   Disable expansion of environment variables.");
 
 	pstring = section.AddPath("shell_history_file", OnlyAtStart, "shell_history.txt");
 
