@@ -348,9 +348,9 @@ static void maybe_write_primary_config(const CommandLineArguments& args)
 		const auto primary_config_path = get_primary_config_path();
 
 		if (!config_file_is_valid(primary_config_path)) {
-			// No config is loaded at this point, so we're
-			// writing the default settings to the primary
-			// config.
+			// No config is loaded at this point, so we're writing
+			// the default settings to the primary config.
+			MSG_LoadMessages();
 			if (control->WriteConfig(primary_config_path)) {
 				LOG_MSG("CONFIG: Created primary config file '%s'",
 				        primary_config_path.string().c_str());
