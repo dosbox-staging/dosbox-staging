@@ -3053,6 +3053,16 @@ void MAPPER_DisplayUI() {
 			E_Exit("MAPPER: OpenGL support in SDL renderer is unavailable but required for OpenGL output");
 		}
 
+		// Since our OpenGL renderer started requesting a version 3.3 context,
+		// the call to SDL_GL_MakeCurrent() when exiting the mapper started failing.
+		//
+		// This is a bit of hack (but so is a lot of this mapper code).
+		// Resetting attributes to default before creating the mapper's render fixes the problem.
+		//
+		// As far as I know, attributes are only evalutated before window and/or context creation
+		// so this should not affect our regular (non-mapper) OpenGL renderer.
+		SDL_GL_ResetAttributes();
+
 		constexpr uint32_t renderer_flags = 0;
 
 		mapper.renderer = SDL_CreateRenderer(mapper.window,
