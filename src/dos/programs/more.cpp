@@ -117,8 +117,10 @@ bool MORE::FindInputFiles(MoreOutputFiles &output)
 		}
 
 		found = true;
-		while (!DOSBOX_IsShutdownRequested()) {
-			CALLBACK_Idle();
+		while (true) {
+			if (CALLBACK_Idle()) {
+				return false;
+			}
 
 			DOS_DTA::Result search_result = {};
 

@@ -315,7 +315,9 @@ void DOS_PerformHardDiskIoDelay(uint16_t data_transferred_bytes)
 
 	do {
 		DOS_ExecuteRegisteredCallbacks(DiskType::HardDisk);
-		CALLBACK_Idle();
+		if (CALLBACK_Idle()) {
+			break;
+		}
 	} while (PIC_FullIndex() < endtime);
 }
 
@@ -350,7 +352,9 @@ void DOS_PerformFloppyIoDelay(uint16_t data_transferred_bytes)
 
 	do {
 		DOS_ExecuteRegisteredCallbacks(DiskType::Floppy);
-		CALLBACK_Idle();
+		if (CALLBACK_Idle()) {
+			break;
+		}
 	} while (PIC_FullIndex() < endtime);
 }
 
@@ -385,7 +389,9 @@ void DOS_PerformCdRomIoDelay(uint16_t data_transferred_bytes)
 
 	do {
 		DOS_ExecuteRegisteredCallbacks(DiskType::CdRom);
-		CALLBACK_Idle();
+		if (CALLBACK_Idle()) {
+			break;
+		}
 	} while (PIC_FullIndex() < endtime);
 }
 
@@ -1687,7 +1693,9 @@ bool DOS_IsCancelRequest()
 		return true;
 	}
 
-	CALLBACK_Idle();
+	if (CALLBACK_Idle()) {
+		return false;
+	}
 	while (!(Files[STDIN]->GetInformation() & (1 << 6))) {
 		// A key is waiting, read it
 		uint16_t count = 1;

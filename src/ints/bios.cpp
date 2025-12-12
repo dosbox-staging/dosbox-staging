@@ -502,11 +502,14 @@ static Bitu INT17_Handler(void) {
 static bool INT14_Wait(uint16_t port, uint8_t mask, uint8_t timeout, uint8_t* retval) {
 	const auto starttime = PIC_FullIndex();
 	const auto timeout_f = timeout * 1000.0;
+
 	while (((*retval = IO_ReadB(port)) & mask) != mask) {
 		if (starttime < (PIC_FullIndex() - timeout_f)) {
 			return false;
 		}
-		CALLBACK_Idle();
+		if (CALLBACK_Idle()) {
+			break;
+		}
 	}
 	return true;
 }
@@ -795,7 +798,9 @@ static Bitu INT15_Handler(void) {
 				IO_Write(0x71, IO_Read(0x71) & ~0x40);
 				break;
 			}
-			CALLBACK_Idle();
+			if (CALLBACK_Idle()) {
+				break;
+			}
 		}
 		CALLBACK_SCF(false);
 		break;
@@ -1073,10 +1078,9 @@ static Bitu reboot_handler()
 		constexpr auto delay_ms = 1000.0;
 		const auto start = PIC_FullIndex();
 		while ((PIC_FullIndex() - start) < delay_ms) {
-			CALLBACK_Idle();
 			// Bail out if the user closes the window.
 			// Otherwise we get stuck in an infinite loop.
-			if (DOSBOX_IsShutdownRequested()) {
+			if (CALLBACK_Idle()) {
 				return CBRET_NONE;
 			}
 		}

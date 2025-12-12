@@ -759,7 +759,13 @@ static void teletype_output_attr(const uint8_t chr, const uint8_t attr,
 		// Idle for 1/3rd of a second
 		double start;
 		start=PIC_FullIndex();
-		while ((PIC_FullIndex()-start)<333.0) CALLBACK_Idle();
+
+		while ((PIC_FullIndex() - start) < 333.0) {
+			if (CALLBACK_Idle()) {
+				break;
+			}
+		}
+
 		// Speaker off
 		IO_Write(0x61,IO_Read(0x61)&~3);
 		// No change in position
