@@ -463,8 +463,10 @@ uint32_t MoreOutputBase::GetNumLinesFromUser(UserDecision& decision)
 	WriteOut(" ");
 
 	std::string number_str = {};
-	while (!DOSBOX_IsShutdownRequested()) {
-		CALLBACK_Idle();
+	while (true) {
+		if (CALLBACK_Idle()) {
+			break;
+		}
 
 		// Try to read the key
 		uint16_t count = 1;
@@ -509,8 +511,10 @@ MoreOutputBase::UserDecision MoreOutputBase::WaitForCancelContinue()
 MoreOutputBase::UserDecision MoreOutputBase::WaitForCancelContinueNext()
 {
 	auto decision = UserDecision::Cancel;
-	while (!DOSBOX_IsShutdownRequested()) {
-		CALLBACK_Idle();
+	while (true) {
+		if (CALLBACK_Idle()) {
+			break;
+		}
 
 		// Try to read the key
 		uint16_t count = 1;

@@ -798,7 +798,7 @@ bool ConnectToServer(const char* strAddr)
 				// This will contain our IPX address and port num
 				const auto ticks = GetTicks();
 
-				while(true) {
+				while (true) {
 					const auto elapsed = GetTicksSince(ticks);
 					if (elapsed > 5000) {
 						LOG_WARNING("IPX: Timeout connecting to server at %s",
@@ -807,7 +807,10 @@ bool ConnectToServer(const char* strAddr)
 
 						return false;
 					}
-					CALLBACK_Idle();
+					if (CALLBACK_Idle()) {
+						break;
+					}
+
 					const int res = SDLNet_UDP_Recv(ipxClientSocket,
 					                                &regPacket);
 					if (res != 0) {
@@ -1045,7 +1048,9 @@ public:
 				pingSend();
 				const auto ticks = GetTicks();
 				while ((GetTicksSince(ticks)) < 1500) {
-					CALLBACK_Idle();
+					if (CALLBACK_Idle()) {
+						return;
+					}
 					if(pingCheck(&pingHead)) {
 						WriteOut(
 						        "Response from %d.%d.%d.%d, port %d time=%lldms\n",

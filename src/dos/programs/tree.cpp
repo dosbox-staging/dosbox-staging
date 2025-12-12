@@ -376,8 +376,7 @@ bool TREE::DisplayTree(MoreOutputStrings& output, const std::string& path,
 		output.AddString("%s%s\n", graph.c_str(), entry.name.c_str());
 		skip_empty_line = false;
 
-		CALLBACK_Idle();
-		if (DOSBOX_IsShutdownRequested()) {
+		if (CALLBACK_Idle()) {
 			break;
 		}
 

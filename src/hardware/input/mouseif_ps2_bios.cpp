@@ -833,8 +833,12 @@ static void bios_flush_aux()
 		}
 
 		const auto start_ticks = PIC_Ticks;
+
 		while (PIC_Ticks - start_ticks <= max_wait_ms) {
-			CALLBACK_Idle();
+			if (CALLBACK_Idle()) {
+				break;
+			}
+
 			has_more = bios_is_aux_byte_waiting();
 			if (has_more) {
 				break;
