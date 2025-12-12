@@ -69,7 +69,10 @@ void CALLBACK_Init();
 callback_number_t CALLBACK_Allocate();
 void CALLBACK_DeAllocate(const callback_number_t in);
 
-void CALLBACK_Idle();
+// Returns true if shutting down DOSBox was requested while idling.
+// The caller must exit idling loops if true is returned otherwise the
+// emulator will hang.
+[[nodiscard]] bool CALLBACK_Idle();
 
 void CALLBACK_RunRealInt(uint8_t intnum);
 void CALLBACK_RunRealFar(uint16_t seg,uint16_t off);
