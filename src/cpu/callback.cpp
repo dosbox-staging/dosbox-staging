@@ -52,7 +52,7 @@ void CALLBACK_DeAllocate(callback_number_t cb_num)
 	Callback_Handlers[cb_num] = &illegal_handler;
 }
 
-void CALLBACK_Idle()
+[[nodiscard]] bool CALLBACK_Idle()
 {
 	// This makes the CPU execute instructions to handle IRQ's and then come
 	// back
@@ -73,6 +73,8 @@ void CALLBACK_Idle()
 	if (!CPU_CycleAutoAdjust && CPU_Cycles > 0) {
 		CPU_Cycles = 0;
 	}
+
+	return DOSBOX_IsShutdownRequested();
 }
 
 static Bitu default_handler()
