@@ -760,39 +760,47 @@ static Bitu INT15_Handler(void) {
 			LOG(LOG_BIOS,LOG_ERROR)("INT15:84:Unknown Bios Joystick functionality.");
 		}
 		break;
-	case 0x86:	/* BIOS - WAIT (AT,PS) */
-		{
-			if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
-				reg_ah=0x83;
-				CALLBACK_SCF(true);
-				break;
-			}
-			uint32_t count=(reg_cx<<16)|reg_dx;
-		        const auto timeout = PIC_FullIndex() +
-		                             static_cast<double>(count) / 1000.0 + 1.0;
-		        mem_writed(BIOS_WAIT_FLAG_POINTER, RealMake(0, BIOS_WAIT_FLAG_TEMP));
-		        mem_writed(BIOS_WAIT_FLAG_COUNT, count);
-		        mem_writeb(BIOS_WAIT_FLAG_ACTIVE, 1);
-		        /* Unmask IRQ 8 if masked */
-		        uint8_t mask = IO_Read(0xa1);
-		        if (mask & 1)
-			        IO_Write(0xa1, mask & ~1);
-		        /* Reprogram RTC to start */
-			IO_Write(0x70,0xb);
-			IO_Write(0x71,IO_Read(0x71)|0x40);
-			while (mem_readd(BIOS_WAIT_FLAG_COUNT)) {
-				if (PIC_FullIndex()>timeout) {
-					/* RTC timer not working for some reason */
-					mem_writeb(BIOS_WAIT_FLAG_ACTIVE,0);
-					IO_Write(0x70,0xb);
-					IO_Write(0x71,IO_Read(0x71)&~0x40);
-					break;
-				}
-				CALLBACK_Idle();
-			}
-			CALLBACK_SCF(false);
+
+	case 0x86: /* BIOS - WAIT (AT,PS) */
+	{
+		if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
+			reg_ah = 0x83;
+			CALLBACK_SCF(true);
 			break;
 		}
+		uint32_t count = (reg_cx << 16) | reg_dx;
+
+		const auto timeout = PIC_FullIndex() +
+		                     static_cast<double>(count) / 1000.0 + 1.0;
+
+		mem_writed(BIOS_WAIT_FLAG_POINTER, RealMake(0, BIOS_WAIT_FLAG_TEMP));
+		mem_writed(BIOS_WAIT_FLAG_COUNT, count);
+		mem_writeb(BIOS_WAIT_FLAG_ACTIVE, 1);
+
+		// Unmask IRQ 8 if masked
+		uint8_t mask = IO_Read(0xa1);
+		if (mask & 1) {
+			IO_Write(0xa1, mask & ~1);
+		}
+
+		// Reprogram RTC to start
+		IO_Write(0x70, 0xb);
+		IO_Write(0x71, IO_Read(0x71) | 0x40);
+
+		while (mem_readd(BIOS_WAIT_FLAG_COUNT)) {
+			if (PIC_FullIndex() > timeout) {
+				// RTC timer not working for some reason
+				mem_writeb(BIOS_WAIT_FLAG_ACTIVE, 0);
+				IO_Write(0x70, 0xb);
+				IO_Write(0x71, IO_Read(0x71) & ~0x40);
+				break;
+			}
+			CALLBACK_Idle();
+		}
+		CALLBACK_SCF(false);
+		break;
+	}
+
 	case 0x87:	/* Copy extended memory */
 		{
 			bool enabled = MEM_A20_Enabled();
