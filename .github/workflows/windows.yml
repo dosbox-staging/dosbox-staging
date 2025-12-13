@@ -223,9 +223,6 @@ jobs:
         with:
           submodules: false
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v6
-
       - name: Set common vars
         uses: ./.github/actions/set-common-vars
 
@@ -236,6 +233,12 @@ jobs:
           set -x
           echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.arch }}-$DOSBOX_VERSION_AND_HASH" >> $GITHUB_ENV
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ env.PACKAGE_DIR }}
+          path: ${{ env.PACKAGE_DIR }}
+                    
       - name: Dump workspace contents
         shell: bash
         run: find $RUNNER_WORKSPACE
