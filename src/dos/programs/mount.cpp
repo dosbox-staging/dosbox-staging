@@ -69,7 +69,46 @@ void MOUNT::ShowUsage()
 	output.Display();
 }
 
-void MOUNT::Run(void) {
+// Try to find a path on the Host OS.
+// If not found, check if it exists on a mounted DOS drive
+static std::string ResolveMountPath(const std::string& input_path)
+{
+	// Check host OS first
+	std::string native = to_native_path(input_path);
+	struct stat st;
+	if (!native.empty() && stat(native.c_str(), &st) == 0) {
+		return native;
+	}
+
+	// Check virtual DOS filesystem
+	char dos_fullname[DOS_PATHLENGTH];
+	uint8_t drive_idx;
+
+	// Convert input to a DOS path (e.g. "testdir" -> "C:\TESTDIR")
+	if (DOS_MakeName(input_path.c_str(), dos_fullname, &drive_idx)) {
+		if (Drives.at(drive_idx)) {
+			// Ask the drive to map "C:\TESTDIR" ->
+			// "/home/user/games/testdir"
+			std::string host_mapped = Drives.at(drive_idx)->MapDosToHostFilename(
+			        dos_fullname);
+
+			// Check if the resolved path actually exists on the host
+			if (!host_mapped.empty() &&
+			    stat(host_mapped.c_str(), &st) == 0) {
+				LOG_MSG("MOUNT: Found '%s' via virtual drive %c",
+				        input_path.c_str(),
+				        'A' + drive_idx);
+				return host_mapped;
+			}
+		}
+	}
+
+	// Return original native path if not found
+	return native;
+}
+
+void MOUNT::Run(void)
+{
 	std::shared_ptr<DOS_Drive> newdrive = {};
 	char drive                          = '\0';
 	std::string label                   = {};
@@ -233,7 +272,8 @@ void MOUNT::Run(void) {
 			temp_line.pop_back();
 #endif
 
-		const std::string real_path = to_native_path(temp_line);
+		std::string real_path = ResolveMountPath(temp_line);
+
 		if (real_path.empty()) {
 			LOG_MSG("MOUNT: Path '%s' not found", temp_line.c_str());
 		} else {
@@ -302,15 +342,24 @@ void MOUNT::Run(void) {
 			if (temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
 #endif
 			if (type == "overlay") {
-				const auto ldp = std::dynamic_pointer_cast<localDrive>(
-				        Drives[drive_index(drive)]);
-				const auto cdp = std::dynamic_pointer_cast<cdromDrive>(
-				        Drives[drive_index(drive)]);
-				if (!ldp || cdp) {
-					WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"));
+				auto base_drive = Drives[drive_index(drive)];
+				if (!base_drive) {
+					WriteOut(MSG_Get(
+					        "PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"));
 					return;
 				}
-				std::string base = ldp->GetBasedir();
+
+				// Ask the drive for its base directory (Host
+				// path). If it returns an empty string, it's
+				// likely a CDROM or non-local drive, which is
+				// incompatible with overlays.
+				std::string base = base_drive->GetBasedir();
+				if (base.empty()) {
+					WriteOut(MSG_Get(
+					        "PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"));
+					return;
+				}
+
 				uint8_t o_error = 0;
 				newdrive = std::make_shared<Overlay_Drive>(
 				        base.c_str(),
@@ -331,9 +380,9 @@ void MOUNT::Run(void) {
 					return;
 				}
 				//Copy current directory if not marked as deleted.
-				if (newdrive->TestDir(ldp->curdir)) {
+				if (newdrive->TestDir(base_drive->curdir)) {
 					safe_strcpy(newdrive->curdir,
-								ldp->curdir);
+					            base_drive->curdir);
 				}
 				Drives.at(drive_index(drive)) = nullptr;
 			} else {
@@ -356,7 +405,6 @@ void MOUNT::Run(void) {
 
 	DriveManager::RegisterFilesystemImage(drive_index(drive), newdrive);
 	Drives.at(drive_index(drive)) = newdrive;
-	// Always initialize the drive to activate wrappers
 	DriveManager::InitializeDrive(drive_index(drive));
 
 	/* Set the correct media byte in the table */

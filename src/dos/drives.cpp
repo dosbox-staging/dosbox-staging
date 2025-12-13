@@ -283,6 +283,16 @@ public:
 		return real_drive->MapDosToHostFilename(dosname);
 	}
 
+	FILE* GetHostFilePtr(const char* name, const char* mode) override
+	{
+		return real_drive->GetHostFilePtr(name, mode);
+	}
+
+	const char* GetBasedir() const override
+	{
+		return real_drive->GetBasedir();
+	}
+
 	std::unique_ptr<DOS_File> FileOpen(const char* name, const uint8_t flags) override
 	{
 		auto file = real_drive->FileOpen(name, flags);

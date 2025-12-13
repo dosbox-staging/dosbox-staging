@@ -1679,10 +1679,10 @@ bool CDROM_Interface_Image::GetRealFileName(std::string &filename, std::string &
 		return false;
 	}
 
-	const auto ldp = std::dynamic_pointer_cast<localDrive>(Drives.at(drive));
-	if (ldp) {
-		const std::string host_filename = ldp->MapDosToHostFilename(fullname);
-		if (path_exists(host_filename)) {
+	if (Drives.at(drive)) {
+		const std::string host_filename = Drives.at(drive)->MapDosToHostFilename(
+		        fullname);
+		if (!host_filename.empty() && path_exists(host_filename)) {
 			filename = host_filename;
 			return true;
 		}

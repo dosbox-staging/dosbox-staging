@@ -319,6 +319,14 @@ public:
 	{
 		return "";
 	}
+	virtual FILE* GetHostFilePtr(const char* /*name*/, const char* /*mode*/)
+	{
+		return nullptr;
+	}
+	virtual const char* GetBasedir() const
+	{
+		return "";
+	}
 	virtual bool FileExists(const char* name)                     = 0;
 	virtual uint8_t GetMediaByte(void)                            = 0;
 	virtual void SetDir(const char* path);
