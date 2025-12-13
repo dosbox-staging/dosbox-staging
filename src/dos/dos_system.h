@@ -112,10 +112,10 @@ public:
 		return !name.empty() && (strcasecmp(name.c_str(), str) == 0);
 	}
 
-	virtual bool	Read(uint8_t * data,uint16_t * size)=0;
-	virtual bool	Write(uint8_t * data,uint16_t * size)=0;
-	virtual bool	Seek(uint32_t * pos,uint32_t type)=0;
-	virtual void	Close()=0;
+	virtual bool Read(uint8_t* data, uint16_t* size)        = 0;
+	virtual bool Write(const uint8_t* data, uint16_t* size) = 0;
+	virtual bool Seek(uint32_t* pos, const uint32_t type)   = 0;
+	virtual void Close()                                    = 0;
 	virtual uint16_t	GetInformation(void)=0;
 	virtual bool IsOnReadOnlyMedium() const = 0;
 
@@ -156,8 +156,8 @@ public:
 	}
 
 	bool Read(uint8_t* data, uint16_t* size) override;
-	bool Write(uint8_t* data, uint16_t* size) override;
-	bool Seek(uint32_t* pos, uint32_t type) override;
+	bool Write(const uint8_t* data, uint16_t* size) override;
+	bool Seek(uint32_t* pos, const uint32_t type) override;
 	void Close() override;
 	uint16_t GetInformation(void) override;
 	bool IsOnReadOnlyMedium() const override { return false; }
@@ -299,7 +299,7 @@ public:
 	virtual ~DOS_Drive() = default;
 
 	virtual std::unique_ptr<DOS_File> FileOpen(const char* name,
-	                                           uint8_t flags) = 0;
+	                                           const uint8_t flags) = 0;
 	virtual std::unique_ptr<DOS_File> FileCreate(const char* name,
 	                                             FatAttributeFlags attributes) = 0;
 	virtual bool FileUnlink(const char* name)                           = 0;
@@ -315,6 +315,10 @@ public:
 	virtual bool AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
 	                            uint16_t* _total_clusters,
 	                            uint16_t* _free_clusters) = 0;
+	virtual std::string MapDosToHostFilename(const char*)
+	{
+		return "";
+	}
 	virtual bool FileExists(const char* name)                     = 0;
 	virtual uint8_t GetMediaByte(void)                            = 0;
 	virtual void SetDir(const char* path);

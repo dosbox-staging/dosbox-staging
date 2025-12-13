@@ -41,7 +41,7 @@ bool device_COM::Read(uint8_t *data, uint16_t *size)
 	return true;
 }
 
-bool device_COM::Write(uint8_t *data, uint16_t *size)
+bool device_COM::Write(const uint8_t* data, uint16_t* size)
 {
 	// DTR + RTS on
 	sclass->Write_MCR(0x03);

@@ -356,6 +356,8 @@ void MOUNT::Run(void) {
 
 	DriveManager::RegisterFilesystemImage(drive_index(drive), newdrive);
 	Drives.at(drive_index(drive)) = newdrive;
+	// Always initialize the drive to activate wrappers
+	DriveManager::InitializeDrive(drive_index(drive));
 
 	/* Set the correct media byte in the table */
 	mem_writeb(RealToPhysical(dos.tables.mediaid) + (drive_index(drive)) * 9,
@@ -387,6 +389,7 @@ void MOUNT::Run(void) {
 		newdrive->dirCache.SetLabel(label.c_str(), iscdrom, true);
 	}
 	if (type == "floppy") incrementFDD();
+
 	return;
 }
 

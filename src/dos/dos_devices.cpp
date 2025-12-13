@@ -36,7 +36,7 @@ public:
 		ext.interrupt = real_readw(seg, off + 8);
 	}
 	bool Read(uint8_t* data, uint16_t* size) override;
-	bool Write(uint8_t* data, uint16_t* size) override;
+	bool Write(const uint8_t* data, uint16_t* size) override;
 	bool Seek(uint32_t* pos, uint32_t type) override;
 	void Close() override;
 	uint16_t GetInformation() override;
@@ -128,7 +128,7 @@ bool DOS_ExtDevice::Read(uint8_t *data, uint16_t *size)
 	return true;
 }
 
-bool DOS_ExtDevice::Write(uint8_t *data, uint16_t *size)
+bool DOS_ExtDevice::Write(const uint8_t* data, uint16_t* size)
 {
 	PhysPt bufptr = (dos.dcp << 4) | 32;
 	for (uint16_t no = 0; no < *size; no++) {
@@ -264,7 +264,7 @@ public:
 		LOG(LOG_IOCTL, LOG_NORMAL)("%s:READ", GetName());
 		return true;
 	}
-	bool Write(uint8_t* /*data*/, uint16_t* /*size*/) override
+	bool Write(const uint8_t* /*data*/, uint16_t* /*size*/) override
 	{
 		LOG(LOG_IOCTL, LOG_NORMAL)("%s:WRITE", GetName());
 		return true;
@@ -314,7 +314,8 @@ bool DOS_Device::Read(uint8_t * data,uint16_t * size) {
 	return Devices[devnum]->Read(data,size);
 }
 
-bool DOS_Device::Write(uint8_t * data,uint16_t * size) {
+bool DOS_Device::Write(const uint8_t* data, uint16_t* size)
+{
 	return Devices[devnum]->Write(data,size);
 }
 
