@@ -269,7 +269,7 @@ static MonochromePalette mono_cga_palette = {};
 // Monochrome CGA palettes with contrast optimised for 4-colour CGA graphics modes
 static constexpr Rgb888 mono_cga_graphics_palettes[NumMonochromePalettes][NumCgaColors] = {
 	{
-		// 0 - Amber,
+		// 0 - Amber
 		{0x00, 0x00, 0x00}, {0x15, 0x05, 0x00}, {0x20, 0x0b, 0x00}, {0x24, 0x0d, 0x00},
 		{0x33, 0x18, 0x00}, {0x37, 0x1b, 0x00}, {0x3f, 0x26, 0x01}, {0x3f, 0x2b, 0x06},
 		{0x0b, 0x02, 0x00}, {0x1b, 0x08, 0x00}, {0x29, 0x11, 0x00}, {0x2e, 0x14, 0x00},
@@ -1187,6 +1187,26 @@ static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
+static constexpr int NumHerculesColors = 2;
+
+// clang-format off
+static constexpr Rgb888 hercules_palettes[NumMonochromePalettes][NumHerculesColors] = {
+	{
+		// 0 - Amber
+		{0x34, 0x20, 0x00}, {0x3f, 0x34, 0x00}
+	}, {
+		// 1 - Green
+		{0x00, 0x26, 0x00}, {0x00, 0x3f, 0x00}
+	}, {
+		// 2 - White
+		{0x2a, 0x2a, 0x2a}, {0x3f, 0x3f, 0x3f}
+	}, {
+		// 3 - Paperwhite
+		{0x2d, 0x2e, 0x2d}, {0x3f, 0x3f, 0x3b}
+	}
+};
+// clang-format on
+
 void VGA_SetMonochromePalette(const enum MonochromePalette _palette)
 {
 	if (is_machine_hercules()) {
@@ -1248,28 +1268,36 @@ static void cycle_hercules_palette(bool pressed)
 
 void VGA_SetHerculesPalette()
 {
-	switch (hercules_palette) {
-	case MonochromePalette::Amber:
-		VGA_DAC_SetEntry(0x7, 0x34, 0x20, 0x00);
-		VGA_DAC_SetEntry(0xf, 0x3f, 0x34, 0x00);
-		break;
-	case MonochromePalette::Green:
-		VGA_DAC_SetEntry(0x7, 0x00, 0x26, 0x00);
-		VGA_DAC_SetEntry(0xf, 0x00, 0x3f, 0x00);
-		break;
-	case MonochromePalette::White:
-		VGA_DAC_SetEntry(0x7, 0x2a, 0x2a, 0x2a);
-		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3f);
-		break;
-	case MonochromePalette::Paperwhite:
-		VGA_DAC_SetEntry(0x7, 0x2d, 0x2e, 0x2d);
-		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3b);
-		break;
-	default: assertm(false, "Invalid MonochromePalette value");
-	}
+	const auto palette_idx = enum_val(hercules_palette);
+	const auto dark_color  = hercules_palettes[palette_idx][0];
+	const auto light_color = hercules_palettes[palette_idx][1];
+
+	VGA_DAC_SetEntry(0x7, dark_color.red, dark_color.green, dark_color.blue);
+	VGA_DAC_SetEntry(0xf, light_color.red, light_color.green, light_color.blue);
 
 	VGA_DAC_CombineColor(0, 0);
 	VGA_DAC_CombineColor(1, 7);
+}
+
+Rgb888 VGA_GetBlackLevelColor()
+{
+	if (is_machine_hercules()) {
+		const auto palette_idx = enum_val(hercules_palette);
+		const auto dark_color  = hercules_palettes[palette_idx][0];
+		return dark_color;
+
+	} else if (is_machine_cga_mono()) {
+		const auto palette_idx = enum_val(mono_cga_palette);
+		// The colour at index 5 has the same average luminosity as the
+		// "dark" Hercules colour
+		const auto color = mono_cga_graphics_palettes[palette_idx][5];
+		return color;
+
+	} else {
+		// Use neutral dark grey for all other video standards (no
+		// colour tint)
+		return Rgb888{40, 40, 40};
+	}
 }
 
 static void write_hercules(io_port_t port, io_val_t value, io_width_t)
