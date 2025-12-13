@@ -240,6 +240,7 @@ public:
 	                                   const VideoMode& video_mode);
 
 	ShaderDescriptor GetCurrentShaderDescriptor() const;
+	ShaderMode GetCurrentShaderMode() const;
 
 private:
 	ShaderManager()  = default;

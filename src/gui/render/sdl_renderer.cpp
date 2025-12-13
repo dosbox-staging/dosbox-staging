@@ -252,7 +252,7 @@ void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 SdlRenderer::SetShaderResult SdlRenderer::SetShader(
         [[maybe_unused]] const std::string& shader_name)
 {
-	// no shader support; always report success
+	// no-op; always report success (no shader support)
 	//
 	// If we didn't, the rendering backend agnostic fallback mechanism would
 	// fail and we'd hard exit.
@@ -261,31 +261,31 @@ SdlRenderer::SetShaderResult SdlRenderer::SetShader(
 
 void SdlRenderer::NotifyVideoModeChanged([[maybe_unused]] const VideoMode& video_mode)
 {
-	// no shader support
+	// no-op (no shader support)
 	return;
 }
 
 bool SdlRenderer::ForceReloadCurrentShader()
 {
-	// no shader support; always report success
+	// no-op; always report success (no shader support)
 	return true;
 }
 
 ShaderInfo SdlRenderer::GetCurrentShaderInfo()
 {
-	// no shader support
+	// no-op (no shader support)
 	return {};
 }
 
 ShaderPreset SdlRenderer::GetCurrentShaderPreset()
 {
-	// no shader support
+	// no-op (no shader support)
 	return {};
 }
 
 std::string SdlRenderer::GetCurrentShaderDescriptorString()
 {
-	// no shader support
+	// no-op (no shader support)
 	return {};
 }
 
@@ -370,6 +370,22 @@ void SdlRenderer::SetVsync(const bool is_enabled)
 		        (is_enabled ? "enabling" : "disabling"),
 		        SDL_GetError());
 	}
+}
+
+void SdlRenderer::SetColorSpace([[maybe_unused]] const ColorSpace color_space)
+{
+	// no-op (no colour space support)
+}
+
+void SdlRenderer::SetImageAdjustmentSettings(
+        [[maybe_unused]] const ImageAdjustmentSettings& settings)
+{
+	// no-op (no image adjustment support)
+}
+
+void SdlRenderer::EnableImageAdjustments([[maybe_unused]] const bool enable)
+{
+	// no-op (no image adjustment support)
 }
 
 RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_px)

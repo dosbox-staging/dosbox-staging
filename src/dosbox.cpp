@@ -714,7 +714,7 @@ static void dosbox_realinit(SectionProp& section)
 	}
 }
 
-static void dosbox_init()
+void DOSBOX_Init()
 {
 	auto section = get_section("dosbox");
 	assert(section);
@@ -733,7 +733,7 @@ static void dosbox_init()
 	CMOS_Init();
 }
 
-static void dosbox_destroy()
+void DOSBOX_Destroy()
 {
 	CMOS_Destroy();
 	TIMER_Destroy();
@@ -1095,7 +1095,7 @@ void DOSBOX_InitModuleConfigsAndMessages()
 
 void DOSBOX_InitModules()
 {
-	dosbox_init();
+	DOSBOX_Init();
 
 #if C_DEBUGGER
 	LOG_StartUp();
@@ -1186,7 +1186,7 @@ void DOSBOX_DestroyModules()
 	LOG_Destroy();
 #endif
 
-	dosbox_destroy();
+	DOSBOX_Destroy();
 
 	control = {};
 }
