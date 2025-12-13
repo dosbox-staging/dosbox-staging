@@ -3,6 +3,7 @@ libmisc_nomsg_sources = [
     'ansi_code_markup.cpp',
     'console.cpp',
     'cross.cpp',
+    'dos_rwops.cpp',
     'fs_utils.cpp',
     'fs_utils_posix.cpp',
     'fs_utils_win32.cpp',
