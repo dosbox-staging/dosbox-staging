@@ -80,7 +80,7 @@ First-time users and people migrating from other DOSBox variants should start by
 DOSBox Staging has the following library dependencies:
 
 | Dependency                                               | Provides feature                                | vcpkg package name | vcpkg version     | Optional?           |
-| -------------------------------------------------------- | ----------------------------------------------- | ------------------ | -------  -------- | ------------------- |
+| -------------------------------------------------------- | ----------------------------------------------- | ------------------ | ----------------- | ------------------- |
 | [FluidSynth](https://www.fluidsynth.org/)                | General MIDI playback                           | fluidsynth         | 2.5.1             | **no** :red_circle: |
 | [GoogleTest](https://github.com/google/googletest)       | Unit testing (development)                      | gtest              | 1.70.0#2          | yes :green_circle:  |
 | [IIR](https://github.com/berndporr/iir1)                 | Audio filtering                                 | iir1               | 1.10.0            | **no** :red_circle: |
