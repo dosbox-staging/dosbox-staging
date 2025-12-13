@@ -44,19 +44,7 @@ unsigned int result_errorcode = 0;
 
 static bool is_guest_booted = false;
 
-struct DiskSettings {
-	DiskSpeed hdd_disk_speed   = DiskSpeed::Maximum;
-	DiskSpeed fdd_disk_speed   = DiskSpeed::Maximum;
-	DiskSpeed cdrom_disk_speed = DiskSpeed::Maximum;
-};
-
-static struct DiskSettings disk_settings = {};
-
 extern void DOS_ClearLaunchedProgramNames();
-
-constexpr auto EstimatedFileCreationIoOverheadInBytes = 2048;
-constexpr auto EstimatedFileOpenIoOverheadInBytes     = 1024;
-constexpr auto EstimatedFileCloseIoOverheadInBytes    = 512;
 
 void DOS_NotifyBooting()
 {
@@ -135,265 +123,6 @@ static uint16_t DOS_GetAmount(void) {
 #ifndef DOSBOX_CPU_H
 #include "cpu/cpu.h"
 #endif
-
-void DOS_SetDiskSpeed(DiskSpeed disk_speed, DiskType disk_type)
-{
-	switch (disk_type) {
-	case DiskType::Floppy: disk_settings.fdd_disk_speed = disk_speed; break;
-	case DiskType::HardDisk:
-		disk_settings.hdd_disk_speed = disk_speed;
-		break;
-	case DiskType::CdRom:
-		disk_settings.cdrom_disk_speed = disk_speed;
-		break;
-	default:
-		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
-		return;
-	}
-}
-
-static std::optional<std::function<void()>> io_callback_floppy;
-static std::optional<std::function<void()>> io_callback_harddisk;
-static std::optional<std::function<void()>> io_callback_cdrom;
-
-void DOS_RegisterIoCallback(std::function<void()> callback, DiskType disk_type)
-{
-	switch (disk_type) {
-	case DiskType::Floppy: io_callback_floppy = std::move(callback); break;
-	case DiskType::HardDisk:
-		io_callback_harddisk = std::move(callback);
-		break;
-	case DiskType::CdRom: io_callback_cdrom = std::move(callback); break;
-	default:
-		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
-		return;
-	}
-}
-
-// TODO: Unregister should work on particular callbacks instead of all of a
-// given disk type
-void DOS_UnregisterIoCallback(DiskType disk_type)
-{
-	switch (disk_type) {
-	case DiskType::Floppy: io_callback_floppy.reset(); break;
-	case DiskType::HardDisk: io_callback_harddisk.reset(); break;
-	case DiskType::CdRom: io_callback_cdrom.reset(); break;
-	default: break;
-	}
-}
-
-// Call any registered callbacks in the supplied callback vector
-void DOS_ExecuteRegisteredCallbacks(DiskType disk_type)
-{
-	switch (disk_type) {
-	case DiskType::Floppy:
-		if (io_callback_floppy.has_value()) {
-			(*io_callback_floppy)();
-		}
-		break;
-	case DiskType::HardDisk:
-		if (io_callback_harddisk.has_value()) {
-			(*io_callback_harddisk)();
-		}
-		break;
-	case DiskType::CdRom:
-		if (io_callback_cdrom.has_value()) {
-			(*io_callback_cdrom)();
-		}
-		break;
-	default:
-		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
-		return;
-	}
-}
-
-// Add a delay as configured for the relevant disk type, and call any
-// registered callbacks.
-
-void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type)
-{
-	DOS_ExecuteRegisteredCallbacks(disk_type);
-	switch (disk_type) {
-	case DiskType::Floppy:
-		DOS_PerformFloppyIoDelay(data_transferred_bytes);
-		break;
-	case DiskType::HardDisk:
-		DOS_PerformHardDiskIoDelay(data_transferred_bytes);
-		break;
-	case DiskType::CdRom:
-		DOS_PerformCdRomIoDelay(data_transferred_bytes);
-		break;
-	default:
-		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
-		return;
-	}
-}
-
-DiskType DOS_GetDiskTypeFromMediaByte(uint8_t media_byte)
-{
-	switch (media_byte) {
-	case 0xF0:
-		// 3.5" 1.44MB floppy
-		return DiskType::Floppy;
-	case 0xF9:
-		// 5.25" 1.2MB floppy or 3.5" 720KB floppy
-		return DiskType::Floppy;
-	case 0xFD:
-		// 5.25" 360KB floppy
-		return DiskType::Floppy;
-	case 0xFF:
-		// 5.25" 320KB floppy
-		return DiskType::Floppy;
-	case 0xFC:
-		// 5.25" 180KB floppy
-		return DiskType::Floppy;
-	case 0xFE:
-		// 5.25" 160KB floppy
-		return DiskType::Floppy;
-	case 0xF8: return DiskType::HardDisk;
-	default: return DiskType::HardDisk;
-	}
-}
-
-void DOS_ExecuteRegisteredCallbacksByHandle(uint16_t reg_handle)
-{
-	uint8_t handle = RealHandle(reg_handle);
-
-	if (handle != 0xff && Files[handle]) {
-		uint8_t drive = Files[handle]->GetDrive();
-		if (drive >= Drives.size()) {
-			return;
-		}
-		DOS_ExecuteRegisteredCallbacks(DOS_GetDiskTypeFromMediaByte(
-		        Drives[drive]->GetMediaByte()));
-	}
-}
-
-static void DOS_PerformDiskIoDelayByHandle(uint16_t data_transferred_bytes,
-                                           uint16_t reg_handle)
-{
-	uint8_t handle = RealHandle(reg_handle);
-	if (handle != 0xff && Files[handle]) {
-		uint8_t drive = Files[handle]->GetDrive();
-		if (drive >= Drives.size()) {
-			return;
-		}
-		DOS_PerformDiskIoDelay(data_transferred_bytes,
-		                       DOS_GetDiskTypeFromMediaByte(
-		                               Drives[drive]->GetMediaByte()));
-	}
-}
-
-void DOS_PerformHardDiskIoDelay(uint16_t data_transferred_bytes)
-{
-	constexpr auto HardDiskSpeedFastKbPerSec   = 15000;
-	constexpr auto HardDiskSpeedMediumKbPerSec = 2500;
-	constexpr auto HardDiskSpeedSlowKbPerSec   = 600;
-	double scalar;
-
-	switch (disk_settings.hdd_disk_speed) {
-	case DiskSpeed::Fast:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         (HardDiskSpeedFastKbPerSec * BytesPerKilobyte);
-		break;
-	case DiskSpeed::Medium:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         (HardDiskSpeedMediumKbPerSec * BytesPerKilobyte);
-		break;
-	case DiskSpeed::Slow:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         (HardDiskSpeedSlowKbPerSec * BytesPerKilobyte);
-		break;
-	default: return;
-	}
-
-	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
-
-	// MS-DOS will most likely enable interrupts in the course of
-	// performing disk I/O
-	CPU_STI();
-
-	do {
-		DOS_ExecuteRegisteredCallbacks(DiskType::HardDisk);
-		if (CALLBACK_Idle()) {
-			break;
-		}
-	} while (PIC_FullIndex() < endtime);
-}
-
-void DOS_PerformFloppyIoDelay(uint16_t data_transferred_bytes)
-{
-	constexpr auto FloppyDiskSpeedFastKbPerSec   = 120;
-	constexpr auto FloppyDiskSpeedMediumKbPerSec = 60;
-	constexpr auto FloppyDiskSpeedSlowKbPerSec   = 30;
-	double scalar;
-
-	switch (disk_settings.fdd_disk_speed) {
-	case DiskSpeed::Fast:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         (FloppyDiskSpeedFastKbPerSec * BytesPerKilobyte);
-		break;
-	case DiskSpeed::Medium:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         (FloppyDiskSpeedMediumKbPerSec * BytesPerKilobyte);
-		break;
-	case DiskSpeed::Slow:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         (FloppyDiskSpeedSlowKbPerSec * BytesPerKilobyte);
-		break;
-	default: return;
-	}
-
-	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
-
-	// MS-DOS will most likely enable interrupts in the course of
-	// performing disk I/O
-	CPU_STI();
-
-	do {
-		DOS_ExecuteRegisteredCallbacks(DiskType::Floppy);
-		if (CALLBACK_Idle()) {
-			break;
-		}
-	} while (PIC_FullIndex() < endtime);
-}
-
-void DOS_PerformCdRomIoDelay(uint16_t data_transferred_bytes)
-{
-	constexpr auto CdRomSpeedFastKbPerSec   = 1200;
-	constexpr auto CdRomSpeedMediumKbPerSec = 300;
-	constexpr auto CdRomSpeedSlowKbPerSec   = 150;
-	double scalar;
-
-	switch (disk_settings.cdrom_disk_speed) {
-	case DiskSpeed::Fast:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         (CdRomSpeedFastKbPerSec * BytesPerKilobyte);
-		break;
-	case DiskSpeed::Medium:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         (CdRomSpeedMediumKbPerSec * BytesPerKilobyte);
-		break;
-	case DiskSpeed::Slow:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         (CdRomSpeedSlowKbPerSec * BytesPerKilobyte);
-		break;
-	default: return;
-	}
-
-	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
-
-	// MS-DOS will most likely enable interrupts in the course of
-	// performing disk I/O
-	CPU_STI();
-
-	do {
-		DOS_ExecuteRegisteredCallbacks(DiskType::CdRom);
-		if (CALLBACK_Idle()) {
-			break;
-		}
-	} while (PIC_FullIndex() < endtime);
-}
 
 static inline void modify_cycles(Bits value)
 {
@@ -997,9 +726,6 @@ static Bitu DOS_21Handler(void) {
 	case 0x3c:		/* CREATE Create of truncate file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_CreateFile(name1, reg_cl, &reg_ax)) {
-			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
-			DOS_PerformDiskIoDelayByHandle(EstimatedFileCreationIoOverheadInBytes,
-			                               reg_bx);
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -1008,10 +734,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x3d:		/* OPEN Open existing file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
-		if (DOS_OpenFile(name1,reg_al,&reg_ax)) {
-			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
-			DOS_PerformDiskIoDelayByHandle(EstimatedFileOpenIoOverheadInBytes,
-			                               reg_bx);
+		if (DOS_OpenFile(name1, reg_al, &reg_ax)) {
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -1021,9 +744,6 @@ static Bitu DOS_21Handler(void) {
 	case 0x3e:		/* CLOSE Close file */
 		if (DOS_CloseFile(reg_bx,false,&reg_al)) {
 			/* al destroyed with pre-close refcount from sft */
-			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
-			DOS_PerformDiskIoDelayByHandle(EstimatedFileCloseIoOverheadInBytes,
-			                               reg_bx);
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -1034,16 +754,15 @@ static Bitu DOS_21Handler(void) {
 		{ 
 			uint16_t toread=DOS_GetAmount();
 			dos.echo=true;
-			if (DOS_ReadFile(reg_bx,dos_copybuf,&toread)) {
-			        DOS_PerformDiskIoDelayByHandle(toread, reg_bx);
+		        if (DOS_ReadFile(reg_bx, dos_copybuf, &toread)) {
 			        MEM_BlockWrite(SegPhys(ds)+reg_dx,dos_copybuf,toread);
 				reg_ax=toread;
 				CALLBACK_SCF(false);
-			} else {
-				reg_ax=dos.errorcode;
+		        } else {
+			        reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
-			}
-			modify_cycles(reg_ax);
+		        }
+		        modify_cycles(reg_ax);
 			dos.echo=false;
 			break;
 		}
@@ -1051,16 +770,14 @@ static Bitu DOS_21Handler(void) {
 		{
 			uint16_t towrite=DOS_GetAmount();
 			MEM_BlockRead(SegPhys(ds)+reg_dx,dos_copybuf,towrite);
-			if (DOS_WriteFile(reg_bx,dos_copybuf,&towrite)) {
-			        DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
-			        DOS_PerformDiskIoDelayByHandle(towrite, reg_bx);
+		        if (DOS_WriteFile(reg_bx, dos_copybuf, &towrite)) {
 			        reg_ax = towrite;
 			        CALLBACK_SCF(false);
-			} else {
-				reg_ax=dos.errorcode;
+		        } else {
+			        reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
-			}
-			modify_cycles(reg_ax);
+		        }
+		        modify_cycles(reg_ax);
 			break;
 		};
 	case 0x41:					/* UNLINK Delete file */

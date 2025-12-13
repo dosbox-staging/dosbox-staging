@@ -1809,6 +1809,7 @@ void DOS_SetupFiles()
 	const auto z_drive_ptr = std::make_shared<Virtual_Drive>();
 	DriveManager::RegisterFilesystemImage(z_drive_index, z_drive_ptr);
 	Drives.at(z_drive_index) = z_drive_ptr;
+	DriveManager::InitializeDrive(z_drive_index);
 }
 
 bool DOS_LockFile(const uint16_t entry, const uint32_t pos, const uint32_t len)

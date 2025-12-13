@@ -470,8 +470,8 @@ public:
 	// i.e. is LPTnum
 	device_COM(class CSerial* sc);
 	bool Read(uint8_t* data, uint16_t* size) override;
-	bool Write(uint8_t* data, uint16_t* size) override;
-	bool Seek(uint32_t* pos, uint32_t type) override;
+	bool Write(const uint8_t* data, uint16_t* size) override;
+	bool Seek(uint32_t* pos, const uint32_t type) override;
 	void Close() override;
 	uint16_t GetInformation() override;
 

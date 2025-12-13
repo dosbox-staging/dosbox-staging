@@ -16,6 +16,7 @@
 #include "channel_names.h"
 #include "config/setup.h"
 #include "decoders/dr_flac.h"
+#include "dos/drives.h"
 #include "hardware/timer.h"
 #include "mixer.h"
 #include "utils/checks.h"
@@ -417,13 +418,13 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 		PlaySeek();
 	};
 
-	DOS_RegisterIoCallback(io_callback, disk_type);
+	DriveManager::RegisterIoCallback(io_callback, disk_type);
 }
 
 // Destructor unregisters the callbacks
 DiskNoiseDevice::~DiskNoiseDevice()
 {
-	DOS_UnregisterIoCallback(disk_type);
+	DriveManager::UnregisterIoCallback(disk_type);
 }
 
 void DiskNoiseDevice::ActivateSpin()

@@ -26,6 +26,7 @@
 #include "debugger/debugger.h"
 #include "dos/dos.h"
 #include "dos/dos_locale.h"
+#include "dos/drives.h"
 #include "dos/programs.h"
 #include "fpu/fpu.h"
 #include "gui/common.h"
@@ -655,6 +656,9 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 
 static void dosbox_realinit(SectionProp& section)
 {
+	using enum DiskSpeed;
+	using enum DiskType;
+
 	// Initialize some dosbox internals
 	ticks.remain = 0;
 	ticks.last   = GetTicks();
@@ -694,25 +698,25 @@ static void dosbox_realinit(SectionProp& section)
 	// Set the disk IO data rate
 	const auto hdd_io_speed = section.GetString("hard_disk_speed");
 	if (hdd_io_speed == "fast") {
-		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::HardDisk);
+		DriveManager::SetDiskSpeed(Fast, HardDisk);
 	} else if (hdd_io_speed == "medium") {
-		DOS_SetDiskSpeed(DiskSpeed::Medium, DiskType::HardDisk);
+		DriveManager::SetDiskSpeed(Medium, HardDisk);
 	} else if (hdd_io_speed == "slow") {
-		DOS_SetDiskSpeed(DiskSpeed::Slow, DiskType::HardDisk);
+		DriveManager::SetDiskSpeed(Slow, HardDisk);
 	} else {
-		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::HardDisk);
+		DriveManager::SetDiskSpeed(Maximum, HardDisk);
 	}
 
 	// Set the floppy disk IO data rate
 	const auto floppy_io_speed = section.GetString("floppy_disk_speed");
 	if (floppy_io_speed == "fast") {
-		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::Floppy);
+		DriveManager::SetDiskSpeed(Fast, Floppy);
 	} else if (floppy_io_speed == "medium") {
-		DOS_SetDiskSpeed(DiskSpeed::Medium, DiskType::Floppy);
+		DriveManager::SetDiskSpeed(Medium, Floppy);
 	} else if (floppy_io_speed == "slow") {
-		DOS_SetDiskSpeed(DiskSpeed::Slow, DiskType::Floppy);
+		DriveManager::SetDiskSpeed(Slow, Floppy);
 	} else {
-		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::Floppy);
+		DriveManager::SetDiskSpeed(Maximum, Floppy);
 	}
 }
 

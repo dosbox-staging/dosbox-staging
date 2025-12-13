@@ -1904,19 +1904,22 @@ void DOS_Shell::CMD_SUBST (char * args) {
 			throw 0;
 		}
 
-		const auto ldp = std::dynamic_pointer_cast<localDrive>(
-		        Drives.at(drive));
-		if (!ldp) {
+		// Check if source drive exists
+		if (!Drives.at(drive)) {
 			throw 0;
 		}
-		char newname[CROSS_LEN];
-		safe_strcpy(newname, ldp->GetBasedir());
-		strcat(newname,fulldir);
-		CROSS_FILENAME(newname);
-		ldp->dirCache.ExpandNameAndNormaliseCase(newname);
-		strcat(mountstring,"\"");
-		strcat(mountstring, newname);
-		strcat(mountstring,"\"");
+
+		// fulldir contains the DOS path we want to subst (e.g. "\GAMES")
+		std::string host_path = Drives.at(drive)->MapDosToHostFilename(fulldir);
+
+		// Could not resolve path or drive type doesn't support mapping
+		if (host_path.empty()) {
+			throw 0;
+		}
+
+		strcat(mountstring, "\"");
+		strcat(mountstring, host_path.c_str());
+		strcat(mountstring, "\"");
 		this->ParseLine(mountstring);
 	}
 	catch(int a){
