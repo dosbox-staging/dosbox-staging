@@ -703,11 +703,17 @@ static bool handle_shader_auto_switching(const VideoMode& video_mode,
 	return true;
 }
 
-bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode,
-                                   const bool reinit_renderer)
+static bool notify_video_mode_changed(const VideoMode& video_mode,
+                                      const bool reinit_renderer)
 {
 	handle_auto_image_adjustment_settings(video_mode);
 	return handle_shader_auto_switching(video_mode, reinit_renderer);
+}
+
+bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode)
+{
+	constexpr auto ReinitRenderer = false;
+	return notify_video_mode_changed(video_mode, ReinitRenderer);
 }
 
 void RENDER_NotifyEgaModeWithVgaPalette()
@@ -723,7 +729,7 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 
 		// We are potentially auto-switching to a VGA shader now.
 		constexpr auto ReinitRenderer = true;
-		RENDER_NotifyVideoModeChanged(video_mode, ReinitRenderer);
+		notify_video_mode_changed(video_mode, ReinitRenderer);
 	}
 }
 
