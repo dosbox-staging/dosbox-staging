@@ -95,7 +95,7 @@ public:
 	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
 	std::unique_ptr<DOS_File> FileCreate(const char* name,
 	                                     FatAttributeFlags attributes) override;
-	FILE* GetHostFilePtr(const char* const name, const char* const type);
+	FILE* GetHostFilePtr(const char* const name, const char* const type) override;
 	std::string MapDosToHostFilename(const char* const dos_name) override;
 	bool FileUnlink(const char* name) override;
 	bool RemoveDir(const char* dir) override;
@@ -115,7 +115,7 @@ public:
 	bool IsRemote(void) override;
 	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
-	const char* GetBasedir() const
+	const char* GetBasedir() const override
 	{
 		return basedir;
 	}
