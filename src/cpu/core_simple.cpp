@@ -14,7 +14,6 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "lazyflags.h"
-#include "misc/tracy.h"
 
 #include "simde/x86/mmx.h"
 
@@ -128,7 +127,6 @@ static inline uint32_t Fetchd() {
 
 Bits CPU_Core_Simple_Run() noexcept
 {
-	ZoneScoped;
 	while (CPU_Cycles-->0) {
 		LOADIP;
 		core.opcode_index=cpu.code.big*0x200;

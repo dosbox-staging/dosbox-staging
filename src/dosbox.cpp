@@ -61,7 +61,6 @@
 #include "midi/midi.h"
 #include "misc/cross.h"
 #include "misc/support.h"
-#include "misc/tracy.h"
 #include "misc/video.h"
 #include "network/ethernet.h"
 #include "shell/autoexec.h"
@@ -168,7 +167,6 @@ static void increase_ticks()
 {
 	// Make it return ticks.remain and set it in the function above to
 	// remove the global variable.
-	ZoneScoped;
 
 	// For fast-forward mode
 	if (ticks.locked) {

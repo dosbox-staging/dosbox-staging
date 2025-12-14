@@ -12,7 +12,6 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "lazyflags.h"
-#include "misc/tracy.h"
 
 typedef PhysPt EAPoint;
 #define SegBase(c)	SegPhys(c)
@@ -48,7 +47,6 @@ typedef PhysPt EAPoint;
 
 Bits CPU_Core_Full_Run() noexcept
 {
-	ZoneScoped;
 	FullData inst{};
 	while (CPU_Cycles-->0) {
 #if C_DEBUGGER

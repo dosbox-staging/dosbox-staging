@@ -33,7 +33,6 @@
 #include "fpu/fpu.h"
 #include "hardware/memory.h"
 #include "hardware/port.h"
-#include "misc/tracy.h"
 
 #define CACHE_MAXSIZE	(4096*3)
 #define CACHE_TOTAL		(1024*1024*8)
@@ -299,8 +298,6 @@ auto sync_normal_fpu_and_run_dyn_code = gen_runcode;
 
 Bits CPU_Core_Dyn_X86_Run() noexcept
 {
-	ZoneScoped;
-
 #	if defined(X86_DYNFPU_DH_ENABLED)
 	// activates at each return point below (on scope closure)
 	HostFpuToDhCopier host_fpu_to_dh_copier;

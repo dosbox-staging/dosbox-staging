@@ -1,5 +1,0 @@
-#  include <tracy/Tracy.hpp>
-#endif
-
-// close the header
-#endif

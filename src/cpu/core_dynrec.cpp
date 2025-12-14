@@ -41,7 +41,6 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "lazyflags.h"
-#include "misc/tracy.h"
 
 #define CACHE_MAXSIZE	(4096*2)
 #define CACHE_TOTAL		(1024*1024*8)
@@ -220,7 +219,6 @@ CacheBlock *LinkBlocks(BlockReturn ret)
 
 Bits CPU_Core_Dynrec_Run() noexcept
 {
-	ZoneScoped;
 	for (;;) {
 		// Determine the linear address of CS:EIP
 		PhysPt ip_point=SegPhys(cs)+reg_eip;

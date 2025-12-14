@@ -38,7 +38,6 @@
 #include "midi/midi.h"
 #include "misc/cross.h"
 #include "misc/notifications.h"
-#include "misc/tracy.h"
 #include "misc/video.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
@@ -2582,8 +2581,6 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
                                    Uint8* stream, int bytes_requested)
 {
 	assert(bytes_requested > 0);
-
-	ZoneScoped;
 
 	constexpr int BytesPerAudioFrame = sizeof(AudioFrame);
 

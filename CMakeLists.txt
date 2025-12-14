@@ -267,7 +267,6 @@ endif()
 
 set(C_MT32EMU ON)       # TODO: Option
 
-set(C_TRACY OFF)        # TODO: Option
 set(C_DIRECTSERIAL ON)
 
 if (OPT_DEBUGGER)
@@ -415,9 +414,6 @@ set(RESOURCES_PATH "resources")
 # Generate asset copy commands and add them as a dependency
 include(cmake/add_copy_assets.cmake)
 add_copy_assets()
-
-#find_package(Tracy CONFIG REQUIRED)
-#target_link_libraries(dosbox PRIVATE Tracy::TracyClient)
 
 include_directories(
   src
