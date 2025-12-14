@@ -333,9 +333,7 @@ void RENDER_EndUpdate(bool abort);
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue);
 
-bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode,
-                                   const bool reinit_renderer);
-
+bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode);
 void RENDER_NotifyEgaModeWithVgaPalette();
 
 #endif // DOSBOX_RENDER_H
