@@ -84,9 +84,6 @@
 // Define to 1 to use opengl display output support
 #mesondefine C_OPENGL
 
-// Define to 1 to enable the Tracy profiling server
-#mesondefine C_TRACY
-
 // Define to 1 to enable internal debugger (using ncurses or pdcurses)
 #mesondefine C_DEBUGGER
 

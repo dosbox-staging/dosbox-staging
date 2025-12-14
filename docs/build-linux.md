@@ -273,34 +273,6 @@ meson compile -C build/debugger
 For the heavy debugger, use `heavy` instead of `normal`.
 
 
-### Make a build with profiling enabled
-
-Staging includes the [Tracy](https://github.com/wolfpld/tracy) profiler, which
-is disabled by default. To enable it for Meson builds, set the `tracy` option
-to `true`:
-
-``` shell
-meson setup -Dtracy=true build/release-tracy
-meson compile -C build/release-tracy
-```
-
-We have instrumented a very small core of subsystem functions for baseline
-demonstration purposes. You can add additional profiling macros to your functions
-of interest.
-
-The resulting binary requires the Tracy profiler server to view profiling
-data. If using Meson on a *nix system, switch to
-`subprojects/tracy.x.x.x.x/profiler/build/unix` and run `make`
-
-Start the instrumented Staging binary, then start the server. You should see
-Staging as an available client for Connect.
-
-You can also run the server on a different machine on the network, even on a
-different platform.
-
-Please refer to the Tracy documentation for further information.
-
-
 ### Repository and package maintainers
 
 By default, the Meson build system will lookup shared (or dynamic)

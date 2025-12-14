@@ -20,10 +20,6 @@
     },
     "sdl2-net",
     "speexdsp",
-    {
-      "name": "tracy",
-      "platform": "!(windows & arm64)"
-    },
     "zlib-ng",
     {
       "name": "pkgconf",
