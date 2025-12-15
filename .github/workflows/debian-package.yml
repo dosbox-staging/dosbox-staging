@@ -62,7 +62,7 @@ jobs:
           # Move the package into the repo so the uploader can access it
           mv ../${{ env.PACKAGE_NAME }}.deb .
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: ${{ env.PACKAGE_NAME }}
           path: ${{ env.PACKAGE_NAME }}.deb
