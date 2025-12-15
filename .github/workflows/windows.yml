@@ -234,7 +234,7 @@ jobs:
           echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.arch }}-$DOSBOX_VERSION_AND_HASH" >> $GITHUB_ENV
 
       - name: Download artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: ${{ env.PACKAGE_DIR }}
           path: ${{ env.PACKAGE_DIR }}          
