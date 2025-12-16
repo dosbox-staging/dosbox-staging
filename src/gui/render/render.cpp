@@ -692,6 +692,7 @@ static bool handle_shader_auto_switching(const VideoMode& video_mode,
 		const auto render_params_changed =
 		        ((curr_preset.settings.force_single_scan !=
 		          new_preset.settings.force_single_scan) ||
+
 		         (curr_preset.settings.force_no_pixel_doubling !=
 		          new_preset.settings.force_no_pixel_doubling));
 
