@@ -19,10 +19,6 @@ if (WIN32)
   add_subdirectory(platform/windows)
 endif()
 
-if (APPLE)
-  add_subdirectory(platform/macos)
-endif()
-
 if (OPT_TESTS)
   target_sources(dosbox_tests PRIVATE dosbox.cpp)
 endif()
