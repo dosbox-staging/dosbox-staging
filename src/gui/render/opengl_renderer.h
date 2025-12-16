@@ -118,6 +118,7 @@ private:
 
 	void RecreatePass1InputTextureAndRenderBuffer();
 	void RecreatePass1OutputTexture();
+	void SetPass1OutputTextureFiltering();
 
 	void RenderPass1();
 	void RenderPass2();
