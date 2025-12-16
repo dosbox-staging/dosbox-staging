@@ -1,0 +1,60 @@
+diff --git a/include/SDL_hints.h b/include/SDL_hints.h
+index 6713d01fe..1a7ddddeb 100644
+--- a/include/SDL_hints.h
++++ b/include/SDL_hints.h
+@@ -1553,6 +1553,27 @@ extern "C" {
+  */
+ #define SDL_HINT_MAC_OPENGL_ASYNC_DISPATCH "SDL_MAC_OPENGL_ASYNC_DISPATCH"
+ 
++/**
++ * A variable controlling the color space of the window. To take advantage of
++ * wide gamut displays, you'll typically want to set this to Display P3, use
++ * Display P3 RGB colors internally in the application, then let macOS convert
++ * the Display P3 pixel data to the color space set in system settings.
++ *
++ * - "srgb": Use the sRGB color space (default).
++ * - "extendedsrgb": Use the extended sRGB color space. This is the same as
++ *   sRGB but RGB values are allowed to go below 0.0 and above 1.0, which
++ *   makes it ideal for HDR content.
++ * - "displayp3": Use the Display P3 color space, which is the default color
++ *   space on modern macOS. This color space uses DCI P3 primaries, D65 white
++ *   point, and the sRGB gamma curve.
++ * - "adobergb1998": Use the Adobe RGB 1998 color space.
++ *
++ * This hint only applies to macOS.
++ *
++ * This hint is available since SDL 2.32.12.
++ */
++#define SDL_HINT_MAC_COLOR_SPACE    "SDL_HINT_MAC_COLOR_SPACE"
++
+ /**
+  * A variable setting the double click radius, in pixels.
+  */
+diff --git a/src/video/cocoa/SDL_cocoawindow.m b/src/video/cocoa/SDL_cocoawindow.m
+index 641df8129..d9182e61b 100644
+--- a/src/video/cocoa/SDL_cocoawindow.m
++++ b/src/video/cocoa/SDL_cocoawindow.m
+@@ -1805,7 +1805,22 @@ int Cocoa_CreateWindow(_THIS, SDL_Window * window)
+         return SDL_SetError("%s", [[e reason] UTF8String]);
+     }
+ 
+-    [nswindow setColorSpace:[NSColorSpace sRGBColorSpace]];
++    const char *hint = SDL_GetHint(SDL_HINT_MAC_COLOR_SPACE);
++    if (!hint || SDL_strcasecmp(hint, "srgb") == 0) {
++        [nswindow setColorSpace:[NSColorSpace sRGBColorSpace]];
++
++    } else if (SDL_strcasecmp(hint, "extendedsrgb") == 0) {
++        [nswindow setColorSpace:[NSColorSpace extendedSRGBColorSpace]];
++
++    } else if (SDL_strcasecmp(hint, "displayp3") == 0) {
++        [nswindow setColorSpace:[NSColorSpace displayP3ColorSpace]];
++
++    } else if (SDL_strcasecmp(hint, "adobergb1998") == 0) {
++        [nswindow setColorSpace:[NSColorSpace adobeRGB1998ColorSpace]];
++
++    } else {
++        [nswindow setColorSpace:[NSColorSpace sRGBColorSpace]];
++    }
+ 
+ #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200 /* Added in the 10.12.0 SDK. */
+     /* By default, don't allow users to make our window tabbed in 10.12 or later */
