@@ -23,10 +23,6 @@
 #include <SDL_opengl.h>
 #include <SDL_syswm.h>
 
-#if defined(MACOSX)
-#include "platform/macos/cocoa.h"
-#endif
-
 CHECK_NARROWING();
 
 // #define DEBUG_OPENGL
@@ -100,35 +96,7 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	auto flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
-	const auto sdl_window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
-
-#if defined(MACOSX)
-	// From "Best Practices for Color Management in OS X and iOS", chapter
-	// "Non-Color Managed Frameworks, OpenGL - Explicit Color Management
-	// Example":
-	//
-	//   OpenGL is not color managed. As a consequence, it might require
-	//   additional effort to devise solutions to specific color problems
-	//   you may encounter when using it. The fundamental problem is OpenGL
-	//   has one set of assumptions, and the display buffer has another.
-	//
-	// Ref:
-	// https://developer.apple.com/library/archive/technotes/tn2313/_index.html#//apple_ref/doc/uid/DTS40014694-CH1-NONCOLORMANAGEDFRAMEWORKS-OPENGL___EXPLICIT_COLOR_MANAGEMENT_EXAMPLE
-	//
-	// SDL2 tags the window's colorspace with sRGBColorSpace. This is
-	// hardcoded, but what we want is to use the Display P3 colour space
-	// instead internally, tag the window with displayP3ColorSpace, then let
-	// the system-wide colour management feature of macOS do the rest (i.e.,
-	// converting the Display P3 image data to whatever colour space is set
-	// in the system settings).
-	//
-	SDL_SysWMinfo wmInfo;
-	SDL_GetWindowWMInfo(sdl_window, &wmInfo);
-
-	setDisplayP3ColorSpace(wmInfo.info.cocoa.window);
-#endif
-
-	return sdl_window;
+	return SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
 }
 
 #ifdef USE_DEBUG_CONTEXT
