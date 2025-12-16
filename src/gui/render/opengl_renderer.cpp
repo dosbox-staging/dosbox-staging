@@ -408,8 +408,6 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 
 void OpenGlRenderer::RecreatePass1OutputTexture()
 {
-	glActiveTexture(GL_TEXTURE0);
-
 	if (pass1.out_texture) {
 		glDeleteTextures(1, &pass1.out_texture);
 	}
@@ -420,6 +418,25 @@ void OpenGlRenderer::RecreatePass1OutputTexture()
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	SetPass1OutputTextureFiltering();
+
+	glTexImage2D(GL_TEXTURE_2D,
+	             0,            // mimap level (0 = base image)
+	             GL_RGB32F,    // internal format
+	             pass1.width,  // width
+	             pass1.height, // height
+	             0,            // border (must be always 0)
+	             GL_BGRA,      // pixel data format
+	             GL_FLOAT,     // pixel data type
+	             nullptr);     // pointer to image data
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void OpenGlRenderer::SetPass1OutputTextureFiltering()
+{
+	glBindTexture(GL_TEXTURE_2D, pass1.out_texture);
 
 	const auto& shader_settings = pass2.shader_preset.settings;
 
@@ -433,18 +450,6 @@ void OpenGlRenderer::RecreatePass1OutputTexture()
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_param);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_param);
-
-	glTexImage2D(GL_TEXTURE_2D,
-	             0,            // mimap level (0 = base image)
-	             GL_RGB32F,    // internal format
-	             pass1.width,  // width
-	             pass1.height, // height
-	             0,            // border (must be always 0)
-	             GL_BGRA,      // pixel data format
-	             GL_FLOAT,     // pixel data type
-	             nullptr);     // pointer to image data
-
-	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void OpenGlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
@@ -759,6 +764,9 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 		// We could set the shader but not the preset.
 		return PresetError;
 	}
+
+	// The texture filtering mode might have changed
+	SetPass1OutputTextureFiltering();
 
 	current_shader_descriptor_string = shader_descriptor;
 	return Ok;
