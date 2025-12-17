@@ -34,12 +34,16 @@ First-time users and people migrating from other DOSBox variants should start by
 
 ## Stable release builds
 
+Regular users should use our stable release builds available on our project website:
+
 - [Windows](https://www.dosbox-staging.org/releases/windows/)
 - [macOS](https://www.dosbox-staging.org/releases/macos/)
 - [Linux](https://www.dosbox-staging.org/releases/linux/)
 
 
-## Test builds & development snapshots
+## Development builds
+
+Development builds are automatically created on every commit merged to the `main` branch. You need to be logged in to GitHub to download the development builds.
 
 [Development builds]
 
