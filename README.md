@@ -28,12 +28,9 @@ First-time users and people migrating from other DOSBox variants should start by
 
 ## Build status
 
-[![Linux x86\_64 build status][build-lin1-badge]][build-lin1-ci]
-[![Linux other build status][build-lin2-badge]][build-lin2-ci]
 [![Windows (VisualStudio) build status][build-win-msvc-badge]][build-win-msvc-ci]
-[![Windows (MSYS2) build status][build-win-msys2-badge]][build-win-msys2-ci]
 [![macOS build status][build-mac-badge]][build-mac-ci]
-
+[![Linux x86\_64 build status][build-lin1-badge]][build-lin1-ci]
 
 ## Stable release builds
 
