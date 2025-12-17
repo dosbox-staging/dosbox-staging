@@ -190,6 +190,7 @@ std::optional<VideoModeBlock> SHOWPIC::GetClosestVideoMode(const int width,
 
 		if (new_distance < best_distance) {
 			best_mode = mode;
+			best_distance = new_distance;
 		}
 	}
 
