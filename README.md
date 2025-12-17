@@ -3,7 +3,7 @@
 ![GPL-2.0-or-later][gpl-badge]
 [![Chat][discord-badge]][discord]
 
-DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices.
+**DOSBox Staging** is a modern continuation of DOSBox with advanced features and current development practices.
 
 It is a (mostly) drop-in replacement for older DOSBox versions—your existing configurations will continue to work, and you will have access to many advanced features.
 
@@ -34,9 +34,9 @@ First-time users and people migrating from other DOSBox variants should start by
 
 ## Stable release builds
 
-[Windows](https://www.dosbox-staging.org/releases/windows/),
-[macOS](https://www.dosbox-staging.org/releases/macos/)
-[Linux](https://www.dosbox-staging.org/releases/linux/),
+- [Windows](https://www.dosbox-staging.org/releases/windows/)
+- [macOS](https://www.dosbox-staging.org/releases/macos/)
+- [Linux](https://www.dosbox-staging.org/releases/linux/)
 
 
 ## Test builds & development snapshots
@@ -232,21 +232,6 @@ a significant length of time.
 
 [vcpkg]: https://github.com/microsoft/vcpkg
 
-
-### Windows (MSYS2), macOS (MacPorts), Haiku, NixOS, others
-
-Instructions for other build systems and operating systems are documented
-in [docs/BUILD.md].
-
-Links to OS-specific instructions: [MSYS2], [MacPorts], [Haiku], [NixOS].
-
-[BUILD.md]: docs/BUILD.md
-[MSYS2]:    docs/build-windows.md
-[MacPorts]: docs/build-macos.md
-[Haiku]:    docs/build-haiku.md
-[NixOS]:    docs/build-nix.md
-
-
 ## Imported branches, community patches, old forks
 
 Upstream commits are imported to this repo in a timely manner,
@@ -266,6 +251,12 @@ Additionally, we attach some optional metadata to the commits in the form of
 git fetch origin "refs/notes/*:refs/notes/*"
 ```
 
+## Website & documentation
+
+Please refer to the [documentation guide](DOCUMENTATION.md) before making
+changes to the website or the documentation.
+
+
 [`svn/*`]:     https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F
 [`svn/trunk`]: https://github.com/dosbox-staging/dosbox-staging/tree/svn/trunk
 [`vogons/*`]:  https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F
@@ -279,21 +270,8 @@ git fetch origin "refs/notes/*:refs/notes/*"
 [build-lin1-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/linux.yml?label=Linux%20%28x86_64%29
 [build-lin1-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/linux.yml?query=branch%3Amain
 
-[build-lin2-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/platforms.yml?label=Linux%20%28other%29
-[build-lin2-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/platforms.yml?query=branch%3Amain
-
-[build-win-msys2-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/windows-msys2.yml?label=Windows%20%28MSYS2%29
-[build-win-msys2-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/windows-msys2.yml?query=branch%3Amain
-
 [build-win-msvc-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/windows-msvc.yml?label=Windows%20%28Visual%20Studio%29
 [build-win-msvc-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/windows-msvc.yml?query=branch%3Amain
 
 [build-mac-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/macos.yml?label=macOS%20%28x86_64%2C%20arm64%29
 [build-mac-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/macos.yml?query=branch%3Amain
-
-
-## Website & documentation
-
-Please refer to the [documentation guide](DOCUMENTATION.md) before making
-changes to the website or the documentation.
-
