@@ -22,12 +22,9 @@
 #include "misc/support.h"
 #include "misc/video.h"
 #include "shell/shell.h"
-#include "utils/checks.h"
 #include "utils/fraction.h"
 #include "utils/math_utils.h"
 #include "utils/string_utils.h"
-
-CHECK_NARROWING();
 
 Render render;
 ScalerLineHandler_t RENDER_DrawLine;
