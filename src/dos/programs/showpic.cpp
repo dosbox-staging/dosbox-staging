@@ -139,7 +139,7 @@ std::optional<VideoModeBlock> SHOWPIC::GetClosestVideoMode(const int width,
 
 	for (auto& mode : ModeList_VGA) {
 		// Disallow 2-color monochrome modes
-		constexpr auto Monochrome_640x200 = 0x0f;
+		constexpr auto Monochrome_640x200 = 0x06;
 		constexpr auto Monochrome_640x350 = 0x0f;
 		constexpr auto Monochrome_640x480 = 0x11;
 
