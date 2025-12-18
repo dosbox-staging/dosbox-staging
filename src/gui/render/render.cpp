@@ -290,11 +290,6 @@ static SectionProp& get_render_section()
 	return *section;
 }
 
-static uint8_t get_best_mode(const uint8_t flags)
-{
-	return (flags & GFX_CAN_32) & ~(GFX_CAN_8 | GFX_CAN_15 | GFX_CAN_16);
-}
-
 static void reinit_drawing()
 {
 	render_callback(GFX_CallbackReset);
