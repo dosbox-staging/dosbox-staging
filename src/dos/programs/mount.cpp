@@ -286,7 +286,7 @@ void MOUNT::Run(void)
 						real_path.c_str(),
 						temp_line.c_str());
 			}
-			temp_line = real_path;
+			temp_line = std::move(real_path);
 		}
 
 		struct stat test;

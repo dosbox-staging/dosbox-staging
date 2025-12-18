@@ -39,11 +39,13 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		return nullptr;
 
 	try {
-		if (!Drives.at(drive)) {
+		const auto& drive_ptr = Drives.at(drive);
+
+		if (!drive_ptr) {
 			return nullptr;
 		}
 
-		tmpfile = Drives.at(drive)->GetHostFilePtr(fullname, "rb");
+		tmpfile = drive_ptr->GetHostFilePtr(fullname, "rb");
 
 		if (tmpfile == nullptr) {
 			if (!tryload)
@@ -60,12 +62,12 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		*bsize = ftell(tmpfile);
 		fclose(tmpfile);
 
-		tmpfile = Drives.at(drive)->GetHostFilePtr(fullname, "rb+");
+		tmpfile = drive_ptr->GetHostFilePtr(fullname, "rb+");
 		if (tmpfile == nullptr) {
 			//				if (!tryload) *error=2;
 			//				return NULL;
 			WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
-			tmpfile = Drives.at(drive)->GetHostFilePtr(fullname, "rb");
+			tmpfile = drive_ptr->GetHostFilePtr(fullname, "rb");
 			if (tmpfile == nullptr) {
 				if (!tryload)
 					*error = 1;
