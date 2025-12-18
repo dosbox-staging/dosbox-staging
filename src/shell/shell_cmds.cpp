@@ -1859,10 +1859,10 @@ void DOS_Shell::CMD_SUBST (char * args) {
  * E.g. make basedir member dos_drive instead of localdrive
  */
 	HELP("SUBST");
-	char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
+	std::string mountstring;
 	char temp_str[2] = { 0,0 };
 	try {
-		safe_strcpy(mountstring, "MOUNT ");
+		mountstring = "MOUNT ";
 		StripSpaces(args);
 		std::string arg;
 		CommandLine command("", args);
@@ -1888,18 +1888,21 @@ void DOS_Shell::CMD_SUBST (char * args) {
 			if (!Drives.at(drive_idx)) {
 				throw 1; // targetdrive not in use
 			}
-			strcat(mountstring, "-u ");
-			strcat(mountstring, temp_str);
-			this->ParseLine(mountstring);
+			mountstring += "-u ";
+			mountstring += temp_str;
+			std::vector<char> mutable_cmd(mountstring.begin(),
+			                              mountstring.end());
+			mutable_cmd.push_back('\0');
+			this->ParseLine(mutable_cmd.data());
 			return;
 		}
 		if (Drives.at(drive_idx)) {
 			throw 0; // targetdrive in use
 		}
-		strcat(mountstring, temp_str);
-		strcat(mountstring, " ");
+		mountstring += temp_str;
+		mountstring += " ";
 
-   		uint8_t drive;char fulldir[DOS_PATHLENGTH];
+		uint8_t drive;char fulldir[DOS_PATHLENGTH];
 		if (!DOS_MakeName(arg.c_str(), fulldir, &drive)) {
 			throw 0;
 		}
@@ -1917,26 +1920,21 @@ void DOS_Shell::CMD_SUBST (char * args) {
 			throw 0;
 		}
 
-		// Check for buffer overflow
-		if (strlen(mountstring) + host_path.length() + 3 >= sizeof(mountstring)) {
-			// The path is too long to handle. Fail safely.
-			throw 0; 
-		}
-
-		strcat(mountstring, "\"");
-		strcat(mountstring, host_path.c_str());
-		strcat(mountstring, "\"");
-		this->ParseLine(mountstring);
-	}
-	catch(int a){
+		mountstring += "\"";
+		mountstring += host_path;
+		mountstring += "\"";
+		std::vector<char> mutable_cmd(mountstring.begin(),
+		                              mountstring.end());
+		mutable_cmd.push_back('\0');
+		this->ParseLine(mutable_cmd.data());
+	} catch (int a) {
 		if (a == 0) {
 			WriteOut(MSG_Get("SHELL_CMD_SUBST_FAILURE"));
 		} else {
 		       	WriteOut(MSG_Get("SHELL_CMD_SUBST_NO_REMOVE"));
 		}
 		return;
-	}
-	catch(...) {		//dynamic cast failed =>so no localdrive
+	} catch (...) { // dynamic cast failed =>so no localdrive
 		WriteOut(MSG_Get("SHELL_CMD_SUBST_FAILURE"));
 		return;
 	}
