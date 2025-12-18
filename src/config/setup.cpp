@@ -1083,7 +1083,7 @@ bool SectionProp::HandleInputline(const std::string& line)
 	return false;
 }
 
-void SectionProp::PrintData(FILE* outfile) const {}
+void SectionProp::PrintData([[maybe_unused]] FILE* outfile) const {}
 
 std::string SectionProp::GetPropertyValue(const std::string& _property) const
 {
