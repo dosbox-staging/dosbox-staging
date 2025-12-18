@@ -114,7 +114,7 @@ void SHOWPIC::SetPalette(const SDL_Palette& palette) const
 {
 	// Ensure the 4 CGA colours are mapped to the first 4 VGA palette
 	// indices and the 16 EGA colours to the first 16 indices
-	for (auto i = 0; i < NumCgaColors; ++i) {
+	for (uint8_t i = 0; i < NumCgaColors; ++i) {
 		INT10_SetSinglePaletteRegister(i, i);
 	}
 
@@ -125,7 +125,10 @@ void SHOWPIC::SetPalette(const SDL_Palette& palette) const
 		// standard VGA modes use 18-bit colours (6-bit per channel)
 		const auto rgb666 = Rgb666::FromRgb888({c.r, c.g, c.b});
 
-		INT10_SetSingleDACRegister(i, rgb666.red, rgb666.green, rgb666.blue);
+		INT10_SetSingleDACRegister(check_cast<uint8_t>(i),
+		                           rgb666.red,
+		                           rgb666.green,
+		                           rgb666.blue);
 	}
 }
 
@@ -211,22 +214,25 @@ void SHOWPIC::DisplayImage(const SDL_Surface& surface, const int screen_width,
 
 	for (auto y = 0; y < surface.h; ++y) {
 		for (auto x = 0; x < surface.w; ++x) {
-			INT10_PutPixel(xoffs + x, yoffs + y, 0, pixel_data[x]);
+			INT10_PutPixel(check_cast<uint16_t>(xoffs + x),
+			               check_cast<uint16_t>(yoffs + y),
+			               0,
+			               pixel_data[x]);
 		}
 		pixel_data += surface.pitch;
 	}
 }
 
-void SHOWPIC::ClearScreen(const int screen_width, const int screen_height) const
+void SHOWPIC::ClearScreen(const uint16_t screen_width, const uint16_t screen_height) const
 {
-	for (auto y = 0; y < screen_height; ++y) {
-		for (auto x = 0; x < screen_width; ++x) {
+	for (uint16_t y = 0; y < screen_height; ++y) {
+		for (uint16_t x = 0; x < screen_width; ++x) {
 			INT10_PutPixel(x, y, 0, 0);
 		}
 	}
 }
 
-void SHOWPIC::WaitForTicks(const int num_ticks) const
+void SHOWPIC::WaitForTicks(const uint32_t num_ticks) const
 {
 	const auto ticks_start = PIC_Ticks;
 
