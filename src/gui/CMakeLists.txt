@@ -14,5 +14,3 @@ target_sources(libdosboxcommon PRIVATE
 target_link_libraries(libdosboxcommon PRIVATE
   OpenGL::GL
   $<IF:$<BOOL:${C_OPENGL}>,libglad,>)
-
-target_link_libraries(libdosboxcommon PRIVATE simpleini)
