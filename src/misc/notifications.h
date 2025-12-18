@@ -120,7 +120,7 @@ enum class Source {
 };
 
 template <typename... Args>
-void display_message([[maybe_unused]] const Level level, const Source source,
+void display_message([[maybe_unused]] const Level level, [[maybe_unused]] const Source source,
                      const std::string_view topic,
                      const std::string& message_key, const Args&... args) noexcept
 {
