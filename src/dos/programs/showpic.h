@@ -37,9 +37,10 @@ private:
 	void DisplayImage(const SDL_Surface& surface, const int screen_width,
 	                  const int screen_height) const;
 
-	void ClearScreen(const int screen_width, const int screen_height) const;
+	void ClearScreen(const uint16_t screen_width,
+	                 const uint16_t screen_height) const;
 
-	void WaitForTicks(const int num_ticks) const;
+	void WaitForTicks(const uint32_t num_ticks) const;
 	void WaitForKeypress() const;
 };
 
