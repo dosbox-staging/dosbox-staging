@@ -1917,6 +1917,12 @@ void DOS_Shell::CMD_SUBST (char * args) {
 			throw 0;
 		}
 
+		// Check for buffer overflow
+		if (strlen(mountstring) + host_path.length() + 3 >= sizeof(mountstring)) {
+			// The path is too long to handle. Fail safely.
+			throw 0; 
+		}
+
 		strcat(mountstring, "\"");
 		strcat(mountstring, host_path.c_str());
 		strcat(mountstring, "\"");
