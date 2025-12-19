@@ -275,14 +275,14 @@ endif()
 
 # ManyMouse - optional XInput support
 option(OPT_MANYMOUSE
-       "Use ManyMouse library for single-computer multiplayer gaming in The Settlers I/II"
-       ON
+  "Use ManyMouse library for single-computer multiplayer gaming in The Settlers I/II"
+  ON
 )
 
 # ManyMouse - optional XInput support
 option(OPT_XINPUT
-       "Let ManyMouse use the X Input protocol"
-       OFF
+  "Let ManyMouse use the X Input protocol"
+  OFF
 )
 
 # ManyMouse
@@ -396,14 +396,15 @@ target_include_directories(
 # Bundle licenses, but skip the ones that are not relevant for
 # binary distribution or allow us to not distribute the license text.
 set(LICENSE_FILES
-    licenses/BSD-2-Clause.txt
-    licenses/BSD-3-Clause.txt
-    licenses/DEBUG.COM.txt
-    licenses/GPL-2.0.txt
-    licenses/LGPL-2.1.txt
-    licenses/MIT.txt
-    licenses/UNICODE.txt
-    licenses/Zlib.txt)
+  licenses/BSD-2-Clause.txt
+  licenses/BSD-3-Clause.txt
+  licenses/DEBUG.COM.txt
+  licenses/GPL-2.0.txt
+  licenses/LGPL-2.1.txt
+  licenses/MIT.txt
+  licenses/UNICODE.txt
+  licenses/Zlib.txt
+)
 
 # Set the directory with resources to bundle
 set(RESOURCES_PATH "resources")
