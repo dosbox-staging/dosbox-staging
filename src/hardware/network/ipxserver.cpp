@@ -3,8 +3,6 @@
 
 #include "dosbox.h"
 
-#if C_IPX
-
 #include "hardware/network/ipxserver.h"
 
 #include <atomic>
@@ -246,5 +244,3 @@ bool IPX_StartServer(uint16_t portnum)
 	}
 	return false;
 }
-
-#endif

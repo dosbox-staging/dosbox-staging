@@ -1074,10 +1074,7 @@ void DOSBOX_InitModuleConfigsAndMessages()
 	JOYSTICK_AddConfigSection(control);
 	SERIAL_AddConfigSection(control);
 	DOS_AddConfigSection(control);
-
-#if C_IPX
 	IPX_AddConfigSection(control);
-#endif
 
 	ETHERNET_AddConfigSection(control);
 
@@ -1144,9 +1141,7 @@ void DOSBOX_InitModules()
 	SERIAL_Init();
 	DOS_Init();
 
-#if C_IPX
 	IPX_Init();
-#endif
 	ETHERNET_Init();
 	VIRTUALBOX_Init();
 	VMWARE_Init();
@@ -1159,9 +1154,7 @@ void DOSBOX_DestroyModules()
 	VMWARE_Destroy();
 	VIRTUALBOX_Destroy();
 	ETHERNET_Destroy();
-#if C_IPX
 	IPX_Destroy();
-#endif
 
 	DOS_Destroy();
 	SERIAL_Destroy();
