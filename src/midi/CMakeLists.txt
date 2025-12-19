@@ -10,8 +10,8 @@ target_sources(libdosboxcommon PRIVATE
   win32.cpp
 )
 
-target_link_libraries(libdosboxcommon PRIVATE 
-  MT32Emu::mt32emu 
+target_link_libraries(libdosboxcommon PRIVATE
+  $<IF:$<BOOL:${C_MT32EMU}>,MT32Emu::mt32emu,>
   FluidSynth::libfluidsynth
 )
 
