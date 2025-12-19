@@ -260,7 +260,10 @@ if (OPT_OPENGL)
   set(C_OPENGL ON)
 endif()
 
-set(C_MT32EMU ON)       # TODO: Option
+option(OPT_MT32EMU "Enable Roland MT-32 emulation support" ON)
+if (OPT_MT32EMU)
+  set(C_MT32EMU ON)
+endif()
 
 if (OPT_DEBUGGER)
   set(C_DEBUGGER ON)
