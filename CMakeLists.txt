@@ -266,8 +266,6 @@ endif()
 
 set(C_MT32EMU ON)       # TODO: Option
 
-set(C_DIRECTSERIAL ON)
-
 if (OPT_DEBUGGER)
   set(C_DEBUGGER ON)
 
