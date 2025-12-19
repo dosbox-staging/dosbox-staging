@@ -108,6 +108,7 @@ protected:
 private:
 	void MaybeLogFilesystemProtection(const std::string& filename);
 	bool FileIsReadOnly(const char* name);
+	bool FileOrDriveIsReadOnly(const char* name);
 	const bool readonly;
 	const bool always_open_ro_files;
 	std::unordered_set<std::string> write_protected_files;
