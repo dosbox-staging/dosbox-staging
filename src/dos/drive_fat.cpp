@@ -139,10 +139,14 @@ bool fatFile::Read(uint8_t * data, uint16_t *size) {
 
 bool fatFile::Write(uint8_t * data, uint16_t *size) {
 	// check if file opened in read-only mode
-	if ((this->flags & 0xf) == OPEN_READ || myDrive->IsReadOnly()) {
+	uint8_t lastflags = this->flags & 0xf;
+	if (lastflags == OPEN_READ) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
+
+	// File should always be opened in read-only mode if on read-only drive
+	assert(!IsOnReadOnlyMedium());
 
 	direntry tmpentry;
 	uint16_t sizedec, sizecount;
@@ -274,7 +278,7 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 
 void fatFile::Close()
 {
-	if ((flags & 0xf) != OPEN_READ && !myDrive->IsReadOnly()) {
+	if ((flags & 0xf) != OPEN_READ && !IsOnReadOnlyMedium()) {
 		if (flush_time_on_close == FlushTimeOnClose::ManuallySet || set_archive_on_close) {
 			direntry tmpentry;
 			myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
@@ -1038,7 +1042,7 @@ uint8_t fatDrive::GetMediaByte(void) {
 std::unique_ptr<DOS_File> fatDrive::FileCreate(const char* name,
                                                FatAttributeFlags attributes)
 {
-	if (readonly) {
+	if (IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return nullptr;
 	}
@@ -1141,6 +1145,11 @@ std::unique_ptr<DOS_File> fatDrive::FileOpen(const char* name, uint8_t flags)
 		return nullptr;
 	}
 
+	// Force read-only mode if the drive is read-only.
+	if (!open_for_readonly && IsReadOnly()) {
+		flags = OPEN_READ;
+	}
+
 	// These must be extracted to temporaries or GCC throws a compile error
 	// It doesn't like something about the combination of the packed attribute
 	// and how make_unique uses references as arguments
@@ -1163,7 +1172,7 @@ std::unique_ptr<DOS_File> fatDrive::FileOpen(const char* name, uint8_t flags)
 }
 
 bool fatDrive::FileUnlink(const char * name) {
-	if (readonly) {
+	if (IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -1383,7 +1392,7 @@ bool fatDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 
 bool fatDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 {
-	if (readonly) {
+	if (IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -1536,7 +1545,7 @@ void fatDrive::zeroOutCluster(uint32_t clustNumber) {
 
 bool fatDrive::MakeDir(const char* dir)
 {
-	if (readonly) {
+	if (IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -1592,7 +1601,7 @@ bool fatDrive::MakeDir(const char* dir)
 }
 
 bool fatDrive::RemoveDir(const char *dir) {
-	if (readonly) {
+	if (IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -1649,7 +1658,7 @@ bool fatDrive::RemoveDir(const char *dir) {
 }
 
 bool fatDrive::Rename(const char * oldname, const char * newname) {
-	if (readonly) {
+	if (IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
