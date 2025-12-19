@@ -447,12 +447,6 @@ if get_option('enable_debugger') == 'heavy'
     conf_data.set10('C_HEAVY_DEBUGGER', true)
 endif
 
-foreach osdef : ['LINUX', 'WIN32', 'MACOSX', 'BSD']
-    if conf_data.has(osdef)
-        conf_data.set10('C_DIRECTSERIAL', true)
-    endif
-endforeach
-
 if cc.has_function('clock_gettime', prefix: '#include <time.h>')
     conf_data.set10('HAVE_CLOCK_GETTIME', true)
 endif

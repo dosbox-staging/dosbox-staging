@@ -9,7 +9,6 @@
 #include <memory>
 #include <tuple>
 
-#include "directserial.h"
 #include "nullmodem.h"
 #include "serialdummy.h"
 #include "serialmouse.h"
@@ -1301,20 +1300,8 @@ public:
 				serialports[i] = new CSerialDummy (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::DUMMY;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
-			}
-#ifdef C_DIRECTSERIAL
-			else if (type=="direct") {
-				serialports[i] = new CDirectSerial (i, &cmd);
-				serialports[i]->serialType = SERIAL_PORT_TYPE::DIRECT;
-				cmd.GetStringRemain(serialports[i]->commandLineString);
-				if (!serialports[i]->InstallationSuccessful) {
-					// serial port name was wrong or already in use
-					delete serialports[i];
-					serialports[i] = nullptr;
-				}
-			}
-#endif
-			else if (type == "modem") {
+
+			} else if (type == "modem") {
 				serialports[i] = new CSerialModem (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::MODEM;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
@@ -1322,6 +1309,7 @@ public:
 					delete serialports[i];
 					serialports[i] = nullptr;
 				}
+
 			} else if (type == "nullmodem") {
 				serialports[i] = new CNullModem (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::NULL_MODEM;
