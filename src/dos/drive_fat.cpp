@@ -278,27 +278,26 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 
 void fatFile::Close()
 {
-	if ((flags & 0xf) != OPEN_READ && (flags & 0xf) != OPEN_READ_NO_MOD &&
-	    !IsOnReadOnlyMedium()) {
-		if (flush_time_on_close == FlushTimeOnClose::ManuallySet || set_archive_on_close) {
-			direntry tmpentry;
-			myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
-			if (flush_time_on_close == FlushTimeOnClose::ManuallySet) {
-				tmpentry.modTime = time;
-				tmpentry.modDate = date;
-			}
-			if (set_archive_on_close) {
-				FatAttributeFlags tmp = tmpentry.attrib;
-				tmp.archive           = true;
-				tmpentry.attrib       = tmp._data;
-			}
-			myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
+	if (flush_time_on_close == FlushTimeOnClose::ManuallySet ||
+	    set_archive_on_close) {
+		assert(!IsOnReadOnlyMedium());
+		direntry tmpentry;
+		myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
+		if (flush_time_on_close == FlushTimeOnClose::ManuallySet) {
+			tmpentry.modTime = time;
+			tmpentry.modDate = date;
 		}
+		if (set_archive_on_close) {
+			FatAttributeFlags tmp = tmpentry.attrib;
+			tmp.archive           = true;
+			tmpentry.attrib       = tmp._data;
+		}
+		myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
+	}
 
-		/* Flush buffer */
-		if (loadedSector) {
-			myDrive->writeSector(currentSector, sectorBuffer);
-		}
+	// Flush buffer
+	if (loadedSector) {
+		myDrive->writeSector(currentSector, sectorBuffer);
 	}
 
 	set_archive_on_close = false;
