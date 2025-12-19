@@ -72,10 +72,8 @@ static const HostReg RegParams[] = {
 	HOST_R7, HOST_R8, HOST_R9, HOST_R10
 };
 
-#if C_FPU
 #include "fpu/fpu.h"
 extern FPU_rec fpu;
-#endif
 
 // register that holds function return values
 #define FC_RETOP HOST_R3
@@ -178,14 +176,12 @@ static HostReg inline gen_addr(int64_t &addr, HostReg dest)
 		return HOST_R27;
 	}
 
-#if C_FPU
 	off = addr - (int64_t)&fpu;
 	if ((int16_t)off == off)
 	{
 		addr = off;
 		return HOST_R28;
 	}
-#endif
 
 	if (addr & 0xffffffff00000000) {
 		IMM_OP(15, dest, 0, (addr & 0xffff000000000000) >> 48); // lis dest, upper
@@ -718,9 +714,7 @@ static void gen_run_code(void)
 	DSF_OP(62, HOST_R30, HOST_R1, 208+32, 0); // :
 	DSF_OP(62, HOST_R31, HOST_R1, 208+40, 0); // std r31, 248(sp)
 
-#if C_FPU
 	gen_mov_qword_to_reg_imm(HOST_R28, ((uint64_t)&fpu));
-#endif
 	gen_mov_qword_to_reg_imm(FC_SEGS_ADDR, ((uint64_t)&Segs));
 	gen_mov_qword_to_reg_imm(FC_REGS_ADDR, ((uint64_t)&cpu_regs));
 	DSF_OP(62, HOST_R0,  HOST_R1, 256+16, 0); // std r0,256+16(sp)
