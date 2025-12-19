@@ -27,14 +27,16 @@
 
 bool localDrive::FileIsReadOnly(const char* name)
 {
-	if (IsReadOnly()) {
-		return true;
-	}
 	FatAttributeFlags test_attr = {};
 	if (GetFileAttr(name, &test_attr)) {
 		return test_attr.read_only;
 	}
 	return false;
+}
+
+bool localDrive::FileOrDriveIsReadOnly(const char* name)
+{
+	return IsReadOnly() || FileIsReadOnly(name);
 }
 
 std::unique_ptr<DOS_File> localDrive::FileCreate(const char* name,
@@ -43,7 +45,7 @@ std::unique_ptr<DOS_File> localDrive::FileCreate(const char* name,
 	assert(!IsReadOnly());
 
 	// Don't allow overwriting read-only files.
-	if (FileIsReadOnly(name)) {
+	if (FileOrDriveIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return nullptr;
 	}
@@ -152,13 +154,20 @@ std::unique_ptr<DOS_File> localDrive::FileOpen(const char* name, uint8_t flags)
 		}
 	}
 
+	// DOS allows opening files in r/w mode on a r/o medium just fine, there
+	// won't be an error unless the app actually tries to write something.
+	if (write_access && IsReadOnly()) {
+		flags                = OPEN_READ;
+		write_access         = false;
+		fallback_to_readonly = true;
+	}
+
 	NativeFileHandle file_handle = open_native_file(host_filename, write_access);
 
 	// If we couldn't open the file, then it's possible that
-	// the file is simply write-protected and the flags requested
-	// RW access.  So check if this is the case:
-	if (file_handle == InvalidNativeFileHandle && write_access &&
-	    always_open_ro_files) {
+	// the underlying host file is simply write-protected and the flags
+	// requested RW access. So check if this is the case:
+	if (file_handle == InvalidNativeFileHandle && write_access) {
 		// If yes, check if the file can be opened with Read-only access:
 		file_handle = open_native_file(host_filename, false);
 		if (file_handle != InvalidNativeFileHandle) {
@@ -229,7 +238,7 @@ bool localDrive::FileUnlink(const char* name)
 	}
 
 	// Don't allow deleting read-only files.
-	if (FileIsReadOnly(name)) {
+	if (FileOrDriveIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
