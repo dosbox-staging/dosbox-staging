@@ -393,18 +393,20 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 		LoadSample(spin_sample_path, spin.sample);
 	}
 
-	// After loading spin_up_sample and sample:
-	if (!spin.spin_up_sample.empty()) {
-		spin.spin_up_it = spin.spin_up_sample.begin();
-	} else {
-		spin.spin_up_it = spin.spin_up_sample.end();
-	}
+	// Start iterators at the beginning or end, depending on whether the
+	// disk noise is looping (HDD) or not (FDD)
+	// This prevents fdd spin noise on initial startup
+	if (spin.loop && !spin.spin_up_sample.empty()) {
+        spin.spin_up_it = spin.spin_up_sample.begin();
+    } else {
+        spin.spin_up_it = spin.spin_up_sample.end();
+    }
 
-	if (!spin.sample.empty()) {
-		spin.spin_it = spin.sample.begin();
-	} else {
-		spin.spin_it = spin.sample.end();
-	}
+    if (spin.loop && !spin.sample.empty()) {
+        spin.spin_it = spin.sample.begin();
+    } else {
+        spin.spin_it = spin.sample.end();
+    }
 
 	LoadSeekSamples(seek_sample_paths);
 	seek.current_sample.clear();
