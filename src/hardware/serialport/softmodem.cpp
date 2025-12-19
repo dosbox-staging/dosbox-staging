@@ -1,9 +1,7 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox.h"
-
-#if C_MODEM
 
 #include <cctype>
 #include <cstdlib>
@@ -1170,12 +1168,10 @@ void CSerialModem::updateModemControlLines() {
                         if(!getDTR()) {
                                 SendRes(ResNOCARRIER);
                                 EnterIdleState();
-                                LOG_MSG("SERIAL: Port %" PRIu8 " modem hung up due to "
-                                        "dropped DTR.", GetPortNumber());
+                                LOG_MSG("SERIAL: Port %" PRIu8 " modem hung up
+due to " "dropped DTR.", GetPortNumber());
                         }
 
         oldDTRstate = getDTR();
 }
 */
-
-#endif // C_MODEM

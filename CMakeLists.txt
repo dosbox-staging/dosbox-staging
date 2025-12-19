@@ -257,7 +257,6 @@ set(C_PER_PAGE_W_OR_X ON)
 set(C_FPU ON)
 
 # Networking (TODO: Option & dependent on SDL2_Net)
-set(C_MODEM ON)
 set(C_IPX ON)
 
 option(OPT_OPENGL "Enable OpenGL render backend" ON)
