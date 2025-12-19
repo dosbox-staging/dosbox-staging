@@ -2210,7 +2210,11 @@ bool CPU_PopSeg(SegNames seg,bool use32) {
 }
 
 bool CPU_CPUID() {
-	if (CPU_ArchitectureType<ArchitectureType::Intel486NewSlow) return false;
+	constexpr auto FpuEmulationEnabled = true;
+
+	if (CPU_ArchitectureType < ArchitectureType::Intel486NewSlow) {
+		return false;
+	}
 	switch (reg_eax) {
 	case 0:	/* Vendor ID String and maximum level? */
 		reg_eax=1;  /* Maximum level */
@@ -2221,26 +2225,37 @@ bool CPU_CPUID() {
 	case 1: // Get processor type/family/model/stepping and feature flags
 		if ((CPU_ArchitectureType == ArchitectureType::Intel486NewSlow) ||
 		    (CPU_ArchitectureType == ArchitectureType::Mixed)) {
-#if C_FPU
-			reg_eax = 0x402; // Intel 486DX
-			reg_edx = 0x1;   // FPU
-#else
-			reg_eax = 0x422; // Intel 486SX
-			reg_edx = 0x0;   // no FPU
-#endif
-			reg_ebx = 0;     // Not supported
-			reg_ecx = 0;     // No features
+
+			if (FpuEmulationEnabled) {
+				reg_eax = 0x402; // Intel 486DX
+				reg_edx = 0x1;   // FPU
+			} else {
+				reg_eax = 0x422; // Intel 486SX
+				reg_edx = 0x0;   // no FPU
+			}
+
+			reg_ebx = 0; // Not supported
+			reg_ecx = 0; // No features
+			             //
 		} else if (CPU_ArchitectureType == ArchitectureType::Pentium) {
-#if C_FPU
-			reg_eax = 0x517; // Intel Pentium P5 60/66 MHz D1-step
-			reg_edx = 0x11;  // FPU + Time Stamp Counter (RDTSC)
-#else
-			// All Pentiums had FPU built-in, so when FPU is
-			// disabled, we pretend to have early Pentium model with
-			// FDIV bug present.
-			reg_eax = 0x513; // Intel Pentium P5 60/66 MHz B1-step
-			reg_edx = 0x10;  // Time Stamp Counter (RDTSC)
-#endif
+			if (FpuEmulationEnabled) {
+				// Intel Pentium P5 60/66 MHz D1-step
+				reg_eax = 0x517;
+
+				// FPU + Time Stamp Counter (RDTSC)
+				reg_edx = 0x11;
+			} else {
+				// All Pentiums had FPU built-in, so when FPU is
+				// disabled, we pretend to have early Pentium
+				// model with FDIV bug present.
+
+				// Intel Pentium P5 60/66 MHz B1-step
+				reg_eax = 0x513;
+
+				// Time Stamp Counter (RDTSC)
+				reg_edx = 0x10;
+			}
+
 			reg_ebx = 0;     // Not supported
 			reg_ecx = 0;     // No features
 		} else if (CPU_ArchitectureType == ArchitectureType::PentiumMmx) {

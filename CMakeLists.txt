@@ -254,7 +254,6 @@ if (HAVE_GETPEERNAME AND HAVE_GETSOCKNAME)
 endif()
 
 set(C_PER_PAGE_W_OR_X ON)
-set(C_FPU ON)
 
 option(OPT_OPENGL "Enable OpenGL render backend" ON)
 if (OPT_OPENGL)

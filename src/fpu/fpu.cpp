@@ -1,9 +1,7 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
 #include "dosbox.h"
-#if C_FPU
 
 #include "cpu/cpu.h"
 #include "misc/cross.h"
@@ -609,5 +607,3 @@ void FPU_Init()
 #endif
 	FPU_FINIT();
 }
-
-#endif

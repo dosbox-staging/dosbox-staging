@@ -1106,9 +1106,7 @@ void DOSBOX_InitModules()
 	COMPOSITE_Init();
 
 	CPU_Init();
-#if C_FPU
 	FPU_Init();
-#endif
 	DMA_Init();
 	VGA_Init();
 	KEYBOARD_Init();

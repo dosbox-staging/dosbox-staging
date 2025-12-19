@@ -34,9 +34,8 @@
 
 extern Bitu cycle_count;
 
-#if C_FPU
-#define CPU_FPU	1						//Enable FPU escape instructions
-#endif
+// Enable FPU escape instructions
+#define CPU_FPU 1
 
 #define CPU_PIC_CHECK 1
 #define CPU_TRAP_CHECK 1

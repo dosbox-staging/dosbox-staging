@@ -609,9 +609,8 @@ switch (inst.code.op) {
 			SETFLAGBIT(ZF,0);
 		}
 		break;
-	case O_FPU:
-#if C_FPU
-		switch (((inst.rm>=0xc0) << 3) | inst.code.save) {
+        case O_FPU:
+	        switch (((inst.rm>=0xc0) << 3) | inst.code.save) {
 		case 0x00:	FPU_ESC0_EA(inst.rm,inst.rm_eaa);break;
 		case 0x01:	FPU_ESC1_EA(inst.rm,inst.rm_eaa);break;
 		case 0x02:	FPU_ESC2_EA(inst.rm,inst.rm_eaa);break;
@@ -631,11 +630,8 @@ switch (inst.code.op) {
 		case 0x0f:	FPU_ESC7_Normal(inst.rm);break;
 		}
 		goto nextopcode;
-#else
-		LOG(LOG_CPU,LOG_ERROR)("Unhandled FPU ESCAPE %d",inst.code.save);
-		goto nextopcode;
-#endif
-	case O_BOUNDw:
+
+        case O_BOUNDw:
 		{
 			if (inst.rm>=0xc0) goto illegalopcode;
 			const auto bound_min=LoadMws(inst.rm_eaa);

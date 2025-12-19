@@ -52,10 +52,7 @@
 // Can not be used together with C_DYNAMIC_X86
 #cmakedefine01 C_DYNREC
 
-// Define to 1 to enable floating point emulation
-#cmakedefine01 C_FPU
-
-// Define to 1 to use  fpu core implemented in x86 assembler
+// Define to 1 to use FPU core implemented in x86 assembler
 #cmakedefine01 C_FPU_X86
 
 // TODO Define to 1 to use inlined memory functions in cpu core
