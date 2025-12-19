@@ -15,8 +15,6 @@ set(DOSBOX_VERSION ${PROJECT_VERSION}-alpha)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# TODO Enable certain warnings-as-errors for at least MSVC, Clang & GCC
-
 # Disable the noisy narrowing and conversion warnings by default. Use the
 # CHECK_NARROWING() macro to opt-in these checks on a per-file basis. See
 # `src/util/checks.h` for details.
