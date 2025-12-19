@@ -4,8 +4,6 @@
 
 #include "dosbox.h"
 
-#if C_MODEM
-
 #include "shell/command_line.h"
 #include "config/config.h"
 #include "serialport.h"
@@ -607,4 +605,3 @@ void CNullModem::setRTS(bool val) {
 void CNullModem::setDTR(bool val) {
 	setRTSDTR(getRTS(), val);
 }
-#endif

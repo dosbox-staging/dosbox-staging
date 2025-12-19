@@ -68,9 +68,6 @@
 // This way it's easier to port or package on a new platform, where these
 // libraries might be missing.
 
-// Define to 1 to enable internal modem emulation (using SDL2_net)
-#cmakedefine01 C_MODEM
-
 // Define to 1 to enable IPX over Internet networking (using SDL2_net)
 #cmakedefine01 C_IPX
 
