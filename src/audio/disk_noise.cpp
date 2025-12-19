@@ -131,10 +131,9 @@ AudioFrame DiskNoiseDevice::GetNextFrame()
 		}
 	} else if (!spin.sample.empty() &&
 	           (spin.spin_it != spin.sample.end() || spin.loop)) {
-		// Loop the spin sound if enabled. Used for
-		// persistent HDD noise Not used for floppy
-		// noise because motor should stop after r/w
-		// operations aredone
+		// Loop the spin sound if enabled. Used for persistent HDD
+		// noise. Not used for floppy noise because motor should stop
+		// after read-write operations are done.
 		if (spin.spin_it == spin.sample.end() && spin.loop) {
 			spin.spin_it = spin.sample.begin();
 		}
