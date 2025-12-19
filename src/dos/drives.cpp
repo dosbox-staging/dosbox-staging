@@ -246,6 +246,8 @@ public:
 
 	bool Seek(uint32_t* pos, const uint32_t type) override
 	{
+		DriveManager::PerformDiskIoDelay(DriveManager::EstimatedSeekIoOverheadInBytes,
+		                                 disk_type);
 		return real_file->Seek(pos, type);
 	}
 	uint16_t GetInformation() override

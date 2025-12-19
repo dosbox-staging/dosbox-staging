@@ -44,6 +44,7 @@ public:
 	static constexpr auto EstimatedFileCreationIoOverheadInBytes = 2048;
 	static constexpr auto EstimatedFileOpenIoOverheadInBytes     = 1024;
 	static constexpr auto EstimatedFileCloseIoOverheadInBytes    = 512;
+	static constexpr auto EstimatedSeekIoOverheadInBytes         = 1024;
 
 	static void AppendFilesystemImages(const int drive,
 	                                   const filesystem_images_t& filesystem_images);
