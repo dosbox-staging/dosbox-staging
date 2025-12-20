@@ -268,19 +268,20 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 	render.updating = false;
 }
 
-static Bitu make_aspect_table(Bitu height, double scale_y, Bitu min_y)
+static int make_aspect_table(int height, double scale_y, int min_y)
 {
-	Bitu i;
-	double lines     = 0;
-	Bitu lines_added = 0;
+	double lines    = 0;
+	int lines_added = 0;
 
 	for (auto i = 0; i < height; i++) {
 		lines += scale_y;
-		if (lines >= min_y) {
-			Bitu temp_lines = (Bitu)lines;
+
+		if (lines >= static_cast<double>(min_y)) {
+			auto temp_lines = static_cast<int>(lines);
 			lines -= temp_lines;
 			lines_added += temp_lines;
-			Scaler_Aspect[i] = temp_lines;
+			Scaler_Aspect[i] = check_cast<uint8_t>(temp_lines);
+
 		} else {
 			Scaler_Aspect[i] = 0;
 		}
