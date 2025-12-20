@@ -268,24 +268,24 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 	render.updating = false;
 }
 
-static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
+static Bitu make_aspect_table(Bitu height, double scale_y, Bitu min_y)
 {
 	Bitu i;
-	double lines    = 0;
-	Bitu linesadded = 0;
+	double lines     = 0;
+	Bitu lines_added = 0;
 
-	for (i = 0; i < height; i++) {
-		lines += scaley;
-		if (lines >= miny) {
-			Bitu templines = (Bitu)lines;
-			lines -= templines;
-			linesadded += templines;
-			Scaler_Aspect[i] = templines;
+	for (auto i = 0; i < height; i++) {
+		lines += scale_y;
+		if (lines >= min_y) {
+			Bitu temp_lines = (Bitu)lines;
+			lines -= temp_lines;
+			lines_added += temp_lines;
+			Scaler_Aspect[i] = temp_lines;
 		} else {
 			Scaler_Aspect[i] = 0;
 		}
 	}
-	return linesadded;
+	return lines_added;
 }
 
 static SectionProp& get_render_section()
