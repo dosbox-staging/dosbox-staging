@@ -30,15 +30,6 @@ if (MSVC)
 
 else()
 
-  # TODO: GCC 12 (still used in our CI workflow) complains about unrecognized
-  # command line options; after switching to a newer release, enable the
-  # following warning flags:
-  #     -Winvalid-utf8
-  #     -Wtrivial-auto-var-init
-  #     -Wdeprecated-non-prototype (C only)
-  #     -Wflex-array-member-not-at-end (C only)
-  #     -Wfree-labels (C only)
-
   # Warning flags common to C and C++ code
   set(WARNING_FLAGS_COMMON
       "-Wall" "-Wextra" "-Wdeprecated"
@@ -65,6 +56,30 @@ else()
       "-Weffc++"
       "-Wextra-semi"
   )
+
+  # GCC 12 (still used in our CI workflow) complains about unrecognized
+  # command line options; after switching to a newer release, enable the
+  # following warning flags:
+  if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13)
+       OR
+       (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+
+    set(WARNING_FLAGS_C
+        ${WARNING_FLAGS_C}
+        "-Winvalid-utf8"
+        "-Wtrivial-auto-var-init"
+        "-Wdeprecated-non-prototype"
+        "-Wflex-array-member-not-at-end"
+        "-Wfree-labels"
+    )
+    set(WARNING_FLAGS_CXX
+        ${WARNING_FLAGS_CXX}
+        "-Winvalid-utf8"
+        "-Wtrivial-auto-var-init"
+    )
+  endif()
+
 
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:C>:${WARNING_FLAGS_C}>"
