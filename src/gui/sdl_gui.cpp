@@ -1479,6 +1479,17 @@ static void create_window_and_renderer()
 	}
 
 	sdl.window = sdl.renderer->GetWindow();
+
+#ifdef MACOSX
+	// The window is not always brought to the foreground after startup with
+	// SDL 2.32.10 on macOS, hence this workaround. Both the OpenGL and SDL
+	// texture renderers are affected.
+	//
+	// SDL on Windows and Linux seems to always raise the window after
+	// creation.
+	//
+	SDL_RaiseWindow(sdl.window);
+#endif
 }
 
 static void configure_keyboard_capture()
