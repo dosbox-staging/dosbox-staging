@@ -55,16 +55,14 @@ DiskNoises::DiskNoises(const DiskNoiseMode floppy_disk_noise_mode,
 	                                              hard_disk_noise_mode,
 	                                              spin_up,
 	                                              spin,
-	                                              hdd_seek_samples,
-	                                              true);
+	                                              hdd_seek_samples);
 	active_devices.emplace_back(hdd_noise);
 
 	floppy_noise = std::make_shared<DiskNoiseDevice>(DiskType::Floppy,
 	                                                 floppy_disk_noise_mode,
 	                                                 floppy_spin_up,
 	                                                 floppy_spin,
-	                                                 floppy_seek_samples,
-	                                                 false);
+	                                                 floppy_seek_samples);
 	active_devices.emplace_back(floppy_noise);
 	MIXER_UnlockMixerThread();
 }
@@ -374,8 +372,7 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
                                  const DiskNoiseMode disk_noise_mode,
                                  const std::string& spin_up_sample_path,
                                  const std::string& spin_sample_path,
-                                 const std::vector<std::string>& seek_sample_paths,
-                                 bool loop_spin_sample)
+                                 const std::vector<std::string>& seek_sample_paths)
         : disk_noise_mode(disk_noise_mode),
           disk_type(disk_type)
 {
@@ -384,7 +381,8 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 		return;
 	}
 
-	spin.loop = loop_spin_sample;
+	// Only hard disk noises loop the spin sample
+	(disk_type == DiskType::HardDisk) ? spin.loop = true : spin.loop = false;
 
 	// Only attempt to load spin samples if disk noise mode is "on" instead
 	// of "seek-only"
@@ -396,13 +394,13 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	// Start iterators at the beginning or end, depending on whether the
 	// disk noise is looping (HDD) or not (FDD)
 	// This prevents fdd spin noise on initial startup
-	if (spin.loop && !spin.spin_up_sample.empty()) {
+	if (disk_type == DiskType::HardDisk && !spin.spin_up_sample.empty()) {
         spin.spin_up_it = spin.spin_up_sample.begin();
     } else {
         spin.spin_up_it = spin.spin_up_sample.end();
     }
 
-    if (spin.loop && !spin.sample.empty()) {
+    if (disk_type == DiskType::HardDisk && !spin.sample.empty()) {
         spin.spin_it = spin.sample.begin();
     } else {
         spin.spin_it = spin.sample.end();
