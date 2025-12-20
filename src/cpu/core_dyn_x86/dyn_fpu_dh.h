@@ -3,8 +3,6 @@
 
 #include "dosbox.h"
 
-#if C_FPU
-
 static void FPU_FLD_16(PhysPt addr) {
 	dyn_dh_fpu.temp.m1 = (uint32_t)mem_readw(addr);
 }
@@ -407,5 +405,3 @@ static void dh_fpu_esc7(){
 		}
 	}
 }
-
-#endif // C_FPU

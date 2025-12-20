@@ -72,15 +72,6 @@
  * libraries might be missing.
  */
 
-// Define to 1 to enable internal modem emulation (using SDL2_net)
-#mesondefine C_MODEM
-
-// Define to 1 to enable IPX over Internet networking (using SDL2_net)
-#mesondefine C_IPX
-
-// Enable serial port passthrough support
-#mesondefine C_DIRECTSERIAL
-
 // Define to 1 to use opengl display output support
 #mesondefine C_OPENGL
 

@@ -9,7 +9,6 @@
 #include <memory>
 #include <tuple>
 
-#include "directserial.h"
 #include "nullmodem.h"
 #include "serialdummy.h"
 #include "serialmouse.h"
@@ -1285,10 +1284,8 @@ public:
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};
 		SectionProp* section = static_cast<SectionProp*>(sec);
 
-#if C_MODEM
 		const PropPath *pbFilename = section->GetPath("phonebookfile");
 		MODEM_ReadPhonebook(pbFilename->realpath);
-#endif
 
 		char s_property[] = "serialx";
 		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i) {
@@ -1303,21 +1300,8 @@ public:
 				serialports[i] = new CSerialDummy (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::DUMMY;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
-			}
-#ifdef C_DIRECTSERIAL
-			else if (type=="direct") {
-				serialports[i] = new CDirectSerial (i, &cmd);
-				serialports[i]->serialType = SERIAL_PORT_TYPE::DIRECT;
-				cmd.GetStringRemain(serialports[i]->commandLineString);
-				if (!serialports[i]->InstallationSuccessful) {
-					// serial port name was wrong or already in use
-					delete serialports[i];
-					serialports[i] = nullptr;
-				}
-			}
-#endif
-#if C_MODEM
-			else if(type=="modem") {
+
+			} else if (type == "modem") {
 				serialports[i] = new CSerialModem (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::MODEM;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
@@ -1325,8 +1309,8 @@ public:
 					delete serialports[i];
 					serialports[i] = nullptr;
 				}
-			}
-			else if(type=="nullmodem") {
+
+			} else if (type == "nullmodem") {
 				serialports[i] = new CNullModem (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::NULL_MODEM;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
@@ -1334,9 +1318,7 @@ public:
 					delete serialports[i];
 					serialports[i] = nullptr;
 				}
-			}
-#endif
-			else if(type=="mouse") {
+			} else if (type == "mouse") {
 				serialports[i] = new CSerialMouse (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::MOUSE;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
@@ -1344,8 +1326,7 @@ public:
 					delete serialports[i];
 					serialports[i] = nullptr;
 				}
-			}
-			else if(type=="disabled") {
+			} else if (type == "disabled") {
 				serialports[i] = nullptr;
 			} else {
 				serialports[i] = nullptr;
@@ -1365,9 +1346,7 @@ public:
 				serialports[i] = nullptr;
 			}
 		}
-#if C_MODEM
 		MODEM_ClearPhonebook();
-#endif
 	}
 };
 

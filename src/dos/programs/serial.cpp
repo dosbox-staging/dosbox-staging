@@ -5,7 +5,6 @@
 
 #include <map>
 
-#include "hardware/serialport/directserial.h"
 #include "hardware/serialport/nullmodem.h"
 #include "hardware/serialport/serialdummy.h"
 #include "hardware/serialport/serialmouse.h"
@@ -16,17 +15,12 @@
 
 // Map the serial port type enums to printable names
 static std::map<SERIAL_PORT_TYPE, const std::string> serial_type_names = {
-        {SERIAL_PORT_TYPE::DISABLED,   "disabled"},
-        {SERIAL_PORT_TYPE::DUMMY,      "dummy"},
-#ifdef C_DIRECTSERIAL
-        {SERIAL_PORT_TYPE::DIRECT,     "direct"},
-#endif
-#if C_MODEM
-        {SERIAL_PORT_TYPE::MODEM,      "modem"},
+        {  SERIAL_PORT_TYPE::DISABLED,  "disabled"},
+        {     SERIAL_PORT_TYPE::DUMMY,     "dummy"},
+        {     SERIAL_PORT_TYPE::MODEM,     "modem"},
         {SERIAL_PORT_TYPE::NULL_MODEM, "nullmodem"},
-#endif
-        {SERIAL_PORT_TYPE::MOUSE,      "mouse"},
-        {SERIAL_PORT_TYPE::INVALID,    "invalid"},
+        {     SERIAL_PORT_TYPE::MOUSE,     "mouse"},
+        {   SERIAL_PORT_TYPE::INVALID,   "invalid"},
 };
 
 void SERIAL::showPort(int port)
@@ -134,13 +128,6 @@ void SERIAL::Run()
 			serialports[port_index] = new CSerialDummy(port_index,
 			                                           commandLine);
 			break;
-#ifdef C_DIRECTSERIAL
-		case SERIAL_PORT_TYPE::DIRECT:
-			serialports[port_index] = new CDirectSerial(port_index,
-			                                            commandLine);
-			break;
-#endif
-#if C_MODEM
 		case SERIAL_PORT_TYPE::MODEM:
 			serialports[port_index] = new CSerialModem(port_index,
 			                                           commandLine);
@@ -148,7 +135,6 @@ void SERIAL::Run()
 		case SERIAL_PORT_TYPE::NULL_MODEM:
 			serialports[port_index] = new CNullModem(port_index, commandLine);
 			break;
-#endif
 		case SERIAL_PORT_TYPE::MOUSE:
 			serialports[port_index] = new CSerialMouse(port_index,
 			                                           commandLine);

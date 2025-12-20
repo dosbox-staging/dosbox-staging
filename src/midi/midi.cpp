@@ -814,8 +814,10 @@ static void init_mididevice_settings(SectionProp& secprop)
 	        "  coreaudio:    The built-in macOS MIDI synthesiser. The SoundFont to use can\n"
 	        "                be specified with the 'midiconfig' setting.\n");
 
+#if C_MT32EMU
 	str_prop->SetOptionHelp(MidiDeviceName::Mt32,
 	                        "  mt32:         The internal Roland MT-32 synthesizer (see the [mt32] section).\n");
+#endif
 
 	str_prop->SetOptionHelp(MidiDeviceName::SoundCanvas,
 	                        "  soundcanvas:  The internal Roland SC-55 synthesiser (requires a CLAP audio\n"
@@ -829,15 +831,17 @@ static void init_mididevice_settings(SectionProp& secprop)
 
 	str_prop->SetOptionHelp("none", "  none:         Disable MIDI output.");
 
-	str_prop->SetValues({
-		MidiDevicePortPref,
+	str_prop->SetValues({MidiDevicePortPref,
 #if C_COREAUDIO
-		        MidiDeviceName::CoreAudio,
+	                     MidiDeviceName::CoreAudio,
 #endif
-		        MidiDeviceName::Mt32, MidiDeviceName::SoundCanvas,
-		        MidiDeviceName::FluidSynth,
-		        "none"
-	});
+
+#if C_MT32EMU
+	                     MidiDeviceName::Mt32,
+	                     MidiDeviceName::SoundCanvas,
+#endif
+	                     MidiDeviceName::FluidSynth,
+	                     "none"});
 
 	str_prop->SetDeprecatedWithAlternateValue("alsa", DefaultMidiDevicePref);
 	str_prop->SetDeprecatedWithAlternateValue("auto", DefaultMidiDevicePref);

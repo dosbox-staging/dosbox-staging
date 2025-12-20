@@ -6,8 +6,6 @@
 
 #include "dosbox.h"
 
-#if C_MODEM
-
 #include <vector>
 
 #include "misc/support.h"
@@ -217,7 +215,5 @@ public:
 
 	NETClientSocket *Accept() override;
 };
-
-#endif // C_MODEM
 
 #endif

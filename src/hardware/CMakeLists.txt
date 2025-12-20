@@ -39,8 +39,6 @@ target_sources(libdosboxcommon PRIVATE
   network/ipxserver.cpp
   network/ne2000.cpp
 
-  serialport/directserial.cpp
-  serialport/libserial.cpp
   serialport/misc_util.cpp
   serialport/nullmodem.cpp
   serialport/serialdummy.cpp

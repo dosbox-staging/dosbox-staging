@@ -434,8 +434,6 @@ conf_data.set_quoted(
 )
 
 conf_data.set10(os_family_name, true)
-conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
-conf_data.set10('C_IPX', get_option('use_sdl2_net'))
 conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
@@ -447,12 +445,6 @@ endif
 if get_option('enable_debugger') == 'heavy'
     conf_data.set10('C_HEAVY_DEBUGGER', true)
 endif
-
-foreach osdef : ['LINUX', 'WIN32', 'MACOSX', 'BSD']
-    if conf_data.has(osdef)
-        conf_data.set10('C_DIRECTSERIAL', true)
-    endif
-endforeach
 
 if cc.has_function('clock_gettime', prefix: '#include <time.h>')
     conf_data.set10('HAVE_CLOCK_GETTIME', true)

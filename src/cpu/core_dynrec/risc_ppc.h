@@ -73,10 +73,8 @@ static const HostReg RegParams[] = {
 	HOST_R7, HOST_R8, HOST_R9, HOST_R10
 };
 
-#if C_FPU
 #include "fpu/fpu.h"
 extern struct FPU_rec fpu;
-#endif
 
 #if defined(USE_SDA_BASE)
 extern uint32_t _SDA_BASE_[];
@@ -171,14 +169,12 @@ static HostReg inline gen_addr(int32_t &addr, HostReg dest)
 		return HOST_R27;
 	}
 
-#if C_FPU
 	off = addr - (int32_t)&fpu;
 	if ((int16_t)off == off)
 	{
 		addr = off;
 		return HOST_R28;
 	}
-#endif
 
 #if defined(USE_SDA_BASE)
 	off = addr - (int32_t)_SDA_BASE_;
@@ -640,10 +636,8 @@ static void gen_run_code(void)
 	IMM_OP(15, FC_REGS_ADDR, 0, ((uint32_t)&cpu_regs)>>16);  // lis FC_REGS_ADDR, cpu_regs@h
 	IMM_OP(24, FC_REGS_ADDR, FC_REGS_ADDR, &cpu_regs);     // ori FC_REGS_ADDR, FC_REGS_ADDR, cpu_regs@l
 
-#if C_FPU
 	IMM_OP(15, HOST_R28, 0, ((uint32_t)&fpu)>>16);  // lis r28, fpu@h
-	IMM_OP(24, HOST_R28, HOST_R28, &fpu);         // ori r28, r28, fpu@l
-#endif
+	IMM_OP(24, HOST_R28, HOST_R28, &fpu);           // ori r28, r28, fpu@l
 
 	IMM_OP(36, HOST_R0, HOST_R1, 256+4); // stw r0,256+4(sp)
 	IMM_OP(19, 0x14, 0, 528<<1);     // bctr

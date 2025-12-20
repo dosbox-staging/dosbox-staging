@@ -30,7 +30,7 @@
 #define SaveMw(off,val)	mem_writew(off,val)
 #define SaveMd(off,val)	mem_writed(off,val)
 #define SaveMq(off,val) mem_writeq(off,val)
-#else 
+#else
 #include "cpu/paging.h"
 #define LoadMb(off) mem_readb_inline(off)
 #define LoadMw(off) mem_readw_inline(off)
@@ -44,9 +44,8 @@
 
 extern Bitu cycle_count;
 
-#if C_FPU
-#define CPU_FPU	1						//Enable FPU escape instructions
-#endif
+// Enable FPU escape instructions
+#define CPU_FPU 1
 
 #define CPU_PIC_CHECK 1
 #define CPU_TRAP_CHECK 1
@@ -158,7 +157,7 @@ restart_opcode:
 		#include "core_normal/prefix_66_0f.h"
 		default:
 		illegal_opcode:
-#if C_DEBUGGER	
+#if C_DEBUGGER
 			{
 				Bitu len=(GETIP-reg_eip);
 				LOADIP;
