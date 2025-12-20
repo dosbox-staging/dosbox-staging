@@ -73,10 +73,11 @@ void MOUNT::ShowUsage()
 // If not found, check if it exists on a mounted DOS drive
 static std::string ResolveMountPath(const std::string& input_path)
 {
+	std::error_code ec;
+
 	// Check host OS first
 	std::string native = to_native_path(input_path);
-	struct stat st;
-	if (!native.empty() && stat(native.c_str(), &st) == 0) {
+	if (!native.empty() && std_fs::exists(native, ec)) {
 		return native;
 	}
 
@@ -93,8 +94,7 @@ static std::string ResolveMountPath(const std::string& input_path)
 			        dos_fullname);
 
 			// Check if the resolved path actually exists on the host
-			if (!host_mapped.empty() &&
-			    stat(host_mapped.c_str(), &st) == 0) {
+			if (!host_mapped.empty() && std_fs::exists(host_mapped, ec)) {
 				LOG_MSG("MOUNT: Found '%s' via virtual drive %c",
 				        input_path.c_str(),
 				        'A' + drive_idx);
