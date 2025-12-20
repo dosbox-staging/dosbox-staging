@@ -84,7 +84,7 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 	// Mix audio frames from all active devices
 	for (auto i = 0; i < num_frames_requested; ++i) {
 		AudioFrame mixed_sample = {};
-		for (const auto& device : disk_noises->active_devices) {
+		for (const auto& device : active_devices) {
 			AudioFrame sample = device->GetNextFrame();
 			mixed_sample += sample;
 		}
