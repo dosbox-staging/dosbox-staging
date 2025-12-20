@@ -106,14 +106,14 @@ private:
 
 Message::Message(const std::string& message_english)
         : is_english(true),
-          message_raw(message_english)
+          message_raw(replace_eol(message_english, "\n"))
 {}
 
 Message::Message(const std::string& message_english,
                  const std::string& message_translated)
         : is_english(false),
-          message_raw(message_translated),
-          message_previous_english(message_english)
+          message_raw(replace_eol(message_translated, "\n")),
+          message_previous_english(replace_eol(message_english, "\n"))
 {}
 
 bool Message::IsFuzzy() const
