@@ -23,6 +23,12 @@ SdlRenderer::SdlRenderer(const int x, const int y, const int width,
 {
 	auto flags = sdl_window_flags | OpenGlDriverCrashWorkaround(render_driver);
 
+#ifdef MACOSX
+	if (!SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "srgb")) {
+		LOG_WARNING("SDL: Error setting sRGB color space");
+	}
+#endif
+
 	window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
 
 	if (!window && (flags & SDL_WINDOW_OPENGL)) {
