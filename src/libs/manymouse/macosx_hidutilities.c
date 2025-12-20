@@ -6,6 +6,8 @@
  * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file written by Ryan C. Gordon.
+ *  Altered by the DOSBox Staging team to:
+ *   - fix non UTF-8 characters GCC compiler warning
  */
 
 #include "manymouse.h"
@@ -949,7 +951,7 @@ static unsigned long HIDCreateOpenDeviceInterface (UInt32 hidDevice, pRecDevice 
 			plugInResult = (*ppPlugInInterface)->QueryInterface (ppPlugInInterface,
 														CFUUIDGetUUIDBytes (kIOHIDDeviceInterfaceID), (void *) &(pDevice->interface));
 			if (S_OK != plugInResult)
-				HIDReportErrorNum ("CouldnÕt query HID class device interface from plugInInterface", plugInResult);
+				HIDReportErrorNum ("Couldn't query HID class device interface from plugInInterface", plugInResult);
 			IODestroyPlugInInterface (ppPlugInInterface); // replace (*ppPlugInInterface)->Release (ppPlugInInterface)
 		}
 		else
@@ -1434,7 +1436,7 @@ static unsigned long  HIDQueueDevice (pRecDevice pDevice)
 			HIDREPORTERRORNUM ("HIDQueueDevice - Failed to stop queue.", result);
 
 		// queue element
-  //¥ pElement = HIDGetFirstDeviceElement (pDevice, kHIDElementTypeIO);
+		// pElement = HIDGetFirstDeviceElement (pDevice, kHIDElementTypeIO);
 		pElement = HIDGetFirstDeviceElement (pDevice, kHIDElementTypeInput | kHIDElementTypeFeature);
 
 		while (pElement)
@@ -1445,7 +1447,7 @@ static unsigned long  HIDQueueDevice (pRecDevice pDevice)
 				if (kIOReturnSuccess != result)
 					HIDREPORTERRORNUM ("HIDQueueDevice - Failed to add element to queue.", result);
 			}
-			//¥ pElement = HIDGetNextDeviceElement (pElement, kHIDElementTypeIO);
+			// pElement = HIDGetNextDeviceElement (pElement, kHIDElementTypeIO);
 			pElement = HIDGetNextDeviceElement (pElement, kHIDElementTypeInput | kHIDElementTypeFeature);
 		}
 
