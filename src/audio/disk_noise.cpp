@@ -573,7 +573,7 @@ static void init_disknoise_config_settings(SectionProp& secprop)
 	        "  on:            Play both hard disk seek and spin noises.\n"
 	        "\n"
 			"Note: You can customise the disk noise volume by changing the volume of the\n"
-      		"`DISKNOISE` mixer channel.");
+      		"      `DISKNOISE` mixer channel.");
 
 	str_prop = secprop.AddString("floppy_disk_noise", Always, "off");
 	str_prop->SetValues({"off", "seek-only", "on"});
@@ -587,7 +587,7 @@ static void init_disknoise_config_settings(SectionProp& secprop)
 	        "  on:            Play both floppy disk seek and spin noises.\n"
 	        "\n"
 			"Note: You can customise the disk noise volume by changing the volume of the\n"
-      		"`DISKNOISE` mixer channel.");
+      		"      `DISKNOISE` mixer channel.");
 }
 
 void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
