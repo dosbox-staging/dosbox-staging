@@ -96,8 +96,6 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 
 DiskNoises::~DiskNoises()
 {
-	MIXER_LockMixerThread();
-
 	floppy_noise.reset();
 	hdd_noise.reset();
 	active_devices.clear();
@@ -107,8 +105,6 @@ DiskNoises::~DiskNoises()
 		MIXER_DeregisterChannel(mix_channel);
 		mix_channel.reset();
 	}
-
-	MIXER_UnlockMixerThread();
 }
 
 AudioFrame DiskNoiseDevice::GetNextFrame()
