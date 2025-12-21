@@ -43,11 +43,23 @@ DiskNoises::DiskNoises(const DiskNoiseMode floppy_disk_noise_mode,
 	const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
 	                                      this,
 	                                      std::placeholders::_1);
+
 	mix_channel = MIXER_AddChannel(mixer_callback,
 	                               DiskNoiseSampleRateInHz,
 	                               ChannelName::DiskNoise,
 	                               {ChannelFeature::Stereo});
-	mix_channel->Enable(true);
+
+	// We don't have any samples loaded at this point when the callback gets
+	// initialised. This means we'd get all sorts of weird race conditions
+	// if we'd start the audio mixer callback at this point.
+	//
+	// The easy solution while keeping the current design is to only start the
+	// callback after the samples have been loaded.
+	//
+	// The mixer callback won't run if the channel is in disabled state.
+	//
+	mix_channel->Enable(false);
+
 	float vol_gain = percentage_to_gain(100);
 	mix_channel->SetAppVolume({vol_gain, vol_gain});
 
@@ -96,15 +108,25 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 
 DiskNoises::~DiskNoises()
 {
-	floppy_noise.reset();
-	hdd_noise.reset();
-	active_devices.clear();
+	MIXER_LockMixerThread();
 
+	// Stop playback
 	if (mix_channel) {
 		mix_channel->Enable(false);
-		MIXER_DeregisterChannel(mix_channel);
-		mix_channel.reset();
 	}
+
+	// Only free the duplicate shared pointers
+	active_devices = {};
+
+	// This will actually destroy the two DiskNoiseDevice objects, and their
+	// destructors will unregister the IO callbacks
+	floppy_noise = {};
+	hdd_noise = {};
+
+	// Deregister the mixer channel, after which it's cleaned up
+	MIXER_DeregisterChannel(mix_channel);
+
+	MIXER_UnlockMixerThread();
 }
 
 AudioFrame DiskNoiseDevice::GetNextFrame()
@@ -414,6 +436,18 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	};
 
 	DriveManager::RegisterIoCallback(io_callback, disk_type);
+
+	// TODO The idea is to start the callback after all floppy and HDD samples
+	// have been loaded. This is actually not correct because we have two
+	// DiskNoiseDevices, and we must only start the callback once the second
+	// one has been initialised and thus all possible samples have been
+	// loaded.
+	//
+	// So this whole thing needs a redesign.
+	//
+	auto mixer_channel = MIXER_FindChannel(ChannelName::DiskNoise);
+	assert(mixer_channel);
+	mixer_channel->Enable(true);
 }
 
 // Destructor unregisters the callbacks
