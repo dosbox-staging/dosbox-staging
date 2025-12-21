@@ -39,6 +39,8 @@ DiskNoises::DiskNoises(const DiskNoiseMode floppy_disk_noise_mode,
 		return;
 	}
 
+	LOG_ERR("************ DiskNoises INIT");
+
 	MIXER_LockMixerThread();
 	const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
 	                                      this,
@@ -108,6 +110,7 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 
 DiskNoises::~DiskNoises()
 {
+	LOG_ERR("************ DiskNoises DESTRUCT");
 	MIXER_LockMixerThread();
 
 	// Stop playback
@@ -394,6 +397,8 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
         : disk_noise_mode(disk_noise_mode),
           disk_type(disk_type)
 {
+	LOG_ERR("************ DiskNoiseDevice INIT");
+
 	if (disk_noise_mode == DiskNoiseMode::Off) {
 		LOG_INFO("DISKNOISE: Disk noise emulation disabled");
 		return;
@@ -453,6 +458,7 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 // Destructor unregisters the callbacks
 DiskNoiseDevice::~DiskNoiseDevice()
 {
+	LOG_ERR("************ DiskNoiseDevice DESTRUCT");
 	DriveManager::UnregisterIoCallback(disk_type);
 }
 
