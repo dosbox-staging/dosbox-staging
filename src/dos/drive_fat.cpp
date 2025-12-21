@@ -140,7 +140,7 @@ bool fatFile::Read(uint8_t * data, uint16_t *size) {
 bool fatFile::Write(uint8_t * data, uint16_t *size) {
 	// check if file opened in read-only mode
 	uint8_t lastflags = this->flags & 0xf;
-	if (lastflags == OPEN_READ) {
+	if (lastflags == OPEN_READ || lastflags == OPEN_READ_NO_MOD) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -278,7 +278,8 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 
 void fatFile::Close()
 {
-	if ((flags & 0xf) != OPEN_READ && !IsOnReadOnlyMedium()) {
+	if ((flags & 0xf) != OPEN_READ && (flags & 0xf) != OPEN_READ_NO_MOD &&
+	    !IsOnReadOnlyMedium()) {
 		if (flush_time_on_close == FlushTimeOnClose::ManuallySet || set_archive_on_close) {
 			direntry tmpentry;
 			myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
@@ -1139,7 +1140,8 @@ std::unique_ptr<DOS_File> fatDrive::FileOpen(const char* name, uint8_t flags)
 
 	const FatAttributeFlags entry_attributes = fileEntry.attrib;
 	const bool is_readonly                   = entry_attributes.read_only;
-	bool open_for_readonly                   = ((flags & 0xf) == OPEN_READ);
+	bool open_for_readonly                   = ((flags & 0xf) == OPEN_READ ||
+		                                        (flags & 0xf) == OPEN_READ_NO_MOD);
 	if (is_readonly && !open_for_readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return nullptr;
