@@ -56,8 +56,9 @@ else()
   )
 
   # GCC 12 (still used in our CI workflow) complains about unrecognized
-  # command line options; after switching to a newer release, enable the
-  # following warning flags:
+  # command line options, so we'll enable these conditionally for the GCC 13+
+  # and Clang builds only for now.
+  #
   if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13)
        OR
