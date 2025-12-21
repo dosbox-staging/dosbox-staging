@@ -68,6 +68,7 @@ private:
 
 	void VerifyMessage(const std::string& message_key);
 	void VerifyFormatString(const std::string& message_key);
+	void VerifyNoLeftoverHelperLines(const std::string& message_key);
 
 	void VerifyFormatStringAgainst(const std::string& message_key,
 	                               const Message& message_english);
@@ -311,6 +312,53 @@ void Message::VerifyFormatString(const std::string& message_key)
 	}
 }
 
+void Message::VerifyNoLeftoverHelperLines(const std::string& message_key)
+{
+	if (!is_ok || is_verified) {
+		return;
+	}
+
+	auto get_helper_line = [](const std::string& segment) {
+		assert(!segment.empty());
+
+		constexpr size_t LineLength = 80;
+
+		std::string helper_line = {};
+		helper_line.reserve(LineLength);
+
+		while (helper_line.size() < LineLength) {
+			helper_line += segment;
+		}
+
+		return helper_line.substr(0, LineLength);
+	};
+
+	static const std::vector<std::string> HelperLines = {
+		get_helper_line("0123456789"),
+		get_helper_line("1234567890"),
+		get_helper_line("-")
+	};
+
+	for (const auto& helper_line : HelperLines) {
+
+		if (message_raw.find(helper_line) == std::string::npos) {
+			// No given leftover helper line in the translation
+			continue;
+		}
+
+		if (message_previous_english.find(helper_line) != std::string::npos) {
+			// Same string is present in the English message
+			continue;
+		}
+
+		LOG_WARNING("%s contains a leftover helper line",
+		            GetLogStart(message_key).c_str());
+		MarkInvalid();
+
+		break;
+	}
+}
+
 void Message::VerifyFormatStringAgainst(const std::string& message_key,
                                         const Message& message_english)
 {
@@ -411,6 +459,7 @@ void Message::VerifyTranslated(const std::string& message_key,
 	}
 
 	VerifyFormatString(message_key);
+	VerifyNoLeftoverHelperLines(message_key);
 	if (message_english.IsValid()) {
 		VerifyTranslationUpToDate(message_english);
 		VerifyFormatStringAgainst(message_key, message_english);
