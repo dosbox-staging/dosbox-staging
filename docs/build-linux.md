@@ -60,16 +60,19 @@ These are generic, distro-independent building instructions.
 
 ### Install the dependencies (development packages are needed, too)
 
-- SDL 2.x
-- SDL2_net
-- IIR
-- OpusFile
-- MT32Emu
-- FluidSynth
 - ALSA
-- libpng
-- OpenGL headers
+- FluidSynth
 - GTest
+- IIR
+- libpng
+- MT32Emu
+- OpenGL headers
+- OpusFile
+- SDL 2.x
+- SDL2_image
+- SDL2_net
+- SpeexDSP
+- zlib-nG
 
 ### Clone DOSBox Staging
 
@@ -101,7 +104,8 @@ You can now launch DOSBox Staging with the command:
 
 ```bash
 sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
-             autoconf bison libtool libgl1-mesa-dev libsdl2-dev
+             autoconf autoconf-archive automake bison libtool libgl1-mesa-dev \
+             libsdl2-dev
 ```
 
 ### Install the vcpkg tool
