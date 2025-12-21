@@ -404,10 +404,6 @@ bool localDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 		return false;
 	}
 
-	if (IsReadOnly()) {
-		attr->read_only = true;
-	}
-
 	return true;
 }
 
