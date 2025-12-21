@@ -3,19 +3,17 @@
 # Before editing read the translation manual:
 # https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/TRANSLATING.md
 #
+
 msgid ""
 msgstr ""
 "Project-Id-Version: dosbox-staging\n"
 "Report-Msgid-Bugs-To: https://github.com/dosbox-staging/dosbox-staging/issues\n"
-"POT-Creation-Date: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
 "Language: nl\n"
-"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.8\n"
+"MIME-Version: 1.0\n"
+"X-Generator: DOSBox Staging 0.83.0-alpha\n"
+
 
 #. Do not translate this, set it according to the instruction!
 #: #METADATA
@@ -26,6 +24,7 @@ msgid ""
 "Writing script used in this language, can be one of:\n"
 "Latin, Arabic, Armenian, Cherokee, Cyrillic, Georgian, Greek, Hebrew"
 msgstr "Latin"
+
 
 #: src/main.cpp:100
 #, c-format, no-wrap
@@ -2522,7 +2521,7 @@ msgctxt "KEYBOARD_MOD_ADJECTIVE_RIGHT"
 msgid "Right"
 msgstr "Rechts"
 
-#: src/gui/shader_manager.cpp:328
+#: src/gui/shader_manager.cpp:335
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_1"
 msgid ""
@@ -2532,7 +2531,7 @@ msgstr ""
 "List van GLSL shaders\n"
 "------------------------------"
 
-#: src/gui/shader_manager.cpp:331
+#: src/gui/shader_manager.cpp:338
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_2"
 msgid ""
@@ -2542,19 +2541,19 @@ msgstr ""
 "De bovenstaande shaders kunnen gebruikt worden in de 'shader'\n"
 "configuratie-instelling, zonder pad of .glsl extensie."
 
-#: src/gui/shader_manager.cpp:335
+#: src/gui/shader_manager.cpp:342
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NOT_EXISTS"
 msgid "Path '%s' does not exist."
 msgstr "Pad '%s' bestaat niet."
 
-#: src/gui/shader_manager.cpp:336
+#: src/gui/shader_manager.cpp:343
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NO_SHADERS"
 msgid "Path '%s' has no shaders."
 msgstr "Pad '%s' heeft geen shaders."
 
-#: src/gui/shader_manager.cpp:337
+#: src/gui/shader_manager.cpp:344
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_LIST"
 msgid "Path '%s' has:"
@@ -2640,9 +2639,7 @@ msgstr ""
 #, c-format, no-wrap
 msgctxt "CONFIG_FULLSCREEN_MODE"
 msgid "Set fullscreen mode ('standard' by default). Possible values:\n"
-msgstr ""
-"Stel de volledige schermmodus in (standaard 'standard'). Mogelijke waarden:\n"
-"1234567890123456789012345678901234567890\n"
+msgstr "Stel de volledige schermmodus in (standaard 'standard'). Mogelijke waarden:\n"
 
 #: src/config/setup.cpp:281
 #, c-format, no-wrap
@@ -2707,8 +2704,7 @@ msgstr ""
 "             instellingen (zoals of beeldverhoudingscorrectie is ingeschakeld).\n"
 "\n"
 "  small, medium, large (s, m, l):\n"
-"             Stel de grootte van het venster in op ten opzichte van het\n"
-"             bureaublad.\n"
+"             Stel de grootte van het venster in ten opzichte van het bureaublad.\n"
 "\n"
 "  WxH:       Geef de venstergrootte op in WxH-formaat in logische eenheden\n"
 "             (bijv. 1024x768)."
@@ -2725,7 +2721,6 @@ msgid ""
 "  X,Y:       Set window position in X,Y format in logical units (e.g., 250,100).\n"
 "             0,0 is the top-left corner of the screen."
 msgstr ""
-"12345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
 "Stel de beginpositie van het venster in voor de venstermodus (standaard 'auto').\n"
 "Mogelijke waarden:\n"
 "  auto:      Laat de windowmanager de positie bepalen (standaard).\n"
@@ -3354,7 +3349,6 @@ msgid ""
 "      rate is a hack that only works acceptably with a small subset of all DOS\n"
 "      games (typically mid to late 1990s games)."
 msgstr ""
-"12345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
 "Pas de framesnelheid van de geëmuleerde videomodus aan ('default' standaard).\n"
 "Mogelijke waarden:\n"
 "\n"
@@ -4034,7 +4028,7 @@ msgstr ""
 "  - Als u een geavanceerde scaler hebt gebruikt, overweeg dan een van de\n"
 "    [color=light-green]'shader'[reset] opties."
 
-#: src/gui/render/render.cpp:1542
+#: src/gui/render/render.cpp:1534
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_RENAMED"
 msgid ""
@@ -4044,7 +4038,7 @@ msgstr ""
 "De ingebouwde shader [color=white]'%s'[reset] is hernoemd naar [color=white]'%s'[reset];\n"
 "gebruik [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:1546
+#: src/gui/render/render.cpp:1538
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_FALLBACK"
 msgid ""
@@ -4054,7 +4048,7 @@ msgstr ""
 "Fout bij het instellen van shader [color=white]'%s'[reset],\n"
 "terugvallen op [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:1550
+#: src/gui/render/render.cpp:1542
 #, c-format, no-wrap
 msgctxt "RENDER_DEFAULT_SHADER_PRESET_FALLBACK"
 msgid ""
@@ -4117,7 +4111,6 @@ msgstr ""
 "Tijdperk van CGA-composietmonitor om te emuleren ('auto' standaard).\n"
 "Mogelijke waarden:\n"
 "\n"
-"12345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
 "  auto:  PCjr gebruikt 'nieuw' en CGA/Tandy gebruiken 'oud' (standaard)\n"
 "  old:   Emuleer een vroeg NTSC IBM CGA-composietmonitormodel.\n"
 "  new:   Emuleer een laat NTSC IBM CGA-composietmonitormodel."
@@ -5312,7 +5305,6 @@ msgstr ""
 "  - Voer `MIXER /LISTMIDI` uit om de lijst met beschikbare modellen te zien.\n"
 "\n"
 "  - Dit is *GEEN* General MIDI-compatibel MIDI-apparaat; gebruik het alleen als\n"
-"12345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
 "    het spel Roland MT-32 MIDI ondersteunt (wat ouder is dan General MIDI).\n"
 
 #: src/config/setup.cpp:265
@@ -5824,43 +5816,43 @@ msgstr ""
 "ongewijzigde MIDI-uitvoer van een programma wilt vastleggen, b.v. bij het werken\n"
 "met muziektoepassingen of bij het debuggen van MIDI-problemen."
 
-#: src/midi/midi.cpp:927
+#: src/midi/midi.cpp:931
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_ERROR_OPENING_DEVICE"
 msgid "Error opening MIDI device [color=white]'%s'[reset]; using [color=white]'%s'[reset]"
 msgstr "Fout bij het openen van MIDI-apparaat [color=white]'%s'[reset]; met behulp van [color=white]'%s'[reset]"
 
-#: src/midi/midi.cpp:931
+#: src/midi/midi.cpp:935
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_ERROR_OPENING_DEVICE_NO_MIDI"
 msgid "Error opening MIDI device [color=white]'%s'[reset]; using 'none' (disabling MIDI output)"
 msgstr "Fout bij het openen van MIDI-apparaat [color=white]'%s'[reset]; 'none' gebruiken (MIDI-uitvoer uitschakelen)"
 
-#: src/midi/midi.cpp:935
+#: src/midi/midi.cpp:939
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_LIST_NOT_SUPPORTED"
 msgid "Listing not supported"
 msgstr "Lijst wordt niet ondersteund"
 
-#: src/midi/midi.cpp:936
+#: src/midi/midi.cpp:940
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_NOT_CONFIGURED"
 msgid "Device not configured"
 msgstr "Apparaat niet geconfigureerd"
 
-#: src/midi/midi.cpp:937
+#: src/midi/midi.cpp:941
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_NO_PORTS"
 msgid "No available ports"
 msgstr "Geen beschikbare poorten"
 
-#: src/midi/midi.cpp:938
+#: src/midi/midi.cpp:942
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_NO_MODEL_ACTIVE"
 msgid "No model is currently active"
 msgstr "Er is momenteel geen model actief"
 
-#: src/midi/midi.cpp:939
+#: src/midi/midi.cpp:943
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_NO_MODELS"
 msgid "No available models"
@@ -6232,7 +6224,7 @@ msgid ""
 "  <custom>:  Custom filter definition; see 'sb_filter' for details."
 msgstr ""
 "Filter voor de Sound Blaster CMS-uitvoer (standaard 'on'). Mogelijke waarden:\n"
-"12345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
+"\n"
 "  on:        Filter de uitvoer (standaard).\n"
 "  off:       Filter de uitvoer niet.\n"
 "  <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details."
@@ -6826,8 +6818,8 @@ msgid ""
 "Swap the 3rd and the 4th axis ('off' by default). Can be useful for certain\n"
 "joysticks."
 msgstr ""
-"12345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
-"Verwissel de 3e en de 4e as (standaard 'off'). Kan handig zijn voor bepaalde joysticks."
+"Verwissel de 3e en de 4e as (standaard 'off'). Kan handig zijn voor bepaalde\n"
+"joysticks."
 
 #: src/config/setup.cpp:265
 #, c-format, no-wrap
@@ -7321,10 +7313,10 @@ msgid ""
 "Forward one or more UDP ports from the host into the DOS guest (unset by\n"
 "default). The format is the same as for TCP port forwards."
 msgstr ""
-"Een of meer UDP-poorten van de host doorsturen naar de DOS-gast (standaard niet\r\n"
+"Een of meer UDP-poorten van de host doorsturen naar de DOS-gast (standaard niet\n"
 "ingesteld). Het formaat is hetzelfde als voor TCP poorten doorsturen."
 
-#: src/dosbox.cpp:1086
+#: src/dosbox.cpp:1083
 #, c-format, no-wrap
 msgctxt "AUTOEXEC_CONFIGFILE_HELP"
 msgid ""
@@ -7335,7 +7327,7 @@ msgstr ""
 "DOS-opdracht.\n"
 "Belangrijk: De sectie [autoexec] moet de laatste sectie in de config zijn!"
 
-#: src/dosbox.cpp:1090
+#: src/dosbox.cpp:1087
 #, c-format, no-wrap
 msgctxt "CONFIGFILE_INTRO"
 msgid ""
@@ -10132,7 +10124,7 @@ msgctxt "PROGRAM_RESCAN_SUCCESS"
 msgid "Drive re-scanned.\n"
 msgstr "Schijf opnieuw gescand.\n"
 
-#: src/dos/programs/serial.cpp:178
+#: src/dos/programs/serial.cpp:164
 #, c-format, no-wrap
 msgctxt "PROGRAM_SERIAL_HELP_LONG"
 msgid ""
@@ -10186,25 +10178,25 @@ msgstr ""
 " [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0             : Gebruik een echte port op Linux\n"
 " [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse\n"
 
-#: src/dos/programs/serial.cpp:203
+#: src/dos/programs/serial.cpp:189
 #, c-format, no-wrap
 msgctxt "PROGRAM_SERIAL_SHOW_PORT"
 msgid "COM%d: %s %s\n"
 msgstr "COM%d: %s %s\n"
 
-#: src/dos/programs/serial.cpp:204
+#: src/dos/programs/serial.cpp:190
 #, c-format, no-wrap
 msgctxt "PROGRAM_SERIAL_BAD_PORT"
 msgid "Must specify a numeric port value between 1 and %d, inclusive.\n"
 msgstr "Moet een numerieke poortwaarde specificeren tussen 1 en %d, inclusief.\n"
 
-#: src/dos/programs/serial.cpp:206
+#: src/dos/programs/serial.cpp:192
 #, c-format, no-wrap
 msgctxt "PROGRAM_SERIAL_BAD_TYPE"
 msgid "Type must be one of the following:\n"
 msgstr "Type moet een van de volgende zijn:\n"
 
-#: src/dos/programs/serial.cpp:207
+#: src/dos/programs/serial.cpp:193
 #, c-format, no-wrap
 msgctxt "PROGRAM_SERIAL_INDENTED_LIST"
 msgid "  %s\n"
@@ -10346,13 +10338,13 @@ msgctxt "PROGRAM_SETVER_BATCH_BY_FILE_PATH"
 msgid "rules for matching by file name with path"
 msgstr "regels voor matchen op bestandsnaam met pad"
 
-#: src/dos/programs/showpic.cpp:248
+#: src/dos/programs/showpic.cpp:255
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_HELP"
 msgid "Display an image file.\n"
 msgstr "Een afbeeldingsbestand weergeven.\n"
 
-#: src/dos/programs/showpic.cpp:250
+#: src/dos/programs/showpic.cpp:257
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_HELP_LONG"
 msgid ""
@@ -10378,7 +10370,7 @@ msgstr ""
 "\n"
 "Parameters:\n"
 "  [color=light-cyan]BESTAND[reset] naam van een BMP-, GIF-, IFF/LBM-, PCX- of PNG-afbeeldingsbestand om\n"
-"           weer te geven\r\n"
+"           weer te geven\n"
 "\n"
 "Opmerkingen:\n"
 "  - Een S3 SVGA-beeldschermadapter is vereist.\n"
@@ -10392,25 +10384,25 @@ msgstr ""
 "  [color=light-green]toonafbeelding[reset] [color=light-cyan]image1.png[reset]\n"
 "  [color=light-green]toonafbeelding[reset] [color=light-cyan]d:\\pics\\gods.iff[reset]\n"
 
-#: src/dos/programs/showpic.cpp:268
+#: src/dos/programs/showpic.cpp:275
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_SVGA_S3_REQUIRED"
 msgid "This program requires an S3 SVGA adapter.\n"
 msgstr "Voor dit programma is een S3 SVGA-adapter vereist.\n"
 
-#: src/dos/programs/showpic.cpp:271
+#: src/dos/programs/showpic.cpp:278
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_LOAD_ERROR"
 msgid "Error loading image '%s'\n"
 msgstr "Fout bij het laden van afbeelding '%s'\n"
 
-#: src/dos/programs/showpic.cpp:273
+#: src/dos/programs/showpic.cpp:280
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_NOT_PALETTED_IMAGE"
 msgid "Only paletted images are supported."
 msgstr "Alleen afbeeldingen met een kleurenpalet worden ondersteund."
 
-#: src/dos/programs/showpic.cpp:276
+#: src/dos/programs/showpic.cpp:283
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_IMAGE_TOO_LARGE"
 msgid "Image dimensions are too large."
@@ -12464,3 +12456,4 @@ msgstr "Diverse opdrachten"
 msgctxt "HELP_UTIL_CATEGORY_UNKNOWN"
 msgid "Unknown Command"
 msgstr "Onbekende opdracht"
+
