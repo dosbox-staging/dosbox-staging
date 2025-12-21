@@ -39,32 +39,34 @@ DiskNoises::DiskNoises(const DiskNoiseMode floppy_disk_noise_mode,
 		return;
 	}
 
-	MIXER_LockMixerThread();
-	const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
-	                                      this,
-	                                      std::placeholders::_1);
-	mix_channel = MIXER_AddChannel(mixer_callback,
-	                               DiskNoiseSampleRateInHz,
-	                               ChannelName::DiskNoise,
-	                               {ChannelFeature::Stereo});
-	mix_channel->Enable(true);
-	float vol_gain = percentage_to_gain(100);
-	mix_channel->SetAppVolume({vol_gain, vol_gain});
-
+	// Load samples
 	hdd_noise = std::make_shared<DiskNoiseDevice>(DiskType::HardDisk,
-	                                              hard_disk_noise_mode,
-	                                              spin_up,
-	                                              spin,
-	                                              hdd_seek_samples);
-	active_devices.emplace_back(hdd_noise);
+                                                  hard_disk_noise_mode,
+                                                  spin_up,
+                                                  spin,
+                                                  hdd_seek_samples);
+    active_devices.emplace_back(hdd_noise);
 
-	floppy_noise = std::make_shared<DiskNoiseDevice>(DiskType::Floppy,
-	                                                 floppy_disk_noise_mode,
-	                                                 floppy_spin_up,
-	                                                 floppy_spin,
-	                                                 floppy_seek_samples);
-	active_devices.emplace_back(floppy_noise);
-	MIXER_UnlockMixerThread();
+    floppy_noise = std::make_shared<DiskNoiseDevice>(DiskType::Floppy,
+                                                     floppy_disk_noise_mode,
+                                                     floppy_spin_up,
+                                                     floppy_spin,
+                                                     floppy_seek_samples);
+    active_devices.emplace_back(floppy_noise);
+
+    // Start audio thread
+    MIXER_LockMixerThread();
+    const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
+                                          this,
+                                          std::placeholders::_1);
+    mix_channel = MIXER_AddChannel(mixer_callback,
+                                   DiskNoiseSampleRateInHz,
+                                   ChannelName::DiskNoise,
+                                   {ChannelFeature::Stereo});
+    mix_channel->Enable(true);
+    MIXER_UnlockMixerThread();
+    float vol_gain = percentage_to_gain(100);
+    mix_channel->SetAppVolume({vol_gain, vol_gain});
 }
 
 DiskNoises* DiskNoises::GetInstance()
@@ -77,6 +79,11 @@ DiskNoises* DiskNoises::GetInstance()
 
 void DiskNoises::AudioCallback(const int num_frames_requested)
 {
+	// Check if callback runs before mix_channel is assigned.
+	if (!mix_channel) {
+        return;
+    }
+
 	// stereo interleaved buffer
 	static std::vector<AudioFrame> out = {};
 	out.clear();
@@ -91,20 +98,22 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 		out.emplace_back(mixed_sample);
 	}
 
-	disk_noises->mix_channel->AddAudioFrames(out);
+	mix_channel->AddAudioFrames(out);
 }
 
 DiskNoises::~DiskNoises()
 {
-	floppy_noise.reset();
-	hdd_noise.reset();
-	active_devices.clear();
-
+	// Stop audio thread and unregister channel
 	if (mix_channel) {
-		mix_channel->Enable(false);
-		MIXER_DeregisterChannel(mix_channel);
-		mix_channel.reset();
-	}
+        mix_channel->Enable(false);
+        MIXER_DeregisterChannel(mix_channel);
+        mix_channel.reset();
+    }
+
+	// Destroy devices and associated samples
+    floppy_noise.reset();
+    hdd_noise.reset();
+    active_devices.clear();
 }
 
 AudioFrame DiskNoiseDevice::GetNextFrame()
@@ -424,6 +433,9 @@ DiskNoiseDevice::~DiskNoiseDevice()
 
 void DiskNoiseDevice::ActivateSpin()
 {
+	// Lock mutex to guard against GetNextFrame
+	std::lock_guard<std::mutex> lock(mutex);
+
 	if (disk_noise_mode == DiskNoiseMode::Off) {
 		return;
 	}
@@ -442,7 +454,9 @@ void DiskNoiseDevice::ActivateSpin()
 
 void DiskNoiseDevice::PlaySeek()
 {
+	// Lock mutex to guard against GetNextFrame
 	std::lock_guard<std::mutex> lock(mutex);
+
 	if (disk_noise_mode == DiskNoiseMode::Off) {
 		return;
 	}
@@ -546,9 +560,9 @@ void DISKNOISE_Init()
 
 void DISKNOISE_Destroy()
 {
-	MIXER_LockMixerThread();
+    MIXER_LockMixerThread();
 	disk_noises.reset();
-	MIXER_UnlockMixerThread();
+    MIXER_UnlockMixerThread();
 }
 
 static void init_disknoise_config_settings(SectionProp& secprop)
