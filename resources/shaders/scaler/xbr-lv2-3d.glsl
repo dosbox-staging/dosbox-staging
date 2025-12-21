@@ -3,8 +3,11 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2011-2015 Hyllian <sergiogdb@gmail.com>
 // SPDX-License-Identifier: MIT
-
+//
 // Hyllian's xBR-lv2 Shader
+//
+// Note from Hyllian:
+//   Incorporates some of the ideas from SABR shader. Thanks to Joshua Street.
 
 #pragma use_nearest_texture_filter
 #pragma force_single_scan
@@ -13,9 +16,12 @@
 #pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
 #pragma parameter XBR_EQ_THRESHOLD "Eq Threshold" 15.0 0.0 50.0 1.0
 #pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
-#pragma parameter XBR_RES "Internal Res Multiplier" 2.0 1.0 8.0 1.0
+#pragma parameter XBR_RES "Internal Res Multiplier" 1.0 1.0 8.0 1.0
 #pragma parameter XBR_SCALE "xBR Scale" 3.0 1.0 5.0 1.0
 #pragma parameter XBR_CORNER_TYPE "Corner Calculation" 3.0 1.0 4.0 1.0
+
+#define mul(a,b) (b*a)
+#define saturate(c) clamp(c, 0.0, 1.0)
 
 #if defined(VERTEX)
 
@@ -28,24 +34,20 @@ uniform vec2 rubyOutputSize;
 uniform vec2 rubyTextureSize;
 uniform vec2 rubyInputSize;
 
-uniform float XBR_RES;
+#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize)
 
-// compatibility #defines
-#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
-#define OutSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
+uniform float XBR_RES;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	v_texCoord.xy = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 *
-	                rubyInputSize / rubyTextureSize;
-
-	vec2 ps  = XBR_RES / SourceSize.xy;
+	v_texCoord.xy = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize / rubyTextureSize;
+	vec2 ps = XBR_RES/SourceSize.xy;
 	float dx = ps.x;
 	float dy = ps.y;
 
-	t1 = vec4(dx, 0, 0, dy); // F H
+	t1 = vec4( dx, 0, 0, dy); // F H
 }
 
 #elif defined(FRAGMENT)
@@ -57,7 +59,13 @@ out vec4 FragColor;
 
 uniform vec2 rubyOutputSize;
 uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 uniform sampler2D rubyTexture;
+
+#define Source rubyTexture
+#define vTexCoord v_texCoord.xy
+
+#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
 
 uniform float XBR_Y_WEIGHT;
 uniform float XBR_EQ_THRESHOLD;
@@ -66,33 +74,24 @@ uniform float XBR_RES;
 uniform float XBR_SCALE;
 uniform float XBR_CORNER_TYPE;
 
-#define Source rubyTexture
-#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
-#define OutSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
-
-#define mul(a,b) (b*a)
-#define saturate(c) clamp(c, 0.0, 1.0)
-
-#define lv2_cf XBR_LV2_COEFFICIENT
-
-const float coef = 2.0;
-const vec3 rgbw = vec3(14.352, 28.176, 5.472);
-const vec4 eq_threshold  = vec4(15.0, 15.0, 15.0, 15.0);
+const   float coef          = 2.0;
+const   vec3  rgbw          = vec3(14.352, 28.176, 5.472);
+const   vec4  eq_threshold  = vec4(15.0, 15.0, 15.0, 15.0);
 
 vec4 delta   = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
 vec4 delta_l = vec4(0.5/XBR_SCALE, 1.0/XBR_SCALE, 0.5/XBR_SCALE, 1.0/XBR_SCALE);
 vec4 delta_u = delta_l.yxwz;
 
-const vec4 Ao = vec4( 1.0, -1.0, -1.0, 1.0 );
-const vec4 Bo = vec4( 1.0,  1.0, -1.0,-1.0 );
-const vec4 Co = vec4( 1.5,  0.5, -0.5, 0.5 );
-const vec4 Ax = vec4( 1.0, -1.0, -1.0, 1.0 );
-const vec4 Bx = vec4( 0.5,  2.0, -0.5,-2.0 );
-const vec4 Cx = vec4( 1.0,  1.0, -0.5, 0.0 );
-const vec4 Ay = vec4( 1.0, -1.0, -1.0, 1.0 );
-const vec4 By = vec4( 2.0,  0.5, -2.0,-0.5 );
-const vec4 Cy = vec4( 2.0,  0.0, -1.0, 0.5 );
-const vec4 Ci = vec4(0.25, 0.25, 0.25, 0.25);
+const  vec4 Ao = vec4( 1.0, -1.0, -1.0, 1.0 );
+const  vec4 Bo = vec4( 1.0,  1.0, -1.0,-1.0 );
+const  vec4 Co = vec4( 1.5,  0.5, -0.5, 0.5 );
+const  vec4 Ax = vec4( 1.0, -1.0, -1.0, 1.0 );
+const  vec4 Bx = vec4( 0.5,  2.0, -0.5,-2.0 );
+const  vec4 Cx = vec4( 1.0,  1.0, -0.5, 0.0 );
+const  vec4 Ay = vec4( 1.0, -1.0, -1.0, 1.0 );
+const  vec4 By = vec4( 2.0,  0.5, -2.0,-0.5 );
+const  vec4 Cy = vec4( 2.0,  0.0, -1.0, 0.5 );
+const  vec4 Ci = vec4(0.25, 0.25, 0.25, 0.25);
 
 const vec3 Y = vec3(0.2126, 0.7152, 0.0722);
 
@@ -122,23 +121,16 @@ float c_df(vec3 c1, vec3 c2)
 void main()
 {
 	bvec4 edri, edr, edr_left, edr_up, px; // px = pixel, edr = edge detection rule
-
-	bvec4 interp_restriction_lv0, interp_restriction_lv1,
-	        interp_restriction_lv2_left, interp_restriction_lv2_up,
-	        block_3d, block_3d_left, block_3d_up;
-
+	bvec4 interp_restriction_lv0, interp_restriction_lv1, interp_restriction_lv2_left, interp_restriction_lv2_up, block_3d, block_3d_left, block_3d_up;
 	vec4 fx, fx_left, fx_up; // inequations of straight lines.
 
-	vec4 delta  = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
-	vec4 deltaL = vec4(0.5/XBR_SCALE, 1.0/XBR_SCALE, 0.5/XBR_SCALE, 1.0/XBR_SCALE);
-	vec4 deltaU = deltaL.yxwz;
-
-	vec2 vTexCoord = v_texCoord.xy;
+	vec4 delta         = vec4(1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE, 1.0/XBR_SCALE);
+	vec4 deltaL        = vec4(0.5/XBR_SCALE, 1.0/XBR_SCALE, 0.5/XBR_SCALE, 1.0/XBR_SCALE);
+	vec4 deltaU        = deltaL.yxwz;
 
 	vec2 fp = fract(vTexCoord*SourceSize.xy/XBR_RES);
 
-	vec2 tex = (floor(vTexCoord * SourceSize.xy / XBR_RES) + vec2(0.5, 0.5)) *
-	           XBR_RES / SourceSize.xy;
+	vec2 tex = (floor(vTexCoord*SourceSize.xy/XBR_RES) + vec2(0.5, 0.5))*XBR_RES/SourceSize.xy;
 
 	vec2 dx = t1.xy;
 	vec2 dy = t1.zw;
@@ -217,29 +209,36 @@ void main()
 	fx_left = (Ax*fp.y+Bx*fp.x);
 	fx_up   = (Ay*fp.y+By*fp.x);
 
-	block_3d.x = ((f0.x==f1.x && f1.x==f2.x && f2.x==f3.x) && (h0.x==h1.x && h1.x==h2.x && h2.x==h3.x));
-	block_3d.y = ((f0.y==f1.y && f1.y==f2.y && f2.y==f3.y) && (h0.y==h1.y && h1.y==h2.y && h2.y==h3.y));
-	block_3d.z = ((f0.z==f1.z && f1.z==f2.z && f2.z==f3.z) && (h0.z==h1.z && h1.z==h2.z && h2.z==h3.z));
-	block_3d.w = ((f0.w==f1.w && f1.w==f2.w && f2.w==f3.w) && (h0.w==h1.w && h1.w==h2.w && h2.w==h3.w));
-
+	block_3d.x    =  ((f0.x==f1.x && f1.x==f2.x && f2.x==f3.x) && (h0.x==h1.x && h1.x==h2.x && h2.x==h3.x));
+	block_3d.y    =  ((f0.y==f1.y && f1.y==f2.y && f2.y==f3.y) && (h0.y==h1.y && h1.y==h2.y && h2.y==h3.y));
+	block_3d.z    =  ((f0.z==f1.z && f1.z==f2.z && f2.z==f3.z) && (h0.z==h1.z && h1.z==h2.z && h2.z==h3.z));
+	block_3d.w    =  ((f0.w==f1.w && f1.w==f2.w && f2.w==f3.w) && (h0.w==h1.w && h1.w==h2.w && h2.w==h3.w));
 	interp_restriction_lv1.x = interp_restriction_lv0.x = ((e.x!=f.x) && (e.x!=h.x) && block_3d.x);
 	interp_restriction_lv1.y = interp_restriction_lv0.y = ((e.y!=f.y) && (e.y!=h.y) && block_3d.y);
 	interp_restriction_lv1.z = interp_restriction_lv0.z = ((e.z!=f.z) && (e.z!=h.z) && block_3d.z);
 	interp_restriction_lv1.w = interp_restriction_lv0.w = ((e.w!=f.w) && (e.w!=h.w) && block_3d.w);
 
-	if (XBR_CORNER_TYPE == 2.0) {
-		interp_restriction_lv1 = (interp_restriction_lv0  &&  ( !eq(f,b) && !eq(h,d) || eq(e,i) && !eq(f,i4) && !eq(h,i5) || eq(e,g) || eq(e,c) ) );
+
+    if (XBR_CORNER_TYPE == 2.0) {
+		interp_restriction_lv1.x      = (interp_restriction_lv0.x  &&  ( !eq(f,b).x && !eq(h,d).x || eq(e,i).x && !eq(f,i4).x && !eq(h,i5).x || eq(e,g).x || eq(e,c).x ) );
+		interp_restriction_lv1.y      = (interp_restriction_lv0.y  &&  ( !eq(f,b).y && !eq(h,d).y || eq(e,i).y && !eq(f,i4).y && !eq(h,i5).y || eq(e,g).y || eq(e,c).y ) );
+		interp_restriction_lv1.z      = (interp_restriction_lv0.z  &&  ( !eq(f,b).z && !eq(h,d).z || eq(e,i).z && !eq(f,i4).z && !eq(h,i5).z || eq(e,g).z || eq(e,c).z ) );
+		interp_restriction_lv1.w      = (interp_restriction_lv0.w  &&  ( !eq(f,b).w && !eq(h,d).w || eq(e,i).w && !eq(f,i4).w && !eq(h,i5).w || eq(e,g).w || eq(e,c).w ) );
 
 	} else if (XBR_CORNER_TYPE == 4.0) {
 		vec4 c1 = i4.yzwx;
 		vec4 g0 = i5.wxyz;
-		interp_restriction_lv1 = (interp_restriction_lv0  &&  ( !eq(f,b) && !eq(h,d) || eq(e,i) && !eq(f,i4) && !eq(h,i5) || eq(e,g) || eq(e,c) ) && (!eq(f,f4) && !eq(f,i) || !eq(h,h5) && !eq(h,i) || !eq(h,g) || !eq(f,c) || eq(b,c1) && eq(d,g0)));
+
+		interp_restriction_lv1.x    = (interp_restriction_lv0.x  &&  ( !eq(f,b).x && !eq(h,d).x || eq(e,i).x && !eq(f,i4).x && !eq(h,i5).x || eq(e,g).x || eq(e,c).x ) && (!eq(f,f4).x && !eq(f,i).x || !eq(h,h5).x && !eq(h,i).x || !eq(h,g).x || !eq(f,c).x || eq(b,c1).x && eq(d,g0).x ));
+		interp_restriction_lv1.y    = (interp_restriction_lv0.y  &&  ( !eq(f,b).y && !eq(h,d).y || eq(e,i).y && !eq(f,i4).y && !eq(h,i5).y || eq(e,g).y || eq(e,c).y ) && (!eq(f,f4).y && !eq(f,i).y || !eq(h,h5).y && !eq(h,i).y || !eq(h,g).y || !eq(f,c).y || eq(b,c1).y && eq(d,g0).y ));
+		interp_restriction_lv1.z    = (interp_restriction_lv0.z  &&  ( !eq(f,b).z && !eq(h,d).z || eq(e,i).z && !eq(f,i4).z && !eq(h,i5).z || eq(e,g).z || eq(e,c).z ) && (!eq(f,f4).z && !eq(f,i).z || !eq(h,h5).z && !eq(h,i).z || !eq(h,g).z || !eq(f,c).z || eq(b,c1).z && eq(d,g0).z ));
+		interp_restriction_lv1.w    = (interp_restriction_lv0.w  &&  ( !eq(f,b).w && !eq(h,d).w || eq(e,i).w && !eq(f,i4).w && !eq(h,i5).w || eq(e,g).w || eq(e,c).w ) && (!eq(f,f4).w && !eq(f,i).w || !eq(h,h5).w && !eq(h,i).w || !eq(h,g).w || !eq(f,c).w || eq(b,c1).w && eq(d,g0).w ));
 
 	} else if (XBR_CORNER_TYPE == 3.0) {
-		interp_restriction_lv1.x = (interp_restriction_lv0.x  && ( !eq(f,b).x && !eq(f,c).x || !eq(h,d).x && !eq(h,g).x || eq(e,i).x && (!eq(f,f4).x && !eq(f,i4).x || !eq(h,h5).x && !eq(h,i5).x) || eq(e,g).x || eq(e,c).x) );
-		interp_restriction_lv1.y = (interp_restriction_lv0.y  && ( !eq(f,b).y && !eq(f,c).y || !eq(h,d).y && !eq(h,g).y || eq(e,i).y && (!eq(f,f4).y && !eq(f,i4).y || !eq(h,h5).y && !eq(h,i5).y) || eq(e,g).y || eq(e,c).y) );
-		interp_restriction_lv1.z = (interp_restriction_lv0.z  && ( !eq(f,b).z && !eq(f,c).z || !eq(h,d).z && !eq(h,g).z || eq(e,i).z && (!eq(f,f4).z && !eq(f,i4).z || !eq(h,h5).z && !eq(h,i5).z) || eq(e,g).z || eq(e,c).z) );
-		interp_restriction_lv1.w = (interp_restriction_lv0.w  && ( !eq(f,b).w && !eq(f,c).w || !eq(h,d).w && !eq(h,g).w || eq(e,i).w && (!eq(f,f4).w && !eq(f,i4).w || !eq(h,h5).w && !eq(h,i5).w) || eq(e,g).w || eq(e,c).w) );
+		interp_restriction_lv1.x    = (interp_restriction_lv0.x  && ( !eq(f,b).x && !eq(f,c).x || !eq(h,d).x && !eq(h,g).x || eq(e,i).x && (!eq(f,f4).x && !eq(f,i4).x || !eq(h,h5).x && !eq(h,i5).x) || eq(e,g).x || eq(e,c).x) );
+		interp_restriction_lv1.y    = (interp_restriction_lv0.y  && ( !eq(f,b).y && !eq(f,c).y || !eq(h,d).y && !eq(h,g).y || eq(e,i).y && (!eq(f,f4).y && !eq(f,i4).y || !eq(h,h5).y && !eq(h,i5).y) || eq(e,g).y || eq(e,c).y) );
+		interp_restriction_lv1.z    = (interp_restriction_lv0.z  && ( !eq(f,b).z && !eq(f,c).z || !eq(h,d).z && !eq(h,g).z || eq(e,i).z && (!eq(f,f4).z && !eq(f,i4).z || !eq(h,h5).z && !eq(h,i5).z) || eq(e,g).z || eq(e,c).z) );
+		interp_restriction_lv1.w    = (interp_restriction_lv0.w  && ( !eq(f,b).w && !eq(f,c).w || !eq(h,d).w && !eq(h,g).w || eq(e,i).w && (!eq(f,f4).w && !eq(f,i4).w || !eq(h,h5).w && !eq(h,i5).w) || eq(e,g).w || eq(e,c).w) );
 	}
 
 	interp_restriction_lv2_left.x = ((e.x!=g.x) && (d.x!=g.x));
@@ -288,9 +287,9 @@ void main()
 
 	vec4 maximos;
 	if (XBR_CORNER_TYPE == 1.0) {
-		maximos = max(max(fx30, fx60), max(fx45, fx45i));
-	} else {
 		maximos = max(max(fx30, fx60), fx45);
+	} else {
+		maximos = max(max(fx30, fx60), max(fx45, fx45i));
 	}
 
 	vec3 res1 = E;
@@ -305,5 +304,4 @@ void main()
 
 	FragColor = vec4(res, 1.0);
 }
-
 #endif
