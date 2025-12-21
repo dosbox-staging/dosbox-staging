@@ -140,9 +140,6 @@ if (OPT_SANITIZER)
   endif()
 
 elseif (OPT_THREAD_SANITIZER)
-  if (DOSBOX_PLATFORM_MACOS)
-    message(WARNING "Thread sanitizer does not work well on macOS")
-  endif()
   set(SANITIZER_FLAGS "thread")
 endif()
 
