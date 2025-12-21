@@ -145,7 +145,7 @@ endif()
 
 if (OPT_SANITIZER OR OPT_THREAD_SANITIZER)
   if (MSVC)
-    message(FATAL_ERROR "Sanitizers are only supported for CLANG and GCC compilers")
+    message(FATAL_ERROR "Sanitizers are only supported for Clang and GCC compilers")
   endif()
 
   if (DOSBOX_PLATFORM_WINDOWS)
