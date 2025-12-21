@@ -66,6 +66,8 @@ private:
 
 	std::string GetLogStart(const std::string& message_key) const;
 
+	void AutoAdjustTranslation(const Message& message_english);
+
 	void VerifyMessage(const std::string& message_key);
 	void VerifyFormatString(const std::string& message_key);
 	void VerifyNoLeftoverHelperLines(const std::string& message_key);
@@ -168,6 +170,93 @@ const std::string& Message::GetRaw() const
 	return message_raw;
 }
 
+void Message::AutoAdjustTranslation(const Message& message_english)
+{
+	// If the translation is known to be fuzzy, do not try to auto-adjust
+	// it; translator attention was already requested here
+	if (!is_ok || is_verified || is_fuzzy) {
+		return;
+	}
+
+	// If the English string is unchanged, there is nothing in the
+	// translated string that needs to be adjusted
+	if (message_previous_english == message_english.message_raw) {
+		return;
+	}
+
+	auto count_leading_newlines = [](const std::string& message) {
+		const auto position = message.find_first_not_of('\n');
+		if (position == std::string::npos) {
+			return message.size();
+		} else {
+			return position;
+		}
+	};
+
+	auto count_trailing_newlines = [](const std::string& message) {
+		const auto position = message.find_last_not_of('\n');
+		if (position == std::string::npos) {
+			return message.size();
+		} else {
+			return message.size() - position - 1;
+		}
+	};
+
+	// Count the number of leading and trailing newlines in the translated
+	// message, the current English message, and the English message
+	// which was the base for the translation (the previous English)
+
+	auto& translated               = message_raw;
+	const auto leading_translated  = count_leading_newlines(translated);
+	const auto trailing_translated = count_trailing_newlines(translated);
+
+	auto& previous               = message_previous_english;
+	const auto leading_previous  = count_leading_newlines(previous);
+	const auto trailing_previous = count_trailing_newlines(previous);
+
+	const auto& current         = message_english.message_raw;
+	const auto leading_current  = count_leading_newlines(current);
+	const auto trailing_current = count_trailing_newlines(current);
+
+	// Skip auto-adjusting if any of the strings is empty or consists only
+	// of newline characters
+	if (leading_translated == translated.size() || translated.empty() ||
+	    leading_previous == previous.size() || previous.empty() ||
+	    leading_current == current.size() || current.empty()) {
+		return;
+	}
+
+	// Safety check - do not auto-adjust the translation if the translated
+	// message has a different
+	if (leading_translated != leading_previous ||
+	    trailing_translated != trailing_previous) {
+		return;
+	}
+
+	const auto translated_stripped = translated.substr(
+	        leading_translated,
+	        translated.size() - leading_translated - trailing_translated);
+	const auto previous_stripped = previous.substr(
+	        leading_previous,
+	        previous.size() - leading_previous - trailing_previous);
+	const auto current_stripped = current.substr(
+	        leading_current,
+                current.size() - leading_current - trailing_current);
+
+	// We can only auto-adjust the translated message if the previous and
+	// current English strings only differ by the number of leading/trailing
+	// newlines
+	if (current_stripped != previous_stripped) {
+		return;
+	}
+
+	// Override the previous English string, adjust the translation
+	previous   = current;
+	translated = std::string(leading_current, '\n') +
+	             translated_stripped +
+	             std::string(trailing_current, '\n');
+}
+
 void Message::VerifyMessage(const std::string& message_key)
 {
 	if (!is_ok || is_verified) {
@@ -181,7 +270,7 @@ void Message::VerifyMessage(const std::string& message_key)
 
 		// No special characters allowed, except a newline character;
 		// please use DOSBox tags instead of ANSI escape sequences
-		LOG_WARNING("%s contains invalid character 0x%02x",
+		LOG_WARNING("LOCALE: '%s' contains invalid character 0x%02x",
 		            GetLogStart(message_key).c_str(),
 		            item);
 		MarkInvalid();
@@ -217,7 +306,7 @@ void Message::VerifyFormatString(const std::string& message_key)
 		// NOTE: If you want to skip format string checks for the given
 		//       message, put a 'MsgFlagNoFormatString' flag into
 		//       the relevant 'MSG_Add' call
-		LOG_WARNING("%s contains an incorrect format specifier: %s",
+		LOG_WARNING("LOCALE: '%s' contains an incorrect format specifier: %s",
 		            GetLogStart(message_key).c_str(),
 		            error.c_str());
 		MarkInvalid();
@@ -351,7 +440,7 @@ void Message::VerifyNoLeftoverHelperLines(const std::string& message_key)
 			continue;
 		}
 
-		LOG_WARNING("%s contains a leftover helper line",
+		LOG_WARNING("LOCALE: '%s' contains a leftover helper line",
 		            GetLogStart(message_key).c_str());
 		MarkInvalid();
 
@@ -369,7 +458,7 @@ void Message::VerifyFormatStringAgainst(const std::string& message_key,
 	// Check if the number of format specifiers match
 	if (format_specifiers.size() != message_english.format_specifiers.size()) {
 		LOG_WARNING(
-		        "%s has %d format specifier(s) "
+		        "LOCALE '%s' has %d format specifier(s) "
 		        "while English has %d specifier(s)",
 		        GetLogStart(message_key).c_str(),
 		        static_cast<int>(format_specifiers.size()),
@@ -416,7 +505,7 @@ void Message::VerifyFormatStringAgainst(const std::string& message_key,
 		    (specifier.precision != "*" && specifier_english.precision == "*")) {
 
 			LOG_WARNING(
-			        "%s has format specifier '%s' "
+			        "LOCALE: '%s' has format specifier '%s' "
 			        "incompatible with English counterpart '%s'",
 			        GetLogStart(message_key).c_str(),
 			        specifier.AsString().c_str(),
@@ -461,6 +550,7 @@ void Message::VerifyTranslated(const std::string& message_key,
 	VerifyFormatString(message_key);
 	VerifyNoLeftoverHelperLines(message_key);
 	if (message_english.IsValid()) {
+		AutoAdjustTranslation(message_english);
 		VerifyTranslationUpToDate(message_english);
 		VerifyFormatStringAgainst(message_key, message_english);
 	}
