@@ -1,4 +1,4 @@
-#version 120
+#version 330 core
 
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2015-2015 Ove Kaaven
