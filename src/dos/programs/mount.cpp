@@ -119,15 +119,28 @@ void MOUNT::Run(void) {
 		std::string str_size = "";
 		if (type=="floppy") {
 			str_size="512,1,2880,2880";/* All space free */
-			mediaid=0xF0;		/* Floppy 1.44 media */
+			mediaid = MediaId::Floppy1_44MB; /* Floppy 1.44 media */
 		} else if (type=="dir" || type == "overlay") {
 			// 512*32*32765==~500MB total size
 			// 512*32*16000==~250MB total free size
 			str_size="512,32,32765,16000";
-			mediaid=0xF8;		/* Hard Disk */
-		} else if (type=="cdrom") {
-			str_size="2048,1,65535,0";
-			mediaid=0xF8;		/* Hard Disk */
+			mediaid = MediaId::HardDisk; /* Hard Disk */
+
+			// If drive mounted to A or B, set mediaid to floppy
+			// This is preferable to using type because floppies can
+			// be auto-mounted as type "dir"
+			std::string command_arg;
+			cmd->FindCommand(1, command_arg);
+			const unsigned char first_char = static_cast<unsigned char>(
+			        command_arg[0]);
+			const int i_drive = std::toupper(first_char);
+			if (i_drive == 'A' || i_drive == 'B') {
+				mediaid = MediaId::Floppy1_44MB;
+			}
+
+		} else if (type == "cdrom") {
+			str_size = "2048,1,65535,0";
+			mediaid  = MediaId::HardDisk; /* Hard Disk */
 		} else {
 			WriteOut(MSG_Get("PROGAM_MOUNT_ILL_TYPE"), type.c_str());
 			return;
