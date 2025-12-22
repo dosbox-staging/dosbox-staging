@@ -300,15 +300,21 @@ void IMGMOUNT::Run(void)
 					        "PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
 					return;
 				}
+				if (Drives.at(dummy)->GetType() !=
+				    DosDriveType::Local) {
+					WriteOut(MSG_Get(
+					        "PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
+					return;
+				}
 
-				temp_line = Drives.at(dummy)->MapDosToHostFilename(
-				        fullname);
-
-				if (temp_line.empty()) {
+				const auto ldp = std::dynamic_pointer_cast<localDrive>(
+				        Drives.at(dummy));
+				if (ldp == nullptr) {
 					WriteOut(MSG_Get(
 					        "PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
 					return;
 				}
+				temp_line = ldp->MapDosToHostFilename(fullname);
 
 				if (!path_exists(temp_line)) {
 					if (add_wildcard_paths(temp_line, paths)) {

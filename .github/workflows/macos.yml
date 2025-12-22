@@ -92,14 +92,14 @@ jobs:
               | grep "path @executable_path/lib"
 
       - name: Upload binary
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: dosbox-${{ matrix.conf.arch }}
           path: build/release-macos-${{ matrix.conf.arch }}/Release/dosbox
           overwrite: true
 
       - name: Upload resources
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Resources
           path: build/release-macos-${{ matrix.conf.arch }}/Resources
@@ -123,7 +123,7 @@ jobs:
         run: HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --overwrite librsvg
 
       - name: Download binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
 
       - name: Package
         run: |
@@ -175,7 +175,7 @@ jobs:
 
 
       - name: Upload DMG disk image
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:

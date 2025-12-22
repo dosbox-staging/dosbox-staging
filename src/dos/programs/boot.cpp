@@ -39,14 +39,13 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		return nullptr;
 
 	try {
-		const auto& drive_ptr = Drives.at(drive);
-
-		if (!drive_ptr) {
+		const auto ldp = std::dynamic_pointer_cast<localDrive>(
+		        Drives.at(drive));
+		if (!ldp) {
 			return nullptr;
 		}
 
-		tmpfile = drive_ptr->GetHostFilePtr(fullname, "rb");
-
+		tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 		if (tmpfile == nullptr) {
 			if (!tryload)
 				*error = 1;
@@ -62,12 +61,12 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		*bsize = ftell(tmpfile);
 		fclose(tmpfile);
 
-		tmpfile = drive_ptr->GetHostFilePtr(fullname, "rb+");
+		tmpfile = ldp->GetHostFilePtr(fullname, "rb+");
 		if (tmpfile == nullptr) {
 			//				if (!tryload) *error=2;
 			//				return NULL;
 			WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
-			tmpfile = drive_ptr->GetHostFilePtr(fullname, "rb");
+			tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 			if (tmpfile == nullptr) {
 				if (!tryload)
 					*error = 1;

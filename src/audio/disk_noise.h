@@ -30,7 +30,8 @@ public:
 	DiskNoiseDevice(const DiskType disk_type, const DiskNoiseMode disk_noise_mode,
 	                const std::string& spin_up_sample_path,
 	                const std::string& spin_sample_path,
-	                const std::vector<std::string>& seek_sample_paths);
+	                const std::vector<std::string>& seek_sample_paths,
+	                bool loop_spin_sample);
 	~DiskNoiseDevice();
 	void ActivateSpin();
 	void PlaySeek();

@@ -17,6 +17,7 @@
 #include <limits>
 #include <sys/types.h>
 
+#include "audio/disk_noise.h"
 #include "dos.h"
 #include "dos_mscdex.h"
 #include "hardware/port.h"
@@ -560,6 +561,16 @@ bool localFile::Read(uint8_t* data, uint16_t* num_bytes)
 		return false;
 	}
 
+	// Store last path to enable disk noise to choose sequential vs. random
+	// access noises
+	DiskNoises* disk_noises = DiskNoises::GetInstance();
+	if (disk_noises != nullptr) {
+		disk_noises->SetLastIoPath(path.string(),
+		                           DiskNoiseIoType::Read,
+		                           DOS_GetDiskTypeFromMediaByte(
+		                                   local_drive.lock()->GetMediaByte()));
+	}
+
 	const auto ret = read_native_file(file_handle, data, *num_bytes);
 	*num_bytes     = check_cast<uint16_t>(ret.num_bytes);
 	if (ret.error) {
@@ -578,7 +589,7 @@ bool localFile::Read(uint8_t* data, uint16_t* num_bytes)
 	return true;
 }
 
-bool localFile::Write(const uint8_t* data, uint16_t* num_bytes)
+bool localFile::Write(uint8_t* data, uint16_t* num_bytes)
 {
 	assert(file_handle != InvalidNativeFileHandle);
 	uint8_t lastflags = this->flags & 0xf;
@@ -602,6 +613,16 @@ bool localFile::Write(const uint8_t* data, uint16_t* num_bytes)
 		return true;
 	}
 
+	// Store last path to enable disk noise to choose sequential vs. random
+	// access noises
+	DiskNoises* disk_noises = DiskNoises::GetInstance();
+	if (disk_noises != nullptr) {
+		disk_noises->SetLastIoPath(path.string(),
+		                           DiskNoiseIoType::Write,
+		                           DOS_GetDiskTypeFromMediaByte(
+		                                   local_drive.lock()->GetMediaByte()));
+	}
+
 	// Otherwise we have some data to write
 	const auto ret = write_native_file(file_handle, data, *num_bytes);
 	*num_bytes     = check_cast<uint16_t>(ret.num_bytes);
@@ -613,7 +634,7 @@ bool localFile::Write(const uint8_t* data, uint16_t* num_bytes)
 	return true;
 }
 
-bool localFile::Seek(uint32_t* pos_addr, const uint32_t type)
+bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 {
 	assert(file_handle != InvalidNativeFileHandle);
 

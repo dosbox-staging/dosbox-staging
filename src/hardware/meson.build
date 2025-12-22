@@ -39,8 +39,6 @@ libhardware_sources = files(
     'network/ipxserver.cpp',
     'network/ne2000.cpp',
 
-    'serialport/directserial.cpp',
-    'serialport/libserial.cpp',
     'serialport/misc_util.cpp',
     'serialport/nullmodem.cpp',
     'serialport/serialdummy.cpp',
@@ -98,7 +96,6 @@ libhardware = static_library(
         sdl2_dep,
         sdl2_net_dep,
         speexdsp_dep,
-        tracy_dep,
         winsock2_dep,
     ],
     cpp_args: warnings,

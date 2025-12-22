@@ -1,12 +1,10 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_SERIALMODEM_H
 #define DOSBOX_SERIALMODEM_H
 
 #include "dosbox.h"
-
-#if C_MODEM
 
 #include <vector>
 #include <memory>
@@ -259,6 +257,4 @@ private:
 	} dial;
 };
 
-#endif // C_MODEM
-
-#endif
+#endif // DOSBOX_SERIALMODEM_H

@@ -18,12 +18,9 @@
       "name": "sdl2",
       "platform": "!linux"
     },
+    "sdl2-image",
     "sdl2-net",
     "speexdsp",
-    {
-      "name": "tracy",
-      "platform": "!(windows & arm64)"
-    },
     "zlib-ng",
     {
       "name": "pkgconf",

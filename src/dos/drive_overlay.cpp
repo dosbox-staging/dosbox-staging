@@ -215,7 +215,7 @@ public:
 		file->file_handle = InvalidNativeFileHandle;
 	}
 
-	bool Write(const uint8_t* data, uint16_t* size) override
+	bool Write(uint8_t* data, uint16_t* size) override
 	{
 		uint8_t f = flags & 0xf;
 		if (!overlay_active && (f == OPEN_READWRITE || f == OPEN_WRITE)) {

@@ -60,16 +60,19 @@ These are generic, distro-independent building instructions.
 
 ### Install the dependencies (development packages are needed, too)
 
-- SDL 2.x
-- SDL2_net
-- IIR
-- OpusFile
-- MT32Emu
-- FluidSynth
 - ALSA
-- libpng
-- OpenGL headers
+- FluidSynth
 - GTest
+- IIR
+- libpng
+- MT32Emu
+- OpenGL headers
+- OpusFile
+- SDL 2.x
+- SDL2_image
+- SDL2_net
+- SpeexDSP
+- zlib-nG
 
 ### Clone DOSBox Staging
 
@@ -101,7 +104,8 @@ You can now launch DOSBox Staging with the command:
 
 ```bash
 sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
-             autoconf bison libtool libgl1-mesa-dev libsdl2-dev
+             autoconf autoconf-archive automake bison libtool libgl1-mesa-dev \
+             libsdl2-dev
 ```
 
 ### Install the vcpkg tool
@@ -271,34 +275,6 @@ meson compile -C build/debugger
 ```
 
 For the heavy debugger, use `heavy` instead of `normal`.
-
-
-### Make a build with profiling enabled
-
-Staging includes the [Tracy](https://github.com/wolfpld/tracy) profiler, which
-is disabled by default. To enable it for Meson builds, set the `tracy` option
-to `true`:
-
-``` shell
-meson setup -Dtracy=true build/release-tracy
-meson compile -C build/release-tracy
-```
-
-We have instrumented a very small core of subsystem functions for baseline
-demonstration purposes. You can add additional profiling macros to your functions
-of interest.
-
-The resulting binary requires the Tracy profiler server to view profiling
-data. If using Meson on a *nix system, switch to
-`subprojects/tracy.x.x.x.x/profiler/build/unix` and run `make`
-
-Start the instrumented Staging binary, then start the server. You should see
-Staging as an available client for Connect.
-
-You can also run the server on a different machine on the network, even on a
-different platform.
-
-Please refer to the Tracy documentation for further information.
 
 
 ### Repository and package maintainers

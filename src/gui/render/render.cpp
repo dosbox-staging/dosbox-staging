@@ -22,12 +22,9 @@
 #include "misc/support.h"
 #include "misc/video.h"
 #include "shell/shell.h"
-#include "utils/checks.h"
 #include "utils/fraction.h"
 #include "utils/math_utils.h"
 #include "utils/string_utils.h"
-
-CHECK_NARROWING();
 
 Render render;
 ScalerLineHandler_t RENDER_DrawLine;
@@ -291,11 +288,6 @@ static SectionProp& get_render_section()
 	assert(section);
 
 	return *section;
-}
-
-static uint8_t get_best_mode(const uint8_t flags)
-{
-	return (flags & GFX_CAN_32) & ~(GFX_CAN_8 | GFX_CAN_15 | GFX_CAN_16);
 }
 
 static void reinit_drawing()

@@ -29,9 +29,9 @@ public:
 	fatFile(const char* name, uint32_t startCluster, uint32_t fileLen, std::shared_ptr<fatDrive> useDrive, bool _read_only_medium);
 	fatFile(const fatFile&) = delete; // prevent copy
 	fatFile& operator=(const fatFile&) = delete; // prevent assignment
-	bool Read(uint8_t* data, uint16_t* size) override;
-	bool Write(const uint8_t* data, uint16_t* size) override;
-	bool Seek(uint32_t* pos, const uint32_t type) override;
+	bool Read(uint8_t * data,uint16_t * size) override;
+	bool Write(uint8_t * data,uint16_t * size) override;
+	bool Seek(uint32_t * pos,uint32_t type) override;
 	void Close() override;
 	uint16_t GetInformation(void) override;
 	bool IsOnReadOnlyMedium() const override;
@@ -137,8 +137,7 @@ bool fatFile::Read(uint8_t * data, uint16_t *size) {
 	return true;
 }
 
-bool fatFile::Write(const uint8_t* data, uint16_t* size)
-{
+bool fatFile::Write(uint8_t * data, uint16_t *size) {
 	// check if file opened in read-only mode
 	if ((this->flags & 0xf) == OPEN_READ || myDrive->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -241,8 +240,7 @@ finalizeWrite:
 	return true;
 }
 
-bool fatFile::Seek(uint32_t* pos, const uint32_t type)
-{
+bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 	int32_t seekto=0;
 	
 	switch(type) {

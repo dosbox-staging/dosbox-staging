@@ -1481,10 +1481,10 @@ public:
 		//else if(ppindex == 1) config |= 0x0000;
 		if(ppindex == 2) config |= 0x4000;
 		else config |= 0xc000;	// 3 ports
-#if (C_FPU)
+
 		//FPU
 		config|=0x2;
-#endif
+
 		switch (machine) {
 		case MachineType::Hercules:
 			//Startup monochrome

@@ -24,8 +24,8 @@ public:
 	}
 
 	bool Read(uint8_t* data, uint16_t* size) override;
-	bool Write(const uint8_t* data, uint16_t* size) override;
-	bool Seek(uint32_t* pos, const uint32_t type) override;
+	bool Write(uint8_t* data, uint16_t* size) override;
+	bool Seek(uint32_t* pos, uint32_t type) override;
 	void Close() override;
 	uint16_t GetInformation() override;
 	bool ReadFromControlChannel([[maybe_unused]] PhysPt bufptr,
@@ -168,7 +168,7 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 	return true;
 }
 
-bool device_CON::Write(const uint8_t* data, uint16_t* size)
+bool device_CON::Write(uint8_t* data, uint16_t* size)
 {
 	uint16_t count = 0;
 	Bitu i;

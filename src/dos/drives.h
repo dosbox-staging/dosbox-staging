@@ -41,11 +41,6 @@ public:
 	};
 	using drive_infos_t = std::array<DriveInfo, DOS_DRIVES>;
 
-	static constexpr auto EstimatedFileCreationIoOverheadInBytes = 2048;
-	static constexpr auto EstimatedFileOpenIoOverheadInBytes     = 1024;
-	static constexpr auto EstimatedFileCloseIoOverheadInBytes    = 512;
-	static constexpr auto EstimatedSeekIoOverheadInBytes         = 1024;
-
 	static void AppendFilesystemImages(const int drive,
 	                                   const filesystem_images_t& filesystem_images);
 
@@ -59,30 +54,11 @@ public:
 	static void CycleDisks(int drive, bool notify);
 	static void CycleAllDisks(void);
 	static char *GetDrivePosition(int drive);
-	static void SetDiskSpeed(const DiskSpeed disk_speed, const DiskType disk_type);
-
-	static void RegisterIoCallback(std::function<void()> callback,
-	                               const DiskType disk_type);
-
-	static void UnregisterIoCallback(const DiskType disk_type);
-	static void ExecuteRegisteredCallbacks(const DiskType disk_type);
-
-	static void PerformDiskIoDelay(const uint16_t data_transferred_bytes,
-	                               const DiskType disk_type);
-
-	static void PerformDiskIoDelayByHandle(const uint16_t data_transferred_bytes,
-	                                       const uint16_t reg_handle);
-
-	static void ExecuteRegisteredCallbacksByHandle(const uint16_t reg_handle);
-	static DiskType GetDiskTypeFromDriveNumber(const int drive_number);
 
 	static void Init();
 
 private:
 	static drive_infos_t drive_infos;
-	static void PerformHardDiskIoDelay(const uint16_t data_transferred_bytes);
-	static void PerformFloppyIoDelay(const uint16_t data_transferred_bytes);
-	static void PerformCdRomIoDelay(const uint16_t data_transferred_bytes);
 };
 
 // Must be constructed with a shared_ptr as it uses weak_from_this()
@@ -96,8 +72,8 @@ public:
 	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
 	std::unique_ptr<DOS_File> FileCreate(const char* name,
 	                                     FatAttributeFlags attributes) override;
-	FILE* GetHostFilePtr(const char* const name, const char* const type) override;
-	std::string MapDosToHostFilename(const char* const dos_name) override;
+	FILE* GetHostFilePtr(const char* const name, const char* const type);
+	std::string MapDosToHostFilename(const char* const dos_name);
 	bool FileUnlink(const char* name) override;
 	bool RemoveDir(const char* dir) override;
 	bool MakeDir(const char* dir) override;
@@ -116,7 +92,7 @@ public:
 	bool IsRemote(void) override;
 	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
-	const char* GetBasedir() const override
+	const char* GetBasedir() const
 	{
 		return basedir;
 	}

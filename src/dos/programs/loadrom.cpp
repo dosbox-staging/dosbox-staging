@@ -41,11 +41,13 @@ void LOADROM::Run(void)
 
 	try {
 		/* try to read ROM file into buffer */
-		if (!Drives.at(drive)) {
+		const auto ldp = std::dynamic_pointer_cast<localDrive>(
+		        Drives.at(drive));
+		if (!ldp) {
 			return;
 		}
 
-		FILE* tmpfile = Drives.at(drive)->GetHostFilePtr(fullname, "rb");
+		FILE* tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 		if (tmpfile == nullptr) {
 			WriteOut(MSG_Get("PROGRAM_LOADROM_CANT_OPEN"));
 			return;

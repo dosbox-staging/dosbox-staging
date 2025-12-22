@@ -1859,10 +1859,10 @@ void DOS_Shell::CMD_SUBST (char * args) {
  * E.g. make basedir member dos_drive instead of localdrive
  */
 	HELP("SUBST");
-	std::string mountstring;
+	char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
 	char temp_str[2] = { 0,0 };
 	try {
-		mountstring = "MOUNT ";
+		safe_strcpy(mountstring, "MOUNT ");
 		StripSpaces(args);
 		std::string arg;
 		CommandLine command("", args);
@@ -1888,53 +1888,46 @@ void DOS_Shell::CMD_SUBST (char * args) {
 			if (!Drives.at(drive_idx)) {
 				throw 1; // targetdrive not in use
 			}
-			mountstring += "-u ";
-			mountstring += temp_str;
-			std::vector<char> mutable_cmd(mountstring.begin(),
-			                              mountstring.end());
-			mutable_cmd.push_back('\0');
-			this->ParseLine(mutable_cmd.data());
+			strcat(mountstring, "-u ");
+			strcat(mountstring, temp_str);
+			this->ParseLine(mountstring);
 			return;
 		}
 		if (Drives.at(drive_idx)) {
 			throw 0; // targetdrive in use
 		}
-		mountstring += temp_str;
-		mountstring += " ";
+		strcat(mountstring, temp_str);
+		strcat(mountstring, " ");
 
-		uint8_t drive;char fulldir[DOS_PATHLENGTH];
+   		uint8_t drive;char fulldir[DOS_PATHLENGTH];
 		if (!DOS_MakeName(arg.c_str(), fulldir, &drive)) {
 			throw 0;
 		}
 
-		// Check if source drive exists
-		if (!Drives.at(drive)) {
+		const auto ldp = std::dynamic_pointer_cast<localDrive>(
+		        Drives.at(drive));
+		if (!ldp) {
 			throw 0;
 		}
-
-		// fulldir contains the DOS path we want to subst (e.g. "\GAMES")
-		std::string host_path = Drives.at(drive)->MapDosToHostFilename(fulldir);
-
-		// Could not resolve path or drive type doesn't support mapping
-		if (host_path.empty()) {
-			throw 0;
-		}
-
-		mountstring += "\"";
-		mountstring += host_path;
-		mountstring += "\"";
-		std::vector<char> mutable_cmd(mountstring.begin(),
-		                              mountstring.end());
-		mutable_cmd.push_back('\0');
-		this->ParseLine(mutable_cmd.data());
-	} catch (int a) {
+		char newname[CROSS_LEN];
+		safe_strcpy(newname, ldp->GetBasedir());
+		strcat(newname,fulldir);
+		CROSS_FILENAME(newname);
+		ldp->dirCache.ExpandNameAndNormaliseCase(newname);
+		strcat(mountstring,"\"");
+		strcat(mountstring, newname);
+		strcat(mountstring,"\"");
+		this->ParseLine(mountstring);
+	}
+	catch(int a){
 		if (a == 0) {
 			WriteOut(MSG_Get("SHELL_CMD_SUBST_FAILURE"));
 		} else {
 		       	WriteOut(MSG_Get("SHELL_CMD_SUBST_NO_REMOVE"));
 		}
 		return;
-	} catch (...) { // dynamic cast failed =>so no localdrive
+	}
+	catch(...) {		//dynamic cast failed =>so no localdrive
 		WriteOut(MSG_Get("SHELL_CMD_SUBST_FAILURE"));
 		return;
 	}

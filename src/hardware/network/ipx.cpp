@@ -4,8 +4,6 @@
 
 #include "dosbox.h"
 
-#if C_IPX
-
 #include "hardware/network/ipx.h"
 
 #include <cinttypes>
@@ -1230,5 +1228,3 @@ void IPX_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)
 
 // Initialize static members;
 uint16_t IPX::dospage = 0;
-
-#endif

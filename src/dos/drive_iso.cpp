@@ -22,8 +22,8 @@ public:
 	isoFile &operator=(const isoFile &) = delete; // prevent assignment
 
 	bool Read(uint8_t *data, uint16_t *size) override;
-	bool Write(const uint8_t* data, uint16_t* size) override;
-	bool Seek(uint32_t* pos, const uint32_t type) override;
+	bool Write(uint8_t *data, uint16_t *size) override;
+	bool Seek(uint32_t *pos, uint32_t type) override;
 	void Close() override;
 	uint16_t GetInformation(void) override;
 	bool IsOnReadOnlyMedium() const override;
@@ -94,13 +94,11 @@ bool isoFile::Read(uint8_t *data, uint16_t *size) {
 	return true;
 }
 
-bool isoFile::Write(const uint8_t* /*data*/, uint16_t* /*size*/)
-{
+bool isoFile::Write(uint8_t* /*data*/, uint16_t* /*size*/) {
 	return false;
 }
 
-bool isoFile::Seek(uint32_t* pos, const uint32_t type)
-{
+bool isoFile::Seek(uint32_t *pos, uint32_t type) {
 	switch (type) {
 		case DOS_SEEK_SET:
 			filePos = fileBegin + *pos;

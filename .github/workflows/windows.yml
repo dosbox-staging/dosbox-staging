@@ -154,7 +154,7 @@ jobs:
 
       - name: Upload package
         if:   ${{ !matrix.conf.debugger }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.PACKAGE_DIR }}-without-debugger
           path: ${{ env.PACKAGE_DIR }}
@@ -172,7 +172,7 @@ jobs:
 
       - name: Upload debugger artifact
         if:   ${{ matrix.conf.debugger }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.PACKAGE_DIR }}-with-debugger
           path: ${{ env.PACKAGE_DIR }}/dosbox_with_debugger.exe
@@ -201,7 +201,7 @@ jobs:
         uses: ./.github/actions/set-common-vars
 
       - name: Merge artifacts (${{ matrix.arch }} )
-        uses: actions/upload-artifact/merge@v5
+        uses: actions/upload-artifact/merge@v6
         with:
           name:    dosbox-staging-windows-${{ matrix.arch }}-${{ env.DOSBOX_VERSION_AND_HASH }}
           pattern: dosbox-staging-windows-${{ matrix.arch }}-*
@@ -223,9 +223,6 @@ jobs:
         with:
           submodules: false
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-
       - name: Set common vars
         uses: ./.github/actions/set-common-vars
 
@@ -235,6 +232,12 @@ jobs:
         run: |
           set -x
           echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.arch }}-$DOSBOX_VERSION_AND_HASH" >> $GITHUB_ENV
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ env.PACKAGE_DIR }}
+          path: ${{ env.PACKAGE_DIR }}          
 
       - name: Dump workspace contents
         shell: bash
@@ -271,7 +274,7 @@ jobs:
           dir
 
       - name: Upload Windows installer
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.PACKAGE_DIR }}-setup
           path: ${{ github.workspace }}\out\${{ env.PACKAGE_DIR }}-setup.exe

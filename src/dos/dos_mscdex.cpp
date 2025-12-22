@@ -1337,12 +1337,12 @@ public:
 	{
 		return false;
 	}
-	bool Write(const uint8_t* /*data*/, uint16_t* /*size*/) override
+	bool Write(uint8_t* /*data*/, uint16_t* /*size*/) override
 	{
 		LOG(LOG_ALL, LOG_NORMAL)("Write to mscdex device");
 		return false;
 	}
-	bool Seek(uint32_t* /*pos*/, const uint32_t /*type*/) override
+	bool Seek(uint32_t* /*pos*/, uint32_t /*type*/) override
 	{
 		return false;
 	}

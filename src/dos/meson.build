@@ -51,10 +51,10 @@ libdos_sources = files(
     'programs/mouse.cpp',
     'programs/mousectl.cpp',
     'programs/move.cpp',
-    'programs/placeholder.cpp',
     'programs/rescan.cpp',
     'programs/serial.cpp',
     'programs/setver.cpp',
+    'programs/showpic.cpp',
     'programs/subst.cpp',
     'programs/tree.cpp',
 )
@@ -65,6 +65,7 @@ libdos = static_library(
     include_directories: incdir,
     dependencies: [
         sdl2_dep,
+        sdl2_image_dep,
         sdl2_net_dep,
         libdecoders_dep,
         ghc_dep,

@@ -26,7 +26,6 @@
 #include "debugger/debugger.h"
 #include "dos/dos.h"
 #include "dos/dos_locale.h"
-#include "dos/drives.h"
 #include "dos/programs.h"
 #include "fpu/fpu.h"
 #include "gui/common.h"
@@ -62,7 +61,6 @@
 #include "midi/midi.h"
 #include "misc/cross.h"
 #include "misc/support.h"
-#include "misc/tracy.h"
 #include "misc/video.h"
 #include "network/ethernet.h"
 #include "shell/autoexec.h"
@@ -169,7 +167,6 @@ static void increase_ticks()
 {
 	// Make it return ticks.remain and set it in the function above to
 	// remove the global variable.
-	ZoneScoped;
 
 	// For fast-forward mode
 	if (ticks.locked) {
@@ -656,9 +653,6 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 
 static void dosbox_realinit(SectionProp& section)
 {
-	using enum DiskSpeed;
-	using enum DiskType;
-
 	// Initialize some dosbox internals
 	ticks.remain = 0;
 	ticks.last   = GetTicks();
@@ -698,25 +692,25 @@ static void dosbox_realinit(SectionProp& section)
 	// Set the disk IO data rate
 	const auto hdd_io_speed = section.GetString("hard_disk_speed");
 	if (hdd_io_speed == "fast") {
-		DriveManager::SetDiskSpeed(Fast, HardDisk);
+		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::HardDisk);
 	} else if (hdd_io_speed == "medium") {
-		DriveManager::SetDiskSpeed(Medium, HardDisk);
+		DOS_SetDiskSpeed(DiskSpeed::Medium, DiskType::HardDisk);
 	} else if (hdd_io_speed == "slow") {
-		DriveManager::SetDiskSpeed(Slow, HardDisk);
+		DOS_SetDiskSpeed(DiskSpeed::Slow, DiskType::HardDisk);
 	} else {
-		DriveManager::SetDiskSpeed(Maximum, HardDisk);
+		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::HardDisk);
 	}
 
 	// Set the floppy disk IO data rate
 	const auto floppy_io_speed = section.GetString("floppy_disk_speed");
 	if (floppy_io_speed == "fast") {
-		DriveManager::SetDiskSpeed(Fast, Floppy);
+		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::Floppy);
 	} else if (floppy_io_speed == "medium") {
-		DriveManager::SetDiskSpeed(Medium, Floppy);
+		DOS_SetDiskSpeed(DiskSpeed::Medium, DiskType::Floppy);
 	} else if (floppy_io_speed == "slow") {
-		DriveManager::SetDiskSpeed(Slow, Floppy);
+		DOS_SetDiskSpeed(DiskSpeed::Slow, DiskType::Floppy);
 	} else {
-		DriveManager::SetDiskSpeed(Maximum, Floppy);
+		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::Floppy);
 	}
 }
 
@@ -1080,10 +1074,7 @@ void DOSBOX_InitModuleConfigsAndMessages()
 	JOYSTICK_AddConfigSection(control);
 	SERIAL_AddConfigSection(control);
 	DOS_AddConfigSection(control);
-
-#if C_IPX
 	IPX_AddConfigSection(control);
-#endif
 
 	ETHERNET_AddConfigSection(control);
 
@@ -1115,9 +1106,7 @@ void DOSBOX_InitModules()
 	COMPOSITE_Init();
 
 	CPU_Init();
-#if C_FPU
 	FPU_Init();
-#endif
 	DMA_Init();
 	VGA_Init();
 	KEYBOARD_Init();
@@ -1150,9 +1139,7 @@ void DOSBOX_InitModules()
 	SERIAL_Init();
 	DOS_Init();
 
-#if C_IPX
 	IPX_Init();
-#endif
 	ETHERNET_Init();
 	VIRTUALBOX_Init();
 	VMWARE_Init();
@@ -1165,9 +1152,7 @@ void DOSBOX_DestroyModules()
 	VMWARE_Destroy();
 	VIRTUALBOX_Destroy();
 	ETHERNET_Destroy();
-#if C_IPX
 	IPX_Destroy();
-#endif
 
 	DOS_Destroy();
 	SERIAL_Destroy();

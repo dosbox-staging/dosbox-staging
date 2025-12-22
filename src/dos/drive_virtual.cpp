@@ -314,8 +314,8 @@ public:
 	Virtual_File &operator=(const Virtual_File &) = delete; // prevent assignment
 
 	bool Read(uint8_t* data, uint16_t* size) override;
-	bool Write(const uint8_t* data, uint16_t* size) override;
-	bool Seek(uint32_t* pos, const uint32_t type) override;
+	bool Write(uint8_t* data, uint16_t* size) override;
+	bool Seek(uint32_t* pos, uint32_t type) override;
 	void Close() override;
 	uint16_t GetInformation() override;
 	bool IsOnReadOnlyMedium() const override;
@@ -354,13 +354,13 @@ bool Virtual_File::Read(uint8_t* data, uint16_t* bytes_requested)
 	return true;
 }
 
-bool Virtual_File::Write(const uint8_t* /*data*/, uint16_t* /*size*/)
+bool Virtual_File::Write(uint8_t* /*data*/, uint16_t* /*size*/)
 {
 	/* Not really writable */
 	return false;
 }
 
-bool Virtual_File::Seek(uint32_t* new_pos, const uint32_t type)
+bool Virtual_File::Seek(uint32_t* new_pos, uint32_t type)
 {
 	switch (type) {
 	case DOS_SEEK_SET:
