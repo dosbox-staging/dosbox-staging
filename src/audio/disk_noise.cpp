@@ -38,34 +38,34 @@ DiskNoises::DiskNoises(const DiskNoiseMode floppy_disk_noise_mode,
 		return;
 	}
 
-	MIXER_LockMixerThread();
-	const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
-	                                      this,
-	                                      std::placeholders::_1);
-	mix_channel = MIXER_AddChannel(mixer_callback,
-	                               DiskNoiseSampleRateInHz,
-	                               ChannelName::DiskNoise,
-	                               {ChannelFeature::Stereo});
-	mix_channel->Enable(true);
-	float vol_gain = percentage_to_gain(100);
-	mix_channel->SetAppVolume({vol_gain, vol_gain});
-
+	// Load samples
 	hdd_noise = std::make_shared<DiskNoiseDevice>(DiskType::HardDisk,
-	                                              hard_disk_noise_mode,
-	                                              spin_up,
-	                                              spin,
-	                                              hdd_seek_samples,
-	                                              true);
-	active_devices.emplace_back(hdd_noise);
+                                                  hard_disk_noise_mode,
+                                                  spin_up,
+                                                  spin,
+                                                  hdd_seek_samples);
+    active_devices.emplace_back(hdd_noise);
 
-	floppy_noise = std::make_shared<DiskNoiseDevice>(DiskType::Floppy,
-	                                                 floppy_disk_noise_mode,
-	                                                 floppy_spin_up,
-	                                                 floppy_spin,
-	                                                 floppy_seek_samples,
-	                                                 false);
-	active_devices.emplace_back(floppy_noise);
-	MIXER_UnlockMixerThread();
+    floppy_noise = std::make_shared<DiskNoiseDevice>(DiskType::Floppy,
+                                                     floppy_disk_noise_mode,
+                                                     floppy_spin_up,
+                                                     floppy_spin,
+                                                     floppy_seek_samples);
+    active_devices.emplace_back(floppy_noise);
+
+    // Start audio thread
+    MIXER_LockMixerThread();
+    const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
+                                          this,
+                                          std::placeholders::_1);
+    mix_channel = MIXER_AddChannel(mixer_callback,
+                                   DiskNoiseSampleRateInHz,
+                                   ChannelName::DiskNoise,
+                                   {ChannelFeature::Stereo});
+    mix_channel->Enable(true);
+    MIXER_UnlockMixerThread();
+    float vol_gain = percentage_to_gain(100);
+    mix_channel->SetAppVolume({vol_gain, vol_gain});
 }
 
 DiskNoises* DiskNoises::GetInstance()
@@ -78,6 +78,11 @@ DiskNoises* DiskNoises::GetInstance()
 
 void DiskNoises::AudioCallback(const int num_frames_requested)
 {
+	// Check if callback runs before mix_channel is assigned.
+	if (!mix_channel) {
+        return;
+    }
+
 	// stereo interleaved buffer
 	static std::vector<AudioFrame> out = {};
 	out.clear();
@@ -85,31 +90,29 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 	// Mix audio frames from all active devices
 	for (auto i = 0; i < num_frames_requested; ++i) {
 		AudioFrame mixed_sample = {};
-		for (const auto& device : disk_noises->active_devices) {
+		for (const auto& device : active_devices) {
 			AudioFrame sample = device->GetNextFrame();
 			mixed_sample += sample;
 		}
 		out.emplace_back(mixed_sample);
 	}
 
-	disk_noises->mix_channel->AddAudioFrames(out);
+	mix_channel->AddAudioFrames(out);
 }
 
 DiskNoises::~DiskNoises()
 {
-	MIXER_LockMixerThread();
-
-	floppy_noise.reset();
-	hdd_noise.reset();
-	active_devices.clear();
-
+	// Stop audio thread and unregister channel
 	if (mix_channel) {
-		mix_channel->Enable(false);
-		MIXER_DeregisterChannel(mix_channel);
-		mix_channel.reset();
-	}
+        mix_channel->Enable(false);
+        MIXER_DeregisterChannel(mix_channel);
+        mix_channel.reset();
+    }
 
-	MIXER_UnlockMixerThread();
+	// Destroy devices and associated samples
+    floppy_noise.reset();
+    hdd_noise.reset();
+    active_devices.clear();
 }
 
 AudioFrame DiskNoiseDevice::GetNextFrame()
@@ -130,10 +133,9 @@ AudioFrame DiskNoiseDevice::GetNextFrame()
 		}
 	} else if (!spin.sample.empty() &&
 	           (spin.spin_it != spin.sample.end() || spin.loop)) {
-		// Loop the spin sound if enabled. Used for
-		// persistent HDD noise Not used for floppy
-		// noise because motor should stop after r/w
-		// operations aredone
+		// Loop the spin sound if enabled. Used for persistent HDD
+		// noise. Not used for floppy noise because motor should stop
+		// after read-write operations are done.
 		if (spin.spin_it == spin.sample.end() && spin.loop) {
 			spin.spin_it = spin.sample.begin();
 		}
@@ -374,8 +376,7 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
                                  const DiskNoiseMode disk_noise_mode,
                                  const std::string& spin_up_sample_path,
                                  const std::string& spin_sample_path,
-                                 const std::vector<std::string>& seek_sample_paths,
-                                 bool loop_spin_sample)
+                                 const std::vector<std::string>& seek_sample_paths)
         : disk_noise_mode(disk_noise_mode),
           disk_type(disk_type)
 {
@@ -384,7 +385,8 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 		return;
 	}
 
-	spin.loop = loop_spin_sample;
+	// Only hard disk noises loop the spin sample
+	(disk_type == DiskType::HardDisk) ? spin.loop = true : spin.loop = false;
 
 	// Only attempt to load spin samples if disk noise mode is "on" instead
 	// of "seek-only"
@@ -393,18 +395,20 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 		LoadSample(spin_sample_path, spin.sample);
 	}
 
-	// After loading spin_up_sample and sample:
-	if (!spin.spin_up_sample.empty()) {
-		spin.spin_up_it = spin.spin_up_sample.begin();
-	} else {
-		spin.spin_up_it = spin.spin_up_sample.end();
-	}
+	// Start iterators at the beginning or end, depending on whether the
+	// disk noise is looping (HDD) or not (FDD)
+	// This prevents fdd spin noise on initial startup
+	if (disk_type == DiskType::HardDisk && !spin.spin_up_sample.empty()) {
+        spin.spin_up_it = spin.spin_up_sample.begin();
+    } else {
+        spin.spin_up_it = spin.spin_up_sample.end();
+    }
 
-	if (!spin.sample.empty()) {
-		spin.spin_it = spin.sample.begin();
-	} else {
-		spin.spin_it = spin.sample.end();
-	}
+    if (disk_type == DiskType::HardDisk && !spin.sample.empty()) {
+        spin.spin_it = spin.sample.begin();
+    } else {
+        spin.spin_it = spin.sample.end();
+    }
 
 	LoadSeekSamples(seek_sample_paths);
 	seek.current_sample.clear();
@@ -428,6 +432,9 @@ DiskNoiseDevice::~DiskNoiseDevice()
 
 void DiskNoiseDevice::ActivateSpin()
 {
+	// Lock mutex to guard against GetNextFrame
+	std::lock_guard<std::mutex> lock(mutex);
+
 	if (disk_noise_mode == DiskNoiseMode::Off) {
 		return;
 	}
@@ -446,7 +453,9 @@ void DiskNoiseDevice::ActivateSpin()
 
 void DiskNoiseDevice::PlaySeek()
 {
+	// Lock mutex to guard against GetNextFrame
 	std::lock_guard<std::mutex> lock(mutex);
+
 	if (disk_noise_mode == DiskNoiseMode::Off) {
 		return;
 	}
@@ -550,9 +559,9 @@ void DISKNOISE_Init()
 
 void DISKNOISE_Destroy()
 {
-	MIXER_LockMixerThread();
+    MIXER_LockMixerThread();
 	disk_noises.reset();
-	MIXER_UnlockMixerThread();
+    MIXER_UnlockMixerThread();
 }
 
 static void init_disknoise_config_settings(SectionProp& secprop)
@@ -568,7 +577,10 @@ static void init_disknoise_config_settings(SectionProp& secprop)
 	        "\n"
 	        "  off:           No hard disk noises (default).\n"
 	        "  seek-only:     Play hard disk seek noises only, no spin noises.\n"
-	        "  on:            Play both hard disk seek and spin noises.");
+	        "  on:            Play both hard disk seek and spin noises.\n"
+	        "\n"
+			"Note: You can customise the disk noise volume by changing the volume of the\n"
+      		"      `DISKNOISE` mixer channel.");
 
 	str_prop = secprop.AddString("floppy_disk_noise", Always, "off");
 	str_prop->SetValues({"off", "seek-only", "on"});
@@ -579,7 +591,10 @@ static void init_disknoise_config_settings(SectionProp& secprop)
 	        "\n"
 	        "  off:           No floppy disk noises (default).\n"
 	        "  seek-only:     Play floppy disk seek noises only, no spin noises.\n"
-	        "  on:            Play both floppy disk seek and spin noises.");
+	        "  on:            Play both floppy disk seek and spin noises.\n"
+	        "\n"
+			"Note: You can customise the disk noise volume by changing the volume of the\n"
+      		"      `DISKNOISE` mixer channel.");
 }
 
 void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
