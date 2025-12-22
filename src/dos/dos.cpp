@@ -57,6 +57,7 @@ extern void DOS_ClearLaunchedProgramNames();
 constexpr auto EstimatedFileCreationIoOverheadInBytes = 2048;
 constexpr auto EstimatedFileOpenIoOverheadInBytes     = 1024;
 constexpr auto EstimatedFileCloseIoOverheadInBytes    = 512;
+constexpr auto EstimatedFileSeekIoOverheadInBytes     = 512;
 
 void DOS_NotifyBooting()
 {
@@ -232,25 +233,31 @@ void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type)
 DiskType DOS_GetDiskTypeFromMediaByte(uint8_t media_byte)
 {
 	switch (media_byte) {
-	case 0xF0:
+	case MediaId::Floppy1_44MB:
 		// 3.5" 1.44MB floppy
 		return DiskType::Floppy;
-	case 0xF9:
+	case MediaId::Floppy720KB:
 		// 5.25" 1.2MB floppy or 3.5" 720KB floppy
 		return DiskType::Floppy;
-	case 0xFD:
+	case MediaId::Floppy360KB:
 		// 5.25" 360KB floppy
 		return DiskType::Floppy;
-	case 0xFF:
+	case MediaId::Floppy320KB:
 		// 5.25" 320KB floppy
 		return DiskType::Floppy;
-	case 0xFC:
+	case MediaId::Floppy180KB:
 		// 5.25" 180KB floppy
 		return DiskType::Floppy;
-	case 0xFE:
+	case MediaId::Floppy160KB:
 		// 5.25" 160KB floppy
 		return DiskType::Floppy;
-	case 0xF8: return DiskType::HardDisk;
+	case MediaId::Floppy1_2MB:
+		// 5.25" 1.2MB floppy
+		return DiskType::Floppy;
+	case MediaId::Floppy2_88MB:
+		// 3.5" 2.88MB floppy
+		return DiskType::Floppy;
+	case MediaId::HardDisk: return DiskType::HardDisk;
 	default: return DiskType::HardDisk;
 	}
 }
@@ -1076,10 +1083,13 @@ static Bitu DOS_21Handler(void) {
 		{
 			uint32_t pos=(reg_cx<<16) + reg_dx;
 			if (DOS_SeekFile(reg_bx,&pos,reg_al)) {
-				reg_dx=(uint16_t)(pos >> 16);
-				reg_ax=(uint16_t)(pos & 0xFFFF);
-				CALLBACK_SCF(false);
-			} else {
+			        DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
+			        DOS_PerformDiskIoDelayByHandle(EstimatedFileSeekIoOverheadInBytes,
+			                                       reg_bx);
+			        reg_dx = (uint16_t)(pos >> 16);
+			        reg_ax = (uint16_t)(pos & 0xFFFF);
+			        CALLBACK_SCF(false);
+		        } else {
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
 			}

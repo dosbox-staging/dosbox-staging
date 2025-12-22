@@ -185,7 +185,7 @@ class fatDrive final : public DOS_Drive, public std::enable_shared_from_this<fat
 public:
 	fatDrive(const char* sysFilename, uint32_t bytesector,
 	         uint32_t cylsector, uint32_t headscyl, uint32_t cylinders,
-	         bool roflag);
+	         uint8_t mediaid, bool roflag);
 	fatDrive(const fatDrive&)            = delete; // prevent copying
 	fatDrive& operator=(const fatDrive&) = delete; // prevent assignment
 	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
@@ -241,7 +241,8 @@ private:
 	bool addDirectoryEntry(uint32_t dirClustNumber, direntry useEntry);
 	void zeroOutCluster(uint32_t clustNumber);
 	bool getEntryName(const char *fullname, char *entname);
-	
+
+	uint8_t mediaid;
 	bootstrap bootbuffer;
 	bool absolute;
 	bool readonly;
