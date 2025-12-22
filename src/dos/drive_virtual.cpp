@@ -607,7 +607,7 @@ bool Virtual_Drive::AllocationInfo(uint16_t * _bytes_sector,uint8_t * _sectors_c
 }
 
 uint8_t Virtual_Drive::GetMediaByte() {
-	return 0xF8;
+	return MediaId::HardDisk;
 }
 
 bool Virtual_Drive::IsRemote() {

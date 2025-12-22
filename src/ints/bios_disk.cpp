@@ -160,7 +160,11 @@ uint8_t imageDisk::Read_AbsoluteSector(uint32_t sectnum, void *data)
 			return 0xff;
 		}
 	}
-	size_t ret = fread(data, 1, sector_size, diskimg);
+
+	DiskType type = hardDrive ? DiskType::HardDisk : DiskType::Floppy;
+	DOS_PerformDiskIoDelay(sector_size, type);
+
+	size_t ret  = fread(data, 1, sector_size, diskimg);
 	current_fpos=bytenum+ret;
 	last_action=READ;
 
@@ -190,7 +194,11 @@ uint8_t imageDisk::Write_AbsoluteSector(uint32_t sectnum, void *data) {
 			return 0xff;
 		}
 	}
-	size_t ret = fwrite(data, 1, sector_size, diskimg);
+
+	DiskType type = hardDrive ? DiskType::HardDisk : DiskType::Floppy;
+	DOS_PerformDiskIoDelay(sector_size, type);
+
+	size_t ret  = fwrite(data, 1, sector_size, diskimg);
 	current_fpos=bytenum+ret;
 	last_action=WRITE;
 
