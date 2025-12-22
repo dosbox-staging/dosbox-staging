@@ -423,6 +423,7 @@ void IMGMOUNT::Run(void)
 			                                            sizes[1],
 			                                            sizes[2],
 			                                            sizes[3],
+														mediaid,
 			                                            roflag);
 			if (fat_image->created_successfully) {
 				fat_images.push_back(fat_image);
