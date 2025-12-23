@@ -79,9 +79,7 @@ DiskNoises* DiskNoises::GetInstance()
 void DiskNoises::AudioCallback(const int num_frames_requested)
 {
 	// Check if callback runs before mix_channel is assigned.
-	if (!mix_channel) {
-		return;
-	}
+	assert(mix_channel != nullptr);
 
 	// stereo interleaved buffer
 	static std::vector<AudioFrame> out = {};
@@ -91,7 +89,7 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 	for (auto i = 0; i < num_frames_requested; ++i) {
 		AudioFrame mixed_sample = {};
 		for (const auto& device : active_devices) {
-			AudioFrame sample = device->GetNextFrame();
+			auto sample = device->GetNextFrame();
 			mixed_sample += sample;
 		}
 		out.emplace_back(mixed_sample);
@@ -386,7 +384,7 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	}
 
 	// Only hard disk noises loop the spin sample
-	(disk_type == DiskType::HardDisk) ? spin.loop = true : spin.loop = false;
+	spin.loop = (disk_type == DiskType::HardDisk);
 
 	// Only attempt to load spin samples if disk noise mode is "on" instead
 	// of "seek-only"

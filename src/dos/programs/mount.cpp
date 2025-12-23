@@ -128,7 +128,7 @@ void MOUNT::Run(void) {
 
 			// If drive mounted to A or B, set mediaid to floppy
 			// This is preferable to using type because floppies can
-			// be auto-mounted as type"dir"
+			// be auto-mounted as type "dir"
 			std::string command_arg;
 			cmd->FindCommand(1, command_arg);
 			const unsigned char first_char = static_cast<unsigned char>(
