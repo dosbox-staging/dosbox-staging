@@ -209,18 +209,58 @@ available in these old versions can be used (choose one for your compiler):
 
 ## Unit tests
 
-Unit tests are built by default, you can start them with the command:
-
-```bash
-./build/release-linux/tests/dosbox_tests
-```
-
-To disable building unit tests, pass the `-DOPT_TESTS=OFF` option when
-configuring the project, for example:
+Unit tests are built by default. To disable building unit tests, pass the
+`-DOPT_TESTS=OFF` option when configuring the project, for example:
 
 ```bash
 cmake --preset=release-linux -DOPT_TESTS=OFF
 ```
+
+To run the entire test suite, execute the following (use the same CMake preset
+you used for building):
+
+```bash
+ctest --preset debug-linux
+```
+
+To run all test cases in a single test suite, pass in the name of the suite
+with the `-R` option:
+
+```bash
+ctest --preset debug-linux -R DOS_FilesTest
+```
+
+You can narrow this down to run a single test case only:
+
+```bash
+ctest --preset debug-linux -R DOS_FilesTest.DOS_MakeName_Basic_Failures
+```
+
+To run a group of tests, you can use wildcards and regexes. E.g. to run all
+test cases in the `DOS_FilesTest` suite with names starting with
+`DOS_MakeName_`:
+
+```bash
+ctest --preset debug-linux -R "DOS_FilesTest.DOS_MakeName_*"
+```
+
+Pass in the `-V` option to see the DOSBox Staging log output:
+
+```bash
+ctest --preset debug-linux -R DOS_FilesTest.DOS_MakeName_Basic_Failures -V
+```
+
+You might want to run the test executable directly to get coloured output, and
+the option to start an interactive `gdb` session if a test crashes. For
+example:
+
+```
+build/debug-linux/tests/dosbox_tests --gtest_filter=DOS_FilesTest.DOS_MakeName_Basic_Failures
+```
+
+See the [ctest documentation](https://cmake.org/cmake/help/v3.31/manual/ctest.1.html)
+for the full list of available options.
+
 
 ## Sanitizer build
 
