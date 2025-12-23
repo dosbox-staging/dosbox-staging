@@ -82,6 +82,16 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 ### Configure and build
 
+To create the debug build:
+
+```bash
+cd dosbox-staging
+cmake --preset=debug-linux
+cmake --build --preset=debug-linux
+```
+
+To create the optimised release build:
+
 ```bash
 cd dosbox-staging
 cmake --preset=release-linux
@@ -90,7 +100,15 @@ cmake --build --preset=release-linux
 
 ### Start DOSBox Staging
 
-You can now launch DOSBox Staging with the command:
+Once built, you can launch DOSBox Staging with the following commands.
+
+Debug build:
+
+``` bash
+./build/debug-linux/dosbox
+```
+
+Release build:
 
 ``` bash
 ./build/release-linux/dosbox
@@ -140,6 +158,16 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 ### Configure and build
 
+To create the debug build:
+
+```bash
+cd dosbox-staging
+cmake --preset=debug-linux-vcpkg
+cmake --build --preset=debug-linux-vcpkg
+```
+
+To create the optimised release build:
+
 ```bash
 cd dosbox-staging
 cmake --preset=release-linux-vcpkg
@@ -148,10 +176,18 @@ cmake --build --preset=release-linux-vcpkg
 
 ### Start DOSBox Staging
 
-You can now launch DOSBox Staging with the command:
+Once built, you can launch DOSBox Staging with the following commands.
 
-```bash
-./build/release-linux/dosbox
+Debug build:
+
+``` bash
+./build/debug-linux-vcpkg/dosbox
+```
+
+Release build:
+
+``` bash
+./build/release-linux-vcpkg/dosbox
 ```
 
 ## Bisecting and building old versions
