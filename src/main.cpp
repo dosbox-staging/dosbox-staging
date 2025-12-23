@@ -671,10 +671,10 @@ int main(int argc, char* argv[])
 
 		maybe_create_resource_directories();
 
+		DOSBOX_InitModules();
+
 		// Initialise the GUI
 		GFX_Init();
-
-		DOSBOX_InitModules();
 
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
@@ -688,8 +688,8 @@ int main(int argc, char* argv[])
 		SHELL_InitAndRun();
 
 		// Shutdown and release
-		GFX_Destroy();
 		DOSBOX_DestroyModules();
+		GFX_Destroy();
 
 	} catch (char* error) {
 		// TODO Maybe show popup dialog with the error in addition to
