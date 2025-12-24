@@ -1714,8 +1714,8 @@ void GFX_InitSdl()
 	set_sdl_hints();
 
 	// Initialise SDL (timer is needed for title bar animations)
-	if (SDL_InitSubSystem(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
-		E_Exit("SDL: Can't init SDL %s", SDL_GetError());
+	if (SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
+		E_Exit("SDL: Failed to init SDL video and timer: %s", SDL_GetError());
 	}
 
 	if (is_using_kmsdrm_driver() && !check_kmsdrm_setting()) {
@@ -1733,12 +1733,11 @@ void GFX_InitSdl()
 	SDL_version sdl_version = {};
 	SDL_GetVersion(&sdl_version);
 
-	LOG_MSG("SDL: Version %d.%d.%d initialised (%s video and %s audio)",
+	LOG_MSG("SDL: Version %d.%d.%d initialised",
 	        sdl_version.major,
 	        sdl_version.minor,
-	        sdl_version.patch,
-	        SDL_GetCurrentVideoDriver(),
-	        SDL_GetCurrentAudioDriver());
+	        sdl_version.patch);
+	LOG_MSG("SDL: %s video initialised", SDL_GetCurrentVideoDriver());
 
 #ifdef MACOSX
 	// Check for .dosbox document packages dropped from Finder
