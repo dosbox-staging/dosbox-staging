@@ -7,9 +7,9 @@
 #include "config/setup.h"
 
 void TITLEBAR_AddMessages();
-void TITLEBAR_AddConfigSettings(SectionProp& section);
+void TITLEBAR_AddConfigSettings();
 
-void TITLEBAR_ReadConfig(const SectionProp& section);
+void TITLEBAR_ReadConfig();
 
 void TITLEBAR_RefreshTitle();
 void TITLEBAR_RefreshAnimatedTitle();
