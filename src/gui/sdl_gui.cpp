@@ -49,6 +49,15 @@ CHECK_NARROWING();
 
 // #define DEBUG_WINDOW_EVENTS
 
+template <typename... Args>
+void log_window_event([[maybe_unused]] const char* message,
+                      [[maybe_unused]] const Args&... args) noexcept
+{
+#ifdef DEBUG_WINDOW_EVENTS
+	LOG_DEBUG(message, args...);
+#endif
+}
+
 constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
 {
 	return (version.major << 16) + (version.minor << 8) + version.patch;
@@ -627,14 +636,15 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	                           static_cast<float>(width_in_logical_units);
 
 	if (std::abs(new_dpi_scale - sdl.dpi_scale) < DBL_EPSILON) {
-		// LOG_MSG("SDL: DPI scale hasn't changed (still %f)",
-		//         sdl.dpi_scale);
+		log_window_event("SDL: DPI scale hasn't changed (still %g)",
+		                 sdl.dpi_scale);
 		return;
 	}
 	sdl.dpi_scale = new_dpi_scale;
-	// LOG_MSG("SDL: DPI scale updated from %f to %f",
-	//         sdl.dpi_scale,
-	//         new_dpi_scale);
+
+	log_window_event("SDL: DPI scale updated from %g to %g",
+	                 sdl.dpi_scale,
+	                 new_dpi_scale);
 }
 
 static void configure_window_transparency()
@@ -2108,15 +2118,6 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 		}
 		MIXER_UnlockMixerThread();
 	}
-}
-
-template <typename... Args>
-void log_window_event([[maybe_unused]] const char* message,
-                      [[maybe_unused]] const Args&... args) noexcept
-{
-#ifdef DEBUG_WINDOW_EVENTS
-	LOG_DEBUG(message, args...);
-#endif
 }
 
 static bool handle_sdl_windowevent(const SDL_Event& event)
