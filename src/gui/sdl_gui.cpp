@@ -1758,8 +1758,6 @@ void GFX_Init()
 #endif
 
 	// Start GUI init
-	auto section = get_sdl_section();
-
 	configure_pause_and_mute_when_inactive();
 
 	// Assume focus on startup
@@ -1807,7 +1805,7 @@ void GFX_Init()
 	// Notify MOUSE subsystem that it can start now
 	MOUSE_NotifyReadyGFX();
 
-	TITLEBAR_ReadConfig(*section);
+	TITLEBAR_ReadConfig();
 
 	if (sdl.is_fullscreen &&
 	    sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
@@ -1902,7 +1900,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		}
 
 	} else if (prop_name == "window_titlebar") {
-		TITLEBAR_ReadConfig(section);
+		TITLEBAR_ReadConfig();
 
 	} else if (prop_name == "window_transparency") {
 		if (!sdl.is_fullscreen) {
@@ -2590,7 +2588,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	pbool = section.AddBool("window_decorations", Always, true);
 	pbool->SetHelp("Enable window decorations in windowed mode ('on' by default).");
 
-	TITLEBAR_AddConfigSettings(section);
+	TITLEBAR_AddConfigSettings();
 
 	pint = section.AddInt("transparency", Deprecated, 0);
 	pint->SetHelp("Renamed to [color=light-green]'window_transparency'[reset].");
