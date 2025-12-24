@@ -310,6 +310,14 @@ static void maybe_add_recording_pause_mark(std::string& title_str)
 
 static void set_window_title()
 {
+	// The CPU subsystem is initialised before the GUI, so the cycles
+	// changed notifications must be no-ops if we don't have the application
+	// window up yet.
+	const auto window = GFX_GetWindow();
+	if (!window) {
+		return;
+	}
+
 	static std::string last_title_str = {};
 
 	auto new_title_str = state.title_no_tags;
@@ -318,7 +326,7 @@ static void set_window_title()
 	maybe_add_recording_pause_mark(new_title_str);
 
 	if (new_title_str != last_title_str) {
-		SDL_SetWindowTitle(GFX_GetWindow(), new_title_str.c_str());
+		SDL_SetWindowTitle(window, new_title_str.c_str());
 		last_title_str = new_title_str;
 	}
 }
