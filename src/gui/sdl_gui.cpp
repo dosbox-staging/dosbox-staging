@@ -622,18 +622,16 @@ static void set_minimum_window_size()
 }
 
 static void check_and_handle_dpi_change(SDL_Window* sdl_window,
-                                        int width_in_logical_units = 0)
+                                        const int _new_width = 0)
 {
-	if (width_in_logical_units <= 0) {
-		SDL_GetWindowSize(sdl_window, &width_in_logical_units, nullptr);
+	auto new_width = _new_width;
+	if (new_width <= 0) {
+		SDL_GetWindowSize(sdl_window, &new_width, nullptr);
 	}
+	assert(new_width > 0);
 
 	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
-
-	assert(width_in_logical_units > 0);
-
-	const auto new_dpi_scale = canvas_size_px.w /
-	                           static_cast<float>(width_in_logical_units);
+	const auto new_dpi_scale = canvas_size_px.w / static_cast<float>(new_width);
 
 	if (std::abs(new_dpi_scale - sdl.dpi_scale) < DBL_EPSILON) {
 		log_window_event("SDL: DPI scale hasn't changed (still %g)",
