@@ -867,11 +867,82 @@ static bool check_kmsdrm_setting()
 static void update_viewport()
 {
 	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
-	const auto draw_rect_px   = GFX_CalcDrawRectInPixels(canvas_size_px);
 
-	sdl.draw.draw_rect_px = to_sdl_rect(draw_rect_px);
+	auto notify_viewport_size_changed = [&]() {
+		const auto draw_rect_px = GFX_CalcDrawRectInPixels(canvas_size_px);
+		sdl.draw.draw_rect_px = to_sdl_rect(draw_rect_px);
 
-	sdl.renderer->NotifyViewportSizeChanged(draw_rect_px);
+		sdl.renderer->NotifyViewportSizeChanged(draw_rect_px);
+	};
+
+	// TODO come up with a better design for the adaptive shader switching
+	//
+	// The normal flow when using adaptive CRT shaders is that we call the
+	// `NotifyViewportSize()` method of the render backend, which then
+	// handles shader preset switching based on the current restricted
+	// viewport size. That works well when only changing the shader *preset*
+	// is required because all CRT shaders enforce integer scaling. But
+	// there's an edge case when we switch from a CRT shader to the 'sharp'
+	// shader:
+	//
+	// 1. When we calculate the draw area with `GFX_CalcDrawRectInPixels()`,
+	// that calls `RENDER_CalcDrawRectInPixels()`, which in turn queries the
+	// current shader in 'auto' integer scaling mode by calling
+	// `GetCurrentShaderInfo()` of the render backend. The problem is the
+	// current shader is *still* the CRT shader at this point, which
+	// enforces integer scaling. Thus we'll get the draw area restricted by
+	// integer scaling based on the currently active CRT shader, *not* the
+	// full viewport area which we'd expect for the 'sharp' shader to work
+	// correclty (as it doesn't enforce integer scaling; it should fit the
+	// image to the viewport).
+	//
+	// 2. This results in a restricted draw area being set, and the shader
+	// switching only happens *after that*. The end result is the 'sharp'
+	// shader is effectively integer scaled based on the integer scaling
+	// imposed by the previously active the CRT shader.
+	//
+	// ---
+	//
+	// We have a chicken-and-egg problem here; the root cause is that
+	// `NotifyViewportSize()` of the render backend takes the *restricted*
+	// draw area size, not the full viewport size. Ideally, it should take
+	// the unrestricted full viewport size, then it should perform the
+	// shader switching and the restricted viewport size calculation
+	// (potentially) in the correct order. That's a job for the render
+	// backend.
+	//
+	// For now, calling `NotifyViewportSizeChanged()` a second time if the
+	// current shader has been auto-switched to another shader fixes the
+	// problem, but it's a bit of a bandaid solution.
+	//
+	// The proper fix will require a major redesign:
+	//
+	// - The interaction between ShaderManager and the RenderBackend is a
+	//   bit messy at the moment. ShaderManager should probably only do
+	//   shader and preset loading and nothing else, then we should have a
+	//   separate ShaderAutoSwitcher class to separate the two different
+	//   concerns.
+	//
+	// - The integer scaling handling should be moved into another utility
+	//   class out of render.cpp, then the render backend should use this to
+	//   restrict the viewport size if the current shader requires it (as
+	//   opposed to sdl_gui.cpp and ShaderManager both calling RENDER_*
+	//   methods that perform viewport size restriction). Only the render
+	//   backend should "drive" the integer scaling restriction handling
+	//   when it's notified of a viewport size change, then everybody else
+	//   should just ask the render backend for the current resticted
+	//   viewport size.
+	//
+	const auto curr_shader = sdl.renderer->GetCurrentShaderInfo();
+
+	notify_viewport_size_changed();
+
+	const auto new_shader     = sdl.renderer->GetCurrentShaderInfo();
+	const auto shader_changed = (curr_shader.name != new_shader.name);
+
+	if (shader_changed) {
+		notify_viewport_size_changed();
+	}
 }
 
 void GFX_SetSize(const int render_width_px, const int render_height_px,
