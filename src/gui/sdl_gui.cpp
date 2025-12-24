@@ -591,49 +591,25 @@ static bool is_aspect_ratio_correction_enabled()
 	        AspectRatioCorrectionMode::Auto);
 }
 
-static void update_fallback_dimensions(const double dpi_scale)
+static void set_minimum_window_size()
 {
 	// TODO This only works for 320x200 games. We cannot make hardcoded
 	// assumptions about aspect ratios in general, e.g. the pixel aspect
 	// ratio is 1:1 for 640x480 games both with 'aspect = on` and 'aspect =
 	// off'.
-	const auto fallback_height = (is_aspect_ratio_correction_enabled() ? 480
-	                                                                   : 400) /
-	                             dpi_scale;
+	const auto minimum_height = (is_aspect_ratio_correction_enabled() ? 480 : 400);
 
-	assert(dpi_scale > 0);
-	const auto fallback_width = 640 / dpi_scale;
+	constexpr auto MinimumWidth = 640;
 
-	FallbackWindowSize = {iround(fallback_width), iround(fallback_height)};
+	FallbackWindowSize = {iround(MinimumWidth), iround(minimum_height)};
 
-	// TODO pixels or logical units?
-	// LOG_INFO("SDL: Updated fallback dimensions to %dx%d",
-	//          FallbackWindowSize.x,
-	//          FallbackWindowSize.y);
-
-	// Keep the SDL minimum allowed window size in lock-step with the
-	// fallback dimensions. If these aren't linked, the window can obscure
-	// the content (or vice-versa).
-	if (!sdl.window) {
-		return;
-		// LOG_WARNING("SDL: Tried setting window minimum size,"
-		//             " but the SDL window is not available yet");
-	}
+	// The SDL documentation is incorrect; this will set the minimum window
+	// size in logical units, not pixels.
 	SDL_SetWindowMinimumSize(sdl.window,
 	                         FallbackWindowSize.x,
 	                         FallbackWindowSize.y);
 
-	// TODO pixels or logical units?
 	// LOG_INFO("SDL: Updated window minimum size to %dx%d", width, height);
-}
-
-// This is a collection point for things affected by DPI changes, instead of
-// duplicating these calls at every point in the code where we save a new DPI
-static void apply_new_dpi_scale(const double dpi_scale)
-{
-	update_fallback_dimensions(dpi_scale);
-
-	// add more functions here
 }
 
 static void check_and_handle_dpi_change(SDL_Window* sdl_window,
@@ -659,8 +635,6 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	// LOG_MSG("SDL: DPI scale updated from %f to %f",
 	//         sdl.dpi_scale,
 	//         new_dpi_scale);
-
-	apply_new_dpi_scale(new_dpi_scale);
 }
 
 static void configure_window_transparency()
@@ -1850,6 +1824,7 @@ void GFX_InitAndStartGui()
 	sdl.draw.render_height_px = FallbackWindowSize.y;
 
 	create_window_and_renderer();
+	set_minimum_window_size();
 
 	RENDER_SetShaderWithFallback();
 
