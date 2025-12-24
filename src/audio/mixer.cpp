@@ -2786,6 +2786,11 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	// Non-zero is the device is to be opened for recording as well
 	constexpr auto IsCapture = 0;
 
+	if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+		LOG_ERR("SDL: Failed to init SDL audio subsystem: %s", SDL_GetError());
+		return false;
+	}
+
 	if ((mixer.sdl_device = SDL_OpenAudioDevice(
 	             DeviceName, IsCapture, &desired, &obtained, sdl_allow_flags)) ==
 	    SdlError) {
@@ -2795,6 +2800,8 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		set_section_property_value("mixer", "nosound", "off");
 		return false;
 	}
+
+	LOG_MSG("SDL: %s audio initialised", SDL_GetCurrentAudioDriver());
 
 	// Opening SDL audio device succeeded
 	//
