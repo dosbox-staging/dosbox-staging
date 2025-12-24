@@ -76,6 +76,7 @@ RenderBackend* GFX_GetRenderer();
 
 enum class TextureFilterMode { NearestNeighbour, Bilinear };
 
+// Might return nullptr if the window doesn't exist yet
 SDL_Window* GFX_GetWindow();
 
 uint32_t GFX_MakePixel(const uint8_t red, const uint8_t green, const uint8_t blue);
