@@ -1709,12 +1709,12 @@ static void handle_macos_dosbox_package_drop(const std::string& dropped_file_pat
 }
 #endif
 
-void GFX_Init()
+void GFX_InitSdl()
 {
 	set_sdl_hints();
 
 	// Initialise SDL (timer is needed for title bar animations)
-	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
+	if (SDL_InitSubSystem(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
 		E_Exit("SDL: Can't init SDL %s", SDL_GetError());
 	}
 
@@ -1756,7 +1756,10 @@ void GFX_Init()
 		}
 	}
 #endif
+}
 
+void GFX_InitAndStartGui()
+{
 	// Start GUI init
 	configure_pause_and_mute_when_inactive();
 
