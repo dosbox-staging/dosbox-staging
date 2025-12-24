@@ -671,10 +671,12 @@ int main(int argc, char* argv[])
 
 		maybe_create_resource_directories();
 
+		GFX_InitSdl();
+
 		DOSBOX_InitModules();
 
-		// Initialise the GUI
-		GFX_Init();
+		// Initialise and start the GUI
+		GFX_InitAndStartGui();
 
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.

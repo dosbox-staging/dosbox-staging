@@ -15,7 +15,8 @@
 
 void GFX_AddConfigSection();
 
-void GFX_Init();
+void GFX_InitSdl();
+void GFX_InitAndStartGui();
 void GFX_Destroy();
 
 void GFX_RequestExit(const bool pressed);
