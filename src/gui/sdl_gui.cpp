@@ -65,7 +65,7 @@ constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
 
 SDL_Block sdl;
 
-static SDL_Point FallbackWindowSize = {640, 480};
+static SDL_Point minimum_window_size = {640, 480};
 
 DosBox::Rect to_rect(const SDL_Rect r)
 {
@@ -601,13 +601,13 @@ static void set_minimum_window_size()
 
 	constexpr auto MinimumWidth = 640;
 
-	FallbackWindowSize = {iround(MinimumWidth), iround(minimum_height)};
+	minimum_window_size  = {iround(MinimumWidth), iround(minimum_height)};
 
 	// The SDL documentation is incorrect; this will set the minimum window
 	// size in logical units, not pixels.
 	SDL_SetWindowMinimumSize(sdl.window,
-	                         FallbackWindowSize.x,
-	                         FallbackWindowSize.y);
+	                         minimum_window_size.x,
+	                         minimum_window_size.y);
 
 	// LOG_INFO("SDL: Updated window minimum size to %dx%d", width, height);
 }
@@ -784,8 +784,8 @@ static SDL_Rect get_desktop_size()
 	desktop.w -= (left + right);
 	desktop.h -= (top + bottom);
 
-	assert(desktop.w >= FallbackWindowSize.x);
-	assert(desktop.h >= FallbackWindowSize.y);
+	assert(desktop.w >= minimum_window_size.x);
+	assert(desktop.h >= minimum_window_size.y);
 	return desktop;
 }
 
@@ -1186,7 +1186,7 @@ static SDL_Point refine_window_size(const SDL_Point size,
 		return {size.x, y};
 	}
 
-	return FallbackWindowSize;
+	return minimum_window_size;
 }
 
 static void maybe_limit_requested_resolution(int& w, int& h,
@@ -1235,8 +1235,8 @@ static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 
 	const bool was_parsed = sscanf(pref.c_str(), "%dx%d", &w, &h) == 2;
 
-	const bool is_valid = (w >= FallbackWindowSize.x &&
-	                       h >= FallbackWindowSize.y);
+	const bool is_valid = (w >= minimum_window_size.x &&
+	                       h >= minimum_window_size.y);
 
 	if (was_parsed && is_valid) {
 		maybe_limit_requested_resolution(w, h, "window");
@@ -1249,7 +1249,7 @@ static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 	        "using 'default'",
 	        pref.c_str());
 
-	return FallbackWindowSize;
+	return minimum_window_size;
 }
 
 static SDL_Point window_bounds_from_label(const std::string& pref,
@@ -1291,8 +1291,8 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 
 static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 {
-	const auto w = std::max(size.x, FallbackWindowSize.x);
-	const auto h = std::max(size.y, FallbackWindowSize.y);
+	const auto w = std::max(size.x, minimum_window_size.x);
+	const auto h = std::max(size.y, minimum_window_size.y);
 	return {w, h};
 }
 
@@ -1402,7 +1402,7 @@ static void configure_window_size()
 
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
-	SDL_Point coarse_size = FallbackWindowSize;
+	SDL_Point coarse_size = minimum_window_size;
 
 	const auto use_exact_window_resolution = window_size_pref.find('x') !=
 	                                         std::string::npos;
@@ -1820,8 +1820,8 @@ void GFX_InitAndStartGui()
 	configure_renderer();
 	configure_window();
 
-	sdl.draw.render_width_px  = FallbackWindowSize.x;
-	sdl.draw.render_height_px = FallbackWindowSize.y;
+	sdl.draw.render_width_px  = minimum_window_size.x;
+	sdl.draw.render_height_px = minimum_window_size.y;
 
 	create_window_and_renderer();
 	set_minimum_window_size();
@@ -1839,8 +1839,8 @@ void GFX_InitAndStartGui()
 #endif
 
 	SDL_SetWindowMinimumSize(sdl.window,
-	                         FallbackWindowSize.x,
-	                         FallbackWindowSize.y);
+	                         minimum_window_size.x,
+	                         minimum_window_size.y);
 
 	sdl.renderer->SetVsync(is_vsync_enabled());
 
