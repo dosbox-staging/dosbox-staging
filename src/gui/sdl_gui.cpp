@@ -1450,15 +1450,6 @@ static void save_window_position_from_conf()
 	        get_sdl_section()->GetString("window_position")));
 }
 
-static void configure_window()
-{
-	set_window_decorations();
-
-	save_window_position_from_conf();
-
-	configure_window_size();
-}
-
 TextureFilterMode GFX_GetTextureFilterMode()
 {
 	return sdl.texture_filter_mode;
@@ -1831,7 +1822,10 @@ void GFX_InitAndStartGui()
 	configure_vsync();
 	configure_presentation_mode();
 	configure_renderer();
-	configure_window();
+
+	set_window_decorations();
+	save_window_position_from_conf();
+	configure_window_size();
 
 	sdl.draw.render_width_px  = minimum_window_size.x;
 	sdl.draw.render_height_px = minimum_window_size.y;
