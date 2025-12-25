@@ -1809,7 +1809,6 @@ void GFX_InitAndStartGui()
 	configure_presentation_mode();
 	configure_renderer();
 
-	set_window_decorations();
 	save_window_position_from_conf();
 	configure_window_size();
 
