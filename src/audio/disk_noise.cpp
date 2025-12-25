@@ -55,17 +55,18 @@ DiskNoises::DiskNoises(const DiskNoiseMode floppy_disk_noise_mode,
 
 	// Start audio thread
 	MIXER_LockMixerThread();
+
 	const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
 	                                      this,
 	                                      std::placeholders::_1);
-	mix_channel               = MIXER_AddChannel(mixer_callback,
-                                       DiskNoiseSampleRateInHz,
-                                       ChannelName::DiskNoise,
-	                                             {ChannelFeature::Stereo});
+
+	mix_channel = MIXER_AddChannel(mixer_callback,
+	                               DiskNoiseSampleRateInHz,
+	                               ChannelName::DiskNoise,
+	                               {});
 	mix_channel->Enable(true);
+
 	MIXER_UnlockMixerThread();
-	float vol_gain = percentage_to_gain(100);
-	mix_channel->SetAppVolume({vol_gain, vol_gain});
 }
 
 DiskNoises* DiskNoises::GetInstance()
