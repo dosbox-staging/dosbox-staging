@@ -161,8 +161,12 @@ uint8_t imageDisk::Read_AbsoluteSector(uint32_t sectnum, void *data)
 		}
 	}
 
-	DiskType type = hardDrive ? DiskType::HardDisk : DiskType::Floppy;
-	DOS_PerformDiskIoDelay(sector_size, type);
+	// Only perform delay if we booted from a disk image
+	// Otherwise this would result in delay duplication in the int21 handler
+	if (DOS_IsGuestOsBooted()) {
+		DiskType type = hardDrive ? DiskType::HardDisk : DiskType::Floppy;
+		DOS_PerformDiskIoDelay(sector_size, type);
+	}
 
 	size_t ret   = fread(data, 1, sector_size, diskimg);
 	current_fpos = bytenum + ret;
@@ -195,8 +199,12 @@ uint8_t imageDisk::Write_AbsoluteSector(uint32_t sectnum, void *data) {
 		}
 	}
 
-	DiskType type = hardDrive ? DiskType::HardDisk : DiskType::Floppy;
-	DOS_PerformDiskIoDelay(sector_size, type);
+	// Only perform delay if we booted from a disk image
+	// Otherwise this would result in delay duplication in the int21 handler
+	if (DOS_IsGuestOsBooted()) {
+		DiskType type = hardDrive ? DiskType::HardDisk : DiskType::Floppy;
+		DOS_PerformDiskIoDelay(sector_size, type);
+	}
 
 	size_t ret   = fwrite(data, 1, sector_size, diskimg);
 	current_fpos = bytenum + ret;
