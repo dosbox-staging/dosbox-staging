@@ -1830,16 +1830,7 @@ void GFX_InitAndStartGui()
 	// creation.
 	//
 	SDL_RaiseWindow(sdl.window);
-#endif
 
-	set_minimum_window_size();
-
-	// Assume focus on startup
-	apply_active_settings();
-
-	RENDER_SetShaderWithFallback();
-
-#if defined(MACOSX)
 	// Setting the SDL_WINDOW_BORDERLESS flag on window creation doesn't
 	// work on macOS.
 	//
@@ -1848,6 +1839,13 @@ void GFX_InitAndStartGui()
 	//
 	set_window_decorations();
 #endif
+
+	set_minimum_window_size();
+
+	// Assume focus on startup
+	apply_active_settings();
+
+	RENDER_SetShaderWithFallback();
 
 	SDL_SetWindowMinimumSize(sdl.window,
 	                         minimum_window_size.x,
