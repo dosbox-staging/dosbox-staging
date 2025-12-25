@@ -1444,12 +1444,17 @@ static void configure_window_size()
 	        sdl.display_number);
 }
 
+static void save_window_position_from_conf()
+{
+	save_window_position(parse_window_position_conf(
+	        get_sdl_section()->GetString("window_position")));
+}
+
 static void configure_window()
 {
 	set_window_decorations();
 
-	save_window_position(parse_window_position_conf(
-	        get_sdl_section()->GetString("window_position")));
+	save_window_position_from_conf();
 
 	configure_window_size();
 }
@@ -1932,8 +1937,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 #endif
 
 	} else if (prop_name == "window_position") {
-		save_window_position(parse_window_position_conf(
-		        section.GetString("window_position")));
+		save_window_position_from_conf();
 
 		if (!sdl.is_fullscreen) {
 			SDL_SetWindowPosition(sdl.window,
