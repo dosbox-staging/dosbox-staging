@@ -1813,7 +1813,7 @@ void GFX_InitSdl()
 
 void GFX_InitAndStartGui()
 {
-	// Start GUI init
+	// Configure initial settings
 	configure_pause_and_mute_when_inactive();
 
 	configure_fullscreen_mode();
@@ -1830,6 +1830,7 @@ void GFX_InitAndStartGui()
 	sdl.draw.render_width_px  = minimum_window_size.x;
 	sdl.draw.render_height_px = minimum_window_size.y;
 
+	// Create rendering backend and application window
 	sdl.renderer = std::unique_ptr<RenderBackend>(create_renderer());
 	assert(sdl.renderer);
 
