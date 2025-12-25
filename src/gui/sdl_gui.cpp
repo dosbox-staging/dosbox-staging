@@ -160,9 +160,10 @@ SDL_Window* GFX_GetWindow()
 
 double GFX_GetHostRefreshRate()
 {
+	assert(sdl.window);
+
 	SDL_DisplayMode mode = {};
 
-	assert(sdl.window);
 	const auto display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
 
 	constexpr auto DefaultHostRefreshRateHz = 60;
@@ -602,6 +603,8 @@ static bool is_aspect_ratio_correction_enabled()
 
 static void set_minimum_window_size()
 {
+	assert(sdl.window);
+
 	// TODO This only works for 320x200 games. We cannot make hardcoded
 	// assumptions about aspect ratios in general, e.g. the pixel aspect
 	// ratio is 1:1 for 640x480 games both with 'aspect = on` and 'aspect =
@@ -624,6 +627,8 @@ static void set_minimum_window_size()
 static void check_and_handle_dpi_change(SDL_Window* sdl_window,
                                         const int _new_width = 0)
 {
+	assert(sdl.window);
+
 	auto new_width = _new_width;
 	if (new_width <= 0) {
 		SDL_GetWindowSize(sdl_window, &new_width, nullptr);
@@ -647,6 +652,8 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 
 static void set_window_transparency()
 {
+	assert(sdl.window);
+
 	const auto transparency = get_sdl_section()->GetInt("window_transparency");
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 
@@ -655,6 +662,8 @@ static void set_window_transparency()
 
 static void set_window_decorations()
 {
+	assert(sdl.window);
+
 	SDL_SetWindowBordered(sdl.window,
 	                      get_sdl_section()->GetBool("window_decorations")
 	                              ? SDL_TRUE
@@ -663,6 +672,8 @@ static void set_window_decorations()
 
 static void enter_fullscreen()
 {
+	assert(sdl.window);
+
 	sdl.is_fullscreen = true;
 
 	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
@@ -711,6 +722,8 @@ static void enter_fullscreen()
 
 static void exit_fullscreen()
 {
+	assert(sdl.window);
+
 	sdl.is_fullscreen = false;
 
 	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
@@ -1021,6 +1034,8 @@ void GFX_SetMouseVisibility(const bool requested_visible)
 
 static void focus_input()
 {
+	assert(sdl.window);
+
 	// Ensure we have input focus when in fullscreen
 	if (!sdl.is_fullscreen) {
 		return;
@@ -1874,6 +1889,8 @@ void GFX_InitAndStartGui()
 static void notify_sdl_setting_updated(SectionProp& section,
                                        const std::string& prop_name)
 {
+	assert(sdl.window);
+
 	if (prop_name == "fullscreen") {
 		auto fullscreen_requested = section.GetBool("fullscreen");
 
