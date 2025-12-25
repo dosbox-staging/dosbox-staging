@@ -208,7 +208,6 @@ void DOS_ExecuteRegisteredCallbacks(DiskType disk_type)
 
 // Add a delay as configured for the relevant disk type, and call any
 // registered callbacks.
-
 void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type)
 {
 	DOS_ExecuteRegisteredCallbacks(disk_type);
@@ -255,20 +254,6 @@ DiskType DOS_GetDiskTypeFromMediaByte(uint8_t media_byte)
 		return DiskType::Floppy;
 	case MediaId::HardDisk: return DiskType::HardDisk;
 	default: return DiskType::HardDisk;
-	}
-}
-
-void DOS_ExecuteRegisteredCallbacksByHandle(uint16_t reg_handle)
-{
-	uint8_t handle = RealHandle(reg_handle);
-
-	if (handle != 0xff && Files[handle]) {
-		uint8_t drive = Files[handle]->GetDrive();
-		if (drive >= Drives.size()) {
-			return;
-		}
-		DOS_ExecuteRegisteredCallbacks(DOS_GetDiskTypeFromMediaByte(
-		        Drives[drive]->GetMediaByte()));
 	}
 }
 
@@ -1003,7 +988,6 @@ static Bitu DOS_21Handler(void) {
 	case 0x3c:		/* CREATE Create of truncate file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_CreateFile(name1, reg_cl, &reg_ax)) {
-			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
 			DOS_PerformDiskIoDelayByHandle(EstimatedFileCreationIoOverheadInBytes,
 			                               reg_bx);
 			CALLBACK_SCF(false);
@@ -1014,8 +998,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x3d:		/* OPEN Open existing file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
-		if (DOS_OpenFile(name1,reg_al,&reg_ax)) {
-			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
+		if (DOS_OpenFile(name1, reg_al, &reg_ax)) {
 			DOS_PerformDiskIoDelayByHandle(EstimatedFileOpenIoOverheadInBytes,
 			                               reg_bx);
 			CALLBACK_SCF(false);
@@ -1027,7 +1010,6 @@ static Bitu DOS_21Handler(void) {
 	case 0x3e:		/* CLOSE Close file */
 		if (DOS_CloseFile(reg_bx,false,&reg_al)) {
 			/* al destroyed with pre-close refcount from sft */
-			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
 			DOS_PerformDiskIoDelayByHandle(EstimatedFileCloseIoOverheadInBytes,
 			                               reg_bx);
 			CALLBACK_SCF(false);
@@ -1057,19 +1039,18 @@ static Bitu DOS_21Handler(void) {
 		{
 			uint16_t towrite=DOS_GetAmount();
 			MEM_BlockRead(SegPhys(ds)+reg_dx,dos_copybuf,towrite);
-			if (DOS_WriteFile(reg_bx,dos_copybuf,&towrite)) {
-			        DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
+		        if (DOS_WriteFile(reg_bx, dos_copybuf, &towrite)) {
 			        DOS_PerformDiskIoDelayByHandle(towrite, reg_bx);
 			        reg_ax = towrite;
 			        CALLBACK_SCF(false);
-			} else {
-				reg_ax=dos.errorcode;
-				CALLBACK_SCF(true);
-			}
-			modify_cycles(reg_ax);
-			break;
-		};
-	case 0x41:					/* UNLINK Delete file */
+		        } else {
+			        reg_ax = dos.errorcode;
+			        CALLBACK_SCF(true);
+		        }
+		        modify_cycles(reg_ax);
+		        break;
+	};
+	case 0x41: /* UNLINK Delete file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_UnlinkFile(name1)) {
 			CALLBACK_SCF(false);
@@ -1081,18 +1062,17 @@ static Bitu DOS_21Handler(void) {
 	case 0x42:					/* LSEEK Set current file position */
 		{
 			uint32_t pos=(reg_cx<<16) + reg_dx;
-			if (DOS_SeekFile(reg_bx,&pos,reg_al)) {
-			        DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
+		        if (DOS_SeekFile(reg_bx, &pos, reg_al)) {
 			        DOS_PerformDiskIoDelayByHandle(EstimatedFileSeekIoOverheadInBytes,
 			                                       reg_bx);
 			        reg_dx = (uint16_t)(pos >> 16);
 			        reg_ax = (uint16_t)(pos & 0xFFFF);
 			        CALLBACK_SCF(false);
 		        } else {
-				reg_ax=dos.errorcode;
+			        reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
-			}
-			break;
+		        }
+		        break;
 		}
 	case 0x43:					/* Get/Set file attributes */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
