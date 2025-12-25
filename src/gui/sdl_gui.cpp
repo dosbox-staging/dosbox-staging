@@ -653,7 +653,7 @@ static void configure_window_transparency()
 	SDL_SetWindowOpacity(sdl.window, alpha);
 }
 
-static void configure_window_decorations()
+static void set_window_decorations()
 {
 	SDL_SetWindowBordered(sdl.window,
 	                      get_sdl_section()->GetBool("window_decorations")
@@ -717,7 +717,7 @@ static void exit_fullscreen()
 		// Restore the previous window state when exiting our "fake"
 		// borderless fullscreen mode.
 		//
-		configure_window_decorations();
+		set_window_decorations();
 
 		SDL_SetWindowResizable(sdl.window, SDL_TRUE);
 
@@ -751,7 +751,7 @@ static void exit_fullscreen()
 	// We need to disable transparency in fullscreen on macOS
 	configure_window_transparency();
 
-	configure_window_decorations();
+	set_window_decorations();
 }
 
 DosBox::Rect GFX_GetCanvasSizeInPixels()
@@ -1446,7 +1446,7 @@ static void configure_window_size()
 
 static void configure_window()
 {
-	configure_window_decorations();
+	set_window_decorations();
 
 	save_window_position(parse_window_position_conf(
 	        get_sdl_section()->GetString("window_position")));
@@ -1843,7 +1843,7 @@ void GFX_InitAndStartGui()
 	// TODO Remove workaround when the SDL issue
 	// https://github.com/libsdl-org/SDL/issues/6172 is resolved.
 	//
-	configure_window_decorations();
+	set_window_decorations();
 #endif
 
 	SDL_SetWindowMinimumSize(sdl.window,
@@ -1925,7 +1925,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		GFX_ResetScreen();
 
 	} else if (prop_name == "window_decorations") {
-		configure_window_decorations();
+		set_window_decorations();
 
 #if C_OPENGL && defined(MACOSX)
 		update_viewport();
