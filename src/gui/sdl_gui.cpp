@@ -1543,6 +1543,8 @@ static void create_window_and_renderer()
 
 static void configure_keyboard_capture()
 {
+	assert(sdl.window);
+
 	const auto capture_keyboard = get_sdl_section()->GetBool("keyboard_capture");
 
 	SDL_SetWindowKeyboardGrab(sdl.window, capture_keyboard ? SDL_TRUE : SDL_FALSE);
@@ -1558,9 +1560,7 @@ static void apply_active_settings()
 
 	// At least on some platforms grabbing the keyboard has to be repeated
 	// each time we regain focus
-	if (sdl.window) {
-		configure_keyboard_capture();
-	}
+	configure_keyboard_capture();
 }
 
 static void apply_inactive_settings()
