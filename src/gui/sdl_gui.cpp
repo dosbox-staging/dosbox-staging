@@ -1812,9 +1812,6 @@ void GFX_InitAndStartGui()
 	// Start GUI init
 	configure_pause_and_mute_when_inactive();
 
-	// Assume focus on startup
-	apply_active_settings();
-
 	configure_fullscreen_mode();
 	configure_display();
 
@@ -1832,6 +1829,9 @@ void GFX_InitAndStartGui()
 
 	create_window_and_renderer();
 	set_minimum_window_size();
+
+	// Assume focus on startup
+	apply_active_settings();
 
 	RENDER_SetShaderWithFallback();
 
