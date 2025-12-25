@@ -184,8 +184,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path,
 		// Load entire file into memory
 		std::ifstream file(candidate, std::ios::binary | std::ios::ate);
 		if (!file) {
-			LOG_WARNING("DISKNOISE: Failed to open file '%s'",
-			            candidate.string().c_str());
+			LOG_ERR("DISKNOISE: Failed to open file '%s'",
+			        candidate.string().c_str());
 			continue;
 		}
 
@@ -195,8 +195,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path,
 		std::vector<uint8_t> file_data = {};
 		file_data.resize(static_cast<size_t>(size));
 		if (!file.read(reinterpret_cast<char*>(file_data.data()), size)) {
-			LOG_WARNING("DISKNOISE: Failed to read file '%s'",
-			            candidate.string().c_str());
+			LOG_ERR("DISKNOISE: Failed to read file '%s'",
+			        candidate.string().c_str());
 			continue;
 		}
 
@@ -205,8 +205,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path,
 		                                     file_data.size(),
 		                                     nullptr);
 		if (!decoder) {
-			LOG_WARNING("DISKNOISE: Failed to parse FLAC file '%s'",
-			            candidate.string().c_str());
+			LOG_ERR("DISKNOISE: Failed to parse FLAC file '%s'",
+			        candidate.string().c_str());
 			continue;
 		}
 
@@ -216,16 +216,18 @@ void DiskNoiseDevice::LoadSample(const std::string& path,
 		const auto HertzToKilohertz = 1000;
 
 		if (channels != 1) {
-			LOG_WARNING("DISKNOISE: FLAC file '%s' is not mono.",
-			            candidate.string().c_str());
+			LOG_ERR("DISKNOISE: FLAC file '%s' is not mono",
+			        candidate.string().c_str());
+
 			drflac_close(decoder);
 			continue;
-		}
+		}		
 		if (sample_rate != DiskNoiseSampleRateInHz) {
-			LOG_WARNING("DISKNOISE: FLAC file '%s' should be %dkHz, but %dkHz was found",
-			            candidate.string().c_str(),
-			            DiskNoiseSampleRateInHz / HertzToKilohertz,
-			            sample_rate / HertzToKilohertz);
+			LOG_ERR("DISKNOISE: FLAC file '%s' should be %d kHz, but %d kHz was found",
+			        candidate.string().c_str(),
+			        DiskNoiseSampleRateInHz / HertzToKilohertz,
+			        sample_rate / HertzToKilohertz);
+
 			drflac_close(decoder);
 			continue;
 		}
@@ -236,8 +238,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path,
 		drflac_close(decoder);
 
 		if (frames_read == 0) {
-			LOG_WARNING("DISKNOISE: Failed to decode FLAC frames from '%s'",
-			            candidate.string().c_str());
+			LOG_ERR("DISKNOISE: Failed to decode FLAC frames from '%s'",
+			        candidate.string().c_str());
 			continue;
 		}
 
@@ -253,7 +255,7 @@ void DiskNoiseDevice::LoadSample(const std::string& path,
 		return;
 	}
 
-	LOG_WARNING("DISKNOISE: Failed to find FLAC file: '%s'", path.c_str());
+	LOG_ERR("DISKNOISE: Failed to find FLAC file: '%s'", path.c_str());
 }
 
 void DiskNoiseDevice::LoadSeekSamples(const std::vector<std::string>& paths)
@@ -336,11 +338,10 @@ size_t DiskNoiseDevice::ChooseSeekIndex() const
 		const size_t r = static_cast<size_t>(rand()) % valid_indices.size();
 		return valid_indices[r];
 	}
-	default: {
-		LOG_WARNING("DISKNOISE: Unknown disk type '%d' for ChooseSeekIndex",
-		            static_cast<int>(disk_type));
-		return 0;
+	case DiskType::CdRom: {
+		// CD-ROM does not currently support disk noise emulation
 	}
+	default: assertm(false, "Invalid ChooseSeekIndex type"); return 0;
 	}
 	return 0;
 }
@@ -495,10 +496,7 @@ void DiskNoises::SetLastIoPath(const std::string& path,
 	case DiskType::CdRom:
 		// CD-ROM does not currently support disk noise emulation
 		break;
-	default:
-		LOG_WARNING("DISKNOISE: Unknown disk type '%d' for SetLastIoPath",
-		            static_cast<int>(disk_type));
-		break;
+	default: assertm(false, "Invalid DiskType type"); break;
 	}
 }
 

@@ -202,9 +202,7 @@ void DOS_ExecuteRegisteredCallbacks(DiskType disk_type)
 			(*io_callback_cdrom)();
 		}
 		break;
-	default:
-		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
-		return;
+	default: assertm(false, "Invalid DiskType enum");
 	}
 }
 
@@ -224,9 +222,7 @@ void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type)
 	case DiskType::CdRom:
 		DOS_PerformCdRomIoDelay(data_transferred_bytes);
 		break;
-	default:
-		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
-		return;
+	default: assertm(false, "Invalid DiskType enum");
 	}
 }
 
@@ -299,6 +295,7 @@ void DOS_PerformHardDiskIoDelay(uint16_t data_transferred_bytes)
 	double scalar;
 
 	switch (disk_settings.hdd_disk_speed) {
+	case DiskSpeed::Maximum: return;
 	case DiskSpeed::Fast:
 		scalar = static_cast<double>(data_transferred_bytes) /
 		         (HardDiskSpeedFastKbPerSec * BytesPerKilobyte);
@@ -311,7 +308,7 @@ void DOS_PerformHardDiskIoDelay(uint16_t data_transferred_bytes)
 		scalar = static_cast<double>(data_transferred_bytes) /
 		         (HardDiskSpeedSlowKbPerSec * BytesPerKilobyte);
 		break;
-	default: return;
+	default: assertm(false, "Invalid DiskSpeed enum"); return;
 	}
 
 	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
@@ -336,6 +333,7 @@ void DOS_PerformFloppyIoDelay(uint16_t data_transferred_bytes)
 	double scalar;
 
 	switch (disk_settings.fdd_disk_speed) {
+	case DiskSpeed::Maximum: return;
 	case DiskSpeed::Fast:
 		scalar = static_cast<double>(data_transferred_bytes) /
 		         (FloppyDiskSpeedFastKbPerSec * BytesPerKilobyte);
@@ -348,7 +346,7 @@ void DOS_PerformFloppyIoDelay(uint16_t data_transferred_bytes)
 		scalar = static_cast<double>(data_transferred_bytes) /
 		         (FloppyDiskSpeedSlowKbPerSec * BytesPerKilobyte);
 		break;
-	default: return;
+	default: assertm(false, "Invalid DiskType enum"); return;
 	}
 
 	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
@@ -373,6 +371,7 @@ void DOS_PerformCdRomIoDelay(uint16_t data_transferred_bytes)
 	double scalar;
 
 	switch (disk_settings.cdrom_disk_speed) {
+	case DiskSpeed::Maximum: return;
 	case DiskSpeed::Fast:
 		scalar = static_cast<double>(data_transferred_bytes) /
 		         (CdRomSpeedFastKbPerSec * BytesPerKilobyte);
@@ -385,7 +384,7 @@ void DOS_PerformCdRomIoDelay(uint16_t data_transferred_bytes)
 		scalar = static_cast<double>(data_transferred_bytes) /
 		         (CdRomSpeedSlowKbPerSec * BytesPerKilobyte);
 		break;
-	default: return;
+	default: assertm(false, "Invalid DiskType enum"); return;
 	}
 
 	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
