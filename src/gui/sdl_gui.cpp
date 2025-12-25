@@ -451,6 +451,7 @@ static void maybe_log_presentation_and_vsync_mode()
 
 static void maybe_log_display_properties()
 {
+	assert(sdl.renderer);
 	assert(sdl.draw.render_width_px > 0 && sdl.draw.render_height_px > 0);
 
 	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
@@ -627,6 +628,7 @@ static void set_minimum_window_size()
 static void check_and_handle_dpi_change(SDL_Window* sdl_window,
                                         const int _new_width = 0)
 {
+	assert(sdl.renderer);
 	assert(sdl.window);
 
 	auto new_width = _new_width;
@@ -769,11 +771,13 @@ static void exit_fullscreen()
 
 DosBox::Rect GFX_GetCanvasSizeInPixels()
 {
+	assert(sdl.renderer);
 	return sdl.renderer->GetCanvasSizeInPixels();
 }
 
 RenderBackend* GFX_GetRenderer()
 {
+	assert(sdl.renderer);
 	return sdl.renderer.get();
 }
 
@@ -817,6 +821,8 @@ DosBox::Rect GFX_GetDesktopSize()
 
 DosBox::Rect GFX_GetViewportSizeInPixels()
 {
+	assert(sdl.renderer);
+
 	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
 
 	return RENDER_CalcRestrictedViewportSizeInPixels(canvas_size_px);
@@ -861,6 +867,8 @@ static bool check_kmsdrm_setting()
 
 static void update_viewport()
 {
+	assert(sdl.renderer);
+
 	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
 
 	auto notify_viewport_size_changed = [&]() {
@@ -945,6 +953,8 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
                  const bool double_width, const bool double_height,
                  const VideoMode& video_mode, GFX_Callback_t callback)
 {
+	assert(sdl.renderer);
+
 	if (sdl.draw.updating_framebuffer) {
 		GFX_EndUpdate();
 	}
@@ -978,6 +988,7 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
 
 void GFX_CenterMouse()
 {
+	assert(sdl.renderer);
 	assert(sdl.window);
 
 	int width  = 0;
@@ -1052,6 +1063,8 @@ static void focus_input()
 
 static void toggle_fullscreen()
 {
+	assert(sdl.renderer);
+
 	// Record the window's current canvas size if we're departing window-mode
 	if (!sdl.is_fullscreen) {
 		sdl.windowed.canvas_size = to_sdl_rect(
@@ -1088,6 +1101,8 @@ static void toggle_fullscreen_handler(bool pressed)
 //
 bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 {
+	assert(sdl.renderer);
+
 	if (!sdl.draw.active || sdl.draw.updating_framebuffer) {
 		return false;
 	}
@@ -1100,6 +1115,8 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 
 void GFX_EndUpdate()
 {
+	assert(sdl.renderer);
+
 	if (sdl.draw.updating_framebuffer) {
 		// `sdl.draw.updating_framebuffer` is true when the contents of
 		// the framebuffer has been changed in the current frame.
@@ -1156,6 +1173,8 @@ void GFX_EndUpdate()
 
 uint32_t GFX_MakePixel(const uint8_t red, const uint8_t green, const uint8_t blue)
 {
+	assert(sdl.renderer);
+
 	return sdl.renderer->MakePixel(red, green, blue);
 }
 
@@ -1886,6 +1905,7 @@ void GFX_InitAndStartGui()
 static void notify_sdl_setting_updated(SectionProp& section,
                                        const std::string& prop_name)
 {
+	assert(sdl.renderer);
 	assert(sdl.window);
 
 	if (prop_name == "fullscreen") {
@@ -2354,6 +2374,8 @@ static void adjust_ticks_after_present_frame(int64_t elapsed_us)
 
 void GFX_CaptureRenderedImage()
 {
+	assert(sdl.renderer);
+
 	// The draw rect can extends beyond the bounds of the window or the
 	// screen in fullscreen when we're "zooming into" the DOS content in
 	// `relative` viewport mode. But rendered captures should always capture
@@ -2379,6 +2401,8 @@ void GFX_CaptureRenderedImage()
 
 void GFX_MaybePresentFrame()
 {
+	assert(sdl.renderer);
+
 	const auto start_us = GetTicksUs();
 
 	// Always present the frame if we want to capture the next
