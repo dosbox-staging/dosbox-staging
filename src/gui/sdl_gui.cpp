@@ -1606,7 +1606,7 @@ static void configure_display()
 	}
 }
 
-static void configure_allow_screensaver()
+static void set_allow_screensaver()
 {
 	const std::string screensaver = get_sdl_section()->GetString("screensaver");
 	if (screensaver == "allow") {
@@ -1854,7 +1854,7 @@ void GFX_InitAndStartGui()
 	set_window_transparency();
 
 	check_and_handle_dpi_change(sdl.window);
-	configure_allow_screensaver();
+	set_allow_screensaver();
 
 	add_default_sdl_section_mapper_bindings();
 
@@ -1912,7 +1912,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		GFX_ResetScreen();
 
 	} else if (prop_name == "screensaver") {
-		configure_allow_screensaver();
+		set_allow_screensaver();
 
 	} else if (prop_name == "vsync") {
 		validate_vsync_and_presentation_mode_settings();
