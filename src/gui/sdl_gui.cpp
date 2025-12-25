@@ -645,7 +645,7 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	                 new_dpi_scale);
 }
 
-static void configure_window_transparency()
+static void set_window_transparency()
 {
 	const auto transparency = get_sdl_section()->GetInt("window_transparency");
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
@@ -729,7 +729,7 @@ static void exit_fullscreen()
 		                      sdl.fullscreen.prev_window.x_pos,
 		                      sdl.fullscreen.prev_window.y_pos);
 
-		configure_window_transparency();
+		set_window_transparency();
 
 		maybe_log_display_properties();
 
@@ -749,7 +749,7 @@ static void exit_fullscreen()
 	}
 
 	// We need to disable transparency in fullscreen on macOS
-	configure_window_transparency();
+	set_window_transparency();
 
 	set_window_decorations();
 }
@@ -1852,7 +1852,7 @@ void GFX_InitAndStartGui()
 
 	sdl.renderer->SetVsync(is_vsync_enabled());
 
-	configure_window_transparency();
+	set_window_transparency();
 
 	check_and_handle_dpi_change(sdl.window);
 	configure_allow_screensaver();
@@ -1961,7 +1961,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "window_transparency") {
 		if (!sdl.is_fullscreen) {
-			configure_window_transparency();
+			set_window_transparency();
 		}
 
 	} else {
