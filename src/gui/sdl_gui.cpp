@@ -1541,7 +1541,7 @@ static void create_window_and_renderer()
 #endif
 }
 
-static void configure_keyboard_capture()
+static void set_keyboard_capture()
 {
 	assert(sdl.window);
 
@@ -1560,7 +1560,7 @@ static void apply_active_settings()
 
 	// At least on some platforms grabbing the keyboard has to be repeated
 	// each time we regain focus
-	configure_keyboard_capture();
+	set_keyboard_capture();
 }
 
 static void apply_inactive_settings()
@@ -1894,7 +1894,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		}
 
 	} else if (prop_name == "keyboard_capture") {
-		configure_keyboard_capture();
+		set_keyboard_capture();
 
 	} else if (prop_name == "mapperfile") {
 		MAPPER_BindKeys(&section);
