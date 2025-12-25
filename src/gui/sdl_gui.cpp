@@ -1478,27 +1478,27 @@ static int get_sdl_window_flags()
 	return check_cast<int>(flags);
 }
 
-static void create_window_and_renderer()
+static RenderBackend* create_renderer()
 {
 #if C_OPENGL
 	if (sdl.render_backend_type == RenderBackendType::OpenGl) {
 		try {
-			sdl.renderer = std::make_unique<OpenGlRenderer>(
-			        sdl.windowed.x_pos,
-			        sdl.windowed.y_pos,
-			        sdl.windowed.width,
-			        sdl.windowed.height,
-			        get_sdl_window_flags());
+			return new OpenGlRenderer(sdl.windowed.x_pos,
+			                          sdl.windowed.y_pos,
+			                          sdl.windowed.width,
+			                          sdl.windowed.height,
+			                          get_sdl_window_flags());
 
 		} catch (const std::runtime_error& ex) {
 			LOG_WARNING(
 			        "OPENGL: Error initialising OpenGL renderer, "
 			        "falling back to SDL renderer");
 
-			// GL attributes are global and can affect SDL's texture renderer
-			// as it can use OpenGL internally as a backend.
-			// This is done in OpenGlRenderer's destructor but we caught an exception during construction
-			// so the destructor will not be run here.
+			// GL attributes are global and can affect SDL's texture
+			// renderer as it can use OpenGL internally as a
+			// backend. This is done in OpenGlRenderer's destructor
+			// but we caught an exception during construction so the
+			// destructor will not be run here.
 			SDL_GL_ResetAttributes();
 
 			sdl.render_backend_type = RenderBackendType::Sdl;
@@ -1513,32 +1513,21 @@ static void create_window_and_renderer()
 			        "texture_renderer");
 			lowcase(render_driver);
 
-			sdl.renderer = std::make_unique<SdlRenderer>(
-			        sdl.windowed.x_pos,
-			        sdl.windowed.y_pos,
-			        sdl.windowed.width,
-			        sdl.windowed.height,
-			        get_sdl_window_flags(),
-			        render_driver,
-			        sdl.texture_filter_mode);
+			return new SdlRenderer(sdl.windowed.x_pos,
+			                       sdl.windowed.y_pos,
+			                       sdl.windowed.width,
+			                       sdl.windowed.height,
+			                       get_sdl_window_flags(),
+			                       render_driver,
+			                       sdl.texture_filter_mode);
 
 		} catch (const std::runtime_error& ex) {
 			E_Exit("SDL: Could not initialize SDL render backend");
 		}
 	}
 
-	sdl.window = sdl.renderer->GetWindow();
-
-#ifdef MACOSX
-	// The window is not always brought to the foreground after startup with
-	// SDL 2.32.10 on macOS, hence this workaround. Both the OpenGL and SDL
-	// texture renderers are affected.
-	//
-	// SDL on Windows and Linux seems to always raise the window after
-	// creation.
-	//
-	SDL_RaiseWindow(sdl.window);
-#endif
+	assert(false);
+	return nullptr;
 }
 
 static void set_keyboard_capture()
@@ -1827,7 +1816,23 @@ void GFX_InitAndStartGui()
 	sdl.draw.render_width_px  = minimum_window_size.x;
 	sdl.draw.render_height_px = minimum_window_size.y;
 
-	create_window_and_renderer();
+	sdl.renderer = std::unique_ptr<RenderBackend>(create_renderer());
+	assert(sdl.renderer);
+
+	sdl.window = sdl.renderer->GetWindow();
+	assert(sdl.window);
+
+#ifdef MACOSX
+	// The window is not always brought to the foreground after startup with
+	// SDL 2.32.10 on macOS, hence this workaround. Both the OpenGL and SDL
+	// texture renderers are affected.
+	//
+	// SDL on Windows and Linux seems to always raise the window after
+	// creation.
+	//
+	SDL_RaiseWindow(sdl.window);
+#endif
+
 	set_minimum_window_size();
 
 	// Assume focus on startup
