@@ -1863,10 +1863,6 @@ void GFX_InitAndStartGui()
 
 	RENDER_SetShaderWithFallback();
 
-	SDL_SetWindowMinimumSize(sdl.window,
-	                         minimum_window_size.x,
-	                         minimum_window_size.y);
-
 	sdl.renderer->SetVsync(is_vsync_enabled());
 
 	set_window_transparency();
