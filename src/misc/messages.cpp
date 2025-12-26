@@ -13,6 +13,7 @@
 #include "misc/std_filesystem.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
+#include "private/messages_adjust.h"
 #include "private/messages_po_entry.h"
 #include "utils/checks.h"
 #include "utils/fs_utils.h"
@@ -184,77 +185,9 @@ void Message::AutoAdjustTranslation(const Message& message_english)
 		return;
 	}
 
-	auto count_leading_newlines = [](const std::string& message) {
-		const auto position = message.find_first_not_of('\n');
-		if (position == std::string::npos) {
-			return message.size();
-		} else {
-			return position;
-		}
-	};
-
-	auto count_trailing_newlines = [](const std::string& message) {
-		const auto position = message.find_last_not_of('\n');
-		if (position == std::string::npos) {
-			return message.size();
-		} else {
-			return message.size() - position - 1;
-		}
-	};
-
-	// Count the number of leading and trailing newlines in the translated
-	// message, the current English message, and the English message
-	// which was the base for the translation (the previous English)
-
-	auto& translated               = message_raw;
-	const auto leading_translated  = count_leading_newlines(translated);
-	const auto trailing_translated = count_trailing_newlines(translated);
-
-	auto& previous               = message_previous_english;
-	const auto leading_previous  = count_leading_newlines(previous);
-	const auto trailing_previous = count_trailing_newlines(previous);
-
-	const auto& current         = message_english.message_raw;
-	const auto leading_current  = count_leading_newlines(current);
-	const auto trailing_current = count_trailing_newlines(current);
-
-	// Skip auto-adjusting if any of the strings is empty or consists only
-	// of newline characters
-	if (leading_translated == translated.size() || translated.empty() ||
-	    leading_previous == previous.size() || previous.empty() ||
-	    leading_current == current.size() || current.empty()) {
-		return;
-	}
-
-	// Safety check - do not auto-adjust the translation if the translated
-	// message has a different
-	if (leading_translated != leading_previous ||
-	    trailing_translated != trailing_previous) {
-		return;
-	}
-
-	const auto translated_stripped = translated.substr(
-	        leading_translated,
-	        translated.size() - leading_translated - trailing_translated);
-	const auto previous_stripped = previous.substr(
-	        leading_previous,
-	        previous.size() - leading_previous - trailing_previous);
-	const auto current_stripped = current.substr(
-	        leading_current,
-                current.size() - leading_current - trailing_current);
-
-	// We can only auto-adjust the translated message if the previous and
-	// current English strings only differ by the number of leading/trailing
-	// newlines
-	if (current_stripped != previous_stripped) {
-		return;
-	}
-
-	// Override the previous English string, adjust the translation
-	previous   = current;
-	translated = std::string(leading_current, '\n') +
-	             translated_stripped +
-	             std::string(trailing_current, '\n');
+	adjust_newlines(message_english.message_raw,
+	                message_previous_english,
+	                message_raw);
 }
 
 void Message::VerifyMessage(const std::string& message_key)
