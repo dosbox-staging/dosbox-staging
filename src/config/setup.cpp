@@ -488,6 +488,7 @@ bool PropInt::SetValue(const std::string& input)
 		                      default_value.ToString().c_str());
 		return false;
 	}
+
 	return ValidateValue(val);
 }
 
