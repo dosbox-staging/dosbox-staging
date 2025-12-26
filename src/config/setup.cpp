@@ -414,14 +414,10 @@ bool PropInt::ValidateValue(const Value& new_value)
 	if (va >= mi && va <= ma) {
 		value = new_value;
 		return true;
-	}
+	} 
 
-	// Outside range, set it to the closest boundary
-	if (va > ma) {
-		value = ma;
-	} else {
-		value = mi;
-	}
+	// Outside range, use default value
+	value = default_value;
 
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
