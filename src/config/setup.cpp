@@ -89,33 +89,33 @@ bool Value::operator<(const Value& other) const
 	       std::tie(other._hex, other._bool, other._int, other._string, other._double);
 }
 
-bool Value::SetValue(const std::string& _value, const Etype _type)
+bool Value::SetValue(const std::string& new_value, const Etype _type)
 {
 	assert(type == V_NONE || type == _type);
 	type = _type;
 
 	bool is_valid = true;
 	switch (type) {
-	case V_HEX: is_valid = SetHex(_value); break;
-	case V_INT: is_valid = SetInt(_value); break;
-	case V_BOOL: is_valid = SetBool(_value); break;
-	case V_STRING: SetString(_value); break;
-	case V_DOUBLE: is_valid = SetDouble(_value); break;
+	case V_HEX: is_valid = SetHex(new_value); break;
+	case V_INT: is_valid = SetInt(new_value); break;
+	case V_BOOL: is_valid = SetBool(new_value); break;
+	case V_STRING: SetString(new_value); break;
+	case V_DOUBLE: is_valid = SetDouble(new_value); break;
 
 	case V_NONE:
 	case V_CURRENT:
 	default:
 		LOG_ERR("CONFIG: Unhandled type when setting value: '%s'",
-		        _value.c_str());
+		        new_value.c_str());
 		is_valid = false;
 		break;
 	}
 	return is_valid;
 }
 
-bool Value::SetHex(const std::string& _value)
+bool Value::SetHex(const std::string& new_value)
 {
-	std::istringstream input(_value);
+	std::istringstream input(new_value);
 	input.flags(std::ios::hex);
 	int result = INT_MIN;
 	input >> result;
@@ -126,9 +126,9 @@ bool Value::SetHex(const std::string& _value)
 	return true;
 }
 
-bool Value::SetInt(const std::string& _value)
+bool Value::SetInt(const std::string& new_value)
 {
-	std::istringstream input(_value);
+	std::istringstream input(new_value);
 	int result = INT_MIN;
 	input >> result;
 	if (result == INT_MIN) {
@@ -138,9 +138,9 @@ bool Value::SetInt(const std::string& _value)
 	return true;
 }
 
-bool Value::SetDouble(const std::string& _value)
+bool Value::SetDouble(const std::string& new_value)
 {
-	std::istringstream input(_value);
+	std::istringstream input(new_value);
 	double result = std::numeric_limits<double>::max();
 	input >> result;
 	if (result == std::numeric_limits<double>::max()) {
@@ -152,9 +152,9 @@ bool Value::SetDouble(const std::string& _value)
 
 // Sets the '_bool' member variable to either the parsed boolean value or false
 // if it couldn't be parsed. Returns true if the provided string was parsed.
-bool Value::SetBool(const std::string& _value)
+bool Value::SetBool(const std::string& new_value)
 {
-	auto lowercase_value = _value;
+	auto lowercase_value = new_value;
 	lowcase(lowercase_value);
 	const auto parsed = parse_bool_setting(lowercase_value);
 
@@ -163,9 +163,9 @@ bool Value::SetBool(const std::string& _value)
 	return parsed.has_value();
 }
 
-void Value::SetString(const std::string& _value)
+void Value::SetString(const std::string& new_value)
 {
-	_string = _value;
+	_string = new_value;
 }
 
 std::string Value::ToString() const
@@ -201,14 +201,14 @@ Property::Property(const std::string& name, Changeable::Value when)
 	        "Only letters, digits, and underscores are allowed in property names");
 }
 
-bool Property::IsValidValue(const Value& _value)
+bool Property::IsValidValue(const Value& new_value)
 {
 	if (!IsRestrictedValue()) {
 		return true;
 	}
 
 	for (const_iter it = valid_values.begin(); it != valid_values.end(); ++it) {
-		if ((*it) == _value) {
+		if ((*it) == new_value) {
 			return true;
 		}
 	}
@@ -217,7 +217,7 @@ bool Property::IsValidValue(const Value& _value)
 	                      "CONFIG",
 	                      "PROGRAM_CONFIG_INVALID_SETTING",
 	                      propname.c_str(),
-	                      _value.ToString().c_str(),
+	                      new_value.ToString().c_str(),
 	                      default_value.ToString().c_str());
 
 	return false;
@@ -239,13 +239,13 @@ bool Property::IsValueDeprecated(const Value& val) const
 	return is_deprecated;
 }
 
-bool Property::ValidateValue(const Value& _value)
+bool Property::ValidateValue(const Value& new_value)
 {
-	if (IsValueDeprecated(_value)) {
-		value = GetAlternateForDeprecatedValue(_value);
+	if (IsValueDeprecated(new_value)) {
+		value = GetAlternateForDeprecatedValue(new_value);
 		return true;
-	} else if (IsValidValue(_value)) {
-		value = _value;
+	} else if (IsValidValue(new_value)) {
+		value = new_value;
 		return true;
 	} else {
 		value = default_value;
@@ -498,7 +498,7 @@ bool PropString::SetValue(const std::string& input)
 	return ValidateValue(val);
 }
 
-bool PropString::IsValidValue(const Value& _value)
+bool PropString::IsValidValue(const Value& new_value)
 {
 	if (!IsRestrictedValue()) {
 		return true;
@@ -507,20 +507,20 @@ bool PropString::IsValidValue(const Value& _value)
 	// If the property's valid values includes either positive or negative
 	// bool strings ("on", "false", etc..), then check if this incoming
 	// value is either.
-	if (is_positive_bool_valid && has_true(_value.ToString())) {
+	if (is_positive_bool_valid && has_true(new_value.ToString())) {
 		return true;
 	}
-	if (is_negative_bool_valid && has_false(_value.ToString())) {
+	if (is_negative_bool_valid && has_false(new_value.ToString())) {
 		return true;
 	}
 
 	for (const auto& val : valid_values) {
-		if (val == _value) { // Match!
+		if (val == new_value) { // Match!
 			return true;
 		}
 		if (val.ToString() == "%u") {
 			unsigned int v;
-			if (sscanf(_value.ToString().c_str(), "%u", &v) == 1) {
+			if (sscanf(new_value.ToString().c_str(), "%u", &v) == 1) {
 				return true;
 			}
 		}
@@ -530,7 +530,7 @@ bool PropString::IsValidValue(const Value& _value)
 	                      "CONFIG",
 	                      "PROGRAM_CONFIG_INVALID_SETTING",
 	                      propname.c_str(),
-	                      _value.ToString().c_str(),
+	                      new_value.ToString().c_str(),
 	                      default_value.ToString().c_str());
 
 	return false;
@@ -611,12 +611,12 @@ void PropMultiVal::MakeDefaultValue()
 	ValidateValue(val);
 }
 
-bool PropMultiValRemain::SetValue(const std::string& _value)
+bool PropMultiValRemain::SetValue(const std::string& new_value)
 {
-	Value val(_value, Value::V_STRING);
+	Value val(new_value, Value::V_STRING);
 	bool is_valid = ValidateValue(val);
 
-	std::string local(_value);
+	std::string local(new_value);
 	int i                    = 0;
 	int number_of_properties = 0;
 
@@ -669,12 +669,12 @@ bool PropMultiValRemain::SetValue(const std::string& _value)
 	return is_valid;
 }
 
-bool PropMultiVal::SetValue(const std::string& _value)
+bool PropMultiVal::SetValue(const std::string& new_value)
 {
-	Value val(_value, Value::V_STRING);
+	Value val(new_value, Value::V_STRING);
 	bool is_valid = ValidateValue(val);
 
-	std::string local(_value);
+	std::string local(new_value);
 	int i = 0;
 
 	Property* p = section->GetProperty(0);
@@ -835,42 +835,42 @@ void Property::SetEnabledOptions(const std::vector<std::string>& options)
 }
 
 PropInt* SectionProp::AddInt(const std::string& _propname,
-                             Property::Changeable::Value when, int _value)
+                             Property::Changeable::Value when, int new_value)
 {
-	const auto prop = new PropInt(_propname, when, _value);
+	const auto prop = new PropInt(_propname, when, new_value);
 	properties.push_back(prop);
 	return prop;
 }
 
 PropString* SectionProp::AddString(const std::string& _propname,
                                    Property::Changeable::Value when,
-                                   const char* _value)
+                                   const char* new_value)
 {
-	const auto prop = new PropString(_propname, when, _value);
+	const auto prop = new PropString(_propname, when, new_value);
 	properties.push_back(prop);
 	return prop;
 }
 
 PropPath* SectionProp::AddPath(const std::string& _propname,
-                               Property::Changeable::Value when, const char* _value)
+                               Property::Changeable::Value when, const char* new_value)
 {
-	const auto prop = new PropPath(_propname, when, _value);
+	const auto prop = new PropPath(_propname, when, new_value);
 	properties.push_back(prop);
 	return prop;
 }
 
 PropBool* SectionProp::AddBool(const std::string& _propname,
-                               Property::Changeable::Value when, bool _value)
+                               Property::Changeable::Value when, bool new_value)
 {
-	const auto prop = new PropBool(_propname, when, _value);
+	const auto prop = new PropBool(_propname, when, new_value);
 	properties.push_back(prop);
 	return prop;
 }
 
 PropHex* SectionProp::AddHex(const std::string& _propname,
-                             Property::Changeable::Value when, Hex _value)
+                             Property::Changeable::Value when, Hex new_value)
 {
-	const auto prop = new PropHex(_propname, when, _value);
+	const auto prop = new PropHex(_propname, when, new_value);
 	properties.push_back(prop);
 	return prop;
 }
