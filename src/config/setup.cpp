@@ -381,15 +381,17 @@ std::string Property::GetHelpRaw() const
 	return result;
 }
 
-bool PropInt::ValidateValue(const Value& _value)
+bool PropInt::ValidateValue(const Value& new_value)
 {
 	if (IsRestrictedValue()) {
-		if (IsValueDeprecated(_value)) {
-			value = GetAlternateForDeprecatedValue(_value);
+		if (IsValueDeprecated(new_value)) {
+			value = GetAlternateForDeprecatedValue(new_value);
 			return true;
-		} else if (IsValidValue(_value)) {
-			value = _value;
+
+		} else if (IsValidValue(new_value)) {
+			value = new_value;
 			return true;
+
 		} else {
 			value = default_value;
 			return false;
@@ -400,37 +402,36 @@ bool PropInt::ValidateValue(const Value& _value)
 	const int mi = min_value;
 	const int ma = max_value;
 
-	int va = static_cast<int>(Value(_value));
-
 	// No ranges
 	if (mi == -1 && ma == -1) {
-		value = _value;
+		value = new_value;
 		return true;
 	}
 
+	const int va = new_value;
+
 	// Inside range
 	if (va >= mi && va <= ma) {
-		value = _value;
+		value = new_value;
 		return true;
 	}
 
 	// Outside range, set it to the closest boundary
 	if (va > ma) {
-		va = ma;
+		value = ma;
 	} else {
-		va = mi;
+		value = mi;
 	}
 
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
 	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
 	                      propname.c_str(),
-	                      _value.ToString().c_str(),
+	                      new_value.ToString().c_str(),
 	                      min_value.ToString().c_str(),
 	                      max_value.ToString().c_str(),
-	                      std::to_string(va).c_str());
+	                      std::to_string(static_cast<int>(value)).c_str());
 
-	value = va;
 	return true;
 }
 
