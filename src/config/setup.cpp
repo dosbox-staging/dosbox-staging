@@ -1031,29 +1031,36 @@ Hex SectionProp::GetHex(const std::string& _propname) const
 
 bool SectionProp::HandleInputline(const std::string& line)
 {
-	std::string::size_type loc = line.find('=');
+	// Parse a configuration setting in the 'setting_name = setting_value'
+	// format
+	const std::string::size_type loc = line.find('=');
 
 	if (loc == std::string::npos) {
 		return false;
 	}
 
-	std::string name = line.substr(0, loc);
-	std::string val  = line.substr(loc + 1);
+	std::string setting_name      = line.substr(0, loc);
+	std::string setting_value_str = line.substr(loc + 1);
 
-	// Strip quotes around the value
-	trim(val);
-	std::string::size_type length = val.length();
-	if (length > 1 && ((val[0] == '\"' && val[length - 1] == '\"') ||
-	                   (val[0] == '\'' && val[length - 1] == '\''))) {
-		val = val.substr(1, length - 2);
+	// Strip quotes around the value string
+	trim(setting_value_str);
+	const auto length = setting_value_str.length();
+
+	if (length > 1 &&
+	    ((setting_value_str[0] == '\"' && setting_value_str[length - 1] == '\"') ||
+	     (setting_value_str[0] == '\'' && setting_value_str[length - 1] == '\''))) {
+
+		setting_value_str = setting_value_str.substr(1, length - 2);
 	}
 
-	// Trim the result in case there were spaces somewhere
-	trim(name);
-	trim(val);
+	// Trim leading and trailing spaces from the setting name and value
+	// strings
+	trim(setting_name);
+	trim(setting_value_str);
 
+	// Find the configuration setting and try to set it
 	for (auto& p : properties) {
-		if (strcasecmp(p->propname.c_str(), name.c_str()) != 0) {
+		if (strcasecmp(p->propname.c_str(), setting_name.c_str()) != 0) {
 			continue;
 		}
 
@@ -1061,24 +1068,26 @@ bool SectionProp::HandleInputline(const std::string& line)
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "CONFIG",
 			                      "PROGRAM_CONFIG_DEPRECATED_SETTING",
-			                      name.c_str());
+			                      setting_name.c_str());
 
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "CONFIG",
-			                      create_setting_help_msg_name(name));
+			                      create_setting_help_msg_name(
+			                              setting_name));
 
 			if (!p->IsDeprecatedButAllowed()) {
 				return false;
 			}
 		}
 
-		return p->SetValue(val);
+		return p->SetValue(setting_value_str);
 	}
 
+	// We couldn't find the config setting; display an error
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
 	                      "PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND",
-	                      name.c_str());
+	                      setting_name.c_str());
 	return false;
 }
 
