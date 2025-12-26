@@ -1092,7 +1092,7 @@ void PROGRAMS_AddMessages()
 
 	MSG_Add("PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
 	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
-	        "must be between %s-%s, using [color=white]'%s'[reset]");
+	        "must be between %s and %s, using [color=white]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_NO_HELP",
 	        "No help available for the setting [color=light-green]'%s'[reset].");
