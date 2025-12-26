@@ -128,14 +128,11 @@ bool Value::SetHex(const std::string& new_value)
 
 bool Value::SetInt(const std::string& new_value)
 {
-	std::istringstream input(new_value);
-	int result = INT_MIN;
-	input >> result;
-	if (result == INT_MIN) {
-		return false;
+	if (const auto maybe_int = parse_int(new_value); maybe_int) {
+		_int = *maybe_int;
+		return true;
 	}
-	_int = result;
-	return true;
+	return false;
 }
 
 bool Value::SetDouble(const std::string& new_value)
