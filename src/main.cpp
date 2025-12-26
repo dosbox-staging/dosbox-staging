@@ -672,10 +672,7 @@ int main(int argc, char* argv[])
 		maybe_create_resource_directories();
 
 		GFX_InitSdl();
-
 		DOSBOX_InitModules();
-
-		// Initialise and start the GUI
 		GFX_InitAndStartGui();
 
 		// All subsystems' hotkeys need to be registered at this point
@@ -689,7 +686,6 @@ int main(int argc, char* argv[])
 		// Start emulation
 		SHELL_InitAndRun();
 
-		// Shutdown and release
 		DOSBOX_DestroyModules();
 		GFX_Destroy();
 

@@ -1899,6 +1899,8 @@ void GFX_InitAndStartGui()
 	    sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
 		enter_fullscreen();
 	}
+
+	RENDER_Init();
 }
 
 static void notify_sdl_setting_updated(SectionProp& section,
