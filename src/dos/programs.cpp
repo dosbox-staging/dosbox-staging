@@ -1079,7 +1079,7 @@ void PROGRAMS_AddMessages()
 	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_INVALID_SETTING",
-	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset];\n"
 	        "using [color=white]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_INVALID_SETTING_WITH_DETAILS",
@@ -1087,15 +1087,15 @@ void PROGRAMS_AddMessages()
 	        "%s; using [color=white]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED_SETTING_VALUE",
-	        "Deprecated [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
+	        "Deprecated [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset];\n"
 	        "using [color=white]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_INVALID_INTEGER_SETTING",
-	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset];\n"
 	        "must be an integer, using [color=white]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
-	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset];\n"
 	        "must be between %s and %s, using [color=white]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_NO_HELP",
