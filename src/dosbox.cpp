@@ -1102,7 +1102,6 @@ void DOSBOX_InitModules()
 	LOG_Init();
 #endif
 
-	RENDER_Init();
 	COMPOSITE_Init();
 
 	CPU_Init();
