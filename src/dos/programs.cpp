@@ -1090,6 +1090,10 @@ void PROGRAMS_AddMessages()
 	        "Deprecated [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
 	        "using [color=white]'%s'[reset]");
 
+	MSG_Add("PROGRAM_CONFIG_INVALID_INTEGER_SETTING",
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
+	        "must be an integer, using [color=white]'%s'[reset]");
+
 	MSG_Add("PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
 	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
 	        "must be between %s and %s, using [color=white]'%s'[reset]");

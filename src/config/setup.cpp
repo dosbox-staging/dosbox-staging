@@ -411,7 +411,7 @@ bool PropInt::ValidateValue(const Value& new_value)
 	if (va >= mi && va <= ma) {
 		value = new_value;
 		return true;
-	} 
+	}
 
 	// Outside valid range, use default value
 	value = default_value;
@@ -475,7 +475,17 @@ bool PropDouble::SetValue(const std::string& input)
 bool PropInt::SetValue(const std::string& input)
 {
 	Value val;
-	if (!val.SetValue(input, Value::V_INT)) {
+	const auto is_valid = val.SetValue(input, Value::V_INT);
+
+	if (!is_valid) {
+		SetValue(default_value.ToString());
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_INVALID_INTEGER_SETTING",
+		                      propname.c_str(),
+		                      input.c_str(),
+		                      default_value.ToString().c_str());
 		return false;
 	}
 	return ValidateValue(val);
@@ -563,7 +573,7 @@ bool PropPath::SetValue(const std::string& input)
 
 bool PropBool::SetValue(const std::string& input)
 {
-	auto is_valid = value.SetValue(input, Value::V_BOOL);
+	const auto is_valid = value.SetValue(input, Value::V_BOOL);
 	if (!is_valid) {
 		SetValue(default_value.ToString());
 
