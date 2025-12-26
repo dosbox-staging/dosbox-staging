@@ -431,18 +431,16 @@ bool PropInt::ValidateValue(const Value& new_value)
 	return true;
 }
 
-bool PropInt::IsValidValue(const Value& _value)
+bool PropInt::IsValidValue(const Value& new_value)
 {
 	if (IsRestrictedValue()) {
-		return Property::IsValidValue(_value);
+		return Property::IsValidValue(new_value);
 	}
 
-	// LOG_MSG("still used ?");
-	// No >= and <= in Value type and == is ambigious
 	const int mi = min_value;
 	const int ma = max_value;
 
-	int va = static_cast<int>(Value(_value));
+	const int va = new_value;
 
 	if (mi == -1 && ma == -1) {
 		return true;
@@ -455,7 +453,7 @@ bool PropInt::IsValidValue(const Value& _value)
 	                      "CONFIG",
 	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
 	                      propname.c_str(),
-	                      _value.ToString().c_str(),
+	                      new_value.ToString().c_str(),
 	                      min_value.ToString().c_str(),
 	                      max_value.ToString().c_str(),
 	                      default_value.ToString().c_str());
