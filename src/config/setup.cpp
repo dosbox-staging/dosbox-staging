@@ -1029,7 +1029,7 @@ Hex SectionProp::GetHex(const std::string& _propname) const
 	return 0;
 }
 
-bool SectionProp::HandleInputline(const std::string& line)
+bool SectionProp::HandleInputLine(const std::string& line)
 {
 	// Parse a configuration setting in the 'setting_name = setting_value'
 	// format
@@ -1103,7 +1103,7 @@ std::string SectionProp::GetPropertyValue(const std::string& _property) const
 	return NO_SUCH_PROPERTY;
 }
 
-bool AutoExecSection::HandleInputline(const std::string& line)
+bool AutoExecSection::HandleInputLine(const std::string& line)
 {
 	if (!data.empty()) {
 		// Add return to previous line in buffer
