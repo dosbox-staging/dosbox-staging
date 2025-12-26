@@ -398,11 +398,11 @@ bool PropInt::ValidateValue(const Value& new_value)
 		}
 	}
 
-	// Handle ranges if specified
+	// Handle range if specified
 	const int mi = min_value;
 	const int ma = max_value;
 
-	// No ranges
+	// No range specified
 	if (mi == -1 && ma == -1) {
 		value = new_value;
 		return true;
@@ -410,13 +410,13 @@ bool PropInt::ValidateValue(const Value& new_value)
 
 	const int va = new_value;
 
-	// Inside range
+	// Inside valid range
 	if (va >= mi && va <= ma) {
 		value = new_value;
 		return true;
 	} 
 
-	// Outside range, use default value
+	// Outside valid range, use default value
 	value = default_value;
 
 	NOTIFY_DisplayWarning(Notification::Source::Console,
@@ -437,18 +437,23 @@ bool PropInt::IsValidValue(const Value& new_value)
 		return Property::IsValidValue(new_value);
 	}
 
+	// Handle range if specified
 	const int mi = min_value;
 	const int ma = max_value;
 
 	const int va = new_value;
 
+	// No range specified
 	if (mi == -1 && ma == -1) {
 		return true;
 	}
+
+	// Inside valid range
 	if (va >= mi && va <= ma) {
 		return true;
 	}
 
+	// Outside valid range
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
 	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
