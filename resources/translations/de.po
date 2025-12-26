@@ -6633,7 +6633,7 @@ msgstr ""
 
 #: src/dos/programs.cpp:1084
 #, fuzzy, c-format, no-wrap
-msgctxt "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE"
+msgctxt "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE"
 msgid "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; must be between %s-%s, using [color=white]'%s'[reset]"
 msgstr ""
 

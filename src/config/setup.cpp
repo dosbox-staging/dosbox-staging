@@ -418,7 +418,7 @@ bool PropInt::ValidateValue(const Value& new_value)
 
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
-	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	                      "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
 	                      propname.c_str(),
 	                      new_value.ToString().c_str(),
 	                      min_value.ToString().c_str(),
@@ -453,7 +453,7 @@ bool PropInt::IsValidValue(const Value& new_value)
 	// Outside valid range
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
-	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	                      "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
 	                      propname.c_str(),
 	                      new_value.ToString().c_str(),
 	                      min_value.ToString().c_str(),
