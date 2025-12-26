@@ -374,7 +374,7 @@ public:
 
 	virtual std::string GetPropertyValue(const std::string& property) const = 0;
 
-	virtual bool HandleInputline(const std::string& line) = 0;
+	virtual bool HandleInputLine(const std::string& line) = 0;
 
 	virtual void PrintData(FILE* outfile) const = 0;
 };
@@ -452,7 +452,7 @@ public:
 
 	PropMultiValRemain* GetMultiValRemain(const std::string& _propname) const;
 
-	bool HandleInputline(const std::string& line) override;
+	bool HandleInputLine(const std::string& line) override;
 
 	void PrintData(FILE* outfile) const override;
 
@@ -513,7 +513,7 @@ public:
 	AutoExecSection& operator=(AutoExecSection&& other) = default;
 
 	std::string GetPropertyValue(const std::string& property) const override;
-	bool HandleInputline(const std::string& line) override;
+	bool HandleInputLine(const std::string& line) override;
 	void PrintData(FILE* outfile) const override;
 
 	std::string data = {};

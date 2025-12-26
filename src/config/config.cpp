@@ -220,7 +220,7 @@ void Config::OverwriteAutoexec(const std::string& conf, const std::string& line)
 		overwritten_autoexec_conf = conf;
 		overwritten_autoexec_section.data.clear();
 	}
-	overwritten_autoexec_section.HandleInputline(line);
+	overwritten_autoexec_section.HandleInputLine(line);
 }
 
 const std::string& Config::GetOverwrittenAutoexecConf() const
@@ -296,7 +296,7 @@ bool Config::ParseConfigFile(const std::string& type,
 		}
 
 		if (!is_comment(line)) {
-			current_section->HandleInputline(line);
+			current_section->HandleInputLine(line);
 			OverwriteAutoexec(config_file_name, line);
 		}
 	};
@@ -333,7 +333,7 @@ bool Config::ParseConfigFile(const std::string& type,
 				is_autoexec_section = (section_name == "autoexec");
 			}
 		} else if (current_section) {
-			current_section->HandleInputline(line);
+			current_section->HandleInputLine(line);
 		}
 	}
 

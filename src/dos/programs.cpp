@@ -655,7 +655,7 @@ void CONFIG::Run(void)
 			for (const auto& pvar : pvars) {
 				const auto line_utf8 = dos_to_utf8(
 				        pvar, DosStringConvertMode::WithControlCodes);
-				sec->HandleInputline(line_utf8);
+				sec->HandleInputLine(line_utf8);
 			}
 			break;
 		}
@@ -874,7 +874,7 @@ void CONFIG::Run(void)
 				        inputline,
 				        DosStringConvertMode::NoSpecialCharacters);
 
-				tsec->HandleInputline(line_utf8);
+				tsec->HandleInputLine(line_utf8);
 
 				tsec->ExecuteUpdate(*property);
 			}

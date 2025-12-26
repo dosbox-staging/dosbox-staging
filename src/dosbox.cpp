@@ -456,7 +456,7 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 	const auto arguments = &control->arguments;
 	if (!arguments->machine.empty()) {
 		//update value in config (else no matching against suggested values
-		section.HandleInputline(std::string("machine=") + arguments->machine);
+		section.HandleInputLine(std::string("machine=") + arguments->machine);
 	}
 
 	const auto machine_str = section.GetString("machine");

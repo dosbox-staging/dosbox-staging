@@ -453,7 +453,7 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 
 			std::string inputline = pvars[1] + "=" + value;
 
-			bool change_success = tsec->HandleInputline(inputline);
+			bool change_success = tsec->HandleInputLine(inputline);
 
 			if (!change_success && !value.empty()) {
 				// TODO convert to notification
