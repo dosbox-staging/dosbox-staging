@@ -476,8 +476,7 @@ bool PropInt::SetValue(const std::string& input)
 	if (!val.SetValue(input, Value::V_INT)) {
 		return false;
 	}
-	bool is_valid = ValidateValue(val);
-	return is_valid;
+	return ValidateValue(val);
 }
 
 bool PropString::SetValue(const std::string& input)
