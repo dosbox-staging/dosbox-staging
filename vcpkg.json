@@ -5,7 +5,10 @@
   "version": "0.83.0-alpha",
   "dependencies": [
     "gtest",
-    "angle",
+    {
+      "name": "angle",
+      "features": [ "metal" ]
+    },
     "iir1",
     "libmt32emu",
     "libpng",

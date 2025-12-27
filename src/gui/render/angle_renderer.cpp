@@ -163,7 +163,7 @@ bool AngleRenderer::InitRenderer()
 	
 	max_texture_size_px = size;
 
-    LOG_INFO("ANGLE: %s", glGetString(GL_VERSION));
+    LOG_INFO("ANGLE: %s, %s", glGetString(GL_VERSION), glGetString(GL_RENDERER));
 
 	// Vertex data (1 triangle)
 	// ------------------------
