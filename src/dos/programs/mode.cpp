@@ -40,35 +40,6 @@ static bool is_valid_video_mode(const std::string& mode)
 	return video_mode_map_svga_s3.contains(mode);
 }
 
-static void set_typematic_rate(const int rate_idx, const int delay_idx)
-{
-	// Set Keyboard Typematic Rate
-	reg_ah = 3;
-
-	// set typematic rate/delay
-	reg_al = 5;
-
-	// typematic rate (repeats per second)
-	//   0 = 30.0
-	//   1 = 26.7
-	//   2 = 24.0
-	//   ...
-	//  29 =  2.3
-	//  30 =  2.1
-	//  31 =  2.0
-	reg_bl = check_cast<uint8_t>(rate_idx);
-
-	// repeat delay
-	//   0 =  250 ms
-	//   2 =  750 ms
-	//   1 =  500 ms
-	//   3 = 1000 ms
-	reg_bh = check_cast<uint8_t>(delay_idx);
-
-	// Keyboard BIOS Services
-	CALLBACK_RunRealInt(0x16);
-}
-
 static void set_8x8_font()
 {
 	// Load and activate ROM font
@@ -242,6 +213,35 @@ void MODE::HandleSetDisplayMode()
 	}
 
 	SetDisplayMode(mode_str);
+}
+
+static void set_typematic_rate(const int rate_idx, const int delay_idx)
+{
+	// Set Keyboard Typematic Rate
+	reg_ah = 3;
+
+	// set typematic rate/delay
+	reg_al = 5;
+
+	// typematic rate (repeats per second)
+	//   0 = 30.0
+	//   1 = 26.7
+	//   2 = 24.0
+	//   ...
+	//  29 =  2.3
+	//  30 =  2.1
+	//  31 =  2.0
+	reg_bl = check_cast<uint8_t>(rate_idx);
+
+	// repeat delay
+	//   0 =  250 ms
+	//   2 =  750 ms
+	//   1 =  500 ms
+	//   3 = 1000 ms
+	reg_bh = check_cast<uint8_t>(delay_idx);
+
+	// Keyboard BIOS Services
+	CALLBACK_RunRealInt(0x16);
 }
 
 bool MODE::HandleSetTypematicRate()
