@@ -893,17 +893,17 @@ static void init_soundcanvas_config_settings(SectionProp& sec_prop)
 	                      sc55mk2_101.config_name});
 
 	str_prop->SetHelp(
-	        "The Roland Sound Canvas model to use.\n"
-	        "One or more CLAP audio plugins that implement the supported Sound Canvas\n"
-	        "models must be present in the 'plugins' directory in your DOSBox installation\n"
-	        "or configuration directory. DOSBox searches for the requested model by\n"
-	        "inspecting the plugin descriptions. The lookup for the best model is\n"
-	        "performed in order as listed.\n"
+	        "Roland Sound Canvas model to use ('auto' by default). One or more CLAP audio\n"
+	        "plugins that implement the supported Sound Canvas models must be present in the\n"
+	        "'plugins' directory in your DOSBox installation or configuration directory.\n"
+	        "DOSBox searches for the requested model by inspecting the plugin descriptions.\n"
+	        "The lookup for the best model is performed in order as listed. Possible values:\n"
+	        "\n"
 	        "  auto:       Pick the best available model (default).\n"
 	        "  sc55:       Pick the best available original SC-55 model.\n"
 	        "  sc55mk2:    Pick the best available SC-55mk2 model.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'sc55_121').");
-	
+
 	str_prop = sec_prop.AddString("soundcanvas_rom_dir", when_idle, "");
 	str_prop->SetHelp(
 	        "The directory containing the Roland Sound Canvas ROMs (unset by default).\n"
@@ -914,7 +914,9 @@ static void init_soundcanvas_config_settings(SectionProp& sec_prop)
 	str_prop = sec_prop.AddString("soundcanvas_filter", when_idle, "on");
 	assert(str_prop);
 	str_prop->SetHelp(
-	        "Filter for the Roland Sound Canvas audio output:\n"
+	        "Filter for the Roland Sound Canvas audio output ('on' by default).\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");

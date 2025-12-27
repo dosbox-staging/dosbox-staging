@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -15,23 +16,28 @@
 #include "hardware/video/vga.h"
 #include "utils/rect.h"
 
-constexpr auto BilinearShaderName = "interpolation/bilinear";
-constexpr auto SharpShaderName    = "interpolation/sharp";
-constexpr auto FallbackShaderName = BilinearShaderName;
+namespace SymbolicShaderName {
 
-constexpr auto AutoGraphicsStandardShaderName = "crt-auto";
-constexpr auto AutoMachineShaderName          = "crt-auto-machine";
-constexpr auto AutoArcadeShaderName           = "crt-auto-arcade";
-constexpr auto AutoArcadeSharpShaderName      = "crt-auto-arcade-sharp";
+constexpr auto AutoGraphicsStandard = "crt-auto";
+constexpr auto AutoMachine          = "crt-auto-machine";
+constexpr auto AutoArcade           = "crt-auto-arcade";
+constexpr auto AutoArcadeSharp      = "crt-auto-arcade-sharp";
+} // namespace SymbolicShaderName
+
+namespace ShaderName {
+
+constexpr auto CrtHyllian = "crt/crt-hyllian";
+constexpr auto Sharp      = "interpolation/sharp";
+} // namespace ShaderName
 
 enum class ShaderMode {
-	// No shader auto-switching; the 'glshader' setting always contains the
+	// No shader auto-switching; the 'shader' setting always contains the
 	// name of the shader in use.
 	//
 	Single,
 
 	// Graphics-standard-based adaptive CRT shader mode.
-	// Enabled with the 'crt-auto' magic 'glshader' setting.
+	// Enabled with the 'crt-auto' magic 'shader' setting.
 	//
 	// The most appropriate shader is auto-selected based on the graphic
 	// standard of the current video mode and the viewport resolution. E.g.,
@@ -56,7 +62,7 @@ enum class ShaderMode {
 	AutoGraphicsStandard,
 
 	// Machine-based adaptive CRT shader mode.
-	// Enabled via the 'crt-machine-auto' magic 'glshader' setting.
+	// Enabled via the 'crt-machine-auto' magic 'shader' setting.
 	//
 	// This mode emulates a computer (machine) equipped with the configured
 	// video adapter and a matching monitor. The auto-switching picks the most
@@ -70,7 +76,7 @@ enum class ShaderMode {
 	AutoMachine,
 
 	// 15 kHz arcade / home computer monitor adaptive CRT shader mode.
-	// Enabled via the 'crt-machine-arcade' magic 'glshader' setting.
+	// Enabled via the 'crt-machine-arcade' magic 'shader' setting.
 	//
 	// This basically forces single scanning of all double-scanned VGA modes
 	// and no pixel doubling in all modes to achieve a somewhat less sharp
@@ -88,24 +94,94 @@ enum class ShaderMode {
 	AutoArcadeSharp
 };
 
+/*
+ * The shader descriptor is in the `SHADER_NAME[:SHADER_PRESET]` format
+ * where `SHADER_NAME` can refer to the filename of an actual shader on
+ * the filesystem, a symbolic alias, or a "meta-shader". Specifying
+ * `SHADER_PRESET` after a colon is optional (the default preset is used
+ * if it's not provided).
+ *
+ * These are the various use-cases in more detail:
+ *
+ * 1. Referring to an actual shader file in the standard resource lookup
+ *    paths. The .glsl extension can be omitted. A shader preset can be
+ *    optionally specified in the `SHADER_NAME:PRESET_NAME` format. If the
+ *    preset is not specified, the default preset will be used. Examples:
+ *
+ *    - interpolation/catmull-rom.glsl
+ *    - interpolation/catmull-rom
+ *    - crt/crt-hyllian
+ *    - crt/crt-hyllian:vga-4k
+ *
+ * 2. Referring to an actual shader file on the filesystem via relative
+ * or absolute paths. The .glsl extension can be omitted. Examples:
+ *
+ *    - ../my-shaders/custom-shader
+ *    - D:\Emulators\DOSBox\shaders\custom-shader.glsl
+ *
+ * 3. Aliased symbolic shader names, e.g.:
+ *
+ *    - bilinear (alias of 'interpolation/bilinear')
+ *    - sharp    (alias of 'interpolation/sharp')
+ *
+ * 4. "Meta-shader" symbolic shader names. Currently, these are the CRT
+ *    shaders that automatically switch presets depending on the machine
+ *    type and the viewport resolution. This is the full list of meta-
+ *    shaders:
+ *
+ *    - crt-auto
+ *    - crt-auto-machine
+ *    - crt-auto-arcade
+ *    - crt-auto-arcade-sharp
+ */
+struct ShaderDescriptor {
+	std::string shader_name = {};
+	std::string preset_name = {};
+
+	auto operator<=>(const ShaderDescriptor&) const = default;
+
+	std::string ToString() const
+	{
+		if (preset_name.empty()) {
+			return shader_name;
+		} else {
+			return format_str("%s:%s",
+			                  shader_name.c_str(),
+			                  preset_name.c_str());
+		}
+	}
+};
+
+ShaderDescriptor from_string(const std::string& descriptor,
+                             const std::string& extension);
+
 // The default setttings are important; these are the settings we get if the
 // shader doesn't override them via custom pragmas.
 struct ShaderSettings {
-	bool use_srgb_texture     = false;
-	bool use_srgb_framebuffer = false;
-
 	bool force_single_scan       = false;
 	bool force_no_pixel_doubling = false;
 
 	TextureFilterMode texture_filter_mode = TextureFilterMode::Bilinear;
+
+	auto operator<=>(const ShaderSettings&) const = default;
+};
+
+using ShaderParameters = std::unordered_map<std::string, float>;
+
+struct ShaderPreset {
+	std::string name        = {};
+	ShaderSettings settings = {};
+	ShaderParameters params = {};
 };
 
 struct ShaderInfo {
-	// Actual shader name, as stored on disk minus the .glsl extension
+	// The mapped shader name without the file extension. The name might
+	// optionally contain a relative or absolute directory path.
 	std::string name = {};
 
-	ShaderSettings settings = {};
-	bool is_adaptive        = false;
+	ShaderPreset default_preset = {};
+
+	bool is_adaptive = false;
 };
 
 // Shader manager for loading shader sources, parsing shader metadata, and
@@ -133,21 +209,37 @@ public:
 
 	static void AddMessages();
 
-	// Generate a human-readable shader inventory message (one list element
-	// per line).
+	/*
+	 * Generate a human-readable shader inventory message (one list element
+	 * per line).
+	 */
 	std::deque<std::string> GenerateShaderInventoryMessage() const;
 
-	std::string MapShaderName(const std::string& name) const;
+	std::optional<std::pair<ShaderInfo, std::string>> LoadShader(
+	        const std::string& mapped_name);
 
 	std::optional<std::pair<ShaderInfo, std::string>> LoadShader(
-	        const std::string& shader_name);
+	        const std::string& shader_name, const std::string& extension);
 
-	void NotifyShaderNameChanged(const std::string& shader_name);
+	std::optional<ShaderPreset> LoadShaderPreset(
+	        const ShaderDescriptor& descriptor,
+	        const ShaderPreset& default_preset) const;
 
+	/*
+	 * Notify the shader manager that the current shader has been changed
+	 * by the user.
+	 */
+	void NotifyShaderChanged(const std::string& shader_descriptor,
+	                         const std::string& extension);
+
+	/*
+	 * Notify the shader manager that the viewport area or the current
+	 * video mode has been changed.
+	 */
 	void NotifyRenderParametersChanged(const DosBox::Rect canvas_size_px,
 	                                   const VideoMode& video_mode);
 
-	std::string GetCurrentShaderName() const;
+	ShaderDescriptor GetCurrentShaderDescriptor() const;
 
 private:
 	ShaderManager()  = default;
@@ -158,29 +250,39 @@ private:
 	// prevent assignment
 	ShaderManager& operator=(const ShaderManager&) = delete;
 
+	ShaderDescriptor ParseShaderDescriptor(const std::string& descriptor,
+	                                       const std::string& extension) const;
+
+	std::string MapShaderName(const std::string& name) const;
+
 	std::optional<std::string> FindShaderAndReadSource(const std::string& shader_name);
 
-	ShaderSettings ParseShaderSettings(const std::string& shader_name,
-	                                   const std::string& source) const;
+	ShaderPreset ParseDefaultShaderPreset(const std::string& shader_name,
+	                                      const std::string& shader_source) const;
+
+	void SetShaderSetting(const std::string& name, const std::string& value,
+	                      ShaderSettings& settings) const;
+
+	std::optional<std::pair<std::string, float>> ParseParameterPragma(
+	        const std::string& pragma_value) const;
 
 	void MaybeAutoSwitchShader();
 
-	std::string FindShaderAutoGraphicsStandard() const;
-	std::string FindShaderAutoMachine() const;
-	std::string FindShaderAutoArcade() const;
-	std::string FindShaderAutoArcadeSharp() const;
+	ShaderDescriptor FindShaderAutoGraphicsStandard() const;
+	ShaderDescriptor FindShaderAutoMachine() const;
+	ShaderDescriptor FindShaderAutoArcade() const;
+	ShaderDescriptor FindShaderAutoArcadeSharp() const;
 
-	std::string GetHerculesShader() const;
-	std::string GetCgaShader() const;
-	std::string GetCompositeShader() const;
-	std::string GetEgaShader() const;
-	std::string GetVgaShader() const;
-
-	std::string shader_name_from_config = {};
+	ShaderDescriptor GetHerculesShader() const;
+	ShaderDescriptor GetCgaShader() const;
+	ShaderDescriptor GetCompositeShader() const;
+	ShaderDescriptor GetEgaShader() const;
+	ShaderDescriptor GetVgaShader() const;
 
 	struct {
-		std::string name = {};
-		ShaderMode mode  = ShaderMode::Single;
+		ShaderDescriptor descriptor = {};
+
+		ShaderMode mode = ShaderMode::Single;
 	} current_shader = {};
 
 	VideoMode video_mode = {};

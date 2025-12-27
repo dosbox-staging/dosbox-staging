@@ -33,13 +33,6 @@ option(
     description: 'Enable Ethernet emulation using Libslirp',
 )
 
-option(
-    'tracy',
-    type: 'boolean',
-    value: false,
-    description: 'Enable profiling using Tracy',
-)
-
 # This option exists only for rare situations when Linux developer cannot
 # install ALSA library headers on their machine.
 #
@@ -205,7 +198,6 @@ option(
         'sdl2_net',
         'slirp',
         'speexdsp',
-        'tracy',
         'zlib',
     ],
     value: [],

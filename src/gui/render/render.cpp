@@ -18,6 +18,7 @@
 #include "gui/render/render.h"
 #include "gui/render/render_backend.h"
 #include "hardware/video/vga.h"
+#include "misc/notifications.h"
 #include "misc/support.h"
 #include "misc/video.h"
 #include "shell/shell.h"
@@ -289,11 +290,6 @@ static SectionProp& get_render_section()
 	return *section;
 }
 
-static uint8_t get_best_mode(const uint8_t flags)
-{
-	return (flags & GFX_CAN_32) & ~(GFX_CAN_8 | GFX_CAN_15 | GFX_CAN_16);
-}
-
 static void reinit_drawing()
 {
 	render_callback(GFX_CallbackReset);
@@ -317,7 +313,7 @@ static void render_reset()
 	bool double_width        = render.src.double_width;
 	bool double_height       = render.src.double_height;
 
-	uint8_t gfx_flags, xscale, yscale;
+	uint8_t xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
 
 	// Don't do software scaler sizes larger than 4k
@@ -341,7 +337,6 @@ static void render_reset()
 		simpleBlock = &ScaleNormal1x;
 	}
 
-	gfx_flags = simpleBlock->gfxFlags;
 	xscale    = simpleBlock->xscale;
 	yscale    = simpleBlock->yscale;
 	//		LOG_MSG("Scaler:%s",simpleBlock->name);
@@ -353,61 +348,35 @@ static void render_reset()
 	case PixelFormat::RGB555_Packed16:
 	case PixelFormat::RGB565_Packed16:
 		render.src_start = (render.src.width * 2) / src_pixel_bytes;
-		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	case PixelFormat::BGR24_ByteArray:
 		render.src_start = (render.src.width * 3) / src_pixel_bytes;
-		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	case PixelFormat::BGRX32_ByteArray:
 		render.src_start = (render.src.width * 4) / src_pixel_bytes;
-		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	}
 
-	gfx_flags = get_best_mode(gfx_flags);
-
-	if (!gfx_flags) {
-		if (simpleBlock == &ScaleNormal1x) {
-			E_Exit("Failed to create a rendering output");
-		}
-	}
 	render_width_px *= xscale;
 	const auto render_height_px = make_aspect_table(render.src.height,
 	                                                yscale,
 	                                                yscale);
 
-	// Set up scaler variables
-	if (double_height) {
-		gfx_flags |= GFX_DBL_H;
-	}
-	if (double_width) {
-		gfx_flags |= GFX_DBL_W;
-	}
-
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
 
-	gfx_flags = GFX_SetSize(render_width_px,
-	                        render_height_px,
-	                        render_pixel_aspect_ratio,
-	                        gfx_flags,
-	                        render.src.video_mode,
-	                        &render_callback);
+	GFX_SetSize(render_width_px,
+	            render_height_px,
+	            render_pixel_aspect_ratio,
+	            double_width,
+	            double_height,
+	            render.src.video_mode,
+	            &render_callback);
 
-	if (gfx_flags & GFX_CAN_8) {
-		render.scale.outMode = scalerMode8;
-	} else if (gfx_flags & GFX_CAN_15) {
-		render.scale.outMode = scalerMode15;
-	} else if (gfx_flags & GFX_CAN_16) {
-		render.scale.outMode = scalerMode16;
-	} else if (gfx_flags & GFX_CAN_32) {
-		render.scale.outMode = scalerMode32;
-	} else {
-		E_Exit("Failed to create a rendering output");
-	}
+	// Set up scaler variables
+	render.scale.outMode = scalerMode32;
 
-	const auto lineBlock = gfx_flags & GFX_CAN_RANDOM ? &simpleBlock->Random
-	                                                  : &simpleBlock->Linear;
+	const auto lineBlock = &simpleBlock->Random;
+
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
 		render.scale.lineHandler = (*lineBlock)[0][render.scale.outMode];
@@ -448,7 +417,7 @@ static void render_reset()
 	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
 	render.scale.inHeight  = render.src.height;
 
-	// Reset the palette change detection to it's initial value
+	// Reset the palette change detection to its initial value
 	render.pal.first   = 0;
 	render.pal.last    = 255;
 	render.pal.changed = false;
@@ -525,10 +494,10 @@ static void set_scan_and_pixel_doubling()
 	} break;
 
 	case RenderBackendType::OpenGl: {
-		const auto shader_info = GFX_GetRenderer()->GetCurrentShaderInfo();
+		const auto shader_preset = GFX_GetRenderer()->GetCurrentShaderPreset();
 
-		force_vga_single_scan = shader_info.settings.force_single_scan;
-		force_no_pixel_doubling = shader_info.settings.force_no_pixel_doubling;
+		force_vga_single_scan = shader_preset.settings.force_single_scan;
+		force_no_pixel_doubling = shader_preset.settings.force_no_pixel_doubling;
 	} break;
 
 	default: assertm(false, "Invalid RenderindBackend value");
@@ -538,19 +507,39 @@ static void set_scan_and_pixel_doubling()
 	VGA_AllowPixelDoubling(!force_no_pixel_doubling);
 }
 
-bool RENDER_MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
-                                  const VideoMode& video_mode,
-                                  const bool reinit_render)
+bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode, const bool reinit_render)
 {
-	const auto shader_changed = GFX_GetRenderer()->MaybeAutoSwitchShader(
-	        canvas_size_px, video_mode);
+	const auto renderer = GFX_GetRenderer();
+
+	const auto curr_shader = renderer->GetCurrentShaderInfo();
+	const auto curr_preset = renderer->GetCurrentShaderPreset(); //-V821
+
+	renderer->NotifyVideoModeChanged(video_mode);
+
+	const auto new_shader = renderer->GetCurrentShaderInfo();
+	const auto new_preset = renderer->GetCurrentShaderPreset(); //-V821
+
+	const auto shader_changed = (curr_shader.name != new_shader.name) ||
+	                            (curr_preset.name != new_preset.name);
 
 	if (shader_changed) {
 		set_scan_and_pixel_doubling();
+
 		if (reinit_render) {
-			reinit_drawing();
+			// No need to reinit the renderer if the double scaning
+			// / pixel doubling settings have not been changed.
+			const auto render_params_changed =
+			        ((curr_preset.settings.force_single_scan !=
+			          new_preset.settings.force_single_scan) ||
+			         (curr_preset.settings.force_no_pixel_doubling !=
+			          new_preset.settings.force_no_pixel_doubling));
+
+			if (render_params_changed) {
+				reinit_drawing();
+			}
 		}
 	}
+
 	return shader_changed;
 }
 
@@ -567,10 +556,7 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 
 		// We are potentially auto-switching to a VGA shader now.
 		constexpr auto ReinitRender = true;
-
-		RENDER_MaybeAutoSwitchShader(GFX_GetCanvasSizeInPixels(),
-		                             video_mode,
-		                             ReinitRender);
+		RENDER_NotifyVideoModeChanged(video_mode, ReinitRender);
 	}
 }
 
@@ -584,20 +570,86 @@ void RENDER_AddMessages()
 	ShaderManager::AddMessages();
 }
 
+static bool set_shader(const std::string& descriptor)
+{
+	using enum RenderBackend::SetShaderResult;
+
+	switch (GFX_GetRenderer()->SetShader(descriptor)) {
+	case ShaderError: return false;
+
+	case PresetError:
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "RENDER_DEFAULT_SHADER_PRESET_FALLBACK",
+		                      descriptor.c_str(),
+		                      ShaderName::Sharp);
+
+		set_scan_and_pixel_doubling();
+		return true;
+
+	case Ok: set_scan_and_pixel_doubling(); return true;
+
+	default: assertm(false, "Invalid SetShaderResult value"); return false;
+	}
+}
+
+static void set_fallback_shader_or_exit()
+{
+	if (set_shader(SymbolicShaderName::AutoGraphicsStandard)) {
+		set_section_property_value("render",
+		                           "shader",
+		                           SymbolicShaderName::AutoGraphicsStandard);
+		return;
+	}
+
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "RENDER",
+	                      "RENDER_SHADER_FALLBACK",
+	                      SymbolicShaderName::AutoGraphicsStandard,
+	                      ShaderName::Sharp);
+
+	if (set_shader(ShaderName::Sharp)) {
+		set_section_property_value("render", "shader", ShaderName::Sharp);
+		return;
+	}
+
+	E_Exit("RENDER: Error loading fallback shaders, exiting");
+}
+
+static void set_shader_with_fallback_or_exit(const std::string& shader_descriptor)
+{
+	if (!set_shader(shader_descriptor)) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "RENDER_SHADER_FALLBACK",
+		                      shader_descriptor.c_str(),
+		                      SymbolicShaderName::AutoGraphicsStandard);
+
+		set_fallback_shader_or_exit();
+	}
+}
+
 static void reload_shader([[maybe_unused]] const bool pressed)
 {
 	if (!pressed) {
 		return;
 	}
 
-	const auto shader_name = ShaderManager::GetInstance().GetCurrentShaderName();
-	if (shader_name.empty()) {
-		return;
+	const auto shader_descriptor =
+	        ShaderManager::GetInstance().GetCurrentShaderDescriptor();
+
+	LOG_MSG("RENDER: Reloading shader '%s'",
+	        shader_descriptor.ToString().c_str());
+
+	if (!GFX_GetRenderer()->ForceReloadCurrentShader()) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "RENDER_SHADER_FALLBACK",
+		                      shader_descriptor.ToString().c_str(),
+		                      SymbolicShaderName::AutoGraphicsStandard);
+
+		set_fallback_shader_or_exit();
 	}
-
-	LOG_MSG("RENDER: Reloading shader '%s'", shader_name.c_str());
-
-	GFX_GetRenderer()->ForceReloadCurrentShader();
 
 	set_scan_and_pixel_doubling();
 
@@ -659,9 +711,16 @@ static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting(Sectio
 		return AspectRatioCorrectionMode::Stretch;
 
 	} else {
-		// TODO convert to notification
-		LOG_WARNING("RENDER: Invalid 'aspect' setting: '%s', using 'auto'",
-		            mode.c_str());
+		constexpr auto SettingName  = "aspect";
+		constexpr auto DefaultValue = "auto";
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      SettingName,
+		                      mode.c_str(),
+		                      DefaultValue);
+
 		return AspectRatioCorrectionMode::Auto;
 	}
 }
@@ -680,13 +739,25 @@ static void log_invalid_viewport_setting_warning(
         const std::string& pref,
         const std::optional<const std::string> extra_info = {})
 {
-	// TODO convert to notification
-	LOG_WARNING(
-	        "DISPLAY: Invalid 'viewport' setting: '%s'"
-	        "%s%s, using 'fit'",
-	        pref.c_str(),
-	        (extra_info ? ". " : ""),
-	        (extra_info ? extra_info->c_str() : ""));
+	constexpr auto SettingName  = "viewport";
+	constexpr auto DefaultValue = "fit";
+
+	if (extra_info) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING_WITH_DETAILS",
+		                      SettingName,
+		                      pref.c_str(),
+		                      extra_info->c_str(),
+		                      DefaultValue);
+	} else {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      SettingName,
+		                      pref.c_str(),
+		                      DefaultValue);
+	}
 }
 
 std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s)
@@ -892,9 +963,16 @@ static IntegerScalingMode get_integer_scaling_mode_setting(SectionProp& section)
 		return IntegerScalingMode::Vertical;
 
 	} else {
-		// TODO convert to notification
-		LOG_WARNING("RENDER: Invalid 'integer_scaling' setting: '%s', using 'auto'",
-		            mode.c_str());
+		constexpr auto SettingName  = "integer_scaling";
+		constexpr auto DefaultValue = "auto";
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      SettingName,
+		                      mode.c_str(),
+		                      DefaultValue);
+
 		return IntegerScalingMode::Auto;
 	}
 }
@@ -1068,13 +1146,23 @@ static void init_render_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
-	auto* int_prop = section.AddInt("frameskip", Deprecated, 0);
-	int_prop->SetHelp("Consider capping frame rates using the 'host_rate' setting.");
+	auto int_prop = section.AddInt("frameskip", Deprecated, 0);
+	int_prop->SetHelp(
+	        "The [color=light-green]'frameskip'[reset] setting has been removed; "
+	        "consider capping frame rates using the\n"
+	        "[color=light-green]'host_rate'[reset] setting instead.");
 
-	auto* string_prop = section.AddString("glshader", Always, "crt-auto");
+	auto string_prop = section.AddString("glshader", DeprecatedButAllowed, "");
+	string_prop->SetHelp(
+	        "The [color=light-green]'glshader'[reset] setting is deprecated but still accepted;\n"
+	        "please use [color=light-green]'shader'[reset] instead.");
+
+	string_prop = section.AddString("shader", Always, "crt-auto");
 	string_prop->SetOptionHelp(
-	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
-	        "output modes ('crt-auto' by default). Adaptive CRT shader options:\n"
+	        "Set an adaptive CRT monitor emulation shader or a regular shader ('crt-auto' by\n"
+	        "default). Shaders are only supported in the OpenGL output mode (see 'output').\n"
+	        "Adaptive CRT shader options:\n"
+	        "\n"
 	        "  crt-auto:               Adaptive CRT shader that prioritises developer intent\n"
 	        "                          and how people experienced the games at the time of\n"
 	        "                          release (default). An appropriate shader variant is\n"
@@ -1085,46 +1173,51 @@ static void init_render_settings(SectionProp& section)
 	        "                          visible scanlines in CGA and EGA games even on an\n"
 	        "                          emulated VGA adapter. The sharp shader is used below\n"
 	        "                          3.0x vertical scaling.\n"
+	        "\n"
 	        "  crt-auto-machine:       A variation of 'crt-auto'; this emulates a fixed CRT\n"
 	        "                          monitor for the video adapter configured via the\n"
 	        "                          'machine' setting. E.g., CGA and EGA games will appear\n"
 	        "                          double-scanned on an emulated VGA adapter.\n"
+	        "\n"
 	        "  crt-auto-arcade:        Emulation of an arcade or home computer monitor with\n"
 	        "                          a less sharp image and thick scanlines in low-\n"
 	        "                          resolution video modes. This is a fantasy option that\n"
 	        "                          never existed in real life, but it can be a lot of\n"
 	        "                          fun, especially with DOS ports of Amiga games.\n"
+	        "\n"
 	        "  crt-auto-arcade-sharp:  A sharper arcade shader variant for those who like the\n"
 	        "                          thick scanlines but want to retain the sharpness of a\n"
 	        "                          typical PC monitor.\n"
 	        "\n"
 	        "Other shader options include (non-exhaustive list):\n"
-	        "  sharp:                  Upscale the image treating the pixels as small\n"
-	        "                          rectangles, resulting in a sharp image with minimum\n"
-	        "                          blur while maintaining the correct pixel aspect ratio.\n"
-	        "                          This is the recommended option for those who don't\n"
-	        "                          want to use the adaptive CRT shaders.\n"
-	        "  bilinear:               Upscale the image using bilinear interpolation\n"
-	        "                          (results in a blurry image).\n"
-	        "  nearest:                Upscale the image using nearest-neighbour\n"
-	        "                          interpolation (also known as \"no bilinear\"). This\n"
-	        "                          results in the sharpest possible image at the expense\n"
-	        "                          of uneven pixels, especially with non-square pixel\n"
-	        "                          aspect ratios (this is less of an issue on high\n"
-	        "                          resolution monitors).\n"
 	        "\n"
-	        "Start DOSBox Staging with the '--list-glshaders' command line option to see the\n"
+	        "  sharp:     Upscale the image treating the pixels as small rectangles,\n"
+	        "             resulting in a sharp image with minimum blur while maintaining\n"
+	        "             the correct pixel aspect ratio. This is the recommended option for\n"
+	        "             those who don't want to use the adaptive CRT shaders.\n"
+	        "\n"
+	        "  bilinear:  Upscale the image using bilinear interpolation (results in a blurry\n"
+	        "             image).\n"
+	        "\n"
+	        "  nearest:   Upscale the image using nearest-neighbour interpolation (also known\n"
+	        "             as \"no bilinear\"). This results in the sharpest possible image at\n"
+	        "             the expense of uneven pixels, especially with non-square pixel\n"
+	        "             aspect ratios (this is less of an issue on high resolution\n"
+	        "             monitors).\n"
+	        "\n"
+	        "Start DOSBox Staging with the '--list-shaders' command line option to see the\n"
 	        "full list of available shaders. You can also use an absolute or relative path to\n"
 	        "a file. In all cases, you may omit the shader's '.glsl' file extension.");
 	string_prop->SetEnabledOptions({
 #if C_OPENGL
-	        "glshader",
+	        "shader",
 #endif
 	});
 
 	string_prop = section.AddString("aspect", Always, "auto");
 	string_prop->SetHelp(
-	        "Set the aspect ratio correction mode ('auto' by default):\n"
+	        "Set the aspect ratio correction mode ('auto' by default). Possible values:\n"
+	        "\n"
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
 	        "                       flat-screen displays, so DOS video modes with non-square\n"
 	        "                       pixels appear as they would on a 4:3 display aspect\n"
@@ -1133,11 +1226,13 @@ static void init_render_settings(SectionProp& section)
 	        "                       square pixels, such as 320x200 or 640x400; square pixel\n"
 	        "                       modes (e.g., 320x240, 640x480, and 800x600), are\n"
 	        "                       displayed as-is.\n"
+	        "\n"
 	        "  square-pixels, off:  Don't apply aspect ratio correction; all DOS video modes\n"
 	        "                       will be displayed with square pixels. Most 320x200 games\n"
 	        "                       will appear squashed, but a minority of titles (e.g.,\n"
 	        "                       DOS ports of PAL Amiga games) need square pixels to\n"
 	        "                       appear as the artists intended.\n"
+	        "\n"
 	        "  stretch:             Calculate the aspect ratio from the viewport's\n"
 	        "                       dimensions. Combined with the 'viewport' setting, this\n"
 	        "                       mode is useful to force arbitrary aspect ratios (e.g.,\n"
@@ -1155,14 +1250,18 @@ static void init_render_settings(SectionProp& section)
 	        "'viewport' settings, which may result in a non-integer scaling factor in the\n"
 	        "other dimension. If the image is larger than the viewport, the integer scaling\n"
 	        "constraint is auto-disabled (same as 'off'). Possible values:\n"
+	        "\n"
 	        "  auto:        A special vertical mode auto-enabled only for the adaptive CRT\n"
-	        "               shaders (see `glshader`). This mode has refinements over standard\n"
+	        "               shaders (see `shader`). This mode has refinements over standard\n"
 	        "               vertical integer scaling: 3.5x and 4.5x scaling factors are also\n"
 	        "               allowed, and integer scaling is disabled above 5.0x scaling.\n"
+	        "\n"
 	        "  vertical:    Constrain the vertical scaling factor to integer values.\n"
 	        "               This is the recommended setting for third-party shaders to avoid\n"
 	        "               uneven scanlines and interference artifacts.\n"
+	        "\n"
 	        "  horizontal:  Constrain the horizontal scaling factor to integer values.\n"
+	        "\n"
 	        "  off:         No integer scaling constraint is applied; the image fills the\n"
 	        "               viewport while maintaining the configured aspect ratio.");
 
@@ -1173,15 +1272,19 @@ static void init_render_settings(SectionProp& section)
 	        "Set the viewport size ('fit' by default). This is the maximum drawable area;\n"
 	        "the video output is always contained within the viewport while taking the\n"
 	        "configured aspect ratio into account (see 'aspect'). Possible values:\n"
+	        "\n"
 	        "  fit:               Fit the viewport into the available window/screen\n"
 	        "                     (default). There might be padding (black areas) around the\n"
 	        "                     image with 'integer_scaling' enabled.\n"
+	        "\n"
 	        "  WxH:               Set a fixed viewport size in WxH format in logical units\n"
 	        "                     (e.g., 960x720). The specified size must not be larger than\n"
 	        "                     the desktop. If it's larger than the window size, it will\n"
 	        "                     be scaled to fit within the window.\n"
+	        "\n"
 	        "  N%%:                Similar to 'WxH', but the size is specified as a percentage\n"
 	        "                     of the desktop size.\n"
+	        "\n"
 	        "  relative H%% V%%:    The viewport is set to a 4:3 aspect ratio rectangle fit\n"
 	        "                     into the available window or screen, then is scaled by\n"
 	        "                     the H and V horizontal and vertical scaling factors (valid\n"
@@ -1191,18 +1294,26 @@ static void init_render_settings(SectionProp& section)
 	        "                     with 'aspect = stretch' and to \"zoom\" into the image.\n"
 	        "                     This effectively emulates the horizontal and vertical\n"
 	        "                     stretch controls of CRT monitors.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - Using 'relative' mode with 'integer_scaling' enabled could lead to\n"
 	        "    surprising (but correct) results.\n"
-	        "  - You can use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey\n"
-	        "    actions to set the stretch in 'relative' mode in real-time.");
+	        "  - Use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey actions to\n"
+	        "    adjust the image size in 'relative' mode in real-time, then copy the new\n"
+	        "    settings from the logs into your config.");
 
 	string_prop = section.AddString("monochrome_palette",
 	                                Always,
 	                                MonochromePaletteAmber);
 	string_prop->SetHelp(
 	        "Set the palette for monochrome display emulation ('amber' by default).\n"
-	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
+	        "Works only with the 'hercules' and 'cga_mono' machine types. Possible values:\n"
+	        "\n"
+	        "  amber:       Amber palette (default).\n"
+	        "  green:       Green palette.\n"
+	        "  white:       White palette.\n"
+	        "  paperwhite:  Paperwhite palette.\n"
+	        "\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
 
 	string_prop->SetValues({MonochromePaletteAmber,
@@ -1214,44 +1325,56 @@ static void init_render_settings(SectionProp& section)
 	string_prop->SetHelp(
 	        "Set the interpretation of CGA RGBI colours ('default' by default). Affects all\n"
 	        "machine types capable of displaying CGA or better graphics. Built-in presets:\n"
+	        "\n"
 	        "  default:       The canonical CGA palette, as emulated by VGA adapters\n"
 	        "                 (default).\n"
+	        "\n"
 	        "  tandy <bl>:    Emulation of an idealised Tandy monitor with adjustable brown\n"
 	        "                 level. The brown level can be provided as an optional second\n"
 	        "                 parameter (0 - red, 50 - brown, 100 - dark yellow;\n"
 	        "                 defaults to 50). E.g. tandy 100\n"
+	        "\n"
 	        "  tandy-warm:    Emulation of the actual colour output of an unknown Tandy\n"
 	        "                 monitor.\n"
+	        "\n"
 	        "  ibm5153 <c>:   Emulation of the actual colour output of an IBM 5153 monitor\n"
 	        "                 with a unique contrast control that dims non-bright colours\n"
 	        "                 only. The contrast can be optionally provided as a second\n"
 	        "                 parameter (0 to 100; defaults to 100), e.g. ibm5153 60\n"
+	        "\n"
 	        "  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:\n"
 	        "                 Palettes used by the Amiga ports of Sierra AGI games.\n"
+	        "\n"
 	        "  agi-amigaish:  A mix of EGA and Amiga colours used by the Sarien\n"
 	        "                 AGI-interpreter.\n"
+	        "\n"
 	        "  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.\n"
 	        "  colodore:      Commodore 64 inspired colours based on the Colodore palette.\n"
 	        "  colodore-sat:  Colodore palette with 20%% more saturation.\n"
+	        "\n"
 	        "  dga16:         A modern take on the canonical CGA palette with dialed back\n"
 	        "                 contrast.\n"
+	        "\n"
 	        "You can also set custom colours by specifying 16 space or comma separated\n"
 	        "colour values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full\n"
 	        "red), or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colours\n"
 	        "are ordered as follows:\n"
+	        "\n"
 	        "  black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,\n"
 	        "  light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.\n"
+	        "\n"
 	        "Their default values, shown here in 6-digit hex code format, are:\n"
+	        "\n"
 	        "  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa\n"
 	        "  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff");
 
 	string_prop = section.AddString("scaler", Deprecated, "none");
 	string_prop->SetHelp(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
-	        "  - If you used the normal2x/3x scalers, consider using 'integer_scaling'\n"
-	        "    with `glshader = sharp` and optionally setting the desired 'window_size'\n"
-	        "    or 'viewport' size.\n"
-	        "  - If you used an advanced scaler, consider one of the 'glshader' options.");
+	        "  - If you used the normal2x/3x scalers, consider using [color=light-green]'integer_scaling'[reset]\n"
+	        "    with [color=light-green]'shader = sharp'[reset] and optionally setting the desired [color=light-green]'window_size'[reset]\n"
+	        "    or [color=light-green]'viewport'[reset] size.\n"
+	        "  - If you used an advanced scaler, consider one of the [color=light-green]'shader'[reset] options.");
 }
 
 enum { Horiz, Vert };
@@ -1332,26 +1455,20 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
-bool set_shader(const std::string& shader_name)
+static std::string get_shader_setting_value()
 {
-	if (!GFX_GetRenderer()->SetShader(shader_name)) {
-		return false;
-	}
+	const auto legacy_pref = get_render_section().GetString("glshader");
 
-	set_scan_and_pixel_doubling();
-	return true;
+	if (!legacy_pref.empty()) {
+		set_section_property_value("render", "glshader", "");
+		set_section_property_value("render", "shader", legacy_pref);
+	}
+	return get_render_section().GetString("shader");
 }
 
 void RENDER_SetShaderWithFallback()
 {
-	if (set_shader(get_render_section().GetString("glshader"))) {
-		return;
-	}
-	if (set_shader("crt-auto")) {
-		set_section_property_value("render", "glshader", "crt-auto");
-		return;
-	}
-	E_Exit("RENDER: Error setting default 'crt-auto' shader");
+	set_shader_with_fallback_or_exit(get_shader_setting_value());
 }
 
 static void set_monochrome_palette(SectionProp& section)
@@ -1390,9 +1507,14 @@ static void notify_render_setting_updated(SectionProp& section,
 		// TODO Support switching custom CGA colors at runtime. This is
 		// somewhat complicated and needs experimentation.
 
-	} else if (prop_name == "glshader") {
-		set_shader(section.GetString("glshader"));
+	} else if (prop_name == "glshader" || prop_name == "shader") {
+		set_shader_with_fallback_or_exit(get_shader_setting_value());
 		reinit_drawing();
+
+		set_section_property_value(
+		        "render",
+		        "shader",
+		        GFX_GetRenderer()->GetCurrentShaderDescriptorString());
 
 	} else if (prop_name == "integer_scaling") {
 		set_integer_scaling(section);
@@ -1405,6 +1527,21 @@ static void notify_render_setting_updated(SectionProp& section,
 		set_viewport(section);
 		reinit_drawing();
 	}
+}
+
+static void register_render_text_messages()
+{
+	MSG_Add("RENDER_SHADER_RENAMED",
+	        "Built-in shader [color=white]'%s'[reset] has been renamed to [color=white]'%s'[reset];\n"
+	        "using [color=white]'%s'[reset]");
+
+	MSG_Add("RENDER_SHADER_FALLBACK",
+	        "Error setting shader [color=white]'%s'[reset],\n"
+	        "falling back to [color=white]'%s'[reset]");
+
+	MSG_Add("RENDER_DEFAULT_SHADER_PRESET_FALLBACK",
+	        "Error setting shader preset [color=white]'%s'[reset],\n"
+	        "falling back to default preset");
 }
 
 void RENDER_AddConfigSection(const ConfigPtr& conf)
@@ -1440,4 +1577,5 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 	                  "Reload Shader");
 
 	init_render_settings(*section);
+	register_render_text_messages();
 }

@@ -60,16 +60,19 @@ These are generic, distro-independent building instructions.
 
 ### Install the dependencies (development packages are needed, too)
 
-- SDL 2.x
-- SDL2_net
-- IIR
-- OpusFile
-- MT32Emu
-- FluidSynth
 - ALSA
-- libpng
-- OpenGL headers
+- FluidSynth
 - GTest
+- IIR
+- libpng
+- MT32Emu
+- OpenGL headers
+- OpusFile
+- SDL 2.x
+- SDL2_image
+- SDL2_net
+- SpeexDSP
+- zlib-nG
 
 ### Clone DOSBox Staging
 
@@ -79,6 +82,16 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 ### Configure and build
 
+To create the debug build:
+
+```bash
+cd dosbox-staging
+cmake --preset=debug-linux
+cmake --build --preset=debug-linux
+```
+
+To create the optimised release build:
+
 ```bash
 cd dosbox-staging
 cmake --preset=release-linux
@@ -87,7 +100,15 @@ cmake --build --preset=release-linux
 
 ### Start DOSBox Staging
 
-You can now launch DOSBox Staging with the command:
+Once built, you can launch DOSBox Staging with the following commands.
+
+Debug build:
+
+``` bash
+./build/debug-linux/dosbox
+```
+
+Release build:
 
 ``` bash
 ./build/release-linux/dosbox
@@ -101,7 +122,8 @@ You can now launch DOSBox Staging with the command:
 
 ```bash
 sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
-             autoconf bison libtool libgl1-mesa-dev libsdl2-dev
+             autoconf autoconf-archive automake bison libtool libgl1-mesa-dev \
+             libsdl2-dev
 ```
 
 ### Install the vcpkg tool
@@ -136,6 +158,16 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 ### Configure and build
 
+To create the debug build:
+
+```bash
+cd dosbox-staging
+cmake --preset=debug-linux-vcpkg
+cmake --build --preset=debug-linux-vcpkg
+```
+
+To create the optimised release build:
+
 ```bash
 cd dosbox-staging
 cmake --preset=release-linux-vcpkg
@@ -144,10 +176,18 @@ cmake --build --preset=release-linux-vcpkg
 
 ### Start DOSBox Staging
 
-You can now launch DOSBox Staging with the command:
+Once built, you can launch DOSBox Staging with the following commands.
 
-```bash
-./build/release-linux/dosbox
+Debug build:
+
+``` bash
+./build/debug-linux-vcpkg/dosbox
+```
+
+Release build:
+
+``` bash
+./build/release-linux-vcpkg/dosbox
 ```
 
 ## Bisecting and building old versions
@@ -169,18 +209,58 @@ available in these old versions can be used (choose one for your compiler):
 
 ## Unit tests
 
-Unit tests are built by default, you can start them with the command:
-
-```bash
-./build/release-linux/tests/dosbox_tests
-```
-
-To disable building unit tests, pass the `-DOPT_TESTS=OFF` option when
-configuring the project, for example:
+Unit tests are built by default. To disable building unit tests, pass the
+`-DOPT_TESTS=OFF` option when configuring the project, for example:
 
 ```bash
 cmake --preset=release-linux -DOPT_TESTS=OFF
 ```
+
+To run the entire test suite, execute the following (use the same CMake preset
+you used for building):
+
+```bash
+ctest --preset debug-linux
+```
+
+To run all test cases in a single test suite, pass in the name of the suite
+with the `-R` option:
+
+```bash
+ctest --preset debug-linux -R DOS_FilesTest
+```
+
+You can narrow this down to run a single test case only:
+
+```bash
+ctest --preset debug-linux -R DOS_FilesTest.DOS_MakeName_Basic_Failures
+```
+
+To run a group of tests, you can use wildcards and regexes. E.g. to run all
+test cases in the `DOS_FilesTest` suite with names starting with
+`DOS_MakeName_`:
+
+```bash
+ctest --preset debug-linux -R "DOS_FilesTest.DOS_MakeName_*"
+```
+
+Pass in the `-V` option to see the DOSBox Staging log output:
+
+```bash
+ctest --preset debug-linux -R DOS_FilesTest.DOS_MakeName_Basic_Failures -V
+```
+
+You might want to run the test executable directly to get coloured output, and
+the option to start an interactive `gdb` session if a test crashes. For
+example:
+
+```
+build/debug-linux/tests/dosbox_tests --gtest_filter=DOS_FilesTest.DOS_MakeName_Basic_Failures
+```
+
+See the [ctest documentation](https://cmake.org/cmake/help/v3.31/manual/ctest.1.html)
+for the full list of available options.
+
 
 ## Sanitizer build
 
@@ -271,34 +351,6 @@ meson compile -C build/debugger
 ```
 
 For the heavy debugger, use `heavy` instead of `normal`.
-
-
-### Make a build with profiling enabled
-
-Staging includes the [Tracy](https://github.com/wolfpld/tracy) profiler, which
-is disabled by default. To enable it for Meson builds, set the `tracy` option
-to `true`:
-
-``` shell
-meson setup -Dtracy=true build/release-tracy
-meson compile -C build/release-tracy
-```
-
-We have instrumented a very small core of subsystem functions for baseline
-demonstration purposes. You can add additional profiling macros to your functions
-of interest.
-
-The resulting binary requires the Tracy profiler server to view profiling
-data. If using Meson on a *nix system, switch to
-`subprojects/tracy.x.x.x.x/profiler/build/unix` and run `make`
-
-Start the instrumented Staging binary, then start the server. You should see
-Staging as an available client for Connect.
-
-You can also run the server on a different machine on the network, even on a
-different platform.
-
-Please refer to the Tracy documentation for further information.
 
 
 ### Repository and package maintainers

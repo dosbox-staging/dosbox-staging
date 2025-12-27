@@ -27,14 +27,16 @@
 
 bool localDrive::FileIsReadOnly(const char* name)
 {
-	if (IsReadOnly()) {
-		return true;
-	}
 	FatAttributeFlags test_attr = {};
 	if (GetFileAttr(name, &test_attr)) {
 		return test_attr.read_only;
 	}
 	return false;
+}
+
+bool localDrive::FileOrDriveIsReadOnly(const char* name)
+{
+	return IsReadOnly() || FileIsReadOnly(name);
 }
 
 std::unique_ptr<DOS_File> localDrive::FileCreate(const char* name,
@@ -43,7 +45,7 @@ std::unique_ptr<DOS_File> localDrive::FileCreate(const char* name,
 	assert(!IsReadOnly());
 
 	// Don't allow overwriting read-only files.
-	if (FileIsReadOnly(name)) {
+	if (FileOrDriveIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return nullptr;
 	}
@@ -119,16 +121,16 @@ void localDrive::MaybeLogFilesystemProtection(const std::string& filename)
 
 std::unique_ptr<DOS_File> localDrive::FileOpen(const char* name, uint8_t flags)
 {
-	bool write_access = false;
+	bool dos_write_access = false;
 	switch (flags & 0xf) {
 		case OPEN_READ:
 		//No modification of dates. LORD4.07 uses this
 		case OPEN_READ_NO_MOD:
-			write_access = false;
+			dos_write_access = false;
 			break;
 		case OPEN_WRITE:
 		case OPEN_READWRITE:
-			write_access = true;
+			dos_write_access = true;
 			break;
 		default:
 			DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
@@ -138,31 +140,52 @@ std::unique_ptr<DOS_File> localDrive::FileOpen(const char* name, uint8_t flags)
 	const std::string host_filename = MapDosToHostFilename(name);
 	bool fallback_to_readonly = false;
 
+	// Unless blocked, always try to open files in r/w mode on the host end
+	// since setting modify date doesn't work in r/o mode on Windows but it
+	// does on DOS. We already emulate read/write restrictions so it should
+	// be fine.
+	bool host_write_access = true;
+
 	// Don't allow opening read-only files in write mode,
 	// unless configured otherwise
-	if (write_access && FileIsReadOnly(name)) {
-		if (always_open_ro_files) {
-			flags = OPEN_READ;
-			write_access = false;
-			fallback_to_readonly = true;
-		} else {
-			MaybeLogFilesystemProtection(host_filename);
-			DOS_SetError(DOSERR_ACCESS_DENIED);
-			return nullptr;
+	if (FileIsReadOnly(name)) {
+		host_write_access = false;
+		if (dos_write_access) {
+			if (always_open_ro_files) {
+				flags                = OPEN_READ;
+				dos_write_access     = false;
+				fallback_to_readonly = true;
+			} else {
+				MaybeLogFilesystemProtection(host_filename);
+				DOS_SetError(DOSERR_ACCESS_DENIED);
+				return nullptr;
+			}
 		}
 	}
 
-	NativeFileHandle file_handle = open_native_file(host_filename, write_access);
+	// DOS allows opening files in r/w mode on a r/o medium just fine, there
+	// won't be an error unless the app actually tries to write something.
+	if (IsReadOnly()) {
+		host_write_access = false;
+		if (dos_write_access) {
+			flags                = OPEN_READ;
+			dos_write_access     = false;
+			fallback_to_readonly = true;
+		}
+	}
+
+	NativeFileHandle file_handle = open_native_file(host_filename,
+	                                                host_write_access);
 
 	// If we couldn't open the file, then it's possible that
-	// the file is simply write-protected and the flags requested
-	// RW access.  So check if this is the case:
-	if (file_handle == InvalidNativeFileHandle && write_access &&
-	    always_open_ro_files) {
+	// the underlying host file is simply write-protected and the flags
+	// requested RW access. So check if this is the case:
+	if (file_handle == InvalidNativeFileHandle && host_write_access) {
 		// If yes, check if the file can be opened with Read-only access:
 		file_handle = open_native_file(host_filename, false);
-		if (file_handle != InvalidNativeFileHandle) {
+		if (file_handle != InvalidNativeFileHandle && dos_write_access) {
 			flags                = OPEN_READ;
+			dos_write_access     = false;
 			fallback_to_readonly = true;
 		}
 	}
@@ -229,7 +252,7 @@ bool localDrive::FileUnlink(const char* name)
 	}
 
 	// Don't allow deleting read-only files.
-	if (FileIsReadOnly(name)) {
+	if (FileOrDriveIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -402,10 +425,6 @@ bool localDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 		// it should set DOS error code (setting it here is not allowed)
 		*attr = 0;
 		return false;
-	}
-
-	if (IsReadOnly()) {
-		attr->read_only = true;
 	}
 
 	return true;

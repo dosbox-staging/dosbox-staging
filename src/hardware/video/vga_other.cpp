@@ -25,7 +25,7 @@
 #include "utils/rgb888.h"
 #include "utils/string_utils.h"
 
-// CHECK_NARROWING();
+CHECK_NARROWING();
 
 static void write_crtc_index_other(io_port_t, io_val_t value, io_width_t)
 {
@@ -204,10 +204,10 @@ static void write_lightpen(io_port_t port, io_val_t, io_width_t)
 	}
 }
 
-class knob_t {
+class Knob {
 public:
-	knob_t() = delete;
-	knob_t(const int default_value, const int min_value, const int max_value)
+	Knob() = delete;
+	Knob(const int default_value, const int min_value, const int max_value)
 	        : def(default_value),
 	          min(min_value),
 	          max(max_value),
@@ -224,10 +224,23 @@ public:
 	void reset() { set(def); }
 
 	// read-only functions to get constraints
-	float as_float() const { return static_cast<float>(val); }
-	int get_default() const { return def; }
-	int get_min() const { return min; }
-	int get_max() const { return max; }
+	float AsFloat() const
+	{
+		return static_cast<float>(val);
+	}
+
+	int GetDefaultValue() const
+	{
+		return def;
+	}
+	int GetMinValue() const
+	{
+		return min;
+	}
+	int GetMaxValue() const
+	{
+		return max;
+	}
 
 private:
 	const int def; // "default" is a C++ keyword (don't use it)
@@ -236,19 +249,19 @@ private:
 	int val;
 };
 
-static knob_t hue(0, -360, 360);
-static knob_t saturation(100, 0, 360);
-static knob_t contrast(100, 0, 360);
-static knob_t brightness(0, -100, 100);
-static knob_t convergence(0, -50, 50);
+static Knob hue(0, -360, 360);
+static Knob saturation(100, 0, 360);
+static Knob contrast(100, 0, 360);
+static Knob brightness(0, -100, 100);
+static Knob convergence(0, -50, 50);
 
-enum class COMPOSITE_STATE : uint8_t {
-	AUTO = 0,
-	ON,
-	OFF,
+enum class CompositeState {
+	Auto = 0,
+	On,
+	Off,
 };
 
-static COMPOSITE_STATE cga_comp = COMPOSITE_STATE::AUTO;
+static CompositeState cga_comp   = CompositeState::Auto;
 static bool is_composite_new_era = false;
 
 static MonochromePalette hercules_palette = {};
@@ -340,9 +353,9 @@ static void update_cga16_color_pcjr()
 	constexpr auto tau = 6.28318531f;    // == 2*pi
 	constexpr auto ns = 567.0f / 440.0f; // degrees of hue shift per nanosecond
 
-	const auto tv_brightness = brightness.as_float() / 100.0f;
-	const auto tv_saturation = saturation.as_float() / 100.0f;
-	const auto tv_contrast = (1 - tv_brightness) * contrast.as_float() / 100.0f;
+	const auto tv_brightness = brightness.AsFloat() / 100.0f;
+	const auto tv_saturation = saturation.AsFloat() / 100.0f;
+	const auto tv_contrast = (1 - tv_brightness) * contrast.AsFloat() / 100.0f;
 
 	const bool bw = vga.tandy.mode.is_black_and_white_mode;
 	const bool bpp1 = vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics;
@@ -378,7 +391,8 @@ static void update_cga16_color_pcjr()
 	                                        (chroma_coefficient + rgbi_d) +
 	                                burst_delay + color_delay;
 
-	const float hue_adjust = (-(90.0f - 33.0f) - hue.as_float() + pixel_clock_delay) * tau / 360.0f;
+	const float hue_adjust = (-(90.0f - 33.0f) - hue.AsFloat() + pixel_clock_delay) *
+	                         tau / 360.0f;
 	float chroma_signals[8][4];
 	for (uint8_t i = 0; i < 4; i++) {
 		chroma_signals[0][i] = 0;
@@ -554,15 +568,17 @@ static void update_cga16_color()
 	                           ? new_cga_v(chroma_multiplexer[255], i3, i3, i3, i3)
 	                           : chroma_multiplexer[255] + i3;
 
-	const auto mode_contrast = 2.56f * contrast.as_float() / (max_v - min_v);
+	const auto mode_contrast = 2.56f * contrast.AsFloat() / (max_v - min_v);
 
-	const auto mode_brightness = brightness.as_float() * 5 - 256 * min_v / (max_v - min_v);
+	const auto mode_brightness = brightness.AsFloat() * 5 -
+	                             256 * min_v / (max_v - min_v);
 
 	const bool in_tandy_text_mode = (vga.mode == M_CGA_TEXT_COMPOSITE) &&
 	                                (vga.tandy.mode.is_high_bandwidth);
 	const auto mode_hue = in_tandy_text_mode ? 14.0f : 4.0f;
 
-	const auto mode_saturation = saturation.as_float() * (is_composite_new_era ? 5.8f : 2.9f) / 100;
+	const auto mode_saturation = saturation.AsFloat() *
+	                             (is_composite_new_era ? 5.8f : 2.9f) / 100;
 
 	// Update the Composite CGA palette
 	const bool in_tandy_mode_4 = vga.tandy.mode.is_black_and_white_mode;
@@ -602,7 +618,7 @@ static void update_cga16_color()
 	const auto q = static_cast<float>(CGA_Composite_Table[6 * 68 + 1] -
 	                                  CGA_Composite_Table[6 * 68 + 3]);
 
-	const auto a = tau * (33 + 90 + hue.as_float() + mode_hue) / 360.0f;
+	const auto a = tau * (33 + 90 + hue.AsFloat() + mode_hue) / 360.0f;
 	const auto c = cosf(a);
 	const auto s = sinf(a);
 
@@ -632,30 +648,49 @@ static void update_cga16_color()
 	vga.composite.sharpness = convergence.get() * 256 / 100;
 }
 
-enum CRT_KNOB : uint8_t {
-	ERA = 0,
-	HUE,
-	SATURATION,
-	CONTRAST,
-	BRIGHTNESS,
-	CONVERGENCE,
-	ENUM_END
+enum CrtKnob {
+	Era = 0,
+	Hue,
+	Saturation,
+	Contrast,
+	Brightness,
+	Convergence,
+	LastValue
 };
-static auto crt_knob = CRT_KNOB::ERA;
+
+static auto crt_knob = CrtKnob::Era;
 
 static void log_crt_knob_value()
 {
 	switch (crt_knob) {
-	case CRT_KNOB::ERA:
+	case CrtKnob::Era:
 		LOG_MSG("COMPOSITE: %s-era CGA selected",
 		        is_composite_new_era ? "New" : "Old");
 		break;
-	case CRT_KNOB::HUE: LOG_MSG("COMPOSITE: Hue is %d", hue.get()); break;
-	case CRT_KNOB::SATURATION: LOG_MSG("COMPOSITE: Saturation is %d", saturation.get()); break;
-	case CRT_KNOB::CONTRAST: LOG_MSG("COMPOSITE: Contrast is %d", contrast.get()); break;
-	case CRT_KNOB::BRIGHTNESS: LOG_MSG("COMPOSITE: Brightness is %d", brightness.get()); break;
-	case CRT_KNOB::CONVERGENCE: LOG_MSG("COMPOSITE: Convergence is %d", convergence.get()); break;
-	case CRT_KNOB::ENUM_END: assertm(false, "Should not reach CRT knob end marker"); break;
+
+	case CrtKnob::Hue:
+		LOG_MSG("COMPOSITE: composite_hue =  %d", hue.get());
+		break;
+
+	case CrtKnob::Saturation:
+		LOG_MSG("COMPOSITE: composite_saturation = %d", saturation.get());
+		break;
+
+	case CrtKnob::Contrast:
+		LOG_MSG("COMPOSITE: composite_contrast = %d", contrast.get());
+		break;
+
+	case CrtKnob::Brightness:
+		LOG_MSG("COMPOSITE: composite_brightness = %d", brightness.get());
+		break;
+
+	case CrtKnob::Convergence:
+		LOG_MSG("COMPOSITE: composite_convergence =  %d", convergence.get());
+		break;
+
+	case CrtKnob::LastValue:
+		assertm(false, "Should not reach CRT knob end marker");
+		break;
 	}
 }
 
@@ -666,13 +701,13 @@ static void turn_crt_knob(bool pressed, const int amount)
 	}
 
 	switch (crt_knob) {
-	case CRT_KNOB::ERA: is_composite_new_era = !is_composite_new_era; break;
-	case CRT_KNOB::HUE: hue.turn(amount); break;
-	case CRT_KNOB::SATURATION: saturation.turn(amount); break;
-	case CRT_KNOB::CONTRAST: contrast.turn(amount); break;
-	case CRT_KNOB::BRIGHTNESS: brightness.turn(amount); break;
-	case CRT_KNOB::CONVERGENCE: convergence.turn(amount); break;
-	case CRT_KNOB::ENUM_END:
+	case CrtKnob::Era: is_composite_new_era = !is_composite_new_era; break;
+	case CrtKnob::Hue: hue.turn(amount); break;
+	case CrtKnob::Saturation: saturation.turn(amount); break;
+	case CrtKnob::Contrast: contrast.turn(amount); break;
+	case CrtKnob::Brightness: brightness.turn(amount); break;
+	case CrtKnob::Convergence: convergence.turn(amount); break;
+	case CrtKnob::LastValue:
 		assertm(false, "Should not reach CRT knob end marker");
 		break;
 	}
@@ -704,11 +739,11 @@ static void select_next_crt_knob(bool pressed)
 	auto next_knob = static_cast<uint8_t>(crt_knob) + 1;
 
 	// PCjr doesn't have a convergence knob
-	if (is_machine_pcjr() && next_knob >= CRT_KNOB::CONVERGENCE) {
+	if (is_machine_pcjr() && next_knob >= CrtKnob::Convergence) {
 		next_knob++;
 	}
 
-	crt_knob = static_cast<CRT_KNOB>(next_knob % CRT_KNOB::ENUM_END);
+	crt_knob = static_cast<CrtKnob>(next_knob % CrtKnob::LastValue);
 
 	log_crt_knob_value();
 }
@@ -757,9 +792,8 @@ static void write_cga(io_port_t port, io_val_t value, io_width_t)
 		vga.attr.disabled = (val&0x8)? 0: 1;
 		if (vga.tandy.mode.is_graphics_enabled) {
 			if (vga.tandy.mode.is_tandy_640_dot_graphics) {
-				if (cga_comp == COMPOSITE_STATE::ON ||
-				    ((cga_comp == COMPOSITE_STATE::AUTO &&
-				      !(val & 0x4)) &&
+				if (cga_comp == CompositeState::On ||
+				    ((cga_comp == CompositeState::Auto && !(val & 0x4)) &&
 				     !is_machine_cga_mono())) {
 
 					// composite ntsc 640x200 16 color mode
@@ -773,7 +807,7 @@ static void write_cga(io_port_t port, io_val_t value, io_width_t)
 					VGA_SetMode(M_TANDY2);
 				}
 			} else {							// lowres mode
-				if (cga_comp == COMPOSITE_STATE::ON) {
+				if (cga_comp == CompositeState::On) {
 					// composite ntsc 640x200 16 color mode
 					if (is_machine_pcjr()) {
 						VGA_SetMode(M_CGA16);
@@ -788,7 +822,7 @@ static void write_cga(io_port_t port, io_val_t value, io_width_t)
 
 			write_cga_color_select(vga.tandy.color_select);
 		} else {
-			if (cga_comp == COMPOSITE_STATE::ON) { // composite display
+			if (cga_comp == CompositeState::On) { // composite display
 				VGA_SetMode(M_CGA_TEXT_COMPOSITE);
 				update_cga16_color();
 			} else {
@@ -832,18 +866,18 @@ static void toggle_cga_composite_mode(bool pressed)
 	}
 
 	// Step through the composite modes
-	if (cga_comp == COMPOSITE_STATE::AUTO) {
-		cga_comp = COMPOSITE_STATE::ON;
-	} else if (cga_comp == COMPOSITE_STATE::ON) {
-		cga_comp = COMPOSITE_STATE::OFF;
+	if (cga_comp == CompositeState::Auto) {
+		cga_comp = CompositeState::On;
+	} else if (cga_comp == CompositeState::On) {
+		cga_comp = CompositeState::Off;
 	} else {
-		cga_comp = COMPOSITE_STATE::AUTO;
+		cga_comp = CompositeState::Auto;
 	}
 
 	LOG_MSG("COMPOSITE: State is %s",
-	        (cga_comp == COMPOSITE_STATE::AUTO
+	        (cga_comp == CompositeState::Auto
 	                 ? "auto"
-	                 : (cga_comp == COMPOSITE_STATE::ON ? "on" : "off")));
+	                 : (cga_comp == CompositeState::On ? "on" : "off")));
 
 	apply_composite_state();
 }
@@ -918,7 +952,7 @@ static void TANDY_FindMode()
 				VGA_SetModeNow(M_TANDY16);
 			} else VGA_SetMode(M_TANDY16);
 		} else if (vga.tandy.mode_control.is_tandy_640x200_4_color_graphics) {
-			if (cga_comp == COMPOSITE_STATE::ON) {
+			if (cga_comp == CompositeState::On) {
 				// composite ntsc 640x200 16 color mode
 				VGA_SetMode(M_CGA4_COMPOSITE);
 				update_cga16_color();
@@ -926,7 +960,7 @@ static void TANDY_FindMode()
 				VGA_SetMode(M_TANDY4);
 			}
 		} else if (vga.tandy.mode.is_tandy_640_dot_graphics) {
-			if (cga_comp == COMPOSITE_STATE::ON) {
+			if (cga_comp == CompositeState::On) {
 				// composite ntsc 640x200 16 color mode
 				VGA_SetMode(M_CGA2_COMPOSITE);
 				update_cga16_color();
@@ -935,9 +969,9 @@ static void TANDY_FindMode()
 			}
 		} else {
 			// otherwise some 4-colour graphics mode
-			const auto new_mode = (cga_comp == COMPOSITE_STATE::ON)
-			                              ? M_CGA4_COMPOSITE
-			                              : M_TANDY4;
+			const auto new_mode = (cga_comp == CompositeState::On)
+			                            ? M_CGA4_COMPOSITE
+			                            : M_TANDY4;
 			if (vga.mode == M_TANDY16) {
 				VGA_SetModeNow(new_mode);
 			} else {
@@ -963,8 +997,8 @@ static void PCJr_FindMode()
 			}
 		} else if (vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics) {
 			// bit3 of mode control 2 signals 2 colour graphics mode
-			if (cga_comp == COMPOSITE_STATE::ON ||
-			    (cga_comp == COMPOSITE_STATE::AUTO &&
+			if (cga_comp == CompositeState::On ||
+			    (cga_comp == CompositeState::Auto &&
 			     !(vga.tandy.mode.is_black_and_white_mode))) {
 				VGA_SetMode(M_CGA16);
 			} else {
@@ -972,7 +1006,9 @@ static void PCJr_FindMode()
 			}
 		} else {
 			// otherwise some 4-colour graphics mode
-			const auto new_mode = (cga_comp == COMPOSITE_STATE::ON) ? M_CGA16 : M_TANDY4;
+			const auto new_mode = (cga_comp == CompositeState::On)
+			                            ? M_CGA16
+			                            : M_TANDY4;
 			if (vga.mode == M_TANDY16) {
 				VGA_SetModeNow(new_mode);
 			} else {
@@ -1083,8 +1119,9 @@ static void write_tandy(io_port_t port, io_val_t value, io_width_t)
 		vga.tandy.color_select=val;
 		tandy_update_palette();
 		// Re-apply the composite mode after updating the palette
-		if (cga_comp == COMPOSITE_STATE::ON)
+		if (cga_comp == CompositeState::On) {
 			apply_composite_state();
+		}
 		break;
 	case 0x3da:
 		vga.tandy.reg_index = val;
@@ -1459,16 +1496,16 @@ void COMPOSITE_Init()
 	const auto state = section->GetString("composite");
 
 	if (state == "auto") {
-		cga_comp = COMPOSITE_STATE::AUTO;
+		cga_comp = CompositeState::Auto;
 	} else {
 		const auto state_has_bool = parse_bool_setting(state);
 		if (state_has_bool) {
-			cga_comp = *state_has_bool ? COMPOSITE_STATE::ON
-			                           : COMPOSITE_STATE::OFF;
+			cga_comp = *state_has_bool ? CompositeState::On
+			                           : CompositeState::Off;
 		} else {
 			LOG_WARNING("COMPOSITE: Invalid 'composite' setting: '%s', using 'off'",
 			            state.c_str());
-			cga_comp = COMPOSITE_STATE::OFF;
+			cga_comp = CompositeState::Off;
 		}
 	}
 
@@ -1482,15 +1519,9 @@ void COMPOSITE_Init()
 	brightness.set(section->GetInt("brightness"));
 	convergence.set(section->GetInt("convergence"));
 
-	if (cga_comp == COMPOSITE_STATE::ON) {
-		LOG_MSG("COMPOSITE: %s-era enabled with settings: hue %d, saturation %d,"
-		        " contrast %d, brightness %d, and convergence %d",
-		        (is_composite_new_era ? "New" : "Old"),
-		        hue.get(),
-		        saturation.get(),
-		        contrast.get(),
-		        brightness.get(),
-		        convergence.get());
+	if (cga_comp == CompositeState::On) {
+		LOG_MSG("COMPOSITE: %s-era composite mode enabled",
+		        (is_composite_new_era ? "New" : "Old"));
 	}
 }
 
@@ -1507,43 +1538,81 @@ static void init_composite_settings(SectionProp& section)
 	auto str_prop = section.AddString("composite", WhenIdle, "auto");
 	str_prop->SetValues({"auto", "on", "off"});
 	str_prop->SetHelp(
-	        "Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine\n"
-	        "types; 'auto' by default). 'auto' lets the program decide.\n"
-	        "Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,\n"
-	        "      then copy the new settings from the logs into your config.");
+	        "Enable CGA composite monitor emulation ('auto' by default). Only available for\n"
+	        "'cga', 'pcjr', and 'tandy' machine types. This allows the emulation of NTSC\n"
+	        "artifact colours from the raw CGA RBGI image data, just like on a real NTSC CGA\n"
+	        "composite monitor. Possible values:\n"
+	        "\n"
+	        "  off:   Disable composite emulation.\n"
+	        "\n"
+	        "  on:    Enable composite emulation in all video modes.\n"
+	        "\n"
+	        "  auto:  Automatically enable composite emulation for the 640x400 composite\n"
+	        "         mode if the game uses it (default). You need to enable composite mode\n"
+	        "         manually for the 320x200 mode.\n"
+	        "\n"
+	        "Note: Fine-tune the composite emulation settings (e.g., 'composite_hue') using\n"
+	        "      the composite hotkeys, then copy the new settings from the logs into your\n"
+	        "      config.");
 
 	str_prop = section.AddString("era", WhenIdle, "auto");
 	str_prop->SetValues({"auto", "old", "new"});
 	str_prop->SetHelp(
-	        "Era of composite technology ('auto' by default).\n"
-	        "When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.");
+	        "Era of CGA composite monitor to emulate ('auto' by default).\n"
+	        "Possible values:\n"
+	        "\n"
+	        "  auto:  PCjr uses 'new', and CGA/Tandy use 'old' (default)\n"
+	        "  old:   Emulate an early NTSC IBM CGA composite monitor model.\n"
+	        "  new:   Emulate a late NTSC IBM CGA composite monitor model.");
 
-	auto int_prop = section.AddInt("hue", WhenIdle, hue.get_default());
-	int_prop->SetMinMax(hue.get_min(), hue.get_max());
+	auto int_prop = section.AddInt("hue", WhenIdle, hue.GetDefaultValue());
+	int_prop->SetMinMax(hue.GetMinValue(), hue.GetMaxValue());
+	int_prop->SetHelp(format_str(
+	        "Set the hue of the CGA composite colours (%d by default).\n"
+	        "Valid range is %d to %d. For example, adjust until the sky appears blue and\n"
+	        "the grass green in the game. This emulates the tint knob of CGA composite\n"
+	        "monitors which often had to be adjusted for each game.",
+	        hue.GetDefaultValue(),
+	        hue.GetMinValue(),
+	        hue.GetMaxValue()));
+
+	int_prop = section.AddInt("saturation", WhenIdle, saturation.GetDefaultValue());
+	int_prop->SetMinMax(saturation.GetMinValue(), saturation.GetMaxValue());
 	int_prop->SetHelp(
-	        format_str("Hue of the RGB palette (%d by default).\n"
-	                   "For example, adjust until the sky is blue.",
-	                   hue.get_default()));
+	        format_str("Set the saturation of the CGA composite colours (%d by default).\n"
+	                   "Valid range is %d to %d.",
+	                   saturation.GetDefaultValue(),
+	                   saturation.GetMinValue(),
+	                   saturation.GetMaxValue()));
 
-	int_prop = section.AddInt("saturation", WhenIdle, saturation.get_default());
-	int_prop->SetMinMax(saturation.get_min(), saturation.get_max());
-	int_prop->SetHelp(format_str("Intensity of colors, from washed out to vivid (%d by default).",
-	                             saturation.get_default()));
+	int_prop = section.AddInt("contrast", WhenIdle, contrast.GetDefaultValue());
+	int_prop->SetMinMax(contrast.GetMinValue(), contrast.GetMaxValue());
+	int_prop->SetHelp(
+	        format_str("Set the contrast of the CGA composite colours (%d by default).\n"
+	                   "Valid range is %d to %d.",
+	                   contrast.GetDefaultValue(),
+	                   contrast.GetMinValue(),
+	                   contrast.GetMaxValue()));
 
-	int_prop = section.AddInt("contrast", WhenIdle, contrast.get_default());
-	int_prop->SetMinMax(contrast.get_min(), contrast.get_max());
-	int_prop->SetHelp(format_str("Ratio between the dark and light area (%d by default).",
-	                             contrast.get_default()));
+	int_prop = section.AddInt("brightness", WhenIdle, brightness.GetDefaultValue());
+	int_prop->SetMinMax(brightness.GetMinValue(), brightness.GetMaxValue());
+	int_prop->SetHelp(
+	        format_str("Set the brightness of the CGA composite colours (%d by default).\n"
+	                   "Valid range is %d to %d.",
+	                   brightness.GetDefaultValue(),
+	                   brightness.GetMinValue(),
+	                   brightness.GetMaxValue()));
 
-	int_prop = section.AddInt("brightness", WhenIdle, brightness.get_default());
-	int_prop->SetMinMax(brightness.get_min(), brightness.get_max());
-	int_prop->SetHelp(format_str("Luminosity of the image, from dark to light (%d by default).",
-	                             brightness.get_default()));
-
-	int_prop = section.AddInt("convergence", WhenIdle, convergence.get_default());
-	int_prop->SetMinMax(convergence.get_min(), convergence.get_max());
-	int_prop->SetHelp(format_str("Convergence of subpixel elements, from blurry to sharp (%d by default).",
-	                             convergence.get_default()));
+	int_prop = section.AddInt("convergence",
+	                          WhenIdle,
+	                          convergence.GetDefaultValue());
+	int_prop->SetMinMax(convergence.GetMinValue(), convergence.GetMaxValue());
+	int_prop->SetHelp(
+	        format_str("Set the sharpness of the CGA composite image (%d by default).\n"
+	                   "Valid range is %d to %d.",
+	                   convergence.GetDefaultValue(),
+	                   convergence.GetMinValue(),
+	                   convergence.GetMaxValue()));
 }
 
 void COMPOSITE_AddConfigSection(Config& conf)

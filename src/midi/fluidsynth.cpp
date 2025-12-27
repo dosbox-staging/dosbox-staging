@@ -62,20 +62,23 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	// in the OS (usually "Fluid_R3").
 	auto str_prop = secprop.AddString("soundfont", WhenIdle, "default.sf2");
 	str_prop->SetHelp(
-	        "Name or path of SoundFont file to use ('default.sf2' by default).\n"
-	        "The SoundFont will be looked up in the following locations in order:\n"
+	        "Name or path of SoundFont file to use ('default.sf2' by default). The SoundFont\n"
+	        "will be looked up in the following locations in order:\n"
+	        "\n"
 	        "  - The user-defined SoundFont directory (see 'soundfont_dir').\n"
 	        "  - The 'soundfonts' directory in your DOSBox configuration directory.\n"
 	        "  - Other common system locations.\n"
+	        "\n"
 	        "The '.sf2' extension can be omitted. You can use paths relative to the above\n"
 	        "locations or absolute paths as well.\n"
+	        "\n"
 	        "Note: Run `MIXER /LISTMIDI` to see the list of available SoundFonts.");
 
 	str_prop = secprop.AddString("soundfont_dir", WhenIdle, "");
 	str_prop->SetHelp(
-	        "Extra user-defined SoundFont directory (unset by default).\n"
-	        "If this is set, SoundFonts are looked up in this directory first, then in the\n"
-	        "the standard system locations.");
+	        "Extra user-defined SoundFont directory (unset by default). If this is set,\n"
+	        "SoundFonts are looked up in this directory first, then in the the standard\n"
+	        "system locations.");
 
 	constexpr auto DefaultVolume = 100;
 	constexpr auto MinVolume     = 1;
@@ -84,19 +87,21 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	auto int_prop = secprop.AddInt("soundfont_volume", WhenIdle, DefaultVolume);
 	int_prop->SetMinMax(MinVolume, MaxVolume);
 	int_prop->SetHelp(
-	        format_str("Set the SoundFont's volume as a percentage (%d by default).\n"
-	                   "This is useful for normalising the volume of different SoundFonts.\n"
-	                   "The percentage value can range from %d to %d.",
+	        format_str("Set the SoundFont's volume as a percentage (%d by default). This is useful for\n"
+	                   "normalising the volume of different SoundFonts. The percentage value can range\n"
+	                   "from %d to %d.",
 	                   DefaultVolume,
 	                   MinVolume,
 	                   MaxVolume));
 
 	str_prop = secprop.AddString(ChorusSettingName, WhenIdle, DefaultChorusSetting);
 	str_prop->SetHelp(
-	        "Configure the FluidSynth chorus. Possible values:\n"
+	        "Configure the FluidSynth chorus ('auto' by default). Possible values:\n"
+	        "\n"
 	        "  auto:      Enable chorus, except for known problematic SoundFonts (default).\n"
 	        "  on:        Always enable chorus.\n"
 	        "  off:       Disable chorus.\n"
+	        "\n"
 	        "  <custom>:  Custom setting via five space-separated values:\n"
 	        "               - voice-count:      Integer from 0 to 99\n"
 	        "               - level:            Decimal from 0.0 to 10.0\n"
@@ -113,10 +118,12 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	str_prop = secprop.AddString(ReverbSettingName, WhenIdle, DefaultReverbSetting);
 	;
 	str_prop->SetHelp(
-	        "Configure the FluidSynth reverb. Possible values:\n"
+	        "Configure the FluidSynth reverb ('auto' by default). Possible values:\n"
+	        "\n"
 	        "  auto:      Enable reverb (default).\n"
 	        "  on:        Enable reverb.\n"
 	        "  off:       Disable reverb.\n"
+	        "\n"
 	        "  <custom>:  Custom setting via four space-separated values:\n"
 	        "               - room-size:  Decimal from 0.0 to 1.0\n"
 	        "               - damping:    Decimal from 0.0 to 1.0\n"
@@ -132,7 +139,8 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	str_prop = secprop.AddString("fsynth_filter", WhenIdle, "off");
 	assert(str_prop);
 	str_prop->SetHelp(
-	        "Filter for the FluidSynth audio output:\n"
+	        "Filter for the FluidSynth audio output ('off' by default). Possible values:\n"
+	        "\n"
 	        "  off:       Don't filter the output (default).\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }

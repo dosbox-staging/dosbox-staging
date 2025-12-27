@@ -26,21 +26,24 @@ public:
 	~SdlRenderer() override;
 
 	SDL_Window* GetWindow() override;
-	uint8_t GetGfxFlags() override;
 
 	DosBox::Rect GetCanvasSizeInPixels() override;
-	void UpdateViewport(const DosBox::Rect draw_rect_px) override;
 
-	bool UpdateRenderSize(const int new_render_width_px,
-	                      const int new_render_height_px) override;
+	void NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px) override;
 
-	bool SetShader([[maybe_unused]] const std::string& shader_name) override;
+	void NotifyRenderSizeChanged(const int new_render_width_px,
+	                             const int new_render_height_px) override;
 
-	bool MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
-	                           [[maybe_unused]] const VideoMode& video_mode) override;
+	void NotifyVideoModeChanged(const VideoMode& video_mode) override;
+
+	SetShaderResult SetShader(const std::string& shader_name) override;
 
 	bool ForceReloadCurrentShader() override;
+
 	ShaderInfo GetCurrentShaderInfo() override;
+	ShaderPreset GetCurrentShaderPreset() override;
+
+	std::string GetCurrentShaderDescriptorString() override;
 
 	void StartFrame(uint8_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
@@ -67,7 +70,6 @@ private:
 
 	SDL_Window* window     = {};
 	SDL_Renderer* renderer = {};
-	uint8_t gfx_flags      = 0;
 
 	// The current framebuffer we render the emulated video output into
 	// (contains the "work-in-progress" next frame).

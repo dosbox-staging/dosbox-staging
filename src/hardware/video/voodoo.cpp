@@ -7504,10 +7504,7 @@ static void Voodoo_UpdateScreen()
 			        1000.0 / v->draw.frame_period_ms);
 
 			constexpr auto ReinitRender = false;
-
-			RENDER_MaybeAutoSwitchShader(GFX_GetCanvasSizeInPixels(),
-			                             video_mode,
-			                             ReinitRender);
+			RENDER_NotifyVideoModeChanged(video_mode, ReinitRender);
 
 			RENDER_SetSize(image_info, frames_per_second);
 		}
@@ -7941,20 +7938,25 @@ static void init_voodoo_config_settings(SectionProp& section)
 	auto* str_prop = section.AddString("voodoo_memsize", OnlyAtStart, "4");
 	str_prop->SetValues({"4", "12"});
 	str_prop->SetHelp(
-	        "Set the amount of video memory for 3dfx Voodoo graphics. The memory is used by\n"
-	        "the Frame Buffer Interface (FBI) and Texture Mapping Unit (TMU) as follows:\n"
+	        "Set the amount of video memory for 3dfx Voodoo graphics (4 by default). The\n"
+	        "memory is used by the Frame Buffer Interface (FBI) and Texture Mapping Unit\n"
+	        "(TMU). Possible values:\n"
+	        "\n"
 	        "   4: 2 MB for the FBI and one TMU with 2 MB (default).\n"
 	        "  12: 4 MB for the FBI and two TMUs, each with 4 MB.");
 
 	// Deprecate the boolean Voodoo multithreading setting
 	bool_prop = section.AddBool("voodoo_multithreading", Deprecated, false);
-	bool_prop->SetHelp("Renamed to 'voodoo_threads'");
+	bool_prop->SetHelp("Renamed to [color=light-green]'voodoo_threads'.[reset]");
 
 	str_prop = section.AddString("voodoo_threads", OnlyAtStart, "auto");
 	str_prop->SetHelp(
-	        "Use threads to improve 3dfx Voodoo performance:\n"
+	        "Use threads to improve 3dfx Voodoo performance ('auto' by default). Possible\n"
+	        "values:\n"
+	        "\n"
 	        "  auto:     Use up to 16 threads based on available CPU cores (default).\n"
 	        "  <value>:  Set a specific number of threads between 1 and 128.\n"
+	        "\n"
 	        "Note: Setting this to a higher value than the number of logical CPUs your\n"
 	        "      hardware supports is very likely to harm performance. This has been\n"
 	        "      measured to scale well up to 8-16 threads, but it has not been tested\n"

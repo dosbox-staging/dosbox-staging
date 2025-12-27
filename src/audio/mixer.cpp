@@ -38,7 +38,6 @@
 #include "midi/midi.h"
 #include "misc/cross.h"
 #include "misc/notifications.h"
-#include "misc/tracy.h"
 #include "misc/video.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
@@ -482,7 +481,7 @@ static ReverbPreset reverb_pref_to_preset(const std::string& pref)
 		return ReverbPreset::Huge;
 	}
 
-	// the conf system programmatically guarantees only the above prefs are
+	// The conf system programmatically guarantees only the above prefs are
 	// used
 	constexpr auto SettingName  = "reverb";
 	constexpr auto DefaultValue = "off";
@@ -2583,8 +2582,6 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 {
 	assert(bytes_requested > 0);
 
-	ZoneScoped;
-
 	constexpr int BytesPerAudioFrame = sizeof(AudioFrame);
 
 	const auto frames_requested = check_cast<size_t>(bytes_requested /
@@ -2789,6 +2786,11 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	// Non-zero is the device is to be opened for recording as well
 	constexpr auto IsCapture = 0;
 
+	if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+		LOG_ERR("SDL: Failed to init SDL audio subsystem: %s", SDL_GetError());
+		return false;
+	}
+
 	if ((mixer.sdl_device = SDL_OpenAudioDevice(
 	             DeviceName, IsCapture, &desired, &obtained, sdl_allow_flags)) ==
 	    SdlError) {
@@ -2798,6 +2800,8 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		set_section_property_value("mixer", "nosound", "off");
 		return false;
 	}
+
+	LOG_MSG("SDL: %s audio initialised", SDL_GetCurrentAudioDriver());
 
 	// Opening SDL audio device succeeded
 	//
@@ -3100,27 +3104,27 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 	auto bool_prop = sec_prop.AddBool("nosound", OnlyAtStart, false);
 	assert(bool_prop);
 	bool_prop->SetHelp(
-	        "Enable silent mode ('off' by default).\n"
-	        "Sound is still emulated in silent mode, but DOSBox outputs no sound to the host.\n"
-	        "Capturing the emulated audio output to a WAV file works in silent mode.");
+	        "Enable silent mode ('off' by default). Sound is still emulated in silent mode,\n"
+	        "but DOSBox outputs no sound to the host. Capturing the emulated audio output to\n"
+	        "a WAV file works in silent mode.");
 
 	auto int_prop = sec_prop.AddInt("rate", OnlyAtStart, DefaultSampleRateHz);
 	assert(int_prop);
 	int_prop->SetMinMax(8000, 96000);
 	int_prop->SetHelp(
-	        "Sample rate of DOSBox's internal audio mixer in Hz (%s by default).\n"
-	        "Valid range is 8000 to 96000 Hz. The vast majority of consumer-grade audio\n"
-	        "hardware uses a native rate of 48000 Hz. Recommend leaving this as-is unless\n"
-	        "you have good reason to change it. The OS will most likely resample non-standard\n"
-	        "sample rates to 48000 Hz anyway.");
+	        "Sample rate of DOSBox's internal audio mixer in Hz (%s by default). Valid\n"
+	        "range is 8000 to 96000 Hz. The vast majority of consumer-grade audio hardware\n"
+	        "uses a native rate of 48000 Hz. Recommend leaving this as-is unless you have\n"
+	        "good reason to change it. The OS will most likely resample non-standard sample\n"
+	        "rates to 48000 Hz anyway.");
 
 	int_prop = sec_prop.AddInt("blocksize", OnlyAtStart, DefaultBlocksize);
 	int_prop->SetMinMax(64, 8192);
 	int_prop->SetHelp(
-	        "Block size of the host audio device in sample frames (%s by default).\n"
-	        "Valid range is 64 to 8192. Should be set to power-of-two values (e.g., 256,\n"
-	        "512, 1024, etc.) Larger values might help with sound stuttering but will\n"
-	        "introduce more latency. Also see 'negotiate'.");
+	        "Block size of the host audio device in sample frames (%s by default). Valid\n"
+	        "range is 64 to 8192. Should be set to power-of-two values (e.g., 256, 512, 1024,\n"
+	        "etc.) Larger values might help with sound stuttering but will introduce more\n"
+	        "latency. Also see 'negotiate'.");
 
 	int_prop = sec_prop.AddInt("prebuffer", OnlyAtStart, DefaultPrebufferMs);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
@@ -3131,25 +3135,28 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 
 	bool_prop = sec_prop.AddBool("negotiate", OnlyAtStart, DefaultAllowNegotiate);
 	bool_prop->SetHelp(
-	        "Negotiate a possibly better 'blocksize' setting (%s by default).\n"
-	        "Enable it if you're not getting audio or the sound is stuttering with your\n"
-	        "'blocksize' setting. Disable it to force the manually set 'blocksize' value.");
+	        "Negotiate a possibly better 'blocksize' setting (%s by default). Enable it if\n"
+	        "you're not getting audio or the sound is stuttering with your 'blocksize'\n"
+	        "setting. Disable it to force the manually set 'blocksize' value.");
 
 	constexpr auto DefaultOn = true;
 	bool_prop = sec_prop.AddBool("compressor", WhenIdle, DefaultOn);
 	bool_prop->SetHelp(
 	        "Enable the auto-leveling compressor on the master channel to prevent clipping\n"
-	        "of the audio output:\n"
+	        "of the audio output ('on' by default). Possible values:\n"
+	        "\n"
 	        "  off:  Disable compressor.\n"
 	        "  on:   Enable compressor (default).");
 
 	auto string_prop = sec_prop.AddString("crossfeed", WhenIdle, "off");
 	string_prop->SetHelp(
-	        "Set crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many games pan\n"
-	        "the instruments 100%% left and 100%% right in the stereo field on these audio\n"
-	        "devices which is unpleasant to listen to in headphones. With crossfeed enabled,\n"
-	        "a portion of the left channel signal is mixed into the right channel and vice\n"
-	        "versa, creating a more natural listening experience.\n"
+	        "Set crossfeed on the OPL and CMS (Gameblaster) mixer channels ('off' by\n"
+	        "default). Many games pan the instruments 100%% left and 100%% right in the\n"
+	        "stereo field on these audio devices which is unpleasant to listen to in\n"
+	        "headphones. With crossfeed enabled, a portion of the left channel signal is\n"
+	        "mixed into the right channel and vice versa, creating a more natural listening\n"
+	        "experience. Possible values:\n"
+	        "\n"
 	        "  off:     No crossfeed (default).\n"
 	        "  on:      Enable crossfeed (normal preset).\n"
 	        "  light:   Light crossfeed (strength 15).\n"
@@ -3163,17 +3170,25 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 
 	string_prop = sec_prop.AddString("reverb", WhenIdle, "off");
 	string_prop->SetHelp(
-	        "Reverb effect that adds a sense of space to the sound:\n"
+	        "Reverb effect that adds a sense of space to the sound ('off') by default.\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  off:     No reverb (default).\n"
+	        "\n"
 	        "  on:      Enable reverb (medium preset).\n"
+	        "\n"
 	        "  tiny:    Simulates the sound of a small integrated speaker in a room;\n"
 	        "           specifically designed for small-speaker audio systems\n"
 	        "           (PC speaker, Tandy, PS/1 Audio, and LPT DAC devices).\n"
+	        "\n"
 	        "  small:   Adds a subtle sense of space; good for games that use a single\n"
 	        "           synth channel (typically OPL) for both music and sound effects.\n"
+	        "\n"
 	        "  medium:  Medium room preset that works well with a wide variety of games.\n"
+	        "\n"
 	        "  large:   Large hall preset recommended for games that use separate\n"
 	        "           channels for music and digital audio.\n"
+	        "\n"
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
 	        "\n"
@@ -3181,33 +3196,44 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 	        "  - The presets apply a noticeable amount of reverb to the synth mixer channels\n"
 	        "    (except for synths with built-in reverb; e.g., the Roland MT-32), and a\n"
 	        "    subtle amount to the digital audio channels.\n"
+	        "\n"
 	        "  - Use the MIXER command to fine-tune the reverb levels per channel.");
 	string_prop->SetValues(
 	        {"off", "on", "tiny", "small", "medium", "large", "huge"});
 
 	string_prop = sec_prop.AddString("chorus", WhenIdle, "off");
 	string_prop->SetHelp(
-	        "Chorus effect that adds a sense of stereo movement to the sound:\n"
+	        "Chorus effect that adds a sense of stereo movement to the sound ('off' by\n"
+	        "default). Possible values:\n"
+	        "\n"
 	        "  off:     No chorus (default).\n"
+	        "\n"
 	        "  on:      Enable chorus (normal preset).\n"
+	        "\n"
 	        "  light:   A light chorus effect (especially suited for synth music that\n"
 	        "           features lots of white noise).\n"
+	        "\n"
 	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
+	        "\n"
 	        "  strong:  An obvious and upfront chorus effect.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The presets apply the chorus effect to the synth channels only (except\n"
 	        "    for synths with built-in chorus; e.g. the Roland MT-32).\n"
+	        "\n"
 	        "  - Use the MIXER command to fine-tune the chorus levels per channel.");
 	string_prop->SetValues({"off", "on", "light", "normal", "strong"});
 
 	bool_prop = sec_prop.AddBool("denoiser", WhenIdle, DefaultOn);
 	bool_prop->SetHelp(
 	        "Remove low-level residual noise from the output of the OPL synth and the Roland\n"
-	        "Sound Canvas. The emulation of these devices is accurate to the original\n"
-	        "hardware units, which includes the emulation of a very low-level semi-random\n"
-	        "noise. Although this is authentic, most people would find it slightly annoying.\n"
+	        "Sound Canvas ('on' by default). The emulation of these devices is accurate to\n"
+	        "the original hardware units, which includes the emulation of a very low-level\n"
+	        "semi-random noise. Although this is authentic, most people would find it\n"
+	        "slightly annoying. Possible values:\n"
+	        "\n"
 	        "  off:  Disable the denoiser.\n"
+	        "\n"
 	        "  on:   Enable the denoiser on the OPL and SOUNDCANVAS channels (default).\n"
 	        "        The denoiser does not introduce any sound quality degradation; it only\n"
 	        "        removes the barely audible residual noise in quiet passages.");
@@ -3220,7 +3246,7 @@ static void register_mixer_text_messages()
 	MSG_Add("MIXER_INVALID_CUSTOM_FILTER",
 	        "Invalid custom filter definition: [color=white]'%s'[reset].\n"
 	        "Must be specified in [color=light-cyan]"
-	        "'lfp|hpf ORDER CUTOFF_FREQUENCY'[reset] format.");
+	        "'lpf|hpf ORDER CUTOFF_FREQUENCY'[reset] format.");
 
 	MSG_Add("MIXER_INVALID_CUSTOM_FILTER_ORDER",
 	        "Invalid %s filter order: [color=white]'%s'[reset]. "

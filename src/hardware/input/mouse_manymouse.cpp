@@ -235,8 +235,11 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &physical_device_idx)
 	constexpr uint32_t ticks_threshold = 50; // time to wait idle in PIC ticks
 	const auto pic_ticks_start = PIC_Ticks;
 	while (PIC_Ticks >= pic_ticks_start &&
-	       PIC_Ticks - pic_ticks_start < ticks_threshold)
-		CALLBACK_Idle();
+	       PIC_Ticks - pic_ticks_start < ticks_threshold) {
+		if (CALLBACK_Idle()) {
+			return false;
+		}
+	}
 
 	// Make sure the module is initialized,
 	// but suppress default event handling

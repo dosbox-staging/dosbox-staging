@@ -6,6 +6,7 @@
 #endif
 
 #include "utils/math_utils.h"
+#include <bit>
 
 static constexpr uint16_t PrecisionModeMask = 0x0300;
 
@@ -13,7 +14,12 @@ static constexpr uint16_t SinglePrecisionMode   = 0x0000;
 static constexpr uint16_t DoublePrecisionMode   = 0x0200;
 static constexpr uint16_t ExtendedPrecisionMode = 0x0300;
 
-static void FPU_FINIT(void) {
+static constexpr uint16_t InvalidArithmeticFlag = 0x0001;
+static constexpr uint16_t ZeroDivideFlag        = 0x0004;
+static constexpr uint16_t PrecisionFlag         = 0x0020;
+
+static void FPU_FINIT(void)
+{
 	FPU_SetCW(0x37F);
 	fpu.sw = 0;
 	TOP=FPU_GET_TOP();
@@ -91,38 +97,13 @@ static void FPU_FPOP(void){
 	return;
 }
 
-static double FROUND(double in)
+static inline double FROUND(double in)
 {
-	const auto prec_mode = fpu.cw & PrecisionModeMask;
-
-	// If the fpu is in single precision mode, cast to a float first
-	// to correct any double values that aren't valid single precision
-	// values.
-	if (prec_mode == SinglePrecisionMode) {
-		in = static_cast<float>(in);
-	}
-
 	switch (fpu.round) {
 	case ROUND_Nearest: return std::nearbyint(in);
 	case ROUND_Down: return std::floor(in);
 	case ROUND_Up: return std::ceil(in);
-	case ROUND_Chop: {
-		// This is a fix for rounding to a close integer in extended
-		// precision mode, e.g. 7.999999999999994; an example can be
-		// seen in the Quake options screen size slider. In this case,
-		// what is almost certainly wanted is 8.0, so return the closer
-		// integer instead of chopping to the lower value.
-		if (prec_mode == ExtendedPrecisionMode) {
-			if (const auto lower = std::floor(in);
-			    are_almost_equal_relative(in, lower)) {
-				return lower;
-			} else if (const auto upper = std::ceil(in);
-			           are_almost_equal_relative(upper, in)) {
-				return upper;
-			}
-		}
-		return std::trunc(in);
-	}
+	case ROUND_Chop: return std::trunc(in);
 	default: return in;
 	}
 }
@@ -130,69 +111,211 @@ static double FROUND(double in)
 #define BIAS80 16383
 #define BIAS64 1023
 
-static Real64 FPU_FLD80(PhysPt addr) {
-	struct {
-		int16_t begin = 0;
-		FPU_Reg eind  = {};
-	} test = {};
-
-	test.eind.ll = mem_readq(addr);
-	test.begin = mem_readw(addr+8);
-   
-	int64_t exp64 = (((test.begin&0x7fff) - BIAS80));
-	int64_t blah = ((exp64 >0)?exp64:-exp64)&0x3ff;
-	int64_t exp64final = ((exp64 >0)?blah:-blah) +BIAS64;
-
-	int64_t mant64 = (test.eind.ll >> 11) & LONGTYPE(0xfffffffffffff);
-	int64_t sign = (test.begin&0x8000)?1:0;
-	FPU_Reg result;
-	result.ll = (sign <<63)|(exp64final << 52)| mant64;
-
-	if (test.eind.l.lower == 0 && test.eind.l.upper == INT32_MIN &&
-	    (test.begin & INT16_MAX) == INT16_MAX) {
-		//Detect INF and -INF (score 3.11 when drawing a slur.)
-		result.d = sign?-HUGE_VAL:HUGE_VAL;
+// Rounds sig to nearest even, shifting right by s bits
+static inline uint64_t round_to_nearest_even(uint64_t sig, unsigned s)
+{
+	if (s == 0) {
+		return sig;
 	}
-	return result.d;
 
-	//mant64= test.mant80/2***64    * 2 **53 
+	const bool big     = (s >= 64);
+	const uint64_t hi  = big ? 0 : (sig >> s);
+	const uint64_t rem = big ? sig : (sig & ((1ULL << s) - 1));
+	if (!rem) {
+		return hi;
+	}
+
+	const uint64_t half = big ? (1ULL << 63) : (1ULL << (s - 1));
+	const uint64_t lsb  = hi & 1ULL;
+	const bool round_up = (rem > half) || (rem == half && lsb);
+	return hi + (round_up ? 1ULL : 0ULL);
 }
 
-static void FPU_ST80(PhysPt addr,Bitu reg) {
-	struct {
-		int16_t begin = 0;
-		FPU_Reg eind  = {};
-	} test = {};
+static Real64 FPU_FLD80(PhysPt addr)
+{
+	const auto raw_mant = mem_readq(addr);
+	const auto raw_exp  = mem_readw(addr + 8);
 
-	int64_t sign80 = (fpu.regs[reg].ll & LONGTYPE(0x8000000000000000)) ? 1 : 0;
-	int64_t exp80       = fpu.regs[reg].ll & LONGTYPE(0x7ff0000000000000);
-	int64_t exp80final  = (exp80 >> 52);
-	int64_t mant80 = fpu.regs[reg].ll&LONGTYPE(0x000fffffffffffff);
-	int64_t mant80final = (mant80 << 11);
-	if(fpu.regs[reg].d != 0){ //Zero is a special case
-		// Elvira wants the 8 and tcalc doesn't
-		mant80final |= LONGTYPE(0x8000000000000000);
-		//Ca-cyber doesn't like this when result is zero.
-		exp80final += (BIAS80 - BIAS64);
+	const auto sign  = static_cast<uint16_t>(raw_exp) >> 15;
+	const auto exp80 = static_cast<uint16_t>(raw_exp) & 0x7fff;
+	// J bit is at bit 63 for normals
+	uint64_t sig64 = raw_mant;
+
+	uint64_t out = 0;
+
+	// Special cases
+	if (exp80 == 0x7fff) {
+		// Inf or NaN
+		// J==1, frac==0
+		const bool is_inf = (sig64 & 0x7fffffffffffffffULL) == 0;
+		if (is_inf) {
+			out = (uint64_t(sign) << 63) | (0x7ffULL << 52);
+			return std::bit_cast<double>(out);
+		}
+		// Quiet NaN
+		out = (uint64_t(sign) << 63) | (0x7ffULL << 52) | (1ULL << 51);
+		return std::bit_cast<double>(out);
 	}
-	test.begin = (static_cast<int16_t>(sign80)<<15)| static_cast<int16_t>(exp80final);
-	test.eind.ll = mant80final;
-	mem_writeq(addr, test.eind.ll);
-	mem_writew(addr+8,test.begin);
+
+	if (exp80 == 0) {
+		// Zero or subnormal (J==0)
+		if (sig64 == 0) {
+			// signed zero
+			out = (uint64_t(sign) << 63);
+			return std::bit_cast<double>(out);
+		}
+		// Normalize the subnormal significand so that J lands in bit 63
+		const auto lz = std::countl_zero(sig64);
+		sig64 <<= lz;
+		// Unbiased exponent for subnormals is 1 - BIAS80, minus the shifts
+		int64_t E = (1 - BIAS80) - lz + BIAS64;
+
+		// Will be subnormal or underflow to zero in double
+		if (E <= 0) {
+			// Shift so that the implicit 1 would align just above
+			// the fraction
+			const auto s = static_cast<unsigned>(12 - E); // 11 + (1
+			                                              // - E)
+			uint64_t q = round_to_nearest_even(sig64, s);
+			if (q == 0) {
+				// underflow to signed zero
+				out = (uint64_t(sign) << 63);
+				return std::bit_cast<double>(out);
+			}
+			// If rounding created a carry into the hidden-1 place,
+			// it became the smallest normal
+			if (q == (1ULL << 53)) {
+				out = (uint64_t(sign) << 63) |
+				      (1ULL << 52); // exponent=1, mantissa=0
+				return std::bit_cast<double>(out);
+			}
+			const uint64_t mant = q & ((1ULL << 52) - 1);
+			// exponent=0 (subnormal)
+			out = (uint64_t(sign) << 63) | mant;
+			return std::bit_cast<double>(out);
+		}
+		// Else it turned normal; fall through to normal path with E >= 1
+		int64_t exp64    = E;
+		const auto sig53 = round_to_nearest_even(sig64, 11);
+		uint64_t mant    = sig53 & ((1ULL << 52) - 1);
+		// Carry from rounding?
+		if (sig53 == (1ULL << 53)) {
+			mant = 0;
+			++exp64;
+		}
+		if (exp64 >= 0x7ff) {
+			out = (uint64_t(sign) << 63) | (0x7ffULL << 52);
+			return std::bit_cast<double>(out);
+		}
+		out = (uint64_t(sign) << 63) |
+		      (static_cast<uint64_t>(exp64) << 52) | mant;
+		return std::bit_cast<double>(out);
+	}
+
+	// Normal finite: ensure J bit set (defensive against pseudo-denorms)
+	if ((sig64 >> 63) == 0) {
+		sig64 |= (1ULL << 63);
+	}
+
+	auto exp64 = static_cast<int64_t>(exp80) - BIAS80 + BIAS64;
+
+	// Subnormal result?
+	if (exp64 <= 0) {
+		// 11 + (1 - exp64)
+		const unsigned s = static_cast<unsigned>(12 - exp64);
+		uint64_t q       = round_to_nearest_even(sig64, s);
+		if (q == 0) {
+			out = (uint64_t(sign) << 63);
+			return std::bit_cast<double>(out);
+		}
+		if (q == (1ULL << 53)) {
+			// Rounded up to the smallest normal
+			out = (uint64_t(sign) << 63) | (1ULL << 52);
+			return std::bit_cast<double>(out);
+		}
+		const uint64_t mant = q & ((1ULL << 52) - 1);
+		// exponent=0
+		out = (uint64_t(sign) << 63) | mant;
+		return std::bit_cast<double>(out);
+	}
+
+	// Normal result
+	const uint64_t sig53 = round_to_nearest_even(sig64, 11);
+	uint64_t mant        = sig53 & ((1ULL << 52) - 1);
+
+	// Carry from rounding?
+	if (sig53 == (1ULL << 53)) {
+		mant = 0;
+		++exp64;
+	}
+	// Overflow?
+	if (exp64 >= 0x7ff) {
+		out = (uint64_t(sign) << 63) | (0x7ffULL << 52);
+		return std::bit_cast<double>(out);
+	}
+
+	out = (uint64_t(sign) << 63) | (static_cast<uint64_t>(exp64) << 52) | mant;
+
+	return std::bit_cast<double>(out);
 }
 
+static void FPU_ST80(PhysPt addr, Bitu reg)
+{
+	const uint64_t val64 = fpu.regs[reg].bits();
+
+	const uint64_t sign64 = val64 >> 63;
+	const uint64_t exp64  = (val64 >> 52) & 0x7ff;
+	const uint64_t mant64 = val64 & ((1ULL << 52) - 1);
+
+	uint64_t mant80;
+	uint16_t exp80;
+
+	if (exp64 == 0x7ff) {
+		// Infinity or NaN
+		exp80 = 0x7fff;
+		if (mant64 == 0) {
+			// Infinity - set J bit, clear fraction
+			mant80 = 1ULL << 63;
+		} else {
+			// NaN - set J bit and quiet bit, preserve some fraction
+			// bits
+			mant80 = (1ULL << 63) | (1ULL << 62) | (mant64 << 11);
+		}
+	} else if (exp64 == 0) {
+		if (mant64 == 0) {
+			// Zero
+			exp80  = 0;
+			mant80 = 0;
+		} else {
+			// Subnormal - normalize it
+			// align to bit 63
+			const auto lz = std::countl_zero(mant64 << 12);
+			// set J bit
+			mant80 = (mant64 << (12 + lz)) | (1ULL << 63);
+			exp80 = static_cast<uint16_t>(1 - BIAS64 + BIAS80 - lz);
+		}
+	} else {
+		// Normal number
+		exp80 = static_cast<uint16_t>(exp64 - BIAS64 + BIAS80);
+		// Set J bit (implicit 1) and shift mantissa
+		mant80 = (1ULL << 63) | (mant64 << 11);
+	}
+
+	// Combine sign and exponent for the high word
+	const uint16_t high_word = (static_cast<uint16_t>(sign64) << 15) | exp80;
+
+	mem_writeq(addr, mant80);
+	mem_writew(addr + 8, high_word);
+}
 
 static void FPU_FLD_F32(PhysPt addr,Bitu store_to) {
-	union {
-		float f;
-		uint32_t l;
-	}	blah;
-	blah.l = mem_readd(addr);
-	fpu.regs[store_to].d = static_cast<Real64>(blah.f);
+	const auto val       = mem_readd(addr);
+	const auto f         = std::bit_cast<float>(val);
+	fpu.regs[store_to].d = static_cast<Real64>(f);
 }
 
 static void FPU_FLD_F64(PhysPt addr,Bitu store_to) {
-	fpu.regs[store_to].ll = mem_readq(addr);
+	fpu.regs[store_to].set_bits(mem_readq(addr));
 }
 
 static void FPU_FLD_F80(PhysPt addr) {
@@ -261,17 +384,13 @@ static inline void FPU_FLD_I16_EA(PhysPt addr) {
 
 
 static void FPU_FST_F32(PhysPt addr) {
-	union {
-		float f;
-		uint32_t l;
-	}	blah;
-	//should depend on rounding method
-	blah.f = static_cast<float>(fpu.regs[TOP].d);
-	mem_writed(addr,blah.l);
+	const auto f   = static_cast<float>(fpu.regs[TOP].d);
+	const auto val = std::bit_cast<uint32_t>(f);
+	mem_writed(addr, val);
 }
 
 static void FPU_FST_F64(PhysPt addr) {
-	mem_writeq(addr, fpu.regs[TOP].ll);
+	mem_writeq(addr, fpu.regs[TOP].bits());
 }
 
 static void FPU_FST_F80(PhysPt addr) {
@@ -308,10 +427,12 @@ static void FPU_FST_I64(PhysPt addr)
 
 static void FPU_FBST(PhysPt addr) {
 	FPU_Reg val = fpu.regs[TOP];
-	if(val.ll & LONGTYPE(0x8000000000000000)) { // MSB = sign
+	if (val.bits() & LONGTYPE(0x8000000000000000)) { // MSB = sign
 		mem_writeb(addr+9,0x80);
 		val.d = -val.d;
-	} else mem_writeb(addr+9,0);
+	} else {
+		mem_writeb(addr + 9, 0);
+	}
 
 	uint64_t rndint = static_cast<uint64_t>(FROUND(val.d));
 	// BCD (18 decimal digits) overflow? (0x0DE0B6B3A763FFFF max)
@@ -367,8 +488,16 @@ static void FPU_FCOS(void){
 }
 
 static void FPU_FSQRT(void){
-	fpu.regs[TOP].d = std::sqrt(fpu.regs[TOP].d);
-	//flags and such :)
+	const auto val = fpu.regs[TOP].d;
+
+	if (val < 0.0) {
+		fpu.sw |= InvalidArithmeticFlag;
+		fpu.regs[TOP].d = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
+
+	fpu.regs[TOP].d = std::sqrt(val);
+	// flags and such :)
 	return;
 }
 static void FPU_FPATAN(void){
@@ -384,16 +513,67 @@ static void FPU_FPTAN(void){
 	//flags and such :)
 	return;
 }
+
 static void FPU_FDIV(Bitu st, Bitu other){
-	fpu.regs[st].d= fpu.regs[st].d/fpu.regs[other].d;
-	//flags and such :)
-	return;
+	const auto a = fpu.regs[st].d;
+	const auto b = fpu.regs[other].d;
+
+	if (b != 0.0 && std::isfinite(a) && std::isfinite(b)) {
+		fpu.regs[st].d = a / b;
+		return;
+	}
+
+	if (b == 0.0 && (std::isfinite(a) && a != 0.0)) {
+		fpu.sw |= ZeroDivideFlag;
+		fpu.regs[st].d = std::copysign(
+		        std::numeric_limits<double>::infinity(),
+		        (std::signbit(a) ^ std::signbit(b)) ? -1.0 : 1.0);
+		return;
+	}
+
+	if (std::isnan(a) || std::isnan(b)) {
+		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
+
+	if ((a == 0.0 && b == 0.0) || (std::isinf(a) && std::isinf(b))) {
+		fpu.sw |= InvalidArithmeticFlag;
+		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
+
+	fpu.regs[st].d = a / b;
 }
 
 static void FPU_FDIVR(Bitu st, Bitu other){
-	fpu.regs[st].d= fpu.regs[other].d/fpu.regs[st].d;
-	// flags and such :)
-	return;
+	const auto a = fpu.regs[other].d;
+	const auto b = fpu.regs[st].d;
+
+	if (b != 0.0 && std::isfinite(a) && std::isfinite(b)) {
+		fpu.regs[st].d = a / b;
+		return;
+	}
+
+	if (b == 0.0 && (std::isfinite(a) && a != 0.0)) {
+		fpu.sw |= ZeroDivideFlag;
+		fpu.regs[st].d = std::copysign(
+		        std::numeric_limits<double>::infinity(),
+		        (std::signbit(a) ^ std::signbit(b)) ? -1.0 : 1.0);
+		return;
+	}
+
+	if (std::isnan(a) || std::isnan(b)) {
+		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
+
+	if ((a == 0.0 && b == 0.0) || (std::isinf(a) && std::isinf(b))) {
+		fpu.sw |= InvalidArithmeticFlag;
+		fpu.regs[st].d = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
+
+	fpu.regs[st].d = a / b;
 }
 
 static void FPU_FMUL(Bitu st, Bitu other){
@@ -433,18 +613,52 @@ static void FPU_FST(Bitu st, Bitu other){
 }
 
 static void FPU_FCOM(Bitu st, Bitu other){
-	if(((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) || 
-		((fpu.tags[other] != TAG_Valid) && (fpu.tags[other] != TAG_Zero))){
-		FPU_SET_C3(1);FPU_SET_C2(1);FPU_SET_C0(1);return;
+	const auto a = fpu.regs[st].d;
+	const auto b = fpu.regs[other].d;
+
+	/*
+	Table 3-21. FCOM/FCOMP/FCOMPP Results
+	+----------------+----+----+----+
+	|   Condition    | C3 | C2 | C0 |
+	+----------------+----+----+----+
+	| ST(0) > SRC    |  0 |  0 |  0 |
+	| ST(0) < SRC    |  0 |  0 |  1 |
+	| ST(0) = SRC    |  1 |  0 |  0 |
+	| Unordered (*)  |  1 |  1 |  1 |
+	+----------------+----+----+----+
+
+	Notes:
+	(*) Flags are not set if an unmasked invalid-arithmetic-operand (#IA)
+	exception is generated.
+
+	FPU Flags Affected:
+	C1 Set to 0.
+	C0, C2, C3 See table.
+	*/
+
+	FPU_SET_C1(0);
+
+	if (((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) ||
+	    ((fpu.tags[other] != TAG_Valid) && (fpu.tags[other] != TAG_Zero))) {
+		FPU_SET_C3(1);
+		FPU_SET_C2(1);
+		FPU_SET_C0(1);
+		return;
 	}
-	if(fpu.regs[st].d == fpu.regs[other].d){
-		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C0(0);return;
+
+	if (std::isunordered(a, b)) {
+		fpu.sw |= InvalidArithmeticFlag;
+		if (fpu.cw & InvalidArithmeticFlag) {
+			FPU_SET_C3(1);
+			FPU_SET_C2(1);
+			FPU_SET_C0(1);
+		}
+		return;
 	}
-	if(fpu.regs[st].d < fpu.regs[other].d){
-		FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C0(1);return;
-	}
-	// st > other
-	FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C0(0);return;
+
+	FPU_SET_C3(a == b);
+	FPU_SET_C2(0);
+	FPU_SET_C0(a < b);
 }
 
 static void FPU_FUCOM(Bitu st, Bitu other){
@@ -452,69 +666,114 @@ static void FPU_FUCOM(Bitu st, Bitu other){
 	FPU_FCOM(st,other);
 }
 
-static void FPU_FRNDINT(void){
-	const auto rounded  = FROUND(fpu.regs[TOP].d);
-	if (fpu.cw&0x20) { //As we don't generate exceptions; only do it when masked
-		if (rounded != fpu.regs[TOP].d)
-			fpu.sw |= 0x20; //Set Precision Exception
+static void FPU_FRNDINT(void)
+{
+	const auto val = fpu.regs[TOP].d;
+	if (std::isnan(val) || std::isinf(val)) {
+		return;
 	}
+	const auto rounded = FROUND(val);
+	if (rounded != val) {
+		fpu.sw |= PrecisionFlag;
+	}
+	FPU_SET_C1(rounded > val ? 1 : 0);
 	fpu.regs[TOP].d = rounded;
 }
 
-static void FPU_FPREM(void){
-	Real64 valtop = fpu.regs[TOP].d;
-	Real64 valdiv = fpu.regs[STV(1)].d;
-	int64_t ressaved = static_cast<int64_t>( (valtop/valdiv) );
-// Some backups
-//	Real64 res=valtop - ressaved*valdiv; 
-//      res= fmod(valtop,valdiv);
-	fpu.regs[TOP].d = valtop - ressaved*valdiv;
-	FPU_SET_C0(static_cast<Bitu>(ressaved&4));
-	FPU_SET_C3(static_cast<Bitu>(ressaved&2));
-	FPU_SET_C1(static_cast<Bitu>(ressaved&1));
-	FPU_SET_C2(0);
-}
+static void FPU_FPREM(void)
+{
+	const auto st0 = fpu.regs[TOP].d;
+	const auto st1 = fpu.regs[STV(1)].d;
 
-static void FPU_FPREM1(void){
-	Real64 valtop = fpu.regs[TOP].d;
-	Real64 valdiv = fpu.regs[STV(1)].d;
-	double quot = valtop/valdiv;
-	double quotf = floor(quot);
-	int64_t ressaved;
-	if (quot-quotf>0.5) ressaved = static_cast<int64_t>(quotf+1);
-	else if (quot-quotf<0.5) ressaved = static_cast<int64_t>(quotf);
-	else ressaved = static_cast<int64_t>((((static_cast<int64_t>(quotf))&1)!=0)?(quotf+1):(quotf));
-	fpu.regs[TOP].d = valtop - ressaved*valdiv;
-	FPU_SET_C0(static_cast<Bitu>(ressaved&4));
-	FPU_SET_C3(static_cast<Bitu>(ressaved&2));
-	FPU_SET_C1(static_cast<Bitu>(ressaved&1));
-	FPU_SET_C2(0);
-}
-
-static void FPU_FXAM(void){
-	if(fpu.regs[TOP].ll & LONGTYPE(0x8000000000000000))	//sign
-	{ 
-		FPU_SET_C1(1);
-	} 
-	else 
-	{
-		FPU_SET_C1(0);
-	}
-	if(fpu.tags[TOP] == TAG_Empty)
-	{
-		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C0(1);
+	if (std::isnan(st0) || std::isnan(st1)) {
+		fpu.regs[TOP].d = std::numeric_limits<double>::quiet_NaN();
+		fpu.sw |= InvalidArithmeticFlag;
+		FPU_SET_C2(0);
 		return;
 	}
-	if(fpu.regs[TOP].d == 0.0)		//zero or normalized number.
-	{ 
-		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C0(0);
-	}
-	else
-	{
-		FPU_SET_C3(0);FPU_SET_C2(1);FPU_SET_C0(0);
-	}
+
+	const auto q    = static_cast<int64_t>(st0 / st1);
+	fpu.regs[TOP].d = std::fmod(st0, st1);
+
+	FPU_SET_C0((q >> 2) & 1);
+	FPU_SET_C3((q >> 1) & 1);
+	FPU_SET_C1(q & 1);
+	FPU_SET_C2(0);
 }
 
+static void FPU_FPREM1(void)
+{
+	const auto st0 = fpu.regs[TOP].d;
+	const auto st1 = fpu.regs[STV(1)].d;
+
+	if (std::isnan(st0) || std::isnan(st1)) {
+		fpu.regs[TOP].d = std::numeric_limits<double>::quiet_NaN();
+		fpu.sw |= InvalidArithmeticFlag;
+		FPU_SET_C2(0);
+		return;
+	}
+
+	const auto q    = static_cast<int64_t>(std::nearbyint(st0 / st1));
+	fpu.regs[TOP].d = std::remainder(st0, st1);
+
+	FPU_SET_C0((q >> 2) & 1);
+	FPU_SET_C3((q >> 1) & 1);
+	FPU_SET_C1(q & 1);
+	FPU_SET_C2(0);
+}
+
+static void FPU_FXAM(void)
+{
+	const auto st0 = fpu.regs[TOP].d;
+
+	FPU_SET_C1(std::signbit(st0));
+
+	if (fpu.tags[TOP] == TAG_Empty) {
+		FPU_SET_C3(1);
+		FPU_SET_C2(0);
+		FPU_SET_C0(1);
+		return;
+	}
+
+	switch (std::fpclassify(st0)) {
+	case FP_NORMAL:
+		FPU_SET_C3(0);
+		FPU_SET_C2(1);
+		FPU_SET_C0(0);
+		break;
+
+	case FP_ZERO:
+		FPU_SET_C3(1);
+		FPU_SET_C2(0);
+		FPU_SET_C0(0);
+		break;
+
+	case FP_NAN:
+		FPU_SET_C3(0);
+		FPU_SET_C2(0);
+		FPU_SET_C0(1);
+		break;
+
+	case FP_INFINITE:
+		FPU_SET_C3(0);
+		FPU_SET_C2(1);
+		FPU_SET_C0(1);
+		break;
+
+	case FP_SUBNORMAL:
+		FPU_SET_C3(1);
+		FPU_SET_C2(1);
+		FPU_SET_C0(0);
+		break;
+
+	// Unsupported
+	default:
+		FPU_SET_C3(0);
+		FPU_SET_C2(0);
+		FPU_SET_C0(0);
+		break;
+	}
+}
 
 static void FPU_F2XM1(void){
 	fpu.regs[TOP].d = std::pow(2.0, fpu.regs[TOP].d) - 1.0;
@@ -590,17 +849,19 @@ static void FPU_FRSTOR(PhysPt addr){
 	}
 }
 
-static void FPU_FXTRACT(void) {
-	// function stores real bias in st and 
-	// pushes the significant number onto the stack
-	// if double ever uses a different base please correct this function
+static void FPU_FXTRACT(void)
+{
+	const auto st0 = fpu.regs[TOP].d;
 
-	FPU_Reg test = fpu.regs[TOP];
-	int64_t exp80 =  test.ll&LONGTYPE(0x7ff0000000000000);
-	int64_t exp80final = (exp80>>52) - BIAS64;
-	Real64 mant = test.d / (std::pow(2.0, static_cast<Real64>(exp80final)));
-	fpu.regs[TOP].d = static_cast<Real64>(exp80final);
-	FPU_PUSH(mant);
+	int exponent;
+	auto mantissa = std::frexp(st0, &exponent);
+
+	// Adjust the mantissa and exponent to match FXTRACT normalization
+	mantissa *= 2.0;
+	exponent -= 1;
+
+	fpu.regs[TOP].d = static_cast<double>(exponent);
+	FPU_PUSH(mantissa);
 }
 
 static void FPU_FCHS(void){

@@ -33,22 +33,24 @@ public:
 	~OpenGlRenderer() override;
 
 	SDL_Window* GetWindow() override;
-	uint8_t GetGfxFlags() override;
 
 	DosBox::Rect GetCanvasSizeInPixels() override;
-	void UpdateViewport(const DosBox::Rect draw_rect_px) override;
 
-	bool UpdateRenderSize(const int new_render_width_px,
-	                      const int new_render_height_px) override;
+	void NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px) override;
 
-	bool SetShader(const std::string& shader_name) override;
+	void NotifyRenderSizeChanged(const int new_render_width_px,
+	                             const int new_render_height_px) override;
 
-	bool MaybeAutoSwitchShader(const DosBox::Rect canvas_size_px,
-	                           const VideoMode& video_mode) override;
+	void NotifyVideoModeChanged(const VideoMode& video_mode) override;
+
+	SetShaderResult SetShader(const std::string& shader_descriptor) override;
 
 	bool ForceReloadCurrentShader() override;
 
 	ShaderInfo GetCurrentShaderInfo() override;
+	ShaderPreset GetCurrentShaderPreset() override;
+
+	std::string GetCurrentShaderDescriptorString() override;
 
 	void StartFrame(uint8_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
@@ -70,8 +72,8 @@ public:
 
 private:
 	struct Shader {
-		GLuint program_object = 0;
 		ShaderInfo info       = {};
+		GLuint program_object = 0;
 	};
 
 	SDL_Window* CreateSdlWindow(const int x, const int y, const int width,
@@ -80,12 +82,26 @@ private:
 
 	bool InitRenderer();
 
+	void MaybeUpdateRenderSize(const int new_render_width_px,
+	                           const int new_render_height_px);
+
+	SetShaderResult SetShaderInternal(const std::string& shader_descriptor,
+	                                  const bool force_reload = false);
+
+	bool MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_descriptor,
+	                                const ShaderDescriptor& new_descriptor);
+
 	bool SwitchShader(const std::string& shader_name);
 
 	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& shader_name);
 
-	void GetUniformLocations();
-	void UpdateUniforms() const;
+	void SwitchShaderPresetOrSetDefault(const ShaderDescriptor& descriptor);
+
+	std::optional<ShaderPreset> GetOrLoadAndCacheShaderPreset(
+	        const ShaderDescriptor& descriptor);
+
+	void GetUniformLocations(const ShaderParameters& params);
+	void UpdateUniforms();
 
 	std::optional<GLuint> BuildShaderProgram(const std::string& source);
 
@@ -94,7 +110,6 @@ private:
 
 	SDL_Window* window    = {};
 	SDL_GLContext context = {};
-	uint8_t gfx_flags     = 0;
 
 	int pitch = 0;
 
@@ -116,21 +131,48 @@ private:
 	GLuint texture            = 0;
 	GLint max_texture_size_px = 0;
 
-	bool is_framebuffer_srgb_capable = false;
-
 	struct {
-		GLint texture_size = 0;
-		GLint input_size   = 0;
-		GLint output_size  = 0;
-		GLint frame_count  = 0;
-	} uniform = {};
+		GLint texture_size  = -1;
+		GLint input_size    = -1;
+		GLint output_size   = -1;
+		GLint frame_count   = -1;
+		GLint input_texture = -1;
 
-	GLuint frame_count         = 0;
-	GLfloat vertex_data[2 * 3] = {}; // 2 triangles
+		std::unordered_map<std::string, GLint> params = {};
+	} uniforms = {};
 
+	GLuint frame_count = 0;
+
+	// Vertex buffer object
+	GLuint vbo = 0;
+
+	// Vertex array object
+	GLuint vao = 0;
+
+	// Vertex data for an oversized triangle
+	GLfloat vertex_data[2 * 3] = {};
+
+	// Keys are the shader names including the path part but without the
+	// .glsl file extension
 	std::unordered_map<std::string, Shader> shader_cache = {};
 
-	Shader current_shader = {};
+	// Keys are the shader names including the path part but without the
+	// .glsl file extension
+	std::unordered_map<std::string, ShaderPreset> shader_preset_cache = {};
+
+	Shader current_shader              = {};
+	ShaderPreset current_shader_preset = {};
+
+	ShaderDescriptor current_shader_descriptor = {};
+
+	// Current shader descriptor string as set by the user (e.g., if the
+	// user set `crt-auto`, this will stay `crt-auto`; it won't be synced to
+	// the actual shader & preset combo in use, such as
+	// `crt/crt-hyllian:vga-4k`).
+	//
+	// Might contain the .glsl file extension if set by the user.
+	//
+	std::string current_shader_descriptor_string = {};
 };
 
 #endif // C_OPENGL

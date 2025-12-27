@@ -3,7 +3,7 @@
 ![GPL-2.0-or-later][gpl-badge]
 [![Chat][discord-badge]][discord]
 
-DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices.
+**DOSBox Staging** is a modern continuation of DOSBox with advanced features and current development practices.
 
 It is a (mostly) drop-in replacement for older DOSBox versions—your existing configurations will continue to work, and you will have access to many advanced features.
 
@@ -28,21 +28,22 @@ First-time users and people migrating from other DOSBox variants should start by
 
 ## Build status
 
-[![Linux x86\_64 build status][build-lin1-badge]][build-lin1-ci]
-[![Linux other build status][build-lin2-badge]][build-lin2-ci]
 [![Windows (VisualStudio) build status][build-win-msvc-badge]][build-win-msvc-ci]
-[![Windows (MSYS2) build status][build-win-msys2-badge]][build-win-msys2-ci]
 [![macOS build status][build-mac-badge]][build-mac-ci]
-
+[![Linux x86\_64 build status][build-lin1-badge]][build-lin1-ci]
 
 ## Stable release builds
 
-[Windows](https://www.dosbox-staging.org/releases/windows/),
-[macOS](https://www.dosbox-staging.org/releases/macos/)
-[Linux](https://www.dosbox-staging.org/releases/linux/),
+Regular users should use our stable release builds available on our project website:
+
+- [Windows](https://www.dosbox-staging.org/releases/windows/)
+- [macOS](https://www.dosbox-staging.org/releases/macos/)
+- [Linux](https://www.dosbox-staging.org/releases/linux/)
 
 
-## Test builds & development snapshots
+## Development builds
+
+Development builds are automatically created on every commit merged to the `main` branch. You need to be logged in to GitHub to download the development builds.
 
 [Development builds]
 
@@ -79,19 +80,22 @@ First-time users and people migrating from other DOSBox variants should start by
 
 DOSBox Staging has the following library dependencies:
 
-| Dependency                                               | Provides feature                                | vcpkg package name | vcpkg version   | Optional?           |
-| -------------------------------------------------------- | ----------------------------------------------- | ------------------ | --------------- | ------------------- |
-| [FluidSynth](https://www.fluidsynth.org/)                | General MIDI playback                           | fluidsynth         | 2.5.0 (overlay) | **no** :red_circle: |
-| [GoogleTest](https://github.com/google/googletest)       | Unit testing (development)                      | gtest              | 1.70.0#1        | yes :green_circle:  |
-| [IIR](https://github.com/berndporr/iir1)                 | Audio filtering                                 | iir1               | 1.10.0          | **no** :red_circle: |
-| [libpng](http://www.libpng.org/pub/png/libpng.html)      | PNG encoding of screen captures                 | libpng             | 1.6.50          | yes :green_circle:  |
-| [Munt](https://github.com/munt/munt)                     | Roland MT-32 and CM-32L emulation               | libmt32emu         | 2.7.1           | yes :green_circle:  |
-| [Opus File](https://opus-codec.org/)                     | CD Audio playback for Opus-encoded audio tracks | opusfile           | 0.12+20221121#1 | **no** :red_circle: |
-| [SDL 2](https://github.com/libsdl-org/SDL)               | OS-agnostic API for video, audio, and eventing  | sdl2               | 2.32.10         | **no** :red_circle: |
-| [SDL_net 2](https://github.com/libsdl-org/SDL_net)       | Network API for emulated serial and IPX         | sdl2-net           | 2.2.0#3         | yes :green_circle:  |
-| [SpeexDSP](https://github.com/xiph/speexdsp)             | Audio resampling                                | speexdsp           | 1.2.1#1         | **no** :red_circle: |
-| [Tracy Profiler](https://github.com/wolfpld/tracy)       | Event profiler (development)                    | tracy              | 0.11.1#2        | yes :green_circle:  |
-| [zlib-ng](https://github.com/zlib-ng/zlib-ng)            | ZMBV video capture                              | zlib-ng            | 2.2.5           | yes :green_circle:  |
+| Dependency                                                | Provides feature                                | vcpkg package name | vcpkg version     | Optional?           |
+| --------------------------------------------------------- | ----------------------------------------------- | ------------------ | ----------------- | ------------------- |
+| [FluidSynth](https://www.fluidsynth.org/)                 | General MIDI playback                           | fluidsynth         | 2.5.1             | **no** :red_circle: |
+| [GoogleTest](https://github.com/google/googletest)        | Unit testing (development)                      | gtest              | 1.70.0#2          | yes :green_circle:  |
+| [IIR](https://github.com/berndporr/iir1)                  | Audio filtering                                 | iir1               | 1.10.0            | **no** :red_circle: |
+| [libmt32emu](https://github.com/munt/munt)                | Roland MT-32 and CM-32L emulation               | libmt32emu         | 2.7.1             | yes :green_circle:  |
+| [libpng](http://www.libpng.org/pub/png/libpng.html)       | PNG encoding of screen captures                 | libpng             | 1.6.53            | **no** :red_circle: |
+| [libslirp](https://gitlab.freedesktop.org/slirp/libslirp) | General purpose TCP-IP emulator                 | libslirp           | 4.9.0             | yes :green_circle:  |
+| [Opus File](https://opus-codec.org/)                      | CD Audio playback for Opus-encoded audio tracks | opusfile           | 0.12+20221121#1   | **no** :red_circle: |
+| [SDL 2](https://github.com/libsdl-org/SDL)                | OS-agnostic API for video, audio, and eventing  | sdl2               | 2.32.10 (overlay) | **no** :red_circle: |
+| [SDL_image 2](https://github.com/libsdl-org/SDL_image)    | Image decoding for many popular formats         | sdl2-image         | 2.8.8#2           | **no** :red_circle: |
+| [SDL_net 2](https://github.com/libsdl-org/SDL_net)        | Network API for emulated serial and IPX         | sdl2-net           | 2.2.0#3           | **no** :red_circle: |
+| [SpeexDSP](https://github.com/xiph/speexdsp)              | Audio resampling                                | speexdsp           | 1.2.1#1           | **no** :red_circle: |
+| [zlib-ng](https://github.com/zlib-ng/zlib-ng)             | ZMBV video capture                              | zlib-ng            | 2.3.2             | yes¹ :green_circle: |
+
+_¹ You can use plain old zlib instead._
 
 
 ### Dynamically loaded dependencies
@@ -235,21 +239,6 @@ a significant length of time.
 
 [vcpkg]: https://github.com/microsoft/vcpkg
 
-
-### Windows (MSYS2), macOS (MacPorts), Haiku, NixOS, others
-
-Instructions for other build systems and operating systems are documented
-in [docs/BUILD.md].
-
-Links to OS-specific instructions: [MSYS2], [MacPorts], [Haiku], [NixOS].
-
-[BUILD.md]: docs/BUILD.md
-[MSYS2]:    docs/build-windows.md
-[MacPorts]: docs/build-macos.md
-[Haiku]:    docs/build-haiku.md
-[NixOS]:    docs/build-nix.md
-
-
 ## Imported branches, community patches, old forks
 
 Upstream commits are imported to this repo in a timely manner,
@@ -269,6 +258,12 @@ Additionally, we attach some optional metadata to the commits in the form of
 git fetch origin "refs/notes/*:refs/notes/*"
 ```
 
+## Website & documentation
+
+Please refer to the [documentation guide](DOCUMENTATION.md) before making
+changes to the website or the documentation.
+
+
 [`svn/*`]:     https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F
 [`svn/trunk`]: https://github.com/dosbox-staging/dosbox-staging/tree/svn/trunk
 [`vogons/*`]:  https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F
@@ -282,21 +277,8 @@ git fetch origin "refs/notes/*:refs/notes/*"
 [build-lin1-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/linux.yml?label=Linux%20%28x86_64%29
 [build-lin1-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/linux.yml?query=branch%3Amain
 
-[build-lin2-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/platforms.yml?label=Linux%20%28other%29
-[build-lin2-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/platforms.yml?query=branch%3Amain
-
-[build-win-msys2-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/windows-msys2.yml?label=Windows%20%28MSYS2%29
-[build-win-msys2-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/windows-msys2.yml?query=branch%3Amain
-
 [build-win-msvc-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/windows-msvc.yml?label=Windows%20%28Visual%20Studio%29
 [build-win-msvc-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/windows-msvc.yml?query=branch%3Amain
 
 [build-mac-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/macos.yml?label=macOS%20%28x86_64%2C%20arm64%29
 [build-mac-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/macos.yml?query=branch%3Amain
-
-
-## Website & documentation
-
-Please refer to the [documentation guide](DOCUMENTATION.md) before making
-changes to the website or the documentation.
-

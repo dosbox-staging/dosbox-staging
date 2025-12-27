@@ -22,12 +22,12 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: false
 
       - name: Set up CMake
-        uses: lukka/get-cmake@628dd514bed37cb0a609e84a6186cbbaa2fc0140 # v4.1.2
+        uses: lukka/get-cmake@9e07ecdcee1b12e5037e42f410b67f03e2f626e1 # v4.2.1
 
       - name: Configure PVS-Studio repository
         run: |
@@ -110,7 +110,7 @@ jobs:
           rm -rf "${reportdir}/pvs-report.fullhtml"
 
       - name: Upload report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: pvs-analysis-report
           path: pvs-report

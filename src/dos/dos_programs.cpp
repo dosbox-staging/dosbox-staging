@@ -4,7 +4,6 @@
 
 #include "dos/programs.h"
 
-#include "shell/autoexec.h"
 #include "programs/attrib.h"
 #include "programs/autotype.h"
 #include "programs/boot.h"
@@ -25,12 +24,13 @@
 #include "programs/mouse.h"
 #include "programs/mousectl.h"
 #include "programs/move.h"
-#include "programs/placeholder.h"
 #include "programs/rescan.h"
 #include "programs/serial.h"
 #include "programs/setver.h"
+#include "programs/showpic.h"
 #include "programs/subst.h"
 #include "programs/tree.h"
+#include "shell/autoexec.h"
 
 #if C_DEBUGGER
 #include "programs/biostest.h"
@@ -86,6 +86,7 @@ void Add_VFiles()
 	PROGRAMS_MakeFile("RESCAN.COM", ProgramCreate<RESCAN>);
 	PROGRAMS_MakeFile("SERIAL.COM", ProgramCreate<SERIAL>);
 	PROGRAMS_MakeFile("SETVER.EXE", ProgramCreate<SETVER>);
+	PROGRAMS_MakeFile("SHOWPIC.EXE", ProgramCreate<SHOWPIC>);
 	PROGRAMS_MakeFile("SUBST.EXE", ProgramCreate<SUBST>);
 	PROGRAMS_MakeFile("TREE.COM", ProgramCreate<TREE>);
 

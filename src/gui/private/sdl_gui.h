@@ -85,7 +85,7 @@
 //   image is centered and the overhanging areas are clipped.
 //
 
-enum class FullscreenMode { Standard, Original, ForcedBorderless };
+enum class FullscreenMode { Standard, ForcedBorderless };
 
 struct SDL_Block {
 	uint32_t start_event_id = UINT32_MAX;
@@ -103,8 +103,6 @@ struct SDL_Block {
 	RenderBackendType render_backend_type = RenderBackendType::Sdl;
 
 	TextureFilterMode texture_filter_mode = {};
-
-	bool video_initialised = false;
 
 	std::unique_ptr<RenderBackend> renderer = {};
 
@@ -142,9 +140,6 @@ struct SDL_Block {
 
 	struct {
 		FullscreenMode mode = {};
-
-		int width  = 0;
-		int height = 0;
 
 		struct {
 			int width  = 0;

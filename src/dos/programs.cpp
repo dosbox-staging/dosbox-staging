@@ -631,7 +631,7 @@ void CONFIG::Run(void)
 		case P_HELP3: HandleHelpCommand(pvars); return;
 
 		case P_AUTOEXEC_CLEAR: {
-			SectionLine* sec = dynamic_cast<SectionLine*>(
+			AutoExecSection* sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 			if (!sec) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
@@ -646,7 +646,7 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
 				return;
 			}
-			SectionLine* sec = dynamic_cast<SectionLine*>(
+			AutoExecSection* sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 			if (!sec) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
@@ -655,13 +655,13 @@ void CONFIG::Run(void)
 			for (const auto& pvar : pvars) {
 				const auto line_utf8 = dos_to_utf8(
 				        pvar, DosStringConvertMode::WithControlCodes);
-				sec->HandleInputline(line_utf8);
+				sec->HandleInputLine(line_utf8);
 			}
 			break;
 		}
 
 		case P_AUTOEXEC_TYPE: {
-			SectionLine* sec = dynamic_cast<SectionLine*>(
+			AutoExecSection* sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 
 			if (!sec) {
@@ -719,9 +719,9 @@ void CONFIG::Run(void)
 					        dynamic_cast<SectionProp*>(sec);
 
 					if (psec == nullptr) {
-						// autoexec section
-						SectionLine* pline =
-						        dynamic_cast<SectionLine*>(sec);
+						AutoExecSection* pline =
+						        dynamic_cast<AutoExecSection*>(
+						                sec);
 						assert(pline);
 
 						if (pline) {
@@ -874,7 +874,7 @@ void CONFIG::Run(void)
 				        inputline,
 				        DosStringConvertMode::NoSpecialCharacters);
 
-				tsec->HandleInputline(line_utf8);
+				tsec->HandleInputLine(line_utf8);
 
 				tsec->ExecuteUpdate(*property);
 			}
@@ -1079,16 +1079,24 @@ void PROGRAMS_AddMessages()
 	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_INVALID_SETTING",
-	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset];\n"
 	        "using [color=white]'%s'[reset]");
+
+	MSG_Add("PROGRAM_CONFIG_INVALID_SETTING_WITH_DETAILS",
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset].\n"
+	        "%s; using [color=white]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED_SETTING_VALUE",
-	        "Deprecated [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
+	        "Deprecated [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset];\n"
 	        "using [color=white]'%s'[reset]");
 
-	MSG_Add("PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
-	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
-	        "must be between %s-%s, using [color=white]'%s'[reset]");
+	MSG_Add("PROGRAM_CONFIG_INVALID_INTEGER_SETTING",
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset];\n"
+	        "must be an integer, using [color=white]'%s'[reset]");
+
+	MSG_Add("PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset];\n"
+	        "must be between %s and %s, using [color=white]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_NO_HELP",
 	        "No help available for the setting [color=light-green]'%s'[reset].");

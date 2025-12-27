@@ -27,6 +27,45 @@
 // Set by parseconfigfile so PropPath can use it to construct the realpath
 std_fs::path current_config_dir;
 
+static void write_property(const Property& prop, FILE* outfile)
+{
+	auto help_text = prop.GetHelpRaw();
+
+	// Percentage signs are encoded as '%%' in the config descriptions
+	// because they are sent through printf-like functions (e.g.,
+	// WriteOut()). So we need to de-escape them before writing them into
+	// the config.
+	help_text = format_str(help_text);
+
+	auto lines = split_with_empties(help_text, '\n');
+
+	// Write help text
+	for (auto& line : lines) {
+		if (line.empty()) {
+			fprintf(outfile, "#\n");
+		} else {
+			fprintf(outfile, "# %s\n", line.c_str());
+		}
+	}
+
+	fprintf(outfile, "#\n");
+
+	// Write 'setting = value' pair
+	fprintf(outfile,
+	        "%s = %s\n\n",
+	        prop.propname.c_str(),
+	        prop.GetValue().ToString().c_str());
+}
+
+static void write_section(SectionProp& sec, FILE* outfile)
+{
+	for (size_t i = 0; const auto prop = sec.GetProperty(i); ++i) {
+		if (!prop->IsDeprecated()) {
+			write_property(*prop, outfile);
+		}
+	}
+}
+
 bool Config::WriteConfig(const std_fs::path& path) const
 {
 	char temp[50];
@@ -41,98 +80,16 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	fprintf(outfile, MSG_GetTranslatedRaw("CONFIGFILE_INTRO").c_str(), DOSBOX_VERSION);
 	fprintf(outfile, "\n");
 
-	for (auto tel = sections.cbegin(); tel != sections.cend(); ++tel) {
+	for (auto section = sections.cbegin(); section != sections.cend(); ++section) {
 		// Print section header
-		safe_strcpy(temp, (*tel)->GetName());
+		safe_strcpy(temp, (*section)->GetName());
 		lowcase(temp);
-		fprintf(outfile, "[%s]\n", temp);
+		fprintf(outfile, "[%s]\n\n", temp);
 
-		SectionProp* sec = dynamic_cast<SectionProp*>(*tel);
+		auto sec = dynamic_cast<SectionProp*>(*section);
 		if (sec) {
-			Property* p;
-			int i = 0;
+			write_section(*sec, outfile);
 
-			size_t maxwidth = 0;
-
-			while ((p = sec->GetProperty(i++))) {
-				maxwidth = std::max(maxwidth, p->propname.length());
-			}
-
-			i = 0;
-
-			char prefix[80];
-			int intmaxwidth = std::min<int>(60, check_cast<int>(maxwidth));
-			safe_sprintf(prefix, "\n# %*s  ", intmaxwidth, "");
-
-			while ((p = sec->GetProperty(i++))) {
-				if (p->IsDeprecated()) {
-					continue;
-				}
-
-				auto help = p->GetHelpRaw();
-
-				std::string::size_type pos = std::string::npos;
-
-				while ((pos = help.find('\n', pos + 1)) !=
-				       std::string::npos) {
-					help.replace(pos, 1, prefix);
-				}
-
-				// Percentage signs are encoded as '%%' in the
-				// config descriptions because they are sent
-				// through printf-like functions (e.g.,
-				// WriteOut()). So we need to de-escape them
-				// before writing them into the config.
-				auto s = format_str(help);
-
-				fprintf(outfile,
-				        "# %*s: %s",
-				        intmaxwidth,
-				        p->propname.c_str(),
-				        s.c_str());
-
-				auto print_values = [&](const char* values_msg_key,
-				                        const std::vector<Value>& values) {
-					if (values.empty()) {
-						return;
-					}
-					fprintf(outfile,
-					        "%s%s:",
-					        prefix,
-					        MSG_GetTranslatedRaw(values_msg_key)
-					                .c_str());
-
-					std::vector<Value>::const_iterator it =
-					        values.begin();
-
-					while (it != values.end()) {
-						if ((*it).ToString() != "%u") {
-							// Hack hack hack. else
-							// we need to modify
-							// GetValues, but that
-							// one is const...
-							if (it != values.begin()) {
-								fputs(",", outfile);
-							}
-
-							fprintf(outfile,
-							        " %s",
-							        (*it).ToString().c_str());
-						}
-						++it;
-					}
-					fprintf(outfile, ".");
-				};
-
-				print_values("PROGRAM_CONFIG_VALID_VALUES",
-				             p->GetValues());
-
-				print_values("PROGRAM_CONFIG_DEPRECATED_VALUES",
-				             p->GetDeprecatedValues());
-
-				fprintf(outfile, "\n");
-				fprintf(outfile, "#\n");
-			}
 		} else {
 			upcase(temp);
 			strcat(temp, "_CONFIGFILE_HELP");
@@ -160,10 +117,11 @@ bool Config::WriteConfig(const std_fs::path& path) const
 			}
 		}
 
-		fprintf(outfile, "\n");
-		(*tel)->PrintData(outfile);
+		// This will effectively only print the autoexec section
+		// TODO Do this in a nicer way and get rid of PrintData()
+		// altogether.
+		(*section)->PrintData(outfile);
 
-		// Always add empty line between sections
 		fprintf(outfile, "\n");
 	}
 
@@ -182,9 +140,9 @@ SectionProp* Config::AddSection(const char* section_name)
 	return s;
 }
 
-SectionLine* Config::AddAutoexecSection()
+AutoExecSection* Config::AddAutoexecSection()
 {
-	SectionLine* section = new SectionLine("autoexec");
+	AutoExecSection* section = new AutoExecSection("autoexec");
 	sections.push_back(section);
 
 	return section;
@@ -262,7 +220,7 @@ void Config::OverwriteAutoexec(const std::string& conf, const std::string& line)
 		overwritten_autoexec_conf = conf;
 		overwritten_autoexec_section.data.clear();
 	}
-	overwritten_autoexec_section.HandleInputline(line);
+	overwritten_autoexec_section.HandleInputLine(line);
 }
 
 const std::string& Config::GetOverwrittenAutoexecConf() const
@@ -270,7 +228,7 @@ const std::string& Config::GetOverwrittenAutoexecConf() const
 	return overwritten_autoexec_conf;
 }
 
-const SectionLine& Config::GetOverwrittenAutoexecSection() const
+const AutoExecSection& Config::GetOverwrittenAutoexecSection() const
 {
 	return overwritten_autoexec_section;
 }
@@ -338,7 +296,7 @@ bool Config::ParseConfigFile(const std::string& type,
 		}
 
 		if (!is_comment(line)) {
-			current_section->HandleInputline(line);
+			current_section->HandleInputLine(line);
 			OverwriteAutoexec(config_file_name, line);
 		}
 	};
@@ -375,7 +333,7 @@ bool Config::ParseConfigFile(const std::string& type,
 				is_autoexec_section = (section_name == "autoexec");
 			}
 		} else if (current_section) {
-			current_section->HandleInputline(line);
+			current_section->HandleInputLine(line);
 		}
 	}
 
@@ -623,7 +581,7 @@ void Config::ParseArguments()
 	arguments.list_countries = cmdline->FindRemoveBoolArgument("list-countries");
 	arguments.list_layouts = cmdline->FindRemoveBoolArgument("list-layouts");
 	arguments.list_code_pages = cmdline->FindRemoveBoolArgument("list-code-pages");
-	arguments.list_glshaders = cmdline->FindRemoveBoolArgument("list-glshaders");
+	arguments.list_shaders = cmdline->FindRemoveBoolArgument("list-shaders");
 	arguments.noconsole   = cmdline->FindRemoveBoolArgument("noconsole");
 	arguments.startmapper = cmdline->FindRemoveBoolArgument("startmapper");
 	arguments.exit        = cmdline->FindRemoveBoolArgument("exit");

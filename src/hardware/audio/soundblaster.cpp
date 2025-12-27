@@ -3763,8 +3763,9 @@ void init_sblaster_config_settings(SectionProp& secprop)
 	pstring->SetValues(
 	        {"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "ess", "none"});
 	pstring->SetHelp(
-	        "Sound Blaster model to emulate ('sb16' by default).\n"
-	        "The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.\n"
+	        "Sound Blaster model to emulate ('sb16' by default). The models auto-selected\n"
+	        "with 'oplmode' and 'cms' on 'auto' are also listed. Possible values:\n"
+	        "\n"
 	        "  gb:        Game Blaster          - CMS\n"
 	        "  sb1:       Sound Blaster 1.0     - OPL2, CMS\n"
 	        "  sb2:       Sound Blaster 2.0     - OPL2\n"
@@ -3773,9 +3774,11 @@ void init_sblaster_config_settings(SectionProp& secprop)
 	        "  sb16:      Sound Blaster 16      - OPL3 (default)\n"
 	        "  ess:       ESS ES1688 AudioDrive - ESFM\n"
 	        "  none/off:  Disable Sound Blaster emulation.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - Creative Music System was later rebranded to Game Blaster; they are the\n"
 	        "    same card.\n"
+	        "\n"
 	        "  - The 'ess' option is for getting ESS Enhanced FM music via the card's ESFM\n"
 	        "    synthesiser in games that support it. The ESS DAC is not emulated but the\n"
 	        "    card is Sound Blaster Pro compatible; just configure the game for Sound\n"
@@ -3802,30 +3805,39 @@ void init_sblaster_config_settings(SectionProp& secprop)
 	        "Allow the Sound Blaster mixer to modify volume levels ('on' by default).\n"
 	        "Sound Blaster Pro 1 and later cards allow programs to set the volume of the\n"
 	        "digital audio (DAC), FM synth, and CD Audio output. These correspond to the\n"
-	        "SB, OPL, and CDAUDIO DOSBox mixer channels, respectively.\n"
+	        "SB, OPL, and CDAUDIO DOSBox mixer channels, respectively. Possible values:\n"
+	        "\n"
 	        "  on:   The final level of the above channels is a combination of the volume\n"
 	        "        set by the program, and the volume set in the DOSBox mixer.\n"
+	        "\n"
 	        "  off:  Only the DOSBox mixer determines the volume of these channels.\n"
+	        "\n"
 	        "Note: Some games change the volume levels dynamically (e.g., lower the FM music\n"
 	        "      volume when speech is playing); it's best to leave 'sbmixer' enabled for\n"
 	        "      such games.");
 
 	pint = secprop.AddInt("sbwarmup", when_idle, 100);
 	pint->SetHelp(
-	        "Silence initial DMA audio after card power-on, in milliseconds\n"
-	        "(100 by default). This mitigates pops heard when starting many SB-based games.\n"
-	        "Reduce this if you notice intial playback is missing audio.");
+	        "Silence initial DMA audio after card power-on, in milliseconds (100 by default).\n"
+	        "This mitigates pops heard when starting many SB-based games. Reduce this if you\n"
+	        "notice intial playback is missing audio.");
 	pint->SetMinMax(0, 100);
 
 	pstring = secprop.AddString("sb_filter", when_idle, "modern");
 	pstring->SetHelp(
-	        "Type of filter to emulate for the Sound Blaster digital sound output:\n"
+	        "Type of filter to emulate for the Sound Blaster digital sound output ('modern'\n"
+	        "by default). Possible values:\n"
+	        "\n"
 	        "  auto:      Use the appropriate filter determined by 'sbtype'.\n"
+	        "\n"
 	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
 	        "             Use the filter of this Sound Blaster model.\n"
+	        "\n"
 	        "  modern:    Use linear interpolation upsampling that acts as a low-pass\n"
 	        "             filter; this is the legacy DOSBox behaviour (default).\n"
+	        "\n"
 	        "  off:       Don't filter the output.\n"
+	        "\n"
 	        "  <custom>:  One or two custom filters in the following format:\n"
 	        "               TYPE ORDER FREQ\n"
 	        "             Where TYPE can be 'hpf' (high-pass) or 'lpf' (low-pass),\n"
@@ -3833,7 +3845,7 @@ void init_sblaster_config_settings(SectionProp& secprop)
 	        "             (1st order = 6dB/oct slope, 2nd order = 12dB/oct, etc.),\n"
 	        "             and FREQ is the cutoff frequency in Hz. Examples:\n"
 	        "                lpf 2 12000\n"
-	        "                hpf 3 120 lfp 1 6500");
+	        "                hpf 3 120 lpf 1 6500");
 
 	pbool = secprop.AddBool("sb_filter_always_on", when_idle, false);
 	pbool->SetHelp(

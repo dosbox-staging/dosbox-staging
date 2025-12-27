@@ -4,8 +4,6 @@
 
 #include "dosbox.h"
 
-#if C_IPX
-
 #include "hardware/network/ipx.h"
 
 #include <cinttypes>
@@ -278,7 +276,7 @@ static void OpenSocket(void) {
 		if(sockAlloc > 0x7fff) {
 			// I have no idea how this could happen if the IPX driver
 			// is limited to 150 open sockets at a time
-			LOG_MSG("IPX: Out of dynamic sockets");
+			LOG_WARNING("IPX: Out of dynamic sockets");
 		}
 		sockNum = sockAlloc;
 	} else {
@@ -352,7 +350,7 @@ static void IPX_AES_EventHandler(uint32_t param)
 		}
 		tmpECB = tmp2ECB;
 	}
-	LOG_MSG("!!!! Rogue AES !!!!" );
+	LOG_WARNING("IPX: Rogue AES");
 }
 
 static void sendPacket(ECBClass* sendecb);
@@ -485,7 +483,7 @@ static void handleIpxRequest(void) {
 		                        // ethernet packet size
 		break;
 
-	default: LOG_MSG("Unhandled IPX function: %4x", reg_bx); break;
+	default: LOG_WARNING("Unhandled IPX function: %4x", reg_bx); break;
 	}
 }
 
@@ -556,7 +554,8 @@ static void pingSend(void) {
 	const int result = SDLNet_UDP_Send(ipxClientSocket, regPacket.channel,
 	                                   &regPacket);
 	if (!result)
-		LOG_MSG("IPX: Failed to send a ping packet: %s", SDLNet_GetError());
+		LOG_WARNING("IPX: Failed to send a ping packet: %s",
+		            SDLNet_GetError());
 }
 
 static void receivePacket(uint8_t *buffer, int16_t bufSize) {
@@ -608,8 +607,10 @@ static void IPX_ClientLoop(void) {
 
 
 void DisconnectFromServer(bool unexpected) {
-	if(unexpected) LOG_MSG("IPX: Server disconnected unexpectedly");
-	if(incomingPacket.connected) {
+	if (unexpected) {
+		LOG_WARNING("IPX: Server disconnected unexpectedly");
+	}
+	if (incomingPacket.connected) {
 		incomingPacket.connected = false;
 		TIMER_DelTickHandler(&IPX_ClientLoop);
 		SDLNet_UDP_Close(ipxClientSocket);
@@ -655,7 +656,8 @@ static void sendPacket(ECBClass* sendecb) {
 			outbuffer[packetsize] = real_readb(tmpFrag.segment, tmpFrag.offset + t);
 			packetsize++;
 			if(packetsize>=IPXBUFFERSIZE) {
-				LOG_MSG("IPX: Packet size to be sent greater than %d bytes.", IPXBUFFERSIZE);
+				LOG_WARNING("IPX: Packet size to be sent greater than %d bytes.",
+				            IPXBUFFERSIZE);
 				sendecb->setCompletionFlag(COMP_UNDELIVERABLE);
 				sendecb->NotifyESR();
 				return;
@@ -705,7 +707,8 @@ static void sendPacket(ECBClass* sendecb) {
 		const int result = SDLNet_UDP_Send(ipxClientSocket, UDPChannel,
 		                                   &outPacket);
 		if (result == 0) {
-			LOG_MSG("IPX: Could not send packet: %s", SDLNet_GetError());
+			LOG_WARNING("IPX: Could not send packet: %s",
+			            SDLNet_GetError());
 			sendecb->setCompletionFlag(COMP_HARDWAREERROR);
 			sendecb->NotifyESR();
 			DisconnectFromServer(true);
@@ -784,7 +787,8 @@ bool ConnectToServer(const char* strAddr)
 			numsent = SDLNet_UDP_Send(ipxClientSocket, regPacket.channel, &regPacket);
 
 			if(!numsent) {
-				LOG_MSG("IPX: Unable to connect to server: %s", SDLNet_GetError());
+				LOG_WARNING("IPX: Unable to connect to server: %s",
+				            SDLNet_GetError());
 				SDLNet_UDP_Close(ipxClientSocket);
 				return false;
 			} else {
@@ -792,15 +796,19 @@ bool ConnectToServer(const char* strAddr)
 				// This will contain our IPX address and port num
 				const auto ticks = GetTicks();
 
-				while(true) {
+				while (true) {
 					const auto elapsed = GetTicksSince(ticks);
-					if(elapsed > 5000) {
-						LOG_MSG("Timeout connecting to server at %s", strAddr);
+					if (elapsed > 5000) {
+						LOG_WARNING("IPX: Timeout connecting to server at %s",
+						            strAddr);
 						SDLNet_UDP_Close(ipxClientSocket);
 
 						return false;
 					}
-					CALLBACK_Idle();
+					if (CALLBACK_Idle()) {
+						break;
+					}
+
 					const int res = SDLNet_UDP_Recv(ipxClientSocket,
 					                                &regPacket);
 					if (res != 0) {
@@ -810,17 +818,18 @@ bool ConnectToServer(const char* strAddr)
 					}
 				}
 
-				LOG_MSG("IPX: Connected to server.  IPX address is %d:%d:%d:%d:%d:%d", CONVIPX(localIpxAddr.netnode));
+				LOG_MSG("IPX: Connected to server. IPX address is %d:%d:%d:%d:%d:%d",
+				        CONVIPX(localIpxAddr.netnode));
 
 				incomingPacket.connected = true;
 				TIMER_AddTickHandler(&IPX_ClientLoop);
 				return true;
 			}
 		} else {
-			LOG_MSG("IPX: Unable to open socket");
+			LOG_WARNING("IPX: Unable to open socket");
 		}
 	} else {
-		LOG_MSG("IPX: Unable resolve connection to server");
+		LOG_WARNING("IPX: Unable resolve connection to server");
 	}
 	return false;
 }
@@ -1037,7 +1046,9 @@ public:
 				pingSend();
 				const auto ticks = GetTicks();
 				while ((GetTicksSince(ticks)) < 1500) {
-					CALLBACK_Idle();
+					if (CALLBACK_Idle()) {
+						return;
+					}
 					if(pingCheck(&pingHead)) {
 						WriteOut(
 						        "Response from %d.%d.%d.%d, port %d time=%lldms\n",
@@ -1217,5 +1228,3 @@ void IPX_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)
 
 // Initialize static members;
 uint16_t IPX::dospage = 0;
-
-#endif

@@ -52,10 +52,7 @@
 // Can not be used together with C_DYNAMIC_X86
 #cmakedefine01 C_DYNREC
 
-// Define to 1 to enable floating point emulation
-#cmakedefine01 C_FPU
-
-// Define to 1 to use  fpu core implemented in x86 assembler
+// Define to 1 to use FPU core implemented in x86 assembler
 #cmakedefine01 C_FPU_X86
 
 // TODO Define to 1 to use inlined memory functions in cpu core
@@ -68,20 +65,8 @@
 // This way it's easier to port or package on a new platform, where these
 // libraries might be missing.
 
-// Define to 1 to enable internal modem emulation (using SDL2_net)
-#cmakedefine01 C_MODEM
-
-// Define to 1 to enable IPX over Internet networking (using SDL2_net)
-#cmakedefine01 C_IPX
-
-// Enable serial port passthrough support
-#cmakedefine01 C_DIRECTSERIAL
-
 // Define to 1 to use opengl display output support
 #cmakedefine01 C_OPENGL
-
-// Define to 1 to enable the Tracy profiling server
-#cmakedefine01 C_TRACY
 
 // Define to 1 to enable internal debugger (using ncurses or pdcurses)
 #cmakedefine01 C_DEBUGGER

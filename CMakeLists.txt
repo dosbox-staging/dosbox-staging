@@ -15,8 +15,6 @@ set(DOSBOX_VERSION ${PROJECT_VERSION}-alpha)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# TODO Enable certain warnings-as-errors for at least MSVC, Clang & GCC
-
 # Disable the noisy narrowing and conversion warnings by default. Use the
 # CHECK_NARROWING() macro to opt-in these checks on a per-file basis. See
 # `src/util/checks.h` for details.
@@ -29,15 +27,6 @@ if (MSVC)
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 
 else()
-
-  # TODO: GCC 12 (still used in our CI workflow) complains about unrecognized
-  # command line options; after switching to a newer release, enable the
-  # following warning flags:
-  #     -Winvalid-utf8
-  #     -Wtrivial-auto-var-init
-  #     -Wdeprecated-non-prototype (C only)
-  #     -Wflex-array-member-not-at-end (C only)
-  #     -Wfree-labels (C only)
 
   # Warning flags common to C and C++ code
   set(WARNING_FLAGS_COMMON
@@ -65,6 +54,31 @@ else()
       "-Weffc++"
       "-Wextra-semi"
   )
+
+  # GCC 12 (still used in our CI workflow) complains about unrecognized
+  # command line options, so we'll enable these conditionally for the GCC 13+
+  # and Clang builds only for now.
+  #
+  if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13)
+       OR
+       (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+
+    set(WARNING_FLAGS_C
+        ${WARNING_FLAGS_C}
+        "-Winvalid-utf8"
+        "-Wtrivial-auto-var-init"
+        "-Wdeprecated-non-prototype"
+        "-Wflex-array-member-not-at-end"
+        "-Wfree-labels"
+    )
+    set(WARNING_FLAGS_CXX
+        ${WARNING_FLAGS_CXX}
+        "-Winvalid-utf8"
+        "-Wtrivial-auto-var-init"
+    )
+  endif()
+
 
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:C>:${WARNING_FLAGS_C}>"
@@ -127,15 +141,12 @@ if (OPT_SANITIZER)
   endif()
 
 elseif (OPT_THREAD_SANITIZER)
-  if (DOSBOX_PLATFORM_MACOS)
-    message(WARNING "Thread sanitizer does not work well on macOS")
-  endif()
   set(SANITIZER_FLAGS "thread")
 endif()
 
 if (OPT_SANITIZER OR OPT_THREAD_SANITIZER)
   if (MSVC)
-    message(FATAL_ERROR "Sanitizers are only supported for CLANG and GCC compilers")
+    message(FATAL_ERROR "Sanitizers are only supported for Clang and GCC compilers")
   endif()
 
   if (DOSBOX_PLATFORM_WINDOWS)
@@ -266,21 +277,16 @@ if (HAVE_GETPEERNAME AND HAVE_GETSOCKNAME)
 endif()
 
 set(C_PER_PAGE_W_OR_X ON)
-set(C_FPU ON)
-
-# Networking (TODO: Option & dependent on SDL2_Net)
-set(C_MODEM ON)
-set(C_IPX ON)
 
 option(OPT_OPENGL "Enable OpenGL render backend" ON)
 if (OPT_OPENGL)
   set(C_OPENGL ON)
 endif()
 
-set(C_MT32EMU ON)       # TODO: Option
-
-set(C_TRACY OFF)        # TODO: Option
-set(C_DIRECTSERIAL ON)
+option(OPT_MT32EMU "Enable Roland MT-32 emulation support" ON)
+if (OPT_MT32EMU)
+  set(C_MT32EMU ON)
+endif()
 
 if (OPT_DEBUGGER)
   set(C_DEBUGGER ON)
@@ -292,14 +298,14 @@ endif()
 
 # ManyMouse - optional XInput support
 option(OPT_MANYMOUSE
-       "Use ManyMouse library for single-computer multiplayer gaming in The Settlers I/II"
-       ON
+  "Use ManyMouse library for single-computer multiplayer gaming in The Settlers I/II"
+  ON
 )
 
 # ManyMouse - optional XInput support
 option(OPT_XINPUT
-       "Let ManyMouse use the X Input protocol"
-       OFF
+  "Let ManyMouse use the X Input protocol"
+  OFF
 )
 
 # ManyMouse
@@ -393,6 +399,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 # Find common external dependencies
 find_package(PkgConfig REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
+find_package(SDL2_image CONFIG REQUIRED)
 find_package(SDL2_net REQUIRED)
 find_package(iir REQUIRED)
 find_package(PNG REQUIRED)
@@ -412,14 +419,15 @@ target_include_directories(
 # Bundle licenses, but skip the ones that are not relevant for
 # binary distribution or allow us to not distribute the license text.
 set(LICENSE_FILES
-    licenses/BSD-2-Clause.txt
-    licenses/BSD-3-Clause.txt
-    licenses/DEBUG.COM.txt
-    licenses/GPL-2.0.txt
-    licenses/LGPL-2.1.txt
-    licenses/MIT.txt
-    licenses/UNICODE.txt
-    licenses/Zlib.txt)
+  licenses/BSD-2-Clause.txt
+  licenses/BSD-3-Clause.txt
+  licenses/DEBUG.COM.txt
+  licenses/GPL-2.0.txt
+  licenses/LGPL-2.1.txt
+  licenses/MIT.txt
+  licenses/UNICODE.txt
+  licenses/Zlib.txt
+)
 
 # Set the directory with resources to bundle
 set(RESOURCES_PATH "resources")
@@ -427,9 +435,6 @@ set(RESOURCES_PATH "resources")
 # Generate asset copy commands and add them as a dependency
 include(cmake/add_copy_assets.cmake)
 add_copy_assets()
-
-#find_package(Tracy CONFIG REQUIRED)
-#target_link_libraries(dosbox PRIVATE Tracy::TracyClient)
 
 include_directories(
   src

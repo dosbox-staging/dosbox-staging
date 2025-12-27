@@ -92,7 +92,6 @@ libcpu = static_library(
     dependencies: [
         sdl2_dep,
         ghc_dep,
-        tracy_dep,
         libloguru_dep,
     ],
     cpp_args: [ warnings, '-fpermissive' ]

@@ -1,0 +1,3 @@
+resource_dirs = [
+    'crt'
+]

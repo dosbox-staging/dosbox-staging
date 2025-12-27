@@ -310,6 +310,14 @@ static void maybe_add_recording_pause_mark(std::string& title_str)
 
 static void set_window_title()
 {
+	// The CPU subsystem is initialised before the GUI, so the cycles
+	// changed notifications must be no-ops if we don't have the application
+	// window up yet.
+	const auto window = GFX_GetWindow();
+	if (!window) {
+		return;
+	}
+
 	static std::string last_title_str = {};
 
 	auto new_title_str = state.title_no_tags;
@@ -318,7 +326,7 @@ static void set_window_title()
 	maybe_add_recording_pause_mark(new_title_str);
 
 	if (new_title_str != last_title_str) {
-		SDL_SetWindowTitle(GFX_GetWindow(), new_title_str.c_str());
+		SDL_SetWindowTitle(window, new_title_str.c_str());
 		last_title_str = new_title_str;
 	}
 }
@@ -700,30 +708,36 @@ static void parse_config(const std::string& new_setting_str)
 	}
 }
 
-void TITLEBAR_ReadConfig(const SectionProp& section)
+void TITLEBAR_ReadConfig()
 {
-	parse_config(section.GetString("window_titlebar"));
+	const auto section = get_sdl_section();
+	assert(section);
+
+	parse_config(section->GetString("window_titlebar"));
 
 	TITLEBAR_RefreshTitle();
 }
 
-void TITLEBAR_AddConfigSettings(SectionProp& section)
+void TITLEBAR_AddConfigSettings()
 {
+	const auto section = get_sdl_section();
+
 	constexpr auto always = Property::Changeable::Always;
 
 	PropString* prop_str = nullptr;
 
-	prop_str = section.AddString("window_titlebar",
-	                             always,
-	                             "program=name dosbox=auto cycles=on mouse=full");
+	prop_str = section->AddString("window_titlebar",
+	                              always,
+	                              "program=name dosbox=auto cycles=on mouse=full");
 	prop_str->SetHelp(
 	        "Space separated list of information to be displayed in the window's titlebar\n"
 	        "('program=name dosbox=auto cycles=on mouse=full' by default). If a parameter\n"
-	        "is not specified, its default value is used.\n"
-	        "Possible information to display are:\n"
+	        "is not specified, its default value is used. Possible information to display:\n"
+	        "\n"
 	        "  animation=<value>:  If set to 'on' (default), animate the audio/video\n"
 	        "                      recording mark. Set to 'off' to disable animation; this\n"
 	        "                      is useful if your screen font produces weird results.\n"
+	        "\n"
 	        "  program=<value>:    Display the name of the running program.\n"
 	        "                      <value> can be one of:\n"
 	        "                        none/off:  Do not display program name.\n"
@@ -732,21 +746,26 @@ void TITLEBAR_AddConfigSettings(SectionProp& section)
 	        "                        segment:   Display program memory segment name.\n"
 	        "                        'Title':   Custom name. Alternatively, you can use\n"
 	        "                                   \"Title\", (Title), <Title> or [Title] form.\n"
+	        "\n"
 	        "                      Note: With some software (like Windows 3.1x in enhanced\n"
 	        "                      mode) it is impossible to recognize the full program\n"
 	        "                      name or path; in such cases 'segment' is used instead.\n"
+	        "\n"
 	        "  dosbox=<value>:     Display 'DOSBox Staging' in the title bar.\n"
 	        "                      <value> can be one of:\n"
 	        "                        always:   Always display 'DOSBox Staging'.\n"
 	        "                        auto:     Only display it if no program is running or\n"
 	        "                                  'program=none' is set (default).\n"
+	        "\n"
 	        "  version=<value>:    Display DOSBox version information.\n"
 	        "                      <value> can be one of:\n"
 	        "                         none/off:  Do not display DOSBox version (default).\n"
 	        "                         simple:    Simple version information.\n"
 	        "                         detailed:  Include Git hash, if available.\n"
+	        "\n"
 	        "  cycles=<value>:     If set to 'on' (default), show CPU cycles setting.\n"
 	        "                      Set to 'off' to disable cycles setting display.\n"
+	        "\n"
 	        "  mouse=<value>:      Mouse capturing hint verbosity level:\n"
 	        "                        none/off:  Do not display any mouse hints.\n"
 	        "                        short:     Only display if mouse is captured.\n"

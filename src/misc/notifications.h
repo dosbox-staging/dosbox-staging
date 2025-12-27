@@ -1,22 +1,5 @@
-/*
- *  SPDX-License-Identifier: GPL-2.0-or-later
- *
- *  Copyright (C) 2025-2025  The DOSBox Staging Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- */
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_NOTIFICATIONS_H
 #define DOSBOX_NOTIFICATIONS_H
@@ -137,7 +120,7 @@ enum class Source {
 };
 
 template <typename... Args>
-void display_message([[maybe_unused]] const Level level, const Source source,
+void display_message([[maybe_unused]] const Level level, [[maybe_unused]] const Source source,
                      const std::string_view topic,
                      const std::string& message_key, const Args&... args) noexcept
 {
@@ -170,9 +153,8 @@ void display_message([[maybe_unused]] const Level level, const Source source,
 	// result in a crash. One way this can happen is when setting an
 	// out-of-range config value for a config that will be only applied
 	// after a restart (e.g., `memsize 123456` followed by `config -r`).
-	const auto is_console_initialised = (DOS_GetFirstShell() != nullptr);
-
-	if (source == Source::Console && is_console_initialised) {
+	//
+	if (SHELL_IsRunning()) {
 		const auto& format = MSG_Get(message_key);
 		const auto str = format_str(format, args...);
 

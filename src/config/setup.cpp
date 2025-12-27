@@ -89,33 +89,33 @@ bool Value::operator<(const Value& other) const
 	       std::tie(other._hex, other._bool, other._int, other._string, other._double);
 }
 
-bool Value::SetValue(const std::string& _value, const Etype _type)
+bool Value::SetValue(const std::string& new_value, const Etype _type)
 {
 	assert(type == V_NONE || type == _type);
 	type = _type;
 
 	bool is_valid = true;
 	switch (type) {
-	case V_HEX: is_valid = SetHex(_value); break;
-	case V_INT: is_valid = SetInt(_value); break;
-	case V_BOOL: is_valid = SetBool(_value); break;
-	case V_STRING: SetString(_value); break;
-	case V_DOUBLE: is_valid = SetDouble(_value); break;
+	case V_HEX: is_valid = SetHex(new_value); break;
+	case V_INT: is_valid = SetInt(new_value); break;
+	case V_BOOL: is_valid = SetBool(new_value); break;
+	case V_STRING: SetString(new_value); break;
+	case V_DOUBLE: is_valid = SetDouble(new_value); break;
 
 	case V_NONE:
 	case V_CURRENT:
 	default:
 		LOG_ERR("CONFIG: Unhandled type when setting value: '%s'",
-		        _value.c_str());
+		        new_value.c_str());
 		is_valid = false;
 		break;
 	}
 	return is_valid;
 }
 
-bool Value::SetHex(const std::string& _value)
+bool Value::SetHex(const std::string& new_value)
 {
-	std::istringstream input(_value);
+	std::istringstream input(new_value);
 	input.flags(std::ios::hex);
 	int result = INT_MIN;
 	input >> result;
@@ -126,21 +126,18 @@ bool Value::SetHex(const std::string& _value)
 	return true;
 }
 
-bool Value::SetInt(const std::string& _value)
+bool Value::SetInt(const std::string& new_value)
 {
-	std::istringstream input(_value);
-	int result = INT_MIN;
-	input >> result;
-	if (result == INT_MIN) {
-		return false;
+	if (const auto maybe_int = parse_int(new_value); maybe_int) {
+		_int = *maybe_int;
+		return true;
 	}
-	_int = result;
-	return true;
+	return false;
 }
 
-bool Value::SetDouble(const std::string& _value)
+bool Value::SetDouble(const std::string& new_value)
 {
-	std::istringstream input(_value);
+	std::istringstream input(new_value);
 	double result = std::numeric_limits<double>::max();
 	input >> result;
 	if (result == std::numeric_limits<double>::max()) {
@@ -152,9 +149,9 @@ bool Value::SetDouble(const std::string& _value)
 
 // Sets the '_bool' member variable to either the parsed boolean value or false
 // if it couldn't be parsed. Returns true if the provided string was parsed.
-bool Value::SetBool(const std::string& _value)
+bool Value::SetBool(const std::string& new_value)
 {
-	auto lowercase_value = _value;
+	auto lowercase_value = new_value;
 	lowcase(lowercase_value);
 	const auto parsed = parse_bool_setting(lowercase_value);
 
@@ -163,9 +160,9 @@ bool Value::SetBool(const std::string& _value)
 	return parsed.has_value();
 }
 
-void Value::SetString(const std::string& _value)
+void Value::SetString(const std::string& new_value)
 {
-	_string = _value;
+	_string = new_value;
 }
 
 std::string Value::ToString() const
@@ -201,14 +198,14 @@ Property::Property(const std::string& name, Changeable::Value when)
 	        "Only letters, digits, and underscores are allowed in property names");
 }
 
-bool Property::IsValidValue(const Value& _value)
+bool Property::IsValidValue(const Value& new_value)
 {
 	if (!IsRestrictedValue()) {
 		return true;
 	}
 
 	for (const_iter it = valid_values.begin(); it != valid_values.end(); ++it) {
-		if ((*it) == _value) {
+		if ((*it) == new_value) {
 			return true;
 		}
 	}
@@ -217,7 +214,7 @@ bool Property::IsValidValue(const Value& _value)
 	                      "CONFIG",
 	                      "PROGRAM_CONFIG_INVALID_SETTING",
 	                      propname.c_str(),
-	                      _value.ToString().c_str(),
+	                      new_value.ToString().c_str(),
 	                      default_value.ToString().c_str());
 
 	return false;
@@ -239,13 +236,13 @@ bool Property::IsValueDeprecated(const Value& val) const
 	return is_deprecated;
 }
 
-bool Property::ValidateValue(const Value& _value)
+bool Property::ValidateValue(const Value& new_value)
 {
-	if (IsValueDeprecated(_value)) {
-		value = GetAlternateForDeprecatedValue(_value);
+	if (IsValueDeprecated(new_value)) {
+		value = GetAlternateForDeprecatedValue(new_value);
 		return true;
-	} else if (IsValidValue(_value)) {
-		value = _value;
+	} else if (IsValidValue(new_value)) {
+		value = new_value;
 		return true;
 	} else {
 		value = default_value;
@@ -381,84 +378,84 @@ std::string Property::GetHelpRaw() const
 	return result;
 }
 
-bool PropInt::ValidateValue(const Value& _value)
+bool PropInt::ValidateValue(const Value& new_value)
 {
 	if (IsRestrictedValue()) {
-		if (IsValueDeprecated(_value)) {
-			value = GetAlternateForDeprecatedValue(_value);
+		if (IsValueDeprecated(new_value)) {
+			value = GetAlternateForDeprecatedValue(new_value);
 			return true;
-		} else if (IsValidValue(_value)) {
-			value = _value;
+
+		} else if (IsValidValue(new_value)) {
+			value = new_value;
 			return true;
+
 		} else {
 			value = default_value;
 			return false;
 		}
 	}
 
-	// Handle ranges if specified
+	// Handle range if specified
 	const int mi = min_value;
 	const int ma = max_value;
 
-	int va = static_cast<int>(Value(_value));
-
-	// No ranges
+	// No range specified
 	if (mi == -1 && ma == -1) {
-		value = _value;
+		value = new_value;
 		return true;
 	}
 
-	// Inside range
+	const int va = new_value;
+
+	// Inside valid range
 	if (va >= mi && va <= ma) {
-		value = _value;
+		value = new_value;
 		return true;
 	}
 
-	// Outside range, set it to the closest boundary
-	if (va > ma) {
-		va = ma;
-	} else {
-		va = mi;
-	}
+	// Outside valid range, use default value
+	value = default_value;
 
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
-	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	                      "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
 	                      propname.c_str(),
-	                      _value.ToString().c_str(),
+	                      new_value.ToString().c_str(),
 	                      min_value.ToString().c_str(),
 	                      max_value.ToString().c_str(),
-	                      std::to_string(va).c_str());
+	                      std::to_string(static_cast<int>(value)).c_str());
 
-	value = va;
 	return true;
 }
 
-bool PropInt::IsValidValue(const Value& _value)
+bool PropInt::IsValidValue(const Value& new_value)
 {
 	if (IsRestrictedValue()) {
-		return Property::IsValidValue(_value);
+		return Property::IsValidValue(new_value);
 	}
 
-	// LOG_MSG("still used ?");
-	// No >= and <= in Value type and == is ambigious
+	// Handle range if specified
 	const int mi = min_value;
 	const int ma = max_value;
 
-	int va = static_cast<int>(Value(_value));
+	const int va = new_value;
 
+	// No range specified
 	if (mi == -1 && ma == -1) {
 		return true;
 	}
+
+	// Inside valid range
 	if (va >= mi && va <= ma) {
 		return true;
 	}
 
+	// Outside valid range
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
-	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	                      "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
 	                      propname.c_str(),
-	                      _value.ToString().c_str(),
+	                      new_value.ToString().c_str(),
 	                      min_value.ToString().c_str(),
 	                      max_value.ToString().c_str(),
 	                      default_value.ToString().c_str());
@@ -478,11 +475,21 @@ bool PropDouble::SetValue(const std::string& input)
 bool PropInt::SetValue(const std::string& input)
 {
 	Value val;
-	if (!val.SetValue(input, Value::V_INT)) {
+	const auto is_valid = val.SetValue(input, Value::V_INT);
+
+	if (!is_valid) {
+		SetValue(default_value.ToString());
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_INVALID_INTEGER_SETTING",
+		                      propname.c_str(),
+		                      input.c_str(),
+		                      default_value.ToString().c_str());
 		return false;
 	}
-	bool is_valid = ValidateValue(val);
-	return is_valid;
+
+	return ValidateValue(val);
 }
 
 bool PropString::SetValue(const std::string& input)
@@ -499,7 +506,7 @@ bool PropString::SetValue(const std::string& input)
 	return ValidateValue(val);
 }
 
-bool PropString::IsValidValue(const Value& _value)
+bool PropString::IsValidValue(const Value& new_value)
 {
 	if (!IsRestrictedValue()) {
 		return true;
@@ -508,20 +515,20 @@ bool PropString::IsValidValue(const Value& _value)
 	// If the property's valid values includes either positive or negative
 	// bool strings ("on", "false", etc..), then check if this incoming
 	// value is either.
-	if (is_positive_bool_valid && has_true(_value.ToString())) {
+	if (is_positive_bool_valid && has_true(new_value.ToString())) {
 		return true;
 	}
-	if (is_negative_bool_valid && has_false(_value.ToString())) {
+	if (is_negative_bool_valid && has_false(new_value.ToString())) {
 		return true;
 	}
 
 	for (const auto& val : valid_values) {
-		if (val == _value) { // Match!
+		if (val == new_value) { // Match!
 			return true;
 		}
 		if (val.ToString() == "%u") {
 			unsigned int v;
-			if (sscanf(_value.ToString().c_str(), "%u", &v) == 1) {
+			if (sscanf(new_value.ToString().c_str(), "%u", &v) == 1) {
 				return true;
 			}
 		}
@@ -531,7 +538,7 @@ bool PropString::IsValidValue(const Value& _value)
 	                      "CONFIG",
 	                      "PROGRAM_CONFIG_INVALID_SETTING",
 	                      propname.c_str(),
-	                      _value.ToString().c_str(),
+	                      new_value.ToString().c_str(),
 	                      default_value.ToString().c_str());
 
 	return false;
@@ -567,7 +574,7 @@ bool PropPath::SetValue(const std::string& input)
 
 bool PropBool::SetValue(const std::string& input)
 {
-	auto is_valid = value.SetValue(input, Value::V_BOOL);
+	const auto is_valid = value.SetValue(input, Value::V_BOOL);
 	if (!is_valid) {
 		SetValue(default_value.ToString());
 
@@ -612,12 +619,12 @@ void PropMultiVal::MakeDefaultValue()
 	ValidateValue(val);
 }
 
-bool PropMultiValRemain::SetValue(const std::string& _value)
+bool PropMultiValRemain::SetValue(const std::string& new_value)
 {
-	Value val(_value, Value::V_STRING);
+	Value val(new_value, Value::V_STRING);
 	bool is_valid = ValidateValue(val);
 
-	std::string local(_value);
+	std::string local(new_value);
 	int i                    = 0;
 	int number_of_properties = 0;
 
@@ -670,12 +677,12 @@ bool PropMultiValRemain::SetValue(const std::string& _value)
 	return is_valid;
 }
 
-bool PropMultiVal::SetValue(const std::string& _value)
+bool PropMultiVal::SetValue(const std::string& new_value)
 {
-	Value val(_value, Value::V_STRING);
+	Value val(new_value, Value::V_STRING);
 	bool is_valid = ValidateValue(val);
 
-	std::string local(_value);
+	std::string local(new_value);
 	int i = 0;
 
 	Property* p = section->GetProperty(0);
@@ -836,42 +843,42 @@ void Property::SetEnabledOptions(const std::vector<std::string>& options)
 }
 
 PropInt* SectionProp::AddInt(const std::string& _propname,
-                             Property::Changeable::Value when, int _value)
+                             Property::Changeable::Value when, int new_value)
 {
-	const auto prop = new PropInt(_propname, when, _value);
+	const auto prop = new PropInt(_propname, when, new_value);
 	properties.push_back(prop);
 	return prop;
 }
 
 PropString* SectionProp::AddString(const std::string& _propname,
                                    Property::Changeable::Value when,
-                                   const char* _value)
+                                   const char* new_value)
 {
-	const auto prop = new PropString(_propname, when, _value);
+	const auto prop = new PropString(_propname, when, new_value);
 	properties.push_back(prop);
 	return prop;
 }
 
 PropPath* SectionProp::AddPath(const std::string& _propname,
-                               Property::Changeable::Value when, const char* _value)
+                               Property::Changeable::Value when, const char* new_value)
 {
-	const auto prop = new PropPath(_propname, when, _value);
+	const auto prop = new PropPath(_propname, when, new_value);
 	properties.push_back(prop);
 	return prop;
 }
 
 PropBool* SectionProp::AddBool(const std::string& _propname,
-                               Property::Changeable::Value when, bool _value)
+                               Property::Changeable::Value when, bool new_value)
 {
-	const auto prop = new PropBool(_propname, when, _value);
+	const auto prop = new PropBool(_propname, when, new_value);
 	properties.push_back(prop);
 	return prop;
 }
 
 PropHex* SectionProp::AddHex(const std::string& _propname,
-                             Property::Changeable::Value when, Hex _value)
+                             Property::Changeable::Value when, Hex new_value)
 {
-	const auto prop = new PropHex(_propname, when, _value);
+	const auto prop = new PropHex(_propname, when, new_value);
 	properties.push_back(prop);
 	return prop;
 }
@@ -1030,31 +1037,38 @@ Hex SectionProp::GetHex(const std::string& _propname) const
 	return 0;
 }
 
-bool SectionProp::HandleInputline(const std::string& line)
+bool SectionProp::HandleInputLine(const std::string& line)
 {
-	std::string::size_type loc = line.find('=');
+	// Parse a configuration setting in the 'setting_name = setting_value'
+	// format
+	const std::string::size_type loc = line.find('=');
 
 	if (loc == std::string::npos) {
 		return false;
 	}
 
-	std::string name = line.substr(0, loc);
-	std::string val  = line.substr(loc + 1);
+	std::string setting_name      = line.substr(0, loc);
+	std::string setting_value_str = line.substr(loc + 1);
 
-	// Strip quotes around the value
-	trim(val);
-	std::string::size_type length = val.length();
-	if (length > 1 && ((val[0] == '\"' && val[length - 1] == '\"') ||
-	                   (val[0] == '\'' && val[length - 1] == '\''))) {
-		val = val.substr(1, length - 2);
+	// Strip quotes around the value string
+	trim(setting_value_str);
+	const auto length = setting_value_str.length();
+
+	if (length > 1 &&
+	    ((setting_value_str[0] == '\"' && setting_value_str[length - 1] == '\"') ||
+	     (setting_value_str[0] == '\'' && setting_value_str[length - 1] == '\''))) {
+
+		setting_value_str = setting_value_str.substr(1, length - 2);
 	}
 
-	// Trim the result in case there were spaces somewhere
-	trim(name);
-	trim(val);
+	// Trim leading and trailing spaces from the setting name and value
+	// strings
+	trim(setting_name);
+	trim(setting_value_str);
 
+	// Find the configuration setting and try to set it
 	for (auto& p : properties) {
-		if (strcasecmp(p->propname.c_str(), name.c_str()) != 0) {
+		if (strcasecmp(p->propname.c_str(), setting_name.c_str()) != 0) {
 			continue;
 		}
 
@@ -1062,50 +1076,30 @@ bool SectionProp::HandleInputline(const std::string& line)
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "CONFIG",
 			                      "PROGRAM_CONFIG_DEPRECATED_SETTING",
-			                      name.c_str());
+			                      setting_name.c_str());
 
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "CONFIG",
-			                      create_setting_help_msg_name(name));
+			                      create_setting_help_msg_name(
+			                              setting_name));
 
 			if (!p->IsDeprecatedButAllowed()) {
 				return false;
 			}
 		}
 
-		return p->SetValue(val);
+		return p->SetValue(setting_value_str);
 	}
 
+	// We couldn't find the config setting; display an error
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
 	                      "PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND",
-	                      name.c_str());
+	                      setting_name.c_str());
 	return false;
 }
 
-void SectionProp::PrintData(FILE* outfile) const
-{
-	// Now print out the individual section entries
-
-	// Determine maximum length of the props in this section
-	int len = 0;
-	for (const auto& tel : properties) {
-		const auto prop_length = check_cast<int>(tel->propname.length());
-		len = std::max<int>(len, prop_length);
-	}
-
-	for (const auto& tel : properties) {
-		if (tel->IsDeprecated()) {
-			continue;
-		}
-
-		fprintf(outfile,
-		        "%-*s = %s\n",
-		        std::min<int>(40, len),
-		        tel->propname.c_str(),
-		        tel->GetValue().ToString().c_str());
-	}
-}
+void SectionProp::PrintData([[maybe_unused]] FILE* outfile) const {}
 
 std::string SectionProp::GetPropertyValue(const std::string& _property) const
 {
@@ -1117,7 +1111,7 @@ std::string SectionProp::GetPropertyValue(const std::string& _property) const
 	return NO_SUCH_PROPERTY;
 }
 
-bool SectionLine::HandleInputline(const std::string& line)
+bool AutoExecSection::HandleInputLine(const std::string& line)
 {
 	if (!data.empty()) {
 		// Add return to previous line in buffer
@@ -1127,12 +1121,12 @@ bool SectionLine::HandleInputline(const std::string& line)
 	return true;
 }
 
-void SectionLine::PrintData(FILE* outfile) const
+void AutoExecSection::PrintData(FILE* outfile) const
 {
 	fprintf(outfile, "%s", data.c_str());
 }
 
-std::string SectionLine::GetPropertyValue(const std::string&) const
+std::string AutoExecSection::GetPropertyValue(const std::string&) const
 {
 	return NO_SUCH_PROPERTY;
 }

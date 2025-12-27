@@ -123,7 +123,7 @@ constexpr uint16_t EGA_LINE_DOUBLE = 1 << 1;
 constexpr uint16_t VGA_PIXEL_DOUBLE = 1 << 2;
 
 // Refresh rate constants
-constexpr auto RefreshRateMin        = 23;
+constexpr auto RefreshRateMin        = 24;
 constexpr auto RefreshRateDosDefault = 70;
 constexpr auto RefreshRateMax        = 1000;
 
@@ -1105,7 +1105,7 @@ void VGA_SetupDrawing(uint32_t val);
 void VGA_CheckScanLength(void);
 void VGA_ChangedBank(void);
 
-const VideoMode& VGA_GetCurrentVideoMode();
+VideoMode VGA_GetCurrentVideoMode();
 
 // DAC/Attribute functions
 void VGA_DAC_CombineColor(const uint8_t palette_idx, const uint8_t color_idx);

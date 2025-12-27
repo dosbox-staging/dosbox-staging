@@ -120,11 +120,6 @@ bool SdlRenderer::InitRenderer(const std::string& render_driver)
 	}
 	LOG_MSG("SDL: Using '%s' SDL render driver", info.name);
 
-	// TODO: GFX_CAN_32 | GFX_CAN_RANDOM is always set for both SDL and OpenGL backends.
-	// Opportunity to remove dead code from render.cpp.
-	static_assert(SDL_PIXELTYPE(SdlPixelFormat) == SDL_PIXELTYPE_PACKED32);
-	gfx_flags = GFX_CAN_32 | GFX_CAN_RANDOM;
-
 	if (SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE) < 0) {
 		LOG_ERR("SDL: Error setting render clear color: %s", SDL_GetError());
 	}
@@ -159,11 +154,6 @@ SDL_Window* SdlRenderer::GetWindow()
 	return window;
 }
 
-uint8_t SdlRenderer::GetGfxFlags()
-{
-	return gfx_flags;
-}
-
 DosBox::Rect SdlRenderer::GetCanvasSizeInPixels()
 {
 	SDL_Rect canvas_size_px = {};
@@ -183,7 +173,7 @@ DosBox::Rect SdlRenderer::GetCanvasSizeInPixels()
 	return r;
 }
 
-void SdlRenderer::UpdateViewport(const DosBox::Rect draw_rect_px)
+void SdlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 {
 	const auto sdl_draw_rect_px = to_sdl_rect(draw_rect_px);
 
@@ -192,7 +182,8 @@ void SdlRenderer::UpdateViewport(const DosBox::Rect draw_rect_px)
 	}
 }
 
-bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_height_px)
+void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
+                                          const int render_height_px)
 {
 	if (texture) {
 		SDL_DestroyTexture(texture);
@@ -205,7 +196,7 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 	                            render_height_px);
 	if (!texture) {
 		LOG_ERR("SDL: Error creating SDL texture: %s", SDL_GetError());
-		return false;
+		return;
 	}
 
 	switch (texture_filter_mode) {
@@ -225,7 +216,7 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 		}
 		break;
 
-	default: assertm(false, "Invalid TextureFilterMode"); return 0;
+	default: assertm(false, "Invalid TextureFilterMode"); return;
 	}
 
 	// unused; must be 0
@@ -254,26 +245,24 @@ bool SdlRenderer::UpdateRenderSize(const int render_width_px, const int render_h
 	if (!curr_framebuf || !last_framebuf) {
 		SDL_DestroyTexture(texture);
 		LOG_ERR("SDL: Error creating input surface: %s", SDL_GetError());
-		return false;
+		return;
 	}
-
-	return true;
 }
 
-bool SdlRenderer::SetShader([[maybe_unused]] const std::string& shader_name)
+SdlRenderer::SetShaderResult SdlRenderer::SetShader(
+        [[maybe_unused]] const std::string& shader_name)
 {
 	// no shader support; always report success
 	//
 	// If we didn't, the rendering backend agnostic fallback mechanism would
 	// fail and we'd hard exit.
-	return true;
+	return SetShaderResult::Ok;
 }
 
-bool SdlRenderer::MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
-                                        [[maybe_unused]] const VideoMode& video_mode)
+void SdlRenderer::NotifyVideoModeChanged([[maybe_unused]] const VideoMode& video_mode)
 {
-	// no shader support; always report no change
-	return false;
+	// no shader support
+	return;
 }
 
 bool SdlRenderer::ForceReloadCurrentShader()
@@ -283,6 +272,18 @@ bool SdlRenderer::ForceReloadCurrentShader()
 }
 
 ShaderInfo SdlRenderer::GetCurrentShaderInfo()
+{
+	// no shader support
+	return {};
+}
+
+ShaderPreset SdlRenderer::GetCurrentShaderPreset()
+{
+	// no shader support
+	return {};
+}
+
+std::string SdlRenderer::GetCurrentShaderDescriptorString()
 {
 	// no shader support
 	return {};

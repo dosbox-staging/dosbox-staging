@@ -1,9 +1,7 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox_config.h"
-
-#if C_MODEM
 
 #define ENET_IMPLEMENTATION
 
@@ -732,5 +730,3 @@ NETClientSocket *TCPServerSocket::Accept()
 	
 	return new TCPClientSocket(new_tcpsock);
 }
-
-#endif // C_MODEM

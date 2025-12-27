@@ -502,11 +502,14 @@ static Bitu INT17_Handler(void) {
 static bool INT14_Wait(uint16_t port, uint8_t mask, uint8_t timeout, uint8_t* retval) {
 	const auto starttime = PIC_FullIndex();
 	const auto timeout_f = timeout * 1000.0;
+
 	while (((*retval = IO_ReadB(port)) & mask) != mask) {
 		if (starttime < (PIC_FullIndex() - timeout_f)) {
 			return false;
 		}
-		CALLBACK_Idle();
+		if (CALLBACK_Idle()) {
+			break;
+		}
 	}
 	return true;
 }
@@ -760,39 +763,49 @@ static Bitu INT15_Handler(void) {
 			LOG(LOG_BIOS,LOG_ERROR)("INT15:84:Unknown Bios Joystick functionality.");
 		}
 		break;
-	case 0x86:	/* BIOS - WAIT (AT,PS) */
-		{
-			if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
-				reg_ah=0x83;
-				CALLBACK_SCF(true);
-				break;
-			}
-			uint32_t count=(reg_cx<<16)|reg_dx;
-		        const auto timeout = PIC_FullIndex() +
-		                             static_cast<double>(count) / 1000.0 + 1.0;
-		        mem_writed(BIOS_WAIT_FLAG_POINTER, RealMake(0, BIOS_WAIT_FLAG_TEMP));
-		        mem_writed(BIOS_WAIT_FLAG_COUNT, count);
-		        mem_writeb(BIOS_WAIT_FLAG_ACTIVE, 1);
-		        /* Unmask IRQ 8 if masked */
-		        uint8_t mask = IO_Read(0xa1);
-		        if (mask & 1)
-			        IO_Write(0xa1, mask & ~1);
-		        /* Reprogram RTC to start */
-			IO_Write(0x70,0xb);
-			IO_Write(0x71,IO_Read(0x71)|0x40);
-			while (mem_readd(BIOS_WAIT_FLAG_COUNT)) {
-				if (PIC_FullIndex()>timeout) {
-					/* RTC timer not working for some reason */
-					mem_writeb(BIOS_WAIT_FLAG_ACTIVE,0);
-					IO_Write(0x70,0xb);
-					IO_Write(0x71,IO_Read(0x71)&~0x40);
-					break;
-				}
-				CALLBACK_Idle();
-			}
-			CALLBACK_SCF(false);
+
+	case 0x86: /* BIOS - WAIT (AT,PS) */
+	{
+		if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
+			reg_ah = 0x83;
+			CALLBACK_SCF(true);
 			break;
 		}
+		uint32_t count = (reg_cx << 16) | reg_dx;
+
+		const auto timeout = PIC_FullIndex() +
+		                     static_cast<double>(count) / 1000.0 + 1.0;
+
+		mem_writed(BIOS_WAIT_FLAG_POINTER, RealMake(0, BIOS_WAIT_FLAG_TEMP));
+		mem_writed(BIOS_WAIT_FLAG_COUNT, count);
+		mem_writeb(BIOS_WAIT_FLAG_ACTIVE, 1);
+
+		// Unmask IRQ 8 if masked
+		uint8_t mask = IO_Read(0xa1);
+		if (mask & 1) {
+			IO_Write(0xa1, mask & ~1);
+		}
+
+		// Reprogram RTC to start
+		IO_Write(0x70, 0xb);
+		IO_Write(0x71, IO_Read(0x71) | 0x40);
+
+		while (mem_readd(BIOS_WAIT_FLAG_COUNT)) {
+			if (PIC_FullIndex() > timeout) {
+				// RTC timer not working for some reason
+				mem_writeb(BIOS_WAIT_FLAG_ACTIVE, 0);
+				IO_Write(0x70, 0xb);
+				IO_Write(0x71, IO_Read(0x71) & ~0x40);
+				break;
+			}
+			if (CALLBACK_Idle()) {
+				break;
+			}
+		}
+		CALLBACK_SCF(false);
+		break;
+	}
+
 	case 0x87:	/* Copy extended memory */
 		{
 			bool enabled = MEM_A20_Enabled();
@@ -1065,10 +1078,9 @@ static Bitu reboot_handler()
 		constexpr auto delay_ms = 1000.0;
 		const auto start = PIC_FullIndex();
 		while ((PIC_FullIndex() - start) < delay_ms) {
-			CALLBACK_Idle();
 			// Bail out if the user closes the window.
 			// Otherwise we get stuck in an infinite loop.
-			if (DOSBOX_IsShutdownRequested()) {
+			if (CALLBACK_Idle()) {
 				return CBRET_NONE;
 			}
 		}
@@ -1469,10 +1481,10 @@ public:
 		//else if(ppindex == 1) config |= 0x0000;
 		if(ppindex == 2) config |= 0x4000;
 		else config |= 0xc000;	// 3 ports
-#if (C_FPU)
+
 		//FPU
 		config|=0x2;
-#endif
+
 		switch (machine) {
 		case MachineType::Hercules:
 			//Startup monochrome

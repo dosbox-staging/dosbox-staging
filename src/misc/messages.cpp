@@ -106,14 +106,14 @@ private:
 
 Message::Message(const std::string& message_english)
         : is_english(true),
-          message_raw(message_english)
+          message_raw(replace_eol(message_english, "\n"))
 {}
 
 Message::Message(const std::string& message_english,
                  const std::string& message_translated)
         : is_english(false),
-          message_raw(message_translated),
-          message_previous_english(message_english)
+          message_raw(replace_eol(message_translated, "\n")),
+          message_previous_english(replace_eol(message_english, "\n"))
 {}
 
 bool Message::IsFuzzy() const
@@ -483,6 +483,7 @@ static std::unordered_map<std::string, MessageLocation> message_location = {};
 static std::unordered_map<std::string, Message> dictionary_english    = {};
 static std::unordered_map<std::string, Message> dictionary_translated = {};
 
+static std::string translation_language         = {};
 static std::optional<Script> translation_script = {};
 static bool is_translation_script_fuzzy         = false;
 
@@ -550,6 +551,7 @@ static void clear_translated_messages()
 {
 	dictionary_translated.clear();
 
+	translation_language        = {};
 	translation_script          = {};
 	is_translation_script_fuzzy = false;
 }
@@ -712,6 +714,10 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 			if (!reader.ValidateGettextMetadata()) {
 				break;
 			}
+			const auto language = reader.GetLanguageFromMetadata();
+			if (!language.empty()) {
+				translation_language = language;
+			}
 			continue;
 		}
 
@@ -740,6 +746,11 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 
 	if (!found_message) {
 		reader.LogWarning("no messages found in the file");
+	}
+
+	// If no language was found in the metadata, use the file name instead
+	if (translation_language.empty()) {
+		translation_language = std_fs::path(file_path).stem().string();
 	}
 
 	// Check if current code page is suitable for this translation
@@ -863,6 +874,15 @@ bool MSG_Exists(const std::string& message_key)
 	return dictionary_english.contains(message_key);
 }
 
+std::string MSG_GetLanguage()
+{
+	if (!translation_language.empty()) {
+		return translation_language;
+	}
+
+	return "en";
+}
+
 bool MSG_WriteToFile(const std::string& file_name)
 {
 	return save_messages_to_path(file_name);
@@ -976,10 +996,20 @@ void MSG_LoadMessages()
 	}
 
 	// Get the list of autodetected languages
-	auto language_files = host_languages.language_files;
-	language_files.insert(language_files.end(),
-	                      host_languages.language_files_gui.begin(),
-	                      host_languages.language_files_gui.end());
+	auto languages = host_languages.app_languages;
+	languages.insert(languages.end(),
+	                 host_languages.gui_languages.begin(),
+	                 host_languages.gui_languages.end());
+
+	std::vector<std::string> language_files = {};
+	for (const auto& language : languages) {
+		for (const auto& language_file : language.GetLanguageFiles()) {
+			if (contains(language_files, language_file)) {
+				continue;
+			}
+			language_files.push_back(language_file);
+		}
+	}
 
 	// If autodetection failed, use internal English messages
 	if (language_files.empty()) {

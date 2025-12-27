@@ -1,14 +1,10 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
-// include guard
 #ifndef DOSBOX_NULLMODEM_WIN32_H
 #define DOSBOX_NULLMODEM_WIN32_H
 
 #include "dosbox.h"
-
-#if C_MODEM
 
 #include "misc_util.h"
 #include "serialport.h"
@@ -104,5 +100,4 @@ private:
 	} telClient;
 };
 
-#endif	// C_MODEM
-#endif	// include guard
+#endif // DOSBOX_NULLMODEM_WIN32_H

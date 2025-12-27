@@ -67,7 +67,9 @@ bool CDROM_Interface_Fake :: GetMediaTrayStatus(bool& mediaPresent, bool& mediaC
 void CDROM_Interface::LagDriveResponse() const
 {
 	// Always simulate a very small amount of drive response time
-	CALLBACK_Idle();
+	if (CALLBACK_Idle()) {
+		return;
+	}
 
 	// Handle tick-rollover
 	static decltype(PIC_Ticks) prev_ticks = 0;
@@ -76,8 +78,11 @@ void CDROM_Interface::LagDriveResponse() const
 	// Ensure results a monotonically increasing
 	auto since_last_response_ms = [=]() { return PIC_Ticks - prev_ticks; };
 	constexpr auto monotonic_response_ms = 1000 / REDBOOK_FRAMES_PER_SECOND;
+
 	while (since_last_response_ms() < monotonic_response_ms) {
-		CALLBACK_Idle();
+		if (CALLBACK_Idle()) {
+			return;
+		}
 	}
 
 	prev_ticks = PIC_Ticks;

@@ -9,7 +9,6 @@
 #include <memory>
 #include <tuple>
 
-#include "directserial.h"
 #include "nullmodem.h"
 #include "serialdummy.h"
 #include "serialmouse.h"
@@ -1194,7 +1193,9 @@ CSerial::~CSerial() {
 
 static bool idle(const double start, const uint32_t timeout)
 {
-	CALLBACK_Idle();
+	if (CALLBACK_Idle()) {
+		return true;
+	}
 	return PIC_FullIndex() - start > timeout;
 }
 
@@ -1205,14 +1206,15 @@ bool CSerial::Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeo
 
 	// Wait until we're ready to receive (or we've timed out)
 	const uint32_t ready_flag = (wait_dsr ? MSR_DSR_MASK : 0x0);
-	while ((Read_MSR() & ready_flag) != ready_flag && !timed_out)
+	while ((Read_MSR() & ready_flag) != ready_flag && !timed_out) {
 		timed_out = idle(starttime, timeout);
+	}
 
 	// wait for a byte to arrive (or we've timed out)
 	*lsr = static_cast<uint8_t>(Read_LSR());
 	while (!(*lsr & LSR_RX_DATA_READY_MASK) && !timed_out) {
 		timed_out = idle(starttime, timeout);
-		*lsr = static_cast<uint8_t>(Read_LSR());
+		*lsr      = static_cast<uint8_t>(Read_LSR());
 	}
 
 	if (timed_out) {
@@ -1242,14 +1244,16 @@ bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeo
 	bool timed_out = false;
 
 	// Wait until our transfer queue is empty (or we've timed out)
-	while (!(Read_LSR() & LSR_TX_HOLDING_EMPTY_MASK) && !timed_out)
+	while (!(Read_LSR() & LSR_TX_HOLDING_EMPTY_MASK) && !timed_out) {
 		timed_out = idle(start_time, timeout);
+	}
 
 	// Wait until the receiver is ready (or we've timed out)
 	const uint32_t ready_flags = (wait_dsr ? MSR_DSR_MASK : 0x0) |
 	                             (wait_cts ? MSR_CTS_MASK : 0x0);
-	while ((Read_MSR() & ready_flags) != ready_flags && !timed_out)
+	while ((Read_MSR() & ready_flags) != ready_flags && !timed_out) {
 		timed_out = idle(start_time, timeout);
+	}
 
 	if (timed_out) {
 #if SERIAL_DEBUG
@@ -1280,10 +1284,8 @@ public:
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};
 		SectionProp* section = static_cast<SectionProp*>(sec);
 
-#if C_MODEM
 		const PropPath *pbFilename = section->GetPath("phonebookfile");
 		MODEM_ReadPhonebook(pbFilename->realpath);
-#endif
 
 		char s_property[] = "serialx";
 		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i) {
@@ -1298,21 +1300,8 @@ public:
 				serialports[i] = new CSerialDummy (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::DUMMY;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
-			}
-#ifdef C_DIRECTSERIAL
-			else if (type=="direct") {
-				serialports[i] = new CDirectSerial (i, &cmd);
-				serialports[i]->serialType = SERIAL_PORT_TYPE::DIRECT;
-				cmd.GetStringRemain(serialports[i]->commandLineString);
-				if (!serialports[i]->InstallationSuccessful) {
-					// serial port name was wrong or already in use
-					delete serialports[i];
-					serialports[i] = nullptr;
-				}
-			}
-#endif
-#if C_MODEM
-			else if(type=="modem") {
+
+			} else if (type == "modem") {
 				serialports[i] = new CSerialModem (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::MODEM;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
@@ -1320,8 +1309,8 @@ public:
 					delete serialports[i];
 					serialports[i] = nullptr;
 				}
-			}
-			else if(type=="nullmodem") {
+
+			} else if (type == "nullmodem") {
 				serialports[i] = new CNullModem (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::NULL_MODEM;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
@@ -1329,9 +1318,7 @@ public:
 					delete serialports[i];
 					serialports[i] = nullptr;
 				}
-			}
-#endif
-			else if(type=="mouse") {
+			} else if (type == "mouse") {
 				serialports[i] = new CSerialMouse (i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::MOUSE;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
@@ -1339,8 +1326,7 @@ public:
 					delete serialports[i];
 					serialports[i] = nullptr;
 				}
-			}
-			else if(type=="disabled") {
+			} else if (type == "disabled") {
 				serialports[i] = nullptr;
 			} else {
 				serialports[i] = nullptr;
@@ -1360,9 +1346,7 @@ public:
 				serialports[i] = nullptr;
 			}
 		}
-#if C_MODEM
 		MODEM_ClearPhonebook();
-#endif
 	}
 };
 
@@ -1401,19 +1385,33 @@ static void add_serial_config_settings(SectionProp& section)
 	pstring->SetValues(serials);
 	pmulti_remain->GetSection()->AddString("parameters", WhenIdle, "");
 	pmulti_remain->SetHelp(
-	        "Set type of device connected to the COM1 port.\n"
-	        "Can be disabled, dummy, mouse, modem, nullmodem, direct ('dummy' by default).\n"
-	        "Additional parameters must be on the same line in the form of\n"
-	        "parameter:value. The optional 'irq' parameter is common for all types.\n"
+	        "Set type of device connected to the COM1 port ('dummy' by default).\n"
+	        "Possible values:\n"
+	        "\n"
+	        "  disabled:  Disables the port.\n"
+	        "  dummy:     Emulates the port without a device attached to it.\n"
+	        "  mouse:     Emulates a serial mouse attached to the port.\n"
+	        "  modem:     Emulates a modem attached to the port.\n"
+	        "  nullmodem: Emulates a nullmoden attached to the port.\n"
+	        "  direct:    Emulates a direct serial link.\n"
+	        "\n"
+	        "Additional parameters must be on the same line in the form of PARAMETER:VALUE.\n"
+	        "The optional 'irq' parameter is common for all types. Available parameters:\n"
+	        "\n"
 	        "  - for 'mouse':      model (optional; overrides the 'com_mouse_model' setting).\n"
+	        "\n"
 	        "  - for 'direct':     realport (required), rxdelay (optional).\n"
 	        "                      (e.g., realport:COM1, realport:ttyS0).\n"
+	        "\n"
 	        "  - for 'modem':      listenport, sock, bps (all optional).\n"
+	        "\n"
 	        "  - for 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,\n"
 	        "                      transparent, port, inhsocket, sock (all optional).\n"
+	        "\n"
 	        "The 'sock' parameter specifies the protocol to use at both sides of the\n"
 	        "connection. Valid values are 0 for TCP, and 1 for ENet reliable UDP.\n"
-	        "Example: serial1=modem listenport:5000 sock:1");
+	        "Example:\n"
+	        "  serial1=modem listenport:5000 sock:1");
 
 	pmulti_remain = section.AddMultiValRemain("serial2", WhenIdle, " ");
 	pstring = pmulti_remain->GetSection()->AddString("type", WhenIdle, "dummy");

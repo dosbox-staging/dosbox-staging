@@ -154,7 +154,8 @@ static void init_lpt_dac_settings(SectionProp& section)
 
 	auto pstring = section.AddString("lpt_dac", WhenIdle, "none");
 	pstring->SetHelp(
-	        "Type of DAC plugged into the parallel port:\n"
+	        "Type of DAC plugged into the parallel port ('none' by default). Possible values:\n"
+	        "\n"
 	        "  disney:    Disney Sound Source.\n"
 	        "  covox:     Covox Speech Thing.\n"
 	        "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
@@ -163,13 +164,16 @@ static void init_lpt_dac_settings(SectionProp& section)
 
 	pstring = section.AddString("lpt_dac_filter", WhenIdle, "on");
 	pstring->SetHelp(
-	        "Filter for the LPT DAC audio device(s):\n"
+	        "Filter for the LPT DAC audio device(s) ('on' by default). Possible values:\n"
+	        "\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	auto pbool = section.AddBool("disney", Deprecated, false);
-	pbool->SetHelp("Use 'lpt_dac = disney' to enable the Disney Sound Source.");
+	pbool->SetHelp(
+	        "Use [color=light-green]'lpt_dac = disney'[reset] to "
+	        "enable the Disney Sound Source.");
 }
 
 void LPTDAC_Init(SectionProp& section)

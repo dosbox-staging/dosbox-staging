@@ -315,7 +315,9 @@ void DOS_PerformHardDiskIoDelay(uint16_t data_transferred_bytes)
 
 	do {
 		DOS_ExecuteRegisteredCallbacks(DiskType::HardDisk);
-		CALLBACK_Idle();
+		if (CALLBACK_Idle()) {
+			break;
+		}
 	} while (PIC_FullIndex() < endtime);
 }
 
@@ -350,7 +352,9 @@ void DOS_PerformFloppyIoDelay(uint16_t data_transferred_bytes)
 
 	do {
 		DOS_ExecuteRegisteredCallbacks(DiskType::Floppy);
-		CALLBACK_Idle();
+		if (CALLBACK_Idle()) {
+			break;
+		}
 	} while (PIC_FullIndex() < endtime);
 }
 
@@ -385,7 +389,9 @@ void DOS_PerformCdRomIoDelay(uint16_t data_transferred_bytes)
 
 	do {
 		DOS_ExecuteRegisteredCallbacks(DiskType::CdRom);
-		CALLBACK_Idle();
+		if (CALLBACK_Idle()) {
+			break;
+		}
 	} while (PIC_FullIndex() < endtime);
 }
 
@@ -1687,7 +1693,9 @@ bool DOS_IsCancelRequest()
 		return true;
 	}
 
-	CALLBACK_Idle();
+	if (CALLBACK_Idle()) {
+		return false;
+	}
 	while (!(Files[STDIN]->GetInformation() & (1 << 6))) {
 		// A key is waiting, read it
 		uint16_t count = 1;
@@ -1901,7 +1909,7 @@ static void init_dos_settings(SectionProp& section)
 	// CONFIG.SYS
 
 	auto pbool = section.AddBool("xms", WhenIdle, true);
-	pbool->SetHelp("Enable XMS support ('on' by default).");
+	pbool->SetHelp("Enable XMS memory support ('on' by default).");
 
 	auto pstring = section.AddString("ems", WhenIdle, "true");
 	pstring->SetValues({"true", "emsboard", "emm386", "off"});
@@ -1911,32 +1919,36 @@ static void init_dos_settings(SectionProp& section)
 	        "support to be disabled to work at all.");
 
 	pbool = section.AddBool("umb", WhenIdle, true);
-	pbool->SetHelp("Enable UMB support ('on' by default).");
+	pbool->SetHelp("Enable UMB memory support ('on' by default).");
 
 	pstring = section.AddString("pcjr_memory_config", OnlyAtStart, "expanded");
 	pstring->SetValues({"expanded", "standard"});
 	pstring->SetHelp(
-	        "PCjr memory layout ('expanded' by default).\n"
+	        "Set PCjr memory layout ('expanded' by default). Possible values:\n"
+	        "\n"
 	        "  expanded:  640 KB total memory with applications residing above 128 KB.\n"
 	        "             Compatible with most games.\n"
+	        "\n"
 	        "  standard:  128 KB total memory with applications residing below 96 KB.\n"
 	        "             Required for some older games (e.g., Jumpman, Troll).");
 
 	pstring = section.AddString("ver", WhenIdle, "5.0");
 	pstring->SetHelp(
-	        "Set DOS version (5.0 by default). Specify in major.minor format.\n"
-	        "A single number is treated as the major version.\n"
-	        "Common settings are 3.3, 5.0, 6.22, and 7.1.");
+	        "Set DOS version in MAJOR.MINOR format (5.0 by default). A single number is\n"
+	        "treated as the major version. Common settings are 3.3, 5.0, 6.22, and 7.1.");
 
 	// DOS locale settings
 
 	pstring = section.AddString("locale_period", WhenIdle, "native");
 	pstring->SetHelp(
-	        "Set locale epoch ('native' by default).\n"
+	        "Set locale epoch ('native' by default). Possible values:\n"
+	        "\n"
 	        "  historic:  If data is available for the given country, mimic old DOS behavior\n"
 	        "             when displaying time, dates, or numbers.\n"
+	        "\n"
 	        "  modern:    Follow current day practices for user experience more consistent\n"
 	        "             with typical host systems.\n"
+	        "\n"
 	        "  native:    Re-use current host OS settings, regardless of the country set;\n"
 	        "             use 'modern' data to fill-in the gaps when the DOS locale system\n"
 	        "             is too limited to follow the desktop settings.");
@@ -1944,26 +1956,26 @@ static void init_dos_settings(SectionProp& section)
 
 	pstring = section.AddString("country", WhenIdle, "auto");
 	pstring->SetHelp(
-	        "Set DOS country code ('auto' by default).\n"
-	        "This affects country-specific information such as date, time, and decimal\n"
-	        "formats. If set to 'auto', selects the country code reflecting the host\n"
-	        "OS settings.\n"
-	        "The list of country codes can be displayed using '--list-countries'\n"
-	        "command-line argument.");
+	        "Set DOS country code ('auto' by default). This affects country-specific\n"
+	        "information such as date, time, and decimal formats. If set to 'auto', it\n"
+	        "selects the country code reflecting the host OS settings.\n"
+	        "\n"
+	        "The list of country codes can be displayed using '--list-countries' command-line\n"
+	        "argument.");
 
 	pstring = section.AddString("keyboardlayout", Deprecated, "");
-	pstring->SetHelp("Renamed to 'keyboard_layout'.");
+	pstring->SetHelp("Renamed to [color=light-green]'keyboard_layout'[reset].");
 
 	pstring = section.AddString("keyboard_layout", OnlyAtStart, "auto");
 	pstring->SetHelp(
-	        "Keyboard layout code ('auto' by default).\n"
-	        "The list of supported keyboard layout codes can be displayed using the\n"
-	        "'--list-layouts' command-line argument, e.g., 'uk' is the British English\n"
-	        "layout. The layout can be followed by the code page number, e.g., 'uk 850'\n"
-	        "selects a Western European screen font.\n"
-	        "Set to 'auto' to guess the values from the host OS settings.\n"
-	        "After startup, use the 'KEYB' command to manage keyboard layouts and code pages\n"
-	        "(run 'HELP KEYB' for details).");
+	        "Keyboard layout code ('auto' by default). The list of supported keyboard layout\n"
+	        "codes can be displayed using the '--list-layouts' command-line argument, e.g.,\n"
+	        "'uk' is the British English layout. The layout can be followed by the code page\n"
+	        "number, e.g., 'uk 850' selects a Western European screen font.\n"
+	        "\n"
+	        "Set to 'auto' to guess the values from the host OS settings. After startup, use\n"
+	        "the 'KEYB' command to manage keyboard layouts and code pages (run 'HELP KEYB'\n"
+	        "for details).");
 
 	// COMMAND.COM settings
 
@@ -1971,30 +1983,33 @@ static void init_dos_settings(SectionProp& section)
 	pstring->SetValues({"auto", "on", "off"});
 	pstring->SetHelp(
 	        "Enable expanding environment variables such as %%PATH%% in the DOS command shell\n"
-	        "(auto by default, enabled if DOS version >= 7.0).\n"
-	        "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
+	        "('auto' by default). FreeDOS and MS-DOS 7.0+ COMMAND.COM supports this behavior.\n"
+	        "Possible values:\n"
+	        "\n"
+	        "  auto:  Enabled if DOS version is 7.0 or above (default).\n"
+	        "  on:    Enable expansion of environment variables.\n"
+	        "  off:   Disable expansion of environment variables.");
 
 	pstring = section.AddPath("shell_history_file", OnlyAtStart, "shell_history.txt");
 
 	pstring->SetHelp(
-	        "File containing persistent command line history ('shell_history.txt'\n"
-	        "by default). Setting it to empty disables persistent shell history.");
+	        "File containing persistent command line history ('shell_history.txt' by\n"
+	        "default). Setting it to empty disables persistent shell history.");
 
 	// Misc DOS command settings
 
 	pstring = section.AddPath("setver_table_file", OnlyAtStart, "");
 	pstring->SetHelp(
 	        "File containing the list of applications and assigned DOS versions, in a\n"
-	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
-	        "(empty by default).");
+	        "tab-separated format, used by SETVER.EXE as a persistent storage (empty by\n"
+	        "default).");
 
 	pbool = section.AddBool("file_locking", WhenIdle, true);
 	pbool->SetHelp(
-	        "Enable file locking (SHARE.EXE emulation; 'on' by default).\n"
-	        "This is required for some Windows 3.1x applications to work properly.\n"
-	        "It generally does not cause problems for DOS games except in rare cases\n"
-	        "(e.g., Astral Blur demo). If you experience crashes related to file\n"
-	        "permissions, you can try disabling this.");
+	        "Enable file locking via emulating SHARE.EXE ('on' by default). This is required\n"
+	        "for some Windows 3.1x applications to work properly. It generally does not cause\n"
+	        "problems for DOS games except in rare cases (e.g., Astral Blur demo). If you\n"
+	        "experience crashes related to file permissions, you can try disabling this.");
 }
 
 void DOS_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)

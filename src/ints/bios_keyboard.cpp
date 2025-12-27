@@ -352,9 +352,10 @@ static Bitu IRQ1_Handler(void) {
 				// Interrupts screen output by BIOS until another key is pressed
 				// This is seemingly accurate behavior as tested in 86box
 				// https://en.wikipedia.org/wiki/Break_key
-				while (!DOSBOX_IsShutdownRequested() &&
-				       (mem_readb(BIOS_KEYBOARD_FLAGS2) & 8)) {
-					CALLBACK_Idle();
+				while (mem_readb(BIOS_KEYBOARD_FLAGS2) & 8) {
+					if (CALLBACK_Idle()) {
+						break;
+					}
 				}
 				reg_ip+=5;	// skip out 20,20
 				return CBRET_NONE;

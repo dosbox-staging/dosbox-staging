@@ -2075,7 +2075,7 @@ static void CreateLayout() {
 		                  combo_4[i].entry,
 		                  combo_4[i].key);
 	}
-	AddKeyButtonEvent(pos_x(14), pos_y(4), button_width * 3, button_height, "SHIFT", "rshift", KBD_rightshift);
+	AddKeyButtonEvent(pos_x(14), pos_y(4), button_width * 2, button_height, "SHIFT", "rshift", KBD_rightshift);
 
 	/* Bottom Row */
 	AddKeyButtonEvent(pos_x(0), pos_y(5), button_width * 2, button_height, MMOD1_NAME, "lctrl", KBD_leftctrl);
@@ -2176,33 +2176,36 @@ static void CreateLayout() {
 
 #define XO 10
 #define YO 7
+
+	const auto y_offs = 10;
+
 	/* Joystick Buttons/Texts */
 	/* Buttons 1+2 of 1st Joystick */
-	AddJButtonButton(pos_x(XO), pos_y(YO), button_width, button_height, "1", 0, 0);
-	AddJButtonButton(pos_x(XO + 2), pos_y(YO), button_width, button_height, "2", 0, 1);
+	AddJButtonButton(pos_x(XO), pos_y(YO) + y_offs, button_width, button_height, "1", 0, 0);
+	AddJButtonButton(pos_x(XO + 2), pos_y(YO) + y_offs, button_width, button_height, "2", 0, 1);
 	/* Axes 1+2 (X+Y) of 1st Joystick */
-	CJAxisEvent* cjaxis = AddJAxisButton(pos_x(XO + 1), pos_y(YO), button_width, button_height, "Y-", 0, 1, false, nullptr);
-	AddJAxisButton(pos_x(XO + 1), pos_y(YO + 1), button_width, button_height, "Y+", 0, 1, true, cjaxis);
-	cjaxis = AddJAxisButton(pos_x(XO), pos_y(YO + 1), button_width, button_height, "X-", 0, 0, false, nullptr);
-	AddJAxisButton(pos_x(XO + 2), pos_y(YO + 1), button_width, button_height, "X+", 0, 0, true, cjaxis);
+	CJAxisEvent* cjaxis = AddJAxisButton(pos_x(XO + 1), pos_y(YO) + y_offs, button_width, button_height, "Y-", 0, 1, false, nullptr);
+	AddJAxisButton(pos_x(XO + 1), pos_y(YO + 1) + y_offs, button_width, button_height, "Y+", 0, 1, true, cjaxis);
+	cjaxis = AddJAxisButton(pos_x(XO), pos_y(YO + 1) + y_offs, button_width, button_height, "X-", 0, 0, false, nullptr);
+	AddJAxisButton(pos_x(XO + 2), pos_y(YO + 1) + y_offs, button_width, button_height, "X+", 0, 0, true, cjaxis);
 
 	CJAxisEvent * tmp_ptr;
 
 	assert(joytype != JOY_UNSET);
 	if (joytype == JOY_2AXIS) {
 		/* Buttons 1+2 of 2nd Joystick */
-		AddJButtonButton(pos_x(XO + 4), pos_y(YO), button_width, button_height, "1", 1, 0);
-		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO), button_width, button_height, "2", 1, 1);
+		AddJButtonButton(pos_x(XO + 4), pos_y(YO) + y_offs, button_width, button_height, "1", 1, 0);
+		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO) + y_offs, button_width, button_height, "2", 1, 1);
 		/* Buttons 3+4 of 1st Joystick, not accessible */
 		AddJButtonButton_hidden(0,2);
 		AddJButtonButton_hidden(0,3);
 
 		/* Axes 1+2 (X+Y) of 2nd Joystick */
-		cjaxis  = AddJAxisButton(pos_x(XO + 4), pos_y(YO + 1), button_width, button_height, "X-", 1, 0, false, nullptr);
-		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 2), pos_y(YO + 1), button_width, button_height, "X+", 1, 0, true, cjaxis);
+		cjaxis  = AddJAxisButton(pos_x(XO + 4), pos_y(YO + 1) + y_offs, button_width, button_height, "X-", 1, 0, false, nullptr);
+		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 2), pos_y(YO + 1) + y_offs, button_width, button_height, "X+", 1, 0, true, cjaxis);
 		(void)tmp_ptr;
-		cjaxis  = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 0), button_width, button_height, "Y-", 1, 1, false, nullptr);
-		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 1), button_width, button_height, "Y+", 1, 1, true, cjaxis);
+		cjaxis  = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 0) + y_offs, button_width, button_height, "Y-", 1, 1, false, nullptr);
+		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 1) + y_offs, button_width, button_height, "Y+", 1, 1, true, cjaxis);
 		(void)tmp_ptr;
 		/* Axes 3+4 (X+Y) of 1st Joystick, not accessible */
 		cjaxis  = AddJAxisButton_hidden(0, 2, false, nullptr);
@@ -2213,18 +2216,18 @@ static void CreateLayout() {
 		(void)tmp_ptr;
 	} else {
 		/* Buttons 3+4 of 1st Joystick */
-		AddJButtonButton(pos_x(XO + 4), pos_y(YO), button_width, button_height, "3", 0, 2);
-		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO), button_width, button_height, "4", 0, 3);
+		AddJButtonButton(pos_x(XO + 4), pos_y(YO) + y_offs, button_width, button_height, "3", 0, 2);
+		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO) + y_offs, button_width, button_height, "4", 0, 3);
 		/* Buttons 1+2 of 2nd Joystick, not accessible */
 		AddJButtonButton_hidden(1, 0);
 		AddJButtonButton_hidden(1, 1);
 
 		/* Axes 3+4 (X+Y) of 1st Joystick */
-		cjaxis  = AddJAxisButton(pos_x(XO + 4), pos_y(YO + 1), button_width, button_height, "X-", 0, 2, false, nullptr);
-		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 2), pos_y(YO + 1), button_width, button_height, "X+", 0, 2, true, cjaxis);
+		cjaxis  = AddJAxisButton(pos_x(XO + 4), pos_y(YO + 1) + y_offs, button_width, button_height, "X-", 0, 2, false, nullptr);
+		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 2), pos_y(YO + 1) + y_offs, button_width, button_height, "X+", 0, 2, true, cjaxis);
 		(void)tmp_ptr;
-		cjaxis  = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 0), button_width, button_height, "Y-", 0, 3, false, nullptr);
-		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 1), button_width, button_height, "Y+", 0, 3, true, cjaxis);
+		cjaxis  = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 0) + y_offs, button_width, button_height, "Y-", 0, 3, false, nullptr);
+		tmp_ptr = AddJAxisButton(pos_x(XO + 4 + 1), pos_y(YO + 1) + y_offs, button_width, button_height, "Y+", 0, 3, true, cjaxis);
 		(void)tmp_ptr;
 		/* Axes 1+2 (X+Y) of 2nd Joystick , not accessible*/
 		cjaxis  = AddJAxisButton_hidden(1, 0, false, nullptr);
@@ -2237,8 +2240,8 @@ static void CreateLayout() {
 
 	if (joytype == JOY_CH) {
 		/* Buttons 5+6 of 1st Joystick */
-		AddJButtonButton(pos_x(XO + 8), pos_y(YO), button_width, button_height, "5", 0, 4);
-		AddJButtonButton(pos_x(XO + 8 + 2), pos_y(YO), button_width, button_height, "6", 0, 5);
+		AddJButtonButton(pos_x(XO + 8), pos_y(YO) + y_offs, button_width, button_height, "5", 0, 4);
+		AddJButtonButton(pos_x(XO + 8 + 2), pos_y(YO) + y_offs, button_width, button_height, "6", 0, 5);
 	} else {
 		/* Buttons 5+6 of 1st Joystick, not accessible */
 		AddJButtonButton_hidden(0, 4);
@@ -2246,37 +2249,37 @@ static void CreateLayout() {
 	}
 
 	/* Hat directions up, left, down, right */
-	AddJHatButton(pos_x(XO + 8 + 1), pos_y(YO), button_width, button_height, "UP", 0, 0, 0);
-	AddJHatButton(pos_x(XO + 8 + 0), pos_y(YO + 1), button_width, button_height, "LFT", 0, 0, 3);
-	AddJHatButton(pos_x(XO + 8 + 1), pos_y(YO + 1), button_width, button_height, "DWN", 0, 0, 2);
-	AddJHatButton(pos_x(XO + 8 + 2), pos_y(YO + 1), button_width, button_height, "RGT", 0, 0, 1);
+	AddJHatButton(pos_x(XO + 8 + 1), pos_y(YO) + y_offs, button_width, button_height, "UP", 0, 0, 0);
+	AddJHatButton(pos_x(XO + 8 + 0), pos_y(YO + 1) + y_offs, button_width, button_height, "LFT", 0, 0, 3);
+	AddJHatButton(pos_x(XO + 8 + 1), pos_y(YO + 1) + y_offs, button_width, button_height, "DWN", 0, 0, 2);
+	AddJHatButton(pos_x(XO + 8 + 2), pos_y(YO + 1) + y_offs, button_width, button_height, "RGT", 0, 0, 1);
 
 	/* Labels for the joystick */
 	CTextButton * btn;
 	if (joytype == JOY_2AXIS) {
-		new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Joystick 1");
-		new CTextButton(pos_x(XO + 4), pos_y(YO - 1), 3 * button_width, 20, "Joystick 2");
-		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1), 3 * button_width, 20, "Disabled");
+		new CTextButton(pos_x(XO + 0), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Joystick 1");
+		new CTextButton(pos_x(XO + 4), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Joystick 2");
+		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Disabled");
 		btn->SetColor(color_grey);
 	} else if(joytype == JOY_4AXIS || joytype == JOY_4AXIS_2) {
-		new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Axis 1/2");
-		new CTextButton(pos_x(XO + 4), pos_y(YO - 1), 3 * button_width, 20, "Axis 3/4");
-		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1), 3 * button_width, 20, "Disabled");
+		new CTextButton(pos_x(XO + 0), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 1/2");
+		new CTextButton(pos_x(XO + 4), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 3/4");
+		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Disabled");
 		btn->SetColor(color_grey);
 	} else if(joytype == JOY_CH) {
-		new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Axis 1/2");
-		new CTextButton(pos_x(XO + 4), pos_y(YO - 1), 3 * button_width, 20, "Axis 3/4");
-		new CTextButton(pos_x(XO + 8), pos_y(YO - 1), 3 * button_width, 20, "Hat/D-pad");
+		new CTextButton(pos_x(XO + 0), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 1/2");
+		new CTextButton(pos_x(XO + 4), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 3/4");
+		new CTextButton(pos_x(XO + 8), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Hat/D-pad");
 	} else if ( joytype == JOY_FCS) {
-		new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Axis 1/2");
-		new CTextButton(pos_x(XO + 4), pos_y(YO - 1), 3 * button_width, 20, "Axis 3");
-		new CTextButton(pos_x(XO + 8), pos_y(YO - 1), 3 * button_width, 20, "Hat/D-pad");
+		new CTextButton(pos_x(XO + 0), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 1/2");
+		new CTextButton(pos_x(XO + 4), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Axis 3");
+		new CTextButton(pos_x(XO + 8), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Hat/D-pad");
 	} else if (joytype == JOY_DISABLED) {
-		btn = new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Disabled");
+		btn = new CTextButton(pos_x(XO + 0), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Disabled");
 		btn->SetColor(color_grey);
-		btn = new CTextButton(pos_x(XO + 4), pos_y(YO - 1), 3 * button_width, 20, "Disabled");
+		btn = new CTextButton(pos_x(XO + 4), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Disabled");
 		btn->SetColor(color_grey);
-		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1), 3 * button_width, 20, "Disabled");
+		btn = new CTextButton(pos_x(XO + 8), pos_y(YO - 1) + y_offs, 3 * button_width, 20, "Disabled");
 		btn->SetColor(color_grey);
 	}
 
@@ -2288,7 +2291,7 @@ static void CreateLayout() {
 	/* Create Handler buttons */
 	int32_t xpos = 0;
 	int32_t ypos = 10;
-	constexpr auto bw = button_width + 5;
+	constexpr auto bw = button_width + 8;
 	for (const auto &handler_event : handlergroup) {
 		new CEventButton(200 + xpos * 3 * bw, pos_y(ypos), bw * 3, button_height,
 		                 handler_event->button_name.c_str(), handler_event);
@@ -2302,10 +2305,10 @@ static void CreateLayout() {
 //	new CTextButton(pos_x(6), 0, 124, 20, "Keyboard Layout");
 //	new CTextButton(pos_x(17), 0, 124, 20, "Joystick Layout");
 
-	bind_but.action = new CCaptionButton(0, 335, 0, 0);
+	bind_but.action = new CCaptionButton(0, 355, 0, 0);
 
-	bind_but.event_title=new CCaptionButton(0,350,0,0);
-	bind_but.bind_title=new CCaptionButton(0,365,0,0);
+	bind_but.event_title=new CCaptionButton(0,370,0,0);
+	bind_but.bind_title=new CCaptionButton(0,385,0,0);
 
 	/* Create binding support buttons */
 
@@ -2314,11 +2317,11 @@ static void CreateLayout() {
 	bind_but.mod3 = new CCheckButton(20, 454, 110, 20, "Mod3", BC_Mod3);
 	bind_but.hold = new CCheckButton(150, 410, 60, 20, "Hold", BC_Hold);
 
-	bind_but.add = new CBindButton(250, 380, 100, 20, "Add bind", BB_Add);
-	bind_but.del = new CBindButton(250, 400, 100, 20, "Remove bind", BB_Del);
-	bind_but.next = new CBindButton(250, 420, 100, 20, "Next bind", BB_Next);
+	bind_but.add = new CBindButton(250, 410, 100, 20, "Add bind", BB_Add);
+	bind_but.del = new CBindButton(250, 432, 100, 20, "Remove bind", BB_Del);
+	bind_but.next = new CBindButton(250, 454, 100, 20, "Next bind", BB_Next);
 
-	bind_but.exit=new CBindButton(450,450,50,20,"Exit",BB_Exit);
+	bind_but.exit=new CBindButton(450,454,50,20,"Exit",BB_Exit);
 
 	bind_but.bind_title->Change("Bind Title");
 }
@@ -3049,6 +3052,16 @@ void MAPPER_DisplayUI() {
 		if (renderer_driver_index == -1) {
 			E_Exit("MAPPER: OpenGL support in SDL renderer is unavailable but required for OpenGL output");
 		}
+
+		// Since our OpenGL renderer started requesting a version 3.3 context,
+		// the call to SDL_GL_MakeCurrent() when exiting the mapper started failing.
+		//
+		// This is a bit of hack (but so is a lot of this mapper code).
+		// Resetting attributes to default before creating the mapper's render fixes the problem.
+		//
+		// As far as I know, attributes are only evalutated before window and/or context creation
+		// so this should not affect our regular (non-mapper) OpenGL renderer.
+		SDL_GL_ResetAttributes();
 
 		constexpr uint32_t renderer_flags = 0;
 

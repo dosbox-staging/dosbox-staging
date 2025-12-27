@@ -35,18 +35,37 @@ void FPU_ESC6_EA(Bitu func,PhysPt ea);
 void FPU_ESC7_Normal(Bitu rm);
 void FPU_ESC7_EA(Bitu func,PhysPt ea);
 
-union FPU_Reg {
-	double d = 0.0;
-	struct {
-#ifndef WORDS_BIGENDIAN
-		uint32_t lower;
-		int32_t upper;
-#else
-		int32_t upper;
-		uint32_t lower;
-#endif
-	} l;
-	int64_t ll;
+#include <bit>
+#include <optional>
+
+struct FPU_Reg {
+	double d;
+
+	constexpr FPU_Reg() noexcept : d(0.0) {}
+	constexpr FPU_Reg(double v) noexcept : d(v) {}
+	constexpr explicit FPU_Reg(uint64_t bits) noexcept
+	        : d(std::bit_cast<double>(bits))
+	{}
+
+	constexpr uint64_t bits(void) const noexcept
+	{
+		return std::bit_cast<uint64_t>(d);
+	}
+	constexpr void set_bits(uint64_t val) noexcept
+	{
+		d = std::bit_cast<double>(val);
+	}
+
+	constexpr FPU_Reg& operator=(uint64_t val) noexcept
+	{
+		d = std::bit_cast<double>(val);
+		return *this;
+	}
+	constexpr FPU_Reg& operator=(double val) noexcept
+	{
+		d = val;
+		return *this;
+	}
 };
 
 struct FPU_P_Reg {
@@ -142,24 +161,24 @@ static inline void FPU_SET_TOP(const uint32_t val)
 void FPU_SetPRegsFrom(const uint8_t dyn_regs[8][10]);
 void FPU_GetPRegsTo(uint8_t dyn_regs[8][10]);
 
-static inline void FPU_SET_C0(Bitu C){
-	fpu.sw &= ~0x0100;
-	if(C) fpu.sw |=  0x0100;
+static inline void FPU_SET_C0(bool C)
+{
+	fpu.sw = (fpu.sw & ~0x0100u) | (C * 0x0100u);
 }
 
-static inline void FPU_SET_C1(Bitu C){
-	fpu.sw &= ~0x0200;
-	if(C) fpu.sw |=  0x0200;
+static inline void FPU_SET_C1(bool C)
+{
+	fpu.sw = (fpu.sw & ~0x0200u) | (C * 0x0200u);
 }
 
-static inline void FPU_SET_C2(Bitu C){
-	fpu.sw &= ~0x0400;
-	if(C) fpu.sw |=  0x0400;
+static inline void FPU_SET_C2(bool C)
+{
+	fpu.sw = (fpu.sw & ~0x0400u) | (C * 0x0400u);
 }
 
-static inline void FPU_SET_C3(Bitu C){
-	fpu.sw &= ~0x4000;
-	if(C) fpu.sw |= 0x4000;
+static inline void FPU_SET_C3(bool C)
+{
+	fpu.sw = (fpu.sw & ~0x4000u) | (C * 0x4000u);
 }
 
 static inline void FPU_LOG_WARN(unsigned tree, bool ea, uintptr_t group, uintptr_t sub)

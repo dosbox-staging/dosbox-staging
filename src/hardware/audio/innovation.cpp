@@ -286,19 +286,26 @@ static void init_innovation_config_settings(SectionProp& sec_prop)
 	auto* str_prop = sec_prop.AddString("sidmodel", when_idle, "none");
 	str_prop->SetValues({"auto", "6581", "8580", "none"});
 	str_prop->SetHelp(
-	        "Model of chip to emulate in the Innovation SSI-2001 card:\n"
+	        "Model of chip to emulate in the Innovation SSI-2001 card ('none' by default).\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  auto:  Use the 6581 chip.\n"
+	        "\n"
 	        "  6581:  The original chip, known for its bassy and rich character.\n"
+	        "\n"
 	        "  8580:  A later revision that more closely matched the SID specification.\n"
 	        "         It fixed the 6581's DC bias and is less prone to distortion.\n"
 	        "         The 8580 is an option on reproduction cards, like the DuoSID.\n"
+	        "\n"
 	        "  none:  Disable the card (default).");
 
 	// Chip clock frequency
 	str_prop = sec_prop.AddString("sidclock", when_idle, "default");
 	str_prop->SetValues({"default", "c64ntsc", "c64pal", "hardsid"});
 	str_prop->SetHelp(
-	        "The SID chip's clock frequency, which is jumperable on reproduction cards:\n"
+	        "The SID chip's clock frequency, which is jumperable on reproduction cards\n"
+	        "('default' by default). Possible values:\n"
+	        "\n"
 	        "  default:  0.895 MHz, per the original SSI-2001 card (default).\n"
 	        "  c64ntsc:  1.023 MHz, per NTSC Commodore PCs and the DuoSID.\n"
 	        "  c64pal:   0.985 MHz, per PAL Commodore PCs and the DuoSID.\n"
@@ -314,20 +321,20 @@ static void init_innovation_config_settings(SectionProp& sec_prop)
 	auto* int_prop = sec_prop.AddInt("6581filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
 	int_prop->SetHelp(
-	        "Adjusts the 6581's filtering strength as a percentage from 0 to 100\n"
-	        "(50 by default). The SID's analog filtering meant that each chip was\n"
-	        "physically unique.");
+	        "Adjusts the 6581's filtering strength as a percentage from 0 to 100 (50 by\n"
+	        "default). The SID's analog filtering meant that each chip was physically unique.");
 
 	int_prop = sec_prop.AddInt("8580filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
 	int_prop->SetHelp(
-	        "Adjusts the 8580's filtering strength as a percentage from 0 to 100\n"
-	        "(50 by default).");
+	        "Adjusts the 8580's filtering strength as a percentage from 0 to 100 (50 by\n"
+	        "default).");
 
 	str_prop = sec_prop.AddString("innovation_filter", when_idle, "off");
 	assert(str_prop);
 	str_prop->SetHelp(
-	        "Filter for the Innovation audio output:\n"
+	        "Filter for the Innovation audio output ('off' by default). Possible values:\n"
+	        "\n"
 	        "  off:       Don't filter the output (default).\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox.h"
@@ -41,7 +41,6 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "lazyflags.h"
-#include "misc/tracy.h"
 
 #define CACHE_MAXSIZE	(4096*2)
 #define CACHE_TOTAL		(1024*1024*8)
@@ -52,14 +51,10 @@
 #define DYN_PAGE_HASH	(4096>>DYN_HASH_SHIFT)
 #define DYN_LINKS		(16)
 
-
 //#define DYN_LOG 1 //Turn Logging on.
 
-
-#if C_FPU
-#define CPU_FPU 1                                               //Enable FPU escape instructions
-#endif
-
+// Enable FPU escape instructions
+#define CPU_FPU 1
 
 // the emulated x86 registers
 #define DRC_REG_EAX 0
@@ -220,7 +215,6 @@ CacheBlock *LinkBlocks(BlockReturn ret)
 
 Bits CPU_Core_Dynrec_Run() noexcept
 {
-	ZoneScoped;
 	for (;;) {
 		// Determine the linear address of CS:EIP
 		PhysPt ip_point=SegPhys(cs)+reg_eip;

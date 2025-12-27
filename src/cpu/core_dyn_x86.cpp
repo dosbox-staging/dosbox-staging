@@ -1,6 +1,5 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
-
 
 #include "dosbox.h"
 
@@ -33,7 +32,6 @@
 #include "fpu/fpu.h"
 #include "hardware/memory.h"
 #include "hardware/port.h"
-#include "misc/tracy.h"
 
 #define CACHE_MAXSIZE	(4096*3)
 #define CACHE_TOTAL		(1024*1024*8)
@@ -46,11 +44,10 @@
 
 //#define DYN_LOG 1 //Turn logging on
 
+// Enable FPU escape instructions
+#define CPU_FPU 1
 
-#if C_FPU
-#define CPU_FPU 1                                               //Enable FPU escape instructions
 #define X86_DYNFPU_DH_ENABLED
-#endif
 
 enum {
 	G_EAX,G_ECX,G_EDX,G_EBX,
@@ -119,7 +116,7 @@ struct DynReg {
 	Bitu flags;
 	GenReg * genreg;
 	void * data;
-}; 
+};
 
 enum DynAccess {
 	DA_d,DA_w,
@@ -299,8 +296,6 @@ auto sync_normal_fpu_and_run_dyn_code = gen_runcode;
 
 Bits CPU_Core_Dyn_X86_Run() noexcept
 {
-	ZoneScoped;
-
 #	if defined(X86_DYNFPU_DH_ENABLED)
 	// activates at each return point below (on scope closure)
 	HostFpuToDhCopier host_fpu_to_dh_copier;
@@ -338,7 +333,7 @@ restart_core:
 				goto restart_core;
 			}
 			CPU_CycleLeft+=old_cycles;
-			return nc_retcode; 
+			return nc_retcode;
 		}
 	}
 run_block:
@@ -374,7 +369,7 @@ run_block:
 		goto restart_core;
 	case BR_Cycles:
 #if C_DEBUGGER
-#if C_HEAVY_DEBUGGER			
+#if C_HEAVY_DEBUGGER
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif

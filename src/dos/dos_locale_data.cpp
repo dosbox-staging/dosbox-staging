@@ -605,8 +605,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "es", "sp" }, "Spanish (QWERTY)",
-		// Not sure if the layout is popular, low priority for now
-		AutodetectionPriority::Low,
+		// Not sure if the layout is popular, high priority for now
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwerty,
 	},
@@ -699,14 +699,16 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 		{ "hu" }, "Hungarian (101-key, QWERTY)",
 		// Priority approved by a native speaker
 		AutodetectionPriority::Low,
-		3845, // CWI-2 encoding
+		// Code page approved by a native speaker
+		852,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "hu208" }, "Hungarian (102-key, QWERTZ)",
 		// Priority approved by a native speaker
 		AutodetectionPriority::Low,
-		3845, // CWI-2 encoding
+		// Code page approved by a native speaker
+		852,
 		KeyboardScript::LatinQwertz,
 	},
 	{
@@ -817,8 +819,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "la" }, "Latin American (QWERTY)",
-		// Not sure if the layout is popular, low priority for now
-		AutodetectionPriority::Low,
+		// Not sure if the layout is popular, high priority for now
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwerty,
 	},
@@ -1018,8 +1020,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "po" }, "Portuguese (QWERTY)",
-		// Not sure if the layout is popular, low priority for now
-		AutodetectionPriority::Low,
+		// Not sure if the layout is popular, high priority for now
+		AutodetectionPriority::High,
 		860, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinQwerty,
 	},
@@ -1710,9 +1712,7 @@ const std::map<DosCountry, CountryInfoEntry> LocaleData::CountryInfo = {
 			// bg_BG
 			DosDateFormat::DayMonthYear, LocaleSeparator::Period,
 			DosTimeFormat::Time24H,      LocaleSeparator::Colon,
-			// TODO: Bulgaria is expected to switch currency to EUR
-                        // soon - adapt this when it happens
-			{ "лв.", "lv." }, "BGN", 2,
+			{ "€" }, "EUR", 2,
 			DosCurrencyFormat::AmountSpaceSymbol,
 			LocaleSeparator::Space,         // thousands separator
 			LocaleSeparator::Comma,         // decimal separator

@@ -460,27 +460,33 @@ static void init_mouse_config_settings(SectionProp& secprop)
 		OptionCaptureType::NoMouse
 	});
 	prop_str->SetHelp(
-	        "Set the mouse capture behaviour:\n"
+	        "Set the mouse capture behaviour ('onclick' by default). Possible values:\n"
+	        "\n"
 	        "  onclick:   Capture the mouse when clicking any mouse button in the window\n"
+	        "\n"
 	        "             (default).\n"
 	        "  onstart:   Capture the mouse immediately on start. Might not work correctly\n"
+	        "\n"
 	        "             on some host operating systems.\n"
 	        "  seamless:  Let the mouse move seamlessly between the DOSBox window and the\n"
 	        "             rest of the desktop; captures only with middle-click or hotkey.\n"
 	        "             Seamless mouse does not work correctly with all the games.\n"
 	        "             Windows 3.1x can be made compatible with a custom mouse driver.\n"
+	        "\n"
 	        "  nomouse:   Hide the mouse and don't send mouse input to the game.\n"
+	        "\n"
 	        "For touch-screen control, use 'seamless'.");
 
 	auto prop_bool = secprop.AddBool("mouse_middle_release", Always, true);
 	prop_bool->SetHelp(
-	        "Release the captured mouse by middle-clicking, and also capture it in\n"
-	        "seamless mode ('on' by default).");
+	        "Release the captured mouse by middle-clicking, and also capture it in seamless\n"
+	        "mode ('on' by default).");
 
 	prop_bool = secprop.AddBool("mouse_multi_display_aware", Always, true);
 	prop_bool->SetHelp(
 	        "Allow seamless mouse behavior and mouse pointer release to work in fullscreen\n"
 	        "mode on systems with more than one display ('on' by default).\n"
+	        "\n"
 	        "Note: You should disable this if it incorrectly detects multiple displays\n"
 	        "      when only one should actually be used. This might happen if you are\n"
 	        "      using mirrored display mode or using an AV receiver's HDMI input for\n"
@@ -490,10 +496,10 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	prop_str->SetHelp(
 	        "Global mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
 	        "(100 by default). Values can be separated by spaces, commas, or semicolons\n"
-	        "(i.e. 100,150). Negative values invert the axis, zero disables it.\n"
-	        "Providing only one value sets sensitivity for both axes.\n"
-	        "Sensitivity can be further fine-tuned per mouse interface using the internal\n"
-	        "MOUSECTL.COM tool available on the Z drive.");
+	        "(i.e. 100,150). Negative values invert the axis, zero disables it. Providing\n"
+	        "only one value sets sensitivity for both axes. Sensitivity can be further\n"
+	        "fine-tuned per mouse interface using the internal MOUSECTL.COM tool available\n"
+	        "on the Z drive.");
 
 	prop_bool = secprop.AddBool("mouse_raw_input", Always, true);
 	prop_bool->SetHelp(
@@ -517,27 +523,33 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "serial (COM) ports and communicates with the mouse directly. This results in\n"
 	        "lower input lag, smoother movement, and increased mouse responsiveness, so only\n"
 	        "disable it and load a real DOS mouse driver if it's really necessary (e.g., if a\n"
-	        "game is not compatible with the built-in driver).\n"
+	        "game is not compatible with the built-in driver). Possible values:\n"
+	        "\n"
 	        "  on:      Simulate a mouse driver TSR program loaded from AUTOEXEC.BAT\n"
 	        "           (default). This is the most compatible way to emulate the DOS mouse\n"
 	        "           driver, but if it doesn't work with your game, try the 'no-tsr'\n"
 	        "           setting.\n"
+	        "\n"
 	        "  no-tsr:  Enable the mouse driver without simulating the TSR program. Let us\n"
 	        "           know if it fixes any software not working with the 'on' setting.\n"
+	        "\n"
 	        "  off:     Disable the built-in mouse driver. You can still start it at runtime\n"
 	        "           by executing the bundled MOUSE.COM from drive Z.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - The `ps2_mouse_model` and `com_mouse_model` settings have no effect on the\n"
 	        "    built-in driver.\n"
+	        "\n"
 	        "  - The driver is auto-disabled if you boot into real MS-DOS or Windows 9x\n"
 	        "    under DOSBox. Under Windows 3.x, the driver is not disabled, but the\n"
 	        "    Windows 3.x mouse driver takes over.\n"
+	        "\n"
 	        "  - To use a real DOS mouse driver (e.g., MOUSE.COM or CTMOUSE.EXE), configure\n"
 	        "    the mouse type with `ps2_mouse_model` or `com_mouse_model`, then load the\n"
 	        "    driver.\n");
 
 	prop_bool = secprop.AddBool("dos_mouse_driver", Deprecated, true);
-	prop_bool->SetHelp("Renamed to 'builtin_dos_mouse_driver'.");
+	prop_bool->SetHelp("Renamed to [color=light-green]'builtin_dos_mouse_driver'[reset].");
 
 	prop_str = secprop.AddString("builtin_dos_mouse_driver_model",
 	                             Always,
@@ -550,12 +562,15 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	});
 	prop_str->SetHelp(
 	        "Set the mouse model to be simulated by the built-in DOS mouse driver ('2button'\n"
-	        "by default).\n"
+	        "by default). Possible values:\n"
+	        "\n"
 	        "  2button:  2 buttons, the safest option for most games. The majority of DOS\n"
 	        "            games onoly support 2 buttons, some might misbehave if the middle\n"
 	        "            button is pressed.\n"
+	        "\n"
 	        "  3button:  3 buttons, only supported by very few DOS games. Only use this if\n"
 	        "            the game is known to support a 3-button mouse.\n"
+	        "\n"
 	        "  wheel:    3 buttons + wheel, supports the CuteMouse WheelAPI version 1.0.\n"
 	        "            No DOS game uses the mouse wheel, only a handful of DOS applications\n"
 	        "            and Windows 3.x with special third-party drivers.");
@@ -566,7 +581,8 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	assert(prop_str);
 	prop_str->SetHelp(
 	        "Additional built-in DOS mouse driver settings as a list of space or comma\n"
-	        "separated options (unset by default).\n"
+	        "separated options (unset by default). Possible values:\n"
+	        "\n"
 	        "  immediate:  Update mouse movement counters immediately, without waiting for\n"
 	        "              interrupt. May improve mouse latency in fast-paced games (arcade,\n"
 	        "              FPS, etc.), but might cause issues in some titles.\n"
@@ -574,13 +590,14 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "                - Ultima Underworld: The Stygian Abyss\n"
 	        "                - Ultima Underworld II: Labyrinth of Worlds\n"
 	        "              Please report other incompatible games so we can update this list.\n"
+	        "\n"
 	        "  modern:     If provided, v7.0+ Microsoft mouse driver behaviour is emulated,\n"
 	        "              otherwise the v6.0 and earlier behaviour (the two are slightly\n"
 	        "              incompatible). Only Descent II with the official Voodoo patch has\n"
 	        "              been found to require the v7.0+ behaviour so far.");
 
 	prop_bool = secprop.AddBool("dos_mouse_immediate", Deprecated, false);
-	prop_bool->SetHelp("Configure using 'builtin_dos_mouse_driver_options'.");
+	prop_bool->SetHelp("Configure using [color=light-green]'builtin_dos_mouse_driver_options'[reset].");
 
 	// Physical mice configuration
 
@@ -597,8 +614,10 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	});
 	prop_str->SetHelp(
 	        "Set the PS/2 AUX port mouse model, or in other words, the type of the virtual\n"
-	        "mouse plugged into the emulated PS/2 mouse port ('explorer' by default).\n"
-	        "The setting has no effect on the built-in mouse driver (see 'dos_mouse_driver').\n"
+	        "mouse plugged into the emulated PS/2 mouse port ('explorer' by default). The\n"
+	        "setting has no effect on the built-in mouse driver (see 'dos_mouse_driver').\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  standard:      3 buttons, standard PS/2 mouse.\n"
 	        "  intellimouse:  3 buttons + wheel, Microsoft IntelliMouse.\n"
 	        "  explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer (default).\n"
@@ -621,30 +640,39 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "Set the default COM (serial) mouse model, or in other words, the type of the\n"
 	        "virtual mouse plugged into the emulated COM ports ('wheel+msm' by default).\n"
 	        "The setting has no effect on the built-in mouse driver (see 'dos_mouse_driver').\n"
+	        "Possible values:\n"
+	        "\n"
 	        "  2button:      2 buttons, Microsoft mouse.\n"
+	        "\n"
 	        "  3button:      3 buttons, Logitech mouse;\n"
 	        "                mostly compatible with Microsoft mouse.\n"
+	        "\n"
 	        "  wheel:        3 buttons + wheel;\n"
 	        "                mostly compatible with Microsoft mouse.\n"
+	        "\n"
 	        "  msm:          3 buttons, Mouse Systems mouse;\n"
 	        "                NOT compatible with Microsoft mouse.\n"
+	        "\n"
 	        "  2button+msm:  Automatic choice between '2button' and 'msm'.\n"
+	        "\n"
 	        "  3button+msm:  Automatic choice between '3button' and 'msm'.\n"
+	        "\n"
 	        "  wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).\n"
+	        "\n"
 	        "Note: Enable COM port mice in the [serial] section.");
 
 	// VMM interfaces
 
 	prop_bool = secprop.AddBool("vmware_mouse", OnlyAtStart, true);
 	prop_bool->SetHelp(
-	        "VMware mouse interface ('on' by default).\n"
-	        "Fully compatible only with 3rd party Windows 3.1x driver.\n"
+	        "VMware mouse interface ('on' by default). Fully compatible only with 3rd party\n"
+	        "Windows 3.1x driver.\n"
 	        "Note: Requires PS/2 mouse to be enabled.");
 
 	prop_bool = secprop.AddBool("virtualbox_mouse", OnlyAtStart, true);
 	prop_bool->SetHelp(
-	        "VirtualBox mouse interface ('on' by default).\n"
-	        "Fully compatible only with 3rd party Windows 3.1x driver.\n"
+	        "VirtualBox mouse interface ('on' by default). Fully compatible only with 3rd\n"
+	        "party Windows 3.1x driver.\n"
 	        "Note: Requires PS/2 mouse to be enabled.");
 }
 
