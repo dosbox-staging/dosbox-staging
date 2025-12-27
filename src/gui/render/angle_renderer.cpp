@@ -92,6 +92,20 @@ bool AngleRenderer::InitRenderer()
 
     EGLNativeWindowType native_window =
         (EGLNativeWindowType)wmInfo.info.win.window;
+#elif defined(SDL_VIDEO_DRIVER_X11) || defined(SDL_VIDEO_DRIVER_WAYLAND)
+
+    SDL_SysWMinfo wmInfo;
+    SDL_VERSION(&wmInfo.version);
+    SDL_GetWindowWMInfo(window, &wmInfo);
+
+#if defined(SDL_VIDEO_DRIVER_X11)
+    EGLNativeWindowType native_window =
+        (EGLNativeWindowType)wmInfo.info.x11.window;
+
+#elif defined(SDL_VIDEO_DRIVER_WAYLAND)
+    EGLNativeWindowType native_window =
+        (EGLNativeWindowType)wmInfo.info.wl.egl_window;
+#endif
 #else
 #error Unsupported platform
 #endif

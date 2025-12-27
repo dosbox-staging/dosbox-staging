@@ -3,11 +3,17 @@ if (APPLE)
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_library(libglad STATIC debug/src/gl.c debug/src/gles2.c)
+  if (C_ANGLE)
+  add_library(libglad STATIC debug/src/gles2.c)
+  else()
+  add_library(libglad STATIC debug/src/gl.c)
+  endif()
   target_include_directories(libglad PUBLIC debug/include)
-
 else() # Release
-  add_library(libglad STATIC release/src/gl.c release/src/gles2.c)
+  if (C_ANGLE)
+  add_library(libglad STATIC release/src/gles2.c)
+  else()
+  add_library(libglad STATIC release/src/gl.c)
+  endif()
   target_include_directories(libglad PUBLIC release/include)
-
 endif()
