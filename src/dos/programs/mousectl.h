@@ -22,9 +22,9 @@ public:
 
 private:
 	bool ParseAndRun();
-	bool ParseInterfaces(std::vector<std::string> &params);
-	bool ParseSensitivity(const std::string &param, int16_t &value);
-	static bool ParseIntParam(const std::string &param, int &value);
+	bool ParseInterfaces(std::vector<std::string>& params);
+	bool ParseSensitivity(const std::string& param, int16_t& value);
+	static bool ParseIntParam(const std::string& param, int& value);
 	bool CheckInterfaces();
 	bool CheckMappingSupported();
 	bool CheckMappingPossible();
@@ -36,18 +36,18 @@ private:
 	// they return 'true' if DOS error code should indicate success,
 	// and 'false' if we should report a failure
 	bool CmdShow(const bool show_all);
-	bool CmdMap(const MouseInterfaceId interface_id, const std::string &pattern);
+	bool CmdMap(const MouseInterfaceId interface_id, const std::string& pattern);
 	bool CmdMap();
 	bool CmdUnMap();
 	bool CmdOnOff(const bool enable);
 	bool CmdReset();
-	bool CmdSensitivity(const std::string &param_x, const std::string &param_y);
-	bool CmdSensitivityX(const std::string &param);
-	bool CmdSensitivityY(const std::string &param);
+	bool CmdSensitivity(const std::string& param_x, const std::string& param_y);
+	bool CmdSensitivityX(const std::string& param);
+	bool CmdSensitivityY(const std::string& param);
 	bool CmdSensitivity();
 	bool CmdSensitivityX();
 	bool CmdSensitivityY();
-	bool CmdMinRate(const std::string &param);
+	bool CmdMinRate(const std::string& param);
 	bool CmdMinRate();
 
 	static void AddMessages();

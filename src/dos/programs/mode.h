@@ -9,9 +9,6 @@
 
 #include <string>
 
-
-enum class FontWidth;
-
 class MODE final : public Program {
 public:
 	MODE()
@@ -25,8 +22,10 @@ public:
 	void Run() override;
 
 private:
-	void HandleSetDisplayMode(const std::string& command);
 	bool HandleSetTypematicRate();
+
+	void HandleSetDisplayMode();
+	void SetDisplayMode(const std::string& mode_str);
 
 	static void AddMessages();
 };
