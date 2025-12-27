@@ -1699,9 +1699,9 @@ static void set_sdl_hints()
 #endif
 #endif
 
-#if defined(C_ANGLE)
-    SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
-#endif
+// #if defined(C_ANGLE)
+//     SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
+// #endif
 
 #if defined(WIN32)
 	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
