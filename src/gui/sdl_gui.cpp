@@ -25,7 +25,12 @@
 #include "cpu/cpu.h"
 #include "dosbox.h"
 #include "gui/mapper.h"
+#if C_OPENGL
 #include "gui/render/opengl_renderer.h"
+#endif
+#if C_ANGLE
+#include "gui/render/angle_renderer.h"
+#endif
 #include "gui/render/sdl_renderer.h"
 #include "gui/titlebar.h"
 #include "hardware/input/keyboard.h"
@@ -261,6 +266,8 @@ static void configure_renderer()
 {
 	const std::string output = get_sdl_section()->GetString("output");
 
+	LOG_INFO("SDL: Configuring output mode '%s'", output.c_str());
+
 	if (output == "texture") {
 		sdl.render_backend_type = RenderBackendType::Sdl;
 		sdl.texture_filter_mode = TextureFilterMode::Bilinear;
@@ -272,6 +279,11 @@ static void configure_renderer()
 #if C_OPENGL
 	} else if (output == "opengl") {
 		sdl.render_backend_type = RenderBackendType::OpenGl;
+#endif
+
+#if C_ANGLE
+	} else if (true) {
+		sdl.render_backend_type = RenderBackendType::Angle;
 #endif
 
 	} else {
@@ -1541,7 +1553,34 @@ static RenderBackend* create_renderer()
 	}
 #endif
 
-	if (sdl.render_backend_type == RenderBackendType::Sdl) {
+#if C_ANGLE
+	if (sdl.render_backend_type == RenderBackendType::Angle) {
+		try {
+			return new AngleRenderer(sdl.windowed.x_pos,
+			                          sdl.windowed.y_pos,
+			                          sdl.windowed.width,
+			                          sdl.windowed.height,
+			                          get_sdl_window_flags());
+
+		} catch (const std::runtime_error& ex) {
+			LOG_WARNING(
+			        "ANGLE: Error initialising ANGLE renderer, "
+			        "falling back to SDL renderer");
+
+			// GL attributes are global and can affect SDL's texture
+			// renderer as it can use OpenGL internally as a
+			// backend. This is done in OpenGlRenderer's destructor
+			// but we caught an exception during construction so the
+			// destructor will not be run here.
+			SDL_GL_ResetAttributes();
+
+			sdl.render_backend_type = RenderBackendType::Sdl;
+			set_section_property_value("sdl", "output", "texture");
+		}
+	}
+#endif
+
+if (sdl.render_backend_type == RenderBackendType::Sdl) {
 		try {
 			std::string render_driver = get_sdl_section()->GetString(
 			        "texture_renderer");
@@ -1658,6 +1697,10 @@ static void set_sdl_hints()
 	set_env_var("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, Overwrite);
 	set_env_var("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, Overwrite);
 #endif
+#endif
+
+#if defined(C_ANGLE)
+    SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
 #endif
 
 #if defined(WIN32)
@@ -2550,15 +2593,17 @@ static void init_sdl_config_settings(SectionProp& section)
 
 #if C_OPENGL
 	const std::string default_output = "opengl";
+#elif C_ANGLE
+	const std::string default_output = "angle";
 #else
 	const std::string default_output = "texture";
 #endif
 	auto pstring = section.AddString("output", OnlyAtStart, default_output.c_str());
 
 	pstring->SetOptionHelp(
-	        "opengl_default",
-	        "Rendering backend to use for graphics output ('opengl' by default). Only the\n"
-	        "'opengl' backend has shader support and is thus the preferred option. The\n"
+	        "angle_default",
+	        "Rendering backend to use for graphics output ('angle' by default). Only the\n"
+	        "'angle' and 'opengl' backend have shader support. The\n"
 	        "'texture' backend is only provided as a last resort fallback if OpenGL is not\n"
 	        "available or the OpenGL driver is not Core Profile 3.3 compliant. Possible\n"
 	        "values:\n");
@@ -2566,8 +2611,10 @@ static void init_sdl_config_settings(SectionProp& section)
 	pstring->SetOptionHelp("texture_default",
 	                       "Rendering backend to use for graphics output ('texture' by default).");
 
+	pstring->SetOptionHelp("angle",
+	                       "  angle:      ANGLE backend with shader support (default).");
 	pstring->SetOptionHelp("opengl",
-	                       "  opengl:     OpenGL backend with shader support (default).");
+	                       "  opengl:     OpenGL backend with shader support.");
 	pstring->SetOptionHelp("texture",
 	                       "  texture:    SDL's texture backend with bilinear interpolation.");
 	pstring->SetOptionHelp("texturenb",
@@ -2585,6 +2632,8 @@ static void init_sdl_config_settings(SectionProp& section)
 	pstring->SetValues({
 #if C_OPENGL
 	        "opengl",
+#elif C_ANGLE
+	        "angle",
 #endif
 	        "texture",
 	        "texturenb",
@@ -2593,6 +2642,9 @@ static void init_sdl_config_settings(SectionProp& section)
 #if C_OPENGL
 	        "opengl_default",
 	        "opengl",
+#elif C_ANGLE
+	        "angle_default",
+	        "angle",
 #else
 	        "texture_default",
 #endif

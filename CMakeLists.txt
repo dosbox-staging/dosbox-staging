@@ -266,9 +266,14 @@ endif()
 
 set(C_PER_PAGE_W_OR_X ON)
 
-option(OPT_OPENGL "Enable OpenGL render backend" ON)
+option(OPT_OPENGL "Enable OpenGL render backend" OFF)
 if (OPT_OPENGL)
   set(C_OPENGL ON)
+endif()
+
+option(OPT_ANGLE "Enable ANGLE render backend" ON)
+if (OPT_ANGLE)
+  set(C_ANGLE ON)
 endif()
 
 option(OPT_MT32EMU "Enable Roland MT-32 emulation support" ON)
@@ -391,6 +396,7 @@ find_package(SDL2_image CONFIG REQUIRED)
 find_package(SDL2_net REQUIRED)
 find_package(iir REQUIRED)
 find_package(PNG REQUIRED)
+find_package(unofficial-angle CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(MT32Emu REQUIRED)
 find_package(FluidSynth REQUIRED CONFIG)
