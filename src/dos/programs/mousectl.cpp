@@ -33,81 +33,94 @@ bool MOUSECTL::ParseAndRun()
 	list_ids.clear();
 	if (!ParseInterfaces(params) || !CheckInterfaces()) {
 		return false;
-        }
+	}
 
-	auto param_equal = [&params](const size_t idx, const char *string) {
+	auto param_equal = [&params](const size_t idx, const char* string) {
 		if (idx >= params.size()) {
 			return false;
-                }
+		}
 		return iequals(params[idx], string);
 	};
 
 	// CmdShow
 	if (list_ids.empty() && params.empty()) {
 		return CmdShow(false);
-        }
+	}
 	if (list_ids.empty() && params.size() == 1) {
 		if (param_equal(0, "-all")) {
 			return CmdShow(true);
-                }
-        }
+		}
+	}
 
 	// CmdMap - by supplied host mouse name
 	if (list_ids.size() == 1 && params.size() == 2) {
 		if (param_equal(0, "-map")) {
 			return CmdMap(list_ids[0], params[1]);
-                }
-        }
+		}
+	}
 
 	// CmdMap - interactive
 	if (!list_ids.empty() && params.size() == 1) {
 		if (param_equal(0, "-map")) {
 			return CmdMap();
-                }
-        }
+		}
+	}
 
 	// CmdUnmap / CmdOnOff / CmdReset / CmdSensitivity / CmdMinRate
 	if (params.size() == 1) {
-		if (param_equal(0, "-unmap"))
+		if (param_equal(0, "-unmap")) {
 			return CmdUnMap();
-		if (param_equal(0, "-on"))
+		}
+		if (param_equal(0, "-on")) {
 			return CmdOnOff(true);
-		if (param_equal(0, "-off"))
+		}
+		if (param_equal(0, "-off")) {
 			return CmdOnOff(false);
-		if (param_equal(0, "-reset"))
+		}
+		if (param_equal(0, "-reset")) {
 			return CmdReset();
-		if (param_equal(0, "-s"))
+		}
+		if (param_equal(0, "-s")) {
 			return CmdSensitivity();
-		if (param_equal(0, "-sx"))
+		}
+		if (param_equal(0, "-sx")) {
 			return CmdSensitivityX();
-		if (param_equal(0, "-sy"))
+		}
+		if (param_equal(0, "-sy")) {
 			return CmdSensitivityY();
-		if (param_equal(0, "-r"))
+		}
+		if (param_equal(0, "-r")) {
 			return CmdMinRate();
+		}
 	}
 
 	// CmdSensitivity / CmdMinRate with a non-default value
 	if (params.size() == 2) {
-		if (param_equal(0, "-r"))
+		if (param_equal(0, "-r")) {
 			return CmdMinRate(params[1]);
+		}
 
-		if (param_equal(0, "-s"))
+		if (param_equal(0, "-s")) {
 			return CmdSensitivity(params[1], params[1]);
-		if (param_equal(0, "-sx"))
+		}
+		if (param_equal(0, "-sx")) {
 			return CmdSensitivityX(params[1]);
-		if (param_equal(0, "-sy"))
+		}
+		if (param_equal(0, "-sy")) {
 			return CmdSensitivityY(params[1]);
+		}
 	}
 	if (params.size() == 3) {
-		if (param_equal(0, "-s"))
+		if (param_equal(0, "-s")) {
 			return CmdSensitivity(params[1], params[2]);
+		}
 	}
 
 	WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 	return false;
 }
 
-bool MOUSECTL::ParseSensitivity(const std::string &param, int16_t &value)
+bool MOUSECTL::ParseSensitivity(const std::string& param, int16_t& value)
 {
 	value = 0;
 
@@ -128,7 +141,7 @@ bool MOUSECTL::ParseSensitivity(const std::string &param, int16_t &value)
 	return true;
 }
 
-bool MOUSECTL::ParseIntParam(const std::string &param, int &value)
+bool MOUSECTL::ParseIntParam(const std::string& param, int& value)
 {
 	try {
 		value = std::stoi(param);
@@ -140,9 +153,9 @@ bool MOUSECTL::ParseIntParam(const std::string &param, int &value)
 	return true;
 }
 
-bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params)
+bool MOUSECTL::ParseInterfaces(std::vector<std::string>& params)
 {
-	auto add_if_is_interface = [&](const std::string &param) {
+	auto add_if_is_interface = [&](const std::string& param) {
 		for (const auto id : {
 		             MouseInterfaceId::DOS,
 		             MouseInterfaceId::PS2,
@@ -163,8 +176,9 @@ bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params)
 		}
 		return false;
 	};
-	while (!params.empty() && add_if_is_interface(params.front()))
+	while (!params.empty() && add_if_is_interface(params.front())) {
 		params.erase(params.begin()); // pop
+	}
 
 	// Check that all interfaces are unique
 	const std::set<MouseInterfaceId> tmp(list_ids.begin(), list_ids.end());
@@ -178,13 +192,15 @@ bool MOUSECTL::ParseInterfaces(std::vector<std::string> &params)
 
 bool MOUSECTL::CheckInterfaces()
 {
-	if (MouseControlAPI::CheckInterfaces(list_ids))
+	if (MouseControlAPI::CheckInterfaces(list_ids)) {
 		return true;
+	}
 
-	if (list_ids.empty())
+	if (list_ids.empty()) {
 		WriteOut(MSG_Get("PROGRAM_MOUSECTL_NO_INTERFACES"));
-	else
+	} else {
 		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MISSING_INTERFACES"));
+	}
 
 	return false;
 }
@@ -223,21 +239,24 @@ bool MOUSECTL::CmdShow(const bool show_all)
 	WriteOut("\n");
 	WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_HEADER1"));
 	WriteOut("\n");
-	for (const auto &entry : info_interfaces) {
-		if (!entry.IsEmulated())
+	for (const auto& entry : info_interfaces) {
+		if (!entry.IsEmulated()) {
 			continue;
+		}
 		const auto interface_id  = entry.GetInterfaceId();
 		const auto rate_hz       = entry.GetRate();
 		const bool rate_enforced = entry.GetMinRate();
 
-		if (rate_enforced)
+		if (rate_enforced) {
 			hint_rate_min = true;
+		}
 
 		if (interface_id == MouseInterfaceId::COM1 ||
 		    interface_id == MouseInterfaceId::COM2 ||
 		    interface_id == MouseInterfaceId::COM3 ||
-		    interface_id == MouseInterfaceId::COM4)
+		    interface_id == MouseInterfaceId::COM4) {
 			hint_rate_com = true;
+		}
 
 		WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_LAYOUT1"),
 		         MouseControlAPI::GetInterfaceNameStr(interface_id).c_str(),
@@ -249,8 +268,9 @@ bool MOUSECTL::CmdShow(const bool show_all)
 		                 .c_str());
 		WriteOut("\n");
 
-		if (entry.GetMapStatus() == MouseMapStatus::Mapped)
+		if (entry.GetMapStatus() == MouseMapStatus::Mapped) {
 			show_mapped = true;
+		}
 	}
 	WriteOut("\n");
 
@@ -269,12 +289,12 @@ bool MOUSECTL::CmdShow(const bool show_all)
 
 	if (!show_all && !show_mapped) {
 		return true;
-        }
+	}
 
 	if (!CheckMappingSupported()) {
-                WriteOut("\n");
-                return true;
-        }
+		WriteOut("\n");
+		return true;
+	}
 
 	const auto info_physical = mouse_config_api.GetInfoPhysical();
 	if (info_physical.empty()) {
@@ -285,15 +305,16 @@ bool MOUSECTL::CmdShow(const bool show_all)
 
 	if (hint) {
 		WriteOut("\n");
-        }
+	}
 	WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_HEADER2"));
 	WriteOut("\n");
 
 	// Display physical mice mapped to some interface
 	bool needs_newline = false;
-	for (const auto &entry : info_interfaces) {
-		if (!entry.IsMapped() || entry.IsMappedDeviceDisconnected())
+	for (const auto& entry : info_interfaces) {
+		if (!entry.IsMapped() || entry.IsMappedDeviceDisconnected()) {
 			continue;
+		}
 		WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_LAYOUT2"),
 		         MouseControlAPI::GetInterfaceNameStr(entry.GetInterfaceId())
 		                 .c_str(),
@@ -303,16 +324,17 @@ bool MOUSECTL::CmdShow(const bool show_all)
 	}
 
 	if (!show_all) {
-		if (needs_newline)
+		if (needs_newline) {
 			WriteOut("\n");
+		}
 		return true;
 	}
 
-
 	// Display physical mice not mapped to any interface
-	for (const auto &entry : info_physical) {
-		if (entry.IsMapped() || entry.IsDeviceDisconnected())
+	for (const auto& entry : info_physical) {
+		if (entry.IsMapped() || entry.IsDeviceDisconnected()) {
 			continue;
+		}
 		WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED"),
 		         entry.GetDeviceName().c_str());
 		WriteOut("\n");
@@ -331,19 +353,16 @@ void MOUSECTL::FinalizeMapping()
 
 bool MOUSECTL::CheckMappingSupported()
 {
-        switch (MouseControlAPI::IsMappingSupported()) {
-                case MouseControlAPI::MappingSupport::Supported:
-                        return true;
-                case MouseControlAPI::MappingSupport::NotCompiledIn:
-                        WriteOut(MSG_Get("PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT"));
-                        return false;
-                case MouseControlAPI::MappingSupport::NotAvailableRawInput:
-                        WriteOut(MSG_Get("PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT"));
-                        return false;
-                default:
-                        assert(false);
-                        return false;
-        }
+	switch (MouseControlAPI::IsMappingSupported()) {
+	case MouseControlAPI::MappingSupport::Supported: return true;
+	case MouseControlAPI::MappingSupport::NotCompiledIn:
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT"));
+		return false;
+	case MouseControlAPI::MappingSupport::NotAvailableRawInput:
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT"));
+		return false;
+	default: assert(false); return false;
+	}
 }
 
 bool MOUSECTL::CheckMappingPossible()
@@ -361,7 +380,7 @@ bool MOUSECTL::CheckMappingPossible()
 	return true;
 }
 
-bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string &pattern)
+bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string& pattern)
 {
 	std::regex regex;
 	if (!MouseControlAPI::PatternToRegex(pattern, regex)) {
@@ -408,7 +427,7 @@ bool MOUSECTL::CmdMap()
 	WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAP_ADVICE"));
 	WriteOut("\n\n");
 
-	for (const auto &interface_id : list_ids) {
+	for (const auto& interface_id : list_ids) {
 		WriteOut(convert_ansi_markup("[color=light-cyan]%-4s[reset]   ?"),
 		         MouseControlAPI::GetInterfaceNameStr(interface_id).c_str());
 
@@ -451,34 +470,38 @@ bool MOUSECTL::CmdReset()
 	return true;
 }
 
-bool MOUSECTL::CmdSensitivity(const std::string &param_x, const std::string &param_y)
+bool MOUSECTL::CmdSensitivity(const std::string& param_x, const std::string& param_y)
 {
 	int16_t value_x = 0;
 	int16_t value_y = 0;
-	if (!ParseSensitivity(param_x, value_x) || !ParseSensitivity(param_y, value_y))
+	if (!ParseSensitivity(param_x, value_x) ||
+	    !ParseSensitivity(param_y, value_y)) {
 		return false;
+	}
 
 	MouseControlAPI mouse_config_api;
 	mouse_config_api.SetSensitivity(list_ids, value_x, value_y);
 	return true;
 }
 
-bool MOUSECTL::CmdSensitivityX(const std::string &param)
+bool MOUSECTL::CmdSensitivityX(const std::string& param)
 {
 	int16_t value = 0;
-	if (!ParseSensitivity(param, value))
+	if (!ParseSensitivity(param, value)) {
 		return false;
+	}
 
 	MouseControlAPI mouse_config_api;
 	mouse_config_api.SetSensitivityX(list_ids, value);
 	return true;
 }
 
-bool MOUSECTL::CmdSensitivityY(const std::string &param)
+bool MOUSECTL::CmdSensitivityY(const std::string& param)
 {
 	int16_t value = 0;
-	if (!ParseSensitivity(param, value))
+	if (!ParseSensitivity(param, value)) {
 		return false;
+	}
 
 	MouseControlAPI mouse_config_api;
 	mouse_config_api.SetSensitivityY(list_ids, value);
@@ -506,10 +529,10 @@ bool MOUSECTL::CmdSensitivityY()
 	return true;
 }
 
-bool MOUSECTL::CmdMinRate(const std::string &param)
+bool MOUSECTL::CmdMinRate(const std::string& param)
 {
-	const auto &valid_list = MouseControlAPI::GetValidMinRateList();
-	const auto &valid_str  = MouseControlAPI::GetValidMinRateStr();
+	const auto& valid_list = MouseControlAPI::GetValidMinRateList();
+	const auto& valid_str  = MouseControlAPI::GetValidMinRateStr();
 
 	int tmp = 0;
 	if (!ParseIntParam(param, tmp)) {
@@ -577,51 +600,63 @@ void MOUSECTL::AddMessages()
 
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_PATTERN",
 	        "Incorrect syntax, only ASCII characters allowed in pattern.\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY",
 	        "Incorrect syntax, sensitivity needs to be in -999 to +999 range.\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_DUPLICATED",
 	        "Incorrect syntax, duplicated mouse interfaces.\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_MIN_RATE",
 	        "Incorrect syntax, sampling rate has to be one of:\n%s\n");
 
 	MSG_Add("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE",
 	        "Mapping not available in no-mouse mode.\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER",
 	        "Mapping not possible with current guest mouse driver.\n");
 
 	MSG_Add("PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT",
 	        "Individual physical mice not supported in this build.\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT",
 	        "Individual physical mice not supported if 'mouse_raw_input' is enabled.\n");
 
-        MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES",
-	        "No mouse interfaces available.\n");
+	MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES", "No mouse interfaces available.\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_MISSING_INTERFACES",
 	        "Mouse interface not available.\n");
-	MSG_Add("PROGRAM_MOUSECTL_NO_PHYSICAL_MICE",
-	        "No physical mice detected.\n");
+
+	MSG_Add("PROGRAM_MOUSECTL_NO_PHYSICAL_MICE", "No physical mice detected.\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_NO_MATCH",
 	        "No available mouse found matching the pattern.\n");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HEADER1",
 	        "[color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT1",
 	        "[color=light-cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HEADER2",
 	        "[color=white]Interface     Mouse Name[reset]");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT2",
 	        "[color=light-cyan]%-4s[reset]          %s");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED", "not mapped    %s");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_HOST", "uses system pointer");
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED", "mapped physical mouse");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED",
 	        "[color=light-red]mapped mouse disconnected[reset]");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED", "disabled");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM",
 	        "Sampling rates for mice on [color=light-cyan]COM[reset] interfaces are estimations only.");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN",
 	        "Sampling rates with minimum value set are marked with '*'.");
 
@@ -629,7 +664,9 @@ void MOUSECTL::AddMessages()
 	        "Click [color=white]left[reset] mouse button to map the physical mouse to the interface. Clicking\n"
 	        "any other button cancels the mapping and assigns system pointer to all the\n"
 	        "mouse interfaces.");
+
 	MSG_Add("PROGRAM_MOUSECTL_MAP_CANCEL", "(mapping cancelled)");
+
 	MSG_Add("PROGRAM_MOUSECTL_MAP_HINT",
 	        "Seamless mouse integration is always disabled while mapping is in effect\n"
 	        "and mapped mice always receive raw input events.");
