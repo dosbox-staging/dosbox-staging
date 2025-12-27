@@ -1899,6 +1899,8 @@ void GFX_InitAndStartGui()
 	    sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
 		enter_fullscreen();
 	}
+
+	RENDER_Init();
 }
 
 static void notify_sdl_setting_updated(SectionProp& section,
@@ -2204,7 +2206,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 			// Needed for aspect & viewport mode combinations where
 			// the pixel aspect ratio or viewport size is sized
 			// relatively to the window size.
-			VGA_SetupDrawing(0);
+			GFX_ResetScreen();
 
 			last_width  = width;
 			last_height = height;

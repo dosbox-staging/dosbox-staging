@@ -39,7 +39,7 @@ void main()
 	float dx = (1.0/rubyTextureSize.x);
 	float dy = (1.0/rubyTextureSize.y);
 
-	vec2 TexCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 *
+	vec2 TexCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
 	                rubyInputSize / rubyTextureSize;
 
 	v_texCoord     = TexCoord;
