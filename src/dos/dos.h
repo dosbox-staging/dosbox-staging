@@ -71,6 +71,18 @@ enum class DosReturnMode : uint8_t {
 	TerminateAndStayResident = 3
 };
 
+enum MediaId : uint8_t {
+	Floppy1_44MB = 0xF0,
+	Floppy720KB  = 0xF9,
+	Floppy360KB  = 0xFD,
+	Floppy320KB  = 0xFF,
+	Floppy1_2MB  = 0xF5,
+	Floppy2_88MB = 0xE5,
+	Floppy180KB  = 0xFC,
+	Floppy160KB  = 0xFE,
+	HardDisk     = 0xF8
+};
+
 enum class DiskType { Floppy, HardDisk, CdRom };
 
 #define DOS_FILES   255
