@@ -2725,27 +2725,34 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 	                  "reloadshader",
 	                  "Reload Shader");
 
+#ifdef MACOSX
+	constexpr auto ImageAdjustmentModKeys = MMOD2 | MMOD3;
+#else
+	// Windows & Linux
+	constexpr auto ImageAdjustmentModKeys = MMOD3;
+#endif
+
 	MAPPER_AddHandler(select_prev_image_adjustment_control,
 	                  SDL_SCANCODE_F9,
-	                  PRIMARY_MOD | MMOD2,
+	                  ImageAdjustmentModKeys,
 	                  "previmageadj",
 	                  "PrevImageAdj");
 
 	MAPPER_AddHandler(select_next_image_adjustment_control,
 	                  SDL_SCANCODE_F10,
-	                  PRIMARY_MOD | MMOD2,
+	                  ImageAdjustmentModKeys,
 	                  "nextimageadj",
 	                  "NextImageAdj");
 
 	MAPPER_AddHandler(decrease_image_adjustment_control,
 	                  SDL_SCANCODE_F11,
-	                  PRIMARY_MOD | MMOD2,
+	                  ImageAdjustmentModKeys,
 	                  "decimageadj",
 	                  "DecImageAdj");
 
 	MAPPER_AddHandler(increase_image_adjustment_control,
 	                  SDL_SCANCODE_F12,
-	                  PRIMARY_MOD | MMOD2,
+	                  ImageAdjustmentModKeys,
 	                  "incimageadj",
 	                  "IncImageAdj");
 
