@@ -16,19 +16,22 @@
 #include "utils/math_utils.h"
 
 // Glad must be included before SDL
-#include "glad/gl.h"
+#include "EGL/egl.h"
+#include "glad/gles2.h"
 
 // must be included after dosbox_config.h
 #include <SDL.h>
-#include <SDL_opengl.h>
 #include <SDL_syswm.h>
+#if defined(SDL_VIDEO_DRIVER_COCOA)
+#include <SDL_metal.h>
+#endif
 
 CHECK_NARROWING();
 
 // #define DEBUG_OPENGL
 // #define USE_DEBUG_CONTEXT
 
-constexpr auto GlslExtension = ".glsl";
+constexpr auto GlslExtension = ".es.glsl";
 
 constexpr auto ImageAdjustmentsShaderName = "_internal/image-adjustments-pass";
 
@@ -69,32 +72,10 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
                                             const int width, const int height,
                                             const uint32_t sdl_window_flags)
 {
-	// Request 24-bits framebuffer, don't care about depth buffer
-	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-#ifdef USE_DEBUG_CONTEXT
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-
-	// Request an OpenGL 4.3 core profile context (debug output became a
-	// core part of OpenGL since version 4.3). Note the macOS doesn't seem
-	// to support debug contexts at all.
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-#else
-	// Request an OpenGL 3.3 core profile context
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-#endif
-
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-	// Request an OpenGL-ready window
 	auto flags = sdl_window_flags;
-	flags |= SDL_WINDOW_OPENGL;
+#if defined(SDL_VIDEO_DRIVER_COCOA)
+	flags |= SDL_WINDOW_METAL;
+#endif
 
 #ifdef MACOSX
 	if (!SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "displayp3")) {
@@ -115,38 +96,99 @@ void glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity,
 
 bool OpenGlRenderer::InitRenderer()
 {
-	context = SDL_GL_CreateContext(window);
-	if (!context) {
-		LOG_ERR("SDL: Error creating OpenGL context: %s", SDL_GetError());
+#if defined(SDL_VIDEO_DRIVER_COCOA)
+	metal_view = SDL_Metal_CreateView(window);
+	if (!metal_view) {
+		LOG_ERR("SDL_Metal_CreateView failed");
+		return false;
+	}
+	auto raw_metal_layer = SDL_Metal_GetLayer(metal_view);
+	if (!raw_metal_layer) {
+		LOG_ERR("SDL_Metal_GetLayer failed");
 		return false;
 	}
 
-	const auto version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+	EGLNativeWindowType native_window = (EGLNativeWindowType)raw_metal_layer;
+#elif defined(SDL_VIDEO_DRIVER_WINDOWS)
+	// Get native window
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	SDL_GetWindowWMInfo(window, &wmInfo);
 
-#ifdef USE_DEBUG_CONTEXT
-	GLint flags;
-	glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-	if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
-		glEnable(GL_DEBUG_OUTPUT);
-		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-		glDebugMessageCallback(glDebugOutput, nullptr);
-		glDebugMessageControl(
-		        GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-	} else {
-		LOG_WARNING("OPENGL: Could not initialise debug context");
-	}
+	EGLNativeWindowType native_window = (EGLNativeWindowType)wmInfo.info.win.window;
+#elif defined(SDL_VIDEO_DRIVER_X11) || defined(SDL_VIDEO_DRIVER_WAYLAND)
+
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	SDL_GetWindowWMInfo(window, &wmInfo);
+
+#if defined(SDL_VIDEO_DRIVER_X11)
+	EGLNativeWindowType native_window = (EGLNativeWindowType)wmInfo.info.x11.window;
+
+#elif defined(SDL_VIDEO_DRIVER_WAYLAND)
+	EGLNativeWindowType native_window = (EGLNativeWindowType)wmInfo.info.wl.egl_window;
 #endif
+#else
+#error Unsupported platform
+#endif
+
+	display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	eglInitialize(display, nullptr, nullptr);
+	eglBindAPI(EGL_OPENGL_ES_API);
+
+	const EGLint configAttribs[] = {EGL_RENDERABLE_TYPE,
+	                                EGL_OPENGL_ES3_BIT,
+	                                EGL_SURFACE_TYPE,
+	                                EGL_WINDOW_BIT,
+	                                EGL_RED_SIZE,
+	                                8,
+	                                EGL_GREEN_SIZE,
+	                                8,
+	                                EGL_BLUE_SIZE,
+	                                8,
+	                                EGL_ALPHA_SIZE,
+	                                8,
+	                                EGL_NONE};
+
+	EGLint numConfigs;
+	eglChooseConfig(display, configAttribs, &config, 1, &numConfigs);
+
+	const EGLint ctxAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE};
+
+	context = eglCreateContext(display, config, EGL_NO_CONTEXT, ctxAttribs);
+	if (context == EGL_NO_CONTEXT) {
+		EGLint err = eglGetError();
+		LOG_ERR("OPENGL: eglCreateContext failed: 0x%x", err);
+		return false;
+	}
+
+	surface = eglCreateWindowSurface(display, config, native_window, nullptr);
+	if (surface == EGL_NO_SURFACE) {
+		EGLint err = eglGetError();
+		LOG_ERR("OPENGL: eglCreateWindowSurface failed: 0x%x", err);
+		return false;
+	}
+
+	if (!eglMakeCurrent(display, surface, surface, context)) {
+		EGLint err = eglGetError();
+		LOG_ERR("OPENGL: eglMakeCurrent failed: 0x%x", err);
+		return false;
+	}
+
+	if (!gladLoadGLES2((GLADloadfunc)eglGetProcAddress)) {
+		LOG_ERR("OPENGL: failed to load GLES2");
+		return false;
+	}
 
 	GLint size = 0;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &size);
+	assert(size > 0);
 
 	max_texture_size_px = size;
 
-	LOG_INFO("OPENGL: Version: %d.%d, GLSL version: %s, vendor: %s",
-	         GLAD_VERSION_MAJOR(version),
-	         GLAD_VERSION_MINOR(version),
-	         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION, "unknown"),
-	         safe_gl_get_string(GL_VENDOR, "unknown"));
+	LOG_INFO("OPENGL: %s, %s",
+	         safe_gl_get_string(GL_VERSION, "unknown"),
+	         safe_gl_get_string(GL_RENDERER, "unknown"));
 
 	// Vertex data of a single oversized triangle encompassing the viewport
 	// Lower left
@@ -160,6 +202,9 @@ bool OpenGlRenderer::InitRenderer()
 	// Upper left
 	vertex_data[4] = -1.0f;
 	vertex_data[5] = 3.0f;
+
+	// Pack pixel data tightly
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	// Create VBO & VAO
 	glGenVertexArrays(1, &vao);
@@ -205,8 +250,6 @@ bool OpenGlRenderer::InitRenderer()
 
 OpenGlRenderer::~OpenGlRenderer()
 {
-	SDL_GL_ResetAttributes();
-
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
 
@@ -226,10 +269,19 @@ OpenGlRenderer::~OpenGlRenderer()
 	}
 	shader_cache.clear();
 
-	if (context) {
-		SDL_GL_DeleteContext(context);
-		context = {};
+#if defined(SDL_VIDEO_DRIVER_COCOA)
+	if (metal_view) {
+		SDL_Metal_DestroyView(metal_view);
 	}
+#endif
+
+	if (display) {
+		eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+		eglDestroyContext(display, context);
+		eglDestroySurface(display, surface);
+		eglTerminate(display);
+	}
+
 	if (window) {
 		SDL_DestroyWindow(window);
 		window = {};
@@ -374,20 +426,21 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
 	// Just create the texture; we'll copy the image data later with
 	// `glTexSubImage2D()`
 	//
-	glTexImage2D(GL_TEXTURE_2D,
-	             0,                // mimap level (0 = base image)
-	             GL_RGB8,          // internal format
-	             pass1.width,      // width
-	             pass1.height,     // height
-	             0,                // border (must be always 0)
-	             GL_BGRA,          // pixel data format
-	             GL_UNSIGNED_BYTE, // pixel data type
-	             nullptr           // pointer to image data
-	);
+	glTexStorage2D(GL_TEXTURE_2D,
+	               1, // levels
+	               GL_RGBA8,
+	               pass1.width,
+	               pass1.height);
+
+	// Fix channel order in hardware
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_BLUE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -419,17 +472,12 @@ void OpenGlRenderer::RecreatePass1OutputTexture()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
 	SetPass1OutputTextureFiltering();
 
-	glTexImage2D(GL_TEXTURE_2D,
-	             0,            // mimap level (0 = base image)
-	             GL_RGB32F,    // internal format
-	             pass1.width,  // width
-	             pass1.height, // height
-	             0,            // border (must be always 0)
-	             GL_BGRA,      // pixel data format
-	             GL_FLOAT,     // pixel data type
-	             nullptr);     // pointer to image data
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA16F, pass1.width, pass1.height);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -483,7 +531,6 @@ void OpenGlRenderer::PrepareFrame()
 	assert(!last_framebuf.empty());
 
 	if (last_framebuf_dirty) {
-		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, pass1.in_texture);
 
 		glTexSubImage2D(GL_TEXTURE_2D,
@@ -492,10 +539,11 @@ void OpenGlRenderer::PrepareFrame()
 		                0,            // y offset
 		                pass1.width,  // width
 		                pass1.height, // height
-		                GL_BGRA,      // pixel data format
-		                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
+		                GL_RGBA,      // pixel data format
+		                GL_UNSIGNED_BYTE,    // pixel data type
 		                last_framebuf.data() // pointer to image data
 		);
+
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		++frame_count;
@@ -580,7 +628,10 @@ void OpenGlRenderer::PresentFrame()
 	}
 
 	// Present frame
-	SDL_GL_SwapWindow(window);
+	if (!eglSwapBuffers(display, surface)) {
+		EGLint err = eglGetError();
+		LOG_ERR("OPENGL: eglSwapBuffers failed: 0x%x", err);
+	}
 }
 
 std::optional<GLuint> OpenGlRenderer::BuildShader(const GLenum type,
@@ -972,11 +1023,11 @@ void OpenGlRenderer::SetVsync(const bool is_enabled)
 {
 	const auto swap_interval = is_enabled ? 1 : 0;
 
-	if (SDL_GL_SetSwapInterval(swap_interval) != 0) {
+	if (eglSwapInterval(display, swap_interval) != EGL_TRUE) {
 		// The requested swap_interval is not supported
-		LOG_WARNING("OPENGL: Error %s vsync: %s",
+		LOG_WARNING("OPENGL: Error %s vsync: 0x%x",
 		            (is_enabled ? "enabling" : "disabling"),
-		            SDL_GetError());
+		            eglGetError());
 	}
 }
 
@@ -1188,7 +1239,7 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	             iroundf(output_rect_px.y),
 	             image.params.width,
 	             image.params.height,
-	             GL_BGR,
+	             GL_RGBA,
 	             GL_UNSIGNED_BYTE,
 	             image.image_data);
 

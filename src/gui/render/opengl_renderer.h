@@ -20,9 +20,9 @@
 #include "utils/rect.h"
 
 // Glad must be included before SDL
-#include "glad/gl.h"
+#include <EGL/egl.h>
 #include <SDL.h>
-#include <SDL_opengl.h>
+#include <glad/gles2.h>
 
 class OpenGlRenderer : public RenderBackend {
 
@@ -128,7 +128,16 @@ private:
 	// ---------------------------------------------------------------------
 
 	SDL_Window* window    = {};
-	SDL_GLContext context = {};
+
+	// EGL / ANGLE state (explicit)
+	EGLDisplay display = EGL_NO_DISPLAY;
+	EGLContext context = EGL_NO_CONTEXT;
+	EGLSurface surface = EGL_NO_SURFACE;
+
+	EGLConfig config = nullptr;
+#if defined(SDL_VIDEO_DRIVER_COCOA)
+	SDL_MetalView metal_view = nullptr;
+#endif
 
 	GLint max_texture_size_px = 0;
 

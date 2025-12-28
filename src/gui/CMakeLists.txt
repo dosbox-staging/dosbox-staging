@@ -13,5 +13,6 @@ target_sources(libdosboxcommon PRIVATE
 )
 
 target_link_libraries(libdosboxcommon PRIVATE
-  OpenGL::GL
+  unofficial::angle::libEGL
+  unofficial::angle::libGLESv2
   $<IF:$<BOOL:${C_OPENGL}>,libglad,>)
