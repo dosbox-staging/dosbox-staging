@@ -3,7 +3,7 @@
 
 #include "host_locale.h"
 
-#include "private/iso_locale_codes.h"
+#include "iso_locale_codes.h"
 #include "utils/checks.h"
 #include "utils/string_utils.h"
 
