@@ -733,6 +733,16 @@ bool LanguageTerritory::IsEnglish() const
 	return language == Iso639::English;
 }
 
+const std::string& LanguageTerritory::GetIsoLanguageCode() const
+{
+	return language;
+}
+
+const std::string& LanguageTerritory::GetIsoTerritoryCode() const
+{
+	return territory;
+}
+
 std::optional<DosCountry> LanguageTerritory::GetDosCountryCode() const
 {
 	if (IsEmpty() || IsGeneric()) {
