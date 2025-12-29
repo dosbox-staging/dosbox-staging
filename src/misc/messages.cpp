@@ -7,6 +7,7 @@
 #include "config/config.h"
 #include "config/setup.h"
 #include "dos/dos_locale.h"
+#include "hardware/input/mouse.h"
 #include "host_locale.h"
 #include "misc/ansi_code_markup.h"
 #include "misc/cross.h"
@@ -621,11 +622,17 @@ static bool check_message_exists(const std::string& message_key)
 
 static void clear_translated_messages()
 {
+	const bool notify_new_language = !translation_language.empty();
+
 	dictionary_translated.clear();
 
 	translation_language        = {};
 	translation_script          = {};
 	is_translation_script_fuzzy = false;
+
+	if (notify_new_language) {
+		MOUSE_NotifyLanguageChanged();
+	}
 }
 
 // ***************************************************************************
@@ -830,6 +837,7 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 		check_code_page();
 	}
 
+	MOUSE_NotifyLanguageChanged();
 	return true;
 }
 

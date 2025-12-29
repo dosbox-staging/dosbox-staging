@@ -92,6 +92,9 @@ void MOUSE_EventWheel(const int16_t w_rel, const MouseInterfaceId device_id);
 // parts of the emulation (like DOS driver) should be disabled
 void MOUSE_NotifyBooting();
 
+// Notify that the translation language has changed
+void MOUSE_NotifyLanguageChanged();
+
 // Notify that GFX subsystem (currently SDL) is started
 // and can accept requests from mouse emulation module
 void MOUSE_NotifyReadyGFX();
