@@ -13,6 +13,7 @@
 #include "misc/std_filesystem.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
+#include "private/messages_adjust.h"
 #include "private/messages_po_entry.h"
 #include "utils/checks.h"
 #include "utils/fs_utils.h"
@@ -66,8 +67,11 @@ private:
 
 	std::string GetLogStart(const std::string& message_key) const;
 
+	void AutoAdjustTranslation(const Message& message_english);
+
 	void VerifyMessage(const std::string& message_key);
 	void VerifyFormatString(const std::string& message_key);
+	void VerifyNoLeftoverHelperLines(const std::string& message_key);
 
 	void VerifyFormatStringAgainst(const std::string& message_key,
 	                               const Message& message_english);
@@ -167,6 +171,25 @@ const std::string& Message::GetRaw() const
 	return message_raw;
 }
 
+void Message::AutoAdjustTranslation(const Message& message_english)
+{
+	// If the translation is known to be fuzzy, do not try to auto-adjust
+	// it; translator attention was already requested here
+	if (!is_ok || is_verified || is_fuzzy) {
+		return;
+	}
+
+	// If the English string is unchanged, there is nothing in the
+	// translated string that needs to be adjusted
+	if (message_previous_english == message_english.message_raw) {
+		return;
+	}
+
+	adjust_newlines(message_english.message_raw,
+	                message_previous_english,
+	                message_raw);
+}
+
 void Message::VerifyMessage(const std::string& message_key)
 {
 	if (!is_ok || is_verified) {
@@ -180,7 +203,7 @@ void Message::VerifyMessage(const std::string& message_key)
 
 		// No special characters allowed, except a newline character;
 		// please use DOSBox tags instead of ANSI escape sequences
-		LOG_WARNING("%s contains invalid character 0x%02x",
+		LOG_WARNING("LOCALE: '%s' contains invalid character 0x%02x",
 		            GetLogStart(message_key).c_str(),
 		            item);
 		MarkInvalid();
@@ -216,7 +239,7 @@ void Message::VerifyFormatString(const std::string& message_key)
 		// NOTE: If you want to skip format string checks for the given
 		//       message, put a 'MsgFlagNoFormatString' flag into
 		//       the relevant 'MSG_Add' call
-		LOG_WARNING("%s contains an incorrect format specifier: %s",
+		LOG_WARNING("LOCALE: '%s' contains an incorrect format specifier: %s",
 		            GetLogStart(message_key).c_str(),
 		            error.c_str());
 		MarkInvalid();
@@ -311,6 +334,53 @@ void Message::VerifyFormatString(const std::string& message_key)
 	}
 }
 
+void Message::VerifyNoLeftoverHelperLines(const std::string& message_key)
+{
+	if (!is_ok || is_verified) {
+		return;
+	}
+
+	auto get_helper_line = [](const std::string& segment) {
+		assert(!segment.empty());
+
+		constexpr size_t LineLength = 80;
+
+		std::string helper_line = {};
+		helper_line.reserve(LineLength);
+
+		while (helper_line.size() < LineLength) {
+			helper_line += segment;
+		}
+
+		return helper_line.substr(0, LineLength);
+	};
+
+	static const std::vector<std::string> HelperLines = {
+		get_helper_line("0123456789"),
+		get_helper_line("1234567890"),
+		get_helper_line("-")
+	};
+
+	for (const auto& helper_line : HelperLines) {
+
+		if (message_raw.find(helper_line) == std::string::npos) {
+			// No given leftover helper line in the translation
+			continue;
+		}
+
+		if (message_previous_english.find(helper_line) != std::string::npos) {
+			// Same string is present in the English message
+			continue;
+		}
+
+		LOG_WARNING("LOCALE: '%s' contains a leftover helper line",
+		            GetLogStart(message_key).c_str());
+		MarkInvalid();
+
+		break;
+	}
+}
+
 void Message::VerifyFormatStringAgainst(const std::string& message_key,
                                         const Message& message_english)
 {
@@ -321,7 +391,7 @@ void Message::VerifyFormatStringAgainst(const std::string& message_key,
 	// Check if the number of format specifiers match
 	if (format_specifiers.size() != message_english.format_specifiers.size()) {
 		LOG_WARNING(
-		        "%s has %d format specifier(s) "
+		        "LOCALE '%s' has %d format specifier(s) "
 		        "while English has %d specifier(s)",
 		        GetLogStart(message_key).c_str(),
 		        static_cast<int>(format_specifiers.size()),
@@ -368,7 +438,7 @@ void Message::VerifyFormatStringAgainst(const std::string& message_key,
 		    (specifier.precision != "*" && specifier_english.precision == "*")) {
 
 			LOG_WARNING(
-			        "%s has format specifier '%s' "
+			        "LOCALE: '%s' has format specifier '%s' "
 			        "incompatible with English counterpart '%s'",
 			        GetLogStart(message_key).c_str(),
 			        specifier.AsString().c_str(),
@@ -411,7 +481,9 @@ void Message::VerifyTranslated(const std::string& message_key,
 	}
 
 	VerifyFormatString(message_key);
+	VerifyNoLeftoverHelperLines(message_key);
 	if (message_english.IsValid()) {
+		AutoAdjustTranslation(message_english);
 		VerifyTranslationUpToDate(message_english);
 		VerifyFormatStringAgainst(message_key, message_english);
 	}

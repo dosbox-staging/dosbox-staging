@@ -40,35 +40,6 @@ static bool is_valid_video_mode(const std::string& mode)
 	return video_mode_map_svga_s3.contains(mode);
 }
 
-static void set_typematic_rate(const int rate_idx, const int delay_idx)
-{
-	// Set Keyboard Typematic Rate
-	reg_ah = 3;
-
-	// set typematic rate/delay
-	reg_al = 5;
-
-	// typematic rate (repeats per second)
-	//   0 = 30.0
-	//   1 = 26.7
-	//   2 = 24.0
-	//   ...
-	//  29 =  2.3
-	//  30 =  2.1
-	//  31 =  2.0
-	reg_bl = check_cast<uint8_t>(rate_idx);
-
-	// repeat delay
-	//   0 =  250 ms
-	//   2 =  750 ms
-	//   1 =  500 ms
-	//   3 = 1000 ms
-	reg_bh = check_cast<uint8_t>(delay_idx);
-
-	// Keyboard BIOS Services
-	CALLBACK_RunRealInt(0x16);
-}
-
 static void set_8x8_font()
 {
 	// Load and activate ROM font
@@ -83,17 +54,9 @@ static void set_8x8_font()
 	CALLBACK_RunRealInt(0x10);
 }
 
-void MODE::HandleSetDisplayMode(const std::string& _mode_str)
+// `mode_str` must be in WxH format (lowercase `x`)
+void MODE::SetDisplayMode(const std::string& mode_str)
 {
-	auto mode_str = _mode_str;
-
-	// These formats are all valid:
-	//   80X25
-	//   80x25
-	//   80,25
-	lowcase(mode_str);
-	mode_str = replace(mode_str, ',', 'x');
-
 	if (!is_valid_video_mode(mode_str)) {
 		WriteOut(MSG_Get("PROGRAM_MODE_INVALID_DISPLAY_MODE"),
 		         mode_str.c_str());
@@ -183,20 +146,119 @@ void MODE::HandleSetDisplayMode(const std::string& _mode_str)
 	}
 }
 
+void MODE::HandleSetDisplayMode()
+{
+	// Try to parse mode set via COLS=<cols> and LINES=<lines>
+	constexpr auto RemoveArg = true;
+	std::string cols_str;
+	std::string lines_str;
+
+	cmd->FindStringCaseInsensitiveBegin("cols=", cols_str, RemoveArg);
+	cmd->FindStringCaseInsensitiveBegin("lines=", lines_str, RemoveArg);
+
+	std::optional<int> maybe_cols  = {};
+	std::optional<int> maybe_lines = {};
+
+	if (!cols_str.empty()) {
+		if (const auto maybe_int = parse_int(cols_str); maybe_int) {
+			maybe_cols = maybe_int;
+		} else {
+			WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
+			return;
+		}
+	}
+	if (!lines_str.empty()) {
+		if (const auto maybe_int = parse_int(lines_str); maybe_int) {
+			maybe_lines = maybe_int;
+		} else {
+			WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
+			return;
+		}
+	}
+
+	if (maybe_cols || maybe_lines) {
+		// Either COLS= or LINES= was found; attempt to set the display
+		// mode
+
+		const auto mode_str = format_str("%dx%d",
+		                                 maybe_cols.value_or(80),
+		                                 maybe_lines.value_or(25));
+		SetDisplayMode(mode_str);
+		return;
+	}
+
+	// Try to use the next remaining argument as the mode string
+	if (cmd->GetCount() == 0) {
+		return;
+	}
+	std::string mode_str = cmd->GetArguments()[0];
+	lowcase(mode_str);
+
+	// We accept either 'X' or ',' as separator, so these are all valid:
+	//   80X25
+	//   80x25
+	//   80,25
+	mode_str = replace(mode_str, ',', 'x');
+
+	// Map symbolic mode names to COLxLINES format. We don't bother with
+	// setting monochrome modes on CGA adapters (BW40, BW80, and MONO
+	// options); we just want to set a standard 40/80 column mode for
+	// compatibility with batch scripts (e.g., game installers).
+	if (mode_str == "40" || mode_str == "bw40" || mode_str == "co40") {
+		mode_str = "40x25";
+
+	} else if (mode_str == "80" || mode_str == "bw80" ||
+	           mode_str == "co80" || mode_str == "mono") {
+		mode_str = "80x25";
+	}
+
+	SetDisplayMode(mode_str);
+}
+
+static void set_typematic_rate(const int rate_idx, const int delay_idx)
+{
+	// Set Keyboard Typematic Rate
+	reg_ah = 3;
+
+	// set typematic rate/delay
+	reg_al = 5;
+
+	// typematic rate (repeats per second)
+	//   0 = 30.0
+	//   1 = 26.7
+	//   2 = 24.0
+	//   ...
+	//  29 =  2.3
+	//  30 =  2.1
+	//  31 =  2.0
+	reg_bl = check_cast<uint8_t>(rate_idx);
+
+	// repeat delay
+	//   0 =  250 ms
+	//   2 =  750 ms
+	//   1 =  500 ms
+	//   3 = 1000 ms
+	reg_bh = check_cast<uint8_t>(delay_idx);
+
+	// Keyboard BIOS Services
+	CALLBACK_RunRealInt(0x16);
+}
+
 bool MODE::HandleSetTypematicRate()
 {
-	constexpr auto remove = false;
+	constexpr auto RemoveArg = true;
+	std::string rate_str;
+	std::string delay_str;
 
-	std::string rate_str  = {};
-	std::string delay_str = {};
-
-	if (!cmd->FindStringBegin("rate=", rate_str, remove) ||
-	    !cmd->FindStringBegin("delay=", delay_str, remove)) {
-		return false;
-	}
+	cmd->FindStringCaseInsensitiveBegin("rate=", rate_str, RemoveArg);
+	cmd->FindStringCaseInsensitiveBegin("delay=", delay_str, RemoveArg);
 
 	const auto maybe_rate  = parse_int(rate_str);
 	const auto maybe_delay = parse_int(delay_str);
+
+	if (!maybe_rate && !maybe_delay) {
+		return true;
+	}
 
 	if (maybe_rate && maybe_delay) {
 		constexpr auto MinRate  = 1;
@@ -208,16 +270,15 @@ bool MODE::HandleSetTypematicRate()
 		const auto delay = std::clamp(*maybe_delay, MinDelay, MaxDelay) - 1;
 
 		set_typematic_rate(rate, delay);
-	} else {
-		WriteOut(MSG_Get("PROGRAM_MODE_INVALID_TYPEMATIC_RATE"));
+		return true;
 	}
-	return true;
+
+	WriteOut(MSG_Get("PROGRAM_MODE_INVALID_TYPEMATIC_RATE"));
+	return false;
 }
 
 void MODE::Run()
 {
-	// Handle command line
-
 	if (HelpRequested()) {
 		MoreOutputStrings output(*this);
 		output.AddString(MSG_Get("PROGRAM_MODE_HELP_LONG"));
@@ -225,32 +286,24 @@ void MODE::Run()
 		return;
 	}
 
-	auto is_set_display_mode_command = [](const std::string& command) {
-		// Set display mode commands start with digits (e.g., 80x43)
-		constexpr auto MinLength = sizeof("80x43") - 1;
-		return isdigit(command[0]) && command.size() >= MinLength;
-	};
-
 	if (cmd->GetCount() == 0) {
 		WriteOut(MSG_Get("SHELL_MISSING_PARAMETER"));
-
-	} else if (cmd->GetCount() == 1) {
-		const auto args    = cmd->GetArguments();
-		const auto command = args[0];
-
-		if (is_set_display_mode_command(command)) {
-			const auto& mode = command;
-			HandleSetDisplayMode(mode);
-		} else {
-			WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
-		}
-
-	} else if (cmd->GetCount() >= 2) {
-		// To allow 'MODE CON: RATE=32 DELAY=1' too with minimal effort
-		if (!HandleSetTypematicRate()) {
-			WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
-		}
+		return;
 	}
+
+	// Ignore CON or CON: if it's the first argument
+	auto maybe_device = cmd->GetArguments()[0];
+	lowcase(maybe_device);
+	if (maybe_device == "con" || maybe_device == "con:") {
+		cmd->Shift(1);
+	}
+
+	if (!HandleSetTypematicRate()) {
+		// Exit if there was an error
+		return;
+	}
+
+	HandleSetDisplayMode();
 }
 
 void MODE::AddMessages()
@@ -259,30 +312,36 @@ void MODE::AddMessages()
 	        "Set the display mode or the keyboard's typematic rate.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=light-green]mode[reset] [color=white]COLSxLINES[reset]\n"
-	        "  [color=light-green]mode[reset] [color=white]COLS,LINES[reset]\n"
-	        "  [color=light-green]mode[reset] rate=[color=white]RATE[reset] delay=[color=white]DELAY[reset]\n"
+	        "  [color=light-green]mode[reset] [[color=light-cyan]DEVICE[reset]] [color=white]COLS[reset]\n"
+	        "  [color=light-green]mode[reset] [[color=light-cyan]DEVICE[reset]] [color=white]COLS,LINES[reset]\n"
+	        "  [color=light-green]mode[reset] [[color=light-cyan]DEVICE[reset]] [color=white]MODENAME[reset]\n"
+	        "  [color=light-green]mode[reset] [[color=light-cyan]DEVICE[reset]] cols=[color=white]COLS[reset] lines=[color=white]LINES[reset]\n"
+	        "  [color=light-green]mode[reset] [[color=light-cyan]DEVICE[reset]] rate=[color=white]RATE[reset] delay=[color=white]DELAY[reset]\n"
 	        "\n"
 	        "Parameters:\n"
+	        "  [color=light-cyan]DEVICE[reset]    CON or CON: (optional)\n"
 	        "  [color=white]COLS[reset]      number of characters (columns) per line (40, 80, or 132)\n"
 	        "  [color=white]LINES[reset]     number of lines on the screen (25, 28, 30, 34, 43, 50, or 60)\n"
-	        "  [color=white]RATE[reset]      key repeat rate, from [color=white]1[reset] to [color=white]32[reset] (1 = slowest, 32 = fastest)\n"
-	        "  [color=white]DELAY[reset]     key repeat delay, from [color=white]1[reset] to [color=white]4[reset] (1 = shortest, 4 = longest)\n"
+	        "  [color=white]MODENAME[reset]  symbolic mode name (CO40, CO80, BW40, BW80, or MONO)\n"
+	        "  [color=white]RATE[reset]      key repeat rate, from [color=white]1[reset] (slowest) to [color=white]32[reset] (fastest)\n"
+	        "  [color=white]DELAY[reset]     key repeat delay, from [color=white]1[reset] (shortest) to [color=white]4[reset] (longest)\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - Valid [color=white]COLSxLINES[reset] combinations per graphics adapter type:\n"
+	        "  - Valid display modes per graphics adapter:\n"
 	        "      Hercules           80x25\n"
 	        "      CGA, PCjr, Tandy   40x25, 80x25\n"
 	        "      EGA                40x25, 80x25, 80x43\n"
 	        "      SVGA (non-S3)      40x25, 80x25, 80x28, 80x30, 80x34, 80x43, 80x50\n"
 	        "      SVGA (S3)          40x25, all 80 and 132-column modes\n"
 	        "\n"
-	        "  - The 132x28, 132x30, and 132x34 modes are only available if `vesa_modes`\n"
-	        "    is set to `all`.\n"
+	        "  - The 132x28, 132x30, and 132x34 modes are only available if `vesa_modes` is\n"
+	        "    set to `all`.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]mode[reset] [color=white]132x50\n"
-	        "  [color=light-green]mode[reset] [color=white]80x43[reset]\n"
+	        "  [color=light-green]mode[reset] [color=white]132x50[reset]\n"
+	        "  [color=light-green]mode[reset] CON [color=white]80x43[reset]\n"
+	        "  [color=light-green]mode[reset] [color=white]co80[reset]\n"
+	        "  [color=light-green]mode[reset] CON: cols=[color=white]80[reset] lines=[color=white]43[reset]\n"
 	        "  [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]");
 
 	MSG_Add("PROGRAM_MODE_INVALID_DISPLAY_MODE",
