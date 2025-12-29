@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "private/iso_locale_codes.h"
+#include "iso_locale_codes.h"
 #include "utils/checks.h"
 
 CHECK_NARROWING();
