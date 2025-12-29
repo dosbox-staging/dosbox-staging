@@ -28,6 +28,10 @@ public:
 	// Checks if the language is English
 	bool IsEnglish() const;
 
+	// Get the case-adjusted ISO language and territory codes
+	const std::string& GetIsoLanguageCode() const;
+	const std::string& GetIsoTerritoryCode() const;
+
 	// Convert data to a DOS country code
 	std::optional<DosCountry> GetDosCountryCode() const;
 
