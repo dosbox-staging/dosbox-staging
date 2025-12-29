@@ -2292,7 +2292,9 @@ static cga_colors_t handle_cga_colors_prefs_tandy(const std::string& cga_colors_
 	if (tokens.size() > 1) {
 		auto brown_level_pref = tokens[1];
 
-		if (float p; sscanf(brown_level_pref.c_str(), "%f", &p)) {
+		float p = {};
+		const auto result = sscanf(brown_level_pref.c_str(), "%f", &p);
+		if (result != 0 && result != EOF) {
 			auto cga_colors = cga_colors_default;
 
 			brown_level = clamp(p / 100, 0.0f, 1.0f);
@@ -2322,7 +2324,9 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string& cga_color
 	if (tokens.size() > 1) {
 		auto contrast_pref = tokens[1];
 
-		if (float p; sscanf(contrast_pref.c_str(), "%f", &p)) {
+		float p = {};
+		const auto parse_result = sscanf(contrast_pref.c_str(), "%f", &p);
+		if (parse_result != 0 && parse_result != EOF) {
 			contrast = clamp(p / 100, 0.0f, 1.0f);
 
 			auto cga_colors = cga_colors_ibm5153;
@@ -2450,8 +2454,9 @@ std::optional<Rgb888> parse_color_token(const std::string& token,
 			return {};
 		}
 
-		uint32_t value;
-		if (!sscanf(token.c_str(), "#%x", &value)) {
+		unsigned int value = {};
+		const auto parse_result = sscanf(token.c_str(), "#%x", &value);
+		if (parse_result == 0 || parse_result == EOF) {
 			log_warning("could not parse hex color");
 			return {};
 		}
@@ -2494,8 +2499,9 @@ std::optional<Rgb888> parse_color_token(const std::string& token,
 				return {};
 			}
 
-			int32_t value;
-			if (!sscanf(c.c_str(), "%d", &value)) {
+			int value = {};
+			const auto parse_result = sscanf(c.c_str(), "%d", &value);
+			if (parse_result == 0 || parse_result == EOF) {
 				log_warning("could not parse RGB-triplet value");
 				return {};
 			}
