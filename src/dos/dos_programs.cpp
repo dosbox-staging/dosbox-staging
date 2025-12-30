@@ -10,6 +10,7 @@
 #include "programs/choice.h"
 #include "programs/clip.h"
 #include "programs/help.h"
+#include "programs/imgmake.h"
 #include "programs/imgmount.h"
 #include "programs/intro.h"
 #include "programs/keyb.h"
@@ -69,6 +70,7 @@ void DOS_SetupPrograms()
 	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
 	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramCreate);
 	PROGRAMS_MakeFile("HELP.COM", ProgramCreate<HELP>);
+	PROGRAMS_MakeFile("IMGMAKE.COM", ProgramCreate<IMGMAKE>);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", ProgramCreate<IMGMOUNT>);
 	PROGRAMS_MakeFile("INTRO.COM", ProgramCreate<INTRO>);
 	PROGRAMS_MakeFile("KEYB.COM", ProgramCreate<KEYB>);

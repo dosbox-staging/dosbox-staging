@@ -368,6 +368,8 @@ std::string host_eol();
 // Replaces end-of-line markings (any encoding) with the supplied one
 std::string replace_eol(const std::string& str, const std::string& new_eol);
 
+std::string right_pad(const std::string& str, int length, char pad_char);
+
 // Compares two pieces of text, insensitive to end-of-line encoding differences
 bool is_text_equal(const std::string& str_1, const std::string& str_2);
 
