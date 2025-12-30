@@ -1077,7 +1077,7 @@ bool ParseCommand(char* str) {
 	found = const_cast<char*>(s_found.c_str());
 
 	if (command == "MEMDUMP") { // Dump memory to file
-		uint16_t seg = (uint16_t)GetHexValue(found,found); found++;
+		auto     seg = (uint16_t)GetHexValue(found,found); found++;
 		uint32_t ofs = GetHexValue(found,found); found++;
 		uint32_t num = GetHexValue(found,found); found++;
 		SaveMemory(seg,ofs,num);
@@ -1085,7 +1085,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "MEMDUMPBIN") { // Dump memory to file binary
-		uint16_t seg = (uint16_t)GetHexValue(found,found); found++;
+		auto      seg = (uint16_t)GetHexValue(found,found); found++;
 		uint32_t ofs = GetHexValue(found,found); found++;
 		uint32_t num = GetHexValue(found,found); found++;
 		SaveMemoryBin(seg,ofs,num);
@@ -1093,7 +1093,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "IV") { // Insert variable
-		uint16_t seg = (uint16_t)GetHexValue(found,found); found++;
+		auto     seg = (uint16_t)GetHexValue(found,found); found++;
 		uint32_t ofs = (uint16_t)GetHexValue(found,found); found++;
 		char name[16];
 		for (int i=0; i<16; i++) {
@@ -1143,13 +1143,13 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "SM") { // Set memory with following values
-		uint16_t seg = (uint16_t)GetHexValue(found,found); found++;
+		auto     seg = (uint16_t)GetHexValue(found,found); found++;
 		uint32_t ofs = GetHexValue(found,found); found++;
 		uint16_t count = 0;
 		while (*found) {
 			while (*found==' ') found++;
 			if (*found) {
-				uint8_t value = (uint8_t)GetHexValue(found,found);
+				auto value = (uint8_t)GetHexValue(found,found);
 				if(*found) found++;
 				mem_writeb_checked(GetAddress(seg,ofs+count),value);
 				count++;
@@ -1160,7 +1160,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "BP") { // Add new breakpoint
-		uint16_t seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
+		auto     seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
 		uint32_t ofs = GetHexValue(found,found);
 		CBreakpoint::AddBreakpoint(seg,ofs,false);
 		DEBUG_ShowMsg("DEBUG: Set breakpoint at %04X:%04X\n",seg,ofs);
@@ -1170,7 +1170,7 @@ bool ParseCommand(char* str) {
 #if C_HEAVY_DEBUGGER
 
 	if (command == "BPM") { // Add new breakpoint
-		uint16_t seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
+		auto     seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
 		uint32_t ofs = GetHexValue(found,found);
 		CBreakpoint::AddMemBreakpoint(seg,ofs);
 		DEBUG_ShowMsg("DEBUG: Set memory breakpoint at %04X:%04X\n",seg,ofs);
@@ -1178,7 +1178,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "BPMR") { // Add new breakpoint
-		uint16_t seg = (uint16_t)GetHexValue(found, found);
+		auto seg = (uint16_t)GetHexValue(found, found);
 		found++; // skip ":"
 		uint32_t ofs    = GetHexValue(found, found);
 		CBreakpoint* bp = CBreakpoint::AddMemBreakpoint(seg, ofs);
@@ -1191,7 +1191,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "BPPM") { // Add new breakpoint
-		uint16_t seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
+		auto     seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
 		uint32_t ofs = GetHexValue(found,found);
 		CBreakpoint* bp = CBreakpoint::AddMemBreakpoint(seg,ofs);
 		if (bp)	{
@@ -1212,15 +1212,15 @@ bool ParseCommand(char* str) {
 #endif
 
 	if (command == "BPINT") { // Add Interrupt Breakpoint
-		uint8_t intNr	= (uint8_t)GetHexValue(found,found);
-		bool all = !(*found);
-		uint8_t valAH = (uint8_t)GetHexValue(found,found);
+		auto intNr = (uint8_t)GetHexValue(found,found);
+		bool all   = !(*found);
+		auto valAH = (uint8_t)GetHexValue(found,found);
 		if ((valAH==0x00) && (*found=='*' || all)) {
 			CBreakpoint::AddIntBreakpoint(intNr,BPINT_ALL,BPINT_ALL,false);
 			DEBUG_ShowMsg("DEBUG: Set interrupt breakpoint at INT %02X\n",intNr);
 		} else {
 			all = !(*found);
-			uint8_t valAL = (uint8_t)GetHexValue(found,found);
+			auto valAL = (uint8_t)GetHexValue(found,found);
 			if ((valAL==0x00) && (*found=='*' || all)) {
 				CBreakpoint::AddIntBreakpoint(intNr,valAH,BPINT_ALL,false);
 				DEBUG_ShowMsg("DEBUG: Set interrupt breakpoint at INT %02X AH=%02X\n",intNr,valAH);
@@ -1240,7 +1240,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "BPDEL") { // Delete Breakpoints
-		uint8_t bpNr	= (uint8_t)GetHexValue(found,found);
+		auto bpNr = (uint8_t)GetHexValue(found,found);
 		if ((bpNr==0x00) && (*found=='*')) { // Delete all
 			CBreakpoint::DeleteAll();
 			DEBUG_ShowMsg("DEBUG: Breakpoints deleted.\n");
@@ -1252,7 +1252,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "C") { // Set code overview
-		uint16_t codeSeg = (uint16_t)GetHexValue(found,found); found++;
+		auto     codeSeg = (uint16_t)GetHexValue(found,found); found++;
 		uint32_t codeOfs = GetHexValue(found,found);
 		DEBUG_ShowMsg("DEBUG: Set code overview to %04X:%04X\n",codeSeg,codeOfs);
 		codeViewData.useCS	= codeSeg;
@@ -1315,7 +1315,7 @@ bool ParseCommand(char* str) {
 #endif
 
 	if (command == "INTT") { //trace int.
-		uint8_t intNr = (uint8_t)GetHexValue(found,found);
+		auto intNr = (uint8_t)GetHexValue(found,found);
 		DEBUG_ShowMsg("DEBUG: Tracing INT %02X\n",intNr);
 		CPU_HW_Interrupt(intNr);
 		SetCodeWinStart();
@@ -1323,7 +1323,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "INT") { // start int.
-		uint8_t intNr = (uint8_t)GetHexValue(found,found);
+		auto intNr = (uint8_t)GetHexValue(found,found);
 		DEBUG_ShowMsg("DEBUG: Starting INT %02X\n",intNr);
 		CBreakpoint::AddBreakpoint(SegValue(cs),reg_eip, true);
 		CBreakpoint::ActivateBreakpointsExceptAt(SegPhys(cs)+reg_eip-1);
@@ -1367,7 +1367,7 @@ bool ParseCommand(char* str) {
 
 	if (command == "INTHAND") {
 		if (found[0] != 0) {
-			uint8_t intNr = (uint8_t)GetHexValue(found,found);
+			auto intNr = (uint8_t)GetHexValue(found,found);
 			DEBUG_ShowMsg("DEBUG: Set code overview to interrupt handler %X\n",intNr);
 			codeViewData.useCS	= mem_readw(intNr*4+2);
 			codeViewData.useEIP = mem_readw(intNr*4);
@@ -1898,7 +1898,7 @@ uint32_t DEBUG_CheckKeys(void) {
 							codeViewData.inputStr[codeViewData.inputPos++] = char(key);
 							codeViewData.inputStr[codeViewData.inputPos] = '\0';
 					} else if (!codeViewData.ovrMode) {
-						int len = (int) safe_strlen(codeViewData.inputStr);
+						auto len = (int) safe_strlen(codeViewData.inputStr);
 						if (len < MAXCMDLEN) {
 							for(len++;len>codeViewData.inputPos;len--)
 								codeViewData.inputStr[len]=codeViewData.inputStr[len-1];
@@ -2010,7 +2010,7 @@ static void LogMCBChain(uint16_t mcb_segment) {
 	DOS_MCB mcb(mcb_segment);
 	char filename[9]; // 8 characters plus a terminating NUL
 	const char *psp_seg_note;
-	uint16_t DOS_dataOfs = static_cast<uint16_t>(dataOfs); //Realmode addressing only
+	auto DOS_dataOfs = static_cast<uint16_t>(dataOfs); //Realmode addressing only
 	PhysPt dataAddr = PhysicalMake(dataSeg,DOS_dataOfs);// location being viewed in the "Data Overview"
 
 	// loop forever, breaking out of the loop once we've processed the last MCB
@@ -2432,7 +2432,7 @@ bool CDebugVar::SaveVars(char *name)
 
 
 	// write number of vars
-	uint16_t num = (uint16_t)varList.size();
+	auto num = (uint16_t)varList.size();
 	fwrite(&num,1,sizeof(num),f);
 
 	std::vector<CDebugVar*>::iterator i;
