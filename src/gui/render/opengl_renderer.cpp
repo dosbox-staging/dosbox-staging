@@ -432,13 +432,9 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 	//
 	glTexStorage2D(GL_TEXTURE_2D,
 	               1, // levels
-	               GL_RGBA8,
+	               GL_BGRA8_EXT,
 	               pass1.width,
 	               pass1.height);
-
-	// Fix channel order in hardware
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_BLUE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -534,7 +530,7 @@ void OpenGlRenderer::PrepareFrame()
 		                0,            // y offset
 		                pass1.width,  // width
 		                pass1.height, // height
-		                GL_RGBA,      // pixel data format
+		                GL_BGRA_EXT,      // pixel data format
 		                GL_UNSIGNED_BYTE,    // pixel data type
 		                last_framebuf.data() // pointer to image data
 		);
