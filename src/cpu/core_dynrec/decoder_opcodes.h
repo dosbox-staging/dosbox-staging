@@ -667,7 +667,7 @@ static void dyn_grp2_ev(grp2_types type) {
 			dyn_shift_word_gencall((ShiftOps)decode.modrm.reg,decode.big_op);
 			break;
 		}
-		uint8_t imm=(uint8_t)val;
+		const auto imm = static_cast<uint8_t>(val);
 		if (imm) {
 			gen_mov_byte_to_reg_low_imm_canuseword(FC_OP2,imm&0x1f);
 			dyn_shift_word_gencall((ShiftOps)decode.modrm.reg,decode.big_op);
