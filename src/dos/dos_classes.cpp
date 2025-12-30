@@ -385,10 +385,8 @@ bool DOS_PSP::SetEnvironmentValue(std::string_view variable, std::string_view ne
 
 	if (!new_string.empty()) {
 		std::string bigentry(variable);
-		for (std::string::iterator it = bigentry.begin();
-		     it != bigentry.end();
-		     ++it) {
-			*it = toupper(*it);
+		for (auto& entry : bigentry) {
+			entry = toupper(entry);
 		}
 		snprintf(env_string,
 		         bytes_to_read + 1,
