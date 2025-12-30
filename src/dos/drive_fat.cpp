@@ -764,25 +764,23 @@ constexpr uint16_t dta_pages()
 	return pages;
 }
 
-fatDrive::fatDrive(const char *sysFilename,
-                   uint32_t bytesector,
-                   uint32_t cylsector,
-                   uint32_t headscyl,
-                   uint32_t cylinders,
-                   bool roflag)
-	: loadedDisk(nullptr),
-	  created_successfully(true),
-	  partSectOff(0),
-	  bootbuffer{{0}, {0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0},
-	  absolute(false),
-	  readonly(roflag),
-	  fattype(0),
-	  CountOfClusters(0),
-	  firstDataSector(0),
-	  firstRootDirSect(0),
-	  cwdDirCluster(0),
-	  fatSectBuffer{0},
-	  curFatSect(0)
+fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
+                   uint32_t cylsector, uint32_t headscyl, uint32_t cylinders,
+                   uint8_t mediaid, bool roflag)
+        : loadedDisk(nullptr),
+          created_successfully(true),
+          partSectOff(0),
+          mediaid(mediaid),
+          bootbuffer{{0}, {0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0},
+          absolute(false),
+          readonly(roflag),
+          fattype(0),
+          CountOfClusters(0),
+          firstDataSector(0),
+          firstRootDirSect(0),
+          cwdDirCluster(0),
+          fatSectBuffer{0},
+          curFatSect(0)
 {
 	FILE *diskfile;
 	uint32_t filesize;
@@ -1035,7 +1033,7 @@ Bits fatDrive::UnMount()
 }
 
 uint8_t fatDrive::GetMediaByte(void) {
-	return loadedDisk ? loadedDisk->GetBiosType() : 0;
+	return mediaid;
 }
 
 // name can be a full DOS path with filename, up-to DOS_PATHLENGTH in length

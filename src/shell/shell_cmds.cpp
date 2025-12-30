@@ -1760,16 +1760,23 @@ void DOS_Shell::CMD_DATE(char *args)
 	CALLBACK_RunRealInt(0x21);
 
 	const auto date_string = MSG_Get("SHELL_CMD_DATE_DAYS");
-	const char* datestring = date_string.c_str();
 
-	uint32_t length;
 	char day[6] = {0};
-	if (sscanf(datestring, "%u", &length) && (length < 5) &&
-	    (strlen(datestring) == (length * 7 + 1))) {
-		// date string appears valid
-		for (uint32_t i = 0; i < length; i++)
-			day[i] = datestring[reg_al * length + 1 + i];
+	if (!date_string.empty() && isdigit(date_string[0])) {
+
+		constexpr size_t MaxDayAbbreviationLength = 5;
+		constexpr size_t DaysPerWeek = 7;
+
+		const size_t length = date_string[0] - '0';
+		if (length < MaxDayAbbreviationLength &&
+		    date_string.size() == (length * DaysPerWeek + 1)) {
+			// Date string appears valid
+			for (size_t i = 0; i < length; i++) {
+				day[i] = date_string[reg_al * length + 1 + i];
+			}
+		}
 	}
+
 	bool dateonly = scan_and_remove_cmdline_switch(args, "T");
 	if (!dateonly) {
 		WriteOut(MSG_Get("SHELL_CMD_DATE_NOW"));

@@ -1477,9 +1477,8 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 		const auto filter_name = (type_pref == "lpf") ? "low-pass"
 		                                              : "high-pass";
 
-		int order;
-		if (!sscanf(order_pref.c_str(), "%d", &order) || order < 1 ||
-		    order > MaxFilterOrder) {
+		const auto order = parse_int(order_pref);
+		if (!order || *order < 1 || *order > MaxFilterOrder) {
 
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      name,
@@ -1490,9 +1489,8 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 			return false;
 		}
 
-		int cutoff_freq_hz;
-		if (!sscanf(cutoff_freq_pref.c_str(), "%d", &cutoff_freq_hz) ||
-		    cutoff_freq_hz <= 0) {
+		const auto cutoff_freq_hz = parse_int(cutoff_freq_pref);
+		if (!cutoff_freq_hz || *cutoff_freq_hz <= 0) {
 
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      name,
@@ -1503,11 +1501,11 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 		}
 
 		if (type_pref == "lpf") {
-			ConfigureLowPassFilter(order, cutoff_freq_hz);
+			ConfigureLowPassFilter(*order, *cutoff_freq_hz);
 			SetLowPassFilter(FilterState::On);
 
 		} else if (type_pref == "hpf") {
-			ConfigureHighPassFilter(order, cutoff_freq_hz);
+			ConfigureHighPassFilter(*order, *cutoff_freq_hz);
 			SetHighPassFilter(FilterState::On);
 
 		} else {
