@@ -426,8 +426,6 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
 	// Just create the texture; we'll copy the image data later with
 	// `glTexSubImage2D()`
@@ -471,9 +469,6 @@ void OpenGlRenderer::RecreatePass1OutputTexture()
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
 	SetPass1OutputTextureFiltering();
 
@@ -1239,7 +1234,7 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	             iroundf(output_rect_px.y),
 	             image.params.width,
 	             image.params.height,
-	             GL_RGBA,
+	             GL_RGB,
 	             GL_UNSIGNED_BYTE,
 	             image.image_data);
 
