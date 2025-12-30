@@ -329,9 +329,10 @@ void CEvent::ClearBinds() {
 	}
 	bindlist.clear();
 }
-void CEvent::DeActivateAll() {
-	for (CBindList_it bit = bindlist.begin() ; bit != bindlist.end(); ++bit) {
-		(*bit)->DeActivateBind(true);
+void CEvent::DeActivateAll()
+{
+	for (auto& entry : bindlist) {
+		entry->DeActivateBind(true);
 	}
 }
 
@@ -2341,8 +2342,8 @@ static void CreateStringBind(char * line) {
 foundevent:
 	CBind * bind = nullptr;
 	for (char * bindline=strip_word(line);*bindline;bindline=strip_word(line)) {
-		for (CBindGroup_it it = bindgroups.begin(); it != bindgroups.end(); ++it) {
-			bind=(*it)->CreateConfigBind(bindline);
+		for (auto& entry : bindgroups) {
+			bind = entry->CreateConfigBind(bindline);
 			if (bind) {
 				event->AddBind(bind);
 				bind->SetFlags(bindline);
@@ -2579,8 +2580,8 @@ static void MAPPER_SaveBinds() {
 	}
 	for (const auto& event : events) {
 		fprintf(savefile,"%s ",event->GetName());
-		for (CBindList_it bind_it = event->bindlist.begin(); bind_it != event->bindlist.end(); ++bind_it) {
-			CBind * bind=*(bind_it);
+		for (auto& entry : event->bindlist) {
+			CBind * bind = entry;
 			const auto buffer = bind->GetConfigName() + bind->GetFlags();
 			fprintf(savefile, "\"%s\" ", buffer.c_str());
 		}
@@ -2771,7 +2772,7 @@ void BIND_MappingEvents()
 			mapper.exit=true;
 			break;
 		default:
-			if (mapper.addbind) for (CBindGroup_it it = bindgroups.begin(); it != bindgroups.end(); ++it) {
+			if (mapper.addbind) for (auto it = bindgroups.begin(); it != bindgroups.end(); ++it) {
 				CBind * newbind=(*it)->CreateEventBind(&event);
 				if (!newbind) continue;
 				mapper.aevent->AddBind(newbind);
