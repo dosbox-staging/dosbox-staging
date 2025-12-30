@@ -209,7 +209,7 @@ public:
 	uint8_t *alloc_invalidation_map() const
 	{
 		constexpr size_t map_size = 4096;
-		uint8_t *map = new (std::nothrow) uint8_t[map_size];
+		auto map = new (std::nothrow) uint8_t[map_size];
 		if (!map) {
 			E_Exit("failed to allocate invalidation_map");
 		}
@@ -727,7 +727,7 @@ static void cache_closeblock()
 	block->link[0].next=nullptr;
 	block->link[1].next=nullptr;
 	// close the block with correct alignment
-	Bitu written = (Bitu)(cache.pos - block->cache.start);
+	auto written = (Bitu)(cache.pos - block->cache.start);
 	if (written>block->cache.size) {
 		if (!block->cache.next) {
 			if (written > block->cache.size + CACHE_MAXSIZE)
@@ -849,7 +849,7 @@ static inline void dyn_mem_adjust(void *&ptr, size_t &size)
 	// Use different code on 64K page systems (currently just ppc64le).
 	// The other code will sometimes underrun our pointer into unmapped
 	// memory and mprotect() will then fail.
-	const uintptr_t p = reinterpret_cast<uintptr_t>(ptr);
+	const auto p = reinterpret_cast<uintptr_t>(ptr);
 	const auto align_adjust = p % HostPageSize;
 	const auto p_aligned = p - align_adjust;
 	assert((p_aligned % HostPageSize) == 0);
