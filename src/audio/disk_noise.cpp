@@ -244,7 +244,7 @@ void DiskNoiseDevice::LoadSample(const std::string& path,
 		}
 
 		// Scale data to integer value range
-		const float scale = static_cast<float>(INT16_MAX);
+		const auto scale = static_cast<float>(INT16_MAX);
 		for (auto& sample : destination_buffer) {
 			sample *= scale;
 		}
