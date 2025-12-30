@@ -2645,7 +2645,7 @@ static void mixer_thread_loop()
 			// audio.
 			constexpr double NanosecondsPerMillisecond = 1000000.0;
 
-			const uint64_t nap_time = static_cast<uint64_t>(
+			const auto nap_time = static_cast<uint64_t>(
 			        expected_time * NanosecondsPerMillisecond);
 
 			std::this_thread::sleep_for(
