@@ -541,8 +541,8 @@ void MouseInterface::UpdateSensitivity()
 		if (setting == 0) {
 			return 0.0f;
 		}
-		const float user_value = static_cast<float>(setting);
-		const float scaling    = sensitivity_predefined / 100.0f;
+		const auto user_value = static_cast<float>(setting);
+		const float scaling   = sensitivity_predefined / 100.0f;
 		return user_value * scaling;
 	};
 
