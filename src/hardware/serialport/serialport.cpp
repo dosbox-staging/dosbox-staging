@@ -1282,7 +1282,7 @@ public:
 	SerialPorts(Section* sec)
 	{
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};
-		SectionProp* section = static_cast<SectionProp*>(sec);
+		auto section = static_cast<SectionProp*>(sec);
 
 		const PropPath *pbFilename = section->GetPath("phonebookfile");
 		MODEM_ReadPhonebook(pbFilename->realpath);
