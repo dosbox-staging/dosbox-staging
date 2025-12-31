@@ -357,7 +357,7 @@ static void IDE_ATAPI_SpinDown(uint32_t idx /*which IDE controller*/)
 		if (dev->type == IDE_TYPE_HDD) {
 			// no-op
 		} else if (dev->type == IDE_TYPE_CDROM) {
-			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
+			auto atapi = (IDEATAPICDROMDevice *)dev;
 
 			if (atapi->loading_mode == LOAD_DISC_READIED || atapi->loading_mode == LOAD_READY) {
 				atapi->loading_mode = LOAD_IDLE;
@@ -385,7 +385,7 @@ static void IDE_ATAPI_CDInsertion(uint32_t idx /*which IDE controller*/)
 		if (dev->type == IDE_TYPE_HDD) {
 			// no-op
 		} else if (dev->type == IDE_TYPE_CDROM) {
-			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
+			auto atapi = (IDEATAPICDROMDevice *)dev;
 
 			if (atapi->loading_mode == LOAD_INSERT_CD) {
 				atapi->loading_mode = LOAD_DISC_LOADING;
@@ -414,7 +414,7 @@ static void IDE_ATAPI_SpinUpComplete(uint32_t idx /*which IDE controller*/)
 		if (dev->type == IDE_TYPE_HDD) {
 			// no-op
 		} else if (dev->type == IDE_TYPE_CDROM) {
-			IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
+			auto atapi = (IDEATAPICDROMDevice *)dev;
 
 			if (atapi->loading_mode == LOAD_DISC_LOADING) {
 				atapi->loading_mode = LOAD_DISC_READIED;
@@ -1322,7 +1322,7 @@ void IDEATAPICDROMDevice::on_mode_select_io_complete()
 
 	while ((scan + 2) < fence) {
 		uint8_t PAGE = *scan++;
-		uint32_t LEN = (uint32_t)(*scan++);
+		auto LEN = (uint32_t)(*scan++);
 
 		if ((scan + LEN) > fence) {
 			LOG_WARNING("IDE: ATAPI MODE SELECT warning, page_0 length extends %u bytes past buffer",
@@ -2277,7 +2277,7 @@ void IDE_ATAPI_MediaChangeNotify(uint8_t requested_drive_index)
 			if (dev == nullptr)
 				continue;
 			if (dev->type == IDE_TYPE_CDROM) {
-				IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
+				auto atapi = (IDEATAPICDROMDevice *)dev;
 				if (requested_drive_index == atapi->drive_index) {
 					LOG_MSG("IDE: ATAPI acknowledge media change for drive %c",
 					        requested_drive_index + 'A');
@@ -2432,7 +2432,7 @@ std::string GetIDEPosition(uint8_t bios_disk_index)
 		IDEController *c = GetIDEController(index);
 		if (c)
 			for (int slave = 0; slave < 2; slave++) {
-				IDEATADevice *dev = dynamic_cast<IDEATADevice *>(c->device[slave]);
+				auto dev = dynamic_cast<IDEATADevice *>(c->device[slave]);
 				if (dev && dev->bios_disk_index == bios_disk_index) {
 					return std::to_string(index + 1) + (slave ? 's' : 'm');
 				}
@@ -2529,7 +2529,7 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk, uint64_t lba)
 			dev->faked_command = false;
 
 			if (dev->type == IDE_TYPE_HDD) {
-				IDEATADevice *ata = (IDEATADevice *)dev;
+				auto ata = (IDEATADevice *)dev;
 				//              static bool int13_fix_wrap_warned = false;
 				bool vm86 = IDE_CPU_Is_Vm86();
 
@@ -2691,7 +2691,7 @@ void IDE_EmuINT13DiskReadByBIOS(uint8_t disk, uint32_t cyl, uint32_t head, unsig
 			dev->faked_command = false;
 
 			if (dev->type == IDE_TYPE_HDD) {
-				IDEATADevice *ata = (IDEATADevice *)dev;
+				auto ata  = (IDEATADevice *)dev;
 				bool vm86 = IDE_CPU_Is_Vm86();
 
 				if ((ata->bios_disk_index - 2) == (disk - 0x80)) {
@@ -2897,7 +2897,7 @@ void IDE_ResetDiskByBIOS(uint8_t disk)
 			/* TBD: Forcibly device-reset the IDE device */
 
 			if (dev->type == IDE_TYPE_HDD) {
-				IDEATADevice *ata = (IDEATADevice *)dev;
+				auto ata = (IDEATADevice *)dev;
 
 				if ((ata->bios_disk_index - 2) == (disk - 0x80)) {
 					LOG_MSG("IDE: %d%c reset by BIOS disk 0x%02x", (uint32_t)(idx + 1),
@@ -2939,7 +2939,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 		return;
 
 	if (dev->type == IDE_TYPE_HDD) {
-		IDEATADevice *ata = (IDEATADevice *)dev;
+		auto ata = (IDEATADevice *)dev;
 		uint32_t sectorn = 0; /* TBD: expand to uint64_t when adding LBA48 emulation */
 		uint32_t sectcount;
 		std::shared_ptr<imageDisk> disk = nullptr;
@@ -3323,7 +3323,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			break;
 		}
 	} else if (dev->type == IDE_TYPE_CDROM) {
-		IDEATAPICDROMDevice *atapi = (IDEATAPICDROMDevice *)dev;
+		auto atapi = (IDEATAPICDROMDevice *)dev;
 
 		if (dev->state == IDE_DEV_ATAPI_BUSY) {
 			switch (dev->command) {
