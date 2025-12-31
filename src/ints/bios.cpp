@@ -179,7 +179,7 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 	if (isplayback) IO_Write(0x0b,0x48|tandy_dma);
 	else IO_Write(0x0b,0x44|tandy_dma);
 	/* set physical address of buffer */
-	uint8_t bufpage=(uint8_t)((bufpt>>16)&0xff);
+	auto bufpage=(uint8_t)((bufpt>>16)&0xff);
 	IO_Write(tandy_dma*2,(uint8_t)(bufpt&0xff));
 	IO_Write(tandy_dma*2,(uint8_t)((bufpt>>8)&0xff));
 	switch (tandy_dma) {
@@ -200,8 +200,8 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 	IO_Write(tandy_dma*2+1,(uint8_t)(tlength&0xff));
 	IO_Write(tandy_dma*2+1,(uint8_t)((tlength>>8)&0xff));
 
-	uint16_t delay=(uint16_t)(real_readw(0x40,0xd2)&0xfff);
-	uint8_t amplitude=(uint8_t)((real_readw(0x40,0xd2)>>13)&0x7);
+	auto delay=(uint16_t)(real_readw(0x40,0xd2)&0xfff);
+	auto amplitude=(uint8_t)((real_readw(0x40,0xd2)>>13)&0x7);
 	if (tandy_sb.port) {
 		IO_Write(0x0a,tandy_dma);	/* enable DMA channel */
 		/* set frequency */
@@ -421,7 +421,7 @@ static void BIOS_HostTimeSync() {
 	dos.date.month=(uint8_t)loctime->tm_mon+1;
 	dos.date.year=(uint16_t)loctime->tm_year+1900;
 
-	uint32_t ticks=(uint32_t)(((double)(
+	auto ticks=(uint32_t)(((double)(
 		loctime->tm_hour*3600*1000+
 		loctime->tm_min*60*1000+
 		loctime->tm_sec*1000+
