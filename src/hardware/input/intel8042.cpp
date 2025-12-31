@@ -296,7 +296,7 @@ static void warn_vendor_lines()
 static void warn_unknown_command(const Command command)
 {
 	static bool already_warned[UINT8_MAX + 1];
-	const uint8_t code = static_cast<uint8_t>(command);
+	const auto code = static_cast<uint8_t>(command);
 	if (!already_warned[code]) {
 		LOG_WARNING("I8042: Unknown command 0x%02x", code);
 		already_warned[code] = true;
@@ -580,25 +580,25 @@ static uint8_t get_output_port() // aka port P2
 
 static bool is_cmd_mem_read(const Command command)
 {
-	const uint8_t code = static_cast<uint8_t>(command);
+	const auto code = static_cast<uint8_t>(command);
 	return (code >= 0x20) && (code <= 0x3f);
 }
 
 static bool is_cmd_mem_write(const Command command)
 {
-	const uint8_t code = static_cast<uint8_t>(command);
+	const auto code = static_cast<uint8_t>(command);
 	return (code >= 0x60) && (code <= 0x7f);
 }
 
 static bool is_cmd_pulse_line(const Command command)
 {
-	const uint8_t code = static_cast<uint8_t>(command);
+	const auto code = static_cast<uint8_t>(command);
 	return (code >= 0xf0);
 }
 
 static bool is_cmd_vendor_lines(const Command command)
 {
-	const uint8_t code = static_cast<uint8_t>(command);
+	const auto code = static_cast<uint8_t>(command);
 	return (code >= 0xb0) && (code <= 0xbd);
 }
 
@@ -878,8 +878,8 @@ static void execute_command(const Command command, const uint8_t param)
 		} else if (is_cmd_pulse_line(command)) { // 0xf0-0xff
 			// Pulse controller lines for 6ms,
 			// bits 0-3 counts, 0 = pulse relevant line
-			const auto lines   = param & 0b0000'1111;
-			const uint8_t code = static_cast<uint8_t>(command);
+			const auto lines = param & 0b0000'1111;
+			const auto code  = static_cast<uint8_t>(command);
 			if ((code == 0xf0 && param != 0b1111 && param != 0b1110) ||
 			    (code != 0xf0 && param != 0b1111)) {
 				warn_line_pulse();
