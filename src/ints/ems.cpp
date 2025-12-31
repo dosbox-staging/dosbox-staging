@@ -933,7 +933,7 @@ static Bitu INT67_Handler(void) {
 				for (ct=0; ct<4; ct++) {
 					uint16_t handle=emm_mappings[ct].handle;
 					if (handle!=0xffff) {
-						uint16_t memh=(uint16_t)MEM_NextHandleAt(emm_handles[handle].mem,emm_mappings[ct].page*4);
+						auto memh=(uint16_t)MEM_NextHandleAt(emm_handles[handle].mem,emm_mappings[ct].page*4);
 						uint16_t entry_addr=reg_di+(EMM_PAGEFRAME>>6)+(ct*0x10);
 						real_writew(SegValue(es),entry_addr+0x00+0x01,(memh+0)*0x10);		// mapping of 1/4 of page
 						real_writew(SegValue(es),entry_addr+0x04+0x01,(memh+1)*0x10);		// mapping of 2/4 of page
