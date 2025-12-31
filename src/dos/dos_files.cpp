@@ -274,7 +274,7 @@ bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 
 			int32_t iDown;
 			bool dots = true;
-			int32_t templen=(int32_t)strlen(tempdir);
+			auto templen=(int32_t)strlen(tempdir);
 			for(iDown=0;(iDown < templen) && dots;iDown++)
 				if(tempdir[iDown] != '.')
 					dots = false;
@@ -1273,7 +1273,7 @@ uint8_t FCB_Parsename(uint16_t seg, uint16_t offset, uint8_t parser,
 	while (true) {
 		unsigned char nc = *reinterpret_cast<const unsigned char*>(
 		        &string[0]);
-		char ncs = (char)toupper(nc); //Should use DOS_ToUpper, but then more calls need to be changed.
+		auto ncs = (char)toupper(nc); //Should use DOS_ToUpper, but then more calls need to be changed.
 		if (ncs == '*') { //Handle *
 			fill = '?';
 			ncs = '?';
@@ -1299,7 +1299,7 @@ checkext:
 	while (true) {
 		unsigned char nc = *reinterpret_cast<const unsigned char*>(
 		        &string[0]);
-		char ncs = (char)toupper(nc);
+		auto ncs = (char)toupper(nc);
 		if (ncs == '*') { //Handle *
 			fill = '?';
 			ncs = '?';
@@ -1555,9 +1555,9 @@ uint8_t DOS_FCBIncreaseSize(uint16_t seg, uint16_t offset)
 	date = DOS_PackDate(dos.date.year,dos.date.month,dos.date.day);
 	uint32_t ticks = mem_readd(BIOS_TIMER);
 	uint32_t seconds = (ticks*10)/182;
-	uint16_t hour = (uint16_t)(seconds/3600);
-	uint16_t min = (uint16_t)((seconds % 3600)/60);
-	uint16_t sec = (uint16_t)(seconds % 60);
+	auto hour = static_cast<uint16_t>(seconds/3600);
+	auto min  = static_cast<uint16_t>((seconds % 3600)/60);
+	auto sec  = static_cast<uint16_t>(seconds % 60);
 	time = DOS_PackTime(hour,min,sec);
 	Files[fhandle]->time = time;
 	Files[fhandle]->date = date;
