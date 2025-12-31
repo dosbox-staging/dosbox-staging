@@ -111,7 +111,7 @@ std::u32string utf8_to_wide(const std::string& str)
 	for (size_t i = 0; i < str.size(); ++i) {
 		const size_t remaining = str.size() - i - 1;
 
-		const uint8_t byte_1 = static_cast<uint8_t>(str[i]);
+		const auto    byte_1 = static_cast<uint8_t>(str[i]);
 		const uint8_t byte_2 = (remaining >= 1) ? static_cast<uint8_t>(str[i + 1]) : 0;
 		const uint8_t byte_3 = (remaining >= 2) ? static_cast<uint8_t>(str[i + 2]) : 0;
 		const uint8_t byte_4 = (remaining >= 3) ? static_cast<uint8_t>(str[i + 3]) : 0;
