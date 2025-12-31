@@ -722,7 +722,7 @@ static void set_text_lines()
 
 void INT10_SetCurMode(void)
 {
-	uint16_t bios_mode = (uint16_t)real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_MODE);
+	auto bios_mode = (uint16_t)real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_MODE);
 
 	if (CurMode->mode != bios_mode) {
 		bool mode_changed = false;

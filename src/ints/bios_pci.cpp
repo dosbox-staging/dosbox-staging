@@ -106,7 +106,7 @@ void INT1AB1_Handler()
 		}
 
 		const auto tag_value = (reg_cx << 16) | reg_dx;
-		const uint32_t device_tag = static_cast<uint32_t>(tag_value);
+		const auto device_tag = static_cast<uint32_t>(tag_value);
 
 		// Try to find requested device
 		uint32_t device_number = 0;
@@ -137,7 +137,7 @@ void INT1AB1_Handler()
 	}
 	case 0x03: { // Find PCI Class Code
 		const auto tag_value = reg_ecx & 0xffffff;
-		const uint32_t class_tag = static_cast<uint32_t>(tag_value);
+		const auto class_tag = static_cast<uint32_t>(tag_value);
 
 		// Try to find requested device
 		uint32_t device_number = 0;
