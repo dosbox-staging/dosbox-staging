@@ -911,8 +911,8 @@ void MidiDeviceFluidSynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 // Apply the sysex message to the service
 void MidiDeviceFluidSynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 {
-	const char* data = reinterpret_cast<const char*>(msg.data());
-	const auto n     = static_cast<int>(msg.size());
+	const auto data = reinterpret_cast<const char*>(msg.data());
+	const auto n    = static_cast<int>(msg.size());
 
 	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
 }
