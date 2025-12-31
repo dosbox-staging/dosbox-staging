@@ -33,6 +33,7 @@ GPL-2.0-or-later terms, however there are some exceptions:
    - iir1: MIT
    - loguru: Public Domain
    - ManyMouse: Zlib
+   - PL_MPEG: MIT
    - PDcurses: Public Domain
    - simde: MIT
    - stb_truetype: MIT or Public Domain
