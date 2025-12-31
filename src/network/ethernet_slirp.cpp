@@ -126,14 +126,14 @@ static void *db_slirp_timer_new(SlirpTimerCb cb, void *cb_opaque, void *opaque)
 static void db_slirp_timer_free(void *timer, void *opaque)
 {
 	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
-	struct slirp_timer *real_timer = (struct slirp_timer *)timer;
+	auto real_timer = (struct slirp_timer *)timer;
 	conn->TimerFree(real_timer);
 }
 
 static void db_slirp_timer_mod(void *timer, int64_t expire_time, void *opaque)
 {
 	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
-	struct slirp_timer *real_timer = (struct slirp_timer *)timer;
+	auto real_timer = (struct slirp_timer *)timer;
 	conn->TimerMod(real_timer, expire_time);
 }
 
@@ -447,7 +447,7 @@ int SlirpEthernetConnection::ReceivePacket(const uint8_t *packet, int len)
 
 struct slirp_timer *SlirpEthernetConnection::TimerNew(SlirpTimerCb cb, void *cb_opaque)
 {
-	struct slirp_timer *timer = new struct slirp_timer;
+	auto timer = new struct slirp_timer;
 	timer->expires_ns = 0;
 	timer->cb = cb;
 	timer->cb_opaque = cb_opaque;

@@ -1021,7 +1021,7 @@ bx_ne2k_c::page3_write(io_port_t, io_val_t, io_width_t)
 void
 bx_ne2k_c::tx_timer_handler(void *this_ptr)
 {
-  bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
+  auto class_ptr = (bx_ne2k_c *) this_ptr;
 
   class_ptr->tx_timer();
 }
@@ -1050,7 +1050,7 @@ bx_ne2k_c::tx_timer(void)
 io_val_t bx_ne2k_c::read_handler(void *this_ptr, io_port_t address, io_width_t io_len)
 {
 #if !BX_USE_NE2K_SMF
-  bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
+  auto class_ptr = (bx_ne2k_c *) this_ptr;
 
   return( class_ptr->read(address, io_len) );
 }
@@ -1105,7 +1105,7 @@ bx_ne2k_c::write_handler(void *this_ptr, io_port_t address, io_val_t value,
 			 io_width_t io_len)
 {
 #if !BX_USE_NE2K_SMF
-  bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
+  auto class_ptr = (bx_ne2k_c *) this_ptr;
 
   class_ptr->write(address, value, io_len);
 }
