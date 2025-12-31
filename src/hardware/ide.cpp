@@ -1,11 +1,7 @@
-/*
- * IDE ATA/ATAPI and controller emulation for DOSBox-X
- * (C) 2012 Jonathan Campbell
-
- * [insert open source license here]
- */
-
-/* $Id: ide.cpp,v 1.49 2009-04-10 09:53:04 c2woody Exp $ */
+// SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2012-2021 Jonathan Campbell
+// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "ide.h"
 
