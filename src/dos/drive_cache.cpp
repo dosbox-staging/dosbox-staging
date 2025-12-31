@@ -429,8 +429,8 @@ unsigned DOS_Drive_Cache::CreateShortNameID(CFileInfo *curDir, const char *name)
 		return 1; // short name IDs start with 1
 
 	unsigned found_nr = 0;
-	Bits low = 0;
-	Bits high = (Bits)(filelist_size - 1);
+	Bits low  = 0;
+	auto high = (Bits)(filelist_size - 1);
 
 	while (low <= high) {
 		auto mid = (low + high) / 2;
@@ -553,7 +553,7 @@ Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName, const size
 	RemoveTrailingDot(shortName);
 	// Search long name and return array number of element
 	Bits low	= 0;
-	Bits high	= (Bits)(filelist_size-1);
+	auto high	= (Bits)(filelist_size-1);
 	Bits mid,res;
 	while (low<=high) {
 		mid = (low+high)/2;
@@ -831,7 +831,7 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, uint16_t& id) 
 }
 
 void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, bool is_directory) {
-	CFileInfo* info = new CFileInfo;
+	auto info = new CFileInfo;
 	safe_strcpy(info->orgname, name);
 	info->shortNr = 0;
 	info->isDir = is_directory;
@@ -866,7 +866,7 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, bool is_dire
 }
 
 void DOS_Drive_Cache::CopyEntry(CFileInfo* dir, CFileInfo* from) {
-	CFileInfo* info = new CFileInfo;
+	auto info = new CFileInfo;
 	// just copy things into new fileinfo
 	safe_strcpy(info->orgname, from->orgname);
 	safe_strcpy(info->shortname, from->shortname);
