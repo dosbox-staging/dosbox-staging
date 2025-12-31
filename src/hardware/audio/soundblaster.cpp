@@ -1777,7 +1777,7 @@ static void dsp_do_reset(const uint8_t val)
 static void dsp_e2_dma_callback(const DmaChannel* /*chan*/, const DmaEvent event)
 {
 	if (event == DmaEvent::IsUnmasked) {
-		uint8_t val = (uint8_t)(sb.e2.value & 0xff);
+		auto val = static_cast<uint8_t>(sb.e2.value & 0xff);
 
 		DmaChannel* chan = DMA_GetChannel(sb.hw.dma8);
 
@@ -2400,7 +2400,7 @@ static float calc_vol(const uint8_t amount)
 {
 	uint8_t count = 31 - amount;
 
-	float db = static_cast<float>(count);
+	auto db = static_cast<float>(count);
 
 	if (sb.type == SbType::SBPro1 || sb.type == SbType::SBPro2) {
 		if (count) {
@@ -3516,7 +3516,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 {
 	assert(conf);
 
-	SectionProp* section = static_cast<SectionProp*>(conf);
+	auto section = static_cast<SectionProp*>(conf);
 
 	sb.hw.base = section->GetHex("sbbase");
 	sb.hw.irq  = static_cast<uint8_t>(section->GetInt("irq"));

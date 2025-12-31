@@ -817,7 +817,7 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 	opl.mode = _opl_mode;
 
-	SectionProp* section = static_cast<SectionProp*>(configuration);
+	auto section = static_cast<SectionProp*>(configuration);
 	const auto base = static_cast<uint16_t>(section->GetHex("sbbase"));
 
 	ctrl.mixer_enabled = section->GetBool("sbmixer");
