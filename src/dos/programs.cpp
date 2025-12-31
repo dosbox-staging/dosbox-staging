@@ -92,10 +92,10 @@ static Bitu PROGRAMS_Handler(void)
 	static_assert(exec_block_size < UINT16_MAX, "Should only be 19 bytes");
 
 	// Read the index from program code in memory
-	PhysPt reader = PhysicalMake(dos.psp(),
-	                             256 + static_cast<uint16_t>(exec_block_size));
+	auto reader = PhysicalMake(dos.psp(),
+	                           256 + static_cast<uint16_t>(exec_block_size));
 
-	HostPt writer = (HostPt)&index;
+	auto writer = (HostPt)&index;
 
 	for (; size > 0; size--) {
 		*writer++ = mem_readb(reader++);
@@ -155,8 +155,7 @@ void Program::ChangeToLongCmd()
 	// Length of arguments can be ~120. but switch when above 100 to be sure
 
 	if (/*control->SecureMode() ||*/ cmd->GetNumArguments() > 100) {
-		CommandLine* temp = new CommandLine(cmd->GetFileName(),
-		                                    full_arguments);
+		auto temp = new CommandLine(cmd->GetFileName(), full_arguments);
 		delete cmd;
 		cmd = temp;
 	}
@@ -337,7 +336,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		return;
 	}
 
-	SectionProp* psec = dynamic_cast<SectionProp*>(sec);
+	auto psec = dynamic_cast<SectionProp*>(sec);
 
 	// Special [autoexec] section handling (if has no properties like all
 	// the other sections).
@@ -394,7 +393,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 				} else if (p->GetType() == Value::V_INT) {
 					// Print min & max for integer values if
 					// used
-					PropInt* pint = dynamic_cast<PropInt*>(p);
+					auto pint = dynamic_cast<PropInt*>(p);
 					assert(pint);
 
 					if (pint && pint->GetMin() != pint->GetMax()) {
@@ -631,7 +630,7 @@ void CONFIG::Run(void)
 		case P_HELP3: HandleHelpCommand(pvars); return;
 
 		case P_AUTOEXEC_CLEAR: {
-			AutoExecSection* sec = dynamic_cast<AutoExecSection*>(
+			auto sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 			if (!sec) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
@@ -646,7 +645,7 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
 				return;
 			}
-			AutoExecSection* sec = dynamic_cast<AutoExecSection*>(
+			auto sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 			if (!sec) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
@@ -661,7 +660,7 @@ void CONFIG::Run(void)
 		}
 
 		case P_AUTOEXEC_TYPE: {
-			AutoExecSection* sec = dynamic_cast<AutoExecSection*>(
+			auto sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 
 			if (!sec) {
@@ -715,11 +714,10 @@ void CONFIG::Run(void)
 				if (sec) {
 					// list properties in section
 					auto i = 0;
-					SectionProp* psec =
-					        dynamic_cast<SectionProp*>(sec);
+					auto psec = dynamic_cast<SectionProp*>(sec);
 
 					if (psec == nullptr) {
-						AutoExecSection* pline =
+						auto pline =
 						        dynamic_cast<AutoExecSection*>(
 						                sec);
 						assert(pline);
