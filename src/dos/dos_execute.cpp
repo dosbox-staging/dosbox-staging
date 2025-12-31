@@ -320,7 +320,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		iscom=true;
 	} else {
 		/* Convert the header to correct endian, i hope this works */
-		HostPt endian=(HostPt)&head;
+		auto endian=(HostPt)&head;
 		for (i=0;i<sizeof(EXE_Header)/2;i++) {
 			*((uint16_t *)endian)=host_readw(endian);
 			endian+=2;
@@ -335,7 +335,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 			if (imagesize+headersize<512) imagesize = 512-headersize;
 		}
 	}
-	uint8_t *loadbuf = new uint8_t[0x10000];
+	auto loadbuf = new uint8_t[0x10000];
 	if (flags!=OVERLAY) {
 		/* Create an environment block */
 		envseg=block.exec.envseg;
