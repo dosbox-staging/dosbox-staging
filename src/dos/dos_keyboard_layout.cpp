@@ -340,7 +340,7 @@ KeyboardLayoutResult KeyboardLayout::ReadKeyboardFile(const std::string& keyboar
 		start_pos=0;
 	} else {
 		// check ID-bytes of file
-		uint32_t dr = (uint32_t)fread(read_buf, sizeof(uint8_t), 4,
+		auto dr = (uint32_t)fread(read_buf, sizeof(uint8_t), 4,
 		                          tempfile.get());
 		if ((dr<4) || (read_buf[0]!=0x4b) || (read_buf[1]!=0x4c) || (read_buf[2]!=0x46)) {
 			LOG_WARNING("LOCALE: Keyboard layout file for layout '%s' is invalid",
@@ -364,7 +364,7 @@ KeyboardLayoutResult KeyboardLayout::ReadKeyboardFile(const std::string& keyboar
 		std::string available_layout = {};
 		for (;i<data_len;) {
 			assert(start_pos + i < sizeof(read_buf));
-			char lcode=char(read_buf[start_pos+i]);
+			auto lcode = char(read_buf[start_pos+i]);
 			i++;
 			if (lcode==',') break;
 			available_layout.push_back(lcode);
@@ -607,7 +607,7 @@ bool KeyboardLayout::SetMapKey(const uint8_t key, const uint16_t layouted_key,
                                const bool is_command, const bool is_keypair)
 {
 	if (is_command) {
-		uint8_t key_command=(uint8_t)(layouted_key&0xff);
+		auto key_command=(uint8_t)(layouted_key&0xff);
 		// check if diacritics-command
 		if ((key_command>=200) && (key_command<235)) {
 			// diacritics command
@@ -696,7 +696,7 @@ uint16_t KeyboardLayout::ExtractCodePage(const std::string& keyboard_layout)
 		start_pos=0;
 	} else {
 		// check ID-bytes of file
-		uint32_t dr = (uint32_t)fread(read_buf, sizeof(uint8_t), 4,
+		auto dr = (uint32_t)fread(read_buf, sizeof(uint8_t), 4,
 		                          tempfile.get());
 		if ((dr<4) || (read_buf[0]!=0x4b) || (read_buf[1]!=0x4c) || (read_buf[2]!=0x46)) {
 			LOG_WARNING("LOCALE: Keyboard layout file for layout '%s' is invalid",
@@ -765,7 +765,7 @@ KeyboardLayoutResult KeyboardLayout::SwitchKeyboardLayout(
 				diacritics_character = 0;
 			}
 		} else {
-			KeyboardLayout *temp_layout = new KeyboardLayout();
+			auto temp_layout = new KeyboardLayout();
 
 			auto code_page = temp_layout->ExtractCodePage(keyboard_layout);
 			if (!DOS_CanLoadScreenFonts() && code_page != DefaultCodePage) {
