@@ -124,7 +124,7 @@ static bool DOS_MultiplexFunctions(void) {
 
 			// fill in filename in fcb style
 			// (space-padded name (8 chars)+space-padded extension (3 chars))
-			const char* filename=(const char*)Files[reg_bx]->GetName();
+			auto filename=(const char*)Files[reg_bx]->GetName();
 			if (strrchr(filename,'\\')) filename=strrchr(filename,'\\')+1;
 			if (strrchr(filename,'/')) filename=strrchr(filename,'/')+1;
 			if (!filename) return true;
