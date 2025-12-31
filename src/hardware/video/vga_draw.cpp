@@ -714,7 +714,7 @@ static uint8_t *VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line)
 		return TempLine;
 	const Bitu font_addr = (vga.draw.cursor.address - vidstart) >> 1;
 	if (font_addr < vga.draw.blocks) {
-		uint32_t *draw = (uint32_t *)&TempLine[font_addr * 8];
+		auto draw = (uint32_t *)&TempLine[font_addr * 8];
 		uint32_t att=TXT_FG_Table[vga.tandy.draw_base[vga.draw.cursor.address+1]&0xf];
 		*draw++ = att;
 		*draw++ = att;
@@ -764,7 +764,7 @@ static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 		return TempLine;
 	const Bitu font_addr = (vga.draw.cursor.address - vidstart) >> 1;
 	if (font_addr < vga.draw.blocks) {
-		uint32_t *draw = (uint32_t *)&TempLine[font_addr * 8];
+		auto draw = (uint32_t *)&TempLine[font_addr * 8];
 		uint8_t attr = vga.tandy.draw_base[vga.draw.cursor.address+1];
 		uint32_t cg;
 		if (attr&0x8) {
@@ -885,7 +885,7 @@ static inline void VGA_ChangesEnd(void ) {
 		Bitu total = 4 + end - vga.changes.start;
 		uint32_t clearMask = vga.changes.clearMask;
 		total >>= 2;
-		uint32_t *clear = (uint32_t *)&vga.changes.map[  vga.changes.start & ~3 ];
+		auto clear = (uint32_t *)&vga.changes.map[  vga.changes.start & ~3 ];
 		while ( total-- ) {
 			clear[0] &= clearMask;
 			++clear;
