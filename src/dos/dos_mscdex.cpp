@@ -336,7 +336,7 @@ int CMscdex::AddDrive(uint16_t _drive, const char* physicalPath, uint8_t& subUni
 
 		// Create Callback Strategy
 		uint16_t off = sizeof(DOS_DeviceHeader::sDeviceHeader);
-		uint16_t call_strategy=(uint16_t)CALLBACK_Allocate();
+		auto call_strategy = static_cast<uint16_t>(CALLBACK_Allocate());
 		Callback_Handlers[call_strategy]=MSCDEX_Strategy_Handler;
 		real_writeb(seg,off+0,(uint8_t)0xFE);		//GRP 4
 		real_writeb(seg,off+1,(uint8_t)0x38);		//Extra Callback instruction
@@ -346,7 +346,7 @@ int CMscdex::AddDrive(uint16_t _drive, const char* physicalPath, uint8_t& subUni
 		
 		// Create Callback Interrupt
 		off += 5;
-		uint16_t call_interrupt=(uint16_t)CALLBACK_Allocate();
+		auto call_interrupt = static_cast<uint16_t>(CALLBACK_Allocate());
 		Callback_Handlers[call_interrupt]=MSCDEX_Interrupt_Handler;
 		real_writeb(seg,off+0,(uint8_t)0xFE);		//GRP 4
 		real_writeb(seg,off+1,(uint8_t)0x38);		//Extra Callback instruction
@@ -689,7 +689,7 @@ bool CMscdex::GetDirectoryEntry(uint16_t drive, bool copyFlag, PhysPt pathname, 
 	char* searchPos = searchName;
 
 	//strip of tailing . (XCOM APOCALYPSE)
-	size_t searchlen = safe_strlen(searchName);
+	auto searchlen = safe_strlen(searchName);
 	if (searchlen > 1 && strcmp(searchName,".."))
 		if (searchName[searchlen-1] =='.')  searchName[searchlen-1] = 0;
 
