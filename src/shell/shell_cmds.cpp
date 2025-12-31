@@ -938,7 +938,7 @@ void DOS_Shell::CMD_DIR(char* args)
 		//
 		if (has_option_wide) {
 			if (entry.IsDirectory()) {
-				const int length = static_cast<int>(entry.name.length());
+				const auto length = static_cast<int>(entry.name.length());
 				output.AddString("[%s]%*s",
 				                 entry.name.c_str(),
 				                 (14 - length),
@@ -1946,7 +1946,7 @@ void DOS_Shell::CMD_LOADHIGH(char *args){
 	HELP("LOADHIGH");
 	uint16_t umb_start=dos_infoblock.GetStartOfUMBChain();
 	uint8_t umb_flag=dos_infoblock.GetUMBChainState();
-	uint8_t old_memstrat=(uint8_t)(DOS_GetMemAllocStrategy()&0xff);
+	auto old_memstrat=(uint8_t)(DOS_GetMemAllocStrategy()&0xff);
 	if (umb_start == 0x9fff) {
 		if ((umb_flag&1) == 0) DOS_LinkUMBsToMemChain(1);
 		DOS_SetMemAllocStrategy(0x80);	// search in UMBs first
