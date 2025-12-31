@@ -387,7 +387,7 @@ void BOOT::Run(void)
 				if (!fseek_in_rom(tfile, 0x3000L, SEEK_SET)) {
 					return;
 				}
-				uint32_t drd = (uint32_t)fread(rombuf, 1, 0xb000, tfile);
+				auto drd = (uint32_t)fread(rombuf, 1, 0xb000, tfile);
 				if (drd == 0xb000) {
 					for (i = 0; i < 0xb000; i++)
 						phys_writeb(0xf3000 + i, rombuf[i]);
