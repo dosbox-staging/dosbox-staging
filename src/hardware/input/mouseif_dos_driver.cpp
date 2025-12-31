@@ -424,7 +424,7 @@ static void draw_cursor_text()
 		          read_high_byte(result),
 		          true);
 	} else {
-		uint16_t address = static_cast<uint16_t>(
+		auto address = static_cast<uint16_t>(
 		        page * real_readw(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE));
 		address = static_cast<uint16_t>(
 		        address +
@@ -1198,8 +1198,8 @@ static void limit_coordinates()
 	MouseDriverState state(*state_segment);
 
 	auto limit = [](float& pos, const int16_t minpos, const int16_t maxpos) {
-		const float min = static_cast<float>(minpos);
-		const float max = static_cast<float>(maxpos);
+		const auto min = static_cast<float>(minpos);
+		const auto max = static_cast<float>(maxpos);
 
 		pos = std::clamp(pos, min, max);
 	};
