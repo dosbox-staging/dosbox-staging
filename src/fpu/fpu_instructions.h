@@ -222,8 +222,8 @@ static Real64 FPU_FLD80(PhysPt addr)
 	// Subnormal result?
 	if (exp64 <= 0) {
 		// 11 + (1 - exp64)
-		const unsigned s = static_cast<unsigned>(12 - exp64);
-		uint64_t q       = round_to_nearest_even(sig64, s);
+		const auto s = static_cast<unsigned>(12 - exp64);
+		uint64_t q   = round_to_nearest_even(sig64, s);
 		if (q == 0) {
 			out = (uint64_t(sign) << 63);
 			return std::bit_cast<double>(out);
@@ -361,7 +361,7 @@ static void FPU_FBLD(PhysPt addr,Bitu store_to) {
 
 	//last number, only now convert to float in order to get
 	//the best signification
-	Real64 temp = static_cast<Real64>(val);
+	auto temp = static_cast<Real64>(val);
 	in = mem_readb(addr + 9);
 	temp += ( (in&0xf) * base );
 	if(in&0x80) temp *= -1.0;
@@ -434,7 +434,7 @@ static void FPU_FBST(PhysPt addr) {
 		mem_writeb(addr + 9, 0);
 	}
 
-	uint64_t rndint = static_cast<uint64_t>(FROUND(val.d));
+	auto rndint = static_cast<uint64_t>(FROUND(val.d));
 	// BCD (18 decimal digits) overflow? (0x0DE0B6B3A763FFFF max)
 	if (rndint > LONGTYPE(999999999999999999)) {
 		// write BCD integer indefinite value
