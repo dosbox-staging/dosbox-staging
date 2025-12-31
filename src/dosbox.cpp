@@ -567,7 +567,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 	parameters.emplace_back("--waitpid");
 	parameters.emplace_back(std::to_string(getpid()));
 
-	char** newargs = new char*[parameters.size() + 1];
+	auto newargs = new char*[parameters.size() + 1];
 
 	// parameter 0 is the executable path
 	// contents of the vector follow
