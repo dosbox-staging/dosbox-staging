@@ -393,7 +393,7 @@ void IMGMOUNT::Run(void)
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY"));
 				return;
 			}
-			Bitu sectors = (Bitu)(fcsize / (16 * 63));
+			auto sectors = (Bitu)(fcsize / (16 * 63));
 			if (sectors * 16 * 63 != fcsize) {
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY"));
 				return;

@@ -131,8 +131,7 @@ void MOUNT::Run(void) {
 			// be auto-mounted as type "dir"
 			std::string command_arg;
 			cmd->FindCommand(1, command_arg);
-			const unsigned char first_char = static_cast<unsigned char>(
-			        command_arg[0]);
+			const auto first_char = static_cast<unsigned char>(command_arg[0]);
 			const int i_drive = std::toupper(first_char);
 			if (i_drive == 'A' || i_drive == 'B') {
 				mediaid = MediaId::Floppy1_44MB;
@@ -149,7 +148,7 @@ void MOUNT::Run(void) {
 		std::string mb_size;
 		if (cmd->FindString("-freesize",mb_size,true)) {
 			char teststr[1024];
-			uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
+			auto freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
 			if (type=="floppy") {
 				// freesize in kb
 				safe_sprintf(teststr,
@@ -274,7 +273,7 @@ void MOUNT::Run(void) {
 		}
 
 		if (temp_line[temp_line.size() - 1] != CROSS_FILESPLIT) temp_line += CROSS_FILESPLIT;
-		uint8_t int8_tize = (uint8_t)sizes[1];
+		auto int8_tize = static_cast<uint8_t>(sizes[1]);
 
 		if (type == "cdrom") {
 			// Following options were relevant only for physical CD-ROM support:
