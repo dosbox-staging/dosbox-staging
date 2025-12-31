@@ -520,7 +520,7 @@ MoreOutputBase::UserDecision MoreOutputBase::WaitForCancelContinueNext()
 		uint16_t count = 1;
 		uint8_t  tmp   = 0;
 		DOS_ReadFile(STDIN, &tmp, &count);
-		const char code = static_cast<char>(tmp);
+		const auto code = static_cast<char>(tmp);
 
 		if (DOSBOX_IsShutdownRequested() || count == 0 ||
 		    ciequals(code, 'q') || code == Ascii::CtrlC ||
