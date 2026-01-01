@@ -228,7 +228,7 @@ static uint32_t read_kcl_file(const FILE_unique_ptr& kcl_file,
 			uint16_t lcnum = host_readw(&rbuf[0]);
 			i+=2;
 			uint16_t lng_pos = 0;
-			for (;i<data_len;) {
+			while (i < data_len) {
 				if (fread(rbuf, sizeof(uint8_t), 1, kcl_file.get()) != 1) {
 					break;
 				}
@@ -362,7 +362,7 @@ KeyboardLayoutResult KeyboardLayout::ReadKeyboardFile(const std::string& keyboar
 	for (uint16_t i = 0; i < data_len;) {
 		i+=2;
 		std::string available_layout = {};
-		for (;i<data_len;) {
+		while (i < data_len) {
 			assert(start_pos + i < sizeof(read_buf));
 			auto lcode = char(read_buf[start_pos+i]);
 			i++;
