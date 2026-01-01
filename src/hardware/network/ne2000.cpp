@@ -76,12 +76,6 @@ bx_ne2k_c::bx_ne2k_c(void)
   s.tx_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
-
-bx_ne2k_c::~bx_ne2k_c(void)
-{
-  // nothing for now
-}
-
 //
 // reset - restore state to power-up, cancelling all i/o
 //
