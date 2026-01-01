@@ -99,8 +99,9 @@ struct Render {
 		ScalerLineHandler_t line_handler         = nullptr;
 		ScalerLineHandler_t line_palette_handler = nullptr;
 
-		uint8_t* out_write = nullptr;
-		int out_pitch      = 0;
+		uint8_t* out_write       = nullptr;
+		uint8_t* out_write_start = nullptr;
+		int out_pitch            = 0;
 
 		uint32_t cache_pitch = 0;
 		uint8_t* cache_read  = nullptr;

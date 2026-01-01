@@ -111,14 +111,19 @@ static void start_line_handler(const void* s)
 		for (Bits x = render.src_start; x > 0;) {
 			const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
 			const auto src_val = read_unaligned_size_t(src_ptr);
+
 			if (src_val != cache[0]) {
-				if (!GFX_StartUpdate(render.scale.out_write,
-				                     render.scale.out_pitch)) {
+				if (GFX_StartUpdate(render.scale.out_write_start,
+				                    render.scale.out_pitch)) {
+					render.scale.out_write = render.scale.out_write_start;
+				} else {
 					RENDER_DrawLine = empty_line_handler;
 					return;
 				}
+
 				render.scale.out_write += render.scale.out_pitch *
 				                          Scaler_ChangedLines[0];
+
 				RENDER_DrawLine = render.scale.line_handler;
 				RENDER_DrawLine(s);
 				return;
@@ -128,6 +133,7 @@ static void start_line_handler(const void* s)
 			cache++;
 		}
 	}
+
 	render.scale.cache_read += render.scale.cache_pitch;
 	Scaler_ChangedLines[0] += Scaler_Aspect[render.scale.in_line];
 	render.scale.in_line++;
@@ -171,11 +177,15 @@ bool RENDER_StartUpdate()
 	if (render.scale.in_mode == scalerMode8) {
 		check_palette();
 	}
+
 	render.scale.in_line    = 0;
 	render.scale.out_line   = 0;
 	render.scale.cache_read = (uint8_t*)&scalerSourceCache;
-	render.scale.out_write  = nullptr;
-	render.scale.out_pitch  = 0;
+
+	render.scale.out_write_start = nullptr;
+	render.scale.out_write       = nullptr;
+	render.scale.out_pitch       = 0;
+
 	Scaler_ChangedLines[0]  = 0;
 	Scaler_ChangedLineIndex = 0;
 
@@ -186,22 +196,31 @@ bool RENDER_StartUpdate()
 
 		// Will always have to update the screen with this one anyway,
 		// so let's update already
-		if (!GFX_StartUpdate(render.scale.out_write, render.scale.out_pitch)) {
+		if (!GFX_StartUpdate(render.scale.out_write_start,
+		                     render.scale.out_pitch)) {
 			return false;
 		}
+
+		render.scale.out_write   = render.scale.out_write_start;
 		render.full_frame        = true;
 		render.scale.clear_cache = false;
-		RENDER_DrawLine          = clear_cache_handler;
+
+		RENDER_DrawLine = clear_cache_handler;
+
 	} else {
 		if (render.palette.changed) {
 			// Assume pal changes always do a full screen update
 			// anyway
-			if (!GFX_StartUpdate(render.scale.out_write,
+			if (!GFX_StartUpdate(render.scale.out_write_start,
 			                     render.scale.out_pitch)) {
 				return false;
 			}
-			RENDER_DrawLine   = render.scale.line_palette_handler;
-			render.full_frame = true;
+
+			render.scale.out_write = render.scale.out_write_start;
+			render.full_frame      = true;
+
+			RENDER_DrawLine = render.scale.line_palette_handler;
+
 		} else {
 			RENDER_DrawLine = start_line_handler;
 			if (CAPTURE_IsCapturingImage() ||
@@ -421,8 +440,11 @@ static void render_reset()
 	memset(render.palette.modified, 0, sizeof(render.palette.modified));
 
 	// Finish this frame using a copy only handler
-	RENDER_DrawLine        = finish_line_handler;
-	render.scale.out_write = nullptr;
+	RENDER_DrawLine = finish_line_handler;
+
+	render.scale.out_write_start = nullptr;
+	render.scale.out_write       = nullptr;
+	render.scale.out_pitch       = 0;
 
 	// Signal the next frame to first reinit the cache
 	render.scale.clear_cache = true;
