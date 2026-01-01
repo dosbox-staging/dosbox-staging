@@ -29,11 +29,6 @@ public:
 		return pixel == rhs.pixel;
 	}
 
-	constexpr bool operator!=(const Rgb555& that) const
-	{
-		return !operator==(that);
-	}
-
 	Rgb888 ToRgb888() const
 	{
 		const auto r8 = Red5To8(pixel);

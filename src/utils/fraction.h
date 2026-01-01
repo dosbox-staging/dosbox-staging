@@ -76,11 +76,6 @@ public:
 		return (num == that.num) && (denom == that.denom);
 	}
 
-	constexpr bool operator!=(const Fraction& that) const
-	{
-		return !operator==(that);
-	}
-
 	// Addition
 	constexpr Fraction& operator+=(const Fraction& that)
 	{
