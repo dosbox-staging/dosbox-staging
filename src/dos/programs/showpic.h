@@ -10,7 +10,7 @@
 #include "ints/int10.h"
 #include "misc/help_util.h"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 class SHOWPIC final : public Program {
 public:

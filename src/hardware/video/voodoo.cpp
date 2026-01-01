@@ -68,8 +68,8 @@
 #include <cstring>
 #include <mutex>
 
-#include <SDL.h>
-#include <SDL_cpuinfo.h> // for proper SSE defines for MSVC
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_cpuinfo.h> // for proper SSE defines for MSVC
 
 #include "vga.h"
 
@@ -7095,7 +7095,7 @@ static int get_num_total_threads()
 		set_section_property_value(SectionName, SettingName, AutoSetting);
 	}
 
-	return std::clamp(SDL_GetCPUCount(), MinThreads, MaxAutoThreads);
+	return std::clamp(SDL_GetNumLogicalCPUCores(), MinThreads, MaxAutoThreads);
 }
 
 /***************************************************************************

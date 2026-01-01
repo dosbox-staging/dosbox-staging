@@ -12,14 +12,20 @@
     "opusfile",
     "fluidsynth",
     {
-      "name": "sdl2",
+      "name": "sdl3",
       "platform": "linux",
-      "features": ["alsa", "dbus", "ibus", "wayland", "x11"]
-    }, {
-      "name": "sdl2",
+      "features": [
+        "alsa",
+        "ibus",
+        "wayland",
+        "x11"
+      ]
+    },
+    {
+      "name": "sdl3",
       "platform": "!linux"
     },
-    "sdl2-image",
+    "sdl3-image",
     "speexdsp",
     "zlib-ng",
     {
