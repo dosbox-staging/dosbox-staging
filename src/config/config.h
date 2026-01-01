@@ -80,8 +80,8 @@ public:
 	{
 		assert(cmdline);
 		startup_params = cmdline->GetArguments();
-		startup_params.insert(startup_params.begin(),
-		                      cmdline->GetFileName());
+		startup_params.emplace(startup_params.begin(),
+		                       cmdline->GetFileName());
 
 		ParseArguments();
 	}
