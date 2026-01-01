@@ -333,7 +333,7 @@ std::optional<ChorusParameters> parse_custom_chorus_params(const std::string& ch
 	auto validate = [&](const char* param_name,
 	                    const std::string& value,
 	                    const double min_value,
-	                    const double max_value) -> std::optional<double> {
+	                    const double max_value) {
 		return validate_effect_parameter(ChorusSettingName,
 		                                 param_name,
 		                                 value,
@@ -491,7 +491,7 @@ std::optional<ReverbParameters> parse_custom_reverb_params(const std::string& re
 	auto validate = [&](const char* param_name,
 	                    const std::string& value,
 	                    const double min_value,
-	                    const double max_value) -> std::optional<double> {
+	                    const double max_value) {
 		return validate_effect_parameter(ReverbSettingName,
 		                                 param_name,
 		                                 value,
