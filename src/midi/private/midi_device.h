@@ -26,7 +26,7 @@ class MidiDevice {
 public:
 	enum class Type { Internal, External };
 
-	virtual ~MidiDevice() {}
+	virtual ~MidiDevice() = default;
 
 	virtual std::string GetName() const = 0;
 	virtual Type GetType() const        = 0;
