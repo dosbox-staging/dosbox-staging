@@ -54,6 +54,9 @@ class SectionProp;
 
 typedef Bitu (LoopHandler)(void);
 
+void DOSBOX_Init();
+void DOSBOX_Destroy();
+
 void DOSBOX_InitModuleConfigsAndMessages();
 void DOSBOX_InitModules();
 void DOSBOX_DestroyModules();
