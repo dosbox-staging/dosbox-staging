@@ -389,19 +389,20 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	constexpr auto BytesPerPixel = 4;
-
 	// Allocate host memory buffers for the texture data. The video card
 	// emulation will write to these buffers, then we'll copy the data to
 	// the texture in GPU memory with `glTexSubImage2D()` before presenting
 	// the frame.
-	const auto framebuf_bytes = static_cast<size_t>(pass1.width) *
-	                            pass1.height * BytesPerPixel;
+	const auto pitch_pixels = pass1.width;
+	const auto num_pixels = static_cast<size_t>(pitch_pixels) * pass1.height;
 
-	curr_framebuf.resize(framebuf_bytes);
-	last_framebuf.resize(framebuf_bytes);
+	curr_framebuf.resize(num_pixels);
+	last_framebuf.resize(num_pixels);
 
-	pass1.in_texture_pitch = pass1.width * BytesPerPixel;
+	constexpr auto BytesPerPixel = sizeof(uint32_t);
+	const auto pitch_bytes       = pitch_pixels * BytesPerPixel;
+
+	pass1.in_texture_pitch = check_cast<int>(pitch_bytes);
 }
 
 void OpenGlRenderer::RecreatePass1OutputTexture()
@@ -450,16 +451,14 @@ void OpenGlRenderer::SetPass1OutputTextureFiltering()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_param);
 }
 
-void OpenGlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
+void OpenGlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 {
 	assert(!curr_framebuf.empty());
 
 	pixels_out = curr_framebuf.data();
-
 	if (pixels_out == nullptr) {
 		return;
 	}
-
 	pitch_out = pass1.in_texture_pitch;
 }
 
@@ -494,6 +493,7 @@ void OpenGlRenderer::PrepareFrame()
 		                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
 		                last_framebuf.data() // pointer to image data
 		);
+
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		++frame_count;
@@ -1162,8 +1162,10 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	image.params.pixel_aspect_ratio = {1};
 	image.params.pixel_format       = PixelFormat::BGR24_ByteArray;
 
+	constexpr auto BitsInByte = 8;
+
 	image.pitch = image.params.width *
-	              (get_bits_per_pixel(image.params.pixel_format) / 8);
+	              (get_bits_per_pixel(image.params.pixel_format) / BitsInByte);
 
 	const auto image_size_bytes = check_cast<uint32_t>(image.params.height *
 	                                                   image.pitch);
@@ -1179,6 +1181,9 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	// GL_BGRA pixel format with glReadPixels(). We need to set it 1
 	// to be able to use the GL_BGR format in order to conserve
 	// memory. This should not cause any slowdowns whatsoever.
+	//
+	// TODO measure if this is actually true with some 4k captures and
+	// potentially revert to the default 4-byte alignment
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	glReadPixels(iroundf(output_rect_px.x),
@@ -1188,6 +1193,9 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	             GL_BGR,
 	             GL_UNSIGNED_BYTE,
 	             image.image_data);
+
+	// Restore default
+	glPixelStorei(GL_PACK_ALIGNMENT, 4);
 
 	return image;
 }
