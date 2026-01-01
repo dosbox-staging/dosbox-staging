@@ -62,5 +62,5 @@ target_sources(libdosboxcommon PRIVATE
 target_sources(dosbox PRIVATE dos_files.cpp)
 
 target_link_libraries(libdosboxcommon PRIVATE
-  $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
+  $<IF:$<TARGET_EXISTS:SDL3_image::SDL3_image>,SDL3_image::SDL3_image,SDL3_image::SDL3_image-static>
 )
