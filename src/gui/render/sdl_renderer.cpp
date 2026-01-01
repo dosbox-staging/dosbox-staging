@@ -285,7 +285,7 @@ std::string SdlRenderer::GetCurrentShaderDescriptorString()
 	return {};
 }
 
-void SdlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
+void SdlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 {
 	assert(curr_framebuf);
 
@@ -294,7 +294,7 @@ void SdlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
 		SDL_LockSurface(curr_framebuf);
 	}
 
-	pixels_out = static_cast<uint8_t*>(curr_framebuf->pixels);
+	pixels_out = reinterpret_cast<uint32_t*>(curr_framebuf->pixels);
 	pitch_out  = curr_framebuf->pitch;
 }
 
@@ -311,9 +311,8 @@ void SdlRenderer::EndFrame()
 	// emulation only writes the changed pixels to the framebuffer in each
 	// frame.
 
-	// TODO Couldn't get SDL_BlitSurface to work... If you
-	// can, feel free to use that here, but this works
-	// perfectly fine.
+	// TODO Couldn't get SDL_BlitSurface to work... If you can, feel free to
+	// use that here, but this works perfectly fine.
 	std::memcpy(last_framebuf->pixels,
 	            curr_framebuf->pixels,
 	            (curr_framebuf->h * curr_framebuf->pitch));

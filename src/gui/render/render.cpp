@@ -101,12 +101,14 @@ static void start_line_handler(const void* src_line_data)
 				// Otherwise, it will keep displaying the same
 				// frame at present time without doing a buffer
 				// swap followed by a texture upload to the GPU.
-				if (!GFX_StartUpdate(render.scale.out_write,
-				                     render.scale.out_pitch)) {
-
+				uint32_t* buf_ptr = {};
+				if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
 					RENDER_DrawLine = empty_line_handler;
 					return;
 				}
+
+				render.scale.out_write = reinterpret_cast<uint8_t*>(
+				        buf_ptr);
 
 				render.updating_frame = true;
 				render.scale.out_write += render.scale.out_pitch *
@@ -184,9 +186,13 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.scale.out_write, render.scale.out_pitch)) {
+		//
+		uint32_t* buf_ptr = {};
+		if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
 			return false;
 		}
+
+		render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
 
 		RENDER_DrawLine = clear_cache_handler;
 
@@ -202,9 +208,12 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.scale.out_write, render.scale.out_pitch)) {
+		uint32_t* buf_ptr = {};
+		if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
 			return false;
 		}
+
+		render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
 
 		RENDER_DrawLine = render.scale.line_palette_handler;
 
@@ -261,9 +270,6 @@ static void handle_capture_frame()
 
 	CAPTURE_AddFrame(image, frames_per_second);
 }
-
-
-
 
 void RENDER_EndUpdate([[maybe_unused]] bool abort)
 {
@@ -851,17 +857,16 @@ static void set_aspect_ratio_correction(SectionProp& section)
 			constexpr auto DefaultValue = "auto";
 
 			NOTIFY_DisplayWarning(Notification::Source::Console,
-								  "RENDER",
-								  "PROGRAM_CONFIG_INVALID_SETTING",
-								  SettingName,
-								  mode.c_str(),
-								  DefaultValue);
+			                      "RENDER",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      SettingName,
+			                      mode.c_str(),
+			                      DefaultValue);
 
 			return AspectRatioCorrectionMode::Auto;
 		}
 	}();
 }
-
 
 AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode()
 {
