@@ -166,6 +166,115 @@ struct RenderedImage {
 	}
 };
 
+// CRT color profile emulation settings.
+enum class CrtColorProfile {
+	// Auto-select in adaptive CRT shader mode, otherwise None
+	Auto = -1,
+
+	// Raw RGB colours
+	None = 0,
+
+	// EBU standard phosphor emulation, used in high-end professional CRT
+	// monitors, such as the Sony BVM/PVM series (6500K white point)
+	Ebu = 1,
+
+	// P22 phosphor emulation, the most commonly used in lower-end CRT
+	// monitors (6500K white point)
+	P22 = 2,
+
+	// SMPT "C" phosphor emulation, the standard for American broadcast video
+	// monitors (6500K white point)
+	SmpteC = 3,
+
+	// 1980s Philips home computer monitor colours (e.g., Commodore 1084,
+	// Philips CM8833-II)
+	Philips = 4,
+
+	// Sony Trinitron CRT TV and monitor colours (~9300K whitepoint)
+	Trinitron = 5
+};
+
+// Settings to mimic the image adjustment options of real CRT monitors
+//
+struct ImageAdjustmentSettings {
+
+	// CRT colour profile emulation (see the `CrtColorProfile` enum).
+	CrtColorProfile crt_color_profile = CrtColorProfile::None;
+
+	// Analog brightness control. Valid range between 0.0 and 100.0; 50.0
+	// means no change.
+	float brightness = 50.0f;
+
+	// Analog contrast control. Valid range between 0.0 and 100.0; 50.0
+	// means no change.
+	float contrast = 50.0f;
+
+	// Gamma control. Valid range between -1.0 and 1.0; 0.0 means no change.
+	float gamma = 0.0f;
+
+	// Digital saturation control. Valid range between -1.0 and 1.0; 0.0
+	// means no change
+	float saturation = 0.0f;
+
+	// Digital sigmoid ("S-curve") contrast. Valid range between -2.0
+	// and 2.0; 0.0 means no change.
+	float digital_contrast = 50.0f;
+
+	// Used in CGA mono and Hercules modes to tint the raised black level as
+	// true monochrome monitors can't display pure grey.
+	Rgb888 black_level_color = {};
+
+	// Minimum black level to achieve visible "black scanlines". Valid range
+	// between 0.0 and 1.0; 0.0 means no change.
+	float black_level = 0.0f;
+
+	// Colour temperature (white point) in Kelvin (K); valid range is from
+	// 3000 K to 10,000 K.
+	float color_temperature_kelvin = 6500.0f;
+
+	// Post color temperature adjustment luminosity preservation factor. 0.0
+	// disables luminosity preservation, 1.0 restores the full luminosity.
+	// The closer the value is to 1.0, the less precise the temperature of
+	// the white point and lighter colours become.
+	float color_temperature_luma_preserve = 0.0f;
+
+	// Gain of the red channel. Valid range between 0.0 and 2.0; 1.0 means
+	// no change (unity gain).
+	float red_gain = 1.0f;
+
+	// Gain of the green channel. Valid range between 0.0 and 2.0; 1.0 means
+	// no change (unity gain).
+	float green_gain = 1.0f;
+
+	// Gain of the blue channel. Valid range between 0.0 and 2.0; 1.0 means
+	// no change (unity gain).
+	float blue_gain = 1.0f;
+};
+
+enum class ColorSpace {
+	// Standard sRGB with D65 (6500K) whitepoint and sRGB gamma
+	Srgb = 0,
+
+	// DCI-P3 colour space with DCI whitepoint (~6300K) and 2.6 gamma
+	DciP3 = 1,
+
+	// DCI-P3 colour space variant with D65 whitepoint (6500K) and 2.6 gamma
+	DciP3_D65 = 2,
+
+	// Display P3 with D65 whitepoint (6500K) and sRGB gamma
+	DisplayP3 = 3,
+
+	// "Modern" DCI-P3 variant for average consumer/gamer displays with ~90%
+	// P3 colour space coverage (D65 whitepoint and sRGB gamma)
+	ModernP3 = 4,
+
+	// AdobeRgb 2020 with D65 whitepoint (6500K) and 2.2 gamma
+	AdobeRgb = 5,
+
+	// Rec.2020 with D65 whitepoint (6500K) and 2.2 gamma
+	Rec2020 = 6
+};
+
 extern Render render;
 extern ScalerLineHandler RENDER_DrawLine;
 
@@ -199,7 +308,7 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue);
 
 bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode,
-                                   const bool reinit_render);
+                                   const bool reinit_renderer);
 
 void RENDER_NotifyEgaModeWithVgaPalette();
 
