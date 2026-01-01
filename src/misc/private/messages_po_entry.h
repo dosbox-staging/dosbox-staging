@@ -43,7 +43,7 @@ public:
 	void AddHelpLine(const std::string& line);
 
 protected:
-	PoEntry() {}
+	PoEntry() = default;
 	virtual ~PoEntry() = default;
 
 	std::string location = {};
