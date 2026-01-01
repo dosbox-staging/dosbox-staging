@@ -120,7 +120,7 @@ inline auto make_check_fseek_func(const std::string& module_name,
 	//
 	auto check_fseek_lambda = [=](FILE*& stream,
 	                              const long long offset,
-	                              const int whence) -> bool {
+	                              const int whence) {
 		return check_fseek(module_name.c_str(),
 		                   file_description.c_str(),
 		                   filepath.string().c_str(),
