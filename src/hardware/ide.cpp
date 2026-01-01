@@ -2326,8 +2326,7 @@ void IDE_CDROM_Detach(const int8_t requested_drive_index)
 		IDEController *c = idecontroller[index];
 		if (c)
 			for (int slave = 0; slave < 2; slave++) {
-				IDEATAPICDROMDevice *dev;
-				dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
+				auto dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
 				if (dev && dev->drive_index == drive_index) {
 					delete dev;
 					c->device[slave] = nullptr;
@@ -2342,8 +2341,7 @@ void IDE_CDROM_Detach_Ret(int8_t &indexret,bool &slaveret,int8_t drive_index) {
         IDEController *c = idecontroller[index];
         if (c)
         for (int slave = 0; slave < 2; slave++) {
-            IDEATAPICDROMDevice *dev;
-            dev = dynamic_cast<IDEATAPICDROMDevice*>(c->device[slave]);
+            auto dev = dynamic_cast<IDEATAPICDROMDevice*>(c->device[slave]);
             if (dev && dev->drive_index == drive_index) {
                 delete dev;
                 c->device[slave] = nullptr;
@@ -2360,8 +2358,7 @@ void IDE_CDROM_DetachAll()
 		IDEController *c = idecontroller[index];
 		if (c)
 			for (int slave = 0; slave < 2; slave++) {
-				IDEATAPICDROMDevice *dev;
-				dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
+				auto dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
 				if (dev) {
 					delete dev;
 					c->device[slave] = nullptr;
@@ -2406,8 +2403,7 @@ void IDE_Hard_Disk_Detach(uint8_t bios_disk_index)
 		IDEController *c = idecontroller[index];
 		if (c)
 			for (int slave = 0; slave < 2; slave++) {
-				IDEATADevice *dev;
-				dev = dynamic_cast<IDEATADevice *>(c->device[slave]);
+				auto dev = dynamic_cast<IDEATADevice *>(c->device[slave]);
 				if (dev && dev->bios_disk_index == bios_disk_index) {
 					delete dev;
 					c->device[slave] = nullptr;
