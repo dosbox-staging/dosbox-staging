@@ -31,6 +31,12 @@ void ImageScaler::Init(const RenderedImage& image)
 	// image.
 	const auto pixel_skip_count = (image.params.is_width_doubled() ? 1 : 0);
 
+	descaled_input_width = image.params.width /
+	                       (image.params.is_width_doubled() ? 2 : 1);
+
+	descaled_input_height = image.params.height /
+	                        (image.params.is_height_doubled() ? 2 : 1);
+
 	input_decoder.Init(image, row_skip_count, pixel_skip_count);
 
 	UpdateOutputParamsUpscale();
@@ -63,15 +69,14 @@ void ImageScaler::UpdateOutputParamsUpscale()
 
 	output.vert_scaling_mode = PerAxisScaling::Integer;
 
-	// Adjusting for a few special modes where the rendered width is twice
-	// the video mode width:
-	// - The Tandy/PCjr 160x200 is rendered as 320x200
-	// - The Tandy 640x200 4-colour composite mode is rendered as 1280x200
-	assert(input.params.width % video_mode.width == 0);
-	const auto par_adjustment_factor = (input.params.width / video_mode.width);
-
-	const auto pixel_aspect_ratio = video_mode.pixel_aspect_ratio /
-	                                par_adjustment_factor;
+	// Composite modes need special treatment as they're rendered at 2x the
+	// width of the video mode but this is not considered pixel doubling (we
+	// need the extra width to have enough pixels to represent the composite
+	// artifacts).
+	const auto pixel_aspect_ratio = (input.params.video_mode.color_depth ==
+	                                 ColorDepth::Composite)
+	                                      ? video_mode.pixel_aspect_ratio / 2
+	                                      : video_mode.pixel_aspect_ratio;
 
 	// Calculate horizontal scale factor, and potentially refine the results
 	// by bumping up the vertical scale factor iteratively.
@@ -81,7 +86,7 @@ void ImageScaler::UpdateOutputParamsUpscale()
 		output.horiz_scale = horiz_scale_fract.ToFloat();
 		output.one_per_horiz_scale = horiz_scale_fract.Inverse().ToFloat();
 
-		output.width = iroundf(static_cast<float>(input.params.width) *
+		output.width = iroundf(static_cast<float>(descaled_input_width) *
 		                       output.horiz_scale);
 
 		output.height = video_mode.height * output.vert_scale;
@@ -119,16 +124,7 @@ void ImageScaler::UpdateOutputParamsUpscale()
 		output.horiz_scaling_mode = PerAxisScaling::Fractional;
 	}
 
-	// Determine pixel format
-	const auto only_integer_scaling =
-	        ((output.horiz_scaling_mode == PerAxisScaling::Integer) &&
-	         (output.vert_scaling_mode == PerAxisScaling::Integer));
-
-	if (only_integer_scaling && input.is_paletted()) {
-		output.pixel_format = OutputPixelFormat::Indexed8;
-	} else {
-		output.pixel_format = OutputPixelFormat::Rgb888;
-	}
+	output.pixel_format = OutputPixelFormat::Rgb888;
 
 	output.curr_row   = 0;
 	output.row_repeat = 0;
@@ -165,6 +161,8 @@ void ImageScaler::LogParams()
 	        "    input.PAR:                  1:%1.6f (%d:%d)\n"
 	        "    input.pixel_format:         %10s\n"
 	        "    input.pitch:                %10d\n"
+	        "    descaled_input_width:       %10d\n"
+	        "    descaled_input_height:      %10d\n"
 	        "    --------------------------------------\n"
 	        "    video_mode.width:           %10d\n"
 	        "    video_mode.height:          %10d\n"
@@ -186,6 +184,8 @@ void ImageScaler::LogParams()
 	        static_cast<int32_t>(src.pixel_aspect_ratio.Denom()),
 	        to_string(src.pixel_format),
 	        input.pitch,
+	        descaled_input_width,
+	        descaled_input_height,
 
 	        video_mode.width,
 	        video_mode.height,
@@ -218,7 +218,7 @@ void ImageScaler::AllocateBuffers()
 	// Pad by 1 pixel at the end so we can handle the last pixel of the row
 	// without branching (the interpolator operates on the current and the
 	// next pixel).
-	linear_row_buf.resize((input.params.width + 1u) * ComponentsPerRgbPixel);
+	linear_row_buf.resize((descaled_input_width + 1u) * ComponentsPerRgbPixel);
 }
 
 int ImageScaler::GetOutputWidth() const
@@ -240,8 +240,8 @@ void ImageScaler::DecodeNextRowToLinearRgb()
 {
 	auto out = linear_row_buf.begin();
 
-	for (auto x = 0; x < input.params.width; ++x) {
-		const auto pixel = input_decoder.GetNextPixelAsRgb888();
+	for (auto x = 0; x < descaled_input_width; ++x) {
+		const auto pixel = input_decoder.GetNextPixel();
 
 		*out++ = srgb8_to_linear_lut(pixel.red);
 		*out++ = srgb8_to_linear_lut(pixel.green);
@@ -266,21 +266,14 @@ void ImageScaler::GenerateNextIntegerUpscaledOutputRow()
 {
 	auto out = output.row_buf.begin();
 
-	for (auto x = 0; x < input.params.width; ++x) {
+	for (auto x = 0; x < descaled_input_width; ++x) {
 		auto pixels_to_write = static_cast<uint32_t>(output.horiz_scale);
 
-		if (input.is_paletted()) {
-			const auto pixel = input_decoder.GetNextIndexed8Pixel();
-			while (pixels_to_write--) {
-				*out++ = pixel;
-			}
-		} else {
-			const auto pixel = input_decoder.GetNextPixelAsRgb888();
-			while (pixels_to_write--) {
-				*out++ = pixel.red;
-				*out++ = pixel.green;
-				*out++ = pixel.blue;
-			}
+		const auto pixel = input_decoder.GetNextPixel();
+		while (pixels_to_write--) {
+			*out++ = pixel.red;
+			*out++ = pixel.green;
+			*out++ = pixel.blue;
 		}
 	}
 
@@ -296,7 +289,7 @@ void ImageScaler::GenerateNextSharpUpscaledOutputRow()
 	for (auto x = 0; x < output.width; ++x) {
 		const auto x0 = static_cast<float>(x) * output.one_per_horiz_scale;
 		const auto floor_x0 = ifloor(x0);
-		assert(floor_x0 < input.params.width);
+		assert(floor_x0 < descaled_input_width);
 
 		const auto row_offs = floor_x0 * ComponentsPerRgbPixel;
 		auto pixel_addr     = row_start + row_offs;

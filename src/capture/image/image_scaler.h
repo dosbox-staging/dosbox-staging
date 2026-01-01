@@ -97,6 +97,9 @@ private:
 
 	std::vector<float> linear_row_buf = {};
 
+	int descaled_input_width  = 0;
+	int descaled_input_height = 0;
+
 	struct {
 		int width  = 0;
 		int height = 0;

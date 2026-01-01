@@ -99,8 +99,8 @@ struct Render {
 		ScalerLineHandler_t line_handler         = nullptr;
 		ScalerLineHandler_t line_palette_handler = nullptr;
 
-		uint8_t* out_write       = nullptr;
 		uint8_t* out_write_start = nullptr;
+		uint8_t* out_write       = nullptr;
 		int out_pitch            = 0;
 
 		uint32_t cache_pitch = 0;
@@ -135,8 +135,9 @@ struct RenderedImage {
 	// Bytes per row
 	int pitch = 0;
 
-	// (width * height) number of pixels stored in the pixel format defined
-	// by pixel_format
+	// Image data as 32-bit pixels stored as a sequence of four packed 8-bit
+	// values in BGRX byte order (that's in memory order, so byte N is B,
+	// byte N+1 is G, byte N+2 is R).
 	uint8_t* image_data = nullptr;
 
 	// Pointer to a (256 * 4) byte long palette data, stored as 8-bit RGB

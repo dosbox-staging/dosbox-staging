@@ -10,6 +10,18 @@ CHECK_NARROWING();
 void ImageDecoder::Init(const RenderedImage& _image, const int _row_skip_count,
                         const int _pixel_skip_count)
 {
+	// For raw and upscaled captures we're getting pixel data in BGRX32
+	// format from the scalers.
+	//
+	// For rendered captures, we're retrieving the pixel data from the
+	// framebuffer in BGR24 format
+	//
+	// TODO Is there any performance advantage in doing this? Surely GPUs
+	// operate on packed 32-bit RGBA data internally anyway.
+	//
+	assert(_image.params.pixel_format == PixelFormat::BGR24_ByteArray ||
+	       _image.params.pixel_format == PixelFormat::BGRX32_ByteArray);
+
 	assert(_image.params.width > 0);
 	assert(_image.params.height > 0);
 

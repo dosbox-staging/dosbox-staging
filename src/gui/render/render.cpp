@@ -189,6 +189,15 @@ bool RENDER_StartUpdate()
 	Scaler_ChangedLines[0]  = 0;
 	Scaler_ChangedLineIndex = 0;
 
+	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
+
+		// On emulated VGA adapters, we only publish a new frame if there
+		// have been changes (e.g., a static screen will result in no
+		// updates). Clearing the shader cache ensure we'll publish the
+		// new frame anyway if image or video capturing is activated.
+		render.scale.clear_cache = true;
+	}
+
 	// Clearing the cache will first process the line to make sure it's
 	// never the same
 	if (render.scale.clear_cache) {
@@ -223,12 +232,8 @@ bool RENDER_StartUpdate()
 
 		} else {
 			RENDER_DrawLine = start_line_handler;
-			if (CAPTURE_IsCapturingImage() ||
-			    CAPTURE_IsCapturingVideo()) {
-				render.full_frame = true;
-			} else {
-				render.full_frame = false;
-			}
+
+			render.full_frame = false;
 		}
 	}
 	render.updating = true;
@@ -251,16 +256,49 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 
 	RENDER_DrawLine = empty_line_handler;
 
-	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
+	// We asked for clearing the scaler cache in `RENDER_StartUpdate()`, but
+	// that will happen only on the next frame, and sometimes the latency is
+	// more than a single frame. So we *must check* that
+	// `render.scale.out_write_start` is not nullptr, meaning there's data
+	// in the cache.
+	//
+	// TODO This complicated VGA-only scaler caching mechanism is quite
+	// horrible and most likely unnecessary. It doesn't really help with
+	// anything. It doesn't help at all with demanding VGA/SVGA games that
+	// require high CPU cycles and do constant fullscreen redraws on every
+	// frame (e.g., fullscreen FPS games) because then cache is not used at
+	// all.. In theory, it would reduce the CPU usage in low-framerate
+	// adventure and strategy games that have mostly static screens and low
+	// FPS, but those are rather undemanding anyway and require low CPU
+	// cycles. We should benchmark this and simplify it at some point.
+	//
+	if (render.scale.out_write_start &&
+	    (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo())) {
+
 		RenderedImage image = {};
 
-		image.params       = render.src;
-		image.pitch        = render.scale.cache_pitch;
-		image.image_data   = (uint8_t*)&scalerSourceCache;
-		image.palette_data = (uint8_t*)&render.palette.rgb;
+		image.params = render.src;
+
+		// Adjust width if the image was doubled at the scaler stage.
+		image.params.width *= ((render.src.width_doubling ==
+		                        ImageDoublingMode::Scaler)
+		                               ? 2
+		                               : 1);
+
+		// Adjust height if the image was doubled at the scaler stage
+		image.params.height *= ((render.src.height_doubling ==
+		                         ImageDoublingMode::Scaler)
+		                                ? 2
+		                                : 1);
+
+		// Post-scaler images are always in BGRX format
+		image.params.pixel_format = PixelFormat::BGRX32_ByteArray;
+
+		image.pitch      = render.scale.out_pitch;
+		image.image_data = render.scale.out_write_start;
+		image.palette_data = reinterpret_cast<uint8_t*>(&render.palette.rgb);
 
 		const auto frames_per_second = static_cast<float>(render.fps);
-
 		CAPTURE_AddFrame(image, frames_per_second);
 	}
 
@@ -348,8 +386,8 @@ static void render_reset()
 		simpleBlock = &ScaleNormal1x;
 	}
 
-	xscale    = simpleBlock->xscale;
-	yscale    = simpleBlock->yscale;
+	xscale = simpleBlock->xscale;
+	yscale = simpleBlock->yscale;
 	//		LOG_MSG("Scaler:%s",simpleBlock->name);
 
 	constexpr auto src_pixel_bytes = sizeof(uintptr_t);

@@ -178,8 +178,39 @@ void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
 
 void ImageCapturer::CapturePostRenderImage(const RenderedImage& image)
 {
+	// For grouped captures, we might need to wait a little bit in VGA modes
+	// so a new frame is ready to be presented in `RENDER_EndUpdate()`
+	// (because in VGA modes we don't present the current frame if there are
+	// no changes from the previous frame).
+	//
+	// When a new frame is ready to be presented, `RENDER_EndUpdate()` will
+	// effectively transition `state.grouped` from `Pending` to `InProgress`
+	// by calling `MaybeCaptureImage()`.
+	//
+	// This means if we're in `state.groped` is Pending`, we'll have to wait
+	// a little longer.
+	if (state.grouped == CaptureState::Pending) {
+		return;
+	}
+
+	if (state.rendered == CaptureState::Pending) {
+		// We're not in grouped capture mode; we got here by the user
+		// pressing the capture rendered screenshot hotkey.
+		//
+		assert(state.grouped == CaptureState::Off);
+
+		// But that means we'll need generate the rendered image path
+		// outselves (`MaybeCaptureImage()` takes care of that in
+		// group-capture mode).
+		//
+		const auto index = get_next_capture_index(CaptureType::RawImage);
+		rendered_path = generate_capture_filename(CaptureType::RenderedImage,
+		                                          index);
+	}
+
 	GetNextImageSaver().QueueImage(image, CapturedImageType::Rendered, rendered_path);
 
+	rendered_path.clear();
 	state.rendered = CaptureState::Off;
 
 	// In grouped capture mode, adding the post-render image is

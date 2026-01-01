@@ -210,23 +210,12 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 	// chunk for raw images.
 	const auto pixel_aspect_ratio = src.video_mode.pixel_aspect_ratio;
 
-	if (image.is_paletted()) {
-		if (!png_writer.InitIndexed8(outfile,
-		                             output_width,
-		                             output_height,
-		                             pixel_aspect_ratio,
-		                             src.video_mode,
-		                             image.palette_data)) {
-			return;
-		}
-	} else {
-		if (!png_writer.InitRgb888(outfile,
-		                           output_width,
-		                           output_height,
-		                           pixel_aspect_ratio,
-		                           src.video_mode)) {
-			return;
-		}
+	if (!png_writer.InitRgb888(outfile,
+	                           output_width,
+	                           output_height,
+	                           pixel_aspect_ratio,
+	                           src.video_mode)) {
+		return;
 	}
 
 	constexpr auto MaxBytesPerPixel = 3;
@@ -238,21 +227,14 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 		auto out = row_buf.begin();
 
 		auto pixels_to_write = output_width;
-		if (image.is_paletted()) {
-			while (pixels_to_write--) {
-				const auto pixel = image_decoder.GetNextIndexed8Pixel();
+		while (pixels_to_write--) {
+			const auto pixel = image_decoder.GetNextPixel();
 
-				*out++ = pixel;
-			}
-		} else {
-			while (pixels_to_write--) {
-				const auto pixel = image_decoder.GetNextPixelAsRgb888();
-
-				*out++ = pixel.red;
-				*out++ = pixel.green;
-				*out++ = pixel.blue;
-			}
+			*out++ = pixel.red;
+			*out++ = pixel.green;
+			*out++ = pixel.blue;
 		}
+
 		png_writer.WriteRow(row_buf.begin());
 		image_decoder.AdvanceRow();
 	}
@@ -312,12 +294,13 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 
 		auto pixels_to_write = src.width;
 		while (pixels_to_write--) {
-			const auto pixel = image_decoder.GetNextPixelAsRgb888();
+			const auto pixel = image_decoder.GetNextPixel();
 
 			*out++ = pixel.red;
 			*out++ = pixel.green;
 			*out++ = pixel.blue;
 		}
+
 		png_writer.WriteRow(row_buf.begin());
 		image_decoder.AdvanceRow();
 	}

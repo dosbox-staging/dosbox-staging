@@ -232,12 +232,10 @@ const char* to_string(const ImageDoublingMode mode);
 //   - double_height = false (we're rendering scan-doubled)
 //
 struct ImageInfo {
-	// The image data has this many pixels per image row (so this is the
-	// image width prior to optional width-doubling).
+	// The image data has this many pixels per image row.
 	int width = 0;
 
-	// The image data has this many rows (so this is the image height prior
-	// to optional height-doubling).
+	// The image data has this many rows.
 	int height = 0;
 
 	// TODO
