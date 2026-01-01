@@ -1,4 +1,5 @@
 libgui_sources = files(
+    'auto_image_adjustments.cpp',
     'clipboard.cpp',
     'mapper.cpp',
     'mapper.cpp',

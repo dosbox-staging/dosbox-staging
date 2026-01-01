@@ -18,6 +18,7 @@
 #include "utils/bit_view.h"
 #include "utils/fraction.h"
 #include "utils/rgb666.h"
+#include "utils/rgb888.h"
 
 //Don't enable keeping changes and mapping lfb probably...
 #define VGA_LFB_MAPPED
@@ -1097,6 +1098,8 @@ constexpr auto NumMonochromePalettes = enum_val(MonochromePalette::Paperwhite) +
 void VGA_SetMonochromePalette(const enum MonochromePalette);
 void VGA_SetHerculesPalette();
 void VGA_SetMonochromeCgaPalette();
+
+Rgb888 VGA_GetBlackLevelColor();
 
 // Functions for different resolutions
 void VGA_SetMode(VGAModes mode);
