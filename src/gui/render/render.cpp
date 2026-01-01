@@ -14,6 +14,7 @@
 #include "config/config.h"
 #include "config/setup.h"
 #include "gui/common.h"
+#include "gui/render/deinterlacer.h"
 #include "gui/mapper.h"
 #include "gui/render/render.h"
 #include "gui/render/render_backend.h"
@@ -115,6 +116,8 @@ static void start_line_handler(const void* s)
 				                     render.scale.outPitch)) {
 					RENDER_DrawLine = empty_line_handler;
 					return;
+				} else {
+					render.scale.outWriteStart = render.scale.outWrite;
 				}
 				render.scale.outWrite += render.scale.outPitch *
 				                         Scaler_ChangedLines[0];
@@ -188,6 +191,7 @@ bool RENDER_StartUpdate()
 		if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
 			return false;
 		}
+		render.scale.outWriteStart = render.scale.outWrite;
 		render.fullFrame        = true;
 		render.scale.clearCache = false;
 		RENDER_DrawLine         = clear_cache_handler;
@@ -199,6 +203,7 @@ bool RENDER_StartUpdate()
 			                     render.scale.outPitch)) {
 				return false;
 			}
+			render.scale.outWriteStart = render.scale.outWrite;
 			RENDER_DrawLine  = render.scale.linePalHandler;
 			render.fullFrame = true;
 		} else {
@@ -222,6 +227,8 @@ static void halt_render()
 	render.updating = false;
 	render.active   = false;
 }
+
+static std::unique_ptr<Deinterlacer> deinterlacer = {};
 
 void RENDER_EndUpdate([[maybe_unused]] bool abort)
 {
@@ -256,6 +263,19 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 
 		CAPTURE_AddFrame(image, frames_per_second);
 	}
+
+	const auto& mode = render.src.video_mode;
+
+//	if (mode.graphics_standard >= GraphicsStandard::Vga && mode.is_graphics_mode &&
+//	    mode.color_depth >= ColorDepth::IndexedColor256 && mode.height >= 400) {
+
+	if (render.scale.outWriteStart) {
+		deinterlacer->Deinterlace(
+		        reinterpret_cast<uint32_t*>(render.scale.outWriteStart),
+		        mode.width * (render.src.double_width ? 2 : 1),
+		        mode.height * (render.src.double_height ? 2 : 1));
+	}
+//	}
 
 	GFX_EndUpdate();
 
@@ -1488,6 +1508,8 @@ void RENDER_Init()
 {
 	auto section = get_section("render");
 	assert(section);
+
+	deinterlacer = std::make_unique<Deinterlacer>();
 
 	set_aspect_ratio_correction(*section);
 	set_viewport(*section);

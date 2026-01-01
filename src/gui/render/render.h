@@ -107,6 +107,8 @@ struct Render {
 		uint32_t blocks     = 0;
 		uint32_t lastBlock  = 0;
 		int outPitch        = 0;
+
+		uint8_t* outWriteStart = nullptr;
 		uint8_t* outWrite   = nullptr;
 		uint32_t cachePitch = 0;
 		uint8_t* cacheRead  = nullptr;
