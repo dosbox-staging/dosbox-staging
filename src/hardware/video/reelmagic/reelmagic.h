@@ -18,7 +18,7 @@
 struct ReelMagic_PlayerConfiguration;
 struct ReelMagic_PlayerAttributes;
 struct ReelMagic_VideoMixerMPEGProvider {
-	virtual ~ReelMagic_VideoMixerMPEGProvider() {}
+	virtual ~ReelMagic_VideoMixerMPEGProvider() = default;
 	virtual void OnVerticalRefresh(void* const outputBuffer, const float fps) = 0;
 	virtual const ReelMagic_PlayerConfiguration& GetConfig() const = 0;
 	virtual const ReelMagic_PlayerAttributes& GetAttrs() const     = 0;
@@ -89,7 +89,7 @@ struct ReelMagic_PlayerAttributes {
 	} PictureSize = {};
 };
 struct ReelMagic_MediaPlayerFile {
-	virtual ~ReelMagic_MediaPlayerFile() {}
+	virtual ~ReelMagic_MediaPlayerFile() = default;
 
 	virtual const char* GetFileName() const = 0;
 	virtual uint32_t GetFileSize() const    = 0;
@@ -99,7 +99,7 @@ struct ReelMagic_MediaPlayerFile {
 	virtual void Seek(uint32_t pos, uint32_t type) = 0;
 };
 struct ReelMagic_MediaPlayer {
-	virtual ~ReelMagic_MediaPlayer() {}
+	virtual ~ReelMagic_MediaPlayer() = default;
 	virtual ReelMagic_PlayerConfiguration& Config()            = 0;
 	virtual const ReelMagic_PlayerAttributes& GetAttrs() const = 0;
 
