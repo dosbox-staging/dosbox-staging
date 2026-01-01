@@ -31,8 +31,8 @@ static bool dyn_helper_divw(uint16_t val) {
 	if (!val) return CPU_PrepareException(0,0);
 	const uint32_t num   = (((uint32_t)reg_dx)<<16)|reg_ax;
 	const uint32_t quo   = num/val;
-	const uint16_t rem   = (uint16_t)(num % val);
-	const uint16_t quo16 = (uint16_t)(quo&0xffff);
+	const auto     rem   = static_cast<uint16_t>(num % val);
+	const auto     quo16 = static_cast<uint16_t>(quo & 0xffff);
 	if (quo!=(uint32_t)quo16) return CPU_PrepareException(0,0);
 	reg_dx=rem;
 	reg_ax=quo16;
