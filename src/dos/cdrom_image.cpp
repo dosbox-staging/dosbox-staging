@@ -147,7 +147,7 @@ int CDROM_Interface_Image::BinaryFile::getLength()
 uint16_t CDROM_Interface_Image::BinaryFile::getEndian()
 {
 	// Image files are always little endian
-	return AUDIO_S16LSB;
+	return SDL_AUDIO_S16LE;
 }
 
 bool CDROM_Interface_Image::BinaryFile::seek(const uint32_t offset)
@@ -207,7 +207,7 @@ CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
 	: TrackFile(4096)
 {
 	// Use the audio file's sample rate and number of channels as-is
-	Sound_AudioInfo desired = {AUDIO_S16, 0, 0};
+	Sound_AudioInfo desired = {SDL_AUDIO_S16LE, 0, 0};
 	sample = Sound_NewSampleFromFile(filename, &desired);
 	const std::string filename_only = get_basename(filename);
 	if (sample) {
@@ -429,7 +429,7 @@ uint32_t CDROM_Interface_Image::AudioFile::decode(int16_t *buffer,
 
 uint16_t CDROM_Interface_Image::AudioFile::getEndian()
 {
-	return sample ? sample->actual.format : AUDIO_S16SYS;
+	return sample ? sample->actual.format : SDL_AUDIO_S16;
 }
 
 uint32_t CDROM_Interface_Image::AudioFile::getRate()
@@ -719,7 +719,7 @@ bool CDROM_Interface_Image::PlayAudioTrack(const Track& track, const uint32_t se
 	currentTrackIndex = track.number - 1;
 
 	// Assign the mixer function associated with this track's content type
-	if (track_file->getEndian() == AUDIO_S16SYS) {
+	if (track_file->getEndian() == SDL_AUDIO_S16) {
 		player.addFrames = (track_channels == 2)
 		                         ? &MixerChannel::AddSamples_s16
 		                         : &MixerChannel::AddSamples_m16;
