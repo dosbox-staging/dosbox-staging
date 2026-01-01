@@ -82,7 +82,7 @@ static void update_cursor_absolute_position(const float x_abs, const float y_abs
 
 	auto calc_pos = [&](const float pos,
 	                    const int draw_start_pos,
-	                    const int draw_end_pos) -> float {
+	                    const int draw_end_pos) {
 		assert(draw_end_pos - draw_start_pos > 1);
 		constexpr float MinPos = 0.0f;
 
