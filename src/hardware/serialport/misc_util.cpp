@@ -25,16 +25,6 @@ const char* to_string(const SocketType socket_type)
 
 // --- GENERIC NET INTERFACE -------------------------------------------------
 
-NETClientSocket::NETClientSocket()
-{
-	// nothing
-}
-
-NETClientSocket::~NETClientSocket()
-{
-	// nothing
-}
-
 NETClientSocket* NETClientSocket::NETClientFactory(const SocketType socketType,
                                                    const char* destination,
                                                    const uint16_t port)
@@ -84,10 +74,6 @@ bool NETClientSocket::SendByteBuffered(uint8_t val)
 	sendbufferindex = 0;
 	return SendArray(sendbuffer.data(), sendbuffer.size());
 }
-
-NETServerSocket::NETServerSocket() {}
-
-NETServerSocket::~NETServerSocket() {}
 
 void NETServerSocket::Close()
 {
