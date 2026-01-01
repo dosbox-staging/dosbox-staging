@@ -2603,7 +2603,7 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
 		return false;
 	}
 
-	auto try_loading = [](const std_fs::path &mapper_path) -> bool {
+	auto try_loading = [](const std_fs::path &mapper_path) {
 		constexpr auto optional = ResourceImportance::Optional;
 		auto lines = get_resource_lines(mapper_path, optional);
 		if (lines.empty())
