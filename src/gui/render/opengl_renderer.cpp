@@ -454,8 +454,7 @@ void OpenGlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
 {
 	assert(!curr_framebuf.empty());
 
-	pixels_out = curr_framebuf.data();
-
+	pixels_out = reinterpret_cast<uint8_t*>(curr_framebuf.data());
 	if (pixels_out == nullptr) {
 		return;
 	}
