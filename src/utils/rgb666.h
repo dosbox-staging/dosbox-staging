@@ -35,11 +35,6 @@ public:
 		return (red == that.red && green == that.green && blue == that.blue);
 	}
 
-	constexpr bool operator!=(const Rgb666& that) const
-	{
-		return !operator==(that);
-	}
-
 	// Scoped conversion helpers
 	static constexpr Rgb666 FromRgb888(const Rgb888 rgb888)
 	{

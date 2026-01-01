@@ -139,11 +139,6 @@ struct VideoMode {
 		        is_double_scanned_mode == that.is_double_scanned_mode &&
 		        has_vga_colors == that.has_vga_colors);
 	}
-
-	constexpr bool operator!=(const VideoMode& that) const
-	{
-		return !operator==(that);
-	}
 };
 
 std::string to_string(const VideoMode& video_mode);
@@ -293,11 +288,6 @@ struct ImageInfo {
 		        pixel_aspect_ratio == that.pixel_aspect_ratio &&
 		        pixel_format == that.pixel_format &&
 		        video_mode == that.video_mode);
-	}
-
-	constexpr bool operator!=(const ImageInfo& that) const
-	{
-		return !operator==(that);
 	}
 };
 

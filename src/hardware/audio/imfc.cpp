@@ -556,10 +556,6 @@ constexpr bool operator==(const FractionalNote& a, const FractionalNote& b) noex
 {
 	return a.note == b.note && a.fraction == b.fraction;
 }
-constexpr bool operator!=(const FractionalNote& a, const FractionalNote& b) noexcept
-{
-	return !(a == b);
-}
 constexpr FractionalNote operator-(const FractionalNote& a,
                                    const FractionalNote& b) noexcept
 {

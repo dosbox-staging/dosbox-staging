@@ -38,11 +38,6 @@ struct ViewportSettings {
 		        relative.height_scale == that.relative.height_scale &&
 		        relative.width_scale == that.relative.width_scale);
 	}
-
-	constexpr bool operator!=(const ViewportSettings& that) const
-	{
-		return !operator==(that);
-	}
 };
 
 enum class IntegerScalingMode {

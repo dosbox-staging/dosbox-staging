@@ -71,11 +71,6 @@ struct Rect {
 		return (x == that.x && y == that.y && w == that.w && h == that.h);
 	}
 
-	constexpr bool operator!=(const Rect& that) const
-	{
-		return !operator==(that);
-	}
-
 	constexpr float x1() const
 	{
 		return x;
