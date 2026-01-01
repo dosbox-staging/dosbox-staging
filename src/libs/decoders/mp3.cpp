@@ -28,12 +28,12 @@ static size_t mp3_read(void* const pUserData, void* const pBufferOut, const size
     Uint8* ptr = static_cast<Uint8*>(pBufferOut);
     Sound_Sample* const sample = static_cast<Sound_Sample*>(pUserData);
     const Sound_SampleInternal* const internal = static_cast<const Sound_SampleInternal*>(sample->opaque);
-    SDL_RWops* rwops = internal->rw;
+    SDL_IOStream* rwops = internal->rw;
     size_t bytes_read = 0;
 
     while (bytes_read < bytesToRead)
     {
-        const size_t rc = SDL_RWread(rwops, ptr, 1, bytesToRead - bytes_read);
+        const size_t rc = SDL_ReadIO(rwops, ptr, bytesToRead - bytes_read);
         if (rc == 0) {
             sample->flags |= SOUND_SAMPLEFLAG_EOF;
             break;
@@ -47,10 +47,10 @@ static size_t mp3_read(void* const pUserData, void* const pBufferOut, const size
 
 static drmp3_bool32 mp3_seek(void* const pUserData, const Sint32 offset, const drmp3_seek_origin origin)
 {
-    const Sint32 whence = (origin == drmp3_seek_origin_start) ? RW_SEEK_SET : RW_SEEK_CUR;
+    const SDL_IOWhence whence = (origin == drmp3_seek_origin_start) ? SDL_IO_SEEK_SET : SDL_IO_SEEK_CUR;
     Sound_Sample* const sample = static_cast<Sound_Sample*>(pUserData);
     Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
-    return (SDL_RWseek(internal->rw, offset, whence) != -1) ? DRMP3_TRUE : DRMP3_FALSE;
+    return (SDL_SeekIO(internal->rw, offset, whence) != -1) ? DRMP3_TRUE : DRMP3_FALSE;
 } /* mp3_seek */
 
 
@@ -124,7 +124,7 @@ static int32_t MP3_open(Sound_Sample* const sample, const char* const ext)
     sample->flags = SOUND_SAMPLEFLAG_CANSEEK;
     sample->actual.channels = static_cast<uint8_t>(p_mp3->p_dr->channels);
     sample->actual.rate = p_mp3->p_dr->sampleRate;
-    sample->actual.format = AUDIO_S16SYS;  // native byte-order based on architecture
+    sample->actual.format = SDL_AUDIO_S16;  // native byte-order based on architecture
     // total_time needs milliseconds
     internal->total_time = static_cast<int32_t>(ceil_udivide(num_frames * 1000u, sample->actual.rate));
     return 1; // success

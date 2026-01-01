@@ -21,7 +21,7 @@
 #include "utils/fraction.h"
 
 // must be included after dosbox_config.h
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 // The image rendered in the emulated computer's raw framebuffer as raw pixels
 // goes through a number of transformations until it gets shown on the host

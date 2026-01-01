@@ -43,7 +43,7 @@
 #include "utils/string_utils.h"
 
 // must be included after dosbox_config.h
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 CHECK_NARROWING();
 
@@ -56,20 +56,6 @@ void log_window_event([[maybe_unused]] const char* message,
 #ifdef DEBUG_WINDOW_EVENTS
 	LOG_DEBUG(message, args...);
 #endif
-}
-
-constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
-{
-	return (version.major << 16) + (version.minor << 8) + version.patch;
-}
-
-[[maybe_unused]] static bool is_runtime_sdl_version_at_least(const SDL_version min_version)
-{
-	SDL_version version = {};
-	SDL_GetVersion(&version);
-	const auto curr_version = sdl_version_to_uint32(version);
-
-	return curr_version >= sdl_version_to_uint32(min_version);
 }
 
 SDL_Block sdl;
@@ -94,19 +80,21 @@ extern std::queue<SDL_Event> pdc_event_queue;
 static bool is_debugger_event(const SDL_Event& event)
 {
 	switch (event.type) {
-	case SDL_KEYDOWN:
-	case SDL_KEYUP:
-	case SDL_MOUSEBUTTONDOWN:
-	case SDL_MOUSEBUTTONUP:
-	case SDL_MOUSEMOTION:
-	case SDL_MOUSEWHEEL:
-	case SDL_TEXTINPUT:
-	case SDL_TEXTEDITING:
-	case SDL_USEREVENT:
-	case SDL_WINDOWEVENT:
+	case SDL_EVENT_KEY_DOWN:
+	case SDL_EVENT_KEY_UP:
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+	case SDL_EVENT_MOUSE_BUTTON_UP:
+	case SDL_EVENT_MOUSE_MOTION:
+	case SDL_EVENT_MOUSE_WHEEL:
+	case SDL_EVENT_TEXT_INPUT:
+	case SDL_EVENT_TEXT_EDITING:
+	case SDL_EVENT_USER:
 		return event.window.windowID == SDL_GetWindowID(pdc_window);
 
-	default: return false;
+	default:
+		if (event.type >= SDL_EVENT_WINDOW_FIRST && event.type <= SDL_EVENT_WINDOW_LAST)
+			return event.window.windowID == SDL_GetWindowID(pdc_window);
+		return false;
 	}
 }
 #endif
@@ -165,30 +153,30 @@ double GFX_GetHostRefreshRate()
 {
 	assert(sdl.window);
 
-	SDL_DisplayMode mode = {};
-
-	const auto display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
+	const auto display_in_use = SDL_GetDisplayForWindow(sdl.window);
 
 	constexpr auto DefaultHostRefreshRateHz = 60;
 
-	if (display_in_use < 0) {
-		LOG_ERR("SDL: Could not get the current window index: %s",
-				SDL_GetError());
-		return DefaultHostRefreshRateHz;
-	}
-	if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
-		LOG_ERR("SDL: Could not get the current display mode: %s",
-				SDL_GetError());
-		return DefaultHostRefreshRateHz;
-	}
-	if (mode.refresh_rate < RefreshRateMin) {
-		LOG_WARNING("SDL: Got a strange refresh rate of %d Hz",
-					mode.refresh_rate);
+	if (display_in_use == 0) {
+		LOG_ERR("SDL: Could not get the current display ID: %s",
+		        SDL_GetError());
 		return DefaultHostRefreshRateHz;
 	}
 
-	assert(mode.refresh_rate >= RefreshRateMin);
-	return mode.refresh_rate;
+	const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(display_in_use);
+	if (!mode) {
+		LOG_ERR("SDL: Could not get the current display mode: %s",
+		        SDL_GetError());
+		return DefaultHostRefreshRateHz;
+	}
+	if (mode->refresh_rate < RefreshRateMin) {
+		LOG_WARNING("SDL: Got a strange refresh rate of %g Hz",
+		            mode->refresh_rate);
+		return DefaultHostRefreshRateHz;
+	}
+
+	assert(mode->refresh_rate >= RefreshRateMin);
+	return mode->refresh_rate;
 }
 
 static void validate_vsync_and_presentation_mode_settings()
@@ -297,8 +285,8 @@ void GFX_RequestExit(const bool pressed)
 #if defined(MACOSX)
 static bool is_command_pressed(const SDL_Event event)
 {
-	return (event.key.keysym.mod == KMOD_RGUI ||
-	        event.key.keysym.mod == KMOD_LGUI);
+	return (event.key.mod == SDL_KMOD_RGUI ||
+	        event.key.mod == SDL_KMOD_LGUI);
 }
 #endif
 
@@ -331,26 +319,23 @@ static bool is_command_pressed(const SDL_Event event)
 		SDL_WaitEvent(&event);
 
 		switch (event.type) {
-		case SDL_QUIT: GFX_RequestExit(true); break;
+		case SDL_EVENT_QUIT: GFX_RequestExit(true); break;
 
-		case SDL_WINDOWEVENT:
-			if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
-				// We may need to re-create a texture and more
-				GFX_ResetScreen();
-			}
+		case SDL_EVENT_WINDOW_RESTORED:
+			GFX_ResetScreen();
 			break;
 
-		case SDL_KEYDOWN:
+		case SDL_EVENT_KEY_DOWN:
 #if defined(MACOSX)
 			// Pause/unpause is hardcoded to Command+P on macOS
 			if (is_command_pressed(event) &&
-			    event.key.keysym.sym == SDLK_p) {
+			    event.key.key == SDLK_P) {
 #else
 			// Pause/unpause is hardcoded to Alt+Pause on Window &
 			// Linux
-			if (event.key.keysym.sym == SDLK_PAUSE) {
+			if (event.key.key == SDLK_PAUSE) {
 #endif
-				const uint16_t outkeymod = event.key.keysym.mod;
+				const uint16_t outkeymod = event.key.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
 					MAPPER_LosingFocus();
@@ -586,15 +571,17 @@ static void notify_new_mouse_screen_params()
 	// its starting point by the inverse of the DPI scale factor.
 	params.draw_rect = to_rect(sdl.draw.draw_rect_px).Copy().Scale(1.0f / sdl.dpi_scale);
 
-	int abs_x = 0;
-	int abs_y = 0;
+	float abs_x = 0.0f;
+	float abs_y = 0.0f;
 	SDL_GetMouseState(&abs_x, &abs_y);
 
-	params.x_abs = static_cast<float>(abs_x);
-	params.y_abs = static_cast<float>(abs_y);
+	params.x_abs = abs_x;
+	params.y_abs = abs_y;
 
 	params.is_fullscreen    = sdl.is_fullscreen;
-	params.is_multi_display = (SDL_GetNumVideoDisplays() > 1);
+	int num_displays = 0;
+	SDL_GetDisplays(&num_displays);
+	params.is_multi_display = (num_displays > 1);
 
 	MOUSE_NewScreenParams(params);
 }
@@ -611,7 +598,7 @@ static void set_minimum_window_size()
 
 	// TODO This only works for 320x200 games. We cannot make hardcoded
 	// assumptions about aspect ratios in general, e.g. the pixel aspect
-	// ratio is 1:1 for 640x480 games both with 'aspect = on` and 'aspect =
+	// ratio is 1:1 for 640x480 games both with 'aspect = on' and 'aspect =
 	// off'.
 	const auto minimum_height = (is_aspect_ratio_correction_enabled() ? 480 : 400);
 
@@ -621,9 +608,11 @@ static void set_minimum_window_size()
 
 	// The SDL documentation is incorrect; this will set the minimum window
 	// size in logical units, not pixels.
-	SDL_SetWindowMinimumSize(sdl.window,
+	if (!SDL_SetWindowMinimumSize(sdl.window,
 	                         minimum_window_size.x,
-	                         minimum_window_size.y);
+	                         minimum_window_size.y)) {
+		LOG_WARNING("SDL: Failed to set window minimum size: %s", SDL_GetError());
+	}
 
 	// LOG_INFO("SDL: Updated window minimum size to %dx%d", width, height);
 }
@@ -662,17 +651,19 @@ static void set_window_transparency()
 	const auto transparency = get_sdl_section()->GetInt("window_transparency");
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 
-	SDL_SetWindowOpacity(sdl.window, alpha);
+	if (!SDL_SetWindowOpacity(sdl.window, alpha)) {
+		LOG_WARNING("SDL: Failed to set window opacity: %s", SDL_GetError());
+	}
 }
 
 static void set_window_decorations()
 {
 	assert(sdl.window);
 
-	SDL_SetWindowBordered(sdl.window,
-	                      get_sdl_section()->GetBool("window_decorations")
-	                              ? SDL_TRUE
-	                              : SDL_FALSE);
+	if (!SDL_SetWindowBordered(sdl.window,
+	                      get_sdl_section()->GetBool("window_decorations"))) {
+		LOG_WARNING("SDL: Failed to set window border: %s", SDL_GetError());
+	}
 }
 
 static void enter_fullscreen()
@@ -691,7 +682,11 @@ static void enter_fullscreen()
 		// fullscreen optimisation won't kick in.
 		//
 		SDL_Rect display_bounds = {};
-		SDL_GetDisplayBounds(sdl.display_number, &display_bounds);
+		if (!SDL_GetDisplayBounds(sdl.display_number, &display_bounds)) {
+			LOG_WARNING("SDL: Failed to get display bounds: %s", SDL_GetError());
+			return;
+		}
+
 		SDL_GetWindowSize(sdl.window,
 		                  &sdl.fullscreen.prev_window.width,
 		                  &sdl.fullscreen.prev_window.height);
@@ -700,29 +695,33 @@ static void enter_fullscreen()
 		                      &sdl.fullscreen.prev_window.x_pos,
 		                      &sdl.fullscreen.prev_window.y_pos);
 
-		SDL_SetWindowBordered(sdl.window, SDL_FALSE);
-		SDL_SetWindowResizable(sdl.window, SDL_FALSE);
-		SDL_SetWindowPosition(sdl.window, 0, 0);
+		SDL_SetWindowBordered(sdl.window, false);
+		SDL_SetWindowResizable(sdl.window, false);
+		if (!SDL_SetWindowPosition(sdl.window, 0, 0)) {
+			LOG_WARNING("SDL: Failed to set window position: %s", SDL_GetError());
+		}
 
-		SDL_SetWindowSize(sdl.window,
+		if (!SDL_SetWindowSize(sdl.window,
 		                  display_bounds.w + 1,
-		                  display_bounds.h);
+		                  display_bounds.h)) {
+			LOG_WARNING("SDL: Failed to set window size: %s", SDL_GetError());
+		}
 
 		// Disable transparency in fullscreen mode
-		SDL_SetWindowOpacity(sdl.window, 100);
+		SDL_SetWindowOpacity(sdl.window, 1.0f);
 
 		maybe_log_display_properties();
 
 	} else {
-		const auto mode = (sdl.fullscreen.mode == FullscreenMode::Standard)
-		                        ? SDL_WINDOW_FULLSCREEN_DESKTOP
-		                        : SDL_WINDOW_FULLSCREEN;
+		const auto fullscreen = (sdl.fullscreen.mode == FullscreenMode::Standard);
 
-		SDL_SetWindowFullscreen(sdl.window, mode); //-V2006
+		if (!SDL_SetWindowFullscreen(sdl.window, fullscreen)) {
+			LOG_WARNING("SDL: Failed to set fullscreen: %s", SDL_GetError());
+		}
 	}
 
 	// We need to disable transparency in fullscreen on macOS
-	SDL_SetWindowOpacity(sdl.window, 100);
+	SDL_SetWindowOpacity(sdl.window, 1.0f);
 }
 
 static void exit_fullscreen()
@@ -737,23 +736,28 @@ static void exit_fullscreen()
 		//
 		set_window_decorations();
 
-		SDL_SetWindowResizable(sdl.window, SDL_TRUE);
+		SDL_SetWindowResizable(sdl.window, true);
 
-		SDL_SetWindowSize(sdl.window,
+		if (!SDL_SetWindowSize(sdl.window,
 		                  sdl.fullscreen.prev_window.width,
-		                  sdl.fullscreen.prev_window.height);
+		                  sdl.fullscreen.prev_window.height)) {
+			LOG_WARNING("SDL: Failed to set window size: %s", SDL_GetError());
+		}
 
-		SDL_SetWindowPosition(sdl.window,
+		if (!SDL_SetWindowPosition(sdl.window,
 		                      sdl.fullscreen.prev_window.x_pos,
-		                      sdl.fullscreen.prev_window.y_pos);
+		                      sdl.fullscreen.prev_window.y_pos)) {
+			LOG_WARNING("SDL: Failed to set window position: %s", SDL_GetError());
+		}
 
 		set_window_transparency();
 
 		maybe_log_display_properties();
 
 	} else {
-		constexpr auto WindowedMode = 0;
-		SDL_SetWindowFullscreen(sdl.window, WindowedMode);
+		if (!SDL_SetWindowFullscreen(sdl.window, false)) {
+			LOG_WARNING("SDL: Failed to exit fullscreen: %s", SDL_GetError());
+		}
 
 		// On macOS, SDL_SetWindowSize() and SDL_SetWindowPosition()
 		// calls in fullscreen mode are no-ops, so we need to set the
@@ -794,7 +798,13 @@ static SDL_Rect get_desktop_size()
 	SDL_Rect desktop = {};
 	assert(sdl.display_number >= 0);
 
-	SDL_GetDisplayBounds(sdl.display_number, &desktop);
+	if (!SDL_GetDisplayBounds(sdl.display_number, &desktop)) {
+		LOG_ERR("SDL: Could not get display bounds for display number %d: %s", sdl.display_number, SDL_GetError());
+		// Return a safe default
+		desktop.w = 1024;
+		desktop.h = 768;
+		return desktop;
+	}
 
 	// Deduct the border decorations from the desktop size
 	int top    = 0;
@@ -802,15 +812,11 @@ static SDL_Rect get_desktop_size()
 	int bottom = 0;
 	int right  = 0;
 
-	SDL_GetWindowBordersSize(SDL_GetWindowFromID(sdl.display_number),
-	                         &top,
-	                         &left,
-	                         &bottom,
-	                         &right);
-
-	// If SDL_GetWindowBordersSize fails, it populates the values with 0.
-	desktop.w -= (left + right);
-	desktop.h -= (top + bottom);
+	if (SDL_GetWindowBordersSize(sdl.window, &top, &left, &bottom, &right)) {
+		// If SDL_GetWindowBordersSize succeeds, deduct borders
+		desktop.w -= (left + right);
+		desktop.h -= (top + bottom);
+	}
 
 	assert(desktop.w >= minimum_window_size.x);
 	assert(desktop.h >= minimum_window_size.y);
@@ -997,39 +1003,20 @@ void GFX_CenterMouse()
 	int width  = 0;
 	int height = 0;
 
-#if defined(WIN32)
-	if (is_runtime_sdl_version_at_least({2, 28, 1})) {
-		SDL_GetWindowSize(sdl.window, &width, &height);
-
-	} else {
-		const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
-
-		width  = iroundf(canvas_size_px.w);
-		height = iroundf(canvas_size_px.h);
-	}
-#else
 	SDL_GetWindowSize(sdl.window, &width, &height);
-#endif
 
-	SDL_WarpMouseInWindow(sdl.window, width / 2, height / 2);
+	SDL_WarpMouseInWindow(sdl.window, static_cast<float>(width) / 2.0f, static_cast<float>(height) / 2.0f);
 }
 
-void GFX_SetMouseRawInput(const bool requested_raw_input)
+void GFX_SetMouseRawInput([[maybe_unused]]const bool requested_raw_input)
 {
-	if (SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
-	                            requested_raw_input ? "0" : "1",
-	                            SDL_HINT_OVERRIDE) != SDL_TRUE) {
-
-		LOG_WARNING("SDL: Error %s raw mouse input",
-		            requested_raw_input ? "enabling" : "disabling");
-	}
+	// Unsupported (not needed) under SDL3
 }
 
 void GFX_SetMouseCapture(const bool requested_capture)
 {
-	const auto param = requested_capture ? SDL_TRUE : SDL_FALSE;
-	if (SDL_SetRelativeMouseMode(param) != 0) {
-		SDL_ShowCursor(SDL_ENABLE);
+	if (!SDL_SetWindowRelativeMouseMode(sdl.window, requested_capture)) {
+		SDL_ShowCursor();
 
 		E_Exit("SDL: Error %s relative mode",
 		       requested_capture ? "putting the mouse into"
@@ -1039,10 +1026,14 @@ void GFX_SetMouseCapture(const bool requested_capture)
 
 void GFX_SetMouseVisibility(const bool requested_visible)
 {
-	const auto param = requested_visible ? SDL_ENABLE : SDL_DISABLE;
-	if (SDL_ShowCursor(param) < 0) {
-		E_Exit("SDL: Error making mouse cursor %s",
-		       requested_visible ? "visible" : "invisible");
+	if (requested_visible) {
+		if (!SDL_ShowCursor()) {
+			LOG_WARNING("SDL: Error making mouse cursor visible");
+		}
+	} else {
+		if (!SDL_HideCursor()) {
+			LOG_WARNING("SDL: Error making mouse cursor invisible");
+		}
 	}
 }
 
@@ -1060,8 +1051,12 @@ static void focus_input()
 	}
 
 	// If not, raise-and-focus to prevent stranding the window
-	SDL_RaiseWindow(sdl.window);
-	SDL_SetWindowInputFocus(sdl.window);
+	if (!SDL_RaiseWindow(sdl.window)) {
+		LOG_WARNING("SDL: Failed to raise window: %s", SDL_GetError());
+	}
+	if (!SDL_RaiseWindow(sdl.window)) {
+		LOG_WARNING("SDL: Failed to set window input focus: %s", SDL_GetError());
+	}
 }
 
 static void toggle_fullscreen()
@@ -1517,7 +1512,7 @@ TextureFilterMode GFX_GetTextureFilterMode()
 
 static int get_sdl_window_flags()
 {
-	auto flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+	auto flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
 	if (!get_sdl_section()->GetBool("window_decorations")) {
 		flags |= SDL_WINDOW_BORDERLESS;
@@ -1526,7 +1521,7 @@ static int get_sdl_window_flags()
 	if (sdl.is_fullscreen) {
 		switch (sdl.fullscreen.mode) {
 		case FullscreenMode::Standard:
-			flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+			flags |= SDL_WINDOW_FULLSCREEN;
 			break;
 		case FullscreenMode::ForcedBorderless:
 			// no-op
@@ -1596,7 +1591,9 @@ static void set_keyboard_capture()
 
 	const auto capture_keyboard = get_sdl_section()->GetBool("keyboard_capture");
 
-	SDL_SetWindowKeyboardGrab(sdl.window, capture_keyboard ? SDL_TRUE : SDL_FALSE);
+	if (!SDL_SetWindowKeyboardGrab(sdl.window, capture_keyboard)) {
+		LOG_WARNING("SDL: Failed to set keyboard grab: %s", SDL_GetError());
+	}
 }
 
 static void apply_active_settings()
@@ -1646,8 +1643,11 @@ static void configure_display()
 {
 	const int display = get_sdl_section()->GetInt("display");
 
-	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
-		sdl.display_number = display;
+	int num_displays = 0;
+	SDL_DisplayID *displays = SDL_GetDisplays(&num_displays);
+	if ((display >= 0) && (display < num_displays)) {
+		sdl.display_number = displays[display];
+		assert(sdl.display_number != 0);
 	} else {
 		// TODO convert to notification
 		LOG_WARNING("SDL: Display number out of bounds, using display 0");
@@ -1659,9 +1659,13 @@ static void set_allow_screensaver()
 {
 	const std::string screensaver = get_sdl_section()->GetString("screensaver");
 	if (screensaver == "allow") {
-		SDL_EnableScreenSaver();
+		if (!SDL_EnableScreenSaver()) {
+			LOG_WARNING("SDL: Failed to enable screensaver: %s", SDL_GetError());
+		}
 	} else {
-		SDL_DisableScreenSaver();
+		if (!SDL_DisableScreenSaver()) {
+			LOG_WARNING("SDL: Failed to disable screensaver: %s", SDL_GetError());
+		}
 	}
 }
 
@@ -1675,21 +1679,7 @@ static void configure_pause_and_mute_when_inactive()
 
 static void set_sdl_hints()
 {
-#if (SDL_VERSION_ATLEAST(3, 0, 0))
 	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
-#else
-#if !defined(WIN32) && !defined(MACOSX)
-	constexpr int Overwrite = 0;
-
-	set_env_var("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, Overwrite);
-	set_env_var("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, Overwrite);
-#endif
-#endif
-
-#if defined(WIN32)
-	SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
-	SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1");
-#endif
 
 	// Seamless mouse integration feels more 'seamless' if mouse
 	// clicks on unfocused windows are passed to the guest.
@@ -1771,7 +1761,7 @@ static bool is_dosbox_package(const std::string& path)
 // Handle .dosbox package drops from Finder
 static void handle_macos_dosbox_package_drop(const std::string& dropped_file_path)
 {
-	LOG_MSG("CONFIG: Received dropped file via SDL_DROPFILE: '%s'",
+	LOG_MSG("CONFIG: Received dropped file via SDL_EVENT_DROP_FILE: '%s'",
 	        dropped_file_path.c_str());
 
 	// Check if it's a .dosbox package
@@ -1807,8 +1797,8 @@ void GFX_InitSdl()
 {
 	set_sdl_hints();
 
-	// Initialise SDL (timer is needed for title bar animations)
-	if (SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
+	// Initialise SDL
+	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		E_Exit("SDL: Failed to init SDL video and timer: %s", SDL_GetError());
 	}
 
@@ -1819,18 +1809,15 @@ void GFX_InitSdl()
 
 	// Register custom SDL events
 	sdl.start_event_id = SDL_RegisterEvents(enum_val(DosBoxSdlEvent::NumEvents));
-	if (sdl.start_event_id == UINT32_MAX) {
+	if (sdl.start_event_id == 0) {
 		E_Exit("SDL: Error allocating event IDs");
 	}
 
 	// Log runtime SDL version
-	SDL_version sdl_version = {};
-	SDL_GetVersion(&sdl_version);
-
 	LOG_MSG("SDL: Version %d.%d.%d initialised",
-	        sdl_version.major,
-	        sdl_version.minor,
-	        sdl_version.patch);
+	        SDL_MAJOR_VERSION,
+	        SDL_MINOR_VERSION,
+	        SDL_MICRO_VERSION);
 	LOG_MSG("SDL: %s video initialised", SDL_GetCurrentVideoDriver());
 
 #ifdef MACOSX
@@ -1842,9 +1829,8 @@ void GFX_InitSdl()
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
-		if (event.type == SDL_DROPFILE && event.drop.file != nullptr) {
-			const std::string dropped_file_path = event.drop.file;
-			SDL_free(event.drop.file);
+		if (event.type == SDL_EVENT_DROP_FILE && event.drop.data != nullptr) {
+			const std::string dropped_file_path = event.drop.data;
 			handle_macos_dosbox_package_drop(dropped_file_path);
 		}
 	}
@@ -1891,7 +1877,6 @@ void GFX_InitAndStartGui()
 	// - https://github.com/libsdl-org/SDL/issues/13920
 	//
 	SDL_RaiseWindow(sdl.window);
-	SDL_SetWindowInputFocus(sdl.window);
 
 	// Setting the SDL_WINDOW_BORDERLESS flag on window creation doesn't
 	// work on macOS.
@@ -1960,9 +1945,6 @@ static void notify_sdl_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "keyboard_capture") {
 		set_keyboard_capture();
-
-	} else if (prop_name == "mapperfile") {
-		MAPPER_BindKeys(&section);
 
 	} else if (prop_name == "mute_when_inactive") {
 		configure_pause_and_mute_when_inactive();
@@ -2042,8 +2024,8 @@ static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 
 static void handle_mouse_wheel(SDL_MouseWheelEvent* wheel)
 {
-	const auto tmp = (wheel->direction == SDL_MOUSEWHEEL_NORMAL) ? -wheel->y
-	                                                             : wheel->y;
+	const auto tmp = (wheel->direction == SDL_MOUSEWHEEL_NORMAL) ? -wheel->integer_y
+	                                                             : wheel->integer_y;
 	MOUSE_EventWheel(check_cast<int16_t>(tmp));
 }
 
@@ -2061,7 +2043,7 @@ static void handle_mouse_button(SDL_MouseButtonEvent* button)
 		// clang-format on
 	};
 	assert(button);
-	notify_button(button->button, button->state == SDL_PRESSED);
+	notify_button(button->button, button->down);
 }
 
 void GFX_LosingFocus()
@@ -2072,6 +2054,12 @@ void GFX_LosingFocus()
 bool GFX_IsFullscreen()
 {
 	return sdl.is_fullscreen;
+}
+
+static bool is_window_event(const SDL_Event& event)
+{
+	return (event.type >= SDL_EVENT_WINDOW_FIRST &&
+	        event.type <= SDL_EVENT_WINDOW_LAST);
 }
 
 static bool is_user_event(const SDL_Event& event)
@@ -2102,11 +2090,8 @@ int GFX_GetUserSdlEventId(DosBoxSdlEvent event)
 
 static void handle_pause_when_inactive(const SDL_Event& event)
 {
-	// Non-focus priority is set to pause; check to see if we've lost window
-	// or input focus i.e. has the window been minimised or made inactive?
-	//
-	if ((event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) ||
-	    (event.window.event == SDL_WINDOWEVENT_MINIMIZED)) {
+	if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST ||
+	    event.type == SDL_EVENT_WINDOW_MINIMIZED) {
 		// Window has lost focus, pause the emulator. This is similar to
 		// what PauseDOSBox() does, but the exit criteria is different.
 		// Instead of waiting for the user to hit Alt+Break, we wait for
@@ -2133,46 +2118,14 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 			SDL_WaitEvent(&ev);
 
 			switch (ev.type) {
-			case SDL_QUIT: GFX_RequestExit(true); break;
-			case SDL_WINDOWEVENT: {
-				const auto we = ev.window.event;
-
-				// wait until we get window focus back
-				if ((we == SDL_WINDOWEVENT_FOCUS_LOST) ||
-				    (we == SDL_WINDOWEVENT_MINIMIZED) ||
-				    (we == SDL_WINDOWEVENT_FOCUS_GAINED) ||
-				    (we == SDL_WINDOWEVENT_RESTORED) ||
-				    (we == SDL_WINDOWEVENT_EXPOSED)) {
-
-					// We've got focus back, so unpause and
-					// break out of the loop
-					if ((we == SDL_WINDOWEVENT_FOCUS_GAINED) ||
-					    (we == SDL_WINDOWEVENT_RESTORED) ||
-					    (we == SDL_WINDOWEVENT_EXPOSED)) {
-
-						sdl.is_paused = false;
-						TITLEBAR_RefreshTitle();
-
-						if (we == SDL_WINDOWEVENT_FOCUS_GAINED) {
-							sdl.is_paused = false;
-							apply_active_settings();
-						}
-					}
-
-					// Now poke a "release ALT" command into
-					// the keyboard buffer we have to do
-					// this, otherwise ALT will 'stick' and
-					// cause problems with the app running
-					// in the DOSBox.
-					//
-					KEYBOARD_AddKey(KBD_leftalt, false);
-					KEYBOARD_AddKey(KBD_rightalt, false);
-
-					if (we == SDL_WINDOWEVENT_RESTORED) {
-						// We may need to re-create a
-						// texture and more
-						GFX_ResetScreen();
-					}
+			case SDL_EVENT_QUIT: GFX_RequestExit(true); break;
+			case SDL_EVENT_WINDOW_FOCUS_GAINED:
+			case SDL_EVENT_WINDOW_RESTORED:
+			case SDL_EVENT_WINDOW_EXPOSED: {
+				const auto we = ev.type;
+				// ...existing code...
+				if (we == SDL_EVENT_WINDOW_RESTORED) {
+					// ...existing code...
 				}
 			} break;
 			}
@@ -2183,8 +2136,8 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 
 static bool handle_sdl_windowevent(const SDL_Event& event)
 {
-	switch (event.window.event) {
-	case SDL_WINDOWEVENT_RESTORED:
+	switch (event.type) {
+	case SDL_EVENT_WINDOW_RESTORED:
 		log_window_event("SDL: Window has been restored");
 
 		// We may need to re-create a texture and more on Android.
@@ -2204,7 +2157,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		focus_input();
 		return true;
 
-	case SDL_WINDOWEVENT_RESIZED: {
+	case SDL_EVENT_WINDOW_RESIZED: {
 		// Window dimensions in logical coordinates
 		const auto width  = event.window.data1;
 		const auto height = event.window.data2;
@@ -2214,7 +2167,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		static int last_width  = 0;
 		static int last_height = 0;
 
-		// SDL_WINDOWEVENT_RESIZED events are sent twice when resizing
+		// SDL_EVENT_WINDOW_RESIZED events are sent twice when resizing
 		// the window, but maybe_log_display_properties() will only
 		// output a log entry if the image dimensions have actually
 		// changed.
@@ -2242,13 +2195,13 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 	}
 
-	case SDL_WINDOWEVENT_FOCUS_GAINED:
+	case SDL_EVENT_WINDOW_FOCUS_GAINED:
 		log_window_event("SDL: Window has gained keyboard focus");
 
 		apply_active_settings();
 		[[fallthrough]];
 
-	case SDL_WINDOWEVENT_EXPOSED:
+	case SDL_EVENT_WINDOW_EXPOSED:
 		log_window_event("SDL: Window has been exposed and should be redrawn");
 
 		// TODO: below is not consistently true :( seems incorrect on
@@ -2266,30 +2219,30 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		focus_input();
 		return true;
 
-	case SDL_WINDOWEVENT_FOCUS_LOST:
+	case SDL_EVENT_WINDOW_FOCUS_LOST:
 		log_window_event("SDL: Window has lost keyboard focus");
 
 		apply_inactive_settings();
 		GFX_LosingFocus();
 		return false;
 
-	case SDL_WINDOWEVENT_ENTER:
+	case SDL_EVENT_WINDOW_MOUSE_ENTER:
 		log_window_event("SDL: Window has gained mouse focus");
 		return true;
 
-	case SDL_WINDOWEVENT_LEAVE:
+	case SDL_EVENT_WINDOW_MOUSE_LEAVE:
 		log_window_event("SDL: Window has lost mouse focus");
 		return true;
 
-	case SDL_WINDOWEVENT_SHOWN:
+	case SDL_EVENT_WINDOW_SHOWN:
 		log_window_event("SDL: Window has been shown");
 		return true;
 
-	case SDL_WINDOWEVENT_HIDDEN:
+	case SDL_EVENT_WINDOW_HIDDEN:
 		log_window_event("SDL: Window has been hidden");
 		return true;
 
-	case SDL_WINDOWEVENT_MOVED: {
+	case SDL_EVENT_WINDOW_MOVED: {
 		const auto x = event.window.data1;
 		const auto y = event.window.data2;
 
@@ -2320,7 +2273,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 	}
 
-	case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
+	case SDL_EVENT_WINDOW_DISPLAY_CHANGED: {
 		const auto new_display_number = event.window.data1;
 		log_window_event("SDL: Window has been moved to display %d",
 		                 new_display_number);
@@ -2336,7 +2289,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 	}
 
-	case SDL_WINDOWEVENT_SIZE_CHANGED: {
+	case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
 		log_window_event("SDL: The window size has changed");
 
 		// The window size has changed either as a result of an API call
@@ -2349,37 +2302,38 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 	}
 
-	case SDL_WINDOWEVENT_MINIMIZED:
+	case SDL_EVENT_WINDOW_MINIMIZED:
 		log_window_event("SDL: Window has been minimized");
 
 		apply_inactive_settings();
 		return false;
 
-	case SDL_WINDOWEVENT_MAXIMIZED:
+	case SDL_EVENT_WINDOW_MAXIMIZED:
 		log_window_event("SDL: Window has been maximized");
 		return true;
 
-	case SDL_WINDOWEVENT_CLOSE:
+	case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 		log_window_event(
 		        "SDL: The window manager requests that the window be closed");
 
 		GFX_RequestExit(true);
 		return false;
 
-	case SDL_WINDOWEVENT_TAKE_FOCUS:
-		log_window_event("SDL: Window is being offered a focus");
+	// case SDL_WINDOWEVENT_TAKE_FOCUS:
+	// 	log_window_event("SDL: Window is being offered a focus");
 
-		focus_input();
-		apply_active_settings();
-		return true;
+	// 	focus_input();
+	// 	apply_active_settings();
+	// 	return true;
 
-	case SDL_WINDOWEVENT_HIT_TEST:
+	case SDL_EVENT_WINDOW_HIT_TEST:
 		log_window_event(
 		        "SDL: Window had a hit test that wasn't SDL_HITTEST_NORMAL");
 		return true;
 
 	default: return false;
 	}
+	return false;
 }
 
 static void adjust_ticks_after_present_frame(int64_t elapsed_us)
@@ -2490,7 +2444,7 @@ bool GFX_PollAndHandleEvents()
 		last_check_joystick = current_check_joystick;
 
 		if (MAPPER_IsUsingJoysticks()) {
-			SDL_JoystickUpdate();
+			SDL_UpdateJoysticks();
 		}
 		MAPPER_UpdateJoysticks();
 	}
@@ -2507,36 +2461,30 @@ bool GFX_PollAndHandleEvents()
 			continue;
 		}
 
-		switch (event.type) {
-		case SDL_DISPLAYEVENT:
-			switch (event.display.event) {
-			case SDL_DISPLAYEVENT_CONNECTED:
-			case SDL_DISPLAYEVENT_DISCONNECTED:
-				notify_new_mouse_screen_params();
-				break;
-			default: break;
-			};
-			break;
-
-		case SDL_WINDOWEVENT: {
+		if (is_window_event(event)) {
 			auto handling_finished = handle_sdl_windowevent(event);
 			if (handling_finished) {
 				continue;
 			}
-
 			if (sdl.pause_when_inactive) {
 				handle_pause_when_inactive(event);
-			}
-		} break;
+			}			
+		}
 
-		case SDL_MOUSEMOTION: handle_mouse_motion(&event.motion); break;
-		case SDL_MOUSEWHEEL: handle_mouse_wheel(&event.wheel); break;
-		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP:
+		switch(event.type) {
+		case SDL_EVENT_DISPLAY_ADDED:
+		case SDL_EVENT_DISPLAY_REMOVED:
+			notify_new_mouse_screen_params();
+			break;
+
+		case SDL_EVENT_MOUSE_MOTION: handle_mouse_motion(&event.motion); break;
+		case SDL_EVENT_MOUSE_WHEEL: handle_mouse_wheel(&event.wheel); break;
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		case SDL_EVENT_MOUSE_BUTTON_UP:
 			handle_mouse_button(&event.button);
 			break;
 
-		case SDL_QUIT: GFX_RequestExit(true); break;
+		case SDL_EVENT_QUIT: GFX_RequestExit(true); break;
 		default: MAPPER_CheckEvent(&event);
 		}
 	}
@@ -2551,15 +2499,14 @@ static std::vector<std::string> get_sdl_texture_renderers()
 	drivers.reserve(n + 1);
 	drivers.emplace_back("auto");
 
-	SDL_RendererInfo info;
+	const char *name;
 
 	for (int i = 0; i < n; i++) {
-		if (SDL_GetRenderDriverInfo(i, &info)) {
+		name = SDL_GetRenderDriver(i);
+		if (!name) {
 			continue;
 		}
-		if (info.flags & SDL_RENDERER_TARGETTEXTURE) {
-			drivers.emplace_back(info.name);
-		}
+		drivers.emplace_back(name);
 	}
 	return drivers;
 }

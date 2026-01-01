@@ -31,5 +31,5 @@ endif()
 
 target_link_libraries(libdecoders
   PRIVATE
-  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+  SDL3::SDL3
 )

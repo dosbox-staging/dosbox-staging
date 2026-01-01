@@ -40,17 +40,17 @@ add_library(libpdcurses STATIC
   pdcurses/util.c
   pdcurses/window.c
 
-  sdl2_queue/pdcclip.cpp
-  sdl2_queue/pdcdisp.cpp
-  sdl2_queue/pdcgetsc.cpp
-  sdl2_queue/pdckbd.cpp
-  sdl2_queue/pdcscrn.cpp
-  sdl2_queue/pdcsetsc.cpp
-  sdl2_queue/pdcutil.cpp
+  sdl3_queue/pdcclip.cpp
+  sdl3_queue/pdcdisp.cpp
+  sdl3_queue/pdcgetsc.cpp
+  sdl3_queue/pdckbd.cpp
+  sdl3_queue/pdcscrn.cpp
+  sdl3_queue/pdcsetsc.cpp
+  sdl3_queue/pdcutil.cpp
 )
 
 target_include_directories(libpdcurses PUBLIC . pdcurses)
 
 target_link_libraries(
-  libpdcurses PRIVATE $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+  libpdcurses PRIVATE SDL3::SDL3
 )

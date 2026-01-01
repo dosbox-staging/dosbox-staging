@@ -1,15 +1,15 @@
 /* PDCurses */
-#ifndef PDC_SDL2_QUEUE_H
-#define PDC_SDL2_QUEUE_H
+#ifndef PDC_SDL3_QUEUE_H
+#define PDC_SDL3_QUEUE_H
 
 #include "dosbox_config.h"
 
 #include <queue>
 
 // must be included after dosbox_config.h
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #ifdef PDC_WIDE
-# include <SDL_ttf.h>
+# include <SDL3_ttf/SDL_ttf.h>
 #endif
 
 #include <curspriv.h>
@@ -21,6 +21,7 @@ PDCEX  int pdc_font_size;
 
 PDCEX  SDL_Window *pdc_window;
 PDCEX  SDL_Surface *pdc_screen, *pdc_font, *pdc_icon, *pdc_back;
+PDCEX  SDL_Palette *pdc_font_palette;
 PDCEX  int pdc_sheight, pdc_swidth, pdc_yoffset, pdc_xoffset;
 
 extern SDL_Surface *pdc_tileback;    /* used to regenerate the background

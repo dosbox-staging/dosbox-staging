@@ -24,7 +24,7 @@
 #include <cassert>
 #include <cinttypes>
 #include <opusfile.h>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "utils/math_utils.h"
 #include "misc/support.h"
@@ -59,8 +59,8 @@ static void opus_quit(void)
  *       int         _nbytes  --> The maximum number of bytes to read.
  *    Returns: The number of bytes successfully read, or a negative value on error.
  *
- * SDL: size_t SDL_RWread
- *      struct SDL_RWops* context --> a pointer to an SDL_RWops structure
+ * SDL: size_t SDL_ReadIO
+ *      struct SDL_IOStream* context --> a pointer to an SDL_IOStream structure
  *      void*             ptr     --> a pointer to a buffer to read data into
  *      size_t            size    --> the size of each object to read, in bytes
  *      size_t            maxnum  --> the maximum number of objects to be read
@@ -76,9 +76,8 @@ static int RWops_opus_read(void * stream, uint8_t * buffer, int32_t requested_by
     int32_t bytes_read = 0;
     auto *sample = static_cast<Sound_Sample*>(stream);
     while (bytes_read < requested_bytes) {
-        const size_t rc = SDL_RWread(static_cast<SDL_RWops*>(stream),
+        const size_t rc = SDL_ReadIO(static_cast<SDL_IOStream*>(stream),
                                      static_cast<void*>(buf_pos),
-                                     1,
                                      static_cast<size_t>(requested_bytes - bytes_read));
 
         if (rc == 0) {
@@ -109,14 +108,14 @@ static int RWops_opus_read(void * stream, uint8_t * buffer, int32_t requested_by
  *      define  SEEK_CUR    1
  *      define  SEEK_END    2
  *
- * SDL: Sint64 SDL_RWseek
- *      SDL_RWops* context --> a pointer to an SDL_RWops structure
+ * SDL: Sint64 SDL_SeekIO
+ *      SDL_IOStream* context --> a pointer to an SDL_IOStream structure
  *      Sint64     offset, --> offset, in bytes
  *      Sint32     whence  --> an offset in bytes, relative to whence location; can be negative
  *   Returns the final offset in the data stream after the seek or -1 on error.
- *      RW_SEEK_SET   0
- *      RW_SEEK_CUR   1
- *      RW_SEEK_END   2
+ *      SDL_IO_SEEK_SET   0
+ *      SDL_IO_SEEK_CUR   1
+ *      SDL_IO_SEEK_END   2
  */
 static int32_t RWops_opus_seek(void * stream, const opus_int64 offset, const int32_t whence)
 {
@@ -125,8 +124,8 @@ static int32_t RWops_opus_seek(void * stream, const opus_int64 offset, const int
     assertm(whence == SEEK_SET || whence == SEEK_CUR || whence == SEEK_END,
             "OPUS: The position from where to seek is invalid");
 
-    const int64_t offset_after_seek = SDL_RWseek(static_cast<SDL_RWops*>(stream),
-                                                 offset, whence);
+    const int64_t offset_after_seek = SDL_SeekIO(static_cast<SDL_IOStream*>(stream),
+                                                 offset, static_cast<SDL_IOWhence>(whence));
     SNDDBG(("Opus ops seek:          "
             "requested: %" PRId64 " and got: %" PRId64 "\n",
             static_cast<int64_t>(offset), offset_after_seek));
@@ -138,13 +137,13 @@ static int32_t RWops_opus_seek(void * stream, const opus_int64 offset, const int
  * Read-Write Ops Close Callback Wrapper
  * -------------------------------------
  * OPUS: typedef int(* op_close_func)(void *_stream)
- * SDL:  Sint32 SDL_RWclose(struct SDL_RWops* context)
+ * SDL:  Sint32 SDL_CloseIO(struct SDL_IOStream* context)
  */
 static int32_t RWops_opus_close(void * stream)
 {
     constexpr auto success = 0;
-    const auto sdl_stream = static_cast<SDL_RWops*>(stream);
-    return sdl_stream ? SDL_RWclose(sdl_stream) : success;
+    const auto sdl_stream = static_cast<SDL_IOStream*>(stream);
+    return sdl_stream ? SDL_CloseIO(sdl_stream) : success;
 } /* RWops_opus_close */
 
 
@@ -152,14 +151,14 @@ static int32_t RWops_opus_close(void * stream)
  * Read-Write Ops Tell Callback Wrapper
  * ------------------------------------
  * OPUS: typedef opus_int64(* op_tell_func)(void *_stream)
- * SDL:  Sint64 SDL_RWtell(struct SDL_RWops* context)
+ * SDL:  Sint64 SDL_TellIO(struct SDL_IOStream* context)
  */
 static opus_int64 RWops_opus_tell(void * stream)
 {
     // Guard against invalid input
     assertm(stream, "OPUS: Input is not initialized");
 
-    const int64_t current_offset = SDL_RWtell(static_cast<SDL_RWops*>(stream));
+    const int64_t current_offset = SDL_TellIO(static_cast<SDL_IOStream*>(stream));
     SNDDBG(("Opus ops tell:          % " PRId64 "\n",current_offset));
     return current_offset;
 } /* RWops_opus_tell */
@@ -260,7 +259,7 @@ static int32_t opus_open(Sound_Sample * sample, const char * ext)
     sample->actual.rate = OPUS_FRAMES_PER_S;
     sample->actual.channels = static_cast<Uint8>(oh->channel_count);
     sample->flags = op_seekable(of) ? SOUND_SAMPLEFLAG_CANSEEK: 0;
-    sample->actual.format = AUDIO_S16SYS;
+    sample->actual.format = SDL_AUDIO_S16;
 
     // Populate the track's duration in milliseconds (or -1 if bad)
     const int64_t pcm_frames = op_pcm_total(of, -1);

@@ -20,8 +20,8 @@
 #include "utils/rgb666.h"
 #include "utils/rgb888.h"
 
-#include <SDL.h>
-#include <SDL_image.h>
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 
 CHECK_NARROWING();
 
@@ -69,17 +69,18 @@ void SHOWPIC::Run(void)
 		return;
 	}
 
-	auto surface = IMG_Load_RW(create_sdl_rwops_for_dos_file(handle), 1);
+	auto surface = IMG_Load_IO(create_sdl_rwops_for_dos_file(handle), 1);
 	if (!surface) {
 		WriteOut(MSG_Get("PROGRAM_SHOWPIC_LOAD_ERROR"), path);
 		return;
 	}
 
-	auto palette = surface->format->palette;
+	auto palette = SDL_GetSurfacePalette(surface);
 
 	const auto is_paletted_image = (palette != nullptr);
 	if (!is_paletted_image) {
 		WriteOut(MSG_Get("PROGRAM_SHOWPIC_NOT_PALETTED_IMAGE"));
+		SDL_DestroySurface(surface);
 		return;
 	}
 
@@ -90,6 +91,7 @@ void SHOWPIC::Run(void)
 	                                                  palette->ncolors);
 	if (!maybe_video_mode) {
 		WriteOut(MSG_Get("PROGRAM_SHOWPIC_IMAGE_TOO_LARGE"));
+		SDL_DestroySurface(surface);
 		return;
 	}
 	const auto& video_mode = *maybe_video_mode;
@@ -108,6 +110,7 @@ void SHOWPIC::Run(void)
 	ClearScreen(video_mode.swidth, video_mode.sheight);
 
 	INT10_SetVideoMode(last_video_mode);
+	SDL_DestroySurface(surface);
 }
 
 void SHOWPIC::SetPalette(const SDL_Palette& palette) const
@@ -121,7 +124,7 @@ void SHOWPIC::SetPalette(const SDL_Palette& palette) const
 	for (auto i = 0; i < palette.ncolors; ++i) {
 		const auto c = palette.colors[i];
 
-		// SDL_image normalises palette values to 24-bit RGB, but
+		// SDL3 provides palette values as 24-bit RGB, but
 		// standard VGA modes use 18-bit colours (6-bit per channel)
 		const auto rgb666 = Rgb666::FromRgb888({c.r, c.g, c.b});
 

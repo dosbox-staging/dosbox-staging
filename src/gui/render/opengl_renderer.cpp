@@ -19,9 +19,8 @@
 #include "glad/gl.h"
 
 // must be included after dosbox_config.h
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include <SDL_syswm.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
 
 CHECK_NARROWING();
 
@@ -96,11 +95,22 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	auto flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
-#ifdef MACOSX
+#if defined(MACOSX) && defined(SDL_HINT_MAC_COLOR_SPACE)
 	SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "displayp3");
 #endif
 
-	return SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
+	SDL_PropertiesID props = SDL_CreateProperties();
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_X_NUMBER, x);
+    SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, y);
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, width);
+    SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);	
+	// For window flags you should use separate window creation properties,
+    // but for easier migration from SDL2 you can use the following:	
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER, flags);
+	auto window = SDL_CreateWindowWithProperties(props);
+	SDL_DestroyProperties(props);
+
+	return window;
 }
 
 #ifdef USE_DEBUG_CONTEXT
@@ -225,7 +235,7 @@ OpenGlRenderer::~OpenGlRenderer()
 	shader_cache.clear();
 
 	if (context) {
-		SDL_GL_DeleteContext(context);
+		SDL_GL_DestroyContext(context);
 		context = {};
 	}
 	if (window) {
@@ -1041,7 +1051,7 @@ void OpenGlRenderer::SetVsync(const bool is_enabled)
 {
 	const auto swap_interval = is_enabled ? 1 : 0;
 
-	if (SDL_GL_SetSwapInterval(swap_interval) != 0) {
+	if (!SDL_GL_SetSwapInterval(swap_interval)) {
 		// The requested swap_interval is not supported
 		LOG_ERR("OPENGL: Error %s vsync: %s",
 		        (is_enabled ? "enabling" : "disabling"),
