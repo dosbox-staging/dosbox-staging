@@ -170,8 +170,6 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, uint8_t mediaid, int 
 	}
 }
 
-isoDrive::~isoDrive() { }
-
 int isoDrive::UpdateMscdex(char drive_letter, const char *path, uint8_t &sub_unit)
 {
 	if (MSCDEX_HasDrive(drive_letter)) {

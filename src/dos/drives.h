@@ -365,7 +365,7 @@ class isoDrive final : public DOS_Drive, public std::enable_shared_from_this<iso
 public:
 	isoDrive(char driveLetter, const char* device_name, uint8_t mediaid,
 	         int& error);
-	~isoDrive() override;
+	~isoDrive() override = default;
 	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
 	std::unique_ptr<DOS_File> FileCreate(const char* name,
 	                                     FatAttributeFlags attributes) override;
