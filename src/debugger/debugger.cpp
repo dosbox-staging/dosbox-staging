@@ -2209,7 +2209,6 @@ int32_t DEBUG_Run(int32_t amount, bool quickexit)
 
 		const auto graphics_window = GFX_GetWindow();
 		SDL_RaiseWindow(graphics_window);
-		SDL_SetWindowInputFocus(graphics_window);
 
 		DOSBOX_SetNormalLoop();
 	}
@@ -2608,7 +2607,6 @@ void DEBUG_Enable(bool pressed)
 	GFX_LosingFocus();
 	pdc_event_queue = {};
 	SDL_RaiseWindow(pdc_window);
-	SDL_SetWindowInputFocus(pdc_window);
 	SetCodeWinStart();
 	DEBUG_DrawScreen();
 
