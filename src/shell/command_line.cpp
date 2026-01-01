@@ -334,7 +334,7 @@ CommandLine::CommandLine(int argc, const char* const argv[])
 	int i = 1;
 
 	while (i < argc) {
-		cmds.push_back(argv[i]);
+		cmds.emplace_back(argv[i]);
 		i++;
 	}
 }
