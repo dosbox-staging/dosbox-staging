@@ -2,7 +2,6 @@ autoconf
 autoconf-archive
 automake
 libtool
-libsdl2-dev
 libgl1-mesa-dev
 libegl1-mesa-dev
 libxft-dev
