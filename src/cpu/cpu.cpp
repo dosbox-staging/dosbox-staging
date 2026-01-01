@@ -2758,7 +2758,7 @@ public:
 		modern_cycles_config = {};
 
 		auto clamp_and_sync_cycles =
-		        [](const int cycles, const std::string& setting_name) -> int {
+		        [](const int cycles, const std::string& setting_name) {
 			if (cycles < CpuCyclesMin || cycles > CpuCyclesMax) {
 				const auto new_cycles = clamp(cycles,
 				                              CpuCyclesMin,
