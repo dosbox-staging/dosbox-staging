@@ -2,8 +2,8 @@
 
 #include "pdcsdl.h"
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #ifdef PDC_WIDE
 # include "../common/acsgr.h"
@@ -110,7 +110,7 @@ static void _set_attr(chtype ch)
         if (newfg != foregr)
         {
 #ifndef PDC_WIDE
-            SDL_SetPaletteColors(pdc_font->format->palette,
+            SDL_SetPaletteColors(pdc_font_palette,
                                  pdc_color + newfg, pdc_flastc, 1);
 #endif
             foregr = newfg;
@@ -120,13 +120,13 @@ static void _set_attr(chtype ch)
         {
 #ifndef PDC_WIDE
             if (newbg == -1)
-                SDL_SetColorKey(pdc_font, SDL_TRUE, 0);
+                SDL_SetSurfaceColorKey(pdc_font, true, 0);
             else
             {
                 if (backgr == -1)
-                    SDL_SetColorKey(pdc_font, SDL_FALSE, 0);
+                    SDL_SetSurfaceColorKey(pdc_font, false, 0);
 
-                SDL_SetPaletteColors(pdc_font->format->palette,
+                SDL_SetPaletteColors(pdc_font_palette,
                                      pdc_color + newbg, 0, 1);
             }
 #endif
@@ -154,14 +154,14 @@ bool _grprint(chtype ch, SDL_Rect dest)
         dest.y += hmid;
         dest.w = pdc_fthick;
         dest.x += wmid;
-        SDL_FillRect(pdc_screen, &dest, col);
+        SDL_FillSurfaceRect(pdc_screen, &dest, col);
         dest.w = pdc_fwidth - wmid;
         goto S1;
     case ACS_LLCORNER:
         dest.h = hmid;
         dest.w = pdc_fthick;
         dest.x += wmid;
-        SDL_FillRect(pdc_screen, &dest, col);
+        SDL_FillSurfaceRect(pdc_screen, &dest, col);
         dest.w = pdc_fwidth - wmid;
         dest.y += hmid;
         goto S1;
@@ -170,7 +170,7 @@ bool _grprint(chtype ch, SDL_Rect dest)
         dest.w = pdc_fthick;
         dest.y += hmid;
         dest.x += wmid;
-        SDL_FillRect(pdc_screen, &dest, col);
+        SDL_FillSurfaceRect(pdc_screen, &dest, col);
         dest.w = wmid;
         dest.x -= wmid;
         goto S1;
@@ -178,7 +178,7 @@ bool _grprint(chtype ch, SDL_Rect dest)
         dest.h = hmid + pdc_fthick;
         dest.w = pdc_fthick;
         dest.x += wmid;
-        SDL_FillRect(pdc_screen, &dest, col);
+        SDL_FillSurfaceRect(pdc_screen, &dest, col);
         dest.w = wmid;
         dest.x -= wmid;
         dest.y += hmid;
@@ -188,7 +188,7 @@ bool _grprint(chtype ch, SDL_Rect dest)
         dest.w = pdc_fwidth - wmid;
         dest.x += wmid;
         dest.y += hmid;
-        SDL_FillRect(pdc_screen, &dest, col);
+        SDL_FillSurfaceRect(pdc_screen, &dest, col);
         dest.w = pdc_fthick;
         dest.x -= wmid;
         goto VLINE;
@@ -197,7 +197,7 @@ bool _grprint(chtype ch, SDL_Rect dest)
     case ACS_PLUS:
         dest.h = pdc_fthick;
         dest.y += hmid;
-        SDL_FillRect(pdc_screen, &dest, col);
+        SDL_FillSurfaceRect(pdc_screen, &dest, col);
     VLINE:
         dest.h = pdc_fheight;
         dest.y -= hmid;
@@ -210,7 +210,7 @@ bool _grprint(chtype ch, SDL_Rect dest)
         dest.w = pdc_fthick;
         dest.x += wmid;
         dest.y += hmid;
-        SDL_FillRect(pdc_screen, &dest, col);
+        SDL_FillSurfaceRect(pdc_screen, &dest, col);
         dest.w = pdc_fwidth;
         dest.x -= wmid;
         goto S1;
@@ -218,7 +218,7 @@ bool _grprint(chtype ch, SDL_Rect dest)
         dest.h = hmid;
         dest.w = pdc_fthick;
         dest.x += wmid;
-        SDL_FillRect(pdc_screen, &dest, col);
+        SDL_FillSurfaceRect(pdc_screen, &dest, col);
         dest.w = pdc_fwidth;
         dest.x -= wmid;
     case ACS_HLINE:
@@ -237,7 +237,7 @@ bool _grprint(chtype ch, SDL_Rect dest)
         dest.h = pdc_fthick;
     case ACS_BLOCK:
     DRAW:
-        SDL_FillRect(pdc_screen, &dest, col);
+        SDL_FillSurfaceRect(pdc_screen, &dest, col);
         return TRUE;
     default: ;
     }
@@ -288,7 +288,7 @@ void PDC_gotoyx(int row, int col)
     dest.w = src.w;
 
 #ifdef PDC_WIDE
-    SDL_FillRect(pdc_screen, &dest, pdc_mapped[backgr]);
+    SDL_FillSurfaceRect(pdc_screen, &dest, pdc_mapped[backgr]);
 
     if (!(SP->visibility == 2 && (ch & A_ALTCHARSET && !(ch & 0xff80)) &&
         _grprint(ch & (0x7f | A_ALTCHARSET), dest)))
@@ -309,7 +309,7 @@ void PDC_gotoyx(int row, int col)
             dest.x += center;
             SDL_BlitSurface(pdc_font, &src, pdc_screen, &dest);
             dest.x -= center;
-            SDL_FreeSurface(pdc_font);
+            SDL_DestroySurface(pdc_font);
             pdc_font = NULL;
         }
     }
@@ -382,7 +382,7 @@ void _new_packet(attr_t attr, int lineno, int x, int len, const chtype *srcp)
         SDL_BlitSurface(pdc_tileback, &dest, pdc_screen, &dest);
 #ifdef PDC_WIDE
     else
-        SDL_FillRect(pdc_screen, &dest, pdc_mapped[backgr]);
+        SDL_FillSurfaceRect(pdc_screen, &dest, pdc_mapped[backgr]);
 #endif
 
     if (hcol == -1)
@@ -419,7 +419,7 @@ void _new_packet(attr_t attr, int lineno, int x, int len, const chtype *srcp)
                 chstr[0] = ch;
 
                 if (pdc_font)
-                    SDL_FreeSurface(pdc_font);
+                    SDL_DestroySurface(pdc_font);
 
                 pdc_font = TTF_RenderUNICODE_Blended(pdc_ttffont, chstr,
                                                      pdc_color[foregr]);
@@ -446,12 +446,12 @@ void _new_packet(attr_t attr, int lineno, int x, int len, const chtype *srcp)
             dest.w = pdc_fthick;
 
             if (attr & A_LEFT)
-                SDL_FillRect(pdc_screen, &dest, pdc_mapped[hcol]);
+                SDL_FillSurfaceRect(pdc_screen, &dest, pdc_mapped[hcol]);
 
             if (attr & A_RIGHT)
             {
                 dest.x += pdc_fwidth - pdc_fthick;
-                SDL_FillRect(pdc_screen, &dest, pdc_mapped[hcol]);
+                SDL_FillSurfaceRect(pdc_screen, &dest, pdc_mapped[hcol]);
                 dest.x -= pdc_fwidth - pdc_fthick;
             }
         }
@@ -462,7 +462,7 @@ void _new_packet(attr_t attr, int lineno, int x, int len, const chtype *srcp)
 #ifdef PDC_WIDE
     if (pdc_font)
     {
-        SDL_FreeSurface(pdc_font);
+        SDL_DestroySurface(pdc_font);
         pdc_font = NULL;
     }
 #endif
@@ -474,7 +474,7 @@ void _new_packet(attr_t attr, int lineno, int x, int len, const chtype *srcp)
         dest.h = pdc_fthick;
         dest.w = pdc_fwidth * len;
 
-        SDL_FillRect(pdc_screen, &dest, pdc_mapped[hcol]);
+        SDL_FillSurfaceRect(pdc_screen, &dest, pdc_mapped[hcol]);
     }
 }
 
@@ -507,11 +507,11 @@ void PDC_transform_line(int lineno, int x, int len, const chtype *srcp)
     _new_packet(old_attr, lineno, x, i, srcp);
 }
 
-static Uint32 _blink_timer(Uint32 interval, [[maybe_unused]] void *param)
+static Uint32 _blink_timer(void *userdata, SDL_TimerID timerID, Uint32 interval)
 {
-    SDL_Event event;
+    SDL_Event event = {};
 
-    event.type = SDL_USEREVENT;
+    event.type = SDL_EVENT_USER;
     SDL_PushEvent(&event);
     return(interval);
 }
@@ -568,9 +568,8 @@ void PDC_pump_and_peep(void)
 
     const auto & event = pdc_event_queue.front();
 
-    if (SDL_WINDOWEVENT == event.type &&
-        (SDL_WINDOWEVENT_RESTORED == event.window.event ||
-            SDL_WINDOWEVENT_EXPOSED == event.window.event))
+    if ((SDL_EVENT_WINDOW_RESTORED == event.window.type ||
+            SDL_EVENT_WINDOW_EXPOSED == event.window.type))
     {
         SDL_UpdateWindowSurface(pdc_window);
         rectcount = 0;

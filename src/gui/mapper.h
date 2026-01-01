@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #define MAPPERFILE "mapper-sdl2-" DOSBOX_VERSION ".map"
 
@@ -81,10 +81,10 @@ constexpr int MaxBindNameLength = 100;
  * the mapper UI buttons to reflect joystick binds being added / removed.
  *
  * @param event A pointer to an SDL_JoyDeviceEvent whose type must be one of:
- * - SDL_CONTROLLERDEVICEADDED
- * - SDL_CONTROLLERDEVICEREMOVED
- * - SDL_JOYDEVICEADDED
- * - SDL_JOYDEVICEREMOVED
+ * - SDL_EVENT_GAMEPAD_ADDED
+ * - SDL_EVENT_GAMEPAD_REMOVED
+ * - SDL_EVENT_JOYSTICK_ADDED
+ * - SDL_EVENT_JOYSTICK_REMOVED
  */
 void MAPPER_HandleJoyDeviceEvent(SDL_JoyDeviceEvent* event);
 
