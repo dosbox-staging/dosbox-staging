@@ -2,7 +2,7 @@
 
 #include "pdcsdl.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #ifndef PDC_WIDE
 # include "../common/font437.h"
 #endif
@@ -30,6 +30,8 @@ int pdc_font_size =
 SDL_Window *pdc_window = NULL;
 SDL_Surface *pdc_screen = NULL, *pdc_font = NULL, *pdc_icon = NULL,
             *pdc_back = NULL, *pdc_tileback = NULL;
+SDL_Palette *pdc_font_palette = NULL;
+
 int pdc_sheight = 0, pdc_swidth = 0, pdc_yoffset = 0, pdc_xoffset = 0;
 
 SDL_Color pdc_color[PDC_MAXCOL];
@@ -48,20 +50,19 @@ static void _clean(void)
         TTF_Quit();
     }
 #endif
-    SDL_FreeSurface(pdc_tileback);
-    SDL_FreeSurface(pdc_back);
-    SDL_FreeSurface(pdc_icon);
-    SDL_FreeSurface(pdc_font);
+    SDL_DestroySurface(pdc_tileback);
+    SDL_DestroySurface(pdc_back);
+    SDL_DestroySurface(pdc_icon);
+    SDL_DestroySurface(pdc_font);
     SDL_DestroyWindow(pdc_window);
-    SDL_Quit();
 }
 
 void PDC_retile(void)
 {
     if (pdc_tileback)
-        SDL_FreeSurface(pdc_tileback);
+        SDL_DestroySurface(pdc_tileback);
 
-    pdc_tileback = SDL_ConvertSurface(pdc_screen, pdc_screen->format, 0);
+    pdc_tileback = SDL_ConvertSurface(pdc_screen, pdc_screen->format);
     if (pdc_tileback == NULL)
         return;
 
@@ -128,7 +129,7 @@ static void _initialize_colors(void)
         pdc_color[i].r = pdc_color[i].g = pdc_color[i].b = (i - 232) * 10 + 8;
 
     for (i = 0; i < 256; i++)
-        pdc_mapped[i] = SDL_MapRGB(pdc_screen->format, pdc_color[i].r,
+        pdc_mapped[i] = SDL_MapSurfaceRGB(pdc_screen, pdc_color[i].r,
                                    pdc_color[i].g, pdc_color[i].b);
 }
 
@@ -137,9 +138,10 @@ static void _initialize_colors(void)
 int _get_displaynum(void)
 {
     SDL_Rect size;
-    int i, xpos, ypos, displays;
+    int i, displays;
+    float xpos, ypos;
 
-    displays = SDL_GetNumVideoDisplays();
+    SDL_GetDisplays(&displays);
 
     if (displays > 1)
     {
@@ -162,7 +164,6 @@ int _get_displaynum(void)
 int PDC_scr_open(void)
 {
     SDL_Event event;
-    int displaynum = 0;
 
     PDC_LOG(("PDC_scr_open() - called\n"));
 
@@ -170,15 +171,13 @@ int PDC_scr_open(void)
 
     if (pdc_own_window)
     {
-        if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_EVENTS) < 0)
+        if (!SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS))
         {
             fprintf(stderr, "Could not start SDL: %s\n", SDL_GetError());
             return ERR;
         }
 
         atexit(_clean);
-
-        displaynum = _get_displaynum();
     }
 
 #ifdef PDC_WIDE
@@ -221,7 +220,7 @@ int PDC_scr_open(void)
     }
 
     if (!pdc_font)
-        pdc_font = SDL_LoadBMP_RW(SDL_RWFromMem(font437, sizeof(font437)), 0);
+        pdc_font = SDL_LoadBMP_IO(SDL_IOFromMem(font437, sizeof(font437)), 0);
 
     if (!pdc_font)
     {
@@ -229,7 +228,9 @@ int PDC_scr_open(void)
         return ERR;
     }
 
-    SP->mono = !pdc_font->format->palette;
+    pdc_font_palette = SDL_CreateSurfacePalette(pdc_font);
+
+    SP->mono = !pdc_font_palette;
 #endif
 
     if (!SP->mono && !pdc_back)
@@ -256,7 +257,8 @@ int PDC_scr_open(void)
     pdc_fthick = 1;
 
     if (!SP->mono)
-        pdc_flastc = pdc_font->format->palette->ncolors - 1;
+        pdc_flastc = pdc_font_palette->ncolors - 1;
+
 #endif
 
     if (pdc_own_window && !pdc_icon)
@@ -265,7 +267,7 @@ int PDC_scr_open(void)
         pdc_icon = SDL_LoadBMP(iname ? iname : "pdcicon.bmp");
 
         if (!pdc_icon)
-            pdc_icon = SDL_LoadBMP_RW(SDL_RWFromMem(iconbmp,
+            pdc_icon = SDL_LoadBMP_IO(SDL_IOFromMem(iconbmp,
                                                     sizeof(iconbmp)), 0);
     }
 
@@ -277,17 +279,15 @@ int PDC_scr_open(void)
         env = getenv("PDC_COLS");
         pdc_swidth = (env ? atoi(env) : 80) * pdc_fwidth;
 
-        /* Workaround to not disrupt OpenGL context state in other windows. 
-           Disabled for macOS, as it causes a segfault, and isn't needed. */
-#ifndef __MACOSX__
+    #ifdef MACOSX
+        SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "gpu");
+    #else
         SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0");
-#endif
-        constexpr uint32_t flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+    #endif
+    
+        constexpr uint32_t flags = SDL_WINDOW_RESIZABLE;
 
-        pdc_window = SDL_CreateWindow("PDCurses",
-            SDL_WINDOWPOS_CENTERED_DISPLAY(displaynum),
-            SDL_WINDOWPOS_CENTERED_DISPLAY(displaynum),
-            pdc_swidth, pdc_sheight, flags);
+        pdc_window = SDL_CreateWindow("DOSBox Staging Debugger", pdc_swidth, pdc_sheight, flags);
 
         if (pdc_window == NULL)
         {
@@ -295,7 +295,10 @@ int PDC_scr_open(void)
             return ERR;
         }
 
-        SDL_SetWindowIcon(pdc_window, pdc_icon);
+        if (!SDL_SetWindowIcon(pdc_window, pdc_icon)) {
+            fprintf(stderr, "Could not set SDL window icon: %s\n",
+                    SDL_GetError());
+        }
     }
 
     /* Events must be pumped before calling SDL_GetWindowSurface, or
@@ -308,9 +311,8 @@ int PDC_scr_open(void)
     const auto wId = SDL_GetWindowID(pdc_window);
 
     while (SDL_PollEvent(&event))
-        if (SDL_WINDOWEVENT == event.type &&
-            event.window.windowID == wId &&
-            SDL_WINDOWEVENT_EXPOSED == event.window.event)
+        if (event.window.windowID == wId &&
+            SDL_EVENT_WINDOW_EXPOSED == event.type)
                 break;
 
     if (!pdc_screen)
@@ -336,7 +338,7 @@ int PDC_scr_open(void)
 
     _initialize_colors();
 
-    SDL_StartTextInput();
+    SDL_StartTextInput(pdc_window);
 
     PDC_mouse_set();
 
@@ -362,11 +364,11 @@ int PDC_resize_screen(int nlines, int ncols)
 
     if (nlines && ncols)
     {
-#if SDL_VERSION_ATLEAST(2, 0, 5)
         SDL_Rect max;
         int top, left, bottom, right;
 
-        SDL_GetDisplayUsableBounds(0, &max);
+        const auto display_id = SDL_GetDisplayForWindow(pdc_window);
+        SDL_GetDisplayUsableBounds(display_id, &max);
         SDL_GetWindowBordersSize(pdc_window, &top, &left, &bottom, &right);
         max.h -= top + bottom;
         max.w -= left + right;
@@ -375,7 +377,6 @@ int PDC_resize_screen(int nlines, int ncols)
             nlines--;
         while (ncols * pdc_fwidth > max.w)
             ncols--;
-#endif
         pdc_sheight = nlines * pdc_fheight;
         pdc_swidth = ncols * pdc_fwidth;
 
@@ -431,7 +432,7 @@ int PDC_init_color(short color, short red, short green, short blue)
     pdc_color[color].g = DIVROUND(green * 255, 1000);
     pdc_color[color].b = DIVROUND(blue * 255, 1000);
 
-    pdc_mapped[color] = SDL_MapRGB(pdc_screen->format, pdc_color[color].r,
+    pdc_mapped[color] = SDL_MapSurfaceRGB(pdc_screen, pdc_color[color].r,
                                    pdc_color[color].g, pdc_color[color].b);
 
     return OK;
