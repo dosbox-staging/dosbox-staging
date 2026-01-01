@@ -210,7 +210,7 @@ std::vector<uint8_t> LS::GetColumnWidths(const std::vector<uint8_t>& name_widths
 	// words into a terminal width.  If it returns false, then the first
 	// column_count integers in column_widths vector describe the column
 	// widths.
-	auto too_many_columns = [&](const size_t column_count) -> bool {
+	auto too_many_columns = [&](const size_t column_count) {
 		std::fill(column_widths.begin(), column_widths.end(), 0);
 		if (column_count <= 1) {
 			return false;

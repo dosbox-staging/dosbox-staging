@@ -1990,7 +1990,7 @@ void DOS_Shell::CMD_CHOICE(char * args){
 		}
 	};
 	// helper to search the cmdline for the last regex match
-	auto search_cmdline_for = [&](const std::regex &r) -> bool {
+	auto search_cmdline_for = [&](const std::regex &r) {
 		matches = {};
 		auto it = std::sregex_iterator(cmdline.begin(), cmdline.end(), r);
 		while (it != std::sregex_iterator())
