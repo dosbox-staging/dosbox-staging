@@ -15,7 +15,7 @@
 #include "utils/rect.h"
 
 // must be included after dosbox_config.h
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 class SdlRenderer : public RenderBackend {
 
