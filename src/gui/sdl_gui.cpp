@@ -1118,7 +1118,7 @@ static void toggle_fullscreen_handler(bool pressed)
 //    - `GFX_StartUpdate()` IS called for this frame.
 //    - `GFX_EndUpdate()` IS called; `sdl.draw.updating_framebuffer` is TRUE.
 //
-bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
+bool GFX_StartUpdate(uint32_t*& pixels, int& pitch)
 {
 	assert(sdl.renderer);
 
