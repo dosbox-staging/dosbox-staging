@@ -327,11 +327,9 @@ void OpenGlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
 	assert(!curr_framebuf.empty());
 
 	pixels_out = curr_framebuf.data();
-
 	if (pixels_out == nullptr) {
 		return;
 	}
-
 	pitch_out = pitch;
 }
 
