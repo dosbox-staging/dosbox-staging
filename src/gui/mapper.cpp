@@ -2903,7 +2903,7 @@ static void ClearBindGroups()
 
 static void CreateBindGroups()
 {
-	CKeyBindGroup* key_bind_group = new CKeyBindGroup(SDL_NUM_SCANCODES);
+	auto key_bind_group = new CKeyBindGroup(SDL_NUM_SCANCODES);
 	keybindgroups.push_back(key_bind_group);
 
 	assert(joytype != JOY_UNSET);
