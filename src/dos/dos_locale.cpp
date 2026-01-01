@@ -1603,7 +1603,7 @@ static void load_keyboard_layout()
 class DOS_Locale {
 public:
 	DOS_Locale(SectionProp& section);
-	~DOS_Locale();
+	~DOS_Locale() = default;
 };
 
 DOS_Locale::DOS_Locale(SectionProp& section)
@@ -1649,8 +1649,6 @@ DOS_Locale::DOS_Locale(SectionProp& section)
 
 	config.is_config_loaded = true;
 }
-
-DOS_Locale::~DOS_Locale() {}
 
 void DOS_Locale_AddMessages()
 {
