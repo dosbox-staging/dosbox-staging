@@ -86,7 +86,7 @@ static const std::optional<Clap::PluginInfo> find_plugin_for_model(
 	// inspecting ther descriptions
 
 	for (const auto& plugin_info : plugin_infos) {
-		auto has = [&](const char* s) -> bool {
+		auto has = [&](const char* s) {
 			return find_in_case_insensitive(s, plugin_info.name);
 		};
 
@@ -814,7 +814,7 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	}();
 
 	auto highlight_model = [&](const SynthModel* model,
-	                           const char* display_name) -> std::string {
+	                           const char* display_name) {
 		constexpr auto darkgray = "[color=dark-gray]";
 		constexpr auto green    = "[color=light-green]";
 		constexpr auto reset    = "[reset]";
