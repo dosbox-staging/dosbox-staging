@@ -117,7 +117,7 @@ void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resi
 	erase_canonical_name(psp_seg);
 
 	dos.return_code = exit_code;
-	dos.return_mode = (is_terminate_and_stay_resident)
+	dos.return_mode = is_terminate_and_stay_resident
 	                        ? DosReturnMode::TerminateAndStayResident
 	                        : DosReturnMode::Exit;
 

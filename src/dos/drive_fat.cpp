@@ -630,7 +630,7 @@ uint32_t fatDrive::getAbsoluteSectFromChain(uint32_t startClustNum, uint32_t log
 				if(testvalue >= 0xfffffff8) isEOF = true;
 				break;
 		}
-		if((isEOF) && (skipClust>=1)) {
+		if(isEOF && (skipClust >= 1)) {
 			//LOG_MSG("End of cluster chain reached before end of logical sector seek!");
 			if (skipClust == 1 && fattype == FAT12) {
 				//break;
