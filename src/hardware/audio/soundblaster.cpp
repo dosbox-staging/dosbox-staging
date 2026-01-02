@@ -1935,7 +1935,7 @@ static void dsp_do_command()
 
 	case 0x0f: // SB16 ASP get register
 		if (sb.type == SbType::SB16) {
-			if ((asp_init_in_progress) && (sb.dsp.in.data[0] == 0x83)) {
+			if (asp_init_in_progress && (sb.dsp.in.data[0] == 0x83)) {
 				asp_regs[0x83] = ~asp_regs[0x83];
 			}
 #if 0
@@ -2477,8 +2477,8 @@ static void ctmixer_reset()
 
 static void write_sb_pro_volume(uint8_t* dest, const uint8_t value)
 {
-	dest[0] = ((((value) & 0xf0) >> 3) | (sb.type == SbType::SB16 ? 1 : 3));
-	dest[1] = ((((value) & 0x0f) << 1) | (sb.type == SbType::SB16 ? 1 : 3));
+	dest[0] = (((value) & 0xf0) >> 3) | (sb.type == SbType::SB16 ? 1 : 3);
+	dest[1] = (((value) & 0x0f) << 1) | (sb.type == SbType::SB16 ? 1 : 3);
 }
 
 static uint8_t read_sb_pro_volume(const uint8_t* src)
