@@ -6,7 +6,7 @@
 #define PTYPE      uint32_t
 
 #if SBPP == 8 || SBPP == 9
-#define PMAKE(_VAL) render.pal.lut[_VAL]
+#define PMAKE(_VAL) render.palette.lut[_VAL]
 #define SRCTYPE     uint8_t
 #endif
 

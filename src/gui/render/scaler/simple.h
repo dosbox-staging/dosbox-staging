@@ -17,17 +17,18 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 	/* Clear the complete line marker */
 	Bitu hadChange = 0;
 	auto src       = static_cast<const SRCTYPE*>(s);
-	auto cache     = reinterpret_cast<SRCTYPE*>(render.scale.cacheRead);
+	auto cache     = reinterpret_cast<SRCTYPE*>(render.scale.cache_read);
 
-	render.scale.cacheRead += render.scale.cachePitch;
+	render.scale.cache_read += render.scale.cache_pitch;
 
-	PTYPE* line0 = (PTYPE*)(render.scale.outWrite);
+	PTYPE* line0 = (PTYPE*)(render.scale.out_write);
 #if (SBPP == 9)
 	for (Bits x = render.src.width; x > 0;) {
 		if (std::memcmp(src, cache, sizeof(uint32_t)) == 0 &&
-		    (render.pal.modified[src[0]] | render.pal.modified[src[1]] |
-		     render.pal.modified[src[2]] | render.pal.modified[src[3]]) == 0) {
-
+		    (render.palette.modified[src[0]] |
+		     render.palette.modified[src[1]] |
+		     render.palette.modified[src[2]] |
+		     render.palette.modified[src[3]]) == 0) {
 			x -= 4;
 			src += 4;
 			cache += 4;
@@ -52,7 +53,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 		} else {
 #if (SCALERHEIGHT > 1)
 			PTYPE* line1 = (PTYPE*)(((uint8_t*)line0) +
-			                        render.scale.outPitch);
+			                        render.scale.out_pitch);
 #endif
 			hadChange = 1;
 			for (Bitu i = ((x > 32) ? 32 : x); i > 0; i--, x--) {
@@ -73,14 +74,14 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 		}
 	}
 
-	Bitu scaleLines = scaler_aspect[render.scale.outLine++];
-	if (scaleLines - SCALERHEIGHT && hadChange) {
+	Bitu scale_lines = scaler_aspect[render.scale.out_line++];
+	if (scale_lines - SCALERHEIGHT && hadChange) {
 
-		BituMove(render.scale.outWrite + render.scale.outPitch * SCALERHEIGHT,
-		         render.scale.outWrite +
-		                 render.scale.outPitch * (SCALERHEIGHT - 1),
+		BituMove(render.scale.out_write + render.scale.out_pitch * SCALERHEIGHT,
+		         render.scale.out_write +
+		                 render.scale.out_pitch * (SCALERHEIGHT - 1),
 		         render.src.width * SCALERWIDTH * PSIZE);
 	}
 
-	ScalerAddLines(hadChange, scaleLines);
+	ScalerAddLines(hadChange, scale_lines);
 }

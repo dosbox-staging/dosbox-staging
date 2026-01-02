@@ -64,7 +64,7 @@ enum class AspectRatioCorrectionMode {
 	Stretch
 };
 
-struct RenderPal_t {
+struct RenderPalette {
 	std::array<Rgb888, NumVgaColors> rgb = {};
 
 	uint32_t lut[NumVgaColors]     = {};
@@ -85,25 +85,25 @@ struct Render {
 	struct {
 		uint32_t size = 0;
 
-		ScalerMode inMode  = {};
+		ScalerMode in_mode = {};
 
-		bool clearCache = false;
+		bool clear_cache = false;
 
-		ScalerLineHandler lineHandler    = nullptr;
-		ScalerLineHandler linePalHandler = nullptr;
+		ScalerLineHandler line_handler         = nullptr;
+		ScalerLineHandler line_palette_handler = nullptr;
 
 		uint32_t blocks     = 0;
-		uint32_t lastBlock  = 0;
-		int outPitch        = 0;
-		uint8_t* outWrite   = nullptr;
-		uint32_t cachePitch = 0;
-		uint8_t* cacheRead  = nullptr;
-		uint32_t inHeight   = 0;
-		uint32_t inLine     = 0;
-		uint32_t outLine    = 0;
+		uint32_t last_block  = 0;
+		int out_pitch        = 0;
+		uint8_t* out_write   = nullptr;
+		uint32_t cache_pitch = 0;
+		uint8_t* cache_read  = nullptr;
+		uint32_t in_height   = 0;
+		uint32_t in_line     = 0;
+		uint32_t out_line    = 0;
 	} scale = {};
 
-	RenderPal_t pal = {};
+	RenderPalette palette = {};
 
 	bool render_in_progress = false;
 	bool active             = false;

@@ -42,7 +42,7 @@ static inline void ScalerAddLines(Bitu changed, Bitu count)
 	} else {
 		scaler_changed_lines[++scaler_changed_line_index] = count;
 	}
-	render.scale.outWrite += render.scale.outPitch * count;
+	render.scale.out_write += render.scale.out_pitch * count;
 }
 
 /* Include the different rendering routines */
