@@ -3074,11 +3074,11 @@ constexpr int8_t LFO_SH = 10;
 [[maybe_unused]] constexpr int8_t TIMER_SH = 16;
 
 constexpr int8_t ENV_BITS = 10;
-constexpr auto ENV_LEN    = (1 << ENV_BITS);
-constexpr auto ENV_STEP   = (128.0 / ENV_LEN);
+constexpr auto ENV_LEN    = 1 << ENV_BITS;
+constexpr auto ENV_STEP   = 128.0 / ENV_LEN;
 
-constexpr auto MAX_ATT_INDEX = (ENV_LEN - 1); /* 1023 */
-constexpr auto MIN_ATT_INDEX = (0);           /* 0 */
+constexpr auto MAX_ATT_INDEX = ENV_LEN - 1; /* 1023 */
+constexpr auto MIN_ATT_INDEX = 0;
 
 constexpr auto EG_ATT = 4;
 constexpr auto EG_DEC = 3;
