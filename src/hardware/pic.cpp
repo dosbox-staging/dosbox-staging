@@ -131,9 +131,9 @@ void PIC_Controller::set_imr(uint8_t val)
 	if (is_machine_pcjr()) {
 		//irq 6 is a NMI on the PCJR
 		if (this == &primary_controller)
-			val &= ~(1 << (6));
+			val &= ~(1 << 6);
 	}
-	uint8_t change = (imr) ^ (val); //Bits that have changed become 1.
+	uint8_t change = imr ^ val; //Bits that have changed become 1.
 	imr  =  val;
 	imrr = ~val;
 
@@ -169,10 +169,10 @@ void PIC_Controller::deactivate() {
 }
 
 void PIC_Controller::start_irq(uint8_t val) {
-	irr &= ~(1<<(val));
+	irr &= ~(1 << val);
 	if (!auto_eoi) {
 		active_irq = val;
-		isr |= 1<<(val);
+		isr |= 1 << val;
 		isrr = ~isr;
 	} else if (rotate_on_auto_eoi) {
 		LOG_ERR("PIC: Rotate on auto EOI not handled");
@@ -233,7 +233,7 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 				LOG_ERR("PIC: Rotate mode not supported");
 			}
 			if (val & 0x40) { // specific EOI
-				pic->isr &= ~(1 << ((val - 0x60)));
+				pic->isr &= ~(1 << (val - 0x60));
 				pic->isrr = ~pic->isr;
 				pic->check_after_EOI();
 //				if (val&0x80);	// perform rotation
