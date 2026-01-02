@@ -1859,7 +1859,13 @@ void GFX_InitAndStartGui()
 	// SDL on Windows and Linux seems to always raise the window after
 	// creation.
 	//
+	// SDL issues:
+	//
+	// - https://github.com/libsdl-org/SDL/issues/14701
+	// - https://github.com/libsdl-org/SDL/issues/13920
+	//
 	SDL_RaiseWindow(sdl.window);
+	SDL_SetWindowInputFocus(sdl.window);
 
 	// Setting the SDL_WINDOW_BORDERLESS flag on window creation doesn't
 	// work on macOS.
