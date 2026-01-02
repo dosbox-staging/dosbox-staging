@@ -960,11 +960,11 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	//Horizontal sync position
 	IO_WriteW(crtc_base,0x02 | (CurMode->hdispend+1) << 8);
 	//Horizontal sync width, seems to be fixed to 0xa, for cga at least, hercules has 0xf
-	IO_WriteW(crtc_base,0x03 | (0xa) << 8);
+	IO_WriteW(crtc_base,0x03 | 0xa << 8);
 	////Vertical total
 	IO_WriteW(crtc_base,0x04 | (CurMode->vtotal) << 8);
 	//Vertical total adjust, 6 for cga,hercules,tandy
-	IO_WriteW(crtc_base,0x05 | (6) << 8);
+	IO_WriteW(crtc_base,0x05 | 6 << 8);
 	//Vertical displayed
 	IO_WriteW(crtc_base,0x06 | (CurMode->vdispend) << 8);
 	//Vertical sync position
