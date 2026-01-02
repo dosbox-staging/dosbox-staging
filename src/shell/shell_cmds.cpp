@@ -1080,7 +1080,7 @@ void DOS_Shell::CMD_COPY(char* args)
 					}
 				}
 			}
-			sources.emplace_back(copysource(source_x,(plus)?true:false));
+			sources.emplace_back(copysource(source_x, plus ? true : false));
 			source_p = plus;
 		} while (source_p && *source_p);
 	}
@@ -1882,7 +1882,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		if (!command.FindCommand(1, arg))
 			throw 0;
 		if ((arg.size() > 1) && arg[1] != ':')
-			throw(0);
+			throw 0;
 
 		temp_str[0]=(char)toupper(args[0]);
 
