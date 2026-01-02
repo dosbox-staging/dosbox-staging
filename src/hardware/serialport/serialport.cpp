@@ -475,7 +475,7 @@ void CSerial::Write_THR(uint8_t data)
 {
 	// 0-7 transmit data
 
-	if ((LCR & LCR_DIVISOR_Enable_MASK)) {
+	if (LCR & LCR_DIVISOR_Enable_MASK) {
 		// write to DLL
 		baud_divider&=0xFF00;
 		baud_divider |= data;
@@ -484,7 +484,7 @@ void CSerial::Write_THR(uint8_t data)
 		// write to THR
         clear (TX_PRIORITY);
 
-		if((LSR & LSR_TX_EMPTY_MASK))
+		if(LSR & LSR_TX_EMPTY_MASK)
 		{	// we were idle before
 			// LOG_MSG("SERIAL: Port %" PRIu8 " starting new transmit cycle", GetPortNumber());
 			// if(sync_guardtime) LOG_MSG("SERIAL: Port %" PRIu8 " internal error 1", GetPortNumber());
@@ -530,7 +530,7 @@ void CSerial::Write_THR(uint8_t data)
 uint32_t CSerial::Read_RHR()
 {
 	// 0-7 received data
-	if ((LCR & LCR_DIVISOR_Enable_MASK)) return baud_divider&0xff;
+	if (LCR & LCR_DIVISOR_Enable_MASK) return baud_divider&0xff;
 	else {
 		uint8_t data = rxfifo->getb();
 		if(FCR&FCR_ACTIVATE) {
@@ -574,7 +574,7 @@ uint32_t CSerial::Read_IER()
 
 void CSerial::Write_IER(uint8_t data)
 {
-	if ((LCR & LCR_DIVISOR_Enable_MASK)) { // write to DLM
+	if (LCR & LCR_DIVISOR_Enable_MASK) { // write to DLM
 		baud_divider&=0xff;
 		baud_divider |= ((uint16_t)data) << 8;
 		changeLineProperties();
@@ -1177,11 +1177,11 @@ CSerial::~CSerial() {
 		removeEvent(i);
 
 	// Free the fifos and devices
-	delete(errorfifo);
+	delete errorfifo;
 	errorfifo = nullptr;
-	delete(rxfifo);
+	delete rxfifo;
 	rxfifo = nullptr;
-	delete(txfifo);
+	delete txfifo;
 	txfifo = nullptr;
 
 	// Uninstall the IO handlers
