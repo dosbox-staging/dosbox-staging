@@ -116,7 +116,7 @@ bool DOS_ExtDevice::Read(uint8_t *data, uint16_t *size)
 	PhysPt bufptr = (dos.dcp << 4) | 32;
 	for (uint16_t no = 0; no < *size; no++) {
 		// INPUT
-		if ((CallDeviceFunction(4, 26, bufptr, 1) & 0x8000)) {
+		if (CallDeviceFunction(4, 26, bufptr, 1) & 0x8000) {
 			return false;
 		} else {
 			if (real_readw(dos.dcp, 18) != 1) {
@@ -134,7 +134,7 @@ bool DOS_ExtDevice::Write(uint8_t *data, uint16_t *size)
 	for (uint16_t no = 0; no < *size; no++) {
 		mem_writeb(bufptr, *data);
 		// OUTPUT
-		if ((CallDeviceFunction(8, 26, bufptr, 1) & 0x8000)) {
+		if (CallDeviceFunction(8, 26, bufptr, 1) & 0x8000) {
 			return false;
 		} else {
 			if (real_readw(dos.dcp, 18) != 1) {

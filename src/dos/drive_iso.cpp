@@ -484,7 +484,7 @@ int isoDrive :: readDirEntry(isoDirEntry *de, uint8_t *data) {
 	if (de->fileUnitSize != 0 || de->interleaveGapSize != 0) return -1;
 
 	// modify file identifier for use with dosbox
-	if ((de->length < 33 + de->fileIdentLength)) return -1;
+	if (de->length < 33 + de->fileIdentLength) return -1;
 	if (IS_DIR(FLAGS2)) {
 		if (de->fileIdentLength == 1 && de->ident[0] == 0)
 			strcpy(reinterpret_cast<char *>(de->ident), ".");
