@@ -2014,8 +2014,8 @@ ImageInfo setup_drawing()
 	// 320x200 is rendered as 320x400.
 	bool rendered_double_scan = false;
 
-	// If true, we're dealing with "baked-in" pixel doubling, i.e. when 
-	// 160x200 is rendered as 320x200.
+	// If true, we're dealing with "baked-in" pixel doubling. This is only
+	// used for the the 160x200 PCjr mode which is rendered as 320x200.
 	bool rendered_pixel_doubling = false;
 
 	Fraction render_pixel_aspect_ratio = {1};
@@ -2379,9 +2379,8 @@ ImageInfo setup_drawing()
 			VGA_DrawLine = VGA_Draw_4BPP_Line;
 
 		} else { // low-bandwidth
-			double_width     = vga.draw.pixel_doubling_allowed;
-			video_mode.width = horiz_end * 4;
-			render_width     = video_mode.width * 2;
+			video_mode.width        = horiz_end * 4;
+			render_width            = video_mode.width * 2;
 			rendered_pixel_doubling = true;
 
 			VGA_DrawLine = VGA_Draw_4BPP_Line_Double;
