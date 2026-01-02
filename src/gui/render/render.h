@@ -99,26 +99,20 @@ struct Render {
 		ScalerLineHandler_t line_handler         = nullptr;
 		ScalerLineHandler_t line_palette_handler = nullptr;
 
-		// TODO remove
-		uint32_t blocks     = 0;
-		uint32_t last_block = 0;
-
 		uint8_t* out_write = nullptr;
 		int out_pitch      = 0;
 
 		uint32_t cache_pitch = 0;
 		uint8_t* cache_read  = nullptr;
 
-		// TODO remove
-		uint32_t in_height = 0;
-		uint32_t in_line   = 0;
-		uint32_t out_line  = 0;
+		uint32_t in_line  = 0;
+		uint32_t out_line = 0;
 	} scale = {};
 
 	RenderPalette palette = {};
 
-	bool updating  = false;
-	bool active    = false;
+	bool updating   = false;
+	bool active     = false;
 	bool full_frame = true;
 
 	IntegerScalingMode integer_scaling_mode = {};

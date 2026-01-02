@@ -414,10 +414,6 @@ static void render_reset()
 		       static_cast<uint8_t>(render.src.pixel_format));
 	}
 
-	render.scale.blocks    = render.src.width / SCALER_BLOCKSIZE;
-	render.scale.last_block = render.src.width % SCALER_BLOCKSIZE;
-	render.scale.in_height  = render.src.height;
-
 	// Reset the palette change detection to its initial value
 	render.palette.first   = 0;
 	render.palette.last    = 255;
@@ -425,12 +421,12 @@ static void render_reset()
 	memset(render.palette.modified, 0, sizeof(render.palette.modified));
 
 	// Finish this frame using a copy only handler
-	RENDER_DrawLine       = finish_line_handler;
+	RENDER_DrawLine        = finish_line_handler;
 	render.scale.out_write = nullptr;
 
 	// Signal the next frame to first reinit the cache
 	render.scale.clear_cache = true;
-	render.active           = true;
+	render.active            = true;
 }
 
 static void render_callback(GFX_CallbackFunctions_t function)
