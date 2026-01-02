@@ -62,7 +62,7 @@ enum class AspectRatioCorrectionMode {
 	Stretch
 };
 
-struct RenderPal_t {
+struct RenderPalette {
 	struct {
 		uint8_t red    = 0;
 		uint8_t green  = 0;
@@ -91,30 +91,35 @@ struct Render {
 	struct {
 		uint32_t size = 0;
 
-		ScalerMode inMode  = {};
-		ScalerMode outMode = {};
+		ScalerMode in_mode  = {};
+		ScalerMode out_mode = {};
 
-		bool clearCache = false;
+		bool clear_cache = false;
 
-		ScalerLineHandler_t lineHandler    = nullptr;
-		ScalerLineHandler_t linePalHandler = nullptr;
+		ScalerLineHandler_t line_handler         = nullptr;
+		ScalerLineHandler_t line_palette_handler = nullptr;
 
+		// TODO remove
 		uint32_t blocks     = 0;
-		uint32_t lastBlock  = 0;
-		int outPitch        = 0;
-		uint8_t* outWrite   = nullptr;
-		uint32_t cachePitch = 0;
-		uint8_t* cacheRead  = nullptr;
-		uint32_t inHeight   = 0;
-		uint32_t inLine     = 0;
-		uint32_t outLine    = 0;
+		uint32_t last_block = 0;
+
+		uint8_t* out_write = nullptr;
+		int out_pitch      = 0;
+
+		uint32_t cache_pitch = 0;
+		uint8_t* cache_read  = nullptr;
+
+		// TODO remove
+		uint32_t in_height = 0;
+		uint32_t in_line   = 0;
+		uint32_t out_line  = 0;
 	} scale = {};
 
-	RenderPal_t pal = {};
+	RenderPalette palette = {};
 
 	bool updating  = false;
 	bool active    = false;
-	bool fullFrame = true;
+	bool full_frame = true;
 
 	IntegerScalingMode integer_scaling_mode = {};
 };

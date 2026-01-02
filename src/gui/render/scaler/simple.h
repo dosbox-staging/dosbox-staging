@@ -19,11 +19,11 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #endif
 #ifdef RENDER_NULL_INPUT
 	if (!s) {
-		render.scale.cacheRead += render.scale.cachePitch;
+		render.scale.cache_read += render.scale.cache_pitch;
 #if defined(SCALERLINEAR) 
 		Bitu skipLines = SCALERHEIGHT;
 #else
-		Bitu skipLines = Scaler_Aspect[ render.scale.outLine++ ];
+		Bitu skipLines = Scaler_Aspect[render.scale.out_line++];
 #endif
 		ScalerAddLines( 0, skipLines );
 		return;
@@ -32,14 +32,16 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 	/* Clear the complete line marker */
 	Bitu hadChange = 0;
 	auto src   = static_cast<const SRCTYPE*>(s);
-	auto cache = reinterpret_cast<SRCTYPE*>(render.scale.cacheRead);
-	render.scale.cacheRead += render.scale.cachePitch;
-	PTYPE * line0=(PTYPE *)(render.scale.outWrite);
+	auto cache     = reinterpret_cast<SRCTYPE*>(render.scale.cache_read);
+	render.scale.cache_read += render.scale.cache_pitch;
+	PTYPE* line0 = (PTYPE*)(render.scale.out_write);
 #if (SBPP == 9)
 	for (Bits x=render.src.width;x>0;) {
 		if (std::memcmp(src, cache, sizeof(uint32_t)) == 0 &&
-		    (render.pal.modified[src[0]] | render.pal.modified[src[1]] |
-		     render.pal.modified[src[2]] | render.pal.modified[src[3]]) == 0) {
+		    (render.palette.modified[src[0]] |
+		     render.palette.modified[src[1]] |
+		     render.palette.modified[src[2]] |
+		     render.palette.modified[src[3]]) == 0) {
 			x -= 4;
 			src += 4;
 			cache+=4;
@@ -66,8 +68,9 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 			PTYPE *line1 = WC[0];
 #endif
 #else
-#if (SCALERHEIGHT > 1) 
-		PTYPE *line1 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch);
+#if (SCALERHEIGHT > 1)
+			PTYPE* line1 = (PTYPE*)(((uint8_t*)line0) +
+			                        render.scale.out_pitch);
 #endif
 #endif //defined(SCALERLINEAR)
 			hadChange = 1;
@@ -85,7 +88,9 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #if defined(SCALERLINEAR)
 #if (SCALERHEIGHT > 1)
 			Bitu copyLen = (Bitu)((uint8_t*)line1 - (uint8_t*)WC[0]);
-			BituMove(((uint8_t*)line0)-copyLen+render.scale.outPitch  ,WC[0], copyLen );
+			BituMove(((uint8_t*)line0) - copyLen + render.scale.out_pitch,
+			         WC[0],
+			         copyLen);
 #endif
 #endif //defined(SCALERLINEAR)
 		}
@@ -93,11 +98,12 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #if defined(SCALERLINEAR) 
 	Bitu scaleLines = SCALERHEIGHT;
 #else
-	Bitu scaleLines = Scaler_Aspect[ render.scale.outLine++ ];
+	Bitu scaleLines = Scaler_Aspect[render.scale.out_line++];
 	if ( scaleLines - SCALERHEIGHT && hadChange ) {
-		BituMove( render.scale.outWrite + render.scale.outPitch * SCALERHEIGHT,
-			render.scale.outWrite + render.scale.outPitch * (SCALERHEIGHT-1),
-			render.src.width * SCALERWIDTH * PSIZE);
+		BituMove(render.scale.out_write + render.scale.out_pitch * SCALERHEIGHT,
+		         render.scale.out_write +
+		                 render.scale.out_pitch * (SCALERHEIGHT - 1),
+		         render.src.width * SCALERWIDTH * PSIZE);
 	}
 #endif
 	ScalerAddLines( hadChange, scaleLines );

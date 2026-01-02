@@ -60,7 +60,7 @@ static inline void ScalerAddLines( Bitu changed, Bitu count ) {
 	} else {
 		Scaler_ChangedLines[++Scaler_ChangedLineIndex] = count;
 	}
-	render.scale.outWrite += render.scale.outPitch * count;
+	render.scale.out_write += render.scale.out_pitch * count;
 }
 
 

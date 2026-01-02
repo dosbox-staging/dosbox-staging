@@ -68,11 +68,11 @@
 #	if DBPP == 8
 #		define PMAKE(_VAL) (_VAL)
 #	elif DBPP == 15
-#		define PMAKE(_VAL) render.pal.lut.b16[_VAL]
+#define PMAKE(_VAL) render.palette.lut.b16[_VAL]
 #	elif DBPP == 16
-#		define PMAKE(_VAL) render.pal.lut.b16[_VAL]
+#define PMAKE(_VAL) render.palette.lut.b16[_VAL]
 #	elif DBPP == 32
-#		define PMAKE(_VAL) render.pal.lut.b32[_VAL]
+#define PMAKE(_VAL) render.palette.lut.b32[_VAL]
 #	endif
 #	define SRCTYPE uint8_t
 #endif

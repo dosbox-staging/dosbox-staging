@@ -34,69 +34,69 @@ static void render_callback(GFX_CallbackFunctions_t function);
 static void check_palette()
 {
 	// Clean up any previous changed palette data
-	if (render.pal.changed) {
-		memset(render.pal.modified, 0, sizeof(render.pal.modified));
-		render.pal.changed = false;
+	if (render.palette.changed) {
+		memset(render.palette.modified, 0, sizeof(render.palette.modified));
+		render.palette.changed = false;
 	}
-	if (render.pal.first > render.pal.last) {
+	if (render.palette.first > render.palette.last) {
 		return;
 	}
 	Bitu i;
-	switch (render.scale.outMode) {
+	switch (render.scale.out_mode) {
 	case scalerMode8: break;
 	case scalerMode15:
 	case scalerMode16:
-		for (i = render.pal.first; i <= render.pal.last; i++) {
-			uint8_t r = render.pal.rgb[i].red;
-			uint8_t g = render.pal.rgb[i].green;
-			uint8_t b = render.pal.rgb[i].blue;
+		for (i = render.palette.first; i <= render.palette.last; i++) {
+			uint8_t r = render.palette.rgb[i].red;
+			uint8_t g = render.palette.rgb[i].green;
+			uint8_t b = render.palette.rgb[i].blue;
 
 			// TODO This can't possibly work with the OpenGL
 			// renderer at the very least which will always return a
 			// 32-bit XRGB value.
 			//
 			uint16_t new_pal = GFX_MakePixel(r, g, b);
-			if (new_pal != render.pal.lut.b16[i]) {
-				render.pal.changed     = true;
-				render.pal.modified[i] = 1;
-				render.pal.lut.b16[i]  = new_pal;
+			if (new_pal != render.palette.lut.b16[i]) {
+				render.palette.changed     = true;
+				render.palette.modified[i] = 1;
+				render.palette.lut.b16[i]  = new_pal;
 			}
 		}
 		break;
 	case scalerMode32:
 	default:
-		for (i = render.pal.first; i <= render.pal.last; i++) {
-			uint8_t r = render.pal.rgb[i].red;
-			uint8_t g = render.pal.rgb[i].green;
-			uint8_t b = render.pal.rgb[i].blue;
+		for (i = render.palette.first; i <= render.palette.last; i++) {
+			uint8_t r = render.palette.rgb[i].red;
+			uint8_t g = render.palette.rgb[i].green;
+			uint8_t b = render.palette.rgb[i].blue;
 
 			uint32_t new_pal = GFX_MakePixel(r, g, b);
-			if (new_pal != render.pal.lut.b32[i]) {
-				render.pal.changed     = true;
-				render.pal.modified[i] = 1;
-				render.pal.lut.b32[i]  = new_pal;
+			if (new_pal != render.palette.lut.b32[i]) {
+				render.palette.changed     = true;
+				render.palette.modified[i] = 1;
+				render.palette.lut.b32[i]  = new_pal;
 			}
 		}
 		break;
 	}
 
 	// Setup pal index to startup values
-	render.pal.first = 256;
-	render.pal.last  = 0;
+	render.palette.first = 256;
+	render.palette.last  = 0;
 }
 
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue)
 {
-	render.pal.rgb[entry].red   = red;
-	render.pal.rgb[entry].green = green;
-	render.pal.rgb[entry].blue  = blue;
+	render.palette.rgb[entry].red   = red;
+	render.palette.rgb[entry].green = green;
+	render.palette.rgb[entry].blue  = blue;
 
-	if (render.pal.first > entry) {
-		render.pal.first = entry;
+	if (render.palette.first > entry) {
+		render.palette.first = entry;
 	}
-	if (render.pal.last < entry) {
-		render.pal.last = entry;
+	if (render.palette.last < entry) {
+		render.palette.last = entry;
 	}
 }
 
@@ -106,19 +106,20 @@ static void start_line_handler(const void* s)
 {
 	if (s) {
 		auto src = static_cast<const uintptr_t*>(s);
-		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
+		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cache_read);
+
 		for (Bits x = render.src_start; x > 0;) {
 			const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
 			const auto src_val = read_unaligned_size_t(src_ptr);
 			if (src_val != cache[0]) {
-				if (!GFX_StartUpdate(render.scale.outWrite,
-				                     render.scale.outPitch)) {
+				if (!GFX_StartUpdate(render.scale.out_write,
+				                     render.scale.out_pitch)) {
 					RENDER_DrawLine = empty_line_handler;
 					return;
 				}
-				render.scale.outWrite += render.scale.outPitch *
-				                         Scaler_ChangedLines[0];
-				RENDER_DrawLine = render.scale.lineHandler;
+				render.scale.out_write += render.scale.out_pitch *
+				                          Scaler_ChangedLines[0];
+				RENDER_DrawLine = render.scale.line_handler;
 				RENDER_DrawLine(s);
 				return;
 			}
@@ -127,17 +128,17 @@ static void start_line_handler(const void* s)
 			cache++;
 		}
 	}
-	render.scale.cacheRead += render.scale.cachePitch;
-	Scaler_ChangedLines[0] += Scaler_Aspect[render.scale.inLine];
-	render.scale.inLine++;
-	render.scale.outLine++;
+	render.scale.cache_read += render.scale.cache_pitch;
+	Scaler_ChangedLines[0] += Scaler_Aspect[render.scale.in_line];
+	render.scale.in_line++;
+	render.scale.out_line++;
 }
 
 static void finish_line_handler(const void* s)
 {
 	if (s) {
 		auto src = static_cast<const uintptr_t*>(s);
-		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
+		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cache_read);
 		for (Bits x = render.src_start; x > 0;) {
 			cache[0] = src[0];
 			x--;
@@ -145,18 +146,18 @@ static void finish_line_handler(const void* s)
 			cache++;
 		}
 	}
-	render.scale.cacheRead += render.scale.cachePitch;
+	render.scale.cache_read += render.scale.cache_pitch;
 }
 
 static void clear_cache_handler(const void* src)
 {
 	const uint32_t* srcLine = (const uint32_t*)src;
-	uint32_t* cacheLine     = (uint32_t*)render.scale.cacheRead;
-	Bitu width              = render.scale.cachePitch / 4;
+	uint32_t* cacheLine     = (uint32_t*)render.scale.cache_read;
+	Bitu width              = render.scale.cache_pitch / 4;
 	for (Bitu x = 0; x < width; x++) {
 		cacheLine[x] = ~srcLine[x];
 	}
-	render.scale.lineHandler(src);
+	render.scale.line_handler(src);
 }
 
 bool RENDER_StartUpdate()
@@ -167,47 +168,47 @@ bool RENDER_StartUpdate()
 	if (!render.active) {
 		return false;
 	}
-	if (render.scale.inMode == scalerMode8) {
+	if (render.scale.in_mode == scalerMode8) {
 		check_palette();
 	}
-	render.scale.inLine     = 0;
-	render.scale.outLine    = 0;
-	render.scale.cacheRead  = (uint8_t*)&scalerSourceCache;
-	render.scale.outWrite   = nullptr;
-	render.scale.outPitch   = 0;
+	render.scale.in_line    = 0;
+	render.scale.out_line   = 0;
+	render.scale.cache_read = (uint8_t*)&scalerSourceCache;
+	render.scale.out_write  = nullptr;
+	render.scale.out_pitch  = 0;
 	Scaler_ChangedLines[0]  = 0;
 	Scaler_ChangedLineIndex = 0;
 
 	// Clearing the cache will first process the line to make sure it's
 	// never the same
-	if (render.scale.clearCache) {
+	if (render.scale.clear_cache) {
 		// LOG_MSG("Clearing cache");
 
 		// Will always have to update the screen with this one anyway,
 		// so let's update already
-		if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
+		if (!GFX_StartUpdate(render.scale.out_write, render.scale.out_pitch)) {
 			return false;
 		}
-		render.fullFrame        = true;
-		render.scale.clearCache = false;
-		RENDER_DrawLine         = clear_cache_handler;
+		render.full_frame        = true;
+		render.scale.clear_cache = false;
+		RENDER_DrawLine          = clear_cache_handler;
 	} else {
-		if (render.pal.changed) {
+		if (render.palette.changed) {
 			// Assume pal changes always do a full screen update
 			// anyway
-			if (!GFX_StartUpdate(render.scale.outWrite,
-			                     render.scale.outPitch)) {
+			if (!GFX_StartUpdate(render.scale.out_write,
+			                     render.scale.out_pitch)) {
 				return false;
 			}
-			RENDER_DrawLine  = render.scale.linePalHandler;
-			render.fullFrame = true;
+			RENDER_DrawLine   = render.scale.line_palette_handler;
+			render.full_frame = true;
 		} else {
 			RENDER_DrawLine = start_line_handler;
 			if (CAPTURE_IsCapturingImage() ||
 			    CAPTURE_IsCapturingVideo()) {
-				render.fullFrame = true;
+				render.full_frame = true;
 			} else {
-				render.fullFrame = false;
+				render.full_frame = false;
 			}
 		}
 	}
@@ -248,9 +249,9 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 		image.params               = render.src;
 		image.params.double_width  = double_width;
 		image.params.double_height = double_height;
-		image.pitch                = render.scale.cachePitch;
+		image.pitch                = render.scale.cache_pitch;
 		image.image_data           = (uint8_t*)&scalerSourceCache;
-		image.palette_data         = (uint8_t*)&render.pal.rgb;
+		image.palette_data         = (uint8_t*)&render.palette.rgb;
 
 		const auto frames_per_second = static_cast<float>(render.fps);
 
@@ -373,40 +374,40 @@ static void render_reset()
 	            &render_callback);
 
 	// Set up scaler variables
-	render.scale.outMode = scalerMode32;
+	render.scale.out_mode = scalerMode32;
 
 	const auto lineBlock = &simpleBlock->Random;
 
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
-		render.scale.lineHandler = (*lineBlock)[0][render.scale.outMode];
-		render.scale.linePalHandler = (*lineBlock)[5][render.scale.outMode];
-		render.scale.inMode     = scalerMode8;
-		render.scale.cachePitch = render.src.width * 1;
+		render.scale.line_handler = (*lineBlock)[0][render.scale.out_mode];
+		render.scale.line_palette_handler = (*lineBlock)[5][render.scale.out_mode];
+		render.scale.in_mode     = scalerMode8;
+		render.scale.cache_pitch = render.src.width * 1;
 		break;
 	case PixelFormat::RGB555_Packed16:
-		render.scale.lineHandler = (*lineBlock)[1][render.scale.outMode];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode15;
-		render.scale.cachePitch     = render.src.width * 2;
+		render.scale.line_handler = (*lineBlock)[1][render.scale.out_mode];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.in_mode              = scalerMode15;
+		render.scale.cache_pitch          = render.src.width * 2;
 		break;
 	case PixelFormat::RGB565_Packed16:
-		render.scale.lineHandler = (*lineBlock)[2][render.scale.outMode];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode16;
-		render.scale.cachePitch     = render.src.width * 2;
+		render.scale.line_handler = (*lineBlock)[2][render.scale.out_mode];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.in_mode              = scalerMode16;
+		render.scale.cache_pitch          = render.src.width * 2;
 		break;
 	case PixelFormat::BGR24_ByteArray:
-		render.scale.lineHandler = (*lineBlock)[3][render.scale.outMode];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode32;
-		render.scale.cachePitch     = render.src.width * 3;
+		render.scale.line_handler = (*lineBlock)[3][render.scale.out_mode];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.in_mode              = scalerMode32;
+		render.scale.cache_pitch          = render.src.width * 3;
 		break;
 	case PixelFormat::BGRX32_ByteArray:
-		render.scale.lineHandler = (*lineBlock)[4][render.scale.outMode];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode32;
-		render.scale.cachePitch     = render.src.width * 4;
+		render.scale.line_handler = (*lineBlock)[4][render.scale.out_mode];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.in_mode              = scalerMode32;
+		render.scale.cache_pitch          = render.src.width * 4;
 		break;
 	default:
 		E_Exit("RENDER: Invalid pixel_format %u",
@@ -414,21 +415,21 @@ static void render_reset()
 	}
 
 	render.scale.blocks    = render.src.width / SCALER_BLOCKSIZE;
-	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
-	render.scale.inHeight  = render.src.height;
+	render.scale.last_block = render.src.width % SCALER_BLOCKSIZE;
+	render.scale.in_height  = render.src.height;
 
 	// Reset the palette change detection to its initial value
-	render.pal.first   = 0;
-	render.pal.last    = 255;
-	render.pal.changed = false;
-	memset(render.pal.modified, 0, sizeof(render.pal.modified));
+	render.palette.first   = 0;
+	render.palette.last    = 255;
+	render.palette.changed = false;
+	memset(render.palette.modified, 0, sizeof(render.palette.modified));
 
 	// Finish this frame using a copy only handler
 	RENDER_DrawLine       = finish_line_handler;
-	render.scale.outWrite = nullptr;
+	render.scale.out_write = nullptr;
 
 	// Signal the next frame to first reinit the cache
-	render.scale.clearCache = true;
+	render.scale.clear_cache = true;
 	render.active           = true;
 }
 
@@ -438,7 +439,7 @@ static void render_callback(GFX_CallbackFunctions_t function)
 		halt_render();
 		return;
 	} else if (function == GFX_CallbackRedraw) {
-		render.scale.clearCache = true;
+		render.scale.clear_cache = true;
 		return;
 	} else if (function == GFX_CallbackReset) {
 		GFX_EndUpdate();

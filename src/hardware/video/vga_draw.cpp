@@ -1098,11 +1098,11 @@ static void inline VGA_ChangesStart( void ) {
 //		LOG_MSG("Address");
 		VGA_DrawLine = VGA_Draw_Linear_Line;
 		vga.changes.lastAddress = vga.draw.address;
-	} else if ( render.fullFrame ) {
-//		LOG_MSG("Full Frame");
+	} else if (render.full_frame) {
+		//		LOG_MSG("Full Frame");
 		VGA_DrawLine = VGA_Draw_Linear_Line;
 	} else {
-//		LOG_MSG("Changes");
+		//		LOG_MSG("Changes");
 		VGA_DrawLine = VGA_Draw_Changes_Line;
 	}
 	vga.changes.active = true;
