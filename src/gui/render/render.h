@@ -92,13 +92,10 @@ struct Render {
 		ScalerLineHandler lineHandler    = nullptr;
 		ScalerLineHandler linePalHandler = nullptr;
 
-		uint32_t blocks     = 0;
-		uint32_t lastBlock  = 0;
 		int outPitch        = 0;
 		uint8_t* outWrite   = nullptr;
 		uint32_t cachePitch = 0;
 		uint8_t* cacheRead  = nullptr;
-		uint32_t inHeight   = 0;
 		uint32_t inLine     = 0;
 		uint32_t outLine    = 0;
 	} scale = {};
