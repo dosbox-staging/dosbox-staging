@@ -54,7 +54,7 @@ static uint16_t socketCount;
 static uint16_t opensockets[SOCKTABLESIZE];
 
 static uint16_t swapByte(uint16_t sockNum) {
-	return (((sockNum>> 8)) | (sockNum << 8));
+	return (sockNum >> 8) | (sockNum << 8);
 }
 
 void UnpackIP(PackedIP ipPack, IPaddress * ipAddr) {
