@@ -2331,7 +2331,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 		}
 	}
 	sp_index-=bytes;
-	reg_esp=(reg_esp&cpu.stack.notmask)|((sp_index)&cpu.stack.mask);
+	reg_esp=(reg_esp & cpu.stack.notmask) | (sp_index & cpu.stack.mask);
 }
 
 // Estimate the CPU speed in MHz given the amount of cycles emulated
@@ -3151,10 +3151,10 @@ public:
 		}
 
 		if (CPU_ArchitectureType >= ArchitectureType::Intel486NewSlow) {
-			cpu_extflags_toggle = (FLAG_ID | FLAG_AC);
+			cpu_extflags_toggle = FLAG_ID | FLAG_AC;
 
 		} else if (CPU_ArchitectureType >= ArchitectureType::Intel486OldSlow) {
-			cpu_extflags_toggle = (FLAG_AC);
+			cpu_extflags_toggle = FLAG_AC;
 
 		} else {
 			cpu_extflags_toggle = 0;

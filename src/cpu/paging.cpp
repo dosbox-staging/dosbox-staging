@@ -248,12 +248,12 @@ static inline bool InitPage_CheckUseraccess(uint32_t u1,uint32_t u2) {
 	case ArchitectureType::Intel386Slow:
 	case ArchitectureType::Intel386Fast:
 	default:
-		return ((u1)==0) && ((u2)==0);
+		return (u1 == 0) && (u2 == 0);
 	case ArchitectureType::Intel486OldSlow:
 	case ArchitectureType::Intel486NewSlow:
 	case ArchitectureType::Pentium:
 	case ArchitectureType::PentiumMmx:
-		return ((u1)==0) || ((u2)==0);
+		return (u1 == 0) || (u2 == 0);
 	}
 }
 
@@ -663,7 +663,7 @@ public:
 			if (!InitPageCheckPresence_CheckOnly(lin_addr,true,table,entry)) return 0;
 
 			if (InitPage_CheckUseraccess(entry.us, table.us) ||
-			    (((entry.wr == 0) || (table.wr == 0)))) {
+			    ((entry.wr == 0) || (table.wr == 0))) {
 				LOG(LOG_PAGING, LOG_NORMAL)
 				("Page access denied: cpl=%i, %x:%x:%x:%x",
 				 static_cast<int>(cpu.cpl),
