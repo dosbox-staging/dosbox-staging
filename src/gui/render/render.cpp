@@ -39,44 +39,44 @@ static void render_callback(GFX_CallbackFunctions_t function);
 static void check_palette()
 {
 	// Clean up any previous changed palette data
-	if (render.pal.changed) {
-		memset(render.pal.modified, 0, sizeof(render.pal.modified));
-		render.pal.changed = false;
+	if (render.palette.changed) {
+		memset(render.palette.modified, 0, sizeof(render.palette.modified));
+		render.palette.changed = false;
 	}
-	if (render.pal.first > render.pal.last) {
+	if (render.palette.first > render.palette.last) {
 		return;
 	}
 
-	for (auto i = render.pal.first; i <= render.pal.last; i++) {
-		const auto color = render.pal.rgb[i];
+	for (auto i = render.palette.first; i <= render.palette.last; i++) {
+		const auto color = render.palette.rgb[i];
 		const auto new_color = GFX_MakePixel(color.red, color.green, color.blue);
 
-		if (new_color != render.pal.lut[i]) {
-			render.pal.changed     = true;
-			render.pal.modified[i] = 1;
-			render.pal.lut[i]      = new_color;
+		if (new_color != render.palette.lut[i]) {
+			render.palette.changed     = true;
+			render.palette.modified[i] = 1;
+			render.palette.lut[i]      = new_color;
 		}
 	}
 
 	// Setup palette index to startup values
-	render.pal.first = NumVgaColors;
-	render.pal.last  = 0;
+	render.palette.first = NumVgaColors;
+	render.palette.last  = 0;
 }
 
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue)
 {
-	auto& color = render.pal.rgb[entry];
+	auto& color = render.palette.rgb[entry];
 
 	color.red   = red;
 	color.green = green;
 	color.blue  = blue;
 
-	if (render.pal.first > entry) {
-		render.pal.first = entry;
+	if (render.palette.first > entry) {
+		render.palette.first = entry;
 	}
-	if (render.pal.last < entry) {
-		render.pal.last = entry;
+	if (render.palette.last < entry) {
+		render.palette.last = entry;
 	}
 }
 
@@ -86,7 +86,7 @@ static void start_line_handler(const void* src_line_data)
 {
 	if (src_line_data) {
 		auto src = static_cast<const uintptr_t*>(src_line_data);
-		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
+		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cache_read);
 
 		for (Bits x = render.src_start; x > 0;) {
 			const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
@@ -101,38 +101,40 @@ static void start_line_handler(const void* src_line_data)
 				// Otherwise, it will keep displaying the same
 				// frame at present time without doing a buffer
 				// swap followed by a texture upload to the GPU.
-				if (!GFX_StartUpdate(render.scale.outWrite,
-				                     render.scale.outPitch)) {
+				if (!GFX_StartUpdate(render.scale.out_write,
+				                     render.scale.out_pitch)) {
 
 					RENDER_DrawLine = empty_line_handler;
 					return;
 				}
-				render.scale.outWrite += render.scale.outPitch *
-				                         scaler_changed_lines[0];
 
-				RENDER_DrawLine = render.scale.lineHandler;
+				render.scale.out_write += render.scale.out_pitch *
+				                          scaler_changed_lines[0];
+
+				RENDER_DrawLine = render.scale.line_handler;
 				RENDER_DrawLine(src_line_data);
 				return;
 			}
+
 			x--;
 			src++;
 			cache++;
 		}
 	}
-	render.scale.cacheRead += render.scale.cachePitch;
 
-	scaler_changed_lines[0] += scaler_aspect[render.scale.inLine];
+	render.scale.cache_read += render.scale.cache_pitch;
 
-	render.scale.inLine++;
-	render.scale.outLine++;
+	scaler_changed_lines[0] += scaler_aspect[render.scale.in_line];
+
+	render.scale.in_line++;
+	render.scale.out_line++;
 }
 
 static void finish_line_handler(const void* src_line_data)
 {
 	if (src_line_data) {
 		auto src = static_cast<const uintptr_t*>(src_line_data);
-		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
-
+		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cache_read);
 		for (Bits x = render.src_start; x > 0;) {
 			cache[0] = src[0];
 			x--;
@@ -141,21 +143,20 @@ static void finish_line_handler(const void* src_line_data)
 		}
 	}
 
-	render.scale.cacheRead += render.scale.cachePitch;
+	render.scale.cache_read += render.scale.cache_pitch;
 }
 
 static void clear_cache_handler(const void* src_line_data)
 {
 	const uint32_t* src_line = (const uint32_t*)src_line_data;
-	uint32_t* cache_line     = (uint32_t*)render.scale.cacheRead;
-
-	Bitu width = render.scale.cachePitch / 4;
+	uint32_t* cache_line     = (uint32_t*)render.scale.cache_read;
+	Bitu width               = render.scale.cache_pitch / 4;
 
 	for (Bitu x = 0; x < width; x++) {
 		cache_line[x] = ~src_line[x];
 	}
 
-	render.scale.lineHandler(src_line_data);
+	render.scale.line_handler(src_line_data);
 }
 
 bool RENDER_StartUpdate()
@@ -167,48 +168,48 @@ bool RENDER_StartUpdate()
 		return false;
 	}
 
-	if (render.scale.inMode == scalerMode8) {
+	if (render.scale.in_mode == scalerMode8) {
 		check_palette();
 	}
 
-	render.scale.inLine    = 0;
-	render.scale.outLine   = 0;
-	render.scale.cacheRead = (uint8_t*)&scaler_source_cache;
-	render.scale.outWrite  = nullptr;
-	render.scale.outPitch  = 0;
+	render.scale.in_line    = 0;
+	render.scale.out_line   = 0;
+	render.scale.cache_read = (uint8_t*)&scaler_source_cache;
+	render.scale.out_write  = nullptr;
+	render.scale.out_pitch  = 0;
 
 	scaler_changed_lines[0]   = 0;
 	scaler_changed_line_index = 0;
 
 	// Clearing the cache will first process the line to make sure it's
 	// never the same.
-	if (render.scale.clearCache) {
+	if (render.scale.clear_cache) {
 
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
+		if (!GFX_StartUpdate(render.scale.out_write, render.scale.out_pitch)) {
 			return false;
 		}
 
 		RENDER_DrawLine = clear_cache_handler;
 
 		render.render_in_progress = true;
-		render.scale.clearCache   = false;
+		render.scale.clear_cache  = false;
 		return true;
 	}
 
-	if (render.pal.changed) {
+	if (render.palette.changed) {
 		// Assume palette changes always do a full screen update anyway.
 		//
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
+		if (!GFX_StartUpdate(render.scale.out_write, render.scale.out_pitch)) {
 			return false;
 		}
 
-		RENDER_DrawLine = render.scale.linePalHandler;
+		RENDER_DrawLine = render.scale.line_palette_handler;
 
 		render.render_in_progress = true;
 		return true;
@@ -262,9 +263,9 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 		image.params               = render.src;
 		image.params.double_width  = double_width;
 		image.params.double_height = double_height;
-		image.pitch                = render.scale.cachePitch;
+		image.pitch                = render.scale.cache_pitch;
 		image.image_data           = (uint8_t*)&scaler_source_cache;
-		image.palette              = render.pal.rgb;
+		image.palette              = render.palette.rgb;
 
 		const auto frames_per_second = static_cast<float>(render.fps);
 
@@ -391,38 +392,38 @@ static void render_reset()
 	// Set up scaler variables
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
-		render.scale.lineHandler    = scaler->line_handlers[0];
-		render.scale.linePalHandler = scaler->line_handlers[5];
-		render.scale.inMode         = scalerMode8;
-		render.scale.cachePitch     = render.src.width * 1;
+		render.scale.line_handler         = scaler->line_handlers[0];
+		render.scale.line_palette_handler = scaler->line_handlers[5];
+		render.scale.in_mode              = scalerMode8;
+		render.scale.cache_pitch          = render.src.width * 1;
 		break;
 
 	case PixelFormat::RGB555_Packed16:
-		render.scale.lineHandler    = scaler->line_handlers[1];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode15;
-		render.scale.cachePitch     = render.src.width * 2;
+		render.scale.line_handler         = scaler->line_handlers[1];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.in_mode              = scalerMode15;
+		render.scale.cache_pitch          = render.src.width * 2;
 		break;
 
 	case PixelFormat::RGB565_Packed16:
-		render.scale.lineHandler    = scaler->line_handlers[2];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode16;
-		render.scale.cachePitch     = render.src.width * 2;
+		render.scale.line_handler         = scaler->line_handlers[2];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.in_mode              = scalerMode16;
+		render.scale.cache_pitch          = render.src.width * 2;
 		break;
 
 	case PixelFormat::BGR24_ByteArray:
-		render.scale.lineHandler    = scaler->line_handlers[3];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode32;
-		render.scale.cachePitch     = render.src.width * 3;
+		render.scale.line_handler         = scaler->line_handlers[3];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.in_mode              = scalerMode32;
+		render.scale.cache_pitch          = render.src.width * 3;
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
-		render.scale.lineHandler    = scaler->line_handlers[4];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode32;
-		render.scale.cachePitch     = render.src.width * 4;
+		render.scale.line_handler         = scaler->line_handlers[4];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.in_mode              = scalerMode32;
+		render.scale.cache_pitch          = render.src.width * 4;
 		break;
 
 	default:
@@ -431,22 +432,22 @@ static void render_reset()
 	}
 
 	render.scale.blocks    = render.src.width / SCALER_BLOCKSIZE;
-	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
-	render.scale.inHeight  = render.src.height;
+	render.scale.last_block = render.src.width % SCALER_BLOCKSIZE;
+	render.scale.in_height  = render.src.height;
 
 	// Reset the palette change detection to its initial value
-	render.pal.first   = 0;
-	render.pal.last    = 255;
-	render.pal.changed = false;
-	memset(render.pal.modified, 0, sizeof(render.pal.modified));
+	render.palette.first   = 0;
+	render.palette.last    = 255;
+	render.palette.changed = false;
+	memset(render.palette.modified, 0, sizeof(render.palette.modified));
 
 	// Finish this frame using a copy only handler
-	RENDER_DrawLine       = finish_line_handler;
-	render.scale.outWrite = nullptr;
+	RENDER_DrawLine        = finish_line_handler;
+	render.scale.out_write = nullptr;
 
 	// Signal the next frame to first reinit the cache
-	render.scale.clearCache = true;
-	render.active           = true;
+	render.scale.clear_cache = true;
+	render.active            = true;
 }
 
 static void render_callback(GFX_CallbackFunctions_t function)
@@ -456,7 +457,7 @@ static void render_callback(GFX_CallbackFunctions_t function)
 		return;
 
 	} else if (function == GFX_CallbackRedraw) {
-		render.scale.clearCache = true;
+		render.scale.clear_cache = true;
 		return;
 
 	} else if (function == GFX_CallbackReset) {
