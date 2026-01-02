@@ -6831,7 +6831,7 @@ static uint32_t register_r(const uint32_t offset)
 {
 	using namespace bit::literals;
 
-	const auto regnum = static_cast<uint8_t>((offset) & 0xff);
+	const auto regnum = static_cast<uint8_t>(offset & 0xff);
 
 	//LOG(LOG_VOODOO,LOG_WARN)("Voodoo:read chip %x reg %x (%s)", chips, regnum<<2, voodoo_reg_name[regnum]);
 

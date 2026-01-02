@@ -48,7 +48,7 @@ static uint8_t * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
 
 	uint16_t i = 0;
 	for (Bitu x = vga.draw.blocks; x > 0; --x, ++vidstart) {
-		Bitu val = base[(vidstart & (8 * 1024 -1))];
+		Bitu val = base[vidstart & (8 * 1024 -1)];
 		write_unaligned_uint32_at(TempLine, i++, CGA_2_Table[val >> 4]);
 		write_unaligned_uint32_at(TempLine, i++, CGA_2_Table[val & 0xf]);
 	}
