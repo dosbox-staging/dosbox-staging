@@ -614,7 +614,7 @@ size_t CacheBlock::Cache::GrowMaskForTypeAt(const uint8_t type_size,
 		if (map_offset_end >= masklen) {
 			size_t new_mask_len = masklen * 4;
 			if (new_mask_len < map_offset_end) {
-				new_mask_len = ((map_offset_end) & ~3) * 2;
+				new_mask_len = (map_offset_end & ~3) * 2;
 			}
 			GrowWriteMask(check_cast<uint16_t>(new_mask_len));
 		}
