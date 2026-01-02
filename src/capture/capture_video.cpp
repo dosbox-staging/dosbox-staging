@@ -346,17 +346,13 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 // detail.
 //
 // We always write non-double-scanned and non-pixel-doubled frames in raw
-// video capture mode :
+// video capture mode. If `width_doubling` or `height_doubling` is set to some
+// other value than `None`, we need to skip every second row or pixel,
+// respectively.
 //
-// Double scanning and pixel doubling can be either "baked-in" or performed in
-// post-processing. Ignoring the `double_height` and `double_width` flags
-// takes care of the post-processing variety, but for the "baked-in" variants
-// we need to skip every second row or pixel.
-//
-// So, for example, the 320x200 13h VGA mode is always written as 320x200 in
-// raw capture mode regardless of the state of the width & height doubling
-// flags, and irrespective of whether the passed down image is 320x200 or
-// 320x400 with "baked-in" double scanning.
+// For example, for the 320x200 13h VGA mode we're getting 640x400 frames
+// (scan double and pixel doubled), we perform the pixel and row slipping and
+// write 320x200 frames.
 //
 // Composite modes are special because they're rendered at 2x the width of the
 // video mode to allow enough vertical resolution to represent composite
@@ -369,15 +365,14 @@ static void compress_raw_frame(const RenderedImage& image)
 	auto src_row    = image.image_data;
 
 	// To reconstruct the raw image, we must skip every second row
-	// when dealing with "baked-in" double scanning.
-	const auto raw_height = (src.height / (src.rendered_double_scan ? 2 : 1));
-	const auto src_pitch = (image.pitch * (src.rendered_double_scan ? 2 : 1));
+	// when dealing with double scanning.
+	const auto raw_height = (src.height / (src.is_height_doubled() ? 2 : 1));
+	const auto src_pitch = (image.pitch * (src.is_height_doubled() ? 2 : 1));
 
 	// To reconstruct the raw image, we must skip every second pixel
-	// when dealing with "baked-in" pixel doubling.
-	const auto raw_width = (src.width / (src.rendered_pixel_doubling ? 2 : 1));
-
-	const auto pixel_skip_count = (src.rendered_pixel_doubling ? 1 : 0);
+	// when dealing with pixel doubling.
+	const auto raw_width = (src.width / (src.is_width_doubled() ? 2 : 1));
+	const auto pixel_skip_count = (src.is_width_doubled() ? 1 : 0);
 
 	auto compress_row = [&](const uint8_t* row_buffer) {
 		video.codec->CompressLines(1, &row_buffer);
@@ -428,15 +423,15 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	const auto& src = image.params;
 	assert(src.width <= SCALER_MAXWIDTH);
 
-	// To reconstruct the raw image, we must skip every second row when
-	// dealing with "baked-in" double scanning.
-	const auto raw_width = check_cast<uint16_t>(
-	        src.width / (src.rendered_pixel_doubling ? 2 : 1));
-
 	// To reconstruct the raw image, we must skip every second pixel
-	// when dealing with "baked-in" pixel doubling.
+	// when dealing with pixel doubling.
+	const auto raw_width = check_cast<uint16_t>(
+	        src.width / (src.is_width_doubled() ? 2 : 1));
+
+	// To reconstruct the raw image, we must skip every second row when
+	// dealing with double scanning.
 	const auto raw_height = check_cast<uint16_t>(
-	        src.height / (src.rendered_double_scan ? 2 : 1));
+	        src.height / (src.is_height_doubled() ? 2 : 1));
 
 	// Disable capturing if any of the test fails
 	if (video.handle && (video.width != raw_width || video.height != raw_height ||

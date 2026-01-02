@@ -204,12 +204,26 @@ const char* to_string(const PixelFormat pf);
 
 uint8_t get_bits_per_pixel(const PixelFormat pf);
 
+enum class ImageDoublingMode {
+	// TODO
+	None,
+
+	// TODO
+	Render,
+
+	// TODO
+	Scaler
+};
+
+const char* to_string(const ImageDoublingMode mode);
+
 // Extra information about a bitmap image that represents a single frame of
 // DOS video output.
 //
 // E.g. for the 320x200 256-colour 13h VGA mode with double-scanning
 // and pixel-doubling enabled:
 //
+// TODO
 //   - width = 320 (will be pixel-doubled post-render via double_width)
 //   - height = 400 (2*200 lines because we're rendering scan-doubled)
 //   - pixel_aspect_ratio = 5/6 (1:1.2) (because the PAR is meant for the
@@ -226,13 +240,15 @@ struct ImageInfo {
 	// to optional height-doubling).
 	int height = 0;
 
+	// TODO
 	// If true, the final image should be doubled horizontally via a scaler
 	// before outputting it (e.g. to achieve pixel-doubling).
-	bool double_width = false;
+	ImageDoublingMode width_doubling = ImageDoublingMode::None;
 
+	// TODO
 	// If true, the final image should be doubled vertically via a scaler
 	// before outputting it (e.g. to achieve fake double-scanning).
-	bool double_height = false;
+	ImageDoublingMode height_doubling = ImageDoublingMode::None;
 
 	// If true, we're dealing with a double-scanned VGA mode that was
 	// force-rendered as single-scanned.
@@ -245,19 +261,19 @@ struct ImageInfo {
 	// when such video mode transitions happen.
 	bool forced_single_scan = false;
 
+	// TODO
 	// If true, we're dealing with "baked-in" double scanning, i.e., when
 	// 320x200 is rendered as 320x400. This can happen for non-VESA VGA
 	// modes and for EGA modes on VGA. Every other double-scanned mode on
 	// VGA (all CGA modes and all double-scanned VESA modes) are
 	// "fake-double scanned" (doubled post-render by setting `double_height`
 	// to true).
-	bool rendered_double_scan = false;
 
+	// TODO
 	// If true, the image has been rendered doubled horizontally. This is
 	// only used to "normalise" the 160x200 16-colour Tandy and PCjr modes
 	// to 320-pixel-wide rendered output (it simplifies rendering the host
 	// video output downstream, but slightly complicates raw captures).
-	bool rendered_pixel_doubling = false;
 
 	// Pixel aspect ratio to be applied to the final image, *after*
 	// optional width and height doubling, so it appears as intended.
@@ -279,11 +295,21 @@ struct ImageInfo {
 	//   - pixel_aspect_ratio = 5/6 (1:1.2)
 	VideoMode video_mode = {};
 
+	constexpr bool is_width_doubled() const
+	{
+		return (width_doubling != ImageDoublingMode::None);
+	}
+
+	constexpr bool is_height_doubled() const
+	{
+		return (height_doubling != ImageDoublingMode::None);
+	}
+
 	constexpr bool operator==(const ImageInfo& that) const
 	{
 		return (width == that.width && height == that.height &&
-		        double_width == that.double_width &&
-		        double_height == that.double_height &&
+		        width_doubling == that.width_doubling &&
+		        height_doubling == that.height_doubling &&
 		        forced_single_scan == that.forced_single_scan &&
 		        pixel_aspect_ratio == that.pixel_aspect_ratio &&
 		        pixel_format == that.pixel_format &&

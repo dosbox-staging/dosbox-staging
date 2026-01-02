@@ -74,7 +74,17 @@ const char* to_string(const PixelFormat pf)
 	case PixelFormat::RGB565_Packed16: return "RGB565_Packed16";
 	case PixelFormat::BGR24_ByteArray: return "BGR24_ByteArray";
 	case PixelFormat::BGRX32_ByteArray: return "BGRX32_ByteArray";
-	default: assertm(false, "Invalid pixel format"); return {};
+	default: assertm(false, "Invalid PixelFormat"); return {};
+	}
+}
+
+const char* to_string(const ImageDoublingMode mode)
+{
+	switch (mode) {
+	case ImageDoublingMode::None: return "None";
+	case ImageDoublingMode::Render: return "Render";
+	case ImageDoublingMode::Scaler: return "Scaler";
+	default: assertm(false, "Invalid ImageDoublingMode"); return {};
 	}
 }
 

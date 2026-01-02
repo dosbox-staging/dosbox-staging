@@ -17,16 +17,17 @@ void ImageScaler::Init(const RenderedImage& image)
 {
 	input = image;
 
-	// To reconstruct the raw image, we must skip every second row when
-	// dealing with "baked-in" double scanning. "De-double-scanning" VGA
-	// images has the beneficial side effect that we can use finer vertical
-	// integer scaling steps, so it's worthwhile doing it.
-	const uint8_t row_skip_count = (image.params.rendered_double_scan ? 1 : 0);
+	// To reconstruct the raw image, we must skip every second row when the
+	// image has been doubled vertically to emulate double scanning.
+	// "De-double-scanning" VGA images has the beneficial side effect that
+	// we can use finer vertical integer scaling steps, so it's worthwhile
+	// doing it.
+	const uint8_t row_skip_count = (image.params.is_height_doubled() ? 1 : 0);
 
-	// "Baked-in" pixel doubling is only used for the 160x200 16-colour
-	// Tandy/PCjr modes. We wouldn't gain anything by reconstructing the raw
-	// 160-pixel-wide image when upscaling, so we'll just leave it be.
-	const uint8_t pixel_skip_count = 0;
+	// Same deal for horizontal doubling; we'll need to skip every second
+	// pixel if the image has been width-doubled to reconstruct the original
+	// image.
+	const uint8_t pixel_skip_count = (image.params.is_width_doubled() ? 1 : 0);
 
 	input_decoder.Init(image, row_skip_count, pixel_skip_count);
 
@@ -159,8 +160,8 @@ void ImageScaler::LogParams()
 	LOG_MSG("ImageScaler params:\n"
 	        "    input.width:                %10d\n"
 	        "    input.height:               %10d\n"
-	        "    input.double_width:         %10s\n"
-	        "    input.double_height:        %10s\n"
+	        "    input.width_doubling:       %10s\n"
+	        "    input.height_doubling:      %10s\n"
 	        "    input.PAR:                  1:%1.6f (%d:%d)\n"
 	        "    input.pixel_format:         %10s\n"
 	        "    input.pitch:                %10d\n"
@@ -178,8 +179,8 @@ void ImageScaler::LogParams()
 	        "    output.pixel_format:        %10s\n",
 	        src.width,
 	        src.height,
-	        src.double_width ? "yes" : "no",
-	        src.double_height ? "yes" : "no",
+	        to_string(src.width_doubling),
+	        to_string(src.height_doubling),
 	        src.pixel_aspect_ratio.Inverse().ToDouble(),
 	        static_cast<int32_t>(src.pixel_aspect_ratio.Num()),
 	        static_cast<int32_t>(src.pixel_aspect_ratio.Denom()),

@@ -865,8 +865,8 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 
 	image.params.width              = iroundf(output_rect_px.w);
 	image.params.height             = iroundf(output_rect_px.h);
-	image.params.double_width       = false;
-	image.params.double_height      = false;
+	image.params.width_doubling     = ImageDoublingMode::None;
+	image.params.height_doubling    = ImageDoublingMode::None;
 	image.params.pixel_aspect_ratio = {1};
 	image.params.pixel_format       = PixelFormat::BGR24_ByteArray;
 

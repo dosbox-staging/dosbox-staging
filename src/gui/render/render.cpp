@@ -252,25 +252,12 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 	RENDER_DrawLine = empty_line_handler;
 
 	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
-		bool double_width  = false;
-		bool double_height = false;
-		if (render.src.double_width != render.src.double_height) {
-			if (render.src.double_width) {
-				double_width = true;
-			}
-			if (render.src.double_height) {
-				double_height = true;
-			}
-		}
-
 		RenderedImage image = {};
 
-		image.params               = render.src;
-		image.params.double_width  = double_width;
-		image.params.double_height = double_height;
-		image.pitch                = render.scale.cache_pitch;
-		image.image_data           = (uint8_t*)&scalerSourceCache;
-		image.palette_data         = (uint8_t*)&render.palette.rgb;
+		image.params       = render.src;
+		image.pitch        = render.scale.cache_pitch;
+		image.image_data   = (uint8_t*)&scalerSourceCache;
+		image.palette_data = (uint8_t*)&render.palette.rgb;
 
 		const auto frames_per_second = static_cast<float>(render.fps);
 
@@ -330,8 +317,12 @@ static void render_reset()
 	std::lock_guard<std::mutex> guard(render_reset_mutex);
 
 	uint16_t render_width_px = render.src.width;
-	bool double_width        = render.src.double_width;
-	bool double_height       = render.src.double_height;
+
+	const auto double_width = (render.src.width_doubling ==
+	                           ImageDoublingMode::Scaler);
+
+	const auto double_height = (render.src.height_doubling ==
+	                            ImageDoublingMode::Scaler);
 
 	uint8_t xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
