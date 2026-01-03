@@ -86,6 +86,10 @@ private:
 
 	void CloseOutFile();
 
+	void LogRawCaptureParams(const RenderedImage& image,
+	                         const int row_skip_count, const int pixel_skip_count,
+	                         const int output_width, const int output_height);
+
 	RWQueue<SaveImageTask> image_fifo{MaxQueuedImages};
 	std::thread renderer = {};
 	bool is_open         = false;

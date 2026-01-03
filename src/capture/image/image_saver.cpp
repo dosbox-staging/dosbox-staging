@@ -15,6 +15,8 @@
 
 CHECK_NARROWING();
 
+// #define DEBUG_IMAGE_SCALER
+
 ImageSaver::~ImageSaver()
 {
 	Close();
@@ -54,8 +56,9 @@ void ImageSaver::QueueImage(const RenderedImage& image, const CapturedImageType 
                             const std::optional<std_fs::path>& path)
 {
 	if (!image_fifo.IsRunning()) {
-		LOG_WARNING("CAPTURE: Cannot capture image while image capturer "
-		            "is shutting down");
+		LOG_WARNING(
+		        "CAPTURE: Cannot capture image while image capturer "
+		        "is shutting down");
 		return;
 	}
 
@@ -132,6 +135,56 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
 	}
 }
 
+void ImageSaver::LogRawCaptureParams([[maybe_unused]] const RenderedImage& image,
+                                     [[maybe_unused]] const int row_skip_count,
+                                     [[maybe_unused]] const int pixel_skip_count,
+                                     [[maybe_unused]] const int output_width,
+                                     [[maybe_unused]] const int output_height)
+{
+#ifdef DEBUG_IMAGE_SCALER
+	const auto& src = image.params;
+
+	LOG_DEBUG(
+	        "ImageSave::SaveRawImage params:\n"
+	        "    input.width:                %10d\n"
+	        "    input.height:               %10d\n"
+	        "    input.width_doubling:       %10s\n"
+	        "    input.height_doubling:      %10s\n"
+	        "    input.PAR:                  1:%1.6f (%d:%d)\n"
+	        "    input.pixel_format:         %10s\n"
+	        "    input.pitch:                %10d\n"
+	        "    --------------------------------------\n"
+	        "    video_mode.width:           %10d\n"
+	        "    video_mode.height:          %10d\n"
+	        "    video_mode.PAR:             1:%1.6f (%d:%d)\n"
+	        "    --------------------------------------\n"
+	        "    row_skip_count:             %10d\n"
+	        "    pixel_skip_count:           %10d\n"
+	        "    output_width:               %10d\n"
+	        "    output_height:              %10d\n",
+	        src.width,
+	        src.height,
+	        to_string(src.width_doubling),
+	        to_string(src.height_doubling),
+	        src.pixel_aspect_ratio.Inverse().ToDouble(),
+	        static_cast<int32_t>(src.pixel_aspect_ratio.Num()),
+	        static_cast<int32_t>(src.pixel_aspect_ratio.Denom()),
+	        to_string(src.pixel_format),
+	        image.pitch,
+
+	        src.video_mode.width,
+	        src.video_mode.height,
+	        src.video_mode.pixel_aspect_ratio.Inverse().ToDouble(),
+	        static_cast<int32_t>(src.video_mode.pixel_aspect_ratio.Num()),
+	        static_cast<int32_t>(src.video_mode.pixel_aspect_ratio.Denom()),
+
+	        row_skip_count,
+	        pixel_skip_count,
+	        output_width,
+	        output_height);
+#endif
+}
+
 void ImageSaver::SaveRawImage(const RenderedImage& image)
 {
 	PngWriter png_writer = {};
@@ -148,6 +201,8 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 
 	const auto output_width  = src.width / (pixel_skip_count + 1);
 	const auto output_height = src.height / (row_skip_count + 1);
+
+	LogRawCaptureParams(image, row_skip_count, pixel_skip_count, output_width, output_height);
 
 	image_decoder.Init(image, row_skip_count, pixel_skip_count);
 
@@ -241,8 +296,8 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 		return;
 	}
 
-	// We always write the final rendered image displayed on the host monitor
-	// as-is.
+	// We always write the final rendered image displayed on the host
+	// monitor as-is.
 	const auto row_skip_count   = 0;
 	const auto pixel_skip_count = 0;
 	image_decoder.Init(image, row_skip_count, pixel_skip_count);
