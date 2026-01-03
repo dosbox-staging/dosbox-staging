@@ -210,7 +210,7 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 	}
 }
 
-static constexpr auto square_pixel_aspect_ratio = Fraction{1};
+static constexpr auto SquarePixelAspectRatio = Fraction{1};
 
 void ImageSaver::SaveUpscaledImage(const RenderedImage& image)
 {
@@ -226,7 +226,7 @@ void ImageSaver::SaveUpscaledImage(const RenderedImage& image)
 	                   image_scaler,
 	                   image_scaler.GetOutputWidth(),
 	                   image_scaler.GetOutputHeight(),
-	                   square_pixel_aspect_ratio,
+	                   SquarePixelAspectRatio,
 	                   image.params.video_mode,
 	                   image.palette);
 }
@@ -243,7 +243,7 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 	if (!png_writer.InitRgb888(outfile,
 	                           check_cast<uint16_t>(src.width),
 	                           check_cast<uint16_t>(src.height),
-	                           square_pixel_aspect_ratio,
+	                           SquarePixelAspectRatio,
 	                           src.video_mode)) {
 		return;
 	}
