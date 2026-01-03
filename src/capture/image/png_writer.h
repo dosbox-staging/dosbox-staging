@@ -23,11 +23,11 @@ public:
 	PngWriter() = default;
 	~PngWriter();
 
-	bool InitRgb888(FILE* fp, const uint16_t width, const uint16_t height,
+	bool InitRgb888(FILE* fp, const int width, const int height,
 	                const Fraction& pixel_aspect_ratio,
 	                const VideoMode& video_mode);
 
-	bool InitIndexed8(FILE* fp, const uint16_t width, const uint16_t height,
+	bool InitIndexed8(FILE* fp, const int width, const int height,
 	                  const Fraction& pixel_aspect_ratio,
 	                  const VideoMode& video_mode,
 	                  const std::array<Rgb888, NumVgaColors>& palette);
@@ -43,7 +43,7 @@ private:
 	bool Init(FILE* fp);
 	void SetPngCompressionsParams();
 
-	void WritePngInfo(const uint16_t width, const uint16_t height,
+	void WritePngInfo(const int width, const int height,
 	                  const Fraction& pixel_aspect_ratio,
 	                  const VideoMode& video_mode, const bool is_paletted,
 	                  const std::array<Rgb888, NumVgaColors>& palette);

@@ -68,8 +68,8 @@ public:
 
 	std::vector<uint8_t>::const_iterator GetNextOutputRow();
 
-	uint16_t GetOutputWidth() const;
-	uint16_t GetOutputHeight() const;
+	int GetOutputWidth() const;
+	int GetOutputHeight() const;
 	OutputPixelFormat GetOutputPixelFormat() const;
 
 	// prevent copying
@@ -78,7 +78,7 @@ public:
 	ImageScaler& operator=(const ImageScaler&) = delete;
 
 private:
-	static constexpr uint8_t ComponentsPerRgbPixel = 3;
+	static constexpr auto ComponentsPerRgbPixel = 3;
 
 	void UpdateOutputParamsDoublingOnly();
 	void UpdateOutputParamsUpscale();
@@ -98,19 +98,19 @@ private:
 	std::vector<float> linear_row_buf = {};
 
 	struct {
-		uint16_t width  = 0;
-		uint16_t height = 0;
+		int width  = 0;
+		int height = 0;
 
 		float horiz_scale                 = 0;
 		float one_per_horiz_scale         = 0;
-		uint8_t vert_scale                = 0;
+		int vert_scale                    = 0;
 		PerAxisScaling horiz_scaling_mode = {};
 		PerAxisScaling vert_scaling_mode  = {};
 
 		OutputPixelFormat pixel_format = {};
 
-		uint16_t curr_row  = 0;
-		uint8_t row_repeat = 0;
+		int curr_row   = 0;
+		int row_repeat = 0;
 
 		std::vector<uint8_t> row_buf = {};
 	} output = {};
