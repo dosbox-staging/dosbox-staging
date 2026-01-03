@@ -7,8 +7,8 @@
 
 CHECK_NARROWING();
 
-void ImageDecoder::Init(const RenderedImage& _image, const uint8_t _row_skip_count,
-                        const uint8_t _pixel_skip_count)
+void ImageDecoder::Init(const RenderedImage& _image, const int _row_skip_count,
+                        const int _pixel_skip_count)
 {
 	assert(_image.params.width > 0);
 	assert(_image.params.height > 0);
