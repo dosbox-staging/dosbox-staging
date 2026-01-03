@@ -28,8 +28,8 @@ public:
 	// Set `pixel_skip_count` to 1 reconstruct the raw image when the input
 	// has "baked-in" pixel doubling.
 	//
-	void Init(const RenderedImage& image, const uint8_t row_skip_count,
-	          const uint8_t pixel_skip_count);
+	void Init(const RenderedImage& image, const int row_skip_count,
+	          const int pixel_skip_count);
 
 	inline uint8_t GetNextIndexed8Pixel()
 	{
@@ -64,8 +64,8 @@ public:
 private:
 	RenderedImage image = {};
 
-	uint8_t row_skip_count   = 0;
-	uint8_t pixel_skip_count = 0;
+	int row_skip_count   = 0;
+	int pixel_skip_count = 0;
 
 	const uint8_t* curr_row_start = nullptr;
 	const uint8_t* pos            = nullptr;

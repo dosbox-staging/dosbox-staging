@@ -25,7 +25,7 @@ PngWriter::~PngWriter()
 	png_info_ptr = nullptr;
 }
 
-bool PngWriter::InitRgb888(FILE* fp, const uint16_t width, const uint16_t height,
+bool PngWriter::InitRgb888(FILE* fp, const int width, const int height,
                            const Fraction& pixel_aspect_ratio,
                            const VideoMode& video_mode)
 {
@@ -38,7 +38,7 @@ bool PngWriter::InitRgb888(FILE* fp, const uint16_t width, const uint16_t height
 	return true;
 }
 
-bool PngWriter::InitIndexed8(FILE* fp, const uint16_t width, const uint16_t height,
+bool PngWriter::InitIndexed8(FILE* fp, const int width, const int height,
                              const Fraction& pixel_aspect_ratio,
                              const VideoMode& video_mode,
                              const std::array<Rgb888, NumVgaColors>& palette)
@@ -115,7 +115,7 @@ void PngWriter::SetPngCompressionsParams()
 	png_set_compression_method(png_ptr, Z_DEFLATED);
 }
 
-void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
+void PngWriter::WritePngInfo(const int width, const int height,
                              const Fraction& pixel_aspect_ratio,
                              const VideoMode& video_mode, const bool is_paletted,
                              const std::array<Rgb888, NumVgaColors>& palette)
@@ -128,8 +128,8 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 	                                         : PNG_COLOR_TYPE_RGB;
 	png_set_IHDR(png_ptr,
 	             png_info_ptr,
-	             width,
-	             height,
+	             check_cast<uint16_t>(width),
+	             check_cast<uint16_t>(height),
 	             PngBitDepth,
 	             png_color_type,
 	             PNG_INTERLACE_NONE,
