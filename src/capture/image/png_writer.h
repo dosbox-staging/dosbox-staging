@@ -13,7 +13,6 @@
 #include "gui/render/render.h"
 #include "image_saver.h"
 
-
 // A row-based PNG writer that also writes the pixel aspect ratio of the image
 // into the standard pHYs PNG chunk.
 class PngWriter {
@@ -21,11 +20,11 @@ public:
 	PngWriter() = default;
 	~PngWriter();
 
-	bool InitRgb888(FILE* fp, const uint16_t width, const uint16_t height,
+	bool InitRgb888(FILE* fp, const int width, const int height,
 	                const Fraction& pixel_aspect_ratio,
 	                const VideoMode& video_mode);
 
-	bool InitIndexed8(FILE* fp, const uint16_t width, const uint16_t height,
+	bool InitIndexed8(FILE* fp, const int width, const int height,
 	                  const Fraction& pixel_aspect_ratio,
 	                  const VideoMode& video_mode, const uint8_t* palette_data);
 
@@ -40,7 +39,7 @@ private:
 	bool Init(FILE* fp);
 	void SetPngCompressionsParams();
 
-	void WritePngInfo(const uint16_t width, const uint16_t height,
+	void WritePngInfo(const int width, const int height,
 	                  const Fraction& pixel_aspect_ratio,
 	                  const VideoMode& video_mode, const bool is_paletted,
 	                  const uint8_t* palette_data);

@@ -100,9 +100,8 @@ void ImageSaver::SaveImage(const SaveImageTask& task)
 }
 
 static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
-                               ImageScaler& image_scaler, const uint16_t width,
-                               const uint16_t height,
-                               const Fraction& pixel_aspect_ratio,
+                               ImageScaler& image_scaler, const int width,
+                               const int height, const Fraction& pixel_aspect_ratio,
                                const VideoMode& video_mode,
                                const uint8_t* palette_data)
 {
@@ -141,17 +140,14 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 
 	// To reconstruct the raw image, we must skip every second row
 	// when dealing with double scanning.
-	const uint8_t row_skip_count = (src.is_height_doubled() ? 1 : 0);
+	const auto row_skip_count = (src.is_height_doubled() ? 1 : 0);
 
 	// To reconstruct the raw image, we must skip every second pixel
 	// when dealing with pixel doubling.
-	const uint8_t pixel_skip_count = (src.is_width_doubled() ? 1 : 0);
+	const auto pixel_skip_count = (src.is_width_doubled() ? 1 : 0);
 
-	const auto output_width = check_cast<uint16_t>(src.width /
-	                                               (pixel_skip_count + 1));
-
-	const auto output_height = check_cast<uint16_t>(src.height /
-	                                                (row_skip_count + 1));
+	const auto output_width  = src.width / (pixel_skip_count + 1);
+	const auto output_height = src.height / (row_skip_count + 1);
 
 	image_decoder.Init(image, row_skip_count, pixel_skip_count);
 
@@ -178,7 +174,7 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 		}
 	}
 
-	constexpr uint8_t MaxBytesPerPixel = 3;
+	constexpr auto MaxBytesPerPixel = 3;
 	row_buf.resize(static_cast<size_t>(output_width) *
 	               static_cast<size_t>(MaxBytesPerPixel));
 
@@ -251,7 +247,7 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 	const auto pixel_skip_count = 0;
 	image_decoder.Init(image, row_skip_count, pixel_skip_count);
 
-	constexpr uint8_t BytesPerPixel = 3;
+	constexpr auto BytesPerPixel = 3;
 	row_buf.resize(static_cast<size_t>(src.width) *
 	               static_cast<size_t>(BytesPerPixel));
 

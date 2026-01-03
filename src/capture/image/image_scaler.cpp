@@ -24,12 +24,12 @@ void ImageScaler::Init(const RenderedImage& image)
 	// "De-double-scanning" VGA images has the beneficial side effect that
 	// we can use finer vertical integer scaling steps, so it's worthwhile
 	// doing it.
-	const uint8_t row_skip_count = (image.params.is_height_doubled() ? 1 : 0);
+	const auto row_skip_count = (image.params.is_height_doubled() ? 1 : 0);
 
 	// Same deal for horizontal doubling; we'll need to skip every second
 	// pixel if the image has been width-doubled to reconstruct the original
 	// image.
-	const uint8_t pixel_skip_count = (image.params.is_width_doubled() ? 1 : 0);
+	const auto pixel_skip_count = (image.params.is_width_doubled() ? 1 : 0);
 
 	input_decoder.Init(image, row_skip_count, pixel_skip_count);
 
@@ -58,9 +58,8 @@ void ImageScaler::UpdateOutputParamsUpscale()
 
 	// Calculate initial integer vertical scaling factor so the resulting
 	// output image height is roughly around 1200px.
-	output.vert_scale = static_cast<uint8_t>(
-	        roundf(static_cast<float>(TargetOutputHeight) /
-	               static_cast<float>(video_mode.height)));
+	output.vert_scale = iroundf(static_cast<float>(TargetOutputHeight) /
+	                            static_cast<float>(video_mode.height));
 
 	output.vert_scaling_mode = PerAxisScaling::Integer;
 
@@ -82,11 +81,10 @@ void ImageScaler::UpdateOutputParamsUpscale()
 		output.horiz_scale = horiz_scale_fract.ToFloat();
 		output.one_per_horiz_scale = horiz_scale_fract.Inverse().ToFloat();
 
-		output.width = static_cast<uint16_t>(roundf(
-		        static_cast<float>(input.params.width) * output.horiz_scale));
+		output.width = iroundf(static_cast<float>(input.params.width) *
+		                       output.horiz_scale);
 
-		output.height = static_cast<uint16_t>(video_mode.height *
-		                                      output.vert_scale);
+		output.height = video_mode.height * output.vert_scale;
 
 		if (is_integer(output.horiz_scale)) {
 			// Ensure the upscaled image is at least 1000px high for
@@ -115,9 +113,7 @@ void ImageScaler::UpdateOutputParamsUpscale()
 	}
 
 	if (is_integer(output.horiz_scale)) {
-		output.horiz_scale = static_cast<float>(
-		        static_cast<uint16_t>(output.horiz_scale));
-
+		output.horiz_scale = static_cast<float>(output.horiz_scale);
 		output.horiz_scaling_mode = PerAxisScaling::Integer;
 	} else {
 		output.horiz_scaling_mode = PerAxisScaling::Fractional;
@@ -209,7 +205,7 @@ void ImageScaler::LogParams()
 
 void ImageScaler::AllocateBuffers()
 {
-	uint8_t bytes_per_pixel = {};
+	int bytes_per_pixel = {};
 	switch (output.pixel_format) {
 	case OutputPixelFormat::Indexed8: bytes_per_pixel = 8; break;
 	case OutputPixelFormat::Rgb888: bytes_per_pixel = 24; break;
@@ -225,12 +221,12 @@ void ImageScaler::AllocateBuffers()
 	linear_row_buf.resize((input.params.width + 1u) * ComponentsPerRgbPixel);
 }
 
-uint16_t ImageScaler::GetOutputWidth() const
+int ImageScaler::GetOutputWidth() const
 {
 	return output.width;
 }
 
-uint16_t ImageScaler::GetOutputHeight() const
+int ImageScaler::GetOutputHeight() const
 {
 	return output.height;
 }
@@ -260,7 +256,7 @@ void ImageScaler::SetRowRepeat()
 	// Optimisation: output row "vertical integer scale factor" number
 	// of times instead of repeatedly processing it.
 	if (output.vert_scaling_mode == PerAxisScaling::Integer) {
-		output.row_repeat = static_cast<uint8_t>(output.vert_scale - 1);
+		output.row_repeat = output.vert_scale - 1;
 	} else {
 		output.row_repeat = 1;
 	}
@@ -299,7 +295,7 @@ void ImageScaler::GenerateNextSharpUpscaledOutputRow()
 
 	for (auto x = 0; x < output.width; ++x) {
 		const auto x0 = static_cast<float>(x) * output.one_per_horiz_scale;
-		const auto floor_x0 = static_cast<uint16_t>(x0);
+		const auto floor_x0 = ifloor(x0);
 		assert(floor_x0 < input.params.width);
 
 		const auto row_offs = floor_x0 * ComponentsPerRgbPixel;
@@ -319,7 +315,9 @@ void ImageScaler::GenerateNextSharpUpscaledOutputRow()
 		// and the next pixel so that the interpolation "band" is one
 		// pixel wide at most at the edges of the pixel.
 		const auto x1 = x0 + output.one_per_horiz_scale;
-		const auto t  = std::max(x1 - (floor_x0 + 1.0f), 0.0f) *
+
+		const auto t = std::max(x1 - (static_cast<float>(floor_x0) + 1.0f),
+		                        0.0f) *
 		               output.horiz_scale;
 
 		const auto out_r = lerp(r0, r1, t);
