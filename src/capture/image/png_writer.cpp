@@ -33,9 +33,9 @@ bool PngWriter::InitRgb888(FILE* fp, const uint16_t width, const uint16_t height
 		return false;
 	}
 
-	constexpr auto is_paletted  = false;
-	constexpr auto palette_data = nullptr;
-	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, is_paletted, palette_data);
+	constexpr auto IsPaletted  = false;
+	constexpr auto PaletteData = nullptr;
+	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, IsPaletted, PaletteData);
 	return true;
 }
 
@@ -47,8 +47,8 @@ bool PngWriter::InitIndexed8(FILE* fp, const uint16_t width, const uint16_t heig
 		return false;
 	}
 
-	constexpr auto is_paletted = true;
-	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, is_paletted, palette_data);
+	constexpr auto IsPaletted = true;
+	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, IsPaletted, palette_data);
 	return true;
 }
 
@@ -123,14 +123,14 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 	assert(png_ptr);
 	assert(png_info_ptr);
 
-	constexpr auto png_bit_depth = 8;
-	const auto png_color_type    = is_paletted ? PNG_COLOR_TYPE_PALETTE
-	                                           : PNG_COLOR_TYPE_RGB;
+	constexpr auto PngBitDepth = 8;
+	const auto png_color_type  = is_paletted ? PNG_COLOR_TYPE_PALETTE
+	                                         : PNG_COLOR_TYPE_RGB;
 	png_set_IHDR(png_ptr,
 	             png_info_ptr,
 	             width,
 	             height,
-	             png_bit_depth,
+	             PngBitDepth,
 	             png_color_type,
 	             PNG_INTERLACE_NONE,
 	             PNG_COMPRESSION_TYPE_DEFAULT,
