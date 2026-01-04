@@ -88,47 +88,46 @@ static inline void ScalerAddLines( Bitu changed, Bitu count ) {
 ScalerSimpleBlock_t ScaleNormal1x = {
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	1,1,{
-{	Normal1x_8_32_R },
-{	Normal1x_15_32_R},
-{	Normal1x_16_32_R},
-{	Normal1x_24_32_R},
-{	Normal1x_32_32_R},
-{	Normal1x_9_32_R }
+	Normal1x_8_32_R ,
+	Normal1x_15_32_R,
+	Normal1x_16_32_R,
+	Normal1x_24_32_R,
+	Normal1x_32_32_R,
+	Normal1x_9_32_R 
 }};
 
 // Renders double-wide DOS video modes
 ScalerSimpleBlock_t ScaleNormalDw = {
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	2,1,{
-{	NormalDw_8_32_R },
-{	NormalDw_15_32_R},
-{	NormalDw_16_32_R},
-{	NormalDw_24_32_R},
-{	NormalDw_32_32_R},
-{	NormalDw_9_32_R }
+	NormalDw_8_32_R ,
+	NormalDw_15_32_R,
+	NormalDw_16_32_R,
+	NormalDw_24_32_R,
+	NormalDw_32_32_R,
+	NormalDw_9_32_R 
 }};
 
 // Renders double-high DOS video modes
 ScalerSimpleBlock_t ScaleNormalDh = {
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	1,2,{
-{	NormalDh_8_32_R },
-{	NormalDh_15_32_R},
-{	NormalDh_16_32_R},
-{	NormalDh_24_32_R},
-{	NormalDh_32_32_R},
-{	NormalDh_9_32_R }
+	NormalDh_8_32_R ,
+	NormalDh_15_32_R,
+	NormalDh_16_32_R,
+	NormalDh_24_32_R,
+	NormalDh_32_32_R,
+	NormalDh_9_32_R 
 }};
 
 ScalerSimpleBlock_t ScaleNormal2x = {
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	2,2,{
-{   Normal2x_8_32_R },
-{   Normal2x_15_32_R},
-{   Normal2x_16_32_R},
-{   Normal2x_24_32_R},
-{   Normal2x_32_32_R},
-{   Normal2x_9_32_R },
+    Normal2x_8_32_R ,
+    Normal2x_15_32_R,
+    Normal2x_16_32_R,
+    Normal2x_24_32_R,
+    Normal2x_32_32_R,
+    Normal2x_9_32_R
 }};
 
-// clang-format on
