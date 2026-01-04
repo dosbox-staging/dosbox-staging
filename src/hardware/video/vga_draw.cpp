@@ -1212,6 +1212,10 @@ void vga_draw_blank_line()
 	ReelMagic_RENDER_DrawLine(TempLine);
 }
 
+// VGA video output is drawn per scanline. Each scanline is scheduled to be
+// drawn at the exact point in time just like on hardware (this is needed for
+// some demoscene style tricks that change VGA registers at specific scanline
+// locations).
 static void VGA_DrawSingleLine([[maybe_unused]] uint32_t dummy)
 {
 	if (vga.attr.disabled) {
@@ -1236,12 +1240,20 @@ static void VGA_DrawSingleLine([[maybe_unused]] uint32_t dummy)
 	}
 
 	if (vga.draw.lines_done < vga.draw.lines_total) {
+		// Schedule drawing the next line if we're not at the last line
 		PIC_AddEvent(VGA_DrawSingleLine, vga.draw.delay.per_line_ms);
+
 	} else {
+		// We've drawn the full frame, notify the renderer the frame is
+		// ready
 		RENDER_EndUpdate(false);
 	}
 }
 
+// EGA video output is drawn per scanline. Each scanline is scheduled to be
+// drawn at the exact point in time just like on hardware (this is needed for
+// some demoscene style tricks that change EGA registers at specific scanline
+// locations).
 static void VGA_DrawEGASingleLine([[maybe_unused]] uint32_t dummy)
 {
 	if (vga.attr.disabled) {
@@ -1272,12 +1284,17 @@ static void VGA_DrawEGASingleLine([[maybe_unused]] uint32_t dummy)
 	}
 
 	if (vga.draw.lines_done < vga.draw.lines_total) {
+		// Schedule drawing the next line if we're not at the last line
 		PIC_AddEvent(VGA_DrawEGASingleLine, vga.draw.delay.per_line_ms);
+
 	} else {
+		// We've drawn the full frame, notify the renderer the frame is
+		// ready
 		RENDER_EndUpdate(false);
 	}
 }
 
+// All non EGA or VGA machine types draw the screen in four parts
 static void VGA_DrawPart(uint32_t lines)
 {
 	while (lines--) {
@@ -1289,7 +1306,9 @@ static void VGA_DrawPart(uint32_t lines)
 			vga.draw.address_line = 0;
 			vga.draw.address += vga.draw.address_add;
 		}
+
 		++vga.draw.lines_done;
+
 		if (vga.draw.split_line == vga.draw.lines_done) {
 #ifdef VGA_KEEP_CHANGES
 			VGA_ChangesEnd();
@@ -1302,12 +1321,16 @@ static void VGA_DrawPart(uint32_t lines)
 	}
 
 	if (--vga.draw.parts_left) {
+		// Schedule drawing the next part if we're not at the last part
 		PIC_AddEvent(VGA_DrawPart,
 		             vga.draw.delay.parts,
 		             (vga.draw.parts_left != 1)
 		                     ? vga.draw.parts_lines
 		                     : (vga.draw.lines_total - vga.draw.lines_done));
 	} else {
+		// We've drawn the full frame, notify the renderer the frame is
+		// ready
+		//
 #ifdef VGA_KEEP_CHANGES
 		VGA_ChangesEnd();
 #endif
@@ -2080,7 +2103,7 @@ static UpdatedTimings update_vga_timings(const VgaTimings& timings)
 	// Start and End of horizontal blanking
 	vga.draw.delay.hblkstart = static_cast<double>(horiz.blanking_start) *
 	                           1000.0 / f_clock; //  milliseconds
-												 //
+	                                             //
 	vga.draw.delay.hblkend = static_cast<double>(horiz.blanking_end) *
 	                         1000.0 / f_clock;
 
@@ -3378,7 +3401,7 @@ void VGA_SetOverride(const bool vga_override, const double override_refresh_hz)
 			vga.draw.vga_override = false;
 
 			// Change it so the output window gets updated
-			vga.draw.image_info.width = 0; 
+			vga.draw.image_info.width = 0;
 
 			VGA_SetupDrawing(0);
 		}
