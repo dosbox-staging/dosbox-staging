@@ -30,7 +30,7 @@ CHECK_NARROWING();
 namespace {
 
 // Standard FreeDOS MBR
-constexpr uint8_t freedos_mbr[512] = {
+constexpr std::array<uint8_t, 512> freedos_mbr = {
         0xfa, 0x33, 0xc0, 0x8e, 0xd0, 0xbc, 0x00, 0x7c, 0x8b, 0xf4, 0x50, 0x07,
         0x50, 0x1f, 0xfb, 0xfc, 0xbf, 0x00, 0x06, 0xb9, 0x00, 0x01, 0xf2, 0xa5,
         0xea, 0x1d, 0x06, 0x00, 0x00, 0xbe, 0xbe, 0x07, 0xb3, 0x04, 0x80, 0x3c,
@@ -80,7 +80,9 @@ const std::map<std::string, DiskGeometry> GeometryPresets = {
         {"hd_2gig", {1023, 64, 63, 0xF8, 512, 0, 0, 0, false}}
 };
 
-void lba2chs(uint8_t* buf, uint64_t lba, uint32_t max_c, uint32_t max_h, uint32_t max_s)
+// Return a 3-byte array [h, s|c_high, c_low]
+std::array<uint8_t, 3> lba2chs(uint64_t lba, uint32_t max_c, uint32_t max_h,
+                               uint32_t max_s)
 {
 	uint32_t c = 0, h = 0, s = 0;
 	if (lba < static_cast<uint64_t>(max_c) * max_h * max_s) {
@@ -88,8 +90,8 @@ void lba2chs(uint8_t* buf, uint64_t lba, uint32_t max_c, uint32_t max_h, uint32_
 		uint64_t temp = lba / max_s;
 		h             = static_cast<uint32_t>(temp % max_h);
 		c             = static_cast<uint32_t>(temp / max_h);
-        // Clamp for legacy CHS
-        if (c > 1023) {
+		// Clamp for legacy CHS
+		if (c > 1023) {
 			c = 1023;
 		}
 	} else {
@@ -98,9 +100,17 @@ void lba2chs(uint8_t* buf, uint64_t lba, uint32_t max_c, uint32_t max_h, uint32_
 		s = max_s;
 	}
 
-	buf[0] = static_cast<uint8_t>(h);
-	buf[1] = static_cast<uint8_t>((s & 0x3f) | ((c >> 2) & 0xc0));
-	buf[2] = static_cast<uint8_t>(c & 0xff);
+	return {static_cast<uint8_t>(h),
+	        static_cast<uint8_t>((s & 0x3f) | ((c >> 2) & 0xc0)),
+	        static_cast<uint8_t>(c & 0xff)};
+}
+
+// Write a string into a fixed-width buffer and pad with spaces
+void write_padded_string(uint8_t* dest, const std::string& str, size_t length)
+{
+	std::string temp = str;
+	temp.resize(length, ' ');
+	std::copy(temp.begin(), temp.end(), dest);
 }
 
 } // namespace
@@ -180,7 +190,7 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 				return ErrorType::MissingArgument;
 			}
 			const auto& size_str = args[++i];
-			auto size_mb  = parse_int(size_str, 10);
+			auto size_mb         = parse_int(size_str, 10);
 			if (!size_mb) {
 				return ErrorType::InvalidValue;
 			}
@@ -191,7 +201,7 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 				return ErrorType::MissingArgument;
 			}
 			const auto& chs_str = args[++i];
-			auto parts   = split_with_empties(chs_str, ',');
+			auto parts          = split_with_empties(chs_str, ',');
 
 			if (parts.size() != 3) {
 				return ErrorType::InvalidValue;
@@ -247,15 +257,15 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 
 bool Execute(Program* program, CommandSettings& s)
 {
-	DiskGeometry geom          = {};
-	uint64_t total_size        = 0;
+	DiskGeometry geom         = {};
+	uint64_t total_size       = 0;
 	const uint64_t SectorSize = 512;
 
 	// Determine Geometry and Size
 	if (auto it = GeometryPresets.find(s.type); it != GeometryPresets.end()) {
 		geom       = it->second;
-		total_size = static_cast<uint64_t>(geom.cyl) * geom.heads * geom.sectors *
-		             SectorSize;
+		total_size = static_cast<uint64_t>(geom.cyl) * geom.heads *
+		             geom.sectors * SectorSize;
 	} else if (s.type == "hd") {
 		geom.media_desc = 0xF8;
 		geom.is_floppy  = false;
@@ -264,8 +274,8 @@ bool Execute(Program* program, CommandSettings& s)
 			geom.cyl     = s.cylinders;
 			geom.heads   = s.heads;
 			geom.sectors = s.sectors;
-			total_size   = static_cast<uint64_t>(geom.cyl) * geom.heads *
-			             geom.sectors * SectorSize;
+			total_size   = static_cast<uint64_t>(geom.cyl) *
+			             geom.heads * geom.sectors * SectorSize;
 		} else if (s.size_bytes > 0) {
 			total_size           = s.size_bytes;
 			uint64_t tot_sectors = total_size / SectorSize;
@@ -284,8 +294,8 @@ bool Execute(Program* program, CommandSettings& s)
 				geom.heads = 255;
 			}
 
-			geom.cyl = static_cast<uint32_t>(tot_sectors /
-			                      (geom.heads * geom.sectors));
+			geom.cyl = static_cast<uint32_t>(
+			        tot_sectors / (geom.heads * geom.sectors));
 			// Cap for legacy geometry
 			if (geom.cyl > 1023) {
 				geom.cyl = 1023;
@@ -311,56 +321,60 @@ bool Execute(Program* program, CommandSettings& s)
 	}
 
 	// Create File
-	FILE* f = std::fopen(s.filename.c_str(), "wb+");
-	if (!f) {
+	std::fstream fs(s.filename,
+	                std::ios::binary | std::ios::out | std::ios::in |
+	                        std::ios::trunc);
+	if (!fs) {
 		notify_warning("SHELL_CMD_IMGMAKE_CANNOT_WRITE", s.filename.c_str());
 		return false;
 	}
 
 	// Expand file to size (write last byte)
-	if (std::fseek(f, static_cast<long>(total_size - 1), SEEK_SET) != 0) {
+	fs.seekp(static_cast<std::streamoff>(total_size - 1));
+	if (fs.fail()) {
 		notify_warning("SHELL_CMD_IMGMAKE_SPACE_ERROR");
-		std::fclose(f);
+		fs.close();
 		std::remove(s.filename.c_str());
 		return false;
 	}
-	uint8_t zero = 0;
-	std::fwrite(&zero, 1, 1, f);
-	std::rewind(f);
+
+	char zero = 0;
+	fs.write(&zero, 1);
+	fs.seekp(0);
 
 	if (s.no_format) {
-		std::fclose(f);
 		return true;
 	}
 
-	uint8_t buffer[512]     = {0};
+	std::array<uint8_t, 512> buffer;
+	buffer.fill(0);
 	int64_t boot_sector_pos = 0;
 
 	// Partition Table for Hard Disks
 	if (!geom.is_floppy) {
-        // Standard offset (track 0)
+		// Standard offset (track 0)
 		boot_sector_pos = geom.sectors;
-		std::memcpy(buffer, freedos_mbr, SectorSize);
+		std::copy(freedos_mbr.begin(), freedos_mbr.end(), buffer.begin());
 
 		// Partition 1 Entry (0x1BE)
-		uint8_t* p = buffer + 0x1BE;
-        // Active Partition
-		p[0]       = 0x80;
+		uint8_t* p = buffer.data() + 0x1BE;
+		// Active Partition
+		p[0] = 0x80;
 
-		// Start CHS (0, 1, 1) usually, but we use 
-        // boot_sector_pos LBA conversion
-		lba2chs(p + 1,
-		        static_cast<uint64_t>(boot_sector_pos),
-		        geom.cyl,
-		        geom.heads,
-		        geom.sectors);
+		// Start CHS (0, 1, 1) usually, but we use
+		// boot_sector_pos LBA conversion
+		auto start_chs = lba2chs(static_cast<uint64_t>(boot_sector_pos),
+		                         geom.cyl,
+		                         geom.heads,
+		                         geom.sectors);
+		std::copy(start_chs.begin(), start_chs.end(), p + 1);
 
 		// Partition Type
 		uint64_t vol_sectors = (total_size / SectorSize) -
 		                       static_cast<uint64_t>(boot_sector_pos);
 		if (s.fat_type == 32 || vol_sectors > 4194304) {
 			// FAT32 LBA
-            p[4] = 0x0C;
+			p[4] = 0x0C;
 		} else if (vol_sectors > 65535) {
 			// FAT16B
 			p[4] = 0x06;
@@ -370,7 +384,11 @@ bool Execute(Program* program, CommandSettings& s)
 		}
 
 		// End CHS
-		lba2chs(p + 5, (total_size / 512) - 1, geom.cyl, geom.heads, geom.sectors);
+		auto end_chs = lba2chs((total_size / 512) - 1,
+		                       geom.cyl,
+		                       geom.heads,
+		                       geom.sectors);
+		std::copy(end_chs.begin(), end_chs.end(), p + 5);
 
 		// LBA Start & Size
 		host_writed(p + 8, static_cast<uint32_t>(boot_sector_pos));
@@ -380,12 +398,13 @@ bool Execute(Program* program, CommandSettings& s)
 		buffer[510] = 0x55;
 		buffer[511] = 0xAA;
 
-		std::fwrite(buffer, 1, SectorSize, f);
+		fs.write(reinterpret_cast<const char*>(buffer.data()),
+		         buffer.size());
 	}
 
 	// Move to Boot Sector
-	std::fseek(f, static_cast<long>(boot_sector_pos * SectorSize), SEEK_SET);
-	std::memset(buffer, 0, SectorSize);
+	fs.seekp(static_cast<std::streamoff>(boot_sector_pos * SectorSize));
+	buffer.fill(0);
 
 	// Determines FAT parameters
 	uint64_t vol_sectors = (total_size / SectorSize) -
@@ -412,13 +431,14 @@ bool Execute(Program* program, CommandSettings& s)
 	buffer[1] = 0x3C;
 	buffer[2] = 0x90;
 	// OEM Name
-	std::memcpy(buffer + 3, "DOSBOX-S", 8);
+	write_padded_string(buffer.data() + 3, "DOSBOX-S", 8);
 	// Bytes per sector
-	host_writew(buffer + 11, static_cast<uint16_t>(SectorSize));
+	host_writew(buffer.data() + 11, static_cast<uint16_t>(SectorSize));
 
 	// Sectors per cluster
-	uint8_t spc = (s.sectors_per_cluster > 0) ? static_cast<uint8_t>(s.sectors_per_cluster)
-	                                          : 1;
+	uint8_t spc = (s.sectors_per_cluster > 0)
+	                    ? static_cast<uint8_t>(s.sectors_per_cluster)
+	                    : 1;
 	if (s.sectors_per_cluster == 0) {
 		if (vol_sectors > 2097152) {
 			spc = 32;
@@ -430,7 +450,7 @@ bool Execute(Program* program, CommandSettings& s)
 	buffer[13] = spc;
 
 	uint16_t reserved_sectors = (fat_bits == 32) ? 32 : 1;
-	host_writew(buffer + 14, reserved_sectors);
+	host_writew(buffer.data() + 14, reserved_sectors);
 	buffer[16] = static_cast<uint8_t>(s.fat_copies);
 
 	uint16_t root_ent = (fat_bits == 32)
@@ -438,12 +458,12 @@ bool Execute(Program* program, CommandSettings& s)
 	                          : (geom.root_entries > 0
 	                                     ? geom.root_entries
 	                                     : static_cast<uint16_t>(SectorSize));
-	host_writew(buffer + 17, root_ent);
+	host_writew(buffer.data() + 17, root_ent);
 
 	if (vol_sectors < 65536 && fat_bits != 32) {
-		host_writew(buffer + 19, static_cast<uint16_t>(vol_sectors));
+		host_writew(buffer.data() + 19, static_cast<uint16_t>(vol_sectors));
 	} else {
-		host_writew(buffer + 19, 0);
+		host_writew(buffer.data() + 19, 0);
 	}
 
 	buffer[21] = geom.media_desc;
@@ -457,53 +477,61 @@ bool Execute(Program* program, CommandSettings& s)
 	uint64_t total_clusters = data_sectors / spc;
 
 	if (fat_bits == 12) {
-		fat_size = static_cast<uint32_t>(((total_clusters + 2) * 3 / 2) / SectorSize) + 1;
+		fat_size = static_cast<uint32_t>(((total_clusters + 2) * 3 / 2) /
+		                                 SectorSize) +
+		           1;
 	} else if (fat_bits == 16) {
-		fat_size = static_cast<uint32_t>(((total_clusters + 2) * 2) / SectorSize) + 1;
+		fat_size = static_cast<uint32_t>(((total_clusters + 2) * 2) /
+		                                 SectorSize) +
+		           1;
 	} else {
-		fat_size = static_cast<uint32_t>(((total_clusters + 2) * 4) / SectorSize) + 1;
+		fat_size = static_cast<uint32_t>(((total_clusters + 2) * 4) /
+		                                 SectorSize) +
+		           1;
 	}
 
 	if (fat_bits != 32) {
-		host_writew(buffer + 22, static_cast<uint16_t>(fat_size));
+		host_writew(buffer.data() + 22, static_cast<uint16_t>(fat_size));
 	}
 
 	// SPT
-    host_writew(buffer + 24, static_cast<uint16_t>(geom.sectors));
-    // Heads
-	host_writew(buffer + 26, static_cast<uint16_t>(geom.heads));
-    // Hidden sectors
-	host_writed(buffer + 28, static_cast<uint32_t>(boot_sector_pos));
+	host_writew(buffer.data() + 24, static_cast<uint16_t>(geom.sectors));
+	// Heads
+	host_writew(buffer.data() + 26, static_cast<uint16_t>(geom.heads));
+	// Hidden sectors
+	host_writed(buffer.data() + 28, static_cast<uint32_t>(boot_sector_pos));
 	if (fat_bits != 32 && vol_sectors >= 65536) {
-		host_writed(buffer + 32, static_cast<uint32_t>(vol_sectors));
+		host_writed(buffer.data() + 32, static_cast<uint32_t>(vol_sectors));
 	} else if (fat_bits == 32) {
-		host_writed(buffer + 32, static_cast<uint32_t>(vol_sectors));
+		host_writed(buffer.data() + 32, static_cast<uint32_t>(vol_sectors));
 	}
 
 	if (fat_bits == 32) {
-		host_writed(buffer + 36, fat_size);
-        // Root Cluster
-		host_writed(buffer + 44, 2);
-        // FS Info Sector
-		host_writew(buffer + 48, 1);
-        // Backup Boot Sector
-		host_writew(buffer + 50, 6);
-        // Ext Sig
+		host_writed(buffer.data() + 36, fat_size);
+		// Root Cluster
+		host_writed(buffer.data() + 44, 2);
+		// FS Info Sector
+		host_writew(buffer.data() + 48, 1);
+		// Backup Boot Sector
+		host_writew(buffer.data() + 50, 6);
+		// Ext Sig
 		buffer[66] = 0x29;
-        // Serial
-		host_writed(buffer + 67, 0xDEADBEEF);
-		std::memcpy(buffer + 71, "NO NAME    ", 11);
-		std::memcpy(buffer + 82, "FAT32   ", 8);
+		// Serial
+		host_writed(buffer.data() + 67, 0xDEADBEEF);
+
+		write_padded_string(buffer.data() + 71, "NO NAME", 11);
+		write_padded_string(buffer.data() + 82, "FAT32", 8);
 	} else {
-        // Ext Sig
+		// Ext Sig
 		buffer[38] = 0x29;
-        // Serial
-		host_writed(buffer + 39, 0xDEADBEEF);
-		std::memcpy(buffer + 43, "NO NAME    ", 11);
+		// Serial
+		host_writed(buffer.data() + 39, 0xDEADBEEF);
+		write_padded_string(buffer.data() + 43, "NO NAME", 11);
+
 		if (fat_bits == 16) {
-			std::memcpy(buffer + 54, "FAT16   ", 8);
+			write_padded_string(buffer.data() + 54, "FAT16", 8);
 		} else {
-			std::memcpy(buffer + 54, "FAT12   ", 8);
+			write_padded_string(buffer.data() + 54, "FAT12", 8);
 		}
 	}
 
@@ -511,25 +539,29 @@ bool Execute(Program* program, CommandSettings& s)
 	buffer[SectorSize - 1] = 0xAA;
 
 	// Write Boot Sector
-	std::fwrite(buffer, 1, SectorSize, f);
+	fs.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+
 	// Write FATs
-	uint8_t empty_sect[512] = {0};
+	std::array<uint8_t, 512> empty_sect;
+	empty_sect.fill(0);
+
 	// Position after reserved
-	std::fseek(f,
-	           static_cast<long>((boot_sector_pos + reserved_sectors) * SectorSize),
-	           SEEK_SET);
+	fs.seekp(static_cast<std::streamoff>(
+	        (boot_sector_pos + reserved_sectors) * SectorSize));
 
 	// Initialize FAT start
-	uint8_t fat_header[512] = {0};
+	std::array<uint8_t, 512> fat_header;
+	fat_header.fill(0);
+
 	if (fat_bits == 32) {
-        // Media + reserved
-		host_writed(fat_header, 0x0FFFFFF8);
-        // EOC
-		host_writed(fat_header + 4, 0x0FFFFFFF);
-        // Root dir EOC
-		host_writed(fat_header + 8, 0x0FFFFFFF);
+		// Media + reserved
+		host_writed(fat_header.data(), 0x0FFFFFF8);
+		// EOC
+		host_writed(fat_header.data() + 4, 0x0FFFFFFF);
+		// Root dir EOC
+		host_writed(fat_header.data() + 8, 0x0FFFFFFF);
 	} else if (fat_bits == 16) {
-		host_writed(fat_header, 0xFFFFFFF8);
+		host_writed(fat_header.data(), 0xFFFFFFF8);
 	} else {
 		fat_header[0] = 0xF8;
 		fat_header[1] = 0xFF;
@@ -537,49 +569,45 @@ bool Execute(Program* program, CommandSettings& s)
 	}
 
 	for (int i = 0; i < s.fat_copies; ++i) {
-		long current_fat_start = std::ftell(f);
-		std::fwrite(fat_header, 1, SectorSize, f);
+		auto current_fat_start = fs.tellp();
+		fs.write(reinterpret_cast<const char*>(fat_header.data()),
+		         fat_header.size());
+
 		// Fill rest of FAT with zeros
 		for (uint32_t k = 1; k < fat_size; ++k) {
-			std::fwrite(empty_sect, 1, SectorSize, f);
+			fs.write(reinterpret_cast<const char*>(empty_sect.data()),
+			         empty_sect.size());
 		}
-		std::fseek(f,
-		           current_fat_start + static_cast<long>(fat_size * SectorSize),
-		           SEEK_SET);
+
+		fs.seekp(current_fat_start +
+		         static_cast<std::streamoff>(fat_size * SectorSize));
 	}
 
 	// Write Root Directory Label (Optional)
 	if (!s.label.empty()) {
-		std::memset(buffer, 0, SectorSize);
-		std::string lbl = s.label;
-		lbl.resize(11, ' ');
-		std::copy(lbl.begin(), lbl.end(), buffer);
-        // Volume Label Attribute
+		buffer.fill(0);
+		write_padded_string(buffer.data(), s.label, 11);
+		// Volume Label Attribute
 		buffer[11] = 0x08;
-		std::fwrite(buffer, 1, SectorSize, f);
+		fs.write(reinterpret_cast<const char*>(buffer.data()),
+		         buffer.size());
 	}
 
-	std::fclose(f);
+	// File closes automatically via RAII
 
 	// Batch file creation
 	if (s.batch_create) {
-		std::string bat_name = s.filename;
-		size_t dot           = bat_name.find_last_of('.');
-		if (dot != std::string::npos) {
-			bat_name = bat_name.substr(0, dot);
-		}
-		bat_name += ".BAT";
+		std::filesystem::path bat_path(s.filename);
+		bat_path.replace_extension(".BAT");
 
-		std::ofstream bat(bat_name);
+		std::ofstream bat(bat_path);
 		if (bat.is_open()) {
-			bat << "IMGMOUNT ";
-			if (geom.is_floppy) {
-				bat << "A ";
-			} else {
-				bat << "C ";
-			}
-			bat << s.filename << " -size 512," << geom.sectors
-			    << "," << geom.heads << "," << geom.cyl << "\n";
+			char drive_char = geom.is_floppy ? 'A' : 'C';
+			const char* type_flag = geom.is_floppy ? " -t floppy" : "";
+
+			bat << "IMGMOUNT " << drive_char << " " << s.filename
+			    << type_flag << " -size 512," << geom.sectors << ","
+			    << geom.heads << "," << geom.cyl << "\n";
 		}
 	}
 
