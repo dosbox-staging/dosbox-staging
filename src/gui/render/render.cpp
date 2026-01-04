@@ -27,7 +27,7 @@
 #include "utils/string_utils.h"
 
 Render render;
-ScalerLineHandler_t RENDER_DrawLine;
+ScalerLineHandler RENDER_DrawLine;
 
 static void render_callback(GFX_CallbackFunctions_t function);
 

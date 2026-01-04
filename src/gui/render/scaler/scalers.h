@@ -39,13 +39,13 @@ union scalerSourceCache_t {
 
 extern scalerSourceCache_t scalerSourceCache;
 
-typedef void (*ScalerLineHandler_t)(const void* src);
+typedef void (*ScalerLineHandler)(const void* src);
 
 struct Scaler {
 	uint8_t xscale = 0;
 	uint8_t yscale = 0;
 
-	ScalerLineHandler_t line_handlers[6] = {};
+	ScalerLineHandler line_handlers[6] = {};
 };
 
 /* Simple scalers */
