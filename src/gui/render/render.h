@@ -68,14 +68,14 @@ struct RenderPal_t {
 		uint8_t green  = 0;
 		uint8_t blue   = 0;
 		uint8_t unused = 0;
-	} rgb[256] = {};
+	} rgb[NumVgaColors] = {};
 
-	uint32_t lut[256] = {};
+	uint32_t lut[NumVgaColors] = {};
 
-	bool changed          = false;
-	uint8_t modified[256] = {};
-	uint32_t first        = 0;
-	uint32_t last         = 0;
+	bool changed                   = false;
+	uint8_t modified[NumVgaColors] = {};
+	uint32_t first                 = 0;
+	uint32_t last                  = 0;
 };
 
 struct Render {
@@ -161,7 +161,7 @@ struct RenderedImage {
 		// TODO it's bad that we need to make this assumption downstream
 		// on the size and alignment of the palette...
 		if (palette_data) {
-			constexpr uint16_t PaletteNumBytes = 256 * 4;
+			constexpr uint16_t PaletteNumBytes = NumVgaColors * 4;
 			copy.palette_data = new uint8_t[PaletteNumBytes];
 
 			std::memcpy(copy.palette_data, palette_data, PaletteNumBytes);

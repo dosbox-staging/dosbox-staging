@@ -57,7 +57,7 @@ static void check_palette()
 	}
 
 	// Setup pal index to startup values
-	render.pal.first = 256;
+	render.pal.first = NumVgaColors;
 	render.pal.last  = 0;
 }
 
