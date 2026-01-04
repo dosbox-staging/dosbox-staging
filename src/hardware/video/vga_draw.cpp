@@ -24,6 +24,76 @@
 #include "utils/mem_unaligned.h"
 #include "utils/rgb565.h"
 
+// This is a high-level overview of the VGA drawing emulation:
+//
+// - When there is a screen mode change, `VGA_SetupDrawing()` is called, which
+//   in turn calls `setup_drawing()` to initialise the following drawing
+//   parameters:
+//
+//     - Whether the image should be drawn per-scanline, or in 4 parts
+//       (chunks). Hercules modes and VESA and high-resolution VGA modes are
+//       drawn in 4 parts, everything else per-scanline. This is an
+//       optimisation step; it's just more efficient to draw the screen one
+//       quarter screen at a time than per line. Software using Hercules,
+//       VESA, and high-resolution VGA video modes don't reprogram the video
+//       card registers in the middle of the frame at precise scanline
+//       locations like some 320x200 VGA and EGA games to achieve split screen
+//       effects or change the VGA palette mid-screen.
+//
+//     - Set up double scanning and pixel doubling based on the machine type,
+//       screen mode, and the "allow scan doubling" & "allow pixel doubling"
+//       flags.
+//
+//     - Set up the draw pixel format (varies per machine type & screen mode).
+//
+//     - Set up the line draw function pointer `VGA_DrawLine`. This function
+//       will be called at precise time intervald to emulate the graphics
+//       adapter scanning out the contents of the framebuffer line by line, in
+//       sync with the electron beam of the CRT monitor. Alternatively, we
+//       might render screen in 4 parts.
+//
+//  - After the setup is done, the first PIC event for `VGA_DrawSingleLine()`,
+//    or `VGA_DrawEGASingleLine()`, `VGA_DrawPart()` will trigger, which calls
+//    the `VGA_DrawLine` function pointer, which in turn calls the appropriate
+//    draw line handler for the current video mode (e.g.,
+//    `VGA_Draw_CGA16_Line()`).
+//
+// - The draw line handler (e.g., `VGA_Draw_CGA16_Line()`) converts the
+//   contents of the emulated video framebuffer to a line's worth of pixel
+//   data. This pixel data is written to the `TempLine`() global scanline
+//   buffer. The format of the pixel data was set up in `setup_drawing()`
+//   (e.g., `Indexed8` for `VGA_Draw_CGA16_Line()`). There is a one-to-one
+//   mapping between draw line handlers and pixel formats; each draw line
+//   handler can write pixel data only in a *single* pixel format.
+//
+// - The draw line handlers all call `ReelMagic_RENDER_DrawLine(TempLine)`
+//   at some point, which might seem a bit weird. When ReelMagic emulation is
+//   not active, this is a straight passthrough to `RENDER_DrawLine()`; when
+//   ReelMagic is active, the ReelMagic module intercepts the draw line call
+//   and insert data from the decoded MPEG stream into the line buffer.
+//
+// - Note that `RENDER_DrawLine()` is *not* a static function but a function
+//   pointer set up in `render.cpp`. There's some scaler cache management
+//   trickery going on there with the various line handlers, but the main path
+//   is setting `RENDER_DrawLine()` to a line handler function of one of the
+//   scalers (in `render_reset()`). We've only kept the simple scalers that
+//   can only convert internal scanline data stored in arbitrary internal
+//   pixel formats to 32-bit BGRX32 pixels, and optionally perform width
+//   doubling (at the pixel level) and/or line doubling (at the line level).
+// 
+// - The resulting BGRX32 scanline output by the scalers is then written to
+//   the memory area that the OpenGL and SDL render backends use to update the
+//   textures representing the emulated video output. The scalers use an
+//   internal line cache to only do the pixel conversion and optional
+//   width/height doubling on scanlines that have actually changed since the
+//   last frame. This is still very much worth it even on modern hardware as
+//   many DOS games run at fairly low frame rates (often below 15-20 FPS or
+//   much lower) and don't even redraw the whole screen. The scaler cache can
+//   result in a ~10-30x performance increase in typical RPG, adventure, and
+//   strategy games with mostly static graphics and infrequent screen updated
+//   (~3% constant CPU usage vs 0.1-0.3% in typical non-fast-paced games).
+//
+
 // #define DEBUG_VGA_DRAW
 
 typedef uint8_t* (*VGA_Line_Handler)(Bitu vidstart, Bitu line);
