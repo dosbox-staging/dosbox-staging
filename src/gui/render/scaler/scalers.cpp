@@ -13,12 +13,12 @@
 
 #include <cstring>
 
-uint8_t scaler_aspect[SCALER_MAXHEIGHT]        = {};
+uint8_t scaler_aspect[SCALER_MAXHEIGHT]         = {};
 uint16_t scaler_changed_lines[SCALER_MAXHEIGHT] = {};
 
 Bitu scaler_changed_line_index = 0;
 
-scalerSourceCache_t scalerSourceCache;
+ScalerSourceCache scaler_source_cache;
 
 #define _conc3(A, B, C) A##B##C
 #define conc2d(A, B)    _conc3(A, _, B)
