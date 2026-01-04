@@ -24,24 +24,24 @@ constexpr auto dummy_color_index = 0;
 
 TEST(parse_color_token, hex3_valid)
 {
-	const Rgb888 expected = Rgb888(0x11, 0xaa, 0xee);
-	const auto result    = parse_color_token("#1ae", dummy_color_index);
+	const auto expected = Rgb888(0x11, 0xaa, 0xee);
+	const auto result   = parse_color_token("#1ae", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, hex3_valid_min)
 {
-	const Rgb888 expected = Rgb888(0x00, 0x00, 0x00);
-	const auto result    = parse_color_token("#000", dummy_color_index);
+	const auto expected = Rgb888(0x00, 0x00, 0x00);
+	const auto result   = parse_color_token("#000", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, hex3_valid_max)
 {
-	const Rgb888 expected = Rgb888(0xff, 0xff, 0xff);
-	const auto result    = parse_color_token("#fff", dummy_color_index);
+	const auto expected = Rgb888(0xff, 0xff, 0xff);
+	const auto result   = parse_color_token("#fff", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
@@ -84,24 +84,24 @@ TEST(parse_color_token, hex3_invalid_character)
 
 TEST(parse_color_token, hex6_valid)
 {
-	const Rgb888 expected = Rgb888(0x12, 0xab, 0xef);
-	const auto result    = parse_color_token("#12abef", dummy_color_index);
+	const auto expected = Rgb888(0x12, 0xab, 0xef);
+	const auto result   = parse_color_token("#12abef", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, hex6_valid_min)
 {
-	const Rgb888 expected = Rgb888(0x00, 0x00, 0x00);
-	const auto result    = parse_color_token("#000000", dummy_color_index);
+	const auto expected = Rgb888(0x00, 0x00, 0x00);
+	const auto result   = parse_color_token("#000000", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, hex6_valid_max)
 {
-	const Rgb888 expected = Rgb888(0xff, 0xff, 0xff);
-	const auto result    = parse_color_token("#ffffff", dummy_color_index);
+	const auto expected = Rgb888(0xff, 0xff, 0xff);
+	const auto result   = parse_color_token("#ffffff", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
@@ -130,25 +130,25 @@ TEST(parse_color_token, hex6_invalid_too_long)
 
 TEST(parse_color_token, rgb_triplet_valid_no_whitespaces)
 {
-	const Rgb888 expected = Rgb888(7, 42, 231);
-	const auto result = parse_color_token("(7,42,231)", dummy_color_index);
+	const auto expected = Rgb888(7, 42, 231);
+	const auto result   = parse_color_token("(7,42,231)", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, rgb_triplet_valid_single_whitespaces)
 {
-	const Rgb888 expected = Rgb888(7, 42, 231);
-	const auto result = parse_color_token("(7, 42, 231)", dummy_color_index);
+	const auto expected = Rgb888(7, 42, 231);
+	const auto result   = parse_color_token("(7, 42, 231)", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, rgb_triplet_valid_multiple_whitespaces)
 {
-	const Rgb888 expected = Rgb888(7, 42, 231);
-	const auto result    = parse_color_token("( 7 ,  42  ,   231  )",
-                                              dummy_color_index);
+	const auto expected = Rgb888(7, 42, 231);
+	const auto result   = parse_color_token("( 7 ,  42  ,   231  )",
+                                                dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }

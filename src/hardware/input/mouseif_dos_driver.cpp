@@ -18,6 +18,9 @@
 #include "hardware/pic.h"
 #include "ints/bios.h"
 #include "ints/int10.h"
+#include "misc/host_locale.h"
+#include "misc/iso_locale_codes.h"
+#include "misc/messages.h"
 #include "utils/bitops.h"
 #include "utils/byteorder.h"
 #include "utils/checks.h"
@@ -40,6 +43,20 @@ CHECK_NARROWING();
 // Versions are stored in BCD code - 0x09 = version 9, 0x10 = version 10, etc.
 static constexpr uint8_t DriverVersionMajor = 0x08;
 static constexpr uint8_t DriverVersionMinor = 0x05;
+
+// Mouse driver languages known by 'msd.exe' (the Microsoft Diagnostics tool)
+static const std::unordered_map<std::string, uint16_t> LanguageCodes = {
+        {Iso639::English,    0x00},
+        {Iso639::French,     0x01},
+        {Iso639::Dutch,      0x02},
+        {Iso639::German,     0x03},
+        {Iso639::LowGerman,  0x03}, // a German dialect
+        {Iso639::Swedish,    0x04},
+        {Iso639::Finnish,    0x05},
+        {Iso639::Spanish,    0x06},
+        {Iso639::Portuguese, 0x07},
+        {Iso639::Italian,    0x08},
+};
 
 static constexpr auto CharToPixelRatio = 8;
 
@@ -93,7 +110,7 @@ static bool rate_is_set     = false;
 static uint16_t rate_hz     = 0;
 static uint16_t min_rate_hz = 0;
 
-// Language of messages displayed by the driver - fake value, not used
+// Language of messages displayed by the driver
 static uint16_t driver_language = 0;
 
 // Data from mouse events which were already received,
@@ -407,7 +424,7 @@ static void draw_cursor_text()
 		          read_high_byte(result),
 		          true);
 	} else {
-		uint16_t address = static_cast<uint16_t>(
+		auto address = static_cast<uint16_t>(
 		        page * real_readw(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE));
 		address = static_cast<uint16_t>(
 		        address +
@@ -918,6 +935,20 @@ static uint8_t get_interrupt_rate()
 	return 4; // report 200 Hz
 }
 
+static void synchronize_driver_language()
+{
+	// Get the translation language
+	const auto language = LanguageTerritory(MSG_GetLanguage()).GetIsoLanguageCode();
+
+	// Find the mouse driver language code
+	if (LanguageCodes.contains(language)) {
+		driver_language = LanguageCodes.at(language);
+	} else {
+		// Couldn't match the language, set a dummy value (English)
+		driver_language = 0;
+	}
+}
+
 static void reset_hardware()
 {
 	MouseDriverState state(*state_segment);
@@ -933,6 +964,11 @@ static void reset_hardware()
 	// Reset mouse refresh rate
 	rate_is_set = false;
 	notify_interface_rate();
+}
+
+void MOUSE_NotifyLanguageChanged()
+{
+	synchronize_driver_language();
 }
 
 void MOUSEDOS_NotifyMinRate(const uint16_t value_hz)
@@ -1162,8 +1198,8 @@ static void limit_coordinates()
 	MouseDriverState state(*state_segment);
 
 	auto limit = [](float& pos, const int16_t minpos, const int16_t maxpos) {
-		const float min = static_cast<float>(minpos);
-		const float max = static_cast<float>(maxpos);
+		const auto min = static_cast<float>(minpos);
+		const auto max = static_cast<float>(maxpos);
 
 		pos = std::clamp(pos, min, max);
 	};
@@ -1954,7 +1990,10 @@ static Bitu int33_handler()
 		// 00h = English, 01h = French, 02h = Dutch, 03h = German, 04h =
 		// Swedish 05h = Finnish, 06h = Spanish, 07h = Portugese, 08h =
 		// Italian
-		driver_language = reg_bx;
+		if (reg_bx != driver_language) {
+			LOG_WARNING("MOUSE (DOS): Overriding the driver language not supported");
+			driver_language = reg_bx;
+		}
 		break;
 	case 0x23:
 		// MS MOUSE v6.0+ - get language for messages
@@ -2666,7 +2705,7 @@ static void start_driver()
 	reset_hardware();
 	reset();
 
-	driver_language = 0;
+	synchronize_driver_language();
 
 	MouseInterface::GetDOS()->NotifyDosDriverStartup();
 }

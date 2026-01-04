@@ -392,7 +392,7 @@ run_block:
 	case BR_Link2:
 		{
 			uint32_t temp_ip=SegPhys(cs)+reg_eip;
-			CodePageHandler* temp_handler = reinterpret_cast<CodePageHandler *>(get_tlb_readhandler(temp_ip));
+			auto temp_handler = reinterpret_cast<CodePageHandler *>(get_tlb_readhandler(temp_ip));
 			if (temp_handler->flags & (cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16)) {
 				block=temp_handler->FindCacheBlock(temp_ip & 4095);
 				if (!block || !cache.block.running) goto restart_core;

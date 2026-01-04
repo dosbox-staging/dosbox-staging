@@ -88,9 +88,9 @@ static void write_pci(const io_port_t port, const io_val_t value,
 
 	// Check for enabled/bus 0
 	if ((pci_caddress & 0x80ff0000) == 0x80000000) {
-		uint8_t devnum = (uint8_t)((pci_caddress >> 11) & 0x1f);
-		uint8_t fctnum = (uint8_t)((pci_caddress >> 8) & 0x7);
-		uint8_t regnum = (uint8_t)((pci_caddress & 0xfc) + (port & 0x03));
+		auto devnum = (uint8_t)((pci_caddress >> 11) & 0x1f);
+		auto fctnum = (uint8_t)((pci_caddress >> 8) & 0x7);
+		auto regnum = (uint8_t)((pci_caddress & 0xfc) + (port & 0x03));
 		LOG(LOG_PCI, LOG_NORMAL)("PCI: Write to device %x register %x (function %x) (:=%x)",
 		                         devnum,
 		                         regnum,
@@ -169,9 +169,9 @@ static uint8_t read_pci(const io_port_t port, [[maybe_unused]] io_width_t width)
 	LOG(LOG_PCI, LOG_NORMAL)("PCI: Read PCI data -> %x", pci_caddress);
 
 	if ((pci_caddress & 0x80ff0000) == 0x80000000) {
-		uint8_t devnum = (uint8_t)((pci_caddress >> 11) & 0x1f);
-		uint8_t fctnum = (uint8_t)((pci_caddress >> 8) & 0x7);
-		uint8_t regnum = (uint8_t)((pci_caddress & 0xfc) + (port & 0x03));
+		auto devnum = (uint8_t)((pci_caddress >> 11) & 0x1f);
+		auto fctnum = (uint8_t)((pci_caddress >> 8) & 0x7);
+		auto regnum = (uint8_t)((pci_caddress & 0xfc) + (port & 0x03));
 
 		if (devnum >= pci_devices_installed) {
 			return 0xff;

@@ -182,7 +182,7 @@ bool DOS_IOCTL(void) {
 
 					char const* find_ext=strchr(bufin,'.');
 					if (find_ext) {
-						Bitu size=(Bitu)(find_ext-bufin);
+						auto size=(Bitu)(find_ext-bufin);
 						if (size>8) size=8;
 						memcpy(buffer,bufin,size);
 						find_ext++;

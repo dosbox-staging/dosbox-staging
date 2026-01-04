@@ -67,7 +67,7 @@ void assert_DoCommand(std::string input, std::string expected_name,
                       std::string expected_args)
 {
 	MockDOS_Shell shell;
-	char* input_c_str = const_cast<char*>(input.c_str());
+	auto input_c_str = const_cast<char*>(input.c_str());
 	EXPECT_CALL(shell,
 	            ExecuteShellCommand(StrEq(expected_name), StrEq(expected_args)))
 	        .Times(1)

@@ -598,7 +598,7 @@ void TIMER_DelTickHandler(TIMER_TickHandler handler) {
 }
 
 void TIMER_AddTickHandler(TIMER_TickHandler handler) {
-	TickerBlock * newticker=new TickerBlock;
+	auto newticker=new TickerBlock;
 	newticker->next=firstticker;
 	newticker->handler=handler;
 	firstticker=newticker;

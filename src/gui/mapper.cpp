@@ -329,9 +329,10 @@ void CEvent::ClearBinds() {
 	}
 	bindlist.clear();
 }
-void CEvent::DeActivateAll() {
-	for (CBindList_it bit = bindlist.begin() ; bit != bindlist.end(); ++bit) {
-		(*bit)->DeActivateBind(true);
+void CEvent::DeActivateAll()
+{
+	for (auto& entry : bindlist) {
+		entry->DeActivateBind(true);
 	}
 }
 
@@ -445,7 +446,7 @@ public:
 
 	bool CheckEvent(SDL_Event * event) override {
 		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
-		uintptr_t key = static_cast<uintptr_t>(event->key.keysym.scancode);
+		auto key = static_cast<uintptr_t>(event->key.keysym.scancode);
 		if (event->type==SDL_KEYDOWN) ActivateBindList(&lists[key],0x7fff,true);
 		else DeactivateBindList(&lists[key],true);
 		return 0;
@@ -718,8 +719,8 @@ public:
 			int but = atoi(strip_word(buf));
 			bind = CreateButtonBind(but);
 		} else if (!strcasecmp(type, "hat")) {
-			uint8_t hat = static_cast<uint8_t>(atoi(strip_word(buf)));
-			uint8_t dir = static_cast<uint8_t>(atoi(strip_word(buf)));
+			auto hat = static_cast<uint8_t>(atoi(strip_word(buf)));
+			auto dir = static_cast<uint8_t>(atoi(strip_word(buf)));
 			bind = CreateHatBind(hat, dir);
 		}
 		return bind;
@@ -1075,8 +1076,8 @@ private:
 		constexpr int16_t joy_centered = 0;
 		constexpr int16_t joy_full_negative = INT16_MIN;
 		constexpr int16_t joy_full_positive = INT16_MAX;
-		constexpr int16_t joy_50pct_negative = static_cast<int16_t>(INT16_MIN / 2);
-		constexpr int16_t joy_50pct_positive = static_cast<int16_t>(INT16_MAX / 2);
+		constexpr auto joy_50pct_negative = static_cast<int16_t>(INT16_MIN / 2);
+		constexpr auto joy_50pct_positive = static_cast<int16_t>(INT16_MAX / 2);
 
 		switch (hat_pos) {
 		case SDL_HAT_CENTERED: JOYSTICK_Move_Y(1, joy_full_positive); break;
@@ -1897,7 +1898,7 @@ static CKeyEvent* AddKeyButtonEvent(int32_t x, int32_t y, int32_t dx,
 	char buf[64];
 	safe_strcpy(buf, "key_");
 	safe_strcat(buf, entry);
-	CKeyEvent * event=new CKeyEvent(buf,key);
+	auto event=new CKeyEvent(buf,key);
 	new CEventButton(x,y,dx,dy,title,event);
 	return event;
 }
@@ -1922,7 +1923,7 @@ static CJAxisEvent* AddJAxisButton(int32_t x, int32_t y, int32_t dx, int32_t dy,
 	                            static_cast<int>(axis),
 	                            positive ? "+" : "-");
 
-	CJAxisEvent* event = new CJAxisEvent(buf.c_str(), stick, axis, positive, opposite_axis);
+	auto event = new CJAxisEvent(buf.c_str(), stick, axis, positive, opposite_axis);
 
 	new CEventButton(x, y, dx, dy, title, event);
 	return event;
@@ -1945,7 +1946,7 @@ static void AddJButtonButton(int32_t x, int32_t y, int32_t dx, int32_t dy,
 	                            static_cast<int>(stick),
 	                            static_cast<int>(button));
 
-	CJButtonEvent* event = new CJButtonEvent(buf.c_str(), stick, button);
+	auto event = new CJButtonEvent(buf.c_str(), stick, button);
 	new CEventButton(x, y, dx, dy, title, event);
 }
 static void AddJButtonButton_hidden(Bitu stick, Bitu button)
@@ -1965,7 +1966,7 @@ static void AddJHatButton(int32_t x, int32_t y, int32_t dx, int32_t dy,
 	                            static_cast<int>(_hat),
 	                            static_cast<int>(_dir));
 
-	CJHatEvent* event = new CJHatEvent(buf.c_str(), _stick, _hat, _dir);
+	auto event = new CJHatEvent(buf.c_str(), _stick, _hat, _dir);
 	new CEventButton(x, y, dx, dy, title, event);
 }
 
@@ -1974,7 +1975,7 @@ static void AddModButton(int32_t x, int32_t y, int32_t dx, int32_t dy,
 {
 	const auto buf = format_str("mod_%d", mod);
 
-	CModEvent* event = new CModEvent(buf.c_str(), mod);
+	auto event = new CModEvent(buf.c_str(), mod);
 	new CEventButton(x, y, dx, dy, title, event);
 }
 
@@ -2341,8 +2342,8 @@ static void CreateStringBind(char * line) {
 foundevent:
 	CBind * bind = nullptr;
 	for (char * bindline=strip_word(line);*bindline;bindline=strip_word(line)) {
-		for (CBindGroup_it it = bindgroups.begin(); it != bindgroups.end(); ++it) {
-			bind=(*it)->CreateConfigBind(bindline);
+		for (auto& entry : bindgroups) {
+			bind = entry->CreateConfigBind(bindline);
 			if (bind) {
 				event->AddBind(bind);
 				bind->SetFlags(bindline);
@@ -2579,8 +2580,8 @@ static void MAPPER_SaveBinds() {
 	}
 	for (const auto& event : events) {
 		fprintf(savefile,"%s ",event->GetName());
-		for (CBindList_it bind_it = event->bindlist.begin(); bind_it != event->bindlist.end(); ++bind_it) {
-			CBind * bind=*(bind_it);
+		for (auto& entry : event->bindlist) {
+			CBind * bind = entry;
 			const auto buffer = bind->GetConfigName() + bind->GetFlags();
 			fprintf(savefile, "\"%s\" ", buffer.c_str());
 		}
@@ -2771,7 +2772,7 @@ void BIND_MappingEvents()
 			mapper.exit=true;
 			break;
 		default:
-			if (mapper.addbind) for (CBindGroup_it it = bindgroups.begin(); it != bindgroups.end(); ++it) {
+			if (mapper.addbind) for (auto it = bindgroups.begin(); it != bindgroups.end(); ++it) {
 				CBind * newbind=(*it)->CreateEventBind(&event);
 				if (!newbind) continue;
 				mapper.aevent->AddBind(newbind);

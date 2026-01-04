@@ -767,7 +767,7 @@ static Bitu DOS_21Handler(void) {
 
 		Bitu ticks=((Bitu)reg_cx<<16)|reg_dx;
 		if(time_start<=ticks) ticks-=time_start;
-		Bitu time=(Bitu)((100.0/((double)PIT_TICK_RATE/65536.0)) * (double)ticks);
+		auto time=(Bitu)((100.0/((double)PIT_TICK_RATE/65536.0)) * (double)ticks);
 
 		reg_dl=(uint8_t)((Bitu)time % 100); // 1/100 seconds
 		time/=100;

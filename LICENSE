@@ -30,9 +30,9 @@ GPL-2.0-or-later terms, however there are some exceptions:
    - decoders/dr_flac.h, dr_mp3.h, and dr_wav.h: Public Domain or MIT
    - enet: MIT
    - ghc: MIT
-   - iir1: MIT
    - loguru: Public Domain
    - ManyMouse: Zlib
+   - PL_MPEG: MIT
    - PDcurses: Public Domain
    - simde: MIT
    - stb_truetype: MIT or Public Domain

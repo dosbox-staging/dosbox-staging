@@ -776,7 +776,7 @@ private:
 public:
 	MPU401(Section* sec)
 	{
-		SectionProp* section = dynamic_cast<SectionProp*>(sec);
+		auto section = dynamic_cast<SectionProp*>(sec);
 		if (!section) {
 			return;
 		}

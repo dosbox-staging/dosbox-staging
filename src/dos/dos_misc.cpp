@@ -16,7 +16,6 @@ static callback_number_t call_int2f = 0;
 static callback_number_t call_int2a = 0;
 
 static std::list<MultiplexHandler*> Multiplex;
-typedef std::list<MultiplexHandler*>::iterator Multiplex_it;
 
 void DOS_AddMultiplexHandler(MultiplexHandler* handler) {
 	Multiplex.push_front(handler);
@@ -24,7 +23,7 @@ void DOS_AddMultiplexHandler(MultiplexHandler* handler) {
 
 void DOS_DeleteMultiplexHandler(MultiplexHandler* const handler)
 {
-	for (Multiplex_it it = Multiplex.begin(); it != Multiplex.end(); ++it) {
+	for (auto it = Multiplex.begin(); it != Multiplex.end(); ++it) {
 		if(*it == handler) {
 			Multiplex.erase(it);
 			return;
@@ -32,9 +31,10 @@ void DOS_DeleteMultiplexHandler(MultiplexHandler* const handler)
 	}
 }
 
-static Bitu INT2F_Handler(void) {
-	for (Multiplex_it it = Multiplex.begin(); it != Multiplex.end(); ++it) {
-		if ((*it)()) {
+static Bitu INT2F_Handler(void)
+{
+	for (auto handler : Multiplex) {
+		if (handler()) {
 			return CBRET_NONE;
 		}
 	}
@@ -124,7 +124,7 @@ static bool DOS_MultiplexFunctions(void) {
 
 			// fill in filename in fcb style
 			// (space-padded name (8 chars)+space-padded extension (3 chars))
-			const char* filename=(const char*)Files[reg_bx]->GetName();
+			auto filename=(const char*)Files[reg_bx]->GetName();
 			if (strrchr(filename,'\\')) filename=strrchr(filename,'\\')+1;
 			if (strrchr(filename,'/')) filename=strrchr(filename,'/')+1;
 			if (!filename) return true;

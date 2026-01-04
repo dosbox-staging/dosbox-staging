@@ -3,7 +3,7 @@
 
 #include "host_locale.h"
 
-#include "private/iso_locale_codes.h"
+#include "iso_locale_codes.h"
 #include "utils/checks.h"
 #include "utils/string_utils.h"
 
@@ -731,6 +731,16 @@ bool LanguageTerritory::IsGeneric() const
 bool LanguageTerritory::IsEnglish() const
 {
 	return language == Iso639::English;
+}
+
+const std::string& LanguageTerritory::GetIsoLanguageCode() const
+{
+	return language;
+}
+
+const std::string& LanguageTerritory::GetIsoTerritoryCode() const
+{
+	return territory;
 }
 
 std::optional<DosCountry> LanguageTerritory::GetDosCountryCode() const

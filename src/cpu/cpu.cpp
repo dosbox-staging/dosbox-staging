@@ -280,7 +280,7 @@ void CPU_RestoreRealModeCyclesConfig()
 
 void Descriptor::Load(PhysPt address) {
 	cpu.mpl=0;
-	uint32_t* data = (uint32_t*)&saved;
+	auto data = (uint32_t*)&saved;
 	*data	  = mem_readd(address);
 	*(data+1) = mem_readd(address+4);
 	cpu.mpl=3;
@@ -288,7 +288,7 @@ void Descriptor::Load(PhysPt address) {
 
 void Descriptor::Save(PhysPt address) {
 	cpu.mpl=0;
-	uint32_t* data = (uint32_t*)&saved;
+	auto data = (uint32_t*)&saved;
 	mem_writed(address,*data);
 	mem_writed(address+4,*(data+1));
 	cpu.mpl=03;
@@ -3168,7 +3168,7 @@ public:
 		CPU_Cycles          = 0;
 		auto_determine_mode = {};
 
-		SectionProp* secprop = static_cast<SectionProp*>(sec);
+		auto secprop = static_cast<SectionProp*>(sec);
 
 		const std::string cpu_core = secprop->GetString("core");
 		const std::string cpu_type = secprop->GetString("cputype");

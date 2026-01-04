@@ -578,15 +578,17 @@ std::unique_ptr<DOS_File> Overlay_Drive::FileCreate(const char* name,
 	return file;
 }
 
-void Overlay_Drive::add_DOSname_to_cache(const char* name) {
-	for (std::vector<std::string>::const_iterator itc = DOSnames_cache.begin(); itc != DOSnames_cache.end(); ++itc){
-		if (name == (*itc)) return;
+void Overlay_Drive::add_DOSname_to_cache(const char* name)
+{
+	for (const auto& entry : DOSnames_cache) {
+		if (name == entry) return;
 	}
 	DOSnames_cache.push_back(name);
 }
 
-void Overlay_Drive::remove_DOSname_from_cache(const char* name) {
-	for (std::vector<std::string>::iterator it = DOSnames_cache.begin(); it != DOSnames_cache.end(); ++it) {
+void Overlay_Drive::remove_DOSname_from_cache(const char* name)
+{
+	for (auto it = DOSnames_cache.begin(); it != DOSnames_cache.end(); ++it) {
 		if (name == (*it)) { DOSnames_cache.erase(it); return;}
 	}
 
@@ -1110,8 +1112,8 @@ std::string Overlay_Drive::create_filename_of_special_operation(const char* dosn
 bool Overlay_Drive::is_dir_only_in_overlay(const char* name) {
 	if (!name || !*name) return false;
 	if (DOSdirs_cache.empty()) return false;
-	for(std::vector<std::string>::iterator it = DOSdirs_cache.begin(); it != DOSdirs_cache.end(); ++it) {
-		if (*it == name) return true;
+	for(const auto& entry : DOSdirs_cache) {
+		if (entry == name) return true;
 	}
 	return false;
 }
@@ -1119,8 +1121,8 @@ bool Overlay_Drive::is_dir_only_in_overlay(const char* name) {
 bool Overlay_Drive::is_deleted_file(const char* name) {
 	if (!name || !*name) return false;
 	if (deleted_files_in_base.empty()) return false;
-	for(std::vector<std::string>::iterator it = deleted_files_in_base.begin(); it != deleted_files_in_base.end(); ++it) {
-		if (*it == name) return true;
+	for(const auto& entry : deleted_files_in_base) {
+		if (entry == name) return true;
 	}
 	return false;
 }
@@ -1133,9 +1135,10 @@ void Overlay_Drive::add_DOSdir_to_cache(const char* name) {
 	}
 }
 
-void Overlay_Drive::remove_DOSdir_from_cache(const char* name) {
-	for(std::vector<std::string>::iterator it = DOSdirs_cache.begin(); it != DOSdirs_cache.end(); ++it) {
-		if ( *it == name) {
+void Overlay_Drive::remove_DOSdir_from_cache(const char* name)
+{
+	for(auto it = DOSdirs_cache.begin(); it != DOSdirs_cache.end(); ++it) {
+		if (*it == name) {
 			DOSdirs_cache.erase(it);
 			return;
 		}
@@ -1143,7 +1146,7 @@ void Overlay_Drive::remove_DOSdir_from_cache(const char* name) {
 }
 
 void Overlay_Drive::remove_deleted_file(const char* name,bool create_on_disk) {
-	for(std::vector<std::string>::iterator it = deleted_files_in_base.begin(); it != deleted_files_in_base.end(); ++it) {
+	for(auto it = deleted_files_in_base.begin(); it != deleted_files_in_base.end(); ++it) {
 		if (*it == name) {
 			deleted_files_in_base.erase(it);
 			if (create_on_disk) remove_special_file_from_disk(name, "DEL");
@@ -1166,19 +1169,19 @@ bool Overlay_Drive::is_deleted_path(const char* name) {
 	if (!name || !*name) return false;
 	if (deleted_paths_in_base.empty()) return false;
 	std::string sname(name);
-	std::string::size_type namelen = sname.length();;
-	for(std::vector<std::string>::iterator it = deleted_paths_in_base.begin(); it != deleted_paths_in_base.end(); ++it) {
-		std::string::size_type blockedlen = (*it).length();
+	std::string::size_type namelen = sname.length();
+	for(const auto& entry : deleted_paths_in_base) {
+		std::string::size_type blockedlen = entry.length();
 		if (namelen < blockedlen) continue;
 		//See if input starts with name. 
-		std::string::size_type n = sname.find(*it);
+		std::string::size_type n = sname.find(entry);
 		if (n == 0 && ((namelen == blockedlen) || *(name + blockedlen) == '\\' )) return true;
 	}
 	return false;
 }
 
 void Overlay_Drive::remove_deleted_path(const char* name, bool create_on_disk) {
-	for(std::vector<std::string>::iterator it = deleted_paths_in_base.begin(); it != deleted_paths_in_base.end(); ++it) {
+	for(auto it = deleted_paths_in_base.begin(); it != deleted_paths_in_base.end(); ++it) {
 		if (*it == name) {
 			deleted_paths_in_base.erase(it);
 			remove_deleted_file(name,false); //Rethink maybe.

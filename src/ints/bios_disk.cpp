@@ -552,7 +552,7 @@ static Bitu INT13_DiskHandler(void) {
 			largesize *= tmpcyl;
 			largesize *= tmpsect;
 			largesize *= tmpsize;
-			const uint32_t ts = static_cast<uint32_t>(largesize / 512);
+			const auto ts = static_cast<uint32_t>(largesize / 512);
 
 			reg_ah = (drivenum <2)?1:3; //With 2 for floppy MSDOS starts calling int 13 ah 16
 			if(reg_ah == 3) {

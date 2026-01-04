@@ -197,7 +197,7 @@ void mem_memcpy(PhysPt dest,PhysPt src,Bitu size) {
 }
 
 void MEM_BlockRead(PhysPt pt,void * data,Bitu size) {
-	uint8_t * write=reinterpret_cast<uint8_t *>(data);
+	auto write = reinterpret_cast<uint8_t *>(data);
 	while (size--) {
 		*write++=mem_readb_inline(pt++);
 	}
@@ -205,7 +205,7 @@ void MEM_BlockRead(PhysPt pt,void * data,Bitu size) {
 
 void MEM_BlockWrite(PhysPt pt, const void *data, size_t size)
 {
-	const uint8_t *read = static_cast<const uint8_t *>(data);
+	auto read = static_cast<const uint8_t *>(data);
 	while (size--) {
 		mem_writeb_inline(pt++,*read++);
 	}

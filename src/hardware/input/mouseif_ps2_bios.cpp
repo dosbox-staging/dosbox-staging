@@ -126,7 +126,7 @@ static AuxCommand current_command = AuxCommand::None;
 static void warn_unknown_command(const AuxCommand command)
 {
 	static bool already_warned[UINT8_MAX + 1];
-	const uint8_t code = static_cast<uint8_t>(command);
+	const auto code = static_cast<uint8_t>(command);
 	if (!already_warned[code]) {
 		LOG_WARNING("MOUSE (PS/2): Unknown command 0x%02x", code);
 		already_warned[code] = true;

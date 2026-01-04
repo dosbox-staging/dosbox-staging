@@ -71,7 +71,7 @@ void DOS_InfoBlock::SetLocation(uint16_t segment)
 	SSET_BYTE(sDIB, blockDevices, uint8_t(0));
 	SSET_BYTE(sDIB, bootDrive, uint8_t(0));
 	SSET_BYTE(sDIB, useDwordMov, uint8_t(1));
-	const uint16_t ext_size = static_cast<uint16_t>(MEM_TotalPages() * 4 - 1024);
+	const auto ext_size = static_cast<uint16_t>(MEM_TotalPages() * 4 - 1024);
 	SSET_WORD(sDIB, extendedSize, ext_size);
 	SSET_WORD(sDIB, magicWord, uint16_t(0x0001)); // dos5+
 	SSET_WORD(sDIB, sharingCount, uint16_t(0));
@@ -385,10 +385,8 @@ bool DOS_PSP::SetEnvironmentValue(std::string_view variable, std::string_view ne
 
 	if (!new_string.empty()) {
 		std::string bigentry(variable);
-		for (std::string::iterator it = bigentry.begin();
-		     it != bigentry.end();
-		     ++it) {
-			*it = toupper(*it);
+		for (auto& entry : bigentry) {
+			entry = toupper(entry);
 		}
 		snprintf(env_string,
 		         bytes_to_read + 1,
@@ -441,7 +439,7 @@ void DOS_DTA::SetupSearch(uint8_t drive, FatAttributeFlags attr, char* pattern)
 	char * find_ext;
 	find_ext=strchr(pattern,'.');
 	if (find_ext) {
-		Bitu size=(Bitu)(find_ext-pattern);
+		auto size=(Bitu)(find_ext-pattern);
 		if (size>8) size=8;
 		MEM_BlockWrite(pt+offsetof(sDTA,sname),pattern,size);
 		find_ext++;

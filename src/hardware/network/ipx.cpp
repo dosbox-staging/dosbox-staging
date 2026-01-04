@@ -457,7 +457,7 @@ static void handleIpxRequest(void) {
 		        localIpxAddr.netnode[3], localIpxAddr.netnode[2],
 		        localIpxAddr.netnode[1], localIpxAddr.netnode[0]);
 
-		uint8_t *addrptr = (uint8_t *)&localIpxAddr;
+		auto addrptr = (uint8_t *)&localIpxAddr;
 		for (uint16_t i = 0; i < 10; i++)
 			real_writeb(SegValue(es), reg_si + i, addrptr[i]);
 	} break;
@@ -561,7 +561,7 @@ static void pingSend(void) {
 static void receivePacket(uint8_t *buffer, int16_t bufSize) {
 	ECBClass *useECB;
 	ECBClass *nextECB;
-	uint16_t *bufword = (uint16_t *)buffer;
+	auto bufword = (uint16_t *)buffer;
 	uint16_t useSocket = swapByte(bufword[8]);
 	IPXHeader * tmpHeader;
 	tmpHeader = (IPXHeader *)buffer;

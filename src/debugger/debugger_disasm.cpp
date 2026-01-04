@@ -82,12 +82,15 @@ typedef int32_t INT32;
 /* Little endian uint read */
 #define	le_uint8(ptr) (*(UINT8*)ptr)
 
-inline UINT16 le_uint16(const void* ptr) {
-	const UINT8* ptr8 = (const UINT8*)ptr;
+inline UINT16 le_uint16(const void* ptr)
+{
+	const auto ptr8 = (const UINT8*)ptr;
 	return (UINT16)ptr8[0] | (UINT16)ptr8[1] << 8;
 }
-inline UINT32 le_uint32(const void* ptr) {
-	const UINT8* ptr8 = (const UINT8*)ptr;
+
+inline UINT32 le_uint32(const void* ptr)
+{
+	const auto ptr8 = (const UINT8*)ptr;
 	return (UINT32)ptr8[0] | (UINT32)ptr8[1] << 8 |	(UINT32)ptr8[2] << 16 | (UINT32)ptr8[3] << 24;
 }
 
