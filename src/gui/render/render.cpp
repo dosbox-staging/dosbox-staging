@@ -41,43 +41,20 @@ static void check_palette()
 	if (render.pal.first > render.pal.last) {
 		return;
 	}
-	Bitu i;
-	switch (render.scale.outMode) {
-	case scalerMode8: break;
-	case scalerMode15:
-	case scalerMode16:
-		for (i = render.pal.first; i <= render.pal.last; i++) {
-			uint8_t r = render.pal.rgb[i].red;
-			uint8_t g = render.pal.rgb[i].green;
-			uint8_t b = render.pal.rgb[i].blue;
 
-			// TODO This can't possibly work with the OpenGL
-			// renderer at the very least which will always return a
-			// 32-bit XRGB value.
-			//
-			uint16_t new_pal = GFX_MakePixel(r, g, b);
-			if (new_pal != render.pal.lut.b16[i]) {
-				render.pal.changed     = true;
-				render.pal.modified[i] = 1;
-				render.pal.lut.b16[i]  = new_pal;
-			}
-		}
-		break;
-	case scalerMode32:
-	default:
-		for (i = render.pal.first; i <= render.pal.last; i++) {
-			uint8_t r = render.pal.rgb[i].red;
-			uint8_t g = render.pal.rgb[i].green;
-			uint8_t b = render.pal.rgb[i].blue;
+	assert(render.scale.outMode == scalerMode32);
 
-			uint32_t new_pal = GFX_MakePixel(r, g, b);
-			if (new_pal != render.pal.lut.b32[i]) {
-				render.pal.changed     = true;
-				render.pal.modified[i] = 1;
-				render.pal.lut.b32[i]  = new_pal;
-			}
+	for (auto i = render.pal.first; i <= render.pal.last; i++) {
+		uint8_t r = render.pal.rgb[i].red;
+		uint8_t g = render.pal.rgb[i].green;
+		uint8_t b = render.pal.rgb[i].blue;
+
+		uint32_t new_pal = GFX_MakePixel(r, g, b);
+		if (new_pal != render.pal.lut.b32[i]) {
+			render.pal.changed     = true;
+			render.pal.modified[i] = 1;
+			render.pal.lut.b32[i]  = new_pal;
 		}
-		break;
 	}
 
 	// Setup pal index to startup values
@@ -373,6 +350,7 @@ static void render_reset()
 	            &render_callback);
 
 	// Set up scaler variables
+	// The output of the scalers is always 32-bit BGRX pixels
 	render.scale.outMode = scalerMode32;
 
 	const auto lineBlock = &simpleBlock->Random;

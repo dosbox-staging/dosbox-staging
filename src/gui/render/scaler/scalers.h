@@ -24,10 +24,10 @@ constexpr uint16_t SCALER_MAXWIDTH  = 1600 + 30;
 #define SCALER_BLOCKSIZE	16
 
 enum ScalerMode : uint8_t {
-	scalerMode8,
-	scalerMode15,
-	scalerMode16,
-	scalerMode32,
+	scalerMode8,  // 0
+	scalerMode15, // 1
+	scalerMode16, // 2
+	scalerMode32, // 3
 };
 
 typedef void (*ScalerLineHandler_t)(const void* src);
