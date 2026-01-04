@@ -48,6 +48,7 @@ static void check_palette()
 		uint8_t b = render.pal.rgb[i].blue;
 
 		uint32_t new_pal = GFX_MakePixel(r, g, b);
+
 		if (new_pal != render.pal.lut.b32[i]) {
 			render.pal.changed     = true;
 			render.pal.modified[i] = 1;
@@ -82,17 +83,21 @@ static void start_line_handler(const void* s)
 	if (s) {
 		auto src = static_cast<const uintptr_t*>(s);
 		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
+
 		for (Bits x = render.src_start; x > 0;) {
 			const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
 			const auto src_val = read_unaligned_size_t(src_ptr);
+
 			if (src_val != cache[0]) {
 				if (!GFX_StartUpdate(render.scale.outWrite,
 				                     render.scale.outPitch)) {
+
 					RENDER_DrawLine = empty_line_handler;
 					return;
 				}
 				render.scale.outWrite += render.scale.outPitch *
 				                         Scaler_ChangedLines[0];
+
 				RENDER_DrawLine = render.scale.lineHandler;
 				RENDER_DrawLine(s);
 				return;
@@ -103,7 +108,9 @@ static void start_line_handler(const void* s)
 		}
 	}
 	render.scale.cacheRead += render.scale.cachePitch;
+
 	Scaler_ChangedLines[0] += Scaler_Aspect[render.scale.inLine];
+
 	render.scale.inLine++;
 	render.scale.outLine++;
 }
@@ -113,6 +120,7 @@ static void finish_line_handler(const void* s)
 	if (s) {
 		auto src = static_cast<const uintptr_t*>(s);
 		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
+
 		for (Bits x = render.src_start; x > 0;) {
 			cache[0] = src[0];
 			x--;
@@ -120,6 +128,7 @@ static void finish_line_handler(const void* s)
 			cache++;
 		}
 	}
+
 	render.scale.cacheRead += render.scale.cachePitch;
 }
 
@@ -127,10 +136,13 @@ static void clear_cache_handler(const void* src)
 {
 	const uint32_t* srcLine = (const uint32_t*)src;
 	uint32_t* cacheLine     = (uint32_t*)render.scale.cacheRead;
-	Bitu width              = render.scale.cachePitch / 4;
+
+	Bitu width = render.scale.cachePitch / 4;
+
 	for (Bitu x = 0; x < width; x++) {
 		cacheLine[x] = ~srcLine[x];
 	}
+
 	render.scale.lineHandler(src);
 }
 
@@ -139,17 +151,21 @@ bool RENDER_StartUpdate()
 	if (render.updating) {
 		return false;
 	}
+
 	if (!render.active) {
 		return false;
 	}
+
 	if (render.scale.inMode == scalerMode8) {
 		check_palette();
 	}
+
 	render.scale.inLine     = 0;
 	render.scale.outLine    = 0;
 	render.scale.cacheRead  = (uint8_t*)&scalerSourceCache;
 	render.scale.outWrite   = nullptr;
 	render.scale.outPitch   = 0;
+
 	Scaler_ChangedLines[0]  = 0;
 	Scaler_ChangedLineIndex = 0;
 
@@ -163,9 +179,11 @@ bool RENDER_StartUpdate()
 		if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
 			return false;
 		}
+
 		render.fullFrame        = true;
 		render.scale.clearCache = false;
 		RENDER_DrawLine         = clear_cache_handler;
+
 	} else {
 		if (render.pal.changed) {
 			// Assume pal changes always do a full screen update
@@ -174,10 +192,13 @@ bool RENDER_StartUpdate()
 			                     render.scale.outPitch)) {
 				return false;
 			}
+
 			RENDER_DrawLine  = render.scale.linePalHandler;
 			render.fullFrame = true;
+
 		} else {
 			RENDER_DrawLine = start_line_handler;
+
 			if (CAPTURE_IsCapturingImage() ||
 			    CAPTURE_IsCapturingVideo()) {
 				render.fullFrame = true;
@@ -186,6 +207,7 @@ bool RENDER_StartUpdate()
 			}
 		}
 	}
+
 	render.updating = true;
 	return true;
 }
@@ -209,6 +231,7 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
 		bool double_width  = false;
 		bool double_height = false;
+
 		if (render.src.double_width != render.src.double_height) {
 			if (render.src.double_width) {
 				double_width = true;
@@ -312,8 +335,8 @@ static void render_reset()
 		simpleBlock = &ScaleNormal1x;
 	}
 
-	xscale    = simpleBlock->xscale;
-	yscale    = simpleBlock->yscale;
+	xscale = simpleBlock->xscale;
+	yscale = simpleBlock->yscale;
 	//		LOG_MSG("Scaler:%s",simpleBlock->name);
 
 	constexpr auto src_pixel_bytes = sizeof(uintptr_t);
@@ -324,9 +347,11 @@ static void render_reset()
 	case PixelFormat::RGB565_Packed16:
 		render.src_start = (render.src.width * 2) / src_pixel_bytes;
 		break;
+
 	case PixelFormat::BGR24_ByteArray:
 		render.src_start = (render.src.width * 3) / src_pixel_bytes;
 		break;
+
 	case PixelFormat::BGRX32_ByteArray:
 		render.src_start = (render.src.width * 4) / src_pixel_bytes;
 		break;
@@ -357,30 +382,35 @@ static void render_reset()
 		render.scale.inMode         = scalerMode8;
 		render.scale.cachePitch     = render.src.width * 1;
 		break;
+
 	case PixelFormat::RGB555_Packed16:
 		render.scale.lineHandler    = (*lineBlock)[1];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode15;
 		render.scale.cachePitch     = render.src.width * 2;
 		break;
+
 	case PixelFormat::RGB565_Packed16:
 		render.scale.lineHandler    = (*lineBlock)[2];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode16;
 		render.scale.cachePitch     = render.src.width * 2;
 		break;
+
 	case PixelFormat::BGR24_ByteArray:
 		render.scale.lineHandler    = (*lineBlock)[3];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 3;
 		break;
+
 	case PixelFormat::BGRX32_ByteArray:
 		render.scale.lineHandler    = (*lineBlock)[4];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 4;
 		break;
+
 	default:
 		E_Exit("RENDER: Invalid pixel_format %u",
 		       static_cast<uint8_t>(render.src.pixel_format));
@@ -410,12 +440,15 @@ static void render_callback(GFX_CallbackFunctions_t function)
 	if (function == GFX_CallbackStop) {
 		halt_render();
 		return;
+
 	} else if (function == GFX_CallbackRedraw) {
 		render.scale.clearCache = true;
 		return;
+
 	} else if (function == GFX_CallbackReset) {
 		GFX_EndUpdate();
 		render_reset();
+
 	} else {
 		E_Exit("Unhandled GFX_CallbackReset %d", function);
 	}
@@ -504,6 +537,7 @@ bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode, const bool reini
 			const auto render_params_changed =
 			        ((curr_preset.settings.force_single_scan !=
 			          new_preset.settings.force_single_scan) ||
+
 			         (curr_preset.settings.force_no_pixel_doubling !=
 			          new_preset.settings.force_no_pixel_doubling));
 
