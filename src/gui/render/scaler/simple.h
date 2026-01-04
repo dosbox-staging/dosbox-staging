@@ -12,11 +12,7 @@
 #error "Scaler goes too wide"
 #endif
 
-#if defined (SCALERLINEAR)
-static void conc4d(SCALERNAME,SBPP,DBPP,L)(const void *s) {
-#else
 static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
-#endif
 	/* Clear the complete line marker */
 	Bitu hadChange = 0;
 	auto src   = static_cast<const SRCTYPE*>(s);
@@ -49,15 +45,9 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 			line0 += address_step * SCALERWIDTH;
 #endif
 		} else {
-#if defined(SCALERLINEAR)
-#if (SCALERHEIGHT > 1) 
-			PTYPE *line1 = WC[0];
-#endif
-#else
 #if (SCALERHEIGHT > 1) 
 		PTYPE *line1 = (PTYPE *)(((uint8_t*)line0)+ render.scale.outPitch);
 #endif
-#endif //defined(SCALERLINEAR)
 			hadChange = 1;
 			for (Bitu i = x > 32 ? 32 : x;i>0;i--,x--) {
 				const SRCTYPE S = *src;
@@ -70,29 +60,13 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 				line1 += SCALERWIDTH;
 #endif
 			}
-#if defined(SCALERLINEAR)
-#if (SCALERHEIGHT > 1)
-			Bitu copyLen = (Bitu)((uint8_t*)line1 - (uint8_t*)WC[0]);
-			BituMove(((uint8_t*)line0)-copyLen+render.scale.outPitch  ,WC[0], copyLen );
-#endif
-#endif //defined(SCALERLINEAR)
 		}
 	}
-#if defined(SCALERLINEAR) 
-	Bitu scaleLines = SCALERHEIGHT;
-#else
 	Bitu scaleLines = Scaler_Aspect[ render.scale.outLine++ ];
 	if ( scaleLines - SCALERHEIGHT && hadChange ) {
 		BituMove( render.scale.outWrite + render.scale.outPitch * SCALERHEIGHT,
 			render.scale.outWrite + render.scale.outPitch * (SCALERHEIGHT-1),
 			render.src.width * SCALERWIDTH * PSIZE);
 	}
-#endif
 	ScalerAddLines( hadChange, scaleLines );
 }
-
-#if !defined(SCALERLINEAR) 
-#define SCALERLINEAR 1
-#include "simple.h"
-#undef SCALERLINEAR
-#endif

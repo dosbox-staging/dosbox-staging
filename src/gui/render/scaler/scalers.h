@@ -52,7 +52,6 @@ struct ScalerSimpleBlock_t {
 	uint8_t gfxFlags         = 0;
 	uint8_t xscale           = 0;
 	uint8_t yscale           = 0;
-	ScalerLineBlock_t Linear = {};
 	ScalerLineBlock_t Random = {};
 };
 
