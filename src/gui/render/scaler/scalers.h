@@ -42,7 +42,7 @@ union scalerSourceCache_t {
 
 extern scalerSourceCache_t scalerSourceCache;
 
-typedef ScalerLineHandler_t ScalerLineBlock_t[6][4];
+typedef ScalerLineHandler_t ScalerLineBlock_t[6][1];
 
 struct ScalerSimpleBlock_t {
 	uint8_t gfxFlags         = 0;

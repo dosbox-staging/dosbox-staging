@@ -92,7 +92,6 @@ struct Render {
 		uint32_t size = 0;
 
 		ScalerMode inMode  = {};
-		ScalerMode outMode = {};
 
 		bool clearCache = false;
 

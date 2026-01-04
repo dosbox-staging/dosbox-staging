@@ -42,8 +42,6 @@ static void check_palette()
 		return;
 	}
 
-	assert(render.scale.outMode == scalerMode32);
-
 	for (auto i = render.pal.first; i <= render.pal.last; i++) {
 		uint8_t r = render.pal.rgb[i].red;
 		uint8_t g = render.pal.rgb[i].green;
@@ -350,38 +348,35 @@ static void render_reset()
 	            &render_callback);
 
 	// Set up scaler variables
-	// The output of the scalers is always 32-bit BGRX pixels
-	render.scale.outMode = scalerMode32;
-
 	const auto lineBlock = &simpleBlock->Random;
 
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
-		render.scale.lineHandler = (*lineBlock)[0][render.scale.outMode];
-		render.scale.linePalHandler = (*lineBlock)[5][render.scale.outMode];
+		render.scale.lineHandler = (*lineBlock)[0][0];
+		render.scale.linePalHandler = (*lineBlock)[5][0];
 		render.scale.inMode     = scalerMode8;
 		render.scale.cachePitch = render.src.width * 1;
 		break;
 	case PixelFormat::RGB555_Packed16:
-		render.scale.lineHandler = (*lineBlock)[1][render.scale.outMode];
+		render.scale.lineHandler = (*lineBlock)[1][0];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode15;
 		render.scale.cachePitch     = render.src.width * 2;
 		break;
 	case PixelFormat::RGB565_Packed16:
-		render.scale.lineHandler = (*lineBlock)[2][render.scale.outMode];
+		render.scale.lineHandler = (*lineBlock)[2][0];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode16;
 		render.scale.cachePitch     = render.src.width * 2;
 		break;
 	case PixelFormat::BGR24_ByteArray:
-		render.scale.lineHandler = (*lineBlock)[3][render.scale.outMode];
+		render.scale.lineHandler = (*lineBlock)[3][0];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 3;
 		break;
 	case PixelFormat::BGRX32_ByteArray:
-		render.scale.lineHandler = (*lineBlock)[4][render.scale.outMode];
+		render.scale.lineHandler = (*lineBlock)[4][0];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 4;
