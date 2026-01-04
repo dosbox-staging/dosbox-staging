@@ -78,10 +78,10 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 
 static void empty_line_handler(const void*) {}
 
-static void start_line_handler(const void* s)
+static void start_line_handler(const void* src_line_data)
 {
-	if (s) {
-		auto src = static_cast<const uintptr_t*>(s);
+	if (src_line_data) {
+		auto src = static_cast<const uintptr_t*>(src_line_data);
 		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
 
 		for (Bits x = render.src_start; x > 0;) {
@@ -99,7 +99,7 @@ static void start_line_handler(const void* s)
 				                         Scaler_ChangedLines[0];
 
 				RENDER_DrawLine = render.scale.lineHandler;
-				RENDER_DrawLine(s);
+				RENDER_DrawLine(src_line_data);
 				return;
 			}
 			x--;
@@ -115,10 +115,10 @@ static void start_line_handler(const void* s)
 	render.scale.outLine++;
 }
 
-static void finish_line_handler(const void* s)
+static void finish_line_handler(const void* src_line_data)
 {
-	if (s) {
-		auto src = static_cast<const uintptr_t*>(s);
+	if (src_line_data) {
+		auto src = static_cast<const uintptr_t*>(src_line_data);
 		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
 
 		for (Bits x = render.src_start; x > 0;) {
@@ -132,18 +132,18 @@ static void finish_line_handler(const void* s)
 	render.scale.cacheRead += render.scale.cachePitch;
 }
 
-static void clear_cache_handler(const void* src)
+static void clear_cache_handler(const void* src_line_data)
 {
-	const uint32_t* srcLine = (const uint32_t*)src;
-	uint32_t* cacheLine     = (uint32_t*)render.scale.cacheRead;
+	const uint32_t* src_line = (const uint32_t*)src_line_data;
+	uint32_t* cache_line     = (uint32_t*)render.scale.cacheRead;
 
 	Bitu width = render.scale.cachePitch / 4;
 
 	for (Bitu x = 0; x < width; x++) {
-		cacheLine[x] = ~srcLine[x];
+		cache_line[x] = ~src_line[x];
 	}
 
-	render.scale.lineHandler(src);
+	render.scale.lineHandler(src_line_data);
 }
 
 bool RENDER_StartUpdate()
@@ -160,11 +160,11 @@ bool RENDER_StartUpdate()
 		check_palette();
 	}
 
-	render.scale.inLine     = 0;
-	render.scale.outLine    = 0;
-	render.scale.cacheRead  = (uint8_t*)&scalerSourceCache;
-	render.scale.outWrite   = nullptr;
-	render.scale.outPitch   = 0;
+	render.scale.inLine    = 0;
+	render.scale.outLine   = 0;
+	render.scale.cacheRead = (uint8_t*)&scalerSourceCache;
+	render.scale.outWrite  = nullptr;
+	render.scale.outPitch  = 0;
 
 	Scaler_ChangedLines[0]  = 0;
 	Scaler_ChangedLineIndex = 0;
@@ -311,8 +311,7 @@ static void render_reset()
 	bool double_width        = render.src.double_width;
 	bool double_height       = render.src.double_height;
 
-	uint8_t xscale, yscale;
-	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
+	auto scaler = &ScaleNormal1x;
 
 	// Don't do software scaler sizes larger than 4k
 	uint16_t maxsize_current_input = SCALER_MAXWIDTH / render_width_px;
@@ -321,23 +320,19 @@ static void render_reset()
 	}
 
 	if (double_height && double_width) {
-		simpleBlock = &ScaleNormal2x;
+		scaler = &ScaleNormal2x;
 	} else if (double_width) {
-		simpleBlock = &ScaleNormalDw;
+		scaler = &ScaleNormalDw;
 	} else if (double_height) {
-		simpleBlock = &ScaleNormalDh;
+		scaler = &ScaleNormalDh;
 	} else {
-		simpleBlock = &ScaleNormal1x;
+		scaler = &ScaleNormal1x;
 	}
 
-	if ((render_width_px * simpleBlock->xscale > SCALER_MAXWIDTH) ||
-	    (render.src.height * simpleBlock->yscale > SCALER_MAXHEIGHT)) {
-		simpleBlock = &ScaleNormal1x;
+	if ((render_width_px * scaler->xscale > SCALER_MAXWIDTH) ||
+	    (render.src.height * scaler->yscale > SCALER_MAXHEIGHT)) {
+		scaler = &ScaleNormal1x;
 	}
-
-	xscale = simpleBlock->xscale;
-	yscale = simpleBlock->yscale;
-	//		LOG_MSG("Scaler:%s",simpleBlock->name);
 
 	constexpr auto src_pixel_bytes = sizeof(uintptr_t);
 
@@ -357,10 +352,10 @@ static void render_reset()
 		break;
 	}
 
-	render_width_px *= xscale;
+	render_width_px *= scaler->xscale;
 	const auto render_height_px = make_aspect_table(render.src.height,
-	                                                yscale,
-	                                                yscale);
+	                                                scaler->yscale,
+	                                                scaler->yscale);
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
 
@@ -373,7 +368,7 @@ static void render_reset()
 	            &render_callback);
 
 	// Set up scaler variables
-	const auto lineBlock = &simpleBlock->Random;
+	const auto lineBlock = &scaler->Random;
 
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
