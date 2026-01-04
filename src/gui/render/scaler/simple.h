@@ -17,18 +17,6 @@ static void conc4d(SCALERNAME,SBPP,DBPP,L)(const void *s) {
 #else
 static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #endif
-#ifdef RENDER_NULL_INPUT
-	if (!s) {
-		render.scale.cacheRead += render.scale.cachePitch;
-#if defined(SCALERLINEAR) 
-		Bitu skipLines = SCALERHEIGHT;
-#else
-		Bitu skipLines = Scaler_Aspect[ render.scale.outLine++ ];
-#endif
-		ScalerAddLines( 0, skipLines );
-		return;
-	}
-#endif
 	/* Clear the complete line marker */
 	Bitu hadChange = 0;
 	auto src   = static_cast<const SRCTYPE*>(s);
