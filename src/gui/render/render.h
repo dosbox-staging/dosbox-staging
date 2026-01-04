@@ -95,8 +95,8 @@ struct Render {
 
 		bool clearCache = false;
 
-		ScalerLineHandler_t lineHandler    = nullptr;
-		ScalerLineHandler_t linePalHandler = nullptr;
+		ScalerLineHandler lineHandler    = nullptr;
+		ScalerLineHandler linePalHandler = nullptr;
 
 		uint32_t blocks     = 0;
 		uint32_t lastBlock  = 0;
@@ -186,7 +186,7 @@ struct RenderedImage {
 };
 
 extern Render render;
-extern ScalerLineHandler_t RENDER_DrawLine;
+extern ScalerLineHandler RENDER_DrawLine;
 
 void RENDER_Init();
 void RENDER_Reinit();
