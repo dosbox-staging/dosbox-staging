@@ -1624,7 +1624,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 
 	// Add the draw event
 	switch (vga.draw.mode) {
-	case PART:
+	case DrawMode::Part:
 		if (vga.draw.parts_left) {
 			LOG(LOG_VGAMISC, LOG_NORMAL)("Parts left: %u",
 			                             vga.draw.parts_left);
@@ -1640,15 +1640,15 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		             vga.draw.parts_lines);
 		break;
 
-	case DRAWLINE:
-	case EGALINE:
+	case DrawMode::Scanline:
+	case DrawMode::ScanlineEga:
 		if (vga.draw.lines_done < vga.draw.lines_total) {
 			LOG(LOG_VGAMISC,
 			    LOG_NORMAL)("Lines left: %d",
 			                static_cast<int>(vga.draw.lines_total -
 			                                 vga.draw.lines_done));
 
-			if (vga.draw.mode == EGALINE) {
+			if (vga.draw.mode == DrawMode::ScanlineEga) {
 				PIC_RemoveEvents(VGA_DrawEGASingleLine);
 			} else {
 				PIC_RemoveEvents(VGA_DrawSingleLine);
@@ -1658,7 +1658,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 
 		vga.draw.lines_done = 0;
 
-		if (vga.draw.mode == EGALINE) {
+		if (vga.draw.mode == DrawMode::ScanlineEga) {
 			PIC_AddEvent(VGA_DrawEGASingleLine,
 			             vga.draw.delay.per_line_ms + draw_skip);
 		} else {
@@ -1783,14 +1783,14 @@ PixelFormat VGA_ActivateHardwareCursor()
 static void setup_line_drawing_delays()
 {
 	switch (vga.draw.mode) {
-	case PART:
+	case DrawMode::Part:
 		vga.draw.parts_total = 4;
 		vga.draw.delay.parts = vga.draw.delay.vdend / vga.draw.parts_total;
 		vga.draw.parts_lines = vga.draw.lines_total / vga.draw.parts_total;
 		break;
 
-	case DRAWLINE:
-	case EGALINE:
+	case DrawMode::Scanline:
+	case DrawMode::ScanlineEga:
 		assert(vga.draw.delay.vdend > 0.0);
 		vga.draw.delay.per_line_ms = vga.draw.delay.vdend /
 		                             vga.draw.lines_total;
@@ -2260,26 +2260,26 @@ ImageInfo setup_drawing()
 
 	// Set the drawing mode
 	switch (machine) {
-	case MachineType::Hercules: vga.draw.mode = PART; break;
+	case MachineType::Hercules: vga.draw.mode = DrawMode::Part; break;
 
 	case MachineType::CgaMono:
 	case MachineType::CgaColor:
 	case MachineType::Pcjr:
-	case MachineType::Tandy: vga.draw.mode = DRAWLINE; break;
+	case MachineType::Tandy: vga.draw.mode = DrawMode::Scanline; break;
 
 	case MachineType::Ega:
 		// Paradise SVGA uses the same panning mechanism as EGA
-		vga.draw.mode = EGALINE;
+		vga.draw.mode = DrawMode::ScanlineEga;
 		break;
 
 	case MachineType::Vga:
 		if (is_high_resolution_mode(CurMode)) {
-			vga.draw.mode = PART;
 			// High-resolution (640x480 or above, 256 colours or
 			// hi/true color) VESA and SVGA games and demos don't
 			// reprogram the VGA registers in the middle of the
 			// screen, so we can draw these in chunks which is more
 			// performant.
+			vga.draw.mode = DrawMode::Part;
 
 		} else {
 			// Render the screen in 4 parts if the default legacy
@@ -2291,8 +2291,9 @@ ImageInfo setup_drawing()
 			// at startup with per-scanline rendering enabled. This
 			// is most likely due to some VGA emulation deficiency.
 			//
-			vga.draw.mode = vga.draw.vga_render_per_scanline ? DRAWLINE
-			                                                 : PART;
+			vga.draw.mode = vga.draw.vga_render_per_scanline
+			                      ? DrawMode::Scanline
+			                      : DrawMode::Part;
 		}
 		break;
 

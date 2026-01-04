@@ -209,7 +209,7 @@ struct VgaConfig {
 	uint32_t full_enable_and_set_reset = 0;
 };
 
-enum Drawmode { PART, DRAWLINE, EGALINE };
+enum class DrawMode { Part, Scanline, ScanlineEga };
 
 enum class VgaRateMode { Default, Custom };
 
@@ -326,7 +326,7 @@ struct VgaDraw {
 		uint8_t enabled = 0;
 	} cursor = {};
 
-	Drawmode mode       = {};
+	DrawMode mode       = {};
 	bool vret_triggered = false;
 	bool vga_override   = false;
 };
