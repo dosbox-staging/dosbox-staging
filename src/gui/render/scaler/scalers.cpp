@@ -16,7 +16,7 @@
 uint8_t scaler_aspect[SCALER_MAXHEIGHT]        = {};
 uint16_t scaler_changed_lines[SCALER_MAXHEIGHT] = {};
 
-Bitu Scaler_ChangedLineIndex = 0;
+Bitu scaler_changed_line_index = 0;
 
 scalerSourceCache_t scalerSourceCache;
 
@@ -37,10 +37,10 @@ static inline void BituMove(void* _dst, const void* _src, Bitu size)
 
 static inline void ScalerAddLines(Bitu changed, Bitu count)
 {
-	if ((Scaler_ChangedLineIndex & 1) == changed) {
-		scaler_changed_lines[Scaler_ChangedLineIndex] += count;
+	if ((scaler_changed_line_index & 1) == changed) {
+		scaler_changed_lines[scaler_changed_line_index] += count;
 	} else {
-		scaler_changed_lines[++Scaler_ChangedLineIndex] = count;
+		scaler_changed_lines[++scaler_changed_line_index] = count;
 	}
 	render.scale.outWrite += render.scale.outPitch * count;
 }
