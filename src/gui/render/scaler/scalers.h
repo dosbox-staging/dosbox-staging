@@ -29,7 +29,7 @@ enum ScalerMode : uint8_t {
 	scalerMode32, // 3
 };
 
-extern uint8_t Scaler_Aspect[];
+extern uint8_t scaler_aspect[];
 extern Bitu Scaler_ChangedLineIndex;
 extern uint16_t Scaler_ChangedLines[];
 

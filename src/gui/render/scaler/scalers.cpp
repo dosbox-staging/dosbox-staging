@@ -13,7 +13,7 @@
 
 #include <cstring>
 
-uint8_t Scaler_Aspect[SCALER_MAXHEIGHT]        = {};
+uint8_t scaler_aspect[SCALER_MAXHEIGHT]        = {};
 uint16_t Scaler_ChangedLines[SCALER_MAXHEIGHT] = {};
 
 Bitu Scaler_ChangedLineIndex = 0;
