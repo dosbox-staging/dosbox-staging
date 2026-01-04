@@ -1784,11 +1784,7 @@ static void setup_line_drawing_delays()
 {
 	switch (vga.draw.mode) {
 	case PART: {
-		const auto section = get_section("dosbox");
-		assert(section);
-
-		if (vga.draw.mode == PART &&
-		    !section->GetBool("vga_render_per_scanline")) {
+		if (vga.draw.mode == PART && !vga.draw.vga_render_per_scanline) {
 			// Render the screen in 4 parts; this was the legacy
 			// DOSBox behaviour. A few games needs this (e.g., Deus,
 			// Ishar 3, Robinson's Requiem, Time Travelers) and

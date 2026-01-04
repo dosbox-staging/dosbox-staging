@@ -304,6 +304,12 @@ struct VgaDraw {
 	// at the "nomimal width" of the video mode.
 	bool pixel_doubling_allowed  = false;
 
+	// If true, non-VESA VGA modes are drawn per scanline. For a handful of
+	// games we need to disable this and drawn the screen in four parts
+	// (chunks) at a time, otherwise they'd crash at startup (this is a
+	// workaround for a deficiency in our VGA emulation code).
+	bool vga_render_per_scanline = true;
+
 	uint8_t font[64 * 1024] = {};
 	uint8_t* font_tables[2] = {nullptr, nullptr};
 
