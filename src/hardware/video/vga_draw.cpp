@@ -1783,22 +1783,11 @@ PixelFormat VGA_ActivateHardwareCursor()
 static void setup_line_drawing_delays()
 {
 	switch (vga.draw.mode) {
-	case PART: {
-		if (vga.draw.mode == PART && !vga.draw.vga_render_per_scanline) {
-			// Render the screen in 4 parts; this was the legacy
-			// DOSBox behaviour. A few games needs this (e.g., Deus,
-			// Ishar 3, Robinson's Requiem, Time Travelers) and
-			// would crash at startup with per-scanline rendering
-			// enabled. This is most likely due to some VGA
-			// emulation deficiency.
-			vga.draw.parts_total = 4;
-		} else {
-			vga.draw.parts_total = vga.draw.lines_total;
-		}
-
+	case PART:
+		vga.draw.parts_total = 4;
 		vga.draw.delay.parts = vga.draw.delay.vdend / vga.draw.parts_total;
 		vga.draw.parts_lines = vga.draw.lines_total / vga.draw.parts_total;
-	} break;
+		break;
 
 	case DRAWLINE:
 	case EGALINE:
@@ -2243,6 +2232,11 @@ static Fraction calc_pixel_aspect_from_timings(const VgaTimings& timings)
 	return {pwidth / pheight};
 }
 
+static bool is_high_resolution_mode(const video_mode_block_iterator_t mode)
+{
+	return mode->swidth >= 640 && mode->sheight >= 480;
+}
+
 constexpr auto pixel_aspect_1280x1024 = Fraction(4, 3) / Fraction(1280, 1024);
 
 // Can change the following VGA state:
@@ -2262,8 +2256,12 @@ constexpr auto pixel_aspect_1280x1024 = Fraction(4, 3) / Fraction(1280, 1024);
 //
 ImageInfo setup_drawing()
 {
+	const auto bios_mode_number = CurMode->mode;
+
 	// Set the drawing mode
 	switch (machine) {
+	case MachineType::Hercules: vga.draw.mode = PART; break;
+
 	case MachineType::CgaMono:
 	case MachineType::CgaColor:
 	case MachineType::Pcjr:
@@ -2275,7 +2273,30 @@ ImageInfo setup_drawing()
 		break;
 
 	case MachineType::Vga:
-	default: vga.draw.mode = PART; break;
+		if (is_high_resolution_mode(CurMode)) {
+			vga.draw.mode = PART;
+			// High-resolution (640x480 or above, 256 colours or
+			// hi/true color) VESA and SVGA games and demos don't
+			// reprogram the VGA registers in the middle of the
+			// screen, so we can draw these in chunks which is more
+			// performant.
+
+		} else {
+			// Render the screen in 4 parts if the default legacy
+			// DOSBox VGA drawing behaviour is forced by setting
+			// `vga_render_per_scanline = off` in the config.
+			//
+			// A handful of games need this (e.g., Deus, Ishar 3,
+			// Robinson's Requiem, Time Travelers) and would crash
+			// at startup with per-scanline rendering enabled. This
+			// is most likely due to some VGA emulation deficiency.
+			//
+			vga.draw.mode = vga.draw.vga_render_per_scanline ? DRAWLINE
+			                                                 : PART;
+		}
+		break;
+
+	default: assertm(false, "Invalid MachineType value");
 	}
 
 	// We need to set the address_line_total according to the scan doubling
@@ -2416,8 +2437,6 @@ ImageInfo setup_drawing()
 	                  vga.crtc.maximum_scan_line.is_scan_doubling_enabled),
 	          static_cast<uint8_t>(vga.crtc.maximum_scan_line.maximum_scan_line));
 #endif
-
-	const auto bios_mode_number = CurMode->mode;
 
 	video_mode.bios_mode_number = bios_mode_number;
 
