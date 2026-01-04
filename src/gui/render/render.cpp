@@ -96,7 +96,7 @@ static void start_line_handler(const void* src_line_data)
 					return;
 				}
 				render.scale.outWrite += render.scale.outPitch *
-				                         Scaler_ChangedLines[0];
+				                         scaler_changed_lines[0];
 
 				RENDER_DrawLine = render.scale.lineHandler;
 				RENDER_DrawLine(src_line_data);
@@ -109,7 +109,7 @@ static void start_line_handler(const void* src_line_data)
 	}
 	render.scale.cacheRead += render.scale.cachePitch;
 
-	Scaler_ChangedLines[0] += scaler_aspect[render.scale.inLine];
+	scaler_changed_lines[0] += scaler_aspect[render.scale.inLine];
 
 	render.scale.inLine++;
 	render.scale.outLine++;
@@ -166,7 +166,7 @@ bool RENDER_StartUpdate()
 	render.scale.outWrite  = nullptr;
 	render.scale.outPitch  = 0;
 
-	Scaler_ChangedLines[0]  = 0;
+	scaler_changed_lines[0] = 0;
 	Scaler_ChangedLineIndex = 0;
 
 	// Clearing the cache will first process the line to make sure it's
