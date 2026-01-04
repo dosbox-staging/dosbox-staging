@@ -33,14 +33,11 @@ enum ScalerMode : uint8_t {
 typedef void (*ScalerLineHandler_t)(const void* src);
 
 extern uint8_t Scaler_Aspect[];
-extern uint8_t diff_table[];
 extern Bitu Scaler_ChangedLineIndex;
 extern uint16_t Scaler_ChangedLines[];
 
 union scalerSourceCache_t {
 	uint32_t b32	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
-	uint16_t b16	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
-	uint8_t b8	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
 };
 
 extern scalerSourceCache_t scalerSourceCache;
@@ -54,10 +51,6 @@ struct ScalerSimpleBlock_t {
 	uint8_t yscale           = 0;
 	ScalerLineBlock_t Random = {};
 };
-
-#define SCALE_LEFT	0x1
-#define SCALE_RIGHT	0x2
-#define SCALE_FULL	0x4
 
 /* Simple scalers */
 extern ScalerSimpleBlock_t ScaleNormal1x;
