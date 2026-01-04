@@ -1119,109 +1119,107 @@ static void VGA_ProcessSplit()
 	vga.draw.address_line = 0;
 }
 
-// Screen-off black index
-static uint8_t bg_color_index = 0;
-
-static void VGA_DrawSingleLine(uint32_t /*blah*/)
+void vga_draw_blank_line()
 {
-	if (vga.attr.disabled) {
-		switch (machine) {
-		case MachineType::Pcjr:
-			// Displays the border color when screen is disabled
+	// Screen-off black index
+	static uint8_t bg_color_index = 0;
+
+	switch (machine) {
+	case MachineType::Pcjr:
+		// Displays the border color when screen is disabled
+		bg_color_index = vga.tandy.border_color;
+		break;
+
+	case MachineType::Tandy:
+		// Either the PCJr way or the CGA way
+		if (vga.tandy.mode_control.is_tandy_border_enabled) {
 			bg_color_index = vga.tandy.border_color;
-			break;
+		} else if (vga.mode == M_TANDY4) {
+			bg_color_index = vga.attr.palette[0];
+		} else {
+			bg_color_index = 0;
+		}
+		break;
 
-		case MachineType::Tandy:
-			// Either the PCJr way or the CGA way
-			if (vga.tandy.mode_control.is_tandy_border_enabled) {
-				bg_color_index = vga.tandy.border_color;
-			} else if (vga.mode == M_TANDY4) {
-				bg_color_index = vga.attr.palette[0];
-			} else {
-				bg_color_index = 0;
-			}
-			break;
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
+		// The background color
+		bg_color_index = vga.attr.overscan_color;
+		break;
 
-		case MachineType::CgaMono:
-		case MachineType::CgaColor:
-			// the background color
-			bg_color_index = vga.attr.overscan_color;
-			break;
+	case MachineType::Ega:
+	case MachineType::Vga:
+		// DoWhackaDo, Alien Carnage, TV sports Football when disabled
+		// by attribute index bit 5:
+		//
+		// ET3000, ET4000, Paradise display the border color.
+		// S3 displays the content of the currently selected
+		// attribute register.
+		//
+		// When disabled by sequencer, the screen is black "257th
+		// color". The DAC table may not match the bits of the overscan
+		// register so use black for this case too...
+		//
+		if (constexpr uint32_t black_rgb888 = 0;
+		    vga.dac.palette_map[bg_color_index] != black_rgb888) {
 
-		case MachineType::Ega:
-		case MachineType::Vga:
-			// DoWhackaDo, Alien Carnage, TV sports Football
-			// when disabled by attribute index bit 5:
-			//  ET3000, ET4000, Paradise display the border color
-			//  S3 displays the content of the currently selected
-			//  attribute register
-			// when disabled by sequencer the screen is black "257th
-			// color"
+			// Check some assumptions about the palette map
+			constexpr auto palette_map_len = ARRAY_LEN(vga.dac.palette_map);
 
-			// the DAC table may not match the bits of the overscan
-			// register so use black for this case too...
-			// if (vga.attr.disabled& 2) {
-			if (constexpr uint32_t black_rgb888 = 0;
-			    vga.dac.palette_map[bg_color_index] != black_rgb888) {
+			static_assert(palette_map_len == 256,
+			              "The code below assumes the table is 256 elements long");
 
-				// Check some assumptions about the palette map
-				constexpr auto palette_map_len = ARRAY_LEN(
-				        vga.dac.palette_map);
-
-				static_assert(palette_map_len == 256,
-				              "The code below assumes the table is 256 elements long");
-
-				for (uint16_t i = 0; i < palette_map_len; ++i) {
-					if (vga.dac.palette_map[i] == black_rgb888) {
-						bg_color_index = static_cast<uint8_t>(i);
-						break;
-					}
+			for (uint16_t i = 0; i < palette_map_len; ++i) {
+				if (vga.dac.palette_map[i] == black_rgb888) {
+					bg_color_index = static_cast<uint8_t>(i);
+					break;
 				}
 			}
-			//} else
-			//    bg_color_index = vga.attr.overscan_color;
-			break;
+		}
+		break;
 
-		default: bg_color_index = 0; break;
+	default: bg_color_index = 0; break;
+	}
+
+	if (vga.draw.image_info.pixel_format == PixelFormat::Indexed8) {
+		std::fill(templine_buffer.begin(), templine_buffer.end(), bg_color_index);
+
+	} else if (vga.draw.image_info.pixel_format == PixelFormat::RGB565_Packed16) {
+		// Convert the palette colour to a 16-bit value for writing
+		const auto bg_pal_color = vga.dac.palette_map[bg_color_index];
+
+		const auto bg_565_pixel = Rgb565(bg_pal_color.Red8(),
+		                                 bg_pal_color.Green8(),
+		                                 bg_pal_color.Blue8())
+		                                  .pixel;
+
+		const auto line_length = templine_buffer.size() / sizeof(uint16_t);
+		size_t i = 0;
+		while (i < line_length) {
+			write_unaligned_uint16_at(TempLine, i++, bg_565_pixel);
 		}
 
-		if (vga.draw.image_info.pixel_format == PixelFormat::Indexed8) {
-			std::fill(templine_buffer.begin(),
-			          templine_buffer.end(),
-			          bg_color_index);
+	} else if (vga.draw.image_info.pixel_format == PixelFormat::BGRX32_ByteArray) {
 
-		} else if (vga.draw.image_info.pixel_format ==
-		           PixelFormat::RGB565_Packed16) {
-			// Convert the palette colour to a 16-bit value for writing
-			const auto bg_pal_color = vga.dac.palette_map[bg_color_index];
+		const auto background_color = vga.dac.palette_map[bg_color_index];
 
-			const auto bg_565_pixel = Rgb565(bg_pal_color.Red8(),
-			                                 bg_pal_color.Green8(),
-			                                 bg_pal_color.Blue8())
-			                                  .pixel;
-
-			const auto line_length = templine_buffer.size() /
-			                         sizeof(uint16_t);
-			size_t i = 0;
-			while (i < line_length) {
-				write_unaligned_uint16_at(TempLine, i++, bg_565_pixel);
-			}
-
-		} else if (vga.draw.image_info.pixel_format ==
-		           PixelFormat::BGRX32_ByteArray) {
-
-			const auto background_color = vga.dac.palette_map[bg_color_index];
-
-			const auto line_length = templine_buffer.size() /
-			                         sizeof(uint32_t);
-			size_t i = 0;
-			while (i < line_length) {
-				write_unaligned_uint32_at(TempLine, i++, background_color);
-			}
+		const auto line_length = templine_buffer.size() / sizeof(uint32_t);
+		size_t i = 0;
+		while (i < line_length) {
+			write_unaligned_uint32_at(TempLine, i++, background_color);
 		}
-		ReelMagic_RENDER_DrawLine(TempLine);
+	}
+	ReelMagic_RENDER_DrawLine(TempLine);
+}
+
+static void VGA_DrawSingleLine([[maybe_unused]] uint32_t dummy)
+{
+	if (vga.attr.disabled) {
+		// Display a blank line if the screen is disabled
+		vga_draw_blank_line();
 
 	} else {
+		// Otherwise draw the actual line
 		uint8_t* data = VGA_DrawLine(vga.draw.address, vga.draw.address_line);
 		ReelMagic_RENDER_DrawLine(data);
 	}
@@ -1244,13 +1242,15 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 	}
 }
 
-static void VGA_DrawEGASingleLine(uint32_t /*blah*/)
+static void VGA_DrawEGASingleLine([[maybe_unused]] uint32_t dummy)
 {
 	if (vga.attr.disabled) {
+		// Display a blank line if the screen is disabled
 		std::fill(templine_buffer.begin(), templine_buffer.end(), 0);
 		ReelMagic_RENDER_DrawLine(TempLine);
 
 	} else {
+		// Otherwise draw the actual line
 		Bitu address = vga.draw.address;
 		if (vga.mode != M_TEXT) {
 			address += vga.draw.panning;
