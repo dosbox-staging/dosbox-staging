@@ -5,8 +5,6 @@
 #	define PSIZE      4
 #	define PTYPE      uint32_t
 #	define WC         scalerWriteCache.b32
-// #define FC scalerFrameCache.b32
-#	define FC         (*(scalerFrameCache_t*)(&scalerSourceCache.b32[400][0])).b32
 #	define redMask    0xff0000
 #	define greenMask  0x00ff00
 #	define blueMask   0x0000ff
@@ -83,29 +81,6 @@
 #	define SRCTYPE uint32_t
 #endif
 
-//  C0 C1 C2 D3
-//  C3 C4 C5 D4
-//  C6 C7 C8 D5
-//  D0 D1 D2 D6
-
-#define C0 fc[-1]
-#define C1 fc[+0]
-#define C2 fc[+1]
-#define C3 fc[-1]
-#define C4 fc[+0]
-#define C5 fc[+1]
-#define C6 fc[-1]
-#define C7 fc[+0]
-#define C8 fc[+1]
-
-#define D0 fc[-1]
-#define D1 fc[+0]
-#define D2 fc[+1]
-#define D3 fc[+2]
-#define D4 fc[+2]
-#define D5 fc[+2]
-#define D6 fc[+2]
-
 /* Simple scalers */
 #	define SCALERNAME   Normal1x
 #	define SCALERWIDTH  1
@@ -164,7 +139,6 @@
 #undef PMAKE
 #undef WC
 #undef LC
-#undef FC
 #undef SC
 #undef redMask
 #undef greenMask
