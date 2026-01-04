@@ -109,7 +109,7 @@ static void start_line_handler(const void* src_line_data)
 	}
 	render.scale.cacheRead += render.scale.cachePitch;
 
-	Scaler_ChangedLines[0] += Scaler_Aspect[render.scale.inLine];
+	Scaler_ChangedLines[0] += scaler_aspect[render.scale.inLine];
 
 	render.scale.inLine++;
 	render.scale.outLine++;
@@ -272,9 +272,9 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 			Bitu templines = (Bitu)lines;
 			lines -= templines;
 			linesadded += templines;
-			Scaler_Aspect[i] = templines;
+			scaler_aspect[i] = templines;
 		} else {
-			Scaler_Aspect[i] = 0;
+			scaler_aspect[i] = 0;
 		}
 	}
 	return linesadded;
