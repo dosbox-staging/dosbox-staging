@@ -128,7 +128,6 @@ static inline void ScalerAddLines( Bitu changed, Bitu count ) {
 // clang-format off
 
 ScalerSimpleBlock_t ScaleNormal1x = {
-	"Normal",
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	1,1,{
 {	Normal1x_8_8_R,		Normal1x_8_15_R ,	Normal1x_8_16_R ,	Normal1x_8_32_R },
@@ -141,7 +140,6 @@ ScalerSimpleBlock_t ScaleNormal1x = {
 
 // Renders double-wide DOS video modes
 ScalerSimpleBlock_t ScaleNormalDw = {
-	"Normal",
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	2,1,{
 {	NormalDw_8_8_R,		NormalDw_8_15_R ,	NormalDw_8_16_R ,	NormalDw_8_32_R },
@@ -154,7 +152,6 @@ ScalerSimpleBlock_t ScaleNormalDw = {
 
 // Renders double-high DOS video modes
 ScalerSimpleBlock_t ScaleNormalDh = {
-	"Normal",
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	1,2,{
 {	NormalDh_8_8_R,		NormalDh_8_15_R ,	NormalDh_8_16_R ,	NormalDh_8_32_R },
@@ -166,7 +163,6 @@ ScalerSimpleBlock_t ScaleNormalDh = {
 }};
 
 ScalerSimpleBlock_t ScaleNormal2x = {
-	"Normal2x",
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	2,2,{
 {   Normal2x_8_8_R,     Normal2x_8_15_R ,   Normal2x_8_16_R,    Normal2x_8_32_R },

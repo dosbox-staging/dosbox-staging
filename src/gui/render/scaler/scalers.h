@@ -45,7 +45,6 @@ extern scalerSourceCache_t scalerSourceCache;
 typedef ScalerLineHandler_t ScalerLineBlock_t[6][4];
 
 struct ScalerSimpleBlock_t {
-	const char* name         = {};
 	uint8_t gfxFlags         = 0;
 	uint8_t xscale           = 0;
 	uint8_t yscale           = 0;
