@@ -22,9 +22,8 @@ Bitu Scaler_ChangedLineIndex = 0;
 
 scalerSourceCache_t scalerSourceCache;
 
-#define _conc7(A,B,C,D,E,F,G) A ## B ## C ## D ## E ## F ## G
-
-#define conc4d(A,B,C,D) _conc7(A,_,B,_,C,_,D)
+#define _conc3(A,B,C) A ## B ## C
+#define conc2d(A,B) _conc3(A,_,B)
 
 static inline void BituMove( void *_dst, const void * _src, Bitu size) {
 	 auto dst = static_cast<Bitu*>(_dst);
@@ -47,83 +46,71 @@ static inline void ScalerAddLines( Bitu changed, Bitu count ) {
 
 /* Include the different rendering routines */
 #define SBPP 8
-#define DBPP 32
 #include "templates.h"
 #undef SBPP
-#undef DBPP
 
 /* SBPP 9 is a special case with palette check support */
 #define SBPP 9
-#define DBPP 32
 #include "templates.h"
 #undef SBPP
-#undef DBPP
 
 #define SBPP 15
-#define DBPP 32
 #include "templates.h"
 #undef SBPP
-#undef DBPP
 
 #define SBPP 16
-#define DBPP 32
 #include "templates.h"
 #undef SBPP
-#undef DBPP
 
 #define SBPP 24
-#define DBPP 32
 #include "templates.h"
 #undef SBPP
-#undef DBPP
 
 #define SBPP 32
-#define DBPP 32
 #include "templates.h"
 #undef SBPP
-#undef DBPP
 
 // clang-format off
 
 ScalerSimpleBlock_t ScaleNormal1x = {
 	1,1,{
-	Normal1x_8_32_R ,
-	Normal1x_15_32_R,
-	Normal1x_16_32_R,
-	Normal1x_24_32_R,
-	Normal1x_32_32_R,
-	Normal1x_9_32_R 
+	Normal1x_8,
+	Normal1x_15,
+	Normal1x_16,
+	Normal1x_24,
+	Normal1x_32,
+	Normal1x_9
 }};
 
 // Renders double-wide DOS video modes
 ScalerSimpleBlock_t ScaleNormalDw = {
 	2,1,{
-	NormalDw_8_32_R ,
-	NormalDw_15_32_R,
-	NormalDw_16_32_R,
-	NormalDw_24_32_R,
-	NormalDw_32_32_R,
-	NormalDw_9_32_R 
+	NormalDw_8,
+	NormalDw_15,
+	NormalDw_16,
+	NormalDw_24,
+	NormalDw_32,
+	NormalDw_9
 }};
 
 // Renders double-high DOS video modes
 ScalerSimpleBlock_t ScaleNormalDh = {
 	1,2,{
-	NormalDh_8_32_R ,
-	NormalDh_15_32_R,
-	NormalDh_16_32_R,
-	NormalDh_24_32_R,
-	NormalDh_32_32_R,
-	NormalDh_9_32_R 
+	NormalDh_8,
+	NormalDh_15,
+	NormalDh_16,
+	NormalDh_24,
+	NormalDh_32,
+	NormalDh_9
 }};
 
 ScalerSimpleBlock_t ScaleNormal2x = {
 	2,2,{
-    Normal2x_8_32_R ,
-    Normal2x_15_32_R,
-    Normal2x_16_32_R,
-    Normal2x_24_32_R,
-    Normal2x_32_32_R,
-    Normal2x_9_32_R
+    Normal2x_8,
+    Normal2x_15,
+    Normal2x_16,
+    Normal2x_24,
+    Normal2x_32,
+    Normal2x_9
 }};
 
