@@ -6,16 +6,21 @@
 #include "hardware/network/ipxserver.h"
 
 #include <atomic>
+#include <chrono>
 #include <thread>
+
+#ifndef ASIO_STANDALONE
+#define ASIO_STANDALONE
+#endif
+#include <asio.hpp>
 
 #include "hardware/network/ipx.h"
 #include "hardware/timer.h"
 
-static constexpr int UDP_UNICAST = -1; // SDLNet magic number
+static IPaddress ipxServerIp; // IPAddress for server's listening port
 
-static IPaddress ipxServerIp;     // IPAddress for server's listening port
-static UDPsocket ipxServerSocket; // Listening server socket
-static SDLNet_SocketSet socket_set = nullptr;
+static asio::io_context ipx_io;
+static std::unique_ptr<asio::ip::udp::socket> ipx_server_socket = nullptr;
 
 static packetBuffer connBuffer[SOCKETTABLESIZE];
 
@@ -24,6 +29,30 @@ static IPaddress ipconn[SOCKETTABLESIZE]; // Active TCP/IP connection
 
 static std::thread ipx_server_thread;
 static std::atomic_bool ipx_server_running = false;
+
+static asio::ip::udp::endpoint to_endpoint(const IPaddress& addr)
+{
+	const asio::ip::address_v4::bytes_type bytes = {
+	        static_cast<unsigned char>(addr.host & 0xff),
+	        static_cast<unsigned char>((addr.host >> 8) & 0xff),
+	        static_cast<unsigned char>((addr.host >> 16) & 0xff),
+	        static_cast<unsigned char>((addr.host >> 24) & 0xff),
+	};
+	const uint16_t port = Net_PortToHost(addr.port);
+	return {asio::ip::address_v4(bytes), port};
+}
+
+static IPaddress from_endpoint(const asio::ip::udp::endpoint& ep)
+{
+	IPaddress addr   = {};
+	const auto bytes = ep.address().to_v4().to_bytes();
+	addr.host        = static_cast<uint32_t>(bytes[0]) |
+	            (static_cast<uint32_t>(bytes[1]) << 8) |
+	            (static_cast<uint32_t>(bytes[2]) << 16) |
+	            (static_cast<uint32_t>(bytes[3]) << 24);
+	Net_SetPort(addr, ep.port());
+	return addr;
+}
 
 uint8_t packetCRC(uint8_t* buffer, uint16_t bufSize)
 {
@@ -36,28 +65,9 @@ uint8_t packetCRC(uint8_t* buffer, uint16_t bufSize)
 	return tmpCRC;
 }
 
-/*
-static void closeSocket(uint16_t sockidx) {
-	uint32_t host;
-
-	host = ipconn[sockidx].host;
-	LOG_MSG("IPXSERVER: %d.%d.%d.%d disconnected", CONVIP(host));
-
-	SDLNet_TCP_DelSocket(serverSocketSet,tcpconn[sockidx]);
-	SDLNet_TCP_Close(tcpconn[sockidx]);
-	connBuffer[sockidx].connected = false;
-	connBuffer[sockidx].waitsize = false;
-}
-*/
-
 static void sendIPXPacket(uint8_t *buffer, int16_t bufSize) {
 	uint16_t srcport, destport;
 	uint32_t srchost, desthost;
-	UDPpacket outPacket;
-	outPacket.channel = -1;
-	outPacket.data = buffer;
-	outPacket.len = bufSize;
-	outPacket.maxlen = bufSize;
 	IPXHeader *tmpHeader;
 	tmpHeader = (IPXHeader *)buffer;
 
@@ -71,12 +81,17 @@ static void sendIPXPacket(uint8_t *buffer, int16_t bufSize) {
 		// Broadcast
 		for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i) {
 			if(connBuffer[i].connected && ((ipconn[i].host != srchost)||(ipconn[i].port!=srcport))) {
-				outPacket.address = ipconn[i];
-				const int result = SDLNet_UDP_Send(ipxServerSocket,
-				                                   UDP_UNICAST,
-				                                   &outPacket);
-				if (result == 0) {
-					LOG_MSG("IPXSERVER: %s", SDLNet_GetError());
+				if (!ipx_server_socket) {
+					continue;
+				}
+				std::error_code ec;
+				ipx_server_socket->send_to(asio::buffer(buffer, bufSize),
+				                           to_endpoint(ipconn[i]),
+				                           0,
+				                           ec);
+				if (ec) {
+					LOG_MSG("IPXSERVER: send failed: %s",
+					        ec.message().c_str());
 					continue;
 				}
 				//LOG_MSG("IPXSERVER: Packet of %d bytes sent from %d.%d.%d.%d to %d.%d.%d.%d (BROADCAST) (%x CRC)", bufSize, CONVIP(srchost), CONVIP(ipconn[i].host), packetCRC(&buffer[30], bufSize-30));
@@ -86,12 +101,17 @@ static void sendIPXPacket(uint8_t *buffer, int16_t bufSize) {
 		// Specific address
 		for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i) {
 			if((connBuffer[i].connected) && (ipconn[i].host == desthost) && (ipconn[i].port == destport)) {
-				outPacket.address = ipconn[i];
-				const int result = SDLNet_UDP_Send(ipxServerSocket,
-				                                   UDP_UNICAST,
-				                                   &outPacket);
-				if (result == 0) {
-					LOG_MSG("IPXSERVER: %s", SDLNet_GetError());
+				if (!ipx_server_socket) {
+					continue;
+				}
+				std::error_code ec;
+				ipx_server_socket->send_to(asio::buffer(buffer, bufSize),
+				                           to_endpoint(ipconn[i]),
+				                           0,
+				                           ec);
+				if (ec) {
+					LOG_MSG("IPXSERVER: send failed: %s",
+					        ec.message().c_str());
 					continue;
 				}
 				//LOG_MSG("IPXSERVER: Packet sent from %d.%d.%d.%d to %d.%d.%d.%d", CONVIP(srchost), CONVIP(desthost));
@@ -108,84 +128,85 @@ bool IPX_isConnectedToServer(Bits tableNum, IPaddress ** ptrAddr) {
 
 static void ackClient(IPaddress clientAddr) {
 	IPXHeader regHeader = {};
-	UDPpacket regPacket;
 
-	SDLNet_Write16(0xffff, regHeader.checkSum);
-	SDLNet_Write16(sizeof(regHeader), regHeader.length);
+	Net_Write16(0xffff, regHeader.checkSum);
+	Net_Write16(static_cast<uint16_t>(sizeof(regHeader)), regHeader.length);
 
-	SDLNet_Write32(0, regHeader.dest.network);
+	Net_Write32(0, regHeader.dest.network);
 	PackIP(clientAddr, &regHeader.dest.addr.byIP);
-	SDLNet_Write16(0x2, regHeader.dest.socket);
+	Net_Write16(0x2, regHeader.dest.socket);
 
-	SDLNet_Write32(1, regHeader.src.network);
+	Net_Write32(1, regHeader.src.network);
 	PackIP(ipxServerIp, &regHeader.src.addr.byIP);
-	SDLNet_Write16(0x2, regHeader.src.socket);
+	Net_Write16(0x2, regHeader.src.socket);
 	regHeader.transControl = 0;
 
-	regPacket.data = (Uint8 *)&regHeader;
-	regPacket.len = sizeof(regHeader);
-	regPacket.maxlen = sizeof(regHeader);
-	regPacket.address = clientAddr;
-	// Send registration string to client.  If client doesn't get this, client will not be registered
-	const int result = SDLNet_UDP_Send(ipxServerSocket, UDP_UNICAST, &regPacket);
-	if (result == 0)
+	if (!ipx_server_socket) {
+		return;
+	}
+	std::error_code ec;
+	ipx_server_socket->send_to(asio::buffer(&regHeader, sizeof(regHeader)),
+	                           to_endpoint(clientAddr),
+	                           0,
+	                           ec);
+	if (ec) {
 		LOG_MSG("IPXSERVER: Connection response not sent: %s",
-		        SDLNet_GetError());
+		        ec.message().c_str());
+	}
 }
 
-static void IPX_ServerLoop() {
-	UDPpacket inPacket;
+static void IPX_ServerHandlePacket(const IPaddress& sender_addr, const size_t packet_len)
+{
 	IPaddress tmpAddr;
-
-	//char regString[] = "IPX Register\0";
-
 	uint32_t host;
 
-	inPacket.channel = -1;
-	inPacket.data = &inBuffer[0];
-	inPacket.maxlen = IPXBUFFERSIZE;
+	if (packet_len == 0) {
+		return;
+	}
+	if (packet_len > IPXBUFFERSIZE) {
+		return;
+	}
 
-	const int result = SDLNet_UDP_Recv(ipxServerSocket, &inPacket);
-	if (result != 0) {
-		// Check to see if incoming packet is a registration packet
-		// For this, I just spoofed the echo protocol packet designation 0x02
-		IPXHeader *tmpHeader;
-		tmpHeader = (IPXHeader *)&inBuffer[0];
+	// Check to see if incoming packet is a registration packet
+	// For this, I just spoofed the echo protocol packet designation 0x02
+	auto* tmpHeader = reinterpret_cast<IPXHeader*>(&inBuffer[0]);
 
-		// Check to see if echo packet
-		if(SDLNet_Read16(tmpHeader->dest.socket) == 0x2) {
-			// Null destination node means its a server registration packet
-			if(tmpHeader->dest.addr.byIP.host == 0x0) {
-				UnpackIP(tmpHeader->src.addr.byIP, &tmpAddr);
-				for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i) {
-					if(!connBuffer[i].connected) {
-						// Use prefered host IP rather than the reported source IP
-						// It may be better to use the reported source
-						ipconn[i] = inPacket.address;
+	// Check to see if echo packet
+	if (Net_Read16(tmpHeader->dest.socket) == 0x2) {
+		// Null destination node means its a server registration packet
+		if (tmpHeader->dest.addr.byIP.host == 0x0) {
+			UnpackIP(tmpHeader->src.addr.byIP, &tmpAddr);
+			for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i) {
+				if (!connBuffer[i].connected) {
+					// Use prefered host IP rather than the
+					// reported source IP It may be better
+					// to use the reported source
+					ipconn[i] = sender_addr;
 
-						connBuffer[i].connected = true;
-						host = ipconn[i].host;
-						LOG_MSG("IPXSERVER: Connect from %d.%d.%d.%d", CONVIP(host));
-						ackClient(inPacket.address);
-						return;
-					} else {
-						if((ipconn[i].host == tmpAddr.host) && (ipconn[i].port == tmpAddr.port)) {
+					connBuffer[i].connected = true;
+					host = ipconn[i].host;
+					LOG_MSG("IPXSERVER: Connect from %d.%d.%d.%d",
+					        CONVIP(host));
+					ackClient(sender_addr);
+					return;
+				}
 
-							LOG_MSG("IPXSERVER: Reconnect from %d.%d.%d.%d", CONVIP(tmpAddr.host));
-							// Update anonymous port number if changed
-							ipconn[i].port = inPacket.address.port;
-							ackClient(inPacket.address);
-							return;
-						}
-					}
+				if ((ipconn[i].host == tmpAddr.host) &&
+				    (ipconn[i].port == tmpAddr.port)) {
+					LOG_MSG("IPXSERVER: Reconnect from %d.%d.%d.%d",
+					        CONVIP(tmpAddr.host));
+					// Update anonymous port number if changed
+					ipconn[i].port = sender_addr.port;
+					ackClient(sender_addr);
+					return;
 				}
 			}
 		}
-
-		// IPX packet is complete.  Now interpret IPX header and send to respective IP address
-		sendIPXPacket((uint8_t*)inPacket.data,
-		              static_cast<int16_t>(inPacket.len));
 	}
+
+	// IPX packet is complete. Now interpret IPX header and send to
+	// respective IP address
+	sendIPXPacket(inBuffer, static_cast<int16_t>(packet_len));
 }
 
 void IPX_StopServer() {
@@ -195,52 +216,75 @@ void IPX_StopServer() {
 		ipx_server_thread.join();
 	}
 
-	SDLNet_FreeSocketSet(socket_set);
-	SDLNet_UDP_Close(ipxServerSocket);
-	socket_set = nullptr;
+	if (ipx_server_socket) {
+		std::error_code ec;
+		ipx_server_socket->close(ec);
+		ipx_server_socket.reset();
+	}
 }
 
 bool IPX_StartServer(uint16_t portnum)
 {
-	if (!SDLNet_ResolveHost(&ipxServerIp, nullptr, portnum)) {
-		//serverSocketSet = SDLNet_AllocSocketSet(SOCKETTABLESIZE);
-		ipxServerSocket = SDLNet_UDP_Open(portnum);
-		if(!ipxServerSocket) return false;
+	// Server identity used in registration replies; historically this was
+	// INADDR_ANY + port.
+	ipxServerIp.host = 0;
+	Net_SetPort(ipxServerIp, portnum);
 
-		for (auto& i : connBuffer) {
+	std::error_code ec;
+	ipx_server_socket = std::make_unique<asio::ip::udp::socket>(ipx_io);
+	ipx_server_socket->open(asio::ip::udp::v4(), ec);
+	if (ec) {
+		return false;
+	}
+	ipx_server_socket->bind(asio::ip::udp::endpoint(asio::ip::udp::v4(), portnum),
+	                        ec);
+	if (ec) {
+		return false;
+	}
+	ipx_server_socket->non_blocking(true, ec);
+	if (ec) {
+		return false;
+	}
+
+	        for (auto& i : connBuffer) {
 			i.connected = false;
 		}
 
-		if (!socket_set) {
-			socket_set = SDLNet_AllocSocketSet(1);
-			if (!socket_set) {
-				LOG_ERR("IPXSERVER: %s", SDLNet_GetError());
-				return false;
-			}
-			if (SDLNet_UDP_AddSocket(socket_set, ipxServerSocket) == -1) {
-				LOG_ERR("IPXSERVER: %s", SDLNet_GetError());
-				return false;
-			}
-		}
-
-		if (!ipx_server_running) {
+	        if (!ipx_server_running) {
 			ipx_server_running = true;
-			ipx_server_thread  = std::thread([]() {
+		        ipx_server_thread  = std::thread([]() {
                                 while (ipx_server_running) {
-                                        const int num_ready = SDLNet_CheckSockets(
-                                                socket_set, 100);
-                                        if (num_ready == -1) {
-                                                LOG_ERR("IPXSERVER: %s",
-                                                        SDLNet_GetError());
+                                        if (!ipx_server_socket) {
+                                                std::this_thread::sleep_for(
+                                                        std::chrono::milliseconds(100));
                                                 continue;
                                         }
-                                        if (num_ready > 0) {
-                                                IPX_ServerLoop();
+                                        asio::ip::udp::endpoint sender;
+                                        std::error_code ec;
+                                        const auto len = ipx_server_socket->receive_from(
+                                                asio::buffer(inBuffer, IPXBUFFERSIZE),
+                                                sender,
+                                                0,
+                                                ec);
+                                        if (ec == asio::error::would_block ||
+                                            ec == asio::error::try_again) {
+                                                std::this_thread::sleep_for(
+                                                        std::chrono::milliseconds(10));
+                                                continue;
                                         }
+                                        if (ec) {
+                                                LOG_ERR("IPXSERVER: recv failed: %s",
+                                                        ec.message().c_str());
+                                                std::this_thread::sleep_for(
+                                                        std::chrono::milliseconds(10));
+                                                continue;
+                                        }
+                                        IPX_ServerHandlePacket(from_endpoint(sender),
+                                                               len);
                                 }
                         });
-		}
-		return true;
-	}
+	        }
+	        return true;
+
 	return false;
 }
