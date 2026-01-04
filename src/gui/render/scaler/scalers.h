@@ -20,8 +20,7 @@ constexpr uint16_t SCALER_MAXWIDTH  = 1600 + 30;
 // text modes (such as Q200x25x8 used by Necromancer's DOS Navigator) are
 // capable of writing.
 
-
-#define SCALER_BLOCKSIZE	16
+#define SCALER_BLOCKSIZE 16
 
 enum ScalerMode : uint8_t {
 	scalerMode8,  // 0
@@ -37,7 +36,7 @@ extern Bitu Scaler_ChangedLineIndex;
 extern uint16_t Scaler_ChangedLines[];
 
 union scalerSourceCache_t {
-	uint32_t b32	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
+	uint32_t b32[SCALER_MAXHEIGHT][SCALER_MAXWIDTH];
 };
 
 extern scalerSourceCache_t scalerSourceCache;
