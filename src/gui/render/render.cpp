@@ -167,7 +167,7 @@ bool RENDER_StartUpdate()
 	render.scale.outPitch  = 0;
 
 	scaler_changed_lines[0] = 0;
-	Scaler_ChangedLineIndex = 0;
+	scaler_changed_line_index = 0;
 
 	// Clearing the cache will first process the line to make sure it's
 	// never the same
