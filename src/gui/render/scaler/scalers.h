@@ -43,15 +43,15 @@ extern scalerSourceCache_t scalerSourceCache;
 
 typedef ScalerLineHandler_t ScalerLineBlock_t[6];
 
-struct ScalerSimpleBlock_t {
+struct Scaler {
 	uint8_t xscale           = 0;
 	uint8_t yscale           = 0;
 	ScalerLineBlock_t Random = {};
 };
 
 /* Simple scalers */
-extern ScalerSimpleBlock_t ScaleNormal1x;
-extern ScalerSimpleBlock_t ScaleNormalDw;
-extern ScalerSimpleBlock_t ScaleNormalDh;
-extern ScalerSimpleBlock_t ScaleNormal2x;
+extern Scaler ScaleNormal1x;
+extern Scaler ScaleNormalDw;
+extern Scaler ScaleNormalDh;
+extern Scaler ScaleNormal2x;
 #endif

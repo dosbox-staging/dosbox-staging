@@ -70,27 +70,27 @@ static inline void ScalerAddLines(Bitu changed, Bitu count)
 #include "templates.h"
 #undef SBPP
 
-ScalerSimpleBlock_t ScaleNormal1x = {
+Scaler ScaleNormal1x = {
         1,
         1,
         {Normal1x_8, Normal1x_15, Normal1x_16, Normal1x_24, Normal1x_32, Normal1x_9}
 };
 
 // Renders double-wide DOS video modes
-ScalerSimpleBlock_t ScaleNormalDw = {
+Scaler ScaleNormalDw = {
         2,
         1,
         {NormalDw_8, NormalDw_15, NormalDw_16, NormalDw_24, NormalDw_32, NormalDw_9}
 };
 
 // Renders double-high DOS video modes
-ScalerSimpleBlock_t ScaleNormalDh = {
+Scaler ScaleNormalDh = {
         1,
         2,
         {NormalDh_8, NormalDh_15, NormalDh_16, NormalDh_24, NormalDh_32, NormalDh_9}
 };
 
-ScalerSimpleBlock_t ScaleNormal2x = {
+Scaler ScaleNormal2x = {
         2,
         2,
         {Normal2x_8, Normal2x_15, Normal2x_16, Normal2x_24, Normal2x_32, Normal2x_9}
