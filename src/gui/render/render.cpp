@@ -368,39 +368,37 @@ static void render_reset()
 	            &render_callback);
 
 	// Set up scaler variables
-	const auto lineBlock = &scaler->Random;
-
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
-		render.scale.lineHandler    = (*lineBlock)[0];
-		render.scale.linePalHandler = (*lineBlock)[5];
+		render.scale.lineHandler    = scaler->line_handlers[0];
+		render.scale.linePalHandler = scaler->line_handlers[5];
 		render.scale.inMode         = scalerMode8;
 		render.scale.cachePitch     = render.src.width * 1;
 		break;
 
 	case PixelFormat::RGB555_Packed16:
-		render.scale.lineHandler    = (*lineBlock)[1];
+		render.scale.lineHandler    = scaler->line_handlers[1];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode15;
 		render.scale.cachePitch     = render.src.width * 2;
 		break;
 
 	case PixelFormat::RGB565_Packed16:
-		render.scale.lineHandler    = (*lineBlock)[2];
+		render.scale.lineHandler    = scaler->line_handlers[2];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode16;
 		render.scale.cachePitch     = render.src.width * 2;
 		break;
 
 	case PixelFormat::BGR24_ByteArray:
-		render.scale.lineHandler    = (*lineBlock)[3];
+		render.scale.lineHandler    = scaler->line_handlers[3];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 3;
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
-		render.scale.lineHandler    = (*lineBlock)[4];
+		render.scale.lineHandler    = scaler->line_handlers[4];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 4;
