@@ -1780,34 +1780,39 @@ PixelFormat VGA_ActivateHardwareCursor()
 }
 
 // A single point to set total drawn lines and update affected delay values
-static void setup_line_drawing_delays(const uint32_t total_lines)
+static void setup_line_drawing_delays()
 {
-	const auto conf = control->GetSection("dosbox");
+	switch (vga.draw.mode) {
+	case PART: {
+		const auto section = get_section("dosbox");
+		assert(section);
 
-	const auto section = static_cast<SectionProp*>(conf);
-	assert(section);
+		if (vga.draw.mode == PART &&
+		    !section->GetBool("vga_render_per_scanline")) {
+			// Render the screen in 4 parts; this was the legacy
+			// DOSBox behaviour. A few games needs this (e.g., Deus,
+			// Ishar 3, Robinson's Requiem, Time Travelers) and
+			// would crash at startup with per-scanline rendering
+			// enabled. This is most likely due to some VGA
+			// emulation deficiency.
+			vga.draw.parts_total = 4;
+		} else {
+			vga.draw.parts_total = vga.draw.lines_total;
+		}
 
-	if (vga.draw.mode == PART && !section->GetBool("vga_render_per_scanline")) {
-		// Render the screen in 4 parts; this was the legacy DOSBox
-		// behaviour. A few games needs this (e.g., Deus, Ishar 3,
-		// Robinson's Requiem, Time Travelers) and would crash at
-		// startup with per-scanline rendering enabled. This is most
-		// likely due to some VGA emulation deficiency.
-		vga.draw.parts_total = 4;
-	} else {
-		vga.draw.parts_total = total_lines;
+		vga.draw.delay.parts = vga.draw.delay.vdend / vga.draw.parts_total;
+		vga.draw.parts_lines = vga.draw.lines_total / vga.draw.parts_total;
+	} break;
+
+	case DRAWLINE:
+	case EGALINE:
+		assert(vga.draw.delay.vdend > 0.0);
+		vga.draw.delay.per_line_ms = vga.draw.delay.vdend /
+		                             vga.draw.lines_total;
+		break;
+
+	default: assertm(false, "Invalid DrawMode value");
 	}
-
-	vga.draw.delay.parts = vga.draw.delay.vdend / vga.draw.parts_total;
-
-	assert(total_lines > 0 && total_lines <= SCALER_MAXHEIGHT);
-	vga.draw.lines_total = total_lines;
-
-	assert(vga.draw.parts_total > 0);
-	vga.draw.parts_lines = total_lines / vga.draw.parts_total;
-
-	assert(vga.draw.delay.vdend > 0.0);
-	vga.draw.delay.per_line_ms = vga.draw.delay.vdend / total_lines;
 }
 
 // Determines pixel size as a pair of fractions (width and height)
@@ -3231,10 +3236,14 @@ ImageInfo setup_drawing()
 	                             CurMode->sheight != video_mode.height);
 
 	vga.draw.vblank_skip = vblank_skip;
-	setup_line_drawing_delays(render_height);
+
+	assert(render_height > 0 && render_height <= SCALER_MAXHEIGHT);
+	vga.draw.lines_total = render_height;
 
 	vga.draw.line_length = render_width *
 	                       ((get_bits_per_pixel(pixel_format) + 1) / 8);
+
+	setup_line_drawing_delays();
 
 #ifdef VGA_KEEP_CHANGES
 	vga.changes.active    = false;
