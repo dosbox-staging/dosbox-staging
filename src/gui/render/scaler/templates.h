@@ -4,27 +4,13 @@
 
 #define PSIZE      4
 #define PTYPE      uint32_t
-#define WC         scalerWriteCache.b32
-#define redMask    0xff0000
-#define greenMask  0x00ff00
-#define blueMask   0x0000ff
-#define redBits    8
-#define greenBits  8
-#define blueBits   8
-#define redShift   16
-#define greenShift 8
-#define blueShift  0
-
-#define redblueMask (redMask | blueMask)
 
 #if SBPP == 8 || SBPP == 9
-#define SC          scalerSourceCache.b8
 #define PMAKE(_VAL) render.pal.lut.b32[_VAL]
 #define SRCTYPE     uint8_t
 #endif
 
 #if SBPP == 15
-#define SC scalerSourceCache.b16
 #ifdef WORDS_BIGENDIAN
 #// GggBBBbbxRRRrrGG -> 00000000RRRrrRRRGGGggGGGBBBbbBBB
 #define PMAKE(_VAL) \
@@ -43,7 +29,6 @@
 #endif
 
 #if SBPP == 16
-#define SC scalerSourceCache.b16
 #ifdef WORDS_BIGENDIAN
 #// gggBBBbbRRRrrGGg -> RRRrrRRRGGggggGGBBBbbBBB
 #define PMAKE(_VAL) \
@@ -62,14 +47,12 @@
 #endif
 
 #if SBPP == 24
-#define SC          scalerSourceCache.b32
 #define PMAKE(_VAL) (_VAL)
 #include "utils/rgb888.h"
 #define SRCTYPE Rgb888
 #endif
 
 #if SBPP == 32
-#define SC scalerSourceCache.b32
 #ifdef WORDS_BIGENDIAN
 #// BBBBBBBBGGGGGGGGRRRRRRRRxxxxxxxx -> RRRRRRRRGGGGGGGGBBBBBBBB
 #define PMAKE(_VAL) \
@@ -137,17 +120,4 @@
 #undef PSIZE
 #undef PTYPE
 #undef PMAKE
-#undef WC
-#undef LC
-#undef SC
-#undef redMask
-#undef greenMask
-#undef blueMask
-#undef redblueMask
-#undef redBits
-#undef greenBits
-#undef blueBits
-#undef redShift
-#undef greenShift
-#undef blueShift
 #undef SRCTYPE
