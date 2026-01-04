@@ -65,7 +65,7 @@
 #endif
 
 /* Simple scalers */
-#define SCALERNAME   Normal1x
+#define SCALERNAME   Scale1x
 #define SCALERWIDTH  1
 #define SCALERHEIGHT 1
 #define SCALERFUNC   line0[0] = P;
@@ -76,7 +76,7 @@
 #undef SCALERHEIGHT
 #undef SCALERFUNC
 
-#define SCALERNAME   Normal2x
+#define SCALERNAME   Scale2x
 #define SCALERWIDTH  2
 #define SCALERHEIGHT 2
 #define SCALERFUNC \
@@ -91,7 +91,7 @@
 #undef SCALERHEIGHT
 #undef SCALERFUNC
 
-#define SCALERNAME   NormalDw
+#define SCALERNAME   ScaleHoriz2x
 #define SCALERWIDTH  2
 #define SCALERHEIGHT 1
 #define SCALERFUNC \
@@ -104,7 +104,7 @@
 #undef SCALERHEIGHT
 #undef SCALERFUNC
 
-#define SCALERNAME   NormalDh
+#define SCALERNAME   ScaleVert2x
 #define SCALERWIDTH  1
 #define SCALERHEIGHT 2
 #define SCALERFUNC \
