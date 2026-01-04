@@ -311,7 +311,7 @@ static void render_reset()
 	bool double_width        = render.src.double_width;
 	bool double_height       = render.src.double_height;
 
-	auto scaler = &ScaleNormal1x;
+	auto scaler = &Scale1x;
 
 	// Don't do software scaler sizes larger than 4k
 	uint16_t maxsize_current_input = SCALER_MAXWIDTH / render_width_px;
@@ -320,18 +320,18 @@ static void render_reset()
 	}
 
 	if (double_height && double_width) {
-		scaler = &ScaleNormal2x;
+		scaler = &Scale2x;
 	} else if (double_width) {
-		scaler = &ScaleNormalDw;
+		scaler = &ScaleHoriz2x;
 	} else if (double_height) {
-		scaler = &ScaleNormalDh;
+		scaler = &ScaleVert2x;
 	} else {
-		scaler = &ScaleNormal1x;
+		scaler = &Scale1x;
 	}
 
 	if ((render_width_px * scaler->xscale > SCALER_MAXWIDTH) ||
 	    (render.src.height * scaler->yscale > SCALER_MAXHEIGHT)) {
-		scaler = &ScaleNormal1x;
+		scaler = &Scale1x;
 	}
 
 	constexpr auto src_pixel_bytes = sizeof(uintptr_t);

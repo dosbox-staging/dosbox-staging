@@ -49,8 +49,8 @@ struct Scaler {
 };
 
 /* Simple scalers */
-extern Scaler ScaleNormal1x;
-extern Scaler ScaleNormalDw;
-extern Scaler ScaleNormalDh;
-extern Scaler ScaleNormal2x;
+extern Scaler Scale1x;
+extern Scaler ScaleHoriz2x;
+extern Scaler ScaleVert2x;
+extern Scaler Scale2x;
 #endif

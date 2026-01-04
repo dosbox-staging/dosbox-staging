@@ -9,7 +9,6 @@
 #include "dosbox.h"
 
 #include "gui/private/common.h"
-
 #include "gui/render/render.h"
 
 #include <cstring>
@@ -28,7 +27,9 @@ static inline void BituMove(void* _dst, const void* _src, Bitu size)
 {
 	auto dst = static_cast<Bitu*>(_dst);
 	auto src = static_cast<const Bitu*>(_src);
+
 	size /= sizeof(Bitu);
+
 	for (Bitu x = 0; x < size; x++) {
 		dst[x] = src[x];
 	}
@@ -70,29 +71,36 @@ static inline void ScalerAddLines(Bitu changed, Bitu count)
 #include "templates.h"
 #undef SBPP
 
-Scaler ScaleNormal1x = {
+// clang-format off
+
+Scaler Scale1x = {
         1,
         1,
-        {Normal1x_8, Normal1x_15, Normal1x_16, Normal1x_24, Normal1x_32, Normal1x_9}
+        {Scale1x_8,  Scale1x_15, Scale1x_16,
+         Scale1x_24, Scale1x_32, Scale1x_9}
 };
 
 // Renders double-wide DOS video modes
-Scaler ScaleNormalDw = {
+Scaler ScaleHoriz2x = {
         2,
         1,
-        {NormalDw_8, NormalDw_15, NormalDw_16, NormalDw_24, NormalDw_32, NormalDw_9}
+        {ScaleHoriz2x_8,  ScaleHoriz2x_15, ScaleHoriz2x_16,
+         ScaleHoriz2x_24, ScaleHoriz2x_32, ScaleHoriz2x_9}
 };
 
 // Renders double-high DOS video modes
-Scaler ScaleNormalDh = {
+Scaler ScaleVert2x = {
         1,
         2,
-        {NormalDh_8, NormalDh_15, NormalDh_16, NormalDh_24, NormalDh_32, NormalDh_9}
+        {ScaleVert2x_8,  ScaleVert2x_15, ScaleVert2x_16,
+         ScaleVert2x_24, ScaleVert2x_32, ScaleVert2x_9}
 };
 
-Scaler ScaleNormal2x = {
+Scaler Scale2x = {
         2,
         2,
-        {Normal2x_8, Normal2x_15, Normal2x_16, Normal2x_24, Normal2x_32, Normal2x_9}
+        {Scale2x_8 , Scale2x_15, Scale2x_16,
+         Scale2x_24, Scale2x_32, Scale2x_9}
 };
 
+// clang-format on
