@@ -12,7 +12,7 @@
 #error "Scaler goes too wide"
 #endif
 
-static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
+static void conc2d(SCALERNAME,SBPP)(const void *s) {
 	/* Clear the complete line marker */
 	Bitu hadChange = 0;
 	auto src   = static_cast<const SRCTYPE*>(s);
