@@ -162,7 +162,7 @@ bool RENDER_StartUpdate()
 
 	render.scale.inLine    = 0;
 	render.scale.outLine   = 0;
-	render.scale.cacheRead = (uint8_t*)&scalerSourceCache;
+	render.scale.cacheRead = (uint8_t*)&scaler_source_cache;
 	render.scale.outWrite  = nullptr;
 	render.scale.outPitch  = 0;
 
@@ -247,7 +247,7 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 		image.params.double_width  = double_width;
 		image.params.double_height = double_height;
 		image.pitch                = render.scale.cachePitch;
-		image.image_data           = (uint8_t*)&scalerSourceCache;
+		image.image_data           = (uint8_t*)&scaler_source_cache;
 		image.palette_data         = (uint8_t*)&render.pal.rgb;
 
 		const auto frames_per_second = static_cast<float>(render.fps);

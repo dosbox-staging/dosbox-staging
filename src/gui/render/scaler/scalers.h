@@ -33,11 +33,11 @@ extern uint8_t scaler_aspect[];
 extern Bitu scaler_changed_line_index;
 extern uint16_t scaler_changed_lines[];
 
-union scalerSourceCache_t {
+union ScalerSourceCache {
 	uint32_t b32[SCALER_MAXHEIGHT][SCALER_MAXWIDTH];
 };
 
-extern scalerSourceCache_t scalerSourceCache;
+extern ScalerSourceCache scaler_source_cache;
 
 typedef void (*ScalerLineHandler)(const void* src);
 
