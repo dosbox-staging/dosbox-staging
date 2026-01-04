@@ -179,7 +179,7 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 			if (i + 1 >= args.size()) {
 				return ErrorType::MissingArgument;
 			}
-			auto size_str = args[++i];
+			const auto& size_str = args[++i];
 			auto size_mb  = parse_int(size_str, 10);
 			if (!size_mb) {
 				return ErrorType::InvalidValue;
@@ -190,7 +190,7 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 			if (i + 1 >= args.size()) {
 				return ErrorType::MissingArgument;
 			}
-			auto chs_str = args[++i];
+			const auto& chs_str = args[++i];
 			auto parts   = split_with_empties(chs_str, ',');
 
 			if (parts.size() != 3) {
@@ -553,7 +553,7 @@ bool Execute(Program* program, CommandSettings& s)
 		std::memset(buffer, 0, SectorSize);
 		std::string lbl = s.label;
 		lbl.resize(11, ' ');
-		std::memcpy(buffer, lbl.c_str(), 11);
+		std::copy(lbl.begin(), lbl.end(), buffer);
         // Volume Label Attribute
 		buffer[11] = 0x08;
 		std::fwrite(buffer, 1, SectorSize, f);
