@@ -70,10 +70,7 @@ struct RenderPal_t {
 		uint8_t unused = 0;
 	} rgb[256] = {};
 
-	union {
-		uint16_t b16[256];
-		uint32_t b32[256] = {};
-	} lut = {};
+	uint32_t lut[256] = {};
 
 	bool changed          = false;
 	uint8_t modified[256] = {};

@@ -49,10 +49,10 @@ static void check_palette()
 
 		uint32_t new_pal = GFX_MakePixel(r, g, b);
 
-		if (new_pal != render.pal.lut.b32[i]) {
+		if (new_pal != render.pal.lut[i]) {
 			render.pal.changed     = true;
 			render.pal.modified[i] = 1;
-			render.pal.lut.b32[i]  = new_pal;
+			render.pal.lut[i]      = new_pal;
 		}
 	}
 
