@@ -28,21 +28,9 @@ static union {
 } scalerWriteCache;
 //scalerFrameCache_t scalerFrameCache;
 scalerSourceCache_t scalerSourceCache;
-#if RENDER_USE_ADVANCED_SCALERS>1
-scalerChangeCache_t scalerChangeCache;
-#endif
 
-#define _conc2(A,B) A ## B
-#define _conc3(A,B,C) A ## B ## C
-#define _conc4(A,B,C,D) A ## B ## C ## D
-#define _conc5(A,B,C,D,E) A ## B ## C ## D ## E
 #define _conc7(A,B,C,D,E,F,G) A ## B ## C ## D ## E ## F ## G
 
-#define conc2(A,B) _conc2(A,B)
-#define conc3(A,B,C) _conc3(A,B,C)
-#define conc4(A,B,C,D) _conc4(A,B,C,D)
-#define conc2d(A,B) _conc3(A,_,B)
-#define conc3d(A,B,C) _conc5(A,_,B,_,C)
 #define conc4d(A,B,C,D) _conc7(A,_,B,_,C,_,D)
 
 static inline void BituMove( void *_dst, const void * _src, Bitu size) {
@@ -63,27 +51,6 @@ static inline void ScalerAddLines( Bitu changed, Bitu count ) {
 	render.scale.outWrite += render.scale.outPitch * count;
 }
 
-
-#define BituMove2(_DST,_SRC,_SIZE)			\
-{											\
-	Bitu bsize=(_SIZE)/sizeof(Bitu);		\
-	Bitu * bdst=(Bitu *)(_DST);				\
-	Bitu * bsrc=(Bitu *)(_SRC);				\
-	while (bsize--) *bdst++=*bsrc++;		\
-}
-
-#define interp_w2(P0,P1,W0,W1)															\
-	((((P0&redblueMask)*W0+(P1&redblueMask)*W1)/(W0+W1)) & redblueMask) |	\
-	((((P0&  greenMask)*W0+(P1&  greenMask)*W1)/(W0+W1)) & greenMask)
-#define interp_w3(P0,P1,P2,W0,W1,W2)														\
-	((((P0&redblueMask)*W0+(P1&redblueMask)*W1+(P2&redblueMask)*W2)/(W0+W1+W2)) & redblueMask) |	\
-	((((P0&  greenMask)*W0+(P1&  greenMask)*W1+(P2&  greenMask)*W2)/(W0+W1+W2)) & greenMask)
-#define interp_w4(P0,P1,P2,P3,W0,W1,W2,W3)														\
-	((((P0&redblueMask)*W0+(P1&redblueMask)*W1+(P2&redblueMask)*W2+(P3&redblueMask)*W3)/(W0+W1+W2+W3)) & redblueMask) |	\
-	((((P0&  greenMask)*W0+(P1&  greenMask)*W1+(P2&  greenMask)*W2+(P3&  greenMask)*W3)/(W0+W1+W2+W3)) & greenMask)
-
-
-#define CC scalerChangeCache
 
 /* Include the different rendering routines */
 #define SBPP 8
