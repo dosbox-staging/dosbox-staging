@@ -81,28 +81,28 @@ const std::map<std::string, DiskGeometry> GeometryPresets = {
 };
 
 // Return a 3-byte array [h, s|c_high, c_low]
-std::array<uint8_t, 3> lba2chs(uint64_t lba, uint32_t max_c, uint32_t max_h,
-                               uint32_t max_s)
+std::array<uint8_t, 3> lba_to_chs(uint64_t lba, uint32_t max_cylinders, uint32_t max_heads,
+                               uint32_t max_sectors)
 {
-	uint32_t c = 0, h = 0, s = 0;
-	if (lba < static_cast<uint64_t>(max_c) * max_h * max_s) {
-		s             = static_cast<uint32_t>((lba % max_s) + 1);
-		uint64_t temp = lba / max_s;
-		h             = static_cast<uint32_t>(temp % max_h);
-		c             = static_cast<uint32_t>(temp / max_h);
+	uint32_t cylinders = 0, heads = 0, sectors = 0;
+	if (lba < static_cast<uint64_t>(max_cylinders) * max_heads * max_sectors) {
+		sectors             = static_cast<uint32_t>((lba % max_sectors) + 1);
+		uint64_t temp = lba / max_sectors;
+		heads             = static_cast<uint32_t>(temp % max_heads);
+		cylinders             = static_cast<uint32_t>(temp / max_heads);
 		// Clamp for legacy CHS
-		if (c > 1023) {
-			c = 1023;
+		if (cylinders > 1023) {
+			cylinders = 1023;
 		}
 	} else {
-		c = 1023;
-		h = max_h - 1;
-		s = max_s;
+		cylinders = 1023;
+		heads = max_heads - 1;
+		sectors = max_sectors;
 	}
 
-	return {static_cast<uint8_t>(h),
-	        static_cast<uint8_t>((s & 0x3f) | ((c >> 2) & 0xc0)),
-	        static_cast<uint8_t>(c & 0xff)};
+	return {static_cast<uint8_t>(heads),
+	        static_cast<uint8_t>((sectors & 0x3f) | ((cylinders >> 2) & 0xc0)),
+	        static_cast<uint8_t>(cylinders & 0xff)};
 }
 
 // Write a string into a fixed-width buffer and pad with spaces
@@ -252,30 +252,30 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 	return settings;
 }
 
-bool Execute(Program* program, CommandSettings& s)
+bool Execute(Program* program, CommandSettings& command_settings)
 {
 	DiskGeometry geom         = {};
 	uint64_t total_size       = 0;
-	const uint64_t SectorSize = 512;
+	constexpr uint64_t SectorSize = 512;
 
 	// Determine Geometry and Size
-	if (auto it = GeometryPresets.find(s.type); it != GeometryPresets.end()) {
+	if (auto it = GeometryPresets.find(command_settings.type); it != GeometryPresets.end()) {
 		geom       = it->second;
 		total_size = static_cast<uint64_t>(geom.cyl) * geom.heads *
 		             geom.sectors * SectorSize;
-	} else if (s.type == "hd") {
+	} else if (command_settings.type == "hd") {
 		geom.media_desc = 0xF8;
 		geom.is_floppy  = false;
 
-		if (s.use_chs) {
-			geom.cyl     = s.cylinders;
-			geom.heads   = s.heads;
-			geom.sectors = s.sectors;
+		if (command_settings.use_chs) {
+			geom.cyl     = command_settings.cylinders;
+			geom.heads   = command_settings.heads;
+			geom.sectors = command_settings.sectors;
 			total_size   = static_cast<uint64_t>(geom.cyl) *
 			             geom.heads * geom.sectors * SectorSize;
-		} else if (s.size_bytes > 0) {
-			total_size           = s.size_bytes;
-			uint64_t tot_sectors = total_size / SectorSize;
+		} else if (command_settings.size_bytes > 0) {
+			total_size           = command_settings.size_bytes;
+			uint64_t total_sectors = total_size / SectorSize;
 
 			// Calculate CHS from Size
 			geom.heads   = 16;
@@ -292,7 +292,7 @@ bool Execute(Program* program, CommandSettings& s)
 			}
 
 			geom.cyl = static_cast<uint32_t>(
-			        tot_sectors / (geom.heads * geom.sectors));
+			        total_sectors / (geom.heads * geom.sectors));
 			// Cap for legacy geometry
 			if (geom.cyl > 1023) {
 				geom.cyl = 1023;
@@ -302,7 +302,7 @@ bool Execute(Program* program, CommandSettings& s)
 			return false;
 		}
 	} else {
-		notify_warning("SHELL_CMD_IMGMAKE_INVALID_TYPE", s.type.c_str());
+		notify_warning("SHELL_CMD_IMGMAKE_INVALID_TYPE", command_settings.type.c_str());
 		return false;
 	}
 
@@ -312,17 +312,17 @@ bool Execute(Program* program, CommandSettings& s)
 	}
 
 	// Check File Existence
-	if (std::ifstream(s.filename) && !s.force) {
-		notify_warning("SHELL_CMD_IMGMAKE_FILE_EXISTS", s.filename.c_str());
+	if (std::ifstream(command_settings.filename) && !command_settings.force) {
+		notify_warning("SHELL_CMD_IMGMAKE_FILE_EXISTS", command_settings.filename.c_str());
 		return false;
 	}
 
 	// Create File
-	std::fstream fs(s.filename,
+	std::fstream fs(command_settings.filename,
 	                std::ios::binary | std::ios::out | std::ios::in |
 	                        std::ios::trunc);
 	if (!fs) {
-		notify_warning("SHELL_CMD_IMGMAKE_CANNOT_WRITE", s.filename.c_str());
+		notify_warning("SHELL_CMD_IMGMAKE_CANNOT_WRITE", command_settings.filename.c_str());
 		return false;
 	}
 
@@ -331,7 +331,7 @@ bool Execute(Program* program, CommandSettings& s)
 	if (fs.fail()) {
 		notify_warning("SHELL_CMD_IMGMAKE_SPACE_ERROR");
 		fs.close();
-		std::remove(s.filename.c_str());
+		std::remove(command_settings.filename.c_str());
 		return false;
 	}
 
@@ -339,12 +339,11 @@ bool Execute(Program* program, CommandSettings& s)
 	fs.write(&zero, 1);
 	fs.seekp(0);
 
-	if (s.no_format) {
+	if (command_settings.no_format) {
 		return true;
 	}
 
-	std::array<uint8_t, 512> buffer;
-	buffer.fill(0);
+	std::array<uint8_t, 512> buffer = {};
 	int64_t boot_sector_pos = 0;
 
 	// Partition Table for Hard Disks
@@ -360,19 +359,19 @@ bool Execute(Program* program, CommandSettings& s)
 
 		// Start CHS (0, 1, 1) usually, but we use
 		// boot_sector_pos LBA conversion
-		auto start_chs = lba2chs(static_cast<uint64_t>(boot_sector_pos),
+		auto start_chs = lba_to_chs(static_cast<uint64_t>(boot_sector_pos),
 		                         geom.cyl,
 		                         geom.heads,
 		                         geom.sectors);
 		std::copy(start_chs.begin(), start_chs.end(), p + 1);
 
 		// Partition Type
-		uint64_t vol_sectors = (total_size / SectorSize) -
+		uint64_t volume_sectors = (total_size / SectorSize) -
 		                       static_cast<uint64_t>(boot_sector_pos);
-		if (s.fat_type == 32 || vol_sectors > 4194304) {
+		if (command_settings.fat_type == 32 || volume_sectors > 4194304) {
 			// FAT32 LBA
 			p[4] = 0x0C;
-		} else if (vol_sectors > 65535) {
+		} else if (volume_sectors > 65535) {
 			// FAT16B
 			p[4] = 0x06;
 		} else {
@@ -381,7 +380,7 @@ bool Execute(Program* program, CommandSettings& s)
 		}
 
 		// End CHS
-		auto end_chs = lba2chs((total_size / 512) - 1,
+		auto end_chs = lba_to_chs((total_size / 512) - 1,
 		                       geom.cyl,
 		                       geom.heads,
 		                       geom.sectors);
@@ -389,7 +388,7 @@ bool Execute(Program* program, CommandSettings& s)
 
 		// LBA Start & Size
 		host_writed(p + 8, static_cast<uint32_t>(boot_sector_pos));
-		host_writed(p + 12, static_cast<uint32_t>(vol_sectors));
+		host_writed(p + 12, static_cast<uint32_t>(volume_sectors));
 
 		// Signature
 		buffer[510] = 0x55;
@@ -401,12 +400,12 @@ bool Execute(Program* program, CommandSettings& s)
 
 	// Move to Boot Sector
 	fs.seekp(static_cast<std::streamoff>(boot_sector_pos * SectorSize));
-	buffer.fill(0);
+	buffer = {};
 
 	// Determines FAT parameters
 	uint64_t vol_sectors = (total_size / SectorSize) -
 	                       static_cast<uint64_t>(boot_sector_pos);
-	int fat_bits = s.fat_type;
+	int fat_bits = command_settings.fat_type;
 
 	// Auto-detect FAT
 	if (fat_bits == -1) {
@@ -433,10 +432,10 @@ bool Execute(Program* program, CommandSettings& s)
 	host_writew(buffer.data() + 11, static_cast<uint16_t>(SectorSize));
 
 	// Sectors per cluster
-	uint8_t spc = (s.sectors_per_cluster > 0)
-	                    ? static_cast<uint8_t>(s.sectors_per_cluster)
+	uint8_t spc = (command_settings.sectors_per_cluster > 0)
+	                    ? static_cast<uint8_t>(command_settings.sectors_per_cluster)
 	                    : 1;
-	if (s.sectors_per_cluster == 0) {
+	if (command_settings.sectors_per_cluster == 0) {
 		if (vol_sectors > 2097152) {
 			spc = 32;
 		} else if (vol_sectors > 32680) {
@@ -448,7 +447,7 @@ bool Execute(Program* program, CommandSettings& s)
 
 	uint16_t reserved_sectors = (fat_bits == 32) ? 32 : 1;
 	host_writew(buffer.data() + 14, reserved_sectors);
-	buffer[16] = static_cast<uint8_t>(s.fat_copies);
+	buffer[16] = static_cast<uint8_t>(command_settings.fat_copies);
 
 	uint16_t root_ent = (fat_bits == 32)
 	                          ? 0
@@ -491,7 +490,7 @@ bool Execute(Program* program, CommandSettings& s)
 		host_writew(buffer.data() + 22, static_cast<uint16_t>(fat_size));
 	}
 
-	// SPT
+	// Sectors per Track
 	host_writew(buffer.data() + 24, static_cast<uint16_t>(geom.sectors));
 	// Heads
 	host_writew(buffer.data() + 26, static_cast<uint16_t>(geom.heads));
@@ -539,16 +538,14 @@ bool Execute(Program* program, CommandSettings& s)
 	fs.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
 
 	// Write FATs
-	std::array<uint8_t, 512> empty_sect;
-	empty_sect.fill(0);
+	std::array<uint8_t, 512> empty_sect = {};
 
 	// Position after reserved
 	fs.seekp(static_cast<std::streamoff>(
 	        (boot_sector_pos + reserved_sectors) * SectorSize));
 
 	// Initialize FAT start
-	std::array<uint8_t, 512> fat_header;
-	fat_header.fill(0);
+	std::array<uint8_t, 512> fat_header = {};
 
 	if (fat_bits == 32) {
 		// Media + reserved
@@ -565,7 +562,7 @@ bool Execute(Program* program, CommandSettings& s)
 		fat_header[2] = 0xFF;
 	}
 
-	for (int i = 0; i < s.fat_copies; ++i) {
+	for (int i = 0; i < command_settings.fat_copies; ++i) {
 		auto current_fat_start = fs.tellp();
 		fs.write(reinterpret_cast<const char*>(fat_header.data()),
 		         fat_header.size());
@@ -580,10 +577,10 @@ bool Execute(Program* program, CommandSettings& s)
 		         static_cast<std::streamoff>(fat_size * SectorSize));
 	}
 
-	// Write Root Directory Label (Optional)
-	if (!s.label.empty()) {
-		buffer.fill(0);
-		write_padded_string(buffer.data(), s.label, 11);
+	// Write optional Root Directory Label
+	if (!command_settings.label.empty()) {
+		buffer = {};
+		write_padded_string(buffer.data(), command_settings.label, 11);
 		// Volume Label Attribute
 		buffer[11] = 0x08;
 		fs.write(reinterpret_cast<const char*>(buffer.data()),
@@ -593,7 +590,7 @@ bool Execute(Program* program, CommandSettings& s)
 	// File closes automatically via RAII
 
 	program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CREATED"),
-	                  s.filename.c_str(),
+	                  command_settings.filename.c_str(),
 	                  geom.cyl,
 	                  geom.heads,
 	                  geom.sectors);
