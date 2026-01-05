@@ -878,8 +878,7 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	const auto image_size_bytes = check_cast<uint32_t>(image.params.height *
 	                                                   image.pitch);
 
-	image.image_data   = new uint8_t[image_size_bytes];
-	image.palette_data = nullptr;
+	image.image_data = new uint8_t[image_size_bytes];
 
 	image.is_flipped_vertically = true;
 

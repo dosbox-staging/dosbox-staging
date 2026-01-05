@@ -33,22 +33,22 @@ bool PngWriter::InitRgb888(FILE* fp, const uint16_t width, const uint16_t height
 		return false;
 	}
 
-	constexpr auto is_paletted  = false;
-	constexpr auto palette_data = nullptr;
-	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, is_paletted, palette_data);
+	constexpr auto is_paletted = false;
+	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, is_paletted, {});
 	return true;
 }
 
 bool PngWriter::InitIndexed8(FILE* fp, const uint16_t width, const uint16_t height,
                              const Fraction& pixel_aspect_ratio,
-                             const VideoMode& video_mode, const uint8_t* palette_data)
+                             const VideoMode& video_mode,
+                             const std::array<Rgb888, NumVgaColors>& palette)
 {
 	if (!Init(fp)) {
 		return false;
 	}
 
 	constexpr auto is_paletted = true;
-	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, is_paletted, palette_data);
+	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, is_paletted, palette);
 	return true;
 }
 
@@ -117,8 +117,8 @@ void PngWriter::SetPngCompressionsParams()
 
 void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
                              const Fraction& pixel_aspect_ratio,
-                             const VideoMode& video_mode,
-                             const bool is_paletted, const uint8_t* palette_data)
+                             const VideoMode& video_mode, const bool is_paletted,
+                             const std::array<Rgb888, NumVgaColors>& palette)
 {
 	assert(png_ptr);
 	assert(png_info_ptr);
@@ -137,15 +137,16 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 	             PNG_FILTER_TYPE_DEFAULT);
 
 	if (is_paletted) {
-		constexpr auto NumPaletteEntries     = 256;
-		png_color palette[NumPaletteEntries] = {};
+		constexpr auto NumPaletteEntries = NumVgaColors;
+
+		png_color palette_data[NumPaletteEntries] = {};
 
 		for (auto i = 0; i < NumPaletteEntries; ++i) {
-			palette[i].red   = palette_data[i * 4 + 0];
-			palette[i].green = palette_data[i * 4 + 1];
-			palette[i].blue  = palette_data[i * 4 + 2];
+			palette_data[i].red   = palette[i].red;
+			palette_data[i].green = palette[i].green;
+			palette_data[i].blue  = palette[i].blue;
 		}
-		png_set_PLTE(png_ptr, png_info_ptr, palette, NumPaletteEntries);
+		png_set_PLTE(png_ptr, png_info_ptr, palette_data, NumPaletteEntries);
 	}
 
 #ifdef PNG_gAMA_SUPPORTED

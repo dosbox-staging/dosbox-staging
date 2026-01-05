@@ -248,7 +248,7 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 		image.params.double_height = double_height;
 		image.pitch                = render.scale.cachePitch;
 		image.image_data           = (uint8_t*)&scaler_source_cache;
-		image.palette_data         = (uint8_t*)&render.pal.rgb;
+		image.palette              = render.pal.rgb;
 
 		const auto frames_per_second = static_cast<float>(render.fps);
 

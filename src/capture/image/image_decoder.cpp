@@ -17,10 +17,6 @@ void ImageDecoder::Init(const RenderedImage& _image, const uint8_t _row_skip_cou
 	assert(_image.params.pixel_aspect_ratio.ToDouble() >= 0.0);
 	assert(_image.image_data);
 
-	if (_image.is_paletted()) {
-		assert(_image.palette_data);
-	}
-
 	if (_image.is_flipped_vertically) {
 		curr_row_start = _image.image_data +
 		                 (_image.params.height - 1) * _image.pitch;

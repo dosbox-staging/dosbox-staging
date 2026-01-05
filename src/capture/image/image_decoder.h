@@ -87,14 +87,11 @@ private:
 	inline Rgb888 GetNextPalettedPixelAsRgb888()
 	{
 		const auto pal_index = *pos;
-
-		const auto r = image.palette_data[pal_index * 4 + 0];
-		const auto g = image.palette_data[pal_index * 4 + 1];
-		const auto b = image.palette_data[pal_index * 4 + 2];
+		const auto color     = image.palette[pal_index];
 
 		IncrementPos();
 
-		return {r, g, b};
+		return color;
 	}
 
 	inline Rgb888 GetNextRgbPixelAsRgb888()
