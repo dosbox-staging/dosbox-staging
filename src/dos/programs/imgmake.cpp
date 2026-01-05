@@ -138,7 +138,6 @@ struct CommandSettings {
 	bool force        = false;
 	bool no_format    = false;
 	bool use_chs      = false;
-	bool batch_create = false;
 };
 
 using ParseResult = std::variant<ErrorType, CommandSettings>;
@@ -241,8 +240,6 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 			settings.force = true;
 		} else if (arg == "-noformat") {
 			settings.no_format = true;
-		} else if (arg == "-bat") {
-			settings.batch_create = true;
 		} else {
 			return ErrorType::UnknownArgument;
 		}
@@ -595,22 +592,6 @@ bool Execute(Program* program, CommandSettings& s)
 
 	// File closes automatically via RAII
 
-	// Batch file creation
-	if (s.batch_create) {
-		std::filesystem::path bat_path(s.filename);
-		bat_path.replace_extension(".BAT");
-
-		std::ofstream bat(bat_path);
-		if (bat.is_open()) {
-			char drive_char = geom.is_floppy ? 'A' : 'C';
-			const char* type_flag = geom.is_floppy ? " -t floppy" : "";
-
-			bat << "IMGMOUNT " << drive_char << " " << s.filename
-			    << type_flag << " -size 512," << geom.sectors << ","
-			    << geom.heads << "," << geom.cyl << "\n";
-		}
-	}
-
 	program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CREATED"),
 	                  s.filename.c_str(),
 	                  geom.cyl,
@@ -666,7 +647,6 @@ void IMGMAKE::AddMessages()
 	        "  [color=white]-size x[reset]      Size in MB (for hd type).\n"
 	        "  [color=white]-chs c,h,s[reset]   Geometry (Cylinders, Heads, Sectors).\n"
 	        "  [color=white]-nofs[reset]        Do not format the filesystem (raw image).\n"
-	        "  [color=white]-bat[reset]         Create a batch file to mount the image.\n"
 	        "  [color=white]-label name[reset]  Volume label.\n"
 	        "\n"
 	        "Examples:\n"
