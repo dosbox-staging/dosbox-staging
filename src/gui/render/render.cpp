@@ -56,7 +56,7 @@ static void check_palette()
 		}
 	}
 
-	// Setup pal index to startup values
+	// Setup palette index to startup values
 	render.pal.first = NumVgaColors;
 	render.pal.last  = 0;
 }
@@ -89,6 +89,14 @@ static void start_line_handler(const void* src_line_data)
 			const auto src_val = read_unaligned_size_t(src_ptr);
 
 			if (src_val != cache[0]) {
+				// This triggers transferring the pixel data to
+				// the render backend if the contents of the
+				// current frame has changed since the last
+				// frame. This will in turn make the backend do
+				// a buffer swap (if it's double-buffered).
+				// Otherwise, it will keep displaying the same
+				// frame at present time without doing a buffer
+				// swap followed by a texture upload to the GPU.
 				if (!GFX_StartUpdate(render.scale.outWrite,
 				                     render.scale.outPitch)) {
 
@@ -151,7 +159,6 @@ bool RENDER_StartUpdate()
 	if (render.updating) {
 		return false;
 	}
-
 	if (!render.active) {
 		return false;
 	}
@@ -166,46 +173,58 @@ bool RENDER_StartUpdate()
 	render.scale.outWrite  = nullptr;
 	render.scale.outPitch  = 0;
 
-	scaler_changed_lines[0] = 0;
+	scaler_changed_lines[0]   = 0;
 	scaler_changed_line_index = 0;
 
 	// Clearing the cache will first process the line to make sure it's
-	// never the same
+	// never the same.
 	if (render.scale.clearCache) {
-		// LOG_MSG("Clearing cache");
 
-		// Will always have to update the screen with this one anyway,
-		// so let's update already
+		// This will force a buffer swap & texture update in the render
+		// backend (see comments in `start_line_handler()`).
+		//
 		if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
 			return false;
 		}
 
+		RENDER_DrawLine = clear_cache_handler;
+
+		render.updating         = true;
 		render.fullFrame        = true;
 		render.scale.clearCache = false;
-		RENDER_DrawLine         = clear_cache_handler;
+		return true;
+	}
 
-	} else {
-		if (render.pal.changed) {
-			// Assume pal changes always do a full screen update
-			// anyway
-			if (!GFX_StartUpdate(render.scale.outWrite,
-			                     render.scale.outPitch)) {
-				return false;
-			}
-
-			RENDER_DrawLine  = render.scale.linePalHandler;
-			render.fullFrame = true;
-
-		} else {
-			RENDER_DrawLine = start_line_handler;
-
-			if (CAPTURE_IsCapturingImage() ||
-			    CAPTURE_IsCapturingVideo()) {
-				render.fullFrame = true;
-			} else {
-				render.fullFrame = false;
-			}
+	if (render.pal.changed) {
+		// Assume palette changes always do a full screen update anyway.
+		//
+		// This will force a buffer swap & texture update in the render
+		// backend (see comments in `start_line_handler()`).
+		//
+		if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
+			return false;
 		}
+
+		RENDER_DrawLine = render.scale.linePalHandler;
+
+		render.updating  = true;
+		render.fullFrame = true;
+		return true;
+	}
+
+	// Regular path -- scaler cache reset was not request and the palette
+	// hasn't been changed (for screen modes with indexed colour).
+	//
+	// `GFX_StartUpdate()` will be called conditionally in
+	// `start_line_handler()` if the contents of the current frame differs
+	// from the previous one (see comments in `start_line_handler()`).
+	//
+	RENDER_DrawLine = start_line_handler;
+
+	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
+		render.fullFrame = true;
+	} else {
+		render.fullFrame = false;
 	}
 
 	render.updating = true;
