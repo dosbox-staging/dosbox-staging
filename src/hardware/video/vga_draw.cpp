@@ -1465,8 +1465,6 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		break;
 	}
 
-	// Check if we can actually render, else skip the rest (frameskip)
-	// Do this here, else the cursor speed depends on the frameskip
 	++vga.draw.cursor.count;
 
 	if (vga.draw.vga_override || !ReelMagic_RENDER_StartUpdate()) {
