@@ -1096,7 +1096,7 @@ static void toggle_fullscreen_handler(bool pressed)
 // image into. The buffer was sized for the current DOS video mode by a
 // preceding `GFX_SetSize()` call.
 //
-// `pitch_out` is the number of bytes used to store a single row of pixel data
+// `pitch` is the number of bytes used to store a single row of pixel data
 // (can be larger than actual width).
 //
 bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
