@@ -53,13 +53,13 @@ constexpr std::array<uint8_t, 512> freedos_mbr = {
 };
 
 struct DiskGeometry {
-    uint32_t cyl;
+    uint32_t cylinders;
     uint32_t heads;
     uint32_t sectors;
-    uint8_t media_desc;
+    uint8_t media_descriptor;
     uint16_t root_entries;
-    uint32_t sect_per_fat;
-    uint16_t sect_per_cluster;
+    uint32_t sectors_per_fat;
+    uint16_t sectors_per_cluster;
     uint64_t total_size_kb;
     bool is_floppy;
 };
@@ -136,7 +136,6 @@ struct CommandSettings {
     std::filesystem::path filename = {};
     std::string type       = {};
     std::string label      = {};
-    std::string batch_file = {};
 
     uint64_t size_bytes = 0;
     uint32_t cylinders  = 0;
@@ -218,17 +217,17 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
             if (parts.size() != 3) {
                 return ErrorType::InvalidValue;
             }
-            auto c = parse_int(parts[0], 10);
-            auto h = parse_int(parts[1], 10);
-            auto s = parse_int(parts[2], 10);
+            auto cylinders = parse_int(parts[0], 10);
+            auto heads = parse_int(parts[1], 10);
+            auto sectors = parse_int(parts[2], 10);
 
-            if (!c || !h || !s) {
+            if (!cylinders || !heads || !sectors) {
                 return ErrorType::InvalidValue;
             }
 
-            settings.cylinders = static_cast<uint32_t>(*c);
-            settings.heads     = static_cast<uint32_t>(*h);
-            settings.sectors   = static_cast<uint32_t>(*s);
+            settings.cylinders = static_cast<uint32_t>(*cylinders);
+            settings.heads     = static_cast<uint32_t>(*heads);
+            settings.sectors   = static_cast<uint32_t>(*sectors);
             settings.use_chs   = true;
         } else if (arg == "-label") {
             if (i + 1 >= args.size()) {
@@ -267,48 +266,48 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 
 bool Execute(Program* program, CommandSettings& command_settings)
 {
-    DiskGeometry geom         = {};
+    DiskGeometry disk_geometry         = {};
     uint64_t total_size       = 0;
     constexpr uint64_t SectorSize = 512;
 
     // Determine Geometry and Size
     if (auto it = GeometryPresets.find(command_settings.type); it != GeometryPresets.end()) {
-        geom       = it->second;
-        total_size = static_cast<uint64_t>(geom.cyl) * geom.heads *
-                     geom.sectors * SectorSize;
+        disk_geometry       = it->second;
+        total_size = static_cast<uint64_t>(disk_geometry.cylinders) * disk_geometry.heads *
+                     disk_geometry.sectors * SectorSize;
     } else if (command_settings.type == "hd") {
-        geom.media_desc = 0xF8;
-        geom.is_floppy  = false;
+        disk_geometry.media_descriptor = 0xF8;
+        disk_geometry.is_floppy  = false;
 
         if (command_settings.use_chs) {
-            geom.cyl     = command_settings.cylinders;
-            geom.heads   = command_settings.heads;
-            geom.sectors = command_settings.sectors;
-            total_size   = static_cast<uint64_t>(geom.cyl) *
-                         geom.heads * geom.sectors * SectorSize;
+            disk_geometry.cylinders     = command_settings.cylinders;
+            disk_geometry.heads   = command_settings.heads;
+            disk_geometry.sectors = command_settings.sectors;
+            total_size   = static_cast<uint64_t>(disk_geometry.cylinders) *
+                         disk_geometry.heads * disk_geometry.sectors * SectorSize;
         } else if (command_settings.size_bytes > 0) {
             total_size           = command_settings.size_bytes;
             uint64_t total_sectors = total_size / SectorSize;
 
             // Calculate CHS from Size
-            geom.heads   = 16;
-            geom.sectors = 63;
+            disk_geometry.heads   = 16;
+            disk_geometry.sectors = 63;
             // Adjust if too large
             if (total_size > 528 * 1024 * 1024) {
-                geom.heads = 64;
+                disk_geometry.heads = 64;
             }
             if (total_size > 1024 * 1024 * 1024) {
-                geom.heads = 128;
+                disk_geometry.heads = 128;
             }
             if (total_size > 2ull * 1024 * 1024 * 1024) {
-                geom.heads = 255;
+                disk_geometry.heads = 255;
             }
 
-            geom.cyl = static_cast<uint32_t>(
-                    total_sectors / (geom.heads * geom.sectors));
+            disk_geometry.cylinders = static_cast<uint32_t>(
+                    total_sectors / (disk_geometry.heads * disk_geometry.sectors));
             // Cap for legacy geometry
-            if (geom.cyl > 1023) {
-                geom.cyl = 1023;
+            if (disk_geometry.cylinders > 1023) {
+                disk_geometry.cylinders = 1023;
             }
         } else {
             notify_warning("SHELL_CMD_IMGMAKE_MISSING_SIZE");
@@ -364,49 +363,48 @@ bool Execute(Program* program, CommandSettings& command_settings)
     int64_t boot_sector_pos = 0;
 
     // Partition Table for Hard Disks
-    if (!geom.is_floppy) {
+    if (!disk_geometry.is_floppy) {
         // Standard offset (track 0)
-        boot_sector_pos = geom.sectors;
+        boot_sector_pos = disk_geometry.sectors;
         std::copy(freedos_mbr.begin(), freedos_mbr.end(), buffer.begin());
 
         // Partition 1 Entry (0x1BE)
-        uint8_t* p = buffer.data() + 0x1BE;
+        uint8_t* partition = buffer.data() + 0x1BE;
         // Active Partition
-        p[0] = 0x80;
+        partition[0] = 0x80;
 
         // Start CHS (0, 1, 1) usually, but we use
         // boot_sector_pos LBA conversion
         auto start_chs = lba_to_chs(static_cast<uint64_t>(boot_sector_pos),
-                                 geom.cyl,
-                                 geom.heads,
-                                 geom.sectors);
-        std::copy(start_chs.begin(), start_chs.end(), p + 1);
+                                 disk_geometry.cylinders,
+                                 disk_geometry.heads,
+                                 disk_geometry.sectors);
+        std::copy(start_chs.begin(), start_chs.end(), partition + 1);
 
         // Partition Type
         uint64_t volume_sectors = (total_size / SectorSize) -
                                static_cast<uint64_t>(boot_sector_pos);
         if (command_settings.fat_type == 32 || volume_sectors > 4194304) {
             // FAT32 LBA
-            p[4] = 0x0C;
+            partition[4] = 0x0C;
         } else if (volume_sectors > 65535) {
             // FAT16B
-            p[4] = 0x06;
+            partition[4] = 0x06;
         } else {
             // FAT16 < 32M
-            p[4] = 0x04;
+            partition[4] = 0x04;
         }
 
         // End CHS
         auto end_chs = lba_to_chs((total_size / 512) - 1,
-                               geom.cyl,
-                               geom.heads,
-                               geom.sectors);
-        std::copy(end_chs.begin(), end_chs.end(), p + 5);
+                               disk_geometry.cylinders,
+                               disk_geometry.heads,
+                               disk_geometry.sectors);
+        std::copy(end_chs.begin(), end_chs.end(), partition + 5);
 
         // LBA Start & Size
-        host_writed(p + 8, static_cast<uint32_t>(boot_sector_pos));
-        host_writed(p + 12, static_cast<uint32_t>(volume_sectors));
-
+        host_writed(partition + 8, static_cast<uint32_t>(boot_sector_pos));
+        host_writed(partition + 12, static_cast<uint32_t>(volume_sectors));
         // Signature
         buffer[510] = 0x55;
         buffer[511] = 0xAA;
@@ -419,17 +417,17 @@ bool Execute(Program* program, CommandSettings& command_settings)
     buffer = {};
 
     // Determines FAT parameters
-    uint64_t vol_sectors = (total_size / SectorSize) -
+    uint64_t volume_sectors = (total_size / SectorSize) -
                            static_cast<uint64_t>(boot_sector_pos);
     int fat_bits = command_settings.fat_type;
 
     // Auto-detect FAT
     if (fat_bits == -1) {
-        if (geom.is_floppy) {
+        if (disk_geometry.is_floppy) {
             fat_bits = 12;
-        } else if (vol_sectors < 32680) {
+        } else if (volume_sectors < 32680) {
             fat_bits = 12;
-        } else if (vol_sectors < 4194304) {
+        } else if (volume_sectors < 4194304) {
             fat_bits = 16;
         } else {
             fat_bits = 32;
@@ -447,19 +445,18 @@ bool Execute(Program* program, CommandSettings& command_settings)
     // Bytes per sector
     host_writew(buffer.data() + 11, static_cast<uint16_t>(SectorSize));
 
-    // Sectors per cluster
-    uint8_t spc = (command_settings.sectors_per_cluster > 0)
+    uint8_t sectors_per_cluster = (command_settings.sectors_per_cluster > 0)
                         ? static_cast<uint8_t>(command_settings.sectors_per_cluster)
                         : 1;
     if (command_settings.sectors_per_cluster == 0) {
-        if (vol_sectors > 2097152) {
-            spc = 32;
-        } else if (vol_sectors > 32680) {
+        if (volume_sectors > 2097152) {
+            sectors_per_cluster = 32;
+        } else if (volume_sectors > 32680) {
             // HD usually 4k clusters
-            spc = 8;
+            sectors_per_cluster = 8;
         }
     }
-    buffer[13] = spc;
+    buffer[13] = sectors_per_cluster;
 
     uint16_t reserved_sectors = (fat_bits == 32) ? 32 : 1;
     host_writew(buffer.data() + 14, reserved_sectors);
@@ -467,26 +464,26 @@ bool Execute(Program* program, CommandSettings& command_settings)
 
     uint16_t root_ent = (fat_bits == 32)
                               ? 0
-                              : (geom.root_entries > 0
-                                         ? geom.root_entries
+                              : (disk_geometry.root_entries > 0
+                                         ? disk_geometry.root_entries
                                          : static_cast<uint16_t>(SectorSize));
     host_writew(buffer.data() + 17, root_ent);
 
-    if (vol_sectors < 65536 && fat_bits != 32) {
-        host_writew(buffer.data() + 19, static_cast<uint16_t>(vol_sectors));
+    if (volume_sectors < 65536 && fat_bits != 32) {
+        host_writew(buffer.data() + 19, static_cast<uint16_t>(volume_sectors));
     } else {
         host_writew(buffer.data() + 19, 0);
     }
 
-    buffer[21] = geom.media_desc;
+    buffer[21] = disk_geometry.media_descriptor;
 
     // FAT Size calculation
     uint32_t fat_size         = 0;
     uint32_t root_dir_sectors = static_cast<uint32_t>(
             ((static_cast<uint64_t>(root_ent) * 32) + (SectorSize - 1)) /
             SectorSize);
-    uint64_t data_sectors = vol_sectors - reserved_sectors - root_dir_sectors;
-    uint64_t total_clusters = data_sectors / spc;
+    uint64_t data_sectors = volume_sectors - reserved_sectors - root_dir_sectors;
+    uint64_t total_clusters = data_sectors / sectors_per_cluster;
 
     if (fat_bits == 12) {
         fat_size = static_cast<uint32_t>(((total_clusters + 2) * 3 / 2) /
@@ -507,15 +504,15 @@ bool Execute(Program* program, CommandSettings& command_settings)
     }
 
     // Sectors per Track
-    host_writew(buffer.data() + 24, static_cast<uint16_t>(geom.sectors));
+    host_writew(buffer.data() + 24, static_cast<uint16_t>(disk_geometry.sectors));
     // Heads
-    host_writew(buffer.data() + 26, static_cast<uint16_t>(geom.heads));
+    host_writew(buffer.data() + 26, static_cast<uint16_t>(disk_geometry.heads));
     // Hidden sectors
     host_writed(buffer.data() + 28, static_cast<uint32_t>(boot_sector_pos));
-    if (fat_bits != 32 && vol_sectors >= 65536) {
-        host_writed(buffer.data() + 32, static_cast<uint32_t>(vol_sectors));
+    if (fat_bits != 32 && volume_sectors >= 65536) {
+        host_writed(buffer.data() + 32, static_cast<uint32_t>(volume_sectors));
     } else if (fat_bits == 32) {
-        host_writed(buffer.data() + 32, static_cast<uint32_t>(vol_sectors));
+        host_writed(buffer.data() + 32, static_cast<uint32_t>(volume_sectors));
     }
 
     if (fat_bits == 32) {
@@ -602,9 +599,9 @@ bool Execute(Program* program, CommandSettings& command_settings)
 
     program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CREATED"),
                       command_settings.filename.string().c_str(),
-                      geom.cyl,
-                      geom.heads,
-                      geom.sectors);
+                      disk_geometry.cylinders,
+                      disk_geometry.heads,
+                      disk_geometry.sectors);
     return true;
 }
 
