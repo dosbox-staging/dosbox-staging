@@ -4,6 +4,7 @@
 #ifndef DOSBOX_PNG_WRITER_H
 #define DOSBOX_PNG_WRITER_H
 
+#include <array>
 #include <cstdlib>
 #include <optional>
 #include <vector>
@@ -11,8 +12,9 @@
 #include <png.h>
 
 #include "gui/render/render.h"
+#include "hardware/video/vga.h"
 #include "image_saver.h"
-
+#include "utils/rgb888.h"
 
 // A row-based PNG writer that also writes the pixel aspect ratio of the image
 // into the standard pHYs PNG chunk.
@@ -27,7 +29,8 @@ public:
 
 	bool InitIndexed8(FILE* fp, const uint16_t width, const uint16_t height,
 	                  const Fraction& pixel_aspect_ratio,
-	                  const VideoMode& video_mode, const uint8_t* palette_data);
+	                  const VideoMode& video_mode,
+	                  const std::array<Rgb888, NumVgaColors>& palette);
 
 	void WriteRow(std::vector<uint8_t>::const_iterator row);
 
@@ -43,7 +46,7 @@ private:
 	void WritePngInfo(const uint16_t width, const uint16_t height,
 	                  const Fraction& pixel_aspect_ratio,
 	                  const VideoMode& video_mode, const bool is_paletted,
-	                  const uint8_t* palette_data);
+	                  const std::array<Rgb888, NumVgaColors>& palette);
 
 	void FinalisePng();
 
