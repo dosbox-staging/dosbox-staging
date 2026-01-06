@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2019-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2019-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -180,19 +180,19 @@ bool RENDER_StartUpdate()
 	scaler_changed_line_index = 0;
 
 	// Set up scaler output buffer & resize if necessary
-	const auto scaled_width = render.src.width *
-	                          (render.src.double_width ? 2 : 1);
+	render.scale.out_width = render.src.width *
+	                         (render.src.double_width ? 2 : 1);
 
-	const auto scaled_height = render.src.height *
-	                           (render.src.double_height ? 2 : 1);
+	render.scale.out_height = render.src.height *
+	                          (render.src.double_height ? 2 : 1);
 
 	constexpr auto NumBytesPerPixel = 4;
-	render.scale.out_buf.resize(scaled_width * scaled_height * NumBytesPerPixel);
+	render.scale.out_buf.resize(render.scale.out_width *
+	                            render.scale.out_height * NumBytesPerPixel);
 
 	// Clearing the cache will first process the line to make sure it's
 	// never the same.
 	if (render.scale.clear_cache) {
-
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
@@ -251,6 +251,56 @@ static void halt_render()
 	render.active             = false;
 }
 
+static void handle_capture_frame()
+{
+	bool double_width  = false;
+	bool double_height = false;
+
+	if (render.src.double_width != render.src.double_height) {
+		if (render.src.double_width) {
+			double_width = true;
+		}
+		if (render.src.double_height) {
+			double_height = true;
+		}
+	}
+
+	RenderedImage image = {};
+
+	image.params               = render.src;
+	image.params.double_width  = double_width;
+	image.params.double_height = double_height;
+	image.pitch                = render.scale.cache_pitch;
+	image.image_data           = (uint8_t*)&scaler_source_cache;
+	image.palette              = render.palette.rgb;
+
+	const auto frames_per_second = static_cast<float>(render.fps);
+
+	CAPTURE_AddFrame(image, frames_per_second);
+}
+
+static void maybe_deinterlace_scaled_output()
+{
+	if (render.deinterlacing_strength == DeinterlacingStrength::Off) {
+		return;
+	}
+
+	// Games that display interlaced FMV videos use 640x400 256-colour or
+	// better (S)VGA/VESA graphics.
+	//
+	auto mode = VGA_GetCurrentVideoMode();
+
+	if ((machine == MachineType::Vga) && mode.is_graphics_mode &&
+	    (mode.color_depth >= ColorDepth::IndexedColor256) &&
+	    (mode.height >= 400)) {
+
+		render.deinterlacer->Deinterlace(render.dest,
+		                                 render.scale.out_width,
+		                                 render.scale.out_height,
+		                                 render.deinterlacing_strength);
+	}
+}
+
 void RENDER_EndUpdate([[maybe_unused]] bool abort)
 {
 	if (!render.render_in_progress) {
@@ -260,30 +310,7 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 	RENDER_DrawLine = empty_line_handler;
 
 	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
-		bool double_width  = false;
-		bool double_height = false;
-
-		if (render.src.double_width != render.src.double_height) {
-			if (render.src.double_width) {
-				double_width = true;
-			}
-			if (render.src.double_height) {
-				double_height = true;
-			}
-		}
-
-		RenderedImage image = {};
-
-		image.params               = render.src;
-		image.params.double_width  = double_width;
-		image.params.double_height = double_height;
-		image.pitch                = render.scale.cache_pitch;
-		image.image_data           = (uint8_t*)&scaler_source_cache;
-		image.palette              = render.palette.rgb;
-
-		const auto frames_per_second = static_cast<float>(render.fps);
-
-		CAPTURE_AddFrame(image, frames_per_second);
+		handle_capture_frame();
 	}
 
 	if (render.updating_frame) {
@@ -294,6 +321,8 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 		std::memcpy(render.dest,
 		            render.scale.out_buf.data(),
 		            render.scale.out_buf.size());
+
+		maybe_deinterlace_scaled_output();
 	}
 
 	GFX_EndUpdate();
@@ -1005,6 +1034,45 @@ static void set_integer_scaling(SectionProp& section)
 	}();
 }
 
+static void set_deinterlacing(SectionProp& section)
+{
+	render.deinterlacing_strength = [&]() {
+		const std::string pref = section.GetString("deinterlacing");
+
+		if (has_false(pref)) {
+			return DeinterlacingStrength::Off;
+
+		} else if (has_true(pref)) {
+			return DeinterlacingStrength::Medium;
+
+		} else if (pref == "light") {
+			return DeinterlacingStrength::Light;
+
+		} else if (pref == "medium") {
+			return DeinterlacingStrength::Medium;
+
+		} else if (pref == "strong") {
+			return DeinterlacingStrength::Strong;
+
+		} else if (pref == "full") {
+			return DeinterlacingStrength::Full;
+
+		} else {
+			constexpr auto SettingName  = "deinterlacing";
+			constexpr auto DefaultValue = "off";
+
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "RENDER",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      SettingName,
+			                      pref.c_str(),
+			                      DefaultValue);
+
+			return DeinterlacingStrength::Off;
+		}
+	}();
+}
+
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
 {
 	const auto dpi_scale = GFX_GetDpiScaleFactor();
@@ -1399,6 +1467,20 @@ static void init_render_settings(SectionProp& section)
 	        "    with [color=light-green]'shader = sharp'[reset] and optionally setting the desired [color=light-green]'window_size'[reset]\n"
 	        "    or [color=light-green]'viewport'[reset] size.\n"
 	        "  - If you used an advanced scaler, consider one of the [color=light-green]'shader'[reset] options.");
+
+	string_prop = section.AddString("deinterlacing", Always, "off");
+	string_prop->SetHelp(
+	        "Remove alternating black lines from interlaced videos ('off' by default).\n"
+	        "Possible values: TODO\n"
+	        "\n"
+	        "  off:     Disable deinterlacing (default).\n"
+	        "  on:      Enable deinterlacing ('medium' strength).\n"
+	        "  light:   Light deinterlacing.\n"
+	        "  medium:  Medium deinterlacing.\n"
+	        "  strong:  Strong deinterlacing.\n"
+	        "  full:    Full deinterlacing.");
+
+	string_prop->SetValues({"on", "off", "light", "medium", "strong", "full"});
 }
 
 enum { Horiz, Vert };
@@ -1513,11 +1595,15 @@ void RENDER_Init()
 	auto section = get_section("render");
 	assert(section);
 
+	render.deinterlacer = std::make_unique<Deinterlacer>();
+
 	set_aspect_ratio_correction(*section);
 	set_viewport(*section);
 	set_integer_scaling(*section);
 
 	set_monochrome_palette(*section);
+
+	set_deinterlacing(*section);
 }
 
 static void notify_render_setting_updated(SectionProp& section,
@@ -1530,6 +1616,9 @@ static void notify_render_setting_updated(SectionProp& section,
 	} else if (prop_name == "cga_colors") {
 		// TODO Support switching custom CGA colors at runtime. This is
 		// somewhat complicated and needs experimentation.
+
+	} else if (prop_name == "deinterlacing") {
+		set_deinterlacing(section);
 
 	} else if (prop_name == "glshader" || prop_name == "shader") {
 		set_shader_with_fallback_or_exit(get_shader_setting_value());

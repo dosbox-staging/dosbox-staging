@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 
+#include "gui/render/deinterlacer.h"
 #include "gui/render/scaler/scalers.h"
 #include "hardware/video/vga.h"
 #include "utils/fraction.h"
@@ -90,14 +91,18 @@ struct Render {
 		ScalerLineHandler line_handler         = nullptr;
 		ScalerLineHandler line_palette_handler = nullptr;
 
-		std::vector<uint8_t> out_buf = {};
+		uint32_t in_line = 0;
 
-		int out_pitch        = 0;
-		uint8_t* out_write   = nullptr;
 		uint32_t cache_pitch = 0;
 		uint8_t* cache_read  = nullptr;
-		uint32_t in_line     = 0;
-		uint32_t out_line    = 0;
+
+		std::vector<uint8_t> out_buf = {};
+
+		int out_width      = 0;
+		int out_height     = 0;
+		int out_pitch      = 0;
+		uint8_t* out_write = nullptr;
+		uint32_t out_line  = 0;
 	} scale = {};
 
 	uint32_t* dest = nullptr;
@@ -113,6 +118,9 @@ struct Render {
 	IntegerScalingMode integer_scaling_mode                = {};
 
 	ViewportSettings viewport_settings = {};
+
+	std::unique_ptr<Deinterlacer> deinterlacer   = {};
+	DeinterlacingStrength deinterlacing_strength = {};
 };
 
 // A frame of the emulated video output that's passed to the rendering backend
