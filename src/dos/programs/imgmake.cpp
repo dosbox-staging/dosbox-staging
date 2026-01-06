@@ -67,16 +67,16 @@ std::array<uint8_t, 3> lba_to_chs(uint64_t lba, uint32_t max_cylinders,
                                   uint32_t max_heads, uint32_t max_sectors)
 {
 	uint32_t cylinders = 0, heads = 0, sectors = 0;
+	constexpr uint32_t MaxLegacyCylinders = 1023;
 	if (lba < static_cast<uint64_t>(max_cylinders) * max_heads * max_sectors) {
 		sectors       = static_cast<uint32_t>((lba % max_sectors) + 1);
 		uint64_t temp = lba / max_sectors;
 		heads         = static_cast<uint32_t>(temp % max_heads);
 		cylinders     = static_cast<uint32_t>(temp / max_heads);
 		// Clamp for legacy CHS
-		constexpr uint32_t MaxLegacyCylinders = 1023;
 		cylinders = std::min(cylinders, MaxLegacyCylinders);
 	} else {
-		cylinders = 1023;
+		cylinders = MaxLegacyCylinders;
 		heads     = max_heads - 1;
 		sectors   = max_sectors;
 	}
@@ -87,7 +87,7 @@ std::array<uint8_t, 3> lba_to_chs(uint64_t lba, uint32_t max_cylinders,
 }
 
 // Write a string into a fixed-width buffer and pad with spaces
-void write_padded_string(uint8_t* dest, const std::string& str, size_t length)
+void write_padded_string(uint8_t* dest, const std::string& str, int length)
 {
 	std::string temp = str;
 	temp.resize(length, ' ');
@@ -138,7 +138,7 @@ constexpr auto DefaultRootEntries = 512;
 } // namespace
 
 #pragma pack(push, 1)
-struct FAT_BootSector {
+struct FatBootSector {
 	// Common Bios Parameter Block (BPB) (Bytes 0x00 - 0x23)
 	uint8_t jump[3];
 	char oem_name[8];
@@ -191,8 +191,8 @@ struct FAT_BootSector {
 #pragma pack(pop)
 
 // Sanity check to ensure the compiler packed it correctly
-static_assert(sizeof(FAT_BootSector) == 512,
-              "FAT_BootSector must be exactly 512 bytes");
+static_assert(sizeof(FatBootSector) == 512,
+              "FAT BootSector must be exactly 512 bytes");
 
 // Standard DOS Directory Entry (32 bytes)
 #pragma pack(push, 1)
@@ -219,7 +219,7 @@ struct DirectoryEntry {
 static_assert(sizeof(DirectoryEntry) == 32, "DirectoryEntry must be 32 bytes");
 
 #pragma pack(push, 1)
-struct FAT32_FSInfo {
+struct Fat32FsInfo {
 	// Offset 0x00: Always 0x41615252
 	uint32_t lead_signature;
 	// Offset 0x04: Huge gap of zeros
@@ -237,23 +237,23 @@ struct FAT32_FSInfo {
 };
 #pragma pack(pop)
 
-static_assert(sizeof(FAT32_FSInfo) == 512, "FAT32_FSInfo must be exactly 512 bytes");
+static_assert(sizeof(Fat32FsInfo) == 512, "Fat32FsInfo must be exactly 512 bytes");
 
-constexpr uint32_t FAT32LeadSignature   = 0x41615252;
-constexpr uint32_t FAT32StructSignature = 0x61417272;
-constexpr uint32_t FAT32TrailSignature  = 0xAA550000;
+constexpr uint32_t Fat32LeadSignature   = 0x41615252;
+constexpr uint32_t Fat32StructSignature = 0x61417272;
+constexpr uint32_t Fat32TrailSignature  = 0xAA550000;
 
 // Constants for FAT markers
-namespace FAT_Markers {
+namespace FatMarkers {
 // End of Chain (EOC) markers indicate the end of a file/chain.
-constexpr uint32_t FAT32_EOC = 0x0FFFFFFF;
-constexpr uint16_t FAT16_EOC = 0xFFFF;
+constexpr uint32_t Fat32Eoc = 0x0FFFFFFF;
+constexpr uint16_t Fat16Eoc = 0xFFFF;
 
 // The first entry usually contains the Media Descriptor in the low byte.
 // The upper bits are set to 1.
-constexpr uint32_t FAT32_MEDIA_MASK = 0x0FFFFFF0;
-constexpr uint16_t FAT16_MEDIA_MASK = 0xFF00;
-} // namespace FAT_Markers
+constexpr uint32_t Fat32MediaMask = 0x0FFFFFF0;
+constexpr uint16_t Fat16MediaMask = 0xFF00;
+} // namespace FatMarkers
 
 namespace BootCode {
 
@@ -362,7 +362,7 @@ static void notify_warning(const std::string& message_name, const char* arg = nu
 	}
 }
 
-ParseResult ParseArgs(const std::vector<std::string>& args)
+ParseResult parse_args(const std::vector<std::string>& args)
 {
 	CommandSettings settings;
 
@@ -371,7 +371,7 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 	}
 
 	// First argument is usually the filename (unless it starts with -)
-	size_t start_idx = 0;
+	int start_idx = 0;
 	if (args[0][0] != '-') {
 		settings.filename = args[0];
 		start_idx         = 1;
@@ -379,18 +379,19 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 		settings.filename = "IMGMAKE.IMG";
 	}
 
-	for (size_t i = start_idx; i < args.size(); ++i) {
+	int arg_size = static_cast<int>(args.size());
+	for (int i = start_idx; i < arg_size; ++i) {
 		std::string arg = args[i];
 		lowcase(arg);
 
 		if (arg == "-t") {
-			if (i + 1 >= args.size()) {
+			if (i + 1 >= arg_size) {
 				return ErrorType::MissingArgument;
 			}
 			settings.type = args[++i];
 			lowcase(settings.type);
 		} else if (arg == "-size") {
-			if (i + 1 >= args.size()) {
+			if (i + 1 >= arg_size) {
 				return ErrorType::MissingArgument;
 			}
 			const auto& size_str = args[++i];
@@ -401,7 +402,7 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 			settings.size_bytes = static_cast<uint64_t>(*size_mb) *
 			                      BytesPerMegabyte;
 		} else if (arg == "-chs") {
-			if (i + 1 >= args.size()) {
+			if (i + 1 >= arg_size) {
 				return ErrorType::MissingArgument;
 			}
 			const auto& chs_str = args[++i];
@@ -423,19 +424,19 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 			settings.sectors   = static_cast<uint32_t>(*sectors);
 			settings.use_chs   = true;
 		} else if (arg == "-label") {
-			if (i + 1 >= args.size()) {
+			if (i + 1 >= arg_size) {
 				return ErrorType::MissingArgument;
 			}
 			settings.label = args[++i];
 		} else if (arg == "-fat") {
-			if (i + 1 >= args.size()) {
+			if (i + 1 >= arg_size) {
 				return ErrorType::MissingArgument;
 			}
 			if (auto f = parse_int(args[++i], 10)) {
 				settings.fat_type = *f;
 			}
 		} else if (arg == "-spc") {
-			if (i + 1 >= args.size()) {
+			if (i + 1 >= arg_size) {
 				return ErrorType::MissingArgument;
 			}
 			if (auto s = parse_int(args[++i], 10)) {
@@ -457,7 +458,7 @@ ParseResult ParseArgs(const std::vector<std::string>& args)
 	return settings;
 }
 
-bool Execute(Program* program, CommandSettings& command_settings)
+bool execute(Program* program, CommandSettings& command_settings)
 {
 	DiskGeometry disk_geometry  = {};
 	uint64_t total_size         = 0;
@@ -725,7 +726,7 @@ bool Execute(Program* program, CommandSettings& command_settings)
 	           static_cast<long>(boot_sector_position * SectorSize),
 	           SEEK_SET);
 	buffer            = {};
-	auto* boot_sector = reinterpret_cast<FAT_BootSector*>(buffer.data());
+	auto* boot_sector = reinterpret_cast<FatBootSector*>(buffer.data());
 
 	// Bios Parameter Block (BPB) Construction
 
@@ -991,14 +992,14 @@ bool Execute(Program* program, CommandSettings& command_settings)
 	if (fat_bits == 32) {
 		// Construct FSInfo using the packed struct
 		std::array<uint8_t, 512> fs_info_buffer = {};
-		auto* fs_info = reinterpret_cast<FAT32_FSInfo*>(
+		auto* fs_info = reinterpret_cast<Fat32FsInfo*>(
 		        fs_info_buffer.data());
 
 		// Fill signatures and hints
 		host_writed(reinterpret_cast<uint8_t*>(&fs_info->lead_signature),
-		            FAT32LeadSignature);
+		            Fat32LeadSignature);
 		host_writed(reinterpret_cast<uint8_t*>(&fs_info->struct_signature),
-		            FAT32StructSignature);
+		            Fat32StructSignature);
 		host_writed(reinterpret_cast<uint8_t*>(&fs_info->free_count),
 		            static_cast<uint32_t>(tmp_clusters - 1));
 
@@ -1009,7 +1010,7 @@ bool Execute(Program* program, CommandSettings& command_settings)
 		// FAT Index 3 is the first available one
 		host_writed(reinterpret_cast<uint8_t*>(&fs_info->next_free), 3);
 		host_writed(reinterpret_cast<uint8_t*>(&fs_info->trail_signature),
-		            FAT32TrailSignature);
+		            Fat32TrailSignature);
 		// Write FSInfo at Sector 1
 		std::fwrite(fs_info_buffer.data(), 1, SectorSize, fs.get());
 
@@ -1038,19 +1039,19 @@ bool Execute(Program* program, CommandSettings& command_settings)
 	if (fat_bits == 32) {
 		auto* entries = reinterpret_cast<uint32_t*>(fat_sector_buffer.data());
 		host_writed(reinterpret_cast<uint8_t*>(&entries[0]),
-		            FAT_Markers::FAT32_MEDIA_MASK |
+		            FatMarkers::Fat32MediaMask |
 		                    disk_geometry.media_descriptor);
 		host_writed(reinterpret_cast<uint8_t*>(&entries[1]),
-		            FAT_Markers::FAT32_EOC);
+		            FatMarkers::Fat32Eoc);
 		host_writed(reinterpret_cast<uint8_t*>(&entries[2]),
-		            FAT_Markers::FAT32_EOC); // Cluster 2 (Root)
+		            FatMarkers::Fat32Eoc); // Cluster 2 (Root)
 	} else if (fat_bits == 16) {
 		auto* entries = reinterpret_cast<uint16_t*>(fat_sector_buffer.data());
 		host_writew(reinterpret_cast<uint8_t*>(&entries[0]),
-		            FAT_Markers::FAT16_MEDIA_MASK |
+		            FatMarkers::Fat16MediaMask |
 		                    disk_geometry.media_descriptor);
 		host_writew(reinterpret_cast<uint8_t*>(&entries[1]),
-		            FAT_Markers::FAT16_EOC);
+		            FatMarkers::Fat16Eoc);
 	} else {
 		fat_sector_buffer[0] = disk_geometry.media_descriptor;
 		fat_sector_buffer[1] = 0xFF;
@@ -1112,7 +1113,7 @@ void IMGMAKE::Run()
 	}
 
 	const auto args = cmd->GetArguments();
-	auto result     = ImgmakeCommand::ParseArgs(args);
+	auto result     = ImgmakeCommand::parse_args(args);
 
 	if (std::holds_alternative<ImgmakeCommand::ErrorType>(result)) {
 		auto err = std::get<ImgmakeCommand::ErrorType>(result);
@@ -1129,7 +1130,7 @@ void IMGMAKE::Run()
 		}
 	} else {
 		auto settings = std::get<ImgmakeCommand::CommandSettings>(result);
-		ImgmakeCommand::Execute(this, settings);
+		ImgmakeCommand::execute(this, settings);
 	}
 }
 
@@ -1151,7 +1152,7 @@ void IMGMAKE::AddMessages()
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]imgmake[reset] [color=light-cyan]floppy.img[reset] -t fd_1440kb\n"
-	        "  [color=light-green]imgmake[reset] [color=light-cyan]hdd.img[reset] -t hd -size 500 -bat");
+	        "  [color=light-green]imgmake[reset] [color=light-cyan]hdd.img[reset] -t hd -size 500");
 
 	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_ARGS",
 	        "Invalid arguments. Use /? for help.");
