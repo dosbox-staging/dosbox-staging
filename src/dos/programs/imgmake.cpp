@@ -33,26 +33,6 @@ namespace {
 
 namespace fs = std::filesystem;
 
-// Standard FreeDOS MBR
-constexpr std::array<uint8_t, 512> freedos_mbr = {
-        0xfa, 0x33, 0xc0, 0x8e, 0xd0, 0xbc, 0x00, 0x7c, 0x8b, 0xf4, 0x50, 0x07,
-        0x50, 0x1f, 0xfb, 0xfc, 0xbf, 0x00, 0x06, 0xb9, 0x00, 0x01, 0xf2, 0xa5,
-        0xea, 0x1d, 0x06, 0x00, 0x00, 0xbe, 0xbe, 0x07, 0xb3, 0x04, 0x80, 0x3c,
-        0x80, 0x74, 0x0e, 0x80, 0x3c, 0x00, 0x75, 0x1c, 0x83, 0xc6, 0x10, 0xfe,
-        0xcb, 0x75, 0xef, 0xcd, 0x18, 0x8b, 0x14, 0x8b, 0x4c, 0x02, 0x8b, 0xee,
-        0x83, 0xc6, 0x10, 0xfe, 0xcb, 0x74, 0x13, 0x80, 0x3c, 0x00, 0x74, 0xf4,
-        0xbe, 0x8b, 0x06, 0xac, 0x3c, 0x00, 0x74, 0x0b, 0x56, 0xbb, 0x07, 0x00,
-        0xb4, 0x0e, 0xcd, 0x10, 0x5e, 0xeb, 0xf0, 0xeb, 0xfe, 0xbf, 0x05, 0x00,
-        0xbb, 0x00, 0x7c, 0xb8, 0x01, 0x02, 0x57, 0xcd, 0x13, 0x5f, 0x73, 0x0c,
-        0x33, 0xc0, 0xcd, 0x13, 0x4f, 0x75, 0xed, 0xbe, 0xa3, 0x06, 0xeb, 0xd3,
-        0xbe, 0xc2, 0x06, 0xbf, 0xfe, 0x7d, 0x81, 0x3d, 0x55, 0xaa, 0x75, 0xc7,
-        0x8b, 0xf5, 0xea, 0x00, 0x7c, 0x00, 0x00, 0x45, 0x72, 0x72, 0x6f, 0x72,
-        0x20, 0x6c, 0x6f, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x20, 0x4f, 0x53, 0x00,
-        0x4d, 0x69, 0x73, 0x73, 0x69, 0x6e, 0x67, 0x20, 0x4f, 0x53, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-        // ... remaining zeros
-};
-
 struct DiskGeometry {
 	uint32_t cylinders;
 	uint32_t heads;
@@ -278,31 +258,47 @@ constexpr uint16_t FAT16_MEDIA_MASK = 0xFF00;
 namespace BootCode {
 
 // Assembly code to print "Disk not bootable." message:
-// 0:  BE xx xx    MOV SI, 0x7Cxx (Address of string, patched later)
-// 3:  AC          LODSB
-// 4:  08 C0       OR AL, AL
-// 6:  74 04       JZ +4 (to HANG)
-// 8:  B4 0E       MOV AH, 0x0E
-// A:  CD 10       INT 0x10
-// C:  EB F5       JMP -11 (to LODSB)
-// E:  EB FE       HANG: JMP $
-// F:  ...String...
-
 // clang-format off
 constexpr uint8_t Printer[] = {
-    0xBE, 0x00, 0x00,
-    0xAC,
-    0x08, 0xC0,
-    0x74, 0x04,
-    0xB4, 0x0E,
-    0xCD, 0x10,
-    0xEB, 0xF5,
-    0xEB, 0xFE,
-    // String: "Disk not bootable."
-    'D', 'i', 's', 'k', ' ',
-    'n', 'o', 't', ' ',
-    'b', 'o', 'o', 't', 'a', 'b', 'l', 'e', '.',
-    0x00
+    // Stack Setup
+    0xFA,             // 0:  CLI              ; Disable interrupts
+    0x31, 0xC0,       // 1:  XOR AX, AX       ; AX = 0
+    0x8E, 0xD0,       // 3:  MOV SS, AX       ; SS = 0
+    0xBC, 0x00, 0x7C, // 5:  MOV SP, 7C00     ; SP = 7C00 (Grow down)
+    0xFB,             // 8:  STI              ; Enable interrupts
+
+    // Video Mode Setup
+    0xB8, 0x03, 0x00, // 9:  MOV AX, 0003h    ; AH=00 (Set Mode), AL=03 (80x25 Color)
+    0xCD, 0x10,       // 12: INT 10h
+
+    // Segment Setup
+    0x31, 0xC0,       // 14: XOR AX, AX       ; AX = 0
+    0x8E, 0xD8,       // 16: MOV DS, AX       ; DS = 0
+    0x8E, 0xC0,       // 18: MOV ES, AX       ; ES = 0
+
+    // Print Loop
+    0xBE, 0x00, 0x00, // 20: MOV SI, [addr]   ; (Patched later at offset 21)
+    0xFC,             // 23: CLD              ; Clear Direction Flag
+    
+    // .loop:
+    0xAC,             // 24: LODSB            ; AL = [SI++]
+    0x08, 0xC0,       // 25: OR AL, AL
+    0x74, 0x05,       // 27: JZ +5            ; -> HANG
+
+    0xB4, 0x0E,       // 29: MOV AH, 0E       ; Teletype
+    0x31, 0xDB,       // 31: XOR BX, BX       ; Page 0, Color 0
+    0xCD, 0x10,       // 33: INT 10           ; Print
+    0xEB, 0xF3,       // 35: JMP -13          ; -> .loop
+
+    // .hang:
+    0xF4,             // 37: HLT              ; Save host CPU usage
+    0xEB, 0xFD,       // 38: JMP -3           ; Infinite HLT Loop
+
+    // String Data (Offset 40 / 0x28)
+    0x0D, 0x0A,       // CR LF
+    'D', 'i', 's', 'k', ' ', 'n', 'o', 't', ' ',
+    'b', 'o', 'o', 't', 'a', 'b', 'l', 'e', '.', 
+    0x0D, 0x0A, 0x00  // CR LF Null
 };
 // clang-format on
 
@@ -311,8 +307,11 @@ constexpr uint16_t OffsetFAT16 = 0x3E;
 constexpr uint16_t OffsetFAT32 = 0x5A;
 
 // BIOS loads boot sector at 0x7C00.
-// The string starts at offset 0x0F (15) inside the Printer array.
-constexpr uint16_t StringOffsetInCode = 15;
+// The string starts at offset 40 inside the Printer array.
+constexpr auto StringOffsetInCode = 40;
+// The SI patch is at offset 21 in the code.
+constexpr auto PatchOffsetInCode = 21;
+constexpr auto PhysicalAddress   = 0x7C00;
 
 } // namespace BootCode
 namespace FAT_Markers {
@@ -662,7 +661,16 @@ bool Execute(Program* program, CommandSettings& command_settings)
 
 	// Write Partition Table (MBR)
 	if (!disk_geometry.is_floppy) {
-		std::copy(freedos_mbr.begin(), freedos_mbr.end(), buffer.begin());
+		buffer = {};
+		std::copy(std::begin(BootCode::Printer),
+		          std::end(BootCode::Printer),
+		          buffer.begin());
+
+		// Patch MBR Code
+		uint16_t mbr_string_addr = BootCode::PhysicalAddress +
+		                           BootCode::StringOffsetInCode;
+		host_writew(buffer.data() + BootCode::PatchOffsetInCode,
+		            mbr_string_addr);
 
 		// Partition 1 Entry
 		uint8_t* partition = buffer.data() + PartitionEntry1Offset;
@@ -777,8 +785,8 @@ bool Execute(Program* program, CommandSettings& command_settings)
 	}
 
 	// FAT Limit Check & SPC Adjustment
-	auto reserved_sectors_temp        = (fat_bits == 32) ? 32 : 1;
-	auto root_dir_sectors_temp        = 0;
+	auto reserved_sectors_temp = (fat_bits == 32) ? 32 : 1;
+	auto root_dir_sectors_temp = 0;
 	if (fat_bits != 32) {
 		auto root             = (disk_geometry.root_entries > 0)
 		                              ? disk_geometry.root_entries
@@ -893,8 +901,6 @@ bool Execute(Program* program, CommandSettings& command_settings)
 	                    ? static_cast<uint32_t>(volume_sectors)
 	                    : 0);
 
-	constexpr auto BootSectorPhysicalAddress = 0x7C00;
-
 	// Extended BPB & Fallback Boot Code
 	if (fat_bits == 32) {
 		host_writed(reinterpret_cast<uint8_t*>(
@@ -930,16 +936,16 @@ bool Execute(Program* program, CommandSettings& command_settings)
 		                    "FAT32",
 		                    8);
 
-		// Copy fallback boot code (offset 0x5A for FAT32 usually,
-		// but here we just fill start of code area)
-		std::memcpy(boot_sector->ext.fat32.boot_code,
-		            BootCode::Printer,
-		            sizeof(BootCode::Printer));
+		// Copy fallback boot code
+		std::copy(std::begin(BootCode::Printer),
+		          std::end(BootCode::Printer),
+		          boot_sector->ext.fat32.boot_code);
 		// Patch MOV SI address
-		uint16_t string_addr = BootSectorPhysicalAddress +
+		uint16_t string_addr = BootCode::PhysicalAddress +
 		                       BootCode::OffsetFAT32 +
 		                       BootCode::StringOffsetInCode;
-		host_writew(boot_sector->ext.fat32.boot_code + 1, string_addr);
+		host_writew(boot_sector->ext.fat32.boot_code + BootCode::PatchOffsetInCode,
+		            string_addr);
 	} else {
 		constexpr auto BootSectorDriveNumberFloppy   = 0x00;
 		constexpr auto BootSectorDriveNumberHardDisk = 0x80;
@@ -963,14 +969,15 @@ bool Execute(Program* program, CommandSettings& command_settings)
 		                    8);
 
 		// Copy fallback boot code
-		std::memcpy(boot_sector->ext.fat16.boot_code,
-		            BootCode::Printer,
-		            sizeof(BootCode::Printer));
+		std::copy(std::begin(BootCode::Printer),
+		          std::end(BootCode::Printer),
+		          boot_sector->ext.fat16.boot_code);
 		// Patch MOV SI address
-		uint16_t string_addr = BootSectorPhysicalAddress +
+		uint16_t string_addr = BootCode::PhysicalAddress +
 		                       BootCode::OffsetFAT16 +
 		                       BootCode::StringOffsetInCode;
-		host_writew(boot_sector->ext.fat16.boot_code + 1, string_addr);
+		host_writew(boot_sector->ext.fat16.boot_code + BootCode::PatchOffsetInCode,
+		            string_addr);
 	}
 
 	// Boot Sector Signature
