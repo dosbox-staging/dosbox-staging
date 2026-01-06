@@ -20,8 +20,8 @@ public:
 	void ListImgMounts();
 	void Run() override;
 
-    private:
-        static void AddMessages();
+private:
+	static void AddMessages();
 };
 
 #endif // DOSBOX_PROGRAM_IMGMOUNT_H
