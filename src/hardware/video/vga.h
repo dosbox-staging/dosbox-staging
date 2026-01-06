@@ -22,7 +22,6 @@
 
 //Don't enable keeping changes and mapping lfb probably...
 #define VGA_LFB_MAPPED
-//#define VGA_KEEP_CHANGES
 #define VGA_CHANGE_SHIFT	9
 
 class PageHandler;
@@ -1057,10 +1056,6 @@ struct VgaType {
 
 	// How much delay to add to video memory I/O in nanoseconds
 	uint16_t vmem_delay_ns = 0;
-
-#ifdef VGA_KEEP_CHANGES
-	VgaChanges changes = {};
-#endif
 
 	VgaLfb lfb = {};
 
