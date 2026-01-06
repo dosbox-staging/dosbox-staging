@@ -105,8 +105,8 @@ struct Render {
 
 	RenderPal_t pal = {};
 
-	bool updating  = false;
-	bool active    = false;
+	bool render_in_progress = false;
+	bool active             = false;
 
 	IntegerScalingMode integer_scaling_mode = {};
 };

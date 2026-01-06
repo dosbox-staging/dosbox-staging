@@ -155,7 +155,7 @@ static void clear_cache_handler(const void* src_line_data)
 
 bool RENDER_StartUpdate()
 {
-	if (render.updating) {
+	if (render.render_in_progress) {
 		return false;
 	}
 	if (!render.active) {
@@ -188,8 +188,8 @@ bool RENDER_StartUpdate()
 
 		RENDER_DrawLine = clear_cache_handler;
 
-		render.updating         = true;
-		render.scale.clearCache = false;
+		render.render_in_progress = true;
+		render.scale.clearCache   = false;
 		return true;
 	}
 
@@ -205,7 +205,7 @@ bool RENDER_StartUpdate()
 
 		RENDER_DrawLine = render.scale.linePalHandler;
 
-		render.updating = true;
+		render.render_in_progress = true;
 		return true;
 	}
 
@@ -218,7 +218,7 @@ bool RENDER_StartUpdate()
 	//
 	RENDER_DrawLine = start_line_handler;
 
-	render.updating = true;
+	render.render_in_progress = true;
 	return true;
 }
 
@@ -226,13 +226,14 @@ static void halt_render()
 {
 	RENDER_DrawLine = empty_line_handler;
 	GFX_EndUpdate();
-	render.updating = false;
-	render.active   = false;
+
+	render.render_in_progress = false;
+	render.active             = false;
 }
 
 void RENDER_EndUpdate([[maybe_unused]] bool abort)
 {
-	if (!render.updating) {
+	if (!render.render_in_progress) {
 		return;
 	}
 
@@ -267,7 +268,7 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 
 	GFX_EndUpdate();
 
-	render.updating = false;
+	render.render_in_progress = false;
 }
 
 static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
