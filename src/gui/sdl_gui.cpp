@@ -1092,12 +1092,31 @@ static void toggle_fullscreen_handler(bool pressed)
 	}
 }
 
-// Returns a writeable buffer for the VGA emulation to render the framebuffer
-// image into. The buffer was sized for the current DOS video mode by a
-// preceding `GFX_SetSize()` call.
+// The function should return a writeable buffer for the VGA emulation to
+// render the current framebuffer image into. The buffer was sized for the
+// current DOS video mode by a preceding `GFX_SetSize()` call.
 //
 // `pitch` is the number of bytes used to store a single row of pixel data
-// (can be larger than actual width).
+// (can be larger than the actual image width in bytes).
+//
+// The renderer (`render.cpp`) calls this iff the contents of the current
+// emulated VGA framebuffer has changed from the last frame (even it's just a
+// single pixel), otherwise running the scalers and submitting the new frame
+// to the render backend can be optimised away (common scenario in DOS games
+// with low frame rates and mostly static screens, e.g., most RPG, adventure,
+// and strategy titles).
+//
+// So we have two scenarios:
+//
+// 1. Current frame is the same as the previous one:
+//
+//    - `GFX_StartUpdate()` is NOT called for this frame.
+//    - `GFX_EndUpdate()` IS called; `sdl.draw.updating_framebuffer` is FALSE.
+//
+// 2. Current frame contains changes since the previous one:
+//
+//    - `GFX_StartUpdate()` IS called for this frame.
+//    - `GFX_EndUpdate()` IS called; `sdl.draw.updating_framebuffer` is TRUE.
 //
 bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 {
@@ -1113,13 +1132,17 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 	return true;
 }
 
+// Called at the end of each frame at the emulated DOS rate, *regardless* of
+// whether contents of the framebuffer have changed or not compared to the
+// prevoius frame.
 void GFX_EndUpdate()
 {
 	assert(sdl.renderer);
 
 	if (sdl.draw.updating_framebuffer) {
 		// `sdl.draw.updating_framebuffer` is true when the contents of
-		// the framebuffer has been changed in the current frame.
+		// the framebuffer has been changed compared to the previous
+		// frame.
 		//
 		// We're making a copy of the framebuffer as we might present it
 		// a bit later in 'host-rate' mode, otherwise the VGA emulation
@@ -1153,8 +1176,8 @@ void GFX_EndUpdate()
 		// the DOS rate in the future, down to microsecond accuracy
 		// (e.g., by tightening the timing accuracy of the PIC timers as
 		// VGA updates are timed by abusing the emulated PIC timers,
-		// then we might need to do some additional sleep & busy waiting
-		// before present to hit the exact time).
+		// then we might also need to do some additional sleep & busy
+		// waiting before present to hit the exact time).
 		//
 		// Updating the new texture to the GPU also takes some non-zero
 		// time, so we'll probably need to introduce an extra fixed
