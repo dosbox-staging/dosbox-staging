@@ -587,22 +587,17 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 
     Some SoundFonts are *way* too loud; if you encounter such a SoundFont,
     you'll most likely want to lower its output level. The best way to do so
-    is via the `soundfont_volume` setting which takes a percentage volume value:
+    is by including an additional percentage volume value after the
+    SoundFont's name in the config, e.g.:
 
     ```
     [fluidsynth]
-    soundfont = Arachno
-    soundfont_volume = 40
+    soundfont = Arachno 40
     ```
 
     This will scale back the volume to 40%. A few SoundFonts are _extremely
-    loud_---you'll need to turn the volume down to 10-20% to get usable levels
-    out of them. It's a mystery what the authors were thinking...
-
-    The big advantage of using `soundfont_volume` is that you can normalise
-    the SoundFont's volume in your primary config globally, then you don't
-    need to touch any of your game configs that fine-tune the volume of the
-    `FSYNTH` channel via `mixer` commands.
+    loud_---you need to turn the volume down to 10-20% to get usable levels.
+    It's a mystery what the authors were thinking...
 
 
 !!! warning "Roland MT-32 is not General MIDI"
