@@ -573,6 +573,26 @@ void MouseDriverState::SetLastWheelMovedY(const uint16_t value)
 	SET_UINT16(last_wheel_moved_y, value);
 }
 
+float MouseDriverState::GetPreciseMickeyCounterX() const
+{
+	return GET_FLOAT(precise_mickey_counter_x);
+}
+
+float MouseDriverState::GetPreciseMickeyCounterY() const
+{
+	return GET_FLOAT(precise_mickey_counter_y);
+}
+
+void MouseDriverState::SetPreciseMickeyCounterX(const float value)
+{
+	SET_FLOAT(precise_mickey_counter_x, value);
+}
+
+void MouseDriverState::SetPreciseMickeyCounterY(const float value)
+{
+	SET_FLOAT(precise_mickey_counter_y, value);
+}
+
 float MouseDriverState::GetMickeyCounterX() const
 {
 	return GET_FLOAT(mickey_counter_x);

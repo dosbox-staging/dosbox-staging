@@ -79,6 +79,9 @@ struct MouseConfig {
 	bool dos_driver_autoexec = false;
 	bool dos_driver_no_tsr   = false;
 
+	float dos_driver_move_threshold_x = 1.0f;
+	float dos_driver_move_threshold_y = 1.0f;
+
 	bool dos_driver_modern    = false;
 	bool dos_driver_immediate = false;
 
