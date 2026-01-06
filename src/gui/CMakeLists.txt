@@ -6,6 +6,7 @@ target_sources(libdosboxcommon PRIVATE
   shader_manager.cpp
   titlebar.cpp
 
+  render/deinterlacer.cpp
   render/opengl_renderer.cpp
   render/render.cpp
   render/scaler/scalers.cpp
