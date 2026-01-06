@@ -19,8 +19,16 @@ class MOUNT final : public Program {
 	    }
 	    void ListMounts();
 	    void Run() override;
+	    static bool AddWildcardPaths(const std::string& path_arg,
+	                                 std::vector<std::string>& paths);
+	    static bool MountImage(char drive, const std::vector<std::string>& paths,
+	                           const std::string& type, const std::string& fstype,
+	                           uint16_t* sizes, bool roflag, bool wants_ide,
+	                           int8_t ide_index, bool is_second_cable_slot,
+	                           std::function<void(std::string)> logger);
+
     private:
-        static void AddMessages();
+	    static void AddMessages();
 	    void ShowUsage();
 };
 
