@@ -107,7 +107,6 @@ struct Render {
 
 	bool updating  = false;
 	bool active    = false;
-	bool fullFrame = true;
 
 	AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
 	IntegerScalingMode integer_scaling_mode                = {};
