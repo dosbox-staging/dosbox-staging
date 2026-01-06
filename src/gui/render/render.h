@@ -90,13 +90,21 @@ struct Render {
 		ScalerLineHandler line_handler         = nullptr;
 		ScalerLineHandler line_palette_handler = nullptr;
 
-		int out_pitch        = 0;
-		uint8_t* out_write   = nullptr;
 		uint32_t cache_pitch = 0;
 		uint8_t* cache_read  = nullptr;
-		uint32_t in_line     = 0;
-		uint32_t out_line    = 0;
+
+		std::vector<uint8_t> out_buf = {};
+
+		int out_width      = 0;
+		int out_height     = 0;
+		int out_pitch      = 0;
+		uint8_t* out_write = nullptr;
+		uint32_t in_line   = 0;
+		uint32_t out_line  = 0;
 	} scale = {};
+
+	uint8_t* dest  = nullptr;
+	int dest_pitch = 0;
 
 	RenderPalette palette = {};
 

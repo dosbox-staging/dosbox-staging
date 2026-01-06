@@ -101,14 +101,16 @@ static void start_line_handler(const void* src_line_data)
 				// Otherwise, it will keep displaying the same
 				// frame at present time without doing a buffer
 				// swap followed by a texture upload to the GPU.
-				if (!GFX_StartUpdate(render.scale.out_write,
-				                     render.scale.out_pitch)) {
-
+				if (!GFX_StartUpdate(render.dest, render.dest_pitch)) {
 					RENDER_DrawLine = empty_line_handler;
 					return;
 				}
 
+				render.scale.out_write = render.scale.out_buf.data();
+				render.scale.out_pitch = render.dest_pitch;
+
 				render.updating_frame = true;
+
 				render.scale.out_write += render.scale.out_pitch *
 				                          scaler_changed_lines[0];
 
@@ -182,16 +184,29 @@ bool RENDER_StartUpdate()
 	scaler_changed_lines[0]   = 0;
 	scaler_changed_line_index = 0;
 
+	// Set up scaler output buffer & resize if necessary
+	render.scale.out_width = render.src.width *
+	                         (render.src.double_width ? 2 : 1);
+
+	render.scale.out_height = render.src.height *
+	                          (render.src.double_height ? 2 : 1);
+
+	constexpr auto NumBytesPerPixel = 4;
+	render.scale.out_buf.resize(render.scale.out_width *
+	                            render.scale.out_height * NumBytesPerPixel);
+
 	// Clearing the cache will first process the line to make sure it's
 	// never the same.
 	if (render.scale.clear_cache) {
-
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.scale.out_write, render.scale.out_pitch)) {
+		if (!GFX_StartUpdate(render.dest, render.dest_pitch)) {
 			return false;
 		}
+		render.scale.out_write = render.scale.out_buf.data();
+		render.scale.out_pitch = render.dest_pitch;
+		render.updating_frame  = true;
 
 		RENDER_DrawLine = clear_cache_handler;
 
@@ -207,9 +222,11 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.scale.out_write, render.scale.out_pitch)) {
+		if (!GFX_StartUpdate(render.dest, render.dest_pitch)) {
 			return false;
 		}
+		render.scale.out_write = render.scale.out_buf.data();
+		render.scale.out_pitch = render.dest_pitch;
 
 		RENDER_DrawLine = render.scale.line_palette_handler;
 
@@ -272,6 +289,16 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 		const auto frames_per_second = static_cast<float>(render.fps);
 
 		CAPTURE_AddFrame(image, frames_per_second);
+	}
+
+	if (render.updating_frame) {
+		// Copy scaled output into the (potentially) memory-mapped GPU
+		// texture buffer (always in 32-bit BGRX pixel format), but only
+		// if the current frame is different from the previous one.
+		//
+		std::memcpy(render.dest,
+		            render.scale.out_buf.data(),
+		            render.scale.out_buf.size());
 	}
 
 	GFX_EndUpdate();
@@ -348,24 +375,21 @@ static void render_reset()
 		scaler = &Scale1x;
 	}
 
-	constexpr auto src_pixel_bytes = sizeof(uintptr_t);
+	constexpr auto SrcPixelBytes = sizeof(uintptr_t);
 
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
 	case PixelFormat::RGB555_Packed16:
 	case PixelFormat::RGB565_Packed16:
-		render.src_start = check_cast<uint32_t>((render.src.width * 2) /
-		                                        src_pixel_bytes);
+		render.src_start = (render.src.width * 2) / SrcPixelBytes;
 		break;
 
 	case PixelFormat::BGR24_ByteArray:
-		render.src_start = check_cast<uint32_t>((render.src.width * 3) /
-		                                        src_pixel_bytes);
+		render.src_start = (render.src.width * 3) / SrcPixelBytes;
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
-		render.src_start = check_cast<uint32_t>((render.src.width * 4) /
-		                                        src_pixel_bytes);
+		render.src_start = (render.src.width * 4) / SrcPixelBytes;
 		break;
 	}
 
