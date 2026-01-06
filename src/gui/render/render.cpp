@@ -189,7 +189,6 @@ bool RENDER_StartUpdate()
 		RENDER_DrawLine = clear_cache_handler;
 
 		render.updating         = true;
-		render.fullFrame        = true;
 		render.scale.clearCache = false;
 		return true;
 	}
@@ -206,8 +205,7 @@ bool RENDER_StartUpdate()
 
 		RENDER_DrawLine = render.scale.linePalHandler;
 
-		render.updating  = true;
-		render.fullFrame = true;
+		render.updating = true;
 		return true;
 	}
 
@@ -219,12 +217,6 @@ bool RENDER_StartUpdate()
 	// from the previous one (see comments in `start_line_handler()`).
 	//
 	RENDER_DrawLine = start_line_handler;
-
-	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
-		render.fullFrame = true;
-	} else {
-		render.fullFrame = false;
-	}
 
 	render.updating = true;
 	return true;
