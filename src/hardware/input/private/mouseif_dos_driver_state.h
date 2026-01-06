@@ -131,10 +131,10 @@ public:
 	void SetPreciseMickeyCounterX(const float value);
 	void SetPreciseMickeyCounterY(const float value);
 
-	float GetMickeyCounterX() const;
-	float GetMickeyCounterY() const;
-	void SetMickeyCounterX(const float value);
-	void SetMickeyCounterY(const float value);
+	int16_t GetMickeyCounterX() const;
+	int16_t GetMickeyCounterY() const;
+	void SetMickeyCounterX(const int16_t value);
+	void SetMickeyCounterY(const int16_t value);
 
 	float GetMickeysPerPixelX() const;
 	float GetMickeysPerPixelY() const;
@@ -305,8 +305,8 @@ public:
 		float precise_mickey_counter_y = 0.0f;
 
 		// Counters with limited precision, as reported to guest
-		float mickey_counter_x = 0.0f;
-		float mickey_counter_y = 0.0f;
+		int16_t mickey_counter_x = 0;
+		int16_t mickey_counter_y = 0;
 
 		float mickeys_per_pixel_x = 0.0f;
 		float mickeys_per_pixel_y = 0.0f;
