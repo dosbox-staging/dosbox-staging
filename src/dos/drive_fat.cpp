@@ -842,6 +842,8 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 	if (bytesector != BytePerSector) {
 		/* Non-standard sector sizes not implemented */
 		created_successfully = false;
+		LOG_MSG("Non-standard sector size detected: %u bytes per sector",
+		        bytesector);
 		return;
 	}
 
@@ -905,6 +907,8 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 			} else {
 				/* Unknown format */
 				created_successfully = false;
+				LOG_MSG("Unknown floppy format detected (media descriptor 0x%02x)!",
+				        mdesc);
 				return;
 			}
 		}
@@ -917,17 +921,57 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 
 	/* Sanity checks */
 
-	// Note: non-standard sector sizes notimplemented
-	if ((bootbuffer.sectorsperfat == 0) || // FAT32 not implemented yet
-	    (bootbuffer.bytespersector != BytePerSector) ||
-	    (bootbuffer.sectorspercluster == 0) ||
-	    (bootbuffer.rootdirentries == 0) ||
-	    (bootbuffer.fatcopies == 0) ||
-	    (bootbuffer.headcount == 0) ||
-	    (bootbuffer.headcount > headscyl) ||
-	    (bootbuffer.sectorspertrack == 0) ||
-	    (bootbuffer.sectorspertrack > cylsector)) {
+	if (bootbuffer.sectorsperfat == 0) {
+		/* Possibly a FAT32 or non-FAT filesystem */
 		created_successfully = false;
+		LOG_MSG("Loaded image has zero sectors per FAT! FAT32 and non-FAT filesystems are not supported.");
+		return;
+	}
+	if (bootbuffer.bytespersector != BytePerSector) {
+		created_successfully = false;
+		LOG_MSG("Bytes Per Sector mismatch: expected %u, got %u",
+		        BytePerSector,
+		        bootbuffer.bytespersector);
+		return;
+	}
+	if (bootbuffer.sectorspercluster == 0) {
+		created_successfully = false;
+		LOG_MSG("Loaded image has zero sectors per cluster!");
+		return;
+	}
+	if (bootbuffer.rootdirentries == 0) {
+		created_successfully = false;
+		LOG_MSG("Loaded image has zero root directory entries!");
+		return;
+	}
+	if (bootbuffer.fatcopies == 0) {
+		created_successfully = false;
+		LOG_MSG("Loaded image has zero FAT copies!");
+		return;
+	}
+	/* Check geometry values */
+	if (bootbuffer.headcount == 0) {
+		created_successfully = false;
+		LOG_MSG("Loaded image has zero heads per cylinder!");
+		return;
+	}
+	if (bootbuffer.headcount > headscyl) {
+		created_successfully = false;
+		LOG_MSG("Loaded image has more heads per cylinder (%u) than the disk geometry allows (%u)!",
+		        bootbuffer.headcount,
+		        headscyl);
+		return;
+	}
+	if (bootbuffer.sectorspertrack == 0) {
+		created_successfully = false;
+		LOG_MSG("Loaded image has zero sectors per track!");
+		return;
+	}
+	if (bootbuffer.sectorspertrack > cylsector) {
+		created_successfully = false;
+		LOG_MSG("Loaded image has more sectors per track (%u) than the disk geometry allows (%u)!",
+		        bootbuffer.sectorspertrack,
+		        cylsector);
 		return;
 	}
 
