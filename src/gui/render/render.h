@@ -90,6 +90,8 @@ struct Render {
 		ScalerLineHandler line_handler         = nullptr;
 		ScalerLineHandler line_palette_handler = nullptr;
 
+		std::vector<uint8_t> out_buf = {};
+
 		int out_pitch        = 0;
 		uint8_t* out_write   = nullptr;
 		uint32_t cache_pitch = 0;
@@ -97,6 +99,9 @@ struct Render {
 		uint32_t in_line     = 0;
 		uint32_t out_line    = 0;
 	} scale = {};
+
+	uint8_t* dest  = nullptr;
+	int dest_pitch = 0;
 
 	RenderPalette palette = {};
 
