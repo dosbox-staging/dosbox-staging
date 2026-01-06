@@ -100,8 +100,9 @@ struct Render {
 
 	RenderPalette palette = {};
 
-	bool render_in_progress = false;
 	bool active             = false;
+	bool render_in_progress = false;
+	bool updating_frame     = false;
 
 	AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
 	IntegerScalingMode integer_scaling_mode                = {};
