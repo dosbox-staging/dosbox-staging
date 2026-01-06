@@ -619,10 +619,12 @@ bool execute(Program* program, CommandSettings& command_settings)
         constexpr auto FAT12MaxSPC      = 8;
         constexpr auto FAT12MaxSectors = FAT12MaxClusters * FAT12MaxSPC;
 
-        // FAT16 Efficiency Limit: 512 MB
+        // FAT16 Efficiency Limit: 2047 MB
         // At 512MB, FAT16 requires 16KB clusters, which is inefficient.
         // Windows 98/DOS 7.1 switch to FAT32 here by default.
-        constexpr int64_t FAT16EfficiencyLimit = 512 * SectorsPerMB;
+		// However, dosbox-staging does not support FAT32 yet, so for
+		// now we accept this inefficiency in favour of compatibility.
+        constexpr int64_t FAT16EfficiencyLimit = 2047 * SectorsPerMB;
 
         // FAT16 Hard Limit: 2 GB
         // The mathematical limit of unsigned 16-bit math + 32KB clusters.
