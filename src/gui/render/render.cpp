@@ -103,6 +103,7 @@ static void start_line_handler(const void* src_line_data)
 					return;
 				}
 
+				render.updating_frame = true;
 				render.scale.out_write += render.scale.out_pitch *
 				                          scaler_changed_lines[0];
 
@@ -190,6 +191,7 @@ bool RENDER_StartUpdate()
 		RENDER_DrawLine = clear_cache_handler;
 
 		render.render_in_progress = true;
+		render.updating_frame     = true;
 		render.scale.clear_cache  = false;
 		return true;
 	}
@@ -270,6 +272,7 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 	GFX_EndUpdate();
 
 	render.render_in_progress = false;
+	render.updating_frame     = false;
 }
 
 static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
