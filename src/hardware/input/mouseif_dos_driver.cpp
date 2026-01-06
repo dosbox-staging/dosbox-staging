@@ -1176,6 +1176,8 @@ static void reset()
 	state.SetPosX(static_cast<float>((state.GetMaxPosX() + 1) / 2));
 	state.SetPosY(static_cast<float>((state.GetMaxPosY() + 1) / 2));
 
+	state.SetPreciseMickeyCounterX(0.0f);
+	state.SetPreciseMickeyCounterY(0.0f);
 	state.SetMickeyCounterX(0.0f);
 	state.SetMickeyCounterY(0.0f);
 	state.SetCounterWheel(0);
@@ -1243,13 +1245,21 @@ static void update_mickeys_on_move(float& dx, float& dy,
 		return d;
 	};
 
-	auto update_mickey =
-	        [](float& mickey, const float d, const float mickeys_per_pixel) {
-		        mickey += d * mickeys_per_pixel;
-		        if (mickey > 32767.5f || mickey < -32768.5f) {
-			        mickey -= std::copysign(65536.0f, mickey);
-		        }
-	        };
+	auto update_mickey = [](float& mickey,
+	                        float& precise,
+	                        const float displacement,
+	                        const float mickeys_per_pixel,
+	                        const float threshold) {
+		precise += displacement * mickeys_per_pixel;
+		if (std::fabs(precise) < threshold) {
+			return;
+		}
+
+		mickey += MOUSE_ConsumeInt16(precise);
+		if (mickey > 32767.5f || mickey < -32768.5f) {
+			mickey -= std::copysign(65536.0f, mickey);
+		}
+	};
 
 	// Calculate cursor displacement
 	dx = calculate_d(x_rel,
@@ -1259,11 +1269,25 @@ static void update_mickeys_on_move(float& dx, float& dy,
 	                 state.GetPixelsPerMickeyY(),
 	                 state.GetSensitivityCoeffY());
 
-	// Update mickey counters
-	auto mickey_counter_x = state.GetMickeyCounterX();
-	auto mickey_counter_y = state.GetMickeyCounterY();
-	update_mickey(mickey_counter_x, dx, state.GetMickeysPerPixelX());
-	update_mickey(mickey_counter_y, dy, state.GetMickeysPerPixelY());
+	auto precise_counter_x = state.GetPreciseMickeyCounterX();
+	auto precise_counter_y = state.GetPreciseMickeyCounterY();
+	auto mickey_counter_x  = state.GetMickeyCounterX();
+	auto mickey_counter_y  = state.GetMickeyCounterY();
+
+	update_mickey(mickey_counter_x,
+	              precise_counter_x,
+	              dx,
+	              state.GetMickeysPerPixelX(),
+	              mouse_config.dos_driver_move_threshold_x);
+
+	update_mickey(mickey_counter_y,
+	              precise_counter_y,
+	              dy,
+	              state.GetMickeysPerPixelY(),
+	              mouse_config.dos_driver_move_threshold_y);
+
+	state.SetPreciseMickeyCounterX(precise_counter_x);
+	state.SetPreciseMickeyCounterY(precise_counter_y);
 	state.SetMickeyCounterX(mickey_counter_x);
 	state.SetMickeyCounterY(mickey_counter_y);
 }
