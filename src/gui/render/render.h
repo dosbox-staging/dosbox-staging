@@ -11,6 +11,7 @@
 #include <optional>
 #include <string>
 
+#include "gui/render/deinterlacer.h"
 #include "gui/render/scaler/scalers.h"
 #include "hardware/video/vga.h"
 #include "utils/fraction.h"
@@ -99,10 +100,15 @@ struct Render {
 		int out_pitch      = 0;
 		uint8_t* out_write = nullptr;
 
+		alignas(uint64_t)
+		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> out_buf = {};
+
 		int y_scale = 0;
 	} scale = {};
 
 	RenderPalette palette = {};
+
+	uint32_t* dest = nullptr;
 
 	bool active             = false;
 	bool render_in_progress = false;
@@ -112,6 +118,9 @@ struct Render {
 	IntegerScalingMode integer_scaling_mode                = {};
 
 	ViewportSettings viewport_settings = {};
+
+	std::unique_ptr<Deinterlacer> deinterlacer   = {};
+	DeinterlacingStrength deinterlacing_strength = {};
 };
 
 // CRT color profile emulation settings.
