@@ -126,6 +126,11 @@ public:
 	void SetLastWheelMovedX(const uint16_t value);
 	void SetLastWheelMovedY(const uint16_t value);
 
+	float GetPreciseMickeyCounterX() const;
+	float GetPreciseMickeyCounterY() const;
+	void SetPreciseMickeyCounterX(const float value);
+	void SetPreciseMickeyCounterY(const float value);
+
 	float GetMickeyCounterX() const;
 	float GetMickeyCounterY() const;
 	void SetMickeyCounterX(const float value);
@@ -295,6 +300,11 @@ public:
 		uint16_t last_wheel_moved_x = 0;
 		uint16_t last_wheel_moved_y = 0;
 
+		// Full precision mouse mickey counters
+		float precise_mickey_counter_x = 0.0f;
+		float precise_mickey_counter_y = 0.0f;
+
+		// Counters with limited precision, as reported to guest
 		float mickey_counter_x = 0.0f;
 		float mickey_counter_y = 0.0f;
 

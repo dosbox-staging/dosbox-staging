@@ -83,7 +83,8 @@ static const std::vector<uint16_t> list_rates = {
         // issues.
 };
 
-constexpr auto DefaultBuiltinDosMouseDriverOptions = "";
+constexpr auto DefaultBuiltinDosMouseDriverMoveThreshold = "1";
+constexpr auto DefaultBuiltinDosMouseDriverOptions       = "";
 
 const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 {
@@ -211,8 +212,70 @@ static void set_serial_mouse_model(const std::string_view model_str)
 	assert(result);
 }
 
+static void set_dos_driver_move_threshold(const std::string_view options_str)
+{
+	const auto set_default_value = [] {
+		set_section_property_value("mouse",
+		                           "builtin_dos_mouse_driver_move_threshold",
+		                           DefaultBuiltinDosMouseDriverMoveThreshold);
+
+		set_dos_driver_move_threshold(DefaultBuiltinDosMouseDriverMoveThreshold);
+	};
+
+	constexpr int MinAllowedValue = 1;
+	constexpr int MaxAllowedValue = 9;
+
+	const auto tokens = split(options_str, " ,;");
+	if (tokens.empty() || tokens.size() > 2) {
+		LOG_WARNING(
+		        "MOUSE: Invalid number of 'builtin_dos_mouse_driver_move_threshold' "
+		        "parameters '%s', using defaults",
+		        std::string(options_str).c_str());
+
+		set_default_value();
+		return;
+	}
+
+	const auto value_x = parse_int(tokens[0]);
+	const auto value_y = (tokens.size() >= 2) ? parse_int(tokens[1]) : value_x;
+
+	auto is_value_valid = [](const int value) {
+		return value >= MinAllowedValue && value <= MaxAllowedValue;
+	};
+
+	auto log_invalid_parameter = [](const std::string& parameter) {
+		LOG_WARNING(
+		        "MOUSE: Invalid 'builtin_dos_mouse_driver_move_threshold' "
+		        "parameter: '%s', using defaults",
+		        parameter.c_str());
+	};
+
+	if (!value_x || !is_value_valid(*value_x)) {
+		log_invalid_parameter(tokens[0]);
+		set_default_value();
+		return;
+	}
+
+	if ((tokens.size() >= 2) && (!value_y || !is_value_valid(*value_y))) {
+		log_invalid_parameter(tokens[1]);
+		set_default_value();
+		return;
+	}
+
+	mouse_config.dos_driver_move_threshold_x = static_cast<float>(*value_x);
+	mouse_config.dos_driver_move_threshold_y = static_cast<float>(*value_y);
+}
+
 static void set_dos_driver_options(const std::string_view options_str)
 {
+	const auto set_default_value = [] {
+		set_section_property_value("mouse",
+		                           "builtin_dos_mouse_driver_options",
+		                           DefaultBuiltinDosMouseDriverOptions);
+
+		set_dos_driver_options(DefaultBuiltinDosMouseDriverOptions);
+	};
+
 	const std::string OptionImmediate     = "immediate";
 	const std::string OptionModern        = "modern";
 	const std::string OptionNoGranularity = "no-granularity";
@@ -240,11 +303,7 @@ static void set_dos_driver_options(const std::string_view options_str)
 			        "parameter: '%s', using defaults",
 			        token.c_str());
 
-			set_section_property_value("mouse",
-			                           "builtin_dos_mouse_driver_options",
-			                           DefaultBuiltinDosMouseDriverOptions);
-
-			set_dos_driver_options(DefaultBuiltinDosMouseDriverOptions);
+			set_default_value();
 			return;
 		}
 	}
@@ -386,6 +445,8 @@ void MOUSE_Init()
 	mouse_config.raw_input      = section->GetBool("mouse_raw_input");
 
 	set_dos_driver_model(section->GetString("builtin_dos_mouse_driver_model"));
+	set_dos_driver_move_threshold(
+	        section->GetString("builtin_dos_mouse_driver_move_threshold"));
 	set_dos_driver_options(section->GetString("builtin_dos_mouse_driver_options"));
 
 	// Built-in DOS driver configuration
@@ -425,6 +486,10 @@ static void notify_mouse_setting_updated(SectionProp& section,
 	if (prop_name == "builtin_dos_mouse_driver_model") {
 		set_dos_driver_model(
 		        section.GetString("builtin_dos_mouse_driver_model"));
+
+	} else if (prop_name == "builtin_dos_mouse_driver_move_threshold") {
+		set_dos_driver_move_threshold(section.GetString(
+		        "builtin_dos_mouse_driver_move_threshold"));
 
 	} else if (prop_name == "builtin_dos_mouse_driver_options") {
 		set_dos_driver_options(
@@ -587,6 +652,27 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "  wheel:    3 buttons + wheel, supports the CuteMouse WheelAPI version 1.0.\n"
 	        "            No DOS game uses the mouse wheel, only a handful of DOS applications\n"
 	        "            and Windows 3.x with special third-party drivers.");
+
+	prop_str = secprop.AddString("builtin_dos_mouse_driver_move_threshold",
+	                             Always,
+	                             DefaultBuiltinDosMouseDriverMoveThreshold);
+	assert(prop_str);
+	prop_str->SetHelp(
+	        "The smallest amount of mouse movement that will be reported to the guest\n"
+	        "(1 by default). Some DOS games cannot properly respond to small movements, which\n"
+	        "were hard to achieve using the imprecise ball mice of the era; in such case\n"
+	        "increase the amount to the smallest value that results in a proper cursor\n"
+	        "motion. Possible values:\n"
+	        "\n"
+	        "  1-9:  The smallest amount of movement to report, for both horizontal and\n"
+	        "        vertical axes. 1 reports all the movements (default).\n"
+	        "\n"
+	        "  x,y:  Separate values for horizontal and vertical axes, can be separated by\n"
+	        "        spaces, commas, or semicolons.\n"
+	        "\n"
+	        "List of known games requiring the threshold to be set to 2:\n"
+	        "  - Ultima Underworld: The Stygian Abyss\n"
+	        "  - Ultima Underworld II: Labyrinth of Worlds");
 
 	prop_str = secprop.AddString("builtin_dos_mouse_driver_options",
 	                             Always,

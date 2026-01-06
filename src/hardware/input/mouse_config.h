@@ -83,6 +83,9 @@ struct MouseConfig {
 	bool dos_driver_immediate      = false;
 	bool dos_driver_no_granularity = false;
 
+	float dos_driver_move_threshold_x = 1.0f;
+	float dos_driver_move_threshold_y = 1.0f;
+
 	std::string dos_driver_last_options_str = {};
 
 	MouseModelDos model_dos = MouseModelDos::TwoButton;
