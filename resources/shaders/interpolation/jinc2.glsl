@@ -1,5 +1,14 @@
 //#version 130
 
+// SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2011-2026 Hyllian <sergiogdb@gmail.com>
+// SPDX-License-Identifier: MIT
+
+// Hyllian's jinc windowed-jinc 2-lobe sharper with anti-ringing Shader
+//
+// Ported from Libretro's GLSL shader jinc2.glsl to DOSBox-compatible
+// format by Tyrells.
+
 /*
 //#pragma parameter JINC2_WINDOW_SINC "Window Sinc Param" 0.44 0.0 1.0 0.01
 //#pragma parameter JINC2_SINC "Sinc Param" 0.82 0.0 1.0 0.01
@@ -20,32 +29,6 @@
    - HLSL compilers
    - Cg   compilers
 */
-
-/*
-   Hyllian's jinc windowed-jinc 2-lobe sharper with anti-ringing Shader
-   
-   Copyright (C) 2011-2016 Hyllian/Jararaca - sergiogdb@gmail.com
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-   THE SOFTWARE.
-
-*/
-
 
 const   float halfpi            = 1.5707963267948966192313216916398;
 const   float pi                = 3.1415926535897932384626433832795;
