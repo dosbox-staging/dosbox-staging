@@ -103,7 +103,7 @@ struct Render {
 		int y_scale = 0;
 	} scale = {};
 
-	uint8_t* dest  = nullptr;
+	uint32_t* dest = nullptr;
 	int dest_pitch = 0;
 
 	RenderPalette palette = {};
