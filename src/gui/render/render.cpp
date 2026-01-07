@@ -1413,6 +1413,10 @@ static void init_render_settings(SectionProp& section)
 	        "             aspect ratios (this is less of an issue on high resolution\n"
 	        "             monitors).\n"
 	        "\n"
+	        "  jinc2:     Upscale the image using jinc 2-lobe interpolation with anti-ringing.\n"
+	        "             This blends together dithered color patterns at the cost of image\n"
+	        "             sharpness.\n"
+	        "\n"
 	        "Start DOSBox Staging with the '--list-shaders' command line option to see the\n"
 	        "full list of available shaders. You can also use an absolute or relative path to\n"
 	        "a file. In all cases, you may omit the shader's '.glsl' file extension.");
