@@ -83,8 +83,6 @@ struct Render {
 	double fps = 0;
 
 	struct {
-		uint32_t size = 0;
-
 		ScalerMode in_mode = {};
 
 		bool clear_cache = false;

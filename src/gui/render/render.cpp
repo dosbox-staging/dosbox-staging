@@ -325,12 +325,6 @@ static void render_reset()
 
 	auto scaler = &Scale1x;
 
-	// Don't do software scaler sizes larger than 4k
-	uint16_t maxsize_current_input = SCALER_MAXWIDTH / render_width_px;
-	if (render.scale.size > maxsize_current_input) {
-		render.scale.size = maxsize_current_input;
-	}
-
 	if (double_height && double_width) {
 		scaler = &Scale2x;
 	} else if (double_width) {
