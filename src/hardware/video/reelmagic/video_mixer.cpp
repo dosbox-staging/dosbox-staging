@@ -539,7 +539,7 @@ static void setup_video_mixer(const bool update_render_mode)
 		                             vgaOver);
 
 	} else if ((check_cast<uint32_t>(_vgaImageInfo.width) == (_mpegPictureWidth * 2)) &&
-	           (check_cast<uint32_t>(_vgaImageInfo.height) == ((_mpegPictureHeight * 2)))) {
+	           (check_cast<uint32_t>(_vgaImageInfo.height) == (_mpegPictureHeight * 2))) {
 		modeStr = "Double Sized MPEG to VGA Pictures";
 		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_MPEGDoubleVGASize,
 		                             _vgaImageInfo.pixel_format,

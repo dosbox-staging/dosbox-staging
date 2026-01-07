@@ -947,9 +947,9 @@ static void DrawCode(void) {
 		mvwprintw(dbg.win_code,10,0,"%c-> %s%c",
 			(codeViewData.ovrMode?'O':'I'),dispPtr,(*curPtr?' ':'_'));
 		wclrtoeol(dbg.win_code); // not correct in pdcurses if full line
-		mvwchgat(dbg.win_code,10,0,3,0,(PAIR_BLACK_GREY),nullptr);
+		mvwchgat(dbg.win_code,10,0,3,0,PAIR_BLACK_GREY,nullptr);
 		if (*curPtr) {
-			mvwchgat(dbg.win_code,10,(curPtr-dispPtr+4),1,0,(PAIR_BLACK_GREY),nullptr);
+			mvwchgat(dbg.win_code,10,(curPtr-dispPtr+4),1,0,PAIR_BLACK_GREY,nullptr);
  		}
 	}
 
@@ -1869,7 +1869,7 @@ uint32_t DEBUG_CheckKeys(void) {
 				if(ParseCommand(codeViewData.inputStr)) {
 					char* cmd = ltrim(codeViewData.inputStr);
 					if (histBuff.empty() || *--histBuff.end()!=cmd)
-						histBuff.push_back(cmd);
+						histBuff.emplace_back(cmd);
 					if (histBuff.size() > MAX_HIST_BUFFER) histBuff.pop_front();
 					histBuffPos = histBuff.end();
 					ClearInputLine();

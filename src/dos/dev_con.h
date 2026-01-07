@@ -72,7 +72,7 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 	uint16_t oldax = reg_ax;
 	uint16_t count = 0;
 	INT10_SetCurMode();
-	if ((readcache) && (*size)) {
+	if (readcache && *size) {
 		data[count++] = readcache;
 		if (dos.echo) {
 			INT10_TeletypeOutputViaInterrupt(readcache, 7);

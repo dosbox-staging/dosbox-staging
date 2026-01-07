@@ -960,7 +960,7 @@ static uint16_t MSCDEX_IOCTL_Input(PhysPt buffer,uint8_t drive_unit) {
 					mscdex->GetCurrentPos(drive_unit,pos);
 					uint8_t addr_mode = mem_readb(buffer+1);
 					if (addr_mode == 0) { // HSG
-						uint32_t frames = static_cast<uint32_t>(msf_to_frames(pos));
+						auto frames = static_cast<uint32_t>(msf_to_frames(pos));
 						if (frames < REDBOOK_FRAME_PADDING)
 							MSCDEX_LOG("MSCDEX: Get position: invalid position %d:%d:%d", pos.min, pos.sec, pos.fr);
 						else

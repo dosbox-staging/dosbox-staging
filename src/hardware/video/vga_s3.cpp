@@ -675,7 +675,7 @@ void filter_compatible_s3_vesa_modes()
 		mb_8   = 1 << 4,
 	};
 
-	auto hash = [](const uint16_t w, const uint16_t h, const int d) -> uint32_t {
+	auto hash = [](const uint16_t w, const uint16_t h, const int d) {
 		return check_cast<uint32_t>((w + h) * d);
 	};
 

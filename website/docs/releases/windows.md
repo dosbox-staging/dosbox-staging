@@ -9,24 +9,23 @@ hide:
 
 <section class="release-downloads" markdown>
 
-- [Download DOSBox Staging 0.82.1 (x86_64, Installer)][0_82_1_INSTALLER]
+- [Download DOSBox Staging 0.82.2 (x86_64, Installer)][0_82_2_INSTALLER]
   <br>
   <small>
-  sha256: c69e67cbda6a44019d5a6b44d53cf353<wbr>56209cb28e835c2538ed3b2ad017c5b6
-
+  sha256: 8f8cd565a171c7dcedbda9a28f162c1d<wbr>464c20f688765eea4cddfc1f3205914e
   </small>
 
-- [Download DOSBox Staging 0.82.1 (x86_64, Portable ZIP)][0_82_1_ZIP]
+- [Download DOSBox Staging 0.82.2 (x86_64, Portable ZIP)][0_82_2_ZIP]
   <br>
   <small>
-  sha256: a8d4452801f4dde295d1e0835826878e<wbr>710d1a14a9e2525b190347c9f38a13a2
+  sha256: 9fa55dcbacc2e5565ac4be63b5cfa4e7<wbr>d50dc9adb9f9cb53f506d973af567f3a
   </small>
 
 </section>
 
 DOSBox Staging requires **64-bit Windows 8, 10, or 11**.
 
-Check out the [0.82.1 release notes](release-notes/0.82.1.md) to learn about
+Check out the [0.82.2 release notes](release-notes/0.82.2.md) to learn about
 the changes and improvements introduced in this release.
 
 If you're new to DOSBox Staging, we highly recommend following the
@@ -175,25 +174,38 @@ command-line install parameters, please see [Inno's documentation page](https://
 
 ## Older releases
 
-- [Download DOSBox Staging 0.82.0 (x86_64, Installer)][0_82_0_INSTALLER] (Windows 8 or newer)
+
+- [DOSBox Staging 0.82.1 (x86_64, Installer)][0_82_1_INSTALLER] (Windows 8 or newer)
+  <br> 
+  <small>
+  sha256: c69e67cbda6a44019d5a6b44d53cf353<wbr>56209cb28e835c2538ed3b2ad017c5b6
+  </small>
+
+- [DOSBox Staging 0.82.1 (x86_64, Portable ZIP)][0_82_1_ZIP] (Windows 8 or newer)
+  <br>
+  <small>
+  sha256: a8d4452801f4dde295d1e0835826878e<wbr>710d1a14a9e2525b190347c9f38a13a2
+  </small>
+
+- [DOSBox Staging 0.82.0 (x86_64, Installer)][0_82_0_INSTALLER] (Windows 8 or newer)
   <br>
   <small>
   sha256: fa041173e55fba9873be0a85734a09a3<wbr>f54b466c95ff8f1b8aa1a84cd3347729
   </small>
 
-- [Download DOSBox Staging 0.82.0 (x86_64, Portable ZIP)][0_82_0_ZIP] (Windows 8 or newer)
+- [DOSBox Staging 0.82.0 (x86_64, Portable ZIP)][0_82_0_ZIP] (Windows 8 or newer)
   <br>
   <small>
   sha256: b558efff258a7bd5f05cf61f1fddffcd<wbr>e8385e04c9b27bb29854bd13a708fbe1
   </small>
 
-- [Download DOSBox Staging 0.81.2 (x86_64, Installer)][0_81_2_INSTALLER] (Windows 8 or newer)
+- [DOSBox Staging 0.81.2 (x86_64, Installer)][0_81_2_INSTALLER] (Windows 8 or newer)
   <br>
   <small>
   sha256: 7c23512666f694420e5e2612742de5fb<wbr>64b32d336e54359b65fd21e7107ef51c
   </small>
 
-- [Download DOSBox Staging 0.81.2 (x86_64, Portable ZIP)][0_81_2_ZIP] (Windows 8 or newer)
+- [DOSBox Staging 0.81.2 (x86_64, Portable ZIP)][0_81_2_ZIP] (Windows 8 or newer)
   <br>
   <small>
   sha256: d7ec6054ae58d287c3ad5fbf4c3df732<wbr>ea3fd75ae828c8f4481fcf7c6203d168
@@ -355,7 +367,8 @@ command-line install parameters, please see [Inno's documentation page](https://
   sha256: 738d2ae2101384f2eeaf1895de64cf1b<wbr>4c76eaf7873de7e15b7f52145dfed7e7
   </small>
 
-
+[0_82_2_INSTALLER]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-windows-x64-v0.82.2-setup.exe
+[0_82_2_ZIP]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-windows-x64-v0.82.2.zip
 [0_82_1_INSTALLER]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.1/dosbox-staging-windows-x64-v0.82.1-setup.exe
 [0_82_1_ZIP]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.1/dosbox-staging-windows-x64-v0.82.1.zip
 [0_82_0_INSTALLER]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0/dosbox-staging-windows-x64-v0.82.0-setup.exe

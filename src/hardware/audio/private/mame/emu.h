@@ -117,8 +117,8 @@ public:
 	          shortName(short_name)
 	{}
 
-	virtual ~device_t() {
-	}
+	virtual ~device_t() = default;
+
 	// prevent copying and assignment
 	device_t(const device_t &) = delete;
 	device_t &operator=(const device_t &) = delete;

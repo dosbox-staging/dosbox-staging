@@ -1010,7 +1010,7 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	}();
 
 	auto highlight_model = [&](const LASynthModel* model,
-	                           const char* display_name) -> std::string {
+	                           const char* display_name) {
 		constexpr auto darkgray = "[color=dark-gray]";
 		constexpr auto green    = "[color=light-green]";
 		constexpr auto reset    = "[reset]";

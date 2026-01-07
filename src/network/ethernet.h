@@ -38,7 +38,7 @@ public:
 	 * The destructor will close the connection and free any
 	 * per-connection resources.
 	 */
-	virtual ~EthernetConnection() {}
+	virtual ~EthernetConnection() = default;
 
 	/** Sends a packet through the connection.
 	 * This function makes no guarantees as to whether the packet actually

@@ -141,19 +141,8 @@ class DOS_Device : public DOS_File {
 public:
 	DOS_Device() : DOS_File(), devnum(0) {}
 
-	DOS_Device(const DOS_Device& orig)
-		: DOS_File(orig),
-		  devnum(orig.devnum)
-	{
-
-	}
-
-	DOS_Device &operator=(const DOS_Device &orig)
-	{
-		DOS_File::operator=(orig);
-		devnum = orig.devnum;
-		return *this;
-	}
+	DOS_Device(const DOS_Device& orig) = default;
+	DOS_Device &operator=(const DOS_Device &orig) = default;
 
 	bool Read(uint8_t* data, uint16_t* size) override;
 	bool Write(uint8_t* data, uint16_t* size) override;

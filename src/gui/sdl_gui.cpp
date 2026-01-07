@@ -1772,8 +1772,8 @@ static void handle_macos_dosbox_package_drop(const std::string& dropped_file_pat
 	auto new_params = control->startup_params;
 
 	// Add --working-dir to set the package directory
-	new_params.push_back("--working-dir");
-	new_params.push_back(pkg_path.string());
+	new_params.emplace_back("--working-dir");
+	new_params.emplace_back(pkg_path.string());
 
 	// Use the standard restart mechanism to launch with expanded package
 	LOG_MSG("CONFIG: Restarting with expanded package arguments");
@@ -2519,7 +2519,7 @@ static std::vector<std::string> get_sdl_texture_renderers()
 
 	std::vector<std::string> drivers;
 	drivers.reserve(n + 1);
-	drivers.push_back("auto");
+	drivers.emplace_back("auto");
 
 	SDL_RendererInfo info;
 
@@ -2528,7 +2528,7 @@ static std::vector<std::string> get_sdl_texture_renderers()
 			continue;
 		}
 		if (info.flags & SDL_RENDERER_TARGETTEXTURE) {
-			drivers.push_back(info.name);
+			drivers.emplace_back(info.name);
 		}
 	}
 	return drivers;

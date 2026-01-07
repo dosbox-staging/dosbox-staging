@@ -635,7 +635,7 @@ bool PropMultiValRemain::SetValue(const std::string& new_value)
 		return false;
 	}
 
-	while ((section->GetProperty(number_of_properties))) {
+	while (section->GetProperty(number_of_properties)) {
 		number_of_properties++;
 	}
 

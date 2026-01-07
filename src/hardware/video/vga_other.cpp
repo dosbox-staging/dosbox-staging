@@ -479,7 +479,7 @@ static void update_cga16_color_pcjr()
 
 			constexpr auto gamma = 2.2f;
 
-			auto normalize_and_apply_gamma = [=](float v) -> float {
+			auto normalize_and_apply_gamma = [=](float v) {
 				const auto normalized = clamp((v - 0.075f) / (1 - 0.075f), 0.0f, 1.0f);
 				return powf(normalized, gamma);
 			};

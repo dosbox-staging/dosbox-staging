@@ -245,7 +245,7 @@ void Ps1Dac::WriteTimingPort203(io_port_t, io_val_t value, io_width_t)
 	adder = (data_rate_hz << FracShift) / sample_rate_hz;
 
 	regs.status = CalcStatus();
-	if ((regs.status & FifoNearlyEmptyFlag) && (can_trigger_irq)) {
+	if ((regs.status & FifoNearlyEmptyFlag) && can_trigger_irq) {
 		// Generate request for stuff.
 		regs.status |= FifoIrqFlag;
 		can_trigger_irq = false;
@@ -309,7 +309,7 @@ void Ps1Dac::PicCallback(const int frames_requested)
 		regs.status = CalcStatus();
 		pending     = static_cast<int32_t>(bytes_pending);
 		add         = adder;
-		if ((regs.status & FifoNearlyEmptyFlag) && (can_trigger_irq)) {
+		if ((regs.status & FifoNearlyEmptyFlag) && can_trigger_irq) {
 			// More bytes needed.
 			regs.status |= FifoIrqFlag;
 			can_trigger_irq = false;

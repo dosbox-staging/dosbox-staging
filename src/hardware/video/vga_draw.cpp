@@ -48,7 +48,7 @@ static uint8_t * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
 
 	uint16_t i = 0;
 	for (Bitu x = vga.draw.blocks; x > 0; --x, ++vidstart) {
-		Bitu val = base[(vidstart & (8 * 1024 -1))];
+		Bitu val = base[vidstart & (8 * 1024 -1)];
 		write_unaligned_uint32_at(TempLine, i++, CGA_2_Table[val >> 4]);
 		write_unaligned_uint32_at(TempLine, i++, CGA_2_Table[val & 0xf]);
 	}
@@ -94,7 +94,7 @@ static uint8_t *VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line)
 	const uint8_t *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask)
 	                                             << vga.tandy.line_shift);
 
-	auto read_cga16_offset = [=](uint16_t offset) -> uint8_t {
+	auto read_cga16_offset = [=](uint16_t offset) {
 		const auto index = static_cast<uint16_t>(vidstart) + offset;
 		constexpr auto index_mask = static_cast<uint16_t>(8 * 1024 - 1);
 		return base[index & index_mask];

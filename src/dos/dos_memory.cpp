@@ -49,7 +49,7 @@ void DOS_SetMcbFaultStrategy(const char * mcb_fault_strategy_pref)
 // returns true if the MCB block needed triaging
 static bool triage_block(DOS_MCB &mcb, const uint8_t repair_type)
 {
-	auto mcb_type_is_valid = [&]() -> bool {
+	auto mcb_type_is_valid = [&]() {
 		const auto t = mcb.GetType();
 		return t == middle_mcb_type || t == ending_mcb_type;
 	};

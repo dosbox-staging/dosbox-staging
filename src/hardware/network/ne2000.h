@@ -182,10 +182,11 @@ struct bx_ne2k_t {
 
 class bx_ne2k_c  {
 public:
-  bx_ne2k_c(void);
-  virtual ~bx_ne2k_c(void);
-  virtual void init(void);
-  virtual void reset(unsigned type);
+	bx_ne2k_c();
+	virtual ~bx_ne2k_c() = default;
+
+	virtual void init();
+	virtual void reset(unsigned type);
 
 public:
 	bx_ne2k_t s = {};

@@ -131,7 +131,7 @@ public:
 	IDEDevice(IDEController *c, const IDEDeviceType device_type) : controller(c), type(device_type) {}
 	IDEDevice(const IDEDevice &other) = delete;            // prevent copying
 	IDEDevice &operator=(const IDEDevice &other) = delete; // prevent assignment
-	virtual ~IDEDevice();
+	virtual ~IDEDevice() = default;
 
 	virtual void host_reset_begin();    /* IDE controller -> upon setting bit 2 of alt (0x3F6) */
 	virtual void host_reset_complete(); /* IDE controller -> upon setting bit 2 of alt (0x3F6) */
@@ -152,7 +152,7 @@ public:
 	IDEATADevice(IDEController *c, uint8_t disk_index);
 	IDEATADevice(const IDEATADevice &other) = delete;            // prevent copying
 	IDEATADevice &operator=(const IDEATADevice &other) = delete; // prevent assignment
-	~IDEATADevice() override;
+	~IDEATADevice() override = default;
 
 	void writecommand(uint8_t cmd) override;
 
@@ -211,7 +211,7 @@ public:
 	IDEATAPICDROMDevice(IDEController *c, uint8_t requested_drive_index);
 	IDEATAPICDROMDevice(const IDEATAPICDROMDevice &other) = delete;            // prevent copying
 	IDEATAPICDROMDevice &operator=(const IDEATAPICDROMDevice &other) = delete; // prevent assignment
-	~IDEATAPICDROMDevice() override;
+	~IDEATAPICDROMDevice() override = default;
 
 	void writecommand(uint8_t cmd) override;
 
@@ -1297,9 +1297,6 @@ IDEATAPICDROMDevice::IDEATAPICDROMDevice(IDEController *c, uint8_t requested_dri
 		spindown_timeout = c->spindown_timeout;
 }
 
-IDEATAPICDROMDevice::~IDEATAPICDROMDevice()
-{}
-
 void IDEATAPICDROMDevice::on_mode_select_io_complete()
 {
 	uint32_t AllocationLength = ((uint32_t)atapi_cmd[7] << 8) + atapi_cmd[8];
@@ -2124,9 +2121,6 @@ IDEATADevice::IDEATADevice(IDEController *c, uint8_t disk_index)
           bios_disk_index(disk_index)
 {}
 
-IDEATADevice::~IDEATADevice()
-{}
-
 std::shared_ptr<imageDisk> IDEATADevice::getBIOSdisk()
 {
 	if (bios_disk_index >= (2 + MAX_HDD_IMAGES))
@@ -2332,8 +2326,7 @@ void IDE_CDROM_Detach(const int8_t requested_drive_index)
 		IDEController *c = idecontroller[index];
 		if (c)
 			for (int slave = 0; slave < 2; slave++) {
-				IDEATAPICDROMDevice *dev;
-				dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
+				auto dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
 				if (dev && dev->drive_index == drive_index) {
 					delete dev;
 					c->device[slave] = nullptr;
@@ -2348,8 +2341,7 @@ void IDE_CDROM_Detach_Ret(int8_t &indexret,bool &slaveret,int8_t drive_index) {
         IDEController *c = idecontroller[index];
         if (c)
         for (int slave = 0; slave < 2; slave++) {
-            IDEATAPICDROMDevice *dev;
-            dev = dynamic_cast<IDEATAPICDROMDevice*>(c->device[slave]);
+            auto dev = dynamic_cast<IDEATAPICDROMDevice*>(c->device[slave]);
             if (dev && dev->drive_index == drive_index) {
                 delete dev;
                 c->device[slave] = nullptr;
@@ -2366,8 +2358,7 @@ void IDE_CDROM_DetachAll()
 		IDEController *c = idecontroller[index];
 		if (c)
 			for (int slave = 0; slave < 2; slave++) {
-				IDEATAPICDROMDevice *dev;
-				dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
+				auto dev = dynamic_cast<IDEATAPICDROMDevice *>(c->device[slave]);
 				if (dev) {
 					delete dev;
 					c->device[slave] = nullptr;
@@ -2412,8 +2403,7 @@ void IDE_Hard_Disk_Detach(uint8_t bios_disk_index)
 		IDEController *c = idecontroller[index];
 		if (c)
 			for (int slave = 0; slave < 2; slave++) {
-				IDEATADevice *dev;
-				dev = dynamic_cast<IDEATADevice *>(c->device[slave]);
+				auto dev = dynamic_cast<IDEATADevice *>(c->device[slave]);
 				if (dev && dev->bios_disk_index == bios_disk_index) {
 					delete dev;
 					c->device[slave] = nullptr;
@@ -3415,9 +3405,6 @@ void IDEDevice::host_reset_begin()
 	allow_writing = true;
 	state = IDE_DEV_BUSY;
 }
-
-IDEDevice::~IDEDevice()
-{}
 
 void IDEDevice::abort_silent()
 {

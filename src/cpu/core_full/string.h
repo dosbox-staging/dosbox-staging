@@ -146,7 +146,7 @@
 	case R_SCASB:
 		{
 			uint8_t val2 = 0;
-			for (;count>0;) {
+			while (count > 0) {
 				count--;CPU_Cycles--;
 				val2=LoadMb(di_base+di_index);
 				di_index=(di_index+add_index) & add_mask;
@@ -159,7 +159,7 @@
 		{
 			add_index *= 2;
 			uint16_t val2 = 0;
-			for (;count>0;) {
+			while (count > 0) {
 				count--;CPU_Cycles--;
 				val2=LoadMw(di_base+di_index);
 				di_index=(di_index+add_index) & add_mask;
@@ -172,7 +172,7 @@
 		{
 			add_index *= 4;
 			uint32_t val2 = 0;
-			for (;count>0;) {
+			while (count > 0) {
 				count--;CPU_Cycles--;
 				val2=LoadMd(di_base+di_index);
 				di_index=(di_index+add_index) & add_mask;
@@ -185,7 +185,7 @@
 		{
 			uint8_t val1 = 0;
 			uint8_t val2 = 0;
-			for (;count>0;) {
+			while (count > 0) {
 				count--;CPU_Cycles--;
 				val1=LoadMb(si_base+si_index);
 				val2=LoadMb(di_base+di_index);
@@ -201,7 +201,7 @@
 			add_index *= 2;
 			uint16_t val1 = 0;
 			uint16_t val2 = 0;
-			for (;count>0;) {
+			while (count > 0) {
 				count--;CPU_Cycles--;
 				val1=LoadMw(si_base+si_index);
 				val2=LoadMw(di_base+di_index);
@@ -217,7 +217,7 @@
 			add_index *= 4;
 			uint32_t val1 = 0;
 			uint32_t val2 = 0;
-			for (;count>0;) {
+			while (count > 0) {
 				count--;CPU_Cycles--;
 				val1=LoadMd(si_base+si_index);
 				val2=LoadMd(di_base+di_index);

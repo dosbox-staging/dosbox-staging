@@ -37,7 +37,9 @@
     <category>Emulator</category>
   </categories>
   <releases>
-    <release version="0.82.0" date="2024-10-27"/>
+	<release version="0.82.2" date="2025-06-17"/>
+	<release version="0.82.1" date="2025-04-04"/>
+	<release version="0.82.0" date="2024-10-27"/>
     <release version="0.81.2" date="2024-07-21"/>
     <release version="0.81.1" date="2024-05-12"/>
     <release version="0.81.0" date="2024-02-14"/>

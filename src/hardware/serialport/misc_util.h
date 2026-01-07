@@ -72,8 +72,8 @@ enum class SocketState {
 
 class NETClientSocket {
 public:
-	NETClientSocket();
-	virtual ~NETClientSocket();
+	NETClientSocket() = default;
+	virtual ~NETClientSocket() = default;
 
 	NETClientSocket(const NETClientSocket &) = delete; // prevent copying
 	NETClientSocket &operator=(const NETClientSocket &) = delete; // prevent assignment
@@ -101,8 +101,8 @@ private:
 
 class NETServerSocket {
 public:
-	NETServerSocket();
-	virtual ~NETServerSocket();
+	NETServerSocket() = default;
+	virtual ~NETServerSocket() = default;
 
 	NETServerSocket(const NETServerSocket &) = delete; // prevent copying
 	NETServerSocket &operator=(const NETServerSocket &) = delete; // prevent assignment

@@ -239,7 +239,7 @@ static void write_p201(io_port_t, io_val_t, io_width_t)
 	write_active = true;
 	last_write = PIC_Ticks;
 
-	auto percent_to_count = [](auto percent) -> uint8_t {
+	auto percent_to_count = [](auto percent) {
 		const auto scaled = static_cast<int>(round(percent * RANGE));
 		const auto shifted = check_cast<uint8_t>(scaled + RANGE);
 		return shifted;

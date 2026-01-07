@@ -73,7 +73,7 @@ void DEBUG_ShowMsg(const char* format, ...)
 		DEBUG_RefreshPage(0);
 		//		mvwprintw(dbg.win_out,dbg.win_out->_maxy-1, 0, "");
 	}
-	logBuff.push_back(buf);
+	logBuff.emplace_back(buf);
 	if (logBuff.size() > MAX_LOG_BUFFER) {
 		logBuff.pop_front();
 	}

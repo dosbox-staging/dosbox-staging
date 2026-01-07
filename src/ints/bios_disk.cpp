@@ -419,7 +419,7 @@ static Bitu INT13_DiskHandler(void) {
 		bufptr = reg_bx;
 		for (Bitu i = 0; i < reg_al; i++) {
 			last_status = imageDiskList[drivenum]->Read_Sector((uint32_t)reg_dh, (uint32_t)(reg_ch | ((reg_cl & 0xc0)<< 2)), (uint32_t)((reg_cl & 63)+i), sectbuf);
-			if((last_status != 0x00) || (killRead)) {
+			if((last_status != 0x00) || killRead) {
 				LOG_MSG("Error in disk read");
 				killRead = false;
 				reg_ah = 0x04;
