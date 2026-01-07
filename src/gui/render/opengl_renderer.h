@@ -52,7 +52,7 @@ public:
 
 	std::string GetCurrentShaderDescriptorString() override;
 
-	void StartFrame(uint8_t*& pixels_out, int& pitch_out) override;
+	void StartFrame(uint32_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
 
 	void PrepareFrame() override;
