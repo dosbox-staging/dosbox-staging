@@ -364,6 +364,8 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 
 	} else if (name == "nearest") {
 		return "interpolation/nearest";
+	} else if (name == "jinc2") {
+		return "interpolation/jinc2";
 	}
 
 	// Map legacy shader names
