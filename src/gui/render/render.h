@@ -4,6 +4,7 @@
 #ifndef DOSBOX_RENDER_H
 #define DOSBOX_RENDER_H
 
+#include <array>
 #include <cstring>
 #include <deque>
 #include <optional>
@@ -13,6 +14,7 @@
 #include "hardware/video/vga.h"
 #include "utils/fraction.h"
 #include "utils/rect.h"
+#include "utils/rgb888.h"
 
 enum class ViewportMode { Fit, Relative };
 
@@ -63,22 +65,14 @@ enum class AspectRatioCorrectionMode {
 };
 
 struct RenderPal_t {
-	struct {
-		uint8_t red    = 0;
-		uint8_t green  = 0;
-		uint8_t blue   = 0;
-		uint8_t unused = 0;
-	} rgb[256] = {};
+	std::array<Rgb888, NumVgaColors> rgb = {};
 
-	union {
-		uint16_t b16[256];
-		uint32_t b32[256] = {};
-	} lut = {};
+	uint32_t lut[NumVgaColors]     = {};
+	uint8_t modified[NumVgaColors] = {};
 
-	bool changed          = false;
-	uint8_t modified[256] = {};
-	uint32_t first        = 0;
-	uint32_t last         = 0;
+	bool changed   = false;
+	uint32_t first = 0;
+	uint32_t last  = 0;
 };
 
 struct Render {
@@ -92,12 +86,11 @@ struct Render {
 		uint32_t size = 0;
 
 		ScalerMode inMode  = {};
-		ScalerMode outMode = {};
 
 		bool clearCache = false;
 
-		ScalerLineHandler_t lineHandler    = nullptr;
-		ScalerLineHandler_t linePalHandler = nullptr;
+		ScalerLineHandler lineHandler    = nullptr;
+		ScalerLineHandler linePalHandler = nullptr;
 
 		uint32_t blocks     = 0;
 		uint32_t lastBlock  = 0;
@@ -139,10 +132,7 @@ struct RenderedImage {
 	// by pixel_format
 	uint8_t* image_data = nullptr;
 
-	// Pointer to a (256 * 4) byte long palette data, stored as 8-bit RGB
-	// values with 1 extra padding byte per entry (R0, G0, B0, X0, R1, G1,
-	// B1, X1, etc.)
-	uint8_t* palette_data = nullptr;
+	std::array<Rgb888, NumVgaColors> palette = {};
 
 	inline bool is_paletted() const
 	{
@@ -162,14 +152,8 @@ struct RenderedImage {
 		assert(image_data);
 		std::memcpy(copy.image_data, image_data, image_data_num_bytes);
 
-		// TODO it's bad that we need to make this assumption downstream
-		// on the size and alignment of the palette...
-		if (palette_data) {
-			constexpr uint16_t PaletteNumBytes = 256 * 4;
-			copy.palette_data = new uint8_t[PaletteNumBytes];
+		copy.palette = palette;
 
-			std::memcpy(copy.palette_data, palette_data, PaletteNumBytes);
-		}
 		return copy;
 	}
 
@@ -179,15 +163,11 @@ struct RenderedImage {
 			delete[] image_data;
 			image_data = nullptr;
 		}
-		if (palette_data) {
-			delete[] palette_data;
-			palette_data = nullptr;
-		}
 	}
 };
 
 extern Render render;
-extern ScalerLineHandler_t RENDER_DrawLine;
+extern ScalerLineHandler RENDER_DrawLine;
 
 void RENDER_Init();
 void RENDER_Reinit();

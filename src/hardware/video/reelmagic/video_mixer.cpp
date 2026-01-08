@@ -191,7 +191,7 @@ static const auto VideoMixerPixelFormat = PixelFormat::BGRX32_ByteArray;
 static void RMR_DrawLine_Passthrough(const void* src);
 
 // default things to off
-ReelMagic_ScalerLineHandler_t ReelMagic_RENDER_DrawLine = RMR_DrawLine_Passthrough;
+ReelMagic_ScalerLineHandler ReelMagic_RENDER_DrawLine = RMR_DrawLine_Passthrough;
 
 static ReelMagic_VideoMixerMPEGProvider* _requestedMpegProvider = nullptr;
 static ReelMagic_VideoMixerMPEGProvider* _activeMpegProvider    = nullptr;

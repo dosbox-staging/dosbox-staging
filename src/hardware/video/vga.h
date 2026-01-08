@@ -209,7 +209,7 @@ struct VgaConfig {
 	uint32_t full_enable_and_set_reset = 0;
 };
 
-enum Drawmode { PART, DRAWLINE, EGALINE };
+enum class DrawMode { Part, Scanline, ScanlineEga };
 
 enum class VgaRateMode { Default, Custom };
 
@@ -304,6 +304,12 @@ struct VgaDraw {
 	// at the "nomimal width" of the video mode.
 	bool pixel_doubling_allowed  = false;
 
+	// If true, non-VESA VGA modes are drawn per scanline. For a handful of
+	// games we need to disable this and drawn the screen in four parts
+	// (chunks) at a time, otherwise they'd crash at startup (this is a
+	// workaround for a deficiency in our VGA emulation code).
+	bool vga_render_per_scanline = true;
+
 	uint8_t font[64 * 1024] = {};
 	uint8_t* font_tables[2] = {nullptr, nullptr};
 
@@ -320,7 +326,7 @@ struct VgaDraw {
 		uint8_t enabled = 0;
 	} cursor = {};
 
-	Drawmode mode       = {};
+	DrawMode mode       = {};
 	bool vret_triggered = false;
 	bool vga_override   = false;
 };

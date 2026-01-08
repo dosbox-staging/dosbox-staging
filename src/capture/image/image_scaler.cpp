@@ -5,11 +5,13 @@
 
 #include <cmath>
 
+#include "hardware/video/vga.h"
 #include "misc/support.h"
 #include "utils/byteorder.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
 #include "utils/rgb.h"
+#include "utils/rgb888.h"
 
 CHECK_NARROWING();
 

@@ -35,8 +35,8 @@ void ReelMagic_RENDER_SetSize(const ImageInfo& image_info,
 
 bool ReelMagic_RENDER_StartUpdate(void);
 
-using ReelMagic_ScalerLineHandler_t = void(*)(const void* src);
-extern ReelMagic_ScalerLineHandler_t ReelMagic_RENDER_DrawLine;
+using ReelMagic_ScalerLineHandler = void (*)(const void* src);
+extern ReelMagic_ScalerLineHandler ReelMagic_RENDER_DrawLine;
 
 bool ReelMagic_IsVideoMixerEnabled();
 void ReelMagic_ClearVideoMixer();

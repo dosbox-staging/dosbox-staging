@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <array>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -9,9 +10,11 @@
 #include "image_saver.h"
 
 #include "capture/capture.h"
+#include "hardware/video/vga.h"
 #include "misc/support.h"
 #include "png_writer.h"
 #include "utils/checks.h"
+#include "utils/rgb888.h"
 
 CHECK_NARROWING();
 
@@ -104,7 +107,7 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
                                const uint16_t height,
                                const Fraction& pixel_aspect_ratio,
                                const VideoMode& video_mode,
-                               const uint8_t* palette_data)
+                               const std::array<Rgb888, NumVgaColors>& palette)
 {
 	switch (image_scaler.GetOutputPixelFormat()) {
 	case OutputPixelFormat::Indexed8:
@@ -113,7 +116,7 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
 		                             height,
 		                             pixel_aspect_ratio,
 		                             video_mode,
-		                             palette_data)) {
+		                             palette)) {
 			return;
 		}
 		break;
@@ -165,7 +168,7 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 		                             output_height,
 		                             pixel_aspect_ratio,
 		                             src.video_mode,
-		                             image.palette_data)) {
+		                             image.palette)) {
 			return;
 		}
 	} else {
@@ -225,7 +228,7 @@ void ImageSaver::SaveUpscaledImage(const RenderedImage& image)
 	                   image_scaler.GetOutputHeight(),
 	                   square_pixel_aspect_ratio,
 	                   image.params.video_mode,
-	                   image.palette_data);
+	                   image.palette);
 }
 
 void ImageSaver::SaveRenderedImage(const RenderedImage& image)

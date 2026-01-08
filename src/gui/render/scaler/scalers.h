@@ -20,49 +20,37 @@ constexpr uint16_t SCALER_MAXWIDTH  = 1600 + 30;
 // text modes (such as Q200x25x8 used by Necromancer's DOS Navigator) are
 // capable of writing.
 
-
-#define SCALER_BLOCKSIZE	16
+#define SCALER_BLOCKSIZE 16
 
 enum ScalerMode : uint8_t {
-	scalerMode8,
-	scalerMode15,
-	scalerMode16,
-	scalerMode32,
+	scalerMode8,  // 0
+	scalerMode15, // 1
+	scalerMode16, // 2
+	scalerMode32, // 3
 };
 
-typedef void (*ScalerLineHandler_t)(const void* src);
+extern uint8_t scaler_aspect[];
+extern Bitu scaler_changed_line_index;
+extern uint16_t scaler_changed_lines[];
 
-extern uint8_t Scaler_Aspect[];
-extern uint8_t diff_table[];
-extern Bitu Scaler_ChangedLineIndex;
-extern uint16_t Scaler_ChangedLines[];
-
-union scalerSourceCache_t {
-	uint32_t b32	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
-	uint16_t b16	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
-	uint8_t b8	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
+union ScalerSourceCache {
+	uint32_t b32[SCALER_MAXHEIGHT][SCALER_MAXWIDTH];
 };
 
-extern scalerSourceCache_t scalerSourceCache;
+extern ScalerSourceCache scaler_source_cache;
 
-typedef ScalerLineHandler_t ScalerLineBlock_t[6][4];
+typedef void (*ScalerLineHandler)(const void* src);
 
-struct ScalerSimpleBlock_t {
-	const char* name         = {};
-	uint8_t gfxFlags         = 0;
-	uint8_t xscale           = 0;
-	uint8_t yscale           = 0;
-	ScalerLineBlock_t Linear = {};
-	ScalerLineBlock_t Random = {};
+struct Scaler {
+	uint8_t xscale = 0;
+	uint8_t yscale = 0;
+
+	ScalerLineHandler line_handlers[6] = {};
 };
-
-#define SCALE_LEFT	0x1
-#define SCALE_RIGHT	0x2
-#define SCALE_FULL	0x4
 
 /* Simple scalers */
-extern ScalerSimpleBlock_t ScaleNormal1x;
-extern ScalerSimpleBlock_t ScaleNormalDw;
-extern ScalerSimpleBlock_t ScaleNormalDh;
-extern ScalerSimpleBlock_t ScaleNormal2x;
+extern Scaler Scale1x;
+extern Scaler ScaleHoriz2x;
+extern Scaler ScaleVert2x;
+extern Scaler Scale2x;
 #endif
