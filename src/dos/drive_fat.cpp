@@ -150,7 +150,6 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 	// File should always be opened in read-only mode if on read-only drive
 	assert(!IsOnReadOnlyMedium());
 
-	direntry tmpentry;
 	uint16_t sizedec, sizecount;
 	sizedec = *size;
 	sizecount = 0;
@@ -232,15 +231,6 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 	if(curSectOff>0 && loadedSector) myDrive->writeSector(currentSector, sectorBuffer);
 
 finalizeWrite:
-	myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
-	// TODO: On MS-DOS 6.22 timestamps only get flushed to disk on file close.
-	// The time value should also be the time of close, not of write.
-	// This is unlikely to cause huge problems and I don't feel confident in changing this code right now.
-	tmpentry.modTime = DOS_GetBiosTimePacked();
-	tmpentry.modDate = DOS_GetBiosDatePacked();
-	tmpentry.entrysize = filelength;
-	tmpentry.loFirstClust = (uint16_t)firstCluster;
-	myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
 
 	*size =sizecount;
 	return true;
@@ -280,32 +270,53 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 
 void fatFile::Close()
 {
-	if (flush_time_on_close == FlushTimeOnClose::ManuallySet ||
-	    set_archive_on_close) {
-		assert(!IsOnReadOnlyMedium());
-		direntry tmpentry;
-		myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
-		if (flush_time_on_close == FlushTimeOnClose::ManuallySet) {
-			tmpentry.modTime = time;
-			tmpentry.modDate = date;
-		}
-		if (set_archive_on_close) {
-			FatAttributeFlags tmp = tmpentry.attrib;
-			tmp.archive           = true;
-			tmpentry.attrib       = tmp._data;
-		}
-		myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
-	}
+    // If the file was written to (set_archive_on_close is true), we must update metadata
+    if (flush_time_on_close == FlushTimeOnClose::ManuallySet ||
+        set_archive_on_close) {
+        
+        assert(!IsOnReadOnlyMedium());
+        direntry tmpentry;
+        
+        // Read the existing entry
+        myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
+        
+        if (set_archive_on_close) {
+            // Update File Size
+            tmpentry.entrysize = host_to_le(filelength);
 
-	// Flush buffer
-	if (loadedSector) {
-		myDrive->writeSector(currentSector, sectorBuffer);
-	}
+            // Update Start Cluster (Critical for FAT32 High Word)
+            tmpentry.loFirstClust = host_to_le((uint16_t)(firstCluster & 0xFFFF));
+            tmpentry.hiFirstClust = host_to_le((uint16_t)(firstCluster >> 16));
 
-	// Flush the FAT cache on file close to ensure integrity
-	myDrive->flushFatBuffer();
+            // Update Timestamps to "Now" (Standard DOS behavior on close)
+            tmpentry.modTime = host_to_le(DOS_GetBiosTimePacked());
+            tmpentry.modDate = host_to_le(DOS_GetBiosDatePacked());
 
-	set_archive_on_close = false;
+            // Set Archive Attribute
+            FatAttributeFlags tmp = tmpentry.attrib;
+            tmp.archive = true;
+            tmpentry.attrib = tmp._data;
+        }
+
+        // Handle manual timestamp overrides (e.g. touch commands)
+        if (flush_time_on_close == FlushTimeOnClose::ManuallySet) {
+            tmpentry.modTime = host_to_le(time);
+            tmpentry.modDate = host_to_le(date);
+        }
+        
+        // Write the entry back to disk ONCE
+        myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
+    }
+
+    // Flush any pending data in the sector buffer
+    if (loadedSector) {
+        myDrive->writeSector(currentSector, sectorBuffer);
+    }
+
+    // Flush the FAT Table cache (Safety to ensure allocation chain is saved)
+    myDrive->flushFatBuffer();
+
+    set_archive_on_close = false;
 }
 
 bool fatFile::IsOnReadOnlyMedium() const
