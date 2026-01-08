@@ -599,13 +599,14 @@ bool execute(Program* program, CommandSettings& command_settings)
 		return false;
 	}
 
+	auto command_filename = command_settings.filename.string();
+
 	// Create file (truncate if exists)
 	{
-		FilePtr temp_fp(
-		        std::fopen(command_settings.filename.string().c_str(), "wb"));
+		FilePtr temp_fp(std::fopen(command_filename.c_str(), "wb"));
 		if (!temp_fp) {
 			notify_warning("SHELL_CMD_IMGMAKE_CANNOT_WRITE",
-			               command_settings.filename.string().c_str());
+			               command_filename.c_str());
 			return false;
 		}
 		// Closes on scope exit
@@ -620,10 +621,10 @@ bool execute(Program* program, CommandSettings& command_settings)
 		return false;
 	}
 
-	FilePtr fs(std::fopen(command_settings.filename.string().c_str(), "rb+"));
+	FilePtr fs(std::fopen(command_filename.c_str(), "rb+"));
 	if (!fs) {
 		notify_warning("SHELL_CMD_IMGMAKE_CANNOT_WRITE",
-		               command_settings.filename.string().c_str());
+		               command_filename.c_str());
 		return false;
 	}
 
@@ -917,7 +918,7 @@ bool execute(Program* program, CommandSettings& command_settings)
 	fat_size_sectors = static_cast<uint32_t>(
 	        (fat_size_bytes + SectorSize - 1) / SectorSize);
 
-	if (fat_bits != 32) {
+	if (fat_bits != 32) { //-V1051
 		host_writew(reinterpret_cast<uint8_t*>(&boot_sector->sectors_per_fat_16),
 		            static_cast<uint16_t>(fat_size_sectors));
 	} else {
@@ -1106,8 +1107,8 @@ bool execute(Program* program, CommandSettings& command_settings)
 			            fs.get());
 		}
 		std::fseek(fs.get(),
-		           current_fat_start +
-		                   static_cast<long>(fat_size_sectors * SectorSize),
+		           current_fat_start + (static_cast<long>(fat_size_sectors) *
+		                                static_cast<long>(SectorSize)),
 		           SEEK_SET);
 	}
 
@@ -1127,7 +1128,7 @@ bool execute(Program* program, CommandSettings& command_settings)
 	}
 
 	program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CREATED"),
-	                  command_settings.filename.string().c_str(),
+	                  command_filename.c_str(),
 	                  disk_geometry.cylinders,
 	                  disk_geometry.heads,
 	                  disk_geometry.sectors);
