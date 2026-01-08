@@ -38,7 +38,9 @@ vec3 max4(vec3 a, vec3 b, vec3 c, vec3 d)
 vec4 resampler(vec4 x)
 {
    vec4 res;
-   res = (x == vec4(0.0, 0.0, 0.0, 0.0)) ? vec4(wa * wb) : sin(x * wa) * sin(x * wb) / (x * x);
+   res = (x == vec4(0.0, 0.0, 0.0, 0.0)) ?
+        vec4(wa * wb) :
+        sin(x * wa) * sin(x * wb) / (x * x);
    return res;
 }
 
@@ -46,34 +48,24 @@ vec4 resampler(vec4 x)
 
 #if defined(VERTEX)
 
-#define OUT out
-#define IN  in
-#define tex2D texture
-
 #ifdef GL_ES
 #define PRECISION mediump
 #else
 #define PRECISION
 #endif
 
-IN  vec4 VertexCoord;
-IN  vec4 Color;
-IN  vec2 TexCoord;
-OUT vec4 color;
-OUT vec2 texCoord;
+uniform PRECISION vec2 rubyTextureSize;
+uniform PRECISION vec2 rubyInputSize;
 
-uniform mat4 MVPMatrix;
-uniform int  FrameDirection;
-uniform int  FrameCount;
-uniform PRECISION vec2 OutputSize;
-uniform PRECISION vec2 TextureSize;
-uniform PRECISION vec2 InputSize;
+layout (location = 0) in vec2 a_position;
+
+out vec2 v_texCoord;
 
 void main()
 {
-    gl_Position = MVPMatrix * VertexCoord;
-    color = Color;
-    texCoord = TexCoord;
+    gl_Position = vec4(a_position, 0.0, 1.0);
+    v_texCoord  = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 *
+                 rubyInputSize / rubyTextureSize;
 }
 
 #elif defined(FRAGMENT)
