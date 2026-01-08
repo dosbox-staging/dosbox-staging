@@ -210,6 +210,7 @@ public:
 	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
 	void EmptyCache(void) override {}
+	void flushFatBuffer();
 
 public:
 	uint8_t readSector(uint32_t sectnum, void * data);
@@ -257,6 +258,8 @@ private:
 	uint32_t curFatSect;
 	uint32_t rootCluster;
 	uint16_t fsInfoSector;
+	bool fatSectorDirty;
+	uint32_t lastFreeClusterHint;
 };
 
 class cdromDrive final : public localDrive

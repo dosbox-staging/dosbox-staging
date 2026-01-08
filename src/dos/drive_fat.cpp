@@ -23,6 +23,8 @@
 #define FAT32		   2
 
 static constexpr uint16_t BytePerSector = 512;
+static constexpr auto Fat32FsInfoLeadSginature      = 0x41615252;
+static constexpr auto Fat32FsInfoStructureSignature = 0x61417272;
 
 class fatFile final : public DOS_File {
 public:
@@ -300,6 +302,9 @@ void fatFile::Close()
 		myDrive->writeSector(currentSector, sectorBuffer);
 	}
 
+	// Flush the FAT cache on file close to ensure integrity
+	myDrive->flushFatBuffer();
+
 	set_archive_on_close = false;
 }
 
@@ -337,6 +342,9 @@ uint32_t fatDrive::getClusterValue(uint32_t clustNum) {
 	fatentoff = fatoffset % bootbuffer.bytespersector;
 
 	if(curFatSect != fatsectnum) {
+		// Flush the old sector if it was modified
+		flushFatBuffer();
+
 		/* Load two sectors at once for FAT12 */
 		readSector(fatsectnum, &fatSectBuffer[0]);
 		if (fattype==FAT12)
@@ -386,6 +394,9 @@ void fatDrive::setClusterValue(uint32_t clustNum, uint32_t clustValue) {
 	fatentoff = fatoffset % bootbuffer.bytespersector;
 
 	if(curFatSect != fatsectnum) {
+		// Flush before changing sectors
+		flushFatBuffer();
+
 		/* Load two sectors at once for FAT12 */
 		readSector(fatsectnum, &fatSectBuffer[0]);
 		if (fattype==FAT12)
@@ -423,15 +434,9 @@ void fatDrive::setClusterValue(uint32_t clustNum, uint32_t clustValue) {
 		        var_write((uint32_t*)&fatSectBuffer[fatentoff], clustValue);
 	        }
 	        }
-	for(int fc=0;fc<bootbuffer.fatcopies;fc++) {
-		writeSector(fatsectnum + (fc * bootbuffer.sectorsperfat), &fatSectBuffer[0]);
-		if (fattype==FAT12) {
-			if (fatentoff>=511)
-				writeSector(fatsectnum + 1 +
-				                    (fc * bootbuffer.sectorsperfat),
-				            &fatSectBuffer[BytePerSector]);
-		}
-	}
+
+	        // Mark as dirty, do not write to disk yet
+	        fatSectorDirty = true;
 }
 
 bool fatDrive::getEntryName(const char *fullname, char *entname) {
@@ -792,7 +797,9 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
           fatSectBuffer{0},
           curFatSect(0),
           rootCluster(0),
-          fsInfoSector(0xFFFF)
+          fsInfoSector(0xFFFF),
+          fatSectorDirty(false),
+          lastFreeClusterHint(0)
 {
 	FILE *diskfile;
 	uint32_t filesize;
@@ -961,6 +968,36 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 
 		// Read FSInfo Sector Location (Offset 0x30)
 		fsInfoSector = var_read(reinterpret_cast<uint16_t*>(raw_bpb + 0x30));
+
+		// Read FSInfo Next Free Cluster hint if available
+		if (fsInfoSector != 0 && fsInfoSector != 0xFFFF) {
+			uint8_t infoBuffer[512];
+			// Use loadedDisk to read immediately;
+			// fatDrive::readSector might fail if checks in that
+			// function rely on uninitialized vars. fsInfoSector is
+			// relative to the partition offset.
+			loadedDisk->Read_AbsoluteSector(fsInfoSector + partSectOff,
+			                                infoBuffer);
+
+			// Validate FSInfo Signatures
+			if (var_read((uint32_t*)infoBuffer) == Fat32FsInfoLeadSginature &&
+			    var_read((uint32_t*)(infoBuffer + 484)) ==
+			            Fat32FsInfoStructureSignature) {
+
+				// Read Offset 492 (0x1EC): Next Free Cluster
+				uint32_t next_free = var_read(
+				        (uint32_t*)(infoBuffer + 492));
+
+				// 0xFFFFFFFF means "unknown", usually implies
+				// start from beginning We also check >= 2
+				// because clusters 0 and 1 are reserved.
+				if (next_free != 0xFFFFFFFF && next_free >= 2) {
+					// Convert absolute cluster number to
+					// internal 0-based index
+					lastFreeClusterHint = next_free - 2;
+				}
+			}
+		}
 	} else {
 		// Not applicable for FAT12/16
 		fsInfoSector = 0xFFFF;
@@ -1041,11 +1078,10 @@ bool fatDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster
 		// fsInfoSector is relative to the partition start
 		readSector(fsInfoSector + partSectOff, infoBuffer);
 
-		// Validate Signatures:
-		// 0x00: "RRaA" (0x41615252)
-		// 0x1E4: "rrAa" (0x61417272)
-		if (var_read((uint32_t*)infoBuffer) == 0x41615252 &&
-		    var_read((uint32_t*)(infoBuffer + 484)) == 0x61417272) {
+		// Validate FSInfo Signatures
+		if (var_read((uint32_t*)infoBuffer) == Fat32FsInfoLeadSginature &&
+		    var_read((uint32_t*)(infoBuffer + 484)) ==
+		            Fat32FsInfoStructureSignature) {
 
 			uint32_t stored_free = var_read((uint32_t*)(infoBuffer + 488));
 
@@ -1097,10 +1133,55 @@ bool fatDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster
 	return true;
 }
 
-uint32_t fatDrive::getFirstFreeClust(void) {
+void fatDrive::flushFatBuffer()
+{
+	if (!fatSectorDirty || curFatSect == 0xffffffff) {
+		return;
+	}
+
+	// Write the current buffered FAT sector to ALL FAT copies
+	for (int fc = 0; fc < bootbuffer.fatcopies; fc++) {
+		// Calculate sector for this copy
+		// TODO: Check if we need to use sectorsperfat (uint16_t) or
+		// sectorsPerFat (uint32_t)
+		uint32_t sect = curFatSect + (fc * bootbuffer.sectorsperfat);
+
+		writeSector(sect, &fatSectBuffer[0]);
+
+		// Handle FAT12 split sectors (preserve existing FAT12 logic)
+		if (fattype == FAT12) {
+			writeSector(sect + 1, &fatSectBuffer[BytePerSector]);
+		}
+	}
+	fatSectorDirty = false;
+}
+
+uint32_t fatDrive::getFirstFreeClust(void)
+{
 	uint32_t i;
-	for(i=0;i<CountOfClusters;i++) {
-		if(!getClusterValue(i+2)) return (i+2);
+
+	// If hint is invalid or corrupt, reset to 0
+	if (lastFreeClusterHint >= CountOfClusters) {
+		lastFreeClusterHint = 0;
+	}
+
+	// Start from the hint
+	uint32_t start = lastFreeClusterHint;
+
+	// Pass 1: From Hint to End
+	for (i = start; i < CountOfClusters; i++) {
+		if (!getClusterValue(i + 2)) {
+			lastFreeClusterHint = i;
+			return (i + 2);
+		}
+	}
+
+	// Pass 2: From 0 to Hint (Wrap around)
+	for (i = 0; i < start; i++) {
+		if (!getClusterValue(i + 2)) {
+			lastFreeClusterHint = i;
+			return (i + 2);
+		}
 	}
 
 	/* No free cluster found */
@@ -1112,6 +1193,8 @@ bool fatDrive::IsRemovable(void) { return false; }
 
 Bits fatDrive::UnMount()
 {
+	// Flush FAT buffer if dirty
+	flushFatBuffer();
 	return 0;
 }
 
