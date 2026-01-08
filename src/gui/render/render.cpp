@@ -125,7 +125,7 @@ static void start_line_handler(const void* src_line_data)
 
 	render.scale.cache_read += render.scale.cache_pitch;
 
-	scaler_changed_lines[0] += scaler_aspect[render.scale.in_line];
+	scaler_changed_lines[0] += render.scale.yscale;
 
 	render.scale.in_line++;
 	render.scale.out_line++;
@@ -288,26 +288,6 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 	render.updating_frame     = false;
 }
 
-static int make_aspect_table(const int height, const double scaley, const int miny)
-{
-	double lines   = 0;
-	int linesadded = 0;
-
-	for (auto i = 0; i < height; ++i) {
-		lines += scaley;
-
-		if (lines >= miny) {
-			int templines = static_cast<int>(lines);
-			lines -= templines;
-			linesadded += templines;
-			scaler_aspect[i] = templines;
-		} else {
-			scaler_aspect[i] = 0;
-		}
-	}
-	return linesadded;
-}
-
 static SectionProp& get_render_section()
 {
 	auto section = get_section("render");
@@ -351,6 +331,8 @@ static void render_reset()
 		scaler = &Scale1x;
 	}
 
+	render.scale.yscale = scaler->yscale;
+
 	if ((render_width_px * scaler->xscale > SCALER_MAXWIDTH) ||
 	    (render.src.height * scaler->yscale > SCALER_MAXHEIGHT)) {
 		scaler = &Scale1x;
@@ -378,9 +360,7 @@ static void render_reset()
 	}
 
 	render_width_px *= scaler->xscale;
-
-	const auto render_height_px = check_cast<int>(
-	        make_aspect_table(render.src.height, scaler->yscale, scaler->yscale));
+	const auto render_height_px = render.src.height * scaler->yscale;
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
 
