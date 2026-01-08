@@ -347,7 +347,7 @@ uint32_t fatDrive::getClusterValue(uint32_t clustNum) {
 	switch(fattype) {
 		case FAT12:
 			clustValue = var_read((uint16_t *)&fatSectBuffer[fatentoff]);
-			if(clustNum & 0x1) {
+			if(clustNum & 0x1) { //-V1051
 				clustValue >>= 4;
 			} else {
 				clustValue &= 0xfff;
