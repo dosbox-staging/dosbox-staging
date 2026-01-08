@@ -46,15 +46,9 @@ vec4 resampler(vec4 x)
 
 #if defined(VERTEX)
 
-#if __VERSION__ >= 130
 #define OUT out
 #define IN  in
 #define tex2D texture
-#else
-#define OUT varying
-#define IN attribute
-#define tex2D texture2D
-#endif
 
 #ifdef GL_ES
 #define PRECISION mediump
@@ -84,15 +78,9 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#if __VERSION__ >= 130
 #define IN in
 #define tex2D texture
 out vec4 FragColor;
-#else
-#define IN varying
-#define FragColor gl_FragColor
-#define tex2D texture2D
-#endif
 
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
