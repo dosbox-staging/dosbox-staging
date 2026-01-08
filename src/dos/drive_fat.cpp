@@ -347,18 +347,20 @@ uint32_t fatDrive::getClusterValue(uint32_t clustNum) {
 	switch(fattype) {
 		case FAT12:
 			clustValue = var_read((uint16_t *)&fatSectBuffer[fatentoff]);
-			if(clustNum & 0x1) {
-				clustValue >>= 4;
-			} else {
-				clustValue &= 0xfff;
-			}
-			break;
-		case FAT16:
+		        if (clustNum & 0x1) {
+			        clustValue >>= 4;
+		        } else {
+			        clustValue &= 0xfff;
+		        }
+		        break;
+	        case FAT16:
 			clustValue = var_read((uint16_t *)&fatSectBuffer[fatentoff]);
 			break;
 		case FAT32:
 			clustValue = var_read((uint32_t *)&fatSectBuffer[fatentoff]);
-			break;
+			// Mask out high 4 bits
+		    clustValue &= 0x0FFFFFFF;
+		    break;
 	}
 
 	return clustValue;
@@ -412,10 +414,15 @@ void fatDrive::setClusterValue(uint32_t clustNum, uint32_t clustValue) {
 		case FAT16:
 			var_write((uint16_t *)&fatSectBuffer[fatentoff], (uint16_t)clustValue);
 			break;
-		case FAT32:
-			var_write((uint32_t *)&fatSectBuffer[fatentoff], clustValue);
-			break;
-	}
+	        case FAT32: {
+		        // Preserve high 4 bits
+		        uint32_t oldValue = var_read(
+		                (uint32_t*)&fatSectBuffer[fatentoff]);
+		        clustValue = (oldValue & 0xF0000000) |
+		                     (clustValue & 0x0FFFFFFF);
+		        var_write((uint32_t*)&fatSectBuffer[fatentoff], clustValue);
+	        }
+	        }
 	for(int fc=0;fc<bootbuffer.fatcopies;fc++) {
 		writeSector(fatsectnum + (fc * bootbuffer.sectorsperfat), &fatSectBuffer[0]);
 		if (fattype==FAT12) {
@@ -627,7 +634,8 @@ uint32_t fatDrive::getAbsoluteSectFromChain(uint32_t startClustNum, uint32_t log
 				if(testvalue >= 0xfff8) isEOF = true;
 				break;
 			case FAT32:
-				if(testvalue >= 0xfffffff8) isEOF = true;
+				// 32 bit End of Cluster marker
+				if(testvalue >= 0x0ffffff8) isEOF = true;
 				break;
 		}
 		if(isEOF && (skipClust >= 1)) {
@@ -667,7 +675,7 @@ void fatDrive::deleteClustChain(uint32_t startCluster, uint32_t bytePos) {
 				if(testvalue >= 0xfff8) isEOF = true;
 				break;
 			case FAT32:
-				if(testvalue >= 0xfffffff8) isEOF = true;
+				if(testvalue >= 0x0ffffff8) isEOF = true;
 				break;
 		}
 		if(countClust == endClust && !isEOF) {
@@ -680,7 +688,8 @@ void fatDrive::deleteClustChain(uint32_t startCluster, uint32_t bytePos) {
 					setClusterValue(currentClust, 0xffff);
 					break;
 				case FAT32:
-					setClusterValue(currentClust, 0xffffffff);
+					// 32 bit End of Cluster marker
+					setClusterValue(currentClust, 0x0fffffff);
 					break;
 			}
 		} else if(countClust > endClust) {
@@ -708,7 +717,7 @@ uint32_t fatDrive::appendCluster(uint32_t startCluster) {
 				if(testvalue >= 0xfff8) isEOF = true;
 				break;
 			case FAT32:
-				if(testvalue >= 0xfffffff8) isEOF = true;
+				if(testvalue >= 0x0ffffff8) isEOF = true;
 				break;
 		}
 		if(isEOF) break;
@@ -748,7 +757,8 @@ bool fatDrive::allocateCluster(uint32_t useCluster, uint32_t prevCluster) {
 			setClusterValue(useCluster, 0xffff);
 			break;
 		case FAT32:
-			setClusterValue(useCluster, 0xffffffff);
+			// 32 bit End of Cluster marker
+			setClusterValue(useCluster, 0x0fffffff);
 			break;
 	}
 	return true;
@@ -780,7 +790,9 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
           firstRootDirSect(0),
           cwdDirCluster(0),
           fatSectBuffer{0},
-          curFatSect(0)
+          curFatSect(0),
+          rootCluster(0),
+          fsInfoSector(0xFFFF)
 {
 	FILE *diskfile;
 	uint32_t filesize;
@@ -918,15 +930,14 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 	/* Sanity checks */
 
 	// Note: non-standard sector sizes notimplemented
-	if ((bootbuffer.sectorsperfat == 0) || // FAT32 not implemented yet
-	    (bootbuffer.bytespersector != BytePerSector) ||
-	    (bootbuffer.sectorspercluster == 0) ||
-	    (bootbuffer.rootdirentries == 0) ||
-	    (bootbuffer.fatcopies == 0) ||
-	    (bootbuffer.headcount == 0) ||
-	    (bootbuffer.headcount > headscyl) ||
-	    (bootbuffer.sectorspertrack == 0) ||
-	    (bootbuffer.sectorspertrack > cylsector)) {
+	if ( //(bootbuffer.sectorsperfat == 0) || // FAT32 not implemented yet
+	        (bootbuffer.bytespersector != BytePerSector) ||
+	        (bootbuffer.sectorspercluster == 0) ||
+	        // (bootbuffer.rootdirentries == 0) || // Valid for FAT32
+	        (bootbuffer.fatcopies == 0) || (bootbuffer.headcount == 0) ||
+	        (bootbuffer.headcount > headscyl) ||
+	        (bootbuffer.sectorspertrack == 0) ||
+	        (bootbuffer.sectorspertrack > cylsector)) {
 		created_successfully = false;
 		return;
 	}
@@ -934,21 +945,51 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 	/* Filesystem must be contiguous to use absolute sectors, otherwise CHS will be used */
 	absolute = ((bootbuffer.headcount == headscyl) && (bootbuffer.sectorspertrack == cylsector));
 
-	/* Determine FAT format, 12, 16 or 32 */
+	/* Determine FAT format */
+	uint32_t sectorsPerFat = bootbuffer.sectorsperfat;
+
+	// FAT32 Detection and Parameter Loading
+	if (sectorsPerFat == 0) {
+		// Read 32-bit sectors per fat from offset 0x24 (36)
+		// Accessing bootbuffer as raw bytes to avoid struct definition
+		// dependency
+		uint8_t* raw_bpb = reinterpret_cast<uint8_t*>(&bootbuffer);
+		sectorsPerFat = var_read(reinterpret_cast<uint32_t*>(raw_bpb + 0x24));
+
+		// Read Root Cluster from offset 0x2C (44)
+		rootCluster = var_read(reinterpret_cast<uint32_t*>(raw_bpb + 0x2C));
+
+		// Read FSInfo Sector Location (Offset 0x30)
+		fsInfoSector = var_read(reinterpret_cast<uint16_t*>(raw_bpb + 0x30));
+	} else {
+		// Not applicable for FAT12/16
+		fsInfoSector = 0xFFFF;
+	}
 
 	/* Get size of root dir in sectors */
 	uint32_t RootDirSectors = ((bootbuffer.rootdirentries * 32) + (bootbuffer.bytespersector - 1)) / bootbuffer.bytespersector;
 	uint32_t DataSectors;
 	if(bootbuffer.totalsectorcount != 0) {
-		DataSectors = bootbuffer.totalsectorcount - (bootbuffer.reservedsectors + (bootbuffer.fatcopies * bootbuffer.sectorsperfat) + RootDirSectors);
+		DataSectors = bootbuffer.totalsectorcount -
+		              (bootbuffer.reservedsectors +
+		               (bootbuffer.fatcopies * sectorsPerFat) +
+		               RootDirSectors);
 	} else {
-		DataSectors = bootbuffer.totalsecdword - (bootbuffer.reservedsectors + (bootbuffer.fatcopies * bootbuffer.sectorsperfat) + RootDirSectors);
-
+		DataSectors = bootbuffer.totalsecdword -
+		              (bootbuffer.reservedsectors +
+		               (bootbuffer.fatcopies * sectorsPerFat) +
+		               RootDirSectors);
 	}
 	CountOfClusters = DataSectors / bootbuffer.sectorspercluster;
 
-	firstDataSector = (bootbuffer.reservedsectors + (bootbuffer.fatcopies * bootbuffer.sectorsperfat) + RootDirSectors) + partSectOff;
-	firstRootDirSect = bootbuffer.reservedsectors + (bootbuffer.fatcopies * bootbuffer.sectorsperfat) + partSectOff;
+	// RootDirSectors is 0 for FAT32, so this calculation remains valid
+	firstDataSector = (bootbuffer.reservedsectors +
+	                   (bootbuffer.fatcopies * sectorsPerFat) + RootDirSectors) +
+	                  partSectOff;
+
+	// Only used for FAT12/16
+	firstRootDirSect = bootbuffer.reservedsectors +
+	                   (bootbuffer.fatcopies * sectorsPerFat) + partSectOff;
 
 	if (CountOfClusters < 4085) {
 		/* Volume is FAT12 */
@@ -978,39 +1019,81 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 	safe_strcpy(info, sysFilename);
 }
 
-bool fatDrive::AllocationInfo(uint16_t *_bytes_sector, uint8_t *_sectors_cluster, uint16_t *_total_clusters, uint16_t *_free_clusters) {
-	// Guard
+bool fatDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
+                              uint16_t* _total_clusters, uint16_t* _free_clusters)
+{
 	if (!loadedDisk) {
 		return false;
 	}
 
-	uint32_t hs, cy, sect,sectsize;
-	uint32_t countFree = 0;
-	uint32_t i;
+	uint32_t headers, cylinders, sectors, sector_size;
+	loadedDisk->Get_Geometry(&headers, &cylinders, &sectors, &sector_size);
 
-	loadedDisk->Get_Geometry(&hs, &cy, &sect, &sectsize);
-	*_bytes_sector = (uint16_t)sectsize;
-	*_sectors_cluster = bootbuffer.sectorspercluster;
+	// Start with the real physical values
+	uint32_t rep_bytes_sector    = sector_size;
+	uint32_t rep_sectors_cluster = bootbuffer.sectorspercluster;
+	uint32_t rep_total_clusters  = CountOfClusters;
+	uint32_t rep_free_clusters   = 0xFFFFFFFF; // Sentinel value
 
-	if (CountOfClusters<65536) {
-		*_total_clusters = (uint16_t)CountOfClusters;
-	} else {
-		// maybe some special handling needed for fat32
-		*_total_clusters = 65535;
-	}
+	// Read FAT32 FSInfo Sector if available
+	if (fattype == FAT32 && fsInfoSector != 0 && fsInfoSector != 0xFFFF) {
+		uint8_t infoBuffer[512];
+		// fsInfoSector is relative to the partition start
+		readSector(fsInfoSector + partSectOff, infoBuffer);
 
-	for (i=0; i<CountOfClusters; i++) {
-		if (!getClusterValue(i + 2)) {
-			countFree++;
+		// Validate Signatures:
+		// 0x00: "RRaA" (0x41615252)
+		// 0x1E4: "rrAa" (0x61417272)
+		if (var_read((uint32_t*)infoBuffer) == 0x41615252 &&
+		    var_read((uint32_t*)(infoBuffer + 484)) == 0x61417272) {
+
+			uint32_t stored_free = var_read((uint32_t*)(infoBuffer + 488));
+
+			// 0xFFFFFFFF indicates the count is unknown/dirty and
+			// must be computed
+			if (stored_free != 0xFFFFFFFF) {
+				// Sanity check: Free count cannot exceed total
+				// clusters
+				if (stored_free <= rep_total_clusters) {
+					rep_free_clusters = stored_free;
+				}
+			}
 		}
 	}
 
-	if (countFree<65536) {
-		*_free_clusters = (uint16_t)countFree;
-	} else {
-		// maybe some special handling needed for fat32
-		*_free_clusters = 65535;
+	// Scan the FAT if FSInfo was invalid or unavailable
+	if (rep_free_clusters == 0xFFFFFFFF) {
+		rep_free_clusters = 0;
+		for (uint32_t i = 0; i < CountOfClusters; i++) {
+			if (!getClusterValue(i + 2)) {
+				rep_free_clusters++;
+			}
+		}
 	}
+
+	// Fudge geometry to fit 16-bit API limits
+	while (rep_total_clusters > 65535) {
+		if (rep_sectors_cluster >= 128) {
+			rep_total_clusters = 65535;
+			if (rep_free_clusters > 65535) {
+				rep_free_clusters = 65535;
+			}
+			break;
+		}
+
+		// Double the cluster size
+		rep_sectors_cluster <<= 1;
+		// Halve the count of total clusters
+		rep_total_clusters >>= 1;
+		// Halve the count of free clusters
+		rep_free_clusters >>= 1;
+	}
+
+	*_bytes_sector    = (uint16_t)rep_bytes_sector;
+	*_sectors_cluster = (uint8_t)rep_sectors_cluster;
+	*_total_clusters  = (uint16_t)rep_total_clusters;
+	*_free_clusters   = (uint16_t)rep_free_clusters;
+
 	return true;
 }
 
@@ -1283,6 +1366,11 @@ bool fatDrive::FindNextInternal(uint32_t dirClustNumber, DOS_DTA& dta,
 	char find_name[DOS_NAMELENGTH_ASCII];
 	char extension[4];
 
+	// FAT32: Redirect Root (0) to Root Cluster
+	if (dirClustNumber == 0 && fattype == FAT32) {
+		dirClustNumber = rootCluster;
+	}
+
 	dta.GetSearchParams(attrs, search_pattern);
 	dirPos = dta.GetDirID();
 
@@ -1419,7 +1507,15 @@ bool fatDrive::directoryBrowse(uint32_t dirClustNumber, direntry *useEntry, int3
 	uint32_t logentsector;	/* Logical entry sector */
 	uint32_t entryoffset = 0;	/* Index offset within sector */
 	uint32_t tmpsector;
-	if ((start<0) || (start>65535)) return false;
+
+	// FAT32: Redirect Root (0) to Root Cluster
+	if (dirClustNumber == 0 && fattype == FAT32) {
+		dirClustNumber = rootCluster;
+	}
+
+	if ((start < 0) || (start > 65535)) {
+		return false;
+	}
 	auto dirPos = static_cast<uint16_t>(start);
 	if (entNum<start) return false;
 	entNum-=start;
@@ -1430,10 +1526,12 @@ bool fatDrive::directoryBrowse(uint32_t dirClustNumber, direntry *useEntry, int3
 		entryoffset = dirPos % 16;
 
 		if(dirClustNumber==0) {
+			// FAT12/16
 			if(dirPos >= bootbuffer.rootdirentries) return false;
 			tmpsector = firstRootDirSect+logentsector;
 			readSector(tmpsector,sectbuf);
 		} else {
+			// FAT32 root and all subdirs
 			tmpsector = getAbsoluteSectFromChain(dirClustNumber, logentsector);
 			/* A zero sector number can't happen */
 			if(tmpsector == 0) return false;
@@ -1457,9 +1555,14 @@ bool fatDrive::directoryChange(uint32_t dirClustNumber, direntry *useEntry, int3
 	uint32_t entryoffset = 0;	/* Index offset within sector */
 	uint32_t tmpsector = 0;
 	uint16_t dirPos = 0;
-	
-	while(entNum>=0) {
-		
+
+	// FAT32: Redirect Root (0) to Root Cluster
+	if (dirClustNumber == 0 && fattype == FAT32) {
+		dirClustNumber = rootCluster;
+	}
+
+	while (entNum >= 0) {
+
 		logentsector = dirPos / 16;
 		entryoffset = dirPos % 16;
 
@@ -1495,9 +1598,14 @@ bool fatDrive::addDirectoryEntry(uint32_t dirClustNumber, direntry useEntry) {
 	uint32_t entryoffset;  /* Index offset within sector */
 	uint32_t tmpsector;
 	uint16_t dirPos = 0;
-	
-	for(;;) {
-		
+
+	// FAT32: Redirect Root (0) to Root Cluster
+	if (dirClustNumber == 0 && fattype == FAT32) {
+		dirClustNumber = rootCluster;
+	}
+
+	for (;;) {
+
 		logentsector = dirPos / 16;
 		entryoffset = dirPos % 16;
 
