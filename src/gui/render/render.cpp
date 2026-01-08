@@ -151,9 +151,9 @@ static void clear_cache_handler(const void* src_line_data)
 {
 	const uint32_t* src_line = static_cast<const uint32_t*>(src_line_data);
 	uint32_t* cache_line = reinterpret_cast<uint32_t*>(render.scale.cache_read);
-	Bitu width = render.scale.cache_pitch / 4;
+	int width = render.scale.cache_pitch / 4;
 
-	for (Bitu x = 0; x < width; x++) {
+	for (int x = 0; x < width; x++) {
 		cache_line[x] = ~src_line[x];
 	}
 
@@ -288,19 +288,19 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 	render.updating_frame     = false;
 }
 
-static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
+static int make_aspect_table(const int height, const double scaley, const int miny)
 {
-	Bitu i;
-	double lines    = 0;
-	Bitu linesadded = 0;
+	double lines   = 0;
+	int linesadded = 0;
 
-	for (i = 0; i < height; i++) {
+	for (auto i = 0; i < height; ++i) {
 		lines += scaley;
-		if (lines >= static_cast<double>(miny)) {
-			Bitu templines = (Bitu)lines;
-			lines -= static_cast<double>(templines);
+
+		if (lines >= miny) {
+			int templines = static_cast<int>(lines);
+			lines -= templines;
 			linesadded += templines;
-			scaler_aspect[i] = static_cast<uint8_t>(templines);
+			scaler_aspect[i] = templines;
 		} else {
 			scaler_aspect[i] = 0;
 		}
