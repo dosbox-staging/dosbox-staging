@@ -101,6 +101,8 @@ struct Render {
 		uint8_t* out_write = nullptr;
 		uint32_t in_line   = 0;
 		uint32_t out_line  = 0;
+
+		int yscale = 0;
 	} scale = {};
 
 	uint8_t* dest  = nullptr;
