@@ -260,6 +260,8 @@ private:
 	uint16_t fsInfoSector;
 	bool fatSectorDirty;
 	uint32_t lastFreeClusterHint;
+	std::vector<uint8_t> fat_table;
+	bool fat_table_dirty;
 };
 
 class cdromDrive final : public localDrive
