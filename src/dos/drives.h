@@ -255,6 +255,8 @@ private:
 
 	uint8_t fatSectBuffer[1024];
 	uint32_t curFatSect;
+	uint32_t rootCluster;
+	uint16_t fsInfoSector;
 };
 
 class cdromDrive final : public localDrive
