@@ -12,31 +12,38 @@
 // Predefined calibration
 // ***************************************************************************
 
-struct MousePredefined {
-	// Mouse equalization for consistent user experience - please adjust
-	// values so that on full screen, with RAW mouse input, the mouse feel
-	// is similar to Windows 3.11 for Workgroups with PS/2 mouse driver
-	// and default settings
-	const float sensitivity_dos = 1.0f;
-	const float sensitivity_ps2 = 1.0f;
-	const float sensitivity_vmm = 3.0f;
-	const float sensitivity_com = 1.0f;
+namespace Mouse {
 
-	// Constant to move 'intersection point' for the acceleration curve
-	// Requires raw mouse input, otherwise there is no effect
-	// Larger values = higher mouse acceleration
-	const float acceleration_vmm = 1.0f;
+// Mouse equalization for consistent user experience - please adjust values so
+// that on full screen, with RAW mouse input, the mouse feel is similar to
+// Windows 3.11 for Workgroups with PS/2 mouse driver and default settings
+constexpr float SensitivityDos = 1.0f;
+constexpr float SensitivityPs2 = 1.0f;
+constexpr float SensitivityVmm = 3.0f;
+constexpr float SensitivityCom = 1.0f;
 
-	// Default and maximum allowed user sensitivity value
-	const int16_t sensitivity_user_default = 100;
-	const int16_t sensitivity_user_max     = 999;
+// Constant to move 'intersection point' for the acceleration curve
+// Requires raw mouse input, otherwise there is no effect
+// Larger values = higher mouse acceleration
+constexpr float AccelerationVmm = 1.0f;
 
-	// IRQ used by PS/2 mouse - do not change unless you really know
-	// what you are doing!
-	const uint8_t IRQ_PS2 = 12;
-};
+// Default and maximum/minimum allowed user sensitivity value
+constexpr int DefaultSensitivity = 100;
+constexpr int MaxSensitivity     = 999;
+constexpr int MinSensitivity     = -MaxSensitivity;
 
-extern MousePredefined mouse_predefined;
+// Default and maximum/minimum allowed mouse mickey threshold
+constexpr int DefaultMoveThreshold = 1;
+constexpr int MinMoveThreshold     = 1;
+constexpr int MaxMoveThreshold     = 9;
+
+// Default builtin mouse driver options
+constexpr auto DefaultDriverOptions = "";
+
+// PS/2 mouse IRQ, do not change unless you really know what you are doing!
+constexpr uint8_t IrqPs2 = 12;
+
+} // namespace Mouse
 
 // ***************************************************************************
 // Configuration file content
@@ -85,8 +92,6 @@ struct MouseConfig {
 
 	float dos_driver_move_threshold_x = 1.0f;
 	float dos_driver_move_threshold_y = 1.0f;
-
-	std::string dos_driver_last_options_str = {};
 
 	MouseModelDos model_dos = MouseModelDos::TwoButton;
 

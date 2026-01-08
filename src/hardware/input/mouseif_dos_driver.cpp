@@ -270,7 +270,7 @@ static void maybe_trigger_event()
 	}
 
 	maybe_start_delay_timer(delay_ms);
-	PIC_ActivateIRQ(mouse_predefined.IRQ_PS2);
+	PIC_ActivateIRQ(Mouse::IrqPs2);
 }
 
 static void clear_pending_events()
@@ -960,7 +960,8 @@ static void reset_hardware()
 	state.SetWheelApi(0);
 	state.SetCounterWheel(0);
 
-	PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false); // lower IRQ line
+	// Lower the IRQ line
+	PIC_SetIRQMask(Mouse::IrqPs2, false);
 
 	// Reset mouse refresh rate
 	rate_is_set = false;

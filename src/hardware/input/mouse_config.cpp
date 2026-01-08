@@ -9,6 +9,7 @@
 #include "config/config.h"
 #include "config/setup.h"
 #include "gui/common.h"
+#include "misc/notifications.h"
 #include "misc/support.h"
 #include "misc/video.h"
 #include "utils/checks.h"
@@ -20,7 +21,6 @@
 CHECK_NARROWING();
 
 MouseConfig mouse_config;
-MousePredefined mouse_predefined;
 
 namespace OptionBuiltInDosDriver {
 	constexpr auto Off   = "off";
@@ -83,9 +83,6 @@ static const std::vector<uint16_t> list_rates = {
         // issues.
 };
 
-constexpr auto DefaultBuiltinDosMouseDriverMoveThreshold = "1";
-constexpr auto DefaultBuiltinDosMouseDriverOptions       = "";
-
 const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 {
 	return list_rates;
@@ -122,6 +119,18 @@ bool MouseConfig::ParseComModel(const std::string_view model_str,
 	}
 
 	return true;
+}
+
+static void log_invalid_parameter(const std::string& setting_name,
+                                  const std::string_view option_str,
+                                  const std::string& adapted_value)
+{
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "MOUSE",
+	                      "PROGRAM_CONFIG_INVALID_SETTING",
+	                      setting_name.c_str(),
+	                      std::string(option_str).c_str(),
+	                      adapted_value.c_str());
 }
 
 static void set_capture_type(const std::string_view capture_str)
@@ -214,51 +223,45 @@ static void set_serial_mouse_model(const std::string_view model_str)
 
 static void set_dos_driver_move_threshold(const std::string_view options_str)
 {
-	const auto set_default_value = [] {
-		set_section_property_value("mouse",
-		                           "builtin_dos_mouse_driver_move_threshold",
-		                           DefaultBuiltinDosMouseDriverMoveThreshold);
+	const auto DefaultStr = std::to_string(Mouse::DefaultMoveThreshold);
 
-		set_dos_driver_move_threshold(DefaultBuiltinDosMouseDriverMoveThreshold);
+	constexpr auto SettingName = "builtin_dos_mouse_driver_move_threshold";
+
+	auto set_new_value = [&](const std::string& value) {
+		log_invalid_parameter(SettingName, options_str, value);
+		set_section_property_value("mouse", SettingName, value);
+		set_dos_driver_move_threshold(value);
 	};
 
-	constexpr int MinAllowedValue = 1;
-	constexpr int MaxAllowedValue = 9;
-
-	const auto tokens = split(options_str, " ,;");
+	const auto tokens = split(options_str, " \t,;");
 	if (tokens.empty() || tokens.size() > 2) {
-		LOG_WARNING(
-		        "MOUSE: Invalid number of 'builtin_dos_mouse_driver_move_threshold' "
-		        "parameters '%s', using defaults",
-		        std::string(options_str).c_str());
-
-		set_default_value();
+		set_new_value(DefaultStr);
 		return;
 	}
 
 	const auto value_x = parse_int(tokens[0]);
 	const auto value_y = (tokens.size() >= 2) ? parse_int(tokens[1]) : value_x;
 
-	auto is_value_valid = [](const int value) {
-		return value >= MinAllowedValue && value <= MaxAllowedValue;
-	};
-
-	auto log_invalid_parameter = [](const std::string& parameter) {
-		LOG_WARNING(
-		        "MOUSE: Invalid 'builtin_dos_mouse_driver_move_threshold' "
-		        "parameter: '%s', using defaults",
-		        parameter.c_str());
-	};
-
-	if (!value_x || !is_value_valid(*value_x)) {
-		log_invalid_parameter(tokens[0]);
-		set_default_value();
+	if (!value_x || !value_y) {
+		set_new_value(DefaultStr);
 		return;
 	}
 
-	if ((tokens.size() >= 2) && (!value_y || !is_value_valid(*value_y))) {
-		log_invalid_parameter(tokens[1]);
-		set_default_value();
+	const auto clamped_x = std::clamp(*value_x,
+	                                  Mouse::MinMoveThreshold,
+	                                  Mouse::MaxMoveThreshold);
+	const auto clamped_y = std::clamp(*value_y,
+	                                  Mouse::MinMoveThreshold,
+	                                  Mouse::MaxMoveThreshold);
+
+	if (*value_x != clamped_x || *value_y != clamped_y) {
+		auto adapted = std::to_string(clamped_x);
+		if (tokens.size() > 1) {
+			adapted += ",";
+			adapted += std::to_string(clamped_y);
+		}
+
+		set_new_value(adapted);
 		return;
 	}
 
@@ -268,29 +271,25 @@ static void set_dos_driver_move_threshold(const std::string_view options_str)
 
 static void set_dos_driver_options(const std::string_view options_str)
 {
-	const auto set_default_value = [] {
-		set_section_property_value("mouse",
-		                           "builtin_dos_mouse_driver_options",
-		                           DefaultBuiltinDosMouseDriverOptions);
+	constexpr auto DefaultValue = Mouse::DefaultDriverOptions;
 
-		set_dos_driver_options(DefaultBuiltinDosMouseDriverOptions);
-	};
+	constexpr auto SettingName = "builtin_dos_mouse_driver_options";
 
 	const std::string OptionImmediate     = "immediate";
 	const std::string OptionModern        = "modern";
 	const std::string OptionNoGranularity = "no-granularity";
 
-	auto& last_options_str = mouse_config.dos_driver_last_options_str;
-	if (last_options_str == options_str) {
-		return;
-	}
-	last_options_str = options_str;
+	auto set_new_value = [&](const std::string& value) {
+		log_invalid_parameter(SettingName, options_str, value);
+		set_section_property_value("mouse", SettingName, value);
+		set_dos_driver_options(value);
+	};
 
 	mouse_config.dos_driver_immediate      = false;
 	mouse_config.dos_driver_modern         = false;
 	mouse_config.dos_driver_no_granularity = false;
 
-	for (const auto& token : split(options_str, " ,")) {
+	for (const auto& token : split(options_str, " \t,;")) {
 		if (token == OptionImmediate) {
 			mouse_config.dos_driver_immediate = true;
 		} else if (token == OptionModern) {
@@ -298,12 +297,7 @@ static void set_dos_driver_options(const std::string_view options_str)
 		} else if (token == OptionNoGranularity) {
 			mouse_config.dos_driver_no_granularity = true;
 		} else {
-			LOG_WARNING(
-			        "MOUSE: Invalid 'builtin_dos_mouse_driver_options' "
-			        "parameter: '%s', using defaults",
-			        token.c_str());
-
-			set_default_value();
+			set_new_value(DefaultValue);
 			return;
 		}
 	}
@@ -333,102 +327,61 @@ static void set_dos_driver_options(const std::string_view options_str)
 	last_logged_str = options_str;
 }
 
-static void set_sensitivity(const std::string_view sensitivity_str)
+static void set_mouse_sensitivity(const std::string_view options_str)
 {
-	// Coefficient to convert percentage in integer to float
-	constexpr float coeff = 0.01f;
+	const auto DefaultStr = std::to_string(Mouse::DefaultSensitivity);
 
-	// Default sensitivity value
-	const auto& user_default = mouse_predefined.sensitivity_user_default;
-	const auto default_value = coeff * user_default;
+	constexpr auto SettingName = "mouse_sensitivity";
 
-	auto set_mouse_sensitivity_setting = [](const int value) {
-		set_section_property_value("mouse",
-		                           "mouse_sensitivity",
-		                           format_str("%d", value));
-	};
-	auto set_mouse_sensitivity_settings = [](const int val_x, const int val_y) {
-		set_section_property_value("mouse",
-		                           "mouse_sensitivity",
-		                           format_str("%d %d", val_x, val_y));
+	auto set_value = [&](const std::string& value) {
+		set_section_property_value("mouse", SettingName, value);
+		set_mouse_sensitivity(value);
 	};
 
-	// Split input string into values
-	auto values_str = split(sensitivity_str, " \t,;");
-	if (values_str.size() > 2) {
-		LOG_WARNING("MOUSE: Too many values in 'mouse_sensitivity', using '%d'",
-		            user_default);
-		mouse_config.sensitivity_coeff_x = default_value;
-		mouse_config.sensitivity_coeff_y = default_value;
-
-		set_mouse_sensitivity_setting(user_default);
+	auto tokens = split(options_str, " \t,;");
+	if (tokens.empty() || tokens.size() > 2) {
+		log_invalid_parameter(SettingName, options_str, DefaultStr);
+		set_value(DefaultStr);
 		return;
 	}
 
-	// If no values given, use defaults
-	if (values_str.empty()) {
-		mouse_config.sensitivity_coeff_x = default_value;
-		mouse_config.sensitivity_coeff_y = default_value;
+	const auto value_x = parse_int(tokens[0]);
+	const auto value_y = (tokens.size() >= 2) ? parse_int(tokens[1]) : value_x;
 
-		set_mouse_sensitivity_setting(user_default);
+	if (!value_x || !value_y) {
+		log_invalid_parameter(SettingName, options_str, DefaultStr);
+		set_value(DefaultStr);
 		return;
 	}
 
-	// Convert values to integers
-	std::vector<int> values_int = {};
+	const auto clamped_x = std::clamp(*value_x,
+	                                  Mouse::MinSensitivity,
+	                                  Mouse::MaxSensitivity);
+	const auto clamped_y = std::clamp(*value_y,
+	                                  Mouse::MinSensitivity,
+	                                  Mouse::MaxSensitivity);
 
-	bool out_of_range   = false;
-	const int value_min = -mouse_predefined.sensitivity_user_max;
-	const int value_max = mouse_predefined.sensitivity_user_max;
-
-	for (auto& value_str : values_str) {
-		// Remove trailing '%' signs, if present
-		if (value_str.ends_with('%')) {
-			value_str.pop_back();
+	if (*value_x != clamped_x || *value_y != clamped_y) {
+		auto adapted = std::to_string(clamped_x);
+		if (tokens.size() > 1) {
+			adapted += ",";
+			adapted += std::to_string(clamped_y);
 		}
 
-		const auto value = parse_int(value_str);
-		if (!value) {
-			LOG_WARNING("MOUSE: Invalid 'mouse_sensitivity' setting: '%s', using '%d'",
-			            value_str.c_str(),
-			            user_default);
-			mouse_config.sensitivity_coeff_x = default_value;
-			mouse_config.sensitivity_coeff_y = default_value;
-
-			set_mouse_sensitivity_setting(user_default);
-			return;
-		}
-
-		const auto value_clamped = clamp(*value, value_min, value_max);
-		if (value_clamped != *value) {
-			out_of_range = true;
-		}
-		values_int.push_back(value_clamped);
+		log_invalid_parameter(SettingName, options_str, adapted);
+		set_value(adapted);
+		return;
 	}
 
-	if (out_of_range) {
-		LOG_WARNING("MOUSE: 'mouse_sensitivity' adjusted to range %+d - %+d",
-		            value_min,
-		            value_max);
-	}
+	auto convert_value = [](const int value) {
+		// Coefficient to convert percentage in integer to float
+		constexpr float Coefficient = 0.01f;
 
-	// Set the actual values
-	assert(values_int.size() == 1 || values_int.size() == 2);
-	const auto value_float_0         = static_cast<float>(values_int[0]);
-	mouse_config.sensitivity_coeff_x = coeff * value_float_0;
+		return Coefficient * static_cast<float>(value);
+	};
 
-	if (values_int.size() == 2) {
-		const auto value_float_1 = static_cast<float>(values_int[1]);
-		mouse_config.sensitivity_coeff_y = coeff * value_float_1;
-
-		set_mouse_sensitivity_settings(values_int[0], values_int[1]);
-	} else {
-		mouse_config.sensitivity_coeff_y = mouse_config.sensitivity_coeff_x;
-
-		set_mouse_sensitivity_setting(values_int[0]);
-	}
-
-	return;
+	mouse_config.sensitivity_coeff_x = convert_value(*value_x);
+	mouse_config.sensitivity_coeff_y = convert_value(*value_y);
 }
 
 void MOUSE_Init()
@@ -437,7 +390,7 @@ void MOUSE_Init()
 	assert(section);
 
 	set_capture_type(section->GetString("mouse_capture"));
-	set_sensitivity(section->GetString("mouse_sensitivity"));
+	set_mouse_sensitivity(section->GetString("mouse_sensitivity"));
 
 	mouse_config.multi_display_aware = section->GetBool("mouse_multi_display_aware");
 
@@ -517,7 +470,7 @@ static void notify_mouse_setting_updated(SectionProp& section,
 		mouse_config.raw_input = section.GetBool("mouse_raw_input");
 
 	} else if (prop_name == "mouse_sensitivity") {
-		set_sensitivity(section.GetString("mouse_sensitivity"));
+		set_mouse_sensitivity(section.GetString("mouse_sensitivity"));
 	}
 }
 
@@ -570,7 +523,9 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "      using mirrored display mode or using an AV receiver's HDMI input for\n"
 	        "      audio-only listening.");
 
-	prop_str = secprop.AddString("mouse_sensitivity", Always, "100");
+	prop_str = secprop.AddString("mouse_sensitivity",
+	                             Always,
+	                             std::to_string(Mouse::DefaultSensitivity).c_str());
 	prop_str->SetHelp(
 	        "Global mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
 	        "(100 by default). Values can be separated by spaces, commas, or semicolons\n"
@@ -655,7 +610,7 @@ static void init_mouse_config_settings(SectionProp& secprop)
 
 	prop_str = secprop.AddString("builtin_dos_mouse_driver_move_threshold",
 	                             Always,
-	                             DefaultBuiltinDosMouseDriverMoveThreshold);
+	                             std::to_string(Mouse::DefaultMoveThreshold).c_str());
 	assert(prop_str);
 	prop_str->SetHelp(
 	        "The smallest amount of mouse movement that will be reported to the guest\n"
@@ -676,7 +631,7 @@ static void init_mouse_config_settings(SectionProp& secprop)
 
 	prop_str = secprop.AddString("builtin_dos_mouse_driver_options",
 	                             Always,
-	                             DefaultBuiltinDosMouseDriverOptions);
+	                             Mouse::DefaultDriverOptions);
 	assert(prop_str);
 	prop_str->SetHelp(
 	        "Additional built-in DOS mouse driver settings as a list of space or comma\n"
