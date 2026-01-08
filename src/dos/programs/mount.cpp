@@ -286,7 +286,7 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 
 			iso_images.push_back(std::make_shared<isoDrive>(
 			        drive, iso_path.c_str(), mediaid, error));
-			switch (error) {
+			switch (error) { //-V785
 			case 0: break;
 			case 1:
 				log_fmt(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS").c_str());
@@ -471,7 +471,6 @@ void MOUNT::Run(void) {
 		// 512*32*32765==~500MB total size
 		// 512*32*16000==~250MB total free size
 		str_size = "512,32,32765,16000";
-		mediaid  = MediaId::HardDisk;
 
 		// If drive mounted to A or B, set mediaid to floppy
 		// This is preferable to using type because floppies can
@@ -486,7 +485,6 @@ void MOUNT::Run(void) {
 		}
 	} else if (type == "iso") {
 		str_size = "2048,1,65535,0";
-		mediaid  = MediaId::HardDisk;
 	} else if (type != "hdd") {
 		// If it is 'hdd', we leave sizes 0 to trigger detection or
 		// parsing below. If it is unknown, we error out later.
@@ -723,7 +721,7 @@ void MOUNT::Run(void) {
 				if (stat(final_path.c_str(), &t2) == 0 &&
 				    S_ISREG(t2.st_mode)) {
 					auto ext = final_path.substr(
-					        final_path.find_last_of(".") + 1);
+					        final_path.find_last_of('.') + 1);
 					std::transform(ext.begin(),
 					               ext.end(),
 					               ext.begin(),
@@ -817,7 +815,7 @@ void MOUNT::Run(void) {
                                                            mediaid,
                                                            o_error);
 		// Erase old drive on success
-		if (o_error) {
+		if (o_error) { //-V547
 			if (o_error == 1) {
 				WriteOut("No mixing of relative and absolute paths. Overlay failed.");
 			} else if (o_error == 2) {
