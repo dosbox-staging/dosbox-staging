@@ -9,6 +9,9 @@
 // Ported from Libretro's GLSL shader jinc2.glsl to DOSBox-compatible
 // format by Tyrells.
 
+#pragma force_single_scan
+#pragma force_no_pixel_doubling
+
 #define JINC2_WINDOW_SINC 0.44
 #define JINC2_SINC 0.82
 #define JINC2_AR_STRENGTH 0.8
@@ -43,8 +46,6 @@ vec4 resampler(vec4 x)
    return res;
 }
 
-#define texCoord TEX0
-
 #if defined(VERTEX)
 
 #ifdef GL_ES
@@ -69,10 +70,6 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#define IN in
-#define tex2D texture
-out vec4 FragColor;
-
 #ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
@@ -84,13 +81,12 @@ precision mediump float;
 #define PRECISION
 #endif
 
-uniform int FrameDirection;
-uniform int FrameCount;
-uniform PRECISION vec2 OutputSize;
-uniform PRECISION vec2 TextureSize;
-uniform PRECISION vec2 InputSize;
-uniform sampler2D s_p;
-IN vec2 texCoord;
+in vec2 v_texCoord;
+
+out vec4 FragColor;
+
+uniform PRECISION vec2 rubyTextureSize;
+uniform sampler2D rubyTexture;
 
 void main()
 {
@@ -99,7 +95,7 @@ void main()
 
     vec2 dx = vec2(1.0, 0.0);
     vec2 dy = vec2(0.0, 1.0);
-    vec2 pc = texCoord * TextureSize;
+    vec2 pc = v_texCoord * rubyTextureSize;
     vec2 tc = floor(pc - vec2(0.5, 0.5)) + vec2(0.5, 0.5);
      
     weights[0] = resampler(vec4(
@@ -127,28 +123,28 @@ void main()
         d(pc, tc+2.0*dx+2.0*dy)
     ));
 
-    dx /= TextureSize;
-    dy /= TextureSize;
-    tc /= TextureSize;
+    dx /= rubyTextureSize;
+    dy /= rubyTextureSize;
+    tc /= rubyTextureSize;
 
-    vec3 c00 = tex2D(s_p, tc    -dx    -dy).xyz;
-    vec3 c10 = tex2D(s_p, tc           -dy).xyz;
-    vec3 c20 = tex2D(s_p, tc    +dx    -dy).xyz;
-    vec3 c30 = tex2D(s_p, tc+2.0*dx    -dy).xyz;
-    vec3 c01 = tex2D(s_p, tc    -dx       ).xyz;
-    vec3 c11 = tex2D(s_p, tc              ).xyz;
-    vec3 c21 = tex2D(s_p, tc    +dx       ).xyz;
-    vec3 c31 = tex2D(s_p, tc+2.0*dx       ).xyz;
-    vec3 c02 = tex2D(s_p, tc    -dx    +dy).xyz;
-    vec3 c12 = tex2D(s_p, tc           +dy).xyz;
-    vec3 c22 = tex2D(s_p, tc    +dx    +dy).xyz;
-    vec3 c32 = tex2D(s_p, tc+2.0*dx    +dy).xyz;
-    vec3 c03 = tex2D(s_p, tc    -dx+2.0*dy).xyz;
-    vec3 c13 = tex2D(s_p, tc       +2.0*dy).xyz;
-    vec3 c23 = tex2D(s_p, tc    +dx+2.0*dy).xyz;
-    vec3 c33 = tex2D(s_p, tc+2.0*dx+2.0*dy).xyz;
+    vec3 c00 = texture(rubyTexture, tc    -dx    -dy).xyz;
+    vec3 c10 = texture(rubyTexture, tc           -dy).xyz;
+    vec3 c20 = texture(rubyTexture, tc    +dx    -dy).xyz;
+    vec3 c30 = texture(rubyTexture, tc+2.0*dx    -dy).xyz;
+    vec3 c01 = texture(rubyTexture, tc    -dx       ).xyz;
+    vec3 c11 = texture(rubyTexture, tc              ).xyz;
+    vec3 c21 = texture(rubyTexture, tc    +dx       ).xyz;
+    vec3 c31 = texture(rubyTexture, tc+2.0*dx       ).xyz;
+    vec3 c02 = texture(rubyTexture, tc    -dx    +dy).xyz;
+    vec3 c12 = texture(rubyTexture, tc           +dy).xyz;
+    vec3 c22 = texture(rubyTexture, tc    +dx    +dy).xyz;
+    vec3 c32 = texture(rubyTexture, tc+2.0*dx    +dy).xyz;
+    vec3 c03 = texture(rubyTexture, tc    -dx+2.0*dy).xyz;
+    vec3 c13 = texture(rubyTexture, tc       +2.0*dy).xyz;
+    vec3 c23 = texture(rubyTexture, tc    +dx+2.0*dy).xyz;
+    vec3 c33 = texture(rubyTexture, tc+2.0*dx+2.0*dy).xyz;
 
-    color = tex2D(s_p, texCoord).xyz;
+    color = texture(rubyTexture, v_texCoord).xyz;
 
     //  Get min/max samples
     vec3 min_sample = min4(c11, c21, c12, c22);
@@ -189,4 +185,5 @@ void main()
     // final sum and weight normalization
     FragColor.xyz = color;
 }
+
 #endif
