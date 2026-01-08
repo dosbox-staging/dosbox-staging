@@ -678,41 +678,71 @@ void MOUNT::Run(void) {
 		uint16_t arg_idx = 2;
 		std::string cur_arg;
 
-		// If we found the first path, we want to start processing from
-		// arg 2.
-		arg_idx = 2;
-
 		while (cmd->FindCommand(arg_idx++, cur_arg)) {
+			// Expand ~ to home directory
+			cur_arg = resolve_home(cur_arg).string();
 			// Apply relative path logic to current argument
 			if (path_relative_to_last_config &&
 			    control->config_files.size() &&
 			    !std_fs::path(cur_arg).is_absolute()) {
 				std::string lastconfigdir =
-				        control->config_files
-				                [control->config_files.size() - 1];
+				        control->config_files.back();
 				auto pos = lastconfigdir.rfind(CROSS_FILESPLIT);
 				if (pos == std::string::npos) {
 					pos = 0;
 				}
 				lastconfigdir.erase(pos);
-				if (lastconfigdir.length()) {
+				if (!lastconfigdir.empty()) {
 					cur_arg = lastconfigdir +
 					          CROSS_FILESPLIT + cur_arg;
 				}
 			}
 
-			const auto real_path = to_native_path(cur_arg);
-
-			// If path doesn't strictly exist on OS, try wildcards
-			if (real_path.empty() || !path_exists(real_path)) {
-				if (MOUNT::AddWildcardPaths(cur_arg, image_paths)) {
-					continue;
-				}
-			}
-
-			// It exists (or we treat it as literal)
+			// Try to find the path on native filesystem first
+			auto real_path         = to_native_path(cur_arg);
 			std::string final_path = real_path.empty() ? cur_arg
 			                                           : real_path;
+
+			if (real_path.empty() || !path_exists(real_path)) {
+
+				// Try Virtual DOS Drive mapping (IMPORTANT for
+				// 'imgmount d c:\iso.cue')
+				bool found_on_virtual = false;
+
+				// convert dosbox filename to system filename
+				char fullname[CROSS_LEN];
+				char tmp[CROSS_LEN];
+				safe_strcpy(tmp, cur_arg.c_str());
+
+				uint8_t dummy;
+				if (DOS_MakeName(tmp, fullname, &dummy)) {
+					if (Drives.at(dummy) &&
+					    Drives.at(dummy)->GetType() ==
+					            DosDriveType::Local) {
+						const auto ldp = std::dynamic_pointer_cast<localDrive>(
+						        Drives.at(dummy));
+						if (ldp) {
+							std::string host_name = ldp->MapDosToHostFilename(
+							        fullname);
+							if (path_exists(host_name)) {
+								final_path = host_name;
+								found_on_virtual = true;
+								LOG_MSG("IMGMOUNT: Path '%s' found on virtual drive %c:",
+								        fullname,
+								        drive_letter(dummy));
+							}
+						}
+					}
+				}
+
+				if (!found_on_virtual) {
+					// Try wildcards if strictly not found
+					if (MOUNT::AddWildcardPaths(cur_arg,
+					                            image_paths)) {
+						continue;
+					}
+				}
+			}
 
 			// Auto-detect type from FIRST valid file if generic "dir"
 			if (image_paths.empty() && type == "dir") {
@@ -721,7 +751,7 @@ void MOUNT::Run(void) {
 				if (stat(final_path.c_str(), &t2) == 0 &&
 				    S_ISREG(t2.st_mode)) {
 					auto ext = final_path.substr(
-					        final_path.find_last_of('.') + 1);
+					        final_path.find_last_of(".") + 1);
 					std::transform(ext.begin(),
 					               ext.end(),
 					               ext.begin(),
@@ -738,6 +768,8 @@ void MOUNT::Run(void) {
 				}
 			}
 
+			// Resolves to absolute canonical path
+			final_path = simplify_path(final_path).string();
 			image_paths.push_back(final_path);
 		}
 
@@ -778,7 +810,7 @@ void MOUNT::Run(void) {
 		return;
 	}
 
-	if (temp_line[temp_line.size() - 1] != CROSS_FILESPLIT) {
+	if (temp_line.back() != CROSS_FILESPLIT) {
 		temp_line += CROSS_FILESPLIT;
 	}
 	uint8_t int8_tize = (uint8_t)sizes[1];
