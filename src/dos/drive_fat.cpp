@@ -333,121 +333,98 @@ uint32_t fatDrive::getClustFirstSect(uint32_t clustNum) {
 }
 
 uint32_t fatDrive::getClusterValue(uint32_t clustNum) {
-	uint32_t fatoffset=0;
-	uint32_t fatsectnum;
-	uint32_t fatentoff;
-	uint32_t clustValue=0;
+	uint32_t offset = 0;
+	uint32_t val    = 0;
 
-	switch(fattype) {
-		case FAT12:
-			fatoffset = clustNum + (clustNum / 2);
-			break;
-		case FAT16:
-			fatoffset = clustNum * 2;
-			break;
-		case FAT32:
-			fatoffset = clustNum * 4;
-			break;
-	}
-	fatsectnum = bootbuffer.reservedsectors + (fatoffset / bootbuffer.bytespersector) + partSectOff;
-	fatentoff = fatoffset % bootbuffer.bytespersector;
+	switch (fattype) {
+	case FAT12:
+		offset = clustNum + (clustNum / 2);
+		// Safety check
+		if (offset + 1 >= fat_table.size()) {
+			return 0xFFF;
+		}
 
-	if(curFatSect != fatsectnum) {
-		// Flush the old sector if it was modified
-		flushFatBuffer();
+		val = var_read((uint16_t*)&fat_table[offset]);
+		if (clustNum & 1) {
+			val >>= 4;
+		} else {
+			val &= 0xFFF;
+		}
+		break;
 
-		/* Load two sectors at once for FAT12 */
-		readSector(fatsectnum, &fatSectBuffer[0]);
-		if (fattype==FAT12)
-			readSector(fatsectnum + 1, &fatSectBuffer[BytePerSector]);
-		curFatSect = fatsectnum;
-	}
+	case FAT16:
+		offset = clustNum * 2;
+		if (offset >= fat_table.size()) {
+			return 0xFFFF;
+		}
+		val = var_read((uint16_t*)&fat_table[offset]);
+		break;
 
-	switch(fattype) {
-		case FAT12:
-			clustValue = var_read((uint16_t *)&fatSectBuffer[fatentoff]);
-		        if (clustNum & 0x1) {
-			        clustValue >>= 4;
-		        } else {
-			        clustValue &= 0xfff;
-		        }
-		        break;
-	        case FAT16:
-			clustValue = var_read((uint16_t *)&fatSectBuffer[fatentoff]);
-			break;
-		case FAT32:
-			clustValue = var_read((uint32_t *)&fatSectBuffer[fatentoff]);
-			// Mask out high 4 bits
-		    clustValue &= 0x0FFFFFFF;
-		    break;
+	case FAT32:
+		offset = clustNum * 4;
+		if (offset >= fat_table.size()) {
+			return 0x0FFFFFFF;
+		}
+		val = var_read((uint32_t*)&fat_table[offset]);
+		// Mask high bits
+		val &= 0x0FFFFFFF;
+		break;
 	}
 
-	return clustValue;
+	return val;
 }
 
 void fatDrive::setClusterValue(uint32_t clustNum, uint32_t clustValue) {
-	uint32_t fatoffset=0;
-	uint32_t fatsectnum;
-	uint32_t fatentoff;
+	uint32_t offset = 0;
 
-	switch(fattype) {
-		case FAT12:
-			fatoffset = clustNum + (clustNum / 2);
-			break;
-		case FAT16:
-			fatoffset = clustNum * 2;
-			break;
-		case FAT32:
-			fatoffset = clustNum * 4;
-			break;
-	}
-	fatsectnum = bootbuffer.reservedsectors + (fatoffset / bootbuffer.bytespersector) + partSectOff;
-	fatentoff = fatoffset % bootbuffer.bytespersector;
+	// Mark dirty immediately
+	fat_table_dirty = true;
 
-	if(curFatSect != fatsectnum) {
-		// Flush before changing sectors
-		flushFatBuffer();
+	switch (fattype) {
+	case FAT12:
+		offset = clustNum + (clustNum / 2);
+		if (offset + 1 >= fat_table.size()) {
+			return;
+		}
 
-		/* Load two sectors at once for FAT12 */
-		readSector(fatsectnum, &fatSectBuffer[0]);
-		if (fattype==FAT12)
-			        readSector(fatsectnum + 1,
-			                   &fatSectBuffer[BytePerSector]);
-		curFatSect = fatsectnum;
-	}
-
-	switch(fattype) {
-		case FAT12: {
-			uint16_t tmpValue = var_read((uint16_t *)&fatSectBuffer[fatentoff]);
-			if(clustNum & 0x1) {
-				clustValue &= 0xfff;
+		{
+			uint16_t current = var_read((uint16_t*)&fat_table[offset]);
+			if (clustNum & 1) {
+				clustValue &= 0xFFF;
 				clustValue <<= 4;
-				tmpValue &= 0xf;
-				tmpValue |= (uint16_t)clustValue;
-
+				current &= 0x000F;
+				current |= (uint16_t)clustValue;
 			} else {
-				clustValue &= 0xfff;
-				tmpValue &= 0xf000;
-				tmpValue |= (uint16_t)clustValue;
+				clustValue &= 0xFFF;
+				current &= 0xF000;
+				current |= (uint16_t)clustValue;
 			}
-			var_write((uint16_t *)&fatSectBuffer[fatentoff], tmpValue);
-			break;
-			}
-		case FAT16:
-			var_write((uint16_t *)&fatSectBuffer[fatentoff], (uint16_t)clustValue);
-			break;
-	        case FAT32: {
-		        // Preserve high 4 bits
-		        uint32_t oldValue = var_read(
-		                (uint32_t*)&fatSectBuffer[fatentoff]);
-		        clustValue = (oldValue & 0xF0000000) |
-		                     (clustValue & 0x0FFFFFFF);
-		        var_write((uint32_t*)&fatSectBuffer[fatentoff], clustValue);
-	        }
-	        }
+			var_write((uint16_t*)&fat_table[offset], current);
+		}
+		break;
 
-	        // Mark as dirty, do not write to disk yet
-	        fatSectorDirty = true;
+	case FAT16:
+		offset = clustNum * 2;
+		if (offset >= fat_table.size()) {
+			return;
+		}
+		var_write((uint16_t*)&fat_table[offset], (uint16_t)clustValue);
+		break;
+
+	case FAT32:
+		offset = clustNum * 4;
+		if (offset >= fat_table.size()) {
+			return;
+		}
+		{
+			uint32_t current = var_read((uint32_t*)&fat_table[offset]);
+			// Preserve high 4 bits
+			clustValue = (current & 0xF0000000) |
+			             (clustValue & 0x0FFFFFFF);
+			var_write((uint32_t*)&fat_table[offset], clustValue);
+		}
+		break;
+	}
 }
 
 bool fatDrive::getEntryName(const char *fullname, char *entname) {
@@ -810,7 +787,9 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
           rootCluster(0),
           fsInfoSector(0xFFFF),
           fatSectorDirty(false),
-          lastFreeClusterHint(0)
+          lastFreeClusterHint(0),
+          fat_table{},
+          fat_table_dirty(false)
 {
 	FILE *diskfile;
 	uint32_t filesize;
@@ -1014,6 +993,25 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 		fsInfoSector = 0xFFFF;
 	}
 
+	// Resize vector to hold the entire FAT
+	uint32_t fat_byte_size = sectorsPerFat * bootbuffer.bytespersector;
+	fat_table.resize(fat_byte_size);
+
+	// Read the entire FAT into memory (Read FAT Copy #0)
+	uint32_t fat_start_sector = bootbuffer.reservedsectors + partSectOff;
+
+	// We loop through sectors to read them into the vector
+	// (Most imageDisk implementations don't support multi-sector reads
+	// crossing boundaries easily)
+	for (uint32_t i = 0; i < sectorsPerFat; i++) {
+		// Calculate offset in vector
+		uint8_t* ptr = &fat_table[i * bootbuffer.bytespersector];
+		readSector(fat_start_sector + i, ptr);
+	}
+
+	// Reset the "Dirty" flag since we just loaded fresh data
+	fat_table_dirty = false;
+
 	/* Get size of root dir in sectors */
 	uint32_t RootDirSectors = ((bootbuffer.rootdirentries * 32) + (bootbuffer.bytespersector - 1)) / bootbuffer.bytespersector;
 	uint32_t DataSectors;
@@ -1074,53 +1072,32 @@ bool fatDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster
 		return false;
 	}
 
-	uint32_t headers, cylinders, sectors, sector_size;
-	loadedDisk->Get_Geometry(&headers, &cylinders, &sectors, &sector_size);
+	uint32_t hs, cy, sect, sectsize;
+	loadedDisk->Get_Geometry(&hs, &cy, &sect, &sectsize);
 
 	// Start with the real physical values
-	uint32_t rep_bytes_sector    = sector_size;
+	uint32_t rep_bytes_sector    = sectsize;
 	uint32_t rep_sectors_cluster = bootbuffer.sectorspercluster;
 	uint32_t rep_total_clusters  = CountOfClusters;
-	uint32_t rep_free_clusters   = 0xFFFFFFFF; // Sentinel value
+	uint32_t rep_free_clusters   = 0;
 
-	// Read FAT32 FSInfo Sector if available
-	if (fattype == FAT32 && fsInfoSector != 0 && fsInfoSector != 0xFFFF) {
-		uint8_t infoBuffer[512];
-		// fsInfoSector is relative to the partition start
-		readSector(fsInfoSector + partSectOff, infoBuffer);
-
-		// Validate FSInfo Signatures
-		if (var_read((uint32_t*)infoBuffer) == Fat32FsInfoLeadSginature &&
-		    var_read((uint32_t*)(infoBuffer + 484)) ==
-		            Fat32FsInfoStructureSignature) {
-
-			uint32_t stored_free = var_read((uint32_t*)(infoBuffer + 488));
-
-			// 0xFFFFFFFF indicates the count is unknown/dirty and
-			// must be computed
-			if (stored_free != 0xFFFFFFFF) {
-				// Sanity check: Free count cannot exceed total
-				// clusters
-				if (stored_free <= rep_total_clusters) {
-					rep_free_clusters = stored_free;
-				}
-			}
-		}
-	}
-
-	// Scan the FAT if FSInfo was invalid or unavailable
-	if (rep_free_clusters == 0xFFFFFFFF) {
-		rep_free_clusters = 0;
-		for (uint32_t i = 0; i < CountOfClusters; i++) {
-			if (!getClusterValue(i + 2)) {
-				rep_free_clusters++;
-			}
+	// Iterate directly over the in-memory FAT table
+	// We scan all valid clusters (starting at Cluster 2).
+	for (uint32_t i = 0; i < CountOfClusters; i++) {
+		// Check Cluster (i + 2)
+		if (getClusterValue(i + 2) == 0) {
+			rep_free_clusters++;
 		}
 	}
 
 	// Fudge geometry to fit 16-bit API limits
+	// This logic is required because DOS Int 21h 36h only supports 16-bit
+	// integers. We double the reported cluster size and halve the counts
+	// until they fit.
 	while (rep_total_clusters > 65535) {
 		if (rep_sectors_cluster >= 128) {
+			// Cap at max limits if we can't scale further (max 128
+			// sectors/cluster for uint8)
 			rep_total_clusters = 65535;
 			if (rep_free_clusters > 65535) {
 				rep_free_clusters = 65535;
@@ -1146,25 +1123,25 @@ bool fatDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster
 
 void fatDrive::flushFatBuffer()
 {
-	if (!fatSectorDirty || curFatSect == 0xffffffff) {
+	// Only write if something changed
+	if (!fat_table_dirty) {
 		return;
 	}
 
-	// Write the current buffered FAT sector to ALL FAT copies
-	for (int fc = 0; fc < bootbuffer.fatcopies; fc++) {
-		// Calculate sector for this copy
-		// TODO: Check if we need to use sectorsperfat (uint16_t) or
-		// sectorsPerFat (uint32_t)
-		uint32_t sect = curFatSect + (fc * bootbuffer.sectorsperfat);
+	// We need to write the whole table to ALL FAT copies
+	uint32_t sectors_per_fat = fat_table.size() / bootbuffer.bytespersector;
+	uint32_t fat_start_sector = bootbuffer.reservedsectors + partSectOff;
 
-		writeSector(sect, &fatSectBuffer[0]);
-
-		// Handle FAT12 split sectors (preserve existing FAT12 logic)
-		if (fattype == FAT12) {
-			writeSector(sect + 1, &fatSectBuffer[BytePerSector]);
+	for (int copy = 0; copy < bootbuffer.fatcopies; copy++) {
+		uint32_t copy_start_sector = fat_start_sector +
+		                             (copy * sectors_per_fat);
+		for (uint32_t i = 0; i < sectors_per_fat; i++) {
+			uint8_t* dataPtr = &fat_table[i * bootbuffer.bytespersector];
+			writeSector(copy_start_sector + i, dataPtr);
 		}
 	}
-	fatSectorDirty = false;
+
+	fat_table_dirty = false;
 }
 
 uint32_t fatDrive::getFirstFreeClust(void)
