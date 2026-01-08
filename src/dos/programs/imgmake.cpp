@@ -31,8 +31,6 @@ CHECK_NARROWING();
 
 namespace {
 
-namespace fs = std::filesystem;
-
 struct DiskGeometry {
 	uint32_t cylinders;
 	uint32_t heads;
@@ -99,7 +97,7 @@ struct FileCloser {
 	void operator()(FILE* fp) const
 	{
 		if (fp) {
-			std::fclose(fp);
+			fclose(fp);
 		}
 	}
 };
@@ -132,6 +130,29 @@ uint32_t generate_volume_serial()
 	uint32_t hi = (sec << 8) + min + hour;
 
 	return (hi << 16) + lo;
+}
+
+// Write a little-endian value to a destination pointer
+template <typename PtrT, typename ValT>
+inline void write_le(PtrT* dest, ValT value)
+{
+	// Ensure we are writing to an integral type (uint16_t, uint32_t, etc.)
+	static_assert(std::is_integral_v<PtrT>, "Destination must be an integer type");
+
+	// Automatically cast the pointer to what host_write expects
+	auto* raw_dest = reinterpret_cast<uint8_t*>(dest);
+
+	if constexpr (sizeof(PtrT) == 2) {
+		// Narrows value
+		host_writew(raw_dest, static_cast<uint16_t>(value));
+	} else if constexpr (sizeof(PtrT) == 4) {
+		host_writed(raw_dest, static_cast<uint32_t>(value));
+	} else {
+		// Stop compilation if someone tries to use this on a uint8_t or
+		// uint64_t
+		static_assert(sizeof(PtrT) == 2 || sizeof(PtrT) == 4,
+		              "write_le only supports 16-bit and 32-bit destinations");
+	}
 }
 
 constexpr auto DefaultRootEntries = 512;
@@ -366,7 +387,7 @@ namespace ImgmakeCommand {
 enum class ErrorType { None, UnknownArgument, MissingArgument, InvalidValue };
 
 struct CommandSettings {
-	std::filesystem::path filename = {};
+	std_fs::path filename          = {};
 	std::string type               = {};
 	std::string label              = {};
 
@@ -593,7 +614,7 @@ bool execute(Program* program, CommandSettings& command_settings)
 
 	// Check File Existence
 	std::error_code ec;
-	if (fs::exists(command_settings.filename, ec) && !command_settings.force) {
+	if (std_fs::exists(command_settings.filename, ec) && !command_settings.force) {
 		notify_warning("SHELL_CMD_IMGMAKE_FILE_EXISTS",
 		               command_settings.filename.string().c_str());
 		return false;
@@ -602,30 +623,29 @@ bool execute(Program* program, CommandSettings& command_settings)
 	auto command_filename = command_settings.filename.string();
 
 	// Create file (truncate if exists)
-	{
-		FilePtr temp_fp(std::fopen(command_filename.c_str(), "wb"));
-		if (!temp_fp) {
-			notify_warning("SHELL_CMD_IMGMAKE_CANNOT_WRITE",
-			               command_filename.c_str());
-			return false;
-		}
-		// Closes on scope exit
-	}
-
-	// Expand file to avoid fseek/long limits
-	try {
-		fs::resize_file(command_settings.filename, total_size);
-	} catch (const fs::filesystem_error&) {
-		notify_warning("SHELL_CMD_IMGMAKE_SPACE_ERROR");
-		fs::remove(command_settings.filename, ec);
-		return false;
-	}
-
-	FilePtr fs(std::fopen(command_filename.c_str(), "rb+"));
+	FilePtr fs(fopen(command_filename.c_str(), "wb+"));
 	if (!fs) {
 		notify_warning("SHELL_CMD_IMGMAKE_CANNOT_WRITE",
 		               command_filename.c_str());
 		return false;
+	}
+
+	// Expand file
+	if (total_size > 0) {
+		// Seek to the last byte (total_size - 1)
+		if (cross_fseeko(fs.get(), total_size - 1, SEEK_SET) != 0) {
+			notify_warning("SHELL_CMD_IMGMAKE_SPACE_ERROR");
+			return false;
+		}
+
+		// Write a single zero byte at the end, causing the file to
+		// be filled up to total_size with zeros.
+		if (fputc(0, fs.get()) == EOF) {
+			notify_warning("SHELL_CMD_IMGMAKE_SPACE_ERROR");
+			return false;
+		}
+
+		rewind(fs.get());
 	}
 
 	if (command_settings.no_format) {
@@ -754,13 +774,13 @@ bool execute(Program* program, CommandSettings& command_settings)
 
 		buffer[510] = 0x55;
 		buffer[511] = 0xAA;
-		std::fwrite(buffer.data(), 1, buffer.size(), fs.get());
+		fwrite(buffer.data(), 1, buffer.size(), fs.get());
 	}
 
 	// Move to Boot Sector
-	std::fseek(fs.get(),
-	           static_cast<long>(boot_sector_position * SectorSize),
-	           SEEK_SET);
+	cross_fseeko(fs.get(),
+	             static_cast<long>(boot_sector_position * SectorSize),
+	             SEEK_SET);
 	buffer            = {};
 	auto* boot_sector = reinterpret_cast<FatBootSector*>(buffer.data());
 
@@ -776,8 +796,7 @@ bool execute(Program* program, CommandSettings& command_settings)
 	write_padded_string(reinterpret_cast<uint8_t*>(boot_sector->oem_name),
 	                    "DOSBOX-S",
 	                    8);
-	host_writew(reinterpret_cast<uint8_t*>(&boot_sector->bytes_per_sector),
-	            static_cast<uint16_t>(SectorSize));
+	write_le(&boot_sector->bytes_per_sector, SectorSize);
 
 	// Calculate Sectors Per Cluster (SPC) Safely
 	uint32_t sectors_per_cluster = (command_settings.sectors_per_cluster > 0)
@@ -862,23 +881,19 @@ bool execute(Program* program, CommandSettings& command_settings)
 
 	// Remaining BPB
 	auto reserved_sectors = (fat_bits == 32) ? 32 : 1;
-	host_writew(reinterpret_cast<uint8_t*>(&boot_sector->reserved_sectors),
-	            static_cast<uint16_t>(reserved_sectors));
+	write_le(&boot_sector->reserved_sectors, reserved_sectors);
 	boot_sector->fat_copies = static_cast<uint8_t>(command_settings.fat_copies);
 
 	auto root_ent = (fat_bits == 32) ? 0
 	                                 : (disk_geometry.root_entries > 0
 	                                            ? disk_geometry.root_entries
 	                                            : DefaultRootEntries);
-	host_writew(reinterpret_cast<uint8_t*>(&boot_sector->root_entries),
-	            static_cast<uint16_t>(root_ent));
+	write_le(&boot_sector->root_entries, root_ent);
 
 	if (volume_sectors < 65536 && fat_bits != 32) {
-		host_writew(reinterpret_cast<uint8_t*>(&boot_sector->total_sectors_16),
-		            static_cast<uint16_t>(volume_sectors));
+		write_le(&boot_sector->total_sectors_16, volume_sectors);
 	} else {
-		host_writew(reinterpret_cast<uint8_t*>(&boot_sector->total_sectors_16),
-		            0);
+		write_le(&boot_sector->total_sectors_16, 0);
 	}
 
 	boot_sector->media_descriptor = static_cast<uint8_t>(
@@ -919,49 +934,31 @@ bool execute(Program* program, CommandSettings& command_settings)
 	        (fat_size_bytes + SectorSize - 1) / SectorSize);
 
 	if (fat_bits != 32) { //-V1051
-		host_writew(reinterpret_cast<uint8_t*>(&boot_sector->sectors_per_fat_16),
-		            static_cast<uint16_t>(fat_size_sectors));
+		write_le(&boot_sector->sectors_per_fat_16, fat_size_sectors);
 	} else {
-		host_writew(reinterpret_cast<uint8_t*>(&boot_sector->sectors_per_fat_16),
-		            0);
+		write_le(&boot_sector->sectors_per_fat_16, 0);
 	}
 
-	host_writew(reinterpret_cast<uint8_t*>(&boot_sector->sectors_per_track),
-	            static_cast<uint16_t>(disk_geometry.sectors));
-	host_writew(reinterpret_cast<uint8_t*>(&boot_sector->heads),
-	            static_cast<uint16_t>(disk_geometry.heads));
-	host_writed(reinterpret_cast<uint8_t*>(&boot_sector->hidden_sectors),
-	            static_cast<uint32_t>(boot_sector_position));
-	host_writed(reinterpret_cast<uint8_t*>(&boot_sector->total_sectors_32),
-	            (fat_bits == 32 || volume_sectors >= 65536)
-	                    ? static_cast<uint32_t>(volume_sectors)
-	                    : 0);
+	write_le(&boot_sector->sectors_per_track, disk_geometry.sectors);
+	write_le(&boot_sector->heads, disk_geometry.heads);
+	write_le(&boot_sector->hidden_sectors, boot_sector_position);
+	write_le(&boot_sector->total_sectors_32,
+	         (fat_bits == 32 || volume_sectors >= 65536) ? volume_sectors : 0);
 
 	// Extended BPB & Fallback Boot Code
 	if (fat_bits == 32) {
-		host_writed(reinterpret_cast<uint8_t*>(
-		                    &boot_sector->ext.fat32.sectors_per_fat_32),
-		            fat_size_sectors);
-		host_writew(reinterpret_cast<uint8_t*>(&boot_sector->ext.fat32.ext_flags),
-		            0);
-		host_writew(reinterpret_cast<uint8_t*>(&boot_sector->ext.fat32.fs_version),
-		            0);
-		host_writed(reinterpret_cast<uint8_t*>(
-		                    &boot_sector->ext.fat32.root_cluster),
-		            2);
-		host_writew(reinterpret_cast<uint8_t*>(
-		                    &boot_sector->ext.fat32.fs_info_sector),
-		            1);
-		host_writew(reinterpret_cast<uint8_t*>(
-		                    &boot_sector->ext.fat32.backup_boot_sector),
-		            6);
+		write_le(&boot_sector->ext.fat32.sectors_per_fat_32, fat_size_sectors);
+		write_le(&boot_sector->ext.fat32.ext_flags, 0);
+		write_le(&boot_sector->ext.fat32.fs_version, 0);
+		write_le(&boot_sector->ext.fat32.root_cluster, 2);
+		write_le(&boot_sector->ext.fat32.fs_info_sector, 1);
+		write_le(&boot_sector->ext.fat32.backup_boot_sector, 6);
 
 		boot_sector->ext.fat32.boot_signature = 0x29;
 
 		// Generate volume serial number
-		host_writed(reinterpret_cast<uint8_t*>(
-		                    &boot_sector->ext.fat32.serial_number),
-		            generate_volume_serial());
+		write_le(&boot_sector->ext.fat32.serial_number,
+		         generate_volume_serial());
 
 		write_padded_string(reinterpret_cast<uint8_t*>(
 		                            boot_sector->ext.fat32.label),
@@ -991,9 +988,8 @@ bool execute(Program* program, CommandSettings& command_settings)
 		boot_sector->ext.fat16.boot_signature = 0x29;
 
 		// Generate volume serial number
-		host_writed(reinterpret_cast<uint8_t*>(
-		                    &boot_sector->ext.fat16.serial_number),
-		            generate_volume_serial());
+		write_le(&boot_sector->ext.fat16.serial_number,
+		         generate_volume_serial());
 
 		write_padded_string(reinterpret_cast<uint8_t*>(
 		                            boot_sector->ext.fat16.label),
@@ -1021,7 +1017,7 @@ bool execute(Program* program, CommandSettings& command_settings)
 	boot_sector->signature[1] = 0xAA;
 
 	// Write Main Boot Sector
-	std::fwrite(buffer.data(), 1, buffer.size(), fs.get());
+	fwrite(buffer.data(), 1, buffer.size(), fs.get());
 
 	// Write Extra FAT32 Structures (FSInfo + Backup)
 	if (fat_bits == 32) {
@@ -1030,34 +1026,31 @@ bool execute(Program* program, CommandSettings& command_settings)
 		auto* fs_info = reinterpret_cast<Fat32FsInfo*>(fs_info_buffer.data());
 
 		// Fill signatures and hints
-		host_writed(reinterpret_cast<uint8_t*>(&fs_info->lead_signature),
-		            Fat32LeadSignature);
-		host_writed(reinterpret_cast<uint8_t*>(&fs_info->struct_signature),
-		            Fat32StructSignature);
-		host_writed(reinterpret_cast<uint8_t*>(&fs_info->free_count),
-		            static_cast<uint32_t>(tmp_clusters - 1));
+		write_le(&fs_info->lead_signature, Fat32LeadSignature);
+		write_le(&fs_info->struct_signature, Fat32StructSignature);
+		write_le(&fs_info->free_count, tmp_clusters - 1);
 
 		// Tell DOS where to start looking for free clusters
 		// FAT Index 0 is reserved
 		// FAT Index 1 is reserved
 		// FAT Index 2 is Root
 		// FAT Index 3 is the first available one
-		host_writed(reinterpret_cast<uint8_t*>(&fs_info->next_free), 3);
-		host_writed(reinterpret_cast<uint8_t*>(&fs_info->trail_signature),
-		            Fat32TrailSignature);
+		write_le(&fs_info->next_free, 3);
+		write_le(&fs_info->trail_signature, Fat32TrailSignature);
+
 		// Write FSInfo at Sector 1
-		std::fwrite(fs_info_buffer.data(), 1, SectorSize, fs.get());
+		fwrite(fs_info_buffer.data(), 1, SectorSize, fs.get());
 
 		// Write Backup Boot Sector at Sector 6
 		// Note: 'buffer' currently holds the main Boot Sector we just
 		// created
-		std::fseek(fs.get(),
-		           static_cast<long>((boot_sector_position + 6) * SectorSize),
-		           SEEK_SET);
-		std::fwrite(buffer.data(), 1, SectorSize, fs.get());
+		cross_fseeko(fs.get(),
+		             static_cast<long>((boot_sector_position + 6) * SectorSize),
+		             SEEK_SET);
+		fwrite(buffer.data(), 1, SectorSize, fs.get());
 
 		// Write Backup FSInfo at Sector 7
-		std::fwrite(fs_info_buffer.data(), 1, SectorSize, fs.get());
+		fwrite(fs_info_buffer.data(), 1, SectorSize, fs.get());
 	}
 
 	// FAT Initialization
@@ -1065,27 +1058,24 @@ bool execute(Program* program, CommandSettings& command_settings)
 	std::array<uint8_t, 512> empty_sector      = {};
 
 	// Move to FAT 1 start
-	std::fseek(fs.get(),
-	           static_cast<long>((boot_sector_position + reserved_sectors) *
-	                             SectorSize),
-	           SEEK_SET);
+	cross_fseeko(fs.get(),
+	             static_cast<long>((boot_sector_position + reserved_sectors) *
+	                               SectorSize),
+	             SEEK_SET);
 
 	if (fat_bits == 32) {
 		auto* entries = reinterpret_cast<uint32_t*>(fat_sector_buffer.data());
-		host_writed(reinterpret_cast<uint8_t*>(&entries[0]),
-		            FatMarkers::Fat32MediaMask |
-		                    disk_geometry.media_descriptor);
-		host_writed(reinterpret_cast<uint8_t*>(&entries[1]),
-		            FatMarkers::Fat32Eoc);
-		host_writed(reinterpret_cast<uint8_t*>(&entries[2]),
-		            FatMarkers::Fat32Eoc); // Cluster 2 (Root)
+		write_le(&entries[0],
+		         FatMarkers::Fat32MediaMask | disk_geometry.media_descriptor);
+		// Cluster 1 (reserved)
+		write_le(&entries[1], FatMarkers::Fat32Eoc);
+		// Cluster 2 (root)
+		write_le(&entries[2], FatMarkers::Fat32Eoc);
 	} else if (fat_bits == 16) {
 		auto* entries = reinterpret_cast<uint16_t*>(fat_sector_buffer.data());
-		host_writew(reinterpret_cast<uint8_t*>(&entries[0]),
-		            FatMarkers::Fat16MediaMask |
-		                    disk_geometry.media_descriptor);
-		host_writew(reinterpret_cast<uint8_t*>(&entries[1]),
-		            FatMarkers::Fat16Eoc);
+		write_le(&entries[0],
+		         FatMarkers::Fat16MediaMask | disk_geometry.media_descriptor);
+		write_le(&entries[1], FatMarkers::Fat16Eoc);
 	} else {
 		fat_sector_buffer[0] = disk_geometry.media_descriptor;
 		fat_sector_buffer[1] = 0xFF;
@@ -1093,23 +1083,17 @@ bool execute(Program* program, CommandSettings& command_settings)
 	}
 
 	for (int i = 0; i < command_settings.fat_copies; ++i) {
-		auto current_fat_start = std::ftell(fs.get());
-		std::fwrite(fat_sector_buffer.data(),
-		            1,
-		            fat_sector_buffer.size(),
-		            fs.get());
+		auto current_fat_start = cross_ftello(fs.get());
+		fwrite(fat_sector_buffer.data(), 1, fat_sector_buffer.size(), fs.get());
 
 		// Fill remaining FAT sectors with zeroes
 		for (int k = 1; k < fat_size_sectors; ++k) {
-			std::fwrite(empty_sector.data(),
-			            1,
-			            empty_sector.size(),
-			            fs.get());
+			fwrite(empty_sector.data(), 1, empty_sector.size(), fs.get());
 		}
-		std::fseek(fs.get(),
-		           current_fat_start + (static_cast<long>(fat_size_sectors) *
-		                                static_cast<long>(SectorSize)),
-		           SEEK_SET);
+		cross_fseeko(fs.get(),
+		             current_fat_start + (static_cast<long>(fat_size_sectors) *
+		                                  static_cast<long>(SectorSize)),
+		             SEEK_SET);
 	}
 
 	// Write Volume Label (Root Directory)
@@ -1124,7 +1108,7 @@ bool execute(Program* program, CommandSettings& command_settings)
 		constexpr auto AttributeVolumeId = 0x08;
 		entry->attributes                = AttributeVolumeId;
 
-		std::fwrite(root_buffer.data(), 1, root_buffer.size(), fs.get());
+		fwrite(root_buffer.data(), 1, root_buffer.size(), fs.get());
 	}
 
 	program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CREATED"),
