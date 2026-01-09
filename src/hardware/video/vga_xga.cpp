@@ -707,7 +707,9 @@ void XGA_DrawWait(uint32_t val, io_width_t width)
 						DrawWaitSub(mixmode, srcval);
 					}
 					break;
-				}               // fall-through
+				}
+				[[fallthrough]];
+
 			case 0x40 | XGA_32_BIT: // 32 bit
 				DrawWaitSub(mixmode, val);
 				break;
