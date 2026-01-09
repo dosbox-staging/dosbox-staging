@@ -935,18 +935,22 @@ void MOUNT::AddMessages() {
 	        "Mount a directory or an image file from the host OS to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]PATH[reset] [-t TYPE] [-fs FS] [-ide] [-chs C,H,S] [-pr] [-ro]\n"
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]PATH[reset] [-t TYPE] [-label LABEL] [-fs FS] [-chs C,H,S] -pr -ro\n"
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] [IMG2] [..] [-t TYPE] [-fs FS] -ide [-chs C,H,S] -pr -ro\n"
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGE-SET[reset] [-t TYPE] [-fs FS] -ide -pr -ro\n"
 	        "  [color=light-green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE)\n"
 	        "\n"
 	        "Parameters:\n"
 	        "  [color=white]DRIVE[reset]      drive letter (A-Z) or number (0-3) for booting\n"
-	        "  [color=light-cyan]PATH[reset]       directory OR image file(s) on the host OS\n"
-	        "             (Wildcards supported for images, e.g. *.iso)\n"
+	        "  [color=light-cyan]PATH[reset]       directory on the host OS\n"
+	        "  [color=light-cyan]IMAGEFILE[reset]  image file on the host OS\n"
+	        "  [color=light-cyan]IMAGE-SET[reset]  wildcard pattern for multiple images, e.g. *.iso\n"
 	        "  TYPE       type of mount: dir, overlay, floppy, hdd, iso (or cdrom)\n"
 	        "  FS         filesystem: fat, iso, or none (for bootable images)\n"
+			"  LABEL      volume label to assign to the mounted drive\n"
 	        "  -ide       attach as IDE device (for CD-ROM/HDD images)\n"
 	        "  -chs       specify geometry (Cylinders,Heads,Sectors) for HDD images\n"
-	        "  -size      specify geometry (BytesPerSector,SectorsPerCluster,HeadsPerCluster,Cylinders)\n"
+	        "  -size      specify geometry (BytesPerSector,Sectors,Heads,Cylinders)\n"
 	        "             Alternative to -chs for HDD images\n"
 	        "  -freesize  size_in_mb | size_in_kb\n"
 	        "             Sets the amount of free space available on a drive\n"
@@ -1030,7 +1034,7 @@ void MOUNT::AddMessages() {
 	        "For hard drive images, drive geometry must be specified:\n"
 	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -chs Cylinders,Heads,Sectors\n"
 	        "Alternatively:\n"
-	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -size BytesPerSector,SectorsPerCluster,HeadsPerCluster,Cylinders\n"
+	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -size BytesPerSector,Sectors,Heads,Cylinders\n"
 	        "For CD-ROM images:\n"
 	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -t iso\n");
 
@@ -1042,8 +1046,8 @@ void MOUNT::AddMessages() {
 	        "Check that the path is correct and the image is accessible.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_INVALID_GEOMETRY",
 	        "Could not extract drive geometry from image.\n"
-	        "Use parameter -chs cylinders,heads,sectors to specify the geometry.\n"
-	        "Alternatively: -size bps,spc,hpc,cyl\n");
+	        "Use parameter -chs Cylinders,Heads,Sectors to specify the geometry.\n"
+	        "Alternatively: -size BytesPerSector,Sectors,Heads,Cylinders\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FILE_NOT_FOUND", "Image file not found.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_ALREADY_MOUNTED",
 	        "Drive already mounted at that letter.\n");
