@@ -109,7 +109,8 @@ struct Render {
 	bool active    = false;
 	bool fullFrame = true;
 
-	IntegerScalingMode integer_scaling_mode = {};
+	AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
+	IntegerScalingMode integer_scaling_mode                = {};
 };
 
 // A frame of the emulated video output that's passed to the rendering backend
