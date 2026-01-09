@@ -169,19 +169,63 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 	if(seekpos > filelength) {
 		/* Extend file to current position */
 		uint32_t clustSize = myDrive->getClusterSize();
-		if(filelength == 0) {
+
+		if (filelength == 0) {
 			firstCluster = myDrive->getFirstFreeClust();
-			if(firstCluster == 0) goto finalizeWrite; // out of space
+			if (firstCluster == 0) {
+				goto finalizeWrite;
+			}
 			myDrive->allocateCluster(firstCluster, 0);
+			// Ensure first cluster is clean
+			myDrive->zeroOutCluster(firstCluster);
 			filelength = clustSize;
+
+			// Setup sector pointers immediately
+			currentSector = myDrive->getAbsoluteSectFromBytePos(firstCluster,
+			                                                    0);
+			loadedSector = false;
 		}
+
+		// Align filelength to cluster boundary
 		filelength = ((filelength - 1) / clustSize + 1) * clustSize;
-		while(filelength < seekpos) {
-			if(myDrive->appendCluster(firstCluster) == 0) goto finalizeWrite; // out of space
+
+		while (filelength < seekpos) {
+			// Use Fast Append
+			// We know 'currentSector' points to the sector we were
+			// just using. We can calculate the cluster index from it.
+
+			// Convert Absolute Sector -> Logical Sector
+			uint32_t logicalSect = currentSector - myDrive->firstDataSector;
+			// Convert Logical Sector -> Cluster Number
+			uint32_t lastCluster = (logicalSect /
+			                        myDrive->bootbuffer.sectorspercluster) +
+			                       2;
+
+			// Append instantly
+			if (myDrive->appendClusterFast(lastCluster) == 0) {
+				goto finalizeWrite;
+			}
+
+			// Recalculate currentSector for the NEW end of file
+			// Note: This may be slightly expensive but only happens
+			// once per 32KB, not per byte. A faster way could be to
+			// just use the return value of appendClusterFast.
 			filelength += clustSize;
+
+			// Update currentSector to the new cluster for the next
+			// iteration (if any)
+			if (filelength < seekpos) {
+				currentSector = myDrive->getAbsoluteSectFromBytePos(
+				        firstCluster, filelength - 1);
+			}
 		}
-		if(filelength > seekpos) filelength = seekpos;
-		if(*size == 0) goto finalizeWrite;
+
+		if (filelength > seekpos) {
+			filelength = seekpos;
+		}
+		if (*size == 0) {
+			goto finalizeWrite;
+		}
 	}
 
 	while(sizedec != 0) {
@@ -213,6 +257,86 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 			}
 			filelength = seekpos+1;
 		}
+
+		// Direct Block Write
+		// Triggers if:
+		// we are at the start of a sector (aligned)
+		// and we have at least one full sector of data to write
+		// and we have a valid currentSector
+		if (curSectOff == 0 && sizedec >= myDrive->getSectorSize() &&
+		    currentSector != 0) {
+
+			uint32_t clusterSize = myDrive->getClusterSize();
+			uint32_t sectorSize  = myDrive->getSectorSize();
+
+			// Calculate how many bytes remain in the current CLUSTER
+			// (Sectors are only contiguous within a cluster)
+			uint32_t offsetInCluster = seekpos % clusterSize;
+			uint32_t bytesLeftInCluster = clusterSize - offsetInCluster;
+
+			// Determine how many full sectors we can write in this
+			// batch It is the lesser of: Data Remaining vs. Space
+			// in Cluster
+			uint32_t writeBytes = (sizedec < bytesLeftInCluster)
+			                            ? sizedec
+			                            : bytesLeftInCluster;
+
+			// Round down to nearest sector boundary
+			uint32_t sectorCount = writeBytes / sectorSize;
+
+			if (sectorCount > 0) {
+				// Write directly from the input buffer to disk
+				myDrive->writeManySectors(currentSector,
+				                          &data[sizecount],
+				                          sectorCount);
+
+				// Update pointers
+				uint32_t bytesWritten = sectorCount * sectorSize;
+				sizecount += bytesWritten;
+				seekpos += bytesWritten;
+				sizedec -= bytesWritten;
+
+				// Update filelength if we extended past the end
+				if (seekpos > filelength) {
+					filelength = seekpos;
+				}
+
+				// We just wrote to the end of these sectors, so
+				// the next write will be at the start of the
+				// NEXT sector.
+				currentSector += sectorCount;
+				curSectOff = 0;
+
+				// If we crossed a cluster boundary, invalidate
+				// currentSector
+				if ((seekpos % clusterSize) == 0) {
+					loadedSector  = false;
+					currentSector = 0;
+				} else {
+					// We are still in the same cluster,
+					// just advanced sectors
+					loadedSector = false;
+				}
+
+				continue;
+			}
+		}
+
+		// Fallback: Byte-by-byte copy (for unaligned starts or partial
+		// ends)
+		if (!loadedSector) {
+			// Reload buffer if we invalidated it above
+			currentSector = myDrive->getAbsoluteSectFromBytePos(firstCluster,
+			                                                    seekpos);
+			if (currentSector != 0) {
+				myDrive->readSector(currentSector, sectorBuffer);
+				loadedSector = true;
+			} else {
+				// Should not happen if extension logic worked
+				goto finalizeWrite;
+			}
+		}
+
 		sectorBuffer[curSectOff++] = data[sizecount++];
 		seekpos++;
 		if(curSectOff >= myDrive->getSectorSize()) {
@@ -588,6 +712,14 @@ uint8_t fatDrive::writeSector(uint32_t sectnum, void * data) {
 	return loadedDisk->Write_Sector(head, cylinder, sector, data);
 }
 
+void fatDrive::writeManySectors(uint32_t sectnum, void* data, uint32_t count)
+{
+	auto* ptr = (uint8_t*)data;
+	for (uint64_t i = 0; i < count; i++) {
+		writeSector(sectnum + i, ptr + (i * bootbuffer.bytespersector));
+	}
+}
+
 uint32_t fatDrive::getSectorCount()
 {
 	if (bootbuffer.totalsectorcount != 0)
@@ -728,7 +860,28 @@ uint32_t fatDrive::appendCluster(uint32_t startCluster) {
 	return newClust;
 }
 
-bool fatDrive::allocateCluster(uint32_t useCluster, uint32_t prevCluster) {
+// Append if 'prevCluster' is the actual end of the chain.
+// Skips the O(N) walk.
+uint32_t fatDrive::appendClusterFast(uint32_t prevCluster)
+{
+	uint32_t newClust = getFirstFreeClust();
+	if (newClust == 0) {
+		return 0; // Drive full
+	}
+
+	// Link the previous cluster to the new one
+	if (!allocateCluster(newClust, prevCluster)) {
+		return 0;
+	}
+
+	// Zero it out (Important for the garbage issue!)
+	zeroOutCluster(newClust);
+
+	return newClust;
+}
+
+bool fatDrive::allocateCluster(uint32_t useCluster, uint32_t prevCluster)
+{
 
 	/* Can't allocate cluster #0 */
 	if(useCluster == 0) return false;
@@ -773,13 +926,13 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
         : loadedDisk(nullptr),
           created_successfully(true),
           partSectOff(0),
-          mediaid(mediaid),
           bootbuffer{{0}, {0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0},
+          firstDataSector(0),
+          mediaid(mediaid),
           absolute(false),
           readonly(roflag),
           fattype(0),
           CountOfClusters(0),
-          firstDataSector(0),
           firstRootDirSect(0),
           cwdDirCluster(0),
           fatSectBuffer{0},
@@ -1711,13 +1864,16 @@ bool fatDrive::addDirectoryEntry(uint32_t dirClustNumber, direntry useEntry) {
 }
 
 void fatDrive::zeroOutCluster(uint32_t clustNumber) {
-	uint8_t secBuffer[BytePerSector];
+	// Get the starting physical sector of this cluster
+	uint32_t startSect = getClustFirstSect(clustNumber);
 
-	memset(&secBuffer[0], 0, BytePerSector);
+	// Prepare a single zeroed buffer
+	uint8_t zeroBuf[BytePerSector];
+	memset(zeroBuf, 0, BytePerSector);
 
-	int i;
-	for(i=0;i<bootbuffer.sectorspercluster;i++) {
-		writeSector(getAbsoluteSectFromChain(clustNumber,i), &secBuffer[0]);
+	// Write it repeatedly to the contiguous sectors
+	for (uint32_t i = 0; i < bootbuffer.sectorspercluster; i++) {
+		writeSector(startSect + i, zeroBuf);
 	}
 }
 

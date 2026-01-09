@@ -215,6 +215,7 @@ public:
 public:
 	uint8_t readSector(uint32_t sectnum, void * data);
 	uint8_t writeSector(uint32_t sectnum, void * data);
+	void writeManySectors(uint32_t sectnum, void* data, uint32_t count);
 	uint32_t getAbsoluteSectFromBytePos(uint32_t startClustNum, uint32_t bytePos);
 	uint32_t getSectorCount();
 	uint32_t getSectorSize(void);
@@ -222,13 +223,17 @@ public:
 	uint32_t getAbsoluteSectFromChain(uint32_t startClustNum, uint32_t logicalSector);
 	bool allocateCluster(uint32_t useCluster, uint32_t prevCluster);
 	uint32_t appendCluster(uint32_t startCluster);
+	uint32_t appendClusterFast(uint32_t prevCluster);
 	void deleteClustChain(uint32_t startCluster, uint32_t bytePos);
 	uint32_t getFirstFreeClust(void);
 	bool directoryBrowse(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum, int32_t start=0);
 	bool directoryChange(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum);
+	void zeroOutCluster(uint32_t clustNumber);
 	std::shared_ptr<imageDisk> loadedDisk;
 	bool created_successfully;
 	uint32_t partSectOff;
+	bootstrap bootbuffer;
+	uint32_t firstDataSector;
 
 private:
 	uint32_t getClusterValue(uint32_t clustNum);
@@ -240,16 +245,13 @@ private:
 	                     uint32_t* dirClust, uint32_t* subEntry,
 	                     const bool dir_ok = false);
 	bool addDirectoryEntry(uint32_t dirClustNumber, direntry useEntry);
-	void zeroOutCluster(uint32_t clustNumber);
 	bool getEntryName(const char *fullname, char *entname);
 
 	uint8_t mediaid;
-	bootstrap bootbuffer;
 	bool absolute;
 	bool readonly;
 	uint8_t fattype;
 	uint32_t CountOfClusters;
-	uint32_t firstDataSector;
 	uint32_t firstRootDirSect;
 
 	uint32_t cwdDirCluster;
