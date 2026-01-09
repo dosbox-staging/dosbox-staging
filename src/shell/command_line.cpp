@@ -7,10 +7,10 @@
 #include "dos/programs.h"
 #include "utils/string_utils.h"
 
-bool CommandLine::FindExist(const std::string& name, bool remove)
+bool CommandLine::FindExist(const std::string& name, bool remove, bool sens)
 {
 	cmd_it it;
-	if (!(FindEntry(name, it, false))) {
+	if (!(FindEntry(name, it, false, sens))) {
 		return false;
 	}
 	if (remove) {
@@ -127,10 +127,13 @@ bool CommandLine::HasExecutableName() const
 	return false;
 }
 
-bool CommandLine::FindEntry(const std::string& name, cmd_it& it, bool neednext)
+bool CommandLine::FindEntry(const std::string& name, cmd_it& it, bool neednext, bool sens)
 {
 	for (it = cmds.begin(); it != cmds.end(); ++it) {
-		if (iequals((*it).c_str(), name)) {
+		bool match = sens
+		           ? equals((*it).c_str(), name)
+		           : iequals((*it).c_str(), name);
+		if (match) {
 			cmd_it itnext = it;
 			++itnext;
 			if (neednext && (itnext == cmds.end())) {
@@ -396,7 +399,7 @@ bool CommandLine::FindBoolArgument(const std::string& name, bool remove,
 	short_name[1]                 = short_letter;
 	return FindExist(double_dash, remove) ||
 	       FindExist(dash, remove) ||
-	       (short_letter && FindExist(short_name, remove));
+	       (short_letter && FindExist(short_name, remove, true));
 }
 
 bool CommandLine::FindRemoveBoolArgument(const std::string& name, char short_letter)
