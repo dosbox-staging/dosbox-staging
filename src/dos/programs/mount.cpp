@@ -946,8 +946,12 @@ void MOUNT::AddMessages() {
 	        "  FS         filesystem: fat, iso, or none (for bootable images)\n"
 	        "  -ide       attach as IDE device (for CD-ROM/HDD images)\n"
 	        "  -chs       specify geometry (Cylinders,Heads,Sectors) for HDD images\n"
-	        "  -size      specify geometry (BytesPerSector,SectorsPerHead,Heads,Cylinders)\n"
+	        "  -size      specify geometry (BytesPerSector,SectorsPerCluster,HeadsPerCluster,Cylinders)\n"
 	        "             Alternative to -chs for HDD images\n"
+	        "  -freesize  size_in_mb | size_in_kb\n"
+	        "             Sets the amount of free space available on a drive\n"
+	        "             in megabytes (regular drives) or kilobytes (floppy drives).\n"
+	        "             This is a simpler version of -size.\n"
 	        "  -ro        mount as read-only\n"
 	        "  -pr        path is relative to the configuration file location\n"
 	        "  -t overlay mounts the directory as an overlay on top of the existing drive.\n"
@@ -1026,7 +1030,7 @@ void MOUNT::AddMessages() {
 	        "For hard drive images, drive geometry must be specified:\n"
 	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -chs Cylinders,Heads,Sectors\n"
 	        "Alternatively:\n"
-	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -size BytesPerSector,SectorsPerHead,Heads,Cylinders\n"
+	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -size BytesPerSector,SectorsPerCluster,HeadsPerCluster,Cylinders\n"
 	        "For CD-ROM images:\n"
 	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -t iso\n");
 
