@@ -872,11 +872,9 @@ static const char* to_string(const enum MonochromePalette palette)
 	}
 }
 
-static AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
-
 static void set_aspect_ratio_correction(SectionProp& section)
 {
-	aspect_ratio_correction_mode = [&]() {
+	render.aspect_ratio_correction_mode = [&]() {
 		const std::string mode = section.GetString("aspect");
 
 		if (has_true(mode) || mode == "auto") {
@@ -907,7 +905,7 @@ static void set_aspect_ratio_correction(SectionProp& section)
 
 AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode()
 {
-	return aspect_ratio_correction_mode;
+	return render.aspect_ratio_correction_mode;
 }
 
 static void log_invalid_viewport_setting_warning(
