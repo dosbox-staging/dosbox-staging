@@ -874,37 +874,34 @@ static const char* to_string(const enum MonochromePalette palette)
 
 static AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
 
-static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting(SectionProp& section)
-{
-	const std::string mode = section.GetString("aspect");
-
-	if (has_true(mode) || mode == "auto") {
-		return AspectRatioCorrectionMode::Auto;
-
-	} else if (has_false(mode) || mode == "square-pixels") {
-		return AspectRatioCorrectionMode::SquarePixels;
-
-	} else if (mode == "stretch") {
-		return AspectRatioCorrectionMode::Stretch;
-
-	} else {
-		constexpr auto SettingName  = "aspect";
-		constexpr auto DefaultValue = "auto";
-
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "RENDER",
-		                      "PROGRAM_CONFIG_INVALID_SETTING",
-		                      SettingName,
-		                      mode.c_str(),
-		                      DefaultValue);
-
-		return AspectRatioCorrectionMode::Auto;
-	}
-}
-
 static void set_aspect_ratio_correction(SectionProp& section)
 {
-	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting(section);
+	aspect_ratio_correction_mode = [&]() {
+		const std::string mode = section.GetString("aspect");
+
+		if (has_true(mode) || mode == "auto") {
+			return AspectRatioCorrectionMode::Auto;
+
+		} else if (has_false(mode) || mode == "square-pixels") {
+			return AspectRatioCorrectionMode::SquarePixels;
+
+		} else if (mode == "stretch") {
+			return AspectRatioCorrectionMode::Stretch;
+
+		} else {
+			constexpr auto SettingName  = "aspect";
+			constexpr auto DefaultValue = "auto";
+
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+								  "RENDER",
+								  "PROGRAM_CONFIG_INVALID_SETTING",
+								  SettingName,
+								  mode.c_str(),
+								  DefaultValue);
+
+			return AspectRatioCorrectionMode::Auto;
+		}
+	}();
 }
 
 AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode()
