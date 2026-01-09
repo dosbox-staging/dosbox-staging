@@ -16,15 +16,15 @@
 #define JINC2_SINC 0.82
 #define JINC2_AR_STRENGTH 0.8
 
-const float pi      = 3.1415926535897932384626433832795;
-const float wa      = JINC2_WINDOW_SINC * pi;
-const float wb      = JINC2_SINC * pi;
+const float pi = 3.1415926535897932384626433832795;
+const float wa = JINC2_WINDOW_SINC * pi;
+const float wb = JINC2_SINC * pi;
 
 // Calculates the distance between two points
 float d(vec2 pt1, vec2 pt2)
 {
-  vec2 v = pt2 - pt1;
-  return sqrt(dot(v, v));
+    vec2 v = pt2 - pt1;
+    return sqrt(dot(v, v));
 }
 
 vec3 min4(vec3 a, vec3 b, vec3 c, vec3 d)
@@ -154,10 +154,10 @@ void main()
         dot(weights[3], vec4(c03.z, c13.z, c23.z, c33.z))
     );
     color /= (
-        dot(weights[0], vec4(1,1,1,1)) +
-        dot(weights[1], vec4(1,1,1,1)) +
-        dot(weights[2], vec4(1,1,1,1)) +
-        dot(weights[3], vec4(1,1,1,1))
+        dot(weights[0], vec4(1, 1, 1, 1)) +
+        dot(weights[1], vec4(1, 1, 1, 1)) +
+        dot(weights[2], vec4(1, 1, 1, 1)) +
+        dot(weights[3], vec4(1, 1, 1, 1))
     );
 
     // Anti-ringing
