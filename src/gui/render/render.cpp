@@ -43,11 +43,8 @@ static void check_palette()
 	}
 
 	for (auto i = render.pal.first; i <= render.pal.last; i++) {
-		uint8_t r = render.pal.rgb[i].red;
-		uint8_t g = render.pal.rgb[i].green;
-		uint8_t b = render.pal.rgb[i].blue;
-
-		uint32_t new_pal = GFX_MakePixel(r, g, b);
+		const auto color = render.pal.rgb[i];
+		uint32_t new_pal = GFX_MakePixel(color.red, color.green, color.blue);
 
 		if (new_pal != render.pal.lut[i]) {
 			render.pal.changed     = true;
@@ -64,9 +61,11 @@ static void check_palette()
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue)
 {
-	render.pal.rgb[entry].red   = red;
-	render.pal.rgb[entry].green = green;
-	render.pal.rgb[entry].blue  = blue;
+	auto& color = render.pal.rgb[entry];
+
+	color.red   = red;
+	color.green = green;
+	color.blue  = blue;
 
 	if (render.pal.first > entry) {
 		render.pal.first = entry;

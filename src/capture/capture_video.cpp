@@ -463,9 +463,11 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	static uint8_t palette_data[NumVgaColors * 4] = {};
 
 	for (auto i = 0; i < NumVgaColors; ++i) {
-		palette_data[i * 4]     = image.palette[i].red;
-		palette_data[i * 4 + 1] = image.palette[i].green;
-		palette_data[i * 4 + 2] = image.palette[i].blue;
+		const auto color = image.palette[i];
+
+		palette_data[i * 4]     = color.red;
+		palette_data[i * 4 + 1] = color.green;
+		palette_data[i * 4 + 2] = color.blue;
 	}
 
 	if (!video.codec->PrepareCompressFrame(codec_flags,
