@@ -111,6 +111,8 @@ struct Render {
 
 	AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
 	IntegerScalingMode integer_scaling_mode                = {};
+
+	ViewportSettings viewport_settings = {};
 };
 
 // A frame of the emulated video output that's passed to the rendering backend
