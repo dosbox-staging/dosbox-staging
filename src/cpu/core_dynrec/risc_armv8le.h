@@ -380,6 +380,7 @@ static bool gen_mov_memval_to_reg_helper(HostReg dest_reg, uint64_t data, Bitu s
 				cache_addd( LDURB_IMM(dest_reg, addr_reg, data - addr_data) );      // ldurb dest_reg, [addr_reg, #(data - addr_data)]
 				return true;
 			}
+			[[fallthrough]];
 		default:
 			break;
 	}
@@ -493,6 +494,7 @@ static bool gen_mov_memval_from_reg_helper(HostReg src_reg, uint64_t data, Bitu 
 				cache_addd( STURB_IMM(src_reg, addr_reg, data - addr_data) );       // sturb src_reg, [addr_reg, #(data - addr_data)]
 				return true;
 			}
+			[[fallthrough]];
 		default:
 			break;
 	}

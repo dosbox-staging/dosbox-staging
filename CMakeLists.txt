@@ -53,6 +53,7 @@ else()
       ${WARNING_FLAGS_COMMON}
       "-Weffc++"
       "-Wextra-semi"
+      "-Wimplicit-fallthrough"
   )
 
   # GCC 12 (still used in our CI workflow) complains about unrecognized
