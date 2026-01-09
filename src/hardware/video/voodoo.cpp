@@ -5827,7 +5827,7 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (vtype < VOODOO_2) {
 				break;
 			}
-			/* else fall through... */
+		        [[fallthrough]];
 
 		/* fbiInitX can only be written if initEnable says we can -- Voodoo/Voodoo2 only */
 		/* most of these affect memory layout, so always recompute that when done */

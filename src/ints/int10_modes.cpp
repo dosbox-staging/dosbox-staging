@@ -823,7 +823,8 @@ static void finish_set_mode(bool clearmem) {
 				}
 				break;
 			}
-			// fall-through
+			[[fallthrough]];
+
 		case M_CGA2:
 			for (uint16_t ct=0;ct<16*1024;ct++) {
 				real_writew( 0xb800,ct*2,0x0000);
@@ -915,6 +916,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		if (mode > 6)
 			return false;
 		[[fallthrough]];
+
 	case MachineType::Pcjr:
 	case MachineType::Tandy:
 		if (mode>0xa) return false;
@@ -1966,6 +1968,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 				break;
 			}
 			[[fallthrough]];
+
 		case M_LIN4: write_palette_dac_data(palette.ega); break;
 
 		case M_VGA:
