@@ -904,6 +904,7 @@ static void set_aspect_ratio_correction(SectionProp& section)
 	}();
 }
 
+
 AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode()
 {
 	return aspect_ratio_correction_mode;
@@ -1123,40 +1124,37 @@ static void set_viewport(SectionProp& section)
 	}
 }
 
-static IntegerScalingMode get_integer_scaling_mode_setting(SectionProp& section)
-{
-	const std::string mode = section.GetString("integer_scaling");
-
-	if (has_false(mode)) {
-		return IntegerScalingMode::Off;
-
-	} else if (mode == "auto") {
-		return IntegerScalingMode::Auto;
-
-	} else if (mode == "horizontal") {
-		return IntegerScalingMode::Horizontal;
-
-	} else if (mode == "vertical") {
-		return IntegerScalingMode::Vertical;
-
-	} else {
-		constexpr auto SettingName  = "integer_scaling";
-		constexpr auto DefaultValue = "auto";
-
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "RENDER",
-		                      "PROGRAM_CONFIG_INVALID_SETTING",
-		                      SettingName,
-		                      mode.c_str(),
-		                      DefaultValue);
-
-		return IntegerScalingMode::Auto;
-	}
-}
-
 static void set_integer_scaling(SectionProp& section)
 {
-	render.integer_scaling_mode = get_integer_scaling_mode_setting(section);
+	render.integer_scaling_mode = [&]() {
+		const std::string mode = section.GetString("integer_scaling");
+
+		if (has_false(mode)) {
+			return IntegerScalingMode::Off;
+
+		} else if (mode == "auto") {
+			return IntegerScalingMode::Auto;
+
+		} else if (mode == "horizontal") {
+			return IntegerScalingMode::Horizontal;
+
+		} else if (mode == "vertical") {
+			return IntegerScalingMode::Vertical;
+
+		} else {
+			constexpr auto SettingName  = "integer_scaling";
+			constexpr auto DefaultValue = "auto";
+
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "RENDER",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      SettingName,
+			                      mode.c_str(),
+			                      DefaultValue);
+
+			return IntegerScalingMode::Auto;
+		}
+	}();
 }
 
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
