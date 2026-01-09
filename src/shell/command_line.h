@@ -25,6 +25,8 @@ public:
 
 	bool FindExist(const std::string& name, bool remove = false);
 
+	bool FindExistCaseSensitive(const std::string& name, bool remove = false);
+
 	bool FindExistRemoveAll(const std::string& name);
 
 	// Removes all the supplied arguments from the list, returns 'true' if
@@ -90,7 +92,7 @@ private:
 	std::list<std::string> cmds = {};
 	std::string file_name       = "";
 
-	bool FindEntry(const std::string& name, cmd_it& it, bool neednext = false);
+	bool FindEntry(const std::string& name, cmd_it& it, bool neednext = false, const bool case_sensitive = false);
 
 	std::string FindRemoveSingleString(const char* name);
 
