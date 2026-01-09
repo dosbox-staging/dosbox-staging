@@ -22,8 +22,9 @@
 #include "config/config.h"
 #include "hardware/memory.h"
 
-// For the Uint8/16/32 types
-#include <SDL_net.h>
+#include <cstdint>
+
+#include "hardware/network/net_defs.h"
 
 // In Use Flag codes
 #define USEFLAG_AVAILABLE  0x00
@@ -55,27 +56,27 @@
 #endif
 
 struct PackedIP {
-	Uint32 host;
-	Uint16 port;
+	uint32_t host;
+	uint16_t port;
 } GCC_ATTRIBUTE(packed);
 
 struct nodeType {
-	Uint8 node[6];
+	uint8_t node[6];
 } GCC_ATTRIBUTE(packed) ;
 
 struct IPXHeader {
-	Uint8 checkSum[2];
-	Uint8 length[2];
-	Uint8 transControl; // Transport control
-	Uint8 pType; // Packet type
+	uint8_t checkSum[2];
+	uint8_t length[2];
+	uint8_t transControl; // Transport control
+	uint8_t pType;        // Packet type
 
 	struct transport {
-		Uint8 network[4];
+		uint8_t network[4];
 		union addrtype {
 			nodeType byNode;
 			PackedIP byIP ;
 		} GCC_ATTRIBUTE(packed) addr;
-		Uint8 socket[2];
+		uint8_t socket[2];
 	} dest, src;
 } GCC_ATTRIBUTE(packed);
 
