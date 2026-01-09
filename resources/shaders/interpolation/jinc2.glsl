@@ -48,14 +48,8 @@ vec4 resampler(vec4 x)
 
 #if defined(VERTEX)
 
-#ifdef GL_ES
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
-
-uniform PRECISION vec2 rubyTextureSize;
-uniform PRECISION vec2 rubyInputSize;
+uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 
 layout (location = 0) in vec2 a_position;
 
@@ -70,22 +64,11 @@ void main()
 
 #elif defined(FRAGMENT)
 
-#ifdef GL_ES
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-#define PRECISION mediump
-#else
-#define PRECISION
-#endif
-
 in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform PRECISION vec2 rubyTextureSize;
+uniform vec2 rubyTextureSize;
 uniform sampler2D rubyTexture;
 
 void main()
