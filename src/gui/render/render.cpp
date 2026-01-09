@@ -1108,16 +1108,14 @@ static std::optional<ViewportSettings> parse_viewport_settings(const std::string
 	}
 }
 
-static ViewportSettings viewport_settings = {};
-
 static void set_viewport(SectionProp& section)
 {
 	if (const auto& settings = parse_viewport_settings(
 	            section.GetString("viewport"));
 	    settings) {
-		viewport_settings = *settings;
+		render.viewport_settings = *settings;
 	} else {
-		viewport_settings = {};
+		render.viewport_settings = {};
 		set_section_property_value("render", "viewport", "fit");
 	}
 }
@@ -1159,19 +1157,20 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 {
 	const auto dpi_scale = GFX_GetDpiScaleFactor();
 
-	switch (viewport_settings.mode) {
+	switch (render.viewport_settings.mode) {
 	case ViewportMode::Fit: {
 		auto viewport_size_px = [&] {
-			if (viewport_settings.fit.limit_size) {
-				return viewport_settings.fit.limit_size->Copy().ScaleSize(
-				        dpi_scale);
+			if (render.viewport_settings.fit.limit_size) {
+				return render.viewport_settings.fit.limit_size
+				        ->Copy()
+				        .ScaleSize(dpi_scale);
 
-			} else if (viewport_settings.fit.desktop_scale) {
+			} else if (render.viewport_settings.fit.desktop_scale) {
 				auto desktop_size_px = GFX_GetDesktopSize().ScaleSize(
 				        dpi_scale);
 
 				return desktop_size_px.ScaleSize(
-				        *viewport_settings.fit.desktop_scale);
+				        *render.viewport_settings.fit.desktop_scale);
 			} else {
 				// The viewport equals the canvas size
 				// in Fit mode without parameters
@@ -1191,8 +1190,8 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 		        canvas_size_px);
 
 		return restricted_canvas_size_px.Copy()
-		        .ScaleWidth(viewport_settings.relative.width_scale)
-		        .ScaleHeight(viewport_settings.relative.height_scale);
+		        .ScaleWidth(render.viewport_settings.relative.width_scale)
+		        .ScaleHeight(render.viewport_settings.relative.height_scale);
 	}
 
 	default: assertm(false, "Invalid ViewportMode value"); return {};
@@ -1900,7 +1899,7 @@ static void toggle_stretch_axis(const bool pressed)
 	if (!pressed) {
 		return;
 	}
-	if (viewport_settings.mode != ViewportMode::Relative) {
+	if (render.viewport_settings.mode != ViewportMode::Relative) {
 		log_stretch_hotkeys_viewport_mode_warning();
 		return;
 	}
@@ -1916,12 +1915,12 @@ static void toggle_stretch_axis(const bool pressed)
 
 static void adjust_viewport_stretch(const float increment)
 {
-	if (viewport_settings.mode != ViewportMode::Relative) {
+	if (render.viewport_settings.mode != ViewportMode::Relative) {
 		log_stretch_hotkeys_viewport_mode_warning();
 		return;
 	}
 
-	auto& r = viewport_settings.relative;
+	auto& r = render.viewport_settings.relative;
 
 	// Snap to whole percents when using the adjustment controls
 	r.width_scale = roundf(r.width_scale * 100.f) / 100.f;
