@@ -53,6 +53,7 @@ else()
       ${WARNING_FLAGS_COMMON}
       "-Weffc++"
       "-Wextra-semi"
+      "-Wimplicit-fallthrough"
   )
 
   # GCC 12 (still used in our CI workflow) complains about unrecognized
@@ -92,10 +93,22 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   add_compile_options("--param" "max-gcse-memory=250000")
 endif()
 
-# TODO: These are sprintf deprecated warnings.
-# We probably do want to remove sprintf usage at some point.
 if (APPLE)
+  # TODO: These are sprintf deprecated warnings. We probably do want to remove
+  # sprintf usage at some point.
   add_compile_options("-Wno-deprecated-declarations")
+
+  # This adds more metadata to the executable (about ~500KB) which is handy
+  # for profiling. It also results in better crash dumps. This does not affect
+  # performance at all.
+  add_compile_options("-g")
+
+  if (C_TARGETCPU STREQUAL "ARMV8LE")
+    # This has virtually zero performance impact on ARM and it gives us deep
+    # observability on release mode builds at full speed (e.g., when using a
+    # profiler).
+    add_compile_options("-fno-omit-frame-pointer")
+  endif()
 endif()
 
 option(OPT_DEBUGGER "Enable debugger" OFF)

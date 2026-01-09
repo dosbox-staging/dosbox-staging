@@ -508,7 +508,7 @@ static void EnqueueTopUserCallbackOnCPUResume()
 		LOG(LOG_REELMAGIC, LOG_WARN)
 		("Unknown user callback type %04Xh. Defaulting to 0000. This is probably gonna screw something up!",
 		 (unsigned)_userCallbackType);
-		// fall through
+		[[fallthrough]];
 
 	case 0x0000: // The Horde style... shit is passed in registers...
 		reg_bx = ((ucc.command << 8) & 0xFF00) | (ucc.handle & 0xFF);

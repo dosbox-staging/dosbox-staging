@@ -255,7 +255,7 @@ void INT10_ScrollWindow(uint8_t rul,uint8_t cul,uint8_t rlr,uint8_t clr,int8_t n
 				// the ET4000 BIOS supports text output in 800x600 SVGA
 				EGA16_CopyRow(cul,clr,start,start+nlines,base);break;
 			}
-			// fall-through
+			[[fallthrough]];
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Unhandled mode %d for scroll",CurMode->type);
 		}	
@@ -287,7 +287,7 @@ filling:
 			    (CurMode->swidth <= 800)) {
 				EGA16_FillRow(cul,clr,start,base,attr);break;
 			}
-			// fall-through
+			[[fallthrough]];
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Unhandled mode %d for scroll",CurMode->type);
 		}	
@@ -602,7 +602,7 @@ void WriteChar(uint16_t col,uint16_t row,uint8_t page,uint8_t chr,uint8_t attr,b
 		/* might be put into INT10_PutPixel but different vga bios
 		   implementations have different opinions about this */
 		IO_Write(0x3c4,0x2);IO_Write(0x3c5,0xf);
-		// fall-through
+		[[fallthrough]];
 	default:
 		back=attr&0x80;
 		break;
