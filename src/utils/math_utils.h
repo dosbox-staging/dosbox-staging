@@ -328,5 +328,27 @@ template float remap<float>(const float in_min, const float in_max,
 template double remap<double>(const double in_min, const double in_max,
                               const double out_min, const double out_max,
                               const double v);
-							
+
+// Round `x` to the next multiple of `m`. `m` must be positive, `x` can be
+// negative as well.
+//
+// Returns `m` if `x` is 0.
+//
+// Rounding is performed away from zero, so toward the greater number for
+// positive numbers, and toward the lower number for negative numbers.
+//
+inline int round_to_multiple_of(int m, int x)
+{
+	assert(m > 0);
+
+	if (x == 0) {
+		return m;
+	}
+
+	const auto fract = static_cast<double>(x) / m;
+	const auto i     = (x >= 0) ? ceil(fract) : floor(fract);
+
+	return static_cast<int>(i * m);
+}
+
 #endif
