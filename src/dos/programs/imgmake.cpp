@@ -1190,7 +1190,7 @@ void IMGMAKE::Run()
 		auto err = std::get<ImgmakeCommand::ErrorType>(result);
 		if (err != ImgmakeCommand::ErrorType::None) {
 			// Map error to message
-			ImgmakeCommand::notify_warning("SHELL_CMD_IMGMAKE_INVALID_ARGS");
+			ImgmakeCommand::notify_warning("SHELL_SYNTAX_ERROR");
 		}
 		// If error is None, it means empty args, just show help logic
 		// implicitly or exit
@@ -1226,8 +1226,6 @@ void IMGMAKE::AddMessages()
 	        "  [color=light-green]imgmake[reset] [color=light-cyan]floppy.img[reset] -t fd_1440kb\n"
 	        "  [color=light-green]imgmake[reset] [color=light-cyan]hdd.img[reset] -t hd -size 500");
 
-	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_ARGS",
-	        "Invalid arguments. Use /? for help.");
 	MSG_Add("SHELL_CMD_IMGMAKE_MISSING_SIZE",
 	        "You must specify -size or -chs for custom hard disks.");
 	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_TYPE",
