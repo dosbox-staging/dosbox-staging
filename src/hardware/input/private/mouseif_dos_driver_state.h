@@ -240,10 +240,7 @@ public:
 	void SetUserCallbackSegment(const uint16_t value);
 	void SetUserCallbackOffset(const uint16_t value);
 
-#ifdef _MSC_VER
-#pragma pack(1)
-#endif
-
+#pragma pack(push, 1)
 	struct State { // DOS driver state
 
 		// Structure containing (only!) data which should be
@@ -372,13 +369,10 @@ public:
 		uint16_t user_callback_segment = 0;
 		uint16_t user_callback_offset  = 0;
 
-	} GCC_ATTRIBUTE(packed);
+	};
+#pragma pack(pop)
 
 	static State virtual_driver_state;
-
-#ifdef _MSC_VER
-#pragma pack()
-#endif
 };
 
 #endif // DOSBOX_MOUSEIF_DOS_DRIVER_STATE_H
