@@ -438,6 +438,42 @@ static void notify_warning(const std::string& message_name, const char* arg = nu
 	}
 }
 
+// Expand leading ~ to user's home directory
+std_fs::path resolve_path(const std::string& input_path)
+{
+	if (input_path.empty()) {
+		return {};
+	}
+
+	// Check if path starts with "~"
+	if (input_path[0] == '~') {
+		// Only expand if it's just "~", "~/", or "~\" (to allow mixed
+		// separators on Win)
+		bool is_separator = (input_path.length() > 1 &&
+		                     (input_path[1] == '/' || input_path[1] == '\\'));
+
+		if (input_path.length() == 1 || is_separator) {
+			// Try HOME (Linux/macOS) then USERPROFILE (Windows)
+			const char* home = std::getenv("HOME");
+			if (!home) {
+				home = std::getenv("USERPROFILE");
+			}
+
+			if (home) {
+				std::string expanded = home;
+				// Append the rest of the path (skipping the ~)
+				if (input_path.length() > 1) {
+					expanded += input_path.substr(1);
+				}
+				return std_fs::path(expanded);
+			}
+		}
+	}
+
+	// Return original if no tilde or HOME not found
+	return std_fs::path(input_path);
+}
+
 ParseResult parse_args(const std::vector<std::string>& args)
 {
 	CommandSettings settings;
@@ -449,7 +485,7 @@ ParseResult parse_args(const std::vector<std::string>& args)
 	// First argument is usually the filename (unless it starts with -)
 	auto start_idx = 0;
 	if (args[0][0] != '-') {
-		settings.filename = args[0];
+		settings.filename = resolve_path(args[0]);
 		start_idx         = 1;
 
 	} else {
