@@ -10,7 +10,12 @@
 #include <gtest/gtest.h>
 
 #include "config/config.h"
-#include "misc/video.h"
+#include "cpu/cpu.h"
+#include "dos/dos.h"
+#include "dosbox.h"
+#include "hardware/serialport/serialport.h"
+#include "ints/bios.h"
+#include "shell/autoexec.h"
 
 class DOSBoxTestFixture : public ::testing::Test {
 public:
@@ -31,13 +36,32 @@ public:
 		const auto config_path = get_config_dir();
 		control->ParseConfigFiles(config_path);
 
+		// Only initialiasing the minimum number of modules required for
+		// the tests.
+		//
+		// This results in a 4-fold reduction in test execution times
+		// compared to using `DOSBOX_InitModules()` (e.g. DOS_FilesTest
+		// runs in 3 seconds instead of 13).
+		//
 		DOSBOX_InitModuleConfigsAndMessages();
-		DOSBOX_InitModules();
+
+		DOSBOX_Init();
+		CPU_Init();
+		BIOS_Init();
+		SERIAL_Init();
+		DOS_Init();
+		AUTOEXEC_Init();
 	}
 
 	void TearDown() override
 	{
-		DOSBOX_DestroyModules();
+		DOS_Destroy();
+		SERIAL_Destroy();
+		BIOS_Destroy();
+		CPU_Destroy();
+		DOSBOX_Destroy();
+
+		control = {};
 	}
 
 private:
