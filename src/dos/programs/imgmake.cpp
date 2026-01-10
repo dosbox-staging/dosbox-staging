@@ -412,7 +412,6 @@ struct CommandSettings {
 	int sectors        = 0;
 
 	int fat_type            = -1;
-	bool force_fat32        = false;
 	int sectors_per_cluster = 0;
 	int root_entries        = DefaultRootEntries;
 	int fat_copies          = 2;
@@ -517,10 +516,6 @@ ParseResult parse_args(const std::vector<std::string>& args)
 			if (auto f = parse_int(args[++i], 10)) {
 				settings.fat_type = *f;
 			}
-
-		} else if (arg == "-fat32") {
-			settings.force_fat32 = true;
-			settings.fat_type    = 32;
 
 		} else if (arg == "-spc") {
 			if (i + 1 >= arg_size) {
@@ -731,9 +726,7 @@ void determine_fat_type(const CommandSettings& settings, ImageCreationContext& c
 		ctx.fat_bits = 12;
 	} else {
 		// Decision between FAT16 and FAT32
-		if (settings.force_fat32) {
-			ctx.fat_bits = 32;
-		} else if (ctx.volume_sectors >= Fat16HardLimit) {
+		if (ctx.volume_sectors >= Fat16HardLimit) {
 			// > 2GB: Must be FAT32
 			ctx.fat_bits = 32;
 		} else if (ctx.volume_sectors >= Fat16EfficiencyLimit &&
@@ -1191,20 +1184,15 @@ bool execute(Program* program, CommandSettings& settings)
 	}
 	FilePtr fs_guard(ctx.fs);
 
-	// Return early if no formatting requested
-	if (settings.no_format) {
-		return true;
+	// Only write filesystem structures if not in no-format mode
+	if (!settings.no_format) {
+
+		determine_fat_type(settings, ctx);
+		write_mbr(ctx);
+		write_boot_sector(settings, ctx);
+		write_fats(settings, ctx);
+		write_root_dir(settings, ctx);
 	}
-
-	determine_fat_type(settings, ctx);
-
-	write_mbr(ctx);
-
-	write_boot_sector(settings, ctx);
-
-	write_fats(settings, ctx);
-
-	write_root_dir(settings, ctx);
 
 	// Resolve full path for display
 	std::error_code ec;
@@ -1221,6 +1209,14 @@ bool execute(Program* program, CommandSettings& settings)
 	                  ctx.geometry.cylinders,
 	                  ctx.geometry.heads,
 	                  ctx.geometry.sectors);
+
+	if (!settings.no_format) {
+		program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_FORMATTED"),
+		                  (ctx.fat_bits == 12)   ? "12"
+		                  : (ctx.fat_bits == 16) ? "16"
+		                                         : "32");
+	}
+
 	return true;
 }
 
@@ -1272,6 +1268,8 @@ void IMGMAKE::AddMessages()
 	        "               or [color=light-cyan]hd[reset] (requires -size or -chs).\n"
 	        "  [color=white]-size x[reset]      Size in MB (for hd type).\n"
 	        "  [color=white]-chs c,h,s[reset]   Geometry (Cylinders, Heads, Sectors).\n"
+	        "  [color=white]-fat f[reset]       Filesystem type (e.g., -fat 12, -fat 16, -fat 32).\n"
+	        "               Default is determined automatically.\n"
 	        "  [color=white]-noformat[reset]    Do not format the filesystem (raw image).\n"
 	        "  [color=white]-label name[reset]  Volume label.\n"
 	        "\n"
@@ -1298,4 +1296,6 @@ void IMGMAKE::AddMessages()
 	        "Disk full or cannot allocate image size.");
 	MSG_Add("SHELL_CMD_IMGMAKE_CREATED",
 	        "Created [color=light-cyan]%s[reset] [CHS: %u, %u, %u]");
+	MSG_Add("SHELL_CMD_IMGMAKE_FORMATTED",
+	        "\nFormatted as [color=light-cyan]FAT%s[reset]");
 }
