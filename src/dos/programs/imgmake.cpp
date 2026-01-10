@@ -474,6 +474,37 @@ std_fs::path resolve_path(const std::string& input_path)
 	return std_fs::path(input_path);
 }
 
+// Prompt user for Confirmation (Reads from emulated STDIN)
+bool ask_confirmation(Program* program, const std::string& path)
+{
+	program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CONFIRM"), path.c_str());
+
+	while (true) {
+		uint8_t c  = 0;
+		uint16_t n = 1;
+		// Read from STDIN (Handle 0)
+		if (!DOS_ReadFile(0, &c, &n)) {
+			return false;
+		}
+		if (n == 0) {
+			return false;
+		}
+
+		// Ignore whitespace/newlines
+		if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+			continue;
+		}
+
+		if (c == 'y' || c == 'Y') {
+			return true;
+		}
+		if (c == 'n' || c == 'N') {
+			program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_ABORTED"));
+			return false;
+		}
+	}
+}
+
 ParseResult parse_args(const std::vector<std::string>& args)
 {
 	CommandSettings settings;
@@ -1224,6 +1255,21 @@ bool execute(Program* program, CommandSettings& settings)
 		return false;
 	}
 
+	// Resolve full path for display
+	std::error_code ec;
+	auto full_path = std_fs::absolute(settings.filename, ec);
+
+	// Fallback to relative path if absolute resolution fails for whatever
+	// reason
+	if (ec) {
+		full_path = settings.filename;
+	}
+
+	// Confirmation prompt
+	if (!ask_confirmation(program, full_path.string())) {
+		return true;
+	}
+
 	if (!open_and_expand_file(settings, ctx)) {
 		return false;
 	}
@@ -1237,16 +1283,6 @@ bool execute(Program* program, CommandSettings& settings)
 		write_boot_sector(settings, ctx);
 		write_fats(settings, ctx);
 		write_root_dir(settings, ctx);
-	}
-
-	// Resolve full path for display
-	std::error_code ec;
-	auto full_path = std_fs::absolute(settings.filename, ec);
-
-	// Fallback to relative path if absolute resolution fails for whatever
-	// reason
-	if (ec) {
-		full_path = settings.filename;
 	}
 
 	program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CREATED"),
@@ -1343,4 +1379,8 @@ void IMGMAKE::AddMessages()
 	        "Created [color=light-cyan]%s[reset] [CHS: %u, %u, %u]");
 	MSG_Add("SHELL_CMD_IMGMAKE_FORMATTED",
 	        "\nFormatted as [color=light-cyan]FAT%s[reset]");
+	MSG_Add("SHELL_CMD_IMGMAKE_CONFIRM",
+	        "Image will be created at:\n  [color=light-cyan]%s[reset]\n\n"
+	        "Proceed? (Y/N)\n");
+	MSG_Add("SHELL_CMD_IMGMAKE_ABORTED", "\nOperation aborted.");
 }
