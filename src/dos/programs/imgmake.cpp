@@ -646,26 +646,35 @@ bool open_and_expand_file(const CommandSettings& settings, ImageCreationContext&
 	}
 
 	// Create file (truncate if exists)
-	ctx.fs = fopen(settings.filename.string().c_str(), "wb+");
-	if (!ctx.fs) {
+	FILE* raw_fs = fopen(settings.filename.string().c_str(), "wb+");
+	if (!raw_fs) {
 		notify_warning("SHELL_CMD_IMGMAKE_CANNOT_WRITE",
 		               settings.filename.string().c_str());
 		return false;
 	}
 
+	// Wrap immediately in a temporary smart pointer.
+	// If we return false below, this guard will auto-close the file.
+	FilePtr temp_fs_guard(raw_fs);
+
 	// Seek to the last byte (total_size - 1)
-	if (cross_fseeko(ctx.fs, ctx.total_size - 1, SEEK_SET) != 0) {
+	if (cross_fseeko(temp_fs_guard.get(), ctx.total_size - 1, SEEK_SET) != 0) {
 		notify_warning("SHELL_CMD_IMGMAKE_SPACE_ERROR");
 		return false;
 	}
 
 	// Write a single zero byte at the end, causing the file to
 	// be filled up to total_size with zeros.
-	if (fputc(0, ctx.fs) == EOF) {
+	if (fputc(0, temp_fs_guard.get()) == EOF) {
 		notify_warning("SHELL_CMD_IMGMAKE_SPACE_ERROR");
 		return false;
 	}
-	rewind(ctx.fs);
+
+	rewind(temp_fs_guard.get());
+
+	// Release ownership from the local guard and transfer it to the context.
+	ctx.fs = temp_fs_guard.release();
+
 	return true;
 }
 
