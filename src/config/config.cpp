@@ -593,7 +593,7 @@ void Config::ParseArguments()
 	arguments.erasemapper = cmdline->FindRemoveBoolArgument("erasemapper") ||
 	                        cmdline->FindRemoveBoolArgument("resetmapper");
 
-	arguments.version = cmdline->FindRemoveBoolArgument("version", 'v');
+	arguments.version = cmdline->FindRemoveBoolArgument("version", 'V');
 	arguments.help    = (cmdline->FindRemoveBoolArgument("help", 'h') ||
                           cmdline->FindRemoveBoolArgument("help", '?'));
 

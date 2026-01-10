@@ -23,7 +23,7 @@ public:
 		return file_name.c_str();
 	}
 
-	bool FindExist(const std::string& name, bool remove = false);
+	bool FindExist(const std::string& name, bool remove = false, bool sens = false);
 
 	bool FindExistRemoveAll(const std::string& name);
 
@@ -90,7 +90,7 @@ private:
 	std::list<std::string> cmds = {};
 	std::string file_name       = "";
 
-	bool FindEntry(const std::string& name, cmd_it& it, bool neednext = false);
+	bool FindEntry(const std::string& name, cmd_it& it, bool neednext = false, bool sens = false);
 
 	std::string FindRemoveSingleString(const char* name);
 
