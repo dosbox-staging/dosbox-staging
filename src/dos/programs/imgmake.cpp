@@ -1206,8 +1206,18 @@ bool execute(Program* program, CommandSettings& settings)
 
 	write_root_dir(settings, ctx);
 
+	// Resolve full path for display
+	std::error_code ec;
+	auto full_path = std_fs::absolute(settings.filename, ec);
+
+	// Fallback to relative path if absolute resolution fails for whatever
+	// reason
+	if (ec) {
+		full_path = settings.filename;
+	}
+
 	program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CREATED"),
-	                  settings.filename.string().c_str(),
+	                  full_path.string().c_str(),
 	                  ctx.geometry.cylinders,
 	                  ctx.geometry.heads,
 	                  ctx.geometry.sectors);
@@ -1267,7 +1277,13 @@ void IMGMAKE::AddMessages()
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]imgmake[reset] [color=light-cyan]floppy.img[reset] -t fd_1440kb\n"
-	        "  [color=light-green]imgmake[reset] [color=light-cyan]hdd.img[reset] -t hd -size 500");
+	        "  [color=light-green]imgmake[reset] [color=light-cyan]hdd.img[reset] -t hd -size 500\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - The image file will be created in the current working directory, or\n"
+	        "    the absolute path if specified.\n"
+	        "  - You can change the current working directory via the [color=white]--working-dir[reset]\n"
+	        "    dosbox parameter.\n");
 
 	MSG_Add("SHELL_CMD_IMGMAKE_MISSING_SIZE",
 	        "You must specify -size or -chs for custom hard disks.");
