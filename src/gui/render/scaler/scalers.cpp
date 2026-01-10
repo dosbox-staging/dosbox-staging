@@ -13,7 +13,6 @@
 
 #include <cstring>
 
-uint8_t scaler_aspect[SCALER_MAXHEIGHT]         = {};
 uint16_t scaler_changed_lines[SCALER_MAXHEIGHT] = {};
 
 Bitu scaler_changed_line_index = 0;
@@ -42,7 +41,7 @@ static inline void ScalerAddLines(Bitu changed, Bitu count)
 	} else {
 		scaler_changed_lines[++scaler_changed_line_index] = count;
 	}
-	render.scale.outWrite += render.scale.outPitch * count;
+	render.scale.out_write += render.scale.out_pitch * count;
 }
 
 /* Include the different rendering routines */

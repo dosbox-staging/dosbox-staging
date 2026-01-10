@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 
+#include "gui/render/deinterlacer.h"
 #include "gui/render/scaler/scalers.h"
 #include "hardware/video/vga.h"
 #include "utils/fraction.h"
@@ -64,7 +65,7 @@ enum class AspectRatioCorrectionMode {
 	Stretch
 };
 
-struct RenderPal_t {
+struct RenderPalette {
 	std::array<Rgb888, NumVgaColors> rgb = {};
 
 	uint32_t lut[NumVgaColors]     = {};
@@ -83,33 +84,45 @@ struct Render {
 	double fps = 0;
 
 	struct {
-		uint32_t size = 0;
+		ScalerMode in_mode = {};
 
-		ScalerMode inMode  = {};
+		bool clear_cache = false;
 
-		bool clearCache = false;
+		ScalerLineHandler line_handler         = nullptr;
+		ScalerLineHandler line_palette_handler = nullptr;
 
-		ScalerLineHandler lineHandler    = nullptr;
-		ScalerLineHandler linePalHandler = nullptr;
+		uint32_t in_line = 0;
 
-		uint32_t blocks     = 0;
-		uint32_t lastBlock  = 0;
-		int outPitch        = 0;
-		uint8_t* outWrite   = nullptr;
-		uint32_t cachePitch = 0;
-		uint8_t* cacheRead  = nullptr;
-		uint32_t inHeight   = 0;
-		uint32_t inLine     = 0;
-		uint32_t outLine    = 0;
+		uint32_t cache_pitch = 0;
+		uint8_t* cache_read  = nullptr;
+
+		std::vector<uint8_t> out_buf = {};
+
+		int out_width      = 0;
+		int out_height     = 0;
+		int out_pitch      = 0;
+		uint8_t* out_write = nullptr;
+		uint32_t out_line  = 0;
+
+		int yscale = 0;
 	} scale = {};
 
-	RenderPal_t pal = {};
+	uint32_t* dest = nullptr;
+	int dest_pitch = 0;
 
-	bool updating  = false;
-	bool active    = false;
-	bool fullFrame = true;
+	RenderPalette palette = {};
 
-	IntegerScalingMode integer_scaling_mode = {};
+	bool active             = false;
+	bool render_in_progress = false;
+	bool updating_frame     = false;
+
+	AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
+	IntegerScalingMode integer_scaling_mode                = {};
+
+	ViewportSettings viewport_settings = {};
+
+	std::unique_ptr<Deinterlacer> deinterlacer   = {};
+	DeinterlacingStrength deinterlacing_strength = {};
 };
 
 // A frame of the emulated video output that's passed to the rendering backend

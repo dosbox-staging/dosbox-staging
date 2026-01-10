@@ -103,9 +103,8 @@ void ImageSaver::SaveImage(const SaveImageTask& task)
 }
 
 static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
-                               ImageScaler& image_scaler, const uint16_t width,
-                               const uint16_t height,
-                               const Fraction& pixel_aspect_ratio,
+                               ImageScaler& image_scaler, const int width,
+                               const int height, const Fraction& pixel_aspect_ratio,
                                const VideoMode& video_mode,
                                const std::array<Rgb888, NumVgaColors>& palette)
 {
@@ -144,17 +143,14 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 
 	// To reconstruct the raw image, we must skip every second row when
 	// dealing with "baked-in" double scanning.
-	const uint8_t row_skip_count = (src.rendered_double_scan ? 1 : 0);
+	const auto row_skip_count = (src.rendered_double_scan ? 1 : 0);
 
 	// To reconstruct the raw image, we must skip every second pixel when
 	// dealing with "baked-in" pixel doubling.
-	const uint8_t pixel_skip_count = (src.rendered_pixel_doubling ? 1 : 0);
+	const auto pixel_skip_count = (src.rendered_pixel_doubling ? 1 : 0);
 
-	const auto output_width = check_cast<uint16_t>(src.width /
-	                                               (pixel_skip_count + 1));
-
-	const auto output_height = check_cast<uint16_t>(src.height /
-	                                                (row_skip_count + 1));
+	const auto output_width  = src.width / (pixel_skip_count + 1);
+	const auto output_height = src.height / (row_skip_count + 1);
 
 	image_decoder.Init(image, row_skip_count, pixel_skip_count);
 
@@ -181,7 +177,7 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 		}
 	}
 
-	constexpr uint8_t MaxBytesPerPixel = 3;
+	constexpr auto MaxBytesPerPixel = 3;
 	row_buf.resize(static_cast<size_t>(output_width) *
 	               static_cast<size_t>(MaxBytesPerPixel));
 
@@ -210,7 +206,7 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 	}
 }
 
-static constexpr auto square_pixel_aspect_ratio = Fraction{1};
+static constexpr auto SquarePixelAspectRatio = Fraction{1};
 
 void ImageSaver::SaveUpscaledImage(const RenderedImage& image)
 {
@@ -226,7 +222,7 @@ void ImageSaver::SaveUpscaledImage(const RenderedImage& image)
 	                   image_scaler,
 	                   image_scaler.GetOutputWidth(),
 	                   image_scaler.GetOutputHeight(),
-	                   square_pixel_aspect_ratio,
+	                   SquarePixelAspectRatio,
 	                   image.params.video_mode,
 	                   image.palette);
 }
@@ -243,7 +239,7 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 	if (!png_writer.InitRgb888(outfile,
 	                           check_cast<uint16_t>(src.width),
 	                           check_cast<uint16_t>(src.height),
-	                           square_pixel_aspect_ratio,
+	                           SquarePixelAspectRatio,
 	                           src.video_mode)) {
 		return;
 	}
@@ -254,7 +250,7 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 	const auto pixel_skip_count = 0;
 	image_decoder.Init(image, row_skip_count, pixel_skip_count);
 
-	constexpr uint8_t BytesPerPixel = 3;
+	constexpr auto BytesPerPixel = 3;
 	row_buf.resize(static_cast<size_t>(src.width) *
 	               static_cast<size_t>(BytesPerPixel));
 

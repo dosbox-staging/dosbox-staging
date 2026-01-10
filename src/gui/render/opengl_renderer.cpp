@@ -322,16 +322,14 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
 	texture = new_texture;
 }
 
-void OpenGlRenderer::StartFrame(uint8_t*& pixels_out, int& pitch_out)
+void OpenGlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 {
 	assert(!curr_framebuf.empty());
 
 	pixels_out = curr_framebuf.data();
-
 	if (pixels_out == nullptr) {
 		return;
 	}
-
 	pitch_out = pitch;
 }
 

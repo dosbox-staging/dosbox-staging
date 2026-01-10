@@ -81,7 +81,7 @@ public:
 	// `pitch_out` is the number of bytes used to store a single row of
 	// pixel data (can be larger than actual width).
 	//
-	virtual void StartFrame(uint8_t*& pixels_out, int& pitch_out) = 0;
+	virtual void StartFrame(uint32_t*& pixels_out, int& pitch_out) = 0;
 
 	// Called at the end of every frame. There is a matching EndUpdate()
 	// call for every StartUpdate() call.
