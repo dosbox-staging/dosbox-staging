@@ -924,52 +924,52 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 	if (bootbuffer.sectorsperfat == 0) {
 		/* Possibly a FAT32 or non-FAT filesystem */
 		created_successfully = false;
-		LOG_ERR("DOS: MOUNT - Loaded image has zero sectors per FAT! FAT32 and non-FAT filesystems are not supported.");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero sectors per FAT! FAT32 and non-FAT filesystems are not supported.");
 		return;
 	}
 	if (bootbuffer.bytespersector != BytePerSector) {
 		created_successfully = false;
-		LOG_ERR("DOS: MOUNT - Bytes Per Sector mismatch: expected %u, got %u",
+		LOG_WARNING("DOS: MOUNT - Bytes Per Sector mismatch: expected %u, got %u",
 		        BytePerSector,
 		        bootbuffer.bytespersector);
 		return;
 	}
 	if (bootbuffer.sectorspercluster == 0) {
 		created_successfully = false;
-		LOG_ERR("DOS: MOUNT - Loaded image has zero sectors per cluster!");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero sectors per cluster!");
 		return;
 	}
 	if (bootbuffer.rootdirentries == 0) {
 		created_successfully = false;
-		LOG_ERR("DOS: MOUNT - Loaded image has zero root directory entries!");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero root directory entries!");
 		return;
 	}
 	if (bootbuffer.fatcopies == 0) {
 		created_successfully = false;
-		LOG_ERR("DOS: MOUNT - Loaded image has zero FAT copies!");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero FAT copies!");
 		return;
 	}
 	/* Check geometry values */
 	if (bootbuffer.headcount == 0) {
 		created_successfully = false;
-		LOG_ERR("DOS: MOUNT - Loaded image has zero heads per cylinder!");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero heads per cylinder!");
 		return;
 	}
 	if (bootbuffer.headcount > headscyl) {
 		created_successfully = false;
-		LOG_ERR("DOS: MOUNT - Loaded image has more heads per cylinder (%u) than the disk geometry allows (%u)!",
+		LOG_WARNING("DOS: MOUNT - Loaded image has more heads per cylinder (%u) than the disk geometry allows (%u)!",
 		        bootbuffer.headcount,
 		        headscyl);
 		return;
 	}
 	if (bootbuffer.sectorspertrack == 0) {
 		created_successfully = false;
-		LOG_ERR("DOS: MOUNT - Loaded image has zero sectors per track!");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero sectors per track!");
 		return;
 	}
 	if (bootbuffer.sectorspertrack > cylsector) {
 		created_successfully = false;
-		LOG_ERR("DOS: MOUNT - Loaded image has more sectors per track (%u) than the disk geometry allows (%u)!",
+		LOG_WARNING("DOS: MOUNT - Loaded image has more sectors per track (%u) than the disk geometry allows (%u)!",
 		        bootbuffer.sectorspertrack,
 		        cylsector);
 		return;
