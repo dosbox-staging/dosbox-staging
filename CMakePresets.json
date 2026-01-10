@@ -85,6 +85,7 @@
       "binaryDir": "${sourceDir}/build/debug-macos",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "RESOURCE_COPY_PATH": "/Resources"
@@ -98,6 +99,7 @@
       "binaryDir": "${sourceDir}/build/release-macos",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
@@ -112,6 +114,7 @@
       "cacheVariables": {
         "CMAKE_OSX_ARCHITECTURES": "arm64",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
@@ -125,6 +128,7 @@
       "binaryDir": "${sourceDir}/build/release-macos-x86_64",
       "cacheVariables": {
         "CMAKE_OSX_ARCHITECTURES": "x86_64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "11.0",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Release",
