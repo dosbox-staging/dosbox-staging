@@ -225,7 +225,7 @@ struct DirectoryEntry {
 	// Filename is in 8.3 format and padded with spaces
 	char filename[11] = {};
 	// Attributes: 0x08 = Volume Label, 0x10 = Subdir, etc.
-	uint8_t attributes;
+	uint8_t attributes = 0;
 	// Reserved for Windows NT / OS/2
 	uint8_t reserved          = 0;
 	uint8_t create_time_tenth = 0;
@@ -807,9 +807,7 @@ bool execute(Program* program, CommandSettings& command_settings)
 	}
 
 	// Move to Boot Sector
-	cross_fseeko(fs.get(),
-	             static_cast<uint32_t>(boot_sector_position * SectorSizeBytes),
-	             SEEK_SET);
+	cross_fseeko(fs.get(), boot_sector_position * SectorSizeBytes, SEEK_SET);
 	buffer            = {};
 	auto* boot_sector = reinterpret_cast<FatBootSector*>(buffer.data());
 
@@ -1091,8 +1089,7 @@ bool execute(Program* program, CommandSettings& command_settings)
 		// Note: 'buffer' currently holds the main Boot Sector we just
 		// created
 		cross_fseeko(fs.get(),
-		             static_cast<uint32_t>((boot_sector_position + 6) *
-		                                   SectorSizeBytes),
+		             (boot_sector_position + 6) * SectorSizeBytes,
 		             SEEK_SET);
 		fwrite(buffer.data(), 1, SectorSizeBytes, fs.get());
 
@@ -1106,8 +1103,7 @@ bool execute(Program* program, CommandSettings& command_settings)
 
 	// Move to FAT 1 start
 	cross_fseeko(fs.get(),
-	             static_cast<uint32_t>((boot_sector_position + reserved_sectors) *
-	                                   SectorSizeBytes),
+	             (boot_sector_position + reserved_sectors) * SectorSizeBytes,
 	             SEEK_SET);
 
 	if (fat_bits == 32) {
@@ -1144,8 +1140,8 @@ bool execute(Program* program, CommandSettings& command_settings)
 		}
 		cross_fseeko(fs.get(),
 		             current_fat_start +
-		                     (static_cast<uint32_t>(fat_size_sectors) *
-		                      static_cast<uint32_t>(SectorSizeBytes)),
+		                     (static_cast<int64_t>(fat_size_sectors) *
+		                      SectorSizeBytes),
 		             SEEK_SET);
 	}
 
