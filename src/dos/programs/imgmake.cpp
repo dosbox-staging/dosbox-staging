@@ -391,9 +391,9 @@ namespace ImgmakeCommand {
 enum class ErrorType { None, UnknownArgument, MissingArgument, InvalidValue };
 
 struct CommandSettings {
-	std_fs::path filename          = {};
-	std::string type               = {};
-	std::string label              = {};
+	std_fs::path filename = {};
+	std::string type      = {};
+	std::string label     = {};
 
 	int64_t size_bytes = 0;
 	int cylinders      = 0;
@@ -581,9 +581,9 @@ bool execute(Program* program, CommandSettings& command_settings)
 			             disk_geometry.sectors * SectorSizeBytes;
 
 		} else if (command_settings.size_bytes > 0) {
-			total_size            = command_settings.size_bytes;
-			auto total_sectors    = static_cast<int64_t>(
-                                total_size / SectorSizeBytes);
+			total_size         = command_settings.size_bytes;
+			auto total_sectors = static_cast<int64_t>(
+			        total_size / SectorSizeBytes);
 			// Calculate CHS from Size
 
 			// Legacy BIOS Int 13h limit: 1023 cylinders, 16 heads,
@@ -673,7 +673,7 @@ bool execute(Program* program, CommandSettings& command_settings)
 	}
 
 	std::array<uint8_t, SectorSizeBytes> buffer = {};
-	int64_t boot_sector_position    = 0;
+	int64_t boot_sector_position                = 0;
 
 	// Write Partition Table (MBR) for Hard Disks
 	if (!disk_geometry.is_floppy) {
