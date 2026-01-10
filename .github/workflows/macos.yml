@@ -40,7 +40,7 @@ jobs:
             minimum_deployment: '11.0'
             max_warnings: 0
 
-          - host: macos-15
+          - host: macos-26
             arch: arm64
             minimum_deployment: '11.0'
             max_warnings: 0
