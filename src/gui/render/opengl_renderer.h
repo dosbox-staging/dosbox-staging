@@ -17,6 +17,7 @@
 
 #include "dosbox_config.h"
 #include "gui/render/render.h"
+#include "misc/video.h"
 #include "utils/rect.h"
 
 // Glad must be included before SDL
@@ -139,10 +140,10 @@ private:
 	// four packed 8-bit values in BGRX byte order (that's in memory order,
 	// so byte N is B, byte N+1 is G, byte N+2 is R).
 	//
-	std::vector<uint32_t> curr_framebuf = {};
+	alignas(TextureDataPlacementAlignment) std::vector<uint32_t> curr_framebuf = {};
 
 	// Contains the last fully rendered frame, waiting to be presented.
-	std::vector<uint32_t> last_framebuf = {};
+	alignas(TextureDataPlacementAlignment) std::vector<uint32_t> last_framebuf = {};
 
 	// True if the last framebuffer has been updated since the last present
 	bool last_framebuf_dirty = false;

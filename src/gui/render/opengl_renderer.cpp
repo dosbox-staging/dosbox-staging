@@ -395,7 +395,9 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 	// the frame.
 	constexpr auto BytesPerPixel = 4;
 
-	const auto pitch_bytes = pass1.width * BytesPerPixel;
+	const auto pitch_bytes = round_to_multiple_of(TextureDataPitchAlignment,
+	                                              pass1.width * BytesPerPixel);
+
 	const auto framebuf_bytes = static_cast<size_t>(pitch_bytes) * pass1.height;
 
 	curr_framebuf.resize(framebuf_bytes);
@@ -485,6 +487,9 @@ void OpenGlRenderer::PrepareFrame()
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, pass1.in_texture);
 
+		// Set row pitch
+		glPixelStorei(GL_UNPACK_ROW_LENGTH, pass1.in_texture_pitch_pixels);
+
 		glTexSubImage2D(GL_TEXTURE_2D,
 		                0,            // mimap level (0 = base image)
 		                0,            // x offset
@@ -495,7 +500,11 @@ void OpenGlRenderer::PrepareFrame()
 		                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
 		                last_framebuf.data() // pointer to image data
 		);
+
 		glBindTexture(GL_TEXTURE_2D, 0);
+
+		// Reset to default
+		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
 		++frame_count;
 
@@ -1163,8 +1172,10 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	image.params.pixel_aspect_ratio = {1};
 	image.params.pixel_format       = PixelFormat::BGR24_ByteArray;
 
+	constexpr auto BitsInByte = 8;
+
 	image.pitch = image.params.width *
-	              (get_bits_per_pixel(image.params.pixel_format) / 8);
+	              (get_bits_per_pixel(image.params.pixel_format) / BitsInByte);
 
 	const auto image_size_bytes = check_cast<uint32_t>(image.params.height *
 	                                                   image.pitch);
@@ -1180,6 +1191,9 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	// GL_BGRA pixel format with glReadPixels(). We need to set it 1
 	// to be able to use the GL_BGR format in order to conserve
 	// memory. This should not cause any slowdowns whatsoever.
+	//
+	// TODO measure if this is actually true with some 4k captures and
+	// potentially revert to the default 4-byte alignment
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	glReadPixels(iroundf(output_rect_px.x),
@@ -1189,6 +1203,9 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	             GL_BGR,
 	             GL_UNSIGNED_BYTE,
 	             image.image_data);
+
+	// Restore default
+	glPixelStorei(GL_PACK_ALIGNMENT, 4);
 
 	return image;
 }
