@@ -536,7 +536,7 @@ static void cmd_reset(bool is_startup = false)
 	frame.clear();
 
 	if (is_startup) {
-		PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false);
+		PIC_SetIRQMask(Mouse::IrqPs2, false);
 	} else {
 		I8042_AddAuxByte(0xaa); // self-test passed
 		cmd_get_dev_id();
@@ -768,7 +768,7 @@ static void bios_delay_handler(uint32_t /*val*/)
 	bios_delay_running = false;
 	bios_delay_expired = true;
 
-	PIC_ActivateIRQ(mouse_predefined.IRQ_PS2);
+	PIC_ActivateIRQ(Mouse::IrqPs2);
 }
 
 static void bios_maybe_start_delay_timer()
@@ -846,7 +846,7 @@ static void bios_flush_aux()
 		}
 	}
 
-	PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false);
+	PIC_SetIRQMask(Mouse::IrqPs2, false);
 	bios_is_flushing = false;
 }
 

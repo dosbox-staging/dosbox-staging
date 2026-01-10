@@ -270,7 +270,7 @@ static void maybe_trigger_event()
 	}
 
 	maybe_start_delay_timer(delay_ms);
-	PIC_ActivateIRQ(mouse_predefined.IRQ_PS2);
+	PIC_ActivateIRQ(Mouse::IrqPs2);
 }
 
 static void clear_pending_events()
@@ -319,11 +319,6 @@ static uint16_t get_pos_y()
 
 	const auto pos_y = static_cast<uint16_t>(std::lround(state.GetPosY()));
 	return pos_y & state.GetGranularityY();
-}
-
-static uint16_t mickey_counter_to_reg16(const float x)
-{
-	return static_cast<uint16_t>(std::lround(x));
 }
 
 // ***************************************************************************
@@ -959,7 +954,8 @@ static void reset_hardware()
 	state.SetWheelApi(0);
 	state.SetCounterWheel(0);
 
-	PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false); // lower IRQ line
+	// Lower the IRQ line
+	PIC_SetIRQMask(Mouse::IrqPs2, false);
 
 	// Reset mouse refresh rate
 	rate_is_set = false;
@@ -1170,8 +1166,10 @@ static void reset()
 	state.SetPosX(static_cast<float>((state.GetMaxPosX() + 1) / 2));
 	state.SetPosY(static_cast<float>((state.GetMaxPosY() + 1) / 2));
 
-	state.SetMickeyCounterX(0.0f);
-	state.SetMickeyCounterY(0.0f);
+	state.SetPreciseMickeyCounterX(0.0f);
+	state.SetPreciseMickeyCounterY(0.0f);
+	state.SetMickeyCounterX(0);
+	state.SetMickeyCounterY(0);
 	state.SetCounterWheel(0);
 
 	state.SetLastWheelMovedX(0);
@@ -1237,13 +1235,18 @@ static void update_mickeys_on_move(float& dx, float& dy,
 		return d;
 	};
 
-	auto update_mickey =
-	        [](float& mickey, const float d, const float mickeys_per_pixel) {
-		        mickey += d * mickeys_per_pixel;
-		        if (mickey > 32767.5f || mickey < -32768.5f) {
-			        mickey -= std::copysign(65536.0f, mickey);
-		        }
-	        };
+	auto update_mickey = [](int16_t& mickey,
+	                        float& precise,
+	                        const float displacement,
+	                        const float mickeys_per_pixel,
+	                        const float threshold) {
+		precise += displacement * mickeys_per_pixel;
+		if (std::fabs(precise) < threshold) {
+			return;
+		}
+
+		mickey = clamp_to_int16(mickey + MOUSE_ConsumeInt16(precise));
+	};
 
 	// Calculate cursor displacement
 	dx = calculate_d(x_rel,
@@ -1253,11 +1256,25 @@ static void update_mickeys_on_move(float& dx, float& dy,
 	                 state.GetPixelsPerMickeyY(),
 	                 state.GetSensitivityCoeffY());
 
-	// Update mickey counters
-	auto mickey_counter_x = state.GetMickeyCounterX();
-	auto mickey_counter_y = state.GetMickeyCounterY();
-	update_mickey(mickey_counter_x, dx, state.GetMickeysPerPixelX());
-	update_mickey(mickey_counter_y, dy, state.GetMickeysPerPixelY());
+	auto precise_counter_x = state.GetPreciseMickeyCounterX();
+	auto precise_counter_y = state.GetPreciseMickeyCounterY();
+	auto mickey_counter_x  = state.GetMickeyCounterX();
+	auto mickey_counter_y  = state.GetMickeyCounterY();
+
+	update_mickey(mickey_counter_x,
+	              precise_counter_x,
+	              dx,
+	              state.GetMickeysPerPixelX(),
+	              mouse_config.dos_driver_move_threshold_x);
+
+	update_mickey(mickey_counter_y,
+	              precise_counter_y,
+	              dy,
+	              state.GetMickeysPerPixelY(),
+	              mouse_config.dos_driver_move_threshold_y);
+
+	state.SetPreciseMickeyCounterX(precise_counter_x);
+	state.SetPreciseMickeyCounterY(precise_counter_y);
 	state.SetMickeyCounterX(mickey_counter_x);
 	state.SetMickeyCounterY(mickey_counter_y);
 }
@@ -1329,8 +1346,8 @@ static uint8_t move_cursor()
 	const auto old_pos_x = get_pos_x();
 	const auto old_pos_y = get_pos_y();
 
-	const auto old_mickey_x = static_cast<int16_t>(state.GetMickeyCounterX());
-	const auto old_mickey_y = static_cast<int16_t>(state.GetMickeyCounterY());
+	const auto old_mickey_x = state.GetMickeyCounterX();
+	const auto old_mickey_y = state.GetMickeyCounterY();
 
 	if (use_relative) {
 		move_cursor_captured(MOUSE_ClampRelativeMovement(pending.x_rel),
@@ -1796,11 +1813,10 @@ static Bitu int33_handler()
 		[[fallthrough]];
 	case 0x0b:
 		// MS MOUSE v1.0+ - read motion data
-		reg_cx = mickey_counter_to_reg16(state.GetMickeyCounterX());
-		reg_dx = mickey_counter_to_reg16(state.GetMickeyCounterY());
-		// TODO: We might be losing partial mickeys, to be investigated
-		state.SetMickeyCounterX(0.0f);
-		state.SetMickeyCounterY(0.0f);
+		reg_cx = static_cast<uint16_t>(state.GetMickeyCounterX());
+		reg_dx = static_cast<uint16_t>(state.GetMickeyCounterY());
+		state.SetMickeyCounterX(0);
+		state.SetMickeyCounterY(0);
 		break;
 	case 0x0c:
 		// MS MOUSE v1.0+ - define user callback parameters
@@ -2419,8 +2435,8 @@ void MOUSEDOS_DoCallback(const uint8_t mask)
 	reg_bh = wheel_moved ? get_reset_wheel_8bit() : 0;
 	reg_cx = get_pos_x();
 	reg_dx = get_pos_y();
-	reg_si = mickey_counter_to_reg16(state.GetMickeyCounterX());
-	reg_di = mickey_counter_to_reg16(state.GetMickeyCounterY());
+	reg_si = static_cast<uint16_t>(state.GetMickeyCounterX());
+	reg_di = static_cast<uint16_t>(state.GetMickeyCounterY());
 
 	CPU_Push16(RealSegment(user_callback));
 	CPU_Push16(RealOffset(user_callback));

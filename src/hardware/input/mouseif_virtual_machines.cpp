@@ -61,7 +61,7 @@ static uint16_t scaled_y = 0x7fff; // 0x7fff is a center position
 // Multiply scale by 0.02f to put acceleration_vmm in a reasonable
 // range, similar to sensitivity_dos or sensitivity_vmm)
 constexpr float acceleration_multiplier = 0.02f;
-static MouseSpeedCalculator speed_xy(acceleration_multiplier *mouse_predefined.acceleration_vmm);
+static MouseSpeedCalculator speed_xy(acceleration_multiplier * Mouse::AccelerationVmm);
 
 // ***************************************************************************
 // Internal helper routines
