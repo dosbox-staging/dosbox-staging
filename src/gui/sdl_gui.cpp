@@ -1661,12 +1661,8 @@ static void set_sdl_hints()
 #endif
 
 #if defined(WIN32)
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
-		LOG_WARNING("SDL: Error setting DPI awareness flag");
-	}
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE) {
-		LOG_WARNING("SDL: Error setting DPI scaling flag");
-	}
+	SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
+	SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1");
 #endif
 
 	// Seamless mouse integration feels more 'seamless' if mouse

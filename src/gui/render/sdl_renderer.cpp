@@ -24,9 +24,7 @@ SdlRenderer::SdlRenderer(const int x, const int y, const int width,
 	auto flags = sdl_window_flags | OpenGlDriverCrashWorkaround(render_driver);
 
 #ifdef MACOSX
-	if (!SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "srgb")) {
-		LOG_WARNING("SDL: Error setting sRGB color space");
-	}
+	SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "srgb");
 #endif
 
 	window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
@@ -95,16 +93,8 @@ uint32_t SdlRenderer::OpenGlDriverCrashWorkaround(const std::string_view render_
 
 bool SdlRenderer::InitRenderer(const std::string& render_driver)
 {
-	if (render_driver != "auto" &&
-	    (SDL_SetHint(SDL_HINT_RENDER_DRIVER, render_driver.c_str()) == SDL_FALSE)) {
-
-		// TODO convert to notification?
-		LOG_WARNING(
-		        "SDL: Error setting '%s' SDL render driver; "
-		        "falling back to automatic selection",
-		        render_driver.c_str());
-
-		set_section_property_value("sdl", "texture_renderer", "auto");
+	if (render_driver != "auto") {
+	    SDL_SetHint(SDL_HINT_RENDER_DRIVER, render_driver.c_str());
 	}
 
 	constexpr uint32_t Flags = 0;

@@ -97,9 +97,7 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	flags |= SDL_WINDOW_OPENGL;
 
 #ifdef MACOSX
-	if (!SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "displayp3")) {
-		LOG_WARNING("SDL: Error setting Display P3 color space");
-	}
+	SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "displayp3");
 #endif
 
 	return SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
