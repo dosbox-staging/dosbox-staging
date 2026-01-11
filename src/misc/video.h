@@ -291,4 +291,39 @@ struct ImageInfo {
 	}
 };
 
+// The start of staging host memory areas used for uploading textures to the
+// GPU memory should start at 64K boundaries for the best performance.
+//
+// 64K is the best and safest alignment for all current hardware because:
+//
+// - Direct3D 12 and Metal mandate 256-byte alignment (that's a hard
+//   requirement, so SDL must repack misaligned data).
+//
+// - Intel shared memory GPUs can benefit a lot from 4K (4096 byte) alignment
+//   as the drivers can utilise "zero copy" mode when alignment requirements are
+//   met.
+//
+// - AMD & Intel on Linux can require the surprisingly large 64K alignment
+//   with some Vulkan drivers.
+//
+// Generally, 64K alignment is the "best safe baseline" which works correctly
+// and optimally on all OSes and GPUs without complicating matters with
+// detecting the recommended alignment via graphics API calls and dynamic
+// alignment at runtime. That approach might be necessary when dealing with
+// large numbers of very small textures where 64K alignment would be too
+// wasteful. Luckily, we're only dealing with a small handful of texture
+// staging areas, and all are on the larger side.
+//
+constexpr auto TextureDataPlacementAlignment = 65536;
+
+// Similarly to the above, the row pitch of the pixel data should be a
+// multiple of 256 bytes for optimal performance. Modern graphics APIs mandate
+// this (Direct3D 12, Metal, Vulkan), and even drivers of legacy APIs (such as
+// OpenGL or Direct3D 11) might need to realign the data if the GPU driver
+// imposes strict aligment requirements. Even if unaligned transfers would
+// technically work, performance would suffer (similar to unaligned SIMD
+// memory access).
+//
+constexpr auto TextureDataPitchAlignment = 256;
+
 #endif // DOSBOX_VIDEO_H
