@@ -100,7 +100,7 @@ struct Render {
 		int out_pitch      = 0;
 		uint8_t* out_write = nullptr;
 
-		int yscale = 0;
+		int y_scale = 0;
 	} scale = {};
 
 	uint8_t* dest  = nullptr;
