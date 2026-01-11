@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "dos/dos.h"
+#include "dos/drive_local.h"
 #include "dosbox.h"
 #include "misc/ansi_code_markup.h"
 #include "misc/notifications.h"
@@ -416,9 +417,10 @@ struct CommandSettings {
 	int root_entries        = DefaultRootEntries;
 	int fat_copies          = 2;
 
-	bool force     = false;
-	bool no_format = false;
-	bool use_chs   = false;
+	bool force      = false;
+	bool no_format  = false;
+	bool use_chs    = false;
+	bool use_dos_fs = false;
 };
 
 using ParseResult = std::variant<ErrorType, CommandSettings>;
@@ -474,31 +476,88 @@ std_fs::path resolve_path(const std::string& input_path)
 	return std_fs::path(input_path);
 }
 
-// Prompt user for Confirmation (Reads from emulated STDIN)
-bool ask_confirmation(Program* program, const std::string& path)
+// Resolves a DOS path to a Host path, ensuring the target is a mounted local
+// directory.
+// Returns a pair: { pointer to the localDrive, resolved host path }
+// If failure, pointer is null.
+std::pair<std::shared_ptr<localDrive>, std_fs::path> resolve_dos_target(
+        const std::string& input_dos_path)
 {
-	program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CONFIRM"), path.c_str());
+	// Resolve to absolute DOS path (e.g., C:\MYDIR\FILE.IMG)
+	char abs_dos_path[DOS_PATHLENGTH];
+	uint8_t drive_idx;
+	if (!DOS_MakeName(input_dos_path.c_str(), abs_dos_path, &drive_idx)) {
+		notify_warning("SHELL_CMD_IMGMAKE_INVALID_PATH",
+		               input_dos_path.c_str());
+		return {nullptr, {}};
+	}
+
+	// Check if drive is valid
+	if (!Drives[drive_idx]) {
+		notify_warning("SHELL_CMD_IMGMAKE_INVALID_DRIVE");
+		return {nullptr, {}};
+	}
+
+	// Check if drive is a local directory mount
+	auto local_drive = std::dynamic_pointer_cast<localDrive>(Drives[drive_idx]);
+	if (!local_drive) {
+		notify_warning("SHELL_CMD_IMGMAKE_NOT_LOCAL_DRIVE");
+		return {nullptr, {}};
+	}
+
+	// Resolve to Host Path
+	// We strip the drive letter (e.g. "C:") by finding the colon.
+	const char* path_part = strchr(abs_dos_path, ':');
+
+	if (path_part) {
+		// Skip the colon.
+		// This handles "C:\FILE" -> "\FILE" and "C:/FILE" -> "/FILE"
+		path_part++;
+	} else {
+		// Fallback if no colon found (unlikely for absolute DOS path)
+		path_part = abs_dos_path;
+	}
+
+	// MapDosToHostFilename concatenates the drive's BaseDir with path_part.
+	std::string host_path_str = local_drive->MapDosToHostFilename(path_part);
+
+	return {local_drive, std_fs::path(host_path_str)};
+}
+
+// Prompt user for Confirmation (Reads from emulated STDIN)
+bool ask_confirmation(Program* program, const std::string& path,
+                      bool is_dos_fs = false, const std::string& dos_path = "")
+{
+	if (is_dos_fs) {
+		program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CONFIRM_DOS"),
+		                  dos_path.c_str(),
+		                  path.c_str());
+	} else {
+		program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CONFIRM_HOST"),
+		                  path.c_str());
+	}
 
 	while (true) {
-		uint8_t c  = 0;
-		uint16_t n = 1;
+		uint8_t response = 0;
+		uint16_t length  = 1;
 		// Read from STDIN (Handle 0)
-		if (!DOS_ReadFile(0, &c, &n)) {
+		if (!DOS_ReadFile(0, &response, &length)) {
 			return false;
 		}
-		if (n == 0) {
+		if (length == 0) {
 			return false;
 		}
 
 		// Ignore whitespace/newlines
-		if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+		if (response == ' ' || response == '\t' || response == '\r' ||
+		    response == '\n') {
 			continue;
 		}
 
-		if (c == 'y' || c == 'Y') {
+		if (response == 'y' || response == 'Y') {
 			return true;
 		}
-		if (c == 'n' || c == 'N') {
+		if (response == 'n' || response == 'N') {
 			program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_ABORTED"));
 			return false;
 		}
@@ -597,6 +656,9 @@ ParseResult parse_args(const std::vector<std::string>& args)
 
 		} else if (arg == "-noformat") {
 			settings.no_format = true;
+
+		} else if (arg == "-writetodos") {
+			settings.use_dos_fs = true;
 
 		} else {
 			return ErrorType::UnknownArgument;
@@ -1250,43 +1312,77 @@ void write_root_dir(const CommandSettings& settings, ImageCreationContext& ctx)
 bool execute(Program* program, CommandSettings& settings)
 {
 	ImageCreationContext ctx;
+	std_fs::path full_host_path;
+	std::string display_path;
+	std::shared_ptr<localDrive> dos_drive = nullptr;
+
+	// Don't allow users to create disk images in secure mode.
+	if (control->SecureMode()) {
+		program->WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
+		return false;
+	}
 
 	if (!compute_geometry(settings, ctx)) {
 		return false;
 	}
 
-	// Resolve full path for display
-	std::error_code ec;
-	auto full_path = std_fs::absolute(settings.filename, ec);
+	if (settings.use_dos_fs) {
+		// Resolve DOS path to Host path and get the drive pointer
+		auto result    = resolve_dos_target(settings.filename.string());
+		dos_drive      = result.first;
+		full_host_path = result.second;
 
-	// Fallback to relative path if absolute resolution fails for whatever
-	// reason
-	if (ec) {
-		full_path = settings.filename;
+		if (!dos_drive) {
+			return false;
+		}
+
+		// Update the filename setting to the resolved host path so
+		// open_and_expand works
+		display_path      = settings.filename.string();
+		settings.filename = full_host_path;
+	} else {
+		// Resolve Host path (handle ~ expansion, etc.)
+		settings.filename = resolve_path(settings.filename.string());
+		std::error_code ec;
+		full_host_path = std_fs::absolute(settings.filename, ec);
+		// Fallback to relative path if absolute resolution fails for
+		// whatever reason
+		if (ec) {
+			full_host_path = settings.filename;
+		}
+		display_path = full_host_path.string();
 	}
 
 	// Confirmation prompt
-	if (!ask_confirmation(program, full_path.string())) {
+	if (!ask_confirmation(program,
+	                      full_host_path.string(),
+	                      settings.use_dos_fs,
+	                      display_path)) {
 		return true;
 	}
 
-	if (!open_and_expand_file(settings, ctx)) {
-		return false;
-	}
-	FilePtr fs_guard(ctx.fs);
+	{
+		if (!open_and_expand_file(settings, ctx)) {
+			return false;
+		}
+		FilePtr fs_guard(ctx.fs);
 
-	// Only write filesystem structures if not in no-format mode
-	if (!settings.no_format) {
+		// Only write filesystem structures if not in no-format mode
+		if (!settings.no_format) {
 
-		determine_fat_type(settings, ctx);
-		write_mbr(ctx);
-		write_boot_sector(settings, ctx);
-		write_fats(settings, ctx);
-		write_root_dir(settings, ctx);
+			determine_fat_type(settings, ctx);
+			write_mbr(ctx);
+			write_boot_sector(settings, ctx);
+			write_fats(settings, ctx);
+			write_root_dir(settings, ctx);
+		}
+		// fs_guard goes out of scope here, closing the file.
+		// This is important so the OS flushes changes before we tell
+		// DOSBox to rescan.
 	}
 
 	program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CREATED"),
-	                  full_path.string().c_str(),
+	                  display_path.c_str(),
 	                  ctx.geometry.cylinders,
 	                  ctx.geometry.heads,
 	                  ctx.geometry.sectors);
@@ -1296,6 +1392,11 @@ bool execute(Program* program, CommandSettings& settings)
 		                  (ctx.fat_bits == 12)   ? "12"
 		                  : (ctx.fat_bits == 16) ? "16"
 		                                         : "32");
+	}
+
+	// Refresh DOSBox directory cache if we wrote to a mounted DOS drive
+	if (dos_drive) {
+		dos_drive->EmptyCache();
 	}
 
 	return true;
@@ -1353,16 +1454,20 @@ void IMGMAKE::AddMessages()
 	        "               Default is determined automatically.\n"
 	        "  [color=white]-noformat[reset]    Do not format the filesystem (raw image).\n"
 	        "  [color=white]-label name[reset]  Volume label.\n"
+	        "  [color=white]-writetodos[reset]  Write image to the emulated DOS filesystem\n"
+	        "               instead of the Host filesystem.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]imgmake[reset] [color=light-cyan]floppy.img[reset] -t fd_1440kb\n"
 	        "  [color=light-green]imgmake[reset] [color=light-cyan]hdd.img[reset] -t hd -size 500\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - The image file will be created in the current working directory, or\n"
-	        "    the absolute path if specified.\n"
+	        "  - By default, the image file will be created in the current working\n"
+	        "    directory, or the absolute path if specified.\n"
 	        "  - You can change the current working directory via the [color=white]--working-dir[reset]\n"
-	        "    dosbox parameter.\n");
+	        "    dosbox parameter.\n"
+	        "  - When using the [color=white]-writetodos[reset] option, ensure the target path is a mounted\n"
+	        "    local directory (not inside another disk image).\n");
 
 	MSG_Add("SHELL_CMD_IMGMAKE_MISSING_SIZE",
 	        "You must specify -size or -chs for custom hard disks.");
@@ -1379,8 +1484,16 @@ void IMGMAKE::AddMessages()
 	        "Created [color=light-cyan]%s[reset] [CHS: %u, %u, %u]");
 	MSG_Add("SHELL_CMD_IMGMAKE_FORMATTED",
 	        "\nFormatted as [color=light-cyan]FAT%s[reset]");
-	MSG_Add("SHELL_CMD_IMGMAKE_CONFIRM",
-	        "Image will be created at:\n  [color=light-cyan]%s[reset]\n\n"
+	MSG_Add("SHELL_CMD_IMGMAKE_CONFIRM_HOST",
+	        "Image will be created on the [color=light-green]HOST[reset] filesystem at:\n  [color=light-cyan]%s[reset]\n\n"
+	        "Proceed? (Y/N)\n");
+	MSG_Add("SHELL_CMD_IMGMAKE_CONFIRM_DOS",
+	        "Image will be created on the [color=light-green]DOS[reset] filesystem at:\n  [color=light-cyan]%s[reset]\n"
+	        "  (Mapped to Host: %s)\n\n"
 	        "Proceed? (Y/N)\n");
 	MSG_Add("SHELL_CMD_IMGMAKE_ABORTED", "\nOperation aborted.");
+	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_PATH", "Invalid DOS path: %s");
+	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_DRIVE", "Target drive is invalid.");
+	MSG_Add("SHELL_CMD_IMGMAKE_NOT_LOCAL_DRIVE",
+	        "Cannot create image inside another disk image.\nTarget must be a mounted local directory.");
 }
