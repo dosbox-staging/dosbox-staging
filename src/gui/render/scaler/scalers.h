@@ -9,17 +9,11 @@
 
 #include "misc/video.h"
 
-// Allow double-width and double-height scaling for low resolution modes
-#define SCALER_MAX_MUL_WIDTH  2
-#define SCALER_MAX_MUL_HEIGHT 2
-
 // The additional 30 pixels are for some tweaked text modes (e.g., Q200x25x8
 // used by Necromancer's DOS Navigator).
 constexpr int ScalerMaxWidth  = 1600 + 30;
 
 constexpr int ScalerMaxHeight = 1200;
-
-#define SCALER_BLOCKSIZE 16
 
 extern int scaler_changed_line_index;
 extern int scaler_changed_lines[];
