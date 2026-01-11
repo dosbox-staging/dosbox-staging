@@ -21,13 +21,6 @@ constexpr int ScalerMaxHeight = 1200;
 
 #define SCALER_BLOCKSIZE 16
 
-enum ScalerMode : uint8_t {
-	scalerMode8,  // 0
-	scalerMode15, // 1
-	scalerMode16, // 2
-	scalerMode32, // 3
-};
-
 extern int scaler_changed_line_index;
 extern int scaler_changed_lines[];
 

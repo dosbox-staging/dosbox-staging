@@ -1,4 +1,5 @@
-// SPDX-FileCopyrightText:  2019-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2019-2026 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_RENDER_H
@@ -83,8 +84,6 @@ struct Render {
 	double fps = 0;
 
 	struct {
-		ScalerMode in_mode = {};
-
 		bool clear_cache = false;
 
 		ScalerLineHandler line_handler         = nullptr;
