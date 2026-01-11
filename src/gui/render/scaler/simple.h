@@ -74,7 +74,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 		}
 	}
 
-	Bitu scale_lines = render.scale.yscale;
+	Bitu scale_lines = render.scale.y_scale;
 	if (scale_lines - SCALERHEIGHT && hadChange) {
 
 		BituMove(render.scale.out_write + render.scale.out_pitch * SCALERHEIGHT,
