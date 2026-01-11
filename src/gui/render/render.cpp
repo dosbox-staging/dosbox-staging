@@ -239,6 +239,37 @@ static void halt_render()
 	render.active             = false;
 }
 
+static void handle_capture_frame()
+{
+	bool double_width  = false;
+	bool double_height = false;
+
+	if (render.src.double_width != render.src.double_height) {
+		if (render.src.double_width) {
+			double_width = true;
+		}
+		if (render.src.double_height) {
+			double_height = true;
+		}
+	}
+
+	RenderedImage image = {};
+
+	image.params               = render.src;
+	image.params.double_width  = double_width;
+	image.params.double_height = double_height;
+	image.pitch                = render.scale.cache_pitch;
+	image.image_data           = (uint8_t*)&scaler_source_cache;
+	image.palette              = render.palette.rgb;
+
+	const auto frames_per_second = static_cast<float>(render.fps);
+
+	CAPTURE_AddFrame(image, frames_per_second);
+}
+
+
+
+
 void RENDER_EndUpdate([[maybe_unused]] bool abort)
 {
 	if (!render.render_in_progress) {
@@ -248,30 +279,7 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 	RENDER_DrawLine = empty_line_handler;
 
 	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
-		bool double_width  = false;
-		bool double_height = false;
-
-		if (render.src.double_width != render.src.double_height) {
-			if (render.src.double_width) {
-				double_width = true;
-			}
-			if (render.src.double_height) {
-				double_height = true;
-			}
-		}
-
-		RenderedImage image = {};
-
-		image.params               = render.src;
-		image.params.double_width  = double_width;
-		image.params.double_height = double_height;
-		image.pitch                = render.scale.cache_pitch;
-		image.image_data           = (uint8_t*)&scaler_source_cache;
-		image.palette              = render.palette.rgb;
-
-		const auto frames_per_second = static_cast<float>(render.fps);
-
-		CAPTURE_AddFrame(image, frames_per_second);
+		handle_capture_frame();
 	}
 
 	GFX_EndUpdate();
