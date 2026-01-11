@@ -2,9 +2,6 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#define PSIZE      4
-#define PTYPE      uint32_t
-
 #if SBPP == 8 || SBPP == 9
 #define PMAKE(_VAL) render.palette.lut[_VAL]
 #define SRCTYPE     uint8_t
@@ -117,7 +114,5 @@
 #undef SCALERHEIGHT
 #undef SCALERFUNC
 
-#undef PSIZE
-#undef PTYPE
 #undef PMAKE
 #undef SRCTYPE
