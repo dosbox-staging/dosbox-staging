@@ -21,7 +21,7 @@ ScalerSourceCache scaler_source_cache;
 #define _conc3(A, B, C) A##B##C
 #define conc2d(A, B)    _conc3(A, _, B)
 
-static inline void scaler_add_lines(Bitu changed, Bitu count)
+static inline void scaler_add_lines(int changed, int count)
 {
 	if ((scaler_changed_line_index & 1) == changed) {
 		scaler_changed_lines[scaler_changed_line_index] += count;
