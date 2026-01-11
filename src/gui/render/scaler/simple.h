@@ -21,7 +21,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 
 	render.scale.cache_read += render.scale.cache_pitch;
 
-	PTYPE* line0 = (PTYPE*)(render.scale.out_write);
+	uint32_t* line0 = (uint32_t*)(render.scale.out_write);
 #if (SBPP == 9)
 	for (int x = render.src.width; x > 0;) {
 		if (std::memcmp(src, cache, sizeof(uint32_t)) == 0 &&
@@ -52,7 +52,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 #endif
 		} else {
 #if (SCALERHEIGHT > 1)
-			PTYPE* line1 = (PTYPE*)(((uint8_t*)line0) +
+			uint32_t* line1 = (uint32_t*)(((uint8_t*)line0) +
 			                        render.scale.out_pitch);
 #endif
 			had_change = 1;
@@ -63,7 +63,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 				src++;
 				cache++;
 
-				const PTYPE P = PMAKE(S);
+				const uint32_t P = PMAKE(S);
 				SCALERFUNC;
 
 				line0 += SCALERWIDTH;
@@ -80,7 +80,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 		BituMove(render.scale.out_write + render.scale.out_pitch * SCALERHEIGHT,
 		         render.scale.out_write +
 		                 render.scale.out_pitch * (SCALERHEIGHT - 1),
-		         render.src.width * SCALERWIDTH * PSIZE);
+		         render.src.width * SCALERWIDTH * sizeof(uint32_t));
 	}
 
 	ScalerAddLines(had_change, scale_lines);
