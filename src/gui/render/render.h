@@ -90,7 +90,7 @@ struct Render {
 		ScalerLineHandler line_handler         = nullptr;
 		ScalerLineHandler line_palette_handler = nullptr;
 
-		uint32_t cache_pitch = 0;
+		int cache_pitch      = 0;
 		uint8_t* cache_read  = nullptr;
 
 		// Ensure we're paying no unaligned read penalties when
