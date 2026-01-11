@@ -83,5 +83,5 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 		         render.src.width * SCALERWIDTH * sizeof(uint32_t));
 	}
 
-	ScalerAddLines(had_change, scale_lines);
+	scaler_add_lines(had_change, scale_lines);
 }

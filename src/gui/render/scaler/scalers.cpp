@@ -33,7 +33,7 @@ static inline void BituMove(void* _dst, const void* _src, Bitu size)
 	}
 }
 
-static inline void ScalerAddLines(Bitu changed, Bitu count)
+static inline void scaler_add_lines(Bitu changed, Bitu count)
 {
 	if ((scaler_changed_line_index & 1) == changed) {
 		scaler_changed_lines[scaler_changed_line_index] += count;
