@@ -505,6 +505,12 @@ std::pair<std::shared_ptr<localDrive>, std_fs::path> resolve_dos_target(
 		return {nullptr, {}};
 	}
 
+	// Don't allow image creation on read-only drives
+	if (local_drive->IsReadOnly()) {
+		notify_warning("SHELL_CMD_IMGMAKE_DRIVE_READONLY");
+		return {nullptr, {}};
+	}
+
 	// Resolve to Host Path
 	// We strip the drive letter (e.g. "C:") by finding the colon.
 	const char* path_part = strchr(abs_dos_path, ':');
@@ -1498,6 +1504,7 @@ void IMGMAKE::AddMessages()
 	MSG_Add("SHELL_CMD_IMGMAKE_ABORTED", "\nOperation aborted.");
 	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_PATH", "Invalid DOS path: %s");
 	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_DRIVE", "Target drive is invalid.");
+	MSG_Add("SHELL_CMD_IMGMAKE_DRIVE_READONLY", "Target drive is read-only.");
 	MSG_Add("SHELL_CMD_IMGMAKE_NOT_LOCAL_DRIVE",
 	        "Cannot create image inside another disk image.\nTarget must be a mounted local directory.");
 }
