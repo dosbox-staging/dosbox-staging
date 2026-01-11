@@ -82,6 +82,7 @@ struct Render {
 	// Frames per second
 	double fps = 0;
 
+
 	struct {
 		ScalerMode in_mode = {};
 
@@ -93,7 +94,11 @@ struct Render {
 		uint32_t cache_pitch = 0;
 		uint8_t* cache_read  = nullptr;
 
-		alignas(16) std::vector<uint8_t> out_buf = {};
+		// Ensure we're paying no unaligned read penalties when
+		// reading/writing the pixel data one uint64_t at a time.
+		//
+		alignas(uint64_t) std::array<uint8_t, ScalerMaxWidth * ScalerMaxHeight *
+		                                              sizeof(uint32_t)> out_buf = {};
 
 		int out_width      = 0;
 		int out_height     = 0;

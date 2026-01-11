@@ -80,6 +80,18 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 	}
 }
 
+static bool maybe_gfx_start_update()
+{
+	if (!GFX_StartUpdate(render.dest, render.dest_pitch, render.dest_num_bytes)) {
+		return false;
+	}
+
+	render.scale.out_write = render.scale.out_buf.data();
+	render.scale.out_pitch = render.dest_pitch;
+
+	return true;
+}
+
 static void empty_line_handler(const void*) {}
 
 static void start_line_handler(const void* src_line_data)
@@ -101,13 +113,10 @@ static void start_line_handler(const void* src_line_data)
 				// Otherwise, it will keep displaying the same
 				// frame at present time without doing a buffer
 				// swap followed by a texture upload to the GPU.
-				if (!GFX_StartUpdate(render.dest, render.dest_pitch, render.dest_num_bytes)) {
+				if (!maybe_gfx_start_update()) {
 					RENDER_DrawLine = empty_line_handler;
 					return;
 				}
-
-				render.scale.out_write = render.scale.out_buf.data();
-				render.scale.out_pitch = render.dest_pitch;
 
 				render.updating_frame = true;
 
@@ -186,22 +195,16 @@ bool RENDER_StartUpdate()
 	render.scale.out_height = render.src.height *
 	                          (render.src.double_height ? 2 : 1);
 
-	constexpr auto NumBytesPerPixel = 4;
-	render.scale.out_buf.resize(render.scale.out_width *
-	                            render.scale.out_height * NumBytesPerPixel);
-
 	// Clearing the cache will first process the line to make sure it's
 	// never the same.
+	//
 	if (render.scale.clear_cache) {
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.dest, render.dest_pitch, render.dest_num_bytes)) {
+		if (!maybe_gfx_start_update()) {
 			return false;
 		}
-		render.scale.out_write = render.scale.out_buf.data();
-		render.scale.out_pitch = render.dest_pitch;
-		render.updating_frame  = true;
 
 		RENDER_DrawLine = clear_cache_handler;
 
@@ -217,11 +220,9 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.dest, render.dest_pitch, render.dest_num_bytes)) {
+		if (!maybe_gfx_start_update()) {
 			return false;
 		}
-		render.scale.out_write = render.scale.out_buf.data();
-		render.scale.out_pitch = render.dest_pitch;
 
 		RENDER_DrawLine = render.scale.line_palette_handler;
 
@@ -301,7 +302,7 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 		//
 		std::memcpy(render.dest,
 		            render.scale.out_buf.data(),
-		            render.scale.out_buf.size());
+		            render.dest_num_bytes);
 	}
 
 	GFX_EndUpdate();
