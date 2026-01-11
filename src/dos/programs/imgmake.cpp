@@ -1458,7 +1458,7 @@ void IMGMAKE::AddMessages()
 	        "  [color=white]-label name[reset]  Volume label.\n"
 	        "  [color=white]-writetodos[reset]  Write image to the emulated DOS filesystem\n"
 	        "               instead of the Host filesystem.\n"
-	        "  [color=white]-d[reset]           Same as --writetodos\n"
+	        "  [color=white]-d[reset]           Same as -writetodos\n"
 
 	        "\n"
 	        "Examples:\n"
