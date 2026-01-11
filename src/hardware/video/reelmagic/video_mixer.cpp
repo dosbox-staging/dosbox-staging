@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
-// SPDX-FileCopyrightText:  2022-2022  Jon Dennis
+// SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2022-2022 Jon Dennis
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 //
@@ -16,7 +16,7 @@
 #include <string>
 
 #include "config/setup.h"
-#include "gui/render/scaler/scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
+#include "gui/render/scaler/scalers.h"
 #include "misc/video.h"
 #include "utils/checks.h"
 #include "utils/rgb565.h"
@@ -178,7 +178,7 @@ static ImageInfo _vgaImageInfo    = {};
 static double _vgaFramesPerSecond = 0.0;
 
 // state captured from current/active MPEG player
-static PlayerPicturePixel _mpegPictureBuffer[SCALER_MAXWIDTH * SCALER_MAXHEIGHT];
+static PlayerPicturePixel _mpegPictureBuffer[ScalerMaxWidth * ScalerMaxHeight];
 static PlayerPicturePixel* _mpegPictureBufferPtr = _mpegPictureBuffer;
 
 static uint32_t _mpegPictureWidth  = 0;
@@ -196,7 +196,7 @@ ReelMagic_ScalerLineHandler ReelMagic_RENDER_DrawLine = RMR_DrawLine_Passthrough
 static ReelMagic_VideoMixerMPEGProvider* _requestedMpegProvider = nullptr;
 static ReelMagic_VideoMixerMPEGProvider* _activeMpegProvider    = nullptr;
 
-static RenderOutputPixel _finalMixedRenderLineBuffer[SCALER_MAXWIDTH];
+static RenderOutputPixel _finalMixedRenderLineBuffer[ScalerMaxWidth];
 static Bitu _currentRenderLineNumber = 0;
 static uint32_t _renderWidth         = 0;
 static uint32_t _renderHeight        = 0;
@@ -668,10 +668,9 @@ void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider* const
 	assert(provider);
 	// Can our MPEG picture buffer accomodate the provider's picture size?
 	const auto dimensions = provider->GetAttrs().PictureSize;
-	if (dimensions.Width > SCALER_MAXWIDTH ||
-	    dimensions.Height > SCALER_MAXHEIGHT) {
-		LOG(LOG_REELMAGIC, LOG_ERROR)
-		("Video Mixing Buffers Too Small for MPEG Video Size. Reject Player Push");
+	if (dimensions.Width > ScalerMaxWidth || dimensions.Height > ScalerMaxHeight) {
+		LOG(LOG_REELMAGIC, LOG_ERROR)(
+		        "Video Mixing Buffers Too Small for MPEG Video Size. Reject Player Push");
 		return;
 	}
 
