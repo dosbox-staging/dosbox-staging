@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -100,11 +100,11 @@ typedef uint8_t* (*VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
 
-constexpr auto max_pixel_bytes = sizeof(uint32_t);
-constexpr auto max_line_bytes  = SCALER_MAXWIDTH * max_pixel_bytes;
+constexpr auto MaxPixelBytes = sizeof(uint32_t);
+constexpr auto MaxRowBytes   = SCALER_MAXWIDTH * MaxPixelBytes;
 
 // The line buffer can be written in units up to RGB888 pixels (32-bit) size
-alignas(uint32_t) static std::array<uint8_t, max_line_bytes> templine_buffer;
+alignas(uint32_t) static std::array<uint8_t, MaxRowBytes> templine_buffer;
 static auto TempLine = templine_buffer.data();
 
 static uint8_t* VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line)
