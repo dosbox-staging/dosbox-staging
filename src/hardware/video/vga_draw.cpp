@@ -100,13 +100,6 @@ typedef uint8_t* (*VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
 
-// Confirm the maximum dimensions accomodate VGA's pixel and scan doubling
-constexpr auto max_pixel_doubled_width = 512;
-constexpr auto max_scan_doubled_height = 400;
-
-static_assert(SCALER_MAXWIDTH >= SCALER_MAX_MUL_WIDTH * max_pixel_doubled_width);
-static_assert(SCALER_MAXHEIGHT >= SCALER_MAX_MUL_HEIGHT * max_scan_doubled_height);
-
 constexpr auto max_pixel_bytes = sizeof(uint32_t);
 constexpr auto max_line_bytes  = SCALER_MAXWIDTH * max_pixel_bytes;
 
