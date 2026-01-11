@@ -3319,13 +3319,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			        ScalerMaxWidth,
 			        ScalerMaxHeight);
 
-			vga.draw.image_info.width =
-			        std::min(check_cast<uint16_t>(image_info.width),
-			                 ScalerMaxWidth);
+			vga.draw.image_info.width = std::min(image_info.width,
+			                                     ScalerMaxWidth);
 
-			vga.draw.image_info.height =
-			        std::min(check_cast<uint16_t>(image_info.height),
-			                 ScalerMaxHeight);
+			vga.draw.image_info.height = std::min(image_info.height,
+			                                      ScalerMaxHeight);
 		}
 
 		vga.draw.lines_scaled = image_info.forced_single_scan ? 2 : 1;
