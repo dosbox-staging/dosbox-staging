@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <optional>
 #include <thread>
 
 #ifndef ASIO_STANDALONE
@@ -21,6 +22,7 @@ static IPaddress ipxServerIp; // IPAddress for server's listening port
 
 static asio::io_context ipx_io;
 static std::unique_ptr<asio::ip::udp::socket> ipx_server_socket = nullptr;
+static std::optional<asio::executor_work_guard<asio::io_context::executor_type>> ipx_work_guard;
 
 static packetBuffer connBuffer[SOCKETTABLESIZE];
 
@@ -29,6 +31,8 @@ static IPaddress ipconn[SOCKETTABLESIZE]; // Active TCP/IP connection
 
 static std::thread ipx_server_thread;
 static std::atomic_bool ipx_server_running = false;
+
+static void ipx_server_arm_receive();
 
 static asio::ip::udp::endpoint to_endpoint(const IPaddress& addr)
 {
@@ -209,17 +213,54 @@ static void IPX_ServerHandlePacket(const IPaddress& sender_addr, const size_t pa
 	sendIPXPacket(inBuffer, static_cast<int16_t>(packet_len));
 }
 
-void IPX_StopServer() {
-	ipx_server_running = false;
-
-	if (ipx_server_thread.joinable()) {
-		ipx_server_thread.join();
+static void ipx_server_arm_receive()
+{
+	if (!ipx_server_socket) {
+		return;
 	}
+
+	// One outstanding receive at a time, so it's safe to use these statics.
+	static asio::ip::udp::endpoint sender;
+
+	ipx_server_socket->async_receive_from(
+	        asio::buffer(inBuffer, IPXBUFFERSIZE),
+	        sender,
+	        [](const std::error_code& ec, const std::size_t len) {
+		        if (!ipx_server_running) {
+			        return;
+		        }
+		        if (ec) {
+			        // Expected during shutdown
+			        if (ec == asio::error::operation_aborted) {
+				        return;
+			        }
+			        LOG_ERR("IPXSERVER: recv failed: %s",
+			                ec.message().c_str());
+			        ipx_server_arm_receive();
+			        return;
+		        }
+
+		        IPX_ServerHandlePacket(from_endpoint(sender), len);
+		        ipx_server_arm_receive();
+	        });
+}
+
+void IPX_StopServer()
+{
+	ipx_server_running = false;
 
 	if (ipx_server_socket) {
 		std::error_code ec;
+		ipx_server_socket->cancel(ec);
 		ipx_server_socket->close(ec);
 		ipx_server_socket.reset();
+	}
+
+	ipx_work_guard.reset();
+	ipx_io.stop();
+
+	if (ipx_server_thread.joinable()) {
+		ipx_server_thread.join();
 	}
 }
 
@@ -231,6 +272,9 @@ bool IPX_StartServer(uint16_t portnum)
 	Net_SetPort(ipxServerIp, portnum);
 
 	std::error_code ec;
+
+	// If previously stopped, make io_context runnable again.
+	ipx_io.restart();
 	ipx_server_socket = std::make_unique<asio::ip::udp::socket>(ipx_io);
 	ipx_server_socket->open(asio::ip::udp::v4(), ec);
 	if (ec) {
@@ -241,50 +285,18 @@ bool IPX_StartServer(uint16_t portnum)
 	if (ec) {
 		return false;
 	}
-	ipx_server_socket->non_blocking(true, ec);
-	if (ec) {
-		return false;
+	// Async receive blocks efficiently; no non-blocking polling needed.
+
+	for (auto& i : connBuffer) {
+		i.connected = false;
 	}
 
-	        for (auto& i : connBuffer) {
-			i.connected = false;
-		}
+	if (!ipx_server_running) {
+		ipx_server_running = true;
+		ipx_work_guard.emplace(asio::make_work_guard(ipx_io));
+		ipx_server_arm_receive();
+		ipx_server_thread = std::thread([]() { ipx_io.run(); });
+	}
 
-	        if (!ipx_server_running) {
-			ipx_server_running = true;
-		        ipx_server_thread  = std::thread([]() {
-                                while (ipx_server_running) {
-                                        if (!ipx_server_socket) {
-                                                std::this_thread::sleep_for(
-                                                        std::chrono::milliseconds(100));
-                                                continue;
-                                        }
-                                        asio::ip::udp::endpoint sender;
-                                        std::error_code ec;
-                                        const auto len = ipx_server_socket->receive_from(
-                                                asio::buffer(inBuffer, IPXBUFFERSIZE),
-                                                sender,
-                                                0,
-                                                ec);
-                                        if (ec == asio::error::would_block ||
-                                            ec == asio::error::try_again) {
-                                                std::this_thread::sleep_for(
-                                                        std::chrono::milliseconds(10));
-                                                continue;
-                                        }
-                                        if (ec) {
-                                                LOG_ERR("IPXSERVER: recv failed: %s",
-                                                        ec.message().c_str());
-                                                std::this_thread::sleep_for(
-                                                        std::chrono::milliseconds(10));
-                                                continue;
-                                        }
-                                        IPX_ServerHandlePacket(from_endpoint(sender),
-                                                               len);
-                                }
-                        });
-	        }
-	        return true;
-
-	return false;
+	return true;
 }
