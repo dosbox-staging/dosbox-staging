@@ -4,14 +4,6 @@
 
 #include "utils/mem_unaligned.h"
 
-#if SCALER_MAX_MUL_HEIGHT < SCALERHEIGHT
-#error "Scaler goes too high"
-#endif
-
-#if SCALER_MAX_MUL_WIDTH < SCALERWIDTH
-#error "Scaler goes too wide"
-#endif
-
 static void conc2d(SCALERNAME, SBPP)(const void* s)
 {
 	// Clear the complete line marker
