@@ -21,18 +21,6 @@ ScalerSourceCache scaler_source_cache;
 #define _conc3(A, B, C) A##B##C
 #define conc2d(A, B)    _conc3(A, _, B)
 
-static inline void BituMove(void* _dst, const void* _src, Bitu size)
-{
-	auto dst = static_cast<Bitu*>(_dst);
-	auto src = static_cast<const Bitu*>(_src);
-
-	size /= sizeof(Bitu);
-
-	for (Bitu x = 0; x < size; x++) {
-		dst[x] = src[x];
-	}
-}
-
 static inline void scaler_add_lines(Bitu changed, Bitu count)
 {
 	if ((scaler_changed_line_index & 1) == changed) {
