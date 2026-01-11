@@ -15,9 +15,9 @@
 
 // The additional 30 pixels are for some tweaked text modes (e.g., Q200x25x8
 // used by Necromancer's DOS Navigator).
-constexpr uint16_t ScalerMaxWidth  = 1600 + 30;
+constexpr int ScalerMaxWidth  = 1600 + 30;
 
-constexpr uint16_t ScalerMaxHeight = 1200;
+constexpr int ScalerMaxHeight = 1200;
 
 #define SCALER_BLOCKSIZE 16
 
@@ -28,8 +28,8 @@ enum ScalerMode : uint8_t {
 	scalerMode32, // 3
 };
 
-extern Bitu scaler_changed_line_index;
-extern uint16_t scaler_changed_lines[];
+extern int scaler_changed_line_index;
+extern int scaler_changed_lines[];
 
 union ScalerSourceCache {
 	uint32_t b32[ScalerMaxHeight][ScalerMaxWidth];

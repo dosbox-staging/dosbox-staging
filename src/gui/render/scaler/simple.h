@@ -14,8 +14,8 @@
 
 static void conc2d(SCALERNAME, SBPP)(const void* s)
 {
-	/* Clear the complete line marker */
-	Bitu hadChange = 0;
+	// Clear the complete line marker
+	int had_change = 0;
 	auto src       = static_cast<const SRCTYPE*>(s);
 	auto cache     = reinterpret_cast<SRCTYPE*>(render.scale.cache_read);
 
@@ -23,7 +23,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 
 	PTYPE* line0 = (PTYPE*)(render.scale.out_write);
 #if (SBPP == 9)
-	for (Bits x = render.src.width; x > 0;) {
+	for (int x = render.src.width; x > 0;) {
 		if (std::memcmp(src, cache, sizeof(uint32_t)) == 0 &&
 		    (render.palette.modified[src[0]] |
 		     render.palette.modified[src[1]] |
@@ -34,9 +34,9 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 			cache += 4;
 			line0 += 4 * SCALERWIDTH;
 #else
-	constexpr uint8_t address_step = sizeof(Bitu) / sizeof(SRCTYPE);
+	constexpr int address_step = sizeof(int) / sizeof(SRCTYPE);
 
-	for (Bits x = render.src.width; x > 0;) {
+	for (int x = render.src.width; x > 0;) {
 		const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
 		const auto src_val = read_unaligned_size_t(src_ptr);
 
@@ -55,8 +55,8 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 			PTYPE* line1 = (PTYPE*)(((uint8_t*)line0) +
 			                        render.scale.out_pitch);
 #endif
-			hadChange = 1;
-			for (Bitu i = ((x > 32) ? 32 : x); i > 0; i--, x--) {
+			had_change = 1;
+			for (int i = ((x > 32) ? 32 : x); i > 0; i--, x--) {
 				const SRCTYPE S = *src;
 
 				*cache = S;
@@ -74,8 +74,8 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 		}
 	}
 
-	Bitu scale_lines = render.scale.y_scale;
-	if (scale_lines - SCALERHEIGHT && hadChange) {
+	int scale_lines = render.scale.y_scale;
+	if (scale_lines - SCALERHEIGHT && had_change) {
 
 		BituMove(render.scale.out_write + render.scale.out_pitch * SCALERHEIGHT,
 		         render.scale.out_write +
@@ -83,5 +83,5 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 		         render.src.width * SCALERWIDTH * PSIZE);
 	}
 
-	ScalerAddLines(hadChange, scale_lines);
+	ScalerAddLines(had_change, scale_lines);
 }
