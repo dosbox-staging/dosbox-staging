@@ -166,7 +166,7 @@ bool RENDER_StartUpdate()
 		return false;
 	}
 
-	if (render.scale.in_mode == scalerMode8) {
+	if (render.scale.line_palette_handler) {
 		check_palette();
 	}
 
@@ -372,35 +372,30 @@ static void render_reset()
 	case PixelFormat::Indexed8:
 		render.scale.line_handler         = scaler->line_handlers[0];
 		render.scale.line_palette_handler = scaler->line_handlers[5];
-		render.scale.in_mode              = scalerMode8;
 		render.scale.cache_pitch          = render.src.width * 1;
 		break;
 
 	case PixelFormat::RGB555_Packed16:
 		render.scale.line_handler         = scaler->line_handlers[1];
 		render.scale.line_palette_handler = nullptr;
-		render.scale.in_mode              = scalerMode15;
 		render.scale.cache_pitch          = render.src.width * 2;
 		break;
 
 	case PixelFormat::RGB565_Packed16:
 		render.scale.line_handler         = scaler->line_handlers[2];
 		render.scale.line_palette_handler = nullptr;
-		render.scale.in_mode              = scalerMode16;
 		render.scale.cache_pitch          = render.src.width * 2;
 		break;
 
 	case PixelFormat::BGR24_ByteArray:
 		render.scale.line_handler         = scaler->line_handlers[3];
 		render.scale.line_palette_handler = nullptr;
-		render.scale.in_mode              = scalerMode32;
 		render.scale.cache_pitch          = render.src.width * 3;
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
 		render.scale.line_handler         = scaler->line_handlers[4];
 		render.scale.line_palette_handler = nullptr;
-		render.scale.in_mode              = scalerMode32;
 		render.scale.cache_pitch          = render.src.width * 4;
 		break;
 
