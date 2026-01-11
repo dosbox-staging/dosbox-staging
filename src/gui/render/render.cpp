@@ -328,8 +328,8 @@ static void render_reset()
 
 	render.scale.y_scale = scaler->y_scale;
 
-	if ((render_width_px * scaler->x_scale > SCALER_MAXWIDTH) ||
-	    (render.src.height * scaler->y_scale > SCALER_MAXHEIGHT)) {
+	if ((render_width_px * scaler->x_scale > ScalerMaxWidth) ||
+	    (render.src.height * scaler->y_scale > ScalerMaxHeight)) {
 		scaler = &Scale1x;
 	}
 
@@ -448,8 +448,8 @@ void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second)
 	halt_render();
 
 	if (image_info.width == 0 || image_info.height == 0 ||
-	    image_info.width > SCALER_MAXWIDTH ||
-	    image_info.height > SCALER_MAXHEIGHT) {
+	    image_info.width > ScalerMaxWidth ||
+	    image_info.height > ScalerMaxHeight) {
 		return;
 	}
 
