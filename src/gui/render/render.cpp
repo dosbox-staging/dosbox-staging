@@ -125,7 +125,7 @@ static void start_line_handler(const void* src_line_data)
 
 	render.scale.cache_read += render.scale.cache_pitch;
 
-	scaler_changed_lines[0] += render.scale.yscale;
+	scaler_changed_lines[0] += render.scale.y_scale;
 }
 
 static void finish_line_handler(const void* src_line_data)
@@ -326,10 +326,10 @@ static void render_reset()
 		scaler = &Scale1x;
 	}
 
-	render.scale.yscale = scaler->yscale;
+	render.scale.y_scale = scaler->y_scale;
 
-	if ((render_width_px * scaler->xscale > SCALER_MAXWIDTH) ||
-	    (render.src.height * scaler->yscale > SCALER_MAXHEIGHT)) {
+	if ((render_width_px * scaler->x_scale > SCALER_MAXWIDTH) ||
+	    (render.src.height * scaler->y_scale > SCALER_MAXHEIGHT)) {
 		scaler = &Scale1x;
 	}
 
@@ -354,8 +354,8 @@ static void render_reset()
 		break;
 	}
 
-	render_width_px *= scaler->xscale;
-	const auto render_height_px = render.src.height * scaler->yscale;
+	render_width_px *= scaler->x_scale;
+	const auto render_height_px = render.src.height * scaler->y_scale;
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
 

@@ -41,8 +41,8 @@ extern ScalerSourceCache scaler_source_cache;
 typedef void (*ScalerLineHandler)(const void* src);
 
 struct Scaler {
-	uint8_t xscale = 0;
-	uint8_t yscale = 0;
+	int x_scale = 0;
+	int y_scale = 0;
 
 	ScalerLineHandler line_handlers[6] = {};
 };
