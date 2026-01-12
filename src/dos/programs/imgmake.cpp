@@ -440,21 +440,28 @@ static void notify_warning(const std::string& message_name, const char* arg = nu
 	}
 }
 
-// Expand leading ~ to user's home directory
+// Expand leading ~ to user's home directory and strip quotes
 std_fs::path resolve_path(const std::string& input_path)
 {
 	if (input_path.empty()) {
 		return {};
 	}
 
+	std::string path_str = input_path;
+
+	// Strip surrounding double quotes if present.
+	if (path_str.size() >= 2 && path_str.front() == '"' && path_str.back() == '"') {
+		path_str = path_str.substr(1, path_str.size() - 2);
+	}
+
 	// Check if path starts with "~"
-	if (input_path[0] == '~') {
+	if (!path_str.empty() && path_str[0] == '~') {
 		// Only expand if it's just "~", "~/", or "~\" (to allow mixed
 		// separators on Win)
-		bool is_separator = (input_path.length() > 1 &&
-		                     (input_path[1] == '/' || input_path[1] == '\\'));
+		bool is_separator = (path_str.length() > 1 &&
+		                     (path_str[1] == '/' || path_str[1] == '\\'));
 
-		if (input_path.length() == 1 || is_separator) {
+		if (path_str.length() == 1 || is_separator) {
 			// Try HOME (Linux/macOS) then USERPROFILE (Windows)
 			const char* home = std::getenv("HOME");
 			if (!home) {
@@ -464,8 +471,8 @@ std_fs::path resolve_path(const std::string& input_path)
 			if (home) {
 				std::string expanded = home;
 				// Append the rest of the path (skipping the ~)
-				if (input_path.length() > 1) {
-					expanded += input_path.substr(1);
+				if (path_str.length() > 1) {
+					expanded += path_str.substr(1);
 				}
 				return std_fs::path(expanded);
 			}
@@ -473,7 +480,7 @@ std_fs::path resolve_path(const std::string& input_path)
 	}
 
 	// Return original if no tilde or HOME not found
-	return std_fs::path(input_path);
+	return std_fs::path(path_str);
 }
 
 // Resolves a DOS path to a Host path, ensuring the target is a mounted local
