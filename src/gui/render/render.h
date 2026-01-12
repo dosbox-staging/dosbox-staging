@@ -99,8 +99,6 @@ struct Render {
 		int out_height     = 0;
 		int out_pitch      = 0;
 		uint8_t* out_write = nullptr;
-		uint32_t in_line   = 0;
-		uint32_t out_line  = 0;
 
 		int yscale = 0;
 	} scale = {};
