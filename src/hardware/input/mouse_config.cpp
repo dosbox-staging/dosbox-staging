@@ -146,8 +146,17 @@ static void set_dos_driver_mode(const std::string_view mode_str)
 		mouse_config.dos_driver_autoexec = false;
 		mouse_config.dos_driver_no_tsr   = false;
 	} else if (iequals(mode_str, OptionBuiltInDosDriver::On)) {
-		mouse_config.dos_driver_autoexec = true;
-		mouse_config.dos_driver_no_tsr   = false;
+		if (is_machine_tandy() || is_machine_pcjr()) {
+			// The mouse TSR simulation currently does not work
+			// correctly with PCJr or Tandy memory layout - MCB
+			// corruption occurs (TODO: to be fixed).
+			LOG_INFO("MOUSE (DOS): Forced no-TSR mode due to Tandy/PCJr machine type");
+			mouse_config.dos_driver_autoexec = false;
+			mouse_config.dos_driver_no_tsr   = true;
+		} else {
+			mouse_config.dos_driver_autoexec = true;
+			mouse_config.dos_driver_no_tsr   = false;
+		}
 	} else if (iequals(mode_str, OptionBuiltInDosDriver::NoTsr)) {
 		mouse_config.dos_driver_autoexec = false;
 		mouse_config.dos_driver_no_tsr   = true;
