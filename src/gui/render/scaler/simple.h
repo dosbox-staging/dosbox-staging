@@ -30,8 +30,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 			out_line0 += 4 * SCALERWIDTH;
 #else
 
-	constexpr auto MaxSrcPixelSize = sizeof(uint32_t);
-	constexpr auto PixelsPerStep = MaxSrcPixelSize / sizeof(SRCTYPE);
+	constexpr auto PixelsPerStep = sizeof(uint64_t) / sizeof(SRCTYPE);
 
 	for (int x = render.src.width; x > 0;) {
 		const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
@@ -55,12 +54,14 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 #endif
 			had_change = 1;
 
-			for (int i = ((x > 32) ? 32 : x); i > 0; i--, x--) {
+			// If there's a difference, convert up to 32 pixels
+			// before diffing again
+			for (int i = ((x > 32) ? 32 : x); i > 0;) {
 				const SRCTYPE S = *src;
 
 				*cache = S;
-				src++;
-				cache++;
+				++src;
+				++cache;
 
 				const uint32_t P = PMAKE(S);
 				SCALERFUNC;
@@ -69,6 +70,8 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 #if (SCALERHEIGHT > 1)
 				out_line1 += SCALERWIDTH;
 #endif
+				--x;
+				--i;
 			}
 		}
 	}
