@@ -126,9 +126,6 @@ static void start_line_handler(const void* src_line_data)
 	render.scale.cache_read += render.scale.cache_pitch;
 
 	scaler_changed_lines[0] += render.scale.yscale;
-
-	render.scale.in_line++;
-	render.scale.out_line++;
 }
 
 static void finish_line_handler(const void* src_line_data)
@@ -173,8 +170,6 @@ bool RENDER_StartUpdate()
 		check_palette();
 	}
 
-	render.scale.in_line    = 0;
-	render.scale.out_line   = 0;
 	render.scale.cache_read = reinterpret_cast<uint8_t*>(&scaler_source_cache);
 	render.scale.out_write = nullptr;
 	render.scale.out_pitch = 0;
