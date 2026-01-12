@@ -52,7 +52,7 @@ public:
 
 	std::string GetCurrentShaderDescriptorString() override;
 
-	void StartFrame(uint32_t*& pixels_out, int& pitch_out) override;
+	void StartFrame(uint32_t*& pixels_out, int& pitch_out, int& num_bytes) override;
 	void EndFrame() override;
 
 	void PrepareFrame() override;
@@ -169,8 +169,10 @@ private:
 	struct {
 		Shader shader = {};
 
-		GLuint in_texture    = 0;
-		int in_texture_pitch = 0;
+		GLuint in_texture           = 0;
+		int in_texture_pitch_bytes  = 0;
+		int in_texture_pitch_pixels = 0;
+		int in_texture_num_bytes    = 0;
 
 		GLuint out_fbo     = 0;
 		GLuint out_texture = 0;

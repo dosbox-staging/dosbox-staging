@@ -389,19 +389,21 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	constexpr auto BytesPerPixel = 4;
-
 	// Allocate host memory buffers for the texture data. The video card
 	// emulation will write to these buffers, then we'll copy the data to
 	// the texture in GPU memory with `glTexSubImage2D()` before presenting
 	// the frame.
-	const auto framebuf_bytes = static_cast<size_t>(pass1.width) *
-	                            pass1.height * BytesPerPixel;
+	constexpr auto BytesPerPixel = 4;
+
+	const auto pitch_bytes = pass1.width * BytesPerPixel;
+	const auto framebuf_bytes = static_cast<size_t>(pitch_bytes) * pass1.height;
 
 	curr_framebuf.resize(framebuf_bytes);
 	last_framebuf.resize(framebuf_bytes);
 
-	pass1.in_texture_pitch = pass1.width * BytesPerPixel;
+	pass1.in_texture_pitch_bytes  = pitch_bytes;
+	pass1.in_texture_pitch_pixels = pitch_bytes / BytesPerPixel;
+	pass1.in_texture_num_bytes = check_cast<int>(framebuf_bytes);
 }
 
 void OpenGlRenderer::RecreatePass1OutputTexture()
@@ -450,7 +452,7 @@ void OpenGlRenderer::SetPass1OutputTextureFiltering()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_param);
 }
 
-void OpenGlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
+void OpenGlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out, int& num_bytes)
 {
 	assert(!curr_framebuf.empty());
 
@@ -458,8 +460,8 @@ void OpenGlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 	if (pixels_out == nullptr) {
 		return;
 	}
-
-	pitch_out = pass1.in_texture_pitch;
+	pitch_out = pass1.in_texture_pitch_bytes;
+	num_bytes = pass1.in_texture_num_bytes;
 }
 
 void OpenGlRenderer::EndFrame()

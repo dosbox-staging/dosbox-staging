@@ -285,7 +285,7 @@ std::string SdlRenderer::GetCurrentShaderDescriptorString()
 	return {};
 }
 
-void SdlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
+void SdlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out, int& num_bytes)
 {
 	assert(curr_framebuf);
 
@@ -296,6 +296,8 @@ void SdlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 
 	pixels_out = reinterpret_cast<uint32_t*>(curr_framebuf->pixels);
 	pitch_out  = curr_framebuf->pitch;
+	// TODO
+	num_bytes = 0;
 }
 
 void SdlRenderer::EndFrame()

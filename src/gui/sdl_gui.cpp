@@ -1126,7 +1126,9 @@ bool GFX_StartUpdate(uint32_t*& pixels, int& pitch)
 		return false;
 	}
 
-	sdl.renderer->StartFrame(pixels, pitch);
+	// TODO
+	int num_bytes = 0;
+	sdl.renderer->StartFrame(pixels, pitch, num_bytes);
 
 	sdl.draw.updating_framebuffer = true;
 	return true;
