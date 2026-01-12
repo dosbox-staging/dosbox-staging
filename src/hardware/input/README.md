@@ -33,7 +33,7 @@ subsystem (SDL-based at the moment of writing this code), but contains a
 configuration API (`MouseControlAPI` class) for interaction with command-line
 configuration tool and yet-to-be-written GUI.
 
-**`../dos/program_mousectl.cpp`**
+**`../dos/programs/mousectl.cpp`**
 
 Implementation of the command line tool, allowing to change settings (like
 sensitivity or emulated sampling rate) during the runtime. The tool can also
@@ -65,7 +65,7 @@ from SDL-based GFX subsystem.
 
 Implementations (non-object oriented) of various mouse interfaces:
 
-- a simulated DOS driver, compatible with _MOUSE.COM_, with some extensions
+- a built-in DOS driver, compatible with _MOUSE.COM_, with some extensions
 (like _CtMouse_ wheel API or direct support for _INT33_ Windows driver from
 _javispedro_) 
 - PS/2 (both register-level access abd via BIOS calls)
@@ -78,6 +78,13 @@ Future (not yet implemented) planned interfaces include:
 
 - InPort / Bus mouse - I know no description, but Bochs contains an emulation
 code, under GPL2-or-above license
+
+**`mouseif_dos_driver_state.cpp`**
+
+Part of the builtin DOS mouse driver, which stores its state. Depending on the
+configuration, it can be stored either on the host side, or in the guest RAM
+(in UMB or conventional memory) - the latter makes it possible for Windows 3.x
+to virtualize the driver, creating its separate instance for the DOS window.
 
 **`../serialport/serialmouse.cpp`**
 
