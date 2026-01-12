@@ -101,7 +101,7 @@ static void start_line_handler(const void* src_line_data)
 				// Otherwise, it will keep displaying the same
 				// frame at present time without doing a buffer
 				// swap followed by a texture upload to the GPU.
-				if (!GFX_StartUpdate(render.dest, render.dest_pitch)) {
+				if (!GFX_StartUpdate(render.dest, render.dest_pitch, render.dest_num_bytes)) {
 					RENDER_DrawLine = empty_line_handler;
 					return;
 				}
@@ -196,7 +196,7 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.dest, render.dest_pitch)) {
+		if (!GFX_StartUpdate(render.dest, render.dest_pitch, render.dest_num_bytes)) {
 			return false;
 		}
 		render.scale.out_write = render.scale.out_buf.data();
@@ -217,7 +217,7 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.dest, render.dest_pitch)) {
+		if (!GFX_StartUpdate(render.dest, render.dest_pitch, render.dest_num_bytes)) {
 			return false;
 		}
 		render.scale.out_write = render.scale.out_buf.data();

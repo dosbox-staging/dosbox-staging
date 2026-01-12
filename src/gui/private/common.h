@@ -95,7 +95,7 @@ void GFX_Stop();
 
 // Called at the start of every unique frame (when there have been changes to
 // the framebuffer).
-bool GFX_StartUpdate(uint32_t*& pixels, int& pitch);
+bool GFX_StartUpdate(uint32_t*& pixels, int& pitch, int& num_bytes);
 
 // Called at the end of every frame, regardless of whether there have been
 // changes to the framebuffer or not.
