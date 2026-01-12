@@ -83,8 +83,6 @@ struct Render {
 	double fps = 0;
 
 	struct {
-		uint32_t size = 0;
-
 		ScalerMode in_mode = {};
 
 		bool clear_cache = false;
@@ -92,13 +90,10 @@ struct Render {
 		ScalerLineHandler line_handler         = nullptr;
 		ScalerLineHandler line_palette_handler = nullptr;
 
-		uint32_t blocks     = 0;
-		uint32_t last_block  = 0;
 		int out_pitch        = 0;
 		uint8_t* out_write   = nullptr;
 		uint32_t cache_pitch = 0;
 		uint8_t* cache_read  = nullptr;
-		uint32_t in_height   = 0;
 		uint32_t in_line     = 0;
 		uint32_t out_line    = 0;
 	} scale = {};
