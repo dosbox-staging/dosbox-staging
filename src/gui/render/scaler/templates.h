@@ -40,7 +40,7 @@
 #define SCALERNAME   Scale1x
 #define SCALERWIDTH  1
 #define SCALERHEIGHT 1
-#define SCALERFUNC   line0[0] = P;
+#define SCALERFUNC   out_line0[0] = P;
 #include "simple.h"
 
 #undef SCALERNAME
@@ -52,10 +52,10 @@
 #define SCALERWIDTH  2
 #define SCALERHEIGHT 2
 #define SCALERFUNC \
-	line0[0] = P; \
-	line0[1] = P; \
-	line1[0] = P; \
-	line1[1] = P;
+	out_line0[0] = P; \
+	out_line0[1] = P; \
+	out_line1[0] = P; \
+	out_line1[1] = P;
 #include "simple.h"
 
 #undef SCALERNAME
@@ -67,8 +67,8 @@
 #define SCALERWIDTH  2
 #define SCALERHEIGHT 1
 #define SCALERFUNC \
-	line0[0] = P; \
-	line0[1] = P;
+	out_line0[0] = P; \
+	out_line0[1] = P;
 #include "simple.h"
 
 #undef SCALERNAME
@@ -80,8 +80,8 @@
 #define SCALERWIDTH  1
 #define SCALERHEIGHT 2
 #define SCALERFUNC \
-	line0[0] = P; \
-	line1[0] = P;
+	out_line0[0] = P; \
+	out_line1[0] = P;
 #include "simple.h"
 
 #undef SCALERNAME
