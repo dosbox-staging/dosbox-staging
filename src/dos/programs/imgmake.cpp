@@ -33,19 +33,19 @@ CHECK_NARROWING();
 namespace {
 
 struct DiskGeometry {
-	uint32_t cylinders;
-	uint32_t heads;
-	uint32_t sectors;
-	uint8_t media_descriptor;
-	uint16_t root_entries;
-	uint32_t sectors_per_fat;
-	uint16_t sectors_per_cluster;
-	uint64_t total_size_kb;
-	bool is_floppy;
+	uint32_t cylinders           = 0;
+	uint32_t heads               = 0;
+	uint32_t sectors             = 0;
+	uint8_t media_descriptor     = 0;
+	uint16_t root_entries        = 0;
+	uint32_t sectors_per_fat     = 0;
+	uint16_t sectors_per_cluster = 0;
+	uint64_t total_size_kb       = 0;
+	bool is_floppy               = false;
 };
 
 // Maps preset names (e.g., "fd_1440") to geometries
-const std::map<std::string, DiskGeometry> GeometryPresets = {
+const std::unordered_map<std::string, DiskGeometry> GeometryPresets = {
         { "fd_160kb",     {40, 1, 8, 0xFE, 64, 1, 1, 160, true}},
         { "fd_180kb",     {40, 1, 9, 0xFC, 64, 2, 1, 180, true}},
         { "fd_320kb",    {40, 2, 8, 0xFF, 112, 1, 2, 320, true}},
@@ -85,14 +85,6 @@ std::array<uint8_t, 3> lba_to_chs(int64_t lba, int max_cylinders, int max_heads,
 	return {static_cast<uint8_t>(heads),
 	        static_cast<uint8_t>((sectors & 0x3f) | ((cylinders >> 2) & 0xc0)),
 	        static_cast<uint8_t>(cylinders & 0xff)};
-}
-
-// Write a string into a fixed-width buffer and pad with spaces
-void write_padded_string(uint8_t* dest, const std::string& str, int length)
-{
-	auto temp = str;
-	temp.resize(length, ' ');
-	std::copy(temp.begin(), temp.end(), dest);
 }
 
 struct FileCloser {
@@ -387,16 +379,19 @@ constexpr uint32_t MaxClustersFat16 = 65524;
 // FAT32 theoretically can go higher, limit for safety/compatibility
 } // namespace FatMarkers
 
-namespace FatPartitions {
-// Partition Type
-constexpr auto PartitionTypeFat12 = 0x01;
-// For partitions smaller than 32MB
-constexpr auto PartitionTypeFat16_Small = 0x04;
-// For partitions larger than 32MB but not LBA
-constexpr auto PartitionTypeFat16B   = 0x06;
-constexpr auto PartitionTypeFat16LBA = 0x0E;
-constexpr auto PartitionTypeFat32LBA = 0x0C;
-} // namespace FatPartitions
+enum class FatPartitionType : uint8_t {
+	Fat12 = 0x01,
+
+	// For partitions smaller than 32MB
+	Fat16_Small = 0x04,
+
+	// For partitions larger than 32MB but not LBA
+	Fat16B = 0x06,
+
+	Fat16_LBA = 0x0E,
+	Fat32_LBA = 0x0C,
+	Unknown   = 0x00
+};
 
 namespace ImgmakeCommand {
 
@@ -441,7 +436,7 @@ static void notify_warning(const std::string& message_name, const char* arg = nu
 }
 
 // Expand leading ~ to user's home directory and strip quotes
-std_fs::path resolve_path(const std::string& input_path)
+static std_fs::path resolve_path(const std::string& input_path)
 {
 	if (input_path.empty()) {
 		return {};
@@ -450,12 +445,10 @@ std_fs::path resolve_path(const std::string& input_path)
 	std::string path_str = input_path;
 
 	// Strip surrounding double quotes if present.
-	if (path_str.size() >= 2 && path_str.front() == '"' && path_str.back() == '"') {
-		path_str = path_str.substr(1, path_str.size() - 2);
-	}
+	trim(path_str, "\"");
 
 	// Check if path starts with "~"
-	if (!path_str.empty() && path_str[0] == '~') {
+	if (path_str.starts_with('~')) {
 		// Only expand if it's just "~", "~/", or "~\" (to allow mixed
 		// separators on Win)
 		bool is_separator = (path_str.length() > 1 &&
@@ -469,12 +462,16 @@ std_fs::path resolve_path(const std::string& input_path)
 			}
 
 			if (home) {
-				std::string expanded = home;
+				std_fs::path expanded = home;
+
 				// Append the rest of the path (skipping the ~)
 				if (path_str.length() > 1) {
-					expanded += path_str.substr(1);
+					// Convert the substring to a path object
+					std_fs::path remainder(path_str.substr(1));
+					// Strip any leading separator
+					expanded /= remainder.relative_path();
 				}
-				return std_fs::path(expanded);
+				return expanded;
 			}
 		}
 	}
@@ -487,7 +484,7 @@ std_fs::path resolve_path(const std::string& input_path)
 // directory.
 // Returns a pair: { pointer to the localDrive, resolved host path }
 // If failure, pointer is null.
-std::pair<std::shared_ptr<localDrive>, std_fs::path> resolve_dos_target(
+static std::pair<std::shared_ptr<localDrive>, std_fs::path> resolve_dos_target(
         const std::string& input_dos_path)
 {
 	// Resolve to absolute DOS path (e.g., C:\MYDIR\FILE.IMG)
@@ -538,8 +535,8 @@ std::pair<std::shared_ptr<localDrive>, std_fs::path> resolve_dos_target(
 }
 
 // Prompt user for Confirmation (Reads from emulated STDIN)
-bool ask_confirmation(Program* program, const std::string& path,
-                      bool is_dos_fs = false, const std::string& dos_path = "")
+static bool ask_confirmation(Program* program, const std::string& path,
+                             bool is_dos_fs = false, const std::string& dos_path = "")
 {
 	if (is_dos_fs) {
 		program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CONFIRM_DOS"),
@@ -577,7 +574,7 @@ bool ask_confirmation(Program* program, const std::string& path,
 	}
 }
 
-ParseResult parse_args(const std::vector<std::string>& args)
+static ParseResult parse_args(const std::vector<std::string>& args)
 {
 	CommandSettings settings;
 
@@ -699,7 +696,8 @@ struct ImageCreationContext {
 	static constexpr auto SectorSizeBytes = 512;
 };
 
-bool compute_geometry(const CommandSettings& settings, ImageCreationContext& ctx)
+static bool compute_geometry(const CommandSettings& settings,
+                             ImageCreationContext& ctx)
 {
 	if (auto it = GeometryPresets.find(settings.type);
 	    it != GeometryPresets.end()) {
@@ -777,7 +775,8 @@ bool compute_geometry(const CommandSettings& settings, ImageCreationContext& ctx
 	return true;
 }
 
-bool open_and_expand_file(const CommandSettings& settings, ImageCreationContext& ctx)
+static bool open_and_expand_file(const CommandSettings& settings,
+                                 ImageCreationContext& ctx)
 {
 	// Check File Existence
 	std::error_code ec;
@@ -820,7 +819,8 @@ bool open_and_expand_file(const CommandSettings& settings, ImageCreationContext&
 	return true;
 }
 
-void determine_fat_type(const CommandSettings& settings, ImageCreationContext& ctx)
+static void determine_fat_type(const CommandSettings& settings,
+                               ImageCreationContext& ctx)
 {
 	// Write Partition Table (MBR) for Hard Disks
 	if (!ctx.geometry.is_floppy) {
@@ -891,7 +891,7 @@ void determine_fat_type(const CommandSettings& settings, ImageCreationContext& c
 	}
 }
 
-void write_mbr(ImageCreationContext& ctx)
+static void write_mbr(ImageCreationContext& ctx)
 {
 	if (ctx.geometry.is_floppy) {
 		return;
@@ -925,20 +925,19 @@ void write_mbr(ImageCreationContext& ctx)
 	// Note: Logic is similar but not identical to FAT bits
 	// detection
 	if (ctx.fat_bits == 32) {
-		partition[4] = FatPartitions::PartitionTypeFat32LBA;
+		partition[4] = enum_val(FatPartitionType::Fat32_LBA);
 	} else if (ctx.fat_bits == 12) {
-		partition[4] = FatPartitions::PartitionTypeFat12;
+		partition[4] = enum_val(FatPartitionType::Fat12);
 	} else {
 		// We are in FAT16 territory (16MB to 2GB)
 		if (ctx.volume_sectors < 65536) {
-			partition[4] = FatPartitions::PartitionTypeFat16_Small;
-
+			partition[4] = enum_val(FatPartitionType::Fat16_Small);
 		} else if (ctx.total_size > 528 * BytesPerMegabyte) {
 			// 528MB to 2GB: suggest LBA-aware FAT16
-			partition[4] = FatPartitions::PartitionTypeFat16LBA;
+			partition[4] = enum_val(FatPartitionType::Fat16_LBA);
 		} else {
 			// 32MB to 528MB: Use Standard FAT16
-			partition[4] = FatPartitions::PartitionTypeFat16B;
+			partition[4] = enum_val(FatPartitionType::Fat16B);
 		}
 	}
 
@@ -959,7 +958,8 @@ void write_mbr(ImageCreationContext& ctx)
 	fwrite(buffer.data(), 1, buffer.size(), ctx.fs);
 }
 
-void write_boot_sector(const CommandSettings& settings, ImageCreationContext& ctx)
+static void write_boot_sector(const CommandSettings& settings,
+                              ImageCreationContext& ctx)
 {
 	// Move to Boot Sector
 	cross_fseeko(ctx.fs,
@@ -980,7 +980,8 @@ void write_boot_sector(const CommandSettings& settings, ImageCreationContext& ct
 	// OEM Name
 	write_padded_string(reinterpret_cast<uint8_t*>(boot_sector->oem_name),
 	                    "DOSBOX-S",
-	                    8);
+	                    8,
+	                    ' ');
 	write_le(&boot_sector->bytes_per_sector,
 	         ImageCreationContext::SectorSizeBytes);
 
@@ -1152,12 +1153,13 @@ void write_boot_sector(const CommandSettings& settings, ImageCreationContext& ct
 		write_padded_string(reinterpret_cast<uint8_t*>(
 		                            boot_sector->ext.fat32.label),
 		                    "NO NAME",
-		                    11);
+		                    11,
+		                    ' ');
 		write_padded_string(reinterpret_cast<uint8_t*>(
 		                            boot_sector->ext.fat32.fs_type),
 		                    "FAT32",
-		                    8);
-
+		                    8,
+		                    ' ');
 		// Copy fallback boot code
 		std::copy(std::begin(BootCode::Printer),
 		          std::end(BootCode::Printer),
@@ -1184,12 +1186,13 @@ void write_boot_sector(const CommandSettings& settings, ImageCreationContext& ct
 		write_padded_string(reinterpret_cast<uint8_t*>(
 		                            boot_sector->ext.fat16.label),
 		                    "NO NAME",
-		                    11);
+		                    11,
+		                    ' ');
 		write_padded_string(reinterpret_cast<uint8_t*>(
 		                            boot_sector->ext.fat16.fs_type),
 		                    (ctx.fat_bits == 16) ? "FAT16" : "FAT12",
-		                    8);
-
+		                    8,
+		                    ' ');
 		// Copy fallback boot code
 		std::copy(std::begin(BootCode::Printer),
 		          std::end(BootCode::Printer),
@@ -1251,7 +1254,7 @@ void write_boot_sector(const CommandSettings& settings, ImageCreationContext& ct
 	}
 }
 
-void write_fats(const CommandSettings& settings, ImageCreationContext& ctx)
+static void write_fats(const CommandSettings& settings, ImageCreationContext& ctx)
 {
 	std::array<uint8_t, ImageCreationContext::SectorSizeBytes> fat_sector_buffer = {};
 	std::array<uint8_t, ImageCreationContext::SectorSizeBytes> empty_sector = {};
@@ -1306,7 +1309,7 @@ void write_fats(const CommandSettings& settings, ImageCreationContext& ctx)
 	}
 }
 
-void write_root_dir(const CommandSettings& settings, ImageCreationContext& ctx)
+static void write_root_dir(const CommandSettings& settings, ImageCreationContext& ctx)
 {
 	if (settings.label.empty()) {
 		return;
@@ -1316,13 +1319,14 @@ void write_root_dir(const CommandSettings& settings, ImageCreationContext& ctx)
 	auto* entry = reinterpret_cast<DirectoryEntry*>(root_buffer.data());
 	write_padded_string(reinterpret_cast<uint8_t*>(entry->filename),
 	                    settings.label,
-	                    11);
+	                    11,
+	                    ' ');
 	// Volume ID
 	entry->attributes = 0x08;
 	fwrite(root_buffer.data(), 1, root_buffer.size(), ctx.fs);
 }
 
-bool execute(Program* program, CommandSettings& settings)
+static bool execute(Program* program, CommandSettings& settings)
 {
 	ImageCreationContext ctx;
 	std_fs::path full_host_path;

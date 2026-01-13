@@ -623,4 +623,54 @@ TEST(IsTextEqual, Valid)
 	EXPECT_FALSE(is_text_equal("FooBarBaz", "FooBar"));
 }
 
+TEST(WritePaddedStringTest, PadsWithSpaces)
+{
+	constexpr int length               = 8;
+	std::array<uint8_t, length> buffer = {};
+	std::string input                  = "abc";
+	write_padded_string(buffer.data(), input, length, ' ');
+	std::string result(reinterpret_cast<char*>(buffer.data()), length);
+	EXPECT_EQ(result, "abc     ");
+}
+
+TEST(WritePaddedStringTest, PadsWithCustomChar)
+{
+	constexpr int length               = 6;
+	std::array<uint8_t, length> buffer = {};
+	std::string input                  = "hi";
+	write_padded_string(buffer.data(), input, length, '-');
+	std::string result(reinterpret_cast<char*>(buffer.data()), length);
+	EXPECT_EQ(result, "hi----");
+}
+
+TEST(WritePaddedStringTest, TruncatesIfLonger)
+{
+	constexpr int length               = 4;
+	std::array<uint8_t, length> buffer = {};
+	std::string input                  = "toolong";
+	write_padded_string(buffer.data(), input, length, ' ');
+	std::string result(reinterpret_cast<char*>(buffer.data()), length);
+	EXPECT_EQ(result, "tool");
+}
+
+TEST(WritePaddedStringTest, ExactLengthNoPad)
+{
+	constexpr int length               = 5;
+	std::array<uint8_t, length> buffer = {};
+	std::string input                  = "hello";
+	write_padded_string(buffer.data(), input, length, 'x');
+	std::string result(reinterpret_cast<char*>(buffer.data()), length);
+	EXPECT_EQ(result, "hello");
+}
+
+TEST(WritePaddedStringTest, EmptyStringAllPad)
+{
+	constexpr int length               = 3;
+	std::array<uint8_t, length> buffer = {};
+	std::string input                  = "";
+	write_padded_string(buffer.data(), input, length, '*');
+	std::string result(reinterpret_cast<char*>(buffer.data()), length);
+	EXPECT_EQ(result, "***");
+}
+
 } // namespace
