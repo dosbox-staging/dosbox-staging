@@ -89,8 +89,11 @@ struct Render {
 		ScalerLineHandler line_handler         = nullptr;
 		ScalerLineHandler line_palette_handler = nullptr;
 
-		uint32_t cache_pitch = 0;
-		uint8_t* cache_read  = nullptr;
+		int cache_pitch     = 0;
+		uint8_t* cache_read = nullptr;
+
+		alignas(uint64_t)
+		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
 
 		int out_pitch      = 0;
 		uint8_t* out_write = nullptr;

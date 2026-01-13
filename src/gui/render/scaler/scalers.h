@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -17,12 +17,6 @@ constexpr int ScalerMaxHeight = 1200;
 
 extern int scaler_changed_line_index;
 extern int scaler_changed_lines[];
-
-union ScalerSourceCache {
-	uint32_t b32[ScalerMaxHeight][ScalerMaxWidth];
-};
-
-extern ScalerSourceCache scaler_source_cache;
 
 typedef void (*ScalerLineHandler)(const void* src);
 
