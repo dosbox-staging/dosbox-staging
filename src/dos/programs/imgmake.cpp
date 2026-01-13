@@ -16,6 +16,7 @@
 #include <variant>
 #include <vector>
 
+#include "cpu/callback.h"
 #include "dos/dos.h"
 #include "dos/drive_local.h"
 #include "dosbox.h"
@@ -45,21 +46,24 @@ struct DiskGeometry {
 };
 
 // Maps preset names (e.g., "fd_1440") to geometries
+// clang-format off
 const std::unordered_map<std::string, DiskGeometry> GeometryPresets = {
-        { "fd_160kb",     {40, 1, 8, 0xFE, 64, 1, 1, 160, true}},
-        { "fd_180kb",     {40, 1, 9, 0xFC, 64, 2, 1, 180, true}},
-        { "fd_320kb",    {40, 2, 8, 0xFF, 112, 1, 2, 320, true}},
-        { "fd_360kb",    {40, 2, 9, 0xFD, 112, 2, 2, 360, true}},
-        { "fd_720kb",    {80, 2, 9, 0xF9, 112, 3, 2, 720, true}},
-        {"fd_1200kb",  {80, 2, 15, 0xF9, 224, 7, 1, 1200, true}},
-        {"fd_1440kb",  {80, 2, 18, 0xF0, 224, 9, 1, 1440, true}},
-        {"fd_2880kb",  {80, 2, 36, 0xF0, 240, 9, 2, 2880, true}},
+		// name,          cyl, hds, sec, media_desc, root_entr, sect_per_fat, sect_per_cluster, total_size_kb, is_floppy}
+        { "fd_160kb",     {40,   1,   8,       0xFE,        64,            1,                1,           160, true}},
+        { "fd_180kb",     {40,   1,   9,       0xFC,        64,            2,                1,           180, true}},
+        { "fd_320kb",    {40,    2,   8,       0xFF,       112,            1,                2,           320, true}},
+        { "fd_360kb",    {40,    2,   9,       0xFD,       112,            2,                2,           360, true}},
+        { "fd_720kb",    {80,    2,   9,       0xF9,       112,            3,                2,           720, true}},
+        {"fd_1200kb",  {80,      2,  15,       0xF9,       224,            7,                1,          1200, true}},
+        {"fd_1440kb",  {80,      2,  18,       0xF0,       224,            9,                1,          1440, true}},
+        {"fd_2880kb",  {80,      2,  36,       0xF0,       240,            9,                2,          2880, true}},
         // HD presets
-        { "hd_250mb",  {489, 16, 63, 0xF8, 512, 0, 0, 0, false}},
-        { "hd_520mb", {1023, 16, 63, 0xF8, 512, 0, 0, 0, false}},
-        {   "hd_1gb", {1023, 32, 63, 0xF8, 512, 0, 0, 0, false}},
-        {   "hd_2gb", {1023, 64, 63, 0xF8, 512, 0, 0, 0, false}}
+        { "hd_250mb",  {489,    16,  63,       0xF8,       512,            0,                0,             0, false}},
+        { "hd_520mb", {1023,    16,  63,       0xF8,       512,            0,                0,             0, false}},
+        {   "hd_1gb", {1023,    32,  63,       0xF8,       512,            0,                0,             0, false}},
+        {   "hd_2gb", {1023,    64,  63,       0xF8,       512,            0,                0,             0, false}}
 };
+// clang-format on
 
 // Return a 3-byte array [heads, sectors|cylinders_high, cylinders_low]
 std::array<uint8_t, 3> lba_to_chs(int64_t lba, int max_cylinders, int max_heads,
@@ -534,10 +538,11 @@ static std::pair<std::shared_ptr<localDrive>, std_fs::path> resolve_dos_target(
 	return {local_drive, std_fs::path(host_path_str)};
 }
 
-// Prompt user for Confirmation (Reads from emulated STDIN)
-static bool ask_confirmation(Program* program, const std::string& path,
-                             bool is_dos_fs = false, const std::string& dos_path = "")
+// Prompt user for Confirmation (Polling STDIN)
+bool ask_confirmation(Program* program, const std::string& path,
+                      bool is_dos_fs = false, const std::string& dos_path = "")
 {
+	constexpr auto EscKey = 0x1B;
 	if (is_dos_fs) {
 		program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CONFIRM_DOS"),
 		                  dos_path.c_str(),
@@ -548,28 +553,36 @@ static bool ask_confirmation(Program* program, const std::string& path,
 	}
 
 	while (true) {
-		uint8_t response = 0;
-		uint16_t length  = 1;
-		// Read from STDIN (Handle 0)
-		if (!DOS_ReadFile(0, &response, &length)) {
-			return false;
-		}
-		if (length == 0) {
-			return false;
-		}
+		// Check if there is a character in the input buffer
+		if (DOS_GetSTDINStatus()) {
+			uint8_t response = 0;
+			uint16_t length  = 1;
 
-		// Ignore whitespace/newlines
-		if (response == ' ' || response == '\t' || response == '\r' ||
-		    response == '\n') {
-			continue;
-		}
+			// Read the character (Handle 0 = STDIN)
+			if (!DOS_ReadFile(0, &response, &length)) {
+				return false;
+			}
+			if (length == 0) {
+				// Should not happen if Status was true, but as
+				// a safeguard
+				continue;
+			}
 
-		if (response == 'y' || response == 'Y') {
-			return true;
-		}
-		if (response == 'n' || response == 'N') {
-			program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_ABORTED"));
-			return false;
+			if (response == EscKey || response == 'n' || response == 'N') {
+				program->WriteOut(
+				        MSG_Get("SHELL_CMD_IMGMAKE_ABORTED"));
+				return false;
+			}
+
+			if (response == 'y' || response == 'Y') {
+				return true;
+			}
+
+		} else {
+			// Yield and return false if we are shutting down
+			if (CALLBACK_Idle()) {
+				return false;
+			}
 		}
 	}
 }
