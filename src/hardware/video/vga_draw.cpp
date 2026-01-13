@@ -104,7 +104,7 @@ constexpr auto MaxPixelBytes = sizeof(uint32_t);
 constexpr auto MaxRowBytes   = SCALER_MAXWIDTH * MaxPixelBytes;
 
 // The line buffer can be written in units up to RGB888 pixels (32-bit) size
-alignas(uint32_t) static std::array<uint8_t, MaxRowBytes> templine_buffer;
+alignas(uint64_t) static std::array<uint8_t, MaxRowBytes> templine_buffer;
 static auto TempLine = templine_buffer.data();
 
 static uint8_t* VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line)
