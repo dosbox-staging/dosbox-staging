@@ -333,24 +333,21 @@ static void render_reset()
 		scaler = &Scale1x;
 	}
 
-	constexpr auto src_pixel_bytes = sizeof(uintptr_t);
+	constexpr auto SrcPixelBytes = sizeof(uintptr_t);
 
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
 	case PixelFormat::RGB555_Packed16:
 	case PixelFormat::RGB565_Packed16:
-		render.src_start = check_cast<uint32_t>((render.src.width * 2) /
-		                                        src_pixel_bytes);
+		render.src_start = (render.src.width * 2) / SrcPixelBytes;
 		break;
 
 	case PixelFormat::BGR24_ByteArray:
-		render.src_start = check_cast<uint32_t>((render.src.width * 3) /
-		                                        src_pixel_bytes);
+		render.src_start = (render.src.width * 3) / SrcPixelBytes;
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
-		render.src_start = check_cast<uint32_t>((render.src.width * 4) /
-		                                        src_pixel_bytes);
+		render.src_start = (render.src.width * 4) / SrcPixelBytes;
 		break;
 	}
 
