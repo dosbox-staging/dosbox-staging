@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -15,8 +15,6 @@
 
 int scaler_changed_lines[ScalerMaxHeight] = {};
 int scaler_changed_line_index             = 0;
-
-ScalerSourceCache scaler_source_cache;
 
 #define _conc3(A, B, C) A##B##C
 #define conc2d(A, B)    _conc3(A, _, B)
