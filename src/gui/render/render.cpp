@@ -172,7 +172,9 @@ bool RENDER_StartUpdate()
 		check_palette();
 	}
 
-	render.scale.cache_read = reinterpret_cast<uint8_t*>(&scaler_source_cache);
+	render.scale.cache_read = reinterpret_cast<uint8_t*>(
+	        render.scale.cache.data());
+
 	render.scale.out_write = nullptr;
 	render.scale.out_pitch = 0;
 
@@ -263,8 +265,10 @@ static void handle_capture_frame()
 	image.params.double_width  = double_width;
 	image.params.double_height = double_height;
 	image.pitch                = render.scale.cache_pitch;
-	image.image_data = reinterpret_cast<uint8_t*>(&scaler_source_cache);
-	image.palette    = render.palette.rgb;
+
+	image.image_data = reinterpret_cast<uint8_t*>(render.scale.cache.data());
+
+	image.palette = render.palette.rgb;
 
 	const auto frames_per_second = static_cast<float>(render.fps);
 
