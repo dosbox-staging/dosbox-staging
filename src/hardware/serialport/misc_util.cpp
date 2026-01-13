@@ -633,6 +633,10 @@ TCPServerSocket::TCPServerSocket(const uint16_t port)
 	if (ec) {
 		return;
 	}
+	acceptor.non_blocking(true, ec);
+	if (ec) {
+		return;
+	}
 	isopen = true;
 }
 
@@ -646,10 +650,16 @@ TCPServerSocket::~TCPServerSocket()
 
 NETClientSocket* TCPServerSocket::Accept()
 {
+	if (!isopen || !acceptor.is_open()) {
+		return nullptr;
+	}
 	std::error_code ec;
 	asio::ip::tcp::socket new_socket(*io);
 	acceptor.accept(new_socket, ec);
 	if (ec) {
+		if (ec == asio::error::would_block || ec == asio::error::try_again) {
+			return nullptr;
+		}
 		return nullptr;
 	}
 	return new TCPClientSocket(std::move(new_socket), io);
