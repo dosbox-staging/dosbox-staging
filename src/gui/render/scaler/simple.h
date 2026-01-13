@@ -13,7 +13,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 
 	render.scale.cache_read += render.scale.cache_pitch;
 
-	auto line0 = reinterpret_cast<uint32_t*>(render.scale.out_write);
+	auto out_line0 = reinterpret_cast<uint32_t*>(render.scale.out_write);
 
 #if (SBPP == 9)
 	for (int x = render.src.width; x > 0;) {
@@ -27,7 +27,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 			x -= 4;
 			src += 4;
 			cache += 4;
-			line0 += 4 * SCALERWIDTH;
+			out_line0 += 4 * SCALERWIDTH;
 #else
 
 	constexpr auto PixelsPerStep = sizeof(uint64_t) / sizeof(SRCTYPE);
@@ -44,12 +44,12 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 			src += PixelsPerStep;
 
 			cache += PixelsPerStep;
-			line0 += PixelsPerStep * SCALERWIDTH;
+			out_line0 += PixelsPerStep * SCALERWIDTH;
 #endif
 		} else {
 #if (SCALERHEIGHT > 1)
-			auto line1 = reinterpret_cast<uint32_t*>(
-			        reinterpret_cast<uint8_t*>(line0) +
+			auto out_line1 = reinterpret_cast<uint32_t*>(
+			        reinterpret_cast<uint8_t*>(out_line0) +
 			        render.scale.out_pitch);
 #endif
 			had_change = 1;
@@ -66,9 +66,9 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 				const uint32_t P = PMAKE(S);
 				SCALERFUNC;
 
-				line0 += SCALERWIDTH;
+				out_line0 += SCALERWIDTH;
 #if (SCALERHEIGHT > 1)
-				line1 += SCALERWIDTH;
+				out_line1 += SCALERWIDTH;
 #endif
 				--x;
 				--i;
