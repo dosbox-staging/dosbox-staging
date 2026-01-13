@@ -1208,7 +1208,7 @@ void vga_draw_blank_line()
 
 		const auto background_color = vga.dac.palette_map[bg_color_index];
 
-		const auto line_length = templine_buffer.size() / sizeof(uint32_t);
+		const auto line_length = templine_buffer.size() / MaxPixelBytes;
 		size_t i = 0;
 		while (i < line_length) {
 			write_unaligned_uint32_at(TempLine, i++, background_color);
