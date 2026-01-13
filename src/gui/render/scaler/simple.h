@@ -30,7 +30,7 @@ static void conc2d(SCALERNAME, SBPP)(const void* s)
 			line0 += 4 * SCALERWIDTH;
 #else
 
-	constexpr auto PixelsPerStep = sizeof(uint32_t) / sizeof(SRCTYPE);
+	constexpr auto PixelsPerStep = sizeof(uint64_t) / sizeof(SRCTYPE);
 
 	for (int x = render.src.width; x > 0;) {
 		const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
