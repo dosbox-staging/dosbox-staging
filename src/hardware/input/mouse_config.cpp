@@ -213,8 +213,9 @@ static void set_serial_mouse_model(const std::string_view model_str)
 
 static void set_dos_driver_options(const std::string_view options_str)
 {
-	const std::string OptionImmediate = "immediate";
-	const std::string OptionModern    = "modern";
+	const std::string OptionImmediate     = "immediate";
+	const std::string OptionModern        = "modern";
+	const std::string OptionNoGranularity = "no-granularity";
 
 	auto& last_options_str = mouse_config.dos_driver_last_options_str;
 	if (last_options_str == options_str) {
@@ -222,14 +223,17 @@ static void set_dos_driver_options(const std::string_view options_str)
 	}
 	last_options_str = options_str;
 
-	mouse_config.dos_driver_immediate = false;
-	mouse_config.dos_driver_modern    = false;
+	mouse_config.dos_driver_immediate      = false;
+	mouse_config.dos_driver_modern         = false;
+	mouse_config.dos_driver_no_granularity = false;
 
 	for (const auto& token : split(options_str, " ,")) {
 		if (token == OptionImmediate) {
 			mouse_config.dos_driver_immediate = true;
 		} else if (token == OptionModern) {
 			mouse_config.dos_driver_modern = true;
+		} else if (token == OptionNoGranularity) {
+			mouse_config.dos_driver_no_granularity = true;
 		} else {
 			LOG_WARNING(
 			        "MOUSE: Invalid 'builtin_dos_mouse_driver_options' "
@@ -592,18 +596,25 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "Additional built-in DOS mouse driver settings as a list of space or comma\n"
 	        "separated options (unset by default). Possible values:\n"
 	        "\n"
-	        "  immediate:  Update mouse movement counters immediately, without waiting for\n"
-	        "              interrupt. May improve mouse latency in fast-paced games (arcade,\n"
-	        "              FPS, etc.), but might cause issues in some titles.\n"
-	        "              List of known incompatible games:\n"
-	        "                - Ultima Underworld: The Stygian Abyss\n"
-	        "                - Ultima Underworld II: Labyrinth of Worlds\n"
-	        "              Please report other incompatible games so we can update this list.\n"
+	        "  immediate:       Update mouse movement counters immediately, without waiting\n"
+	        "                   for interrupt. May improve mouse latency in fast-paced games\n"
+	        "                   (arcade, FPS, etc.), but might cause issues in some titles.\n"
+	        "                   List of known incompatible games:\n"
+	        "                     - Ultima Underworld: The Stygian Abyss\n"
+	        "                     - Ultima Underworld II: Labyrinth of Worlds\n"
+	        "                   Please report other incompatible games so we can update this\n"
+	        "                   list.\n"
 	        "\n"
-	        "  modern:     If provided, v7.0+ Microsoft mouse driver behaviour is emulated,\n"
-	        "              otherwise the v6.0 and earlier behaviour (the two are slightly\n"
-	        "              incompatible). Only Descent II with the official Voodoo patch has\n"
-	        "              been found to require the v7.0+ behaviour so far.");
+	        "  modern:          If provided, v7.0+ Microsoft mouse driver behaviour is\n"
+	        "                   emulated, otherwise the v6.0 and earlier behaviour (the two\n"
+	        "                   are slightly incompatible). Only 'Descent II' with the\n"
+	        "                   official Voodoo patch has been found to require the v7.0+\n"
+	        "                   behaviour so far.\n"
+	        "\n"
+	        "  no-granularity:  Disables the mouse position granularity. Only enable if the\n"
+	        "                   game needs it. Only 'Joan of Arc: Siege & the Sword' in\n"
+	        "                   Hercules mode has been found to require disabled granularity\n"
+	        "                   so far.");
 
 	prop_bool = secprop.AddBool("dos_mouse_immediate", Deprecated, false);
 	prop_bool->SetHelp("Configure using [color=light-green]'builtin_dos_mouse_driver_options'[reset].");

@@ -310,6 +310,9 @@ static uint16_t get_pos_x()
 	MouseDriverState state(*state_segment);
 
 	const auto pos_x = static_cast<uint16_t>(std::lround(state.GetPosX()));
+	if (mouse_config.dos_driver_no_granularity) {
+		return pos_x;
+	}
 	return pos_x & state.GetGranularityX();
 }
 
@@ -318,6 +321,9 @@ static uint16_t get_pos_y()
 	MouseDriverState state(*state_segment);
 
 	const auto pos_y = static_cast<uint16_t>(std::lround(state.GetPosY()));
+	if (mouse_config.dos_driver_no_granularity) {
+		return pos_y;
+	}
 	return pos_y & state.GetGranularityY();
 }
 
