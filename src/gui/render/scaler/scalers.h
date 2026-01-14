@@ -9,10 +9,10 @@
 
 #include "misc/video.h"
 
-// The additional 30 pixels are for some tweaked text modes (e.g., Q200x25x8
-// used by Necromancer's DOS Navigator).
-constexpr int ScalerMaxWidth  = 1600 + 30;
+// Make sure ScalerMaxWidth remains a multiple of 8
+constexpr int ScalerWidthExtraPadding = 8 * 5;
 
+constexpr int ScalerMaxWidth  = 1600 + ScalerWidthExtraPadding;
 constexpr int ScalerMaxHeight = 1200;
 
 extern int scaler_changed_line_index;
