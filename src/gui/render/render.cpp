@@ -85,43 +85,34 @@ static void empty_line_handler(const void*) {}
 static void start_line_handler(const void* src_line_data)
 {
 	if (src_line_data) {
-		auto src = static_cast<const uintptr_t*>(src_line_data);
-		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cache_read);
+		if (std::memcmp(src_line_data,
+		                render.scale.cache_read,
+		                render.scale.cache_pitch) != 0) {
 
-		for (Bits x = render.src_start; x > 0;) {
-			const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
-			const auto src_val = read_unaligned_size_t(src_ptr);
+			// This triggers transferring the pixel data to the
+			// render backend if the contents of the current frame
+			// has changed since the last frame. This will in turn
+			// make the backend do a buffer swap (if it's
+			// double-buffered). Otherwise, it will keep displaying
+			// the same frame at present time without doing a buffer
+			// swap followed by a texture upload to the GPU.
+			uint32_t* buf_ptr = {};
 
-			if (src_val != cache[0]) {
-				// This triggers transferring the pixel data to
-				// the render backend if the contents of the
-				// current frame has changed since the last
-				// frame. This will in turn make the backend do
-				// a buffer swap (if it's double-buffered).
-				// Otherwise, it will keep displaying the same
-				// frame at present time without doing a buffer
-				// swap followed by a texture upload to the GPU.
-				uint32_t* buf_ptr = {};
-				if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
-					RENDER_DrawLine = empty_line_handler;
-					return;
-				}
-
-				render.scale.out_write = reinterpret_cast<uint8_t*>(
-				        buf_ptr);
-
-				render.updating_frame = true;
-				render.scale.out_write += render.scale.out_pitch *
-				                          scaler_changed_lines[0];
-
-				RENDER_DrawLine = render.scale.line_handler;
-				RENDER_DrawLine(src_line_data);
+			if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
+				RENDER_DrawLine = empty_line_handler;
 				return;
 			}
 
-			x--;
-			src++;
-			cache++;
+			render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
+
+			render.scale.out_write += render.scale.out_pitch *
+			                          scaler_changed_lines[0];
+
+			render.updating_frame = true;
+
+			RENDER_DrawLine = render.scale.line_handler;
+			RENDER_DrawLine(src_line_data);
+			return;
 		}
 	}
 
@@ -133,14 +124,9 @@ static void start_line_handler(const void* src_line_data)
 static void finish_line_handler(const void* src_line_data)
 {
 	if (src_line_data) {
-		auto src = static_cast<const uintptr_t*>(src_line_data);
-		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cache_read);
-		for (Bits x = render.src_start; x > 0;) {
-			cache[0] = src[0];
-			x--;
-			src++;
-			cache++;
-		}
+		std::memcpy(render.scale.cache_read,
+		            src_line_data,
+		            render.scale.cache_pitch);
 	}
 
 	render.scale.cache_read += render.scale.cache_pitch;
@@ -148,12 +134,22 @@ static void finish_line_handler(const void* src_line_data)
 
 static void clear_cache_handler(const void* src_line_data)
 {
-	const uint32_t* src_line = static_cast<const uint32_t*>(src_line_data);
-	uint32_t* cache_line = reinterpret_cast<uint32_t*>(render.scale.cache_read);
-	int width = render.scale.cache_pitch / 4;
+	// `src_line_data` contains a scanline worth of pixel data. All screen
+	// mode widths are multiples of 4, therefore we can access this data one
+	// uint32_t at a time, regardless of pixel format (pixel can be stored
+	// on 1 to 4 bytes).
+	const auto src = static_cast<const uint32_t*>(src_line_data);
 
-	for (int x = 0; x < width; x++) {
-		cache_line[x] = ~src_line[x];
+	// The width of all screen modes and therefore `cache_pitch` too is a
+	// multiple of 4 (`cache_pitch` equals the screen mode's width multiplied
+	// by the number of bytes per pixel and no padding).
+	//
+	auto cache = reinterpret_cast<uint32_t*>(render.scale.cache_read);
+
+	const auto count = render.scale.cache_pitch / sizeof(uint32_t);
+
+	for (size_t x = 0; x < count; ++x) {
+		cache[x] = ~src[x];
 	}
 
 	render.scale.line_handler(src_line_data);
@@ -188,8 +184,8 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		//
 		uint32_t* buf_ptr = {};
+
 		if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
 			return false;
 		}
@@ -211,6 +207,7 @@ bool RENDER_StartUpdate()
 		// backend (see comments in `start_line_handler()`).
 		//
 		uint32_t* buf_ptr = {};
+
 		if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
 			return false;
 		}
@@ -341,24 +338,6 @@ static void render_reset()
 	if ((render_width_px * scaler->x_scale > ScalerMaxWidth) ||
 	    (render.src.height * scaler->y_scale > ScalerMaxHeight)) {
 		scaler = &Scale1x;
-	}
-
-	constexpr auto SrcPixelBytes = sizeof(uintptr_t);
-
-	switch (render.src.pixel_format) {
-	case PixelFormat::Indexed8:
-	case PixelFormat::RGB555_Packed16:
-	case PixelFormat::RGB565_Packed16:
-		render.src_start = (render.src.width * 2) / SrcPixelBytes;
-		break;
-
-	case PixelFormat::BGR24_ByteArray:
-		render.src_start = (render.src.width * 3) / SrcPixelBytes;
-		break;
-
-	case PixelFormat::BGRX32_ByteArray:
-		render.src_start = (render.src.width * 4) / SrcPixelBytes;
-		break;
 	}
 
 	render_width_px *= scaler->x_scale;
