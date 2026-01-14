@@ -94,6 +94,8 @@ struct Render {
 		alignas(uint64_t)
 		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
 
+		int out_width      = 0;
+		int out_height     = 0;
 		int out_pitch      = 0;
 		uint8_t* out_write = nullptr;
 
