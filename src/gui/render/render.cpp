@@ -828,7 +828,7 @@ static const char* to_string(const enum MonochromePalette palette)
 	}
 }
 
-static void set_aspect_ratio_correction(SectionProp& section)
+static void set_aspect_ratio_correction(const SectionProp& section)
 {
 	render.aspect_ratio_correction_mode = [&]() {
 		const std::string mode = section.GetString("aspect");
@@ -1075,7 +1075,7 @@ static void set_viewport(SectionProp& section)
 	}
 }
 
-static void set_integer_scaling(SectionProp& section)
+static void set_integer_scaling(const SectionProp& section)
 {
 	render.integer_scaling_mode = [&]() {
 		const std::string mode = section.GetString("integer_scaling");
