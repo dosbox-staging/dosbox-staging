@@ -9,6 +9,13 @@
 
 #include "misc/video.h"
 
+// The additional padding pixels are party for some tweaked text modes (e.g.,
+// Q200x25x8 used by Necromancer's DOS Navigator) plus as a safety margin.
+//
+// This ensures we're not going to crash in the 1600x1200 24-bit (BGR24)
+// 0x184 VESA mode when reading a few bytes beyond the end of the buffer (see
+// comment above `PixelsPerStep` in `scaler/simple.h`).
+
 // Make sure ScalerMaxWidth remains a multiple of 8
 constexpr int ScalerWidthExtraPadding = 8 * 5;
 
