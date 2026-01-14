@@ -77,8 +77,7 @@ struct RenderPalette {
 };
 
 struct Render {
-	ImageInfo src      = {};
-	uint32_t src_start = 0;
+	ImageInfo src = {};
 
 	// Frames per second
 	double fps = 0;
