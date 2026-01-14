@@ -177,6 +177,13 @@ bool RENDER_StartUpdate()
 	scaler_changed_lines[0]   = 0;
 	scaler_changed_line_index = 0;
 
+	// Set up output image dimensions
+	render.scale.out_width = render.src.width *
+	                         (render.src.double_width ? 2 : 1);
+
+	render.scale.out_height = render.src.height *
+	                          (render.src.double_height ? 2 : 1);
+
 	// Clearing the cache will first process the line to make sure it's
 	// never the same.
 	if (render.scale.clear_cache) {
