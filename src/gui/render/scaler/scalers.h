@@ -7,6 +7,8 @@
 
 #include "gui/render/render.h"
 
+#include <array>
+
 #include "misc/video.h"
 
 // The additional padding pixels are party for some tweaked text modes (e.g.,
@@ -22,8 +24,8 @@ constexpr int ScalerWidthExtraPadding = 8 * 5;
 constexpr int ScalerMaxWidth  = 1600 + ScalerWidthExtraPadding;
 constexpr int ScalerMaxHeight = 1200;
 
+extern std::array<int, ScalerMaxHeight> scaler_changed_lines;
 extern int scaler_changed_line_index;
-extern int scaler_changed_lines[];
 
 typedef void (*ScalerLineHandler)(const void* src);
 
@@ -34,7 +36,7 @@ struct Scaler {
 	ScalerLineHandler line_handlers[6] = {};
 };
 
-/* Simple scalers */
+// Simple scalers
 extern Scaler Scale1x;
 extern Scaler ScaleHoriz2x;
 extern Scaler ScaleVert2x;
