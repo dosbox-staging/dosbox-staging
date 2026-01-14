@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef _RENDER_SCALERS_H
-#define _RENDER_SCALERS_H
+#ifndef DOSBOX_RENDER_SCALERS_H
+#define DOSBOX_RENDER_SCALERS_H
 
 #include "gui/render/render.h"
 
@@ -32,4 +32,5 @@ extern Scaler Scale1x;
 extern Scaler ScaleHoriz2x;
 extern Scaler ScaleVert2x;
 extern Scaler Scale2x;
-#endif
+
+#endif // DOSBOX_RENDER_SCALERS_H
