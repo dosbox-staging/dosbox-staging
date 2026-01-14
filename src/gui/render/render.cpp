@@ -1077,20 +1077,22 @@ static void set_viewport(SectionProp& section)
 
 static void set_integer_scaling(const SectionProp& section)
 {
+	using enum IntegerScalingMode;
+
 	render.integer_scaling_mode = [&]() {
 		const std::string mode = section.GetString("integer_scaling");
 
 		if (has_false(mode)) {
-			return IntegerScalingMode::Off;
+			return Off;
 
 		} else if (mode == "auto") {
-			return IntegerScalingMode::Auto;
+			return Auto;
 
 		} else if (mode == "horizontal") {
-			return IntegerScalingMode::Horizontal;
+			return Horizontal;
 
 		} else if (mode == "vertical") {
-			return IntegerScalingMode::Vertical;
+			return Vertical;
 
 		} else {
 			constexpr auto SettingName  = "integer_scaling";
@@ -1103,7 +1105,7 @@ static void set_integer_scaling(const SectionProp& section)
 			                      mode.c_str(),
 			                      DefaultValue);
 
-			return IntegerScalingMode::Auto;
+			return Auto;
 		}
 	}();
 }
