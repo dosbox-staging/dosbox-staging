@@ -45,11 +45,11 @@ public:
 
 	bool FindCommand(unsigned int which, std::string& value) const;
 
+	bool FindStringBeginCaseSensitive(const std::string& begin,
+	                                  std::string& value, bool remove = false);
+
 	bool FindStringBegin(const std::string& begin, std::string& value,
 	                     bool remove = false);
-
-	bool FindStringCaseInsensitiveBegin(const std::string& begin,
-	                                    std::string& value, bool remove = false);
 
 	bool FindStringRemain(const std::string& name, std::string& value);
 

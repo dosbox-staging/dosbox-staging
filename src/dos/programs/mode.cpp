@@ -153,8 +153,8 @@ void MODE::HandleSetDisplayMode()
 	std::string cols_str;
 	std::string lines_str;
 
-	cmd->FindStringCaseInsensitiveBegin("cols=", cols_str, RemoveArg);
-	cmd->FindStringCaseInsensitiveBegin("lines=", lines_str, RemoveArg);
+	cmd->FindStringBegin("cols=", cols_str, RemoveArg);
+	cmd->FindStringBegin("lines=", lines_str, RemoveArg);
 
 	std::optional<int> maybe_cols  = {};
 	std::optional<int> maybe_lines = {};
@@ -250,8 +250,8 @@ bool MODE::HandleSetTypematicRate()
 	std::string rate_str;
 	std::string delay_str;
 
-	cmd->FindStringCaseInsensitiveBegin("rate=", rate_str, RemoveArg);
-	cmd->FindStringCaseInsensitiveBegin("delay=", delay_str, RemoveArg);
+	cmd->FindStringBegin("rate=", rate_str, RemoveArg);
+	cmd->FindStringBegin("delay=", delay_str, RemoveArg);
 
 	const auto maybe_rate  = parse_int(rate_str);
 	const auto maybe_delay = parse_int(delay_str);

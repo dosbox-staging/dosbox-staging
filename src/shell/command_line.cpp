@@ -142,8 +142,9 @@ bool CommandLine::FindEntry(const std::string& name, cmd_it& it, bool neednext)
 	return false;
 }
 
-bool CommandLine::FindStringBegin(const std::string& begin, std::string& value,
-                                  bool remove)
+bool CommandLine::FindStringBeginCaseSensitive(const std::string& begin,
+                                               std::string& value,
+                                               bool remove)
 {
 	const auto len = begin.length();
 	for (auto it = cmds.begin(); it != cmds.end(); ++it) {
@@ -158,9 +159,9 @@ bool CommandLine::FindStringBegin(const std::string& begin, std::string& value,
 	return false;
 }
 
-bool CommandLine::FindStringCaseInsensitiveBegin(const std::string& begin,
-                                                 std::string& value,
-                                                 bool remove)
+bool CommandLine::FindStringBegin(const std::string& begin,
+                                  std::string& value,
+                                  bool remove)
 {
 	const auto len = begin.length();
 	for (auto it = cmds.begin(); it != cmds.end(); ++it) {
