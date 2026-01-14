@@ -276,6 +276,11 @@ ShaderDescriptor ShaderManager::GetCurrentShaderDescriptor() const
 	return current_shader.descriptor;
 }
 
+ShaderMode ShaderManager::GetCurrentShaderMode() const
+{
+	return current_shader.mode;
+}
+
 std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 {
 	std::deque<std::string> inventory;
@@ -315,6 +320,10 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 		inventory.emplace_back(format_str(pattern, dir.u8string().c_str()));
 
 		while (shader != shaders.end()) {
+			if (shader->string().starts_with("_internal/")) {
+				++shader;
+				continue;
+			}
 			shader->replace_extension("");
 			const auto is_last = (shader + 1 == shaders.end());
 			inventory.emplace_back(file_prefix +
@@ -355,6 +364,8 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 
 	} else if (name == "nearest") {
 		return "interpolation/nearest";
+	} else if (name == "jinc2") {
+		return "interpolation/jinc2";
 	}
 
 	// Map legacy shader names

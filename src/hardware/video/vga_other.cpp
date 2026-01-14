@@ -250,9 +250,6 @@ private:
 };
 
 static Knob hue(0, -360, 360);
-static Knob saturation(100, 0, 360);
-static Knob contrast(100, 0, 360);
-static Knob brightness(0, -100, 100);
 static Knob convergence(0, -50, 50);
 
 enum class CompositeState {
@@ -272,7 +269,7 @@ static MonochromePalette mono_cga_palette = {};
 // Monochrome CGA palettes with contrast optimised for 4-colour CGA graphics modes
 static constexpr Rgb888 mono_cga_graphics_palettes[NumMonochromePalettes][NumCgaColors] = {
 	{
-		// 0 - Amber,
+		// 0 - Amber
 		{0x00, 0x00, 0x00}, {0x15, 0x05, 0x00}, {0x20, 0x0b, 0x00}, {0x24, 0x0d, 0x00},
 		{0x33, 0x18, 0x00}, {0x37, 0x1b, 0x00}, {0x3f, 0x26, 0x01}, {0x3f, 0x2b, 0x06},
 		{0x0b, 0x02, 0x00}, {0x1b, 0x08, 0x00}, {0x29, 0x11, 0x00}, {0x2e, 0x14, 0x00},
@@ -343,6 +340,10 @@ static constexpr float get_rgbi_coefficient(const bool is_new_cga,
 	return r + g + b + i;
 }
 
+constexpr auto Brightness = 0.0f;
+constexpr auto Contrast   = 100.0f;
+constexpr auto Saturation = 100.0f;
+
 static void update_cga16_color_pcjr()
 {
 	assert(is_machine_pcjr());
@@ -353,9 +354,9 @@ static void update_cga16_color_pcjr()
 	constexpr auto tau = 6.28318531f;    // == 2*pi
 	constexpr auto ns = 567.0f / 440.0f; // degrees of hue shift per nanosecond
 
-	const auto tv_brightness = brightness.AsFloat() / 100.0f;
-	const auto tv_saturation = saturation.AsFloat() / 100.0f;
-	const auto tv_contrast = (1 - tv_brightness) * contrast.AsFloat() / 100.0f;
+	const auto tv_brightness = Brightness / 100.0f;
+	const auto tv_saturation = Saturation / 100.0f;
+	const auto tv_contrast   = (1 - tv_brightness) * Contrast / 100.0f;
 
 	const bool bw = vga.tandy.mode.is_black_and_white_mode;
 	const bool bpp1 = vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics;
@@ -568,16 +569,14 @@ static void update_cga16_color()
 	                           ? new_cga_v(chroma_multiplexer[255], i3, i3, i3, i3)
 	                           : chroma_multiplexer[255] + i3;
 
-	const auto mode_contrast = 2.56f * contrast.AsFloat() / (max_v - min_v);
-
-	const auto mode_brightness = brightness.AsFloat() * 5 -
-	                             256 * min_v / (max_v - min_v);
+	const auto mode_contrast = 2.56f * Contrast / (max_v - min_v);
+	const auto mode_brightness = Brightness * 5 - 256 * min_v / (max_v - min_v);
 
 	const bool in_tandy_text_mode = (vga.mode == M_CGA_TEXT_COMPOSITE) &&
 	                                (vga.tandy.mode.is_high_bandwidth);
 	const auto mode_hue = in_tandy_text_mode ? 14.0f : 4.0f;
 
-	const auto mode_saturation = saturation.AsFloat() *
+	const auto mode_saturation = Saturation *
 	                             (is_composite_new_era ? 5.8f : 2.9f) / 100;
 
 	// Update the Composite CGA palette
@@ -648,15 +647,7 @@ static void update_cga16_color()
 	vga.composite.sharpness = convergence.get() * 256 / 100;
 }
 
-enum CrtKnob {
-	Era = 0,
-	Hue,
-	Saturation,
-	Contrast,
-	Brightness,
-	Convergence,
-	LastValue
-};
+enum CrtKnob { Era = 0, Hue, Convergence, LastValue };
 
 static auto crt_knob = CrtKnob::Era;
 
@@ -670,18 +661,6 @@ static void log_crt_knob_value()
 
 	case CrtKnob::Hue:
 		LOG_MSG("COMPOSITE: composite_hue =  %d", hue.get());
-		break;
-
-	case CrtKnob::Saturation:
-		LOG_MSG("COMPOSITE: composite_saturation = %d", saturation.get());
-		break;
-
-	case CrtKnob::Contrast:
-		LOG_MSG("COMPOSITE: composite_contrast = %d", contrast.get());
-		break;
-
-	case CrtKnob::Brightness:
-		LOG_MSG("COMPOSITE: composite_brightness = %d", brightness.get());
 		break;
 
 	case CrtKnob::Convergence:
@@ -703,9 +682,6 @@ static void turn_crt_knob(bool pressed, const int amount)
 	switch (crt_knob) {
 	case CrtKnob::Era: is_composite_new_era = !is_composite_new_era; break;
 	case CrtKnob::Hue: hue.turn(amount); break;
-	case CrtKnob::Saturation: saturation.turn(amount); break;
-	case CrtKnob::Contrast: contrast.turn(amount); break;
-	case CrtKnob::Brightness: brightness.turn(amount); break;
 	case CrtKnob::Convergence: convergence.turn(amount); break;
 	case CrtKnob::LastValue:
 		assertm(false, "Should not reach CRT knob end marker");
@@ -1211,6 +1187,26 @@ static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
+static constexpr int NumHerculesColors = 2;
+
+// clang-format off
+static constexpr Rgb888 hercules_palettes[NumMonochromePalettes][NumHerculesColors] = {
+	{
+		// 0 - Amber
+		{0x34, 0x20, 0x00}, {0x3f, 0x34, 0x00}
+	}, {
+		// 1 - Green
+		{0x00, 0x26, 0x00}, {0x00, 0x3f, 0x00}
+	}, {
+		// 2 - White
+		{0x2a, 0x2a, 0x2a}, {0x3f, 0x3f, 0x3f}
+	}, {
+		// 3 - Paperwhite
+		{0x2d, 0x2e, 0x2d}, {0x3f, 0x3f, 0x3b}
+	}
+};
+// clang-format on
+
 void VGA_SetMonochromePalette(const enum MonochromePalette _palette)
 {
 	if (is_machine_hercules()) {
@@ -1272,28 +1268,36 @@ static void cycle_hercules_palette(bool pressed)
 
 void VGA_SetHerculesPalette()
 {
-	switch (hercules_palette) {
-	case MonochromePalette::Amber:
-		VGA_DAC_SetEntry(0x7, 0x34, 0x20, 0x00);
-		VGA_DAC_SetEntry(0xf, 0x3f, 0x34, 0x00);
-		break;
-	case MonochromePalette::Green:
-		VGA_DAC_SetEntry(0x7, 0x00, 0x26, 0x00);
-		VGA_DAC_SetEntry(0xf, 0x00, 0x3f, 0x00);
-		break;
-	case MonochromePalette::White:
-		VGA_DAC_SetEntry(0x7, 0x2a, 0x2a, 0x2a);
-		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3f);
-		break;
-	case MonochromePalette::Paperwhite:
-		VGA_DAC_SetEntry(0x7, 0x2d, 0x2e, 0x2d);
-		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3b);
-		break;
-	default: assertm(false, "Invalid MonochromePalette value");
-	}
+	const auto palette_idx = enum_val(hercules_palette);
+	const auto dark_color  = hercules_palettes[palette_idx][0];
+	const auto light_color = hercules_palettes[palette_idx][1];
+
+	VGA_DAC_SetEntry(0x7, dark_color.red, dark_color.green, dark_color.blue);
+	VGA_DAC_SetEntry(0xf, light_color.red, light_color.green, light_color.blue);
 
 	VGA_DAC_CombineColor(0, 0);
 	VGA_DAC_CombineColor(1, 7);
+}
+
+Rgb888 VGA_GetBlackLevelColor()
+{
+	if (is_machine_hercules()) {
+		const auto palette_idx = enum_val(hercules_palette);
+		const auto dark_color  = hercules_palettes[palette_idx][0];
+		return dark_color;
+
+	} else if (is_machine_cga_mono()) {
+		const auto palette_idx = enum_val(mono_cga_palette);
+		// The colour at index 5 has the same average luminosity as the
+		// "dark" Hercules colour
+		const auto color = mono_cga_graphics_palettes[palette_idx][5];
+		return color;
+
+	} else {
+		// Use neutral dark grey for all other video standards (no
+		// colour tint)
+		return Rgb888{40, 40, 40};
+	}
 }
 
 static void write_hercules(io_port_t port, io_val_t value, io_width_t)
@@ -1453,13 +1457,28 @@ void VGA_SetupOther()
 	}
 	// Add composite hotkeys for CGA, Tandy, and PCjr
 	if (is_machine_cga_color() || is_machine_pcjr_or_tandy()) {
-		MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10, 0,
-		                  "select", "Sel Knob");
-		MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11, 0,
-		                  "incval", "Inc Knob");
-		MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11,
-		                  MMOD2, "decval", "Dec Knob");
-		MAPPER_AddHandler(toggle_cga_composite_mode, SDL_SCANCODE_F12, 0, "cgacomp",
+		MAPPER_AddHandler(select_next_crt_knob,
+		                  SDL_SCANCODE_F10,
+		                  0,
+		                  "comp_sel",
+		                  "CompSelKnob");
+
+		MAPPER_AddHandler(turn_crt_knob_positive,
+		                  SDL_SCANCODE_F11,
+		                  0,
+		                  "comp_inc",
+		                  "CompIncKnob");
+
+		MAPPER_AddHandler(turn_crt_knob_negative,
+		                  SDL_SCANCODE_F11,
+		                  MMOD2,
+		                  "comp_dec",
+		                  "CompDecKnob");
+
+		MAPPER_AddHandler(toggle_cga_composite_mode,
+		                  SDL_SCANCODE_F12,
+		                  0,
+		                  "cgacomp",
 		                  "CGA Comp");
 	}
 
@@ -1514,9 +1533,6 @@ void COMPOSITE_Init()
 	                       (is_machine_pcjr() && era_choice == "auto");
 
 	hue.set(section->GetInt("hue"));
-	saturation.set(section->GetInt("saturation"));
-	contrast.set(section->GetInt("contrast"));
-	brightness.set(section->GetInt("brightness"));
 	convergence.set(section->GetInt("convergence"));
 
 	if (cga_comp == CompositeState::On) {
@@ -1575,33 +1591,6 @@ static void init_composite_settings(SectionProp& section)
 	        hue.GetDefaultValue(),
 	        hue.GetMinValue(),
 	        hue.GetMaxValue()));
-
-	int_prop = section.AddInt("saturation", WhenIdle, saturation.GetDefaultValue());
-	int_prop->SetMinMax(saturation.GetMinValue(), saturation.GetMaxValue());
-	int_prop->SetHelp(
-	        format_str("Set the saturation of the CGA composite colours (%d by default).\n"
-	                   "Valid range is %d to %d.",
-	                   saturation.GetDefaultValue(),
-	                   saturation.GetMinValue(),
-	                   saturation.GetMaxValue()));
-
-	int_prop = section.AddInt("contrast", WhenIdle, contrast.GetDefaultValue());
-	int_prop->SetMinMax(contrast.GetMinValue(), contrast.GetMaxValue());
-	int_prop->SetHelp(
-	        format_str("Set the contrast of the CGA composite colours (%d by default).\n"
-	                   "Valid range is %d to %d.",
-	                   contrast.GetDefaultValue(),
-	                   contrast.GetMinValue(),
-	                   contrast.GetMaxValue()));
-
-	int_prop = section.AddInt("brightness", WhenIdle, brightness.GetDefaultValue());
-	int_prop->SetMinMax(brightness.GetMinValue(), brightness.GetMaxValue());
-	int_prop->SetHelp(
-	        format_str("Set the brightness of the CGA composite colours (%d by default).\n"
-	                   "Valid range is %d to %d.",
-	                   brightness.GetDefaultValue(),
-	                   brightness.GetMinValue(),
-	                   brightness.GetMaxValue()));
 
 	int_prop = section.AddInt("convergence",
 	                          WhenIdle,

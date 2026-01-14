@@ -29,20 +29,16 @@ jobs:
     name:    Release build (${{ matrix.conf.arch }})
     runs-on: ${{ matrix.conf.host }}
     if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    env:
-      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.conf.minimum_deployment }}
 
     strategy:
       matrix:
         conf:
           - host: macos-15
             arch: x86_64
-            minimum_deployment: '11.0'
             max_warnings: 0
 
           - host: macos-15
             arch: arm64
-            minimum_deployment: '11.0'
             max_warnings: 0
 
     steps:

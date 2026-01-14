@@ -1661,12 +1661,8 @@ static void set_sdl_hints()
 #endif
 
 #if defined(WIN32)
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
-		LOG_WARNING("SDL: Error setting DPI awareness flag");
-	}
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE) {
-		LOG_WARNING("SDL: Error setting DPI scaling flag");
-	}
+	SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
+	SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1");
 #endif
 
 	// Seamless mouse integration feels more 'seamless' if mouse
@@ -1899,6 +1895,8 @@ void GFX_InitAndStartGui()
 	    sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
 		enter_fullscreen();
 	}
+
+	RENDER_Init();
 }
 
 static void notify_sdl_setting_updated(SectionProp& section,
@@ -2204,7 +2202,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 			// Needed for aspect & viewport mode combinations where
 			// the pixel aspect ratio or viewport size is sized
 			// relatively to the window size.
-			VGA_SetupDrawing(0);
+			GFX_ResetScreen();
 
 			last_width  = width;
 			last_height = height;

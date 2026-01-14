@@ -23,6 +23,10 @@ SdlRenderer::SdlRenderer(const int x, const int y, const int width,
 {
 	auto flags = sdl_window_flags | OpenGlDriverCrashWorkaround(render_driver);
 
+#ifdef MACOSX
+	SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "srgb");
+#endif
+
 	window = SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
 
 	if (!window && (flags & SDL_WINDOW_OPENGL)) {
@@ -89,16 +93,8 @@ uint32_t SdlRenderer::OpenGlDriverCrashWorkaround(const std::string_view render_
 
 bool SdlRenderer::InitRenderer(const std::string& render_driver)
 {
-	if (render_driver != "auto" &&
-	    (SDL_SetHint(SDL_HINT_RENDER_DRIVER, render_driver.c_str()) == SDL_FALSE)) {
-
-		// TODO convert to notification?
-		LOG_WARNING(
-		        "SDL: Error setting '%s' SDL render driver; "
-		        "falling back to automatic selection",
-		        render_driver.c_str());
-
-		set_section_property_value("sdl", "texture_renderer", "auto");
+	if (render_driver != "auto") {
+	    SDL_SetHint(SDL_HINT_RENDER_DRIVER, render_driver.c_str());
 	}
 
 	constexpr uint32_t Flags = 0;
@@ -252,7 +248,7 @@ void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 SdlRenderer::SetShaderResult SdlRenderer::SetShader(
         [[maybe_unused]] const std::string& shader_name)
 {
-	// no shader support; always report success
+	// no-op; always report success (no shader support)
 	//
 	// If we didn't, the rendering backend agnostic fallback mechanism would
 	// fail and we'd hard exit.
@@ -261,31 +257,31 @@ SdlRenderer::SetShaderResult SdlRenderer::SetShader(
 
 void SdlRenderer::NotifyVideoModeChanged([[maybe_unused]] const VideoMode& video_mode)
 {
-	// no shader support
+	// no-op (no shader support)
 	return;
 }
 
 bool SdlRenderer::ForceReloadCurrentShader()
 {
-	// no shader support; always report success
+	// no-op; always report success (no shader support)
 	return true;
 }
 
 ShaderInfo SdlRenderer::GetCurrentShaderInfo()
 {
-	// no shader support
+	// no-op (no shader support)
 	return {};
 }
 
 ShaderPreset SdlRenderer::GetCurrentShaderPreset()
 {
-	// no shader support
+	// no-op (no shader support)
 	return {};
 }
 
 std::string SdlRenderer::GetCurrentShaderDescriptorString()
 {
-	// no shader support
+	// no-op (no shader support)
 	return {};
 }
 
@@ -370,6 +366,22 @@ void SdlRenderer::SetVsync(const bool is_enabled)
 		        (is_enabled ? "enabling" : "disabling"),
 		        SDL_GetError());
 	}
+}
+
+void SdlRenderer::SetColorSpace([[maybe_unused]] const ColorSpace color_space)
+{
+	// no-op (no colour space support)
+}
+
+void SdlRenderer::SetImageAdjustmentSettings(
+        [[maybe_unused]] const ImageAdjustmentSettings& settings)
+{
+	// no-op (no image adjustment support)
+}
+
+void SdlRenderer::EnableImageAdjustments([[maybe_unused]] const bool enable)
+{
+	// no-op (no image adjustment support)
 }
 
 RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_px)

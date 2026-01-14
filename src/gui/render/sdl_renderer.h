@@ -53,6 +53,10 @@ public:
 
 	void SetVsync(const bool is_enabled) override;
 
+	void SetColorSpace(const ColorSpace color_space) override;
+	void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings) override;
+	void EnableImageAdjustments(const bool enable) override;
+
 	RenderedImage ReadPixelsPostShader(const DosBox::Rect output_rect_px) override;
 
 	uint32_t MakePixel(const uint8_t red, const uint8_t green,
@@ -81,7 +85,7 @@ private:
 	// True if the last framebuffer has been updated since the last present
 	bool last_framebuf_dirty = false;
 
-	SDL_Texture* texture          = {};
+	SDL_Texture* texture = {};
 
 	TextureFilterMode texture_filter_mode = TextureFilterMode::Bilinear;
 };
