@@ -71,9 +71,9 @@ struct RenderPalette {
 	uint32_t lut[NumVgaColors]     = {};
 	uint8_t modified[NumVgaColors] = {};
 
-	bool changed   = false;
-	uint32_t first = 0;
-	uint32_t last  = 0;
+	bool changed = false;
+	int first    = 0;
+	int last     = 0;
 };
 
 struct Render {
