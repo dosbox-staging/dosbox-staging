@@ -11,10 +11,12 @@
 #include "gui/private/common.h"
 #include "gui/render/render.h"
 
+#include <array>
 #include <cstring>
 
-int scaler_changed_lines[ScalerMaxHeight] = {};
-int scaler_changed_line_index             = 0;
+std::array<int, ScalerMaxHeight> scaler_changed_lines = {};
+
+int scaler_changed_line_index = 0;
 
 #define _conc3(A, B, C) A##B##C
 #define conc2d(A, B)    _conc3(A, _, B)
