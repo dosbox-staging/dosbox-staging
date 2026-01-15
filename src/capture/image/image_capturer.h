@@ -62,16 +62,30 @@ public:
 
 private:
 	struct State {
-		CaptureState raw      = {};
-		CaptureState upscaled = {};
-		CaptureState rendered = {};
-		CaptureState grouped  = {};
+		// If `grouped` is not `Off`, the `raw`, `upscaled` and
+		// `rendered` single-capture states are `Off`.
+		//
+		// Conversely, if `grouped` is not `Off`, the rest of the
+		// single-capture states are `Off.`
+		//
+		CaptureState raw      = CaptureState::Off;
+		CaptureState upscaled = CaptureState::Off;
+		CaptureState rendered = CaptureState::Off;
+
+		CaptureState grouped = CaptureState::Off;
 	};
 	State state = {};
 
 	struct GroupedMode {
-		bool wants_raw      = false;
+		// True if we need to capture the raw output in group capture mode
+		bool wants_raw = false;
+
+		// True if we need to capture the upscaled output in group
+		// capture mode
 		bool wants_upscaled = false;
+
+		// True if we need to capture the rendered output in group
+		// capture mode
 		bool wants_rendered = false;
 	};
 	GroupedMode grouped_mode = {};
