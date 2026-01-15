@@ -626,51 +626,46 @@ TEST(IsTextEqual, Valid)
 TEST(WritePaddedStringTest, PadsWithSpaces)
 {
 	constexpr int length               = 8;
-	std::array<uint8_t, length> buffer = {};
 	std::string input                  = "abc";
-	write_padded_string(buffer.data(), input, length, ' ');
-	std::string result(reinterpret_cast<char*>(buffer.data()), length);
-	EXPECT_EQ(result, "abc     ");
+	auto result                        = right_pad(input, length, ' ');
+	std::string result_str(reinterpret_cast<char*>(result.data()), length);
+	EXPECT_EQ(result_str, "abc     ");
 }
 
 TEST(WritePaddedStringTest, PadsWithCustomChar)
 {
 	constexpr int length               = 6;
-	std::array<uint8_t, length> buffer = {};
 	std::string input                  = "hi";
-	write_padded_string(buffer.data(), input, length, '-');
-	std::string result(reinterpret_cast<char*>(buffer.data()), length);
-	EXPECT_EQ(result, "hi----");
+	auto result                        = right_pad(input, length, '-');
+	std::string result_str(reinterpret_cast<char*>(result.data()), length);
+	EXPECT_EQ(result_str, "hi----");
 }
 
 TEST(WritePaddedStringTest, TruncatesIfLonger)
 {
 	constexpr int length               = 4;
-	std::array<uint8_t, length> buffer = {};
 	std::string input                  = "toolong";
-	write_padded_string(buffer.data(), input, length, ' ');
-	std::string result(reinterpret_cast<char*>(buffer.data()), length);
-	EXPECT_EQ(result, "tool");
+	auto result                        = right_pad(input, length, ' ');
+	std::string result_str(reinterpret_cast<char*>(result.data()), length);
+	EXPECT_EQ(result_str, "tool");
 }
 
 TEST(WritePaddedStringTest, ExactLengthNoPad)
 {
 	constexpr int length               = 5;
-	std::array<uint8_t, length> buffer = {};
 	std::string input                  = "hello";
-	write_padded_string(buffer.data(), input, length, 'x');
-	std::string result(reinterpret_cast<char*>(buffer.data()), length);
-	EXPECT_EQ(result, "hello");
+	auto result                        = right_pad(input, length, 'x');
+	std::string result_str(reinterpret_cast<char*>(result.data()), length);
+	EXPECT_EQ(result_str, "hello");
 }
 
 TEST(WritePaddedStringTest, EmptyStringAllPad)
 {
 	constexpr int length               = 3;
-	std::array<uint8_t, length> buffer = {};
 	std::string input                  = "";
-	write_padded_string(buffer.data(), input, length, '*');
-	std::string result(reinterpret_cast<char*>(buffer.data()), length);
-	EXPECT_EQ(result, "***");
+	auto result                        = right_pad(input, length, '*');
+	std::string result_str(reinterpret_cast<char*>(result.data()), length);
+	EXPECT_EQ(result_str, "***");
 }
 
 } // namespace

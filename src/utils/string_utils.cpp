@@ -495,11 +495,23 @@ bool is_text_equal(const std::string& str_1, const std::string& str_2)
 	return (index_1 == str_1.size()) && (index_2 == str_2.size());
 }
 
-// Write a string into a fixed-width buffer and pad a specified character
-void write_padded_string(uint8_t* dest, const std::string& str, int length,
-                         char pad_char)
+/**
+ * @brief Write a string into a fixed-width buffer and pad a specified character
+ *
+ * This function takes the contents of @p str,  ensuring that the total length
+ * is exactly @p length bytes. If @p str is shorter than @p length, the
+ * remaining space is filled with the character specified by @p pad_char.
+ * If @p str is longer than @p length, it is truncated to fit.
+ *
+ * @param str The input string
+ * @param length The desired length of the output string
+ * @param pad_char The character to use for padding if @p str is shorter than @p
+ * length
+ *
+ */
+std::string right_pad(const std::string& str, int length, char pad_char)
 {
 	auto temp = str;
 	temp.resize(length, pad_char);
-	std::copy(temp.begin(), temp.end(), dest);
+	return temp;
 }

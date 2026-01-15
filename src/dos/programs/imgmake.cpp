@@ -991,10 +991,8 @@ static void write_boot_sector(const CommandSettings& settings,
 	boot_sector->jump[2] = 0x90;
 
 	// OEM Name
-	write_padded_string(reinterpret_cast<uint8_t*>(boot_sector->oem_name),
-	                    "DOSBOX-S",
-	                    8,
-	                    ' ');
+	auto oem_name_str = right_pad("DOSBOX-S", 8, ' ');
+	std::copy(oem_name_str.begin(), oem_name_str.end(), boot_sector->oem_name);
 	write_le(&boot_sector->bytes_per_sector,
 	         ImageCreationContext::SectorSizeBytes);
 
@@ -1163,16 +1161,16 @@ static void write_boot_sector(const CommandSettings& settings,
 		write_le(&boot_sector->ext.fat32.serial_number,
 		         generate_volume_serial());
 
-		write_padded_string(reinterpret_cast<uint8_t*>(
-		                            boot_sector->ext.fat32.label),
-		                    "NO NAME",
-		                    11,
-		                    ' ');
-		write_padded_string(reinterpret_cast<uint8_t*>(
-		                            boot_sector->ext.fat32.fs_type),
-		                    "FAT32",
-		                    8,
-		                    ' ');
+		auto label_str = right_pad("NO NAME", 11, ' ');
+		std::copy(label_str.begin(),
+		          label_str.end(),
+		          boot_sector->ext.fat32.label);
+
+		auto fs_type_str = right_pad("FAT32", 8, ' ');
+		std::copy(fs_type_str.begin(),
+		          fs_type_str.end(),
+		          boot_sector->ext.fat32.fs_type);
+
 		// Copy fallback boot code
 		std::copy(std::begin(BootCode::Printer),
 		          std::end(BootCode::Printer),
@@ -1196,16 +1194,16 @@ static void write_boot_sector(const CommandSettings& settings,
 		// Generate volume serial number
 		write_le(&boot_sector->ext.fat16.serial_number,
 		         generate_volume_serial());
-		write_padded_string(reinterpret_cast<uint8_t*>(
-		                            boot_sector->ext.fat16.label),
-		                    "NO NAME",
-		                    11,
-		                    ' ');
-		write_padded_string(reinterpret_cast<uint8_t*>(
-		                            boot_sector->ext.fat16.fs_type),
-		                    (ctx.fat_bits == 16) ? "FAT16" : "FAT12",
-		                    8,
-		                    ' ');
+		auto label_str = right_pad("NO NAME", 11, ' ');
+		std::copy(label_str.begin(),
+		          label_str.end(),
+		          boot_sector->ext.fat16.label);
+		auto fs_type_str = right_pad((ctx.fat_bits == 16) ? "FAT16" : "FAT12",
+		                             8,
+		                             ' ');
+		std::copy(fs_type_str.begin(),
+		          fs_type_str.end(),
+		          boot_sector->ext.fat16.fs_type);
 		// Copy fallback boot code
 		std::copy(std::begin(BootCode::Printer),
 		          std::end(BootCode::Printer),
@@ -1330,10 +1328,9 @@ static void write_root_dir(const CommandSettings& settings, ImageCreationContext
 
 	std::array<uint8_t, ImageCreationContext::SectorSizeBytes> root_buffer = {};
 	auto* entry = reinterpret_cast<DirectoryEntry*>(root_buffer.data());
-	write_padded_string(reinterpret_cast<uint8_t*>(entry->filename),
-	                    settings.label,
-	                    11,
-	                    ' ');
+	auto filename_str = right_pad(settings.label, 11, ' ');
+	std::copy(filename_str.begin(), filename_str.end(), entry->filename);
+
 	// Volume ID
 	entry->attributes = 0x08;
 	fwrite(root_buffer.data(), 1, root_buffer.size(), ctx.fs);
