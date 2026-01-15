@@ -484,18 +484,17 @@ void MouseInterface::ConfigSetSensitivityY(const int16_t value)
 
 void MouseInterface::ConfigResetSensitivity()
 {
-	ConfigSetSensitivity(mouse_predefined.sensitivity_user_default,
-	                     mouse_predefined.sensitivity_user_default);
+	ConfigSetSensitivity(Mouse::DefaultSensitivity, Mouse::DefaultSensitivity);
 }
 
 void MouseInterface::ConfigResetSensitivityX()
 {
-	ConfigSetSensitivityX(mouse_predefined.sensitivity_user_default);
+	ConfigSetSensitivityX(Mouse::DefaultSensitivity);
 }
 
 void MouseInterface::ConfigResetSensitivityY()
 {
-	ConfigSetSensitivityY(mouse_predefined.sensitivity_user_default);
+	ConfigSetSensitivityY(Mouse::DefaultSensitivity);
 }
 
 void MouseInterface::ConfigSetMinRate(const uint16_t value_hz)
@@ -626,7 +625,7 @@ MouseButtons12S MouseInterface::GetButtonsSquished() const
 // ***************************************************************************
 
 InterfaceDos::InterfaceDos()
-        : MouseInterface(MouseInterfaceId::DOS, mouse_predefined.sensitivity_dos)
+        : MouseInterface(MouseInterfaceId::DOS, Mouse::SensitivityDos)
 {}
 
 void InterfaceDos::Init()
@@ -695,7 +694,7 @@ void InterfaceDos::UpdateRate()
 }
 
 InterfacePS2::InterfacePS2()
-        : MouseInterface(MouseInterfaceId::PS2, mouse_predefined.sensitivity_ps2)
+        : MouseInterface(MouseInterfaceId::PS2, Mouse::SensitivityPs2)
 {}
 
 void InterfacePS2::Init()
@@ -754,8 +753,8 @@ void InterfacePS2::UpdateSensitivity()
 {
 	MouseInterface::UpdateSensitivity();
 
-	const float tmp = mouse_predefined.sensitivity_vmm /
-	                  mouse_predefined.sensitivity_ps2;
+	const float tmp = Mouse::SensitivityVmm / Mouse::SensitivityPs2;
+
 	sensitivity_coeff_vmm_x = sensitivity_coeff_x * tmp;
 	sensitivity_coeff_vmm_y = sensitivity_coeff_y * tmp;
 }
@@ -769,7 +768,7 @@ void InterfacePS2::UpdateRate()
 InterfaceCOM::InterfaceCOM(const uint8_t port_id)
         : MouseInterface(static_cast<MouseInterfaceId>(
                                  static_cast<uint8_t>(MouseInterfaceId::COM1) + port_id),
-                         mouse_predefined.sensitivity_com)
+                         Mouse::SensitivityCom)
 {}
 
 void InterfaceCOM::NotifyMoved(const float x_rel, const float y_rel,

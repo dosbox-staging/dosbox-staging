@@ -922,11 +922,13 @@ bool MouseControlAPI::SetSensitivity(const MouseControlAPI::ListIDs &list_ids,
                                      const int16_t sensitivity_x,
                                      const int16_t sensitivity_y)
 {
-	if (sensitivity_x > mouse_predefined.sensitivity_user_max ||
-	    sensitivity_x < -mouse_predefined.sensitivity_user_max ||
-	    sensitivity_y > mouse_predefined.sensitivity_user_max ||
-	    sensitivity_y < -mouse_predefined.sensitivity_user_max)
+	if (sensitivity_x < Mouse::MinSensitivity ||
+	    sensitivity_x > Mouse::MaxSensitivity ||
+	    sensitivity_y < Mouse::MinSensitivity ||
+	    sensitivity_y > Mouse::MaxSensitivity) {
+
 		return false;
+	}
 
 	auto list = get_relevant_interfaces(list_ids);
 	for (auto &interface : list)
@@ -938,9 +940,10 @@ bool MouseControlAPI::SetSensitivity(const MouseControlAPI::ListIDs &list_ids,
 bool MouseControlAPI::SetSensitivityX(const MouseControlAPI::ListIDs &list_ids,
                                       const int16_t sensitivity_x)
 {
-	if (sensitivity_x > mouse_predefined.sensitivity_user_max ||
-	    sensitivity_x < -mouse_predefined.sensitivity_user_max)
+	if (sensitivity_x < Mouse::MinSensitivity ||
+	    sensitivity_x > Mouse::MaxSensitivity) {
 		return false;
+	}
 
 	auto list = get_relevant_interfaces(list_ids);
 	for (auto &interface : list)
@@ -952,9 +955,10 @@ bool MouseControlAPI::SetSensitivityX(const MouseControlAPI::ListIDs &list_ids,
 bool MouseControlAPI::SetSensitivityY(const MouseControlAPI::ListIDs &list_ids,
                                       const int16_t sensitivity_y)
 {
-	if (sensitivity_y > mouse_predefined.sensitivity_user_max ||
-	    sensitivity_y < -mouse_predefined.sensitivity_user_max)
+	if (sensitivity_y < Mouse::MinSensitivity ||
+	    sensitivity_y > Mouse::MaxSensitivity) {
 		return false;
+	}
 
 	auto list = get_relevant_interfaces(list_ids);
 	for (auto &interface : list)
