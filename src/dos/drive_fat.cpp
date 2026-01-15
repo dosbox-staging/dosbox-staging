@@ -842,8 +842,8 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 	if (bytesector != BytePerSector) {
 		/* Non-standard sector sizes not implemented */
 		created_successfully = false;
-		LOG_MSG("Non-standard sector size detected: %u bytes per sector",
-		        bytesector);
+		LOG_WARNING("DOS: MOUNT - Non-standard sector size detected: %u bytes per sector",
+		            bytesector);
 		return;
 	}
 
@@ -907,8 +907,8 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 			} else {
 				/* Unknown format */
 				created_successfully = false;
-				LOG_MSG("Unknown floppy format detected (media descriptor 0x%02x)!",
-				        mdesc);
+				LOG_WARNING("DOS: MOUNT - Unknown floppy format detected (media descriptor 0x%02x)!",
+				            mdesc);
 				return;
 			}
 		}
