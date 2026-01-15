@@ -7,6 +7,31 @@
 #include <cstdint>
 #include <cstring>
 
+#if defined(WIN32)
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
+
+static inline uint16_t net_to_host16(const uint16_t net_value)
+{
+	return ntohs(net_value);
+}
+
+static inline uint32_t net_to_host32(const uint32_t net_value)
+{
+	return ntohl(net_value);
+}
+
+static inline uint16_t host_to_net16(const uint16_t host_value)
+{
+	return htons(host_value);
+}
+static inline uint32_t host_to_net32(const uint32_t host_value)
+{
+	return htonl(host_value);
+}
+
 // A minimal replacement for SDL_net's IPaddress.
 //
 // Semantics: the underlying bytes are stored in network order (big-endian).
@@ -16,49 +41,42 @@
 struct IPaddress {
 	uint32_t host = 0; // network-order bytes
 	uint16_t port = 0; // network-order bytes
+	IPaddress(const uint32_t host, const uint16_t port)
+	        : host(host_to_net32(host)),
+	          port(host_to_net16(port))
+	{}
+	IPaddress() = default;
 };
 #pragma pack(pop)
 
 static_assert(sizeof(IPaddress) == 6, "IPaddress must match legacy layout");
 
 // Big-endian read/write helpers (replacement for SDLNet_Read/WriteXX).
-inline uint16_t Net_Read16(const void* p)
+// Safe for unaligned pointers.
+static inline uint16_t net_read16(const void* p)
 {
-	const auto* b = static_cast<const uint8_t*>(p);
-	return static_cast<uint16_t>((static_cast<uint16_t>(b[0]) << 8) | b[1]);
+	uint16_t tmp = 0;
+	std::memcpy(&tmp, p, sizeof(tmp));
+	return ntohs(tmp);
 }
 
-inline uint32_t Net_Read32(const void* p)
+static inline uint32_t net_read32(const void* p)
 {
-	const auto* b = static_cast<const uint8_t*>(p);
-	return (static_cast<uint32_t>(b[0]) << 24) | (static_cast<uint32_t>(b[1]) << 16) |
-	       (static_cast<uint32_t>(b[2]) << 8) | static_cast<uint32_t>(b[3]);
+	uint32_t tmp = 0;
+	std::memcpy(&tmp, p, sizeof(tmp));
+	return ntohl(tmp);
 }
 
-inline void Net_Write16(const uint16_t value, void* p)
+static inline void net_write16(const uint16_t value, void* p)
 {
-	auto* b = static_cast<uint8_t*>(p);
-	b[0] = static_cast<uint8_t>(value >> 8);
-	b[1] = static_cast<uint8_t>(value & 0xff);
+	const uint16_t tmp = htons(value);
+	std::memcpy(p, &tmp, sizeof(tmp));
 }
 
-inline void Net_Write32(const uint32_t value, void* p)
+static inline void net_write32(const uint32_t value, void* p)
 {
-	auto* b = static_cast<uint8_t*>(p);
-	b[0] = static_cast<uint8_t>(value >> 24);
-	b[1] = static_cast<uint8_t>((value >> 16) & 0xff);
-	b[2] = static_cast<uint8_t>((value >> 8) & 0xff);
-	b[3] = static_cast<uint8_t>(value & 0xff);
-}
-
-inline uint16_t Net_PortToHost(const uint16_t net_port)
-{
-	return Net_Read16(&net_port);
-}
-
-inline void Net_SetPort(IPaddress& addr, const uint16_t host_port)
-{
-	Net_Write16(host_port, &addr.port);
+	const uint32_t tmp = htonl(value);
+	std::memcpy(p, &tmp, sizeof(tmp));
 }
 
 #endif // DOSBOX_HARDWARE_NETWORK_NET_DEFS_H

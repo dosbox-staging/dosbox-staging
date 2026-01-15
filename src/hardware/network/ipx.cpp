@@ -65,13 +65,7 @@ static uint16_t swapByte(uint16_t sockNum) {
 
 static IPaddress from_endpoint(const asio::ip::udp::endpoint& ep)
 {
-	IPaddress addr   = {};
-	const auto bytes = ep.address().to_v4().to_bytes();
-	addr.host        = static_cast<uint32_t>(bytes[0]) |
-	            (static_cast<uint32_t>(bytes[1]) << 8) |
-	            (static_cast<uint32_t>(bytes[2]) << 16) |
-	            (static_cast<uint32_t>(bytes[3]) << 24);
-	Net_SetPort(addr, ep.port());
+	IPaddress addr = {ep.address().to_v4().to_uint(), ep.port()};
 	return addr;
 }
 
@@ -521,16 +515,16 @@ Bitu IPX_IntHandler(void) {
 static void pingAck(IPaddress retAddr) {
 	IPXHeader regHeader;
 
-	Net_Write16(0xffff, regHeader.checkSum);
-	Net_Write16(static_cast<uint16_t>(sizeof(regHeader)), regHeader.length);
+	net_write16(0xffff, regHeader.checkSum);
+	net_write16(static_cast<uint16_t>(sizeof(regHeader)), regHeader.length);
 
-	Net_Write32(0, regHeader.dest.network);
+	net_write32(0, regHeader.dest.network);
 	PackIP(retAddr, &regHeader.dest.addr.byIP);
-	Net_Write16(0x2, regHeader.dest.socket);
+	net_write16(0x2, regHeader.dest.socket);
 
-	Net_Write32(0, regHeader.src.network);
+	net_write32(0, regHeader.src.network);
 	memcpy(regHeader.src.addr.byNode.node, localIpxAddr.netnode, sizeof(regHeader.src.addr.byNode.node));
-	Net_Write16(0x2, regHeader.src.socket);
+	net_write16(0x2, regHeader.src.socket);
 	regHeader.transControl = 0;
 	regHeader.pType = 0x0;
 
@@ -551,17 +545,17 @@ static void pingAck(IPaddress retAddr) {
 static void pingSend(void) {
 	IPXHeader regHeader;
 
-	Net_Write16(0xffff, regHeader.checkSum);
-	Net_Write16(static_cast<uint16_t>(sizeof(regHeader)), regHeader.length);
+	net_write16(0xffff, regHeader.checkSum);
+	net_write16(static_cast<uint16_t>(sizeof(regHeader)), regHeader.length);
 
-	Net_Write32(0, regHeader.dest.network);
+	net_write32(0, regHeader.dest.network);
 	regHeader.dest.addr.byIP.host = 0xffffffff;
 	regHeader.dest.addr.byIP.port = 0xffff;
-	Net_Write16(0x2, regHeader.dest.socket);
+	net_write16(0x2, regHeader.dest.socket);
 
-	Net_Write32(0, regHeader.src.network);
+	net_write32(0, regHeader.src.network);
 	memcpy(regHeader.src.addr.byNode.node, localIpxAddr.netnode, sizeof(regHeader.src.addr.byNode.node));
-	Net_Write16(0x2, regHeader.src.socket);
+	net_write16(0x2, regHeader.src.socket);
 	regHeader.transControl = 0;
 	regHeader.pType = 0x0;
 
@@ -828,19 +822,19 @@ bool ConnectToServer(const char* strAddr)
 		return false;
 	}
 
-	Net_Write16(0xffff, regHeader.checkSum);
-	Net_Write16(static_cast<uint16_t>(sizeof(regHeader)), regHeader.length);
+	net_write16(0xffff, regHeader.checkSum);
+	net_write16(static_cast<uint16_t>(sizeof(regHeader)), regHeader.length);
 
 	// Echo packet with zeroed dest and src is a server registration packet
-	Net_Write32(0, regHeader.dest.network);
+	net_write32(0, regHeader.dest.network);
 	regHeader.dest.addr.byIP.host = 0x0;
 	regHeader.dest.addr.byIP.port = 0x0;
-	Net_Write16(0x2, regHeader.dest.socket);
+	net_write16(0x2, regHeader.dest.socket);
 
-	Net_Write32(0, regHeader.src.network);
+	net_write32(0, regHeader.src.network);
 	regHeader.src.addr.byIP.host = 0x0;
 	regHeader.src.addr.byIP.port = 0x0;
-	Net_Write16(0x2, regHeader.src.socket);
+	net_write16(0x2, regHeader.src.socket);
 	regHeader.transControl = 0;
 	// Send registration packet to server. If server doesn't get this,
 	// client will not be registered.
@@ -1103,7 +1097,7 @@ public:
 						if(IPX_isConnectedToServer(i,&ptrAddr)) {
 							WriteOut("     %d.%d.%d.%d from port %d\n",
 							         CONVIP(ptrAddr->host),
-							         Net_PortToHost(
+							         net_to_host16(
 							                 ptrAddr->port));
 						}
 					}
@@ -1132,7 +1126,7 @@ public:
 						        "Response from %d.%d.%d.%d, port %d time=%lldms\n",
 						        CONVIP(pingHead.src.addr
 						                       .byIP.host),
-						        Net_PortToHost(
+						        net_to_host16(
 						                pingHead.src
 						                        .addr
 						                        .byIP.port),
