@@ -90,7 +90,7 @@ private:
 	};
 	GroupedMode grouped_mode = {};
 
-	std_fs::path rendered_path    = {};
+	std_fs::path rendered_path = {};
 
 	static constexpr auto NumImageSavers                = 3;
 	size_t current_image_saver_index                    = 0;
