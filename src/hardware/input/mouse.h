@@ -5,6 +5,7 @@
 #ifndef DOSBOX_MOUSE_H
 #define DOSBOX_MOUSE_H
 
+#include <array>
 #include <regex>
 #include <string>
 #include <vector>
@@ -24,22 +25,25 @@ void MOUSE_Init();
 // Data types
 // ***************************************************************************
 
-enum class MouseInterfaceId : uint8_t {
+enum class MouseInterfaceId {
 	DOS,  // emulated DOS mouse driver
 	PS2,  // PS/2 mouse (this includes VMware and VirtualBox protocols)
 	COM1, // serial mouse
 	COM2,
 	COM3,
 	COM4,
-
-	First = DOS,
-	Last  = COM4,
-	None  = UINT8_MAX
 };
 
-constexpr uint8_t num_mouse_interfaces = static_cast<uint8_t>(MouseInterfaceId::Last) + 1;
+constexpr std::array<MouseInterfaceId, 6> AllMouseInterfaceIds = {
+	MouseInterfaceId::DOS,
+	MouseInterfaceId::PS2,
+	MouseInterfaceId::COM1,
+	MouseInterfaceId::COM2,
+	MouseInterfaceId::COM3,
+	MouseInterfaceId::COM4,
+};
 
-enum class MouseMapStatus : uint8_t {
+enum class MouseMapStatus {
 	HostPointer,
 	Mapped,       // single physical mouse mapped to emulated port
 	Disconnected, // physical mouse used to be mapped, but got unplugged
@@ -233,7 +237,8 @@ private:
 	friend class MouseInterface;
 	MouseInterfaceInfoEntry(const MouseInterfaceId interface_id);
 
-	const uint8_t interface_idx;
+	const MouseInterfaceId interface_id;
+
 	const MouseInterface &Interface() const;
 	const MousePhysical &MappedPhysical() const;
 };

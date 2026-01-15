@@ -462,7 +462,8 @@ static void cmd_set_sample_rate(const uint8_t new_rate_hz)
 	}
 
 	// Update event queue settings and interface information
-	MouseInterface::GetPS2()->NotifyInterfaceRate(rate_hz);
+	auto& interface = MouseInterface::GetInstance(MouseInterfaceId::PS2);
+	interface.NotifyInterfaceRate(rate_hz);
 
 	// Handle extended mouse protocol unlock sequences
 	auto process_unlock = [](const std::vector<uint8_t>& sequence,

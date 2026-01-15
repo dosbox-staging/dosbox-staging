@@ -74,10 +74,11 @@ static void maybe_check_remove_mappings()
 	}
 
 	bool needs_warning = false;
-	for (const auto& interface : mouse_interfaces) {
-		if (interface->IsMapped()) {
+	for (const auto interface_id : AllMouseInterfaceIds) {
+		auto& interface = MouseInterface::GetInstance(interface_id);
+		if (interface.IsMapped()) {
 			needs_warning = true;
-			interface->ConfigUnMap();
+			interface.ConfigUnMap();
 		}
 	}
 

@@ -28,12 +28,17 @@ static constexpr uint16_t rate_1200_baud = 40;
 
 CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
         : CSerial(id, cmd),
-          port_id(id),
-          port_num(static_cast<uint16_t>(id + 1))
+          port_num(id + 1),
+          interface_id(static_cast<MouseInterfaceId>(enum_val(MouseInterfaceId::COM1) + id))
 {
-	auto interface = MouseInterface::GetSerial(port_id);
-	if (!interface)
+	if (interface_id != MouseInterfaceId::COM1 &&
+	    interface_id != MouseInterfaceId::COM2 &&
+	    interface_id != MouseInterfaceId::COM3 &&
+	    interface_id != MouseInterfaceId::COM4) {
+
+		LOG_ERR("MOUSE (COM%d): Port not supported", port_num);
 		return;
+	}
 
 	// Get the parameters from the configuration file
 
@@ -60,17 +65,17 @@ CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
 	setCD(false);
 	setCTS(false);
 
-	interface->RegisterListener(*this);
-	interface->NotifyInterfaceRate(rate_1200_baud);
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	interface.RegisterListener(*this);
+	interface.NotifyInterfaceRate(rate_1200_baud);
+
 	InstallationSuccessful = true;
 }
 
 CSerialMouse::~CSerialMouse()
 {
-	auto interface = MouseInterface::GetSerial(port_id);
-	if (interface) {
-		interface->UnRegisterListener();
-	}
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	interface.UnRegisterListener();
 
 	removeEvent(SERIAL_TX_EVENT); // clear events
 	LOG_MSG("MOUSE (COM%d): Disconnected", port_num);
@@ -203,7 +208,8 @@ void CSerialMouse::SetModel(const MouseModelCOM new_model)
 
 	// So far all emulated mice are 1200 bauds, but report anyway
 	// to trigger rate_coeff recalculation
-	MouseInterface::GetSerial(port_id)->NotifyInterfaceRate(rate_1200_baud);
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	interface.NotifyInterfaceRate(rate_1200_baud);
 }
 
 void CSerialMouse::AbortPacket()
