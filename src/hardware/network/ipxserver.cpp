@@ -36,25 +36,14 @@ static void ipx_server_arm_receive();
 
 static asio::ip::udp::endpoint to_endpoint(const IPaddress& addr)
 {
-	const asio::ip::address_v4::bytes_type bytes = {
-	        static_cast<unsigned char>(addr.host & 0xff),
-	        static_cast<unsigned char>((addr.host >> 8) & 0xff),
-	        static_cast<unsigned char>((addr.host >> 16) & 0xff),
-	        static_cast<unsigned char>((addr.host >> 24) & 0xff),
-	};
-	const uint16_t port = Net_PortToHost(addr.port);
-	return {asio::ip::address_v4(bytes), port};
+	const auto host = net_to_host32(addr.host);
+	const auto port = net_to_host16(addr.port);
+	return {asio::ip::address_v4(host), port};
 }
 
 static IPaddress from_endpoint(const asio::ip::udp::endpoint& ep)
 {
-	IPaddress addr   = {};
-	const auto bytes = ep.address().to_v4().to_bytes();
-	addr.host        = static_cast<uint32_t>(bytes[0]) |
-	            (static_cast<uint32_t>(bytes[1]) << 8) |
-	            (static_cast<uint32_t>(bytes[2]) << 16) |
-	            (static_cast<uint32_t>(bytes[3]) << 24);
-	Net_SetPort(addr, ep.port());
+	IPaddress addr = {ep.address().to_v4().to_uint(), ep.port()};
 	return addr;
 }
 
@@ -133,16 +122,16 @@ bool IPX_isConnectedToServer(Bits tableNum, IPaddress ** ptrAddr) {
 static void ackClient(IPaddress clientAddr) {
 	IPXHeader regHeader = {};
 
-	Net_Write16(0xffff, regHeader.checkSum);
-	Net_Write16(static_cast<uint16_t>(sizeof(regHeader)), regHeader.length);
+	net_write16(0xffff, regHeader.checkSum);
+	net_write16(static_cast<uint16_t>(sizeof(regHeader)), regHeader.length);
 
-	Net_Write32(0, regHeader.dest.network);
+	net_write32(0, regHeader.dest.network);
 	PackIP(clientAddr, &regHeader.dest.addr.byIP);
-	Net_Write16(0x2, regHeader.dest.socket);
+	net_write16(0x2, regHeader.dest.socket);
 
-	Net_Write32(1, regHeader.src.network);
+	net_write32(1, regHeader.src.network);
 	PackIP(ipxServerIp, &regHeader.src.addr.byIP);
-	Net_Write16(0x2, regHeader.src.socket);
+	net_write16(0x2, regHeader.src.socket);
 	regHeader.transControl = 0;
 
 	if (!ipx_server_socket) {
@@ -176,7 +165,7 @@ static void IPX_ServerHandlePacket(const IPaddress& sender_addr, const size_t pa
 	auto* tmpHeader = reinterpret_cast<IPXHeader*>(&inBuffer[0]);
 
 	// Check to see if echo packet
-	if (Net_Read16(tmpHeader->dest.socket) == 0x2) {
+	if (net_read16(tmpHeader->dest.socket) == 0x2) {
 		// Null destination node means its a server registration packet
 		if (tmpHeader->dest.addr.byIP.host == 0x0) {
 			UnpackIP(tmpHeader->src.addr.byIP, &tmpAddr);
@@ -269,7 +258,7 @@ bool IPX_StartServer(uint16_t portnum)
 	// Server identity used in registration replies; historically this was
 	// INADDR_ANY + port.
 	ipxServerIp.host = 0;
-	Net_SetPort(ipxServerIp, portnum);
+	ipxServerIp.port = host_to_net16(portnum);
 
 	std::error_code ec;
 
