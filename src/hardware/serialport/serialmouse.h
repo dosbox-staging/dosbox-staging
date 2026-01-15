@@ -47,8 +47,9 @@ private:
 	void SetEventTHR();
 	uint8_t ClampCounter(const int32_t counter) const;
 
-	const uint8_t port_id   = 0;
-	const uint16_t port_num = 0; // for logging purposes
+	const int port_num = 0; // mainly for logging purposes
+
+	const MouseInterfaceId interface_id = {};
 
 	// Mouse model as specified in the parameter
 	MouseModelCOM param_model = MouseModelCOM::NoMouse;

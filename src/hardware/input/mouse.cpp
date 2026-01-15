@@ -384,8 +384,9 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 		GFX_SetMouseHint(state.hint_id);
 	}
 
-	for (auto& interface : mouse_interfaces) {
-		interface->UpdateInputType();
+	for (const auto interface_id : AllMouseInterfaceIds) {
+		auto& interface = MouseInterface::GetInstance(interface_id);
+		interface.UpdateInputType();
 	}
 
 	// And take a note that this is no longer the first run
@@ -535,16 +536,15 @@ void MOUSE_NotifyWindowActive(const bool is_active)
 
 void MOUSE_NotifyDisconnect(const MouseInterfaceId interface_id)
 {
-	auto interface = MouseInterface::Get(interface_id);
-	if (interface) {
-		interface->NotifyDisconnect();
-	}
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	interface.NotifyDisconnect();
 }
 
 void MOUSE_NotifyBooting()
 {
-	for (auto& interface : mouse_interfaces) {
-		interface->NotifyBooting();
+	for (const auto interface_id : AllMouseInterfaceIds) {
+		auto& interface = MouseInterface::GetInstance(interface_id);
+		interface.NotifyBooting();
 	}
 }
 
@@ -581,12 +581,13 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	// Notify mouse interfaces
 	const float x_scaled = x_rel * mouse_config.sensitivity_coeff_x;
 	const float y_scaled = y_rel * mouse_config.sensitivity_coeff_y;
-	for (auto& interface : mouse_interfaces) {
-		if (interface->IsUsingHostPointer()) {
-			interface->NotifyMoved(x_scaled,
-			                       y_scaled,
-			                       state.cursor_x_abs,
-			                       state.cursor_y_abs);
+	for (const auto interface_id : AllMouseInterfaceIds) {
+		auto& interface = MouseInterface::GetInstance(interface_id);
+		if (interface.IsUsingHostPointer()) {
+			interface.NotifyMoved(x_scaled,
+			                      y_scaled,
+			                      state.cursor_x_abs,
+			                      state.cursor_y_abs);
 		}
 	}
 }
@@ -602,11 +603,11 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	}
 
 	// Notify mouse interface
-	auto interface = MouseInterface::Get(interface_id);
-	if (interface && interface->IsUsingEvents()) {
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	if (interface.IsUsingEvents()) {
 		const float x_scaled = x_rel * mouse_config.sensitivity_coeff_x;
 		const float y_scaled = y_rel * mouse_config.sensitivity_coeff_y;
-		interface->NotifyMoved(x_scaled, y_scaled, 0, 0);
+		interface.NotifyMoved(x_scaled, y_scaled, 0, 0);
 	}
 }
 
@@ -646,9 +647,10 @@ void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed)
 	}
 
 	// Notify mouse interfaces
-	for (auto& interface : mouse_interfaces) {
-		if (interface->IsUsingHostPointer()) {
-			interface->NotifyButton(button_id, pressed);
+	for (const auto interface_id : AllMouseInterfaceIds) {
+		auto& interface = MouseInterface::GetInstance(interface_id);
+		if (interface.IsUsingHostPointer()) {
+			interface.NotifyButton(button_id, pressed);
 		}
 	}
 }
@@ -666,9 +668,9 @@ void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed,
 	}
 
 	// Notify mouse interface
-	auto interface = MouseInterface::Get(interface_id);
-	if (interface && interface->IsUsingEvents()) {
-		interface->NotifyButton(button_id, pressed);
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	if (interface.IsUsingEvents()) {
+		interface.NotifyButton(button_id, pressed);
 	}
 }
 
@@ -682,9 +684,10 @@ void MOUSE_EventWheel(const float w_rel)
 	}
 
 	// Notify mouse interfaces
-	for (auto& interface : mouse_interfaces) {
-		if (interface->IsUsingHostPointer()) {
-			interface->NotifyWheel(w_rel);
+	for (const auto interface_id : AllMouseInterfaceIds) {
+		auto& interface = MouseInterface::GetInstance(interface_id);
+		if (interface.IsUsingHostPointer()) {
+			interface.NotifyWheel(w_rel);
 		}
 	}
 }
@@ -699,9 +702,9 @@ void MOUSE_EventWheel(const int16_t w_rel, const MouseInterfaceId interface_id)
 	}
 
 	// Notify mouse interface
-	auto interface = MouseInterface::Get(interface_id);
-	if (interface && interface->IsUsingEvents()) {
-		interface->NotifyWheel(w_rel);
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	if (interface.IsUsingEvents()) {
+		interface.NotifyWheel(w_rel);
 	}
 }
 
@@ -717,23 +720,24 @@ static std::vector<MouseInterface *> get_relevant_interfaces(
 	if (list_ids.empty()) {
 		// If command does not specify interfaces,
 		// assume we are interested in all of them
-		for (const auto& interface : mouse_interfaces) {
-			list_tmp.push_back(interface.get());
+		for (const auto interface_id : AllMouseInterfaceIds) {
+			auto& interface = MouseInterface::GetInstance(interface_id);
+			list_tmp.push_back(&interface);
 		}
 	} else {
-		for (const auto& id : list_ids) {
-			if (const auto interface = MouseInterface::Get(id);
-			    interface) {
-				list_tmp.push_back(interface);
-			}
+		for (const auto& interface_id : list_ids) {
+			auto& interface = MouseInterface::GetInstance(interface_id);
+			list_tmp.push_back(&interface);
 		}
 	}
 
 	// Filter out not emulated ones
 	std::vector<MouseInterface *> list_out = {};
-	for (const auto &interface : list_tmp)
-		if (interface->IsEmulated())
+	for (const auto &interface : list_tmp) {
+		if (interface->IsEmulated()) {
 			list_out.push_back(interface);
+		}
+	}
 
 	return list_out;
 }
@@ -863,12 +867,8 @@ bool MouseControlAPI::Map(const MouseInterfaceId interface_id,\
 		return false;
 	}
 
-	auto mouse_interface = MouseInterface::Get(interface_id);
-	if (!mouse_interface) {
-		return false;
-	}
-
-	return mouse_interface->ConfigMap(physical_device_idx);
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	return interface.ConfigMap(physical_device_idx);
 }
 
 bool MouseControlAPI::Map(const MouseInterfaceId interface_id, const std::regex &regex)
@@ -1028,10 +1028,9 @@ std::string MouseControlAPI::GetInterfaceNameStr(const MouseInterfaceId interfac
 	case MouseInterfaceId::COM2: return "COM2";
 	case MouseInterfaceId::COM3: return "COM3";
 	case MouseInterfaceId::COM4: return "COM4";
-	case MouseInterfaceId::None: return "";
 	default:
 		assert(false); // missing implementation
-		return nullptr;
+		return {};
 	}
 }
 
