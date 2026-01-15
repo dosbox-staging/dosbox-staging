@@ -113,15 +113,15 @@ void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
 		return;
 	}
 
-	bool do_raw      = false;
-	bool do_upscaled = false;
-	bool do_rendered = false;
+	bool capture_raw      = false;
+	bool capture_upscaled = false;
+	bool capture_rendered = false;
 
 	if (state.grouped == CaptureState::Off) {
 		// We're in regular single image capture mode
-		do_raw      = (state.raw != CaptureState::Off);
-		do_upscaled = (state.upscaled != CaptureState::Off);
-		do_rendered = (state.rendered != CaptureState::Off);
+		capture_raw      = (state.raw != CaptureState::Off);
+		capture_upscaled = (state.upscaled != CaptureState::Off);
+		capture_rendered = (state.rendered != CaptureState::Off);
 
 		// Clear the state flags
 		state.raw      = CaptureState::Off;
@@ -133,44 +133,44 @@ void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
 		state.grouped = CaptureState::InProgress;
 
 		if (grouped_mode.wants_raw) {
-			do_raw = true;
+			capture_raw = true;
 		}
 		if (grouped_mode.wants_upscaled) {
-			do_upscaled = true;
+			capture_upscaled = true;
 		}
 		if (grouped_mode.wants_rendered) {
-			do_rendered = true;
+			capture_rendered = true;
 			// If rendered capture is wanted, the state will be
 			// cleared in the CapturePostRenderImage() callback...
 		} else {
-			// ...otherwise we clear it now
+			// ...otherwise we're clearing it now.
 			state.grouped = CaptureState::Off;
 		}
 	}
 
-	if (!(do_raw || do_upscaled || do_rendered)) {
+	if (!(capture_raw || capture_upscaled || capture_rendered)) {
 		return;
 	}
 
-	// We can pass in any of the image types, it doesn't matter which
+	// We can pass in any of the image types; it doesn't matter which.
 	const auto index = get_next_capture_index(CaptureType::RawImage);
 	if (!index) {
 		return;
 	}
-	if (do_raw) {
+	if (capture_raw) {
 		GetNextImageSaver().QueueImage(
 		        image.deep_copy(),
 		        CapturedImageType::Raw,
 		        generate_capture_filename(CaptureType::RawImage, index));
 	}
-	if (do_upscaled) {
+	if (capture_upscaled) {
 		GetNextImageSaver().QueueImage(
 		        image.deep_copy(),
 		        CapturedImageType::Upscaled,
 		        generate_capture_filename(CaptureType::UpscaledImage, index));
 	}
 
-	if (do_rendered) {
+	if (capture_rendered) {
 		rendered_path = generate_capture_filename(CaptureType::RenderedImage,
 		                                          index);
 	}
