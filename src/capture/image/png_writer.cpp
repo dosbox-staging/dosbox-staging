@@ -171,8 +171,11 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 	//   Portable Network Graphics (PNG) Specification (Second Edition)
 	//   https://www.w3.org/TR/2003/REC-PNG-20031110/#11pHYs)
 	//
-	const auto pixels_per_unit_x = static_cast<uint32_t>(pixel_aspect_ratio.Num());
-	const auto pixels_per_unit_y = static_cast<uint32_t>(pixel_aspect_ratio.Denom());
+	const auto pixels_per_unit_x = static_cast<uint32_t>(
+	        pixel_aspect_ratio.Num());
+
+	const auto pixels_per_unit_y = static_cast<uint32_t>(
+	        pixel_aspect_ratio.Denom());
 
 	// "When the unit specifier is 0, the pHYs chunk defines pixel aspect
 	// ratio only; the actual size of the pixels remains unspecified."
