@@ -15,6 +15,8 @@
 
 CHECK_NARROWING();
 
+// #define DEBUG_IMAGE_SCALER
+
 void ImageScaler::Init(const RenderedImage& image)
 {
 	input = image;
@@ -39,7 +41,7 @@ void ImageScaler::Init(const RenderedImage& image)
 	assertm(output.horiz_scale >= 1.0f, "ImageScaler can currently only upscale");
 	assertm(output.vert_scale >= 1, "ImageScaler can currently only upscale");
 
-	// LogParams();
+	LogParams();
 
 	AllocateBuffers();
 }
@@ -139,6 +141,7 @@ void ImageScaler::UpdateOutputParamsUpscale()
 
 void ImageScaler::LogParams()
 {
+#ifdef DEBUG_IMAGE_SCALER
 	auto pixel_format_to_string = [](const OutputPixelFormat pf) -> std::string {
 		switch (pf) {
 		case OutputPixelFormat::Indexed8: return "Indexed8";
@@ -158,7 +161,8 @@ void ImageScaler::LogParams()
 	const auto& src        = input.params;
 	const auto& video_mode = input.params.video_mode;
 
-	LOG_MSG("ImageScaler params:\n"
+	LOG_DEBUG(
+	        "ImageScaler params:\n"
 	        "    input.width:                %10d\n"
 	        "    input.height:               %10d\n"
 	        "    input.double_width:         %10s\n"
@@ -201,6 +205,7 @@ void ImageScaler::LogParams()
 	        scale_mode_to_string(output.horiz_scaling_mode).c_str(),
 	        scale_mode_to_string(output.vert_scaling_mode).c_str(),
 	        pixel_format_to_string(output.pixel_format).c_str());
+#endif
 }
 
 void ImageScaler::AllocateBuffers()
