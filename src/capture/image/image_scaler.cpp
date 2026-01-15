@@ -51,14 +51,14 @@ static bool is_integer(const float f)
 
 void ImageScaler::UpdateOutputParamsUpscale()
 {
-	constexpr auto target_output_height = 1200;
+	constexpr auto TargetOutputHeight = 1200;
 
 	const auto& video_mode = input.params.video_mode;
 
 	// Calculate initial integer vertical scaling factor so the resulting
 	// output image height is roughly around 1200px.
 	output.vert_scale = static_cast<uint8_t>(
-	        roundf(static_cast<float>(target_output_height) /
+	        roundf(static_cast<float>(TargetOutputHeight) /
 	               static_cast<float>(video_mode.height)));
 
 	output.vert_scaling_mode = PerAxisScaling::Integer;
