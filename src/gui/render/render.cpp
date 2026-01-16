@@ -149,9 +149,9 @@ static void finish_line_handler(const void* src_line_data)
 
 static void clear_cache_handler(const void* src_line_data)
 {
-	const uint32_t* src_line = (const uint32_t*)src_line_data;
-	uint32_t* cache_line     = (uint32_t*)render.scale.cache_read;
-	Bitu width               = render.scale.cache_pitch / 4;
+	const uint32_t* src_line = static_cast<const uint32_t*>(src_line_data);
+	uint32_t* cache_line = reinterpret_cast<uint32_t*>(render.scale.cache_read);
+	Bitu width = render.scale.cache_pitch / 4;
 
 	for (Bitu x = 0; x < width; x++) {
 		cache_line[x] = ~src_line[x];
@@ -175,9 +175,9 @@ bool RENDER_StartUpdate()
 
 	render.scale.in_line    = 0;
 	render.scale.out_line   = 0;
-	render.scale.cache_read = (uint8_t*)&scaler_source_cache;
-	render.scale.out_write  = nullptr;
-	render.scale.out_pitch  = 0;
+	render.scale.cache_read = reinterpret_cast<uint8_t*>(&scaler_source_cache);
+	render.scale.out_write = nullptr;
+	render.scale.out_pitch = 0;
 
 	scaler_changed_lines[0]   = 0;
 	scaler_changed_line_index = 0;
@@ -259,8 +259,8 @@ static void handle_capture_frame()
 	image.params.double_width  = double_width;
 	image.params.double_height = double_height;
 	image.pitch                = render.scale.cache_pitch;
-	image.image_data           = (uint8_t*)&scaler_source_cache;
-	image.palette              = render.palette.rgb;
+	image.image_data = reinterpret_cast<uint8_t*>(&scaler_source_cache);
+	image.palette    = render.palette.rgb;
 
 	const auto frames_per_second = static_cast<float>(render.fps);
 
