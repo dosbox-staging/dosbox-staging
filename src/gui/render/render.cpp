@@ -135,21 +135,27 @@ static void finish_line_handler(const void* src_line_data)
 static void clear_cache_handler(const void* src_line_data)
 {
 	// `src_line_data` contains a scanline worth of pixel data. All screen
-	// mode widths are multiples of 4, therefore we can access this data one
-	// uint32_t at a time, regardless of pixel format (pixel can be stored
+	// mode widths are multiples of 8, therefore we can access this data one
+	// uint64_t at a time, regardless of pixel format (pixel can be stored
 	// on 1 to 4 bytes).
-	const auto src = static_cast<const uint32_t*>(src_line_data);
+	auto src = static_cast<const uint8_t*>(src_line_data);
 
 	// The width of all screen modes and therefore `cache_pitch` too is a
-	// multiple of 4 (`cache_pitch` equals the screen mode's width multiplied
+	// multiple of 8 (`cache_pitch` equals the screen mode's width multiplied
 	// by the number of bytes per pixel and no padding).
 	//
-	auto cache = reinterpret_cast<uint32_t*>(render.scale.cache_read);
+	auto cache = render.scale.cache_read;
 
-	const auto count = render.scale.cache_pitch / sizeof(uint32_t);
+	constexpr auto Step = sizeof(uint64_t);
+	const auto count    = render.scale.cache_pitch / Step;
 
 	for (size_t x = 0; x < count; ++x) {
-		cache[x] = ~src[x];
+		const auto src_val = read_unaligned_uint64(src);
+
+		write_unaligned_uint64(cache, ~src_val);
+
+		src += Step;
+		cache += Step;
 	}
 
 	render.scale.line_handler(src_line_data);
