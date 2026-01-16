@@ -865,28 +865,6 @@ have_fd_zero = (
     or cc.has_header_symbol('winsock2.h', 'FD_ZERO')
 )
 
-# SDL Networking
-sdl2_net_dep = optional_dep
-sdl2_net_summary_msg = 'Disabled'
-if get_option('use_sdl2_net')
-    sdl2_net_dep = dependency(
-        'SDL2_net',
-        version: ['>= 2.0.0', '< 3'],
-        static: ('sdl2_net' in static_libs_list or prefers_static_libs),
-        default_options: default_wrap_options,
-        not_found_message: msg.format('use_sdl2_net'),
-        include_type: 'system',
-    )
-    sdl2_net_summary_msg = sdl2_net_dep.found()
-
-    if sdl2_net_dep.found() and not have_fd_zero
-        sdl2_net_dep = optional_dep
-        sdl2_net_summary_msg = 'Disabled due to host missing file-descriptor routines'
-    endif
-
-endif
-summary('SDL_net 2.0 support', sdl2_net_summary_msg)
-
 # SDL Image
 sdl2_image_dep = dependency(
     'SDL2_image',

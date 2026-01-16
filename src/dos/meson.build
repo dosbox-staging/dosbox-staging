@@ -66,7 +66,6 @@ libdos = static_library(
     dependencies: [
         sdl2_dep,
         sdl2_image_dep,
-        sdl2_net_dep,
         libdecoders_dep,
         ghc_dep,
         libiir_dep,
