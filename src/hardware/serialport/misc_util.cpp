@@ -535,6 +535,7 @@ TCPClientSocket::~TCPClientSocket()
 
 bool TCPClientSocket::GetRemoteAddressString(char* buffer)
 {
+	assert(buffer);
 	std::error_code ec;
 	const auto ep = socket.remote_endpoint(ec);
 	if (ec) {
@@ -544,8 +545,9 @@ bool TCPClientSocket::GetRemoteAddressString(char* buffer)
 	if (!addr.is_v4()) {
 		return false;
 	}
-	std::snprintf(buffer, 128, "%s", addr.to_string(ec).c_str());
-	return !ec;
+	const auto addr_str = addr.to_string();
+	std::snprintf(buffer, 128, "%s", addr_str.c_str());
+	return true;
 }
 
 bool TCPClientSocket::ReceiveArray(uint8_t* data, size_t& n)
