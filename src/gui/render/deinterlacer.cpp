@@ -327,13 +327,18 @@ void Deinterlacer::CombineOutput(uint32_t* pixel_data, bit_buffer& mask,
 	}
 }
 
-void Deinterlacer::Deinterlace(uint32_t* pixel_data, const int _image_width,
-                               const int _image_height, const int _image_pitch_pixels,
+void Deinterlacer::Deinterlace(RenderedImage& image,
                                const DeinterlacingStrength strength)
 {
-	image_width        = _image_width;
-	image_height       = _image_height;
-	image_pitch_pixels = _image_pitch_pixels;
+	assert(image.params.pixel_format == PixelFormat::BGRX32_ByteArray);
+
+	image_width        = image.params.width;
+	image_height       = image.params.height;
+	image_pitch_pixels = image.pitch / sizeof(uint32_t);
+
+	// Not undefined behaviour because the original image buffer was an
+	// uint32_t vector
+	auto pixel_data = reinterpret_cast<uint32_t*>(image.image_data);
 
 	// We store 64 1-bit pixels per uint64_t, plus 1 uint64_t for padding at
 	// the end of each row. We also store two padding rows at the top and

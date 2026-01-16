@@ -318,6 +318,33 @@ static void handle_capture_frame()
 	CAPTURE_AddFrame(image, frames_per_second);
 }
 
+static void deinterlace_rendered_output()
+{
+	// Copy scaled & deinterlaced output into the render backend's
+	// texture buffer (always in 32-bit BGRX pixel format)
+	std::memcpy(render.dest,
+	            render.scale.out_buf.data(),
+	            render.scale.out_height * render.scale.out_pitch);
+
+	// Deinterlace the render's backend buffer and leave the scaler
+	// output buffer intact (as deinterlacing the scaler output
+	// buffer itself would screw up the scaler diffing).
+	//
+	RenderedImage image = {};
+
+	image.params               = render.src;
+	image.params.width         = render.scale.out_width;
+	image.params.height        = render.scale.out_height;
+	image.params.pixel_format  = PixelFormat::BGRX32_ByteArray;
+	image.pitch                = render.scale.out_pitch;
+	image.params.double_width  = false;
+	image.params.double_height = false;
+
+	image.image_data = reinterpret_cast<uint8_t*>(render.dest);
+
+	render.deinterlacer->Deinterlace(image, render.deinterlacing_strength);
+}
+
 void RENDER_EndUpdate([[maybe_unused]] bool abort)
 {
 	if (!render.render_in_progress) {
@@ -332,27 +359,7 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 
 	// Only deinterlace the output if the frame has changed
 	if (is_deinterlacing() && render.updating_frame) {
-
-		assert(pitch_pixels % sizeof(uint32_t) == 0);
-
-		const auto pitch_pixels = check_cast<int>(
-		        render.scale.out_pitch / sizeof(uint32_t));
-
-		// Copy scaled & deinterlaced output into the render backend's
-		// texture buffer (always in 32-bit BGRX pixel format)
-		std::memcpy(render.dest,
-		            render.scale.out_buf.data(),
-		            render.scale.out_height * render.scale.out_pitch);
-
-		// Deinterlace the render's backend buffer and leave the scaler
-		// output buffer intact (as deinterlacing the scaler output
-		// buffer itself would screw up the scaler diffing).
-		//
-		render.deinterlacer->Deinterlace(render.dest,
-		                                 render.scale.out_width,
-		                                 render.scale.out_height,
-		                                 pitch_pixels,
-		                                 render.deinterlacing_strength);
+		deinterlace_rendered_output();
 	}
 
 	GFX_EndUpdate();

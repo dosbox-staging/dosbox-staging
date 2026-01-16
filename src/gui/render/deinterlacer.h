@@ -7,6 +7,9 @@
 #include <cstdint>
 #include <vector>
 
+// forward declaration
+struct RenderedImage;
+
 enum class DeinterlacingStrength { Off, Light, Medium, Strong, Full };
 
 class Deinterlacer {
@@ -16,9 +19,7 @@ public:
 
 	// Expects packed RGBA pixel data (one uint32_t per pixel, no extra
 	// padding per line).
-	void Deinterlace(uint32_t* pixel_data, const int image_width,
-	                 const int image_height, const int image_pitch_pixels,
-	                 const DeinterlacingStrength strength);
+	void Deinterlace(RenderedImage& image, const DeinterlacingStrength strength);
 
 	// prevent copying
 	Deinterlacer(const Deinterlacer&) = delete;
