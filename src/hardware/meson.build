@@ -94,7 +94,6 @@ libhardware = static_library(
         libzmbv_dep,
         png_dep,
         sdl2_dep,
-        sdl2_net_dep,
         speexdsp_dep,
         winsock2_dep,
     ],
