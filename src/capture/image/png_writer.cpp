@@ -25,7 +25,7 @@ PngWriter::~PngWriter()
 	png_info_ptr = nullptr;
 }
 
-bool PngWriter::InitRgb888(FILE* fp, const uint16_t width, const uint16_t height,
+bool PngWriter::InitRgb888(FILE* fp, const int width, const int height,
                            const Fraction& pixel_aspect_ratio,
                            const VideoMode& video_mode)
 {
@@ -33,12 +33,12 @@ bool PngWriter::InitRgb888(FILE* fp, const uint16_t width, const uint16_t height
 		return false;
 	}
 
-	constexpr auto is_paletted = false;
-	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, is_paletted, {});
+	constexpr auto IsPaletted = false;
+	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, IsPaletted, {});
 	return true;
 }
 
-bool PngWriter::InitIndexed8(FILE* fp, const uint16_t width, const uint16_t height,
+bool PngWriter::InitIndexed8(FILE* fp, const int width, const int height,
                              const Fraction& pixel_aspect_ratio,
                              const VideoMode& video_mode,
                              const std::array<Rgb888, NumVgaColors>& palette)
@@ -47,8 +47,8 @@ bool PngWriter::InitIndexed8(FILE* fp, const uint16_t width, const uint16_t heig
 		return false;
 	}
 
-	constexpr auto is_paletted = true;
-	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, is_paletted, palette);
+	constexpr auto IsPaletted = true;
+	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, IsPaletted, palette);
 	return true;
 }
 
@@ -115,7 +115,7 @@ void PngWriter::SetPngCompressionsParams()
 	png_set_compression_method(png_ptr, Z_DEFLATED);
 }
 
-void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
+void PngWriter::WritePngInfo(const int width, const int height,
                              const Fraction& pixel_aspect_ratio,
                              const VideoMode& video_mode, const bool is_paletted,
                              const std::array<Rgb888, NumVgaColors>& palette)
@@ -123,14 +123,14 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 	assert(png_ptr);
 	assert(png_info_ptr);
 
-	constexpr auto png_bit_depth = 8;
-	const auto png_color_type    = is_paletted ? PNG_COLOR_TYPE_PALETTE
-	                                           : PNG_COLOR_TYPE_RGB;
+	constexpr auto PngBitDepth = 8;
+	const auto png_color_type  = is_paletted ? PNG_COLOR_TYPE_PALETTE
+	                                         : PNG_COLOR_TYPE_RGB;
 	png_set_IHDR(png_ptr,
 	             png_info_ptr,
-	             width,
-	             height,
-	             png_bit_depth,
+	             check_cast<uint16_t>(width),
+	             check_cast<uint16_t>(height),
+	             PngBitDepth,
 	             png_color_type,
 	             PNG_INTERLACE_NONE,
 	             PNG_COMPRESSION_TYPE_DEFAULT,
@@ -171,8 +171,11 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 	//   Portable Network Graphics (PNG) Specification (Second Edition)
 	//   https://www.w3.org/TR/2003/REC-PNG-20031110/#11pHYs)
 	//
-	const auto pixels_per_unit_x = static_cast<uint32_t>(pixel_aspect_ratio.Num());
-	const auto pixels_per_unit_y = static_cast<uint32_t>(pixel_aspect_ratio.Denom());
+	const auto pixels_per_unit_x = static_cast<uint32_t>(
+	        pixel_aspect_ratio.Num());
+
+	const auto pixels_per_unit_y = static_cast<uint32_t>(
+	        pixel_aspect_ratio.Denom());
 
 	// "When the unit specifier is 0, the pHYs chunk defines pixel aspect
 	// ratio only; the actual size of the pixels remains unspecified."
