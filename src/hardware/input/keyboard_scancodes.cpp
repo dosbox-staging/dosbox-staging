@@ -134,7 +134,7 @@ std::vector<uint8_t> KEYBOARD_GetScanCode1(const KBD_KEYS key_type,
         case KBD_kp0:            code = 0x52; break;
         case KBD_kpperiod:       code = 0x53; break;
 
-        case KBD_oem102:         code = 0x56; break; // XXX
+        case KBD_oem102:         code = 0x56; break;
         case KBD_f11:            code = 0x57; break;
         case KBD_f12:            code = 0x58; break;
 
