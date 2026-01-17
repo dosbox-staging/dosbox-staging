@@ -17,3 +17,4 @@ SDL2_net-*
 speexdsp-*
 zlib*
 gvdb*
+!packagefiles/**

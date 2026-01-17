@@ -7,7 +7,10 @@
 
 #include "misc_util.h"
 
+#include <algorithm>
 #include <cassert>
+#include <cstdio>
+#include <string>
 
 #include "hardware/timer.h"
 
@@ -472,190 +475,123 @@ void ENETClientSocket::updateState()
 
 // --- TCP NET INTERFACE -----------------------------------------------------
 
-class sdl_net_manager_t {
-public:
-	sdl_net_manager_t()
-	{
-		if (already_tried_once)
-			return;
-		already_tried_once = true;
-
-		is_initialized = SDLNet_Init() != -1;
-		if (is_initialized)
-			LOG_INFO("SDLNET: Initialised SDL network subsystem");
-		else
-			LOG_WARNING("SDLNET: failed to initialize SDL network subsystem: %s\n",
-			            SDLNet_GetError());
-	}
-
-	~sdl_net_manager_t()
-	{
-		if (!is_initialized)
-			return;
-
-		assert(already_tried_once);
-		SDLNet_Quit();
-		LOG_INFO("SDLNET: Shutdown SDL network subsystem");
-	}
-
-	bool IsInitialized() const { return is_initialized; }
-
-private:
-	bool already_tried_once = false;
-	bool is_initialized = false;
-};
-
-bool NetWrapper_InitializeSDLNet()
+static void setup_tcp_socket(asio::ip::tcp::socket& socket)
 {
-	static sdl_net_manager_t sdl_net_manager;
-	return sdl_net_manager.IsInitialized();
+	std::error_code ec;
+	socket.set_option(asio::ip::tcp::no_delay(true), ec);
+	(void)ec;
+}
+
+TCPClientSocket::TCPClientSocket(asio::ip::tcp::socket&& new_socket,
+                                 const std::shared_ptr<asio::io_context>& io_context)
+        : io(io_context),
+          socket(std::move(new_socket))
+{
+	setup_tcp_socket(socket);
+	isopen = true;
 }
 
 #ifdef NATIVESOCKETS
 TCPClientSocket::TCPClientSocket(int platformsocket)
+        : io(std::make_shared<asio::io_context>()),
+          socket(*io)
 {
-	if (!NetWrapper_InitializeSDLNet())
-		return;
-
-	nativetcpstruct = new _TCPsocketX;
-	mysock = (TCPsocket)nativetcpstruct;
-
-	// fill the SDL socket manually
-	nativetcpstruct->ready = 0;
-	nativetcpstruct->sflag = 0;
-	nativetcpstruct->channel = platformsocket;
-	sockaddr_in		sa;
-	socklen_t		sz;
-	sz=sizeof(sa);
-	if(getpeername(platformsocket, (sockaddr *)(&sa), &sz)==0) {
-		nativetcpstruct->remoteAddress.host = /*ntohl(*/sa.sin_addr.s_addr;//);
-		nativetcpstruct->remoteAddress.port = /*ntohs(*/sa.sin_port;//);
-	}
-	else {
-		mysock = nullptr;
+	is_inherited_socket = true;
+	std::error_code ec;
+	socket.assign(asio::ip::tcp::v4(), platformsocket, ec);
+	if (ec) {
 		return;
 	}
-	sz=sizeof(sa);
-	if(getsockname(platformsocket, (sockaddr *)(&sa), &sz)==0) {
-		(nativetcpstruct)->localAddress.host = /*ntohl(*/ sa.sin_addr.s_addr; //);
-		(nativetcpstruct)->localAddress.port = /*ntohs(*/ sa.sin_port; //);
-	}
-	else {
-		mysock = nullptr;
-		return;
-	}
-	if(mysock) {
-		listensocketset = SDLNet_AllocSocketSet(1);
-		if(!listensocketset) return;
-		SDLNet_TCP_AddSocket(listensocketset, mysock);
-		isopen=true;
-		return;
-	}
-	return;
+	setup_tcp_socket(socket);
+	isopen = true;
 }
-#endif // NATIVESOCKETS
+#endif
 
-TCPClientSocket::TCPClientSocket(TCPsocket source)
+TCPClientSocket::TCPClientSocket(const char* destination, uint16_t port)
+        : io(std::make_shared<asio::io_context>()),
+          socket(*io)
 {
-	if (!NetWrapper_InitializeSDLNet())
+	std::error_code ec;
+	asio::ip::tcp::resolver resolver(*io);
+	auto endpoints = resolver.resolve(destination, std::to_string(port), ec);
+	if (ec) {
 		return;
-
-	if(source!=nullptr) {
-		mysock = source;
-		listensocketset = SDLNet_AllocSocketSet(1);
-		if(!listensocketset) return;
-		SDLNet_TCP_AddSocket(listensocketset, source);
-
-		isopen=true;
 	}
-}
-
-TCPClientSocket::TCPClientSocket(const char *destination, uint16_t port)
-{
-	if (!NetWrapper_InitializeSDLNet())
+	asio::connect(socket, endpoints, ec);
+	if (ec) {
 		return;
-
-	IPaddress openip;
-	//Ancient versions of SDL_net had this as char*. People still appear to be using this one.
-	if (!SDLNet_ResolveHost(&openip, destination, port)) {
-		listensocketset = SDLNet_AllocSocketSet(1);
-		if(!listensocketset) return;
-		mysock = SDLNet_TCP_Open(&openip);
-		if (!mysock)
-			return;
-		SDLNet_TCP_AddSocket(listensocketset, mysock);
-		isopen=true;
 	}
+	setup_tcp_socket(socket);
+	isopen = true;
 }
 
 TCPClientSocket::~TCPClientSocket()
 {
-#ifdef NATIVESOCKETS
-	if (nativetcpstruct) { //-V809
-		delete nativetcpstruct;
-	}
-	// Very important else. If we're using a native TCP socket, we can't call SDL's close.
-	// nativetcpstruct == mysock so it's a double free and it wasn't created by SDL to begin with
-	else
-#endif
-	if(mysock) {
-		SDLNet_TCP_Close(mysock);
-		LOG_INFO("SDLNET: Closed client TCP listening socket");
-	}
-
-	if (listensocketset) {
-		SDLNet_FreeSocketSet(listensocketset);
+	std::error_code ec;
+	if (socket.is_open()) {
+		socket.close(ec);
 	}
 }
 
-bool TCPClientSocket::GetRemoteAddressString(char *buffer)
+bool TCPClientSocket::GetRemoteAddressString(char* buffer)
 {
-	IPaddress *remote_ip;
-	uint8_t b1, b2, b3, b4;
-	remote_ip=SDLNet_TCP_GetPeerAddress(mysock);
-	if(!remote_ip) return false;
-	b4=remote_ip->host>>24;
-	b3=(remote_ip->host>>16)&0xff;
-	b2=(remote_ip->host>>8)&0xff;
-	b1=remote_ip->host&0xff;
-	sprintf(buffer, "%" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8, b1, b2, b3, b4);
+	assert(buffer);
+	std::error_code ec;
+	const auto ep = socket.remote_endpoint(ec);
+	if (ec) {
+		return false;
+	}
+	const auto addr = ep.address();
+	if (!addr.is_v4()) {
+		return false;
+	}
+	const auto addr_str = addr.to_string();
+	std::snprintf(buffer, 128, "%s", addr_str.c_str());
 	return true;
 }
 
-bool TCPClientSocket::ReceiveArray(uint8_t *data, size_t &n)
+bool TCPClientSocket::ReceiveArray(uint8_t* data, size_t& n)
 {
-	assertm(n <= static_cast<size_t>(std::numeric_limits<int>::max()),
-	        "SDL_net can't handle more bytes at a time.");
 	assert(data);
-	if (SDLNet_CheckSockets(listensocketset, 0)) {
-		const int result = SDLNet_TCP_Recv(mysock, data, static_cast<int>(n));
-		if(result < 1) {
-			isopen = false;
-			n = 0;
-			return false;
-		} else {
-			n = result;
-			return true;
-		}
-	} else {
+	std::error_code ec;
+	const auto available = socket.available(ec);
+	if (ec) {
+		isopen = false;
+		n      = 0;
+		return false;
+	}
+	if (available == 0) {
 		n = 0;
 		return true;
 	}
+	const auto to_read = std::min<size_t>(n, available);
+	const auto bytes_read = socket.read_some(asio::buffer(data, to_read), ec);
+	if (ec) {
+		isopen = false;
+		n      = 0;
+		return false;
+	}
+	n = bytes_read;
+	return true;
 }
 
-SocketState TCPClientSocket::GetcharNonBlock(uint8_t &val)
+SocketState TCPClientSocket::GetcharNonBlock(uint8_t& val)
 {
-	SocketState state = SocketState::Empty;
-	if(SDLNet_CheckSockets(listensocketset,0))
-	{
-		if (SDLNet_TCP_Recv(mysock, &val, 1) == 1)
-			state = SocketState::Good;
-		else {
-			isopen = false;
-			state = SocketState::Closed;
-		}
+	std::error_code ec;
+	const auto available = socket.available(ec);
+	if (ec) {
+		isopen = false;
+		return SocketState::Closed;
 	}
-	return state;
+	if (available == 0) {
+		return SocketState::Empty;
+	}
+	const auto bytes_read = socket.read_some(asio::buffer(&val, 1), ec);
+	if (ec || bytes_read != 1) {
+		isopen = false;
+		return SocketState::Closed;
+	}
+	return SocketState::Good;
 }
 
 bool TCPClientSocket::Putchar(uint8_t val)
@@ -663,13 +599,12 @@ bool TCPClientSocket::Putchar(uint8_t val)
 	return SendArray(&val, 1);
 }
 
-bool TCPClientSocket::SendArray(const uint8_t *data, const size_t n)
+bool TCPClientSocket::SendArray(const uint8_t* data, const size_t n)
 {
-	assertm(n <= static_cast<size_t>(std::numeric_limits<int>::max()),
-	        "SDL_net can't handle more bytes at a time.");
 	assert(data);
-	if (SDLNet_TCP_Send(mysock, data, static_cast<int>(n))
-	    != static_cast<int>(n)) {
+	std::error_code ec;
+	const auto bytes_sent = asio::write(socket, asio::buffer(data, n), ec);
+	if (ec || bytes_sent != n) {
 		isopen = false;
 		return false;
 	}
@@ -677,20 +612,31 @@ bool TCPClientSocket::SendArray(const uint8_t *data, const size_t n)
 }
 
 TCPServerSocket::TCPServerSocket(const uint16_t port)
+        : io(std::make_shared<asio::io_context>()),
+          acceptor(*io)
 {
 	isopen = false;
-	mysock = nullptr;
-
-	if (!NetWrapper_InitializeSDLNet())
+	if (!port) {
 		return;
+	}
 
-	if (port) {
-		IPaddress listen_ip;
-		SDLNet_ResolveHost(&listen_ip, nullptr, port);
-		mysock = SDLNet_TCP_Open(&listen_ip);
-		if (!mysock)
-			return;
-	} else {
+	std::error_code ec;
+	asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v4(), port);
+	acceptor.open(endpoint.protocol(), ec);
+	if (ec) {
+		return;
+	}
+	acceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true), ec);
+	acceptor.bind(endpoint, ec);
+	if (ec) {
+		return;
+	}
+	acceptor.listen(asio::socket_base::max_listen_connections, ec);
+	if (ec) {
+		return;
+	}
+	acceptor.non_blocking(true, ec);
+	if (ec) {
 		return;
 	}
 	isopen = true;
@@ -698,21 +644,25 @@ TCPServerSocket::TCPServerSocket(const uint16_t port)
 
 TCPServerSocket::~TCPServerSocket()
 {
-	if (mysock) {
-		SDLNet_TCP_Close(mysock);
-		LOG_INFO("SDLNET: closed server TCP listening socket");
+	std::error_code ec;
+	if (acceptor.is_open()) {
+		acceptor.close(ec);
 	}
 }
 
-NETClientSocket *TCPServerSocket::Accept()
+NETClientSocket* TCPServerSocket::Accept()
 {
-	TCPsocket new_tcpsock;
-
-	new_tcpsock=SDLNet_TCP_Accept(mysock);
-	if(!new_tcpsock) {
-		//printf("SDLNet_TCP_Accept: %s\n", SDLNet_GetError());
+	if (!isopen || !acceptor.is_open()) {
 		return nullptr;
 	}
-	
-	return new TCPClientSocket(new_tcpsock);
+	std::error_code ec;
+	asio::ip::tcp::socket new_socket(*io);
+	acceptor.accept(new_socket, ec);
+	if (ec) {
+		if (ec == asio::error::would_block || ec == asio::error::try_again) {
+			return nullptr;
+		}
+		return nullptr;
+	}
+	return new TCPClientSocket(std::move(new_socket), io);
 }

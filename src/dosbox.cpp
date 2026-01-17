@@ -12,6 +12,11 @@
 #include <memory>
 
 #ifdef WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+// block winsock.h to prevent net_defs.h redefinition errors
+#define _WINSOCKAPI_
 #include <windows.h>
 #endif
 
