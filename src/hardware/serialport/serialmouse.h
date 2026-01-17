@@ -7,7 +7,7 @@
 
 #include "serialport.h"
 
-#include "hardware/input/mouse_config.h"
+#include "hardware/input/mouse.h"
 
 class CSerialMouse : public CSerial {
 public:
