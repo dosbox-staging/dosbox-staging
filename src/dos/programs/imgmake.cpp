@@ -492,7 +492,7 @@ static std_fs::path resolve_path(const std::string& input_path)
 // directory.
 // Returns a pair: { pointer to the localDrive, resolved host path }
 // If failure, pointer is null.
-static std::pair<std::shared_ptr<localDrive>, std_fs::path> resolve_dos_target(
+static std::tuple<std::shared_ptr<localDrive>, std_fs::path, std::string> resolve_dos_target(
         const std::string& input_dos_path)
 {
 	// Resolve to absolute DOS path (e.g., C:\MYDIR\FILE.IMG)
@@ -501,26 +501,26 @@ static std::pair<std::shared_ptr<localDrive>, std_fs::path> resolve_dos_target(
 	if (!DOS_MakeName(input_dos_path.c_str(), abs_dos_path, &drive_idx)) {
 		notify_warning("SHELL_CMD_IMGMAKE_INVALID_PATH",
 		               input_dos_path.c_str());
-		return {nullptr, {}};
+		return {nullptr, {}, {}};
 	}
 
 	// Check if drive is valid
 	if (!Drives[drive_idx]) {
 		notify_warning("SHELL_CMD_IMGMAKE_INVALID_DRIVE");
-		return {nullptr, {}};
+		return {nullptr, {}, {}};
 	}
 
 	// Check if drive is a local directory mount
 	auto local_drive = std::dynamic_pointer_cast<localDrive>(Drives[drive_idx]);
 	if (!local_drive) {
 		notify_warning("SHELL_CMD_IMGMAKE_NOT_LOCAL_DRIVE");
-		return {nullptr, {}};
+		return {nullptr, {}, {}};
 	}
 
 	// Don't allow image creation on read-only drives
 	if (local_drive->IsReadOnly()) {
 		notify_warning("SHELL_CMD_IMGMAKE_DRIVE_READONLY");
-		return {nullptr, {}};
+		return {nullptr, {}, {}};
 	}
 
 	// Resolve to Host Path
@@ -539,7 +539,23 @@ static std::pair<std::shared_ptr<localDrive>, std_fs::path> resolve_dos_target(
 	// MapDosToHostFilename concatenates the drive's BaseDir with path_part.
 	std::string host_path_str = local_drive->MapDosToHostFilename(path_part);
 
-	return {local_drive, std_fs::path(host_path_str)};
+	// Construct the full DOS path (C:\DIR\FILE.IMG)
+	// Fetch the drive letter from the index ('A' + drive_idx)
+	std::string full_dos_path = "";
+	full_dos_path += static_cast<char>('A' + drive_idx);
+	full_dos_path += ":\\";
+
+	// If abs_dos_path is not empty, append it.
+	std::string internal_path = abs_dos_path;
+	if (!internal_path.empty()) {
+		if (internal_path[0] == '\\' || internal_path[0] == '/') {
+			full_dos_path += internal_path.substr(1);
+		} else {
+			full_dos_path += internal_path;
+		}
+	}
+
+	return {local_drive, std_fs::path(host_path_str), full_dos_path};
 }
 
 // Prompt user for Confirmation (Polling STDIN)
@@ -684,7 +700,7 @@ static ParseResult parse_args(const std::vector<std::string>& args)
 		} else if (arg == "-noformat") {
 			settings.no_format = true;
 
-		} else if (arg == "-writetodos") {
+		} else if (arg == "-writetodos" || arg == "-d") {
 			settings.use_dos_fs = true;
 
 		} else {
@@ -1359,17 +1375,18 @@ static bool execute(Program* program, CommandSettings& settings)
 
 	if (settings.use_dos_fs) {
 		// Resolve DOS path to Host path and get the drive pointer
-		auto result    = resolve_dos_target(settings.filename.string());
-		dos_drive      = result.first;
-		full_host_path = result.second;
+		auto [drive, host_path, abs_dos_path] = resolve_dos_target(
+		        settings.filename.string());
+		dos_drive      = drive;
+		full_host_path = host_path;
 
 		if (!dos_drive) {
 			return false;
 		}
 
-		// Update the filename setting to the resolved host path so
-		// open_and_expand works
-		display_path      = settings.filename.string();
+		// Use the absolute DOS path for the display instead of the raw
+		// input
+		display_path      = abs_dos_path;
 		settings.filename = full_host_path;
 	} else {
 		// Resolve Host path (handle ~ expansion, etc.)
