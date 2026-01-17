@@ -58,7 +58,11 @@ const std::unordered_map<std::string, DiskGeometry> GeometryPresets = {
         {"fd_1440kb",  {80,      2,  18,       0xF0,       224,            9,                1,          1440, true}},
         {"fd_2880kb",  {80,      2,  36,       0xF0,       240,            9,                2,          2880, true}},
         // HD presets
-        { "hd_250mb",  {489,    16,  63,       0xF8,       512,            0,                0,             0, false}},
+        { "hd_20mb",  {40,      16,  63,       0xF8,       512,            0,                0,             0, false}},
+        { "hd_40mb",  {81,      16,  63,       0xF8,       512,            0,                0,             0, false}},
+        { "hd_80mb",  {162,     16,  63,       0xF8,       512,            0,                0,             0, false}},
+        { "hd_120mb", {243,     16,  63,       0xF8,       512,            0,                0,             0, false}},
+        { "hd_250mb", {489,     16,  63,       0xF8,       512,            0,                0,             0, false}},
         { "hd_520mb", {1023,    16,  63,       0xF8,       512,            0,                0,             0, false}},
         {   "hd_1gb", {1023,    32,  63,       0xF8,       512,            0,                0,             0, false}},
         {   "hd_2gb", {1023,    64,  63,       0xF8,       512,            0,                0,             0, false}}
@@ -1466,37 +1470,39 @@ void IMGMAKE::Run()
 void IMGMAKE::AddMessages()
 {
 	MSG_Add("SHELL_CMD_IMGMAKE_HELP_LONG",
-	        "Creates a disk image.\n"
+	        "Create a new empty disk image.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=light-green]imgmake[reset] [color=light-cyan]file[reset] [color=white]-t type[reset] [options]\n"
+	        "  [color=light-green]imgmake[reset] [color=light-cyan]FILE[reset] [color=white]-t TYPE[reset] [PARAMETERS]\n"
 	        "\n"
-	        "Options:\n"
-	        "  [color=white]-t type[reset]      Disk type: [color=light-cyan]\n"
-	        "               fd_2880kb, fd_1440kb, fd_1200kb, fd_720kb, \n"
-	        "               fd_360kb, fd_320kb, fd_180kb, fd_160kb\n"
-	        "               hd_250mb, hd_520mb, hd_1gb, hd_2gb[reset]\n"
+	        "Parameters:\n"
+	        "  -t [color=white]TYPE[reset]      Disk type:\n"
+	        "               [color=light-cyan]fd_2880kb[reset], [color=light-cyan]fd_1440kb[reset], [color=light-cyan]fd_1200kb[reset], [color=light-cyan]fd_720kb[reset], \n"
+	        "               [color=light-cyan]fd_360kb[reset], [color=light-cyan]fd_320kb[reset], [color=light-cyan]fd_180kb[reset], [color=light-cyan]fd_160kb[reset],\n"
+	        "               [color=light-cyan]hd_20mb[reset], [color=light-cyan]hd_40mb[reset], [color=light-cyan]hd_80mb[reset], [color=light-cyan]hd_120mb[reset],\n"
+	        "               [color=light-cyan]hd_250mb[reset], [color=light-cyan]hd_520mb[reset], [color=light-cyan]hd_1gb[reset], [color=light-cyan]hd_2gb[reset]\n"
 	        "               or [color=light-cyan]hd[reset] (requires -size or -chs).\n"
-	        "  [color=white]-size x[reset]      Size in MB (for hd type).\n"
-	        "  [color=white]-chs c,h,s[reset]   Geometry (Cylinders, Heads, Sectors).\n"
-	        "  [color=white]-fat ff[reset]      Filesystem type (e.g. -fat 12, -fat 16, -fat 32).\n"
+	        "\n"
+	        "  -size [color=white]x[reset]      Size in MB (for [color=light-cyan]hd[reset] type).\n"
+	        "  -chs [color=white]c,h,s[reset]   Geometry (Cylinders, Heads, Sectors).\n"
+	        "  -fat [color=white]ff[reset]      Filesystem type ([color=light-cyan]-fat 12[reset], [color=light-cyan]-fat 16[reset] or [color=light-cyan]-fat 32[reset]).\n"
 	        "               Default is determined automatically.\n"
-	        "  [color=white]-noformat[reset]    Do not format the filesystem (raw image).\n"
-	        "  [color=white]-label name[reset]  Volume label.\n"
-	        "  [color=white]-writetodos[reset]  Write image to the emulated DOS filesystem\n"
-	        "               instead of the Host filesystem.\n"
-	        "  [color=white]-d[reset]           Same as -writetodos\n"
+	        "  -noformat    Do not format the filesystem (raw image).\n"
+	        "  -label [color=white]name[reset]  Volume label.\n"
+	        "\n"
+	        "  -writetodos\n"
+	        "  -d           Write image to the emulated DOS filesystem instead\n"
+	        "               of the host filesystem.\n"
 
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]imgmake[reset] [color=light-cyan]floppy.img[reset] -t fd_1440kb\n"
-	        "  [color=light-green]imgmake[reset] [color=light-cyan]hdd.img[reset] -t hd -size 500\n"
+	        "  [color=light-green]imgmake[reset] [color=light-cyan]floppy.img[reset] -t [color=light-cyan]fd_1440kb[reset] -label [color=white]MYDISK[reset]\n"
+	        "  [color=light-green]imgmake[reset] [color=light-cyan]hdd.img[reset] -t [color=light-cyan]hd[reset] -size [color=white]500[reset]\n"
+	        "  [color=light-green]imgmake[reset] [color=light-cyan]C:\\IMAGES\\HDD120.IMG[reset] -t [color=light-cyan]hd_120mb[reset] -fat [color=white]32[reset] -d\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - By default, the image file will be created in the current working\n"
-	        "    directory, or the absolute path if specified.\n"
-	        "  - You can change the current working directory via the [color=white]--working-dir[reset]\n"
-	        "    dosbox parameter.\n"
+	        "    directory on the host filesystem, or at the absolute host path.\n"
 	        "  - When using the [color=white]-writetodos[reset] option, ensure the target path is a mounted\n"
 	        "    local directory (not inside another disk image).\n");
 
@@ -1520,7 +1526,7 @@ void IMGMAKE::AddMessages()
 	        "Proceed? (Y/N)\n");
 	MSG_Add("SHELL_CMD_IMGMAKE_CONFIRM_DOS",
 	        "Image will be created on the [color=light-green]DOS[reset] filesystem at:\n  [color=light-cyan]%s[reset]\n"
-	        "  (Mapped to Host: %s)\n\n"
+	        "  Host path: %s\n\n"
 	        "Proceed? (Y/N)\n");
 	MSG_Add("SHELL_CMD_IMGMAKE_ABORTED", "\nOperation aborted.");
 	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_PATH", "Invalid DOS path: %s");
