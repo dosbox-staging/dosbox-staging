@@ -354,7 +354,8 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 			return false;
 		}
 		uint32_t imagesize = check_cast<uint32_t>(sz);
-		const bool is_hdd  = (imagesize > 2880);
+		// 0=A:, 1=B:, 2=C:, 3=D:
+		const bool is_hdd = (drive >= '2');
 		// Seems to make sense to require a valid geometry..
 		if (is_hdd && sizes[0] == 0 && sizes[1] == 0 && sizes[2] == 0 &&
 		    sizes[3] == 0) {
@@ -590,6 +591,33 @@ void MOUNT::Run(void) {
 		}
 	} else if (first_char >= 'A' && first_char <= 'Z') {
 		drive = first_char;
+
+		// Allow A:, B:, C: and D: to be mounted as raw bootable images
+		if (explicit_fs && fstype == "none") {
+			switch (drive) {
+			case 'A':
+				drive           = '0';
+				is_drive_number = true;
+				break;
+			case 'B':
+				drive           = '1';
+				is_drive_number = true;
+				break;
+			case 'C':
+				drive           = '2';
+				is_drive_number = true;
+				break;
+			case 'D':
+				drive           = '3';
+				is_drive_number = true;
+				break;
+			default:
+				// Don't allow booting from E:, F:, etc.
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
+				return;
+			}
+		}
+
 	} else {
 		ShowUsage();
 		return;
@@ -1029,7 +1057,7 @@ void MOUNT::AddMessages() {
 
 	// IMGMOUNT merged messages
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2",
-	        "Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb; 2,3=hda,hdb).\n");
+	        "Must specify a drive letter A/B/C/D or drive number 0/1/2/3 to mount image at.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY",
 	        "For hard drive images, drive geometry must be specified:\n"
 	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -chs Cylinders,Heads,Sectors\n"
