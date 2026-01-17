@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -100,18 +100,11 @@ typedef uint8_t* (*VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
 
-// Confirm the maximum dimensions accomodate VGA's pixel and scan doubling
-constexpr auto max_pixel_doubled_width = 512;
-constexpr auto max_scan_doubled_height = 400;
-
-static_assert(SCALER_MAXWIDTH >= SCALER_MAX_MUL_WIDTH * max_pixel_doubled_width);
-static_assert(SCALER_MAXHEIGHT >= SCALER_MAX_MUL_HEIGHT * max_scan_doubled_height);
-
-constexpr auto max_pixel_bytes = sizeof(uint32_t);
-constexpr auto max_line_bytes  = SCALER_MAXWIDTH * max_pixel_bytes;
+constexpr auto MaxPixelBytes = sizeof(uint32_t);
+constexpr auto MaxRowBytes   = ScalerMaxWidth * MaxPixelBytes;
 
 // The line buffer can be written in units up to RGB888 pixels (32-bit) size
-alignas(uint32_t) static std::array<uint8_t, max_line_bytes> templine_buffer;
+alignas(uint64_t) static std::array<uint8_t, MaxRowBytes> templine_buffer;
 static auto TempLine = templine_buffer.data();
 
 static uint8_t* VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line)
@@ -225,9 +218,9 @@ static uint8_t byte_clamp(int v)
 
 static uint8_t* Composite_Process(uint8_t border, uint32_t blocks, bool double_width)
 {
-	static int temp[SCALER_MAXWIDTH + 10] = {0};
-	static int atemp[SCALER_MAXWIDTH + 2] = {0};
-	static int btemp[SCALER_MAXWIDTH + 2] = {0};
+	static int temp[ScalerMaxWidth + 10] = {0};
+	static int atemp[ScalerMaxWidth + 2] = {0};
+	static int btemp[ScalerMaxWidth + 2] = {0};
 
 	int w = blocks * 4;
 
@@ -404,43 +397,6 @@ static uint8_t* VGA_Draw_4BPP_Line_Double(Bitu vidstart, Bitu line)
 	}
 	return TempLine;
 }
-
-#ifdef VGA_KEEP_CHANGES
-static uint8_t* VGA_Draw_Changes_Line(Bitu vidstart, Bitu line)
-{
-	Bitu checkMask = vga.changes.checkMask;
-	uint8_t* map   = vga.changes.map;
-
-	Bitu start = (vidstart >> VGA_CHANGE_SHIFT);
-	Bitu end   = ((vidstart + vga.draw.line_length) >> VGA_CHANGE_SHIFT);
-
-	for (; start <= end; ++start) {
-		if (map[start] & checkMask) {
-			Bitu offset = vidstart & vga.draw.linear_mask;
-
-			if (vga.draw.linear_mask - offset < vga.draw.line_length) {
-				memcpy(vga.draw.linear_base + vga.draw.linear_mask + 1,
-				       vga.draw.linear_base,
-				       vga.draw.line_length);
-			}
-
-			uint8_t* ret = &vga.draw.linear_base[offset];
-
-#if !defined(C_UNALIGNED_MEMORY)
-			if (((Bitu)ret) & (sizeof(Bitu) - 1)) {
-				memcpy(TempLine, ret, vga.draw.line_length);
-				return TempLine;
-			}
-#endif
-			return ret;
-		}
-	}
-	//	memset( TempLine, 0x30, vga.changes.lineWidth );
-	//	return TempLine;
-	return 0;
-}
-
-#endif
 
 static uint8_t* VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/)
 {
@@ -1147,27 +1103,6 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 	return TempLine + 32;
 }
 
-#ifdef VGA_KEEP_CHANGES
-static inline void VGA_ChangesEnd(void)
-{
-	if (vga.changes.active) {
-		//		vga.changes.active = false;
-		Bitu end   = vga.draw.address >> VGA_CHANGE_SHIFT;
-		Bitu total = 4 + end - vga.changes.start;
-
-		uint32_t clearMask = vga.changes.clearMask;
-
-		total >>= 2;
-		auto clear = (uint32_t*)&vga.changes.map[vga.changes.start & ~3];
-
-		while (total--) {
-			clear[0] &= clearMask;
-			++clear;
-		}
-	}
-}
-#endif
-
 static void VGA_ProcessSplit()
 {
 	if (vga.attr.mode_control.is_pixel_panning_enabled) {
@@ -1273,7 +1208,7 @@ void vga_draw_blank_line()
 
 		const auto background_color = vga.dac.palette_map[bg_color_index];
 
-		const auto line_length = templine_buffer.size() / sizeof(uint32_t);
+		const auto line_length = templine_buffer.size() / MaxPixelBytes;
 		size_t i = 0;
 		while (i < line_length) {
 			write_unaligned_uint32_at(TempLine, i++, background_color);
@@ -1380,13 +1315,7 @@ static void VGA_DrawPart(uint32_t lines)
 		++vga.draw.lines_done;
 
 		if (vga.draw.split_line == vga.draw.lines_done) {
-#ifdef VGA_KEEP_CHANGES
-			VGA_ChangesEnd();
-#endif
 			VGA_ProcessSplit();
-#ifdef VGA_KEEP_CHANGES
-			vga.changes.start = vga.draw.address >> VGA_CHANGE_SHIFT;
-#endif
 		}
 	}
 
@@ -1398,12 +1327,6 @@ static void VGA_DrawPart(uint32_t lines)
 		                     ? vga.draw.parts_lines
 		                     : (vga.draw.lines_total - vga.draw.lines_done));
 	} else {
-		// We've drawn the full frame, notify the renderer the frame is
-		// ready
-		//
-#ifdef VGA_KEEP_CHANGES
-		VGA_ChangesEnd();
-#endif
 		RENDER_EndUpdate(false);
 	}
 }
@@ -1428,36 +1351,6 @@ void VGA_SetBlinking(const uint8_t enabled)
 		                      ((b + i) << 16) | ((b + i) << 24);
 	}
 }
-
-#ifdef VGA_KEEP_CHANGES
-static void inline VGA_ChangesStart(void)
-{
-	vga.changes.start = vga.draw.address >> VGA_CHANGE_SHIFT;
-	vga.changes.last  = vga.changes.start;
-
-	if (vga.changes.lastAddress != vga.draw.address) {
-		//		LOG_MSG("Address");
-		VGA_DrawLine            = VGA_Draw_Linear_Line;
-		vga.changes.lastAddress = vga.draw.address;
-
-	} else if (render.fullFrame) {
-		//		LOG_MSG("Full Frame");
-		VGA_DrawLine = VGA_Draw_Linear_Line;
-
-	} else {
-		//		LOG_MSG("Changes");
-		VGA_DrawLine = VGA_Draw_Changes_Line;
-	}
-
-	vga.changes.active    = true;
-	vga.changes.checkMask = vga.changes.writeMask;
-	vga.changes.clearMask = ~(0x01010101 << (vga.changes.frame & 7));
-
-	++vga.changes.frame;
-
-	vga.changes.writeMask = 1 << (vga.changes.frame & 7);
-}
-#endif
 
 static void VGA_VertInterrupt(uint32_t /*val*/)
 {
@@ -1569,13 +1462,8 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		// EGA adds one buggy scanline
 		++vga.draw.split_line;
 	}
-
-//	if (is_machine_ega()) vga.draw.split_line =
-//((((vga.config.line_compare&0x5ff)+1)*2-1)/vga.draw.lines_scaled);
-#ifdef VGA_KEEP_CHANGES
-	bool startaddr_changed = false;
-#endif
-
+	//	if (is_machine_ega()) vga.draw.split_line =
+	//((((vga.config.line_compare&0x5ff)+1)*2-1)/vga.draw.lines_scaled);
 	switch (vga.mode) {
 	case M_EGA:
 		if (!(vga.crtc.mode_control.map_display_address_13)) {
@@ -1593,10 +1481,8 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		if (!is_machine_ega()) {
 			vga.draw.address += vga.draw.panning;
 		}
-#ifdef VGA_KEEP_CHANGES
-		startaddr_changed = true;
-#endif
 		break;
+
 	case M_VGA:
 		if (vga.config.compatible_chain4 &&
 		    (vga.crtc.underline_location & 0x40)) {
@@ -1617,9 +1503,6 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		vga.draw.address += vga.draw.bytes_skip;
 		vga.draw.address *= vga.draw.byte_panning_shift;
 		vga.draw.address += vga.draw.panning;
-#ifdef VGA_KEEP_CHANGES
-		startaddr_changed = true;
-#endif
 		break;
 
 	case M_TEXT:
@@ -1671,12 +1554,6 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	if (vga.draw.split_line == 0) {
 		VGA_ProcessSplit();
 	}
-
-#ifdef VGA_KEEP_CHANGES
-	if (startaddr_changed) {
-		VGA_ChangesStart();
-	}
-#endif
 
 	// Check if some lines at the top off the screen are blanked
 	double draw_skip = 0.0;
@@ -3321,19 +3198,13 @@ ImageInfo setup_drawing()
 
 	vga.draw.vblank_skip = vblank_skip;
 
-	assert(render_height > 0 && render_height <= SCALER_MAXHEIGHT);
+	assert(render_height > 0 && render_height <= ScalerMaxHeight);
 	vga.draw.lines_total = render_height;
 
 	vga.draw.line_length = render_width *
 	                       ((get_bits_per_pixel(pixel_format) + 1) / 8);
 
 	setup_line_drawing_delays();
-
-#ifdef VGA_KEEP_CHANGES
-	vga.changes.active    = false;
-	vga.changes.frame     = 0;
-	vga.changes.writeMask = 1;
-#endif
 
 #ifdef DEBUG_VGA_DRAW
 	LOG_DEBUG("VGA: horiz.total: %d, vert.total: %d",
@@ -3439,22 +3310,20 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		vga.draw.image_info = image_info;
 
-		if (image_info.width > SCALER_MAXWIDTH ||
-		    image_info.height > SCALER_MAXHEIGHT) {
+		if (image_info.width > ScalerMaxWidth ||
+		    image_info.height > ScalerMaxHeight) {
 			LOG_ERR("VGA: The calculated video resolution %ux%u will be "
 			        "limited to the maximum of %ux%u",
 			        image_info.width,
 			        image_info.height,
-			        SCALER_MAXWIDTH,
-			        SCALER_MAXHEIGHT);
+			        ScalerMaxWidth,
+			        ScalerMaxHeight);
 
-			vga.draw.image_info.width =
-			        std::min(check_cast<uint16_t>(image_info.width),
-			                 SCALER_MAXWIDTH);
+			vga.draw.image_info.width = std::min(image_info.width,
+			                                     ScalerMaxWidth);
 
-			vga.draw.image_info.height =
-			        std::min(check_cast<uint16_t>(image_info.height),
-			                 SCALER_MAXHEIGHT);
+			vga.draw.image_info.height = std::min(image_info.height,
+			                                      ScalerMaxHeight);
 		}
 
 		vga.draw.lines_scaled = image_info.forced_single_scan ? 2 : 1;

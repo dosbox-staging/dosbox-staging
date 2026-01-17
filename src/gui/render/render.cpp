@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2019-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2019-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -39,44 +39,44 @@ static void render_callback(GFX_CallbackFunctions_t function);
 static void check_palette()
 {
 	// Clean up any previous changed palette data
-	if (render.pal.changed) {
-		memset(render.pal.modified, 0, sizeof(render.pal.modified));
-		render.pal.changed = false;
+	if (render.palette.changed) {
+		memset(render.palette.modified, 0, sizeof(render.palette.modified));
+		render.palette.changed = false;
 	}
-	if (render.pal.first > render.pal.last) {
+	if (render.palette.first > render.palette.last) {
 		return;
 	}
 
-	for (auto i = render.pal.first; i <= render.pal.last; i++) {
-		const auto color = render.pal.rgb[i];
+	for (auto i = render.palette.first; i <= render.palette.last; i++) {
+		const auto color = render.palette.rgb[i];
 		const auto new_color = GFX_MakePixel(color.red, color.green, color.blue);
 
-		if (new_color != render.pal.lut[i]) {
-			render.pal.changed     = true;
-			render.pal.modified[i] = 1;
-			render.pal.lut[i]      = new_color;
+		if (new_color != render.palette.lut[i]) {
+			render.palette.changed     = true;
+			render.palette.modified[i] = 1;
+			render.palette.lut[i]      = new_color;
 		}
 	}
 
 	// Setup palette index to startup values
-	render.pal.first = NumVgaColors;
-	render.pal.last  = 0;
+	render.palette.first = NumVgaColors;
+	render.palette.last  = 0;
 }
 
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue)
 {
-	auto& color = render.pal.rgb[entry];
+	auto& color = render.palette.rgb[entry];
 
 	color.red   = red;
 	color.green = green;
 	color.blue  = blue;
 
-	if (render.pal.first > entry) {
-		render.pal.first = entry;
+	if (render.palette.first > entry) {
+		render.palette.first = entry;
 	}
-	if (render.pal.last < entry) {
-		render.pal.last = entry;
+	if (render.palette.last < entry) {
+		render.palette.last = entry;
 	}
 }
 
@@ -85,134 +85,151 @@ static void empty_line_handler(const void*) {}
 static void start_line_handler(const void* src_line_data)
 {
 	if (src_line_data) {
-		auto src = static_cast<const uintptr_t*>(src_line_data);
-		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
+		if (std::memcmp(src_line_data,
+		                render.scale.cache_read,
+		                render.scale.cache_pitch) != 0) {
 
-		for (Bits x = render.src_start; x > 0;) {
-			const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
-			const auto src_val = read_unaligned_size_t(src_ptr);
+			// This triggers transferring the pixel data to the
+			// render backend if the contents of the current frame
+			// has changed since the last frame. This will in turn
+			// make the backend do a buffer swap (if it's
+			// double-buffered). Otherwise, it will keep displaying
+			// the same frame at present time without doing a buffer
+			// swap followed by a texture upload to the GPU.
+			uint32_t* buf_ptr = {};
 
-			if (src_val != cache[0]) {
-				// This triggers transferring the pixel data to
-				// the render backend if the contents of the
-				// current frame has changed since the last
-				// frame. This will in turn make the backend do
-				// a buffer swap (if it's double-buffered).
-				// Otherwise, it will keep displaying the same
-				// frame at present time without doing a buffer
-				// swap followed by a texture upload to the GPU.
-				if (!GFX_StartUpdate(render.scale.outWrite,
-				                     render.scale.outPitch)) {
-
-					RENDER_DrawLine = empty_line_handler;
-					return;
-				}
-				render.scale.outWrite += render.scale.outPitch *
-				                         scaler_changed_lines[0];
-
-				RENDER_DrawLine = render.scale.lineHandler;
-				RENDER_DrawLine(src_line_data);
+			if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
+				RENDER_DrawLine = empty_line_handler;
 				return;
 			}
-			x--;
-			src++;
-			cache++;
+
+			render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
+
+			render.scale.out_write += render.scale.out_pitch *
+			                          scaler_changed_lines[0];
+
+			render.updating_frame = true;
+
+			RENDER_DrawLine = render.scale.line_handler;
+			RENDER_DrawLine(src_line_data);
+			return;
 		}
 	}
-	render.scale.cacheRead += render.scale.cachePitch;
 
-	scaler_changed_lines[0] += scaler_aspect[render.scale.inLine];
+	render.scale.cache_read += render.scale.cache_pitch;
 
-	render.scale.inLine++;
-	render.scale.outLine++;
+	scaler_changed_lines[0] += render.scale.y_scale;
 }
 
 static void finish_line_handler(const void* src_line_data)
 {
 	if (src_line_data) {
-		auto src = static_cast<const uintptr_t*>(src_line_data);
-		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
-
-		for (Bits x = render.src_start; x > 0;) {
-			cache[0] = src[0];
-			x--;
-			src++;
-			cache++;
-		}
+		std::memcpy(render.scale.cache_read,
+		            src_line_data,
+		            render.scale.cache_pitch);
 	}
 
-	render.scale.cacheRead += render.scale.cachePitch;
+	render.scale.cache_read += render.scale.cache_pitch;
 }
 
 static void clear_cache_handler(const void* src_line_data)
 {
-	const uint32_t* src_line = (const uint32_t*)src_line_data;
-	uint32_t* cache_line     = (uint32_t*)render.scale.cacheRead;
+	// `src_line_data` contains a scanline worth of pixel data. All screen
+	// mode widths are multiples of 8, therefore we can access this data one
+	// uint64_t at a time, regardless of pixel format (pixel can be stored
+	// on 1 to 4 bytes).
+	auto src = static_cast<const uint8_t*>(src_line_data);
 
-	Bitu width = render.scale.cachePitch / 4;
+	// The width of all screen modes and therefore `cache_pitch` too is a
+	// multiple of 8 (`cache_pitch` equals the screen mode's width multiplied
+	// by the number of bytes per pixel and no padding).
+	//
+	auto cache = render.scale.cache_read;
 
-	for (Bitu x = 0; x < width; x++) {
-		cache_line[x] = ~src_line[x];
+	constexpr auto Step = sizeof(uint64_t);
+	const auto count    = render.scale.cache_pitch / Step;
+
+	for (size_t x = 0; x < count; ++x) {
+		const auto src_val = read_unaligned_uint64(src);
+
+		write_unaligned_uint64(cache, ~src_val);
+
+		src += Step;
+		cache += Step;
 	}
 
-	render.scale.lineHandler(src_line_data);
+	render.scale.line_handler(src_line_data);
 }
 
 bool RENDER_StartUpdate()
 {
-	if (render.updating) {
+	if (render.render_in_progress) {
 		return false;
 	}
 	if (!render.active) {
 		return false;
 	}
 
-	if (render.scale.inMode == scalerMode8) {
+	if (render.scale.line_palette_handler) {
 		check_palette();
 	}
 
-	render.scale.inLine    = 0;
-	render.scale.outLine   = 0;
-	render.scale.cacheRead = (uint8_t*)&scaler_source_cache;
-	render.scale.outWrite  = nullptr;
-	render.scale.outPitch  = 0;
+	render.scale.cache_read = reinterpret_cast<uint8_t*>(
+	        render.scale.cache.data());
+
+	render.scale.out_write = nullptr;
+	render.scale.out_pitch = 0;
 
 	scaler_changed_lines[0]   = 0;
 	scaler_changed_line_index = 0;
 
+	// Set up output image dimensions
+	render.scale.out_width = render.src.width *
+	                         (render.src.double_width ? 2 : 1);
+
+	render.scale.out_height = render.src.height *
+	                          (render.src.double_height ? 2 : 1);
+
 	// Clearing the cache will first process the line to make sure it's
 	// never the same.
-	if (render.scale.clearCache) {
+	if (render.scale.clear_cache) {
 
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
+		uint32_t* buf_ptr = {};
+
+		if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
 			return false;
 		}
 
+		render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
+
 		RENDER_DrawLine = clear_cache_handler;
 
-		render.updating         = true;
-		render.fullFrame        = true;
-		render.scale.clearCache = false;
+		render.render_in_progress = true;
+		render.updating_frame     = true;
+		render.scale.clear_cache  = false;
 		return true;
 	}
 
-	if (render.pal.changed) {
+	if (render.palette.changed) {
 		// Assume palette changes always do a full screen update anyway.
 		//
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
+		uint32_t* buf_ptr = {};
+
+		if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
 			return false;
 		}
 
-		RENDER_DrawLine = render.scale.linePalHandler;
+		render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
 
-		render.updating  = true;
-		render.fullFrame = true;
+		RENDER_DrawLine = render.scale.line_palette_handler;
+
+		render.render_in_progress = true;
 		return true;
 	}
 
@@ -225,13 +242,7 @@ bool RENDER_StartUpdate()
 	//
 	RENDER_DrawLine = start_line_handler;
 
-	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
-		render.fullFrame = true;
-	} else {
-		render.fullFrame = false;
-	}
-
-	render.updating = true;
+	render.render_in_progress = true;
 	return true;
 }
 
@@ -239,68 +250,57 @@ static void halt_render()
 {
 	RENDER_DrawLine = empty_line_handler;
 	GFX_EndUpdate();
-	render.updating = false;
-	render.active   = false;
+
+	render.render_in_progress = false;
+	render.active             = false;
+}
+
+static void handle_capture_frame()
+{
+	bool double_width  = false;
+	bool double_height = false;
+
+	if (render.src.double_width != render.src.double_height) {
+		if (render.src.double_width) {
+			double_width = true;
+		}
+		if (render.src.double_height) {
+			double_height = true;
+		}
+	}
+
+	RenderedImage image = {};
+
+	image.params               = render.src;
+	image.params.double_width  = double_width;
+	image.params.double_height = double_height;
+	image.pitch                = render.scale.cache_pitch;
+
+	image.image_data = reinterpret_cast<uint8_t*>(render.scale.cache.data());
+
+	image.palette = render.palette.rgb;
+
+	const auto frames_per_second = static_cast<float>(render.fps);
+
+	CAPTURE_AddFrame(image, frames_per_second);
 }
 
 void RENDER_EndUpdate([[maybe_unused]] bool abort)
 {
-	if (!render.updating) {
+	if (!render.render_in_progress) {
 		return;
 	}
 
 	RENDER_DrawLine = empty_line_handler;
 
 	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
-		bool double_width  = false;
-		bool double_height = false;
-
-		if (render.src.double_width != render.src.double_height) {
-			if (render.src.double_width) {
-				double_width = true;
-			}
-			if (render.src.double_height) {
-				double_height = true;
-			}
-		}
-
-		RenderedImage image = {};
-
-		image.params               = render.src;
-		image.params.double_width  = double_width;
-		image.params.double_height = double_height;
-		image.pitch                = render.scale.cachePitch;
-		image.image_data           = (uint8_t*)&scaler_source_cache;
-		image.palette              = render.pal.rgb;
-
-		const auto frames_per_second = static_cast<float>(render.fps);
-
-		CAPTURE_AddFrame(image, frames_per_second);
+		handle_capture_frame();
 	}
 
 	GFX_EndUpdate();
 
-	render.updating = false;
-}
-
-static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
-{
-	Bitu i;
-	double lines    = 0;
-	Bitu linesadded = 0;
-
-	for (i = 0; i < height; i++) {
-		lines += scaley;
-		if (lines >= static_cast<double>(miny)) {
-			Bitu templines = (Bitu)lines;
-			lines -= static_cast<double>(templines);
-			linesadded += templines;
-			scaler_aspect[i] = static_cast<uint8_t>(templines);
-		} else {
-			scaler_aspect[i] = 0;
-		}
-	}
-	return linesadded;
+	render.render_in_progress = false;
+	render.updating_frame     = false;
 }
 
 static SectionProp& get_render_section()
@@ -336,14 +336,6 @@ static void render_reset()
 
 	auto scaler = &Scale1x;
 
-	// Don't do software scaler sizes larger than 4k
-	uint16_t maxsize_current_input = SCALER_MAXWIDTH /
-	                                 check_cast<uint16_t>(render_width_px);
-
-	if (render.scale.size > maxsize_current_input) {
-		render.scale.size = maxsize_current_input;
-	}
-
 	if (double_height && double_width) {
 		scaler = &Scale2x;
 	} else if (double_width) {
@@ -354,36 +346,15 @@ static void render_reset()
 		scaler = &Scale1x;
 	}
 
-	if ((render_width_px * scaler->xscale > SCALER_MAXWIDTH) ||
-	    (render.src.height * scaler->yscale > SCALER_MAXHEIGHT)) {
+	render.scale.y_scale = scaler->y_scale;
+
+	if ((render_width_px * scaler->x_scale > ScalerMaxWidth) ||
+	    (render.src.height * scaler->y_scale > ScalerMaxHeight)) {
 		scaler = &Scale1x;
 	}
 
-	constexpr auto src_pixel_bytes = sizeof(uintptr_t);
-
-	switch (render.src.pixel_format) {
-	case PixelFormat::Indexed8:
-	case PixelFormat::RGB555_Packed16:
-	case PixelFormat::RGB565_Packed16:
-		render.src_start = check_cast<uint32_t>((render.src.width * 2) /
-		                                        src_pixel_bytes);
-		break;
-
-	case PixelFormat::BGR24_ByteArray:
-		render.src_start = check_cast<uint32_t>((render.src.width * 3) /
-		                                        src_pixel_bytes);
-		break;
-
-	case PixelFormat::BGRX32_ByteArray:
-		render.src_start = check_cast<uint32_t>((render.src.width * 4) /
-		                                        src_pixel_bytes);
-		break;
-	}
-
-	render_width_px *= scaler->xscale;
-
-	const auto render_height_px = check_cast<int>(
-	        make_aspect_table(render.src.height, scaler->yscale, scaler->yscale));
+	render_width_px *= scaler->x_scale;
+	const auto render_height_px = render.src.height * scaler->y_scale;
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
 
@@ -398,38 +369,33 @@ static void render_reset()
 	// Set up scaler variables
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
-		render.scale.lineHandler    = scaler->line_handlers[0];
-		render.scale.linePalHandler = scaler->line_handlers[5];
-		render.scale.inMode         = scalerMode8;
-		render.scale.cachePitch     = render.src.width * 1;
+		render.scale.line_handler         = scaler->line_handlers[0];
+		render.scale.line_palette_handler = scaler->line_handlers[5];
+		render.scale.cache_pitch          = render.src.width * 1;
 		break;
 
 	case PixelFormat::RGB555_Packed16:
-		render.scale.lineHandler    = scaler->line_handlers[1];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode15;
-		render.scale.cachePitch     = render.src.width * 2;
+		render.scale.line_handler         = scaler->line_handlers[1];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.cache_pitch          = render.src.width * 2;
 		break;
 
 	case PixelFormat::RGB565_Packed16:
-		render.scale.lineHandler    = scaler->line_handlers[2];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode16;
-		render.scale.cachePitch     = render.src.width * 2;
+		render.scale.line_handler         = scaler->line_handlers[2];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.cache_pitch          = render.src.width * 2;
 		break;
 
 	case PixelFormat::BGR24_ByteArray:
-		render.scale.lineHandler    = scaler->line_handlers[3];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode32;
-		render.scale.cachePitch     = render.src.width * 3;
+		render.scale.line_handler         = scaler->line_handlers[3];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.cache_pitch          = render.src.width * 3;
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
-		render.scale.lineHandler    = scaler->line_handlers[4];
-		render.scale.linePalHandler = nullptr;
-		render.scale.inMode         = scalerMode32;
-		render.scale.cachePitch     = render.src.width * 4;
+		render.scale.line_handler         = scaler->line_handlers[4];
+		render.scale.line_palette_handler = nullptr;
+		render.scale.cache_pitch          = render.src.width * 4;
 		break;
 
 	default:
@@ -437,23 +403,19 @@ static void render_reset()
 		       static_cast<uint8_t>(render.src.pixel_format));
 	}
 
-	render.scale.blocks    = render.src.width / SCALER_BLOCKSIZE;
-	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
-	render.scale.inHeight  = render.src.height;
-
 	// Reset the palette change detection to its initial value
-	render.pal.first   = 0;
-	render.pal.last    = 255;
-	render.pal.changed = false;
-	memset(render.pal.modified, 0, sizeof(render.pal.modified));
+	render.palette.first   = 0;
+	render.palette.last    = 255;
+	render.palette.changed = false;
+	memset(render.palette.modified, 0, sizeof(render.palette.modified));
 
 	// Finish this frame using a copy only handler
-	RENDER_DrawLine       = finish_line_handler;
-	render.scale.outWrite = nullptr;
+	RENDER_DrawLine        = finish_line_handler;
+	render.scale.out_write = nullptr;
 
 	// Signal the next frame to first reinit the cache
-	render.scale.clearCache = true;
-	render.active           = true;
+	render.scale.clear_cache = true;
+	render.active            = true;
 }
 
 static void render_callback(GFX_CallbackFunctions_t function)
@@ -463,7 +425,7 @@ static void render_callback(GFX_CallbackFunctions_t function)
 		return;
 
 	} else if (function == GFX_CallbackRedraw) {
-		render.scale.clearCache = true;
+		render.scale.clear_cache = true;
 		return;
 
 	} else if (function == GFX_CallbackReset) {
@@ -480,8 +442,8 @@ void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second)
 	halt_render();
 
 	if (image_info.width == 0 || image_info.height == 0 ||
-	    image_info.width > SCALER_MAXWIDTH ||
-	    image_info.height > SCALER_MAXHEIGHT) {
+	    image_info.width > ScalerMaxWidth ||
+	    image_info.height > ScalerMaxHeight) {
 		return;
 	}
 
@@ -872,44 +834,39 @@ static const char* to_string(const enum MonochromePalette palette)
 	}
 }
 
-static AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
-
-static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting(SectionProp& section)
+static void set_aspect_ratio_correction(const SectionProp& section)
 {
-	const std::string mode = section.GetString("aspect");
+	render.aspect_ratio_correction_mode = [&]() {
+		const std::string mode = section.GetString("aspect");
 
-	if (has_true(mode) || mode == "auto") {
-		return AspectRatioCorrectionMode::Auto;
+		if (has_true(mode) || mode == "auto") {
+			return AspectRatioCorrectionMode::Auto;
 
-	} else if (has_false(mode) || mode == "square-pixels") {
-		return AspectRatioCorrectionMode::SquarePixels;
+		} else if (has_false(mode) || mode == "square-pixels") {
+			return AspectRatioCorrectionMode::SquarePixels;
 
-	} else if (mode == "stretch") {
-		return AspectRatioCorrectionMode::Stretch;
+		} else if (mode == "stretch") {
+			return AspectRatioCorrectionMode::Stretch;
 
-	} else {
-		constexpr auto SettingName  = "aspect";
-		constexpr auto DefaultValue = "auto";
+		} else {
+			constexpr auto SettingName  = "aspect";
+			constexpr auto DefaultValue = "auto";
 
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "RENDER",
-		                      "PROGRAM_CONFIG_INVALID_SETTING",
-		                      SettingName,
-		                      mode.c_str(),
-		                      DefaultValue);
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "RENDER",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      SettingName,
+			                      mode.c_str(),
+			                      DefaultValue);
 
-		return AspectRatioCorrectionMode::Auto;
-	}
-}
-
-static void set_aspect_ratio_correction(SectionProp& section)
-{
-	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting(section);
+			return AspectRatioCorrectionMode::Auto;
+		}
+	}();
 }
 
 AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode()
 {
-	return aspect_ratio_correction_mode;
+	return render.aspect_ratio_correction_mode;
 }
 
 static void log_invalid_viewport_setting_warning(
@@ -1112,73 +1069,71 @@ static std::optional<ViewportSettings> parse_viewport_settings(const std::string
 	}
 }
 
-static ViewportSettings viewport_settings = {};
-
 static void set_viewport(SectionProp& section)
 {
 	if (const auto& settings = parse_viewport_settings(
 	            section.GetString("viewport"));
 	    settings) {
-		viewport_settings = *settings;
+		render.viewport_settings = *settings;
 	} else {
-		viewport_settings = {};
+		render.viewport_settings = {};
 		set_section_property_value("render", "viewport", "fit");
 	}
 }
 
-static IntegerScalingMode get_integer_scaling_mode_setting(SectionProp& section)
+static void set_integer_scaling(const SectionProp& section)
 {
-	const std::string mode = section.GetString("integer_scaling");
+	using enum IntegerScalingMode;
 
-	if (has_false(mode)) {
-		return IntegerScalingMode::Off;
+	render.integer_scaling_mode = [&]() {
+		const std::string mode = section.GetString("integer_scaling");
 
-	} else if (mode == "auto") {
-		return IntegerScalingMode::Auto;
+		if (has_false(mode)) {
+			return Off;
 
-	} else if (mode == "horizontal") {
-		return IntegerScalingMode::Horizontal;
+		} else if (mode == "auto") {
+			return Auto;
 
-	} else if (mode == "vertical") {
-		return IntegerScalingMode::Vertical;
+		} else if (mode == "horizontal") {
+			return Horizontal;
 
-	} else {
-		constexpr auto SettingName  = "integer_scaling";
-		constexpr auto DefaultValue = "auto";
+		} else if (mode == "vertical") {
+			return Vertical;
 
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "RENDER",
-		                      "PROGRAM_CONFIG_INVALID_SETTING",
-		                      SettingName,
-		                      mode.c_str(),
-		                      DefaultValue);
+		} else {
+			constexpr auto SettingName  = "integer_scaling";
+			constexpr auto DefaultValue = "auto";
 
-		return IntegerScalingMode::Auto;
-	}
-}
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "RENDER",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      SettingName,
+			                      mode.c_str(),
+			                      DefaultValue);
 
-static void set_integer_scaling(SectionProp& section)
-{
-	render.integer_scaling_mode = get_integer_scaling_mode_setting(section);
+			return Auto;
+		}
+	}();
 }
 
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
 {
 	const auto dpi_scale = GFX_GetDpiScaleFactor();
 
-	switch (viewport_settings.mode) {
+	switch (render.viewport_settings.mode) {
 	case ViewportMode::Fit: {
 		auto viewport_size_px = [&] {
-			if (viewport_settings.fit.limit_size) {
-				return viewport_settings.fit.limit_size->Copy().ScaleSize(
-				        dpi_scale);
+			if (render.viewport_settings.fit.limit_size) {
+				return render.viewport_settings.fit.limit_size
+				        ->Copy()
+				        .ScaleSize(dpi_scale);
 
-			} else if (viewport_settings.fit.desktop_scale) {
+			} else if (render.viewport_settings.fit.desktop_scale) {
 				auto desktop_size_px = GFX_GetDesktopSize().ScaleSize(
 				        dpi_scale);
 
 				return desktop_size_px.ScaleSize(
-				        *viewport_settings.fit.desktop_scale);
+				        *render.viewport_settings.fit.desktop_scale);
 			} else {
 				// The viewport equals the canvas size
 				// in Fit mode without parameters
@@ -1198,8 +1153,8 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 		        canvas_size_px);
 
 		return restricted_canvas_size_px.Copy()
-		        .ScaleWidth(viewport_settings.relative.width_scale)
-		        .ScaleHeight(viewport_settings.relative.height_scale);
+		        .ScaleWidth(render.viewport_settings.relative.width_scale)
+		        .ScaleHeight(render.viewport_settings.relative.height_scale);
 	}
 
 	default: assertm(false, "Invalid ViewportMode value"); return {};
@@ -1907,7 +1862,7 @@ static void toggle_stretch_axis(const bool pressed)
 	if (!pressed) {
 		return;
 	}
-	if (viewport_settings.mode != ViewportMode::Relative) {
+	if (render.viewport_settings.mode != ViewportMode::Relative) {
 		log_stretch_hotkeys_viewport_mode_warning();
 		return;
 	}
@@ -1923,12 +1878,12 @@ static void toggle_stretch_axis(const bool pressed)
 
 static void adjust_viewport_stretch(const float increment)
 {
-	if (viewport_settings.mode != ViewportMode::Relative) {
+	if (render.viewport_settings.mode != ViewportMode::Relative) {
 		log_stretch_hotkeys_viewport_mode_warning();
 		return;
 	}
 
-	auto& r = viewport_settings.relative;
+	auto& r = render.viewport_settings.relative;
 
 	// Snap to whole percents when using the adjustment controls
 	r.width_scale = roundf(r.width_scale * 100.f) / 100.f;
