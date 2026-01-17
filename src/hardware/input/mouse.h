@@ -212,6 +212,47 @@ void MOUSEVMM_SetPointerVisible_VirtualBox(const bool is_visible);
 bool MOUSEVMM_CheckIfUpdated_VmWare();
 
 // ***************************************************************************
+// Serial port mouse device interface
+// ***************************************************************************
+
+class CSerialMouse;
+
+enum class MouseModelCOM {
+	NoMouse, // dummy value or no mouse
+	Microsoft,
+	Logitech,
+	Wheel,
+	MouseSystems
+};
+
+// Configured default serial mouse model
+MouseModelCOM MOUSECOM_GetConfiguredModel();
+// Whether the serial mouse should auto-switch to Mouse Systems mouse emulation
+bool MOUSECOM_GetConfiguredAutoMsm();
+
+bool MOUSECOM_ParseComModel(const std::string_view model_str,
+                            MouseModelCOM& model, bool& auto_msm);
+
+void MOUSECOM_RegisterListener(const MouseInterfaceId interface_id,
+                               CSerialMouse& listener);
+void MOUSECOM_UnregisterListener(const MouseInterfaceId interface_id);
+
+void MOUSECOM_NotifyInterfaceRate(const MouseInterfaceId interface_id,
+                                  const uint16_t rate_hz);
+
+// ***************************************************************************
+// Generic utility functions, made public for serial port mouse
+// ***************************************************************************
+
+float MOUSE_ClampRelativeMovement(const float rel);
+float MOUSE_ClampWheelMovement(const float rel);
+uint16_t MOUSE_ClampRateHz(const uint16_t rate_hz);
+
+bool MOUSE_HasAccumulatedInt(const float delta);
+int8_t MOUSE_ConsumeInt8(float& delta, const bool skip_delta_update = false);
+int16_t MOUSE_ConsumeInt16(float& delta, const bool skip_delta_update = false);
+
+// ***************************************************************************
 // MOUSECTL.COM / GUI configurator interface
 // ***************************************************************************
 

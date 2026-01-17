@@ -4,7 +4,7 @@
 #ifndef DOSBOX_MOUSE_CONFIG_H
 #define DOSBOX_MOUSE_CONFIG_H
 
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 
 #include "dosbox.h"
 
@@ -65,14 +65,6 @@ enum class MouseModelPS2 : uint8_t {
 	Explorer     = 0x04,
 };
 
-enum class MouseModelCOM {
-	NoMouse, // dummy value or no mouse
-	Microsoft,
-	Logitech,
-	Wheel,
-	MouseSystems
-};
-
 struct MouseConfig {
 	MouseCapture capture = MouseCapture::OnStart;
 	bool middle_release  = true;
@@ -106,8 +98,6 @@ struct MouseConfig {
 	// Helper functions for external modules
 
 	static const std::vector<uint16_t>& GetValidMinRateList();
-	static bool ParseComModel(const std::string_view model_str,
-	                          MouseModelCOM& model, bool& auto_msm);
 };
 
 extern MouseConfig mouse_config;

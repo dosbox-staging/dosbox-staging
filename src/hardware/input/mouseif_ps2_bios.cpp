@@ -5,8 +5,8 @@
 #include "mouse.h"
 
 #include "private/intel8042.h"
-#include "mouse_config.h"
-#include "mouse_interfaces.h"
+#include "private/mouse_config.h"
+#include "private/mouse_interfaces.h"
 
 #include <algorithm>
 #include <cmath>

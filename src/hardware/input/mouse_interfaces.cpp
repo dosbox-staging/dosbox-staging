@@ -1,12 +1,11 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mouse_interfaces.h"
-
-#include "private/mouse_common.h"
-#include "private/mouse_manymouse.h"
+#include "private/mouse_interfaces.h"
 #include "mouse.h"
-#include "mouse_config.h"
+#include "private/mouse_common.h"
+#include "private/mouse_config.h"
+#include "private/mouse_manymouse.h"
 
 #include <memory>
 
@@ -198,7 +197,7 @@ public:
 	void UpdateRate() override;
 
 	void RegisterListener(CSerialMouse& listener_object) override;
-	void UnRegisterListener() override;
+	void UnregisterListener() override;
 
 private:
 	friend class MouseInterface;
@@ -478,7 +477,7 @@ void MouseInterface::RegisterListener(CSerialMouse&)
 	assert(false);
 }
 
-void MouseInterface::UnRegisterListener()
+void MouseInterface::UnregisterListener()
 {
 	// should never be called for unsupported interface
 	assert(false);
@@ -786,7 +785,7 @@ void InterfaceCOM::RegisterListener(CSerialMouse& listener_object)
 	emulated = true;
 }
 
-void InterfaceCOM::UnRegisterListener()
+void InterfaceCOM::UnregisterListener()
 {
 	// Serial mouse gets unavailable when listener object disconnects
 
@@ -794,4 +793,24 @@ void InterfaceCOM::UnRegisterListener()
 	listener = nullptr;
 	emulated = false;
 	ManyMouseGlue::GetInstance().ShutdownIfSafe();
+}
+
+void MOUSECOM_RegisterListener(const MouseInterfaceId interface_id,
+                               CSerialMouse& listener)
+{
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	interface.RegisterListener(listener);
+}
+
+void MOUSECOM_UnregisterListener(const MouseInterfaceId interface_id)
+{
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	interface.UnregisterListener();
+}
+
+void MOUSECOM_NotifyInterfaceRate(const MouseInterfaceId interface_id,
+                                  const uint16_t rate_hz)
+{
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	interface.NotifyInterfaceRate(rate_hz);
 }

@@ -4,7 +4,7 @@
 #include "private/mouse_manymouse.h"
 
 #include "private/mouse_common.h"
-#include "mouse_config.h"
+#include "private/mouse_config.h"
 
 #include <algorithm>
 #include <initializer_list>
