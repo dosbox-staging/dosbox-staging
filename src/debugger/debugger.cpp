@@ -760,7 +760,7 @@ static void DrawData(void) {
 	uint32_t add = dataOfs;
 	uint32_t address;
 	/* Data win */	
-	for (int y=0; y<8; y++) {
+	for (int y=0; y<layout_sizes[data]; y++) {
 		// Address
 		if (add<0x10000) mvwprintw (dbg.win_data,y,0,"%04X:%04X     ",dataSeg,add);
 		else mvwprintw (dbg.win_data,y,0,"%04X:%08X ",dataSeg,add);
@@ -865,7 +865,7 @@ static void DrawCode(void) {
 	char dline[200];Bitu size;Bitu c;
 	static char line20[21] = "                    ";
 
-	for (int i=0;i<10;i++) {
+	for (int i=0;i<layout_sizes[code]-1;i++) {
 		saveSel = false;
 		if (has_colors()) {
 			if ((codeViewData.useCS==SegValue(cs)) && (disEIP == reg_eip)) {
@@ -895,7 +895,7 @@ static void DrawCode(void) {
 		bool toolarge = false;
 		mvwprintw(dbg.win_code,i,0,"%04X:%04X  ",codeViewData.useCS,disEIP);
 
-		if (drawsize>10) { toolarge = true; drawsize = 9; }
+		if (drawsize>(uint32_t)layout_sizes[code]-1) { toolarge = true; drawsize = layout_sizes[code]-2; }
 		for (c=0;c<drawsize;c++) {
 			uint8_t value;
 			if (mem_readb_checked(start+c,&value)) value=0;
@@ -903,7 +903,7 @@ static void DrawCode(void) {
 		}
 		if (toolarge) { waddstr(dbg.win_code,".."); drawsize++; }
 		// Spacepad up to 20 characters
-		if(drawsize && (drawsize < 11)) {
+		if(drawsize && (drawsize < (uint32_t)layout_sizes[code])) {
 			line20[20 - drawsize*2] = 0;
 			waddstr(dbg.win_code,line20);
 			line20[20 - drawsize*2] = ' ';
@@ -938,18 +938,18 @@ static void DrawCode(void) {
 	wattrset(dbg.win_code,0);
 	if (!debugging) {
 		if (has_colors()) wattrset(dbg.win_code,COLOR_PAIR(PAIR_GREEN_BLACK));
-		mvwprintw(dbg.win_code,10,0,"%s","(Running)");
+		mvwprintw(dbg.win_code,layout_sizes[code]-1,0,"%s","(Running)");
 		wclrtoeol(dbg.win_code);
 	} else {
 		//TODO long lines
 		char* dispPtr = codeViewData.inputStr;
 		char* curPtr = &codeViewData.inputStr[codeViewData.inputPos];
-		mvwprintw(dbg.win_code,10,0,"%c-> %s%c",
+		mvwprintw(dbg.win_code,layout_sizes[code]-1,0,"%c-> %s%c",
 			(codeViewData.ovrMode?'O':'I'),dispPtr,(*curPtr?' ':'_'));
 		wclrtoeol(dbg.win_code); // not correct in pdcurses if full line
-		mvwchgat(dbg.win_code,10,0,3,0,PAIR_BLACK_GREY,nullptr);
+		mvwchgat(dbg.win_code,layout_sizes[code]-1,0,3,0,PAIR_BLACK_GREY,nullptr);
 		if (*curPtr) {
-			mvwchgat(dbg.win_code,10,(curPtr-dispPtr+4),1,0,PAIR_BLACK_GREY,nullptr);
+			mvwchgat(dbg.win_code,layout_sizes[code]-1,(curPtr-dispPtr+4),1,0,PAIR_BLACK_GREY,nullptr);
  		}
 	}
 
@@ -1768,7 +1768,7 @@ uint32_t DEBUG_CheckKeys(void) {
 		case KEY_NPAGE :	dataOfs += 16;	break;
 
 		case KEY_DOWN:	// down 
-				if (codeViewData.cursorPos<9) codeViewData.cursorPos++;
+				if (codeViewData.cursorPos<layout_sizes[code]-2) codeViewData.cursorPos++;
 				else codeViewData.useEIP += codeViewData.firstInstSize;
 				break;
 		case KEY_UP:	// up 
