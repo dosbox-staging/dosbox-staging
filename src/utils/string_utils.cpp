@@ -27,20 +27,52 @@ void strreplace(char *str, char o, char n)
 	}
 }
 
-void ltrim(std::string &str) {
+/**
+ * @brief Removes leading whitespace from a std::string in place.
+ *
+ * This function modifies the input string by erasing all characters
+ * from the beginning until a non-whitespace character is found.
+ *
+ * @param str The string object to be modified.
+ */
+void ltrim(std::string& str)
+{
 	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int c) {
 		          return !isspace(c);
 	          }));
 }
 
-char *ltrim(char *str)
+/**
+ * @brief Advances a pointer past leading whitespace.
+ *
+ * This function finds the first non-whitespace character in the provided
+ * C-string and returns a pointer to it.
+ *
+ * @note This function does not modify the memory of the string; it simply
+ * returns a pointer offset from the original start.
+ *
+ * @param str The input C-string.
+ * @return char* A pointer to the first non-whitespace character.
+ */
+char* ltrim(char* str)
 {
 	while (*str && isspace(*reinterpret_cast<unsigned char *>(str)))
 		str++;
 	return str;
 }
 
-char *rtrim(char *str)
+/**
+ * @brief Removes trailing whitespace from a C-string.
+ *
+ * This function iterates backwards from the end of the string and
+ * replaces trailing whitespace characters with null terminators ('\0').
+ *
+ * @note This function modifies the input buffer.
+ *
+ * @param str The input C-string to modify.
+ * @return char* A pointer to the start of the original string.
+ */
+char* rtrim(char* str)
 {
 	char *p;
 	p = strchr(str, '\0');
@@ -50,7 +82,17 @@ char *rtrim(char *str)
 	return str;
 }
 
-char *trim(char *str)
+/**
+ * @brief Trims both leading and trailing whitespace from a C-string.
+ *
+ * This function first truncates trailing whitespace (modifying the buffer),
+ * and then calculates a pointer to the first non-whitespace character
+ * (skipping leading whitespace).
+ *
+ * @param str The input C-string to trim.
+ * @return char* A pointer to the trimmed substring within the original buffer.
+ */
+char* trim(char* str)
 {
 	return ltrim(rtrim(str));
 }
@@ -88,7 +130,21 @@ std::string replace(const std::string &str, char old_char, char new_char) noexce
 	return new_str;
 }
 
-void trim(std::string &str, const std::string_view trim_chars)
+/**
+ * @brief Trims specific characters from both ends of a std::string.
+ *
+ * This function removes all leading and trailing occurrences of the characters
+ * specified in @p trim_chars from the input string @p str. The operation is
+ * performed in-place.
+ *
+ * @param str The string to be modified.
+ * @param trim_chars A set of characters to remove (defaults to nothing if
+ * empty). Passed as a string_view for efficiency.
+ *
+ * @note If the string consists entirely of characters found in @p trim_chars,
+ * the string will be cleared (become empty).
+ */
+void trim(std::string& str, const std::string_view trim_chars)
 {
 	const auto empty_pfx = str.find_first_not_of(trim_chars);
 	if (empty_pfx == std::string::npos) {
@@ -437,4 +493,25 @@ bool is_text_equal(const std::string& str_1, const std::string& str_2)
 	}
 
 	return (index_1 == str_1.size()) && (index_2 == str_2.size());
+}
+
+/**
+ * @brief Write a string into a fixed-width buffer and pad a specified character
+ *
+ * This function takes the contents of @p str,  ensuring that the total length
+ * is exactly @p length bytes. If @p str is shorter than @p length, the
+ * remaining space is filled with the character specified by @p pad_char.
+ * If @p str is longer than @p length, it is truncated to fit.
+ *
+ * @param str The input string
+ * @param length The desired length of the output string
+ * @param pad_char The character to use for padding if @p str is shorter than @p
+ * length
+ *
+ */
+std::string right_pad(const std::string& str, int length, char pad_char)
+{
+	auto temp = str;
+	temp.resize(length, pad_char);
+	return temp;
 }
