@@ -93,6 +93,7 @@ libhardware = static_library(
         libym7128bemu_dep,
         libzmbv_dep,
         png_dep,
+        asio_dep,
         sdl2_dep,
         speexdsp_dep,
         winsock2_dep,

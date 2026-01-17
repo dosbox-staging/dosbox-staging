@@ -1,13 +1,14 @@
 [wrap-file]
-directory = SDL2-2.30.6
-source_url = https://github.com/libsdl-org/SDL/releases/download/release-2.30.6/SDL2-2.30.6.tar.gz
-source_filename = SDL2-2.30.6.tar.gz
-source_hash = c6ef64ca18a19d13df6eb22df9aff19fb0db65610a74cc81dae33a82235cacd4
-patch_filename = sdl2_2.30.6-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/sdl2_2.30.6-1/get_patch
-patch_hash = 9c143c81d02ac33fe4d50b320ee2860e59552a30e087630de298af44a16ed015
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/sdl2_2.30.6-1/SDL2-2.30.6.tar.gz
-wrapdb_version = 2.30.6-1
+directory = SDL2-2.32.8
+source_url = https://github.com/libsdl-org/SDL/releases/download/release-2.32.8/SDL2-2.32.8.tar.gz
+source_filename = SDL2-2.32.8.tar.gz
+source_hash = 0ca83e9c9b31e18288c7ec811108e58bac1f1bb5ec6577ad386830eac51c787e
+patch_filename = sdl2_2.32.8-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/sdl2_2.32.8-1/get_patch
+patch_hash = 5df17ea39ca418826db20e96bd821fa52b5718dac64b6225119fb6588c2744f0
+diff_files = sdl2-patches/macos-color-space-hint.patch
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/sdl2_2.32.8-1/SDL2-2.32.8.tar.gz
+wrapdb_version = 2.32.8-1
 
 [provide]
 sdl2 = sdl2_dep
