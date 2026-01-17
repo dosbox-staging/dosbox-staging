@@ -1,10 +1,9 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mouse_config.h"
-
+#include "private/mouse_config.h"
 #include "private/mouse_common.h"
-#include "mouse_interfaces.h"
+#include "private/mouse_interfaces.h"
 
 #include "config/config.h"
 #include "config/setup.h"
@@ -88,8 +87,8 @@ const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 	return list_rates;
 }
 
-bool MouseConfig::ParseComModel(const std::string_view model_str,
-                                MouseModelCOM& model, bool& auto_msm)
+bool MOUSECOM_ParseComModel(const std::string_view model_str,
+                            MouseModelCOM& model, bool& auto_msm)
 {
 	using enum MouseModelCOM;
 
@@ -216,7 +215,7 @@ static void set_ps2_mouse_model(const std::string_view model_str)
 
 static void set_serial_mouse_model(const std::string_view model_str)
 {
-	[[maybe_unused]] const auto result = MouseConfig::ParseComModel(
+	[[maybe_unused]] const auto result = MOUSECOM_ParseComModel(
 	        model_str, mouse_config.model_com, mouse_config.model_com_auto_msm);
 	assert(result);
 }
@@ -745,4 +744,14 @@ void MOUSE_AddConfigSection(const ConfigPtr& conf)
 	section->AddUpdateHandler(notify_mouse_setting_updated);
 
 	init_mouse_config_settings(*section);
+}
+
+MouseModelCOM MOUSECOM_GetConfiguredModel()
+{
+	return mouse_config.model_com;
+}
+
+bool MOUSECOM_GetConfiguredAutoMsm()
+{
+	return mouse_config.model_com_auto_msm;
 }

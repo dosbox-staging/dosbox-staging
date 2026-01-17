@@ -16,8 +16,6 @@
 #include "shell/command_line.h"
 #include "utils/math_utils.h"
 
-#include "hardware/input/mouse_interfaces.h"
-
 CHECK_NARROWING();
 
 // Port clock divider for 1200 baud transmission
@@ -42,8 +40,8 @@ CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
 
 	// Get the parameters from the configuration file
 
-	param_model    = mouse_config.model_com;
-	param_auto_msm = mouse_config.model_com_auto_msm;
+	param_model    = MOUSECOM_GetConfiguredModel();
+	param_auto_msm = MOUSECOM_GetConfiguredAutoMsm();
 
 	// Handle deprecated parameters
 
@@ -51,9 +49,10 @@ CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
 
 	// Override with parameters from command line or [serial] section
 
-	std::string model_string;
+	std::string model_string = {};
 	if (cmd->FindStringBegin("model:", model_string, false) &&
-	    !MouseConfig::ParseComModel(model_string, param_model, param_auto_msm)) {
+	    !MOUSECOM_ParseComModel(model_string, param_model, param_auto_msm)) {
+
 		LOG_ERR("MOUSE (COM%d): Invalid model '%s'",
 		        port_num,
 		        model_string.c_str());
@@ -65,17 +64,15 @@ CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
 	setCD(false);
 	setCTS(false);
 
-	auto& interface = MouseInterface::GetInstance(interface_id);
-	interface.RegisterListener(*this);
-	interface.NotifyInterfaceRate(rate_1200_baud);
+	MOUSECOM_RegisterListener(interface_id, *this);
+	MOUSECOM_NotifyInterfaceRate(interface_id, rate_1200_baud);
 
 	InstallationSuccessful = true;
 }
 
 CSerialMouse::~CSerialMouse()
 {
-	auto& interface = MouseInterface::GetInstance(interface_id);
-	interface.UnRegisterListener();
+	MOUSECOM_UnregisterListener(interface_id);
 
 	removeEvent(SERIAL_TX_EVENT); // clear events
 	LOG_MSG("MOUSE (COM%d): Disconnected", port_num);
@@ -208,8 +205,7 @@ void CSerialMouse::SetModel(const MouseModelCOM new_model)
 
 	// So far all emulated mice are 1200 bauds, but report anyway
 	// to trigger rate_coeff recalculation
-	auto& interface = MouseInterface::GetInstance(interface_id);
-	interface.NotifyInterfaceRate(rate_1200_baud);
+	MOUSECOM_NotifyInterfaceRate(interface_id, rate_1200_baud);
 }
 
 void CSerialMouse::AbortPacket()

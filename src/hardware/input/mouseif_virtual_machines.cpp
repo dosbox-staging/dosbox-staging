@@ -3,8 +3,8 @@
 
 #include "mouse.h"
 
-#include "mouse_config.h"
-#include "mouse_interfaces.h"
+#include "private/mouse_config.h"
+#include "private/mouse_interfaces.h"
 
 #include <algorithm>
 

@@ -4,7 +4,7 @@
 #ifndef DOSBOX_MOUSE_INTERFACES_H
 #define DOSBOX_MOUSE_INTERFACES_H
 
-#include "private/mouse_common.h"
+#include "mouse_common.h"
 
 #include "hardware/serialport/serialmouse.h"
 
@@ -156,7 +156,7 @@ public:
 	virtual void UpdateConfig();
 	virtual void UpdateInputType();
 	virtual void RegisterListener(CSerialMouse& listener_object);
-	virtual void UnRegisterListener();
+	virtual void UnregisterListener();
 	virtual void NotifyDosDriverStartup();
 
 protected:
