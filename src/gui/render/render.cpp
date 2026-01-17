@@ -315,7 +315,17 @@ static void handle_capture_frame()
 
 	const auto frames_per_second = static_cast<float>(render.fps);
 
-	CAPTURE_AddFrame(image, frames_per_second);
+	if (is_deinterlacing()) {
+		auto image_copy = image.deep_copy();
+
+		render.deinterlacer->Deinterlace(image_copy,
+		                                 render.deinterlacing_strength);
+
+		CAPTURE_AddFrame(image_copy, frames_per_second);
+
+	} else {
+		CAPTURE_AddFrame(image, frames_per_second);
+	}
 }
 
 static void deinterlace_rendered_output()
