@@ -47,7 +47,7 @@ CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
 	// Override with parameters from command line or [serial] section
 
 	std::string model_string;
-	if (cmd->FindStringCaseInsensitiveBegin("model:", model_string, false) &&
+	if (cmd->FindStringBegin("model:", model_string, false) &&
 	    !MouseConfig::ParseComModel(model_string, param_model, param_auto_msm)) {
 		LOG_ERR("MOUSE (COM%d): Invalid model '%s'",
 		        port_num,
@@ -81,11 +81,11 @@ void CSerialMouse::HandleDeprecatedOptions(CommandLine *cmd)
 	using enum MouseModelCOM;
 
 	std::string option;
-	if (cmd->FindStringBegin("rate:", option, false))
+	if (cmd->FindStringBeginCaseSensitive("rate:", option, false))
 		LOG_WARNING("MOUSE (COM%d): Deprecated option 'rate:' - ignored",
 		            port_num);
 
-	const bool found_deprecated = cmd->FindStringBegin("type:", option, false);
+	const bool found_deprecated = cmd->FindStringBeginCaseSensitive("type:", option, false);
 
 	if (found_deprecated) {
 		LOG_WARNING("MOUSE (COM%d): Deprecated option 'type:'", port_num);
