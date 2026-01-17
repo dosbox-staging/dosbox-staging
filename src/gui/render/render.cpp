@@ -80,6 +80,50 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 	}
 }
 
+static bool is_deinterlacing()
+{
+	if (render.deinterlacing_strength == DeinterlacingStrength::Off) {
+		return false;
+	}
+
+	// Games that display interlaced FMV videos use 640x400 256-colour or
+	// better (S)VGA/VESA graphics.
+	//
+	auto mode = VGA_GetCurrentVideoMode();
+
+	return (machine == MachineType::Vga) && mode.is_graphics_mode &&
+	       (mode.color_depth >= ColorDepth::IndexedColor256) &&
+	       (mode.height >= 400);
+}
+
+static bool maybe_gfx_start_update()
+{
+	uint32_t* pixel_data = nullptr;
+	int pitch            = 0;
+
+	if (!GFX_StartUpdate(pixel_data, pitch)) {
+		return false;
+	}
+
+	if (is_deinterlacing()) {
+		// Write the scaled output to a temporary buffer first
+		render.scale.out_write = reinterpret_cast<uint8_t*>(
+		        render.scale.out_buf.data());
+
+		render.dest = pixel_data;
+
+	} else {
+		// Write the scaled output directly to the render backend's
+		// texture buffer
+		render.scale.out_write = reinterpret_cast<uint8_t*>(pixel_data);
+		render.dest            = nullptr;
+	}
+
+	render.scale.out_pitch = pitch;
+
+	return true;
+}
+
 static void empty_line_handler(const void*) {}
 
 static void start_line_handler(const void* src_line_data)
@@ -96,14 +140,11 @@ static void start_line_handler(const void* src_line_data)
 			// double-buffered). Otherwise, it will keep displaying
 			// the same frame at present time without doing a buffer
 			// swap followed by a texture upload to the GPU.
-			uint32_t* buf_ptr = {};
-
-			if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
+			//
+			if (!maybe_gfx_start_update()) {
 				RENDER_DrawLine = empty_line_handler;
 				return;
 			}
-
-			render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
 
 			render.scale.out_write += render.scale.out_pitch *
 			                          scaler_changed_lines[0];
@@ -141,8 +182,8 @@ static void clear_cache_handler(const void* src_line_data)
 	auto src = static_cast<const uint8_t*>(src_line_data);
 
 	// The width of all screen modes and therefore `cache_pitch` too is a
-	// multiple of 8 (`cache_pitch` equals the screen mode's width multiplied
-	// by the number of bytes per pixel and no padding).
+	// multiple of 8 (`cache_pitch` equals the screen mode's width
+	// multiplied by the number of bytes per pixel and no padding).
 	//
 	auto cache = render.scale.cache_read;
 
@@ -197,13 +238,9 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		uint32_t* buf_ptr = {};
-
-		if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
+		if (!maybe_gfx_start_update()) {
 			return false;
 		}
-
-		render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
 
 		RENDER_DrawLine = clear_cache_handler;
 
@@ -219,13 +256,9 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		uint32_t* buf_ptr = {};
-
-		if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
+		if (!maybe_gfx_start_update()) {
 			return false;
 		}
-
-		render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
 
 		RENDER_DrawLine = render.scale.line_palette_handler;
 
@@ -282,7 +315,44 @@ static void handle_capture_frame()
 
 	const auto frames_per_second = static_cast<float>(render.fps);
 
-	CAPTURE_AddFrame(image, frames_per_second);
+	if (is_deinterlacing()) {
+		auto image_copy = image.deep_copy();
+
+		render.deinterlacer->Deinterlace(image_copy,
+		                                 render.deinterlacing_strength);
+
+		CAPTURE_AddFrame(image_copy, frames_per_second);
+
+	} else {
+		CAPTURE_AddFrame(image, frames_per_second);
+	}
+}
+
+static void deinterlace_rendered_output()
+{
+	// Copy scaled & deinterlaced output into the render backend's
+	// texture buffer (always in 32-bit BGRX pixel format)
+	std::memcpy(render.dest,
+	            render.scale.out_buf.data(),
+	            render.scale.out_height * render.scale.out_pitch);
+
+	// Deinterlace the render's backend buffer and leave the scaler
+	// output buffer intact (as deinterlacing the scaler output
+	// buffer itself would screw up the scaler diffing).
+	//
+	RenderedImage image = {};
+
+	image.params               = render.src;
+	image.params.width         = render.scale.out_width;
+	image.params.height        = render.scale.out_height;
+	image.params.pixel_format  = PixelFormat::BGRX32_ByteArray;
+	image.pitch                = render.scale.out_pitch;
+	image.params.double_width  = false;
+	image.params.double_height = false;
+
+	image.image_data = reinterpret_cast<uint8_t*>(render.dest);
+
+	render.deinterlacer->Deinterlace(image, render.deinterlacing_strength);
 }
 
 void RENDER_EndUpdate([[maybe_unused]] bool abort)
@@ -295,6 +365,11 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 
 	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
 		handle_capture_frame();
+	}
+
+	// Only deinterlace the output if the frame has changed
+	if (is_deinterlacing() && render.updating_frame) {
+		deinterlace_rendered_output();
 	}
 
 	GFX_EndUpdate();
@@ -1116,6 +1191,45 @@ static void set_integer_scaling(const SectionProp& section)
 	}();
 }
 
+static void set_deinterlacing(SectionProp& section)
+{
+	render.deinterlacing_strength = [&]() {
+		const std::string pref = section.GetString("deinterlacing");
+
+		if (has_false(pref)) {
+			return DeinterlacingStrength::Off;
+
+		} else if (has_true(pref)) {
+			return DeinterlacingStrength::Medium;
+
+		} else if (pref == "light") {
+			return DeinterlacingStrength::Light;
+
+		} else if (pref == "medium") {
+			return DeinterlacingStrength::Medium;
+
+		} else if (pref == "strong") {
+			return DeinterlacingStrength::Strong;
+
+		} else if (pref == "full") {
+			return DeinterlacingStrength::Full;
+
+		} else {
+			constexpr auto SettingName  = "deinterlacing";
+			constexpr auto DefaultValue = "off";
+
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "RENDER",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      SettingName,
+			                      pref.c_str(),
+			                      DefaultValue);
+
+			return DeinterlacingStrength::Off;
+		}
+	}();
+}
+
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
 {
 	const auto dpi_scale = GFX_GetDpiScaleFactor();
@@ -1843,6 +1957,20 @@ static void init_render_settings(SectionProp& section)
 	                   DefaultRgbGain,
 	                   RgbGainMin,
 	                   RgbGainMax));
+
+	string_prop = section.AddString("deinterlacing", Always, "off");
+	string_prop->SetHelp(
+	        "Remove alternating black lines from interlaced videos ('off' by default).\n"
+	        "Possible values: TODO\n"
+	        "\n"
+	        "  off:     Disable deinterlacing (default).\n"
+	        "  on:      Enable deinterlacing ('medium' strength).\n"
+	        "  light:   Light deinterlacing.\n"
+	        "  medium:  Medium deinterlacing.\n"
+	        "  strong:  Strong deinterlacing.\n"
+	        "  full:    Full deinterlacing.");
+
+	string_prop->SetValues({"on", "off", "light", "medium", "strong", "full"});
 }
 
 enum { Horiz, Vert };
@@ -2532,6 +2660,8 @@ void RENDER_Init()
 	auto section = get_section("render");
 	assert(section);
 
+	render.deinterlacer = std::make_unique<Deinterlacer>();
+
 	set_aspect_ratio_correction(*section);
 	set_viewport(*section);
 	set_integer_scaling(*section);
@@ -2561,6 +2691,8 @@ void RENDER_Init()
 	update_blue_gain_setting();
 
 	set_image_adjustment_settings();
+
+	set_deinterlacing(*section);
 }
 
 static void notify_render_setting_updated(SectionProp& section,
@@ -2573,6 +2705,9 @@ static void notify_render_setting_updated(SectionProp& section,
 	} else if (prop_name == "cga_colors") {
 		// TODO Support switching custom CGA colors at runtime. This is
 		// somewhat complicated and needs experimentation.
+
+	} else if (prop_name == "deinterlacing") {
+		set_deinterlacing(section);
 
 	} else if (prop_name == "glshader" || prop_name == "shader") {
 		set_shader_with_fallback_or_exit(get_shader_setting_value());
