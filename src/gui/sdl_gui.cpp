@@ -2650,13 +2650,17 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "resize the window after startup. Possible values:\n"
 	        "\n"
 	        "  default:   Select the best option based on your environment and other\n"
-	        "             settings (such as whether aspect ratio correction is enabled).\n"
+	        "             factors (such as whether aspect ratio correction is enabled).\n"
 	        "\n"
 	        "  small, medium, large (s, m, l):\n"
 	        "             Size the window relative to the desktop.\n"
 	        "\n"
-	        "  WxH:       Specify window size in WxH format in logical units\n"
-	        "             (e.g., 1024x768).");
+	        "  WxH:       Specify window size in WxH format in logical units (e.g.,\n"
+	        "             1024x768). The values be multiplied by the OS-level DPI scaling to\n"
+	        "             get the window size in pixels.\n"
+	        "\n"
+	        "Note: If you want to use pixel coordinates instead and ignore DPI scaling, set\n"
+	        "      the SDL_WINDOWS_DPI_SCALING environment variable to 0.");
 
 	pstring = section.AddString("window_position", Always, "auto");
 	pstring->SetHelp(
@@ -2666,7 +2670,12 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "  auto:      Let the window manager decide the position (default).\n"
 	        "\n"
 	        "  X,Y:       Set window position in X,Y format in logical units (e.g., 250,100).\n"
-	        "             0,0 is the top-left corner of the screen.");
+	        "             0,0 is the top-left corner of the screen. The values will be\n"
+	        "             multiplied by the OS-level DPI scaling to get the window position\n"
+	        "             in pixels.\n"
+	        "\n"
+	        "Note: If you want to use pixel coordinates instead and ignore DPI scaling, set\n"
+	        "      the SDL_WINDOWS_DPI_SCALING environment variable to 0.");
 
 	pbool = section.AddBool("window_decorations", Always, true);
 	pbool->SetHelp("Enable window decorations in windowed mode ('on' by default).");
