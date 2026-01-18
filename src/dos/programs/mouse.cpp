@@ -131,12 +131,12 @@ void MOUSE::RemoveUnsupportedOptions()
 	auto check_remove_numeric = [&](const std::string& begin) {
 
 		std::string value = {};
-		if (cmd->FindStringCaseInsensitiveBegin(begin, value) &&
+		if (cmd->FindStringBegin(begin, value) &&
 		    is_digits(value)) {
 
 			// Found an argument with a numeric value
 			constexpr bool Remove = true;
-			cmd->FindStringCaseInsensitiveBegin(begin, value, Remove);
+			cmd->FindStringBegin(begin, value, Remove);
 			return true;
 		}
 

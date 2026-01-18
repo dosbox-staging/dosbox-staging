@@ -102,7 +102,7 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 	} else {
 		// normal server/client
 		std::string tmpstring;
-		if (cmd->FindStringBegin("server:",tmpstring,false)) {
+		if (cmd->FindStringBeginCaseSensitive("server:",tmpstring,false)) {
 			// we are a client
 			const char* hostnamechar=tmpstring.c_str();
 			size_t hostlen=strlen(hostnamechar)+1;

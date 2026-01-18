@@ -19,6 +19,18 @@ bool CommandLine::FindExist(const std::string& name, bool remove)
 	return true;
 }
 
+bool CommandLine::FindExistCaseSensitive(const std::string& name, bool remove)
+{
+	cmd_it it;
+	if (!(FindEntry(name, it, false, true))) {
+		return false;
+	}
+	if (remove) {
+		cmds.erase(it);
+	}
+	return true;
+}
+
 bool CommandLine::FindExistRemoveAll(const std::string& name)
 {
 	constexpr bool RemoveIfFound = true;
@@ -127,10 +139,13 @@ bool CommandLine::HasExecutableName() const
 	return false;
 }
 
-bool CommandLine::FindEntry(const std::string& name, cmd_it& it, bool neednext)
+bool CommandLine::FindEntry(const std::string& name, cmd_it& it, bool neednext, const bool case_sensitive)
 {
 	for (it = cmds.begin(); it != cmds.end(); ++it) {
-		if (iequals((*it).c_str(), name)) {
+		bool match = case_sensitive
+		           ? equals((*it).c_str(), name)
+		           : iequals((*it).c_str(), name);
+		if (match) {
 			cmd_it itnext = it;
 			++itnext;
 			if (neednext && (itnext == cmds.end())) {
@@ -142,8 +157,9 @@ bool CommandLine::FindEntry(const std::string& name, cmd_it& it, bool neednext)
 	return false;
 }
 
-bool CommandLine::FindStringBegin(const std::string& begin, std::string& value,
-                                  bool remove)
+bool CommandLine::FindStringBeginCaseSensitive(const std::string& begin,
+                                               std::string& value,
+                                               bool remove)
 {
 	const auto len = begin.length();
 	for (auto it = cmds.begin(); it != cmds.end(); ++it) {
@@ -158,9 +174,9 @@ bool CommandLine::FindStringBegin(const std::string& begin, std::string& value,
 	return false;
 }
 
-bool CommandLine::FindStringCaseInsensitiveBegin(const std::string& begin,
-                                                 std::string& value,
-                                                 bool remove)
+bool CommandLine::FindStringBegin(const std::string& begin,
+                                  std::string& value,
+                                  bool remove)
 {
 	const auto len = begin.length();
 	for (auto it = cmds.begin(); it != cmds.end(); ++it) {
@@ -396,7 +412,7 @@ bool CommandLine::FindBoolArgument(const std::string& name, bool remove,
 	short_name[1]                 = short_letter;
 	return FindExist(double_dash, remove) ||
 	       FindExist(dash, remove) ||
-	       (short_letter && FindExist(short_name, remove));
+	       (short_letter && FindExistCaseSensitive(short_name, remove));
 }
 
 bool CommandLine::FindRemoveBoolArgument(const std::string& name, char short_letter)

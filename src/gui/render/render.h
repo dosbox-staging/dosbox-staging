@@ -1,4 +1,5 @@
-// SPDX-FileCopyrightText:  2019-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2019-2026 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_RENDER_H
@@ -64,52 +65,53 @@ enum class AspectRatioCorrectionMode {
 	Stretch
 };
 
-struct RenderPal_t {
+struct RenderPalette {
 	std::array<Rgb888, NumVgaColors> rgb = {};
 
 	uint32_t lut[NumVgaColors]     = {};
 	uint8_t modified[NumVgaColors] = {};
 
-	bool changed   = false;
-	uint32_t first = 0;
-	uint32_t last  = 0;
+	bool changed = false;
+	int first    = 0;
+	int last     = 0;
 };
 
 struct Render {
-	ImageInfo src      = {};
-	uint32_t src_start = 0;
+	ImageInfo src = {};
 
 	// Frames per second
 	double fps = 0;
 
 	struct {
-		uint32_t size = 0;
+		bool clear_cache = false;
 
-		ScalerMode inMode  = {};
+		ScalerLineHandler line_handler         = nullptr;
+		ScalerLineHandler line_palette_handler = nullptr;
 
-		bool clearCache = false;
+		int cache_pitch     = 0;
+		uint8_t* cache_read = nullptr;
 
-		ScalerLineHandler lineHandler    = nullptr;
-		ScalerLineHandler linePalHandler = nullptr;
+		alignas(uint64_t)
+		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
 
-		uint32_t blocks     = 0;
-		uint32_t lastBlock  = 0;
-		int outPitch        = 0;
-		uint8_t* outWrite   = nullptr;
-		uint32_t cachePitch = 0;
-		uint8_t* cacheRead  = nullptr;
-		uint32_t inHeight   = 0;
-		uint32_t inLine     = 0;
-		uint32_t outLine    = 0;
+		int out_width      = 0;
+		int out_height     = 0;
+		int out_pitch      = 0;
+		uint8_t* out_write = nullptr;
+
+		int y_scale = 0;
 	} scale = {};
 
-	RenderPal_t pal = {};
+	RenderPalette palette = {};
 
-	bool updating  = false;
-	bool active    = false;
-	bool fullFrame = true;
+	bool active             = false;
+	bool render_in_progress = false;
+	bool updating_frame     = false;
 
-	IntegerScalingMode integer_scaling_mode = {};
+	AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
+	IntegerScalingMode integer_scaling_mode                = {};
+
+	ViewportSettings viewport_settings = {};
 };
 
 // A frame of the emulated video output that's passed to the rendering backend
