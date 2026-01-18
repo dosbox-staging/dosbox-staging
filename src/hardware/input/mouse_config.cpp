@@ -23,6 +23,8 @@ static const std::string SectionName = "mouse";
 
 MouseConfig mouse_config;
 
+static bool is_serial_mouse_model_read = false;
+
 namespace OptionBuiltInDosDriver {
 
 constexpr auto Off   = "off";
@@ -240,6 +242,8 @@ static void set_serial_mouse_model(const SectionProp& section)
 	[[maybe_unused]] const auto result = MOUSECOM_ParseComModel(
 	        option_str, mouse_config.model_com, mouse_config.model_com_auto_msm);
 	assert(result);
+
+	is_serial_mouse_model_read = true;
 }
 
 static void set_dos_driver_move_threshold(const SectionProp& section)
@@ -477,7 +481,9 @@ void MOUSE_Init()
 	set_ps2_mouse_model(*section);
 
 	// COM port mouse configuration
-	set_serial_mouse_model(*section);
+	if (!is_serial_mouse_model_read) {
+		set_serial_mouse_model(*section);
+	}
 
 	// Virtual Machine Manager (VMM) mouse interfaces
 	set_vmware_mouse(*section);
@@ -801,10 +807,26 @@ void MOUSE_AddConfigSection(const ConfigPtr& conf)
 
 MouseModelCom MOUSECOM_GetConfiguredModel()
 {
+	if (!is_serial_mouse_model_read) {
+
+		const auto section = get_section(SectionName.c_str());
+		assert(section);
+
+		set_serial_mouse_model(*section);
+	}
+
 	return mouse_config.model_com;
 }
 
 bool MOUSECOM_GetConfiguredAutoMsm()
 {
+	if (!is_serial_mouse_model_read) {
+
+		const auto section = get_section(SectionName.c_str());
+		assert(section);
+
+		set_serial_mouse_model(*section);
+	}
+
 	return mouse_config.model_com_auto_msm;
 }
