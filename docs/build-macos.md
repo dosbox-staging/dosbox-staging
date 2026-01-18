@@ -40,7 +40,7 @@ Tools need to be installed and the license agreed to.
 2. Install the minimum set of dependencies and related tools:
 
     ```shell
-    brew install cmake ccache meson sdl2 sdl2_net opusfile \
+    brew install cmake ccache meson sdl2 asio opusfile \
                  pkg-config python3
     ```
 
@@ -58,7 +58,7 @@ Tools need to be installed and the license agreed to.
 2. Install the minimum set of dependencies and related tools:
 
     ```shell
-    sudo port install cmake ccache meson libsdl2 libsdl2_net opusfile \
+    sudo port install cmake ccache meson libsdl2 asio opusfile \
                       glib2 pkgconfig python311
     ```
 

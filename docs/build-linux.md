@@ -70,7 +70,7 @@ These are generic, distro-independent building instructions.
 - OpusFile
 - SDL 2.x
 - SDL2_image
-- SDL2_net
+- asio
 - SpeexDSP
 - zlib-nG
 
