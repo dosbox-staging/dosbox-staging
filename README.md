@@ -91,7 +91,7 @@ DOSBox Staging has the following library dependencies:
 | [Opus File](https://opus-codec.org/)                      | CD Audio playback for Opus-encoded audio tracks | opusfile           | 0.12+20221121#1   | **no** :red_circle: |
 | [SDL 2](https://github.com/libsdl-org/SDL)                | OS-agnostic API for video, audio, and eventing  | sdl2               | 2.32.10 (overlay) | **no** :red_circle: |
 | [SDL_image 2](https://github.com/libsdl-org/SDL_image)    | Image decoding for many popular formats         | sdl2-image         | 2.8.8#2           | **no** :red_circle: |
-| [SDL_net 2](https://github.com/libsdl-org/SDL_net)        | Network API for emulated serial and IPX         | sdl2-net           | 2.2.0#3           | **no** :red_circle: |
+| [Asio](https://think-async.com/Asio/)                     | Network API for emulated serial and IPX         | asio               | 1.30.2            | **no** :red_circle: |
 | [SpeexDSP](https://github.com/xiph/speexdsp)              | Audio resampling                                | speexdsp           | 1.2.1#1           | **no** :red_circle: |
 | [zlib-ng](https://github.com/zlib-ng/zlib-ng)             | ZMBV video capture                              | zlib-ng            | 2.3.2             | yes¹ :green_circle: |
 
@@ -144,7 +144,7 @@ Install build dependencies appropriate for your OS:
 ``` shell
 # Fedora
 sudo dnf install ccache gcc-c++ meson alsa-lib-devel libatomic libpng-devel \
-                 SDL2-devel SDL2_net-devel opusfile-devel \
+                 SDL2-devel asio-devel opusfile-devel \
                  fluidsynth-devel iir1-devel mt32emu-devel libslirp-devel \
                  speexdsp-devel libXi-devel zlib-ng-devel
 ```
@@ -152,7 +152,7 @@ sudo dnf install ccache gcc-c++ meson alsa-lib-devel libatomic libpng-devel \
 ``` shell
 # Debian, Ubuntu
 sudo apt install ccache build-essential libasound2-dev libatomic1 libpng-dev \
-                 libsdl2-dev libsdl2-net-dev libopusfile-dev \
+                 libsdl2-dev libasio-dev libopusfile-dev \
                  libfluidsynth-dev libslirp-dev libspeexdsp-dev libxi-dev
 
 # Install Meson on Debian-11 "Bullseye" or Ubuntu-21.04 and newer
@@ -162,13 +162,13 @@ sudo apt install meson
 ``` shell
 # Arch, Manjaro
 sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net \
-               opusfile fluidsynth libslirp speexdsp libxi pkgconf
+               asio opusfile fluidsynth libslirp speexdsp libxi pkgconf
 ```
 
 ``` shell
 # openSUSE
 sudo zypper install ccache gcc gcc-c++ meson alsa-devel libatomic1 libpng-devel \
-                    libSDL2-devel libSDL2_net-devel \
+                    libSDL2-devel asio-devel \
                     opusfile-devel fluidsynth-devel libmt32emu-devel libslirp-devel \
                     speexdsp libXi-devel
 ```
@@ -176,7 +176,7 @@ sudo zypper install ccache gcc gcc-c++ meson alsa-devel libatomic1 libpng-devel 
 ``` shell
 # macOS
 xcode-select --install
-brew install cmake ccache meson libpng sdl2 sdl2_net opusfile \
+brew install cmake ccache meson libpng sdl2 asio opusfile \
      fluid-synth libslirp pkg-config python3 speexdsp
 ```
 
