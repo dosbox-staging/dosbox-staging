@@ -131,7 +131,7 @@ void MOUNT::WriteMountStatus(const char* image_type,
 	const std::string type_and_images_str = image_type + std::string(" ") +
 	                                        images_str;
 
-	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2").c_str(),
+	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
 	         type_and_images_str.c_str(),
 	         drive_letter);
 }
@@ -300,7 +300,7 @@ bool MOUNT::MountImageIso(MountParameters& params)
 		default: msg_id = "MSCDEX_UNKNOWN_ERROR"; break;
 		}
 
-		if (msg_id) {
+		if (msg_id) { //-V547
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
 			                      msg_id);
@@ -337,7 +337,7 @@ bool MOUNT::MountImageIso(MountParameters& params)
 	}
 
 	// Print status message (success)
-	WriteOut(MSG_Get("MSCDEX_SUCCESS").c_str());
+	WriteOut(MSG_Get("MSCDEX_SUCCESS"));
 	WriteMountStatus(MSG_Get("MOUNT_TYPE_ISO").c_str(), params.paths, params.drive);
 	return true;
 }
@@ -388,7 +388,7 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 		updateDPT();
 	}
 
-	WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER").c_str(),
+	WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),
 	         drv_idx,
 	         params.paths[0].c_str());
 	return true;
@@ -654,18 +654,18 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 // and decided to mount it) Returns false on failure.
 bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_config)
 {
-	std::string temp_line;
+	std::string temp_string;
 	// Get the first path argument
-	if (!cmd->FindCommand(2, temp_line) || temp_line.empty()) {
+	if (!cmd->FindCommand(2, temp_string) || temp_string.empty()) {
 		ShowUsage();
 		return false;
 	}
 
 	// Expand ~ to home directory
-	temp_line = resolve_home(temp_line).string();
+	temp_string = resolve_home(temp_string).string();
 
 	// Resolve first path
-	std::string path_arg_1 = temp_line;
+	std::string path_arg_1 = temp_string;
 	if (path_relative_to_last_config && control->config_files.size() &&
 	    !std_fs::path(path_arg_1).is_absolute()) {
 		std::string lastconfigdir =
@@ -760,7 +760,7 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 							std::string host_name = ldp->MapDosToHostFilename(
 							        fullname);
 							if (path_exists(host_name)) {
-								final_path = host_name;
+								final_path = std::move(host_name);
 								found_on_virtual = true;
 								LOG_MSG("IMGMOUNT: Path '%s' found on virtual drive %c:",
 								        fullname,
@@ -785,7 +785,7 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 				if (stat(final_path.c_str(), &t2) == 0 &&
 				    S_ISREG(t2.st_mode)) {
 					auto ext = final_path.substr(
-					        final_path.find_last_of(".") + 1);
+					        final_path.find_last_of('.') + 1);
 					std::transform(ext.begin(),
 					               ext.end(),
 					               ext.begin(),
