@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_IMAGE_DECODER_H
@@ -7,8 +7,8 @@
 #include <cassert>
 #include <vector>
 
-#include "gui/render/render.h"
 #include "hardware/video/vga.h"
+#include "misc/rendered_image.h"
 #include "misc/support.h"
 #include "utils/byteorder.h"
 #include "utils/checks.h"
