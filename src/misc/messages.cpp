@@ -77,7 +77,10 @@ private:
 	void VerifyFormatStringAgainst(const std::string& message_key,
 	                               const Message& message_english);
 
-	void VerifyTranslationUpToDate(const Message& message_english);
+	void VerifyTranslationUpToDate(const std::string& message_key,
+	                               const Message& message_english);
+
+	static bool IsImportantHelp(const std::string& message_key);
 
 	const bool is_english;
 
@@ -451,13 +454,75 @@ void Message::VerifyFormatStringAgainst(const std::string& message_key,
 	}
 }
 
-void Message::VerifyTranslationUpToDate(const Message& message_english)
+bool Message::IsImportantHelp(const std::string& message_key)
+{
+	// First check for certain hardcoded messages/prefixes
+
+	static const std::vector<std::string> ImportantMessagesList = {
+	        "DOSBOX_HELP", "AUTOEXEC_CONFIGFILE_HELP", "CONFIGFILE_INTRO"};
+
+	static const std::vector<std::string> ImportantMessagePrefixes = {
+	        // Config file option descriptions
+	        "CONFIG_",
+	        "CONFIGITEM_",
+	        // AUTOEXEC.BAT messages
+	        "AUTOEXEC_BAT_",
+	};
+
+	if (contains(ImportantMessagesList, message_key)) {
+		return true;
+	}
+
+	for (const auto& prefix : ImportantMessagePrefixes) {
+		if (message_key.starts_with(prefix)) {
+			return true;
+		}
+	}
+
+	// Check for program/command help messages
+
+	static const std::string ShellPrefix   = "SHELL_CMD_";
+	static const std::string ProgramPrefix = "PROGRAM_";
+	static const std::string HelpSuffix    = "_HELP";
+
+	auto is_help_message = [&](const std::string& prefix) {
+		if (!message_key.starts_with(prefix)) {
+			return false;
+		}
+
+		const auto prefix_length   = prefix.length();
+		const auto suffix_position = message_key.find(HelpSuffix);
+
+		if (suffix_position == std::string::npos ||
+		    suffix_position <= prefix_length) {
+			return false;
+		}
+
+		const auto interior = std::string_view(message_key).substr(
+			prefix_length, suffix_position - prefix_length);
+
+		return std::ranges::count(interior, '_') == 0;
+	};
+
+	return is_help_message(ShellPrefix) || is_help_message(ProgramPrefix);
+}
+
+void Message::VerifyTranslationUpToDate(const std::string& message_key,
+                                        const Message& message_english)
 {
 	assert(!is_english);
 
 	if (message_previous_english.empty() ||
 	    message_previous_english != message_english.GetRaw()) {
+
 		MarkFuzzy();
+	}
+
+	if (IsFuzzy() && IsImportantHelp(message_key)) {
+
+		// If the translation is not up to date (fuzzy), important help
+		// messages shall use English strings
+		MarkInvalid();
 	}
 }
 
@@ -485,7 +550,7 @@ void Message::VerifyTranslated(const std::string& message_key,
 	VerifyNoLeftoverHelperLines(message_key);
 	if (message_english.IsValid()) {
 		AutoAdjustTranslation(message_english);
-		VerifyTranslationUpToDate(message_english);
+		VerifyTranslationUpToDate(message_key, message_english);
 		VerifyFormatStringAgainst(message_key, message_english);
 	}
 
