@@ -18,6 +18,7 @@
 #include "ints/bios_disk.h"
 #include "ints/int10.h"
 #include "misc/cross.h"
+#include "misc/notifications.h"
 #include "more_output.h"
 #include "shell/shell.h"
 #include "utils/fs_utils.h"
@@ -34,11 +35,11 @@ void MOUNT::ListMounts()
 	const std::string header_type  = MSG_Get("PROGRAM_MOUNT_STATUS_TYPE");
 	const std::string header_label = MSG_Get("PROGRAM_MOUNT_STATUS_LABEL");
 
-	const int term_width   = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
-	const auto width_drive = static_cast<int>(header_drive.length());
-	const auto width_label = std::max(minimum_column_length,
-	                                  static_cast<int>(header_label.size()));
-	const auto width_type  = term_width - 3 - width_drive - width_label;
+	const int console_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+	const auto width_drive  = static_cast<int>(header_drive.length());
+	const auto width_label  = std::max(minimum_column_length,
+                                          static_cast<int>(header_label.size()));
+	const auto width_type   = console_width - 3 - width_drive - width_label;
 	if (width_type < 0) {
 		LOG_WARNING("Message is too long.");
 		return;
@@ -58,7 +59,7 @@ void MOUNT::ListMounts()
 
 	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
 	print_row(header_drive, header_type, header_label);
-	const std::string horizontal_divider(term_width, '-');
+	const std::string horizontal_divider(console_width, '-');
 	WriteOut_NoParsing(horizontal_divider);
 
 	bool found_drives = false;
@@ -123,18 +124,8 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
 bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
                        const std::string& type, const std::string& fstype,
                        uint16_t* sizes, bool roflag, bool wants_ide,
-                       int8_t ide_index, bool is_second_cable_slot,
-                       std::function<void(std::string)> logger)
+                       int8_t ide_index, bool is_second_cable_slot)
 {
-	// Format strings like WriteOut does, but sending to the provided logger
-	auto log_fmt = [&](const char* format, ...) {
-		char buf[2048];
-		va_list args;
-		va_start(args, format);
-		vsnprintf(buf, sizeof(buf), format, args);
-		va_end(args);
-		logger(std::string(buf));
-	};
 
 	const uint8_t mediaid = (type == "floppy") ? MediaId::Floppy1_44MB
 	                                           : MediaId::HardDisk;
@@ -149,9 +140,9 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 		const std::string type_and_images_str = image_type +
 		                                        std::string(" ") + images_str;
 
-		log_fmt(MSG_Get("PROGRAM_MOUNT_STATUS_2").c_str(),
-		        type_and_images_str.c_str(),
-		        drive_letter);
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2").c_str(),
+		         type_and_images_str.c_str(),
+		         drive_letter);
 	};
 
 	if (fstype == "fat") {
@@ -162,15 +153,17 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 		if (imgsizedetect) {
 			FILE* diskfile = fopen_wrap_ro_fallback(paths[0], roflag);
 			if (!diskfile) {
-				log_fmt(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE")
-				                .c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
 				return false;
 			}
 			const auto sz = stdio_num_sectors(diskfile);
 			if (sz < 0) {
 				fclose(diskfile);
-				log_fmt(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE")
-				                .c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
 				return false;
 			}
 			uint32_t fcsize = check_cast<uint32_t>(sz);
@@ -178,20 +171,23 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 			if (cross_fseeko(diskfile, 0L, SEEK_SET) != 0 ||
 			    fread(buf, sizeof(uint8_t), 512, diskfile) < 512) {
 				fclose(diskfile);
-				log_fmt(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE")
-				                .c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
 				return false;
 			}
 			fclose(diskfile);
 			if ((buf[510] != 0x55) || (buf[511] != 0xaa)) {
-				log_fmt(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY")
-				                .c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_IMGMOUNT_INVALID_GEOMETRY");
 				return false;
 			}
 			Bitu sectors = (Bitu)(fcsize / (16 * 63));
 			if (sectors * 16 * 63 != fcsize) {
-				log_fmt(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY")
-				                .c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_IMGMOUNT_INVALID_GEOMETRY");
 				return false;
 			}
 			sizes[0] = 512;
@@ -207,7 +203,9 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 		}
 
 		if (Drives.at(drive_index(drive))) {
-			log_fmt(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED").c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_IMGMOUNT_ALREADY_MOUNTED");
 			return false;
 		}
 
@@ -224,12 +222,16 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 			if (fat_image->created_successfully) {
 				fat_images.push_back(fat_image);
 			} else {
-				log_fmt(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE").c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_IMGMOUNT_CANT_CREATE");
 				return false;
 			}
 		}
 		if (fat_images.empty()) {
-			log_fmt(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE").c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_IMGMOUNT_CANT_CREATE");
 			return false;
 		}
 
@@ -252,8 +254,10 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 
 			// Obtain the drive label, saving it in the dirCache
 			if (!DOS_FindFirst(root, FatAttributeFlags::Volume)) {
-				LOG_WARNING("DRIVE: Unable to find %c drive's volume label",
-				            drive);
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "DRIVE: Unable to find volume label for drive %c",
+				                      drive);
 			}
 		}
 		dos.dta(save_dta);
@@ -275,7 +279,9 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 
 	} else if (fstype == "iso") {
 		if (Drives.at(drive_index(drive))) {
-			log_fmt(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED").c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_IMGMOUNT_ALREADY_MOUNTED");
 			return false;
 		}
 
@@ -289,30 +295,46 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 			switch (error) { //-V785
 			case 0: break;
 			case 1:
-				log_fmt(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS").c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "MSCDEX_ERROR_MULTIPLE_CDROMS");
 				break;
 			case 2:
-				log_fmt(MSG_Get("MSCDEX_ERROR_NOT_SUPPORTED").c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "MSCDEX_ERROR_NOT_SUPPORTED");
 				break;
 			case 3:
-				log_fmt(MSG_Get("MSCDEX_ERROR_OPEN").c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "MSCDEX_ERROR_OPEN");
 				break;
 			case 4:
-				log_fmt(MSG_Get("MSCDEX_TOO_MANY_DRIVES").c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "MSCDEX_TOO_MANY_DRIVES");
 				break;
 			case 5:
-				log_fmt(MSG_Get("MSCDEX_LIMITED_SUPPORT").c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "MSCDEX_LIMITED_SUPPORT");
 				break;
 			case 6:
-				log_fmt(MSG_Get("MSCDEX_INVALID_FILEFORMAT").c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "MSCDEX_INVALID_FILEFORMAT");
 				break;
 			default:
-				log_fmt(MSG_Get("MSCDEX_UNKNOWN_ERROR").c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "MSCDEX_UNKNOWN_ERROR");
 				break;
 			}
 			// error: clean up and leave
 			if (error) { //-V547
-				log_fmt(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE").c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_IMGMOUNT_CANT_CREATE");
 				return false;
 			}
 		}
@@ -332,25 +354,30 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 				                 is_second_cable_slot,
 				                 drive_index(drive));
 			} else {
-				log_fmt(MSG_Get("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE")
-				                .c_str());
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE");
 			}
 		}
 
 		// Print status message (success)
-		log_fmt(MSG_Get("MSCDEX_SUCCESS").c_str());
+		WriteOut(MSG_Get("MSCDEX_SUCCESS").c_str());
 		write_out_mount_status(MSG_Get("MOUNT_TYPE_ISO").c_str(), paths, drive);
 
 	} else if (fstype == "none") {
 		FILE* new_disk = fopen_wrap_ro_fallback(paths[0], roflag);
 		if (!new_disk) {
-			log_fmt(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE").c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
 			return false;
 		}
 		const auto sz = stdio_size_kb(new_disk);
 		if (sz < 0) {
 			fclose(new_disk);
-			log_fmt(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE").c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
 			return false;
 		}
 		uint32_t imagesize = check_cast<uint32_t>(sz);
@@ -360,7 +387,9 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 		if (is_hdd && sizes[0] == 0 && sizes[1] == 0 && sizes[2] == 0 &&
 		    sizes[3] == 0) {
 			fclose(new_disk);
-			log_fmt(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY").c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY");
 			return false;
 		}
 
@@ -380,9 +409,9 @@ bool MOUNT::MountImage(char drive, const std::vector<std::string>& paths,
 			updateDPT();
 		}
 
-		log_fmt(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER").c_str(),
-		        drv_idx,
-		        paths[0].c_str());
+		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER").c_str(),
+		         drv_idx,
+		         paths[0].c_str());
 	}
 
 	return true;
@@ -411,7 +440,9 @@ void MOUNT::Run(void) {
 	// In secure mode don't allow people to change mount points.
 	// Neither mount nor unmount
 	if (control->SecureMode()) {
-		WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_CONFIG_SECURE_DISALLOW");
 		return;
 	}
 
@@ -489,7 +520,9 @@ void MOUNT::Run(void) {
 	} else if (type != "hdd") {
 		// If it is 'hdd', we leave sizes 0 to trigger detection or
 		// parsing below. If it is unknown, we error out later.
-		WriteOut(MSG_Get("PROGRAM_MOUNT_ILL_TYPE"), type.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_ILL_TYPE");
 		return;
 	}
 
@@ -558,7 +591,9 @@ void MOUNT::Run(void) {
 			sizes[2] = static_cast<uint16_t>(cmd_heads);
 			sizes[3] = static_cast<uint16_t>(cmd_cylinders);
 		} else {
-			WriteOut("Invalid CHS format. Use -chs cylinders,heads,sectors\n");
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_MOUNT_INVALID_CHS");
 			return;
 		}
 	}
@@ -586,7 +621,9 @@ void MOUNT::Run(void) {
 				fstype = "none";
 			}
 		} else {
-			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_IMGMOUNT_SPECIFY2");
 			return;
 		}
 	} else if (first_char >= 'A' && first_char <= 'Z') {
@@ -613,7 +650,9 @@ void MOUNT::Run(void) {
 				break;
 			default:
 				// Don't allow booting from E:, F:, etc.
-				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_IMGMOUNT_SPECIFY2");
 				return;
 			}
 		}
@@ -628,13 +667,18 @@ void MOUNT::Run(void) {
 		if (type == "overlay") {
 			// Ensure that the base drive exists:
 			if (!Drives.at(drive_index(drive))) {
-				WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_NO_BASE"));
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_MOUNT_OVERLAY_NO_BASE");
 				return;
 			}
 		} else if (Drives.at(drive_index(drive))) {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_ALREADY_MOUNTED"),
-			         drive,
-			         Drives.at(drive_index(drive))->GetInfoString().c_str());
+			NOTIFY_DisplayWarning(
+			        Notification::Source::Console,
+			        "MOUNT",
+			        "PROGRAM_MOUNT_ALREADY_MOUNTED",
+			        drive,
+			        Drives.at(drive_index(drive))->GetInfoString().c_str());
 			return;
 		}
 	}
@@ -802,7 +846,9 @@ void MOUNT::Run(void) {
 		}
 
 		if (image_paths.empty()) {
-			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_IMGMOUNT_FILE_NOT_FOUND");
 			return;
 		}
 
@@ -812,18 +858,15 @@ void MOUNT::Run(void) {
 			mediaid = MediaId::Floppy1_44MB;
 		}
 
-		bool success = this->MountImage(drive,
-		                                image_paths,
-		                                type,
-		                                fstype,
-		                                sizes,
-		                                readonly,
-		                                wants_ide,
-		                                ide_index,
-		                                is_second_cable_slot,
-		                                [this](std::string msg) {
-			                                this->WriteOut_NoParsing(msg);
-		                                });
+		bool success = MountImage(drive,
+		                          image_paths,
+		                          type,
+		                          fstype,
+		                          sizes,
+		                          readonly,
+		                          wants_ide,
+		                          ide_index,
+		                          is_second_cable_slot);
 
 		if (success && type == "floppy") {
 			incrementFDD();
@@ -834,7 +877,10 @@ void MOUNT::Run(void) {
 	// Standard directory or overlay mount
 
 	if (!S_ISDIR(test.st_mode)) {
-		WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"), temp_line.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_ERROR_2",
+		                      temp_line.c_str());
 		return;
 	}
 
@@ -847,11 +893,15 @@ void MOUNT::Run(void) {
 #if defined(WIN32)
 	if ((temp_line == "c:\\") || (temp_line == "C:\\") ||
 	    (temp_line == "c:/") || (temp_line == "C:/")) {
-		WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_WIN"));
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_WARNING_WIN");
 	}
 #else
 	if (temp_line == "/") {
-		WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_WARNING_OTHER");
 	}
 #endif
 
@@ -861,7 +911,9 @@ void MOUNT::Run(void) {
 		const auto cdp = std::dynamic_pointer_cast<cdromDrive>(
 		        Drives[drive_index(drive)]);
 		if (!ldp || cdp) {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE");
 			return;
 		}
 		std::string base = ldp->GetBasedir();
@@ -877,11 +929,17 @@ void MOUNT::Run(void) {
 		// Erase old drive on success
 		if (o_error) { //-V547
 			if (o_error == 1) {
-				WriteOut("No mixing of relative and absolute paths. Overlay failed.");
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_MOUNT_OVERLAY_REL_ABS");
 			} else if (o_error == 2) {
-				WriteOut("overlay directory can not be the same as underlying file system.");
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_MOUNT_OVERLAY_SAME_FS");
 			} else {
-				WriteOut("Something went wrong");
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "MOUNT",
+				                      "PROGRAM_MOUNT_OVERLAY_UNKNOWN_ERROR");
 			}
 			return;
 		}
@@ -911,16 +969,22 @@ void MOUNT::Run(void) {
 	           newdrive->GetMediaByte());
 
 	if (type != "overlay") {
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
-		         newdrive->GetInfoString().c_str(),
-		         drive);
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_STATUS_2",
+		                      newdrive->GetInfoString().c_str(),
+		                      drive);
 		if (readonly) {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_READONLY"));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_MOUNT_READONLY");
 		}
 	} else {
-		WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_STATUS"),
-		         temp_line.c_str(),
-		         drive);
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_OVERLAY_STATUS",
+		                      temp_line.c_str(),
+		                      drive);
 	}
 	// check if volume label is given and don't allow it to updated in the
 	// future
@@ -1054,6 +1118,14 @@ void MOUNT::AddMessages() {
 	        "The overlay directory can not be the same as underlying drive.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR", "Something went wrong.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS", "Overlay %s on drive %c mounted.\n");
+	MSG_Add("PROGRAM_MOUNT_INVALID_CHS",
+	        "Invalid CHS format. Use -chs cylinders,heads,sectors\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_REL_ABS",
+	        "The overlay needs to be specified using the same addressing as the underlying\n"
+	        "drive. No mixing of relative and absolute paths.\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_FS",
+	        "The overlay needs to be on the same filesystem as the underlying drive.\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_UNKNOWN_ERROR", "Something went wrong.\n");
 
 	// IMGMOUNT merged messages
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2",
