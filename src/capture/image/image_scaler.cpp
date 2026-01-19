@@ -217,7 +217,7 @@ void ImageScaler::AllocateBuffers()
 	switch (output.pixel_format) {
 	case OutputPixelFormat::Indexed8: bytes_per_pixel = 8; break;
 	case OutputPixelFormat::Rgb888: bytes_per_pixel = 24; break;
-	default: assert(false);
+	default: assertm(false, "Unsupported OutputPixelFormat");
 	}
 
 	output.row_buf.resize(output.width * bytes_per_pixel);
@@ -249,9 +249,11 @@ void ImageScaler::DecodeNextRowToLinearRgb()
 	for (const auto pixel : row_decode_buf_32) {
 		const auto color = Bgrx8888(pixel);
 
-		*out++ = srgb8_to_linear_lut(color.Red());
-		*out++ = srgb8_to_linear_lut(color.Green());
-		*out++ = srgb8_to_linear_lut(color.Blue());
+		*(out + 0) = srgb8_to_linear_lut(color.Red());
+		*(out + 1) = srgb8_to_linear_lut(color.Green());
+		*(out + 2) = srgb8_to_linear_lut(color.Blue());
+
+		out += 3;
 	}
 }
 
@@ -279,7 +281,8 @@ void ImageScaler::GenerateNextIntegerUpscaledOutputRow()
 			auto pixels_to_write = iround(output.horiz_scale);
 
 			while (pixels_to_write--) {
-				*out++ = pixel;
+				*out = pixel;
+				++out;
 			}
 		}
 
@@ -293,9 +296,11 @@ void ImageScaler::GenerateNextIntegerUpscaledOutputRow()
 			auto pixels_to_write = iround(output.horiz_scale);
 
 			while (pixels_to_write--) {
-				*out++ = color.Red();
-				*out++ = color.Green();
-				*out++ = color.Blue();
+				*(out + 0) = color.Red();
+				*(out + 1) = color.Green();
+				*(out + 2) = color.Blue();
+
+				out += 3;
 			}
 		}
 	}
@@ -317,14 +322,18 @@ void ImageScaler::GenerateNextSharpUpscaledOutputRow()
 		auto pixel_addr     = row_start + row_offs;
 
 		// Current pixel
-		const auto r0 = *pixel_addr++;
-		const auto g0 = *pixel_addr++;
-		const auto b0 = *pixel_addr++;
+		const auto r0 = *(pixel_addr + 0);
+		const auto g0 = *(pixel_addr + 1);
+		const auto b0 = *(pixel_addr + 2);
+
+		pixel_addr += 3;
 
 		// Next horizontal pixel
-		const auto r1 = *pixel_addr++;
-		const auto g1 = *pixel_addr++;
-		const auto b1 = *pixel_addr++;
+		const auto r1 = *(pixel_addr + 0);
+		const auto g1 = *(pixel_addr + 1);
+		const auto b1 = *(pixel_addr + 2);
+
+		pixel_addr += 3;
 
 		// Calculate linear interpolation factor `t` between the current
 		// and the next pixel so that the interpolation "band" is one
@@ -339,9 +348,11 @@ void ImageScaler::GenerateNextSharpUpscaledOutputRow()
 		const auto out_g = std::lerp(g0, g1, t);
 		const auto out_b = std::lerp(b0, b1, t);
 
-		*out++ = linear_to_srgb8_lut(out_r);
-		*out++ = linear_to_srgb8_lut(out_g);
-		*out++ = linear_to_srgb8_lut(out_b);
+		*(out + 0) = linear_to_srgb8_lut(out_r);
+		*(out + 1) = linear_to_srgb8_lut(out_g);
+		*(out + 2) = linear_to_srgb8_lut(out_b);
+
+		out += 3;
 	}
 
 	SetRowRepeat();
