@@ -165,9 +165,11 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 			for (const auto pixel : row_decode_buf) {
 				const auto color = Bgrx8888(pixel);
 
-				*out++ = color.Red();
-				*out++ = color.Green();
-				*out++ = color.Blue();
+				*(out + 0) = color.Red();
+				*(out + 1) = color.Green();
+				*(out + 2) = color.Blue();
+
+				out += 3;
 			}
 		}
 		png_writer.WriteRow(row_output_buf.begin());
@@ -253,9 +255,11 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 		for (const auto pixel : row_decode_buf) {
 			const auto color = Bgrx8888(pixel);
 
-			*out++ = color.Red();
-			*out++ = color.Green();
-			*out++ = color.Blue();
+			*(out + 0) = color.Red();
+			*(out + 1) = color.Green();
+			*(out + 2) = color.Blue();
+
+			out += 3;
 		}
 
 		png_writer.WriteRow(row_output_buf.begin());
