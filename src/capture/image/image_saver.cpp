@@ -102,39 +102,6 @@ void ImageSaver::SaveImage(const SaveImageTask& task)
 	CloseOutFile();
 }
 
-static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
-                               ImageScaler& image_scaler, const int width,
-                               const int height, const Fraction& pixel_aspect_ratio,
-                               const VideoMode& video_mode,
-                               const std::array<Rgb888, NumVgaColors>& palette)
-{
-	switch (image_scaler.GetOutputPixelFormat()) {
-	case OutputPixelFormat::Indexed8:
-		if (!png_writer.InitIndexed8(outfile,
-		                             width,
-		                             height,
-		                             pixel_aspect_ratio,
-		                             video_mode,
-		                             palette)) {
-			return;
-		}
-		break;
-
-	case OutputPixelFormat::Rgb888:
-		if (!png_writer.InitRgb888(
-		            outfile, width, height, pixel_aspect_ratio, video_mode)) {
-			return;
-		}
-		break;
-	}
-
-	auto rows_to_write = image_scaler.GetOutputHeight();
-	while (rows_to_write--) {
-		auto row = image_scaler.GetNextOutputRow();
-		png_writer.WriteRow(row);
-	}
-}
-
 void ImageSaver::SaveRawImage(const RenderedImage& image)
 {
 	PngWriter png_writer = {};
@@ -217,14 +184,34 @@ void ImageSaver::SaveUpscaledImage(const RenderedImage& image)
 	// Always write 1:1 pixel aspect ratio into the PNG pHYs chunk for
 	// upscaled images as the "non-squaredness" is "baked into" the image
 	// data.
-	write_upscaled_png(outfile,
-	                   png_writer,
-	                   image_scaler,
-	                   image_scaler.GetOutputWidth(),
-	                   image_scaler.GetOutputHeight(),
-	                   SquarePixelAspectRatio,
-	                   image.params.video_mode,
-	                   image.palette);
+	switch (image_scaler.GetOutputPixelFormat()) {
+	case OutputPixelFormat::Indexed8:
+		if (!png_writer.InitIndexed8(outfile,
+		                             image_scaler.GetOutputWidth(),
+		                             image_scaler.GetOutputHeight(),
+		                             SquarePixelAspectRatio,
+		                             image.params.video_mode,
+		                             image.palette)) {
+			return;
+		}
+		break;
+
+	case OutputPixelFormat::Rgb888:
+		if (!png_writer.InitRgb888(outfile,
+		                           image_scaler.GetOutputWidth(),
+		                           image_scaler.GetOutputHeight(),
+		                           SquarePixelAspectRatio,
+		                           image.params.video_mode)) {
+			return;
+		}
+		break;
+	}
+
+	auto rows_to_write = image_scaler.GetOutputHeight();
+	while (rows_to_write--) {
+		auto row = image_scaler.GetNextOutputRow();
+		png_writer.WriteRow(row);
+	}
 }
 
 void ImageSaver::SaveRenderedImage(const RenderedImage& image)
