@@ -436,6 +436,7 @@ public:
 	int GetInt(const std::string& _propname) const;
 
 	std::string GetString(const std::string& _propname) const;
+	std::string GetStringLowCase(const std::string& _propname) const;
 
 	PropBool* GetBoolProp(const std::string& propname) const;
 	PropString* GetStringProp(const std::string& propname) const;

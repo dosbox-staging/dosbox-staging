@@ -1006,6 +1006,14 @@ std::string SectionProp::GetString(const std::string& _propname) const
 	return "";
 }
 
+std::string SectionProp::GetStringLowCase(const std::string& _propname) const
+{
+	auto string = GetString(_propname);
+	lowcase(string);
+
+	return string;
+}
+
 PropBool* SectionProp::GetBoolProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
