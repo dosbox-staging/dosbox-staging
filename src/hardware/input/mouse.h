@@ -230,8 +230,9 @@ MouseModelCom MOUSECOM_GetConfiguredModel();
 // Whether the serial mouse should auto-switch to Mouse Systems mouse emulation
 bool MOUSECOM_GetConfiguredAutoMsm();
 
-bool MOUSECOM_ParseComModel(const std::string_view model_str,
-                            MouseModelCom& model, bool& auto_msm);
+bool MOUSECOM_ParseComModel(const std::string& model_str,
+                            MouseModelCom& model,
+                            bool& auto_msm);
 
 void MOUSECOM_RegisterListener(const MouseInterfaceId interface_id,
                                CSerialMouse& listener);

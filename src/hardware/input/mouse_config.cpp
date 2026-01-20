@@ -101,30 +101,34 @@ const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 	return list_rates;
 }
 
-bool MOUSECOM_ParseComModel(const std::string_view model_str,
-                            MouseModelCom& model, bool& auto_msm)
+bool MOUSECOM_ParseComModel(const std::string& model_str,
+                            MouseModelCom& model,
+                            bool& auto_msm)
 {
 	using enum MouseModelCom;
 
-	if (iequals(model_str, OptionModelCom::TwoButton)) {
+	std::string model_lowcase = model_str;
+	lowcase(model_lowcase);
+
+	if (model_lowcase == OptionModelCom::TwoButton) {
 		model    = Microsoft;
 		auto_msm = false;
-	} else if (iequals(model_str, OptionModelCom::ThreeButton)) {
+	} else if (model_lowcase == OptionModelCom::ThreeButton) {
 		model    = Logitech;
 		auto_msm = false;
-	} else if (iequals(model_str, OptionModelCom::Wheel)) {
+	} else if (model_lowcase == OptionModelCom::Wheel) {
 		model    = Wheel;
 		auto_msm = false;
-	} else if (iequals(model_str, OptionModelCom::Msm)) {
+	} else if (model_lowcase == OptionModelCom::Msm) {
 		model    = MouseSystems;
 		auto_msm = false;
-	} else if (iequals(model_str, OptionModelCom::TwoButtonMsm)) {
+	} else if (model_lowcase == OptionModelCom::TwoButtonMsm) {
 		model    = Microsoft;
 		auto_msm = true;
-	} else if (iequals(model_str, OptionModelCom::ThreeButtonMsm)) {
+	} else if (model_lowcase == OptionModelCom::ThreeButtonMsm) {
 		model    = Logitech;
 		auto_msm = true;
-	} else if (iequals(model_str, OptionModelCom::WheelMsm)) {
+	} else if (model_lowcase == OptionModelCom::WheelMsm) {
 		model    = Wheel;
 		auto_msm = true;
 	} else {
@@ -148,17 +152,19 @@ static void log_invalid_parameter(const std::string& setting_name,
 
 static void set_capture_type(const SectionProp& section)
 {
-	const auto option_str = section.GetString("mouse_capture");
+	const std::string SettingName = "mouse_capture";
+
+	const auto option_str = section.GetStringLowCase(SettingName);
 
 	using enum MouseCapture;
 
-	if (iequals(option_str, OptionCaptureType::Seamless)) {
+	if (option_str == OptionCaptureType::Seamless) {
 		mouse_config.capture = Seamless;
-	} else if (iequals(option_str, OptionCaptureType::OnClick)) {
+	} else if (option_str == OptionCaptureType::OnClick) {
 		mouse_config.capture = OnClick;
-	} else if (iequals(option_str, OptionCaptureType::OnStart)) {
+	} else if (option_str == OptionCaptureType::OnStart) {
 		mouse_config.capture = OnStart;
-	} else if (iequals(option_str, OptionCaptureType::NoMouse)) {
+	} else if (option_str == OptionCaptureType::NoMouse) {
 		mouse_config.capture = NoMouse;
 	} else {
 		assertm(false, "Invalid mouse capture value");
@@ -167,12 +173,15 @@ static void set_capture_type(const SectionProp& section)
 
 static void set_dos_driver(const SectionProp& section)
 {
-	const auto option_str = section.GetString("builtin_dos_mouse_driver");
+	const std::string SettingName = "builtin_dos_mouse_driver";
 
-	if (iequals(option_str, OptionBuiltInDosDriver::Off)) {
+	const auto option_str = section.GetStringLowCase(SettingName);
+
+	if (option_str == OptionBuiltInDosDriver::Off) {
 		mouse_config.dos_driver_autoexec = false;
 		mouse_config.dos_driver_no_tsr   = false;
-	} else if (iequals(option_str, OptionBuiltInDosDriver::On)) {
+
+	} else if (option_str == OptionBuiltInDosDriver::On) {
 		if (is_machine_tandy() || is_machine_pcjr()) {
 			// The mouse TSR simulation currently does not work
 			// correctly with PCJr or Tandy memory layout - MCB
@@ -184,9 +193,11 @@ static void set_dos_driver(const SectionProp& section)
 			mouse_config.dos_driver_autoexec = true;
 			mouse_config.dos_driver_no_tsr   = false;
 		}
-	} else if (iequals(option_str, OptionBuiltInDosDriver::NoTsr)) {
+
+	} else if (option_str == OptionBuiltInDosDriver::NoTsr) {
 		mouse_config.dos_driver_autoexec = false;
 		mouse_config.dos_driver_no_tsr   = true;
+
 	} else {
 		assertm(false, "Invalid mouse driver mode");
 	}
@@ -194,17 +205,19 @@ static void set_dos_driver(const SectionProp& section)
 
 static void set_dos_driver_model(const SectionProp& section)
 {
-	const auto option_str = section.GetString("builtin_dos_mouse_driver_model");
+	const std::string SettingName = "builtin_dos_mouse_driver_model";
+
+	const auto option_str = section.GetStringLowCase(SettingName);
 
 	using enum MouseModelDos;
 
 	auto new_model = mouse_config.model_dos;
 
-	if (iequals(option_str, OptionModelDos::TwoButton)) {
+	if (option_str == OptionModelDos::TwoButton) {
 		new_model = TwoButton;
-	} else if (iequals(option_str, OptionModelDos::ThreeButton)) {
+	} else if (option_str == OptionModelDos::ThreeButton) {
 		new_model = ThreeButton;
-	} else if (iequals(option_str, OptionModelDos::Wheel)) {
+	} else if (option_str == OptionModelDos::Wheel) {
 		new_model = Wheel;
 	} else {
 		assertm(false, "Invalid DOS driver mouse model value");
@@ -218,17 +231,19 @@ static void set_dos_driver_model(const SectionProp& section)
 
 static void set_ps2_mouse_model(const SectionProp& section)
 {
-	const auto option_str = section.GetString("ps2_mouse_model");
+	const std::string SettingName = "ps2_mouse_model";
+
+	const auto option_str = section.GetStringLowCase(SettingName);
 
 	using enum MouseModelPs2;
 
-	if (iequals(option_str, OptionModelPs2::Standard)) {
+	if (option_str == OptionModelPs2::Standard) {
 		mouse_config.model_ps2 = Standard;
-	} else if (iequals(option_str, OptionModelPs2::Intellimouse)) {
+	} else if (option_str == OptionModelPs2::Intellimouse) {
 		mouse_config.model_ps2 = IntelliMouse;
-	} else if (iequals(option_str, OptionModelPs2::Explorer)) {
+	} else if (option_str == OptionModelPs2::Explorer) {
 		mouse_config.model_ps2 = Explorer;
-	} else if (iequals(option_str, OptionModelPs2::NoMouse)) {
+	} else if (option_str == OptionModelPs2::NoMouse) {
 		mouse_config.model_ps2 = NoMouse;
 	} else {
 		assertm(false, "Invalid PS/2 mouse model value");
@@ -237,7 +252,9 @@ static void set_ps2_mouse_model(const SectionProp& section)
 
 static void set_serial_mouse_model(const SectionProp& section)
 {
-	const auto option_str = section.GetString("com_mouse_model");
+	const std::string SettingName = "com_mouse_model";
+
+	const auto option_str = section.GetString(SettingName);
 
 	[[maybe_unused]] const auto result = MOUSECOM_ParseComModel(
 	        option_str, mouse_config.model_com, mouse_config.model_com_auto_msm);
