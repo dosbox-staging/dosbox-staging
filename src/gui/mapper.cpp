@@ -1221,7 +1221,7 @@ void MAPPER_AutoType(std::vector<std::string>& buttons, uint32_t wait_ms,
 		if (button == ",") {
 			running_delay_ms += pace_ms;
 		} else {
-			auto_type_queue.emplace(std::move(button));
+			auto_type_queue.emplace(button);
 
 			PIC_AddEvent(auto_type_queued_button,
 			             running_delay_ms,
