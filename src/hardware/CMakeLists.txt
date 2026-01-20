@@ -87,6 +87,5 @@ target_link_libraries(libdosboxcommon PRIVATE
   $<IF:$<BOOL:${C_MANYMOUSE}>,libmanymouse,>
   libnuked
   PkgConfig::SPEEXDSP
-  $<IF:$<TARGET_EXISTS:SDL2_net::SDL2_net>,SDL2_net::SDL2_net,SDL2_net::SDL2_net-static>
 )
 

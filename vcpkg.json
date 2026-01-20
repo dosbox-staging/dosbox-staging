@@ -4,6 +4,7 @@
   "description": "DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices.",
   "version": "0.83.0-alpha",
   "dependencies": [
+    "asio",
     "gtest",
     "iir1",
     "libmt32emu",
@@ -19,7 +20,6 @@
       "platform": "!linux"
     },
     "sdl2-image",
-    "sdl2-net",
     "speexdsp",
     "zlib-ng",
     {

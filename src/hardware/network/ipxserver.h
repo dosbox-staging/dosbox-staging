@@ -4,7 +4,11 @@
 #ifndef DOSBOX_IPXSERVER_H_
 #define DOSBOX_IPXSERVER_H_
 
-#include <SDL_net.h>
+#include "dosbox.h"
+
+#include <cstdint>
+
+#include "hardware/network/net_defs.h"
 
 struct packetBuffer {
 	uint8_t buffer[1024];

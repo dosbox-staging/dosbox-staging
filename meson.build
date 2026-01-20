@@ -580,6 +580,14 @@ dl_dep = cc.find_library('dl', required: false)
 stdcppfs_dep = cxx.find_library('stdc++fs', required: false)
 threads_dep = dependency('threads')
 
+# standalone Asio (system dependency only; no wrap or vendored source)
+asio_dep = dependency(
+    'asio',
+    required: true,
+    fallback: [],
+    include_type: 'system',
+)
+
 # 3rd party libraries
 static_libs_list = get_option('try_static_libs')
 
@@ -606,35 +614,44 @@ opus_dep = dependency(
     include_type: 'system',
 )
 
-sdl2_dep = dependency(
-    'sdl2',
-    version: ['>= 2.0.5', '< 3'],
-    static: ('sdl2' in static_libs_list or prefers_static_libs),
-    default_options: default_wrap_options
-    + [
-        'assertions=' + (is_optimized_buildtype ? 'disabled' : 'enabled'),
-        'prefer_dlopen=true',
-        'test=' + wants_tests.to_string(),
-        'use_audio=enabled',
-        'use_events=enabled',
-        'use_joystick=enabled',
-        'use_loadso=enabled',
-        'use_timers=enabled',
-        'use_video=enabled',
+sdl2_opts = default_wrap_options + [
+    'assertions=' + (is_optimized_buildtype ? 'disabled' : 'enabled'),
+    'prefer_dlopen=true',
+    'test=' + wants_tests.to_string(),
+    'use_audio=enabled',
+    'use_events=enabled',
+    'use_joystick=enabled',
+    'use_loadso=enabled',
+    'use_timers=enabled',
+    'use_video=enabled',
 
-        'use_dummies=false',
-        'system_iconv=disabled',
-        'use_atomic=enabled',
-        'use_file=disabled',
-        'use_filesystem=disabled',
-        'use_hidapi=disabled',
-        'use_haptic=disabled',
-        'use_locale=disabled',
-        'use_sensor=disabled',
-        'use_power=disabled',
-    ],
-    include_type: 'system',
-)
+    'use_dummies=false',
+    'system_iconv=disabled',
+    'use_atomic=enabled',
+    'use_file=disabled',
+    'use_filesystem=disabled',
+    'use_hidapi=disabled',
+    'use_haptic=disabled',
+    'use_locale=disabled',
+    'use_sensor=disabled',
+    'use_power=disabled',
+]
+
+if host_machine.system() == 'darwin'
+    sdl2_proj = subproject(
+        'sdl2',
+        default_options: sdl2_opts,
+    )
+    sdl2_dep = sdl2_proj.get_variable('sdl2_dep')
+else
+    sdl2_dep = dependency(
+        'sdl2',
+        version: ['>= 2.0.5', '< 3'],
+        static: ('sdl2' in static_libs_list or prefers_static_libs),
+        default_options: sdl2_opts,
+        include_type: 'system',
+    )
+endif
 
 # zlib
 # ~~~~
@@ -872,28 +889,6 @@ have_fd_zero = (
     cc.has_header_symbol('sys/select.h', 'FD_ZERO')
     or cc.has_header_symbol('winsock2.h', 'FD_ZERO')
 )
-
-# SDL Networking
-sdl2_net_dep = optional_dep
-sdl2_net_summary_msg = 'Disabled'
-if get_option('use_sdl2_net')
-    sdl2_net_dep = dependency(
-        'SDL2_net',
-        version: ['>= 2.0.0', '< 3'],
-        static: ('sdl2_net' in static_libs_list or prefers_static_libs),
-        default_options: default_wrap_options,
-        not_found_message: msg.format('use_sdl2_net'),
-        include_type: 'system',
-    )
-    sdl2_net_summary_msg = sdl2_net_dep.found()
-
-    if sdl2_net_dep.found() and not have_fd_zero
-        sdl2_net_dep = optional_dep
-        sdl2_net_summary_msg = 'Disabled due to host missing file-descriptor routines'
-    endif
-
-endif
-summary('SDL_net 2.0 support', sdl2_net_summary_msg)
 
 # SDL Image
 sdl2_image_dep = dependency(
@@ -1193,6 +1188,7 @@ third_party_deps = [
     stdcppfs_dep,
     sdl2_dep,
     threads_dep,
+    asio_dep,
     ghc_dep,
     libglad_dep,
     libiir_dep,
