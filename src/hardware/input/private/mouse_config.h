@@ -57,7 +57,7 @@ enum class MouseModelDos {
 	Wheel,
 };
 
-enum class MouseModelPS2 : uint8_t {
+enum class MouseModelPs2 : uint8_t {
 	NoMouse      = 0xff,
 	// Values below must match PS/2 protocol IDs
 	Standard     = 0x00,
@@ -87,9 +87,9 @@ struct MouseConfig {
 
 	MouseModelDos model_dos = MouseModelDos::TwoButton;
 
-	MouseModelPS2 model_ps2 = MouseModelPS2::Standard;
+	MouseModelPs2 model_ps2 = MouseModelPs2::Standard;
 
-	MouseModelCOM model_com = MouseModelCOM::Wheel;
+	MouseModelCom model_com = MouseModelCom::Wheel;
 	bool model_com_auto_msm = true;
 
 	bool is_vmware_mouse_enabled     = false;

@@ -80,7 +80,7 @@ CSerialMouse::~CSerialMouse()
 
 void CSerialMouse::HandleDeprecatedOptions(CommandLine *cmd)
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	std::string option;
 	if (cmd->FindStringBeginCaseSensitive("rate:", option, false))
@@ -124,7 +124,7 @@ void CSerialMouse::HandleDeprecatedOptions(CommandLine *cmd)
 
 void CSerialMouse::BoostRate(const uint16_t rate_hz)
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	if (!rate_hz || model == NoMouse) {
 		rate_coeff = 1.0f;
@@ -157,7 +157,7 @@ void CSerialMouse::BoostRate(const uint16_t rate_hz)
 
 void CSerialMouse::LogMouseModel()
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	std::string model_name = {};
 	switch (model) {
@@ -195,7 +195,7 @@ void CSerialMouse::LogMouseModel()
 	}
 }
 
-void CSerialMouse::SetModel(const MouseModelCOM new_model)
+void CSerialMouse::SetModel(const MouseModelCom new_model)
 {
 	if (model != new_model) {
 		model = new_model;
@@ -296,7 +296,7 @@ void CSerialMouse::NotifyWheel(const float w_rel)
 
 void CSerialMouse::StartPacketId() // send the mouse identifier
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	if (model == NoMouse) {
 		return;
@@ -334,7 +334,7 @@ void CSerialMouse::StartPacketId() // send the mouse identifier
 
 void CSerialMouse::StartPacketData(const bool extended)
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	if (model == NoMouse) {
 		return;
@@ -406,7 +406,7 @@ void CSerialMouse::StartPacketData(const bool extended)
 void CSerialMouse::StartPacketPart2()
 {
 	// Port settings are valid at this point
-	if (model == MouseModelCOM::MouseSystems) {
+	if (model == MouseModelCom::MouseSystems) {
 		//          -- -- -- -- -- -- -- --
 		// Byte 3:  X7 X6 X5 X4 X3 X2 X1 X0
 		// Byte 4:  Y7 Y6 Y5 Y4 Y3 Y2 Y1 Y0
@@ -483,7 +483,7 @@ void CSerialMouse::handleUpperEvent(const uint16_t event_type)
 
 void CSerialMouse::updatePortConfig(const uint16_t divider, const uint8_t lcr)
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	AbortPacket();
 

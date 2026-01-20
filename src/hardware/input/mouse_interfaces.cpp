@@ -663,7 +663,7 @@ InterfacePS2::InterfacePS2()
 void InterfacePS2::Init()
 {
 	MouseInterface::Init();
-	emulated = (mouse_config.model_ps2 != MouseModelPS2::NoMouse);
+	emulated = (mouse_config.model_ps2 != MouseModelPs2::NoMouse);
 	if (emulated) {
 		MOUSEPS2_Init();
 	}

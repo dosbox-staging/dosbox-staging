@@ -88,9 +88,9 @@ const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 }
 
 bool MOUSECOM_ParseComModel(const std::string_view model_str,
-                            MouseModelCOM& model, bool& auto_msm)
+                            MouseModelCom& model, bool& auto_msm)
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	if (iequals(model_str, OptionModelCom::TwoButton)) {
 		model    = Microsoft;
@@ -198,7 +198,7 @@ static void set_dos_driver_model(const std::string_view model_str)
 
 static void set_ps2_mouse_model(const std::string_view model_str)
 {
-	using enum MouseModelPS2;
+	using enum MouseModelPs2;
 
 	if (iequals(model_str, OptionModelPs2::Standard)) {
 		mouse_config.model_ps2 = Standard;
@@ -746,7 +746,7 @@ void MOUSE_AddConfigSection(const ConfigPtr& conf)
 	init_mouse_config_settings(*section);
 }
 
-MouseModelCOM MOUSECOM_GetConfiguredModel()
+MouseModelCom MOUSECOM_GetConfiguredModel()
 {
 	return mouse_config.model_com;
 }

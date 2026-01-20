@@ -93,7 +93,7 @@ static void maybe_check_remove_mappings()
 
 bool MOUSEVMM_IsSupported(const MouseVmmProtocol protocol)
 {
-	if (mouse_config.model_ps2 == MouseModelPS2::NoMouse) {
+	if (mouse_config.model_ps2 == MouseModelPs2::NoMouse) {
 		return false;
 	}
 

@@ -95,7 +95,7 @@ static float delta_x     = 0.0f;
 static float delta_y     = 0.0f;
 static float delta_wheel = 0.0f;
 
-static MouseModelPS2 protocol = MouseModelPS2::Standard;
+static MouseModelPs2 protocol = MouseModelPs2::Standard;
 static uint8_t unlock_idx_im = 0; // sequence index for unlocking extended protocol
 static uint8_t unlock_idx_xp = 0;
 
@@ -145,7 +145,7 @@ void MOUSEPS2_UpdateButtonSquish()
 	//   no standard way to report buttons 4 and 5
 
 	const bool squish = mouse_shared.active_vmm ||
-	                    (protocol != MouseModelPS2::Explorer);
+	                    (protocol != MouseModelPs2::Explorer);
 	buttons._data = squish ? buttons_12S._data : buttons_all._data;
 }
 
@@ -157,10 +157,10 @@ static void terminate_unlock_sequence()
 
 static void maybe_log_mouse_protocol()
 {
-	using enum MouseModelPS2;
+	using enum MouseModelPs2;
 
 	static bool first_time = true;
-	static MouseModelPS2 last_logged = {};
+	static MouseModelPs2 last_logged = {};
 
 	if (!first_time && protocol == last_logged) {
 		return;
@@ -193,7 +193,7 @@ static void maybe_log_mouse_protocol()
 	last_logged = protocol;
 }
 
-static void set_protocol(const MouseModelPS2 new_protocol, bool is_startup = false)
+static void set_protocol(const MouseModelPs2 new_protocol, bool is_startup = false)
 {
 	terminate_unlock_sequence();
 
@@ -285,7 +285,7 @@ static void build_protocol_frame(const bool is_polling = false)
 	dx = get_scaled_movement(dx, is_polling);
 	dy = get_scaled_movement(static_cast<int16_t>(-dy), is_polling);
 
-	if (protocol == MouseModelPS2::Explorer) {
+	if (protocol == MouseModelPs2::Explorer) {
 		// There is no overflow for 5-button mouse protocol, see
 		// HT82M30A datasheet
 		dx = std::clamp(dx,
@@ -320,10 +320,10 @@ static void build_protocol_frame(const bool is_polling = false)
 	frame[1] = static_cast<uint8_t>(dx);
 	frame[2] = static_cast<uint8_t>(dy);
 
-	if (protocol == MouseModelPS2::IntelliMouse) {
+	if (protocol == MouseModelPs2::IntelliMouse) {
 		frame.resize(4);
 		frame[3] = get_reset_wheel_8bit();
-	} else if (protocol == MouseModelPS2::Explorer) {
+	} else if (protocol == MouseModelPs2::Explorer) {
 		frame.resize(4);
 		frame[3] = get_reset_wheel_4bit();
 
@@ -468,7 +468,7 @@ static void cmd_set_sample_rate(const uint8_t new_rate_hz)
 	// Handle extended mouse protocol unlock sequences
 	auto process_unlock = [](const std::vector<uint8_t>& sequence,
 	                         uint8_t& idx,
-	                         const MouseModelPS2 potential_protocol) {
+	                         const MouseModelPs2 potential_protocol) {
 		if (sequence[idx] != rate_hz) {
 			idx = 0;
 		} else if (sequence.size() == ++idx) {
@@ -479,7 +479,7 @@ static void cmd_set_sample_rate(const uint8_t new_rate_hz)
 	static const std::vector<uint8_t> unlock_sequence_im = {200, 100, 80};
 	static const std::vector<uint8_t> unlock_sequence_xp = {200, 200, 80};
 
-	using enum MouseModelPS2;
+	using enum MouseModelPs2;
 
 	if (mouse_config.model_ps2 == IntelliMouse) {
 		process_unlock(unlock_sequence_im, unlock_idx_im, IntelliMouse);
@@ -533,7 +533,7 @@ static void cmd_reset(bool is_startup = false)
 {
 	cmd_set_defaults();
 
-	set_protocol(MouseModelPS2::Standard, is_startup);
+	set_protocol(MouseModelPs2::Standard, is_startup);
 	frame.clear();
 
 	if (is_startup) {
@@ -644,7 +644,7 @@ static void execute_command(const AuxCommand command, const uint8_t param)
 
 bool MOUSEPS2_PortWrite(const uint8_t byte)
 {
-	if (mouse_config.model_ps2 == MouseModelPS2::NoMouse) {
+	if (mouse_config.model_ps2 == MouseModelPs2::NoMouse) {
 		return false; // no mouse emulated
 	}
 
@@ -711,8 +711,8 @@ void MOUSEPS2_NotifyWheel(const float w_rel)
 
 	const auto old_counter = MOUSE_ConsumeInt8(delta_wheel, skip_delta_update);
 
-	if (protocol == MouseModelPS2::IntelliMouse ||
-	    protocol == MouseModelPS2::Explorer) {
+	if (protocol == MouseModelPs2::IntelliMouse ||
+	    protocol == MouseModelPs2::Explorer) {
 		delta_wheel = MOUSE_ClampWheelMovement(delta_wheel + w_rel);
 	}
 
@@ -964,7 +964,7 @@ void MOUSEBIOS_Subfunction_C2() // INT 15h, AH = 0xc2
 		return reg_ah == static_cast<uint8_t>(BiosRetVal::Success);
 	};
 
-	if (mouse_config.model_ps2 == MouseModelPS2::NoMouse) {
+	if (mouse_config.model_ps2 == MouseModelPs2::NoMouse) {
 		set_return_value(BiosRetVal::InterfaceError);
 		return;
 	}
