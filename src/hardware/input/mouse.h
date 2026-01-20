@@ -217,7 +217,7 @@ bool MOUSEVMM_CheckIfUpdated_VmWare();
 
 class CSerialMouse;
 
-enum class MouseModelCOM {
+enum class MouseModelCom {
 	NoMouse, // dummy value or no mouse
 	Microsoft,
 	Logitech,
@@ -226,12 +226,12 @@ enum class MouseModelCOM {
 };
 
 // Configured default serial mouse model
-MouseModelCOM MOUSECOM_GetConfiguredModel();
+MouseModelCom MOUSECOM_GetConfiguredModel();
 // Whether the serial mouse should auto-switch to Mouse Systems mouse emulation
 bool MOUSECOM_GetConfiguredAutoMsm();
 
 bool MOUSECOM_ParseComModel(const std::string_view model_str,
-                            MouseModelCOM& model, bool& auto_msm);
+                            MouseModelCom& model, bool& auto_msm);
 
 void MOUSECOM_RegisterListener(const MouseInterfaceId interface_id,
                                CSerialMouse& listener);
