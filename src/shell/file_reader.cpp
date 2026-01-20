@@ -33,8 +33,9 @@ std::optional<std::string> FileReader::Read()
 	std::string line       = {};
 
 	while (data != '\n') {
-		bool result = DOS_ReadFile(entry, &data, &bytes_to_read);
-		if (!result || bytes_to_read == 0) {
+		// We should also stop at EOF (0x1a) character
+		if (!DOS_ReadFile(entry, &data, &bytes_to_read) ||
+		    bytes_to_read == 0 || data == 0x1a) {
 			break;
 		}
 		line += static_cast<char>(data);
