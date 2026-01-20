@@ -47,7 +47,7 @@ void REELMAGIC_MaybeCreateFmpdrvExecutable();
 void VFILE_GetPathZDrive(std::string& path, const std::string& dirname);
 void VFILE_RegisterZDrive(const std_fs::path& z_drive_path);
 
-void Add_VFiles()
+void DOS_SetupPrograms()
 {
 	const std::string dirname = "drivez";
 
@@ -93,13 +93,4 @@ void Add_VFiles()
 	REELMAGIC_MaybeCreateFmpdrvExecutable();
 
 	AUTOEXEC_RefreshFile();
-}
-
-void DOS_SetupPrograms(void)
-{
-	/*Add misc messages */
-	MSG_Add("WIKI_ADD_UTILITIES_ARTICLE", WIKI_ADD_UTILITIES_ARTICLE);
-	MSG_Add("WIKI_URL", WIKI_URL);
-
-	Add_VFiles();
 }
