@@ -1193,9 +1193,9 @@ void vga_draw_blank_line()
 		// Convert the palette colour to a 16-bit value for writing
 		const auto bg_pal_color = vga.dac.palette_map[bg_color_index];
 
-		const auto bg_565_pixel = Rgb565(bg_pal_color.Red8(),
-		                                 bg_pal_color.Green8(),
-		                                 bg_pal_color.Blue8())
+		const auto bg_565_pixel = Rgb565(bg_pal_color.Red(),
+		                                 bg_pal_color.Green(),
+		                                 bg_pal_color.Blue())
 		                                  .pixel;
 
 		const auto line_length = templine_buffer.size() / sizeof(uint16_t);
