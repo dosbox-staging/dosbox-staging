@@ -4,7 +4,11 @@ add_subdirectory(ESFMu)
 add_subdirectory(loguru)
 add_subdirectory(manymouse)
 add_subdirectory(nuked)
-add_subdirectory(PDCurses)
+
+if (OPT_DEBUGGER)
+  add_subdirectory(PDCurses)
+endif()
+
 add_subdirectory(residfp)
 add_subdirectory(simde)
 add_subdirectory(tal-chorus)
