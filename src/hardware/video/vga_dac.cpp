@@ -160,7 +160,7 @@ static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_id
 	const auto b8 = rgb6_to_8_lut(rgb666.blue);
 
 	// Map the source color into palette's requested index
-	vga.dac.palette_map[palette_idx].Set(b8, g8, r8);
+	vga.dac.palette_map[palette_idx] = Bgrx8888(r8, g8, b8);
 
 	ReelMagic_RENDER_SetPalette(palette_idx, r8, g8, b8);
 }
