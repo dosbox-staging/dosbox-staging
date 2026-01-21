@@ -40,7 +40,7 @@ bool BatchFile::ReadLine(char* lineout)
 		return false;
 	}
 
-	*line = ExpandedBatchLine(*line);
+	line = ExpandedBatchLine(*line);
 	strncpy(lineout, line->c_str(), CMD_MAXLINE);
 	lineout[CMD_MAXLINE - 1] = '\0';
 	return true;
