@@ -15,7 +15,7 @@
 #endif
 #include <float.h>
 #include <stdlib.h>
-#include <memory.h>
+#include <memory>
 
 #if C_DEBUGGER
 #include <stdio.h>
