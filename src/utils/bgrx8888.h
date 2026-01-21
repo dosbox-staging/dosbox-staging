@@ -20,19 +20,19 @@ public:
 		colour.components = {b, g, r, 0};
 	}
 
-	constexpr uint8_t Blue8() const
+	constexpr uint8_t Red() const
 	{
-		return colour.components.b;
+		return colour.components.r;
 	}
 
-	constexpr uint8_t Green8() const
+	constexpr uint8_t Green() const
 	{
 		return colour.components.g;
 	}
 
-	constexpr uint8_t Red8() const
+	constexpr uint8_t Blue() const
 	{
-		return colour.components.r;
+		return colour.components.b;
 	}
 
 	// Cast operator to read-only uint32_t
