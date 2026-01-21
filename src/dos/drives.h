@@ -177,8 +177,6 @@ struct partTable {
 #ifdef _MSC_VER
 #pragma pack ()
 #endif
-//Forward
-class imageDisk;
 
 // Must be constructed with a shared_ptr or it will throw an exception on internal call to shared_from_this()
 class fatDrive final : public DOS_Drive, public std::enable_shared_from_this<fatDrive> {
