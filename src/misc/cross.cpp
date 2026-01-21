@@ -619,14 +619,16 @@ std::string cfstr_to_string(CFStringRef source)
 // Local time support
 // ***************************************************************************
 
+#if defined(WIN32)
+
 namespace cross {
 
-#if defined(WIN32)
 struct tm *localtime_r(const time_t *timep, struct tm *result)
 {
 	const errno_t err = localtime_s(result, timep);
 	return (err == 0 ? result : nullptr);
 }
-#endif
 
 } // namespace cross
+
+#endif
