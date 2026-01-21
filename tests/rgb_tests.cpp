@@ -176,9 +176,9 @@ TEST(rgb, bgrx8888_byte_order)
 
 	// Create a sequential array of objects
 	const Bgrx8888 bgrx_array[3] = {
-	        {b8, g8, r8},
-	        {b8, g8, r8},
-	        {b8, g8, r8},
+	        {r8, g8, b8},
+	        {r8, g8, b8},
+	        {r8, g8, b8},
 	};
 
 	// Treat the array as if it were video memory, i.e., a sequence of bytes.
@@ -202,7 +202,7 @@ TEST(rgb, bgrx8888_cast_byte_order)
 	constexpr uint8_t g8 = 0b1000'0111;
 	constexpr uint8_t r8 = 0b1000'0011;
 
-	const Bgrx8888 bgrx_object(b8, g8, r8);
+	const Bgrx8888 bgrx_object(r8, g8, b8);
 
 	// Cast the object to a uint32_t and copy it byte-by-byte into an array.
 	// Bgrx8888 claims that its uint32_t cast is just another 'view' into
