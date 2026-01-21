@@ -22,17 +22,17 @@ public:
 
 	constexpr uint8_t Blue8() const
 	{
-		return colour.components.b8;
+		return colour.components.b;
 	}
 
 	constexpr uint8_t Green8() const
 	{
-		return colour.components.g8;
+		return colour.components.g;
 	}
 
 	constexpr uint8_t Red8() const
 	{
-		return colour.components.r8;
+		return colour.components.r;
 	}
 
 	// Cast operator to read-only uint32_t
@@ -45,10 +45,10 @@ private:
 	union {
 		struct {
 			// byte order
-			uint8_t b8 = 0;
-			uint8_t g8 = 0;
-			uint8_t r8 = 0;
-			uint8_t x8 = 0;
+			uint8_t b = 0;
+			uint8_t g = 0;
+			uint8_t r = 0;
+			uint8_t x = 0;
 		} components;
 		uint32_t bgrx8888 = 0;
 	} colour = {};
