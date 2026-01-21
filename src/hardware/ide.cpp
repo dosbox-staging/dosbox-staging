@@ -3562,11 +3562,6 @@ void IDEATAPICDROMDevice::writecommand(uint8_t cmd)
 	}
 }
 
-static inline bool is_power_of_2(io_val_t val)
-{
-	return (val != 0) && ((val & (val - 1)) == 0);
-}
-
 void IDEATADevice::writecommand(uint8_t cmd)
 {
 	if (!command_interruption_ok(cmd))
@@ -3700,7 +3695,7 @@ void IDEATADevice::writecommand(uint8_t cmd)
 	case 0xC6: /* SET MULTIPLE MODE */
 		/* only sector counts 1, 2, 4, 8, 16, 32, 64, and 128 are legal by standard.
 		 * NTS: There's a bug in VirtualBox that makes 0 legal too! */
-		if (count != 0 && count <= multiple_sector_max && is_power_of_2(count)) {
+		if (count != 0 && count <= multiple_sector_max && std::has_single_bit(count)) {
 			multiple_sector_count = count;
 			status = IDE_STATUS_DRIVE_READY | IDE_STATUS_DRIVE_SEEK_COMPLETE;
 		} else {
