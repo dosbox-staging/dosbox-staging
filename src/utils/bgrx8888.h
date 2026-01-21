@@ -15,14 +15,9 @@ class Bgrx8888 {
 public:
 	constexpr Bgrx8888() = default;
 
-	Bgrx8888(const uint8_t b8, const uint8_t g8, const uint8_t r8)
+	Bgrx8888(const uint8_t r, const uint8_t g, const uint8_t b)
 	{
-		Set(b8, g8, r8);
-	}
-
-	void Set(const uint8_t b8, const uint8_t g8, const uint8_t r8)
-	{
-		colour.components = {b8, g8, r8, 0};
+		colour.components = {b, g, r, 0};
 	}
 
 	constexpr uint8_t Blue8() const
