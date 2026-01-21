@@ -20,6 +20,11 @@ public:
 		colour.components = {b, g, r, 0};
 	}
 
+	explicit Bgrx8888(const uint32_t color)
+	{
+		colour.bgrx8888 = color;
+	}
+
 	constexpr uint8_t Red() const
 	{
 		return colour.components.r;
