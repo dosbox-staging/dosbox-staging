@@ -285,7 +285,7 @@ int PDC_scr_open(void)
         SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0");
     #endif
     
-        constexpr uint32_t flags = SDL_WINDOW_RESIZABLE;
+        constexpr SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE;
 
         pdc_window = SDL_CreateWindow("DOSBox Staging Debugger", pdc_swidth, pdc_sheight, flags);
 

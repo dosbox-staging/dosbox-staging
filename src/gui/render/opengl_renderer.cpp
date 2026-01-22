@@ -92,7 +92,7 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	// Request an OpenGL-ready window
-	auto flags = sdl_window_flags;
+	SDL_WindowFlags flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
 #if defined(MACOSX) && defined(SDL_HINT_MAC_COLOR_SPACE)
