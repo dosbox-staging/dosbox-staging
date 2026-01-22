@@ -31,8 +31,8 @@ public:
 
 	// Expects packed RGBA pixel data (one uint32_t per pixel, no extra
 	// padding per line).
-	void Deinterlace(const RenderedImage& image,
-	                 const DeinterlacingStrength strength);
+	RenderedImage Deinterlace(const RenderedImage& image,
+	                          const DeinterlacingStrength strength);
 
 	// prevent copying
 	Deinterlacer(const Deinterlacer&) = delete;
@@ -45,7 +45,11 @@ private:
 
 	const int PixelsPerBitBufferElement = 64;
 
-	void SetUpInputImage(const RenderedImage& image);
+	RenderedImage LineDeinterlace(const RenderedImage& input_image,
+	                              const DeinterlacingStrength strength);
+
+	bool SetUpInputImage(const RenderedImage& image);
+	void DecodeInputImage(const RenderedImage& input_image);
 
 	void ThresholdInput(const uint32_t* pixel_data, bit_buffer& dest) const;
 	void DownshiftAndXor(bit_buffer& src, bit_buffer& dest) const;
@@ -59,8 +63,6 @@ private:
 	void CombineOutput(uint32_t* pixel_data, bit_buffer& mask,
 	                   const DeinterlacingStrength strength) const;
 
-	std::vector<uint32_t> decoded_image = {};
-
 	// Information about the input image
 	struct {
 		int width        = 0;
@@ -68,6 +70,10 @@ private:
 		int pitch_pixels = 0;
 		uint32_t* data   = {};
 	} image = {};
+
+	// Decoded image for non-BGRX32 images if the image is not processed in
+	// place
+	std::vector<uint32_t> decoded_image = {};
 
 	// Temporary work buffers holding 1-bit image data
 	bit_buffer buffer1 = {};
