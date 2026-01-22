@@ -30,7 +30,7 @@ class OpenGlRenderer : public RenderBackend {
 
 public:
 	OpenGlRenderer(const int x, const int y, const int width,
-	               const int height, uint32_t sdl_window_flags);
+	               const int height, SDL_WindowFlags sdl_window_flags);
 
 	~OpenGlRenderer() override;
 
@@ -84,7 +84,7 @@ private:
 
 	SDL_Window* CreateSdlWindow(const int x, const int y, const int width,
 	                            const int height,
-	                            const uint32_t sdl_window_flags);
+	                            const SDL_WindowFlags sdl_window_flags);
 
 	bool InitRenderer();
 
