@@ -19,7 +19,7 @@ static constexpr SDL_PixelFormat SdlPixelFormat = SDL_PIXELFORMAT_XRGB8888;
 
 SdlRenderer::SdlRenderer(const int x, const int y,
 						 const int width, const int height,
-						 const uint32_t sdl_window_flags,
+						 const SDL_WindowFlags sdl_window_flags,
                          const std::string& render_driver,
                          TextureFilterMode texture_filter_mode)
         : texture_filter_mode(texture_filter_mode)
@@ -72,7 +72,7 @@ SdlRenderer::SdlRenderer(const int x, const int y,
 // being visibly destroyed for window managers that show animations while
 // creating the window (e.g., Gnome 3).
 //
-uint32_t SdlRenderer::OpenGlDriverCrashWorkaround(const std::string_view render_driver) const
+SDL_WindowFlags SdlRenderer::OpenGlDriverCrashWorkaround(const std::string_view render_driver) const
 {
 	if (render_driver.starts_with("opengl")) {
 		return SDL_WINDOW_OPENGL;
