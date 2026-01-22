@@ -90,7 +90,7 @@ endif()
 
 # GCC needs more memory reserved to fully optimize the CPU emulation code
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  add_compile_options("--param" "max-gcse-memory=250000")
+  add_compile_options("--param" "max-gcse-memory=300000")
 endif()
 
 if (APPLE)
