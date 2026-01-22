@@ -328,8 +328,8 @@ static int _process_mouse_event(void)
     {
         int i;
 
-        SP->mouse_status.x = (event.motion.x - pdc_xoffset) / pdc_fwidth;
-        SP->mouse_status.y = (event.motion.y - pdc_yoffset) / pdc_fheight;
+        SP->mouse_status.x = static_cast<int>((event.motion.x - pdc_xoffset) / pdc_fwidth);
+        SP->mouse_status.y = static_cast<int>((event.motion.y - pdc_yoffset) / pdc_fheight);
 
         if (!event.motion.state ||
            (SP->mouse_status.x == old_mouse_status.x &&
@@ -391,8 +391,8 @@ static int _process_mouse_event(void)
             }
         }
 
-        SP->mouse_status.x = (event.button.x - pdc_xoffset) / pdc_fwidth;
-        SP->mouse_status.y = (event.button.y - pdc_yoffset) / pdc_fheight;
+        SP->mouse_status.x = static_cast<int>((event.button.x - pdc_xoffset) / pdc_fwidth);
+        SP->mouse_status.y = static_cast<int>((event.button.y - pdc_yoffset) / pdc_fheight);
 
         btn--;
 
