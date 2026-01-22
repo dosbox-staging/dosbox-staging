@@ -20,7 +20,7 @@ class SdlRenderer : public RenderBackend {
 
 public:
 	SdlRenderer(const int x, const int y, const int width, const int height,
-	            const uint32_t sdl_window_flags, const std::string& render_driver,
+	            const SDL_WindowFlags sdl_window_flags, const std::string& render_driver,
 	            TextureFilterMode texture_filter_mode);
 
 	~SdlRenderer() override;
@@ -70,7 +70,7 @@ public:
 private:
 	bool InitRenderer(const std::string& render_driver);
 
-	uint32_t OpenGlDriverCrashWorkaround(const std::string_view render_driver) const;
+	SDL_WindowFlags OpenGlDriverCrashWorkaround(const std::string_view render_driver) const;
 
 	SDL_Window* window     = {};
 	SDL_Renderer* renderer = {};

@@ -1510,9 +1510,9 @@ TextureFilterMode GFX_GetTextureFilterMode()
 	return sdl.texture_filter_mode;
 }
 
-static int get_sdl_window_flags()
+static SDL_WindowFlags get_sdl_window_flags()
 {
-	auto flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+	SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
 	if (!get_sdl_section()->GetBool("window_decorations")) {
 		flags |= SDL_WINDOW_BORDERLESS;
@@ -1530,7 +1530,7 @@ static int get_sdl_window_flags()
 		}
 	}
 
-	return check_cast<int>(flags);
+	return flags;
 }
 
 static RenderBackend* create_renderer()

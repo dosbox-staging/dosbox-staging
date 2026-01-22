@@ -45,7 +45,7 @@ static const char* safe_gl_get_string(const GLenum requested_name,
 }
 
 OpenGlRenderer::OpenGlRenderer(const int x, const int y, const int width,
-                               const int height, uint32_t sdl_window_flags)
+                               const int height, SDL_WindowFlags sdl_window_flags)
 {
 	window = CreateSdlWindow(x, y, width, height, sdl_window_flags);
 	if (!window) {
@@ -66,7 +66,7 @@ OpenGlRenderer::OpenGlRenderer(const int x, const int y, const int width,
 
 SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
                                             const int width, const int height,
-                                            const uint32_t sdl_window_flags)
+                                            const SDL_WindowFlags sdl_window_flags)
 {
 	// Request 24-bits framebuffer, don't care about depth buffer
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
