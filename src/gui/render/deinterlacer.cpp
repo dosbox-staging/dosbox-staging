@@ -329,9 +329,38 @@ void Deinterlacer::CombineOutput(uint32_t* pixel_data, bit_buffer& mask,
 	}
 }
 
-void Deinterlacer::SetUpInputImage(const RenderedImage& input_image)
+void Deinterlacer::DecodeInputImage(const RenderedImage& input_image)
+{
+	const auto& p = input_image.params;
+
+	// Convert input image to 32-bit BGRX format and get rid of
+	// "baked-in" pixel and line doubling.
+	const auto pixel_skip_count = (p.width / p.video_mode.width) - 1;
+	const auto row_skip_count   = (p.height / p.video_mode.height) - 1;
+
+	image.width        = p.width / (pixel_skip_count + 1);
+	image.height       = p.height / (row_skip_count + 1);
+	image.pitch_pixels = image.width;
+
+	decoded_image.resize(image.height * image.pitch_pixels);
+
+	// Convert pixel data
+	ImageDecoder image_decoder(input_image, row_skip_count, pixel_skip_count);
+
+	auto out_line = decoded_image.begin();
+
+	for (auto y = 0; y < image.height; ++y) {
+		auto out = out_line;
+		image_decoder.GetNextRowAsBgrx32Pixels(out);
+
+		out_line += image.pitch_pixels;
+	}
+}
+
+bool Deinterlacer::SetUpInputImage(const RenderedImage& input_image)
 {
 	if (input_image.params.pixel_format == PixelFormat::BGRX32_ByteArray) {
+
 		// Not undefined behaviour because the original image buffer was
 		// an uint32_t vector
 		image.width        = input_image.params.width;
@@ -340,46 +369,25 @@ void Deinterlacer::SetUpInputImage(const RenderedImage& input_image)
 
 		image.data = reinterpret_cast<uint32_t*>(input_image.image_data);
 
+		return true;
+
 	} else {
-		// Convert input image to 32-bit BGRX format and get rid of
-		// "baked-in" pixel and line doubling.
-		const auto pixel_skip_count = input_image.params.rendered_pixel_doubling
-		                                    ? 1
-		                                    : 0;
-
-		const auto row_skip_count = input_image.params.rendered_double_scan
-		                                  ? 1
-		                                  : 0;
-
-		image.width = input_image.params.width / (pixel_skip_count + 1);
-		image.height = input_image.params.height / (row_skip_count + 1);
-		image.pitch_pixels = image.width;
-
-		decoded_image.resize(image.height * image.pitch_pixels);
-
-		// Convert pixel data
-		ImageDecoder image_decoder(input_image, row_skip_count, pixel_skip_count);
-
-		auto out_line = decoded_image.begin();
-
-		for (auto y = 0; y < image.height; ++y) {
-			auto out = out_line;
-			image_decoder.GetNextRowAsBgrx32Pixels(out);
-
-			out_line += image.pitch_pixels;
-		}
-
+		DecodeInputImage(input_image);
 		image.data = decoded_image.data();
+
+		return false;
 	}
 }
 
 // Automatically deinterlace FMV videos in the input image that have every
 // second scanline black. Non-interlaced areas will be left intact.
 //
-void Deinterlacer::Deinterlace(const RenderedImage& input_image,
-                               const DeinterlacingStrength strength)
+RenderedImage Deinterlacer::LineDeinterlace(const RenderedImage& input_image,
+                                            const DeinterlacingStrength strength)
 {
-	SetUpInputImage(input_image);
+	// `SetUpInputImage()` returns true if the image had to be decoded into
+	// a temporary buffer.
+	auto process_in_place = SetUpInputImage(input_image);
 
 	// We store 64 1-bit pixels per uint64_t, plus 1 uint64_t for
 	// padding at the end of each row. We also store two padding
@@ -432,4 +440,44 @@ void Deinterlacer::Deinterlace(const RenderedImage& input_image,
 	// anti-aliasing effect.
 	//
 	CombineOutput(image.data, buffer2, strength);
+
+	if (process_in_place) {
+		return input_image;
+
+	} else {
+		// Create a new `RenderedImage` if we didn't process the input
+		// image in-place
+		constexpr auto BytesPerPixel = sizeof(uint32_t);
+
+		// This won't copy the pixel data, just the container
+		RenderedImage new_image = input_image;
+
+		// We're always outputting a BGRX32 image if we had to decode it
+		new_image.params.pixel_format = PixelFormat::BGRX32_ByteArray;
+		new_image.pitch               = image.width * BytesPerPixel;
+
+		new_image.image_data = reinterpret_cast<uint8_t*>(
+		        decoded_image.data());
+
+		std::memcpy(new_image.image_data,
+		            image.data,
+		            image.width * image.height * BytesPerPixel);
+
+		return new_image;
+	}
+}
+
+RenderedImage Deinterlacer::Deinterlace(const RenderedImage& input_image,
+                                        const DeinterlacingStrength strength)
+{
+	const auto mode = input_image.params.video_mode;
+
+	if (mode.is_graphics_mode &&
+	    (mode.color_depth >= ColorDepth::IndexedColor256) &&
+	    (mode.height >= 400)) {
+
+		return LineDeinterlace(input_image, strength);
+	} else {
+		return input_image;
+	}
 }
