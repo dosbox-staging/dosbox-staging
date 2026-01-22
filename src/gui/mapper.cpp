@@ -1290,7 +1290,7 @@ static void DrawText(float x, float y, const char* text, const Rgb888& color)
 class CButton {
 public:
 	CButton(int32_t p_x, int32_t p_y, int32_t p_dx, int32_t p_dy)
-	        : rect{p_x, p_y, p_dx, p_dy},
+	        : rect{static_cast<float>(p_x), static_cast<float>(p_y), static_cast<float>(p_dx), static_cast<float>(p_dy)},
 	          color(color_white),
 	          enabled(true)
 	{
