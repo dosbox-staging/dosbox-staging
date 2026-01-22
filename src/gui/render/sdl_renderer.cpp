@@ -24,7 +24,7 @@ SdlRenderer::SdlRenderer(const int x, const int y,
                          TextureFilterMode texture_filter_mode)
         : texture_filter_mode(texture_filter_mode)
 {
-	auto flags = sdl_window_flags | OpenGlDriverCrashWorkaround(render_driver);
+	SDL_WindowFlags flags = sdl_window_flags | OpenGlDriverCrashWorkaround(render_driver);
 
 	SDL_PropertiesID props = SDL_CreateProperties();
 	SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING, DOSBOX_NAME);
