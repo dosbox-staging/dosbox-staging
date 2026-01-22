@@ -82,18 +82,12 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 
 static bool is_deinterlacing()
 {
-	if (render.deinterlacing_strength == DeinterlacingStrength::Off) {
+	// We only deinterlace (S)VGA and VESA modes
+	if (machine != MachineType::Vga) {
 		return false;
 	}
 
-	// Games that display interlaced FMV videos use 640x400 256-colour or
-	// better (S)VGA/VESA graphics.
-	//
-	auto mode = VGA_GetCurrentVideoMode();
-
-	return (machine == MachineType::Vga) && mode.is_graphics_mode &&
-	       (mode.color_depth >= ColorDepth::IndexedColor256) &&
-	       (mode.height >= 400);
+	return (render.deinterlacing_strength != DeinterlacingStrength::Off);
 }
 
 static bool maybe_gfx_start_update()
@@ -302,12 +296,22 @@ static void handle_capture_frame()
 	const auto frames_per_second = static_cast<float>(render.fps);
 
 	if (is_deinterlacing()) {
-		auto image_copy = image.deep_copy();
+		// The pixel data in the returned new image points either to the
+		// input image's data (for 32-bit BGRX images), or to the
+		// deinterlacer's internal decode buffer (for any other pixel
+		// format). We *must not* call `free()` on `new_image` in either
+		// case as it doesn't own these pixel data buffers.
+		//
+		auto new_image = render.deinterlacer->Deinterlace(
+		        image, render.deinterlacing_strength);
 
-		render.deinterlacer->Deinterlace(image_copy,
-		                                 render.deinterlacing_strength);
-
-		CAPTURE_AddFrame(image_copy, frames_per_second);
+		// The image capturer will create its own deep copy the rendered
+		// image (and thus of the pixel data), and will free it when
+		// it's done with it.
+		//
+		// The video capturer doesn't create a copy, and consequently
+		// doesn't free the rendered image either.
+		CAPTURE_AddFrame(new_image, frames_per_second);
 
 	} else {
 		CAPTURE_AddFrame(image, frames_per_second);
@@ -336,6 +340,9 @@ static void deinterlace_rendered_output()
 
 	image.image_data = reinterpret_cast<uint8_t*>(render.dest);
 
+	// 32-bit BGRX images will always be processed in-place, so we don't
+	// care about the returned `RenderedImage` object (it's the same as the
+	// input image).
 	render.deinterlacer->Deinterlace(image, render.deinterlacing_strength);
 }
 
