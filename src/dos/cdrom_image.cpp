@@ -429,7 +429,7 @@ uint32_t CDROM_Interface_Image::AudioFile::decode(int16_t *buffer,
 
 uint16_t CDROM_Interface_Image::AudioFile::getEndian()
 {
-	return sample ? sample->actual.format : SDL_AUDIO_S16;
+	return sample ? sample->actual.format : static_cast<uint16_t>(SDL_AUDIO_S16);
 }
 
 uint32_t CDROM_Interface_Image::AudioFile::getRate()
