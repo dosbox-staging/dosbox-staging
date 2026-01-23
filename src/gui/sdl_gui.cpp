@@ -618,30 +618,23 @@ static void set_minimum_window_size()
 }
 
 static void check_and_handle_dpi_change(SDL_Window* sdl_window,
-                                        const int _new_width = 0)
+                                        [[maybe_unused]] const int _new_width = 0)
 {
-	assert(sdl.renderer);
-	assert(sdl.window);
+	assert(sdl_window);
 
-	auto new_width = _new_width;
-	if (new_width <= 0) {
-		SDL_GetWindowSize(sdl_window, &new_width, nullptr);
-	}
-	assert(new_width > 0);
+	const auto new_dpi_scale = SDL_GetWindowDisplayScale(sdl_window);
 
-	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
-	const auto new_dpi_scale = canvas_size_px.w / static_cast<float>(new_width);
-
-	if (std::abs(new_dpi_scale - sdl.dpi_scale) < DBL_EPSILON) {
+	if (std::abs(new_dpi_scale - sdl.dpi_scale) < FLT_EPSILON) {
 		log_window_event("SDL: DPI scale hasn't changed (still %g)",
 		                 sdl.dpi_scale);
 		return;
 	}
-	sdl.dpi_scale = new_dpi_scale;
 
 	log_window_event("SDL: DPI scale updated from %g to %g",
 	                 sdl.dpi_scale,
 	                 new_dpi_scale);
+
+	sdl.dpi_scale = new_dpi_scale;
 }
 
 static void set_window_transparency()
@@ -2016,17 +2009,17 @@ static void notify_sdl_setting_updated(SectionProp& section,
 
 static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
-	MOUSE_EventMoved(static_cast<float>(motion->xrel),
-	                 static_cast<float>(motion->yrel),
-	                 static_cast<float>(motion->x),
-	                 static_cast<float>(motion->y));
+	MOUSE_EventMoved(motion->xrel,
+	                 motion->yrel,
+	                 motion->x,
+	                 motion->y);
 }
 
 static void handle_mouse_wheel(SDL_MouseWheelEvent* wheel)
 {
-	const auto tmp = (wheel->direction == SDL_MOUSEWHEEL_NORMAL) ? -wheel->integer_y
-	                                                             : wheel->integer_y;
-	MOUSE_EventWheel(check_cast<int16_t>(tmp));
+	const auto tmp = (wheel->direction == SDL_MOUSEWHEEL_NORMAL) ? static_cast<uint16_t>(-wheel->y)
+	                                                             : static_cast<uint16_t>(wheel->y);
+	MOUSE_EventWheel(check_cast<uint16_t>(tmp));
 }
 
 static void handle_mouse_button(SDL_MouseButtonEvent* button)
@@ -2450,6 +2443,7 @@ bool GFX_PollAndHandleEvents()
 	}
 
 	while (SDL_PollEvent(&event)) {
+		
 #if C_DEBUGGER
 		if (is_debugger_event(event)) {
 			pdc_event_queue.push(event);
