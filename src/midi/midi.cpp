@@ -668,7 +668,7 @@ void MIDI_ListDevices(Program* caller)
 	[[maybe_unused]] auto write_device_name = [&](const std::string& device_name) {
 		const auto color = convert_ansi_markup("[color=white]%s:[reset]\n");
 
-		caller->WriteOut(color.c_str(), device_name.c_str());
+		caller->WriteOut(color, device_name.c_str());
 	};
 
 	[[maybe_unused]] auto device_ptr = midi.device.get();

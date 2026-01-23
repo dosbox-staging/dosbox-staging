@@ -168,7 +168,7 @@ void CDROM_Interface_Physical::InitAudio()
 	                          std::placeholders::_1);
 	mixer_channel = MIXER_AddChannel(callback,
 	                                 REDBOOK_PCM_FRAMES_PER_SECOND,
-	                                 name.c_str(),
+	                                 name,
 	                                 {ChannelFeature::Stereo,
 	                                  ChannelFeature::DigitalAudio});
 
