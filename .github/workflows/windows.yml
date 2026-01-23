@@ -267,11 +267,9 @@ jobs:
 
 
       - name: Build Windows installer
-        shell: pwsh
-        run: |
-          cd out
-          C:\PROGRA~2\INNOSE~1\ISCC.exe DOSBox-Staging-setup.iss
-          dir
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
+        with:
+          path: out/DOSBox-Staging-setup.iss
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v6
