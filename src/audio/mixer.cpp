@@ -2766,8 +2766,8 @@ void MIXER_CloseAudioDevice()
 
 // Sets `mixer.sample_rate_hz` and `mixer.blocksize` on success
 static bool init_sdl_sound(const int requested_sample_rate_hz,
-                           const int requested_blocksize_in_frames,
-                           [[maybe_unused]]const bool allow_negotiate)
+                           [[maybe_unused]] const int requested_blocksize_in_frames,
+                           [[maybe_unused]] const bool allow_negotiate)
 {
 	SDL_AudioSpec desired  = {};
 	SDL_AudioSpec obtained = {};
@@ -2824,18 +2824,6 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		                           "rate",
 		                           format_str("%d",
 		                                      mixer.sample_rate_hz.load()));
-	}
-
-	// Did SDL negotiate a different blocksize?
-	if (obtained_blocksize != requested_blocksize_in_frames) {
-		LOG_WARNING("MIXER: SDL negotiated the requested blocksize of "
-		        "%d to %d frames",
-		        requested_blocksize_in_frames,
-		        obtained_blocksize);
-
-		set_section_property_value("mixer",
-		                           "blocksize",
-		                           format_str("%d", mixer.blocksize));
 	}
 
 	LOG_MSG("MIXER: Initialised stereo %d Hz audio with %d sample frame buffer",
