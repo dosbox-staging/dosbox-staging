@@ -2076,9 +2076,6 @@ static void update_black_level_setting()
 		              0.0f,
 		              1.0f,
 		              static_cast<float>(*maybe_black_level));
-
-		LOG_TRACE("black_level %f",
-		          curr_image_adjustment_settings.black_level);
 	} else {
 		curr_image_adjustment_settings.black_level = BlackLevelMin;
 	}
