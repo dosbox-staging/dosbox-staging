@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <numeric>
 #include <vector>
 
 #include "dos.h"
@@ -433,7 +434,7 @@ unsigned DOS_Drive_Cache::CreateShortNameID(CFileInfo *curDir, const char *name)
 	auto high = (Bits)(filelist_size - 1);
 
 	while (low <= high) {
-		auto mid = (low + high) / 2;
+		auto mid = std::midpoint(low, high);
 		const char *other_shortname = curDir->longNameList[mid]->shortname;
 		const int res = CompareShortname(name, other_shortname);
 		
@@ -556,7 +557,7 @@ Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName, const size
 	auto high	= (Bits)(filelist_size-1);
 	Bits mid,res;
 	while (low<=high) {
-		mid = (low+high)/2;
+		mid = std::midpoint(low, high);
 		res = strcmp(shortName,curDir->fileList[mid]->shortname);
 		if (res>0)	low  = mid+1; else
 		if (res<0)	high = mid-1; else
