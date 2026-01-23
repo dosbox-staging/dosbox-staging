@@ -1961,7 +1961,6 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
                      const uint32_t wait_ms,
                      const uint32_t pacing_ms);
 void MAPPER_StopAutoTyping();
-void DOS_21Handler();
 
 void DOS_Shell::CMD_CHOICE(char * args){
 	HELP("CHOICE");
