@@ -2450,7 +2450,7 @@ std::optional<Rgb888> parse_color_token(const std::string& token,
 		}
 		// Need to do this check because sscanf is way too lenient and
 		// would parse something like "xyz" as 0
-		if (!is_hex_digits(token.substr(1))) {
+		if (!is_hex_digits(std::string_view(token).substr(1))) {
 			log_warning("hex colors must contain only digits and the letters A to F");
 			return {};
 		}
