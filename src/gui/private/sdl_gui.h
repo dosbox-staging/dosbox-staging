@@ -91,7 +91,7 @@ struct SDL_Block {
 	uint32_t start_event_id = UINT32_MAX;
 
 	SDL_Window* window = {};
-	int display_number = 0;
+	SDL_DisplayID display_number = 0;
 
 	float dpi_scale    = 1.0f;
 	bool is_fullscreen = false;
