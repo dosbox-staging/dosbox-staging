@@ -571,6 +571,9 @@ static void wait_for_pid(const int wait_pid)
 #endif
 }
 
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+
 int main(int argc, char* argv[])
 {
 	// Ensure we perform SDL cleanup and restore console settings at exit
