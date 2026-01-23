@@ -97,7 +97,7 @@ static CBindList holdlist;
 static bool suppress_save_mapper_file_message = false;
 
 // In SDL ticks (msec)
-static auto joystick_subsystem_init_timestamp = std::numeric_limits<uint32_t>::max();
+static auto joystick_subsystem_init_timestamp = std::numeric_limits<uint64_t>::max();
 
 class CEvent {
 public:
