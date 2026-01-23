@@ -25,6 +25,7 @@
 #include "dos/dos.h"
 #include "dos/drives.h"
 #include "dos/programs/more_output.h"
+#include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "ints/bios.h"
 #include "ints/int10.h"
@@ -101,6 +102,33 @@ static char *ExpandDot(const char *args, char *buffer, size_t bufsize)
 	}
 	else safe_strncpy(buffer,args, bufsize);
 	return buffer;
+}
+
+static char read_from_keyboard()
+{
+	// Blocks until a key is pressed and removes the key from buffer.
+	reg_ah = is_machine_ega_or_better() ? 0x10 : 0x0;
+	CALLBACK_RunRealInt(0x16);
+	return reg_al;
+}
+
+static char read_from_keyboard_with_timeout(double timeout_ms, char default_key)
+{
+	const auto start_ms = PIC_FullIndex();
+	while (!CALLBACK_Idle()) {
+		// Check for key but does not block or remove from buffer.
+		reg_ah = is_machine_ega_or_better() ? 0x11 : 0x1;
+		CALLBACK_RunRealInt(0x16);
+		if (!(cpu_regs.flags & FLAG_ZF)) {
+			// Key has been pressed.
+			return read_from_keyboard();
+		}
+		const auto now_ms = PIC_FullIndex();
+		if (now_ms >= start_ms + timeout_ms) {
+			break;
+		}
+	}
+	return default_key;
 }
 
 bool lookup_shell_cmd(std::string name, SHELL_Cmd &shell_cmd)
@@ -1957,11 +1985,6 @@ void DOS_Shell::CMD_LOADHIGH(char *args){
 	} else this->ParseLine(args);
 }
 
-void MAPPER_AutoType(std::vector<std::string> &sequence,
-                     const uint32_t wait_ms,
-                     const uint32_t pacing_ms);
-void MAPPER_StopAutoTyping();
-
 void DOS_Shell::CMD_CHOICE(char * args){
 	HELP("CHOICE");
 
@@ -2032,37 +2055,31 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	}
 
 	// If a default was given, is it in the choices and is the wait valid?
-	const auto using_auto_type = has_default &&
-	                             contains(choices, default_choice) &&
-	                             default_wait_s > 0;
-	if (using_auto_type) {
-		std::vector<std::string> sequence{std::string{default_choice}};
-		const auto start_after_ms = static_cast<uint32_t>(default_wait_s * 1000);
-		MAPPER_AutoType(sequence, start_after_ms, 500);
-	}
+	bool do_timeout = has_default &&
+	                  contains(choices, default_choice) &&
+	                  default_wait_s > 0;
 
 	// Begin waiting for input, but maybe break on some conditions
 	constexpr char ctrl_c = 3;
 	char choice = '\0';
-	uint16_t bytes_read = 1;
 	while (!contains(choices, choice)) {
-		DOS_ReadFile(STDIN, reinterpret_cast<uint8_t *>(&choice), &bytes_read);
-		if (!bytes_read) {
-			WriteOut_NoParsing(MSG_Get("SHELL_CMD_CHOICE_EOF"));
-			dos.return_code = 255;
-			LOG_ERR("CHOICE: Failed, returing errorlevel %u",
-			        dos.return_code);
-			return;
+		if (do_timeout) {
+			choice = read_from_keyboard_with_timeout(default_wait_s * 1000, default_choice);
+		} else {
+			choice = read_from_keyboard();
 		}
-		if (always_capitalize)
+		if (always_capitalize) {
 			choice = static_cast<char>(toupper(choice));
-		if (using_auto_type)
-			MAPPER_StopAutoTyping();
+		}
 		if (DOSBOX_IsShutdownRequested()) {
 			break;
 		}
-		if (choice == ctrl_c)
+		if (choice == ctrl_c) {
 			break;
+		}
+		// User pressed a key but not a valid choice.
+		// Cancel the timeout + default choice.
+		do_timeout = false;
 	}
 
 	// Print the choice and return the index (or zero if aborted)
