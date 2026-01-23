@@ -789,7 +789,7 @@ RenderBackendType GFX_GetRenderBackendType()
 static SDL_Rect get_desktop_size()
 {
 	SDL_Rect desktop = {};
-	assert(sdl.display_number >= 0);
+	assert(sdl.display_number > 0);
 
 	if (!SDL_GetDisplayBounds(sdl.display_number, &desktop)) {
 		LOG_ERR("SDL: Could not get display bounds for display number %d: %s", sdl.display_number, SDL_GetError());
@@ -1644,7 +1644,7 @@ static void configure_display()
 	} else {
 		// TODO convert to notification
 		LOG_WARNING("SDL: Display number out of bounds, using display 0");
-		sdl.display_number = 0;
+		sdl.display_number = displays[0];
 	}
 }
 
