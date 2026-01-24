@@ -151,7 +151,7 @@ bool OpenGlRenderer::InitRenderer()
 		return false;
 	}
 
-	const auto version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+	gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
 
 #ifdef USE_DEBUG_CONTEXT
 	GLint flags;
@@ -172,9 +172,8 @@ bool OpenGlRenderer::InitRenderer()
 
 	max_texture_size_px = size;
 
-	LOG_INFO("OPENGL: Version: %d.%d, GLSL version: %s, vendor: %s",
-	         GLAD_VERSION_MAJOR(version),
-	         GLAD_VERSION_MINOR(version),
+	LOG_INFO("OPENGL: Version: %s, GLSL version: %s, vendor: %s",
+			 safe_gl_get_string(GL_VERSION, "unknown"),
 	         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION, "unknown"),
 	         safe_gl_get_string(GL_VENDOR, "unknown"));
 
