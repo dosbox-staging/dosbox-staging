@@ -2808,7 +2808,9 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		return false;
 	}
 
-	LOG_MSG("SDL: %s audio initialised", SDL_GetCurrentAudioDriver());
+	const auto driver_name = SDL_GetCurrentAudioDriver();
+	const auto playback_name = SDL_GetAudioDeviceName(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
+	LOG_MSG("MIXER: Initialised '%s' audio driver using '%s' output device", driver_name, playback_name);
 
 	// Opening SDL audio device succeeded
 	//
