@@ -273,11 +273,7 @@ SDL_Window* OpenGlRenderer::GetWindow()
 DosBox::Rect OpenGlRenderer::GetCanvasSizeInPixels()
 {
 	SDL_Rect canvas_size_px = {};
-#if SDL_VERSION_ATLEAST(2, 26, 0)
 	SDL_GetWindowSizeInPixels(window, &canvas_size_px.w, &canvas_size_px.h);
-#else
-	SDL_GL_GetDrawableSize(window, &canvas_size_px.w, &canvas_size_px.h);
-#endif
 
 	const auto r = to_rect(canvas_size_px);
 	assert(r.HasPositiveSize());
