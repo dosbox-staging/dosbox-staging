@@ -4,9 +4,9 @@
 
 #include "mouse.h"
 
+#include "private/mouse_config.h"
+#include "private/mouse_interfaces.h"
 #include "private/mouseif_dos_driver_state.h"
-#include "mouse_config.h"
-#include "mouse_interfaces.h"
 
 #include <algorithm>
 
@@ -880,16 +880,17 @@ static void notify_interface_rate()
 
 	constexpr uint16_t DefaultRateHz = 200;
 
+	auto& interface = MouseInterface::GetInstance(MouseInterfaceId::DOS);
 	if (rate_is_set) {
 		// Rate was set by guest application - use this value. The
 		// minimum will be enforced by MouseInterface nevertheless
-		MouseInterface::GetDOS()->NotifyInterfaceRate(rate_hz);
+		interface.NotifyInterfaceRate(rate_hz);
 	} else if (min_rate_hz) {
 		// If user set the minimum mouse rate - follow it
-		MouseInterface::GetDOS()->NotifyInterfaceRate(min_rate_hz);
+		interface.NotifyInterfaceRate(min_rate_hz);
 	} else {
 		// No user setting in effect - use default value
-		MouseInterface::GetDOS()->NotifyInterfaceRate(DefaultRateHz);
+		interface.NotifyInterfaceRate(DefaultRateHz);
 	}
 }
 
@@ -919,8 +920,10 @@ static uint8_t get_interrupt_rate()
 		// Rate was set by the application - report what was requested
 		rate_to_report = rate_hz;
 	} else {
-		// Raate wasn't set - report the value closest to the real rate
-		rate_to_report = MouseInterface::GetDOS()->GetRate();
+		// Rate wasn't set - report the value closest to the real rate
+		const auto& interface = MouseInterface::GetInstance(MouseInterfaceId::DOS);
+
+		rate_to_report = interface.GetRate();
 	}
 
 	if (rate_to_report == 0) {
@@ -2729,7 +2732,8 @@ static void start_driver()
 
 	synchronize_driver_language();
 
-	MouseInterface::GetDOS()->NotifyDosDriverStartup();
+	auto& interface = MouseInterface::GetInstance(MouseInterfaceId::DOS);
+	interface.NotifyDosDriverStartup();
 }
 
 bool MOUSEDOS_StartDriver(const bool force_low_memory)

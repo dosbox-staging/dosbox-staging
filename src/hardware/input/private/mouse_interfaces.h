@@ -4,9 +4,11 @@
 #ifndef DOSBOX_MOUSE_INTERFACES_H
 #define DOSBOX_MOUSE_INTERFACES_H
 
-#include "private/mouse_common.h"
+#include "mouse_common.h"
 
 #include "hardware/serialport/serialmouse.h"
+
+#include <array>
 
 // ***************************************************************************
 // Main mouse module
@@ -110,15 +112,14 @@ public:
 	virtual ~MouseInterface()                        = default;
 
 	static void InitAllInstances();
-	static MouseInterface* Get(const MouseInterfaceId interface_id);
-	static MouseInterface* GetDOS();
-	static MouseInterface* GetPS2();
-	static MouseInterface* GetSerial(const uint8_t port_id);
+
+	static MouseInterface& GetInstance(const MouseInterfaceId interface_id);
 
 	virtual void NotifyMoved(const float x_rel, const float y_rel,
-	                         const float x_abs, const float y_abs) = 0;
-	virtual void NotifyButton(const MouseButtonId id, const bool pressed) = 0;
-	virtual void NotifyWheel(const float w_rel) = 0;
+	                         const float x_abs, const float y_abs);
+	virtual void NotifyButton(const MouseButtonId id,
+		                  const bool pressed);
+	virtual void NotifyWheel(const float w_rel);
 
 	void NotifyInterfaceRate(const uint16_t rate_hz);
 	virtual void NotifyBooting();
@@ -155,7 +156,7 @@ public:
 	virtual void UpdateConfig();
 	virtual void UpdateInputType();
 	virtual void RegisterListener(CSerialMouse& listener_object);
-	virtual void UnRegisterListener();
+	virtual void UnregisterListener();
 	virtual void NotifyDosDriverStartup();
 
 protected:
@@ -196,7 +197,9 @@ protected:
 	uint16_t interface_rate_hz = 0;
 
 private:
-	const MouseInterfaceId interface_id = MouseInterfaceId::None;
+	static void MaybeCreateInterface(const MouseInterfaceId interface_id);
+
+	const MouseInterfaceId interface_id;
 
 	MouseMapStatus map_status   = MouseMapStatus::HostPointer;
 	uint8_t mapped_physical_idx = idx_host_pointer;
@@ -209,7 +212,5 @@ private:
 
 	float sensitivity_predefined = 1.0f; // hardcoded for the given interface
 };
-
-extern std::vector<std::unique_ptr<MouseInterface>> mouse_interfaces;
 
 #endif // DOSBOX_MOUSE_INTERFACES_H

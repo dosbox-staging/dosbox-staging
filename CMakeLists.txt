@@ -69,9 +69,6 @@ else()
         ${WARNING_FLAGS_C}
         "-Winvalid-utf8"
         "-Wtrivial-auto-var-init"
-        "-Wdeprecated-non-prototype"
-        "-Wflex-array-member-not-at-end"
-        "-Wfree-labels"
     )
     set(WARNING_FLAGS_CXX
         ${WARNING_FLAGS_CXX}
@@ -80,6 +77,18 @@ else()
     )
   endif()
 
+  if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
+       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
+       OR
+       (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+
+    set(WARNING_FLAGS_C
+            ${WARNING_FLAGS_C}
+            "-Wdeprecated-non-prototype"
+            "-Wflex-array-member-not-at-end"
+            "-Wfree-labels"
+    )
+  endif()
 
   add_compile_options(
     "$<$<COMPILE_LANGUAGE:C>:${WARNING_FLAGS_C}>"
@@ -90,7 +99,7 @@ endif()
 
 # GCC needs more memory reserved to fully optimize the CPU emulation code
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  add_compile_options("--param" "max-gcse-memory=250000")
+  add_compile_options("--param" "max-gcse-memory=300000")
 endif()
 
 if (APPLE)

@@ -4,7 +4,7 @@
 #ifndef DOSBOX_MOUSE_CONFIG_H
 #define DOSBOX_MOUSE_CONFIG_H
 
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 
 #include "dosbox.h"
 
@@ -57,20 +57,12 @@ enum class MouseModelDos {
 	Wheel,
 };
 
-enum class MouseModelPS2 : uint8_t {
+enum class MouseModelPs2 : uint8_t {
 	NoMouse      = 0xff,
 	// Values below must match PS/2 protocol IDs
 	Standard     = 0x00,
 	IntelliMouse = 0x03,
 	Explorer     = 0x04,
-};
-
-enum class MouseModelCOM {
-	NoMouse, // dummy value or no mouse
-	Microsoft,
-	Logitech,
-	Wheel,
-	MouseSystems
 };
 
 struct MouseConfig {
@@ -95,9 +87,9 @@ struct MouseConfig {
 
 	MouseModelDos model_dos = MouseModelDos::TwoButton;
 
-	MouseModelPS2 model_ps2 = MouseModelPS2::Standard;
+	MouseModelPs2 model_ps2 = MouseModelPs2::Standard;
 
-	MouseModelCOM model_com = MouseModelCOM::Wheel;
+	MouseModelCom model_com = MouseModelCom::Wheel;
 	bool model_com_auto_msm = true;
 
 	bool is_vmware_mouse_enabled     = false;
@@ -106,8 +98,6 @@ struct MouseConfig {
 	// Helper functions for external modules
 
 	static const std::vector<uint16_t>& GetValidMinRateList();
-	static bool ParseComModel(const std::string_view model_str,
-	                          MouseModelCOM& model, bool& auto_msm);
 };
 
 extern MouseConfig mouse_config;
