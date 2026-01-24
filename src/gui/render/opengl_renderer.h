@@ -10,6 +10,7 @@
 
 #include "gui/private/shader_manager.h"
 
+#include <array>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -159,7 +160,7 @@ private:
 	GLuint vao = 0;
 
 	// Vertex data for an oversized triangle
-	GLfloat vertex_data[2 * 3] = {};
+	std::array<GLfloat, 2 * 3> vertex_data = {};
 
 	ColorSpace color_space = {};
 
