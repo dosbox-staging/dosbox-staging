@@ -7,8 +7,7 @@
 #include <memory>
 #include <vector>
 
-#include "image_decoder.h"
-
+#include "misc/image_decoder.h"
 #include "misc/rendered_image.h"
 #include "utils/rgb888.h"
 
