@@ -1672,8 +1672,6 @@ static void configure_pause_and_mute_when_inactive()
 
 static void set_sdl_hints()
 {
-	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
-
 	// Seamless mouse integration feels more 'seamless' if mouse
 	// clicks on unfocused windows are passed to the guest.
 	SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
