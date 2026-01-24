@@ -2766,8 +2766,8 @@ void MIXER_CloseAudioDevice()
 
 // Sets `mixer.sample_rate_hz` and `mixer.blocksize` on success
 static bool init_sdl_sound(const int requested_sample_rate_hz,
-                           [[maybe_unused]] const int requested_blocksize_in_frames,
-                           [[maybe_unused]] const bool allow_negotiate)
+                           const int requested_blocksize_in_frames,
+                           const bool allow_negotiate)
 {
 	SDL_AudioSpec desired  = {};
 	SDL_AudioSpec obtained = {};
@@ -2777,6 +2777,20 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	desired.channels = NumStereoChannels;
 	desired.format   = SDL_AUDIO_F32;
 	desired.freq     = requested_sample_rate_hz;
+
+	// The relationship between negotiate and blocksize changed in SDL3. In SDL2,
+	// you requested a blocksize via the `samples` field, and then if negotiate
+	// was true, SDL could try for a 'better' blocksize. In SDL3, you now use a 
+	// hint to request a specific blocksize; negotiate doesn't affect SDL's 
+	// behavior in that regard anymore. To maintain the old behavior for the
+	// user, we set the hint only when negotiate is false. If negotiate is true,
+	// we just let SDL decide everything. However, the hint is still just a
+	// request, and SDL may still return a different blocksize, according to the
+	// docs. https://wiki.libsdl.org/SDL3/SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES
+	if (!allow_negotiate) {
+		const std::string samples = std::to_string(requested_blocksize_in_frames);
+		SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, samples.c_str());
+	}
 
 	// Open the audio device
 	if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {
@@ -2824,6 +2838,18 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		                           "rate",
 		                           format_str("%d",
 		                                      mixer.sample_rate_hz.load()));
+	}
+
+	// Did SDL adjust the hint request?
+	if (!allow_negotiate && obtained_blocksize != requested_blocksize_in_frames) {
+		LOG_MSG("MIXER: SDL changed the requested blocksize of "
+		        "%d to %d frames",
+		        requested_blocksize_in_frames,
+		        obtained_blocksize);
+
+		set_section_property_value("mixer",
+		                           "blocksize",
+		                           format_str("%d", mixer.blocksize));
 	}
 
 	LOG_MSG("MIXER: Initialised stereo %d Hz audio with %d sample frame buffer",
