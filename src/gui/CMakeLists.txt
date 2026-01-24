@@ -16,6 +16,12 @@ target_sources(libdosboxcommon PRIVATE
   render/shader_pipeline.cpp
 )
 
+if(APPLE)
+target_sources(libdosboxcommon PRIVATE
+  render/macos_colorspace.mm
+)
+endif()
+
 target_link_libraries(libdosboxcommon PRIVATE
   OpenGL::GL
   $<IF:$<BOOL:${C_OPENGL}>,libglad,>)
