@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "deinterlacer.h"
+#include "private/deinterlacer.h"
 
 #include <vector>
 

@@ -11,7 +11,8 @@
 #include <optional>
 #include <string>
 
-#include "gui/render/deinterlacer.h"
+#include "private/deinterlacer.h"
+
 #include "gui/render/scaler/scalers.h"
 #include "hardware/video/vga.h"
 #include "utils/fraction.h"
