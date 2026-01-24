@@ -10,9 +10,9 @@
 #include <thread>
 #include <vector>
 
-#include "image_decoder.h"
 #include "image_scaler.h"
 
+#include "misc/image_decoder.h"
 #include "misc/rendered_image.h"
 #include "misc/std_filesystem.h"
 #include "utils/rwqueue.h"

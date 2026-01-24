@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "image_scaler.h"
+#include "image_decoder.h"
 
 #include "utils/bgrx8888.h"
 #include "utils/checks.h"

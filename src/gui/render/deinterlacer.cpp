@@ -5,7 +5,7 @@
 
 #include <vector>
 
-#include "capture/image/image_decoder.h"
+#include "misc/image_decoder.h"
 #include "utils/checks.h"
 
 CHECK_NARROWING();
