@@ -22,6 +22,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 
+#if defined(MACOSX) 
+#include "macos_colorspace.h"
+#endif
+
 CHECK_NARROWING();
 
 // #define DEBUG_OPENGL
@@ -95,10 +99,6 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	SDL_WindowFlags flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
-#if defined(MACOSX) && defined(SDL_HINT_MAC_COLOR_SPACE)
-	SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "displayp3");
-#endif
-
 	SDL_PropertiesID props = SDL_CreateProperties();
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_X_NUMBER, x);
     SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, y);
@@ -109,6 +109,28 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER, flags);
 	auto window = SDL_CreateWindowWithProperties(props);
 	SDL_DestroyProperties(props);
+
+#if defined(MACOSX) 
+	// From "Best Practices for Color Management in OS X and iOS", chapter
+	// "Non-Color Managed Frameworks, OpenGL - Explicit Color Management
+	// Example":
+	// 
+	//   OpenGL is not color managed. As a consequence, it might require
+	//   additional effort to devise solutions to specific color problems
+	//   you may encounter when using it. The fundamental problem is OpenGL
+	//   has one set of assumptions, and the display buffer has another.
+	// 
+	// Ref:
+	// https://developer.apple.com/library/archive/technotes/tn2313/_index.html#//apple_ref/doc/uid/DTS40014694-CH1-NONCOLORMANAGEDFRAMEWORKS-OPENGL___EXPLICIT_COLOR_MANAGEMENT_EXAMPLE
+	// 
+	// SDL3 tags the window's colorspace with sRGBColorSpace. This is
+	// hardcoded, but what we want is to use the Display P3 colour space
+	// instead internally, tag the window with displayP3ColorSpace, then let
+	// the system-wide colour management feature of macOS do the rest (i.e.,
+	// converting the Display P3 image data to whatever colour space is set in
+	// the system settings).
+	setDisplayP3ColorSpace(window);
+#endif
 
 	return window;
 }
