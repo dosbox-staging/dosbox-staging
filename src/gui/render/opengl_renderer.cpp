@@ -172,8 +172,9 @@ bool OpenGlRenderer::InitRenderer()
 
 	max_texture_size_px = size;
 
-	LOG_INFO("OPENGL: Version: %s, GLSL version: %s, vendor: %s",
+	LOG_INFO("OPENGL: Version: %s, renderer: %s, GLSL version: %s, vendor: %s",
 			 safe_gl_get_string(GL_VERSION, "unknown"),
+	         safe_gl_get_string(GL_RENDERER, "unknown"),
 	         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION, "unknown"),
 	         safe_gl_get_string(GL_VENDOR, "unknown"));
 
