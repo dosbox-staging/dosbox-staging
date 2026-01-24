@@ -7,6 +7,7 @@
 
 #include "misc/image_decoder.h"
 #include "utils/checks.h"
+#include "utils/mem_unaligned.h"
 
 CHECK_NARROWING();
 
@@ -275,7 +276,7 @@ void apply_masked_bleed_64(uint64_t m, const uint32_t* in, uint32_t* out,
 	}
 }
 
-static int to_rgb_scale_factor(const DeinterlacingStrength strength)
+static int to_rgb_scale_factor_linear(const DeinterlacingStrength strength)
 {
 	using enum DeinterlacingStrength;
 
@@ -283,6 +284,21 @@ static int to_rgb_scale_factor(const DeinterlacingStrength strength)
 	case Light: return 153;  // ~0.6x scaling
 	case Medium: return 204; // ~0.8x scaling
 	case Strong: return 230; // ~0.9x scaling
+	case Full: return 256;   // 1.0x scaling (no scaling)
+	default:
+		assertm(false, "Invalid DeinterlacingStrength value");
+		return 0;
+	}
+}
+
+static int to_rgb_scale_factor_dot(const DeinterlacingStrength strength)
+{
+	using enum DeinterlacingStrength;
+
+	switch (strength) {
+	case Light: return 193;  // ~0.75 scaling
+	case Medium: return 234; // ~0.91 scaling
+	case Strong: return 245; // ~0.96 scaling
 	case Full: return 256;   // 1.0x scaling (no scaling)
 	default:
 		assertm(false, "Invalid DeinterlacingStrength value");
@@ -306,7 +322,7 @@ void Deinterlacer::CombineOutput(uint32_t* pixel_data, bit_buffer& mask,
 	// Start reading the mask from the second line
 	auto mask_line = mask.data() + BufferOffset + buffer_pitch * 2;
 
-	const auto rgb_scale_factor = to_rgb_scale_factor(strength);
+	const auto rgb_scale_factor = to_rgb_scale_factor_linear(strength);
 
 	for (auto y = 0; y < (image.height - 1); ++y) {
 		auto mask_pos = mask_line;
@@ -467,6 +483,306 @@ RenderedImage Deinterlacer::LineDeinterlace(const RenderedImage& input_image,
 	}
 }
 
+// Automatically deinterlace "dot pattern" FMV videos in the CD-ROM version
+// of KGB and Dune. Non-interlaced areas will be left intact.
+//
+RenderedImage Deinterlacer::DotDeinterlace(const RenderedImage& input_image,
+                                           const DeinterlacingStrength strength)
+{
+	const auto& p = input_image.params;
+
+	// Convert input image to 32-bit BGRX format and get rid of
+	// "baked-in" pixel and line doubling. We do this because it's much
+	// easier to perform deinterlacing on the "raw" output without any
+	// width/height doubling, then reconstruct the width/height doubled
+	// image at the output stage.
+	//
+	const auto pixel_skip_count = (p.width / p.video_mode.width) - 1;
+	const auto row_skip_count   = (p.height / p.video_mode.height) - 1;
+
+	image.width        = input_image.params.width / (pixel_skip_count + 1);
+	image.height       = input_image.params.height / (row_skip_count + 1);
+	image.pitch_pixels = image.width;
+
+	// We'll decode two rows at a time
+	decoded_image.resize(image.width * 2);
+
+	ImageDecoder image_decoder(input_image, row_skip_count, pixel_skip_count);
+
+	const auto rgb_scale_factor = to_rgb_scale_factor_dot(strength);
+
+	// We're updating the input image in-place
+	uint8_t* out_line    = input_image.image_data;
+	const auto out_pitch = input_image.pitch;
+
+	// The "dot deinterlacing" pattern looks like this:
+	//
+	//   row 1   P . P . P . P .
+	//   row 2   . . . . . . . .
+	//   row 3   P . P . P . P .
+	//   row 4   . . . . . . . .
+	//   ...
+	//
+	// 'P' represents a pixel that is either fully black (rgb(0,0,0)) or
+	// not black.
+	//
+	// '.' represents fully black pixels (rgb(0,0,0))
+	//
+	// We decode and process the image in odd & even row-pairs (rows 1 & 2,
+	// rows 3 & 4, etc.) If we can detect the above pattern on the current
+	// row-pair, we do the deinterlacing and write the result back to the
+	// input image. If we can't detect the pattern, we stop the process.
+	//
+	// This works because "dot interlaced" FMV content in KGB and Dune is
+	// full-width and starts from the top of the screen. So we start
+	// deinterlacing from the top and keep going until dot pattern can be
+	// detected. This leaves the subtitles below the FMV video intact.
+	//
+	const auto double_width  = (pixel_skip_count != 0);
+	const auto double_height = (row_skip_count != 0);
+
+	// Start processing rows from the top and skip black rows until we reach
+	// 1/3 of the screen height. The assumption is the interlaced image
+	// should start in the top third of the screen.
+	auto y = 0;
+
+	while (y < image.height / 3) {
+		auto in_line = decoded_image.begin();
+		image_decoder.GetNextRowAsBgrx32Pixels(in_line);
+		++y;
+
+		uint64_t sum_pixels = 0;
+		for (auto x = 0; x < image.width; ++x) {
+			sum_pixels += *(in_line + x);
+		}
+		if (sum_pixels == 0) {
+			// Advance the write position
+			out_line += out_pitch * (double_height ? 2 : 1);
+		} else {
+			break;
+		}
+	}
+
+	// Decode and process the image in row-pairs until we can detect the dot
+	// pattern
+	//
+	bool first_iteration = true;
+
+	while (y < (image.height - 1)) {
+		// Decode row N, except for the first iteration
+		auto in_line = decoded_image.begin();
+		if (!first_iteration) {
+			image_decoder.GetNextRowAsBgrx32Pixels(in_line);
+			++y;
+		} else {
+			first_iteration = false;
+		}
+
+		uint64_t odd_line_sum_odd_pixels = 0;
+		for (auto x = 1; x < image.width; x += 2) {
+			odd_line_sum_odd_pixels += *(in_line + x);
+		}
+		if (odd_line_sum_odd_pixels > 0) {
+			// Pattern doesn't fit, stop deinterlacing
+			break;
+		}
+
+		// Decode row N+1
+		in_line = decoded_image.begin() + image.width;
+		image_decoder.GetNextRowAsBgrx32Pixels(in_line);
+		++y;
+
+		uint64_t even_line_sum_all_pixels = 0;
+		for (auto x = 0; x < image.width; ++x) {
+			even_line_sum_all_pixels += *(in_line + x);
+		}
+		if (even_line_sum_all_pixels > 0) {
+			// Pattern doesn't fit, stop deinterlacing
+			break;
+		}
+
+		// Write the two deinterlaced lines to the input image in-place,
+		// taking the width/height doubling of the input image into
+		// account.
+		//
+		in_line = decoded_image.begin();
+
+		if (!double_width && !double_height) {
+			WriteDotDeinterlacedOutput2x2(in_line,
+			                              out_line,
+			                              out_pitch,
+			                              rgb_scale_factor);
+
+		} else if (double_width && !double_height) {
+			WriteDotDeinterlacedOutput4x2(in_line,
+			                              out_line,
+			                              out_pitch,
+			                              rgb_scale_factor);
+
+		} else if (!double_width && double_height) {
+			WriteDotDeinterlacedOutput2x4(in_line,
+			                              out_line,
+			                              out_pitch,
+			                              rgb_scale_factor);
+
+		} else if (double_width && double_height) {
+			WriteDotDeinterlacedOutput4x4(in_line,
+			                              out_line,
+			                              out_pitch,
+			                              rgb_scale_factor);
+		}
+	}
+
+	return input_image;
+}
+
+void Deinterlacer::WriteDotDeinterlacedOutput2x2(
+        std::vector<uint32_t>::const_iterator in_line, uint8_t*& out_line,
+        int out_pitch, int rgb_scale_factor) const
+{
+	auto out = out_line;
+
+	// Upscale top-left input pixel P to a 2x2 area (P is are already
+	// in the input buffer, so no need to write it again)
+	//
+	// row 1 -  P   1b
+	// row 2 -  2a  2b
+
+	for (auto x = 0; x < image.width; x += 2) {
+		const auto p1 = *(in_line + x);
+
+		// row 1
+		write_unaligned_uint32(out + out_pitch * 0 + 4, p1); // pixel 1b
+
+		const auto p2 = scale_rgb(p1, rgb_scale_factor);
+
+		// row 2
+		write_unaligned_uint32(out + out_pitch * 1 + 0, p2); // pixel 2a
+		write_unaligned_uint32(out + out_pitch * 1 + 4, p2); // pixel 2b
+
+		out += 8;
+	}
+
+	out_line += out_pitch * 2;
+}
+
+void Deinterlacer::WriteDotDeinterlacedOutput2x4(
+        std::vector<uint32_t>::const_iterator in_line, uint8_t*& out_line,
+        int out_pitch, int rgb_scale_factor) const
+{
+	auto out = out_line;
+
+	// Upscale top-left input pixel P to a 2x4 area (all P pixels are
+	// already in the input buffer, so no need to write them again)
+	//
+	// row 1 -  P   1b
+	// row 2 -  P   2b
+	// row 3 -  3a  3b
+	// row 4 -  4a  4b
+
+	for (auto x = 0; x < image.width; x += 2) {
+		const auto p1 = *(in_line + x);
+
+		// row 1
+		write_unaligned_uint32(out + out_pitch * 0 + 4, p1); // pixel 1b
+
+		// row 2
+		write_unaligned_uint32(out + out_pitch * 1 + 4, p1); // pixel 2b
+
+		const auto p2 = scale_rgb(p1, rgb_scale_factor);
+
+		// row 3
+		write_unaligned_uint32(out + out_pitch * 2 + 0, p2); // pixel 3a
+		write_unaligned_uint32(out + out_pitch * 2 + 4, p2); // pixel 3b
+
+		// row 4
+		write_unaligned_uint32(out + out_pitch * 3 + 0, p2); // pixel 4a
+		write_unaligned_uint32(out + out_pitch * 3 + 4, p2); // pixel 4b
+
+		out += 8;
+	}
+
+	out_line += out_pitch * 4;
+}
+
+void Deinterlacer::WriteDotDeinterlacedOutput4x2(
+        std::vector<uint32_t>::const_iterator in_line, uint8_t*& out_line,
+        int out_pitch, int rgb_scale_factor) const
+{
+	auto out = out_line;
+
+	// Upscale top-left input pixel P to a 4x2 area (all P pixels are
+	// already in the input buffer, so no need to write them again)
+	//
+	// row 1 -  P   P   1c  1d
+	// row 2 -  2a  2b  2c  2d
+
+	for (auto x = 0; x < image.width; x += 2) {
+		const auto p1 = *(in_line + x);
+
+		// row 1
+		write_unaligned_uint32(out + out_pitch * 0 + 8, p1); // pixel 1c
+		write_unaligned_uint32(out + out_pitch * 0 + 12, p1); // pixel 1d
+
+		const auto p2 = scale_rgb(p1, rgb_scale_factor);
+
+		// row 2
+		write_unaligned_uint32(out + out_pitch * 1 + 0, p2); // pixel 2a
+		write_unaligned_uint32(out + out_pitch * 1 + 4, p2); // pixel 2b
+		write_unaligned_uint32(out + out_pitch * 1 + 8, p2); // pixel 2c
+		write_unaligned_uint32(out + out_pitch * 1 + 12, p2); // pixel 2d
+
+		out += 16;
+	}
+
+	out_line += out_pitch * 2;
+}
+
+void Deinterlacer::WriteDotDeinterlacedOutput4x4(
+        std::vector<uint32_t>::const_iterator in_line, uint8_t*& out_line,
+        int out_pitch, int rgb_scale_factor) const
+{
+	auto out = out_line;
+
+	// Upscale top-left input pixel P to a 4x4 area (all P pixels are
+	// already in the input buffer, so no need to write them again)
+	//
+	// row 1 -  P   P   1c  1d
+	// row 2 -  P   P   2c  2d
+	// row 3 -  3a  3b  3c  3d
+	// row 4 -  4a  4b  4c  4d
+
+	for (auto x = 0; x < image.width; x += 2) {
+		const auto p1 = *(in_line + x);
+
+		// row 1
+		write_unaligned_uint32(out + out_pitch * 0 + 8, p1); // pixel 1c
+		write_unaligned_uint32(out + out_pitch * 0 + 12, p1); // pixel 1d
+
+		// row 2
+		write_unaligned_uint32(out + out_pitch * 1 + 8, p1); // pixel 2c
+		write_unaligned_uint32(out + out_pitch * 1 + 12, p1); // pixel 2d
+
+		const auto p2 = scale_rgb(p1, rgb_scale_factor);
+
+		// row 3
+		write_unaligned_uint32(out + out_pitch * 2 + 0, p2); // pixel 3a
+		write_unaligned_uint32(out + out_pitch * 2 + 4, p2); // pixel 3b
+		write_unaligned_uint32(out + out_pitch * 2 + 8, p2); // pixel 3c
+		write_unaligned_uint32(out + out_pitch * 2 + 12, p2); // pixel 3d
+
+		// row 4
+		write_unaligned_uint32(out + out_pitch * 3 + 0, p2); // pixel 4a
+		write_unaligned_uint32(out + out_pitch * 3 + 4, p2); // pixel 4b
+		write_unaligned_uint32(out + out_pitch * 3 + 8, p2); // pixel 4c
+		write_unaligned_uint32(out + out_pitch * 3 + 12, p2); // pixel 4d
+
+		out += 16;
+	}
+
+	out_line += out_pitch * 4;
+}
+
 RenderedImage Deinterlacer::Deinterlace(const RenderedImage& input_image,
                                         const DeinterlacingStrength strength)
 {
@@ -476,7 +792,16 @@ RenderedImage Deinterlacer::Deinterlace(const RenderedImage& input_image,
 	    (mode.color_depth >= ColorDepth::IndexedColor256) &&
 	    (mode.height >= 400)) {
 
+		// Regular deinterlacing of 400+ line 256-colour,
+		// high-colour, and true colour modes.
 		return LineDeinterlace(input_image, strength);
+
+	} else if (mode.bios_mode_number == 0x13) {
+		// Special processing for KGB and Dune CD-ROM versions
+		// that use the weird "dot pattern interlacing" in the
+		// 320x200 13h VGA mode.
+		return DotDeinterlace(input_image, strength);
+
 	} else {
 		return input_image;
 	}

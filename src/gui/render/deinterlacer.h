@@ -45,6 +45,7 @@ private:
 
 	const int PixelsPerBitBufferElement = 64;
 
+	// Line deinterlace methods
 	RenderedImage LineDeinterlace(const RenderedImage& input_image,
 	                              const DeinterlacingStrength strength);
 
@@ -62,6 +63,26 @@ private:
 
 	void CombineOutput(uint32_t* pixel_data, bit_buffer& mask,
 	                   const DeinterlacingStrength strength) const;
+
+	// Dot deinterlace methods
+	RenderedImage DotDeinterlace(const RenderedImage& input_image,
+	                             const DeinterlacingStrength strength);
+
+	void WriteDotDeinterlacedOutput2x2(std::vector<uint32_t>::const_iterator in_line,
+	                                   uint8_t*& out_line, int out_pitch,
+	                                   int rgb_scale_factor) const;
+
+	void WriteDotDeinterlacedOutput2x4(std::vector<uint32_t>::const_iterator in_line,
+	                                   uint8_t*& out_line, int out_pitch,
+	                                   int rgb_scale_factor) const;
+
+	void WriteDotDeinterlacedOutput4x2(std::vector<uint32_t>::const_iterator in_line,
+	                                   uint8_t*& out_line, int out_pitch,
+	                                   int rgb_scale_factor) const;
+
+	void WriteDotDeinterlacedOutput4x4(std::vector<uint32_t>::const_iterator in_line,
+	                                   uint8_t*& out_line, int out_pitch,
+	                                   int rgb_scale_factor) const;
 
 	// Information about the input image
 	struct {
