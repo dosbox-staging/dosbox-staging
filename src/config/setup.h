@@ -525,6 +525,7 @@ bool config_file_is_valid(const std_fs::path& path);
 // Helper functions for retrieving configuration sections
 
 SectionProp* get_section(const char* section_name);
+AutoExecSection* get_autoexec_section(const char* section_name);
 
 SectionProp* get_joystick_section();
 SectionProp* get_sdl_section();

@@ -800,7 +800,7 @@ void AUTOEXEC_RefreshFile()
 
 void AUTOEXEC_Init()
 {
-	auto section = get_section("autoexec");
+	auto section = get_autoexec_section("autoexec");
 	assert(section);
 
 	autoexec_module = std::make_unique<AutoExecModule>(section);
