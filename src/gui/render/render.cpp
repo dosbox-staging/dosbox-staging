@@ -1683,7 +1683,6 @@ static void init_render_settings(SectionProp& section)
 	        "              results.");
 
 	constexpr int DefaultBrightness = 45;
-
 	int_prop = section.AddInt("brightness", Always, DefaultBrightness);
 	int_prop->SetMinMax(BrightnessMin, BrightnessMax);
 	int_prop->SetHelp(
@@ -1695,7 +1694,6 @@ static void init_render_settings(SectionProp& section)
 	                   BrightnessMax));
 
 	constexpr int DefaultContrast = 65;
-
 	int_prop = section.AddInt("contrast", Always, DefaultContrast);
 	int_prop->SetMinMax(ContrastMin, ContrastMax);
 	int_prop->SetHelp(
@@ -1708,7 +1706,6 @@ static void init_render_settings(SectionProp& section)
 	                   ContrastMax));
 
 	constexpr int DefaultGamma = 0;
-
 	int_prop = section.AddInt("gamma", Always, DefaultGamma);
 	int_prop->SetMinMax(GammaMin, GammaMax);
 	int_prop->SetHelp(
@@ -1720,7 +1717,6 @@ static void init_render_settings(SectionProp& section)
 	                   GammaMax));
 
 	constexpr int DefaultDigitalContrast = 0;
-
 	int_prop = section.AddInt("digital_contrast", Always, DefaultDigitalContrast);
 	int_prop->SetMinMax(DigitalContrastMin, DigitalContrastMax);
 	int_prop->SetHelp(format_str(
@@ -1732,7 +1728,6 @@ static void init_render_settings(SectionProp& section)
 	        DigitalContrastMax));
 
 	constexpr auto DefaultBlackLevel = "auto";
-
 	string_prop = section.AddString("black_level", Always, DefaultBlackLevel);
 	string_prop->SetHelp(format_str(
 	        "Raise the black level of the video output ('%s' by default). It is applied\n"
@@ -1753,7 +1748,6 @@ static void init_render_settings(SectionProp& section)
 	        BlackLevelMax));
 
 	constexpr int DefaultSaturation = 0;
-
 	int_prop = section.AddInt("saturation", Always, DefaultSaturation);
 	int_prop->SetMinMax(SaturationMin, SaturationMax);
 	int_prop->SetHelp(
@@ -1765,7 +1759,6 @@ static void init_render_settings(SectionProp& section)
 	                   SaturationMax));
 
 	constexpr auto DefaultColorTemperature = "auto";
-
 	string_prop = section.AddString("color_temperature",
 	                                Always,
 	                                DefaultColorTemperature);
@@ -1787,14 +1780,11 @@ static void init_render_settings(SectionProp& section)
 	        ColorTemperatureMax));
 
 	constexpr auto DefaultColorTemperatureLumaPreserve = 0;
-
 	int_prop = section.AddInt("color_temperature_luma_preserve",
 	                          Always,
 	                          DefaultColorTemperatureLumaPreserve);
-
 	int_prop->SetMinMax(ColorTemperatureLumaPreserveMin,
 	                    ColorTemperatureLumaPreserveMax);
-
 	int_prop->SetHelp(format_str(
 	        "Preserve image luminosity prior to colour temperature adjustment (%d by\n"
 	        "default). Valid range is %d to %d. 0 doesn't perform any luminosity\n"
@@ -1806,7 +1796,6 @@ static void init_render_settings(SectionProp& section)
 	        ColorTemperatureLumaPreserveMax));
 
 	constexpr int DefaultRgbGain = 100;
-
 	int_prop = section.AddInt("red_gain", Always, DefaultRgbGain);
 	int_prop->SetMinMax(RgbGainMin, RgbGainMax);
 	int_prop->SetHelp(
