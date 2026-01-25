@@ -1272,6 +1272,101 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 	return draw_size_px.CenterTo(canvas_size_px.cx(), canvas_size_px.cy());
 }
 
+static void init_color_space_setting(SectionProp& section)
+{
+	using enum Property::Changeable::Value;
+
+#if defined(MACOSX)
+	constexpr auto DefaultColorSpace = "display-p3";
+#else
+	constexpr auto DefaultColorSpace = "srgb";
+#endif
+
+	auto string_prop = section.AddString("color_space", Always, DefaultColorSpace);
+	string_prop->SetValues(
+#if defined(MACOSX)
+	        {"display-p3"}
+#else
+	        {"srgb", "display-p3", "dci-p3", "dci-p3-d65", "modern-p3", "adobe-rgb", "rec-2020"}
+#endif
+	);
+
+	string_prop->SetOptionHelp("color_space_description",
+	                           format_str("Set the colour space of the video output ('%s' by default). This setting\n"
+	                                      "allows to take advantage of wide color gamut monitors and to more accurately\n"
+	                                      "emulate CRT colors. Possible values:",
+	                                      DefaultColorSpace));
+
+	string_prop->SetOptionHelp("color_space_description_macos",
+	                           "Set the colour space of the video output. On macOS, this is always 'display-p3';\n"
+	                           "the OS performs the conversion to the colour profile set in your system\n"
+	                           "settings.");
+
+	string_prop->SetOptionHelp(
+	        "color_space_srgb",
+	        "\n"
+	        "  srgb:        The lowest common denominator non-wide gamut sRGB colour space\n"
+	        "               with 6500K white point and sRGB gamma (default).");
+
+	string_prop->SetOptionHelp("color_space_display_p3",
+	                           "\n"
+	                           "  display-p3:  Display P3 wide gamut colour space with 6500K white point and\n"
+	                           "               sRGB gamma.");
+
+	string_prop->SetOptionHelp(
+	        "color_space_rest",
+	        "\n"
+	        "  dci-p3:      Standard DCI-P3 wide gamut colour space with DCI white point\n"
+	        "               (~6300K) and a 2.6 gamma. Use 'dci-p3-d65' instead if the whites\n"
+	        "               and grays have a greenish tint with your monitor in DCI-P3 mode.\n"
+	        "\n"
+	        "  dci-p3-d65:  DCI-P3 variant with modified D65 white point (6500K) and 2.6\n"
+	        "               gamma. Use 'dci-p3' instead if the whites and grays have a\n"
+	        "               yellowish tint with your monitor in DCI-P3 mode.\n"
+	        "\n"
+	        "  modern-p3:   Setting for average consumer/gaming monitors that only reach\n"
+	        "               around 90%% DCI-P3 colour space gamut coverage (6500K white\n"
+	        "               point, sRGB gamma). Use the other DCI-P3 colour spaces if your\n"
+	        "               monitor's DCI-P3 coverage is close to 100%%.\n"
+	        "\n"
+	        "  adobe-rgb:   AdobeRGB 2020 wide gamut colour space with 6500K white point\n"
+	        "               and 2.2 gamma.\n"
+	        "\n"
+	        "  rec-2020:    Rec.2020 wide gamut colour space with 6500K white point and 2.2\n"
+	        "               gamma.");
+
+	string_prop->SetOptionHelp(
+	        "color_space_notes",
+	        "\n"
+	        "Notes:\n"
+	        "  - Colour space transforms are applied to rendered screenshots, but not to raw\n"
+	        "    and upscaled screenshots and video captures (those are always in sRGB).");
+
+	string_prop->SetOptionHelp(
+	        "color_space_notes_windows_linux",
+	        "\n"
+	        "  - The feature only works in OpenGL output mode.\n"
+	        "\n"
+	        "  - The setting must match the colour space set on your monitor.\n"
+	        "\n"
+	        "  - You must disable all OS and graphics driver level colour management, and you\n"
+	        "    must not use any 3rd party colour management programs for DOSBox Staging,\n"
+	        "    otherwise you'll get incorrect colours.");
+
+	string_prop->SetEnabledOptions({
+#if defined(MACOSX)
+	        "color_space_description_macos", "color_space_display_p3", "color_space_notes"
+#else
+	        "color_space_description",
+	        "color_space_srgb",
+	        "color_space_display_p3",
+	        "color_space_rest",
+	        "color_space_notes",
+	        "color_space_notes_windows_linux"
+#endif
+	});
+}
+
 std::string RENDER_GetCgaColorsSetting()
 {
 	return get_render_section().GetStringLowCase("cga_colors");
@@ -1551,95 +1646,7 @@ static void init_render_settings(SectionProp& section)
 	        "\n"
 	        "  - If you used an advanced scaler, consider one of the [color=light-green]'shader'[reset] options.");
 
-#if defined(MACOSX)
-	constexpr auto DefaultColorSpace = "display-p3";
-#else
-	constexpr auto DefaultColorSpace = "srgb";
-#endif
-
-	string_prop = section.AddString("color_space", Always, DefaultColorSpace);
-	string_prop->SetValues(
-#if defined(MACOSX)
-	        {"display-p3"}
-#else
-	        {"srgb", "display-p3", "dci-p3", "dci-p3-d65", "modern-p3", "adobe-rgb", "rec-2020"}
-#endif
-	);
-
-	string_prop->SetOptionHelp("color_space_description",
-	                           format_str("Set the colour space of the video output ('%s' by default). This setting\n"
-	                                      "allows to take advantage of wide color gamut monitors and to more accurately\n"
-	                                      "emulate CRT colors. Possible values:",
-	                                      DefaultColorSpace));
-
-	string_prop->SetOptionHelp("color_space_description_macos",
-	                           "Set the colour space of the video output. On macOS, this is always 'display-p3';\n"
-	                           "the OS performs the conversion to the colour profile set in your system\n"
-	                           "settings.");
-
-	string_prop->SetOptionHelp(
-	        "color_space_srgb",
-	        "\n"
-	        "  srgb:        The lowest common denominator non-wide gamut sRGB colour space\n"
-	        "               with 6500K white point and sRGB gamma (default).");
-
-	string_prop->SetOptionHelp("color_space_display_p3",
-	                           "\n"
-	                           "  display-p3:  Display P3 wide gamut colour space with 6500K white point and\n"
-	                           "               sRGB gamma.");
-
-	string_prop->SetOptionHelp(
-	        "color_space_rest",
-	        "\n"
-	        "  dci-p3:      Standard DCI-P3 wide gamut colour space with DCI white point\n"
-	        "               (~6300K) and a 2.6 gamma. Use 'dci-p3-d65' instead if the whites\n"
-	        "               and grays have a greenish tint with your monitor in DCI-P3 mode.\n"
-	        "\n"
-	        "  dci-p3-d65:  DCI-P3 variant with modified D65 white point (6500K) and 2.6\n"
-	        "               gamma. Use 'dci-p3' instead if the whites and grays have a\n"
-	        "               yellowish tint with your monitor in DCI-P3 mode.\n"
-	        "\n"
-	        "  modern-p3:   Setting for average consumer/gaming monitors that only reach\n"
-	        "               around 90%% DCI-P3 colour space gamut coverage (6500K white\n"
-	        "               point, sRGB gamma). Use the other DCI-P3 colour spaces if your\n"
-	        "               monitor's DCI-P3 coverage is close to 100%%.\n"
-	        "\n"
-	        "  adobe-rgb:   AdobeRGB 2020 wide gamut colour space with 6500K white point\n"
-	        "               and 2.2 gamma.\n"
-	        "\n"
-	        "  rec-2020:    Rec.2020 wide gamut colour space with 6500K white point and 2.2\n"
-	        "               gamma.");
-
-	string_prop->SetOptionHelp(
-	        "color_space_notes",
-	        "\n"
-	        "Notes:\n"
-	        "  - Colour space transforms are applied to rendered screenshots, but not to raw\n"
-	        "    and upscaled screenshots and video captures (those are always in sRGB).");
-
-	string_prop->SetOptionHelp(
-	        "color_space_notes_windows_linux",
-	        "\n"
-	        "  - The feature only works in OpenGL output mode.\n"
-	        "\n"
-	        "  - The setting must match the colour space set on your monitor.\n"
-	        "\n"
-	        "  - You must disable all OS and graphics driver level colour management, and you\n"
-	        "    must not use any 3rd party colour management programs for DOSBox Staging,\n"
-	        "    otherwise you'll get incorrect colours.");
-
-	string_prop->SetEnabledOptions({
-#if defined(MACOSX)
-	        "color_space_description_macos", "color_space_display_p3", "color_space_notes"
-#else
-	        "color_space_description",
-	        "color_space_srgb",
-	        "color_space_display_p3",
-	        "color_space_rest",
-	        "color_space_notes",
-	        "color_space_notes_windows_linux"
-#endif
-	});
+	init_color_space_setting(section);
 
 	auto bool_prop = section.AddBool("image_adjustments", WhenIdle, true);
 	bool_prop->SetHelp(
