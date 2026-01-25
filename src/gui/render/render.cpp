@@ -598,7 +598,7 @@ static void handle_auto_image_adjustment_settings(const VideoMode& video_mode)
 			}
 		}
 
-		if (get_render_section().GetString("black_level") == "auto") {
+		if (get_render_section().GetStringLowCase("black_level") == "auto") {
 			if (curr_image_adjustment_settings.black_level !=
 			    settings.black_level) {
 
@@ -611,7 +611,7 @@ static void handle_auto_image_adjustment_settings(const VideoMode& video_mode)
 			}
 		}
 
-		if (get_render_section().GetString("color_temperature") == "auto") {
+		if (get_render_section().GetStringLowCase("color_temperature") == "auto") {
 			if (curr_image_adjustment_settings.color_temperature_kelvin !=
 			    settings.color_temperature_kelvin) {
 
@@ -1055,7 +1055,7 @@ static std::optional<ViewportSettings> parse_viewport_settings(const std::string
 static void set_viewport(SectionProp& section)
 {
 	if (const auto& settings = parse_viewport_settings(
-	            section.GetString("viewport"));
+	            section.GetStringLowCase("viewport"));
 	    settings) {
 		render.viewport_settings = *settings;
 	} else {
@@ -1259,7 +1259,7 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 
 std::string RENDER_GetCgaColorsSetting()
 {
-	return get_render_section().GetString("cga_colors");
+	return get_render_section().GetStringLowCase("cga_colors");
 }
 
 constexpr int BrightnessMin = 0;
