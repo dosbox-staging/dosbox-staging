@@ -17,44 +17,37 @@
 #include "utils/rgb565.h"
 #include "utils/rgb888.h"
 
+// Row-based image decoder to convert an image in any pixel format to
+// 8-bit indexed or 32-bit BGRX pixel data.
+//
 class ImageDecoder {
 public:
-	ImageDecoder()  = default;
-	~ImageDecoder() = default;
-
 	// Set `row_skip_count` to 1 reconstruct the raw image when the input
 	// has "baked-in" double scanning.
 	//
 	// Set `pixel_skip_count` to 1 reconstruct the raw image when the input
 	// has "baked-in" pixel doubling.
 	//
-	void Init(const RenderedImage& image, const int row_skip_count,
-	          const int pixel_skip_count);
+	ImageDecoder(const RenderedImage& image, const int row_skip_count,
+	             const int pixel_skip_count);
 
-	inline uint8_t GetNextIndexed8Pixel()
-	{
-		assert(image.is_paletted());
-		assert(pos - curr_row_start < image.pitch);
+	~ImageDecoder() = default;
 
-		const auto pal_index = *pos;
+	// Decodes the next row into the `out` vector as 8-bit indexed pixel
+	// data. `out` must be large enough to hold the data.
+	//
+	// Decodes the first row when called for the first time after
+	// construction.
+	//
+	void GetNextRowAsIndexed8Pixels(std::vector<uint8_t>::iterator out);
 
-		IncrementPos();
-
-		return pal_index;
-	}
-
-	inline Rgb888 GetNextPixelAsRgb888()
-	{
-		assert(pos - curr_row_start < image.pitch);
-
-		if (image.is_paletted()) {
-			return GetNextPalettedPixelAsRgb888();
-		} else {
-			return GetNextRgbPixelAsRgb888();
-		}
-	}
-
-	void AdvanceRow();
+	// Decodes the next row into the `out` vector as 32-bit BGRX pixel data.
+	// `out` must be large enough to hold the data.
+	//
+	// Decodes the first row when called for the first time after
+	// construction.
+	//
+	void GetNextRowAsBgrx32Pixels(std::vector<uint32_t>::iterator out);
 
 	// prevent copying
 	ImageDecoder(const ImageDecoder&) = delete;
@@ -62,71 +55,23 @@ public:
 	ImageDecoder& operator=(const ImageDecoder&) = delete;
 
 private:
+	void GetBgrx32RowFromIndexed8(std::vector<uint32_t>::iterator out);
+	void GetBgrx32RowFromRgb555(std::vector<uint32_t>::iterator out);
+	void GetBgrx32RowFromRgb565(std::vector<uint32_t>::iterator out);
+	void GetBgrx32RowFromBgr24(std::vector<uint32_t>::iterator out);
+	void GetBgrx32RowFromBgrx32(std::vector<uint32_t>::iterator out);
+
+	void AdvanceRow();
+
 	RenderedImage image = {};
 
 	int row_skip_count   = 0;
 	int pixel_skip_count = 0;
 
-	const uint8_t* curr_row_start = nullptr;
-	const uint8_t* pos            = nullptr;
+	const uint8_t* in_row_start = nullptr;
+	const uint8_t* in_pos       = nullptr;
 
-	inline void IncrementPos()
-	{
-		for (auto i = 0; i <= pixel_skip_count; ++i) {
-			switch (image.params.pixel_format) {
-			case PixelFormat::Indexed8: ++pos; break;
-			case PixelFormat::RGB555_Packed16:
-			case PixelFormat::RGB565_Packed16: pos += 2; break;
-			case PixelFormat::BGR24_ByteArray: pos += 3; break;
-			case PixelFormat::BGRX32_ByteArray: pos += 4; break;
-			default: assertm(false, "Invalid PixelFormat value");
-			}
-		}
-	}
-
-	inline Rgb888 GetNextPalettedPixelAsRgb888()
-	{
-		const auto pal_index = *pos;
-		const auto color     = image.palette[pal_index];
-
-		IncrementPos();
-
-		return color;
-	}
-
-	inline Rgb888 GetNextRgbPixelAsRgb888()
-	{
-		Rgb888 pixel = {};
-
-		switch (image.params.pixel_format) {
-		case PixelFormat::RGB555_Packed16: {
-			const auto p = host_readw(pos);
-
-			pixel = Rgb555(p).ToRgb888();
-		} break;
-
-		case PixelFormat::RGB565_Packed16: {
-			const auto p = host_readw(pos);
-
-			pixel = Rgb565(p).ToRgb888();
-		} break;
-
-		case PixelFormat::BGR24_ByteArray:
-		case PixelFormat::BGRX32_ByteArray: {
-			const auto b = *(pos + 0);
-			const auto g = *(pos + 1);
-			const auto r = *(pos + 2);
-
-			pixel = {r, g, b};
-		} break;
-
-		default: assertm(false, "Invalid PixelFormat value");
-		}
-
-		IncrementPos();
-
-		return pixel;
-	}
+	int out_width = 0;
 };
 
 #endif // DOSBOX_IMAGE_DECODER_H

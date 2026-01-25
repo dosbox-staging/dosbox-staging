@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <vector>
 
-#include "capture/image/image_decoder.h"
 #include "misc/rendered_image.h"
 
 enum class DeinterlacingStrength { Off, Light, Medium, Strong, Full };
@@ -60,7 +59,6 @@ private:
 	void CombineOutput(uint32_t* pixel_data, bit_buffer& mask,
 	                   const DeinterlacingStrength strength) const;
 
-	ImageDecoder image_decoder          = {};
 	std::vector<uint32_t> decoded_image = {};
 
 	// Information about the input image

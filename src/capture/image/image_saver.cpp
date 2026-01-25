@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <array>
@@ -7,14 +7,15 @@
 #include <cstring>
 #include <vector>
 
+#include "image_decoder.h"
 #include "image_saver.h"
 
 #include "capture/capture.h"
 #include "hardware/video/vga.h"
 #include "misc/support.h"
 #include "png_writer.h"
+#include "utils/bgrx8888.h"
 #include "utils/checks.h"
-#include "utils/rgb888.h"
 
 CHECK_NARROWING();
 
@@ -57,8 +58,9 @@ void ImageSaver::QueueImage(const RenderedImage& image, const CapturedImageType 
                             const std::optional<std_fs::path>& path)
 {
 	if (!image_fifo.IsRunning()) {
-		LOG_WARNING("CAPTURE: Cannot capture image while image capturer "
-		            "is shutting down");
+		LOG_WARNING(
+		        "CAPTURE: Cannot capture image while image capturer "
+		        "is shutting down");
 		return;
 	}
 
@@ -119,7 +121,7 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 	const auto output_width  = src.width / (pixel_skip_count + 1);
 	const auto output_height = src.height / (row_skip_count + 1);
 
-	image_decoder.Init(image, row_skip_count, pixel_skip_count);
+	ImageDecoder image_decoder(image, row_skip_count, pixel_skip_count);
 
 	// Write the pixel aspect ratio of the video mode into the PNG pHYs
 	// chunk for raw images.
@@ -145,31 +147,30 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 	}
 
 	constexpr auto MaxBytesPerPixel = 3;
-	row_buf.resize(static_cast<size_t>(output_width) *
+	row_output_buf.resize(static_cast<size_t>(output_width) *
 	               static_cast<size_t>(MaxBytesPerPixel));
 
 	auto rows_to_write = output_height;
 	while (rows_to_write--) {
-		auto out = row_buf.begin();
+		auto out = row_output_buf.begin();
 
-		auto pixels_to_write = output_width;
 		if (image.is_paletted()) {
-			while (pixels_to_write--) {
-				const auto pixel = image_decoder.GetNextIndexed8Pixel();
+			image_decoder.GetNextRowAsIndexed8Pixels(out);
 
-				*out++ = pixel;
-			}
 		} else {
-			while (pixels_to_write--) {
-				const auto pixel = image_decoder.GetNextPixelAsRgb888();
+			row_decode_buf.resize(output_width);
+			image_decoder.GetNextRowAsBgrx32Pixels(
+			        row_decode_buf.begin());
 
-				*out++ = pixel.red;
-				*out++ = pixel.green;
-				*out++ = pixel.blue;
+			for (const auto pixel : row_decode_buf) {
+				const auto color = Bgrx8888(pixel);
+
+				*out++ = color.Red();
+				*out++ = color.Green();
+				*out++ = color.Blue();
 			}
 		}
-		png_writer.WriteRow(row_buf.begin());
-		image_decoder.AdvanceRow();
+		png_writer.WriteRow(row_output_buf.begin());
 	}
 }
 
@@ -231,30 +232,33 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 		return;
 	}
 
-	// We always write the final rendered image displayed on the host monitor
-	// as-is.
+	// We always write the final rendered image displayed on the host
+	// monitor as-is.
 	const auto row_skip_count   = 0;
 	const auto pixel_skip_count = 0;
-	image_decoder.Init(image, row_skip_count, pixel_skip_count);
+
+	ImageDecoder image_decoder(image, row_skip_count, pixel_skip_count);
 
 	constexpr auto BytesPerPixel = 3;
-	row_buf.resize(static_cast<size_t>(src.width) *
+	row_output_buf.resize(static_cast<size_t>(src.width) *
 	               static_cast<size_t>(BytesPerPixel));
 
 	auto rows_to_write = src.height;
 	while (rows_to_write--) {
-		auto out = row_buf.begin();
+		auto out = row_output_buf.begin();
 
-		auto pixels_to_write = src.width;
-		while (pixels_to_write--) {
-			const auto pixel = image_decoder.GetNextPixelAsRgb888();
+		row_decode_buf.resize(src.width);
+		image_decoder.GetNextRowAsBgrx32Pixels(row_decode_buf.begin());
 
-			*out++ = pixel.red;
-			*out++ = pixel.green;
-			*out++ = pixel.blue;
+		for (const auto pixel : row_decode_buf) {
+			const auto color = Bgrx8888(pixel);
+
+			*out++ = color.Red();
+			*out++ = color.Green();
+			*out++ = color.Blue();
 		}
-		png_writer.WriteRow(row_buf.begin());
-		image_decoder.AdvanceRow();
+
+		png_writer.WriteRow(row_output_buf.begin());
 	}
 }
 
