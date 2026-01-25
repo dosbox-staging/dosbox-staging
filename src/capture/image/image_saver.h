@@ -5,6 +5,7 @@
 #define DOSBOX_IMAGE_SAVER_H
 
 #include <atomic>
+#include <memory>
 #include <optional>
 #include <thread>
 #include <vector>
@@ -92,8 +93,8 @@ private:
 
 	ImageScaler image_scaler = {};
 
-	ImageDecoder image_decoder   = {};
-	std::vector<uint8_t> row_buf = {};
+	std::vector<uint32_t> row_decode_buf = {};
+	std::vector<uint8_t> row_output_buf  = {};
 
 	FILE* outfile = nullptr;
 };
