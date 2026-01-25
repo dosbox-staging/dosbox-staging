@@ -280,7 +280,7 @@ int PDC_scr_open(void)
         pdc_swidth = (env ? atoi(env) : 80) * pdc_fwidth;
 
     #ifdef MACOSX
-        SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "gpu");
+        SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "metal");
     #else
         SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0");
     #endif
