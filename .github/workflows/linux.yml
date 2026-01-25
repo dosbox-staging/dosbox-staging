@@ -52,7 +52,7 @@ jobs:
           - name: GCC 12, Ubuntu 22.04, debugger build
             os: ubuntu-22.04
             cmake_preset: debug-linux-vcpkg
-            cmake_flags: -DOPT_HEAVY_DEBUGGER=ON
+            cmake_flags: -DOPT_DEBUGGER=ON -DOPT_HEAVY_DEBUGGER=ON
             cc:  gcc
             cxx: g++
             max_warnings: 0
