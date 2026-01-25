@@ -79,23 +79,15 @@ extern std::queue<SDL_Event> pdc_event_queue;
 
 static bool is_debugger_event(const SDL_Event& event)
 {
-	switch (event.type) {
-	case SDL_EVENT_KEY_DOWN:
-	case SDL_EVENT_KEY_UP:
-	case SDL_EVENT_MOUSE_BUTTON_DOWN:
-	case SDL_EVENT_MOUSE_BUTTON_UP:
-	case SDL_EVENT_MOUSE_MOTION:
-	case SDL_EVENT_MOUSE_WHEEL:
-	case SDL_EVENT_TEXT_INPUT:
-	case SDL_EVENT_TEXT_EDITING:
-	case SDL_EVENT_USER:
-		return event.window.windowID == SDL_GetWindowID(pdc_window);
-
-	default:
-		if (event.type >= SDL_EVENT_WINDOW_FIRST && event.type <= SDL_EVENT_WINDOW_LAST)
-			return event.window.windowID == SDL_GetWindowID(pdc_window);
-		return false;
-	}
+    if (!pdc_window) {
+        return false;
+    }
+    
+    const auto pdc_window_id = SDL_GetWindowID(pdc_window);
+    const auto event_window = SDL_GetWindowFromEvent(&event);
+	const auto event_window_id = SDL_GetWindowID(event_window);
+	
+	return event_window_id == pdc_window_id;
 }
 #endif
 
@@ -2426,7 +2418,7 @@ void GFX_MaybePresentFrame()
 //   false - event loop wants to quit
 bool GFX_PollAndHandleEvents()
 {
-	SDL_Event event;
+	SDL_Event event = {};
 
 	static auto last_check_joystick = GetTicks();
 	auto current_check_joystick     = GetTicks();
