@@ -1382,6 +1382,7 @@ static void init_render_settings(SectionProp& section)
 	});
 
 	string_prop = section.AddString("aspect", Always, "auto");
+	string_prop->SetValues({"auto", "on", "square-pixels", "off", "stretch"});
 	string_prop->SetHelp(
 	        "Set the aspect ratio correction mode ('auto' by default). Possible values:\n"
 	        "\n"
@@ -1407,9 +1408,8 @@ static void init_render_settings(SectionProp& section)
 	        "                       to emulate the horizontal and vertical stretch controls\n"
 	        "                       of CRT monitors.");
 
-	string_prop->SetValues({"auto", "on", "square-pixels", "off", "stretch"});
-
 	string_prop = section.AddString("integer_scaling", Always, "auto");
+	string_prop->SetValues({"auto", "vertical", "horizontal", "off"});
 	string_prop->SetHelp(
 	        "Constrain the horizontal or vertical scaling factor to the largest integer\n"
 	        "value so the image still fits into the viewport ('auto' by default). The\n"
@@ -1431,8 +1431,6 @@ static void init_render_settings(SectionProp& section)
 	        "\n"
 	        "  off:         No integer scaling constraint is applied; the image fills the\n"
 	        "               viewport while maintaining the configured aspect ratio.");
-
-	string_prop->SetValues({"auto", "vertical", "horizontal", "off"});
 
 	string_prop = section.AddString("viewport", Always, "fit");
 	string_prop->SetHelp(
@@ -1473,6 +1471,10 @@ static void init_render_settings(SectionProp& section)
 	string_prop = section.AddString("monochrome_palette",
 	                                Always,
 	                                MonochromePaletteAmber);
+	string_prop->SetValues({MonochromePaletteAmber,
+	                        MonochromePaletteGreen,
+	                        MonochromePaletteWhite,
+	                        MonochromePalettePaperwhite});
 	string_prop->SetHelp(
 	        "Set the palette for monochrome display emulation ('amber' by default).\n"
 	        "Works only with the 'hercules' and 'cga_mono' machine types. Possible values:\n"
@@ -1483,11 +1485,6 @@ static void init_render_settings(SectionProp& section)
 	        "  paperwhite:  Paperwhite palette.\n"
 	        "\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
-
-	string_prop->SetValues({MonochromePaletteAmber,
-	                        MonochromePaletteGreen,
-	                        MonochromePaletteWhite,
-	                        MonochromePalettePaperwhite});
 
 	string_prop = section.AddString("cga_colors", OnlyAtStart, "default");
 	string_prop->SetHelp(
