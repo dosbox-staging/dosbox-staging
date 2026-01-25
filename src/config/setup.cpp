@@ -1118,6 +1118,17 @@ std::string SectionProp::GetPropertyValue(const std::string& _property) const
 	return NO_SUCH_PROPERTY;
 }
 
+AutoExecSection* get_autoexec_section(const char* section_name)
+{
+	assert(control);
+
+	const auto sec = static_cast<AutoExecSection*>(
+	        control->GetSection(section_name));
+	assert(sec);
+
+	return sec;
+}
+
 bool AutoExecSection::HandleInputLine(const std::string& line)
 {
 	if (!data.empty()) {
