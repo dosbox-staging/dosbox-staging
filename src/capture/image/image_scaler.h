@@ -4,6 +4,7 @@
 #ifndef DOSBOX_IMAGE_SCALER_H
 #define DOSBOX_IMAGE_SCALER_H
 
+#include <memory>
 #include <vector>
 
 #include "image_decoder.h"
@@ -92,8 +93,11 @@ private:
 	void GenerateNextIntegerUpscaledOutputRow();
 	void GenerateNextSharpUpscaledOutputRow();
 
-	RenderedImage input        = {};
-	ImageDecoder input_decoder = {};
+	RenderedImage input                         = {};
+	std::unique_ptr<ImageDecoder> input_decoder = {};
+
+	std::vector<uint8_t> row_decode_buf_8   = {};
+	std::vector<uint32_t> row_decode_buf_32 = {};
 
 	std::vector<float> linear_row_buf = {};
 

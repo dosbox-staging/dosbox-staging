@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "image_scaler.h"
@@ -7,11 +7,11 @@
 
 #include "hardware/video/vga.h"
 #include "misc/support.h"
+#include "utils/bgrx8888.h"
 #include "utils/byteorder.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
 #include "utils/rgb.h"
-#include "utils/rgb888.h"
 
 CHECK_NARROWING();
 
@@ -32,7 +32,9 @@ void ImageScaler::Init(const RenderedImage& image)
 	// 160-pixel-wide image when upscaling, so we'll just leave it be.
 	const auto pixel_skip_count = 0;
 
-	input_decoder.Init(image, row_skip_count, pixel_skip_count);
+	input_decoder = std::make_unique<ImageDecoder>(image,
+	                                               row_skip_count,
+	                                               pixel_skip_count);
 
 	UpdateOutputParamsUpscale();
 
@@ -206,6 +208,11 @@ void ImageScaler::LogParams()
 
 void ImageScaler::AllocateBuffers()
 {
+	// Pad by 1 pixel at the end so we can handle the last pixel of the row
+	// without branching (the interpolator operates on the current and the
+	// next pixel).
+	linear_row_buf.resize((input.params.width + 1u) * ComponentsPerRgbPixel);
+
 	int bytes_per_pixel = {};
 	switch (output.pixel_format) {
 	case OutputPixelFormat::Indexed8: bytes_per_pixel = 8; break;
@@ -213,13 +220,7 @@ void ImageScaler::AllocateBuffers()
 	default: assert(false);
 	}
 
-	output.row_buf.resize(static_cast<size_t>(output.width) *
-	                      static_cast<size_t>(bytes_per_pixel));
-
-	// Pad by 1 pixel at the end so we can handle the last pixel of the row
-	// without branching (the interpolator operates on the current and the
-	// next pixel).
-	linear_row_buf.resize((input.params.width + 1u) * ComponentsPerRgbPixel);
+	output.row_buf.resize(output.width * bytes_per_pixel);
 }
 
 int ImageScaler::GetOutputWidth() const
@@ -239,17 +240,19 @@ OutputPixelFormat ImageScaler::GetOutputPixelFormat() const
 
 void ImageScaler::DecodeNextRowToLinearRgb()
 {
+	row_decode_buf_32.resize(input.params.width);
+
+	input_decoder->GetNextRowAsBgrx32Pixels(row_decode_buf_32.begin());
+
 	auto out = linear_row_buf.begin();
 
-	for (auto x = 0; x < input.params.width; ++x) {
-		const auto pixel = input_decoder.GetNextPixelAsRgb888();
+	for (const auto pixel : row_decode_buf_32) {
+		const auto color = Bgrx8888(pixel);
 
-		*out++ = srgb8_to_linear_lut(pixel.red);
-		*out++ = srgb8_to_linear_lut(pixel.green);
-		*out++ = srgb8_to_linear_lut(pixel.blue);
+		*out++ = srgb8_to_linear_lut(color.Red());
+		*out++ = srgb8_to_linear_lut(color.Green());
+		*out++ = srgb8_to_linear_lut(color.Blue());
 	}
-
-	input_decoder.AdvanceRow();
 }
 
 void ImageScaler::SetRowRepeat()
@@ -267,25 +270,36 @@ void ImageScaler::GenerateNextIntegerUpscaledOutputRow()
 {
 	auto out = output.row_buf.begin();
 
-	for (auto x = 0; x < input.params.width; ++x) {
-		auto pixels_to_write = static_cast<uint32_t>(output.horiz_scale);
+	if (input.is_paletted()) {
+		row_decode_buf_8.resize(input.params.width);
 
-		if (input.is_paletted()) {
-			const auto pixel = input_decoder.GetNextIndexed8Pixel();
+		input_decoder->GetNextRowAsIndexed8Pixels(row_decode_buf_8.begin());
+
+		for (const auto pixel : row_decode_buf_8) {
+			auto pixels_to_write = iround(output.horiz_scale);
+
 			while (pixels_to_write--) {
 				*out++ = pixel;
 			}
-		} else {
-			const auto pixel = input_decoder.GetNextPixelAsRgb888();
+		}
+
+	} else { // Bgrx32
+		row_decode_buf_32.resize(input.params.width);
+
+		input_decoder->GetNextRowAsBgrx32Pixels(row_decode_buf_32.begin());
+
+		for (const auto pixel : row_decode_buf_32) {
+			const auto color     = Bgrx8888(pixel);
+			auto pixels_to_write = iround(output.horiz_scale);
+
 			while (pixels_to_write--) {
-				*out++ = pixel.red;
-				*out++ = pixel.green;
-				*out++ = pixel.blue;
+				*out++ = color.Red();
+				*out++ = color.Green();
+				*out++ = color.Blue();
 			}
 		}
 	}
 
-	input_decoder.AdvanceRow();
 	SetRowRepeat();
 }
 
@@ -342,7 +356,9 @@ std::vector<uint8_t>::const_iterator ImageScaler::GetNextOutputRow()
 	if (output.row_repeat == 0) {
 		if (output.horiz_scaling_mode == PerAxisScaling::Integer &&
 		    output.vert_scaling_mode == PerAxisScaling::Integer) {
+
 			GenerateNextIntegerUpscaledOutputRow();
+
 		} else {
 			DecodeNextRowToLinearRgb();
 			GenerateNextSharpUpscaledOutputRow();

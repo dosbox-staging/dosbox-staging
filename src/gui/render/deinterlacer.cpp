@@ -5,6 +5,7 @@
 
 #include <vector>
 
+#include "capture/image/image_decoder.h"
 #include "utils/checks.h"
 
 CHECK_NARROWING();
@@ -345,6 +346,7 @@ void Deinterlacer::SetUpInputImage(const RenderedImage& input_image)
 		const auto pixel_skip_count = input_image.params.rendered_pixel_doubling
 		                                    ? 1
 		                                    : 0;
+
 		const auto row_skip_count = input_image.params.rendered_double_scan
 		                                  ? 1
 		                                  : 0;
@@ -356,23 +358,13 @@ void Deinterlacer::SetUpInputImage(const RenderedImage& input_image)
 		decoded_image.resize(image.height * image.pitch_pixels);
 
 		// Convert pixel data
-		image_decoder.Init(input_image, row_skip_count, pixel_skip_count);
+		ImageDecoder image_decoder(input_image, row_skip_count, pixel_skip_count);
 
-		auto out_line = decoded_image.data();
+		auto out_line = decoded_image.begin();
 
 		for (auto y = 0; y < image.height; ++y) {
 			auto out = out_line;
-
-			for (auto x = 0; x < image.width; ++x) {
-				const auto in_pixel = image_decoder.GetNextPixelAsRgb888();
-				const auto out_pixel =
-				        (static_cast<uint32_t>(in_pixel.red) << 16) |
-				        (static_cast<uint32_t>(in_pixel.green) << 8) |
-				        static_cast<uint32_t>(in_pixel.blue);
-
-				*out = out_pixel;
-				++out;
-			}
+			image_decoder.GetNextRowAsBgrx32Pixels(out);
 
 			out_line += image.pitch_pixels;
 		}
