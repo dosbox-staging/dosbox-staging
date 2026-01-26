@@ -52,7 +52,11 @@ private:
 	bool SetUpInputImage(const RenderedImage& image);
 	void DecodeInputImage(const RenderedImage& input_image);
 
-	void ThresholdInput(const uint32_t* pixel_data, bit_buffer& dest) const;
+	uint32_t DetectBackgroundColor(const uint32_t* pixel_data) const;
+
+	void ThresholdInput(const uint32_t* pixel_data, bit_buffer& dest,
+	                    const uint32_t bg_color) const;
+
 	void DownshiftAndXor(bit_buffer& src, bit_buffer& dest) const;
 
 	void ErodeHorizontal(bit_buffer& src, bit_buffer& dest) const;
