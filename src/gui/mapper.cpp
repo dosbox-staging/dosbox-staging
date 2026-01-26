@@ -633,8 +633,11 @@ public:
 		emulated_hats=0;
 		JOYSTICK_Enable(emustick,true);
 
-		sdl_joystick = SDL_OpenJoystick(stick_id);
-		stick_id = SDL_GetJoystickID(sdl_joystick);
+		int num_joysticks;
+		SDL_JoystickID* joysticks = SDL_GetJoysticks(&num_joysticks);
+
+		sdl_joystick = SDL_OpenJoystick(joysticks[0]);
+		stick_id     = SDL_GetJoystickID(sdl_joystick);
 
 		set_joystick_led(sdl_joystick, on_color);
 		if (sdl_joystick==nullptr) {
@@ -959,7 +962,7 @@ protected:
 	int hats = 0;
 	int emulated_hats = 0;
     // Instance ID of the joystick as it appears in SDL events
-	SDL_JoystickID stick_id{0};
+	SDL_JoystickID stick_id = {};
 	uint8_t emustick;
 	SDL_Joystick *sdl_joystick = nullptr;
 	char configname[10];
@@ -2814,9 +2817,9 @@ static void QueryJoysticks()
 
 	// Record how many joysticks are present and set our desired minimum axis
 	int num_joysticks = 0;
-	SDL_GetJoysticks(&num_joysticks);
-	if (num_joysticks < 0) {
-		LOG_WARNING("MAPPER: SDL_NumJoysticks() failed: %s", SDL_GetError());
+	const auto joysticks = SDL_GetJoysticks(&num_joysticks);
+	if (joysticks == nullptr) {
+		LOG_WARNING("MAPPER: SDL_GetJoysticks() failed: %s", SDL_GetError());
 		LOG_WARNING("MAPPER: Skipping further joystick checks");
 		if (wants_auto_config) {
 			joytype = JOY_NONE_FOUND;
@@ -2846,7 +2849,7 @@ static void QueryJoysticks()
 	// Check which, if any, of the first two joysticks are useable
 	bool useable[2] = {false, false};
 	for (int i = 0; i < req_min_axis; ++i) {
-		SDL_Joystick *stick = SDL_OpenJoystick(i);
+		SDL_Joystick* stick = SDL_OpenJoystick(joysticks[i]);
 		set_joystick_led(stick, marginal_color);
 
 		useable[i] = (SDL_GetNumJoystickAxes(stick) >= req_min_axis) ||
@@ -2856,6 +2859,8 @@ static void QueryJoysticks()
 		SDL_CloseJoystick(stick);
 	}
 
+	SDL_free(joysticks);
+	
 	// Set the type of joystick based on which are useable
 	const bool first_usable = useable[0];
 	const bool second_usable = useable[1];
