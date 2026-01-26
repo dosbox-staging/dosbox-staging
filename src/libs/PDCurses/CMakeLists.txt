@@ -49,7 +49,7 @@ add_library(libpdcurses STATIC
   sdl3_queue/pdcutil.cpp
 )
 
-target_include_directories(libpdcurses PUBLIC . pdcurses)
+target_include_directories(libpdcurses PUBLIC . pdcurses sdl3_queue)
 
 target_link_libraries(
   libpdcurses PRIVATE SDL3::SDL3
