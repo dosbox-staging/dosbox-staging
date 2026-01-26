@@ -275,7 +275,7 @@ int PDC_scr_open(void)
     if (pdc_own_window)
     {
         const char *env = getenv("PDC_LINES");
-        pdc_sheight = (env ? atoi(env) : 25) * pdc_fheight;
+        pdc_sheight = (env ? atoi(env) : 50) * pdc_fheight;
 
         env = getenv("PDC_COLS");
         pdc_swidth = (env ? atoi(env) : 80) * pdc_fwidth;
