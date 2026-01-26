@@ -5,6 +5,7 @@
 #include "dosbox_config.h"
 
 #include <queue>
+#include <string>
 
 // must be included after dosbox_config.h
 #include <SDL3/SDL.h>
@@ -37,8 +38,6 @@ extern int pdc_flastc;               /* font palette's last color
 extern bool pdc_own_window;          /* if pdc_window was not set
                                         before initscr(), PDCurses is
                                         responsible for (owns) it */
-
-extern std::queue<SDL_Event> pdc_event_queue;
 
 PDCEX  void PDC_update_rects(void);
 PDCEX  void PDC_retile(void);

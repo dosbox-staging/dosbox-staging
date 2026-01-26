@@ -19,6 +19,10 @@ target_sources(libdosboxcommon PRIVATE
 )
 endif()
 
+if (OPT_DEBUGGER)
+  target_link_libraries(libdosboxcommon PRIVATE libpdcurses)
+endif()
+
 target_link_libraries(libdosboxcommon PRIVATE
   OpenGL::GL
   $<IF:$<BOOL:${C_OPENGL}>,libglad,>)

@@ -16,6 +16,7 @@
 
 #if C_DEBUGGER
 #include <queue>
+#include "pdc_event_queue.h"
 #endif
 
 #include "audio/mixer.h"
@@ -75,7 +76,7 @@ SDL_Rect to_sdl_rect(const DosBox::Rect& r)
 #if C_DEBUGGER
 
 extern SDL_Window* pdc_window;
-extern std::queue<SDL_Event> pdc_event_queue;
+extern std::queue<QueuedEvent> debugger_event_queue;
 
 static bool is_debugger_event(const SDL_Event& event)
 {
@@ -2436,7 +2437,12 @@ bool GFX_PollAndHandleEvents()
 		
 #if C_DEBUGGER
 		if (is_debugger_event(event)) {
-			pdc_event_queue.push(event);
+			QueuedEvent qe;
+			qe.ev = event;
+			if (event.type == SDL_EVENT_TEXT_INPUT && event.text.text) {
+				qe.text = event.text.text;
+			}
+			debugger_event_queue.push(std::move(qe));
 			continue;
 		}
 #endif
