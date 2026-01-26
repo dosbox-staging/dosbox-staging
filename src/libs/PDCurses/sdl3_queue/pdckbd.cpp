@@ -1,11 +1,12 @@
 /* PDCurses */
 
 #include "pdcsdl.h"
+#include "pdc_event_queue.h"
 
 #include <cctype>
 #include <cstring>
 
-static SDL_Event event;
+static QueuedEvent event;
 static SDL_Keycode oldkey;
 static MOUSE_STATUS old_mouse_status;
 
@@ -88,13 +89,13 @@ bool PDC_check_key(void)
     /* SDL_EVENT_TEXT_INPUT can return multiple chars from the IME which we
        should handle before polling for additional events. */
 
-    if (event.type == SDL_EVENT_TEXT_INPUT && event.text.text[0]) {
+    if (event.ev.type == SDL_EVENT_TEXT_INPUT && !event.text.empty()) {
         haveevent = true;
     } else {
-        haveevent = !pdc_event_queue.empty();
+        haveevent = !debugger_event_queue.empty();
         if (haveevent) {
-            event = pdc_event_queue.front();
-            pdc_event_queue.pop();
+            event = debugger_event_queue.front();
+            debugger_event_queue.pop();
         }
     }
 
@@ -181,9 +182,9 @@ static int _process_key_event(void)
 
     SP->key_code = FALSE;
 
-    if (event.type == SDL_EVENT_KEY_UP)
+    if (event.ev.type == SDL_EVENT_KEY_UP)
     {
-        switch (event.key.key)
+        switch (event.ev.key.key)
         {
             case SDLK_LCTRL:
             case SDLK_RCTRL:
@@ -202,10 +203,10 @@ static int _process_key_event(void)
         if (!(SDL_GetModState() & SDL_KMOD_NUM))
             SP->key_modifiers &= ~PDC_KEY_MODIFIER_NUMLOCK;
 
-        if (SP->return_key_modifiers && event.key.key == oldkey)
+        if (SP->return_key_modifiers && event.ev.key.key == oldkey)
         {
             SP->key_code = TRUE;
-            switch (event.key.key)
+            switch (event.ev.key.key)
             {
             case SDLK_RSHIFT:
                 return KEY_SHIFT_R;
@@ -227,32 +228,36 @@ static int _process_key_event(void)
         SP->key_code = FALSE;
         return -1;
     }
-    else if (event.type == SDL_EVENT_TEXT_INPUT)
+    else if (event.ev.type == SDL_EVENT_TEXT_INPUT)
     {
 #ifdef PDC_WIDE
-        if ((key = _utf8_to_unicode(event.text.text, &bytes)) == -1)
-        {
-            event.text.text[0] = '\0';
+        if (!event.text.empty()) {
+            char *buf = &event.text[0];
+            if ((key = _utf8_to_unicode(buf, &bytes)) == -1)
+            {
+                event.text.clear();
+            }
+            else
+            {
+                event.text.erase(0, bytes);
+            }
+            return _handle_alt_keys(key);
         }
-        else
-        {
-            memmove(event.text.text, event.text.text + bytes,
-                    strlen(event.text.text) - bytes + 1);
-        }
-        return _handle_alt_keys(key);
+        return -1;
 #else
-        key = (unsigned char)event.text.text[0];
-        memmove((void*)event.text.text, event.text.text + 1,
-                strlen(event.text.text));
+        if (event.text.empty())
+            return -1;
+        key = (unsigned char)event.text[0];
+        event.text.erase(0, 1);
         return key > 0x7f ? -1 : _handle_alt_keys(key);
 #endif
     }
 
-    oldkey = event.key.key;
+    oldkey = event.ev.key.key;
     if (SDL_GetModState() & SDL_KMOD_NUM)
         SP->key_modifiers |= PDC_KEY_MODIFIER_NUMLOCK;
 
-    switch (event.key.key)
+    switch (event.ev.key.key)
     {
         case SDLK_LCTRL:
         case SDLK_RCTRL:
@@ -269,23 +274,23 @@ static int _process_key_event(void)
         case SDLK_RETURN:
             return 0x0d;
         default:
-            key = event.key.key;
+            key = event.ev.key.key;
     }
 
     for (i = 0; key_table[i].keycode; i++)
     {
-        if (key_table[i].keycode == event.key.key)
+        if (key_table[i].keycode == event.ev.key.key)
         {
-            if ((event.key.mod & SDL_KMOD_SHIFT) ||
-                (key_table[i].numkeypad && (event.key.mod & SDL_KMOD_NUM)))
+            if ((event.ev.key.mod & SDL_KMOD_SHIFT) ||
+                (key_table[i].numkeypad && (event.ev.key.mod & SDL_KMOD_NUM)))
             {
                 key = key_table[i].shifted;
             }
-            else if (event.key.mod & SDL_KMOD_CTRL)
+            else if (event.ev.key.mod & SDL_KMOD_CTRL)
             {
                 key = key_table[i].control;
             }
-            else if (event.key.mod & SDL_KMOD_ALT)
+            else if (event.ev.key.mod & SDL_KMOD_ALT)
             {
                 key = key_table[i].alt;
             }
@@ -324,14 +329,14 @@ static int _process_mouse_event(void)
     if (keymods & SDL_KMOD_ALT)
         shift_flags |= BUTTON_ALT;
 
-    if (event.type == SDL_EVENT_MOUSE_MOTION)
+    if (event.ev.type == SDL_EVENT_MOUSE_MOTION)
     {
         int i;
 
-        SP->mouse_status.x = static_cast<int>((event.motion.x - pdc_xoffset) / pdc_fwidth);
-        SP->mouse_status.y = static_cast<int>((event.motion.y - pdc_yoffset) / pdc_fheight);
+        SP->mouse_status.x = static_cast<int>((event.ev.motion.x - pdc_xoffset) / pdc_fwidth);
+        SP->mouse_status.y = static_cast<int>((event.ev.motion.y - pdc_yoffset) / pdc_fheight);
 
-        if (!event.motion.state ||
+        if (!event.ev.motion.state ||
            (SP->mouse_status.x == old_mouse_status.x &&
             SP->mouse_status.y == old_mouse_status.y))
             return -1;
@@ -340,24 +345,24 @@ static int _process_mouse_event(void)
 
         for (i = 0; i < 3; i++)
         {
-            if (event.motion.state & SDL_BUTTON_MASK(i + 1))
+            if (event.ev.motion.state & SDL_BUTTON_MASK(i + 1))
             {
                 SP->mouse_status.button[i] = BUTTON_MOVED | shift_flags;
                 SP->mouse_status.changes |= (1 << i);
             }
         }
     }
-    else if (event.type == SDL_EVENT_MOUSE_WHEEL)
+    else if (event.ev.type == SDL_EVENT_MOUSE_WHEEL)
     {
         SP->mouse_status.x = SP->mouse_status.y = -1;
 
-        if (event.wheel.y > 0)
+        if (event.ev.wheel.y > 0)
             SP->mouse_status.changes = PDC_MOUSE_WHEEL_UP;
-        else if (event.wheel.y < 0)
+        else if (event.ev.wheel.y < 0)
             SP->mouse_status.changes = PDC_MOUSE_WHEEL_DOWN;
-        else if (event.wheel.x > 0)
+        else if (event.ev.wheel.x > 0)
             SP->mouse_status.changes = PDC_MOUSE_WHEEL_RIGHT;
-        else if (event.wheel.x < 0)
+        else if (event.ev.wheel.x < 0)
             SP->mouse_status.changes = PDC_MOUSE_WHEEL_LEFT;
         else
             return -1;
@@ -367,9 +372,9 @@ static int _process_mouse_event(void)
     }
     else
     {
-        short action = (event.button.down) ?
-                       BUTTON_PRESSED : BUTTON_RELEASED;
-        Uint8 btn = event.button.button;
+        short action = (event.ev.button.down) ?
+                   BUTTON_PRESSED : BUTTON_RELEASED;
+        Uint8 btn = event.ev.button.button;
 
         if (btn < 1 || btn > 3)
             return -1;
@@ -380,19 +385,19 @@ static int _process_mouse_event(void)
         {
             napms(SP->mouse_wait);
 
-            if (!pdc_event_queue.empty())
+            if (!debugger_event_queue.empty())
             {
-                const auto & ev = pdc_event_queue.front();
+                const auto & ev = debugger_event_queue.front();
 
-                if (ev.type == SDL_EVENT_MOUSE_BUTTON_UP && ev.button.button == btn) {
+                if (ev.ev.type == SDL_EVENT_MOUSE_BUTTON_UP && ev.ev.button.button == btn) {
                     action = BUTTON_CLICKED;
-                    pdc_event_queue.pop();
+                    debugger_event_queue.pop();
                 }
             }
         }
 
-        SP->mouse_status.x = static_cast<int>((event.button.x - pdc_xoffset) / pdc_fwidth);
-        SP->mouse_status.y = static_cast<int>((event.button.y - pdc_yoffset) / pdc_fheight);
+        SP->mouse_status.x = static_cast<int>((event.ev.button.x - pdc_xoffset) / pdc_fwidth);
+        SP->mouse_status.y = static_cast<int>((event.ev.button.y - pdc_yoffset) / pdc_fheight);
 
         btn--;
 
@@ -410,7 +415,7 @@ static int _process_mouse_event(void)
 
 int PDC_get_key(void)
 {
-    switch (event.type)
+    switch (event.ev.type)
     {
     case SDL_EVENT_QUIT:
         exit(1);
