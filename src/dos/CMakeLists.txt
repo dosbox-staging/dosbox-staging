@@ -34,7 +34,7 @@ target_sources(libdosboxcommon PRIVATE
   programs/choice.cpp
   programs/clip.cpp
   programs/help.cpp
-  programs/imgmake.cpp
+  programs/makeimg.cpp
   programs/imgmount.cpp
   programs/intro.cpp
   programs/keyb.cpp

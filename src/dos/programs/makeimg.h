@@ -1,20 +1,20 @@
 // SPDX-FileCopyrightText: 2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_IMGMAKE_H
-#define DOSBOX_IMGMAKE_H
+#ifndef DOSBOX_MAKEIMG_H
+#define DOSBOX_MAKEIMG_H
 
 #include "shell/shell.h"
 
-class IMGMAKE final : public Program {
+class MAKEIMG final : public Program {
 public:
-	IMGMAKE()
+	MAKEIMG()
 	{
 		AddMessages();
 		help_detail = {HELP_Filter::Common,
 		               HELP_Category::Dosbox,
 		               HELP_CmdType::Program,
-		               "IMGMAKE"};
+		               "MAKEIMG"};
 	}
 	void Run() override;
 
@@ -22,4 +22,4 @@ public:
 	static void AddMessages();
 };
 
-#endif // DOSBOX_IMGMAKE_H
+#endif // DOSBOX_MAKEIMG_H

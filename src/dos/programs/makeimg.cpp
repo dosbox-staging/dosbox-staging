@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "imgmake.h"
+#include "makeimg.h"
 
 #include <algorithm>
 #include <array>
@@ -401,7 +401,7 @@ enum class FatPartitionType : uint8_t {
 	Unknown   = 0x00
 };
 
-namespace ImgmakeCommand {
+namespace MakeimgCommand {
 
 enum class ErrorType { None, UnknownArgument, MissingArgument, InvalidValue };
 
@@ -432,13 +432,13 @@ static void notify_warning(const std::string& message_name, const char* arg = nu
 {
 	if (arg) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "IMGMAKE",
+		                      "MAKEIMG",
 		                      message_name,
 		                      arg);
 
 	} else {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "IMGMAKE",
+		                      "MAKEIMG",
 		                      message_name);
 	}
 }
@@ -499,27 +499,27 @@ static std::tuple<std::shared_ptr<localDrive>, std_fs::path, std::string> resolv
 	char abs_dos_path[DOS_PATHLENGTH];
 	uint8_t drive_idx;
 	if (!DOS_MakeName(input_dos_path.c_str(), abs_dos_path, &drive_idx)) {
-		notify_warning("SHELL_CMD_IMGMAKE_INVALID_PATH",
+		notify_warning("SHELL_CMD_MAKEIMG_INVALID_PATH",
 		               input_dos_path.c_str());
 		return {nullptr, {}, {}};
 	}
 
 	// Check if drive is valid
 	if (!Drives[drive_idx]) {
-		notify_warning("SHELL_CMD_IMGMAKE_INVALID_DRIVE");
+		notify_warning("SHELL_CMD_MAKEIMG_INVALID_DRIVE");
 		return {nullptr, {}, {}};
 	}
 
 	// Check if drive is a local directory mount
 	auto local_drive = std::dynamic_pointer_cast<localDrive>(Drives[drive_idx]);
 	if (!local_drive) {
-		notify_warning("SHELL_CMD_IMGMAKE_NOT_LOCAL_DRIVE");
+		notify_warning("SHELL_CMD_MAKEIMG_NOT_LOCAL_DRIVE");
 		return {nullptr, {}, {}};
 	}
 
 	// Don't allow image creation on read-only drives
 	if (local_drive->IsReadOnly()) {
-		notify_warning("SHELL_CMD_IMGMAKE_DRIVE_READONLY");
+		notify_warning("SHELL_CMD_MAKEIMG_DRIVE_READONLY");
 		return {nullptr, {}, {}};
 	}
 
@@ -564,11 +564,11 @@ bool ask_confirmation(Program* program, const std::string& path,
 {
 	constexpr auto EscKey = 0x1B;
 	if (is_dos_fs) {
-		program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CONFIRM_DOS"),
+		program->WriteOut(MSG_Get("SHELL_CMD_MAKEIMG_CONFIRM_DOS"),
 		                  dos_path.c_str(),
 		                  path.c_str());
 	} else {
-		program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CONFIRM_HOST"),
+		program->WriteOut(MSG_Get("SHELL_CMD_MAKEIMG_CONFIRM_HOST"),
 		                  path.c_str());
 	}
 
@@ -590,7 +590,7 @@ bool ask_confirmation(Program* program, const std::string& path,
 
 			if (response == EscKey || response == 'n' || response == 'N') {
 				program->WriteOut(
-				        MSG_Get("SHELL_CMD_IMGMAKE_ABORTED"));
+				        MSG_Get("SHELL_CMD_MAKEIMG_ABORTED"));
 				return false;
 			}
 
@@ -622,7 +622,7 @@ static ParseResult parse_args(const std::vector<std::string>& args)
 		start_idx         = 1;
 
 	} else {
-		settings.filename = "IMGMAKE.IMG";
+		settings.filename = "MAKEIMG.IMG";
 	}
 
 	auto arg_size = static_cast<int>(args.size());
@@ -743,7 +743,7 @@ static bool compute_geometry(const CommandSettings& settings,
 		ctx.geometry.is_floppy        = false;
 
 		if (!settings.use_chs && settings.size_bytes == 0) {
-			notify_warning("SHELL_CMD_IMGMAKE_MISSING_SIZE");
+			notify_warning("SHELL_CMD_MAKEIMG_MISSING_SIZE");
 			return false;
 		}
 
@@ -796,13 +796,13 @@ static bool compute_geometry(const CommandSettings& settings,
 			                                  MaxInt13Cylinders);
 		}
 	} else {
-		notify_warning("SHELL_CMD_IMGMAKE_INVALID_TYPE",
+		notify_warning("SHELL_CMD_MAKEIMG_INVALID_TYPE",
 		               settings.type.c_str());
 		return false;
 	}
 
 	if (ctx.total_size == 0) {
-		notify_warning("SHELL_CMD_IMGMAKE_BAD_SIZE");
+		notify_warning("SHELL_CMD_MAKEIMG_BAD_SIZE");
 		return false;
 	}
 	return true;
@@ -814,7 +814,7 @@ static bool open_and_expand_file(const CommandSettings& settings,
 	// Check File Existence
 	std::error_code ec;
 	if (std_fs::exists(settings.filename, ec) && !settings.force) {
-		notify_warning("SHELL_CMD_IMGMAKE_FILE_EXISTS",
+		notify_warning("SHELL_CMD_MAKEIMG_FILE_EXISTS",
 		               settings.filename.string().c_str());
 		return false;
 	}
@@ -822,7 +822,7 @@ static bool open_and_expand_file(const CommandSettings& settings,
 	// Create file (truncate if exists)
 	FILE* raw_fs = fopen(settings.filename.string().c_str(), "wb+");
 	if (!raw_fs) {
-		notify_warning("SHELL_CMD_IMGMAKE_CANNOT_WRITE",
+		notify_warning("SHELL_CMD_MAKEIMG_CANNOT_WRITE",
 		               settings.filename.string().c_str());
 		return false;
 	}
@@ -833,14 +833,14 @@ static bool open_and_expand_file(const CommandSettings& settings,
 
 	// Seek to the last byte (total_size - 1)
 	if (cross_fseeko(temp_fs_guard.get(), ctx.total_size - 1, SEEK_SET) != 0) {
-		notify_warning("SHELL_CMD_IMGMAKE_SPACE_ERROR");
+		notify_warning("SHELL_CMD_MAKEIMG_SPACE_ERROR");
 		return false;
 	}
 
 	// Write a single zero byte at the end, causing the file to
 	// be filled up to total_size with zeros.
 	if (fputc(0, temp_fs_guard.get()) == EOF) {
-		notify_warning("SHELL_CMD_IMGMAKE_SPACE_ERROR");
+		notify_warning("SHELL_CMD_MAKEIMG_SPACE_ERROR");
 		return false;
 	}
 
@@ -1429,14 +1429,14 @@ static bool execute(Program* program, CommandSettings& settings)
 		// DOSBox to rescan.
 	}
 
-	program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_CREATED"),
+	program->WriteOut(MSG_Get("SHELL_CMD_MAKEIMG_CREATED"),
 	                  display_path.c_str(),
 	                  ctx.geometry.cylinders,
 	                  ctx.geometry.heads,
 	                  ctx.geometry.sectors);
 
 	if (!settings.no_format) {
-		program->WriteOut(MSG_Get("SHELL_CMD_IMGMAKE_FORMATTED"),
+		program->WriteOut(MSG_Get("SHELL_CMD_MAKEIMG_FORMATTED"),
 		                  (ctx.fat_bits == 12)   ? "12"
 		                  : (ctx.fat_bits == 16) ? "16"
 		                                         : "32");
@@ -1450,47 +1450,47 @@ static bool execute(Program* program, CommandSettings& settings)
 	return true;
 }
 
-} // namespace ImgmakeCommand
+} // namespace MakeimgCommand
 
-void IMGMAKE::Run()
+void MAKEIMG::Run()
 {
 	if (HelpRequested()) {
 		MoreOutputStrings output(*this);
-		output.AddString(MSG_Get("SHELL_CMD_IMGMAKE_HELP_LONG"));
+		output.AddString(MSG_Get("SHELL_CMD_MAKEIMG_HELP_LONG"));
 		output.Display();
 		return;
 	}
 
 	const auto args = cmd->GetArguments();
-	auto result     = ImgmakeCommand::parse_args(args);
+	auto result     = MakeimgCommand::parse_args(args);
 
-	if (std::holds_alternative<ImgmakeCommand::ErrorType>(result)) {
-		auto err = std::get<ImgmakeCommand::ErrorType>(result);
-		if (err != ImgmakeCommand::ErrorType::None) {
+	if (std::holds_alternative<MakeimgCommand::ErrorType>(result)) {
+		auto err = std::get<MakeimgCommand::ErrorType>(result);
+		if (err != MakeimgCommand::ErrorType::None) {
 			// Map error to message
-			ImgmakeCommand::notify_warning("SHELL_SYNTAX_ERROR");
+			MakeimgCommand::notify_warning("SHELL_SYNTAX_ERROR");
 		}
 		// If error is None, it means empty args, just show help logic
 		// implicitly or exit
-		if (err == ImgmakeCommand::ErrorType::None) {
+		if (err == MakeimgCommand::ErrorType::None) {
 			MoreOutputStrings output(*this);
-			output.AddString(MSG_Get("SHELL_CMD_IMGMAKE_HELP_LONG"));
+			output.AddString(MSG_Get("SHELL_CMD_MAKEIMG_HELP_LONG"));
 			output.Display();
 		}
 
 	} else {
-		auto settings = std::get<ImgmakeCommand::CommandSettings>(result);
-		ImgmakeCommand::execute(this, settings);
+		auto settings = std::get<MakeimgCommand::CommandSettings>(result);
+		MakeimgCommand::execute(this, settings);
 	}
 }
 
-void IMGMAKE::AddMessages()
+void MAKEIMG::AddMessages()
 {
-	MSG_Add("SHELL_CMD_IMGMAKE_HELP_LONG",
+	MSG_Add("SHELL_CMD_MAKEIMG_HELP_LONG",
 	        "Create a new empty disk image.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=light-green]imgmake[reset] [color=light-cyan]FILE[reset] [color=white]-t TYPE[reset] [PARAMETERS]\n"
+	        "  [color=light-green]makeimg[reset] [color=light-cyan]FILE[reset] [color=white]-t TYPE[reset] [PARAMETERS]\n"
 	        "\n"
 	        "Parameters:\n"
 	        "  -t [color=white]TYPE[reset]      Disk type:\n"
@@ -1513,9 +1513,9 @@ void IMGMAKE::AddMessages()
 
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]imgmake[reset] [color=light-cyan]floppy.img[reset] -t [color=light-cyan]fd_1440kb[reset] -label [color=white]MYDISK[reset]\n"
-	        "  [color=light-green]imgmake[reset] [color=light-cyan]hdd.img[reset] -t [color=light-cyan]hd[reset] -size [color=white]500[reset]\n"
-	        "  [color=light-green]imgmake[reset] [color=light-cyan]C:\\IMAGES\\HDD120.IMG[reset] -t [color=light-cyan]hd_120mb[reset] -fat [color=white]32[reset] -d\n"
+	        "  [color=light-green]makeimg[reset] [color=light-cyan]floppy.img[reset] -t [color=light-cyan]fd_1440kb[reset] -label [color=white]MYDISK[reset]\n"
+	        "  [color=light-green]makeimg[reset] [color=light-cyan]hdd.img[reset] -t [color=light-cyan]hd[reset] -size [color=white]500[reset]\n"
+	        "  [color=light-green]makeimg[reset] [color=light-cyan]C:\\IMAGES\\HDD120.IMG[reset] -t [color=light-cyan]hd_120mb[reset] -fat [color=white]32[reset] -d\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - By default, the image file will be created in the current working\n"
@@ -1523,32 +1523,32 @@ void IMGMAKE::AddMessages()
 	        "  - When using the [color=white]-writetodos[reset] option, ensure the target path is a mounted\n"
 	        "    local directory (not inside another disk image).\n");
 
-	MSG_Add("SHELL_CMD_IMGMAKE_MISSING_SIZE",
+	MSG_Add("SHELL_CMD_MAKEIMG_MISSING_SIZE",
 	        "You must specify -size or -chs for custom hard disks.");
-	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_TYPE",
+	MSG_Add("SHELL_CMD_MAKEIMG_INVALID_TYPE",
 	        "Unknown disk type: [color=light-cyan]%s[reset]");
-	MSG_Add("SHELL_CMD_IMGMAKE_BAD_SIZE", "Invalid disk size calculated.");
-	MSG_Add("SHELL_CMD_IMGMAKE_FILE_EXISTS",
+	MSG_Add("SHELL_CMD_MAKEIMG_BAD_SIZE", "Invalid disk size calculated.");
+	MSG_Add("SHELL_CMD_MAKEIMG_FILE_EXISTS",
 	        "File [color=light-cyan]%s[reset] already exists. Use -force to overwrite.");
-	MSG_Add("SHELL_CMD_IMGMAKE_CANNOT_WRITE",
+	MSG_Add("SHELL_CMD_MAKEIMG_CANNOT_WRITE",
 	        "Cannot open file [color=light-cyan]%s[reset] for writing.");
-	MSG_Add("SHELL_CMD_IMGMAKE_SPACE_ERROR",
+	MSG_Add("SHELL_CMD_MAKEIMG_SPACE_ERROR",
 	        "Disk full or cannot allocate image size.");
-	MSG_Add("SHELL_CMD_IMGMAKE_CREATED",
+	MSG_Add("SHELL_CMD_MAKEIMG_CREATED",
 	        "Created [color=light-cyan]%s[reset] [CHS: %u, %u, %u]");
-	MSG_Add("SHELL_CMD_IMGMAKE_FORMATTED",
+	MSG_Add("SHELL_CMD_MAKEIMG_FORMATTED",
 	        "\nFormatted as [color=light-cyan]FAT%s[reset]");
-	MSG_Add("SHELL_CMD_IMGMAKE_CONFIRM_HOST",
+	MSG_Add("SHELL_CMD_MAKEIMG_CONFIRM_HOST",
 	        "Image will be created on the [color=light-green]HOST[reset] filesystem at:\n  [color=light-cyan]%s[reset]\n\n"
 	        "Proceed? (Y/N)\n");
-	MSG_Add("SHELL_CMD_IMGMAKE_CONFIRM_DOS",
+	MSG_Add("SHELL_CMD_MAKEIMG_CONFIRM_DOS",
 	        "Image will be created on the [color=light-green]DOS[reset] filesystem at:\n  [color=light-cyan]%s[reset]\n"
 	        "  Host path: %s\n\n"
 	        "Proceed? (Y/N)\n");
-	MSG_Add("SHELL_CMD_IMGMAKE_ABORTED", "\nOperation aborted.");
-	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_PATH", "Invalid DOS path: %s");
-	MSG_Add("SHELL_CMD_IMGMAKE_INVALID_DRIVE", "Target drive is invalid.");
-	MSG_Add("SHELL_CMD_IMGMAKE_DRIVE_READONLY", "Target drive is read-only.");
-	MSG_Add("SHELL_CMD_IMGMAKE_NOT_LOCAL_DRIVE",
+	MSG_Add("SHELL_CMD_MAKEIMG_ABORTED", "\nOperation aborted.");
+	MSG_Add("SHELL_CMD_MAKEIMG_INVALID_PATH", "Invalid DOS path: %s");
+	MSG_Add("SHELL_CMD_MAKEIMG_INVALID_DRIVE", "Target drive is invalid.");
+	MSG_Add("SHELL_CMD_MAKEIMG_DRIVE_READONLY", "Target drive is read-only.");
+	MSG_Add("SHELL_CMD_MAKEIMG_NOT_LOCAL_DRIVE",
 	        "Cannot create image inside another disk image.\nTarget must be a mounted local directory.");
 }
