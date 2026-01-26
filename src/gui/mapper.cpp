@@ -96,9 +96,6 @@ static CBindList holdlist;
 
 static bool suppress_save_mapper_file_message = false;
 
-// In SDL ticks (msec)
-static auto joystick_subsystem_init_timestamp = std::numeric_limits<uint64_t>::max();
-
 class CEvent {
 public:
 	CEvent(const char *ev_entry) : bindlist{}
@@ -2645,13 +2642,6 @@ void MAPPER_CheckEvent(SDL_Event *event)
 
 void MAPPER_HandleJoyDeviceEvent(SDL_JoyDeviceEvent* event)
 {
-	#define SDL_TICKS_PASSED(A, B)  ((Sint32)((B) - (A)) <= 0)
-
-	// Hack to eliminate redundant initialization and corresponding log spam
-	// at startup
-	if (!SDL_TICKS_PASSED(event->timestamp, joystick_subsystem_init_timestamp)) {
-		return;
-	}
 	switch (event->type) {
 	case SDL_EVENT_GAMEPAD_ADDED:
 	case SDL_EVENT_JOYSTICK_ADDED: {
@@ -2810,7 +2800,6 @@ static void QueryJoysticks()
 
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK) {
 		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-		joystick_subsystem_init_timestamp = SDL_GetTicks();
 	}
 
 	const bool wants_auto_config = joytype & (JOY_AUTO | JOY_ONLY_FOR_MAPPING);
