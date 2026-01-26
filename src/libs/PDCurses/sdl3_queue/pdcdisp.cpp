@@ -1,6 +1,7 @@
 /* PDCurses */
 
 #include "pdcsdl.h"
+#include "pdc_event_queue.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -563,16 +564,16 @@ void PDC_doupdate(void)
 
 void PDC_pump_and_peep(void)
 {
-    if (pdc_event_queue.empty())
+    if (debugger_event_queue.empty())
         return;
 
-    const auto & event = pdc_event_queue.front();
+    const auto & qe = debugger_event_queue.front();
 
-    if ((SDL_EVENT_WINDOW_RESTORED == event.window.type ||
-            SDL_EVENT_WINDOW_EXPOSED == event.window.type))
+    if ((SDL_EVENT_WINDOW_RESTORED == qe.ev.window.type ||
+            SDL_EVENT_WINDOW_EXPOSED == qe.ev.window.type))
     {
         SDL_UpdateWindowSurface(pdc_window);
         rectcount = 0;
-        pdc_event_queue.pop();
+        debugger_event_queue.pop();
     }
 }
