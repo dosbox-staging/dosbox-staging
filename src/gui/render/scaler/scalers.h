@@ -5,8 +5,6 @@
 #ifndef DOSBOX_RENDER_SCALERS_H
 #define DOSBOX_RENDER_SCALERS_H
 
-#include "gui/render/render.h"
-
 #include <array>
 
 #include "misc/video.h"

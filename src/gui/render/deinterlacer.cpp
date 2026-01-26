@@ -5,13 +5,59 @@
 
 #include <vector>
 
+#include "gui/render/render.h"
 #include "misc/image_decoder.h"
 #include "utils/checks.h"
 #include "utils/mem_unaligned.h"
 
 CHECK_NARROWING();
 
-void Deinterlacer::ThresholdInput(const uint32_t* src, bit_buffer& dest) const
+uint32_t Deinterlacer::DetectBackgroundColor(const uint32_t* pixel_data) const
+{
+	auto in_line = pixel_data;
+
+	// Some games might use some other background colour than RGB(0,0,0);
+	// e.g., Crusader: No Regret sets it to RGB(8,8,8), and the "black
+	// scanlines" also have this color instead of 100% black.
+	//
+	// At least in this game, the widescreen video starts at line 120, and
+	// lines 0-119 contain the background colour. We can turn this knowledge
+	// into a detection heuristics: we assume the top left pixel color is
+	// the background colour, and if the next 10 lines are filled with this
+	// color, we conclude this must be the background colour.
+	//
+	// We might need to improve our heuristics if we come across similar
+	// games with non-black backgrounds that break these assumptions.
+	//
+	const auto top_left_pixel_color = *in_line;
+
+	// The fastest way is to create a row's worth of data filled with our
+	// background colour candidate, and then memcmp it to the actual rows.
+	std::array<uint32_t, ScalerMaxWidth> bg_color_row = {};
+	for (auto x = 0; x < image.width; ++x) {
+		bg_color_row[x] = top_left_pixel_color;
+	}
+
+	// Are the top first 10 lines filled with the background colour?
+	auto bg_color_detected = [&] {
+		for (auto y = 0; y < 10; ++y) {
+			if (std::memcmp(bg_color_row.data(),
+			                in_line + (image.pitch_pixels * y),
+			                image.width * sizeof(uint32_t)) != 0) {
+
+				return false;
+			}
+		}
+		return true;
+	}();
+
+	// Return the detected colour if we succeeded, or revert to black
+	constexpr uint32_t Black = 0;
+	return bg_color_detected ? top_left_pixel_color : Black;
+}
+
+void Deinterlacer::ThresholdInput(const uint32_t* src, bit_buffer& dest,
+                                  const uint32_t bg_color) const
 {
 	auto in_line  = src;
 	auto out_line = dest.data() + BufferOffset + buffer_pitch;
@@ -48,14 +94,14 @@ void Deinterlacer::ThresholdInput(const uint32_t* src, bit_buffer& dest) const
 				// the 64th pixel.
 				//
 				const uint8_t bits =
-				        static_cast<uint8_t>(((a1 != 0) << 0)) |
-				        static_cast<uint8_t>(((a2 != 0) << 1)) |
-				        static_cast<uint8_t>(((a3 != 0) << 2)) |
-				        static_cast<uint8_t>(((a4 != 0) << 3)) |
-				        static_cast<uint8_t>(((a5 != 0) << 4)) |
-				        static_cast<uint8_t>(((a6 != 0) << 5)) |
-				        static_cast<uint8_t>(((a7 != 0) << 6)) |
-				        static_cast<uint8_t>(((a8 != 0) << 7));
+				        static_cast<uint8_t>(((a1 != bg_color) << 0)) |
+				        static_cast<uint8_t>(((a2 != bg_color) << 1)) |
+				        static_cast<uint8_t>(((a3 != bg_color) << 2)) |
+				        static_cast<uint8_t>(((a4 != bg_color) << 3)) |
+				        static_cast<uint8_t>(((a5 != bg_color) << 4)) |
+				        static_cast<uint8_t>(((a6 != bg_color) << 5)) |
+				        static_cast<uint8_t>(((a7 != bg_color) << 6)) |
+				        static_cast<uint8_t>(((a8 != bg_color) << 7));
 
 				out_buf |= static_cast<uint64_t>(bits) << (n * 8);
 			}
@@ -416,12 +462,15 @@ RenderedImage Deinterlacer::LineDeinterlace(const RenderedImage& input_image,
 
 	buffer_pitch = image.width / PixelsPerBitBufferElement + BufferOffset;
 
+	// Attempt to detect the background colour of the input image based on
+	// some heuristics.
+	const auto bg_color = DetectBackgroundColor(image.data);
+
 	// Run a threshold pass on the original image to generate a 1-bit
 	// mask. The mask bitplane is 0 for black pixels and 1 for non-black
 	// pixels. Interlaced areas will show up as alternating lines of 1s
 	// and 0s.
-	//
-	ThresholdInput(image.data, buffer1);
+	ThresholdInput(image.data, buffer1, bg_color);
 
 	// Make a copy of the 1-bit mask, shift it one pixel down, and XOR it
 	// with the unshifted original mask. This will cause interlaced areas
@@ -436,14 +485,18 @@ RenderedImage Deinterlacer::LineDeinterlace(const RenderedImage& input_image,
 	// borders of the non-interlaced areas, and will get rid various
 	// other small leftover junk as well.
 	//
-	ErodeHorizontal(buffer2, buffer1);
-	ErodeVertical(buffer1, buffer2);
+	for (auto i = 0; i < 2; ++i) {
+		ErodeHorizontal(buffer2, buffer1);
+		ErodeVertical(buffer1, buffer2);
+	}
 
 	// Do a morphological dilate operation with 1-pixel radius on the
 	// resulting mask to "grow back" the original interlaced areas.
 	//
-	DilateHorizontal(buffer2, buffer1);
-	DilateVertical(buffer1, buffer2);
+	for (auto i = 0; i < 2; ++i) {
+		DilateHorizontal(buffer2, buffer1);
+		DilateVertical(buffer1, buffer2);
+	}
 
 	// Now we have a bitmask that has large contiguous areas filled with 1s
 	// where we need to perform the deinterlacing. We'll combine the
