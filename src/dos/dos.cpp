@@ -1993,12 +1993,18 @@ static void init_dos_settings(SectionProp& section)
 	        "tab-separated format, used by SETVER.EXE as a persistent storage (empty by\n"
 	        "default).");
 
-	pbool = section.AddBool("file_locking", WhenIdle, true);
-	pbool->SetHelp(
-	        "Enable file locking via emulating SHARE.EXE ('on' by default). This is required\n"
+	pstring = section.AddString("file_locking", WhenIdle, "auto");
+	pstring->SetValues({"auto", "on", "off"});
+	pstring->SetHelp(
+	        "Enable file locking via emulating SHARE.EXE ('auto' by default). This is required\n"
 	        "for some Windows 3.1x applications to work properly. It generally does not cause\n"
 	        "problems for DOS games except in rare cases (e.g., Astral Blur demo). If you\n"
-	        "experience crashes related to file permissions, you can try disabling this.");
+	        "experience crashes related to file permissions, you can try disabling this.\n"
+	        "Possible values:\n"
+	        "\n"
+	        "  auto:  Enable file locking only when Windows 3.1 is running.\n"
+	        "  on:    Always enable file locking.\n"
+	        "  off:   Always disable file locking.");
 }
 
 void DOS_AddConfigSection([[maybe_unused]] const ConfigPtr& conf)

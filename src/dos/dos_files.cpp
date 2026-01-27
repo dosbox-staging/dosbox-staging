@@ -12,6 +12,7 @@
 #include <ctime>
 
 #include "dosbox.h"
+#include "dos_windows.h"
 #include "ints/bios.h"
 #include "hardware/memory.h"
 #include "cpu/registers.h"
@@ -35,7 +36,13 @@ std::array<std::unique_ptr<DOS_File>, DOS_FILES> Files = {};
 std::array<std::shared_ptr<DOS_Drive>, DOS_DRIVES> Drives = {};
 
 // Set by "file_locking" config
-static bool emulate_file_locking = true;
+enum class FileLockingConfig
+{
+	Auto,
+	On,
+	Off
+};
+static FileLockingConfig emulate_file_locking = FileLockingConfig::Auto;
 
 enum class FileSharingMode
 {
@@ -1876,10 +1883,26 @@ void DOS_ClearDrivesAndFiles()
 
 bool DOS_IsFileLocking()
 {
-	return emulate_file_locking;
+	switch (emulate_file_locking) {
+		case FileLockingConfig::On:
+			return true;
+		case FileLockingConfig::Off:
+			return false;
+		default:
+			assertm(emulate_file_locking == FileLockingConfig::Auto, "emulate_file_locking enum set to invalid value");
+			return WINDOWS_IsStarted();
+	}
 }
 
 void DOS_Files_Init(SectionProp& section)
 {
-	emulate_file_locking = section.GetBool("file_locking");
+	const auto locking = section.GetString("file_locking");
+	if (locking == "on") {
+		emulate_file_locking = FileLockingConfig::On;
+	} else if (locking == "off") {
+		emulate_file_locking = FileLockingConfig::Off;
+	} else {
+		assertm(locking == "auto", "file_locking config set to invalid string");
+		emulate_file_locking = FileLockingConfig::Auto;
+	}
 }
