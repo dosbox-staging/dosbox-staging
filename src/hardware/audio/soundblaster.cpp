@@ -2510,14 +2510,31 @@ static void reset_mixer()
 
 static void write_sb_pro_volume(uint8_t* dest, const uint8_t value)
 {
-	dest[0] = (((value) & 0xf0) >> 3) | (sb.type == SbType::SB16 ? 1 : 3);
-	dest[1] = (((value) & 0x0f) << 1) | (sb.type == SbType::SB16 ? 1 : 3);
+	dest[0] = ((value & 0xf0) >> 3) | (sb.type == SbType::SB16 ? 1 : 3);
+	dest[1] = ((value & 0x0f) << 1) | (sb.type == SbType::SB16 ? 1 : 3);
+}
+
+static void write_ess_sb_pro_volume(uint8_t* dest, const uint8_t value)
+{
+	// If the Sound Blaster Pro compatible interface is used on ESS, bits 0
+	// and 4 are cleared by all writes.
+	const auto val = value & 0b11101110;
+
+	dest[0] = (val & 0xf0) >> 4;
+	dest[1] = (val & 0x0f);
 }
 
 static uint8_t read_sb_pro_volume(const uint8_t* src)
 {
 	return ((((src[0] & 0x1e) << 3) | ((src[1] & 0x1e) >> 1)) |
 	        ((sb.type == SbType::SBPro1 || sb.type == SbType::SBPro2) ? 0x11 : 0));
+}
+
+static uint8_t read_ess_sb_pro_volume(const uint8_t* src)
+{
+	// If the Sound Blaster Pro compatible interface is used on ESS, bits 0
+	// and 4 and forced high on all reads.
+	return ((src[0] << 4) | src[1]) | 0b00010001;
 }
 
 static void dsp_change_stereo(const bool stereo)
@@ -2592,8 +2609,12 @@ static void mixer_write(const uint8_t val)
 		update_channel_volumes();
 		break;
 
-	case 0x04: // DAC Volume (SBPRO)
-		write_sb_pro_volume(sb.mixer.dac, val);
+	case 0x04: // DAC Volume (SBPRO, ESS)
+		if (sb.ess.extended_mode_enabled) {
+			write_ess_sb_pro_volume(sb.mixer.dac, val);
+		} else {
+			write_sb_pro_volume(sb.mixer.dac, val);
+		}
 		update_channel_volumes();
 		break;
 
@@ -2682,22 +2703,38 @@ static void mixer_write(const uint8_t val)
 		break;
 
 	case 0x22: // Master Volume (SBPRO)
-		write_sb_pro_volume(sb.mixer.master, val);
+		if (sb.ess.extended_mode_enabled) {
+			write_ess_sb_pro_volume(sb.mixer.master, val);
+		} else {
+			write_sb_pro_volume(sb.mixer.master, val);
+		}
 		update_channel_volumes();
 		break;
 
 	case 0x26: // FM Volume (SBPRO)
-		write_sb_pro_volume(sb.mixer.fm, val);
+		if (sb.ess.extended_mode_enabled) {
+			write_ess_sb_pro_volume(sb.mixer.fm, val);
+		} else {
+			write_sb_pro_volume(sb.mixer.fm, val);
+		}
 		update_channel_volumes();
 		break;
 
 	case 0x28: // CD Audio Volume (SBPRO)
-		write_sb_pro_volume(sb.mixer.cda, val);
+		if (sb.ess.extended_mode_enabled) {
+			write_ess_sb_pro_volume(sb.mixer.cda, val);
+		} else {
+			write_sb_pro_volume(sb.mixer.cda, val);
+		}
 		update_channel_volumes();
 		break;
 
 	case 0x2e: // Line-in Volume (SBPRO)
-		write_sb_pro_volume(sb.mixer.lin, val);
+		if (sb.ess.extended_mode_enabled) {
+			write_ess_sb_pro_volume(sb.mixer.lin, val);
+		} else {
+			write_sb_pro_volume(sb.mixer.lin, val);
+		}
 		break;
 
 	// case 0x20: // Master Volume Left (SBPRO) ?
@@ -2871,11 +2908,19 @@ static uint8_t mixer_read()
 		}
 		break;
 
-	case 0x22: // Master Volume (SB Pro)
-		return read_sb_pro_volume(sb.mixer.master);
+	case 0x22: // Master Volume (SB Pro, ESS)
+		if (sb.ess.extended_mode_enabled) {
+			return read_ess_sb_pro_volume(sb.mixer.master);
+		} else {
+			return read_sb_pro_volume(sb.mixer.master);
+		}
 
-	case 0x04: // DAC Volume (SB Pro)
-		return read_sb_pro_volume(sb.mixer.dac);
+	case 0x04: // DAC Volume (SB Pro, ESS)
+		if (sb.ess.extended_mode_enabled) {
+			return read_ess_sb_pro_volume(sb.mixer.dac);
+		} else {
+			return read_sb_pro_volume(sb.mixer.dac);
+		}
 
 	case 0x06: // FM Volume (SB2 only) + FM output selection
 		return ((sb.mixer.fm[1] >> 1) & 0xe);
@@ -2895,14 +2940,26 @@ static uint8_t mixer_read()
 		return 0x11 | (sb.mixer.stereo_enabled ? 0x02 : 0x00) |
 		       (sb.mixer.filter_enabled ? 0x00 : 0x20);
 
-	case 0x26: // FM Volume (SB Pro)
-		return read_sb_pro_volume(sb.mixer.fm);
+	case 0x26: // FM Volume (SB Pro, ESS)
+		if (sb.ess.extended_mode_enabled) {
+			return read_ess_sb_pro_volume(sb.mixer.fm);
+		} else {
+			return read_sb_pro_volume(sb.mixer.fm);
+		}
 
-	case 0x28: // CD Audio Volume (SB Pro)
-		return read_sb_pro_volume(sb.mixer.cda);
+	case 0x28: // CD Audio Volume (SB Pro, ESS)
+		if (sb.ess.extended_mode_enabled) {
+			return read_ess_sb_pro_volume(sb.mixer.cda);
+		} else {
+			return read_sb_pro_volume(sb.mixer.cda);
+		}
 
-	case 0x2e: // Line-in Volume (SB Pro)
-		return read_sb_pro_volume(sb.mixer.lin);
+	case 0x2e: // Line-in Volume (SB Pro, ESS)
+		if (sb.ess.extended_mode_enabled) {
+			return read_ess_sb_pro_volume(sb.mixer.lin);
+		} else {
+			return read_sb_pro_volume(sb.mixer.lin);
+		}
 
 	case 0x30: // Master Volume Left (SB16)
 		if (sb.type == SbType::SB16) {
@@ -2925,7 +2982,7 @@ static uint8_t mixer_read()
 			return sb.mixer.dac[0] << 3;
 		}
 		if (sb.ess.extended_mode_enabled) {
-			return read_ess_volume(sb.mixer.master);
+			return read_ess_sb_pro_volume(sb.mixer.master);
 		}
 		ret = 0xa;
 		break;
@@ -2959,7 +3016,7 @@ static uint8_t mixer_read()
 			return sb.mixer.cda[0] << 3;
 		}
 		if (sb.ess.extended_mode_enabled) {
-			return read_ess_volume(sb.mixer.fm);
+			return read_ess_sb_pro_volume(sb.mixer.fm);
 		}
 		ret = 0xa;
 		break;
@@ -2978,7 +3035,7 @@ static uint8_t mixer_read()
 			return sb.mixer.lin[0] << 3;
 		}
 		if (sb.ess.extended_mode_enabled) {
-			return read_ess_volume(sb.mixer.cda);
+			return read_ess_sb_pro_volume(sb.mixer.cda);
 		}
 		ret = 0xa;
 		break;
@@ -2999,7 +3056,7 @@ static uint8_t mixer_read()
 
 	case 0x3e: // Line Volume (ESS)
 		if (sb.ess.extended_mode_enabled) {
-			return read_ess_volume(sb.mixer.lin);
+			return read_ess_sb_pro_volume(sb.mixer.lin);
 		}
 		break;
 
