@@ -17,12 +17,12 @@ layout (location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
 
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) * rubyInputSize;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) * INPUT_TEXTURE_SIZE;
 }
 
 #elif defined(FRAGMENT)
@@ -31,18 +31,18 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
 uniform sampler2D rubyTexture;
 
 vec3 getadvinterp2xtexel(vec2 coord)
 {
 	vec2 base = floor(coord / vec2(2.0)) + vec2(0.5);
-	vec3 c4   = texture(rubyTexture, base / rubyInputSize).xyz;
+	vec3 c4   = texture(rubyTexture, base / INPUT_TEXTURE_SIZE).xyz;
 
-	vec3 c1 = texture(rubyTexture, (base - vec2(0.0, 1.0)) / rubyInputSize).xyz;
-	vec3 c7 = texture(rubyTexture, (base + vec2(0.0, 1.0)) / rubyInputSize).xyz;
-	vec3 c3 = texture(rubyTexture, (base - vec2(1.0, 0.0)) / rubyInputSize).xyz;
-	vec3 c5 = texture(rubyTexture, (base + vec2(1.0, 0.0)) / rubyInputSize).xyz;
+	vec3 c1 = texture(rubyTexture, (base - vec2(0.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c7 = texture(rubyTexture, (base + vec2(0.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c3 = texture(rubyTexture, (base - vec2(1.0, 0.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c5 = texture(rubyTexture, (base + vec2(1.0, 0.0)) / INPUT_TEXTURE_SIZE).xyz;
 
 	bool outer = c1 != c7 && c3 != c5;
 	bool c3c1  = outer && c3 == c1;
