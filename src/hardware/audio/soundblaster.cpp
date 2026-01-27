@@ -1708,7 +1708,7 @@ static void dsp_finish_reset(const uint32_t /*val*/)
 	sb.dsp.state = DspState::Normal;
 }
 
-static void dsp_reset()
+static void reset_dsp()
 {
 	LOG(LOG_SB, LOG_ERROR)("DSP:Reset");
 
@@ -1763,7 +1763,7 @@ static void dsp_do_reset(const uint8_t val)
 {
 	if (((val & 1) != 0) && (sb.dsp.state != DspState::Reset)) {
 		// TODO Get out of highspeed mode
-		dsp_reset();
+		reset_dsp();
 
 		sb.dsp.state = DspState::Reset;
 	} else if (((val & 1) == 0) && (sb.dsp.state == DspState::Reset)) {
@@ -3677,7 +3677,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 	asp_regs[5] = 0x01;
 	asp_regs[9] = 0xf8;
 
-	dsp_reset();
+	reset_dsp();
 
 	reset_mixer();
 
@@ -3742,7 +3742,7 @@ SoundBlaster::~SoundBlaster()
 		wh.Uninstall();
 	}
 
-	dsp_reset();
+	reset_dsp();
 	sb.dsp.reset_tally = 0;
 
 	MIXER_DeregisterChannel(channel);
