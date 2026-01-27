@@ -2831,7 +2831,7 @@ static void mixer_write(const uint8_t val)
 	}
 }
 
-static uint8_t ctmixer_read()
+static uint8_t mixer_read()
 {
 	uint8_t ret = 0;
 	// if ( sb.mixer.index< 0x80) LOG_MSG("Read mixer %x",sb.mixer.index);
@@ -3109,9 +3109,7 @@ static uint8_t read_sb(const io_port_t port, const io_width_t)
 {
 	switch (port - sb.hw.base) {
 	case MixerIndex: return sb.mixer.index;
-
-	case MixerData: return ctmixer_read();
-
+	case MixerData: return mixer_read();
 	case DspReadData: return dsp_read_data();
 
 	case DspReadStatus: {
