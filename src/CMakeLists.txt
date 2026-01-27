@@ -2,7 +2,11 @@ add_subdirectory(audio)
 add_subdirectory(capture)
 add_subdirectory(config)
 add_subdirectory(cpu)
-add_subdirectory(debugger)
+
+if (OPT_DEBUGGER)
+  add_subdirectory(debugger)
+endif()
+
 add_subdirectory(dos)
 add_subdirectory(fpu)
 add_subdirectory(gui)

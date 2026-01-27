@@ -16,8 +16,6 @@
 #include "shell/command_line.h"
 #include "utils/math_utils.h"
 
-#include "hardware/input/mouse_interfaces.h"
-
 CHECK_NARROWING();
 
 // Port clock divider for 1200 baud transmission
@@ -28,17 +26,22 @@ static constexpr uint16_t rate_1200_baud = 40;
 
 CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
         : CSerial(id, cmd),
-          port_id(id),
-          port_num(static_cast<uint16_t>(id + 1))
+          port_num(id + 1),
+          interface_id(static_cast<MouseInterfaceId>(enum_val(MouseInterfaceId::COM1) + id))
 {
-	auto interface = MouseInterface::GetSerial(port_id);
-	if (!interface)
+	if (interface_id != MouseInterfaceId::COM1 &&
+	    interface_id != MouseInterfaceId::COM2 &&
+	    interface_id != MouseInterfaceId::COM3 &&
+	    interface_id != MouseInterfaceId::COM4) {
+
+		LOG_ERR("MOUSE (COM%d): Port not supported", port_num);
 		return;
+	}
 
 	// Get the parameters from the configuration file
 
-	param_model    = mouse_config.model_com;
-	param_auto_msm = mouse_config.model_com_auto_msm;
+	param_model    = MOUSECOM_GetConfiguredModel();
+	param_auto_msm = MOUSECOM_GetConfiguredAutoMsm();
 
 	// Handle deprecated parameters
 
@@ -46,9 +49,10 @@ CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
 
 	// Override with parameters from command line or [serial] section
 
-	std::string model_string;
+	std::string model_string = {};
 	if (cmd->FindStringBegin("model:", model_string, false) &&
-	    !MouseConfig::ParseComModel(model_string, param_model, param_auto_msm)) {
+	    !MOUSECOM_ParseComModel(model_string, param_model, param_auto_msm)) {
+
 		LOG_ERR("MOUSE (COM%d): Invalid model '%s'",
 		        port_num,
 		        model_string.c_str());
@@ -60,17 +64,15 @@ CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
 	setCD(false);
 	setCTS(false);
 
-	interface->RegisterListener(*this);
-	interface->NotifyInterfaceRate(rate_1200_baud);
+	MOUSECOM_RegisterListener(interface_id, *this);
+	MOUSECOM_NotifyInterfaceRate(interface_id, rate_1200_baud);
+
 	InstallationSuccessful = true;
 }
 
 CSerialMouse::~CSerialMouse()
 {
-	auto interface = MouseInterface::GetSerial(port_id);
-	if (interface) {
-		interface->UnRegisterListener();
-	}
+	MOUSECOM_UnregisterListener(interface_id);
 
 	removeEvent(SERIAL_TX_EVENT); // clear events
 	LOG_MSG("MOUSE (COM%d): Disconnected", port_num);
@@ -78,7 +80,7 @@ CSerialMouse::~CSerialMouse()
 
 void CSerialMouse::HandleDeprecatedOptions(CommandLine *cmd)
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	std::string option;
 	if (cmd->FindStringBeginCaseSensitive("rate:", option, false))
@@ -122,7 +124,7 @@ void CSerialMouse::HandleDeprecatedOptions(CommandLine *cmd)
 
 void CSerialMouse::BoostRate(const uint16_t rate_hz)
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	if (!rate_hz || model == NoMouse) {
 		rate_coeff = 1.0f;
@@ -155,7 +157,7 @@ void CSerialMouse::BoostRate(const uint16_t rate_hz)
 
 void CSerialMouse::LogMouseModel()
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	std::string model_name = {};
 	switch (model) {
@@ -193,7 +195,7 @@ void CSerialMouse::LogMouseModel()
 	}
 }
 
-void CSerialMouse::SetModel(const MouseModelCOM new_model)
+void CSerialMouse::SetModel(const MouseModelCom new_model)
 {
 	if (model != new_model) {
 		model = new_model;
@@ -203,7 +205,7 @@ void CSerialMouse::SetModel(const MouseModelCOM new_model)
 
 	// So far all emulated mice are 1200 bauds, but report anyway
 	// to trigger rate_coeff recalculation
-	MouseInterface::GetSerial(port_id)->NotifyInterfaceRate(rate_1200_baud);
+	MOUSECOM_NotifyInterfaceRate(interface_id, rate_1200_baud);
 }
 
 void CSerialMouse::AbortPacket()
@@ -294,7 +296,7 @@ void CSerialMouse::NotifyWheel(const float w_rel)
 
 void CSerialMouse::StartPacketId() // send the mouse identifier
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	if (model == NoMouse) {
 		return;
@@ -332,7 +334,7 @@ void CSerialMouse::StartPacketId() // send the mouse identifier
 
 void CSerialMouse::StartPacketData(const bool extended)
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	if (model == NoMouse) {
 		return;
@@ -404,7 +406,7 @@ void CSerialMouse::StartPacketData(const bool extended)
 void CSerialMouse::StartPacketPart2()
 {
 	// Port settings are valid at this point
-	if (model == MouseModelCOM::MouseSystems) {
+	if (model == MouseModelCom::MouseSystems) {
 		//          -- -- -- -- -- -- -- --
 		// Byte 3:  X7 X6 X5 X4 X3 X2 X1 X0
 		// Byte 4:  Y7 Y6 Y5 Y4 Y3 Y2 Y1 Y0
@@ -481,7 +483,7 @@ void CSerialMouse::handleUpperEvent(const uint16_t event_type)
 
 void CSerialMouse::updatePortConfig(const uint16_t divider, const uint8_t lcr)
 {
-	using enum MouseModelCOM;
+	using enum MouseModelCom;
 
 	AbortPacket();
 

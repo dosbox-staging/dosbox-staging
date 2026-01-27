@@ -4,7 +4,7 @@
 #include "private/mouse_manymouse.h"
 
 #include "private/mouse_common.h"
-#include "mouse_config.h"
+#include "private/mouse_config.h"
 
 #include <algorithm>
 #include <initializer_list>
@@ -27,17 +27,17 @@ void manymouse_tick(uint32_t)
 
 MousePhysical::MousePhysical(const std::string &name) : name(name) {}
 
-bool MousePhysical::IsMapped() const
-{
-	return mapped_id != MouseInterfaceId::None;
-}
-
 bool MousePhysical::IsDisconnected() const
 {
 	return disconnected;
 }
 
-MouseInterfaceId MousePhysical::GetMappedInterfaceId() const
+bool MousePhysical::IsMapped() const
+{
+	return mapped_id.has_value();
+}
+
+std::optional<MouseInterfaceId> MousePhysical::GetMappedInterfaceId() const
 {
 	return mapped_id;
 }
@@ -275,11 +275,16 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &physical_device_idx)
 
 		// Do not accept already mapped devices
 		bool already_mapped = false;
-		for (const auto &interface : mouse_interfaces)
-			if (interface->IsMapped(physical_device_idx))
+		for (const auto interface_id : AllMouseInterfaceIds) {
+			const auto& interface = MouseInterface::GetInstance(interface_id);
+			if (interface.IsMapped(physical_device_idx)) {
 				already_mapped = true;
-		if (already_mapped)
+				break;
+			}
+		}
+		if (already_mapped) {
 			continue;
+		}
 
 		// Mouse probed successfully
 		physical_device_idx = static_cast<uint8_t>(event.device);
@@ -306,7 +311,7 @@ uint8_t ManyMouseGlue::GetIdx(const std::regex &regex)
 			// mouse disconnected or name does not match
 			continue;
 
-		if (physical_device.GetMappedInterfaceId() == MouseInterfaceId::None)
+		if (physical_device.GetMappedInterfaceId())
 			// name matches, mouse not mapped yet - use it!
 			return static_cast<uint8_t>(i);
 	}
@@ -317,16 +322,15 @@ uint8_t ManyMouseGlue::GetIdx(const std::regex &regex)
 void ManyMouseGlue::Map(const uint8_t physical_device_idx,
                         const MouseInterfaceId interface_id)
 {
-	assert(interface_id != MouseInterfaceId::None);
-
 	if (physical_device_idx >= physical_devices.size()) {
 		UnMap(interface_id);
 		return;
 	}
 
 	auto &physical_device = physical_devices[physical_device_idx];
-	if (interface_id == physical_device.GetMappedInterfaceId())
+	if (interface_id == physical_device.GetMappedInterfaceId()) {
 		return; // nothing to update
+	}
 	physical_device.mapped_id = interface_id;
 
 	MapFinalize();
@@ -335,9 +339,10 @@ void ManyMouseGlue::Map(const uint8_t physical_device_idx,
 void ManyMouseGlue::UnMap(const MouseInterfaceId interface_id)
 {
 	for (auto &physical_device : physical_devices) {
-		if (interface_id != physical_device.GetMappedInterfaceId())
+		if (interface_id != physical_device.GetMappedInterfaceId()) {
 			continue; // not a device to unmap
-		physical_device.mapped_id = MouseInterfaceId::None;
+		}
+		physical_device.mapped_id = {};
 		break;
 	}
 
@@ -375,8 +380,8 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical
 	}
 
 	const auto device_idx = static_cast<uint8_t>(event.device);
-	const auto interface_id = physical_devices[device_idx].GetMappedInterfaceId();
-	const bool no_interface = (interface_id == MouseInterfaceId::None);
+	const auto interface_id = physical_devices[device_idx].GetMappedInterfaceId(); 
+	const bool no_interface = !interface_id.has_value();
 
 	switch (event.type) {
 	case MANYMOUSE_EVENT_ABSMOTION:
@@ -418,27 +423,33 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical
 		}
 		MOUSE_EventButton(static_cast<MouseButtonId>(event.item),
 		                  event.value,
-		                  interface_id);
+		                  *interface_id);
 		break;
 
 	case MANYMOUSE_EVENT_SCROLL:
 		// LOG_INFO("MANYMOUSE #%u WHEEL #%u %d", event.device,
 		// event.item, event.value);
-		if (no_interface || critical_only || (event.item != 0))
+		if (no_interface || critical_only || (event.item != 0)) {
 			break; // only the 1st wheel is supported
-		MOUSE_EventWheel(clamp_to_int16(-event.value), interface_id);
+		}
+		MOUSE_EventWheel(clamp_to_int16(-event.value), *interface_id);
 		break;
 
 	case MANYMOUSE_EVENT_DISCONNECT:
 		// LOG_INFO("MANYMOUSE #%u DISCONNECT", event.device);
+
+		if (no_interface) {
+			break;
+		}
+
 		physical_devices[event.device].disconnected = true;
 
 		for (const auto button_id : {MouseButtonId::Left,
 		                             MouseButtonId::Right,
 		                             MouseButtonId::Middle}) {
-			MOUSE_EventButton(button_id, false, interface_id);
+			MOUSE_EventButton(button_id, false, *interface_id);
 		}
-		MOUSE_NotifyDisconnect(interface_id);
+		MOUSE_NotifyDisconnect(*interface_id);
 		break;
 
 	default:
@@ -453,25 +464,31 @@ void ManyMouseGlue::Tick()
 
 	// Handle all the events from the queue
 	ManyMouseEvent event;
-	while (ManyMouse_PollEvent(&event))
+	while (ManyMouse_PollEvent(&event)) {
 		HandleEvent(event);
+	}
 
 	// Report accumulated mouse movements
 	assert(rel_x.size() < UINT8_MAX);
 	for (uint8_t idx = 0; idx < rel_x.size(); idx++) {
-		if (rel_x[idx] == 0 && rel_y[idx] == 0)
+		if (rel_x[idx] == 0 && rel_y[idx] == 0) {
 			continue;
+		}
 
 		const auto interface_id = physical_devices[idx].GetMappedInterfaceId();
-		MOUSE_EventMoved(static_cast<float>(rel_x[idx]),
-		                 static_cast<float>(rel_y[idx]),
-		                 interface_id);
+		if (interface_id) {
+			MOUSE_EventMoved(static_cast<float>(rel_x[idx]),
+			                 static_cast<float>(rel_y[idx]),
+			                 *interface_id);
+		}
+
 		rel_x[idx] = 0;
 		rel_y[idx] = 0;
 	}
 
-	if (is_mapping_in_effect)
+	if (is_mapping_in_effect) {
 		PIC_AddEvent(manymouse_tick, tick_interval);
+	}
 }
 
 #else

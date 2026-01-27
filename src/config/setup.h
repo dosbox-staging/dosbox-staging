@@ -436,6 +436,7 @@ public:
 	int GetInt(const std::string& _propname) const;
 
 	std::string GetString(const std::string& _propname) const;
+	std::string GetStringLowCase(const std::string& _propname) const;
 
 	PropBool* GetBoolProp(const std::string& propname) const;
 	PropString* GetStringProp(const std::string& propname) const;
@@ -524,6 +525,7 @@ bool config_file_is_valid(const std_fs::path& path);
 // Helper functions for retrieving configuration sections
 
 SectionProp* get_section(const char* section_name);
+AutoExecSection* get_autoexec_section(const char* section_name);
 
 SectionProp* get_joystick_section();
 SectionProp* get_sdl_section();

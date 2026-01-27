@@ -10,6 +10,7 @@
 #include "programs/choice.h"
 #include "programs/clip.h"
 #include "programs/help.h"
+#include "programs/makeimg.h"
 #include "programs/imgmount.h"
 #include "programs/intro.h"
 #include "programs/keyb.h"
@@ -47,7 +48,7 @@ void REELMAGIC_MaybeCreateFmpdrvExecutable();
 void VFILE_GetPathZDrive(std::string& path, const std::string& dirname);
 void VFILE_RegisterZDrive(const std_fs::path& z_drive_path);
 
-void Add_VFiles()
+void DOS_SetupPrograms()
 {
 	const std::string dirname = "drivez";
 
@@ -69,6 +70,7 @@ void Add_VFiles()
 	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
 	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramCreate);
 	PROGRAMS_MakeFile("HELP.COM", ProgramCreate<HELP>);
+	PROGRAMS_MakeFile("MAKEIMG.COM", ProgramCreate<MAKEIMG>);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", ProgramCreate<IMGMOUNT>);
 	PROGRAMS_MakeFile("INTRO.COM", ProgramCreate<INTRO>);
 	PROGRAMS_MakeFile("KEYB.COM", ProgramCreate<KEYB>);
@@ -93,13 +95,4 @@ void Add_VFiles()
 	REELMAGIC_MaybeCreateFmpdrvExecutable();
 
 	AUTOEXEC_RefreshFile();
-}
-
-void DOS_SetupPrograms(void)
-{
-	/*Add misc messages */
-	MSG_Add("WIKI_ADD_UTILITIES_ARTICLE", WIKI_ADD_UTILITIES_ARTICLE);
-	MSG_Add("WIKI_URL", WIKI_URL);
-
-	Add_VFiles();
 }

@@ -89,7 +89,7 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 			while (true) {
 				reg_ah = is_machine_ega_or_better() ? 0x11 : 0x1;
 				CALLBACK_RunRealInt(0x16);
-				if (reg_ax != 0) {
+				if (!(cpu_regs.flags & FLAG_ZF)) {
 					break;
 				}
 				WINDOWS_ReleaseTimeSlice();

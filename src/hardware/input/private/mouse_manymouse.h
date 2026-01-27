@@ -5,8 +5,9 @@
 #define DOSBOX_MOUSE_MANYMOUSE_H
 
 #include "hardware/input/mouse.h"
-#include "hardware/input/mouse_interfaces.h"
+#include "mouse_interfaces.h"
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -18,18 +19,19 @@ class MousePhysical {
 public:
 	MousePhysical(const std::string &name);
 
-	bool IsMapped() const;
 	bool IsDisconnected() const;
+	bool IsMapped() const;
 
-	MouseInterfaceId GetMappedInterfaceId() const;
+	std::optional<MouseInterfaceId> GetMappedInterfaceId() const;
 	const std::string &GetName() const;
 
 private:
 	friend class ManyMouseGlue;
 
-	const std::string name     = "";
-	MouseInterfaceId mapped_id = MouseInterfaceId::None;
-	bool disconnected          = false;
+	const std::string name = "";
+	bool disconnected      = false;
+
+	std::optional<MouseInterfaceId> mapped_id = {};
 };
 
 class ManyMouseGlue final {

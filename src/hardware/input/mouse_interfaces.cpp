@@ -1,12 +1,11 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "mouse_interfaces.h"
-
-#include "private/mouse_common.h"
-#include "private/mouse_manymouse.h"
+#include "private/mouse_interfaces.h"
 #include "mouse.h"
-#include "mouse_config.h"
+#include "private/mouse_common.h"
+#include "private/mouse_config.h"
+#include "private/mouse_manymouse.h"
 
 #include <memory>
 
@@ -14,20 +13,20 @@
 
 CHECK_NARROWING();
 
-std::vector<std::unique_ptr<MouseInterface>> mouse_interfaces = {};
+constexpr auto NumInterfaces = AllMouseInterfaceIds.size();
+static std::array<MouseInterface*, NumInterfaces> mouse_interfaces = { nullptr };
 
 // ***************************************************************************
 // Mouse interface information facade
 // ***************************************************************************
 
 MouseInterfaceInfoEntry::MouseInterfaceInfoEntry(const MouseInterfaceId interface_id)
-        : interface_idx(static_cast<uint8_t>(interface_id))
+        : interface_id(interface_id)
 {}
 
 const MouseInterface& MouseInterfaceInfoEntry::Interface() const
 {
-	assert(mouse_interfaces[interface_idx]);
-	return *mouse_interfaces[interface_idx].get();
+	return MouseInterface::GetInstance(interface_id);
 }
 
 const MousePhysical& MouseInterfaceInfoEntry::MappedPhysical() const
@@ -198,7 +197,7 @@ public:
 	void UpdateRate() override;
 
 	void RegisterListener(CSerialMouse& listener_object) override;
-	void UnRegisterListener() override;
+	void UnregisterListener() override;
 
 private:
 	friend class MouseInterface;
@@ -216,84 +215,42 @@ private:
 
 void MouseInterface::InitAllInstances()
 {
-	if (!mouse_interfaces.empty()) {
-		return; // already initialized
+	for (auto interface_id : AllMouseInterfaceIds) {
+		auto& interface = MouseInterface::GetInstance(interface_id);
+		interface.Init();
+		interface.UpdateConfig();
 	}
+}
 
-	const auto first = static_cast<uint8_t>(MouseInterfaceId::First);
-	const auto last  = static_cast<uint8_t>(MouseInterfaceId::Last);
+MouseInterface& MouseInterface::GetInstance(const MouseInterfaceId interface_id)
+{
+	const auto index = enum_val(interface_id);
+	if (!mouse_interfaces[index]) {
 
-	for (uint8_t i = first; i <= last; i++) {
-		switch (static_cast<MouseInterfaceId>(i)) {
+		switch (interface_id) {
 		case MouseInterfaceId::DOS:
-			mouse_interfaces.emplace_back(
-			        std::make_unique<InterfaceDos>());
+			mouse_interfaces[index] = new InterfaceDos();
 			break;
 		case MouseInterfaceId::PS2:
-			mouse_interfaces.emplace_back(
-			        std::make_unique<InterfacePS2>());
+			mouse_interfaces[index] = new InterfacePS2();
 			break;
 		case MouseInterfaceId::COM1:
-			mouse_interfaces.emplace_back(
-			        std::make_unique<InterfaceCOM>(0));
+			mouse_interfaces[index] = new InterfaceCOM(0);
 			break;
 		case MouseInterfaceId::COM2:
-			mouse_interfaces.emplace_back(
-			        std::make_unique<InterfaceCOM>(1));
+			mouse_interfaces[index] = new InterfaceCOM(1);
 			break;
 		case MouseInterfaceId::COM3:
-			mouse_interfaces.emplace_back(
-			        std::make_unique<InterfaceCOM>(2));
+			mouse_interfaces[index] = new InterfaceCOM(2);
 			break;
 		case MouseInterfaceId::COM4:
-			mouse_interfaces.emplace_back(
-			        std::make_unique<InterfaceCOM>(3));
+			mouse_interfaces[index] = new InterfaceCOM(3);
 			break;
 		default: assert(false); break;
 		}
 	}
 
-	for (auto& interface : mouse_interfaces) {
-		assert(interface);
-		interface->Init();
-		interface->UpdateConfig();
-	}
-}
-
-MouseInterface* MouseInterface::Get(const MouseInterfaceId interface_id)
-{
-	const auto idx = static_cast<size_t>(interface_id);
-	if (idx < mouse_interfaces.size()) {
-		assert(mouse_interfaces[idx]);
-		return mouse_interfaces[idx].get();
-	}
-
-	assert(interface_id == MouseInterfaceId::None);
-	return nullptr;
-}
-
-MouseInterface* MouseInterface::GetDOS()
-{
-	const auto idx = static_cast<uint8_t>(MouseInterfaceId::DOS);
-	return MouseInterface::Get(static_cast<MouseInterfaceId>(idx));
-}
-
-MouseInterface* MouseInterface::GetPS2()
-{
-	const auto idx = static_cast<uint8_t>(MouseInterfaceId::PS2);
-	return MouseInterface::Get(static_cast<MouseInterfaceId>(idx));
-}
-
-MouseInterface* MouseInterface::GetSerial(const uint8_t port_id)
-{
-	if (port_id < SERIAL_MAX_PORTS) {
-		const auto idx = static_cast<uint8_t>(MouseInterfaceId::COM1) + port_id;
-		return MouseInterface::Get(static_cast<MouseInterfaceId>(idx));
-	}
-
-	LOG_ERR("MOUSE: Ports above COM4 not supported");
-	assert(false);
-	return nullptr;
+	return *mouse_interfaces[index];
 }
 
 MouseInterface::MouseInterface(const MouseInterfaceId interface_id,
@@ -382,6 +339,12 @@ void MouseInterface::NotifyInterfaceRate(const uint16_t new_rate_hz)
 	interface_rate_hz = new_rate_hz;
 	UpdateRate();
 }
+
+void MouseInterface::NotifyMoved(const float, const float, const float, const float) {}
+
+void MouseInterface::NotifyButton(const MouseButtonId, const bool) {}
+
+void MouseInterface::NotifyWheel(const float) {}
 
 void MouseInterface::NotifyBooting() {}
 
@@ -514,7 +477,7 @@ void MouseInterface::RegisterListener(CSerialMouse&)
 	assert(false);
 }
 
-void MouseInterface::UnRegisterListener()
+void MouseInterface::UnregisterListener()
 {
 	// should never be called for unsupported interface
 	assert(false);
@@ -700,7 +663,7 @@ InterfacePS2::InterfacePS2()
 void InterfacePS2::Init()
 {
 	MouseInterface::Init();
-	emulated = (mouse_config.model_ps2 != MouseModelPS2::NoMouse);
+	emulated = (mouse_config.model_ps2 != MouseModelPs2::NoMouse);
 	if (emulated) {
 		MOUSEPS2_Init();
 	}
@@ -822,7 +785,7 @@ void InterfaceCOM::RegisterListener(CSerialMouse& listener_object)
 	emulated = true;
 }
 
-void InterfaceCOM::UnRegisterListener()
+void InterfaceCOM::UnregisterListener()
 {
 	// Serial mouse gets unavailable when listener object disconnects
 
@@ -830,4 +793,24 @@ void InterfaceCOM::UnRegisterListener()
 	listener = nullptr;
 	emulated = false;
 	ManyMouseGlue::GetInstance().ShutdownIfSafe();
+}
+
+void MOUSECOM_RegisterListener(const MouseInterfaceId interface_id,
+                               CSerialMouse& listener)
+{
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	interface.RegisterListener(listener);
+}
+
+void MOUSECOM_UnregisterListener(const MouseInterfaceId interface_id)
+{
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	interface.UnregisterListener();
+}
+
+void MOUSECOM_NotifyInterfaceRate(const MouseInterfaceId interface_id,
+                                  const uint16_t rate_hz)
+{
+	auto& interface = MouseInterface::GetInstance(interface_id);
+	interface.NotifyInterfaceRate(rate_hz);
 }

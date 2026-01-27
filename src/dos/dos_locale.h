@@ -33,14 +33,11 @@ constexpr uint16_t DefaultCodePage = 437;
 //
 // TODO: 'Ralph Brown Interrupt List' also mentions countries listed below:
 //
-// 51  = Peru                          ISO 3166-1: PE
-// 53  = Cuba                          ISO 3166-1: CU
 // 93  = Afghanistan                   ISO 3166-1: AF
 // 94  = Sri Lanka                     ISO 3166-1: LK
 // 98  = Iran                          ISO 3166-1: IR
 // 218 = Libya                         ISO 3166-1: LY
 // 220 = Gambia                        ISO 3166-1: GM
-// 221 = Senegal                       ISO 3166-1: SN
 // 222 = Maruitania                    ISO 3166-1: MR
 // 223 = Mali                          ISO 3166-1: ML
 // 224 = African Guinea                ISO 3166-1: GN
@@ -50,7 +47,6 @@ constexpr uint16_t DefaultCodePage = 437;
 // 230 = Mauritius                     ISO 3166-1: MU
 // 231 = Liberia                       ISO 3166-1: LR
 // 232 = Sierra Leone                  ISO 3166-1: SL
-// 233 = Ghana                         ISO 3166-1: GH
 // 235 = Chad                          ISO 3166-1: TD
 // 236 = Central African Republic      ISO 3166-1: CF
 // 237 = Cameroon                      ISO 3166-1: CM
@@ -58,44 +54,31 @@ constexpr uint16_t DefaultCodePage = 437;
 // 239 = Sao Tome and Principe         ISO 3166-1: ST
 // 240 = Equatorial Guinea             ISO 3166-1: GQ
 // 241 = Gabon                         ISO 3166-1: GA
-// 242 = Congo                         ISO 3166-1: CG
 // 243 = Zaire                         ISO 3166-1: CD, ZR
 // 244 = Angola                        ISO 3166-1: AO
 // 245 = Guinea-Bissau                 ISO 3166-1: GW
 // 246 = Diego Garcia                  ISO 3166-1: DG
 // 247 = Ascension Island              ISO 3166-1: AC
-// 248 = Seychelles                    ISO 3166-1: SC
 // 249 = Sudan                         ISO 3166-1: SD
-// 250 = Rwhanda                       ISO 3166-1: RW
 // 251 = Ethiopia                      ISO 3166-1: ET
 // 252 = Somalia                       ISO 3166-1: SO
 // 253 = Djibouti                      ISO 3166-1: DJ
-// 254 = Kenya                         ISO 3166-1: KE
-// 255 = Tanzania                      ISO 3166-1: TZ
-// 256 = Uganda                        ISO 3166-1: UG
 // 257 = Burundi                       ISO 3166-1: BI
 // 259 = Mozambique                    ISO 3166-1: MZ
-// 260 = Zambia                        ISO 3166-1: ZM
-// 261 = Madagascar                    ISO 3166-1: MG
 // 262 = Reunion Island                ISO 3166-1: RE
-// 263 = Zimbabwe                      ISO 3166-1: ZW, RH (Southern Rhodesia)
 // 264 = Namibia                       ISO 3166-1: NA
 // 265 = Malawi                        ISO 3166-1: MW
 // 266 = Lesotho                       ISO 3166-1: LS
-// 267 = Botswana                      ISO 3166-1: BW
 // 268 = Eswatini                      ISO 3166-1: SZ (old name: Swaziland)
 // 269 = Comoros                       ISO 3166-1: KM
 // 270 = Mayotte                       ISO 3166-1: YT
 // 290 = St. Helena                    ISO 3166-1: SH, TA (Tristan da Cunha)
-// 297 = Aruba                         ISO 3166-1: AW
-// 299 = Greenland                     ISO 3166-1: GL
 // 350 = Gibraltar                     ISO 3166-1: GI
 // 357 = Cyprus                        ISO 3166-1: CY
 // 373 = Moldova                       ISO 3166-1: MD
 // 500 = Falkland Islands              ISO 3166-1: FK
 // 501 = Belize                        ISO 3166-1: BZ
 // 508 = St. Pierre and Miquelon       ISO 3166-1: PM
-// 509 = Haiti                         ISO 3166-1: HT
 // 590 = Guadeloupe                    ISO 3166-1: GP
 // 592 = Guyana                        ISO 3166-1: GY
 // 594 = French Guiana                 ISO 3166-1: GF
@@ -109,7 +92,6 @@ constexpr uint16_t DefaultCodePage = 437;
 // 673 = Brunei                        ISO 3166-1: BN
 // 674 = Nauru                         ISO 3166-1: NR
 // 675 = Papua New Guinea              ISO 3166-1: PG
-// 676 = Tonga Islands                 ISO 3166-1: TO
 // 677 = Solomon Islands               ISO 3166-1: SB
 // 678 = Vanuatu                       ISO 3166-1: VU, NH (New Hebrides)
 // 679 = Fiji                          ISO 3166-1: FJ
@@ -145,23 +127,16 @@ constexpr uint16_t DefaultCodePage = 437;
 // 977 = Nepal                         ISO 3166-1: NP
 // 995 = Myanmar                       ISO 3166-1: MM, BU (Burma)
 //
-// TODO: In addition, the following ountries can be identified using host
+// TODO: In addition, the following countries can be identified using host
 // interfaces, we should consider adding them, too:
 //
 // 150 = Europe (English)              ISO 3166-1: UE, EZ, en_??
 // 211 = South Sudan                   ISO 3166-1: SS
 // 284 = Virgin Islands (British)      ISO 3166-1: VG
-// 291 = Eritrea                       ISO 3166-1: ER
-// 299 = Greenland                     ISO 3166-1: GL
-// 376 = Andorra                       ISO 3166-1: AD
-// 377 = Monaco                        ISO 3166-1: MC
-// 379 = Vatican                       ISO 3166-1: VA
 // 383 = Kosovo                        ISO 3166-1: XK
-// 423 = Liechtenstein                 ISO 3166-1: LI
 // 599 = Curaçao / Sint Maarten / Bonaire
 //       ISO 3166-1: CW / SX / BQ
 // 670 = Timor-Leste                   ISO 3166-1: TL, TP (East Timor)
-// 787/939 = Puerto Rico               ISO 3166-1: PR
 // 970 = Palestine                     ISO 3166-1: PS
 //
 // TODO: at least MS-DOS 6.22 and Windows ME unofficially support country
@@ -203,7 +178,9 @@ enum class DosCountry : uint16_t {
 	Norway         = 47,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
 	Poland         = 48,  // MS-DOS, PC-DOS,         FreeDOS,          OS/2
 	Germany        = 49,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Peru	       = 51,
 	Mexico         = 52,  // MS-DOS,                                   OS/2
+	Cuba           = 53,
 	Argentina      = 54,  // MS-DOS,                 FreeDOS,          OS/2
 	Brazil         = 55,  // MS-DOS, PC-DOS,         FreeDOS,          OS/2
 	Chile          = 56,  // MS-DOS
@@ -229,10 +206,25 @@ enum class DosCountry : uint16_t {
 	Morocco        = 212, //                                           OS/2
 	Algeria        = 213, //                                           OS/2
 	Tunisia        = 216, //                                           OS/2
+	Senegal        = 221,
 	Niger          = 227,
 	Benin          = 229,
+	Ghana          = 233,
 	Nigeria        = 234,
+	Congo          = 242,
+	Seychelles     = 248,
+	Rwanda         = 250,
+	Kenya          = 254,
+	Tanzania       = 255,
+	Uganda         = 256,
+	Zambia         = 260,
+	Madagascar     = 261,
+	Zimbabwe       = 263,
+	Botswana       = 267,
+	Eritrea        = 291,
+	Aruba          = 297,
 	FaroeIslands   = 298,
+	Greenland      = 299,
 	Portugal       = 351, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
 	Luxembourg     = 352, //                                           OS/2
 	Ireland        = 353, // MS-DOS,                                   OS/2
@@ -246,6 +238,10 @@ enum class DosCountry : uint16_t {
 	Estonia        = 372, // WIN-ME,                                   OS/2
 	Armenia        = 374,
 	Belarus        = 375, // WIN-ME                  FreeDOS,          OS/2
+	Andorra        = 376,
+	Monaco         = 377,
+	SanMarino      = 378,
+	VaticanCity    = 379,
 	Ukraine        = 380, // WIN-ME                  FreeDOS,          OS/2
 	Serbia         = 381, // MS-DOS, PC-DOS,         FreeDOS,          OS/2 (*)
 	Montenegro     = 382,
@@ -257,19 +253,24 @@ enum class DosCountry : uint16_t {
 	NorthMacedonia = 389, // MS-DOS, PC-DOS,         FreeDOS,          OS/2
 	Slovakia       = 421, // MS-DOS, PC-DOS,                           OS/2 (*)
         // 422 - used for Slovakia by CP-DOS and OS/2
+	Liechtenstein  = 423,
 	Guatemala      = 502, //                                           OS/2
 	ElSalvador     = 503, //                                           OS/2
 	Honduras       = 504, //                                           OS/2
 	Nicaragua      = 505, //                                           OS/2
 	CostaRica      = 506, //                                           OS/2
 	Panama         = 507, //                                           OS/2
+	Haiti          = 509,
 	Bolivia        = 591, //                                           OS/2
 	Ecuador        = 593, // MS-DOS,                                   OS/2
 	Paraguay       = 595, //                                           OS/2
 	Uruguay        = 598, //                                           OS/2
+	Tonga          = 676,
 	Arabic         = 785, // MS-DOS,                 FreeDOS, Paragon, OS/2
+	PuertoRico     = 787,
 	HongKong       = 852, // MS-DOS
 	Taiwan         = 886, // MS-DOS,                                   OS/2 (*)
+	// 939 - duplicate of Puerto Rico
 	Lebanon        = 961, //                                           OS/2
 	Jordan         = 962, //                                           OS/2
 	Syria          = 963, //                                           OS/2
@@ -306,6 +307,8 @@ enum class DosCountry : uint16_t {
 	//   uses this code as a duplicate of 886, probably for compatibility
 	// - OS/2 uses country code 1 also for Canada, English, it does not use 4
 	// - OS/2 uses country 34 also for Catalunya
+	// - Puerto Rico uses two area codes, 787 and 939 (the telephone numbers
+	//   overlap); here the 787 is used
 
 	// FreeDOS also supports the following, not yet handled here:
 	// - Belgium/Dutch        40032

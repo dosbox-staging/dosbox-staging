@@ -1006,6 +1006,14 @@ std::string SectionProp::GetString(const std::string& _propname) const
 	return "";
 }
 
+std::string SectionProp::GetStringLowCase(const std::string& _propname) const
+{
+	auto string = GetString(_propname);
+	lowcase(string);
+
+	return string;
+}
+
 PropBool* SectionProp::GetBoolProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
@@ -1108,6 +1116,17 @@ std::string SectionProp::GetPropertyValue(const std::string& _property) const
 		}
 	}
 	return NO_SUCH_PROPERTY;
+}
+
+AutoExecSection* get_autoexec_section(const char* section_name)
+{
+	assert(control);
+
+	const auto sec = static_cast<AutoExecSection*>(
+	        control->GetSection(section_name));
+	assert(sec);
+
+	return sec;
 }
 
 bool AutoExecSection::HandleInputLine(const std::string& line)

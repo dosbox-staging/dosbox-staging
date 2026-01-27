@@ -180,6 +180,8 @@ constexpr auto ShadersDir                = "shaders";
 
 constexpr auto MicrosInMillisecond = 1000;
 constexpr auto BytesPerKilobyte    = 1024;
+constexpr auto BytesPerMegabyte = BytesPerKilobyte * 1024;
+constexpr int64_t BytesPerGigabyte = BytesPerMegabyte * 1024;
 
 enum class DiskSpeed { Maximum, Fast, Medium, Slow };
 

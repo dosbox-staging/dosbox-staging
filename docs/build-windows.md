@@ -64,9 +64,26 @@ you build a binary optimized for gaming.
    You'll need to do this twice for the first time, and probably after
    changing the CMakeList.txt files.
 
-> **Tip**
->
-> If the CMake configurations disappear after updating Visual Studio or the
-> local DOSBox Staging repository, just repeat the above steps. Removing the
-> `.vs` folder inside the local repo folder is usually the important bit, that
-> will trigger re-importing the CMake configs.
+## Troubleshooting
+
+### Random build failures
+
+Try using **Clean All** from the **Build** menu, then **Rescan Solution**
+from the **Project** menu. In most cases, **Build All** should work without
+errors after this.
+
+If you're still getting errors, or some of these menu items are not available,
+delete the DOSBox Staging project in Visual Studio, delete the `.vs` folder
+inside the local repo folder, then follow the instructions in
+**Importing the CMake project** to reimport the project.
+
+### Cmake configurations have disappeared
+
+If the CMake configurations have disappeared from the toolbar after updating
+Visual Studio or the local DOSBox Staging repository, try **Rescan Solution**
+from the **Project** menu.
+
+If that doesn't help, delete the DOSBox Staging project in Visual Studio,
+delete the `.vs` folder inside the local repo folder, then follow the
+instructions in **Importing the CMake project** to reimport the project.
+

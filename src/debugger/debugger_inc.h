@@ -27,6 +27,12 @@ struct DBGBlock {
 	uint32_t active_win = 0;    /* Current active window */
 	uint32_t input_y = 0;
 	uint32_t global_mask = 0; /* Current msgmask */
+	/* Window height values in rows */
+	int32_t rows_registers = 4; /* Registers window height */
+	int32_t rows_data = 8;      /* Data Output window height */
+	int32_t rows_code = 11;     /* Disassembly/Debug point window height */
+	int32_t rows_variables = 4; /* Variable window height */
+	int32_t rows_output = 0;    /* Text Output window height, calculated dynamically */
 };
 
 struct DASMLine {

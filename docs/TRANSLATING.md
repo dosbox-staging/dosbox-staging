@@ -158,6 +158,11 @@ msgstr "Latin"
 >
 > Some dedicated `PO` editors use a different name for the `fuzzy` flag in
 > their user interfaces, like _translation status_, _work needed_, etc.
+>
+> Some important messages (command help, config option help, introduction) are
+> displayed in English if the current translation marks the message as `fuzzy`.
+> This is to prevent displaying outdated (very likely no longer correct) help
+> messages if the translation is not up to date.
 
 ### Translatable entries
 

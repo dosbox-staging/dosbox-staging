@@ -7,7 +7,7 @@
 
 #include "serialport.h"
 
-#include "hardware/input/mouse_config.h"
+#include "hardware/input/mouse.h"
 
 class CSerialMouse : public CSerial {
 public:
@@ -35,7 +35,7 @@ private:
 	void LogMouseModel();
 
 	void HandleDeprecatedOptions(CommandLine* cmd);
-	void SetModel(const MouseModelCOM new_type);
+	void SetModel(const MouseModelCom new_type);
 	void AbortPacket();
 	void ClearCounters();
 	void MouseReset();
@@ -47,15 +47,16 @@ private:
 	void SetEventTHR();
 	uint8_t ClampCounter(const int32_t counter) const;
 
-	const uint8_t port_id   = 0;
-	const uint16_t port_num = 0; // for logging purposes
+	const int port_num = 0; // mainly for logging purposes
+
+	const MouseInterfaceId interface_id = {};
 
 	// Mouse model as specified in the parameter
-	MouseModelCOM param_model = MouseModelCOM::NoMouse;
+	MouseModelCom param_model = MouseModelCom::NoMouse;
 	// If true = autoswitch between param_model and Mouse Systems mouse
 	bool param_auto_msm = false;
 
-	MouseModelCOM model = MouseModelCOM::NoMouse; // currently emulated model
+	MouseModelCom model = MouseModelCom::NoMouse; // currently emulated model
 
 	uint8_t port_byte_len = 0; // how many bits the port transmits in a byte
 

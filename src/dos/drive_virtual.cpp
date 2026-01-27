@@ -29,7 +29,7 @@ unsigned int vfile_pos = 1;
 uint16_t fztime = 0;
 uint16_t fzdate = 0;
 char sfn[DOS_NAMELENGTH_ASCII];
-void Add_VFiles();
+
 extern DOS_Shell *first_shell;
 
 class VFILE_Block;
@@ -662,5 +662,5 @@ void Virtual_Drive::EmptyCache()
 	vfile_pos = 1;
 	PROGRAMS_Destroy();
 	vfilenames = {Filename{"", ""}};
-	Add_VFiles();
+	DOS_SetupPrograms();
 }
