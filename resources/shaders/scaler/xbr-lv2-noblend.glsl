@@ -33,18 +33,16 @@ out vec4 t5;
 out vec4 t6;
 out vec4 t7;
 
-uniform vec2 rubyTextureSize;
 uniform vec2 rubyInputSize;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	float dx = (1.0/rubyTextureSize.x);
-	float dy = (1.0/rubyTextureSize.y);
+	float dx = (1.0/rubyInputSize.x);
+	float dy = (1.0/rubyInputSize.y);
 
-	vec2 TexCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	                rubyInputSize / rubyTextureSize;
+	vec2 TexCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
 	v_texCoord     = TexCoord;
 	v_texCoord.x *= 1.00000001;
@@ -72,7 +70,7 @@ in vec4 t7;
 
 out vec4 FragColor;
 
-uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 uniform sampler2D rubyTexture;
 
 uniform float XBR_EQ_THRESHOLD;
@@ -129,7 +127,7 @@ void main()
 	bvec4 nc, px;
 	vec4 fx, fx_l, fx_u; // inequations of straight lines.
 
-	vec2 fp  = fract(v_texCoord*rubyTextureSize);
+	vec2 fp  = fract(v_texCoord*rubyInputSize);
 
 	vec3 A1 = texture(rubyTexture, t1.xw ).xyz;
 	vec3 B1 = texture(rubyTexture, t1.yw ).xyz;

@@ -30,16 +30,14 @@ out vec2 onex;
 out vec2 oney;
 
 uniform vec2 rubyInputSize;
-uniform vec2 rubyTextureSize;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	             rubyInputSize / rubyTextureSize;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
-	sourceSize = vec4(rubyTextureSize, 1.0 / rubyTextureSize);
+	sourceSize = vec4(rubyInputSize, 1.0 / rubyInputSize);
 	onex       = vec2(sourceSize.z, 0.0);
 	oney       = vec2(0.0, sourceSize.w);
 }
