@@ -3310,28 +3310,30 @@ void SoundBlaster::MixerCallback(const int frames_requested)
 
 static SbType determine_sb_type(const std::string& pref)
 {
+	using enum SbType;
+
 	if (pref == "gb") {
-		return SbType::GameBlaster;
+		return GameBlaster;
 
 	} else if (pref == "sb1") {
-		return SbType::SB1;
+		return SB1;
 
 	} else if (pref == "sb2") {
-		return SbType::SB2;
+		return SB2;
 
 	} else if (pref == "sbpro1") {
-		return SbType::SBPro1;
+		return SBPro1;
 
 	} else if (pref == "sbpro2" || pref == "ess") {
-		return SbType::SBPro2;
+		return SBPro2;
 
 	} else if (pref == "sb16") {
 		// Invalid settings result in defaulting to 'sb16'
-		return SbType::SB16;
+		return SB16;
 	}
 
 	// "falsey" setting ("off", "none", "false", etc.)
-	return SbType::None;
+	return None;
 }
 
 static EssType determine_ess_type(const std::string& pref)
