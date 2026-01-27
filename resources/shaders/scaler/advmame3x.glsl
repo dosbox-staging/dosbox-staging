@@ -17,14 +17,14 @@ layout(location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
 
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
 	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	             rubyInputSize * 3.0;
+	             INPUT_TEXTURE_SIZE * 3.0;
 }
 
 #elif defined(FRAGMENT)
@@ -33,7 +33,7 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
 uniform sampler2D rubyTexture;
 
 vec3 getadvmame3xtexel(vec2 coord)
@@ -56,13 +56,13 @@ vec3 getadvmame3xtexel(vec2 coord)
 		left = up - left;
 	}
 
-	vec3 c0 = texture(rubyTexture, (base + up + left) / rubyInputSize).xyz;
-	vec3 c1 = texture(rubyTexture, (base + up) / rubyInputSize).xyz;
-	vec3 c2 = texture(rubyTexture, (base + up - left) / rubyInputSize).xyz;
-	vec3 c3 = texture(rubyTexture, (base + left) / rubyInputSize).xyz;
-	vec3 c4 = texture(rubyTexture, base / rubyInputSize).xyz;
-	vec3 c5 = texture(rubyTexture, (base - left) / rubyInputSize).xyz;
-	vec3 c7 = texture(rubyTexture, (base - up) / rubyInputSize).xyz;
+	vec3 c0 = texture(rubyTexture, (base + up + left) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c1 = texture(rubyTexture, (base + up) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c2 = texture(rubyTexture, (base + up - left) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c3 = texture(rubyTexture, (base + left) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c4 = texture(rubyTexture, base / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c5 = texture(rubyTexture, (base - left) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c7 = texture(rubyTexture, (base - up) / INPUT_TEXTURE_SIZE).xyz;
 
 	bool outer  = c1 != c7 && c3 != c5;
 	bool check1 = c3 == c1 && (!any(m) || c4 != c2);

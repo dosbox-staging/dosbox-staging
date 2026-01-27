@@ -27,16 +27,16 @@ layout (location = 0) in vec2 a_position;
 out vec2 v_texCoord;
 out vec2 prescale;
 
-uniform vec2 rubyInputSize;
-uniform vec2 rubyOutputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
+uniform vec2 OUTPUT_TEXTURE_SIZE;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 * rubyInputSize;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 * INPUT_TEXTURE_SIZE;
 
-	prescale = ceil(rubyOutputSize / rubyInputSize);
+	prescale = ceil(OUTPUT_TEXTURE_SIZE / INPUT_TEXTURE_SIZE);
 }
 
 #elif defined(FRAGMENT)
@@ -46,7 +46,7 @@ in vec2 prescale;
 
 out vec4 FragColor;
 
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
 uniform sampler2D rubyTexture;
 
 uniform float PHOSPHOR_LAYOUT;
@@ -141,14 +141,14 @@ vec4 tex2D_linear(in sampler2D sampler, in vec2 uv)
 {
 
 	// subtract 0.5 here and add it again after the floor to centre the texel
-	vec2 texCoord = uv * rubyInputSize - vec2(0.5);
+	vec2 texCoord = uv * INPUT_TEXTURE_SIZE - vec2(0.5);
 
 	vec2 s0t0 = floor(texCoord) + vec2(0.5);
 	vec2 s0t1 = s0t0 + vec2(0.0, 1.0);
 	vec2 s1t0 = s0t0 + vec2(1.0, 0.0);
 	vec2 s1t1 = s0t0 + vec2(1.0);
 
-	vec2 invTexSize = 1.0 / rubyInputSize;
+	vec2 invTexSize = 1.0 / INPUT_TEXTURE_SIZE;
 
 	vec4 c_s0t0 = GAMMA_IN(texture(sampler, s0t0 * invTexSize));
 	vec4 c_s0t1 = GAMMA_IN(texture(sampler, s0t1 * invTexSize));
@@ -176,8 +176,8 @@ void main()
 	                 prescale +
 	         halfp;
 
-	vec2 mod_texel = min(texel_floored + f, rubyInputSize - halfp);
-	vec4 color     = tex2D_linear(rubyTexture, mod_texel / rubyInputSize);
+	vec2 mod_texel = min(texel_floored + f, INPUT_TEXTURE_SIZE - halfp);
+	vec4 color     = tex2D_linear(rubyTexture, mod_texel / INPUT_TEXTURE_SIZE);
 
 	color = add_vga_overlay(color,
 	                        SCANLINE_STRENGTH_MIN,

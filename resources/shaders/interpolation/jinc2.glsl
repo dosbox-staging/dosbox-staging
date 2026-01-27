@@ -77,7 +77,7 @@ void main()
 
     vec2 dx = vec2(1.0, 0.0);
     vec2 dy = vec2(0.0, 1.0);
-    vec2 pc = v_texCoord * rubyInputSize;
+    vec2 pc = v_texCoord * INPUT_TEXTURE_SIZE;
     vec2 tc = floor(pc - vec2(0.5, 0.5)) + vec2(0.5, 0.5);
 
     weights[0] = resampler(vec4(
@@ -105,9 +105,9 @@ void main()
         d(pc, tc+2.0*dx+2.0*dy)
     ));
 
-    dx /= rubyInputSize;
-    dy /= rubyInputSize;
-    tc /= rubyInputSize;
+    dx /= INPUT_TEXTURE_SIZE;
+    dy /= INPUT_TEXTURE_SIZE;
+    tc /= INPUT_TEXTURE_SIZE;
 
     vec3 c00 = texture(rubyTexture, tc    -dx    -dy).xyz;
     vec3 c10 = texture(rubyTexture, tc           -dy).xyz;
