@@ -2404,36 +2404,36 @@ static uint8_t dsp_read_data()
 	return sb.dsp.out.lastval;
 }
 
-static float calc_vol(const uint8_t amount)
+static float calc_sb_mixer_gain(const uint8_t amount)
 {
 	uint8_t count = 31 - amount;
-
-	auto db = static_cast<float>(count);
+	auto gain_db  = static_cast<float>(count);
 
 	if (sb.type == SbType::SBPro1 || sb.type == SbType::SBPro2) {
 		if (count) {
 			if (count < 16) {
-				db -= 1.0f;
+				gain_db -= 1.0f;
 			} else if (count > 16) {
-				db += 1.0f;
+				gain_db += 1.0f;
 			}
 			if (count == 24) {
-				db += 2.0f;
+				gain_db += 2.0f;
 			}
 			if (count > 27) {
-				// Turn it off.
 				return 0.0f;
 			}
 		}
 	} else {
-		// Give the rest, the SB16 scale, as we don't have data.
-		db *= 2.0f;
+		// Use the SB16 scale for the other non-SB Pro models as well,
+		// as we don't have data.
+		gain_db *= 2.0f;
+
 		if (count > 20) {
-			db -= 1.0f;
+			gain_db -= 1.0f;
 		}
 	}
 
-	return powf(10.0f, -0.05f * db);
+	return decibel_to_gain(gain_db);
 }
 
 static void ctmixer_update_volumes()
@@ -2442,25 +2442,28 @@ static void ctmixer_update_volumes()
 		return;
 	}
 
-	float m0 = calc_vol(sb.mixer.master[0]);
-	float m1 = calc_vol(sb.mixer.master[1]);
+	AudioFrame master_gain = {calc_sb_mixer_gain(sb.mixer.master[0]),
+	                          calc_sb_mixer_gain(sb.mixer.master[1])};
 
-	auto chan = MIXER_FindChannel(ChannelName::SoundBlasterDac);
-	if (chan) {
-		chan->SetAppVolume({m0 * calc_vol(sb.mixer.dac[0]),
-		                    m1 * calc_vol(sb.mixer.dac[1])});
+	if (auto chan = MIXER_FindChannel(ChannelName::SoundBlasterDac); chan) {
+		AudioFrame dac_gain = {calc_sb_mixer_gain(sb.mixer.dac[0]),
+		                       calc_sb_mixer_gain(sb.mixer.dac[1])};
+
+		chan->SetAppVolume(master_gain * dac_gain);
 	}
 
-	chan = MIXER_FindChannel(ChannelName::Opl);
-	if (chan) {
-		chan->SetAppVolume({m0 * calc_vol(sb.mixer.fm[0]),
-		                    m1 * calc_vol(sb.mixer.fm[1])});
+	if (auto chan = MIXER_FindChannel(ChannelName::Opl); chan) {
+		AudioFrame opl_gain = {calc_sb_mixer_gain(sb.mixer.fm[0]),
+		                       calc_sb_mixer_gain(sb.mixer.fm[1])};
+
+		chan->SetAppVolume(master_gain * opl_gain);
 	}
 
-	chan = MIXER_FindChannel(ChannelName::CdAudio);
-	if (chan) {
-		chan->SetAppVolume({m0 * calc_vol(sb.mixer.cda[0]),
-		                    m1 * calc_vol(sb.mixer.cda[1])});
+	if (auto chan = MIXER_FindChannel(ChannelName::CdAudio); chan) {
+		AudioFrame cd_audio_gain = {calc_sb_mixer_gain(sb.mixer.cda[0]),
+		                            calc_sb_mixer_gain(sb.mixer.cda[1])};
+
+		chan->SetAppVolume(master_gain * cd_audio_gain);
 	}
 }
 
