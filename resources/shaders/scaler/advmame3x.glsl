@@ -33,7 +33,7 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 uniform sampler2D rubyTexture;
 
 vec3 getadvmame3xtexel(vec2 coord)
@@ -56,13 +56,13 @@ vec3 getadvmame3xtexel(vec2 coord)
 		left = up - left;
 	}
 
-	vec3 c0 = texture(rubyTexture, (base + up + left) / rubyTextureSize).xyz;
-	vec3 c1 = texture(rubyTexture, (base + up) / rubyTextureSize).xyz;
-	vec3 c2 = texture(rubyTexture, (base + up - left) / rubyTextureSize).xyz;
-	vec3 c3 = texture(rubyTexture, (base + left) / rubyTextureSize).xyz;
-	vec3 c4 = texture(rubyTexture, base / rubyTextureSize).xyz;
-	vec3 c5 = texture(rubyTexture, (base - left) / rubyTextureSize).xyz;
-	vec3 c7 = texture(rubyTexture, (base - up) / rubyTextureSize).xyz;
+	vec3 c0 = texture(rubyTexture, (base + up + left) / rubyInputSize).xyz;
+	vec3 c1 = texture(rubyTexture, (base + up) / rubyInputSize).xyz;
+	vec3 c2 = texture(rubyTexture, (base + up - left) / rubyInputSize).xyz;
+	vec3 c3 = texture(rubyTexture, (base + left) / rubyInputSize).xyz;
+	vec3 c4 = texture(rubyTexture, base / rubyInputSize).xyz;
+	vec3 c5 = texture(rubyTexture, (base - left) / rubyInputSize).xyz;
+	vec3 c7 = texture(rubyTexture, (base - up) / rubyInputSize).xyz;
 
 	bool outer  = c1 != c7 && c3 != c5;
 	bool check1 = c3 == c1 && (!any(m) || c4 != c2);
