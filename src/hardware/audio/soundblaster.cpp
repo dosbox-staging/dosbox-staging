@@ -2653,7 +2653,7 @@ static void mixer_write(const uint8_t val)
 	} break;
 
 	case 0x14: // Audio 1 Play Volume (ESS)
-		if (sb.ess.type != EssType::None) {
+		if (sb.ess.extended_mode_enabled) {
 			write_ess_volume(val, sb.mixer.dac);
 			update_channel_volumes();
 		}
@@ -2701,7 +2701,7 @@ static void mixer_write(const uint8_t val)
 			sb.mixer.dac[0] = val >> 3;
 			update_channel_volumes();
 
-		} else if (sb.ess.type != EssType::None) {
+		} else if (sb.ess.extended_mode_enabled) {
 			write_ess_volume(val, sb.mixer.master);
 			update_channel_volumes();
 		}
@@ -2735,7 +2735,7 @@ static void mixer_write(const uint8_t val)
 			sb.mixer.cda[0] = val >> 3;
 			update_channel_volumes();
 
-		} else if (sb.ess.type != EssType::None) {
+		} else if (sb.ess.extended_mode_enabled) {
 			write_ess_volume(val, sb.mixer.fm);
 			update_channel_volumes();
 		}
@@ -2754,7 +2754,7 @@ static void mixer_write(const uint8_t val)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.lin[0] = val >> 3;
 
-		} else if (sb.ess.type != EssType::None) {
+		} else if (sb.ess.extended_mode_enabled) {
 			write_ess_volume(val, sb.mixer.cda);
 			update_channel_volumes();
 		}
@@ -2773,7 +2773,7 @@ static void mixer_write(const uint8_t val)
 		break;
 
 	case 0x3e: // Line Volume (ESS)
-		if (sb.ess.type != EssType::None) {
+		if (sb.ess.extended_mode_enabled) {
 			write_ess_volume(val, sb.mixer.lin);
 		}
 		break;
@@ -2844,7 +2844,7 @@ static uint8_t mixer_read()
 		return ((sb.mixer.master[1] >> 1) & 0xe);
 
 	case 0x14: // Audio 1 Play Volume (ESS)
-		if (sb.ess.type != EssType::None) {
+		if (sb.ess.extended_mode_enabled) {
 			return read_ess_volume(sb.mixer.dac);
 		}
 		break;
@@ -2902,7 +2902,7 @@ static uint8_t mixer_read()
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.dac[0] << 3;
 		}
-		if (sb.ess.type != EssType::None) {
+		if (sb.ess.extended_mode_enabled) {
 			return read_ess_volume(sb.mixer.master);
 		}
 		ret = 0xa;
@@ -2936,7 +2936,7 @@ static uint8_t mixer_read()
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.cda[0] << 3;
 		}
-		if (sb.ess.type != EssType::None) {
+		if (sb.ess.extended_mode_enabled) {
 			return read_ess_volume(sb.mixer.fm);
 		}
 		ret = 0xa;
@@ -2955,7 +2955,7 @@ static uint8_t mixer_read()
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.lin[0] << 3;
 		}
-		if (sb.ess.type != EssType::None) {
+		if (sb.ess.extended_mode_enabled) {
 			return read_ess_volume(sb.mixer.cda);
 		}
 		ret = 0xa;
@@ -2976,7 +2976,7 @@ static uint8_t mixer_read()
 		break;
 
 	case 0x3e: // Line Volume (ESS)
-		if (sb.ess.type != EssType::None) {
+		if (sb.ess.extended_mode_enabled) {
 			return read_ess_volume(sb.mixer.lin);
 		}
 		break;
