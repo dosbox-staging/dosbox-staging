@@ -197,7 +197,7 @@ static void DrawBars(void)
 	         0,
 	         "-----(Variable Overview                   )-----                                ");
 	/* Show the Output OverView */
-	outy += dbg.rows_output + 1;
+	outy += dbg.rows_variables + 1;
 	mvaddstr(outy - 1,
 	         0,
 	         "-----(Output          Scroll: home/end    )-----                                ");
