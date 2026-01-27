@@ -221,7 +221,7 @@ struct SbInfo {
 		uint8_t index = 0;
 
 		// If true, DOS software can programmatically change the Sound
-		// Blaster mixer's volume levels on SB Pro 1 and later card for
+		// Blaster mixer's volume levels on SB Pro 1 and later cards for
 		// the SB (DAC), OPL (FM) and CDAUDIO channels. These are called
 		// "app levels". The final output level is the "user level" set
 		// in the DOSBox mixer multiplied with the "app level" for these
@@ -1848,7 +1848,7 @@ static void dsp_do_command()
 		// here, not mucking up the switch statement.
 
 		if (sb.dsp.cmd == 0xc6 || sb.dsp.cmd == 0xc7) {
-			// 0xc6 enabled extended mode, 0xc7 disables it
+			// 0xc6 enables extended mode, 0xc7 disables it
 			sb.ess.extended_mode_enabled = (sb.dsp.cmd == 0xc6);
 
 			LOG_TRACE("ESS: Extended mode %s",
@@ -3656,7 +3656,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 		if (i == 8 || i == 9) {
 			continue;
 		}
-		// Disable mixer ports for lower soundblaster
+		// Disable mixer ports for SoundBlaster 1 and 2
 		if ((sb.type == SbType::SB1 || sb.type == SbType::SB2) &&
 		    (i == 4 || i == 5)) {
 			continue;
