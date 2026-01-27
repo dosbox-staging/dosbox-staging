@@ -214,7 +214,6 @@ private:
 		ShaderPreset shader_preset = {};
 
 		struct {
-			GLint texture_size  = -1;
 			GLint input_size    = -1;
 			GLint output_size   = -1;
 			GLint frame_count   = -1;

@@ -36,18 +36,16 @@ out vec4 t5;
 out vec4 t6;
 out vec4 t7;
 
-uniform vec2 rubyOutputSize;
-uniform vec2 rubyTextureSize;
 uniform vec2 rubyInputSize;
+uniform vec2 rubyOutputSize;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	             rubyInputSize / rubyTextureSize;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
-	vec2 ps = vec2(1.0) / rubyTextureSize.xy;
+	vec2 ps = vec2(1.0) / rubyInputSize.xy;
 
 	float dx = ps.x;
 	float dy = ps.y;
@@ -80,9 +78,8 @@ in vec4 t7;
 
 out vec4 FragColor;
 
-uniform vec2 rubyOutputSize;
-uniform vec2 rubyTextureSize;
 uniform vec2 rubyInputSize;
+uniform vec2 rubyOutputSize;
 uniform sampler2D rubyTexture;
 
 // compatibility #defines
@@ -90,7 +87,7 @@ uniform sampler2D rubyTexture;
 #define Source rubyTexture
 #define vTexCoord v_texCoord.xy
 
-#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
+#define SourceSize vec4(rubyInputSize, 1.0 / rubyInputSize) //either TextureSize or InputSize
 #define OutputSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
 
 uniform float XBR_Y_WEIGHT;
