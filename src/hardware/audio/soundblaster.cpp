@@ -2436,7 +2436,7 @@ static float calc_sb_mixer_gain(const uint8_t amount)
 	return decibel_to_gain(gain_db);
 }
 
-static void ctmixer_update_volumes()
+static void update_channel_volumes()
 {
 	if (!sb.mixer.enabled) {
 		return;
@@ -2483,7 +2483,7 @@ static void reset_mixer()
 	sb.mixer.master[0] = DefaultVolume;
 	sb.mixer.master[1] = DefaultVolume;
 
-	ctmixer_update_volumes();
+	update_channel_volumes();
 }
 
 static void write_sb_pro_volume(uint8_t* dest, const uint8_t value)
@@ -2567,12 +2567,12 @@ static void ctmixer_write(const uint8_t val)
 
 	case 0x02: // Master Volume (SB2 Only)
 		write_sb_pro_volume(sb.mixer.master, (val & 0xf) | (val << 4));
-		ctmixer_update_volumes();
+		update_channel_volumes();
 		break;
 
 	case 0x04: // DAC Volume (SBPRO)
 		write_sb_pro_volume(sb.mixer.dac, val);
-		ctmixer_update_volumes();
+		update_channel_volumes();
 		break;
 
 	case 0x06: { // FM output selection
@@ -2580,7 +2580,7 @@ static void ctmixer_write(const uint8_t val)
 		// volume controls both channels
 		write_sb_pro_volume(sb.mixer.fm, (val & 0xf) | (val << 4));
 
-		ctmixer_update_volumes();
+		update_channel_volumes();
 
 		if (val & 0x60) {
 			LOG(LOG_SB, LOG_WARN)("Turned FM one channel off. not implemented %X",
@@ -2591,14 +2591,14 @@ static void ctmixer_write(const uint8_t val)
 
 	case 0x08: // CDA Volume (SB2 Only)
 		write_sb_pro_volume(sb.mixer.cda, (val & 0xf) | (val << 4));
-		ctmixer_update_volumes();
+		update_channel_volumes();
 		break;
 
 	case 0x0a: // Mic Level (SBPRO) or DAC Volume (SB2)
 		// 2-bit, 3-bit on SB16
 		if (sb.type == SbType::SB2) {
 			sb.mixer.dac[0] = sb.mixer.dac[1] = ((val & 0x6) << 2) | 3;
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		} else {
 			sb.mixer.mic = ((val & 0x7) << 2) |
 			               (sb.type == SbType::SB16 ? 1 : 3);
@@ -2655,23 +2655,23 @@ static void ctmixer_write(const uint8_t val)
 	case 0x14: // Audio 1 Play Volume (ESS)
 		if (sb.ess_type != EssType::None) {
 			write_ess_volume(val, sb.mixer.dac);
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		}
 		break;
 
 	case 0x22: // Master Volume (SBPRO)
 		write_sb_pro_volume(sb.mixer.master, val);
-		ctmixer_update_volumes();
+		update_channel_volumes();
 		break;
 
 	case 0x26: // FM Volume (SBPRO)
 		write_sb_pro_volume(sb.mixer.fm, val);
-		ctmixer_update_volumes();
+		update_channel_volumes();
 		break;
 
 	case 0x28: // CD Audio Volume (SBPRO)
 		write_sb_pro_volume(sb.mixer.cda, val);
-		ctmixer_update_volumes();
+		update_channel_volumes();
 		break;
 
 	case 0x2e: // Line-in Volume (SBPRO)
@@ -2682,7 +2682,7 @@ static void ctmixer_write(const uint8_t val)
 	case 0x30: // Master Volume Left (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.master[0] = val >> 3;
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		}
 		break;
 
@@ -2690,7 +2690,7 @@ static void ctmixer_write(const uint8_t val)
 	case 0x31: // Master Volume Right (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.master[1] = val >> 3;
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		}
 		break;
 
@@ -2699,32 +2699,32 @@ static void ctmixer_write(const uint8_t val)
 		// Master Volume (ESS)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.dac[0] = val >> 3;
-			ctmixer_update_volumes();
+			update_channel_volumes();
 
 		} else if (sb.ess_type != EssType::None) {
 			write_ess_volume(val, sb.mixer.master);
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		}
 		break;
 
 	case 0x33: // DAC Volume Right (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.dac[1] = val >> 3;
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		}
 		break;
 
 	case 0x34: // FM Volume Left (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.fm[0] = val >> 3;
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		}
 		break;
 
 	case 0x35: // FM Volume Right (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.fm[1] = val >> 3;
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		}
 		break;
 
@@ -2733,18 +2733,18 @@ static void ctmixer_write(const uint8_t val)
 		// FM Volume (ESS)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.cda[0] = val >> 3;
-			ctmixer_update_volumes();
+			update_channel_volumes();
 
 		} else if (sb.ess_type != EssType::None) {
 			write_ess_volume(val, sb.mixer.fm);
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		}
 		break;
 
 	case 0x37: // CD Volume Right (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.cda[1] = val >> 3;
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		}
 		break;
 
@@ -2756,7 +2756,7 @@ static void ctmixer_write(const uint8_t val)
 
 		} else if (sb.ess_type != EssType::None) {
 			write_ess_volume(val, sb.mixer.cda);
-			ctmixer_update_volumes();
+			update_channel_volumes();
 		}
 		break;
 
