@@ -2555,7 +2555,7 @@ static uint8_t read_ess_volume(const uint8_t v[2])
 	return (high_nibble << 4) + low_nibble;
 }
 
-static void ctmixer_write(const uint8_t val)
+static void mixer_write(const uint8_t val)
 {
 	using namespace bit::literals;
 
@@ -3148,13 +3148,9 @@ static void write_sb(const io_port_t port, const io_val_t value, const io_width_
 
 	switch (port - sb.hw.base) {
 	case DspReset: dsp_do_reset(val); break;
-
 	case DspWriteData: dsp_do_write(val); break;
-
 	case MixerIndex: sb.mixer.index = val; break;
-
-	case MixerData: ctmixer_write(val); break;
-
+	case MixerData: mixer_write(val); break;
 	default:
 		LOG(LOG_SB, LOG_NORMAL)("Unhandled write to SB Port %4X", port);
 		break;
