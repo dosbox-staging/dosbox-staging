@@ -174,10 +174,10 @@ struct SbInfo {
 	DspMode mode = DspMode::None;
 	SbType type  = SbType::None;
 
-	// ESS chipset emulation, to be set only for SbType::SBPro2
-	EssType ess_type = EssType::None;
-
 	struct {
+		// ESS chipset emulation, to be set only for SbType::SBPro2
+		EssType type = EssType::None;
+
 		bool extended_mode_enabled = false;
 	} ess = {};
 
@@ -398,7 +398,7 @@ static void dsp_enable_speaker(const bool enabled)
 	// enable/disable commands are simply ignored. Only the SB Pro and
 	// earlier models can toggle the speaker-output via speaker
 	// enable/disable commands.
-	if (sb.type == SbType::SB16 || sb.ess_type != EssType::None) {
+	if (sb.type == SbType::SB16 || sb.ess.type != EssType::None) {
 		return;
 	}
 
@@ -429,7 +429,7 @@ static void dsp_enable_speaker(const bool enabled)
 
 static void init_speaker_state()
 {
-	if (sb.type == SbType::SB16 || sb.ess_type != EssType::None) {
+	if (sb.type == SbType::SB16 || sb.ess.type != EssType::None) {
 
 		// Speaker output (DAC output) is always enabled on the SB16 and
 		// ESS cards. Because the channel is active, we treat this as a
@@ -1842,7 +1842,7 @@ static bool check_sb2_or_above()
 
 static void dsp_do_command()
 {
-	if (sb.ess_type != EssType::None && sb.dsp.cmd >= 0xa0 && sb.dsp.cmd <= 0xcf) {
+	if (sb.ess.type != EssType::None && sb.dsp.cmd >= 0xa0 && sb.dsp.cmd <= 0xcf) {
 		LOG_TRACE("ESS: Command: %02xh", sb.dsp.cmd);
 		// ESS DSP commands overlap with SB16 commands. We handle them
 		// here, not mucking up the switch statement.
@@ -2206,7 +2206,7 @@ static void dsp_do_command()
 			break;
 
 		case SbType::SBPro2:
-			if (sb.ess_type != EssType::None) {
+			if (sb.ess.type != EssType::None) {
 				dsp_add_data(0x03);
 				dsp_add_data(0x01);
 			} else {
@@ -2240,7 +2240,7 @@ static void dsp_do_command()
 	case 0xe3: // DSP Copyright
 		dsp_flush_data();
 
-		if (sb.ess_type != EssType::None) {
+		if (sb.ess.type != EssType::None) {
 			// ESS chips do not return a copyright string
 			dsp_add_data(0);
 		} else {
@@ -2256,7 +2256,7 @@ static void dsp_do_command()
 		break;
 
 	case 0xe7: // ESS detect/read config
-		switch (sb.ess_type) {
+		switch (sb.ess.type) {
 		case EssType::None: break;
 
 		case EssType::Es1688:
@@ -2653,7 +2653,7 @@ static void mixer_write(const uint8_t val)
 	} break;
 
 	case 0x14: // Audio 1 Play Volume (ESS)
-		if (sb.ess_type != EssType::None) {
+		if (sb.ess.type != EssType::None) {
 			write_ess_volume(val, sb.mixer.dac);
 			update_channel_volumes();
 		}
@@ -2701,7 +2701,7 @@ static void mixer_write(const uint8_t val)
 			sb.mixer.dac[0] = val >> 3;
 			update_channel_volumes();
 
-		} else if (sb.ess_type != EssType::None) {
+		} else if (sb.ess.type != EssType::None) {
 			write_ess_volume(val, sb.mixer.master);
 			update_channel_volumes();
 		}
@@ -2735,7 +2735,7 @@ static void mixer_write(const uint8_t val)
 			sb.mixer.cda[0] = val >> 3;
 			update_channel_volumes();
 
-		} else if (sb.ess_type != EssType::None) {
+		} else if (sb.ess.type != EssType::None) {
 			write_ess_volume(val, sb.mixer.fm);
 			update_channel_volumes();
 		}
@@ -2754,7 +2754,7 @@ static void mixer_write(const uint8_t val)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.lin[0] = val >> 3;
 
-		} else if (sb.ess_type != EssType::None) {
+		} else if (sb.ess.type != EssType::None) {
 			write_ess_volume(val, sb.mixer.cda);
 			update_channel_volumes();
 		}
@@ -2773,7 +2773,7 @@ static void mixer_write(const uint8_t val)
 		break;
 
 	case 0x3e: // Line Volume (ESS)
-		if (sb.ess_type != EssType::None) {
+		if (sb.ess.type != EssType::None) {
 			write_ess_volume(val, sb.mixer.lin);
 		}
 		break;
@@ -2844,7 +2844,7 @@ static uint8_t mixer_read()
 		return ((sb.mixer.master[1] >> 1) & 0xe);
 
 	case 0x14: // Audio 1 Play Volume (ESS)
-		if (sb.ess_type != EssType::None) {
+		if (sb.ess.type != EssType::None) {
 			return read_ess_volume(sb.mixer.dac);
 		}
 		break;
@@ -2902,7 +2902,7 @@ static uint8_t mixer_read()
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.dac[0] << 3;
 		}
-		if (sb.ess_type != EssType::None) {
+		if (sb.ess.type != EssType::None) {
 			return read_ess_volume(sb.mixer.master);
 		}
 		ret = 0xa;
@@ -2936,7 +2936,7 @@ static uint8_t mixer_read()
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.cda[0] << 3;
 		}
-		if (sb.ess_type != EssType::None) {
+		if (sb.ess.type != EssType::None) {
 			return read_ess_volume(sb.mixer.fm);
 		}
 		ret = 0xa;
@@ -2955,7 +2955,7 @@ static uint8_t mixer_read()
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.lin[0] << 3;
 		}
-		if (sb.ess_type != EssType::None) {
+		if (sb.ess.type != EssType::None) {
 			return read_ess_volume(sb.mixer.cda);
 		}
 		ret = 0xa;
@@ -2976,13 +2976,13 @@ static uint8_t mixer_read()
 		break;
 
 	case 0x3e: // Line Volume (ESS)
-		if (sb.ess_type != EssType::None) {
+		if (sb.ess.type != EssType::None) {
 			return read_ess_volume(sb.mixer.lin);
 		}
 		break;
 
 	case 0x40: // ESS Identification Value (ES1488 and later)
-		switch (sb.ess_type) {
+		switch (sb.ess.type) {
 		case EssType::None:
 		case EssType::Es1688:
 			ret = sb.mixer.ess_id_str[sb.mixer.ess_id_str_pos];
@@ -3538,9 +3538,9 @@ SoundBlaster::SoundBlaster(Section* conf)
 	const auto sbtype_pref = section->GetString("sbtype");
 
 	sb.type     = determine_sb_type(sbtype_pref);
-	sb.ess_type = determine_ess_type(sbtype_pref);
+	sb.ess.type = determine_ess_type(sbtype_pref);
 
-	switch (sb.ess_type) {
+	switch (sb.ess.type) {
 	case EssType::None: break;
 	case EssType::Es1688:
 		// First two bytes identify the part number, 1688 in this case.
@@ -3552,7 +3552,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 		sb.mixer.ess_id_str[3] = sb.hw.base & 0xff;
 	}
 
-	oplmode = determine_oplmode(section->GetString("oplmode"), sb.type, sb.ess_type);
+	oplmode = determine_oplmode(section->GetString("oplmode"), sb.type, sb.ess.type);
 
 	// Init OPL
 	switch (oplmode) {
