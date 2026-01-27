@@ -2469,19 +2469,41 @@ static void update_channel_volumes()
 
 static void reset_mixer()
 {
-	constexpr auto DefaultVolume = 31;
+	switch (sb.ess.type) {
+	case EssType::None: {
+		constexpr auto DefaultSbValue = 31;
 
-	sb.mixer.fm[0] = DefaultVolume;
-	sb.mixer.fm[1] = DefaultVolume;
+		sb.mixer.fm[0] = DefaultSbValue;
+		sb.mixer.fm[1] = DefaultSbValue;
 
-	sb.mixer.cda[0] = DefaultVolume;
-	sb.mixer.cda[1] = DefaultVolume;
+		sb.mixer.cda[0] = DefaultSbValue;
+		sb.mixer.cda[1] = DefaultSbValue;
 
-	sb.mixer.dac[0] = DefaultVolume;
-	sb.mixer.dac[1] = DefaultVolume;
+		sb.mixer.dac[0] = DefaultSbValue;
+		sb.mixer.dac[1] = DefaultSbValue;
 
-	sb.mixer.master[0] = DefaultVolume;
-	sb.mixer.master[1] = DefaultVolume;
+		sb.mixer.master[0] = DefaultSbValue;
+		sb.mixer.master[1] = DefaultSbValue;
+	} break;
+
+	case EssType::Es1688:
+		sb.mixer.fm[0] = 0x88;
+		sb.mixer.fm[1] = 0x88;
+
+		sb.mixer.cda[0] = 0x00;
+		sb.mixer.cda[1] = 0x00;
+
+		sb.mixer.dac[0] = 0x88;
+		sb.mixer.dac[1] = 0x88;
+
+		sb.mixer.master[0] = 0x88;
+		sb.mixer.master[1] = 0x88;
+
+		sb.ess.extended_mode_enabled = false;
+
+	default:
+		assertm(false, "Invalid EssType value");
+	}
 
 	update_channel_volumes();
 }
