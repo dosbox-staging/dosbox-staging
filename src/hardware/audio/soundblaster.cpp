@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2019-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2019-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -176,6 +176,10 @@ struct SbInfo {
 
 	// ESS chipset emulation, to be set only for SbType::SBPro2
 	EssType ess_type = EssType::None;
+
+	struct {
+		bool extended_mode_enabled = false;
+	} ess = {};
 
 	struct {
 		bool pending_8bit;
@@ -1844,9 +1848,12 @@ static void dsp_do_command()
 		// here, not mucking up the switch statement.
 
 		if (sb.dsp.cmd == 0xc6 || sb.dsp.cmd == 0xc7) {
-			// set(0xc6) clear(0xc7) extended mode
-			LOG_TRACE("ESS: Extended DAC mode turned on %s",
-			          (sb.dsp.cmd == 0xc6) ? "on" : "off");
+			// 0xc6 enabled extended mode, 0xc7 disables it
+			sb.ess.extended_mode_enabled = (sb.dsp.cmd == 0xc6);
+
+			LOG_TRACE("ESS: Extended mode %s",
+			          sb.ess.extended_mode_enabled ? "enabled"
+			                                       : "disabled");
 		} else {
 			LOG_TRACE("ESS: Unknown command %02xh", sb.dsp.cmd);
 		}
@@ -1960,8 +1967,9 @@ static void dsp_do_command()
 			sb.dac = {};
 		}
 
-		// Ensure we're using per-frame callback timing because DAC samples
-		// are sent one after another with sub-millisecond timing.
+		// Ensure we're using per-frame callback timing because DAC
+		// samples are sent one after another with sub-millisecond
+		// timing.
 		callback_type.SetPerFrame();
 
 		if (const auto dac_rate_hz = sb.dac.MeasureDacRateHz(); dac_rate_hz) {
@@ -3538,8 +3546,11 @@ SoundBlaster::SoundBlaster(Section* conf)
 	switch (sb.ess_type) {
 	case EssType::None: break;
 	case EssType::Es1688:
+		// First two bytes identify the part number, 1688 in this case.
+		// For the ES1869, this should be x18 and 0x69.
 		sb.mixer.ess_id_str[0] = 0x16;
 		sb.mixer.ess_id_str[1] = 0x88;
+
 		sb.mixer.ess_id_str[2] = (sb.hw.base >> 8) & 0xff;
 		sb.mixer.ess_id_str[3] = sb.hw.base & 0xff;
 	}
