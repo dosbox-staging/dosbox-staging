@@ -39,7 +39,7 @@ layout (location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
 
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
 
 void main()
 {
@@ -54,7 +54,7 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
 uniform sampler2D s_p;
 
 uniform float BEAM_PROFILE;
@@ -450,8 +450,8 @@ void main()
 	vec4 profile = get_beam_profile();
 
 	vec2 TextureSize =
-	        mix(vec2(rubyInputSize.x * SHARPNESS_HACK, rubyInputSize.y),
-	            vec2(rubyInputSize.x, rubyInputSize.y * SHARPNESS_HACK),
+	        mix(vec2(INPUT_TEXTURE_SIZE.x * SHARPNESS_HACK, INPUT_TEXTURE_SIZE.y),
+	            vec2(INPUT_TEXTURE_SIZE.x, INPUT_TEXTURE_SIZE.y * SHARPNESS_HACK),
 	            VSCANLINES);
 
 	vec2 dx = mix(vec2(1.0 / TextureSize.x, 0.0),

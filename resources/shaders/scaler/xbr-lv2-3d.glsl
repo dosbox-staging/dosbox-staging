@@ -34,9 +34,9 @@ layout (location = 0) in vec2 a_position;
 out vec2 v_texCoord;
 out vec4 t1;
 
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
 
-#define SourceSize vec4(rubyInputSize, 1.0 / rubyInputSize)
+#define SourceSize vec4(INPUT_TEXTURE_SIZE, 1.0 / INPUT_TEXTURE_SIZE)
 
 uniform float XBR_RES;
 
@@ -45,7 +45,7 @@ void main()
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
 	v_texCoord.xy = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	                rubyInputSize / rubyInputSize;
+	                INPUT_TEXTURE_SIZE / INPUT_TEXTURE_SIZE;
 
 	vec2 ps  = XBR_RES / SourceSize.xy;
 	float dx = ps.x;
@@ -61,13 +61,13 @@ in vec4 t1;
 
 out vec4 FragColor;
 
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
 uniform sampler2D rubyTexture;
 
 #define Source rubyTexture
 #define vTexCoord v_texCoord.xy
 
-#define SourceSize vec4(rubyInputSize, 1.0 / rubyInputSize)
+#define SourceSize vec4(INPUT_TEXTURE_SIZE, 1.0 / INPUT_TEXTURE_SIZE)
 
 uniform float XBR_Y_WEIGHT;
 uniform float XBR_EQ_THRESHOLD;
