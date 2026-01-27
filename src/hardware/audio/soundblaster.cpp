@@ -2467,7 +2467,7 @@ static void ctmixer_update_volumes()
 	}
 }
 
-static void ctmixer_reset()
+static void reset_mixer()
 {
 	constexpr auto DefaultVolume = 31;
 
@@ -2561,7 +2561,7 @@ static void ctmixer_write(const uint8_t val)
 
 	switch (sb.mixer.index) {
 	case 0x00: // Reset
-		ctmixer_reset();
+		reset_mixer();
 		LOG(LOG_SB, LOG_WARN)("Mixer reset value %x", val);
 		break;
 
@@ -3679,7 +3679,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 
 	dsp_reset();
 
-	ctmixer_reset();
+	reset_mixer();
 
 	ProcessDMATransfer = &play_dma_transfer;
 
