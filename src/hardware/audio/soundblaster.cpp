@@ -2436,7 +2436,7 @@ static float calc_sb_mixer_gain(const uint8_t amount)
 	return decibel_to_gain(gain_db);
 }
 
-static void update_channel_volumes()
+static void update_sb_channel_volumes()
 {
 	if (!sb.mixer.enabled) {
 		return;
@@ -2467,6 +2467,66 @@ static void update_channel_volumes()
 	}
 }
 
+static void update_ess_channel_volumes()
+{
+	if (!sb.mixer.enabled) {
+		return;
+	}
+
+	AudioFrame master_gain = {calc_sb_mixer_gain(sb.mixer.master[0]),
+	                          calc_sb_mixer_gain(sb.mixer.master[1])};
+
+	auto calc_dac_fm_gain = [](uint8_t v) {
+		if (v == 0) {
+			return 0.0f;
+		}
+
+		float db_gain;
+		if (v >= 8) {
+			db_gain = (static_cast<float>(v) - 8) * 1.5f;
+		} else {
+			db_gain = (static_cast<float>(v) - 8) * 3.0f;
+		}
+		return decibel_to_gain(db_gain);
+	};
+
+	if (auto chan = MIXER_FindChannel(ChannelName::SoundBlasterDac); chan) {
+		AudioFrame dac_gain = {calc_dac_fm_gain(sb.mixer.dac[0]),
+		                       calc_dac_fm_gain(sb.mixer.dac[1])};
+
+		chan->SetAppVolume(master_gain * dac_gain);
+	}
+
+	if (auto chan = MIXER_FindChannel(ChannelName::Opl); chan) {
+		AudioFrame opl_gain = {calc_dac_fm_gain(sb.mixer.fm[0]),
+		                       calc_dac_fm_gain(sb.mixer.fm[1])};
+
+		chan->SetAppVolume(master_gain * opl_gain);
+	}
+
+	if (auto chan = MIXER_FindChannel(ChannelName::CdAudio); chan) {
+		auto calc_cda_gain = [](uint8_t v) {
+			if (v == 0) {
+				return 0.0f;
+			}
+
+			float db_gain;
+			if (v >= 6) {
+				db_gain = (static_cast<float>(v) - 13) * 1.5f;
+			} else {
+				db_gain = -13.5f -
+				          (6.0f - static_cast<float>(v)) * 3.0f;
+			}
+			return decibel_to_gain(db_gain);
+		};
+
+		AudioFrame cd_audio_gain = {calc_cda_gain(sb.mixer.cda[0]),
+		                            calc_cda_gain(sb.mixer.cda[1])};
+
+		chan->SetAppVolume(master_gain * cd_audio_gain);
+	}
+}
+
 static void reset_mixer()
 {
 	switch (sb.ess.type) {
@@ -2484,9 +2544,11 @@ static void reset_mixer()
 
 		sb.mixer.master[0] = DefaultSbValue;
 		sb.mixer.master[1] = DefaultSbValue;
+
+		update_sb_channel_volumes();
 	} break;
 
-	case EssType::Es1688:
+	case EssType::Es1688: {
 		sb.mixer.fm[0] = 0x88;
 		sb.mixer.fm[1] = 0x88;
 
@@ -2499,13 +2561,13 @@ static void reset_mixer()
 		sb.mixer.master[0] = 0x88;
 		sb.mixer.master[1] = 0x88;
 
+		update_ess_channel_volumes();
+
 		sb.ess.extended_mode_enabled = false;
+	} break;
 
-	default:
-		assertm(false, "Invalid EssType value");
+	default: assertm(false, "Invalid EssType value");
 	}
-
-	update_channel_volumes();
 }
 
 static void write_sb_pro_volume(uint8_t* dest, const uint8_t value)
@@ -2524,6 +2586,12 @@ static void write_ess_sb_pro_volume(uint8_t* dest, const uint8_t value)
 	dest[1] = (val & 0x0f);
 }
 
+static void write_ess_volume(uint8_t* dest, const uint8_t value)
+{
+	dest[0] = (value & 0xf0) >> 4;
+	dest[1] = (value & 0x0f);
+}
+
 static uint8_t read_sb_pro_volume(const uint8_t* src)
 {
 	return ((((src[0] & 0x1e) << 3) | ((src[1] & 0x1e) >> 1)) |
@@ -2535,6 +2603,13 @@ static uint8_t read_ess_sb_pro_volume(const uint8_t* src)
 	// If the Sound Blaster Pro compatible interface is used on ESS, bits 0
 	// and 4 and forced high on all reads.
 	return ((src[0] << 4) | src[1]) | 0b00010001;
+}
+
+static uint8_t read_ess_volume(const uint8_t* src)
+{
+	// If the Sound Blaster Pro compatible interface is used on ESS, bits 0
+	// and 4 and forced high on all reads.
+	return ((src[0] << 4) | src[1]);
 }
 
 static void dsp_change_stereo(const bool stereo)
@@ -2556,44 +2631,6 @@ static void dsp_change_stereo(const bool stereo)
 	sb.dma.stereo = stereo;
 }
 
-static void write_ess_volume(const uint8_t val, uint8_t* out)
-{
-	auto map_nibble_to_5bit = [](const uint8_t v) {
-		assert(v <= 0x0f);
-
-		// Nibble (4-bit, 0-15) to 5-bit (0-31) mapping:
-		//
-		// 0 -> 0
-		// 1 -> 2
-		// 2 -> 4
-		// 3 -> 6
-		// ....
-		// 7 -> 14
-		// 8 -> 17
-		// 9 -> 19
-		// 10 -> 21
-		// 11 -> 23
-		// ....
-		// 15 -> 31
-		//
-		return (v << 1) | (v >> 3);
-	};
-
-	out[0] = map_nibble_to_5bit(high_nibble(val));
-	out[1] = map_nibble_to_5bit(low_nibble(val));
-}
-
-static uint8_t read_ess_volume(const uint8_t v[2])
-{
-	assert(v[0] <= 0x1f);
-	assert(v[1] <= 0x1f);
-
-	// 5-bit (0-31) to nibble (4-bit, 0-15) mapping
-	const auto high_nibble = v[0] >> 1;
-	const auto low_nibble  = v[1] >> 1;
-	return (high_nibble << 4) + low_nibble;
-}
-
 static void mixer_write(const uint8_t val)
 {
 	using namespace bit::literals;
@@ -2606,24 +2643,24 @@ static void mixer_write(const uint8_t val)
 
 	case 0x02: // Master Volume (SB2 Only)
 		write_sb_pro_volume(sb.mixer.master, (val & 0xf) | (val << 4));
-		update_channel_volumes();
+		update_sb_channel_volumes();
 		break;
 
 	case 0x04: // DAC Volume (SBPRO, ESS)
 		if (sb.ess.extended_mode_enabled) {
 			write_ess_sb_pro_volume(sb.mixer.dac, val);
+			update_ess_channel_volumes();
 		} else {
 			write_sb_pro_volume(sb.mixer.dac, val);
+			update_sb_channel_volumes();
 		}
-		update_channel_volumes();
 		break;
 
 	case 0x06: { // FM output selection
 		// Somewhat obsolete with dual OPL SBpro + FM volume (SB2 Only)
 		// volume controls both channels
 		write_sb_pro_volume(sb.mixer.fm, (val & 0xf) | (val << 4));
-
-		update_channel_volumes();
+		update_sb_channel_volumes();
 
 		if (val & 0x60) {
 			LOG(LOG_SB, LOG_WARN)("Turned FM one channel off. not implemented %X",
@@ -2634,14 +2671,14 @@ static void mixer_write(const uint8_t val)
 
 	case 0x08: // CDA Volume (SB2 Only)
 		write_sb_pro_volume(sb.mixer.cda, (val & 0xf) | (val << 4));
-		update_channel_volumes();
+		update_sb_channel_volumes();
 		break;
 
 	case 0x0a: // Mic Level (SBPRO) or DAC Volume (SB2)
 		// 2-bit, 3-bit on SB16
 		if (sb.type == SbType::SB2) {
 			sb.mixer.dac[0] = sb.mixer.dac[1] = ((val & 0x6) << 2) | 3;
-			update_channel_volumes();
+			update_sb_channel_volumes();
 		} else {
 			sb.mixer.mic = ((val & 0x7) << 2) |
 			               (sb.type == SbType::SB16 ? 1 : 3);
@@ -2697,39 +2734,42 @@ static void mixer_write(const uint8_t val)
 
 	case 0x14: // Audio 1 Play Volume (ESS)
 		if (sb.ess.extended_mode_enabled) {
-			write_ess_volume(val, sb.mixer.dac);
-			update_channel_volumes();
+			write_ess_volume(sb.mixer.dac, val);
+			update_ess_channel_volumes();
 		}
 		break;
 
-	case 0x22: // Master Volume (SBPRO)
+	case 0x22: // Master Volume (SBPRO, ESS)
 		if (sb.ess.extended_mode_enabled) {
 			write_ess_sb_pro_volume(sb.mixer.master, val);
+			update_ess_channel_volumes();
 		} else {
 			write_sb_pro_volume(sb.mixer.master, val);
+			update_sb_channel_volumes();
 		}
-		update_channel_volumes();
 		break;
 
-	case 0x26: // FM Volume (SBPRO)
+	case 0x26: // FM Volume (SBPRO, ESS)
 		if (sb.ess.extended_mode_enabled) {
 			write_ess_sb_pro_volume(sb.mixer.fm, val);
+			update_ess_channel_volumes();
 		} else {
 			write_sb_pro_volume(sb.mixer.fm, val);
+			update_sb_channel_volumes();
 		}
-		update_channel_volumes();
 		break;
 
-	case 0x28: // CD Audio Volume (SBPRO)
+	case 0x28: // CD Audio Volume (SBPRO, ESS)
 		if (sb.ess.extended_mode_enabled) {
 			write_ess_sb_pro_volume(sb.mixer.cda, val);
+			update_ess_channel_volumes();
 		} else {
 			write_sb_pro_volume(sb.mixer.cda, val);
+			update_sb_channel_volumes();
 		}
-		update_channel_volumes();
 		break;
 
-	case 0x2e: // Line-in Volume (SBPRO)
+	case 0x2e: // Line-in Volume (SBPRO, ESS)
 		if (sb.ess.extended_mode_enabled) {
 			write_ess_sb_pro_volume(sb.mixer.lin, val);
 		} else {
@@ -2741,7 +2781,7 @@ static void mixer_write(const uint8_t val)
 	case 0x30: // Master Volume Left (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.master[0] = val >> 3;
-			update_channel_volumes();
+			update_sb_channel_volumes();
 		}
 		break;
 
@@ -2749,7 +2789,7 @@ static void mixer_write(const uint8_t val)
 	case 0x31: // Master Volume Right (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.master[1] = val >> 3;
-			update_channel_volumes();
+			update_sb_channel_volumes();
 		}
 		break;
 
@@ -2758,32 +2798,32 @@ static void mixer_write(const uint8_t val)
 		// Master Volume (ESS)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.dac[0] = val >> 3;
-			update_channel_volumes();
+			update_sb_channel_volumes();
 
 		} else if (sb.ess.extended_mode_enabled) {
-			write_ess_volume(val, sb.mixer.master);
-			update_channel_volumes();
+			write_ess_volume(sb.mixer.master, val);
+			update_ess_channel_volumes();
 		}
 		break;
 
 	case 0x33: // DAC Volume Right (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.dac[1] = val >> 3;
-			update_channel_volumes();
+			update_sb_channel_volumes();
 		}
 		break;
 
 	case 0x34: // FM Volume Left (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.fm[0] = val >> 3;
-			update_channel_volumes();
+			update_sb_channel_volumes();
 		}
 		break;
 
 	case 0x35: // FM Volume Right (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.fm[1] = val >> 3;
-			update_channel_volumes();
+			update_sb_channel_volumes();
 		}
 		break;
 
@@ -2792,18 +2832,18 @@ static void mixer_write(const uint8_t val)
 		// FM Volume (ESS)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.cda[0] = val >> 3;
-			update_channel_volumes();
+			update_sb_channel_volumes();
 
 		} else if (sb.ess.extended_mode_enabled) {
-			write_ess_volume(val, sb.mixer.fm);
-			update_channel_volumes();
+			write_ess_volume(sb.mixer.fm, val);
+			update_ess_channel_volumes();
 		}
 		break;
 
 	case 0x37: // CD Volume Right (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.cda[1] = val >> 3;
-			update_channel_volumes();
+			update_sb_channel_volumes();
 		}
 		break;
 
@@ -2812,10 +2852,11 @@ static void mixer_write(const uint8_t val)
 		// AuxA (CD) Volume Register (ESS)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.lin[0] = val >> 3;
+			update_sb_channel_volumes();
 
 		} else if (sb.ess.extended_mode_enabled) {
-			write_ess_volume(val, sb.mixer.cda);
-			update_channel_volumes();
+			write_ess_volume(sb.mixer.cda, val);
+			update_ess_channel_volumes();
 		}
 		break;
 
@@ -2833,7 +2874,7 @@ static void mixer_write(const uint8_t val)
 
 	case 0x3e: // Line Volume (ESS)
 		if (sb.ess.extended_mode_enabled) {
-			write_ess_volume(val, sb.mixer.lin);
+			write_ess_volume(sb.mixer.lin, val);
 		}
 		break;
 
@@ -2982,7 +3023,7 @@ static uint8_t mixer_read()
 			return sb.mixer.dac[0] << 3;
 		}
 		if (sb.ess.extended_mode_enabled) {
-			return read_ess_sb_pro_volume(sb.mixer.master);
+			return read_ess_volume(sb.mixer.master);
 		}
 		ret = 0xa;
 		break;
@@ -3016,7 +3057,7 @@ static uint8_t mixer_read()
 			return sb.mixer.cda[0] << 3;
 		}
 		if (sb.ess.extended_mode_enabled) {
-			return read_ess_sb_pro_volume(sb.mixer.fm);
+			return read_ess_volume(sb.mixer.fm);
 		}
 		ret = 0xa;
 		break;
@@ -3035,7 +3076,7 @@ static uint8_t mixer_read()
 			return sb.mixer.lin[0] << 3;
 		}
 		if (sb.ess.extended_mode_enabled) {
-			return read_ess_sb_pro_volume(sb.mixer.cda);
+			return read_ess_volume(sb.mixer.cda);
 		}
 		ret = 0xa;
 		break;
@@ -3056,7 +3097,7 @@ static uint8_t mixer_read()
 
 	case 0x3e: // Line Volume (ESS)
 		if (sb.ess.extended_mode_enabled) {
-			return read_ess_sb_pro_volume(sb.mixer.lin);
+			return read_ess_volume(sb.mixer.lin);
 		}
 		break;
 
