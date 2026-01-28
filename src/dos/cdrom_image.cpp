@@ -614,7 +614,7 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 	uint32_t relative_sector = 0;
 
 	if (!tracks.empty()) { 	// We have a useable CD; get a valid play-position
-		track_iter track = tracks.begin();
+		auto track = tracks.begin();
 		// the CD's current track is valid
 
 		 // reserve the track_file as a shared_ptr to avoid deletion in another thread
@@ -637,7 +637,7 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 			// the CD hasn't been played yet or has an invalid
 			// audio_pos
 		} else {
-			for (track_iter it = tracks.begin(); it != tracks.end(); ++it) {
+			for (auto it = tracks.begin(); it != tracks.end(); ++it) {
 				if (it->attr == 0) {	// Found an audio track
 					track = it;
 					absolute_sector = it->start;
