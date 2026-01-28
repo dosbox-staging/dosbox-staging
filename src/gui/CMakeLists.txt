@@ -20,7 +20,7 @@ target_sources(libdosboxcommon PRIVATE
 endif()
 
 if (OPT_DEBUGGER)
-  target_link_libraries(libdosboxcommon PRIVATE libpdcurses)
+  target_link_libraries(libdosboxcommon PRIVATE imgui::imgui)
 endif()
 
 target_link_libraries(libdosboxcommon PRIVATE
