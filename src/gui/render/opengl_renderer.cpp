@@ -195,9 +195,6 @@ bool OpenGlRenderer::InitRenderer()
 	}
 	pass1.shader = *maybe_shader;
 
-	glUseProgram(pass1.shader.program_object);
-	GetPass1UniformLocations();
-
 	return true;
 }
 
@@ -909,10 +906,6 @@ bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
 	}
 
 	pass2.shader = *maybe_shader;
-
-	glUseProgram(pass2.shader.program_object);
-	GetPass2UniformLocations(pass2.shader.info.default_preset.params);
-
 	return true;
 }
 
@@ -1073,129 +1066,66 @@ void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 	UpdatePass1Uniforms();
 }
 
-void OpenGlRenderer::GetPass1UniformLocations()
-{
-	auto& u       = pass1.uniforms;
-	const auto po = pass1.shader.program_object;
-
-	u.input_texture = glGetUniformLocation(po, "INPUT_TEXTURE");
-
-	u.color_space = glGetUniformLocation(po, "COLOR_SPACE");
-
-	u.enable_adjustments = glGetUniformLocation(po, "ENABLE_ADJUSTMENTS");
-
-	u.color_profile     = glGetUniformLocation(po, "COLOR_PROFILE");
-	u.brightness        = glGetUniformLocation(po, "BRIGHTNESS");
-	u.contrast          = glGetUniformLocation(po, "CONTRAST");
-	u.gamma             = glGetUniformLocation(po, "GAMMA");
-	u.saturation        = glGetUniformLocation(po, "SATURATION");
-	u.digital_contrast  = glGetUniformLocation(po, "DIGITAL_CONTRAST");
-	u.black_level_color = glGetUniformLocation(po, "BLACK_LEVEL_COLOR");
-	u.black_level       = glGetUniformLocation(po, "BLACK_LEVEL");
-
-	u.color_temperature_kelvin = glGetUniformLocation(po, "COLOR_TEMPERATURE_KELVIN");
-
-	u.color_temperature_luma_preserve =
-	        glGetUniformLocation(po, "COLOR_TEMPERATURE_LUMA_PRESERVE");
-
-	u.red_gain   = glGetUniformLocation(po, "RED_GAIN");
-	u.green_gain = glGetUniformLocation(po, "GREEN_GAIN");
-	u.blue_gain  = glGetUniformLocation(po, "BLUE_GAIN");
-}
-
 void OpenGlRenderer::UpdatePass1Uniforms()
 {
-	const auto& u = pass1.uniforms;
+	const auto po = pass1.shader.program_object;
 	const auto& s = pass1.image_adjustment_settings;
 
-	glUniform1i(u.input_texture, 0);
+	SetUniform1i(po, "INPUT_TEXTURE", 0);
 
-	glUniform1i(u.color_space, enum_val(color_space));
+	SetUniform1i(po, "COLOR_SPACE", enum_val(color_space));
 
-	glUniform1i(u.enable_adjustments, pass1.enable_image_adjustments ? 1 : 0);
-	glUniform1i(u.color_profile, enum_val(s.crt_color_profile));
-	glUniform1f(u.brightness, s.brightness);
-	glUniform1f(u.contrast, s.contrast);
-	glUniform1f(u.gamma, s.gamma);
-	glUniform1f(u.digital_contrast, s.digital_contrast);
+	SetUniform1i(po, "ENABLE_ADJUSTMENTS", pass1.enable_image_adjustments ? 1 : 0);
+	SetUniform1i(po, "COLOR_PROFILE", enum_val(s.crt_color_profile));
+	SetUniform1f(po, "BRIGHTNESS", s.brightness);
+	SetUniform1f(po, "CONTRAST", s.contrast);
+	SetUniform1f(po, "GAMMA", s.gamma);
+	SetUniform1f(po, "DIGITAL_CONTRAST", s.digital_contrast);
 
 	constexpr auto RgbMaxValue = 255.0f;
 
-	glUniform3f(u.black_level_color,
-	            s.black_level_color.red / RgbMaxValue,
-	            s.black_level_color.green / RgbMaxValue,
-	            s.black_level_color.blue / RgbMaxValue);
+	SetUniform3f(po,
+	             "BLACK_LEVEL_COLOR",
+	             s.black_level_color.red / RgbMaxValue,
+	             s.black_level_color.green / RgbMaxValue,
+	             s.black_level_color.blue / RgbMaxValue);
 
-	glUniform1f(u.black_level, s.black_level);
-	glUniform1f(u.saturation, s.saturation);
+	SetUniform1f(po, "BLACK_LEVEL", s.black_level);
+	SetUniform1f(po, "SATURATION", s.saturation);
 
-	glUniform1f(u.color_temperature_kelvin,
-	            static_cast<float>(s.color_temperature_kelvin));
+	SetUniform1f(po,
+	             "COLOR_TEMPERATURE_KELVIN",
+	             static_cast<float>(s.color_temperature_kelvin));
 
-	glUniform1f(u.color_temperature_luma_preserve,
-	            s.color_temperature_luma_preserve);
+	SetUniform1f(po,
+	             "COLOR_TEMPERATURE_LUMA_PRESERVE",
+	             s.color_temperature_luma_preserve);
 
-	glUniform1f(u.red_gain, s.red_gain);
-	glUniform1f(u.green_gain, s.green_gain);
-	glUniform1f(u.blue_gain, s.blue_gain);
-}
-
-void OpenGlRenderer::GetPass2UniformLocations(const ShaderParameters& params)
-{
-	auto& u       = pass2.uniforms;
-	const auto po = pass2.shader.program_object;
-
-	u.input_texture = glGetUniformLocation(po, "rubyTexture");
-
-	u.input_size  = glGetUniformLocation(po, "INPUT_TEXTURE_SIZE");
-	u.output_size = glGetUniformLocation(po, "OUTPUT_TEXTURE_SIZE");
-	u.frame_count = glGetUniformLocation(po, "rubyFrameCount");
-
-	for (const auto& [name, value] : params) {
-		const auto location = glGetUniformLocation(po, name.c_str());
-
-		if (location == -1) {
-			LOG_ERR("OPENGL: Error retrieving location of uniform '%s'",
-			        name.c_str());
-		} else {
-			u.params[name] = location;
-		}
-	}
+	SetUniform1f(po, "RED_GAIN", s.red_gain);
+	SetUniform1f(po, "GREEN_GAIN", s.green_gain);
+	SetUniform1f(po, "BLUE_GAIN", s.blue_gain);
 }
 
 void OpenGlRenderer::UpdatePass2Uniforms()
 {
-	const auto& u = pass2.uniforms;
+	const auto po = pass2.shader.program_object;
 
-	if (u.input_size > -1) {
-		glUniform2f(u.input_size,
-		            static_cast<GLfloat>(pass1.width),
-		            static_cast<GLfloat>(pass1.height));
-	}
+	SetUniform1i(po, "INPUT_TEXTURE", 0);
 
-	if (u.output_size > -1) {
-		glUniform2f(u.output_size, viewport_rect_px.w, viewport_rect_px.h);
-	}
+	SetUniform2f(po,
+	             "INPUT_TEXTURE_SIZE",
+	             static_cast<GLfloat>(pass1.width),
+	             static_cast<GLfloat>(pass1.height));
 
-	if (u.frame_count > -1) {
-		glUniform1i(u.frame_count, frame_count);
-	}
+	SetUniform2f(po,
+	             "OUTPUT_TEXTURE_SIZE",
+	             viewport_rect_px.w,
+	             viewport_rect_px.h);
 
-	if (u.input_texture > -1) {
-		glUniform1i(u.input_texture, 0);
-	}
+	SetUniform1i(po, "FRAME_COUNT", frame_count);
 
 	for (const auto& [uniform_name, value] : pass2.shader_preset.params) {
-		if (auto it = u.params.find(uniform_name); it != u.params.end()) {
-			const auto& [_, location] = *it;
-
-			if (location > -1) {
-				glUniform1f(location, value);
-			}
-		} else {
-			LOG_ERR("OPENGL: Unknown uniform name: '%s'",
-			        uniform_name.c_str());
-		}
+		SetUniform1f(po, uniform_name, value);
 	}
 }
 
@@ -1268,6 +1198,55 @@ uint32_t OpenGlRenderer::MakePixel(const uint8_t red, const uint8_t green,
                                    const uint8_t blue)
 {
 	return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
+}
+
+static GLint get_uniform_location(const GLint program_object, const std::string& name)
+{
+	const auto location = glGetUniformLocation(program_object, name.c_str());
+#ifdef DEBUG_OPENGL
+	if (location == -1) {
+		LOG_DEBUG("OPENGL: Error retrieving location of uniform '%s'",
+		          name.c_str());
+	}
+#endif
+	return location;
+}
+
+void OpenGlRenderer::SetUniform1i(const GLint program_object,
+                                  const std::string& name, const int val)
+{
+	const auto location = get_uniform_location(program_object, name);
+	if (location != -1) {
+		glUniform1i(location, val);
+	}
+}
+
+void OpenGlRenderer::SetUniform1f(const GLint program_object,
+                                  const std::string& name, const float val)
+{
+	const auto location = get_uniform_location(program_object, name);
+	if (location != -1) {
+		glUniform1f(location, val);
+	}
+}
+
+void OpenGlRenderer::SetUniform2f(const GLint program_object, const std::string& name,
+                                  const float val1, const float val2)
+{
+	const auto location = get_uniform_location(program_object, name);
+	if (location != -1) {
+		glUniform2f(location, val1, val2);
+	}
+}
+
+void OpenGlRenderer::SetUniform3f(const GLint program_object,
+                                  const std::string& name, const float val1,
+                                  const float val2, const float val3)
+{
+	const auto location = get_uniform_location(program_object, name);
+	if (location != -1) {
+		glUniform3f(location, val1, val2, val3);
+	}
 }
 
 #endif // C_OPENGL
