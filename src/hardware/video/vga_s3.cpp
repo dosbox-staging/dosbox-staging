@@ -804,11 +804,7 @@ void filter_compatible_s3_vesa_modes()
 		return !mode_allowed(m);
 	};
 
-	// We don't need the return value
-	ModeList_VGA.erase(std::remove_if(ModeList_VGA.begin(),
-	                                  ModeList_VGA.end(),
-	                                  mode_not_allowed),
-	                   ModeList_VGA.end());
+	std::erase_if(ModeList_VGA, mode_not_allowed);
 
 	CurMode = std::prev(ModeList_VGA.end());
 }
