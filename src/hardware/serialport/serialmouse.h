@@ -12,7 +12,7 @@
 class CSerialMouse : public CSerial {
 public:
 	CSerialMouse(const uint8_t id, CommandLine *cmd);
-	virtual ~CSerialMouse();
+	~CSerialMouse() override;
 
 	void NotifyMoved(const float x_rel, const float y_rel);
 	void NotifyButton(const uint8_t new_buttons,
