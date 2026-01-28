@@ -1110,7 +1110,7 @@ void SectionProp::PrintData([[maybe_unused]] FILE* outfile) const {}
 
 std::string SectionProp::GetPropertyValue(const std::string& _property) const
 {
-	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
+	for (auto tel = properties.begin(); tel != properties.end(); ++tel) {
 		if (!strcasecmp((*tel)->propname.c_str(), _property.c_str())) {
 			return (*tel)->GetValue().ToString();
 		}
@@ -1152,7 +1152,7 @@ std::string AutoExecSection::GetPropertyValue(const std::string&) const
 SectionProp::~SectionProp()
 {
 	// Delete properties themself (properties stores the pointer of a prop
-	for (it prop = properties.begin(); prop != properties.end(); ++prop) {
+	for (auto prop = properties.begin(); prop != properties.end(); ++prop) {
 		delete (*prop);
 	}
 }
