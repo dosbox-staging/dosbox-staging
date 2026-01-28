@@ -2562,7 +2562,7 @@ private:
 	}
 
 public:
-	virtual ~PD71055() = default;
+	~PD71055() override = default;
 	explicit PD71055(const std::string& name)
 	        : m_name(name),
 	          m_port0(name + ".p0"),
