@@ -8,4 +8,4 @@ target_sources(libdosboxcommon PRIVATE
   debugger_disasm.cpp
   debugger_gui.cpp)
 
-target_link_libraries(libdosboxcommon PRIVATE libpdcurses)
+target_link_libraries(libdosboxcommon PRIVATE imgui)

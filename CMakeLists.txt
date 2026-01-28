@@ -61,7 +61,6 @@ else()
   # Warning flags only valid for the C++ code
   set(WARNING_FLAGS_CXX
       ${WARNING_FLAGS_COMMON}
-      "-Weffc++"
       "-Wextra-semi"
       "-Wimplicit-fallthrough"
   )

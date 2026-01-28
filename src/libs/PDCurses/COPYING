@@ -1,6 +1,0 @@
-The core package and most ports are in the public domain, but a few files in the 
-demos and X11 directories are subject to copyright under licenses described there.
-
-This software is provided AS IS with NO WARRANTY whatsoever.
-
-Source: https://github.com/wmcbrine/PDCurses#legal-stuff
