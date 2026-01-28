@@ -132,7 +132,7 @@ const std::string& MousePhysicalInfoEntry::GetDeviceName() const
 class InterfaceDos final : public MouseInterface {
 public:
 	InterfaceDos();
-	~InterfaceDos() = default;
+	~InterfaceDos() override = default;
 
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const float x_abs, const float y_abs) override;
@@ -159,7 +159,7 @@ private:
 class InterfacePS2 final : public MouseInterface {
 public:
 	InterfacePS2();
-	~InterfacePS2() = default;
+	~InterfacePS2() override = default;
 
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const float x_abs, const float y_abs) override;
@@ -187,7 +187,7 @@ private:
 class InterfaceCOM final : public MouseInterface {
 public:
 	InterfaceCOM(const uint8_t port_id);
-	~InterfaceCOM() = default;
+	~InterfaceCOM() override = default;
 
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const float x_abs, const float y_abs) override;
