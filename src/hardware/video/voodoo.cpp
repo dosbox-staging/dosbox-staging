@@ -3505,7 +3505,7 @@ static raster_info *add_rasterizer(voodoo_state *vs, const raster_info *cinfo)
 -------------------------------------------------*/
 static raster_info *find_rasterizer(voodoo_state *vs, int texcount)
 {
-	raster_info *info, *prev = NULL;
+	raster_info *info, *prev = nullptr;
 	raster_info curinfo;
 	int hash;
 
@@ -3554,7 +3554,7 @@ static raster_info *find_rasterizer(voodoo_state *vs, int texcount)
 	curinfo.polys = 0;
 	curinfo.hits = 0;
 #endif
-	curinfo.next = 0;
+	curinfo.next = nullptr;
 	curinfo.shader_ready = false;
 
 	return add_rasterizer(vs, &curinfo);
