@@ -1286,7 +1286,7 @@ struct attributes {
 static void show_attributes(DOS_Shell* shell, const FatAttributeFlags fattr,
                             const char* name)
 {
-	shell->WriteOut("  %c  %c%c%c	%s\n",
+	shell->WriteOut("  %c  %c%c%c     %s\n",
 	                fattr.archive   ? 'A' : ' ',
 	                fattr.hidden    ? 'H' : ' ',
 	                fattr.system    ? 'S' : ' ',
