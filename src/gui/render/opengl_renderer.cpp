@@ -172,7 +172,7 @@ bool OpenGlRenderer::InitRenderer()
 	                      GL_FLOAT, // component data type,
 	                      GL_FALSE, // do not normalise fixed point,
 	                      0,        // data stride (0=packed),
-	                      static_cast<GLvoid*>(0));
+	                      static_cast<GLvoid*>(nullptr));
 
 	glEnableVertexAttribArray(0);
 
