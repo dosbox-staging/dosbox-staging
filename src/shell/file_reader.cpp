@@ -37,6 +37,11 @@ std::optional<std::string> FileReader::Read()
 		if (!result || bytes_to_read == 0) {
 			break;
 		}
+		if (data == 0x1a) {
+			// Stop at EOF character
+			DOS_SeekFile(entry, &cursor, DOS_SEEK_END);
+			break;
+		}
 		line += static_cast<char>(data);
 	}
 

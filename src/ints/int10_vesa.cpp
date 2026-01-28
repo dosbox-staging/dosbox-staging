@@ -399,7 +399,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 	minfo.XCharSize     = mblock.cwidth;
 	minfo.YCharSize     = mblock.cheight;
 
-	if (!int10.vesa_nolfb) {
+	if (modeAttributes & 0x80) {
 		minfo.PhysBasePtr = host_to_le32(PciGfxLfbBase);
 	}
 
@@ -734,6 +734,9 @@ uint8_t VESA_GetDisplayStart(uint16_t& x, uint16_t& y)
 	IO_Write(0x3c0, 0x13 | 0x20);
 
 	uint8_t panning = IO_Read(0x3c1);
+	if (CurMode->type == M_TEXT && panning > 7) {
+		panning = 0;
+	}
 
 	Bitu virtual_screen_width = vga.config.scan_len * pixels_per_offset;
 	Bitu start_pixel = vga.config.display_start * (pixels_per_offset / 2) +
