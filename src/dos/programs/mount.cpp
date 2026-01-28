@@ -843,7 +843,7 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 {
 	std::string final_path = local_path;
-	if (final_path.back() != CROSS_FILESPLIT) {
+	if (!final_path.empty() && final_path.back() != CROSS_FILESPLIT) {
 		final_path += CROSS_FILESPLIT;
 	}
 
