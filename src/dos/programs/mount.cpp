@@ -654,18 +654,18 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 // and decided to mount it) Returns false on failure.
 bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_config)
 {
-	std::string temp_string;
+	std::string final_path;
 	// Get the first path argument
-	if (!cmd->FindCommand(2, temp_string) || temp_string.empty()) {
+	if (!cmd->FindCommand(2, final_path) || final_path.empty()) {
 		ShowUsage();
 		return false;
 	}
 
 	// Expand ~ to home directory
-	temp_string = resolve_home(temp_string).string();
+	final_path = resolve_home(final_path).string();
 
 	// Resolve first path
-	std::string path_arg_1 = temp_string;
+	std::string path_arg_1 = final_path;
 	if (path_relative_to_last_config && control->config_files.size() &&
 	    !std_fs::path(path_arg_1).is_absolute()) {
 		std::string lastconfigdir =
@@ -832,11 +832,11 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
 		                      "PROGRAM_MOUNT_ERROR_2",
-		                      temp_line.c_str());
+		                      final_path.c_str());
 		return false;
 	}
 
-	MountLocal(params, temp_line);
+	MountLocal(params, final_path);
 	return true;
 }
 
