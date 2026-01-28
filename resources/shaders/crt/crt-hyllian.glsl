@@ -457,6 +457,7 @@ void main()
 	vec2 dx = mix(vec2(1.0 / TextureSize.x, 0.0),
 	              vec2(0.0, 1.0 / TextureSize.y),
 	              VSCANLINES);
+
 	vec2 dy = mix(vec2(0.0, 1.0 / TextureSize.y),
 	              vec2(1.0 / TextureSize.x, 0.0),
 	              VSCANLINES);
@@ -500,6 +501,7 @@ void main()
 	color0   = mix(aux,
                      color0,
                      CRT_ANTI_RINGING * step(0.0, (c00 - c01) * (c02 - c03)));
+
 	aux      = color1;
 	color1   = clamp(color1, min_sample1, max_sample1);
 	color1   = mix(aux,

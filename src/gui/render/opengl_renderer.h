@@ -112,10 +112,19 @@ private:
 	std::optional<GLuint> BuildShader(const GLenum type,
 	                                  const std::string& source) const;
 
-	void GetPass1UniformLocations();
-	void UpdatePass1Uniforms();
+	void SetUniform1i(const GLint program_object, const std::string& name,
+	                  const int val);
 
-	void GetPass2UniformLocations(const ShaderParameters& params);
+	void SetUniform1f(const GLint program_object, const std::string& name,
+	                  const float val);
+
+	void SetUniform2f(const GLint program_object, const std::string& name,
+	                  const float val1, const float val2);
+
+	void SetUniform3f(const GLint program_object, const std::string& name,
+	                  const float val1, const float val2, const float val3);
+
+	void UpdatePass1Uniforms();
 	void UpdatePass2Uniforms();
 
 	void RecreatePass1InputTextureAndRenderBuffer();
@@ -180,30 +189,6 @@ private:
 		int width  = 0;
 		int height = 0;
 
-		struct {
-			GLint input_texture = -1;
-
-			GLint color_space = -1;
-
-			GLint enable_adjustments = -1;
-
-			GLint color_profile     = -1;
-			GLint brightness        = -1;
-			GLint contrast          = -1;
-			GLint gamma             = -1;
-			GLint digital_contrast  = -1;
-			GLint black_level_color = -1;
-			GLint black_level       = -1;
-			GLint saturation        = -1;
-
-			GLint color_temperature_kelvin        = -1;
-			GLint color_temperature_luma_preserve = -1;
-
-			GLint red_gain   = -1;
-			GLint green_gain = -1;
-			GLint blue_gain  = -1;
-		} uniforms = {};
-
 		ImageAdjustmentSettings image_adjustment_settings = {};
 
 		bool enable_image_adjustments = false;
@@ -212,15 +197,6 @@ private:
 	struct {
 		Shader shader              = {};
 		ShaderPreset shader_preset = {};
-
-		struct {
-			GLint input_size    = -1;
-			GLint output_size   = -1;
-			GLint frame_count   = -1;
-			GLint input_texture = -1;
-
-			std::unordered_map<std::string, GLint> params = {};
-		} uniforms = {};
 	} pass2 = {};
 
 	// ---------------------------------------------------------------------
