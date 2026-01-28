@@ -63,7 +63,7 @@ TEST(PathConversion, MissingFile)
 constexpr char TEST_DIR[] = "tests/files/no_path";
 
 struct CreateDirTest : public testing::Test {
-	~CreateDirTest() {
+	~CreateDirTest() override {
 		if (path_exists(TEST_DIR))
 			remove_dir(TEST_DIR);
 	}
