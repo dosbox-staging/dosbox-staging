@@ -139,9 +139,12 @@ bool GFX_HaveDesktopEnvironment()
 		                                   "DESKTOP_SESSION",
 		                                   "GDMSESSION"};
 
+		auto get_variable = [](const char* variable) {
+			return std::getenv(variable);
+		};
 		have_desktop_environment = std::any_of(std::begin(EnvVars),
 		                                       std::end(EnvVars),
-		                                       std::getenv);
+		                                       get_variable);
 
 		already_checked = true;
 	}
