@@ -336,8 +336,8 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
 	}
 
 	// Size hasn't changed, don't recreate the texture
-	if (new_render_width_px == pass1.width &&
-	    new_render_height_px == pass1.height) {
+	if (new_render_width_px == render_width_px &&
+	    new_render_height_px == render_height_px) {
 		// no-op
 		return;
 	}
@@ -351,8 +351,8 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
 		return;
 	}
 
-	pass1.width  = new_render_width_px;
-	pass1.height = new_render_height_px;
+	render_width_px  = new_render_width_px;
+	render_height_px = new_render_height_px;
 
 	RecreatePass1InputTextureAndRenderBuffer();
 	RecreatePass1OutputTexture();
@@ -394,8 +394,8 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 	glTexImage2D(GL_TEXTURE_2D,
 	             0,                // mimap level (0 = base image)
 	             GL_RGB8,          // internal format
-	             pass1.width,      // width
-	             pass1.height,     // height
+	             render_width_px,  // width
+	             render_height_px, // height
 	             0,                // border (must be always 0)
 	             GL_BGRA,          // pixel data format
 	             GL_UNSIGNED_BYTE, // pixel data type
@@ -408,8 +408,8 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 	// emulation will write to these buffers, then we'll copy the data to
 	// the texture in GPU memory with `glTexSubImage2D()` before presenting
 	// the frame.
-	const auto pitch_pixels = pass1.width;
-	const auto num_pixels = static_cast<size_t>(pitch_pixels) * pass1.height;
+	const auto pitch_pixels = render_width_px;
+	const auto num_pixels = static_cast<size_t>(pitch_pixels) * render_height_px;
 
 	curr_framebuf.resize(num_pixels);
 	last_framebuf.resize(num_pixels);
@@ -436,14 +436,14 @@ void OpenGlRenderer::RecreatePass1OutputTexture()
 	SetPass1OutputTextureFiltering();
 
 	glTexImage2D(GL_TEXTURE_2D,
-	             0,            // mimap level (0 = base image)
-	             GL_RGB32F,    // internal format
-	             pass1.width,  // width
-	             pass1.height, // height
-	             0,            // border (must be always 0)
-	             GL_BGRA,      // pixel data format
-	             GL_FLOAT,     // pixel data type
-	             nullptr);     // pointer to image data
+	             0,                // mimap level (0 = base image)
+	             GL_RGB32F,        // internal format
+	             render_width_px,  // width
+	             render_height_px, // height
+	             0,                // border (must be always 0)
+	             GL_BGRA,          // pixel data format
+	             GL_FLOAT,         // pixel data type
+	             nullptr);         // pointer to image data
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -499,12 +499,12 @@ void OpenGlRenderer::PrepareFrame()
 		glBindTexture(GL_TEXTURE_2D, pass1.in_texture);
 
 		glTexSubImage2D(GL_TEXTURE_2D,
-		                0,            // mimap level (0 = base image)
-		                0,            // x offset
-		                0,            // y offset
-		                pass1.width,  // width
-		                pass1.height, // height
-		                GL_BGRA,      // pixel data format
+		                0,               // mimap level (0 = base image)
+		                0,               // x offset
+		                0,               // y offset
+		                render_width_px, // width
+		                render_height_px, // height
+		                GL_BGRA,          // pixel data format
 		                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
 		                last_framebuf.data() // pointer to image data
 		);
@@ -534,7 +534,7 @@ void OpenGlRenderer::RenderPass1()
 	glBindTexture(GL_TEXTURE_2D, pass1.in_texture);
 
 	// Set up viewport
-	glViewport(0, 0, pass1.width, pass1.height);
+	glViewport(0, 0, render_width_px, render_height_px);
 
 	// Apply shader by drawing an oversized triangle
 	glBindVertexArray(vao);
@@ -890,7 +890,7 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::MaybeSetShaderAndPreset(
 		}
 	}
 
-	MaybeUpdateRenderSize(pass1.width, pass1.height);
+	MaybeUpdateRenderSize(render_width_px, render_height_px);
 
 	if (SwitchShaderPresetOrSetDefault(new_descriptor)) {
 		return Ok;
@@ -1115,8 +1115,8 @@ void OpenGlRenderer::UpdatePass2Uniforms()
 
 	SetUniform2f(po,
 	             "INPUT_TEXTURE_SIZE",
-	             static_cast<GLfloat>(pass1.width),
-	             static_cast<GLfloat>(pass1.height));
+	             static_cast<GLfloat>(render_width_px),
+	             static_cast<GLfloat>(render_height_px));
 
 	SetUniform2f(po,
 	             "OUTPUT_TEXTURE_SIZE",
