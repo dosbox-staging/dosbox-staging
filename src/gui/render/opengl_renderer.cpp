@@ -7,6 +7,7 @@
 
 #include "gui/private/common.h"
 #include "gui/private/shader_manager.h"
+#include "private/shader_pass.h"
 
 #include "capture/capture.h"
 #include "dosbox_config.h"
@@ -188,7 +189,7 @@ bool OpenGlRenderer::InitRenderer()
 	// Set up shader passes
 	// --------------------
 	// Pass 1
-	OpenGlRenderer::ShaderPass pass1;
+	ShaderPass pass1;
 
 	pass1.id          = ShaderPassId::ImageAdjustments;
 	pass1.in_texture  = 0;  // will be set later
@@ -197,7 +198,8 @@ bool OpenGlRenderer::InitRenderer()
 
 	glGenFramebuffers(1, &pass1.out_fbo);
 
-	const auto maybe_shader = LoadAndBuildShader(ImageAdjustmentsShaderName);
+	const auto maybe_shader = LoadAndBuildShader(pass1,
+	                                             ImageAdjustmentsShaderName);
 	if (!maybe_shader) {
 		E_Exit("OPENGL: Cannot load '%s' shader, exiting",
 		       ImageAdjustmentsShaderName);
@@ -207,7 +209,7 @@ bool OpenGlRenderer::InitRenderer()
 	shader_passes.push_back(pass1);
 
 	// Pass 2
-	OpenGlRenderer::ShaderPass pass2;
+	ShaderPass pass2;
 	pass2.id          = ShaderPassId::Main;
 	pass2.shader      = {}; // will be set later
 	pass2.in_texture  = 0;  // will be set later
@@ -344,7 +346,7 @@ void OpenGlRenderer::NotifyRenderSizeChanged(const int new_render_width_px,
 	MaybeUpdateRenderSize(new_render_width_px, new_render_height_px);
 }
 
-OpenGlRenderer::ShaderPass& OpenGlRenderer::GetShaderPass(const ShaderPassId id)
+ShaderPass& OpenGlRenderer::GetShaderPass(const ShaderPassId id)
 {
 	for (auto& pass : shader_passes) {
 		if (pass.id == id) {
@@ -631,155 +633,6 @@ void OpenGlRenderer::PresentFrame()
 	SDL_GL_SwapWindow(window);
 }
 
-std::optional<GLuint> OpenGlRenderer::BuildShader(const GLenum type,
-                                                  const std::string& source) const
-{
-	GLuint shader            = 0;
-	GLint is_shader_compiled = 0;
-
-	assert(!source.empty());
-
-	const char* shaderSrc      = source.c_str();
-	const char* src_strings[2] = {nullptr, nullptr};
-	std::string top;
-
-	// Look for "#version" because it has to occur first
-	if (const char* ver = strstr(shaderSrc, "#version "); ver) {
-
-		const char* endline = strchr(ver + 9, '\n');
-		if (endline) {
-			top.assign(shaderSrc, endline - shaderSrc + 1);
-			shaderSrc = endline + 1;
-		}
-	}
-
-	top += (type == GL_VERTEX_SHADER) ? "#define VERTEX 1\n"
-	                                  : "#define FRAGMENT 1\n";
-
-	src_strings[0] = top.c_str();
-	src_strings[1] = shaderSrc;
-
-	// Create the shader object
-	shader = glCreateShader(type);
-	if (shader == 0) {
-		return {};
-	}
-
-	// Load the shader source
-	glShaderSource(shader, 2, src_strings, nullptr);
-
-	// Compile the shader
-	glCompileShader(shader);
-
-	// Check the compile status
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &is_shader_compiled);
-
-	GLint log_length_bytes = 0;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length_bytes);
-
-	// The info log might contain warnings and info messages even if the
-	// compilation was successful, so we'll always log it if it's non-empty.
-	if (log_length_bytes > 1) {
-		std::vector<GLchar> info_log(log_length_bytes);
-		glGetShaderInfoLog(shader, log_length_bytes, nullptr, info_log.data());
-
-		if (is_shader_compiled) {
-			LOG_WARNING("OPENGL: Shader info log: %s", info_log.data());
-		} else {
-			LOG_ERR("OPENGL: Error compiling shader: %s",
-			        info_log.data());
-		}
-	}
-
-	if (!is_shader_compiled) {
-		glDeleteShader(shader);
-		return {};
-	}
-
-	return shader;
-}
-
-// Build a OpenGL shader program.
-//
-// Input GLSL source must contain both vertex and fragment stages inside their
-// respective preprocessor definitions.
-//
-// Returns a ready to use OpenGL shader program on success.
-//
-std::optional<GLuint> OpenGlRenderer::BuildShaderProgram(const std::string& shader_source)
-{
-	if (shader_source.empty()) {
-		LOG_ERR("OPENGL: No shader source present");
-		return {};
-	}
-
-	const auto maybe_vertex_shader = BuildShader(GL_VERTEX_SHADER, shader_source);
-	if (!maybe_vertex_shader) {
-		LOG_ERR("OPENGL: Error compiling vertex shader");
-		return {};
-	}
-	const auto vertex_shader = *maybe_vertex_shader;
-
-	const auto maybe_fragment_shader = BuildShader(GL_FRAGMENT_SHADER,
-	                                               shader_source);
-	if (!maybe_fragment_shader) {
-		LOG_ERR("OPENGL: Error compiling fragment shader");
-		glDeleteShader(vertex_shader);
-		return {};
-	}
-	const auto fragment_shader = *maybe_fragment_shader;
-
-	const GLuint shader_program = glCreateProgram();
-
-	if (!shader_program) {
-		LOG_ERR("OPENGL: Error creating shader program");
-		glDeleteShader(vertex_shader);
-		glDeleteShader(fragment_shader);
-		return {};
-	}
-
-	glAttachShader(shader_program, vertex_shader);
-	glAttachShader(shader_program, fragment_shader);
-
-	glLinkProgram(shader_program);
-
-	glDeleteShader(vertex_shader);
-	glDeleteShader(fragment_shader);
-
-	// Check the link status
-	GLint is_program_linked = GL_FALSE;
-	glGetProgramiv(shader_program, GL_LINK_STATUS, &is_program_linked);
-
-	// The info log might contain warnings and info messages even if the
-	// linking was successful, so we'll always log it if it's non-empty.
-	GLint log_length_bytes = 0;
-	glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &log_length_bytes);
-
-	if (log_length_bytes > 1) {
-		std::vector<GLchar> info_log(static_cast<size_t>(log_length_bytes));
-
-		glGetProgramInfoLog(shader_program,
-		                    log_length_bytes,
-		                    nullptr,
-		                    info_log.data());
-
-		if (is_program_linked) {
-			LOG_WARNING("OPENGL: Program info log:\n %s",
-			            info_log.data());
-		} else {
-			LOG_ERR("OPENGL: Error linking shader program:\n %s",
-			        info_log.data());
-		}
-	}
-
-	if (!is_program_linked) {
-		glDeleteProgram(shader_program);
-		return {};
-	}
-
-	return shader_program;
-}
-
 OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShader(const std::string& symbolic_shader_descriptor)
 {
 	return SetShaderInternal(symbolic_shader_descriptor);
@@ -937,12 +790,13 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::MaybeSetShaderAndPreset(
 
 bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
 {
-	const auto maybe_shader = GetOrLoadAndCacheShader(shader_name);
+	auto& pass = GetShaderPass(ShaderPassId::Main);
+
+	const auto maybe_shader = GetOrLoadAndCacheShader(pass, shader_name);
 	if (!maybe_shader) {
 		return false;
 	}
 
-	auto& pass  = GetShaderPass(ShaderPassId::Main);
 	pass.shader = *maybe_shader;
 	return true;
 }
@@ -1014,8 +868,8 @@ std::optional<ShaderPreset> OpenGlRenderer::GetOrLoadAndCacheShaderPreset(
 	return shader_preset_cache[cache_key];
 }
 
-std::optional<OpenGlRenderer::Shader> OpenGlRenderer::LoadAndBuildShader(
-        const std::string& shader_name)
+std::optional<Shader> OpenGlRenderer::LoadAndBuildShader(ShaderPass& pass,
+                                                         const std::string& shader_name)
 {
 
 	auto log_error = [&]() {
@@ -1033,20 +887,19 @@ std::optional<OpenGlRenderer::Shader> OpenGlRenderer::LoadAndBuildShader(
 	const auto& [shader_info, shader_source] = *maybe_result;
 	assert(shader_info.name == shader_name);
 
-	const auto maybe_shader_program = BuildShaderProgram(shader_source);
-	if (!maybe_shader_program) {
+	if (!pass.BuildShaderProgram(shader_source)) {
 		log_error();
 		return {};
 	}
 
-	return Shader{shader_info, *maybe_shader_program};
+	return Shader{shader_info, pass.shader.program_object};
 }
 
-std::optional<OpenGlRenderer::Shader> OpenGlRenderer::GetOrLoadAndCacheShader(
-        const std::string& shader_name)
+std::optional<Shader> OpenGlRenderer::GetOrLoadAndCacheShader(ShaderPass& pass,
+                                                              const std::string& shader_name)
 {
 	if (!shader_cache.contains(shader_name)) {
-		const auto maybe_shader = LoadAndBuildShader(shader_name);
+		const auto maybe_shader = LoadAndBuildShader(pass, shader_name);
 		if (!maybe_shader) {
 			return {};
 		}
@@ -1103,64 +956,57 @@ void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 
 void OpenGlRenderer::UpdateImageAdjustmentsPassUniforms()
 {
-	const auto& pass = GetShaderPass(ShaderPassId::ImageAdjustments);
-	const auto po    = pass.shader.program_object;
+	auto& pass = GetShaderPass(ShaderPassId::ImageAdjustments);
 	const auto& s    = image_adjustment_settings;
 
-	glUseProgram(po);
+	glUseProgram(pass.shader.program_object);
 
-	SetUniform1i(po, "INPUT_TEXTURE", 0);
+	pass.SetUniform1i("INPUT_TEXTURE", 0);
 
-	SetUniform1i(po, "COLOR_SPACE", enum_val(color_space));
-	SetUniform1i(po, "ENABLE_ADJUSTMENTS", enable_image_adjustments ? 1 : 0);
-	SetUniform1i(po, "COLOR_PROFILE", enum_val(s.crt_color_profile));
-	SetUniform1f(po, "BRIGHTNESS", s.brightness);
-	SetUniform1f(po, "CONTRAST", s.contrast);
-	SetUniform1f(po, "GAMMA", s.gamma);
-	SetUniform1f(po, "DIGITAL_CONTRAST", s.digital_contrast);
+	pass.SetUniform1i("COLOR_SPACE", enum_val(color_space));
+	pass.SetUniform1i("ENABLE_ADJUSTMENTS", enable_image_adjustments ? 1 : 0);
+	pass.SetUniform1i("COLOR_PROFILE", enum_val(s.crt_color_profile));
+	pass.SetUniform1f("BRIGHTNESS", s.brightness);
+	pass.SetUniform1f("CONTRAST", s.contrast);
+	pass.SetUniform1f("GAMMA", s.gamma);
+	pass.SetUniform1f("DIGITAL_CONTRAST", s.digital_contrast);
 
 	constexpr auto RgbMaxValue = 255.0f;
 
-	SetUniform3f(po,
-	             "BLACK_LEVEL_COLOR",
-	             s.black_level_color.red / RgbMaxValue,
-	             s.black_level_color.green / RgbMaxValue,
-	             s.black_level_color.blue / RgbMaxValue);
+	pass.SetUniform3f("BLACK_LEVEL_COLOR",
+	                  s.black_level_color.red / RgbMaxValue,
+	                  s.black_level_color.green / RgbMaxValue,
+	                  s.black_level_color.blue / RgbMaxValue);
 
-	SetUniform1f(po, "BLACK_LEVEL", s.black_level);
-	SetUniform1f(po, "SATURATION", s.saturation);
+	pass.SetUniform1f("BLACK_LEVEL", s.black_level);
+	pass.SetUniform1f("SATURATION", s.saturation);
 
-	SetUniform1f(po,
-	             "COLOR_TEMPERATURE_KELVIN",
-	             static_cast<float>(s.color_temperature_kelvin));
+	pass.SetUniform1f("COLOR_TEMPERATURE_KELVIN",
+	                  static_cast<float>(s.color_temperature_kelvin));
 
-	SetUniform1f(po,
-	             "COLOR_TEMPERATURE_LUMA_PRESERVE",
-	             s.color_temperature_luma_preserve);
+	pass.SetUniform1f("COLOR_TEMPERATURE_LUMA_PRESERVE",
+	                  s.color_temperature_luma_preserve);
 
-	SetUniform1f(po, "RED_GAIN", s.red_gain);
-	SetUniform1f(po, "GREEN_GAIN", s.green_gain);
-	SetUniform1f(po, "BLUE_GAIN", s.blue_gain);
+	pass.SetUniform1f("RED_GAIN", s.red_gain);
+	pass.SetUniform1f("GREEN_GAIN", s.green_gain);
+	pass.SetUniform1f("BLUE_GAIN", s.blue_gain);
 }
 
 void OpenGlRenderer::UpdateMainShaderPassUniforms()
 {
-	const auto& pass = GetShaderPass(ShaderPassId::Main);
-	const auto po    = pass.shader.program_object;
+	auto& pass = GetShaderPass(ShaderPassId::Main);
 
-	glUseProgram(po);
+	glUseProgram(pass.shader.program_object);
 
-	SetUniform1i(po, "INPUT_TEXTURE", 0);
+	pass.SetUniform1i("INPUT_TEXTURE", 0);
+	pass.SetUniform2f("INPUT_TEXTURE_SIZE",
+	                  static_cast<GLfloat>(input_texture.width),
+	                  static_cast<GLfloat>(input_texture.height));
 
-	SetUniform2f(po,
-	             "INPUT_TEXTURE_SIZE",
-	             static_cast<GLfloat>(input_texture.width),
-	             static_cast<GLfloat>(input_texture.height));
-
-	SetUniform2f(po, "OUTPUT_TEXTURE_SIZE", pass.viewport.w, pass.viewport.h);
+	pass.SetUniform2f("OUTPUT_TEXTURE_SIZE", pass.viewport.w, pass.viewport.h);
 
 	for (const auto& [uniform_name, value] : main_shader_preset.params) {
-		SetUniform1f(po, uniform_name, value);
+		pass.SetUniform1f(uniform_name, value);
 	}
 }
 
@@ -1234,55 +1080,6 @@ uint32_t OpenGlRenderer::MakePixel(const uint8_t red, const uint8_t green,
                                    const uint8_t blue)
 {
 	return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
-}
-
-static GLint get_uniform_location(const GLint program_object, const std::string& name)
-{
-	const auto location = glGetUniformLocation(program_object, name.c_str());
-#ifdef DEBUG_OPENGL
-	if (location == -1) {
-		LOG_DEBUG("OPENGL: Error retrieving location of '%s' uniform",
-		          name.c_str());
-	}
-#endif
-	return location;
-}
-
-void OpenGlRenderer::SetUniform1i(const GLint program_object,
-                                  const std::string& name, const int val)
-{
-	const auto location = get_uniform_location(program_object, name);
-	if (location != -1) {
-		glUniform1i(location, val);
-	}
-}
-
-void OpenGlRenderer::SetUniform1f(const GLint program_object,
-                                  const std::string& name, const float val)
-{
-	const auto location = get_uniform_location(program_object, name);
-	if (location != -1) {
-		glUniform1f(location, val);
-	}
-}
-
-void OpenGlRenderer::SetUniform2f(const GLint program_object, const std::string& name,
-                                  const float val1, const float val2)
-{
-	const auto location = get_uniform_location(program_object, name);
-	if (location != -1) {
-		glUniform2f(location, val1, val2);
-	}
-}
-
-void OpenGlRenderer::SetUniform3f(const GLint program_object,
-                                  const std::string& name, const float val1,
-                                  const float val2, const float val3)
-{
-	const auto location = get_uniform_location(program_object, name);
-	if (location != -1) {
-		glUniform3f(location, val1, val2, val3);
-	}
 }
 
 #endif // C_OPENGL
