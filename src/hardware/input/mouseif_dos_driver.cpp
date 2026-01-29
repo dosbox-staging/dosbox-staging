@@ -1609,6 +1609,115 @@ void MOUSEDOS_NotifyModelChanged()
 	MOUSEDOS_NotifyButton(pending.button_state);
 }
 
+// Requires function parameters to be present in the CPU registers
+static bool is_known_oem_function()
+{
+	// Reference:
+	// -
+	// https://mirror.math.princeton.edu/pub/oldlinux/Linux.old/docs/interrupts/int-html/int-33.htm
+
+	if (reg_ax >= 0xffe6) {
+		// Switch-It task switcher software
+		return true;
+	}
+
+	if (reg_al == 0x6c && (reg_ah >= 0x13 && reg_ah <= 0x27)) {
+		// Logitech Mouse function, some known functions:
+		// 0x156c - get signature and version strings
+		// 0x1d6c - get compass parameter
+		// 0x1e6c - set compass parameter
+		// 0x1f6c - get ballistics information
+		// 0x206c - set left or right parameter
+		// 0x216c - get left or right parameter
+		// 0x226c - remove driver from memory
+		// 0x236c - set ballistics information
+		// 0x246c - get parameters and reset serial mouse
+		// 0x256c - set parameters (serial mice only):
+		//          BX = 0x0000 - set baud rate
+		//          BX = 0x0001 - set emulation
+		//          BX = 0x0002 - set report rate
+		//          BX = 0x0003 - set mouse port
+		//          BX = 0x0004 - set mouse logical buttons
+		// 0x266c - get version (?)
+		return true;
+	}
+
+	switch (reg_ax) {
+	default: return false;
+		// Do not silence out unknown functions up to 0x6f; we have no
+		// information about possible extra functions available in the
+		// Microsoft mouse driver 8.x-11.x; there is a chance that some
+		// early OEM drivers have functions with a conflicting ID
+	case 0x0070:
+		// Mouse Systems - installation check
+	case 0x0072:
+		// Mouse Systems 7.01+ - unknown functionality
+		// Genius Mouse 9.06+  - unknown functionality
+	case 0x0073:
+		// Mouse Systems 7.01+ - (BX = 0xabcd) get button assignments
+		// VBADOS driver       - get driver info
+	case 0x00a0:
+		// TrueDOX Mouse driver - set PC mode (3 button)
+	case 0x00a1:
+		// TrueDOX Mouse driver - set MS mode (2 button)
+	case 0x00a6:
+		// TrueDOX Mouse driver - get resolution
+	case 0x00b0:
+		// LCS/Telegraphics Mouse Driver - unknown functionality
+	case 0x00d6:
+		// Twiddler TWMOUSE - get button/tilt state
+	case 0x00f0:
+	case 0x00f1:
+	case 0x00f2:
+	case 0x00f3:
+		// LCS/Telegraphics Mouse Driver - unknown functionality
+	case 0x0100:
+		// GRT Mouse 1.00+ - installation check
+	case 0x0101:
+		// GRT Mouse 1.00+ - set mouse cursor shape
+	case 0x0102:
+		// GRT Mouse 1.00+ - get mouse cursor shape
+	case 0x0103:
+		// GRT Mouse 1.00+ - set active characters
+	case 0x0104:
+		// GRT Mouse 1.00+ - get active characters
+	case 0x0666:
+		// TrueDOX Mouse driver v4.01 - get copyright string
+	case 0x3000:
+		// Smooth Mouse Driver, PrecisePoint - installation check
+	case 0x3001:
+		// Smooth Mouse Driver, PrecisePoint - enable smooth mouse
+	case 0x3002:
+		// Smooth Mouse Driver, PrecisePoint - disable smooth mouse
+	case 0x3003:
+		// Smooth Mouse Driver, PrecisePoint - get information
+	case 0x3004:
+	case 0x3005:
+		// Smooth Mouse Driver, PrecisePoint - reserved
+	case 0x4f00:
+	case 0x4f01:
+		// Logitech Mouse 6.10+ - unknown functionality
+	case 0x5301:
+		// Logitech CyberMan - get 3D position, orientation, and button
+		// status
+	case 0x5330:
+		// Logitech CyberMan - generate tactile feedback
+	case 0x53c0:
+		// Logitech CyberMan - exchange event handlers
+	case 0x53c1:
+		// Logitech CyberMan - get static device data and driver support
+		// status
+	case 0x53c2:
+		// Logitech CyberMan - get dynamic device data
+	case 0x6f00:
+		// Hewlett Packard - driver installation check
+	case 0x8800:
+		// InfoTrack IMOUSE.COM - unhook mouse IRQ
+		//                      - (BX = 0xffff) - get active IRQ
+		return true;
+	}
+}
+
 static Bitu int33_handler()
 {
 	maybe_disable_wheel_api();
@@ -2134,7 +2243,7 @@ static Bitu int33_handler()
 		break;
 	case 0x30:
 		// MS MOUSE v7.04+ - get/set BallPoint information
-		LOG_WARNING("MOUSE (DOS): Get/set BallPoint information not implemented");
+		LOG_WARNING("MOUSE (DOS): Get/Set BallPoint information not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
 	case 0x31:
@@ -2188,38 +2297,19 @@ static Bitu int33_handler()
 		SegSet16(es, info_segment);
 		reg_di = info_offset_version;
 		break;
-	case 0x70:
-		// Mouse Systems - installation check
-	case 0x72:
-		// Mouse Systems 7.01+ - unknown functionality
-		// Genius Mouse 9.06+  - unknown functionality
-	case 0x73:
-		// Mouse Systems 7.01+ - get button assignments
-		// VBADOS driver       - get driver info
-	case 0x5301:
-		// Logitech CyberMan - get 3D position, orientation, and button
-		// status
-	case 0x5330:
-		// Logitech CyberMan - generate tactile feedback
-	case 0x53c0:
-		// Logitech CyberMan - exchange event handlers
-	case 0x53c1:	
-		// Logitech CyberMan - get static device data and driver support
-		// status	
-	case 0x53c2:
-		// Logitech CyberMan - get dynamic device data
-
+	default:
 		// Do not print out any warnings for known 3rd party oem driver
 		// extensions - every software (except the one bound to the
 		// particular driver) should continue working correctly even if
 		// we completely ignore the call
-		break;
-	default:
-		// Unknown function
-		LOG_WARNING("MOUSE (DOS): Interrupt 0x33 function 0x%04x not implemented",
-		            reg_ax);
+		if (!is_known_oem_function()) {
+			// Unknown function
+			LOG_WARNING("MOUSE (DOS): Interrupt 0x33 function 0x%04x not implemented",
+			            reg_ax);
+		}
 		break;
 	}
+
 	return CBRET_NONE;
 }
 

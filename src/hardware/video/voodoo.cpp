@@ -3129,10 +3129,10 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 	const int32_t dx = startx - (fbi.ax >> 4);
 	const int32_t dy = y - (fbi.ay >> 4);
 
-	int32_t iterr = fbi.startr + dy * fbi.drdy + dx * fbi.drdx;
-	int32_t iterg = fbi.startg + dy * fbi.dgdy + dx * fbi.dgdx;
-	int32_t iterb = fbi.startb + dy * fbi.dbdy + dx * fbi.dbdx;
-	int32_t itera = fbi.starta + dy * fbi.dady + dx * fbi.dadx;
+	int64_t iterr = fbi.startr + dy * fbi.drdy + dx * fbi.drdx;
+	int64_t iterg = fbi.startg + dy * fbi.dgdy + dx * fbi.dgdx;
+	int64_t iterb = fbi.startb + dy * fbi.dbdy + dx * fbi.dbdx;
+	int64_t itera = fbi.starta + dy * fbi.dady + dx * fbi.dadx;
 	int32_t iterz = fbi.startz + dy * fbi.dzdy + dx * fbi.dzdx;
 	int64_t iterw = fbi.startw + dy * fbi.dwdy + dx * fbi.dwdx;
 	int64_t iterw0 = 0;

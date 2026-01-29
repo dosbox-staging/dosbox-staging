@@ -1221,7 +1221,7 @@ void MAPPER_AutoType(std::vector<std::string>& buttons, uint32_t wait_ms,
 		if (button == ",") {
 			running_delay_ms += pace_ms;
 		} else {
-			auto_type_queue.emplace(std::move(button));
+			auto_type_queue.emplace(button);
 
 			PIC_AddEvent(auto_type_queued_button,
 			             running_delay_ms,
@@ -1238,7 +1238,7 @@ void MAPPER_AutoType(std::vector<std::string>& buttons, uint32_t wait_ms,
 	}
 }
 
-void MAPPER_StopAutoTyping()
+static void stop_auto_typing()
 {
 	auto_type_queue = {};
 	PIC_RemoveEvents(auto_type_queued_button);
@@ -2479,7 +2479,7 @@ static struct {
 
 static void ClearAllBinds()
 {
-	MAPPER_StopAutoTyping();
+	stop_auto_typing();
 
 	for (const auto& event : events) {
 		event->ClearBinds();
@@ -3158,7 +3158,7 @@ void MAPPER_DisplayUI() {
 
 void MAPPER_Destroy() {
 	// Stop any ongoing typing as soon as possible (because it access events)
-	MAPPER_StopAutoTyping();
+	stop_auto_typing();
 
 	// Release all the accumulated allocations by the mapper
 	events.clear();
