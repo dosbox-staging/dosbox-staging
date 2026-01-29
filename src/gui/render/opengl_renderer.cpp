@@ -205,9 +205,9 @@ OpenGlRenderer::~OpenGlRenderer()
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
 
-	if (pass1.in_texture) {
-		glDeleteTextures(1, &pass1.in_texture);
-		pass1.in_texture = 0;
+	if (input_texture.texture) {
+		glDeleteTextures(1, &input_texture.texture);
+		input_texture.texture = 0;
 	}
 
 	if (pass1.out_texture) {
@@ -318,8 +318,8 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
 	}
 
 	// Size hasn't changed, don't recreate the texture
-	if (new_render_width_px == render_width_px &&
-	    new_render_height_px == render_height_px) {
+	if (new_render_width_px == input_texture.width &&
+	    new_render_height_px == input_texture.height) {
 		// no-op
 		return;
 	}
@@ -333,8 +333,8 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
 		return;
 	}
 
-	render_width_px  = new_render_width_px;
-	render_height_px = new_render_height_px;
+	input_texture.width  = new_render_width_px;
+	input_texture.height = new_render_height_px;
 
 	RecreatePass1InputTextureAndRenderBuffer();
 	RecreatePass1OutputTexture();
@@ -356,14 +356,14 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
 
 void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 {
-	if (pass1.in_texture) {
-		glDeleteTextures(1, &pass1.in_texture);
+	if (input_texture.texture) {
+		glDeleteTextures(1, &input_texture.texture);
 	}
 
-	glGenTextures(1, &pass1.in_texture);
+	glGenTextures(1, &input_texture.texture);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, pass1.in_texture);
+	glBindTexture(GL_TEXTURE_2D, input_texture.texture);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -374,14 +374,14 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 	// `glTexSubImage2D()`
 	//
 	glTexImage2D(GL_TEXTURE_2D,
-	             0,                // mimap level (0 = base image)
-	             GL_RGB8,          // internal format
-	             render_width_px,  // width
-	             render_height_px, // height
-	             0,                // border (must be always 0)
-	             GL_BGRA,          // pixel data format
-	             GL_UNSIGNED_BYTE, // pixel data type
-	             nullptr           // pointer to image data
+	             0,                    // mimap level (0 = base image)
+	             GL_RGB8,              // internal format
+	             input_texture.width,  // width
+	             input_texture.height, // height
+	             0,                    // border (must be always 0)
+	             GL_BGRA,              // pixel data format
+	             GL_UNSIGNED_BYTE,     // pixel data type
+	             nullptr               // pointer to image data
 	);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -390,8 +390,9 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 	// emulation will write to these buffers, then we'll copy the data to
 	// the texture in GPU memory with `glTexSubImage2D()` before presenting
 	// the frame.
-	const auto pitch_pixels = render_width_px;
-	const auto num_pixels = static_cast<size_t>(pitch_pixels) * render_height_px;
+	const auto pitch_pixels = input_texture.width;
+	const auto num_pixels   = static_cast<size_t>(pitch_pixels) *
+	                        input_texture.height;
 
 	curr_framebuf.resize(num_pixels);
 	last_framebuf.resize(num_pixels);
@@ -399,7 +400,7 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 	constexpr auto BytesPerPixel = sizeof(uint32_t);
 	const auto pitch_bytes       = pitch_pixels * BytesPerPixel;
 
-	pass1.in_texture_pitch = check_cast<int>(pitch_bytes);
+	input_texture.pitch = check_cast<int>(pitch_bytes);
 }
 
 void OpenGlRenderer::RecreatePass1OutputTexture()
@@ -418,14 +419,14 @@ void OpenGlRenderer::RecreatePass1OutputTexture()
 	SetPass1OutputTextureFiltering();
 
 	glTexImage2D(GL_TEXTURE_2D,
-	             0,                // mimap level (0 = base image)
-	             GL_RGB32F,        // internal format
-	             render_width_px,  // width
-	             render_height_px, // height
-	             0,                // border (must be always 0)
-	             GL_BGRA,          // pixel data format
-	             GL_FLOAT,         // pixel data type
-	             nullptr);         // pointer to image data
+	             0,                    // mimap level (0 = base image)
+	             GL_RGB32F,            // internal format
+	             input_texture.width,  // width
+	             input_texture.height, // height
+	             0,                    // border (must be always 0)
+	             GL_BGRA,              // pixel data format
+	             GL_FLOAT,             // pixel data type
+	             nullptr);             // pointer to image data
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -456,7 +457,7 @@ void OpenGlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 	if (pixels_out == nullptr) {
 		return;
 	}
-	pitch_out = pass1.in_texture_pitch;
+	pitch_out = input_texture.pitch;
 }
 
 void OpenGlRenderer::EndFrame()
@@ -478,15 +479,15 @@ void OpenGlRenderer::PrepareFrame()
 
 	if (last_framebuf_dirty) {
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, pass1.in_texture);
+		glBindTexture(GL_TEXTURE_2D, input_texture.texture);
 
 		glTexSubImage2D(GL_TEXTURE_2D,
-		                0,               // mimap level (0 = base image)
-		                0,               // x offset
-		                0,               // y offset
-		                render_width_px, // width
-		                render_height_px, // height
-		                GL_BGRA,          // pixel data format
+		                0, // mimap level (0 = base image)
+		                0, // x offset
+		                0, // y offset
+		                input_texture.width,  // width
+		                input_texture.height, // height
+		                GL_BGRA,              // pixel data format
 		                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
 		                last_framebuf.data() // pointer to image data
 		);
@@ -513,10 +514,10 @@ void OpenGlRenderer::RenderPass1()
 	// Bind input texture containing the raw framebuffer data of the
 	// emulated video card
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, pass1.in_texture);
+	glBindTexture(GL_TEXTURE_2D, input_texture.texture);
 
 	// Set up viewport
-	glViewport(0, 0, render_width_px, render_height_px);
+	glViewport(0, 0, input_texture.width, input_texture.height);
 
 	// Apply shader by drawing an oversized triangle
 	glBindVertexArray(vao);
@@ -828,7 +829,7 @@ bool OpenGlRenderer::MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_des
 	}
 
 	SwitchShaderPresetOrSetDefault(new_descriptor);
-	MaybeUpdateRenderSize(render_width_px, render_height_px);
+	MaybeUpdateRenderSize(input_texture.width, input_texture.height);
 
 	return true;
 }
@@ -1044,8 +1045,8 @@ void OpenGlRenderer::UpdatePass2Uniforms()
 
 	SetUniform2f(po,
 	             "INPUT_TEXTURE_SIZE",
-	             static_cast<GLfloat>(render_width_px),
-	             static_cast<GLfloat>(render_height_px));
+	             static_cast<GLfloat>(input_texture.width),
+	             static_cast<GLfloat>(input_texture.height));
 
 	SetUniform2f(po,
 	             "OUTPUT_TEXTURE_SIZE",
