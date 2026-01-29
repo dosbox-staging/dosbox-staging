@@ -185,7 +185,16 @@ bool OpenGlRenderer::InitRenderer()
 	// space
 	glDisable(GL_DEPTH_TEST);
 
-	// Create off-screen framebuffer
+	// Set up shader passes
+	// --------------------
+	// Pass 1
+	OpenGlRenderer::ShaderPass pass1;
+
+	pass1.id          = ShaderPassId::ImageAdjustments;
+	pass1.in_texture  = 0;  // will be set later
+	pass1.out_texture = 0;  // will be set later
+	pass1.viewport    = {}; // will be set later
+
 	glGenFramebuffers(1, &pass1.out_fbo);
 
 	const auto maybe_shader = LoadAndBuildShader(ImageAdjustmentsShaderName);
@@ -194,6 +203,19 @@ bool OpenGlRenderer::InitRenderer()
 		       ImageAdjustmentsShaderName);
 	}
 	pass1.shader = *maybe_shader;
+
+	shader_passes.push_back(pass1);
+
+	// Pass 2
+	OpenGlRenderer::ShaderPass pass2;
+	pass2.id          = ShaderPassId::Main;
+	pass2.shader      = {}; // will be set later
+	pass2.in_texture  = 0;  // will be set later
+	pass2.out_fbo     = 0;  // last pass; doesn't have an FBO
+	pass2.out_texture = 0;  // last pass; doesn't have an output texture
+	pass2.viewport    = {}; // will be set later
+
+	shader_passes.push_back(pass2);
 
 	return true;
 }
@@ -210,11 +232,13 @@ OpenGlRenderer::~OpenGlRenderer()
 		input_texture.texture = 0;
 	}
 
-	if (pass1.out_texture) {
-		glDeleteTextures(1, &pass1.out_texture);
-		pass1.out_texture = 0;
+	for (auto& pass : shader_passes) {
+		if (pass.out_texture) {
+			glDeleteTextures(1, &pass.out_texture);
+			pass.out_texture = 0;
+		}
+		glDeleteFramebuffers(1, &pass.out_fbo);
 	}
-	glDeleteFramebuffers(1, &pass1.out_fbo);
 
 	for (auto& [_, shader] : shader_cache) {
 		glDeleteProgram(shader.program_object);
@@ -253,10 +277,13 @@ DosBox::Rect OpenGlRenderer::GetCanvasSizeInPixels()
 
 void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 {
-	viewport_rect_px = draw_rect_px;
+	auto& pass    = GetShaderPass(ShaderPassId::Main);
+	pass.viewport = draw_rect_px;
 
-	// If the viewport size has changed, the canvas size might have changed
-	// too.
+	UpdateMainShaderPassUniforms();
+
+	// If the viewport size has changed, the canvas size might have
+	// changed too.
 	const auto canvas_size_px = GetCanvasSizeInPixels();
 
 	// We always expect a valid canvas
@@ -299,6 +326,19 @@ void OpenGlRenderer::NotifyRenderSizeChanged(const int new_render_width_px,
 	MaybeUpdateRenderSize(new_render_width_px, new_render_height_px);
 }
 
+OpenGlRenderer::ShaderPass& OpenGlRenderer::GetShaderPass(const ShaderPassId id)
+{
+	for (auto& pass : shader_passes) {
+		if (pass.id == id) {
+			return pass;
+		}
+	}
+	assertm(false, "Invalid shader pass ID");
+
+	// Just to make the compiler happy
+	return shader_passes[0];
+}
+
 void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
                                            const int new_render_height_px)
 {
@@ -336,25 +376,51 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
 	input_texture.width  = new_render_width_px;
 	input_texture.height = new_render_height_px;
 
-	RecreatePass1InputTextureAndRenderBuffer();
-	RecreatePass1OutputTexture();
+	RecreateInputTexture();
 
-	// Set up off-screen framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, pass1.out_fbo);
+	GLuint prev_pass_out_texture = 0;
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER,
-	                       GL_COLOR_ATTACHMENT0,
-	                       GL_TEXTURE_2D,
-	                       pass1.out_texture,
-	                       0);
+	for (auto& pass : shader_passes) {
+		if (pass.id == ShaderPassId::ImageAdjustments) {
+			pass.in_texture = input_texture.texture;
+		} else {
+			pass.in_texture = prev_pass_out_texture;
+		}
 
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		LOG_ERR("OPENGL: Framebuffer is not complete");
+		if (pass.out_fbo != 0) {
+			if (pass.out_texture) {
+				glDeleteTextures(1, &pass.out_texture);
+			}
+			pass.out_texture = CreateTexture();
+
+			pass.viewport = {0,
+			                 0,
+			                 input_texture.width,
+			                 input_texture.height};
+
+			// Set up off-screen framebuffer
+			glBindFramebuffer(GL_FRAMEBUFFER, pass.out_fbo);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER,
+			                       GL_COLOR_ATTACHMENT0,
+			                       GL_TEXTURE_2D,
+			                       pass.out_texture,
+			                       0);
+
+			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
+			    GL_FRAMEBUFFER_COMPLETE) {
+				LOG_ERR("OPENGL: Framebuffer is not complete");
+			}
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+			prev_pass_out_texture = pass.out_texture;
+		}
 	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	UpdateMainShaderPassUniforms();
 }
 
-void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
+void OpenGlRenderer::RecreateInputTexture()
 {
 	if (input_texture.texture) {
 		glDeleteTextures(1, &input_texture.texture);
@@ -403,20 +469,19 @@ void OpenGlRenderer::RecreatePass1InputTextureAndRenderBuffer()
 	input_texture.pitch = check_cast<int>(pitch_bytes);
 }
 
-void OpenGlRenderer::RecreatePass1OutputTexture()
+GLuint OpenGlRenderer::CreateTexture()
 {
-	if (pass1.out_texture) {
-		glDeleteTextures(1, &pass1.out_texture);
-	}
-	glGenTextures(1, &pass1.out_texture);
+	GLuint texture = 0;
+
+	glGenTextures(1, &texture);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, pass1.out_texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	SetPass1OutputTextureFiltering();
+	SetTextureFiltering(texture);
 
 	glTexImage2D(GL_TEXTURE_2D,
 	             0,                    // mimap level (0 = base image)
@@ -429,11 +494,13 @@ void OpenGlRenderer::RecreatePass1OutputTexture()
 	             nullptr);             // pointer to image data
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return texture;
 }
 
-void OpenGlRenderer::SetPass1OutputTextureFiltering()
+void OpenGlRenderer::SetTextureFiltering(const GLuint texture)
 {
-	glBindTexture(GL_TEXTURE_2D, pass1.out_texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
 
 	const auto& shader_settings = main_shader_preset.settings;
 
@@ -498,56 +565,23 @@ void OpenGlRenderer::PrepareFrame()
 	}
 }
 
-void OpenGlRenderer::RenderPass1()
+void OpenGlRenderer::RenderPass(const ShaderPass& pass)
 {
-	// Pass 1
-	// ------
-	// Apply image adjustment shader and render into an off-screen buffer
-
-	glBindFramebuffer(GL_FRAMEBUFFER, pass1.out_fbo);
+	// Render into an off-screen buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, pass.out_fbo);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glUseProgram(pass1.shader.program_object);
+	glUseProgram(pass.shader.program_object);
 
-	// Bind input texture containing the raw framebuffer data of the
-	// emulated video card
+	// Bind input texture
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, input_texture.texture);
+	glBindTexture(GL_TEXTURE_2D, pass.in_texture);
 
 	// Set up viewport
-	glViewport(0, 0, input_texture.width, input_texture.height);
-
-	// Apply shader by drawing an oversized triangle
-	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-
-	// Reset binds
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glBindVertexArray(0);
-}
-
-void OpenGlRenderer::RenderPass2()
-{
-	// Pass 2
-	// ------
-	// Apply user-configured shader and render the output into default
-	// framebuffer visible on the screen.
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glUseProgram(pass2.shader.program_object);
-	UpdatePass2Uniforms();
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, pass1.out_texture);
-
-	// Set up viewport
-	glViewport(static_cast<GLsizei>(viewport_rect_px.x),
-	           static_cast<GLsizei>(viewport_rect_px.y),
-	           static_cast<GLsizei>(viewport_rect_px.w),
-	           static_cast<GLsizei>(viewport_rect_px.h));
+	glViewport(static_cast<GLsizei>(pass.viewport.x),
+	           static_cast<GLsizei>(pass.viewport.y),
+	           static_cast<GLsizei>(pass.viewport.w),
+	           static_cast<GLsizei>(pass.viewport.h));
 
 	// Apply shader by drawing an oversized triangle
 	glBindVertexArray(vao);
@@ -561,8 +595,9 @@ void OpenGlRenderer::RenderPass2()
 
 void OpenGlRenderer::PresentFrame()
 {
-	RenderPass1();
-	RenderPass2();
+	for (const auto& pass : shader_passes) {
+		RenderPass(pass);
+	}
 
 	// Optionally capture frame
 	if (CAPTURE_IsCapturingPostRenderImage()) {
@@ -761,7 +796,10 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 	}
 
 	// The texture filtering mode might have changed
-	SetPass1OutputTextureFiltering();
+	const auto& pass = GetShaderPass(ShaderPassId::ImageAdjustments);
+	SetTextureFiltering(pass.out_texture);
+
+	UpdateMainShaderPassUniforms();
 
 	current_shader_descriptor_string = shader_descriptor;
 	return Ok;
@@ -839,7 +877,8 @@ bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
 		return false;
 	}
 
-	pass2.shader = *maybe_shader;
+	auto& pass  = GetShaderPass(ShaderPassId::Main);
+	pass.shader = *maybe_shader;
 	return true;
 }
 
@@ -975,35 +1014,34 @@ void OpenGlRenderer::SetColorSpace(const ColorSpace _color_space)
 {
 	color_space = _color_space;
 
-	glUseProgram(pass1.shader.program_object);
-	UpdatePass1Uniforms();
+	UpdateImageAdjustmentsPassUniforms();
 }
 
 void OpenGlRenderer::EnableImageAdjustments(const bool enable)
 {
 	enable_image_adjustments = enable;
 
-	glUseProgram(pass1.shader.program_object);
-	UpdatePass1Uniforms();
+	UpdateImageAdjustmentsPassUniforms();
 }
 
 void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings)
 {
 	image_adjustment_settings = settings;
 
-	glUseProgram(pass1.shader.program_object);
-	UpdatePass1Uniforms();
+	UpdateImageAdjustmentsPassUniforms();
 }
 
-void OpenGlRenderer::UpdatePass1Uniforms()
+void OpenGlRenderer::UpdateImageAdjustmentsPassUniforms()
 {
-	const auto po = pass1.shader.program_object;
-	const auto& s = image_adjustment_settings;
+	const auto& pass = GetShaderPass(ShaderPassId::ImageAdjustments);
+	const auto po    = pass.shader.program_object;
+	const auto& s    = image_adjustment_settings;
+
+	glUseProgram(po);
 
 	SetUniform1i(po, "INPUT_TEXTURE", 0);
 
 	SetUniform1i(po, "COLOR_SPACE", enum_val(color_space));
-
 	SetUniform1i(po, "ENABLE_ADJUSTMENTS", enable_image_adjustments ? 1 : 0);
 	SetUniform1i(po, "COLOR_PROFILE", enum_val(s.crt_color_profile));
 	SetUniform1f(po, "BRIGHTNESS", s.brightness);
@@ -1035,9 +1073,12 @@ void OpenGlRenderer::UpdatePass1Uniforms()
 	SetUniform1f(po, "BLUE_GAIN", s.blue_gain);
 }
 
-void OpenGlRenderer::UpdatePass2Uniforms()
+void OpenGlRenderer::UpdateMainShaderPassUniforms()
 {
-	const auto po = pass2.shader.program_object;
+	const auto& pass = GetShaderPass(ShaderPassId::Main);
+	const auto po    = pass.shader.program_object;
+
+	glUseProgram(po);
 
 	SetUniform1i(po, "INPUT_TEXTURE", 0);
 
@@ -1046,10 +1087,7 @@ void OpenGlRenderer::UpdatePass2Uniforms()
 	             static_cast<GLfloat>(input_texture.width),
 	             static_cast<GLfloat>(input_texture.height));
 
-	SetUniform2f(po,
-	             "OUTPUT_TEXTURE_SIZE",
-	             viewport_rect_px.w,
-	             viewport_rect_px.h);
+	SetUniform2f(po, "OUTPUT_TEXTURE_SIZE", pass.viewport.w, pass.viewport.h);
 
 	for (const auto& [uniform_name, value] : main_shader_preset.params) {
 		SetUniform1f(po, uniform_name, value);
@@ -1058,7 +1096,8 @@ void OpenGlRenderer::UpdatePass2Uniforms()
 
 ShaderInfo OpenGlRenderer::GetCurrentShaderInfo()
 {
-	return pass2.shader.info;
+	const auto& pass = GetShaderPass(ShaderPassId::Main);
+	return pass.shader.info;
 }
 
 ShaderPreset OpenGlRenderer::GetCurrentShaderPreset()
