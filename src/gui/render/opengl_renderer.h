@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_OPENGL_RENDERER_H
@@ -8,13 +8,14 @@
 
 #if C_OPENGL
 
-#include "gui/private/shader_manager.h"
-
 #include <array>
 #include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "gui/private/shader_manager.h"
+#include "private/shader_pass.h"
 
 #include "dosbox_config.h"
 #include "gui/render/render.h"
@@ -77,11 +78,6 @@ public:
 	OpenGlRenderer& operator=(const OpenGlRenderer&) = delete;
 
 private:
-	struct Shader {
-		ShaderInfo info       = {};
-		GLuint program_object = 0;
-	};
-
 	SDL_Window* CreateSdlWindow(const int x, const int y, const int width,
 	                            const int height,
 	                            const uint32_t sdl_window_flags);
@@ -99,8 +95,11 @@ private:
 
 	bool SwitchShader(const std::string& shader_name);
 
-	std::optional<Shader> LoadAndBuildShader(const std::string& shader_name);
-	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& shader_name);
+	std::optional<Shader> LoadAndBuildShader(ShaderPass& pass,
+	                                         const std::string& shader_name);
+
+	std::optional<Shader> GetOrLoadAndCacheShader(ShaderPass& pass,
+	                                              const std::string& shader_name);
 
 	void SwitchShaderPresetOrSetDefault(const ShaderDescriptor& descriptor);
 
@@ -155,17 +154,6 @@ private:
 	// ---------------------------------------------------------------------
 	// Shader passes
 	// ---------------------------------------------------------------------
-	enum class ShaderPassId { ImageAdjustments, Main };
-
-	struct ShaderPass {
-		ShaderPassId id       = {};
-		Shader shader         = {};
-		GLuint in_texture     = 0;
-		GLuint out_fbo        = 0;
-		GLuint out_texture    = 0;
-		DosBox::Rect viewport = {};
-	};
-
 	std::vector<ShaderPass> shader_passes = {};
 
 	// Image adjustments pass params
@@ -190,18 +178,6 @@ private:
 	GLuint CreateTexture();
 	void SetTextureFiltering(const GLuint texture);
 	void RenderPass(const ShaderPass& pass);
-
-	void SetUniform1i(const GLint program_object, const std::string& name,
-	                  const int val);
-
-	void SetUniform1f(const GLint program_object, const std::string& name,
-	                  const float val);
-
-	void SetUniform2f(const GLint program_object, const std::string& name,
-	                  const float val1, const float val2);
-
-	void SetUniform3f(const GLint program_object, const std::string& name,
-	                  const float val1, const float val2, const float val3);
 
 	// ---------------------------------------------------------------------
 	// Shader caching & preset management
