@@ -694,9 +694,12 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 	bool explicit_image_type = (params.type == "hdd" || params.type == "iso" ||
 	                            params.type == "floppy");
 
+	const bool has_wildcards = path_arg_1.find_first_of("*?") !=
+	                           std::string::npos;
 	bool is_image_mode = false;
+
 	// Explicit triggers
-	if (explicit_image_type || params.is_drive_number) {
+	if (explicit_image_type || params.is_drive_number || has_wildcards) {
 		is_image_mode = true;
 	}
 
@@ -736,9 +739,39 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 				}
 			}
 
-			// Try to find the path on native filesystem first
-			auto real_path         = to_native_path(cur_arg);
-			std::string final_path = real_path.empty() ? cur_arg
+			// Resolve virtual drive letters to host paths first
+			char fullname[CROSS_LEN];
+			char tmp[CROSS_LEN];
+			safe_strcpy(tmp, cur_arg.c_str());
+			uint8_t drive_idx_found;
+			std::string path_to_expand = cur_arg;
+
+			if (DOS_MakeName(tmp, fullname, &drive_idx_found)) {
+				if (Drives.at(drive_idx_found) &&
+				    Drives.at(drive_idx_found)->GetType() ==
+				            DosDriveType::Local) {
+					const auto ldp = std::dynamic_pointer_cast<localDrive>(
+					        Drives.at(drive_idx_found));
+					if (ldp) {
+						// This turns "C:\*.CUE" into
+						// "/home/user/dosbox/c_drive/*.CUE"
+						path_to_expand = ldp->MapDosToHostFilename(
+						        fullname);
+					}
+				}
+			}
+
+			// Now try wildcard expansion on the translated host path
+			if (path_to_expand.find_first_of("*?") != std::string::npos) {
+				if (MOUNT::AddWildcardPaths(path_to_expand,
+				                            params.paths)) {
+					continue;
+				}
+			}
+
+			// Fallback for literal files
+			auto real_path = to_native_path(path_to_expand);
+			std::string final_path = real_path.empty() ? path_to_expand
 			                                           : real_path;
 
 			if (real_path.empty() || !path_exists(real_path)) {
