@@ -114,28 +114,6 @@ private:
 	std::optional<GLuint> BuildShader(const GLenum type,
 	                                  const std::string& source) const;
 
-	void SetUniform1i(const GLint program_object, const std::string& name,
-	                  const int val);
-
-	void SetUniform1f(const GLint program_object, const std::string& name,
-	                  const float val);
-
-	void SetUniform2f(const GLint program_object, const std::string& name,
-	                  const float val1, const float val2);
-
-	void SetUniform3f(const GLint program_object, const std::string& name,
-	                  const float val1, const float val2, const float val3);
-
-	void UpdatePass1Uniforms();
-	void UpdatePass2Uniforms();
-
-	void RecreatePass1InputTextureAndRenderBuffer();
-	void RecreatePass1OutputTexture();
-	void SetPass1OutputTextureFiltering();
-
-	void RenderPass1();
-	void RenderPass2();
-
 	// ---------------------------------------------------------------------
 	// Common
 	// ---------------------------------------------------------------------
@@ -167,8 +145,6 @@ private:
 		GLuint texture = 0;
 	} input_texture = {};
 
-	DosBox::Rect viewport_rect_px = {};
-
 	// Vertex buffer object
 	GLuint vbo = 0;
 
@@ -178,29 +154,56 @@ private:
 	// Vertex data for an oversized triangle
 	std::array<GLfloat, 2 * 3> vertex_data = {};
 
-	// Image adjustments pass
-	// ----------------------
+	// ---------------------------------------------------------------------
+	// Shader passes
+	// ---------------------------------------------------------------------
+	enum class ShaderPassId { ImageAdjustments, Main };
+
+	struct ShaderPass {
+		ShaderPassId id       = {};
+		Shader shader         = {};
+		GLuint in_texture     = 0;
+		GLuint out_fbo        = 0;
+		GLuint out_texture    = 0;
+		DosBox::Rect viewport = {};
+	};
+
+	std::vector<ShaderPass> shader_passes = {};
+
+	// Image adjustments pass params
+	// -----------------------------
 	ColorSpace color_space = {};
 
 	ImageAdjustmentSettings image_adjustment_settings = {};
 
 	bool enable_image_adjustments = false;
 
+	void UpdateImageAdjustmentsPassUniforms();
+
+	// Main shader pass params
+	// -----------------------
 	ShaderPreset main_shader_preset = {};
 
-	// ---------------------------------------------------------------------
-	// Render passes
-	// ---------------------------------------------------------------------
-	struct {
-		Shader shader = {};
+	void UpdateMainShaderPassUniforms();
 
-		GLuint out_fbo     = 0;
-		GLuint out_texture = 0;
-	} pass1 = {};
+	ShaderPass& GetShaderPass(const ShaderPassId id);
+	void RecreateInputTexture();
 
-	struct {
-		Shader shader              = {};
-	} pass2 = {};
+	GLuint CreateTexture();
+	void SetTextureFiltering(const GLuint texture);
+	void RenderPass(const ShaderPass& pass);
+
+	void SetUniform1i(const GLint program_object, const std::string& name,
+	                  const int val);
+
+	void SetUniform1f(const GLint program_object, const std::string& name,
+	                  const float val);
+
+	void SetUniform2f(const GLint program_object, const std::string& name,
+	                  const float val1, const float val2);
+
+	void SetUniform3f(const GLint program_object, const std::string& name,
+	                  const float val1, const float val2, const float val3);
 
 	// ---------------------------------------------------------------------
 	// Shader caching & preset management
