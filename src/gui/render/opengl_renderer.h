@@ -188,6 +188,8 @@ private:
 
 	bool enable_image_adjustments = false;
 
+	ShaderPreset main_shader_preset = {};
+
 	// ---------------------------------------------------------------------
 	// Render passes
 	// ---------------------------------------------------------------------
@@ -199,8 +201,7 @@ private:
 	} pass1 = {};
 
 	struct {
-		Shader shader              = {};
-		ShaderPreset shader_preset = {};
+		Shader shader = {};
 	} pass2 = {};
 
 	// ---------------------------------------------------------------------
