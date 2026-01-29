@@ -171,12 +171,17 @@ private:
 	// Vertex data for an oversized triangle
 	std::array<GLfloat, 2 * 3> vertex_data = {};
 
+	// Image adjustments pass
+	// ----------------------
 	ColorSpace color_space = {};
+
+	ImageAdjustmentSettings image_adjustment_settings = {};
+
+	bool enable_image_adjustments = false;
 
 	// ---------------------------------------------------------------------
 	// Render passes
 	// ---------------------------------------------------------------------
-
 	struct {
 		Shader shader = {};
 
@@ -189,9 +194,6 @@ private:
 		int width  = 0;
 		int height = 0;
 
-		ImageAdjustmentSettings image_adjustment_settings = {};
-
-		bool enable_image_adjustments = false;
 	} pass1 = {};
 
 	struct {

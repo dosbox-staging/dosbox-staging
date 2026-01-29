@@ -555,6 +555,7 @@ void OpenGlRenderer::RenderPass2()
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	// Reset binds
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 }
@@ -981,7 +982,7 @@ void OpenGlRenderer::SetColorSpace(const ColorSpace _color_space)
 
 void OpenGlRenderer::EnableImageAdjustments(const bool enable)
 {
-	pass1.enable_image_adjustments = enable;
+	enable_image_adjustments = enable;
 
 	glUseProgram(pass1.shader.program_object);
 	UpdatePass1Uniforms();
@@ -989,7 +990,7 @@ void OpenGlRenderer::EnableImageAdjustments(const bool enable)
 
 void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings)
 {
-	pass1.image_adjustment_settings = settings;
+	image_adjustment_settings = settings;
 
 	glUseProgram(pass1.shader.program_object);
 	UpdatePass1Uniforms();
@@ -998,13 +999,13 @@ void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 void OpenGlRenderer::UpdatePass1Uniforms()
 {
 	const auto po = pass1.shader.program_object;
-	const auto& s = pass1.image_adjustment_settings;
+	const auto& s = image_adjustment_settings;
 
 	SetUniform1i(po, "INPUT_TEXTURE", 0);
 
 	SetUniform1i(po, "COLOR_SPACE", enum_val(color_space));
 
-	SetUniform1i(po, "ENABLE_ADJUSTMENTS", pass1.enable_image_adjustments ? 1 : 0);
+	SetUniform1i(po, "ENABLE_ADJUSTMENTS", enable_image_adjustments ? 1 : 0);
 	SetUniform1i(po, "COLOR_PROFILE", enum_val(s.crt_color_profile));
 	SetUniform1f(po, "BRIGHTNESS", s.brightness);
 	SetUniform1f(po, "CONTRAST", s.contrast);
