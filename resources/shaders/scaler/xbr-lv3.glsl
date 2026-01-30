@@ -80,11 +80,11 @@ out vec4 FragColor;
 
 uniform vec2 INPUT_TEXTURE_SIZE;
 uniform vec2 OUTPUT_TEXTURE_SIZE;
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
 // compatibility #defines
 
-#define Source rubyTexture
+#define Source INPUT_TEXTURE
 #define vTexCoord v_texCoord.xy
 
 #define SourceSize vec4(INPUT_TEXTURE_SIZE, 1.0 / INPUT_TEXTURE_SIZE) //either TextureSize or InputSize
@@ -146,33 +146,33 @@ void main()
 
 	vec2 fp = fract(vTexCoord * SourceSize.xy);
 
-	vec3 A1 = texture(rubyTexture, t1.xw).rgb;
-	vec3 B1 = texture(rubyTexture, t1.yw).rgb;
-	vec3 C1 = texture(rubyTexture, t1.zw).rgb;
+	vec3 A1 = texture(INPUT_TEXTURE, t1.xw).rgb;
+	vec3 B1 = texture(INPUT_TEXTURE, t1.yw).rgb;
+	vec3 C1 = texture(INPUT_TEXTURE, t1.zw).rgb;
 
-	vec3 A = texture(rubyTexture, t2.xw).rgb;
-	vec3 B = texture(rubyTexture, t2.yw).rgb;
-	vec3 C = texture(rubyTexture, t2.zw).rgb;
+	vec3 A = texture(INPUT_TEXTURE, t2.xw).rgb;
+	vec3 B = texture(INPUT_TEXTURE, t2.yw).rgb;
+	vec3 C = texture(INPUT_TEXTURE, t2.zw).rgb;
 
-	vec3 D = texture(rubyTexture, t3.xw).rgb;
-	vec3 E = texture(rubyTexture, t3.yw).rgb;
-	vec3 F = texture(rubyTexture, t3.zw).rgb;
+	vec3 D = texture(INPUT_TEXTURE, t3.xw).rgb;
+	vec3 E = texture(INPUT_TEXTURE, t3.yw).rgb;
+	vec3 F = texture(INPUT_TEXTURE, t3.zw).rgb;
 
-	vec3 G = texture(rubyTexture, t4.xw).rgb;
-	vec3 H = texture(rubyTexture, t4.yw).rgb;
-	vec3 I = texture(rubyTexture, t4.zw).rgb;
+	vec3 G = texture(INPUT_TEXTURE, t4.xw).rgb;
+	vec3 H = texture(INPUT_TEXTURE, t4.yw).rgb;
+	vec3 I = texture(INPUT_TEXTURE, t4.zw).rgb;
 
-	vec3 G5 = texture(rubyTexture, t5.xw).rgb;
-	vec3 H5 = texture(rubyTexture, t5.yw).rgb;
-	vec3 I5 = texture(rubyTexture, t5.zw).rgb;
+	vec3 G5 = texture(INPUT_TEXTURE, t5.xw).rgb;
+	vec3 H5 = texture(INPUT_TEXTURE, t5.yw).rgb;
+	vec3 I5 = texture(INPUT_TEXTURE, t5.zw).rgb;
 
-	vec3 A0 = texture(rubyTexture, t6.xy).rgb;
-	vec3 D0 = texture(rubyTexture, t6.xz).rgb;
-	vec3 G0 = texture(rubyTexture, t6.xw).rgb;
+	vec3 A0 = texture(INPUT_TEXTURE, t6.xy).rgb;
+	vec3 D0 = texture(INPUT_TEXTURE, t6.xz).rgb;
+	vec3 G0 = texture(INPUT_TEXTURE, t6.xw).rgb;
 
-	vec3 C4 = texture(rubyTexture, t7.xy).rgb;
-	vec3 F4 = texture(rubyTexture, t7.xz).rgb;
-	vec3 I4 = texture(rubyTexture, t7.xw).rgb;
+	vec3 C4 = texture(INPUT_TEXTURE, t7.xy).rgb;
+	vec3 F4 = texture(INPUT_TEXTURE, t7.xz).rgb;
+	vec3 I4 = texture(INPUT_TEXTURE, t7.xw).rgb;
 
 	vec4 b = transpose(mat4x3(B, D, H, F)) * (XBR_Y_WEIGHT * yuv[0]);
 	vec4 c = transpose(mat4x3(C, A, G, I)) * (XBR_Y_WEIGHT * yuv[0]);
