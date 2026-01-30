@@ -62,9 +62,9 @@ in vec4 t1;
 out vec4 FragColor;
 
 uniform vec2 INPUT_TEXTURE_SIZE;
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
-#define Source rubyTexture
+#define Source INPUT_TEXTURE
 #define vTexCoord v_texCoord.xy
 
 #define SourceSize vec4(INPUT_TEXTURE_SIZE, 1.0 / INPUT_TEXTURE_SIZE)
