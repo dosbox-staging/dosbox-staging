@@ -494,8 +494,6 @@ void OpenGlRenderer::PrepareFrame()
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		++frame_count;
-
 		last_framebuf_dirty = false;
 	}
 }
@@ -1052,8 +1050,6 @@ void OpenGlRenderer::UpdatePass2Uniforms()
 	             "OUTPUT_TEXTURE_SIZE",
 	             viewport_rect_px.w,
 	             viewport_rect_px.h);
-
-	SetUniform1i(po, "FRAME_COUNT", frame_count);
 
 	for (const auto& [uniform_name, value] : main_shader_preset.params) {
 		SetUniform1f(po, uniform_name, value);
