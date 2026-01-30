@@ -34,20 +34,20 @@ in vec2 v_texCoord;
 out vec4 FragColor;
 
 uniform vec2 INPUT_TEXTURE_SIZE;
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
 vec3 getadvinterp3xtexel(vec2 coord)
 {
 	vec2 base = floor(coord / vec2(3.0)) + vec2(0.5);
-	vec3 c0 = texture(rubyTexture, (base - vec2(1.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c1 = texture(rubyTexture, (base - vec2(0.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c2 = texture(rubyTexture, (base - vec2(-1.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c3 = texture(rubyTexture, (base - vec2(1.0, 0.0)) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c4 = texture(rubyTexture, base / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c5 = texture(rubyTexture, (base + vec2(1.0, 0.0)) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c6 = texture(rubyTexture, (base + vec2(-1.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c7 = texture(rubyTexture, (base + vec2(0.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c8 = texture(rubyTexture, (base + vec2(1.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c0 = texture(INPUT_TEXTURE, (base - vec2(1.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c1 = texture(INPUT_TEXTURE, (base - vec2(0.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c2 = texture(INPUT_TEXTURE, (base - vec2(-1.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c3 = texture(INPUT_TEXTURE, (base - vec2(1.0, 0.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c4 = texture(INPUT_TEXTURE, base / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c5 = texture(INPUT_TEXTURE, (base + vec2(1.0, 0.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c6 = texture(INPUT_TEXTURE, (base + vec2(-1.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c7 = texture(INPUT_TEXTURE, (base + vec2(0.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c8 = texture(INPUT_TEXTURE, (base + vec2(1.0, 1.0)) / INPUT_TEXTURE_SIZE).xyz;
 
 	bool outer = c1 != c7 && c3 != c5;
 

@@ -38,7 +38,7 @@ in vec2 prescale;
 out vec4 FragColor;
 
 uniform vec2 INPUT_TEXTURE_SIZE;
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
 #define GAMMA             2.2
 #define GAMMA_IN(color)   pow(color, vec4(GAMMA))
@@ -81,7 +81,7 @@ void main() {
 
 	vec2 mod_texel = min(texel_floored + f, INPUT_TEXTURE_SIZE - halfp);
 
-	FragColor = GAMMA_OUT(texture_linear(rubyTexture, mod_texel / INPUT_TEXTURE_SIZE));
+	FragColor = GAMMA_OUT(texture_linear(INPUT_TEXTURE, mod_texel / INPUT_TEXTURE_SIZE));
 }
 
 #endif
