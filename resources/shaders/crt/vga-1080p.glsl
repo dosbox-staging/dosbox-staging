@@ -51,7 +51,7 @@ in vec2 oney;
 
 out vec4 FragColor;
 
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
 uniform float SPOT_WIDTH;
 uniform float SPOT_HEIGHT;
@@ -65,7 +65,7 @@ uniform float GAMMA_INPUT;
 uniform float GAMMA_OUTPUT;
 
 #define GAMMA_IN(color) pow(color, vec4(GAMMA_INPUT))
-#define TEX2D(coords)   GAMMA_IN(texture(rubyTexture, coords))
+#define TEX2D(coords)   GAMMA_IN(texture(INPUT_TEXTURE, coords))
 
 // Macro for weights computing
 #define WEIGHT(w) \

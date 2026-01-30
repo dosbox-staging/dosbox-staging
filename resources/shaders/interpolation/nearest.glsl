@@ -32,11 +32,11 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
 void main()
 {
-	FragColor = texture(rubyTexture, v_texCoord);
+	FragColor = texture(INPUT_TEXTURE, v_texCoord);
 }
 
 #endif

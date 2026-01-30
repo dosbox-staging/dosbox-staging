@@ -45,7 +45,7 @@ in vec2 v_texCoord;
 out vec4 FragColor;
 
 uniform vec2 INPUT_TEXTURE_SIZE;
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
 #define GAMMA             2.2
 #define GAMMA_IN(color)   pow(color, vec4(GAMMA))
@@ -114,17 +114,17 @@ void main()
 	texCoord3 /= INPUT_TEXTURE_SIZE;
 	texCoord12 /= INPUT_TEXTURE_SIZE;
 
-	vec4 color = texture_linear(rubyTexture, vec2(texCoord0.x, texCoord0.y)) * w0.x * w0.y +
-	             texture_linear(rubyTexture, vec2(texCoord12.x, texCoord0.y)) * w12.x * w0.y +
-	             texture_linear(rubyTexture, vec2(texCoord3.x, texCoord0.y)) * w3.x * w0.y
+	vec4 color = texture_linear(INPUT_TEXTURE, vec2(texCoord0.x, texCoord0.y)) * w0.x * w0.y +
+	             texture_linear(INPUT_TEXTURE, vec2(texCoord12.x, texCoord0.y)) * w12.x * w0.y +
+	             texture_linear(INPUT_TEXTURE, vec2(texCoord3.x, texCoord0.y)) * w3.x * w0.y
 
-	           + texture_linear(rubyTexture, vec2(texCoord0.x, texCoord12.y)) * w0.x * w12.y +
-	             texture_linear(rubyTexture, vec2(texCoord12.x, texCoord12.y)) * w12.x * w12.y +
-	             texture_linear(rubyTexture, vec2(texCoord3.x, texCoord12.y)) * w3.x * w12.y
+	           + texture_linear(INPUT_TEXTURE, vec2(texCoord0.x, texCoord12.y)) * w0.x * w12.y +
+	             texture_linear(INPUT_TEXTURE, vec2(texCoord12.x, texCoord12.y)) * w12.x * w12.y +
+	             texture_linear(INPUT_TEXTURE, vec2(texCoord3.x, texCoord12.y)) * w3.x * w12.y
 
-	           + texture_linear(rubyTexture, vec2(texCoord0.x, texCoord3.y)) * w0.x * w3.y +
-	             texture_linear(rubyTexture, vec2(texCoord12.x, texCoord3.y)) * w12.x * w3.y +
-	             texture_linear(rubyTexture, vec2(texCoord3.x, texCoord3.y)) * w3.x * w3.y;
+	           + texture_linear(INPUT_TEXTURE, vec2(texCoord0.x, texCoord3.y)) * w0.x * w3.y +
+	             texture_linear(INPUT_TEXTURE, vec2(texCoord12.x, texCoord3.y)) * w12.x * w3.y +
+	             texture_linear(INPUT_TEXTURE, vec2(texCoord3.x, texCoord3.y)) * w3.x * w3.y;
 
 	FragColor = GAMMA_OUT(color);
 }

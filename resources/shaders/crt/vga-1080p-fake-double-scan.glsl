@@ -47,7 +47,7 @@ in vec2 prescale;
 out vec4 FragColor;
 
 uniform vec2 INPUT_TEXTURE_SIZE;
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
 uniform float PHOSPHOR_LAYOUT;
 uniform float SCANLINE_STRENGTH_MIN;
@@ -177,7 +177,7 @@ void main()
 	         halfp;
 
 	vec2 mod_texel = min(texel_floored + f, INPUT_TEXTURE_SIZE - halfp);
-	vec4 color     = tex2D_linear(rubyTexture, mod_texel / INPUT_TEXTURE_SIZE);
+	vec4 color     = tex2D_linear(INPUT_TEXTURE, mod_texel / INPUT_TEXTURE_SIZE);
 
 	color = add_vga_overlay(color,
 	                        SCANLINE_STRENGTH_MIN,

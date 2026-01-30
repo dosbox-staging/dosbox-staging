@@ -71,7 +71,7 @@ in vec4 t7;
 out vec4 FragColor;
 
 uniform vec2 INPUT_TEXTURE_SIZE;
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
 uniform float XBR_EQ_THRESHOLD;
 uniform float XBR_LV2_COEFFICIENT;
@@ -129,27 +129,27 @@ void main()
 
 	vec2 fp  = fract(v_texCoord*INPUT_TEXTURE_SIZE);
 
-	vec3 A1 = texture(rubyTexture, t1.xw ).xyz;
-	vec3 B1 = texture(rubyTexture, t1.yw ).xyz;
-	vec3 C1 = texture(rubyTexture, t1.zw ).xyz;
-	vec3 A  = texture(rubyTexture, t2.xw ).xyz;
-	vec3 B  = texture(rubyTexture, t2.yw ).xyz;
-	vec3 C  = texture(rubyTexture, t2.zw ).xyz;
-	vec3 D  = texture(rubyTexture, t3.xw ).xyz;
-	vec3 E  = texture(rubyTexture, t3.yw ).xyz;
-	vec3 F  = texture(rubyTexture, t3.zw ).xyz;
-	vec3 G  = texture(rubyTexture, t4.xw ).xyz;
-	vec3 H  = texture(rubyTexture, t4.yw ).xyz;
-	vec3 I  = texture(rubyTexture, t4.zw ).xyz;
-	vec3 G5 = texture(rubyTexture, t5.xw ).xyz;
-	vec3 H5 = texture(rubyTexture, t5.yw ).xyz;
-	vec3 I5 = texture(rubyTexture, t5.zw ).xyz;
-	vec3 A0 = texture(rubyTexture, t6.xy ).xyz;
-	vec3 D0 = texture(rubyTexture, t6.xz ).xyz;
-	vec3 G0 = texture(rubyTexture, t6.xw ).xyz;
-	vec3 C4 = texture(rubyTexture, t7.xy ).xyz;
-	vec3 F4 = texture(rubyTexture, t7.xz ).xyz;
-	vec3 I4 = texture(rubyTexture, t7.xw ).xyz;
+	vec3 A1 = texture(INPUT_TEXTURE, t1.xw ).xyz;
+	vec3 B1 = texture(INPUT_TEXTURE, t1.yw ).xyz;
+	vec3 C1 = texture(INPUT_TEXTURE, t1.zw ).xyz;
+	vec3 A  = texture(INPUT_TEXTURE, t2.xw ).xyz;
+	vec3 B  = texture(INPUT_TEXTURE, t2.yw ).xyz;
+	vec3 C  = texture(INPUT_TEXTURE, t2.zw ).xyz;
+	vec3 D  = texture(INPUT_TEXTURE, t3.xw ).xyz;
+	vec3 E  = texture(INPUT_TEXTURE, t3.yw ).xyz;
+	vec3 F  = texture(INPUT_TEXTURE, t3.zw ).xyz;
+	vec3 G  = texture(INPUT_TEXTURE, t4.xw ).xyz;
+	vec3 H  = texture(INPUT_TEXTURE, t4.yw ).xyz;
+	vec3 I  = texture(INPUT_TEXTURE, t4.zw ).xyz;
+	vec3 G5 = texture(INPUT_TEXTURE, t5.xw ).xyz;
+	vec3 H5 = texture(INPUT_TEXTURE, t5.yw ).xyz;
+	vec3 I5 = texture(INPUT_TEXTURE, t5.zw ).xyz;
+	vec3 A0 = texture(INPUT_TEXTURE, t6.xy ).xyz;
+	vec3 D0 = texture(INPUT_TEXTURE, t6.xz ).xyz;
+	vec3 G0 = texture(INPUT_TEXTURE, t6.xw ).xyz;
+	vec3 C4 = texture(INPUT_TEXTURE, t7.xy ).xyz;
+	vec3 F4 = texture(INPUT_TEXTURE, t7.xz ).xyz;
+	vec3 I4 = texture(INPUT_TEXTURE, t7.xw ).xyz;
 
 	vec4 b = mul( mat4x3(B, D, H, F), Y );
 	vec4 c = mul( mat4x3(C, A, G, I), Y );
