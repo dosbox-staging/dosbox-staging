@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "gui/private/shader_manager.h"
+#include "private/shader_manager.h"
 #include "private/shader_pass.h"
 
 #include "dosbox_config.h"
