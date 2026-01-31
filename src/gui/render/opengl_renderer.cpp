@@ -6,6 +6,7 @@
 #if C_OPENGL
 
 #include "gui/private/common.h"
+#include "private/auto_shader_switcher.h"
 #include "private/shader_pass.h"
 
 #include "capture/capture.h"
@@ -311,8 +312,10 @@ void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 		return;
 	}
 
-	const auto new_descriptor = ShaderManager::GetInstance().NotifyRenderParametersChanged(
-	        curr_shader_descriptor, canvas_size_px, video_mode);
+	auto& shader_switcher = AutoShaderSwitcher::GetInstance();
+	shader_switcher.NotifyRenderParametersChanged(canvas_size_px, video_mode);
+
+	const auto new_descriptor = shader_switcher.GetCurrentShaderDescriptor();
 
 	HandleShaderAndPresetChangeViaNotify(new_descriptor);
 }
@@ -642,11 +645,14 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 {
 	using enum OpenGlRenderer::SetShaderResult;
 
-	const auto new_descriptor = ShaderManager::GetInstance().NotifyShaderChanged(
-	        new_symbolic_shader_descriptor, GlslExtension);
+	auto& shader_switcher = AutoShaderSwitcher::GetInstance();
 
 	const auto curr_descriptor = force_reload ? ShaderDescriptor{"", ""}
 	                                          : curr_shader_descriptor;
+
+	shader_switcher.NotifyShaderChanged(new_symbolic_shader_descriptor, GlslExtension);
+
+	const auto new_descriptor = shader_switcher.GetCurrentShaderDescriptor();
 
 	const auto result = MaybeSetShaderAndPreset(curr_descriptor, new_descriptor);
 
@@ -749,8 +755,10 @@ void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 	assert(video_mode.width > 0 && video_mode.height > 0);
 
 	// Handle shader auto-switching
-	const auto new_descriptor = ShaderManager::GetInstance().NotifyRenderParametersChanged(
-	        curr_shader_descriptor, canvas_size_px, video_mode);
+	auto& shader_switcher = AutoShaderSwitcher::GetInstance();
+	shader_switcher.NotifyRenderParametersChanged(canvas_size_px, video_mode);
+
+	const auto new_descriptor = shader_switcher.GetCurrentShaderDescriptor();
 
 	HandleShaderAndPresetChangeViaNotify(new_descriptor);
 }
@@ -955,8 +963,8 @@ void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 
 void OpenGlRenderer::UpdateImageAdjustmentsPassUniforms()
 {
-	auto& pass = GetShaderPass(ShaderPassId::ImageAdjustments);
-	const auto& s    = image_adjustment_settings;
+	auto& pass    = GetShaderPass(ShaderPassId::ImageAdjustments);
+	const auto& s = image_adjustment_settings;
 
 	glUseProgram(pass.shader.program_object);
 

@@ -6,6 +6,7 @@ libgui_sources = files(
     'titlebar.cpp',
 
     'render/auto_image_adjustments.cpp',
+    'render/auto_shader_switcher.cpp',
     'render/deinterlacer.cpp',
     'render/opengl_renderer.cpp',
     'render/render.cpp',
