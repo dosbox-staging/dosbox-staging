@@ -3,11 +3,17 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "imgmount.h"
+#include "misc/notifications.h"
 #include "mount.h"
 
 // IMGMOUNT is a stub that forwards execution to the unified MOUNT command.
 void IMGMOUNT::Run(void)
 {
+	// Print deprecation notice
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "IMGMOUNT",
+	                      "PROGRAM_IMGMOUNT_DEPRECATED");
+
 	// Create a MOUNT command instance on the stack
 	MOUNT mount_cmd;
 

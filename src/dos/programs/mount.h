@@ -22,7 +22,7 @@ struct MountParameters {
 	std::array<uint16_t, 4> sizes = {0, 0, 0, 0};
 
 	bool roflag               = false;
-	bool wants_ide            = false;
+	bool is_ide               = false;
 	int8_t ide_index          = -1;
 	bool is_second_cable_slot = false;
 	uint8_t mediaid           = 0;

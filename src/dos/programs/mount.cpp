@@ -98,17 +98,16 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
                              std::vector<std::string>& paths)
 {
 	// Expand the given path argument
-	constexpr auto only_expand_files        = true;
-	constexpr auto skip_native_path         = true;
+	constexpr auto OnlyExpandFiles          = true;
+	constexpr auto SkipNativePath           = true;
 	std::vector<std::string> expanded_paths = {};
-	if (!get_expanded_files(path_arg, expanded_paths, only_expand_files, skip_native_path)) {
+	if (!get_expanded_files(path_arg, expanded_paths, OnlyExpandFiles, SkipNativePath)) {
 		return false;
 	}
 
 	// Sort wildcards with natural ordering
-	constexpr auto npos      = std::string::npos;
-	const auto has_wildcards = path_arg.find_first_of('*') != npos ||
-	                           path_arg.find_first_of('?') != npos;
+	const auto has_wildcards = path_arg.find_first_of('*') != std::string::npos ||
+	                           path_arg.find_first_of('?') != std::string::npos;
 	if (has_wildcards) {
 		std::sort(expanded_paths.begin(), expanded_paths.end(), natural_compare);
 	}
@@ -124,10 +123,12 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
 void MOUNT::WriteMountStatus(const char* image_type,
                              const std::vector<std::string>& images, char drive_letter)
 {
-	constexpr auto end_punctuation        = "";
-	const auto images_str                 = join_with_commas(images,
-                                                 MSG_Get("CONJUNCTION_AND"),
-                                                 end_punctuation);
+	constexpr auto EndPunctuation = "";
+
+	const auto images_str = join_with_commas(images,
+	                                         MSG_Get("CONJUNCTION_AND"),
+	                                         EndPunctuation);
+
 	const std::string type_and_images_str = image_type + std::string(" ") +
 	                                        images_str;
 
@@ -234,7 +235,10 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	DriveManager::InitializeDrive(drive_index(params.drive));
 
 	// Set the correct media byte in the table
-	mem_writeb(RealToPhysical(dos.tables.mediaid) + drive_index(params.drive) * 9,
+	// Each entry is 9 bytes, with the media byte at offset 0x00
+	constexpr auto DptEntrySize = 9;
+	mem_writeb(RealToPhysical(dos.tables.mediaid) +
+	                   drive_index(params.drive) * DptEntrySize,
 	           params.mediaid);
 
 	// Command uses dta so set it to our internal dta
@@ -324,7 +328,7 @@ bool MOUNT::MountImageIso(MountParameters& params)
 	           params.mediaid);
 
 	// If instructed, attach to IDE controller as ATAPI CD-ROM device
-	if (params.wants_ide) {
+	if (params.is_ide) {
 		if (params.ide_index >= 0) {
 			IDE_CDROM_Attach(params.ide_index,
 			                 params.is_second_cable_slot,
@@ -344,7 +348,7 @@ bool MOUNT::MountImageIso(MountParameters& params)
 
 bool MOUNT::MountImageRaw(MountParameters& params)
 {
-	FILE* new_disk = fopen_wrap_ro_fallback(params.paths[0], params.roflag);
+	auto new_disk = fopen_wrap_ro_fallback(params.paths[0], params.roflag);
 	if (!new_disk) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
@@ -359,9 +363,9 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 		                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
 		return false;
 	}
-	uint32_t imagesize = check_cast<uint32_t>(sz);
+	auto imagesize = check_cast<uint32_t>(sz);
 	// 0=A:, 1=B:, 2=C:, 3=D:
-	const bool is_hdd = (params.drive >= '2');
+	const auto is_hdd = (params.drive >= '2');
 	// Seems to make sense to require a valid geometry..
 	if (is_hdd && params.sizes[0] == 0 && params.sizes[1] == 0 &&
 	    params.sizes[2] == 0 && params.sizes[3] == 0) {
@@ -443,9 +447,10 @@ void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 
 	// Parse -ide
 	std::string ide_value = {};
-	params.wants_ide      = cmd->FindString("-ide", ide_value, true) ||
-	                   cmd->FindExist("-ide", true);
-	if (params.wants_ide && (params.type == "iso")) {
+
+	params.is_ide = cmd->FindString("-ide", ide_value, true) ||
+	                cmd->FindExist("-ide", true);
+	if (params.is_ide && (params.type == "iso")) {
 		IDE_Get_Next_Cable_Slot(params.ide_index, params.is_second_cable_slot);
 	}
 
@@ -462,6 +467,7 @@ void MOUNT::ParseGeometry(MountParameters& params)
 	if (params.type == "floppy") {
 		str_size       = "512,1,2880,2880";
 		params.mediaid = MediaId::Floppy1_44MB;
+
 	} else if (params.type == "dir" || params.type == "overlay") {
 		// 512*32*32765==~500MB total size
 		// 512*32*16000==~250MB total free size
@@ -524,8 +530,8 @@ void MOUNT::ParseGeometry(MountParameters& params)
 	if (!str_size.empty()) {
 		char number[21]  = {0};
 		const char* scan = str_size.c_str();
-		Bitu index       = 0;
-		Bitu count       = 0;
+		int index        = 0;
+		int count        = 0;
 		// Parse the str_size string
 		while (*scan && index < 20 && count < 4) {
 			if (*scan == ',') {
@@ -689,14 +695,14 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 
 	// Check first path
 	struct stat test;
-	bool stat_ok       = (stat(path_arg_1.c_str(), &test) == 0);
-	bool target_is_dir = stat_ok && S_ISDIR(test.st_mode);
-	bool explicit_image_type = (params.type == "hdd" || params.type == "iso" ||
+	auto stat_ok       = (stat(path_arg_1.c_str(), &test) == 0);
+	auto target_is_dir = stat_ok && S_ISDIR(test.st_mode);
+	auto explicit_image_type = (params.type == "hdd" || params.type == "iso" ||
 	                            params.type == "floppy");
 
-	const bool has_wildcards = path_arg_1.find_first_of("*?") !=
+	const auto has_wildcards = path_arg_1.find_first_of("*?") !=
 	                           std::string::npos;
-	bool is_image_mode = false;
+	auto is_image_mode = false;
 
 	// Explicit triggers
 	if (explicit_image_type || params.is_drive_number || has_wildcards) {
@@ -793,7 +799,8 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 							std::string host_name = ldp->MapDosToHostFilename(
 							        fullname);
 							if (path_exists(host_name)) {
-								final_path = std::move(host_name);
+								final_path = std::move(
+								        host_name);
 								found_on_virtual = true;
 								LOG_MSG("IMGMOUNT: Path '%s' found on virtual drive %c:",
 								        fullname,
@@ -981,6 +988,7 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 	// future
 	if (!params.label.empty()) {
 		newdrive->dirCache.SetLabel(params.label.c_str(), false, false);
+
 	} else if (params.type == "dir" || params.type == "overlay") {
 		// For hard drives set the label to DRIVELETTER_Drive.
 		// For floppy drives set the label to DRIVELETTER_Floppy.
@@ -988,6 +996,7 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 		params.label = params.drive;
 		params.label += "_DRIVE";
 		newdrive->dirCache.SetLabel(params.label.c_str(), false, false);
+
 	} else if (params.type == "floppy") {
 		// Floppy labels handled in IMGMOUNT logic usually, but if
 		// mounted as dir:
@@ -1007,7 +1016,7 @@ void MOUNT::Run(void)
 {
 	MountParameters params;
 
-	// Hack To allow long commandlines
+	// Hack to allow long commandlines
 	ChangeToLongCmd();
 
 	if (!cmd->GetCount()) {
@@ -1041,7 +1050,7 @@ void MOUNT::Run(void)
 		return;
 	}
 
-	// Parse Paths and execute (MountImage or MountLocal)
+	// Parse paths and execute (MountImage or MountLocal)
 	ProcessPaths(params, path_relative_to_last_config);
 }
 
@@ -1052,115 +1061,147 @@ void MOUNT::AddMessages()
 		return;
 	}
 	MSG_Add("PROGRAM_MOUNT_HELP",
-	        "Map physical folders, drives, or images to a virtual drive letter.\n");
+	        "Mount a directory or an image file to a drive letter.\n");
 
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG",
-	        "Mount a directory or an image file from the host OS to a drive letter.\n"
+	        "Mount a directory or an image file to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]PATH[reset] [-t TYPE] [-label LABEL] [-fs FS] [-chs C,H,S] -pr -ro\n"
-	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] [IMG2] [..] [-t TYPE] [-fs FS] -ide [-chs C,H,S] -pr -ro\n"
-	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGE-SET[reset] [-t TYPE] [-fs FS] -ide -pr -ro\n"
-	        "  [color=light-green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE)\n"
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]PATH[reset] [PARAMETERS]\n"
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] [IMAGEFILE2...] [PARAMETERS]\n"
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGE-SET[reset] [PARAMETERS]\n"
+	        "  [color=light-green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts [color=white]DRIVE[reset])\n"
 	        "\n"
-	        "Parameters:\n"
-	        "  [color=white]DRIVE[reset]      drive letter (A-Z) or number (0-3) for booting\n"
-	        "  [color=light-cyan]PATH[reset]       directory on the host OS\n"
-	        "  [color=light-cyan]IMAGEFILE[reset]  image file on the host OS\n"
-	        "  [color=light-cyan]IMAGE-SET[reset]  wildcard pattern for multiple images, e.g. *.iso\n"
-	        "  TYPE       type of mount: dir, overlay, floppy, hdd, iso (or cdrom)\n"
-	        "  FS         filesystem: fat, iso, or none (for bootable images)\n"
-	        "  LABEL      volume label to assign to the mounted drive\n"
-	        "  -ide       attach as IDE device (for CD-ROM/HDD images)\n"
-	        "  -chs       specify geometry (Cylinders,Heads,Sectors) for HDD images\n"
-	        "  -size      specify geometry (BytesPerSector,Sectors,Heads,Cylinders)\n"
-	        "             Alternative to -chs for HDD images\n"
-	        "  -freesize  size_in_mb | size_in_kb\n"
-	        "             Sets the amount of free space available on a drive\n"
-	        "             in megabytes (regular drives) or kilobytes (floppy drives).\n"
-	        "             This is a simpler version of -size.\n"
-	        "  -ro        mount as read-only\n"
-	        "  -pr        path is relative to the configuration file location\n"
-	        "  -t overlay mounts the directory as an overlay on top of the existing drive.\n"
-	        "             All writes are redirected to this directory, leaving the original\n"
-	        "             files untouched.\n"
+	        "Common parameters:\n"
+	        "  [color=white]DRIVE[reset]           drive letter (A-Z) to mount to\n"
+	        "  [color=light-cyan]PATH[reset]            directory on the host OS (absolute or relative path)\n"
+	        "  [color=light-cyan]IMAGEFILE[reset]       image file on the host OS (absolute or relative path) or on a\n"
+	        "                  mounted DOS drive (e.g. C:\\GAME.ISO)\n"
+	        "  [color=light-cyan]IMAGE-SET[reset]       ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
+	        "\n"
+	        "  -t [color=white]TYPE[reset]         type of mount: [color=light-cyan]dir[reset], [color=light-cyan]overlay[reset], [color=light-cyan]floppy[reset], [color=light-cyan]hdd[reset], [color=light-cyan]iso[reset] (or [color=light-cyan]cdrom[reset])\n"
+	        "  -fs [color=white]FS[reset]          filesystem: [color=light-cyan]fat[reset], [color=light-cyan]iso[reset], or [color=light-cyan]none[reset] (for bootable images)\n"
+	        "  -label [color=white]LABEL[reset]    volume label to assign to the mounted drive\n"
+	        "  -ro             mount as read-only\n"
+	        "\n"
+	        "Directory mount parameters:\n"
+	        "  -freesize [color=white]SIZE[reset]  size (in KB for floppies, in MB for hard disks); sets the\n"
+	        "                  amount of free space available on the drive (~250 MB by\n"
+	        "                  default for HDD directory mounts)\n"
+	        "  -t [color=light-cyan]overlay[reset]      mounts the directory as an overlay on top of an existing drive\n"
+	        "\n"
+	        "Image parameters:\n"
+	        "  -chs [color=white]C,H,S[reset]      specify geometry ([color=white]C[reset]ylinders,[color=white]H[reset]eads,[color=white]S[reset]ectors) for HDD images\n"
+	        "  -size [color=white]B,S,H,C[reset]   specify geometry ([color=white]B[reset]ytesPerSector,[color=white]S[reset]ectors,[color=white]H[reset]eads,[color=white]C[reset]ylinders);\n"
+	        "                  alternative to -chs for HDD images\n"
+	        "  -ide            attach as IDE device (for CD-ROM and HDD images)\n"
+	        "  -pr             path is relative to the configuration file location\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - You can use wildcards to mount multiple images, e.g.:\n"
-	        "      [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n"
-	        "  - [color=yellow]%s+F4[reset] swaps & mounts the next disk image, if provided via wildcards.\n"
-	        "  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful\n"
-	        "    for CD-based games that need a real DOS environment via bootable HDD image.\n"
-	        "  - Type [color=light-cyan]overlay[reset] requires [color=white]DRIVE[reset] to be already mounted. It mounts\n"
-	        "    [color=light-cyan]PATH[reset] as a write-layer over the drive. Modified files are stored\n"
-	        "    in [color=light-cyan]PATH[reset], leaving the original drive data unchanged.\n"
+	        "  - Use wildcards or multiple image files to mount them at the same drive\n"
+	        "    letter, then press [color=yellow]%s+F4[reset] to cycle between them. This is useful for\n"
+	        "    programs that require swapping disks while running.\n"
+	        "\n"
+	        "  - The -ide flag emulates an IDE controller for an attached HDD or CD drive\n"
+	        "    for CD-based games that need a real DOS environment via a bootable HDD\n"
+	        "    image.\n"
+	        "\n"
+	        "  - Type [color=light-cyan]overlay[reset] requires [color=white]DRIVE[reset] to be already mounted. It mounts [color=light-cyan]PATH[reset] on the\n"
+	        "    host OS as a write-layer over the drive. Modified files are stored in [color=light-cyan]PATH[reset],\n"
+	        "    leaving the original drive data unchanged.\n"
 	        "\n"
 	        "Examples:\n");
+
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG_WIN32",
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\\dosgames[reset]\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\\dosgamesoverlay[reset] -t overlay\n"
 	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\Games\\doom.iso[reset] -t iso\n"
 	        "  [color=light-green]mount[reset] [color=white]2[reset] [color=light-cyan]Win95.img[reset] -t hdd -fs none -chs 304,64,63\n"
 	        "  [color=light-green]mount[reset] [color=white]0[reset] [color=light-cyan]floppy.img[reset] -t floppy -fs none\n"
-	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n");
+	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n"
+	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n");
+
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG_MACOSX",
+	        "  (~ is expanded to your home directory)\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgamesoverlay[reset] -t overlay\n"
 	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]~/Games/doom.iso[reset] -t iso\n"
 	        "  [color=light-green]mount[reset] [color=white]2[reset] [color=light-cyan]Win95.img[reset] -t hdd -fs none -chs 304,64,63\n"
 	        "  [color=light-green]mount[reset] [color=white]0[reset] [color=light-cyan]floppy.img[reset] -t floppy -fs none\n"
-	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n");
+	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
+	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n");
+
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG_OTHER",
+	        "  (~ is expanded to your home directory)\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgamesoverlay[reset] -t overlay\n"
 	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]~/Games/doom.iso[reset] -t iso\n"
 	        "  [color=light-green]mount[reset] [color=white]2[reset] [color=light-cyan]Win95.img[reset] -t hdd -fs none -chs 304,64,63\n"
 	        "  [color=light-green]mount[reset] [color=white]0[reset] [color=light-cyan]floppy.img[reset] -t floppy -fs none\n"
-	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n");
+	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
+	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n");
 
 	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND", "CD-ROMs found: %d\n");
 	MSG_Add("PROGRAM_MOUNT_ERROR_1", "Directory or file %s doesn't exist.\n");
+
 	MSG_Add("PROGRAM_MOUNT_ERROR_2",
 	        "%s isn't a directory or valid image file.\n");
+
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s\n");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED", "Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED", "Drive %c isn't mounted.\n");
+
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCESS",
 	        "Drive %c has successfully been removed.\n");
+
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL",
 	        "Virtual Drives can not be unMOUNTed.\n");
+
 	MSG_Add("PROGRAM_MOUNT_DRIVEID_ERROR",
 	        "'%c' is not a valid drive identifier.\n");
+
 	MSG_Add("PROGRAM_MOUNT_WARNING_WIN",
 	        "[color=light-red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
+
 	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER",
 	        "[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
+
 	MSG_Add("PROGRAM_MOUNT_NO_OPTION",
 	        "Warning: Ignoring unsupported option '%s'.\n");
+
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_NO_BASE",
 	        "A normal directory needs to be MOUNTed first before an overlay can be added on\n"
 	        "top.\n");
+
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE",
 	        "The overlay is NOT compatible with the drive that is specified.\n");
+
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_MIXED_BASE",
 	        "The overlay needs to be specified using the same addressing as the underlying\n"
 	        "drive. No mixing of relative and absolute paths.\n");
+
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE",
 	        "The overlay directory can not be the same as underlying drive.\n");
+
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR", "Something went wrong.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS", "Overlay %s on drive %c mounted.\n");
+
 	MSG_Add("PROGRAM_MOUNT_INVALID_CHS",
 	        "Invalid CHS format. Use -chs cylinders,heads,sectors\n");
+
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_REL_ABS",
 	        "The overlay needs to be specified using the same addressing as the underlying\n"
 	        "drive. No mixing of relative and absolute paths.\n");
+
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_FS",
 	        "The overlay needs to be on the same filesystem as the underlying drive.\n");
+
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_UNKNOWN_ERROR", "Something went wrong.\n");
 
 	// IMGMOUNT merged messages
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2",
 	        "Must specify a drive letter A/B/C/D or drive number 0/1/2/3 to mount image at.\n");
+
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY",
 	        "For hard drive images, drive geometry must be specified:\n"
 	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -chs Cylinders,Heads,Sectors\n"
@@ -1170,18 +1211,28 @@ void MOUNT::AddMessages()
 	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -t iso\n");
 
 	MSG_Add("PROGRAM_IMGMOUNT_STATUS_NONE", "No drive available.\n");
+
 	MSG_Add("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE",
 	        "No available IDE controllers. Drive will not have IDE emulation.\n");
+
 	MSG_Add("PROGRAM_IMGMOUNT_INVALID_IMAGE",
 	        "Could not load image file.\n"
 	        "Check that the path is correct and the image is accessible.\n");
+
 	MSG_Add("PROGRAM_IMGMOUNT_INVALID_GEOMETRY",
 	        "Could not extract drive geometry from image.\n"
 	        "Use parameter -chs Cylinders,Heads,Sectors to specify the geometry.\n"
 	        "Alternatively: -size BytesPerSector,Sectors,Heads,Cylinders\n");
+
 	MSG_Add("PROGRAM_IMGMOUNT_FILE_NOT_FOUND", "Image file not found.\n");
+
 	MSG_Add("PROGRAM_IMGMOUNT_ALREADY_MOUNTED",
 	        "Drive already mounted at that letter.\n");
+
 	MSG_Add("PROGRAM_IMGMOUNT_CANT_CREATE", "Can't create drive from file.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER", "Drive number %d mounted as %s.\n");
+
+	MSG_Add("PROGRAM_IMGMOUNT_DEPRECATED",
+	        "[color=yellow]Note: 'imgmount' is deprecated.[reset]\n"
+	        "Use 'mount' for both directories and disk images.");
 }

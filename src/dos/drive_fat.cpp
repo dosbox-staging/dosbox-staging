@@ -630,11 +630,11 @@ uint32_t fatDrive::getAbsoluteSectFromChain(uint32_t startClustNum, uint32_t log
 				if(testvalue >= 0xfffffff8) isEOF = true;
 				break;
 		}
-		if(isEOF && (skipClust >= 1)) {
-			//LOG_MSG("End of cluster chain reached before end of logical sector seek!");
+		if (isEOF && (skipClust >= 1)) {
 			if (skipClust == 1 && fattype == FAT12) {
 				//break;
-				LOG(LOG_DOSMISC, LOG_ERROR)("End of cluster chain reached, but maybe good after all ?");
+				LOG(LOG_DOSMISC,
+				    LOG_WARN)("End of cluster chain reached.");
 			}
 			return 0;
 		}
@@ -907,7 +907,7 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 			} else {
 				/* Unknown format */
 				created_successfully = false;
-				LOG_WARNING("DOS: MOUNT - Unknown floppy format detected (media descriptor 0x%02x)!",
+				LOG_WARNING("DOS: MOUNT - Unknown floppy format detected (media descriptor 0x%02x).",
 				            mdesc);
 				return;
 			}
@@ -916,7 +916,7 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 
 	if ((bootbuffer.magic1 != 0x55) || (bootbuffer.magic2 != 0xaa)) {
 		/* Not a FAT filesystem */
-		LOG_MSG("Loaded image has no valid magicnumbers at the end!");
+		LOG_MSG("Loaded image has no valid magicnumbers at the end.");
 	}
 
 	/* Sanity checks */
@@ -929,49 +929,49 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 	}
 	if (bootbuffer.bytespersector != BytePerSector) {
 		created_successfully = false;
-		LOG_WARNING("DOS: MOUNT - Bytes Per Sector mismatch: expected %u, got %u",
-		        BytePerSector,
-		        bootbuffer.bytespersector);
+		LOG_WARNING("DOS: MOUNT - Bytes Per Sector mismatch: expected %u, got %u.",
+		            BytePerSector,
+		            bootbuffer.bytespersector);
 		return;
 	}
 	if (bootbuffer.sectorspercluster == 0) {
 		created_successfully = false;
-		LOG_WARNING("DOS: MOUNT - Loaded image has zero sectors per cluster!");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero sectors per cluster.");
 		return;
 	}
 	if (bootbuffer.rootdirentries == 0) {
 		created_successfully = false;
-		LOG_WARNING("DOS: MOUNT - Loaded image has zero root directory entries!");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero root directory entries.");
 		return;
 	}
 	if (bootbuffer.fatcopies == 0) {
 		created_successfully = false;
-		LOG_WARNING("DOS: MOUNT - Loaded image has zero FAT copies!");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero FAT copies.");
 		return;
 	}
 	/* Check geometry values */
 	if (bootbuffer.headcount == 0) {
 		created_successfully = false;
-		LOG_WARNING("DOS: MOUNT - Loaded image has zero heads per cylinder!");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero heads per cylinder.");
 		return;
 	}
 	if (bootbuffer.headcount > headscyl) {
 		created_successfully = false;
-		LOG_WARNING("DOS: MOUNT - Loaded image has more heads per cylinder (%u) than the disk geometry allows (%u)!",
-		        bootbuffer.headcount,
-		        headscyl);
+		LOG_WARNING("DOS: MOUNT - Loaded image has more heads per cylinder (%u) than the disk geometry allows (%u).",
+		            bootbuffer.headcount,
+		            headscyl);
 		return;
 	}
 	if (bootbuffer.sectorspertrack == 0) {
 		created_successfully = false;
-		LOG_WARNING("DOS: MOUNT - Loaded image has zero sectors per track!");
+		LOG_WARNING("DOS: MOUNT - Loaded image has zero sectors per track.");
 		return;
 	}
 	if (bootbuffer.sectorspertrack > cylsector) {
 		created_successfully = false;
-		LOG_WARNING("DOS: MOUNT - Loaded image has more sectors per track (%u) than the disk geometry allows (%u)!",
-		        bootbuffer.sectorspertrack,
-		        cylsector);
+		LOG_WARNING("DOS: MOUNT - Loaded image has more sectors per track (%u) than the disk geometry allows (%u).",
+		            bootbuffer.sectorspertrack,
+		            cylsector);
 		return;
 	}
 
@@ -1264,7 +1264,7 @@ bool fatDrive::FindFirst(const char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) 
 		return true;
 	}
 	if (FatAttributeFlags(attr).volume) //check for root dir or fcb_findfirst
-		LOG(LOG_DOSMISC,LOG_WARN)("findfirst for volumelabel used on fatDrive. Unhandled!!!!!");
+		LOG(LOG_DOSMISC,LOG_WARN)("findfirst for volumelabel used on fatDrive. Unhandled.");
 #endif
 	if(!getDirClustNum(_dir, &cwdDirCluster, false)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
