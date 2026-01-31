@@ -11,8 +11,8 @@ target_sources(libdosboxcommon PRIVATE
   render/render.cpp
   render/scaler/scalers.cpp
   render/sdl_renderer.cpp
+  render/shader.cpp
   render/shader_manager.cpp
-  render/shader_pass.cpp
 )
 
 target_link_libraries(libdosboxcommon PRIVATE
