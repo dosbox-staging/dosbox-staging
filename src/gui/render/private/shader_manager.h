@@ -9,7 +9,7 @@
 #include <utility>
 
 #include "gui/private/common.h"
-#include "shader.h"
+#include "shader_common.h"
 
 /*
  * Shader manager for loading shader and shader presets.
