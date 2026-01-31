@@ -5,7 +5,7 @@
 #define DOSBOX_RENDER_BACKEND_H
 
 #include "gui/private/common.h"
-#include "gui/private/shader_manager.h"
+#include "gui/render/private/shader_manager.h"
 
 #include <string>
 

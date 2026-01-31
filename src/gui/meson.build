@@ -4,7 +4,6 @@ libgui_sources = files(
     'mapper.cpp',
     'mapper.cpp',
     'sdl_gui.cpp',
-    'shader_manager.cpp',
     'titlebar.cpp',
 
     'render/deinterlacer.cpp',
@@ -12,6 +11,7 @@ libgui_sources = files(
     'render/render.cpp',
     'render/scaler/scalers.cpp',
     'render/sdl_renderer.cpp',
+    'render/shader_manager.cpp',
     'render/shader_pass.cpp'
 )
 

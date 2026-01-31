@@ -6,7 +6,6 @@
 #if C_OPENGL
 
 #include "gui/private/common.h"
-#include "gui/private/shader_manager.h"
 #include "private/shader_pass.h"
 
 #include "capture/capture.h"
