@@ -510,7 +510,7 @@ static CrtColorProfile to_crt_color_profile_enum(const std::string& setting)
 	if (setting == "auto") {
 		return Auto;
 
-	} else if (setting == "none") {
+	} else if (has_false(setting)) {
 		return None;
 
 	} else if (setting == "ebu") {
