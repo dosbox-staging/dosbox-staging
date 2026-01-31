@@ -1,10 +1,10 @@
 target_sources(libdosboxcommon PRIVATE
-  auto_image_adjustments.cpp
   clipboard.cpp
   mapper.cpp
   sdl_gui.cpp
   titlebar.cpp
 
+  render/auto_image_adjustments.cpp
   render/deinterlacer.cpp
   render/opengl_renderer.cpp
   render/render.cpp
