@@ -24,10 +24,57 @@
 
 CHECK_NARROWING();
 
-std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
-        const std::string& shader_name, const std::string& extension)
+// #define DEBUG_SHADER_MANAGER
+
+ShaderManager::ShaderManager() {}
+
+ShaderManager::~ShaderManager()
 {
-	auto maybe_shader_source = FindShaderAndReadSource(shader_name + extension);
+	for (auto& [_, shader] : shader_cache) {
+		glDeleteProgram(shader.program_object);
+	}
+	shader_cache.clear();
+}
+
+std::optional<Shader> ShaderManager::LoadShader(const std::string& shader_name)
+{
+	if (!shader_cache.contains(shader_name)) {
+		const auto maybe_shader = LoadAndBuildShader(shader_name);
+		if (!maybe_shader) {
+			return {};
+		}
+		const auto& shader = *maybe_shader;
+
+		shader_cache[shader.info.name] = shader;
+
+#ifdef DEBUG_SHADER_MANAGER
+		LOG_DEBUG("OPENGL: Built and cached shader '%s'",
+		          shader_name.c_str());
+#endif
+
+	} else {
+#ifdef DEBUG_SHADER_MANAGER
+		LOG_DEBUG("OPENGL: Using cached shader '%s'", shader_name.c_str());
+#endif
+	}
+
+	return shader_cache[shader_name];
+}
+
+std::optional<Shader> ShaderManager::ForceReloadShader(const std::string& shader_name)
+{
+	if (shader_cache.contains(shader_name)) {
+		glDeleteProgram(shader_cache[shader_name].program_object);
+		shader_cache.erase(shader_name);
+	}
+	return LoadAndBuildShader(shader_name);
+}
+
+std::optional<Shader> ShaderManager::LoadAndBuildShader(const std::string& shader_name)
+{
+	constexpr auto GlslExtension = ".glsl";
+
+	auto maybe_shader_source = FindShaderAndReadSource(shader_name + GlslExtension);
 	if (!maybe_shader_source) {
 		// List all the existing shaders for the user
 		// TODO convert to notification
@@ -46,18 +93,64 @@ std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
 
 	const bool is_adaptive = [&] {
 		// TODO why?
-//		if (current_shader.mode == ShaderMode::Single) {
-//			return false;
-//		} else {
-			// This will turn off vertical integer scaling for the
-			// 'sharp' shader in 'integer_scaling = auto' mode
-			return (shader_name != ShaderName::Sharp);
-//		}
+		//		if (current_shader.mode == ShaderMode::Single) {
+		//			return false;
+		//		} else {
+		// This will turn off vertical integer scaling for the
+		// 'sharp' shader in 'integer_scaling = auto' mode
+		return (shader_name != ShaderName::Sharp);
+		//		}
 	}();
 
-	const ShaderInfo shader_info = {shader_name, default_preset, is_adaptive};
+	Shader shader = {};
+	shader.info   = {shader_name, default_preset, is_adaptive};
 
-	return std::pair{shader_info, shader_source};
+	if (!shader.BuildShaderProgram(shader_source)) {
+		return {};
+	}
+	return shader;
+}
+
+ShaderPreset ShaderManager::LoadShaderPresetOrDefault(const ShaderDescriptor& descriptor)
+{
+	assert(!descriptor.shader_name.empty());
+
+	assert(shader_cache.contains(descriptor.shader_name));
+
+	const auto& default_preset = shader_cache[descriptor.shader_name].info.default_preset;
+	if (descriptor.preset_name.empty()) {
+#ifdef DEBUG_SHADER_MANAGER
+		LOG_DEBUG("OPENGL: Using default shader preset",
+		          descriptor.ToString().c_str());
+#endif
+		return default_preset;
+	}
+
+	const auto cache_key = descriptor.ToString();
+
+	if (!shader_preset_cache.contains(cache_key)) {
+		const auto maybe_preset = LoadShaderPreset(descriptor, default_preset);
+		if (!maybe_preset) {
+			LOG_WARNING("OPENGL: Error loading shader preset '%s'; using default preset",
+			            descriptor.ToString().c_str());
+			return default_preset;
+		}
+
+		shader_preset_cache[cache_key] = *maybe_preset;
+
+#ifdef DEBUG_SHADER_MANAGER
+		LOG_DEBUG("OPENGL: Loaded and cached shader preset '%s'",
+		          descriptor.ToString().c_str());
+#endif
+
+	} else {
+#ifdef DEBUG_SHADER_MANAGER
+		LOG_DEBUG("OPENGL: Using cached shader preset '%s'",
+		          descriptor.ToString().c_str());
+#endif
+	}
+
+	return shader_preset_cache[cache_key];
 }
 
 std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(

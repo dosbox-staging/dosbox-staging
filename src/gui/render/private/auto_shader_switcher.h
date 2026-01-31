@@ -40,8 +40,7 @@ public:
 	 * Notify the auto shader switcher that the current shader has been
 	 * changed by the user.
 	 */
-	void NotifyShaderChanged(const std::string& shader_descriptor,
-	                         const std::string& extension);
+	void NotifyShaderChanged(const std::string& shader_descriptor);
 
 	/*
 	 * Notify the auto shader switcher that the viewport area or the current
