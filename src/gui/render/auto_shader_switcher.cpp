@@ -34,13 +34,13 @@ static ShaderDescriptor parse_shader_descriptor(const std::string& descriptor,
 	return {path.string(), preset_name};
 }
 
-void AutoShaderSwitcher::NotifyShaderChanged(const std::string& shader_descriptor,
-                                             const std::string& extension)
+void AutoShaderSwitcher::NotifyShaderChanged(const std::string& shader_descriptor)
 {
 	assert(!shader_descriptor.empty());
-	assert(!extension.empty());
 
-	const auto descriptor = parse_shader_descriptor(shader_descriptor, extension);
+	constexpr auto GlslExtension = ".glsl";
+	const auto descriptor = parse_shader_descriptor(shader_descriptor,
+	                                                GlslExtension);
 
 	const auto shader_name = MapShaderName(descriptor.shader_name);
 
