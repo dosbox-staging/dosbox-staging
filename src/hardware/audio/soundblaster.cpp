@@ -3372,7 +3372,7 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 			case SbType::None: return OplMode::None;
 			}
 		}
-		// "falsey" setting ("off", "none", "false", etc.)
+		assert(has_false(pref));
 		return OplMode::None;
 
 	} else {
