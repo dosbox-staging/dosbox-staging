@@ -10,7 +10,7 @@
 #include <memory>
 #include <mutex>
 
-#include "gui/private/auto_image_adjustments.h"
+#include "private/auto_image_adjustments.h"
 
 #include "capture/capture.h"
 #include "config/config.h"
