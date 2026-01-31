@@ -91,7 +91,9 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 	const auto filename_s = resolve_home(filename).string();
 	tmpfile = fopen(filename_s.c_str(), "rb+");
 
-	auto fseek_in_tmpfile = make_check_fseek_func("BOOT", "image", filename);
+	// Used for logging in check_fseek()
+	constexpr auto ModuleName = "BOOT";
+	constexpr auto FileDescription = "image";
 
 	if (!tmpfile) {
 		if ((tmpfile = fopen(filename_s.c_str(), "rb"))) {
@@ -100,7 +102,7 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 			//				fclose(tmpfile);
 			//				if (tryload) error = 2;
 			WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
-			if (!fseek_in_tmpfile(tmpfile, 0L, SEEK_END)) {
+			if (!check_fseek(ModuleName, FileDescription, filename, tmpfile, 0L, SEEK_END)) {
 				return nullptr;
 			}
 			*ksize = (ftell(tmpfile) / 1024);
@@ -115,7 +117,7 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 			WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
 		return nullptr;
 	}
-	if (!fseek_in_tmpfile(tmpfile, 0L, SEEK_END)) {
+	if (!check_fseek(ModuleName, FileDescription, filename, tmpfile, 0L, SEEK_END)) {
 		return nullptr;
 	}
 	*ksize = (ftell(tmpfile) / 1024);
@@ -280,8 +282,9 @@ void BOOT::Run(void)
 			uint8_t rombuf[65536];
 			Bits cfound_at = -1;
 
-			auto fseek_in_usefile = make_check_fseek_func(
-			        "BOOT", "cartridge", temp_line.c_str());
+			// Used for logging in check_fseek()
+			constexpr auto ModuleName = "BOOT";
+			constexpr auto FileDescription = "cartridge";
 
 			if (!cart_cmd.empty()) {
 				if (!usefile_1) {
@@ -290,7 +293,7 @@ void BOOT::Run(void)
 				}
 				/* read cartridge data into buffer */
 				constexpr auto seek_pos = 0x200;
-				if (!fseek_in_usefile(usefile_1, seek_pos, SEEK_SET)) {
+				if (!check_fseek(ModuleName, FileDescription, temp_line.c_str(), usefile_1, seek_pos, SEEK_SET)) {
 					return;
 				}
 				const auto rom_bytes_expected = rombytesize_1 - 0x200;
@@ -382,9 +385,7 @@ void BOOT::Run(void)
 			constexpr auto rom_filename = "system.rom";
 			FILE* tfile = getFSFile(rom_filename, &sz1, &sz2, true);
 			if (tfile != nullptr) {
-				auto fseek_in_rom = make_check_fseek_func(
-				        "BOOT", "system ROM", rom_filename);
-				if (!fseek_in_rom(tfile, 0x3000L, SEEK_SET)) {
+				if (!check_fseek("BOOT", "system ROM", rom_filename, tfile, 0x3000L, SEEK_SET)) {
 					return;
 				}
 				auto drd = (uint32_t)fread(rombuf, 1, 0xb000, tfile);
@@ -396,7 +397,7 @@ void BOOT::Run(void)
 			}
 
 			if (usefile_2 != nullptr) {
-				if (!fseek_in_usefile(usefile_2, 0x0L, SEEK_SET)) {
+				if (!check_fseek(ModuleName, FileDescription, temp_line.c_str(), usefile_2, 0x0L, SEEK_SET)) {
 					return;
 				}
 				if (fread(rombuf, 1, 0x200, usefile_2) < 0x200) {
@@ -408,7 +409,7 @@ void BOOT::Run(void)
 				PhysPt romseg_pt = host_readw(&rombuf[0x1ce]) << 4;
 
 				/* read cartridge data into buffer */
-				if (!fseek_in_usefile(usefile_2, 0x200L, SEEK_SET)) {
+				if (!check_fseek(ModuleName, FileDescription, temp_line.c_str(), usefile_2, 0x200L, SEEK_SET)) {
 					return;
 				}
 				if (fread(rombuf, 1, rombytesize_2 - 0x200, usefile_2) <
@@ -427,7 +428,7 @@ void BOOT::Run(void)
 					phys_writeb(romseg_pt + i, rombuf[i]);
 			}
 
-			if (!fseek_in_usefile(usefile_1, 0x0L, SEEK_SET)) {
+			if (!check_fseek(ModuleName, FileDescription, temp_line.c_str(), usefile_1, 0x0L, SEEK_SET)) {
 				return;
 			}
 			if (fread(rombuf, 1, 0x200, usefile_1) < 0x200) {
@@ -439,7 +440,7 @@ void BOOT::Run(void)
 			uint16_t romseg = host_readw(&rombuf[0x1ce]);
 
 			/* read cartridge data into buffer */
-			if (!fseek_in_usefile(usefile_1, 0x200L, SEEK_SET)) {
+			if (!check_fseek(ModuleName, FileDescription, temp_line.c_str(), usefile_1, 0x200L, SEEK_SET)) {
 				return;
 			}
 			if (fread(rombuf, 1, rombytesize_1 - 0x200, usefile_1) <
