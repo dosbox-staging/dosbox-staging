@@ -382,27 +382,28 @@ double JOYSTICK_GetMove_Y(uint8_t which)
 void JOYSTICK_ParseConfiguredType()
 {
 	const auto conf    = get_joystick_section();
-	const auto section = static_cast<SectionProp *>(conf);
-	const auto type = section->GetString("joysticktype");
+	const auto section = static_cast<SectionProp*>(conf);
+	const auto type    = section->GetString("joysticktype");
 
-	if (type == "disabled")
+	if (has_false(type)) {
 		joytype = JOY_DISABLED;
-	else if (type == "hidden")
+	} else if (type == "hidden") {
 		joytype = JOY_ONLY_FOR_MAPPING;
-	else if (type == "auto")
+	} else if (type == "auto") {
 		joytype = JOY_AUTO;
-	else if (type == "2axis")
+	} else if (type == "2axis") {
 		joytype = JOY_2AXIS;
-	else if (type == "4axis")
+	} else if (type == "4axis") {
 		joytype = JOY_4AXIS;
-	else if (type == "4axis_2")
+	} else if (type == "4axis_2") {
 		joytype = JOY_4AXIS_2;
-	else if (type == "fcs")
+	} else if (type == "fcs") {
 		joytype = JOY_FCS;
-	else if (type == "ch")
+	} else if (type == "ch") {
 		joytype = JOY_CH;
-	else
+	} else {
 		joytype = JOY_AUTO;
+	}
 
 	assert(joytype != JOY_UNSET);
 }
