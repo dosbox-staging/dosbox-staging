@@ -2170,13 +2170,13 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 
 			assert(s.pos >= 0.0f && s.pos <= 1.0f);
 			AudioFrame lerped_frame = {};
-			lerped_frame.left       = lerp(s.last_frame.left,
-                                                 curr_frame.left,
-                                                 s.pos);
+			lerped_frame.left       = std::lerp(s.last_frame.left,
+			                                    curr_frame.left,
+			                                    s.pos);
 
-			lerped_frame.right = lerp(s.last_frame.right,
-			                          curr_frame.right,
-			                          s.pos);
+			lerped_frame.right = std::lerp(s.last_frame.right,
+			                               curr_frame.right,
+			                               s.pos);
 
 			audio_frames.push_back(lerped_frame);
 

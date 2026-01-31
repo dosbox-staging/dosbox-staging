@@ -280,12 +280,6 @@ constexpr float percentage_to_gain(const float percentage)
 }
 
 template <typename T>
-constexpr T lerp(const T a, const T b, const T t)
-{
-	return a * (1 - t) + b * t;
-}
-
-template <typename T>
 constexpr T invlerp(const T a, const T b, const T v)
 {
 	return (v - a) / (b - a);
@@ -296,7 +290,7 @@ constexpr T remap(const T in_min, const T in_max, const T out_min,
                   const T out_max, const T v)
 {
 	const auto t = invlerp(in_min, in_max, v);
-	return lerp(out_min, out_max, t);
+	return std::lerp(out_min, out_max, t);
 }
 
 inline std::vector<uint8_t> ascii_to_bcd(const std::string& string)
@@ -314,10 +308,7 @@ inline std::vector<uint8_t> ascii_to_bcd(const std::string& string)
 	return bcd;
 }
 
-// Explicit instantiations for lerp, invlerp, and remap
-
-template float lerp<float>(const float a, const float b, const float t);
-template double lerp<double>(const double a, const double b, const double t);
+// Explicit instantiations for invlerp and remap
 
 template float invlerp<float>(const float a, const float b, const float v);
 template double invlerp<double>(const double a, const double b, const double v);

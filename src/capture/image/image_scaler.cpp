@@ -321,9 +321,9 @@ void ImageScaler::GenerateNextSharpUpscaledOutputRow()
 		                        0.0f) *
 		               output.horiz_scale;
 
-		const auto out_r = lerp(r0, r1, t);
-		const auto out_g = lerp(g0, g1, t);
-		const auto out_b = lerp(b0, b1, t);
+		const auto out_r = std::lerp(r0, r1, t);
+		const auto out_g = std::lerp(g0, g1, t);
+		const auto out_b = std::lerp(b0, b1, t);
 
 		*out++ = linear_to_srgb8_lut(out_r);
 		*out++ = linear_to_srgb8_lut(out_g);
