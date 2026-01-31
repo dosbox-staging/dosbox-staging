@@ -1326,7 +1326,7 @@ public:
 					delete serialports[i];
 					serialports[i] = nullptr;
 				}
-			} else if (type == "disabled") {
+			} else if (has_false(type)) {
 				serialports[i] = nullptr;
 			} else {
 				serialports[i] = nullptr;
