@@ -509,7 +509,7 @@ static DiskNoiseMode get_disk_noise_mode(const std::string& mode)
 	} else if (mode == "seek-only") {
 		return DiskNoiseMode::SeekOnly;
 	} else {
-        assert(mode == "off");
+        assert(has_false(mode));
 		return DiskNoiseMode::Off;
 	}
 }
