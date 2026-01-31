@@ -3,7 +3,7 @@
 
 #include "private/auto_image_adjustments.h"
 
-#include "private/shader_manager.h"
+#include "render/private/shader_manager.h"
 
 #include "utils/checks.h"
 
