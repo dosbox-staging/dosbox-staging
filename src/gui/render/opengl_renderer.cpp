@@ -6,6 +6,7 @@
 #if C_OPENGL
 
 #include "gui/private/common.h"
+#include "private/auto_shader_switcher.h"
 #include "private/shader_pass.h"
 
 #include "capture/capture.h"
@@ -311,7 +312,7 @@ void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 		return;
 	}
 
-	const auto new_descriptor = ShaderManager::GetInstance().NotifyRenderParametersChanged(
+	const auto new_descriptor = AutoShaderSwitcher::GetInstance().NotifyRenderParametersChanged(
 	        curr_shader_descriptor, canvas_size_px, video_mode);
 
 	HandleShaderAndPresetChangeViaNotify(new_descriptor);
@@ -642,7 +643,7 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 {
 	using enum OpenGlRenderer::SetShaderResult;
 
-	const auto new_descriptor = ShaderManager::GetInstance().NotifyShaderChanged(
+	const auto new_descriptor = AutoShaderSwitcher::GetInstance().NotifyShaderChanged(
 	        new_symbolic_shader_descriptor, GlslExtension);
 
 	const auto curr_descriptor = force_reload ? ShaderDescriptor{"", ""}
@@ -690,6 +691,9 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 
 void OpenGlRenderer::ForceReloadCurrentShader()
 {
+	LOG_MSG("RENDER: Reloading shader '%s'",
+	        curr_shader_descriptor.ToString().c_str());
+
 	// Save shader & shader preset for later
 	const auto shader_key = curr_shader_descriptor.shader_name;
 	assert(shader_cache.contains(shader_key));
@@ -706,9 +710,6 @@ void OpenGlRenderer::ForceReloadCurrentShader()
 	// Delete them from the caches
 	shader_cache.erase(shader_key);
 	shader_preset_cache.erase(shader_preset_key);
-
-	LOG_MSG("RENDER: Reloading shader '%s'",
-	        curr_shader_descriptor.ToString().c_str());
 
 	constexpr auto ForceReload = true;
 
@@ -753,7 +754,7 @@ void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 	assert(video_mode.width > 0 && video_mode.height > 0);
 
 	// Handle shader auto-switching
-	const auto new_descriptor = ShaderManager::GetInstance().NotifyRenderParametersChanged(
+	const auto new_descriptor = AutoShaderSwitcher::GetInstance().NotifyRenderParametersChanged(
 	        curr_shader_descriptor, canvas_size_px, video_mode);
 
 	HandleShaderAndPresetChangeViaNotify(new_descriptor);
@@ -959,8 +960,8 @@ void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 
 void OpenGlRenderer::UpdateImageAdjustmentsPassUniforms()
 {
-	auto& pass = GetShaderPass(ShaderPassId::ImageAdjustments);
-	const auto& s    = image_adjustment_settings;
+	auto& pass    = GetShaderPass(ShaderPassId::ImageAdjustments);
+	const auto& s = image_adjustment_settings;
 
 	glUseProgram(pass.shader.program_object);
 
