@@ -196,7 +196,7 @@ static void validate_vsync_and_presentation_mode_settings()
 	        "presentation_mode");
 
 	if (presentation_mode_pref == "dos-rate" &&
-	    (vsync_pref == "on" || vsync_pref == "fullscreen-only")) {
+	    (has_true(vsync_pref) || vsync_pref == "fullscreen-only")) {
 
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "DISPLAY",
