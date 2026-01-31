@@ -521,7 +521,7 @@ static std::optional<FilterType> determine_filter_type(const std::string& filter
 		case SbType::GameBlaster: return FilterType::None;   break;
 		}
 		// clang-format on
-	} else if (filter_choice == "off") {
+	} else if (has_false(filter_choice)) {
 		return FilterType::None;
 
 	} else if (filter_choice == "sb1") {
