@@ -17,15 +17,13 @@
 
 CHECK_NARROWING();
 
-ShaderDescriptor AutoShaderSwitcher::NotifyShaderChanged(const std::string& symbolic_shader_descriptor,
-                                                         const std::string& extension)
+ShaderDescriptor AutoShaderSwitcher::NotifyShaderChanged(const std::string& symbolic_shader_descriptor)
 {
 	assert(!symbolic_shader_descriptor.empty());
-	assert(!extension.empty());
 
-	const auto shader_descriptor = ShaderDescriptor::FromString(symbolic_shader_descriptor,
-	                                                            extension);
-
+	constexpr auto GlslExtension = ".glsl";
+	const auto shader_descriptor = ShaderDescriptor::FromString(
+	        symbolic_shader_descriptor, GlslExtension);
 
 	const auto mapped_shader_name = MapShaderName(shader_descriptor.shader_name);
 
