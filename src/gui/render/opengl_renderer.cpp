@@ -28,8 +28,6 @@ CHECK_NARROWING();
 // #define DEBUG_OPENGL
 // #define USE_DEBUG_CONTEXT
 
-constexpr auto GlslExtension = ".glsl";
-
 constexpr auto ImageAdjustmentsShaderName = "_internal/image-adjustments-pass";
 
 // A safe wrapper around that returns the default result on failure
@@ -197,7 +195,9 @@ bool OpenGlRenderer::InitRenderer()
 
 	glGenFramebuffers(1, &pass1.out_fbo);
 
-	const auto maybe_shader = LoadAndBuildShader(ImageAdjustmentsShaderName);
+	const auto maybe_shader = ShaderManager::GetInstance().LoadShader(
+	        ImageAdjustmentsShaderName);
+
 	if (!maybe_shader) {
 		E_Exit("OPENGL: Cannot load '%s' shader, exiting",
 		       ImageAdjustmentsShaderName);
@@ -239,11 +239,6 @@ OpenGlRenderer::~OpenGlRenderer()
 		}
 		glDeleteFramebuffers(1, &pass.out_fbo);
 	}
-
-	for (auto& [_, shader] : shader_cache) {
-		glDeleteProgram(shader.program_object);
-	}
-	shader_cache.clear();
 
 	if (context) {
 		SDL_GL_DeleteContext(context);
@@ -648,7 +643,7 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 	const auto curr_descriptor = force_reload ? ShaderDescriptor{"", ""}
 	                                          : curr_shader_descriptor;
 
-	shader_switcher.NotifyShaderChanged(new_symbolic_shader_descriptor, GlslExtension);
+	shader_switcher.NotifyShaderChanged(new_symbolic_shader_descriptor);
 
 	const auto new_descriptor = shader_switcher.GetCurrentShaderDescriptor();
 
@@ -690,58 +685,15 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 
 void OpenGlRenderer::ForceReloadCurrentShader()
 {
-	// Save shader & shader preset for later
-	const auto shader_key = curr_shader_descriptor.shader_name;
-	assert(shader_cache.contains(shader_key));
-	const auto saved_shader = shader_cache[shader_key];
-
-	const auto shader_preset_key     = curr_shader_descriptor.ToString();
-	ShaderPreset saved_shader_preset = {};
-
-	if (!curr_shader_descriptor.preset_name.empty()) {
-		assert(shader_preset_cache.contains(shader_preset_key));
-		saved_shader_preset = shader_preset_cache[shader_preset_key];
-	}
-
-	// Delete them from the caches
-	shader_cache.erase(shader_key);
-	shader_preset_cache.erase(shader_preset_key);
-
 	LOG_MSG("RENDER: Reloading shader '%s'",
 	        curr_shader_descriptor.ToString().c_str());
 
+	// Force reload by clearing the shader manager's cache
+	ShaderManager::GetInstance().ForceReloadShader(
+	        curr_shader_descriptor.shader_name);
+
 	constexpr auto ForceReload = true;
-
-	const auto result = SetShaderInternal(curr_symbolic_shader_descriptor,
-	                                      ForceReload);
-
-	using enum OpenGlRenderer::SetShaderResult;
-
-	switch (result) {
-	case Ok:
-		// Delete saved shader program
-		glDeleteProgram(saved_shader.program_object);
-		break;
-
-	case PresetError:
-		// Restore saved preset
-		if (!curr_shader_descriptor.preset_name.empty()) {
-			shader_preset_cache[shader_preset_key] = saved_shader_preset;
-		}
-		break;
-
-	case ShaderError:
-		// Restore saved shader
-		shader_cache[shader_key] = saved_shader;
-
-		// Restore saved preset
-		if (!curr_shader_descriptor.preset_name.empty()) {
-			shader_preset_cache[shader_preset_key] = saved_shader_preset;
-		}
-		break;
-
-	default: assertm(false, "Invalid SetShaderResult value");
-	}
+	SetShaderInternal(curr_symbolic_shader_descriptor, ForceReload);
 }
 
 void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
@@ -797,7 +749,8 @@ bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
 {
 	auto& pass = GetShaderPass(ShaderPassId::Main);
 
-	const auto maybe_shader = GetOrLoadAndCacheShader(shader_name);
+	const auto maybe_shader = ShaderManager::GetInstance().LoadShader(shader_name);
+
 	if (!maybe_shader) {
 		return false;
 	}
@@ -810,121 +763,22 @@ bool OpenGlRenderer::SwitchShaderPresetOrSetDefault(const ShaderDescriptor& desc
 {
 	assert(!descriptor.shader_name.empty());
 
-	auto set_default_preset = [&]() {
-		assert(shader_cache.contains(descriptor.shader_name));
-		auto& default_preset = shader_cache[descriptor.shader_name].info.default_preset;
+	const auto maybe_preset = ShaderManager::GetInstance().LoadShaderPresetOrDefault(
+	        descriptor);
 
-		main_shader_preset = default_preset;
-	};
-
-	if (descriptor.preset_name.empty()) {
-		set_default_preset();
+	if (maybe_preset) {
+		main_shader_preset = *maybe_preset;
+		curr_shader_descriptor.preset_name = main_shader_preset.name;
 		return true;
-
-	} else {
-		if (const auto maybe_preset = GetOrLoadAndCacheShaderPreset(descriptor);
-		    maybe_preset) {
-
-			main_shader_preset = *maybe_preset;
-			return true;
-
-		} else {
-			set_default_preset();
-			curr_shader_descriptor.preset_name.clear();
-			return false;
-		}
 	}
+
+	// Loading failed - use whatever default preset we got
+	main_shader_preset = ShaderManager::GetInstance().GetDefaultPreset(
+	        descriptor.shader_name);
+	curr_shader_descriptor.preset_name.clear();
+	return false;
 }
 
-std::optional<ShaderPreset> OpenGlRenderer::GetOrLoadAndCacheShaderPreset(
-        const ShaderDescriptor& descriptor)
-{
-	assert(!descriptor.shader_name.empty());
-
-	assert(shader_cache.contains(descriptor.shader_name));
-	const auto& default_preset = shader_cache[descriptor.shader_name].info.default_preset;
-
-	const auto cache_key = descriptor.ToString();
-
-	if (!shader_preset_cache.contains(cache_key)) {
-		const auto maybe_preset = ShaderManager::GetInstance().LoadShaderPreset(
-		        descriptor, default_preset);
-
-		if (!maybe_preset) {
-			LOG_ERR("RENDER: Error loading shader preset '%s'; using default preset",
-			        descriptor.ToString().c_str());
-			return {};
-		}
-
-		shader_preset_cache[cache_key] = *maybe_preset;
-
-#ifdef DEBUG_OPENGL
-		LOG_DEBUG("OPENGL: Loaded and cached shader preset '%s'",
-		          descriptor.ToString().c_str());
-#endif
-
-	} else {
-#ifdef DEBUG_OPENGL
-		LOG_DEBUG("OPENGL: Using cached shader preset '%s'",
-		          descriptor.ToString().c_str());
-#endif
-	}
-
-	return shader_preset_cache[cache_key];
-}
-
-std::optional<Shader> OpenGlRenderer::LoadAndBuildShader(const std::string& shader_name)
-{
-
-	auto log_error = [&]() {
-		LOG_ERR("RENDER: Error loading shader '%s'", shader_name.c_str());
-	};
-
-	const auto maybe_result = ShaderManager::GetInstance().LoadShader(
-	        shader_name, GlslExtension);
-
-	if (!maybe_result) {
-		log_error();
-		return {};
-	}
-
-	const auto& [shader_info, shader_source] = *maybe_result;
-	assert(shader_info.name == shader_name);
-
-	Shader shader = {};
-	shader.info   = shader_info;
-
-	if (!shader.BuildShaderProgram(shader_source)) {
-		log_error();
-		return {};
-	}
-	return shader;
-}
-
-std::optional<Shader> OpenGlRenderer::GetOrLoadAndCacheShader(const std::string& shader_name)
-{
-	if (!shader_cache.contains(shader_name)) {
-		const auto maybe_shader = LoadAndBuildShader(shader_name);
-		if (!maybe_shader) {
-			return {};
-		}
-		const auto& shader = *maybe_shader;
-
-		shader_cache[shader.info.name] = shader;
-
-#ifdef DEBUG_OPENGL
-		LOG_DEBUG("OPENGL: Built and cached shader '%s'",
-		          shader_name.c_str());
-#endif
-
-	} else {
-#ifdef DEBUG_OPENGL
-		LOG_DEBUG("OPENGL: Using cached shader '%s'", shader_name.c_str());
-#endif
-	}
-
-	return shader_cache[shader_name];
-}
 
 void OpenGlRenderer::SetVsync(const bool is_enabled)
 {

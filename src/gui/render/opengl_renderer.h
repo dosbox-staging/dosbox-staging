@@ -11,7 +11,6 @@
 #include <array>
 #include <optional>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "private/shader_common.h"
@@ -98,18 +97,8 @@ private:
 
 	bool SwitchShader(const std::string& shader_name);
 
-	std::optional<Shader> LoadAndBuildShader(const std::string& shader_name);
-	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& shader_name);
-
 	bool SwitchShaderPresetOrSetDefault(const ShaderDescriptor& descriptor);
 
-	std::optional<ShaderPreset> GetOrLoadAndCacheShaderPreset(
-	        const ShaderDescriptor& descriptor);
-
-	std::optional<GLuint> BuildShaderProgram(const std::string& source);
-
-	std::optional<GLuint> BuildShader(const GLenum type,
-	                                  const std::string& source) const;
 
 	// ---------------------------------------------------------------------
 	// Common
@@ -178,18 +167,6 @@ private:
 	GLuint CreateTexture();
 	void SetTextureFiltering(const GLuint texture);
 	void RenderPass(const ShaderPass& pass);
-
-	// ---------------------------------------------------------------------
-	// Shader caching & preset management
-	// ---------------------------------------------------------------------
-
-	// Keys are the shader names including the path part but without the
-	// .glsl file extension
-	std::unordered_map<std::string, Shader> shader_cache = {};
-
-	// Keys are the shader names including the path part but without the
-	// .glsl file extension
-	std::unordered_map<std::string, ShaderPreset> shader_preset_cache = {};
 
 	ShaderDescriptor curr_shader_descriptor = {};
 
