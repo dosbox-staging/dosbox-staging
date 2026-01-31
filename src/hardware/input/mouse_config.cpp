@@ -27,8 +27,6 @@ static bool is_serial_mouse_model_read = false;
 
 namespace OptionBuiltInDosDriver {
 
-constexpr auto Off   = "off";
-constexpr auto On    = "on";
 constexpr auto NoTsr = "no-tsr";
 
 } // namespace OptionBuiltInDosDriver
@@ -177,11 +175,11 @@ static void set_dos_driver(const SectionProp& section)
 
 	const auto option_str = section.GetStringLowCase(SettingName);
 
-	if (option_str == OptionBuiltInDosDriver::Off) {
+	if (has_false(option_str)) {
 		mouse_config.dos_driver_autoexec = false;
 		mouse_config.dos_driver_no_tsr   = false;
 
-	} else if (option_str == OptionBuiltInDosDriver::On) {
+	} else if (has_true(option_str)) {
 		if (is_machine_tandy() || is_machine_pcjr()) {
 			// The mouse TSR simulation currently does not work
 			// correctly with PCJr or Tandy memory layout - MCB
@@ -617,13 +615,11 @@ static void init_mouse_config_settings(SectionProp& secprop)
 
 	// Built-in DOS driver configuration
 
-	prop_str = secprop.AddString("builtin_dos_mouse_driver",
-	                             OnlyAtStart,
-	                             OptionBuiltInDosDriver::On);
+	prop_str = secprop.AddString("builtin_dos_mouse_driver", OnlyAtStart, "on");
 	assert(prop_str);
 	prop_str->SetValues({
-		OptionBuiltInDosDriver::Off,
-		OptionBuiltInDosDriver::On,
+		"off",
+		"on",
 		OptionBuiltInDosDriver::NoTsr
 	});
 	prop_str->SetHelp(

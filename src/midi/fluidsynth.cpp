@@ -775,7 +775,7 @@ void MidiDeviceFluidSynth::SetFilter()
 	        "fsynth_filter");
 
 	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
-		if (filter_prefs != "off") {
+		if (!has_false(filter_prefs)) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "FSYNTH",
 			                      "PROGRAM_CONFIG_INVALID_SETTING",

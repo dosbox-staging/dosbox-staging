@@ -445,7 +445,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 		setup_filter(mixer_channel, filter_enabled);
 
 	} else if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
-		if (filter_prefs != "off") {
+		if (!has_false(filter_prefs)) {
 			LOG_WARNING(
 			        "SOUNDCANVAS: Invalid 'soundcanvas_filter' value: '%s', "
 			        "using 'on'",

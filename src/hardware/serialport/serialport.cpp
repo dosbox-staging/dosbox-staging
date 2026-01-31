@@ -242,22 +242,34 @@ void CSerial::handleEvent(uint16_t type)
 		break;
 
 	case SERIAL_ERRMSG_EVENT:
-		LOG_MSG("SERIAL: Port %" PRIu8 " errors:\n"
-		        "  - framing %" PRIu32 "\n"
-		        "  - parity %" PRIu32 "\n"
-		        "  - RX overruns %" PRIu32 "\n"
-		        "  - IF0 overruns: %" PRIu32 "\n"
-		        "  - TX overruns: %" PRIu32 "\n"
-		        "  - break %" PRIu32,
-		        GetPortNumber(), framingErrors, parityErrors,
-		        overrunErrors, overrunIF0, txOverrunErrors, breakErrors);
+		LOG_WARNING("SERIAL: Port %" PRIu8
+		            " errors:\n"
+		            "  - framing %" PRIu32
+		            "\n"
+		            "  - parity %" PRIu32
+		            "\n"
+		            "  - RX overruns %" PRIu32
+		            "\n"
+		            "  - IF0 overruns: %" PRIu32
+		            "\n"
+		            "  - TX overruns: %" PRIu32
+		            "\n"
+		            "  - break %" PRIu32,
+		            GetPortNumber(),
+		            framingErrors,
+		            parityErrors,
+		            overrunErrors,
+		            overrunIF0,
+		            txOverrunErrors,
+		            breakErrors);
+
 		errormsg_pending = false;
-		framingErrors = 0;
-		parityErrors = 0;
-		overrunErrors = 0;
-		txOverrunErrors = 0;
-		overrunIF0 = 0;
-		breakErrors = 0;
+		framingErrors    = 0;
+		parityErrors     = 0;
+		overrunErrors    = 0;
+		txOverrunErrors  = 0;
+		overrunIF0       = 0;
+		breakErrors      = 0;
 		break;
 
 	case SERIAL_RX_TIMEOUT_EVENT:
@@ -719,9 +731,9 @@ void CSerial::Write_MCR(uint8_t data)
 	// WARNING: At the time setRTSDTR is called rts and dsr members are
 	// still wrong.
 	if (data & FIFO_FLOWCONTROL)
-		LOG_MSG("SERIAL: Port %" PRIu8 " warning, tried to activate hardware "
-		        "handshake.",
-		        GetPortNumber());
+		LOG_WARNING("SERIAL: Port %" PRIu8
+		            " warning, tried to activate hardware handshake",
+		            GetPortNumber());
 	bool new_dtr = data & MCR_DTR_MASK? true:false;
 	bool new_rts = data & MCR_RTS_MASK? true:false;
 	bool new_op1 = data & MCR_OP1_MASK? true:false;
@@ -1326,12 +1338,14 @@ public:
 					delete serialports[i];
 					serialports[i] = nullptr;
 				}
-			} else if (type == "disabled") {
+			} else if (has_false(type)) {
 				serialports[i] = nullptr;
 			} else {
 				serialports[i] = nullptr;
-				LOG_MSG("SERIAL: Port %" PRIu8 " invalid type \"%s\".",
-				        static_cast<uint8_t>(i + 1), type.c_str());
+				LOG_WARNING("SERIAL: Port %" PRIu8
+				            " invalid type \"%s\".",
+				            static_cast<uint8_t>(i + 1),
+				            type.c_str());
 			}
 			if(serialports[i]) biosParameter[i] = serial_baseaddr[i];
 		} // for 1-4

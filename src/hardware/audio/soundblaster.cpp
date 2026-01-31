@@ -521,7 +521,7 @@ static std::optional<FilterType> determine_filter_type(const std::string& filter
 		case SbType::GameBlaster: return FilterType::None;   break;
 		}
 		// clang-format on
-	} else if (filter_choice == "off") {
+	} else if (has_false(filter_choice)) {
 		return FilterType::None;
 
 	} else if (filter_choice == "sb1") {
@@ -3325,7 +3325,7 @@ static SbType determine_sb_type(const std::string& pref)
 		return SbType::SB16;
 	}
 
-	// "falsey" setting ("off", "none", "false", etc.)
+	assert(has_false(pref));
 	return SbType::None;
 }
 
@@ -3372,7 +3372,7 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 			case SbType::None: return OplMode::None;
 			}
 		}
-		// "falsey" setting ("off", "none", "false", etc.)
+		assert(has_false(pref));
 		return OplMode::None;
 
 	} else {
