@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "private/shader.h"
+#include "private/shader_common.h"
 #include "private/shader_manager.h"
 #include "private/shader_pass.h"
 
@@ -96,11 +96,8 @@ private:
 
 	bool SwitchShader(const std::string& shader_name);
 
-	std::optional<Shader> LoadAndBuildShader(ShaderPass& pass,
-	                                         const std::string& shader_name);
-
-	std::optional<Shader> GetOrLoadAndCacheShader(ShaderPass& pass,
-	                                              const std::string& shader_name);
+	std::optional<Shader> LoadAndBuildShader(const std::string& shader_name);
+	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& shader_name);
 
 	void SwitchShaderPresetOrSetDefault(const ShaderDescriptor& descriptor);
 
