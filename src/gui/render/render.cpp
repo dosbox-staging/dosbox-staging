@@ -11,6 +11,7 @@
 #include <mutex>
 
 #include "private/auto_image_adjustments.h"
+#include "private/auto_shader_switcher.h"
 
 #include "capture/capture.h"
 #include "config/config.h"
@@ -842,7 +843,7 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 	}
 
 	const auto shader_descriptor =
-	        ShaderManager::GetInstance().GetCurrentShaderDescriptor();
+	        AutoShaderSwitcher::GetInstance().GetCurrentShaderDescriptor();
 
 	LOG_MSG("RENDER: Reloading shader '%s'",
 	        shader_descriptor.ToString().c_str());

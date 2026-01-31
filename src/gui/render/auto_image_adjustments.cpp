@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "private/auto_image_adjustments.h"
-#include "private/shader_manager.h"
+
+#include "private/auto_shader_switcher.h"
 
 #include "utils/checks.h"
 
@@ -74,7 +75,7 @@ std::optional<AutoImageAdjustments> AutoImageAdjustmentsManager::GetSettings(
 {
 	using enum ShaderMode;
 
-	switch (ShaderManager::GetInstance().GetCurrentShaderMode()) {
+	switch (AutoShaderSwitcher::GetInstance().GetCurrentShaderMode()) {
 	case Single:
 		// If no adaptive CRT shader is active, use the machine type to
 		// derive the appropriate colour settings.
