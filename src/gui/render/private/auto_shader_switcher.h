@@ -8,7 +8,7 @@
 #include <unordered_map>
 
 #include "gui/private/common.h"
-#include "shader_pass.h"
+#include "shader.h"
 
 #include "misc/video.h"
 #include "utils/rect.h"
