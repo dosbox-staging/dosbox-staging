@@ -7,7 +7,6 @@
 
 #include "gui/private/common.h"
 #include "private/auto_shader_switcher.h"
-#include "private/shader_pass.h"
 
 #include "capture/capture.h"
 #include "dosbox_config.h"
