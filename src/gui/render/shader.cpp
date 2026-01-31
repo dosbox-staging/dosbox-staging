@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "private/shader_pass.h"
+#include "private/shader.h"
 
 #if C_OPENGL
 
@@ -12,7 +12,7 @@
 //
 // Returns a ready to use OpenGL shader program on success.
 //
-bool ShaderPass::BuildShaderProgram(const std::string& shader_source)
+bool Shader::BuildShaderProgram(const std::string& shader_source)
 {
 	if (shader_source.empty()) {
 		LOG_ERR("OPENGL: No shader source present");
@@ -83,12 +83,12 @@ bool ShaderPass::BuildShaderProgram(const std::string& shader_source)
 		return false;
 	}
 
-	shader.program_object = shader_program;
+	program_object = shader_program;
 	return true;
 }
 
-std::optional<GLuint> ShaderPass::BuildShader(const GLenum type,
-                                              const std::string& source)
+std::optional<GLuint> Shader::BuildShader(const GLenum type,
+                                          const std::string& source) const
 {
 	GLuint shader            = 0;
 	GLint is_shader_compiled = 0;
@@ -155,9 +155,9 @@ std::optional<GLuint> ShaderPass::BuildShader(const GLenum type,
 	return shader;
 }
 
-GLint ShaderPass::GetUniformLocation(const std::string& name)
+GLint Shader::GetUniformLocation(const std::string& name) const
 {
-	const auto location = glGetUniformLocation(shader.program_object, name.c_str());
+	const auto location = glGetUniformLocation(program_object, name.c_str());
 #ifdef DEBUG_OPENGL
 	if (location == -1) {
 		LOG_DEBUG("OPENGL: Error retrieving location of '%s' uniform",
@@ -167,7 +167,7 @@ GLint ShaderPass::GetUniformLocation(const std::string& name)
 	return location;
 }
 
-void ShaderPass::SetUniform1i(const std::string& name, const int val)
+void Shader::SetUniform1i(const std::string& name, const int val) const
 {
 	const auto location = GetUniformLocation(name);
 	if (location != -1) {
@@ -175,7 +175,7 @@ void ShaderPass::SetUniform1i(const std::string& name, const int val)
 	}
 }
 
-void ShaderPass::SetUniform1f(const std::string& name, const float val)
+void Shader::SetUniform1f(const std::string& name, const float val) const
 {
 	const auto location = GetUniformLocation(name);
 	if (location != -1) {
@@ -183,8 +183,8 @@ void ShaderPass::SetUniform1f(const std::string& name, const float val)
 	}
 }
 
-void ShaderPass::SetUniform2f(const std::string& name, const float val1,
-                              const float val2)
+void Shader::SetUniform2f(const std::string& name, const float val1,
+                          const float val2) const
 {
 	const auto location = GetUniformLocation(name);
 	if (location != -1) {
@@ -192,8 +192,8 @@ void ShaderPass::SetUniform2f(const std::string& name, const float val1,
 	}
 }
 
-void ShaderPass::SetUniform3f(const std::string& name, const float val1,
-                              const float val2, const float val3)
+void Shader::SetUniform3f(const std::string& name, const float val1,
+                          const float val2, const float val3) const
 {
 	const auto location = GetUniformLocation(name);
 	if (location != -1) {

@@ -197,8 +197,7 @@ bool OpenGlRenderer::InitRenderer()
 
 	glGenFramebuffers(1, &pass1.out_fbo);
 
-	const auto maybe_shader = LoadAndBuildShader(pass1,
-	                                             ImageAdjustmentsShaderName);
+	const auto maybe_shader = LoadAndBuildShader(ImageAdjustmentsShaderName);
 	if (!maybe_shader) {
 		E_Exit("OPENGL: Cannot load '%s' shader, exiting",
 		       ImageAdjustmentsShaderName);
@@ -795,7 +794,7 @@ bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
 {
 	auto& pass = GetShaderPass(ShaderPassId::Main);
 
-	const auto maybe_shader = GetOrLoadAndCacheShader(pass, shader_name);
+	const auto maybe_shader = GetOrLoadAndCacheShader(shader_name);
 	if (!maybe_shader) {
 		return false;
 	}
@@ -871,8 +870,7 @@ std::optional<ShaderPreset> OpenGlRenderer::GetOrLoadAndCacheShaderPreset(
 	return shader_preset_cache[cache_key];
 }
 
-std::optional<Shader> OpenGlRenderer::LoadAndBuildShader(ShaderPass& pass,
-                                                         const std::string& shader_name)
+std::optional<Shader> OpenGlRenderer::LoadAndBuildShader(const std::string& shader_name)
 {
 
 	auto log_error = [&]() {
@@ -890,19 +888,20 @@ std::optional<Shader> OpenGlRenderer::LoadAndBuildShader(ShaderPass& pass,
 	const auto& [shader_info, shader_source] = *maybe_result;
 	assert(shader_info.name == shader_name);
 
-	if (!pass.BuildShaderProgram(shader_source)) {
+	Shader shader = {};
+	shader.info   = shader_info;
+
+	if (!shader.BuildShaderProgram(shader_source)) {
 		log_error();
 		return {};
 	}
-
-	return Shader{shader_info, pass.shader.program_object};
+	return shader;
 }
 
-std::optional<Shader> OpenGlRenderer::GetOrLoadAndCacheShader(ShaderPass& pass,
-                                                              const std::string& shader_name)
+std::optional<Shader> OpenGlRenderer::GetOrLoadAndCacheShader(const std::string& shader_name)
 {
 	if (!shader_cache.contains(shader_name)) {
-		const auto maybe_shader = LoadAndBuildShader(pass, shader_name);
+		const auto maybe_shader = LoadAndBuildShader(shader_name);
 		if (!maybe_shader) {
 			return {};
 		}
@@ -959,57 +958,61 @@ void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 
 void OpenGlRenderer::UpdateImageAdjustmentsPassUniforms()
 {
-	auto& pass    = GetShaderPass(ShaderPassId::ImageAdjustments);
-	const auto& s = image_adjustment_settings;
+	auto& pass         = GetShaderPass(ShaderPassId::ImageAdjustments);
+	const auto& s      = image_adjustment_settings;
+	const auto& shader = pass.shader;
 
-	glUseProgram(pass.shader.program_object);
+	glUseProgram(shader.program_object);
 
-	pass.SetUniform1i("INPUT_TEXTURE", 0);
+	shader.SetUniform1i("INPUT_TEXTURE", 0);
 
-	pass.SetUniform1i("COLOR_SPACE", enum_val(color_space));
-	pass.SetUniform1i("ENABLE_ADJUSTMENTS", enable_image_adjustments ? 1 : 0);
-	pass.SetUniform1i("COLOR_PROFILE", enum_val(s.crt_color_profile));
-	pass.SetUniform1f("BRIGHTNESS", s.brightness);
-	pass.SetUniform1f("CONTRAST", s.contrast);
-	pass.SetUniform1f("GAMMA", s.gamma);
-	pass.SetUniform1f("DIGITAL_CONTRAST", s.digital_contrast);
+	shader.SetUniform1i("COLOR_SPACE", enum_val(color_space));
+	shader.SetUniform1i("ENABLE_ADJUSTMENTS", enable_image_adjustments ? 1 : 0);
+	shader.SetUniform1i("COLOR_PROFILE", enum_val(s.crt_color_profile));
+	shader.SetUniform1f("BRIGHTNESS", s.brightness);
+	shader.SetUniform1f("CONTRAST", s.contrast);
+	shader.SetUniform1f("GAMMA", s.gamma);
+	shader.SetUniform1f("DIGITAL_CONTRAST", s.digital_contrast);
 
 	constexpr auto RgbMaxValue = 255.0f;
 
-	pass.SetUniform3f("BLACK_LEVEL_COLOR",
-	                  s.black_level_color.red / RgbMaxValue,
-	                  s.black_level_color.green / RgbMaxValue,
-	                  s.black_level_color.blue / RgbMaxValue);
+	shader.SetUniform3f("BLACK_LEVEL_COLOR",
+	                    s.black_level_color.red / RgbMaxValue,
+	                    s.black_level_color.green / RgbMaxValue,
+	                    s.black_level_color.blue / RgbMaxValue);
 
-	pass.SetUniform1f("BLACK_LEVEL", s.black_level);
-	pass.SetUniform1f("SATURATION", s.saturation);
+	shader.SetUniform1f("BLACK_LEVEL", s.black_level);
+	shader.SetUniform1f("SATURATION", s.saturation);
 
-	pass.SetUniform1f("COLOR_TEMPERATURE_KELVIN",
-	                  static_cast<float>(s.color_temperature_kelvin));
+	shader.SetUniform1f("COLOR_TEMPERATURE_KELVIN",
+	                    static_cast<float>(s.color_temperature_kelvin));
 
-	pass.SetUniform1f("COLOR_TEMPERATURE_LUMA_PRESERVE",
-	                  s.color_temperature_luma_preserve);
+	shader.SetUniform1f("COLOR_TEMPERATURE_LUMA_PRESERVE",
+	                    s.color_temperature_luma_preserve);
 
-	pass.SetUniform1f("RED_GAIN", s.red_gain);
-	pass.SetUniform1f("GREEN_GAIN", s.green_gain);
-	pass.SetUniform1f("BLUE_GAIN", s.blue_gain);
+	shader.SetUniform1f("RED_GAIN", s.red_gain);
+	shader.SetUniform1f("GREEN_GAIN", s.green_gain);
+	shader.SetUniform1f("BLUE_GAIN", s.blue_gain);
 }
 
 void OpenGlRenderer::UpdateMainShaderPassUniforms()
 {
-	auto& pass = GetShaderPass(ShaderPassId::Main);
+	auto& pass         = GetShaderPass(ShaderPassId::Main);
+	const auto& shader = pass.shader;
 
-	glUseProgram(pass.shader.program_object);
+	glUseProgram(shader.program_object);
 
-	pass.SetUniform1i("INPUT_TEXTURE", 0);
-	pass.SetUniform2f("INPUT_TEXTURE_SIZE",
-	                  static_cast<GLfloat>(input_texture.width),
-	                  static_cast<GLfloat>(input_texture.height));
+	shader.SetUniform1i("INPUT_TEXTURE", 0);
+	shader.SetUniform2f("INPUT_TEXTURE_SIZE",
+	                    static_cast<GLfloat>(input_texture.width),
+	                    static_cast<GLfloat>(input_texture.height));
 
-	pass.SetUniform2f("OUTPUT_TEXTURE_SIZE", pass.viewport.w, pass.viewport.h);
+	shader.SetUniform2f("OUTPUT_TEXTURE_SIZE",
+	                    pass.viewport.w,
+	                    pass.viewport.h);
 
 	for (const auto& [uniform_name, value] : main_shader_preset.params) {
-		pass.SetUniform1f(uniform_name, value);
+		shader.SetUniform1f(uniform_name, value);
 	}
 }
 
