@@ -3325,7 +3325,7 @@ static SbType determine_sb_type(const std::string& pref)
 		return SbType::SB16;
 	}
 
-	// "falsey" setting ("off", "none", "false", etc.)
+	assert(has_false(pref));
 	return SbType::None;
 }
 
