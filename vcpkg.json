@@ -17,6 +17,7 @@
       "features": [
         "alsa",
         "ibus",
+        "vulkan",
         "wayland",
         "x11"
       ]
