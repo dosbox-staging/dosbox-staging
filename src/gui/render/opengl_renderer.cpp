@@ -921,10 +921,6 @@ bool OpenGlRenderer::SwitchShaderPresetOrSetDefault(const ShaderDescriptor& desc
 	assert(!descriptor.shader_name.empty());
 
 	auto set_default_preset = [&]() {
-#ifdef DEBUG_OPENGL
-		LOG_DEBUG("OPENGL: Using default shader preset",
-		          descriptor.ToString().c_str());
-#endif
 		assert(shader_cache.contains(descriptor.shader_name));
 		auto& default_preset = shader_cache[descriptor.shader_name].info.default_preset;
 

@@ -216,6 +216,8 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 
 	// TODO get_resource_path() should return optional
 	if (path.empty()) {
+		LOG_WARNING("RENDER: Cannot locate shader preset '%s'",
+		            descriptor.ToString().c_str());
 		return {};
 	}
 
@@ -223,14 +225,24 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 	                         (std_fs::is_regular_file(path) ||
 	                          std_fs::is_symlink(path));
 	if (!file_exists) {
+		LOG_WARNING(
+		        "RENDER: Error loading shader preset file '%s'; "
+		        "file does not exist or not a regular file",
+		        path.string().c_str());
 		return {};
 	}
 
 	CSimpleIniA ini;
 	ini.SetUnicode();
 
+#ifdef DEBUG_SHADER_MANAGER
+	LOG_DEBUG("RENDER: Loading shader preset '%s'", path.string().c_str());
+#endif
+
 	const auto result = ini.LoadFile(path.string().c_str());
 	if (result < 0) {
+		LOG_WARNING("RENDER: Error loading shader preset '%s'; invalid file format",
+		            path.string().c_str());
 		return {};
 	}
 
@@ -264,6 +276,9 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 				}
 			}
 		}
+	} else {
+		LOG_WARNING("RENDER: Invalid preset file; [parameters] section not found");
+		return {};
 	}
 
 	return preset;
