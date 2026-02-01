@@ -87,8 +87,8 @@ constexpr uint8_t ClearColorA = 255;
 } // namespace DBGUI
 
 struct DBGBlock {
-	SDL_Window* win_main   = nullptr;
-	SDL_Renderer* renderer = nullptr;
+	SDL_Window* win_main     = nullptr;
+	SDL_GPUDevice* gpu_device = nullptr;
 	uint32_t active_win    = 0;
 	uint32_t input_y       = 0;
 	uint32_t global_mask   = 0;
