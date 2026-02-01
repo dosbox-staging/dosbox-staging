@@ -4,7 +4,7 @@ add_library(imgui STATIC
     imgui_tables.cpp
     imgui_widgets.cpp
     backends/imgui_impl_sdl3.cpp
-    backends/imgui_impl_sdlrenderer3.cpp
+    backends/imgui_impl_sdlgpu3.cpp
 )
 
 target_include_directories(imgui PUBLIC
