@@ -141,8 +141,8 @@ static void clear_cache_handler(const void* src_line_data)
 	auto src = static_cast<const uint8_t*>(src_line_data);
 
 	// The width of all screen modes and therefore `cache_pitch` too is a
-	// multiple of 8 (`cache_pitch` equals the screen mode's width multiplied
-	// by the number of bytes per pixel and no padding).
+	// multiple of 8 (`cache_pitch` equals the screen mode's width
+	// multiplied by the number of bytes per pixel and no padding).
 	//
 	auto cache = render.scale.cache_read;
 
@@ -1194,9 +1194,9 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 		// - it allows the 3.5x and 4.5x half steps,
 		// - and it disables integer scaling above 5.0x scaling.
 		//
-		// The half-steps and no scaling above 5.0x result in no moire
-		// artifacts in 99% of cases, so it's very much worth it for
-		// better viewport utilisation.
+		// The half-steps and no scaling above 5.0x result in no
+		// moire artifacts in 99% of cases, so it's very much
+		// worth it for better viewport utilisation.
 		//
 		if (GFX_GetRenderBackendType() != RenderBackendType::OpenGl) {
 			return draw_size_fit_px;
@@ -1207,17 +1207,18 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 				const auto factor = draw_size_fit_px.h /
 				                    render_size_px.h;
 				if (factor >= 5.0) {
-					// Disable integer scaling above 5.0x
-					// vertical scaling
+					// Disable integer scaling
+					// above 5.0x vertical scaling
 					return factor;
 				}
 				if (factor >= 3.0) {
-					// Allow 3.5x and 4.5x half steps in
-					// the 3.0x to 5.0x vertical scaling range
+					// Allow 3.5x and 4.5x half
+					// steps in the 3.0x to 5.0x
+					// vertical scaling range
 					return floorf(factor * 2) / 2;
 				}
-				// Allow only integer steps below 3.0x vertical
-				// scaling
+				// Allow only integer steps below 3.0x
+				// vertical scaling
 				return floorf(factor);
 			}();
 
@@ -1225,8 +1226,9 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 			        integer_scale_factor);
 		}
 
-		// Handles the `sharp` shader fallback when the viewport is
-		// is too small for CRT shaders; integer scaling is then disabled.
+		// Handles the `sharp` shader fallback when the viewport
+		// is is too small for CRT shaders; integer scaling is
+		// then disabled.
 		return draw_size_fit_px;
 	};
 
@@ -2296,8 +2298,9 @@ static void adjust_image_setting(const Direction dir)
 
 	switch (curr_image_adjustment_control) {
 	case ColorSpace: {
-		// Only `srgb` is supported on macOS, so we only allow cycling
-		// through the other color space settings on Windows and Linux.
+		// Only `srgb` is supported on macOS, so we only allow
+		// cycling through the other color space settings on
+		// Windows and Linux.
 		//
 #if !defined(MACOSX)
 		const auto setting_name = "color_space";
@@ -2558,8 +2561,8 @@ static void notify_render_setting_updated(SectionProp& section,
 		reinit_drawing();
 
 	} else if (prop_name == "cga_colors") {
-		// TODO Support switching custom CGA colors at runtime. This is
-		// somewhat complicated and needs experimentation.
+		// TODO Support switching custom CGA colors at runtime.
+		// This is somewhat complicated and needs experimentation.
 
 	} else if (prop_name == "glshader" || prop_name == "shader") {
 
