@@ -47,10 +47,10 @@ enum class ShaderMode {
 	// standard of the current video mode, *not* the emulated video adapter.
 	//
 	// As most users leave the 'machine' setting at the 'svga_s3' default,
-	// this mode gives them single-scanned CRT emulation in CGA and EGA modes,
-	// providing a more authentic out-of-the-box experience (authentic as in
-	// "how people experienced the game at the time of release", and
-	// prioritising the most probable developer intent.)
+	// this mode gives them single-scanned CRT emulation in CGA and EGA
+	// modes, providing a more authentic out-of-the-box experience
+	// (authentic as in "how people experienced these games at the time of
+	// release", and prioritising the "most probable" developer intent.)
 	//
 	// For CGA and EGA modes that reprogram the 18-bit DAC palette on VGA
 	// adapters, a double-scanned VGA shader is selected. This is authentic as
@@ -150,10 +150,10 @@ struct ShaderDescriptor {
 			                  preset_name.c_str());
 		}
 	}
-};
 
-ShaderDescriptor from_string(const std::string& descriptor,
-                             const std::string& extension);
+	static ShaderDescriptor FromString(const std::string& descriptor,
+	                                   const std::string& extension);
+};
 
 // The default setttings are important; these are the settings we get if the
 // shader doesn't override them via custom pragmas.
@@ -229,17 +229,16 @@ public:
 	 * Notify the shader manager that the current shader has been changed
 	 * by the user.
 	 */
-	void NotifyShaderChanged(const std::string& shader_descriptor,
-	                         const std::string& extension);
-
+	ShaderDescriptor NotifyShaderChanged(const std::string& symbolic_shader_descriptor,
+	                                     const std::string& extension);
 	/*
 	 * Notify the shader manager that the viewport area or the current
 	 * video mode has been changed.
 	 */
-	void NotifyRenderParametersChanged(const DosBox::Rect canvas_size_px,
-	                                   const VideoMode& video_mode);
+	ShaderDescriptor NotifyRenderParametersChanged(
+	        const ShaderDescriptor& curr_shader_descriptor,
+	        const DosBox::Rect canvas_size_px, const VideoMode& video_mode);
 
-	ShaderDescriptor GetCurrentShaderDescriptor() const;
 	ShaderMode GetCurrentShaderMode() const;
 
 private:
@@ -267,7 +266,8 @@ private:
 	std::optional<std::pair<std::string, float>> ParseParameterPragma(
 	        const std::string& pragma_value) const;
 
-	void MaybeAutoSwitchShader();
+	ShaderDescriptor MaybeAutoSwitchShader(
+	        const ShaderDescriptor& new_mapped_descriptor) const;
 
 	ShaderDescriptor FindShaderAutoGraphicsStandard() const;
 	ShaderDescriptor FindShaderAutoMachine() const;
@@ -280,11 +280,8 @@ private:
 	ShaderDescriptor GetEgaShader() const;
 	ShaderDescriptor GetVgaShader() const;
 
-	struct {
-		ShaderDescriptor descriptor = {};
-
-		ShaderMode mode = ShaderMode::Single;
-	} current_shader = {};
+	ShaderDescriptor last_shader_descriptor = {};
+	ShaderMode current_shader_mode          = {};
 
 	VideoMode video_mode = {};
 

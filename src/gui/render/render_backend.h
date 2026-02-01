@@ -53,10 +53,12 @@ public:
 	//
 	enum class SetShaderResult { Ok, ShaderError, PresetError };
 
-	virtual SetShaderResult SetShader(const std::string& symbolic_name) = 0;
+	virtual SetShaderResult SetShader(const std::string& symbolic_shader_descriptor) = 0;
 
-	// Reload the currently active shader from disk.
-	virtual bool ForceReloadCurrentShader() = 0;
+	// Reload the currently active shader from disk. If this fails (e.g.,
+	// the shader cannot be loaded, or the compilation fails), the current
+	// shader should stay active.
+	virtual void ForceReloadCurrentShader() = 0;
 
 	// Get information about the currently active shader.
 	virtual ShaderInfo GetCurrentShaderInfo() = 0;
@@ -66,7 +68,7 @@ public:
 
 	// Get the shader descriptor string of the currently active shader.
 	// (see `ShaderManager::NotifyShaderChanged()`.
-	virtual std::string GetCurrentShaderDescriptorString() = 0;
+	virtual std::string GetCurrentSymbolicShaderDescriptor() = 0;
 
 	// Called at the start of every unique frame (when there have been
 	// changes to the DOS framebuffer).
