@@ -2547,9 +2547,8 @@ int32_t DEBUG_Run(int32_t amount, bool quickexit)
 
 		const auto graphics_window = GFX_GetWindow();
 		if (!SDL_RaiseWindow(graphics_window)) {
-			DEBUG_ShowMsg(
-			        "DEBUG: Failed to raise graphics window: %s\n",
-			        SDL_GetError());
+		LOG_F(ERROR, "DEBUG: Failed to raise main window: %s\n",
+		        SDL_GetError());
 		}
 
 		DOSBOX_SetNormalLoop();
@@ -2899,8 +2898,7 @@ void DEBUG_Enable(bool pressed)
 	// Defocus the graphical UI and bring the debugger UI into focus
 	GFX_LosingFocus();
 	if (!SDL_RaiseWindow(dbg.win_main)) {
-		DEBUG_ShowMsg(
-		        "DEBUG: Failed to raise debugger window: %s\n",
+		LOG_F(ERROR, "DEBUG: Failed to raise debugger window: %s\n",
 		        SDL_GetError());
 	}
 	SetCodeWinStart();
