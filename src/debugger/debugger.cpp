@@ -2894,7 +2894,6 @@ void DEBUG_Enable(bool pressed)
 
 	// Defocus the graphical UI and bring the debugger UI into focus
 	GFX_LosingFocus();
-	debugger_event_queue = {};
 	SDL_RaiseWindow(dbg.win_main);
 	SetCodeWinStart();
 

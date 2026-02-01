@@ -53,7 +53,7 @@ static std::deque<int> key_buffer;
 static float display_scale = 1.0f;
 
 // Event queue
-std::queue<DebuggerInputEvent> debugger_event_queue;
+std::queue<DebuggerInputEvent> debugger_event_queue = {};
 
 bool DBGUI_IsInitialized()
 {
