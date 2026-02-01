@@ -53,8 +53,8 @@ enum class ShaderMode {
 	// release", and prioritising the "most probable" developer intent.)
 	//
 	// For CGA and EGA modes that reprogram the 18-bit DAC palette on VGA
-	// adapters, a double-scanned VGA shader is selected. This is authentic as
-	// these games require a VGA adapter, therefore they were designed with
+	// adapters, a double-scanned VGA shader is selected. This is authentic
+	// as these games require a VGA adapter, therefore they were designed with
 	// double scanning in mind. In other words, no one could have experienced
 	// them on single scanning CGA and EGA monitors without special hardware
 	// hacks.
@@ -95,13 +95,25 @@ enum class ShaderMode {
 };
 
 /*
- * The shader descriptor is in the `SHADER_NAME[:SHADER_PRESET]` format
- * where `SHADER_NAME` can refer to the filename of an actual shader on
- * the filesystem, a symbolic alias, or a "meta-shader". Specifying
- * `SHADER_PRESET` after a colon is optional (the default preset is used
- * if it's not provided).
+ * A symbolic shader descriptor is a `std::string` in the
+ * `SHADER_NAME[:SHADER_PRESET]` format where `SHADER_NAME` can refer to the
+ * filename of an actual shader on the filesystem, a symbolic alias, or a
+ * "meta-shader". Specifying `SHADER_PRESET` after a colon is optional (the
+ * default preset is used if it's not provided).
  *
- * These are the various use-cases in more detail:
+ * Once a symbolic shader description is turned into a `ShaderDescriptor`, the
+ * symbolic and "meta-shader" shader names are resolved to actual physical
+ * shader names on disk.
+ *
+ * E.g. the `crt-auto` symbolic shader descriptions can be potentially
+ * resolved to `crt/crt-hyllian:vga-4k`.
+ *
+ * Although `ShaderDescriptor`s could contain symbolic and meta shader names,
+ * too, we use them only for resolved descriptors in the codebase for clarity.
+ *
+ * ---
+ *
+ * These are the various shader descriptor use-cases in more detail:
  *
  * 1. Referring to an actual shader file in the standard resource lookup
  *    paths. The .glsl extension can be omitted. A shader preset can be
@@ -110,11 +122,11 @@ enum class ShaderMode {
  *
  *    - interpolation/catmull-rom.glsl
  *    - interpolation/catmull-rom
- *    - crt/crt-hyllian
+ *    - crt/crt-hyllian  (the ":" must be omitted if no preset is specified)
  *    - crt/crt-hyllian:vga-4k
  *
  * 2. Referring to an actual shader file on the filesystem via relative
- * or absolute paths. The .glsl extension can be omitted. Examples:
+ *    or absolute paths. The .glsl extension can be omitted. Examples:
  *
  *    - ../my-shaders/custom-shader
  *    - D:\Emulators\DOSBox\shaders\custom-shader.glsl
@@ -124,9 +136,9 @@ enum class ShaderMode {
  *    - bilinear (alias of 'interpolation/bilinear')
  *    - sharp    (alias of 'interpolation/sharp')
  *
- * 4. "Meta-shader" symbolic shader names. Currently, these are the CRT
- *    shaders that automatically switch presets depending on the machine
- *    type and the viewport resolution. This is the full list of meta-
+ * 4. "Meta-shader" names. Currently, only the auto-CRT shader fall into this
+ *    category that automatically switch presets depending on the machine
+ *    type and the viewport resolution. This is the full list of the meta-
  *    shaders:
  *
  *    - crt-auto
@@ -155,8 +167,8 @@ struct ShaderDescriptor {
 	                                   const std::string& extension);
 };
 
-// The default setttings are important; these are the settings we get if the
-// shader doesn't override them via custom pragmas.
+// The default shader settings are important; we'll get these if the shader
+// doesn't override them via custom pragmas.
 struct ShaderSettings {
 	bool force_single_scan       = false;
 	bool force_no_pixel_doubling = false;
@@ -175,7 +187,7 @@ struct ShaderPreset {
 };
 
 struct ShaderInfo {
-	// The mapped shader name without the file extension. The name might
+	// Resolved shader name without the file extension. The name might
 	// optionally contain a relative or absolute directory path.
 	std::string name = {};
 
@@ -232,8 +244,8 @@ public:
 	ShaderDescriptor NotifyShaderChanged(const std::string& symbolic_shader_descriptor,
 	                                     const std::string& extension);
 	/*
-	 * Notify the shader manager that the viewport area or the current
-	 * video mode has been changed.
+	 * Notify the shader manager that the viewport area or the
+	 * current video mode has been changed.
 	 */
 	ShaderDescriptor NotifyRenderParametersChanged(
 	        const ShaderDescriptor& curr_shader_descriptor,
