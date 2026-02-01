@@ -19,7 +19,7 @@
 
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
-#include <imgui_impl_sdlrenderer3.h>
+#include <imgui_impl_sdlgpu3.h>
 
 #include "cpu/cpu.h"
 #include "cpu/registers.h"
@@ -379,11 +379,27 @@ void DBGUI_StartUp(void)
 		return;
 	}
 
-	dbg.renderer = SDL_CreateRenderer(dbg.win_main, nullptr);
-	if (!dbg.renderer) {
-		LOG_ERR("DEBUG: Failed to create renderer: %s", SDL_GetError());
+	// Create GPU device - SDL_GPU uses Vulkan/Metal/D3D12 under the hood,
+	// avoiding OpenGL context conflicts with the main DOSBox window
+	dbg.gpu_device = SDL_CreateGPUDevice(
+	        SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL |
+	                SDL_GPU_SHADERFORMAT_MSL | SDL_GPU_SHADERFORMAT_METALLIB,
+	        true,
+	        nullptr);
+	if (!dbg.gpu_device) {
+		LOG_ERR("DEBUG: Failed to create GPU device: %s", SDL_GetError());
 		SDL_DestroyWindow(dbg.win_main);
 		dbg.win_main = nullptr;
+		return;
+	}
+
+	if (!SDL_ClaimWindowForGPUDevice(dbg.gpu_device, dbg.win_main)) {
+		LOG_ERR("DEBUG: Failed to claim window for GPU device: %s",
+		        SDL_GetError());
+		SDL_DestroyGPUDevice(dbg.gpu_device);
+		SDL_DestroyWindow(dbg.win_main);
+		dbg.gpu_device = nullptr;
+		dbg.win_main   = nullptr;
 		return;
 	}
 
@@ -406,9 +422,15 @@ void DBGUI_StartUp(void)
 	style.ScaleAllSizes(display_scale);
 	style.FontScaleDpi = display_scale;
 
-	// Setup Platform/Renderer backends
-	ImGui_ImplSDL3_InitForSDLRenderer(dbg.win_main, dbg.renderer);
-	ImGui_ImplSDLRenderer3_Init(dbg.renderer);
+	// Setup Platform/Renderer backends for SDL_GPU
+	ImGui_ImplSDLGPU3_InitInfo init_info   = {};
+	init_info.Device                       = dbg.gpu_device;
+	init_info.ColorTargetFormat            = SDL_GetGPUSwapchainTextureFormat(
+                dbg.gpu_device, dbg.win_main);
+	init_info.MSAASamples = SDL_GPU_SAMPLECOUNT_1;
+
+	ImGui_ImplSDL3_InitForOther(dbg.win_main);
+	ImGui_ImplSDLGPU3_Init(&init_info);
 
 	io.Fonts->AddFontFromMemoryCompressedTTF(IBM_VGA_8x16_compressed_data,
 	                                         IBM_VGA_8x16_compressed_size);
@@ -418,7 +440,7 @@ void DBGUI_StartUp(void)
 
 	// Now that ImGui is initialized, resize the window to fit all child
 	// windows. Need to do a dummy frame to get accurate font metrics.
-	ImGui_ImplSDLRenderer3_NewFrame();
+	ImGui_ImplSDLGPU3_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
@@ -440,13 +462,14 @@ void DBGUI_Shutdown(void)
 		return;
 	}
 
-	ImGui_ImplSDLRenderer3_Shutdown();
+	ImGui_ImplSDLGPU3_Shutdown();
 	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();
 
-	if (dbg.renderer) {
-		SDL_DestroyRenderer(dbg.renderer);
-		dbg.renderer = nullptr;
+	if (dbg.gpu_device) {
+		SDL_ReleaseWindowFromGPUDevice(dbg.gpu_device, dbg.win_main);
+		SDL_DestroyGPUDevice(dbg.gpu_device);
+		dbg.gpu_device = nullptr;
 	}
 
 	if (dbg.win_main) {
@@ -463,7 +486,7 @@ void DBGUI_NewFrame(void)
 		return;
 	}
 
-	ImGui_ImplSDLRenderer3_NewFrame();
+	ImGui_ImplSDLGPU3_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 }
@@ -476,20 +499,53 @@ void DBGUI_Render(void)
 
 	ImGui::Render();
 
-	// Set render scale for high DPI displays
-	ImGuiIO& io = ImGui::GetIO();
-	SDL_SetRenderScale(dbg.renderer,
-	                   io.DisplayFramebufferScale.x,
-	                   io.DisplayFramebufferScale.y);
+	SDL_GPUCommandBuffer* command_buffer = SDL_AcquireGPUCommandBuffer(
+	        dbg.gpu_device);
+	if (!command_buffer) {
+		LOG_ERR("DEBUG: Failed to acquire GPU command buffer: %s",
+		        SDL_GetError());
+		return;
+	}
 
-	SDL_SetRenderDrawColor(dbg.renderer,
-	                       DBGUI::ClearColorR,
-	                       DBGUI::ClearColorG,
-	                       DBGUI::ClearColorB,
-	                       DBGUI::ClearColorA);
-	SDL_RenderClear(dbg.renderer);
-	ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), dbg.renderer);
-	SDL_RenderPresent(dbg.renderer);
+	SDL_GPUTexture* swapchain_texture = nullptr;
+	if (!SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer,
+	                                           dbg.win_main,
+	                                           &swapchain_texture,
+	                                           nullptr,
+	                                           nullptr)) {
+		LOG_ERR("DEBUG: Failed to acquire swapchain texture: %s",
+		        SDL_GetError());
+		SDL_SubmitGPUCommandBuffer(command_buffer);
+		return;
+	}
+
+	if (swapchain_texture) {
+		ImDrawData* draw_data = ImGui::GetDrawData();
+
+		// Must call PrepareDrawData before the render pass
+		ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, command_buffer);
+
+		// Set up the color target with clear color
+		SDL_GPUColorTargetInfo target_info = {};
+		target_info.texture                = swapchain_texture;
+		target_info.clear_color.r = DBGUI::ClearColorR / 255.0f;
+		target_info.clear_color.g = DBGUI::ClearColorG / 255.0f;
+		target_info.clear_color.b = DBGUI::ClearColorB / 255.0f;
+		target_info.clear_color.a = DBGUI::ClearColorA / 255.0f;
+		target_info.load_op       = SDL_GPU_LOADOP_CLEAR;
+		target_info.store_op      = SDL_GPU_STOREOP_STORE;
+
+		SDL_GPURenderPass* render_pass = SDL_BeginGPURenderPass(
+		        command_buffer, &target_info, 1, nullptr);
+
+		ImGui_ImplSDLGPU3_RenderDrawData(draw_data,
+		                                 command_buffer,
+		                                 render_pass);
+
+		SDL_EndGPURenderPass(render_pass);
+	}
+
+	SDL_SubmitGPUCommandBuffer(command_buffer);
 }
 
 // Title bar colors - cyan background with black text (classic DOS style)
