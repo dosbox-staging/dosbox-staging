@@ -2546,7 +2546,11 @@ int32_t DEBUG_Run(int32_t amount, bool quickexit)
 		CBreakpoint::ActivateBreakpoints();
 
 		const auto graphics_window = GFX_GetWindow();
-		SDL_RaiseWindow(graphics_window);
+		if (!SDL_RaiseWindow(graphics_window)) {
+			DEBUG_ShowMsg(
+			        "DEBUG: Failed to raise graphics window: %s\n",
+			        SDL_GetError());
+		}
 
 		DOSBOX_SetNormalLoop();
 	}
@@ -2894,7 +2898,11 @@ void DEBUG_Enable(bool pressed)
 
 	// Defocus the graphical UI and bring the debugger UI into focus
 	GFX_LosingFocus();
-	SDL_RaiseWindow(dbg.win_main);
+	if (!SDL_RaiseWindow(dbg.win_main)) {
+		DEBUG_ShowMsg(
+		        "DEBUG: Failed to raise debugger window: %s\n",
+		        SDL_GetError());
+	}
 	SetCodeWinStart();
 
 	// Maybe show help for the first time in the debugger
