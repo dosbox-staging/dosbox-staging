@@ -44,14 +44,14 @@ public:
 
 	void NotifyVideoModeChanged(const VideoMode& video_mode) override;
 
-	SetShaderResult SetShader(const std::string& shader_descriptor) override;
+	SetShaderResult SetShader(const std::string& symbolic_shader_descriptor) override;
 
-	bool ForceReloadCurrentShader() override;
+	void ForceReloadCurrentShader() override;
 
 	ShaderInfo GetCurrentShaderInfo() override;
 	ShaderPreset GetCurrentShaderPreset() override;
 
-	std::string GetCurrentShaderDescriptorString() override;
+	std::string GetCurrentSymbolicShaderDescriptor() override;
 
 	void StartFrame(uint32_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
@@ -90,18 +90,20 @@ private:
 	void MaybeUpdateRenderSize(const int new_render_width_px,
 	                           const int new_render_height_px);
 
-	SetShaderResult SetShaderInternal(const std::string& shader_descriptor,
+	SetShaderResult SetShaderInternal(const std::string& symbolic_shader_descriptor,
 	                                  const bool force_reload = false);
 
-	bool MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_descriptor,
-	                                const ShaderDescriptor& new_descriptor);
+	void HandleShaderAndPresetChangeViaNotify(const ShaderDescriptor& new_descriptor);
+
+	SetShaderResult MaybeSetShaderAndPreset(const ShaderDescriptor& curr_descriptor,
+	                                        const ShaderDescriptor& new_descriptor);
 
 	bool SwitchShader(const std::string& shader_name);
 
 	std::optional<Shader> LoadAndBuildShader(const std::string& shader_name);
 	std::optional<Shader> GetOrLoadAndCacheShader(const std::string& shader_name);
 
-	void SwitchShaderPresetOrSetDefault(const ShaderDescriptor& descriptor);
+	bool SwitchShaderPresetOrSetDefault(const ShaderDescriptor& descriptor);
 
 	std::optional<ShaderPreset> GetOrLoadAndCacheShaderPreset(
 	        const ShaderDescriptor& descriptor);
@@ -235,7 +237,7 @@ private:
 	// .glsl file extension
 	std::unordered_map<std::string, ShaderPreset> shader_preset_cache = {};
 
-	ShaderDescriptor current_shader_descriptor = {};
+	ShaderDescriptor curr_shader_descriptor = {};
 
 	// Current shader descriptor string as set by the user (e.g., if the
 	// user set `crt-auto`, this will stay `crt-auto`; it won't be synced to
@@ -244,7 +246,7 @@ private:
 	//
 	// Might contain the .glsl file extension if set by the user.
 	//
-	std::string current_shader_descriptor_string = {};
+	std::string curr_symbolic_shader_descriptor = {};
 };
 
 #endif // C_OPENGL

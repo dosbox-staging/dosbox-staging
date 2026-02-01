@@ -732,40 +732,37 @@ static bool set_shader(const std::string& descriptor)
 	}
 }
 
-static void set_fallback_shader_or_exit()
+static void set_fallback_shader_or_exit(const std::string& failed_shader_descriptor)
 {
-	if (set_shader(SymbolicShaderName::AutoGraphicsStandard)) {
-		set_section_property_value("render",
-		                           "shader",
-		                           SymbolicShaderName::AutoGraphicsStandard);
-		return;
-	}
-
-	NOTIFY_DisplayWarning(Notification::Source::Console,
-	                      "RENDER",
-	                      "RENDER_SHADER_FALLBACK",
-	                      SymbolicShaderName::AutoGraphicsStandard,
-	                      ShaderName::Sharp);
-
-	if (set_shader(ShaderName::Sharp)) {
-		set_section_property_value("render", "shader", ShaderName::Sharp);
-		return;
-	}
-
-	E_Exit("RENDER: Error loading fallback shaders, exiting");
-}
-
-static void set_shader_with_fallback_or_exit(const std::string& shader_descriptor)
-{
-	if (!set_shader(shader_descriptor)) {
+	if (failed_shader_descriptor != SymbolicShaderName::AutoGraphicsStandard) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "RENDER",
 		                      "RENDER_SHADER_FALLBACK",
-		                      shader_descriptor.c_str(),
+		                      failed_shader_descriptor.c_str(),
 		                      SymbolicShaderName::AutoGraphicsStandard);
 
-		set_fallback_shader_or_exit();
+		if (set_shader(SymbolicShaderName::AutoGraphicsStandard)) {
+			set_section_property_value("render",
+			                           "shader",
+			                           SymbolicShaderName::AutoGraphicsStandard);
+			return;
+		}
 	}
+
+	if (failed_shader_descriptor != ShaderName::Sharp) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "RENDER_SHADER_FALLBACK",
+		                      SymbolicShaderName::AutoGraphicsStandard,
+		                      ShaderName::Sharp);
+
+		if (set_shader(ShaderName::Sharp)) {
+			set_section_property_value("render", "shader", ShaderName::Sharp);
+			return;
+		}
+	}
+
+	E_Exit("RENDER: Error setting fallback shaders, exiting");
 }
 
 static void reload_shader([[maybe_unused]] const bool pressed)
@@ -774,21 +771,7 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 		return;
 	}
 
-	const auto shader_descriptor =
-	        ShaderManager::GetInstance().GetCurrentShaderDescriptor();
-
-	LOG_MSG("RENDER: Reloading shader '%s'",
-	        shader_descriptor.ToString().c_str());
-
-	if (!GFX_GetRenderer()->ForceReloadCurrentShader()) {
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "RENDER",
-		                      "RENDER_SHADER_FALLBACK",
-		                      shader_descriptor.ToString().c_str(),
-		                      SymbolicShaderName::AutoGraphicsStandard);
-
-		set_fallback_shader_or_exit();
-	}
+	GFX_GetRenderer()->ForceReloadCurrentShader();
 
 	set_scan_and_pixel_doubling();
 
@@ -2508,7 +2491,11 @@ static std::string get_shader_setting_value()
 
 void RENDER_SetShaderWithFallback()
 {
-	set_shader_with_fallback_or_exit(get_shader_setting_value());
+	const auto shader_descriptor = get_shader_setting_value();
+
+	if (!set_shader(shader_descriptor)) {
+		set_fallback_shader_or_exit(shader_descriptor);
+	}
 }
 
 static void set_monochrome_palette(SectionProp& section)
@@ -2575,13 +2562,17 @@ static void notify_render_setting_updated(SectionProp& section,
 		// somewhat complicated and needs experimentation.
 
 	} else if (prop_name == "glshader" || prop_name == "shader") {
-		set_shader_with_fallback_or_exit(get_shader_setting_value());
+
+		const auto shader_descriptor = get_shader_setting_value();
+		if (!set_shader(shader_descriptor)) {
+			set_fallback_shader_or_exit(shader_descriptor);
+		}
 		reinit_drawing();
 
 		set_section_property_value(
 		        "render",
 		        "shader",
-		        GFX_GetRenderer()->GetCurrentShaderDescriptorString());
+		        GFX_GetRenderer()->GetCurrentSymbolicShaderDescriptor());
 
 	} else if (prop_name == "integer_scaling") {
 		set_integer_scaling(section);

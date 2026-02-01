@@ -94,7 +94,7 @@ uint32_t SdlRenderer::OpenGlDriverCrashWorkaround(const std::string_view render_
 bool SdlRenderer::InitRenderer(const std::string& render_driver)
 {
 	if (render_driver != "auto") {
-	    SDL_SetHint(SDL_HINT_RENDER_DRIVER, render_driver.c_str());
+		SDL_SetHint(SDL_HINT_RENDER_DRIVER, render_driver.c_str());
 	}
 
 	constexpr uint32_t Flags = 0;
@@ -246,7 +246,7 @@ void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 }
 
 SdlRenderer::SetShaderResult SdlRenderer::SetShader(
-        [[maybe_unused]] const std::string& shader_name)
+        [[maybe_unused]] const std::string& symbolic_shader_descriptor)
 {
 	// no-op; always report success (no shader support)
 	//
@@ -261,10 +261,9 @@ void SdlRenderer::NotifyVideoModeChanged([[maybe_unused]] const VideoMode& video
 	return;
 }
 
-bool SdlRenderer::ForceReloadCurrentShader()
+void SdlRenderer::ForceReloadCurrentShader()
 {
-	// no-op; always report success (no shader support)
-	return true;
+	// no-op
 }
 
 ShaderInfo SdlRenderer::GetCurrentShaderInfo()
@@ -279,7 +278,7 @@ ShaderPreset SdlRenderer::GetCurrentShaderPreset()
 	return {};
 }
 
-std::string SdlRenderer::GetCurrentShaderDescriptorString()
+std::string SdlRenderer::GetCurrentSymbolicShaderDescriptor()
 {
 	// no-op (no shader support)
 	return {};
