@@ -1491,14 +1491,14 @@ static void init_render_settings(SectionProp& section)
 	        "                 defaults to 50). E.g., tandy 100\n"
 	        "\n"
 	        "  tandy-warm:    Emulation of the actual colour output of an unknown Tandy\n"
-	        "                 monitor. Inteded to be used with 'crt_color_profile = none' and\n"
-	        "                 'color_temperature = 6500'.\n"
+	        "                 monitor. Intended to be used with 'crt_color_profile = none'\n"
+	        "                 and 'color_temperature = 6500'.\n"
 	        "\n"
 	        "  ibm5153 <c>:   Emulation of the actual colour output of an IBM 5153 monitor\n"
 	        "                 with a unique contrast control that dims non-bright colours\n"
 	        "                 only. The contrast can be optionally provided as a second\n"
 	        "                 parameter (0 to 100; defaults to 100), e.g., ibm5153 60.\n"
-	        "                 Inteded to be used with 'crt_color_profile = none' and\n"
+	        "                 Intended to be used with 'crt_color_profile = none' and\n"
 	        "                 'color_temperature = 6500'.\n"
 	        "\n"
 	        "  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:\n"
@@ -1741,7 +1741,7 @@ static void init_render_settings(SectionProp& section)
 	        "            0 does not raise the black level.\n"
 	        "\n"
 	        "Note: Raising the black level if useful for \"black scanline\" emulation; this\n"
-	        "      adds visula interest to PCjr, Tandy, CGA, and EGA games with simple\n"
+	        "      adds visual interest to PCjr, Tandy, CGA, and EGA games with simple\n"
 	        "      graphics.",
 	        DefaultBlackLevel,
 	        BlackLevelMin,
