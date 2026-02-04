@@ -14,7 +14,7 @@
 // Glad must be included before SDL
 #include "glad/gl.h"
 
-enum class ShaderPassId { ImageAdjustments, Main };
+enum class ShaderPassId { ImageAdjustments, Jinc2Dedither, Main };
 
 struct ShaderPass {
 	ShaderPassId id = {};

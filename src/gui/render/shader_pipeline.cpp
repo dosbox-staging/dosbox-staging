@@ -34,6 +34,20 @@ ShaderPipeline::ShaderPipeline()
 
 	shader_passes.push_back(pass);
 
+	// Jinc2 dedither pass
+	pass = {};
+
+	pass.id          = ShaderPassId::Jinc2Dedither;
+	pass.in_texture  = 0;  // will be set later
+	pass.out_texture = 0;  // will be set later
+	pass.viewport    = {}; // will be set later
+
+	glGenFramebuffers(1, &pass.out_fbo);
+
+	pass.shader = LoadShaderPassOrExit("jinc2-dedither-pass");
+
+	shader_passes.push_back(pass);
+
 	// Main shader pass (e.g., a CRT shader, the sharp shader, an upscaler,
 	// etc.)
 	pass = {};
