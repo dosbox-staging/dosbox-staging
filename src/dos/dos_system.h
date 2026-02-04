@@ -216,7 +216,7 @@ public:
 		          longNameList(0)
 		{}
 
-		virtual ~CFileInfo()
+		~CFileInfo()
 		{
 			for (auto p : fileList) {
 				delete p;
