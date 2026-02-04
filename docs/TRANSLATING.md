@@ -332,6 +332,22 @@ Do not exceed 80 characters in a line, or commands like `cls /?` won't be able t
 display the help properly. Also test that the `help /all` command properly extracts
 and displays the shortened command descriptions.
 
+### ANSI colours and the 80-character line limit
+
+Adhering to the 80 character line limit is very hard when using ANSI colour
+tags (e.g., `[color=light-green]COMMAND[reset]`). The web-based ANSI Markup
+Editor tool can make this a lot easier:
+
+https://www.dosbox-staging.org/tools/ansi-editor/
+
+Press the **Help** button and just follow the instructions.
+
+> [!TIP]
+>
+> This is a single-page webapp; if you want to use it offline, just save
+> the page's source to your computer as a `.html` file and open it in any
+> browser.
+
 ### Startup screen strings
 
 For example, `SHELL_STARTUP_BEGIN` or `SHELL_STARTUP_CGA`.
