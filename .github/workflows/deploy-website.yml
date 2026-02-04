@@ -68,6 +68,8 @@ jobs:
                   -not -path "."            `# ignore current dir` \
                   -not -path "./static"     `# ignore manually managed 'static' dir` \
                   -not -path "./static/*"   `# ignore manually managed 'static' dir contents` \
+                  -not -path "./tools"      `# ignore manually managed 'tools' dir` \
+                  -not -path "./tools/*"    `# ignore manually managed 'tools' dir` contents \
                   -not -path "./preview"    `# ignore 'preview' dir` \
                   -not -path "./preview/*"  `# ignore 'preview' dir contents` \
                   -not -name "README.md"    `# ignore 'README.md'` \
