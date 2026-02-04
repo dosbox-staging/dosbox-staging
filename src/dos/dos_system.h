@@ -170,7 +170,7 @@ private:
 #define MAX_OPENDIRS 2048
 //Can be high as it's only storage (16 bit variable)
 
-class DOS_Drive_Cache {
+class DOS_Drive_Cache final {
 public:
 	enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
 	DOS_Drive_Cache            (void);
@@ -202,7 +202,7 @@ public:
 	void SetLabel(const char *name, bool cdrom, bool allowupdate);
 	const char *GetLabel() const { return label; }
 
-	class CFileInfo {
+	class CFileInfo final {
 	public:
 		CFileInfo(void)
 		        : orgname{0},
