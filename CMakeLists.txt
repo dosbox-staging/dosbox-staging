@@ -129,6 +129,7 @@ endif()
 include(CheckIncludeFile)
 include(CheckIncludeFiles)
 include(CheckCXXSourceCompiles)
+include(CheckStructHasMember)
 include(CheckSymbolExists)
 include(GNUInstallDirs)
 
@@ -385,6 +386,13 @@ check_symbol_exists(
 )
 check_symbol_exists(
   sys_icache_invalidate "libkern/OSCacheControl.h" HAVE_SYS_ICACHE_INVALIDATE
+)
+
+check_struct_has_member(
+  "struct dirent"
+  d_type
+  dirent.h
+  HAVE_STRUCT_DIRENT_D_TYPE
 )
 
 set(CUSTOM_DATADIR "${CMAKE_INSTALL_FULL_DATADIR}")
