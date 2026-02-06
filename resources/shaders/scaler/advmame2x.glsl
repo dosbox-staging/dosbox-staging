@@ -4,8 +4,12 @@
 // SPDX-FileCopyrightText:  2003-2020 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+/*
+
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
+
+*/
 
 #if defined(VERTEX)
 

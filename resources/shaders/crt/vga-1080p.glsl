@@ -3,6 +3,8 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: MIT
 
+/*
+
 #pragma parameter SPOT_WIDTH "Spot Width" 0.85 0.0 1.0 0.05
 #pragma parameter SPOT_HEIGHT "Spot Height" 0.80 0.0 1.0 0.05
 #pragma parameter PHOSPHOR_LAYOUT "Phosphor Layout" 2.0 0.0 19.0 1.0
@@ -13,6 +15,8 @@
 #pragma parameter MASK_STRENGTH "Mask Strength" 0.10 0.0 1.0 0.1
 #pragma parameter GAMMA_INPUT "Gamma Input" 2.4 0.0 5.0 0.1
 #pragma parameter GAMMA_OUTPUT "Gamma Output" 2.62 0.0 5.0 0.1
+
+*/
 
 /////////////////////////////////////////////////////////////////////////////
 

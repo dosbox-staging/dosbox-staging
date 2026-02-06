@@ -5,8 +5,12 @@
 // SPDX-FileCopyrightText:  2020-2020 jmarsh <jmarsh@vogons.org>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+/*
+
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
+
+*/
 
 #if defined(VERTEX)
 

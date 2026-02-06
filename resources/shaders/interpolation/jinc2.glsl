@@ -9,8 +9,12 @@
 // Ported from Libretro's GLSL shader jinc2.glsl to DOSBox-compatible
 // format by Tyrells.
 
+/*
+
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
+
+*/
 
 #define JINC2_WINDOW_SINC 0.44
 #define JINC2_SINC 0.82

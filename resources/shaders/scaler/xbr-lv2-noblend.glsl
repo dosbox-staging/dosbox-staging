@@ -6,6 +6,8 @@
 
 // Hyllian's xBR-lv2-noblend Shader
 
+/*
+
 #pragma use_nearest_texture_filter
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
@@ -13,6 +15,8 @@
 #pragma parameter XBR_EQ_THRESHOLD "Eq Threshold" 0.6 0.0 2.0 0.1
 #pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
 #pragma parameter XBR_CORNER_TYPE "Corner Calculation" 1.0 1.0 4.0 1.0
+
+*/
 
 #define mul(a,b) (b*a)
 
