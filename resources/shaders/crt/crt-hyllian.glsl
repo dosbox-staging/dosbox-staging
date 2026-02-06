@@ -1,6 +1,6 @@
 #version 330 core
 
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2021-2020 Hyllian <sergiogdb@gmail.com>
 // SPDX-FileCopyrightText:  2020-2020 Tyrells
 // SPDX-License-Identifier: MIT
@@ -39,7 +39,7 @@ layout (location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
 
-uniform vec2 INPUT_TEXTURE_SIZE;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
 
 void main()
 {
@@ -54,8 +54,8 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 INPUT_TEXTURE_SIZE;
-uniform sampler2D s_p;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform sampler2D INPUT_TEXTURE_0;
 
 uniform float BEAM_PROFILE;
 uniform float HFILTER_PROFILE;
@@ -450,8 +450,8 @@ void main()
 	vec4 profile = get_beam_profile();
 
 	vec2 TextureSize =
-	        mix(vec2(INPUT_TEXTURE_SIZE.x * SHARPNESS_HACK, INPUT_TEXTURE_SIZE.y),
-	            vec2(INPUT_TEXTURE_SIZE.x, INPUT_TEXTURE_SIZE.y * SHARPNESS_HACK),
+	        mix(vec2(INPUT_TEXTURE_SIZE_0.x * SHARPNESS_HACK, INPUT_TEXTURE_SIZE_0.y),
+	            vec2(INPUT_TEXTURE_SIZE_0.x, INPUT_TEXTURE_SIZE_0.y * SHARPNESS_HACK),
 	            VSCANLINES);
 
 	vec2 dx = mix(vec2(1.0 / TextureSize.x, 0.0),
@@ -470,15 +470,15 @@ void main()
 
 	vec2 fp = mix(fract(pix_coord), fract(pix_coord.yx), VSCANLINES);
 
-	vec4 c00 = GAMMA_IN(texture(s_p, tc - dx - dy).xyzw);
-	vec4 c01 = GAMMA_IN(texture(s_p, tc - dy).xyzw);
-	vec4 c02 = GAMMA_IN(texture(s_p, tc + dx - dy).xyzw);
-	vec4 c03 = GAMMA_IN(texture(s_p, tc + 2.0 * dx - dy).xyzw);
+	vec4 c00 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc - dx - dy).xyzw);
+	vec4 c01 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc - dy).xyzw);
+	vec4 c02 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc + dx - dy).xyzw);
+	vec4 c03 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc + 2.0 * dx - dy).xyzw);
 
-	vec4 c10 = GAMMA_IN(texture(s_p, tc - dx).xyzw);
-	vec4 c11 = GAMMA_IN(texture(s_p, tc).xyzw);
-	vec4 c12 = GAMMA_IN(texture(s_p, tc + dx).xyzw);
-	vec4 c13 = GAMMA_IN(texture(s_p, tc + 2.0 * dx).xyzw);
+	vec4 c10 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc - dx).xyzw);
+	vec4 c11 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc).xyzw);
+	vec4 c12 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc + dx).xyzw);
+	vec4 c13 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc + 2.0 * dx).xyzw);
 
 	mat4 invX = get_hfilter_profile();
 

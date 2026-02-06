@@ -36,7 +36,7 @@ out vec4 t5;
 out vec4 t6;
 out vec4 t7;
 
-uniform vec2 INPUT_TEXTURE_SIZE;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
 uniform vec2 OUTPUT_TEXTURE_SIZE;
 
 void main()
@@ -45,7 +45,7 @@ void main()
 
 	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
-	vec2 ps = vec2(1.0) / INPUT_TEXTURE_SIZE.xy;
+	vec2 ps = vec2(1.0) / INPUT_TEXTURE_SIZE_0.xy;
 
 	float dx = ps.x;
 	float dy = ps.y;
@@ -78,16 +78,16 @@ in vec4 t7;
 
 out vec4 FragColor;
 
-uniform vec2 INPUT_TEXTURE_SIZE;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
 uniform vec2 OUTPUT_TEXTURE_SIZE;
-uniform sampler2D INPUT_TEXTURE;
+uniform sampler2D INPUT_TEXTURE_0;
 
 // compatibility #defines
 
-#define Source INPUT_TEXTURE
+#define Source INPUT_TEXTURE_0
 #define vTexCoord v_texCoord.xy
 
-#define SourceSize vec4(INPUT_TEXTURE_SIZE, 1.0 / INPUT_TEXTURE_SIZE) //either TextureSize or InputSize
+#define SourceSize vec4(INPUT_TEXTURE_SIZE_0, 1.0 / INPUT_TEXTURE_SIZE_0) //either TextureSize or InputSize
 #define OutputSize vec4(OUTPUT_TEXTURE_SIZE, 1.0 / OUTPUT_TEXTURE_SIZE)
 
 uniform float XBR_Y_WEIGHT;
@@ -146,33 +146,33 @@ void main()
 
 	vec2 fp = fract(vTexCoord * SourceSize.xy);
 
-	vec3 A1 = texture(INPUT_TEXTURE, t1.xw).rgb;
-	vec3 B1 = texture(INPUT_TEXTURE, t1.yw).rgb;
-	vec3 C1 = texture(INPUT_TEXTURE, t1.zw).rgb;
+	vec3 A1 = texture(INPUT_TEXTURE_0, t1.xw).rgb;
+	vec3 B1 = texture(INPUT_TEXTURE_0, t1.yw).rgb;
+	vec3 C1 = texture(INPUT_TEXTURE_0, t1.zw).rgb;
 
-	vec3 A = texture(INPUT_TEXTURE, t2.xw).rgb;
-	vec3 B = texture(INPUT_TEXTURE, t2.yw).rgb;
-	vec3 C = texture(INPUT_TEXTURE, t2.zw).rgb;
+	vec3 A = texture(INPUT_TEXTURE_0, t2.xw).rgb;
+	vec3 B = texture(INPUT_TEXTURE_0, t2.yw).rgb;
+	vec3 C = texture(INPUT_TEXTURE_0, t2.zw).rgb;
 
-	vec3 D = texture(INPUT_TEXTURE, t3.xw).rgb;
-	vec3 E = texture(INPUT_TEXTURE, t3.yw).rgb;
-	vec3 F = texture(INPUT_TEXTURE, t3.zw).rgb;
+	vec3 D = texture(INPUT_TEXTURE_0, t3.xw).rgb;
+	vec3 E = texture(INPUT_TEXTURE_0, t3.yw).rgb;
+	vec3 F = texture(INPUT_TEXTURE_0, t3.zw).rgb;
 
-	vec3 G = texture(INPUT_TEXTURE, t4.xw).rgb;
-	vec3 H = texture(INPUT_TEXTURE, t4.yw).rgb;
-	vec3 I = texture(INPUT_TEXTURE, t4.zw).rgb;
+	vec3 G = texture(INPUT_TEXTURE_0, t4.xw).rgb;
+	vec3 H = texture(INPUT_TEXTURE_0, t4.yw).rgb;
+	vec3 I = texture(INPUT_TEXTURE_0, t4.zw).rgb;
 
-	vec3 G5 = texture(INPUT_TEXTURE, t5.xw).rgb;
-	vec3 H5 = texture(INPUT_TEXTURE, t5.yw).rgb;
-	vec3 I5 = texture(INPUT_TEXTURE, t5.zw).rgb;
+	vec3 G5 = texture(INPUT_TEXTURE_0, t5.xw).rgb;
+	vec3 H5 = texture(INPUT_TEXTURE_0, t5.yw).rgb;
+	vec3 I5 = texture(INPUT_TEXTURE_0, t5.zw).rgb;
 
-	vec3 A0 = texture(INPUT_TEXTURE, t6.xy).rgb;
-	vec3 D0 = texture(INPUT_TEXTURE, t6.xz).rgb;
-	vec3 G0 = texture(INPUT_TEXTURE, t6.xw).rgb;
+	vec3 A0 = texture(INPUT_TEXTURE_0, t6.xy).rgb;
+	vec3 D0 = texture(INPUT_TEXTURE_0, t6.xz).rgb;
+	vec3 G0 = texture(INPUT_TEXTURE_0, t6.xw).rgb;
 
-	vec3 C4 = texture(INPUT_TEXTURE, t7.xy).rgb;
-	vec3 F4 = texture(INPUT_TEXTURE, t7.xz).rgb;
-	vec3 I4 = texture(INPUT_TEXTURE, t7.xw).rgb;
+	vec3 C4 = texture(INPUT_TEXTURE_0, t7.xy).rgb;
+	vec3 F4 = texture(INPUT_TEXTURE_0, t7.xz).rgb;
+	vec3 I4 = texture(INPUT_TEXTURE_0, t7.xw).rgb;
 
 	vec4 b = transpose(mat4x3(B, D, H, F)) * (XBR_Y_WEIGHT * yuv[0]);
 	vec4 c = transpose(mat4x3(C, A, G, I)) * (XBR_Y_WEIGHT * yuv[0]);

@@ -44,8 +44,8 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 INPUT_TEXTURE_SIZE;
-uniform sampler2D INPUT_TEXTURE;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform sampler2D INPUT_TEXTURE_0;
 
 #define GAMMA             2.2
 #define GAMMA_IN(color)   pow(color, vec4(GAMMA))
@@ -54,14 +54,14 @@ uniform sampler2D INPUT_TEXTURE;
 vec4 texture_linear(in sampler2D sampler, in vec2 uv)
 {
 	// subtract 0.5 here and add it again after the floor to centre the texel
-	vec2 texCoord = uv * INPUT_TEXTURE_SIZE - vec2(0.5);
+	vec2 texCoord = uv * INPUT_TEXTURE_SIZE_0 - vec2(0.5);
 
 	vec2 s0t0 = floor(texCoord) + vec2(0.5);
 	vec2 s0t1 = s0t0 + vec2(0.0, 1.0);
 	vec2 s1t0 = s0t0 + vec2(1.0, 0.0);
 	vec2 s1t1 = s0t0 + vec2(1.0);
 
-	vec2 invTexSize = 1.0 / INPUT_TEXTURE_SIZE;
+	vec2 invTexSize = 1.0 / INPUT_TEXTURE_SIZE_0;
 
 	vec4 c_s0t0 = GAMMA_IN(texture(sampler, s0t0 * invTexSize));
 	vec4 c_s0t1 = GAMMA_IN(texture(sampler, s0t1 * invTexSize));
@@ -82,7 +82,7 @@ void main()
 	// UV coordinate. We'll do this by rounding down the sample location to
 	// get the exact center of our "starting" texel. The starting texel will
 	// be at location [1, 1] in the grid, where [0, 0] is the top left corner.
-	vec2 samplePos = v_texCoord * INPUT_TEXTURE_SIZE;
+	vec2 samplePos = v_texCoord * INPUT_TEXTURE_SIZE_0;
 	vec2 texCoord1 = floor(samplePos - 0.5) + 0.5;
 
 	// Compute the fractional offset from our starting texel to our original
@@ -110,21 +110,21 @@ void main()
 	vec2 texCoord3  = texCoord1 + 2.0;
 	vec2 texCoord12 = texCoord1 + offset12;
 
-	texCoord0 /= INPUT_TEXTURE_SIZE;
-	texCoord3 /= INPUT_TEXTURE_SIZE;
-	texCoord12 /= INPUT_TEXTURE_SIZE;
+	texCoord0 /= INPUT_TEXTURE_SIZE_0;
+	texCoord3 /= INPUT_TEXTURE_SIZE_0;
+	texCoord12 /= INPUT_TEXTURE_SIZE_0;
 
-	vec4 color = texture_linear(INPUT_TEXTURE, vec2(texCoord0.x, texCoord0.y)) * w0.x * w0.y +
-	             texture_linear(INPUT_TEXTURE, vec2(texCoord12.x, texCoord0.y)) * w12.x * w0.y +
-	             texture_linear(INPUT_TEXTURE, vec2(texCoord3.x, texCoord0.y)) * w3.x * w0.y
+	vec4 color = texture_linear(INPUT_TEXTURE_0, vec2(texCoord0.x, texCoord0.y)) * w0.x * w0.y +
+	             texture_linear(INPUT_TEXTURE_0, vec2(texCoord12.x, texCoord0.y)) * w12.x * w0.y +
+	             texture_linear(INPUT_TEXTURE_0, vec2(texCoord3.x, texCoord0.y)) * w3.x * w0.y
 
-	           + texture_linear(INPUT_TEXTURE, vec2(texCoord0.x, texCoord12.y)) * w0.x * w12.y +
-	             texture_linear(INPUT_TEXTURE, vec2(texCoord12.x, texCoord12.y)) * w12.x * w12.y +
-	             texture_linear(INPUT_TEXTURE, vec2(texCoord3.x, texCoord12.y)) * w3.x * w12.y
+	           + texture_linear(INPUT_TEXTURE_0, vec2(texCoord0.x, texCoord12.y)) * w0.x * w12.y +
+	             texture_linear(INPUT_TEXTURE_0, vec2(texCoord12.x, texCoord12.y)) * w12.x * w12.y +
+	             texture_linear(INPUT_TEXTURE_0, vec2(texCoord3.x, texCoord12.y)) * w3.x * w12.y
 
-	           + texture_linear(INPUT_TEXTURE, vec2(texCoord0.x, texCoord3.y)) * w0.x * w3.y +
-	             texture_linear(INPUT_TEXTURE, vec2(texCoord12.x, texCoord3.y)) * w12.x * w3.y +
-	             texture_linear(INPUT_TEXTURE, vec2(texCoord3.x, texCoord3.y)) * w3.x * w3.y;
+	           + texture_linear(INPUT_TEXTURE_0, vec2(texCoord0.x, texCoord3.y)) * w0.x * w3.y +
+	             texture_linear(INPUT_TEXTURE_0, vec2(texCoord12.x, texCoord3.y)) * w12.x * w3.y +
+	             texture_linear(INPUT_TEXTURE_0, vec2(texCoord3.x, texCoord3.y)) * w3.x * w3.y;
 
 	FragColor = GAMMA_OUT(color);
 }
