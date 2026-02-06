@@ -18,8 +18,12 @@
  *	more details
  */
 
+/*
+
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
+
+*/
 
 #if defined(VERTEX)
 

@@ -10,6 +10,8 @@
 // Ported from Libretro's GLSL shader crt-hyllian.glslp to DOSBox-compatible
 // format by Tyrells.
 
+/*
+
 #pragma parameter BEAM_PROFILE "BEAM PROFILE (BP)" 0.0 0.0 2.0 1.0
 #pragma parameter HFILTER_PROFILE "HORIZONTAL FILTER PROFILE [ HERMITE | CATMULL-ROM ]" 0.0 0.0 1.0 1.0
 #pragma parameter BEAM_MIN_WIDTH "Custom [If BP=0.00] MIN BEAM WIDTH" 0.95 0.0 1.0 0.01
@@ -23,6 +25,8 @@
 #pragma parameter INPUT_GAMMA "INPUT GAMMA" 2.4 0.0 5.0 0.1
 #pragma parameter OUTPUT_GAMMA "OUTPUT GAMMA" 2. 0.0 5.0 0.1
 #pragma parameter VSCANLINES "VERTICAL SCANLINES [ OFF | ON ]" 0.0 0.0 1.0 1.0
+
+*/
 
 /////////////////////////////////////////////////////////////////////////////
 
