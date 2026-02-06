@@ -63,4 +63,5 @@ include(GoogleTest)
 gtest_discover_tests(
   dosbox_tests WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   DISCOVERY_MODE PRE_TEST
+  DISCOVERY_TIMEOUT 60
 )
