@@ -14,11 +14,9 @@
 #include <vector>
 
 #include "private/shader_common.h"
-#include "private/shader_manager.h"
-#include "private/shader_pass.h"
+#include "private/shader_pipeline.h"
 
 #include "dosbox_config.h"
-#include "gui/render/render.h"
 #include "misc/video.h"
 #include "utils/rect.h"
 
@@ -46,14 +44,14 @@ public:
 
 	void NotifyVideoModeChanged(const VideoMode& video_mode) override;
 
-	SetShaderResult SetShader(const std::string& symbolic_shader_descriptor) override;
+	SetShaderResult SetShader(const std::string& shader_descriptor) override;
 
-	void ForceReloadCurrentShader() override;
+	bool ForceReloadCurrentShader() override;
 
 	ShaderInfo GetCurrentShaderInfo() override;
 	ShaderPreset GetCurrentShaderPreset() override;
 
-	std::string GetCurrentSymbolicShaderDescriptor() override;
+	std::string GetCurrentShaderDescriptorString() override;
 
 	void StartFrame(uint32_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
@@ -87,22 +85,15 @@ private:
 	void MaybeUpdateRenderSize(const int new_render_width_px,
 	                           const int new_render_height_px);
 
-	SetShaderResult SetShaderInternal(const std::string& symbolic_shader_descriptor,
+	SetShaderResult SetShaderInternal(const std::string& shader_descriptor,
 	                                  const bool force_reload = false);
 
-	void HandleShaderAndPresetChangeViaNotify(const ShaderDescriptor& new_descriptor);
-
-	SetShaderResult MaybeSetShaderAndPreset(const ShaderDescriptor& curr_descriptor,
-	                                        const ShaderDescriptor& new_descriptor);
+	bool MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_descriptor,
+	                                const ShaderDescriptor& new_descriptor);
 
 	bool SwitchShader(const std::string& shader_name);
 
-	bool SwitchShaderPresetOrSetDefault(const ShaderDescriptor& descriptor);
-
-
-	// ---------------------------------------------------------------------
-	// Common
-	// ---------------------------------------------------------------------
+	void RecreateInputTexture();
 
 	SDL_Window* window    = {};
 	SDL_GLContext context = {};
@@ -140,35 +131,7 @@ private:
 	// Vertex data for an oversized triangle
 	std::array<GLfloat, 2 * 3> vertex_data = {};
 
-	// ---------------------------------------------------------------------
-	// Shader passes
-	// ---------------------------------------------------------------------
-	std::vector<ShaderPass> shader_passes = {};
-
-	// Image adjustments pass params
-	// -----------------------------
-	ColorSpace color_space = {};
-
-	ImageAdjustmentSettings image_adjustment_settings = {};
-
-	bool enable_image_adjustments = false;
-
-	void UpdateImageAdjustmentsPassUniforms();
-
-	// Main shader pass params
-	// -----------------------
-	ShaderPreset main_shader_preset = {};
-
-	void UpdateMainShaderPassUniforms();
-
-	ShaderPass& GetShaderPass(const ShaderPassId id);
-	void RecreateInputTexture();
-
-	GLuint CreateTexture();
-	void SetTextureFiltering(const GLuint texture);
-	void RenderPass(const ShaderPass& pass);
-
-	ShaderDescriptor curr_shader_descriptor = {};
+	ShaderDescriptor current_shader_descriptor = {};
 
 	// Current shader descriptor string as set by the user (e.g., if the
 	// user set `crt-auto`, this will stay `crt-auto`; it won't be synced to
@@ -177,7 +140,12 @@ private:
 	//
 	// Might contain the .glsl file extension if set by the user.
 	//
-	std::string curr_symbolic_shader_descriptor = {};
+	std::string current_shader_descriptor_string = {};
+
+	ShaderInfo main_shader_info     = {};
+	ShaderPreset main_shader_preset = {};
+
+	std::unique_ptr<ShaderPipeline> shader_pipeline = {};
 };
 
 #endif // C_OPENGL

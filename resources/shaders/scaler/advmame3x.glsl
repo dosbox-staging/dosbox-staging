@@ -17,14 +17,14 @@ layout(location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
 
-uniform vec2 INPUT_TEXTURE_SIZE;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
 	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	             INPUT_TEXTURE_SIZE * 3.0;
+	             INPUT_TEXTURE_SIZE_0 * 3.0;
 }
 
 #elif defined(FRAGMENT)
@@ -33,8 +33,8 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 INPUT_TEXTURE_SIZE;
-uniform sampler2D INPUT_TEXTURE;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform sampler2D INPUT_TEXTURE_0;
 
 vec3 getadvmame3xtexel(vec2 coord)
 {
@@ -56,13 +56,13 @@ vec3 getadvmame3xtexel(vec2 coord)
 		left = up - left;
 	}
 
-	vec3 c0 = texture(INPUT_TEXTURE, (base + up + left) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c1 = texture(INPUT_TEXTURE, (base + up) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c2 = texture(INPUT_TEXTURE, (base + up - left) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c3 = texture(INPUT_TEXTURE, (base + left) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c4 = texture(INPUT_TEXTURE, base / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c5 = texture(INPUT_TEXTURE, (base - left) / INPUT_TEXTURE_SIZE).xyz;
-	vec3 c7 = texture(INPUT_TEXTURE, (base - up) / INPUT_TEXTURE_SIZE).xyz;
+	vec3 c0 = texture(INPUT_TEXTURE_0, (base + up + left) / INPUT_TEXTURE_SIZE_0).xyz;
+	vec3 c1 = texture(INPUT_TEXTURE_0, (base + up) / INPUT_TEXTURE_SIZE_0).xyz;
+	vec3 c2 = texture(INPUT_TEXTURE_0, (base + up - left) / INPUT_TEXTURE_SIZE_0).xyz;
+	vec3 c3 = texture(INPUT_TEXTURE_0, (base + left) / INPUT_TEXTURE_SIZE_0).xyz;
+	vec3 c4 = texture(INPUT_TEXTURE_0, base / INPUT_TEXTURE_SIZE_0).xyz;
+	vec3 c5 = texture(INPUT_TEXTURE_0, (base - left) / INPUT_TEXTURE_SIZE_0).xyz;
+	vec3 c7 = texture(INPUT_TEXTURE_0, (base - up) / INPUT_TEXTURE_SIZE_0).xyz;
 
 	bool outer  = c1 != c7 && c3 != c5;
 	bool check1 = c3 == c1 && (!any(m) || c4 != c2);

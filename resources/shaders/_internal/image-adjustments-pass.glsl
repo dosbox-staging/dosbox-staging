@@ -27,7 +27,7 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform sampler2D INPUT_TEXTURE;
+uniform sampler2D INPUT_TEXTURE_0;
 
 uniform int COLOR_SPACE;
 
@@ -351,7 +351,7 @@ const float CrtBlackLevel =
 
 void main()
 {
-	vec3 color = texture(INPUT_TEXTURE, v_texCoord).rgb;
+	vec3 color = texture(INPUT_TEXTURE_0, v_texCoord).rgb;
 	vec3 orig_color = color;
 
 	color = sigmoid_contrast(color, DIGITAL_CONTRAST);
