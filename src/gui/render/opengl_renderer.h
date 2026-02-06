@@ -14,11 +14,9 @@
 #include <vector>
 
 #include "private/shader_common.h"
-#include "private/shader_manager.h"
-#include "private/shader_pass.h"
+#include "private/shader_pipeline.h"
 
 #include "dosbox_config.h"
-#include "gui/render/render.h"
 #include "misc/video.h"
 #include "utils/rect.h"
 
@@ -83,6 +81,7 @@ private:
 	                            const uint32_t sdl_window_flags);
 
 	bool InitRenderer();
+	void RecreateInputTexture();
 
 	void MaybeUpdateRenderSize(const int new_render_width_px,
 	                           const int new_render_height_px);
@@ -92,14 +91,10 @@ private:
 
 	void HandleShaderAndPresetChangeViaNotify(const ShaderDescriptor& new_descriptor);
 
-	SetShaderResult MaybeSetShaderAndPreset(const ShaderDescriptor& curr_descriptor,
-	                                        const ShaderDescriptor& new_descriptor);
+	SetShaderResult MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_descriptor,
+	                                           const ShaderDescriptor& new_descriptor);
 
 	bool SwitchShader(const std::string& shader_name);
-
-	// ---------------------------------------------------------------------
-	// Common
-	// ---------------------------------------------------------------------
 
 	SDL_Window* window    = {};
 	SDL_GLContext context = {};
@@ -137,37 +132,6 @@ private:
 	// Vertex data for an oversized triangle
 	std::array<GLfloat, 2 * 3> vertex_data = {};
 
-	// ---------------------------------------------------------------------
-	// Shader passes
-	// ---------------------------------------------------------------------
-	std::vector<ShaderPass> shader_passes = {};
-
-	// Image adjustments pass params
-	// -----------------------------
-	ColorSpace color_space = {};
-
-	ImageAdjustmentSettings image_adjustment_settings = {};
-
-	bool enable_image_adjustments = false;
-
-	void UpdateImageAdjustmentsPassUniforms();
-
-	// Main shader pass params
-	// -----------------------
-	ShaderPreset main_shader_preset = {};
-
-	void UpdateMainShaderPassUniforms();
-
-	ShaderPass& GetShaderPass(const ShaderPassId id);
-	void RecreateInputTexture();
-
-	GLuint CreateTexture();
-	void SetTextureFiltering(const GLuint texture);
-	void RenderPass(const ShaderPass& pass);
-
-	ShaderDescriptor curr_shader_descriptor = {};
-	ShaderDescriptor current_shader_descriptor = {};
-
 	// Current shader descriptor string as set by the user (e.g., if the
 	// user set `crt-auto`, this will stay `crt-auto`; it won't be synced to
 	// the actual shader & preset combo in use, such as
@@ -176,6 +140,13 @@ private:
 	// Might contain the .glsl file extension if set by the user.
 	//
 	std::string curr_symbolic_shader_descriptor = {};
+
+	ShaderDescriptor curr_shader_descriptor = {};
+
+	ShaderInfo main_shader_info     = {};
+	ShaderPreset main_shader_preset = {};
+
+	std::unique_ptr<ShaderPipeline> shader_pipeline = {};
 };
 
 #endif // C_OPENGL
