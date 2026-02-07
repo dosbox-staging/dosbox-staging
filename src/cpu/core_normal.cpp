@@ -14,6 +14,7 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "lazyflags.h"
+#include "webserver/bridge.h"
 
 #include "simde/x86/mmx.h"
 
@@ -132,6 +133,7 @@ static inline uint32_t Fetchd() {
 
 Bits CPU_Core_Normal_Run() noexcept
 {
+	Webserver::DebugBridge::Instance().ProcessRequests();
 	while (CPU_Cycles-->0) {
 		LOADIP;
 		core.opcode_index=cpu.code.big*0x200;
@@ -149,7 +151,7 @@ Bits CPU_Core_Normal_Run() noexcept
 #endif
 		cycle_count++;
 #endif
-restart_opcode:
+	restart_opcode:
 		switch (core.opcode_index+Fetchb()) {
 		#include "core_normal/prefix_none.h"
 		#include "core_normal/prefix_0f.h"

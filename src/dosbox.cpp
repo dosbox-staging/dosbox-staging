@@ -71,6 +71,7 @@
 #include "shell/autoexec.h"
 #include "shell/shell.h"
 #include "utils/math_utils.h"
+#include "webserver/webserver.h"
 
 MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
@@ -1082,6 +1083,7 @@ void DOSBOX_InitModuleConfigsAndMessages()
 	IPX_AddConfigSection(control);
 
 	ETHERNET_AddConfigSection(control);
+	WEBSERVER_AddConfigSection(control);
 
 	control->AddAutoexecSection();
 
@@ -1147,12 +1149,14 @@ void DOSBOX_InitModules()
 	ETHERNET_Init();
 	VIRTUALBOX_Init();
 	VMWARE_Init();
+	WEBSERVER_Init();
 
 	AUTOEXEC_Init();
 }
 
 void DOSBOX_DestroyModules()
 {
+	WEBSERVER_Destroy();
 	VMWARE_Destroy();
 	VIRTUALBOX_Destroy();
 	ETHERNET_Destroy();

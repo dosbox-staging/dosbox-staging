@@ -173,6 +173,7 @@ inline bool is_machine_hercules() {
 constexpr auto DefaultMt32RomsDir        = "mt32-roms";
 constexpr auto DefaultSoundCanvasRomsDir = "soundcanvas-roms";
 constexpr auto DefaultSoundfontsDir      = "soundfonts";
+constexpr auto DefaultWebserverDir       = "webserver";
 constexpr auto DiskNoisesDir             = "disk-noises";
 constexpr auto PluginsDir                = "plugins";
 constexpr auto ShaderPresetsDir          = "shader-presets";

@@ -175,7 +175,9 @@
 //
 
 // Prevent <windows.h> from clobbering std::min and std::max
+#ifndef NOMINMAX
 #cmakedefine NOMINMAX 1
+#endif
 
 // Enables mathematical constants (such as M_PI) in Windows math.h header
 // https://docs.microsoft.com/en-us/cpp/c-runtime-library/math-constants
