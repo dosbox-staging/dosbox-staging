@@ -1,14 +1,14 @@
-// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_IMAGE_SCALER_H
 #define DOSBOX_IMAGE_SCALER_H
 
+#include <memory>
 #include <vector>
 
-#include "image_decoder.h"
-
-#include "gui/render/render.h"
+#include "misc/image_decoder.h"
+#include "misc/rendered_image.h"
 #include "utils/rgb888.h"
 
 enum class OutputPixelFormat { Indexed8, Rgb888 };
@@ -92,8 +92,11 @@ private:
 	void GenerateNextIntegerUpscaledOutputRow();
 	void GenerateNextSharpUpscaledOutputRow();
 
-	RenderedImage input        = {};
-	ImageDecoder input_decoder = {};
+	RenderedImage input                         = {};
+	std::unique_ptr<ImageDecoder> input_decoder = {};
+
+	std::vector<uint8_t> row_decode_buf_8   = {};
+	std::vector<uint32_t> row_decode_buf_32 = {};
 
 	std::vector<float> linear_row_buf = {};
 

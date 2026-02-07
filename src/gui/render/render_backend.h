@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_RENDER_BACKEND_H
@@ -10,6 +10,9 @@
 #include <string>
 
 #include "dosbox_config.h"
+#include "gui/render/render.h"
+#include "misc/rendered_image.h"
+#include "misc/video.h"
 #include "utils/rect.h"
 
 // forward declaration
@@ -78,8 +81,8 @@ public:
 	// If a renderer implements a double buffering scheme, this call should
 	// return a pointer to the current render buffer.
 	//
-	// `pitch_out` is the number of bytes used to store a single row of pixel
-	// data, including optional padding bytes at the end of the row.
+	// `pitch_out` is the number of bytes used to store a single row of
+	// pixel data, including optional padding bytes at the end of the row.
 	//
 	virtual void StartFrame(uint32_t*& pixels_out, int& pitch_out) = 0;
 

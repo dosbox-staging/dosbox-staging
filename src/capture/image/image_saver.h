@@ -1,17 +1,19 @@
-// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_IMAGE_SAVER_H
 #define DOSBOX_IMAGE_SAVER_H
 
 #include <atomic>
+#include <memory>
 #include <optional>
 #include <thread>
 #include <vector>
 
-#include "gui/render/render.h"
-#include "image_decoder.h"
 #include "image_scaler.h"
+
+#include "misc/image_decoder.h"
+#include "misc/rendered_image.h"
 #include "misc/std_filesystem.h"
 #include "utils/rwqueue.h"
 
@@ -65,8 +67,7 @@ public:
 	// image was saved. Consider the implications carefully; you might need
 	// to pass in a deep-copied copy of the RenderedImage instance, because
 	// you cannot know when exactly in the future will it be freed.
-	void QueueImage(const RenderedImage& image,
-	                const CapturedImageType type,
+	void QueueImage(const RenderedImage& image, const CapturedImageType type,
 	                const std::optional<std_fs::path>& path);
 
 	// prevent copying
@@ -92,8 +93,8 @@ private:
 
 	ImageScaler image_scaler = {};
 
-	ImageDecoder image_decoder   = {};
-	std::vector<uint8_t> row_buf = {};
+	std::vector<uint32_t> row_decode_buf = {};
+	std::vector<uint8_t> row_output_buf  = {};
 
 	FILE* outfile = nullptr;
 };
