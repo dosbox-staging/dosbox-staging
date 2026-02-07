@@ -37,11 +37,13 @@ jobs:
           # external vcpkg dependencies for AMR64 first
           - arch: x64
             debugger: false
-            max_warnings: 0
+          # temporary issue with iir library
+            max_warnings: 2
 
           - arch: x64
             debugger: true
-            max_warnings: 0
+          # temporary issue with iir library
+            max_warnings: 2
 
     steps:
       - name: Check out repository
