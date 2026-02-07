@@ -141,8 +141,8 @@ static void clear_cache_handler(const void* src_line_data)
 	auto src = static_cast<const uint8_t*>(src_line_data);
 
 	// The width of all screen modes and therefore `cache_pitch` too is a
-	// multiple of 8 (`cache_pitch` equals the screen mode's width multiplied
-	// by the number of bytes per pixel and no padding).
+	// multiple of 8 (`cache_pitch` equals the screen mode's width
+	// multiplied by the number of bytes per pixel and no padding).
 	//
 	auto cache = render.scale.cache_read;
 
@@ -732,40 +732,37 @@ static bool set_shader(const std::string& descriptor)
 	}
 }
 
-static void set_fallback_shader_or_exit()
+static void set_fallback_shader_or_exit(const std::string& failed_shader_descriptor)
 {
-	if (set_shader(SymbolicShaderName::AutoGraphicsStandard)) {
-		set_section_property_value("render",
-		                           "shader",
-		                           SymbolicShaderName::AutoGraphicsStandard);
-		return;
-	}
-
-	NOTIFY_DisplayWarning(Notification::Source::Console,
-	                      "RENDER",
-	                      "RENDER_SHADER_FALLBACK",
-	                      SymbolicShaderName::AutoGraphicsStandard,
-	                      ShaderName::Sharp);
-
-	if (set_shader(ShaderName::Sharp)) {
-		set_section_property_value("render", "shader", ShaderName::Sharp);
-		return;
-	}
-
-	E_Exit("RENDER: Error loading fallback shaders, exiting");
-}
-
-static void set_shader_with_fallback_or_exit(const std::string& shader_descriptor)
-{
-	if (!set_shader(shader_descriptor)) {
+	if (failed_shader_descriptor != SymbolicShaderName::AutoGraphicsStandard) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "RENDER",
 		                      "RENDER_SHADER_FALLBACK",
-		                      shader_descriptor.c_str(),
+		                      failed_shader_descriptor.c_str(),
 		                      SymbolicShaderName::AutoGraphicsStandard);
 
-		set_fallback_shader_or_exit();
+		if (set_shader(SymbolicShaderName::AutoGraphicsStandard)) {
+			set_section_property_value("render",
+			                           "shader",
+			                           SymbolicShaderName::AutoGraphicsStandard);
+			return;
+		}
 	}
+
+	if (failed_shader_descriptor != ShaderName::Sharp) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "RENDER_SHADER_FALLBACK",
+		                      SymbolicShaderName::AutoGraphicsStandard,
+		                      ShaderName::Sharp);
+
+		if (set_shader(ShaderName::Sharp)) {
+			set_section_property_value("render", "shader", ShaderName::Sharp);
+			return;
+		}
+	}
+
+	E_Exit("RENDER: Error setting fallback shaders, exiting");
 }
 
 static void reload_shader([[maybe_unused]] const bool pressed)
@@ -774,21 +771,7 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 		return;
 	}
 
-	const auto shader_descriptor =
-	        ShaderManager::GetInstance().GetCurrentShaderDescriptor();
-
-	LOG_MSG("RENDER: Reloading shader '%s'",
-	        shader_descriptor.ToString().c_str());
-
-	if (!GFX_GetRenderer()->ForceReloadCurrentShader()) {
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "RENDER",
-		                      "RENDER_SHADER_FALLBACK",
-		                      shader_descriptor.ToString().c_str(),
-		                      SymbolicShaderName::AutoGraphicsStandard);
-
-		set_fallback_shader_or_exit();
-	}
+	GFX_GetRenderer()->ForceReloadCurrentShader();
 
 	set_scan_and_pixel_doubling();
 
@@ -1211,9 +1194,9 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 		// - it allows the 3.5x and 4.5x half steps,
 		// - and it disables integer scaling above 5.0x scaling.
 		//
-		// The half-steps and no scaling above 5.0x result in no moire
-		// artifacts in 99% of cases, so it's very much worth it for
-		// better viewport utilisation.
+		// The half-steps and no scaling above 5.0x result in no
+		// moire artifacts in 99% of cases, so it's very much
+		// worth it for better viewport utilisation.
 		//
 		if (GFX_GetRenderBackendType() != RenderBackendType::OpenGl) {
 			return draw_size_fit_px;
@@ -1224,17 +1207,18 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 				const auto factor = draw_size_fit_px.h /
 				                    render_size_px.h;
 				if (factor >= 5.0) {
-					// Disable integer scaling above 5.0x
-					// vertical scaling
+					// Disable integer scaling
+					// above 5.0x vertical scaling
 					return factor;
 				}
 				if (factor >= 3.0) {
-					// Allow 3.5x and 4.5x half steps in
-					// the 3.0x to 5.0x vertical scaling range
+					// Allow 3.5x and 4.5x half
+					// steps in the 3.0x to 5.0x
+					// vertical scaling range
 					return floorf(factor * 2) / 2;
 				}
-				// Allow only integer steps below 3.0x vertical
-				// scaling
+				// Allow only integer steps below 3.0x
+				// vertical scaling
 				return floorf(factor);
 			}();
 
@@ -1242,8 +1226,9 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 			        integer_scale_factor);
 		}
 
-		// Handles the `sharp` shader fallback when the viewport is
-		// is too small for CRT shaders; integer scaling is then disabled.
+		// Handles the `sharp` shader fallback when the viewport
+		// is is too small for CRT shaders; integer scaling is
+		// then disabled.
 		return draw_size_fit_px;
 	};
 
@@ -1506,14 +1491,14 @@ static void init_render_settings(SectionProp& section)
 	        "                 defaults to 50). E.g., tandy 100\n"
 	        "\n"
 	        "  tandy-warm:    Emulation of the actual colour output of an unknown Tandy\n"
-	        "                 monitor. Inteded to be used with 'crt_color_profile = none' and\n"
-	        "                 'color_temperature = 6500'.\n"
+	        "                 monitor. Intended to be used with 'crt_color_profile = none'\n"
+	        "                 and 'color_temperature = 6500'.\n"
 	        "\n"
 	        "  ibm5153 <c>:   Emulation of the actual colour output of an IBM 5153 monitor\n"
 	        "                 with a unique contrast control that dims non-bright colours\n"
 	        "                 only. The contrast can be optionally provided as a second\n"
 	        "                 parameter (0 to 100; defaults to 100), e.g., ibm5153 60.\n"
-	        "                 Inteded to be used with 'crt_color_profile = none' and\n"
+	        "                 Intended to be used with 'crt_color_profile = none' and\n"
 	        "                 'color_temperature = 6500'.\n"
 	        "\n"
 	        "  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:\n"
@@ -1756,7 +1741,7 @@ static void init_render_settings(SectionProp& section)
 	        "            0 does not raise the black level.\n"
 	        "\n"
 	        "Note: Raising the black level if useful for \"black scanline\" emulation; this\n"
-	        "      adds visula interest to PCjr, Tandy, CGA, and EGA games with simple\n"
+	        "      adds visual interest to PCjr, Tandy, CGA, and EGA games with simple\n"
 	        "      graphics.",
 	        DefaultBlackLevel,
 	        BlackLevelMin,
@@ -2313,8 +2298,9 @@ static void adjust_image_setting(const Direction dir)
 
 	switch (curr_image_adjustment_control) {
 	case ColorSpace: {
-		// Only `srgb` is supported on macOS, so we only allow cycling
-		// through the other color space settings on Windows and Linux.
+		// Only `srgb` is supported on macOS, so we only allow
+		// cycling through the other color space settings on
+		// Windows and Linux.
 		//
 #if !defined(MACOSX)
 		const auto setting_name = "color_space";
@@ -2508,7 +2494,11 @@ static std::string get_shader_setting_value()
 
 void RENDER_SetShaderWithFallback()
 {
-	set_shader_with_fallback_or_exit(get_shader_setting_value());
+	const auto shader_descriptor = get_shader_setting_value();
+
+	if (!set_shader(shader_descriptor)) {
+		set_fallback_shader_or_exit(shader_descriptor);
+	}
 }
 
 static void set_monochrome_palette(SectionProp& section)
@@ -2571,17 +2561,21 @@ static void notify_render_setting_updated(SectionProp& section,
 		reinit_drawing();
 
 	} else if (prop_name == "cga_colors") {
-		// TODO Support switching custom CGA colors at runtime. This is
-		// somewhat complicated and needs experimentation.
+		// TODO Support switching custom CGA colors at runtime.
+		// This is somewhat complicated and needs experimentation.
 
 	} else if (prop_name == "glshader" || prop_name == "shader") {
-		set_shader_with_fallback_or_exit(get_shader_setting_value());
+
+		const auto shader_descriptor = get_shader_setting_value();
+		if (!set_shader(shader_descriptor)) {
+			set_fallback_shader_or_exit(shader_descriptor);
+		}
 		reinit_drawing();
 
 		set_section_property_value(
 		        "render",
 		        "shader",
-		        GFX_GetRenderer()->GetCurrentShaderDescriptorString());
+		        GFX_GetRenderer()->GetCurrentSymbolicShaderDescriptor());
 
 	} else if (prop_name == "integer_scaling") {
 		set_integer_scaling(section);

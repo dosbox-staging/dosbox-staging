@@ -33,8 +33,10 @@
 
 CHECK_NARROWING();
 
-ShaderDescriptor parse_shader_descriptor(const std::string& descriptor,
-                                         const std::string& extension)
+// #define DEBUG_SHADER_MANAGER
+
+ShaderDescriptor ShaderDescriptor::FromString(const std::string& descriptor,
+                                              const std::string& extension)
 {
 	const auto parts        = split(descriptor, ":");
 	const auto& shader_name = parts[0];
@@ -50,69 +52,64 @@ ShaderDescriptor parse_shader_descriptor(const std::string& descriptor,
 	return {path.string(), preset_name};
 }
 
-void ShaderManager::NotifyShaderChanged(const std::string& shader_descriptor,
-                                        const std::string& extension)
+ShaderDescriptor ShaderManager::NotifyShaderChanged(const std::string& symbolic_shader_descriptor,
+                                                    const std::string& extension)
 {
-	assert(!shader_descriptor.empty());
+	assert(!symbolic_shader_descriptor.empty());
 	assert(!extension.empty());
 
-	const auto descriptor = parse_shader_descriptor(shader_descriptor, extension);
+	const auto shader_descriptor = ShaderDescriptor::FromString(symbolic_shader_descriptor,
+	                                                            extension);
 
-	const auto shader_name = MapShaderName(descriptor.shader_name);
+	const auto mapped_shader_name = MapShaderName(shader_descriptor.shader_name);
 
-	auto store_descriptor_and_maybe_autoswitch = [&]() {
-		current_shader.descriptor = {shader_name, descriptor.preset_name};
-		MaybeAutoSwitchShader();
-	};
+	const ShaderDescriptor new_shader_descriptor = {mapped_shader_name,
+	                                                shader_descriptor.preset_name};
 
 	using enum ShaderMode;
 
-	if (shader_name == SymbolicShaderName::AutoGraphicsStandard) {
-		if (current_shader.mode != AutoGraphicsStandard) {
-			current_shader.mode = AutoGraphicsStandard;
+	if (mapped_shader_name == SymbolicShaderName::AutoGraphicsStandard) {
+		if (current_shader_mode != AutoGraphicsStandard) {
+
+			current_shader_mode = AutoGraphicsStandard;
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the graphics "
 			        "standard of the video mode");
-
-			store_descriptor_and_maybe_autoswitch();
 		}
-	} else if (shader_name == SymbolicShaderName::AutoMachine) {
-		if (current_shader.mode != AutoMachine) {
-			current_shader.mode = AutoMachine;
+	} else if (mapped_shader_name == SymbolicShaderName::AutoMachine) {
+		if (current_shader_mode != AutoMachine) {
 
+			current_shader_mode = AutoMachine;
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the "
 			        "configured graphics adapter");
-
-			store_descriptor_and_maybe_autoswitch();
 		}
-	} else if (shader_name == SymbolicShaderName::AutoArcade) {
-		if (current_shader.mode != AutoArcade) {
-			current_shader.mode = AutoArcade;
+	} else if (mapped_shader_name == SymbolicShaderName::AutoArcade) {
+		if (current_shader_mode != AutoArcade) {
 
+			current_shader_mode = AutoArcade;
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
 			        "CRT shader (normal variant)");
-
-			store_descriptor_and_maybe_autoswitch();
 		}
-	} else if (shader_name == SymbolicShaderName::AutoArcadeSharp) {
-		if (current_shader.mode != AutoArcadeSharp) {
-			current_shader.mode = AutoArcadeSharp;
+	} else if (mapped_shader_name == SymbolicShaderName::AutoArcadeSharp) {
+		if (current_shader_mode != AutoArcadeSharp) {
 
+			current_shader_mode = AutoArcadeSharp;
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
 			        "CRT shader (sharp variant)");
-
-			store_descriptor_and_maybe_autoswitch();
 		}
 	} else {
-		current_shader.mode       = Single;
-		current_shader.descriptor = {shader_name, descriptor.preset_name};
+		current_shader_mode = Single;
 
 		LOG_MSG("RENDER: Using shader '%s'",
-		        current_shader.descriptor.ToString().c_str());
+		        new_shader_descriptor.ToString().c_str());
 	}
+
+	last_shader_descriptor = MaybeAutoSwitchShader(new_shader_descriptor);
+	return last_shader_descriptor;
 }
 
-void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_size_px,
-                                                  const VideoMode& new_video_mode)
+ShaderDescriptor ShaderManager::NotifyRenderParametersChanged(
+        const ShaderDescriptor& curr_shader_descriptor,
+        const DosBox::Rect new_canvas_size_px, const VideoMode& new_video_mode)
 {
 	// We need to calculate the scale factors for two eventualities: 1)
 	// potentially double-scanned, and 2) forced single-scanned output. Then
@@ -164,7 +161,8 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_
 
 	video_mode = new_video_mode;
 
-	MaybeAutoSwitchShader();
+	last_shader_descriptor = MaybeAutoSwitchShader(curr_shader_descriptor);
+	return last_shader_descriptor;
 }
 
 std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
@@ -188,7 +186,7 @@ std::optional<std::pair<ShaderInfo, std::string>> ShaderManager::LoadShader(
 	                                                     shader_source);
 
 	const bool is_adaptive = [&] {
-		if (current_shader.mode == ShaderMode::Single) {
+		if (current_shader_mode == ShaderMode::Single) {
 			return false;
 
 		} else {
@@ -218,6 +216,8 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 
 	// TODO get_resource_path() should return optional
 	if (path.empty()) {
+		LOG_WARNING("RENDER: Cannot locate shader preset '%s'",
+		            descriptor.ToString().c_str());
 		return {};
 	}
 
@@ -225,14 +225,24 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 	                         (std_fs::is_regular_file(path) ||
 	                          std_fs::is_symlink(path));
 	if (!file_exists) {
+		LOG_WARNING(
+		        "RENDER: Error loading shader preset file '%s'; "
+		        "file does not exist or not a regular file",
+		        path.string().c_str());
 		return {};
 	}
 
 	CSimpleIniA ini;
 	ini.SetUnicode();
 
+#ifdef DEBUG_SHADER_MANAGER
+	LOG_DEBUG("RENDER: Loading shader preset '%s'", path.string().c_str());
+#endif
+
 	const auto result = ini.LoadFile(path.string().c_str());
 	if (result < 0) {
+		LOG_WARNING("RENDER: Error loading shader preset '%s'; invalid file format",
+		            path.string().c_str());
 		return {};
 	}
 
@@ -266,19 +276,17 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 				}
 			}
 		}
+	} else {
+		LOG_WARNING("RENDER: Invalid preset file; [parameters] section not found");
+		return {};
 	}
 
 	return preset;
 }
 
-ShaderDescriptor ShaderManager::GetCurrentShaderDescriptor() const
-{
-	return current_shader.descriptor;
-}
-
 ShaderMode ShaderManager::GetCurrentShaderMode() const
 {
-	return current_shader.mode;
+	return current_shader_mode;
 }
 
 std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
@@ -542,13 +550,14 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
         };
 }
 
-void ShaderManager::MaybeAutoSwitchShader()
+ShaderDescriptor ShaderManager::MaybeAutoSwitchShader(
+        const ShaderDescriptor& new_shader_descriptor) const
 {
 	using enum ShaderMode;
 
-	const auto new_shader_descriptor = [&]() -> ShaderDescriptor {
-		switch (current_shader.mode) {
-		case Single: return current_shader.descriptor;
+	const auto new_descriptor = [&]() -> ShaderDescriptor {
+		switch (current_shader_mode) {
+		case Single: return new_shader_descriptor;
 
 		case AutoGraphicsStandard:
 			return FindShaderAutoGraphicsStandard();
@@ -562,18 +571,20 @@ void ShaderManager::MaybeAutoSwitchShader()
 		}
 	}();
 
-	if (current_shader.descriptor == new_shader_descriptor) {
-		return;
+	if (last_shader_descriptor != new_descriptor) {
+		if (current_shader_mode == ShaderMode::AutoGraphicsStandard &&
+		    video_mode.has_vga_colors) {
+
+			LOG_MSG("RENDER: EGA mode with custom 18-bit VGA palette "
+			        "detected; auto-switching to VGA shader");
+		}
+	}
+	if (current_shader_mode != Single) {
+		LOG_MSG("RENDER: Auto-switched to shader '%s'",
+		        new_descriptor.ToString().c_str());
 	}
 
-	current_shader.descriptor = new_shader_descriptor;
-
-	if (video_mode.has_vga_colors) {
-		LOG_MSG("RENDER: EGA mode with custom 18-bit VGA palette "
-		        "detected; auto-switching to VGA shader");
-	}
-	LOG_MSG("RENDER: Auto-switched to shader '%s'",
-	        current_shader.descriptor.ToString().c_str());
+	return new_descriptor;
 }
 
 ShaderDescriptor ShaderManager::GetHerculesShader() const

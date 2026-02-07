@@ -41,22 +41,26 @@ public:
 	// Notify the renderer of video mode changes.
 	virtual void NotifyVideoModeChanged(const VideoMode& video_mode) = 0;
 
-	// Set a shader by its symbolic shader name. The render backend should
-	// load the shader via the `ShaderManager` if it's not in its shader
-	// cache (caching is optional but recommended).
+	// Set a shader by its symbolic shader descriptor. The render backend
+	// should load the shader via the `ShaderManager` if it's not in its
+	// shader cache (caching is optional but recommended).
 	//
-	// E.g., `crt-auto-machine` is a symbolic name that will get mapped to
-	// actual shaders that implement the Hercules, CGA, EGA, and VGA CRT
-	// emulations, respectively.
+	// E.g., `crt-auto-machine` is a symbolic "meta shader" name that will
+	// get resolved to actual physical shaders on disk that implement the
+	// Hercules, CGA, EGA, and VGA CRT emulations, respectively (see
+	// `ShaderManager::NotifyShaderChanged()`.
 	//
-	// Similarly, `sharp` is mapped to `interpolation/sharp.glsl`, etc.
+	// Similarly, `sharp` is mapped to `interpolation/sharp.glsl` on disk,
+	// etc.
 	//
 	enum class SetShaderResult { Ok, ShaderError, PresetError };
 
-	virtual SetShaderResult SetShader(const std::string& symbolic_name) = 0;
+	virtual SetShaderResult SetShader(const std::string& symbolic_shader_descriptor) = 0;
 
-	// Reload the currently active shader from disk.
-	virtual bool ForceReloadCurrentShader() = 0;
+	// Reload the currently active shader from disk. If this fails (e.g.,
+	// the shader cannot be loaded, or the compilation fails), the current
+	// shader should stay active.
+	virtual void ForceReloadCurrentShader() = 0;
 
 	// Get information about the currently active shader.
 	virtual ShaderInfo GetCurrentShaderInfo() = 0;
@@ -64,9 +68,9 @@ public:
 	// Get current shader preset.
 	virtual ShaderPreset GetCurrentShaderPreset() = 0;
 
-	// Get the shader descriptor string of the currently active shader.
+	// Get the symbolic shader descriptor of the currently active shader
 	// (see `ShaderManager::NotifyShaderChanged()`.
-	virtual std::string GetCurrentShaderDescriptorString() = 0;
+	virtual std::string GetCurrentSymbolicShaderDescriptor() = 0;
 
 	// Called at the start of every unique frame (when there have been
 	// changes to the DOS framebuffer).
@@ -78,8 +82,8 @@ public:
 	// If a renderer implements a double buffering scheme, this call should
 	// return a pointer to the current render buffer.
 	//
-	// `pitch_out` is the number of bytes used to store a single row of pixel
-	// data, including optional padding bytes at the end of the row.
+	// `pitch_out` is the number of bytes used to store a single row of
+	// pixel data, including optional padding bytes at the end of the row.
 	//
 	virtual void StartFrame(uint32_t*& pixels_out, int& pitch_out) = 0;
 
