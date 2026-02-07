@@ -308,6 +308,11 @@ inline std::vector<uint8_t> ascii_to_bcd(const std::string& string)
 	return bcd;
 }
 
+constexpr uint8_t bcd_to_decimal(const uint8_t byte)
+{
+	return static_cast<uint8_t>(high_nibble(byte) * 10 + low_nibble(byte));
+}
+
 // Explicit instantiations for invlerp and remap
 
 template float invlerp<float>(const float a, const float b, const float v);
