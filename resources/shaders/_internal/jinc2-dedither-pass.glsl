@@ -59,7 +59,7 @@ out vec2 v_texCoord;
 void main()
 {
     gl_Position = vec4(a_position, 0.0, 1.0);
-    v_texCoord  = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0;
+    v_texCoord  = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 }
 
 #elif defined(FRAGMENT)
@@ -68,6 +68,7 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
+uniform vec2 INPUT_TEXTURE_SIZE;
 uniform sampler2D INPUT_TEXTURE;
 
 void main()
@@ -164,7 +165,8 @@ void main()
     color = clamp(color, min_sample, max_sample);
     color = mix(aux, color, JINC2_AR_STRENGTH);
 
-    // final sum and weight normalization
+	color = clamp(color, vec3(0.0), vec3(1.0));
+
     FragColor.xyz = color;
 }
 
