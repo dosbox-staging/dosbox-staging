@@ -6,6 +6,10 @@
 
 #include "config/setup.h"
 
+constexpr uint16_t EmsPageSize = 16 * 1024;
+
+extern const std::string EmsDeviceName;
+
 void EMS_Init(SectionProp& section);
 void EMS_Destroy();
 

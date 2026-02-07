@@ -20,12 +20,12 @@
 #include "hardware/memory.h"
 #include "hardware/port.h"
 #include "ints/bios.h"
+#include "ints/ems.h"
 #include "misc/support.h"
 
 #define EMM_PAGEFRAME	0xE000
 #define EMM_PAGEFRAME4K	((EMM_PAGEFRAME*16)/4096)
 #define	EMM_MAX_HANDLES	200				/* 255 Max */
-#define EMM_PAGE_SIZE	(16*1024U)
 #define EMM_MAX_PAGES	(32 * 1024 / 16 )
 #define EMM_MAX_PHYS	4				/* 4 16kb pages in pageframe */
 
@@ -66,6 +66,8 @@
 #define EMM_MOVE_OVLAPI			0x97
 #define EMM_NOT_FOUND			0xa0
 
+const std::string EmsDeviceName = "EMMXXXX0";
+
 
 struct EMM_Mapping {
 	uint16_t handle;
@@ -93,7 +95,7 @@ class device_EMM final : public DOS_Device {
 public:
 	device_EMM(bool is_emm386_avail) : is_emm386(is_emm386_avail)
 	{
-		SetName("EMMXXXX0");
+		SetName(EmsDeviceName.c_str());
 		GEMMIS_seg = 0;
 	}
 
@@ -675,7 +677,7 @@ static uint8_t MemoryRegion()
 		src_mem=region.src_page_seg*16+region.src_offset;
 	} else {
 		if (!ValidHandle(region.src_handle)) return EMM_INVALID_HANDLE;
-		if ((emm_handles[region.src_handle].pages*EMM_PAGE_SIZE) < ((region.src_page_seg*EMM_PAGE_SIZE)+region.src_offset+region.bytes)) return EMM_LOG_OUT_RANGE;
+		if ((emm_handles[region.src_handle].pages*EmsPageSize) < ((region.src_page_seg*EmsPageSize)+region.src_offset+region.bytes)) return EMM_LOG_OUT_RANGE;
 		src_handle=emm_handles[region.src_handle].mem;
 		Bitu pages=region.src_page_seg*4+(region.src_offset/MEM_PAGE_SIZE);
 		for (;pages>0;pages--) src_handle=MEM_NextHandle(src_handle);
@@ -686,7 +688,7 @@ static uint8_t MemoryRegion()
 		dest_mem=region.dest_page_seg*16+region.dest_offset;
 	} else {
 		if (!ValidHandle(region.dest_handle)) return EMM_INVALID_HANDLE;
-		if (emm_handles[region.dest_handle].pages*EMM_PAGE_SIZE < (region.dest_page_seg*EMM_PAGE_SIZE)+region.dest_offset+region.bytes) return EMM_LOG_OUT_RANGE;
+		if (emm_handles[region.dest_handle].pages*EmsPageSize < (region.dest_page_seg*EmsPageSize)+region.dest_offset+region.bytes) return EMM_LOG_OUT_RANGE;
 		dest_handle=emm_handles[region.dest_handle].mem;
 		Bitu pages=region.dest_page_seg*4+(region.dest_offset/MEM_PAGE_SIZE);
 		for (;pages>0;pages--) dest_handle=MEM_NextHandle(dest_handle);
@@ -1434,9 +1436,9 @@ public:
 		ems_baseseg = DOS_GetMemory(2); // We have 32 bytes
 
 		/* Add a little hack so it appears that there is an actual ems device installed */
-		const char* emsname = "EMMXXXX0";
-		MEM_BlockWrite(PhysicalMake(ems_baseseg, 0xa), emsname,
-		               strlen(emsname) + 1);
+		MEM_BlockWrite(PhysicalMake(ems_baseseg, 0xa),
+		               EmsDeviceName.c_str(),
+		               EmsDeviceName.length() + 1);
 
 		call_int67=CALLBACK_Allocate();
 		CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET,PhysicalMake(ems_baseseg,4),"Int 67 ems");
