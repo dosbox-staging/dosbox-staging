@@ -59,6 +59,26 @@ struct CpuAutoDetermineMode {
 extern ArchitectureType CPU_ArchitectureType;
 extern Bitu CPU_PrefetchQueueSize;
 
+inline bool is_cpu_286_or_better()
+{
+	return CPU_ArchitectureType >= ArchitectureType::Intel286;
+}
+
+inline bool is_cpu_386_or_better()
+{
+	return CPU_ArchitectureType >= ArchitectureType::Intel386Slow;
+}
+
+inline bool is_cpu_486_or_better()
+{
+	return CPU_ArchitectureType >= ArchitectureType::Intel486OldSlow;
+}
+
+inline bool is_cpu_586_or_better()
+{
+	return CPU_ArchitectureType >= ArchitectureType::Pentium;
+}
+
 void CPU_AddConfigSection(const ConfigPtr& conf);
 
 void CPU_Init();
