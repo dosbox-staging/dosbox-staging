@@ -19,7 +19,6 @@ libmidi = static_library(
         coreaudio_dep,
         coremidi_dep,
         fluid_dep,
-        ghc_dep,
         libiir_dep,
         libloguru_dep,
         mt32emu_dep,

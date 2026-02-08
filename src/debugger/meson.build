@@ -11,7 +11,6 @@ libdebugger = static_library(
     dependencies: [
         sdl2_dep,
         libpdcurses_dep,
-        ghc_dep,
         libiir_dep,
         libloguru_dep,
     ],

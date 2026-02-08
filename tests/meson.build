@@ -43,7 +43,7 @@ endforeach
 example = executable(
     'example',
     ['example_tests.cpp', 'stubs.cpp'],
-    dependencies: [gmock_dep, libmisc_stubs_dep, libshell_stubs_dep, ghc_dep, libloguru_dep],
+    dependencies: [gmock_dep, libmisc_stubs_dep, libshell_stubs_dep, libloguru_dep],
     include_directories: incdir,
     cpp_args: cpp_args,
 )
@@ -52,7 +52,7 @@ test('gtest example', example, should_fail: true)
 fs_utils = executable(
     'fs_utils',
     ['fs_utils_tests.cpp', 'stubs.cpp'],
-    dependencies: [gmock_dep, libmisc_stubs_dep, libshell_stubs_dep, ghc_dep, libloguru_dep],
+    dependencies: [gmock_dep, libmisc_stubs_dep, libshell_stubs_dep, libloguru_dep],
     include_directories: incdir,
     cpp_args: cpp_args,
 )
@@ -117,7 +117,7 @@ foreach ut : unit_tests
     exe = executable(
         name,
         [name + '_tests.cpp'] + extra_cpp,
-        dependencies: [gmock_dep, ghc_dep, libloguru_dep] + ut.get('deps'),
+        dependencies: [gmock_dep, libloguru_dep] + ut.get('deps'),
         link_args: extra_link_flags,
         include_directories: incdir,
         cpp_args: cpp_args,

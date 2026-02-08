@@ -4,6 +4,12 @@
 #ifndef DOSBOX_FILESYSTEM_H
 #define DOSBOX_FILESYSTEM_H
 
-#include "ghc/ghc/fs_std_fwd.hpp"
+#include <filesystem>
+namespace std_fs {
+using namespace std::filesystem;
+using ifstream = std::ifstream;
+using ofstream = std::ofstream;
+using fstream = std::fstream;
+}
 
 #endif
