@@ -5,16 +5,16 @@
 
 /*
 
-#pragma parameter SPOT_WIDTH "Spot Width" 0.85 0.0 1.0 0.05
-#pragma parameter SPOT_HEIGHT "Spot Height" 0.80 0.0 1.0 0.05
-#pragma parameter PHOSPHOR_LAYOUT "Phosphor Layout" 2.0 0.0 19.0 1.0
-#pragma parameter SCANLINE_STRENGTH_MIN "Scanline Strength Min" 0.80 0.0 1.0 0.05
-#pragma parameter SCANLINE_STRENGTH_MAX "Scanline Strength Max" 0.85 0.0 1.0 0.05
-#pragma parameter COLOR_BOOST_EVEN "Color Boost Even" 4.80 1.0 2.0 0.05
-#pragma parameter COLOR_BOOST_ODD "Color Boost Odd" 1.40 1.0 2.0 0.05
-#pragma parameter MASK_STRENGTH "Mask Strength" 0.10 0.0 1.0 0.1
-#pragma parameter GAMMA_INPUT "Gamma Input" 2.4 0.0 5.0 0.1
-#pragma parameter GAMMA_OUTPUT "Gamma Output" 2.62 0.0 5.0 0.1
+#pragma parameter SPOT_WIDTH            "Spot Width"            0.85  0.0  1.0  0.05
+#pragma parameter SPOT_HEIGHT           "Spot Height"           0.80  0.0  1.0  0.05
+#pragma parameter PHOSPHOR_LAYOUT       "Phosphor Layout"       2.0   0.0 19.0  1.0
+#pragma parameter SCANLINE_STRENGTH_MIN "Scanline Strength Min" 0.80  0.0  1.0  0.05
+#pragma parameter SCANLINE_STRENGTH_MAX "Scanline Strength Max" 0.85  0.0  1.0  0.05
+#pragma parameter COLOR_BOOST_EVEN      "Color Boost Even"      4.80  1.0  2.0  0.05
+#pragma parameter COLOR_BOOST_ODD       "Color Boost Odd"       1.40  1.0  2.0  0.05
+#pragma parameter MASK_STRENGTH         "Mask Strength"         0.10  0.0  1.0  0.1
+#pragma parameter GAMMA_INPUT           "Gamma Input"           2.4   0.0  5.0  0.1
+#pragma parameter GAMMA_OUTPUT          "Gamma Output"          2.62  0.0  5.0  0.1
 
 */
 

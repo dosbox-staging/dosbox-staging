@@ -12,19 +12,21 @@
 
 /*
 
-#pragma parameter BEAM_PROFILE "BEAM PROFILE (BP)" 0.0 0.0 2.0 1.0
-#pragma parameter HFILTER_PROFILE "HORIZONTAL FILTER PROFILE [ HERMITE | CATMULL-ROM ]" 0.0 0.0 1.0 1.0
-#pragma parameter BEAM_MIN_WIDTH "Custom [If BP=0.00] MIN BEAM WIDTH" 0.95 0.0 1.0 0.01
-#pragma parameter BEAM_MAX_WIDTH "Custom [If BP=0.00] MAX BEAM WIDTH" 1.30 0.0 1.0 0.01
-#pragma parameter SCANLINES_STRENGTH "Custom [If BP=0.00] SCANLINES STRENGTH" 0.85 0.0 1.0 0.01
-#pragma parameter COLOR_BOOST "Custom [If BP=0.00] COLOR BOOST" 2.50 1.0 2.0 0.05
-#pragma parameter SHARPNESS_HACK "SHARPNESS_HACK" 1.0 1.0 4.0 1.0
-#pragma parameter PHOSPHOR_LAYOUT "PHOSPHOR LAYOUT" 2.0 0.0 19.0 1.0
-#pragma parameter MASK_INTENSITY "MASK INTENSITY" 0.55 0.0 1.0 0.1
-#pragma parameter CRT_ANTI_RINGING "ANTI RINGING" 1.0 0.0 1.0 0.2
-#pragma parameter INPUT_GAMMA "INPUT GAMMA" 2.4 0.0 5.0 0.1
-#pragma parameter OUTPUT_GAMMA "OUTPUT GAMMA" 2. 0.0 5.0 0.1
-#pragma parameter VSCANLINES "VERTICAL SCANLINES [ OFF | ON ]" 0.0 0.0 1.0 1.0
+#pragma parameter BEAM_PROFILE       "BEAM PROFILE (BP)"                                    0.0  0.0 2.0   1.0
+#pragma parameter HFILTER_PROFILE    "HORIZONTAL FILTER PROFILE [ HERMITE | CATMULL-ROM ]"  0.0  0.0 1.0   1.0
+#pragma parameter BEAM_MIN_WIDTH     "Custom [If BP=0.00] MIN BEAM WIDTH"                  0.95  0.0 1.0  0.01
+#pragma parameter BEAM_MAX_WIDTH     "Custom [If BP=0.00] MAX BEAM WIDTH"                  1.30  0.0 1.0  0.01
+#pragma parameter SCANLINES_STRENGTH "Custom [If BP=0.00] SCANLINES STRENGTH"              0.85  0.0 1.0  0.01
+#pragma parameter COLOR_BOOST        "Custom [If BP=0.00] COLOR BOOST"                     2.50  1.0 2.0  0.05
+
+#pragma parameter SHARPNESS_HACK     "SHARPNESS_HACK"  1.0   1.0  4.0  1.0
+#pragma parameter PHOSPHOR_LAYOUT    "PHOSPHOR LAYOUT" 2.0   0.0 19.0  1.0
+#pragma parameter MASK_INTENSITY     "MASK INTENSITY"  0.55  0.0  1.0  0.1
+#pragma parameter CRT_ANTI_RINGING   "ANTI RINGING"    1.0   0.0  1.0  0.2
+#pragma parameter INPUT_GAMMA        "INPUT GAMMA"     2.4   0.0  5.0  0.1
+#pragma parameter OUTPUT_GAMMA       "OUTPUT GAMMA"    2.0   0.0  5.0  0.1
+
+#pragma parameter VSCANLINES         "VERTICAL SCANLINES [ OFF | ON ]" 0.0  0.0 1.0  1.0
 
 */
 
