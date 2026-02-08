@@ -18,7 +18,6 @@ libgui = static_library(
     libgui_sources,
     include_directories: incdir,
     dependencies: [
-        ghc_dep,
         libglad_dep,
         libiir_dep,
         libloguru_dep,

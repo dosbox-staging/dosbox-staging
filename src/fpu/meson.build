@@ -2,7 +2,7 @@ libfpu = static_library(
     'fpu',
     ['fpu.cpp'],
     include_directories: incdir,
-    dependencies: [ghc_dep, libloguru_dep],
+    dependencies: [libloguru_dep],
     cpp_args: warnings,
 )
 

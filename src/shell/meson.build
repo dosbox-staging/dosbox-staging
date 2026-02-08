@@ -15,7 +15,6 @@ libshell = static_library(
     include_directories: incdir,
     dependencies: [
         sdl2_dep,
-        ghc_dep,
         libloguru_dep,
     ],
     cpp_args: warnings,
