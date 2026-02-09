@@ -578,14 +578,17 @@ std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes,
 	constexpr uint16_t CommandTailSegment   = 0x08;
 	constexpr uint16_t CommandTailSizeBytes = 0x80;
 
-	// Try to matche the smallest block
-	const uint8_t MemAllocStrategy = force_low_memory
-		? DosMemAllocStrategy::LowMemoryBestFit
-		: DosMemAllocStrategy::BestFit;
+	// The lowest possible UMB segment
+	constexpr uint16_t UmbLowLimit = 0xc000;
 
 	if (bytes == 0 || bytes > MaxTsrSizeBytes || reg_sp <= StackNeeded) {
 		return {};
 	}
+
+	// Calculate number of memory blocks we need for the TSR
+	auto get_number_of_blocks = [&bytes]() {
+		return PspSizeSegments + (bytes + RealSegmentSize - 1) / RealSegmentSize;
+	};
 
 	// Get current DOS PSP
 	const auto app_psp_segment = dos.psp();
@@ -598,15 +601,38 @@ std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes,
 	DOS_ParamBlock param_block(SegPhys(ss) + reg_sp);
 	param_block.Clear();
 
-	// Calculate number of memory blocks to allocate
-	uint16_t blocks = PspSizeSegments;
-	blocks += (bytes + RealSegmentSize - 1) / RealSegmentSize;
-
-	// Allocate memory
-	uint16_t tsr_psp_segment = 0;
+	// Preserve old memory allocation strategy
 	const auto old_strategy = DOS_GetMemAllocStrategy();
-	DOS_SetMemAllocStrategy(MemAllocStrategy);
-	const auto result = DOS_AllocateMemory(&tsr_psp_segment, &blocks);
+
+	uint16_t tsr_psp_segment = 0;
+
+	uint16_t blocks = get_number_of_blocks();
+	bool result     = false;
+
+	// Try to allocate Upper Memory
+	if (!force_low_memory) {
+		DOS_SetMemAllocStrategy(DosMemAllocStrategy::UmbMemoryBestFit);
+		result = DOS_AllocateMemory(&tsr_psp_segment, &blocks);
+		if (result && tsr_psp_segment < UmbLowLimit) {
+			// We got the Conventional Memory
+			DOS_FreeMemory(tsr_psp_segment);
+			result = false;
+		}
+		if (!result) {
+			// Allocation failed, prepare the parameters once again
+			blocks = get_number_of_blocks();
+		}
+	}
+
+	// If failed, or if low memory requested, try the Conventional Memory
+	if (!result) {
+		// Try to allocate space at the end of memory - we don't want
+		// to leave a 'hole' in the memory when our executable ends
+		DOS_SetMemAllocStrategy(DosMemAllocStrategy::LowMemoryLastFit);
+		result = DOS_AllocateMemory(&tsr_psp_segment, &blocks);
+	}
+
+	// Restore memory allocation strategy
 	DOS_SetMemAllocStrategy(old_strategy);
 
 	if (!result) {
