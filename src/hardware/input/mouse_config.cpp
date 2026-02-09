@@ -27,6 +27,7 @@ static bool is_serial_mouse_model_read = false;
 
 namespace OptionBuiltInDosDriver {
 
+constexpr auto Auto  = "auto";
 constexpr auto NoTsr = "no-tsr";
 
 } // namespace OptionBuiltInDosDriver
@@ -174,15 +175,21 @@ static void set_dos_driver(const SectionProp& section)
 
 	const auto option_str = section.GetStringLowCase(SettingName);
 
-	if (has_false(option_str)) {
-		mouse_config.dos_driver_autoexec = false;
-		mouse_config.dos_driver_no_tsr   = false;
+	const bool has_auto   = (option_str == OptionBuiltInDosDriver::Auto);
+	const bool has_no_tsr = (option_str == OptionBuiltInDosDriver::NoTsr);
 
-	} else if (has_true(option_str)) {
+	if (has_true(option_str) || (has_auto && is_machine_ega_or_better())) {
+
 		mouse_config.dos_driver_autoexec = true;
 		mouse_config.dos_driver_no_tsr   = false;
 
-	} else if (option_str == OptionBuiltInDosDriver::NoTsr) {
+	} else if (has_false(option_str)) {
+
+		mouse_config.dos_driver_autoexec = false;
+		mouse_config.dos_driver_no_tsr   = false;
+
+	} else if (has_no_tsr || has_auto) {
+
 		mouse_config.dos_driver_autoexec = false;
 		mouse_config.dos_driver_no_tsr   = true;
 
@@ -610,20 +617,27 @@ static void init_mouse_config_settings(SectionProp& secprop)
 
 	// Built-in DOS driver configuration
 
-	prop_str = secprop.AddString("builtin_dos_mouse_driver", OnlyAtStart, "on");
+	prop_str = secprop.AddString("builtin_dos_mouse_driver",
+	                             OnlyAtStart,
+	                             OptionBuiltInDosDriver::Auto);
 	assert(prop_str);
-	prop_str->SetValues({"off", "on", OptionBuiltInDosDriver::NoTsr});
+	prop_str->SetValues({"off",
+	                     "on",
+	                     OptionBuiltInDosDriver::Auto,
+	                     OptionBuiltInDosDriver::NoTsr});
 	prop_str->SetHelp(
-	        "Built-in DOS mouse driver mode ('on' by default). It bypasses the PS/2 and\n"
+	        "Built-in DOS mouse driver mode ('auto' by default). It bypasses the PS/2 and\n"
 	        "serial (COM) ports and communicates with the mouse directly. This results in\n"
 	        "lower input lag, smoother movement, and increased mouse responsiveness, so only\n"
 	        "disable it and load a real DOS mouse driver if it's really necessary (e.g., if a\n"
 	        "game is not compatible with the built-in driver). Possible values:\n"
 	        "\n"
-	        "  on:      Simulate a mouse driver TSR program loaded from AUTOEXEC.BAT\n"
-	        "           (default). This is the most compatible way to emulate the DOS mouse\n"
-	        "           driver, but if it doesn't work with your game, try the 'no-tsr'\n"
-	        "           setting.\n"
+	        "  auto:    Pick 'on' or 'no-tsr' suitable for the configured machine type\n"
+	        "           (default).\n"
+	        "\n"
+	        "  on:      Use a little Upper or Conventional memory (much less than any real\n"
+	        "           DOS mouse driver) to simulate a mouse driver TSR program. Try using\n"
+	        "           'no-tsr' if you're having mouse issues with a program.\n"
 	        "\n"
 	        "  no-tsr:  Enable the mouse driver without simulating the TSR program. Let us\n"
 	        "           know if it fixes any software not working with the 'on' setting.\n"
