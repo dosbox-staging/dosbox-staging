@@ -27,11 +27,11 @@ ShaderPipeline::ShaderPipeline()
 	// etc.)
 	ShaderPass pass = {};
 
-	pass.id          = ShaderPassId::Main;
-	pass.shader      = {}; // will be set later
-	pass.out_fbo     = 0;  // last pass; doesn't have an FBO
-	pass.out_texture = 0;  // last pass; doesn't have an output texture
-	pass.viewport    = {}; // will be set later
+	pass.id               = ShaderPassId::Main;
+	pass.shader           = {}; // will be set later
+	pass.out_fbo          = 0;  // last pass; doesn't have an FBO
+	pass.out_texture      = 0;  // last pass; doesn't have an output texture
+	pass.out_texture_size = {}; // will be set later
 
 	shader_passes.push_back(pass);
 }
@@ -51,9 +51,9 @@ void ShaderPipeline::LoadInternalShaderPassOrExit(const std::string shader_name,
 
 	ShaderPass pass = pass_params;
 
-	pass.id          = ShaderPassId::ImageAdjustments;
-	pass.out_texture = 0;  // will be set later
-	pass.viewport    = {}; // will be set later
+	pass.id               = ShaderPassId::ImageAdjustments;
+	pass.out_texture      = 0;  // will be set later
+	pass.out_texture_size = {}; // will be set later
 
 	glGenFramebuffers(1, &pass.out_fbo);
 
@@ -75,8 +75,8 @@ ShaderPipeline::~ShaderPipeline()
 
 void ShaderPipeline::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 {
-	auto& pass    = GetShaderPass(ShaderPassId::Main);
-	pass.viewport = draw_rect_px;
+	auto& pass            = GetShaderPass(ShaderPassId::Main);
+	pass.out_texture_size = draw_rect_px;
 
 	for (auto it = shader_passes.begin(); it != shader_passes.end(); ++it) {
 		UpdateTextureUniforms(it);
@@ -107,10 +107,10 @@ void ShaderPipeline::NotifyRenderSizeChanged(const int input_texture_width,
 			                                 input_texture.height,
 			                                 preset.settings.texture_filter_mode);
 
-			pass.viewport = {0,
-			                 0,
-			                 input_texture.width,
-			                 input_texture.height};
+			pass.out_texture_size = {0,
+			                         0,
+			                         input_texture.width,
+			                         input_texture.height};
 
 			// Set up off-screen framebuffer
 			glBindFramebuffer(GL_FRAMEBUFFER, pass.out_fbo);
@@ -255,10 +255,10 @@ void ShaderPipeline::RenderPass(const ShaderPass& pass,
 	}
 
 	// Set up viewport
-	glViewport(static_cast<GLsizei>(pass.viewport.x),
-	           static_cast<GLsizei>(pass.viewport.y),
-	           static_cast<GLsizei>(pass.viewport.w),
-	           static_cast<GLsizei>(pass.viewport.h));
+	glViewport(static_cast<GLsizei>(pass.out_texture_size.x),
+	           static_cast<GLsizei>(pass.out_texture_size.y),
+	           static_cast<GLsizei>(pass.out_texture_size.w),
+	           static_cast<GLsizei>(pass.out_texture_size.h));
 
 	// Apply shader by drawing an oversized triangle
 	glBindVertexArray(vertex_array_object);
@@ -292,9 +292,12 @@ void ShaderPipeline::UpdateTextureUniforms(const std::list<ShaderPass>::iterator
 
 			} else {
 				const auto prev_pass = std::prev(pass);
-				width = static_cast<GLfloat>(prev_pass->viewport.w);
+
+				width = static_cast<GLfloat>(
+				        prev_pass->out_texture_size.w);
+
 				height = static_cast<GLfloat>(
-				        prev_pass->viewport.h);
+				        prev_pass->out_texture_size.h);
 
 				in_texture = prev_pass->out_texture;
 			}
@@ -310,8 +313,11 @@ void ShaderPipeline::UpdateTextureUniforms(const std::list<ShaderPass>::iterator
 
 				const auto p = *it;
 				if (p.id == pass_id) {
-					width = static_cast<GLfloat>(p.viewport.w);
-					height = static_cast<GLfloat>(p.viewport.h);
+					width = static_cast<GLfloat>(
+					        p.out_texture_size.w);
+
+					height = static_cast<GLfloat>(
+					        p.out_texture_size.h);
 
 					in_texture = p.out_texture;
 
@@ -339,8 +345,8 @@ void ShaderPipeline::UpdateTextureUniforms(const std::list<ShaderPass>::iterator
 	}
 
 	pass->shader.SetUniform2f("OUTPUT_TEXTURE_SIZE",
-	                          pass->viewport.w,
-	                          pass->viewport.h);
+	                          pass->out_texture_size.w,
+	                          pass->out_texture_size.h);
 }
 
 void ShaderPipeline::UpdateMainShaderPassUniforms()
