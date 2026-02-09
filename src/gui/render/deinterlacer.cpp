@@ -14,6 +14,10 @@ CHECK_NARROWING();
 
 uint32_t Deinterlacer::DetectBackgroundColor(const uint32_t* pixel_data) const
 {
+	assert(pixel_data);
+	assert(image.width > 0);
+	assert(image.height >= 10);
+
 	auto in_line = pixel_data;
 
 	// Some games might use some other background colour than RGB(0,0,0);
@@ -59,6 +63,8 @@ uint32_t Deinterlacer::DetectBackgroundColor(const uint32_t* pixel_data) const
 void Deinterlacer::ThresholdInput(const uint32_t* src, bit_buffer& dest,
                                   const uint32_t bg_color) const
 {
+	assert(src);
+
 	auto in_line  = src;
 	auto out_line = dest.data() + BufferOffset + buffer_pitch;
 
@@ -355,6 +361,8 @@ static int to_rgb_scale_factor_dot(const DeinterlacingStrength strength)
 void Deinterlacer::CombineOutput(uint32_t* pixel_data, bit_buffer& mask,
                                  const DeinterlacingStrength strength) const
 {
+	assert(pixel_data);
+
 	std::vector<uint32_t> src(image.width * image.height);
 
 	constexpr auto BytesPerPixel = sizeof(uint32_t);
@@ -447,6 +455,10 @@ bool Deinterlacer::SetUpInputImage(const RenderedImage& input_image)
 RenderedImage Deinterlacer::LineDeinterlace(const RenderedImage& input_image,
                                             const DeinterlacingStrength strength)
 {
+	assert(input_image.image_data);
+	assert(input_image.params.width > 0);
+	assert(input_image.params.height > 0);
+
 	// `SetUpInputImage()` returns true if the image had to be decoded into
 	// a temporary buffer.
 	auto process_in_place = SetUpInputImage(input_image);
@@ -542,6 +554,10 @@ RenderedImage Deinterlacer::LineDeinterlace(const RenderedImage& input_image,
 RenderedImage Deinterlacer::DotDeinterlace(const RenderedImage& input_image,
                                            const DeinterlacingStrength strength)
 {
+	assert(input_image.image_data);
+	assert(input_image.params.width > 0);
+	assert(input_image.params.height > 0);
+
 	const auto& p = input_image.params;
 
 	// Convert input image to 32-bit BGRX format and get rid of
