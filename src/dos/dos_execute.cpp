@@ -572,7 +572,6 @@ std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes,
                                               const bool force_low_memory)
 {
 	constexpr uint16_t StackNeeded = 0x80;
-	constexpr uint16_t PspSegments = 0x10;
 
 	constexpr uint32_t MaxTsrSizeBytes = 512 * 1024;
 
@@ -600,7 +599,7 @@ std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes,
 	param_block.Clear();
 
 	// Calculate number of memory blocks to allocate
-	uint16_t blocks = PspSegments;
+	uint16_t blocks = PspSizeSegments;
 	blocks += (bytes + RealSegmentSize - 1) / RealSegmentSize;
 
 	// Allocate memory
@@ -625,7 +624,7 @@ std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes,
 	              CommandTailSizeBytes);
 
 	// Clear the TSR memory
-	const auto start_segment = tsr_psp_segment + PspSegments;
+	const auto start_segment = tsr_psp_segment + PspSizeSegments;
 	const auto end_segment   = tsr_psp_segment + blocks;
 	for (auto seg = start_segment; seg < end_segment; ++seg) {
 		mem_writeq(PhysicalMake(seg, sizeof(uint64_t) * 0), 0);

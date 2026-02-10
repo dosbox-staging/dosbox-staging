@@ -21,6 +21,7 @@
 #include "cpu/registers.h"
 #include "dos/programs/more_output.h"
 #include "gui/mapper.h"
+#include "hardware/memory.h"
 #include "misc/cross.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
@@ -28,17 +29,21 @@
 
 callback_number_t call_program = 0;
 
-/* This registers a file on the virtual drive and creates the correct structure
- * for it*/
+// This registers a file on the virtual drive and creates the correct structure
+// for it
+
+// Memory segments to be reserved for the fake executable, this includes
+// segments added by DOS to store the PSP
+constexpr uint8_t Segments = 0x40;
 
 constexpr std::array<uint8_t, 19> exe_block = {
-        0xbc, 0x00, 0x04,       // MOV SP,0x400  Decrease stack size
-        0xbb, 0x40, 0x00,       // MOV BX,0x040  For memory resize
-        0xb4, 0x4a,             // MOV AH,0x4A   Resize memory block
-        0xcd, 0x21,             // INT 0x21
-        0xFE, 0x38, 0x00, 0x00, // 12th position is the CALLBack number
-        0xb8, 0x00, 0x4c,       // Mov ax,4c00
-        0xcd, 0x21,             // INT 0x21
+        0xbc, 0x00,     0x04,       // MOV SP,0x400     Decrease stack size
+        0xbb, Segments, 0x00,       // MOV BX,Segments  For memory resize
+        0xb4, 0x4a,                 // MOV AH,0x4A      Resize memory block
+        0xcd, 0x21,                 // INT 0x21
+        0xfe, 0x38,     0x00, 0x00, // 12th position is the CALLBack number
+        0xb8, 0x00,     0x4c,       // MOV ax,4c00
+        0xcd, 0x21,                 // INT 0x21
 };
 
 // COM data constants
@@ -66,6 +71,11 @@ void PROGRAMS_MakeFile(const char* name, PROGRAMS_Creator creator)
 	const auto index = internal_progs.size();
 	assert(index <= UINT8_MAX); // saving the index into an 8-bit space
 	comdata.push_back(static_cast<uint8_t>(index));
+
+	// Enlarge the executable to make sure the memory resize call in the
+	// 'exe_block' succeeds; otherwise, if our program falls into a small
+	// memory hole, our stack might override someone else's data
+	comdata.resize(Segments * RealSegmentSize - PspSizeBytes);
 
 	// Register the COM program with the Z:\ virtual filesystem
 	VFILE_Register(name, comdata.data(), static_cast<uint32_t>(comdata.size()));
