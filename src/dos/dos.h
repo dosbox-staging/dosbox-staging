@@ -484,6 +484,9 @@ protected:
 	Environment& operator=(Environment&&)      = default;
 };
 
+constexpr uint16_t PspSizeSegments = 0x10;
+constexpr size_t PspSizeBytes      = PspSizeSegments * RealSegmentSize;
+
 /* Program Segment Prefix */
 class DOS_PSP final : public MemStruct, public Environment {
 public:
