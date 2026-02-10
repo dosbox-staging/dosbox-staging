@@ -9,6 +9,12 @@
 //  - Colur space transforms & the rest: guest(r), Dr. Venom
 //
 
+/*
+
+#pragma name ImageAdjustments
+
+*/
+
 #if defined(VERTEX)
 
 layout (location = 0) in vec2 a_position;
