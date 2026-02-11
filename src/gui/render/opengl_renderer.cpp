@@ -180,6 +180,7 @@ bool OpenGlRenderer::InitRenderer()
 	// We don't care about depth testing; we'll just apply the shaders in 2D
 	// space
 	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
 
 	shader_pipeline = std::make_unique<ShaderPipeline>();
 
