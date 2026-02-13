@@ -563,6 +563,8 @@ void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 	        curr_shader_descriptor, canvas_size_px, video_mode);
 
 	HandleShaderAndPresetChangeViaNotify(new_descriptor);
+
+	shader_pipeline->NotifyVideoModeChanged(video_mode);
 }
 
 OpenGlRenderer::SetShaderResult OpenGlRenderer::MaybeSwitchShaderAndPreset(
