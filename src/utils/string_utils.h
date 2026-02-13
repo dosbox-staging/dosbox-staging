@@ -315,6 +315,11 @@ std::string to_string(const Container& c, const std::string& delimiter = ", ",
 	return result + suffix;
 }
 
+std::string join(const std::vector<std::string>& items,
+				 const std::string& delimiter = ", ",
+                 const std::string& prefix = "{",
+                 const std::string& suffix = "}");
+
 // Parse the string as an integer or decimal value and return it as a float.
 // This API should give us enough numerical range and accuracy for any
 // text-based inputs.
