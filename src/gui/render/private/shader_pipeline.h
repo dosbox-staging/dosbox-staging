@@ -58,6 +58,7 @@ public:
 	void SetColorSpace(const ColorSpace color_space);
 	void EnableImageAdjustments(const bool enable);
 	void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings);
+	void SetDeditheringStrength(const float strength);
 
 	void Render(const GLuint vertex_array_object) const;
 
@@ -107,6 +108,12 @@ private:
 	bool enable_image_adjustments = false;
 
 	void UpdateImageAdjustmentsPassUniforms();
+
+	// Dedither pass params
+	// --------------------
+	float dedithering_strength = {};
+
+	void UpdateDeditherPassUniforms();
 
 	// Main shader pass params
 	// -----------------------
