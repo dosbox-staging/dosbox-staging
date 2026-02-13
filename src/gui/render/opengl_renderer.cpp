@@ -502,6 +502,8 @@ void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 	const auto new_descriptor = shader_switcher.GetCurrentShaderDescriptor();
 
 	MaybeSwitchShaderAndPreset(curr_descriptor, new_descriptor);
+
+	shader_pipeline->NotifyVideoModeChanged(video_mode);
 }
 
 bool OpenGlRenderer::MaybeSwitchShaderAndPreset(const ShaderDescriptor& curr_descriptor,

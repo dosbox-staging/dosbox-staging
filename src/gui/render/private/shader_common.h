@@ -6,6 +6,10 @@
 
 #include "gui/private/common.h"
 
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "glad/gl.h"
 
 namespace SymbolicShaderName {
@@ -166,10 +170,44 @@ struct ShaderPreset {
 	ShaderParameters params = {};
 };
 
+enum class ShaderOutputSize {
+	// Size of rendered VGA card output (e.g., for the mode 13h VGA mode, it
+	// can be 320x200, 320x400 or 640x400 depending on the double scanning and
+	// pixel doubling settings)
+	Rendered,
+
+	// "Nominal" size of the emulated DOS video mode (e.g., 320x200 for the
+	// mode 13h VGA mode, which is double-scanned to 400 lines)
+	VideoMode,
+
+	// Size of the viewport (depends on the window size or the screen
+	// dimensions in fullscreen, the various viewport restriction settings
+	// like integer scaling, etc.)
+	Viewport
+};
+
+inline const char* to_string(const ShaderOutputSize s)
+{
+	using enum ShaderOutputSize;
+
+	switch (s) {
+	case Rendered: return "Rendered";
+	case VideoMode: return "VideoMode";
+	case Viewport: return "Viewport";
+	default: assertm(false, "Invalid ShaderOutputSize value"); return "";
+	}
+}
+
 struct ShaderInfo {
 	// The mapped shader name without the file extension. The name might
 	// optionally contain a relative or absolute directory path.
 	std::string name = {};
+
+	// Name of the shader pass set via `#pragma name`
+	std::string pass_name = {};
+
+	std::vector<std::string> input_ids = {"Previous"};
+	ShaderOutputSize output_size       = ShaderOutputSize::Rendered;
 
 	ShaderPreset default_preset = {};
 
