@@ -132,11 +132,11 @@ void MOUNT::WriteMountStatus(const char* image_type,
 	} else {
 		// Multiple images are each listed on a new line
 		images_str   = image_type + std::string(":\n");
-		int item_num = 0;
+		u_int8_t item_num = 0;
 		for (const auto& image : images) {
 			assert(!image.empty());
 			images_str = images_str.append(std::string(" ") + image);
-			if (item_num + 1 < images.size()) {
+			if (item_num + 1u < images.size()) {
 				images_str = images_str.append(", \n");
 			} else {
 				images_str = images_str.append("\n");
