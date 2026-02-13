@@ -11,7 +11,10 @@
 
 /*
 
-#pragma name ImageAdjustments
+#pragma name        ImageAdjustments
+#pragma output_size VideoMode
+
+#pragma use_nearest_texture_filter
 
 */
 
