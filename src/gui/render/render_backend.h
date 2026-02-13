@@ -4,10 +4,10 @@
 #ifndef DOSBOX_RENDER_BACKEND_H
 #define DOSBOX_RENDER_BACKEND_H
 
-#include "gui/private/common.h"
-#include "gui/render/private/shader_manager.h"
-
 #include <string>
+
+#include "gui/private/common.h"
+#include "private/shader_manager.h"
 
 #include "dosbox_config.h"
 #include "gui/render/render.h"
@@ -116,6 +116,9 @@ public:
 
 	// Sets image adjustment settings.
 	virtual void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings) = 0;
+
+	// Sets dedithering strength.
+	virtual void SetDeditheringStrength(const float strength) = 0;
 
 	// Read the specified rectangle of the post-shader from the window's
 	// framebuffer.

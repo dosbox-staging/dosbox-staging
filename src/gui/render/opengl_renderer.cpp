@@ -579,6 +579,11 @@ void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 	shader_pipeline->SetImageAdjustmentSettings(settings);
 }
 
+void OpenGlRenderer::SetDeditheringStrength(const float strength)
+{
+	shader_pipeline->SetDeditheringStrength(strength);
+}
+
 ShaderInfo OpenGlRenderer::GetCurrentShaderInfo()
 {
 	return main_shader_info;
