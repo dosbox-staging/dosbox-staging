@@ -378,6 +378,11 @@ void SdlRenderer::SetImageAdjustmentSettings(
 	// no-op (no image adjustment support)
 }
 
+void SdlRenderer::SetDeditheringStrength([[maybe_unused]] const float strength)
+{
+	// no-op (no image adjustment support)
+}
+
 void SdlRenderer::EnableImageAdjustments([[maybe_unused]] const bool enable)
 {
 	// no-op (no image adjustment support)
