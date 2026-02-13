@@ -342,7 +342,7 @@ void OpenGlRenderer::RecreateInputTexture()
 	//
 	glTexImage2D(GL_TEXTURE_2D,
 	             0,                    // mimap level (0 = base image)
-	             GL_RGB8,              // internal format
+	             GL_RGBA8,             // internal format
 	             input_texture.width,  // width
 	             input_texture.height, // height
 	             0,                    // border (must be always 0)
