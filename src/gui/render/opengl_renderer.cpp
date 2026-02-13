@@ -7,6 +7,7 @@
 
 #include "gui/private/common.h"
 #include "private/auto_shader_switcher.h"
+#include "private/shader_manager.h"
 
 #include "capture/capture.h"
 #include "dosbox_config.h"
@@ -607,6 +608,11 @@ void OpenGlRenderer::EnableImageAdjustments(const bool enable)
 void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings)
 {
 	shader_pipeline->SetImageAdjustmentSettings(settings);
+}
+
+void OpenGlRenderer::SetDeditheringStrength(const float strength)
+{
+	shader_pipeline->SetDeditheringStrength(strength);
 }
 
 ShaderInfo OpenGlRenderer::GetCurrentShaderInfo()
