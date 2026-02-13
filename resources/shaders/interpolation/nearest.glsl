@@ -7,7 +7,8 @@
 
 /*
 
-#pragma name Main_Pass1
+#pragma name        Main_Pass1
+#pragma output_size Viewport
 
 #pragma use_nearest_texture_filter
 #pragma force_single_scan

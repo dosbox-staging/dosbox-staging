@@ -7,7 +7,8 @@
 
 /*
 
-#pragma name Main_Pass1
+#pragma name        Main_Pass1
+#pragma output_size Viewport
 
 */
 
