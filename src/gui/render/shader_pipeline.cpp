@@ -209,14 +209,14 @@ GLuint ShaderPipeline::CreateTexture(const int width, const int height,
 	SetTextureFiltering(texture, filter_mode);
 
 	glTexImage2D(GL_TEXTURE_2D,
-	             0,         // mimap level (0 = base image)
-	             GL_RGB32F, // internal format
-	             width,     // width
-	             height,    // height
-	             0,         // border (must be always 0)
-	             GL_BGRA,   // pixel data format
-	             GL_FLOAT,  // pixel data type
-	             nullptr);  // pointer to image data
+	             0,        // mimap level (0 = base image)
+	             GL_RGBA8, // internal format
+	             width,    // width
+	             height,   // height
+	             0,        // border (must be always 0)
+	             GL_BGRA,  // pixel data format
+	             GL_BYTE,  // pixel data type
+	             nullptr); // pointer to image data
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -305,7 +305,7 @@ void ShaderPipeline::RenderPass(const ShaderPass& pass,
 	glUseProgram(pass.shader.program_object);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, pass.out_fbo);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	for (size_t i = 0; i < pass.in_textures.size(); ++i) {
 		glActiveTexture(GL_TEXTURE0 + check_cast<GLenum>(i));
