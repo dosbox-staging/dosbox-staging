@@ -123,18 +123,29 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
 void MOUNT::WriteMountStatus(const char* image_type,
                              const std::vector<std::string>& images, char drive_letter)
 {
-	constexpr auto EndPunctuation = "";
+	std::string images_str = {};
 
-	const auto images_str = join_with_commas(images,
-	                                         MSG_Get("CONJUNCTION_AND"),
-	                                         EndPunctuation);
+	if (images.size() == 1) {
+		// If only one image, don't add newlines and just write in one
+		// line:
+		images_str = image_type + std::string(" ") + images[0];
+	} else {
+		// Multiple images are each listed on a new line
+		images_str   = image_type + std::string(":\n");
+		int item_num = 0;
+		for (const auto& image : images) {
+			assert(!image.empty());
+			images_str = images_str.append(std::string(" ") + image);
+			if (item_num + 1 < images.size()) {
+				images_str = images_str.append(", \n");
+			} else {
+				images_str = images_str.append("\n");
+			}
+			item_num++;
+		}
+	}
 
-	const std::string type_and_images_str = image_type + std::string(" ") +
-	                                        images_str;
-
-	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
-	         type_and_images_str.c_str(),
-	         drive_letter);
+	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), images_str.c_str(), drive_letter);
 }
 
 bool MOUNT::MountImageFat(MountParameters& params)
