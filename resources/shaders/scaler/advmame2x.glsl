@@ -6,7 +6,8 @@
 
 /*
 
-#pragma name Main_Pass1
+#pragma name        Main_Pass1
+#pragma output_size Viewport
 
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
