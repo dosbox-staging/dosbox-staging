@@ -99,8 +99,7 @@ const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 	return list_rates;
 }
 
-bool MOUSECOM_ParseComModel(const std::string& model_str,
-                            MouseModelCom& model,
+bool MOUSECOM_ParseComModel(const std::string& model_str, MouseModelCom& model,
                             bool& auto_msm)
 {
 	using enum MouseModelCom;
@@ -557,12 +556,10 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	                                  Always,
 	                                  OptionCaptureType::OnClick);
 	assert(prop_str);
-	prop_str->SetValues({
-		OptionCaptureType::Seamless,
-		OptionCaptureType::OnClick,
-		OptionCaptureType::OnStart,
-		OptionCaptureType::NoMouse
-	});
+	prop_str->SetValues({OptionCaptureType::Seamless,
+	                     OptionCaptureType::OnClick,
+	                     OptionCaptureType::OnStart,
+	                     OptionCaptureType::NoMouse});
 	prop_str->SetHelp(
 	        "Set the mouse capture behaviour ('onclick' by default). Possible values:\n"
 	        "\n"
@@ -624,11 +621,7 @@ static void init_mouse_config_settings(SectionProp& secprop)
 
 	prop_str = secprop.AddString("builtin_dos_mouse_driver", OnlyAtStart, "on");
 	assert(prop_str);
-	prop_str->SetValues({
-		"off",
-		"on",
-		OptionBuiltInDosDriver::NoTsr
-	});
+	prop_str->SetValues({"off", "on", OptionBuiltInDosDriver::NoTsr});
 	prop_str->SetHelp(
 	        "Built-in DOS mouse driver mode ('on' by default). It bypasses the PS/2 and\n"
 	        "serial (COM) ports and communicates with the mouse directly. This results in\n"
@@ -660,17 +653,16 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "    driver.\n");
 
 	prop_bool = secprop.AddBool("dos_mouse_driver", Deprecated, true);
-	prop_bool->SetHelp("Renamed to [color=light-green]'builtin_dos_mouse_driver'[reset].");
+	prop_bool->SetHelp(
+	        "Renamed to [color=light-green]'builtin_dos_mouse_driver'[reset].");
 
 	prop_str = secprop.AddString("builtin_dos_mouse_driver_model",
 	                             Always,
 	                             OptionModelDos::TwoButton);
 	assert(prop_str);
-	prop_str->SetValues({
-		OptionModelDos::TwoButton,
-		OptionModelDos::ThreeButton,
-		OptionModelDos::Wheel
-	});
+	prop_str->SetValues({OptionModelDos::TwoButton,
+	                     OptionModelDos::ThreeButton,
+	                     OptionModelDos::Wheel});
 	prop_str->SetHelp(
 	        "Set the mouse model to be simulated by the built-in DOS mouse driver ('2button'\n"
 	        "by default). Possible values:\n"
@@ -736,7 +728,8 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "                   so far.");
 
 	prop_bool = secprop.AddBool("dos_mouse_immediate", Deprecated, false);
-	prop_bool->SetHelp("Configure using [color=light-green]'builtin_dos_mouse_driver_options'[reset].");
+	prop_bool->SetHelp(
+	        "Configure using [color=light-green]'builtin_dos_mouse_driver_options'[reset].");
 
 	// Physical mice configuration
 
@@ -745,12 +738,10 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	                             OnlyAtStart,
 	                             OptionModelPs2::Explorer);
 	assert(prop_str);
-	prop_str->SetValues({
-		OptionModelPs2::Standard,
-		OptionModelPs2::Intellimouse,
-		OptionModelPs2::Explorer,
-		OptionModelPs2::NoMouse
-	});
+	prop_str->SetValues({OptionModelPs2::Standard,
+	                     OptionModelPs2::Intellimouse,
+	                     OptionModelPs2::Explorer,
+	                     OptionModelPs2::NoMouse});
 	prop_str->SetHelp(
 	        "Set the PS/2 AUX port mouse model, or in other words, the type of the virtual\n"
 	        "mouse plugged into the emulated PS/2 mouse port ('explorer' by default). The\n"
@@ -766,15 +757,13 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	                             OnlyAtStart,
 	                             OptionModelCom::WheelMsm);
 	assert(prop_str);
-	prop_str->SetValues({
-		OptionModelCom::TwoButton,
-		OptionModelCom::ThreeButton,
-		OptionModelCom::Wheel,
-		OptionModelCom::Msm,
-		OptionModelCom::TwoButtonMsm,
-		OptionModelCom::ThreeButtonMsm,
-		OptionModelCom::WheelMsm
-	});
+	prop_str->SetValues({OptionModelCom::TwoButton,
+	                     OptionModelCom::ThreeButton,
+	                     OptionModelCom::Wheel,
+	                     OptionModelCom::Msm,
+	                     OptionModelCom::TwoButtonMsm,
+	                     OptionModelCom::ThreeButtonMsm,
+	                     OptionModelCom::WheelMsm});
 	prop_str->SetHelp(
 	        "Set the default COM (serial) mouse model, or in other words, the type of the\n"
 	        "virtual mouse plugged into the emulated COM ports ('wheel+msm' by default).\n"
