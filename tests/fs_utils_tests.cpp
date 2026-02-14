@@ -90,37 +90,19 @@ TEST(SimplifyPath, CanBeSimplifiedComplex)
 	EXPECT_EQ(simplify_path(original), expected);
 }
 
-TEST_F(CreateDirTest, CreateDir)
-{
-	ASSERT_FALSE(path_exists(TEST_DIR));
-	EXPECT_EQ(create_dir(TEST_DIR, 0700), 0);
-	EXPECT_TRUE(path_exists(TEST_DIR));
-	EXPECT_EQ(create_dir(TEST_DIR, 0700), -1);
-	EXPECT_EQ(errno, EEXIST);
-}
-
 TEST_F(CreateDirTest, CreateDirWithoutFail)
 {
 	ASSERT_FALSE(path_exists(TEST_DIR));
-	EXPECT_EQ(create_dir(TEST_DIR, 0700, OK_IF_EXISTS), 0);
+	EXPECT_EQ(create_dir_if_not_exist(TEST_DIR), true);
 	EXPECT_TRUE(path_exists(TEST_DIR));
-	EXPECT_EQ(create_dir(TEST_DIR, 0700, OK_IF_EXISTS), 0);
+	EXPECT_EQ(create_dir_if_not_exist(TEST_DIR), true);
 }
 
 TEST_F(CreateDirTest, FailDueToFileExisting)
 {
 	constexpr char path[] = "tests/files/paths/empty.txt";
 	ASSERT_TRUE(path_exists(path));
-	EXPECT_EQ(create_dir(path, 0700), -1);
-	EXPECT_EQ(errno, EEXIST);
-}
-
-TEST_F(CreateDirTest, FailDueToFileExisting2)
-{
-	constexpr char path[] = "tests/files/paths/empty.txt";
-	ASSERT_TRUE(path_exists(path));
-	EXPECT_EQ(create_dir(path, 0700, OK_IF_EXISTS), -1);
-	EXPECT_EQ(errno, EEXIST);
+	EXPECT_EQ(create_dir_if_not_exist(path), false);
 }
 
 } // namespace
