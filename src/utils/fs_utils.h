@@ -78,6 +78,8 @@ inline bool path_exists(const std::string &path) noexcept
 
 std::string to_native_path(const std::string &path) noexcept;
 
+std::string truncate_path(size_t width, const std_fs::path& path);
+
 // Returns a simplified representation of the path, be it relative,
 // absolute, or in its original (as-provided) form.
 // The shortest valid path is considered the simplest form.
