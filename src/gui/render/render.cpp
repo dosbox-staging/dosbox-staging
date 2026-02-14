@@ -2186,7 +2186,7 @@ static std::optional<int> get_black_level_setting_value()
 			NOTIFY_DisplayWarning(
 			        Notification::Source::Console,
 			        "RENDER",
-			        "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+			        "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
 			        SettingName,
 			        format_str("%d", black_level).c_str(),
 			        format_str("%d", BlackLevelMin).c_str(),
@@ -2257,7 +2257,7 @@ static std::optional<int> get_color_temperature_setting_value()
 			NOTIFY_DisplayWarning(
 			        Notification::Source::Console,
 			        "RENDER",
-			        "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+			        "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
 			        SettingName,
 			        format_str("%d", color_temperature).c_str(),
 			        format_str("%d", ColorTemperatureMin).c_str(),
