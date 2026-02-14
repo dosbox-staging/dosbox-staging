@@ -500,10 +500,9 @@ static void apply_windows_debugger_workaround(const bool is_console_disabled)
 static void maybe_create_resource_directories()
 {
 	auto try_create_resource_dir = [](std_fs::path const& dir) {
-		if (create_dir(dir, 0700, OK_IF_EXISTS) != 0) {
-			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
-						dir.string().c_str(),
-						safe_strerror(errno).c_str());
+		if (!create_dir_if_not_exist(dir)) {
+			LOG_WARNING("CONFIG: Can't create directory '%s'",
+						dir.string().c_str());
 		}
 	};
 	const auto plugins_dir = get_config_dir() / PluginsDir;

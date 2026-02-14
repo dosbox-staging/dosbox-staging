@@ -165,6 +165,16 @@ uint16_t local_drive_create_dir(const std_fs::path& path)
 	return (result == 0) ? DOSERR_NONE : DOSERR_ACCESS_DENIED;
 }
 
+bool create_dir_if_not_exist(const std_fs::path& path)
+{
+	std::error_code ec = {};
+	if (std_fs::is_directory(path, ec)) {
+		return true;
+	}
+	ec.clear();
+	return std_fs::create_directory(path, ec);
+}
+
 int64_t get_native_file_position(const NativeFileHandle handle)
 {
 	return seek_native_file(handle, 0, NativeSeek::Current);
