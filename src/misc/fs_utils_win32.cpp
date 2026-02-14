@@ -28,8 +28,7 @@ std::string to_native_path(const std::string &path) noexcept
 
 uint16_t local_drive_create_dir(const std_fs::path& path)
 {
-	const int err = _mkdir(path.string().c_str());
-	if (err == 0) {
+	if (CreateDirectoryW(path.c_str(), nullptr)) {
 		return DOSERR_NONE;
 	}
 	return DOSERR_ACCESS_DENIED;
