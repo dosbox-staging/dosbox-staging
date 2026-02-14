@@ -61,7 +61,6 @@ else()
   # Warning flags only valid for the C++ code
   set(WARNING_FLAGS_CXX
       ${WARNING_FLAGS_COMMON}
-      "-Weffc++"
       "-Wextra-semi"
       "-Wimplicit-fallthrough"
   )
@@ -426,8 +425,8 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
 # Find common external dependencies
 find_package(PkgConfig REQUIRED)
-find_package(SDL2 CONFIG REQUIRED)
-find_package(SDL2_image CONFIG REQUIRED)
+find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
+find_package(SDL3_image CONFIG REQUIRED)
 find_package(iir REQUIRED)
 find_package(PNG REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -498,8 +497,7 @@ target_link_libraries(libdosboxcommon PRIVATE
 
 target_link_libraries(dosbox PRIVATE
   libdosboxcommon
-  $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
-  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+  SDL3::SDL3
 )
 
 # Add installation rules

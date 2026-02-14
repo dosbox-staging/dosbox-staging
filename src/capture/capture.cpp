@@ -25,7 +25,7 @@
 #include "utils/string_utils.h"
 
 // must be included after dosbox_config.h
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 CHECK_NARROWING();
 
