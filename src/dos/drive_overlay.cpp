@@ -74,7 +74,7 @@ bool Overlay_Drive::RemoveDir(const char * dir) {
 		safe_strcpy(odir, overlaydir);
 		safe_strcat(odir, dir);
 		CROSS_FILENAME(odir);
-		const auto result_ok = remove_dir(odir);
+		const auto result_ok = local_drive_remove_dir(odir);
 		if (result_ok) {
 			remove_DOSdir_from_cache(dir);
 			char newdir[CROSS_LEN];
