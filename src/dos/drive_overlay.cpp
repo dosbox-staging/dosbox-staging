@@ -979,7 +979,7 @@ bool Overlay_Drive::FileUnlink(const char * name) {
 	safe_strcat(overlayname, name);
 	CROSS_FILENAME(overlayname);
 	//	char *fullname = dirCache.GetExpandNameAndNormaliseCase(newname);
-	if (!delete_file(overlayname)) {
+	if (!delete_native_file(overlayname)) {
 		//Unlink failed for some reason try finding it.
 		struct stat buffer;
 		if(stat(overlayname,&buffer)) {
@@ -1104,7 +1104,7 @@ void Overlay_Drive::remove_special_file_from_disk(const char* dosname, const cha
 	safe_strcpy(overlayname, overlaydir);
 	safe_strcat(overlayname, name.c_str());
 	CROSS_FILENAME(overlayname);
-	if (!delete_file(overlayname)) {
+	if (!delete_native_file(overlayname)) {
 		LOG_ERR("DOS: Failed to remove overlay file '%s'", overlayname);
 	}
 }
