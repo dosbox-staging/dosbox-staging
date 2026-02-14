@@ -191,5 +191,6 @@ bool delete_native_file(const std_fs::path& path);
 // Simple file/directory removal routines, without MS-DOS compatibility hacks
 bool delete_file(const std_fs::path& path);
 bool remove_dir(const std_fs::path& path);
+bool create_dir_if_not_exist(const std_fs::path& path);
 
 #endif

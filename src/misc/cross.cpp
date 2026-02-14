@@ -55,13 +55,9 @@ static std_fs::path get_or_create_config_dir()
 {
 	const auto conf_path = resolve_home("~/Library/Preferences/DOSBox");
 
-	constexpr auto success = 0;
-	if (create_dir(conf_path, 0700, OK_IF_EXISTS) == success) {
-
-	} else {
-		LOG_ERR("CONFIG: Can't create config directory '%s': %s",
-		        conf_path.string().c_str(),
-		        safe_strerror(errno).c_str());
+	if (!create_dir_if_not_exist(conf_path)) {
+		LOG_ERR("CONFIG: Can't create config directory '%s'",
+		        conf_path.string().c_str());
 	}
 	return conf_path;
 }
@@ -96,11 +92,9 @@ static std_fs::path get_or_create_config_dir()
 
 	const auto conf_path = std_fs::path(appdata_path) / "DOSBox";
 
-	constexpr auto success_result = 0;
-	if (create_dir(conf_path, 0700, OK_IF_EXISTS) != success_result) {
-		LOG_ERR("CONFIG: Can't create config directory '%s': %s",
-		        conf_path.string().c_str(),
-		        safe_strerror(errno).c_str());
+	if (!create_dir_if_not_exist(conf_path)) {
+		LOG_ERR("CONFIG: Can't create config directory '%s'",
+		        conf_path.string().c_str());
 	}
 
 	return conf_path;
