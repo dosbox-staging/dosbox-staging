@@ -346,23 +346,24 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 
 	RegisterIoHandlers();
 
-	constexpr bool Stereo = true;
-	constexpr bool SignedData = true;
+	constexpr bool Stereo      = true;
+	constexpr bool SignedData  = true;
 	constexpr bool NativeOrder = true;
 
 	// Register the Audio and DMA channels
-	const auto mixer_callback = std::bind(MIXER_PullFromQueueCallback<Gus, AudioFrame, Stereo, SignedData, NativeOrder>,
-	                                      std::placeholders::_1,
-	                                      this);
+	const auto mixer_callback = std::bind(
+	        MIXER_PullFromQueueCallback<Gus, AudioFrame, Stereo, SignedData, NativeOrder>,
+	        std::placeholders::_1,
+	        this);
 
 	channel = MIXER_AddChannel(mixer_callback,
-	                                 UseMixerRate,
-	                                 ChannelName::GravisUltrasound,
-	                                 {ChannelFeature::Sleep,
-	                                  ChannelFeature::Stereo,
-	                                  ChannelFeature::ReverbSend,
-	                                  ChannelFeature::ChorusSend,
-	                                  ChannelFeature::DigitalAudio});
+	                           UseMixerRate,
+	                           ChannelName::GravisUltrasound,
+	                           {ChannelFeature::Sleep,
+	                            ChannelFeature::Stereo,
+	                            ChannelFeature::ReverbSend,
+	                            ChannelFeature::ChorusSend,
+	                            ChannelFeature::DigitalAudio});
 
 	assert(channel);
 
@@ -371,7 +372,7 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	// real GF1 chip which always outputs a 44.1 kHz sample stream to
 	// the DAC, but starts dropping samples in the internal mixer above
 	// 14 active voices due to bandwidth limitations. Technically, we
-	// could emulate this exact behaviour, but in practice it would 
+	// could emulate this exact behaviour, but in practice it would
 	// make little to no difference compared to our current method.
 	//
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
@@ -1113,7 +1114,7 @@ void Gus::Reset() noexcept
 	should_change_irq_dma = false;
 	PIC_RemoveEvents(gus_timer_event);
 
-	reset_register.data = {};
+	reset_register.data       = {};
 	mix_control_register.data = MixControlRegisterDefaultState;
 }
 
@@ -1167,7 +1168,7 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 	switch (port - port_base) {
 	case 0x200:
 		mix_control_register.data = static_cast<uint8_t>(val);
-		should_change_irq_dma = true;
+		should_change_irq_dma     = true;
 		return;
 	case 0x208: adlib_command_reg = static_cast<uint8_t>(val); break;
 	case 0x209:
@@ -1210,7 +1211,8 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 			//  Section 2.13.
 			should_change_irq_dma = false;
 
-			const auto address_select = AddressSelectRegister{static_cast<uint8_t>(val)};
+			const auto address_select = AddressSelectRegister{
+			        static_cast<uint8_t>(val)};
 
 			const auto ch1_selector = address_select.channel1_selector;
 
@@ -1219,17 +1221,22 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 			if (mix_control_register.irq_control_selected) {
 
 				// Application is selecting IRQ addresses
-				if (ch1_selector && ch1_selector < IrqAddresses.size()) {
-					irq1 = to_internal_irq(IrqAddresses[ch1_selector]);
+				if (ch1_selector &&
+				    ch1_selector < IrqAddresses.size()) {
+					irq1 = to_internal_irq(
+					        IrqAddresses[ch1_selector]);
 				}
 
 				if (address_select.channel2_combined_with_channel1) {
-					// Channel 2 can be combined if it's selector is 0
+					// Channel 2 can be combined if it's
+					// selector is 0
 					if (ch2_selector == 0) {
 						irq2 = irq1;
 					}
-				} else if (ch2_selector && ch2_selector < IrqAddresses.size()) {
-					irq2 = to_internal_irq(IrqAddresses[ch2_selector]);
+				} else if (ch2_selector &&
+				           ch2_selector < IrqAddresses.size()) {
+					irq2 = to_internal_irq(
+					        IrqAddresses[ch2_selector]);
 				}
 #if LOG_GUS
 				LOG_MSG("GUS: Assigned GF1 IRQ to %d and MIDI IRQ to %d",
@@ -1239,17 +1246,22 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 			} else {
 
 				// Application is selecting DMA addresses
-				if (ch1_selector && ch1_selector < DmaAddresses.size()) {
-					UpdatePlaybackDmaAddress(DmaAddresses[ch1_selector]);
+				if (ch1_selector &&
+				    ch1_selector < DmaAddresses.size()) {
+					UpdatePlaybackDmaAddress(
+					        DmaAddresses[ch1_selector]);
 				}
 
 				if (address_select.channel2_combined_with_channel1) {
-					// Channel 2 can be combined if it's selector is 0
+					// Channel 2 can be combined if it's
+					// selector is 0
 					if (ch2_selector == 0) {
 						UpdateRecordingDmaAddress(dma1);
 					}
-				} else if (ch2_selector && ch2_selector < DmaAddresses.size()) {
-					UpdateRecordingDmaAddress(DmaAddresses[ch2_selector]);
+				} else if (ch2_selector &&
+				           ch2_selector < DmaAddresses.size()) {
+					UpdateRecordingDmaAddress(
+					        DmaAddresses[ch2_selector]);
 				}
 			}
 		}
