@@ -150,8 +150,8 @@ bool Overlay_Drive::MakeDir(const char * dir) {
 	safe_strcpy(newdir, overlaydir);
 	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
-	const int temp = create_dir(newdir, 0775);
-	if (temp==0) {
+	const int result = local_drive_create_dir(newdir);
+	if (result == DOSERR_NONE) {
 		char fakename[CROSS_LEN];
 		safe_strcpy(fakename, basedir);
 		safe_strcat(fakename, dir);
@@ -160,7 +160,7 @@ bool Overlay_Drive::MakeDir(const char * dir) {
 		add_DOSdir_to_cache(dir);
 	}
 
-	return (temp == 0);// || ((temp!=0) && (errno==EEXIST));
+	return (result == DOSERR_NONE);
 }
 
 bool Overlay_Drive::TestDir(const char * dir) {
@@ -632,7 +632,7 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 			} else {
 				//folder does not exist, make it
 				if (logoverlay) LOG_MSG("creating %s",dirnameoverlay);
-				if (create_dir(dirnameoverlay, 0700) != 0)
+				if (local_drive_create_dir(dirnameoverlay) != DOSERR_NONE)
 					return false;
 			}
 		}
