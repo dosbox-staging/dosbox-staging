@@ -1020,35 +1020,6 @@ std_fs::path MidiDeviceFluidSynth::GetSoundFontPath()
 	return soundfont_path;
 }
 
-std::string format_sf_line(size_t width, const std_fs::path& sf_path)
-{
-	assert(width > 0);
-	std::vector<char> line_buf(width);
-
-	const auto& name = sf_path.filename().string();
-	const auto& path = simplify_path(sf_path).string();
-
-	snprintf(line_buf.data(), width, "%-16s - %s", name.c_str(), path.c_str());
-	std::string line = line_buf.data();
-
-	// Formatted line did not fill the whole buffer - no further
-	// formatting is necessary.
-	if (line.size() + 1 < width) {
-		return line;
-	}
-
-	// The description was too long and got trimmed; place three
-	// dots in the end to make it clear to the user.
-	const std::string cutoff = "...";
-
-	assert(line.size() > cutoff.size());
-
-	const auto start = line.end() - static_cast<int>(cutoff.size());
-	line.replace(start, line.end(), cutoff);
-
-	return line;
-}
-
 void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 {
 	const size_t term_width = INT10_GetTextColumns();
@@ -1056,7 +1027,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 	constexpr auto Indent = "  ";
 
 	auto write_line = [&](const std_fs::path& sf_path) {
-		const auto line = format_sf_line(term_width - 2, sf_path);
+		const auto line = truncate_path(term_width - strlen(Indent), sf_path);
 
 		const auto do_highlight = [&] {
 			if (device) {

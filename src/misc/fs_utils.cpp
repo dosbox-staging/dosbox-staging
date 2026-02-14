@@ -88,7 +88,40 @@ std::optional<std::vector<std::string>> get_lines(const std_fs::path &text_file)
 	return lines;
 }
 
-std_fs::path simplify_path(const std_fs::path &original_path) noexcept
+std::string truncate_path(size_t width, const std_fs::path& path)
+{
+	assert(width > 0);
+	std::vector<char> line_buf(width);
+
+	const auto& name            = path.filename().string();
+	const auto& simplified_path = simplify_path(path).string();
+
+	snprintf(line_buf.data(),
+	         width,
+	         "%-16s - %s",
+	         name.c_str(),
+	         simplified_path.c_str());
+	std::string line = line_buf.data();
+
+	// Formatted line did not fill the whole buffer - no further
+	// formatting is necessary.
+	if (line.size() + 1 < width) {
+		return line;
+	}
+
+	// The path was too long and got trimmed; place three
+	// dots in the end to make it clear to the user.
+	const std::string cutoff = "...";
+
+	assert(line.size() > cutoff.size());
+
+	const auto start = line.end() - static_cast<int>(cutoff.size());
+	line.replace(start, line.end(), cutoff);
+
+	return line;
+}
+
+std_fs::path simplify_path(const std_fs::path& original_path) noexcept
 {
 	auto ec = std::error_code();
 
