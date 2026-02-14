@@ -1960,8 +1960,9 @@ static void dsp_do_command()
 			sb.dac = {};
 		}
 
-		// Ensure we're using per-frame callback timing because DAC samples
-		// are sent one after another with sub-millisecond timing.
+		// Ensure we're using per-frame callback timing because DAC
+		// samples are sent one after another with sub-millisecond
+		// timing.
 		callback_type.SetPerFrame();
 
 		if (const auto dac_rate_hz = sb.dac.MeasureDacRateHz(); dac_rate_hz) {
