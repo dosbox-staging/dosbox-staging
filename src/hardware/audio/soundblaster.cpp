@@ -3786,19 +3786,27 @@ void init_sblaster_config_settings(SectionProp& secprop)
 
 	auto phex = secprop.AddHex("sbbase", when_idle, 0x220);
 	phex->SetValues({"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
-	phex->SetHelp("The IO address of the Sound Blaster (220 by default).");
+	phex->SetHelp(
+	        "The IO address of the Sound Blaster (220 by default).\n"
+	        "Possible values: 220, 240, 260, 280, 2a0, 2c0, 2e0, 300");
 
 	auto pint = secprop.AddInt("irq", when_idle, 7);
 	pint->SetValues({"3", "5", "7", "9", "10", "11", "12"});
-	pint->SetHelp("The IRQ number of the Sound Blaster (7 by default).");
+	pint->SetHelp(
+	        "The IRQ number of the Sound Blaster (7 by default).\n"
+	        "Possible values: 3, 5, 7, 9, 10, 11, 12");
 
 	pint = secprop.AddInt("dma", when_idle, 1);
 	pint->SetValues({"0", "1", "3", "5", "6", "7"});
-	pint->SetHelp("The DMA channel of the Sound Blaster (1 by default).");
+	pint->SetHelp(
+	        "The DMA channel of the Sound Blaster (1 by default).\n"
+	        "Possible values: 0, 1, 3, 5, 6, 7");
 
 	pint = secprop.AddInt("hdma", when_idle, 5);
 	pint->SetValues({"0", "1", "3", "5", "6", "7"});
-	pint->SetHelp("The High DMA channel of the Sound Blaster 16 (5 by default).");
+	pint->SetHelp(
+	        "The High DMA channel of the Sound Blaster 16 (5 by default).\n"
+	        "Possible values: 0, 1, 3, 5, 6, 7");
 
 	auto pbool = secprop.AddBool("sbmixer", when_idle, true);
 	pbool->SetHelp(
