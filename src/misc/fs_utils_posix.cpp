@@ -92,16 +92,14 @@ std::string to_native_path(const std::string &path) noexcept
 	return ret;
 }
 
-int create_dir(const std_fs::path& path, uint32_t mode, uint32_t flags) noexcept
+uint16_t local_drive_create_dir(const std_fs::path& path)
 {
 	static_assert(sizeof(uint32_t) >= sizeof(mode_t), "");
-	const int err = mkdir(path.c_str(), mode);
-	if ((errno == EEXIST) && (flags & OK_IF_EXISTS)) {
-		struct stat pstat;
-		if ((stat(path.c_str(), &pstat) == 0) && S_ISDIR(pstat.st_mode))
-			return 0;
+	const int err = mkdir(path.c_str(), 0775);
+	if (err == 0) {
+		return DOSERR_NONE;
 	}
-	return err;
+	return DOSERR_ACCESS_DENIED;
 }
 
 #if !defined(MACOSX)

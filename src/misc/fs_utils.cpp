@@ -158,13 +158,6 @@ std::time_t to_time_t(const std_fs::file_time_type &fs_time)
 // Local drive file/directory attribute handling
 // ***************************************************************************
 
-uint16_t local_drive_create_dir(const std_fs::path& path)
-{
-	const auto result = create_dir(path.c_str(), 0775);
-
-	return (result == 0) ? DOSERR_NONE : DOSERR_ACCESS_DENIED;
-}
-
 bool create_dir_if_not_exist(const std_fs::path& path)
 {
 	std::error_code ec = {};

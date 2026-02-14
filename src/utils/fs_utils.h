@@ -83,21 +83,6 @@ std::string to_native_path(const std::string &path) noexcept;
 // The shortest valid path is considered the simplest form.
 std_fs::path simplify_path(const std_fs::path &path) noexcept;
 
-/* Cross-platform wrapper for following functions:
- *
- * - Unix: mkdir(const char *, mode_t)
- * - Windows: _mkdir(const char *)
- *
- * Normal behaviour of mkdir is to fail when directory exists already,
- * you can override this behaviour by calling:
- *
- *     create_dir(path, 0700, OK_IF_EXISTS)
- */
-
-constexpr uint32_t OK_IF_EXISTS = 0x1;
-
-int create_dir(const std_fs::path& path, uint32_t mode, uint32_t flags = 0x0) noexcept;
-
 // Behaves like fseek, but logs an error stating the module, byte offset, file
 // description, filename, and strerror on failure. Returns true on success and
 // false on failure. On failure, it closes the file as it's no longer in a good
