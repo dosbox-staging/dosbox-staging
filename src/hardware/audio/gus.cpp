@@ -1555,17 +1555,22 @@ static void init_gus_config_settings(SectionProp& secprop)
 	assert(hex_prop);
 	hex_prop->SetValues({"210", "220", "230", "240", "250", "260"});
 	hex_prop->SetHelp(
-	        "The IO base address of the Gravis UltraSound (240 by default).");
+	        "The IO base address of the Gravis UltraSound (240 by default).\n"
+	        "Possible values: 210, 220, 230, 240, 250, 260");
 
 	auto* int_prop = secprop.AddInt("gusirq", when_idle, 5);
 	assert(int_prop);
 	int_prop->SetValues({"2", "3", "5", "7", "11", "12", "15"});
-	int_prop->SetHelp("The IRQ number of the Gravis UltraSound (5 by default).");
+	int_prop->SetHelp(
+	        "The IRQ number of the Gravis UltraSound (5 by default).\n"
+	        "Possible values: 2, 3, 5, 7, 11, 12, 15");
 
 	int_prop = secprop.AddInt("gusdma", when_idle, 3);
 	assert(int_prop);
 	int_prop->SetValues({"1", "3", "5", "6", "7"});
-	int_prop->SetHelp("The DMA channel of the Gravis UltraSound (3 by default).");
+	int_prop->SetHelp(
+	        "The DMA channel of the Gravis UltraSound (3 by default).\n"
+	        "Possible values: 1, 3, 5, 6, 7");
 
 	auto* str_prop = secprop.AddString("gus_filter", when_idle, "on");
 	assert(str_prop);
