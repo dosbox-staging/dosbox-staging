@@ -4,8 +4,6 @@
 
 #include "private/sdl_gui.h"
 
-#include "private/common.h"
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -17,6 +15,8 @@
 #if C_DEBUGGER
 #include <queue>
 #endif
+
+#include "private/common.h"
 
 #include "audio/mixer.h"
 #include "capture/capture.h"

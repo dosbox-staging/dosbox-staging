@@ -9,13 +9,20 @@
 //  - Colur space transforms & the rest: guest(r), Dr. Venom
 //
 
+/*
+
+#pragma name        ImageAdjustments
+#pragma output_size VideoMode
+
+#pragma use_nearest_texture_filter
+
+*/
+
 #if defined(VERTEX)
 
 layout (location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
-
-uniform vec2 inputSize;
 
 void main()
 {
@@ -29,7 +36,7 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform sampler2D inputTexture;
+uniform sampler2D INPUT_TEXTURE_0;
 
 uniform int COLOR_SPACE;
 
@@ -353,7 +360,7 @@ const float CrtBlackLevel =
 
 void main()
 {
-	vec3 color = texture(inputTexture, v_texCoord).rgb;
+	vec3 color = texture(INPUT_TEXTURE_0, v_texCoord).rgb;
 	vec3 orig_color = color;
 
 	color = sigmoid_contrast(color, DIGITAL_CONTRAST);

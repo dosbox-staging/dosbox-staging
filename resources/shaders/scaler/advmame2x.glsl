@@ -6,6 +6,9 @@
 
 /*
 
+#pragma name        Main_Pass1
+#pragma output_size Viewport
+
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
 
@@ -17,12 +20,12 @@ layout (location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
 
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) * rubyInputSize;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) * INPUT_TEXTURE_SIZE_0;
 }
 
 #elif defined(FRAGMENT)
@@ -31,17 +34,17 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 rubyTextureSize;
-uniform sampler2D rubyTexture;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform sampler2D INPUT_TEXTURE_0;
 
 vec3 getadvmame2xtexel(vec2 coord)
 {
 	vec2 base = floor(coord / vec2(2.0)) + vec2(0.5);
-	vec3 c4 = texture(rubyTexture, base / rubyTextureSize).xyz;
-	vec3 c1 = texture(rubyTexture, (base - vec2(0.0, 1.0)) / rubyTextureSize).xyz;
-	vec3 c7 = texture(rubyTexture, (base + vec2(0.0, 1.0)) / rubyTextureSize).xyz;
-	vec3 c3 = texture(rubyTexture, (base - vec2(1.0, 0.0)) / rubyTextureSize).xyz;
-	vec3 c5 = texture(rubyTexture, (base + vec2(1.0, 0.0)) / rubyTextureSize).xyz;
+	vec3 c4 = texture(INPUT_TEXTURE_0, base / INPUT_TEXTURE_SIZE_0).xyz;
+	vec3 c1 = texture(INPUT_TEXTURE_0, (base - vec2(0.0, 1.0)) / INPUT_TEXTURE_SIZE_0).xyz;
+	vec3 c7 = texture(INPUT_TEXTURE_0, (base + vec2(0.0, 1.0)) / INPUT_TEXTURE_SIZE_0).xyz;
+	vec3 c3 = texture(INPUT_TEXTURE_0, (base - vec2(1.0, 0.0)) / INPUT_TEXTURE_SIZE_0).xyz;
+	vec3 c5 = texture(INPUT_TEXTURE_0, (base + vec2(1.0, 0.0)) / INPUT_TEXTURE_SIZE_0).xyz;
 
 	bool outer = c1 != c7 && c3 != c5;
 	bool c3c1 = outer && c3 == c1;

@@ -243,6 +243,23 @@ std::string join_with_commas(const std::vector<std::string>& items,
 	return result;
 }
 
+std::string join(const std::vector<std::string>& items,
+				 const std::string& delimiter,
+                 const std::string& prefix,
+                 const std::string& suffix)
+{
+	std::string result = prefix;
+
+	for (auto it = items.begin(); it != items.end(); ++it) {
+		result += *it;
+		if (std::next(it) != items.end()) {
+			result += delimiter;
+		}
+	}
+
+	return result + suffix;
+}
+
 bool ciequals(const char a, const char b)
 {
 	return tolower(a) == tolower(b);

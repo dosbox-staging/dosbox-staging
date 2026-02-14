@@ -11,15 +11,18 @@
 
 /*
 
+#pragma name        Main_Pass1
+#pragma output_size Viewport
+
 #pragma use_nearest_texture_filter
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
 
-#pragma parameter XBR_Y_WEIGHT "Y Weight" 48.0 0.0 100.0 1.0
-#pragma parameter XBR_EQ_THRESHOLD "EQ Threshold" 10.0 0.0 50.0 1.0
-#pragma parameter XBR_EQ_THRESHOLD2 "EQ Threshold 2" 2.0 0.0 4.0 1.0
-#pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 1.0
-#pragma parameter XBR_CORNER_TYPE "Corner Calculation" 3.0 1.0 3.0 1.0
+#pragma parameter XBR_Y_WEIGHT        "Y Weight"           48.0  0.0 100.0  1.0
+#pragma parameter XBR_EQ_THRESHOLD    "EQ Threshold"       10.0  0.0  50.0  1.0
+#pragma parameter XBR_EQ_THRESHOLD2   "EQ Threshold 2"      2.0  0.0   4.0  1.0
+#pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient"     2.0  1.0   3.0  1.0
+#pragma parameter XBR_CORNER_TYPE     "Corner Calculation"  3.0  1.0   3.0  1.0
 
 */
 
@@ -36,18 +39,16 @@ out vec4 t5;
 out vec4 t6;
 out vec4 t7;
 
-uniform vec2 rubyOutputSize;
-uniform vec2 rubyTextureSize;
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform vec2 OUTPUT_TEXTURE_SIZE;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	             rubyInputSize / rubyTextureSize;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
-	vec2 ps = vec2(1.0) / rubyTextureSize.xy;
+	vec2 ps = vec2(1.0) / INPUT_TEXTURE_SIZE_0.xy;
 
 	float dx = ps.x;
 	float dy = ps.y;
@@ -80,18 +81,17 @@ in vec4 t7;
 
 out vec4 FragColor;
 
-uniform vec2 rubyOutputSize;
-uniform vec2 rubyTextureSize;
-uniform vec2 rubyInputSize;
-uniform sampler2D rubyTexture;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform vec2 OUTPUT_TEXTURE_SIZE;
+uniform sampler2D INPUT_TEXTURE_0;
 
 // compatibility #defines
 
-#define Source rubyTexture
+#define Source INPUT_TEXTURE_0
 #define vTexCoord v_texCoord.xy
 
-#define SourceSize vec4(rubyTextureSize, 1.0 / rubyTextureSize) //either TextureSize or InputSize
-#define OutputSize vec4(rubyOutputSize, 1.0 / rubyOutputSize)
+#define SourceSize vec4(INPUT_TEXTURE_SIZE_0, 1.0 / INPUT_TEXTURE_SIZE_0) //either TextureSize or InputSize
+#define OutputSize vec4(OUTPUT_TEXTURE_SIZE, 1.0 / OUTPUT_TEXTURE_SIZE)
 
 uniform float XBR_Y_WEIGHT;
 uniform float XBR_EQ_THRESHOLD;
@@ -149,33 +149,33 @@ void main()
 
 	vec2 fp = fract(vTexCoord * SourceSize.xy);
 
-	vec3 A1 = texture(rubyTexture, t1.xw).rgb;
-	vec3 B1 = texture(rubyTexture, t1.yw).rgb;
-	vec3 C1 = texture(rubyTexture, t1.zw).rgb;
+	vec3 A1 = texture(INPUT_TEXTURE_0, t1.xw).rgb;
+	vec3 B1 = texture(INPUT_TEXTURE_0, t1.yw).rgb;
+	vec3 C1 = texture(INPUT_TEXTURE_0, t1.zw).rgb;
 
-	vec3 A = texture(rubyTexture, t2.xw).rgb;
-	vec3 B = texture(rubyTexture, t2.yw).rgb;
-	vec3 C = texture(rubyTexture, t2.zw).rgb;
+	vec3 A = texture(INPUT_TEXTURE_0, t2.xw).rgb;
+	vec3 B = texture(INPUT_TEXTURE_0, t2.yw).rgb;
+	vec3 C = texture(INPUT_TEXTURE_0, t2.zw).rgb;
 
-	vec3 D = texture(rubyTexture, t3.xw).rgb;
-	vec3 E = texture(rubyTexture, t3.yw).rgb;
-	vec3 F = texture(rubyTexture, t3.zw).rgb;
+	vec3 D = texture(INPUT_TEXTURE_0, t3.xw).rgb;
+	vec3 E = texture(INPUT_TEXTURE_0, t3.yw).rgb;
+	vec3 F = texture(INPUT_TEXTURE_0, t3.zw).rgb;
 
-	vec3 G = texture(rubyTexture, t4.xw).rgb;
-	vec3 H = texture(rubyTexture, t4.yw).rgb;
-	vec3 I = texture(rubyTexture, t4.zw).rgb;
+	vec3 G = texture(INPUT_TEXTURE_0, t4.xw).rgb;
+	vec3 H = texture(INPUT_TEXTURE_0, t4.yw).rgb;
+	vec3 I = texture(INPUT_TEXTURE_0, t4.zw).rgb;
 
-	vec3 G5 = texture(rubyTexture, t5.xw).rgb;
-	vec3 H5 = texture(rubyTexture, t5.yw).rgb;
-	vec3 I5 = texture(rubyTexture, t5.zw).rgb;
+	vec3 G5 = texture(INPUT_TEXTURE_0, t5.xw).rgb;
+	vec3 H5 = texture(INPUT_TEXTURE_0, t5.yw).rgb;
+	vec3 I5 = texture(INPUT_TEXTURE_0, t5.zw).rgb;
 
-	vec3 A0 = texture(rubyTexture, t6.xy).rgb;
-	vec3 D0 = texture(rubyTexture, t6.xz).rgb;
-	vec3 G0 = texture(rubyTexture, t6.xw).rgb;
+	vec3 A0 = texture(INPUT_TEXTURE_0, t6.xy).rgb;
+	vec3 D0 = texture(INPUT_TEXTURE_0, t6.xz).rgb;
+	vec3 G0 = texture(INPUT_TEXTURE_0, t6.xw).rgb;
 
-	vec3 C4 = texture(rubyTexture, t7.xy).rgb;
-	vec3 F4 = texture(rubyTexture, t7.xz).rgb;
-	vec3 I4 = texture(rubyTexture, t7.xw).rgb;
+	vec3 C4 = texture(INPUT_TEXTURE_0, t7.xy).rgb;
+	vec3 F4 = texture(INPUT_TEXTURE_0, t7.xz).rgb;
+	vec3 I4 = texture(INPUT_TEXTURE_0, t7.xw).rgb;
 
 	vec4 b = transpose(mat4x3(B, D, H, F)) * (XBR_Y_WEIGHT * yuv[0]);
 	vec4 c = transpose(mat4x3(C, A, G, I)) * (XBR_Y_WEIGHT * yuv[0]);

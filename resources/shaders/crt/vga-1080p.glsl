@@ -5,16 +5,19 @@
 
 /*
 
-#pragma parameter SPOT_WIDTH "Spot Width" 0.85 0.0 1.0 0.05
-#pragma parameter SPOT_HEIGHT "Spot Height" 0.80 0.0 1.0 0.05
-#pragma parameter PHOSPHOR_LAYOUT "Phosphor Layout" 2.0 0.0 19.0 1.0
-#pragma parameter SCANLINE_STRENGTH_MIN "Scanline Strength Min" 0.80 0.0 1.0 0.05
-#pragma parameter SCANLINE_STRENGTH_MAX "Scanline Strength Max" 0.85 0.0 1.0 0.05
-#pragma parameter COLOR_BOOST_EVEN "Color Boost Even" 4.80 1.0 2.0 0.05
-#pragma parameter COLOR_BOOST_ODD "Color Boost Odd" 1.40 1.0 2.0 0.05
-#pragma parameter MASK_STRENGTH "Mask Strength" 0.10 0.0 1.0 0.1
-#pragma parameter GAMMA_INPUT "Gamma Input" 2.4 0.0 5.0 0.1
-#pragma parameter GAMMA_OUTPUT "Gamma Output" 2.62 0.0 5.0 0.1
+#pragma name        Main_Pass1
+#pragma output_size Viewport
+
+#pragma parameter SPOT_WIDTH            "Spot Width"            0.85  0.0  1.0  0.05
+#pragma parameter SPOT_HEIGHT           "Spot Height"           0.80  0.0  1.0  0.05
+#pragma parameter PHOSPHOR_LAYOUT       "Phosphor Layout"       2.0   0.0 19.0  1.0
+#pragma parameter SCANLINE_STRENGTH_MIN "Scanline Strength Min" 0.80  0.0  1.0  0.05
+#pragma parameter SCANLINE_STRENGTH_MAX "Scanline Strength Max" 0.85  0.0  1.0  0.05
+#pragma parameter COLOR_BOOST_EVEN      "Color Boost Even"      4.80  1.0  2.0  0.05
+#pragma parameter COLOR_BOOST_ODD       "Color Boost Odd"       1.40  1.0  2.0  0.05
+#pragma parameter MASK_STRENGTH         "Mask Strength"         0.10  0.0  1.0  0.1
+#pragma parameter GAMMA_INPUT           "Gamma Input"           2.4   0.0  5.0  0.1
+#pragma parameter GAMMA_OUTPUT          "Gamma Output"          2.62  0.0  5.0  0.1
 
 */
 
@@ -29,17 +32,15 @@ out vec4 sourceSize;
 out vec2 onex;
 out vec2 oney;
 
-uniform vec2 rubyInputSize;
-uniform vec2 rubyTextureSize;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	             rubyInputSize / rubyTextureSize;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
-	sourceSize = vec4(rubyTextureSize, 1.0 / rubyTextureSize);
+	sourceSize = vec4(INPUT_TEXTURE_SIZE_0, 1.0 / INPUT_TEXTURE_SIZE_0);
 	onex       = vec2(sourceSize.z, 0.0);
 	oney       = vec2(0.0, sourceSize.w);
 }
@@ -53,7 +54,7 @@ in vec2 oney;
 
 out vec4 FragColor;
 
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE_0;
 
 uniform float SPOT_WIDTH;
 uniform float SPOT_HEIGHT;
@@ -67,7 +68,7 @@ uniform float GAMMA_INPUT;
 uniform float GAMMA_OUTPUT;
 
 #define GAMMA_IN(color) pow(color, vec4(GAMMA_INPUT))
-#define TEX2D(coords)   GAMMA_IN(texture(rubyTexture, coords))
+#define TEX2D(coords)   GAMMA_IN(texture(INPUT_TEXTURE_0, coords))
 
 // Macro for weights computing
 #define WEIGHT(w) \

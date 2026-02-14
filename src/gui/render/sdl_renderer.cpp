@@ -94,7 +94,7 @@ uint32_t SdlRenderer::OpenGlDriverCrashWorkaround(const std::string_view render_
 bool SdlRenderer::InitRenderer(const std::string& render_driver)
 {
 	if (render_driver != "auto") {
-	    SDL_SetHint(SDL_HINT_RENDER_DRIVER, render_driver.c_str());
+		SDL_SetHint(SDL_HINT_RENDER_DRIVER, render_driver.c_str());
 	}
 
 	constexpr uint32_t Flags = 0;
@@ -374,6 +374,11 @@ void SdlRenderer::SetColorSpace([[maybe_unused]] const ColorSpace color_space)
 
 void SdlRenderer::SetImageAdjustmentSettings(
         [[maybe_unused]] const ImageAdjustmentSettings& settings)
+{
+	// no-op (no image adjustment support)
+}
+
+void SdlRenderer::SetDeditheringStrength([[maybe_unused]] const float strength)
 {
 	// no-op (no image adjustment support)
 }
