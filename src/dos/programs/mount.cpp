@@ -120,32 +120,25 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
 	return true;
 }
 
-void MOUNT::WriteMountStatus(const char* image_type,
+void MOUNT::WriteMountStatus(const std::string& image_type,
                              const std::vector<std::string>& images, char drive_letter)
 {
-	std::string images_str = {};
+	const size_t term_width = INT10_GetTextColumns();
+	constexpr auto Indent   = "  ";
+	std::string images_str  = {};
 
-	if (images.size() == 1) {
-		// If only one image, don't add newlines and just write in one
-		// line:
-		images_str = image_type + std::string(" ") + images[0];
-	} else {
-		// Multiple images are each listed on a new line
-		images_str   = image_type + std::string(":\n");
-		u_int8_t item_num = 0;
-		for (const auto& image : images) {
-			assert(!image.empty());
-			images_str = images_str.append(std::string(" ") + image);
-			if (item_num + 1u < images.size()) {
-				images_str = images_str.append(", \n");
-			} else {
-				images_str = images_str.append("\n");
-			}
-			item_num++;
-		}
+	for (const auto& image : images) {
+		assert(!image.empty());
+		images_str = images_str.append(
+		        std::string(Indent) +
+		        truncate_path(term_width - strlen(Indent), image) +
+		        std::string("\n"));
 	}
 
-	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), images_str.c_str(), drive_letter);
+	WriteOut(MSG_Get("PROGRAM_MOUNT_RESULT"),
+	         image_type.c_str(),
+	         drive_letter,
+	         images_str.c_str());
 }
 
 bool MOUNT::MountImageFat(MountParameters& params)
@@ -269,7 +262,10 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	}
 	dos.dta(save_dta);
 
-	WriteMountStatus(MSG_Get("MOUNT_TYPE_FAT").c_str(), params.paths, params.drive);
+	std::string mount_message = (params.paths.size() > 1)
+	                                  ? MSG_Get("MOUNT_TYPE_FAT_PLURAL")
+	                                  : MSG_Get("MOUNT_TYPE_FAT");
+	WriteMountStatus(mount_message, params.paths, params.drive);
 
 	const auto fat_image = std::dynamic_pointer_cast<fatDrive>(
 	        fat_images.front());
@@ -353,7 +349,12 @@ bool MOUNT::MountImageIso(MountParameters& params)
 
 	// Print status message (success)
 	WriteOut(MSG_Get("MSCDEX_SUCCESS"));
-	WriteMountStatus(MSG_Get("MOUNT_TYPE_ISO").c_str(), params.paths, params.drive);
+
+	std::string mount_message = (params.paths.size() > 1)
+	                                  ? MSG_Get("MOUNT_TYPE_CDIMAGE_PLURAL")
+	                                  : MSG_Get("MOUNT_TYPE_CDIMAGE");
+	WriteMountStatus(mount_message, params.paths, params.drive);
+
 	return true;
 }
 
