@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_BGRX8888_H
@@ -6,59 +6,40 @@
 
 #include <cstdint>
 
-// A class that holds the colour channels as an array of four 8-bit values
-// in byte order (also known as memory order), regardless of host
-// endianness. The bytes in memory are always Blue, Green, Red, and finally
-// a placeholder.
-//
 class Bgrx8888 {
 public:
+	uint32_t color = 0;
+
 	constexpr Bgrx8888() = default;
 
-	Bgrx8888(const uint8_t b8, const uint8_t g8, const uint8_t r8)
+	constexpr Bgrx8888(const uint8_t r, const uint8_t g, const uint8_t b)
+	        : color(static_cast<uint32_t>(b << 0) |
+	                static_cast<uint32_t>(g << 8) |
+	                static_cast<uint32_t>(r << 16))
+	{}
+
+	constexpr explicit Bgrx8888(const uint32_t c) : color(c) {}
+
+	constexpr uint8_t Red() const
 	{
-		Set(b8, g8, r8);
+		return static_cast<uint8_t>((color & 0xff0000) >> 16);
 	}
 
-	void Set(const uint8_t b8, const uint8_t g8, const uint8_t r8)
+	constexpr uint8_t Green() const
 	{
-		colour.components = {b8, g8, r8, 0};
+		return static_cast<uint8_t>((color & 0xff00) >> 8);
 	}
 
-	constexpr uint8_t Blue8() const
+	constexpr uint8_t Blue() const
 	{
-		return colour.components.b8;
-	}
-
-	constexpr uint8_t Green8() const
-	{
-		return colour.components.g8;
-	}
-
-	constexpr uint8_t Red8() const
-	{
-		return colour.components.r8;
+		return static_cast<uint8_t>(color & 0xff);
 	}
 
 	// Cast operator to read-only uint32_t
 	constexpr operator uint32_t() const
 	{
-		return colour.bgrx8888;
+		return color;
 	}
-
-private:
-	union {
-		struct {
-			// byte order
-			uint8_t b8 = 0;
-			uint8_t g8 = 0;
-			uint8_t r8 = 0;
-			uint8_t x8 = 0;
-		} components;
-		uint32_t bgrx8888 = 0;
-	} colour = {};
 };
 
-static_assert(sizeof(Bgrx8888) == sizeof(uint32_t));
-
-#endif
+#endif // DOSBOX_BGRX8888_H

@@ -11,6 +11,8 @@
 #include <optional>
 #include <string>
 
+#include "private/deinterlacer.h"
+
 #include "gui/render/scaler/scalers.h"
 #include "hardware/video/vga.h"
 #include "utils/fraction.h"
@@ -99,10 +101,15 @@ struct Render {
 		int out_pitch      = 0;
 		uint8_t* out_write = nullptr;
 
+		alignas(uint64_t)
+		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> out_buf = {};
+
 		int y_scale = 0;
 	} scale = {};
 
 	RenderPalette palette = {};
+
+	uint32_t* dest = nullptr;
 
 	bool active             = false;
 	bool render_in_progress = false;
@@ -112,60 +119,9 @@ struct Render {
 	IntegerScalingMode integer_scaling_mode                = {};
 
 	ViewportSettings viewport_settings = {};
-};
 
-// A frame of the emulated video output that's passed to the rendering backend
-// or to the image and video capturers.
-//
-// Also used for passing the post-shader output read back from the frame buffer
-// to the image capturer.
-//
-struct RenderedImage {
-	ImageInfo params = {};
-
-	// If true, the image is stored flipped vertically, starting from the
-	// bottom row
-	bool is_flipped_vertically = false;
-
-	// Bytes per row
-	int pitch = 0;
-
-	// (width * height) number of pixels stored in the pixel format defined
-	// by pixel_format
-	uint8_t* image_data = nullptr;
-
-	std::array<Rgb888, NumVgaColors> palette = {};
-
-	inline bool is_paletted() const
-	{
-		return (params.pixel_format == PixelFormat::Indexed8);
-	}
-
-	RenderedImage deep_copy() const
-	{
-		RenderedImage copy = *this;
-
-		// Deep-copy image and palette data
-		const auto image_data_num_bytes = static_cast<uint32_t>(
-		        params.height * pitch);
-
-		copy.image_data = new uint8_t[image_data_num_bytes];
-
-		assert(image_data);
-		std::memcpy(copy.image_data, image_data, image_data_num_bytes);
-
-		copy.palette = palette;
-
-		return copy;
-	}
-
-	void free()
-	{
-		if (image_data) {
-			delete[] image_data;
-			image_data = nullptr;
-		}
-	}
+	std::unique_ptr<Deinterlacer> deinterlacer   = {};
+	DeinterlacingStrength deinterlacing_strength = {};
 };
 
 // CRT color profile emulation settings.

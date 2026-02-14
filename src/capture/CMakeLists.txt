@@ -5,7 +5,6 @@ target_sources(libdosboxcommon PRIVATE
   capture_video.cpp
 
   image/image_capturer.cpp
-  image/image_decoder.cpp
   image/image_saver.cpp
   image/image_scaler.cpp
   image/png_writer.cpp)

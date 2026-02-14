@@ -11,6 +11,7 @@ target_sources(libdosboxcommon PRIVATE
   host_locale_macos.cpp
   host_locale_posix.cpp
   host_locale_win32.cpp
+  image_decoder.cpp
   iso_locale_codes.cpp
   messages_adjust.cpp
   messages_po_entry.cpp

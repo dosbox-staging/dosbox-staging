@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "utils/bgrx8888.h"
-#include "utils/rgb888.h"
 #include "utils/rgb.h"
 #include "utils/rgb565.h"
+#include "utils/rgb888.h"
 
 #include <gtest/gtest.h>
 
@@ -168,57 +168,44 @@ TEST(rgb, rgb888_byte_order)
 	EXPECT_EQ(byte_array[third_b8_offset], b8);
 }
 
-TEST(rgb, bgrx8888_byte_order)
+TEST(rgb, bgrx8888_byte_array)
 {
-	constexpr uint8_t b8 = 0b1000'1111;
-	constexpr uint8_t g8 = 0b1000'0111;
-	constexpr uint8_t r8 = 0b1000'0011;
+	constexpr uint8_t r = 0b1000'0011;
+	constexpr uint8_t g = 0b1000'0111;
+	constexpr uint8_t b = 0b1000'1111;
 
-	// Create a sequential array of objects
 	const Bgrx8888 bgrx_array[3] = {
-	        {b8, g8, r8},
-	        {b8, g8, r8},
-	        {b8, g8, r8},
+	        {r, g, b},
+	        {r, g, b},
+	        {r, g, b},
 	};
 
-	// Treat the array as if it were video memory, i.e., a sequence of bytes.
 	const auto byte_array = reinterpret_cast<const uint8_t*>(bgrx_array);
 
-	// If Bgrx8888 works properly, the colour values will always be in the
-	// same place regardless of the hosts's endianness.
-	//
-	constexpr auto first_b8_offset  = sizeof(Bgrx8888) * 0 + 0;
-	constexpr auto second_g8_offset = sizeof(Bgrx8888) * 1 + 1;
-	constexpr auto third_r8_offset  = sizeof(Bgrx8888) * 2 + 2;
+	constexpr auto first_blue_offset   = sizeof(Bgrx8888) * 0 + 0;
+	constexpr auto second_green_offset = sizeof(Bgrx8888) * 1 + 1;
+	constexpr auto third_red_offset    = sizeof(Bgrx8888) * 2 + 2;
 
-	EXPECT_EQ(byte_array[first_b8_offset], b8);
-	EXPECT_EQ(byte_array[second_g8_offset], g8);
-	EXPECT_EQ(byte_array[third_r8_offset], r8);
+	EXPECT_EQ(byte_array[first_blue_offset], b);
+	EXPECT_EQ(byte_array[second_green_offset], g);
+	EXPECT_EQ(byte_array[third_red_offset], r);
 }
 
-TEST(rgb, bgrx8888_cast_byte_order)
+TEST(rgb, bgrx8888_object)
 {
-	constexpr uint8_t b8 = 0b1000'1111;
-	constexpr uint8_t g8 = 0b1000'0111;
-	constexpr uint8_t r8 = 0b1000'0011;
+	constexpr uint8_t r = 0b1000'0011;
+	constexpr uint8_t g = 0b1000'0111;
+	constexpr uint8_t b = 0b1000'1111;
 
-	const Bgrx8888 bgrx_object(b8, g8, r8);
+	const Bgrx8888 bgrx_object(r, g, b);
 
-	// Cast the object to a uint32_t and copy it byte-by-byte into an array.
-	// Bgrx8888 claims that its uint32_t cast is just another 'view' into
-	// the fixed BGRx byte-ordered colour values.
-	//
 	const uint32_t bgrx_as_uint32 = bgrx_object;
 	constexpr auto array_size     = sizeof(bgrx_as_uint32);
 
 	uint8_t byte_array[array_size] = {};
 	memcpy(byte_array, &bgrx_as_uint32, array_size);
 
-	// If Bgrx8888 works properly, the colour values will always be in the
-	// same place regardless of the hosts's endianness. So the uint32 is
-	// merely a different view into the struct's byte-order values.
-	//
-	EXPECT_EQ(byte_array[0], b8);
-	EXPECT_EQ(byte_array[1], g8);
-	EXPECT_EQ(byte_array[2], r8);
+	EXPECT_EQ(byte_array[0], b);
+	EXPECT_EQ(byte_array[1], g);
+	EXPECT_EQ(byte_array[2], r);
 }

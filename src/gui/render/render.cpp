@@ -80,6 +80,44 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 	}
 }
 
+static bool is_deinterlacing()
+{
+	// We only deinterlace (S)VGA and VESA modes
+	if (machine != MachineType::Vga) {
+		return false;
+	}
+
+	return (render.deinterlacing_strength != DeinterlacingStrength::Off);
+}
+
+static bool maybe_gfx_start_update()
+{
+	uint32_t* pixel_data = nullptr;
+	int pitch            = 0;
+
+	if (!GFX_StartUpdate(pixel_data, pitch)) {
+		return false;
+	}
+
+	if (is_deinterlacing()) {
+		// Write the scaled output to a temporary buffer first
+		render.scale.out_write = reinterpret_cast<uint8_t*>(
+		        render.scale.out_buf.data());
+
+		render.dest = pixel_data;
+
+	} else {
+		// Write the scaled output directly to the render backend's
+		// texture buffer
+		render.scale.out_write = reinterpret_cast<uint8_t*>(pixel_data);
+		render.dest            = nullptr;
+	}
+
+	render.scale.out_pitch = pitch;
+
+	return true;
+}
+
 static void empty_line_handler(const void*) {}
 
 static void start_line_handler(const void* src_line_data)
@@ -96,14 +134,11 @@ static void start_line_handler(const void* src_line_data)
 			// double-buffered). Otherwise, it will keep displaying
 			// the same frame at present time without doing a buffer
 			// swap followed by a texture upload to the GPU.
-			uint32_t* buf_ptr = {};
-
-			if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
+			//
+			if (!maybe_gfx_start_update()) {
 				RENDER_DrawLine = empty_line_handler;
 				return;
 			}
-
-			render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
 
 			render.scale.out_write += render.scale.out_pitch *
 			                          scaler_changed_lines[0];
@@ -197,13 +232,9 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		uint32_t* buf_ptr = {};
-
-		if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
+		if (!maybe_gfx_start_update()) {
 			return false;
 		}
-
-		render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
 
 		RENDER_DrawLine = clear_cache_handler;
 
@@ -219,13 +250,9 @@ bool RENDER_StartUpdate()
 		// This will force a buffer swap & texture update in the render
 		// backend (see comments in `start_line_handler()`).
 		//
-		uint32_t* buf_ptr = {};
-
-		if (!GFX_StartUpdate(buf_ptr, render.scale.out_pitch)) {
+		if (!maybe_gfx_start_update()) {
 			return false;
 		}
-
-		render.scale.out_write = reinterpret_cast<uint8_t*>(buf_ptr);
 
 		RENDER_DrawLine = render.scale.line_palette_handler;
 
@@ -257,24 +284,10 @@ static void halt_render()
 
 static void handle_capture_frame()
 {
-	bool double_width  = false;
-	bool double_height = false;
-
-	if (render.src.double_width != render.src.double_height) {
-		if (render.src.double_width) {
-			double_width = true;
-		}
-		if (render.src.double_height) {
-			double_height = true;
-		}
-	}
-
 	RenderedImage image = {};
 
-	image.params               = render.src;
-	image.params.double_width  = double_width;
-	image.params.double_height = double_height;
-	image.pitch                = render.scale.cache_pitch;
+	image.params = render.src;
+	image.pitch  = render.scale.cache_pitch;
 
 	image.image_data = reinterpret_cast<uint8_t*>(render.scale.cache.data());
 
@@ -282,7 +295,55 @@ static void handle_capture_frame()
 
 	const auto frames_per_second = static_cast<float>(render.fps);
 
-	CAPTURE_AddFrame(image, frames_per_second);
+	if (is_deinterlacing()) {
+		// The pixel data in the returned new image points either to the
+		// input image's data (for 32-bit BGRX images), or to the
+		// deinterlacer's internal decode buffer (for any other pixel
+		// format). We *must not* call `free()` on `new_image` in either
+		// case as it doesn't own these pixel data buffers.
+		//
+		auto new_image = render.deinterlacer->Deinterlace(
+		        image, render.deinterlacing_strength);
+
+		// The image capturer will create its own deep copy the rendered
+		// image (and thus of the pixel data), and will free it when
+		// it's done with it.
+		//
+		// The video capturer doesn't create a copy, and consequently
+		// doesn't free the rendered image either.
+		CAPTURE_AddFrame(new_image, frames_per_second);
+
+	} else {
+		CAPTURE_AddFrame(image, frames_per_second);
+	}
+}
+
+static void deinterlace_rendered_output()
+{
+	// Copy scaled & deinterlaced output into the render backend's
+	// texture buffer (always in 32-bit BGRX pixel format)
+	std::memcpy(render.dest,
+	            render.scale.out_buf.data(),
+	            render.scale.out_height * render.scale.out_pitch);
+
+	// Deinterlace the render's backend buffer and leave the scaler
+	// output buffer intact (as deinterlacing the scaler output
+	// buffer itself would screw up the scaler diffing).
+	//
+	RenderedImage image = {};
+
+	image.params              = render.src;
+	image.params.width        = render.scale.out_width;
+	image.params.height       = render.scale.out_height;
+	image.params.pixel_format = PixelFormat::BGRX32_ByteArray;
+	image.pitch               = render.scale.out_pitch;
+
+	image.image_data = reinterpret_cast<uint8_t*>(render.dest);
+
+	// 32-bit BGRX images will always be processed in-place, so we don't
+	// care about the returned `RenderedImage` object (it's the same as the
+	// input image).
+	render.deinterlacer->Deinterlace(image, render.deinterlacing_strength);
 }
 
 void RENDER_EndUpdate([[maybe_unused]] bool abort)
@@ -295,6 +356,11 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 
 	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
 		handle_capture_frame();
+	}
+
+	// Only deinterlace the output if the frame has changed
+	if (is_deinterlacing() && render.updating_frame) {
+		deinterlace_rendered_output();
 	}
 
 	GFX_EndUpdate();
@@ -598,7 +664,7 @@ static void handle_auto_image_adjustment_settings(const VideoMode& video_mode)
 			}
 		}
 
-		if (get_render_section().GetString("black_level") == "auto") {
+		if (get_render_section().GetStringLowCase("black_level") == "auto") {
 			if (curr_image_adjustment_settings.black_level !=
 			    settings.black_level) {
 
@@ -611,7 +677,8 @@ static void handle_auto_image_adjustment_settings(const VideoMode& video_mode)
 			}
 		}
 
-		if (get_render_section().GetString("color_temperature") == "auto") {
+		if (get_render_section().GetStringLowCase("color_temperature") ==
+		    "auto") {
 			if (curr_image_adjustment_settings.color_temperature_kelvin !=
 			    settings.color_temperature_kelvin) {
 
@@ -1055,7 +1122,7 @@ static std::optional<ViewportSettings> parse_viewport_settings(const std::string
 static void set_viewport(SectionProp& section)
 {
 	if (const auto& settings = parse_viewport_settings(
-	            section.GetString("viewport"));
+	            section.GetStringLowCase("viewport"));
 	    settings) {
 		render.viewport_settings = *settings;
 	} else {
@@ -1095,6 +1162,47 @@ static void set_integer_scaling(const SectionProp& section)
 			                      DefaultValue);
 
 			return Auto;
+		}
+	}();
+}
+
+static void set_deinterlacing(const SectionProp& section)
+{
+	using enum DeinterlacingStrength;
+
+	render.deinterlacing_strength = [&]() {
+		const std::string pref = section.GetStringLowCase("deinterlacing");
+
+		if (has_false(pref)) {
+			return Off;
+
+		} else if (has_true(pref)) {
+			return Medium;
+
+		} else if (pref == "light") {
+			return Light;
+
+		} else if (pref == "medium") {
+			return Medium;
+
+		} else if (pref == "strong") {
+			return Strong;
+
+		} else if (pref == "full") {
+			return Full;
+
+		} else {
+			constexpr auto SettingName  = "deinterlacing";
+			constexpr auto DefaultValue = "off";
+
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "RENDER",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      SettingName,
+			                      pref.c_str(),
+			                      DefaultValue);
+
+			return Off;
 		}
 	}();
 }
@@ -1257,9 +1365,104 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 	return draw_size_px.CenterTo(canvas_size_px.cx(), canvas_size_px.cy());
 }
 
+static void init_color_space_setting(SectionProp& section)
+{
+	using enum Property::Changeable::Value;
+
+#if defined(MACOSX)
+	constexpr auto DefaultColorSpace = "display-p3";
+#else
+	constexpr auto DefaultColorSpace = "srgb";
+#endif
+
+	auto string_prop = section.AddString("color_space", Always, DefaultColorSpace);
+	string_prop->SetValues(
+#if defined(MACOSX)
+	        {"display-p3"}
+#else
+	        {"srgb", "display-p3", "dci-p3", "dci-p3-d65", "modern-p3", "adobe-rgb", "rec-2020"}
+#endif
+	);
+
+	string_prop->SetOptionHelp("color_space_description",
+	                           format_str("Set the colour space of the video output ('%s' by default). This setting\n"
+	                                      "allows to take advantage of wide color gamut monitors and to more accurately\n"
+	                                      "emulate CRT colors. Possible values:",
+	                                      DefaultColorSpace));
+
+	string_prop->SetOptionHelp("color_space_description_macos",
+	                           "Set the colour space of the video output. On macOS, this is always 'display-p3';\n"
+	                           "the OS performs the conversion to the colour profile set in your system\n"
+	                           "settings.");
+
+	string_prop->SetOptionHelp(
+	        "color_space_srgb",
+	        "\n"
+	        "  srgb:        The lowest common denominator non-wide gamut sRGB colour space\n"
+	        "               with 6500K white point and sRGB gamma (default).");
+
+	string_prop->SetOptionHelp("color_space_display_p3",
+	                           "\n"
+	                           "  display-p3:  Display P3 wide gamut colour space with 6500K white point and\n"
+	                           "               sRGB gamma.");
+
+	string_prop->SetOptionHelp(
+	        "color_space_rest",
+	        "\n"
+	        "  dci-p3:      Standard DCI-P3 wide gamut colour space with DCI white point\n"
+	        "               (~6300K) and a 2.6 gamma. Use 'dci-p3-d65' instead if the whites\n"
+	        "               and grays have a greenish tint with your monitor in DCI-P3 mode.\n"
+	        "\n"
+	        "  dci-p3-d65:  DCI-P3 variant with modified D65 white point (6500K) and 2.6\n"
+	        "               gamma. Use 'dci-p3' instead if the whites and grays have a\n"
+	        "               yellowish tint with your monitor in DCI-P3 mode.\n"
+	        "\n"
+	        "  modern-p3:   Setting for average consumer/gaming monitors that only reach\n"
+	        "               around 90%% DCI-P3 colour space gamut coverage (6500K white\n"
+	        "               point, sRGB gamma). Use the other DCI-P3 colour spaces if your\n"
+	        "               monitor's DCI-P3 coverage is close to 100%%.\n"
+	        "\n"
+	        "  adobe-rgb:   AdobeRGB 2020 wide gamut colour space with 6500K white point\n"
+	        "               and 2.2 gamma.\n"
+	        "\n"
+	        "  rec-2020:    Rec.2020 wide gamut colour space with 6500K white point and 2.2\n"
+	        "               gamma.");
+
+	string_prop->SetOptionHelp(
+	        "color_space_notes",
+	        "\n"
+	        "Notes:\n"
+	        "  - Colour space transforms are applied to rendered screenshots, but not to raw\n"
+	        "    and upscaled screenshots and video captures (those are always in sRGB).");
+
+	string_prop->SetOptionHelp(
+	        "color_space_notes_windows_linux",
+	        "\n"
+	        "  - The feature only works in OpenGL output mode.\n"
+	        "\n"
+	        "  - The setting must match the colour space set on your monitor.\n"
+	        "\n"
+	        "  - You must disable all OS and graphics driver level colour management, and you\n"
+	        "    must not use any 3rd party colour management programs for DOSBox Staging,\n"
+	        "    otherwise you'll get incorrect colours.");
+
+	string_prop->SetEnabledOptions({
+#if defined(MACOSX)
+	        "color_space_description_macos", "color_space_display_p3", "color_space_notes"
+#else
+	        "color_space_description",
+	        "color_space_srgb",
+	        "color_space_display_p3",
+	        "color_space_rest",
+	        "color_space_notes",
+	        "color_space_notes_windows_linux"
+#endif
+	});
+}
+
 std::string RENDER_GetCgaColorsSetting()
 {
-	return get_render_section().GetString("cga_colors");
+	return get_render_section().GetStringLowCase("cga_colors");
 }
 
 constexpr int BrightnessMin = 0;
@@ -1367,6 +1570,7 @@ static void init_render_settings(SectionProp& section)
 	});
 
 	string_prop = section.AddString("aspect", Always, "auto");
+	string_prop->SetValues({"auto", "on", "square-pixels", "off", "stretch"});
 	string_prop->SetHelp(
 	        "Set the aspect ratio correction mode ('auto' by default). Possible values:\n"
 	        "\n"
@@ -1392,9 +1596,8 @@ static void init_render_settings(SectionProp& section)
 	        "                       to emulate the horizontal and vertical stretch controls\n"
 	        "                       of CRT monitors.");
 
-	string_prop->SetValues({"auto", "on", "square-pixels", "off", "stretch"});
-
 	string_prop = section.AddString("integer_scaling", Always, "auto");
+	string_prop->SetValues({"auto", "vertical", "horizontal", "off"});
 	string_prop->SetHelp(
 	        "Constrain the horizontal or vertical scaling factor to the largest integer\n"
 	        "value so the image still fits into the viewport ('auto' by default). The\n"
@@ -1416,8 +1619,6 @@ static void init_render_settings(SectionProp& section)
 	        "\n"
 	        "  off:         No integer scaling constraint is applied; the image fills the\n"
 	        "               viewport while maintaining the configured aspect ratio.");
-
-	string_prop->SetValues({"auto", "vertical", "horizontal", "off"});
 
 	string_prop = section.AddString("viewport", Always, "fit");
 	string_prop->SetHelp(
@@ -1458,6 +1659,10 @@ static void init_render_settings(SectionProp& section)
 	string_prop = section.AddString("monochrome_palette",
 	                                Always,
 	                                MonochromePaletteAmber);
+	string_prop->SetValues({MonochromePaletteAmber,
+	                        MonochromePaletteGreen,
+	                        MonochromePaletteWhite,
+	                        MonochromePalettePaperwhite});
 	string_prop->SetHelp(
 	        "Set the palette for monochrome display emulation ('amber' by default).\n"
 	        "Works only with the 'hercules' and 'cga_mono' machine types. Possible values:\n"
@@ -1468,11 +1673,6 @@ static void init_render_settings(SectionProp& section)
 	        "  paperwhite:  Paperwhite palette.\n"
 	        "\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
-
-	string_prop->SetValues({MonochromePaletteAmber,
-	                        MonochromePaletteGreen,
-	                        MonochromePaletteWhite,
-	                        MonochromePalettePaperwhite});
 
 	string_prop = section.AddString("cga_colors", OnlyAtStart, "default");
 	string_prop->SetHelp(
@@ -1539,95 +1739,7 @@ static void init_render_settings(SectionProp& section)
 	        "\n"
 	        "  - If you used an advanced scaler, consider one of the [color=light-green]'shader'[reset] options.");
 
-#if defined(MACOSX)
-	constexpr auto DefaultColorSpace = "display-p3";
-#else
-	constexpr auto DefaultColorSpace = "srgb";
-#endif
-
-	string_prop = section.AddString("color_space", Always, DefaultColorSpace);
-	string_prop->SetValues(
-#if defined(MACOSX)
-	        {"display-p3"}
-#else
-	        {"srgb", "display-p3", "dci-p3", "dci-p3-d65", "modern-p3", "adobe-rgb", "rec-2020"}
-#endif
-	);
-
-	string_prop->SetOptionHelp("color_space_description",
-	                           format_str("Set the colour space of the video output ('%s' by default). This setting\n"
-	                                      "allows to take advantage of wide color gamut monitors and to more accurately\n"
-	                                      "emulate CRT colors. Possible values:",
-	                                      DefaultColorSpace));
-
-	string_prop->SetOptionHelp("color_space_description_macos",
-	                           "Set the colour space of the video output. On macOS, this is always 'display-p3';\n"
-	                           "the OS performs the conversion to the colour profile set in your system\n"
-	                           "settings.");
-
-	string_prop->SetOptionHelp(
-	        "color_space_srgb",
-	        "\n"
-	        "  srgb:        The lowest common denominator non-wide gamut sRGB colour space\n"
-	        "               with 6500K white point and sRGB gamma (default).");
-
-	string_prop->SetOptionHelp("color_space_display_p3",
-	                           "\n"
-	                           "  display-p3:  Display P3 wide gamut colour space with 6500K white point and\n"
-	                           "               sRGB gamma.");
-
-	string_prop->SetOptionHelp(
-	        "color_space_rest",
-	        "\n"
-	        "  dci-p3:      Standard DCI-P3 wide gamut colour space with DCI white point\n"
-	        "               (~6300K) and a 2.6 gamma. Use 'dci-p3-d65' instead if the whites\n"
-	        "               and grays have a greenish tint with your monitor in DCI-P3 mode.\n"
-	        "\n"
-	        "  dci-p3-d65:  DCI-P3 variant with modified D65 white point (6500K) and 2.6\n"
-	        "               gamma. Use 'dci-p3' instead if the whites and grays have a\n"
-	        "               yellowish tint with your monitor in DCI-P3 mode.\n"
-	        "\n"
-	        "  modern-p3:   Setting for average consumer/gaming monitors that only reach\n"
-	        "               around 90%% DCI-P3 colour space gamut coverage (6500K white\n"
-	        "               point, sRGB gamma). Use the other DCI-P3 colour spaces if your\n"
-	        "               monitor's DCI-P3 coverage is close to 100%%.\n"
-	        "\n"
-	        "  adobe-rgb:   AdobeRGB 2020 wide gamut colour space with 6500K white point\n"
-	        "               and 2.2 gamma.\n"
-	        "\n"
-	        "  rec-2020:    Rec.2020 wide gamut colour space with 6500K white point and 2.2\n"
-	        "               gamma.");
-
-	string_prop->SetOptionHelp(
-	        "color_space_notes",
-	        "\n"
-	        "Notes:\n"
-	        "  - Colour space transforms are applied to rendered screenshots, but not to raw\n"
-	        "    and upscaled screenshots and video captures (those are always in sRGB).");
-
-	string_prop->SetOptionHelp(
-	        "color_space_notes_windows_linux",
-	        "\n"
-	        "  - The feature only works in OpenGL output mode.\n"
-	        "\n"
-	        "  - The setting must match the colour space set on your monitor.\n"
-	        "\n"
-	        "  - You must disable all OS and graphics driver level colour management, and you\n"
-	        "    must not use any 3rd party colour management programs for DOSBox Staging,\n"
-	        "    otherwise you'll get incorrect colours.");
-
-	string_prop->SetEnabledOptions({
-#if defined(MACOSX)
-	        "color_space_description_macos", "color_space_display_p3", "color_space_notes"
-#else
-	        "color_space_description",
-	        "color_space_srgb",
-	        "color_space_display_p3",
-	        "color_space_rest",
-	        "color_space_notes",
-	        "color_space_notes_windows_linux"
-#endif
-	});
+	init_color_space_setting(section);
 
 	auto bool_prop = section.AddBool("image_adjustments", WhenIdle, true);
 	bool_prop->SetHelp(
@@ -1679,7 +1791,6 @@ static void init_render_settings(SectionProp& section)
 	        "              results.");
 
 	constexpr int DefaultBrightness = 45;
-
 	int_prop = section.AddInt("brightness", Always, DefaultBrightness);
 	int_prop->SetMinMax(BrightnessMin, BrightnessMax);
 	int_prop->SetHelp(
@@ -1691,7 +1802,6 @@ static void init_render_settings(SectionProp& section)
 	                   BrightnessMax));
 
 	constexpr int DefaultContrast = 65;
-
 	int_prop = section.AddInt("contrast", Always, DefaultContrast);
 	int_prop->SetMinMax(ContrastMin, ContrastMax);
 	int_prop->SetHelp(
@@ -1704,7 +1814,6 @@ static void init_render_settings(SectionProp& section)
 	                   ContrastMax));
 
 	constexpr int DefaultGamma = 0;
-
 	int_prop = section.AddInt("gamma", Always, DefaultGamma);
 	int_prop->SetMinMax(GammaMin, GammaMax);
 	int_prop->SetHelp(
@@ -1716,7 +1825,6 @@ static void init_render_settings(SectionProp& section)
 	                   GammaMax));
 
 	constexpr int DefaultDigitalContrast = 0;
-
 	int_prop = section.AddInt("digital_contrast", Always, DefaultDigitalContrast);
 	int_prop->SetMinMax(DigitalContrastMin, DigitalContrastMax);
 	int_prop->SetHelp(format_str(
@@ -1728,7 +1836,6 @@ static void init_render_settings(SectionProp& section)
 	        DigitalContrastMax));
 
 	constexpr auto DefaultBlackLevel = "auto";
-
 	string_prop = section.AddString("black_level", Always, DefaultBlackLevel);
 	string_prop->SetHelp(format_str(
 	        "Raise the black level of the video output ('%s' by default). It is applied\n"
@@ -1749,7 +1856,6 @@ static void init_render_settings(SectionProp& section)
 	        BlackLevelMax));
 
 	constexpr int DefaultSaturation = 0;
-
 	int_prop = section.AddInt("saturation", Always, DefaultSaturation);
 	int_prop->SetMinMax(SaturationMin, SaturationMax);
 	int_prop->SetHelp(
@@ -1761,7 +1867,6 @@ static void init_render_settings(SectionProp& section)
 	                   SaturationMax));
 
 	constexpr auto DefaultColorTemperature = "auto";
-
 	string_prop = section.AddString("color_temperature",
 	                                Always,
 	                                DefaultColorTemperature);
@@ -1783,14 +1888,11 @@ static void init_render_settings(SectionProp& section)
 	        ColorTemperatureMax));
 
 	constexpr auto DefaultColorTemperatureLumaPreserve = 0;
-
 	int_prop = section.AddInt("color_temperature_luma_preserve",
 	                          Always,
 	                          DefaultColorTemperatureLumaPreserve);
-
 	int_prop->SetMinMax(ColorTemperatureLumaPreserveMin,
 	                    ColorTemperatureLumaPreserveMax);
-
 	int_prop->SetHelp(format_str(
 	        "Preserve image luminosity prior to colour temperature adjustment (%d by\n"
 	        "default). Valid range is %d to %d. 0 doesn't perform any luminosity\n"
@@ -1802,7 +1904,6 @@ static void init_render_settings(SectionProp& section)
 	        ColorTemperatureLumaPreserveMax));
 
 	constexpr int DefaultRgbGain = 100;
-
 	int_prop = section.AddInt("red_gain", Always, DefaultRgbGain);
 	int_prop->SetMinMax(RgbGainMin, RgbGainMax);
 	int_prop->SetHelp(
@@ -1829,6 +1930,35 @@ static void init_render_settings(SectionProp& section)
 	                   DefaultRgbGain,
 	                   RgbGainMin,
 	                   RgbGainMax));
+
+	string_prop = section.AddString("deinterlacing", Always, "off");
+	string_prop->SetValues({"on", "off", "light", "medium", "strong", "full"});
+	string_prop->SetHelp(
+	        "Remove black lines from interlaced videos ('off' by default). Use with games\n"
+	        "that display video content with alternating black lines. This trick worked well\n"
+	        "on CRT monitors to increase perceptual resolution while saving storage space,\n"
+	        "but it resulted in brightness-loss. Possible values:\n"
+	        "\n"
+	        "  off:     Disable deinterlacing (default).\n"
+	        "\n"
+	        "  on:      Enable deinterlacing at 'medium' strength.\n"
+	        "\n"
+	        "  light:   Light deinterlacing. Black scanlines are softened to mimic the\n"
+	        "           CRT look.\n"
+	        "\n"
+	        "  medium:  Medium deinterlacing. Best balance between removing black lines,\n"
+	        "           increasing brightness, and keeping the higher resolution look.\n"
+	        "\n"
+	        "  strong:  Strong deinterlacing. Image brightness is almost completely\n"
+	        "           restored at the expense of diminishing the higher resolution look.\n"
+	        "\n"
+	        "  full:    Full deinterlacing. Completely removes black lines and maximises\n"
+	        "           brightness, but the image will appear blockier.\n"
+	        "\n"
+	        "Note: Enabling vertical 'integer_scaling' is recommended on lower resolution\n"
+	        "      displays to avoid interference artifacts when using lower deinterlacing\n"
+	        "      strengths. Alternatively, use 'full' strength to completely eliminate all\n"
+	        "      potential interference patterns.");
 }
 
 enum { Horiz, Vert };
@@ -2076,9 +2206,6 @@ static void update_black_level_setting()
 		              0.0f,
 		              1.0f,
 		              static_cast<float>(*maybe_black_level));
-
-		LOG_TRACE("black_level %f",
-		          curr_image_adjustment_settings.black_level);
 	} else {
 		curr_image_adjustment_settings.black_level = BlackLevelMin;
 	}
@@ -2523,6 +2650,8 @@ void RENDER_Init()
 	auto section = get_section("render");
 	assert(section);
 
+	render.deinterlacer = std::make_unique<Deinterlacer>();
+
 	set_aspect_ratio_correction(*section);
 	set_viewport(*section);
 	set_integer_scaling(*section);
@@ -2552,6 +2681,8 @@ void RENDER_Init()
 	update_blue_gain_setting();
 
 	set_image_adjustment_settings();
+
+	set_deinterlacing(*section);
 }
 
 static void notify_render_setting_updated(SectionProp& section,
@@ -2564,6 +2695,10 @@ static void notify_render_setting_updated(SectionProp& section,
 	} else if (prop_name == "cga_colors") {
 		// TODO Support switching custom CGA colors at runtime.
 		// This is somewhat complicated and needs experimentation.
+
+	} else if (prop_name == "deinterlacing") {
+		set_deinterlacing(section);
+		render_reset();
 
 	} else if (prop_name == "glshader" || prop_name == "shader") {
 
