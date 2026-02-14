@@ -1723,8 +1723,9 @@ static void init_render_settings(SectionProp& section)
 	int_prop = section.AddInt("gamma", Always, DefaultGamma);
 	int_prop->SetMinMax(GammaMin, GammaMax);
 	int_prop->SetHelp(
-	        format_str("Set the gamma of the video output (%d by default). Valid range is %d to %d."
-	                   "This is additional gamma adjustment relative to the emulated virtual monitors gamma.",
+	        format_str("Set the gamma of the video output (%d by default). Valid range is %d to %d.\n"
+	                   "This is additional gamma adjustment relative to the emulated virtual monitor's\n"
+	                   "gamma.",
 	                   DefaultGamma,
 	                   GammaMin,
 	                   GammaMax));
