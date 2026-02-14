@@ -127,6 +127,20 @@ void lowcase(std::string &str)
 	std::transform(str.begin(), str.end(), str.begin(), to_lower);
 }
 
+std::string upcase(const std::string_view sv)
+{
+	std::string res(sv);
+	upcase(res);
+	return res;
+}
+
+std::string lowcase(const std::string_view sv)
+{
+	std::string res(sv);
+	lowcase(res);
+	return res;
+}
+
 std::string replace(const std::string &str, char old_char, char new_char) noexcept
 {
 	std::string new_str = str;
