@@ -243,7 +243,7 @@ public:
 //Create leading directories of a file being overlayed if they exist in the original (localDrive).
 //This function is used to create copies of existing files, so all leading directories exist in the original.
 
-std::pair<NativeFileHandle, std_fs::path> Overlay_Drive::create_file_in_overlay(
+std::pair<NativeFileHandle, std::string> Overlay_Drive::create_file_in_overlay(
         const char* dos_filename, const FatAttributeFlags attributes)
 {
 	if (logoverlay) {
@@ -318,7 +318,7 @@ bool OverlayFile::create_copy()
 		if (od) {
 			FatAttributeFlags attributes = {};
 			local_drive_get_attributes(GetPath(), attributes);
-			std_fs::path newpath = {};
+			std::string newpath = {};
 			std::tie(newhandle,
 			         newpath) = od->create_file_in_overlay(GetName(),
 			                                               attributes);
@@ -554,7 +554,7 @@ std::unique_ptr<DOS_File> Overlay_Drive::FileCreate(const char* name,
 		.time = DOS_GetBiosTimePacked()
 	};
 
-	timestamp_cache[path.string()] = dos_time;
+	timestamp_cache[path] = dos_time;
 
 	auto file = std::make_unique<OverlayFile>(name,
 	                                          path,
