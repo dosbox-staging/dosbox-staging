@@ -347,10 +347,10 @@ AutoExecModule::AutoExecModule(Section* configuration)
 
 		// Check if argument is a file/directory
 		std_fs::path path = argument;
-		bool is_directory = std_fs::is_directory(path);
+		bool is_directory = is_dir(path);
 		if (!is_directory) {
 			path         = std_fs::current_path() / path;
-			is_directory = std_fs::is_directory(path);
+			is_directory = is_dir(path);
 		}
 
 		if (is_directory) {

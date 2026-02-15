@@ -258,7 +258,7 @@ void VFILE_RegisterZDrive(const std_fs::path &z_drive_path)
 	constexpr auto dir_indicator = "/";
 
 	// Check if the provided path is invalid
-	if (z_drive_path.empty() || !std_fs::is_directory(z_drive_path))
+	if (z_drive_path.empty() || !is_dir(z_drive_path))
 		return;
 
 	std::error_code ec = {};
