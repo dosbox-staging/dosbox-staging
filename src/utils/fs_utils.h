@@ -49,16 +49,6 @@ bool is_directory(const std::string& candidate);
 
 bool is_hidden_by_host(const std::filesystem::path& pathname);
 
-/* Check if the given path corresponds to an existing file or directory.
- */
-
-bool path_exists(const char *path) noexcept;
-
-inline bool path_exists(const std::string &path) noexcept
-{
-	return path_exists(path.c_str());
-}
-
 /* Convert path (possibly in format used by different OS) to a path
  * native for host OS.
  *

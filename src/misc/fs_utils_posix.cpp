@@ -23,11 +23,6 @@
 #include "utils/env_utils.h"
 #include "utils/string_utils.h"
 
-bool path_exists(const char *path) noexcept
-{
-	return (access(path, F_OK) == 0);
-}
-
 static std::string translate_to_glob_pattern(const std::string &path) noexcept
 {
 	std::string glob_pattern;
