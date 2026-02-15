@@ -351,4 +351,9 @@ bool local_drive_path_exists(const std_fs::path& path)
 	return PathFileExistsW(path.c_str());
 }
 
+bool local_drive_rename_file_or_directory(const std_fs::path& old_path, const std_fs::path& new_path)
+{
+	return MoveFileW(old_path.c_str(), new_path.c_str());
+}
+
 #endif
