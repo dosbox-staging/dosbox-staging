@@ -28,7 +28,7 @@ std::string ShaderPass::ToString() const
 	        "shader.program_object:   %d\n\n"
 
 	        "in_textures:             %s\n"
-	        "out_texture_size:        %s\n"
+	        "out_size:                %s\n"
 	        "out_fbo:                 %d\n"
 	        "out_texture:             %d\n",
 
@@ -39,7 +39,7 @@ std::string ShaderPass::ToString() const
 
 	        shader.program_object,
 	        to_string(in_textures).c_str(),
-	        out_texture_size.ToString().c_str(),
+	        out_size.ToString().c_str(),
 	        out_fbo,
 	        out_texture);
 }
@@ -156,11 +156,11 @@ void ShaderPipeline::CreatePipeline()
 			}
 		}();
 
-		pass.out_texture_size = {0, 0, width, height};
+		pass.out_size = {0, 0, width, height};
 
 		if (std::next(it) == shader_passes.end()) {
-			pass.out_texture_size.x = viewport.x;
-			pass.out_texture_size.y = viewport.y;
+			pass.out_size.x = viewport.x;
+			pass.out_size.y = viewport.y;
 
 		} else {
 			// The last pass is rendered directly to the window's
@@ -339,10 +339,10 @@ void ShaderPipeline::RenderPass(const ShaderPass& pass,
 	}
 
 	// Set up viewport
-	glViewport(static_cast<GLsizei>(pass.out_texture_size.x),
-	           static_cast<GLsizei>(pass.out_texture_size.y),
-	           static_cast<GLsizei>(pass.out_texture_size.w),
-	           static_cast<GLsizei>(pass.out_texture_size.h));
+	glViewport(static_cast<GLsizei>(pass.out_size.x),
+	           static_cast<GLsizei>(pass.out_size.y),
+	           static_cast<GLsizei>(pass.out_size.w),
+	           static_cast<GLsizei>(pass.out_size.h));
 
 	// Apply shader by drawing an oversized triangle
 	glBindVertexArray(vertex_array_object);
@@ -378,10 +378,10 @@ void ShaderPipeline::UpdateTextureUniforms(const std::list<ShaderPass>::iterator
 				const auto prev_pass = std::prev(pass);
 
 				width = static_cast<GLfloat>(
-				        prev_pass->out_texture_size.w);
+				        prev_pass->out_size.w);
 
 				height = static_cast<GLfloat>(
-				        prev_pass->out_texture_size.h);
+				        prev_pass->out_size.h);
 
 				in_texture = prev_pass->out_texture;
 			}
@@ -398,10 +398,10 @@ void ShaderPipeline::UpdateTextureUniforms(const std::list<ShaderPass>::iterator
 				const auto p = *it;
 				if (p.shader.info.pass_name == pass_id) {
 					width = static_cast<GLfloat>(
-					        p.out_texture_size.w);
+					        p.out_size.w);
 
 					height = static_cast<GLfloat>(
-					        p.out_texture_size.h);
+					        p.out_size.h);
 
 					in_texture = p.out_texture;
 
@@ -429,8 +429,8 @@ void ShaderPipeline::UpdateTextureUniforms(const std::list<ShaderPass>::iterator
 	}
 
 	pass->shader.SetUniform2f("OUTPUT_TEXTURE_SIZE",
-	                          pass->out_texture_size.w,
-	                          pass->out_texture_size.h);
+	                          pass->out_size.w,
+	                          pass->out_size.h);
 }
 
 void ShaderPipeline::UpdateMainShaderPassUniforms()
