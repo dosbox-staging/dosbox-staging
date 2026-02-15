@@ -5,17 +5,11 @@
 
 #if defined(WIN32)
 
-#include <direct.h>
-#include <fcntl.h>
-#include <io.h>
-#include <sys/stat.h>
-
 // Windows header needed for PathFileExistsW
 #include "Shlwapi.h"
 
 #include "dos/dos.h"
 #include "dos/dos_system.h"
-#include "misc/compiler.h"
 
 std::string to_native_path(const std::string &path) noexcept
 {
