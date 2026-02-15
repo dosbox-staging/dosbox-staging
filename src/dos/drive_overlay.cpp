@@ -383,11 +383,31 @@ Overlay_Drive::Overlay_Drive(const char *startdir,
 
 	error = 0;
 
+	// Avoid std_fs::path constructor throwing an exception on Windows
+	// by explicitly converting to UTF-16 first.
+	#if defined(WIN32)
+	wchar_t utf16_path[MAX_PATH] = {};
+	if (!codepage437_to_utf16(startdir, utf16_path)) {
+		error = -1;
+		return;
+	}
+	const bool is_absolute = std_fs::path(utf16_path).is_absolute();
+	memset(utf16_path, 0, sizeof(utf16_path));
+	if (!codepage437_to_utf16(overlay, utf16_path)) {
+		error = -1;
+		return;
+	}
+	if (std_fs::path(utf16_path).is_absolute() != is_absolute) {
+		error = -1;
+		return;
+	}
+	#else
 	if (std_fs::path(startdir).is_absolute() !=
 	    std_fs::path(overlay).is_absolute()) {
 		error = 1;
 		return;
 	}
+	#endif
 
 	safe_strcpy(overlaydir, overlay);
 	char dirname[CROSS_LEN] = { 0 };
