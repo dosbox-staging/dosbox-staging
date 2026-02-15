@@ -273,7 +273,8 @@ static int erase_primary_config_file()
 		return 1;
 	}
 
-	if (!delete_file(path)) {
+	std::error_code ec = {};
+	if (!std_fs::remove(path, ec)) {
 		fprintf(stderr,
 		        "Cannot delete primary config '%s'",
 		        path.string().c_str());
@@ -300,7 +301,8 @@ static int erase_mapper_file()
 		       "a custom mapper file.\n");
 	}
 
-	if (!delete_file(path)) {
+	std::error_code ec = {};
+	if (!std_fs::remove(path, ec)) {
 		fprintf(stderr,
 		        "Cannot delete mapper file '%s'",
 		        path.string().c_str());

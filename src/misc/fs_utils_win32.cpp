@@ -348,11 +348,6 @@ bool local_drive_remove_dir(const std_fs::path& path)
 	return false;
 }
 
-bool delete_file(const std_fs::path& path)
-{
-	return _unlink(path.string().c_str()) == 0;
-}
-
 bool remove_dir(const std_fs::path& path)
 {
 	return _rmdir(path.string().c_str()) == 0;
