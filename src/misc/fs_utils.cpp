@@ -43,15 +43,9 @@ bool check_fseek(const char* module_name, const char* file_description,
 
 bool is_directory(const std::string& candidate)
 {
-	std::error_code ec;
+	std::error_code ec = {};
 	const std_fs::path p(candidate);
 
-	// If it's a symlink then check what it points to ..
-	if (std_fs::is_symlink(p, ec)) {
-		const auto status = std_fs::symlink_status(p, ec);
-		return std_fs::is_directory(status);
-	}
-	// If it's not a symlink then we can check it directly ..
 	return std_fs::is_directory(p, ec);
 }
 
