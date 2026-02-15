@@ -214,7 +214,7 @@ std::unique_ptr<DOS_File> localDrive::FileOpen(const char* name, uint8_t flags)
 	}
 
 	auto file = std::make_unique<localFile>(name,
-	                                        host_filename,
+	                                        host_filename.c_str(),
 	                                        file_handle,
 	                                        basedir,
 	                                        IsReadOnly(),
@@ -584,7 +584,7 @@ bool localFile::Read(uint8_t* data, uint16_t* num_bytes)
 	// access noises
 	DiskNoises* disk_noises = DiskNoises::GetInstance();
 	if (disk_noises != nullptr) {
-		disk_noises->SetLastIoPath(path.string(),
+		disk_noises->SetLastIoPath(path,
 		                           DiskNoiseIoType::Read,
 		                           DOS_GetDiskTypeFromMediaByte(
 		                                   local_drive.lock()->GetMediaByte()));
@@ -636,7 +636,7 @@ bool localFile::Write(uint8_t* data, uint16_t* num_bytes)
 	// access noises
 	DiskNoises* disk_noises = DiskNoises::GetInstance();
 	if (disk_noises != nullptr) {
-		disk_noises->SetLastIoPath(path.string(),
+		disk_noises->SetLastIoPath(path,
 		                           DiskNoiseIoType::Write,
 		                           DOS_GetDiskTypeFromMediaByte(
 		                                   local_drive.lock()->GetMediaByte()));
@@ -672,7 +672,7 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 		case DOS_SEEK_CUR: {
 			const auto current_pos = get_native_file_position(file_handle);
 			if (current_pos == NativeSeekFailed) {
-				LOG_WARNING("FS: File seek failed for '%s'", path.string().c_str());
+				LOG_WARNING("FS: File seek failed for '%s'", path.c_str());
 				DOS_SetError(DOSERR_ACCESS_DENIED);
 				return false;
 			}
@@ -682,7 +682,7 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 		case DOS_SEEK_END: {
 			const auto end_pos = seek_native_file(file_handle, 0, NativeSeek::End);
 			if (end_pos == NativeSeekFailed) {
-				LOG_WARNING("FS: File seek failed for '%s'", path.string().c_str());
+				LOG_WARNING("FS: File seek failed for '%s'", path.c_str());
 				DOS_SetError(DOSERR_ACCESS_DENIED);
 				return false;
 			}
@@ -701,7 +701,7 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 	auto returned_pos = seek_native_file(file_handle, seek_to, NativeSeek::Set);
 
 	if (returned_pos == NativeSeekFailed) {
-		LOG_WARNING("FS: File seek failed for '%s'", path.string().c_str());
+		LOG_WARNING("FS: File seek failed for '%s'", path.c_str());
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -739,7 +739,7 @@ void localFile::MaybeFlushTime()
 	const auto drive_ptr = local_drive.lock();
 	if (drive_ptr) {
 		auto& cache = drive_ptr->timestamp_cache;
-		auto entry  = cache.find(path.string());
+		auto entry  = cache.find(path);
 		if (entry != cache.end()) {
 			// Only update the cache if it already contains
 			// the entry. This handles an edge case where
@@ -783,7 +783,7 @@ uint16_t localFile::GetInformation(void)
 	return read_only_medium ? 0x40 : 0;
 }
 
-localFile::localFile(const char* _name, const std_fs::path& path,
+localFile::localFile(const char* _name, const char* path,
                      const NativeFileHandle handle, const char* _basedir,
                      const bool _read_only_medium,
                      const std::weak_ptr<localDrive> drive,

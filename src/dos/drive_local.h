@@ -10,7 +10,7 @@
 
 class localFile : public DOS_File {
 public:
-	localFile(const char* name, const std_fs::path& path,
+	localFile(const char* name, const char* path,
 	          const NativeFileHandle handle, const char* basedir,
 	          const bool _read_only_medium, const std::weak_ptr<localDrive> drive,
 	          const DosDateTime dos_time, const uint8_t _flags);
@@ -27,7 +27,7 @@ public:
 	{
 		return basedir;
 	}
-	std_fs::path GetPath() const
+	std::string GetPath() const
 	{
 		return path;
 	}
@@ -36,7 +36,7 @@ public:
 
 private:
 	void MaybeFlushTime();
-	const std_fs::path path = {};
+	const std::string path = {};
 	const char* basedir     = nullptr;
 
 	const bool read_only_medium = false;

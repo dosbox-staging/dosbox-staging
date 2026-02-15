@@ -188,7 +188,7 @@ bool Overlay_Drive::TestDir(const char * dir) {
 
 class OverlayFile final : public localFile {
 public:
-	OverlayFile(const char* name, const std_fs::path& path,
+	OverlayFile(const char* name, const char* path,
 	            NativeFileHandle handle, const char* basedir,
 	            const bool _read_only_medium,
 	            const std::weak_ptr<localDrive> drive,
@@ -202,7 +202,7 @@ public:
 	}
 
 	OverlayFile(localFile* file)
-	        : localFile(file->GetName(), file->GetPath(), file->file_handle,
+	        : localFile(file->GetName(), file->GetPath().c_str(), file->file_handle,
 	                    file->GetBaseDir(), file->IsOnReadOnlyMedium(),
 	                    file->local_drive,
 	                    {.date = file->date, .time = file->time}, file->flags),
@@ -557,7 +557,7 @@ std::unique_ptr<DOS_File> Overlay_Drive::FileCreate(const char* name,
 	timestamp_cache[path] = dos_time;
 
 	auto file = std::make_unique<OverlayFile>(name,
-	                                          path,
+	                                          path.c_str(),
 	                                          file_handle,
 	                                          overlaydir,
 	                                          IsReadOnly(),
