@@ -64,8 +64,10 @@ constexpr char TEST_DIR[] = "tests/files/no_path";
 
 struct CreateDirTest : public testing::Test {
 	~CreateDirTest() override {
-		if (path_exists(TEST_DIR))
-			remove_dir(TEST_DIR);
+		if (path_exists(TEST_DIR)) {
+			std::error_code ec = {};
+			std_fs::remove(TEST_DIR, ec);
+		}
 	}
 };
 
