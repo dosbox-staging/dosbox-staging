@@ -249,8 +249,8 @@ void SdlRenderer::NotifyVideoModeChanged([[maybe_unused]] const VideoMode& video
 
 void SdlRenderer::ForceReloadCurrentShader()
 {
-	// no shader support; always report success
-	return true;
+	// no shader support
+	return;
 }
 
 ShaderInfo SdlRenderer::GetCurrentShaderInfo()
