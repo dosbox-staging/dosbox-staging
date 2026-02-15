@@ -29,7 +29,7 @@ struct ShaderPass {
 
 	// Output texture size for intermediate shader passes (width & height
 	// only), or the position and size of the viewport for the final pass.
-	DosBox::Rect out_texture_size = {};
+	DosBox::Rect out_size = {};
 
 	// Textures and FBOs for intermediate shader passes. Both are 0 for the
 	// final pass that's rendered directly to the window's framebuffer.
