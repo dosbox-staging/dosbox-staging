@@ -233,7 +233,7 @@ DirInformation* open_directory(const char* dirname) {
 
 	dir.handle = INVALID_HANDLE_VALUE;
 
-	return (path_exists(dirname) ? &dir : nullptr);
+	return (local_drive_path_exists(dirname) ? &dir : nullptr);
 }
 
 bool read_directory_first(DirInformation* dirp, char* entry_name, bool& is_directory) {

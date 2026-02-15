@@ -493,7 +493,7 @@ bool localDrive::TestDir(const char* dir)
 			return false;
 		}
 	}
-	return path_exists(host_dir);
+	return local_drive_path_exists(host_dir);
 }
 
 bool localDrive::Rename(const char* oldname, const char* newname)

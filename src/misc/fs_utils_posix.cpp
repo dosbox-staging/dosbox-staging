@@ -54,12 +54,12 @@ static std::string translate_to_glob_pattern(const std::string &path) noexcept
 
 std::string to_native_path(const std::string &path) noexcept
 {
-	if (path_exists(path))
+	if (local_drive_path_exists(path))
 		return path;
 
 	// Perhaps path is ok, just using Windows-style delimiters:
 	const std::string posix_path = replace(path, '\\', '/');
-	if (path_exists(posix_path))
+	if (local_drive_path_exists(posix_path))
 		return posix_path;
 
 	// Convert case-insensitive path to case-sensitive path.
@@ -318,7 +318,7 @@ uint16_t local_drive_get_attributes(const std_fs::path& path,
 uint16_t local_drive_set_attributes(const std_fs::path& path,
                                     const FatAttributeFlags attributes)
 {
-	if (!path_exists(path)) {
+	if (!local_drive_path_exists(path)) {
 		return DOSERR_FILE_NOT_FOUND;
 	}
 
@@ -493,6 +493,11 @@ bool delete_native_file(const std_fs::path& path)
 bool local_drive_remove_dir(const std_fs::path& path)
 {
 	return rmdir(path.c_str()) == 0;
+}
+
+bool local_drive_path_exists(const std_fs::path& path)
+{
+	return access(path.c_str(), F_OK) == 0;
 }
 
 #endif
