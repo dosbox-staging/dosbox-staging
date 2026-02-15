@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Monitor</title>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; background: #1a1a1a; color: #e0e0e0; margin: 20px; line-height: 1.4; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #444; }
+        .entry-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; background: #333; padding: 8px; border-radius: 4px; }
+        input, select { background: #444; color: white; border: 1px solid #666; padding: 5px; border-radius: 4px; }
+        button { cursor: pointer; padding: 5px 12px; border-radius: 4px; border: none; background: #007bff; color: white; }
+        button.delete { background: #dc3545; margin-left: 20px; }
+        button.secondary { background: #6c757d; }
+        .monitor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .monitor-item { background: #222; border-left: 4px solid #007bff; padding: 10px; border-radius: 4px; }
+        .monitor-label { font-size: 0.8rem; color: #aaa; text-transform: uppercase; }
+        .monitor-value, .monitor-value-hex { font-size: 1.4rem; font-family: monospace; color: #00ff41; }
+
+		.config-io { 
+			display: flex; 
+			flex-direction: column; 
+			gap: 10px; 
+		}
+
+		textarea { 
+			background: #111; 
+			color: #00ff41; 
+			font-family: monospace; 
+			padding: 10px; 
+			height: 80px; 
+			border: 1px solid #444; 
+			resize: vertical; 
+			width: 100%;
+			box-sizing: border-box;
+		}
+
+		.button-row {
+			display: flex;
+			justify-content: space-between; 
+			align-items: center;
+			gap: 10px;
+		}
+		button {
+			opacity: 0.9;
+		}
+		button:hover {
+			opacity: 1;
+		}
+	</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Memory Visualizer</h2>
+
+    <div id="monitor-container" class="monitor-grid"></div>
+
+    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #444;">
+
+    <div class="card">
+        <h3>Memory Watchlist</h3>
+        <div id="entries-list"></div>
+        <button onclick="addEntry()">+ Add Address</button>
+    </div>
+
+	<div class="card config-io">
+		<h3>Share Configuration</h3>
+		<textarea id="share-string" placeholder="Paste or view config here..."></textarea>
+		<div class="button-row">
+			<button onclick="copyConfig()" class="secondary">Copy to Clipboard</button>
+			<button onclick="importConfig()">Import String</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	let api;
+	import('./api.js').then((module) => {
+		api = new module.DOSBoxApi();
+		init();
+	});
+
+    let entries = [];
+    const typeLengths = { "uint8": 1, "int8": 1, "uint16": 2, "int16": 2, "uint32": 4, "int32": 4, "cstring": 32 };
+
+
+    async function fetchValue(entry) {
+        try {
+            const len = typeLengths[entry.type] || 2;
+			const mem = await api.readMem(parseInt(entry.addr, 16), len)
+            const view = new DataView(mem.buffer);
+            switch(entry.type) {
+                case 'uint8': return view.getUint8(0);
+                case 'int8': return view.getInt8(0);
+                case 'uint16': return view.getUint16(0, true);
+                case 'int16': return view.getInt16(0, true);
+                case 'uint32': return view.getUint32(0, true);
+                case 'int32': return view.getInt32(0, true);
+                case 'cstring': 
+                    let str = "";
+                    for(let i=0; i<mem.length; i++) {
+                        if(mem[i] === 0) break;
+                        str += String.fromCharCode(mem[i]);
+                    }
+                    return str;
+                default: return "??";
+            }
+        } catch (e) {
+			console.log(e);
+            return "ERR";
+        }
+    }
+
+	function dataChanged() {
+		const container = document.getElementById('monitor-container');
+		container.needsUpdate = true;
+		exportConfig();
+	}
+
+	async function updateMonitorLoop() {
+		const tasks = entries.map(async (entry) => {
+			if (entry.isFetching) return;
+			entry.isFetching = true;
+			try {
+				const val = await fetchValue(entry);
+				entry.val = val;
+			} finally {
+				entry.isFetching = false;
+			}
+		});
+		await Promise.all(tasks);
+		renderMonitorUI();
+		setTimeout(updateMonitorLoop, 100);
+	}
+
+    function renderMonitorUI() {
+        const container = document.getElementById('monitor-container');
+        if (container.children.length !== entries.length || container.needsUpdate) {
+            container.innerHTML = entries.map(e => `
+                <div class="monitor-item" id="mon-${e.id}">
+                    <div class="monitor-label">${e.label || 'No Label'}</div>
+					<div class="monitor-value-hex monitor-${e.type}-hex"></div>
+                    <div class="monitor-value monitor-${e.type}"></div>
+                </div>
+            `).join('');
+        }
+
+		for (let entry of entries) {
+			if (entry.shownVal == entry.val && !container.needsUpdate) continue;
+			entry.shownVal = entry.val
+		    const decEl = document.querySelector(`#mon-${entry.id} .monitor-value`);
+			const hexEl = document.querySelector(`#mon-${entry.id} .monitor-value-hex`);
+            decEl.innerText = entry.val.toString();
+			if (entry.type == 'cstring') {
+				hexEl.innerText = `${entry.val.length} chars`
+			} else {
+				hexEl.innerText = `0x${(entry.val || '').toString(16).toUpperCase()}`
+			}
+            const inputEl = document.getElementById(`input-${entry.id}`);
+            if (inputEl && document.activeElement !== inputEl) {
+                inputEl.value = entry.val;
+            }
+		}
+		container.needsUpdate = false;
+    }
+
+	async function writeValue(index, newValue) {
+        const entry = entries[index];
+        let val;
+        
+        if (newValue.startsWith('0x')) {
+            val = parseInt(newValue, 16);
+        } else {
+            val = parseInt(newValue, 10);
+        }
+
+        if (isNaN(val)) return;
+
+        try {
+			const len = typeLengths[entry.type] || 2;
+			const buffer = new Uint8Array(len);
+			const view = new DataView(buffer.buffer);
+			if (len === 1) view.setUint8(0, val);
+			else if (len === 2) view.setUint16(0, val, true);
+			else if (len === 4) view.setUint32(0, val, true);
+			else throw new Error(`Unsupported length: ${len}`);
+			await api.writeMem(parseInt(entry.addr, 16), buffer);
+            console.log(`Wrote ${val} to ${entry.addr}`);
+        } catch (e) {
+            console.error("Write failed", e);
+        }
+    }
+
+	function renderSettings() {
+        const list = document.getElementById('entries-list');
+        list.innerHTML = entries.map((e, index) => `
+            <div class="entry-row">
+				<div style="display:flex; gap: 2px;">
+					<button class="secondary" onclick="moveEntry(${index}, -1)">↑</button>
+					<button class="secondary" onclick="moveEntry(${index}, 1)">↓</button>
+				</div>
+                <input type="text" style="width: 80px" placeholder="Addr" value="${e.addr}" onchange="updateEntry(${index}, 'addr', this.value)">
+                
+                <select onchange="updateEntry(${index}, 'type', this.value)">
+                    <option value="uint8" ${e.type === 'uint8' ? 'selected' : ''}>uint8</option>
+                    <option value="int8" ${e.type === 'int8' ? 'selected' : ''}>int8</option>
+                    <option value="uint16" ${e.type === 'uint16' ? 'selected' : ''}>uint16</option>
+                    <option value="int16" ${e.type === 'int16' ? 'selected' : ''}>int16</option>
+                    <option value="uint32" ${e.type === 'uint32' ? 'selected' : ''}>uint32</option>
+                    <option value="cstring" ${e.type === 'cstring' ? 'selected' : ''}>cstring</option>
+                </select>
+
+                <input type="text" placeholder="Label" value="${e.label}" onchange="updateEntry(${index}, 'label', this.value)">
+
+                <input type="text" 
+                    id="input-${e.id}" 
+                    style="width: 70px; border-color: #007bff;" 
+                    value="${e.value || 0}" 
+                    onkeydown="if(event.key==='Enter') writeValue(${index}, this.value)"
+					onblur="this.lastValue=this.value; this.lastValueTime=Date.now()"
+				>
+				<button onclick="const input = document.getElementById('input-${e.id}'); const val = Date.now() - input.lastValueTime < 500 ? input.lastValue : input.value; writeValue(${index}, val)">
+					Write
+				</button>
+				<div style="flex: 1;"></div>
+                <div style="display:flex; gap: 2px;">
+                    <button class="delete" onclick="removeEntry(${index})">✕</button>
+                </div>
+            </div>
+        `).join('');
+        exportConfig();
+    }
+
+    function addEntry() {
+        entries.push({ id: Date.now(), addr: "0x0000", type: "uint8", label: "New Item" });
+	    dataChanged();	
+        renderSettings();
+    }
+
+    function updateEntry(index, key, val) {
+        entries[index][key] = val;
+		dataChanged();
+    }
+
+    function removeEntry(index) {
+        entries.splice(index, 1);
+		dataChanged();
+        renderSettings();
+    }
+
+    function moveEntry(index, direction) {
+		const newIndex = index + direction;
+		if (newIndex >= 0 && newIndex < entries.length) {
+			[entries[index], entries[newIndex]] = [entries[newIndex], entries[index]];
+			dataChanged();
+			renderSettings();
+		}
+	}
+
+    // --- Import/Export ---
+
+    function exportConfig() {
+		const json = JSON.stringify(entries, ['addr', 'type', 'label']);
+        const str = btoa(json);
+        document.getElementById('share-string').value = str;
+		localStorage.setItem('memory_monitor_config', str);
+        return str;
+    }
+
+	function copyConfig() {
+		const base64 = exportConfig();
+		navigator.clipboard.writeText(base64);
+	}
+
+    function importConfig(config) {
+        try {
+            const str = config || document.getElementById('share-string').value;
+            const data = JSON.parse(atob(str));
+            if (Array.isArray(data)) {
+				let id = 0;
+				for (let entry of data) {
+					entry.id = id++;
+				}
+				entries = data;
+                renderSettings();
+            }
+        } catch (e) {
+            alert("Invalid config string.");
+        }
+    }
+
+	async function init() {
+		const saved = localStorage.getItem('memory_monitor_config');
+		if (saved) {
+			importConfig(saved)
+		}
+		renderSettings();
+		updateMonitorLoop();
+	}
+</script>
+
+</body>
+</html>
