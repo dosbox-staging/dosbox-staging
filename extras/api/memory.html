@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Memory Viewer</title>
+    <style>
+        body { font-family: 'Cascadia Code', 'Consolas', monospace; background: #1e1e1e; color: #d4d4d4; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        nav { background: #2d2d2d; padding: 10px 15px; border-bottom: 1px solid #444; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .nav-group { display: flex; align-items: center; gap: 8px; border-right: 1px solid #555; padding-right: 15px; }
+        input { background: #3c3c3c; border: 1px solid #555; color: #fff; padding: 4px 8px; width: 100px; border-radius: 3px; }
+        button { background: #0e639c; color: white; border: none; padding: 5px 12px; cursor: pointer; border-radius: 3px; }
+        button:hover { background: #1177bb; }
+        header { background: #333; padding: 8px 15px; border-bottom: 1px solid #444; display: flex; gap: 20px; font-size: 0.9em; }
+        .container { display: flex; flex: 1; overflow: hidden; }
+        #hex-view { flex: 1; overflow-y: auto; padding: 20px; background: #000; line-height: 1.4; white-space: pre; }
+        #disasm-view { width: 650px; overflow-y: scroll; overflow-x: scroll; padding: 20px; background: #252526; border-left: 1px solid #444; }
+		#disasm-nav { margin-bottom: 5px; }
+		#disasm-content { display: grid; grid-template-columns: max-content 25% 1fr; gap: 0 10px; line-height: 1.5; }
+        .reg-link { color: #4ec9b0; font-weight: bold; text-decoration: none; border-bottom: 1px dashed #4ec9b0; cursor: pointer; padding: 2px 4px; }
+        .reg-link:hover { background: #333; color: #fff; border-bottom-style: solid; }
+        #registers-bar { display: flex; align-items: center; gap: 8px; font-family: monospace; }
+		dl { display: flex; margin: 0; padding: 0; }
+		.register { color: #4ec9b0; font-weight: bold; margin: 0 4px 0 0; }
+		dd.register { margin-right: 8px; }
+        .addr { color: #569cd6; font-weight: bold; }
+        .mnemonic { color: #ce9178; font-weight: bold; }
+        .ops { color: #9cdcfe; }
+        .data { color: #9cdcfe; margin-right: 4px; display: inline-block; width: 2ch; }
+        .dim { color: #666; }
+        .ascii { color: #ce9178; margin-left: 15px; border-left: 1px solid #333; padding-left: 10px; }
+        h3 { margin-top: 0; color: #ce9178; font-size: 1.1em; }
+    </style>
+	<script type="module" src="./api.js"></script>
+	<script src="./vendor/capstone-x86.min.js"></script>
+</head>
+<body>
+
+<nav>
+    <div class="nav-group">
+        <label>Segments:</label>
+        <span id="segment-links"></span>
+    </div>
+	<form class="nav-group" onsubmit="gotoManual(); return false;">
+		<label for="manual-addr">Address:</label>
+		<input type="text" id="manual-addr" placeholder="0x0000:0x0000">
+		<label for="manual-len">Length:</label>
+		<input type="text" id="manual-len" placeholder="0xffff">
+		<button type="submit">Load</button>
+	</form>
+</nav>
+
+<header id="registers-bar"></header>
+
+<div class="container">
+    <div id="hex-view"></div>
+	<div id="disasm-view">
+        <h3>Disassembly</h3>
+		<form class="nav-group" id="disasm-nav" onsubmit="renderDisasmManual(); return false;">
+			<label>Start:</label>
+			<input type="text" id="disasm-start" value="">
+			<button type="submit"">Disassemble</button>
+		</form>
+        <div id="disasm-content"></div>
+    </div>
+</div>
+
+<script>
+	const regNames = ['eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'ebp', 'esp', 'eip'];
+	const segNames = ['cs', 'ss', 'ds', 'es', 'fs', 'gs'];
+
+	const capstone = new cs.Capstone(cs.ARCH_X86, cs.MODE_16);
+
+	function parseIntOrHex(str) {
+		return parseInt(str, str.startsWith('0x') ? 16 : 10);
+	}
+
+	function parseSegment(str) {
+		if (!str) {
+			return 0;
+		}
+		if (segNames.indexOf(str.toLowerCase()) >= 0) {
+			return str.toUpperCase();
+		} else {
+			return parseIntOrHex(str);
+		}
+	}
+
+	function parseRealAddr(str) {
+		const [segment, offset] = str.split(':');
+		if (offset) {
+			return [parseSegment(segment), parseIntOrHex(offset)];
+		} else {
+			return [0, parseIntOrHex(segment)];
+		}
+	}
+
+    const params = new URLSearchParams(window.location.search);
+    const currentSegment = parseSegment(params.get('segment')); 
+    const currentAddr = parseIntOrHex(params.get('addr') || '0') || 0;
+	const currentLen = parseIntOrHex(params.get('len') || '0') || 0xFFFF;
+	var currentData;
+
+    async function init(api) {
+        const hexOut = document.getElementById('hex-view');
+        const regBar = document.getElementById('registers-bar');
+        const segLinks = document.getElementById('segment-links');
+		const inputAddr = document.getElementById('manual-addr');
+		const inputLen = document.getElementById('manual-len');
+
+        try {
+            segLinks.innerHTML = segNames.map(s => 
+                `<a class="reg-link" href="?segment=${s.toUpperCase()}&addr=0">${s.toUpperCase()}</a>`
+            ).join(' ');
+
+            currentData = await api.readMemAndCpu(currentSegment, currentAddr, currentLen);
+            const memory = currentData.memory.data;
+            const startAddr = currentData.memory.addr; 
+            const regs = currentData.registers;
+
+			if (currentSegment) {
+				if (typeof(currentSegment) == "string") {
+					inputAddr.value = `${currentSegment}:0x${currentAddr.toString(16).padStart(4, '0')}`
+				} else {
+					inputAddr.value = `0x${currentSegment.toString(16).padStart(4, '0')}:0x${currentAddr.toString(16).padStart(4, '0')}`
+				}
+			} else {
+				inputAddr.value = `0x${startAddr.toString(16).padStart(6, '0')}`
+			}
+			inputLen.value = `0x${memory.length.toString(16).padStart(0, '0')}`
+
+            regBar.innerHTML = `
+				<dl>
+				${regNames.map(r => `<dt class="register">${r.toUpperCase()}:</dt><dd class="register">0x${regs[r].toString(16).padStart(4, '0')}</dd>`).join(' ')}
+				</dl>
+                <span class="dim">|</span>
+				<dl>
+                ${segNames.map(s => `<dt class="register">${s.toUpperCase()}:</dt><dd class="register">0x${regs[s].toString(16).padStart(4, '0')}</dd>`).join(' ')}
+				</dl>
+            `;
+            renderHex(memory, startAddr, currentAddr, hexOut);
+			renderDisasm();
+        } catch (err) {
+            hexOut.innerHTML = `<div style="color: #f44747; padding: 20px;">Error: ${err.message}\n${err.stack}</div>`;
+        }
+    }
+	
+	function download() {
+		const blob = new Blob([currentData.memory.data], { type: 'application/octet-stream' });
+		const url = window.URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = "memory.bin";
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		window.URL.revokeObjectURL(url);
+	}
+
+    function renderHex(memory, startAddr, startOffset, container) {
+        let html = "";
+		html += `<button style="margin-bottom: 5px" onclick="download()">Download hex dump</button><br/>`
+		let baseSegment;
+		if (typeof(currentSegment) == "string") {
+			baseSegment = currentSegment;
+		} else if (currentSegment) {
+			baseSegment = "0x" + currentSegment.toString(16).padStart(4, '0');
+		}
+		const maxBytes = 1024 * 1024
+		const maxLines = 8192
+		let lines = [];
+        for (let i = 0 - (startAddr % 16); i < Math.min(memory.length, maxBytes); i += 16) {
+            let rowAddr = startAddr + i;
+            let hexPart = "";
+            let asciiPart = "";
+			let lineHtml = "";
+			if (baseSegment) {
+				lineHtml += `<span class="addr">${baseSegment}:0x${(startOffset + i).toString(16).padStart(4, '0')}</span>  `;
+			} else {
+				lineHtml += `<span class="addr">0x${rowAddr.toString(16).padStart(6, '0')}</span>  `;
+			}
+			let allZeroes = true;
+            for (let j = 0; j < 16; j++) {
+                const idx = i + j;
+                if (idx >= memory.length) break;
+				if (idx < 0) {
+					hexPart += `<span class="data">  </span> `;
+					asciiPart += ' ';
+				} else {
+					const byte = memory[idx];
+					if (byte) {
+						allZeroes = false;
+					}
+					const currentByteAbsAddr = rowAddr + j;
+					hexPart += `<span class="data">${byte.toString(16).padStart(2, '0')}</span> `;
+					asciiPart += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '.';
+				}
+            }
+			lineHtml += hexPart + `<span class="ascii">${asciiPart}</span>\n`;
+			lines.push({"html": lineHtml, "empty": allZeroes});
+        }
+		let i = 0
+		let shownLines = 0;
+		while (i < lines.length) {
+			let line = lines[i];
+			if (!line.empty) {
+				html += line.html;
+				shownLines++;
+			} else {
+				let zeroesEnd = i + 1;
+				while (zeroesEnd < lines.length && lines[zeroesEnd].empty) {
+					zeroesEnd++;
+				}
+				if (zeroesEnd - i > 4) {
+					html += lines[i].html;
+					const numSkipped = (zeroesEnd - i - 1) * 16;
+					i = zeroesEnd - 1;
+					let lineHtml = `<span class="addr">    (....)</span> `
+					lineHtml += `<span class="data">    omitting 0x${numSkipped.toString(16)} zero bytes (${numSkipped / 16} lines) </span>`
+					lineHtml += `<span class="ascii" style="visibility: hidden"></span>\n`
+					html += lineHtml;
+					shownLines += 3;
+				} else {
+					html += line.html;
+				}
+			}
+			i++;
+			if (shownLines >= maxLines) {
+				break
+			}
+		}
+		if (shownLines >= maxLines || memory.length > maxBytes) {
+			let lineHtml = `<span class="addr">  (....)</span> `
+			lineHtml += `<span class="data">  reached limit of ${maxLines} lines or ${maxBytes / 1024} KiB</span>`
+			lineHtml += `<span class="ascii" style="visibility: hidden"></span>\n`
+			html += lineHtml;
+		}
+        container.innerHTML = html;
+    }
+
+	function renderDisasm(startOffset=0, maxInstructions=512) {
+		const json = currentData;
+		const container = document.getElementById('disasm-content');
+		const memory = currentData.memory.data;
+		const base = currentAddr;
+		const memoryToDisasm = memory.slice(startOffset);
+		let baseSegment;
+		if (typeof(currentSegment) == "string") {
+			baseSegment = currentSegment + ":";
+		} else if (currentSegment) {
+			baseSegment = "0x" + currentSegment.toString(16).padStart(4, '0') + ":";
+		} else {
+			baseSegment = "";
+		}
+		try {
+			const instructions = capstone.disasm(memoryToDisasm, base + startOffset, maxInstructions);
+			let html = "";
+			instructions.forEach(ins => {
+				html += `<span class="addr">${baseSegment}0x${ins.address.toString(16).padStart(4, '0')}</span> `;
+				html += `<span class="disasm-bytes">${ins.bytes.map(b => b.toString(16).padStart(2, '0')).join(' ')}</span> `;
+				html += `<span><a class="mnemonic">${ins.mnemonic.padEnd(8)}</a> <a class="ops">${ins.op_str}</a></span>  `;
+			});
+			container.innerHTML = html || "No instructions found.";
+		} catch (err) {
+			if (typeof(err) == "string" && err.indexOf("failed with code 0:") >= 0) {
+				container.innerHTML = "No instructions found.";
+			} else {
+				container.innerText = `Error: ${err}\n${err.stack}`;
+			}
+		}
+	}
+
+	function renderDisasmManual() {
+		let start = document.getElementById('disasm-start').value.trim();
+		if (start.toLowerCase() == "eip" || start.toLowerCase() == "ip") {
+			start = currentData.registers.eip;
+		} else {
+			start = parseIntOrHex(start);
+		}
+		renderDisasm(start);
+	}
+
+    function gotoManual() {
+        const [segment, addr] = parseRealAddr(document.getElementById('manual-addr').value.trim());
+		const len = parseIntOrHex(document.getElementById('manual-len').value.trim()) || 0xFFFF;
+        window.location.search = `?segment=${segment}&addr=${addr}&len=${len}`;
+    }
+
+	import('./api.js').then((api) => {
+		init(new api.DOSBoxApi());
+	});
+</script>
+</body>
+</html>

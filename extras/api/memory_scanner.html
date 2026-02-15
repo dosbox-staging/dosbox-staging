@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Memory Scanner</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #e0e0e0; padding: 20px; line-height: 1.4; }
+        .container { max-width: 800px; margin: auto; background: #2d2d2d; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .controls, .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; padding: 15px; border: 1px solid #444; border-radius: 4px; }
+		.filters { grid-template-columns: repeat(3, 1fr); }
+        label { display: block; font-size: 12px; margin-bottom: 5px; color: #aaa; }
+        select, input, button { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #555; background: #3d3d3d; color: white; box-sizing: border-box; }
+        button { cursor: pointer; background: #2ecc71; border: none; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #27ae60; }
+        button.secondary { background: #3498db; }
+        button.secondary:hover { background: #2980b9; }
+        button.danger { background: #e74c3c; }
+        #status { font-weight: bold; color: #f1c40f; margin-bottom: 10px; }
+        #results { max-height: 200px; overflow-y: auto; background: #111; padding: 10px; font-family: monospace; border-radius: 4px; }
+        .result-item { 
+			display: flex; 
+			align-items: center; 
+			gap: 10px; 
+			padding: 5px; 
+			border-bottom: 1px solid #333; 
+		}
+		.result-item span { flex: 1; }
+		.result-item input { width: 80px; padding: 4px; }
+		.result-item button { width: 60px; padding: 4px; font-size: 11px; }
+    </style>
+	<script type="module" src="./api.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h2>Memory Finder</h2>
+    
+    <div class="controls">
+        <div>
+            <label>Search Value</label>
+            <input type="text" id="searchValue" placeholder="e.g. 100 or 0xAB" onchange="searchValueChanged()">
+        </div>
+        <div>
+            <label>Data Type</label>
+            <select id="dataType">
+                <option value="uint8">uint8</option>
+				<option value="int8">int8</option>
+                <option value="uint16">uint16</option>
+				<option value="int16">int16</option>
+                <option value="uint32">uint32</option>
+				<option value="int32">int32</option>
+            </select>
+        </div>
+        <div>
+            <label>Endianness</label>
+            <select id="endian">
+                <option value="le">Little Endian (DOS)</option>
+                <option value="be">Big Endian</option>
+            </select>
+        </div>
+        <div>
+            <label>&nbsp;</label>
+            <button onclick="initialSearch()">First Scan</button>
+        </div>
+    </div>
+
+    <div class="filters">
+        <button class="secondary" id="button-specific" onclick="filterScan('specific')">Changed to search val</button>
+        <button class="secondary" onclick="filterScan('changed')">Changed to anything</button>
+        <button class="secondary" onclick="filterScan('unchanged')">Unchanged</button>
+		<button class="secondary" onclick="filterScan('increased')">Increased</button>
+        <button class="secondary" onclick="filterScan('decreased')">Decreased</button>
+    </div>
+
+    <div id="status">Ready.</div>
+    <div id="results">Addresses will appear here...</div>
+</div>
+
+<script>
+	import('./api.js').then((module) => {
+		api = new module.DOSBoxApi();
+		searchValueChanged();
+	});
+
+    const typeLengths = { "uint8": 1, "int8": 1, "uint16": 2, "int16": 2, "uint32": 4, "int32": 4 };
+    const MEM_SIZE = 16 * 1024 * 1024;
+    let memory = null;
+    let candidates = [];
+	let api;
+
+
+    async function fetchMemory() {
+        updateStatus("Fetching memory...");
+		console.log(api);
+        try {
+			return api.readMem(0, MEM_SIZE);
+        } catch (e) {
+			console.log(e);
+            updateStatus("Error: Could not connect to API.");
+            return null;
+        }
+    }
+
+	async function refreshMemory() {
+		memory = await fetchMemory();
+	}
+
+    function getValue(buffer, offset, type, isLE) {
+        const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+		if (type === 'uint8') return view.getUint8(offset);
+		if (type === 'int8') return view.getInt8(offset);
+		if (type === 'uint16') return view.getUint16(offset, isLE);
+		if (type === 'int16') return view.getInt16(offset, isLE);
+		if (type === 'uint32') return view.getUint32(offset, isLE);
+		if (type === 'int32') return view.getInt32(offset, isLE);
+    }
+
+    function setValue(buffer, offset, type, isLE, value) {
+        const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+		if (type === 'uint8') return view.setUint8(offset, value);
+		if (type === 'int8') return view.setInt8(offset, value);
+		if (type === 'uint16') return view.setUint16(offset, value, isLE);
+		if (type === 'int16') return view.setInt16(offset, value, isLE);
+		if (type === 'uint32') return view.setUint32(offset, value, isLE);
+		if (type === 'int32') return view.setInt32(offset, value, isLE);
+    }
+
+    function updateStatus(msg) {
+        document.getElementById('status').innerText = msg;
+    }
+
+	async function initialSearch() {
+        const target = parseInt(document.getElementById('searchValue').value);
+        const type = document.getElementById('dataType').value;
+        const isLE = document.getElementById('endian').value === 'le';
+		const aligned = false;
+
+        if (isNaN(target)) return alert("Enter a search value first.");
+
+        memory = await fetchMemory();
+        if (!memory) return;
+
+        candidates = [];
+        const step = aligned ? typeLengths[type] : 1;
+
+        for (let i = 0; i < memory.length - 4; i += step) {
+            if (getValue(memory, i, type, isLE) === target) {
+                candidates.push(i);
+            }
+        }
+        
+        renderResults();
+    }
+
+	function parseIntOrHex(str) {
+		return parseInt(str, str.startsWith("0x") ? 16 : 10);
+	}
+
+	function searchValueChanged() {
+		const target = parseInt(document.getElementById('searchValue').value);
+		if (target) {
+			const el = document.getElementById('button-specific');
+			el.innerHTML = `Changed to ${target}`;
+		}
+	}
+
+    async function filterScan(mode) {
+        if (candidates.length === 0) return alert("Run an initial scan first.");
+        
+        const type = document.getElementById('dataType').value;
+        const isLE = document.getElementById('endian').value === 'le';
+        const target = parseIntOrHex(document.getElementById('searchValue').value);
+        
+        const nextMemory = await fetchMemory();
+        if (!nextMemory) return;
+
+        const filtered = [];
+        for (let addr of candidates) {
+            const oldVal = getValue(memory, addr, type, isLE);
+            const newVal = getValue(nextMemory, addr, type, isLE);
+
+            let match = false;
+            switch(mode) {
+                case 'specific': match = newVal === target; break;
+                case 'increased': match = newVal > oldVal; break;
+                case 'decreased': match = newVal < oldVal; break;
+                case 'unchanged': match = newVal === oldVal; break;
+                case 'changed':   match = newVal !== oldVal; break;
+            }
+            if (match) filtered.push(addr);
+        }
+
+        memory = nextMemory;
+		if (!filtered.length) {
+			updateStatus("No candidate matched, not updating candidates.")
+			return;
+		}
+        candidates = filtered;
+        renderResults();
+        updateStatus(`Filtered down to ${candidates.length} candidates.`);
+    }
+
+    async function pokeMemory(addr) {
+        const input = document.getElementById(`input-${addr}`);
+        const newVal = parseIntOrHex(input.value);
+        const type = document.getElementById('dataType').value;
+        const isLE = document.getElementById('endian').value === 'le';
+        if (isNaN(newVal)) return alert("Enter a valid number.");
+
+        updateStatus(`Writing ${newVal} to 0x${addr.toString(16)}...`);
+
+        try {
+			const buf = new Uint8Array(typeLengths[type]);
+			setValue(buf, 0, type, isLE, newVal);
+			await api.writeMem(addr, buf);
+			updateStatus("Write successful!");
+			await refreshMemory();
+			renderResults();
+        } catch (e) {
+			console.log(e);
+            updateStatus(`Error: Failed to update memory: ${e}`);
+        }
+    }
+
+    function renderResults() {
+		const type = document.getElementById('dataType').value;
+        const isLE = document.getElementById('endian').value === 'le';
+        const container = document.getElementById('results');
+		updateStatus(`Found ${candidates.length} candidates.`);
+        if (candidates.length === 0) {
+            container.innerHTML = "No matches found.";
+            return;
+        }
+        if (candidates.length > 500) {
+            container.innerHTML = `Too many results to display (${candidates.length}). Keep filtering!`;
+            return;
+        }
+        let len = 1;
+        if (type === 'uint16') len = 2;
+        if (type === 'uint32') len = 4;
+        container.innerHTML = candidates.map(addr => {
+            const val = getValue(memory, addr, type, isLE);
+            return `
+                <div class="result-item">
+                    <span><strong>0x${addr.toString(16).toUpperCase().padStart(6, '0')}</strong></span>
+                    <span>0x${val.toString(16).padStart(len * 2, '0')} (${val})</span>
+					<form onsubmit="pokeMemory(${addr}); return false;">
+                    <input id="input-${addr}" value="${val}">
+                    <button type="submit"">Write</button>
+					</form>
+                </div>`;
+        }).join('');
+    }
+
+</script>
+
+</body>
+</html>
