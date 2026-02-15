@@ -17,11 +17,6 @@
 #include "dos/dos_system.h"
 #include "misc/compiler.h"
 
-bool path_exists(const char *path) noexcept
-{
-	return (_access(path, 0) == 0);
-}
-
 std::string to_native_path(const std::string &path) noexcept
 {
 	if (local_drive_path_exists(path))
