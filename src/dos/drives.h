@@ -495,7 +495,7 @@ public:
 	bool Rename(const char* oldname, const char* newname) override;
 	void EmptyCache(void) override;
 
-	std::pair<NativeFileHandle, std_fs::path> create_file_in_overlay(
+	std::pair<NativeFileHandle, std::string> create_file_in_overlay(
 	        const char* dos_filename, const FatAttributeFlags attributes);
 
 	Bits UnMount(void) override;
