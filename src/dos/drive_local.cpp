@@ -505,12 +505,12 @@ bool localDrive::Rename(const char* oldname, const char* newname)
 	safe_strcpy(newnew, basedir);
 	safe_strcat(newnew, newname);
 	CROSS_FILENAME(newnew);
-	int temp = rename(old_host_filename.c_str(), dirCache.GetExpandNameAndNormaliseCase(newnew));
-	if (temp == 0) {
+	const bool success = local_drive_rename_file_or_directory(old_host_filename, dirCache.GetExpandNameAndNormaliseCase(newnew));
+	if (success) {
 		timestamp_cache.erase(old_host_filename);
 		dirCache.CacheOut(newnew);
 	}
-	return temp == 0;
+	return success;
 }
 
 bool localDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,

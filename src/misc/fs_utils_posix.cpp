@@ -495,4 +495,9 @@ bool local_drive_path_exists(const std_fs::path& path)
 	return access(path.c_str(), F_OK) == 0;
 }
 
+bool local_drive_rename_file_or_directory(const std_fs::path& old_path, const std_fs::path& new_path)
+{
+	return rename(old_path.c_str(), new_path.c_str()) == 0;
+}
+
 #endif

@@ -1267,11 +1267,8 @@ bool Overlay_Drive::Rename(const char * oldname, const char * newname) {
 	bool success = false;
 
 	// check if overlaynameold exists and if so rename it to overlaynamenew
-	std::error_code ec = {};
-	if (std_fs::exists(overlaynameold, ec)) {
-		std_fs::rename(overlaynameold, overlaynamenew, ec);
-
-		success = !ec; // success if no error-code
+	if (local_drive_path_exists(overlaynameold)) {
+		success = local_drive_rename_file_or_directory(overlaynameold, overlaynamenew);
 
 		if (success) {
 			timestamp_cache.erase(overlaynameold);
