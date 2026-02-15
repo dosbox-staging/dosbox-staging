@@ -10,6 +10,9 @@
 #include <io.h>
 #include <sys/stat.h>
 
+// Windows header needed for PathFileExistsW
+#include "Shlwapi.h"
+
 #include "dos/dos.h"
 #include "dos/dos_system.h"
 #include "misc/compiler.h"
@@ -21,7 +24,7 @@ bool path_exists(const char *path) noexcept
 
 std::string to_native_path(const std::string &path) noexcept
 {
-	if (path_exists(path))
+	if (local_drive_path_exists(path))
 		return path;
 	return "";
 }
@@ -346,6 +349,11 @@ bool local_drive_remove_dir(const std_fs::path& path)
 	attributes |= FILE_ATTRIBUTE_READONLY;
 	SetFileAttributesW(path.c_str(), attributes);
 	return false;
+}
+
+bool local_drive_path_exists(const std_fs::path& path)
+{
+	return PathFileExistsW(path.c_str());
 }
 
 #endif

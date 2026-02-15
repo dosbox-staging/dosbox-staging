@@ -266,7 +266,7 @@ int CMscdex::RemoveDrive(uint16_t _drive)
 
 static std::unique_ptr<CDROM_Interface> create_cdrom_interface(const char *path)
 {
-	if (!path_exists(path)) {
+	if (!local_drive_path_exists(path)) {
 		return {};
 	}
 

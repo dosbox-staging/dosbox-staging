@@ -138,6 +138,7 @@ std::deque<std_fs::path> get_xdg_data_dirs() noexcept;
 
 union FatAttributeFlags; // forward declaration
 
+bool local_drive_path_exists(const std_fs::path& path);
 uint16_t local_drive_create_dir(const std_fs::path& path);
 bool local_drive_remove_dir(const std_fs::path& path);
 uint16_t local_drive_get_attributes(const std_fs::path& path,

@@ -31,3 +31,7 @@ endif()
 target_include_directories(libdosboxcommon PRIVATE ../libs/include)
 target_link_libraries(libdosboxcommon PRIVATE libwhereami)
 
+# Shlwapi needed for PathFileExistsW
+if(WIN32)
+  target_link_libraries(libdosboxcommon PRIVATE Shlwapi)
+endif()

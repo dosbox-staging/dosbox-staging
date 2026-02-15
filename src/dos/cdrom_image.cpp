@@ -1654,7 +1654,7 @@ bool CDROM_Interface_Image::HasDataTrack() const
 bool CDROM_Interface_Image::GetRealFileName(std::string &filename, std::string &pathname)
 {
 	// check if file exists
-	if (path_exists(filename)) {
+	if (local_drive_path_exists(filename)) {
 		return true;
 	}
 
@@ -1665,7 +1665,7 @@ bool CDROM_Interface_Image::GetRealFileName(std::string &filename, std::string &
 	const std::string cue_file_entry = (pathname + CROSS_FILESPLIT + filename);
 	const std::string tmpstr = to_native_path(cue_file_entry);
 
-	if (path_exists(tmpstr)) {
+	if (local_drive_path_exists(tmpstr)) {
 		filename = tmpstr;
 		return true;
 	}
@@ -1682,7 +1682,7 @@ bool CDROM_Interface_Image::GetRealFileName(std::string &filename, std::string &
 	const auto ldp = std::dynamic_pointer_cast<localDrive>(Drives.at(drive));
 	if (ldp) {
 		const std::string host_filename = ldp->MapDosToHostFilename(fullname);
-		if (path_exists(host_filename)) {
+		if (local_drive_path_exists(host_filename)) {
 			filename = host_filename;
 			return true;
 		}
