@@ -524,6 +524,9 @@ static void maybe_create_resource_directories()
 
 	const auto soundcanvas_rom_dir = get_config_dir() / DefaultSoundCanvasRomsDir;
 	try_create_resource_dir(soundcanvas_rom_dir);
+
+	const auto webserver_dir = get_config_dir() / DefaultWebserverDir;
+	try_create_resource_dir(webserver_dir);
 }
 
 static void quit_func()

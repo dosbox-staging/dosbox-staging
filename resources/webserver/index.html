@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOSBox Staging API</title>
+    <link rel="stylesheet" href="./style-index.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-title">DOSBox Staging API</div>
+            <div class="header-subtitle">Version:</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>DOSBox Staging API</h1>
+        <p>
+            Welcome to the DOSBox REST API, this server has REST endpoints to access the internal state of the emulated machine.
+        </p>
+
+        <p>
+            For example, <a href="./api/memory/0/0x100000">api/memory/0/0x100000</a> downloads a snapshot of the entire lower memory area.
+        </p>
+
+        <p>
+            All endpoints access the internal state atomically between steps of the emulated CPU.
+            They will never be executed during natively implemented DOS functions or interrupts, this means the internal data structures are guaranteed to be consistent in any given snapshot.
+        </p>
+        <p>
+            <strong>NOTE</strong>: This feature has been primarily tested with <code>core = normal</code> at the moment. Your experience with other CPU modes may vary.
+        </p>
+
+        <section id="docs">
+            <h2 class="single">GET /api/cpu</h2>
+            <p>Read CPU registers.</p>
+
+            <h2 class="first">GET /api/memory/:offset/:len</h2>
+            <h2 class="last">GET /api/memory/:segment/:offset/:len</h2>
+            <p>Read memory from the given address.</p>
+            <p>The optional segment parameter can be the name of a segment register or a number. All URL parameters accept hex strings if prefixed with <code>0x</code>.</p>
+            <p>By default this outputs the raw binary data, set <code>Accept: application/json</code> to request a JSON response with the data encoded in Base64.</p>
+
+            <h2 class="first">PUT /api/memory/:offset</h2>
+            <h2 class="last">PUT /api/memory/:segment/:offset</h2>
+            <p>Write memory to the given address.</p>
+            <p>Path parameters work the same as for GET.</p>
+            <p>This accept either raw binary data with <code>Content-Type: application/octet-stream</code> or a JSON object with a Base64 encoded field <code>data</code> with <code>Content-Type: application/json</code>.</p>
+
+            <p>The <code>If-Matches</code> header can be set to Base64 encoded data to perform an atomic compare-and-swap operation. The length of this comparison data can be different from the written data.</p>
+            <p>Returns code 412 (precondition failed) if the current data does not match the <code>If-Matches</code> header.</p>
+
+
+            <h2 class="single">POST /api/memory/allocate</h2>
+            <p>Allocate memory.</p>
+            <p><strong>Request</strong></p>
+            <pre><code>{
+    "size": size_bytes,
+    "area": "conv"|"UMA"|"XMS
+}</code></pre>
+            <p><strong>Response</strong></p>
+            <pre><code>{
+    "addr": physical_address
+}</code></pre>
+
+            <code>conv</code> and <code>UMA</code> allocate memory from DOS.
+            <code>XMS</code> allocates raw pages and marks them as reserved for EMS and XMS.
+
+            <h2 class="single">POST /api/memory/free</h2>
+            <p>Frees allocated memory at the given address.</p>
+            <p><strong>Request</strong></p>
+            <pre><code>{
+    "addr": physical_address,
+}</code></pre>
+            <p>Returns error 400 on invalid addresses.</p>
+
+            <h2 class="single">GET /api/dos</h2>
+            <p>Retrieve pointers to internal DOS data structures like the DOS swappable area and list of lists.</p>
+
+            <h2 class="single">GET /api/info</h2>
+            <p>Retrieve DOSBox version and relevant paths.</p>
+        </section>
+    </div>
+
+    <script>
+        async function updateVersion() {
+            try {
+              const response = await fetch('/api/info');
+              if (!response.ok) throw new Error('Fetch error');
+              const data = await response.json();
+              const versionElement = document.querySelector('.header-subtitle');
+              if (versionElement && data.version) {
+                versionElement.textContent = `Version: ${data.version}`;
+              }
+            } catch (error) {
+              console.error('Failed to fetch version:', error);
+            }
+          }
+          document.addEventListener('DOMContentLoaded', updateVersion);
+    </script>
+</body>
+</html>
