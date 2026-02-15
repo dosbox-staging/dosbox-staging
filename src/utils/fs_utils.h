@@ -174,7 +174,6 @@ void set_dos_file_time(const NativeFileHandle handle, const uint16_t date, const
 bool delete_native_file(const std_fs::path& path);
 
 // Simple file/directory removal routines, without MS-DOS compatibility hacks
-bool remove_dir(const std_fs::path& path);
 bool create_dir_if_not_exist(const std_fs::path& path);
 
 #endif
