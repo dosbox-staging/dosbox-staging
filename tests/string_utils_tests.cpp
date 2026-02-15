@@ -457,27 +457,44 @@ TEST(LTrim, Valid)
 	EXPECT_EQ(perform_ltrim("ABC   "), "ABC   ");
 }
 
-TEST(Upcase, Valid) {
-	auto perform_upcase = [](const std::string& input) {
-		std::string output = input;
-		upcase(output);
-		return output;
+TEST(Upcase, Valid)
+{
+	auto perform_upcase = [](const std::string& input,
+	                         const std::string& expected) {
+		std::string test_str = input;
+		upcase(test_str);
+		EXPECT_EQ(test_str, expected);
+
+		std::string test_cstr = input;
+		char* result          = upcase(test_cstr.data());
+		EXPECT_STREQ(result, expected.c_str());
+		EXPECT_EQ(test_cstr, expected);
+
+		EXPECT_EQ(upcase(std::string_view(input)), expected);
 	};
-	EXPECT_EQ(perform_upcase("abc"), "ABC");
-	EXPECT_EQ(perform_upcase("ABC"), "ABC");
-	EXPECT_EQ(perform_upcase("aBc"), "ABC");
+	perform_upcase("abc", "ABC");
+	perform_upcase("ABC", "ABC");
+	perform_upcase("aBc", "ABC");
 }
 
 TEST(Lowcase, Valid)
 {
-	auto perform_lowcase = [](const std::string& input) {
-		std::string output = input;
-		lowcase(output);
-		return output;
+	auto perform_lowcase = [](const std::string& input,
+	                          const std::string& expected) {
+		std::string test_str = input;
+		lowcase(test_str);
+		EXPECT_EQ(test_str, expected);
+
+		std::string test_cstr = input;
+		char* result          = lowcase(test_cstr.data());
+		EXPECT_STREQ(result, expected.c_str());
+		EXPECT_EQ(test_cstr, expected);
+
+		EXPECT_EQ(lowcase(std::string_view(input)), expected);
 	};
-	EXPECT_EQ(perform_lowcase("abc"), "abc");
-	EXPECT_EQ(perform_lowcase("ABC"), "abc");
-	EXPECT_EQ(perform_lowcase("aBc"), "abc");
+	perform_lowcase("abc", "abc");
+	perform_lowcase("ABC", "abc");
+	perform_lowcase("aBc", "abc");
 }
 
 TEST(Replace, Valid)

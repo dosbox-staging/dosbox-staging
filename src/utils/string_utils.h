@@ -191,6 +191,8 @@ char* rtrim(char* str);
 char* trim(char* str);
 char* upcase(char* str);
 char* lowcase(char* str);
+std::string upcase(const std::string_view sv);
+std::string lowcase(const std::string_view sv);
 
 inline bool is_empty(const char* str) noexcept
 {
