@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+#include "misc/logging.h"
 #include "misc/std_filesystem.h"
 
 #if defined(WIN32)
@@ -21,6 +22,45 @@
 	using NativeFileHandle = HANDLE;
 	// Cannot be constexpr due to Win32 macro
 	#define InvalidNativeFileHandle INVALID_HANDLE_VALUE
+
+	template <int out_length>
+	bool codepage437_to_utf16(const char *in_string, wchar_t (&out_string)[out_length])
+	{
+		constexpr UINT Codepage = 437;
+		constexpr DWORD Flags = 0;
+		// -1 means read the entire null terminated string
+		constexpr int InLength = -1;
+		const auto num_chars = MultiByteToWideChar(Codepage, Flags, in_string, InLength, out_string, out_length);
+		if (num_chars >= out_length) {
+			LOG_ERR("FS: codepage437_to_utf16: Insufficient output buffer length");
+			return false;
+		}
+		if (num_chars > 0) {
+			// Ensure output string is null terminated (should be, but just in case)
+			out_string[num_chars] = 0;
+			return true;
+		}
+		const auto error = GetLastError();
+		// Message table source or something, is ignored for our usage
+		constexpr LPCVOID lpSource = nullptr;
+		// Also ignored, only used for FORMAT_MESSAGE_FROM_STRING
+		constexpr va_list* Arguments = nullptr;
+		char error_message[512] = {};
+		if (FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+							lpSource,
+							error,
+							LANG_USER_DEFAULT,
+							error_message,
+							sizeof(error_message),
+							Arguments)) {
+			// Just in case Windows does something dumb I'm sticking a null terminator on the end :)
+			error_message[sizeof(error_message) - 1] = 0;
+			LOG_ERR("FS: MultiByteToWideChar failed with error code %lu: %s", error, error_message);
+		} else {
+			LOG_ERR("FS: MultiByteToWideChar failed with error code %lu: FormatMessageA also failed", error);
+		}
+		return false;
+	}
 
 #else // Linux, macOS
 	using NativeFileHandle = int;
@@ -128,20 +168,20 @@ std::deque<std_fs::path> get_xdg_data_dirs() noexcept;
 
 union FatAttributeFlags; // forward declaration
 
-bool local_drive_rename_file_or_directory(const std_fs::path& old_path, const std_fs::path& new_path);
-bool local_drive_path_exists(const std_fs::path& path);
-uint16_t local_drive_create_dir(const std_fs::path& path);
-bool local_drive_remove_dir(const std_fs::path& path);
-uint16_t local_drive_get_attributes(const std_fs::path& path,
+bool local_drive_rename_file_or_directory(const char* old_path, const char* new_path);
+bool local_drive_path_exists(const char* path);
+uint16_t local_drive_create_dir(const char* path);
+bool local_drive_remove_dir(const char* path);
+uint16_t local_drive_get_attributes(const char* path,
                                     FatAttributeFlags& attributes);
-uint16_t local_drive_set_attributes(const std_fs::path& path,
+uint16_t local_drive_set_attributes(const char* path,
                                     const FatAttributeFlags attributes);
 
 // Native file I/O wrappers.
 // Currently only used by local drive and overlay drive but suitable for use
 // elsewhere.
-NativeFileHandle open_native_file(const std_fs::path& path, const bool write_access);
-NativeFileHandle create_native_file(const std_fs::path& path,
+NativeFileHandle open_native_file(const char* path, const bool write_access);
+NativeFileHandle create_native_file(const char* path,
                                     const std::optional<FatAttributeFlags> attributes);
 
 NativeIoResult read_native_file(const NativeFileHandle handle, uint8_t* buffer,
@@ -163,7 +203,7 @@ bool truncate_native_file(const NativeFileHandle handle);
 DosDateTime get_dos_file_time(const NativeFileHandle handle);
 void set_dos_file_time(const NativeFileHandle handle, const uint16_t date, const uint16_t time);
 
-bool delete_native_file(const std_fs::path& path);
+bool delete_native_file(const char* path);
 
 // Simple file/directory removal routines, without MS-DOS compatibility hacks
 bool create_dir_if_not_exist(const std_fs::path& path);

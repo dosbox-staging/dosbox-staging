@@ -317,7 +317,7 @@ bool OverlayFile::create_copy()
 		        Drives[drive_set]);
 		if (od) {
 			FatAttributeFlags attributes = {};
-			local_drive_get_attributes(GetPath(), attributes);
+			local_drive_get_attributes(GetPath().c_str(), attributes);
 			std::string newpath = {};
 			std::tie(newhandle,
 			         newpath) = od->create_file_in_overlay(GetName(),
