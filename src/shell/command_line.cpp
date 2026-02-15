@@ -125,7 +125,7 @@ bool CommandLine::FindCommand(unsigned int which, std::string& value) const
 // Was a directory provided on the command line?
 bool CommandLine::HasDirectory() const
 {
-	return std::any_of(cmds.begin(), cmds.end(), is_directory);
+	return std::any_of(cmds.begin(), cmds.end(), is_dir);
 }
 
 // Was an executable filename provided on the command line?

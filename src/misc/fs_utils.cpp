@@ -41,12 +41,10 @@ bool check_fseek(const char* module_name, const char* file_description,
 	return false;
 }
 
-bool is_directory(const std::string& candidate)
+bool is_dir(const std_fs::path& path)
 {
 	std::error_code ec = {};
-	const std_fs::path p(candidate);
-
-	return std_fs::is_directory(p, ec);
+	return std_fs::is_directory(path, ec);
 }
 
 bool is_hidden_by_host(const std_fs::path& pathname)
