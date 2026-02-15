@@ -174,7 +174,7 @@ std::unique_ptr<DOS_File> localDrive::FileOpen(const char* name, uint8_t flags)
 		}
 	}
 
-	NativeFileHandle file_handle = open_native_file(host_filename,
+	NativeFileHandle file_handle = open_native_file(host_filename.c_str(),
 	                                                host_write_access);
 
 	// If we couldn't open the file, then it's possible that
@@ -182,7 +182,7 @@ std::unique_ptr<DOS_File> localDrive::FileOpen(const char* name, uint8_t flags)
 	// requested RW access. So check if this is the case:
 	if (file_handle == InvalidNativeFileHandle && host_write_access) {
 		// If yes, check if the file can be opened with Read-only access:
-		file_handle = open_native_file(host_filename, false);
+		file_handle = open_native_file(host_filename.c_str(), false);
 		if (file_handle != InvalidNativeFileHandle && dos_write_access) {
 			flags                = OPEN_READ;
 			dos_write_access     = false;
@@ -420,7 +420,7 @@ bool localDrive::FindNext(DOS_DTA& dta)
 
 bool localDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
-	if (local_drive_get_attributes(MapDosToHostFilename(name), *attr) != DOSERR_NONE) {
+	if (local_drive_get_attributes(MapDosToHostFilename(name).c_str(), *attr) != DOSERR_NONE) {
 		// The caller is responsible to act accordingly, possibly
 		// it should set DOS error code (setting it here is not allowed)
 		*attr = 0;
@@ -435,7 +435,7 @@ bool localDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 	assert(!IsReadOnly());
 	const std::string host_filename = MapDosToHostFilename(name);
 
-	const auto result = local_drive_set_attributes(host_filename, attr);
+	const auto result = local_drive_set_attributes(host_filename.c_str(), attr);
 	dirCache.CacheOut(host_filename.c_str());
 
 	if (result != DOSERR_NONE) {
@@ -493,7 +493,7 @@ bool localDrive::TestDir(const char* dir)
 			return false;
 		}
 	}
-	return local_drive_path_exists(host_dir);
+	return local_drive_path_exists(host_dir.c_str());
 }
 
 bool localDrive::Rename(const char* oldname, const char* newname)
@@ -505,7 +505,7 @@ bool localDrive::Rename(const char* oldname, const char* newname)
 	safe_strcpy(newnew, basedir);
 	safe_strcat(newnew, newname);
 	CROSS_FILENAME(newnew);
-	const bool success = local_drive_rename_file_or_directory(old_host_filename, dirCache.GetExpandNameAndNormaliseCase(newnew));
+	const bool success = local_drive_rename_file_or_directory(old_host_filename.c_str(), dirCache.GetExpandNameAndNormaliseCase(newnew));
 	if (success) {
 		timestamp_cache.erase(old_host_filename);
 		dirCache.CacheOut(newnew);
@@ -759,10 +759,10 @@ void localFile::Close()
 			assert(!IsOnReadOnlyMedium());
 			FatAttributeFlags attributes = {};
 			if (DOSERR_NONE ==
-			    local_drive_get_attributes(path, attributes)
+			    local_drive_get_attributes(path.c_str(), attributes)
 				&& !attributes.archive) {
 				attributes.archive = true;
-				local_drive_set_attributes(path, attributes);
+				local_drive_set_attributes(path.c_str(), attributes);
 			}
 			set_archive_on_close = false;
 		}

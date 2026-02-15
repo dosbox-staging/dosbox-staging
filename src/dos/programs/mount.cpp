@@ -780,7 +780,7 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 			std::string final_path = real_path.empty() ? path_to_expand
 			                                           : real_path;
 
-			if (real_path.empty() || !local_drive_path_exists(real_path)) {
+			if (real_path.empty() || !local_drive_path_exists(real_path.c_str())) {
 				// Try Virtual DOS Drive mapping
 				bool found_on_virtual = false;
 
@@ -798,7 +798,7 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 						if (ldp) {
 							std::string host_name = ldp->MapDosToHostFilename(
 							        fullname);
-							if (local_drive_path_exists(host_name)) {
+							if (local_drive_path_exists(host_name.c_str())) {
 								final_path = std::move(
 								        host_name);
 								found_on_virtual = true;
