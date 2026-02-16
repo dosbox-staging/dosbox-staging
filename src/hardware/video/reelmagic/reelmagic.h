@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2022 Jon Dennis
 // SPDX-License-Identifier: GPL-2.0-or-later
 

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_MOUSEIF_DOS_DRIVER_STATE_H

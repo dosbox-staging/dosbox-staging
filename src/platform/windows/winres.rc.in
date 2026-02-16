@@ -23,7 +23,7 @@ BEGIN
             VALUE "FileDescription", "DOSBox Staging DOS Emulator"
             VALUE "FileVersion", "@CMAKE_PROJECT_VERSION_MAJOR@, @CMAKE_PROJECT_VERSION_MINOR@, @CMAKE_PROJECT_VERSION_PATCH@, 0"
             VALUE "InternalName", "dosbox-staging"
-            VALUE "LegalCopyright", "Copyright (C) 2025 The DOSBox Staging Team"
+            VALUE "LegalCopyright", "Copyright (C) 2026 The DOSBox Staging Team"
             VALUE "OriginalFilename", "dosbox.exe"
             VALUE "ProductName", "DOSBox Staging"
             VALUE "ProductVersion", "@CMAKE_PROJECT_VERSION_MAJOR@, @CMAKE_PROJECT_VERSION_MINOR@, @CMAKE_PROJECT_VERSION_PATCH@, 0"

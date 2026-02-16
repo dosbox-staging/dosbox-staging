@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>

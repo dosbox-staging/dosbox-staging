@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2008-2010  Ralf Grillenberger <h-a-l-9000@users.sourceforge.net>
 // SPDX-FileCopyrightText:  2004-2008  Dean Beeler <canadacow@users.sourceforge.net>
 // SPDX-FileCopyrightText:  2001-2003  Peter Grehan <grehan@iprg.nokia.com>

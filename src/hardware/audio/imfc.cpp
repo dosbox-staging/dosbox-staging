@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2017-2020  Loris Chiocca
 // SPDX-FileCopyrightText:  1999-2000  Daisuke Nagano <breeze.nagano@nifty.ne.jp>
 // SPDX-FileCopyrightText:  1997-1999  Jarek Burczynski <s0246@priv4.onet.pl>

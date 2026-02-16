@@ -1,6 +1,6 @@
 #version 330 core
 
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2011-2016 Hyllian <sergiogdb@gmail.com>
 // SPDX-License-Identifier: MIT
 
