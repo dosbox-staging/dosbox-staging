@@ -1,6 +1,6 @@
 #version 330 core
 
-// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: MIT
 //
 // Most of the code was taken from various sources with minor adjustments:
