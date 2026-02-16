@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText:  2022-2024 The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 # SPDX-FileCopyrightText:  2022-2022 Patryk Obara <patryk.obara@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -10,10 +10,18 @@ pushd "$(git rev-parse --show-toplevel)" > /dev/null || exit
 
 year=$(date +%Y)
 team="The DOSBox Staging Team"
-code_sed_script="s|SPDX-FileCopyrightText:  \([0-9]\+\)\(-\([0-9]\+\)\)\?  $team|SPDX-FileCopyrightText:  \1-$year $team|"
+spdx_sed_script="s|SPDX-FileCopyrightText:  \([0-9][0-9]*\)\(-[0-9][0-9]*\)* $team|SPDX-FileCopyrightText:  \1-$year $team|"
+copyright_c_sed_script="s|Copyright (C) \([0-9][0-9]*\)\(-[0-9][0-9]*\)* $team|Copyright (C) \1-$year $team|"
+
+# BSD sed (macOS) requires an argument after -i, GNU sed (Linux) does not
+if sed --version 2>/dev/null | grep -q 'GNU sed'; then
+	sed_inplace=(sed -i)
+else
+	sed_inplace=(sed -i '')
+fi
 
 find_files () {
-	find {src,include,tests} -type f \( \
+	find {src,tests,resources,extras,scripts} -type f \( \
 		-name '*.bat' -o \
 		-name '*.cpp' -o \
 		-name '*.c' -o \
@@ -21,6 +29,7 @@ find_files () {
 		-name '*.h' -o \
 		-name '*.in' -o \
 		-name '*.py' -o \
+		-name '*.sh' -o \
 		-name '*.txt' \
 		\)
 }
@@ -28,23 +37,23 @@ find_files () {
 filter_new_files () {
 	while read -r path ; do
 		committer_year=$(git log -1 --format=%cd --date=format:%Y "$path")
-		if [[ "$committer_year" == "$year" ]] ; then 
+		if [[ "$committer_year" == "$year" ]] ; then
 			echo "$path"
 		fi
 	done
 }
 
-# C, C++, headers, meson template inputs
-find_files | filter_new_files | xargs sed -i "$code_sed_script"
+# C, C++, headers, shell scripts, meson template inputs
+# Run both SPDX and Copyright (C) patterns on each file
+find_files | filter_new_files | xargs "${sed_inplace[@]}" -e "$spdx_sed_script" -e "$copyright_c_sed_script"
 
 # Metadata files and dates visible to end users
-sed -i "$code_sed_script" src/gui/gui_msg.h
-sed -i "$code_sed_script" extras/linux/org.dosbox_staging.dosbox_staging.metainfo.xml
-sed -i "s|Copyright [0-9]\+ $team|Copyright $year $team|" extras/macos/Info.plist.template
-sed -i "s|\xa9 [0-9]\+ $team|\xa9 $year $team|" src/winres.rc
+"${sed_inplace[@]}" "$copyright_c_sed_script" extras/linux/org.dosbox_staging.dosbox_staging.metainfo.xml
+"${sed_inplace[@]}" "s|Copyright [0-9][0-9]* $team|Copyright $year $team|" extras/macos/Info.plist.template
+"${sed_inplace[@]}" "s|Copyright (C) [0-9][0-9]* $team|Copyright (C) $year $team|" src/platform/windows/winres.rc.in
 
 echo "Some suspicious copyright lines (fix them manually if necessary):"
-git grep "Copyright (C) $year-$year"
+git grep -E "(Copyright \(C\)|SPDX-FileCopyrightText:) +$year-$year"
 echo
 echo "Review modified files and commit changes:"
 git diff --shortstat
