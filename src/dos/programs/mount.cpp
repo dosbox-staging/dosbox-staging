@@ -131,7 +131,7 @@ void MOUNT::WriteMountStatus(const std::string& image_type,
 		assert(!image.empty());
 		images_str = images_str.append(
 		        std::string(Indent) +
-		        truncate_path(term_width - strlen(Indent), image) +
+		        truncate_path(image, term_width - strlen(Indent)) +
 		        std::string("\n"));
 	}
 
