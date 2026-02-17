@@ -108,7 +108,7 @@ bool is_hidden_by_host(const std::filesystem::path& pathname);
 
 std::string to_native_path(const std::string &path) noexcept;
 
-std::string truncate_path(size_t width, const std_fs::path& path);
+std::string truncate_path(const std_fs::path& path, int max_length);
 
 // Returns a simplified representation of the path, be it relative,
 // absolute, or in its original (as-provided) form.

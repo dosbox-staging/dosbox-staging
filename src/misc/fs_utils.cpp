@@ -88,37 +88,37 @@ std::optional<std::vector<std::string>> get_lines(const std_fs::path &text_file)
 	return lines;
 }
 
-std::string truncate_path(size_t width, const std_fs::path& path)
+std::string truncate_path(const std_fs::path& path, int max_length)
 {
-	assert(width > 0);
-	std::vector<char> line_buf(width);
+	const std::string ellipsis = "...";
 
-	const auto& name            = path.filename().string();
-	const auto& simplified_path = simplify_path(path).string();
+	assert(max_length > 0);
 
-	snprintf(line_buf.data(),
-	         width,
-	         "%-16s - %s",
-	         name.c_str(),
-	         simplified_path.c_str());
-	std::string line = line_buf.data();
+	const size_t limit = static_cast<size_t>(max_length);
 
-	// Formatted line did not fill the whole buffer - no further
-	// formatting is necessary.
-	if (line.size() + 1 < width) {
-		return line;
+	// Extremely small widths
+	if (limit <= ellipsis.size()) {
+		return ellipsis.substr(0, limit);
 	}
 
-	// The path was too long and got trimmed; place three
-	// dots in the end to make it clear to the user.
-	const std::string cutoff = "...";
+	auto full_path = simplify_path(path).string();
+	auto filename  = path.filename().string();
 
-	assert(line.size() > cutoff.size());
+	// Full path fits
+	if (full_path.size() <= limit) {
+		return full_path;
+	}
 
-	const auto start = line.end() - static_cast<int>(cutoff.size());
-	line.replace(start, line.end(), cutoff);
+	// Shorten path while keeping the filename whole
+	if (limit > filename.size() + ellipsis.size()) {
+		auto keep_from_right = limit - ellipsis.size();
+		return ellipsis +
+		       full_path.substr(full_path.size() - keep_from_right);
+	}
 
-	return line;
+	// Truncate the filename from the left if too long
+	auto keep_from_right = limit - ellipsis.size();
+	return ellipsis + filename.substr(filename.size() - keep_from_right);
 }
 
 std_fs::path simplify_path(const std_fs::path& original_path) noexcept

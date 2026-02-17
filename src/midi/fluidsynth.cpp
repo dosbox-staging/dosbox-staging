@@ -1027,7 +1027,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 	constexpr auto Indent = "  ";
 
 	auto write_line = [&](const std_fs::path& sf_path) {
-		const auto line = truncate_path(term_width - strlen(Indent), sf_path);
+		const auto line = truncate_path(sf_path, term_width - strlen(Indent));
 
 		const auto do_highlight = [&] {
 			if (device) {
