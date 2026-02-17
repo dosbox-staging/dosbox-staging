@@ -103,7 +103,7 @@ _¹ You can use plain old zlib instead._
 **Slirp** is built separately as a dynamic library (via
 vcpkg) and is loaded on-demand at runtime if available. Please refer to the
 [dosbox-staging-ext](https://github.com/dosbox-staging/dosbox-staging-ext)
-project for further details. To check the version of this dependency 
+project for further details. To check the version of this dependency
 included in our stable and dev build packages, check out the comments of the
 [releases packages](https://github.com/dosbox-staging/dosbox-staging-ext/releases) of
 the [dosbox-staging-ext](https://github.com/dosbox-staging/dosbox-staging-ext)
@@ -143,10 +143,10 @@ Install build dependencies appropriate for your OS:
 
 ``` shell
 # Fedora
-sudo dnf install ccache gcc-c++ meson alsa-lib-devel libatomic libpng-devel \
-                 SDL2-devel asio-devel opusfile-devel \
-                 fluidsynth-devel iir1-devel mt32emu-devel libslirp-devel \
-                 speexdsp-devel libXi-devel zlib-ng-devel
+sudo dnf install SDL2_image-devel alsa-lib-devel asio-devel ccache \
+                 fluidsynth-devel gcc-c++ gmock-devel iir1-devel libXi-devel \
+                 libatomic libpng-devel libslirp-devel meson mt32emu-devel \
+                 opusfile-devel speexdsp-devel zlib-ng-devel
 ```
 
 ``` shell
