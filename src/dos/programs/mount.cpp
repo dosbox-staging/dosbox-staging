@@ -125,13 +125,14 @@ void MOUNT::WriteMountStatus(const std::string& image_type,
 {
 	const size_t term_width = INT10_GetTextColumns();
 	constexpr auto Indent   = "  ";
+	const auto indent_size = strlen(Indent);
 	std::string images_str  = {};
 
 	for (const auto& image : images) {
 		assert(!image.empty());
 		images_str = images_str.append(
 		        std::string(Indent) +
-		        truncate_path(image, term_width - strlen(Indent)) +
+		        truncate_path(image, term_width - indent_size) +
 		        std::string("\n"));
 	}
 
