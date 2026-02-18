@@ -18,6 +18,11 @@ public:
 
 	void WaitForCompletion(const uint32_t timeout_ms = 250);
 
+	// Set by Execute() to report errors without throwing on the
+	// emulation thread. Handlers should check this after
+	// WaitForCompletion() and throw on the webserver thread.
+	std::string error = {};
+
 private:
 	friend class DebugBridge;
 
