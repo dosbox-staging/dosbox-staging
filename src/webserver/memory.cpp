@@ -12,6 +12,7 @@
 
 #include "cpu/registers.h"
 #include "dos/dos_memory.h"
+#include "hardware/memory.h"
 
 using json = nlohmann::json;
 using httplib::Request, httplib::Response;
@@ -83,6 +84,16 @@ void ReadMemCommand::Execute()
 	effective_addr = base_segment_to_offset(base) + offset;
 	LOG_DEBUG("API: ReadMemCommand(0x%06x, %d)", effective_addr, len);
 
+	const uint64_t mem_total = static_cast<uint64_t>(MEM_TotalPages()) *
+	                           MemPageSize;
+	const uint64_t end_addr = static_cast<uint64_t>(effective_addr) + len;
+	if (end_addr > mem_total) {
+		error = "Address range 0x" + std::to_string(effective_addr) + " + " +
+		        std::to_string(len) + " exceeds emulated memory size (" +
+		        std::to_string(mem_total) + " bytes)";
+		return;
+	}
+
 	memory.resize(len);
 	MEM_BlockRead(effective_addr, memory.data(), len);
 }
@@ -99,6 +110,10 @@ void ReadMemCommand::Get(const Request& req, Response& res)
 
 	ReadMemCommand cmd(segment, offset, num_bytes);
 	cmd.WaitForCompletion();
+
+	if (!cmd.error.empty()) {
+		throw std::out_of_range(cmd.error);
+	}
 
 	if (req.get_header_value("accept").starts_with(TypeJson)) {
 		json j;
@@ -120,6 +135,18 @@ void WriteMemCommand::Execute()
 	effective_addr = base_segment_to_offset(base) + offset;
 	LOG_DEBUG("API: WriteMemCommand(0x%06x, %d)", effective_addr, data.size());
 
+	const uint64_t mem_total = static_cast<uint64_t>(MEM_TotalPages()) *
+	                           MemPageSize;
+	const uint64_t end_addr = static_cast<uint64_t>(effective_addr) +
+	                          data.size();
+	if (end_addr > mem_total) {
+		error = "Address range 0x" + std::to_string(effective_addr) +
+		        " + " + std::to_string(data.size()) +
+		        " exceeds emulated memory size (" +
+		        std::to_string(mem_total) + " bytes)";
+		return;
+	}
+
 	if (!expected_data.empty()) {
 		conflict_data.resize(expected_data.size());
 		MEM_BlockRead(effective_addr,
@@ -139,6 +166,8 @@ void WriteMemCommand::Put(const httplib::Request& req, httplib::Response& res)
 	uint32_t offset;
 	parse_mem_addr(req, segment, offset);
 
+	constexpr size_t MaxWriteBytes = 128 * 1024 * 1024; // 128 MiB
+
 	std::string data;
 	if (req.get_header_value("Content-Type") == TypeJson) {
 		auto j = json::parse(req.body);
@@ -149,6 +178,11 @@ void WriteMemCommand::Put(const httplib::Request& req, httplib::Response& res)
 		throw std::invalid_argument("Content-Type must be either " +
 		                            std::string(TypeJson) + " or " +
 		                            std::string(TypeBinary));
+	}
+
+	if (data.size() > MaxWriteBytes) {
+		throw std::invalid_argument(
+		        "Write data exceeds maximum size of 128 MiB");
 	}
 
 	std::string expected_data;
@@ -166,6 +200,10 @@ void WriteMemCommand::Put(const httplib::Request& req, httplib::Response& res)
 
 	WriteMemCommand cmd(segment, offset, std::move(data), std::move(expected_data));
 	cmd.WaitForCompletion();
+
+	if (!cmd.error.empty()) {
+		throw std::out_of_range(cmd.error);
+	}
 
 	json j;
 	j["memory"]["addr"] = cmd.effective_addr;
