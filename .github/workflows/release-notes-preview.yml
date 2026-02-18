@@ -1,4 +1,4 @@
-name: Update release notes draft
+name: Update release notes preview
 permissions: read-all
 
 on:
@@ -9,7 +9,7 @@ on:
 
 env:
   RELEASE_START_TIME:  2024-10-23T07:37:53Z
-  DRAFT_RELEASE_TAG:   0.83.0-alpha
+  PRE_RELEASE_TAG:   0.83.0-alpha
   GITHUB_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN_RELEASE_DRAFTER }}
 
 jobs:
@@ -27,13 +27,13 @@ jobs:
           ./scripts/tools/release-notes-drafter.py query \
               -p pull-requests.csv -s $RELEASE_START_TIME
 
-      - name: Generate release notes draft
+      - name: Generate release notes
         run: |
           ./scripts/tools/release-notes-drafter.py process \
               -i pull-requests.csv -m release-notes.md
 
-      - name: Update release notes draft
+      - name: Publish release notes preview
         run: |
           ./scripts/tools/release-notes-drafter.py publish \
-              -n release-notes.md -t $DRAFT_RELEASE_TAG
+              -n release-notes.md -t $PRE_RELEASE_TAG
 
