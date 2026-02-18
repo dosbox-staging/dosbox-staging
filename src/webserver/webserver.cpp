@@ -93,11 +93,11 @@ static void init_config_settings(SectionProp& section)
 {
 	using enum Property::Changeable::Value;
 
-	auto enabled = section.AddBool("webserver_enabled", OnlyAtStart, true);
+	auto enabled = section.AddBool("webserver_enabled", OnlyAtStart, false);
 	enabled->SetHelp(
-	        "Enable the HTTP REST API that exposes internal state and memory.\n"
-	        "Open [color=blue]http://localhost:8080[reset] (or configured port) to show documentation.");
-
+			"Enable the HTTP REST API that exposes internal state and memory (disabled by\n"  
+			"default). Open http://localhost:8080 in a browser (or use the configured port)\n"  
+			"to view the API documentation.");
 	auto bind_ip = section.AddString("webserver_bind_address",
 	                                 OnlyAtStart,
 	                                 "127.0.0.1");
