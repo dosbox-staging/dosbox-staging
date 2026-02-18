@@ -211,14 +211,14 @@ def get_latest_public_release():
     return response["data"]["repository"]["latestRelease"]
 
 
-def get_draft_release_id_by_tag(tag):
+def get_prerelease_id_by_tag(tag):
     query = make_repository_query("""
       releases(first: 50, orderBy: {field: CREATED_AT, direction: DESC}) {
         edges {
           node {
             databaseId
             tagName
-            isDraft
+            isPrerelease
           }
         }
       }""")
@@ -227,7 +227,7 @@ def get_draft_release_id_by_tag(tag):
 
     for edge in releases["data"]["repository"]["releases"]["edges"]:
         item = edge["node"]
-        if item["isDraft"] and item["tagName"] == tag:
+        if item["isPrerelease"] and item["tagName"] == tag:
             return item["databaseId"]
 
     return None
@@ -422,9 +422,16 @@ def append_category_markdown(markdown, items, category_name):
     return f"{markdown}\n\n"
 
 
+PRERELEASE_WARNING = """> [!WARNING]
+> **Auto-generated release notes preview** — This is not a release.
+> No binaries are available. These notes are updated automatically as PRs are merged.
+
+"""
+
+
 def process_pull_requests_markdown(items, markdown_fname):
     remaining = items
-    markdown = ""
+    markdown = PRERELEASE_WARNING
 
     for filter_def in FILTERS:
         [filtered, remaining] = filter_category(remaining, filter_def)
@@ -461,7 +468,7 @@ def make_upsert_release_payload(tag, name, description):
         "target_commitish": "main",
         "name": name,
         "body": description,
-        "draft": True,
+        "draft": False,
         "prerelease": True,
         "generate_release_notes": False
     })
@@ -495,13 +502,13 @@ def update_release(release_id, tag, name, description):
     return json.loads(r.text)
 
 
-def publish_draft_release(markdown_file, tag):
-    release_id = get_draft_release_id_by_tag(tag)
+def publish_prerelease(markdown_file, tag):
+    release_id = get_prerelease_id_by_tag(tag)
 
     with open(markdown_file, encoding="UTF-8") as f:
         description = f.read()
 
-    name = f"{tag} release notes draft"
+    name = f"{tag} release notes preview"
 
     if release_id:
         update_release(release_id, tag, name, description)
@@ -556,7 +563,7 @@ def main():
             if not args.version_tag:
                 parser.error("release tag must be specified with -t")
 
-            publish_draft_release(args.release_notes_file, args.version_tag)
+            publish_prerelease(args.release_notes_file, args.version_tag)
 
 
 if __name__ == "__main__":
