@@ -7,6 +7,7 @@
 #include "dos.h"
 #include "memory.h"
 
+#include <set>
 #include <string>
 #include <thread>
 
@@ -61,6 +62,64 @@ static void setup_api_handlers()
 	server.Get("/api/dos", DosInfoCommand::Get);
 }
 
+static std::string strip_port(const std::string& host)
+{
+	// IPv6 literal: [::1]:8080
+	if (host.size() > 1 && host[0] == '[') {
+		const auto bracket = host.rfind(']');
+		if (bracket != std::string::npos) {
+			return host.substr(0, bracket + 1);
+		}
+		return host;
+	}
+	// IPv4 or hostname: 127.0.0.1:8080
+	const auto colon = host.rfind(':');
+	if (colon != std::string::npos) {
+		return host.substr(0, colon);
+	}
+	return host;
+}
+
+static void setup_host_validation(const std::string& addr, int port)
+{
+	// Build the set of allowed Host header values to prevent DNS
+	// rebinding attacks. A rebound domain would not match any of these.
+	std::set<std::string> allowed;
+
+	const auto port_str = ":" + std::to_string(port);
+
+	auto add = [&](const std::string& hostname) {
+		allowed.emplace(hostname);
+		allowed.emplace(hostname + port_str);
+	};
+
+	add(addr);
+
+	if (addr == "127.0.0.1" || addr == "0.0.0.0") {
+		add("localhost");
+	}
+	if (addr == "::1" || addr == "::") {
+		add("localhost");
+		add("[::1]");
+	}
+
+	server.set_pre_routing_handler(
+	        [allowed = std::move(allowed)](const httplib::Request& req,
+	                                       httplib::Response& res) {
+		        const auto host = strip_port(
+		                req.get_header_value("Host"));
+
+		        if (allowed.find(host) == allowed.end()) {
+			        LOG_WARNING("WEBSERVER: Rejected request with Host header '%s'",
+			                    req.get_header_value("Host").c_str());
+			        res.status = httplib::StatusCode::Forbidden_403;
+			        res.set_content("Forbidden", "text/plain");
+			        return httplib::Server::HandlerResponse::Handled;
+		        }
+		        return httplib::Server::HandlerResponse::Unhandled;
+	        });
+}
+
 static void run(std::string addr, int port)
 {
 	const auto resource_home = get_resource_path("webserver").string();
@@ -69,6 +128,7 @@ static void run(std::string addr, int port)
 	server.set_mount_point("/", resource_home);
 
 	setup_api_handlers();
+	setup_host_validation(addr, port);
 	server.set_exception_handler(error_handler);
 	server.Get("/api/info", [=](auto, auto& res) {
 		json j;
