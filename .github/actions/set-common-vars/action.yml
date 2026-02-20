@@ -15,3 +15,6 @@ runs:
 
         echo "VCPKG_EXT_DEPS_VERSION=v0.83.0-4" >> $GITHUB_ENV
         echo "NUKED_SC55_CLAP_VERSION=v0.11.0" >> $GITHUB_ENV
+
+        # For release notes generation - set to previous release publish time
+        echo "RELEASE_START_TIME=2024-10-23T07:37:53Z" >> $GITHUB_ENV

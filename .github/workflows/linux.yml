@@ -195,6 +195,11 @@ jobs:
           mkdir $PLUGINS_DIR
           cp nuked-sc55-clap/* $PLUGINS_DIR
 
+      - name: Generate release notes HTML
+        uses: ./.github/actions/generate-release-notes
+        with:
+          output_path: "dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}/doc/release-notes.html"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create tarball
         run: |

@@ -156,6 +156,11 @@ jobs:
           mkdir "$PLUGINS_DIR"
           cp -R nuked-sc55-clap/* "$PLUGINS_DIR"
 
+      - name: Generate release notes HTML
+        uses: ./.github/actions/generate-release-notes
+        with:
+          output_path: "dist/DOSBox Staging.app/Contents/SharedSupport/release-notes.html"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create DMG disk image
         run: |
