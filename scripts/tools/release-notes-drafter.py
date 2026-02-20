@@ -5,20 +5,24 @@
 
 """
 Create release notes draft for DOSBox Staging.
+
+The GitHub access token must be set in the GITHUB_ACCESS_TOKEN env var.
+The token must have the following scopes: repo, workflow, write:packages, delete:packages
 """
 
 # pylint: disable=invalid-name
+# pylint: disable=import-error
 # pylint: disable=missing-docstring
 # pylint: disable=global-statement
 
 import argparse
 import csv
+import datetime
 import json
 import os
 import sys
 
-from datetime import datetime
-
+import markdown2
 import requests
 
 
@@ -100,23 +104,24 @@ def setup_arg_parser(parser):
         choices=["query", "process", "publish"],
         help="""query
   Queries information about all pull requests merged to the 'main'
-  branch since the last public DOSBox Staging release and writes the
-  results to a CSV file.
+  branch since the last public DOSBox Staging release and writes
+  the results to a CSV file.
 
 process
-  Processes the CSV output of the query action and generates the release
-  notes draft either in Markdown or CSV format.
+  Processes the CSV output of the 'query' action and generates the
+  release notes draft either in Markdown or CSV format.
 
 publish
   Publishes (creates or updates) the release notes draft.
-""",
+"""
     )
 
     query_args = parser.add_argument_group(title="query arguments")
     query_args.add_argument(
         "-s",
         "--start_time",
-        help="include pull requests after this datetime"
+        help="""include pull requests after this datetime
+        """
     )
     query_args.add_argument(
         "-p",
@@ -129,19 +134,37 @@ publish
     process_args.add_argument(
         "-i",
         "--input_csv",
-        help="input CSV file containing the pull requests"
-    )
-
-    process_args.add_argument(
-        "-m",
-        "--markdown_file",
-        help="write categorised PRs to a Markdown file"
+        help="""input CSV file containing the pull requests
+        """
     )
 
     process_args.add_argument(
         "-c",
         "--csv_file",
-        help="write categorised PRs to a CSV file"
+        help="""write categorised PRs to a CSV file
+        """
+    )
+
+    process_args.add_argument(
+        "-m",
+        "--markdown_file",
+        help="""write categorised PRs to a Markdown file
+(to be published as pre-release notes on GitHub)
+
+"""
+    )
+
+    process_args.add_argument(
+        "--html_file",
+        help="""write release notes to an HTML file
+(to be included in the development build artifacts)
+
+"""
+    )
+
+    process_args.add_argument(
+        "--html_version_tag",
+        help="version tag of the release notes draft (e.g., v0.83.0-alpha)"
     )
 
     publish_args = parser.add_argument_group(title="publish arguments")
@@ -149,13 +172,15 @@ publish
     publish_args.add_argument(
         "-n",
         "--release_notes_file",
-        help="releate notes Markdown file"
+        help="""release notes Markdown file
+
+"""
     )
 
     publish_args.add_argument(
         "-t",
-        "--version_tag",
-        help="version tag of the release notes draft (e.g., v0.83.0-alpha)"
+        "--publish_version_tag",
+        help="the release notes will be published under this tag (e.g., v0.83.0-alpha)"
     )
 
 
@@ -309,7 +334,7 @@ def fetch_all_pull_requests_since(start_time):
     cursor = None
     item_offset = 0
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.datetime.now(datetime.UTC).isoformat()
 
     while True:
         print(f"Fetching next page of pull requests, item offset: {item_offset}")
@@ -344,6 +369,10 @@ def write_csv(items, output_csv):
         writer.writerows(items)
 
 
+def sort_items(items):
+    items.sort(key=lambda x: (x["title"].lower()))
+
+
 def filter_category(items, filter_def):
     """ `filter_def` is an entry from FILTERS """
 
@@ -369,7 +398,7 @@ def filter_category(items, filter_def):
         if not include or not remove:
             remaining.append(i)
 
-    filtered.sort(key=lambda x: (x["title"].lower()))
+    sort_items(filtered)
 
     return [filtered, remaining]
 
@@ -383,12 +412,12 @@ def get_contributor_list(items):
 
 
 def append_contributor_list(markdown, items):
-    markdown = f"{markdown}## Commit authors\n\n"
+    markdown = f'{markdown}## Commit authors\n\n<div class="authors">\n<ul>\n'
 
     for i in get_contributor_list(items):
-        markdown = f"{markdown}  - {i}\n"
+        markdown = f"{markdown}  <li>{i}</li>\n"
 
-    return f"{markdown} \n\n"
+    return f"{markdown}</ul>\n</div>\n"
 
 
 def process_pull_requests_csv(items, csv_fname):
@@ -402,6 +431,8 @@ def process_pull_requests_csv(items, csv_fname):
             item["category"] = filter_def["category"]
             result.append(item)
 
+    sort_items(remaining)
+
     for item in remaining:
         item["category"] = "other"
         result.append(item)
@@ -413,7 +444,8 @@ def append_category_markdown(markdown, items, category_name):
     markdown = f"{markdown}## Full PR list of {category_name}\n\n"
 
     for i in items:
-        item_md = f"  - {i['title']} (#{i['number']})"
+        pr_link = f"[#{i['number']}]({i['url']})"
+        item_md = f"  - {i['title']} ({pr_link})"
         if "backport" in i["labels"]:
             item_md += " _[backport]_"
 
@@ -422,16 +454,77 @@ def append_category_markdown(markdown, items, category_name):
     return f"{markdown}\n\n"
 
 
-PRERELEASE_WARNING = """> [!WARNING]
-> **Auto-generated release notes preview** — This is not a release.
-> No binaries are available. These notes are updated automatically as PRs are merged.
+MARKDOWN_HEADER = """> [!WARNING]
+> **These are the automatically generated release notes of the latest
+> development snapshot builds!** This is not a stable release; things
+> might blow up! 💣 🔥 💀
+>
+> You can download the latest development builds from here:
+> https://www.dosbox-staging.org/releases/development-builds/
 
 """
 
+HTML_HEADER = """
+<div class="warning">
+<p><strong>These are automatically generated release notes for this development
+snapshot build!</strong><br>This is not a stable release; things might blow
+up! 💣 🔥 💀</p>
 
-def process_pull_requests_markdown(items, markdown_fname):
+<p>You can download the latest stable builds <a href="https://www.dosbox-staging.org/releases/">from our
+website</a>.</p>
+</div>
+"""
+
+HTML_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOSBox Staging Release Notes</title>
+  <style>
+    body {
+      font-family: Helvetica, Arial, "Segoe UI", sans-serif;
+      font-size: 17px;
+      line-height: 1.6;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #333;
+      background: #fff;
+    }
+    h2, h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
+    h2 { border-bottom: 1px solid #d0d7de; padding-bottom: 0.3em; font-size: 1.5em; }
+    ul { padding-left: 2em; }
+    li { margin: 0.25em 0; }
+    a { color: rgb(245, 0, 86); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    em { font-style: italic; }
+    .warning {
+      background-color: rgba(255, 145, 0, 0.18);
+      padding: 1px 15px;
+      border-radius: 5px;
+    }
+    .authors { line-height: 1.4; }
+  </style>
+</head>
+
+<body>
+%CONTENT%
+</body>
+
+</html>
+"""
+
+
+def generate_markdown(items, header):
     remaining = items
-    markdown = PRERELEASE_WARNING
+    markdown = header
 
     for filter_def in FILTERS:
         [filtered, remaining] = filter_category(remaining, filter_def)
@@ -439,14 +532,37 @@ def process_pull_requests_markdown(items, markdown_fname):
             markdown = append_category_markdown(markdown, filtered,
                                                 filter_def["title"])
 
+    sort_items(remaining)
+
     if remaining:
         markdown = append_category_markdown(markdown, remaining,
                                             "other changes")
 
     markdown = append_contributor_list(markdown, items)
+    return markdown
+
+
+def process_pull_requests_markdown(items, markdown_fname):
+    markdown = generate_markdown(items, MARKDOWN_HEADER)
 
     with open(markdown_fname, "w", newline="", encoding="UTF-8") as f:
         f.write(markdown)
+
+
+def process_pull_requests_html(items, html_fname, version_tag):
+    markdown = generate_markdown(items, HTML_HEADER)
+
+    # Convert markdown to HTML
+    html_content = markdown2.markdown(markdown)
+
+    header = f'<h1>DOSBox Staging {version_tag}</h1>'
+    html_content = header + html_content
+
+    # Wrap in HTML template
+    html = HTML_TEMPLATE.replace("%CONTENT%", html_content)
+
+    with open(html_fname, "w", newline="", encoding="UTF-8") as f:
+        f.write(html)
 
 
 def query_pull_requests(csv_fname, start_time):
@@ -516,6 +632,7 @@ def publish_prerelease(markdown_file, tag):
         create_release(tag, name, description)
 
 
+# pylint: disable=too-many-branches
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
@@ -545,13 +662,21 @@ def main():
             if not args.input_csv:
                 parser.error("input CSV file must be specified with -i")
 
-            if not args.markdown_file and not args.csv_file:
-                parser.error("at least one of -m or -c must be specified")
+            if not args.markdown_file and not args.csv_file and not args.html_file:
+                parser.error("at least one of -m, -c, or --html must be specified")
 
             items = read_csv(args.input_csv)
 
             if args.markdown_file:
                 process_pull_requests_markdown(items, args.markdown_file)
+
+            if args.html_file:
+                if not args.html_version_tag:
+                    parser.error("HTML version tag must be specified"
+                                 "with --html_version_tag")
+
+                process_pull_requests_html(items, args.html_file,
+                                           args.html_version_tag)
 
             if args.csv_file:
                 process_pull_requests_csv(items, args.csv_file)
@@ -560,10 +685,10 @@ def main():
             if not args.release_notes_file:
                 parser.error("release notes file must be specified with -n")
 
-            if not args.version_tag:
+            if not args.publish_version_tag:
                 parser.error("release tag must be specified with -t")
 
-            publish_prerelease(args.release_notes_file, args.version_tag)
+            publish_prerelease(args.release_notes_file, args.publish_version_tag)
 
 
 if __name__ == "__main__":
