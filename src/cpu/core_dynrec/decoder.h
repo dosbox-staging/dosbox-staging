@@ -707,8 +707,9 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 
 		case 0x90:	// nop
 		case 0x9b:	// wait
-		case 0xf0:	// lock
 			break;
+		case 0xf0:	// lock
+			goto restart_prefix;
 
 		case 0x91:case 0x92:case 0x93:case 0x94:case 0x95:case 0x96:case 0x97:
 			dyn_xchg_ax(opcode&7);

@@ -943,7 +943,7 @@
 		break;
 	CASE_B(0xf0)												/* LOCK */
 		LOG(LOG_CPU,LOG_NORMAL)("CPU:LOCK"); /* FIXME: see case D_LOCK in core_full/load.h */
-		break;
+        goto restart_opcode;
 	CASE_B(0xf1)												/* ICEBP */
 		CPU_SW_Interrupt_NoIOPLCheck(1,GETIP);
 #if CPU_TRAP_CHECK
