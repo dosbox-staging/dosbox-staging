@@ -28,20 +28,25 @@ public:
 
 enum class MemoryArea { Conv, Uma, Xms };
 
+enum class AllocStrategy { FirstFit, BestFit, LastFit };
+
 class AllocMemoryCommand : public DebugCommand {
 public:
-	AllocMemoryCommand(const uint16_t bytes, const MemoryArea area)
+	AllocMemoryCommand(const uint16_t bytes, const MemoryArea area, const AllocStrategy strategy)
 	        : area(area),
+	          strategy(strategy),
 	          bytes(bytes)
+	          
 	{}
 
 	void Execute() override;
 	static void Post(const httplib::Request& req, httplib::Response& res);
 
 private:
-	MemoryArea area = {};
-	uint32_t addr   = 0;
-	uint16_t bytes  = 0;
+	MemoryArea area        = {};
+	AllocStrategy strategy = AllocStrategy::BestFit;
+	uint32_t addr          = 0;
+	uint16_t bytes         = 0;
 
 	void AllocDos();
 	void AllocXms();

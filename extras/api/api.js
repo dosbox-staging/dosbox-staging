@@ -92,11 +92,11 @@ export class DOSBoxApi {
         return null;
     }
 
-    async alloc(sizeBytes, area = 'conv') {
+    async alloc(sizeBytes, area = 'conv', strategy = 'best_fit') {
         const res = await this._request('memory/allocate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ size: sizeBytes, area: area })
+            body: JSON.stringify({ size: sizeBytes, area: area,  strategy: strategy })
         });
         return await res.json();
     }

@@ -58,6 +58,7 @@
             <pre><code>{
     "size": size_bytes,
     "area": "conv"|"UMA"|"XMS
+    "strategy": "best_fit"|"first_fit"|"last_fit"
 }</code></pre>
             <p><strong>Response</strong></p>
             <pre><code>{
@@ -66,6 +67,10 @@
 
             <code>conv</code> and <code>UMA</code> allocate memory from DOS.
             <code>XMS</code> allocates raw pages and marks them as reserved for EMS and XMS.
+
+            <p><code>strategy</code> controls the allocator behavior, the default is <code>best_fit</code> which is almost always the best setting.
+            The other options will prefer lower/higer addresses in the selected area.</p>
+            <p>The XMS allocator only supports <code>best_fit</code>.</p>
 
             <h2 class="single">POST /api/memory/free</h2>
             <p>Frees allocated memory at the given address.</p>

@@ -49,7 +49,7 @@ export class DOSBoxApi {
 	writeMem(offset: string | number, data: Uint8Array): Promise<void>;
 	compareAndSwap(segment: string | number, offset: string | number, data: Uint8Array, expected: Uint8Array): Promise<Uint8Array?>;
 	compareAndSwap(offset: string | number, data: Uint8Array, expected: Uint8Array): Promise<Uint8Array?>;
-    alloc(sizeBytes: number, area?: 'conv' | 'UMA' | 'XMS'): Promise<AllocateResponse>;
+    alloc(sizeBytes: number, area?: 'conv' | 'UMA' | 'XMS', strategy?: 'best_fit' | 'first_fit' | 'last_fit'): Promise<AllocateResponse>;
     free(physicalAddress: number): Promise<void>;
     getDosInfo(): Promise<DosInfo>;
 }

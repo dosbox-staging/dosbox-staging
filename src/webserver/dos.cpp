@@ -42,13 +42,43 @@ void DosInfoCommand::Get(const httplib::Request&, httplib::Response& res)
 
 void AllocMemoryCommand::AllocDos()
 {
-	uint16_t blocks  = (bytes + DosBlockSize - 1) / DosBlockSize;
-	auto old_strat   = DOS_GetMemAllocStrategy();
-	uint16_t segment = 0;
+	uint16_t blocks   = (bytes + DosBlockSize - 1) / DosBlockSize;
+	auto old_strategy = DOS_GetMemAllocStrategy();
+	uint16_t segment  = 0;
 
-	DOS_SetMemAllocStrategy(area == MemoryArea::Conv
-	                                ? DosMemAllocStrategy::BestFit
-	                                : DosMemAllocStrategy::UmbMemoryBestFit);
+	uint16_t new_strategy = 0;
+	switch (area) {
+	case MemoryArea::Conv:
+		switch (strategy) {
+		case AllocStrategy::FirstFit:
+			new_strategy = DosMemAllocStrategy::LowMemoryFirstFit;
+			break;
+		case AllocStrategy::BestFit:
+			new_strategy = DosMemAllocStrategy::LowMemoryBestFit;
+			break;
+		case AllocStrategy::LastFit:
+			new_strategy = DosMemAllocStrategy::LowMemoryLastFit;
+			break;
+		default: assertm(false, "Invalid alloc strategy"); break;
+		}
+		break;
+	case MemoryArea::Uma:
+		switch (strategy) {
+		case AllocStrategy::FirstFit:
+			new_strategy = DosMemAllocStrategy::UmbMemoryFirstFit;
+			break;
+		case AllocStrategy::BestFit:
+			new_strategy = DosMemAllocStrategy::UmbMemoryBestFit;
+			break;
+		case AllocStrategy::LastFit:
+			new_strategy = DosMemAllocStrategy::UmbMemoryLastFit;
+			break;
+		default: assertm(false, "Invalid alloc strategy"); break;
+		}
+		break;
+	default: assertm(false, "Invalid memory area"); break;
+	}
+	DOS_SetMemAllocStrategy(new_strategy);
 
 	auto ok = DOS_AllocateMemory(&segment, &blocks);
 	addr    = PhysicalMake(segment, 0);
@@ -57,7 +87,7 @@ void AllocMemoryCommand::AllocDos()
 	          ok,
 	          blocks * DosBlockSize,
 	          addr);
-	DOS_SetMemAllocStrategy(old_strat);
+	DOS_SetMemAllocStrategy(old_strategy);
 
 	if (!ok) {
 		addr = 0;
@@ -95,6 +125,7 @@ void AllocMemoryCommand::Post(const httplib::Request& req, httplib::Response& re
 	auto j        = json::parse(req.body);
 	uint32_t size = j.at("size");
 	auto area     = MemoryArea::Conv;
+	auto strategy = AllocStrategy::BestFit;
 	if (j.contains("area")) {
 		std::string req_area = j["area"];
 		upcase(req_area);
@@ -105,12 +136,29 @@ void AllocMemoryCommand::Post(const httplib::Request& req, httplib::Response& re
 		} else if (req_area == "XMS") {
 			area = MemoryArea::Xms;
 		} else {
-			throw std::invalid_argument("Invalid memory area: " +
-			                            j["area"].dump());
+			throw std::invalid_argument("Invalid memory area: " + req_area);
+		}
+	}
+	if (j.contains("strategy")) {
+		std::string req_strategy = j["strategy"];
+		upcase(req_strategy);
+		if (req_strategy == "FIRST_FIT") {
+			strategy = AllocStrategy::FirstFit;
+		} else if (req_strategy == "BEST_FIT") {
+			strategy = AllocStrategy::BestFit;
+		} else if (req_strategy == "LAST_FIT") {
+			strategy = AllocStrategy::LastFit;
+		} else {
+			throw std::invalid_argument("Invalid alloc strategy: " +
+			                            req_strategy);
+		}
+		if (area == MemoryArea::Xms && strategy != AllocStrategy::BestFit) {
+			throw std::invalid_argument(
+			        "XMS allocator only supports best_fit");
 		}
 	}
 
-	AllocMemoryCommand cmd(size, area);
+	AllocMemoryCommand cmd(size, area, strategy);
 	cmd.WaitForCompletion();
 
 	if (cmd.addr) {
