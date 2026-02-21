@@ -338,6 +338,37 @@ public:
 		}
 	}
 
+	// Same as GetInfoString but truncating the path to fit max_length
+	std::string GetInfoStringTruncated(int max_length) const
+	{
+		switch (type) {
+		case DosDriveType::Local: {
+			int msg_length = MSG_Get("MOUNT_TYPE_LOCAL_DIRECTORY").size();
+			return MSG_Get("MOUNT_TYPE_LOCAL_DIRECTORY") +
+			       std::string(" ") +
+			       truncate_path(info, max_length - msg_length - 1);
+		}
+		case DosDriveType::Cdrom: {
+			int msg_length = MSG_Get("MOUNT_TYPE_CDROM").size();
+			return MSG_Get("MOUNT_TYPE_CDROM") + std::string(" ") +
+			       truncate_path(info, max_length - msg_length - 1);
+		}
+		case DosDriveType::Fat: {
+			int msg_length = MSG_Get("MOUNT_TYPE_FAT").size();
+			return MSG_Get("MOUNT_TYPE_FAT") + std::string(" ") +
+			       truncate_path(info, max_length - msg_length - 1);
+		}
+		case DosDriveType::Iso: {
+			int msg_length = MSG_Get("MOUNT_TYPE_CDROM").size();
+			return MSG_Get("MOUNT_TYPE_CDROM") + std::string(" ") +
+			       truncate_path(info, max_length - msg_length - 1);
+		}
+		case DosDriveType::Virtual:
+			return MSG_Get("MOUNT_TYPE_VIRTUAL");
+		default: return MSG_Get("MOUNT_TYPE_UNKNOWN");
+		}
+	}
+
 	char curdir[DOS_PATHLENGTH];
 	char info[256];
 	DosDriveType type = DosDriveType::Unknown;
