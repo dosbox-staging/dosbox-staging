@@ -25,6 +25,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  generate_release_notes:
+    name:    Generate release notes
+    runs-on: ubuntu-latest
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          submodules: false
+
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
+      - name: Generate release notes HTML
+        uses: ./.github/actions/generate-release-notes
+        with:
+          output_path: release-notes.html
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          git_hash: ${{ github.sha }}
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-notes-html
+          path: release-notes.html
+          retention-days: 1
+
   build_macos_release:
     name:    Release build (${{ matrix.conf.arch }})
     runs-on: ${{ matrix.conf.host }}
@@ -104,7 +131,7 @@ jobs:
 
   publish_universal_build:
     name:    Publish universal build
-    needs:   build_macos_release
+    needs:   [build_macos_release, generate_release_notes]
     runs-on: macos-15
     steps:
       - name: Check out repository
@@ -156,12 +183,6 @@ jobs:
           mkdir "$PLUGINS_DIR"
           cp -R nuked-sc55-clap/* "$PLUGINS_DIR"
 
-      - name: Generate release notes HTML
-        uses: ./.github/actions/generate-release-notes
-        with:
-          output_path: "dist/DOSBox Staging.app/Contents/SharedSupport/release-notes.html"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Create DMG disk image
         run: |
           ln -s /Applications dist/
@@ -175,10 +196,17 @@ jobs:
               -format UDZO "dosbox-staging-macOS-universal-$DOSBOX_VERSION_AND_HASH.dmg"
 
 
+      - name: Download release notes HTML
+        uses: actions/download-artifact@v6
+        with:
+          name: release-notes-html
+
       - name: Upload DMG disk image
         uses: actions/upload-artifact@v6
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:
           name: dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}
-          path: dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}.dmg
+          path: |
+            dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}.dmg
+            release-notes.html

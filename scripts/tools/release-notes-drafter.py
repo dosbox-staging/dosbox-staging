@@ -160,6 +160,12 @@ publish
              "'release' shows release note header, 'none' omits header"
     )
 
+    process_args.add_argument(
+        "--git-hash",
+        dest="git_hash",
+        help="git commit hash to include in HTML output"
+    )
+
     publish_args = parser.add_argument_group(title="publish arguments")
 
     publish_args.add_argument(
@@ -487,6 +493,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       padding: 1em;
       margin-bottom: 1.5em;
     }
+    .build-info {
+      font-size: 0.85em;
+      color: #656d76;
+      margin-bottom: 1.5em;
+    }
+    .build-info code {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
   </style>
 </head>
 <body>
@@ -532,7 +546,7 @@ def process_pull_requests_markdown(items, markdown_fname, header_type="preview")
         f.write(markdown)
 
 
-def process_pull_requests_html(items, html_fname, header_type="release"):
+def process_pull_requests_html(items, html_fname, header_type="release", git_hash=None):
     markdown = generate_markdown_content(items, header_type)
 
     # Convert markdown to HTML using markdown2
@@ -541,6 +555,12 @@ def process_pull_requests_html(items, html_fname, header_type="release"):
         markdown,
         extras=["fenced-code-blocks", "tables", "header-ids", "cuddled-lists"]
     )
+
+    # Add build info line if git hash is provided
+    if git_hash:
+        short_hash = git_hash[:8] if len(git_hash) > 8 else git_hash
+        build_info = f'<p class="build-info">Build: <code>{short_hash}</code></p>\n'
+        html_content = build_info + html_content
 
     # Wrap in HTML template
     html = HTML_TEMPLATE.replace("%CONTENT%", html_content)
@@ -656,7 +676,7 @@ def main():
 
             if args.html_file:
                 process_pull_requests_html(items, args.html_file,
-                                           args.header_type)
+                                           args.header_type, args.git_hash)
 
             if args.csv_file:
                 process_pull_requests_csv(items, args.csv_file)

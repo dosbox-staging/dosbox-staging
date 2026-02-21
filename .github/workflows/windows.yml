@@ -25,10 +25,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_windows_release:
-    name: Release ${{ matrix.conf.debugger && 'w/ debugger' || '' }} (${{ matrix.conf.arch }})
-    if:   github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+  generate_release_notes:
+    name:    Generate release notes
+    runs-on: ubuntu-latest
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          submodules: false
 
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
+      - name: Generate release notes HTML
+        uses: ./.github/actions/generate-release-notes
+        with:
+          output_path: release-notes.html
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          git_hash: ${{ github.sha }}
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-notes-html
+          path: release-notes.html
+          retention-days: 1
+
+  build_windows_release:
+    name:  Release ${{ matrix.conf.debugger && 'w/ debugger' || '' }} (${{ matrix.conf.arch }})
+    if:    github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    needs: generate_release_notes
     runs-on: windows-2022
     strategy:
       matrix:
@@ -151,12 +178,12 @@ jobs:
           mkdir $PLUGINS_DIR
           cp nuked-sc55-clap/* $PLUGINS_DIR
 
-      - name: Generate release notes HTML
+      - name: Download release notes HTML
         if:   ${{ !matrix.conf.debugger }}
-        uses: ./.github/actions/generate-release-notes
+        uses: actions/download-artifact@v6
         with:
-          output_path: "${{ env.PACKAGE_DIR }}/doc/release-notes.html"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          name: release-notes-html
+          path: ${{ env.PACKAGE_DIR }}
 
       - name: Upload package
         if:   ${{ !matrix.conf.debugger }}
@@ -267,6 +294,9 @@ jobs:
           cp extras/icons/windows/dosbox-staging.ico      out
           cp extras/icons/windows/dosbox-staging.bmp      out
           cp extras/icons/windows/dosbox-staging-side.bmp out
+
+          # Remove release notes from installer (it's only for the ZIP artifact)
+          rm -f $PACKAGE_DIR/release-notes.html
 
           mv $PACKAGE_DIR/*          out/program
           mv out/program/dosbox*.exe out
