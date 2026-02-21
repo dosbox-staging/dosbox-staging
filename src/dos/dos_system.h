@@ -332,7 +332,7 @@ public:
 		case DosDriveType::Fat:
 			return MSG_Get("MOUNT_TYPE_FAT") + std::string(" ") + info;
 		case DosDriveType::Iso:
-			return MSG_Get("MOUNT_TYPE_ISO") + std::string(" ") + info;
+			return MSG_Get("MOUNT_TYPE_CDROM") + std::string(" ") + info;
 		case DosDriveType::Virtual: return MSG_Get("MOUNT_TYPE_VIRTUAL");
 		default: return MSG_Get("MOUNT_TYPE_UNKNOWN");
 		}
