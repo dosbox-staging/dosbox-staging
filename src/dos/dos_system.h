@@ -348,6 +348,9 @@ public:
 			       std::string(" ") +
 			       truncate_path(info, max_length - msg_length - 1);
 		}
+		// ISO and CD-ROM are interchangeable
+		case DosDriveType::Iso:
+				[[fallthrough]];
 		case DosDriveType::Cdrom: {
 			int msg_length = MSG_Get("MOUNT_TYPE_CDROM").size();
 			return MSG_Get("MOUNT_TYPE_CDROM") + std::string(" ") +
@@ -356,11 +359,6 @@ public:
 		case DosDriveType::Fat: {
 			int msg_length = MSG_Get("MOUNT_TYPE_FAT").size();
 			return MSG_Get("MOUNT_TYPE_FAT") + std::string(" ") +
-			       truncate_path(info, max_length - msg_length - 1);
-		}
-		case DosDriveType::Iso: {
-			int msg_length = MSG_Get("MOUNT_TYPE_CDROM").size();
-			return MSG_Get("MOUNT_TYPE_CDROM") + std::string(" ") +
 			       truncate_path(info, max_length - msg_length - 1);
 		}
 		case DosDriveType::Virtual:
