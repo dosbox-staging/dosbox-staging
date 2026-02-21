@@ -236,7 +236,7 @@ jobs:
       - name: Merge artifacts (${{ matrix.arch }} )
         uses: actions/upload-artifact/merge@v6
         with:
-          name:    dosbox-staging-windows-${{ matrix.arch }}-${{ env.DOSBOX_VERSION_AND_HASH }}
+          name:    dosbox-staging-windows-${{ matrix.arch }}-${{ env.DOSBOX_VERSION_AND_HASH }}.zip
           pattern: dosbox-staging-windows-${{ matrix.arch }}-*
           delete-merged: 'true'
 
@@ -270,7 +270,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: ${{ env.PACKAGE_DIR }}
-          path: ${{ env.PACKAGE_DIR }}          
+          path: ${{ env.PACKAGE_DIR }}
 
       - name: Dump workspace contents
         shell: bash
@@ -312,6 +312,6 @@ jobs:
       - name: Upload Windows installer
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ env.PACKAGE_DIR }}-setup
+          name: ${{ env.PACKAGE_DIR }}-setup.zip
           path: ${{ github.workspace }}\out\${{ env.PACKAGE_DIR }}-setup.exe
           overwrite: true

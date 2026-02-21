@@ -206,7 +206,7 @@ jobs:
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:
-          name: dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}
+          name: dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}.zip
           path: |
             dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}.dmg
             release-notes.html
