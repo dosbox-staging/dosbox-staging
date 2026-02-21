@@ -559,7 +559,7 @@ void BOOT::AddMessages()
 	        "pressing [color=yellow]%s+F4[reset], and -l specifies the mounted drive to boot from. If no drive\n"
 	        "letter is specified, this defaults to booting from the A drive. The only\n"
 	        "bootable drive letters are A, C, and D. For booting from a hard drive (C or D),\n"
-	        "the image should have already been mounted using the [color=light-blue]IMGMOUNT[reset] command.\n\n"
+	        "the image should have already been mounted using the [color=light-blue]MOUNT[reset] command.\n\n"
 	        "Type [color=light-blue]BOOT /?[reset] for the syntax of this command.\n");
 	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c.\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
