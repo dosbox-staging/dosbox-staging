@@ -25,10 +25,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_windows_release:
-    name: Release ${{ matrix.conf.debugger && 'w/ debugger' || '' }} (${{ matrix.conf.arch }})
-    if:   github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+  generate_release_notes:
+    name:    Generate release notes
+    runs-on: ubuntu-latest
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          submodules: false
 
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
+      - name: Generate release notes HTML
+        uses: ./.github/actions/generate-release-notes
+        with:
+          output_path: release-notes.html
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          git_hash: ${{ github.sha }}
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-notes-html.zip
+          path: release-notes.html
+          retention-days: 1
+
+  build_windows_release:
+    name:  Release ${{ matrix.conf.debugger && 'w/ debugger' || '' }} (${{ matrix.conf.arch }})
+    if:    github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    needs: generate_release_notes
     runs-on: windows-2022
     strategy:
       matrix:
@@ -151,12 +178,18 @@ jobs:
           mkdir $PLUGINS_DIR
           cp nuked-sc55-clap/* $PLUGINS_DIR
 
+      - name: Download release notes HTML
+        if:   ${{ !matrix.conf.debugger }}
+        uses: actions/download-artifact@v7
+        with:
+          name: release-notes-html.zip
+          path: ${{ env.PACKAGE_DIR }}
 
       - name: Upload package
         if:   ${{ !matrix.conf.debugger }}
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ env.PACKAGE_DIR }}-without-debugger
+          name: ${{ env.PACKAGE_DIR }}-without-debugger.zip
           path: ${{ env.PACKAGE_DIR }}
           overwrite: true
 
@@ -174,7 +207,7 @@ jobs:
         if:   ${{ matrix.conf.debugger }}
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ env.PACKAGE_DIR }}-with-debugger
+          name: ${{ env.PACKAGE_DIR }}-with-debugger.zip
           path: ${{ env.PACKAGE_DIR }}/dosbox_with_debugger.exe
           overwrite: true
 
@@ -203,7 +236,7 @@ jobs:
       - name: Merge artifacts (${{ matrix.arch }} )
         uses: actions/upload-artifact/merge@v6
         with:
-          name:    dosbox-staging-windows-${{ matrix.arch }}-${{ env.DOSBOX_VERSION_AND_HASH }}
+          name:    dosbox-staging-windows-${{ matrix.arch }}-${{ env.DOSBOX_VERSION_AND_HASH }}.zip
           pattern: dosbox-staging-windows-${{ matrix.arch }}-*
           delete-merged: 'true'
 
@@ -236,8 +269,8 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v7
         with:
-          name: ${{ env.PACKAGE_DIR }}
-          path: ${{ env.PACKAGE_DIR }}          
+          name: ${{ env.PACKAGE_DIR }}.zip
+          path: ${{ env.PACKAGE_DIR }}
 
       - name: Dump workspace contents
         shell: bash
@@ -262,6 +295,8 @@ jobs:
           cp extras/icons/windows/dosbox-staging.bmp      out
           cp extras/icons/windows/dosbox-staging-side.bmp out
 
+          mv $PACKAGE_DIR/release-notes.html out
+
           mv $PACKAGE_DIR/*          out/program
           mv out/program/dosbox*.exe out
 
@@ -276,6 +311,6 @@ jobs:
       - name: Upload Windows installer
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ env.PACKAGE_DIR }}-setup
+          name: ${{ env.PACKAGE_DIR }}-setup.zip
           path: ${{ github.workspace }}\out\${{ env.PACKAGE_DIR }}-setup.exe
           overwrite: true

@@ -25,6 +25,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  generate_release_notes:
+    name:    Generate release notes
+    runs-on: ubuntu-latest
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          submodules: false
+
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
+      - name: Generate release notes HTML
+        uses: ./.github/actions/generate-release-notes
+        with:
+          output_path: release-notes.html
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          git_hash: ${{ github.sha }}
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-notes-html.zip
+          path: release-notes.html
+          retention-days: 1
+
   build_linux:
     name:    ${{ matrix.conf.name }} ${{ matrix.arch }}
     runs-on: ${{ matrix.conf.os }}${{ matrix.arch == 'arm64' && '-arm' || '' }}
@@ -116,6 +143,7 @@ jobs:
   build_linux_release:
     name:    Release build
     runs-on: ubuntu-22.04
+    needs:   generate_release_notes
     if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     steps:
       - name: Check out repository
@@ -195,6 +223,11 @@ jobs:
           mkdir $PLUGINS_DIR
           cp nuked-sc55-clap/* $PLUGINS_DIR
 
+      - name: Download release notes HTML
+        uses: actions/download-artifact@v7
+        with:
+          name: release-notes-html.zip
+          path: "dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}"
 
       - name: Create tarball
         run: |
@@ -207,5 +240,5 @@ jobs:
         # a tarball), and it removes all executable flags while zipping.
         # Letting it zip a tarball preserves flags in the compressed files.
         with:
-          name: dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}
+          name: dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}.zip
           path: dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}.tar.xz

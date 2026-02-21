@@ -1,0 +1,43 @@
+name: Generate release notes HTML
+description: Generate HTML release notes for inclusion in build artifacts
+
+inputs:
+  output_path:
+    description: Path for the output HTML file
+    required: true
+  github_token:
+    description: GitHub token for API access
+    required: true
+  git_hash:
+    description: Git commit hash to include in the HTML
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Install markdown2
+      shell: bash
+      run: pip3 install markdown2
+
+    - name: Query pull requests
+      shell: bash
+      env:
+        GITHUB_ACCESS_TOKEN: ${{ inputs.github_token }}
+      run: |
+        ./scripts/tools/release-notes-drafter.py query \
+            -p pull-requests.csv -s $RELEASE_START_TIME
+
+    - name: Generate HTML release notes
+      shell: bash
+      env:
+        GITHUB_ACCESS_TOKEN: ${{ inputs.github_token }}
+      run: |
+        mkdir -p "$(dirname "${{ inputs.output_path }}")"
+        HASH_ARG=""
+        if [ -n "${{ inputs.git_hash }}" ]; then
+          HASH_ARG="--git-hash ${{ inputs.git_hash }}"
+        fi
+        ./scripts/tools/release-notes-drafter.py process \
+            -i pull-requests.csv --html "${{ inputs.output_path }}" \
+            --header-type release $HASH_ARG

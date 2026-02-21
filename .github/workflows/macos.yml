@@ -25,6 +25,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  generate_release_notes:
+    name:    Generate release notes
+    runs-on: ubuntu-latest
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          submodules: false
+
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
+      - name: Generate release notes HTML
+        uses: ./.github/actions/generate-release-notes
+        with:
+          output_path: release-notes.html
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          git_hash: ${{ github.sha }}
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-notes-html.zip
+          path: release-notes.html
+          retention-days: 1
+
   build_macos_release:
     name:    Release build (${{ matrix.conf.arch }})
     runs-on: ${{ matrix.conf.host }}
@@ -90,21 +117,21 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@v6
         with:
-          name: dosbox-${{ matrix.conf.arch }}
+          name: dosbox-${{ matrix.conf.arch }}.zip
           path: build/release-macos-${{ matrix.conf.arch }}/Release/dosbox
           overwrite: true
 
       - name: Upload resources
         uses: actions/upload-artifact@v6
         with:
-          name: Resources
+          name: Resources.zip
           path: build/release-macos-${{ matrix.conf.arch }}/Resources
           overwrite: true
 
 
   publish_universal_build:
     name:    Publish universal build
-    needs:   build_macos_release
+    needs:   [build_macos_release, generate_release_notes]
     runs-on: macos-15
     steps:
       - name: Check out repository
@@ -118,18 +145,24 @@ jobs:
       - name: Install brew depedencies
         run: HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --overwrite librsvg
 
-      - name: Download binaries
+      - name: Download artifacts
         uses: actions/download-artifact@v7
 
       - name: Package
         run: |
+          mv dosbox-arm64.zip dosbox-arm64
+          mv dosbox-x86_64.zip dosbox-x86_64
+          mv Resources.zip Resources
+
           mv Resources ../
+
           ./scripts/packaging/create-package.sh \
               -p macos \
               -v $DOSBOX_VERSION_AND_HASH \
               -f \
               "$(pwd)" \
               "$(pwd)"
+
 
       - name: Inject external vcpkg dependencies
         run: |
@@ -156,7 +189,6 @@ jobs:
           mkdir "$PLUGINS_DIR"
           cp -R nuked-sc55-clap/* "$PLUGINS_DIR"
 
-
       - name: Create DMG disk image
         run: |
           ln -s /Applications dist/
@@ -170,10 +202,17 @@ jobs:
               -format UDZO "dosbox-staging-macOS-universal-$DOSBOX_VERSION_AND_HASH.dmg"
 
 
+      - name: Download release notes HTML
+        uses: actions/download-artifact@v7
+        with:
+          name: release-notes-html.zip
+
       - name: Upload DMG disk image
         uses: actions/upload-artifact@v6
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:
-          name: dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}
-          path: dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}.dmg
+          name: dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}.zip
+          path: |
+            dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}.dmg
+            release-notes.html
