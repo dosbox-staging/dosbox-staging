@@ -150,13 +150,19 @@ jobs:
 
       - name: Package
         run: |
+          mv dosbox-arm64.zip dosbox-arm64
+          mv dosbox-x86_64.zip dosbox-x86_64
+          mv Resources.zip Resources
+
           mv Resources ../
+
           ./scripts/packaging/create-package.sh \
               -p macos \
               -v $DOSBOX_VERSION_AND_HASH \
               -f \
               "$(pwd)" \
               "$(pwd)"
+
 
       - name: Inject external vcpkg dependencies
         run: |
