@@ -1072,8 +1072,8 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 		                            (dir_label.length() +
 		                             std::string_view(Indent).length());
 
-		const auto truncated_dir =
-		        model_and_dir->second.string().substr(0, dir_max_length);
+		const auto truncated_dir = truncate_path(model_and_dir->second.string(),
+		                                         dir_max_length);
 
 		caller->WriteOut("%s%s%s\n",
 		                 Indent,

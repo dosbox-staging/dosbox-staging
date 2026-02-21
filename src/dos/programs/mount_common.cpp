@@ -72,7 +72,7 @@ void AddCommonMountMessages() {
 	MSG_Add("PROGRAM_MOUNT_STATUS_LABEL", "Label");
 	MSG_Add("PROGRAM_MOUNT_STATUS_NAME", "Image name");
 	MSG_Add("PROGRAM_MOUNT_STATUS_SLOT", "Swap slot");
-	MSG_Add("PROGRAM_MOUNT_STATUS_2", "%s mounted as %c drive\n");
+	MSG_Add("PROGRAM_MOUNT_RESULT", "%s mounted as %c drive:\n%s");
 	MSG_Add("PROGRAM_MOUNT_STATUS_1", "The currently mounted drives are:\n");
 	MSG_Add("PROGRAM_MOUNT_READONLY", "Mounted read-only\n");
 }
@@ -81,7 +81,10 @@ void AddMountTypeMessages() {
 	MSG_Add("MOUNT_TYPE_LOCAL_DIRECTORY", "Local directory");
 	MSG_Add("MOUNT_TYPE_CDROM", "CD-ROM drive");
 	MSG_Add("MOUNT_TYPE_FAT", "FAT image");
-	MSG_Add("MOUNT_TYPE_ISO", "ISO image");
+	MSG_Add("MOUNT_TYPE_FAT_PLURAL", "FAT images");
+	MSG_Add("MOUNT_TYPE_CDIMAGE", "CD-ROM image");
+	MSG_Add("MOUNT_TYPE_CDIMAGE_PLURAL", "CD-ROM images");
 	MSG_Add("MOUNT_TYPE_VIRTUAL", "Internal virtual drive");
+	MSG_Add("MOUNT_TYPE_OVERLAY", "Overlay drive");
 	MSG_Add("MOUNT_TYPE_UNKNOWN", "unknown drive");
 }

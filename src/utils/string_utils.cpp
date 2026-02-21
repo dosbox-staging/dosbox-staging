@@ -232,31 +232,6 @@ std::vector<std::string> split(const std::string_view seq, const std::string_vie
 	return words;
 }
 
-std::string join_with_commas(const std::vector<std::string>& items,
-                             const std::string_view and_conjunction,
-                             const std::string_view end_punctuation)
-{
-	const auto num_items = items.size();
-
-	std::string result = {};
-
-	// C++26 should add the missing operator+(std::string, std::string_view)
-	const auto and_pair = std::string(" ").append(and_conjunction) + " ";
-	const auto and_multi = std::string(", ").append(and_conjunction) + " ";
-
-	std::string separator = (num_items == 2u) ? and_pair : ", ";
-
-	size_t item_num = 1;
-	for (const auto& item : items) {
-		assert(!item.empty());
-		result += item;
-		result += (item_num == num_items) ? end_punctuation : separator;
-		separator = (item_num + 2u == num_items) ? and_multi : separator;
-		++item_num;
-	}
-	return result;
-}
-
 bool ciequals(const char a, const char b)
 {
 	return tolower(a) == tolower(b);
