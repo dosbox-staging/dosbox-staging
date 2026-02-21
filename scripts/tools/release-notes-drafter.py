@@ -8,6 +8,7 @@ Create release notes draft for DOSBox Staging.
 """
 
 # pylint: disable=invalid-name
+# pylint: disable=import-error
 # pylint: disable=missing-docstring
 # pylint: disable=global-statement
 
@@ -637,6 +638,7 @@ def publish_prerelease(markdown_file, tag):
         create_release(tag, name, description)
 
 
+# pylint: disable=too-many-branches
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
