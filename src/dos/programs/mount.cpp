@@ -66,7 +66,7 @@ void MOUNT::ListMounts()
 	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
 		if (Drives[d]) {
 			print_row(std::string{drive_letter(d)},
-			          Drives[d]->GetInfoString(),
+			          Drives[d]->GetInfoStringTruncated(width_type),
 			          To_Label(Drives[d]->GetLabel()));
 			found_drives = true;
 		}
