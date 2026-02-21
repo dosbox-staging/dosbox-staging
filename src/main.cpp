@@ -571,6 +571,9 @@ static void wait_for_pid(const int wait_pid)
 #endif
 }
 
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+
 int main(int argc, char* argv[])
 {
 	// Ensure we perform SDL cleanup and restore console settings at exit
@@ -593,7 +596,15 @@ int main(int argc, char* argv[])
 	// have been handled.
 	init_logger(*arguments, argc, argv);
 
-	LOG_MSG("%s version %s", DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
+	const auto version_string = DOSBOX_GetDetailedVersion();
+
+	SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, DOSBOX_PROJECT_NAME);			
+	SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_VERSION_STRING, version_string);			
+	SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_IDENTIFIER_STRING, DOSBOX_APP_ID);			
+	SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_COPYRIGHT_STRING, DOSBOX_COPYRIGHT);			
+	SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_URL_STRING, DOSBOX_WEBSITE);			
+
+	LOG_MSG("%s version %s", DOSBOX_PROJECT_NAME, version_string);
 	LOG_MSG("---");
 
 	LOG_MSG("Loguru version %d.%d.%d initialised",

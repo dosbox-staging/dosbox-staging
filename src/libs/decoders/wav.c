@@ -38,11 +38,11 @@ static size_t wav_read(void* pUserData, void* pBufferOut, size_t bytesToRead)
     Uint8 *ptr = (Uint8 *) pBufferOut;
     Sound_Sample *sample = (Sound_Sample *) pUserData;
     Sound_SampleInternal *internal = (Sound_SampleInternal *) sample->opaque;
-    SDL_RWops *rwops = internal->rw;
+    SDL_IOStream *rwops = internal->rw;
     size_t bytes_read = 0;
 
     while (bytes_read < bytesToRead) {
-        const size_t rc = SDL_RWread(rwops, ptr, 1, bytesToRead - bytes_read);
+        const size_t rc = SDL_ReadIO(rwops, ptr, bytesToRead - bytes_read);
         if (rc == 0) {
             sample->flags |= SOUND_SAMPLEFLAG_EOF;
             break;
@@ -56,10 +56,10 @@ static size_t wav_read(void* pUserData, void* pBufferOut, size_t bytesToRead)
 
 static drwav_bool32 wav_seek(void* pUserData, int offset, drwav_seek_origin origin)
 {
-    const int whence = (origin == drwav_seek_origin_start) ? RW_SEEK_SET : RW_SEEK_CUR;
+    const int whence = (origin == drwav_seek_origin_start) ? SDL_IO_SEEK_SET : SDL_IO_SEEK_CUR;
     Sound_Sample *sample = (Sound_Sample *) pUserData;
     Sound_SampleInternal *internal = (Sound_SampleInternal *) sample->opaque;
-    return (SDL_RWseek(internal->rw, offset, whence) != -1) ? DRWAV_TRUE : DRWAV_FALSE;
+    return (SDL_SeekIO(internal->rw, offset, whence) != -1) ? DRWAV_TRUE : DRWAV_FALSE;
 } /* wav_seek */
 
 
@@ -98,7 +98,7 @@ static int WAV_open(Sound_Sample *sample, const char *ext)
         SNDDBG(("WAV: Codec accepted the data stream.\n"));
         sample->flags = SOUND_SAMPLEFLAG_CANSEEK;
         sample->actual.rate = dr->sampleRate;
-        sample->actual.format = AUDIO_S16SYS;
+        sample->actual.format = SDL_AUDIO_S16;
         sample->actual.channels = (Uint8)(dr->channels);
 
         const Uint64 frames = (Uint64) dr->totalPCMFrameCount;

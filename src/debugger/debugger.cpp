@@ -38,7 +38,7 @@
 #include "utils/checks.h"
 #include "utils/string_utils.h"
 
-int old_cursor_state;
+#include <imgui.h>
 
 // forward declarations
 static void DrawCode(void);
@@ -112,19 +112,6 @@ static auto oldcpucpl = cpu.cpl;
 DBGBlock dbg          = {};
 Bitu cycle_count      = 0;
 static bool debugging = false;
-
-static void SetColor(Bitu test)
-{
-	if (test) {
-		if (has_colors()) {
-			wattrset(dbg.win_reg, COLOR_PAIR(PAIR_BYELLOW_BLACK));
-		}
-	} else {
-		if (has_colors()) {
-			wattrset(dbg.win_reg, 0);
-		}
-	}
-}
 
 #define MAXCMDLEN 254
 struct SCodeViewData {
@@ -951,7 +938,6 @@ static bool StepOver()
 			CBreakpoint::AddBreakpoint(SegValue(cs), reg_eip + size, true);
 		}
 		debugging = false;
-		DrawCode();
 		return true;
 	}
 	return false;
@@ -959,10 +945,6 @@ static bool StepOver()
 
 bool DEBUG_ExitLoop(void)
 {
-#if C_HEAVY_DEBUGGER
-	DrawVariables();
-#endif
-
 	if (exitLoop) {
 		exitLoop = false;
 		return true;
@@ -976,287 +958,643 @@ bool DEBUG_ExitLoop(void)
 
 static void DrawData(void)
 {
+	if (!DBGUI_IsInitialized()) {
+		return;
+	}
 
-	uint8_t ch;
-	uint32_t add = dataOfs;
-	uint32_t address;
-	/* Data win */
-	for (auto y = 0; y < dbg.rows_data; ++y) {
-		// Address
-		if (add < 0x10000) {
-			mvwprintw(dbg.win_data, y, 0, "%04X:%04X     ", dataSeg, add);
-		} else {
-			mvwprintw(dbg.win_data, y, 0, "%04X:%08X ", dataSeg, add);
+	// Calculate window dimensions based on character rows/columns
+	float line_height      = ImGui::GetTextLineHeightWithSpacing();
+	float title_bar_height = ImGui::GetFrameHeight();
+	float padding          = ImGui::GetStyle().WindowPadding.y * 2;
+	float window_width     = DBGUI_GetWindowWidth();
+	float window_height = (dbg.rows_data * line_height) + title_bar_height +
+	                      padding;
+
+	ImGui::SetNextWindowPos(ImVec2(0, DBGUI_GetWindowY(1)),
+	                        ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
+	                         ImGuiCond_FirstUseEver);
+
+	if (DBGUI_BeginWindowWithStyledTitle("-----(Data Overview   Scroll: mousewheel,page up/down)-----",
+	                                     ImGuiWindowFlags_NoCollapse)) {
+		// Handle mouse wheel scrolling when hovering over this window
+		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+			float wheel = ImGui::GetIO().MouseWheel;
+			if (wheel > 0) {
+				dataOfs -= 16; // Scroll up
+			} else if (wheel < 0) {
+				dataOfs += 16; // Scroll down
+			}
 		}
-		for (int x = 0; x < 16; x++) {
-			address = GetAddress(dataSeg, add);
-			if (mem_readb_checked(address, &ch)) {
-				ch = 0;
-			}
-			mvwprintw(dbg.win_data, y, 14 + 3 * x, "%02X", ch);
-			if (showPrintable) {
-				if (ch < 32 ||
-				    !isprint(*reinterpret_cast<unsigned char*>(&ch))) {
-					ch = '.';
-				}
-				mvwaddch(dbg.win_data, y, 63 + x, ch);
+
+		uint8_t ch;
+		uint32_t add = dataOfs;
+		uint32_t address;
+
+		for (auto y = 0; y < dbg.rows_data; ++y) {
+			char line[128];
+			char* ptr = line;
+
+			// Address
+			if (add < 0x10000) {
+				ptr += sprintf(ptr, "%04X:%04X  ", dataSeg, add);
 			} else {
-#if PDCURSES
-				mvwaddrawch(dbg.win_data, y, 63 + x, ch);
-#else
-				if (ch < 32) {
-					ch = '.';
-				}
-				mvwaddch(dbg.win_data, y, 63 + x, ch);
-#endif
+				ptr += sprintf(ptr, "%04X:%08X  ", dataSeg, add);
 			}
-			add++;
+
+			// Hex values
+			for (int x = 0; x < 16; x++) {
+				address = GetAddress(dataSeg, add + x);
+				if (mem_readb_checked(address, &ch)) {
+					ch = 0;
+				}
+				ptr += sprintf(ptr, "%02X ", ch);
+			}
+
+			// ASCII representation
+			*ptr++ = ' ';
+			for (int x = 0; x < 16; x++) {
+				address = GetAddress(dataSeg, add + x);
+				if (mem_readb_checked(address, &ch)) {
+					ch = 0;
+				}
+				if (showPrintable) {
+					if (ch < 32 ||
+					    !isprint(static_cast<unsigned char>(ch))) {
+						ch = '.';
+					}
+				} else {
+					if (ch < 32) {
+						ch = '.';
+					}
+				}
+				*ptr++ = ch;
+			}
+			*ptr = '\0';
+
+			ImGui::TextUnformatted(line);
+			add += 16;
 		}
 	}
-	wrefresh(dbg.win_data);
+	DBGUI_EndWindowWithStyledTitle();
 }
 
 static void DrawRegisters(void)
 {
-	/* Main Registers */
-	SetColor(reg_eax != oldregs.eax);
-	oldregs.eax = reg_eax;
-	mvwprintw(dbg.win_reg, 0, 4, "%08X", reg_eax);
-	SetColor(reg_ebx != oldregs.ebx);
-	oldregs.ebx = reg_ebx;
-	mvwprintw(dbg.win_reg, 1, 4, "%08X", reg_ebx);
-	SetColor(reg_ecx != oldregs.ecx);
-	oldregs.ecx = reg_ecx;
-	mvwprintw(dbg.win_reg, 2, 4, "%08X", reg_ecx);
-	SetColor(reg_edx != oldregs.edx);
-	oldregs.edx = reg_edx;
-	mvwprintw(dbg.win_reg, 3, 4, "%08X", reg_edx);
+	if (!DBGUI_IsInitialized()) {
+		return;
+	}
 
-	SetColor(reg_esi != oldregs.esi);
-	oldregs.esi = reg_esi;
-	mvwprintw(dbg.win_reg, 0, 18, "%08X", reg_esi);
-	SetColor(reg_edi != oldregs.edi);
-	oldregs.edi = reg_edi;
-	mvwprintw(dbg.win_reg, 1, 18, "%08X", reg_edi);
-	SetColor(reg_ebp != oldregs.ebp);
-	oldregs.ebp = reg_ebp;
-	mvwprintw(dbg.win_reg, 2, 18, "%08X", reg_ebp);
-	SetColor(reg_esp != oldregs.esp);
-	oldregs.esp = reg_esp;
-	mvwprintw(dbg.win_reg, 3, 18, "%08X", reg_esp);
-	SetColor(reg_eip != oldregs.eip);
-	oldregs.eip = reg_eip;
-	mvwprintw(dbg.win_reg, 1, 42, "%08X", reg_eip);
+	// Calculate window dimensions based on character rows/columns
+	float line_height      = ImGui::GetTextLineHeightWithSpacing();
+	float title_bar_height = ImGui::GetFrameHeight();
+	float padding          = ImGui::GetStyle().WindowPadding.y * 2;
+	float window_width     = DBGUI_GetWindowWidth();
+	float window_height    = (dbg.rows_registers * line_height) +
+	                      title_bar_height + padding;
 
-	SetColor(SegValue(ds) != oldsegs[ds].val);
-	oldsegs[ds].val = SegValue(ds);
-	mvwprintw(dbg.win_reg, 0, 31, "%04X", SegValue(ds));
-	SetColor(SegValue(es) != oldsegs[es].val);
-	oldsegs[es].val = SegValue(es);
-	mvwprintw(dbg.win_reg, 0, 41, "%04X", SegValue(es));
-	SetColor(SegValue(fs) != oldsegs[fs].val);
-	oldsegs[fs].val = SegValue(fs);
-	mvwprintw(dbg.win_reg, 0, 51, "%04X", SegValue(fs));
-	SetColor(SegValue(gs) != oldsegs[gs].val);
-	oldsegs[gs].val = SegValue(gs);
-	mvwprintw(dbg.win_reg, 0, 61, "%04X", SegValue(gs));
-	SetColor(SegValue(ss) != oldsegs[ss].val);
-	oldsegs[ss].val = SegValue(ss);
-	mvwprintw(dbg.win_reg, 0, 71, "%04X", SegValue(ss));
-	SetColor(SegValue(cs) != oldsegs[cs].val);
-	oldsegs[cs].val = SegValue(cs);
-	mvwprintw(dbg.win_reg, 1, 31, "%04X", SegValue(cs));
+	ImGui::SetNextWindowPos(ImVec2(0, DBGUI_GetWindowY(0)),
+	                        ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
+	                         ImGuiCond_FirstUseEver);
 
-	/*Individual flags*/
-	Bitu changed_flags = reg_flags ^ oldflags;
-	oldflags           = reg_flags;
+	if (DBGUI_BeginWindowWithStyledTitle("-----(Register Overview                              )-----",
+	                                     ImGuiWindowFlags_NoCollapse)) {
+		ImVec4 highlight_color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
 
-	SetColor(changed_flags & FLAG_CF);
-	mvwprintw(dbg.win_reg, 1, 53, "%01X", GETFLAG(CF) ? 1 : 0);
-	SetColor(changed_flags & FLAG_ZF);
-	mvwprintw(dbg.win_reg, 1, 56, "%01X", GETFLAG(ZF) ? 1 : 0);
-	SetColor(changed_flags & FLAG_SF);
-	mvwprintw(dbg.win_reg, 1, 59, "%01X", GETFLAG(SF) ? 1 : 0);
-	SetColor(changed_flags & FLAG_OF);
-	mvwprintw(dbg.win_reg, 1, 62, "%01X", GETFLAG(OF) ? 1 : 0);
-	SetColor(changed_flags & FLAG_AF);
-	mvwprintw(dbg.win_reg, 1, 65, "%01X", GETFLAG(AF) ? 1 : 0);
-	SetColor(changed_flags & FLAG_PF);
-	mvwprintw(dbg.win_reg, 1, 68, "%01X", GETFLAG(PF) ? 1 : 0);
-
-	SetColor(changed_flags & FLAG_DF);
-	mvwprintw(dbg.win_reg, 1, 71, "%01X", GETFLAG(DF) ? 1 : 0);
-	SetColor(changed_flags & FLAG_IF);
-	mvwprintw(dbg.win_reg, 1, 74, "%01X", GETFLAG(IF) ? 1 : 0);
-	SetColor(changed_flags & FLAG_TF);
-	mvwprintw(dbg.win_reg, 1, 77, "%01X", GETFLAG(TF) ? 1 : 0);
-
-	SetColor(changed_flags & FLAG_IOPL);
-	mvwprintw(dbg.win_reg, 2, 72, "%01X", GETFLAG(IOPL) >> 12);
-
-	SetColor(cpu.cpl ^ oldcpucpl);
-	mvwprintw(dbg.win_reg, 2, 78, "%01" PRIXPTR, cpu.cpl);
-	oldcpucpl = cpu.cpl;
-
-	if (cpu.pmode) {
-		if (reg_flags & FLAG_VM) {
-			mvwprintw(dbg.win_reg, 0, 76, "VM86");
-		} else if (cpu.code.big) {
-			mvwprintw(dbg.win_reg, 0, 76, "Pr32");
-		} else {
-			mvwprintw(dbg.win_reg, 0, 76, "Pr16");
+		// Row 1: EAX, ESI, DS, ES, FS, GS, SS, Mode
+		ImGui::Text("EAX=");
+		ImGui::SameLine(0, 0);
+		if (reg_eax != oldregs.eax) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
 		}
-	} else {
-		mvwprintw(dbg.win_reg, 0, 76, "Real");
-	}
+		ImGui::Text("%08X", reg_eax);
+		if (reg_eax != oldregs.eax) {
+			ImGui::PopStyleColor();
+		}
+		oldregs.eax = reg_eax;
 
-	// Selector info, if available
-	if ((cpu.pmode) && curSelectorName[0]) {
-		char out1[200], out2[200];
-		GetDescriptorInfo(curSelectorName, out1, out2);
-		mvwprintw(dbg.win_reg, 2, 28, out1);
-		mvwprintw(dbg.win_reg, 3, 28, out2);
-	}
+		ImGui::SameLine();
+		ImGui::Text("ESI=");
+		ImGui::SameLine(0, 0);
+		if (reg_esi != oldregs.esi) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%08X", reg_esi);
+		if (reg_esi != oldregs.esi) {
+			ImGui::PopStyleColor();
+		}
+		oldregs.esi = reg_esi;
 
-	wattrset(dbg.win_reg, 0);
-	mvwprintw(dbg.win_reg, 3, 60, "%" PRIuPTR "       ", cycle_count);
-	wrefresh(dbg.win_reg);
+		ImGui::SameLine();
+		ImGui::Text("DS=");
+		ImGui::SameLine(0, 0);
+		if (SegValue(ds) != oldsegs[ds].val) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%04X", SegValue(ds));
+		if (SegValue(ds) != oldsegs[ds].val) {
+			ImGui::PopStyleColor();
+		}
+		oldsegs[ds].val = SegValue(ds);
+
+		ImGui::SameLine();
+		ImGui::Text("ES=");
+		ImGui::SameLine(0, 0);
+		if (SegValue(es) != oldsegs[es].val) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%04X", SegValue(es));
+		if (SegValue(es) != oldsegs[es].val) {
+			ImGui::PopStyleColor();
+		}
+		oldsegs[es].val = SegValue(es);
+
+		ImGui::SameLine();
+		ImGui::Text("FS=");
+		ImGui::SameLine(0, 0);
+		if (SegValue(fs) != oldsegs[fs].val) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%04X", SegValue(fs));
+		if (SegValue(fs) != oldsegs[fs].val) {
+			ImGui::PopStyleColor();
+		}
+		oldsegs[fs].val = SegValue(fs);
+
+		ImGui::SameLine();
+		ImGui::Text("GS=");
+		ImGui::SameLine(0, 0);
+		if (SegValue(gs) != oldsegs[gs].val) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%04X", SegValue(gs));
+		if (SegValue(gs) != oldsegs[gs].val) {
+			ImGui::PopStyleColor();
+		}
+		oldsegs[gs].val = SegValue(gs);
+
+		ImGui::SameLine();
+		ImGui::Text("SS=");
+		ImGui::SameLine(0, 0);
+		if (SegValue(ss) != oldsegs[ss].val) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%04X", SegValue(ss));
+		if (SegValue(ss) != oldsegs[ss].val) {
+			ImGui::PopStyleColor();
+		}
+		oldsegs[ss].val = SegValue(ss);
+
+		ImGui::SameLine();
+		const char* mode_str = "Real";
+		if (cpu.pmode) {
+			if (reg_flags & FLAG_VM) {
+				mode_str = "VM86";
+			} else if (cpu.code.big) {
+				mode_str = "Pr32";
+			} else {
+				mode_str = "Pr16";
+			}
+		}
+		ImGui::Text("%s", mode_str);
+
+		// Row 2: EBX, EDI, CS, EIP, Flags
+		ImGui::Text("EBX=");
+		ImGui::SameLine(0, 0);
+		if (reg_ebx != oldregs.ebx) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%08X", reg_ebx);
+		if (reg_ebx != oldregs.ebx) {
+			ImGui::PopStyleColor();
+		}
+		oldregs.ebx = reg_ebx;
+
+		ImGui::SameLine();
+		ImGui::Text("EDI=");
+		ImGui::SameLine(0, 0);
+		if (reg_edi != oldregs.edi) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%08X", reg_edi);
+		if (reg_edi != oldregs.edi) {
+			ImGui::PopStyleColor();
+		}
+		oldregs.edi = reg_edi;
+
+		ImGui::SameLine();
+		ImGui::Text("CS=");
+		ImGui::SameLine(0, 0);
+		if (SegValue(cs) != oldsegs[cs].val) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%04X", SegValue(cs));
+		if (SegValue(cs) != oldsegs[cs].val) {
+			ImGui::PopStyleColor();
+		}
+		oldsegs[cs].val = SegValue(cs);
+
+		ImGui::SameLine();
+		ImGui::Text("EIP=");
+		ImGui::SameLine(0, 0);
+		if (reg_eip != oldregs.eip) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%08X", reg_eip);
+		if (reg_eip != oldregs.eip) {
+			ImGui::PopStyleColor();
+		}
+		oldregs.eip = reg_eip;
+
+		Bitu changed_flags = reg_flags ^ oldflags;
+		oldflags           = reg_flags;
+
+		ImGui::SameLine();
+		ImGui::Text("C=");
+		ImGui::SameLine(0, 0);
+		if (changed_flags & FLAG_CF) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", GETFLAG(CF) ? 1 : 0);
+		if (changed_flags & FLAG_CF) {
+			ImGui::PopStyleColor();
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("Z=");
+		ImGui::SameLine(0, 0);
+		if (changed_flags & FLAG_ZF) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", GETFLAG(ZF) ? 1 : 0);
+		if (changed_flags & FLAG_ZF) {
+			ImGui::PopStyleColor();
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("S=");
+		ImGui::SameLine(0, 0);
+		if (changed_flags & FLAG_SF) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", GETFLAG(SF) ? 1 : 0);
+		if (changed_flags & FLAG_SF) {
+			ImGui::PopStyleColor();
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("O=");
+		ImGui::SameLine(0, 0);
+		if (changed_flags & FLAG_OF) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", GETFLAG(OF) ? 1 : 0);
+		if (changed_flags & FLAG_OF) {
+			ImGui::PopStyleColor();
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("A=");
+		ImGui::SameLine(0, 0);
+		if (changed_flags & FLAG_AF) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", GETFLAG(AF) ? 1 : 0);
+		if (changed_flags & FLAG_AF) {
+			ImGui::PopStyleColor();
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("P=");
+		ImGui::SameLine(0, 0);
+		if (changed_flags & FLAG_PF) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", GETFLAG(PF) ? 1 : 0);
+		if (changed_flags & FLAG_PF) {
+			ImGui::PopStyleColor();
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("D=");
+		ImGui::SameLine(0, 0);
+		if (changed_flags & FLAG_DF) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", GETFLAG(DF) ? 1 : 0);
+		if (changed_flags & FLAG_DF) {
+			ImGui::PopStyleColor();
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("I=");
+		ImGui::SameLine(0, 0);
+		if (changed_flags & FLAG_IF) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", GETFLAG(IF) ? 1 : 0);
+		if (changed_flags & FLAG_IF) {
+			ImGui::PopStyleColor();
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("T=");
+		ImGui::SameLine(0, 0);
+		if (changed_flags & FLAG_TF) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", GETFLAG(TF) ? 1 : 0);
+		if (changed_flags & FLAG_TF) {
+			ImGui::PopStyleColor();
+		}
+
+		// Row 3: ECX, EBP, IOPL, CPL
+		ImGui::Text("ECX=");
+		ImGui::SameLine(0, 0);
+		if (reg_ecx != oldregs.ecx) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%08X", reg_ecx);
+		if (reg_ecx != oldregs.ecx) {
+			ImGui::PopStyleColor();
+		}
+		oldregs.ecx = reg_ecx;
+
+		ImGui::SameLine();
+		ImGui::Text("EBP=");
+		ImGui::SameLine(0, 0);
+		if (reg_ebp != oldregs.ebp) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%08X", reg_ebp);
+		if (reg_ebp != oldregs.ebp) {
+			ImGui::PopStyleColor();
+		}
+		oldregs.ebp = reg_ebp;
+
+		ImGui::SameLine();
+		ImGui::Text("IOPL=");
+		ImGui::SameLine(0, 0);
+		if (changed_flags & FLAG_IOPL) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", (int)(GETFLAG(IOPL) >> 12));
+		if (changed_flags & FLAG_IOPL) {
+			ImGui::PopStyleColor();
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("CPL=");
+		ImGui::SameLine(0, 0);
+		if (cpu.cpl != oldcpucpl) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%d", (int)cpu.cpl);
+		if (cpu.cpl != oldcpucpl) {
+			ImGui::PopStyleColor();
+		}
+		oldcpucpl = cpu.cpl;
+
+		// Selector info, if available
+		if ((cpu.pmode) && curSelectorName[0]) {
+			char out1[200], out2[200];
+			GetDescriptorInfo(curSelectorName, out1, out2);
+			ImGui::SameLine();
+			ImGui::Text("%s", out1);
+		}
+
+		// Row 4: EDX, ESP, Cycles
+		ImGui::Text("EDX=");
+		ImGui::SameLine(0, 0);
+		if (reg_edx != oldregs.edx) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%08X", reg_edx);
+		if (reg_edx != oldregs.edx) {
+			ImGui::PopStyleColor();
+		}
+		oldregs.edx = reg_edx;
+
+		ImGui::SameLine();
+		ImGui::Text("ESP=");
+		ImGui::SameLine(0, 0);
+		if (reg_esp != oldregs.esp) {
+			ImGui::PushStyleColor(ImGuiCol_Text, highlight_color);
+		}
+		ImGui::Text("%08X", reg_esp);
+		if (reg_esp != oldregs.esp) {
+			ImGui::PopStyleColor();
+		}
+		oldregs.esp = reg_esp;
+
+		ImGui::SameLine();
+		ImGui::Text("Cycles: %" PRIuPTR, cycle_count);
+	}
+	DBGUI_EndWindowWithStyledTitle();
 }
 
 static void DrawCode(void)
 {
-	bool saveSel;
-	uint32_t disEIP = codeViewData.useEIP;
-	PhysPt start    = GetAddress(codeViewData.useCS, codeViewData.useEIP);
-	char dline[200];
-	Bitu size;
-	Bitu c;
-	static char line20[21] = "                    ";
+	if (!DBGUI_IsInitialized()) {
+		return;
+	}
 
-	for (auto i = 0; i < dbg.rows_code - 1; ++i) {
-		saveSel = false;
-		if (has_colors()) {
-			if ((codeViewData.useCS == SegValue(cs)) &&
-			    (disEIP == reg_eip)) {
-				wattrset(dbg.win_code, COLOR_PAIR(PAIR_GREEN_BLACK));
-				if (codeViewData.cursorPos == -1) {
-					codeViewData.cursorPos = i; // Set Cursor
+	// Calculate window dimensions based on character rows/columns
+	// (code rows + 1 for input line)
+	float line_height      = ImGui::GetTextLineHeightWithSpacing();
+	float title_bar_height = ImGui::GetFrameHeight();
+	float padding          = ImGui::GetStyle().WindowPadding.y * 2;
+	float separator_height = 4.0f;
+	float window_width     = DBGUI_GetWindowWidth();
+	float window_height = (dbg.rows_code * line_height) + title_bar_height +
+	                      padding + separator_height;
+
+	ImGui::SetNextWindowPos(ImVec2(0, DBGUI_GetWindowY(2)),
+	                        ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
+	                         ImGuiCond_FirstUseEver);
+
+	if (DBGUI_BeginWindowWithStyledTitle("-----(Code Overview        Scroll: mousewheel,up/down)-----",
+	                                     ImGuiWindowFlags_NoCollapse)) {
+		// Handle mouse wheel scrolling when hovering over this window
+		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+			float wheel = ImGui::GetIO().MouseWheel;
+			if (wheel > 0) {
+				// Scroll up - move cursor up or scroll code
+				if (codeViewData.cursorPos > 0) {
+					codeViewData.cursorPos--;
+				} else {
+					codeViewData.useEIP -= 1;
 				}
-				if (i == codeViewData.cursorPos) {
+			} else if (wheel < 0) {
+				// Scroll down - move cursor down or scroll code
+				if (codeViewData.cursorPos < dbg.rows_code - 2) {
+					codeViewData.cursorPos++;
+				} else {
+					codeViewData.useEIP += codeViewData.firstInstSize;
+				}
+			}
+		}
+
+		ImVec4 green_color  = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+		ImVec4 grey_color   = ImVec4(0.75f, 0.75f, 0.75f, 1.0f);
+		ImVec4 red_bg_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+
+		// Reserve space at the bottom for the input line
+		float input_line_height = ImGui::GetTextLineHeightWithSpacing() + 4.0f;
+		float available_height = ImGui::GetContentRegionAvail().y -
+		                         input_line_height;
+
+		// Scrollable code region
+		ImGui::BeginChild("CodeScrolling",
+		                  ImVec2(0, available_height),
+		                  false,
+		                  ImGuiWindowFlags_HorizontalScrollbar);
+
+		bool saveSel;
+		uint32_t disEIP = codeViewData.useEIP;
+		PhysPt start = GetAddress(codeViewData.useCS, codeViewData.useEIP);
+		char dline[200];
+		Bitu size;
+		Bitu c;
+
+		for (auto i = 0; i < dbg.rows_code - 1; ++i) {
+			saveSel = false;
+			bool is_current_ip = (codeViewData.useCS == SegValue(cs)) &&
+			                     (disEIP == reg_eip);
+			bool is_cursor     = (i == codeViewData.cursorPos);
+			bool is_breakpoint = CBreakpoint::IsBreakpoint(
+			        codeViewData.useCS, disEIP);
+
+			if (is_current_ip) {
+				if (codeViewData.cursorPos == -1) {
+					codeViewData.cursorPos = i;
+				}
+				if (is_cursor) {
 					codeViewData.cursorSeg = SegValue(cs);
 					codeViewData.cursorOfs = disEIP;
 				}
-				saveSel = (i == codeViewData.cursorPos);
-			} else if (i == codeViewData.cursorPos) {
-				wattrset(dbg.win_code, COLOR_PAIR(PAIR_BLACK_GREY));
+				saveSel = is_cursor;
+			} else if (is_cursor) {
 				codeViewData.cursorSeg = codeViewData.useCS;
 				codeViewData.cursorOfs = disEIP;
 				saveSel                = true;
-			} else if (CBreakpoint::IsBreakpoint(codeViewData.useCS,
-			                                     disEIP)) {
-				wattrset(dbg.win_code, COLOR_PAIR(PAIR_GREY_RED));
-			} else {
-				wattrset(dbg.win_code, 0);
+			}
+
+			// Build the line
+			char line[256];
+			char* ptr = line;
+			ptr += sprintf(ptr, "%04X:%04X  ", codeViewData.useCS, disEIP);
+
+			Bitu drawsize = size =
+			        DasmI386(dline, start, disEIP, cpu.code.big);
+			bool toolarge = false;
+
+			if (drawsize > check_cast<uint32_t>(dbg.rows_code - 1)) {
+				toolarge = true;
+				drawsize = dbg.rows_code - 2;
+			}
+
+			// Hex bytes
+			for (c = 0; c < drawsize; c++) {
+				uint8_t value;
+				if (mem_readb_checked(start + c, &value)) {
+					value = 0;
+				}
+				ptr += sprintf(ptr, "%02X", value);
+			}
+			if (toolarge) {
+				ptr += sprintf(ptr, "..");
+				drawsize++;
+			}
+
+			// Pad hex to fixed width
+			int hex_len = drawsize * 2 + (toolarge ? 2 : 0);
+			while (hex_len < 20) {
+				*ptr++ = ' ';
+				hex_len++;
+			}
+
+			// Disassembly
+			char empty_res[] = {0};
+			char* res        = empty_res;
+			if (showExtend) {
+				res = AnalyzeInstruction(dline, saveSel);
+			}
+
+			// Pad disassembly
+			size_t dline_len = safe_strlen(dline);
+			if (dline_len > 28) {
+				dline_len = 28;
+			}
+			memcpy(ptr, dline, dline_len);
+			ptr += dline_len;
+			for (size_t pad = dline_len; pad < 28; pad++) {
+				*ptr++ = ' ';
+			}
+
+			// Result
+			if (res && res[0]) {
+				size_t res_len = strlen(res);
+				if (res_len > 20) {
+					res_len = 20;
+				}
+				memcpy(ptr, res, res_len);
+				ptr += res_len;
+			}
+			*ptr = '\0';
+
+			// Determine color
+			if (is_current_ip) {
+				ImGui::PushStyleColor(ImGuiCol_Text, green_color);
+			} else if (is_breakpoint) {
+				ImGui::PushStyleColor(ImGuiCol_Text, red_bg_color);
+			} else if (is_cursor) {
+				ImGui::PushStyleColor(ImGuiCol_Text, grey_color);
+			}
+
+			// Make line selectable
+			bool selected = is_cursor;
+			if (ImGui::Selectable(line, selected)) {
+				codeViewData.cursorPos = i;
+				codeViewData.cursorSeg = codeViewData.useCS;
+				codeViewData.cursorOfs = disEIP;
+			}
+
+			if (is_current_ip || is_breakpoint || is_cursor) {
+				ImGui::PopStyleColor();
+			}
+
+			start += size;
+			disEIP += size;
+
+			if (i == 0) {
+				codeViewData.firstInstSize = size;
+			}
+			if (i == 4) {
+				codeViewData.useEIPmid = disEIP;
 			}
 		}
 
-		Bitu drawsize = size = DasmI386(dline, start, disEIP, cpu.code.big);
-		bool toolarge = false;
-		mvwprintw(dbg.win_code, i, 0, "%04X:%04X  ", codeViewData.useCS, disEIP);
+		codeViewData.useEIPlast = disEIP;
 
-		if (drawsize > check_cast<uint32_t>(dbg.rows_code - 1)) {
-			toolarge = true;
-			drawsize = dbg.rows_code - 2;
-		}
-		for (c = 0; c < drawsize; c++) {
-			uint8_t value;
-			if (mem_readb_checked(start + c, &value)) {
-				value = 0;
-			}
-			wprintw(dbg.win_code, "%02X", value);
-		}
-		if (toolarge) {
-			waddstr(dbg.win_code, "..");
-			drawsize++;
-		}
-		// Spacepad up to 20 characters
-		if (drawsize && (drawsize < check_cast<uint32_t>(dbg.rows_code))) {
-			line20[20 - drawsize * 2] = 0;
-			waddstr(dbg.win_code, line20);
-			line20[20 - drawsize * 2] = ' ';
+		ImGui::EndChild();
+
+		// Input line or running indicator (fixed at bottom)
+		ImGui::Separator();
+		if (!debugging) {
+			ImGui::PushStyleColor(ImGuiCol_Text, green_color);
+			ImGui::Text("(Running)");
+			ImGui::PopStyleColor();
 		} else {
-			waddstr(dbg.win_code, line20);
-		}
-
-		char empty_res[] = {0};
-		char* res        = empty_res;
-		if (showExtend) {
-			res = AnalyzeInstruction(dline, saveSel);
-		}
-		// Spacepad it up to 28 characters
-		size_t dline_len = safe_strlen(dline);
-		if (dline_len < 28) {
-			memset(dline + dline_len, ' ', 28 - dline_len);
-		}
-		dline[28] = 0;
-		waddstr(dbg.win_code, dline);
-		// Spacepad it up to 20 characters
-		size_t res_len = strlen(res);
-		if (res_len && (res_len < 21)) {
-			waddstr(dbg.win_code, res);
-			line20[20 - res_len] = 0;
-			waddstr(dbg.win_code, line20);
-			line20[20 - res_len] = ' ';
-		} else {
-			waddstr(dbg.win_code, line20);
-		}
-
-		start += size;
-		disEIP += size;
-
-		if (i == 0) {
-			codeViewData.firstInstSize = size;
-		}
-		if (i == 4) {
-			codeViewData.useEIPmid = disEIP;
+			char* dispPtr = codeViewData.inputStr;
+			ImGui::Text("%c-> %s_",
+			            (codeViewData.ovrMode ? 'O' : 'I'),
+			            dispPtr);
 		}
 	}
-
-	codeViewData.useEIPlast = disEIP;
-
-	wattrset(dbg.win_code, 0);
-	if (!debugging) {
-		if (has_colors()) {
-			wattrset(dbg.win_code, COLOR_PAIR(PAIR_GREEN_BLACK));
-		}
-		mvwprintw(dbg.win_code, dbg.rows_code - 1, 0, "%s", "(Running)");
-		wclrtoeol(dbg.win_code);
-	} else {
-		// TODO long lines
-		char* dispPtr = codeViewData.inputStr;
-		char* curPtr  = &codeViewData.inputStr[codeViewData.inputPos];
-		mvwprintw(dbg.win_code,
-		          dbg.rows_code - 1,
-		          0,
-		          "%c-> %s%c",
-		          (codeViewData.ovrMode ? 'O' : 'I'),
-		          dispPtr,
-		          (*curPtr ? ' ' : '_'));
-		wclrtoeol(dbg.win_code); // not correct in pdcurses if full line
-		mvwchgat(dbg.win_code, dbg.rows_code - 1, 0, 3, 0, PAIR_BLACK_GREY, nullptr);
-		if (*curPtr) {
-			mvwchgat(dbg.win_code,
-			         dbg.rows_code - 1,
-			         (curPtr - dispPtr + 4),
-			         1,
-			         0,
-			         PAIR_BLACK_GREY,
-			         nullptr);
-		}
-	}
-
-	wattrset(dbg.win_code, 0);
-	wrefresh(dbg.win_code);
+	DBGUI_EndWindowWithStyledTitle();
 }
 
 static void SetCodeWinStart()
@@ -2209,7 +2547,6 @@ int32_t DEBUG_Run(int32_t amount, bool quickexit)
 
 		const auto graphics_window = GFX_GetWindow();
 		SDL_RaiseWindow(graphics_window);
-		SDL_SetWindowInputFocus(graphics_window);
 
 		DOSBOX_SetNormalLoop();
 	}
@@ -2220,8 +2557,7 @@ uint32_t DEBUG_CheckKeys(void)
 {
 	Bits ret       = 0;
 	bool numberrun = false;
-	bool skipDraw  = false;
-	int key        = getch();
+	int key        = DBGUI_GetKey();
 
 	if (key >= '1' && key <= '5' && safe_strlen(codeViewData.inputStr) == 0) {
 		const int32_t v[] = {5, 500, 1000, 5000, 10000};
@@ -2230,65 +2566,15 @@ uint32_t DEBUG_CheckKeys(void)
 
 		/* Setup variables so we end up at the proper ret processing */
 		numberrun = true;
-
-		// Don't redraw the screen if it's going to get redrawn
-		// immediately afterwards, to avoid resetting oldregs.
-		if (ret == static_cast<Bits>(debugCallback)) {
-			skipDraw = true;
-		}
-		key = -1;
+		key       = KEY_NONE;
 	}
 
-	if (key > 0 || numberrun) {
-#if defined(WIN32) && PDCURSES
-		switch (key) {
-		case PADENTER: key = 0x0A; break;
-		case PADSLASH: key = '/'; break;
-		case PADSTAR: key = '*'; break;
-		case PADMINUS: key = '-'; break;
-		case PADPLUS: key = '+'; break;
-		case PADSTOP: key = KEY_DC; break;
-		case PAD0: key = KEY_IC; break;
-		case KEY_A1: key = KEY_HOME; break;
-		case KEY_A2: key = KEY_UP; break;
-		case KEY_A3: key = KEY_PPAGE; break;
-		case KEY_B1: key = KEY_LEFT; break;
-		case KEY_B3: key = KEY_RIGHT; break;
-		case KEY_C1: key = KEY_END; break;
-		case KEY_C2: key = KEY_DOWN; break;
-		case KEY_C3: key = KEY_NPAGE; break;
-		case ALT_D:
-			if (ungetch('D') != ERR) {
-				key = 27;
-			}
-			break;
-		case ALT_E:
-			if (ungetch('E') != ERR) {
-				key = 27;
-			}
-			break;
-		case ALT_X:
-			if (ungetch('X') != ERR) {
-				key = 27;
-			}
-			break;
-		case ALT_B:
-			if (ungetch('B') != ERR) {
-				key = 27;
-			}
-			break;
-		case ALT_S:
-			if (ungetch('S') != ERR) {
-				key = 27;
-			}
-			break;
-		}
-#endif
+	if (key != KEY_NONE || numberrun) {
 		switch (ascii_to_upper(key)) {
 		case 27: // escape (a bit slow): Clears line. and processes alt
 		         // commands.
-			key = getch();
-			if (key < 0) { // Purely escape Clear line
+			key = DBGUI_GetKey();
+			if (key == KEY_NONE) { // Purely escape Clear line
 				ClearInputLine();
 				break;
 			}
@@ -2337,17 +2623,17 @@ uint32_t DEBUG_CheckKeys(void)
 			default: break;
 			}
 			break;
-		case KEY_PPAGE: dataOfs -= 16; break;
-		case KEY_NPAGE: dataOfs += 16; break;
+		case DBGUI_KEY_PPAGE: dataOfs -= 16; break;
+		case DBGUI_KEY_NPAGE: dataOfs += 16; break;
 
-		case KEY_DOWN: // down
+		case DBGUI_KEY_DOWN: // down
 			if (codeViewData.cursorPos < dbg.rows_code - 2) {
 				codeViewData.cursorPos++;
 			} else {
 				codeViewData.useEIP += codeViewData.firstInstSize;
 			}
 			break;
-		case KEY_UP: // up
+		case DBGUI_KEY_UP: // up
 			if (codeViewData.cursorPos > 0) {
 				codeViewData.cursorPos--;
 			} else {
@@ -2376,28 +2662,28 @@ uint32_t DEBUG_CheckKeys(void)
 				codeViewData.useEIP = newEIP;
 			}
 			break;
-		case KEY_HOME: // Home: scroll log page up
+		case DBGUI_KEY_HOME: // Home: scroll log page up
 			DEBUG_RefreshPage(-1);
 			break;
-		case KEY_END: // End: scroll log page down
+		case DBGUI_KEY_END: // End: scroll log page down
 			DEBUG_RefreshPage(1);
 			break;
-		case KEY_IC: // Insert: toggle insert/overwrite
+		case DBGUI_KEY_IC: // Insert: toggle insert/overwrite
 			codeViewData.ovrMode = !codeViewData.ovrMode;
 			break;
-		case KEY_LEFT: // move to the left in command line
+		case DBGUI_KEY_LEFT: // move to the left in command line
 			if (codeViewData.inputPos > 0) {
 				codeViewData.inputPos--;
 			}
 			break;
-		case KEY_RIGHT: // move to the right in command line
+		case DBGUI_KEY_RIGHT: // move to the right in command line
 			if (codeViewData.inputStr[codeViewData.inputPos]) {
 				codeViewData.inputPos++;
 			}
 			break;
-		case KEY_F(6): // previous command (f1-f4 generate rubbish at my
-		               // place)
-		case KEY_F(3): // previous command
+		case DBGUI_KEY_F(6): // previous command (f1-f4 generate rubbish
+		                     // at my place)
+		case DBGUI_KEY_F(3): // previous command
 			if (histBuffPos == histBuff.begin()) {
 				break;
 			}
@@ -2410,8 +2696,9 @@ uint32_t DEBUG_CheckKeys(void)
 			safe_strcpy(codeViewData.inputStr, (--histBuffPos)->c_str());
 			codeViewData.inputPos = safe_strlen(codeViewData.inputStr);
 			break;
-		case KEY_F(7): // next command (f1-f4 generate rubbish at my place)
-		case KEY_F(4): // next command
+		case DBGUI_KEY_F(7): // next command (f1-f4 generate rubbish at
+		                     // my place)
+		case DBGUI_KEY_F(4): // next command
 			if (histBuffPos == histBuff.end()) {
 				break;
 			}
@@ -2425,18 +2712,18 @@ uint32_t DEBUG_CheckKeys(void)
 			}
 			codeViewData.inputPos = safe_strlen(codeViewData.inputStr);
 			break;
-		case KEY_F(5): // Run Program
+		case DBGUI_KEY_F(5): // Run Program
 			debugging = false;
-			DrawCode(); // update code window to show "running" status
-
-			ret      = DEBUG_Run(1, false);
-			skipDraw = true; // don't update screen after this
-			                 // instruction
+			// Redraw screen to show "(Running)" before entering normal loop
+			DBGUI_NewFrame();
+			DEBUG_DrawScreen();
+			DBGUI_Render();
+			ret = DEBUG_Run(1, false);
 			break;
-		case KEY_F(8): // Toggle printable characters
+		case DBGUI_KEY_F(8): // Toggle printable characters
 			showPrintable = !showPrintable;
 			break;
-		case KEY_F(9): // Set/Remove Breakpoint
+		case DBGUI_KEY_F(9): // Set/Remove Breakpoint
 			if (CBreakpoint::IsBreakpoint(codeViewData.cursorSeg,
 			                              codeViewData.cursorOfs)) {
 				if (CBreakpoint::DeleteBreakpoint(codeViewData.cursorSeg,
@@ -2454,19 +2741,18 @@ uint32_t DEBUG_CheckKeys(void)
 				              codeViewData.cursorOfs);
 			}
 			break;
-		case KEY_F(10): // Step over inst
+		case DBGUI_KEY_F(10): // Step over inst
 			if (StepOver()) {
-				ret      = DEBUG_Run(1, false);
-				skipDraw = true;
+				ret = DEBUG_Run(1, false);
 				break;
 			}
 			// If we aren't stepping over something, do a normal step.
 			[[fallthrough]];
-		case KEY_F(11): // trace into
+		case DBGUI_KEY_F(11): // trace into
 			exitLoop = false;
 			ret      = DEBUG_Run(1, true);
 			break;
-		case 0x0A: // Parse typed Command
+		case '\n': // Parse typed Command
 			codeViewData.inputStr[MAXCMDLEN] = '\0';
 			if (ParseCommand(codeViewData.inputStr)) {
 				char* cmd = ltrim(codeViewData.inputStr);
@@ -2483,7 +2769,7 @@ uint32_t DEBUG_CheckKeys(void)
 				        codeViewData.inputStr);
 			}
 			break;
-		case KEY_BACKSPACE: // backspace (linux)
+		case DBGUI_KEY_BACKSPACE: // backspace
 		case 0x7f: // backspace in some terminal emulators (linux)
 		case 0x08: // delete
 			if (codeViewData.inputPos == 0) {
@@ -2491,7 +2777,7 @@ uint32_t DEBUG_CheckKeys(void)
 			}
 			codeViewData.inputPos--;
 			[[fallthrough]];
-		case KEY_DC: // delete character
+		case DBGUI_KEY_DC: // delete character
 			if ((codeViewData.inputPos < 0) ||
 			    (codeViewData.inputPos >= MAXCMDLEN)) {
 				break;
@@ -2534,8 +2820,6 @@ uint32_t DEBUG_CheckKeys(void)
 					codeViewData.inputStr[codeViewData.inputPos++] =
 					        char(key);
 				}
-			} else if (key == killchar()) {
-				ClearInputLine();
 			}
 			break;
 		}
@@ -2555,9 +2839,7 @@ uint32_t DEBUG_CheckKeys(void)
 			}
 		}
 		ret = 0;
-		if (!skipDraw) {
-			DEBUG_DrawScreen();
-		}
+		// Drawing is now handled by the main loop
 	}
 	return ret;
 }
@@ -2566,6 +2848,16 @@ Bitu DEBUG_Loop(void)
 {
 	// TODO Disable sound
 	GFX_PollAndHandleEvents();
+
+	// Start a new ImGui frame
+	DBGUI_NewFrame();
+
+	// Draw debugger windows
+	DEBUG_DrawScreen();
+
+	// Render ImGui
+	DBGUI_Render();
+
 	// Interrupt started ? - then skip it
 	uint16_t oldCS  = SegValue(cs);
 	uint32_t oldEIP = reg_eip;
@@ -2581,10 +2873,6 @@ Bitu DEBUG_Loop(void)
 	return DEBUG_CheckKeys();
 }
 
-#include <queue>
-extern SDL_Window* pdc_window;
-extern std::queue<SDL_Event> pdc_event_queue;
-
 void DEBUG_Enable(bool pressed)
 {
 	if (!pressed) {
@@ -2595,7 +2883,7 @@ void DEBUG_Enable(bool pressed)
 	static bool was_ui_started = false;
 	if (!was_ui_started) {
 		DBGUI_StartUp();
-		was_ui_started = (pdc_window != nullptr);
+		was_ui_started = DBGUI_IsInitialized();
 	}
 
 	// The debugger is run in release mode so cannot use asserts
@@ -2606,11 +2894,8 @@ void DEBUG_Enable(bool pressed)
 
 	// Defocus the graphical UI and bring the debugger UI into focus
 	GFX_LosingFocus();
-	pdc_event_queue = {};
-	SDL_RaiseWindow(pdc_window);
-	SDL_SetWindowInputFocus(pdc_window);
+	SDL_RaiseWindow(dbg.win_main);
 	SetCodeWinStart();
-	DEBUG_DrawScreen();
 
 	// Maybe show help for the first time in the debugger
 	static bool was_help_shown = false;
@@ -2632,6 +2917,7 @@ void DEBUG_DrawScreen(void)
 	DrawCode();
 	DrawRegisters();
 	DrawVariables();
+	DBGUI_DrawOutputWindow();
 }
 
 static void DEBUG_RaiseTimerIrq(void)
@@ -3103,8 +3389,6 @@ Bitu debugCallback;
 
 void DEBUG_Init()
 {
-	DEBUG_DrawScreen();
-
 	// Add some keyhandlers
 	MAPPER_AddHandler(DEBUG_Enable, SDL_SCANCODE_PAUSE, MMOD2, "debugger", "Debugger");
 
@@ -3126,11 +3410,7 @@ void DEBUG_Destroy()
 	CBreakpoint::DeleteAll();
 	CDebugVar::DeleteAll();
 
-	curs_set(old_cursor_state);
-
-	if (pdc_window) {
-		endwin();
-	}
+	DBGUI_Shutdown();
 }
 
 void DEBUG_AddConfigSection(const ConfigPtr& conf)
@@ -3339,51 +3619,59 @@ static void OutputVecTable(char* filename)
 #define DEBUG_VAR_BUF_LEN 16
 static void DrawVariables()
 {
-	if (varList.empty()) {
+	if (!DBGUI_IsInitialized()) {
 		return;
 	}
 
-	char buffer[DEBUG_VAR_BUF_LEN] = {};
-	bool windowchanges             = false;
+	// Calculate window dimensions based on character rows/columns
+	float line_height      = ImGui::GetTextLineHeightWithSpacing();
+	float title_bar_height = ImGui::GetFrameHeight();
+	float padding          = ImGui::GetStyle().WindowPadding.y * 2;
+	float window_width     = DBGUI_GetWindowWidth();
+	float window_height    = (dbg.rows_variables * line_height) +
+	                      title_bar_height + padding;
 
-	for (size_t i = 0; i != varList.size(); ++i) {
-		if (i == 4 * 3) {
-			/* too many variables */
-			break;
-		}
+	ImGui::SetNextWindowPos(ImVec2(0, DBGUI_GetWindowY(3)),
+	                        ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
+	                         ImGuiCond_FirstUseEver);
 
-		auto dv = varList[i];
-		uint16_t value;
-		bool varchanges   = false;
-		bool has_no_value = mem_readw_checked(dv->GetAdr(), &value);
-		if (has_no_value) {
-			snprintf(buffer, DEBUG_VAR_BUF_LEN, "%s", "??????");
-			dv->SetValue(false, 0);
-			varchanges = true;
+	if (DBGUI_BeginWindowWithStyledTitle("-----(Variable Overview                              )-----",
+	                                     ImGuiWindowFlags_NoCollapse)) {
+		if (varList.empty()) {
+			ImGui::TextDisabled("(no variables defined)");
 		} else {
-			if (dv->HasValue() && dv->GetValue() == value) {
-				; // It already had a value and it didn't change
-				  // (most likely case)
-			} else {
-				dv->SetValue(true, value);
-				snprintf(buffer, DEBUG_VAR_BUF_LEN, "0x%04x", value);
-				varchanges = true;
+			char buffer[DEBUG_VAR_BUF_LEN] = {};
+
+			for (size_t i = 0; i != varList.size(); ++i) {
+				if (i == 4 * 3) {
+					break;
+				}
+
+				auto dv = varList[i];
+				uint16_t value;
+				bool has_no_value = mem_readw_checked(dv->GetAdr(),
+				                                      &value);
+
+				if (has_no_value) {
+					snprintf(buffer, DEBUG_VAR_BUF_LEN, "%s", "??????");
+					dv->SetValue(false, 0);
+				} else {
+					if (!dv->HasValue() ||
+					    dv->GetValue() != value) {
+						dv->SetValue(true, value);
+					}
+					snprintf(buffer, DEBUG_VAR_BUF_LEN, "0x%04x", value);
+				}
+
+				if (i % 3 != 0) {
+					ImGui::SameLine();
+				}
+				ImGui::Text("%s: %s", dv->GetName(), buffer);
 			}
 		}
-
-		if (varchanges) {
-			int y = i / 3;
-			int x = (i % 3) * 26;
-			mvwprintw(dbg.win_var, y, x, dv->GetName());
-			mvwprintw(dbg.win_var, y, (x + DEBUG_VAR_BUF_LEN + 1), buffer);
-			windowchanges = true; // Something has changed in this
-			                      // window
-		}
 	}
-
-	if (windowchanges) {
-		wrefresh(dbg.win_var);
-	}
+	DBGUI_EndWindowWithStyledTitle();
 }
 #undef DEBUG_VAR_BUF_LEN
 // HEAVY DEBUGGING STUFF

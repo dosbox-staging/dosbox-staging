@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include <SDL_endian.h>
+#include <SDL3/SDL_endian.h>
 
 #include "private/mt32_lasynth_model.h"
 

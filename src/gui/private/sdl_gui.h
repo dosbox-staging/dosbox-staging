@@ -21,7 +21,7 @@
 #include "utils/fraction.h"
 
 // must be included after dosbox_config.h
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 // The image rendered in the emulated computer's raw framebuffer as raw pixels
 // goes through a number of transformations until it gets shown on the host
@@ -91,7 +91,7 @@ struct SDL_Block {
 	uint32_t start_event_id = UINT32_MAX;
 
 	SDL_Window* window = {};
-	int display_number = 0;
+	SDL_DisplayID display_number = 0;
 
 	float dpi_scale    = 1.0f;
 	bool is_fullscreen = false;

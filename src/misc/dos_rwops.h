@@ -6,12 +6,12 @@
 
 #include <cstdint>
 
-#include <SDL_rwops.h>
+#include <SDL3/SDL_iostream.h>
 
-// SDL RWops (I/O stream) implementation for DOS files. With this, we can use
+// SDL IOStream implementation for DOS files. With this, we can use
 // libraries like SDL2_image to read DOS files from the host filesystem or
 // mounted disk images.
 //
-SDL_RWops* create_sdl_rwops_for_dos_file(const uint16_t dos_file_handle);
+SDL_IOStream* create_sdl_rwops_for_dos_file(const uint16_t dos_file_handle);
 
 #endif // DOSBOX_DOS_RWOPS_H

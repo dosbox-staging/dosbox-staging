@@ -157,7 +157,7 @@ enum class PixelFormat : uint8_t {
 	// Example:
 	// uint16_t pixel = (red << 10) | (green << 5) | (blue << 0)
 	//
-	// SDL Equivalent: SDL_PIXELFORMAT_RGB555
+	// SDL Equivalent: SDL_PIXELFORMAT_XRGB1555
 	// FFmpeg Equivalent: AV_PIX_FMT_RGB555
 	RGB555_Packed16 = 15,
 
