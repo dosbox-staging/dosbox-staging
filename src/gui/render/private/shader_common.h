@@ -1,20 +1,17 @@
-// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_SHADER_MANAGER_H
-#define DOSBOX_SHADER_MANAGER_H
-
-#include <optional>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
+#ifndef DOSBOX_SHADER_COMMON_H
+#define DOSBOX_SHADER_COMMON_H
 
 #include "gui/private/common.h"
-
-#include "gui/render/render.h"
-#include "hardware/video/vga.h"
 #include "utils/rect.h"
+
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "glad/gl.h"
 
 namespace SymbolicShaderName {
 
@@ -186,119 +183,48 @@ struct ShaderPreset {
 	ShaderParameters params = {};
 };
 
+enum class ShaderOutputSize {
+	// Size of rendered VGA card output (e.g., for the mode 13h VGA mode, it
+	// can be 320x200, 320x400 or 640x400 depending on the double scanning and
+	// pixel doubling settings)
+	Rendered,
+
+	// "Nominal" size of the emulated DOS video mode (e.g., 320x200 for the
+	// mode 13h VGA mode, which is double-scanned to 400 lines)
+	VideoMode,
+
+	// Size of the viewport (depends on the window size or the screen
+	// dimensions in fullscreen, the various viewport restriction settings
+	// like integer scaling, etc.)
+	Viewport
+};
+
+inline const char* to_string(const ShaderOutputSize s)
+{
+	using enum ShaderOutputSize;
+
+	switch (s) {
+	case Rendered: return "Rendered";
+	case VideoMode: return "VideoMode";
+	case Viewport: return "Viewport";
+	default: assertm(false, "Invalid ShaderOutputSize value"); return "";
+	}
+}
+
 struct ShaderInfo {
 	// Resolved shader name without the file extension. The name might
 	// optionally contain a relative or absolute directory path.
 	std::string name = {};
+
+	// Name of the shader pass set via `#pragma name`
+	std::string pass_name = {};
+
+	std::vector<std::string> input_ids = {"Previous"};
+	ShaderOutputSize output_size       = ShaderOutputSize::Rendered;
 
 	ShaderPreset default_preset = {};
 
 	bool is_adaptive = false;
 };
 
-// Shader manager for loading shader sources, parsing shader metadata, and
-// handling shader auto-switching for the adaptive CRT shaders.
-//
-// Usage:
-//
-// - Notify the shader manager about changes that could potentially trigger
-//   shader switching with the `Notify*` methods.
-//
-// - Query the name of the new shader shader with `GetCurrentShaderName()`.
-//   The caller is responsible for implementing lazy shader switching (only
-//   activate the new shader if the current shader has changed).
-//
-// - Read the shader source code with `LoadShader()`, then compile and
-//   activate it in the rendering backend.
-//
-class ShaderManager {
-public:
-	static ShaderManager& GetInstance()
-	{
-		static ShaderManager instance;
-		return instance;
-	}
-
-	static void AddMessages();
-
-	/*
-	 * Generate a human-readable shader inventory message (one list element
-	 * per line).
-	 */
-	std::deque<std::string> GenerateShaderInventoryMessage() const;
-
-	std::optional<std::pair<ShaderInfo, std::string>> LoadShader(
-	        const std::string& mapped_name);
-
-	std::optional<std::pair<ShaderInfo, std::string>> LoadShader(
-	        const std::string& shader_name, const std::string& extension);
-
-	std::optional<ShaderPreset> LoadShaderPreset(
-	        const ShaderDescriptor& descriptor,
-	        const ShaderPreset& default_preset) const;
-
-	/*
-	 * Notify the shader manager that the current shader has been changed
-	 * by the user.
-	 */
-	ShaderDescriptor NotifyShaderChanged(const std::string& symbolic_shader_descriptor,
-	                                     const std::string& extension);
-	/*
-	 * Notify the shader manager that the viewport area or the
-	 * current video mode has been changed.
-	 */
-	ShaderDescriptor NotifyRenderParametersChanged(
-	        const ShaderDescriptor& curr_shader_descriptor,
-	        const DosBox::Rect canvas_size_px, const VideoMode& video_mode);
-
-	ShaderMode GetCurrentShaderMode() const;
-
-private:
-	ShaderManager()  = default;
-	~ShaderManager() = default;
-
-	// prevent copying
-	ShaderManager(const ShaderManager&) = delete;
-	// prevent assignment
-	ShaderManager& operator=(const ShaderManager&) = delete;
-
-	ShaderDescriptor ParseShaderDescriptor(const std::string& descriptor,
-	                                       const std::string& extension) const;
-
-	std::string MapShaderName(const std::string& name) const;
-
-	std::optional<std::string> FindShaderAndReadSource(const std::string& shader_name);
-
-	ShaderPreset ParseDefaultShaderPreset(const std::string& shader_name,
-	                                      const std::string& shader_source) const;
-
-	void SetShaderSetting(const std::string& name, const std::string& value,
-	                      ShaderSettings& settings) const;
-
-	std::optional<std::pair<std::string, float>> ParseParameterPragma(
-	        const std::string& pragma_value) const;
-
-	ShaderDescriptor MaybeAutoSwitchShader(
-	        const ShaderDescriptor& new_mapped_descriptor) const;
-
-	ShaderDescriptor FindShaderAutoGraphicsStandard() const;
-	ShaderDescriptor FindShaderAutoMachine() const;
-	ShaderDescriptor FindShaderAutoArcade() const;
-	ShaderDescriptor FindShaderAutoArcadeSharp() const;
-
-	ShaderDescriptor GetHerculesShader() const;
-	ShaderDescriptor GetCgaShader() const;
-	ShaderDescriptor GetCompositeShader() const;
-	ShaderDescriptor GetEgaShader() const;
-	ShaderDescriptor GetVgaShader() const;
-
-	ShaderDescriptor last_shader_descriptor = {};
-	ShaderMode current_shader_mode          = {};
-
-	VideoMode video_mode = {};
-
-	int pixels_per_scanline                   = 1;
-	int pixels_per_scanline_force_single_scan = 1;
-};
-
-#endif // DOSBOX_SHADER_MANAGER_H
+#endif // DOSBOX_SHADER_COMMON_H

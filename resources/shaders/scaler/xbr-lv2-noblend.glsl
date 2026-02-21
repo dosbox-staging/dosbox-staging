@@ -8,13 +8,16 @@
 
 /*
 
+#pragma name        Main_Pass1
+#pragma output_size Viewport
+
 #pragma use_nearest_texture_filter
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
 
-#pragma parameter XBR_EQ_THRESHOLD "Eq Threshold" 0.6 0.0 2.0 0.1
-#pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient" 2.0 1.0 3.0 0.1
-#pragma parameter XBR_CORNER_TYPE "Corner Calculation" 1.0 1.0 4.0 1.0
+#pragma parameter XBR_EQ_THRESHOLD    "Eq Threshold"       0.6  0.0 2.0  0.1
+#pragma parameter XBR_LV2_COEFFICIENT "Lv2 Coefficient"    2.0  1.0 3.0  0.1
+#pragma parameter XBR_CORNER_TYPE     "Corner Calculation" 1.0  1.0 4.0  1.0
 
 */
 
@@ -33,18 +36,16 @@ out vec4 t5;
 out vec4 t6;
 out vec4 t7;
 
-uniform vec2 rubyTextureSize;
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	float dx = (1.0/rubyTextureSize.x);
-	float dy = (1.0/rubyTextureSize.y);
+	float dx = (1.0/INPUT_TEXTURE_SIZE_0.x);
+	float dy = (1.0/INPUT_TEXTURE_SIZE_0.y);
 
-	vec2 TexCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	                rubyInputSize / rubyTextureSize;
+	vec2 TexCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
 	v_texCoord     = TexCoord;
 	v_texCoord.x *= 1.00000001;
@@ -72,8 +73,8 @@ in vec4 t7;
 
 out vec4 FragColor;
 
-uniform vec2 rubyTextureSize;
-uniform sampler2D rubyTexture;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform sampler2D INPUT_TEXTURE_0;
 
 uniform float XBR_EQ_THRESHOLD;
 uniform float XBR_LV2_COEFFICIENT;
@@ -129,29 +130,29 @@ void main()
 	bvec4 nc, px;
 	vec4 fx, fx_l, fx_u; // inequations of straight lines.
 
-	vec2 fp  = fract(v_texCoord*rubyTextureSize);
+	vec2 fp  = fract(v_texCoord*INPUT_TEXTURE_SIZE_0);
 
-	vec3 A1 = texture(rubyTexture, t1.xw ).xyz;
-	vec3 B1 = texture(rubyTexture, t1.yw ).xyz;
-	vec3 C1 = texture(rubyTexture, t1.zw ).xyz;
-	vec3 A  = texture(rubyTexture, t2.xw ).xyz;
-	vec3 B  = texture(rubyTexture, t2.yw ).xyz;
-	vec3 C  = texture(rubyTexture, t2.zw ).xyz;
-	vec3 D  = texture(rubyTexture, t3.xw ).xyz;
-	vec3 E  = texture(rubyTexture, t3.yw ).xyz;
-	vec3 F  = texture(rubyTexture, t3.zw ).xyz;
-	vec3 G  = texture(rubyTexture, t4.xw ).xyz;
-	vec3 H  = texture(rubyTexture, t4.yw ).xyz;
-	vec3 I  = texture(rubyTexture, t4.zw ).xyz;
-	vec3 G5 = texture(rubyTexture, t5.xw ).xyz;
-	vec3 H5 = texture(rubyTexture, t5.yw ).xyz;
-	vec3 I5 = texture(rubyTexture, t5.zw ).xyz;
-	vec3 A0 = texture(rubyTexture, t6.xy ).xyz;
-	vec3 D0 = texture(rubyTexture, t6.xz ).xyz;
-	vec3 G0 = texture(rubyTexture, t6.xw ).xyz;
-	vec3 C4 = texture(rubyTexture, t7.xy ).xyz;
-	vec3 F4 = texture(rubyTexture, t7.xz ).xyz;
-	vec3 I4 = texture(rubyTexture, t7.xw ).xyz;
+	vec3 A1 = texture(INPUT_TEXTURE_0, t1.xw ).xyz;
+	vec3 B1 = texture(INPUT_TEXTURE_0, t1.yw ).xyz;
+	vec3 C1 = texture(INPUT_TEXTURE_0, t1.zw ).xyz;
+	vec3 A  = texture(INPUT_TEXTURE_0, t2.xw ).xyz;
+	vec3 B  = texture(INPUT_TEXTURE_0, t2.yw ).xyz;
+	vec3 C  = texture(INPUT_TEXTURE_0, t2.zw ).xyz;
+	vec3 D  = texture(INPUT_TEXTURE_0, t3.xw ).xyz;
+	vec3 E  = texture(INPUT_TEXTURE_0, t3.yw ).xyz;
+	vec3 F  = texture(INPUT_TEXTURE_0, t3.zw ).xyz;
+	vec3 G  = texture(INPUT_TEXTURE_0, t4.xw ).xyz;
+	vec3 H  = texture(INPUT_TEXTURE_0, t4.yw ).xyz;
+	vec3 I  = texture(INPUT_TEXTURE_0, t4.zw ).xyz;
+	vec3 G5 = texture(INPUT_TEXTURE_0, t5.xw ).xyz;
+	vec3 H5 = texture(INPUT_TEXTURE_0, t5.yw ).xyz;
+	vec3 I5 = texture(INPUT_TEXTURE_0, t5.zw ).xyz;
+	vec3 A0 = texture(INPUT_TEXTURE_0, t6.xy ).xyz;
+	vec3 D0 = texture(INPUT_TEXTURE_0, t6.xz ).xyz;
+	vec3 G0 = texture(INPUT_TEXTURE_0, t6.xw ).xyz;
+	vec3 C4 = texture(INPUT_TEXTURE_0, t7.xy ).xyz;
+	vec3 F4 = texture(INPUT_TEXTURE_0, t7.xz ).xyz;
+	vec3 I4 = texture(INPUT_TEXTURE_0, t7.xw ).xyz;
 
 	vec4 b = mul( mat4x3(B, D, H, F), Y );
 	vec4 c = mul( mat4x3(C, A, G, I), Y );

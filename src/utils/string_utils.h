@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+#include "misc/support.h"
+
 template <size_t N>
 int safe_sprintf(char (&dst)[N], const char* fmt, ...)
         GCC_ATTRIBUTE(format(printf, 2, 3));
@@ -288,6 +290,38 @@ std::string join_with_commas(const std::vector<std::string>& items,
                              const std::string_view and_conjunction = "and",
                              const std::string_view end_punctuation = ".");
 
+template <typename Container>
+std::string to_string(const Container& c, const std::string& delimiter = ", ",
+                      const std::string& prefix = "{",
+                      const std::string& suffix = "}")
+{
+	using ElementType = typename Container::value_type;
+
+	static_assert(std::is_enum_v<ElementType> || std::is_arithmetic_v<ElementType>,
+	              "Container elements must be either enum class types "
+	              "or arithmetic types compatible with std::to_string()");
+
+	std::string result = prefix;
+
+	for (auto it = c.begin(); it != c.end(); ++it) {
+		if constexpr (std::is_enum_v<ElementType>) {
+			result += std::to_string(enum_val(*it));
+		} else {
+			result += std::to_string(*it);
+		}
+		if (std::next(it) != c.end()) {
+			result += delimiter;
+		}
+	}
+
+	return result + suffix;
+}
+
+std::string join(const std::vector<std::string>& items,
+				 const std::string& delimiter = ", ",
+                 const std::string& prefix = "{",
+                 const std::string& suffix = "}");
+
 // Parse the string as an integer or decimal value and return it as a float.
 // This API should give us enough numerical range and accuracy for any
 // text-based inputs.
@@ -350,7 +384,7 @@ std::string format_str(const std::string& format, const Args&... args) noexcept
 	return result;
 }
 
-template<size_t N>
+template <size_t N>
 std::string safe_tostring(char (&str)[N]) noexcept
 {
 	return std::string(str, safe_strlen(str));

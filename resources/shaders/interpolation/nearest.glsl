@@ -7,6 +7,9 @@
 
 /*
 
+#pragma name        Main_Pass1
+#pragma output_size Viewport
+
 #pragma use_nearest_texture_filter
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
@@ -14,9 +17,6 @@
 */
 
 #if defined(VERTEX)
-
-uniform vec2 rubyTextureSize;
-uniform vec2 rubyInputSize;
 
 layout (location = 0) in vec2 a_position;
 
@@ -26,8 +26,7 @@ void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	             rubyInputSize / rubyTextureSize;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 }
 
 #elif defined(FRAGMENT)
@@ -36,11 +35,11 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE_0;
 
 void main()
 {
-	FragColor = texture(rubyTexture, v_texCoord);
+	FragColor = texture(INPUT_TEXTURE_0, v_texCoord);
 }
 
 #endif

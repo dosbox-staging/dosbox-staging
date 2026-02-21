@@ -1,17 +1,20 @@
 libgui_sources = files(
-    'auto_image_adjustments.cpp',
     'clipboard.cpp',
     'mapper.cpp',
     'mapper.cpp',
     'sdl_gui.cpp',
-    'shader_manager.cpp',
     'titlebar.cpp',
 
+    'render/auto_image_adjustments.cpp',
+    'render/auto_shader_switcher.cpp',
     'render/deinterlacer.cpp',
     'render/opengl_renderer.cpp',
     'render/render.cpp',
     'render/scaler/scalers.cpp',
-    'render/sdl_renderer.cpp'
+    'render/sdl_renderer.cpp',
+    'render/shader.cpp',
+    'render/shader_manager.cpp',
+    'render/shader_pipeline.cpp',
 )
 
 libgui = static_library(
