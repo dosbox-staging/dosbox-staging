@@ -356,12 +356,14 @@ void ShaderPipeline::RenderPass(const ShaderPass& pass,
 
 void ShaderPipeline::UpdateTextureUniforms(const std::list<ShaderPass>::iterator pass) const
 {
-	glUseProgram(pass->shader.program_object);
+	const auto shader = pass->shader;
+
+	glUseProgram(shader.program_object);
 
 	pass->in_textures.clear();
 
-	for (size_t i = 0; i < pass->shader.info.input_ids.size(); ++i) {
-		const auto pass_id = pass->shader.info.input_ids[i];
+	for (size_t i = 0; i < shader.info.input_ids.size(); ++i) {
+		const auto pass_id = shader.info.input_ids[i];
 
 		GLfloat width     = 0;
 		GLfloat height    = 0;
@@ -377,8 +379,7 @@ void ShaderPipeline::UpdateTextureUniforms(const std::list<ShaderPass>::iterator
 			} else {
 				const auto prev_pass = std::prev(pass);
 
-				width = static_cast<GLfloat>(
-				        prev_pass->out_size.w);
+				width = static_cast<GLfloat>(prev_pass->out_size.w);
 
 				height = static_cast<GLfloat>(
 				        prev_pass->out_size.h);
@@ -397,11 +398,9 @@ void ShaderPipeline::UpdateTextureUniforms(const std::list<ShaderPass>::iterator
 
 				const auto p = *it;
 				if (p.shader.info.pass_name == pass_id) {
-					width = static_cast<GLfloat>(
-					        p.out_size.w);
+					width = static_cast<GLfloat>(p.out_size.w);
 
-					height = static_cast<GLfloat>(
-					        p.out_size.h);
+					height = static_cast<GLfloat>(p.out_size.h);
 
 					in_texture = p.out_texture;
 
@@ -418,19 +417,19 @@ void ShaderPipeline::UpdateTextureUniforms(const std::list<ShaderPass>::iterator
 		}
 
 		const auto input_texture_name = format_str("INPUT_TEXTURE_%d", i);
-		pass->shader.SetUniform1i(input_texture_name.c_str(),
-		                          check_cast<GLint>(i));
+		shader.SetUniform1i(input_texture_name.c_str(),
+		                    check_cast<GLint>(i));
 
 		const auto input_texture_size_name = format_str("INPUT_TEXTURE_SIZE_%d",
 		                                                i);
-		pass->shader.SetUniform2f(input_texture_size_name.c_str(), width, height);
+		shader.SetUniform2f(input_texture_size_name.c_str(), width, height);
 
 		pass->in_textures.emplace_back(in_texture);
 	}
 
-	pass->shader.SetUniform2f("OUTPUT_TEXTURE_SIZE",
-	                          pass->out_size.w,
-	                          pass->out_size.h);
+	shader.SetUniform2f("OUTPUT_TEXTURE_SIZE",
+	                    pass->out_size.w,
+	                    pass->out_size.h);
 }
 
 void ShaderPipeline::UpdateMainShaderPassUniforms()
