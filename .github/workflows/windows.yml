@@ -295,8 +295,7 @@ jobs:
           cp extras/icons/windows/dosbox-staging.bmp      out
           cp extras/icons/windows/dosbox-staging-side.bmp out
 
-          # Remove release notes from installer (it's only for the ZIP artifact)
-          rm -f $PACKAGE_DIR/release-notes.html
+          mv $PACKAGE_DIR/release-notes.html out
 
           mv $PACKAGE_DIR/*          out/program
           mv out/program/dosbox*.exe out
