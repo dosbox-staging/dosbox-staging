@@ -136,10 +136,46 @@
       }
     },
     {
+      "name": "debug-windows-vs2022",
+      "displayName": "Debug (Windows host CPU with VS2022)",
+      "description": "Configure for Debug build",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/debug-windows-vs2022",
+      "cacheVariables": {
+        "CMAKE_GENERATOR_TOOLSET": "ClangCL",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "RESOURCE_COPY_PATH": "/Resources"
+      },
+      "environment": {
+        "UseMultiToolTask": "true",
+        "EnforceProcessCountAcrossBuilds": "true"
+      }
+    },
+    {
+      "name": "release-windows-vs2022",
+      "displayName": "Release (Windows host CPU with VS2022)",
+      "description": "Configure for Release build",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/release-windows-vs2022",
+      "cacheVariables": {
+        "CMAKE_GENERATOR_TOOLSET": "ClangCL",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "RESOURCE_COPY_PATH": "/Resources"
+      },
+      "environment": {
+        "UseMultiToolTask": "true",
+        "EnforceProcessCountAcrossBuilds": "true"
+      }
+    },
+    {
       "name": "debug-windows",
       "displayName": "Debug (Windows host CPU)",
       "description": "Configure for Debug build",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "binaryDir": "${sourceDir}/build/debug-windows",
       "cacheVariables": {
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",
@@ -157,7 +193,7 @@
       "name": "release-windows",
       "displayName": "Release (Windows host CPU)",
       "description": "Configure for Release build",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "binaryDir": "${sourceDir}/build/release-windows",
       "cacheVariables": {
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",
@@ -310,6 +346,22 @@
     {
       "name": "release-macos-x86_64",
       "configurePreset" : "release-macos-x86_64",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug-windows-vs2022",
+      "configurePreset" : "debug-windows-vs2022",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release-windows-vs2022",
+      "configurePreset" : "release-windows-vs2022",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
