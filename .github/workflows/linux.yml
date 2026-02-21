@@ -48,7 +48,7 @@ jobs:
       - name: Upload release notes artifact
         uses: actions/upload-artifact@v6
         with:
-          name: release-notes-html
+          name: release-notes-html.zip
           path: release-notes.html
           retention-days: 1
 
@@ -224,9 +224,9 @@ jobs:
           cp nuked-sc55-clap/* $PLUGINS_DIR
 
       - name: Download release notes HTML
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
-          name: release-notes-html
+          name: release-notes-html.zip
           path: "dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}"
 
       - name: Create tarball

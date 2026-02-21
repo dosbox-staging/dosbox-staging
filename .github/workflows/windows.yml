@@ -48,7 +48,7 @@ jobs:
       - name: Upload release notes artifact
         uses: actions/upload-artifact@v6
         with:
-          name: release-notes-html
+          name: release-notes-html.zip
           path: release-notes.html
           retention-days: 1
 
@@ -180,16 +180,16 @@ jobs:
 
       - name: Download release notes HTML
         if:   ${{ !matrix.conf.debugger }}
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
-          name: release-notes-html
+          name: release-notes-html.zip
           path: ${{ env.PACKAGE_DIR }}
 
       - name: Upload package
         if:   ${{ !matrix.conf.debugger }}
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ env.PACKAGE_DIR }}-without-debugger
+          name: ${{ env.PACKAGE_DIR }}-without-debugger.zip
           path: ${{ env.PACKAGE_DIR }}
           overwrite: true
 
@@ -207,7 +207,7 @@ jobs:
         if:   ${{ matrix.conf.debugger }}
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ env.PACKAGE_DIR }}-with-debugger
+          name: ${{ env.PACKAGE_DIR }}-with-debugger.zip
           path: ${{ env.PACKAGE_DIR }}/dosbox_with_debugger.exe
           overwrite: true
 
@@ -269,7 +269,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v7
         with:
-          name: ${{ env.PACKAGE_DIR }}
+          name: ${{ env.PACKAGE_DIR }}.zip
           path: ${{ env.PACKAGE_DIR }}
 
       - name: Dump workspace contents

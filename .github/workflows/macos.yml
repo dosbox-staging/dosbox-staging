@@ -48,7 +48,7 @@ jobs:
       - name: Upload release notes artifact
         uses: actions/upload-artifact@v6
         with:
-          name: release-notes-html
+          name: release-notes-html.zip
           path: release-notes.html
           retention-days: 1
 
@@ -117,14 +117,14 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@v6
         with:
-          name: dosbox-${{ matrix.conf.arch }}
+          name: dosbox-${{ matrix.conf.arch }}.zip
           path: build/release-macos-${{ matrix.conf.arch }}/Release/dosbox
           overwrite: true
 
       - name: Upload resources
         uses: actions/upload-artifact@v6
         with:
-          name: Resources
+          name: Resources.zip
           path: build/release-macos-${{ matrix.conf.arch }}/Resources
           overwrite: true
 
@@ -145,7 +145,7 @@ jobs:
       - name: Install brew depedencies
         run: HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --overwrite librsvg
 
-      - name: Download binaries
+      - name: Download artifacts
         uses: actions/download-artifact@v7
 
       - name: Package
@@ -197,9 +197,9 @@ jobs:
 
 
       - name: Download release notes HTML
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
-          name: release-notes-html
+          name: release-notes-html.zip
 
       - name: Upload DMG disk image
         uses: actions/upload-artifact@v6
