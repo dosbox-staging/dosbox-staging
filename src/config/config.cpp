@@ -471,12 +471,15 @@ std::string Config::SetProperty(std::vector<std::string>& parameters)
 	const auto space_pos  = parameters[0].find_first_of(' ');
 	const auto equals_pos = parameters[0].find_first_of('=');
 
-	if ((equals_pos != std::string::npos) &&
-	    ((space_pos == std::string::npos) || (equals_pos < space_pos))) {
+	const auto space_found  = (space_pos != std::string::npos);
+	const auto equals_found = (equals_pos != std::string::npos);
+
+	if ((equals_found && !space_found) || (equals_pos < space_pos)) {
 
 		// If we have a '=' possibly before a space, split on the '='
 		parameters.emplace(parameters.begin() + 1,
 		                   parameters[0].substr(equals_pos + 1));
+
 		parameters[0].erase(equals_pos);
 
 		// As we had a '=', the first thing must be a property now
@@ -492,12 +495,12 @@ std::string Config::SetProperty(std::vector<std::string>& parameters)
 		// Order in the vector should be ok now
 
 	} else {
-		if ((space_pos != std::string::npos) &&
-		    ((equals_pos == std::string::npos) || (space_pos < equals_pos))) {
+		if ((space_found && !equals_found) || (space_pos < equals_pos)) {
 
 			// Space before a possible '=', split on the ' '
 			parameters.emplace(parameters.begin() + 1,
 			                   parameters[0].substr(space_pos + 1));
+
 			parameters[0].erase(space_pos);
 		}
 
@@ -517,8 +520,9 @@ std::string Config::SetProperty(std::vector<std::string>& parameters)
 				                  parameters[0].c_str());
 			}
 		} else {
-			// First of parameters is most likely a section, but could
-			// still be gus have a look at the second parameter
+			// First of parameters is most likely a section, but
+			// could still be gus have a look at the second
+			// parameter
 			if (parameters.size() < 2) {
 				return MSG_Get("PROGRAM_CONFIG_SET_SYNTAX");
 			}
@@ -526,9 +530,11 @@ std::string Config::SetProperty(std::vector<std::string>& parameters)
 			const auto space_pos2 = parameters[1].find_first_of(' ');
 			const auto equals_pos2 = parameters[1].find_first_of('=');
 
-			if ((equals_pos2 != std::string::npos) &&
-			    ((space_pos2 == std::string::npos) ||
-			     (equals_pos2 < space_pos2))) {
+			const auto space_found2 = (space_pos2 != std::string::npos);
+			const auto equals_found2 = (equals_pos2 != std::string::npos);
+
+			if ((equals_found2 && !space_found2) ||
+			    (equals_pos2 < space_pos2)) {
 				// Split on the '='
 				parameters.emplace(parameters.begin() + 2,
 				                   parameters[1].substr(
@@ -536,9 +542,8 @@ std::string Config::SetProperty(std::vector<std::string>& parameters)
 
 				parameters[1].erase(equals_pos2);
 
-			} else if ((space_pos2 != std::string::npos) &&
-			           ((equals_pos2 == std::string::npos) ||
-			            (space_pos2 < equals_pos2))) {
+			} else if ((space_found2 && !equals_found2) ||
+			           (space_pos2 < equals_pos2)) {
 				// Split on the space
 				parameters.emplace(parameters.begin() + 2,
 				                   parameters[1].substr(
