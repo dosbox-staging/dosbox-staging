@@ -13,10 +13,10 @@
 #include "misc/support.h"
 
 #ifndef DOSBOX_REGS_H
-	#include "cpu/registers.h"
+#include "cpu/registers.h"
 #endif
 #ifndef DOSBOX_MEM_H
-	#include "hardware/memory.h"
+#include "hardware/memory.h"
 #endif
 
 constexpr auto CpuCyclesMin = 50;
@@ -265,7 +265,7 @@ void CPU_Push32(const uint32_t value);
 #define DESC_CODE_R_C_NA  0x1f
 
 #ifdef _MSC_VER
-	#pragma pack(1)
+#pragma pack(1)
 #endif
 
 struct S_Descriptor {
@@ -362,12 +362,14 @@ struct TSS_32 {
 } GCC_ATTRIBUTE(packed);
 
 #ifdef _MSC_VER
-	#pragma pack()
+#pragma pack()
 #endif
 class Descriptor {
 public:
 	Descriptor()
-	        : saved{{0, 0}}
+	        : saved{
+	                  {0, 0}
+        }
 	{}
 
 	void Load(PhysPt address);
@@ -564,13 +566,13 @@ public:
 
 struct CPUBlock {
 	// Current privilege
-	Bitu cpl; 
+	Bitu cpl;
 
 	Bitu mpl;
 	Bitu cr0;
 
 	// Is protected mode enabled
-	bool pmode; 
+	bool pmode;
 
 	GDTDescriptorTable gdt;
 	DescriptorTable idt;
