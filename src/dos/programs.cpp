@@ -849,21 +849,22 @@ void CONFIG::Run(void)
 				parameters.push_back(rest);
 			}
 
-			if (const auto warning_message = control->SetPropertyFromCli(parameters);
+			if (const auto warning_message = control->SetPropertyFromCli(
+			            parameters);
 			    !warning_message.empty()) {
 
 				WriteOut(warning_message);
 
 			} else {
-				auto* tsec = dynamic_cast<SectionProp*>(
+				auto* section = dynamic_cast<SectionProp*>(
 				        control->GetSection(parameters[0]));
-				if (!tsec) {
+				if (!section) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
 					         parameters[0].c_str());
 					return;
 				}
 
-				auto* property = tsec->GetProperty(parameters[1]);
+				auto* property = section->GetProperty(parameters[1]);
 
 				if (!property) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
@@ -903,15 +904,13 @@ void CONFIG::Run(void)
 					return;
 				}
 
-				std::string inputline = parameters[1] + "=" + value;
-
+				const auto input_line = parameters[1] + "=" + value;
 				const auto line_utf8 = dos_to_utf8(
-				        inputline,
+				        input_line,
 				        DosStringConvertMode::NoSpecialCharacters);
 
-				tsec->HandleInputLine(line_utf8);
-
-				tsec->ExecuteUpdate(*property);
+				section->HandleInputLine(line_utf8);
+				section->ExecuteUpdate(*property);
 			}
 			return;
 		}
