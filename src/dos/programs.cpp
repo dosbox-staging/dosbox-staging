@@ -899,7 +899,7 @@ void CONFIG::Run(void)
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"),
 					         parameters[1].c_str());
 
-					property->SetQueueableValue(value);
+					property->SetQueuedValue(value);
 					return;
 				}
 
