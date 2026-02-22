@@ -560,11 +560,14 @@ void CONFIG::Run(void)
 				DOSBOX_Restart();
 			} else {
 				std::vector<std::string> restart_params;
+
 				restart_params.emplace_back(
 				        control->cmdline->GetFileName());
+
 				for (size_t i = 0; i < parameters.size(); i++) {
 					restart_params.emplace_back(parameters[i]);
 				}
+
 				const auto remaining_args = cmd->GetArguments();
 				restart_params.insert(restart_params.end(),
 				                      remaining_args.begin(),

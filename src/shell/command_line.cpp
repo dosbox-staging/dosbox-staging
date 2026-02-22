@@ -292,12 +292,12 @@ std::vector<std::string> CommandLine::GetArguments()
 int CommandLine::GetParameterFromList(const char* const params[],
                                       std::vector<std::string>& output)
 {
-	// Return values: 0 = P_NOMATCH, 1 = P_NOPARAMS
+	// Return values: 0 = NoMatch, 1 = NoParams
 	// TODO return nomoreparams
 	int retval = 1;
 	output.clear();
 
-	enum { P_START, P_FIRSTNOMATCH, P_FIRSTMATCH } parsestate = P_START;
+	enum { Start, FirstNoMatch, FirstMatch } parsestate = Start;
 
 	auto it = cmds.begin();
 
@@ -309,26 +309,26 @@ int CommandLine::GetParameterFromList(const char* const params[],
 				// Found a parameter
 				found = true;
 				switch (parsestate) {
-				case P_START:
+				case Start:
 					retval     = i + 2;
-					parsestate = P_FIRSTMATCH;
+					parsestate = FirstMatch;
 					break;
-				case P_FIRSTMATCH:
-				case P_FIRSTNOMATCH: return retval;
+				case FirstMatch:
+				case FirstNoMatch: return retval;
 				}
 			}
 		}
 
 		if (!found) {
 			switch (parsestate) {
-			case P_START:
+			case Start:
 				// No match
 				retval     = 0;
-				parsestate = P_FIRSTNOMATCH;
+				parsestate = FirstNoMatch;
 				output.push_back(*it);
 				break;
-			case P_FIRSTMATCH:
-			case P_FIRSTNOMATCH: output.push_back(*it); break;
+			case FirstMatch:
+			case FirstNoMatch: output.push_back(*it); break;
 			}
 		}
 
