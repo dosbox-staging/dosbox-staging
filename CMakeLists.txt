@@ -523,7 +523,7 @@ target_link_libraries(libdosboxcommon PRIVATE
 
 target_link_libraries(dosbox PRIVATE
   libdosboxcommon
-  SDL3::SDL3
+  SDL3::Headers
 )
 
 # Remove MkDocs source-tree caches (website/.cache, __pycache__, site)
