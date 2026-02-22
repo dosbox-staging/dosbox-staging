@@ -465,108 +465,116 @@ void Config::ParseConfigFiles(const std_fs::path& config_dir)
 	MSG_LoadMessages();
 }
 
-std::string Config::SetProperty(std::vector<std::string>& pvars)
+std::string Config::SetProperty(std::vector<std::string>& parameters)
 {
 	// Attempt to split off the first word
-	std::string::size_type spcpos = pvars[0].find_first_of(' ');
-	std::string::size_type equpos = pvars[0].find_first_of('=');
+	const auto space_pos  = parameters[0].find_first_of(' ');
+	const auto equals_pos = parameters[0].find_first_of('=');
 
-	if ((equpos != std::string::npos) &&
-	    ((spcpos == std::string::npos) || (equpos < spcpos))) {
+	if ((equals_pos != std::string::npos) &&
+	    ((space_pos == std::string::npos) || (equals_pos < space_pos))) {
 
-		// If we have a '=' possibly before a ' ' split on the =
-		pvars.emplace(pvars.begin() + 1, pvars[0].substr(equpos + 1));
-		pvars[0].erase(equpos);
+		// If we have a '=' possibly before a space, split on the '='
+		parameters.emplace(parameters.begin() + 1,
+		                   parameters[0].substr(equals_pos + 1));
+		parameters[0].erase(equals_pos);
 
-		// As we had a = the first thing must be a property now
-		Section* sec = GetSectionFromProperty(pvars[0].c_str());
+		// As we had a '=', the first thing must be a property now
+		const auto sec = GetSectionFromProperty(parameters[0].c_str());
 
 		if (sec) {
-			pvars.emplace(pvars.begin(), std::string(sec->GetName()));
+			parameters.emplace(parameters.begin(),
+			                   std::string(sec->GetName()));
 		} else {
 			return format_str(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
-			                  pvars[0].c_str());
+			                  parameters[0].c_str());
 		}
 		// Order in the vector should be ok now
 
 	} else {
-		if ((spcpos != std::string::npos) &&
-		    ((equpos == std::string::npos) || (spcpos < equpos))) {
+		if ((space_pos != std::string::npos) &&
+		    ((equals_pos == std::string::npos) || (space_pos < equals_pos))) {
 
-			// ' ' before a possible '=', split on the ' '
-			pvars.emplace(pvars.begin() + 1,
-			              pvars[0].substr(spcpos + 1));
-			pvars[0].erase(spcpos);
+			// Space before a possible '=', split on the ' '
+			parameters.emplace(parameters.begin() + 1,
+			                   parameters[0].substr(space_pos + 1));
+			parameters[0].erase(space_pos);
 		}
 
 		// Check if the first parameter is a section or property
-		Section* sec = GetSection(pvars[0]);
+		const auto sec = GetSection(parameters[0]);
 
 		if (!sec) {
-			// Not a section: little duplicate from above
-			Section* secprop = GetSectionFromProperty(pvars[0].c_str());
+			// Not a section; little duplicate from above
+			const auto secprop = GetSectionFromProperty(
+			        parameters[0].c_str());
 
 			if (secprop) {
-				pvars.emplace(pvars.begin(),
-				              std::string(secprop->GetName()));
+				parameters.emplace(parameters.begin(),
+				                   std::string(secprop->GetName()));
 			} else {
 				return format_str(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
-				                  pvars[0].c_str());
+				                  parameters[0].c_str());
 			}
 		} else {
-			// First of pvars is most likely a section, but could
+			// First of parameters is most likely a section, but could
 			// still be gus have a look at the second parameter
-			if (pvars.size() < 2) {
+			if (parameters.size() < 2) {
 				return MSG_Get("PROGRAM_CONFIG_SET_SYNTAX");
 			}
 
-			std::string::size_type spcpos2 = pvars[1].find_first_of(' ');
-			std::string::size_type equpos2 = pvars[1].find_first_of('=');
+			const auto space_pos2 = parameters[1].find_first_of(' ');
+			const auto equals_pos2 = parameters[1].find_first_of('=');
 
-			if ((equpos2 != std::string::npos) &&
-			    ((spcpos2 == std::string::npos) || (equpos2 < spcpos2))) {
-				// Split on the =
-				pvars.emplace(pvars.begin() + 2,
-				              pvars[1].substr(equpos2 + 1));
+			if ((equals_pos2 != std::string::npos) &&
+			    ((space_pos2 == std::string::npos) ||
+			     (equals_pos2 < space_pos2))) {
+				// Split on the '='
+				parameters.emplace(parameters.begin() + 2,
+				                   parameters[1].substr(
+				                           equals_pos2 + 1));
 
-				pvars[1].erase(equpos2);
+				parameters[1].erase(equals_pos2);
 
-			} else if ((spcpos2 != std::string::npos) &&
-			           ((equpos2 == std::string::npos) ||
-			            (spcpos2 < equpos2))) {
-				// Split on the ' '
-				pvars.emplace(pvars.begin() + 2,
-				              pvars[1].substr(spcpos2 + 1));
+			} else if ((space_pos2 != std::string::npos) &&
+			           ((equals_pos2 == std::string::npos) ||
+			            (space_pos2 < equals_pos2))) {
+				// Split on the space
+				parameters.emplace(parameters.begin() + 2,
+				                   parameters[1].substr(
+				                           space_pos2 + 1));
 
-				pvars[1].erase(spcpos2);
+				parameters[1].erase(space_pos2);
 			}
 
 			// Is this a property?
-			Section* sec2 = GetSectionFromProperty(pvars[1].c_str());
+			const auto sec2 = GetSectionFromProperty(
+			        parameters[1].c_str());
 
 			if (!sec2) {
 				// Not a property
-				Section* sec3 = GetSectionFromProperty(
-				        pvars[0].c_str());
+				const auto sec3 = GetSectionFromProperty(
+				        parameters[0].c_str());
 				if (sec3) {
 					// Section and property name are identical
-					pvars.emplace(pvars.begin(), pvars[0]);
+					parameters.emplace(parameters.begin(),
+					                   parameters[0]);
 				}
-				// else has been checked above already
+				// Else has been checked above already
 			}
 		}
 	}
 
-	if (pvars.size() < 3) {
+	if (parameters.size() < 3) {
 		return MSG_Get("PROGRAM_CONFIG_SET_SYNTAX");
 	}
 
 	// Check if the property actually exists in the section
-	const auto sec2 = GetSectionFromProperty(pvars[1].c_str());
+	const auto sec2 = GetSectionFromProperty(parameters[1].c_str());
 	if (!sec2) {
 		return format_str(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
-		                  pvars[1].c_str(),
-		                  pvars[0].c_str());
+		                  parameters[1].c_str(),
+		                  parameters[0].c_str());
 	}
 
 	return "";
