@@ -510,7 +510,7 @@ target_link_libraries(libdosboxcommon PRIVATE
 
 target_link_libraries(dosbox PRIVATE
   libdosboxcommon
-  SDL3::SDL3
+  SDL3::Headers
 )
 
 # Add installation rules
