@@ -12,6 +12,6 @@ target_include_directories(imgui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/backends
 )
 
-target_link_libraries(imgui PUBLIC SDL3::SDL3)
+target_link_libraries(imgui PRIVATE SDL3::SDL3)
 
 add_library(imgui::imgui ALIAS imgui)

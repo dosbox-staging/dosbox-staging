@@ -50,7 +50,7 @@ endif()
 target_link_libraries(dosbox_tests PRIVATE
     GTest::gmock_main
     libdosboxcommon
-    SDL3::SDL3
+    SDL3::Headers
 )
 
 include(GoogleTest)
