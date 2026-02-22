@@ -432,7 +432,7 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 
 		std::vector<std::string> pvars(1, std::move(command));
 
-		const auto warning_message = control->SetProperty(pvars);
+		const auto warning_message = control->SetPropertyFromCli(pvars);
 
 		if (!warning_message.empty()) {
 			// TODO convert to notification

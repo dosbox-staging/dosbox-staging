@@ -129,7 +129,7 @@ public:
 
 	void ParseConfigFiles(const std_fs::path& config_path);
 
-	std::string SetProperty(std::vector<std::string>& parameters);
+	std::string SetPropertyFromCli(std::vector<std::string>& parameters);
 
 	const std::string& GetArgumentLanguage();
 

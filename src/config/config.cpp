@@ -465,7 +465,7 @@ void Config::ParseConfigFiles(const std_fs::path& config_dir)
 	MSG_LoadMessages();
 }
 
-std::string Config::SetProperty(std::vector<std::string>& parameters)
+std::string Config::SetPropertyFromCli(std::vector<std::string>& parameters)
 {
 	// Attempt to split off the first word
 	const auto space_pos  = parameters[0].find_first_of(' ');

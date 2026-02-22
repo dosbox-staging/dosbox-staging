@@ -849,7 +849,7 @@ void CONFIG::Run(void)
 				parameters.push_back(rest);
 			}
 
-			if (const auto warning_message = control->SetProperty(parameters);
+			if (const auto warning_message = control->SetPropertyFromCli(parameters);
 			    !warning_message.empty()) {
 
 				WriteOut(warning_message);
