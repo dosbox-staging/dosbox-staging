@@ -3430,11 +3430,24 @@ public:
 			}
 		};
 
-		PropMultiVal* p = secprop->GetMultiVal("cycles");
+		// Split the 'cycles' setting into two parts (type and
+		// parameters) at the first space character.
+		const auto [type, parameters] =
+		        [&]() -> std::pair<std::string, std::string> {
+			std::string pref = secprop->GetString("cycles");
 
-		const std::string type = p->GetSection()->GetString("type");
+			auto pos = pref.find(' ');
+			if (pos == std::string::npos) {
+				return {pref, ""};
+			}
+
+			const auto type   = pref.substr(0, pos);
+			const auto params = pref.substr(pos + 1);
+			return {type, params};
+		}();
+
 		std::string str;
-		CommandLine cmd("", p->GetSection()->GetString("parameters"));
+		CommandLine cmd("", parameters);
 
 		constexpr auto MinPercent = 0;
 		constexpr auto MaxPercent = 100;
@@ -3815,20 +3828,12 @@ void init_cpu_config_settings(SectionProp& secprop)
 	pstring->SetDeprecatedWithAlternateValue("pentium_slow", "pentium");
 
 	// Legacy `cycles` setting
-	auto pmulti_remain = secprop.AddMultiValRemain("cycles",
-	                                               DeprecatedButAllowed,
-	                                               " ");
-	pmulti_remain->SetHelp(
+	pstring = secprop.AddString("cycles", DeprecatedButAllowed, " ");
+	pstring->SetHelp(
 	        "The [color=light-green]'cycles'[reset] setting is deprecated but still accepted;\n"
 	        "please use [color=light-green]'cpu_cycles'[reset], "
 	        "[color=light-green]'cpu_cycles_protected'[reset] and "
 	        "[color=light-green]'cpu_throttle'[reset] instead.");
-
-	pstring = pmulti_remain->GetSection()->AddString("type", Always, "auto");
-	pmulti_remain->SetValue(" ");
-	pstring->SetValues({"auto", "fixed", "max", "%u"});
-
-	pmulti_remain->GetSection()->AddString("parameters", Always, "");
 
 	// Revised CPU cycles related settings
 	const auto cpu_cycles_default = format_str("%d", CpuCyclesRealModeDefault);
