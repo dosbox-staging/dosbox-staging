@@ -33,7 +33,6 @@ static const std::string CmdBoot          = "@Z:\\BOOT.COM ";
 static const std::string CmdConfig        = "@Z:\\CONFIG.COM ";
 static const std::string CmdMount         = "@Z:\\MOUNT.COM ";
 static const std::string CmdMouse         = "@Z:\\MOUSE.COM ";
-static const std::string CmdImgMount      = "@Z:\\IMGMOUNT.COM ";
 static const std::string CmdEchoOff       = "@ECHO OFF";
 static const std::string CmdSet           = "@SET ";
 static const std::string CmdSetPath       = "@SET PATH=";
@@ -644,7 +643,7 @@ std::string build_auto_mount_cd_images_cmd(const std::string_view dir_letter,
                                            const std::vector<std_fs::path>& image_paths,
                                            const std::optional<AutoMountSettings>& settings)
 {
-	auto command = CmdImgMount;
+	auto command = CmdMount;
 
 	if (!settings.has_value() || settings->override_drive.empty()) {
 		command += dir_letter;
@@ -724,7 +723,7 @@ void AutoExecModule::AutoMountDriveD(const std::string& cdrom_images,
                                      const Placement placement)
 {
 	AddLine(placement, CmdMount + "-u D" + ToNul);
-	AddLine(placement, CmdImgMount + "D " + cdrom_images + " -t iso" + ToNul);
+	AddLine(placement, CmdMount + "D " + cdrom_images + " -t iso" + ToNul);
 }
 
 void AutoExecModule::ReMountDirAsDriveC(const std::string& directory)
