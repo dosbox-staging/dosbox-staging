@@ -430,17 +430,17 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 			continue;
 		}
 
-		std::vector<std::string> pvars(1, std::move(command));
+		std::vector<std::string> parameters(1, command);
 
-		const auto warning_message = control->SetPropertyFromCli(pvars);
+		if (const auto warning_message = control->SetPropertyFromCli(parameters);
+		    !warning_message.empty()) {
 
-		if (!warning_message.empty()) {
 			// TODO convert to notification
 			LOG_WARNING("CONFIG: %s", warning_message.c_str());
 
 		} else {
-			Section* tsec = control->GetSection(pvars[0]);
-			std::string value(pvars[2]);
+			auto section = control->GetSection(parameters[0]);
+			std::string value(parameters[2]);
 
 			// Due to parsing, there can be a '=' at the
 			// start of the value.
@@ -449,18 +449,17 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 				value.erase(0, 1);
 			}
 
-			for (size_t i = 3; i < pvars.size(); i++) {
-				value += (std::string(" ") + pvars[i]);
+			for (size_t i = 3; i < parameters.size(); i++) {
+				value += (std::string(" ") + parameters[i]);
 			}
 
-			std::string inputline = pvars[1] + "=" + value;
-
-			bool change_success = tsec->HandleInputLine(inputline);
+			auto input_line = parameters[1] + "=" + value;
+			bool change_success = section->HandleInputLine(input_line);
 
 			if (!change_success && !value.empty()) {
 				// TODO convert to notification
 				LOG_WARNING("CONFIG: Cannot set '%s'",
-				            inputline.c_str());
+				            input_line.c_str());
 			}
 		}
 	}
