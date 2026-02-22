@@ -569,7 +569,15 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 		if (!first) {
 			command_line.push_back(' ');
 		}
-		command_line.append(arg);
+
+		// On Linux and macOS, command line arguments are passed as an
+		// array of strings to execvp() and can contain spaces. On
+		// Windows, the entire command line is passed to CreateProcess()
+		// as a single string, therefore we need to enclose the
+		// arguments in double quotes, otherwise things will break if
+		// one or more arguments contain spaces.
+		//
+		command_line.append("\"" + arg + "\"");
 		first = false;
 	}
 #else
