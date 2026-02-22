@@ -396,7 +396,8 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 					auto pint = dynamic_cast<PropInt*>(p);
 					assert(pint);
 
-					if (pint && pint->GetMin() != pint->GetMax()) {
+					if (pint &&
+					    pint->GetMin() != pint->GetMax()) {
 						std::ostringstream oss;
 						oss << pint->GetMin();
 						oss << "..";
@@ -477,46 +478,80 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 
 void CONFIG::Run(void)
 {
-	static const char* const params[] = {
-	        "-r",      "-wcd",       "-wc",      "-writeconf",   "-l",
-	        "-h",      "-help",      "-?",       "-axclear",     "-axadd",
-	        "-axtype", "-avistart",  "-avistop", "-startmapper", "-get",
-	        "-set",    "-writelang", "-wl",      "-securemode",  ""};
+	// TODO use a map instead
+	static const char* const AllCommandLineParamFlags[] = {
+	        "-r", // Restart
 
-	enum prs {
-		P_NOMATCH,
-		P_NOPARAMS, // fixed return values for GetParameterFromList
-		P_RESTART,
-		P_WRITECONF_DEFAULT,
-		P_WRITECONF,
-		P_WRITECONF2,
-		P_LISTCONF,
-		P_HELP,
-		P_HELP2,
-		P_HELP3,
-		P_AUTOEXEC_CLEAR,
-		P_AUTOEXEC_ADD,
-		P_AUTOEXEC_TYPE,
-		P_REC_AVI_START,
-		P_REC_AVI_STOP,
-		P_START_MAPPER,
-		P_GETPROP,
-		P_SETPROP,
-		P_WRITELANG,
-		P_WRITELANG2,
-		P_SECURE
-	} presult = P_NOMATCH;
+	        "-wcd",       // WriteDefaultConfig
+	        "-wc",        // WriteConfig1
+	        "-writeconf", // WriteConfig2
+	        "-l",         // ListConfig
+
+	        "-h",    // ShowHelp1
+	        "-help", // ShowHelp2
+	        "-?",    // ShowHelp3
+
+	        "-axclear", // ClearAutoexec
+	        "-axadd",   // AppendLineToAutoexec
+	        "-axtype",  // ShowAutoexec
+
+	        "-avistart", // StartVideoCapture
+	        "-avistop",  // StopVideoCapture
+
+	        "-startmapper", // StartMapper
+
+	        "-get", // GetProperty
+	        "-set", // SetProperty
+
+	        "-writelang", // WriteLanguageFile1
+	        "-wl",        // WriteLanguageFile2
+
+	        "-securemode", // EnableSecureMode
+	        ""};
+
+	enum Parameter {
+		NoMatch  = 0,
+		NoParams = 1, // fixed return values for GetParameterFromList
+
+		Restart = 2,
+
+		WriteDefaultConfig,
+		WriteConfig1,
+		WriteConfig2,
+		ListConfig,
+
+		ShowHelp1,
+		ShowHelp2,
+		ShowHelp3,
+
+		ClearAutoexec,
+		AppendLineToAutoexec,
+		ShowAutoexec,
+
+		StartVideoCapture,
+		StopVideoCapture,
+
+		StartMapper,
+		GetProperty,
+		SetProperty,
+
+		WriteLanguageFile1,
+		WriteLanguageFile2,
+
+		EnableSecureMode
+	} param_result = NoMatch;
 
 	bool first = true;
 
 	std::vector<std::string> pvars = {};
 
 	// Loop through the passed parameters
-	while (presult != P_NOPARAMS) {
-		presult = (enum prs)cmd->GetParameterFromList(params, pvars);
+	while (param_result != NoParams) {
+		param_result = (enum Parameter)cmd->GetParameterFromList(
+		        AllCommandLineParamFlags, pvars);
 
-		switch (presult) {
-		case P_RESTART:
+		switch (param_result) {
+		case Restart:
 			if (CheckSecureMode()) {
 				return;
 			}
@@ -538,7 +573,7 @@ void CONFIG::Run(void)
 			}
 			return;
 
-		case P_LISTCONF: {
+		case ListConfig: {
 			auto size = control->config_files.size();
 			const std_fs::path config_path = get_config_dir();
 
@@ -581,7 +616,7 @@ void CONFIG::Run(void)
 			break;
 		}
 
-		case P_WRITECONF_DEFAULT: {
+		case WriteDefaultConfig: {
 			if (CheckSecureMode()) {
 				return;
 			}
@@ -593,8 +628,8 @@ void CONFIG::Run(void)
 			break;
 		}
 
-		case P_WRITECONF:
-		case P_WRITECONF2:
+		case WriteConfig1:
+		case WriteConfig2:
 			if (CheckSecureMode()) {
 				return;
 			}
@@ -617,19 +652,19 @@ void CONFIG::Run(void)
 			}
 			break;
 
-		case P_NOPARAMS:
+		case NoParams:
 			if (!first) {
 				break;
 			}
 			[[fallthrough]];
 
-		case P_NOMATCH: DisplayHelp(); return;
+		case NoMatch: DisplayHelp(); return;
 
-		case P_HELP:
-		case P_HELP2:
-		case P_HELP3: HandleHelpCommand(pvars); return;
+		case ShowHelp1:
+		case ShowHelp2:
+		case ShowHelp3: HandleHelpCommand(pvars); return;
 
-		case P_AUTOEXEC_CLEAR: {
+		case ClearAutoexec: {
 			auto sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 			if (!sec) {
@@ -640,7 +675,7 @@ void CONFIG::Run(void)
 			break;
 		}
 
-		case P_AUTOEXEC_ADD: {
+		case AppendLineToAutoexec: {
 			if (pvars.empty()) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
 				return;
@@ -659,7 +694,7 @@ void CONFIG::Run(void)
 			break;
 		}
 
-		case P_AUTOEXEC_TYPE: {
+		case ShowAutoexec: {
 			auto sec = dynamic_cast<AutoExecSection*>(
 			        control->GetSection(std::string("autoexec")));
 
@@ -678,16 +713,16 @@ void CONFIG::Run(void)
 			break;
 		}
 
-		case P_REC_AVI_START: CAPTURE_StartVideoCapture(); break;
-		case P_REC_AVI_STOP: CAPTURE_StopVideoCapture(); break;
-		case P_START_MAPPER:
+		case StartVideoCapture: CAPTURE_StartVideoCapture(); break;
+		case StopVideoCapture: CAPTURE_StopVideoCapture(); break;
+		case StartMapper:
 			if (CheckSecureMode()) {
 				return;
 			}
 			MAPPER_Run(false);
 			break;
 
-		case P_GETPROP: {
+		case GetProperty: {
 			// "section property"
 			// "property"
 			// "section"
@@ -717,13 +752,13 @@ void CONFIG::Run(void)
 					auto psec = dynamic_cast<SectionProp*>(sec);
 
 					if (psec == nullptr) {
-						auto pline =
-						        dynamic_cast<AutoExecSection*>(
-						                sec);
+						auto pline = dynamic_cast<AutoExecSection*>(
+						        sec);
 						assert(pline);
 
 						if (pline) {
-							WriteOut("%s", pline->data.c_str());
+							WriteOut("%s",
+							         pline->data.c_str());
 						}
 						break;
 					}
@@ -759,7 +794,8 @@ void CONFIG::Run(void)
 
 					WriteOut("%s", val_dos.c_str());
 					DOS_PSP(psp->GetParent())
-					        .SetEnvironmentValue("CONFIG", val_dos);
+					        .SetEnvironmentValue("CONFIG",
+					                             val_dos);
 				}
 				break;
 			}
@@ -800,7 +836,7 @@ void CONFIG::Run(void)
 			return;
 		}
 
-		case P_SETPROP: {
+		case SetProperty: {
 			if (pvars.empty()) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
 				return;
@@ -879,8 +915,8 @@ void CONFIG::Run(void)
 			return;
 		}
 
-		case P_WRITELANG:
-		case P_WRITELANG2:
+		case WriteLanguageFile1:
+		case WriteLanguageFile2:
 			// In secure mode don't allow a new languagefile to be
 			// created Who knows which kind of file we would overwrite.
 			if (CheckSecureMode()) {
@@ -899,7 +935,7 @@ void CONFIG::Run(void)
 			}
 			break;
 
-		case P_SECURE:
+		case EnableSecureMode:
 			// Code for switching to secure mode
 			control->SwitchToSecureMode();
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_ON"));
