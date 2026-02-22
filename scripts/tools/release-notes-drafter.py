@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# SPDX-FileCopyrightText:  2024-2024 The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2024-2026 The DOSBox Staging Team
 # SPDX-License-Identifier: MIT
 
 """
