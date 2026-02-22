@@ -380,25 +380,15 @@ void MidiDeviceFluidSynth::SetChorusParams(const ChorusParameters& params)
 	// Apply setting to all groups
 	constexpr int FxGroup = -1;
 
-	fluid_synth_set_chorus_group_nr(synth.get(),
-									FxGroup,
-									params.voice_count);
+	fluid_synth_set_chorus_group_nr(synth.get(), FxGroup, params.voice_count);
 
-	fluid_synth_set_chorus_group_level(synth.get(),
-									   FxGroup,
-									   params.level);
+	fluid_synth_set_chorus_group_level(synth.get(), FxGroup, params.level);
 
-	fluid_synth_set_chorus_group_speed(synth.get(),
-									   FxGroup,
-									   params.speed);
+	fluid_synth_set_chorus_group_speed(synth.get(), FxGroup, params.speed);
 
-	fluid_synth_set_chorus_group_depth(synth.get(),
-	                                   FxGroup,
-	                                   params.depth);
+	fluid_synth_set_chorus_group_depth(synth.get(), FxGroup, params.depth);
 
-	fluid_synth_set_chorus_group_type(synth.get(),
-	                                  FxGroup,
-	                                  params.mod_wave);
+	fluid_synth_set_chorus_group_type(synth.get(), FxGroup, params.mod_wave);
 
 	LOG_MSG("FSYNTH: Chorus enabled with %d voices at level %.2f, "
 	        "%.2f Hz speed, %.2f depth, and %s-wave modulation",
@@ -519,21 +509,13 @@ void MidiDeviceFluidSynth::SetReverbParams(const ReverbParameters& params)
 	// Apply setting to all groups
 	constexpr int FxGroup = -1;
 
-	fluid_synth_set_reverb_group_roomsize(synth.get(),
-	                                      FxGroup,
-	                                      params.room_size);
+	fluid_synth_set_reverb_group_roomsize(synth.get(), FxGroup, params.room_size);
 
-	fluid_synth_set_reverb_group_damp(synth.get(),
-	                                  FxGroup,
-	                                  params.damping);
+	fluid_synth_set_reverb_group_damp(synth.get(), FxGroup, params.damping);
 
-	fluid_synth_set_reverb_group_width(synth.get(),
-	                                   FxGroup,
-	                                   params.width);
+	fluid_synth_set_reverb_group_width(synth.get(), FxGroup, params.width);
 
-	fluid_synth_set_reverb_group_level(synth.get(),
-	                                   FxGroup,
-	                                   params.level);
+	fluid_synth_set_reverb_group_level(synth.get(), FxGroup, params.level);
 
 	LOG_MSG("FSYNTH: Reverb enabled with a %.2f room size, "
 	        "%.2f damping, %.2f width, and level %.2f",
@@ -626,9 +608,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	const auto sample_rate_hz = MIXER_GetSampleRate();
 	ms_per_audio_frame        = MillisInSecond / sample_rate_hz;
 
-	fluid_settings_setnum(fluid_settings.get(),
-						  "synth.sample-rate",
-						  sample_rate_hz);
+	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate", sample_rate_hz);
 
 	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                          delete_fluid_synth);
@@ -644,8 +624,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	constexpr auto ResetPresets = true;
 	if (fluid_synth_sfload(fluid_synth.get(),
-						   sf_path.string().c_str(),
-						   ResetPresets) == FLUID_FAILED) {
+	                       sf_path.string().c_str(),
+	                       ResetPresets) == FLUID_FAILED) {
 
 		const auto msg = format_str("FSYNTH: Error loading SoundFont '%s'",
 		                            sf_name.c_str());
@@ -678,9 +658,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel
 	// waveforms
-	fluid_synth_set_interp_method(fluid_synth.get(),
-								  FxGroup,
-								  FLUID_INTERP_HIGHEST);
+	fluid_synth_set_interp_method(fluid_synth.get(), FxGroup, FLUID_INTERP_HIGHEST);
+
 	// Always use XG/GS mode which emulates the concave curve specific to
 	// the Roland Sound Canvas family of sound modules. In this mode the
 	// portamento time is 7 bits wide, using only CC5, and the concave curve
@@ -688,7 +667,6 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	// Roland SC-55 v1.21 hardware unit.
 	fluid_synth_set_portamento_time_mode(fluid_synth.get(),
 	                                     FLUID_PORTAMENTO_TIME_MODE_XG_GS);
-
 
 	SetChorus();
 	SetReverb();
@@ -925,13 +903,13 @@ void MidiDeviceFluidSynth::RenderAudioFramesToFifo(const int num_audio_frames)
 	}
 
 	fluid_synth_write_float(synth.get(),
-							num_audio_frames,
-							&audio_frames[0][0],
-							0,
-							2,
-							&audio_frames[0][0],
-							1,
-							2);
+	                        num_audio_frames,
+	                        &audio_frames[0][0],
+	                        0,
+	                        2,
+	                        &audio_frames[0][0],
+	                        1,
+	                        2);
 
 	audio_frame_fifo.BulkEnqueue(audio_frames, num_audio_frames);
 }
