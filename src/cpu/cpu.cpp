@@ -2945,6 +2945,13 @@ static void sync_modern_cycles_settings()
 	set_section_property_value("cpu", "cpu_cycles_protected", cycles_protected_val);
 }
 
+static void clear_modern_cycles_settings()
+{
+	set_section_property_value("cpu", "cpu_cycles", "");
+	set_section_property_value("cpu", "cpu_cycles_protected", "");
+	set_section_property_value("cpu", "cpu_throttle", "false");
+}
+
 static void cpu_increase_cycles_modern()
 {
 	auto& conf = modern_cycles_config;
@@ -3682,10 +3689,16 @@ public:
 		auto cycles_pref = secprop->GetString("cycles");
 		trim(cycles_pref);
 
-		if (!cycles_pref.empty()) {
+		if (cycles_pref.empty()) {
+			legacy_cycles_mode = false;
+
+			ConfigureCyclesModern(secprop);
+			set_modern_cycles_config(CpuMode::Real);
+
+		} else {
 			// "Legacy cycles mode" is enabled by setting 'cycles'
-			// to a non-blank value (the default value is a single
-			// space character).
+			// to a non-blank value (the default value is an empty
+			// string).
 			legacy_cycles_mode = true;
 
 			// Clear new CPU settings in "legacy cycles mode" to
@@ -3696,16 +3709,9 @@ public:
 			// game config sets 'cycles' explicitly, that will
 			// override the new settings.
 			//
-			set_section_property_value("cpu", "cpu_cycles", "");
-			set_section_property_value("cpu", "cpu_cycles_protected", "");
-			set_section_property_value("cpu", "cpu_throttle", "false");
-		}
+			clear_modern_cycles_settings();
 
-		if (legacy_cycles_mode) {
 			ConfigureCyclesLegacy(secprop);
-		} else {
-			ConfigureCyclesModern(secprop);
-			set_modern_cycles_config(CpuMode::Real);
 		}
 
 		cpu_cycle_up   = secprop->GetInt("cycleup");
@@ -3745,6 +3751,69 @@ void CPU_Destroy()
 static void notify_cpu_setting_updated([[maybe_unused]] SectionProp& section,
                                        [[maybe_unused]] const std::string& prop_name)
 {
+	auto enable_modern_mode = [&] {
+		// Clear legacy CPU 'cycles' setting to enable "modern" mode
+		set_section_property_value("cpu", "cycles", "");
+	};
+
+	auto get_cpu_cycles_pref = [&] {
+		std::string pref = section.GetString("cpu_cycles");
+		trim(pref);
+		return pref;
+	};
+
+	auto get_cpu_cycles_protected_pref = [&] {
+		std::string pref = section.GetString("cpu_cycles_protected");
+		trim(pref);
+		return pref;
+	};
+
+	auto set_cpu_cycles_to_default_if_empty = [&] {
+		if (get_cpu_cycles_pref().empty()) {
+			set_section_property_value(
+			        "cpu",
+			        "cpu_cycles",
+			        format_str("%d", CpuCyclesRealModeDefault));
+		}
+	};
+
+	auto set_cpu_cycles_protected_to_default_if_empty = [&] {
+		if (get_cpu_cycles_protected_pref().empty()) {
+			set_section_property_value(
+			        "cpu",
+			        "cpu_cycles_protected",
+			        format_str("%d", CpuCyclesProtectedModeDefault));
+		}
+	};
+
+	if (prop_name == "cycles") {
+		// "Legacy cycles mode" is enabled by setting 'cycles'
+		// to a non-blank value (the default value is a single
+		std::string cycles_pref = section.GetString("cycles");
+		trim(cycles_pref);
+
+		if (!cycles_pref.empty()) {
+			// Clear new CPU settings in "legacy cycles mode" to
+			// avoid confusion.
+			clear_modern_cycles_settings();
+		}
+
+	} else if (prop_name == "cpu_cycles") {
+		if (!get_cpu_cycles_pref().empty()) {
+			enable_modern_mode();
+			set_cpu_cycles_protected_to_default_if_empty();
+		}
+	} else if (prop_name == "cpu_cycles_protected") {
+		if (!get_cpu_cycles_protected_pref().empty()) {
+			enable_modern_mode();
+			set_cpu_cycles_to_default_if_empty();
+		}
+	} else if (prop_name == "cpu_throttle") {
+		enable_modern_mode();
+		set_cpu_cycles_to_default_if_empty();
+		set_cpu_cycles_protected_to_default_if_empty();
+	}
+
 	CPU_Destroy();
 	CPU_Init();
 }
@@ -3828,7 +3897,7 @@ void init_cpu_config_settings(SectionProp& secprop)
 	pstring->SetDeprecatedWithAlternateValue("pentium_slow", "pentium");
 
 	// Legacy `cycles` setting
-	pstring = secprop.AddString("cycles", DeprecatedButAllowed, " ");
+	pstring = secprop.AddString("cycles", DeprecatedButAllowed, "");
 	pstring->SetHelp(
 	        "The [color=light-green]'cycles'[reset] setting is deprecated but still accepted;\n"
 	        "please use [color=light-green]'cpu_cycles'[reset], "
