@@ -767,10 +767,10 @@ std::vector<Value> Property::GetDeprecatedValues() const
 	return values;
 }
 
-void Property::SetQueueableValue(std::string&& value)
+void Property::SetQueueableValue(const std::string& value)
 {
 	assert(!value.empty());
-	queueable_value = std::move(value);
+	queueable_value = value;
 }
 
 const std::optional<std::string>& Property::GetQueuedValue() const

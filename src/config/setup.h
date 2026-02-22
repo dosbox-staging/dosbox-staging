@@ -172,7 +172,7 @@ public:
 		return default_value;
 	}
 
-	void SetQueueableValue(std::string&& value);
+	void SetQueueableValue(const std::string& value);
 
 	const std::optional<std::string>& GetQueuedValue() const;
 

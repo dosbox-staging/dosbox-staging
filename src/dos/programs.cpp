@@ -862,7 +862,7 @@ void CONFIG::Run(void)
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"),
 					         pvars[1].c_str());
 
-					property->SetQueueableValue(std::move(value));
+					property->SetQueueableValue(value);
 					return;
 				}
 
