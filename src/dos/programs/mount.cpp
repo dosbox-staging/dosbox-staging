@@ -462,6 +462,9 @@ void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	if (params.type == "cdrom") {
 		params.type = "iso";
 	}
+	if (params.type == "fdd") {
+		params.type = "floppy";
+	}
 
 	params.roflag = cmd->FindExist("-ro", true);
 
@@ -517,7 +520,8 @@ void MOUNT::ParseGeometry(MountParameters& params)
 		// parsing below. If it is unknown, we error out later.
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
-		                      "PROGRAM_MOUNT_ILL_TYPE");
+		                      "PROGRAM_MOUNT_ILL_TYPE",
+		                      params.type.c_str());
 		return;
 	}
 
