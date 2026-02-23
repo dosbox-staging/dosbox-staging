@@ -430,10 +430,23 @@ bool MOUNT::MountImage(MountParameters& params)
 bool MOUNT::HandleUnmount()
 {
 	std::string umount = {};
+
+	// Standard order: -u <drive>
 	if (cmd->FindString("-u", umount, false)) {
 		WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
 		return true;
 	}
+
+	// Reverse order: <drive> -u
+	if (cmd->FindExist("-u", false)) {
+		// Check umount != "-u" to prevent parsing errors if the user
+		// just types "mount -u".
+		if (cmd->FindCommand(1, umount) && !umount.empty() && umount != "-u") {
+			WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
+			return true;
+		}
+	}
+
 	return false;
 }
 
