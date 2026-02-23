@@ -461,17 +461,14 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShader(const std::string& sym
 }
 
 OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
-        const std::string& new_symbolic_shader_descriptor, const bool force_reload)
+        const std::string& new_symbolic_shader_descriptor)
 {
 	using enum OpenGlRenderer::SetShaderResult;
 
 	const auto new_descriptor = AutoShaderSwitcher::GetInstance().NotifyShaderChanged(
 	        new_symbolic_shader_descriptor);
 
-	const auto curr_descriptor = force_reload ? ShaderDescriptor{"", ""}
-	                                          : curr_shader_descriptor;
-
-	const auto result = MaybeSwitchShaderAndPreset(curr_descriptor,
+	const auto result = MaybeSwitchShaderAndPreset(curr_shader_descriptor,
 	                                               new_descriptor);
 
 	switch (result) {
@@ -503,7 +500,17 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 
 void OpenGlRenderer::ForceReloadCurrentShader()
 {
-	// TODO to be reimplemented later
+	const auto result = ShaderManager::GetInstance().ForceReloadShader(
+	        curr_shader_descriptor);
+
+	if (result) {
+		const auto [shader, preset] = *result;
+
+		shader_pipeline->SetMainShader(shader);
+		shader_pipeline->SetMainShaderPreset(preset);
+
+		MaybeUpdateRenderSize(input_texture.width, input_texture.height);
+	}
 }
 
 void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
