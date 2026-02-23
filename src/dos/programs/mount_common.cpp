@@ -73,6 +73,7 @@ void AddCommonMountMessages() {
 	MSG_Add("PROGRAM_MOUNT_STATUS_NAME", "Image name");
 	MSG_Add("PROGRAM_MOUNT_STATUS_SLOT", "Swap slot");
 	MSG_Add("PROGRAM_MOUNT_RESULT", "%s mounted as %c drive:\n%s");
+	MSG_Add("PROGRAM_MOUNT_STATUS_2", "%s mounted as %c drive\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_1", "The currently mounted drives are:\n");
 	MSG_Add("PROGRAM_MOUNT_READONLY", "Mounted read-only\n");
 }
