@@ -55,13 +55,16 @@ static void perform_dma_io(const DmaDirection direction, const PhysPt spage,
 	auto data_pt = reinterpret_cast<uint8_t*>(data_start);
 
 	// Convert from DMA 'words' to actual bytes, no greater than 64 KB
-	auto remaining_bytes = check_cast<uint16_t>(num_words << is_dma16);
+	auto remaining_bytes = check_cast<uint32_t>(num_words << is_dma16);
+	
+	assert(remaining_bytes <= 65536);
+
 	do {
 		// Find the right EMS page that contains the current address
 		auto page = highpart_addr_page + (mem_address >> 12);
 		if (page < EMM_PAGEFRAME4K) {
 			page = paging.firstmb[page];
-		} else if (page < EMM_PAGEFRAME4K + 0x10) {
+		} else if (page < EMM_PAGEFRAME4K + 0x10) {	
 			page = ems_board_mapping[page];
 		} else if (page < LINK_START) {
 			page = paging.firstmb[page];
@@ -69,7 +72,7 @@ static void perform_dma_io(const DmaDirection direction, const PhysPt spage,
 
 		// Calculate the offset within the page
 		const auto pos_in_page = mem_address & (DosPageSize - 1);
-		const auto bytes_to_page_end = check_cast<uint16_t>(DosPageSize -
+		const auto bytes_to_page_end = check_cast<uint32_t>(DosPageSize -
 		                                                    pos_in_page);
 		const auto chunk_start = check_cast<PhysPt>(page * DosPageSize +
 		                                            pos_in_page);
@@ -79,14 +82,14 @@ static void perform_dma_io(const DmaDirection direction, const PhysPt spage,
 
 		// Copy the data from the page address into the data pointer
 		if (direction == DmaDirection::Read) {
-			for (auto i = 0; i < chunk_bytes; ++i) {
+			for (uint32_t i = 0; i < chunk_bytes; ++i) {
 				data_pt[i] = phys_readb(chunk_start + i);
 			}
 		}
 
 		// Copy the data from the data pointer into the page address
 		else if (direction == DmaDirection::Write) {
-			for (auto i = 0; i < chunk_bytes; ++i) {
+			for (uint32_t i = 0; i < chunk_bytes; ++i) {
 				phys_writeb(chunk_start + i, data_pt[i]);
 			}
 		}
@@ -417,19 +420,19 @@ size_t DmaChannel::Write(const size_t words, uint8_t* const src_buffer)
 size_t DmaChannel::ReadOrWrite(const DmaDirection direction, const size_t words,
                                uint8_t* const buffer)
 {
-	auto want     = check_cast<uint16_t>(words);
-	uint16_t done = 0;
+	auto want     = check_cast<uint32_t>(words);
+	uint32_t done = 0;
 	curr_addr &= dma_wrapping;
 
 	// incremented per transfer
 	auto curr_buffer = buffer;
 again:
-	Bitu left = (curr_count + 1);
+	uint32_t left = (curr_count + 1);
 	if (want < left) {
 		perform_dma_io(direction, page_base, curr_addr, curr_buffer, want, is_16bit);
 		done += want;
-		curr_addr += want;
-		curr_count -= want;
+		curr_addr += check_cast<uint32_t>(want);
+		curr_count -= check_cast<uint16_t>(want);
 	} else {
 		perform_dma_io(direction, page_base, curr_addr, curr_buffer, left, is_16bit);
 		curr_buffer += left << is_16bit;
