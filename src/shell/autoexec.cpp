@@ -281,8 +281,8 @@ AutoExecModule::AutoExecModule(Section* configuration)
 		}
 	}
 
-	// Check -securemode switch to disable mount/imgmount/boot after
-	// running autoexec.bat
+	// Check -securemode switch to disable mount/boot after running
+	// autoexec.bat
 	const auto cmdline               = control->cmdline; // short-lived copy
 	const auto arguments             = &control->arguments;
 	const bool has_option_securemode = arguments->securemode;
@@ -600,8 +600,8 @@ std::vector<std_fs::path> get_files_by_ext(const std_fs::path& drive_path,
 	return paths;
 }
 
-// Build a command to mount a drive from a directory, based on the
-// provided settings
+// Build a command to mount a drive from a directory, based on the provided
+// settings
 std::string build_auto_mount_dir_cmd(const std::string_view dir_letter,
                                      const std_fs::path& drive_path,
                                      const std::optional<AutoMountSettings>& settings)
@@ -637,8 +637,7 @@ std::string build_auto_mount_dir_cmd(const std::string_view dir_letter,
 	return command;
 }
 
-// Build a command to mount CD images in a folder, based on the
-// provided settings
+// Build a command to mount CD images in a folder, based on the provided settings
 std::string build_auto_mount_cd_images_cmd(const std::string_view dir_letter,
                                            const std::vector<std_fs::path>& image_paths,
                                            const std::optional<AutoMountSettings>& settings)
@@ -657,9 +656,9 @@ std::string build_auto_mount_cd_images_cmd(const std::string_view dir_letter,
 
 	command += " -t iso -fs iso";
 
-	// When mounting CD images via imgmount, we ignore the type
-	// (always cdrom), the readonly flag (implied) and the label settings
-	// (derived from the CD images themselves)
+	// When mounting CD images via mount, we ignore the type (always cdrom),
+	// the readonly flag (implied) and the label settings (derived from the
+	// CD images themselves)
 	if (settings.has_value() && !settings->verbose) {
 		command += ToNul;
 	}
@@ -687,9 +686,8 @@ std::string build_auto_mount_fd_images_cmd(const std::string_view dir_letter,
 
 	command += " -t floppy";
 
-	// When mounting floppy images via imgmount, we ignore the type
-	// (always floppy) and the label settings (derived from the images
-	// themselves)
+	// When mounting floppy images via mount, we ignore the type (always
+	// floppy) and the label settings (derived from the images themselves)
 	if (settings.has_value()) {
 		if (settings->readonly) {
 			command += " -ro";
