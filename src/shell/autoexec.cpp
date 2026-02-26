@@ -576,6 +576,30 @@ std::optional<AutoMountSettings> parse_drive_conf(const std_fs::path& conf_path)
 	return settings;
 }
 
+// Get all files in the given directory that have the specified extensions
+std::vector<std_fs::path> get_files_by_ext(const std_fs::path& drive_path,
+                                           const std::vector<std::string_view>& extensions)
+{
+	std::vector<std_fs::path> paths = {};
+
+	for (const auto& entry : std_fs::directory_iterator(drive_path)) {
+		if (entry.exists() && entry.is_regular_file()) {
+			const auto& path = entry.path();
+			std::string ext  = path.extension().string();
+			lowcase(ext);
+			if (std::ranges::find(extensions, ext) != extensions.end()) {
+				paths.push_back(path);
+			}
+		}
+	}
+
+	std::ranges::sort(paths, [](const std_fs::path& a, const std_fs::path& b) {
+		return natural_compare(a.filename().string(), b.filename().string());
+	});
+
+	return paths;
+}
+
 // Build a command to mount a drive from a directory, based on the
 // provided settings
 std::string build_auto_mount_dir_cmd(const std::string_view dir_letter,
@@ -611,30 +635,6 @@ std::string build_auto_mount_dir_cmd(const std::string_view dir_letter,
 	}
 
 	return command;
-}
-
-// Get all files in the given directory that have the specified extensions
-std::vector<std_fs::path> get_files_by_ext(const std_fs::path& drive_path,
-                                           const std::vector<std::string_view>& extensions)
-{
-	std::vector<std_fs::path> paths = {};
-
-	for (const auto& entry : std_fs::directory_iterator(drive_path)) {
-		if (entry.exists() && entry.is_regular_file()) {
-			const auto& path = entry.path();
-			std::string ext  = path.extension().string();
-			lowcase(ext);
-			if (std::ranges::find(extensions, ext) != extensions.end()) {
-				paths.push_back(path);
-			}
-		}
-	}
-
-	std::ranges::sort(paths, [](const std_fs::path& a, const std_fs::path& b) {
-		return natural_compare(a.filename().string(), b.filename().string());
-	});
-
-	return paths;
 }
 
 // Build a command to mount CD images in a folder, based on the
