@@ -30,18 +30,44 @@ CHECK_NARROWING();
 ShaderDescriptor ShaderDescriptor::FromString(const std::string& descriptor,
                                               const std::string& extension)
 {
-	const auto parts        = split(descriptor, ":");
-	const auto& shader_name = parts[0];
+	const auto parts = split(descriptor, ":");
 
 	// Drop optional shader file extension (e.g., '.glsl')
-	std_fs::path path = shader_name;
+	std_fs::path path = parts[0];
 	if (path.extension() == extension) {
 		path.replace_extension("");
 	}
 
+	const auto shader_name = path.string();
 	const auto preset_name = (parts.size() > 1) ? parts[1] : "";
 
-	return {path.string(), preset_name};
+	const auto shader_mode = [&] {
+		// clang-format off
+		static const std::unordered_map<std::string, ShaderMode> auto_shader_map = {
+			{SymbolicShaderName::AutoGraphicsStandard, ShaderMode::AutoGraphicsStandard},
+			{SymbolicShaderName::AutoMachine,          ShaderMode::AutoMachine},
+			{SymbolicShaderName::AutoArcade,           ShaderMode::AutoArcade},
+			{SymbolicShaderName::AutoArcadeSharp,      ShaderMode::AutoArcadeSharp},
+		};
+		// clang-format on
+
+		if (const auto it = auto_shader_map.find(descriptor);
+		    it != auto_shader_map.end()) {
+			return it->second;
+		}
+		return ShaderMode::Single;
+	}();
+
+	return {shader_name, preset_name, shader_mode};
+}
+
+bool ShaderDescriptor::EnforceIntegerScaling() const
+{
+	if (shader_mode == ShaderMode::Single) {
+		return true;
+	} else {
+		return (shader_name != ShaderName::Sharp);
+	}
 }
 
 ShaderManager::ShaderManager() {}
@@ -150,25 +176,13 @@ std::optional<Shader> ShaderManager::LoadAndBuildShader(const std::string& shade
 	const auto& shader_source = *maybe_shader_source;
 	const auto result = ParseShaderPragmas(shader_name, shader_source);
 
-	const bool is_adaptive = [&] {
-		// TODO why?
-		//		if (current_shader.mode == ShaderMode::Single) {
-		//			return false;
-		//		} else {
-		// This will turn off vertical integer scaling for the
-		// 'sharp' shader in 'integer_scaling = auto' mode
-		return (shader_name != ShaderName::Sharp);
-		//		}
-	}();
-
 	Shader shader = {};
 
 	shader.info = {shader_name,
 	               result.pass_name,
 	               result.input_ids,
 	               result.output_size,
-	               result.preset,
-	               is_adaptive};
+	               result.preset};
 
 	if (!shader.BuildShaderProgram(shader_source)) {
 		LOG_ERR("RENDER: Error loading shader '%s'", shader_name.c_str());

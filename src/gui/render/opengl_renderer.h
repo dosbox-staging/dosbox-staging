@@ -52,6 +52,7 @@ public:
 	ShaderPreset GetCurrentShaderPreset() override;
 
 	std::string GetCurrentSymbolicShaderDescriptor() override;
+	ShaderDescriptor GetCurrentShaderDescriptor() override;
 
 	void StartFrame(uint32_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;

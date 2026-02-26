@@ -276,7 +276,8 @@ void OpenGlRenderer::HandleShaderAndPresetChangeViaNotify(const ShaderDescriptor
 		LOG_ERR("RENDER: Error loading shader preset '%s'; using default preset",
 		        new_descriptor.ToString().c_str());
 
-		curr_shader_descriptor = {new_descriptor.shader_name, ""};
+		curr_shader_descriptor             = new_descriptor;
+		curr_shader_descriptor.preset_name = "";
 		break;
 
 	case ShaderError:
@@ -387,7 +388,6 @@ void OpenGlRenderer::RecreateInputTexture()
 	input_texture.pitch = check_cast<int>(pitch_bytes);
 }
 
-
 void OpenGlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 {
 	assert(!curr_framebuf.empty());
@@ -468,6 +468,9 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 	const auto new_descriptor = AutoShaderSwitcher::GetInstance().NotifyShaderChanged(
 	        new_symbolic_shader_descriptor);
 
+	LOG_TRACE("OpenGlRenderer::SetShaderInternal response %s",
+	          new_descriptor.ToString().c_str());
+
 	const auto result = MaybeSwitchShaderAndPreset(curr_shader_descriptor,
 	                                               new_descriptor);
 
@@ -478,7 +481,8 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 	} break;
 
 	case PresetError: {
-		curr_shader_descriptor = {new_descriptor.shader_name, ""};
+		curr_shader_descriptor             = new_descriptor;
+		curr_shader_descriptor.preset_name = "";
 
 		constexpr auto GlslExtension = ".glsl";
 		auto descriptor = ShaderDescriptor::FromString(new_symbolic_shader_descriptor,
@@ -618,6 +622,11 @@ ShaderPreset OpenGlRenderer::GetCurrentShaderPreset()
 std::string OpenGlRenderer::GetCurrentSymbolicShaderDescriptor()
 {
 	return curr_symbolic_shader_descriptor;
+}
+
+ShaderDescriptor OpenGlRenderer::GetCurrentShaderDescriptor()
+{
+	return curr_shader_descriptor;
 }
 
 RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_px)
