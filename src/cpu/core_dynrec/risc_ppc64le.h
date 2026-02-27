@@ -28,6 +28,7 @@
 
 #define DRC_USE_REGS_ADDR
 #define DRC_USE_SEGS_ADDR
+#define DRC_USE_LFLAGS_ADDR
 
 // register mapping
 enum HostReg {
@@ -57,7 +58,7 @@ enum HostReg {
 	HOST_R23,
 	HOST_R24,
 	HOST_R25,
-	HOST_R26, // generic non-volatile (used for inline adc/sbb)
+	HOST_R26, // points to lflags (lazy flags struct)
 	HOST_R27, // points to current CacheBlock (decode.block)
 	HOST_R28, // points to fpu
 	HOST_R29, // FC_ADDR
@@ -87,6 +88,8 @@ extern FPU_rec fpu;
 #define FC_SEGS_ADDR HOST_R30
 // register that points to cpu_regs[]
 #define FC_REGS_ADDR HOST_R31
+// register that points to lflags (lazy flags struct)
+#define FC_LFLAGS_ADDR HOST_R26
 
 // register that holds the first parameter
 #define FC_OP1 RegParams[0]
@@ -181,6 +184,13 @@ static HostReg inline gen_addr(int64_t &addr, HostReg dest)
 	{
 		addr = off;
 		return HOST_R28;
+	}
+
+	off = addr - (int64_t)&lflags;
+	if ((int16_t)off == off)
+	{
+		addr = off;
+		return FC_LFLAGS_ADDR;
 	}
 
 	if (addr & 0xffffffff00000000) {
@@ -714,6 +724,7 @@ static void gen_run_code(void)
 	DSF_OP(62, HOST_R30, HOST_R1, 208+32, 0); // :
 	DSF_OP(62, HOST_R31, HOST_R1, 208+40, 0); // std r31, 248(sp)
 
+	gen_mov_qword_to_reg_imm(FC_LFLAGS_ADDR, ((uint64_t)&lflags));
 	gen_mov_qword_to_reg_imm(HOST_R28, ((uint64_t)&fpu));
 	gen_mov_qword_to_reg_imm(FC_SEGS_ADDR, ((uint64_t)&Segs));
 	gen_mov_qword_to_reg_imm(FC_REGS_ADDR, ((uint64_t)&cpu_regs));
@@ -745,6 +756,76 @@ static void gen_run_code(void)
 static void gen_return_function(void)
 {
 	gen_function(epilog_addr);
+}
+
+// Emit an inline 2-operand ALU operation with lazy flag stores.
+// FC_OP1 and FC_OP2 hold the operands; FC_RETOP gets the result.
+// The emitted code stores var1, var2, res, and type into lflags
+// using FC_LFLAGS_ADDR (R26) as the base register.
+// The total size is exactly 7 instructions (28 bytes) to match
+// the call stanza size so gen_fill_function_ptr can patch it.
+//
+// alu_insn is the PPC instruction word for the operation, e.g.:
+//   EXT(FC_RETOP, FC_OP2, FC_OP1, 40, 0) for subf (SUB)
+//   EXT(FC_RETOP, FC_OP1, FC_OP2, 266, 0) for add (ADD)
+// For ops where the EXT encoding has non-standard register order
+// (e.g. 'or' uses EXT(rS, rA, rB)), pass the correctly-encoded word.
+//
+// flags_type is the lflags type constant (e.g. t_SUBd).
+// op_size: 4 = dword (stw), 2 = word (sth), 1 = byte (stb).
+// has_result: true for ops that produce a result (ADD, SUB, XOR, AND, OR),
+//             false for CMP/TEST (no result in FC_RETOP needed).
+static void inline gen_dop_alu_flags_inline(uint32_t alu_insn,
+                                            Bitu flags_type,
+                                            int op_size,
+                                            [[maybe_unused]] bool has_result)
+{
+	// 1: store op1 -> lf_var1d/w/b
+	if (op_size == 4) {
+		gen_mov_word_from_reg(FC_OP1, (void*)&lf_var1d, true);  // stw
+	} else if (op_size == 2) {
+		gen_mov_word_from_reg(FC_OP1, (void*)&lf_var1w, false); // sth
+	} else {
+		gen_mov_byte_from_reg_low(FC_OP1, (void*)&lf_var1b);   // stb
+	}
+
+	// 2: store op2 -> lf_var2d/w/b
+	if (op_size == 4) {
+		gen_mov_word_from_reg(FC_OP2, (void*)&lf_var2d, true);  // stw
+	} else if (op_size == 2) {
+		gen_mov_word_from_reg(FC_OP2, (void*)&lf_var2w, false); // sth
+	} else {
+		gen_mov_byte_from_reg_low(FC_OP2, (void*)&lf_var2b);   // stb
+	}
+
+	// 3: ALU operation (result in FC_RETOP)
+	cache_addd(alu_insn);
+
+	// 4: store result -> lf_resd/w/b
+	if (op_size == 4) {
+		gen_mov_word_from_reg(FC_RETOP, (void*)&lf_resd, true);  // stw
+	} else if (op_size == 2) {
+		gen_mov_word_from_reg(FC_RETOP, (void*)&lf_resw, false); // sth
+	} else {
+		gen_mov_byte_from_reg_low(FC_RETOP, (void*)&lf_resb);   // stb
+	}
+
+	// 5: li r0, flags_type
+	IMM_OP(14, HOST_R0, 0, (uint16_t)flags_type); // li r0, type
+
+	// 6: store type into lflags.type
+	// Use the correct store width based on the actual size of the field.
+	// uint_fast8_t may be 1 byte (unsigned char) or wider on some platforms.
+	if constexpr (sizeof(lflags.type) >= 4) {
+		gen_mov_word_from_reg(HOST_R0, (void*)&lflags.type, true);  // stw
+	} else if constexpr (sizeof(lflags.type) >= 2) {
+		gen_mov_word_from_reg(HOST_R0, (void*)&lflags.type, false); // sth
+	} else {
+		gen_mov_byte_from_reg_low(HOST_R0, (void*)&lflags.type);   // stb
+	}
+
+	// 7: pad to 7 instructions
+	NOP_OP();
 }
 
 // called when a call to a function can be replaced by a
@@ -779,18 +860,15 @@ static void gen_fill_function_ptr(const uint8_t *pos, void *fct_ptr, Bitu flags_
 		case t_ADCb:
 		case t_ADCw:
 		case t_ADCd:
-			op[0] = EXT(HOST_R26, FC_OP1, FC_OP2, 266, 0); // r26 = FC_OP1 + FC_OP2
-			op[1] = 0x48000001 | ((getCF_glue-(pos+4)) & 0x03FFFFFC); // bl get_CF
-			op[2] = IMM(12, HOST_R0, FC_RETOP, -1);        // addic r0, FC_RETOP, 0xFFFFFFFF (XER[CA] = !!CF)
-			op[3] = EXT(FC_RETOP, HOST_R26, 0, 202, 0);    // addze; FC_RETOP = r26 + !!CF
+			// R26 is now FC_LFLAGS_ADDR, so we can't use it as a
+			// temp here. Fall back to function call for this rare case.
+			do_gen_call(fct_ptr, (uint64_t*)op, true);
 			return;
 		case t_SBBb:
 		case t_SBBw:
 		case t_SBBd:
-			op[0] = EXT(HOST_R26, FC_OP2, FC_OP1, 40, 0);  // r26 = FC_OP1 - FC_OP2
-			op[1] = 0x48000001 | ((getCF_glue-(pos+4)) & 0x03FFFFFC); // bl get_CF
-			op[2] = IMM(8, HOST_R0, FC_RETOP, 0);          // subfic r0, FC_RETOP, 0 (XER[CA] = !CF)
-			op[3] = EXT(FC_RETOP, HOST_R26, 0, 234, 0);    // addme; FC_RETOP = r26 - 1 + !CF
+			// R26 is now FC_LFLAGS_ADDR, fall back to function call.
+			do_gen_call(fct_ptr, (uint64_t*)op, true);
 			return;
 		case t_ANDb:
 		case t_ANDw:
