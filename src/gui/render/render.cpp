@@ -564,6 +564,7 @@ static void set_scan_and_pixel_doubling()
 	VGA_AllowPixelDoubling(!force_no_pixel_doubling);
 }
 
+static ColorSpace curr_color_space                            = {};
 static ImageAdjustmentSettings curr_image_adjustment_settings = {};
 
 static void set_image_adjustment_settings()
@@ -644,6 +645,7 @@ static void handle_auto_image_adjustment_settings(const VideoMode& video_mode)
 	        AutoImageAdjustmentsManager::GetInstance().GetSettings(
 	                machine,
 	                video_mode,
+	                curr_color_space,
 	                GFX_GetRenderer()->GetCurrentShaderDescriptor());
 
 	if (maybe_auto_settings) {
@@ -2169,12 +2171,31 @@ static ColorSpace to_color_space_enum(const std::string& setting)
 	}
 }
 
+float get_gamma(const ColorSpace cs)
+{
+	using enum ColorSpace;
+
+	switch (cs) {
+	case Srgb:
+	case DisplayP3:
+	case ModernP3:
+	case AdobeRgb: return 2.2f;
+
+	case Rec2020: return 2.4f;
+
+	case DciP3:
+	case DciP3_D65: return 2.6f;
+
+	default: assertm(false, "Invalid ColorSpace enum value"); return 0.0f;
+	}
+}
+
 static void update_color_space_setting()
 {
-	const auto color_space = to_color_space_enum(
+	curr_color_space = to_color_space_enum(
 	        get_render_section().GetString("color_space"));
 
-	GFX_GetRenderer()->SetColorSpace(color_space);
+	GFX_GetRenderer()->SetColorSpace(curr_color_space);
 }
 
 static void update_enable_image_adjustments_setting()
@@ -2603,8 +2624,8 @@ static void adjust_image_setting(const Direction dir)
 		set_setting("black_level", format_str("%d", new_value));
 
 		update_black_level_setting();
-		handle_auto_image_adjustment_settings(VGA_GetCurrentVideoMode());
 		set_image_adjustment_settings();
+		handle_auto_image_adjustment_settings(VGA_GetCurrentVideoMode());
 	} break;
 
 	case Saturation:
@@ -2815,6 +2836,7 @@ static void notify_render_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "color_space") {
 		update_color_space_setting();
+		handle_auto_image_adjustment_settings(VGA_GetCurrentVideoMode());
 
 	} else if (prop_name == "image_adjustments") {
 		update_enable_image_adjustments_setting();
@@ -2842,8 +2864,8 @@ static void notify_render_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "black_level") {
 		update_black_level_setting();
-		handle_auto_image_adjustment_settings(VGA_GetCurrentVideoMode());
 		set_image_adjustment_settings();
+		handle_auto_image_adjustment_settings(VGA_GetCurrentVideoMode());
 
 	} else if (prop_name == "saturation") {
 		update_saturation_setting();
@@ -2851,8 +2873,8 @@ static void notify_render_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "color_temperature") {
 		update_color_temperature_setting();
-		handle_auto_image_adjustment_settings(VGA_GetCurrentVideoMode());
 		set_image_adjustment_settings();
+		handle_auto_image_adjustment_settings(VGA_GetCurrentVideoMode());
 
 	} else if (prop_name == "color_temperature_luma_preserve") {
 		update_color_temperature_luma_preserve_setting();
