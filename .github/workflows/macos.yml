@@ -88,14 +88,14 @@ jobs:
               | grep "path @executable_path/lib"
 
       - name: Upload binary
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: dosbox-${{ matrix.conf.arch }}
           path: build/release-macos-${{ matrix.conf.arch }}/Release/dosbox
           overwrite: true
 
       - name: Upload resources
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: Resources
           path: build/release-macos-${{ matrix.conf.arch }}/Resources
@@ -171,7 +171,7 @@ jobs:
 
 
       - name: Upload DMG disk image
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:
