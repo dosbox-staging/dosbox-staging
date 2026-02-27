@@ -8,13 +8,14 @@
 
 #include <cassert>
 
-// Flag Handling
-uint32_t get_CF();
-uint32_t get_AF();
-uint32_t get_ZF();
-uint32_t get_SF();
-uint32_t get_OF();
-uint32_t get_PF();
+// Flag Handling — forward declarations must also be 'inline' to match the
+// inline definitions below; otherwise GCC emits out-of-line copies.
+inline uint32_t get_CF();
+inline uint32_t get_AF();
+inline uint32_t get_ZF();
+inline uint32_t get_SF();
+inline uint32_t get_OF();
+inline uint32_t get_PF();
 
 uint32_t FillFlags(void);
 void FillFlagsNoCFOF(void);
@@ -162,7 +163,7 @@ inline uint16_t parity_lookup[256] = {
 /* CF     Carry Flag -- Set on high-order bit carry or borrow; cleared
           otherwise.
 */
-inline uint32_t get_CF(void) {
+inline __attribute__((always_inline)) uint32_t get_CF(void) {
 	switch (lflags.type) {
 	case t_UNKNOWN:
 	case t_INCb:
@@ -251,7 +252,7 @@ inline uint32_t get_CF(void) {
             four bits of   AL; cleared otherwise. Used for decimal
             arithmetic.
 */
-inline uint32_t get_AF(void) {
+inline __attribute__((always_inline)) uint32_t get_AF(void) {
 	switch (lflags.type) {
 	case t_UNKNOWN:
 		return GETFLAG(AF);
@@ -330,7 +331,7 @@ inline uint32_t get_AF(void) {
 
 /* ZF     Zero Flag -- Set if result is zero; cleared otherwise.
 */
-inline uint32_t get_ZF(void) {
+inline __attribute__((always_inline)) uint32_t get_ZF(void) {
 	switch (lflags.type) {
 	case t_UNKNOWN:
 		return GETFLAG(ZF);
@@ -398,7 +399,7 @@ inline uint32_t get_ZF(void) {
 /* SF     Sign Flag -- Set equal to high-order bit of result (0 is
             positive, 1 if negative).
 */
-inline uint32_t get_SF(void) {
+inline __attribute__((always_inline)) uint32_t get_SF(void) {
 	switch (lflags.type) {
 	case t_UNKNOWN:
 		return GETFLAG(SF);
@@ -463,7 +464,7 @@ inline uint32_t get_SF(void) {
 	return false;
 }
 
-inline uint32_t get_OF(void) {
+inline __attribute__((always_inline)) uint32_t get_OF(void) {
 	switch (lflags.type) {
 	case t_UNKNOWN:
 	case t_MUL:
@@ -550,7 +551,7 @@ inline uint32_t get_OF(void) {
 	return false;
 }
 
-inline uint32_t get_PF(void) {
+inline __attribute__((always_inline)) uint32_t get_PF(void) {
 	switch (lflags.type) {
 	case t_UNKNOWN:
 		return GETFLAG(PF);
