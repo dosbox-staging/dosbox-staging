@@ -1816,7 +1816,7 @@ static uint16_t DRC_CALL_CONV dynrec_movsb_word(uint16_t count,int16_t add_index
 		CPU_Cycles=0;
 	}
 	for (;count>0;count--) {
-		mem_writeb(di_base+reg_di,mem_readb(si_base+reg_si));
+		mem_writeb_inline(di_base+reg_di,mem_readb_inline(si_base+reg_si));
 		reg_si+=add_index;
 		reg_di+=add_index;
 	}
@@ -1834,7 +1834,7 @@ static uint32_t DRC_CALL_CONV dynrec_movsb_dword(uint32_t count,int32_t add_inde
 		CPU_Cycles=0;
 	}
 	for (;count>0;count--) {
-		mem_writeb(di_base+reg_edi,mem_readb(si_base+reg_esi));
+		mem_writeb_inline(di_base+reg_edi,mem_readb_inline(si_base+reg_esi));
 		reg_esi+=add_index;
 		reg_edi+=add_index;
 	}
@@ -1853,7 +1853,7 @@ static uint16_t DRC_CALL_CONV dynrec_movsw_word(uint16_t count,int16_t add_index
 	}
 	add_index<<=1;
 	for (;count>0;count--) {
-		mem_writew(di_base+reg_di,mem_readw(si_base+reg_si));
+		mem_writew_inline(di_base+reg_di,mem_readw_inline(si_base+reg_si));
 		reg_si+=add_index;
 		reg_di+=add_index;
 	}
@@ -1872,7 +1872,7 @@ static uint32_t DRC_CALL_CONV dynrec_movsw_dword(uint32_t count,int32_t add_inde
 	}
 	add_index = left_shift_signed(add_index, 1);
 	for (;count>0;count--) {
-		mem_writew(di_base+reg_edi,mem_readw(si_base+reg_esi));
+		mem_writew_inline(di_base+reg_edi,mem_readw_inline(si_base+reg_esi));
 		reg_esi+=add_index;
 		reg_edi+=add_index;
 	}
@@ -1891,7 +1891,7 @@ static uint16_t DRC_CALL_CONV dynrec_movsd_word(uint16_t count,int16_t add_index
 	}
 	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
-		mem_writed(di_base+reg_di,mem_readd(si_base+reg_si));
+		mem_writed_inline(di_base+reg_di,mem_readd_inline(si_base+reg_si));
 		reg_si+=add_index;
 		reg_di+=add_index;
 	}
@@ -1910,7 +1910,7 @@ static uint32_t DRC_CALL_CONV dynrec_movsd_dword(uint32_t count,int32_t add_inde
 	}
 	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
-		mem_writed(di_base+reg_edi,mem_readd(si_base+reg_esi));
+		mem_writed_inline(di_base+reg_edi,mem_readd_inline(si_base+reg_esi));
 		reg_esi+=add_index;
 		reg_edi+=add_index;
 	}
@@ -1929,7 +1929,7 @@ static uint16_t DRC_CALL_CONV dynrec_lodsb_word(uint16_t count,int16_t add_index
 		CPU_Cycles=0;
 	}
 	for (;count>0;count--) {
-		reg_al=mem_readb(si_base+reg_si);
+		reg_al=mem_readb_inline(si_base+reg_si);
 		reg_si+=add_index;
 	}
 	return count_left;
@@ -1946,7 +1946,7 @@ static uint32_t DRC_CALL_CONV dynrec_lodsb_dword(uint32_t count,int32_t add_inde
 		CPU_Cycles=0;
 	}
 	for (;count>0;count--) {
-		reg_al=mem_readb(si_base+reg_esi);
+		reg_al=mem_readb_inline(si_base+reg_esi);
 		reg_esi+=add_index;
 	}
 	return count_left;
@@ -1964,7 +1964,7 @@ static uint16_t DRC_CALL_CONV dynrec_lodsw_word(uint16_t count,int16_t add_index
 	}
 	add_index = left_shift_signed(add_index, 1);
 	for (;count>0;count--) {
-		reg_ax=mem_readw(si_base+reg_si);
+		reg_ax=mem_readw_inline(si_base+reg_si);
 		reg_si+=add_index;
 	}
 	return count_left;
@@ -1982,7 +1982,7 @@ static uint32_t DRC_CALL_CONV dynrec_lodsw_dword(uint32_t count,int32_t add_inde
 	}
 	add_index = left_shift_signed(add_index, 1);
 	for (;count>0;count--) {
-		reg_ax=mem_readw(si_base+reg_esi);
+		reg_ax=mem_readw_inline(si_base+reg_esi);
 		reg_esi+=add_index;
 	}
 	return count_left;
@@ -2000,7 +2000,7 @@ static uint16_t DRC_CALL_CONV dynrec_lodsd_word(uint16_t count,int16_t add_index
 	}
 	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
-		reg_eax=mem_readd(si_base+reg_si);
+		reg_eax=mem_readd_inline(si_base+reg_si);
 		reg_si+=add_index;
 	}
 	return count_left;
@@ -2018,7 +2018,7 @@ static uint32_t DRC_CALL_CONV dynrec_lodsd_dword(uint32_t count,int32_t add_inde
 	}
 	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
-		reg_eax=mem_readd(si_base+reg_esi);
+		reg_eax=mem_readd_inline(si_base+reg_esi);
 		reg_esi+=add_index;
 	}
 	return count_left;
@@ -2036,7 +2036,7 @@ static uint16_t DRC_CALL_CONV dynrec_stosb_word(uint16_t count,int16_t add_index
 		CPU_Cycles=0;
 	}
 	for (;count>0;count--) {
-		mem_writeb(di_base+reg_di,reg_al);
+		mem_writeb_inline(di_base+reg_di,reg_al);
 		reg_di+=add_index;
 	}
 	return count_left;
@@ -2053,7 +2053,7 @@ static uint32_t DRC_CALL_CONV dynrec_stosb_dword(uint32_t count,int32_t add_inde
 		CPU_Cycles=0;
 	}
 	for (;count>0;count--) {
-		mem_writeb(di_base+reg_edi,reg_al);
+		mem_writeb_inline(di_base+reg_edi,reg_al);
 		reg_edi+=add_index;
 	}
 	return count_left;
@@ -2071,7 +2071,7 @@ static uint16_t DRC_CALL_CONV dynrec_stosw_word(uint16_t count,int16_t add_index
 	}
 	add_index = left_shift_signed(add_index, 1);
 	for (;count>0;count--) {
-		mem_writew(di_base+reg_di,reg_ax);
+		mem_writew_inline(di_base+reg_di,reg_ax);
 		reg_di+=add_index;
 	}
 	return count_left;
@@ -2089,7 +2089,7 @@ static uint32_t DRC_CALL_CONV dynrec_stosw_dword(uint32_t count,int32_t add_inde
 	}
 	add_index = left_shift_signed(add_index, 1);
 	for (;count>0;count--) {
-		mem_writew(di_base+reg_edi,reg_ax);
+		mem_writew_inline(di_base+reg_edi,reg_ax);
 		reg_edi+=add_index;
 	}
 	return count_left;
@@ -2107,7 +2107,7 @@ static uint16_t DRC_CALL_CONV dynrec_stosd_word(uint16_t count,int16_t add_index
 	}
 	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
-		mem_writed(di_base+reg_di,reg_eax);
+		mem_writed_inline(di_base+reg_di,reg_eax);
 		reg_di+=add_index;
 	}
 	return count_left;
@@ -2125,7 +2125,7 @@ static uint32_t DRC_CALL_CONV dynrec_stosd_dword(uint32_t count,int32_t add_inde
 	}
 	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
-		mem_writed(di_base+reg_edi,reg_eax);
+		mem_writed_inline(di_base+reg_edi,reg_eax);
 		reg_edi+=add_index;
 	}
 	return count_left;
@@ -2135,27 +2135,27 @@ static uint32_t DRC_CALL_CONV dynrec_stosd_dword(uint32_t count,int32_t add_inde
 static void DRC_CALL_CONV dynrec_push_word(uint16_t value) DRC_FC;
 static void DRC_CALL_CONV dynrec_push_word(uint16_t value) {
 	uint32_t new_esp=(reg_esp&cpu.stack.notmask)|((reg_esp-2)&cpu.stack.mask);
-	mem_writew(SegPhys(ss) + (new_esp & cpu.stack.mask),value);
+	mem_writew_inline(SegPhys(ss) + (new_esp & cpu.stack.mask),value);
 	reg_esp=new_esp;
 }
 
 static void DRC_CALL_CONV dynrec_push_dword(uint32_t value) DRC_FC;
 static void DRC_CALL_CONV dynrec_push_dword(uint32_t value) {
 	uint32_t new_esp=(reg_esp&cpu.stack.notmask)|((reg_esp-4)&cpu.stack.mask);
-	mem_writed(SegPhys(ss) + (new_esp & cpu.stack.mask) ,value);
+	mem_writed_inline(SegPhys(ss) + (new_esp & cpu.stack.mask) ,value);
 	reg_esp=new_esp;
 }
 
 static uint16_t DRC_CALL_CONV dynrec_pop_word(void) DRC_FC;
 static uint16_t DRC_CALL_CONV dynrec_pop_word(void) {
-	uint16_t val=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+	uint16_t val=mem_readw_inline(SegPhys(ss) + (reg_esp & cpu.stack.mask));
 	reg_esp=(reg_esp&cpu.stack.notmask)|((reg_esp+2)&cpu.stack.mask);
 	return val;
 }
 
 static uint32_t DRC_CALL_CONV dynrec_pop_dword(void) DRC_FC;
 static uint32_t DRC_CALL_CONV dynrec_pop_dword(void) {
-	uint32_t val=mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+	uint32_t val=mem_readd_inline(SegPhys(ss) + (reg_esp & cpu.stack.mask));
 	reg_esp=(reg_esp&cpu.stack.notmask)|((reg_esp+4)&cpu.stack.mask);
 	return val;
 }
