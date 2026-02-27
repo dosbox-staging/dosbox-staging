@@ -209,14 +209,14 @@ GLuint ShaderPipeline::CreateTexture(const int width, const int height,
 	SetTextureFiltering(texture, filter_mode);
 
 	glTexImage2D(GL_TEXTURE_2D,
-	             0,         // mimap level (0 = base image)
-	             GL_RGB32F, // internal format
-	             width,     // width
-	             height,    // height
-	             0,         // border (must be always 0)
-	             GL_BGRA,   // pixel data format
-	             GL_FLOAT,  // pixel data type
-	             nullptr);  // pointer to image data
+	             0,          // mimap level (0 = base image)
+	             GL_RGBA32F, // internal format
+	             width,      // width
+	             height,     // height
+	             0,          // border (must be always 0)
+	             GL_BGRA,    // pixel data format
+	             GL_FLOAT,   // pixel data type
+	             nullptr);   // pointer to image data
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
