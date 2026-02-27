@@ -378,6 +378,73 @@ static void DRC_CALL_CONV dynrec_test_dword_simple([[maybe_unused]] uint32_t op1
 
 
 static void dyn_dop_byte_gencall(DualOps op) {
+#ifdef DRC_USE_LFLAGS_ADDR
+	// Inline ALU + flag stores for byte operations
+	{
+		Bitu flags_type = 0;
+		uint32_t alu_insn = 0;
+		bool has_result = true;
+		bool handled = false;
+		void *simple_func = nullptr;
+
+		switch (op) {
+		case DOP_ADD:
+			flags_type = t_ADDb;
+			alu_insn = EXT(FC_RETOP, FC_OP1, FC_OP2, 266, 0);
+			simple_func = (void*)&dynrec_add_byte_simple;
+			handled = true;
+			break;
+		case DOP_SUB:
+			flags_type = t_SUBb;
+			alu_insn = EXT(FC_RETOP, FC_OP2, FC_OP1, 40, 0);
+			simple_func = (void*)&dynrec_sub_byte_simple;
+			handled = true;
+			break;
+		case DOP_CMP:
+			flags_type = t_CMPb;
+			alu_insn = EXT(FC_RETOP, FC_OP2, FC_OP1, 40, 0);
+			simple_func = (void*)&dynrec_cmp_byte_simple;
+			has_result = false;
+			handled = true;
+			break;
+		case DOP_XOR:
+			flags_type = t_XORb;
+			alu_insn = EXT(FC_OP1, FC_RETOP, FC_OP2, 316, 0);
+			simple_func = (void*)&dynrec_xor_byte_simple;
+			handled = true;
+			break;
+		case DOP_AND:
+			flags_type = t_ANDb;
+			alu_insn = EXT(FC_OP1, FC_RETOP, FC_OP2, 28, 0);
+			simple_func = (void*)&dynrec_and_byte_simple;
+			handled = true;
+			break;
+		case DOP_OR:
+			flags_type = t_ORb;
+			alu_insn = EXT(FC_OP1, FC_RETOP, FC_OP2, 444, 0);
+			simple_func = (void*)&dynrec_or_byte_simple;
+			handled = true;
+			break;
+		case DOP_TEST:
+			flags_type = t_TESTb;
+			alu_insn = EXT(FC_OP1, FC_RETOP, FC_OP2, 28, 0);
+			simple_func = (void*)&dynrec_test_byte_simple;
+			has_result = false;
+			handled = true;
+			break;
+		default:
+			break;
+		}
+
+		if (handled) {
+			InvalidateFlags(simple_func, flags_type);
+			gen_dop_alu_flags_inline(alu_insn, flags_type, 1, has_result);
+			return;
+		}
+	}
+	// Fall through for ADC, SBB
+#endif // DRC_USE_LFLAGS_ADDR
+
 	switch (op) {
 		case DOP_ADD:
 			InvalidateFlags((void*)&dynrec_add_byte_simple,t_ADDb);
@@ -422,6 +489,111 @@ static void dyn_dop_byte_gencall(DualOps op) {
 }
 
 static void dyn_dop_word_gencall(DualOps op,bool dword) {
+#ifdef DRC_USE_LFLAGS_ADDR
+	// Inline ALU + flag stores using FC_LFLAGS_ADDR base register.
+	// This avoids the function call overhead while still storing
+	// the lazy flag state for later flag evaluation.
+	// ADC/SBB/MOV/XCHG still use function calls since they need
+	// special handling (CF read, no flags, etc.)
+	{
+		Bitu flags_type = 0;
+		uint32_t alu_insn = 0;
+		bool has_result = true;
+		bool handled = false;
+
+		switch (op) {
+		case DOP_ADD:
+			flags_type = dword ? t_ADDd : t_ADDw;
+			// add FC_RETOP, FC_OP1, FC_OP2
+			alu_insn = EXT(FC_RETOP, FC_OP1, FC_OP2, 266, 0);
+			handled = true;
+			break;
+		case DOP_SUB:
+			flags_type = dword ? t_SUBd : t_SUBw;
+			// subf FC_RETOP, FC_OP2, FC_OP1 (= FC_OP1 - FC_OP2)
+			alu_insn = EXT(FC_RETOP, FC_OP2, FC_OP1, 40, 0);
+			handled = true;
+			break;
+		case DOP_CMP:
+			flags_type = dword ? t_CMPd : t_CMPw;
+			// subf FC_RETOP, FC_OP2, FC_OP1 (= FC_OP1 - FC_OP2)
+			alu_insn = EXT(FC_RETOP, FC_OP2, FC_OP1, 40, 0);
+			has_result = false;
+			handled = true;
+			break;
+		case DOP_XOR:
+			flags_type = dword ? t_XORd : t_XORw;
+			// xor FC_RETOP, FC_OP1, FC_OP2
+			alu_insn = EXT(FC_OP1, FC_RETOP, FC_OP2, 316, 0);
+			handled = true;
+			break;
+		case DOP_AND:
+			flags_type = dword ? t_ANDd : t_ANDw;
+			// and FC_RETOP, FC_OP1, FC_OP2
+			alu_insn = EXT(FC_OP1, FC_RETOP, FC_OP2, 28, 0);
+			handled = true;
+			break;
+		case DOP_OR:
+			flags_type = dword ? t_ORd : t_ORw;
+			// or FC_RETOP, FC_OP1, FC_OP2
+			alu_insn = EXT(FC_OP1, FC_RETOP, FC_OP2, 444, 0);
+			handled = true;
+			break;
+		case DOP_TEST:
+			flags_type = dword ? t_TESTd : t_TESTw;
+			// and FC_RETOP, FC_OP1, FC_OP2
+			alu_insn = EXT(FC_OP1, FC_RETOP, FC_OP2, 28, 0);
+			has_result = false;
+			handled = true;
+			break;
+		default:
+			break;
+		}
+
+		if (handled) {
+			void *simple_func;
+			switch (op) {
+			case DOP_ADD:
+				simple_func = dword ? (void*)&dynrec_add_dword_simple
+				                    : (void*)&dynrec_add_word_simple;
+				break;
+			case DOP_SUB:
+				simple_func = dword ? (void*)&dynrec_sub_dword_simple
+				                    : (void*)&dynrec_sub_word_simple;
+				break;
+			case DOP_CMP:
+				simple_func = dword ? (void*)&dynrec_cmp_dword_simple
+				                    : (void*)&dynrec_cmp_word_simple;
+				break;
+			case DOP_XOR:
+				simple_func = dword ? (void*)&dynrec_xor_dword_simple
+				                    : (void*)&dynrec_xor_word_simple;
+				break;
+			case DOP_AND:
+				simple_func = dword ? (void*)&dynrec_and_dword_simple
+				                    : (void*)&dynrec_and_word_simple;
+				break;
+			case DOP_OR:
+				simple_func = dword ? (void*)&dynrec_or_dword_simple
+				                    : (void*)&dynrec_or_word_simple;
+				break;
+			case DOP_TEST:
+				simple_func = dword ? (void*)&dynrec_test_dword_simple
+				                    : (void*)&dynrec_test_word_simple;
+				break;
+			default:
+				simple_func = nullptr;
+				break;
+			}
+
+			InvalidateFlags(simple_func, flags_type);
+			gen_dop_alu_flags_inline(alu_insn, flags_type, dword ? 4 : 2, has_result);
+			return;
+		}
+	}
+	// Fall through for ops not handled inline (ADC, SBB, MOV, XCHG)
+#endif // DRC_USE_LFLAGS_ADDR
+
 	if (dword) {
 		switch (op) {
 			case DOP_ADD:
