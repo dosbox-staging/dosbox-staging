@@ -720,7 +720,7 @@ std::string build_auto_mount_cmd(const std::string_view dir_letter,
                                  const std::optional<AutoMountSettings>& settings)
 {
 	auto image_type                         = "cdrom";
-	std::vector<std::string_view> image_ext = {".iso", ".cue"};
+	std::vector<std::string_view> image_ext = {".iso", ".cue", ".mds"};
 	auto build_auto_mount_images_cmd = build_auto_mount_cd_images_cmd;
 
 	// Look for floppy images when dir_letter matches a floppy drive
