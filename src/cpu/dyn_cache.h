@@ -905,7 +905,7 @@ static inline void dyn_mem_set_access([[maybe_unused]] void *ptr,
 
 static inline void dyn_mem_execute(void *ptr, size_t size)
 {
-#if defined(C_PER_PAGE_W_OR_X)
+#if C_PER_PAGE_W_OR_X
 	dyn_mem_set_access(ptr, size, true);
 #else
 	// Skip per-page execute-flagging
@@ -914,7 +914,7 @@ static inline void dyn_mem_execute(void *ptr, size_t size)
 
 static inline void dyn_mem_write(void *ptr, size_t size)
 {
-#if defined(C_PER_PAGE_W_OR_X)
+#if C_PER_PAGE_W_OR_X
 	dyn_mem_set_access(ptr, size, false);
 #else
 	// Skip per-page write-flagging
@@ -924,8 +924,10 @@ static inline void dyn_mem_write(void *ptr, size_t size)
 static inline void dyn_cache_invalidate([[maybe_unused]] void *ptr,
                                         [[maybe_unused]] size_t size)
 {
-#if defined(C_PER_PAGE_W_OR_X)
-#	if defined(HAVE_BUILTIN_CLEAR_CACHE)
+	// The instruction cache must always be flushed after writing JIT code,
+	// regardless of the per-page W^X policy. Architectures with split I/D
+	// caches (e.g., PPC64, ARM) will execute stale instructions otherwise.
+#if defined(HAVE_BUILTIN_CLEAR_CACHE)
 	const auto start     = static_cast<char*>(ptr);
 	const auto start_val = reinterpret_cast<uintptr_t>(start);
 	const auto end_val = start_val + size;
@@ -942,9 +944,6 @@ static inline void dyn_cache_invalidate([[maybe_unused]] void *ptr,
 	FlushInstructionCache(GetCurrentProcess(), ptr, size);
 #else
 #error "Don't know how to clear the cache on this platform: please report this"
-#endif
-#else
-	// Skip per-page invalidation
 #endif
 }
 
