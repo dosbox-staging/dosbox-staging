@@ -233,6 +233,8 @@ enum class ColorSpace {
 	Rec2020 = 6
 };
 
+float get_gamma(const ColorSpace cs);
+
 extern Render render;
 extern ScalerLineHandler RENDER_DrawLine;
 
