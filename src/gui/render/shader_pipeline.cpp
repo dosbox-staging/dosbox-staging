@@ -52,7 +52,7 @@ ShaderPipeline::ShaderPipeline()
 
 	// The image adjustments pass is always the first; it cannot be disabled
 	// as it performs the colour space transforms as well.
-	LoadInternalShaderPassOrExit("image-adjustments-pass");
+	LoadInternalShaderPassOrExit("image-adjustments");
 	UpdateImageAdjustmentsPassUniforms();
 
 	// Checkerboard dedither
