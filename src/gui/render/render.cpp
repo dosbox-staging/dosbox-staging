@@ -564,6 +564,7 @@ static void set_scan_and_pixel_doubling()
 	VGA_AllowPixelDoubling(!force_no_pixel_doubling);
 }
 
+static ColorSpace curr_color_space                            = {};
 static ImageAdjustmentSettings curr_image_adjustment_settings = {};
 
 static void set_image_adjustment_settings()
@@ -644,6 +645,7 @@ static void handle_auto_image_adjustment_settings(const VideoMode& video_mode)
 	        AutoImageAdjustmentsManager::GetInstance().GetSettings(
 	                machine,
 	                video_mode,
+	                curr_color_space,
 	                GFX_GetRenderer()->GetCurrentShaderDescriptor());
 
 	if (maybe_auto_settings) {
@@ -2173,12 +2175,31 @@ static ColorSpace to_color_space_enum(const std::string& setting)
 	}
 }
 
+float get_gamma(const ColorSpace cs)
+{
+	using enum ColorSpace;
+
+	switch (cs) {
+	case Srgb:
+	case DisplayP3:
+	case ModernP3:
+	case AdobeRgb: return 2.2f;
+
+	case Rec2020: return 2.4f;
+
+	case DciP3:
+	case DciP3_D65: return 2.6f;
+
+	default: assertm(false, "Invalid ColorSpace enum value"); return 0.0f;
+	}
+}
+
 static void update_color_space_setting()
 {
-	const auto color_space = to_color_space_enum(
+	curr_color_space = to_color_space_enum(
 	        get_render_section().GetString("color_space"));
 
-	GFX_GetRenderer()->SetColorSpace(color_space);
+	GFX_GetRenderer()->SetColorSpace(curr_color_space);
 }
 
 static void update_enable_image_adjustments_setting()
