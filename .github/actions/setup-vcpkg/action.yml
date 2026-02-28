@@ -4,13 +4,16 @@ inputs:
   name_os:
     description: "Name or OS"
     required: true
+
   arch:
     description: "Architecture"
     required: true
+
   compiler:
     description: "Compiler"
     required: false
     default: ""
+
   compiler_vers:
     description: "Compiler version"
     required: false
