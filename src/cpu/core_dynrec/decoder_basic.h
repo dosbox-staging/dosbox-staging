@@ -710,47 +710,278 @@ bool DRC_CALL_CONV mem_writed_checked_drc(PhysPt address,uint32_t val) {
 
 // functions that enable access to the memory
 
+#ifdef DRC_USE_INLINE_TLB
+
+// Emit inline TLB fast-path for JIT memory reads.
+// At JIT runtime: looks up paging.tlb.read[address>>12], if non-NULL and no
+// page crossing, loads directly from host memory. Otherwise falls back to
+// the checked function call (slow path).
+//
+// reg_addr: register holding the guest physical address (32-bit)
+// reg_dst:  register to receive the loaded value
+// width:    1 (byte), 2 (word), or 4 (dword)
+//
+// Scratch registers used: HOST_R8, HOST_R9, HOST_R0
+// CR fields used: cr0 (TLB NULL check), cr1 (page crossing check)
+static void gen_inline_tlb_read(HostReg reg_addr, HostReg reg_dst, int width) {
+	// Safety: scratch registers must not collide with operands.
+	// reg_addr is typically FC_ADDR (R29), reg_dst is FC_OP1 (R3) or FC_OP2 (R4).
+	assert(reg_addr != HOST_R8 && reg_addr != HOST_R9);
+	assert(reg_dst != HOST_R8 && reg_dst != HOST_R9);
+
+	const uint8_t *slow_path_page = nullptr; // branch location for page-crossing
+	const uint8_t *slow_path_null = nullptr; // branch location for TLB miss
+	const uint8_t *fast_path_end  = nullptr; // branch location for skip-over-slow
+
+	// --- Page-crossing check (skip for byte reads) ---
+	if (width > 1) {
+		// r0 = reg_addr & 0xFFF (low 12 bits = offset within page)
+		RLW_OP(21, reg_addr, HOST_R0, 0, 20, 31, 0); // rlwinm r0, reg_addr, 0, 20, 31
+
+		// threshold: dword needs addr&0xFFF < 0xFFD, word needs < 0xFFF
+		const uint16_t threshold = (width == 4) ? 0x0FFD : 0x0FFF;
+
+		// cmpwi cr1, r0, threshold  (BF=1, L=0 -> regsd = (1<<2)|0 = 4)
+		IMM_OP(11, 4, HOST_R0, threshold); // cmpwi cr1, r0, threshold
+
+		// bge cr1, slow_path (branch if NOT less than threshold)
+		// bc 4, CR1[LT], offset  ->  BO=4, BI=4 (CR1*4+LT=4)
+		IMM_OP(16, 4, 4, 0); // bge cr1, slow_path (offset patched later)
+		slow_path_page = cache.pos - 4;
+	}
+
+	// --- TLB lookup ---
+	// r8 = reg_addr >> 12 (page index, 20 bits)
+	RLW_OP(21, reg_addr, HOST_R8, 20, 12, 31, 0); // srwi r8, reg_addr, 12
+	// r8 = r8 << 3 (multiply by 8 for pointer size)
+	RLD_OP(30, HOST_R8, HOST_R8, 3, 60, 1, 0); // rldicr r8, r8, 3, 60 (sldi r8, r8, 3)
+	// r9 = *(FC_TLB_READ + r8)  -- load the TLB entry (host pointer)
+	EXT_OP(HOST_R9, FC_TLB_READ, HOST_R8, 21, 0); // ldx r9, FC_TLB_READ(r14), r8
+
+	// --- NULL check (TLB miss) ---
+	// cmpdi cr0, r9, 0  (BF=0, L=1 -> regsd = (0<<2)|1 = 1)
+	IMM_OP(11, 1, HOST_R9, 0); // cmpdi cr0, r9, 0
+
+	// beq cr0, slow_path (branch if TLB entry is NULL)
+	// bc 12, CR0[EQ], offset -> BO=12, BI=2
+	IMM_OP(16, 12, 2, 0); // beq cr0, slow_path (offset patched later)
+	slow_path_null = cache.pos - 4;
+
+	// --- Fast path: load from host memory ---
+	// effective address = r9 (TLB entry) + reg_addr (guest address)
+	// reg_addr may have stale upper 32 bits from 64-bit additions during
+	// effective address calculation (gen_add/gen_lea use 64-bit ops).
+	// Truncate to 32 bits in r0 before using as index.
+	// lwzx/lhzx/lbzx reg_dst, r9, r0
+	RLD_OP(30, reg_addr, HOST_R0, 0, 32, 0, 0); // clrldi r0, reg_addr, 32
+	{
+		unsigned xo;
+		switch (width) {
+			case 4: xo = 23;  break; // lwzx
+			case 2: xo = 279; break; // lhzx
+			case 1: xo = 87;  break; // lbzx
+			default: xo = 23; break;
+		}
+		EXT_OP(reg_dst, HOST_R9, HOST_R0, xo, 0);
+	}
+
+	// --- Jump over slow path ---
+	// bc 20, 0, done  (unconditional bc, BO=20="always", BI=0)
+	IMM_OP(16, 20, 0, 0); // b done (offset patched later)
+	fast_path_end = cache.pos - 4;
+
+	// --- Slow path ---
+	// Patch the page-crossing and NULL-check branches to point here.
+	if (slow_path_page) gen_fill_branch(slow_path_page);
+	gen_fill_branch(slow_path_null);
+
+	// Move address to FC_OP1 (R3) for function call, if not already there.
+	if (reg_addr != FC_OP1) {
+		gen_mov_regs(FC_OP1, reg_addr);
+	}
+
+	// Call the appropriate checked memory read function.
+	switch (width) {
+		case 4:  gen_call_function_raw((void *)&mem_readd_checked_drc); break;
+		case 2:  gen_call_function_raw((void *)&mem_readw_checked_drc); break;
+		default: gen_call_function_raw((void *)&mem_readb_checked_drc); break;
+	}
+
+	// Check for exception (the function returns bool in FC_RETOP/R3).
+	dyn_check_exception(FC_RETOP);
+
+	// Load the result from core_dynrec.readdata into reg_dst.
+	if (width == 4) {
+		gen_mov_word_to_reg(reg_dst, &core_dynrec.readdata, true);
+	} else if (width == 2) {
+		gen_mov_word_to_reg(reg_dst, &core_dynrec.readdata, false);
+	} else {
+		gen_mov_byte_to_reg_low(reg_dst, &core_dynrec.readdata);
+	}
+
+	// --- Done ---
+	// Patch the fast-path-end branch to point here.
+	gen_fill_branch(fast_path_end);
+}
+
+// Emit inline TLB fast-path for JIT memory writes.
+// At JIT runtime: looks up paging.tlb.write[address>>12], if non-NULL and no
+// page crossing, stores directly to host memory. Otherwise falls back to
+// the checked function call (slow path).
+//
+// reg_addr: register holding the guest physical address (32-bit)
+// reg_val:  register holding the value to write
+// width:    1 (byte), 2 (word), or 4 (dword)
+//
+// Scratch registers used: HOST_R8, HOST_R9, HOST_R0
+// CR fields used: cr0 (TLB NULL check), cr1 (page crossing check)
+static void gen_inline_tlb_write(HostReg reg_addr, HostReg reg_val, int width) {
+	assert(reg_addr != HOST_R8 && reg_addr != HOST_R9);
+	assert(reg_val != HOST_R8 && reg_val != HOST_R9);
+
+	const uint8_t *slow_path_page = nullptr;
+	const uint8_t *slow_path_null = nullptr;
+	const uint8_t *fast_path_end  = nullptr;
+
+	// --- Page-crossing check (skip for byte writes) ---
+	if (width > 1) {
+		RLW_OP(21, reg_addr, HOST_R0, 0, 20, 31, 0); // rlwinm r0, reg_addr, 0, 20, 31
+		const uint16_t threshold = (width == 4) ? 0x0FFD : 0x0FFF;
+		IMM_OP(11, 4, HOST_R0, threshold); // cmpwi cr1, r0, threshold
+		IMM_OP(16, 4, 4, 0); // bge cr1, slow_path
+		slow_path_page = cache.pos - 4;
+	}
+
+	// --- TLB lookup ---
+	RLW_OP(21, reg_addr, HOST_R8, 20, 12, 31, 0); // srwi r8, reg_addr, 12
+	RLD_OP(30, HOST_R8, HOST_R8, 3, 60, 1, 0); // sldi r8, r8, 3
+	EXT_OP(HOST_R9, FC_TLB_WRITE, HOST_R8, 21, 0); // ldx r9, FC_TLB_WRITE(r15), r8
+
+	// --- NULL check ---
+	IMM_OP(11, 1, HOST_R9, 0); // cmpdi cr0, r9, 0
+	IMM_OP(16, 12, 2, 0); // beq cr0, slow_path
+	slow_path_null = cache.pos - 4;
+
+	// --- Fast path: store to host memory ---
+	// Truncate reg_addr to 32 bits (same reason as read path).
+	RLD_OP(30, reg_addr, HOST_R0, 0, 32, 0, 0); // clrldi r0, reg_addr, 32
+	{
+		unsigned xo;
+		switch (width) {
+			case 4: xo = 151; break; // stwx
+			case 2: xo = 407; break; // sthx
+			case 1: xo = 215; break; // stbx
+			default: xo = 151; break;
+		}
+		EXT_OP(reg_val, HOST_R9, HOST_R0, xo, 0);
+	}
+
+	// --- Jump over slow path ---
+	IMM_OP(16, 20, 0, 0); // bc always, done
+	fast_path_end = cache.pos - 4;
+
+	// --- Slow path ---
+	if (slow_path_page) gen_fill_branch(slow_path_page);
+	gen_fill_branch(slow_path_null);
+
+	// Set up arguments: FC_OP1 = address, FC_OP2 = value.
+	// Must be careful about ordering if reg_addr or reg_val overlap
+	// with FC_OP1 (R3) or FC_OP2 (R4).
+	if (reg_addr == FC_OP2 && reg_val == FC_OP1) {
+		// Swap case: addr is in R4, val is in R3. Need temp.
+		gen_mov_regs(HOST_R0, reg_addr);  // r0 = addr
+		gen_mov_regs(FC_OP2, reg_val);    // r4 = val
+		gen_mov_regs(FC_OP1, HOST_R0);    // r3 = addr
+	} else {
+		// Move val first if reg_val might be FC_OP1 (which we'd overwrite)
+		if (reg_val != FC_OP2 && reg_addr == FC_OP2) {
+			// addr is already in R4, move val to R4 first would clobber it
+			gen_mov_regs(HOST_R0, reg_addr);
+			gen_mov_regs(FC_OP2, reg_val);
+			gen_mov_regs(FC_OP1, HOST_R0);
+		} else {
+			if (reg_val != FC_OP2) gen_mov_regs(FC_OP2, reg_val);
+			if (reg_addr != FC_OP1) gen_mov_regs(FC_OP1, reg_addr);
+		}
+	}
+
+	switch (width) {
+		case 4:  gen_call_function_raw((void *)&mem_writed_checked_drc); break;
+		case 2:  gen_call_function_raw((void *)&mem_writew_checked_drc); break;
+		default: gen_call_function_raw((void *)&mem_writeb_checked_drc); break;
+	}
+
+	dyn_check_exception(FC_RETOP);
+
+	// --- Done ---
+	gen_fill_branch(fast_path_end);
+}
+
+#endif // DRC_USE_INLINE_TLB
+
 // read a byte from a given address and store it in reg_dst
 static void dyn_read_byte(HostReg reg_addr,HostReg reg_dst) {
+#ifdef DRC_USE_INLINE_TLB
+	gen_inline_tlb_read(reg_addr, reg_dst, 1);
+#else
 	gen_mov_regs(FC_OP1,reg_addr);
 	gen_call_function_raw((void *)&mem_readb_checked_drc);
 	dyn_check_exception(FC_RETOP);
 	gen_mov_byte_to_reg_low(reg_dst,&core_dynrec.readdata);
+#endif
 }
 static void dyn_read_byte_canuseword(HostReg reg_addr,HostReg reg_dst) {
+#ifdef DRC_USE_INLINE_TLB
+	// lbzx zero-extends to 32 bits, so _canuseword is the same as byte read
+	gen_inline_tlb_read(reg_addr, reg_dst, 1);
+#else
 	gen_mov_regs(FC_OP1,reg_addr);
 	gen_call_function_raw((void *)&mem_readb_checked_drc);
 	dyn_check_exception(FC_RETOP);
 	gen_mov_byte_to_reg_low_canuseword(reg_dst,&core_dynrec.readdata);
+#endif
 }
 
 // write a byte from reg_val into the memory given by the address
 static void dyn_write_byte(HostReg reg_addr,HostReg reg_val) {
+#ifdef DRC_USE_INLINE_TLB
+	gen_inline_tlb_write(reg_addr, reg_val, 1);
+#else
 	gen_mov_regs(FC_OP2,reg_val);
 	gen_mov_regs(FC_OP1,reg_addr);
 	gen_call_function_raw((void *)&mem_writeb_checked_drc);
 	dyn_check_exception(FC_RETOP);
+#endif
 }
 
 // read a 32bit (dword=true) or 16bit (dword=false) value
 // from a given address and store it in reg_dst
 static void dyn_read_word(HostReg reg_addr,HostReg reg_dst,bool dword) {
+#ifdef DRC_USE_INLINE_TLB
+	gen_inline_tlb_read(reg_addr, reg_dst, dword ? 4 : 2);
+#else
 	gen_mov_regs(FC_OP1,reg_addr);
 	if (dword) gen_call_function_raw((void *)&mem_readd_checked_drc);
 	else gen_call_function_raw((void *)&mem_readw_checked_drc);
 	dyn_check_exception(FC_RETOP);
 	gen_mov_word_to_reg(reg_dst,&core_dynrec.readdata,dword);
+#endif
 }
 
 // write a 32bit (dword=true) or 16bit (dword=false) value
 // from reg_val into the memory given by the address
 static void dyn_write_word(HostReg reg_addr,HostReg reg_val,bool dword) {
+#ifdef DRC_USE_INLINE_TLB
+//	if (!dword) gen_extend_word(false,reg_val);
+	gen_inline_tlb_write(reg_addr, reg_val, dword ? 4 : 2);
+#else
 //	if (!dword) gen_extend_word(false,reg_val);
 	gen_mov_regs(FC_OP2,reg_val);
 	gen_mov_regs(FC_OP1,reg_addr);
 	if (dword) gen_call_function_raw((void *)&mem_writed_checked_drc);
 	else gen_call_function_raw((void *)&mem_writew_checked_drc);
 	dyn_check_exception(FC_RETOP);
+#endif
 }
 
 // effective address calculation helper, op2 has to be present!

@@ -30,6 +30,11 @@
 #define DRC_USE_SEGS_ADDR
 #define DRC_USE_LFLAGS_ADDR
 
+// Inline TLB fast-path in JIT-generated code for memory reads/writes.
+// Uses pinned registers to hold the TLB array base addresses, avoiding
+// function call overhead for the common case (TLB hit, no page crossing).
+#define DRC_USE_INLINE_TLB
+
 // register mapping
 enum HostReg {
 	HOST_R0 = 0,
@@ -90,6 +95,13 @@ extern FPU_rec fpu;
 #define FC_REGS_ADDR HOST_R31
 // register that points to lflags (lazy flags struct)
 #define FC_LFLAGS_ADDR HOST_R26
+
+#ifdef DRC_USE_INLINE_TLB
+// register that points to paging.tlb.read[0]
+#define FC_TLB_READ HOST_R14
+// register that points to paging.tlb.write[0]
+#define FC_TLB_WRITE HOST_R15
+#endif
 
 // register that holds the first parameter
 #define FC_OP1 RegParams[0]
@@ -717,6 +729,10 @@ static void gen_run_code(void)
 
 	// put at the very end of the stack frame, since we have no floats
 	// to save
+#ifdef DRC_USE_INLINE_TLB
+	DSF_OP(62, FC_TLB_READ,  HOST_R1, 192+0 , 0); // std r14, 192(sp)
+	DSF_OP(62, FC_TLB_WRITE, HOST_R1, 192+8 , 0); // std r15, 200(sp)
+#endif
 	DSF_OP(62, HOST_R26, HOST_R1, 208+0 , 0); // std r26, 208(sp)
 	DSF_OP(62, HOST_R27, HOST_R1, 208+8 , 0); // std r27, 216(sp)
 	DSF_OP(62, HOST_R28, HOST_R1, 208+16, 0); // :
@@ -724,6 +740,10 @@ static void gen_run_code(void)
 	DSF_OP(62, HOST_R30, HOST_R1, 208+32, 0); // :
 	DSF_OP(62, HOST_R31, HOST_R1, 208+40, 0); // std r31, 248(sp)
 
+#ifdef DRC_USE_INLINE_TLB
+	gen_mov_qword_to_reg_imm(FC_TLB_READ, (uint64_t)PAGING_GetReadBaseAddress());
+	gen_mov_qword_to_reg_imm(FC_TLB_WRITE, (uint64_t)PAGING_GetWriteBaseAddress());
+#endif
 	gen_mov_qword_to_reg_imm(FC_LFLAGS_ADDR, ((uint64_t)&lflags));
 	gen_mov_qword_to_reg_imm(HOST_R28, ((uint64_t)&fpu));
 	gen_mov_qword_to_reg_imm(FC_SEGS_ADDR, ((uint64_t)&Segs));
@@ -743,6 +763,10 @@ static void gen_run_code(void)
 	DSF_OP(58, HOST_R28, HOST_R1, 208+16, 0);
 	DSF_OP(58, HOST_R27, HOST_R1, 208+8 , 0);
 	DSF_OP(58, HOST_R26, HOST_R1, 208+0 , 0);
+#ifdef DRC_USE_INLINE_TLB
+	DSF_OP(58, FC_TLB_WRITE, HOST_R1, 192+8 , 0); // ld r15, 200(sp)
+	DSF_OP(58, FC_TLB_READ,  HOST_R1, 192+0 , 0); // ld r14, 192(sp)
+#endif
 
 	IMM_OP(14, HOST_R1, HOST_R1, 256);   // addi sp, sp, 256
 	IMM_OP(19, 0x14, 0, 16<<1);          // blr
