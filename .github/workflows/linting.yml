@@ -11,7 +11,7 @@ jobs:
   run_linters:
     name: Run scripts & Markdown linters
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Check out repository
         uses: actions/checkout@v6

@@ -13,7 +13,7 @@ env:
 
 jobs:
   update_release_notes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     if: github.repository == 'dosbox-staging/dosbox-staging'
     steps:
       - name: Check out repository
