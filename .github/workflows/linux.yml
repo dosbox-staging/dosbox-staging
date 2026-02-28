@@ -230,15 +230,14 @@ jobs:
           path: "dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}"
 
       - name: Create tarball
+        # Upload tarball instead of a zip file to preserve file attributes
         run: |
           tar -cJf "dosbox-staging-linux-x86_64-$DOSBOX_VERSION_AND_HASH.tar.xz" \
               "dosbox-staging-linux-x86_64-$DOSBOX_VERSION_AND_HASH"
 
       - name: Upload tarball
         uses: actions/upload-artifact@v7
-        # GitHub automatically zips the artifacts (there's no way to create
-        # a tarball), and it removes all executable flags while zipping.
-        # Letting it zip a tarball preserves flags in the compressed files.
         with:
-          name: dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}
+          name: dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}.tar.xz
           path: dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}.tar.xz
+          archive: false
