@@ -385,11 +385,35 @@ static void dyn_lea(void) {
 }
 
 
+// Dispatch wrappers for push/pop: use inline JIT codegen on PPC64LE,
+// fall back to C function call on other architectures.
+// Only the dword (32-bit) variants are inlined since those dominate
+// in 32-bit protected mode (Quake, Doom, etc.).
+
+static void dyn_emit_push_dword(void) {
+	// Value to push must be in FC_OP1 (R3) before calling this.
+#ifdef DRC_USE_INLINE_PUSH_POP
+	gen_inline_push_dword();
+#else
+	gen_call_function_raw((void*)&dynrec_push_dword);
+#endif
+}
+
+static void dyn_emit_pop_dword(void) {
+	// Result will be in FC_RETOP (R3) after this returns.
+#ifdef DRC_USE_INLINE_PUSH_POP
+	gen_inline_pop_dword();
+#else
+	gen_call_function_raw((void*)&dynrec_pop_dword);
+#endif
+}
+
+
 static void dyn_push_seg(uint8_t seg) {
 	MOV_SEG_VAL_TO_HOST_REG(FC_OP1,seg);
 	if (decode.big_op) {
 		gen_extend_word(false,FC_OP1);
-		gen_call_function_raw((void*)&dynrec_push_dword);
+		dyn_emit_push_dword();
 	} else {
 		gen_call_function_raw((void*)&dynrec_push_word);
 	}
@@ -402,26 +426,26 @@ static void dyn_pop_seg(uint8_t seg) {
 
 static void dyn_push_reg(uint8_t reg) {
 	MOV_REG_WORD_TO_HOST_REG(FC_OP1,reg,decode.big_op);
-	if (decode.big_op) gen_call_function_raw((void*)&dynrec_push_dword);
+	if (decode.big_op) dyn_emit_push_dword();
 	else gen_call_function_raw((void*)&dynrec_push_word);
 }
 
 static void dyn_pop_reg(uint8_t reg) {
-	if (decode.big_op) gen_call_function_raw((void*)&dynrec_pop_dword);
+	if (decode.big_op) dyn_emit_pop_dword();
 	else gen_call_function_raw((void*)&dynrec_pop_word);
 	MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,reg,decode.big_op);
 }
 
 static void dyn_push_byte_imm(int8_t imm) {
 	gen_mov_dword_to_reg_imm(FC_OP1,(uint32_t)imm);
-	if (decode.big_op) gen_call_function_raw((void*)&dynrec_push_dword);
+	if (decode.big_op) dyn_emit_push_dword();
 	else gen_call_function_raw((void*)&dynrec_push_word);
 }
 
 static void dyn_push_word_imm(Bitu imm) {
 	if (decode.big_op) {
 		gen_mov_dword_to_reg_imm(FC_OP1,imm);
-		gen_call_function_raw((void*)&dynrec_push_dword);
+		dyn_emit_push_dword();
 	} else {
 		gen_mov_word_to_reg_imm(FC_OP1,(uint16_t)imm);
 		gen_call_function_raw((void*)&dynrec_push_word);
@@ -434,7 +458,7 @@ static void dyn_pop_ev(void) {
 		// save original ESP
 		MOV_REG_WORD32_TO_HOST_REG(FC_OP2,DRC_REG_ESP);
 		gen_protect_reg(FC_OP2);
-		if (decode.big_op) gen_call_function_raw((void*)&dynrec_pop_dword);
+		if (decode.big_op) dyn_emit_pop_dword();
 		else gen_call_function_raw((void*)&dynrec_pop_word);
 		dyn_fill_ea(FC_ADDR);
 		gen_mov_regs(FC_OP2,FC_RETOP);
@@ -449,7 +473,7 @@ static void dyn_pop_ev(void) {
 		dyn_check_exception(FC_RETOP);
 		gen_fill_branch(no_fault);
 	} else {
-		if (decode.big_op) gen_call_function_raw((void*)&dynrec_pop_dword);
+		if (decode.big_op) dyn_emit_pop_dword();
 		else gen_call_function_raw((void*)&dynrec_pop_word);
 		MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,decode.modrm.rm,decode.big_op);
 	}
@@ -840,7 +864,7 @@ static Bitu dyn_grp4_ev(void) {
 		gen_protect_addr_reg();
 		gen_mov_word_to_reg(FC_OP1,decode.big_op?(void*)(&reg_eip):(void*)(&reg_ip),decode.big_op);
 		gen_add_imm(FC_OP1,(uint32_t)(decode.code-decode.code_start));
-		if (decode.big_op) gen_call_function_raw((void*)&dynrec_push_dword);
+		if (decode.big_op) dyn_emit_push_dword();
 		else gen_call_function_raw((void*)&dynrec_push_word);
 
 		gen_restore_addr_reg();
@@ -864,7 +888,7 @@ static Bitu dyn_grp4_ev(void) {
 			decode.big_op,FC_OP2,FC_ADDR,FC_RETOP);
 		return 1;
 	case 0x6:		// PUSH Ev
-		if (decode.big_op) gen_call_function_raw((void*)&dynrec_push_dword);
+		if (decode.big_op) dyn_emit_push_dword();
 		else gen_call_function_raw((void*)&dynrec_push_word);
 		break;
 	default:
@@ -1175,7 +1199,7 @@ static void dyn_loop(LoopTypes type) {
 static void dyn_ret_near(Bitu bytes) {
 	dyn_reduce_cycles();
 
-	if (decode.big_op) gen_call_function_raw((void*)&dynrec_pop_dword);
+	if (decode.big_op) dyn_emit_pop_dword();
 	else gen_call_function_raw((void*)&dynrec_pop_word);
 	gen_mov_word_from_reg(FC_RETOP,decode.big_op?(void*)(&reg_eip):(void*)(&reg_ip),decode.big_op);
 
@@ -1189,7 +1213,7 @@ static void dyn_call_near_imm(void) {
 	if (decode.big_op) imm=(int32_t)decode_fetchd();
 	else imm=(int16_t)decode_fetchw();
 	dyn_set_eip_end(FC_OP1);
-	if (decode.big_op) gen_call_function_raw((void*)&dynrec_push_dword);
+	if (decode.big_op) dyn_emit_push_dword();
 	else gen_call_function_raw((void*)&dynrec_push_word);
 
 	dyn_set_eip_end(FC_OP1,imm);

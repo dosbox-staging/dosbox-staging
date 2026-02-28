@@ -919,6 +919,127 @@ static void gen_inline_tlb_write(HostReg reg_addr, HostReg reg_val, int width) {
 
 #endif // DRC_USE_INLINE_TLB
 
+#if defined(DRC_USE_INLINE_PUSH_POP) && defined(DRC_USE_INLINE_TLB)
+
+// Offsets within CPUBlock struct (verified empirically on PPC64LE):
+//   cpu.stack.mask    at +88  (Bitu, lower 32 bits hold the mask)
+//   cpu.stack.notmask at +96  (Bitu, lower 32 bits hold the not-mask)
+// Offset within Segments struct:
+//   Segs.phys[ss]    at +24  (PhysPt = uint32_t, ss=2)
+// Offset within CPU_Regs struct:
+//   reg_esp           at +16  (GenReg32, regs[4].dword[0])
+//
+// Stack scratch area: offset 128(R1) is inside the gen_run_code 256-byte
+// frame (bytes 0-191 are unused by saved registers at 192-248).
+
+static constexpr int STACK_SCRATCH_OFFSET = 128;
+static constexpr int REG_ESP_OFFSET = 16;    // cpu_regs.regs[4].dword[0]
+static constexpr int SEG_PHYS_SS_OFFSET = 24; // Segs.phys[ss=2]
+
+// Emit inline push_dword: pushes value in FC_OP1 (R3) onto the stack.
+// Uses inline TLB fast-path for the memory write.
+//
+// Approach:
+//   1. Compute write address = SegPhys(ss) + (new_esp & mask) → HOST_R7
+//   2. Save new_esp to stack scratch area (survives slow-path function call)
+//   3. gen_inline_tlb_write(HOST_R7, FC_OP1, 4)
+//      - If write faults: dyn_check_exception returns from block, ESP unchanged
+//      - If write succeeds: continue
+//   4. Load new_esp from stack scratch, store to reg_esp
+//
+// Scratch registers: HOST_R5-R9 (volatile, may be clobbered by slow path)
+// IMPORTANT: Does NOT clobber FC_ADDR (R29). Uses HOST_R7 for the write
+// address instead, because callers like CALL Ev store the call target in
+// FC_ADDR before pushing the return address — clobbering FC_ADDR would
+// lose the call target.
+static void gen_inline_push_dword(void) {
+	// Load &cpu into R5 — needed for mask/notmask
+	gen_mov_qword_to_reg_imm(HOST_R5, (uint64_t)&cpu);
+
+	// Load inputs
+	IMM_OP(32, HOST_R6, FC_REGS_ADDR, REG_ESP_OFFSET); // lwz r6, 16(r31) — reg_esp
+	IMM_OP(32, HOST_R7, HOST_R5, 88);                   // lwz r7, 88(r5) — cpu.stack.mask
+	IMM_OP(32, HOST_R8, HOST_R5, 96);                   // lwz r8, 96(r5) — cpu.stack.notmask
+
+	// Compute new_esp = (reg_esp & notmask) | ((reg_esp - 4) & mask)
+	IMM_OP(14, HOST_R9, HOST_R6, (uint16_t)-4);         // addi r9, r6, -4
+	EXT_OP(HOST_R9, HOST_R9, HOST_R7, 28, 0);           // and r9, r9, r7 — (esp-4) & mask
+	EXT_OP(HOST_R6, HOST_R6, HOST_R8, 28, 0);           // and r6, r6, r8 — reg_esp & notmask
+	EXT_OP(HOST_R9, HOST_R9, HOST_R6, 444, 0);          // or r9, r9, r6 — new_esp
+
+	// Save new_esp to stack scratch (survives slow-path function call)
+	IMM_OP(36, HOST_R9, HOST_R1, STACK_SCRATCH_OFFSET);  // stw r9, 128(r1)
+
+	// Compute write address = SegPhys(ss) + (new_esp & mask) → HOST_R7
+	// Note: for PPC 'and rA, rS, rB', result is in rA (rega position).
+	// EXT_OP(rS, rA, rB, 28, 0) — first param is source, second is dest.
+	EXT_OP(HOST_R9, HOST_R0, HOST_R7, 28, 0);           // and r0, r9, r7 — new_esp & mask
+	IMM_OP(32, HOST_R6, FC_SEGS_ADDR, SEG_PHYS_SS_OFFSET); // lwz r6, 24(r30) — SegPhys(ss)
+	EXT_OP(HOST_R7, HOST_R6, HOST_R0, 266, 0);          // add r7, r6, r0 — write addr
+
+	// Write value (FC_OP1/R3) to memory at HOST_R7
+	// gen_inline_tlb_write scratches R8, R9, R0 but not R7.
+	gen_inline_tlb_write(HOST_R7, FC_OP1, 4);
+	// If write faulted, dyn_check_exception already returned from block.
+	// reg_esp is unchanged — correct for a faulting push.
+
+	// Write succeeded — update reg_esp from stack scratch
+	IMM_OP(32, HOST_R5, HOST_R1, STACK_SCRATCH_OFFSET);  // lwz r5, 128(r1) — new_esp
+	IMM_OP(36, HOST_R5, FC_REGS_ADDR, REG_ESP_OFFSET);   // stw r5, 16(r31) — reg_esp = new_esp
+}
+
+// Emit inline pop_dword: pops a dword from the stack into FC_RETOP (R3).
+// Uses inline TLB fast-path for the memory read.
+//
+// Approach:
+//   1. Compute read address = SegPhys(ss) + (reg_esp & mask) → HOST_R7
+//   2. gen_inline_tlb_read(HOST_R7, FC_RETOP, 4) — result in R3
+//      - If read faults: dyn_check_exception returns from block
+//      - If read succeeds: continue with result in R3
+//   3. Compute new_esp (reload reg_esp/mask/notmask from memory since
+//      slow path may have clobbered volatile registers)
+//   4. Store new_esp to reg_esp (using R5-R9 only, preserving R3)
+//
+// Scratch: HOST_R5-R9 (volatile), HOST_R7 for read address
+// IMPORTANT: Does NOT clobber FC_ADDR (R29), for consistency with push.
+// Result: FC_RETOP (R3) = popped value
+static void gen_inline_pop_dword(void) {
+	// Load &cpu into R5
+	gen_mov_qword_to_reg_imm(HOST_R5, (uint64_t)&cpu);
+
+	// Load inputs
+	IMM_OP(32, HOST_R6, FC_REGS_ADDR, REG_ESP_OFFSET); // lwz r6, 16(r31) — reg_esp
+	IMM_OP(32, HOST_R7, HOST_R5, 88);                   // lwz r7, 88(r5) — cpu.stack.mask
+
+	// Compute read address = SegPhys(ss) + (reg_esp & mask) → HOST_R7
+	EXT_OP(HOST_R6, HOST_R0, HOST_R7, 28, 0);           // and r0, r6, r7 — reg_esp & mask
+	IMM_OP(32, HOST_R8, FC_SEGS_ADDR, SEG_PHYS_SS_OFFSET); // lwz r8, 24(r30) — SegPhys(ss)
+	EXT_OP(HOST_R7, HOST_R8, HOST_R0, 266, 0);          // add r7, r8, r0 — read addr
+
+	// Read dword from HOST_R7 into FC_RETOP (R3)
+	gen_inline_tlb_read(HOST_R7, FC_RETOP, 4);
+	// If read faulted, dyn_check_exception already returned from block.
+	// Result is now in FC_RETOP (R3).
+
+	// Read succeeded — compute new_esp and update reg_esp.
+	// Must reload values since slow path may have clobbered volatile regs.
+	// IMPORTANT: Must not clobber FC_RETOP (R3) — use R5-R9 only.
+	gen_mov_qword_to_reg_imm(HOST_R5, (uint64_t)&cpu);
+	IMM_OP(32, HOST_R6, FC_REGS_ADDR, REG_ESP_OFFSET); // lwz r6, 16(r31) — reg_esp
+	IMM_OP(32, HOST_R7, HOST_R5, 88);                   // lwz r7, 88(r5) — cpu.stack.mask
+	IMM_OP(32, HOST_R8, HOST_R5, 96);                   // lwz r8, 96(r5) — cpu.stack.notmask
+
+	// new_esp = (reg_esp & notmask) | ((reg_esp + 4) & mask)
+	EXT_OP(HOST_R6, HOST_R9, HOST_R8, 28, 0);           // and r9, r6, r8 — reg_esp & notmask
+	IMM_OP(14, HOST_R5, HOST_R6, 4);                     // addi r5, r6, 4
+	EXT_OP(HOST_R5, HOST_R5, HOST_R7, 28, 0);           // and r5, r5, r7 — (esp+4) & mask
+	EXT_OP(HOST_R9, HOST_R9, HOST_R5, 444, 0);          // or r9, r9, r5 — new_esp
+	IMM_OP(36, HOST_R9, FC_REGS_ADDR, REG_ESP_OFFSET);  // stw r9, 16(r31) — reg_esp = new_esp
+	// FC_RETOP (R3) still holds the popped value.
+}
+
+#endif // DRC_USE_INLINE_PUSH_POP && DRC_USE_INLINE_TLB
+
 // read a byte from a given address and store it in reg_dst
 static void dyn_read_byte(HostReg reg_addr,HostReg reg_dst) {
 #ifdef DRC_USE_INLINE_TLB

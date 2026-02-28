@@ -39,6 +39,10 @@
 // Uses HOST_R28 pinned to &fpu to avoid function call overhead.
 #define DRC_USE_INLINE_FPU
 
+// Inline push_dword/pop_dword in JIT-generated code.
+// Requires DRC_USE_INLINE_TLB for the TLB fast-path memory access.
+#define DRC_USE_INLINE_PUSH_POP
+
 // register mapping
 enum HostReg {
 	HOST_R0 = 0,
