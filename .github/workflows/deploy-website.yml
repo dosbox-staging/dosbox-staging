@@ -20,7 +20,7 @@ jobs:
 
   build_and_deploy_website:
     needs: linting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Check out MkDocs sources
         uses: actions/checkout@v6
