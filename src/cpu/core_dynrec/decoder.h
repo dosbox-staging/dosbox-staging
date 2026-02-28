@@ -50,6 +50,18 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 	decode.cycles=0;
 	uint_fast8_t opcode;
 	while (max_opcodes--) {
+		// Check if the cache block is running low on space.
+		// With inline TLB code, each opcode can generate significantly
+		// more host instructions, plus each memory access adds a
+		// deferred exception handler (~64 bytes each) emitted at
+		// block close. Reserve enough room for the close epilogue
+		// and all accumulated deferred handlers.
+		{
+			const auto used = static_cast<Bitu>(cache.pos - decode.block->cache.start);
+			const auto reserve = static_cast<Bitu>(256 + used_save_info_dynrec * 64);
+			if (used + reserve >= decode.block->cache.size)
+				break;
+		}
 		// Init prefixes
 		decode.big_addr=cpu.code.big;
 		decode.big_op=cpu.code.big;
