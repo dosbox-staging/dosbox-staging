@@ -202,8 +202,8 @@ static void increase_ticks()
 
 		static int64_t cumulative_time_slept_us = 0;
 
-		constexpr auto sleep_duration = std::chrono::microseconds(1000);
-		std::this_thread::sleep_for(sleep_duration);
+		constexpr uint64_t SleepDurationUs = 1000;
+		SDL_DelayPrecise(SleepDurationUs * 1000);
 
 		const auto time_slept_us = GetTicksUsSince(ticks_new_us);
 		cumulative_time_slept_us += time_slept_us;
