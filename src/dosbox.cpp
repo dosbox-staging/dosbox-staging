@@ -202,8 +202,13 @@ static void increase_ticks()
 
 		static int64_t cumulative_time_slept_us = 0;
 
-		constexpr auto sleep_duration = std::chrono::microseconds(1000);
-		std::this_thread::sleep_for(sleep_duration);
+		// Sleep until the next millisecond tick boundary rather than a
+		// flat 1ms, to wake up as close to the next tick as possible.
+		const auto next_tick_us = (ticks.last + 1) * MicrosInMillisecond;
+		const auto sleep_us = next_tick_us - ticks_new_us;
+		if (sleep_us > 0) {
+			SDL_DelayPrecise(static_cast<uint64_t>(sleep_us) * 1000);
+		}
 
 		const auto time_slept_us = GetTicksUsSince(ticks_new_us);
 		cumulative_time_slept_us += time_slept_us;
