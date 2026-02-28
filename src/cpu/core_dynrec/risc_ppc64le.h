@@ -35,6 +35,10 @@
 // function call overhead for the common case (TLB hit, no page crossing).
 #define DRC_USE_INLINE_TLB
 
+// Inline FPU stack operations (PREP_PUSH, FPOP, FXCH) in JIT-generated code.
+// Uses HOST_R28 pinned to &fpu to avoid function call overhead.
+#define DRC_USE_INLINE_FPU
+
 // register mapping
 enum HostReg {
 	HOST_R0 = 0,
@@ -1099,4 +1103,119 @@ static void gen_mov_regword_to_reg(HostReg dest_reg, Bitu index, bool dword)
 		gen_mov_regval32_to_reg(dest_reg, index);
 	else
 		gen_mov_regval16_to_reg(dest_reg, index);
+}
+
+// ========================================================================
+// Inline FPU stack operations
+// ========================================================================
+// HOST_R28 points to &fpu (loaded in gen_run_code prologue).
+// FPU_rec layout:  regs[9] @ +0, regs_memcpy[9] @ +72, tags[9] @ +352,
+//                  top @ +368
+// Uses only HOST_R0 as scratch — does NOT clobber FC_OP1/FC_OP2.
+// ========================================================================
+
+#define FPU_OFFSET_REGS        0
+#define FPU_OFFSET_REGS_MEMCPY 72
+#define FPU_OFFSET_TAGS        352
+#define FPU_OFFSET_TOP         368
+
+// Inline FPU_PREP_PUSH: TOP = (TOP - 1) & 7; fpu.tags[TOP] = TAG_Valid(0)
+// Clobbers: HOST_R0, HOST_R5. Does NOT clobber FC_OP1/FC_OP2.
+// NOTE: HOST_R0 cannot be used as RA in D-form load/store instructions
+// (PPC treats r0 in RA position as literal 0), so we use HOST_R5 for
+// the base address and HOST_R0 for scratch/data values.
+static void gen_inline_fpu_prep_push(void) {
+	// lwz r5, FPU_OFFSET_TOP(r28)     -- load TOP
+	IMM_OP(32, HOST_R5, HOST_R28, FPU_OFFSET_TOP);
+	// addi r5, r5, -1                 -- TOP - 1
+	IMM_OP(14, HOST_R5, HOST_R5, -1);
+	// clrlwi r5, r5, 29               -- & 7
+	RLW_OP(21, HOST_R5, HOST_R5, 0, 29, 31, 0);
+	// stw r5, FPU_OFFSET_TOP(r28)     -- store new TOP
+	IMM_OP(36, HOST_R5, HOST_R28, FPU_OFFSET_TOP);
+	// add r5, r28, r5                 -- r5 = &fpu + new_top
+	EXT_OP(HOST_R5, HOST_R28, HOST_R5, 266, 0);
+	// li r0, TAG_Valid (0)
+	IMM_OP(14, HOST_R0, 0, TAG_Valid);
+	// stb r0, FPU_OFFSET_TAGS(r5)     -- fpu.tags[new_top] = TAG_Valid
+	IMM_OP(38, HOST_R0, HOST_R5, FPU_OFFSET_TAGS);
+}
+
+// Inline FPU_FPOP: fpu.tags[TOP] = TAG_Empty(3); TOP = (TOP + 1) & 7
+// NOTE: Same HOST_R0/RA constraint as above — use HOST_R5 for base address.
+static void gen_inline_fpu_fpop(void) {
+	// lwz r5, FPU_OFFSET_TOP(r28)     -- load TOP
+	IMM_OP(32, HOST_R5, HOST_R28, FPU_OFFSET_TOP);
+	// add r5, r28, r5                 -- r5 = &fpu + old_top
+	EXT_OP(HOST_R5, HOST_R28, HOST_R5, 266, 0);
+	// li r0, TAG_Empty (3)
+	IMM_OP(14, HOST_R0, 0, TAG_Empty);
+	// stb r0, FPU_OFFSET_TAGS(r5)     -- fpu.tags[old_top] = TAG_Empty
+	IMM_OP(38, HOST_R0, HOST_R5, FPU_OFFSET_TAGS);
+	// lwz r5, FPU_OFFSET_TOP(r28)     -- reload TOP
+	IMM_OP(32, HOST_R5, HOST_R28, FPU_OFFSET_TOP);
+	// addi r5, r5, 1                  -- TOP + 1
+	IMM_OP(14, HOST_R5, HOST_R5, 1);
+	// clrlwi r5, r5, 29               -- & 7
+	RLW_OP(21, HOST_R5, HOST_R5, 0, 29, 31, 0);
+	// stw r5, FPU_OFFSET_TOP(r28)     -- store new TOP
+	IMM_OP(36, HOST_R5, HOST_R28, FPU_OFFSET_TOP);
+}
+
+// Inline FPU_FXCH(st, other): swap regs, regs_memcpy, and tags between
+// fpu register indices in FC_OP1 (r3) and FC_OP2 (r4).
+// Clobbers: HOST_R0, HOST_R5, HOST_R6, HOST_R7, HOST_R8, HOST_R9, HOST_R10
+// Also clobbers FC_OP1 (r3) and FC_OP2 (r4) since we reuse them for addresses.
+static void gen_inline_fpu_fxch(void) {
+	// We need to swap:
+	//   fpu.regs[st].d      <-> fpu.regs[other].d       (8 bytes each, at +0 + idx*8)
+	//   fpu.regs_memcpy[st] <-> fpu.regs_memcpy[other]  (8 bytes each, at +72 + idx*8)
+	//   fpu.tags[st]        <-> fpu.tags[other]          (1 byte each, at +352 + idx)
+	//
+	// FC_OP1 (r3) = st index, FC_OP2 (r4) = other index
+	// HOST_R28 = &fpu
+
+	// Compute byte offsets for regs[] (idx * 8):
+	// sldi r5, r3, 3        -- r5 = st * 8
+	RLD_OP(30, FC_OP1, HOST_R5, 3, 60, 1, 0);
+	// sldi r6, r4, 3        -- r6 = other * 8
+	RLD_OP(30, FC_OP2, HOST_R6, 3, 60, 1, 0);
+
+	// --- Swap regs[st].d and regs[other].d (8-byte doubles) ---
+	// ldx r7, r28, r5       -- r7 = fpu.regs[st].d (as 64-bit int)
+	EXT_OP(HOST_R7, HOST_R28, HOST_R5, 21, 0);
+	// ldx r8, r28, r6       -- r8 = fpu.regs[other].d
+	EXT_OP(HOST_R8, HOST_R28, HOST_R6, 21, 0);
+	// stdx r8, r28, r5      -- fpu.regs[st] = other's value
+	EXT_OP(HOST_R8, HOST_R28, HOST_R5, 149, 0);
+	// stdx r7, r28, r6      -- fpu.regs[other] = st's value
+	EXT_OP(HOST_R7, HOST_R28, HOST_R6, 149, 0);
+
+	// --- Swap regs_memcpy[st] and regs_memcpy[other] (8 bytes, at +72) ---
+	// addi r5, r5, FPU_OFFSET_REGS_MEMCPY  -- r5 = st*8 + 72
+	IMM_OP(14, HOST_R5, HOST_R5, FPU_OFFSET_REGS_MEMCPY);
+	// addi r6, r6, FPU_OFFSET_REGS_MEMCPY  -- r6 = other*8 + 72
+	IMM_OP(14, HOST_R6, HOST_R6, FPU_OFFSET_REGS_MEMCPY);
+	// ldx r7, r28, r5
+	EXT_OP(HOST_R7, HOST_R28, HOST_R5, 21, 0);
+	// ldx r8, r28, r6
+	EXT_OP(HOST_R8, HOST_R28, HOST_R6, 21, 0);
+	// stdx r8, r28, r5
+	EXT_OP(HOST_R8, HOST_R28, HOST_R5, 149, 0);
+	// stdx r7, r28, r6
+	EXT_OP(HOST_R7, HOST_R28, HOST_R6, 149, 0);
+
+	// --- Swap tags[st] and tags[other] (1 byte each, at +352) ---
+	// add r5, r28, r3       -- r5 = &fpu + st (using original index)
+	EXT_OP(HOST_R5, HOST_R28, FC_OP1, 266, 0);
+	// add r6, r28, r4       -- r6 = &fpu + other
+	EXT_OP(HOST_R6, HOST_R28, FC_OP2, 266, 0);
+	// lbz r7, FPU_OFFSET_TAGS(r5)  -- r7 = tags[st]
+	IMM_OP(34, HOST_R7, HOST_R5, FPU_OFFSET_TAGS);
+	// lbz r8, FPU_OFFSET_TAGS(r6)  -- r8 = tags[other]
+	IMM_OP(34, HOST_R8, HOST_R6, FPU_OFFSET_TAGS);
+	// stb r8, FPU_OFFSET_TAGS(r5)  -- tags[st] = other's tag
+	IMM_OP(38, HOST_R8, HOST_R5, FPU_OFFSET_TAGS);
+	// stb r7, FPU_OFFSET_TAGS(r6)  -- tags[other] = st's tag
+	IMM_OP(38, HOST_R7, HOST_R6, FPU_OFFSET_TAGS);
 }
