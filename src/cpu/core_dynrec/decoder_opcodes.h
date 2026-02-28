@@ -1299,8 +1299,19 @@ static void dyn_string(STRING_OP op) {
 			else gen_call_function_m((void*)&dynrec_lodsw_word,(Bitu)DRCD_SEG_PHYS(di_base_addr));
 			break;
 		case R_LODSD:
-			if (decode.big_addr) gen_call_function_m((void*)&dynrec_lodsd_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr));
-			else gen_call_function_m((void*)&dynrec_lodsd_word,(Bitu)DRCD_SEG_PHYS(di_base_addr));
+#if defined(DRC_USE_INLINE_LODSD)
+			// Inline the non-rep, big_addr case for LODSD.
+			// For rep or 16-bit addr, fall back to the C function.
+			if (!decode.rep && decode.big_addr) {
+				// Segs.phys[seg] offset from FC_SEGS_ADDR (R30):
+				// Segs.val[8] = 16 bytes, then phys[seg] at 16 + seg*4
+				gen_inline_lodsd_dword(16 + di_base_addr * 4);
+			} else
+#endif
+			{
+				if (decode.big_addr) gen_call_function_m((void*)&dynrec_lodsd_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr));
+				else gen_call_function_m((void*)&dynrec_lodsd_word,(Bitu)DRCD_SEG_PHYS(di_base_addr));
+			}
 			break;
 
 		case R_STOSB:

@@ -1040,6 +1040,67 @@ static void gen_inline_pop_dword(void) {
 
 #endif // DRC_USE_INLINE_PUSH_POP && DRC_USE_INLINE_TLB
 
+#if defined(DRC_USE_INLINE_LODSD) && defined(DRC_USE_INLINE_TLB)
+
+// Offsets within CPU_Regs struct (FC_REGS_ADDR / R31):
+//   reg_eax = regs[0].dword[0] at offset 0
+//   reg_esi = regs[6].dword[0] at offset 24
+// Offsets within Segments struct (FC_SEGS_ADDR / R30):
+//   Segs.val[8]  occupies bytes 0-15
+//   Segs.phys[seg] at offset 16 + seg*4
+// cpu.direction at offset 160 from &cpu (Bits = int64_t on PPC64LE)
+
+static constexpr int REG_EAX_OFFSET = 0;   // cpu_regs.regs[0].dword[0]
+static constexpr int REG_ESI_OFFSET = 24;  // cpu_regs.regs[6].dword[0]
+static constexpr int CPU_DIRECTION_OFFSET = 160; // offsetof(CPUBlock, direction)
+
+// Emit inline LODSD (non-rep, count=1, big_addr) in JIT-generated code.
+// Loads a dword from [seg_base + ESI] into EAX, then updates ESI by
+// direction*4.
+//
+// seg_phys_offset: offset of Segs.phys[seg] from FC_SEGS_ADDR (R30).
+//                  For DS (default): 16 + 3*4 = 28.
+//
+// At entry: FC_OP2 (R4) = cpu.direction (but may be clobbered by slow path)
+//
+// Scratch registers: HOST_R5-R9, HOST_R0 (all volatile)
+// Does NOT clobber FC_ADDR (R29) or other pinned registers.
+// Result: reg_eax updated, reg_esi updated, FC_RETOP (R3) = 0 (count_left)
+static void gen_inline_lodsd_dword(int seg_phys_offset) {
+	// Load reg_esi and segment base
+	IMM_OP(32, HOST_R6, FC_REGS_ADDR, REG_ESI_OFFSET);   // lwz r6, 24(r31) — reg_esi
+	IMM_OP(32, HOST_R8, FC_SEGS_ADDR, seg_phys_offset);   // lwz r8, offset(r30) — seg_base
+
+	// Compute read address = seg_base + reg_esi → HOST_R7
+	EXT_OP(HOST_R7, HOST_R8, HOST_R6, 266, 0);            // add r7, r8, r6 — address
+
+	// Read dword from HOST_R7 into FC_RETOP (R3)
+	// Scratches R8, R9, R0; may call slow path which clobbers all volatile regs.
+	gen_inline_tlb_read(HOST_R7, FC_RETOP, 4);
+	// If read faulted, dyn_check_exception already returned from block.
+	// Result is now in FC_RETOP (R3).
+
+	// Store result to reg_eax
+	IMM_OP(36, FC_RETOP, FC_REGS_ADDR, REG_EAX_OFFSET);  // stw r3, 0(r31) — reg_eax = result
+
+	// Reload reg_esi (volatile regs may have been clobbered by slow path)
+	IMM_OP(32, HOST_R6, FC_REGS_ADDR, REG_ESI_OFFSET);    // lwz r6, 24(r31) — reg_esi
+
+	// Load cpu.direction and compute add_index = direction << 2
+	gen_mov_qword_to_reg_imm(HOST_R5, (uint64_t)&cpu);
+	IMM_OP(32, HOST_R5, HOST_R5, CPU_DIRECTION_OFFSET);    // lwz r5, 160(r5) — direction (lower 32 bits)
+	RLW_OP(21, HOST_R5, HOST_R5, 2, 0, 29, 0);            // slwi r5, r5, 2 — add_index = direction*4
+
+	// Update reg_esi += add_index
+	EXT_OP(HOST_R6, HOST_R6, HOST_R5, 266, 0);            // add r6, r6, r5
+	IMM_OP(36, HOST_R6, FC_REGS_ADDR, REG_ESI_OFFSET);    // stw r6, 24(r31) — reg_esi = updated
+
+	// Set FC_RETOP = 0 (count_left = 0, no premature termination)
+	gen_mov_dword_to_reg_imm(FC_RETOP, 0);
+}
+
+#endif // DRC_USE_INLINE_LODSD && DRC_USE_INLINE_TLB
+
 // read a byte from a given address and store it in reg_dst
 static void dyn_read_byte(HostReg reg_addr,HostReg reg_dst) {
 #ifdef DRC_USE_INLINE_TLB

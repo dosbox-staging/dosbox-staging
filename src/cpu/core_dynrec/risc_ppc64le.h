@@ -43,6 +43,10 @@
 // Requires DRC_USE_INLINE_TLB for the TLB fast-path memory access.
 #define DRC_USE_INLINE_PUSH_POP
 
+// Inline LODSD (load string dword) for the non-rep case.
+// Requires DRC_USE_INLINE_TLB for the TLB fast-path memory access.
+#define DRC_USE_INLINE_LODSD
+
 // register mapping
 enum HostReg {
 	HOST_R0 = 0,
