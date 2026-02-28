@@ -5,9 +5,11 @@ inputs:
   output_path:
     description: Path for the output HTML file
     required: true
+
   github_token:
     description: GitHub token for API access
     required: true
+
   git_hash:
     description: Git commit hash to include in the HTML
     required: false
@@ -25,8 +27,10 @@ runs:
       env:
         GITHUB_ACCESS_TOKEN: ${{ inputs.github_token }}
       run: |
-        ./scripts/tools/release-notes-drafter.py query \
-            -p pull-requests.csv -s $RELEASE_START_TIME
+        ./scripts/tools/release-notes-drafter.py \
+            query \
+            --start_time            $RELEASE_START_TIME \
+            --out_pull_requests_csv pull-requests.csv
 
     - name: Generate HTML release notes
       shell: bash
@@ -35,6 +39,8 @@ runs:
       run: |
         mkdir -p "$(dirname "${{ inputs.output_path }}")"
 
-        ./scripts/tools/release-notes-drafter.py process \
-            -i pull-requests.csv --html_file "${{ inputs.output_path }}" \
-            --html_version_tag $DOSBOX_VERSION_AND_HASH
+        ./scripts/tools/release-notes-drafter.py \
+            process \
+            --input_csv_file   pull-requests.csv \
+            --html_version_tag $DOSBOX_VERSION_AND_HASH \
+            --out_html_file    "${{ inputs.output_path }}"

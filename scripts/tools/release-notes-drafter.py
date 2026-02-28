@@ -118,36 +118,31 @@ publish
 
     query_args = parser.add_argument_group(title="query arguments")
     query_args.add_argument(
-        "-s",
         "--start_time",
         help="""include pull requests after this datetime
         """
     )
     query_args.add_argument(
-        "-p",
-        "--pull_requests_csv",
+        "--out_pull_requests_csv",
         help="output CSV file containing the pull requests"
     )
 
     process_args = parser.add_argument_group(title="process arguments")
 
     process_args.add_argument(
-        "-i",
-        "--input_csv",
+        "--input_csv_file",
         help="""input CSV file containing the pull requests
         """
     )
 
     process_args.add_argument(
-        "-c",
-        "--csv_file",
+        "--out_csv_file",
         help="""write categorised PRs to a CSV file
         """
     )
 
     process_args.add_argument(
-        "-m",
-        "--markdown_file",
+        "--out_markdown_file",
         help="""write categorised PRs to a Markdown file
 (to be published as pre-release notes on GitHub)
 
@@ -155,7 +150,7 @@ publish
     )
 
     process_args.add_argument(
-        "--html_file",
+        "--out_html_file",
         help="""write release notes to an HTML file
 (to be included in the development build artifacts)
 
@@ -170,7 +165,6 @@ publish
     publish_args = parser.add_argument_group(title="publish arguments")
 
     publish_args.add_argument(
-        "-n",
         "--release_notes_file",
         help="""release notes Markdown file
 
@@ -178,7 +172,6 @@ publish
     )
 
     publish_args.add_argument(
-        "-t",
         "--publish_version_tag",
         help="the release notes will be published under this tag (e.g., v0.83.0-alpha)"
     )
@@ -651,42 +644,43 @@ def main():
     match args.ACTION:
         case "query":
             if not args.start_time:
-                parser.error("start time must be specified with -s")
+                parser.error("--start_time must be specified")
 
-            if not args.pull_requests_csv:
-                parser.error("output CSV file must be specified with -p")
+            if not args.out_pull_requests_csv:
+                parser.error("--out_pull_requests_csv must be specified")
 
-            query_pull_requests(args.pull_requests_csv, args.start_time)
+            query_pull_requests(args.out_pull_requests_csv, args.start_time)
 
         case "process":
-            if not args.input_csv:
-                parser.error("input CSV file must be specified with -i")
+            if not args.input_csv_file:
+                parser.error("--input_csv_file must be specified")
 
-            if not args.markdown_file and not args.csv_file and not args.html_file:
-                parser.error("at least one of -m, -c, or --html must be specified")
+            if not args.out_markdown_file and not args.out_csv_file and not args.out_html_file:
+                parser.error("one of --out_markdown_file, --out_csv_file, or "
+                             "--out_html_file must be specified")
 
-            items = read_csv(args.input_csv)
+            items = read_csv(args.input_csv_file)
 
-            if args.markdown_file:
-                process_pull_requests_markdown(items, args.markdown_file)
+            if args.out_markdown_file:
+                process_pull_requests_markdown(items, args.out_markdown_file)
 
-            if args.html_file:
+            if args.out_html_file:
                 if not args.html_version_tag:
-                    parser.error("HTML version tag must be specified"
-                                 "with --html_version_tag")
+                    parser.error("--html_version_tag of the release notes draft must "
+                                 "be specified")
 
-                process_pull_requests_html(items, args.html_file,
+                process_pull_requests_html(items, args.out_html_file,
                                            args.html_version_tag)
 
-            if args.csv_file:
-                process_pull_requests_csv(items, args.csv_file)
+            if args.out_csv_file:
+                process_pull_requests_csv(items, args.out_csv_file)
 
         case "publish":
             if not args.release_notes_file:
-                parser.error("release notes file must be specified with -n")
+                parser.error("--release_notes_file must be specified")
 
             if not args.publish_version_tag:
-                parser.error("release tag must be specified with -t")
+                parser.error("--publish_version_tag must be specified")
 
             publish_prerelease(args.release_notes_file, args.publish_version_tag)
 
