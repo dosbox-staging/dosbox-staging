@@ -510,7 +510,7 @@ void AutoExecModule::AddLine(const Placement placement, const std::string& line)
 }
 
 // Specify a 'Drive' config object with allowed key and value types
-std::unique_ptr<Config> specify_drive_conf()
+static std::unique_ptr<Config> specify_drive_conf()
 {
 	auto conf = std::make_unique<Config>();
 
@@ -538,8 +538,8 @@ std::unique_ptr<Config> specify_drive_conf()
 
 // Parse a 'Drive' config file and return object with allowed key and
 // value types
-std::optional<AutoMountSettings> parse_drive_conf(const char dir_letter,
-                                                  const std_fs::path& conf_path)
+static std::optional<AutoMountSettings> parse_drive_conf(const char dir_letter,
+                                                         const std_fs::path& conf_path)
 {
 	AutoMountSettings settings = {};
 
@@ -592,8 +592,8 @@ std::optional<AutoMountSettings> parse_drive_conf(const char dir_letter,
 }
 
 // Get all files in the given directory that have the specified extensions
-std::vector<std_fs::path> get_files_by_ext(const std_fs::path& drive_path,
-                                           const std::vector<std::string_view>& extensions)
+static std::vector<std_fs::path> get_files_by_ext(
+        const std_fs::path& drive_path, const std::vector<std::string_view>& extensions)
 {
 	std::vector<std_fs::path> paths = {};
 
@@ -617,9 +617,9 @@ std::vector<std_fs::path> get_files_by_ext(const std_fs::path& drive_path,
 
 // Build a command to mount a drive from a directory, based on the provided
 // settings
-std::string build_auto_mount_dir_cmd(const char dir_letter,
-                                     const std_fs::path& drive_path,
-                                     const std::optional<AutoMountSettings>& settings)
+static std::string build_auto_mount_dir_cmd(const char dir_letter,
+                                            const std_fs::path& drive_path,
+                                            const std::optional<AutoMountSettings>& settings)
 {
 	auto command = CmdMount;
 
@@ -653,7 +653,7 @@ std::string build_auto_mount_dir_cmd(const char dir_letter,
 }
 
 // Build a command to mount CD images in a folder, based on the provided settings
-std::string build_auto_mount_cd_images_cmd(
+static std::string build_auto_mount_cd_images_cmd(
         const char dir_letter, const std::vector<std_fs::path>& image_paths,
         const std::optional<AutoMountSettings>& settings)
 {
@@ -683,7 +683,7 @@ std::string build_auto_mount_cd_images_cmd(
 
 // Build a command to mount floppy disk images in a folder, based on the
 // provided settings
-std::string build_auto_mount_fd_images_cmd(
+static std::string build_auto_mount_fd_images_cmd(
         const char dir_letter, const std::vector<std_fs::path>& image_paths,
         const std::optional<AutoMountSettings>& settings)
 {
@@ -715,8 +715,9 @@ std::string build_auto_mount_fd_images_cmd(
 	return command;
 }
 
-std::string build_auto_mount_cmd(const char dir_letter, const std_fs::path& drive_path,
-                                 const std::optional<AutoMountSettings>& settings)
+static std::string build_auto_mount_cmd(const char dir_letter,
+                                        const std_fs::path& drive_path,
+                                        const std::optional<AutoMountSettings>& settings)
 {
 	auto image_type                         = "cdrom";
 	std::vector<std::string_view> image_ext = {".iso", ".cue", ".mds"};
@@ -747,7 +748,7 @@ std::string build_auto_mount_cmd(const char dir_letter, const std_fs::path& driv
 void AutoExecModule::AutoMountDetectedDrive(const char dir_letter)
 {
 	// Does drives/[x] exist?
-	const auto res_name = std::string(1, dir_letter);
+	const auto res_name   = std::string(1, dir_letter);
 	const auto drive_path = get_resource_path("drives", res_name);
 	if (!path_exists(drive_path)) {
 		return;
