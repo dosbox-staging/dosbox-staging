@@ -32,6 +32,8 @@ all: png windows macos
 #  Needs rsvg-convert from the librsvg package.
 #
 png:
+	mkdir -p $(PNG_DIR)
+
 	rsvg-convert -h  16 svg/dosbox-staging-16.svg > $(PNG_DIR)/icon_16.png
 	rsvg-convert -h  24 svg/dosbox-staging-24.svg > $(PNG_DIR)/icon_24.png
 	rsvg-convert -h  32 svg/dosbox-staging-32.svg > $(PNG_DIR)/icon_32.png
@@ -54,6 +56,8 @@ png:
 #  CLI tool for this).
 #
 windows:
+	mkdir -p $(WINDOWS_DIR)
+
 	icotool -c $(PNG_DIR)/icon_256.png \
 	           $(PNG_DIR)/icon_48.png \
 	           $(PNG_DIR)/icon_32.png \
