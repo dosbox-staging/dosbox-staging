@@ -578,10 +578,10 @@ ShaderDescriptor ShaderManager::MaybeAutoSwitchShader(
 			LOG_MSG("RENDER: EGA mode with custom 18-bit VGA palette "
 			        "detected; auto-switching to VGA shader");
 		}
-	}
-	if (current_shader_mode != Single) {
-		LOG_MSG("RENDER: Auto-switched to shader '%s'",
-		        new_descriptor.ToString().c_str());
+		if (current_shader_mode != Single) {
+			LOG_MSG("RENDER: Auto-switched to shader '%s'",
+			        new_descriptor.ToString().c_str());
+		}
 	}
 
 	return new_descriptor;
