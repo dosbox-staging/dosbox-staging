@@ -101,19 +101,18 @@ std::string truncate_path(const std_fs::path& path, int max_length)
 		return ellipsis.substr(0, max_length_unsigned);
 	}
 
-	auto full_path = simplify_path(path).string();
 	auto filename  = path.filename().string();
 
 	// Full path fits
-	if (full_path.size() <= max_length_unsigned) {
-		return full_path;
+	if (path.string().size() <= max_length_unsigned) {
+		return path.string();
 	}
 
 	// Shorten path while keeping the filename whole
 	if (max_length_unsigned > filename.size() + ellipsis.size()) {
 		auto keep_from_right = max_length_unsigned - ellipsis.size();
 		return ellipsis +
-		       full_path.substr(full_path.size() - keep_from_right);
+		       path.string().substr(path.string().size() - keep_from_right);
 	}
 
 	// Truncate the filename from the left if too long
