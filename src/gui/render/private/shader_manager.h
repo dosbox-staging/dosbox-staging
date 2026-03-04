@@ -37,6 +37,9 @@ public:
 
 	ShaderPreset LoadShaderPresetOrDefault(const ShaderDescriptor& descriptor);
 
+	std::optional<std::pair<Shader, ShaderPreset>> ForceReloadShader(
+	        const ShaderDescriptor& descriptor);
+
 	/*
 	 * Generate a human-readable shader inventory message (one list element
 	 * per line).
