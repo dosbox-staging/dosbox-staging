@@ -164,22 +164,11 @@ struct FullData {
 	Bitu rm_mod;
 	OpCode code;
 	EAPoint cseip;
-#ifdef WORDS_BIGENDIAN
-	union {
-		uint32_t dword[1];
-		int32_t dwords[1];
-		uint16_t word[2];
-		int16_t words[2];
-		uint8_t byte[4];
-		int8_t bytes[4];
-		} blah1,blah2,blah_imm;
-#else
 	union {	
 		uint8_t b;int8_t bs;
 		uint16_t w;int16_t ws;
 		uint32_t d;int32_t ds;
 	} op1,op2,imm;
-#endif
 	Bitu new_flags;
 	struct {
 		EAPoint base;
@@ -190,31 +179,6 @@ struct FullData {
 };
 
 /* Some defines to get the names correct. */
-#ifdef WORDS_BIGENDIAN
-
-#define inst_op1_b  inst.blah1.byte[3]
-#define inst_op1_bs inst.blah1.bytes[3]
-#define inst_op1_w  inst.blah1.word[1]
-#define inst_op1_ws inst.blah1.words[1]
-#define inst_op1_d  inst.blah1.dword[0]
-#define inst_op1_ds inst.blah1.dwords[0]
-
-#define inst_op2_b  inst.blah2.byte[3]
-#define inst_op2_bs inst.blah2.bytes[3]
-#define inst_op2_w  inst.blah2.word[1]
-#define inst_op2_ws inst.blah2.words[1]
-#define inst_op2_d  inst.blah2.dword[0]
-#define inst_op2_ds inst.blah2.dwords[0]
-
-#define inst_imm_b  inst.blah_imm.byte[3]
-#define inst_imm_bs inst.blah_imm.bytes[3]
-#define inst_imm_w  inst.blah_imm.word[1]
-#define inst_imm_ws inst.blah_imm.words[1]
-#define inst_imm_d  inst.blah_imm.dword[0]
-#define inst_imm_ds inst.blah_imm.dwords[0]
-
-#else
-
 #define inst_op1_b  inst.op1.b
 #define inst_op1_bs inst.op1.bs
 #define inst_op1_w  inst.op1.w
@@ -235,9 +199,6 @@ struct FullData {
 #define inst_imm_ws inst.imm.ws
 #define inst_imm_d  inst.imm.d
 #define inst_imm_ds inst.imm.ds
-
-#endif
-
 
 #define PREFIX_NONE		0x0
 #define PREFIX_ADDR		0x1

@@ -269,20 +269,6 @@ void CPU_Push32(const uint32_t value);
 #endif
 
 struct S_Descriptor {
-#ifdef WORDS_BIGENDIAN
-	uint32_t base_0_15 : 16;
-	uint32_t limit_0_15 : 16;
-	uint32_t base_24_31 : 8;
-	uint32_t g : 1;
-	uint32_t big : 1;
-	uint32_t r : 1;
-	uint32_t avl : 1;
-	uint32_t limit_16_19 : 4;
-	uint32_t p : 1;
-	uint32_t dpl : 2;
-	uint32_t type : 5;
-	uint32_t base_16_23 : 8;
-#else
 	uint32_t limit_0_15 : 16;
 	uint32_t base_0_15 : 16;
 	uint32_t base_16_23 : 8;
@@ -295,20 +281,9 @@ struct S_Descriptor {
 	uint32_t big : 1;
 	uint32_t g : 1;
 	uint32_t base_24_31 : 8;
-#endif
 } GCC_ATTRIBUTE(packed);
 
 struct G_Descriptor {
-#ifdef WORDS_BIGENDIAN
-	uint32_t selector : 16;
-	uint32_t offset_0_15 : 16;
-	uint32_t offset_16_31 : 16;
-	uint32_t p : 1;
-	uint32_t dpl : 2;
-	uint32_t type : 5;
-	uint32_t reserved : 3;
-	uint32_t paramcount : 5;
-#else
 	uint32_t offset_0_15 : 16;
 	uint32_t selector : 16;
 	uint32_t paramcount : 5;
@@ -317,7 +292,6 @@ struct G_Descriptor {
 	uint32_t dpl : 2;
 	uint32_t p : 1;
 	uint32_t offset_16_31 : 16;
-#endif
 } GCC_ATTRIBUTE(packed);
 
 struct TSS_16 {

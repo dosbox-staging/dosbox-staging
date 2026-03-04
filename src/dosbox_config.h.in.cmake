@@ -164,13 +164,6 @@
 #cmakedefine HAVE_SYS_XATTR_H
 
 
-// Hardware-related defines
-//
-
-// Define to 1 when host/target processor uses big endian byte ordering
-#cmakedefine WORDS_BIGENDIAN
-
-
 // Windows-related defines
 //
 

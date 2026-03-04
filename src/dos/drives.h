@@ -338,13 +338,8 @@ struct isoDirEntry {
 #pragma pack ()
 #endif
 
-#if defined (WORDS_BIGENDIAN)
-#define EXTENT_LOCATION(de)	((de).extentLocationM)
-#define DATA_LENGTH(de)		((de).dataLengthM)
-#else
 #define EXTENT_LOCATION(de)	((de).extentLocationL)
 #define DATA_LENGTH(de)		((de).dataLengthL)
-#endif
 
 #define ISO_FRAMESIZE		2048
 #define ISO_ASSOCIATED		4

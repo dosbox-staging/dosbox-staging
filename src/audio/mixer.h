@@ -70,12 +70,9 @@ constexpr T Mixer_GetSilentDOSSample()
 	}
 
 	// unsigned 16-bit samples: silence is always 32768 (little-endian)
-	if (sizeof(T) == 2u)
-#if defined(WORDS_BIGENDIAN)
-		return static_cast<T>(0x0080); // 32768 (little-endian)
-#else
+	if (sizeof(T) == 2u) {
 		return static_cast<T>(0x8000); // 32768
-#endif
+	}
 	static_assert(sizeof(T) <= 2, "DOS only produced 8 and 16-bit samples");
 }
 

@@ -144,10 +144,8 @@ static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint32_t) == 0,
 
 #include "simde/x86/mmx.h"
 
-#if !defined(WORDS_BIGENDIAN)
 #define gen_add_LE gen_add
 #define gen_mov_LE_word_to_reg gen_mov_word_to_reg
-#endif
 
 #include "core_dynrec/decoder.h"
 

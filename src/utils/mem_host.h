@@ -19,17 +19,7 @@
 #include "utils/byteorder.h"
 #include "utils/mem_unaligned.h"
 
-/* Use host_read* functions to replace endian branching and byte swapping code,
- * such as:
- *
- *   #ifdef WORDS_BIGENDIAN
- *   auto x = byteswap(*(uint16_t*)(arr));
- *   #else
- *   auto x = *(uint16_t*)(arr);
- *   #endif
- */
-
-// Read a single-byte value; provided for backwards-compatibility only.
+// Read a single-byte value.
 constexpr uint8_t host_readb(const uint8_t* const arr) noexcept
 {
 	return *arr;
@@ -53,16 +43,6 @@ static inline uint64_t host_readq(const uint8_t* const arr) noexcept
 	return le64_to_host(read_unaligned_uint64(arr));
 }
 
-/* Use host_read*_at functions to replace endian branching and byte swapping
- * code such as:
- *
- *   #ifdef WORDS_BIGENDIAN
- *   auto x = byteswap(((uint16_t*)arr)[idx]);
- *   #else
- *   auto x = ((uint16_t*)arr)[idx];
- *   #endif
- */
-
 // Read an array-indexed 16-bit word from 8-bit DOS/little-endian byte-ordered
 // memory.
 static inline uint16_t host_readw_at(const uint8_t *arr, const uintptr_t idx) noexcept
@@ -84,17 +64,7 @@ static inline uint64_t host_readq_at(const uint8_t *arr, const uintptr_t idx) no
 	return host_readq(arr + idx * sizeof(uint64_t));
 }
 
-/* Use host_write* functions to replace endian branching and byte swapping
- * code such as:
- *
- *   #ifdef WORDS_BIGENDIAN
- *   *(uint16_t*)arr = byteswap((uint16_t)val);
- *   #else
- *   *(uint16_t*)arr = (uint16_t)val;
- *   #endif
- */
-
-// Write a single-byte value; provided for backwards-compatibility only.
+// Write a single-byte value.
 static inline void host_writeb(uint8_t *arr, const uint8_t val) noexcept
 {
 	*arr = val;
@@ -117,16 +87,6 @@ static inline void host_writeq(uint8_t *arr, const uint64_t val) noexcept
 {
 	write_unaligned_uint64(arr, host_to_le64(val));
 }
-
-/* Use host_write*_at functions to replace endian branching and byte swapping
- * code such as:
- *
- *   #ifdef WORDS_BIGENDIAN
- *   ((uint16_t*)arr)[idx] = byteswap((uint16_t)val);
- *   #else
- *   ((uint16_t*)arr)[idx] = (uint16_t)val;
- *   #endif
- */
 
 // Write a 16-bit array-indexed word to 8-bit memory using DOS/little-endian
 // byte-ordering.
@@ -155,16 +115,6 @@ static inline void host_writeq_at(uint8_t *arr,
 	host_writeq(arr + idx * sizeof(uint64_t), val);
 }
 
-/* Use host_add* functions to replace endian branching and byte swapping
- * code such as:
- *
- *   #ifdef WORDS_BIGENDIAN
- *   *(uint16_t*)arr += byteswap((uint16_t)val);
- *   #else
- *   *(uint16_t*)arr += val;
- *   #endif
- */
-
 // Add to a 16-bit word stored in 8-bit DOS/little-endian byte-ordered memory.
 static inline void host_addw(uint8_t *arr, const uint16_t val) noexcept
 {
@@ -183,16 +133,6 @@ static inline void host_addq(uint8_t *arr, const uint64_t val) noexcept
 {
 	host_writeq(arr, host_readq(arr) + val);
 }
-
-/* Use host_inc* functions to replace endian branching and byte swapping
- * code such as:
- *
- *   #ifdef WORDS_BIGENDIAN
- *   *(uint16_t*)arr += byteswap((uint16_t)1);
- *   #else
- *   *(uint16_t*)arr += 1;
- *   #endif
- */
 
 // Increment a 16-bit word stored in 8-bit DOS/little-endian byte-ordered memory.
 static inline void host_incw(uint8_t *arr) noexcept
