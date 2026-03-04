@@ -184,8 +184,11 @@ void ShaderPipeline::CreatePipeline()
 			// framebuffer
 
 			// Create output texture
+			const auto& preset = pass.shader.info.default_preset;
+
 			pass.out_texture = CreateTexture(static_cast<int>(width),
-			                                 static_cast<int>(height));
+			                                 static_cast<int>(height),
+			                                 preset.settings.float_output_texture);
 
 			// Set up off-screen framebuffer
 			glGenFramebuffers(1, &pass.out_fbo);
@@ -226,7 +229,8 @@ void ShaderPipeline::DestroyPipeline()
 	}
 }
 
-GLuint ShaderPipeline::CreateTexture(const int width, const int height) const
+GLuint ShaderPipeline::CreateTexture(const int width, const int height,
+                                     const bool float_texture) const
 {
 	GLuint texture = 0;
 
@@ -241,15 +245,19 @@ GLuint ShaderPipeline::CreateTexture(const int width, const int height) const
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+	const auto internal_format = (float_texture ? GL_RGBA32F : GL_RGBA8);
+	const auto pixel_data_type = (float_texture ? GL_FLOAT : GL_UNSIGNED_BYTE);
+
 	glTexImage2D(GL_TEXTURE_2D,
-	             0,         // mimap level (0 = base image)
-	             GL_RGB32F, // internal format
-	             width,     // width
-	             height,    // height
-	             0,         // border (must be always 0)
-	             GL_BGRA,   // pixel data format
-	             GL_FLOAT,  // pixel data type
-	             nullptr);  // pointer to image data
+	             0, // mimap level (0 = base image)
+	             internal_format,
+	             width,   // width
+	             height,  // height
+	             0,       // border (must be always 0)
+	             GL_BGRA, // pixel data format
+	             pixel_data_type,
+	             nullptr // pointer to image data
+	);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
