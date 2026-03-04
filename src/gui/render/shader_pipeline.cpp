@@ -46,6 +46,8 @@ std::string ShaderPass::ToString() const
 
 ShaderPipeline::ShaderPipeline()
 {
+	CreateSamplers();
+
 	// The image adjustments pass is always the first; it cannot be disabled
 	// as it performs the colour space transforms as well.
 	LoadInternalShaderPassOrExit("image-adjustments");
@@ -57,6 +59,33 @@ ShaderPipeline::ShaderPipeline()
 	main_pass1.shader.info.pass_name = "Main_Pass1";
 
 	shader_passes.push_back(main_pass1);
+}
+
+void ShaderPipeline::CreateSamplers()
+{
+	glGenSamplers(1, &nearest_sampler);
+	glSamplerParameteri(nearest_sampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glSamplerParameteri(nearest_sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glSamplerParameteri(nearest_sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glSamplerParameteri(nearest_sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+	glGenSamplers(1, &linear_sampler);
+	glSamplerParameteri(linear_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glSamplerParameteri(linear_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glSamplerParameteri(linear_sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glSamplerParameteri(linear_sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+}
+
+void ShaderPipeline::DestroySamplers()
+{
+	if (nearest_sampler) {
+		glDeleteSamplers(1, &nearest_sampler);
+		nearest_sampler = 0;
+	}
+	if (linear_sampler) {
+		glDeleteSamplers(1, &linear_sampler);
+		linear_sampler = 0;
+	}
 }
 
 void ShaderPipeline::LoadInternalShaderPassOrExit(const std::string shader_name)
@@ -80,6 +109,7 @@ void ShaderPipeline::LoadInternalShaderPassOrExit(const std::string shader_name)
 ShaderPipeline::~ShaderPipeline()
 {
 	DestroyPipeline();
+	DestroySamplers();
 }
 
 void ShaderPipeline::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
@@ -154,11 +184,8 @@ void ShaderPipeline::CreatePipeline()
 			// framebuffer
 
 			// Create output texture
-			const auto& preset = pass.shader.info.default_preset;
-
 			pass.out_texture = CreateTexture(static_cast<int>(width),
-			                                 static_cast<int>(height),
-			                                 preset.settings.texture_filter_mode);
+			                                 static_cast<int>(height));
 
 			// Set up off-screen framebuffer
 			glGenFramebuffers(1, &pass.out_fbo);
@@ -180,6 +207,7 @@ void ShaderPipeline::CreatePipeline()
 		UpdateTextureUniforms(it);
 	}
 
+	UpdateMainShaderPassUniforms();
 	UpdateImageAdjustmentsPassUniforms();
 
 	UpdateMainShaderPassUniforms();
@@ -198,8 +226,7 @@ void ShaderPipeline::DestroyPipeline()
 	}
 }
 
-GLuint ShaderPipeline::CreateTexture(const int width, const int height,
-                                     const TextureFilterMode filter_mode) const
+GLuint ShaderPipeline::CreateTexture(const int width, const int height) const
 {
 	GLuint texture = 0;
 
@@ -211,7 +238,8 @@ GLuint ShaderPipeline::CreateTexture(const int width, const int height,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-	SetTextureFiltering(texture, filter_mode);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	glTexImage2D(GL_TEXTURE_2D,
 	             0,         // mimap level (0 = base image)
@@ -234,12 +262,6 @@ void ShaderPipeline::SetMainShader(const Shader& shader)
 	main_pass.shader = shader;
 
 	main_shader_preset = shader.info.default_preset;
-
-	// The texture filtering mode might have changed
-	const auto& pass = GetShaderPass("ImageAdjustments");
-
-	SetTextureFiltering(pass.out_texture,
-	                    main_shader_preset.settings.texture_filter_mode);
 
 	UpdateMainShaderPassUniforms();
 }
@@ -266,23 +288,6 @@ void ShaderPipeline::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 {
 	image_adjustment_settings = settings;
 	UpdateImageAdjustmentsPassUniforms();
-}
-
-void ShaderPipeline::SetTextureFiltering(const GLuint texture,
-                                         const TextureFilterMode filter_mode) const
-{
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	const int filter_param = [&] {
-		switch (filter_mode) {
-		case TextureFilterMode::NearestNeighbour: return GL_NEAREST;
-		case TextureFilterMode::Bilinear: return GL_LINEAR;
-		default: assertm(false, "Invalid TextureFilterMode"); return 0;
-		}
-	}();
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_param);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_param);
 }
 
 void ShaderPipeline::Render(const GLuint vertex_array_object) const
@@ -316,6 +321,23 @@ void ShaderPipeline::RenderPass(const ShaderPass& pass,
 	for (size_t i = 0; i < pass.in_textures.size(); ++i) {
 		glActiveTexture(GL_TEXTURE0 + check_cast<GLenum>(i));
 		glBindTexture(GL_TEXTURE_2D, pass.in_textures[i]);
+
+		// Bind sampler with the requested filter mode to the texture unit
+		const auto& preset = pass.shader.info.default_preset;
+
+		const auto texture_unit = check_cast<GLuint>(i);
+
+		switch (preset.settings.texture_filter_mode) {
+		case TextureFilterMode::NearestNeighbour:
+			glBindSampler(texture_unit, nearest_sampler);
+			break;
+
+		case TextureFilterMode::Bilinear:
+			glBindSampler(texture_unit, linear_sampler);
+			break;
+
+		default: assertm(false, "Invalid TextureFilterMode");
+		}
 	}
 
 	// Set up viewport
