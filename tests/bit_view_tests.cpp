@@ -557,8 +557,8 @@ TEST(bit_view, bare_constructor)
 
 TEST(bit_view, multibyte)
 {
-	// Construct a bit sequence that will deliberately break if not handled
-	// properly on big-endian systems
+	// Construct a bit sequence that will break if the endianness is not
+	// handled correctly
 	constexpr uint16_t reg16_val = 0b1010'0000'0000'0101;
 
 	// A bit_view union to access the two low bits (0 and 3) by name

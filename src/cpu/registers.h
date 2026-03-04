@@ -104,21 +104,10 @@ union GenReg32 {
 	uint8_t byte[4];
 };
 
-#ifdef WORDS_BIGENDIAN
-
-constexpr auto DW_INDEX = 0;
-constexpr auto W_INDEX = 1;
-constexpr auto BH_INDEX = 2;
-constexpr auto BL_INDEX = 3;
-
-#else
-
 constexpr auto DW_INDEX = 0;
 constexpr auto W_INDEX = 0;
 constexpr auto BH_INDEX = 1;
 constexpr auto BL_INDEX = 0;
-
-#endif
 
 // The CpuTestFlags struct allows CPU test flags to be applied en masse. First
 // construct it with the set of flags you will be adjusting followed by
