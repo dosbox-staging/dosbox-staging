@@ -1078,7 +1078,7 @@ void OpenGlRenderer::GetPass1UniformLocations()
 	auto& u       = pass1.uniforms;
 	const auto po = pass1.shader.program_object;
 
-	u.input_texture = glGetUniformLocation(po, "inputTexture");
+	u.input_texture = glGetUniformLocation(po, "INPUT_TEXTURE");
 
 	u.color_space = glGetUniformLocation(po, "COLOR_SPACE");
 
