@@ -453,7 +453,7 @@ void OpenGlRenderer::SetPass1OutputTextureFiltering()
 {
 	glBindTexture(GL_TEXTURE_2D, pass1.out_texture);
 
-	const auto& shader_settings = pass2.shader_preset.settings;
+	const auto& shader_settings = main_shader_preset.settings;
 
 	const int filter_param = [&] {
 		switch (shader_settings.texture_filter_mode) {
@@ -919,7 +919,7 @@ bool OpenGlRenderer::SwitchShaderPresetOrSetDefault(const ShaderDescriptor& desc
 		assert(shader_cache.contains(descriptor.shader_name));
 		auto& default_preset = shader_cache[descriptor.shader_name].info.default_preset;
 
-		pass2.shader_preset = default_preset;
+		main_shader_preset = default_preset;
 	};
 
 	if (descriptor.preset_name.empty()) {
@@ -930,7 +930,7 @@ bool OpenGlRenderer::SwitchShaderPresetOrSetDefault(const ShaderDescriptor& desc
 		if (const auto maybe_preset = GetOrLoadAndCacheShaderPreset(descriptor);
 		    maybe_preset) {
 
-			pass2.shader_preset = *maybe_preset;
+			main_shader_preset = *maybe_preset;
 			return true;
 
 		} else {
@@ -1126,7 +1126,7 @@ void OpenGlRenderer::UpdatePass2Uniforms()
 
 	SetUniform1i(po, "FRAME_COUNT", frame_count);
 
-	for (const auto& [uniform_name, value] : pass2.shader_preset.params) {
+	for (const auto& [uniform_name, value] : main_shader_preset.params) {
 		SetUniform1f(po, uniform_name, value);
 	}
 }
@@ -1138,7 +1138,7 @@ ShaderInfo OpenGlRenderer::GetCurrentShaderInfo()
 
 ShaderPreset OpenGlRenderer::GetCurrentShaderPreset()
 {
-	return pass2.shader_preset;
+	return main_shader_preset;
 }
 
 std::string OpenGlRenderer::GetCurrentSymbolicShaderDescriptor()
