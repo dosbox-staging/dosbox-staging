@@ -67,6 +67,9 @@ public:
 	ShaderPipeline& operator=(const ShaderPipeline&) = delete;
 
 private:
+	void CreateSamplers();
+	void DestroySamplers();
+
 	void LoadInternalShaderPassOrExit(const std::string shader_name);
 
 	void CreatePipeline();
@@ -77,11 +80,7 @@ private:
 	std::pair<GLuint, DosBox::Rect> GetPreviousPassOutputTexture(
 	        const std::list<ShaderPass>::iterator pass) const;
 
-	GLuint CreateTexture(const int width, const int height,
-	                     const TextureFilterMode filter_mode) const;
-
-	void SetTextureFiltering(const GLuint texture,
-	                         const TextureFilterMode filter_mode) const;
+	GLuint CreateTexture(const int width, const int height) const;
 
 	void UpdateTextureUniforms(const std::list<ShaderPass>::iterator pass) const;
 
@@ -94,6 +93,9 @@ private:
 
 	VideoMode video_mode  = {};
 	DosBox::Rect viewport = {};
+
+	GLuint nearest_sampler = 0;
+	GLuint linear_sampler  = 0;
 
 	// ---------------------------------------------------------------------
 	// Shader passes
