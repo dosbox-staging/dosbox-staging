@@ -13,6 +13,7 @@ target_sources(libdosboxcommon PRIVATE
   render/sdl_renderer.cpp
   render/shader.cpp
   render/shader_manager.cpp
+  render/shader_pipeline.cpp
 )
 
 target_link_libraries(libdosboxcommon PRIVATE
