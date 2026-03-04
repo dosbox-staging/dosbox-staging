@@ -46,16 +46,6 @@ inline std::optional<MdsHeader> read_mds_header(std::ifstream &stream)
 		return {};
 	}
 
-	#ifdef WORDS_BIGENDIAN
-	mds_header.medium_type = bswap_u16(mds_header.medium_type);
-	mds_header.num_sessions = bswap_u16(mds_header.num_sessions);
-	mds_header.bca_len = bswap_u16(mds_header.bca_len);
-	mds_header.bca_data_offset = bswap_u32(mds_header.bca_data_offset);
-	mds_header.disc_structures_offset = bswap_u32(mds_header.disc_structures_offset);
-	mds_header.session_block_offset = bswap_u32(mds_header.session_block_offset);
-	mds_header.dpm_blocks_offset = bswap_u32(mds_header.dpm_blocks_offset);
-	#endif
-
 	return mds_header;
 }
 
@@ -84,15 +74,6 @@ inline std::optional<MdsSessionBlock> read_mds_session_block(std::ifstream &stre
 	if (stream.fail()) {
 		return {};
 	}
-
-	#ifdef WORDS_BIGENDIAN
-	mds_session_block.session_start = bswap_u32(mds_session_block.session_start);
-	mds_session_block.session_end = bswap_u32(mds_session_block.session_end);
-	mds_session_block.session_number = bswap_u16(mds_session_block.session_number);
-	mds_session_block.first_track = bswap_u16(mds_session_block.first_track);
-	mds_session_block.last_track = bswap_u16(mds_session_block.last_track);
-	mds_session_block.track_block_offset = bswap_u32(mds_session_block.track_block_offset);
-	#endif
 
 	return mds_session_block;
 }
@@ -140,15 +121,6 @@ inline std::optional<MdsTrackBlock> read_mds_track_block(std::ifstream &stream, 
 		return {};
 	}
 
-	#ifdef WORDS_BIGENDIAN
-	mds_track_block.extra_offset = bswap_u32(mds_track_block.extra_offset);
-	mds_track_block.sector_size = bswap_u16(mds_track_block.sector_size);
-	mds_track_block.start_sector = bswap_u32(mds_track_block.start_sector);
-	mds_track_block.start_offset = bswap_u64(mds_track_block.start_offset);
-	mds_track_block.number_of_files = bswap_u32(mds_track_block.number_of_files);
-	mds_track_block.footer_offset = bswap_u32(mds_track_block.footer_offset);
-	#endif
-
 	return mds_track_block;
 }
 
@@ -170,11 +142,6 @@ inline std::optional<MdsExtraBlock> read_mds_extra_block(std::ifstream &stream, 
 	if (stream.fail()) {
 		return {};
 	}
-
-	#ifdef WORDS_BIGENDIAN
-	mds_extra_block.pregap = bswap_u32(mds_extra_block.pregap);
-	mds_extra_block.length = bswap_u32(mds_extra_block.length);
-	#endif
 
 	return mds_extra_block;
 }
@@ -199,11 +166,6 @@ inline std::optional<MdsFooter> read_mds_footer(std::ifstream &stream, const std
 	if (stream.fail()) {
 		return {};
 	}
-
-	#ifdef WORDS_BIGENDIAN
-	mds_footer.filename_offset = bswap_u32(mds_footer.filename_offset);
-	mds_footer.widechar_filename = bswap_u32(mds_footer.widechar_filename);
-	#endif
 
 	return mds_footer;
 }

@@ -63,36 +63,6 @@ inline uint64_t bswap_u64(const uint64_t x)
 
 #endif // MSC_VER
 
-#ifdef WORDS_BIGENDIAN
-
-constexpr uint16_t host_to_le16(const uint16_t x)
-{
-	return bswap_u16(x);
-}
-constexpr uint32_t host_to_le32(const uint32_t x)
-{
-	return bswap_u32(x);
-}
-constexpr uint64_t host_to_le64(const uint64_t x)
-{
-	return bswap_u64(x);
-}
-
-constexpr uint16_t le16_to_host(const uint16_t x)
-{
-	return bswap_u16(x);
-}
-constexpr uint32_t le32_to_host(const uint32_t x)
-{
-	return bswap_u32(x);
-}
-constexpr uint64_t le64_to_host(const uint64_t x)
-{
-	return bswap_u64(x);
-}
-
-#else
-
 constexpr uint16_t host_to_le16(const uint16_t x)
 {
 	return x;
@@ -118,8 +88,6 @@ constexpr uint64_t le64_to_host(const uint64_t x)
 {
 	return x;
 }
-
-#endif
 
 /* 'host_to_le' functions allow for byte order conversion on big endian
  * architectures while respecting memory alignment on low endian.
@@ -134,19 +102,9 @@ constexpr uint64_t le64_to_host(const uint64_t x)
 
 constexpr uint8_t host_to_le(uint8_t x) noexcept { return x; }
 
-#ifdef WORDS_BIGENDIAN
-
-constexpr uint16_t host_to_le(uint16_t x) noexcept { return bswap_u16(x); }
-constexpr uint32_t host_to_le(uint32_t x) noexcept { return bswap_u32(x); }
-constexpr uint64_t host_to_le(uint64_t x) noexcept { return bswap_u64(x); }
-
-#else
-
 constexpr uint16_t host_to_le(uint16_t x) noexcept { return x; }
 constexpr uint32_t host_to_le(uint32_t x) noexcept { return x; }
 constexpr uint64_t host_to_le(uint64_t x) noexcept { return x; }
-
-#endif
 
 /* Functions 'le_to_host' and 'host_to_le' are the same function, only the user
  * intent might be different.

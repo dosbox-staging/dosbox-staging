@@ -71,12 +71,6 @@ To use bit_views with larger types or registers, the type should be
 accessible in it's explicit 8-bit parts (for example, a uint32_t can be
 represented as an array of four uin8_t), each element of which can be
 assigned to a bit_view-based union.
-
-This is deliberate because the byte-ordering of the bit-view's data cannot
-be assumed. For example, the byte ordering of a 16-bit register populated
-within a DOS emulator will be little-endian, even when running on a
-big-endian host, where as native data types on big-endian hardware will be
-big-endian.
 */
 
 #ifndef BIT_VIEW_H_

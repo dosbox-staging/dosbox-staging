@@ -178,11 +178,7 @@ struct rectangle
 #define ACCESSING_BITS_16_31			((mem_mask & 0xffff0000) != 0)
 
 //// constants for expression endianness
-#ifndef WORDS_BIGENDIAN
 #define NATIVE_ENDIAN_VALUE_LE_BE(leval,beval)	(leval)
-#else
-#define NATIVE_ENDIAN_VALUE_LE_BE(leval,beval)	(beval)
-#endif
 
 #define BYTE4_XOR_LE(a) 				((a) ^ NATIVE_ENDIAN_VALUE_LE_BE(0,3))
 
@@ -666,11 +662,7 @@ using rgb_t = uint32_t;
 
 struct rgba
 {
-#ifndef WORDS_BIGENDIAN
 	uint8_t				b, g, r, a;
-#else
-	uint8_t				a, r, g, b;
-#endif
 };
 
 union voodoo_reg

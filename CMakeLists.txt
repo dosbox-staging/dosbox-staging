@@ -201,7 +201,7 @@ endif()
 
 # Check host endianness
 if (CMAKE_CXX_BYTE_ORDER STREQUAL BIG_ENDIAN)
-  set(WORDS_BIGENDIAN ON)
+  message(FATAL_ERROR "Big-endian architectures are not supported")
 endif()
 
 # Enable color output for certain compilers
