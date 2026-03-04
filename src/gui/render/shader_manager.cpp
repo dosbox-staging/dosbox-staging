@@ -278,12 +278,17 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 	}
 
 	ShaderPreset preset = default_preset;
-
-	preset.name = descriptor.preset_name;
+	preset.name         = descriptor.preset_name;
 
 	if (const auto settings = ini.GetSection("settings"); settings) {
 		for (const auto& [name, value] : *settings) {
-			SetShaderSetting(name.pItem, value, preset.settings);
+
+			if (!SetShaderSetting(name.pItem, value, preset.settings)) {
+				LOG_ERR("RENDER: Invalid shader setting, name: '%s', value: '%s'",
+				        name.pItem,
+				        value);
+			}
+			return {};
 		}
 	}
 
@@ -497,7 +502,21 @@ ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
 				}
 
 			} else {
-				SetShaderSetting(pragma, "on", result.preset.settings);
+				bool success = false;
+
+				if (const auto maybe_setting = ParseSettingPragma(pragma);
+				    maybe_setting) {
+
+					auto [name, value] = *maybe_setting;
+
+					success = SetShaderSetting(name,
+					                           value,
+					                           result.preset.settings);
+				}
+				if (!success) {
+					LOG_ERR("RENDER: Invalid shader setting pragma: '%s'",
+					        pragma.c_str());
+				}
 			}
 
 			++next;
@@ -528,27 +547,35 @@ ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
 	return result;
 }
 
-void ShaderManager::SetShaderSetting(const std::string& name, const std::string& value,
-                                     ShaderSettings& settings) const
+bool ShaderManager::SetShaderSetting(const std::string& name, const std::string& value,
+                                     ShaderSettings& out_settings) const
 {
 	assert(!name.empty());
 
-	const auto is_true = (value == "1") || has_true(value);
+	const auto maybe_bool = parse_bool_setting(value);
+	if (!maybe_bool) {
+		return false;
+	}
+	const auto bool_value = *maybe_bool;
 
 	if (name == "force_single_scan") {
-		settings.force_single_scan = is_true;
-
-	} else if (name == "force_no_pixel_doubling") {
-		settings.force_no_pixel_doubling = is_true;
-
-	} else if (name == "use_nearest_texture_filter") {
-		settings.texture_filter_mode = is_true ? TextureFilterMode::NearestNeighbour
-		                                       : TextureFilterMode::Bilinear;
-
-	} else {
-		LOG_WARNING("RENDER: Unknown shader setting pragma: '%s'",
-		            name.c_str());
+		out_settings.force_single_scan = bool_value;
+		return true;
 	}
+
+	if (name == "force_no_pixel_doubling") {
+		out_settings.force_no_pixel_doubling = bool_value;
+		return true;
+	}
+
+	if (name == "use_nearest_texture_filter") {
+		out_settings.texture_filter_mode =
+		        (bool_value ? TextureFilterMode::NearestNeighbour
+		                    : TextureFilterMode::Bilinear);
+		return true;
+	}
+
+	return false;
 }
 
 std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma(
@@ -587,6 +614,22 @@ std::optional<std::pair<std::string, float>> ShaderManager::ParseParameterPragma
 
 	return {
 	        {param_name, *maybe_default_val}
+        };
+}
+
+std::optional<std::pair<std::string, std::string>> ShaderManager::ParseSettingPragma(
+        const std::string& pragma) const
+{
+	// Shader setting format:
+	//
+	//   #pragma force_single_scan on
+	//
+	const auto parts = split(pragma);
+	if (parts.size() != 2) {
+		return {};
+	}
+	return {
+	        {parts[0], parts[1]}
         };
 }
 

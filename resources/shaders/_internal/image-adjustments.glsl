@@ -14,7 +14,7 @@
 #pragma name        ImageAdjustments
 #pragma output_size Previous
 
-#pragma use_nearest_texture_filter
+#pragma use_nearest_texture_filter on
 
 */
 
