@@ -6,9 +6,11 @@
 
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 #include "gui/private/common.h"
+#include "shader.h"
 #include "shader_common.h"
 
 /*
@@ -30,15 +32,10 @@ public:
 
 	static void AddMessages();
 
-	std::optional<std::pair<ShaderInfo, std::string>> LoadShader(
-	        const std::string& mapped_name);
+	std::optional<Shader> LoadShader(const std::string& shader_name);
+	std::optional<Shader> ForceReloadShader(const std::string& shader_name);
 
-	std::optional<std::pair<ShaderInfo, std::string>> LoadShader(
-	        const std::string& shader_name, const std::string& extension);
-
-	std::optional<ShaderPreset> LoadShaderPreset(
-	        const ShaderDescriptor& descriptor,
-	        const ShaderPreset& default_preset) const;
+	ShaderPreset LoadShaderPresetOrDefault(const ShaderDescriptor& descriptor);
 
 	/*
 	 * Generate a human-readable shader inventory message (one list element
@@ -47,16 +44,21 @@ public:
 	std::deque<std::string> GenerateShaderInventoryMessage() const;
 
 private:
-	ShaderManager()  = default;
-	~ShaderManager() = default;
+	ShaderManager();
+	~ShaderManager();
 
 	// prevent copying
 	ShaderManager(const ShaderManager&) = delete;
 	// prevent assignment
 	ShaderManager& operator=(const ShaderManager&) = delete;
 
+	std::optional<Shader> LoadAndBuildShader(const std::string& shader_name);
 
 	std::optional<std::string> FindShaderAndReadSource(const std::string& shader_name);
+
+	std::optional<ShaderPreset> LoadShaderPreset(
+	        const ShaderDescriptor& descriptor,
+	        const ShaderPreset& default_preset) const;
 
 	ShaderPreset ParseDefaultShaderPreset(const std::string& shader_name,
 	                                      const std::string& shader_source) const;
@@ -67,6 +69,13 @@ private:
 	std::optional<std::pair<std::string, float>> ParseParameterPragma(
 	        const std::string& pragma_value) const;
 
+	// Keys are the shader names including the path part but without the
+	// .glsl file extension
+	std::unordered_map<std::string, Shader> shader_cache = {};
+
+	// Keys are the shader names including the path part but without the
+	// .glsl file extension
+	std::unordered_map<std::string, ShaderPreset> shader_preset_cache = {};
 };
 
 #endif // DOSBOX_SHADER_MANAGER_H
