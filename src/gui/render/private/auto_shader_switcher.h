@@ -72,11 +72,11 @@ private:
 	ShaderDescriptor FindShaderAutoArcade() const;
 	ShaderDescriptor FindShaderAutoArcadeSharp() const;
 
-	ShaderDescriptor GetHerculesShader() const;
-	ShaderDescriptor GetCgaShader() const;
-	ShaderDescriptor GetCompositeShader() const;
-	ShaderDescriptor GetEgaShader() const;
-	ShaderDescriptor GetVgaShader() const;
+	ShaderDescriptor GetHerculesShader(const ShaderMode shader_mode) const;
+	ShaderDescriptor GetCgaShader(const ShaderMode shader_mode) const;
+	ShaderDescriptor GetCompositeShader(const ShaderMode shader_mode) const;
+	ShaderDescriptor GetEgaShader(const ShaderMode shader_mode) const;
+	ShaderDescriptor GetVgaShader(const ShaderMode shader_mode) const;
 
 	ShaderDescriptor last_shader_descriptor = {};
 	ShaderMode current_shader_mode          = {};
