@@ -388,7 +388,6 @@ void OpenGlRenderer::RecreateInputTexture()
 	input_texture.pitch = check_cast<int>(pitch_bytes);
 }
 
-
 void OpenGlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 {
 	assert(!curr_framebuf.empty());
@@ -620,6 +619,11 @@ ShaderPreset OpenGlRenderer::GetCurrentShaderPreset()
 std::string OpenGlRenderer::GetCurrentSymbolicShaderDescriptor()
 {
 	return curr_symbolic_shader_descriptor;
+}
+
+ShaderDescriptor OpenGlRenderer::GetCurrentShaderDescriptor()
+{
+	return curr_shader_descriptor;
 }
 
 RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_px)
