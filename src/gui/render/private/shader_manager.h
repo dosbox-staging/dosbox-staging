@@ -48,7 +48,7 @@ public:
 	std::deque<std::string> GenerateShaderInventoryMessage() const;
 
 private:
-	ShaderManager();
+	ShaderManager() = default;
 	~ShaderManager();
 
 	// prevent copying
