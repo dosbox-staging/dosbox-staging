@@ -86,8 +86,7 @@ private:
 	void MaybeUpdateRenderSize(const int new_render_width_px,
 	                           const int new_render_height_px);
 
-	SetShaderResult SetShaderInternal(const std::string& symbolic_shader_descriptor,
-	                                  const bool force_reload = false);
+	SetShaderResult SetShaderInternal(const std::string& symbolic_shader_descriptor);
 
 	void HandleShaderAndPresetChangeViaNotify(const ShaderDescriptor& new_descriptor);
 
