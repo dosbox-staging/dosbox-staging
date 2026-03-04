@@ -12,7 +12,8 @@
 
 /*
 
-#pragma name Main_Pass1
+#pragma name        Main_Pass1
+#pragma output_size Viewport
 
 #pragma parameter BEAM_PROFILE       "BEAM PROFILE (BP)"                                    0.0  0.0 2.0   1.0
 #pragma parameter HFILTER_PROFILE    "HORIZONTAL FILTER PROFILE [ HERMITE | CATMULL-ROM ]"  0.0  0.0 1.0   1.0
