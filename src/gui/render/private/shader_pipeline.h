@@ -95,6 +95,10 @@ private:
 	void RenderPass(const ShaderPass& pass, const GLuint vertex_array_object) const;
 
 	struct {
+		bool dedithering_enabled = false;
+	} config = {};
+
+	struct {
 		DosBox::Rect size = {};
 		GLuint texture    = 0;
 	} input_texture = {};
