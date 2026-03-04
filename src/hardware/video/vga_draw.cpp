@@ -47,7 +47,7 @@
 //     - Set up the draw pixel format (varies per machine type & screen mode).
 //
 //     - Set up the line draw function pointer `VGA_DrawLine`. This function
-//       will be called at precise time intervald to emulate the graphics
+//       will be called at precise time intervals to emulate the graphics
 //       adapter scanning out the contents of the framebuffer line by line, in
 //       sync with the electron beam of the CRT monitor. Alternatively, we
 //       might render screen in 4 parts.
