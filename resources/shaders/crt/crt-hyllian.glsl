@@ -39,16 +39,13 @@ layout (location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
 
-uniform vec2 rubyOutputSize;
-uniform vec2 rubyTextureSize;
 uniform vec2 rubyInputSize;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	             rubyInputSize / rubyTextureSize;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 }
 
 #elif defined(FRAGMENT)
@@ -57,7 +54,7 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 uniform sampler2D s_p;
 
 uniform float BEAM_PROFILE;
@@ -453,8 +450,8 @@ void main()
 	vec4 profile = get_beam_profile();
 
 	vec2 TextureSize =
-	        mix(vec2(rubyTextureSize.x * SHARPNESS_HACK, rubyTextureSize.y),
-	            vec2(rubyTextureSize.x, rubyTextureSize.y * SHARPNESS_HACK),
+	        mix(vec2(rubyInputSize.x * SHARPNESS_HACK, rubyInputSize.y),
+	            vec2(rubyInputSize.x, rubyInputSize.y * SHARPNESS_HACK),
 	            VSCANLINES);
 
 	vec2 dx = mix(vec2(1.0 / TextureSize.x, 0.0),
