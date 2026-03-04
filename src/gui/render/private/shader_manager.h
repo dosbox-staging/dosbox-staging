@@ -74,11 +74,14 @@ private:
 	ParseShaderPragmaResult ParseShaderPragmas(const std::string& shader_name,
 	                                           const std::string& shader_source) const;
 
-	void SetShaderSetting(const std::string& name, const std::string& value,
-	                      ShaderSettings& settings) const;
+	bool SetShaderSetting(const std::string& name, const std::string& value,
+	                      ShaderSettings& out_settings) const;
 
 	std::optional<std::pair<std::string, float>> ParseParameterPragma(
 	        const std::string& pragma_value) const;
+
+	std::optional<std::pair<std::string, std::string>> ParseSettingPragma(
+	        const std::string& pragma) const;
 
 	std::optional<std::string> ParseNamePragma(const std::string& pragma) const;
 

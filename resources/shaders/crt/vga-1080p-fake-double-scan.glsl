@@ -8,7 +8,7 @@
 #pragma name        Main_Pass1
 #pragma output_size Viewport
 
-#pragma force_single_scan
+#pragma force_single_scan on
 
 #pragma parameter PHOSPHOR_LAYOUT       "Phosphor Layout"       2.0   0.0 19.0  1.0
 #pragma parameter SCANLINE_STRENGTH_MIN "Scanline Strength Min" 0.80  0.0  1.0  0.80
