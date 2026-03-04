@@ -160,6 +160,9 @@ private:
 	// True if the last framebuffer has been updated since the last present
 	bool last_framebuf_dirty = false;
 
+	int render_width_px  = 0;
+	int render_height_px = 0;
+
 	DosBox::Rect viewport_rect_px = {};
 
 	GLuint frame_count = 0;
@@ -192,10 +195,6 @@ private:
 
 		GLuint out_fbo     = 0;
 		GLuint out_texture = 0;
-
-		int width  = 0;
-		int height = 0;
-
 	} pass1 = {};
 
 	struct {
