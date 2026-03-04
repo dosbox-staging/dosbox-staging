@@ -47,7 +47,7 @@
 //     - Set up the draw pixel format (varies per machine type & screen mode).
 //
 //     - Set up the line draw function pointer `VGA_DrawLine`. This function
-//       will be called at precise time intervald to emulate the graphics
+//       will be called at precise time intervals to emulate the graphics
 //       adapter scanning out the contents of the framebuffer line by line, in
 //       sync with the electron beam of the CRT monitor. Alternatively, we
 //       might render screen in 4 parts.
@@ -80,7 +80,7 @@
 //   can only convert internal scanline data stored in arbitrary internal
 //   pixel formats to 32-bit BGRX32 pixels, and optionally perform width
 //   doubling (at the pixel level) and/or line doubling (at the line level).
-// 
+//
 // - The resulting BGRX32 scanline output by the scalers is then written to
 //   the memory area that the OpenGL and SDL render backends use to update the
 //   textures representing the emulated video output. The scalers use an
