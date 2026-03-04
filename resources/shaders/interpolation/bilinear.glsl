@@ -24,11 +24,11 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform sampler2D INPUT_TEXTURE;
+uniform sampler2D INPUT_TEXTURE_0;
 
 void main()
 {
-	FragColor = texture(INPUT_TEXTURE, v_texCoord);
+	FragColor = texture(INPUT_TEXTURE_0, v_texCoord);
 }
 
 #endif

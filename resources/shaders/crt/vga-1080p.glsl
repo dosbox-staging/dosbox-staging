@@ -29,7 +29,7 @@ out vec4 sourceSize;
 out vec2 onex;
 out vec2 oney;
 
-uniform vec2 INPUT_TEXTURE_SIZE;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
 
 void main()
 {
@@ -37,7 +37,7 @@ void main()
 
 	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
-	sourceSize = vec4(INPUT_TEXTURE_SIZE, 1.0 / INPUT_TEXTURE_SIZE);
+	sourceSize = vec4(INPUT_TEXTURE_SIZE_0, 1.0 / INPUT_TEXTURE_SIZE_0);
 	onex       = vec2(sourceSize.z, 0.0);
 	oney       = vec2(0.0, sourceSize.w);
 }
@@ -51,7 +51,7 @@ in vec2 oney;
 
 out vec4 FragColor;
 
-uniform sampler2D INPUT_TEXTURE;
+uniform sampler2D INPUT_TEXTURE_0;
 
 uniform float SPOT_WIDTH;
 uniform float SPOT_HEIGHT;
@@ -65,7 +65,7 @@ uniform float GAMMA_INPUT;
 uniform float GAMMA_OUTPUT;
 
 #define GAMMA_IN(color) pow(color, vec4(GAMMA_INPUT))
-#define TEX2D(coords)   GAMMA_IN(texture(INPUT_TEXTURE, coords))
+#define TEX2D(coords)   GAMMA_IN(texture(INPUT_TEXTURE_0, coords))
 
 // Macro for weights computing
 #define WEIGHT(w) \
