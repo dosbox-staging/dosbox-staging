@@ -45,9 +45,11 @@ public:
 	ShaderPipeline();
 	~ShaderPipeline();
 
+	bool IsPipelineComplete() const;
+
 	void NotifyRenderSizeChanged(const int input_texture_width,
 	                             const int input_texture_height,
-	                             const GLuint _input_texture);
+	                             const GLuint input_texture);
 
 	void NotifyViewportSizeChanged(const DosBox::Rect& viewport);
 	void NotifyVideoModeChanged(const VideoMode& video_mode);
@@ -70,7 +72,11 @@ private:
 	void CreateSamplers();
 	void DestroySamplers();
 
-	void LoadInternalShaderPassOrExit(const std::string& shader_name);
+	void LoadAndAddInternalPasses();
+	void LoadAndAddInternalPassOrExit(const std::string& shader_name);
+
+	void SetPassOutputSizes();
+	void CreatePassOutputTextures();
 
 	void CreatePipeline();
 	void DestroyPipeline();
@@ -80,9 +86,9 @@ private:
 	std::pair<GLuint, DosBox::Rect> GetPreviousPassOutputTexture(
 	        const std::vector<ShaderPass>::iterator pass) const;
 
-	GLuint CreateTexture(const int width, const int height,
-	                     const bool float_texture) const;
+	GLuint CreateTexture(const DosBox::Rect& size, const bool float_texture) const;
 
+	void UpdatePassTextureUniforms();
 	void UpdateTextureUniforms(const std::vector<ShaderPass>::iterator pass) const;
 
 	void RenderPass(const ShaderPass& pass, const GLuint vertex_array_object) const;
@@ -94,6 +100,8 @@ private:
 
 	VideoMode video_mode  = {};
 	DosBox::Rect viewport = {};
+
+	std::optional<Shader> main_shader = {};
 
 	GLuint nearest_sampler = 0;
 	GLuint linear_sampler  = 0;
