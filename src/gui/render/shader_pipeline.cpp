@@ -472,12 +472,14 @@ void ShaderPipeline::RenderPass(const ShaderPass& pass,
 
 void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterator pass) const
 {
-	glUseProgram(pass->shader.program_object);
+	const auto shader = pass->shader;
+
+	glUseProgram(shader.program_object);
 
 	pass->in_textures.clear();
 
-	for (size_t i = 0; i < pass->shader.info.input_ids.size(); ++i) {
-		const auto pass_id = pass->shader.info.input_ids[i];
+	for (size_t i = 0; i < shader.info.input_ids.size(); ++i) {
+		const auto pass_id = shader.info.input_ids[i];
 
 		GLuint in_texture            = 0;
 		DosBox::Rect in_texture_size = {};
@@ -529,9 +531,9 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 		pass->in_textures.emplace_back(in_texture);
 	}
 
-	pass->shader.SetUniform2f("OUTPUT_TEXTURE_SIZE",
-	                          pass->out_size.w,
-	                          pass->out_size.h);
+	shader.SetUniform2f("OUTPUT_TEXTURE_SIZE",
+	                    pass->out_size.w,
+	                    pass->out_size.h);
 }
 
 void ShaderPipeline::UpdatePassTextureUniforms()

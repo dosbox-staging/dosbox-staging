@@ -70,8 +70,6 @@ bool ShaderDescriptor::EnforceIntegerScaling() const
 	}
 }
 
-ShaderManager::ShaderManager() {}
-
 ShaderManager::~ShaderManager()
 {
 	for (const auto& [_, shader] : shader_cache) {
@@ -686,7 +684,7 @@ std::optional<ShaderOutputSize> ShaderManager::ParseOutputSizePragma(
 	if (parts.size() != 1) {
 		return {};
 	}
-	const auto type = parts[0];
+	const auto& type = parts[0];
 
 	using enum ShaderOutputSize;
 
@@ -720,10 +718,11 @@ std::optional<std::pair<int, std::string>> ShaderManager::ParseInputPragma(
 		return {};
 	}
 
-	auto index_str = parts[0];
-	auto name      = parts[1];
+	const auto& index_str = parts[0];
 
 	if (auto maybe_int = parse_int(index_str); maybe_int) {
+		const auto& name = parts[1];
+
 		return {
 		        {*maybe_int, name}
                 };
