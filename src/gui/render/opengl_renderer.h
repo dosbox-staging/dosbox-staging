@@ -160,8 +160,12 @@ private:
 	// True if the last framebuffer has been updated since the last present
 	bool last_framebuf_dirty = false;
 
-	int render_width_px  = 0;
-	int render_height_px = 0;
+	struct {
+		int width      = 0;
+		int height     = 0;
+		int pitch      = 0;
+		GLuint texture = 0;
+	} input_texture = {};
 
 	DosBox::Rect viewport_rect_px = {};
 
@@ -189,9 +193,6 @@ private:
 	// ---------------------------------------------------------------------
 	struct {
 		Shader shader = {};
-
-		GLuint in_texture    = 0;
-		int in_texture_pitch = 0;
 
 		GLuint out_fbo     = 0;
 		GLuint out_texture = 0;
