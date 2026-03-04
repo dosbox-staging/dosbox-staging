@@ -590,10 +590,10 @@ bool ShaderManager::SetShaderSetting(const std::string& name, const std::string&
 		return true;
 	}
 
-	if (name == "use_nearest_texture_filter") {
+	if (name == "linear_filtering") {
 		out_settings.texture_filter_mode =
-		        (bool_value ? TextureFilterMode::NearestNeighbour
-		                    : TextureFilterMode::Bilinear);
+		        (bool_value ? TextureFilterMode::Bilinear
+		                    : TextureFilterMode::NearestNeighbour);
 		return true;
 	}
 
