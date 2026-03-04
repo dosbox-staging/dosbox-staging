@@ -78,13 +78,55 @@ std::optional<Shader> ShaderManager::LoadShader(const std::string& shader_name)
 	return shader_cache[shader_name];
 }
 
-std::optional<Shader> ShaderManager::ForceReloadShader(const std::string& shader_name)
+std::optional<std::pair<Shader, ShaderPreset>> ShaderManager::ForceReloadShader(
+        const ShaderDescriptor& descriptor)
 {
-	if (shader_cache.contains(shader_name)) {
-		glDeleteProgram(shader_cache[shader_name].program_object);
-		shader_cache.erase(shader_name);
+	const auto maybe_shader = LoadAndBuildShader(descriptor.shader_name);
+	if (!maybe_shader) {
+		LOG_ERR("RENDER: Error reloading shader '%s'",
+		        descriptor.shader_name.c_str());
+		return {};
 	}
-	return LoadAndBuildShader(shader_name);
+	const auto shader = *maybe_shader;
+
+	auto replace_cached_shader = [&] {
+		// Replace reloaded shader in the cache
+		const auto shader_key = descriptor.shader_name;
+		assert(shader_cache.contains(shader_key));
+
+		glDeleteProgram(shader_cache[shader_key].program_object);
+		shader_cache[shader_key] = shader;
+	};
+
+	if (descriptor.preset_name.empty()) {
+		// No preset specified; use default preset
+		replace_cached_shader();
+
+		return {
+		        {shader, shader.info.default_preset}
+                };
+	}
+
+	const auto maybe_preset = ShaderManager::LoadShaderPreset(
+	        descriptor, shader.info.default_preset);
+	if (!maybe_preset) {
+		LOG_ERR("RENDER: Error reloading shader preset '%s'",
+		        descriptor.ToString().c_str());
+		return {};
+	}
+	const auto preset = *maybe_preset;
+
+	replace_cached_shader();
+
+	// Replace reloaded shader preset in the cache
+	const auto preset_key = descriptor.ToString();
+	assert(shader_preset_cache.contains(preset_key));
+
+	shader_preset_cache[preset_key] = preset;
+
+	return {
+	        {shader, preset}
+        };
 }
 
 std::optional<Shader> ShaderManager::LoadAndBuildShader(const std::string& shader_name)

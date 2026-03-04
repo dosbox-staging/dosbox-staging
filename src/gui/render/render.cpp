@@ -839,6 +839,8 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 		return;
 	}
 
+	LOG_INFO("RENDER: Reloading current shader");
+
 	GFX_GetRenderer()->ForceReloadCurrentShader();
 
 	set_scan_and_pixel_doubling();

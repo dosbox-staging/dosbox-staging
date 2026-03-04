@@ -276,7 +276,8 @@ void OpenGlRenderer::HandleShaderAndPresetChangeViaNotify(const ShaderDescriptor
 		LOG_ERR("RENDER: Error loading shader preset '%s'; using default preset",
 		        new_descriptor.ToString().c_str());
 
-		curr_shader_descriptor = {new_descriptor.shader_name, ""};
+		curr_shader_descriptor = new_descriptor;
+		curr_shader_descriptor.preset_name.clear();
 		break;
 
 	case ShaderError:
@@ -461,17 +462,14 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShader(const std::string& sym
 }
 
 OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
-        const std::string& new_symbolic_shader_descriptor, const bool force_reload)
+        const std::string& new_symbolic_shader_descriptor)
 {
 	using enum OpenGlRenderer::SetShaderResult;
 
 	const auto new_descriptor = AutoShaderSwitcher::GetInstance().NotifyShaderChanged(
 	        new_symbolic_shader_descriptor);
 
-	const auto curr_descriptor = force_reload ? ShaderDescriptor{"", ""}
-	                                          : curr_shader_descriptor;
-
-	const auto result = MaybeSwitchShaderAndPreset(curr_descriptor,
+	const auto result = MaybeSwitchShaderAndPreset(curr_shader_descriptor,
 	                                               new_descriptor);
 
 	switch (result) {
@@ -481,7 +479,8 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 	} break;
 
 	case PresetError: {
-		curr_shader_descriptor = {new_descriptor.shader_name, ""};
+		curr_shader_descriptor = new_descriptor;
+		curr_shader_descriptor.preset_name.clear();
 
 		constexpr auto GlslExtension = ".glsl";
 		auto descriptor = ShaderDescriptor::FromString(new_symbolic_shader_descriptor,
@@ -503,7 +502,17 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShaderInternal(
 
 void OpenGlRenderer::ForceReloadCurrentShader()
 {
-	// TODO to be reimplemented later
+	const auto result = ShaderManager::GetInstance().ForceReloadShader(
+	        curr_shader_descriptor);
+
+	if (result) {
+		const auto& [shader, preset] = *result;
+
+		shader_pipeline->SetMainShader(shader);
+		shader_pipeline->SetMainShaderPreset(preset);
+
+		MaybeUpdateRenderSize(input_texture.width, input_texture.height);
+	}
 }
 
 void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
@@ -562,8 +571,8 @@ bool OpenGlRenderer::SwitchShader(const std::string& shader_name)
 		return false;
 	}
 
-	const auto shader = *maybe_shader;
-	main_shader_info  = shader.info;
+	const auto& shader = *maybe_shader;
+	main_shader_info   = shader.info;
 
 	shader_pipeline->SetMainShader(shader);
 	return true;
