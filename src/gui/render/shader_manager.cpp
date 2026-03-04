@@ -597,6 +597,11 @@ bool ShaderManager::SetShaderSetting(const std::string& name, const std::string&
 		return true;
 	}
 
+	if (name == "float_output") {
+		out_settings.float_output_texture = bool_value;
+		return true;
+	}
+
 	return false;
 }
 

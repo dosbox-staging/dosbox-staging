@@ -189,6 +189,8 @@ struct ShaderSettings {
 
 	TextureFilterMode texture_filter_mode = TextureFilterMode::Bilinear;
 
+	bool float_output_texture = false;
+
 	auto operator<=>(const ShaderSettings&) const = default;
 };
 

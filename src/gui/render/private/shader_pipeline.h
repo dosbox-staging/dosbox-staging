@@ -80,7 +80,8 @@ private:
 	std::pair<GLuint, DosBox::Rect> GetPreviousPassOutputTexture(
 	        const std::vector<ShaderPass>::iterator pass) const;
 
-	GLuint CreateTexture(const int width, const int height) const;
+	GLuint CreateTexture(const int width, const int height,
+	                     const bool float_texture) const;
 
 	void UpdateTextureUniforms(const std::vector<ShaderPass>::iterator pass) const;
 
