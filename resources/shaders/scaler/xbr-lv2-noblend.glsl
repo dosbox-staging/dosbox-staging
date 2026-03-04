@@ -33,14 +33,14 @@ out vec4 t5;
 out vec4 t6;
 out vec4 t7;
 
-uniform vec2 INPUT_TEXTURE_SIZE;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	float dx = (1.0/INPUT_TEXTURE_SIZE.x);
-	float dy = (1.0/INPUT_TEXTURE_SIZE.y);
+	float dx = (1.0/INPUT_TEXTURE_SIZE_0.x);
+	float dy = (1.0/INPUT_TEXTURE_SIZE_0.y);
 
 	vec2 TexCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
@@ -70,8 +70,8 @@ in vec4 t7;
 
 out vec4 FragColor;
 
-uniform vec2 INPUT_TEXTURE_SIZE;
-uniform sampler2D INPUT_TEXTURE;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform sampler2D INPUT_TEXTURE_0;
 
 uniform float XBR_EQ_THRESHOLD;
 uniform float XBR_LV2_COEFFICIENT;
@@ -127,29 +127,29 @@ void main()
 	bvec4 nc, px;
 	vec4 fx, fx_l, fx_u; // inequations of straight lines.
 
-	vec2 fp  = fract(v_texCoord*INPUT_TEXTURE_SIZE);
+	vec2 fp  = fract(v_texCoord*INPUT_TEXTURE_SIZE_0);
 
-	vec3 A1 = texture(INPUT_TEXTURE, t1.xw ).xyz;
-	vec3 B1 = texture(INPUT_TEXTURE, t1.yw ).xyz;
-	vec3 C1 = texture(INPUT_TEXTURE, t1.zw ).xyz;
-	vec3 A  = texture(INPUT_TEXTURE, t2.xw ).xyz;
-	vec3 B  = texture(INPUT_TEXTURE, t2.yw ).xyz;
-	vec3 C  = texture(INPUT_TEXTURE, t2.zw ).xyz;
-	vec3 D  = texture(INPUT_TEXTURE, t3.xw ).xyz;
-	vec3 E  = texture(INPUT_TEXTURE, t3.yw ).xyz;
-	vec3 F  = texture(INPUT_TEXTURE, t3.zw ).xyz;
-	vec3 G  = texture(INPUT_TEXTURE, t4.xw ).xyz;
-	vec3 H  = texture(INPUT_TEXTURE, t4.yw ).xyz;
-	vec3 I  = texture(INPUT_TEXTURE, t4.zw ).xyz;
-	vec3 G5 = texture(INPUT_TEXTURE, t5.xw ).xyz;
-	vec3 H5 = texture(INPUT_TEXTURE, t5.yw ).xyz;
-	vec3 I5 = texture(INPUT_TEXTURE, t5.zw ).xyz;
-	vec3 A0 = texture(INPUT_TEXTURE, t6.xy ).xyz;
-	vec3 D0 = texture(INPUT_TEXTURE, t6.xz ).xyz;
-	vec3 G0 = texture(INPUT_TEXTURE, t6.xw ).xyz;
-	vec3 C4 = texture(INPUT_TEXTURE, t7.xy ).xyz;
-	vec3 F4 = texture(INPUT_TEXTURE, t7.xz ).xyz;
-	vec3 I4 = texture(INPUT_TEXTURE, t7.xw ).xyz;
+	vec3 A1 = texture(INPUT_TEXTURE_0, t1.xw ).xyz;
+	vec3 B1 = texture(INPUT_TEXTURE_0, t1.yw ).xyz;
+	vec3 C1 = texture(INPUT_TEXTURE_0, t1.zw ).xyz;
+	vec3 A  = texture(INPUT_TEXTURE_0, t2.xw ).xyz;
+	vec3 B  = texture(INPUT_TEXTURE_0, t2.yw ).xyz;
+	vec3 C  = texture(INPUT_TEXTURE_0, t2.zw ).xyz;
+	vec3 D  = texture(INPUT_TEXTURE_0, t3.xw ).xyz;
+	vec3 E  = texture(INPUT_TEXTURE_0, t3.yw ).xyz;
+	vec3 F  = texture(INPUT_TEXTURE_0, t3.zw ).xyz;
+	vec3 G  = texture(INPUT_TEXTURE_0, t4.xw ).xyz;
+	vec3 H  = texture(INPUT_TEXTURE_0, t4.yw ).xyz;
+	vec3 I  = texture(INPUT_TEXTURE_0, t4.zw ).xyz;
+	vec3 G5 = texture(INPUT_TEXTURE_0, t5.xw ).xyz;
+	vec3 H5 = texture(INPUT_TEXTURE_0, t5.yw ).xyz;
+	vec3 I5 = texture(INPUT_TEXTURE_0, t5.zw ).xyz;
+	vec3 A0 = texture(INPUT_TEXTURE_0, t6.xy ).xyz;
+	vec3 D0 = texture(INPUT_TEXTURE_0, t6.xz ).xyz;
+	vec3 G0 = texture(INPUT_TEXTURE_0, t6.xw ).xyz;
+	vec3 C4 = texture(INPUT_TEXTURE_0, t7.xy ).xyz;
+	vec3 F4 = texture(INPUT_TEXTURE_0, t7.xz ).xyz;
+	vec3 I4 = texture(INPUT_TEXTURE_0, t7.xw ).xyz;
 
 	vec4 b = mul( mat4x3(B, D, H, F), Y );
 	vec4 c = mul( mat4x3(C, A, G, I), Y );
