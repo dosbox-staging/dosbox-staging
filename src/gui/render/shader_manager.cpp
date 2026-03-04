@@ -74,7 +74,7 @@ ShaderManager::ShaderManager() {}
 
 ShaderManager::~ShaderManager()
 {
-	for (auto& [_, shader] : shader_cache) {
+	for (const auto& [_, shader] : shader_cache) {
 		glDeleteProgram(shader.program_object);
 	}
 	shader_cache.clear();
@@ -118,7 +118,7 @@ std::optional<std::pair<Shader, ShaderPreset>> ShaderManager::ForceReloadShader(
 
 	auto replace_cached_shader = [&] {
 		// Replace reloaded shader in the cache
-		const auto shader_key = descriptor.shader_name;
+		const auto& shader_key = descriptor.shader_name;
 		assert(shader_cache.contains(shader_key));
 
 		glDeleteProgram(shader_cache[shader_key].program_object);
@@ -141,12 +141,12 @@ std::optional<std::pair<Shader, ShaderPreset>> ShaderManager::ForceReloadShader(
 		        descriptor.ToString().c_str());
 		return {};
 	}
-	const auto preset = *maybe_preset;
+	const auto& preset = *maybe_preset;
 
 	replace_cached_shader();
 
 	// Replace reloaded shader preset in the cache
-	const auto preset_key = descriptor.ToString();
+	const auto& preset_key = descriptor.ToString();
 	assert(shader_preset_cache.contains(preset_key));
 
 	shader_preset_cache[preset_key] = preset;
@@ -270,8 +270,7 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 	LOG_DEBUG("RENDER: Loading shader preset '%s'", path.string().c_str());
 #endif
 
-	const auto result = ini.LoadFile(path.string().c_str());
-	if (result < 0) {
+	if (ini.LoadFile(path.string().c_str()) < 0) {
 		LOG_ERR("RENDER: Error loading shader preset '%s'; invalid file format",
 		        path.string().c_str());
 		return {};
@@ -287,8 +286,8 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 				LOG_ERR("RENDER: Invalid shader setting, name: '%s', value: '%s'",
 				        name.pItem,
 				        value);
+				return {};
 			}
-			return {};
 		}
 	}
 
@@ -480,6 +479,7 @@ ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
 
 					const auto& [input_index,
 					             input_name] = *maybe_result;
+
 					input_ids[input_index] = input_name;
 
 					highest_input_index = std::max(
@@ -506,7 +506,7 @@ ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
 				if (const auto maybe_setting = ParseSettingPragma(pragma);
 				    maybe_setting) {
 
-					auto [name, value] = *maybe_setting;
+					const auto& [name, value] = *maybe_setting;
 
 					success = SetShaderSetting(name,
 					                           value,
