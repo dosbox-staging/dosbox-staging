@@ -12,6 +12,8 @@
 
 /*
 
+#pragma name Main_Pass1
+
 #pragma parameter BEAM_PROFILE       "BEAM PROFILE (BP)"                                    0.0  0.0 2.0   1.0
 #pragma parameter HFILTER_PROFILE    "HORIZONTAL FILTER PROFILE [ HERMITE | CATMULL-ROM ]"  0.0  0.0 1.0   1.0
 #pragma parameter BEAM_MIN_WIDTH     "Custom [If BP=0.00] MIN BEAM WIDTH"                  0.95  0.0 1.0  0.01
