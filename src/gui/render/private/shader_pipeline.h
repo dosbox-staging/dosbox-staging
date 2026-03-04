@@ -49,7 +49,7 @@ public:
 	                             const int input_texture_height,
 	                             const GLuint _input_texture);
 
-	void NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px);
+	void NotifyViewportSizeChanged(const DosBox::Rect& viewport);
 	void NotifyVideoModeChanged(const VideoMode& video_mode);
 
 	void SetMainShader(const Shader& shader);
@@ -70,7 +70,7 @@ private:
 	void CreateSamplers();
 	void DestroySamplers();
 
-	void LoadInternalShaderPassOrExit(const std::string shader_name);
+	void LoadInternalShaderPassOrExit(const std::string& shader_name);
 
 	void CreatePipeline();
 	void DestroyPipeline();

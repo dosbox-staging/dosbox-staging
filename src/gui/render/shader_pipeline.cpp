@@ -88,7 +88,7 @@ void ShaderPipeline::DestroySamplers()
 	}
 }
 
-void ShaderPipeline::LoadInternalShaderPassOrExit(const std::string shader_name)
+void ShaderPipeline::LoadInternalShaderPassOrExit(const std::string& shader_name)
 {
 	const auto path = std_fs::path("_internal") / shader_name;
 
@@ -112,9 +112,9 @@ ShaderPipeline::~ShaderPipeline()
 	DestroySamplers();
 }
 
-void ShaderPipeline::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
+void ShaderPipeline::NotifyViewportSizeChanged(const DosBox::Rect& new_viewport)
 {
-	viewport = draw_rect_px;
+	viewport = new_viewport;
 
 	DestroyPipeline();
 	CreatePipeline();
@@ -441,7 +441,7 @@ std::pair<GLuint, DosBox::Rect> ShaderPipeline::GetPreviousPassOutputTexture(
 
 void ShaderPipeline::UpdateMainShaderPassUniforms()
 {
-	auto& pass         = GetShaderPass("Main_Pass1");
+	const auto& pass   = GetShaderPass("Main_Pass1");
 	const auto& shader = pass.shader;
 
 	glUseProgram(shader.program_object);
@@ -453,7 +453,7 @@ void ShaderPipeline::UpdateMainShaderPassUniforms()
 
 void ShaderPipeline::UpdateImageAdjustmentsPassUniforms()
 {
-	auto& pass         = GetShaderPass("ImageAdjustments");
+	const auto& pass   = GetShaderPass("ImageAdjustments");
 	const auto& s      = image_adjustment_settings;
 	const auto& shader = pass.shader;
 
@@ -477,8 +477,7 @@ void ShaderPipeline::UpdateImageAdjustmentsPassUniforms()
 	shader.SetUniform1f("BLACK_LEVEL", s.black_level);
 	shader.SetUniform1f("SATURATION", s.saturation);
 
-	shader.SetUniform1f("COLOR_TEMPERATURE_KELVIN",
-	                    static_cast<float>(s.color_temperature_kelvin));
+	shader.SetUniform1f("COLOR_TEMPERATURE_KELVIN", s.color_temperature_kelvin);
 
 	shader.SetUniform1f("COLOR_TEMPERATURE_LUMA_PRESERVE",
 	                    s.color_temperature_luma_preserve);
