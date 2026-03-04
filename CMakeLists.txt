@@ -122,7 +122,7 @@ if (APPLE)
   # performance at all.
   add_compile_options("-g")
 
-  if (C_TARGETCPU STREQUAL "ARMV8LE")
+  if (C_TARGET_CPU STREQUAL "ARMV8LE")
     # This has virtually zero performance impact on ARM and it gives us deep
     # observability on release mode builds at full speed (e.g., when using a
     # profiler).
@@ -260,13 +260,25 @@ int main() {
 check_cxx_source_compiles("${TEST_CODE_BUILTIN_CLEAR_CACHE}"
                           HAVE_BUILTIN_CLEAR_CACHE)
 
+set(C_TARGET_CPU_ARM    OFF)
+set(C_TARGET_CPU_X86    OFF)
+
+option(OPT_FORCE_DYNREC "Force DYNREC dynamic recompiler (not x86-64 optimized)" OFF)
+
 if (CMAKE_SYSTEM_PROCESSOR  STREQUAL "AMD64"  OR
     CMAKE_SYSTEM_PROCESSOR  STREQUAL "x86_64" OR
     CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
 
-  set(C_TARGETCPU        "X86_64")
-  set(C_DYNAMIC_X86      ON)
-  set(C_DYNREC           OFF)
+  set(C_TARGET_CPU_X86    ON)
+
+  if (OPT_FORCE_DYNREC)
+      set(C_DYNAMIC_X86  OFF)
+      set(C_DYNREC       ON)
+  else()
+      set(C_DYNAMIC_X86  ON)
+      set(C_DYNREC       OFF)
+  endif()
+
   set(C_FPU_X86          ON)
   set(C_UNALIGNED_MEMORY ON)
 
@@ -274,7 +286,8 @@ elseif (CMAKE_SYSTEM_PROCESSOR  STREQUAL "arm64"   OR
         CMAKE_SYSTEM_PROCESSOR  STREQUAL "aarch64" OR
         CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
 
-  set(C_TARGETCPU        "ARMV8LE")
+  set(C_TARGET_CPU_ARM    ON)
+
   set(C_DYNAMIC_X86      OFF)
   set(C_DYNREC           ON)
   set(C_FPU_X86          OFF)
