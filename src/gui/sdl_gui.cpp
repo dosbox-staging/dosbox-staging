@@ -1543,11 +1543,15 @@ static RenderBackend* create_renderer()
 #if C_OPENGL
 	if (sdl.render_backend_type == RenderBackendType::OpenGl) {
 		try {
+			ShaderPipelineConfig config = {};
+			config.dedithering_enabled = RENDER_IsDeditheringEnabled();
+
 			return new OpenGlRenderer(sdl.windowed.x_pos,
 			                          sdl.windowed.y_pos,
 			                          sdl.windowed.width,
 			                          sdl.windowed.height,
-			                          get_sdl_window_flags());
+			                          get_sdl_window_flags(),
+			                          config);
 
 		} catch (const std::runtime_error& ex) {
 			LOG_WARNING(

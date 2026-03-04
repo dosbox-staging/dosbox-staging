@@ -268,4 +268,6 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 bool RENDER_NotifyVideoModeChanged(const VideoMode& video_mode);
 void RENDER_NotifyEgaModeWithVgaPalette();
 
+bool RENDER_IsDeditheringEnabled();
+
 #endif // DOSBOX_RENDER_H

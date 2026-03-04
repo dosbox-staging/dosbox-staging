@@ -1217,57 +1217,61 @@ static void set_deinterlacing(const SectionProp& section)
 constexpr int DeditheringStrengthMin = 0;
 constexpr int DeditheringStrengthMax = 100;
 
-static void set_dedithering(const SectionProp& section)
+static float get_dedithering_strength()
 {
 	constexpr auto SettingName     = "dedithering";
 	constexpr auto DefaultValue    = "off";
 	constexpr auto DefaultStrength = 0.0f;
 
-	const auto strength = [&]() {
-		const std::string pref = section.GetStringLowCase(SettingName);
+	const std::string pref = get_render_section().GetStringLowCase(SettingName);
 
-		if (has_false(pref)) {
-			return 0.0f;
+	if (has_false(pref)) {
+		return 0.0f;
 
-		} else if (has_true(pref)) {
-			return 1.0f;
+	} else if (has_true(pref)) {
+		return 1.0f;
 
-		} else if (const auto maybe_int = parse_int(pref); maybe_int) {
-			const auto strength_int = *maybe_int;
+	} else if (const auto maybe_int = parse_int(pref); maybe_int) {
+		const auto strength_int = *maybe_int;
 
-			if (strength_int >= DeditheringStrengthMin &&
-			    strength_int <= DeditheringStrengthMax) {
-				return static_cast<float>(*maybe_int) / 100.0f;
-
-			} else {
-				NOTIFY_DisplayWarning(
-				        Notification::Source::Console,
-				        "RENDER",
-				        "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
-				        SettingName,
-				        format_str("%d", strength_int).c_str(),
-				        format_str("%d", DeditheringStrengthMin).c_str(),
-				        format_str("%d", DeditheringStrengthMax).c_str(),
-				        DefaultValue);
-
-				set_section_property_value("render",
-				                           SettingName,
-				                           DefaultValue);
-				return DefaultStrength;
-			}
+		if (strength_int >= DeditheringStrengthMin &&
+		    strength_int <= DeditheringStrengthMax) {
+			return static_cast<float>(*maybe_int) / 100.0f;
 
 		} else {
-			NOTIFY_DisplayWarning(Notification::Source::Console,
-			                      "RENDER",
-			                      "PROGRAM_CONFIG_INVALID_SETTING",
-			                      SettingName,
-			                      pref.c_str(),
-			                      DefaultValue);
+			NOTIFY_DisplayWarning(
+			        Notification::Source::Console,
+			        "RENDER",
+			        "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
+			        SettingName,
+			        format_str("%d", strength_int).c_str(),
+			        format_str("%d", DeditheringStrengthMin).c_str(),
+			        format_str("%d", DeditheringStrengthMax).c_str(),
+			        DefaultValue);
+
+			set_section_property_value("render", SettingName, DefaultValue);
 			return DefaultStrength;
 		}
-	}();
 
-	GFX_GetRenderer()->SetDeditheringStrength(strength);
+	} else {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      SettingName,
+		                      pref.c_str(),
+		                      DefaultValue);
+		return DefaultStrength;
+	}
+}
+
+bool RENDER_IsDeditheringEnabled()
+{
+	return (get_dedithering_strength() > 0.0f);
+}
+
+static void set_dedithering()
+{
+	GFX_GetRenderer()->SetDeditheringStrength(get_dedithering_strength());
 }
 
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
@@ -2772,7 +2776,7 @@ void RENDER_Init()
 	set_image_adjustment_settings();
 
 	set_deinterlacing(*section);
-	set_dedithering(*section);
+	set_dedithering();
 }
 
 static void notify_render_setting_updated(SectionProp& section,
@@ -2791,7 +2795,7 @@ static void notify_render_setting_updated(SectionProp& section,
 		render_reset();
 
 	} else if (prop_name == "dedithering") {
-		set_dedithering(section);
+		set_dedithering();
 		render_reset();
 
 	} else if (prop_name == "glshader" || prop_name == "shader") {

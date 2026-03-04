@@ -45,7 +45,8 @@ std::string ShaderPass::ToString() const
 	        out_texture);
 }
 
-ShaderPipeline::ShaderPipeline()
+ShaderPipeline::ShaderPipeline(const ShaderPipelineConfig& config)
+        : config(config)
 {
 	CreateSamplers();
 
@@ -149,30 +150,39 @@ void ShaderPipeline::CreatePipeline()
 	SetPassOutputSizes();
 	CreatePassOutputTextures();
 
+	// Update uniforms
 	UpdatePassTextureUniforms();
 	UpdateMainShaderPassUniforms();
 	UpdateImageAdjustmentsPassUniforms();
+
+	if (config.dedithering_enabled) {
+		UpdateDeditherPassUniforms();
+	}
 }
 
 void ShaderPipeline::LoadAndAddInternalPasses()
 {
-	// Resize the input image (the rendered image) to the size of
-	// the video mode. This can perform width and/or and/or halving.
-	LoadAndAddInternalPassOrExit("integer-downscale");
+	if (config.dedithering_enabled) {
+		// Resize the input image (the rendered image) to the size of
+		// the video mode. This can perform width and/or and/or halving.
+		LoadAndAddInternalPassOrExit("integer-downscale");
 
-	// Checkerboard dedither
-	LoadAndAddInternalPassOrExit("checkerboard-dedither-linearize");
-	LoadAndAddInternalPassOrExit("checkerboard-dedither-pass1");
-	LoadAndAddInternalPassOrExit("checkerboard-dedither-pass2");
-	LoadAndAddInternalPassOrExit("checkerboard-dedither-pass3");
+		// Checkerboard dedither
+		LoadAndAddInternalPassOrExit("checkerboard-dedither-linearize");
+		LoadAndAddInternalPassOrExit("checkerboard-dedither-pass1");
+		LoadAndAddInternalPassOrExit("checkerboard-dedither-pass2");
+		LoadAndAddInternalPassOrExit("checkerboard-dedither-pass3");
+	}
 
 	// The image adjustments pass is always the first; it cannot be disabled
 	// as it performs the colour space transforms as well.
 	LoadAndAddInternalPassOrExit("image-adjustments");
 
-	// Resize the image to the size of the rendered imge. This can
-	// perform width and/or and/or doubling.
-	LoadAndAddInternalPassOrExit("integer-upscale");
+	if (config.dedithering_enabled) {
+		// Resize the image to the size of the rendered imge. This can
+		// perform width and/or and/or doubling.
+		LoadAndAddInternalPassOrExit("integer-upscale");
+	}
 
 	// Main shader pass (e.g., a CRT shader, the sharp shader, an upscaler,
 	// etc.)
@@ -372,7 +382,19 @@ void ShaderPipeline::SetDeditheringStrength(const float strength)
 {
 	dedithering_strength = strength;
 
-	if (IsPipelineComplete()) {
+	if (!IsPipelineComplete()) {
+		return;
+	}
+
+	const auto enable_dedithering = (strength > 0.0f);
+
+	if (config.dedithering_enabled != enable_dedithering) {
+		config.dedithering_enabled = enable_dedithering;
+
+		DestroyPipeline();
+		CreatePipeline();
+
+	} else if (config.dedithering_enabled) {
 		UpdateDeditherPassUniforms();
 	}
 }

@@ -43,7 +43,9 @@ static const char* safe_gl_get_string(const GLenum requested_name,
 }
 
 OpenGlRenderer::OpenGlRenderer(const int x, const int y, const int width,
-                               const int height, uint32_t sdl_window_flags)
+                               const int height, uint32_t sdl_window_flags,
+                               const ShaderPipelineConfig& _shader_pipeline_config)
+
 {
 	window = CreateSdlWindow(x, y, width, height, sdl_window_flags);
 	if (!window) {
@@ -60,6 +62,10 @@ OpenGlRenderer::OpenGlRenderer(const int x, const int y, const int width,
 		LOG_ERR("%s", msg.c_str());
 		throw std::runtime_error(msg);
 	}
+
+	shader_pipeline = std::make_unique<ShaderPipeline>(_shader_pipeline_config);
+
+	shader_pipeline_config = _shader_pipeline_config;
 }
 
 SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
@@ -181,8 +187,6 @@ bool OpenGlRenderer::InitRenderer()
 	// We don't care about depth testing; we'll just apply the shaders in 2D
 	// space
 	glDisable(GL_DEPTH_TEST);
-
-	shader_pipeline = std::make_unique<ShaderPipeline>();
 
 	return true;
 }
@@ -510,7 +514,8 @@ void OpenGlRenderer::ForceReloadCurrentShader()
 	if (result) {
 		const auto& [shader, preset] = *result;
 
-		shader_pipeline = std::make_unique<ShaderPipeline>();
+		shader_pipeline = std::make_unique<ShaderPipeline>(
+		        shader_pipeline_config);
 
 		shader_pipeline->NotifyRenderSizeChanged(input_texture.width,
 		                                         input_texture.height,
@@ -622,6 +627,10 @@ void OpenGlRenderer::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 
 void OpenGlRenderer::SetDeditheringStrength(const float strength)
 {
+	if (strength == 0.0f) {
+		config.dedithering_enabled = RENDER_IsDeditheringEnabled();
+	}
+
 	shader_pipeline->SetDeditheringStrength(strength);
 }
 

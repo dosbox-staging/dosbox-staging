@@ -40,10 +40,14 @@ struct ShaderPass {
 	std::string ToString() const;
 };
 
+struct ShaderPipelineConfig {
+	bool dedithering_enabled = false;
+};
+
 class ShaderPipeline {
 
 public:
-	ShaderPipeline();
+	ShaderPipeline(const ShaderPipelineConfig& config);
 	~ShaderPipeline();
 
 	bool IsPipelineComplete() const;
@@ -94,6 +98,8 @@ private:
 	void UpdateTextureUniforms(const std::list<ShaderPass>::iterator pass) const;
 
 	void RenderPass(const ShaderPass& pass, const GLuint vertex_array_object) const;
+
+	ShaderPipelineConfig config = {};
 
 	struct {
 		DosBox::Rect size = {};

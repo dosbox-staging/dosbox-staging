@@ -29,7 +29,8 @@ class OpenGlRenderer : public RenderBackend {
 
 public:
 	OpenGlRenderer(const int x, const int y, const int width,
-	               const int height, uint32_t sdl_window_flags);
+	               const int height, uint32_t sdl_window_flags,
+	               const ShaderPipelineConfig& shader_pipeline_config);
 
 	~OpenGlRenderer() override;
 
@@ -151,6 +152,8 @@ private:
 	VideoMode curr_video_mode       = {};
 
 	std::unique_ptr<ShaderPipeline> shader_pipeline = {};
+
+	ShaderPipelineConfig shader_pipeline_config     = {};
 };
 
 #endif // C_OPENGL
