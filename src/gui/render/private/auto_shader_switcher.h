@@ -40,8 +40,7 @@ public:
 	 * Notify the shader manager that the current shader has been changed
 	 * by the user.
 	 */
-	ShaderDescriptor NotifyShaderChanged(const std::string& symbolic_shader_descriptor,
-	                                     const std::string& extension);
+	ShaderDescriptor NotifyShaderChanged(const std::string& symbolic_shader_descriptor);
 
 	/*
 	 * Notify the shader manager that the viewport area or the
