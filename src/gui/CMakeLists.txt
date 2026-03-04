@@ -3,15 +3,15 @@ target_sources(libdosboxcommon PRIVATE
   clipboard.cpp
   mapper.cpp
   sdl_gui.cpp
-  shader_manager.cpp
   titlebar.cpp
 
-  render/shader_pass.cpp
   render/deinterlacer.cpp
   render/opengl_renderer.cpp
   render/render.cpp
   render/scaler/scalers.cpp
   render/sdl_renderer.cpp
+  render/shader_manager.cpp
+  render/shader_pass.cpp
 )
 
 target_link_libraries(libdosboxcommon PRIVATE

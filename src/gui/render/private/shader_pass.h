@@ -7,7 +7,7 @@
 #include <optional>
 #include <string>
 
-#include "gui/private/shader_manager.h"
+#include "shader_manager.h"
 
 #include "utils/rect.h"
 
