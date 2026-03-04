@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "private/shader.h"
 #include "private/shader_manager.h"
 #include "private/shader_pass.h"
 
