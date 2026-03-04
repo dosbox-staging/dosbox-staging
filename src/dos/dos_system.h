@@ -321,18 +321,20 @@ public:
 	{
 		return info;
 	}
+
 	std::string GetInfoString() const
+	{
+		return GetTypeString() + std::string(" ") + info;
+	}
+
+	std::string GetTypeString() const
 	{
 		switch (type) {
 		case DosDriveType::Local:
-			return MSG_Get("MOUNT_TYPE_LOCAL_DIRECTORY") +
-			       std::string(" ") + info;
-		case DosDriveType::Cdrom:
-			return MSG_Get("MOUNT_TYPE_CDROM") + std::string(" ") + info;
-		case DosDriveType::Fat:
-			return MSG_Get("MOUNT_TYPE_FAT") + std::string(" ") + info;
-		case DosDriveType::Iso:
-			return MSG_Get("MOUNT_TYPE_CDROM") + std::string(" ") + info;
+			return MSG_Get("MOUNT_TYPE_LOCAL_DIRECTORY");
+		case DosDriveType::Cdrom: return MSG_Get("MOUNT_TYPE_CDROM");
+		case DosDriveType::Fat: return MSG_Get("MOUNT_TYPE_FAT");
+		case DosDriveType::Iso: return MSG_Get("MOUNT_TYPE_CDROM");
 		case DosDriveType::Virtual: return MSG_Get("MOUNT_TYPE_VIRTUAL");
 		default: return MSG_Get("MOUNT_TYPE_UNKNOWN");
 		}
