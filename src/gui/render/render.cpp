@@ -11,6 +11,7 @@
 #include <mutex>
 
 #include "private/auto_image_adjustments.h"
+#include "private/auto_shader_switcher.h"
 
 #include "capture/capture.h"
 #include "config/config.h"
