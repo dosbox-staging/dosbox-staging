@@ -174,15 +174,22 @@ std::optional<Shader> ShaderManager::LoadAndBuildShader(const std::string& shade
 	}
 
 	const auto& shader_source = *maybe_shader_source;
-	const auto result = ParseShaderPragmas(shader_name, shader_source);
+
+	const auto maybe_pragmas = ParseShaderPragmas(shader_name, shader_source);
+	if (!maybe_pragmas) {
+		LOG_ERR("RENDER: Error parsing pragmas of shader '%s'",
+		        shader_name.c_str());
+		return {};
+	}
+	const auto pragmas = *maybe_pragmas;
 
 	Shader shader = {};
 
 	shader.info = {shader_name,
-	               result.pass_name,
-	               result.input_ids,
-	               result.output_size,
-	               result.preset};
+	               pragmas.pass_name,
+	               pragmas.input_ids,
+	               pragmas.output_size,
+	               pragmas.preset};
 
 	if (!shader.BuildShaderProgram(shader_source)) {
 		LOG_ERR("RENDER: Error loading shader '%s'", shader_name.c_str());
@@ -426,9 +433,12 @@ std::optional<std::string> ShaderManager::FindShaderAndReadSource(
 	return {};
 }
 
-ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
+std::optional<ShaderManager::ParseShaderPragmaResult> ShaderManager::ParseShaderPragmas(
         const std::string& shader_name, const std::string& shader_source) const
 {
+	// We'll try to parse all pragmas and report all errors
+	bool has_errors = false;
+
 	ParseShaderPragmaResult result = {};
 
 	// The default preset has no name
@@ -461,6 +471,7 @@ ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
 				} else {
 					LOG_ERR("RENDER: Invalid shader parameter pragma: '%s'",
 					        pragma.c_str());
+					has_errors = true;
 				}
 
 			} else if (pragma.starts_with("name")) {
@@ -471,6 +482,7 @@ ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
 				} else {
 					LOG_ERR("RENDER: Invalid shader pass name pragma: '%s'",
 					        pragma.c_str());
+					has_errors = true;
 				}
 
 			} else if (pragma.starts_with("input")) {
@@ -485,6 +497,7 @@ ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
 				} else {
 					LOG_ERR("RENDER: Invalid input name pragme: '%s'",
 					        pragma.c_str());
+					has_errors = true;
 				}
 
 			} else if (pragma.starts_with("output_size")) {
@@ -496,23 +509,24 @@ ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
 				} else {
 					LOG_ERR("RENDER: Invalid output size pragma: '%s'",
 					        pragma.c_str());
+					has_errors = true;
 				}
 
 			} else {
-				bool success = false;
+				bool parse_ok = false;
 
 				if (const auto maybe_setting = ParseSettingPragma(pragma);
 				    maybe_setting) {
 
 					const auto& [name, value] = *maybe_setting;
 
-					success = SetShaderSetting(name,
-					                           value,
-					                           result.preset.settings);
+					parse_ok = SetShaderSetting(
+					        name, value, result.preset.settings);
 				}
-				if (!success) {
+				if (!parse_ok) {
 					LOG_ERR("RENDER: Invalid shader setting pragma: '%s'",
 					        pragma.c_str());
+					has_errors = true;
 				}
 			}
 
@@ -522,6 +536,8 @@ ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
 		LOG_ERR("RENDER: Regex error while parsing shader '%s' for pragmas: %d",
 		        shader_name.c_str(),
 		        e.code());
+
+		has_errors = true;
 	}
 
 	// Validate and store texture input IDs
@@ -532,13 +548,20 @@ ShaderManager::ParseShaderPragmaResult ShaderManager::ParseShaderPragmas(
 		        "(%d inputs but highest input index is %d)",
 		        num_inputs,
 		        highest_input_index);
+
+		has_errors = true;
 	}
+
 	if (num_inputs == 0) {
 		result.input_ids = {"Previous"};
 	} else {
 		for (auto i = 0; i <= highest_input_index; ++i) {
 			result.input_ids.emplace_back(input_ids[i]);
 		}
+	}
+
+	if (has_errors) {
+		return {};
 	}
 
 	return result;

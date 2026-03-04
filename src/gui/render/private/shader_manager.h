@@ -71,8 +71,8 @@ private:
 		ShaderOutputSize output_size       = {};
 	};
 
-	ParseShaderPragmaResult ParseShaderPragmas(const std::string& shader_name,
-	                                           const std::string& shader_source) const;
+	std::optional<ParseShaderPragmaResult> ParseShaderPragmas(
+	        const std::string& shader_name, const std::string& shader_source) const;
 
 	bool SetShaderSetting(const std::string& name, const std::string& value,
 	                      ShaderSettings& out_settings) const;
