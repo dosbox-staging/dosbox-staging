@@ -210,8 +210,8 @@ ShaderPreset ShaderManager::LoadShaderPresetOrDefault(const ShaderDescriptor& de
 	if (!shader_preset_cache.contains(cache_key)) {
 		const auto maybe_preset = LoadShaderPreset(descriptor, default_preset);
 		if (!maybe_preset) {
-			LOG_WARNING("OPENGL: Error loading shader preset '%s'; using default preset",
-			            descriptor.ToString().c_str());
+			LOG_ERR("OPENGL: Error loading shader preset '%s'; using default preset",
+			        descriptor.ToString().c_str());
 			return default_preset;
 		}
 
@@ -247,8 +247,8 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 
 	// TODO get_resource_path() should return optional
 	if (path.empty()) {
-		LOG_WARNING("RENDER: Cannot locate shader preset '%s'",
-		            descriptor.ToString().c_str());
+		LOG_ERR("RENDER: Cannot locate shader preset '%s'",
+		        descriptor.ToString().c_str());
 		return {};
 	}
 
@@ -256,8 +256,7 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 	                         (std_fs::is_regular_file(path) ||
 	                          std_fs::is_symlink(path));
 	if (!file_exists) {
-		LOG_WARNING(
-		        "RENDER: Error loading shader preset file '%s'; "
+		LOG_ERR("RENDER: Error loading shader preset file '%s'; "
 		        "file does not exist or not a regular file",
 		        path.string().c_str());
 		return {};
@@ -272,8 +271,8 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 
 	const auto result = ini.LoadFile(path.string().c_str());
 	if (result < 0) {
-		LOG_WARNING("RENDER: Error loading shader preset '%s'; invalid file format",
-		            path.string().c_str());
+		LOG_ERR("RENDER: Error loading shader preset '%s'; invalid file format",
+		        path.string().c_str());
 		return {};
 	}
 
@@ -297,13 +296,12 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 			const auto name = key.pItem;
 
 			if (!default_preset.params.contains(name)) {
-				LOG_WARNING("RENDER: Invalid shader parameter name: '%s'",
-				            name);
+				LOG_ERR("RENDER: Invalid shader parameter name: '%s'",
+				        name);
 			} else {
 				const auto maybe_float = parse_float(value_str);
 				if (!maybe_float) {
-					LOG_WARNING(
-					        "RENDER: Invalid value for shader parameter '%s' "
+					LOG_ERR("RENDER: Invalid value for shader parameter '%s' "
 					        "(must be float): '%s'",
 					        name,
 					        value_str);
@@ -313,7 +311,7 @@ std::optional<ShaderPreset> ShaderManager::LoadShaderPreset(
 			}
 		}
 	} else {
-		LOG_WARNING("RENDER: Invalid shader preset file; [parameters] section not found");
+		LOG_ERR("RENDER: Invalid shader preset file; [parameters] section not found");
 		return {};
 	}
 
