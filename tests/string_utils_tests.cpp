@@ -685,4 +685,38 @@ TEST(WritePaddedStringTest, EmptyStringAllPad)
 	EXPECT_EQ(result_str, "***");
 }
 
+TEST(StlContainerToString, EmptyIntVector)
+{
+	std::vector<int> v = {};
+	EXPECT_EQ(to_string(v), "{}");
+}
+
+TEST(StlContainerToString, NonEmptyIntVector)
+{
+	std::vector<int> v = {3, 42, 112};
+	EXPECT_EQ(to_string(v), "{3, 42, 112}");
+}
+
+TEST(StlContainerToString, NonEmptyIntVector_CustomFormat1)
+{
+	std::vector<int> v = {3, 42, 112};
+	EXPECT_EQ(to_string(v, "|", "[", "]"), "[3|42|112]");
+}
+
+TEST(StlContainerToString, NonEmptyIntVector_CustomFormat2)
+{
+	std::vector<int> v = {3, 42, 112};
+	EXPECT_EQ(to_string(v, "-", "", ""), "3-42-112");
+}
+
+TEST(StlContainerToString, NonEmptyEnumVector)
+{
+	enum class Color { Red, Green, Blue, Yellow };
+	using enum Color;
+	std::vector<Color> v = {Blue, Blue, Yellow};
+
+	EXPECT_EQ(to_string(v), "{2, 2, 3}");
+}
+
+
 } // namespace
