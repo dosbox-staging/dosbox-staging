@@ -37,22 +37,21 @@ struct ShaderPass {
 	std::vector<ShaderPassId> in_texture_ids = {ShaderPassId::Previous};
 	std::vector<GLuint> in_textures          = {};
 
-	GLuint out_fbo     = 0;
-	GLuint out_texture = 0;
-
-	DosBox::Rect viewport = {};
+	GLuint out_fbo                = 0;
+	GLuint out_texture            = 0;
+	DosBox::Rect out_texture_size = {};
 
 	std::string ToString() const
 	{
 		return format_str(
-		        "id:             %d\n"
-		        "shader.name:    %s\n"
-		        "shader.program: %d\n"
-		        "in_texture_ids: %s\n"
-		        "in_textures:    %s\n"
-		        "out_fbo:        %d\n"
-		        "out_texture:    %d\n"
-		        "viewport:       %s",
+		        "id:               %d\n"
+		        "shader.name:      %s\n"
+		        "shader.program:   %d\n"
+		        "in_texture_ids:   %s\n"
+		        "in_textures:      %s\n"
+		        "out_fbo:          %d\n"
+		        "out_texture:      %d\n"
+		        "out_texture_size: %s",
 		        id,
 		        shader.info.name.c_str(),
 		        shader.program_object,
@@ -60,7 +59,7 @@ struct ShaderPass {
 		        to_string(in_textures).c_str(),
 		        out_fbo,
 		        out_texture,
-		        viewport.ToString().c_str());
+		        out_texture_size.ToString().c_str());
 	}
 };
 
