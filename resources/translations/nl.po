@@ -2671,7 +2671,7 @@ msgctxt "KEYBOARD_MOD_ADJECTIVE_RIGHT"
 msgid "Right"
 msgstr "Rechts"
 
-#: src/gui/shader_manager.cpp:344
+#: src/gui/shader_manager.cpp:352
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_1"
 msgid ""
@@ -2681,7 +2681,7 @@ msgstr ""
 "List van GLSL shaders\n"
 "------------------------------"
 
-#: src/gui/shader_manager.cpp:347
+#: src/gui/shader_manager.cpp:355
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_2"
 msgid ""
@@ -2691,19 +2691,19 @@ msgstr ""
 "De bovenstaande shaders kunnen gebruikt worden in de 'shader'\n"
 "configuratie-instelling, zonder pad of .glsl extensie."
 
-#: src/gui/shader_manager.cpp:351
+#: src/gui/shader_manager.cpp:359
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NOT_EXISTS"
 msgid "Path '%s' does not exist."
 msgstr "Pad '%s' bestaat niet."
 
-#: src/gui/shader_manager.cpp:352
+#: src/gui/shader_manager.cpp:360
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NO_SHADERS"
 msgid "Path '%s' has no shaders."
 msgstr "Pad '%s' heeft geen shaders."
 
-#: src/gui/shader_manager.cpp:353
+#: src/gui/shader_manager.cpp:361
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_LIST"
 msgid "Path '%s' has:"
@@ -3465,15 +3465,15 @@ msgctxt "CONFIG_VMEM_DELAY"
 msgid ""
 "Set video memory access delay emulation ('off' by default). Possible values:\n"
 "\n"
-"  off:      Disable video memory access delay emulation (default).\n"
-"            This is preferable for most games to avoid slowdowns.\n"
+"  off:       Disable video memory access delay emulation (default).\n"
+"             This is preferable for most games to avoid slowdowns.\n"
 "\n"
-"  on:       Enable video memory access delay emulation (3000 ns).\n"
-"            This can help reduce or eliminate flicker in Hercules,\n"
-"            CGA, EGA, and early VGA games.\n"
+"  on:        Enable video memory access delay emulation (3000 ns).\n"
+"             This can help reduce or eliminate flicker in Hercules,\n"
+"             CGA, EGA, and early VGA games.\n"
 "\n"
-"  <value>:  Set access delay in nanoseconds. Valid range is 0 to 20000 ns;\n"
-"            500 to 5000 ns is the most useful range.\n"
+"  <number>:  Set access delay in nanoseconds. Valid range is 0 to 20000 ns;\n"
+"             500 to 5000 ns is the most useful range.\n"
 "\n"
 "Note: Only set this on a per-game basis when necessary as it slows down\n"
 "      the whole emulator."
@@ -3492,7 +3492,7 @@ msgstr ""
 "  <waarde>: Stel toegangsvertraging in nanoseconden in. Geldig bereik is 0 tot\n"
 "            20000 ns; 500 tot 5000 ns is het meest bruikbare bereik.\n"
 "\n"
-"Opmerking: Stel dit alleen per spel in als dat nodig is, omdat het de hele\n"
+"Opmerking: Stel dit alleen per-spel in als dat nodig is, omdat het de hele\n"
 "           emulator vertraagt."
 
 #: src/config/setup.cpp:262
@@ -3502,18 +3502,18 @@ msgid ""
 "Override the emulated DOS video mode's refresh rate with a custom rate\n"
 "('default' by default). Possible values:\n"
 "\n"
-"  default:  Don't override; use the emulated DOS video mode's refresh rate\n"
-"            (default).\n"
+"  default:   Don't override; use the emulated DOS video mode's refresh rate\n"
+"             (default).\n"
 "\n"
-"  host:     Override the refresh rate of all DOS video modes with the refresh\n"
-"            rate of your monitor. This might allow you to play some 70 Hz VGA\n"
-"            games with perfect vsync on a 60 Hz fixed refresh rate monitor (see\n"
-"            'vsync' for further details).\n"
+"  host:      Override the refresh rate of all DOS video modes with the refresh\n"
+"             rate of your monitor. This might allow you to play some 70 Hz VGA\n"
+"             games with perfect vsync on a 60 Hz fixed refresh rate monitor (see\n"
+"             'vsync' for further details).\n"
 "\n"
-"  <value>:  Override the refresh rate of all DOS video modes with a fixed rate\n"
-"            specified in Hz (valid range is from 24.000 to 1000.000). This is a\n"
-"            niche option for a select few fast-paced mid to late 1990s 3D games\n"
-"            for high refresh rate gaming.\n"
+"  <number>:  Override the refresh rate of all DOS video modes with a fixed rate\n"
+"             specified in Hz (valid range is from 24.000 to 1000.000). This is a\n"
+"             niche option for a select few fast-paced mid to late 1990s 3D games\n"
+"             for high refresh rate gaming.\n"
 "\n"
 "Note: Many games will misbehave when overriding the DOS video mode's refresh\n"
 "      rate with non-standard values. This can manifest in glitchy video,\n"
@@ -4118,14 +4118,14 @@ msgid ""
 "                 defaults to 50). E.g., tandy 100\n"
 "\n"
 "  tandy-warm:    Emulation of the actual colour output of an unknown Tandy\n"
-"                 monitor. Inteded to be used with 'crt_color_profile = none' and\n"
-"                 'color_temperature = 6500'.\n"
+"                 monitor. Intended to be used with 'crt_color_profile = none'\n"
+"                 and 'color_temperature = 6500'.\n"
 "\n"
 "  ibm5153 <c>:   Emulation of the actual colour output of an IBM 5153 monitor\n"
 "                 with a unique contrast control that dims non-bright colours\n"
 "                 only. The contrast can be optionally provided as a second\n"
 "                 parameter (0 to 100; defaults to 100), e.g., ibm5153 60.\n"
-"                 Inteded to be used with 'crt_color_profile = none' and\n"
+"                 Intended to be used with 'crt_color_profile = none' and\n"
 "                 'color_temperature = 6500'.\n"
 "\n"
 "  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:\n"
@@ -4490,7 +4490,10 @@ msgstr ""
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_GAMMA"
-msgid "Set the gamma of the video output (0 by default). Valid range is -50 to 50.This is additional gamma adjustment relative to the emulated virtual monitors gamma."
+msgid ""
+"Set the gamma of the video output (0 by default). Valid range is -50 to 50.\n"
+"This is additional gamma adjustment relative to the emulated virtual monitor's\n"
+"gamma."
 msgstr ""
 "Stel de gammawaarde van de video-uitvoer in (standaard 0). Het geldige bereik is\n"
 "-50 tot 50. Dit is een extra gamma-aanpassing ten opzichte van de gammawaarde\n"
@@ -4517,20 +4520,20 @@ msgid ""
 "before the 'brightness' and 'contrast' settings which can also raise the black\n"
 "level, so it effectively acts as a black level boost. Possible values:\n"
 "\n"
-"  auto:     Raise the black level for PCjr, Tandy, CGA and EGA video modes only\n"
-"            for adaptive CRT shaders; for any other shader, use 0 (default).\n"
+"  auto:      Raise the black level for PCjr, Tandy, CGA and EGA video modes only\n"
+"             for adaptive CRT shaders; for any other shader, use 0 (default).\n"
 "\n"
-"  <value>:  Set the black level raise amount. Valid range is 0 to 100.\n"
-"            0 does not raise the black level.\n"
+"  <number>:  Set the black level raise amount. Valid range is 0 to 100.\n"
+"             0 does not raise the black level.\n"
 "\n"
 "Note: Raising the black level if useful for \"black scanline\" emulation; this\n"
-"      adds visula interest to PCjr, Tandy, CGA, and EGA games with simple\n"
+"      adds visual interest to PCjr, Tandy, CGA, and EGA games with simple\n"
 "      graphics."
 msgstr ""
 "Verhoog het zwartniveau van de video-uitvoer (standaard 'auto'). Deze instelling\n"
-"wordt toegepast vóór de instellingen voor 'helderheid' en 'contrast', die het\n"
-"zwartniveau ook kunnen verhogen. Het werkt dus in feite als een\n"
-"zwartniveau-boost. Mogelijke waarden:\n"
+"wordt toegepast vóór de instellingen voor 'brightness' (helderheid) en\n"
+"'contrast', die het zwartniveau ook kunnen verhogen. Het werkt dus in feite als\n"
+"een zwartniveau-boost. Mogelijke waarden:\n"
 "\n"
 "  auto:     Verhoog het zwartniveau alleen voor PCjr-, Tandy-, CGA- en EGA-\n"
 "            videomodi voor adaptieve CRT-shaders; voor alle andere shaders\n"
@@ -4562,15 +4565,15 @@ msgid ""
 "Set the colour temperature (white point) of the video output ('auto' by\n"
 "default). Possible values:\n"
 "\n"
-"  auto:     Select an authentic colour temperature for adaptive CRT shaders;\n"
-"            for any other shader, use 6500 (default).\n"
+"  auto:      Select an authentic colour temperature for adaptive CRT shaders;\n"
+"             for any other shader, use 6500 (default).\n"
 "\n"
-"  <value>:  Specify colour temperature in Kelvin (K). Valid range is 3000 to\n"
-"            10000. The Kelvin value only makes sense if 'crt_color_profile' is\n"
-"            set to 'none' or to one of the profiles with 6500K white point,\n"
-"            otherwise it acts as a relative colour temperature adjustment (less\n"
-"            then 6500 results in warmer colours, more than 6500 in cooler\n"
-"            colours)."
+"  <number>:  Specify colour temperature in Kelvin (K). Valid range is 3000 to\n"
+"             10000. The Kelvin value only makes sense if 'crt_color_profile' is\n"
+"             set to 'none' or to one of the profiles with 6500K white point,\n"
+"             otherwise it acts as a relative colour temperature adjustment (less\n"
+"             then 6500 results in warmer colours, more than 6500 in cooler\n"
+"             colours)."
 msgstr ""
 "Stel de kleurtemperatuur (witpunt) van de video-uitvoer in ('auto' standaard).\n"
 "Mogelijke waarden:\n"
@@ -4635,7 +4638,66 @@ msgstr ""
 "(standaard 100). Het geldige bereik is 0 tot 200. Bij 100 verandert de\n"
 "versterking niet."
 
-#: src/gui/render/render.cpp:2660
+#: src/config/setup.cpp:262
+#, c-format, no-wrap
+msgctxt "CONFIG_DEINTERLACING"
+msgid ""
+"Remove black lines from interlaced videos ('off' by default). Use with games\n"
+"that display video content with alternating black lines. This trick worked well\n"
+"on CRT monitors to increase perceptual resolution while saving storage space,\n"
+"but it resulted in brightness-loss. Possible values:\n"
+"\n"
+"  off:     Disable deinterlacing (default).\n"
+"\n"
+"  on:      Enable deinterlacing at 'medium' strength.\n"
+"\n"
+"  light:   Light deinterlacing. Black scanlines are softened to mimic the\n"
+"           CRT look.\n"
+"\n"
+"  medium:  Medium deinterlacing. Best balance between removing black lines,\n"
+"           increasing brightness, and keeping the higher resolution look.\n"
+"\n"
+"  strong:  Strong deinterlacing. Image brightness is almost completely\n"
+"           restored at the expense of diminishing the higher resolution look.\n"
+"\n"
+"  full:    Full deinterlacing. Completely removes black lines and maximises\n"
+"           brightness, but the image will appear blockier.\n"
+"\n"
+"Note: Enabling vertical 'integer_scaling' is recommended on lower resolution\n"
+"      displays to avoid interference artifacts when using lower deinterlacing\n"
+"      strengths. Alternatively, use 'full' strength to completely eliminate all\n"
+"      potential interference patterns."
+msgstr ""
+"Verwijder zwarte lijnen uit geïnterlinieerde video's (standaard 'uit'). Gebruik\n"
+"dit bij spelen die videocontent weergeven met afwisselende zwarte lijnen. Deze\n"
+"truc werkte goed op CRT-monitoren om de waargenomen resolutie te verhogen en\n"
+"tegelijkertijd opslagruimte te besparen, maar het resulteerde wel in verlies\n"
+"van helderheid. Mogelijke waarden:\n"
+"\n"
+" off:     Deinterlacing uitschakelen (standaard).\n"
+"\n"
+" on:      Deinterlacing inschakelen met een gemiddelde sterkte.\n"
+"\n"
+" light:   Lichte deinterlacing. Zwarte scanlijnen worden verzacht om de CRT-look\n"
+"          na te bootsen.\n"
+"\n"
+" medium:  Gemiddelde deinterlacing. De beste balans tussen het verwijderen van\n"
+"          zwarte lijnen, het verhogen van de helderheid en het behouden van de\n"
+"          hogere resolutie.\n"
+"\n"
+" strong:  Sterke deinterlacing. De beeldhelderheid wordt bijna volledig hersteld\n"
+"          ten koste van de hogere resolutie.\n"
+"\n"
+" full:    Volledige deinterlacing. Verwijdert volledig zwarte lijnen en\n"
+"          maximaliseert de helderheid, maar het beeld zal blokkeriger lijken.\n"
+"\n"
+"Opmerking: Het inschakelen van verticale 'integer_scaling' wordt aanbevolen op\n"
+"           schermen met een lagere resolutie om interferentie-artefacten te\n"
+"           voorkomen bij gebruik van lagere deinterlacing-sterktes. U kunt ook\n"
+"           de 'full' sterkte gebruiken om alle mogelijke\n"
+"           interferentiepatronen volledig te elimineren."
+
+#: src/gui/render/render.cpp:2790
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_RENAMED"
 msgid ""
@@ -4645,7 +4707,7 @@ msgstr ""
 "De ingebouwde shader [color=white]'%s'[reset] is hernoemd naar [color=white]'%s'[reset];\n"
 "gebruik [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:2664
+#: src/gui/render/render.cpp:2794
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_FALLBACK"
 msgid ""
@@ -4655,7 +4717,7 @@ msgstr ""
 "Fout bij het instellen van shader [color=white]'%s'[reset],\n"
 "terugvallen op [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:2668
+#: src/gui/render/render.cpp:2798
 #, c-format, no-wrap
 msgctxt "RENDER_DEFAULT_SHADER_PRESET_FALLBACK"
 msgid ""
@@ -5082,8 +5144,8 @@ msgid ""
 "Use threads to improve 3dfx Voodoo performance ('auto' by default). Possible\n"
 "values:\n"
 "\n"
-"  auto:     Use up to 16 threads based on available CPU cores (default).\n"
-"  <value>:  Set a specific number of threads between 1 and 128.\n"
+"  auto:      Use up to 16 threads based on available CPU cores (default).\n"
+"  <number>:  Set a specific number of threads between 1 and 128.\n"
 "\n"
 "Note: Setting this to a higher value than the number of logical CPUs your\n"
 "      hardware supports is very likely to harm performance. This has been\n"
@@ -5191,8 +5253,8 @@ msgid ""
 "Set the mouse capture behaviour ('onclick' by default). Possible values:\n"
 "\n"
 "  onclick:   Capture the mouse when clicking any mouse button in the window\n"
-"\n"
 "             (default).\n"
+"\n"
 "  onstart:   Capture the mouse immediately on start. Might not work correctly\n"
 "\n"
 "             on some host operating systems.\n"
@@ -5203,17 +5265,18 @@ msgid ""
 "\n"
 "  nomouse:   Hide the mouse and don't send mouse input to the game.\n"
 "\n"
-"For touch-screen control, use 'seamless'."
+"Note: Use 'seamless' mode for touch screens."
 msgstr ""
 "Kies een muis vang methode (standaard 'onclick'). Mogelijke waarden:\n"
 "\n"
 "  onclick:   Vang de muis wanneer u in het venster klikt (standaard).\n"
 "\n"
-"  onstart:   Vang de muis meteen bij het starten van DOSBox staging.\n"
+"  onstart:   Vang de muis meteen bij het starten van DOSBox.\n"
 "             Werkt mogelijk niet correct op sommige hostbesturingssystemen.\n"
 "\n"
-"  seamless:  Laat de muis naadloos bewegen tussen de host en DOSBox staging;\n"
-"             Vang de muis alleen met de middelste muis knop of sneltoets.\n"
+"  seamless:  Laat de muis naadloos bewegen tussen de host en het DOSBox\n"
+"             venster en de rest van de desktop; vang de muis alleen met de\n"
+"             middelste muis knop of sneltoets.\n"
 "             Naadloze muis werkt niet goed voor alle spelen.\n"
 "             Windows 3.1x kan hiermee werken met een speciale muis driver.\n"
 "\n"
@@ -5256,27 +5319,41 @@ msgstr ""
 #, c-format, no-wrap
 msgctxt "CONFIG_MOUSE_SENSITIVITY"
 msgid ""
-"Global mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
-"(100 by default). Values can be separated by spaces, commas, or semicolons\n"
-"(i.e. 100,150). Negative values invert the axis, zero disables it. Providing\n"
-"only one value sets sensitivity for both axes. Sensitivity can be further\n"
-"fine-tuned per mouse interface using the internal MOUSECTL.COM tool available\n"
-"on the Z drive."
+"Set global mouse sensitivity (100 by default). Possible values:\n"
+"\n"
+"  <value>:  Set sensitivity for both axes as a percentage (e.g. 150).\n"
+"\n"
+"  X,Y:      Set X and Y axis sensitivity separately as percentages (e.g.,\n"
+"            100,150). The two values can be separated by a space or a semicolon\n"
+"            as well.\n"
+"\n"
+"Notes:\n"
+"  - Negative values invert an axis, zero disables it.\n"
+"\n"
+"  - Sensitivity can be fine-tuned futher per mouse interface with the internal\n"
+"    MOUSECTL.COM command."
 msgstr ""
-"Globale muisgevoeligheid voor de horizontale en verticale assen, als percentage\n"
-"(standaard 100). Waarden kunnen worden gescheiden door spaties, komma's of\n"
-"puntkomma's (d.w.z. 100,150). Negatieve waarden keren de as om, nul schakelt\n"
-"deze uit.\n"
-"Als u slechts één waarde opgeeft, wordt de gevoeligheid voor beide assen\n"
-"ingesteld. De gevoeligheid kan per muisinterface verder worden verfijnd met\n"
-"behulp van de interne MOUSECTL.COM-tool die beschikbaar is op de Z-schijf."
+"Stel de globale muisgevoeligheid in (standaard 100). Mogelijke waarden:\n"
+"\n"
+"  <waarde>: Stel de gevoeligheid voor beide assen in als een percentage\n"
+"           (bijv. 150).\n"
+"\n"
+"  X,Y:      Stel de gevoeligheid voor de X- en Y-as afzonderlijk in als\n"
+"            percentages (bijv. 100,150). De twee waarden kunnen ook gescheiden\n"
+"            worden door een spatie of een puntkomma.\n"
+"\n"
+"Opmerkingen:\n"
+"  - Negatieve waarden keren een as om, nul schakelt deze uit.\n"
+"\n"
+"  - De gevoeligheid kan per muisinterface verder worden verfijnd met de interne\n"
+"    opdracht MOUSECTL.COM."
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_MOUSE_RAW_INPUT"
 msgid ""
-"Enable to bypass your operating system's mouse acceleration and sensitivity\n"
-"settings ('on' by default). Works in fullscreen or when the mouse is captured\n"
+"Bypass the mouse acceleration and sensitivity settings of the host operating\n"
+"system ('on' by default). Works in fullscreen or when the mouse is captured\n"
 "in windowed mode."
 msgstr ""
 "Schakel dit in om de instellingen voor muisversnelling en gevoeligheid van uw\n"
@@ -5519,19 +5596,16 @@ msgid ""
 "\n"
 "  2button:      2 buttons, Microsoft mouse.\n"
 "\n"
-"  3button:      3 buttons, Logitech mouse;\n"
-"                mostly compatible with Microsoft mouse.\n"
+"  3button:      3 buttons, Logitech mouse; mostly compatible with Microsoft\n"
+"                mouse.\n"
 "\n"
-"  wheel:        3 buttons + wheel;\n"
-"                mostly compatible with Microsoft mouse.\n"
+"  wheel:        3 buttons + wheel; mostly compatible with Microsoft mouse.\n"
 "\n"
-"  msm:          3 buttons, Mouse Systems mouse;\n"
-"                NOT compatible with Microsoft mouse.\n"
+"  msm:          3 buttons, Mouse Systems mouse; NOT compatible with Microsoft\n"
+"                mouse.\n"
 "\n"
 "  2button+msm:  Automatic choice between '2button' and 'msm'.\n"
-"\n"
 "  3button+msm:  Automatic choice between '3button' and 'msm'.\n"
-"\n"
 "  wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).\n"
 "\n"
 "Note: Enable COM port mice in the [serial] section."
@@ -5550,9 +5624,7 @@ msgstr ""
 "  msm:          3 knoppen, Mouse Systems-muis, NIET compatibel met MS-muis.\n"
 "\n"
 "  2button+msm:  Automatische keuze tussen '2button' en 'msm'.\n"
-"\n"
 "  3button+msm:  Automatische keuze tussen '3button' en 'msm'.\n"
-"\n"
 "  wheel+msm:    Automatische keuze tussen 'wiel' en 'msm' (standaard).\n"
 "\n"
 "Opmerkingen: Activeer COM-poort muis in de [serial] sectie."
@@ -5563,10 +5635,12 @@ msgctxt "CONFIG_VMWARE_MOUSE"
 msgid ""
 "VMware mouse interface ('on' by default). Fully compatible only with 3rd party\n"
 "Windows 3.1x driver.\n"
+"\n"
 "Note: Requires PS/2 mouse to be enabled."
 msgstr ""
 "VMware-muisinterface (standaard aan).\n"
 "Alleen volledig compatibel met experimentele Windows 3.1x-drivers van derden.\n"
+"\n"
 "Opmerking: vereist dat de PS/2-muis is ingeschakeld."
 
 #: src/config/setup.cpp:262
@@ -5575,10 +5649,12 @@ msgctxt "CONFIG_VIRTUALBOX_MOUSE"
 msgid ""
 "VirtualBox mouse interface ('on' by default). Fully compatible only with 3rd\n"
 "party Windows 3.1x driver.\n"
+"\n"
 "Note: Requires PS/2 mouse to be enabled."
 msgstr ""
 "VirtualBox-muisinterface (standaard aan).\n"
 "Alleen volledig compatibel met het Windows 3.1x-stuurprogramma van derden.\n"
+"\n"
 "Opmerking: vereist dat de PS/2-muis is ingeschakeld."
 
 #: src/config/setup.cpp:262
@@ -6148,25 +6224,25 @@ msgstr ""
 "  off:       Filter de uitgang niet (standaard).\n"
 "  <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details."
 
-#: src/midi/fluidsynth.cpp:1175
+#: src/midi/fluidsynth.cpp:1115
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_NO_SOUNDFONTS"
 msgid "No available SoundFonts"
 msgstr "Geen beschikbare SoundFonts"
 
-#: src/midi/fluidsynth.cpp:1177
+#: src/midi/fluidsynth.cpp:1117
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_SOUNDFONT_DIR"
 msgid "Invalid [color=light-green]soundfont_dir[reset] setting; cannot open directory [color=white]'%s'[reset], using ''"
 msgstr "Ongeldige instelling voor [color=lichtgroen]soundfont_dir[reset]; kan map [color=white]'%s'[reset] niet openen met ''"
 
-#: src/midi/fluidsynth.cpp:1181
+#: src/midi/fluidsynth.cpp:1121
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_ERROR_LOADING_SOUNDFONT"
 msgid "Error loading SoundFont [color=white]'%s'[reset]"
 msgstr "Fout bij laden van SoundFont [color=white]'%s'[reset]"
 
-#: src/midi/fluidsynth.cpp:1184
+#: src/midi/fluidsynth.cpp:1124
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_EFFECT_PARAMETER"
 msgid ""
@@ -6176,7 +6252,7 @@ msgstr ""
 "Ongeldige [color=light-green]'%s'[reset] synthparameter (%s): [color=white]%s[reset];\n"
 "moet tussen %.2f en %.2f liggen, gebruik [color=white]'%s'[reset]"
 
-#: src/midi/fluidsynth.cpp:1189
+#: src/midi/fluidsynth.cpp:1129
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_CHORUS_WAVE"
 msgid ""
@@ -6186,7 +6262,7 @@ msgstr ""
 "Ongeldige [color=light-green]'fsynth_chorus'[reset] synthparameter (modulatiegolftype): [color=white]%s[reset];\n"
 "moet [color=white]'sinus'[reset] of [color=white]'driehoek'[reset] zijn"
 
-#: src/midi/fluidsynth.cpp:1194
+#: src/midi/fluidsynth.cpp:1134
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_NUM_EFFECT_PARAMS"
 msgid ""
@@ -6533,26 +6609,42 @@ msgstr ""
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_SBBASE"
-msgid "The IO address of the Sound Blaster (220 by default)."
-msgstr "Het IO-basisadres van de Sound Blaster (standaard 220)."
+msgid ""
+"The IO address of the Sound Blaster (220 by default).\n"
+"Possible values: 220, 240, 260, 280, 2a0, 2c0, 2e0, 300"
+msgstr ""
+"Het IO-basisadres van de Sound Blaster (standaard 220).\n"
+"Mogelijke waarden: 220, 240, 260, 280, 2a0, 2c0, 2e0, 300"
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_IRQ"
-msgid "The IRQ number of the Sound Blaster (7 by default)."
-msgstr "Het IRQ-nummer van de Sound Blaster (standaard 7)."
+msgid ""
+"The IRQ number of the Sound Blaster (7 by default).\n"
+"Possible values: 3, 5, 7, 9, 10, 11, 12"
+msgstr ""
+"Het IRQ-nummer van de Sound Blaster (standaard 7).\n"
+"Mogelijke waarden: 3, 5, 7, 9, 10, 11, 12"
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_DMA"
-msgid "The DMA channel of the Sound Blaster (1 by default)."
-msgstr "Het DMA-nummer van de Sound Blaster (standaard 1)."
+msgid ""
+"The DMA channel of the Sound Blaster (1 by default).\n"
+"Possible values: 0, 1, 3, 5, 6, 7"
+msgstr ""
+"Het DMA-nummer van de Sound Blaster (standaard 1).\n"
+"Mogelijke waarden: 0, 1, 3, 5, 6, 7"
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_HDMA"
-msgid "The High DMA channel of the Sound Blaster 16 (5 by default)."
-msgstr "Het hoge DMA-nummer van de Sound Blaster 16 (standaard 5)."
+msgid ""
+"The High DMA channel of the Sound Blaster 16 (5 by default).\n"
+"Possible values: 0, 1, 3, 5, 6, 7"
+msgstr ""
+"Het hoge DMA-nummer van de Sound Blaster 16 (standaard 5).\n"
+"Mogelijke waarden: 0, 1, 3, 5, 6, 7"
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
@@ -6660,25 +6752,25 @@ msgstr ""
 "Andere Sound Blaster-modellen staan ​​niet toe om het filter in software te\n"
 "schakelen."
 
-#: src/hardware/audio/soundblaster.cpp:3887
+#: src/hardware/audio/soundblaster.cpp:3896
 #, c-format, no-wrap
 msgctxt "SBLASTER_INVALID_ESS_OPLMODE"
 msgid "Invalid [color=light-green]'%s'[reset] setting for the ESS card: [color=white]'%s'[reset], using [color=white]'%s'[reset]"
 msgstr "Ongeldige [color=light-green]'%s'[reset] instelling voor de ESS-kaart: [color=white]'%s'[reset], met behulp van [color=white]'%s'[reset]"
 
-#: src/hardware/audio/soundblaster.cpp:3892
+#: src/hardware/audio/soundblaster.cpp:3901
 #, c-format, no-wrap
 msgctxt "SBLASTER_CMS_OPLMODE_DEPRECATED"
 msgid "The [color=white]'cms'[reset] setting for [color=light-green]'oplmode'[reset] is deprecated; use [color=white]'cms = on'[reset] instead"
 msgstr "De instelling [color=white]'cms'[reset] voor [color=light-green]'oplmode'[reset] is verouderd; gebruik in plaats daarvan [color=white]'cms = on'[reset]"
 
-#: src/hardware/audio/soundblaster.cpp:3897
+#: src/hardware/audio/soundblaster.cpp:3906
 #, c-format, no-wrap
 msgctxt "SBLASTER_CMS_FORCED_AUTO"
 msgid "[color=light-green]'%s'[reset] setting is [color=white]'off'[reset], but is forced to [color=white]'%s'[reset] on the Game Blaster"
 msgstr "De instelling voor [color=light-green]'%s'[reset] is [color=white]'uit'[reset], maar wordt gedwongen naar [color=white]'%s'[reset] op de Game Blaster"
 
-#: src/hardware/audio/soundblaster.cpp:3902
+#: src/hardware/audio/soundblaster.cpp:3911
 #, c-format, no-wrap
 msgctxt "SBLASTER_CMS_FORCED_OFF"
 msgid "[color=light-green]'%s'[reset] setting [color=white]'on'[reset] not supported on this card, forcing [color=white]'%s'[reset]"
@@ -6886,20 +6978,32 @@ msgstr ""
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_GUSBASE"
-msgid "The IO base address of the Gravis UltraSound (240 by default)."
-msgstr "Het IO-basisadres van de Gravis UltraSound (standaard 240)."
+msgid ""
+"The IO base address of the Gravis UltraSound (240 by default).\n"
+"Possible values: 210, 220, 230, 240, 250, 260"
+msgstr ""
+"Het IO-basisadres van de Gravis UltraSound (standaard 240).\n"
+"Mogelijke waarden: 210, 220, 230, 240, 250, 260"
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_GUSIRQ"
-msgid "The IRQ number of the Gravis UltraSound (5 by default)."
-msgstr "Het IRQ-nummer van de Gravis UltraSound (standaard 5)."
+msgid ""
+"The IRQ number of the Gravis UltraSound (5 by default).\n"
+"Possible values: 2, 3, 5, 7, 11, 12, 15"
+msgstr ""
+"Het IRQ-nummer van de Gravis UltraSound (standaard 5).\n"
+"Mogelijke waarden: 2, 3, 5, 7, 11, 12, 15"
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_GUSDMA"
-msgid "The DMA channel of the Gravis UltraSound (3 by default)."
-msgstr "Het DMA-nummer van de Gravis UltraSound (standaard 3)."
+msgid ""
+"The DMA channel of the Gravis UltraSound (3 by default).\n"
+"Possible values: 1, 3, 5, 6, 7"
+msgstr ""
+"Het DMA-nummer van de Gravis UltraSound (standaard 3).\n"
+"Mogelijke waarden: 1, 3, 5, 6, 7"
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
@@ -6943,14 +7047,22 @@ msgstr "Schakel de IBM Music Feature Card in (standaard 'off')."
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_IMFC_BASE"
-msgid "The IO base address of the IBM Music Feature Card ('2A20' by default)."
-msgstr "Het IO-basisadres van de IBM Music Feature Card (standaard '2A20')."
+msgid ""
+"The IO base address of the IBM Music Feature Card ('2A20' by default).\n"
+"Possible values: 2A20, 2A30"
+msgstr ""
+"Het IO-basisadres van de IBM Music Feature Card (standaard '2A20').\n"
+"Mogelijke waarden: 2A20, 2A30"
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_IMFC_IRQ"
-msgid "The IRQ number of the IBM Music Feature Card (3 by default)."
-msgstr "Het IRQ-nummer van de IBM Music Feature Card (standaard 3)."
+msgid ""
+"The IRQ number of the IBM Music Feature Card (3 by default).\n"
+"Possible values: 2, 3, 4, 5, 6, 7"
+msgstr ""
+"Het IRQ-nummer van de IBM Music Feature Card (standaard 3).\n"
+"Mogelijke waarden: 2, 3, 4, 5, 6, 7"
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
@@ -7022,8 +7134,12 @@ msgstr ""
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_SIDPORT"
-msgid "The IO port address of the Innovation SSI-2001 (280 by default)."
-msgstr "Het IO-basisadres van de Innovation SSI-2001 (standaard 280)."
+msgid ""
+"The IO port address of the Innovation SSI-2001 (280 by default).\n"
+"Possible values: 240, 260, 280, 2a0, 2c0"
+msgstr ""
+"Het IO-basisadres van de Innovation SSI-2001 (standaard 280).\n"
+"Mogelijke waarden: 240, 260, 280, 2a0, 2c0"
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
@@ -7963,7 +8079,39 @@ msgstr ""
 "Een of meer UDP-poorten van de host doorsturen naar de DOS-gast (standaard niet\n"
 "ingesteld). Het formaat is hetzelfde als voor TCP poorten doorsturen."
 
-#: src/dosbox.cpp:1088
+#: src/config/setup.cpp:262
+#, c-format, no-wrap
+msgctxt "CONFIG_WEBSERVER_ENABLED"
+msgid ""
+"Enable the HTTP REST API that exposes internal state and memory (disabled by\n"
+"default). Open http://localhost:8080 in a browser (or use the configured port)\n"
+"to view the API documentation."
+msgstr ""
+"Schakel de HTTP REST API in die de interne status en het geheugen beschikbaar\n"
+"maakt (standaard uit). Open http://localhost:8080 in een browser (of gebruik\n"
+"de geconfigureerde poort) om de API-documentatie te bekijken."
+
+#: src/config/setup.cpp:262
+#, c-format, no-wrap
+msgctxt "CONFIG_WEBSERVER_BIND_ADDRESS"
+msgid ""
+"Bind to the given IP address. This API gives full control over DOSBox, do not\n"
+"ever expose this to untrusted hosts.\n"
+"\n"
+"By default only local connections are allowed."
+msgstr ""
+"Maak verbinding met het opgegeven IP-adres. Deze API geeft volledige controle\n"
+"over DOSBox; stel deze nooit bloot aan onbetrouwbare hosts.\n"
+"\n"
+"Standaard zijn alleen lokale verbindingen toegestaan."
+
+#: src/config/setup.cpp:262
+#, c-format, no-wrap
+msgctxt "CONFIG_WEBSERVER_PORT"
+msgid "TCP port to bind to."
+msgstr "TCP-poort om aan te binden."
+
+#: src/dosbox.cpp:1101
 #, c-format, no-wrap
 msgctxt "AUTOEXEC_CONFIGFILE_HELP"
 msgid ""
@@ -7974,7 +8122,7 @@ msgstr ""
 "DOS-opdracht.\n"
 "Belangrijk: De sectie [autoexec] moet de laatste sectie in de config zijn!"
 
-#: src/dosbox.cpp:1092
+#: src/dosbox.cpp:1105
 #, c-format, no-wrap
 msgctxt "CONFIGFILE_INTRO"
 msgid ""
@@ -7984,13 +8132,13 @@ msgstr ""
 "# Dit is het configuratiebestand voor dosbox-staging (%s).\n"
 "# Regels die beginnen met een '#'-teken zijn opmerkingen.\n"
 
-#: src/dos/programs.cpp:923
+#: src/dos/programs.cpp:962
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_NOCONFIGFILE"
 msgid "No config file loaded\n"
 msgstr "Geen configuratiebestand geladen!\n"
 
-#: src/dos/programs.cpp:925
+#: src/dos/programs.cpp:964
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_PRIMARY_CONF"
 msgid ""
@@ -8000,7 +8148,7 @@ msgstr ""
 "[color=white]Primair configuratiebestand:[reset]\n"
 "  %s\n"
 
-#: src/dos/programs.cpp:928
+#: src/dos/programs.cpp:967
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_ADDITIONAL_CONF"
 msgid ""
@@ -8012,7 +8160,7 @@ msgstr ""
 "[color=white]Extra configuratiebestanden:[reset]\n"
 "  "
 
-#: src/dos/programs.cpp:931
+#: src/dos/programs.cpp:970
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_CONFDIR"
 msgid ""
@@ -8024,7 +8172,7 @@ msgstr ""
 "  %s\n"
 "\n"
 
-#: src/dos/programs.cpp:935
+#: src/dos/programs.cpp:974
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_FILE_ERROR"
 msgid ""
@@ -8034,13 +8182,13 @@ msgstr ""
 "\n"
 "Kan configuratiebestand '%s' niet openen\n"
 
-#: src/dos/programs.cpp:936
+#: src/dos/programs.cpp:975
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_FILE_WHICH"
 msgid "Writing current config to '%s'\n"
 msgstr "De huidige configuratie wordt naar '%s' geschreven.\n"
 
-#: src/dos/programs.cpp:939
+#: src/dos/programs.cpp:978
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CONFIG_HELP_LONG"
 msgid ""
@@ -8167,7 +8315,7 @@ msgstr ""
 "\n"
 "  -securemode         veilige modus inschakelen"
 
-#: src/dos/programs.cpp:1001
+#: src/dos/programs.cpp:1040
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_HLP_PROPHLP"
 msgid ""
@@ -8177,25 +8325,25 @@ msgstr ""
 "[color=white]Doel van instelling [color=light-green]'%s'[color=white] (opgenomen in sectie [color=light-cyan][%s][color=white]):[reset]\n"
 "\n"
 
-#: src/dos/programs.cpp:1005
+#: src/dos/programs.cpp:1044
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES"
 msgid "[color=white]Possible values:[reset]  %s\n"
 msgstr "[color=white]Mogelijke waarden:[reset]  %s\n"
 
-#: src/dos/programs.cpp:1008
+#: src/dos/programs.cpp:1047
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE"
 msgid "[color=white]Default value:[reset]    %s\n"
 msgstr "[color=white]Standaard waarde:[reset]   %s\n"
 
-#: src/dos/programs.cpp:1011
+#: src/dos/programs.cpp:1050
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE"
 msgid "[color=white]Current value:[reset]    %s\n"
 msgstr "[color=white]Huidige waarde:[reset]     %s\n"
 
-#: src/dos/programs.cpp:1014
+#: src/dos/programs.cpp:1053
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_HLP_AUTOEXEC"
 msgid ""
@@ -8207,55 +8355,55 @@ msgstr ""
 "\n"
 "%s\n"
 
-#: src/dos/programs.cpp:1019
+#: src/dos/programs.cpp:1058
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_HLP_NOCHANGE"
 msgid "[color=yellow]This setting cannot be changed at runtime.[reset]\n"
 msgstr "[color=yellow]Deze instelling kan tijdens runtime niet worden gewijzigd.[reset]\n"
 
-#: src/dos/programs.cpp:1022
+#: src/dos/programs.cpp:1061
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_HLP_POSINT"
 msgid "positive integer"
 msgstr "positief geheel getal"
 
-#: src/dos/programs.cpp:1024
+#: src/dos/programs.cpp:1063
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_HLP_SECTHLP"
 msgid "[color=white]List of settings in the [color=light-cyan][%s][color=white] section:[reset]\n"
 msgstr "[color=white]Sectie [color=light-cyan][%s] [color=white]bevat de volgende instellingen:[reset]\n"
 
-#: src/dos/programs.cpp:1028
+#: src/dos/programs.cpp:1067
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_HLP_SECTLIST"
 msgid "[color=white]List of configuration sections:[reset]\n"
 msgstr "[color=white]DOSBox-configuratie bevat de volgende secties:[reset]\n"
 
-#: src/dos/programs.cpp:1031
+#: src/dos/programs.cpp:1070
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_SECURE_ON"
 msgid "Secure mode enabled.\n"
 msgstr "Beveiligde modus ingeschakeld.\n"
 
-#: src/dos/programs.cpp:1033
+#: src/dos/programs.cpp:1072
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_SECURE_DISALLOW"
 msgid "This operation is not permitted in secure mode.\n"
 msgstr "Deze bewerking is niet toegestaan in de beveiligde modus.\n"
 
-#: src/dos/programs.cpp:1036
+#: src/dos/programs.cpp:1075
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_SECTION_ERROR"
 msgid "Section [color=light-cyan][%s][reset] doesn't exist.\n"
 msgstr "Sectie [color=light-cyan][%s][reset] bestaat niet.\n"
 
-#: src/dos/programs.cpp:1039
+#: src/dos/programs.cpp:1078
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_GET_SYNTAX"
 msgid "Usage: [color=light-green]config[reset] -get [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
 msgstr "Gebruik: [color=light-green]config[reset] -get [color=light-cyan][SECTIE][reset] [color=white]INSTELLING[reset]\n"
 
-#: src/dos/programs.cpp:1043
+#: src/dos/programs.cpp:1082
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_PRINT_STARTUP"
 msgid ""
@@ -8267,31 +8415,31 @@ msgstr ""
 "[color=white]DOSBox is gestart met de volgende opdrachtregelparameters:[reset]\n"
 "  %s\n"
 
-#: src/dos/programs.cpp:1047
+#: src/dos/programs.cpp:1086
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_MISSINGPARAM"
 msgid "Missing parameter.\n"
 msgstr "Ontbrekende parameter.\n"
 
-#: src/dos/programs.cpp:1049
+#: src/dos/programs.cpp:1088
 #, c-format, no-wrap
 msgctxt "PROGRAM_PATH_TOO_LONG"
 msgid "The path '%s' exceeds the DOS limit of %d characters.\n"
 msgstr "Het pad '%s' overschrijdt de maximale DOS lengte van %d karakters\n"
 
-#: src/dos/programs.cpp:1052
+#: src/dos/programs.cpp:1091
 #, c-format, no-wrap
 msgctxt "PROGRAM_EXECUTABLE_MISSING"
 msgid "Executable file not found: '%s'\n"
 msgstr "Uitvoerbaar bestand niet gevonden: '%s'\n"
 
-#: src/dos/programs.cpp:1054
+#: src/dos/programs.cpp:1093
 #, c-format, no-wrap
 msgctxt "CONJUNCTION_AND"
 msgid "and"
 msgstr "en"
 
-#: src/dos/programs.cpp:1056
+#: src/dos/programs.cpp:1095
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_NOT_CHANGEABLE"
 msgid ""
@@ -8303,7 +8451,7 @@ msgstr ""
 "Deze wordt echter wel toegepast bij het herstarten door 'CONFIG -r' uit\n"
 "te voeren of via de sneltoets voor herstarten.\n"
 
-#: src/dos/programs.cpp:1061
+#: src/dos/programs.cpp:1100
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_DEPRECATED_BUT_ALLOWED_WARNING"
 msgid ""
@@ -8313,25 +8461,25 @@ msgstr ""
 "[color=light-red]Deze instelling is verouderd en wordt alleen bewaard voor compatibiliteit met oude configuraties.\n"
 "Gebruik de voorgestelde alternatieven; de ondersteuning hiervoor wordt in de toekomst verwijderd.[reset]\n"
 
-#: src/dos/programs.cpp:1067
+#: src/dos/programs.cpp:1106
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_DEPRECATED_WARNING"
 msgid "[color=light-red]This setting is no longer available; please use the suggested alternatives.[reset]\n"
 msgstr "[color=light-red]Deze instelling is niet langer beschikbaar; gebruik de voorgestelde alternatieven.[reset]\n"
 
-#: src/dos/programs.cpp:1071
+#: src/dos/programs.cpp:1110
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_NO_PROPERTY"
 msgid "There is no property [color=light-green]'%s'[reset] in section [color=light-cyan][%s][reset]\n"
 msgstr "Er is geen eigenschap [color=light-green]'%s'[reset] in sectie [color=light-cyan][%s][reset]\n"
 
-#: src/dos/programs.cpp:1075
+#: src/dos/programs.cpp:1114
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_SET_SYNTAX"
 msgid "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n"
 msgstr "Gebruik: [color=light-green]config [reset]-set [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset][=][color=white]WAARDE[reset]\n"
 
-#: src/dos/programs.cpp:1079
+#: src/dos/programs.cpp:1118
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_INVALID_SETTING"
 msgid ""
@@ -8341,7 +8489,7 @@ msgstr ""
 "Ongeldige [color=light-green]'%s'[reset] instelling: [color=white]'%s'[reset];\n"
 "gebruikt [color=white]'%s'[reset]"
 
-#: src/dos/programs.cpp:1083
+#: src/dos/programs.cpp:1122
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_INVALID_SETTING_WITH_DETAILS"
 msgid ""
@@ -8351,7 +8499,7 @@ msgstr ""
 "Ongeldige [color=light-green]'%s'[reset] instelling: [color=white]'%s'[reset].\n"
 "%s; gebruikt [color=white]'%s'[reset]"
 
-#: src/dos/programs.cpp:1087
+#: src/dos/programs.cpp:1126
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_DEPRECATED_SETTING_VALUE"
 msgid ""
@@ -8361,7 +8509,7 @@ msgstr ""
 "Verouderde [color=light-green]'%s'[reset] instelling: [color=white]'%s'[reset];\n"
 "gebruik [color=white]'%s'[reset]"
 
-#: src/dos/programs.cpp:1091
+#: src/dos/programs.cpp:1130
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_INVALID_INTEGER_SETTING"
 msgid ""
@@ -8371,7 +8519,7 @@ msgstr ""
 "Ongeldige [color=light-green]'%s'[reset] instelling: [color=white]'%s'[reset];\n"
 "moet een geheel getal zijn, gebruikt [color=white]'%s'[reset]"
 
-#: src/dos/programs.cpp:1095
+#: src/dos/programs.cpp:1134
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE"
 msgid ""
@@ -8381,31 +8529,31 @@ msgstr ""
 "Ongeldige [color=light-green]'%s'[reset] instelling: [color=white]'%s'[reset];\n"
 "moet tussen %s en %s liggen, gebruik [color=white]'%s'[reset]"
 
-#: src/dos/programs.cpp:1099
+#: src/dos/programs.cpp:1138
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_NO_HELP"
 msgid "No help available for the setting [color=light-green]'%s'[reset]."
 msgstr "Er is geen hulp beschikbaar voor de instelling [color=light-green]'%s'[reset]."
 
-#: src/dos/programs.cpp:1102
+#: src/dos/programs.cpp:1141
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"
 msgid "No config section or setting exists with the name [color=light-green]'%s'[reset]\n"
 msgstr "Er bestaat geen configuratiesectie of instelling met de naam [color=light-green]'%s'[reset]\n"
 
-#: src/dos/programs.cpp:1105
+#: src/dos/programs.cpp:1144
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_DEPRECATED_SETTING"
 msgid "Deprecated setting [color=light-green]'%s'[reset]"
 msgstr "Verouderde instelling [color=light-green]'%s'[reset]"
 
-#: src/dos/programs.cpp:1108
+#: src/dos/programs.cpp:1147
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_VALID_VALUES"
 msgid "Possible values"
 msgstr "Mogelijke waarden"
 
-#: src/dos/programs.cpp:1110
+#: src/dos/programs.cpp:1149
 #, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_DEPRECATED_VALUES"
 msgid "Deprecated values"
@@ -8517,7 +8665,7 @@ msgstr ""
 "  [color=light-green]autotype[reset] -p [color=white]0.2[reset] [color=light-cyan]f1 kp_8 , , enter[reset]\n"
 "  [color=light-green]autotype[reset] -w [color=white]1.3[reset] [color=light-cyan]esc enter , p l a y e r enter[reset]\n"
 
-#: src/dos/programs/boot.cpp:533
+#: src/dos/programs/boot.cpp:534
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_HELP_LONG"
 msgid ""
@@ -8560,25 +8708,25 @@ msgstr ""
 "  [color=light-green]boot[reset] [color=white]c:[reset]\n"
 "  [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]\n"
 
-#: src/dos/programs/boot.cpp:552
+#: src/dos/programs/boot.cpp:553
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_NOT_EXIST"
 msgid "Bootdisk file does not exist. Failing.\n"
 msgstr "Bootdisk-bestand bestaat niet. Mislukt.\n"
 
-#: src/dos/programs/boot.cpp:553
+#: src/dos/programs/boot.cpp:554
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_NOT_OPEN"
 msgid "Cannot open bootdisk file. Failing.\n"
 msgstr "Kan het bootdisk-bestand niet openen. Mislukt.\n"
 
-#: src/dos/programs/boot.cpp:554
+#: src/dos/programs/boot.cpp:555
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_WRITE_PROTECTED"
 msgid "Image file is read-only! Might create problems.\n"
 msgstr "Imagebestand is alleen-lezen! Kan problemen opleveren.\n"
 
-#: src/dos/programs/boot.cpp:555
+#: src/dos/programs/boot.cpp:556
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_PRINT_ERROR"
 msgid ""
@@ -8604,49 +8752,49 @@ msgstr ""
 "\n"
 "Typ [color=light-blue]BOOT /?[reset] voor de syntaxis van deze opdracht.\n"
 
-#: src/dos/programs/boot.cpp:563
+#: src/dos/programs/boot.cpp:564
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_UNABLE"
 msgid "Unable to boot off of drive %c.\n"
 msgstr "Kan niet opstarten vanaf station %c\n"
 
-#: src/dos/programs/boot.cpp:564
+#: src/dos/programs/boot.cpp:565
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_IMAGE_OPEN"
 msgid "Opening image file: %s\n"
 msgstr "Imagebestand openen: %s\n"
 
-#: src/dos/programs/boot.cpp:565
+#: src/dos/programs/boot.cpp:566
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_IMAGE_MOUNTED"
 msgid "Floppy image(s) already mounted.\n"
 msgstr "Diskette image(s) al gekoppeld.\n"
 
-#: src/dos/programs/boot.cpp:566
+#: src/dos/programs/boot.cpp:567
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_IMAGE_NOT_OPEN"
 msgid "Cannot open %s\n"
 msgstr "Kan %s niet openen\n"
 
-#: src/dos/programs/boot.cpp:567
+#: src/dos/programs/boot.cpp:568
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_BOOT"
 msgid "Booting from drive %c...\n"
 msgstr "Opstarten vanaf schijf %c...\n"
 
-#: src/dos/programs/boot.cpp:568
+#: src/dos/programs/boot.cpp:569
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_CART_WO_PCJR"
 msgid "PCjr cartridge found, but machine is not PCjr.\n"
 msgstr "PCjr-cartridge gevonden, maar machine is geen PCjr.\n"
 
-#: src/dos/programs/boot.cpp:569
+#: src/dos/programs/boot.cpp:570
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_CART_LIST_CMDS"
 msgid "Available PCjr cartridge commands: %s\n"
 msgstr "Beschikbare PCjr cartridge opdrachten: %s\n"
 
-#: src/dos/programs/boot.cpp:570
+#: src/dos/programs/boot.cpp:571
 #, c-format, no-wrap
 msgctxt "PROGRAM_BOOT_CART_NO_CMDS"
 msgid "No PCjr cartridge commands found.\n"
@@ -8897,314 +9045,6 @@ msgid ""
 msgstr ""
 "Het is niet mogelijk om een ​​image te maken binnen een andere schijfimage.\n"
 "Het doel moet een aangekoppelde lokale map zijn."
-
-#: src/dos/programs/mount_common.cpp:59
-#, c-format, no-wrap
-msgctxt "MSCDEX_SUCCESS"
-msgid "MSCDEX installed.\n"
-msgstr "MSCDEX geïnstalleerd.\n"
-
-#: src/dos/programs/mount_common.cpp:60
-#, c-format, no-wrap
-msgctxt "MSCDEX_ERROR_MULTIPLE_CDROMS"
-msgid "MSCDEX: Failure: Drive-letters of multiple CD-ROM drives have to be continuous.\n"
-msgstr "MSCDEX: Fout: Schijfletters van meerdere cd-rom-stations moeten doorlopend zijn.\n"
-
-#: src/dos/programs/mount_common.cpp:61
-#, c-format, no-wrap
-msgctxt "MSCDEX_ERROR_NOT_SUPPORTED"
-msgid "MSCDEX: Failure: Not yet supported.\n"
-msgstr "MSCDEX: Fout: Nog niet ondersteund.\n"
-
-#: src/dos/programs/mount_common.cpp:62
-#, c-format, no-wrap
-msgctxt "MSCDEX_ERROR_PATH"
-msgid "MSCDEX: Specified location is not a CD-ROM drive.\n"
-msgstr "MSCDEX: De opgegeven locatie is geen cd-rom-station.\n"
-
-#: src/dos/programs/mount_common.cpp:63
-#, c-format, no-wrap
-msgctxt "MSCDEX_ERROR_OPEN"
-msgid "MSCDEX: Failure: Invalid file or unable to open.\n"
-msgstr "MSCDEX: Fout: Ongeldig bestand of kan niet worden geopend.\n"
-
-#: src/dos/programs/mount_common.cpp:64
-#, c-format, no-wrap
-msgctxt "MSCDEX_TOO_MANY_DRIVES"
-msgid "MSCDEX: Failure: Too many CD-ROM drives (max: 5). MSCDEX Installation failed.\n"
-msgstr "MSCDEX: Fout: Te veel cd-rom-stations (max: 5). MSCDEX Installatie mislukt.\n"
-
-#: src/dos/programs/mount_common.cpp:65
-#, c-format, no-wrap
-msgctxt "MSCDEX_LIMITED_SUPPORT"
-msgid "MSCDEX: Mounted subdirectory: limited support.\n"
-msgstr "MSCDEX: Gekoppelde submap: beperkte ondersteuning.\n"
-
-#: src/dos/programs/mount_common.cpp:66
-#, c-format, no-wrap
-msgctxt "MSCDEX_INVALID_FILEFORMAT"
-msgid "MSCDEX: Failure: File is either no ISO/CUE image or contains errors.\n"
-msgstr "MSCDEX: Mislukt: Bestand is geen ISO/CUE-image of bevat fouten.\n"
-
-#: src/dos/programs/mount_common.cpp:67
-#, c-format, no-wrap
-msgctxt "MSCDEX_UNKNOWN_ERROR"
-msgid "MSCDEX: Failure: Unknown error.\n"
-msgstr "MSCDEX: Fout: onbekende fout.\n"
-
-#: src/dos/programs/mount_common.cpp:68
-#, c-format, no-wrap
-msgctxt "MSCDEX_WARNING_NO_OPTION"
-msgid "MSCDEX: Warning: Ignoring unsupported option '%s'.\n"
-msgstr "MSCDEX: Waarschuwing: negeert niet-ondersteunde optie '%s'.\n"
-
-#: src/dos/programs/mount_common.cpp:70
-#, c-format, no-wrap
-msgctxt "PROGRAM_MOUNT_STATUS_DRIVE"
-msgid "Drive"
-msgstr "Station"
-
-#: src/dos/programs/mount_common.cpp:71
-#, c-format, no-wrap
-msgctxt "PROGRAM_MOUNT_STATUS_TYPE"
-msgid "Type"
-msgstr "Type"
-
-#: src/dos/programs/mount_common.cpp:72
-#, c-format, no-wrap
-msgctxt "PROGRAM_MOUNT_STATUS_LABEL"
-msgid "Label"
-msgstr "Label"
-
-#: src/dos/programs/mount_common.cpp:73
-#, c-format, no-wrap
-msgctxt "PROGRAM_MOUNT_STATUS_NAME"
-msgid "Image name"
-msgstr "Imagenaam"
-
-#: src/dos/programs/mount_common.cpp:74
-#, c-format, no-wrap
-msgctxt "PROGRAM_MOUNT_STATUS_SLOT"
-msgid "Swap slot"
-msgstr "Wissel slot"
-
-#: src/dos/programs/mount_common.cpp:75
-#, c-format, no-wrap
-msgctxt "PROGRAM_MOUNT_STATUS_2"
-msgid "%s mounted as %c drive\n"
-msgstr "%s gekoppeld als %c schijf\n"
-
-#: src/dos/programs/mount_common.cpp:76
-#, c-format, no-wrap
-msgctxt "PROGRAM_MOUNT_STATUS_1"
-msgid "The currently mounted drives are:\n"
-msgstr "De momenteel gekoppelde schijven zijn:\n"
-
-#: src/dos/programs/mount_common.cpp:77
-#, c-format, no-wrap
-msgctxt "PROGRAM_MOUNT_READONLY"
-msgid "Mounted read-only\n"
-msgstr "Alleen-lezen gekoppeld\n"
-
-#: src/dos/programs/imgmount.cpp:595
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_HELP_LONG"
-msgid ""
-"Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
-"\n"
-"Usage:\n"
-"  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso\n"
-"  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy -ro\n"
-"  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRY -ro\n"
-"  [color=light-green]imgmount[reset] -u [color=white]DRIVE[reset]  (unmounts the [color=white]DRIVE[reset]'s image)\n"
-"\n"
-"Parameters:\n"
-"  [color=white]DRIVE[reset]      drive letter where the image will be mounted: A, C, D, ...\n"
-"  [color=light-cyan]CDROM-SET[reset]  ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
-"  [color=light-cyan]IMAGEFILE[reset]  hard drive or floppy image in FAT16 or FAT12 format\n"
-"  [color=light-cyan]BOOTIMAGE[reset]  bootable disk image with specified -size GEOMETRY:\n"
-"             bytes-per-sector,sectors-per-head,heads,cylinders\n"
-"\n"
-"Notes:\n"
-"  - You can use wildcards to mount multiple images, e.g.:\n"
-"      [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n"
-"  - [color=yellow]%s+F4[reset] swaps & mounts the next [color=light-cyan]CDROM-SET[reset] or [color=light-cyan]BOOTIMAGE[reset], if provided.\n"
-"  - The -ro flag mounts the disk image in read-only (write-protected) mode.\n"
-"  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful\n"
-"    for CD-based games that need a real DOS environment via bootable HDD image.\n"
-"\n"
-"Examples:\n"
-msgstr ""
-"Koppel een cd-rom, diskette of schijfkopie aan een stationsletter.\n"
-"\n"
-"Gebruik:\n"
-"  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso\n"
-"  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]IMAGEBESTAND[reset] [IMAGEBESTAND2 [..]] [-fs fat] -t hdd|floppy -ro\n"
-"  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRIE -ro\n"
-"  [color=light-green]imgmount[reset] -u [color=white]SCHIJF[reset]  (Ontkoppel de [color=white]SCHIJF[reset] image)\n"
-"\n"
-"Parameters:\n"
-"  [color=white]SCHIJF[reset]      schijfletter waar de image gekoppeld wordt: a, c, d, ...\n"
-"  [color=light-cyan]CDROM-SET[reset]  ISO, CUE+BIN, CUE+ISO, of CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
-"  [color=light-cyan]IMAGEBESTAND[reset] harde schijf of diskette image in FAT16 of FAT12 formaat\n"
-"  [color=light-cyan]BOOTIMAGE[reset]    opstartbare schijfimage met opgegeven -size GEOMETRIE:\n"
-"               bytes-per-sector,sectoren-per-kop,koppen,cilinders\n"
-"\n"
-"Opmerkingen:\n"
-"  - U kunt jokers gebruiken om meerdere bestanden te koppelen, bijvoorbeeld:\n"
-"      [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n"
-"  - [color=yellow]%s+F4[reset] verwisselt de volgende [color=light-cyan]CDROM-SET[reset] of [color=light-cyan]BOOTIMAGE[reset], indien aanwezig.\n"
-"  - De vlag -ro koppelt de schijfkopie in alleen-lezen modus.\n"
-"  - De vlag -ide emuleert een IDE-controller, handig voor op cd's gebaseerde\n"
-"    spelen die een echte DOS-omgeving nodig hebben via opstartbaar HDD bestand.\n"
-"\n"
-"Voorbeelden:\n"
-
-#: src/dos/programs/imgmount.cpp:620
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_HELP_LONG_WIN32"
-msgid "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\\Games\\doom.iso[reset] -t cdrom\n"
-msgstr "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\\Games\\doom.iso[reset] -t cdrom\n"
-
-#: src/dos/programs/imgmount.cpp:622
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_HELP_LONG_MACOSX"
-msgid "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/USERNAME/Games/doom.iso[reset] -t cdrom\n"
-msgstr "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/USERNAME/Games/doom.iso[reset] -t cdrom\n"
-
-#: src/dos/programs/imgmount.cpp:624
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_HELP_LONG_OTHER"
-msgid "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom\n"
-msgstr "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom\n"
-
-#: src/dos/programs/imgmount.cpp:626
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_HELP_LONG_GENERIC"
-msgid ""
-"  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom\n"
-"  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
-"  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
-"  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
-msgstr ""
-"  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom\n"
-"  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
-"  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
-"  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
-
-#: src/dos/programs/imgmount.cpp:632
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_SPECIFY_DRIVE"
-msgid "Must specify drive letter to mount image at.\n"
-msgstr "Moet een stationsletter opgeven om de image aan te koppelen.\n"
-
-#: src/dos/programs/imgmount.cpp:635
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_SPECIFY2"
-msgid "Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb; 2,3=hda,hdb).\n"
-msgstr "Geef stationsnummer (0 of 3) op voor koppeling (0,1=fda,fdb; 2,3=hda,hdb).\n"
-
-#: src/dos/programs/imgmount.cpp:638
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"
-msgid ""
-"For CD-ROM images:\n"
-"  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -t iso\n"
-"For hard drive images, must specify drive geometry:\n"
-"  bytes-per-sector,sectors-per-head,heads,cylinders\n"
-"  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -size bps,spc,hpc,cyl\n"
-msgstr ""
-"Voor CD-ROM-images:\n"
-"  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]IMAGEBESTAND[reset] -t iso\n"
-"Voor harde schijfbestanden moet de schijfgeometrie worden opgegeven:\n"
-"  bytes-per-sector,sectors-per-head,heads,cylinders\n"
-"  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]IMAGEBESTAND[reset] -size bps,spc,hpc,cyl\n"
-
-#: src/dos/programs/imgmount.cpp:645
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_STATUS_NONE"
-msgid "No drive available.\n"
-msgstr "Geen schijf beschikbaar\n"
-
-#: src/dos/programs/imgmount.cpp:647
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE"
-msgid "No available IDE controllers. Drive will not have IDE emulation.\n"
-msgstr "Geen beschikbare IDE-controllers. Drive zal geen IDE-emulatie hebben.\n"
-
-#: src/dos/programs/imgmount.cpp:650
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_INVALID_IMAGE"
-msgid ""
-"Could not load image file.\n"
-"Check that the path is correct and the image is accessible.\n"
-msgstr ""
-"Kon imagebestand niet laden.\n"
-"Controleer of het pad correct is en de image toegankelijk is.\n"
-
-#: src/dos/programs/imgmount.cpp:654
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_INVALID_GEOMETRY"
-msgid ""
-"Could not extract drive geometry from image.\n"
-"Use parameter -size bps,spc,hpc,cyl to specify the geometry.\n"
-msgstr ""
-"Kan schijfgeometrie niet uit image halen.\n"
-"Gebruik parameter -size bps,spc,hpc,cyl om de geometrie op te geven.\n"
-
-#: src/dos/programs/imgmount.cpp:658
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED"
-msgid "Type '%s' is unsupported. Specify 'floppy', 'hdd', 'cdrom', or 'iso'.\n"
-msgstr "Typ '%s' wordt niet ondersteund. Geef 'floppy', 'hdd', 'cdrom' of 'iso' op.\n"
-
-#: src/dos/programs/imgmount.cpp:661
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED"
-msgid "Format '%s' is unsupported. Specify 'fat', 'iso', or 'none'.\n"
-msgstr "Formaat \"%s\" wordt niet ondersteund. Geef \"fat\" of \"iso\" of \"none\" op.\n"
-
-#: src/dos/programs/imgmount.cpp:664
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_SPECIFY_FILE"
-msgid "Must specify file-image to mount.\n"
-msgstr "Moet een imagebestand specificeren om te koppelen.\n"
-
-#: src/dos/programs/imgmount.cpp:667
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_FILE_NOT_FOUND"
-msgid "Image file not found.\n"
-msgstr "Imagebestand niet gevonden.\n"
-
-#: src/dos/programs/imgmount.cpp:669
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_MOUNT"
-msgid "To mount directories, use the [color=light-green]MOUNT[reset] command, not the [color=light-green]IMGMOUNT[reset] command.\n"
-msgstr "Om mappen te koppelen, gebruik de [color=light-green]MOUNT[reset]-opdracht, niet [color=light-green]IMGMOUNT[reset].\n"
-
-#: src/dos/programs/imgmount.cpp:672
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_ALREADY_MOUNTED"
-msgid "Drive already mounted at that letter.\n"
-msgstr "Schijf al gekoppeld op die letter.\n"
-
-#: src/dos/programs/imgmount.cpp:675
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_CANT_CREATE"
-msgid "Can't create drive from file.\n"
-msgstr "Kan geen schijf maken van bestand.\n"
-
-#: src/dos/programs/imgmount.cpp:676
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_MOUNT_NUMBER"
-msgid "Drive number %d mounted as %s.\n"
-msgstr "Drive nummer %d gekoppeld als %s\n"
-
-#: src/dos/programs/imgmount.cpp:678
-#, c-format, no-wrap
-msgctxt "PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"
-msgid "The image must be on a host or local drive.\n"
-msgstr "De image moet op een host- of lokale schijf staan.\n"
 
 #: src/dos/programs/intro.cpp:94
 #, c-format, no-wrap
@@ -9835,63 +9675,442 @@ msgstr ""
 "  [color=light-green]ls[reset] [color=light-cyan]bestand.txt[reset]\n"
 "  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]\n"
 
-#: src/dos/programs/mem.cpp:96
+#: src/dos/programs/mem.cpp:1246
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_HELP_LONG"
 msgid ""
-"Display the DOS memory information.\n"
+"Display the amount of used and free memory.\n"
 "\n"
 "Usage:\n"
-"  [color=light-green]mem[reset]\n"
+"  [color=light-green]mem[reset] [/p] [/c | /d | /f | /x | /e]\n"
+"  [color=light-green]mem[reset] [/p] /m [color=light-cyan]MODULE[reset]\n"
+"  [color=light-green]mem[reset] [/p] /m:[color=light-cyan]MODULE[reset]\n"
 "\n"
 "Parameters:\n"
-"  This command has no parameters.\n"
+"  /p or /page      display one page a time\n"
+"  /c or /classify  display memory usage per module\n"
+"  /d or /debug     display detailed memory usage information according to MCB\n"
+"                   (Memory Control Block) and PSP (Program Segment Prefix)\n"
+"                   structures\n"
+"  /f or /free      display free memory segments\n"
+"  /m or /module    display memory usage of the specified [color=light-cyan]MODULE[reset]\n"
+"  /x or /xms       display Extended Memory (XMS) usage\n"
+"  /e or /ems       display Expanded Memory (EMS) usage\n"
 "\n"
 "Notes:\n"
-"  This command shows the DOS memory status, including the free conventional\n"
-"  memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.\n"
+"  - If no report is selected, a brief summary is displayed.\n"
 "\n"
 "Examples:\n"
 "  [color=light-green]mem[reset]\n"
 msgstr ""
-"Geeft de DOS-geheugeninformatie weer.\n"
+"Toon de hoeveelheid gebruikt en vrij geheugen.\n"
 "\n"
 "Gebruik:\n"
-"  [color=light-green]mem[reset]\n"
+"  [color=light-green]mem[reset] [/p] [/c | /d | /f | /x | /e]\n"
+"  [color=light-green]mem[reset] [/p] /m [color=light-cyan]MODULE[reset]\n"
+"  [color=light-green]mem[reset] [/p] /m:[color=light-cyan]MODULE[reset]\n"
 "\n"
 "Parameters:\n"
-"  Deze opdracht heeft geen parameters.\n"
+"  /p of /page      toont één pagina tegelijk\n"
+"  /c of ​​/classify  toont het geheugengebruik per module\n"
+"  /d of /debug     toont gedetailleerde informatie over het geheugengebruik\n"
+"                   volgens MCB (Memory Control Block) en PSP (Program Segment\n"
+"                   Prefix) structuren\n"
+"  /f of /free      toont vrije geheugensegmenten\n"
+"  /m of /module    toont het geheugengebruik van de opgegeven [color=light-cyan]MODULE[reset]\n"
+"  /x of /xms       toont het gebruik van Extended Memory (XMS)\n"
+"  /e of /ems       toont het gebruik van Expanded Memory (EMS)\n"
 "\n"
 "Opmerkingen:\n"
-"  Toont de status van het DOS-geheugen, inclusief vrij conventioneel geheugen,\n"
-"  UMB (bovenste) geheugen, XMS (extended) geheugen en EMS (expanded) geheugen.\n"
+"  - Als er geen rapport is geselecteerd, wordt een korte samenvatting\n"
+"    weergegeven.\n"
 "\n"
 "Voorbeelden:\n"
 "  [color=light-green]mem[reset]\n"
 
-#: src/dos/programs/mem.cpp:111
+#: src/dos/programs/mem.cpp:1273
 #, c-format, no-wrap
-msgctxt "PROGRAM_MEM_CONVEN"
-msgid "%10d KB free conventional memory\n"
-msgstr "%10d kB vrij conventioneel geheugen\n"
+msgctxt "PROGRAM_MEM_SUMMARY_TABLE_HEADER"
+msgid "[color=white]Memory Type           Total        Used         Free[reset]"
+msgstr "[color=white]Geheugen Type          Totaal     Gebruikt         Vrij[reset]"
 
-#: src/dos/programs/mem.cpp:112
+#: src/dos/programs/mem.cpp:1275
 #, c-format, no-wrap
-msgctxt "PROGRAM_MEM_EXTEND"
-msgid "%10d KB free extended memory\n"
-msgstr "%10d kB vrij extended XMS geheugen\n"
+msgctxt "PROGRAM_MEM_SUMMARY_TABLE_HORIZONTAL_LINE"
+msgid "----------------   ----------   ----------   ----------"
+msgstr "----------------   ----------   ----------   ----------"
 
-#: src/dos/programs/mem.cpp:113
+#: src/dos/programs/mem.cpp:1277
 #, c-format, no-wrap
-msgctxt "PROGRAM_MEM_EXPAND"
-msgid "%10d KB free expanded memory\n"
-msgstr "%10d kB vrij expanded EMS geheugen\n"
+msgctxt "PROGRAM_MEM_SUMMARY_TABLE_ROW_FORMAT"
+msgid "[color=light-cyan]%-16s[reset]   %10s   %10s   %10s"
+msgstr "[color=light-cyan]%-16s[reset]   %10s   %10s   %10s"
 
-#: src/dos/programs/mem.cpp:114
+#: src/dos/programs/mem.cpp:1280
 #, c-format, no-wrap
-msgctxt "PROGRAM_MEM_UPPER"
-msgid "%10d KB free upper memory in %d blocks (largest UMB %d KB)\n"
-msgstr "%10d kB vrij bovenste geheugen %d blok(ken) (grootste UMB %d kB)\n"
+msgctxt "PROGRAM_MEM_TYPE_CONVENTIONAL"
+msgid "Conventional"
+msgstr "Conventioneel"
+
+#: src/dos/programs/mem.cpp:1281
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_TYPE_UMB"
+msgid "Upper (UMB)"
+msgstr "Upper (UMB)"
+
+#: src/dos/programs/mem.cpp:1282
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_TYPE_HMA"
+msgid "High (HMA)"
+msgstr "High (HMA)"
+
+#: src/dos/programs/mem.cpp:1283
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_TYPE_XMS"
+msgid "Extended (XMS)"
+msgstr "Extended (XMS)"
+
+#: src/dos/programs/mem.cpp:1284
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_TYPE_EMS"
+msgid "Expanded (EMS)"
+msgstr "Expanded (EMS)"
+
+#: src/dos/programs/mem.cpp:1285
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_TYPE_UNDER_1MB"
+msgid "Total under 1 MB"
+msgstr "Totaal onder 1MB"
+
+#: src/dos/programs/mem.cpp:1287
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_LABEL_LARGEST"
+msgid "Largest free Conventional Memory block"
+msgstr "Grootste vrije conventionele geheugenblok"
+
+#: src/dos/programs/mem.cpp:1289
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_LABEL_LARGEST_UMB"
+msgid "Largest free Upper Memory (UMB) block"
+msgstr "Grootste vrije Upper Memory (UMB)-blok"
+
+#: src/dos/programs/mem.cpp:1292
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_BYTES"
+msgid "bytes"
+msgstr "bytes"
+
+#: src/dos/programs/mem.cpp:1296
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_CLASSIFY_TITLE"
+msgid "Modules using memory below 1 MB:"
+msgstr "Modules die geheugen onder 1 MB gebruiken:"
+
+#: src/dos/programs/mem.cpp:1297
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_CLASSIFY_TABLE_HEADER"
+msgid "[color=white]Name        PSP         Total      =   Conventional  +   Upper (UMB)[reset]"
+msgstr "[color=white]Naam        PSP         Totaal     =   Conventioneel +   Upper (UMB)[reset]"
+
+#: src/dos/programs/mem.cpp:1299
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_CLASSIFY_TABLE_HORIZONTAL_LINE"
+msgid "--------   -----   ---------------   ---------------   ---------------"
+msgstr "--------   -----   ---------------   ---------------   ---------------"
+
+#: src/dos/programs/mem.cpp:1301
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_CLASSIFY_TABLE_ROW_FORMAT"
+msgid "%-8s%c  %04Xh   %15s   %s   %15s"
+msgstr "%-8s%c  %04Xh   %15s   %s   %15s"
+
+#: src/dos/programs/mem.cpp:1304
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_CLASSIFY_FREE"
+msgid "free"
+msgstr "vrij"
+
+#: src/dos/programs/mem.cpp:1308
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_DEBUG_TITLE_CONVENTIONAL"
+msgid "Conventional Memory MCB chain:"
+msgstr "Conventionele geheugen-MCB-keten:"
+
+#: src/dos/programs/mem.cpp:1310
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_DEBUG_TITLE_UPPER"
+msgid "Upper Memory MCB chain #%u:"
+msgstr "Bovenste geheugen MCB-keten #%u:"
+
+#: src/dos/programs/mem.cpp:1313
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_DEBUG_TABLE_HEADER"
+msgid "[color=white]Segment        Size        Name       PSP   Type[reset]"
+msgstr "[color=white]Segment           Grootte  Naam      PSP    Type[reset]"
+
+#: src/dos/programs/mem.cpp:1315
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_DEBUG_TABLE_HORIZONTAL_LINE"
+msgid "-------   ---------------  --------  -----  -------------"
+msgstr "-------   ---------------  --------  -----  -------------"
+
+#: src/dos/programs/mem.cpp:1317
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_DEBUG_TABLE_ROW_FORMAT"
+msgid " %04Xh %c  %15s  %-8s  %04Xh  %s"
+msgstr " %04Xh %c  %15s  %-8s  %04Xh  %s"
+
+#: src/dos/programs/mem.cpp:1322
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_FREE_TITLE_CONVENTIONAL"
+msgid "Free segments in Conventional Memory:"
+msgstr "Vrije segmenten in het conventionele geheugen:"
+
+#: src/dos/programs/mem.cpp:1324
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_FREE_TITLE_UPPER"
+msgid "Free segments in Upper Memory (UMB):"
+msgstr "Vrije segmenten in het bovenste geheugen (UMB):"
+
+#: src/dos/programs/mem.cpp:1327
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_FREE_TABLE_HEADER"
+msgid "[color=white]Segment         Size[reset]"
+msgstr "[color=white]Segment         Grootte[reset]"
+
+#: src/dos/programs/mem.cpp:1329
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_FREE_TABLE_HORIZONTAL_LINE"
+msgid "-------   ---------------"
+msgstr "-------   ---------------"
+
+#: src/dos/programs/mem.cpp:1331
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_FREE_TABLE_ROW_FORMAT"
+msgid " %04Xh %c  %15s"
+msgstr " %04Xh %c  %15s"
+
+#: src/dos/programs/mem.cpp:1333
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_FREE_TABLE_UNDERLINE"
+msgid "          ---------------"
+msgstr "          ---------------"
+
+#: src/dos/programs/mem.cpp:1335
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_FREE_TABLE_SUMMARY"
+msgid "Total:    %s"
+msgstr "Totaal:   %s"
+
+#: src/dos/programs/mem.cpp:1340
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MODULE_TITLE"
+msgid "Module '%s' (PSP segment %04Xh) uses the following memory:"
+msgstr "Module '%s' (PSP-segment %04Xh) gebruikt het volgende geheugen:"
+
+#: src/dos/programs/mem.cpp:1343
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MODULE_TABLE_HEADER"
+msgid "[color=white]Segment         Size        Type[reset]"
+msgstr "[color=white]Segment         Grootte     Type[reset]"
+
+#: src/dos/programs/mem.cpp:1345
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MODULE_TABLE_HORIZONTAL_LINE"
+msgid "-------   ---------------   -------------"
+msgstr "-------   ---------------   -------------"
+
+#: src/dos/programs/mem.cpp:1347
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MODULE_TABLE_ROW_FORMAT"
+msgid " %04Xh    %s   %s"
+msgstr " %04Xh    %s   %s"
+
+#: src/dos/programs/mem.cpp:1349
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MODULE_TABLE_UNDERLINE"
+msgid "          ---------------"
+msgstr "          ---------------"
+
+#: src/dos/programs/mem.cpp:1351
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MODULE_TABLE_SUMMARY"
+msgid "Total:    %s"
+msgstr "Totaal:   %s"
+
+#: src/dos/programs/mem.cpp:1356
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MCB_TYPE_FREE"
+msgid "(free)"
+msgstr "(vrij)"
+
+#: src/dos/programs/mem.cpp:1357
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MCB_TYPE_SYSTEM"
+msgid "System data"
+msgstr "Systeem data"
+
+#: src/dos/programs/mem.cpp:1358
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MCB_TYPE_RESERVED"
+msgid "Reserved area"
+msgstr "Gereserveerd gebied"
+
+#: src/dos/programs/mem.cpp:1359
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MCB_TYPE_PROGRAM"
+msgid "Program"
+msgstr "Programma"
+
+#: src/dos/programs/mem.cpp:1360
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MCB_TYPE_ENVIRONMENT"
+msgid "Environment"
+msgstr "Omgeving"
+
+#: src/dos/programs/mem.cpp:1361
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_MCB_TYPE_DATA"
+msgid "Data"
+msgstr "Data"
+
+#: src/dos/programs/mem.cpp:1363
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_XMS_TITLE"
+msgid "Detailed Extended Memory (XMS) information:"
+msgstr "Gedetailleerde informatie over het extended geheugen (XMS):"
+
+#: src/dos/programs/mem.cpp:1366
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_XMS_LABEL_VERSION"
+msgid "XMS version"
+msgstr "XMS-versie"
+
+#: src/dos/programs/mem.cpp:1367
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_XMS_LABEL_DRIVER"
+msgid "Driver revision"
+msgstr "Stuurprogramma-revisie"
+
+#: src/dos/programs/mem.cpp:1368
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_XMS_LABEL_HMA"
+msgid "High Memory (HMA)"
+msgstr "Hoog geheugen (HMA)"
+
+#: src/dos/programs/mem.cpp:1369
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_XMS_LABEL_TOTAL"
+msgid "Total XMS memory"
+msgstr "Totaal XMS-geheugen"
+
+#: src/dos/programs/mem.cpp:1370
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_XMS_LABEL_FREE"
+msgid "Free XMS memory"
+msgstr "Vrij XMS-geheugen"
+
+#: src/dos/programs/mem.cpp:1371
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_XMS_LABEL_LARGEST"
+msgid "Largest free XMS block"
+msgstr "Grootste vrije XMS-blok"
+
+#: src/dos/programs/mem.cpp:1373
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_XMS_HMA_FREE"
+msgid "free"
+msgstr "vrij"
+
+#: src/dos/programs/mem.cpp:1374
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_XMS_HMA_NOT_AVAILABLE"
+msgid "not available"
+msgstr "niet beschikbaar"
+
+#: src/dos/programs/mem.cpp:1378
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_EMS_TITLE"
+msgid "Detailed Expanded Memory (EMS) information:"
+msgstr "Gedetailleerde informatie over Expanded Memory (EMS):"
+
+#: src/dos/programs/mem.cpp:1381
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_EMS_TABLE_HEADER"
+msgid "[color=white]Handle   Name         Pages         Size[reset]"
+msgstr "[color=white]Handle   Naam       Paginas      Grootte[reset]"
+
+#: src/dos/programs/mem.cpp:1383
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_EMS_TABLE_HORIZONTAL_LINE"
+msgid "------   --------   -------   ----------"
+msgstr "------   --------   -------   ----------"
+
+#: src/dos/programs/mem.cpp:1385
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_EMS_TABLE_ROW_FORMAT"
+msgid "   %3d   %-8s   %7s   %10s"
+msgstr "   %3d   %-8s   %7s   %10s"
+
+#: src/dos/programs/mem.cpp:1388
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_EMS_LABEL_VERSION"
+msgid "EMS version"
+msgstr "EMS-versie"
+
+#: src/dos/programs/mem.cpp:1389
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_EMS_LABEL_SEGMENT"
+msgid "Frame segment"
+msgstr "Frame segment"
+
+#: src/dos/programs/mem.cpp:1390
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_EMS_LABEL_HANDLES_TOTAL"
+msgid "Total handles"
+msgstr "Aantal handles"
+
+#: src/dos/programs/mem.cpp:1391
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_EMS_LABEL_HANDLES_FREE"
+msgid "Free handles"
+msgstr "Vrije handles"
+
+#: src/dos/programs/mem.cpp:1392
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_EMS_LABEL_TOTAL"
+msgid "Total EMS memory"
+msgstr "Totaal EMS-geheugen"
+
+#: src/dos/programs/mem.cpp:1393
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_EMS_LABEL_FREE"
+msgid "Free EMS memory"
+msgstr "Vrij EMS-geheugen"
+
+#: src/dos/programs/mem.cpp:1397
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_ASTERISK"
+msgid "* - the currently running MEM command"
+msgstr "* - het momenteel actieve MEM-commando"
+
+#: src/dos/programs/mem.cpp:1401
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_ERROR_NO_MODULE"
+msgid "No module '%s' in memory.\n"
+msgstr "Module '%s' niet gevonden in het geheugen.\n"
+
+#: src/dos/programs/mem.cpp:1402
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_ERROR_NO_XMS"
+msgid "No Extended Memory (XMS) found.\n"
+msgstr "Geen Extended geheugen (XMS) gevonden.\n"
+
+#: src/dos/programs/mem.cpp:1403
+#, c-format, no-wrap
+msgctxt "PROGRAM_MEM_ERROR_NO_EMS"
+msgid "No Expanded Memory (EMS) found.\n"
+msgstr "Geen Expanded geheugen (EMS) gevonden.\n"
 
 #: src/dos/programs/mixer.cpp:790
 #, c-format, no-wrap
@@ -10417,164 +10636,364 @@ msgctxt "PROGRAM_MORE_HOW_MANY_LINES"
 msgid "[reset][color=brown]how many lines?[reset]"
 msgstr "[reset][color=brown]hoeveel regels?[reset]"
 
-#: src/dos/programs/mount.cpp:410
+#: src/dos/programs/mount_common.cpp:59
+#, c-format, no-wrap
+msgctxt "MSCDEX_SUCCESS"
+msgid "MSCDEX installed.\n"
+msgstr "MSCDEX geïnstalleerd.\n"
+
+#: src/dos/programs/mount_common.cpp:60
+#, c-format, no-wrap
+msgctxt "MSCDEX_ERROR_MULTIPLE_CDROMS"
+msgid "MSCDEX: Failure: Drive-letters of multiple CD-ROM drives have to be continuous.\n"
+msgstr "MSCDEX: Fout: Schijfletters van meerdere cd-rom-stations moeten doorlopend zijn.\n"
+
+#: src/dos/programs/mount_common.cpp:61
+#, c-format, no-wrap
+msgctxt "MSCDEX_ERROR_NOT_SUPPORTED"
+msgid "MSCDEX: Failure: Not yet supported.\n"
+msgstr "MSCDEX: Fout: Nog niet ondersteund.\n"
+
+#: src/dos/programs/mount_common.cpp:62
+#, c-format, no-wrap
+msgctxt "MSCDEX_ERROR_PATH"
+msgid "MSCDEX: Specified location is not a CD-ROM drive.\n"
+msgstr "MSCDEX: De opgegeven locatie is geen cd-rom-station.\n"
+
+#: src/dos/programs/mount_common.cpp:63
+#, c-format, no-wrap
+msgctxt "MSCDEX_ERROR_OPEN"
+msgid "MSCDEX: Failure: Invalid file or unable to open.\n"
+msgstr "MSCDEX: Fout: Ongeldig bestand of kan niet worden geopend.\n"
+
+#: src/dos/programs/mount_common.cpp:64
+#, c-format, no-wrap
+msgctxt "MSCDEX_TOO_MANY_DRIVES"
+msgid "MSCDEX: Failure: Too many CD-ROM drives (max: 5). MSCDEX Installation failed.\n"
+msgstr "MSCDEX: Fout: Te veel cd-rom-stations (max: 5). MSCDEX Installatie mislukt.\n"
+
+#: src/dos/programs/mount_common.cpp:65
+#, c-format, no-wrap
+msgctxt "MSCDEX_LIMITED_SUPPORT"
+msgid "MSCDEX: Mounted subdirectory: limited support.\n"
+msgstr "MSCDEX: Gekoppelde submap: beperkte ondersteuning.\n"
+
+#: src/dos/programs/mount_common.cpp:66
+#, c-format, no-wrap
+msgctxt "MSCDEX_INVALID_FILEFORMAT"
+msgid "MSCDEX: Failure: File is either no ISO/CUE image or contains errors.\n"
+msgstr "MSCDEX: Mislukt: Bestand is geen ISO/CUE-image of bevat fouten.\n"
+
+#: src/dos/programs/mount_common.cpp:67
+#, c-format, no-wrap
+msgctxt "MSCDEX_UNKNOWN_ERROR"
+msgid "MSCDEX: Failure: Unknown error.\n"
+msgstr "MSCDEX: Fout: onbekende fout.\n"
+
+#: src/dos/programs/mount_common.cpp:68
+#, c-format, no-wrap
+msgctxt "MSCDEX_WARNING_NO_OPTION"
+msgid "MSCDEX: Warning: Ignoring unsupported option '%s'.\n"
+msgstr "MSCDEX: Waarschuwing: negeert niet-ondersteunde optie '%s'.\n"
+
+#: src/dos/programs/mount_common.cpp:70
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_STATUS_DRIVE"
+msgid "Drive"
+msgstr "Station"
+
+#: src/dos/programs/mount_common.cpp:71
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_STATUS_TYPE"
+msgid "Type"
+msgstr "Type"
+
+#: src/dos/programs/mount_common.cpp:72
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_STATUS_LABEL"
+msgid "Label"
+msgstr "Label"
+
+#: src/dos/programs/mount_common.cpp:73
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_STATUS_NAME"
+msgid "Image name"
+msgstr "Imagenaam"
+
+#: src/dos/programs/mount_common.cpp:74
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_STATUS_SLOT"
+msgid "Swap slot"
+msgstr "Wissel slot"
+
+#: src/dos/programs/mount_common.cpp:75
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_STATUS_2"
+msgid "%s mounted as %c drive\n"
+msgstr "%s gekoppeld als %c schijf\n"
+
+#: src/dos/programs/mount_common.cpp:76
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_STATUS_1"
+msgid "The currently mounted drives are:\n"
+msgstr "De momenteel gekoppelde schijven zijn:\n"
+
+#: src/dos/programs/mount_common.cpp:77
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_READONLY"
+msgid "Mounted read-only\n"
+msgstr "Alleen-lezen gekoppeld\n"
+
+#: src/dos/programs/mount.cpp:1063
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP"
-msgid "Map physical folders or drives to a virtual drive letter.\n"
-msgstr "Wijs fysieke mappen of stations toe aan een virtuele stationsletter\n"
+msgid "Mount a directory or an image file to a drive letter.\n"
+msgstr "Een map of imagebestand koppelen aan een stationsletter.\n"
 
-#: src/dos/programs/mount.cpp:413
+#: src/dos/programs/mount.cpp:1066
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG"
 msgid ""
-"Mount a directory from the host OS to a drive letter.\n"
+"Mount a directory or an image file to a drive letter.\n"
 "\n"
 "Usage:\n"
-"  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]DIRECTORY[reset] [-t TYPE] [-ro] [-freesize SIZE] [-label LABEL]\n"
-"  [color=light-green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE's directory)\n"
+"  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]PATH[reset] [PARAMETERS]\n"
+"  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] [IMAGEFILE2...] [PARAMETERS]\n"
+"  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGE-SET[reset] [PARAMETERS]\n"
+"  [color=light-green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts [color=white]DRIVE[reset])\n"
 "\n"
-"Parameters:\n"
-"  [color=white]DRIVE[reset]      drive letter where the directory will be mounted: A, C, D, ...\n"
-"  [color=light-cyan]DIRECTORY[reset]  directory on the host OS to mount\n"
-"  TYPE       type of the directory to mount: dir, floppy, cdrom, or overlay\n"
-"  SIZE       free space for the virtual drive (KB for floppies, MB otherwise)\n"
-"  LABEL      drive label name to use\n"
+"Common parameters:\n"
+"  [color=white]DRIVE[reset]           drive letter (A-Z) to mount to\n"
+"  [color=light-cyan]PATH[reset]            directory on the host OS (absolute or relative path)\n"
+"  [color=light-cyan]IMAGEFILE[reset]       image file on the host OS (absolute or relative path) or on a\n"
+"                  mounted DOS drive (e.g. C:\\GAME.ISO)\n"
+"  [color=light-cyan]IMAGE-SET[reset]       ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
+"\n"
+"  -t [color=white]TYPE[reset]         type of mount: [color=light-cyan]dir[reset], [color=light-cyan]overlay[reset], [color=light-cyan]floppy[reset], [color=light-cyan]hdd[reset], [color=light-cyan]iso[reset] (or [color=light-cyan]cdrom[reset])\n"
+"  -fs [color=white]FS[reset]          filesystem: [color=light-cyan]fat[reset], [color=light-cyan]iso[reset], or [color=light-cyan]none[reset] (for bootable images)\n"
+"  -label [color=white]LABEL[reset]    volume label to assign to the mounted drive\n"
+"  -ro             mount as read-only\n"
+"\n"
+"Directory mount parameters:\n"
+"  -freesize [color=white]SIZE[reset]  size (in KB for floppies, in MB for hard disks); sets the\n"
+"                  amount of free space available on the drive (~250 MB by\n"
+"                  default for HDD directory mounts)\n"
+"  -t [color=light-cyan]overlay[reset]      mounts the directory as an overlay on top of an existing drive\n"
+"\n"
+"Image parameters:\n"
+"  -chs [color=white]C,H,S[reset]      specify geometry ([color=white]C[reset]ylinders,[color=white]H[reset]eads,[color=white]S[reset]ectors) for HDD images\n"
+"  -size [color=white]B,S,H,C[reset]   specify geometry ([color=white]B[reset]ytesPerSector,[color=white]S[reset]ectors,[color=white]H[reset]eads,[color=white]C[reset]ylinders);\n"
+"                  alternative to -chs for HDD images\n"
+"  -ide            attach as IDE device (for CD-ROM and HDD images)\n"
+"  -pr             path is relative to the configuration file location\n"
 "\n"
 "Notes:\n"
-"  - '-t overlay' redirects writes for mounted drive to another directory.\n"
-"  - '-ro' mounts the drive as read-only.\n"
+"  - Use wildcards or multiple image files to mount them at the same drive\n"
+"    letter, then press [color=yellow]%s+F4[reset] to cycle between them. This is useful for\n"
+"    programs that require swapping disks while running.\n"
+"\n"
+"  - The -ide flag emulates an IDE controller for an attached HDD or CD drive\n"
+"    for CD-based games that need a real DOS environment via a bootable HDD\n"
+"    image.\n"
+"\n"
+"  - Type [color=light-cyan]overlay[reset] requires [color=white]DRIVE[reset] to be already mounted. It mounts [color=light-cyan]PATH[reset] on the\n"
+"    host OS as a write-layer over the drive. Modified files are stored in [color=light-cyan]PATH[reset],\n"
+"    leaving the original drive data unchanged.\n"
 "\n"
 "Examples:\n"
 msgstr ""
-"Koppel een map van het host-besturingssysteem aan een stationsletter.\n"
+"Een map of afbeeldingsbestand koppelen aan een stationsletter.\n"
 "\n"
 "Gebruik:\n"
-"  [color=light-green]mount[reset] [color=white]SCHIJF[reset] [color=light-cyan]MAP[reset] [-t TYPE] [-usecd #] [-freesize GROOTTE] [-label LABEL]\n"
-"  [color=light-green]mount[reset] -u [color=white]SCHIJF[reset]  (ontkoppelt de map van de SCHIJF)\n"
+"  [color=light-green]mount[reset] [color=white]SCHIJF[reset] [color=light-cyan]PAD[reset] [PARAMETERS]\n"
+"  [color=light-green]mount[reset] [color=white]SCHIJF[reset] [color=light-cyan]IMAGEBESTAND[reset] [IMAGEBESTAND2...] [PARAMETERS]\n"
+"  [color=light-green]mount[reset] [color=white]SCHIJF[reset] [color=light-cyan]IMAGE-SET[reset] [PARAMETERS]\n"
+"  [color=light-green]mount[reset] -u [color=white]DRIVE[reset] (ontkoppelt [color=white]DRIVE[reset])\n"
 "\n"
-"Parameters:\n"
-"  [color=white]SCHIJF[reset]   de stationsletter waar de map wordt aangekoppeld: A, C, D, ...\n"
-"  [color=light-cyan]MAP[reset]      is de map op het host-besturingssysteem dat moet worden gekoppeld\n"
-"  TYPE     type van de te koppelen map: dir, floppy, cdrom of overlay\n"
-"  GROOTTE  vrije ruimte voor de virtuele schijf (KB voor diskettes, MB anders)\n"
-"  LABEL    schijflabelnaam die moet worden gebruikt\n"
+"Algemene parameters:\n"
+"  [color=white]SCHIJF[reset]             stationsletter (A-Z) om aan te koppelen\n"
+"  [color=light-cyan]PAD[reset]                map op het hostbesturingssysteem (absoluut of relatief pad)\n"
+"  [color=light-cyan]IMAGEBESTAND[reset]       imagebestand op het hostbesturingssysteem (absoluut of\n"
+"                     relatief pad) of op een gekoppelde DOS-schijf\n"
+"                     (bijv. C:\\GAME.ISO)\n"
+"  [color=light-cyan]IMAGE-SET[reset]          ISO, CUE+BIN, CUE+ISO of CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
+"\n"
+"  -t [color=white]TYPE[reset]            type koppeling: [color=light-cyan]dir[reset], [color=light-cyan]overlay[reset], [color=light-cyan]floppy[reset], [color=light-cyan]hdd[reset], [color=light-cyan]iso[reset] (of [color=light-cyan]cdrom[reset])\n"
+"  -fs [color=white]FS[reset]             bestandssysteem: [color=light-cyan]fat[reset], [color=light-cyan]iso[reset] of [color=light-cyan]none[reset] (voor opstartbare images)\n"
+"  -label [color=white]LABEL[reset]       volumelabel dat aan het aangekoppelde station moet worden\n"
+"                     toegewezen\n"
+"  -ro                aankoppelen als alleen-lezen\n"
+"\n"
+"Parameters voor het aankoppelen van een directory:\n"
+"  -freesize [color=white]grootte[reset]  grootte (in KB voor diskettes, in MB voor harde schijven);\n"
+"                     Stelt de hoeveelheid beschikbare vrije ruimte op de schijf\n"
+"                     in (standaard ~250 MB voor HDD-directory-mounts)\n"
+"  -t [color=light-cyan]overlay[reset]         koppelt de directory als een overlay bovenop een bestaande\n"
+"                     schijf\n"
+"\n"
+"Parameters voor het aankoppelen van een image bestand:\n"
+"  -chs [color=white]C,H,S[reset]         specificeer de geometrie ([color=white]C[reset]ilinders,[color=white]H[reset]oofden,[color=white]S[reset]ectoren) voor\n"
+"                     HDD-images\n"
+"  -size [color=white]B,S,H,C[reset]      specificeer de geometrie ([color=white]B[reset]ytesPerSector,[color=white]S[reset]ectoren,[color=white]H[reset]oofden,\n"
+"                     [color=white]C[reset]ilinders); Alternatief voor -chs voor HDD-images\n"
+"  -ide               koppelen als IDE-apparaat (voor CD-ROM- en HDD-images)\n"
+"  -pr                pad is relatief ten opzichte van de locatie van het\n"
+"                     configuratiebestand\n"
 "\n"
 "Opmerkingen:\n"
-"  - '-t overlay' stuurt schrijfbewerkingen voor schijf om naar een andere map.\n"
-"  - '-ro' koppelt de schijf als alleen-lezen.\n"
-"  - Extra opties zijn beschreven in de handleiding (README-bestand, hfst. 4).\n"
+"- Gebruik wildcards of meerdere imagebestanden om ze aan dezelfde stationsletter\n"
+"  te koppelen en druk vervolgens op [color=yellow]%s+F4[reset] om ertussen te schakelen. Dit is\n"
+"  handig voor programma's die schijven moeten wisselen tijdens het draaien.\n"
+"\n"
+"- De vlag -ide emuleert een IDE-controller voor een aangesloten HDD of\n"
+"  CD-station voor CD-gebaseerde games die een echte DOS-omgeving nodig hebben\n"
+"  via een opstartbare HDD-image.\n"
+"\n"
+"- Typ [color=light-cyan]overlay[reset] vereist dat [color=white]DRIVE[reset] al gekoppeld is. Het koppelt [color=light-cyan]PATH[reset] op het\n"
+"  hostbesturingssysteem als een schrijflaag over de schijf. Gewijzigde bestanden\n"
+"  worden opgeslagen in [color=light-cyan]PATH[reset], waardoor de originele schijfgegevens ongewijzigd\n"
+"  blijven.\n"
 "\n"
 "Voorbeelden:\n"
 
-#: src/dos/programs/mount.cpp:432
+#: src/dos/programs/mount.cpp:1115
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_WIN32"
 msgid ""
 "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\\dosgames[reset]\n"
-"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\ [reset]-t cdrom\n"
-"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\\dosgamesoverlay[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\Games\\doom.iso[reset] -t iso\n"
+"  [color=light-green]mount[reset] [color=white]2[reset] [color=light-cyan]Win95.img[reset] -t hdd -fs none -chs 304,64,63\n"
+"  [color=light-green]mount[reset] [color=white]0[reset] [color=light-cyan]floppy.img[reset] -t floppy -fs none\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 msgstr ""
 "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\\dosgames[reset]\n"
-"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\ [reset]-t cdrom\n"
-"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\\dosgamesoverlay[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\Games\\doom.iso[reset] -t iso\n"
+"  [color=light-green]mount[reset] [color=white]2[reset] [color=light-cyan]Win95.img[reset] -t hdd -fs none -chs 304,64,63\n"
+"  [color=light-green]mount[reset] [color=white]0[reset] [color=light-cyan]floppy.img[reset] -t floppy -fs none\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:436
+#: src/dos/programs/mount.cpp:1124
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_MACOSX"
 msgid ""
+"  (~ is expanded to your home directory)\n"
 "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
-"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/Volumes/Game CD\"[reset] -t cdrom\n"
-"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgamesoverlay[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]~/Games/doom.iso[reset] -t iso\n"
+"  [color=light-green]mount[reset] [color=white]2[reset] [color=light-cyan]Win95.img[reset] -t hdd -fs none -chs 304,64,63\n"
+"  [color=light-green]mount[reset] [color=white]0[reset] [color=light-cyan]floppy.img[reset] -t floppy -fs none\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 msgstr ""
+"  (~ is expanded to your home directory)\n"
 "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
-"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/Volumes/Game CD\"[reset] -t cdrom\n"
-"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgamesoverlay[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]~/Games/doom.iso[reset] -t iso\n"
+"  [color=light-green]mount[reset] [color=white]2[reset] [color=light-cyan]Win95.img[reset] -t hdd -fs none -chs 304,64,63\n"
+"  [color=light-green]mount[reset] [color=white]0[reset] [color=light-cyan]floppy.img[reset] -t floppy -fs none\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:440
+#: src/dos/programs/mount.cpp:1134
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_OTHER"
 msgid ""
+"  (~ is expanded to your home directory)\n"
 "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
-"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom\n"
-"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgamesoverlay[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]~/Games/doom.iso[reset] -t iso\n"
+"  [color=light-green]mount[reset] [color=white]2[reset] [color=light-cyan]Win95.img[reset] -t hdd -fs none -chs 304,64,63\n"
+"  [color=light-green]mount[reset] [color=white]0[reset] [color=light-cyan]floppy.img[reset] -t floppy -fs none\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 msgstr ""
+"  (~ is expanded to your home directory)\n"
 "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
-"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom\n"
-"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgamesoverlay[reset] -t overlay\n"
+"  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]~/Games/doom.iso[reset] -t iso\n"
+"  [color=light-green]mount[reset] [color=white]2[reset] [color=light-cyan]Win95.img[reset] -t hdd -fs none -chs 304,64,63\n"
+"  [color=light-green]mount[reset] [color=white]0[reset] [color=light-cyan]floppy.img[reset] -t floppy -fs none\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
+"  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
+"\n"
 
-#: src/dos/programs/mount.cpp:445
+#: src/dos/programs/mount.cpp:1144
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_CDROMS_FOUND"
 msgid "CD-ROMs found: %d\n"
 msgstr "CD-ROM's gevonden: %d\n"
 
-#: src/dos/programs/mount.cpp:446
+#: src/dos/programs/mount.cpp:1145
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ERROR_1"
-msgid "Directory %s doesn't exist.\n"
-msgstr "Map %s bestaat niet.\n"
+msgid "Directory or file %s doesn't exist.\n"
+msgstr "Map %s of bestand bestaat niet.\n"
 
-#: src/dos/programs/mount.cpp:447
+#: src/dos/programs/mount.cpp:1147
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ERROR_2"
-msgid "%s isn't a directory.\n"
-msgstr "%s is geen map\n"
+msgid "%s isn't a directory or valid image file.\n"
+msgstr "%s is geen map of geldig image bestand.\n"
 
-#: src/dos/programs/mount.cpp:448
+#: src/dos/programs/mount.cpp:1150
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ILL_TYPE"
 msgid "Illegal type %s\n"
 msgstr "Illegaal type %s\n"
 
-#: src/dos/programs/mount.cpp:449
+#: src/dos/programs/mount.cpp:1151
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ALREADY_MOUNTED"
 msgid "Drive %c already mounted with %s\n"
 msgstr "Schijf %c al gekoppeld met %s\n"
 
-#: src/dos/programs/mount.cpp:450
+#: src/dos/programs/mount.cpp:1152
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"
 msgid "Drive %c isn't mounted.\n"
 msgstr "Schijf %c is niet aangekoppeld.\n"
 
-#: src/dos/programs/mount.cpp:451
+#: src/dos/programs/mount.cpp:1154
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_SUCCESS"
 msgid "Drive %c has successfully been removed.\n"
 msgstr "Schijf %c is succesvol verwijderd.\n"
 
-#: src/dos/programs/mount.cpp:452
+#: src/dos/programs/mount.cpp:1157
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"
 msgid "Virtual Drives can not be unMOUNTed.\n"
 msgstr "Virtuele schijven kunnen niet worden losgekoppeld.\n"
 
-#: src/dos/programs/mount.cpp:453
+#: src/dos/programs/mount.cpp:1160
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_DRIVEID_ERROR"
 msgid "'%c' is not a valid drive identifier.\n"
 msgstr "'%c' is geen geldige schijf-ID.\n"
 
-#: src/dos/programs/mount.cpp:454
+#: src/dos/programs/mount.cpp:1163
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_WARNING_WIN"
 msgid "[color=light-red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n"
 msgstr "[color=light-red]Koppelen van c:\\ is NIET aanbevolen. Koppel de volgende keer een (sub)map.[reset]\n"
 
-#: src/dos/programs/mount.cpp:455
+#: src/dos/programs/mount.cpp:1166
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_WARNING_OTHER"
 msgid "[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n"
 msgstr "[color=light-red]Koppelen van / is NIET aanbevolen. Koppel de volgende keer een (sub)map.[reset]\n"
 
-#: src/dos/programs/mount.cpp:456
+#: src/dos/programs/mount.cpp:1169
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_NO_OPTION"
 msgid "Warning: Ignoring unsupported option '%s'.\n"
 msgstr "Waarschuwing: Negeren van niet-ondersteunde optie '%s'.\n"
 
-#: src/dos/programs/mount.cpp:457
+#: src/dos/programs/mount.cpp:1172
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_NO_BASE"
 msgid ""
@@ -10584,13 +11003,13 @@ msgstr ""
 "Een normale map moet eerst worden gekoppeldd voordat er een overlay bovenop\n"
 "kan worden toegevoegd.\n"
 
-#: src/dos/programs/mount.cpp:460
+#: src/dos/programs/mount.cpp:1176
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"
 msgid "The overlay is NOT compatible with the drive that is specified.\n"
 msgstr "De overlay is NIET compatibel met de opgegeven schijf.\n"
 
-#: src/dos/programs/mount.cpp:461
+#: src/dos/programs/mount.cpp:1179
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_MIXED_BASE"
 msgid ""
@@ -10600,23 +11019,148 @@ msgstr ""
 "De overlay moet worden gespecificeerd met dezelfde adressering als de\n"
 "onderliggende schijf. Geen vermenging van relatieve en absolute paden.\n"
 
-#: src/dos/programs/mount.cpp:464
+#: src/dos/programs/mount.cpp:1183
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE"
 msgid "The overlay directory can not be the same as underlying drive.\n"
 msgstr "De overlay-map mag niet hetzelfde zijn als de onderliggende schijf.\n"
 
-#: src/dos/programs/mount.cpp:465
+#: src/dos/programs/mount.cpp:1186
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR"
 msgid "Something went wrong.\n"
 msgstr "Er is iets fout gegaan.\n"
 
-#: src/dos/programs/mount.cpp:466
+#: src/dos/programs/mount.cpp:1187
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_STATUS"
 msgid "Overlay %s on drive %c mounted.\n"
 msgstr "Overlay %s op schijf %c gekoppeld.\n"
+
+#: src/dos/programs/mount.cpp:1189
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_INVALID_CHS"
+msgid "Invalid CHS format. Use -chs cylinders,heads,sectors\n"
+msgstr "Ongeldig CHS formaat. Gebruik -chs cilinders,hoofden,sectoren\n"
+
+#: src/dos/programs/mount.cpp:1192
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_OVERLAY_REL_ABS"
+msgid ""
+"The overlay needs to be specified using the same addressing as the underlying\n"
+"drive. No mixing of relative and absolute paths.\n"
+msgstr ""
+"De overlay moet worden gespecificeerd met dezelfde adressering als de\n"
+"onderliggende schijf. Het is niet toegestaan ​​om relatieve en absolute paden te\n"
+"combineren.\n"
+
+#: src/dos/programs/mount.cpp:1196
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_OVERLAY_SAME_FS"
+msgid "The overlay needs to be on the same filesystem as the underlying drive.\n"
+msgstr ""
+"De overlay moet zich op hetzelfde bestandssysteem bevinden als de onderliggende\n"
+"schijf.\n"
+
+#: src/dos/programs/mount.cpp:1199
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_OVERLAY_UNKNOWN_ERROR"
+msgid "Something went wrong.\n"
+msgstr "Er is iets misgegaan.\n"
+
+#: src/dos/programs/mount.cpp:1202
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_SPECIFY2"
+msgid "Must specify a drive letter A/B/C/D or drive number 0/1/2/3 to mount image at.\n"
+msgstr ""
+"Een stationsletter A/B/C/D of een stationsnummer 0/1/2/3 moet worden opegegeven\n"
+"waarop de image moet worden gekoppeld.\n"
+
+#: src/dos/programs/mount.cpp:1205
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"
+msgid ""
+"For hard drive images, drive geometry must be specified:\n"
+"  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -chs Cylinders,Heads,Sectors\n"
+"Alternatively:\n"
+"  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -size BytesPerSector,Sectors,Heads,Cylinders\n"
+"For CD-ROM images:\n"
+"  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -t iso\n"
+msgstr ""
+"Voor harde schijfimages moet de schijfgeometrie worden gespecificeerd:\n"
+"  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]IMAGEBESTAND[reset] -chs Cilinders,Hoofden,Sectoren\n"
+"Alternatief:\n"
+"  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]IMAGEBESTAND[reset] -size BytesPerSector,Sectoren,Hoofden,Cilinders\n"
+"Voor cd-romimages:\n"
+"  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]IMAGEBESTAND[reset] -t iso\n"
+
+#: src/dos/programs/mount.cpp:1213
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_STATUS_NONE"
+msgid "No drive available.\n"
+msgstr "Geen schijf beschikbaar\n"
+
+#: src/dos/programs/mount.cpp:1215
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE"
+msgid "No available IDE controllers. Drive will not have IDE emulation.\n"
+msgstr "Geen beschikbare IDE-controllers. Drive zal geen IDE-emulatie hebben.\n"
+
+#: src/dos/programs/mount.cpp:1218
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_INVALID_IMAGE"
+msgid ""
+"Could not load image file.\n"
+"Check that the path is correct and the image is accessible.\n"
+msgstr ""
+"Kon imagebestand niet laden.\n"
+"Controleer of het pad correct is en de image toegankelijk is.\n"
+
+#: src/dos/programs/mount.cpp:1222
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_INVALID_GEOMETRY"
+msgid ""
+"Could not extract drive geometry from image.\n"
+"Use parameter -chs Cylinders,Heads,Sectors to specify the geometry.\n"
+"Alternatively: -size BytesPerSector,Sectors,Heads,Cylinders\n"
+msgstr ""
+"Kan schijfgeometrie niet uit image halen.\n"
+"Gebruik parameter -chs Cilinders,Hoofden,Sectoren om de geometrie op te geven.\n"
+"Alternatief: -size BytesPerSector,Sectoren,Hoofden,Cilinders\n"
+
+#: src/dos/programs/mount.cpp:1227
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_FILE_NOT_FOUND"
+msgid "Image file not found.\n"
+msgstr "Imagebestand niet gevonden.\n"
+
+#: src/dos/programs/mount.cpp:1229
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_ALREADY_MOUNTED"
+msgid "Drive already mounted at that letter.\n"
+msgstr "Schijf al gekoppeld op die letter.\n"
+
+#: src/dos/programs/mount.cpp:1232
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_CANT_CREATE"
+msgid "Can't create drive from file.\n"
+msgstr "Kan geen schijf maken van bestand.\n"
+
+#: src/dos/programs/mount.cpp:1233
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_MOUNT_NUMBER"
+msgid "Drive number %d mounted as %s.\n"
+msgstr "Drive nummer %d gekoppeld als %s\n"
+
+#: src/dos/programs/mount.cpp:1235
+#, c-format, no-wrap
+msgctxt "PROGRAM_IMGMOUNT_DEPRECATED"
+msgid ""
+"[color=yellow]Note: 'imgmount' is deprecated.[reset]\n"
+"Use 'mount' for both directories and disk images."
+msgstr ""
+"[color=yellow]Opmerking: 'imgmount' is verouderd.[reset]\n"
+"Gebruik 'mount' voor zowel mappen als schijfimages."
 
 #: src/dos/programs/mouse.cpp:167
 #, c-format, no-wrap
@@ -11318,7 +11862,7 @@ msgstr ""
 "  [color=light-cyan]MAP[reset]         is de naam van de map om te tonen.\n"
 "  [color=white]VOLGORDE[reset]    is de lijst volgorde, een van:\n"
 "                [color=white]n[reset] (op naam, alfabetisch),\n"
-"                [color=white]s[reset] (op groote, kleinste eerst),\n"
+"                [color=white]s[reset] (op grootte, kleinste eerst),\n"
 "                [color=white]e[reset] (op extensie, alfabetisch),\n"
 "                [color=white]d[reset] (op datum/tijd, oudste eerst),\n"
 "              met een optionele [color=white]-[reset] om de volgorde om te keren.\n"
@@ -11416,13 +11960,13 @@ msgctxt "PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED"
 msgid "[reset][color=brown]Driver not unloaded: configured to stay resident[reset]\n"
 msgstr "[reset][color=brown]Stuurprogramma niet geladen: ingesteld om resident te blijven[reset]\n"
 
-#: src/shell/autoexec.cpp:737
+#: src/shell/autoexec.cpp:736
 #, c-format, no-wrap
 msgctxt "AUTOEXEC_BAT_GENERATED"
 msgid "generated from configuration and command line"
 msgstr "gegenereerd van de configuratie- en opdrachtregel"
 
-#: src/shell/autoexec.cpp:739
+#: src/shell/autoexec.cpp:738
 #, c-format, no-wrap
 msgctxt "AUTOEXEC_BAT_CONFIG_SECTION"
 msgid "from [autoexec] section"
