@@ -8,7 +8,11 @@
 
 #include <string>
 
+#include "gui/private/common.h"
+#include "gui/render/render.h"
+
 #include "dosbox_config.h"
+#include "utils/rect.h"
 
 // must be included after dosbox_config.h
 #include "SDL.h"
@@ -54,6 +58,7 @@ public:
 	void SetColorSpace(const ColorSpace color_space) override;
 	void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings) override;
 	void EnableImageAdjustments(const bool enable) override;
+	void SetDeditheringStrength(const float strength) override;
 
 	RenderedImage ReadPixelsPostShader(const DosBox::Rect output_rect_px) override;
 

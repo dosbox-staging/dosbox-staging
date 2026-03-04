@@ -156,9 +156,23 @@ void ShaderPipeline::CreatePipeline()
 
 void ShaderPipeline::LoadAndAddInternalPasses()
 {
+	// Resize the input image (the rendered image) to the size of
+	// the video mode. This can perform width and/or and/or halving.
+	LoadAndAddInternalPassOrExit("integer-downscale");
+
+	// Checkerboard dedither
+	LoadAndAddInternalPassOrExit("checkerboard-dedither-linearize");
+	LoadAndAddInternalPassOrExit("checkerboard-dedither-pass1");
+	LoadAndAddInternalPassOrExit("checkerboard-dedither-pass2");
+	LoadAndAddInternalPassOrExit("checkerboard-dedither-pass3");
+
 	// The image adjustments pass is always the first; it cannot be disabled
 	// as it performs the colour space transforms as well.
 	LoadAndAddInternalPassOrExit("image-adjustments");
+
+	// Resize the image to the size of the rendered imge. This can
+	// perform width and/or and/or doubling.
+	LoadAndAddInternalPassOrExit("integer-upscale");
 
 	// Main shader pass (e.g., a CRT shader, the sharp shader, an upscaler,
 	// etc.)
@@ -355,6 +369,15 @@ void ShaderPipeline::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 
 	if (IsPipelineComplete()) {
 		UpdateImageAdjustmentsPassUniforms();
+	}
+}
+
+void ShaderPipeline::SetDeditheringStrength(const float strength)
+{
+	dedithering_strength = strength;
+
+	if (IsPipelineComplete()) {
+		UpdateDeditherPassUniforms();
 	}
 }
 
@@ -556,4 +579,48 @@ void ShaderPipeline::UpdateImageAdjustmentsPassUniforms()
 	shader.SetUniform1f("RED_GAIN", s.red_gain);
 	shader.SetUniform1f("GREEN_GAIN", s.green_gain);
 	shader.SetUniform1f("BLUE_GAIN", s.blue_gain);
+}
+
+void ShaderPipeline::UpdateDeditherPassUniforms()
+{
+	static std::vector<std::string> names = {"CheckerboardDedither_Linearize",
+	                                         "CheckerboardDedither_Pass1",
+	                                         "CheckerboardDedither_Pass2",
+	                                         "CheckerboardDedither_Pass3"};
+
+	for (const auto& name : names) {
+		const auto& pass   = GetShaderPass(name);
+		const auto& shader = pass.shader;
+
+		glUseProgram(shader.program_object);
+
+		// Always on (we set the strength to zero, or remove the
+		// dedithering passes from the pipeline to disable it)
+		//
+		shader.SetUniform1f("CD_BLEND_OPTION", 1.0f);
+
+		// Enable gamma correction to ensure correct luminosity of the
+		// dedithered areas (one way to test this is to A/B compare the
+		// original and deithered images while squinting; the dithered
+		// areas should have the same perceptual brightness in both
+		// images).
+		//
+		shader.SetUniform1f("CD_USE_GAMMA", 1.0f);
+
+		// We just use the blend factor to set the dedithering "strength".
+		shader.SetUniform1f("CD_BLEND_LEVEL", dedithering_strength);
+
+		// These options yield the best results for typical dither
+		// patterns in DOS games. Enabling CD_MITIG_LINES is important
+		// to ensure sharp 1px text and 45-degree diagonals. Raising
+		// CD_MITIG_NEIGHBOURS above 1.0 only results in more stray
+		// pixels in non-checkerboard dither patterns, so 1.0 is ideal.
+		//
+		shader.SetUniform1f("CD_MITIG_NEIGHBOURS", 1.0f);
+		shader.SetUniform1f("CD_MITIG_LINES", 1.0f);
+
+		// Always off (this is a diagnostic option to show the
+		// only dedithering mask).
+		shader.SetUniform1f("CD_ADJUST_VIEW", 0.0f);
+	}
 }
