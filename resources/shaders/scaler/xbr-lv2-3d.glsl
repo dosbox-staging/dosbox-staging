@@ -14,9 +14,9 @@
 #pragma name        Main_Pass1
 #pragma output_size Viewport
 
-#pragma use_nearest_texture_filter
-#pragma force_single_scan
-#pragma force_no_pixel_doubling
+#pragma use_nearest_texture_filter on
+#pragma force_single_scan          on
+#pragma force_no_pixel_doubling    on
 
 #pragma parameter XBR_Y_WEIGHT        "Y Weight"                48.0  0.0 100.0  1.0
 #pragma parameter XBR_EQ_THRESHOLD    "Eq Threshold"            15.0  0.0  50.0  1.0
