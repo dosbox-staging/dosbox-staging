@@ -1147,9 +1147,9 @@ void OpenGlRenderer::GetPass2UniformLocations(const ShaderParameters& params)
 
 	u.input_texture = glGetUniformLocation(po, "rubyTexture");
 
-	u.input_size   = glGetUniformLocation(po, "rubyInputSize");
-	u.output_size  = glGetUniformLocation(po, "rubyOutputSize");
-	u.frame_count  = glGetUniformLocation(po, "rubyFrameCount");
+	u.input_size  = glGetUniformLocation(po, "INPUT_TEXTURE_SIZE");
+	u.output_size = glGetUniformLocation(po, "OUTPUT_TEXTURE_SIZE");
+	u.frame_count = glGetUniformLocation(po, "rubyFrameCount");
 
 	for (const auto& [name, value] : params) {
 		const auto location = glGetUniformLocation(po, name.c_str());
