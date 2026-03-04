@@ -5,6 +5,8 @@
 
 /*
 
+#pragma name Main_Pass1
+
 #pragma parameter SPOT_WIDTH            "Spot Width"            0.85  0.0  1.0  0.05
 #pragma parameter SPOT_HEIGHT           "Spot Height"           0.80  0.0  1.0  0.05
 #pragma parameter PHOSPHOR_LAYOUT       "Phosphor Layout"       2.0   0.0 19.0  1.0
