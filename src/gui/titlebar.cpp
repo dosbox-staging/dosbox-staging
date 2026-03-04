@@ -3,10 +3,10 @@
 
 #include "titlebar.h"
 
-#include "private/common.h"
-
 #include <map>
 #include <vector>
+
+#include "private/common.h"
 
 #include "config/config.h"
 #include "config/setup.h"
