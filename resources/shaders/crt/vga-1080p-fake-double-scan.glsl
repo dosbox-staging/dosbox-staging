@@ -29,7 +29,6 @@ out vec2 prescale;
 
 uniform vec2 rubyInputSize;
 uniform vec2 rubyOutputSize;
-uniform vec2 rubyTextureSize;
 
 void main()
 {
@@ -48,7 +47,6 @@ in vec2 prescale;
 out vec4 FragColor;
 
 uniform vec2 rubyInputSize;
-uniform vec2 rubyTextureSize;
 uniform sampler2D rubyTexture;
 
 uniform float PHOSPHOR_LAYOUT;
@@ -143,14 +141,14 @@ vec4 tex2D_linear(in sampler2D sampler, in vec2 uv)
 {
 
 	// subtract 0.5 here and add it again after the floor to centre the texel
-	vec2 texCoord = uv * rubyTextureSize - vec2(0.5);
+	vec2 texCoord = uv * rubyInputSize - vec2(0.5);
 
 	vec2 s0t0 = floor(texCoord) + vec2(0.5);
 	vec2 s0t1 = s0t0 + vec2(0.0, 1.0);
 	vec2 s1t0 = s0t0 + vec2(1.0, 0.0);
 	vec2 s1t1 = s0t0 + vec2(1.0);
 
-	vec2 invTexSize = 1.0 / rubyTextureSize;
+	vec2 invTexSize = 1.0 / rubyInputSize;
 
 	vec4 c_s0t0 = GAMMA_IN(texture(sampler, s0t0 * invTexSize));
 	vec4 c_s0t1 = GAMMA_IN(texture(sampler, s0t1 * invTexSize));
@@ -179,7 +177,7 @@ void main()
 	         halfp;
 
 	vec2 mod_texel = min(texel_floored + f, rubyInputSize - halfp);
-	vec4 color     = tex2D_linear(rubyTexture, mod_texel / rubyTextureSize);
+	vec4 color     = tex2D_linear(rubyTexture, mod_texel / rubyInputSize);
 
 	color = add_vga_overlay(color,
 	                        SCANLINE_STRENGTH_MIN,
