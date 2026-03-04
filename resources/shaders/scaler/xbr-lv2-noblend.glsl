@@ -11,7 +11,7 @@
 #pragma name        Main_Pass1
 #pragma output_size Viewport
 
-#pragma use_nearest_texture_filter on
+#pragma linear_filtering           off
 #pragma force_single_scan          on
 #pragma force_no_pixel_doubling    on
 
