@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -198,7 +199,13 @@ void DriveManager::AppendFilesystemImages(const int drive,
 	disks.insert(std::end(disks), std::begin(images), std::end(images));
 }
 
-void DriveManager::InitializeDrive(int drive) {
+const DriveManager::filesystem_images_t& DriveManager::GetFilesystemImages(int drive)
+{
+	return drive_infos.at(drive).disks;
+}
+
+void DriveManager::InitializeDrive(int drive)
+{
 	auto& drive_info = drive_infos.at(drive);
 	if (!drive_info.disks.empty()) {
 		drive_info.current_disk = 0;

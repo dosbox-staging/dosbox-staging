@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -69,6 +69,7 @@ void AddCommonMountMessages() {
 
 	MSG_Add("PROGRAM_MOUNT_STATUS_DRIVE", "Drive");
 	MSG_Add("PROGRAM_MOUNT_STATUS_TYPE", "Type");
+	MSG_Add("PROGRAM_MOUNT_STATUS_PATH", "Path");
 	MSG_Add("PROGRAM_MOUNT_STATUS_LABEL", "Label");
 	MSG_Add("PROGRAM_MOUNT_STATUS_NAME", "Image name");
 	MSG_Add("PROGRAM_MOUNT_STATUS_SLOT", "Swap slot");
@@ -85,7 +86,7 @@ void AddMountTypeMessages() {
 	MSG_Add("MOUNT_TYPE_FAT_PLURAL", "FAT images");
 	MSG_Add("MOUNT_TYPE_CDIMAGE", "CD-ROM image");
 	MSG_Add("MOUNT_TYPE_CDIMAGE_PLURAL", "CD-ROM images");
-	MSG_Add("MOUNT_TYPE_VIRTUAL", "Internal virtual drive");
+	MSG_Add("MOUNT_TYPE_VIRTUAL", "Internal drive");
 	MSG_Add("MOUNT_TYPE_OVERLAY", "Overlay drive");
 	MSG_Add("MOUNT_TYPE_UNKNOWN", "unknown drive");
 }

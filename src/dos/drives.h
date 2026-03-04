@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -47,6 +48,7 @@ public:
 	static void RegisterFilesystemImage(const int drive,
 	                                    std::shared_ptr<DOS_Drive> filesystem_image);
 
+	static const filesystem_images_t& GetFilesystemImages(int drive);
 	static void InitializeDrive(int drive);
 	static int UnmountDrive(int drive);
 //	static void CycleDrive(bool pressed);

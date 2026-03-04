@@ -33,41 +33,77 @@ void MOUNT::ListMounts()
 {
 	const std::string header_drive = MSG_Get("PROGRAM_MOUNT_STATUS_DRIVE");
 	const std::string header_type  = MSG_Get("PROGRAM_MOUNT_STATUS_TYPE");
+	const std::string header_path  = MSG_Get("PROGRAM_MOUNT_STATUS_PATH");
 	const std::string header_label = MSG_Get("PROGRAM_MOUNT_STATUS_LABEL");
 
 	const int console_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
 	const auto width_drive  = static_cast<int>(header_drive.length());
+	const auto width_type   = 16;
 	const auto width_label  = std::max(minimum_column_length,
                                           static_cast<int>(header_label.size()));
-	const auto width_type   = console_width - 3 - width_drive - width_label;
-	if (width_type < 0) {
+	const auto width_path   = console_width - 4 - width_drive - width_type -
+	                        width_label;
+
+	if (width_path < 0) {
 		LOG_WARNING("Message is too long.");
 		return;
 	}
 
 	auto print_row = [&](const std::string& txt_drive,
 	                     const std::string& txt_type,
+	                     const std::string& txt_path,
 	                     const std::string& txt_label) {
-		WriteOut("%-*s %-*s %-*s\n",
+		WriteOut("%-*s %-*s %-*s %-*s\n",
 		         width_drive,
 		         txt_drive.c_str(),
 		         width_type,
 		         txt_type.c_str(),
+		         width_path,
+		         txt_path.c_str(),
 		         width_label,
 		         txt_label.c_str());
 	};
 
 	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
-	print_row(header_drive, header_type, header_label);
+	print_row(header_drive, header_type, header_path, header_label);
 	const std::string horizontal_divider(console_width, '-');
 	WriteOut_NoParsing(horizontal_divider);
 
 	bool found_drives = false;
 	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
 		if (Drives[d]) {
-			print_row(std::string{drive_letter(d)},
-			          Drives[d]->GetInfoStringTruncated(width_type),
-			          To_Label(Drives[d]->GetLabel()));
+			const auto& images = DriveManager::GetFilesystemImages(d);
+
+			// Render rows for drives holding multiple loaded images
+			if (images.size() > 1) {
+				bool first = true;
+				for (const auto& img : images) {
+					auto type = img->GetTypeString();
+					auto path = img->GetInfo();
+
+					std::string d_str =
+					        first ? " " + std::string{drive_letter(d)} + ":"
+					              : "";
+					std::string l_str =
+					        first ? To_Label(Drives[d]->GetLabel())
+					              : "";
+
+					print_row(d_str,
+					          type,
+					          truncate_path(path, width_path),
+					          l_str);
+					first = false;
+				}
+			} else {
+				// Render singular drive logic
+				auto type = Drives[d]->GetTypeString();
+				auto path = Drives[d]->GetInfo();
+
+				print_row(" " + std::string{drive_letter(d)} + ":",
+				          type,
+				          truncate_path(path, width_path),
+				          To_Label(Drives[d]->GetLabel()));
+			}
 			found_drives = true;
 		}
 	}
@@ -76,7 +112,6 @@ void MOUNT::ListMounts()
 		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_STATUS_NONE"));
 	}
 }
-
 void MOUNT::ShowUsage()
 {
 	MoreOutputStrings output(*this);
