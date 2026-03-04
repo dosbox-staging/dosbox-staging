@@ -284,6 +284,12 @@ std::string SdlRenderer::GetCurrentSymbolicShaderDescriptor()
 	return {};
 }
 
+ShaderDescriptor SdlRenderer::GetCurrentShaderDescriptor()
+{
+	// no-op (no shader support)
+	return {};
+}
+
 void SdlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 {
 	assert(curr_framebuf);

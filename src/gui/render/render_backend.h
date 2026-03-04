@@ -9,6 +9,9 @@
 
 #include <string>
 
+#include "private/shader_common.h"
+#include "private/shader_manager.h"
+
 #include "dosbox_config.h"
 #include "gui/render/render.h"
 #include "misc/rendered_image.h"
@@ -74,6 +77,9 @@ public:
 	// Get the symbolic shader descriptor of the currently active shader
 	// (see `ShaderManager::NotifyShaderChanged()`.
 	virtual std::string GetCurrentSymbolicShaderDescriptor() = 0;
+
+	// Get the shader descriptor of the currently active shader.
+	virtual ShaderDescriptor GetCurrentShaderDescriptor() = 0;
 
 	// Called at the start of every unique frame (when there have been
 	// changes to the DOS framebuffer).

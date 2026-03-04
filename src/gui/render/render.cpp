@@ -640,7 +640,10 @@ static const char* to_displayable_name(const CrtColorProfile profile)
 static void handle_auto_image_adjustment_settings(const VideoMode& video_mode)
 {
 	const auto maybe_auto_settings =
-	        AutoImageAdjustmentsManager::GetInstance().GetSettings(video_mode);
+	        AutoImageAdjustmentsManager::GetInstance().GetSettings(
+	                machine,
+	                video_mode,
+	                GFX_GetRenderer()->GetCurrentShaderDescriptor());
 
 	if (maybe_auto_settings) {
 		const auto settings = *maybe_auto_settings;
@@ -1300,7 +1303,9 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 		// - it enables vertical integer scaling for the adaptive CRT
 		//   shaders if the viewport is large enough (otherwise it falls
 		//   back to the 'sharp' shader with no integer scaling),
+		//
 		// - it allows the 3.5x and 4.5x half steps,
+		//
 		// - and it disables integer scaling above 5.0x scaling.
 		//
 		// The half-steps and no scaling above 5.0x result in no
@@ -1311,7 +1316,10 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 			return draw_size_fit_px;
 		}
 
-		if (GFX_GetRenderer()->GetCurrentShaderInfo().is_adaptive) {
+		const auto curr_shader_descriptor =
+		        GFX_GetRenderer()->GetCurrentShaderDescriptor();
+
+		if (curr_shader_descriptor.EnforceIntegerScaling()) {
 			auto integer_scale_factor = [&] {
 				const auto factor = draw_size_fit_px.h /
 				                    render_size_px.h;

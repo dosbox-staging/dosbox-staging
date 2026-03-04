@@ -91,6 +91,20 @@ enum class ShaderMode {
 	AutoArcadeSharp
 };
 
+inline const char* to_string(const ShaderMode s)
+{
+	using enum ShaderMode;
+
+	switch (s) {
+	case Single: return "Single";
+	case AutoGraphicsStandard: return "AutoGraphicsStandard";
+	case AutoMachine: return "AutoMachine";
+	case AutoArcade: return "AutoArcade";
+	case AutoArcadeSharp: return "AutoArcadeSharp";
+	default: assertm(false, "Invalid ShaderMode value"); return "";
+	}
+}
+
 /*
  * A symbolic shader descriptor is a `std::string` in the
  * `SHADER_NAME[:SHADER_PRESET]` format where `SHADER_NAME` can refer to the
@@ -146,6 +160,7 @@ enum class ShaderMode {
 struct ShaderDescriptor {
 	std::string shader_name = {};
 	std::string preset_name = {};
+	ShaderMode shader_mode  = {};
 
 	auto operator<=>(const ShaderDescriptor&) const = default;
 
@@ -162,6 +177,8 @@ struct ShaderDescriptor {
 
 	static ShaderDescriptor FromString(const std::string& descriptor,
 	                                   const std::string& extension);
+
+	bool EnforceIntegerScaling() const;
 };
 
 // The default shader settings are important; we'll get these if the shader
@@ -227,8 +244,6 @@ struct ShaderInfo {
 	ShaderOutputSize output_size       = ShaderOutputSize::Previous;
 
 	ShaderPreset default_preset = {};
-
-	bool is_adaptive = false;
 };
 
 #endif // DOSBOX_SHADER_COMMON_H

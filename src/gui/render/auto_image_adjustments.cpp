@@ -71,20 +71,22 @@ static constexpr AutoImageAdjustments arcade_settings = {
 };
 
 std::optional<AutoImageAdjustments> AutoImageAdjustmentsManager::GetSettings(
-        const VideoMode& video_mode) const
+        const MachineType machine_type, const VideoMode& video_mode,
+        const ShaderDescriptor& curr_shader_descriptor) const
 {
 	using enum ShaderMode;
 
-	switch (AutoShaderSwitcher::GetInstance().GetCurrentShaderMode()) {
+	switch (curr_shader_descriptor.shader_mode) {
 	case Single:
 		// If no adaptive CRT shader is active, use the machine type to
 		// derive the appropriate colour settings.
-		return GetAutoMachineSettings(video_mode);
+		return GetAutoMachineSettings(machine_type, video_mode);
 
 	case AutoGraphicsStandard:
 		return GetAutoGraphicsStandardSettings(video_mode);
 
-	case AutoMachine: return GetAutoMachineSettings(video_mode);
+	case AutoMachine:
+		return GetAutoMachineSettings(machine_type, video_mode);
 
 	case AutoArcade:
 	case AutoArcadeSharp: return arcade_settings;
@@ -94,7 +96,7 @@ std::optional<AutoImageAdjustments> AutoImageAdjustmentsManager::GetSettings(
 }
 
 AutoImageAdjustments AutoImageAdjustmentsManager::GetAutoMachineSettings(
-        const VideoMode& video_mode) const
+        const MachineType machine_type, const VideoMode& video_mode) const
 {
 	if (video_mode.color_depth == ColorDepth::Composite) {
 		return composite_settings;
@@ -102,7 +104,7 @@ AutoImageAdjustments AutoImageAdjustmentsManager::GetAutoMachineSettings(
 
 	using enum MachineType;
 
-	switch (machine) {
+	switch (machine_type) {
 	case Hercules:
 	case CgaMono: return monochrome_settings;
 
