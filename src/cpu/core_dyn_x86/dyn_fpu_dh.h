@@ -132,13 +132,7 @@ static void FPU_FRSTOR_DH(PhysPt addr){
 }
 
 static void dh_fpu_mem(uint8_t inst, Bitu reg=decode.modrm.reg, void* mem=&dyn_dh_fpu.temp.m1) {
-#if C_TARGETCPU == X86
-	cache_addb(inst);
-	cache_addb(0x05|(reg<<3));
-	cache_addd((uint32_t)(mem));
-#else // X86_64
 	opcode(reg).setabsaddr(mem).Emit8(inst);
-#endif
 }
 
 static void dh_fpu_esc0(){
