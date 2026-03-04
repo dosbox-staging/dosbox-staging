@@ -31,18 +31,18 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 rubyTextureSize;
+uniform vec2 rubyInputSize;
 uniform sampler2D rubyTexture;
 
 vec3 getadvinterp2xtexel(vec2 coord)
 {
 	vec2 base = floor(coord / vec2(2.0)) + vec2(0.5);
-	vec3 c4   = texture(rubyTexture, base / rubyTextureSize).xyz;
+	vec3 c4   = texture(rubyTexture, base / rubyInputSize).xyz;
 
-	vec3 c1 = texture(rubyTexture, (base - vec2(0.0, 1.0)) / rubyTextureSize).xyz;
-	vec3 c7 = texture(rubyTexture, (base + vec2(0.0, 1.0)) / rubyTextureSize).xyz;
-	vec3 c3 = texture(rubyTexture, (base - vec2(1.0, 0.0)) / rubyTextureSize).xyz;
-	vec3 c5 = texture(rubyTexture, (base + vec2(1.0, 0.0)) / rubyTextureSize).xyz;
+	vec3 c1 = texture(rubyTexture, (base - vec2(0.0, 1.0)) / rubyInputSize).xyz;
+	vec3 c7 = texture(rubyTexture, (base + vec2(0.0, 1.0)) / rubyInputSize).xyz;
+	vec3 c3 = texture(rubyTexture, (base - vec2(1.0, 0.0)) / rubyInputSize).xyz;
+	vec3 c5 = texture(rubyTexture, (base + vec2(1.0, 0.0)) / rubyInputSize).xyz;
 
 	bool outer = c1 != c7 && c3 != c5;
 	bool c3c1  = outer && c3 == c1;
