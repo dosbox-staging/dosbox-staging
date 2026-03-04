@@ -718,5 +718,28 @@ TEST(StlContainerToString, NonEmptyEnumVector)
 	EXPECT_EQ(to_string(v), "{2, 2, 3}");
 }
 
+TEST(Join, EmptyVector)
+{
+	std::vector<std::string> v = {};
+	EXPECT_EQ(join(v), "{}");
+}
+
+TEST(Join, NonEmptyVector)
+{
+	std::vector<std::string> v = {"a", "dd", "", "xyz"};
+	EXPECT_EQ(join(v), "{a, dd, , xyz}");
+}
+
+TEST(Join, NonEmptyVector_CustomFormat1)
+{
+	std::vector<std::string> v = {"a", "dd", "", "xyz"};
+	EXPECT_EQ(join(v, "|", "[", "]"), "[a|dd||xyz]");
+}
+
+TEST(Join, NonEmptyVector_CustomFormat2)
+{
+	std::vector<std::string> v = {"a", "dd", "", "xyz"};
+	EXPECT_EQ(join(v, "-", "", ""), "a-dd--xyz");
+}
 
 } // namespace
