@@ -169,8 +169,6 @@ private:
 
 	DosBox::Rect viewport_rect_px = {};
 
-	GLuint frame_count = 0;
-
 	// Vertex buffer object
 	GLuint vbo = 0;
 
