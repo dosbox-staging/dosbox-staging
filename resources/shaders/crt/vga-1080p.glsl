@@ -5,7 +5,8 @@
 
 /*
 
-#pragma name Main_Pass1
+#pragma name        Main_Pass1
+#pragma output_size Viewport
 
 #pragma parameter SPOT_WIDTH            "Spot Width"            0.85  0.0  1.0  0.05
 #pragma parameter SPOT_HEIGHT           "Spot Height"           0.80  0.0  1.0  0.05
