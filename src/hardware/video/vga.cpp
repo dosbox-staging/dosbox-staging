@@ -259,13 +259,8 @@ void VGA_SetCGA2Table(uint8_t val0,uint8_t val1) {
 	uint8_t total[2]={ val0,val1};
 	for (Bitu i=0;i<16;i++) {
 		CGA_2_Table[i]=
-#ifdef WORDS_BIGENDIAN
-			(total[(i >> 0) & 1] << 0  ) | (total[(i >> 1) & 1] << 8  ) |
-			(total[(i >> 2) & 1] << 16 ) | (total[(i >> 3) & 1] << 24 );
-#else 
 			(total[(i >> 3) & 1] << 0  ) | (total[(i >> 2) & 1] << 8  ) |
 			(total[(i >> 1) & 1] << 16 ) | (total[(i >> 0) & 1] << 24 );
-#endif
 	}
 }
 
@@ -273,21 +268,11 @@ void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3) {
 	uint8_t total[4]={ val0,val1,val2,val3};
 	for (Bitu i=0;i<256;i++) {
 		CGA_4_Table[i]=
-#ifdef WORDS_BIGENDIAN
-			(total[(i >> 0) & 3] << 0  ) | (total[(i >> 2) & 3] << 8  ) |
-			(total[(i >> 4) & 3] << 16 ) | (total[(i >> 6) & 3] << 24 );
-#else
 			(total[(i >> 6) & 3] << 0  ) | (total[(i >> 4) & 3] << 8  ) |
 			(total[(i >> 2) & 3] << 16 ) | (total[(i >> 0) & 3] << 24 );
-#endif
 		CGA_4_HiRes_Table[i]=
-#ifdef WORDS_BIGENDIAN
-			(total[((i >> 0) & 1) | ((i >> 3) & 2)] << 0  ) | (total[((i >> 1) & 1) | ((i >> 4) & 2)] << 8  ) |
-			(total[((i >> 2) & 1) | ((i >> 5) & 2)] << 16 ) | (total[((i >> 3) & 1) | ((i >> 6) & 2)] << 24 );
-#else
 			(total[((i >> 3) & 1) | ((i >> 6) & 2)] << 0  ) | (total[((i >> 2) & 1) | ((i >> 5) & 2)] << 8  ) |
 			(total[((i >> 1) & 1) | ((i >> 4) & 2)] << 16 ) | (total[((i >> 0) & 1) | ((i >> 3) & 2)] << 24 );
-#endif
 	}	
 }
 
@@ -349,17 +334,6 @@ void VGA_Init()
 	for (i = 0; i < 16; i++) {
 		TXT_FG_Table[i] = i | (i << 8) | (i << 16) | (i << 24);
 		TXT_BG_Table[i] = i | (i << 8) | (i << 16) | (i << 24);
-#ifdef WORDS_BIGENDIAN
-		FillTable[i] = ((i & 1) ? 0xff000000 : 0) |
-		               ((i & 2) ? 0x00ff0000 : 0) |
-		               ((i & 4) ? 0x0000ff00 : 0) |
-		               ((i & 8) ? 0x000000ff : 0);
-
-		TXT_Font_Table[i] = ((i & 1) ? 0x000000ff : 0) |
-		                    ((i & 2) ? 0x0000ff00 : 0) |
-		                    ((i & 4) ? 0x00ff0000 : 0) |
-		                    ((i & 8) ? 0xff000000 : 0);
-#else
 		FillTable[i] = ((i & 1) ? 0x000000ff : 0) |
 		               ((i & 2) ? 0x0000ff00 : 0) |
 		               ((i & 4) ? 0x00ff0000 : 0) |
@@ -369,22 +343,14 @@ void VGA_Init()
 		                    ((i & 2) ? 0x00ff0000 : 0) |
 		                    ((i & 4) ? 0x0000ff00 : 0) |
 		                    ((i & 8) ? 0x000000ff : 0);
-#endif
 	}
 
 	for (j = 0; j < 4; j++) {
 		for (i = 0; i < 16; i++) {
-#ifdef WORDS_BIGENDIAN
-			Expand16Table[j][i] = ((i & 1) ? 1 << j : 0) |
-			                      ((i & 2) ? 1 << (8 + j) : 0) |
-			                      ((i & 4) ? 1 << (16 + j) : 0) |
-			                      ((i & 8) ? 1 << (24 + j) : 0);
-#else
 			Expand16Table[j][i] = ((i & 1) ? 1 << (24 + j) : 0) |
 			                      ((i & 2) ? 1 << (16 + j) : 0) |
 			                      ((i & 4) ? 1 << (8 + j) : 0) |
 			                      ((i & 8) ? 1 << j : 0);
-#endif
 		}
 	}
 }
