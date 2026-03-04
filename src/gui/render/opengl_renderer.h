@@ -65,6 +65,7 @@ public:
 	void SetColorSpace(const ColorSpace color_space) override;
 	void EnableImageAdjustments(const bool enable) override;
 	void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings) override;
+	void SetDeditheringStrength(const float strength) override;
 
 	RenderedImage ReadPixelsPostShader(const DosBox::Rect output_rect_px) override;
 
