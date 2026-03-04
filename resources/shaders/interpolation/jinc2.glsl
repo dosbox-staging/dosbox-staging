@@ -68,7 +68,7 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
 void main()
 {
@@ -109,24 +109,24 @@ void main()
     dy /= INPUT_TEXTURE_SIZE;
     tc /= INPUT_TEXTURE_SIZE;
 
-    vec3 c00 = texture(rubyTexture, tc    -dx    -dy).xyz;
-    vec3 c10 = texture(rubyTexture, tc           -dy).xyz;
-    vec3 c20 = texture(rubyTexture, tc    +dx    -dy).xyz;
-    vec3 c30 = texture(rubyTexture, tc+2.0*dx    -dy).xyz;
-    vec3 c01 = texture(rubyTexture, tc    -dx       ).xyz;
-    vec3 c11 = texture(rubyTexture, tc              ).xyz;
-    vec3 c21 = texture(rubyTexture, tc    +dx       ).xyz;
-    vec3 c31 = texture(rubyTexture, tc+2.0*dx       ).xyz;
-    vec3 c02 = texture(rubyTexture, tc    -dx    +dy).xyz;
-    vec3 c12 = texture(rubyTexture, tc           +dy).xyz;
-    vec3 c22 = texture(rubyTexture, tc    +dx    +dy).xyz;
-    vec3 c32 = texture(rubyTexture, tc+2.0*dx    +dy).xyz;
-    vec3 c03 = texture(rubyTexture, tc    -dx+2.0*dy).xyz;
-    vec3 c13 = texture(rubyTexture, tc       +2.0*dy).xyz;
-    vec3 c23 = texture(rubyTexture, tc    +dx+2.0*dy).xyz;
-    vec3 c33 = texture(rubyTexture, tc+2.0*dx+2.0*dy).xyz;
+    vec3 c00 = texture(INPUT_TEXTURE, tc    -dx    -dy).xyz;
+    vec3 c10 = texture(INPUT_TEXTURE, tc           -dy).xyz;
+    vec3 c20 = texture(INPUT_TEXTURE, tc    +dx    -dy).xyz;
+    vec3 c30 = texture(INPUT_TEXTURE, tc+2.0*dx    -dy).xyz;
+    vec3 c01 = texture(INPUT_TEXTURE, tc    -dx       ).xyz;
+    vec3 c11 = texture(INPUT_TEXTURE, tc              ).xyz;
+    vec3 c21 = texture(INPUT_TEXTURE, tc    +dx       ).xyz;
+    vec3 c31 = texture(INPUT_TEXTURE, tc+2.0*dx       ).xyz;
+    vec3 c02 = texture(INPUT_TEXTURE, tc    -dx    +dy).xyz;
+    vec3 c12 = texture(INPUT_TEXTURE, tc           +dy).xyz;
+    vec3 c22 = texture(INPUT_TEXTURE, tc    +dx    +dy).xyz;
+    vec3 c32 = texture(INPUT_TEXTURE, tc+2.0*dx    +dy).xyz;
+    vec3 c03 = texture(INPUT_TEXTURE, tc    -dx+2.0*dy).xyz;
+    vec3 c13 = texture(INPUT_TEXTURE, tc       +2.0*dy).xyz;
+    vec3 c23 = texture(INPUT_TEXTURE, tc    +dx+2.0*dy).xyz;
+    vec3 c33 = texture(INPUT_TEXTURE, tc+2.0*dx+2.0*dy).xyz;
 
-    color = texture(rubyTexture, v_texCoord).xyz;
+    color = texture(INPUT_TEXTURE, v_texCoord).xyz;
 
     //  Get min/max samples
     vec3 min_sample = min4(c11, c21, c12, c22);
