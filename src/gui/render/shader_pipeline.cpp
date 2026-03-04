@@ -500,7 +500,7 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 			while (it != shader_passes.begin()) {
 				it = std::prev(it);
 
-				const auto p = *it;
+				const auto& p = *it;
 				if (p.shader.info.pass_name == pass_id) {
 					in_texture      = p.out_texture;
 					in_texture_size = p.out_size;
@@ -518,13 +518,12 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 		}
 
 		const auto in_texture_name = format_str("INPUT_TEXTURE_%d", i);
-		pass->shader.SetUniform1i(in_texture_name.c_str(),
-		                          check_cast<GLint>(i));
+		pass->shader.SetUniform1i(in_texture_name, check_cast<GLint>(i));
 
 		const auto in_texture_size_name = format_str("INPUT_SIZE_%d",
 		                                             i);
 
-		pass->shader.SetUniform2f(in_texture_size_name.c_str(),
+		pass->shader.SetUniform2f(in_texture_size_name,
 		                          in_texture_size.w,
 		                          in_texture_size.h);
 
