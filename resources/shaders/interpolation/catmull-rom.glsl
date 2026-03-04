@@ -20,6 +20,8 @@
 
 /*
 
+#pragma name Main_Pass1
+
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
 

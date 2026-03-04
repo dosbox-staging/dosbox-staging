@@ -5,6 +5,8 @@
 
 /*
 
+#pragma name Main_Pass1
+
 #pragma force_single_scan
 
 #pragma parameter PHOSPHOR_LAYOUT       "Phosphor Layout"       2.0   0.0 19.0  1.0
