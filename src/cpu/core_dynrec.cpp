@@ -135,30 +135,12 @@ static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint32_t) == 0,
 
 #include "dyn_cache.h"
 
-#define X86			0x01
-#define X86_64		0x02
-#define MIPSEL		0x03
-#define ARMV4LE		0x04
-#define ARMV7LE		0x05
-#define POWERPC		0x06
-#define ARMV8LE		0x07
-#define PPC64LE		0x08
+// Currently, the dynrec core is only used for ARM v8. We might want to add an
+// option later to compile for x64; it could be useful to compare the two
+// implementations when troubleshooting issues.
 
-#if C_TARGETCPU == X86_64
-#include "core_dynrec/risc_x64.h"
-#elif C_TARGETCPU == X86
-#include "core_dynrec/risc_x86.h"
-#elif C_TARGETCPU == MIPSEL
-#include "core_dynrec/risc_mipsel32.h"
-#elif (C_TARGETCPU == ARMV4LE) || (C_TARGETCPU == ARMV7LE)
-#include "core_dynrec/risc_armv4le.h"
-#elif C_TARGETCPU == POWERPC
-#include "core_dynrec/risc_ppc.h"
-#elif C_TARGETCPU == ARMV8LE
+// #include "core_dynrec/risc_x64.h"
 #include "core_dynrec/risc_armv8le.h"
-#elif C_TARGETCPU == PPC64LE
-#include "core_dynrec/risc_ppc64le.h"
-#endif
 
 #include "simde/x86/mmx.h"
 
