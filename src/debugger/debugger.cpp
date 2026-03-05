@@ -1535,7 +1535,7 @@ bool ParseCommand(char* str)
 	if (command == "IV") { // Insert variable
 		auto seg = (uint16_t)GetHexValue(found, found);
 		found++;
-		uint32_t ofs = (uint16_t)GetHexValue(found, found);
+		uint32_t ofs = GetHexValue(found, found); // Do not truncate; IV must support 32-bit addresses like SV/LV.
 		found++;
 		char name[16];
 		for (int i = 0; i < 16; i++) {
@@ -1551,7 +1551,7 @@ bool ParseCommand(char* str)
 		if (!name[0]) {
 			return false;
 		}
-		DEBUG_ShowMsg("DEBUG: Created debug var %s at %04X:%04X\n", name, seg, ofs);
+		DEBUG_ShowMsg("DEBUG: Created debug var %s at %04X:%08X\n", name, seg, ofs);
 		CDebugVar::InsertVariable(name, GetAddress(seg, ofs));
 		return true;
 	}
