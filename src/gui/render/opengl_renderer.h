@@ -37,7 +37,7 @@ public:
 
 	DosBox::Rect GetCanvasSizeInPixels() override;
 
-	void NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px) override;
+	void NotifyViewportSizeChanged(const DosBox::Rect viewport_size) override;
 
 	void NotifyRenderSizeChanged(const int new_render_width_px,
 	                             const int new_render_height_px) override;
@@ -145,6 +145,9 @@ private:
 
 	ShaderInfo main_shader_info     = {};
 	ShaderPreset main_shader_preset = {};
+
+	DosBox::Rect curr_viewport_size = {};
+	VideoMode curr_video_mode       = {};
 
 	std::unique_ptr<ShaderPipeline> shader_pipeline = {};
 };

@@ -228,7 +228,7 @@ DosBox::Rect OpenGlRenderer::GetCanvasSizeInPixels()
 	return r;
 }
 
-void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
+void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect viewport_size)
 {
 	// If the viewport size has changed, the canvas size might have
 	// changed too.
@@ -236,6 +236,8 @@ void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 
 	// We always expect a valid canvas
 	assert(!canvas_size_px.IsEmpty());
+
+	curr_viewport_size = viewport_size;
 
 	// The video mode hasn't changed, but the ShaderManager call expects it.
 	const auto video_mode = VGA_GetCurrentVideoMode();
@@ -259,11 +261,11 @@ void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 	}
 
 	const auto new_descriptor = AutoShaderSwitcher::GetInstance().NotifyRenderParametersChanged(
-	        curr_shader_descriptor, canvas_size_px, video_mode);
+	        curr_shader_descriptor, curr_viewport_size, video_mode);
 
 	HandleShaderAndPresetChangeViaNotify(new_descriptor);
 
-	shader_pipeline->NotifyViewportSizeChanged(draw_rect_px);
+	shader_pipeline->NotifyViewportSizeChanged(curr_viewport_size);
 }
 
 void OpenGlRenderer::HandleShaderAndPresetChangeViaNotify(const ShaderDescriptor& new_descriptor)
@@ -507,8 +509,17 @@ void OpenGlRenderer::ForceReloadCurrentShader()
 	if (result) {
 		const auto& [shader, preset] = *result;
 
-		shader_pipeline->SetMainShader(shader);
+		shader_pipeline = std::make_unique<ShaderPipeline>();
+
+		shader_pipeline->NotifyRenderSizeChanged(input_texture.width,
+		                                         input_texture.height,
+		                                         input_texture.texture);
+
+		shader_pipeline->NotifyViewportSizeChanged(curr_viewport_size);
+		shader_pipeline->NotifyVideoModeChanged(curr_video_mode);
+
 		shader_pipeline->SetMainShaderPreset(preset);
+		shader_pipeline->SetMainShader(shader);
 
 		MaybeUpdateRenderSize(input_texture.width, input_texture.height);
 	}
@@ -522,13 +533,15 @@ void OpenGlRenderer::NotifyVideoModeChanged(const VideoMode& video_mode)
 	assert(!canvas_size_px.IsEmpty());
 	assert(video_mode.width > 0 && video_mode.height > 0);
 
+	curr_video_mode = video_mode;
+
 	// Handle shader auto-switching
 	const auto new_descriptor = AutoShaderSwitcher::GetInstance().NotifyRenderParametersChanged(
 	        curr_shader_descriptor, canvas_size_px, video_mode);
 
 	HandleShaderAndPresetChangeViaNotify(new_descriptor);
 
-	shader_pipeline->NotifyVideoModeChanged(video_mode);
+	shader_pipeline->NotifyVideoModeChanged(curr_video_mode);
 }
 
 OpenGlRenderer::SetShaderResult OpenGlRenderer::MaybeSwitchShaderAndPreset(
