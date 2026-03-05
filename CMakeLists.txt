@@ -264,9 +264,15 @@ if (CMAKE_SYSTEM_PROCESSOR  STREQUAL "AMD64"  OR
     CMAKE_SYSTEM_PROCESSOR  STREQUAL "x86_64" OR
     CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
 
+  option(OPT_SLOW_DYNREC "Disable dyn_x86 and use the slower dynrec" OFF)
+  if(OPT_SLOW_DYNREC)
+    set(C_DYNREC ON)
+    set(C_DYNAMIC_X86 OFF)
+  else()
+    set(C_DYNREC OFF)
+    set(C_DYNAMIC_X86 ON)
+  endif()
   set(C_TARGETCPU        "X86_64")
-  set(C_DYNAMIC_X86      ON)
-  set(C_DYNREC           OFF)
   set(C_FPU_X86          ON)
   set(C_UNALIGNED_MEMORY ON)
 
