@@ -40,7 +40,10 @@
 
 int old_cursor_state;
 
+extern void DEBUG_RefreshLayout(void);
+
 // forward declarations
+static void DEBUG_Close(void);
 static void DrawCode(void);
 static void DEBUG_RaiseTimerIrq(void);
 static void SaveMemory(uint16_t seg, uint32_t ofs1, uint32_t num);
@@ -1553,6 +1556,7 @@ bool ParseCommand(char* str)
 		}
 		DEBUG_ShowMsg("DEBUG: Created debug var %s at %04X:%08X\n", name, seg, ofs);
 		CDebugVar::InsertVariable(name, GetAddress(seg, ofs));
+		wclear(dbg.win_var);
 		return true;
 	}
 
@@ -1593,6 +1597,7 @@ bool ParseCommand(char* str)
 		DEBUG_ShowMsg("DEBUG: Variable list load (%s) : %s.\n",
 		              name,
 		              (CDebugVar::LoadVars(name) ? "ok" : "failure"));
+		wclear(dbg.win_var);
 		return true;
 	}
 
@@ -1630,6 +1635,7 @@ bool ParseCommand(char* str)
 			}
 		}
 		DEBUG_ShowMsg("DEBUG: Memory changed.\n");
+		wclear(dbg.win_var);
 		return true;
 	}
 
@@ -2505,6 +2511,10 @@ uint32_t DEBUG_CheckKeys(void)
 				}
 			}
 			break;
+		case KEY_CLOSE:
+			DEBUG_Close();
+			skipDraw = true;
+			break;
 		default:
 			if ((key >= 32) && (key < 127)) {
 				if ((codeViewData.inputPos < 0) ||
@@ -2596,6 +2606,9 @@ void DEBUG_Enable(bool pressed)
 	if (!was_ui_started) {
 		DBGUI_StartUp();
 		was_ui_started = (pdc_window != nullptr);
+	} else {
+		SDL_ShowWindow(pdc_window);
+		DEBUG_RefreshLayout();
 	}
 
 	// The debugger is run in release mode so cannot use asserts
@@ -2624,6 +2637,13 @@ void DEBUG_Enable(bool pressed)
 	DOSBOX_SetLoop(&DEBUG_Loop);
 
 	KEYBOARD_ClrBuffer();
+}
+
+static void DEBUG_Close()
+{
+	SDL_HideWindow(pdc_window);
+	debugging = false;
+	DOSBOX_SetNormalLoop();
 }
 
 void DEBUG_DrawScreen(void)
@@ -3366,12 +3386,14 @@ static void DrawVariables()
 				  // (most likely case)
 			} else {
 				dv->SetValue(true, value);
-				snprintf(buffer, DEBUG_VAR_BUF_LEN, "0x%04x", value);
 				varchanges = true;
+			}
+			if (dbg.win_var->_clear) {
+				snprintf(buffer, DEBUG_VAR_BUF_LEN, "0x%04x", value);
 			}
 		}
 
-		if (varchanges) {
+		if (varchanges || dbg.win_var->_clear) {
 			int y = i / 3;
 			int x = (i % 3) * 26;
 			mvwprintw(dbg.win_var, y, x, dv->GetName());
