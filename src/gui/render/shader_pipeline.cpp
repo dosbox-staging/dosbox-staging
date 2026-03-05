@@ -7,6 +7,7 @@
 
 #include "misc/support.h"
 #include "utils/checks.h"
+#include "utils/math_utils.h"
 
 // Glad must be included before SDL
 #include "glad/gl.h"
@@ -94,6 +95,10 @@ bool ShaderPipeline::IsPipelineComplete() const
 
 void ShaderPipeline::NotifyViewportSizeChanged(const DosBox::Rect& new_viewport)
 {
+	if (viewport == new_viewport) {
+		return;
+	}
+
 	viewport = new_viewport;
 
 	if (IsPipelineComplete()) {
@@ -106,6 +111,12 @@ void ShaderPipeline::NotifyRenderSizeChanged(const int input_texture_width,
                                              const int input_texture_height,
                                              const GLuint new_input_texture)
 {
+	if ((ifloor(input_texture.size.w) == input_texture_width) &&
+	    (ifloor(input_texture.size.h) == input_texture_height) &&
+	    (input_texture.texture == new_input_texture)) {
+		return;
+	}
+
 	input_texture.size    = {input_texture_width, input_texture_height};
 	input_texture.texture = new_input_texture;
 
@@ -117,6 +128,10 @@ void ShaderPipeline::NotifyRenderSizeChanged(const int input_texture_width,
 
 void ShaderPipeline::NotifyVideoModeChanged(const VideoMode& new_video_mode)
 {
+	if (video_mode == new_video_mode) {
+		return;
+	}
+
 	video_mode = new_video_mode;
 
 	if (IsPipelineComplete()) {
@@ -302,10 +317,8 @@ void ShaderPipeline::SetMainShader(const Shader& shader)
 	main_shader_preset = shader.info.default_preset;
 
 	if (IsPipelineComplete()) {
-		auto& main_pass  = GetShaderPass("Main_Pass1");
-		main_pass.shader = shader;
-
-		UpdateMainShaderPassUniforms();
+		DestroyPipeline();
+		CreatePipeline();
 	}
 }
 
