@@ -260,13 +260,22 @@ int main() {
 check_cxx_source_compiles("${TEST_CODE_BUILTIN_CLEAR_CACHE}"
                           HAVE_BUILTIN_CLEAR_CACHE)
 
+option(OPT_FORCE_DYNREC "Force DYNREC dynamic recompiler (not x86-64 optimized)" OFF)
+
 if (CMAKE_SYSTEM_PROCESSOR  STREQUAL "AMD64"  OR
     CMAKE_SYSTEM_PROCESSOR  STREQUAL "x86_64" OR
     CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
 
   set(C_TARGETCPU        "X86_64")
-  set(C_DYNAMIC_X86      ON)
-  set(C_DYNREC           OFF)
+
+  if (OPT_FORCE_DYNREC)
+      set(C_DYNAMIC_X86  OFF)
+      set(C_DYNREC       ON)
+  else()
+      set(C_DYNAMIC_X86  ON)
+      set(C_DYNREC       OFF)
+  endif()
+
   set(C_FPU_X86          ON)
   set(C_UNALIGNED_MEMORY ON)
 
