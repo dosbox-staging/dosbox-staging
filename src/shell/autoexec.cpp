@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <set>
 #include <sstream>
 
 CHECK_NARROWING();
@@ -523,7 +524,7 @@ static std::unique_ptr<Config> specify_drive_conf()
 	constexpr auto OnStartup = Property::Changeable::OnlyAtStart;
 
 	prop->AddString("type", OnStartup, defaults.type.c_str())
-	        ->SetValues({"dir", "floppy", "cdrom", "overlay"});
+	        ->SetValues({"dir", "floppy", "cdrom", "iso", "overlay"});
 
 	prop->AddString("label", OnStartup, defaults.label.c_str());
 	prop->AddString("path", OnStartup, defaults.path.c_str());
@@ -574,7 +575,8 @@ static std::optional<AutoMountSettings> parse_drive_conf(const char dir_letter,
 		        conf_path.string().c_str(),
 		        type.c_str());
 		LOG_ERR("AUTOMOUNT: Type can be set to 'floppy' only for drive letters 'a' or 'b'");
-	} else if (type == "cdrom" && (dir_letter == 'a' || dir_letter == 'b')) {
+	} else if ((type == "cdrom" || type == "iso") &&
+	           (dir_letter == 'a' || dir_letter == 'b')) {
 		LOG_ERR("AUTOMOUNT: %s: setting 'type = %s' is invalid",
 		        conf_path.string().c_str(),
 		        type.c_str());
@@ -719,13 +721,13 @@ static std::string build_auto_mount_cmd(const char dir_letter,
                                         const std_fs::path& drive_path,
                                         const std::optional<AutoMountSettings>& settings)
 {
-	auto image_type                         = "cdrom";
+	std::set<std::string_view, std::less<>> image_type = {"cdrom", "iso"};
 	std::vector<std::string_view> image_ext = {".iso", ".cue", ".mds"};
 	auto build_auto_mount_images_cmd = build_auto_mount_cd_images_cmd;
 
 	// Look for floppy images when dir_letter matches a floppy drive
 	if (dir_letter == 'a' || dir_letter == 'b') {
-		image_type                  = "floppy";
+		image_type                  = {"floppy"};
 		image_ext                   = {".img", ".ima"};
 		build_auto_mount_images_cmd = build_auto_mount_fd_images_cmd;
 	}
@@ -736,7 +738,7 @@ static std::string build_auto_mount_cmd(const char dir_letter,
 	// Use images for the drive mount if some have been found, and if the
 	// drive type is unset or matches the image type
 	if (!image_paths.empty() &&
-	    (settings->type.empty() || settings->type == image_type)) {
+	    (settings->type.empty() || image_type.contains(settings->type))) {
 		return build_auto_mount_images_cmd(dir_letter, image_paths, settings);
 	}
 

@@ -994,7 +994,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "the drive's directory, with content as follows:\n"
 	        "\n"
 	        "  [drive]\n"
-	        "  type     = dir, overlay, floppy, or cdrom\n"
+	        "  type     = dir, overlay, floppy, cdrom or iso (same as cdrom)\n"
 	        "  label    = custom_label\n"
 	        "  path     = path-specification (e.g., path = %%path%%;c:\\tools)\n"
 	        "  override_drive = mount the directory to this drive instead (default empty)\n"
