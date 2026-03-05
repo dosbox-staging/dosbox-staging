@@ -135,12 +135,13 @@ static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint32_t) == 0,
 
 #include "dyn_cache.h"
 
-// Currently, the dynrec core is only used for ARM v8. We might want to add an
-// option later to compile for x64; it could be useful to compare the two
-// implementations when troubleshooting issues.
-
-// #include "core_dynrec/risc_x64.h"
-#include "core_dynrec/risc_armv8le.h"
+#if C_TARGETCPU == X86_64
+	#include "core_dynrec/risc_x64.h"
+#elif C_TARGETCPU == ARMV8LE
+	#include "core_dynrec/risc_armv8le.h"
+#else
+	#error "Unsupported target CPU"
+#endif
 
 #include "simde/x86/mmx.h"
 
