@@ -24,6 +24,10 @@ jobs:
       - name: Set common vars
         uses: ./.github/actions/set-common-vars
 
+      - name: Install markdown2
+        shell: bash
+        run: pip3 install markdown2 requests
+
       - name: Query pull requests
         run: |
           ./scripts/tools/release-notes-drafter.py \
