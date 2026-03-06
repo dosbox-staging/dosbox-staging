@@ -206,6 +206,15 @@ static void DrawBars(void)
 	// window structures
 }
 
+void DEBUG_RefreshLayout()
+{
+	wclear(dbg.win_main);
+	DEBUG_RefreshPage(0);
+	wclear(dbg.win_var);
+	Draw_RegisterLayout();
+	DrawBars();
+}
+
 static void MakeSubWindows(void)
 {
 	/* The Std output win should go at the bottom */

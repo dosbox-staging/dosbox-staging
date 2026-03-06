@@ -415,8 +415,8 @@ int PDC_get_key(void)
     case SDL_QUIT:
         exit(1);
     case SDL_WINDOWEVENT:
-        if (SDL_WINDOWEVENT_SIZE_CHANGED == event.window.event)
-        {
+        switch(event.window.event ) {
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
             pdc_screen = SDL_GetWindowSurface(pdc_window);
             pdc_sheight = pdc_screen->h - pdc_xoffset;
             pdc_swidth = pdc_screen->w - pdc_yoffset;
@@ -429,6 +429,11 @@ int PDC_get_key(void)
                 SP->key_code = TRUE;
                 return KEY_RESIZE;
             }
+            break;
+        case SDL_WINDOWEVENT_CLOSE:
+            SP->key_code = TRUE;
+            return KEY_CLOSE;
+            break;
         }
         break;
     case SDL_MOUSEMOTION:
