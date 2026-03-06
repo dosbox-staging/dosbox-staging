@@ -306,18 +306,22 @@ jobs:
         run: |
           cd out
           C:\PROGRA~2\INNOSE~1\ISCC.exe DOSBox-Staging-setup.iss
-          dir
 
       - name: Download release notes HTML
         uses: actions/download-artifact@v8
         with:
           name: release-notes-html
 
+      - name: Prepare upload directory
+        shell: pwsh
+        run: |
+          move out\*-setup.exe .
+
       - name: Upload Windows installer
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.PACKAGE_DIR }}-setup
           path: |
-            ${{ github.workspace }}\out\${{ env.PACKAGE_DIR }}-setup.exe
+            ${{ env.PACKAGE_DIR }}-setup.exe
             release-notes.html
           overwrite: true
