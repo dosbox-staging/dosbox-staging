@@ -35,8 +35,9 @@
 //
 // These defines are mostly relevant to modules src/cpu/ and src/fpu/
 
-// The type of cpu this target has
-#cmakedefine C_TARGETCPU @C_TARGETCPU@
+// Target CPU we're compiling for; only one of these can be 1
+#cmakedefine01 C_TARGET_CPU_ARM
+#cmakedefine01 C_TARGET_CPU_X86
 
 // Define to 1 if target CPU supports unaligned memory access
 #cmakedefine01 C_UNALIGNED_MEMORY
@@ -44,18 +45,18 @@
 // Define to 1 if the target platform needs per-page dynamic core write or execute (W^X) tagging
 #cmakedefine01 C_PER_PAGE_W_OR_X
 
-// Define to 1 to use x86/x86_64 dynamic cpu core
+// Define to 1 to use the x86_64 dynamic CPU core
 // Can not be used together with C_DYNREC
 #cmakedefine01 C_DYNAMIC_X86
 
-// Define to 1 to use recompiling cpu core
+// Define to 1 to use the recompiling CPU core
 // Can not be used together with C_DYNAMIC_X86
 #cmakedefine01 C_DYNREC
 
-// Define to 1 to use FPU core implemented in x86 assembler
+// Define to 1 to use the FPU core implemented in x86 assembler
 #cmakedefine01 C_FPU_X86
 
-// TODO Define to 1 to use inlined memory functions in cpu core
+// Define to 1 to use inlined memory functions in CPU core
 #define C_CORE_INLINE 1
 
 
@@ -162,13 +163,6 @@
 #cmakedefine HAVE_SYS_SOCKET_H
 #cmakedefine HAVE_SYS_TYPES_H
 #cmakedefine HAVE_SYS_XATTR_H
-
-
-// Hardware-related defines
-//
-
-// Define to 1 when host/target processor uses big endian byte ordering
-#cmakedefine WORDS_BIGENDIAN
 
 
 // Windows-related defines

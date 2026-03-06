@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2026 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox.h"
@@ -174,16 +174,7 @@ struct dyn_dh_fpu {
 
 #	endif
 
-#	define X86    0x01
-#	define X86_64 0x02
-
-#	if C_TARGETCPU == X86_64
-#		include "core_dyn_x86/risc_x64.h"
-#	elif C_TARGETCPU == X86
-#		include "core_dyn_x86/risc_x86.h"
-#	else
-#		error DYN_X86 core not supported for this CPU target.
-#	endif
+#include "core_dyn_x86/risc_x64.h"
 
 struct DynState {
 	DynReg regs[G_MAX];
