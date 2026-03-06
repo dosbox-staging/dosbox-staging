@@ -122,7 +122,7 @@ if (APPLE)
   # performance at all.
   add_compile_options("-g")
 
-  if (C_TARGET_CPU STREQUAL "ARMV8LE")
+  if (CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
     # This has virtually zero performance impact on ARM and it gives us deep
     # observability on release mode builds at full speed (e.g., when using a
     # profiler).
