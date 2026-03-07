@@ -442,6 +442,9 @@ add_executable(dosbox src/main.cpp src/dosbox.cpp)
 target_include_directories(
   dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
 )
+if (OPT_DEBUGGER)
+  set_target_properties( dosbox PROPERTIES OUTPUT_NAME dosbox_with_debugger)
+endif()
 
 # Bundle licenses, but skip the ones that are not relevant for
 # binary distribution or allow us to not distribute the license text.
