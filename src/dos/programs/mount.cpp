@@ -64,9 +64,19 @@ void MOUNT::ListMounts()
 		         txt_label.c_str());
 	};
 
-	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
-	print_row(header_drive, header_type, header_path, header_label);
-	const std::string horizontal_divider(console_width, '-');
+	WriteOut("\n");
+	print_row(convert_ansi_markup("[color=white]") + header_drive,
+	          header_type,
+	          header_path,
+	          header_label + convert_ansi_markup("[reset]"));
+
+	// Make a horizontal divider that draws "-" underneath the headers,
+	// using width_drive, width_type, width_path, and width_label to
+	// determine how long each section should be
+	const std::string horizontal_divider = std::string(width_drive, '-') + " " +
+	                                       std::string(width_type, '-') + " " +
+	                                       std::string(width_path, '-') + " " +
+	                                       std::string(width_label, '-') + "\n";
 	WriteOut_NoParsing(horizontal_divider);
 
 	bool found_drives = false;
@@ -82,7 +92,11 @@ void MOUNT::ListMounts()
 					auto path = img->GetInfo();
 
 					std::string drive_letter_str =
-					        first ? " " + std::string{drive_letter(d)} + ":"
+					        first ? convert_ansi_markup(
+					                        " [color=light-cyan]" +
+					                        std::string{drive_letter(
+					                                d)} +
+					                        ":[reset]  ")
 					              : "";
 					std::string label_str =
 					        first ? To_Label(Drives[d]->GetLabel())
@@ -100,7 +114,10 @@ void MOUNT::ListMounts()
 				auto type = Drives[d]->GetTypeString();
 				auto path = Drives[d]->GetInfo();
 
-				print_row(" " + std::string{drive_letter(d)} + ":",
+				print_row(convert_ansi_markup(
+				                  " [color=light-cyan]" +
+				                  std::string{drive_letter(d)} +
+				                  ":[reset]  "),
 				          type,
 				          truncate_path(path, width_path),
 				          To_Label(Drives[d]->GetLabel()));
@@ -112,6 +129,7 @@ void MOUNT::ListMounts()
 	if (!found_drives) {
 		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_STATUS_NONE"));
 	}
+	WriteOut("\n");
 }
 void MOUNT::ShowUsage()
 {
