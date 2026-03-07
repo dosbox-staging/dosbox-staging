@@ -2,258 +2,264 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "debug",
-      "displayName": "Debug",
-      "description": "Configure for Debug build",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug",
+      "name": "default",
+      "hidden": true,
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/../resources"
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
+        "RESOURCE_COPY_PATH": "/resources"
+      }
+    },
+    {
+      "name": "debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
       "name": "release",
-      "displayName": "Release",
-      "description": "Configure for Release build",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release",
+      "hidden": true,
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/../resources"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
+      "name": "vcpkg",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "debugger",
+      "hidden": true,
+      "cacheVariables": {
+        "OPT_DEBUGGER": "ON"
+      }
+    },
+    {
+      "name": "linux",
+      "hidden": true,
+      "generator": "Ninja"
+    },
+    {
       "name": "debug-linux",
+      "inherits": [ "default", "debug", "linux" ],
       "displayName": "Debug (Linux host CPU), using system libs",
       "description": "Configure for Debug build",
-      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/debug-linux",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/resources",
         "USE_SYSTEM_LIBS": "ON"
       }
     },
     {
       "name": "release-linux",
+      "inherits": [ "default", "release", "linux" ],
       "displayName": "Release (Linux host CPU), using system libs",
       "description": "Configure for Release build",
-      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/release-linux",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/resources",
         "USE_SYSTEM_LIBS": "ON"
       }
     },
     {
       "name": "debug-linux-vcpkg",
+      "inherits": [ "default", "debug", "linux", "vcpkg" ],
       "displayName": "Debug (Linux host CPU), using vcpkg",
       "description": "Configure for Debug build",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug-linux",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/resources"
-      }
+      "binaryDir": "${sourceDir}/build/debug-linux"
     },
     {
       "name": "release-linux-vcpkg",
+      "inherits": [ "default", "release", "linux", "vcpkg" ],
       "displayName": "Release (Linux host CPU), using vcpkg",
       "description": "Configure for Release build",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release-linux",
+      "binaryDir": "${sourceDir}/build/release-linux"
+    },
+    {
+      "name": "macos",
+      "hidden": true,
+      "generator": "Xcode",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/resources"
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0"
       }
     },
     {
       "name": "debug-macos",
+      "inherits": [ "default", "debug", "vcpkg", "macos" ],
       "displayName": "Debug (macOS host CPU)",
       "description": "Configure for Debug build",
-      "generator": "Xcode",
-      "binaryDir": "${sourceDir}/build/debug-macos",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/Resources"
-      }
+      "binaryDir": "${sourceDir}/build/debug-macos"
     },
     {
       "name": "release-macos",
+      "inherits": [ "default", "release", "vcpkg", "macos" ],
       "displayName": "Release (macOS host CPU)",
       "description": "Configure for Release build",
-      "generator": "Xcode",
-      "binaryDir": "${sourceDir}/build/release-macos",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/Resources"
-      }
+      "binaryDir": "${sourceDir}/build/release-macos"
     },
     {
       "name": "release-macos-arm64",
+      "inherits": [ "default", "release", "vcpkg", "macos" ],
       "displayName": "Release (macOS arm64)",
       "description": "Configure for Release build",
-      "generator": "Xcode",
       "binaryDir": "${sourceDir}/build/release-macos-arm64",
       "cacheVariables": {
-        "CMAKE_OSX_ARCHITECTURES": "arm64",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/Resources"
+        "CMAKE_OSX_ARCHITECTURES": "arm64"
       }
     },
     {
       "name": "release-macos-x86_64",
+      "inherits": [ "default", "release", "vcpkg", "macos" ],
       "displayName": "Release (macOS x86_64)",
       "description": "Configure for Release build",
-      "generator": "Xcode",
       "binaryDir": "${sourceDir}/build/release-macos-x86_64",
       "cacheVariables": {
-        "CMAKE_OSX_ARCHITECTURES": "x86_64",
-        "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/Resources"
+        "CMAKE_OSX_ARCHITECTURES": "x86_64"
+      }
+    },
+    {
+      "name": "windows",
+      "hidden": true,
+      "generator": "Visual Studio 18 2026",
+      "cacheVariables": {
+        "CMAKE_GENERATOR_TOOLSET": "ClangCL"
+      },
+      "environment": {
+        "UseMultiToolTask": "true",
+        "EnforceProcessCountAcrossBuilds": "true"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
     },
     {
       "name": "debug-windows",
-      "displayName": "Debug (Windows host CPU)",
-      "description": "Configure for Debug build",
-      "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/debug-windows",
-      "cacheVariables": {
-        "CMAKE_GENERATOR_TOOLSET": "ClangCL",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/Resources"
-      },
-      "environment": {
-        "UseMultiToolTask": "true",
-        "EnforceProcessCountAcrossBuilds": "true"
-      }
+      "inherits": [ "default", "debug", "vcpkg", "windows" ],
+      "binaryDir": "${sourceDir}/build/debug-windows"
     },
     {
       "name": "release-windows",
-      "displayName": "Release (Windows host CPU)",
-      "description": "Configure for Release build",
+      "inherits": [ "default", "release", "vcpkg", "windows" ],
+      "binaryDir": "${sourceDir}/build/release-windows"
+    },
+    {
+      "name": "debug-windows-debugger",
+      "inherits": [ "default", "debug", "vcpkg", "windows", "debugger" ],
+      "binaryDir": "${sourceDir}/build/debug-windows"
+    },
+    {
+      "name": "release-windows-debugger",
+      "inherits": [ "default", "release", "vcpkg", "windows", "debugger" ],
+      "binaryDir": "${sourceDir}/build/release-windows"
+    },
+    {
+      "name": "debug-windows-vs2022",
+      "inherits": [ "default", "debug", "vcpkg", "windows" ],
       "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/release-windows",
-      "cacheVariables": {
-        "CMAKE_GENERATOR_TOOLSET": "ClangCL",
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/Resources"
-      },
-      "environment": {
-        "UseMultiToolTask": "true",
-        "EnforceProcessCountAcrossBuilds": "true"
-      }
+      "binaryDir": "${sourceDir}/build/debug-windows-vs2022"
+    },
+    {
+      "name": "release-windows-vs2022",
+      "inherits": [ "default", "release", "vcpkg", "windows" ],
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/release-windows-vs2022"
     }
   ],
   "buildPresets": [
     {
-      "name": "debug",
-      "configurePreset": "debug"
-    },
-    {
-      "name": "release",
-      "configurePreset": "release"
-    },
-    {
       "name": "debug-linux",
-      "configurePreset" : "debug-linux",
+      "configurePreset": "debug-linux",
       "configuration": "Debug"
     },
     {
       "name": "release-linux",
-      "configurePreset" : "release-linux",
+      "configurePreset": "release-linux",
       "configuration": "Release"
     },
     {
       "name": "debug-linux-vcpkg",
-      "configurePreset" : "debug-linux",
+      "configurePreset": "debug-linux-vcpkg",
       "configuration": "Debug"
     },
     {
       "name": "release-linux-vcpkg",
-      "configurePreset" : "release-linux",
+      "configurePreset": "release-linux-vcpkg",
       "configuration": "Release"
     },
     {
       "name": "debug-macos",
-      "configurePreset" : "debug-macos",
+      "configurePreset": "debug-macos",
       "configuration": "Debug",
-      "nativeToolOptions": ["-quiet"]
+      "nativeToolOptions": [ "-quiet" ]
     },
     {
       "name": "release-macos",
-      "configurePreset" : "release-macos",
+      "configurePreset": "release-macos",
       "configuration": "Release",
-      "nativeToolOptions": ["-quiet"]
+      "nativeToolOptions": [ "-quiet" ]
     },
     {
       "name": "release-macos-arm64",
-      "configurePreset" : "release-macos-arm64",
+      "configurePreset": "release-macos-arm64",
       "configuration": "Release",
-      "nativeToolOptions": ["-quiet"]
+      "nativeToolOptions": [ "-quiet" ]
     },
     {
       "name": "release-macos-x86_64",
-      "configurePreset" : "release-macos-x86_64",
+      "configurePreset": "release-macos-x86_64",
       "configuration": "Release",
-      "nativeToolOptions": ["-quiet"]
+      "nativeToolOptions": [ "-quiet" ]
     },
     {
       "name": "debug-windows",
-      "configurePreset" : "debug-windows",
+      "configurePreset": "debug-windows",
+      "displayName": "Debug (Windows host CPU)",
+      "description": "Configure for Debug build",
       "configuration": "Debug"
     },
     {
       "name": "release-windows",
-      "configurePreset" : "release-windows",
+      "configurePreset": "release-windows",
+      "displayName": "Release (Windows host CPU)",
+      "description": "Configure for Release build",
+      "configuration": "Release"
+    },
+    {
+      "name": "debug-windows-debugger",
+      "configurePreset": "debug-windows-debugger",
+      "displayName": "Debug (Windows host CPU) with debugger",
+      "description": "Configure for Debug build",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-windows-debugger",
+      "configurePreset": "release-windows-debugger",
+      "displayName": "Release (Windows host CPU) with debugger",
+      "description": "Configure for Release build",
+      "configuration": "Release"
+    },
+    {
+      "name": "debug-windows-vs2022",
+      "configurePreset": "debug-windows-vs2022",
+      "displayName": "Debug (Windows host CPU), using VS2022",
+      "description": "Configure for Debug build",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-windows-vs2022",
+      "configurePreset": "release-windows-vs2022",
+      "displayName": "Release (Windows host CPU), using VS2022",
+      "description": "Configure for Release build",
       "configuration": "Release"
     }
   ],
   "testPresets": [
     {
-      "name": "debug",
-      "configurePreset": "debug",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "release",
-      "configurePreset": "release",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
       "name": "debug-linux",
-      "configurePreset" : "debug-linux",
+      "configurePreset": "debug-linux",
       "configuration": "Debug",
       "output": {
         "outputOnFailure": true
@@ -261,7 +267,7 @@
     },
     {
       "name": "release-linux",
-      "configurePreset" : "release-linux",
+      "configurePreset": "release-linux",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
@@ -269,7 +275,7 @@
     },
     {
       "name": "debug-linux-vcpkg",
-      "configurePreset" : "debug-linux",
+      "configurePreset": "debug-linux-vcpkg",
       "configuration": "Debug",
       "output": {
         "outputOnFailure": true
@@ -277,7 +283,7 @@
     },
     {
       "name": "release-linux-vcpkg",
-      "configurePreset" : "release-linux",
+      "configurePreset": "release-linux-vcpkg",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
@@ -285,7 +291,7 @@
     },
     {
       "name": "debug-macos",
-      "configurePreset" : "debug-macos",
+      "configurePreset": "debug-macos",
       "configuration": "Debug",
       "output": {
         "outputOnFailure": true
@@ -293,7 +299,7 @@
     },
     {
       "name": "release-macos",
-      "configurePreset" : "release-macos",
+      "configurePreset": "release-macos",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
@@ -301,7 +307,7 @@
     },
     {
       "name": "release-macos-arm64",
-      "configurePreset" : "release-macos-arm64",
+      "configurePreset": "release-macos-arm64",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
@@ -309,7 +315,7 @@
     },
     {
       "name": "release-macos-x86_64",
-      "configurePreset" : "release-macos-x86_64",
+      "configurePreset": "release-macos-x86_64",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
@@ -317,7 +323,7 @@
     },
     {
       "name": "debug-windows",
-      "configurePreset" : "debug-windows",
+      "configurePreset": "debug-windows",
       "configuration": "Debug",
       "output": {
         "outputOnFailure": true
@@ -325,7 +331,39 @@
     },
     {
       "name": "release-windows",
-      "configurePreset" : "release-windows",
+      "configurePreset": "release-windows",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug-windows-debugger",
+      "configurePreset": "debug-windows-debugger",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release-windows-debugger",
+      "configurePreset": "release-windows-debugger",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug-windows-vs2022",
+      "configurePreset": "debug-windows-vs2022",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release-windows-vs2022",
+      "configurePreset": "release-windows-vs2022",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
