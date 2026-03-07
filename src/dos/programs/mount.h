@@ -65,7 +65,7 @@ private:
 
 	void WriteMountStatus(const std::string& image_type,
 	                      const std::vector<std::string>& images,
-	                      char drive_letter);
+	                      char drive_letter, bool readonly);
 };
 
 #endif // DOSBOX_PROGRAM_MOUNT_H
