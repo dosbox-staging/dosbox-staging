@@ -284,10 +284,6 @@ std::vector<std::string> split_with_empties(std::string_view seq, char delim);
 std::vector<std::string> split(std::string_view seq,
                                std::string_view delims = " \f\n\r\t\v");
 
-std::string join_with_commas(const std::vector<std::string>& items,
-                             const std::string_view and_conjunction = "and",
-                             const std::string_view end_punctuation = ".");
-
 // Parse the string as an integer or decimal value and return it as a float.
 // This API should give us enough numerical range and accuracy for any
 // text-based inputs.

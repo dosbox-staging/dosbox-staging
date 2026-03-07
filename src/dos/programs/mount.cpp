@@ -33,41 +33,95 @@ void MOUNT::ListMounts()
 {
 	const std::string header_drive = MSG_Get("PROGRAM_MOUNT_STATUS_DRIVE");
 	const std::string header_type  = MSG_Get("PROGRAM_MOUNT_STATUS_TYPE");
+	const std::string header_path  = MSG_Get("PROGRAM_MOUNT_STATUS_PATH");
 	const std::string header_label = MSG_Get("PROGRAM_MOUNT_STATUS_LABEL");
 
 	const int console_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
 	const auto width_drive  = static_cast<int>(header_drive.length());
+	const auto width_type   = 16;
 	const auto width_label  = std::max(minimum_column_length,
                                           static_cast<int>(header_label.size()));
-	const auto width_type   = console_width - 3 - width_drive - width_label;
-	if (width_type < 0) {
+	const auto width_path   = console_width - 4 - width_drive - width_type -
+	                        width_label;
+
+	if (width_path < 0) {
 		LOG_WARNING("Message is too long.");
 		return;
 	}
 
 	auto print_row = [&](const std::string& txt_drive,
 	                     const std::string& txt_type,
+	                     const std::string& txt_path,
 	                     const std::string& txt_label) {
-		WriteOut("%-*s %-*s %-*s\n",
+		WriteOut("%-*s %-*s %-*s %-*s\n",
 		         width_drive,
 		         txt_drive.c_str(),
 		         width_type,
 		         txt_type.c_str(),
+		         width_path,
+		         txt_path.c_str(),
 		         width_label,
 		         txt_label.c_str());
 	};
 
-	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
-	print_row(header_drive, header_type, header_label);
-	const std::string horizontal_divider(console_width, '-');
+	WriteOut("\n");
+	print_row(convert_ansi_markup("[color=white]") + header_drive,
+	          header_type,
+	          header_path,
+	          header_label + convert_ansi_markup("[reset]"));
+
+	// Make a horizontal divider that draws "-" underneath the headers,
+	// using width_drive, width_type, width_path, and width_label to
+	// determine how long each section should be
+	const std::string horizontal_divider = std::string(width_drive, '-') + " " +
+	                                       std::string(width_type, '-') + " " +
+	                                       std::string(width_path, '-') + " " +
+	                                       std::string(width_label, '-') + "\n";
 	WriteOut_NoParsing(horizontal_divider);
 
 	bool found_drives = false;
 	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
 		if (Drives[d]) {
-			print_row(std::string{drive_letter(d)},
-			          Drives[d]->GetInfoString(),
-			          To_Label(Drives[d]->GetLabel()));
+			const auto& images = DriveManager::GetFilesystemImages(d);
+
+			// Render rows for drives holding multiple loaded images
+			if (images.size() > 1) {
+				bool first = true;
+				for (const auto& img : images) {
+					auto type = img->GetTypeString();
+					auto path = img->GetInfo();
+
+					std::string drive_letter_str =
+					        first ? convert_ansi_markup(
+					                        " [color=light-cyan]" +
+					                        std::string{drive_letter(
+					                                d)} +
+					                        ":[reset]  ")
+					              : "";
+					std::string label_str =
+					        first ? To_Label(Drives[d]->GetLabel())
+					              : "";
+					std::string type_str = first ? type : "";
+
+					print_row(drive_letter_str,
+					          type_str,
+					          truncate_path(path, width_path),
+					          label_str);
+					first = false;
+				}
+			} else {
+				// Render singular drive logic
+				auto type = Drives[d]->GetTypeString();
+				auto path = Drives[d]->GetInfo();
+
+				print_row(convert_ansi_markup(
+				                  " [color=light-cyan]" +
+				                  std::string{drive_letter(d)} +
+				                  ":[reset]  "),
+				          type,
+				          truncate_path(path, width_path),
+				          To_Label(Drives[d]->GetLabel()));
+			}
 			found_drives = true;
 		}
 	}
@@ -75,8 +129,8 @@ void MOUNT::ListMounts()
 	if (!found_drives) {
 		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_STATUS_NONE"));
 	}
+	WriteOut("\n");
 }
-
 void MOUNT::ShowUsage()
 {
 	MoreOutputStrings output(*this);
@@ -120,21 +174,39 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
 	return true;
 }
 
-void MOUNT::WriteMountStatus(const char* image_type,
-                             const std::vector<std::string>& images, char drive_letter)
+void MOUNT::WriteMountStatus(const std::string& image_type,
+                             const std::vector<std::string>& images,
+                             char drive_letter, bool readonly)
 {
-	constexpr auto EndPunctuation = "";
+	const size_t term_width = INT10_GetTextColumns();
+	constexpr auto Indent   = "  ";
+	const auto indent_size = strlen(Indent);
+	std::string images_str  = {};
 
-	const auto images_str = join_with_commas(images,
-	                                         MSG_Get("CONJUNCTION_AND"),
-	                                         EndPunctuation);
+	if (images.size() == 1) {
+		// If only one image, don't add newlines and just write in one
+		// line:
+		images_str = image_type.c_str() + std::string(" ") + images[0];
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
+		         images_str.c_str(),
+		         drive_letter);
+		if (readonly) {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_READONLY"));
+		}
+	} else {
 
-	const std::string type_and_images_str = image_type + std::string(" ") +
-	                                        images_str;
-
-	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
-	         type_and_images_str.c_str(),
-	         drive_letter);
+		for (const auto& image : images) {
+			assert(!image.empty());
+			images_str = images_str.append(
+			        std::string(Indent) +
+			        truncate_path(image, term_width - indent_size) +
+			        std::string("\n"));
+		}
+		WriteOut(MSG_Get("PROGRAM_MOUNT_RESULT"),
+		         image_type.c_str(),
+		         drive_letter,
+		         images_str.c_str());
+	}
 }
 
 bool MOUNT::MountImageFat(MountParameters& params)
@@ -258,7 +330,10 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	}
 	dos.dta(save_dta);
 
-	WriteMountStatus(MSG_Get("MOUNT_TYPE_FAT").c_str(), params.paths, params.drive);
+	std::string mount_message = (params.paths.size() > 1)
+	                                  ? MSG_Get("MOUNT_TYPE_FAT_PLURAL")
+	                                  : MSG_Get("MOUNT_TYPE_FAT");
+	WriteMountStatus(mount_message, params.paths, params.drive, params.roflag);
 
 	const auto fat_image = std::dynamic_pointer_cast<fatDrive>(
 	        fat_images.front());
@@ -342,7 +417,12 @@ bool MOUNT::MountImageIso(MountParameters& params)
 
 	// Print status message (success)
 	WriteOut(MSG_Get("MSCDEX_SUCCESS"));
-	WriteMountStatus(MSG_Get("MOUNT_TYPE_ISO").c_str(), params.paths, params.drive);
+
+	std::string mount_message = (params.paths.size() > 1)
+	                                  ? MSG_Get("MOUNT_TYPE_CDIMAGE_PLURAL")
+	                                  : MSG_Get("MOUNT_TYPE_CDIMAGE");
+	WriteMountStatus(mount_message, params.paths, params.drive, params.roflag);
+
 	return true;
 }
 
@@ -417,10 +497,23 @@ bool MOUNT::MountImage(MountParameters& params)
 bool MOUNT::HandleUnmount()
 {
 	std::string umount = {};
+
+	// Standard order: -u <drive>
 	if (cmd->FindString("-u", umount, false)) {
 		WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
 		return true;
 	}
+
+	// Reverse order: <drive> -u
+	if (cmd->FindExist("-u", false)) {
+		// Check umount != "-u" to prevent parsing errors if the user
+		// just types "mount -u".
+		if (cmd->FindCommand(1, umount) && !umount.empty() && umount != "-u") {
+			WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
+			return true;
+		}
+	}
+
 	return false;
 }
 
@@ -435,6 +528,9 @@ void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	// Allow aliases or standard image types to pass through
 	if (params.type == "cdrom") {
 		params.type = "iso";
+	}
+	if (params.type == "fdd") {
+		params.type = "floppy";
 	}
 
 	params.roflag = cmd->FindExist("-ro", true);
@@ -491,7 +587,8 @@ void MOUNT::ParseGeometry(MountParameters& params)
 		// parsing below. If it is unknown, we error out later.
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
-		                      "PROGRAM_MOUNT_ILL_TYPE");
+		                      "PROGRAM_MOUNT_ILL_TYPE",
+		                      params.type.c_str());
 		return;
 	}
 

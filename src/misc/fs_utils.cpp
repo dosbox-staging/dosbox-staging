@@ -88,7 +88,39 @@ std::optional<std::vector<std::string>> get_lines(const std_fs::path &text_file)
 	return lines;
 }
 
-std_fs::path simplify_path(const std_fs::path &original_path) noexcept
+std::string truncate_path(const std_fs::path& path, int max_length)
+{
+	const std::string ellipsis = "...";
+
+	assert(max_length > 0);
+
+	const auto max_length_unsigned = static_cast<size_t>(max_length);
+
+	// Extremely small widths
+	if (max_length_unsigned <= ellipsis.size()) {
+		return ellipsis.substr(0, max_length_unsigned);
+	}
+
+	auto filename  = path.filename().string();
+
+	// Full path fits
+	if (path.string().size() <= max_length_unsigned) {
+		return path.string();
+	}
+
+	// Shorten path while keeping the filename whole
+	if (max_length_unsigned > filename.size() + ellipsis.size()) {
+		auto keep_from_right = max_length_unsigned - ellipsis.size();
+		return ellipsis +
+		       path.string().substr(path.string().size() - keep_from_right);
+	}
+
+	// Truncate the filename from the left if too long
+	auto keep_from_right = max_length_unsigned - ellipsis.size();
+	return ellipsis + filename.substr(filename.size() - keep_from_right);
+}
+
+std_fs::path simplify_path(const std_fs::path& original_path) noexcept
 {
 	auto ec = std::error_code();
 
