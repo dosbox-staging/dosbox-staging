@@ -4,10 +4,10 @@
 #ifndef DOSBOX_RENDER_BACKEND_H
 #define DOSBOX_RENDER_BACKEND_H
 
-#include "gui/private/common.h"
-#include "gui/private/shader_manager.h"
-
 #include <string>
+
+#include "gui/private/common.h"
+#include "private/shader_common.h"
 
 #include "dosbox_config.h"
 #include "gui/render/render.h"
@@ -75,6 +75,9 @@ public:
 	// (see `ShaderManager::NotifyShaderChanged()`.
 	virtual std::string GetCurrentSymbolicShaderDescriptor() = 0;
 
+	// Get the shader descriptor of the currently active shader.
+	virtual ShaderDescriptor GetCurrentShaderDescriptor() = 0;
+
 	// Called at the start of every unique frame (when there have been
 	// changes to the DOS framebuffer).
 	//
@@ -120,6 +123,9 @@ public:
 
 	// Sets image adjustment settings.
 	virtual void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings) = 0;
+
+	// Sets dedithering strength.
+	virtual void SetDeditheringStrength(const float strength) = 0;
 
 	// Read the specified rectangle of the post-shader from the window's
 	// framebuffer.

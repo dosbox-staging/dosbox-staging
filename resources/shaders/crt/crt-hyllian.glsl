@@ -12,19 +12,24 @@
 
 /*
 
-#pragma parameter BEAM_PROFILE "BEAM PROFILE (BP)" 0.0 0.0 2.0 1.0
-#pragma parameter HFILTER_PROFILE "HORIZONTAL FILTER PROFILE [ HERMITE | CATMULL-ROM ]" 0.0 0.0 1.0 1.0
-#pragma parameter BEAM_MIN_WIDTH "Custom [If BP=0.00] MIN BEAM WIDTH" 0.95 0.0 1.0 0.01
-#pragma parameter BEAM_MAX_WIDTH "Custom [If BP=0.00] MAX BEAM WIDTH" 1.30 0.0 1.0 0.01
-#pragma parameter SCANLINES_STRENGTH "Custom [If BP=0.00] SCANLINES STRENGTH" 0.85 0.0 1.0 0.01
-#pragma parameter COLOR_BOOST "Custom [If BP=0.00] COLOR BOOST" 2.50 1.0 2.0 0.05
-#pragma parameter SHARPNESS_HACK "SHARPNESS_HACK" 1.0 1.0 4.0 1.0
-#pragma parameter PHOSPHOR_LAYOUT "PHOSPHOR LAYOUT" 2.0 0.0 19.0 1.0
-#pragma parameter MASK_INTENSITY "MASK INTENSITY" 0.55 0.0 1.0 0.1
-#pragma parameter CRT_ANTI_RINGING "ANTI RINGING" 1.0 0.0 1.0 0.2
-#pragma parameter INPUT_GAMMA "INPUT GAMMA" 2.4 0.0 5.0 0.1
-#pragma parameter OUTPUT_GAMMA "OUTPUT GAMMA" 2. 0.0 5.0 0.1
-#pragma parameter VSCANLINES "VERTICAL SCANLINES [ OFF | ON ]" 0.0 0.0 1.0 1.0
+#pragma name        Main_Pass1
+#pragma output_size Viewport
+
+#pragma parameter BEAM_PROFILE       "BEAM PROFILE (BP)"                                    0.0  0.0 2.0   1.0
+#pragma parameter HFILTER_PROFILE    "HORIZONTAL FILTER PROFILE [ HERMITE | CATMULL-ROM ]"  0.0  0.0 1.0   1.0
+#pragma parameter BEAM_MIN_WIDTH     "Custom [If BP=0.00] MIN BEAM WIDTH"                  0.95  0.0 1.0  0.01
+#pragma parameter BEAM_MAX_WIDTH     "Custom [If BP=0.00] MAX BEAM WIDTH"                  1.30  0.0 1.0  0.01
+#pragma parameter SCANLINES_STRENGTH "Custom [If BP=0.00] SCANLINES STRENGTH"              0.85  0.0 1.0  0.01
+#pragma parameter COLOR_BOOST        "Custom [If BP=0.00] COLOR BOOST"                     2.50  1.0 2.0  0.05
+
+#pragma parameter SHARPNESS_HACK     "SHARPNESS_HACK"  1.0   1.0  4.0  1.0
+#pragma parameter PHOSPHOR_LAYOUT    "PHOSPHOR LAYOUT" 2.0   0.0 19.0  1.0
+#pragma parameter MASK_INTENSITY     "MASK INTENSITY"  0.55  0.0  1.0  0.1
+#pragma parameter CRT_ANTI_RINGING   "ANTI RINGING"    1.0   0.0  1.0  0.2
+#pragma parameter INPUT_GAMMA        "INPUT GAMMA"     2.4   0.0  5.0  0.1
+#pragma parameter OUTPUT_GAMMA       "OUTPUT GAMMA"    2.0   0.0  5.0  0.1
+
+#pragma parameter VSCANLINES         "VERTICAL SCANLINES [ OFF | ON ]" 0.0  0.0 1.0  1.0
 
 */
 
@@ -39,16 +44,13 @@ layout (location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
 
-uniform vec2 rubyOutputSize;
-uniform vec2 rubyTextureSize;
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0 *
-	             rubyInputSize / rubyTextureSize;
+	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 }
 
 #elif defined(FRAGMENT)
@@ -57,8 +59,8 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 rubyTextureSize;
-uniform sampler2D s_p;
+uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform sampler2D INPUT_TEXTURE_0;
 
 uniform float BEAM_PROFILE;
 uniform float HFILTER_PROFILE;
@@ -453,13 +455,14 @@ void main()
 	vec4 profile = get_beam_profile();
 
 	vec2 TextureSize =
-	        mix(vec2(rubyTextureSize.x * SHARPNESS_HACK, rubyTextureSize.y),
-	            vec2(rubyTextureSize.x, rubyTextureSize.y * SHARPNESS_HACK),
+	        mix(vec2(INPUT_TEXTURE_SIZE_0.x * SHARPNESS_HACK, INPUT_TEXTURE_SIZE_0.y),
+	            vec2(INPUT_TEXTURE_SIZE_0.x, INPUT_TEXTURE_SIZE_0.y * SHARPNESS_HACK),
 	            VSCANLINES);
 
 	vec2 dx = mix(vec2(1.0 / TextureSize.x, 0.0),
 	              vec2(0.0, 1.0 / TextureSize.y),
 	              VSCANLINES);
+
 	vec2 dy = mix(vec2(0.0, 1.0 / TextureSize.y),
 	              vec2(1.0 / TextureSize.x, 0.0),
 	              VSCANLINES);
@@ -472,15 +475,15 @@ void main()
 
 	vec2 fp = mix(fract(pix_coord), fract(pix_coord.yx), VSCANLINES);
 
-	vec4 c00 = GAMMA_IN(texture(s_p, tc - dx - dy).xyzw);
-	vec4 c01 = GAMMA_IN(texture(s_p, tc - dy).xyzw);
-	vec4 c02 = GAMMA_IN(texture(s_p, tc + dx - dy).xyzw);
-	vec4 c03 = GAMMA_IN(texture(s_p, tc + 2.0 * dx - dy).xyzw);
+	vec4 c00 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc - dx - dy).xyzw);
+	vec4 c01 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc - dy).xyzw);
+	vec4 c02 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc + dx - dy).xyzw);
+	vec4 c03 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc + 2.0 * dx - dy).xyzw);
 
-	vec4 c10 = GAMMA_IN(texture(s_p, tc - dx).xyzw);
-	vec4 c11 = GAMMA_IN(texture(s_p, tc).xyzw);
-	vec4 c12 = GAMMA_IN(texture(s_p, tc + dx).xyzw);
-	vec4 c13 = GAMMA_IN(texture(s_p, tc + 2.0 * dx).xyzw);
+	vec4 c10 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc - dx).xyzw);
+	vec4 c11 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc).xyzw);
+	vec4 c12 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc + dx).xyzw);
+	vec4 c13 = GAMMA_IN(texture(INPUT_TEXTURE_0, tc + 2.0 * dx).xyzw);
 
 	mat4 invX = get_hfilter_profile();
 
@@ -503,6 +506,7 @@ void main()
 	color0   = mix(aux,
                      color0,
                      CRT_ANTI_RINGING * step(0.0, (c00 - c01) * (c02 - c03)));
+
 	aux      = color1;
 	color1   = clamp(color1, min_sample1, max_sample1);
 	color1   = mix(aux,

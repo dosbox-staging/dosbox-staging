@@ -6,8 +6,10 @@
 
 #include <optional>
 
+#include "dosbox.h"
 #include "gui/render/render.h"
 #include "misc/video.h"
+#include "shader_common.h"
 
 struct AutoImageAdjustments {
 	float black_level                 = 0.0f;
@@ -27,13 +29,16 @@ public:
 		return instance;
 	}
 
-	std::optional<AutoImageAdjustments> GetSettings(const VideoMode& video_mode) const;
+	std::optional<AutoImageAdjustments> GetSettings(
+	        const MachineType machine_type, const VideoMode& video_mode,
+	        const ShaderDescriptor& curr_shader_descriptor) const;
 
 private:
 	AutoImageAdjustmentsManager()  = default;
 	~AutoImageAdjustmentsManager() = default;
 
-	AutoImageAdjustments GetAutoMachineSettings(const VideoMode& video_mode) const;
+	AutoImageAdjustments GetAutoMachineSettings(const MachineType machine_type,
+	                                            const VideoMode& video_mode) const;
 
 	AutoImageAdjustments GetAutoGraphicsStandardSettings(const VideoMode& video_mode) const;
 };
