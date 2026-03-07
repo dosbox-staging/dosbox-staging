@@ -656,35 +656,60 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 	return true;
 }
 
+std::string MOUNT::ApplyRelativePath(const std::string& path,
+                                     bool is_relative_to_last_config) const
+{
+	if (is_relative_to_last_config && !control->config_files.empty() &&
+	    !std_fs::path(path).is_absolute()) {
+		auto last_config_dir = control->config_files.back();
+		const auto pos       = last_config_dir.rfind(CROSS_FILESPLIT);
+
+		last_config_dir.erase(pos == std::string::npos ? 0 : pos);
+		if (!last_config_dir.empty()) {
+			return last_config_dir + CROSS_FILESPLIT + path;
+		}
+	}
+	return path;
+}
+
+// Translates a DOS path to a host path if the DOS path is currently mapped as a
+// drive. Returns an empty string if it cannot be translated.
+std::string MOUNT::GetDosMappedHostPath(const std::string& dos_path) const
+{
+	// DOS_MakeName requires a writable buffer
+	auto fullname_buf = std::array<char, CROSS_LEN>{};
+	uint8_t drive_idx = 0;
+
+	if (DOS_MakeName(dos_path.data(), fullname_buf.data(), &drive_idx)) {
+
+		if (Drives.at(drive_idx) &&
+		    Drives.at(drive_idx)->GetType() == DosDriveType::Local) {
+
+			if (const auto local_drive = std::dynamic_pointer_cast<localDrive>(
+			            Drives.at(drive_idx))) {
+				return local_drive->MapDosToHostFilename(
+				        fullname_buf.data());
+			}
+		}
+	}
+	return "";
+}
+
 // Returns true if processed successfully (even if it means it found an image
 // and decided to mount it) Returns false on failure.
 bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_config)
 {
-	std::string final_path;
+	std::string final_path = {};
+
 	// Get the first path argument
 	if (!cmd->FindCommand(2, final_path) || final_path.empty()) {
 		ShowUsage();
 		return false;
 	}
 
-	// Expand ~ to home directory
-	final_path = resolve_home(final_path).string();
-
-	// Resolve first path
-	std::string path_arg_1 = final_path;
-	if (path_relative_to_last_config && control->config_files.size() &&
-	    !std_fs::path(path_arg_1).is_absolute()) {
-		std::string lastconfigdir =
-		        control->config_files[control->config_files.size() - 1];
-		std::string::size_type pos = lastconfigdir.rfind(CROSS_FILESPLIT);
-		if (pos == std::string::npos) {
-			pos = 0;
-		}
-		lastconfigdir.erase(pos);
-		if (lastconfigdir.length()) {
-			path_arg_1 = lastconfigdir + CROSS_FILESPLIT + path_arg_1;
-		}
-	}
+	// Expand ~ to home directory and apply relative path logic
+	auto path_arg_1 = ApplyRelativePath(resolve_home(final_path).string(),
+	                                    path_relative_to_last_config);
 
 #if defined(WIN32)
 	// Removing trailing backslash if not root dir so stat will succeed
@@ -693,21 +718,28 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 	}
 #endif
 
-	// Check first path
-	struct stat test;
-	auto stat_ok       = (stat(path_arg_1.c_str(), &test) == 0);
-	auto target_is_dir = stat_ok && S_ISDIR(test.st_mode);
-	auto explicit_image_type = (params.type == "hdd" || params.type == "iso" ||
-	                            params.type == "floppy");
+	// Check first path on the host OS
+	struct stat test = {};
+	auto stat_ok = (stat(path_arg_1.c_str(), &test) == 0);
 
-	const auto has_wildcards = path_arg_1.find_first_of("*?") !=
-	                           std::string::npos;
-	auto is_image_mode = false;
-
-	// Explicit triggers
-	if (explicit_image_type || params.is_drive_number || has_wildcards) {
-		is_image_mode = true;
+	// If not found on the host, check if it is a mounted DOS path
+	if (!stat_ok) {
+		const auto mapped_host_path = GetDosMappedHostPath(path_arg_1);
+		if (!mapped_host_path.empty() &&
+		    stat(mapped_host_path.c_str(), &test) == 0) {
+			stat_ok = true;
+		}
 	}
+
+	const auto target_is_dir       = stat_ok && S_ISDIR(test.st_mode);
+	const auto explicit_image_type = (params.type == "hdd" ||
+	                                  params.type == "iso" ||
+	                                  params.type == "floppy");
+	const auto has_wildcards       = path_arg_1.find_first_of("*?") !=
+	                           std::string::npos;
+
+	auto is_image_mode = explicit_image_type || params.is_drive_number ||
+	                     has_wildcards;
 
 	// If the target is a directory, it is a directory mount,
 	// even if -t floppy was specified (legacy MOUNT behavior).
@@ -722,50 +754,20 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 
 	if (is_image_mode) {
 		// Loop through all remaining arguments
-		uint16_t arg_idx = 2;
-		std::string cur_arg;
+		auto arg_idx = 2;
+		std::string cur_arg = "";
 
 		while (cmd->FindCommand(arg_idx++, cur_arg)) {
-			// Expand ~ to home directory
-			cur_arg = resolve_home(cur_arg).string();
-			// Apply relative path logic to current argument
-			if (path_relative_to_last_config &&
-			    control->config_files.size() &&
-			    !std_fs::path(cur_arg).is_absolute()) {
-				std::string lastconfigdir =
-				        control->config_files.back();
-				auto pos = lastconfigdir.rfind(CROSS_FILESPLIT);
-				if (pos == std::string::npos) {
-					pos = 0;
-				}
-				lastconfigdir.erase(pos);
-				if (!lastconfigdir.empty()) {
-					cur_arg = lastconfigdir +
-					          CROSS_FILESPLIT + cur_arg;
-				}
-			}
+
+			// Expand ~, then apply relative path logic
+			cur_arg = ApplyRelativePath(resolve_home(cur_arg).string(),
+			                            path_relative_to_last_config);
 
 			// Resolve virtual drive letters to host paths first
-			char fullname[CROSS_LEN];
-			char tmp[CROSS_LEN];
-			safe_strcpy(tmp, cur_arg.c_str());
-			uint8_t drive_idx_found;
-			std::string path_to_expand = cur_arg;
-
-			if (DOS_MakeName(tmp, fullname, &drive_idx_found)) {
-				if (Drives.at(drive_idx_found) &&
-				    Drives.at(drive_idx_found)->GetType() ==
-				            DosDriveType::Local) {
-					const auto ldp = std::dynamic_pointer_cast<localDrive>(
-					        Drives.at(drive_idx_found));
-					if (ldp) {
-						// This turns "C:\*.CUE" into
-						// "/home/user/dosbox/c_drive/*.CUE"
-						path_to_expand = ldp->MapDosToHostFilename(
-						        fullname);
-					}
-				}
-			}
+			const auto mapped_path = GetDosMappedHostPath(cur_arg);
+			const auto path_to_expand = mapped_path.empty()
+			                                  ? cur_arg
+			                                  : mapped_path;
 
 			// Now try wildcard expansion on the translated host path
 			if (path_to_expand.find_first_of("*?") != std::string::npos) {
@@ -776,39 +778,24 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 			}
 
 			// Fallback for literal files
-			auto real_path = to_native_path(path_to_expand);
-			std::string final_path = real_path.empty() ? path_to_expand
-			                                           : real_path;
+			const auto real_path = to_native_path(path_to_expand);
+			auto loop_final_path = real_path.empty() ? path_to_expand
+			                                         : real_path;
 
-			if (real_path.empty() || !local_drive_path_exists(real_path.c_str())) {
+			if (real_path.empty() ||
+			    !local_drive_path_exists(real_path.c_str())) {
 				// Try Virtual DOS Drive mapping
-				bool found_on_virtual = false;
+				auto found_on_virtual = false;
 
-				// convert dosbox filename to system filename
-				char fullname[CROSS_LEN];
-				char tmp[CROSS_LEN];
-				safe_strcpy(tmp, cur_arg.c_str());
-				uint8_t dummy;
-				if (DOS_MakeName(tmp, fullname, &dummy)) {
-					if (Drives.at(dummy) &&
-					    Drives.at(dummy)->GetType() ==
-					            DosDriveType::Local) {
-						const auto ldp = std::dynamic_pointer_cast<localDrive>(
-						        Drives.at(dummy));
-						if (ldp) {
-							std::string host_name = ldp->MapDosToHostFilename(
-							        fullname);
-							if (local_drive_path_exists(host_name.c_str())) {
-								final_path = std::move(
-								        host_name);
-								found_on_virtual = true;
-								LOG_MSG("IMGMOUNT: Path '%s' found on virtual drive %c:",
-								        fullname,
-								        drive_letter(dummy));
-							}
-						}
-					}
+				const auto fallback_mapped = GetDosMappedHostPath(
+				        cur_arg);
+
+				if (!fallback_mapped.empty() &&
+				    local_drive_path_exists(fallback_mapped.c_str())) {
+					loop_final_path  = fallback_mapped;
+					found_on_virtual = true;
 				}
+
 				if (!found_on_virtual) {
 					// Try wildcards if strictly not found
 					if (MOUNT::AddWildcardPaths(cur_arg,
@@ -820,16 +807,16 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 
 			// Auto-detect type from FIRST valid file if generic "dir"
 			if (params.paths.empty() && params.type == "dir") {
-				// Check if actually file
-				struct stat t2;
-				if (stat(final_path.c_str(), &t2) == 0 &&
+				struct stat t2 = {};
+				if (stat(loop_final_path.c_str(), &t2) == 0 &&
 				    S_ISREG(t2.st_mode)) {
-					auto ext = final_path.substr(
-					        final_path.find_last_of('.') + 1);
+					auto ext = loop_final_path.substr(
+					        loop_final_path.find_last_of('.') + 1);
 					std::transform(ext.begin(),
 					               ext.end(),
 					               ext.begin(),
 					               ::tolower);
+
 					if (ext == "iso" || ext == "cue" ||
 					    ext == "bin" || ext == "mds" ||
 					    ext == "ccd") {
@@ -843,8 +830,8 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 			}
 
 			// Resolves to absolute canonical path
-			final_path = simplify_path(final_path).string();
-			params.paths.push_back(final_path);
+			loop_final_path = simplify_path(loop_final_path).string();
+			params.paths.push_back(loop_final_path);
 		}
 
 		if (params.paths.empty()) {
@@ -860,7 +847,7 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 			params.mediaid = MediaId::Floppy1_44MB;
 		}
 
-		bool success = MountImage(params);
+		const auto success = MountImage(params);
 		if (success && params.type == "floppy") {
 			incrementFDD();
 		}
@@ -872,11 +859,11 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
 		                      "PROGRAM_MOUNT_ERROR_2",
-		                      final_path.c_str());
+		                      path_arg_1.c_str());
 		return false;
 	}
 
-	MountLocal(params, final_path);
+	MountLocal(params, path_arg_1);
 	return true;
 }
 

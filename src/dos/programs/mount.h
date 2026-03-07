@@ -56,6 +56,11 @@ private:
 	                    bool& path_relative_to_last_config);
 	void ParseGeometry(MountParameters& params);
 	bool ParseDrive(MountParameters& params, bool explicit_fs);
+
+	std::string ApplyRelativePath(const std::string& path,
+	                              bool is_relative_to_last_config) const;
+	std::string GetDosMappedHostPath(const std::string& dos_path) const;
+
 	bool ProcessPaths(MountParameters& params, bool path_relative_to_last_config);
 	void MountLocal(MountParameters& params, const std::string& local_path);
 
