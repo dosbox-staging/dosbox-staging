@@ -156,25 +156,38 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
 }
 
 void MOUNT::WriteMountStatus(const std::string& image_type,
-                             const std::vector<std::string>& images, char drive_letter)
+                             const std::vector<std::string>& images,
+                             char drive_letter, bool readonly)
 {
 	const size_t term_width = INT10_GetTextColumns();
 	constexpr auto Indent   = "  ";
 	const auto indent_size = strlen(Indent);
 	std::string images_str  = {};
 
-	for (const auto& image : images) {
-		assert(!image.empty());
-		images_str = images_str.append(
-		        std::string(Indent) +
-		        truncate_path(image, term_width - indent_size) +
-		        std::string("\n"));
-	}
+	if (images.size() == 1) {
+		// If only one image, don't add newlines and just write in one
+		// line:
+		images_str = image_type.c_str() + std::string(" ") + images[0];
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
+		         images_str.c_str(),
+		         drive_letter);
+		if (readonly) {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_READONLY"));
+		}
+	} else {
 
-	WriteOut(MSG_Get("PROGRAM_MOUNT_RESULT"),
-	         image_type.c_str(),
-	         drive_letter,
-	         images_str.c_str());
+		for (const auto& image : images) {
+			assert(!image.empty());
+			images_str = images_str.append(
+			        std::string(Indent) +
+			        truncate_path(image, term_width - indent_size) +
+			        std::string("\n"));
+		}
+		WriteOut(MSG_Get("PROGRAM_MOUNT_RESULT"),
+		         image_type.c_str(),
+		         drive_letter,
+		         images_str.c_str());
+	}
 }
 
 bool MOUNT::MountImageFat(MountParameters& params)
@@ -301,7 +314,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	std::string mount_message = (params.paths.size() > 1)
 	                                  ? MSG_Get("MOUNT_TYPE_FAT_PLURAL")
 	                                  : MSG_Get("MOUNT_TYPE_FAT");
-	WriteMountStatus(mount_message, params.paths, params.drive);
+	WriteMountStatus(mount_message, params.paths, params.drive, params.roflag);
 
 	const auto fat_image = std::dynamic_pointer_cast<fatDrive>(
 	        fat_images.front());
@@ -389,7 +402,7 @@ bool MOUNT::MountImageIso(MountParameters& params)
 	std::string mount_message = (params.paths.size() > 1)
 	                                  ? MSG_Get("MOUNT_TYPE_CDIMAGE_PLURAL")
 	                                  : MSG_Get("MOUNT_TYPE_CDIMAGE");
-	WriteMountStatus(mount_message, params.paths, params.drive);
+	WriteMountStatus(mount_message, params.paths, params.drive, params.roflag);
 
 	return true;
 }
