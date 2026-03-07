@@ -81,17 +81,18 @@ void MOUNT::ListMounts()
 					auto type = img->GetTypeString();
 					auto path = img->GetInfo();
 
-					std::string d_str =
+					std::string drive_letter_str =
 					        first ? " " + std::string{drive_letter(d)} + ":"
 					              : "";
-					std::string l_str =
+					std::string label_str =
 					        first ? To_Label(Drives[d]->GetLabel())
 					              : "";
+					std::string type_str = first ? type : "";
 
-					print_row(d_str,
-					          type,
+					print_row(drive_letter_str,
+					          type_str,
 					          truncate_path(path, width_path),
-					          l_str);
+					          label_str);
 					first = false;
 				}
 			} else {
