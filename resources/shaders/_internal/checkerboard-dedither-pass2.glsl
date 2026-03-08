@@ -47,7 +47,7 @@ in vec2 v_texCoord;
 
 out vec4 FragColor;
 
-uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform vec2 INPUT_SIZE_0;
 uniform sampler2D INPUT_TEXTURE_0;
 uniform sampler2D INPUT_TEXTURE_1;
 
@@ -55,7 +55,7 @@ uniform float CD_BLEND_LEVEL;
 
 void main()
 {
-	vec2 ps = vec2(1.0) / INPUT_TEXTURE_SIZE_0.xy;
+	vec2 ps = vec2(1.0) / INPUT_SIZE_0.xy;
 
 	vec2 dx = vec2(1.0, 0.0) * ps.xy;
 	vec2 dy = vec2(0.0, 1.0) * ps.xy;

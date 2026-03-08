@@ -39,7 +39,7 @@ out vec4 t5;
 out vec4 t6;
 out vec4 t7;
 
-uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform vec2 INPUT_SIZE_0;
 uniform vec2 OUTPUT_TEXTURE_SIZE;
 
 void main()
@@ -48,7 +48,7 @@ void main()
 
 	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
-	vec2 ps = vec2(1.0) / INPUT_TEXTURE_SIZE_0.xy;
+	vec2 ps = vec2(1.0) / INPUT_SIZE_0.xy;
 
 	float dx = ps.x;
 	float dy = ps.y;
@@ -81,7 +81,7 @@ in vec4 t7;
 
 out vec4 FragColor;
 
-uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform vec2 INPUT_SIZE_0;
 uniform vec2 OUTPUT_TEXTURE_SIZE;
 uniform sampler2D INPUT_TEXTURE_0;
 
@@ -90,7 +90,7 @@ uniform sampler2D INPUT_TEXTURE_0;
 #define Source INPUT_TEXTURE_0
 #define vTexCoord v_texCoord.xy
 
-#define SourceSize vec4(INPUT_TEXTURE_SIZE_0, 1.0 / INPUT_TEXTURE_SIZE_0) //either TextureSize or InputSize
+#define SourceSize vec4(INPUT_SIZE_0, 1.0 / INPUT_SIZE_0) //either TextureSize or InputSize
 #define OutputSize vec4(OUTPUT_TEXTURE_SIZE, 1.0 / OUTPUT_TEXTURE_SIZE)
 
 uniform float XBR_Y_WEIGHT;

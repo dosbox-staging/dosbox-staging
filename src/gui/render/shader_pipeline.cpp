@@ -521,7 +521,7 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 		pass->shader.SetUniform1i(in_texture_name.c_str(),
 		                          check_cast<GLint>(i));
 
-		const auto in_texture_size_name = format_str("INPUT_TEXTURE_SIZE_%d",
+		const auto in_texture_size_name = format_str("INPUT_SIZE_%d",
 		                                             i);
 
 		pass->shader.SetUniform2f(in_texture_size_name.c_str(),
