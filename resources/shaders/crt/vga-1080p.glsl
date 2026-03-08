@@ -32,7 +32,7 @@ out vec4 sourceSize;
 out vec2 onex;
 out vec2 oney;
 
-uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform vec2 INPUT_SIZE_0;
 
 void main()
 {
@@ -40,7 +40,7 @@ void main()
 
 	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
-	sourceSize = vec4(INPUT_TEXTURE_SIZE_0, 1.0 / INPUT_TEXTURE_SIZE_0);
+	sourceSize = vec4(INPUT_SIZE_0, 1.0 / INPUT_SIZE_0);
 	onex       = vec2(sourceSize.z, 0.0);
 	oney       = vec2(0.0, sourceSize.w);
 }

@@ -36,14 +36,14 @@ out vec4 t5;
 out vec4 t6;
 out vec4 t7;
 
-uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform vec2 INPUT_SIZE_0;
 
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
 
-	float dx = (1.0/INPUT_TEXTURE_SIZE_0.x);
-	float dy = (1.0/INPUT_TEXTURE_SIZE_0.y);
+	float dx = (1.0/INPUT_SIZE_0.x);
+	float dy = (1.0/INPUT_SIZE_0.y);
 
 	vec2 TexCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 
@@ -73,7 +73,7 @@ in vec4 t7;
 
 out vec4 FragColor;
 
-uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform vec2 INPUT_SIZE_0;
 uniform sampler2D INPUT_TEXTURE_0;
 
 uniform float XBR_EQ_THRESHOLD;
@@ -130,7 +130,7 @@ void main()
 	bvec4 nc, px;
 	vec4 fx, fx_l, fx_u; // inequations of straight lines.
 
-	vec2 fp  = fract(v_texCoord*INPUT_TEXTURE_SIZE_0);
+	vec2 fp  = fract(v_texCoord*INPUT_SIZE_0);
 
 	vec3 A1 = texture(INPUT_TEXTURE_0, t1.xw ).xyz;
 	vec3 B1 = texture(INPUT_TEXTURE_0, t1.yw ).xyz;

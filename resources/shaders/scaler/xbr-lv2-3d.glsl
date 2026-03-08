@@ -37,9 +37,9 @@ layout (location = 0) in vec2 a_position;
 out vec2 v_texCoord;
 out vec4 t1;
 
-uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform vec2 INPUT_SIZE_0;
 
-#define SourceSize vec4(INPUT_TEXTURE_SIZE_0, 1.0 / INPUT_TEXTURE_SIZE_0)
+#define SourceSize vec4(INPUT_SIZE_0, 1.0 / INPUT_SIZE_0)
 
 uniform float XBR_RES;
 
@@ -63,13 +63,13 @@ in vec4 t1;
 
 out vec4 FragColor;
 
-uniform vec2 INPUT_TEXTURE_SIZE_0;
+uniform vec2 INPUT_SIZE_0;
 uniform sampler2D INPUT_TEXTURE_0;
 
 #define Source INPUT_TEXTURE_0
 #define vTexCoord v_texCoord.xy
 
-#define SourceSize vec4(INPUT_TEXTURE_SIZE_0, 1.0 / INPUT_TEXTURE_SIZE_0)
+#define SourceSize vec4(INPUT_SIZE_0, 1.0 / INPUT_SIZE_0)
 
 uniform float XBR_Y_WEIGHT;
 uniform float XBR_EQ_THRESHOLD;
