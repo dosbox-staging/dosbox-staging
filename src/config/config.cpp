@@ -68,9 +68,6 @@ static void write_section(SectionProp& sec, FILE* outfile)
 
 bool Config::WriteConfig(const std_fs::path& path) const
 {
-	char temp[50];
-	char helpline[256];
-
 	FILE* outfile = fopen(path.string().c_str(), "w+t");
 	if (!outfile) {
 		return false;
@@ -80,47 +77,30 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	fprintf(outfile, MSG_GetTranslatedRaw("CONFIGFILE_INTRO").c_str(), DOSBOX_VERSION);
 	fprintf(outfile, "\n");
 
-	for (auto section = sections.cbegin(); section != sections.cend(); ++section) {
-		// Print section header
-		safe_strcpy(temp, (*section)->GetName());
-		lowcase(temp);
-		fprintf(outfile, "[%s]\n\n", temp);
+	for (const auto section : sections) {
+		const std::string section_name = section->GetName();
+		const auto section_name_view   = std::string_view(section_name);
+		const auto section_name_lower  = lowcase(section_name_view);
+		const auto section_name_upper  = upcase(section_name_view);
 
-		auto sec = dynamic_cast<SectionProp*>(*section);
+		fprintf(outfile, "[%s]\n\n", section_name_lower.c_str());
+
+		auto sec = dynamic_cast<SectionProp*>(section);
 		if (sec) {
 			write_section(*sec, outfile);
-
 		} else {
-			upcase(temp);
-			strcat(temp, "_CONFIGFILE_HELP");
-
-			const auto _helpstr = MSG_GetTranslatedRaw(temp);
-
-			const char* helpstr   = _helpstr.c_str();
-			const char* linestart = helpstr;
-			char* helpwrite       = helpline;
-
-			while (*helpstr && static_cast<size_t>(helpstr - linestart) <
-			                           sizeof(helpline)) {
-				*helpwrite++ = *helpstr;
-
-				if (*helpstr == '\n') {
-					*helpwrite = 0;
-
-					fprintf(outfile, "# %s", helpline);
-
-					helpwrite = helpline;
-					linestart = ++helpstr;
-				} else {
-					++helpstr;
-				}
+			const auto help_string = MSG_GetTranslatedRaw(
+			        section_name_upper + "_CONFIGFILE_HELP");
+			const auto help_lines = split(help_string, "\n");
+			for (const auto& help_line : help_lines) {
+				fprintf(outfile, "# %s\n", help_line.c_str());
 			}
 		}
 
 		// This will effectively only print the autoexec section
 		// TODO Do this in a nicer way and get rid of PrintData()
 		// altogether.
-		(*section)->PrintData(outfile);
+		section->PrintData(outfile);
 
 		fprintf(outfile, "\n");
 	}
