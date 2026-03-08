@@ -1100,7 +1100,7 @@ void DOSBOX_InitModuleConfigsAndMessages()
 
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 	        "Each line in this section is executed at startup as a DOS command.\n"
-	        "Important: The [autoexec] section must be the last section in the config!");
+	        "Important: The [autoexec] section must be the last section in the config!\n");
 
 	MSG_Add("CONFIGFILE_INTRO",
 	        "# This is the configuration file for " DOSBOX_NAME
