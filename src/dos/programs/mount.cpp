@@ -554,7 +554,7 @@ void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	cmd->FindString("-label", params.label, true);
 }
 
-void MOUNT::ParseGeometry(MountParameters& params)
+bool MOUNT::ParseGeometry(MountParameters& params)
 {
 	std::string str_size = "";
 	std::string str_chs  = "";
@@ -589,7 +589,7 @@ void MOUNT::ParseGeometry(MountParameters& params)
 		                      "MOUNT",
 		                      "PROGRAM_MOUNT_ILL_TYPE",
 		                      params.type.c_str());
-		return;
+		return false;
 	}
 
 	// Parse the free space in mb (kb for floppies)
@@ -660,8 +660,11 @@ void MOUNT::ParseGeometry(MountParameters& params)
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
 			                      "PROGRAM_MOUNT_INVALID_CHS");
+			return false;
 		}
 	}
+
+	return true;
 }
 
 bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
@@ -1128,8 +1131,13 @@ void MOUNT::Run(void)
 
 	// Parse command line arguments
 	ParseArguments(params, explicit_fs, path_relative_to_last_config);
-	ParseGeometry(params);
 
+	// Check drive geometry and types, abort if not valid
+	if (!ParseGeometry(params)) {
+		return;
+	}
+
+	// Check drive letter/number and overlaps, abort if not valid
 	if (!ParseDrive(params, explicit_fs)) {
 		return;
 	}
@@ -1231,7 +1239,7 @@ void MOUNT::AddMessages()
 	MSG_Add("PROGRAM_MOUNT_ERROR_2",
 	        "%s isn't a directory or valid image file.\n");
 
-	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s\n");
+	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED", "Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED", "Drive %c isn't mounted.\n");
 
