@@ -86,6 +86,7 @@ jobs:
           set -x
           echo "BUILD_DIR=build/release-windows/Release" >> $GITHUB_ENV
           echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.conf.arch }}-$DOSBOX_VERSION_AND_HASH" >> $GITHUB_ENV
+          echo "DOSBOX_DEBUGGER_EXE=dosbox_with_debugger.exe" >> $GITHUB_ENV
 
       - name: Set up vcpkg
         uses: ./.github/actions/setup-vcpkg
@@ -201,14 +202,14 @@ jobs:
           mkdir -p "$PACKAGE_DIR"
           # Move the debugger build into the release area
           ls "$BUILD_DIR"
-          cp "$BUILD_DIR/dosbox.exe" "$PACKAGE_DIR/dosbox_with_debugger.exe"
+          cp "$BUILD_DIR/$DOSBOX_DEBUGGER_EXE" "$PACKAGE_DIR/$DOSBOX_DEBUGGER_EXE"
 
       - name: Upload debugger artifact
         if:   ${{ matrix.conf.debugger }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.PACKAGE_DIR }}-with-debugger
-          path: ${{ env.PACKAGE_DIR }}/dosbox_with_debugger.exe
+          path: ${{ env.PACKAGE_DIR }}/${{ env.DOSBOX_DEBUGGER_EXE }}
           overwrite: true
 
 
