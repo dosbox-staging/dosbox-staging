@@ -1937,15 +1937,14 @@ static void init_render_settings(SectionProp& section)
 	        "Set the colour temperature (white point) of the video output ('%s' by\n"
 	        "default). Possible values:\n"
 	        "\n"
-	        "  auto:      Select an authentic colour temperature for adaptive CRT shaders;\n"
-	        "             for any other shader, use 6500 (default).\n"
-	        "\n"
+	        "  auto:      Select an authentic colour temperature appropriate for the\n"
+	        "             currently active adaptive CRT shader (e.g. 'crt-auto'), or the\n"
+	        "             current machine type for regular shaders (e.g., 'sharp').\n"
+	        "             \n"
 	        "  <number>:  Specify colour temperature in Kelvin (K). Valid range is %d to\n"
-	        "             %d. The Kelvin value only makes sense if 'crt_color_profile' is\n"
-	        "             set to 'none' or to one of the profiles with 6500K white point,\n"
-	        "             otherwise it acts as a relative colour temperature adjustment (less\n"
-	        "             then 6500 results in warmer colours, more than 6500 in cooler\n"
-	        "             colours).",
+	        "             %d. 6500 K is the neutral point for most modern displays. Values\n"
+	        "             below 6500 result in warmer colours, values above 6500 in cooler\n"
+	        "             colours.",
 	        DefaultColorTemperature,
 	        ColorTemperatureMin,
 	        ColorTemperatureMax));
