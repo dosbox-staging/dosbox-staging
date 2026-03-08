@@ -531,7 +531,7 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 		pass->in_textures.emplace_back(in_texture);
 	}
 
-	shader.SetUniform2f("OUTPUT_TEXTURE_SIZE",
+	shader.SetUniform2f("OUTPUT_SIZE",
 	                    pass->out_size.w,
 	                    pass->out_size.h);
 }
