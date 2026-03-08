@@ -1960,11 +1960,11 @@ static void init_render_settings(SectionProp& section)
 	int_prop->SetMinMax(ColorTemperatureLumaPreserveMin,
 	                    ColorTemperatureLumaPreserveMax);
 	int_prop->SetHelp(format_str(
-	        "Preserve image luminosity prior to colour temperature adjustment (%d by\n"
-	        "default). Valid range is %d to %d. 0 doesn't perform any luminosity\n"
+	        "Preserve luminosity of the video output prior to colour temperature adjustment\n"
+	        "(%d by default). Valid range is %d to %d. 0 doesn't perform any luminosity\n"
 	        "preservation, 100 fully preserves the luminosity. Values greater than 0 result\n"
 	        "in inaccurate colour temperatures in the brighter shades, so it's best to set\n"
-	        "this to 0 or close to 0 if your monitor is bright enough.",
+	        "this to 0 if your monitor is bright enough (or at least close to 0).",
 	        DefaultColorTemperatureLumaPreserve,
 	        ColorTemperatureLumaPreserveMin,
 	        ColorTemperatureLumaPreserveMax));
