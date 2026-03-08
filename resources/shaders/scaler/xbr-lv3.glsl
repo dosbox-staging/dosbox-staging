@@ -40,7 +40,7 @@ out vec4 t6;
 out vec4 t7;
 
 uniform vec2 INPUT_SIZE_0;
-uniform vec2 OUTPUT_TEXTURE_SIZE;
+uniform vec2 OUTPUT_SIZE;
 
 void main()
 {
@@ -82,7 +82,7 @@ in vec4 t7;
 out vec4 FragColor;
 
 uniform vec2 INPUT_SIZE_0;
-uniform vec2 OUTPUT_TEXTURE_SIZE;
+uniform vec2 OUTPUT_SIZE;
 uniform sampler2D INPUT_TEXTURE_0;
 
 // compatibility #defines
@@ -91,7 +91,7 @@ uniform sampler2D INPUT_TEXTURE_0;
 #define vTexCoord v_texCoord.xy
 
 #define SourceSize vec4(INPUT_SIZE_0, 1.0 / INPUT_SIZE_0) //either TextureSize or InputSize
-#define OutputSize vec4(OUTPUT_TEXTURE_SIZE, 1.0 / OUTPUT_TEXTURE_SIZE)
+#define OutputSize vec4(OUTPUT_SIZE, 1.0 / OUTPUT_SIZE)
 
 uniform float XBR_Y_WEIGHT;
 uniform float XBR_EQ_THRESHOLD;
