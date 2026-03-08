@@ -320,6 +320,8 @@ std::string to_string(const Container& c, const std::string_view delimiter = ", 
 	return result + suffix;
 }
 
+// Creates a string representation of a list of strings. Useful for debugging.
+//
 std::string join(const std::vector<std::string>& items,
                  const std::string_view delimiter = ", ",
                  const std::string& prefix = "{", const std::string& suffix = "}");

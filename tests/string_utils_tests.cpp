@@ -13,7 +13,7 @@ namespace {
 
 TEST(CaseInsensitiveCompare, Chars)
 {
-	constexpr const char a[] = "123";
+	constexpr const char a[]     = "123";
 	constexpr const char not_a[] = "321";
 
 	EXPECT_TRUE(iequals(a, a));
@@ -22,7 +22,7 @@ TEST(CaseInsensitiveCompare, Chars)
 
 TEST(CaseInsensitiveCompare, StringViews)
 {
-	constexpr std::string_view a = "123";
+	constexpr std::string_view a     = "123";
 	constexpr std::string_view not_a = "321";
 
 	EXPECT_TRUE(iequals(a, a));
@@ -31,22 +31,21 @@ TEST(CaseInsensitiveCompare, StringViews)
 
 TEST(CaseInsensitiveCompare, Strings)
 {
-	const std::string a = "123";
+	const std::string a     = "123";
 	const std::string not_a = "321";
 
 	EXPECT_TRUE(iequals(a, a));
 	EXPECT_FALSE(iequals(a, not_a));
 }
 
-
 TEST(CaseInsensitiveCompare, MixedTypes)
 {
 	constexpr const char a_sz[] = "123";
 
-	constexpr std::string_view a_sv = "123";
+	constexpr std::string_view a_sv     = "123";
 	constexpr std::string_view not_a_sv = "321";
 
-	const std::string a_string = "123";
+	const std::string a_string     = "123";
 	const std::string not_a_string = "321";
 
 	// char and string_view
@@ -61,7 +60,6 @@ TEST(CaseInsensitiveCompare, MixedTypes)
 	EXPECT_TRUE(iequals(a_sv, a_string));
 	EXPECT_FALSE(iequals(a_sv, not_a_string));
 }
-
 
 TEST(NaturalCompare, AtStartChar)
 {
@@ -98,7 +96,6 @@ TEST(NaturalCompare, AtEndChar)
 	EXPECT_TRUE(natural_compare("abc", "ABCd"));
 	EXPECT_TRUE(natural_compare("abcD", "abcE"));
 	EXPECT_TRUE(natural_compare("ABCD", "abce"));
-
 }
 TEST(NaturalCompare, AtEndNum)
 {
@@ -130,7 +127,7 @@ TEST(SafeSprintF, PreventUnderflow)
 TEST(SafeStrcpy, SimpleCopy)
 {
 	char buffer[10] = "";
-	char *ret_value = safe_strcpy(buffer, "abc");
+	char* ret_value = safe_strcpy(buffer, "abc");
 	EXPECT_EQ(ret_value, &buffer[0]);
 	EXPECT_STREQ("abc", buffer);
 }
@@ -150,7 +147,7 @@ TEST(SafeStrcpy, EmptyStringOverwrites)
 
 TEST(SafeStrcpy, StringLongerThanBuffer)
 {
-	char buffer[5] = "";
+	char buffer[5]    = "";
 	char long_input[] = "1234567890";
 	ASSERT_LT(ARRAY_LEN(buffer), strlen(long_input));
 	EXPECT_STREQ("1234", safe_strcpy(buffer, long_input));
@@ -164,8 +161,8 @@ TEST(SafeStrcpyDeathTest, PassNull)
 
 TEST(SafeStrcpyDeathTest, ProtectFromCopyingOverlappingString)
 {
-	char buf[] = "12345678";
-	char *overlapping = &buf[2];
+	char buf[]        = "12345678";
+	char* overlapping = &buf[2];
 	ASSERT_LE(buf, overlapping);
 	ASSERT_LE(overlapping, buf + ARRAY_LEN(buf));
 	EXPECT_DEBUG_DEATH({ safe_strcpy(buf, overlapping); }, "");
@@ -186,7 +183,7 @@ TEST(SafeStrlen, EmptyString)
 TEST(SafeStrlen, FixedSize)
 {
 	constexpr size_t N = 5;
-	char buffer[N] = "1234";
+	char buffer[N]     = "1234";
 	EXPECT_EQ(N - 1, safe_strlen(buffer));
 }
 
@@ -256,7 +253,7 @@ TEST(Split_delim, Empty)
 	EXPECT_EQ(split_with_empties(" ", ' '), two);
 	EXPECT_EQ(split_with_empties("  ", ' '), three);
 }
- 
+
 TEST(Split, NoBoundingWhitespace)
 {
 	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
@@ -414,7 +411,7 @@ TEST(ParsePercentageWithOptionalPercentSign, Invalid)
 TEST(FormatString, Valid)
 {
 	EXPECT_EQ(format_str(""), "");
- 	EXPECT_EQ(format_str("abcd"), "abcd");
+	EXPECT_EQ(format_str("abcd"), "abcd");
 	EXPECT_EQ(format_str("%d", 42), "42");
 	EXPECT_EQ(format_str("%d\0", 42), "42\0");
 	EXPECT_EQ(format_str("%s%d%s", "abcd", 42, "xyz"), "abcd42xyz");
@@ -445,7 +442,7 @@ TEST(IsDigits, Invalid)
 	EXPECT_FALSE(is_digits("01234567890abcdefg"));
 }
 
-TEST(LTrim, Valid) 
+TEST(LTrim, Valid)
 {
 	auto perform_ltrim = [](const std::string& input) {
 		std::string output = input;
@@ -510,7 +507,8 @@ TEST(ReplaceAll, Valid)
 	EXPECT_EQ(replace_all(s1, "%%", "%"), "% foo%bar quz%baz%");
 
 	const auto s2 = "\nthe quick brown fox jumps\nover the\nlazy dog";
-	EXPECT_EQ(replace_all(s2, "the", "a"), "\na quick brown fox jumps\nover a\nlazy dog");
+	EXPECT_EQ(replace_all(s2, "the", "a"),
+	          "\na quick brown fox jumps\nover a\nlazy dog");
 }
 
 TEST(ReplaceEol, Valid)
@@ -642,45 +640,45 @@ TEST(IsTextEqual, Valid)
 
 TEST(WritePaddedStringTest, PadsWithSpaces)
 {
-	constexpr int length               = 8;
-	std::string input                  = "abc";
-	auto result                        = right_pad(input, length, ' ');
+	constexpr int length = 8;
+	std::string input    = "abc";
+	auto result          = right_pad(input, length, ' ');
 	std::string result_str(reinterpret_cast<char*>(result.data()), length);
 	EXPECT_EQ(result_str, "abc     ");
 }
 
 TEST(WritePaddedStringTest, PadsWithCustomChar)
 {
-	constexpr int length               = 6;
-	std::string input                  = "hi";
-	auto result                        = right_pad(input, length, '-');
+	constexpr int length = 6;
+	std::string input    = "hi";
+	auto result          = right_pad(input, length, '-');
 	std::string result_str(reinterpret_cast<char*>(result.data()), length);
 	EXPECT_EQ(result_str, "hi----");
 }
 
 TEST(WritePaddedStringTest, TruncatesIfLonger)
 {
-	constexpr int length               = 4;
-	std::string input                  = "toolong";
-	auto result                        = right_pad(input, length, ' ');
+	constexpr int length = 4;
+	std::string input    = "toolong";
+	auto result          = right_pad(input, length, ' ');
 	std::string result_str(reinterpret_cast<char*>(result.data()), length);
 	EXPECT_EQ(result_str, "tool");
 }
 
 TEST(WritePaddedStringTest, ExactLengthNoPad)
 {
-	constexpr int length               = 5;
-	std::string input                  = "hello";
-	auto result                        = right_pad(input, length, 'x');
+	constexpr int length = 5;
+	std::string input    = "hello";
+	auto result          = right_pad(input, length, 'x');
 	std::string result_str(reinterpret_cast<char*>(result.data()), length);
 	EXPECT_EQ(result_str, "hello");
 }
 
 TEST(WritePaddedStringTest, EmptyStringAllPad)
 {
-	constexpr int length               = 3;
-	std::string input                  = "";
-	auto result                        = right_pad(input, length, '*');
+	constexpr int length = 3;
+	std::string input    = "";
+	auto result          = right_pad(input, length, '*');
 	std::string result_str(reinterpret_cast<char*>(result.data()), length);
 	EXPECT_EQ(result_str, "***");
 }
