@@ -67,11 +67,11 @@ void main()
 	vec2 dy = vec2(0.0, 1.0) * ps.xy;
 
 	// Reading the texels
-	vec3 C  = texture(INPUT_TEXTURE_0, v_texCoord).xyz;
-	vec3 L  = texture(INPUT_TEXTURE_0, v_texCoord - dx).xyz;
-	vec3 R  = texture(INPUT_TEXTURE_0, v_texCoord + dx).xyz;
-	vec3 U  = texture(INPUT_TEXTURE_0, v_texCoord - dy).xyz;
-	vec3 D  = texture(INPUT_TEXTURE_0, v_texCoord + dy).xyz;
+	vec3 C = texture(INPUT_TEXTURE_0, v_texCoord).xyz;
+	vec3 L = texture(INPUT_TEXTURE_0, v_texCoord - dx).xyz;
+	vec3 R = texture(INPUT_TEXTURE_0, v_texCoord + dx).xyz;
+	vec3 U = texture(INPUT_TEXTURE_0, v_texCoord - dy).xyz;
+	vec3 D = texture(INPUT_TEXTURE_0, v_texCoord + dy).xyz;
 
 	vec3 color = C;
 
