@@ -84,7 +84,7 @@ void main()
     vec4 LU2 =  texture(INPUT_TEXTURE_0, v_texCoord -dx -2.0*dy);
     vec4 RU2 =  texture(INPUT_TEXTURE_0, v_texCoord +dx -2.0*dy);
     vec4 LD2 =  texture(INPUT_TEXTURE_0, v_texCoord -dx +2.0*dy);
-    vec4 RD2 =  texture(INPUT_TEXTURE_0, v_texCoord +dx -2.0*dy);
+    vec4 RD2 =  texture(INPUT_TEXTURE_0, v_texCoord +dx +2.0*dy);
 
     vec3 color =  C.rgb;
 
