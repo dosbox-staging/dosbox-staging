@@ -32,7 +32,8 @@ constexpr double MPU401_EIO_DELAY = 0.06;
 constexpr double MPU401_TIMECONSTANT = (60000000 / 1000.0);
 constexpr double MPU401_RESETBUSY    = 14.0;
 
-enum MpuMode { M_UART, M_INTELLIGENT };
+enum class MpuMode { Uart, Intelligent };
+
 enum MpuDataType { T_OVERFLOW, T_MARK, T_MIDI_SYS, T_MIDI_NORM, T_COMMAND };
 
 static void MPU401_WriteData(io_port_t port, io_val_t value, io_width_t);
@@ -105,7 +106,8 @@ struct MpuClock {
 
 struct Mpu {
 	bool is_intelligent = false;
-	MpuMode mode        = M_UART;
+
+	MpuMode mode = MpuMode::Uart;
 
 	// Princess Maker 2 wants it on irq 9
 	uint8_t irq = 9;
@@ -118,7 +120,6 @@ struct Mpu {
 	MpuTrack condbuf    = {};
 
 	MpuState state = {};
-
 	MpuClock clock = {};
 };
 
@@ -185,7 +186,7 @@ static void send_all_notes_off()
 static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
-	if (mpu.mode == M_UART && val != MSG_MPU_RESET) {
+	if (mpu.mode == MpuMode::Uart && val != MSG_MPU_RESET) {
 		return;
 	}
 	if (mpu.state.reset) {
@@ -356,7 +357,7 @@ static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 
 			mpu.state.reset = true;
 
-			if (mpu.mode == M_UART) {
+			if (mpu.mode == MpuMode::Uart) {
 				MPU401_Reset();
 				return; // do not send ack in UART mode
 			}
@@ -366,7 +367,7 @@ static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 
 		case 0x3f: // UART mode
 			LOG(LOG_MISC, LOG_NORMAL)("MPU-401:Set UART mode %u", val);
-			mpu.mode = M_UART;
+			mpu.mode = MpuMode::Uart;
 			break;
 
 		default:;
@@ -436,7 +437,7 @@ static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 {
 	auto val = check_cast<uint8_t>(value);
 
-	if (mpu.mode == M_UART) {
+	if (mpu.mode == MpuMode::Uart) {
 		// Always write the byte to device
 		MIDI_RawOutByte(val);
 
@@ -782,7 +783,7 @@ static void UpdateConductor()
 
 static void MPU401_Event(io_val_t)
 {
-	if (mpu.mode == M_UART) {
+	if (mpu.mode == MpuMode::Uart) {
 		return;
 	}
 
@@ -895,7 +896,7 @@ static void MPU401_Reset()
 
 	PIC_DeActivateIRQ(mpu.irq);
 
-	mpu.mode = (mpu.is_intelligent ? M_INTELLIGENT : M_UART);
+	mpu.mode = (mpu.is_intelligent ? MpuMode::Intelligent : MpuMode::Uart);
 
 	PIC_RemoveEvents(MPU401_Event);
 	PIC_RemoveEvents(MPU401_EOIHandler);
