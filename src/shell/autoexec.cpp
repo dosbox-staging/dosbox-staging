@@ -559,9 +559,11 @@ static std::optional<AutoMountSettings> parse_drive_conf(const char dir_letter,
 	const auto section = static_cast<SectionProp*>(conf->GetSection("drive"));
 
 	const auto override_drive = section->GetString("override_drive");
+
 	if (override_drive.length() == 1 && override_drive[0] >= 'a' &&
 	    override_drive[0] <= 'y') {
 		settings.override_drive = override_drive;
+
 	} else if (!override_drive.empty()) {
 		LOG_ERR("AUTOMOUNT: %s: setting 'override_drive = %s' is invalid",
 		        conf_path.string().c_str(),
@@ -570,17 +572,20 @@ static std::optional<AutoMountSettings> parse_drive_conf(const char dir_letter,
 	}
 
 	const auto type = section->GetString("type");
+
 	if (type == "floppy" && dir_letter >= 'c') {
 		LOG_ERR("AUTOMOUNT: %s: setting 'type = %s' is invalid",
 		        conf_path.string().c_str(),
 		        type.c_str());
 		LOG_ERR("AUTOMOUNT: Type can be set to 'floppy' only for drive letters 'a' or 'b'");
+
 	} else if ((type == "cdrom" || type == "iso") &&
 	           (dir_letter == 'a' || dir_letter == 'b')) {
 		LOG_ERR("AUTOMOUNT: %s: setting 'type = %s' is invalid",
 		        conf_path.string().c_str(),
 		        type.c_str());
 		LOG_ERR("AUTOMOUNT: Type can be set to 'cdrom' only for drive letters 'c' to 'y'");
+
 	} else {
 		settings.type = type;
 	}
