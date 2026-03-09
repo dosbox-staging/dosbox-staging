@@ -14,7 +14,7 @@
 
 #if defined(VERTEX)
 
-layout(location = 0) in vec2 a_position;
+layout (location = 0) in vec2 a_position;
 
 out vec2 v_texCoord;
 
