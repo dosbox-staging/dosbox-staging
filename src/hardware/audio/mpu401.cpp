@@ -787,13 +787,14 @@ public:
 			return;
 		}
 
-		constexpr io_port_t port_0x330 = 0x330;
-		constexpr io_port_t port_0x331 = 0x331;
+		constexpr io_port_t DataPort   = 0x330;
+		constexpr io_port_t StatusPort = 0x331;
 
-		WriteHandler[0].Install(port_0x330, &MPU401_WriteData, io_width_t::byte);
-		WriteHandler[1].Install(port_0x331, &MPU401_WriteCommand, io_width_t::byte);
-		ReadHandler[0].Install(port_0x330, &MPU401_ReadData, io_width_t::byte);
-		ReadHandler[1].Install(port_0x331, &MPU401_ReadStatus, io_width_t::byte);
+		WriteHandler[0].Install(DataPort, &MPU401_WriteData, io_width_t::byte);
+		WriteHandler[1].Install(StatusPort, &MPU401_WriteCommand, io_width_t::byte);
+
+		ReadHandler[0].Install(DataPort, &MPU401_ReadData, io_width_t::byte);
+		ReadHandler[1].Install(StatusPort, &MPU401_ReadStatus, io_width_t::byte);
 
 		mpu = Mpu{};
 		mpu.is_intelligent = (mpu_choice == "intelligent");
@@ -805,8 +806,8 @@ public:
 
 		LOG_MSG("MPU-401: Running in %s mode on ports %xh and %xh",
 		        mpu.is_intelligent ? "intelligent" : "UART",
-		        port_0x330,
-		        port_0x331);
+		        DataPort,
+		        StatusPort);
 
 		is_installed = true;
 	}
