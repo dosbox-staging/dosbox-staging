@@ -517,7 +517,7 @@ bool MOUNT::HandleUnmount()
 	return false;
 }
 
-void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
+bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
                            bool& path_relative_to_last_config)
 {
 	if (cmd->FindExist("-pr", true)) {
@@ -531,6 +531,18 @@ void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	}
 	if (params.type == "fdd") {
 		params.type = "floppy";
+	}
+
+	// Validate the requested mount type
+	if (params.type != "floppy" && params.type != "dir" &&
+	    params.type != "overlay" && params.type != "iso" &&
+	    params.type != "hdd") {
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_ILL_TYPE",
+		                      params.type.c_str());
+		return false;
 	}
 
 	params.roflag = cmd->FindExist("-ro", true);
@@ -552,6 +564,8 @@ void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 
 	// Label
 	cmd->FindString("-label", params.label, true);
+
+	return true;
 }
 
 bool MOUNT::ParseGeometry(MountParameters& params)
@@ -582,14 +596,9 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 		}
 	} else if (params.type == "iso") {
 		str_size = "2048,1,65535,0";
-	} else if (params.type != "hdd") {
-		// If it is 'hdd', we leave sizes 0 to trigger detection or
-		// parsing below. If it is unknown, we error out later.
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "MOUNT",
-		                      "PROGRAM_MOUNT_ILL_TYPE",
-		                      params.type.c_str());
-		return false;
+	} else {
+		// Type parameter validation should prevent this from happening
+		assert(params.type == "hdd");
 	}
 
 	// Parse the free space in mb (kb for floppies)
@@ -1130,7 +1139,9 @@ void MOUNT::Run(void)
 	bool path_relative_to_last_config = false;
 
 	// Parse command line arguments
-	ParseArguments(params, explicit_fs, path_relative_to_last_config);
+	if (!ParseArguments(params, explicit_fs, path_relative_to_last_config)) {
+		return;
+	}
 
 	// Check drive geometry and types, abort if not valid
 	if (!ParseGeometry(params)) {

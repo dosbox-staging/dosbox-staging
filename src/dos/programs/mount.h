@@ -52,7 +52,7 @@ private:
 	void ShowUsage();
 
 	bool HandleUnmount();
-	void ParseArguments(MountParameters& params, bool& explicit_fs,
+	bool ParseArguments(MountParameters& params, bool& explicit_fs,
 	                    bool& path_relative_to_last_config);
 	bool ParseGeometry(MountParameters& params);
 	bool ParseDrive(MountParameters& params, bool explicit_fs);
