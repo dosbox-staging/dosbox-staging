@@ -168,30 +168,30 @@ static void ClrQueue()
 
 static uint8_t MPU401_ReadStatus(io_port_t, io_width_t)
 {
-//	static double next_msg_index = 0.0;
+	static double next_msg_index = 0.0;
 
-//	constexpr double ByteLatencyMs = 1000.0 / 3125.0;
+	constexpr double ByteLatencyMs = 1000.0 / 3125.0;
+
+	if (PIC_FullIndex() - next_msg_index >= 10) {
+		next_msg_index = PIC_FullIndex();
+	}
 
 	// Bits 6 and 7 clear
 	uint8_t ret = 0x3f;
 
-//	const bool ready = (PIC_FullIndex() > next_msg_index);
+	const bool ready = (PIC_FullIndex() >= next_msg_index);
 
 	if (mpu.state.cmd_pending) {
 		ret |= 0x40;
 	} else {
-//		if (!ready) {
+		if (!ready) {
 			ret |= 0x40;
-//		}
+		}
 	}
 
-//	if (ready) {
-//		if (next_msg_index < PIC_FullIndex() - 1000 * 10) {
-//			next_msg_index = PIC_FullIndex();
-//		} else {
-//			next_msg_index += ByteLatencyMs;
-//		}
-//	}
+	if (ready) {
+		next_msg_index += ByteLatencyMs;
+	}
 
 	if (!mpu.queue_used) {
 		ret |= 0x80;
