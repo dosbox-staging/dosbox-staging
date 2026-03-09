@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2026 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mpu401.h"
@@ -11,7 +11,10 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "midi/midi.h"
+#include "utils/checks.h"
 #include "utils/math_utils.h"
+
+CHECK_NARROWING();
 
 static void MPU401_Event(uint32_t);
 static void MPU401_Reset();
