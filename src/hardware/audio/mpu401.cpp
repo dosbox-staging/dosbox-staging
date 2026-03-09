@@ -22,6 +22,9 @@ static void MPU401_ResetDone(uint32_t);
 static void MPU401_EOIHandler(uint32_t val = 0);
 static void MPU401_EOIHandlerDispatch();
 
+constexpr io_port_t Mpu401DataPort   = 0x330;
+constexpr io_port_t Mpu401StatusPort = 0x331;
+
 constexpr uint8_t Mpu401Version   = 0x15;
 constexpr uint8_t Mpu401Revision  = 0x01;
 constexpr uint8_t Mpu401QueueSize = 32;
@@ -423,12 +426,12 @@ static uint8_t MPU401_ReadData(io_port_t, io_width_t)
 		if (mpu.condbuf.type != MpuDataType::Overflow) {
 			mpu.state.block_ack = true;
 
-			MPU401_WriteCommand(0x331,
+			MPU401_WriteCommand(Mpu401StatusPort,
 			                    mpu.condbuf.value[0],
 			                    io_width_t::byte);
 
 			if (mpu.state.command_byte) {
-				MPU401_WriteData(0x330,
+				MPU401_WriteData(Mpu401DataPort,
 				                 mpu.condbuf.value[1],
 				                 io_width_t::byte);
 			}
@@ -901,7 +904,9 @@ static void MPU401_ResetDone(uint32_t)
 	mpu.state.reset = false;
 
 	if (mpu.state.cmd_pending) {
-		MPU401_WriteCommand(0x331, mpu.state.cmd_pending - 1, io_width_t::byte);
+		MPU401_WriteCommand(Mpu401StatusPort,
+		                    mpu.state.cmd_pending - 1,
+		                    io_width_t::byte);
 
 		mpu.state.cmd_pending = 0;
 	}
@@ -976,16 +981,21 @@ public:
 			return;
 		}
 
-		constexpr io_port_t DataPort   = 0x330;
-		constexpr io_port_t StatusPort = 0x331;
+		WriteHandler[0].Install(Mpu401DataPort,
+		                        &MPU401_WriteData,
+		                        io_width_t::byte);
 
-		WriteHandler[0].Install(DataPort, &MPU401_WriteData, io_width_t::byte);
-		WriteHandler[1].Install(StatusPort,
+		WriteHandler[1].Install(Mpu401StatusPort,
 		                        &MPU401_WriteCommand,
 		                        io_width_t::byte);
 
-		ReadHandler[0].Install(DataPort, &MPU401_ReadData, io_width_t::byte);
-		ReadHandler[1].Install(StatusPort, &MPU401_ReadStatus, io_width_t::byte);
+		ReadHandler[0].Install(Mpu401DataPort,
+		                       &MPU401_ReadData,
+		                       io_width_t::byte);
+
+		ReadHandler[1].Install(Mpu401StatusPort,
+		                       &MPU401_ReadStatus,
+		                       io_width_t::byte);
 
 		mpu = Mpu{};
 
@@ -998,8 +1008,8 @@ public:
 
 		LOG_MSG("MPU-401: Running in %s mode on ports %xh and %xh",
 		        mpu.is_intelligent ? "intelligent" : "UART",
-		        DataPort,
-		        StatusPort);
+		        Mpu401DataPort,
+		        Mpu401StatusPort);
 
 		is_installed = true;
 	}
