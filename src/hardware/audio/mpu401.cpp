@@ -34,7 +34,7 @@ constexpr double MPU401_RESETBUSY    = 14.0;
 
 enum class MpuMode { Uart, Intelligent };
 
-enum MpuDataType { T_OVERFLOW, T_MARK, T_MIDI_SYS, T_MIDI_NORM, T_COMMAND };
+enum class MpuDataType { Overflow, Mark, MidiSys, MidiNorm, Command };
 
 static void MPU401_WriteData(io_port_t port, io_val_t value, io_width_t);
 
@@ -56,7 +56,7 @@ struct MpuTrack {
 	uint8_t sys_val  = 0;
 	uint8_t vlength  = 0;
 	uint8_t length   = 0;
-	MpuDataType type = T_MIDI_NORM;
+	MpuDataType type = MpuDataType::MidiNorm;
 };
 
 struct MpuState {
@@ -336,11 +336,11 @@ static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 
 			for (uint8_t i = 0; i < 8; ++i) {
 				mpu.playbuf[i].counter = 0;
-				mpu.playbuf[i].type    = T_OVERFLOW;
+				mpu.playbuf[i].type    = MpuDataType::Overflow;
 			}
 
 			mpu.condbuf.counter = 0;
-			mpu.condbuf.type    = T_OVERFLOW;
+			mpu.condbuf.type    = MpuDataType::Overflow;
 
 			if (!(mpu.state.conductor = mpu.state.cond_set)) {
 				mpu.state.cond_req = 0;
@@ -408,7 +408,7 @@ static uint8_t MPU401_ReadData(io_port_t, io_width_t)
 		mpu.state.data_onoff = 0;
 		mpu.state.cond_req   = true;
 
-		if (mpu.condbuf.type != T_OVERFLOW) {
+		if (mpu.condbuf.type != MpuDataType::Overflow) {
 			mpu.state.block_ack = true;
 
 			MPU401_WriteCommand(0x331,
@@ -422,7 +422,7 @@ static uint8_t MPU401_ReadData(io_port_t, io_width_t)
 			}
 		}
 
-		mpu.condbuf.type = T_OVERFLOW;
+		mpu.condbuf.type = MpuDataType::Overflow;
 	}
 
 	if (ret == MSG_MPU_END || ret == MSG_MPU_CLOCK || ret == MSG_MPU_ACK) {
@@ -612,9 +612,9 @@ static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 			break;
 
 		case 1: // Command byte #1
-			mpu.condbuf.type = T_COMMAND;
+			mpu.condbuf.type = MpuDataType::Command;
 			if (val == 0xf8 || val == 0xf9) {
-				mpu.condbuf.type = T_OVERFLOW;
+				mpu.condbuf.type = MpuDataType::Overflow;
 			}
 
 			mpu.condbuf.value[mpu.condbuf.vlength] = val;
@@ -664,7 +664,9 @@ static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 			switch (val & 0xf0) {
 			case 0xf0: // System message or mark
 				if (val > 0xf7) {
-					mpu.playbuf[mpu.state.channel].type = T_MARK;
+					mpu.playbuf[mpu.state.channel].type =
+					        MpuDataType::Mark;
+
 					mpu.playbuf[mpu.state.channel].sys_val = val;
 
 					length = 1;
@@ -672,7 +674,9 @@ static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 					LOG(LOG_MISC,
 					    LOG_ERROR)("MPU-401:Illegal message");
 
-					mpu.playbuf[mpu.state.channel].type = T_MIDI_SYS;
+					mpu.playbuf[mpu.state.channel].type =
+					        MpuDataType::MidiSys;
+
 					mpu.playbuf[mpu.state.channel].sys_val = val;
 
 					length = 1;
@@ -681,7 +685,7 @@ static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 
 			case 0xc0:
 			case 0xd0: // MIDI Message
-				mpu.playbuf[mpu.state.channel].type = T_MIDI_NORM;
+				mpu.playbuf[mpu.state.channel].type = MpuDataType::MidiNorm;
 
 				length = mpu.playbuf[mpu.state.channel].length = 2;
 				break;
@@ -691,7 +695,7 @@ static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 			case 0xa0:
 			case 0xb0:
 			case 0xe0:
-				mpu.playbuf[mpu.state.channel].type = T_MIDI_NORM;
+				mpu.playbuf[mpu.state.channel].type = MpuDataType::MidiNorm;
 
 				length = mpu.playbuf[mpu.state.channel].length = 3;
 				break;
@@ -700,7 +704,7 @@ static void MPU401_WriteData(io_port_t, io_val_t value, io_width_t)
 				posd++;
 
 				mpu.playbuf[mpu.state.channel].vlength++;
-				mpu.playbuf[mpu.state.channel].type = T_MIDI_NORM;
+				mpu.playbuf[mpu.state.channel].type = MpuDataType::MidiNorm;
 
 				length = mpu.playbuf[mpu.state.channel].length;
 				break;
@@ -722,8 +726,8 @@ static void MPU401_IntelligentOut(uint8_t chan)
 	uint8_t val = 0;
 
 	switch (mpu.playbuf[chan].type) {
-	case T_OVERFLOW: break;
-	case T_MARK:
+	case MpuDataType::Overflow: break;
+	case MpuDataType::Mark:
 		val = mpu.playbuf[chan].sys_val;
 
 		if (val == 0xfc) {
@@ -733,7 +737,7 @@ static void MPU401_IntelligentOut(uint8_t chan)
 		}
 		break;
 
-	case T_MIDI_NORM:
+	case MpuDataType::MidiNorm:
 		for (uint8_t i = 0; i < mpu.playbuf[chan].vlength; ++i) {
 			MIDI_RawOutByte(mpu.playbuf[chan].value[i]);
 		}
@@ -749,7 +753,7 @@ static void UpdateTrack(uint8_t chan)
 
 	if (mpu.state.amask & (1 << chan)) {
 		mpu.playbuf[chan].vlength = 0;
-		mpu.playbuf[chan].type    = T_OVERFLOW;
+		mpu.playbuf[chan].type    = MpuDataType::Overflow;
 		mpu.playbuf[chan].counter = 0xf0;
 
 		mpu.state.req_mask |= (1 << chan);
@@ -930,10 +934,10 @@ static void MPU401_Reset()
 	mpu.state.req_mask = 0;
 
 	mpu.condbuf.counter = 0;
-	mpu.condbuf.type    = T_OVERFLOW;
+	mpu.condbuf.type    = MpuDataType::Overflow;
 
 	for (uint8_t i = 0; i < 8; ++i) {
-		mpu.playbuf[i].type    = T_OVERFLOW;
+		mpu.playbuf[i].type    = MpuDataType::Overflow;
 		mpu.playbuf[i].counter = 0;
 	}
 }
