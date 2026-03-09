@@ -686,7 +686,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	mt32_service->setNiceAmpRampEnabled(UseNiceRamp);
 	mt32_service->setNicePanningEnabled(UseNicePanning);
 	mt32_service->setNicePartialMixingEnabled(UseNicePartialMixing);
-	mt32_service->setMIDIDelayMode(MidiDelayMode);
+//	mt32_service->setMIDIDelayMode(MidiDelayMode);
 
 	const auto rc = mt32_service->openSynth();
 
