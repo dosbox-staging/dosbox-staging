@@ -284,6 +284,12 @@ std::string SdlRenderer::GetCurrentSymbolicShaderDescriptor()
 	return {};
 }
 
+ShaderDescriptor SdlRenderer::GetCurrentShaderDescriptor()
+{
+	// no-op (no shader support)
+	return {};
+}
+
 void SdlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 {
 	assert(curr_framebuf);
@@ -373,6 +379,11 @@ void SdlRenderer::SetColorSpace([[maybe_unused]] const ColorSpace color_space)
 
 void SdlRenderer::SetImageAdjustmentSettings(
         [[maybe_unused]] const ImageAdjustmentSettings& settings)
+{
+	// no-op (no image adjustment support)
+}
+
+void SdlRenderer::SetDeditheringStrength([[maybe_unused]] const float strength)
 {
 	// no-op (no image adjustment support)
 }

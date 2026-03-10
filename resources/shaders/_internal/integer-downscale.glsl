@@ -1,14 +1,14 @@
 #version 330 core
 
-// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
-// SPDX-FileCopyrightText:  2020-2020 Hyllian <sergiogdb@gmail.com>
-// SPDX-FileCopyrightText:  2020-2020 jmarsh <jmarsh@vogons.org>
+// SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /*
 
-#pragma name        Main_Pass1
-#pragma output_size Viewport
+#pragma name        IntegerDownscale
+#pragma output_size VideoMode
+
+#pragma linear_filtering off
 
 */
 
@@ -21,8 +21,7 @@ out vec2 v_texCoord;
 void main()
 {
 	gl_Position = vec4(a_position, 0.0, 1.0);
-
-	v_texCoord = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
+	v_texCoord  = vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0;
 }
 
 #elif defined(FRAGMENT)

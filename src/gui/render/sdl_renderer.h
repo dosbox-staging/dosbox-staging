@@ -6,12 +6,13 @@
 
 #include "render_backend.h"
 
-#include "dosbox_config.h"
+#include <string>
+
 #include "gui/private/common.h"
 #include "gui/render/render.h"
-#include "utils/rect.h"
 
-#include <string>
+#include "dosbox_config.h"
+#include "utils/rect.h"
 
 // must be included after dosbox_config.h
 #include "SDL.h"
@@ -44,6 +45,7 @@ public:
 	ShaderPreset GetCurrentShaderPreset() override;
 
 	std::string GetCurrentSymbolicShaderDescriptor() override;
+	ShaderDescriptor GetCurrentShaderDescriptor() override;
 
 	void StartFrame(uint32_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
@@ -56,6 +58,7 @@ public:
 	void SetColorSpace(const ColorSpace color_space) override;
 	void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings) override;
 	void EnableImageAdjustments(const bool enable) override;
+	void SetDeditheringStrength(const float strength) override;
 
 	RenderedImage ReadPixelsPostShader(const DosBox::Rect output_rect_px) override;
 

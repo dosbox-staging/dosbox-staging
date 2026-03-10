@@ -11,10 +11,10 @@
 #include <cmath>
 #include <cstring>
 #include <iomanip>
-#include <map>
 #include <optional>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 
 #include "audio/channel_names.h"
 #include "config/config.h"
@@ -447,7 +447,7 @@ static void log_filter_config(const char* channel_name, const char* output_type,
                               const FilterType filter)
 {
 	// clang-format off
-	static const std::map<FilterType, std::string> filter_name_map = {
+	static const std::unordered_map<FilterType, std::string> filter_name_map = {
 	        {FilterType::SB1,    "Sound Blaster 1.0"},
 	        {FilterType::SB2,    "Sound Blaster 2.0"},
 	        {FilterType::SBPro1, "Sound Blaster Pro 1"},
@@ -460,9 +460,9 @@ static void log_filter_config(const char* channel_name, const char* output_type,
 	if (filter == FilterType::None) {
 		LOG_MSG("%s: %s filter disabled", channel_name, output_type);
 	} else {
-		auto it = filter_name_map.find(filter);
+		const auto it = filter_name_map.find(filter);
 		if (it != filter_name_map.end()) {
-			auto filter_type = it->second;
+			const auto filter_type = it->second;
 
 			LOG_MSG("%s: %s %s output filter enabled",
 			        channel_name,
