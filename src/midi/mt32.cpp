@@ -1028,7 +1028,7 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 		const auto model_string  = format_str(
                         "%s%s%s%s", color, active_prefix, display_name, reset);
 
-		return convert_ansi_markup(model_string.c_str());
+		return convert_ansi_markup(model_string);
 	};
 
 	// Print available MT-32 ROMs
