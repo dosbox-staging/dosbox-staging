@@ -730,7 +730,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiDeviceFluidSynth::MixerCallback,
+	const auto mixer_callback = std::bind(&MidiSynth::MixerCallback,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -900,56 +900,6 @@ void MidiDeviceFluidSynth::SetFilter()
 	}
 }
 
-int MidiDeviceFluidSynth::GetNumPendingAudioFrames()
-{
-	const auto now_ms = PIC_FullIndex();
-
-	// Wake up the channel and update the last rendered time datum.
-	assert(mixer_channel);
-	if (mixer_channel->WakeUp()) {
-		last_rendered_ms = now_ms;
-		return 0;
-	}
-	if (last_rendered_ms >= now_ms) {
-		return 0;
-	}
-
-	// Return the number of audio frames needed to get current again
-	assert(ms_per_audio_frame > 0.0);
-
-	const auto elapsed_ms = now_ms - last_rendered_ms;
-	const auto num_audio_frames = iround(ceil(elapsed_ms / ms_per_audio_frame));
-	last_rendered_ms += (num_audio_frames * ms_per_audio_frame);
-
-	return num_audio_frames;
-}
-
-// The request to play the channel message is placed in the MIDI work FIFO
-void MidiDeviceFluidSynth::SendMidiMessage(const MidiMessage& msg)
-{
-	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
-
-	MidiWork work{std::move(message),
-	              GetNumPendingAudioFrames(),
-	              MessageType::Channel,
-	              PIC_AtomicIndex()};
-
-	work_fifo.Enqueue(std::move(work));
-}
-
-// The request to play the sysex message is placed in the MIDI work FIFO
-void MidiDeviceFluidSynth::SendSysExMessage(uint8_t* sysex, size_t len)
-{
-	std::vector<uint8_t> message(sysex, sysex + len);
-
-	MidiWork work{std::move(message),
-	              GetNumPendingAudioFrames(),
-	              MessageType::SysEx,
-	              PIC_AtomicIndex()};
-
-	work_fifo.Enqueue(std::move(work));
-}
-
 void MidiDeviceFluidSynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 {
 	const auto status_byte = msg[0];
@@ -980,42 +930,6 @@ void MidiDeviceFluidSynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
 }
 
-// The callback operates at the audio frame-level, steadily adding
-// samples to the mixer until the requested numbers of audio frames is
-// met.
-void MidiDeviceFluidSynth::MixerCallback(const int requested_audio_frames)
-{
-	assert(mixer_channel);
-
-	// Report buffer underruns
-	constexpr auto WarningPercent = 5.0f;
-
-	if (const auto percent_full = audio_frame_fifo.GetPercentFull();
-	    percent_full < WarningPercent) {
-		static auto iteration = 0;
-		if (iteration++ % 100 == 0) {
-			LOG_WARNING("FSYNTH: Audio buffer underrun");
-		}
-		had_underruns = true;
-	}
-
-	static std::vector<AudioFrame> audio_frames = {};
-
-	const auto has_dequeued = audio_frame_fifo.BulkDequeue(audio_frames,
-	                                                       requested_audio_frames);
-
-	if (has_dequeued) {
-		assert(check_cast<int>(audio_frames.size()) == requested_audio_frames);
-		mixer_channel->AddSamples_sfloat(requested_audio_frames,
-		                                 &audio_frames[0][0]);
-
-		last_rendered_ms = PIC_AtomicIndex();
-	} else {
-		assert(!audio_frame_fifo.IsRunning());
-		mixer_channel->AddSilence();
-	}
-}
-
 void MidiDeviceFluidSynth::RenderAudioFramesToFifo(const int num_audio_frames)
 {
 	static std::vector<AudioFrame> audio_frames = {};
@@ -1037,44 +951,15 @@ void MidiDeviceFluidSynth::RenderAudioFramesToFifo(const int num_audio_frames)
 	audio_frame_fifo.BulkEnqueue(audio_frames, num_audio_frames);
 }
 
-void MidiDeviceFluidSynth::ProcessWorkFromFifo()
+void MidiDeviceFluidSynth::ProcessWorkItem(const MidiWork& work)
 {
-	const auto work = work_fifo.Dequeue();
-	if (!work) {
-		return;
-	}
+	if (work.message_type == MessageType::Channel) {
+		assert(work.message.size() <= MaxMidiMessageLen);
+		ApplyChannelMessage(work.message);
 
-#if 0
-	// To log inter-cycle rendering
-	if (work->num_pending_audio_frames > 0) {
-		LOG_DEBUG("FSYNTH: %2u audio frames prior to %s message, followed by "
-		          "%2lu more messages. Have %4lu audio frames queued",
-		          work->num_pending_audio_frames,
-		          work->message_type == MessageType::Channel ? "channel" : "sysex",
-		          work_fifo.Size(),
-		          audio_frame_fifo.Size());
-	}
-#endif
-
-	if (work->num_pending_audio_frames > 0) {
-		RenderAudioFramesToFifo(work->num_pending_audio_frames);
-	}
-
-	if (work->message_type == MessageType::Channel) {
-		assert(work->message.size() <= MaxMidiMessageLen);
-		ApplyChannelMessage(work->message);
 	} else {
-		assert(work->message_type == MessageType::SysEx);
-		ApplySysExMessage(work->message);
-	}
-}
-
-// Keep the fifo populated with freshly rendered buffers
-void MidiDeviceFluidSynth::Render()
-{
-	while (work_fifo.IsRunning()) {
-		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
-		                    : ProcessWorkFromFifo();
+		assert(work.message_type == MessageType::SysEx);
+		ApplySysExMessage(work.message);
 	}
 }
 
