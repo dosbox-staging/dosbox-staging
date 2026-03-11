@@ -95,10 +95,12 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	                   MaxVolume));
 
 	str_prop = secprop.AddString(ChorusSettingName, WhenIdle, DefaultChorusSetting);
-	str_prop->SetHelp(
-	        "Configure the FluidSynth chorus ('auto' by default). Possible values:\n"
+	str_prop->SetHelp(format_str(
+	        "Configure the FluidSynth chorus ('%s' by default). Possible values:\n"
 	        "\n"
-	        "  auto:      Enable chorus, except for known problematic SoundFonts (default).\n"
+	        "  auto:      Automatically enable or disable chorus and apply optimised settings\n"
+	        "             for common SoundFonts (default).\n"
+	        "\n"
 	        "  on:        Always enable chorus.\n"
 	        "  off:       Disable chorus.\n"
 	        "\n"
@@ -113,14 +115,16 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	        "Note: You can disable the FluidSynth chorus and enable the mixer-level chorus\n"
 	        "      on the FluidSynth channel instead, or enable both chorus effects at the\n"
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
-	        "      chorus settings being used.");
+	        "      chorus settings being used.",
+	        DefaultChorusSetting));
 
 	str_prop = secprop.AddString(ReverbSettingName, WhenIdle, DefaultReverbSetting);
-	;
-	str_prop->SetHelp(
-	        "Configure the FluidSynth reverb ('auto' by default). Possible values:\n"
+	str_prop->SetHelp(format_str(
+	        "Configure the FluidSynth reverb ('%s' by default). Possible values:\n"
 	        "\n"
-	        "  auto:      Enable reverb (default).\n"
+	        "  auto:      Automatically enable or disable reverb and apply optimised settings\n"
+	        "             for common SoundFonts (default).\n"
+	        "\n"
 	        "  on:        Enable reverb.\n"
 	        "  off:       Disable reverb.\n"
 	        "\n"
@@ -134,7 +138,8 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	        "Note: You can disable the FluidSynth reverb and enable the mixer-level reverb\n"
 	        "      on the FluidSynth channel instead, or enable both reverb effects at the\n"
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
-	        "      reverb settings being used.");
+	        "      reverb settings being used.",
+	        DefaultReverbSetting));
 
 	str_prop = secprop.AddString("fsynth_filter", WhenIdle, "off");
 	assert(str_prop);
