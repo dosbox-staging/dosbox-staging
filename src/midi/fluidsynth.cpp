@@ -98,8 +98,8 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	str_prop->SetHelp(format_str(
 	        "Configure the FluidSynth chorus ('%s' by default). Possible values:\n"
 	        "\n"
-	        "  auto:      Automatically enable or disable chorus and apply optimised settings\n"
-	        "             for common SoundFonts (default).\n"
+	        "  auto:      Automatically apply optimised chorus settings for common SoundFonts\n"
+	        "             (default).\n"
 	        "\n"
 	        "  on:        Always enable chorus.\n"
 	        "  off:       Disable chorus.\n"
@@ -122,8 +122,9 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	str_prop->SetHelp(format_str(
 	        "Configure the FluidSynth reverb ('%s' by default). Possible values:\n"
 	        "\n"
-	        "  auto:      Automatically enable or disable reverb and apply optimised settings\n"
-	        "             for common SoundFonts (default).\n"
+	        "  auto:      Automatically apply optimised reverb settings for common\n"
+			"             SoundFonts, or 
+	        "             (default).\n"
 	        "\n"
 	        "  on:        Enable reverb.\n"
 	        "  off:       Disable reverb.\n"
