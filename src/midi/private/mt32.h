@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_MT32_H
@@ -62,15 +62,17 @@ public:
 private:
 	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
+	void ProcessWorkFromFifoBacklogged();
 
 	int GetNumPendingAudioFrames();
-	void RenderAudioFramesToFifo(const int num_frames = 1);
+	void RenderAudioFramesToFifo(const int num_frames);
 	void Render();
+	void RenderBacklogged();
 
 	// Managed objects
-	MixerChannelPtr channel = nullptr;
-	RWQueue<AudioFrame> audio_frame_fifo{1};
-	RWQueue<MidiWork> work_fifo{1};
+	MixerChannelPtr channel              = nullptr;
+	RWQueue<AudioFrame> audio_frame_fifo = {1};
+	RWQueue<MidiWork> work_fifo          = {1};
 
 	std::mutex service_mutex                  = {};
 	std::unique_ptr<MT32Emu::Service> service = {};
@@ -83,7 +85,8 @@ private:
 	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
-	bool had_underruns = false;
+	bool had_underruns           = false;
+	bool is_work_fifo_backlogged = false;
 };
 
 void MT32_ListDevices(MidiDeviceMt32* device, Program* caller);
