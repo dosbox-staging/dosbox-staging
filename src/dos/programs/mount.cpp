@@ -517,7 +517,7 @@ bool MOUNT::HandleUnmount()
 	return false;
 }
 
-void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
+bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
                            bool& path_relative_to_last_config)
 {
 	if (cmd->FindExist("-pr", true)) {
@@ -531,6 +531,18 @@ void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	}
 	if (params.type == "fdd") {
 		params.type = "floppy";
+	}
+
+	// Validate the requested mount type
+	if (params.type != "floppy" && params.type != "dir" &&
+	    params.type != "overlay" && params.type != "iso" &&
+	    params.type != "hdd") {
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_ILL_TYPE",
+		                      params.type.c_str());
+		return false;
 	}
 
 	params.roflag = cmd->FindExist("-ro", true);
@@ -552,9 +564,11 @@ void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 
 	// Label
 	cmd->FindString("-label", params.label, true);
+
+	return true;
 }
 
-void MOUNT::ParseGeometry(MountParameters& params)
+bool MOUNT::ParseGeometry(MountParameters& params)
 {
 	std::string str_size = "";
 	std::string str_chs  = "";
@@ -582,14 +596,9 @@ void MOUNT::ParseGeometry(MountParameters& params)
 		}
 	} else if (params.type == "iso") {
 		str_size = "2048,1,65535,0";
-	} else if (params.type != "hdd") {
-		// If it is 'hdd', we leave sizes 0 to trigger detection or
-		// parsing below. If it is unknown, we error out later.
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "MOUNT",
-		                      "PROGRAM_MOUNT_ILL_TYPE",
-		                      params.type.c_str());
-		return;
+	} else {
+		// Type parameter validation should prevent this from happening
+		assert(params.type == "hdd");
 	}
 
 	// Parse the free space in mb (kb for floppies)
@@ -660,8 +669,11 @@ void MOUNT::ParseGeometry(MountParameters& params)
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
 			                      "PROGRAM_MOUNT_INVALID_CHS");
+			return false;
 		}
 	}
+
+	return true;
 }
 
 bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
@@ -1127,9 +1139,16 @@ void MOUNT::Run(void)
 	bool path_relative_to_last_config = false;
 
 	// Parse command line arguments
-	ParseArguments(params, explicit_fs, path_relative_to_last_config);
-	ParseGeometry(params);
+	if (!ParseArguments(params, explicit_fs, path_relative_to_last_config)) {
+		return;
+	}
 
+	// Check drive geometry and types, abort if not valid
+	if (!ParseGeometry(params)) {
+		return;
+	}
+
+	// Check drive letter/number and overlaps, abort if not valid
 	if (!ParseDrive(params, explicit_fs)) {
 		return;
 	}
@@ -1231,7 +1250,7 @@ void MOUNT::AddMessages()
 	MSG_Add("PROGRAM_MOUNT_ERROR_2",
 	        "%s isn't a directory or valid image file.\n");
 
-	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s\n");
+	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED", "Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED", "Drive %c isn't mounted.\n");
 

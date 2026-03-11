@@ -52,9 +52,9 @@ private:
 	void ShowUsage();
 
 	bool HandleUnmount();
-	void ParseArguments(MountParameters& params, bool& explicit_fs,
+	bool ParseArguments(MountParameters& params, bool& explicit_fs,
 	                    bool& path_relative_to_last_config);
-	void ParseGeometry(MountParameters& params);
+	bool ParseGeometry(MountParameters& params);
 	bool ParseDrive(MountParameters& params, bool explicit_fs);
 
 	std::string ApplyRelativePath(const std::string& path,
