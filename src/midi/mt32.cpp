@@ -346,24 +346,24 @@ static void init_mt32_config_settings(SectionProp& sec_prop)
 
 	// Listed in resolution priority order
 	str_prop->SetValues({"auto",
-	                      BestModelAlias::Cm32l,
-	                      cm32l_102_model.GetName(),
-	                      cm32l_100_model.GetName(),
-	                      cm32ln_100_model.GetName(),
+	                     BestModelAlias::Cm32l,
+	                     cm32l_102_model.GetName(),
+	                     cm32l_100_model.GetName(),
+	                     cm32ln_100_model.GetName(),
 
-	                      BestModelAlias::Mt32Any,
-	                      BestModelAlias::Mt32Old,
-	                      mt32_107_model.GetName(),
-	                      mt32_106_model.GetName(),
-	                      mt32_105_model.GetName(),
-	                      mt32_104_model.GetName(),
-	                      mt32_bluer_model.GetName(),
+	                     BestModelAlias::Mt32Any,
+	                     BestModelAlias::Mt32Old,
+	                     mt32_107_model.GetName(),
+	                     mt32_106_model.GetName(),
+	                     mt32_105_model.GetName(),
+	                     mt32_104_model.GetName(),
+	                     mt32_bluer_model.GetName(),
 
-	                      BestModelAlias::Mt32New,
-	                      mt32_207_model.GetName(),
-	                      mt32_206_model.GetName(),
-	                      mt32_204_model.GetName(),
-	                      mt32_203_model.GetName()});
+	                     BestModelAlias::Mt32New,
+	                     mt32_207_model.GetName(),
+	                     mt32_206_model.GetName(),
+	                     mt32_204_model.GetName(),
+	                     mt32_203_model.GetName()});
 	str_prop->SetHelp(
 	        "Roland MT-32/CM-32ML model to use ('auto' by default). You must have the ROM\n"
 	        "files for the selected model available (see 'romdir'). The lookup for the best\n"
