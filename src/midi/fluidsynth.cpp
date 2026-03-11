@@ -25,6 +25,8 @@
 #include "utils/math_utils.h"
 #include "utils/string_utils.h"
 
+#include <riffcpp/riffcpp.hpp>
+
 constexpr auto SoundFontExtension = ".sf2";
 
 constexpr auto ChorusSettingName    = "fsynth_chorus";
@@ -37,21 +39,69 @@ constexpr auto NumReverbParams      = 4;
 
 // clang-format off
 
-// Use reasonable chorus and reverb settings matching ScummVM's defaults
+// Use reasonable default chorus settings matching ScummVM's defaults
 constexpr ChorusParameters DefaultChorusParameters = {
-	3,   // voice count
-	1.2, // level
-	0.3, // speed
-	8.0, // depth
+	3,    // voice count
+	1.2,  // level
+	0.3,  // speed
+	8.0,  // depth
 	fluid_chorus_mod::FLUID_CHORUS_MOD_SINE // mod wave
 };
 
+constexpr ChorusParameters GeneralUserGsChorusParameters = {
+	4,    // voice count
+	0.55, // level
+	0.36, // speed
+	3.6,  // depth
+	fluid_chorus_mod::FLUID_CHORUS_MOD_SINE // mod wave
+};
+
+constexpr ChorusParameters Awe32ChorusParameters = {
+	3,    // voice count
+	0.43, // level
+	0.4,  // speed
+	4.7,  // depth
+	fluid_chorus_mod::FLUID_CHORUS_MOD_SINE // mod wave
+};
+
+constexpr ChorusParameters Trevor0402_Sc55ChorusParameters = {
+	3,    // voice count
+	0.1,  // level
+	0.3,  // speed
+	8.0,  // depth
+	fluid_chorus_mod::FLUID_CHORUS_MOD_SINE // mod wave
+};
+
+
+// Use reasonable default reverb settings matching ScummVM's defaults
 constexpr ReverbParameters DefaultReverbParameters = {
 	0.61, // room size
 	0.23, // damping
 	0.76, // width
 	0.56  // level
 };
+
+constexpr ReverbParameters GeneralUserGsReverbParameters = {
+	0.5,  // room size
+	0.3,  // damping
+	0.8,  // width
+	0.7   // level
+};
+
+constexpr ReverbParameters Awe32ReverbParameters = {
+	0.65, // room size
+	0.3,  // damping
+	0.8,  // width
+	0.6   // level
+};
+
+constexpr ReverbParameters Trevor0402_Sc55ReverbParameters = {
+	0.61, // room size
+	0.23, // damping
+	0.76, // width
+	0.15  // level
+};
+
 // clang-format on
 
 static void init_fluidsynth_config_settings(SectionProp& secprop)
@@ -95,10 +145,13 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	                   MaxVolume));
 
 	str_prop = secprop.AddString(ChorusSettingName, WhenIdle, DefaultChorusSetting);
-	str_prop->SetHelp(
-	        "Configure the FluidSynth chorus ('auto' by default). Possible values:\n"
+	str_prop->SetHelp(format_str(
+	        "Configure the FluidSynth chorus ('%s' by default). Possible values:\n"
 	        "\n"
-	        "  auto:      Enable chorus, except for known problematic SoundFonts (default).\n"
+	        "  auto:      Automatically apply optimised settings for common SoundFonts, or\n"
+	        "             enable chorus with the default settings for all other Soundfonts\n"
+	        "             (default).\n"
+	        "\n"
 	        "  on:        Always enable chorus.\n"
 	        "  off:       Disable chorus.\n"
 	        "\n"
@@ -113,14 +166,17 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	        "Note: You can disable the FluidSynth chorus and enable the mixer-level chorus\n"
 	        "      on the FluidSynth channel instead, or enable both chorus effects at the\n"
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
-	        "      chorus settings being used.");
+	        "      chorus settings being used.",
+	        DefaultChorusSetting));
 
 	str_prop = secprop.AddString(ReverbSettingName, WhenIdle, DefaultReverbSetting);
-	;
-	str_prop->SetHelp(
-	        "Configure the FluidSynth reverb ('auto' by default). Possible values:\n"
+	str_prop->SetHelp(format_str(
+	        "Configure the FluidSynth reverb ('%s' by default). Possible values:\n"
 	        "\n"
-	        "  auto:      Enable reverb (default).\n"
+	        "  auto:      Automatically apply optimised settings for common SoundFonts, or\n"
+	        "             enable reverb with the default settings for all other Soundfonts\n"
+	        "             (default).\n"
+	        "\n"
 	        "  on:        Enable reverb.\n"
 	        "  off:       Disable reverb.\n"
 	        "\n"
@@ -134,7 +190,8 @@ static void init_fluidsynth_config_settings(SectionProp& secprop)
 	        "Note: You can disable the FluidSynth reverb and enable the mixer-level reverb\n"
 	        "      on the FluidSynth channel instead, or enable both reverb effects at the\n"
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
-	        "      reverb settings being used.");
+	        "      reverb settings being used.",
+	        DefaultReverbSetting));
 
 	str_prop = secprop.AddString("fsynth_filter", WhenIdle, "off");
 	assert(str_prop);
@@ -270,6 +327,51 @@ static std_fs::path find_sf_file(const std::string& sf_name)
 	return {};
 }
 
+static std::string read_soundfont_name(const std_fs::path& path)
+{
+	const auto& path_str = path.string();
+
+	try {
+		riffcpp::Chunk root_chunk(path_str.c_str());
+
+		for (auto list_chunk : root_chunk) {
+			if (list_chunk.id() != riffcpp::list_id) {
+				continue;
+			}
+			if (list_chunk.type() != riffcpp::FourCC{'I', 'N', 'F', 'O'}) {
+				continue;
+			}
+
+			for (auto subchunk : list_chunk) {
+				// The 'INAM' ID in the 'INFO" subchunk stores
+				// the name of the SOundFont bank
+				if (subchunk.id() !=
+				    riffcpp::FourCC{'I', 'N', 'A', 'M'}) {
+					continue;
+				}
+
+				std::string name(subchunk.size(), '\0');
+				subchunk.read_data(name.data(), name.size());
+
+				return name;
+			}
+		}
+
+	} catch (const riffcpp::Error& ex) {
+		LOG_WARNING("FSYNTH: Error reading SoundFont metadata of file '%s': %s",
+		            path_str.c_str(),
+		            ex.what());
+
+	} catch (const std::runtime_error& ex) {
+		LOG_ERR("FSYNTH: Unexpected error when reading SoundFont metadata of "
+		        "file '%s': %s",
+		        path_str.c_str(),
+		        ex.what());
+	}
+
+	return "";
+}
+
 static void log_unknown_midi_message(const std::vector<uint8_t>& msg)
 {
 	auto append_as_hex = [](const std::string& str, const uint8_t val) {
@@ -403,46 +505,68 @@ void MidiDeviceFluidSynth::SetChorusParams(const ChorusParameters& params)
 
 void MidiDeviceFluidSynth::SetChorus()
 {
-	auto enable_chorus = [&](const bool enabled) {
-		// Apply setting to all groups
-		constexpr int FxGroup = -1;
-		fluid_synth_chorus_on(synth.get(), FxGroup, enabled);
+	constexpr int AllFxGroups = -1;
 
-		if (!enabled) {
-			LOG_MSG("FSYNTH: Chorus disabled");
-		}
+	auto enable_chorus = [&] {
+		fluid_synth_chorus_on(synth.get(), AllFxGroups, true);
+		LOG_MSG("FSYNTH: Chorus enabled");
+	};
+
+	auto disable_chorus = [&] {
+		fluid_synth_chorus_on(synth.get(), AllFxGroups, false);
+		LOG_MSG("FSYNTH: Chorus disabled");
 	};
 
 	auto handle_auto_setting = [&]() {
-		// Does the SoundFont have known-issues with chorus?
-		const auto is_problematic_font =
-		        find_in_case_insensitive("FluidR3", soundfont_path.string()) ||
-		        find_in_case_insensitive("zdoom", soundfont_path.string());
+		using enum SoundFont;
 
-		if (is_problematic_font) {
-			enable_chorus(false);
+		auto log_auto_apply = [] {
+			LOG_MSG("FSYNTH: Auto-applying optimal chorus settings");
+		};
 
-			LOG_INFO(
-			        "FSYNTH: Chorus auto-disabled due to known issues with "
-			        "the '%s' SoundFont",
-			        get_fluidsynth_section()->GetString("soundfont").c_str());
-		} else {
+		switch (soundfont) {
+		case Unknown:
+			enable_chorus();
 			SetChorusParams(DefaultChorusParameters);
-			enable_chorus(true);
+			break;
 
-			// TODO setting the recommended chorus setting for
-			// GeneralUserGS will happen here
-		}
+		case GeneralUserGs:
+			log_auto_apply();
+			enable_chorus();
+			SetChorusParams(GeneralUserGsChorusParameters);
+			break;
+
+		case Awe32_SynthGs:
+		case SbLive_4GmGsMt:
+			log_auto_apply();
+			enable_chorus();
+			SetChorusParams(Awe32ChorusParameters);
+			break;
+
+		case FluidR3:
+			log_auto_apply();
+			disable_chorus();
+			break;
+
+		case Trevor0402_Sc55:
+			log_auto_apply();
+			enable_chorus();
+			SetChorusParams(Trevor0402_Sc55ChorusParameters);
+			break;
+
+
+		default: assertm(false, "Invalid SoundFont value");
+		};
 	};
 
 	const auto pref = get_fluidsynth_section()->GetString(ChorusSettingName);
 
 	if (has_true(pref)) {
 		SetChorusParams(DefaultChorusParameters);
-		enable_chorus(true);
+		enable_chorus();
 
 	} else if (has_false(pref)) {
-		enable_chorus(false);
+		disable_chorus();
 
 	} else if (pref == "auto") {
 		handle_auto_setting();
@@ -452,7 +576,7 @@ void MidiDeviceFluidSynth::SetChorus()
 		    chorus_params) {
 
 			SetChorusParams(*chorus_params);
-			enable_chorus(true);
+			enable_chorus();
 
 		} else {
 			// TODO error
@@ -528,31 +652,63 @@ void MidiDeviceFluidSynth::SetReverbParams(const ReverbParameters& params)
 
 void MidiDeviceFluidSynth::SetReverb()
 {
-	auto enable_reverb = [&](const bool enabled) {
-		// Apply setting to all groups
-		constexpr int FxGroup = -1;
-		fluid_synth_reverb_on(synth.get(), FxGroup, enabled);
+	constexpr int AllFxGroups = -1;
 
-		if (!enabled) {
-			LOG_MSG("FSYNTH: Reverb disabled");
-		}
+	auto enable_reverb = [&] {
+		fluid_synth_reverb_on(synth.get(), AllFxGroups, true);
+		LOG_MSG("FSYNTH: Reverb enabled");
+	};
+
+	auto disable_reverb = [&] {
+		fluid_synth_reverb_on(synth.get(), AllFxGroups, false);
+		LOG_MSG("FSYNTH: Reverb disabled");
 	};
 
 	auto handle_auto_setting = [&]() {
-		// TODO setting the recommended reverb setting for GeneralUserGS
-		// will happen here
-		SetReverbParams(DefaultReverbParameters);
-		enable_reverb(true);
+		using enum SoundFont;
+
+		auto log_auto_apply = [] {
+			LOG_MSG("FSYNTH: Auto-applying optimal reverb settings");
+		};
+
+		switch (soundfont) {
+		case Unknown:
+		case FluidR3:
+			enable_reverb();
+			SetReverbParams(DefaultReverbParameters);
+			break;
+
+		case GeneralUserGs:
+			log_auto_apply();
+			enable_reverb();
+			SetReverbParams(GeneralUserGsReverbParameters);
+			break;
+
+		case Awe32_SynthGs:
+		case SbLive_4GmGsMt:
+			log_auto_apply();
+			enable_reverb();
+			SetReverbParams(Awe32ReverbParameters);
+			break;
+
+		case Trevor0402_Sc55:
+			log_auto_apply();
+			enable_reverb();
+			SetReverbParams(Trevor0402_Sc55ReverbParameters);
+			break;
+
+		default: assertm(false, "Invalid SoundFont value");
+		};
 	};
 
 	const auto pref = get_fluidsynth_section()->GetString(ReverbSettingName);
 
 	if (has_true(pref)) {
 		SetReverbParams(DefaultReverbParameters);
-		enable_reverb(true);
+		enable_reverb();
 
 	} else if (has_false(pref)) {
-		enable_reverb(false);
+		disable_reverb();
 
 	} else if (pref == "auto") {
 		handle_auto_setting();
@@ -562,7 +718,7 @@ void MidiDeviceFluidSynth::SetReverb()
 		    reverb_params) {
 
 			SetReverbParams(*reverb_params);
-			enable_reverb(true);
+			enable_reverb();
 
 		} else {
 			// TODO error
@@ -643,6 +799,10 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	synth    = std::move(fluid_synth);
 	settings = std::move(fluid_settings);
 
+	soundfont_path = sf_path;
+
+	IdentifySoundFont();
+
 	const auto volume_percent = section->GetInt("soundfont_volume");
 	SetVolume(volume_percent);
 
@@ -712,8 +872,6 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	// Size the in-bound work FIFO
 	work_fifo.Resize(MaxMidiWorkFifoSize);
 
-	soundfont_path = sf_path;
-
 	// Start rendering audio
 	const auto render = std::bind(&MidiDeviceFluidSynth::Render, this);
 	renderer          = std::thread(render);
@@ -755,6 +913,75 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 	mixer_channel.reset();
 
 	MIXER_UnlockMixerThread();
+}
+
+void MidiDeviceFluidSynth::IdentifySoundFont()
+{
+	assert(synth);
+
+	using enum SoundFont;
+
+	const auto name = read_soundfont_name(soundfont_path);
+	LOG_DEBUG("FSYNTH: Loaded SoundFont with name '%s'", name.c_str());
+
+	// Resolve symlinks
+	std::error_code err = {};
+
+	const auto canonical_path = std_fs::canonical(soundfont_path, err);
+	if (err) {
+		soundfont = Unknown;
+		return;
+	}
+
+	const auto filename = canonical_path.stem().string();
+
+	auto has = find_in_case_insensitive;
+
+	// Most of these SoundFonts don't have unique enough names set in their
+	// metadata, so we'll do fuzzy matching based on the filename and the
+	// metadata and hope for the best...
+	soundfont = [&] {
+		if (has("GeneralUser", name) || has("GeneralUser", filename)) {
+			// Typical filename:   'GeneralUser-GS.sf2'
+			//
+			// Name from metadata: 'GeneralUser GS 2.0.3 BETA'
+			// (version can change)
+			//
+			return GeneralUserGs;
+
+		} else if (has("synthgs", filename)) {
+			// Typical filename:   'synthgs-sf2_04-compat.sf2'
+			// Name from metadata: 'GS' (pretty useless for
+			// identification)
+			//
+			return Awe32_SynthGs;
+
+		} else if (has("4MB GMGSMT", name) || has("4gmgsmt", filename)) {
+			// Typical filename:   '4gmgsmt-sf2_04-compat.sf2'
+			// Name from metadata: '4MB GMGSMT'
+			//
+			return Awe32_SynthGs;
+
+		} else if (has("Fluid R3", name) || has("FluidR3", filename) ||
+		           has("Fluid_R3", filename) || has("Fluid-R3", filename)) {
+			// Typical filename:   'Fluid_R3_GM_GS.sf2'
+			// Name from metadata: 'Fluid R3 GM'
+			//
+			return FluidR3;
+
+		} else if (has("SC-55 SoundFont", name)) {
+			// Typical filename:   'SC-55.SoundFont.v1.2b.sf2' (there
+			// are lots of filename variations for this; unreliable)
+			//
+			// Name from metadata: 'SC-55 SoundFont v1.12b' (vague,
+			// but let's try that and hope for the best...)
+			//
+			return Trevor0402_Sc55;
+
+		} else {
+			return Unknown;
+		}
+	}();
 }
 
 void MidiDeviceFluidSynth::SetFilter()
