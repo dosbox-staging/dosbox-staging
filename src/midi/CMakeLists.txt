@@ -4,6 +4,7 @@ target_sources(libdosboxcommon PRIVATE
   coremidi.cpp
   fluidsynth.cpp
   midi.cpp
+  midi_synth.cpp
   mt32.cpp
   mt32_lasynth_model.cpp
   soundcanvas.cpp
