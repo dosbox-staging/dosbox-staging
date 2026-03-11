@@ -17,8 +17,8 @@
 #include "misc/ansi_code_markup.h"
 #include "misc/std_filesystem.h"
 #include "utils/checks.h"
-#include "utils/string_utils.h"
 #include "utils/env_utils.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 
@@ -328,7 +328,8 @@ static std::deque<std_fs::path> get_rom_dirs()
 	auto rom_dirs = get_platform_rom_dirs();
 
 	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
-	std_fs::path selected_romdir = get_soundcanvas_section()->GetString("soundcanvas_rom_dir");
+	std_fs::path selected_romdir = get_soundcanvas_section()->GetString(
+	        "soundcanvas_rom_dir");
 
 	if (selected_romdir.empty()) { // already trimmed
 		selected_romdir = DefaultSoundCanvasRomsDir;
@@ -341,8 +342,8 @@ static std::deque<std_fs::path> get_rom_dirs()
 
 static void set_soundcanvas_rom_dir_env_var()
 {
-	// Get potential ROM directory candidates, these will be added to a 
-	// SOUNDCANVAS_ROM_PATH environment variable which may be used by 
+	// Get potential ROM directory candidates, these will be added to a
+	// SOUNDCANVAS_ROM_PATH environment variable which may be used by
 	// a plugin to search for ROM files
 	std::error_code ec;
 	std::string env_list = {};
@@ -358,7 +359,8 @@ static void set_soundcanvas_rom_dir_env_var()
 			env_list.append(canonical_rom_dir.string());
 		}
 	}
-	LOG_MSG("SOUNDCANVAS: Setting SOUNDCANVAS_ROM_PATH env variable to '%s'", env_list.c_str());
+	LOG_MSG("SOUNDCANVAS: Setting SOUNDCANVAS_ROM_PATH env variable to '%s'",
+	        env_list.c_str());
 	set_env_var("SOUNDCANVAS_ROM_PATH", env_list.c_str(), Env::Overwrite);
 }
 
@@ -813,8 +815,7 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 		}
 	}();
 
-	auto highlight_model = [&](const SynthModel* model,
-	                           const char* display_name) {
+	auto highlight_model = [&](const SynthModel* model, const char* display_name) {
 		constexpr auto darkgray = "[color=dark-gray]";
 		constexpr auto green    = "[color=light-green]";
 		constexpr auto reset    = "[reset]";
@@ -881,16 +882,16 @@ static void init_soundcanvas_config_settings(SectionProp& sec_prop)
 
 	// Listed in resolution priority order
 	str_prop->SetValues({"auto",
-	                      SoundCanvas::BestModelAlias::Sc55,
-	                      sc55_121_model.config_name,
-	                      sc55_120_model.config_name,
-	                      sc55_110_model.config_name,
-	                      sc55_100_model.config_name,
-	                      sc55_200_model.config_name,
+	                     SoundCanvas::BestModelAlias::Sc55,
+	                     sc55_121_model.config_name,
+	                     sc55_120_model.config_name,
+	                     sc55_110_model.config_name,
+	                     sc55_100_model.config_name,
+	                     sc55_200_model.config_name,
 
-	                      SoundCanvas::BestModelAlias::Sc55mk2,
-	                      sc55mk2_100.config_name,
-	                      sc55mk2_101.config_name});
+	                     SoundCanvas::BestModelAlias::Sc55mk2,
+	                     sc55mk2_100.config_name,
+	                     sc55mk2_101.config_name});
 
 	str_prop->SetHelp(
 	        "Roland Sound Canvas model to use ('auto' by default). One or more CLAP audio\n"
