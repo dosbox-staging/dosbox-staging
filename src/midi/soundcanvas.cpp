@@ -1,5 +1,6 @@
-// SPDX-FileCopyrightTextound  2024-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightTextound  2024-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
+
 #include "private/soundcanvas.h"
 
 #include <optional>
@@ -426,7 +427,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	// level constant noise from time to time depending on previous MIDI
 	// input. Implementations accurate to the hardwave behaviour might
 	// emulate this noise as well, so we'll use our audio gate to remove it.
-	
+
 	// This effectively disables the gate on the mk2
 	const auto is_mk1_model = (sc_model->model <= Model::Sc55_200);
 	const auto threshold_db = is_mk1_model ? -70.0f : -1000.0f;
@@ -697,7 +698,8 @@ void MidiDeviceSoundCanvas::RenderBacklogged()
 	// wrong-sounding instruments in many cases.
 	//
 	if (clap.event_list.Size() > 10) {
-		RenderAudioFramesToFifo();
+		constexpr auto OneFrame = 1;
+		RenderAudioFramesToFifo(OneFrame);
 	}
 
 	if (!MIXER_FastForwardModeEnabled()) {
@@ -727,14 +729,15 @@ void MidiDeviceSoundCanvas::ProcessWorkFromFifoBacklogged()
 
 	// If we're in backlogged mode when fast-forward is activated, it means
 	// the Sound Canvas can't keep up with the sped-up CPU emulation.
-	// Therefore, we need to minimise the work to catch up. We can't just
-	// not process any MIDI events at all; we need to keep processing
-	// program change, control change, etc. events, otherwise there's a real
-	// chance the instrument sounds will be wrong when we resume normal
-	// playback. But we can drop all MIDI notes and bypass the actual audio
-	// rendering (we'll just render a few samples from time to time to keep
-	// the Sound Canvas emulation ticking along); this way we can catch up
-	// and stay in sync with the CPU emulation.
+	// Therefore, we need to minimise the work to catch up.
+	//
+	// We can't just *not* process any MIDI events at all; we need to keep
+	// processing program change, control change, etc. events, otherwise
+	// there's a real chance the instrument sounds will be wrong when we
+	// resume normal playback. But we can drop all MIDI notes and bypass the
+	// actual audio rendering; we'll just render a few samples from time to
+	// time to keep the Sound Canvas emulation ticking along. This way, we
+	// can catch up and stay in sync with the CPU emulation.
 	//
 	if (const auto status = get_midi_status(work->message[0]);
 	    get_midi_message_type(status) == MessageType::Channel) {
@@ -755,7 +758,8 @@ void MidiDeviceSoundCanvas::Render()
 		if (is_work_fifo_backlogged) {
 			RenderBacklogged();
 		} else {
-			work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
+			constexpr auto OneFrame = 1;
+			work_fifo.IsEmpty() ? RenderAudioFramesToFifo(OneFrame)
 			                    : ProcessWorkFromFifo();
 		}
 	}

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2024-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_SOUNDCANVAS_H
@@ -78,7 +78,7 @@ private:
 	void ProcessWorkFromFifoBacklogged();
 
 	int GetNumPendingAudioFrames();
-	void RenderAudioFramesToFifo(const int num_frames = 1);
+	void RenderAudioFramesToFifo(const int num_frames);
 	void Render();
 	void RenderBacklogged();
 
