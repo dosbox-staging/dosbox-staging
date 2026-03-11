@@ -403,9 +403,6 @@ void MidiDeviceFluidSynth::SetChorusParams(const ChorusParameters& params)
 
 void MidiDeviceFluidSynth::SetChorus()
 {
-	const auto chorus_pref = get_fluidsynth_section()->GetString(ChorusSettingName);
-	const auto chorus_enabled_opt = parse_bool_setting(chorus_pref);
-
 	auto enable_chorus = [&](const bool enabled) {
 		// Apply setting to all groups
 		constexpr int FxGroup = -1;
@@ -427,7 +424,7 @@ void MidiDeviceFluidSynth::SetChorus()
 
 			LOG_INFO(
 			        "FSYNTH: Chorus auto-disabled due to known issues with "
-			        "the '%s' soundfont",
+			        "the '%s' SoundFont",
 			        get_fluidsynth_section()->GetString("soundfont").c_str());
 		} else {
 			SetChorusParams(DefaultChorusParameters);
@@ -438,24 +435,28 @@ void MidiDeviceFluidSynth::SetChorus()
 		}
 	};
 
-	if (chorus_enabled_opt) {
-		const auto enabled = *chorus_enabled_opt;
-		if (enabled) {
-			SetChorusParams(DefaultChorusParameters);
-		}
-		enable_chorus(enabled);
+	const auto pref = get_fluidsynth_section()->GetString(ChorusSettingName);
 
-	} else if (chorus_pref == "auto") {
+	if (has_true(pref)) {
+		SetChorusParams(DefaultChorusParameters);
+		enable_chorus(true);
+
+	} else if (has_false(pref)) {
+		disable_chorus(true);
+
+	} else if (pref == "auto") {
 		handle_auto_setting();
 
 	} else {
-		if (const auto chorus_params = parse_custom_chorus_params(chorus_pref);
+		if (const auto chorus_params = parse_custom_chorus_params(pref);
 		    chorus_params) {
 
 			SetChorusParams(*chorus_params);
 			enable_chorus(true);
 
 		} else {
+			// TODO error
+	
 			set_section_property_value("fluidsynth",
 			                           ChorusSettingName,
 			                           DefaultChorusSetting);
@@ -527,9 +528,6 @@ void MidiDeviceFluidSynth::SetReverbParams(const ReverbParameters& params)
 
 void MidiDeviceFluidSynth::SetReverb()
 {
-	const auto reverb_pref = get_fluidsynth_section()->GetString(ReverbSettingName);
-	const auto reverb_enabled_opt = parse_bool_setting(reverb_pref);
-
 	auto enable_reverb = [&](const bool enabled) {
 		// Apply setting to all groups
 		constexpr int FxGroup = -1;
@@ -547,12 +545,14 @@ void MidiDeviceFluidSynth::SetReverb()
 		enable_reverb(true);
 	};
 
-	if (reverb_enabled_opt) {
-		const auto enabled = *reverb_enabled_opt;
-		if (enabled) {
-			SetReverbParams(DefaultReverbParameters);
-		}
-		enable_reverb(enabled);
+	const auto pref = get_fluidsynth_section()->GetString(ReverbSettingName);
+
+	if (has_true(pref)) {
+		SetReverbParams(DefaultReverbParameters);
+		enable_reverb(true);
+
+	} else if (has_false(pref)) {
+		enable_reverb(false);
 
 	} else if (reverb_pref == "auto") {
 		handle_auto_setting();
@@ -565,6 +565,8 @@ void MidiDeviceFluidSynth::SetReverb()
 			enable_reverb(true);
 
 		} else {
+			// TODO error
+	
 			set_section_property_value("fluidsynth",
 			                           ReverbSettingName,
 			                           DefaultReverbSetting);
