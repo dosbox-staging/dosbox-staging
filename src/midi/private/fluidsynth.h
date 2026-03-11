@@ -71,23 +71,25 @@ private:
 	void ApplySysExMessage(const std::vector<uint8_t>& msg);
 	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
+	void ProcessWorkFromFifoBacklogged();
 
 	int GetNumPendingAudioFrames();
-	void RenderAudioFramesToFifo(const int num_audio_frames = 1);
+	void RenderAudioFramesToFifo(const int num_audio_frames);
 	void Render();
+	void RenderBacklogged();
 
 	using FluidSynthSettingsPtr =
 	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
 
 	using FluidSynthPtr = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
 
-	FluidSynthSettingsPtr settings{nullptr, &delete_fluid_settings};
-	FluidSynthPtr synth{nullptr, &delete_fluid_synth};
+	FluidSynthSettingsPtr settings = {nullptr, &delete_fluid_settings};
+	FluidSynthPtr synth            = {nullptr, &delete_fluid_synth};
 
-	MixerChannelPtr mixer_channel = nullptr;
-	RWQueue<AudioFrame> audio_frame_fifo{1};
-	RWQueue<MidiWork> work_fifo{1};
-	std::thread renderer = {};
+	MixerChannelPtr mixer_channel        = nullptr;
+	RWQueue<AudioFrame> audio_frame_fifo = {1};
+	RWQueue<MidiWork> work_fifo          = {1};
+	std::thread renderer                 = {};
 
 	std_fs::path soundfont_path = {};
 
@@ -96,7 +98,8 @@ private:
 	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
-	bool had_underruns = false;
+	bool had_underruns           = false;
+	bool is_work_fifo_backlogged = false;
 };
 
 void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller);

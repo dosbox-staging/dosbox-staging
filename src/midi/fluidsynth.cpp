@@ -921,6 +921,16 @@ void MidiDeviceFluidSynth::ProcessWorkFromFifo()
 		return;
 	}
 
+	// Detect if the work FIFO is heavily backlogged and enter the special
+	// backlogged rendering mode. This happens in fast-forward mode if
+	// FluidSynth can't keep up with the sped-up CPU emulation.
+	const auto delta_from_now    = PIC_AtomicIndex() - work->timestamp;
+	constexpr auto OneSecondInMs = 1000.0;
+
+	if (delta_from_now > OneSecondInMs) {
+		is_work_fifo_backlogged = true;
+	}
+
 #if 0
 	// To log inter-cycle rendering
 	if (work->num_pending_audio_frames > 0) {
@@ -946,12 +956,89 @@ void MidiDeviceFluidSynth::ProcessWorkFromFifo()
 	}
 }
 
+void MidiDeviceFluidSynth::ProcessWorkFromFifoBacklogged()
+{
+	const auto work = work_fifo.Dequeue();
+	if (!work) {
+		return;
+	}
+
+	// If we're in backlogged mode when fast-forward is activated, it means
+	// Fluidsynth can't keep up with the sped-up CPU emulation. Therefore,
+	// we need to minimise the work to catch up.
+	//
+	// We can't just *not* process any MIDI events at all; we need to keep
+	// processing program change, control change, etc. events, otherwise
+	// there's a chance the instrument sounds will be wrong when we resume
+	// normal playback. But we can drop all MIDI notes and bypass the actual
+	// audio rendering; we'll just render a few samples from time to time to
+	// keep FluidSynth ticking along. This way, we can catch up and stay in
+	// sync with the CPU emulation.
+	//
+	if (const auto status = get_midi_status(work->message[0]);
+	    get_midi_message_type(status) == MessageType::Channel) {
+
+		if (status == MidiStatus::NoteOn || status == MidiStatus::NoteOff) {
+			// Drop all MIDI note messages as we won't render any audio
+			return;
+		}
+	}
+}
+
 // Keep the fifo populated with freshly rendered buffers
 void MidiDeviceFluidSynth::Render()
 {
 	while (work_fifo.IsRunning()) {
-		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
-		                    : ProcessWorkFromFifo();
+		if (is_work_fifo_backlogged) {
+			RenderBacklogged();
+		} else {
+			constexpr auto OneFrame = 1;
+			work_fifo.IsEmpty() ? RenderAudioFramesToFifo(OneFrame)
+			                    : ProcessWorkFromFifo();
+		}
+	}
+}
+
+void MidiDeviceFluidSynth::RenderBacklogged()
+{
+	// This will only keep the MIDI events we must process (e.g. program
+	// change and SysEx messages).
+	ProcessWorkFromFifoBacklogged();
+
+	// We must drip-feed these essential MIDI events to FluidSynth while in
+	// fast-forward mode and render a nominal sample now and then to keep
+	// the emulation ticking along. Batching them up in groups of 10 does
+	// the job fine.
+	//
+	// If we'd let them pile up and send in one big batch after exiting
+	// fast-forward mode, we'd overload FluidSynth's input buffers so not
+	// all messages would be processed. This has been proven to not be a
+	// viable approach as it resulted in wrong-sounding instruments in many
+	// cases.
+	//
+	if (work_fifo.Size() > 10) {
+		constexpr auto OneFrame = 1;
+		RenderAudioFramesToFifo(OneFrame);
+	}
+
+	if (!MIXER_FastForwardModeEnabled()) {
+		is_work_fifo_backlogged = false;
+
+		// Send "All Notes Off" message to all MIDI channels when
+		// exiting from fast-forward mode. This is the best we can do as
+		// we've skipped processing any "Note On" or "Note Off" messages
+		// while in fast-forward mode. There would be a lot of hanging
+		// notes if we don't do this.
+		//
+		for (uint8_t ch = 0; ch < NumMidiChannels; ++ch) {
+			const uint8_t status = MidiStatus::ControlChange | ch;
+
+			MidiMessage msg = {};
+			msg[0]          = status;
+			msg[1]          = MidiChannelMode::AllNotesOff;
+
+			SendMidiMessage(msg);
+		}
 	}
 }
 
