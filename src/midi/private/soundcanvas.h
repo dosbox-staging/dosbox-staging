@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2024-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_SOUNDCANVAS_H
@@ -78,16 +78,16 @@ private:
 	void ProcessWorkFromFifoBacklogged();
 
 	int GetNumPendingAudioFrames();
-	void RenderAudioFramesToFifo(const int num_frames = 1);
+	void RenderAudioFramesToFifo(const int num_frames);
 	void Render();
 	void RenderBacklogged();
 
 	void AddClapEvent(const MidiWork& work);
 
 	// Managed objects
-	MixerChannelPtr mixer_channel = nullptr;
-	RWQueue<AudioFrame> audio_frame_fifo{1};
-	RWQueue<MidiWork> work_fifo{1};
+	MixerChannelPtr mixer_channel        = nullptr;
+	RWQueue<AudioFrame> audio_frame_fifo = {1};
+	RWQueue<MidiWork> work_fifo          = {1};
 
 	struct {
 		std::unique_ptr<Clap::Plugin> plugin = nullptr;
