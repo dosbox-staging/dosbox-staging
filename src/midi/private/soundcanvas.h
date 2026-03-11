@@ -85,9 +85,9 @@ private:
 	void AddClapEvent(const MidiWork& work);
 
 	// Managed objects
-	MixerChannelPtr mixer_channel = nullptr;
-	RWQueue<AudioFrame> audio_frame_fifo{1};
-	RWQueue<MidiWork> work_fifo{1};
+	MixerChannelPtr mixer_channel        = nullptr;
+	RWQueue<AudioFrame> audio_frame_fifo = {1};
+	RWQueue<MidiWork> work_fifo          = {1};
 
 	struct {
 		std::unique_ptr<Clap::Plugin> plugin = nullptr;
