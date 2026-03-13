@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -12,8 +12,7 @@
 
 #include "config/config.h"
 #include "config/setup.h"
-
-class Program;
+#include "dos/programs/more_output.h"
 
 // Lookup to figure out the total length of a MIDI message (including the
 // first status byte) based on the status byte.
@@ -215,7 +214,7 @@ void MIDI_Init();
 bool MIDI_IsAvailable();
 void MIDI_Reset();
 
-void MIDI_ListDevices(Program* output_handler);
+void MIDI_ListDevices(MoreOutputStrings& output);
 void MIDI_RawOutByte(const uint8_t data);
 
 void MIDI_Mute();

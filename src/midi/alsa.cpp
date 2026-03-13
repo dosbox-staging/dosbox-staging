@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -361,7 +361,7 @@ AlsaAddress MidiDeviceAlsa::GetInputPortAddress()
 	return seq;
 }
 
-void ALSA_ListDevices(MidiDeviceAlsa* device, Program* caller)
+void ALSA_ListDevices(MidiDeviceAlsa* device, MoreOutputStrings& output)
 {
 	const auto input_port = [&]() -> AlsaAddress {
 		if (device) {
@@ -383,7 +383,7 @@ void ALSA_ListDevices(MidiDeviceAlsa* device, Program* caller)
 			const char esc_color[]   = "\033[32;1m";
 			const char esc_nocolor[] = "\033[0m";
 
-			caller->WriteOut("%c %s%3d:%d - %s - %s%s\n",
+			output.AddString("%c %s%3d:%d - %s - %s%s\n",
 			                 (selected ? '*' : ' '),
 			                 (selected ? esc_color : ""),
 			                 addr->client,
@@ -396,7 +396,7 @@ void ALSA_ListDevices(MidiDeviceAlsa* device, Program* caller)
 
 	for_each_alsa_seq_port(print_port);
 
-	caller->WriteOut("\n");
+	output.AddString("\n");
 }
 
 #endif // C_ALSA

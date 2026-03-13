@@ -663,12 +663,12 @@ public:
 	}
 };
 
-void MIDI_ListDevices(Program* caller)
+void MIDI_ListDevices(MoreOutputStrings& output)
 {
 	[[maybe_unused]] auto write_device_name = [&](const std::string& device_name) {
 		const auto color = convert_ansi_markup("[color=white]%s:[reset]\n");
 
-		caller->WriteOut(color, device_name.c_str());
+		output.AddString(color, device_name.c_str());
 	};
 
 	[[maybe_unused]] auto device_ptr = midi.device.get();
@@ -680,7 +680,7 @@ void MIDI_ListDevices(Program* caller)
 	MT32_ListDevices((device_name == MidiDeviceName::Mt32)
 	                         ? dynamic_cast<MidiDeviceMt32*>(device_ptr)
 	                         : nullptr,
-	                 caller);
+	                 output);
 #endif
 
 	write_device_name(MidiDeviceName::SoundCanvas);
@@ -688,7 +688,7 @@ void MIDI_ListDevices(Program* caller)
 	SOUNDCANVAS_ListDevices((device_name == MidiDeviceName::SoundCanvas)
 	                                ? dynamic_cast<MidiDeviceSoundCanvas*>(device_ptr)
 	                                : nullptr,
-	                        caller);
+	                        output);
 
 	write_device_name(MidiDeviceName::FluidSynth);
 
@@ -696,14 +696,14 @@ void MIDI_ListDevices(Program* caller)
 	                           ? dynamic_cast<MidiDeviceFluidSynth*>(device_ptr)
 	                           : nullptr,
 
-	                   caller);
+	                   output);
 #if C_COREMIDI
 	write_device_name(MidiDeviceName::CoreMidi);
 
 	COREMIDI_ListDevices((device_name == MidiDeviceName::CoreMidi)
 	                             ? dynamic_cast<MidiDeviceCoreMidi*>(device_ptr)
 	                             : nullptr,
-	                     caller);
+	                     output);
 #endif
 #if C_COREAUDIO
 	write_device_name(MidiDeviceName::CoreAudio);
@@ -711,7 +711,7 @@ void MIDI_ListDevices(Program* caller)
 	COREAUDIO_ListDevices((device_name == MidiDeviceName::CoreAudio)
 	                              ? dynamic_cast<MidiDeviceCoreAudio*>(device_ptr)
 	                              : nullptr,
-	                      caller);
+	                      output);
 #endif
 #if defined(WIN32)
 	write_device_name(MidiDeviceName::Win32);
@@ -719,7 +719,7 @@ void MIDI_ListDevices(Program* caller)
 	MIDI_WIN32_ListDevices((device_name == MidiDeviceName::Win32)
 	                               ? dynamic_cast<MidiDeviceWin32*>(device_ptr)
 	                               : nullptr,
-	                       caller);
+	                       output);
 #endif
 #if C_ALSA
 	write_device_name(MidiDeviceName::Alsa);
@@ -727,7 +727,7 @@ void MIDI_ListDevices(Program* caller)
 	ALSA_ListDevices((device_name == MidiDeviceName::Alsa)
 	                         ? dynamic_cast<MidiDeviceAlsa*>(device_ptr)
 	                         : nullptr,
-	                 caller);
+	                 output);
 #endif
 }
 

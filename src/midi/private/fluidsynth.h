@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "audio/mixer.h"
+#include "dos/programs/more_output.h"
 #include "misc/std_filesystem.h"
 #include "utils/rwqueue.h"
 
@@ -99,6 +100,6 @@ private:
 	bool had_underruns = false;
 };
 
-void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller);
+void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, MoreOutputStrings& output);
 
 #endif // DOSBOX_FLUIDSYNTH_H

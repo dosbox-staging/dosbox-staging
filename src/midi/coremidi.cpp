@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -147,7 +147,8 @@ void MidiDeviceCoreMidi::SendSysExMessage(uint8_t* sysex, size_t len)
 	MIDISend(m_port, m_endpoint, packetList);
 }
 
-void COREMIDI_ListDevices([[maybe_unused]] MidiDeviceCoreMidi* device, Program* caller)
+void COREMIDI_ListDevices([[maybe_unused]] MidiDeviceCoreMidi* device,
+                          MoreOutputStrings& output)
 {
 	constexpr auto Indent = "  ";
 
@@ -169,7 +170,7 @@ void COREMIDI_ListDevices([[maybe_unused]] MidiDeviceCoreMidi* device, Program* 
 			const char* s = CFStringGetCStringPtr(midi_name,
 			                                      kCFStringEncodingMacRoman);
 			if (s) {
-				caller->WriteOut("%s%02d - %s\n", Indent, i, s);
+				output.AddString("%s%02d - %s\n", Indent, i, s);
 				++num_devices;
 			}
 		}
@@ -178,12 +179,12 @@ void COREMIDI_ListDevices([[maybe_unused]] MidiDeviceCoreMidi* device, Program* 
 	}
 
 	if (num_devices == 0) {
-		caller->WriteOut(Indent);
-		caller->WriteOut(MSG_Get("MIDI_DEVICE_NO_PORTS"));
-		caller->WriteOut("\n");
+		output.AddString(Indent);
+		output.AddString(MSG_Get("MIDI_DEVICE_NO_PORTS"));
+		output.AddString("\n");
 	}
 
-	caller->WriteOut("\n");
+	output.AddString("\n");
 }
 
 #endif // C_COREMIDI

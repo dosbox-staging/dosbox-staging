@@ -750,7 +750,9 @@ void MIXER::Run()
 		return;
 	}
 	if (cmd->FindExist("/LISTMIDI")) {
-		MIDI_ListDevices(this);
+		MoreOutputStrings output(*this);
+		MIDI_ListDevices(output);
+		output.Display();
 		return;
 	}
 

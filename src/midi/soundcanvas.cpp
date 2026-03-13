@@ -769,7 +769,7 @@ static std::set<const SoundCanvas::SynthModel*> available_models = {};
 
 static bool available_models_initialised = false;
 
-void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
+void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, MoreOutputStrings& output)
 {
 	using namespace SoundCanvas;
 
@@ -790,7 +790,7 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	}
 
 	if (available_models.empty()) {
-		caller->WriteOut("%s%s\n\n",
+		output.AddString("%s%s\n\n",
 		                 Indent,
 		                 MSG_Get("MIDI_DEVICE_NO_MODELS").c_str());
 		return;
@@ -840,7 +840,7 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	};
 
 	// Print available Sound Canvas models
-	caller->WriteOut("%s%s", Indent, MSG_Get("SC55_MODELS_LABEL").c_str());
+	output.AddString("%s%s", Indent, MSG_Get("SC55_MODELS_LABEL").c_str());
 
 	// Display order, from old to new
 	const std::vector<const SynthModel*> models_old_to_new = {&sc55_100_model,
@@ -853,27 +853,27 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 
 	for (const auto& model : models_old_to_new) {
 		const auto display_name = model->display_name_short;
-		caller->WriteOut("%s%s",
+		output.AddString("%s%s",
 		                 highlight_model(model, display_name).c_str(),
 		                 ColumnDelim);
 	}
-	caller->WriteOut("\n");
+	output.AddString("\n");
 
-	caller->WriteOut("%s---\n", Indent);
+	output.AddString("%s---\n", Indent);
 
 	// Print info about the active model
 	if (active_sc_model) {
-		caller->WriteOut("%s%s%s\n",
+		output.AddString("%s%s%s\n",
 		                 Indent,
 		                 MSG_Get("SOUNDCANVAS_ACTIVE_MODEL_LABEL").c_str(),
 		                 (*active_sc_model)->display_name_long);
 	} else {
-		caller->WriteOut("%s%s\n",
+		output.AddString("%s%s\n",
 		                 Indent,
 		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE").c_str());
 	}
 
-	caller->WriteOut("\n");
+	output.AddString("\n");
 }
 
 static void init_soundcanvas_config_settings(SectionProp& sec_prop)

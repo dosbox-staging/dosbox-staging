@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_MT32_H
@@ -20,6 +20,7 @@
 #include <mt32emu/mt32emu.h>
 
 #include "audio/mixer.h"
+#include "dos/programs/more_output.h"
 #include "midi/midi.h"
 #include "misc/std_filesystem.h"
 #include "utils/rwqueue.h"
@@ -86,7 +87,7 @@ private:
 	bool had_underruns = false;
 };
 
-void MT32_ListDevices(MidiDeviceMt32* device, Program* caller);
+void MT32_ListDevices(MidiDeviceMt32* device, MoreOutputStrings& output);
 
 #endif // C_MT32EMU
 

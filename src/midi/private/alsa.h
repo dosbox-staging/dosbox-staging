@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -6,6 +6,8 @@
 #define DOSBOX_MIDI_ALSA_H
 
 #include "midi_device.h"
+
+#include "dos/programs/more_output.h"
 
 #if C_ALSA
 
@@ -55,7 +57,7 @@ private:
 	void send_event(int do_flush);
 };
 
-void ALSA_ListDevices(MidiDeviceAlsa* device, Program* caller);
+void ALSA_ListDevices(MidiDeviceAlsa* device, MoreOutputStrings& output);
 
 #endif // C_ALSA
 
