@@ -10,7 +10,7 @@
 #include "utils/rect.h"
 
 // must be included after dosbox_config.h
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 constexpr uint8_t GFX_CAN_8      = 1 << 0;
 constexpr uint8_t GFX_CAN_15     = 1 << 1;
