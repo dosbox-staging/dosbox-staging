@@ -964,19 +964,13 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 {
 	const size_t term_width = INT10_GetTextColumns();
 
-	constexpr auto Indent = "  ";
+	constexpr auto Indent   = "  ";
+	const auto curr_sf_path = device ? device->GetSoundFontPath() : "";
 
 	auto write_line = [&](const std_fs::path& sf_path) {
 		const auto line = truncate_path(sf_path, term_width - strlen(Indent));
 
-		const auto do_highlight = [&] {
-			if (device) {
-				const auto curr_sf_path = device->GetSoundFontPath();
-				return curr_sf_path == sf_path;
-			}
-			return false;
-		}();
-
+		const auto do_highlight = (curr_sf_path == sf_path);
 		if (do_highlight) {
 			constexpr auto Green = "[color=light-green]";
 			constexpr auto Reset = "[reset]";
@@ -1022,6 +1016,14 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 
 			sf_files.emplace_back(sf_path);
 		}
+	}
+
+	// Add the currently loaded SoundFont to the list if wasn't already
+	// found in the standard locations
+	if (!curr_sf_path.empty() &&
+	    std::ranges::find(sf_files, curr_sf_path) == sf_files.end()) {
+
+		sf_files.emplace_back(curr_sf_path);
 	}
 
 	std::sort(sf_files.begin(),
