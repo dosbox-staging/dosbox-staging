@@ -243,7 +243,7 @@ static std_fs::path find_sf_file(const std::string& sf_name)
 		for (const auto& sf :
 		     {dir / sf_name, dir / (sf_name + SoundFontExtension)}) {
 #if 0
-			LOG_MSG("FSYNTH: FluidSynth checking if '%s' exists", sf.c_str());
+			LOG_DEBUG("FSYNTH: FluidSynth checking if '%s' exists", sf.c_str());
 #endif
 			if (path_exists(sf)) {
 				// Parts of the path come from the `soundfont`
@@ -924,12 +924,12 @@ void MidiDeviceFluidSynth::ProcessWorkFromFifo()
 #if 0
 	// To log inter-cycle rendering
 	if (work->num_pending_audio_frames > 0) {
-		LOG_MSG("FSYNTH: %2u audio frames prior to %s message, followed by "
-		        "%2lu more messages. Have %4lu audio frames queued",
-		        work->num_pending_audio_frames,
-		        work->message_type == MessageType::Channel ? "channel" : "sysex",
-		        work_fifo.Size(),
-		        audio_frame_fifo.Size());
+		LOG_DEBUG("FSYNTH: %2u audio frames prior to %s message, followed by "
+		          "%2lu more messages. Have %4lu audio frames queued",
+		          work->num_pending_audio_frames,
+		          work->message_type == MessageType::Channel ? "channel" : "sysex",
+		          work_fifo.Size(),
+		          audio_frame_fifo.Size());
 	}
 #endif
 
