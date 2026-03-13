@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -6,7 +6,8 @@
 
 #ifdef WIN32
 
-void MIDI_WIN32_ListDevices([[maybe_unused]] MidiDeviceWin32* device, Program* caller)
+void MIDI_WIN32_ListDevices([[maybe_unused]] MidiDeviceWin32* device,
+                            MoreOutputStrings& output)
 {
 	unsigned int total = midiOutGetNumDevs();
 
@@ -14,10 +15,10 @@ void MIDI_WIN32_ListDevices([[maybe_unused]] MidiDeviceWin32* device, Program* c
 		MIDIOUTCAPS mididev;
 		midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
 
-		caller->WriteOut("  %2d - \"%s\"\n", i, mididev.szPname);
+		output.AddString("  %2d - \"%s\"\n", i, mididev.szPname);
 	}
 
-	caller->WriteOut("\n");
+	output.AddString("\n");
 }
 
 #endif // WIN32

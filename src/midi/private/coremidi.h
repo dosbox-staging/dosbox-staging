@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -6,6 +6,8 @@
 #define DOSBOX_MIDI_COREMIDI_H
 
 #include "midi_device.h"
+
+#include "dos/programs/more_output.h"
 
 #if C_COREMIDI
 
@@ -40,7 +42,7 @@ private:
 	MIDIPacket* m_pCurPacket   = {};
 };
 
-void COREMIDI_ListDevices(MidiDeviceCoreMidi* device, Program* caller);
+void COREMIDI_ListDevices(MidiDeviceCoreMidi* device, MoreOutputStrings& output);
 
 #endif // C_COREMIDI
 
