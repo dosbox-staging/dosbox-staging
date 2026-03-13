@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -23,6 +23,7 @@
 #include <string>
 
 #include "dos/programs.h"
+#include "dos/programs/more_output.h"
 #include "utils/string_utils.h"
 
 class MidiDeviceWin32 final : public MidiDevice {
@@ -157,7 +158,8 @@ private:
 	HANDLE m_event = nullptr;
 };
 
-void MIDI_WIN32_ListDevices(MidiDeviceWin32* device, Program* caller);
+void MIDI_WIN32_ListDevices(MidiDeviceWin32* device, MoreOutputStrings& output);
+
 
 #endif // WIN32
 

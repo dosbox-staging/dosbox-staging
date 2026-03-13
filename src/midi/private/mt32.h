@@ -20,6 +20,7 @@
 #include <mt32emu/mt32emu.h>
 
 #include "audio/mixer.h"
+#include "dos/programs/more_output.h"
 #include "midi/midi.h"
 #include "misc/std_filesystem.h"
 #include "utils/rwqueue.h"
@@ -89,7 +90,7 @@ private:
 	bool is_work_fifo_backlogged = false;
 };
 
-void MT32_ListDevices(MidiDeviceMt32* device, Program* caller);
+void MT32_ListDevices(MidiDeviceMt32* device, MoreOutputStrings& output);
 
 #endif // C_MT32EMU
 

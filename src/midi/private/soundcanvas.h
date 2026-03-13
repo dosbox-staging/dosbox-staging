@@ -12,6 +12,7 @@
 #include "audio/clap/event_list.h"
 #include "audio/clap/plugin.h"
 #include "audio/mixer.h"
+#include "dos/programs/more_output.h"
 #include "utils/rwqueue.h"
 
 namespace SoundCanvas {
@@ -107,6 +108,6 @@ private:
 	bool is_work_fifo_backlogged = false;
 };
 
-void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller);
+void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, MoreOutputStrings& output);
 
 #endif // DOSBOX_SOUNDCANVAS_H

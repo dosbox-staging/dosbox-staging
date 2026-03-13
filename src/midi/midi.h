@@ -12,8 +12,7 @@
 
 #include "config/config.h"
 #include "config/setup.h"
-
-class Program;
+#include "dos/programs/more_output.h"
 
 // Lookup to figure out the total length of a MIDI message (including the
 // first status byte) based on the status byte.
@@ -215,7 +214,7 @@ void MIDI_Init();
 bool MIDI_IsAvailable();
 void MIDI_Reset();
 
-void MIDI_ListDevices(Program* output_handler);
+void MIDI_ListDevices(MoreOutputStrings& output);
 void MIDI_RawOutByte(const uint8_t data);
 
 void MIDI_Mute();

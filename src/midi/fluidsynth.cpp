@@ -1047,7 +1047,7 @@ std_fs::path MidiDeviceFluidSynth::GetSoundFontPath()
 	return soundfont_path;
 }
 
-void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
+void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, MoreOutputStrings& output)
 {
 	const size_t term_width = INT10_GetTextColumns();
 
@@ -1062,14 +1062,10 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 			constexpr auto Green = "[color=light-green]";
 			constexpr auto Reset = "[reset]";
 
-			const auto output = format_str("%s* %s%s\n",
-			                               Green,
-			                               line.c_str(),
-			                               Reset);
-
-			caller->WriteOut(convert_ansi_markup(output));
+			output.AddString(
+			        format_str("%s* %s%s\n", Green, line.c_str(), Reset));
 		} else {
-			caller->WriteOut("%s%s\n", Indent, line.c_str());
+			output.AddString("%s%s\n", Indent, line.c_str());
 		}
 	};
 
@@ -1120,7 +1116,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 	          });
 
 	if (sf_files.empty()) {
-		caller->WriteOut("%s%s\n",
+		output.AddString("%s%s\n",
 		                 Indent,
 		                 MSG_Get("FLUIDSYNTH_NO_SOUNDFONTS").c_str());
 	} else {
@@ -1129,7 +1125,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 		}
 	}
 
-	caller->WriteOut("\n");
+	output.AddString("\n");
 }
 
 void FSYNTH_Init()

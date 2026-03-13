@@ -1055,7 +1055,7 @@ mt32emu_rom_info MidiDeviceMt32::GetRomInfo()
 // across the first row and directories are printed down the left column.
 // Long directories are truncated and model versions are used to avoid text
 // wrapping.
-void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
+void MT32_ListDevices(MidiDeviceMt32* device, MoreOutputStrings& output)
 {
 	// Table layout constants
 	constexpr auto ColumnDelim = " ";
@@ -1082,7 +1082,7 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	                                                    dirs_with_models);
 
 	if (available_models.empty()) {
-		caller->WriteOut("%s%s\n\n",
+		output.AddString("%s%s\n\n",
 		                 Indent,
 		                 MSG_Get("MIDI_DEVICE_NO_MODELS").c_str());
 		return;
@@ -1118,34 +1118,34 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	};
 
 	// Print available MT-32 ROMs
-	caller->WriteOut("%s%s", Indent, MSG_Get("MT32_ROMS_LABEL").c_str());
+	output.AddString("%s%s", Indent, MSG_Get("MT32_ROMS_LABEL").c_str());
 
 	for (const auto& model : mt32_model_list) {
 		const auto display_name = model->GetVersion();
-		caller->WriteOut("%s%s",
+		output.AddString("%s%s",
 		                 highlight_model(model, display_name).c_str(),
 		                 ColumnDelim);
 	}
-	caller->WriteOut("\n");
+	output.AddString("\n");
 
 	// Print available CM-32L ROMs
-	caller->WriteOut("%s%s", Indent, MSG_Get("CM32L_ROMS_LABEL").c_str());
+	output.AddString("%s%s", Indent, MSG_Get("CM32L_ROMS_LABEL").c_str());
 
 	for (const auto& model : cm32_model_list) {
 		const auto display_name = (model->GetName() == cm32ln_100_model.GetName()
 		                                   ? model->GetName()
 		                                   : model->GetVersion());
-		caller->WriteOut("%s%s",
+		output.AddString("%s%s",
 		                 highlight_model(model, display_name).c_str(),
 		                 ColumnDelim);
 	}
-	caller->WriteOut("\n");
+	output.AddString("\n");
 
-	caller->WriteOut("%s---\n", Indent);
+	output.AddString("%s---\n", Indent);
 
 	// Print info about the active model
 	if (model_and_dir) {
-		caller->WriteOut("%s%s%s (%s)\n",
+		output.AddString("%s%s%s (%s)\n",
 		                 Indent,
 		                 MSG_Get("MT32_ACTIVE_MODEL_LABEL").c_str(),
 		                 model_and_dir->first->GetName(),
@@ -1161,17 +1161,17 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 		const auto truncated_dir = truncate_path(model_and_dir->second.string(),
 		                                         dir_max_length);
 
-		caller->WriteOut("%s%s%s\n",
+		output.AddString("%s%s%s\n",
 		                 Indent,
 		                 dir_label.c_str(),
 		                 truncated_dir.c_str());
 	} else {
-		caller->WriteOut("%s%s\n",
+		output.AddString("%s%s\n",
 		                 Indent,
 		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE").c_str());
 	}
 
-	caller->WriteOut("\n");
+	output.AddString("\n");
 }
 
 static void notify_mt32_setting_updated([[maybe_unused]] SectionProp& section,
