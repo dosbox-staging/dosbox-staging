@@ -526,7 +526,7 @@ void MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 
 	cmd->FindString("-t", params.type, true);
 	// Allow aliases or standard image types to pass through
-	if (params.type == "cdrom") {
+	if (params.type == "cdrom" || params.type == "cd" || params.type == "dvd") {
 		params.type = "iso";
 	}
 	if (params.type == "fdd") {
