@@ -1022,11 +1022,9 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, MoreOutputStrings& output)
 		sf_files.emplace_back(curr_sf_path);
 	}
 
-	std::sort(sf_files.begin(),
-	          sf_files.end(),
-	          [](const std_fs::path& a, const std_fs::path& b) {
-		          return a.filename() < b.filename();
-	          });
+	std::ranges::sort(sf_files, [](const std_fs::path& a, const std_fs::path& b) {
+		return natural_compare(a.filename().string(), b.filename().string());
+	});
 
 	if (sf_files.empty()) {
 		output.AddString("%s%s\n",
