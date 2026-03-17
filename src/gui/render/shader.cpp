@@ -61,6 +61,7 @@ bool Shader::BuildShaderProgram(const std::string& shader_source)
 	GLint log_length_bytes = 0;
 	glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &log_length_bytes);
 
+	// The returned length includes the null termination character
 	if (log_length_bytes > 1) {
 		std::vector<GLchar> info_log(static_cast<size_t>(log_length_bytes));
 
@@ -130,11 +131,12 @@ std::optional<GLuint> Shader::BuildShader(const GLenum type,
 	// Check the compile status
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &is_shader_compiled);
 
+	// The info log might contain warnings and info messages even if the
+	// compilation was successful, so we'll always log it if it's non-empty.
 	GLint log_length_bytes = 0;
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length_bytes);
 
-	// The info log might contain warnings and info messages even if the
-	// compilation was successful, so we'll always log it if it's non-empty.
+	// The returned length includes the null termination character
 	if (log_length_bytes > 1) {
 		std::vector<GLchar> info_log(log_length_bytes);
 		glGetShaderInfoLog(shader, log_length_bytes, nullptr, info_log.data());
