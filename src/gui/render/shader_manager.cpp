@@ -192,7 +192,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 		} else {
 			pattern = MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_SHADERS_LIST");
 		}
-		inventory.emplace_back(format_str(pattern, dir.u8string().c_str()));
+		inventory.emplace_back(format_str(pattern, dir.string().c_str()));
 
 		while (shader != shaders.end()) {
 			if (shader->string().starts_with("_internal/")) {
