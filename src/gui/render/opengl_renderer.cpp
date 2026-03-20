@@ -19,9 +19,12 @@
 #include "glad/gl.h"
 
 // must be included after dosbox_config.h
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include <SDL_syswm.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
+
+#if defined(MACOSX) 
+#include "macos_colorspace.h"
+#endif
 
 CHECK_NARROWING();
 
@@ -46,7 +49,7 @@ static const char* safe_gl_get_string(const GLenum requested_name,
 }
 
 OpenGlRenderer::OpenGlRenderer(const int x, const int y, const int width,
-                               const int height, uint32_t sdl_window_flags)
+                               const int height, SDL_WindowFlags sdl_window_flags)
 {
 	window = CreateSdlWindow(x, y, width, height, sdl_window_flags);
 	if (!window) {
@@ -67,7 +70,7 @@ OpenGlRenderer::OpenGlRenderer(const int x, const int y, const int width,
 
 SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
                                             const int width, const int height,
-                                            const uint32_t sdl_window_flags)
+                                            const SDL_WindowFlags sdl_window_flags)
 {
 	// Request 24-bits framebuffer, don't care about depth buffer
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -93,14 +96,43 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	// Request an OpenGL-ready window
-	auto flags = sdl_window_flags;
+	SDL_WindowFlags flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
-#ifdef MACOSX
-	SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "displayp3");
+	SDL_PropertiesID props = SDL_CreateProperties();
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_X_NUMBER, x);
+    SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, y);
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, width);
+    SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);	
+	// For window flags you should use separate window creation properties,
+    // but for easier migration from SDL2 you can use the following:	
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER, flags);
+	auto window = SDL_CreateWindowWithProperties(props);
+	SDL_DestroyProperties(props);
+
+#if defined(MACOSX) 
+	// From "Best Practices for Color Management in OS X and iOS", chapter
+	// "Non-Color Managed Frameworks, OpenGL - Explicit Color Management
+	// Example":
+	// 
+	//   OpenGL is not color managed. As a consequence, it might require
+	//   additional effort to devise solutions to specific color problems
+	//   you may encounter when using it. The fundamental problem is OpenGL
+	//   has one set of assumptions, and the display buffer has another.
+	// 
+	// Ref:
+	// https://developer.apple.com/library/archive/technotes/tn2313/_index.html#//apple_ref/doc/uid/DTS40014694-CH1-NONCOLORMANAGEDFRAMEWORKS-OPENGL___EXPLICIT_COLOR_MANAGEMENT_EXAMPLE
+	// 
+	// SDL3 tags the window's colorspace with sRGBColorSpace. This is
+	// hardcoded, but what we want is to use the Display P3 colour space
+	// instead internally, tag the window with displayP3ColorSpace, then let
+	// the system-wide colour management feature of macOS do the rest (i.e.,
+	// converting the Display P3 image data to whatever colour space is set in
+	// the system settings).
+	setDisplayP3ColorSpace(window);
 #endif
 
-	return SDL_CreateWindow(DOSBOX_NAME, x, y, width, height, flags);
+	return window;
 }
 
 #ifdef USE_DEBUG_CONTEXT
@@ -119,7 +151,7 @@ bool OpenGlRenderer::InitRenderer()
 		return false;
 	}
 
-	const auto version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+	gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
 
 #ifdef USE_DEBUG_CONTEXT
 	GLint flags;
@@ -140,9 +172,9 @@ bool OpenGlRenderer::InitRenderer()
 
 	max_texture_size_px = size;
 
-	LOG_INFO("OPENGL: Version: %d.%d, GLSL version: %s, vendor: %s",
-	         GLAD_VERSION_MAJOR(version),
-	         GLAD_VERSION_MINOR(version),
+	LOG_INFO("OPENGL: Version: %s, renderer: %s, GLSL version: %s, vendor: %s",
+			 safe_gl_get_string(GL_VERSION, "unknown"),
+	         safe_gl_get_string(GL_RENDERER, "unknown"),
 	         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION, "unknown"),
 	         safe_gl_get_string(GL_VENDOR, "unknown"));
 
@@ -225,7 +257,7 @@ OpenGlRenderer::~OpenGlRenderer()
 	shader_cache.clear();
 
 	if (context) {
-		SDL_GL_DeleteContext(context);
+		SDL_GL_DestroyContext(context);
 		context = {};
 	}
 	if (window) {
@@ -242,11 +274,7 @@ SDL_Window* OpenGlRenderer::GetWindow()
 DosBox::Rect OpenGlRenderer::GetCanvasSizeInPixels()
 {
 	SDL_Rect canvas_size_px = {};
-#if SDL_VERSION_ATLEAST(2, 26, 0)
 	SDL_GetWindowSizeInPixels(window, &canvas_size_px.w, &canvas_size_px.h);
-#else
-	SDL_GL_GetDrawableSize(window, &canvas_size_px.w, &canvas_size_px.h);
-#endif
 
 	const auto r = to_rect(canvas_size_px);
 	assert(r.HasPositiveSize());
@@ -1041,7 +1069,7 @@ void OpenGlRenderer::SetVsync(const bool is_enabled)
 {
 	const auto swap_interval = is_enabled ? 1 : 0;
 
-	if (SDL_GL_SetSwapInterval(swap_interval) != 0) {
+	if (!SDL_GL_SetSwapInterval(swap_interval)) {
 		// The requested swap_interval is not supported
 		LOG_ERR("OPENGL: Error %s vsync: %s",
 		        (is_enabled ? "enabling" : "disabling"),
