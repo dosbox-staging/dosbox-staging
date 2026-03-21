@@ -479,18 +479,13 @@ std::optional<ChorusParameters> parse_custom_chorus_params(const std::string& ch
 
 void MidiDeviceFluidSynth::SetChorusParams(const ChorusParameters& params)
 {
-	// Apply setting to all groups
-	constexpr int FxGroup = -1;
+	constexpr int AllFxGroups = -1;
 
-	fluid_synth_set_chorus_group_nr(synth.get(), FxGroup, params.voice_count);
-
-	fluid_synth_set_chorus_group_level(synth.get(), FxGroup, params.level);
-
-	fluid_synth_set_chorus_group_speed(synth.get(), FxGroup, params.speed);
-
-	fluid_synth_set_chorus_group_depth(synth.get(), FxGroup, params.depth);
-
-	fluid_synth_set_chorus_group_type(synth.get(), FxGroup, params.mod_wave);
+	fluid_synth_set_chorus_group_nr(synth.get(), AllFxGroups, params.voice_count);
+	fluid_synth_set_chorus_group_level(synth.get(), AllFxGroups, params.level);
+	fluid_synth_set_chorus_group_speed(synth.get(), AllFxGroups, params.speed);
+	fluid_synth_set_chorus_group_depth(synth.get(), AllFxGroups, params.depth);
+	fluid_synth_set_chorus_group_type(synth.get(), AllFxGroups, params.mod_wave);
 
 	LOG_MSG("FSYNTH: Chorus enabled with %d voices at level %.2f, "
 	        "%.2f Hz speed, %.2f depth, and %s-wave modulation",
@@ -631,16 +626,12 @@ std::optional<ReverbParameters> parse_custom_reverb_params(const std::string& re
 
 void MidiDeviceFluidSynth::SetReverbParams(const ReverbParameters& params)
 {
-	// Apply setting to all groups
-	constexpr int FxGroup = -1;
+	constexpr int AllFxGroups = -1;
 
-	fluid_synth_set_reverb_group_roomsize(synth.get(), FxGroup, params.room_size);
-
-	fluid_synth_set_reverb_group_damp(synth.get(), FxGroup, params.damping);
-
-	fluid_synth_set_reverb_group_width(synth.get(), FxGroup, params.width);
-
-	fluid_synth_set_reverb_group_level(synth.get(), FxGroup, params.level);
+	fluid_synth_set_reverb_group_roomsize(synth.get(), AllFxGroups, params.room_size);
+	fluid_synth_set_reverb_group_damp(synth.get(), AllFxGroups, params.damping);
+	fluid_synth_set_reverb_group_width(synth.get(), AllFxGroups, params.width);
+	fluid_synth_set_reverb_group_level(synth.get(), AllFxGroups, params.level);
 
 	LOG_MSG("FSYNTH: Reverb enabled with a %.2f room size, "
 	        "%.2f damping, %.2f width, and level %.2f",
@@ -815,12 +806,13 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		        volume_percent);
 	}
 
-	// Applies setting to all groups
-	constexpr int FxGroup = -1;
+	constexpr int AllFxGroups = -1;
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel
 	// waveforms
-	fluid_synth_set_interp_method(fluid_synth.get(), FxGroup, FLUID_INTERP_HIGHEST);
+	fluid_synth_set_interp_method(fluid_synth.get(),
+	                              AllFxGroups,
+	                              FLUID_INTERP_HIGHEST);
 
 	// Always use XG/GS mode which emulates the concave curve specific to
 	// the Roland Sound Canvas family of sound modules. In this mode the
