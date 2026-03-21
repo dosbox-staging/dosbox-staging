@@ -10,6 +10,7 @@ if (OPT_DEBUGGER)
 endif()
 
 add_subdirectory(residfp)
+add_subdirectory(riffcpp)
 add_subdirectory(simde)
 add_subdirectory(tal-chorus)
 add_subdirectory(whereami)

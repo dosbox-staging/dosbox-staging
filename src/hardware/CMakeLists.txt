@@ -83,6 +83,7 @@ target_link_libraries(libdosboxcommon PRIVATE
   libesfmu
   libresidfp
   libym7128bemu
+  libriffcpp
   libtalchorus
   $<IF:$<BOOL:${C_MANYMOUSE}>,libmanymouse,>
   libnuked
