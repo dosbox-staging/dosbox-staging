@@ -2,7 +2,7 @@
 
 std::streambuf::pos_type membuffer::seekoff(off_type off,
                                             std::ios_base::seekdir dir,
-                                            std::ios_base::openmode which) {
+                                            [[maybe_unused]] std::ios_base::openmode which) {
   if (dir == std::ios_base::beg) {
     m_current = m_begin + off;
   } else if (dir == std::ios_base::cur) {
@@ -19,8 +19,8 @@ std::streambuf::pos_type membuffer::seekoff(off_type off,
 }
 
 std::streambuf::pos_type membuffer::seekpos(pos_type pos,
-                                            std::ios_base::openmode which) {
-  if (pos > m_size) {
+                                            [[maybe_unused]] std::ios_base::openmode which) {
+  if (static_cast<size_t>(pos) > m_size) {
     return -1;
   }
   m_current = m_begin + static_cast<off_type>(pos);
