@@ -48,14 +48,6 @@ static std::uint32_t read_size(std::shared_ptr<std::istream> stream,
   return *reinterpret_cast<std::uint32_t *>(read_size.data());
 }
 
-static riffcpp::FourCC read_size_as_id(std::shared_ptr<std::istream> stream,
-                                       std::streampos chunk_pos) {
-  stream->seekg(chunk_pos + std::streamoff{4});
-  riffcpp::FourCC read_id;
-  stream->read(read_id.data(), read_id.size());
-  return read_id;
-}
-
 riffcpp::Chunk::Chunk(const char *filename) {
   pimpl = new riffcpp::Chunk::impl();
   auto stream = std::make_shared<std::ifstream>(filename, std::ios::binary);
@@ -123,7 +115,7 @@ riffcpp::Chunk::Chunk(const void *buffer, std::size_t len) {
 
 riffcpp::Chunk::Chunk(riffcpp::Chunk::impl *impl) { pimpl = std::move(impl); }
 
-riffcpp::Chunk::~Chunk() { delete pimpl; };
+riffcpp::Chunk::~Chunk() { delete pimpl; }
 
 riffcpp::FourCC riffcpp::Chunk::id() { return pimpl->m_id; }
 
@@ -187,8 +179,6 @@ riffcpp::Chunk iter::operator*() const {
 
   im->m_id = read_id(im->m_stream, im->m_pos);
   im->m_size = read_size(im->m_stream, im->m_pos);
-
-  auto size_id = read_size_as_id(im->m_stream, im->m_pos);
 
   auto limit = im->m_pos + std::streamoff{im->m_size};
 
