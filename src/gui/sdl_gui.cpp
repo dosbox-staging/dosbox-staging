@@ -457,6 +457,8 @@ static void maybe_log_display_properties()
 	assert(sdl.renderer);
 	assert(sdl.draw.render_width_px > 0 && sdl.draw.render_height_px > 0);
 
+	static DosBox::Rect last_draw_size_px = {};
+
 	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
 	const auto draw_size_px   = GFX_CalcDrawRectInPixels(canvas_size_px);
 
@@ -470,7 +472,6 @@ static void maybe_log_display_properties()
 		static VideoMode last_video_mode               = {};
 		static double last_refresh_rate                = 0.0;
 		static PresentationMode last_presentation_mode = {};
-		static DosBox::Rect last_draw_size_px          = {};
 		static bool last_width_was_doubled             = false;
 		static bool last_height_was_doubled            = false;
 		static Fraction last_pixel_aspect_ratio        = {};
@@ -508,9 +509,19 @@ static void maybe_log_display_properties()
 		}
 
 	} else {
-		LOG_MSG("SDL: Window size initialized to %dx%d pixels",
-		        iroundf(draw_size_px.w),
-		        iroundf(draw_size_px.h));
+		if (last_draw_size_px.w != draw_size_px.w ||
+		    last_draw_size_px.h != draw_size_px.h) {
+
+			LOG_MSG("DISPLAY: Unknown video mode at %2.5g Hz, "
+			        "scaled to %dx%d pixels",
+			        refresh_rate,
+			        iroundf(draw_size_px.w),
+			        iroundf(draw_size_px.h));
+
+			maybe_log_presentation_and_vsync_mode();
+
+			last_draw_size_px = draw_size_px;
+		}
 	}
 
 #if 0
