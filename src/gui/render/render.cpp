@@ -10,7 +10,9 @@
 #include <memory>
 #include <mutex>
 
-#include "gui/private/auto_image_adjustments.h"
+#include "private/auto_image_adjustments.h"
+#include "private/auto_shader_switcher.h"
+#include "private/shader_manager.h"
 
 #include "capture/capture.h"
 #include "config/config.h"
@@ -639,7 +641,10 @@ static const char* to_displayable_name(const CrtColorProfile profile)
 static void handle_auto_image_adjustment_settings(const VideoMode& video_mode)
 {
 	const auto maybe_auto_settings =
-	        AutoImageAdjustmentsManager::GetInstance().GetSettings(video_mode);
+	        AutoImageAdjustmentsManager::GetInstance().GetSettings(
+	                machine,
+	                video_mode,
+	                GFX_GetRenderer()->GetCurrentShaderDescriptor());
 
 	if (maybe_auto_settings) {
 		const auto settings = *maybe_auto_settings;
@@ -1207,6 +1212,61 @@ static void set_deinterlacing(const SectionProp& section)
 	}();
 }
 
+constexpr int DeditheringStrengthMin = 0;
+constexpr int DeditheringStrengthMax = 100;
+
+static float get_dedithering_strength()
+{
+	constexpr auto SettingName     = "dedithering";
+	constexpr auto DefaultValue    = "off";
+	constexpr auto DefaultStrength = 0.0f;
+
+	const std::string pref = get_render_section().GetStringLowCase(SettingName);
+
+	if (has_false(pref)) {
+		return 0.0f;
+
+	} else if (has_true(pref)) {
+		return 1.0f;
+
+	} else if (const auto maybe_int = parse_int(pref); maybe_int) {
+		const auto strength_int = *maybe_int;
+
+		if (strength_int >= DeditheringStrengthMin &&
+		    strength_int <= DeditheringStrengthMax) {
+			return static_cast<float>(*maybe_int) / 100.0f;
+
+		} else {
+			NOTIFY_DisplayWarning(
+			        Notification::Source::Console,
+			        "RENDER",
+			        "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
+			        SettingName,
+			        format_str("%d", strength_int).c_str(),
+			        format_str("%d", DeditheringStrengthMin).c_str(),
+			        format_str("%d", DeditheringStrengthMax).c_str(),
+			        DefaultValue);
+
+			set_section_property_value("render", SettingName, DefaultValue);
+			return DefaultStrength;
+		}
+
+	} else {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      SettingName,
+		                      pref.c_str(),
+		                      DefaultValue);
+		return DefaultStrength;
+	}
+}
+
+static void set_dedithering()
+{
+	GFX_GetRenderer()->SetDeditheringStrength(get_dedithering_strength());
+}
+
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
 {
 	const auto dpi_scale = GFX_GetDpiScaleFactor();
@@ -1299,7 +1359,9 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 		// - it enables vertical integer scaling for the adaptive CRT
 		//   shaders if the viewport is large enough (otherwise it falls
 		//   back to the 'sharp' shader with no integer scaling),
+		//
 		// - it allows the 3.5x and 4.5x half steps,
+		//
 		// - and it disables integer scaling above 5.0x scaling.
 		//
 		// The half-steps and no scaling above 5.0x result in no
@@ -1310,7 +1372,10 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 			return draw_size_fit_px;
 		}
 
-		if (GFX_GetRenderer()->GetCurrentShaderInfo().is_adaptive) {
+		const auto curr_shader_descriptor =
+		        GFX_GetRenderer()->GetCurrentShaderDescriptor();
+
+		if (curr_shader_descriptor.EnforceAutoIntegerScaling()) {
 			auto integer_scale_factor = [&] {
 				const auto factor = draw_size_fit_px.h /
 				                    render_size_px.h;
@@ -1959,6 +2024,27 @@ static void init_render_settings(SectionProp& section)
 	        "      displays to avoid interference artifacts when using lower deinterlacing\n"
 	        "      strengths. Alternatively, use 'full' strength to completely eliminate all\n"
 	        "      potential interference patterns.");
+
+	string_prop = section.AddString("dedithering", Always, "off");
+	string_prop->SetHelp(format_str(
+	        "Remove checkerboard dither patterns from the video output ('off' by default).\n"
+	        "Useful with CGA and EGA games that use dither patterns to create the illusion\n"
+	        "of more colours with the limited CGA/EGA palettes. Possible values:\n"
+	        "\n"
+	        "  off:       Disable dedithering (default).\n"
+	        "  on:        Enable dedithering (at full strength).\n"
+	        "\n"
+	        "  <number>:  Set dedithering strength from %d (off) to %d (full strength). Lower\n"
+	        "             values result in a subtle softening of dither patterns; higher\n"
+	        "             values blend between the original and the dedithered image.\n"
+	        "\n"
+	        "Notes:\n"
+	        "   - Dedithering only works in OpenGL output mode.\n"
+	        "\n"
+	        "   - Dedithering is applied to rendered screenshots, but not to raw and upscaled\n"
+	        "     screenshots and video captures.",
+	        DeditheringStrengthMin,
+	        DeditheringStrengthMax));
 }
 
 enum { Horiz, Vert };
@@ -2172,7 +2258,7 @@ static std::optional<int> get_black_level_setting_value()
 			NOTIFY_DisplayWarning(
 			        Notification::Source::Console,
 			        "RENDER",
-			        "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+			        "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
 			        SettingName,
 			        format_str("%d", black_level).c_str(),
 			        format_str("%d", BlackLevelMin).c_str(),
@@ -2243,7 +2329,7 @@ static std::optional<int> get_color_temperature_setting_value()
 			NOTIFY_DisplayWarning(
 			        Notification::Source::Console,
 			        "RENDER",
-			        "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+			        "PROGRAM_CONFIG_INVALID_INTEGER_SETTING_OUTSIDE_VALID_RANGE",
 			        SettingName,
 			        format_str("%d", color_temperature).c_str(),
 			        format_str("%d", ColorTemperatureMin).c_str(),
@@ -2683,6 +2769,7 @@ void RENDER_Init()
 	set_image_adjustment_settings();
 
 	set_deinterlacing(*section);
+	set_dedithering();
 }
 
 static void notify_render_setting_updated(SectionProp& section,
@@ -2698,6 +2785,10 @@ static void notify_render_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "deinterlacing") {
 		set_deinterlacing(section);
+		render_reset();
+
+	} else if (prop_name == "dedithering") {
+		set_dedithering();
 		render_reset();
 
 	} else if (prop_name == "glshader" || prop_name == "shader") {

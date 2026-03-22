@@ -18,11 +18,12 @@ bool is_digits(const std::string_view s) noexcept
 	return std::all_of(s.begin(), s.end(), &isdigit);
 }
 
-void strreplace(char *str, char o, char n)
+void strreplace(char* str, char o, char n)
 {
 	while (*str) {
-		if (*str == o)
+		if (*str == o) {
 			*str = n;
+		}
 		str++;
 	}
 }
@@ -56,8 +57,9 @@ void ltrim(std::string& str)
  */
 char* ltrim(char* str)
 {
-	while (*str && isspace(*reinterpret_cast<unsigned char *>(str)))
+	while (*str && isspace(*reinterpret_cast<unsigned char*>(str))) {
 		str++;
+	}
 	return str;
 }
 
@@ -74,9 +76,9 @@ char* ltrim(char* str)
  */
 char* rtrim(char* str)
 {
-	char *p;
+	char* p;
 	p = strchr(str, '\0');
-	while (--p >= str && isspace(*reinterpret_cast<unsigned char *>(p))) {
+	while (--p >= str && isspace(*reinterpret_cast<unsigned char*>(p))) {
 	};
 	p[1] = '\0';
 	return str;
@@ -97,21 +99,23 @@ char* trim(char* str)
 	return ltrim(rtrim(str));
 }
 
-char *upcase(char *str)
+char* upcase(char* str)
 {
-	for (char *idx = str; *idx; idx++)
-		*idx = toupper(*reinterpret_cast<unsigned char *>(idx));
+	for (char* idx = str; *idx; idx++) {
+		*idx = toupper(*reinterpret_cast<unsigned char*>(idx));
+	}
 	return str;
 }
 
-char *lowcase(char *str)
+char* lowcase(char* str)
 {
-	for (char *idx = str; *idx; idx++)
-		*idx = tolower(*reinterpret_cast<unsigned char *>(idx));
+	for (char* idx = str; *idx; idx++) {
+		*idx = tolower(*reinterpret_cast<unsigned char*>(idx));
+	}
 	return str;
 }
 
-void upcase(std::string &str)
+void upcase(std::string& str)
 {
 	auto to_upper = [](const int character) {
 		return std::toupper(character);
@@ -119,7 +123,7 @@ void upcase(std::string &str)
 	std::transform(str.begin(), str.end(), str.begin(), to_upper);
 }
 
-void lowcase(std::string &str)
+void lowcase(std::string& str)
 {
 	auto to_lower = [](const int character) {
 		return std::tolower(character);
@@ -141,7 +145,7 @@ std::string lowcase(const std::string_view sv)
 	return res;
 }
 
-std::string replace(const std::string &str, char old_char, char new_char) noexcept
+std::string replace(const std::string& str, char old_char, char new_char) noexcept
 {
 	std::string new_str = str;
 	std::replace(new_str.begin(), new_str.end(), old_char, new_char);
@@ -174,11 +178,13 @@ void trim(std::string& str, const std::string_view trim_chars)
 	str.erase(0, empty_pfx);
 }
 
-std::vector<std::string> split_with_empties(const std::string_view seq, const char delim)
+std::vector<std::string> split_with_empties(const std::string_view seq,
+                                            const char delim)
 {
 	std::vector<std::string> words;
-	if (seq.empty())
+	if (seq.empty()) {
 		return words;
+	}
 
 	// count delimeters to reserve space in our vector of words
 	const size_t n = 1u + std::count(seq.begin(), seq.end(), delim);
@@ -232,6 +238,47 @@ std::vector<std::string> split(const std::string_view seq, const std::string_vie
 	return words;
 }
 
+std::string join_with_commas(const std::vector<std::string>& items,
+                             const std::string_view and_conjunction,
+                             const std::string_view end_punctuation)
+{
+	const auto num_items = items.size();
+
+	std::string result = {};
+
+	// C++26 should add the missing operator+(std::string, std::string_view)
+	const auto and_pair  = std::string(" ").append(and_conjunction) + " ";
+	const auto and_multi = std::string(", ").append(and_conjunction) + " ";
+
+	std::string separator = (num_items == 2u) ? and_pair : ", ";
+
+	size_t item_num = 1;
+	for (const auto& item : items) {
+		assert(!item.empty());
+		result += item;
+		result += (item_num == num_items) ? end_punctuation : separator;
+		separator = (item_num + 2u == num_items) ? and_multi : separator;
+		++item_num;
+	}
+	return result;
+}
+
+std::string join(const std::vector<std::string>& items,
+                 const std::string_view delimiter, const std::string& prefix,
+                 const std::string& suffix)
+{
+	std::string result = prefix;
+
+	for (auto it = items.begin(); it != items.end(); ++it) {
+		result += *it;
+		if (std::next(it) != items.end()) {
+			result += delimiter;
+		}
+	}
+
+	return result + suffix;
+}
+
 bool ciequals(const char a, const char b)
 {
 	return tolower(a) == tolower(b);
@@ -267,19 +314,19 @@ bool natural_compare(const std::string& a_str, const std::string& b_str)
 
 char* strip_word(char*& line)
 {
-	char *scan = line;
+	char* scan = line;
 	scan       = ltrim(scan);
 	if (*scan == '"') {
-		char *end_quote = strchr(scan + 1, '"');
+		char* end_quote = strchr(scan + 1, '"');
 		if (end_quote) {
 			*end_quote = 0;
 			line       = ltrim(++end_quote);
 			return (scan + 1);
 		}
 	}
-	char *begin = scan;
+	char* begin = scan;
 	for (char c = *scan; (c = *scan); scan++) {
-		if (isspace(*reinterpret_cast<unsigned char *>(&c))) {
+		if (isspace(*reinterpret_cast<unsigned char*>(&c))) {
 			*scan++ = 0;
 			break;
 		}
@@ -303,7 +350,9 @@ std::string strip_word(std::string& line)
 			return word;
 		}
 	}
-	auto end_word = std::find_if(line.begin(), line.end(), [](int c) {return isspace(c);});
+	auto end_word = std::find_if(line.begin(), line.end(), [](int c) {
+		return isspace(c);
+	});
 	const std::string word(line.begin(), end_word);
 	if (end_word != line.end()) {
 		++end_word;
@@ -312,7 +361,7 @@ std::string strip_word(std::string& line)
 	return word;
 }
 
-void strip_punctuation(std::string &str)
+void strip_punctuation(std::string& str)
 {
 	std::erase_if(str, [](unsigned char c) { return std::ispunct(c); });
 }
@@ -413,10 +462,12 @@ std::string replace_all(const std::string& str, const std::string& from,
 }
 
 // Search for the needle in the haystack, case insensitive.
-bool find_in_case_insensitive(const std::string &needle, const std::string &haystack)
+bool find_in_case_insensitive(const std::string& needle, const std::string& haystack)
 {
-	const auto it = std::search(haystack.begin(), haystack.end(),
-	                            needle.begin(), needle.end(),
+	const auto it = std::search(haystack.begin(),
+	                            haystack.end(),
+	                            needle.begin(),
+	                            needle.end(),
 	                            [](char ch1, char ch2) {
 		                            return std::toupper(ch1) ==
 		                                   std::toupper(ch2);

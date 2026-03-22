@@ -1,12 +1,12 @@
-// SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "titlebar.h"
 
-#include "private/common.h"
-
 #include <map>
 #include <vector>
+
+#include "private/common.h"
 
 #include "config/config.h"
 #include "config/setup.h"
