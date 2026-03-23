@@ -54,3 +54,143 @@ FluidSynth is a real-time, high-quality, cross-platform software MIDI synthesise
 
 
 
+## Configuration settings
+
+### FluidSynth
+
+FluidSynth settings are to be configured in the `[fluidsynth]` section.
+
+
+##### fsynth_chorus
+
+:   Configure the FluidSynth chorus.
+
+    Possible values:
+
+    - `auto` *default*{ .default } -- Enable chorus, except for known
+      problematic SoundFonts.
+    - `on` -- Always enable chorus.
+    - `off` -- Disable chorus.
+    - `<custom>` -- Custom setting via five space-separated values:
+      voice-count (0--99), level (0.0--10.0), speed in Hz (0.1--5.0),
+      depth (0.0--21.0), and modulation-wave (`sine` or `triangle`).
+      For example: `3 1.2 0.3 8.0 sine`
+
+    !!! note
+
+        You can disable the FluidSynth chorus and enable the mixer-level
+        chorus on the FluidSynth channel instead, or enable both chorus
+        effects at the same time.
+
+
+##### fsynth_filter
+
+:   Filter for the FluidSynth audio output.
+
+    Possible values:
+
+    - `off` *default*{ .default } -- Don't filter the output.
+    - `<custom>` -- Custom filter definition; see
+      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      for details.
+
+
+##### fsynth_reverb
+
+:   Configure the FluidSynth reverb.
+
+    Possible values:
+
+    - `auto` *default*{ .default } -- Enable reverb.
+    - `on` -- Enable reverb.
+    - `off` -- Disable reverb.
+    - `<custom>` -- Custom setting via four space-separated values:
+      room-size (0.0--1.0), damping (0.0--1.0), width (0.0--100.0),
+      and level (0.0--1.0).
+      For example: `0.61 0.23 0.76 0.56`
+
+    !!! note
+
+        You can disable the FluidSynth reverb and enable the mixer-level
+        reverb on the FluidSynth channel instead, or enable both reverb
+        effects at the same time.
+
+
+##### soundfont
+
+:   Name or path of SoundFont file to use (`default.sf2` by default). The
+    SoundFont will be looked up in the following locations in order:
+
+    <div class="compact" markdown>
+
+    - The user-defined SoundFont directory (see [soundfont_dir](#soundfont_dir)).
+    - The `soundfonts` directory in your DOSBox configuration directory.
+    - Other common system locations.
+
+    </div>
+
+    The `.sf2` extension can be omitted. You can use paths relative to the
+    above locations or absolute paths as well.
+
+    !!! note
+
+        Run `MIXER /LISTMIDI` to see the list of available SoundFonts.
+
+
+##### soundfont_dir
+
+:   Extra user-defined SoundFont directory (unset by default). If set,
+    SoundFonts are looked up in this directory first, then in the standard
+    system locations.
+
+
+##### soundfont_volume
+
+:   Set the SoundFont's volume as a percentage (`100` by default). This is
+    useful for normalising the volume of different SoundFonts. Valid range is
+    1 to 800.
+
+
+### Sound Canvas
+
+Sound Canvas settings are to be configured in the `[soundcanvas]` section.
+
+
+##### soundcanvas_filter
+
+:   Filter for the Roland Sound Canvas audio output.
+
+    Possible values:
+
+    - `on` *default*{ .default } -- Filter the output.
+    - `off` -- Don't filter the output.
+    - `<custom>` -- Custom filter definition; see
+      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      for details.
+
+
+##### soundcanvas_model
+
+:   Roland Sound Canvas model to use. One or more CLAP audio plugins that
+    implement the supported Sound Canvas models must be present in the
+    `plugins` directory in your DOSBox installation or configuration directory.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `auto` *default*{ .default } -- Pick the best available model.
+    - `sc55` -- Pick the best available original SC-55 model.
+    - `sc55mk2` -- Pick the best available SC-55mk2 model.
+    - `<version>` -- Use the exact specified model version (e.g., `sc55_121`).
+
+    </div>
+
+
+##### soundcanvas_rom_dir
+
+:   The directory containing the Roland Sound Canvas ROMs (unset by default).
+    The directory can be absolute or relative, or leave it unset to use the
+    `soundcanvas-roms` directory in your DOSBox configuration directory. Other
+    common system locations will be checked as well.
+
