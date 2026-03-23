@@ -1,5 +1,17 @@
 # Web server
 
+DOSBox Staging can expose an HTTP REST API for development and debugging
+purposes. When enabled, you can inspect internal emulator state, memory
+contents, and control the emulation through simple HTTP requests.
+
+The API only binds to `localhost` by default — never expose it to untrusted
+networks, as it gives full control over the emulator.
+
+!!! warning
+
+    This feature is intended for developers and advanced users. Do not
+    enable it unless you know what you're doing.
+
 
 ## Configuration settings
 
