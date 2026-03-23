@@ -1,5 +1,7 @@
 # DOS
 
+## Overview
+
 The `[dos]` section controls the emulated DOS environment itself — version
 number, memory management, and regional settings.
 
@@ -29,7 +31,8 @@ You can set the DOS parameters in the `[dos]` configuration section.
     !!! note
 
         The list of country codes can be displayed using the
-        `--list-countries` command-line argument.
+        [`--list-countries`](../command-line.md#-list-countries) command-line
+        argument.
 
 
 ##### ems
@@ -90,8 +93,8 @@ You can set the DOS parameters in the `[dos]` configuration section.
     !!! note
 
         The list of supported keyboard layout codes can be displayed using
-        the `--list-layouts` command-line argument (e.g., `uk` is the British
-        English layout).
+        the [`--list-layouts`](../command-line.md#-list-layouts) command-line
+        argument (e.g., `uk` is the British English layout).
 
 
 ##### locale_period

@@ -112,23 +112,23 @@ sections of the manual where they're described in detail.
 
 | Channel name  | Device                                       | Stereo? |
 | ------------- | -------------------------------------------- | --------|
-| `CDAUDIO`     | [CD-DA digital audio]()                      | Yes
-| `CMS`         | [Creative Music System (C/MS) synthesiser]() | Yes
-| `COVOX`       | [Covox Speech Thing digital audio]()         | No
-| `DISNEY`      | [Disney Sound Source (DSS) digital audio]()  | No
-| `FSYNTH`      | [FluidSynth MIDI synthesiser]()              | Yes
-| `GUS`         | [Gravis UltraSound digital audio]()          | Yes
-| `MASTER`      | [Master output channel]()                    | Yes
-| `INNOVATION`  | [Innovation SSI-2001 synthesiser]()          | No
-| `MT32`        | [Roland MT-32 MIDI synthesiser]()            | Yes
-| `OPL`         | [Yamaha OPL synthesiser]()                   | Yes[^stereo]
-| `PCSPEAKER`   | [PC speaker]()                               | No
-| `PS1`         | [IBM PS/1 Audio synthesiser]()               | No
-| `PS1DAC`      | [IBM PS/1 Audio digital audio]()             | No
-| `SB`          | [Sound Blaster digital audio]()              | Yes[^stereo]
-| `STON1`       | [Stereo-on-1 digital audio]()                | Yes
-| `TANDY`       | [Tandy 1000 synthesiser]()                   | No
-| `TANDYDAC`    | [Tandy 1000 digital audio]()                 | No
+| `CDAUDIO`     | CD-DA digital audio                          | Yes
+| `CMS`         | [Creative Music System (C/MS) synthesiser](sound-devices/adlib-cms-sound-blaster.md#cms) | Yes
+| `COVOX`       | [Covox Speech Thing digital audio](sound-devices/covox-variants.md#covox-speech-thing) | No
+| `DISNEY`      | [Disney Sound Source (DSS) digital audio](sound-devices/covox-variants.md#disney-sound-source) | No
+| `FSYNTH`      | [FluidSynth MIDI synthesiser](sound-devices/general-midi.md#fluidsynth) | Yes
+| `GUS`         | [Gravis UltraSound digital audio](sound-devices/gravis-ultrasound.md) | Yes
+| `MASTER`      | Master output channel                        | Yes
+| `INNOVATION`  | [Innovation SSI-2001 synthesiser](sound-devices/innovation.md) | No
+| `MT32`        | [Roland MT-32 MIDI synthesiser](sound-devices/roland-mt-32.md) | Yes
+| `OPL`         | [Yamaha OPL synthesiser](sound-devices/adlib-cms-sound-blaster.md) | Yes[^stereo]
+| `PCSPEAKER`   | [PC speaker](sound-devices/pc-speaker.md)    | No
+| `PS1`         | [IBM PS/1 Audio synthesiser](sound-devices/ibm-ps1audio.md) | No
+| `PS1DAC`      | [IBM PS/1 Audio digital audio](sound-devices/ibm-ps1audio.md) | No
+| `SB`          | [Sound Blaster digital audio](sound-devices/adlib-cms-sound-blaster.md) | Yes[^stereo]
+| `STON1`       | [Stereo-on-1 digital audio](sound-devices/covox-variants.md#stereo-on-1-dac) | Yes
+| `TANDY`       | [Tandy 1000 synthesiser](sound-devices/tandy.md) | No
+| `TANDYDAC`    | [Tandy 1000 digital audio](sound-devices/tandy.md) | No
 
 </div>
 

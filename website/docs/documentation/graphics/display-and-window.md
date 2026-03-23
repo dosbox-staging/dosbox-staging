@@ -1,10 +1,13 @@
 # Display & window
 
+## Overview
+
 DOSBox Staging opens in a resizable window by default. Press
 ++alt+enter++ to toggle fullscreen mode.
 
 The `opengl` [output mode](#output) is the recommended default because it's required
-for CRT shaders and other post-processing effects. If your system doesn't
+for CRT shaders and other post-processing effects (see
+[Rendering](rendering.md)). If your system doesn't
 support OpenGL, `texture` is a solid fallback that still looks good.
 
 For monitors with variable refresh rates (G-Sync, FreeSync, or VRR), you'll
@@ -304,5 +307,5 @@ section.
 
     !!! note
 
-        The `--resetmapper` command line option only deletes the default
-        mapper file.
+        The [`--erasemapper`](../command-line.md#-erasemapper) command line
+        option only deletes the default mapper file.

@@ -128,8 +128,9 @@ support for Windows versions 1.x and 2.x.
 The DOS era spanned roughly 15 years, and the hardware changed dramatically
 during that time. Games are designed for the hardware of their era, so
 matching the emulated hardware to the game's time period gives the best
-results. The key settings to adjust are `machine` (graphics standard),
-`cputype`, `cycles` (CPU speed), and the sound device.
+results. The key settings to adjust are [`machine`](system/general.md#machine)
+(graphics standard), [`cputype`](system/cpu.md#cputype),
+[`cycles`](system/cpu.md#cpu_cycles) (CPU speed), and the sound device.
 
 Here are some typical period-correct starting points:
 
