@@ -19,6 +19,44 @@ available when using a compatible mouse driver — the mouse cursor moves
 freely between the host and guest without manual capture.
 
 
+## Serial mice
+
+DOSBox Staging emulates several serial (COM port) mouse types:
+
+- **Microsoft mouse** --- 2 buttons, the most widely compatible type.
+- **Logitech mouse** --- 3 buttons, mostly compatible with Microsoft mouse.
+- **Wheel mouse** --- 3 buttons + wheel, mostly compatible with Microsoft mouse.
+- **Mouse Systems mouse** --- 3 buttons, an older protocol NOT compatible with
+  Microsoft mice. A few programs require this type.
+
+To enable a serial mouse, use the `SERIAL 1 mouse` command (this attaches it
+to the COM1 port), or edit the `[serial]` section of the configuration file.
+By default, DOSBox Staging tries to determine what type of mouse the program
+expects. See [com_mouse_model](#com_mouse_model) for details.
+
+
+## Dual mouse gaming
+
+Multiple physical mice can be mapped to specific emulated mouse interfaces,
+enabling two-player split-screen gaming (e.g., **The Settlers** and **The
+Settlers II**) using two USB mice on a single computer. Use the `MOUSECTL`
+command on the DOS command line for per-interface mouse configuration.
+
+See the [wiki article](https://github.com/dosbox-staging/dosbox-staging/wiki/Dual-Mouse-Gaming)
+for setup details.
+
+<figure markdown>
+  <video controls width=100%>
+    <source src="https://www.dosbox-staging.org/static/videos/release-notes/0.80.0/settlers-2-dual-mouse.mp4" type="video/mp4">
+    Your browser does not support the <code>video</code> element.
+  </video>
+
+  <figcaption markdown>
+  The Settlers II (1996) --- dual-mouse gaming in action
+  </figcaption>
+</figure>
+
+
 ## Configuration settings
 
 You can set the mouse parameters in the `[mouse]` configuration section.
