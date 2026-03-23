@@ -4,7 +4,7 @@
 
     This is an entirely optional chapter written for people particularly
     interested in computer music. Feel free to skip it and refer to the [list
-    of preferred sound devices](../overview/#selecting-the-best-audio-option)
+    of preferred sound devices](overview.md#selecting-the-best-audio-option)
     to configure your games for the best sound. You might want to revisit this
     chapter later as your interest in and appreciation of computer music
     grows.
@@ -13,7 +13,7 @@
 While it is rare to find a person who would willingly configure a game for PC
 speaker audio in the presence of better options, the "best" choice often
 becomes somewhat subjective as we're moving up the [list of preferred sound
-devices](../overview/#selecting-the-best-audio-option).
+devices](overview.md#selecting-the-best-audio-option).
 
 To save cost and effort, developers usually commissioned musicians to create
 the soundtrack for the most advanced audio device their game had support for.

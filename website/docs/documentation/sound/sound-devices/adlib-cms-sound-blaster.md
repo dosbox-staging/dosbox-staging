@@ -37,7 +37,7 @@ accurate NukedOPL library to achieve a nearly bit-perfect emulation of the OPL
 chips.
 
 The other less common synthesiser is the [Creative Music
-System](#creative-music-system-cms) (also referred to as **C/MS**, or
+System](#creative-music-system-cms-game-blaster) (also referred to as **C/MS**, or
 **CMS**) which is only present on the earliest Sound Blaster models.
 
 Because the history and even the emulation of these synthesisers are so
@@ -164,7 +164,7 @@ filter---this makes most games sound decent regardless of the Sound Blaster
 model in use, but it's not authentic.
 
 For the best authentic results, set the most appropriate Sound Blaster model
-for each game via the [sb_type](#sb-type) configuration setting. Additionally,
+for each game via the [sb_type](#sbtype) configuration setting. Additionally,
 set the [sb_filter](#sb_filter) setting to `auto` to let DOSBox select the
 output filter appropriate for the emulated Sound Blaster model.
 
@@ -617,7 +617,7 @@ The number after the `T` parameter describes the type of the card:
       to enable model-authentic filter emulation.
     - `off` -- Don't filter the digital audio output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
       for details.
 
     These are the model specific low-pass filter settings for the digital
@@ -782,7 +782,7 @@ The number after the `T` parameter describes the type of the card:
     - `sb1`, `sb2`, `sbpro1`, `sbpro2`, `sb16` -- Use the OPL filter of this Sound Blaster model.
     - `off` -- Don't filter the OPL output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
       for details.
 
     These are the model specific low-pass filter settings for OPL output: 
@@ -902,6 +902,6 @@ The number after the `T` parameter describes the type of the card:
       low-pass filter at 6kHz).
     - `off` -- Don't filter the CMS output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
       for details.
 
