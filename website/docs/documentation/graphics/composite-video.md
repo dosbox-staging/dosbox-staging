@@ -1,5 +1,26 @@
 # Composite video
 
+Before dedicated RGB monitors became common in the late 1980s, many home PC
+users connected their computers to TVs or composite video monitors. The
+NTSC composite signal creates what are known as "artifact colours" —
+interference patterns that produce up to 16 colours from CGA's usual
+4-colour palette. It sounds like a bug, but game developers deliberately
+exploited it.
+
+Games like *King's Quest*, *Space Quest*, and many other Sierra AGI titles
+were specifically designed to look their best on composite monitors. Viewed
+on an RGB monitor, these games appear as garish 4-colour affairs; on
+composite, they transform into something surprisingly colourful and
+detailed.
+
+Early and late revision CGA cards produce slightly different artifact
+patterns. The `era` setting lets you choose which to emulate — this matters
+because some games were designed for one revision or the other.
+
+DOSBox Staging automatically enables composite emulation when a game
+switches to the 640×200 composite mode. For the more common 320×200 modes,
+you'll need to set `composite = on` manually.
+
 
 ## Configuration settings
 
