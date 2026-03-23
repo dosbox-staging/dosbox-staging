@@ -1,5 +1,25 @@
 # Rendering
 
+DOSBox Staging uses adaptive CRT shaders by default that emulate the look
+of period-appropriate monitors. A VGA game gets a VGA-style CRT look, an
+EGA game gets an EGA-era monitor, and so on. The result is surprisingly
+close to what these games looked like on the real hardware they were
+designed for.
+
+Most DOS games used non-square pixels — a 320×200 image was stretched to
+fill a 4:3 CRT monitor. Aspect ratio correction is enabled by default so
+games look as they were intended. Without it, everything appears slightly
+squished, which is especially noticeable with pixel art-heavy games like
+*Monkey Island* or *Loom*.
+
+The image adjustment controls — brightness, contrast, saturation, colour
+temperature — work much like the knobs on an old CRT monitor. They're
+useful for fine-tuning the picture to your taste or compensating for
+differences in display characteristics.
+
+If you prefer a crisp, pixel-perfect look without any CRT emulation, set
+`shader = sharp`. For completely unprocessed output, use `shader = none`.
+
 
 ## Configuration settings
 
