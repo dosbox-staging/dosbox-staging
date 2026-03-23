@@ -1,28 +1,34 @@
 # Mouse
 
-DOSBox Staging includes a built-in mouse driver, so you don't need to load
-`MOUSE.COM` or `CTMOUSE` inside DOS. The built-in driver provides lower
-latency and smoother movement than a real DOS mouse driver — your
-point-and-click adventures (*Monkey Island*, *Day of the Tentacle*) and FPS
-games (*Doom*, *Quake*) will thank you.
+## Overview
 
-Click inside the DOSBox window to capture the mouse; press the middle mouse
-button or ++ctrl+f10++ / ++cmd+f10++ to release it (see
-[Keyboard shortcuts](../shortcuts.md)). If your mouse has no
-middle button, the keyboard shortcut is your friend.
+DOSBox Staging includes a built-in mouse driver which is enabled by default,
+so you don't need to load a real DOS mouse driver manually (e.g., `MOUSE.COM`
+or `CTMOUSE`). The built-in driver provides lower latency and smoother
+movement than a real DOS mouse driver and uses less memory. You'll only need
+to tinker with the mouse settings for niche use cases and a handful of
+problematic games --- the vast majority of DOS games that require a mouse will
+work out-of-the-box.
 
-The `mouse_raw_input` setting bypasses your host OS's mouse acceleration,
-giving you consistent sensitivity regardless of your desktop settings. This
-is particularly useful for games where precise mouse control matters.
+To capture the mouse, click inside the DOSBox window, then press the middle
+mouse button or ++ctrl+f10++ / ++cmd+f10++ to release it (see [Keyboard
+shortcuts](../shortcuts.md)). If your mouse has no middle button, the keyboard
+shortcut is your friend.
+
+The [`mouse_raw_input`](#mouse_raw_input) setting bypasses your host OS's
+mouse acceleration, giving you consistent sensitivity regardless of your
+desktop settings. This is particularly useful for games where precise mouse
+control matters.
 
 For Windows 3.1x running inside DOSBox, seamless mouse integration is
-available when using a compatible mouse driver — the mouse cursor moves
-freely between the host and guest without manual capture.
+available when using a compatible mouse driver---the mouse cursor moves
+freely between the host and guest without manual capture (see
+[`mouse_capture`](#mouse_capture)).
 
 
 ## Serial mice
 
-DOSBox Staging emulates several serial (COM port) mouse types:
+DOSBox Staging can emulate several serial (COM port) mouse types:
 
 - **Microsoft mouse** --- 2 buttons, the most widely compatible type.
 - **Logitech mouse** --- 3 buttons, mostly compatible with Microsoft mouse.
@@ -40,9 +46,10 @@ expects. See [com_mouse_model](#com_mouse_model) for details.
 ## Dual mouse gaming
 
 Multiple physical mice can be mapped to specific emulated mouse interfaces,
-enabling two-player split-screen gaming (e.g., **The Settlers** and **The
-Settlers II**) using two USB mice on a single computer. Use the `MOUSECTL`
-command on the DOS command line for per-interface mouse configuration.
+enabling two-player split-screen gaming using two USB mice on a single
+computer (e.g., in **The Settlers** and **The Settlers II**). Use the
+`MOUSECTL` command on the DOS command line to set the per-interface mouse
+configurations.
 
 See the [wiki article](https://github.com/dosbox-staging/dosbox-staging/wiki/Dual-Mouse-Gaming)
 for setup details.
@@ -137,9 +144,10 @@ You can set the mouse parameters in the `[mouse]` configuration section.
 
     !!! note
 
-        Known games requiring the threshold to be set to 2:
-        Ultima Underworld: The Stygian Abyss, Ultima Underworld II: Labyrinth
-        of Worlds.
+        Known games requiring the threshold to be set to `2`:
+
+        - **Ultima Underworld: The Stygian Abyss**
+        - **Ultima Underworld II: Labyrinth of Worlds**
 
 
 ##### builtin_dos_mouse_driver_options
