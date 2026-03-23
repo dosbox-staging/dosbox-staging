@@ -35,10 +35,10 @@ games benefit from `vmem_delay = on`:
 
 - **Corncob 3-D**
 - **Corncob Deluxe**
-- **Crazy Brix** (`vmem_delay = 2000` and `cycles = 70000`)
-- **Future Wars** (also needs `cycles = 1000`)
+- **Crazy Brix** (`vmem_delay = 2000` and `cpu_cycles = 70000`)
+- **Future Wars** (also needs `cpu_cycles = 1000`)
 - **Gold of the Aztecs, The**
-- **Hostages** (also needs `cycles = 1500`)
+- **Hostages** (also needs `cpu_cycles = 1500`)
 - **Operation Stealth** (when VGA or EGA is selected in the game's setup)
 - **Quest for Glory II** (fixes too-fast vertical scrolling in the intro)
 
