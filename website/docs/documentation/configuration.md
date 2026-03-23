@@ -39,7 +39,7 @@ Multiple config files can be loaded, and later values override earlier ones:
    is used).
 2. A local `dosbox.conf` in the working directory is loaded next (unless
    [`--nolocalconf`](command-line.md#-nolocalconf) is used).
-3. Additional config files specified via [`--conf`](command-line.md#-conf) are
+3. Additional config files specified via [`--conf`](command-line.md#-conf-config_file) are
    applied in the order given.
 4. Individual [`--set <setting>=<value>`](command-line.md#-set-settingvalue)
    overrides are applied last and take highest priority.
