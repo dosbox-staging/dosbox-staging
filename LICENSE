@@ -26,16 +26,28 @@ GPL-2.0-or-later terms, however there are some exceptions:
   Unicode, Inc. License Agreement for Data Files and Software license.
 
 - Libraries in src/libs directory, are licensed as follows:
-   - stb.h and stb_vorbis.h: Public Domain
-   - decoders/dr_flac.h, dr_mp3.h, and dr_wav.h: Public Domain or MIT
+   - base64: MIT
+   - clap headers: MIT
+   - decoders/dr_flac.h, dr_mp3.h, dr_wav.h: Public Domain or MIT
+   - decoders/stb.h, stb_vorbis.h: Public Domain
    - enet: MIT
+   - ESFMu: LGPL-2
    - ghc: MIT
-   - loguru: Public Domain
+   - http: MIT
+   - json: MIT
+   - libslirp headers: BSD 3-Clause
    - ManyMouse: Zlib
-   - PL_MPEG: MIT
+   - Nuked OPL3: LGPL-2
+   - loguru: Public Domain
+   - mverb: GPL-3
    - PDcurses: Public Domain
+   - PL_MPEG: MIT
+   - residfp: GLP-2
+   - riffcpp: Zlib
    - simde: MIT
+   - simpleini: MIT
    - stb_truetype: MIT or Public Domain
+   - tal-chorus: GPL-2
    - whereami: MIT or WTFPL
    - YM7128B_emu: BSD 2-Clause
 
