@@ -5,8 +5,8 @@ directly from the emulator. Screenshots can be saved in multiple formats:
 upscaled (clean, aspect-corrected), rendered (post-shader, exactly what you
 see on screen), or raw (the framebuffer contents with square pixels).
 
-The most common shortcuts: ++ctrl+f5++ / ++cmd+f5++ for screenshots,
-++ctrl+f6++ / ++cmd+f6++ to start and stop audio recording, and
+The most common [shortcuts](../shortcuts.md): ++ctrl+f5++ / ++cmd+f5++ for
+screenshots, ++ctrl+f6++ / ++cmd+f6++ to start and stop audio recording, and
 ++ctrl+f7++ / ++cmd+f7++ for video recording. Raw MIDI and OPL output can
 also be captured for those who want to tinker with game music outside the
 emulator.

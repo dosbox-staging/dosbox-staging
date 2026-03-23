@@ -1,6 +1,7 @@
 # Autoexec
 
-The `[autoexec]` section is the last section in the configuration file. Each
+The `[autoexec]` section is the last section in the
+[configuration file](configuration.md). Each
 line in this section is executed at startup as a DOS command.
 
 Unlike other configuration sections, the autoexec section does not contain

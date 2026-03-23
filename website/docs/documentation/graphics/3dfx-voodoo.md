@@ -1,5 +1,7 @@
 # 3dfx Voodoo
 
+## Overview
+
 The 3dfx Voodoo (1996) was a dedicated 3D-only accelerator card — it
 couldn't even output 2D graphics on its own. You'd install it alongside
 your regular video card and connect them with a pass-through cable. A
