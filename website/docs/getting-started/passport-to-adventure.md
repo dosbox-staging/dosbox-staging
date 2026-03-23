@@ -609,12 +609,12 @@ The below screenshots illustrate the difference between the "true EGA" and
     reach the artistic genius of the EGA originals, plus often they don't have
     the exact same gameplay either. This is especially true for the three
     classic LucasArts games included in this demo collection. Check out the
-    comparison and analysis of the EGA versus VGA versions of **Indiana Jones
-    and the Last Crusade** and **Loom**
+    comparison and analysis of the EGA versus VGA versions of [**Indiana Jones
+    and the Last Crusade**](https://www.mobygames.com/game/534/indiana-jones-and-the-last-crusade-the-graphic-adventure/) and [**Loom**](https://www.mobygames.com/game/176/loom/)
     [here](https://www.superrune.com/tutorials/lucasfilm_ega.php).
 
     In [another article](https://www.arcadeattack.co.uk/brian-moriarty/),
-    Brian Moriatry, the creator of **Loom**, shares his opinion about the VGA
+    Brian Moriatry, the creator of [**Loom**](https://www.mobygames.com/game/176/loom/), shares his opinion about the VGA
     remake of the game (he calls it "an abomination", so apparently, he's quite
     unimpressed...) Note that about one-third of the original game's dialogue
     had been cut from the VGA remake.
