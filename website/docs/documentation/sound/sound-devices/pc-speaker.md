@@ -17,8 +17,23 @@ that had some bass response; later models switched to a tiny piezo buzzer
 that sounded thinner and quieter.
 
 PC speaker emulation is enabled by default. The `impulse` model provides
-the most faithful reproduction; fall back to `discrete` only if a specific
-game has issues with it.
+the most faithful reproduction of the actual speaker hardware; it generally
+improves the accuracy of square-wave effects in games like **Commander Keen**
+and **Duke Nukem** (2D), and can even produce sounds where the `discrete`
+model produces none (e.g., **Wizball**). Fall back to `discrete` only if a
+specific game has problems with the `impulse` model.
+
+<figure markdown>
+  <video controls width=760>
+    <source src="https://www.dosbox-staging.org/static/videos/release-notes/0.79.0/pcspeaker-impulse-wizball.webm" type="video/webm; codecs=vp9,opus">
+    <source src="https://www.dosbox-staging.org/static/videos/release-notes/0.79.0/pcspeaker-impulse-wizball.mp4" type="video/mp4">
+    Your browser does not support the <code>video</code> element.
+  </video>
+
+  <figcaption markdown>
+  Wizball (1987) --- PC speaker audio using the `impulse` model vs `discrete`
+  </figcaption>
+</figure>
 
 
 ## Configuration settings
