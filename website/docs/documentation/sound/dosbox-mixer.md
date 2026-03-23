@@ -2,6 +2,28 @@
 
 ## Overview
 
+The DOSBox mixer combines the output of all emulated sound devices into a
+final stereo signal. Each device gets its own mixer channel, and you can
+adjust volume, stereo panning, reverb, chorus, and crossfeed levels
+independently per channel.
+
+The mixer uses a 32-bit floating-point processing path internally, so
+individual channels cannot be overloaded into clipping by high per-channel
+volume settings. A fixed 20 Hz high-pass filter on the master output removes
+DC offset and subsonic rumble. An auto-levelling
+[compressor](#compressor) on the master channel prevents clipping of the final
+output.
+
+The default master volume is 50% (-6 dB) to avoid audible distortion in games
+with loud output. You can raise it per game as needed (e.g., `MIXER MASTER
+100`), but it's better to boost only the channels that are too quiet (e.g.,
+`MIXER SB 200`).
+
+The mixer runs in its own dedicated thread, which greatly reduces and often
+completely eliminates audio stuttering and glitches. This is especially
+noticeable with the Roland MT-32, FluidSynth, OPL synth, and Red Book CD
+Audio.
+
 
 ## The MIXER command
 
@@ -38,11 +60,36 @@ a handy little summary all available options.
 
 ### Volume
 
+Set the volume of a channel as a percentage:
+
+    MIXER OPL 150
+
+This sets the `OPL` channel to 150% volume. You can set the left and right
+channels independently by separating the values with a colon:
+
+    MIXER OPL 200:100
+
 ### Reverb and chorus
+
+Set the reverb and chorus levels of a channel with `R` and `C` followed by
+the level:
+
+    MIXER OPL R50 C30
+
+This sets the `OPL` channel's reverb level to 50 and chorus level to 30.
+For details on the available presets and what reverb and chorus do, see
+[Mixer effects](mixer-effects.md).
 
 ### Crossfeed
 
-### Advanced usage 
+Set the crossfeed strength of a channel with `X` followed by the level:
+
+    MIXER OPL X50
+
+For details on what crossfeed does and the available presets, see
+[Mixer effects --- Crossfeed](mixer-effects.md#crossfeed).
+
+### Advanced usage
 
 You may change the settings of more than one channel in a single command.
 For example, the command `MIXER x30 opl 150 r50 c30 sb x10 reverse` accomplishes the
