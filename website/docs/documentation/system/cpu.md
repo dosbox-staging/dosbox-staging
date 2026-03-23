@@ -1,5 +1,23 @@
 # CPU
 
+The `cpu_cycles` setting controls the speed of the emulated CPU — it's the
+single most important performance setting in DOSBox Staging. Getting it
+right can mean the difference between a game that plays perfectly and one
+that stutters, crawls, or races through its intro sequence.
+
+Too many cycles and you'll get sound stuttering and input lag as your host
+CPU struggles to keep up. Too few and the game turns into a slideshow.
+Finding the sweet spot for each game is part of the charm of retro gaming.
+
+As a rough guide: early 8088-era games (*Alley Cat*, *Sopwith*) need around
+300 cycles. 386-era titles want roughly 3,000–6,000. 486-class games like
+*Doom* are happy at around 25,000. Late Pentium-era titles such as *Quake*
+can eat 50,000 cycles or more.
+
+The `auto` setting for `core` is the sensible default — it uses the faster
+`dynamic` recompiler for protected-mode games and the more accurate `normal`
+interpreter for real-mode programs. You'll rarely need to override this.
+
 
 ## Configuration settings
 
