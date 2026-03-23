@@ -28,3 +28,8 @@ section.
     shortcuts that conflict with system shortcuts.
 
     Possible values: `on`, `off` *default*{ .default }
+
+
+##### keyboard_layout
+
+:   See [keyboard_layout](../../system/dos/#keyboard_layout).
