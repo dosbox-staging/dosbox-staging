@@ -9,7 +9,7 @@
 #include <regex>
 #include <unordered_map>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weffc++"
