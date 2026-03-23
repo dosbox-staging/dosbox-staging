@@ -1,11 +1,47 @@
 # IBM PS/1 Audio Card
 
-Optional audio card released in 1990 for IBM PS/1 computers (model 2011 and
+Optional audio card released in 1990 for IBM PS/1 computers (models 2011 and
 2121). Relatively few games support this option, and the FM sounds very much
 like the PCjr or Tandy 1000, as they all use the same or similar TI sound
-chips.
+chips. By the time the PS/1 Audio card was released, the Sound Blaster was
+already available, making it largely obsolete.
 
- So, by the time the PS/1 Audio card was released, IBM was now playing catch-up to Tandy. Not that it mattered, because the second generation Sound Blaster was now available, making both audio systems obsolete.
+
+## Compatible games
+
+PS/1 Audio support appears primarily in Sierra SCI1-era titles. Many of these
+games detect PS/1 Audio automatically.
+
+<div class="compact" markdown>
+
+- BattleTech: The Crescent Hawks' Revenge
+- Castle of Dr. Brain
+- Conquests of the Longbow
+- Dagger of Amon Ra, The
+- Freddy Pharkas: Frontier Pharmacist
+- Hoyle Classic Card Games
+- King's Quest V
+- King's Quest VI
+- Leather Goddesses of Phobos! 2
+- Leisure Suit Larry 1 (VGA remake)
+- Leisure Suit Larry 5
+- Leisure Suit Larry 6
+- Lost Secret of the Rainforest
+- Mixed Up Fairy Tales
+- Pepper's Adventures in Time
+- Police Quest 3
+- Police Quest: In Pursuit of the Death Angel (VGA remake)
+- Prince of Persia 1
+- Prince of Persia 2
+- Quest for Glory I (VGA remake)
+- Quest for Glory 2
+- Shanghai II: Dragon's Eye
+- Silpheed
+- Space Quest I (VGA remake)
+- Space Quest IV
+- Treehouse, The
+
+</div>
 
 
 ## Configuration settings
