@@ -57,6 +57,10 @@ markdown_extensions:
   - toc:
       permalink: true
 
+# Hooks
+hooks:
+  - hooks/toc_depth.py
+
 # Plugins
 plugins:
   - search
