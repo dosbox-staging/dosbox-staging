@@ -13,9 +13,9 @@ which characters are produced by which keys.
 
 To see what's available on your system:
 
-- `--list-countries` — lists all supported countries with their numeric codes
-- `--list-layouts` — lists all supported keyboard layouts with their codes
-- `--list-code-pages` — lists all bundled code pages (screen fonts)
+- [`--list-countries`](command-line.md#-list-countries) — lists all supported countries with their numeric codes
+- [`--list-layouts`](command-line.md#-list-layouts) — lists all supported keyboard layouts with their codes
+- [`--list-code-pages`](command-line.md#-list-code-pages) — lists all bundled code pages (screen fonts)
 
 These regional settings are configured in the `[dos]` section:
 

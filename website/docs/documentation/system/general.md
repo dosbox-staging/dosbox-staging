@@ -1,5 +1,7 @@
 # General
 
+## Overview
+
 The `[dosbox]` section contains the core system settings — what type of
 machine to emulate, how much memory to give it, and various behaviours that
 affect the overall emulation.
@@ -96,7 +98,8 @@ section.
       DOS video mode's refresh rate.
     - `host` -- Override the refresh rate of all DOS video modes with the
       refresh rate of your monitor. This might allow you to play some 70 Hz
-      VGA games with perfect vsync on a 60 Hz fixed refresh rate monitor.
+      VGA games with perfect [vsync](../graphics/display-and-window.md#vsync)
+      on a 60 Hz fixed refresh rate monitor.
     - `<number>` -- Override the refresh rate of all DOS video modes with a
       fixed rate specified in Hz (valid range is from 24.000 to 1000.000).
       This is a niche option for a select few fast-paced mid to late 1990s 3D

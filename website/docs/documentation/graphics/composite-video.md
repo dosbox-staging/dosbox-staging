@@ -1,5 +1,7 @@
 # Composite video
 
+## Overview
+
 Before dedicated RGB monitors became common in the late 1980s, many home PC
 users connected their computers to TVs or composite video monitors. The
 NTSC composite signal creates what are known as "artifact colours" —
@@ -26,7 +28,7 @@ you'll need to set `composite = on` manually.
 
 You can set the CGA composite video parameters in the `[composite]`
 configuration section. CGA composite monitor emulation is only available for
-`cga`, `pcjr`, and `tandy` machine types.
+`cga`, `pcjr`, and `tandy` [machine](../system/general.md#machine) types.
 
 
 ##### composite

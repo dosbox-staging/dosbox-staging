@@ -1,5 +1,7 @@
 # Ethernet
 
+## Overview
+
 DOSBox Staging can emulate a Novell NE2000-compatible network card, giving
 your emulated DOS machine full TCP/IP networking capabilities. The virtual
 network provides DHCP, so the emulated machine gets its own IP address just
@@ -57,7 +59,9 @@ section.
     !!! note
 
         Addresses 220 and 240 might not be available as they're assigned to
-        the Sound Blaster and Gravis UltraSound by default.
+        the [Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md#sbbase)
+        and [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md#gusbase)
+        by default.
 
 
 ##### nicirq

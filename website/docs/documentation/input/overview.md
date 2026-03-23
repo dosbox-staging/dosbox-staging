@@ -5,7 +5,8 @@ and joystick. For most games, everything works out of the box without any
 configuration.
 
 The built-in **key mapper** (++ctrl+f1++ on Windows/Linux, ++cmd+f1++ on
-macOS) lets you remap any key, mouse button, or joystick control. This is
+macOS; see [Keyboard shortcuts](../shortcuts.md)) lets you remap any key,
+mouse button, or joystick control. This is
 handy when a game uses an awkward key layout or when your controller doesn't
 map cleanly to the emulated game port.
 

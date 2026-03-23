@@ -13,8 +13,8 @@ emulate these specific stick types if a game requires it.
 
 Because the original game port was analog, deadzone and calibration settings
 actually matter. If your character drifts without input or the axes feel
-off, adjusting the deadzone or using the joystick calibration hotkeys can
-help sort things out.
+off, adjusting the deadzone or using the joystick calibration hotkeys (see
+[Keyboard shortcuts](../shortcuts.md)) can help sort things out.
 
 
 ## Joystick calibration

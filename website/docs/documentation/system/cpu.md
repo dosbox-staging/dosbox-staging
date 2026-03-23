@@ -1,5 +1,7 @@
 # CPU
 
+## Overview
+
 The `cpu_cycles` setting controls the speed of the emulated CPU — it's the
 single most important performance setting in DOSBox Staging. Getting it
 right can mean the difference between a game that plays perfectly and one
@@ -216,11 +218,13 @@ section.
 
 ##### cycledown
 
-:   Number of cycles to subtract with the `Dec Cycles` hotkey (`20` by
-    default). Values lower than 100 are treated as a percentage decrease.
+:   Number of cycles to subtract with the `Dec Cycles`
+    [hotkey](../shortcuts.md) (`20` by default). Values lower than 100 are
+    treated as a percentage decrease.
 
 
 ##### cycleup
 
-:   Number of cycles to add with the `Inc Cycles` hotkey (`10` by default).
-    Values lower than 100 are treated as a percentage increase.
+:   Number of cycles to add with the `Inc Cycles` [hotkey](../shortcuts.md)
+    (`10` by default). Values lower than 100 are treated as a percentage
+    increase.

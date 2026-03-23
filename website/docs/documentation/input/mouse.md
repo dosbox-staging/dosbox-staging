@@ -7,7 +7,8 @@ point-and-click adventures (*Monkey Island*, *Day of the Tentacle*) and FPS
 games (*Doom*, *Quake*) will thank you.
 
 Click inside the DOSBox window to capture the mouse; press the middle mouse
-button or ++ctrl+f10++ / ++cmd+f10++ to release it. If your mouse has no
+button or ++ctrl+f10++ / ++cmd+f10++ to release it (see
+[Keyboard shortcuts](../shortcuts.md)). If your mouse has no
 middle button, the keyboard shortcut is your friend.
 
 The `mouse_raw_input` setting bypasses your host OS's mouse acceleration,
@@ -30,7 +31,8 @@ DOSBox Staging emulates several serial (COM port) mouse types:
   Microsoft mice. A few programs require this type.
 
 To enable a serial mouse, use the `SERIAL 1 mouse` command (this attaches it
-to the COM1 port), or edit the `[serial]` section of the configuration file.
+to the COM1 port), or edit the [Serial ports](../networking/serial-ports.md)
+configuration.
 By default, DOSBox Staging tries to determine what type of mouse the program
 expects. See [com_mouse_model](#com_mouse_model) for details.
 
