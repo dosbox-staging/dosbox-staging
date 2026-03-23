@@ -181,6 +181,11 @@ nav:
         - documentation/input/mouse.md
         - documentation/input/joystick.md
 
+      - System:
+        - documentation/system/general.md
+        - documentation/system/cpu.md
+        - documentation/system/dos.md
+
       - documentation/regional.md
       - documentation/shortcuts.md
 
