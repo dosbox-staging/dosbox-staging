@@ -229,3 +229,57 @@ else:
   $HOME/.config/mt32-roms
 
 
+## Configuration settings
+
+Roland MT-32 settings are to be configured in the `[mt32]` section.
+
+
+##### model
+
+:   Roland MT-32/CM-32L model to use. You must have the ROM files for the
+    selected model available (see [romdir](#romdir)). The lookup for the best
+    models is performed in order as listed.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `auto` *default*{ .default } -- Pick the best available model.
+    - `cm32l` -- Pick the best available CM-32L model.
+    - `mt32_old` -- Pick the best available "old" MT-32 model (v1.0x).
+    - `mt32_new` -- Pick the best available "new" MT-32 model (v2.0x).
+    - `mt32` -- Pick the best available MT-32 model.
+    - `<version>` -- Use the exact specified model version (e.g., `mt32_204`).
+
+    </div>
+
+    !!! note
+
+        Run `MIXER /LISTMIDI` to see the list of available models.
+
+
+##### mt32_filter
+
+:   Filter for the Roland MT-32/CM-32L audio output.
+
+    Possible values:
+
+    - `off` *default*{ .default } -- Don't filter the output.
+    - `<custom>` -- Custom filter definition; see
+      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      for details.
+
+
+##### romdir
+
+:   The directory containing the Roland MT-32/CM-32L ROMs (unset by default).
+    The directory can be absolute or relative, or leave it unset to use the
+    `mt32-roms` directory in your DOSBox configuration directory. Other common
+    system locations will be checked as well.
+
+    !!! note
+
+        The file names of the ROM files do not matter; the ROMs are identified
+        by their checksums. Both interleaved and non-interleaved ROM files are
+        supported.
+
