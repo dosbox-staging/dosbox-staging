@@ -1,33 +1,24 @@
 # PC speaker
 
-The PC Speaker was the integrated speaker from the earliest IBM PC’s. It was
-really only meant for simple beeps, but ended up widely used by PC games as it
-was the lowest common-denominator for PC sound, despite its very limited
-capabilities.
+The PC speaker was the built-in speaker in every IBM PC and compatible from
+day one. It was really only meant for simple beeps and diagnostic codes, but
+it ended up as the lowest common denominator for PC game audio — every PC
+had one, so every game could count on it being there.
 
-It is effectively a single-channel square-wave generator, and with
-considerable CPU overhead it was possible to get some half-decent sound out of
-it as demonstrated by RealSound.
+Technically, it's a single-channel square-wave generator. Not exactly hi-fi.
+But with clever programming tricks, developers managed to coax surprisingly
+decent sound out of it. Games like *Alley Cat* and *Sopwith* made the most
+of its musical abilities, while *Castle Wolfenstein* even managed digitised
+speech — impressive given the hardware's severe limitations.
 
-Sound quality was heavily dependent on the type of speaker and the placement
-and PC case it was built into. Originally a dynamic speaker was used, but
-later model PCs used a tiny piezo speaker instead which further reduced sound
-quality and volume.
+Sound quality varied quite a bit depending on the actual speaker hardware
+and the PC case it was mounted in. Early PCs used a proper dynamic speaker
+that had some bass response; later models switched to a tiny piezo buzzer
+that sounded thinner and quieter.
 
-PC Speaker emulation is enabled by default, but can be disabled by setting
-pcspeaker=false in the [speaker] section of the DOSBox-X config file.
-
-
-With clever programming, the PC speaker could act as a crude synth, or even
-play digital audio, enabling speech in games like the original Castle
-Wolfenstein.
-
-RealSound
-
-spellcasting 101
-
-
-Windwalker
+PC speaker emulation is enabled by default. The `impulse` model provides
+the most faithful reproduction; fall back to `discrete` only if a specific
+game has issues with it.
 
 
 ## Configuration settings

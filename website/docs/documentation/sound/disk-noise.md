@@ -1,5 +1,16 @@
 # Disk noise
 
+For those who miss the gentle whirring and clicking of old hard drives and
+floppies, DOSBox Staging can play emulated disk noises. It's a small touch,
+but it adds a surprising amount of atmosphere — there's something oddly
+satisfying about hearing the floppy drive chatter while a game loads.
+
+For the full "waiting for the game to load" experience, pair disk noises
+with throttled disk speeds (see the
+[floppy_disk_speed](../system/general.md#floppy_disk_speed) and
+[hard_disk_speed](../system/general.md#hard_disk_speed) settings). The
+volume is adjustable via the `DISKNOISE` mixer channel.
+
 
 ## Configuration settings
 
