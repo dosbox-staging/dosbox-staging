@@ -186,6 +186,11 @@ nav:
         - documentation/system/cpu.md
         - documentation/system/dos.md
 
+      - Networking:
+        - documentation/networking/serial-ports.md
+        - documentation/networking/ipx.md
+        - documentation/networking/ethernet.md
+
       - documentation/regional.md
       - documentation/shortcuts.md
 
