@@ -143,33 +143,6 @@ TODO image
 MIDI related settings are to be configured in the `[midi]` section.
 
 
-##### mididevice
-
-:   Selects the MIDI device where data from the emulated MPU-401 MIDI
-    interface is sent.
-
-    Possible values:
-
-      - `none` --- Disable MIDI output.
-
-      - `auto` *default*{ .default } --- Either one of the built-in MIDI
-        synthesisers (if [midiconfig](#midiconfig) is set to `fluidsynth` or
-        `mt32`), or a MIDI device external to DOSBox which might be a software
-        synthesiser or a physical device (any other [midiconfig](#midiconfig)
-        value). See [midiconfig](#midiconfig) for all possible configuration
-        combinations.
-
-      - `fluidsynth` --- The built-in FluidSynth MIDI synthesiser (SoundFont
-        player). See the [FluidSynth](TODO) configuration settings for further
-        details.
-
-      - `mt32` --- The built-in Roland MT-32 synthesiser. See the [Roland
-        MT-32](../sound-devices/roland-mt-32) configuration settings for further details.
-
-      - `coreaudio` *(macOS only)* --- Use the built-in macOS MIDI synthesiser.
-      - `coremidi` *(macOS only)*  --- Any device that has been configured in
-        the macOS Audio MIDI Setup.
-
 ##### midiconfig
 
 :   Configuration options for the selected MIDI device.
@@ -205,6 +178,37 @@ MIDI related settings are to be configured in the `[midi]` section.
         overflowing. In that case, add `delaysysex`, e.g., `midiconfig = 2
         delaysysex`.
 
+
+##### mididevice
+
+:   Selects the MIDI device where data from the emulated MPU-401 MIDI
+    interface is sent.
+
+    Possible values:
+
+      - `port` *default*{ .default } --- A MIDI port of the host operating
+        system's MIDI interface. You can configure the port to use with the
+        [midiconfig](#midiconfig) setting.
+
+      - `fluidsynth` --- The built-in FluidSynth MIDI synthesiser (SoundFont
+        player). See the [FluidSynth](../sound-devices/general-midi/#fluidsynth)
+        configuration settings for further details.
+
+      - `mt32` --- The built-in Roland MT-32 synthesiser. See the [Roland
+        MT-32](../sound-devices/roland-mt-32/#configuration-settings)
+        configuration settings for further details.
+
+      - `soundcanvas` --- The internal Roland SC-55 synthesiser (requires a
+        CLAP audio plugin). See the
+        [Sound Canvas](../sound-devices/general-midi/#sound-canvas)
+        configuration settings for further details.
+
+      - `coreaudio` *(macOS only)* --- Use the built-in macOS MIDI synthesiser.
+        The SoundFont to use can be specified with [midiconfig](#midiconfig).
+
+      - `none` --- Disable MIDI output.
+
+
 ##### mpu401
 
 :   MPU-401 MIDI interface mode to emulate.
@@ -224,4 +228,19 @@ MIDI related settings are to be configured in the `[midi]` section.
       written to the MPU to the MIDI device in real-time. Sound Blaster cards
       can only operate in UART mode, and virtually all General MIDI games need
       require only UART mode.
+
+
+##### raw_midi_output
+
+:   Enable raw, unaltered MIDI output (`off` by default). The MIDI drivers of
+    many games don't fully conform to the MIDI standard, which makes editing
+    their MIDI recordings error-prone in MIDI sequencers. DOSBox corrects the
+    MIDI output of such games by default with no audible difference; it only
+    affects the data representation.
+
+    Only enable this if you need to capture the raw, unaltered MIDI output of
+    a program, e.g., when working with music applications or debugging MIDI
+    issues.
+
+    Possible values: `on`, `off` *default*{ .default }
 

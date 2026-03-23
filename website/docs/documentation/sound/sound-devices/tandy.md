@@ -79,3 +79,63 @@ The Sound Blaster 1.0-2.0 all use DMA1 and do not play nicely with the PSSJ soun
 
 
 http://nerdlypleasures.blogspot.com/2022/04/list-of-pcjr-and-tandy-exclusive.html
+
+
+## Configuration settings
+
+Tandy 3 Voice settings are to be configured in the `[speaker]` section.
+
+
+##### tandy
+
+:   Set the Tandy/PCjr 3 Voice sound emulation.
+
+    Possible values:
+
+    - `auto` *default*{ .default } -- Automatically enable Tandy/PCjr sound
+      for the `tandy` and `pcjr` machine types only.
+    - `on` -- Enable Tandy/PCjr sound with DAC support, when possible.
+      Most games also need the machine set to `tandy` or `pcjr` to work.
+    - `psg` -- Only enable the card's three-voice programmable sound generator
+      without DAC to avoid conflicts with other cards using DMA 1.
+    - `off` -- Disable Tandy/PCjr sound.
+
+
+##### tandy_dac_filter
+
+:   Filter for the Tandy DAC output.
+
+    Possible values:
+
+    - `on` *default*{ .default } -- Filter the output.
+    - `off` -- Don't filter the output.
+    - `<custom>` -- Custom filter definition; see
+      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      for details.
+
+
+##### tandy_fadeout
+
+:   Fade out the Tandy synth output after the last IO port write.
+
+    Possible values:
+
+    - `off` *default*{ .default } -- Don't fade out; residual output will
+      play forever.
+    - `on` -- Wait 0.5s before fading out over a 0.5s period.
+    - `<custom>` -- Custom fade-out definition; see
+      [opl_fadeout](../adlib-cms-sound-blaster/#opl_fadeout) for details on
+      the format.
+
+
+##### tandy_filter
+
+:   Filter for the Tandy synth output.
+
+    Possible values:
+
+    - `on` *default*{ .default } -- Filter the output.
+    - `off` -- Don't filter the output.
+    - `<custom>` -- Custom filter definition; see
+      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      for details.

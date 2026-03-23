@@ -28,3 +28,35 @@ spellcasting 101
 
 
 Windwalker
+
+
+## Configuration settings
+
+PC speaker settings are to be configured in the `[speaker]` section.
+
+
+##### pcspeaker
+
+:   PC speaker emulation model.
+
+    Possible values:
+
+    - `impulse` *default*{ .default } -- A very faithful emulation of the PC
+      speaker's output. Works with most games, but may result in garbled sound
+      or silence in a small number of programs.
+    - `discrete` -- Legacy simplified PC speaker emulation; only use this on
+      specific titles that give you problems with the `impulse` model.
+    - `none`/`off` -- Don't emulate the PC speaker.
+
+
+##### pcspeaker_filter
+
+:   Filter for the PC speaker output.
+
+    Possible values:
+
+    - `on` *default*{ .default } -- Filter the output.
+    - `off` -- Don't filter the output.
+    - `<custom>` -- Custom filter definition; see
+      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      for details.
