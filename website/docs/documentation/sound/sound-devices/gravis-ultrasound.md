@@ -1,43 +1,28 @@
 # Gravis UltraSound
 
-The Gravis UltraSound was an advanced synthesizer released by an unlikely
-manufacturer: Canadian joystick company Advanced Gravis. Its audio was far
-ahead of any other consumer device of the time, supporting wave-table
-synthesis, stereo sound, 14-channel playback at 44.1 KHz or a whopping 32
-channels of playback at 19.2 KHz.
+The Gravis UltraSound (GUS) was released in 1992 by an unlikely
+manufacturer: Canadian joystick company Advanced Gravis. Its audio
+capabilities were far ahead of anything else on the consumer market —
+wavetable synthesis, stereo sound, and up to 32 channels of simultaneous
+playback.
 
-However, the Ultrasound eschewed any attempt at backwards-compatibility with
-AdLib or Soundblaster cards. Programs had to be written to specifically take
-advantage of its capabilities. Many DOS users kept a Sound Blaster in their PC
-in addition to an Ultrasound, in case they needed to run a program that did
-not support the more advanced card. (And in DOSBox, this can be imitated by
-turning on both devices in your configuration file, which is recommended.)
+The catch? The GUS made no attempt at backwards compatibility with AdLib or
+Sound Blaster cards. Programs had to be written specifically for it. Many
+DOS gamers kept a Sound Blaster alongside their GUS for titles that lacked
+native support — and in DOSBox Staging, you can do the same by enabling
+both devices in your configuration.
 
-One quirk of the Ultrasound is that, unlike most synthesizers, it did not come
-with any voices pre-installed on the card. All voices had to be installed from
-disk either at driver load time or by the application. Because of this, a set
-of drivers and "patch files" is needed in order to use the Ultrasound in
-DOSBox. Due to incompatibilities between the license of the patch files and
-DOSBox's GPL license, these files cannot be distributed with DOSBox, so you
-will need to download them from another website:
+Another quirk: unlike most sound cards, the GUS shipped with no built-in
+instrument sounds. All voices had to be loaded from disk via "patch files"
+at driver load time. Due to licensing restrictions, these patch files can't
+be distributed with DOSBox Staging, so you'll need to obtain them
+separately.
 
-The Gravis Ultrasound is configured under the gus category. It has several
-options, which are explained in the comments in the configuration file. Of
-particular note is the ultradir option, which must be set to the path to the
-patch files inside DOSBox. (Which is likely not the same as the path on your
-real hard drive.)
-
-
-
-On the plus side, when games did offer support for the Gravis, it provided a far greater audio capability than anything else on the home consumer market. It allowed for 14 channels at 44kHz playback or 32 channels at 19.2kHz.
-
-Several games require the use of Gravis drivers, and as copyrighted software from a commercial company, these drivers are not included with the open-sourced DOSBox installation. You need to install the drivers within DOSBox session to a subdirectory and afterwards change ultradir= to point to this directory path in Windows, macOS or Linux.
-
-
-
-
-
-https://retronn.de/imports/gus_config_guide.html
+Where the GUS truly shone was in the demoscene and tracker music community.
+*Second Reality* by Future Crew — widely considered one of the greatest DOS
+demos ever made — was designed to sound its best on a GUS. Games with
+native GUS support, like *Star Control II*, also benefited enormously from
+its superior audio capabilities.
 
 
 ## Configuration settings
