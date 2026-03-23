@@ -1,5 +1,24 @@
 # General
 
+The `[dosbox]` section contains the core system settings — what type of
+machine to emulate, how much memory to give it, and various behaviours that
+affect the overall emulation.
+
+The `machine` setting selects which video adapter to emulate. The default
+`svga_s3` (an S3 Trio64 SVGA card) covers the widest range of games.
+You'll only need to change it for titles that specifically require CGA, EGA,
+Tandy, or Hercules graphics — the
+[Getting Started guide](../../getting-started/setting-up-prince-of-persia.md)
+walks through a practical example of this.
+
+The default 16 MB of RAM is more than enough for nearly all DOS software.
+A few late-era games want 32 MB or even 64 MB, but these are rare
+exceptions.
+
+Disk speed can be throttled for games that break when disk access is
+instantaneous — some titles use disk loading time as a crude timing
+mechanism. Most users won't need to touch these settings at all.
+
 
 ## Configuration settings
 
