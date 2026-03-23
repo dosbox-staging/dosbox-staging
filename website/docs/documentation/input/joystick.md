@@ -1,5 +1,21 @@
 # Joystick
 
+The classic DOS game port was a 15-pin connector supporting up to 4 analog
+axes and 4 buttons — just enough for two basic 2-button joysticks. DOSBox
+Staging automatically detects your modern USB controller and maps it to the
+emulated game port.
+
+Some flight simulators of the era expected very specific hardware.
+*Wing Commander*, *X-Wing*, and *F-15 Strike Eagle III* were often played
+with dedicated flight sticks, and some titles had built-in support for the
+Thrustmaster FCS or CH Flightstick Pro. The `joysticktype` setting lets you
+emulate these specific stick types if a game requires it.
+
+Because the original game port was analog, deadzone and calibration settings
+actually matter. If your character drifts without input or the axes feel
+off, adjusting the deadzone or using the joystick calibration hotkeys can
+help sort things out.
+
 
 ## Configuration settings
 
