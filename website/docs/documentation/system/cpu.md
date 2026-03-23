@@ -19,6 +19,54 @@ The `auto` setting for `core` is the sensible default — it uses the faster
 interpreter for real-mode programs. You'll rarely need to override this.
 
 
+## Configuration examples
+
+**Fixed speed globally** --- Roughly emulates an i486DX2-66 in both real and
+protected mode:
+
+``` ini
+[cpu]
+cpu_cycles = 25000
+cpu_cycles_protected = auto
+```
+
+**Different real and protected mode speeds** --- 20k cycles for real mode,
+400k for protected mode, with throttling enabled so the host CPU doesn't get
+overloaded:
+
+``` ini
+[cpu]
+cpu_cycles = 20000
+cpu_cycles_protected = 400000
+cpu_throttle = on
+```
+
+**Max speed** --- As fast as your host CPU can handle. Useful when compiling
+programs, rendering 3D images, or playing late-90s 3D games at high
+resolutions:
+
+``` ini
+[cpu]
+cpu_cycles = max
+cpu_cycles_protected = max
+```
+
+!!! warning
+
+    Using `max` cycles can cause problems: some games crash or misbehave
+    when the emulated CPU is "too fast", the effective speed varies across
+    different host machines, and audio glitches are common. It's best to use
+    the lowest fixed cycles value that runs the game at an acceptable speed.
+
+
+## Pentium MMX
+
+Setting `cputype = pentium_mmx` enables Pentium MMX instruction set emulation
+for late-90s demoscene productions and games with MMX-specific enhancements
+(e.g., **Extreme Assault**, **Z.A.R.**). It also enables the MMX-only
+real-time resonant filters in **Impulse Tracker**.
+
+
 ## Configuration settings
 
 You can set the CPU emulation parameters in the `[cpu]` configuration
