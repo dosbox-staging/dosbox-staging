@@ -1,174 +1,336 @@
+---
+toc_depth: 1
+---
+
+# The DOS eras
+
+## Overview
+
+The DOS era spanned roughly 15 years---from the original IBM PC in 1981 to the
+final wave of DOS games in the late 1990s. Hardware evolved dramatically during
+this period, and games were designed for the capabilities of their time.
+Matching the emulated hardware to a game's era gives the most authentic
+experience.
+
+The key settings to adjust are [`machine`](system/general.md#machine) (graphics
+standard), [`cputype`](system/cpu.md#cputype),
+[`cpu_cycles`](system/cpu.md#cpu_cycles) (CPU speed), and the sound device. See
+[A short DOS primer](dos-primer.md) for an explanation of these concepts.
 
-# Early days
 
+## The early days (1981--1984)
 
-peak dos days 1989-1997
+The IBM PC launched in 1981 as a business machine, but games appeared almost
+immediately. The hardware was modest: an Intel 8088 running at 4.77 MHz, CGA
+graphics offering four colours at 320x200, and the PC speaker as the only sound
+source. Software arrived on 360 KB floppy disks, and many early games were
+"booter" titles that ran directly from the floppy without an operating system.
 
+### Notable games
 
-# The Tandy
+- [Wizardry (1981)](https://www.mobygames.com/game/1209/wizardry-proving-grounds-of-the-mad-overlord/) --- pioneering dungeon-crawling RPG
+- [Castle Wolfenstein (1981)](https://www.mobygames.com/game/3115/castle-wolfenstein/) --- stealth action pioneer
+- [Microsoft Flight Simulator (1982)](https://www.mobygames.com/game/4003/microsoft-flight-simulator-v10/) --- one of the first major PC games
+- [Zork (1982)](https://www.mobygames.com/game/50/zork-the-great-underground-empire/) --- iconic text adventure
+- [Ultima III: Exodus (1983)](https://www.mobygames.com/game/878/exodus-ultima-iii/) --- foundational RPG
+- [Lode Runner (1983)](https://www.mobygames.com/game/243/lode-runner/) --- influential puzzle-platformer
+- [The Hitchhiker's Guide to the Galaxy (1984)](https://www.mobygames.com/game/88/the-hitchhikers-guide-to-the-galaxy/) --- legendary Infocom text adventure
+- [Alley Cat (1984)](https://www.mobygames.com/game/190/alley-cat/) --- beloved CGA platformer
+- [King's Quest (1984)](https://www.mobygames.com/game/122/kings-quest/) --- first animated adventure game
+- [Rogue (1984)](https://www.mobygames.com/game/1743/rogue/) --- the original roguelike
+
+### Typical hardware
+
+| Component | Typical spec |
+|-----------|--------------|
+| CPU       | Intel 8088, 4.77 MHz |
+| Graphics  | CGA |
+| Sound     | PC speaker |
+| RAM       | 256--640 KB |
+
+### DOSBox Staging config
+
+``` ini
+[dosbox]
+machine = cga
+
+[cpu]
+cpu_cycles = 300
+
+[speaker]
+pcspeaker = on
+
+[sblaster]
+sbtype = none
+```
 
-1984
 
-The IBM PC computing platform supported gaming from the beginning, but at first its graphical and sound capabilities were not that much more advanced than an Apple II's. Other inexpensive home computers of the day (Atari 800, Commodore 64, TI-99/4A) could run rings around the IBM PC in the video and audio departments. IBM sought to improve its PC line's graphics and sound in an affordable system which became the PCjr., but that was a flop.  Tandy cloned the graphics and sound of the PCjr. and put it into a much more PC-compatible system, the Tandy 1000.  Between the two, the exclusive PCjr./Tandy graphics and sound hardware received wide support from game developers in the mid and late 1980s.  In this article, I will attempt to give a definitive list of games which have "better" graphica or sound on a PCjr. or Tandy 1000 due to this support or have unique video and audio support even if the game can utilize EGA, VGA, Adlib, Game Blaster or Sound Blaster or MT-32.
-The Tandy/PCjr. Enhancements - A Short History
+## EGA and Tandy (1984--1987)
 
+The IBM PC/AT introduced the 286 CPU in 1984 alongside EGA graphics, which
+offered 16 colours from a palette of 64---a big step up from CGA. Around the
+same time, Tandy cloned the failed IBM PCjr's enhanced graphics and sound
+hardware into the much more successful Tandy 1000 line, giving budget-conscious
+gamers 16-colour graphics and three-voice sound. The PC speaker remained the
+dominant sound source on non-Tandy machines, though the AdLib card appeared in
+1987 to change that.
 
-# AdLib and VGA
+### Notable games
 
-1987 both
+- [Ultima IV: Quest of the Avatar (1985)](https://www.mobygames.com/game/884/ultima-iv-quest-of-the-avatar/) --- pioneering RPG with a moral system
+- [The Bard's Tale (1985)](https://www.mobygames.com/game/819/tales-of-the-unknown-volume-i-the-bards-tale/) --- classic party-based RPG
+- [Where in the World Is Carmen Sandiego? (1985)](https://www.mobygames.com/game/163/where-in-the-world-is-carmen-sandiego/) --- educational classic
+- [Starflight (1986)](https://www.mobygames.com/game/115/starflight/) --- open-world space exploration
+- [Might and Magic: Book One (1986)](https://www.mobygames.com/game/1619/might-and-magic-book-one-secret-of-the-inner-sanctum/) --- sprawling first-person RPG
+- [Space Quest (1986)](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/) --- humorous sci-fi adventure
+- [Sid Meier's Pirates! (1987)](https://www.mobygames.com/game/214/sid-meiers-pirates/) --- genre-defining open-world adventure
+- [Leisure Suit Larry (1987)](https://www.mobygames.com/game/379/leisure-suit-larry-in-the-land-of-the-lounge-lizards/) --- adult comedy adventure
+- [Maniac Mansion (1987)](https://www.mobygames.com/game/714/maniac-mansion/) --- SCUMM engine debut
+- [Dungeon Master (1987)](https://www.mobygames.com/game/834/dungeon-master/) --- real-time dungeon crawling pioneer
+
+### Typical hardware
+
+| Component | Typical spec |
+|-----------|--------------|
+| CPU       | Intel 286, 8--12 MHz |
+| Graphics  | EGA (or Tandy) |
+| Sound     | PC speaker (Tandy 3-voice, AdLib from 1987) |
+| RAM       | 640 KB |
+
+### DOSBox Staging config
+
+``` ini
+[dosbox]
+machine = ega
+
+[cpu]
+cpu_cycles = 1500
+
+[speaker]
+pcspeaker = on
+```
+
+!!! tip
 
+    Set `machine = tandy` for games that support Tandy graphics and sound.
+    Many mid-1980s Sierra and other titles look and sound significantly better
+    in Tandy mode.
 
 
+## The VGA and Sound Blaster revolution (1987--1990)
 
-CGA - 1981
+Two hardware breakthroughs transformed PC gaming in the late 1980s. VGA
+graphics arrived in 1987 with 256 colours in Mode 13h (320x200), enabling
+visuals that could rival the Amiga. On the audio side, the AdLib card (1987)
+brought FM synthesis to the PC, followed by the Sound Blaster (1989) which
+added digital audio playback. The 386 CPU provided the processing power to
+drive increasingly ambitious games. This period marks the moment PC gaming
+became a serious force.
 
+### Notable games
+
+- [Wasteland (1988)](https://www.mobygames.com/game/287/wasteland/) --- post-apocalyptic RPG that inspired Fallout
+- [Pool of Radiance (1988)](https://www.mobygames.com/game/502/pool-of-radiance/) --- first Gold Box D&D RPG
+- [Ultima V: Warriors of Destiny (1988)](https://www.mobygames.com/game/808/ultima-v-warriors-of-destiny/) --- deep narrative RPG
+- [SimCity (1989)](https://www.mobygames.com/game/848/simcity/) --- city-building pioneer
+- [Prince of Persia (1989)](https://www.mobygames.com/game/196/prince-of-persia/) --- rotoscoped animation breakthrough
+- [Quest for Glory: So You Want to Be a Hero (1989)](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) --- adventure-RPG hybrid
+- [Populous (1989)](https://www.mobygames.com/game/613/populous/) --- the original god game
+- [The Secret of Monkey Island (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) --- peak LucasArts adventure
+- [Wing Commander (1990)](https://www.mobygames.com/game/3/wing-commander/) --- cinematic space combat
+- [Railroad Tycoon (1990)](https://www.mobygames.com/game/70/sid-meiers-railroad-tycoon/) --- business simulation classic
+
+### Typical hardware
+
+| Component | Typical spec |
+|-----------|--------------|
+| CPU       | Intel 386DX, 25--33 MHz |
+| Graphics  | VGA |
+| Sound     | Sound Blaster (or AdLib) |
+| RAM       | 1--4 MB |
+
+### DOSBox Staging config
+
+``` ini
+[dosbox]
+machine = vgaonly
+
+[cpu]
+cpu_cycles = 6000
+
+[sblaster]
+sbtype = sb1
+```
 
-HGC (Hercules) - 1982
 
-
-EGA - 1984
-
-By 1987, EGA support was commonplace.[15] Most software made up to 1991 could run in EGA, although the vast majority of commercial games used 320×200 with 16 colors for backwards compatibility with CGA and Tandy, and to support users who did not own an enhanced EGA monitor. 350-line modes were mostly used by freeware/shareware games and application software, although SimCity is a notable example of a commercial game that runs in 640×350×16 mode.[16][17]
-
-
-VGA - 1987
-
-
-
-
-
-# 
-
-
-
-# 
-
-AMD 386DX-40 - 1991
-
-While Intel's 386 CPUs had topped out at 33 MHz in 1989, AMD introduced 40 MHz versions of both its 386DX and 386SX out of the gate, extending the lifespan of the architecture. In the following two years the AMD 386DX-40 saw popularity with small manufacturers of PC clones and with budget-minded computer enthusiasts because it offered near-80486 performance at a much lower price than an actual 486.[4] Generally the 386DX-40 performs nearly on par with a 25 MHz 486 due to the 486 needing fewer clock cycles per instruction, thanks to its tighter pipelining (more overlapping of internal processing) in combination with an on-chip CPU cache. However, its 32-bit 40 MHz data bus gave the 386DX-40 comparatively good memory and I/O performance.[5]
-
-
-
-https://www.redhill.net.au/c/c-4.php#dx40
-
-The all-time classic of 386 chips, and in our view the greatest individual X86 CPU of them all — certainly the one that brought modern computing to more people than any other.
-
-This was the last and greatest 386, and AMD made it in enormous quantities. The DX-40 was vastly cheaper than a 486SX, which usually could not out-perform it anyway, and easily faster than Intel's best 386, the DX-33.
-
-For year after year these sold, and it seemed like they would never die. Working techies used to love them because 386DX-40 systems just went and went and went. The technology was stable and more than sufficient to cope with the software of the day. If you had to name just one product that made everyday computing reliable and affordable, this would be it.
-
-Put 33 MHz 486 systems to shame, and was able to keep on doing so right up until the day of the 486-66.
-fast, very cheap, and completely trouble-free.
-
-
-
-
-486DX/2-66 - 1992
-
-The classic 486, memorable for several different reasons. The DX-4/66 story started with the original Intel part, which was a genuine speed demon by the standards of the day, and very expensive indeed. 
-
-When you bought a DX/2-66, the performance difference from your previous unit — be that 386DX-40, 486SX or 486DLC — was immediately obvious, more so than many another upgrade. There was nothing subtle about the extra snap your system had after dropping in a DX/2.
-
-
-
-Intel Pentium 60 - 1993
-
-It became the best-selling CPU in the world and, in various flavours, remained so for four years — a very long time in this industry. 
-
-
-Intel Pentium 90 - 1994
-
-The Pentium is one of the all-time classic CPUs, and though it seems strange to think of it that way now, the 100 was one of the all-time classic Pentiums.
-
-
-Pentium-133 - 1995
-
-Arguably the definitive Pentium, and certainly one of the very best. Like the 100 and the 166 it ran a 66MHz bus to give it good I/O performance, and like those two it was the fastest X86 of all for quite some time. 
-
-
-Pentium 166 - 1996
-
-The power-user's chip of choice for a long, long time, and still a very good performer right up to the close of the century. Generally regarded as the classic Pentium, and the one that will be remebered longest. Probably the most common of all the Pentium parts too.
-
-
-Pentium MMX-166, MMX-200, MMX-233 - 1997
-
-Another one of the great Intel classics, last and best of all the Pentiums.
-
-
-Intel	286-16	1983
-Intel	386-16	1985
-Intel	386-20	1987
-Intel	386-25	1988
-Intel	386-33	1989
-Intel	486-33	May 1990
-Intel	486-50	June 1991
-Intel	486-66	August 1992
-Intel	Pentium-66	March 1993
-Intel	Pentium-100	March 1994
-Intel	Pentium-120	March 1995
-Intel	Pentium-133	June 1995
-Intel	Pentium-166	January 1996
-Intel	P-233 MMX	January 1997
-
-
-
-CUTOFF 1997
-
-
-
-##
-
-early-80s: 8086 cpu, 120 cycles, pc speaker, 1 mb ram, cga
-
-mid-80s: 8086 cpu, 300 cycles, pc speaker, ibm ps1 audio, ega
-
-late 80s: 386, 3000 cycles, sb1, vgaonly (backward compatible w/ ega)
-
-early 90s demo: 486, 20000 cycles, gus, vgaonly, 8 mb
-
-early 90s gamer, 486, 30000 cycles, sbpro2, vgaonly, 16 mb
-
-mid 90s gamer: pentium, 120000 cycles, sb16 / adlib-gold, svga_s3 2mb, 16 mb
-
-late 90s: pentium, 400000 cycles, svga_s3 8mb. awe32, 32 mb 
-
---------
-
-CGA         82-88
-EGA         84-90
-VGA         87-
-PCjr/Tandy  83-90
-
-
-
-
-TANDY
-
-
-
-By 1987, most games did support EGA graphics, which can display identical graphics to the Tandy 1000, so the need for a Tandy 1000 was dwindling.  Toward the end of 1988, Sierra and other game companies began supporting discrete sound cards like the Adlib and midi devices like the Roland MT-32.  Thus the importance of the 3-voice sound began to wane and by 1990 with the Sound Blaster's digital audio playback support, the need for a Tandy 1000 was all but eliminated. 
-
-
-
-from
-tandy + 286 + mpu-401/mt-32 + adlib + cms/gb
-http://nerdlypleasures.blogspot.com/search/label/Tandy%201000?updated-max=2013-11-02T00:49:00-04:00&max-results=20&start=34&by-date=false
-
-What kind of games would be played on this machine?  Well, all the important PC originals from 1981-1990. I will include any game whose maximum resolution was 320x200x16 and supports Tandy graphics or supports the Tandy sound chip for music and/or effects that does not support an Adlib, Sound Blaster, Roland MT-32 or Game Blaster.  Some examples include :
-
-Thexder - Although the game supports an EGA 640x200x16 mode, which is appropriate considering its Japanese origins on the PC-88, it supports Tandy Sound for its music (all of two pieces).  Sound effects are PC Speaker only.
-
-Secret of the Silver Blades, Champions of Krynn & Death Knights of Krynn - All support Adlib music, but if you select Adlib you get PC Speaker sound effects.  Tandy gives better sound effects than the speaker. Music only tends to be in the introduction to those games. 
-
-
-
-
-
-
-
-
-
+## The 486 era (1990--1993)
+
+The 486 brought a huge performance leap: tighter pipelining, an on-chip cache,
+and optional integrated math coprocessor made it far more than just a faster
+386. The AMD 386DX-40 offered near-486 performance at a fraction of the cost,
+extending the 386's life for budget users. Sound hardware matured
+rapidly---the Sound Blaster Pro added stereo output, the Gravis UltraSound
+offered wavetable synthesis, and the Sound Blaster 16 arrived in 1992. Hard
+drives became affordable for home users, and games grew to fill them.
+
+### Notable games
+
+- [Civilization (1991)](https://www.mobygames.com/game/585/sid-meiers-civilization/) --- the strategy game by which all others are measured
+- [Eye of the Beholder (1991)](https://www.mobygames.com/game/835/eye-of-the-beholder/) --- acclaimed dungeon crawler
+- [Lemmings (1991)](https://www.mobygames.com/game/683/lemmings/) --- addictive puzzle classic
+- [Wolfenstein 3D (1992)](https://www.mobygames.com/game/306/wolfenstein-3d/) --- the first-person shooter prototype
+- [Dune II (1992)](https://www.mobygames.com/game/241/dune-ii-the-building-of-a-dynasty/) --- established the real-time strategy genre
+- [Ultima Underworld (1992)](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/) --- first true 3D RPG
+- [Indiana Jones and the Fate of Atlantis (1992)](https://www.mobygames.com/game/316/indiana-jones-and-the-fate-of-atlantis/) --- LucasArts adventure masterpiece
+- [Ultima VII: The Black Gate (1992)](https://www.mobygames.com/game/608/ultima-vii-the-black-gate/) --- one of the greatest RPGs ever made
+- [Star Control II (1992)](https://www.mobygames.com/game/179/star-control-ii/) --- epic space adventure
+- [Syndicate (1993)](https://www.mobygames.com/game/281/syndicate/) --- cyberpunk real-time tactics
+- [Day of the Tentacle (1993)](https://www.mobygames.com/game/719/maniac-mansion-day-of-the-tentacle/) --- pinnacle of point-and-click adventures
+
+### Typical hardware
+
+| Component | Typical spec |
+|-----------|--------------|
+| CPU       | Intel 486DX2, 33--66 MHz |
+| Graphics  | VGA |
+| Sound     | Sound Blaster Pro 2 (or GUS) |
+| RAM       | 4--16 MB |
+
+### DOSBox Staging config
+
+``` ini
+[dosbox]
+machine = vgaonly
+memsize = 16
+
+[cpu]
+cpu_cycles = 30000
+
+[sblaster]
+sbtype = sbpro2
+```
+
+
+## The Pentium era (1993--1996)
+
+Intel's Pentium processor arrived in 1993 and rapidly became the standard for
+serious gaming. The Sound Blaster 16 was ubiquitous, SVGA cards pushed
+higher resolutions and colour depths, and CD-ROM drives became standard,
+ushering in the era of full-motion video and CD audio soundtracks. This was
+the golden age of DOS gaming---the period that produced many of the
+platform's most celebrated titles.
+
+### Notable games
+
+- [DOOM (1993)](https://www.mobygames.com/game/1068/doom/) --- defined the FPS genre
+- [Master of Orion (1993)](https://www.mobygames.com/game/212/master-of-orion/) --- definitive 4X space strategy
+- [X-COM: UFO Defense (1994)](https://www.mobygames.com/game/521/x-com-ufo-defense/) --- tactical strategy masterpiece
+- [Panzer General (1994)](https://www.mobygames.com/game/1021/panzer-general/) --- accessible wargaming classic
+- [Star Wars: TIE Fighter (1994)](https://www.mobygames.com/game/240/star-wars-tie-fighter/) --- best Star Wars space sim
+- [System Shock (1994)](https://www.mobygames.com/game/681/system-shock/) --- immersive sim pioneer
+- [Tex Murphy: Under a Killing Moon (1994)](https://www.mobygames.com/game/850/under-a-killing-moon/) --- FMV detective adventure
+- [Command & Conquer (1995)](https://www.mobygames.com/game/338/command-conquer/) --- popularised real-time strategy
+- [Warcraft II: Tides of Darkness (1995)](https://www.mobygames.com/game/1339/warcraft-ii-tides-of-darkness/) --- landmark RTS
+- [Jagged Alliance (1995)](https://www.mobygames.com/game/1038/jagged-alliance/) --- tactical mercenary RPG
+- [Heroes of Might and Magic (1995)](https://www.mobygames.com/game/668/heroes-of-might-and-magic/) --- turn-based strategy gem
+- [Discworld (1995)](https://www.mobygames.com/game/184/discworld/) --- Terry Pratchett point-and-click adventure
+- [The Elder Scrolls: Daggerfall (1996)](https://www.mobygames.com/game/778/the-elder-scrolls-chapter-ii-daggerfall/) --- massive open-world RPG
+
+### Typical hardware
+
+| Component | Typical spec |
+|-----------|--------------|
+| CPU       | Intel Pentium, 90--133 MHz |
+| Graphics  | SVGA (S3-based) |
+| Sound     | Sound Blaster 16 |
+| RAM       | 16 MB |
+
+### DOSBox Staging config
+
+``` ini
+[dosbox]
+machine = svga_s3
+
+[cpu]
+cpu_cycles = 80000
+
+[sblaster]
+sbtype = sb16
+```
+
+
+## The twilight of DOS (1996--1998)
+
+By the mid-1990s, Windows 95 and DirectX were rapidly taking over PC gaming.
+The final wave of DOS games pushed hardware hard---fast Pentiums and Pentium
+MMX processors, AWE32/64 wavetable sound cards, and SVGA graphics with early
+3D acceleration. These late DOS titles often demanded top-of-the-line hardware
+and represent the platform's technical peak, even as the ecosystem was
+transitioning to Windows.
+
+### Notable games
+
+- [Quake (1996)](https://www.mobygames.com/game/374/quake/) --- true 3D engine revolution
+- [Duke Nukem 3D (1996)](https://www.mobygames.com/game/365/duke-nukem-3d/) --- interactive environments and humour
+- [Heroes of Might and Magic II (1996)](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/) --- refined turn-based strategy
+- [Tomb Raider (1996)](https://www.mobygames.com/game/348/tomb-raider/) --- 3D action-adventure landmark
+- [Broken Sword (1996)](https://www.mobygames.com/game/499/circle-of-blood/) --- acclaimed point-and-click adventure
+- [Descent II (1996)](https://www.mobygames.com/game/694/descent-ii/) --- six-degrees-of-freedom shooter
+- [Dungeon Keeper (1997)](https://www.mobygames.com/game/156/dungeon-keeper/) --- play the villain strategy classic
+- [Fallout (1997)](https://www.mobygames.com/game/223/fallout/) --- post-apocalyptic RPG masterpiece
+- [Theme Hospital (1997)](https://www.mobygames.com/game/674/theme-hospital/) --- Bullfrog management sim
+- [Carmageddon (1997)](https://www.mobygames.com/game/367/carmageddon/) --- controversial vehicular combat racer
+
+### Typical hardware
+
+| Component | Typical spec |
+|-----------|--------------|
+| CPU       | Intel Pentium MMX, 166--233 MHz |
+| Graphics  | SVGA (S3-based) |
+| Sound     | Sound Blaster 16 / AWE32 |
+| RAM       | 32 MB |
+
+### DOSBox Staging config
+
+``` ini
+[dosbox]
+machine = svga_s3
+memsize = 32
+
+[cpu]
+cpu_cycles = 400000
+
+[sblaster]
+sbtype = sb16
+```
+
+
+## Windows 3.x games
+
+DOSBox Staging fully supports Windows 3.x, which was not a standalone operating
+system but an operating environment running on top of DOS. A number of games
+were released exclusively for Windows 3.1 with no DOS version---particularly
+FMV adventures and multimedia titles that leveraged Windows' built-in video
+and audio APIs. Many of these are cult classics well worth rediscovering.
+
+### Notable Windows 3.x exclusives
+
+- [Castle of the Winds (1993)](https://www.mobygames.com/game/842/castle-of-the-winds/) --- charming tile-based roguelike RPG
+- [The Dark Eye (1995)](https://www.mobygames.com/game/1782/the-dark-eye/) --- surreal Edgar Allan Poe horror adventure
+- [Cosmology of Kyoto (1995)](https://www.mobygames.com/game/4365/cosmology-of-kyoto/) --- haunting Japanese historical multimedia experience
+- [Gabriel Knight 2: The Beast Within (1995)](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/) --- FMV mystery adventure masterpiece
+- [Dust: A Tale of the Wired West (1995)](https://www.mobygames.com/game/3990/dust-a-tale-of-the-wired-west/) --- FMV western adventure
+- [Mordor: The Depths of Dejenol (1995)](https://www.mobygames.com/game/31910/mordor-the-depths-of-dejenol/) --- deep first-person dungeon crawler
+- [Burn:Cycle (1995)](https://www.mobygames.com/game/3962/burncycle/) --- cyberpunk FMV adventure
+- [9: The Last Resort (1996)](https://www.mobygames.com/game/2176/9-the-last-resort/) --- surreal FMV puzzle adventure
+- [Titanic: Adventure Out of Time (1996)](https://www.mobygames.com/game/2892/titanic-adventure-out-of-time/) --- historical FMV adventure on the doomed liner
+- [Civilization II (1996)](https://www.mobygames.com/game/15/sid-meiers-civilization-ii/) --- definitive Windows 3.x strategy game
+
+
+## CPU cycles quick reference
+
+The `cpu_cycles` setting controls the speed of the emulated CPU. Use this table
+as a rough guide for matching cycles to real-world hardware.
 
 <div class="compact" markdown>
 
@@ -193,4 +355,3 @@ Secret of the Silver Blades, Champions of Krynn & Death Knights of Krynn - All s
 | Intel Pentium III |  866 | 400000
 
 </div>
-
