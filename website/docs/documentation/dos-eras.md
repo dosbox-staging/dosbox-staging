@@ -39,7 +39,10 @@ source. Software arrived on 360 KB floppy disks, and many early games were
 - [King's Quest (1984)](https://www.mobygames.com/game/122/kings-quest/) --- first animated adventure game
 - [Rogue (1984)](https://www.mobygames.com/game/1743/rogue/) --- the original roguelike
 
+
 ### Typical hardware
+
+<div class="compact" markdown>
 
 | Component | Typical spec |
 |-----------|--------------|
@@ -47,6 +50,9 @@ source. Software arrived on 360 KB floppy disks, and many early games were
 | Graphics  | CGA |
 | Sound     | PC speaker |
 | RAM       | 256--640 KB |
+
+</div>
+
 
 ### DOSBox Staging config
 
@@ -88,7 +94,10 @@ dominant sound source on non-Tandy machines, though the AdLib card appeared in
 - [Maniac Mansion (1987)](https://www.mobygames.com/game/714/maniac-mansion/) --- SCUMM engine debut
 - [Dungeon Master (1987)](https://www.mobygames.com/game/834/dungeon-master/) --- real-time dungeon crawling pioneer
 
+
 ### Typical hardware
+
+<div class="compact" markdown>
 
 | Component | Typical spec |
 |-----------|--------------|
@@ -96,6 +105,9 @@ dominant sound source on non-Tandy machines, though the AdLib card appeared in
 | Graphics  | EGA (or Tandy) |
 | Sound     | PC speaker (Tandy 3-voice, AdLib from 1987) |
 | RAM       | 640 KB |
+
+</div>
+
 
 ### DOSBox Staging config
 
@@ -140,7 +152,10 @@ became a serious force.
 - [Wing Commander (1990)](https://www.mobygames.com/game/3/wing-commander/) --- cinematic space combat
 - [Railroad Tycoon (1990)](https://www.mobygames.com/game/70/sid-meiers-railroad-tycoon/) --- business simulation classic
 
+
 ### Typical hardware
+
+<div class="compact" markdown>
 
 | Component | Typical spec |
 |-----------|--------------|
@@ -148,6 +163,9 @@ became a serious force.
 | Graphics  | VGA |
 | Sound     | Sound Blaster (or AdLib) |
 | RAM       | 1--4 MB |
+
+</div>
+
 
 ### DOSBox Staging config
 
@@ -187,6 +205,9 @@ drives became affordable for home users, and games grew to fill them.
 - [Syndicate (1993)](https://www.mobygames.com/game/281/syndicate/) --- cyberpunk real-time tactics
 - [Day of the Tentacle (1993)](https://www.mobygames.com/game/719/maniac-mansion-day-of-the-tentacle/) --- pinnacle of point-and-click adventures
 
+
+<div class="compact" markdown>
+
 ### Typical hardware
 
 | Component | Typical spec |
@@ -195,6 +216,9 @@ drives became affordable for home users, and games grew to fill them.
 | Graphics  | VGA |
 | Sound     | Sound Blaster Pro 2 (or GUS) |
 | RAM       | 4--16 MB |
+
+</div>
+
 
 ### DOSBox Staging config
 
@@ -236,7 +260,10 @@ platform's most celebrated titles.
 - [Discworld (1995)](https://www.mobygames.com/game/184/discworld/) --- Terry Pratchett point-and-click adventure
 - [The Elder Scrolls: Daggerfall (1996)](https://www.mobygames.com/game/778/the-elder-scrolls-chapter-ii-daggerfall/) --- massive open-world RPG
 
+
 ### Typical hardware
+
+<div class="compact" markdown>
 
 | Component | Typical spec |
 |-----------|--------------|
@@ -244,6 +271,9 @@ platform's most celebrated titles.
 | Graphics  | SVGA (S3-based) |
 | Sound     | Sound Blaster 16 |
 | RAM       | 16 MB |
+
+</div>
+
 
 ### DOSBox Staging config
 
@@ -281,7 +311,10 @@ transitioning to Windows.
 - [Theme Hospital (1997)](https://www.mobygames.com/game/674/theme-hospital/) --- Bullfrog management sim
 - [Carmageddon (1997)](https://www.mobygames.com/game/367/carmageddon/) --- controversial vehicular combat racer
 
+
 ### Typical hardware
+
+<div class="compact" markdown>
 
 | Component | Typical spec |
 |-----------|--------------|
@@ -289,6 +322,9 @@ transitioning to Windows.
 | Graphics  | SVGA (S3-based) |
 | Sound     | Sound Blaster 16 / AWE32 |
 | RAM       | 32 MB |
+
+</div>
+
 
 ### DOSBox Staging config
 
