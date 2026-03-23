@@ -5,6 +5,28 @@ Released in April 1989 by Innovation Computer Corporation, utilizing the MOS
 
 Very few games support this sound option.
 
+
+## Compatible games
+
+<div class="compact" markdown>
+
+- Airball
+- Bad Blood
+- Battle Chess II
+- BattleTech: The Crescent Hawks' Revenge
+- F-19 Stealth Fighter
+- Falcon A.T.
+- Harpoon
+- Joe Montana Football
+- Lord of the Rings Volume 1
+- Red Storm Rising
+- Super Jeopardy
+- Ultima VI
+- Windwalker
+
+</div>
+
+
 ## Configuration parameters
 
 You can set the parameters of the Innovation SSI-2001 card in the
