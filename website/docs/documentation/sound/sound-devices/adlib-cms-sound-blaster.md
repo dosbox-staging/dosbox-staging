@@ -50,14 +50,14 @@ together.
 The below table lists all Sound Blaster models emulated by DOSBox, along with
 their main capabilities:
 
-| Model | `sbtype` value | Digital audio | Synthesiser |
-| ----- | -------------- | ------------- | ----------- |
-| [Game Blaster](#creative-music-system-cms-game-blaster) | `gb` | N/A | CMS (stereo)
-| [Sound Blaster 1.0](#sound-blaster-10) | `sb1` | 8-bit mono 23kHz | OPL2 (mono)<br>CMS (stereo)
-| [Sound Blaster 2.0](#sound-blaster-20) | `sb2` | 8-bit mono 23kHz | OPL2 (mono)<br>CMS (stereo)
-| [Sound Blaster Pro](#sound-blaster-pro) | `sbpro1` | 8-bit mono 44kHz<br>8-bit stereo 23kHz | Dual OPL2 (stereo)
-| [Sound&nbsp;Blaster&nbsp;Pro&nbsp;2.0](#sound-blaster-pro-20) | `sbpro2` | 8-bit mono 44kHz<br>8-bit stereo 23kHz | OPL3 (stereo)
-| [Sound Blaster 16](#sound-blaster-16) | `sb16` | 16-bit stereo 44kHz | OPL3 (stereo)
+| Model                                                         | `sbtype` value | Digital audio                          | Synthesiser                 |
+| -----                                                         | -------------- | -------------                          | -----------                 |
+| [Game Blaster](#creative-music-system-cms-game-blaster)       | `gb`           | N/A                                    | CMS (stereo)                |
+| [Sound Blaster 1.0](#sound-blaster-10)                        | `sb1`          | 8-bit mono 23kHz                       | OPL2 (mono)<br>CMS (stereo) |
+| [Sound Blaster 2.0](#sound-blaster-20)                        | `sb2`          | 8-bit mono 23kHz                       | OPL2 (mono)<br>CMS (stereo) |
+| [Sound Blaster Pro](#sound-blaster-pro)                       | `sbpro1`       | 8-bit mono 44kHz<br>8-bit stereo 23kHz | Dual OPL2 (stereo)          |
+| [Sound&nbsp;Blaster&nbsp;Pro&nbsp;2.0](#sound-blaster-pro-20) | `sbpro2`       | 8-bit mono 44kHz<br>8-bit stereo 23kHz | OPL3 (stereo)               |
+| [Sound Blaster 16](#sound-blaster-16)                         | `sb16`         | 16-bit stereo 44kHz                    | OPL3 (stereo)               |
 
 
 ### Mixer channels
@@ -96,10 +96,10 @@ little help, here are the values to use:
 
 | Setting                                | Config setting    | Default value |
 | -------------------------------------- | ----------------- | ------------- |
-| Base address (or I/O address, or port) | [sbbase](#sbbase) | 220
-| IRQ (or interrupt)                     | [irq](#irq)       | 7
-| DMA (or low DMA)                       | [dma](#dma)       | 1
-| High DMA (or HDMA)                     | [hdma](#hdma)     | 5
+| Base address (or I/O address, or port) | [sbbase](#sbbase) | 220           |
+| IRQ (or interrupt)                     | [irq](#irq)       | 7             |
+| DMA (or low DMA)                       | [dma](#dma)       | 1             |
+| High DMA (or HDMA)                     | [hdma](#hdma)     | 5             |
 
 </div>
 
