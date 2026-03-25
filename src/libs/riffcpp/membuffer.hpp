@@ -1,5 +1,10 @@
 #include <streambuf>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+
 class membuffer : public std::streambuf {
 public:
   membuffer(char *begin, size_t size)
@@ -19,3 +24,6 @@ private:
   char *m_current;
   size_t m_size;
 };
+
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop

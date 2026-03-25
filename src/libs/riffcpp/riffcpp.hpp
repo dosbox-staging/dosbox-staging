@@ -1,6 +1,11 @@
 #ifndef RIFFCPP_H
 #define RIFFCPP_H
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -149,4 +154,8 @@ namespace riffcpp {
     using const_iterator = const iterator;
   };
 } // namespace riffcpp
+	
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+
 #endif // RIFFCPP_H
