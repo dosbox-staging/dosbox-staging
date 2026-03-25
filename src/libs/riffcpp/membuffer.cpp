@@ -1,5 +1,10 @@
 #include "membuffer.hpp"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+
 std::streambuf::pos_type membuffer::seekoff(off_type off,
                                             std::ios_base::seekdir dir,
                                             [[maybe_unused]] std::ios_base::openmode which) {
@@ -46,3 +51,6 @@ std::streambuf::int_type membuffer::uflow() {
 std::streamsize membuffer::showmanyc() {
   return (m_begin + m_size) - m_current;
 }
+
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
