@@ -59,6 +59,8 @@ It was common for PC games released from 1988 to 1992 to support the Roland MT-3
     additional digital music to be played on the Sound Blaster.
 
 
+TODO(CL) the following paragraphs contain way too much technical information.
+we need to vastly simplify all that.
 
 Earlier DOS games that provide a Roland MT-32 sound option frequently use Normal mode during initialisation, or when communicating with the card. Most later games including those that support General MIDI typically only use the more basic UART mode. This mode is much simpler to implement, so almost all hardware that claims to be MPU-401 compatible will have this mode as standard. The Sound Blaster 16 and up only support MPU-401 UART mode, making them unsuitable as a reliable interface for older DOS games with MT-32 support. The older Sound Blasters do not support MPU-401 at all (the game port's pinouts are not MPU-401 compatible). 
 
@@ -131,6 +133,10 @@ configuration setting for further details.
 
 ### Unversioned ROMs
 
+TODO(CL) we don't use the versioned / unversioned concept anymore. we detect
+ROMs by their hashes. look at the config setting's description for more info
+and the code; the ROM section needs to be revisited and simplified.
+
 Unversioned ROMs must be named as follows:
 
 <div class="compact" markdown>
@@ -195,6 +201,8 @@ have been copied to your ROM directory for that model.
 
 
 
+TODO(CL) we need to document the lookup paths below, but it needs major
+cleanup and fact-checking based on the code.
 
 ### Windows
 
