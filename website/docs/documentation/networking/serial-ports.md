@@ -19,6 +19,8 @@ You can also attach a serial mouse to a COM port for the rare game that
 specifically requires one, rather than using the built-in PS/2
 [mouse](../input/mouse.md) driver.
 
+TODO(CL) mobygames links
+
 
 ## Configuration settings
 

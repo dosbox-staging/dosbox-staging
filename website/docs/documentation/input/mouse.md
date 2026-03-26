@@ -27,12 +27,6 @@ horizontal and vertical mouse movement has different sensitivity. You can
 "normalise" the X and Y axis sensitivity or adjust the global sensitivity with
 the [`mouse_sensitivity`](#mouse_sensitivity) setting.
 
-For Windows 3.1x running inside DOSBox, seamless mouse integration is
-available when using a compatible mouse driver --- with this enabled, the
-mouse cursor can be moved freely between the host desktop and the DOSBox
-Staging window (see [`mouse_capture`](#mouse_capture)).
-
-
 ## Serial mice
 
 DOSBox Staging can emulate several serial (COM port) mouse types:
@@ -58,19 +52,16 @@ computer (e.g., in **The Settlers** and **The Settlers II**). Use the
 `MOUSECTL` command on the DOS command line to set the per-interface mouse
 configurations.
 
-See the [wiki article](https://github.com/dosbox-staging/dosbox-staging/wiki/Dual-Mouse-Gaming)
-for setup details.
+See the [Dual mouse gaming](https://github.com/dosbox-staging/dosbox-staging/wiki/Dual-Mouse-Gaming) wiki page for setup details.
 
-<figure markdown>
-  <video controls width=100%>
-    <source src="https://www.dosbox-staging.org/static/videos/release-notes/0.80.0/settlers-2-dual-mouse.mp4" type="video/mp4">
-    Your browser does not support the <code>video</code> element.
-  </video>
 
-  <figcaption markdown>
-  The Settlers II (1996) --- dual-mouse gaming in action
-  </figcaption>
-</figure>
+## Seamless mode
+
+For Windows 3.1x running inside DOSBox, seamless mouse integration is
+available when using a compatible mouse driver --- with this enabled, the
+mouse cursor can be moved freely between the host desktop and the DOSBox
+Staging window (see [`mouse_capture`](#mouse_capture)).
+
 
 
 ## Configuration settings
