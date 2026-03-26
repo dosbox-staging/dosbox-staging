@@ -1,21 +1,33 @@
 # Capture
 
-TODO(CL) structure this better. we need a separate video capture and audio
-capture section before the "Configuration settings" reference section
-
 DOSBox Staging can capture screenshots, record audio, and record video
-directly from the emulator. Screenshots can be saved in multiple formats:
-upscaled (clean, aspect-corrected), rendered (post-shader, exactly what you
-see on screen), or raw (the framebuffer contents with square pixels).
+directly from the emulator. All captures are saved to the `capture/`
+directory in the current working directory by default. You can change this
+with the `capture_dir` setting.
 
-The most common [shortcuts](../shortcuts.md): ++ctrl+f5++ / ++cmd+f5++ for
-screenshots, ++ctrl+f6++ / ++cmd+f6++ to start and stop audio recording, and
-++ctrl+f7++ / ++cmd+f7++ for video recording. Raw MIDI and OPL output can
-also be captured for those who want to tinker with game music outside the
-emulator.
 
-All captures are saved to the `capture/` directory in the current working
-directory by default. You can change this with the `capture_dir` setting.
+## Screenshots
+
+Screenshots can be saved in multiple formats: upscaled (clean,
+aspect-corrected), rendered (post-shader, exactly what you see on screen), or
+raw (the framebuffer contents with square pixels).
+
+Use ++ctrl+f5++ / ++cmd+f5++ to take a screenshot. The format is controlled
+by the [default_image_capture_formats](#default_image_capture_formats)
+setting.
+
+
+## Video capture
+
+Press ++ctrl+f7++ / ++cmd+f7++ to start and stop video recording. The video
+is captured as a lossless AVI file.
+
+
+## Audio capture
+
+Press ++ctrl+f6++ / ++cmd+f6++ to start and stop audio recording. Raw MIDI
+and OPL output can also be captured for those who want to tinker with game
+music outside the emulator.
 
 
 ## Configuration settings
