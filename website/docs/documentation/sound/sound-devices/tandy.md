@@ -1,5 +1,7 @@
 # Tandy 3 Voice
 
+## Overview
+
 The **Tandy 3 Voice** audio was introduced with the Tandy 1000 IBM PC clone
 released in 1984, which was as a clone of the short-lived IBM PCjr.
 

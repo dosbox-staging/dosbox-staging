@@ -62,12 +62,12 @@ their main capabilities:
 
 ### Mixer channels
 
-The digital audio of the Sound Blaster is output to the **`SB`** mixer channel,
-while the AdLib (OPL) synthesiser has its own dedicated **`OPL`** channel. Both
+The digital audio of the Sound Blaster is output to the **SB** mixer channel,
+while the AdLib (OPL) synthesiser has its own dedicated **OPL** channel. Both
 channels can be either mono or stereo, depending on the particular Sound
 Blaster model being emulated.
 
-The Creative Music System synthesiser has its own dedicated **`CMS`** channel,
+The Creative Music System synthesiser has its own dedicated **CMS** channel,
 which is always stereo.
 
 The upshot of this is that the digital audio and synthesiser volumes can be

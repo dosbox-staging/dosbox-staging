@@ -22,44 +22,16 @@ games.
 
 ## Presentation modes
 
-DOSBox presents frames when new content is available, which means the
-effective frame rate can vary between 0 FPS (if the screen content isn't
-changing) and the DOS vertical refresh rate (typically up to ~70 Hz). This is
-**Variable Frame Rate (VFR)** presentation.
+TODO(CL) write section based on release notes from here https://github.com/dosbox-staging/dosbox-staging/pull/4438 . just text, no images.
 
-DOSBox Staging also supports **Constant Frame Rate (CFR)** presentation, which
-presents frames at a constant rate defined by the emulated DOS rate, as well
-as two hybrid modes:
+## Dedithering
 
-- **Synced CFR** --- Constant frame rate synchronised with the host's refresh
-  rate. Presents only the most recently updated frame when the DOS rate
-  exceeds the host rate.
+TODO(CL) write section based on release notes from here https://github.com/dosbox-staging/dosbox-staging/pull/4777 . just text, no images.
 
-- **Throttled VFR** --- Variable frame rate throttled to the display's rate.
-  Presents only the most recently updated frame when the DOS rate exceeds the
-  host rate.
+## Deinterlacing
 
-By default, DOSBox Staging inspects runtime conditions and picks the optimal
-mode. Power users can force a specific mode via the
-[presentation_mode](#presentation_mode) setting.
+TODO(CL) write section based on release notes from here https://github.com/dosbox-staging/dosbox-staging/pull/4689 . just text, no images.
 
-<figure markdown>
-  ![Earthworm Jim (synced CFR)](https://www.dosbox-staging.org/static/images/release-notes/0.79.0/synced-cfr-earthworm-jim.png){ loading=lazy }
-
-  <figcaption markdown>
-  Synced CFR mode selected due to vsync-enforced video drivers
-  </figcaption>
-</figure>
-
-
-## Window transparency
-
-The DOSBox Staging window can be made transparent so you can see through it to
-other windows behind it. Set the
-[window_transparency](#window_transparency) value between `0` (fully opaque,
-default) and `90` (highly transparent).
-
-![Transparent window](https://www.dosbox-staging.org/static/images/release-notes/0.79.0/transparent-window.png){ loading=lazy }
 
 
 ## Configuration settings

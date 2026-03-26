@@ -2,23 +2,34 @@
 
 ## Overview
 
-The `cpu_cycles` setting controls the speed of the emulated CPU — it's the
-single most important performance setting in DOSBox Staging. Getting it
-right can mean the difference between a game that plays perfectly and one
+The [cpu_cycles](#cpu_cycles) setting controls the speed of the emulated CPU; 
+it's the single most important performance setting in DOSBox Staging. Getting
+it right can mean the difference between a game that plays perfectly and one
 that stutters, crawls, or races through its intro sequence.
 
 Too many cycles and you'll get sound stuttering and input lag as your host
 CPU struggles to keep up. Too few and the game turns into a slideshow.
 Finding the sweet spot for each game is part of the charm of retro gaming.
 
-As a rough guide: early 8088-era games (*Alley Cat*, *Sopwith*) need around
-300 cycles. 386-era titles want roughly 3,000–6,000. 486-class games like
-*Doom* are happy at around 25,000. Late Pentium-era titles such as *Quake*
-can eat 50,000 cycles or more.
+As a rough guide: early 8088-era games (**Alley Cat**, **Sopwith**) need
+around 300 cycles. 386-era titles want roughly 3,000–6,000. 486-class games
+like **Doom** are playable at around 25,000 but might need up 50,000 cycles
+for a completely smooth experience. Late Pentium-era titles such as **Quake**
+need 50,000 to 100,000 cycles or even more. See the [cpu_cycles](#cpu_cycles)
+table for further details.
 
-The `auto` setting for `core` is the sensible default — it uses the faster
+The `auto` setting for [core](#core) is the most sensible default — it uses the faster
 `dynamic` recompiler for protected-mode games and the more accurate `normal`
 interpreter for real-mode programs. You'll rarely need to override this.
+
+## Protected and real mode
+
+TODO(CL) adapt/generalise from the getting started guide
+
+
+## Finding the correct cycles setting for a game 
+
+TODO(CL) adapt/generalise from the getting started guide
 
 
 ## Configuration examples
@@ -56,17 +67,9 @@ cpu_cycles_protected = max
 !!! warning
 
     Using `max` cycles can cause problems: some games crash or misbehave
-    when the emulated CPU is "too fast", the effective speed varies across
+    when the emulated CPU is "too fast". The effective speed varies across
     different host machines, and audio glitches are common. It's best to use
     the lowest fixed cycles value that runs the game at an acceptable speed.
-
-
-## Pentium MMX
-
-Setting `cputype = pentium_mmx` enables Pentium MMX instruction set emulation
-for late-90s demoscene productions and games with MMX-specific enhancements
-(e.g., **Extreme Assault**, **Z.A.R.**). It also enables the MMX-only
-real-time resonant filters in **Impulse Tracker**.
 
 
 ## Configuration settings

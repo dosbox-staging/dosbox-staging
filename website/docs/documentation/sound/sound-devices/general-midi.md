@@ -1,5 +1,7 @@
 # General MIDI
 
+## Overview
+
 General MIDI (GM) was introduced in 1991 to solve a simple but annoying
 problem: MIDI could tell a synthesiser *what notes to play*, but not *which
 instruments to use*. GM standardised the instrument assignments — program

@@ -135,9 +135,6 @@ sections of the manual where they're described in detail.
 [^stereo]: The output can either mono or stereo, depending on the selected model.
 
 
-## Mixer signal flow diagram
-
-
 ## Configuration settings
 
 Mixer settings are to be configured in the `[mixer]` section. For effects
