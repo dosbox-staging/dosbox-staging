@@ -5,7 +5,7 @@
 Between about 1998 and 1994, MIDI music was *the* ultimate high-end audio
 option in DOS gaming, offering never-heard-before realism and CD quality audio
 fidelity. Not many could afford the high price tag of MIDI sound modules back
-in the day---they often sold for 3 to 5 times higher as a Sound Blaster card.
+in the day --- they often sold for 3 to 5 times higher as a Sound Blaster card.
 But thanks to the wonders of emulation, now all DOS enthusiasts can experience
 MIDI music nirvana in its full glory!
 
@@ -31,7 +31,7 @@ This works well if you only have a single synthesiser, but after a while
 people wanted to make things more modular. In a more flexible setup, a single
 keyboard could control one or more sound modules which would be connected to
 an audio mixer. The keyboard and the sound modules could even come from
-different manufacturers---for this to work, the introduction of an open
+different manufacturers --- for this to work, the introduction of an open
 communication standard was needed, and thus MIDI was born.
 
 In the above example, whenever you press a key on the keyboard, a short MIDI
@@ -46,14 +46,16 @@ revolutionised the music industry in the 80s.
 
 MIDI compositions are best viewed as the computer music equivalent of sheet
 music. A MIDI score only contains note data and abstract descriptions of
-the instruments that should play them---the generation of the actual
+the instruments that should play them --- the generation of the actual
 sounds is entirely the MIDI sound module's responsibility using its on-board
 samples or sound synthesis capabilities.
 
-MIDI is a great early example of a successful open-source technology---forty
+MIDI is a great early example of a successful open-source technology --- forty
 years after its inception, it's still widely used for a variety of purposes,
 ranging from traditional music production to automating theatrical lighting
 and live sound show control.
+
+TODO(CL) too wordy, trim it down a bit to about 50-60% the length
 
 
 ## MIDI in DOS gaming

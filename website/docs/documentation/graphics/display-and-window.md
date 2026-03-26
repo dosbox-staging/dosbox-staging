@@ -25,14 +25,14 @@ games.
 DOSBox Staging offers two frame presentation strategies, controlled by the
 [presentation_mode](#presentation_mode) setting:
 
-**`dos-rate`** presents frames at the refresh rate of the emulated DOS video
+- **`dos-rate`** presents frames at the refresh rate of the emulated DOS video
 mode (e.g., 70 Hz for standard VGA). This is the ideal choice for variable
 refresh rate (VRR) monitors (G-Sync, FreeSync, or VRR) --- the display
 synchronises directly to the emulated refresh rate, giving you perfect frame
 pacing with no tearing and low input lag. No configuration is needed; the
 defaults just work.
 
-**`host-rate`** presents the most recent frame at the host display's refresh
+- **`host-rate`** presents the most recent frame at the host display's refresh
 rate. This is intended for fixed refresh rate monitors (typically 60 Hz) with
 [vsync](#vsync) enabled to eliminate screen tearing in fast-paced games.
 
@@ -93,6 +93,11 @@ mismatch.
     games that switch between different refresh rates cannot be fully
     accommodated this way.
 
+### Vsync
+
+TODO(CL) adapt the explanation from the getting started guide that explains
+that we can get double tearing in Staging. probably copy the whole table here.
+
 
 ## Dedithering
 
@@ -112,6 +117,8 @@ EGA LucasArts titles (*The Secret of Monkey Island* EGA version, *Loom*),
 and early Legend Entertainment games (*Spellcasting 101*, *Timequest*,
 *Gateway*).
 
+TODO(CL) link game names to mobygames
+
 !!! note
 
     Dedithering is *not* a more authentic representation. On real PC CRT
@@ -123,14 +130,14 @@ and early Legend Entertainment games (*Spellcasting 101*, *Timequest*,
 ## Deinterlacing
 
 Many 90s DOS games displayed full-motion video (FMV) using interlaced
-rendering --- showing only every second line of the video frame. This halved
+rendering, showing only every second line of the video frame. This halved
 storage requirements and looked fine on small CRTs where the brain filled in
 the gaps, but on modern flat screens the alternating black lines look
 distracting and halve the apparent brightness.
 
 The `deinterlacing` setting (in the `[render]` section) automatically detects
 interlaced regions within each frame and reconstructs the missing lines. The
-detection is intelligent --- it only touches interlaced areas while leaving
+detection is intelligent; it only touches interlaced areas while leaving
 HUDs, UI frames, subtitles, and mouse cursors untouched.
 
 Both common interlacing patterns are supported: standard line interlacing
@@ -142,7 +149,7 @@ Games that benefit from deinterlacing include *Wing Commander IV*,
 Regret*, *CyberMage*, *Angel Devoid*, and *Heroes of Might and Magic II*,
 among others. Enable it per-game rather than globally for best results.
 
-
+TODO(CL) link game names to mobygames
 
 ## Configuration settings
 

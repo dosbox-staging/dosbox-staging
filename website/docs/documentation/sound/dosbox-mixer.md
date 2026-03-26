@@ -101,8 +101,6 @@ following:
 - Set the crossfeed of the `SB` channel to 10 and use reverse stereo (`sb x10
     reverse`)
 
-## Listing available MIDI output devices
-
 ## List of mixer channels
 
 <div class="compact" markdown>

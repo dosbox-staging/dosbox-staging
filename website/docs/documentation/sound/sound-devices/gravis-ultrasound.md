@@ -26,6 +26,8 @@ demos ever made — was designed to sound its best on a GUS. Games with
 native GUS support, like *Star Control II*, also benefited enormously from
 its superior audio capabilities.
 
+TODO(CL) game links to mobygames 
+TODO(CL) demo linkt to pouet.net
 
 ## Configuration settings
 

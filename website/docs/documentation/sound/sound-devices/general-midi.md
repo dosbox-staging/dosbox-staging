@@ -2,12 +2,12 @@
 
 ## Overview
 
-General MIDI (GM) was introduced in 1991 to solve a simple but annoying
+**General MIDI (GM)** was introduced in 1991 to solve a simple but annoying
 problem: MIDI could tell a synthesiser *what notes to play*, but not *which
 instruments to use*. GM standardised the instrument assignments — program
-number 1 is always an acoustic grand piano, program 41 is always a violin,
-and so on — so that music written for one GM device would sound recognisable
-on any other.
+number 1 is always an acoustic grand piano, program 41 is always a violin, and
+so on — so that music written for one GM device would sound recognisable on
+any other.
 
 The Roland SC-55, released the same year, was the first Sound Canvas module
 and quickly became the de facto standard for DOS game music. Roland's own
@@ -23,7 +23,12 @@ instrument samples, playback can sound noticeably different from one device
 to another — but the SC-55 is the gold standard for what the composer
 intended.
 
+TODO(CL) insert mobygames links to games
+
 ### A brief history of MIDI in DOS gaming
+
+TODO(CL) this is redundant, we already have midi.md that gives an overview.
+try to merge this into the midi.md page, get rid of the redundant info, etc.
 
 The **Roland MT-32**, released in 1987, was the first sound module that made
 realistic-sounding music in DOS games a possibility. In 1991, Roland released

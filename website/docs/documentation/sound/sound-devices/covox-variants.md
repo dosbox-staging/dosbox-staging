@@ -33,6 +33,7 @@ left, one for right — giving you stereo output at the cost of halving the
 bit depth. Less common than the mono Covox, but supported by some tracker
 players and a handful of games.
 
+TODO(CL) game links to mobygames 
 
 ## Configuration settings
 

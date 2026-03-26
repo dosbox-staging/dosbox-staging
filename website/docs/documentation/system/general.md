@@ -141,6 +141,10 @@ section.
       are often required by late '90s demoscene productions.
 
 
+    TODO(CL) create mode tables for all three options, look this up from the
+    code that narrows down the video modes list
+
+
 ##### vga_8dot_font
 
 :   Use 8-pixel-wide fonts on VGA adapters.

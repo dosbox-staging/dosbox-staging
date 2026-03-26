@@ -16,6 +16,8 @@ The following DOS games are known to use the ReelMagic card:
 
 <div class="compact" markdown>
 
+TODO(CL) link game names to mobygames
+
 - Crime Patrol
 - Crime Patrol 2: Drug Wars
 - Dragon's Lair

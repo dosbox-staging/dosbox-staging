@@ -21,6 +21,7 @@ OpenGL passthrough — which makes it CPU-intensive but very accurate. Voodoo
 emulation is enabled by default, so most DOS Glide games should work out of
 the box.
 
+TODO(CL) link game names to mobygames
 
 ## Configuration settings
 

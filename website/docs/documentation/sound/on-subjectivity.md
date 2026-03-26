@@ -33,27 +33,13 @@ IV: The Perils of Rosella** released in 1988, which was the first PC game to
 feature a fully-orchestrated soundtrack written by a professional media
 composer, William Goldstein.
 
-<figure markdown>
-  <audio controls src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/alone-in-the-dark.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-
-  <figcaption markdown>
-  Opening music of King's Quest IV on the Roland MT-32
-  </figcaption>
-</figure>
-
 Similary, the music of **Police Quest III: The Kindred** from 1991 was
 composed by Jan Hammer of Miami Vice fame specifically for the Roland MT-32.
 Jan Hammer was very fond of the LA synthesis employed by the bigger brother of
 the MT-32, the venerable Roland D-50 synthesiser which was a staple of 80s pop
 music. Sierra simply couldn't have found a more suitable musician for the job!
 
-<figure markdown>
-  <audio controls src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/alone-in-the-dark.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-
-  <figcaption markdown>
-  Opening music of Police Quest III on the Roland MT-32
-  </figcaption>
-</figure>
+TODO(CL) link game names to mobygames
 
 Most people could only afford an AdLib or a Sound Blaster back in the day, but
 given that now everybody has the option to listen to these soundtracks in their
