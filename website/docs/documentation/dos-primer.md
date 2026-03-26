@@ -88,7 +88,22 @@ and most DOS games from 1990 onwards support it. For high-end music, the
 **Roland MT-32** sound module offered stunning synthesised audio from 1988
 onwards, though it was expensive and remained a luxury item.
 
-TODO(CL) GUS, General Midi, CD-DA Audio (just briefly)
+The **Gravis UltraSound (GUS)**, released in 1992, took a different approach
+by using wavetable synthesis with actual sampled sounds stored in its onboard
+RAM, producing much more realistic audio than FM synthesis. It gained a cult
+following, particularly in the demoscene, but never achieved the Sound
+Blaster's market dominance.
+
+**General MIDI** standardised a common set of 128 instrument sounds, allowing
+games to sound consistent across different MIDI-compatible devices. The
+**Roland Sound Canvas SC-55**, released in 1991, became the de facto reference
+device for General MIDI game music and is still considered the gold standard
+for many DOS game soundtracks.
+
+By the mid-1990s, **CD-ROM audio (CD-DA)** gave games access to
+studio-quality pre-recorded music played directly from the game disc. This
+bypassed the sound card entirely for music, delivering a dramatic leap in
+audio fidelity.
 
 
 ## Input peripherals

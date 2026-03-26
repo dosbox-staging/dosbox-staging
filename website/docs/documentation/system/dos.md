@@ -46,8 +46,8 @@ following command line arguments:
 
 You can set the DOS parameters in the `[dos]` configuration section.
 
-TODO(CL) group settings by category, e.g. memory settings
 
+### Regional settings
 
 ##### country
 
@@ -62,6 +62,43 @@ TODO(CL) group settings by category, e.g. memory settings
         argument.
 
 
+##### keyboard_layout
+
+:   Keyboard layout code (`auto` by default). Set to `auto` to guess the
+    values from the host OS settings. The layout can be followed by the code
+    page number, e.g., `uk 850` selects a Western European screen font. After
+    startup, use the `KEYB` command to manage keyboard layouts and code pages
+    (run `HELP KEYB` for details).
+
+    !!! note
+
+        The list of supported keyboard layout codes can be displayed using
+        the [`--list-layouts`](../command-line.md#-list-layouts) command-line
+        argument (e.g., `uk` is the British English layout).
+
+
+##### locale_period
+
+:   Set locale epoch.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `native` *default*{ .default } -- Re-use current host OS settings,
+      regardless of the country set; use `modern` data to fill in the gaps
+      when the DOS locale system is too limited to follow the desktop
+      settings.
+    - `historic` -- If data is available for the given country, mimic old DOS
+      behaviour when displaying time, dates, or numbers.
+    - `modern` -- Follow current day practices for user experience more
+      consistent with typical host systems.
+
+    </div>
+
+
+### Memory
+
 ##### ems
 
 :   Enable EMS support. Enabled provides the best compatibility but certain
@@ -70,6 +107,38 @@ TODO(CL) group settings by category, e.g. memory settings
 
     Possible values: `on` *default*{ .default }, `off`
 
+
+##### pcjr_memory_config
+
+:   Set PCjr memory layout.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `expanded` *default*{ .default } -- 640 KB total memory with
+      applications residing above 128 KB. Compatible with most games.
+    - `standard` -- 128 KB total memory with applications residing below
+      96 KB. Required for some older games (e.g., Jumpman, Troll).
+
+    </div>
+
+
+##### umb
+
+:   Enable UMB memory support.
+
+    Possible values: `on` *default*{ .default }, `off`
+
+
+##### xms
+
+:   Enable XMS memory support.
+
+    Possible values: `on` *default*{ .default }, `off`
+
+
+### Shell & version
 
 ##### expand_shell_variable
 
@@ -109,57 +178,6 @@ TODO(CL) group settings by category, e.g. memory settings
     </div>
 
 
-##### keyboard_layout
-
-:   Keyboard layout code (`auto` by default). Set to `auto` to guess the
-    values from the host OS settings. The layout can be followed by the code
-    page number, e.g., `uk 850` selects a Western European screen font. After
-    startup, use the `KEYB` command to manage keyboard layouts and code pages
-    (run `HELP KEYB` for details).
-
-    !!! note
-
-        The list of supported keyboard layout codes can be displayed using
-        the [`--list-layouts`](../command-line.md#-list-layouts) command-line
-        argument (e.g., `uk` is the British English layout).
-
-
-##### locale_period
-
-:   Set locale epoch.
-
-    Possible values:
-
-    <div class="compact" markdown>
-
-    - `native` *default*{ .default } -- Re-use current host OS settings,
-      regardless of the country set; use `modern` data to fill in the gaps
-      when the DOS locale system is too limited to follow the desktop
-      settings.
-    - `historic` -- If data is available for the given country, mimic old DOS
-      behaviour when displaying time, dates, or numbers.
-    - `modern` -- Follow current day practices for user experience more
-      consistent with typical host systems.
-
-    </div>
-
-
-##### pcjr_memory_config
-
-:   Set PCjr memory layout.
-
-    Possible values:
-
-    <div class="compact" markdown>
-
-    - `expanded` *default*{ .default } -- 640 KB total memory with
-      applications residing above 128 KB. Compatible with most games.
-    - `standard` -- 128 KB total memory with applications residing below
-      96 KB. Required for some older games (e.g., Jumpman, Troll).
-
-    </div>
-
-
 ##### setver_table_file
 
 :   File containing the list of applications and assigned DOS versions, in a
@@ -173,22 +191,8 @@ TODO(CL) group settings by category, e.g. memory settings
     default). Setting it to empty disables persistent shell history.
 
 
-##### umb
-
-:   Enable UMB memory support.
-
-    Possible values: `on` *default*{ .default }, `off`
-
-
 ##### ver
 
 :   Set DOS version in `MAJOR.MINOR` format (`5.0` by default). A single
     number is treated as the major version. Common settings are `3.3`, `5.0`,
     `6.22`, and `7.1`.
-
-
-##### xms
-
-:   Enable XMS memory support.
-
-    Possible values: `on` *default*{ .default }, `off`
