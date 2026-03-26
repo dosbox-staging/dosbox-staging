@@ -67,25 +67,28 @@ Because DOS games were designed for **CRT monitors**, DOSBox Staging includes
 CRT emulation shaders that reproduce the look of the original hardware. This
 makes a surprisingly large difference --- pixel art that looks harsh and
 blocky on a modern flat panel comes alive with the subtle blending and
-scanlines of a CRT.
+scanlines of the CRT emulation.
 
 
 ## Audio
 
-The original IBM PC had no dedicated sound hardware --- just a tiny **PC
-speaker** that could produce simple beeps and square-wave tones. Clever
-programmers pushed it further, but it was never meant for music.
+The original IBM PC had no dedicated sound hardware, just a tiny **PC
+speaker** designed to produce simple beeps and square-wave tones. Clever
+programmers pushed it further and managed to coerce it to play back digitised
+sound samples, but it was never designed for quality audio reproduction.
 
 The **Tandy 1000** was again ahead of its time, providing three-voice sound
 via a built-in chip that made it the best gaming PC for sound until dedicated
 sound cards arrived.
 
-Real audio came to the PC platform in the late 1980s with the **AdLib** card
-(1987) using FM synthesis, followed by Creative's **Sound Blaster** (1989)
-which added digital audio playback. The Sound Blaster became the de facto
-standard, and most DOS games from 1990 onwards support it. For high-end
-music, the **Roland MT-32** sound module offered stunning synthesised audio
-from 1988, though it was expensive and remained a luxury item.
+Real audio came to the PC platform in the late 1987 with the **AdLib** card
+using FM synthesis, followed by Creative's **Sound Blaster** in 1989 which
+added digital audio playback. The Sound Blaster became the de facto standard,
+and most DOS games from 1990 onwards support it. For high-end music, the
+**Roland MT-32** sound module offered stunning synthesised audio from 1988
+onwards, though it was expensive and remained a luxury item.
+
+TODO(CL) GUS, General Midi, CD-DA Audio (just briefly)
 
 
 ## Input peripherals

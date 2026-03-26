@@ -14,8 +14,8 @@ people.
 To capture the mouse, click inside the DOSBox window. By default, the DOSBox
 Staging window's titlebar indicates if the mouse is captured. To release the
 mouse, press the middle mouse button or ++ctrl+f10++ / ++cmd+f10++ (see
-[Keyboard shortcuts](../shortcuts.md)). If your mouse has no middle button,
-the keyboard shortcut is your friend. 
+[Keyboard shortcuts](../appendices/shortcuts.md)). If your mouse has no middle
+button, the keyboard shortcut is your friend. 
 
 The [`mouse_raw_input`](#mouse_raw_input) setting bypasses your host OS's
 mouse acceleration, giving you consistent sensitivity regardless of your

@@ -160,6 +160,8 @@ nav:
       - documentation/configuration.md
       - documentation/command-line.md
 
+      - documentation/autoexec.md
+
       - System:
         - documentation/system/general.md
         - documentation/system/cpu.md
@@ -197,7 +199,6 @@ nav:
           - documentation/sound/sound-devices/covox-variants.md
           - documentation/sound/sound-devices/innovation.md
           - documentation/sound/sound-devices/imfc.md
-        - documentation/capture.md
         - documentation/sound/disk-noise.md
 
       - Networking:
@@ -205,9 +206,12 @@ nav:
         - documentation/networking/ipx.md
         - documentation/networking/ethernet.md
 
+      - documentation/capture.md
       - documentation/webserver.md
-      - documentation/shortcuts.md
-      - documentation/autoexec.md
+
+      - Appendices:
+        - documentation/appendices/shortcuts.md
+        - documentation/appendices/keymapper.md
 
   - Get involved:
       - get-involved/index.md
