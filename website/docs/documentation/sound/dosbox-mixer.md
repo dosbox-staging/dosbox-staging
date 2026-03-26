@@ -135,6 +135,36 @@ sections of the manual where they're described in detail.
 [^stereo]: The output can either mono or stereo, depending on the selected model.
 
 
+## Minimising audio glitches
+
+Even after setting the optimal [cpu_cycles](../system/cpu.md#cpu_cycles)
+value, you may hear occasional clicks or pops. This depends on your
+particular hardware, audio driver, and operating system combination.
+
+Increasing the audio buffer sizes usually helps. The trade-off is higher
+audio latency (a longer delay between an action and its sound). The
+default `blocksize` is 1024 on Windows and 512 on macOS and Linux
+(in sample frames). The default `prebuffer` is 25 ms on Windows and 20 ms
+on the other platforms.
+
+Try doubling both values as a starting point:
+
+``` ini
+[mixer]
+blocksize = 2048
+prebuffer = 50
+```
+
+The `blocksize` should be a power of two: 256, 512, 1024, 2048, 4096, or
+8192. The `prebuffer` can be any value in milliseconds. Increase
+further if glitches persist, but keep in mind that larger buffers mean more
+noticeable input-to-sound delay.
+
+Also make sure your [cpu_cycles](../system/cpu.md#cpu_cycles) isn't set
+higher than the game actually needs --- overdoing it wastes host CPU
+resources that could otherwise go towards glitch-free audio emulation.
+
+
 ## Configuration settings
 
 Mixer settings are to be configured in the `[mixer]` section. For effects
