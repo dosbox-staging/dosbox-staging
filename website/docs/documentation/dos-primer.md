@@ -51,14 +51,41 @@ require specific speed ranges to run correctly.
 
 ## Video
 
-TODO(CL) brief overview of video adapters and the importance of CRT emulation, 
-, calling out tandy as the best overall gaming PC until about 1987
+The original IBM PC supported only two graphics standards: monochrome
+**Hercules** and **CGA** (Color Graphics Adapter) with just four colours at
+320&times;200. **EGA** (Enhanced Graphics Adapter) raised this to 16 colours
+in 1984, and **VGA** (Video Graphics Array) arrived in 1987 with 256 colours
+at 320&times;200 --- the resolution most DOS games are remembered for. Later
+**SVGA** cards pushed to higher resolutions and colour depths.
+
+The **Tandy 1000** line deserves special mention: it offered 16-colour
+graphics and three-voice sound in an affordable package, making it the best
+overall gaming PC until about 1987. Many mid-1980s games look and sound
+noticeably better in Tandy mode.
+
+Because DOS games were designed for **CRT monitors**, DOSBox Staging includes
+CRT emulation shaders that reproduce the look of the original hardware. This
+makes a surprisingly large difference --- pixel art that looks harsh and
+blocky on a modern flat panel comes alive with the subtle blending and
+scanlines of a CRT.
 
 
 ## Audio
 
-TODO(CL) brief overview of the lack of audio until the late 80s, calling out
-tandy as the best overall gaming PC until about 1987
+The original IBM PC had no dedicated sound hardware --- just a tiny **PC
+speaker** that could produce simple beeps and square-wave tones. Clever
+programmers pushed it further, but it was never meant for music.
+
+The **Tandy 1000** was again ahead of its time, providing three-voice sound
+via a built-in chip that made it the best gaming PC for sound until dedicated
+sound cards arrived.
+
+Real audio came to the PC platform in the late 1980s with the **AdLib** card
+(1987) using FM synthesis, followed by Creative's **Sound Blaster** (1989)
+which added digital audio playback. The Sound Blaster became the de facto
+standard, and most DOS games from 1990 onwards support it. For high-end
+music, the **Roland MT-32** sound module offered stunning synthesised audio
+from 1988, though it was expensive and remained a luxury item.
 
 
 ## Input peripherals
@@ -92,7 +119,9 @@ Eventually, hard drives went down in price so most people could afford them.
 As a result of this, the vast majority of DOS games and applications can be
 installed easily onto the hard drive.
 
-TODO(CL) mention CD-ROMs as well
+By the mid-1990s, **CD-ROM drives** became standard equipment, vastly
+expanding storage capacity. Many later DOS games shipped on CD-ROMs, enabling
+full-motion video, CD audio soundtracks, and voice acting.
 
 This is in stark contrast with the home computers of the era that used
 magnetic tapes and floppies for storage due to cost considerations well into
