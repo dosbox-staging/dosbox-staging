@@ -160,11 +160,24 @@ nav:
       - documentation/configuration.md
       - documentation/command-line.md
 
+      - System:
+        - documentation/system/general.md
+        - documentation/system/cpu.md
+        - documentation/system/dos.md
+        - documentation/system/regional.md
+
+      - Input:
+        - documentation/input/overview.md
+        - documentation/input/keyboard.md
+        - documentation/input/mouse.md
+        - documentation/input/joystick.md
+
       - Graphics:
         - documentation/graphics/display-and-window.md
         - documentation/graphics/rendering.md
         - documentation/graphics/composite-video.md
         - documentation/graphics/3dfx-voodoo.md
+        - documentation/graphics/reelmagic.md
 
       - Sound:
         - documentation/sound/overview.md
@@ -187,25 +200,12 @@ nav:
         - documentation/sound/capture.md
         - documentation/sound/disk-noise.md
 
-      - Input:
-        - documentation/input/overview.md
-        - documentation/input/keyboard.md
-        - documentation/input/mouse.md
-        - documentation/input/joystick.md
-
-      - System:
-        - documentation/system/general.md
-        - documentation/system/cpu.md
-        - documentation/system/dos.md
-
       - Networking:
         - documentation/networking/serial-ports.md
         - documentation/networking/ipx.md
         - documentation/networking/ethernet.md
 
-      - documentation/reelmagic.md
       - documentation/webserver.md
-      - documentation/regional.md
       - documentation/shortcuts.md
       - documentation/autoexec.md
 
