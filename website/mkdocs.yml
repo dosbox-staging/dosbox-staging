@@ -197,7 +197,7 @@ nav:
           - documentation/sound/sound-devices/covox-variants.md
           - documentation/sound/sound-devices/innovation.md
           - documentation/sound/sound-devices/imfc.md
-        - documentation/sound/capture.md
+        - documentation/capture.md
         - documentation/sound/disk-noise.md
 
       - Networking:

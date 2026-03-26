@@ -102,14 +102,12 @@ MIDI related settings are to be configured in the `[midi]` section. The most
 common usage scenario is to leave [mididevice](#mididevice) at its default
 `auto` setting, then set [midiconfig](#midiconfig) to:
 
-- `mt32` to use the built-in [Roland MT-32](TODO) emulation,
+- `mt32` to use the built-in [Roland MT-32](sound-devices/roland-mt-32.md) emulation,
 - `fluidsynth` to use the built-in [FluidSynth](#) MIDI synthesiser,
 - or to an ID that identifies an external MIDI device.
 
-You can use the `mixer /listmidi` DOS command to see the list of available external
-MIDI devices. For example:
-
-TODO image
+You can use the `mixer /listmidi` DOS command to see the list of available
+external MIDI devices.
 
 !!! tip
 
