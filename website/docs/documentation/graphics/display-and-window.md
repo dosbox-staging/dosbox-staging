@@ -22,15 +22,88 @@ games.
 
 ## Presentation modes
 
-TODO(CL) write section based on release notes from here https://github.com/dosbox-staging/dosbox-staging/pull/4438 . just text, no images.
+DOSBox Staging offers two frame presentation strategies, controlled by the
+[presentation_mode](#presentation_mode) setting:
+
+**`dos-rate`** presents frames at the refresh rate of the emulated DOS video
+mode (e.g., 70 Hz for standard VGA). This is the ideal choice for variable
+refresh rate (VRR) monitors (G-Sync, FreeSync, or VRR) --- the display
+synchronises directly to the emulated refresh rate, giving you perfect frame
+pacing with no tearing and low input lag. No configuration is needed; the
+defaults just work.
+
+**`host-rate`** presents the most recent frame at the host display's refresh
+rate. This is intended for fixed refresh rate monitors (typically 60 Hz) with
+[vsync](#vsync) enabled to eliminate screen tearing in fast-paced games.
+
+The default `auto` mode selects `dos-rate` when vsync is off and `host-rate`
+when vsync is on, which is the right choice for most setups.
+
+In practice, most users fall into one of three categories:
+
+- **VRR monitor**: Use the defaults (`dos-rate`, vsync off). Perfect pacing,
+  no tearing.
+- **Fixed 60 Hz monitor, fast-paced games**: Set `vsync = on` to eliminate
+  tearing in fullscreen. The `auto` presentation mode will switch to
+  `host-rate` accordingly.
+- **Fixed 60 Hz monitor, slower games** (RPGs, adventures, strategy): The
+  defaults work fine --- tearing is rarely noticeable in these genres.
+
+!!! note
+
+    For perfectly smooth scrolling in 2D games (e.g., Pinball Dreams, Epic
+    Pinball), you'll need a VRR monitor running in VRR mode with vsync
+    disabled. The scrolling in 70 Hz VGA games will always appear juddery on
+    60 Hz fixed refresh rate monitors, even with vsync enabled.
+
 
 ## Dedithering
 
-TODO(CL) write section based on release notes from here https://github.com/dosbox-staging/dosbox-staging/pull/4777 . just text, no images.
+Many DOS games used dithering --- alternating pixel patterns --- to simulate
+more colours than their limited palette could display. This was especially
+common in 16-colour EGA games, where checkerboard patterns created the
+illusion of intermediate shades.
+
+The `dedithering` setting (in the `[render]` section) detects these
+checkerboard patterns and blends them into solid colours. It works with any
+graphics adapter (CGA, EGA, VGA, Hercules) and any resolution, and can be
+combined with any shader.
+
+Games that benefit most from dedithering include early Sierra SCI0 adventures
+(*Leisure Suit Larry 2 & 3*, *Quest for Glory I & II*, *Space Quest III*),
+EGA LucasArts titles (*The Secret of Monkey Island* EGA version, *Loom*),
+and early Legend Entertainment games (*Spellcasting 101*, *Timequest*,
+*Gateway*).
+
+!!! note
+
+    Dedithering is *not* a more authentic representation. On real PC CRT
+    monitors, dither patterns were clearly visible --- blending them into solid
+    colours was only a thing on consoles connected to consumer TV sets. For a
+    more authentic look, use `shader = crt-auto` instead.
+
 
 ## Deinterlacing
 
-TODO(CL) write section based on release notes from here https://github.com/dosbox-staging/dosbox-staging/pull/4689 . just text, no images.
+Many 90s DOS games displayed full-motion video (FMV) using interlaced
+rendering --- showing only every second line of the video frame. This halved
+storage requirements and looked fine on small CRTs where the brain filled in
+the gaps, but on modern flat screens the alternating black lines look
+distracting and halve the apparent brightness.
+
+The `deinterlacing` setting (in the `[render]` section) automatically detects
+interlaced regions within each frame and reconstructs the missing lines. The
+detection is intelligent --- it only touches interlaced areas while leaving
+HUDs, UI frames, subtitles, and mouse cursors untouched.
+
+Both common interlacing patterns are supported: standard line interlacing
+(alternating black horizontal lines, used by most games) and dot interlacing
+(a checkerboard pattern, used by the CD-ROM versions of *Dune* and *KGB*).
+
+Games that benefit from deinterlacing include *Wing Commander IV*,
+*Phantasmagoria*, *Gabriel Knight 2*, *Crusader: No Remorse*, *Crusader: No
+Regret*, *CyberMage*, *Angel Devoid*, and *Heroes of Might and Magic II*,
+among others. Enable it per-game rather than globally for best results.
 
 
 

@@ -12,21 +12,19 @@ Very few games support this sound option.
 
 <div class="compact" markdown>
 
-TODO(CL) mobygames links
-
-- Airball
-- Bad Blood
-- Battle Chess II
-- BattleTech: The Crescent Hawks' Revenge
-- F-19 Stealth Fighter
-- Falcon A.T.
-- Harpoon
-- Joe Montana Football
-- Lord of the Rings Volume 1
-- Red Storm Rising
-- Super Jeopardy
-- Ultima VI
-- Windwalker
+- [Airball](https://www.mobygames.com/game/44/airball/)
+- [Bad Blood](https://www.mobygames.com/game/2127/bad-blood/)
+- [Battle Chess II: Chinese Chess](https://www.mobygames.com/game/1301/battle-chess-ii-chinese-chess/)
+- [BattleTech: The Crescent Hawks' Revenge](https://www.mobygames.com/game/233/battletech-the-crescent-hawks-revenge/)
+- [F-19 Stealth Fighter](https://www.mobygames.com/game/512/f-19-stealth-fighter/)
+- [Falcon A.T.](https://www.mobygames.com/game/1628/falcon-at/)
+- [Harpoon](https://www.mobygames.com/game/8308/harpoon/)
+- [Joe Montana Football](https://www.mobygames.com/game/21183/joe-montana-football/)
+- [J.R.R. Tolkien's The Lord of the Rings, Vol. I](https://www.mobygames.com/game/3870/jrr-tolkiens-the-lord-of-the-rings-vol-i/)
+- [Red Storm Rising](https://www.mobygames.com/game/1655/red-storm-rising/)
+- [Super Jeopardy!](https://www.mobygames.com/game/33449/super-jeopardy/)
+- [Ultima VI: The False Prophet](https://www.mobygames.com/game/104/ultima-vi-the-false-prophet/)
+- [Windwalker](https://www.mobygames.com/game/1636/windwalker/)
 
 </div>
 

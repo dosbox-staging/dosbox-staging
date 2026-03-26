@@ -6,10 +6,13 @@ DOSBox Staging emulates four COM (serial) ports, the same ones DOS programs
 used for modems, serial mice, and direct cable connections.
 
 The most common use case is modem multiplayer. Setting a serial port to
-`modem` mode turns your internet connection into a virtual phone line —
-dial-up multiplayer without the phone bill. Games like *Doom*, *Rise of the
-Triad*, and *Terminal Velocity* all supported modem play, and this is how
-you'd get them talking to each other today.
+`modem` mode turns your internet connection into a virtual phone line ---
+dial-up multiplayer without the phone bill. Games like
+[*Doom*](https://www.mobygames.com/game/1068/doom/),
+[*Rise of the Triad*](https://www.mobygames.com/game/418/rise-of-the-triad-dark-war/),
+and [*Terminal Velocity*](https://www.mobygames.com/game/635/terminal-velocity/)
+all supported modem play, and this is how you'd get them talking to each
+other today.
 
 For a direct two-player link, `nullmodem` mode connects two DOSBox
 instances over TCP without emulating the modem handshake. This is the
@@ -18,8 +21,6 @@ simplest way to get head-to-head play working.
 You can also attach a serial mouse to a COM port for the rare game that
 specifically requires one, rather than using the built-in PS/2
 [mouse](../input/mouse.md) driver.
-
-TODO(CL) mobygames links
 
 
 ## Configuration settings
