@@ -22,6 +22,8 @@ differences in display characteristics.
 If you prefer a crisp, pixel-perfect look without any CRT emulation, set
 `shader = sharp`. For completely unprocessed output, use `shader = none`.
 
+TODO(CL) link game names to mobygames
+
 
 ## CRT shaders
 
@@ -224,6 +226,8 @@ the Temptress*), Delphine Software (*Another World*, *Flashback*), and
 Coktel Vision (*Gobliiins* series). The tell-tale sign is scanned or
 hand-drawn artwork that appears vertically stretched with aspect ratio
 correction enabled.
+
+TODO(CL) link game names to mobygames
 
 Pixels are square (1:1 PAR) in 640&times;480 and higher resolutions. A few
 other modes have their own non-square PARs: 640&times;350 EGA (1:1.37 PAR),
