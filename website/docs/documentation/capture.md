@@ -1,4 +1,7 @@
-# Audio capture
+# Capture
+
+TODO(CL) structure this better. we need a separate video capture and audio
+capture section before the "Configuration settings" reference section
 
 DOSBox Staging can capture screenshots, record audio, and record video
 directly from the emulator. Screenshots can be saved in multiple formats:
