@@ -8,7 +8,7 @@ your regular video card and connect them with a pass-through cable. A
 gloriously awkward setup, but the results were stunning for the era.
 
 Games accessed the Voodoo through 3dfx's proprietary Glide API. Titles
-like [*Tomb Raider*](https://www.mobygames.com/game/348/tomb-raider/), [*Quake*](https://www.mobygames.com/game/374/quake/), and [*Need for Speed II SE*](https://www.mobygames.com/game/2113/need-for-speed-ii-se/) looked dramatically
+like [Tomb Raider](https://www.mobygames.com/game/348/tomb-raider/), [Quake](https://www.mobygames.com/game/374/quake/), and [Need for Speed II SE](https://www.mobygames.com/game/2113/need-for-speed-ii-se/) looked dramatically
 better with Voodoo hardware — and these are among the late DOS-era games
 that DOSBox Staging can bring back to life.
 

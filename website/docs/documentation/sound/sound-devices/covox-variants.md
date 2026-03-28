@@ -13,7 +13,7 @@ for the era.
 The Covox Speech Thing (1986) was a simple R-2R resistor ladder DAC that
 plugged into the parallel port. It was cheap to build (even as a DIY
 project) and provided 8-bit mono audio output. A number of games supported
-it, including several Sierra titles and [*Leisure Suit Larry 1 VGA*](https://www.mobygames.com/game/413/leisure-suit-larry-1-in-the-land-of-the-lounge-lizards/).
+it, including several Sierra titles and [Leisure Suit Larry 1 VGA](https://www.mobygames.com/game/413/leisure-suit-larry-1-in-the-land-of-the-lounge-lizards/).
 
 
 ### Disney Sound Source
