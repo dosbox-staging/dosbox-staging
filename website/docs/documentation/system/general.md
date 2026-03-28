@@ -141,8 +141,37 @@ section.
       are often required by late '90s demoscene productions.
 
 
-    TODO(CL) create mode tables for all three options, look this up from the
-    code that narrows down the video modes list
+    The following table shows the available resolutions in `compatible` mode
+    and the minimum video memory required for each colour depth. Standard VGA
+    modes (320&times;200, 640&times;480, etc.) are always available regardless
+    of the `vesa_modes` setting.
+
+    <div class="compact" markdown>
+
+    | Resolution      | 4-bit | 8-bit | 16-bit | 24-bit | 32-bit |
+    |-----------------|-------|-------|--------|--------|--------|
+    | 640&times;400   | ---   | any   | ---    | ---    | 1 MB   |
+    | 640&times;480   | any   | any   | 1 MB   | 1 MB   | 2 MB   |
+    | 800&times;600   | any   | any   | 1 MB   | ---    | 2 MB   |
+    | 1024&times;768  | any   | 1 MB  | 2 MB   | ---    | 4 MB   |
+    | 1152&times;864  | ---   | 1 MB  | 2 MB   | 4 MB   | 4 MB   |
+    | 1280&times;960  | 1 MB  | 2 MB  | 4 MB   | 4 MB   | 8 MB   |
+    | 1280&times;1024 | 1 MB  | 2 MB  | 4 MB   | 4 MB   | 8 MB   |
+    | 1600&times;1200 | 1 MB  | 2 MB  | 4 MB   | 8 MB   | 8 MB   |
+
+    </div>
+
+    The `all` mode adds the following on top of `compatible`:
+
+    <div class="compact" markdown>
+
+    - 320&times;200 and 320&times;240 high colour modes (15/16/24/32-bit)
+    - 320&times;400 and 320&times;480 modes in various depths
+    - 400&times;300 modes (8/15/16/24-bit)
+    - 512&times;384 modes (8/15/16/32-bit)
+    - 848&times;480 widescreen modes (8/15/16/32-bit)
+
+    </div>
 
 
 ##### vga_8dot_font
