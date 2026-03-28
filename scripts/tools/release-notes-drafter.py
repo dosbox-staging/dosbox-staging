@@ -101,22 +101,22 @@ FILTERS = [
 def setup_arg_parser(parser):
     parser.add_argument(
         "ACTION",
-        choices=["query", "process", "publish"],
-        help="""query
+        choices=["summary.query", "summary.process", "summary.publish"],
+        help="""summary.query
   Queries information about all pull requests merged to the 'main'
   branch since the last public DOSBox Staging release and writes
   the results to a CSV file.
 
-process
-  Processes the CSV output of the 'query' action and generates the
+summary.process
+  Processes the CSV output of the 'summary.query' action and generates the
   release notes draft either in Markdown or CSV format.
 
-publish
+summary.publish
   Publishes (creates or updates) the release notes draft.
 """
     )
 
-    query_args = parser.add_argument_group(title="query arguments")
+    query_args = parser.add_argument_group(title="summary.query arguments")
     query_args.add_argument(
         "--start_time",
         help="""include pull requests after this datetime
@@ -127,7 +127,7 @@ publish
         help="output CSV file containing the pull requests"
     )
 
-    process_args = parser.add_argument_group(title="process arguments")
+    process_args = parser.add_argument_group(title="summary.process arguments")
 
     process_args.add_argument(
         "--input_csv_file",
@@ -162,7 +162,7 @@ publish
         help="version tag of the release notes draft (e.g., v0.83.0-alpha)"
     )
 
-    publish_args = parser.add_argument_group(title="publish arguments")
+    publish_args = parser.add_argument_group(title="summary.publish arguments")
 
     publish_args.add_argument(
         "--release_notes_file",
@@ -642,7 +642,7 @@ def main():
         sys.exit(1)
 
     match args.ACTION:
-        case "query":
+        case "summary.query":
             if not args.start_time:
                 parser.error("--start_time must be specified")
 
@@ -651,7 +651,7 @@ def main():
 
             query_pull_requests(args.out_pull_requests_csv, args.start_time)
 
-        case "process":
+        case "summary.process":
             if not args.input_csv_file:
                 parser.error("--input_csv_file must be specified")
 
@@ -675,7 +675,7 @@ def main():
             if args.out_csv_file:
                 process_pull_requests_csv(items, args.out_csv_file)
 
-        case "publish":
+        case "summary.publish":
             if not args.release_notes_file:
                 parser.error("--release_notes_file must be specified")
 
