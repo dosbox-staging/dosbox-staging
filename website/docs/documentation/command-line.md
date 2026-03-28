@@ -99,7 +99,7 @@ pages.
 
 ##### `--noautoexec`
 
-:   Don't run DOS commands from any [autoexec](autoexec.md) sections.
+:   Don't run DOS commands from any [autoexec](configuration.md#autoexec) sections.
 
 
 ##### `--exit`

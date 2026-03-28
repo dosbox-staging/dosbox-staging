@@ -17,6 +17,9 @@ The default 16 MB of RAM set via [memsize](#memsize) is more than enough for
 nearly all DOS software. A few late DOS-era games need 32 MB, but these are
 rare exceptions.
 
+The [language](#language) setting controls the language of DOSBox Staging's
+own user interface messages.
+
 
 ## Video memory delay
 
