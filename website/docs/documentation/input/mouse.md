@@ -48,11 +48,9 @@ expects. See [com_mouse_model](#com_mouse_model) for details.
 
 Multiple physical mice can be mapped to specific emulated mouse interfaces,
 enabling two-player split-screen gaming using two USB mice on a single
-computer (e.g., in **The Settlers** and **The Settlers II**). Use the
+computer (e.g., in [**The Settlers**](https://www.mobygames.com/game/425/serf-city-life-is-feudal/) and [**The Settlers II**](https://www.mobygames.com/game/598/the-settlers-ii-veni-vidi-vici/)). Use the
 `MOUSECTL` command on the DOS command line to set the per-interface mouse
 configurations.
-
-TODO(CL) link game names to mobygames
 
 See the [Dual mouse gaming](https://github.com/dosbox-staging/dosbox-staging/wiki/Dual-Mouse-Gaming) wiki page for setup details.
 

@@ -21,13 +21,10 @@ be distributed with DOSBox Staging, so you'll need to obtain them
 separately.
 
 Where the GUS truly shone was in the demoscene and tracker music community.
-*Second Reality* by Future Crew — widely considered one of the greatest DOS
+[*Second Reality*](https://www.pouet.net/prod.php?which=5) by Future Crew — widely considered one of the greatest DOS
 demos ever made — was designed to sound its best on a GUS. Games with
-native GUS support, like *Star Control II*, also benefited enormously from
+native GUS support, like [*Star Control II*](https://www.mobygames.com/game/179/star-control-ii/), also benefited enormously from
 its superior audio capabilities.
-
-TODO(CL) game links to mobygames 
-TODO(CL) demo linkt to pouet.net
 
 ## Configuration settings
 

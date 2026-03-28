@@ -16,18 +16,16 @@ The following DOS games are known to use the ReelMagic card:
 
 <div class="compact" markdown>
 
-TODO(CL) link game names to mobygames
-
-- Crime Patrol
-- Crime Patrol 2: Drug Wars
-- Dragon's Lair
-- Entity
-- Flash Traffic: City of Angels
-- Lord of the Rings (Interplay, 1993)
-- Man Enough
-- Return to Zork
-- Space Ace
-- The Horde
+- [Crime Patrol](https://www.mobygames.com/game/459/crime-patrol/)
+- [Crime Patrol 2: Drug Wars](https://www.mobygames.com/game/768/drug-wars/)
+- [Dragon's Lair](https://www.mobygames.com/game/1504/dragons-lair/)
+- [Entity](https://www.mobygames.com/game/6072/entity/)
+- [Flash Traffic: City of Angels](https://www.mobygames.com/game/14651/flash-traffic-city-of-angels/)
+- [Lord of the Rings](https://www.mobygames.com/game/3870/jrr-tolkiens-the-lord-of-the-rings-vol-i/) (Interplay, 1993)
+- [Man Enough](https://www.mobygames.com/game/29122/man-enough/)
+- [Return to Zork](https://www.mobygames.com/game/1219/return-to-zork/)
+- [Space Ace](https://www.mobygames.com/game/6009/space-ace/)
+- [The Horde](https://www.mobygames.com/game/6142/the-horde/)
 
 </div>
 
