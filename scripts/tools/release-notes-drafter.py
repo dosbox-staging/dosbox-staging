@@ -101,7 +101,8 @@ FILTERS = [
 def setup_arg_parser(parser):
     parser.add_argument(
         "ACTION",
-        choices=["summary.query", "summary.process", "summary.publish"],
+        choices=["summary.query", "summary.process", "summary.publish",
+                 "website.query", "website.process"],
         help="""summary.query
   Queries information about all pull requests merged to the 'main'
   branch since the last public DOSBox Staging release and writes
@@ -113,6 +114,15 @@ summary.process
 
 summary.publish
   Publishes (creates or updates) the release notes draft.
+
+website.query
+  Queries all pull requests merged to 'main' since the last public
+  release, including their full descriptions, and writes the results
+  to a JSON file.
+
+website.process
+  Processes the JSON output of the 'website.query' action and generates
+  a detailed release notes draft for the website.
 """
     )
 
@@ -174,6 +184,23 @@ summary.publish
     publish_args.add_argument(
         "--publish_version_tag",
         help="the release notes will be published under this tag (e.g., v0.83.0-alpha)"
+    )
+
+    website_args = parser.add_argument_group(title="website.query / website.process arguments")
+
+    website_args.add_argument(
+        "--out_json_file",
+        help="output JSON file containing pull requests with descriptions"
+    )
+
+    website_args.add_argument(
+        "--input_json_file",
+        help="input JSON file from 'website.query'"
+    )
+
+    website_args.add_argument(
+        "--version",
+        help="release version number (e.g., 0.83.0)"
     )
 
 
@@ -251,12 +278,14 @@ def get_prerelease_id_by_tag(tag):
     return None
 
 
-def get_pull_requests(start, end, cursor=None):
+def get_pull_requests(start, end, cursor=None, include_body=False):
     after = f'"{cursor}"' if cursor else "null"
 
     search_query = ("repo:dosbox-staging/dosbox-staging is:pr "
                     "is:merged base:main "
                     f"merged:{start}..{end} sort:updated")
+
+    body_field = "body" if include_body else ""
 
     query = """
       {
@@ -278,6 +307,7 @@ def get_pull_requests(start, end, cursor=None):
               createdAt
               updatedAt
               mergedAt
+              """ + body_field + """
               labels(first: 20) {
                 nodes {
                   name
@@ -308,7 +338,7 @@ def pull_requests_response_to_dict(response):
     result = []
 
     for item in nodes:
-        result.append({
+        pr = {
             "title":     item["title"],
             "number":    item["number"],
             "author":    get_author(item),
@@ -317,12 +347,16 @@ def pull_requests_response_to_dict(response):
             "updatedAt": item["updatedAt"],
             "mergedAt":  item["mergedAt"],
             "labels":    ", ".join([l["name"] for l in item["labels"]["nodes"]])
-        })
+        }
+        if "body" in item:
+            pr["body"] = item["body"]
+
+        result.append(pr)
 
     return result
 
 
-def fetch_all_pull_requests_since(start_time):
+def fetch_all_pull_requests_since(start_time, include_body=False):
     all_items = []
     cursor = None
     item_offset = 0
@@ -331,7 +365,9 @@ def fetch_all_pull_requests_since(start_time):
 
     while True:
         print(f"Fetching next page of pull requests, item offset: {item_offset}")
-        response = get_pull_requests(start=start_time, end=now, cursor=cursor)
+        response = get_pull_requests(start=start_time, end=now,
+                                     cursor=cursor,
+                                     include_body=include_body)
         items = pull_requests_response_to_dict(response)
 
         all_items.extend(items)
@@ -558,16 +594,25 @@ def process_pull_requests_html(items, html_fname, version_tag):
         f.write(html)
 
 
+def write_json(items, output_json):
+    with open(output_json, "w", encoding="UTF-8") as f:
+        json.dump(items, f, indent=2, ensure_ascii=False)
+
+
+def read_json(fname):
+    with open(fname, encoding="UTF-8") as f:
+        return json.load(f)
+
+
 def query_pull_requests(csv_fname, start_time):
-#    latest_release = get_latest_public_release()
-
-#    latest_release_name = latest_release["name"]
-#    start_time = latest_release["publishedAt"]
-#    print(f"Latest release name: {latest_release_name}, published at: {start_time}")
-
     items = fetch_all_pull_requests_since(start_time)
     write_csv(items, csv_fname)
+    print(f"{len(items)} pull requests written")
 
+
+def website_query_pull_requests(json_fname, start_time):
+    items = fetch_all_pull_requests_since(start_time, include_body=True)
+    write_json(items, json_fname)
     print(f"{len(items)} pull requests written")
 
 
@@ -683,6 +728,15 @@ def main():
                 parser.error("--publish_version_tag must be specified")
 
             publish_prerelease(args.release_notes_file, args.publish_version_tag)
+
+        case "website.query":
+            if not args.start_time:
+                parser.error("--start_time must be specified")
+
+            if not args.out_json_file:
+                parser.error("--out_json_file must be specified")
+
+            website_query_pull_requests(args.out_json_file, args.start_time)
 
 
 if __name__ == "__main__":
