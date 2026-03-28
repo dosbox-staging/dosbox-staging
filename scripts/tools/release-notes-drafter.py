@@ -34,6 +34,9 @@ GITHUB_ACCESS_TOKEN = ""
 
 RELEASES_BASE_URL = f"{GITHUB_API_URL}/repos/{GITHUB_ORG}/{GITHUB_REPO}/releases"
 
+COMMON_VARS_PATH = os.path.join(os.path.dirname(__file__),
+                                "../../.github/actions/set-common-vars/action.yml")
+
 FETCH_PAGE_SIZE = 50
 
 HTTP_TIMEOUT_SEC = 10
@@ -131,7 +134,8 @@ website.process
     query_args.add_argument(
         "--start_time",
         help="""include pull requests after this datetime
-        """
+(defaults to RELEASE_START_TIME from set-common-vars/action.yml)
+"""
     )
     query_args.add_argument(
         "--out_pull_requests_csv",
@@ -203,6 +207,17 @@ website.process
         "--version",
         help="release version number (e.g., 0.83.0)"
     )
+
+
+def get_default_start_time():
+    """Read RELEASE_START_TIME from the CI common vars file."""
+    path = os.path.normpath(COMMON_VARS_PATH)
+    with open(path, encoding="UTF-8") as f:
+        for line in f:
+            m = re.search(r'RELEASE_START_TIME=(\S+)', line)
+            if m:
+                return m.group(1).strip('"\'')
+    return None
 
 
 def create_headers():
@@ -870,13 +885,14 @@ def main():
 
     match args.ACTION:
         case "summary.query":
-            if not args.start_time:
+            start_time = args.start_time or get_default_start_time()
+            if not start_time:
                 parser.error("--start_time must be specified")
 
             if not args.out_pull_requests_csv:
                 parser.error("--out_pull_requests_csv must be specified")
 
-            query_pull_requests(args.out_pull_requests_csv, args.start_time)
+            query_pull_requests(args.out_pull_requests_csv, start_time)
 
         case "summary.process":
             if not args.input_csv_file:
@@ -912,13 +928,14 @@ def main():
             publish_prerelease(args.release_notes_file, args.publish_version_tag)
 
         case "website.query":
-            if not args.start_time:
+            start_time = args.start_time or get_default_start_time()
+            if not start_time:
                 parser.error("--start_time must be specified")
 
             if not args.out_json_file:
                 parser.error("--out_json_file must be specified")
 
-            website_query_pull_requests(args.out_json_file, args.start_time)
+            website_query_pull_requests(args.out_json_file, start_time)
 
         case "website.process":
             if not args.input_json_file:
