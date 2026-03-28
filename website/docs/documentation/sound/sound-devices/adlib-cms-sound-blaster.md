@@ -198,26 +198,9 @@ manufacturers started including full AdLib compatibility on their cards. The
 result of this is that virtually all DOS games from 1990 onwards support the
 AdLib, at least as a fallback option.
 
-<figure markdown>
-  <audio controls src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/alone-in-the-dark.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-
-  <figcaption markdown>
-  Intro music of Alone in the Dark (floppy version) on the AdLib card
-  </figcaption>
-</figure>
-
 Digital audio is not supported on the card, but some games were able to
 approximate it with various tricks (e.g., **F-15 Strike Eagle II** by
 MicroProse).
-
-<figure markdown>
-  <audio controls src="https://archive.org/download/dosbox-staging-v0.79.0-reverb-and-chorus/alone-in-the-dark.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-
-  <figcaption markdown>
-  F-15 Strike Eagle II on the AdLib card
-  </figcaption>
-</figure>
-
 
 Use the following settings to enable AdLib (OPL2) emulation:
 
@@ -455,6 +438,8 @@ sbtype = ess
 
 <div class="compact" markdown>
 
+TODO(CL) link games to mobygames
+
 - 11th Hour, The
 - Advanced Civilization
 - Callahan's Crosstime Saloon
@@ -471,41 +456,11 @@ sbtype = ess
 </div>
 
 
-### Audio comparison: ESFM vs OPL
-
-<div class="compact" markdown>
-
-| Game                                          | Audio example                                                                                                                 |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Heroes of Might and Magic II --- Title (ESFM)   | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heroes2-title-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| Heroes of Might and Magic II --- Title (OPL)  | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heroes2-title-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| Heroes of Might and Magic II --- In-game (ESFM)      | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heroes2-ingame-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| Heroes of Might and Magic II --- In-game (OPL)         | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heroes2-ingame-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| The Settlers 2 --- Track 5 (ESFM)   | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/settlers2-track5-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| The Settlers 2 --- Track 5 (OPL)    | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/settlers2-track5-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| The Settlers 2 --- Track 14 (ESFM)    | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/settlers2-track14-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| The Settlers 2 --- Track 14 (OPL)    | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/settlers2-track14-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| The Gene Machine (ESFM)  | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/the-gene-machine-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| The Gene Machine (OPL)  | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/the-gene-machine-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| Heaven's Dawn (ESFM)  | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heavens-dawn-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-| Heaven's Dawn (OPL)  | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heavens-dawn-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-
-</div>
-
 !!! tip
 
     You can also try to "retrofit" the `ESFM.MID` driver from Miles Sound
     System games that have it into earlier ones that don't. For example,
     **Discworld** sounds great with the ESFM driver from **Heaven's Dawn**.
-
-    <div class="compact" markdown>
-
-    |                    |                                                                                                                     |
-    | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
-    | Discworld (ESFM)   | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/discworld-kitchen-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-    | Discworld (OPL)    | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/discworld-kitchen-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
-
-    </div>
 
 
 ## Configuration settings
