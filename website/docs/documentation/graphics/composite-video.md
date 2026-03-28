@@ -9,7 +9,7 @@ interference patterns that produce up to 16 colours from CGA's usual
 4-colour palette. It sounds like a bug, but game developers deliberately
 exploited it.
 
-Games like [*King's Quest*](https://www.mobygames.com/game/122/kings-quest/), [*Space Quest*](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/), and many other Sierra AGI titles
+Games like [King's Quest](https://www.mobygames.com/game/122/kings-quest/), [Space Quest](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/), and many other Sierra AGI titles
 were specifically designed to look their best on composite monitors. Viewed
 on an RGB monitor, these games appear as garish 4-colour affairs; on
 composite, they transform into something surprisingly colourful and
