@@ -20,6 +20,7 @@ import csv
 import datetime
 import json
 import os
+import re
 import sys
 
 import markdown2
@@ -32,6 +33,9 @@ GITHUB_API_URL      = "https://api.github.com"
 GITHUB_ACCESS_TOKEN = ""
 
 RELEASES_BASE_URL = f"{GITHUB_API_URL}/repos/{GITHUB_ORG}/{GITHUB_REPO}/releases"
+
+COMMON_VARS_PATH = os.path.join(os.path.dirname(__file__),
+                                "../../.github/actions/set-common-vars/action.yml")
 
 FETCH_PAGE_SIZE = 50
 
@@ -101,33 +105,44 @@ FILTERS = [
 def setup_arg_parser(parser):
     parser.add_argument(
         "ACTION",
-        choices=["query", "process", "publish"],
-        help="""query
+        choices=["summary.query", "summary.process", "summary.publish",
+                 "website.query", "website.process"],
+        help="""summary.query
   Queries information about all pull requests merged to the 'main'
   branch since the last public DOSBox Staging release and writes
   the results to a CSV file.
 
-process
-  Processes the CSV output of the 'query' action and generates the
+summary.process
+  Processes the CSV output of the 'summary.query' action and generates the
   release notes draft either in Markdown or CSV format.
 
-publish
+summary.publish
   Publishes (creates or updates) the release notes draft.
+
+website.query
+  Queries all pull requests merged to 'main' since the last public
+  release, including their full descriptions, and writes the results
+  to a JSON file.
+
+website.process
+  Processes the JSON output of the 'website.query' action and generates
+  a detailed release notes draft for the website.
 """
     )
 
-    query_args = parser.add_argument_group(title="query arguments")
+    query_args = parser.add_argument_group(title="summary.query arguments")
     query_args.add_argument(
         "--start_time",
         help="""include pull requests after this datetime
-        """
+(defaults to RELEASE_START_TIME from set-common-vars/action.yml)
+"""
     )
     query_args.add_argument(
         "--out_pull_requests_csv",
         help="output CSV file containing the pull requests"
     )
 
-    process_args = parser.add_argument_group(title="process arguments")
+    process_args = parser.add_argument_group(title="summary.process arguments")
 
     process_args.add_argument(
         "--input_csv_file",
@@ -162,7 +177,7 @@ publish
         help="version tag of the release notes draft (e.g., v0.83.0-alpha)"
     )
 
-    publish_args = parser.add_argument_group(title="publish arguments")
+    publish_args = parser.add_argument_group(title="summary.publish arguments")
 
     publish_args.add_argument(
         "--release_notes_file",
@@ -175,6 +190,34 @@ publish
         "--publish_version_tag",
         help="the release notes will be published under this tag (e.g., v0.83.0-alpha)"
     )
+
+    website_args = parser.add_argument_group(title="website.query / website.process arguments")
+
+    website_args.add_argument(
+        "--out_json_file",
+        help="output JSON file containing pull requests with descriptions"
+    )
+
+    website_args.add_argument(
+        "--input_json_file",
+        help="input JSON file from 'website.query'"
+    )
+
+    website_args.add_argument(
+        "--version",
+        help="release version number (e.g., 0.83.0)"
+    )
+
+
+def get_default_start_time():
+    """Read RELEASE_START_TIME from the CI common vars file."""
+    path = os.path.normpath(COMMON_VARS_PATH)
+    with open(path, encoding="UTF-8") as f:
+        for line in f:
+            m = re.search(r'RELEASE_START_TIME=(\S+)', line)
+            if m:
+                return m.group(1).strip('"\'')
+    return None
 
 
 def create_headers():
@@ -251,12 +294,14 @@ def get_prerelease_id_by_tag(tag):
     return None
 
 
-def get_pull_requests(start, end, cursor=None):
+def get_pull_requests(start, end, cursor=None, include_body=False):
     after = f'"{cursor}"' if cursor else "null"
 
     search_query = ("repo:dosbox-staging/dosbox-staging is:pr "
                     "is:merged base:main "
                     f"merged:{start}..{end} sort:updated")
+
+    body_field = "body" if include_body else ""
 
     query = """
       {
@@ -278,6 +323,7 @@ def get_pull_requests(start, end, cursor=None):
               createdAt
               updatedAt
               mergedAt
+              """ + body_field + """
               labels(first: 20) {
                 nodes {
                   name
@@ -308,7 +354,7 @@ def pull_requests_response_to_dict(response):
     result = []
 
     for item in nodes:
-        result.append({
+        pr = {
             "title":     item["title"],
             "number":    item["number"],
             "author":    get_author(item),
@@ -317,12 +363,16 @@ def pull_requests_response_to_dict(response):
             "updatedAt": item["updatedAt"],
             "mergedAt":  item["mergedAt"],
             "labels":    ", ".join([l["name"] for l in item["labels"]["nodes"]])
-        })
+        }
+        if "body" in item:
+            pr["body"] = item["body"]
+
+        result.append(pr)
 
     return result
 
 
-def fetch_all_pull_requests_since(start_time):
+def fetch_all_pull_requests_since(start_time, include_body=False):
     all_items = []
     cursor = None
     item_offset = 0
@@ -331,7 +381,9 @@ def fetch_all_pull_requests_since(start_time):
 
     while True:
         print(f"Fetching next page of pull requests, item offset: {item_offset}")
-        response = get_pull_requests(start=start_time, end=now, cursor=cursor)
+        response = get_pull_requests(start=start_time, end=now,
+                                     cursor=cursor,
+                                     include_body=include_body)
         items = pull_requests_response_to_dict(response)
 
         all_items.extend(items)
@@ -558,17 +610,202 @@ def process_pull_requests_html(items, html_fname, version_tag):
         f.write(html)
 
 
+def write_json(items, output_json):
+    with open(output_json, "w", encoding="UTF-8") as f:
+        json.dump(items, f, indent=2, ensure_ascii=False)
+
+
+def read_json(fname):
+    with open(fname, encoding="UTF-8") as f:
+        return json.load(f)
+
+
 def query_pull_requests(csv_fname, start_time):
-#    latest_release = get_latest_public_release()
-
-#    latest_release_name = latest_release["name"]
-#    start_time = latest_release["publishedAt"]
-#    print(f"Latest release name: {latest_release_name}, published at: {start_time}")
-
     items = fetch_all_pull_requests_since(start_time)
     write_csv(items, csv_fname)
-
     print(f"{len(items)} pull requests written")
+
+
+def website_query_pull_requests(json_fname, start_time):
+    items = fetch_all_pull_requests_since(start_time, include_body=True)
+    write_json(items, json_fname)
+    print(f"{len(items)} pull requests written")
+
+
+TEMPLATE_PLACEHOLDER_PHRASES = [
+    "If this is a user-facing change",
+    "Remove the section if no notes are needed",
+]
+
+
+def extract_release_notes(body):
+    """Extract the 'Release notes' section from a PR description."""
+    if not body:
+        return None
+
+    match = re.search(r"^#\s+Release notes\s*$", body, re.MULTILINE | re.IGNORECASE)
+    if not match:
+        return None
+
+    rest = body[match.end():]
+
+    # Find the next heading (any level) or end of string
+    next_heading = re.search(r"^#", rest, re.MULTILINE)
+    content = rest[:next_heading.start()] if next_heading else rest
+    content = content.strip()
+
+    if not content:
+        return None
+
+    for phrase in TEMPLATE_PLACEHOLDER_PHRASES:
+        if phrase in content:
+            return None
+
+    return content
+
+
+def categorize_pull_requests(items):
+    """Categorize PRs using FILTERS, returning a dict of category → PR list."""
+    categories = {}
+    remaining = items
+
+    for filter_def in FILTERS:
+        [filtered, remaining] = filter_category(remaining, filter_def)
+        if filtered:
+            categories[filter_def["category"]] = filtered
+
+    sort_items(remaining)
+    if remaining:
+        categories["other"] = remaining
+
+    return categories
+
+
+def append_collapsible_pr_list(md, items, title):
+    """Append a collapsible PR list section."""
+    md += f'??? note "Full PR list of {title}"\n\n'
+    for item in items:
+        md += f"    - {item['title']} (#{item['number']})\n"
+    md += "\n\n"
+    return md
+
+
+def append_narrative_prs(md, items):
+    """Append release notes extracted from PR descriptions."""
+    for item in items:
+        notes = extract_release_notes(item.get("body", ""))
+        if notes:
+            md += f"<!-- PR #{item['number']}: {item['title']} -->\n"
+            md += f"{notes}\n\n"
+    return md
+
+
+# pylint: disable=too-many-locals
+def generate_website_markdown(items, version):
+    categories = categorize_pull_requests(items)
+    filter_titles = {f["category"]: f["title"] for f in FILTERS}
+    short_version = version.rsplit(".", 1)[0] if "." in version else version
+
+    md = f"""\
+# {version} release notes
+
+**Release date:** YYYY-MM-DD
+
+## Summary
+
+<!-- TODO: Write summary of highlights -->
+
+
+## Downloads
+
+Start by downloading the latest version:
+
+<div class="compact" markdown>
+
+- [Windows](../windows.md)
+- [macOS](../macos.md)
+- [Linux](../linux.md)
+
+</div>
+
+<!-- TODO: Add upgrade instructions -->
+
+
+"""
+
+    # Standard sections
+    standard_sections = [
+        ("game-compatibility", "Game compatibility fixes"),
+        ("graphics",           "Graphics"),
+        ("sound",              "Sound"),
+        ("input-handling",     "Input"),
+        ("dos-integration",    "DOS integration"),
+    ]
+
+    for category, heading in standard_sections:
+        prs = categories.get(category, [])
+        if prs:
+            md += f"## {heading}\n\n"
+            md = append_narrative_prs(md, prs)
+            md = append_collapsible_pr_list(md, prs, filter_titles[category])
+
+    # General section: narrative from misc-enhancements/misc-fixes,
+    # collapsible lists for all "general" sub-categories
+    general_narrative = ["misc-enhancements", "misc-fixes"]
+    general_collapsible_only = ["documentation", "project-maintenance", "other"]
+    all_general = general_narrative + general_collapsible_only
+
+    if any(categories.get(cat) for cat in all_general):
+        md += "## General\n\n"
+
+        for cat in general_narrative:
+            md = append_narrative_prs(md, categories.get(cat, []))
+
+        for cat in all_general:
+            prs = categories.get(cat, [])
+            if prs:
+                title = filter_titles.get(cat, "other changes")
+                md = append_collapsible_pr_list(md, prs, title)
+
+    # Localisation
+    loc_prs = categories.get("localisation", [])
+    if loc_prs:
+        md += "## Localisation\n\n"
+        md = append_narrative_prs(md, loc_prs)
+        md = append_collapsible_pr_list(md, loc_prs, filter_titles["localisation"])
+
+    # Contributors & Thank you
+    contributors = "\n".join(f"- {a}" for a in get_contributor_list(items))
+
+    md += f"""\
+## Contributors
+
+### {short_version} commit authors
+
+<div class="compact" markdown>
+
+{contributors}
+
+</div>
+
+
+## Thank you
+
+We are grateful for all the community contributions and the original DOSBox
+project, on which DOSBox Staging is based.
+"""
+
+    return md
+
+
+def website_process_pull_requests(json_fname, version, markdown_fname):
+    items = read_json(json_fname)
+    markdown = generate_website_markdown(items, version)
+
+    with open(markdown_fname, "w", encoding="UTF-8") as f:
+        f.write(markdown)
+
+    print(f"Website release notes draft written to {markdown_fname}")
 
 
 def make_upsert_release_payload(tag, name, description):
@@ -634,24 +871,30 @@ def main():
     setup_arg_parser(parser)
     args = parser.parse_args()
 
+    actions_requiring_token = [
+        "summary.query", "summary.process", "summary.publish",
+        "website.query"
+    ]
+
     global GITHUB_ACCESS_TOKEN
     GITHUB_ACCESS_TOKEN = os.getenv("GITHUB_ACCESS_TOKEN")
 
-    if not GITHUB_ACCESS_TOKEN:
+    if args.ACTION in actions_requiring_token and not GITHUB_ACCESS_TOKEN:
         print("Error: GITHUB_ACCESS_TOKEN env var is empty")
         sys.exit(1)
 
     match args.ACTION:
-        case "query":
-            if not args.start_time:
+        case "summary.query":
+            start_time = args.start_time or get_default_start_time()
+            if not start_time:
                 parser.error("--start_time must be specified")
 
             if not args.out_pull_requests_csv:
                 parser.error("--out_pull_requests_csv must be specified")
 
-            query_pull_requests(args.out_pull_requests_csv, args.start_time)
+            query_pull_requests(args.out_pull_requests_csv, start_time)
 
-        case "process":
+        case "summary.process":
             if not args.input_csv_file:
                 parser.error("--input_csv_file must be specified")
 
@@ -675,7 +918,7 @@ def main():
             if args.out_csv_file:
                 process_pull_requests_csv(items, args.out_csv_file)
 
-        case "publish":
+        case "summary.publish":
             if not args.release_notes_file:
                 parser.error("--release_notes_file must be specified")
 
@@ -683,6 +926,30 @@ def main():
                 parser.error("--publish_version_tag must be specified")
 
             publish_prerelease(args.release_notes_file, args.publish_version_tag)
+
+        case "website.query":
+            start_time = args.start_time or get_default_start_time()
+            if not start_time:
+                parser.error("--start_time must be specified")
+
+            if not args.out_json_file:
+                parser.error("--out_json_file must be specified")
+
+            website_query_pull_requests(args.out_json_file, start_time)
+
+        case "website.process":
+            if not args.input_json_file:
+                parser.error("--input_json_file must be specified")
+
+            if not args.version:
+                parser.error("--version must be specified")
+
+            if not args.out_markdown_file:
+                parser.error("--out_markdown_file must be specified")
+
+            website_process_pull_requests(args.input_json_file,
+                                          args.version,
+                                          args.out_markdown_file)
 
 
 if __name__ == "__main__":
