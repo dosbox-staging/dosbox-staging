@@ -95,8 +95,42 @@ mismatch.
 
 ### Vsync
 
-TODO(CL) adapt the explanation from the getting started guide that explains
-that we can get double tearing in Staging. probably copy the whole table here.
+Because we're running a game inside an emulator, tearing can be introduced
+at _two levels_:
+
+- The game itself might not care about vsync, so it would tear on real
+  hardware too (DOSBox faithfully emulates this).
+
+- DOSBox Staging might not present the emulated frames to the host operating
+  system vsync'ed, which could result in a _second layer_ of tearing, solely
+  introduced by the emulator.
+
+To get zero tearing, _both_ conditions must be met: the game must vsync its
+own video output (i.e., no tearing on real hardware), and vsync must be
+enabled at the DOSBox Staging level.
+
+You have no control over the game's own vsync behaviour. Many DOS games
+hardcode it (e.g., Doom runs at a fixed 35 FPS with vsync). The DOSBox-level
+vsync is what you can control via the [vsync](#vsync) setting.
+
+<div class="compact vsync" markdown>
+
+| Game uses vsync? | DOSBox vsync enabled? | Result
+| --- | --- | ---
+| yes | yes | No tearing
+| no  | yes | Some tearing (also present on real hardware)
+| yes | no  | Bad tearing (in fast-paced games)
+| no  | no  | Very bad double tearing (in fast-paced games)
+
+</div>
+
+!!! warning
+
+    Do **not** force vsync globally at the GPU driver level (e.g., in Nvidia
+    Control Panel or similar). Leave the global vsync settings at their
+    defaults ("let the application decide") and only configure vsync via the
+    DOSBox Staging [vsync](#vsync) setting. Forcing global vsync causes
+    problems with virtually all emulators, not just DOSBox Staging.
 
 
 ## Dedithering
@@ -112,12 +146,10 @@ graphics adapter (CGA, EGA, VGA, Hercules) and any resolution, and can be
 combined with any shader.
 
 Games that benefit most from dedithering include early Sierra SCI0 adventures
-(*Leisure Suit Larry 2 & 3*, *Quest for Glory I & II*, *Space Quest III*),
-EGA LucasArts titles (*The Secret of Monkey Island* EGA version, *Loom*),
-and early Legend Entertainment games (*Spellcasting 101*, *Timequest*,
-*Gateway*).
-
-TODO(CL) link game names to mobygames
+([*Leisure Suit Larry 2*](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/) & [*3*](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/), [*Quest for Glory I*](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) & [*II*](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/), [*Space Quest III*](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)),
+EGA LucasArts titles ([*The Secret of Monkey Island*](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) EGA version, [*Loom*](https://www.mobygames.com/game/176/loom/)),
+and early Legend Entertainment games ([*Spellcasting 101*](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/), [*Timequest*](https://www.mobygames.com/game/1026/timequest/),
+[*Gateway*](https://www.mobygames.com/game/317/frederik-pohls-gateway/)).
 
 !!! note
 
@@ -142,14 +174,12 @@ HUDs, UI frames, subtitles, and mouse cursors untouched.
 
 Both common interlacing patterns are supported: standard line interlacing
 (alternating black horizontal lines, used by most games) and dot interlacing
-(a checkerboard pattern, used by the CD-ROM versions of *Dune* and *KGB*).
+(a checkerboard pattern, used by the CD-ROM versions of [*Dune*](https://www.mobygames.com/game/380/dune/) and [*KGB*](https://www.mobygames.com/game/2894/kgb/)).
 
-Games that benefit from deinterlacing include *Wing Commander IV*,
-*Phantasmagoria*, *Gabriel Knight 2*, *Crusader: No Remorse*, *Crusader: No
-Regret*, *CyberMage*, *Angel Devoid*, and *Heroes of Might and Magic II*,
+Games that benefit from deinterlacing include [*Wing Commander IV*](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/),
+[*Phantasmagoria*](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/), [*Gabriel Knight 2*](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/), [*Crusader: No Remorse*](https://www.mobygames.com/game/851/crusader-no-remorse/), [*Crusader: No
+Regret*](https://www.mobygames.com/game/852/crusader-no-regret/), [*CyberMage*](https://www.mobygames.com/game/791/cybermage-darklight-awakening/), [*Angel Devoid*](https://www.mobygames.com/game/3468/angel-devoid-face-of-the-enemy/), and [*Heroes of Might and Magic II*](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/),
 among others. Enable it per-game rather than globally for best results.
-
-TODO(CL) link game names to mobygames
 
 ## Configuration settings
 
