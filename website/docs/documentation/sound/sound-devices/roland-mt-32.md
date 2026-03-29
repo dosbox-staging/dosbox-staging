@@ -197,6 +197,11 @@ inside the game's working directory.
 4. `$XDG_CONFIG_HOME/dosbox/mt32-roms/` (defaults to `~/.config/dosbox/mt32-roms/`)
 
 
+### Mixer channel
+
+The Roland MT-32 outputs to the **MT32** mixer channel.
+
+
 ## Configuration settings
 
 Roland MT-32 settings are to be configured in the `[mt32]` section.
