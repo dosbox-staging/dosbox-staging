@@ -1,20 +1,21 @@
 # CPU
 
-## Overview
-
-The [cpu_cycles](#cpu_cycles) setting controls the speed of the emulated CPU; 
+The [cpu_cycles](#cpu_cycles) setting controls the speed of the emulated CPU;
 it's the single most important performance setting in DOSBox Staging. Getting
 it right can mean the difference between a game that plays perfectly and one
 that stutters, crawls, or races through its intro sequence.
 
-Too many cycles and you'll get sound stuttering and input lag as your host
-CPU struggles to keep up. Too few and the game turns into a slideshow.
-Finding the sweet spot for each game is part of the charm of retro gaming.
+Too many cycles and you'll get sound stuttering and input lag as your host CPU
+struggles to keep up. Too few and the game turns into a slideshow. Finding the
+sweet spot for each game is part of the charm of retro gaming.
 
-As a rough guide: early 8088-era games ([Alley Cat](https://www.mobygames.com/game/190/alley-cat/), [Sopwith](https://www.mobygames.com/game/1380/sopwith/)) need
-around 300 cycles. 386-era titles want roughly 3,000–6,000. 486-class games
-like [Doom](https://www.mobygames.com/game/1068/doom/) are playable at around 25,000 but might need up 50,000 cycles
-for a completely smooth experience. Late Pentium-era titles such as [Quake](https://www.mobygames.com/game/374/quake/)
+As a rough guide: early 8088-era games
+([Alley Cat](https://www.mobygames.com/game/190/alley-cat/),
+[Sopwith](https://www.mobygames.com/game/1380/sopwith/)) need around 300
+cycles. 386-era titles want roughly 3,000–6,000. 486-class games like
+[Doom](https://www.mobygames.com/game/1068/doom/) are playable at around
+25,000 but might need up 50,000 cycles for a completely smooth experience.
+Late Pentium-era titles such as [Quake](https://www.mobygames.com/game/374/quake/)
 need 50,000 to 100,000 cycles or even more. See the [cpu_cycles](#cpu_cycles)
 table for further details.
 

@@ -1,30 +1,27 @@
 # Gravis UltraSound
 
-## Overview
-
-The Gravis UltraSound (GUS) was released in 1992 by an unlikely
-manufacturer: Canadian joystick company Advanced Gravis. Its audio
-capabilities were far ahead of anything else on the consumer market —
-wavetable synthesis, stereo sound, and up to 32 channels of simultaneous
-playback.
+The Gravis UltraSound (GUS) was released in 1992 by an unlikely manufacturer:
+Canadian joystick company Advanced Gravis. Its audio capabilities were far
+ahead of anything else on the consumer market --- wavetable synthesis, stereo
+sound, and up to 32 channels of simultaneous playback.
 
 The catch? The GUS made no attempt at backwards compatibility with AdLib or
-Sound Blaster cards. Programs had to be written specifically for it. Many
-DOS gamers kept a [Sound Blaster](adlib-cms-sound-blaster.md) alongside their
-GUS for titles that lacked native support — and in DOSBox Staging, you can do
-the same by enabling both devices in your configuration.
+Sound Blaster cards. Programs had to be written specifically for it. Many DOS
+gamers kept a [Sound Blaster](adlib-cms-sound-blaster.md) alongside their GUS
+for titles that lacked native support — and in DOSBox Staging, you can do the
+same by enabling both devices in your configuration.
 
 Another quirk: unlike most sound cards, the GUS shipped with no built-in
-instrument sounds. All voices had to be loaded from disk via "patch files"
-at driver load time. Due to licensing restrictions, these patch files can't
-be distributed with DOSBox Staging, so you'll need to obtain them
-separately.
+instrument sounds. All voices had to be loaded from disk via "patch files" at
+driver load time. Due to licensing restrictions, these patch files can't be
+distributed with DOSBox Staging, so you'll need to obtain them separately.
 
 Where the GUS truly shone was in the demoscene and tracker music community.
-[Second Reality](https://www.pouet.net/prod.php?which=5) by Future Crew — widely considered one of the greatest DOS
-demos ever made — was designed to sound its best on a GUS. Games with
-native GUS support, like [Star Control II](https://www.mobygames.com/game/179/star-control-ii/), also benefited enormously from
-its superior audio capabilities.
+[Second Reality](https://www.pouet.net/prod.php?which=5) by Future Crew,
+widely considered one of the greatest DOS demos ever made, was designed to
+sound its best on a GUS. Games with native GUS support, like [Star Control
+II](https://www.mobygames.com/game/179/star-control-ii/), also benefited
+enormously from its superior audio capabilities.
 
 ## Configuration settings
 

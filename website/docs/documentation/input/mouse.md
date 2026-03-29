@@ -1,7 +1,5 @@
 # Mouse
 
-## Overview
-
 DOSBox Staging includes a built-in mouse driver which is enabled by default,
 so you don't need to load a real DOS mouse driver manually (e.g., `MOUSE.COM`
 or `CTMOUSE`). The vast majority of DOS games that require a mouse will work

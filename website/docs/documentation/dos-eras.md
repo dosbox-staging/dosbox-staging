@@ -2,20 +2,23 @@
 toc_depth: 1
 ---
 
+TODO(JN) on this entire page, cross-link hardware device names marked up with
+bold to other sections where possible (e.g. to Roland MT-32, Sound Blaster,
+etc.)
+
 # The DOS eras
 
-## Overview
-
-The DOS era spanned roughly 15 years---from the original IBM PC in 1981 to the
-final wave of DOS games in the late 1990s. Hardware evolved dramatically during
-this period, and games were designed for the capabilities of their time.
-Matching the emulated hardware to a game's era gives the most authentic
+The DOS era spanned roughly 15 years --- from the original IBM PC in 1981 to
+the final wave of DOS games in the late 1990s. Hardware evolved dramatically
+during this period, and games were designed for the capabilities of their
+time. Matching the emulated hardware to a game's era gives the most authentic
 experience.
 
-The key settings to adjust are [`machine`](system/general.md#machine) (graphics
-standard), [`cputype`](system/cpu.md#cputype),
-[`cpu_cycles`](system/cpu.md#cpu_cycles) (CPU speed), and the [sound device](sound/overview.md). See
-[A short DOS primer](dos-primer.md) for an explanation of these concepts.
+The key settings to adjust are [`machine`](system/general.md#machine)
+(graphics standard), [`cputype`](system/cpu.md#cputype),
+[`cpu_cycles`](system/cpu.md#cpu_cycles) (CPU speed), and the [sound
+device](sound/overview.md). See [A short DOS primer](dos-primer.md) for an
+explanation of these concepts.
 
 
 ## The early days (1981--1984)
@@ -146,10 +149,10 @@ became a serious force.
 
 For those with deeper pockets, the **Roland MT-32** sound module (released in
 1987) offered dramatically superior music through its LA synthesis engine.
-Sierra On-Line was an early champion, and many late-80s games sound
-remarkably better on the MT-32 compared to AdLib or Sound Blaster FM. It
-remained expensive and never became mainstream, but it's widely regarded as
-the best way to experience game music from this period.
+Sierra On-Line was an early champion, and many late-80s games sound remarkably
+better on the MT-32 compared to AdLib or Sound Blaster FM. It remained
+expensive and never became mainstream, but it's widely regarded as the best
+way to experience game music from this period.
 
 ### Notable games
 

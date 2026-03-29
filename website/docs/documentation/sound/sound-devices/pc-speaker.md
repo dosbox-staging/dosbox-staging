@@ -1,29 +1,33 @@
 # PC speaker
 
-## Overview
-
 The PC speaker was the built-in speaker in every IBM PC and compatible from
 day one. It was really only meant for simple beeps and diagnostic codes, but
-it ended up as the lowest common denominator for PC game audio — every PC
+it ended up as the lowest common denominator for PC game audio --- every PC
 had one, so every game could count on it being there.
 
 Technically, it's a single-channel square-wave generator. Not exactly hi-fi.
 But with clever programming tricks, developers managed to coax surprisingly
-decent sound out of it. Games like [Alley Cat](https://www.mobygames.com/game/190/alley-cat/) and [Sopwith](https://www.mobygames.com/game/1380/sopwith/) made the most
-of its musical abilities, while [Castle Wolfenstein](https://www.mobygames.com/game/3115/castle-wolfenstein/) even managed digitised
-speech — impressive given the hardware's severe limitations.
+decent sound out of it. Games like [Alley
+Cat](https://www.mobygames.com/game/190/alley-cat/) and
+[Sopwith](https://www.mobygames.com/game/1380/sopwith/) made the most of its
+musical abilities, while [Castle
+Wolfenstein](https://www.mobygames.com/game/3115/castle-wolfenstein/) even
+managed digitised speech --- impressive given the hardware's severe
+limitations.
 
-Sound quality varied quite a bit depending on the actual speaker hardware
-and the PC case it was mounted in. Early PCs used a proper dynamic speaker
-that had some bass response; later models switched to a tiny piezo buzzer
-that sounded thinner and quieter.
+Sound quality varied quite a bit depending on the actual speaker hardware and
+the PC case it was mounted in. Early PCs used a proper dynamic speaker that
+had some bass response; later models switched to a tiny piezo buzzer that
+sounded thinner and quieter.
 
-PC speaker emulation is enabled by default. The `impulse` model provides
-the most faithful reproduction of the actual speaker hardware; it generally
-improves the accuracy of square-wave effects in games like [Commander Keen](https://www.mobygames.com/game/216/commander-keen-1-marooned-on-mars/)
-and [Duke Nukem](https://www.mobygames.com/game/559/duke-nukem/) (2D), and can even produce sounds where the `discrete`
-model produces none (e.g., [Wizball](https://www.mobygames.com/game/526/wizball/)). Fall back to `discrete` only if a
-specific game has problems with the `impulse` model.
+PC speaker emulation is enabled by default. The `impulse` model provides the
+most faithful reproduction of the actual speaker hardware; it generally
+improves the accuracy of square-wave effects in games like [Commander
+Keen](https://www.mobygames.com/game/216/commander-keen-1-marooned-on-mars/)
+and [Duke Nukem](https://www.mobygames.com/game/559/duke-nukem/) (2D), and can
+even produce sounds where the `discrete` model produces none (e.g.,
+[Wizball](https://www.mobygames.com/game/526/wizball/)). Fall back to
+`discrete` only if a specific game has problems with the `impulse` model.
 
 
 ## Configuration settings
