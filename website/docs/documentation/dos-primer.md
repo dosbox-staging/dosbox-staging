@@ -15,11 +15,6 @@ be able to run DOS games effectively. While this is enough to get started, we
 encourage you to expand your knowledge on the subject over time in the areas
 you're interested in.
 
-TODO(CL) bolded text in this entire chapter should link to relevant
-documentation sections if applicable (e.g. **Gravis UltraSound (GUS)**,
-**Sound Blaster**, etc.)
-
-
 ## Modularity
 
 Unlike game consoles and most home computers of the era, IBM PC compatibles
@@ -56,18 +51,18 @@ require specific speed ranges to run correctly.
 ## Video
 
 The original IBM PC supported only two graphics standards: monochrome
-**Hercules** and **CGA** (Color Graphics Adapter) with just four colours at
-320&times;200. **EGA** (Enhanced Graphics Adapter) raised this to 16 colours
-in 1984, and **VGA** (Video Graphics Array) arrived in 1987 with 256 colours
+**[Hercules](system/general.md#machine)** and **[CGA](system/general.md#machine)** (Color Graphics Adapter) with just four colours at
+320&times;200. **[EGA](system/general.md#machine)** (Enhanced Graphics Adapter) raised this to 16 colours
+in 1984, and **[VGA](system/general.md#machine)** (Video Graphics Array) arrived in 1987 with 256 colours
 at 320&times;200 --- the resolution most DOS games are remembered for. Later
-**SVGA** cards pushed to higher resolutions and colour depths.
+**[SVGA](system/general.md#machine)** cards pushed to higher resolutions and colour depths.
 
-The **Tandy 1000** line deserves special mention: it offered 16-colour
+The **[Tandy 1000](system/general.md#machine)** line deserves special mention: it offered 16-colour
 graphics and three-voice sound in an affordable package, making it the best
 overall gaming PC until about 1987. Many mid-1980s games look and sound
 noticeably better in Tandy mode.
 
-Because DOS games were designed for **CRT monitors**, DOSBox Staging includes
+Because DOS games were designed for **[CRT monitors](graphics/rendering.md)**, DOSBox Staging includes
 CRT emulation shaders that reproduce the look of the original hardware. This
 makes a surprisingly large difference --- pixel art that looks harsh and
 blocky on a modern flat panel comes alive with the subtle blending and
@@ -76,31 +71,31 @@ scanlines of the CRT emulation.
 
 ## Audio
 
-The original IBM PC had no dedicated sound hardware, just a tiny **PC
-speaker** designed to produce simple beeps and square-wave tones. Clever
+The original IBM PC had no dedicated sound hardware, just a tiny
+**[PC speaker](sound/sound-devices/pc-speaker.md)** designed to produce simple beeps and square-wave tones. Clever
 programmers pushed it further and managed to coerce it to play back digitised
 sound samples, but it was never designed for quality audio reproduction.
 
-The **Tandy 1000** was again ahead of its time, providing three-voice sound
+The **[Tandy 1000](sound/sound-devices/tandy.md)** was again ahead of its time, providing three-voice sound
 via a built-in chip that made it the best gaming PC for sound until dedicated
 sound cards arrived.
 
-Real audio came to the PC platform in the late 1987 with the **AdLib** card
-using FM synthesis, followed by Creative's **Sound Blaster** in 1989 which
+Real audio came to the PC platform in the late 1987 with the **[AdLib](sound/sound-devices/adlib-cms-sound-blaster.md)** card
+using FM synthesis, followed by Creative's **[Sound Blaster](sound/sound-devices/adlib-cms-sound-blaster.md)** in 1989 which
 added digital audio playback. The Sound Blaster became the de facto standard,
 and most DOS games from 1990 onwards support it. For high-end music, the
-**Roland MT-32** sound module offered stunning synthesised audio from 1988
+**[Roland MT-32](sound/sound-devices/roland-mt-32.md)** sound module offered stunning synthesised audio from 1988
 onwards, though it was expensive and remained a luxury item.
 
-The **Gravis UltraSound (GUS)**, released in 1992, took a different approach
+The **[Gravis UltraSound (GUS)](sound/sound-devices/gravis-ultrasound.md)**, released in 1992, took a different approach
 by using wavetable synthesis with actual sampled sounds stored in its onboard
 RAM, producing much more realistic audio than FM synthesis. It gained a cult
 following, particularly in the demoscene, but never achieved the Sound
 Blaster's market dominance.
 
-**General MIDI** standardised a common set of 128 instrument sounds, allowing
+**[General MIDI](sound/sound-devices/general-midi.md)** standardised a common set of 128 instrument sounds, allowing
 games to sound consistent across different MIDI-compatible devices. The
-**Roland Sound Canvas SC-55**, released in 1991, became the de facto reference
+**[Roland Sound Canvas SC-55](sound/sound-devices/general-midi.md)**, released in 1991, became the de facto reference
 device for General MIDI game music and is still considered the gold standard
 for many DOS game soundtracks.
 
@@ -112,12 +107,12 @@ audio fidelity.
 
 ## Input peripherals
 
-The standard input peripheral for the IBM PC compatibles was the **keyboard**
-for a long time. Eventually, the **mouse** gained popularity, but it wasn't a
+The standard input peripheral for the IBM PC compatibles was the **[keyboard](input/keyboard.md)**
+for a long time. Eventually, the **[mouse](input/mouse.md)** gained popularity, but it wasn't a
 standard accessory like on the Commodore Amiga or Apple Macintosh line of
 computers.
 
-Many DOS games also support **analog joysticks**. Digital joysticks were a
+Many DOS games also support **[analog joysticks](input/joystick.md)**. Digital joysticks were a
 rarity on the platform.
 
 
