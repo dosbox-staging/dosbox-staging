@@ -1901,8 +1901,8 @@ static void init_dos_settings(SectionProp& section)
 	auto pbool = section.AddBool("xms", WhenIdle, true);
 	pbool->SetHelp("Enable XMS memory support ('on' by default).");
 
-	auto pstring = section.AddString("ems", WhenIdle, "true");
-	pstring->SetValues({"true", "emsboard", "emm386", "off"});
+	auto pstring = section.AddString("ems", WhenIdle, "on");
+	pstring->SetValues({"on", "emsboard", "emm386", "off"});
 	pstring->SetHelp(
 	        "Enable EMS support ('on' by default). Enabled provides the best compatibility\n"
 	        "but certain applications may run better with other choices, or require EMS\n"
