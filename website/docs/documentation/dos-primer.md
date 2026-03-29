@@ -179,13 +179,13 @@ install MS-DOS separately. The emulated DOS command line works just like the
 real thing.
 
 
-## Windows 3.x
+## Windows 3.1
 
 Wait a minute, isn't this supposed to be about DOS?
 
-That's correct, but early Windows versions 1.x to 3.x were not true operating
+That's correct, but early Windows versions 1.0 to 3.1 were not true operating
 systems, only operating *environments* implemented as DOS programs. DOSBox
-Staging fully supports Windows 3.x, giving you access to the large catalogue
+Staging fully supports Windows 3.1, giving you access to the large catalogue
 of early CD-ROM games and educational multimedia applications. It also has
-partial support for Windows versions 1.x and 2.x.
+partial support for Windows versions 1.0 and 2.0.
 

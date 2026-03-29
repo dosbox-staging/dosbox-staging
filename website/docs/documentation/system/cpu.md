@@ -278,7 +278,7 @@ section.
     - `486` -- 486 CPUID, 486+ specific page access level calculation, 486 CR
       register behaviour, and extra 486 instructions.
     - `pentium` -- Same as `486` but with Pentium CPUID, Pentium CR register
-      behaviour, and RDTSC instruction support. Recommended for Windows 3.x
+      behaviour, and RDTSC instruction support. Recommended for Windows 3.1
       games (e.g., Betrayal in Antara).
     - `pentium_mmx` -- Same as `pentium` plus MMX instruction set support.
       Very few games use MMX instructions; it's mostly only useful for

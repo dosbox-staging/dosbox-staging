@@ -29,7 +29,7 @@ The key features for developers are summarised [here](https://github.com/dosbox-
 
 - Faithfully emulate the **DOS operating environment** running on IBM PC
   compatibles and the IBM PCjr, with the primary goal of running **all PC
-  Booter, DOS and Windows 3.x games** released in the 1981--2000 period. Running
+  Booter, DOS and Windows 3.1 games** released in the 1981--2000 period. Running
   applications and demoscene productions or more recent DOS software is a
   secondary objective.
 - Improve the **out-of-the-box experience**.

@@ -414,11 +414,11 @@ mididevice = soundcanvas
 ```
 
 
-## Windows 3.x games
+## Windows 3.1 games
 
-DOSBox Staging fully supports Windows 3.x, which was not a standalone
+DOSBox Staging fully supports Windows 3.1, which was not a standalone
 operating system but an operating environment running on top of DOS. A number
-of games were released exclusively for Windows 3.x with no DOS version ---
+of games were released exclusively for Windows 3.1 with no DOS version ---
 particularly full-motion video (FMV) adventures and multimedia titles that
 leveraged Windows' built-in video and audio support. Many of these are cult
 classics well worth rediscovering.
@@ -433,7 +433,7 @@ classics well worth rediscovering.
 - [Shivers (1995)](https://www.mobygames.com/game/663/shivers/) ---  horror-themed first-person adventure
 - [Dust: A Tale of the Wired West (1995)](https://www.mobygames.com/game/3990/dust-a-tale-of-the-wired-west/) --- FMV western adventure
 - [Burn:Cycle (1995)](https://www.mobygames.com/game/3962/burncycle/) --- cyberpunk FMV adventure
-- [Civilization II (1996)](https://www.mobygames.com/game/15/sid-meiers-civilization-ii/) --- definitive Windows 3.x strategy game
+- [Civilization II (1996)](https://www.mobygames.com/game/15/sid-meiers-civilization-ii/) --- definitive Windows 3.1 strategy game
 - [9: The Last Resort (1996)](https://www.mobygames.com/game/2176/9-the-last-resort/) --- surreal FMV puzzle adventure
 - [Titanic: Adventure Out of Time (1996)](https://www.mobygames.com/game/2892/titanic-adventure-out-of-time/) --- historical FMV adventure
 - [Blue Heat (1997)](https://www.mobygames.com/game/4954/blue-heat/) --- mature-themed video adventure
@@ -463,7 +463,7 @@ machine = svga_s3
 
 [cpu]
 cpu_cycles = 30000
-# This is important; some Windows 3.x games require it
+# This is important; some Windows 3.1 games require it
 cputype = pentium
 
 [sblaster]
