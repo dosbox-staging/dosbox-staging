@@ -10,8 +10,8 @@ dibs on those keys. This is especially useful in fullscreen mode or when a
 game relies on key combinations that collide with OS shortcuts.
 
 All key bindings can be customised through the key mapper (++ctrl+f1++ on
-Windows/Linux, ++cmd+f1++ on macOS). See [Keyboard shortcuts](../shortcuts.md)
-for the full list of default bindings.
+Windows/Linux, ++cmd+f1++ on macOS). See [Keyboard
+shortcuts](../appendices/shortcuts.md) for the full list of default bindings.
 
 
 ## Configuration settings

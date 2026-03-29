@@ -1,19 +1,19 @@
 # Capture
 
 DOSBox Staging can capture screenshots, record audio, and record video
-directly from the emulator. All captures are saved to the `capture/`
-directory in the current working directory by default. You can change this
-with the `capture_dir` setting.
+directly from the emulator. By default, all captures are saved to the
+`capture` directory in the current working directory. You can change this with
+the `capture_dir` setting.
 
 
 ## Screenshots
 
-Screenshots can be saved in multiple formats: upscaled (clean,
-aspect-corrected), rendered (post-shader, exactly what you see on screen), or
-raw (the framebuffer contents with square pixels).
+Screenshots can be saved in multiple formats: **upscaled** (sharp pixels,
+aspect-corrected), **rendered** (post-shader, exactly what you see on screen), or
+**raw** (the framebuffer's contents with 1:1 pixel aspect ratio).
 
-Use ++ctrl+f5++ / ++cmd+f5++ to take a screenshot. The format is controlled
-by the [default_image_capture_formats](#default_image_capture_formats)
+Use ++ctrl+f5++ / ++cmd+f5++ to take a screenshot using the default format(s)
+configured by the [default_image_capture_formats](#default_image_capture_formats)
 setting.
 
 
