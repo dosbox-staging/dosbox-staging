@@ -572,7 +572,7 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "  seamless:  Let the mouse move seamlessly between the DOSBox window and the\n"
 	        "             rest of the desktop; captures only with middle-click or hotkey.\n"
 	        "             Seamless mouse does not work correctly with all the games.\n"
-	        "             Windows 3.1x can be made compatible with a custom mouse driver.\n"
+	        "             Windows 3.1 can be made compatible with a custom mouse driver.\n"
 	        "\n"
 	        "  nomouse:   Hide the mouse and don't send mouse input to the game.\n"
 	        "\n"
@@ -645,8 +645,8 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "    built-in driver.\n"
 	        "\n"
 	        "  - The driver is auto-disabled if you boot into real MS-DOS or Windows 9x\n"
-	        "    under DOSBox. Under Windows 3.x, the driver is not disabled, but the\n"
-	        "    Windows 3.x mouse driver takes over.\n"
+	        "    under DOSBox. Under Windows 3.1, the driver is not disabled, but the\n"
+	        "    Windows 3.1 mouse driver takes over.\n"
 	        "\n"
 	        "  - To use a real DOS mouse driver (e.g., MOUSE.COM or CTMOUSE.EXE), configure\n"
 	        "    the mouse type with `ps2_mouse_model` or `com_mouse_model`, then load the\n"
@@ -676,7 +676,7 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	        "\n"
 	        "  wheel:    3 buttons + wheel, supports the CuteMouse WheelAPI version 1.0.\n"
 	        "            No DOS game uses the mouse wheel, only a handful of DOS applications\n"
-	        "            and Windows 3.x with special third-party drivers.");
+	        "            and Windows 3.1 with special third-party drivers.");
 
 	prop_str = secprop.AddString("builtin_dos_mouse_driver_move_threshold",
 	                             Always,
@@ -791,14 +791,14 @@ static void init_mouse_config_settings(SectionProp& secprop)
 	prop_bool = secprop.AddBool("vmware_mouse", OnlyAtStart, true);
 	prop_bool->SetHelp(
 	        "VMware mouse interface ('on' by default). Fully compatible only with 3rd party\n"
-	        "Windows 3.1x driver.\n"
+	        "Windows 3.1 driver.\n"
 	        "\n"
 	        "Note: Requires PS/2 mouse to be enabled.");
 
 	prop_bool = secprop.AddBool("virtualbox_mouse", OnlyAtStart, true);
 	prop_bool->SetHelp(
 	        "VirtualBox mouse interface ('on' by default). Fully compatible only with 3rd\n"
-	        "party Windows 3.1x driver.\n"
+	        "party Windows 3.1 driver.\n"
 	        "\n"
 	        "Note: Requires PS/2 mouse to be enabled.");
 }
