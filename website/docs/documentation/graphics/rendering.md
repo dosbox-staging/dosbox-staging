@@ -447,13 +447,13 @@ You can set the rendering parameters in the `[render]` configuration section.
     Possible values:
 
     - `auto` *default*{ .default } -- Select an authentic colour temperature
-      for adaptive CRT shaders; for any other shader, use 6500.
+      appropriate for the currently active adaptive CRT shader (e.g.,
+      `crt-auto`), or the current machine type for regular shaders (e.g.,
+      `sharp`).
     - `<number>` -- Specify colour temperature in Kelvin (K). Valid range is
-      3000 to 10000. The Kelvin value only makes sense if
-      [crt_color_profile](#crt_color_profile) is set to `none` or to one of
-      the profiles with 6500K white point, otherwise it acts as a relative
-      colour temperature adjustment (less than 6500 results in warmer
-      colours, more than 6500 in cooler colours).
+      3000 to 10000. 6500 K is the neutral point for most modern displays.
+      Values below 6500 result in warmer colours, values above 6500 in
+      cooler colours.
 
 
 ##### color_temperature_luma_preserve
@@ -539,21 +539,31 @@ You can set the rendering parameters in the `[render]` configuration section.
 
     <div class="compact" markdown>
 
-    - `auto` *default*{ .default } -- Select an authentic colour profile for
-      adaptive CRT shaders; for any other shader, use `none`.
+    - `auto` *default*{ .default } -- Select an authentic colour profile
+      appropriate for the currently active adaptive CRT shader (e.g.,
+      `crt-auto`), or the current machine type for regular shaders (e.g.,
+      `sharp`).
     - `none` -- Display raw colours without any colour profile transforms.
+      This will result in inaccurate colours and gamma on modern displays
+      compared to how games looked on a real CRT in the 1980s and 90s.
     - `ebu` -- EBU standard phosphor emulation, used in high-end professional
-      CRT monitors, such as the Sony BVM/PVM series (6500K white point).
-    - `p22` -- P22 phosphor emulation, the most commonly used in lower-end
-      CRT monitors (6500K white point).
+      CRT monitors, such as the Sony BVM/PVM series.
+    - `p22` -- P22 phosphor emulation, most common in lower-end CRT monitors.
     - `smpte-c` -- SMPTE "C" phosphor emulation, the standard for American
-      broadcast video monitors (6500K white point).
+      broadcast video monitors.
     - `philips` -- Philips CRT monitor colours typical to 15 kHz home
-      computer monitors, such as the Commodore 1084S (~6100K white point).
-      Needs a wide gamut DCI-P3 display for the best results.
-    - `trinitron` -- Typical Sony Trinitron CRT TV and monitor colours
-      (~9300K white point). Needs a wide gamut DCI-P3 display for the best
-      results.
+      computer monitors (e.g., the Commodore 1084S). The intended use of
+      this profile is with `color_temperature` set to 6500. The output will
+      look yellowish due to the ~6100 K Philips CRT colour temperature
+      "baked into" the profile. You can still tweak the relative white
+      balance by changing `color_temperature`. Needs a DCI-P3 display for
+      the most accurate results.
+    - `trinitron` -- Typical Sony Trinitron CRT TV and monitor colours. The
+      intended use of this profile is with `color_temperature` set to 6500.
+      The output will look blueish due to the ~9300 K Trinitron CRT colour
+      temperature "baked into" the profile. You can still tweak the relative
+      white balance by changing `color_temperature`. Needs a DCI-P3 display
+      for the most accurate results.
 
     </div>
 
@@ -590,3 +600,26 @@ You can set the rendering parameters in the `[render]` configuration section.
         on lower resolution displays to avoid interference artifacts when
         using lower deinterlacing strengths. Alternatively, use `full`
         strength to completely eliminate all potential interference patterns.
+
+
+##### dedithering
+
+:   Remove checkerboard dither patterns from the video output. Useful with
+    CGA and EGA games that use dither patterns to create the illusion of
+    more colours with the limited CGA/EGA palettes.
+
+    Possible values:
+
+    - `off` *default*{ .default } -- Disable dedithering.
+    - `on` -- Enable dedithering (at full strength).
+    - `<number>` -- Set dedithering strength from 0 (off) to 100 (full
+      strength). Lower values result in a subtle softening of dither
+      patterns; higher values blend between the original and the dedithered
+      image.
+
+    !!! note
+
+        - Dedithering only works in OpenGL output mode.
+
+        - Dedithering is applied to rendered screenshots, but not to raw and
+          upscaled screenshots and video captures.
