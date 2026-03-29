@@ -1997,11 +1997,11 @@ static void init_dos_settings(SectionProp& section)
 	pstring = section.AddString("file_locking", WhenIdle, "auto");
 	pstring->SetValues({"auto", "on", "off"});
 	pstring->SetHelp(
-	        "Enable file locking via emulating SHARE.EXE ('auto' by default). This is required\n"
-	        "for some Windows 3.1x applications to work properly. It generally does not cause\n"
-	        "problems for DOS games except in rare cases (e.g., Astral Blur demo). If you\n"
-	        "experience crashes related to file permissions, you can try disabling this.\n"
-	        "Possible values:\n"
+	        "Enable file locking via emulating SHARE.EXE ('auto' by default). This is\n"
+	        "required for some Windows 3.1 applications to work properly. It generally does\n"
+	        "not cause problems for DOS games except in rare cases (e.g., Astral Blur demo).\n"
+	        "If you experience crashes related to file permissions, you can try disabling\n"
+	        "this. Possible values:\n"
 	        "\n"
 	        "  auto:  Enable file locking only when Windows 3.1 is running.\n"
 	        "  on:    Always enable file locking.\n"
