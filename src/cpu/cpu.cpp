@@ -3885,7 +3885,7 @@ void init_cpu_config_settings(SectionProp& secprop)
 	        "\n"
 	        "  pentium:       Same as '486' but with Pentium CPUID, Pentium CR register\n"
 	        "                 behaviour, and RDTSC instruction support. Recommended for\n"
-	        "                 Windows 3.x games (e.g., Betrayal in Antara).\n"
+	        "                 Windows 3.1 games (e.g., Betrayal in Antara).\n"
 	        "\n"
 	        "  pentium_mmx:   Same as 'pentium' plus MMX instruction set support. Very few\n"
 	        "                 games use MMX instructions; it's mostly only useful for\n"
