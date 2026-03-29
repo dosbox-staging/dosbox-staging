@@ -564,6 +564,7 @@ static void set_scan_and_pixel_doubling()
 	VGA_AllowPixelDoubling(!force_no_pixel_doubling);
 }
 
+static ColorSpace curr_color_space                            = {};
 static ImageAdjustmentSettings curr_image_adjustment_settings = {};
 
 static void set_image_adjustment_settings()
@@ -644,6 +645,7 @@ static void handle_auto_image_adjustment_settings(const VideoMode& video_mode)
 	        AutoImageAdjustmentsManager::GetInstance().GetSettings(
 	                machine,
 	                video_mode,
+	                curr_color_space,
 	                GFX_GetRenderer()->GetCurrentShaderDescriptor());
 
 	if (maybe_auto_settings) {
@@ -1830,30 +1832,38 @@ static void init_render_settings(SectionProp& section)
 	        {"auto", "none", "ebu", "p22", "smpte-c", "philips", "trinitron"});
 	string_prop->SetHelp(
 	        "Set a CRT colour profile for more authentic video output emulation ('auto' by\n"
-	        "default). All profiles have a built-in colour temperature (white point) that you\n"
-	        "can tweak further with the 'color_temperature' setting. Possible values:\n"
+	        "default). Possible values:\n"
 	        "\n"
-	        "  auto:       Select an authentic colour profile for adaptive CRT shaders;\n"
-	        "              for any other shader, use 'none' (default).\n"
+	        "  auto:       Select an authentic colour profile appropriate for the currently\n"
+	        "              active adaptive CRT shader (e.g. 'crt-auto'), or the current\n"
+	        "              machine type for regular shaders (e.g., 'sharp').\n"
 	        "\n"
-	        "  none:       Display raw colours without any colour profile transforms.\n"
+	        "  none:       Display raw colours without any colour profile transforms. This\n"
+	        "              will result in inaccurate colours and gamma on modern displays\n"
+	        "              compared to how games looked on a real CRT in the 1980s and 90s.\n"
 	        "\n"
 	        "  ebu:        EBU standard phosphor emulation, used in high-end professional CRT\n"
-	        "              monitors, such as the Sony BVM/PVM series (6500K white point).\n"
+	        "              monitors, such as the Sony BVM/PVM series.\n"
 	        "\n"
-	        "  p22:        P22 phosphor emulation, the most commonly used in lower-end CRT\n"
-	        "              monitors (6500K white point).\n"
+	        "  p22:        P22 phosphor emulation, most common in lower-end CRT monitors.\n"
 	        "\n"
 	        "  smpte-c:    SMPT \"C\" phosphor emulation, the standard for American broadcast\n"
-	        "              video monitors (6500K white point).\n"
+	        "              video monitors.\n"
 	        "\n"
 	        "  philips:    Philips CRT monitor colours typical to 15 kHz home computer\n"
-	        "              monitors, such as the Commodore 1084S (~6100K white point).\n"
-	        "              Needs a wide gamut DCI-P3 display for the best results.\n"
+	        "              monitors (e.g., the Commodore 1084S). The intended use of this\n"
+	        "              profile is with 'colour_temperature' set to 6500. The output will\n"
+	        "              look yellowish due to the ~6100 K Philips CRT colour temperature\n"
+	        "              \"baked into\" the profile. You can still tweak the relative white\n"
+	        "              balance by changing 'colour_temperature'. Needs a DCI-P3 display\n"
+	        "              for the most accurate results.\n"
 	        "\n"
-	        "  trinitron:  Typical Sony Trinitron CRT TV and monitor colours (~9300K\n"
-	        "              white point). Needs a wide gamut DCI-P3 display for the best\n"
-	        "              results.");
+	        "  trinitron:  Typical Sony Trinitron CRT TV and monitor colours. The intended\n"
+	        "              use of this profile is with 'colour_temperature' set to 6500. The\n"
+	        "              output will look blueish due to the ~9300 K Trinitron CRT colour\n"
+	        "              temperature \"baked into\" the profile. You can still tweak the\n"
+	        "              relative white balance by changing 'colour_temperature'. Needs a\n"
+	        "              DCI-P3 display for the most accurate results.");
 
 	constexpr int DefaultBrightness = 45;
 	int_prop = section.AddInt("brightness", Always, DefaultBrightness);
@@ -1939,15 +1949,14 @@ static void init_render_settings(SectionProp& section)
 	        "Set the colour temperature (white point) of the video output ('%s' by\n"
 	        "default). Possible values:\n"
 	        "\n"
-	        "  auto:      Select an authentic colour temperature for adaptive CRT shaders;\n"
-	        "             for any other shader, use 6500 (default).\n"
-	        "\n"
+	        "  auto:      Select an authentic colour temperature appropriate for the\n"
+	        "             currently active adaptive CRT shader (e.g. 'crt-auto'), or the\n"
+	        "             current machine type for regular shaders (e.g., 'sharp').\n"
+	        "             \n"
 	        "  <number>:  Specify colour temperature in Kelvin (K). Valid range is %d to\n"
-	        "             %d. The Kelvin value only makes sense if 'crt_color_profile' is\n"
-	        "             set to 'none' or to one of the profiles with 6500K white point,\n"
-	        "             otherwise it acts as a relative colour temperature adjustment (less\n"
-	        "             then 6500 results in warmer colours, more than 6500 in cooler\n"
-	        "             colours).",
+	        "             %d. 6500 K is the neutral point for most modern displays. Values\n"
+	        "             below 6500 result in warmer colours, values above 6500 in cooler\n"
+	        "             colours.",
 	        DefaultColorTemperature,
 	        ColorTemperatureMin,
 	        ColorTemperatureMax));
@@ -1959,11 +1968,11 @@ static void init_render_settings(SectionProp& section)
 	int_prop->SetMinMax(ColorTemperatureLumaPreserveMin,
 	                    ColorTemperatureLumaPreserveMax);
 	int_prop->SetHelp(format_str(
-	        "Preserve image luminosity prior to colour temperature adjustment (%d by\n"
-	        "default). Valid range is %d to %d. 0 doesn't perform any luminosity\n"
+	        "Preserve luminosity of the video output prior to colour temperature adjustment\n"
+	        "(%d by default). Valid range is %d to %d. 0 doesn't perform any luminosity\n"
 	        "preservation, 100 fully preserves the luminosity. Values greater than 0 result\n"
 	        "in inaccurate colour temperatures in the brighter shades, so it's best to set\n"
-	        "this to 0 or close to 0 if your monitor is bright enough.",
+	        "this to 0 if your monitor is bright enough (or at least close to 0).",
 	        DefaultColorTemperatureLumaPreserve,
 	        ColorTemperatureLumaPreserveMin,
 	        ColorTemperatureLumaPreserveMax));
@@ -2173,12 +2182,31 @@ static ColorSpace to_color_space_enum(const std::string& setting)
 	}
 }
 
+float get_gamma(const ColorSpace cs)
+{
+	using enum ColorSpace;
+
+	switch (cs) {
+	case Srgb:
+	case DisplayP3:
+	case ModernP3:
+	case AdobeRgb: return 2.2f;
+
+	case Rec2020: return 2.4f;
+
+	case DciP3:
+	case DciP3_D65: return 2.6f;
+
+	default: assertm(false, "Invalid ColorSpace enum value"); return 0.0f;
+	}
+}
+
 static void update_color_space_setting()
 {
-	const auto color_space = to_color_space_enum(
+	curr_color_space = to_color_space_enum(
 	        get_render_section().GetString("color_space"));
 
-	GFX_GetRenderer()->SetColorSpace(color_space);
+	GFX_GetRenderer()->SetColorSpace(curr_color_space);
 }
 
 static void update_enable_image_adjustments_setting()

@@ -31,6 +31,7 @@ public:
 
 	std::optional<AutoImageAdjustments> GetSettings(
 	        const MachineType machine_type, const VideoMode& video_mode,
+	        const ColorSpace color_space,
 	        const ShaderDescriptor& curr_shader_descriptor) const;
 
 private:

@@ -72,27 +72,40 @@ static constexpr AutoImageAdjustments arcade_settings = {
 
 std::optional<AutoImageAdjustments> AutoImageAdjustmentsManager::GetSettings(
         const MachineType machine_type, const VideoMode& video_mode,
+        const ColorSpace color_space,
         const ShaderDescriptor& curr_shader_descriptor) const
 {
 	using enum ShaderMode;
 
-	switch (curr_shader_descriptor.shader_mode) {
-	case Single:
-		// If no adaptive CRT shader is active, use the machine type to
-		// derive the appropriate colour settings.
-		return GetAutoMachineSettings(machine_type, video_mode);
+	auto settings = [&]() {
+		switch (curr_shader_descriptor.shader_mode) {
+		case Single:
+			// If no adaptive CRT shader is active, use the machine
+			// type to derive the appropriate colour settings.
+			return GetAutoMachineSettings(machine_type, video_mode);
 
-	case AutoGraphicsStandard:
-		return GetAutoGraphicsStandardSettings(video_mode);
+		case AutoGraphicsStandard:
+			return GetAutoGraphicsStandardSettings(video_mode);
 
-	case AutoMachine:
-		return GetAutoMachineSettings(machine_type, video_mode);
+		case AutoMachine:
+			return GetAutoMachineSettings(machine_type, video_mode);
 
-	case AutoArcade:
-	case AutoArcadeSharp: return arcade_settings;
+		case AutoArcade:
+		case AutoArcadeSharp: return arcade_settings;
 
-	default: assertm(false, "Invalid ShaderMode value"); return {};
+		default:
+			assertm(false, "Invalid ShaderMode value");
+			return AutoImageAdjustments{};
+		}
+	}();
+
+	// The black levels in the auto settings are set up for 2.6 DCI-P3 gamma,
+	// so we'll need to adjust them for color spaces with ~2.2-2.4 gamma.
+	if (get_gamma(color_space) < 2.6f) {
+		settings.black_level *= 0.50f;
 	}
+
+	return settings;
 }
 
 AutoImageAdjustments AutoImageAdjustmentsManager::GetAutoMachineSettings(
