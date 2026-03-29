@@ -2669,7 +2669,7 @@ msgctxt "KEYBOARD_MOD_ADJECTIVE_RIGHT"
 msgid "Right"
 msgstr "Destro"
 
-#: src/gui/shader_manager.cpp:352
+#: src/gui/render/shader_manager.cpp:385
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_1"
 msgid ""
@@ -2679,7 +2679,7 @@ msgstr ""
 "Elenco degli shader GLSL disponibili\n"
 "------------------------------------"
 
-#: src/gui/shader_manager.cpp:355
+#: src/gui/render/shader_manager.cpp:388
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_2"
 msgid ""
@@ -2690,19 +2690,19 @@ msgstr ""
 "nell'opzione di configurazione 'shader', senza la necessità di specificare\n"
 "il percorso o l'estensione .glsl."
 
-#: src/gui/shader_manager.cpp:359
+#: src/gui/render/shader_manager.cpp:392
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NOT_EXISTS"
 msgid "Path '%s' does not exist."
 msgstr "Il percorso '%s' non esiste."
 
-#: src/gui/shader_manager.cpp:360
+#: src/gui/render/shader_manager.cpp:393
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NO_SHADERS"
 msgid "Path '%s' has no shaders."
 msgstr "Il percorso '%s' non contiene shader."
 
-#: src/gui/shader_manager.cpp:361
+#: src/gui/render/shader_manager.cpp:394
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_LIST"
 msgid "Path '%s' has:"
@@ -3333,7 +3333,7 @@ msgctxt "TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE"
 msgid "seamless mouse, %s+F10 or middle-click to capture"
 msgstr "mouse senza soluzione di continuità, %s+F10 o pulsante centrale del mouse per catturarlo"
 
-#: src/gui/sdl_gui.cpp:2569
+#: src/gui/sdl_gui.cpp:2580
 #, c-format, no-wrap
 msgctxt "DISPLAY_INVALID_VSYNC_SETTING"
 msgid ""
@@ -3700,7 +3700,7 @@ msgid ""
 "the drive's directory, with content as follows:\n"
 "\n"
 "  [drive]\n"
-"  type     = dir, overlay, floppy, or cdrom\n"
+"  type     = dir, overlay, floppy, cdrom or iso (same as cdrom)\n"
 "  label    = custom_label\n"
 "  path     = path-specification (e.g., path = %%path%%;c:\\tools)\n"
 "  override_drive = mount the directory to this drive instead (default empty)\n"
@@ -3715,7 +3715,7 @@ msgstr ""
 "un file [c].conf accanto alla directory dell'unità, con il seguente contenuto:\n"
 "\n"
 "  [drive]\n"
-"  type     = dir, overlay, floppy, o cdrom\n"
+"  type     = dir, overlay, floppy, cdrom o iso (equivalente a cdrom)\n"
 "  label    = etichetta_personalizzata\n"
 "  path     = percorso di ricerca eseguibili (es. path = %%path%%;c:\\tools)\n"
 "  override_drive = monta invece la directory su questa unità (predef. vuoto)\n"
@@ -4312,7 +4312,7 @@ msgid ""
 "allows to take advantage of wide color gamut monitors and to more accurately\n"
 "emulate CRT colors. Possible values:"
 msgstr ""
-"Imposta lo spazio colore dell'uscita video (predefinito 'srgb'). Questa opzione\n"
+"Imposta lo spazio colore dell'immagine (predefinito 'srgb'). Questa opzione\n"
 "consente di sfruttare i monitor con ampia gamma cromatica e di emulare con\n"
 "maggior precisione i colori visualizzati dagli schermi a tubo catodico.\n"
 "Valori possibili:"
@@ -4325,9 +4325,9 @@ msgid ""
 "the OS performs the conversion to the colour profile set in your system\n"
 "settings."
 msgstr ""
-"Imposta lo spazio colore dell'uscita video. Su macOS, è sempre 'display-p3';\n"
-"il sistema operativo esegue la conversione nel profilo colore impostato nel\n"
-"sistema."
+"Imposta lo spazio colore dell'immagine. Su macOS, è sempre 'display-p3';\n"
+"il sistema operativo esegue la conversione al profilo colore impostato nelle\n"
+"impostazioni del sistema."
 
 #: src/config/setup.cpp:278
 #, c-format, no-wrap
@@ -4469,9 +4469,9 @@ msgstr ""
 "Note:\n"
 "  - Le regolazioni dell'immagine funzionano solo in modalità OpenGL.\n"
 "\n"
-"  - Le regolazioni vengono applicate alle istantanee dello schermo renderizzate\n"
-"    ('rendered') ma non alle istantanee non elaborate ('raw'), ridimensionate\n"
-"    ('upscaled') e alle acquisizioni video.\n"
+"  - Le regolazioni vengono applicate solo alle istantanee dello schermo\n"
+"    renderizzate ('rendered') e non a quelle non elaborate ('raw'),\n"
+"    ridimensionate ('upscaled') o alle acquisizioni video.\n"
 "\n"
 "  - Utilizza i tasti di scelta rapida 'PrevImageAdj' e 'NextImageAdj' per\n"
 "    selezionare un'opzione di regolazione dell'immagine e i tasti 'DecImageAdj'\n"
@@ -4547,7 +4547,7 @@ msgid ""
 "This emulates the brightness control of CRT monitors that sets the black point;\n"
 "higher values will result in raised blacks."
 msgstr ""
-"Imposta la luminosità dell'uscita video (predefinito 45). L'intervallo valido è\n"
+"Imposta la luminosità dell'immagine (predefinito 45). L'intervallo valido è\n"
 "compreso tra 0 e 100. Permette di emulare il controllo della luminosità dei\n"
 "monitor a tubo catodico con controllo del punto di nero; valori più alti\n"
 "produrranno neri più sbiaditi."
@@ -4561,7 +4561,7 @@ msgid ""
 "higher values will result in raised blacks (lower the 'brightness' control to\n"
 "compensate)."
 msgstr ""
-"Imposta il contrasto dell'uscita video (predefinito 65). L'intervallo valido è\n"
+"Imposta il contrasto dell'immagine (predefinito 65). L'intervallo valido è\n"
 "compreso tra 0 e 100. Permette di emulare il controllo del contrasto dei\n"
 "monitor a tubo catodico con controllo del punto di bianco; valori più alti\n"
 "produrranno neri più sbiaditi (per compensare, abbassare la luminosità\n"
@@ -4575,9 +4575,9 @@ msgid ""
 "This is additional gamma adjustment relative to the emulated virtual monitor's\n"
 "gamma."
 msgstr ""
-"Imposta il gamma dell'uscita video (predefinito 0). L'intervallo valido è\n"
-"compreso tra -50 e 50. Si tratta di una regolazione aggiuntiva del gamma\n"
-"rispetto a quello dei monitor virtuali emulati."
+"Imposta il gamma dell'immagine (predefinito 0). L'intervallo valido è compreso\n"
+"tra -50 e 50. Si tratta di una regolazione aggiuntiva del gamma rispetto a\n"
+"quello dei monitor virtuali emulati."
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
@@ -4587,7 +4587,7 @@ msgid ""
 "to 50. This works very differently from the 'contrast' virtual monitor setting;\n"
 "digital contrast is applied to the raw RGB values of the framebuffer image."
 msgstr ""
-"Imposta il contrasto digitale dell'uscita video (predefinito 0). L'intervallo\n"
+"Imposta il contrasto digitale dell'immagine (predefinito 0). L'intervallo\n"
 "valido è compreso tra -50 e 50. Funziona in modo molto diverso dall'opzione\n"
 "'contrast' del monitor virtuale; il contrasto digitale viene applicato ai\n"
 "valori RGB grezzi dell'immagine del framebuffer."
@@ -4610,10 +4610,10 @@ msgid ""
 "      adds visual interest to PCjr, Tandy, CGA, and EGA games with simple\n"
 "      graphics."
 msgstr ""
-"Aumenta il livello del nero dell'uscita video (predefinito 'auto'). Viene\n"
-"applicato prima delle opzioni 'brightness' e 'contrast', che possono anch'esse\n"
-"aumentare il livello del nero, quindi agisce efficacemente come potenziatore\n"
-"del livello del nero. Valori possibili:\n"
+"Aumenta il livello del nero dell'immagine (predefinito 'auto'). Viene applicato\n"
+"prima delle opzioni 'brightness' e 'contrast', che possono anch'esse aumentare\n"
+"il livello, quindi agisce efficacemente come potenziatore del livello del nero.\n"
+"Valori possibili:\n"
 "\n"
 "  auto:     Aumenta il livello del nero solo per le modalità video PCjr, Tandy,\n"
 "            CGA ed EGA per gli shader CRT adattivi; per qualsiasi altro shader,\n"
@@ -4634,7 +4634,7 @@ msgid ""
 "This is digital saturation applied to the raw RGB values of framebuffer image,\n"
 "similarly to 'digital_contrast'."
 msgstr ""
-"Imposta la saturazione dell'uscita video (predefinito 0). L'intervallo valido è\n"
+"Imposta la saturazione dell'immagine (predefinito 0). L'intervallo valido è\n"
 "compreso tra -50 e 50. Si tratta della saturazione digitale applicata ai valori\n"
 "RGB grezzi dell'immagine del framebuffer, in modo simile a 'digital_contrast'."
 
@@ -4655,7 +4655,7 @@ msgid ""
 "             then 6500 results in warmer colours, more than 6500 in cooler\n"
 "             colours)."
 msgstr ""
-"Imposta la temperatura di colore (punto di bianco) dell'uscita video\n"
+"Imposta la temperatura di colore (punto di bianco) dell'immagine\n"
 "(predefinito 'auto'). Valori possibili:\n"
 "\n"
 "  auto:     Seleziona un profilo colore autentico per gli shader CRT adattivi;\n"
@@ -4694,7 +4694,7 @@ msgid ""
 "Set gain factor of the video output's red channel (100 by default). Valid range\n"
 "is 0 to 200. 100 results in no gain change."
 msgstr ""
-"Imposta il guadagno del canale rosso dell'uscita video (predefinito 100).\n"
+"Imposta il guadagno del canale rosso dell'immagine (predefinito 100).\n"
 "L'intervallo valido è compreso tra 0 e 200. 100 non apporta alcuna variazione\n"
 "del guadagno."
 
@@ -4705,7 +4705,7 @@ msgid ""
 "Set gain factor of the video output's green channel (100 by default). Valid\n"
 "range is 0 to 200. 100 results in no gain change."
 msgstr ""
-"Imposta il guadagno del canale verde dell'uscita video (predefinito 100).\n"
+"Imposta il guadagno del canale verde dell'immagine (predefinito 100).\n"
 "L'intervallo valido è compreso tra 0 e 200. 100 non apporta alcuna variazione\n"
 "del guadagno."
 
@@ -4716,7 +4716,7 @@ msgid ""
 "Set gain factor of the video output's blue channel (100 by default). Valid range\n"
 "is 0 to 200. 100 results in no gain change."
 msgstr ""
-"Imposta il guadagno del canale blu dell'uscita video (predefinito 100).\n"
+"Imposta il guadagno del canale blu dell'immagine (predefinito 100).\n"
 "L'intervallo valido è compreso tra 0 e 200. 100 non apporta alcuna variazione\n"
 "del guadagno."
 
@@ -4752,10 +4752,10 @@ msgid ""
 msgstr ""
 "Rimuove le righe nere dai video interlacciati (predefinito 'off').\n"
 "Da utilizzare con i giochi che visualizzano contenuti video con righe nere\n"
-"alternate. Questo trucco funzionava bene sui monitor a tubo catodico dell'epoca\n"
-"in quanto aumentava la risoluzione percepita del contenuto e permetteva, al\n"
-"contempo, di risparmiare lo spazio di archiviazione. Ciò però provocava una\n"
-"perdita di luminosità del video. Valori possibili:\n"
+"alternate. Questo trucco funzionava bene sui monitor a tubo catodico\n"
+"dell'epoca, in quanto aumentava la risoluzione percepita del contenuto e\n"
+"permetteva, al contempo, di risparmiare lo spazio di archiviazione. Ciò però\n"
+"provocava una perdita di luminosità del video. Valori possibili:\n"
 "\n"
 "  off:     Disabilita il deinterlacciamento dei video (predefinito).\n"
 "\n"
@@ -4782,7 +4782,49 @@ msgstr ""
 "      le intensità di deinterlacciamento più basse. In alternativa, per\n"
 "      scongiurare la comparsa di artefatti, scegliere l'intensità 'full'."
 
-#: src/gui/render/render.cpp:2790
+#: src/config/setup.cpp:262
+#, c-format, no-wrap
+msgctxt "CONFIG_DEDITHERING"
+msgid ""
+"Remove checkerboard dither patterns from the video output ('off' by default).\n"
+"Useful with CGA and EGA games that use dither patterns to create the illusion\n"
+"of more colours with the limited CGA/EGA palettes. Possible values:\n"
+"\n"
+"  off:       Disable dedithering (default).\n"
+"  on:        Enable dedithering (at full strength).\n"
+"\n"
+"  <number>:  Set dedithering strength from 0 (off) to 100 (full strength). Lower\n"
+"             values result in a subtle softening of dither patterns; higher\n"
+"             values blend between the original and the dedithered image.\n"
+"\n"
+"Notes:\n"
+"   - Dedithering only works in OpenGL output mode.\n"
+"\n"
+"   - Dedithering is applied to rendered screenshots, but not to raw and upscaled\n"
+"     screenshots and video captures."
+msgstr ""
+"Rimuove i colori con motivo a scacchiera dall'immagine (predefinito 'off').\n"
+"Questo è utile con i giochi CGA e EGA che utilizzano la retinatura per dare\n"
+"l'illusione di avere più colori sullo schermo, nonostante le limitate\n"
+"tavolozze CGA/EGA. Valori possibili:\n"
+"\n"
+"  off:       Mantieni retinatura (predefinito).\n"
+"  on:        Rimuovi retinatura (intensità massima).\n"
+"\n"
+"  <numero>:  Imposta l'intensità di rimozione della retinatura da 0\n"
+"             (disattivato) a 100 (intensità massima). I valori più bassi\n"
+"             producono una leggera sfocatura dei motivi a scacchiera, mentre\n"
+"             quelli più alti fondono l'immagine originale con quella senza\n"
+"             retinatura.\n"
+"\n"
+"Note:\n"
+"  - Questa opzione è disponibile solo in modalità OpenGL.\n"
+"\n"
+"  - La rimozione della retinatura viene applicata solo alle istantanee dello\n"
+"    schermo renderizzate ('rendered') e non a quelle non elaborate ('raw'),\n"
+"    ridimensionate ('upscaled') o alle acquisizioni video."
+
+#: src/gui/render/render.cpp:2881
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_RENAMED"
 msgid ""
@@ -4792,7 +4834,7 @@ msgstr ""
 "Lo shader integrato [color=white]'%s'[reset] è stato rinominato in [color=white]'%s'[reset];\n"
 "utilizzo di [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:2794
+#: src/gui/render/render.cpp:2885
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_FALLBACK"
 msgid ""
@@ -4802,7 +4844,7 @@ msgstr ""
 "Errore durante la selezione dello shader [color=white]'%s'[reset];\n"
 "ripiego su [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:2798
+#: src/gui/render/render.cpp:2889
 #, c-format, no-wrap
 msgctxt "RENDER_DEFAULT_SHADER_PRESET_FALLBACK"
 msgid ""
@@ -5654,7 +5696,6 @@ msgstr ""
 "                  l'aggiornamento ufficiale per il supporto 3dfx Voodoo ha\n"
 "                  richiesto il comportamento della v7.0+.\n"
 "\n"
-"  \n"
 "  no-granularity: Disabilita la granularità della posizione del mouse.\n"
 "                  Utilizzare questa opzione solo se è necessaria per il gioco.\n"
 "                  Finora, solo 'Joan of Arc: Siege & the Sword' in modalità\n"
@@ -6351,25 +6392,25 @@ msgstr ""
 "  <personalizzato>: Definizione di filtri personalizzati;\n"
 "                    per ulteriori dettagli, fare riferimento a 'sb_filter'."
 
-#: src/midi/fluidsynth.cpp:1086
+#: src/midi/fluidsynth.cpp:1082
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_NO_SOUNDFONTS"
 msgid "No available SoundFonts"
 msgstr "Nessun SoundFont disponibile"
 
-#: src/midi/fluidsynth.cpp:1088
+#: src/midi/fluidsynth.cpp:1084
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_SOUNDFONT_DIR"
 msgid "Invalid [color=light-green]soundfont_dir[reset] setting; cannot open directory [color=white]'%s'[reset], using ''"
 msgstr "Opzione [color=light-green]soundfont_dir[reset] non valida; impossibile aprire la directory [color=white]'%s'[reset], utilizzo di ''"
 
-#: src/midi/fluidsynth.cpp:1092
+#: src/midi/fluidsynth.cpp:1088
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_ERROR_LOADING_SOUNDFONT"
 msgid "Error loading SoundFont [color=white]'%s'[reset]"
 msgstr "Errore durante il caricamento del SoundFont [color=white]'%s'[reset]"
 
-#: src/midi/fluidsynth.cpp:1095
+#: src/midi/fluidsynth.cpp:1091
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_EFFECT_PARAMETER"
 msgid ""
@@ -6379,7 +6420,7 @@ msgstr ""
 "Parametro del sintetizzatore [color=light-green]'%s'[reset] non valido (%s): [color=white]%s[reset];\n"
 "deve essere compreso tra %.2f e %.2f, utilizzo di [color=white]'%s'[reset]"
 
-#: src/midi/fluidsynth.cpp:1100
+#: src/midi/fluidsynth.cpp:1096
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_CHORUS_WAVE"
 msgid ""
@@ -6389,7 +6430,7 @@ msgstr ""
 "Parametro del sintetizzatore [color=light-green]'fsynth_chorus'[reset] non valido (tipo di forma\n"
 "d'onda): [color=white]%s[reset]; deve essere [color=white]'sine'[reset] o [color=white]'triangle'[reset]"
 
-#: src/midi/fluidsynth.cpp:1105
+#: src/midi/fluidsynth.cpp:1101
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_NUM_EFFECT_PARAMS"
 msgid ""
@@ -6459,13 +6500,13 @@ msgstr ""
 "  <personalizzato>: Definizione di filtri personalizzati;\n"
 "                    per ulteriori dettagli, fare riferimento a 'sb_filter'."
 
-#: src/midi/soundcanvas.cpp:927
+#: src/midi/soundcanvas.cpp:932
 #, c-format, no-wrap
 msgctxt "SC55_MODELS_LABEL"
 msgid "SC-55 models    "
 msgstr "Modelli SC-55"
 
-#: src/midi/soundcanvas.cpp:928
+#: src/midi/soundcanvas.cpp:933
 #, c-format, no-wrap
 msgctxt "SOUNDCANVAS_ACTIVE_MODEL_LABEL"
 msgid "Active model:    "
@@ -8148,7 +8189,7 @@ msgstr ""
 "arresti anomali relativi ai permessi dei file, prova a disabilitare questa\n"
 "opzione. Valori possibili:\n"
 "\n"
-"  auto:  Abilita la protezione dei file solo se Windows 3.1 è in esecuzione .\n"
+"  auto:  Abilita la protezione dei file solo se Windows 3.1 è in esecuzione.\n"
 "  on:    Abilita sempre la protezione dei file.\n"
 "  off:   Disabilita sempre la protezione dei file."
 
@@ -10363,7 +10404,7 @@ msgctxt "PROGRAM_MEM_ERROR_NO_EMS"
 msgid "No Expanded Memory (EMS) found.\n"
 msgstr "Nessuna memoria espansa (EMS) trovata.\n"
 
-#: src/dos/programs/mixer.cpp:790
+#: src/dos/programs/mixer.cpp:792
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_HELP_LONG"
 msgid ""
@@ -10428,61 +10469,61 @@ msgstr ""
 "  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
 "  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]master[reset] [color=white]40[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]"
 
-#: src/dos/programs/mixer.cpp:820
+#: src/dos/programs/mixer.cpp:822
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_HEADER_LAYOUT"
 msgid "%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s"
 msgstr "%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-10s %10s %9s %9s"
 
-#: src/dos/programs/mixer.cpp:823
+#: src/dos/programs/mixer.cpp:825
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_HEADER_LABELS"
 msgid "[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]"
 msgstr "[color=white]Canale       Volume    Volume (dB)   Modalità  A.Incrociata  Riverbero  Coro[reset]"
 
-#: src/dos/programs/mixer.cpp:826
+#: src/dos/programs/mixer.cpp:828
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_OFF"
 msgid "off"
 msgstr "spento"
 
-#: src/dos/programs/mixer.cpp:827
+#: src/dos/programs/mixer.cpp:829
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_STEREO"
 msgid "Stereo"
 msgstr "Stereo"
 
-#: src/dos/programs/mixer.cpp:828
+#: src/dos/programs/mixer.cpp:830
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_REVERSE"
 msgid "Reverse"
 msgstr "Inverso"
 
-#: src/dos/programs/mixer.cpp:829
+#: src/dos/programs/mixer.cpp:831
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_MONO"
 msgid "Mono"
 msgstr "Mono"
 
-#: src/dos/programs/mixer.cpp:831
+#: src/dos/programs/mixer.cpp:833
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INACTIVE_CHANNEL"
 msgid "Channel [color=light-cyan]%s[reset] is not active"
 msgstr "Il canale [color=light-cyan]%s[reset] non è attivo"
 
-#: src/dos/programs/mixer.cpp:834
+#: src/dos/programs/mixer.cpp:836
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"
 msgid "Invalid global command: [color=white]%s[reset]"
 msgstr "Comando globale non valido: [color=white]%s[reset]"
 
-#: src/dos/programs/mixer.cpp:837
+#: src/dos/programs/mixer.cpp:839
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"
 msgid "Invalid volume for the [color=light-cyan]%s[reset] channel: [color=white]%s[reset]"
 msgstr "Volume non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]"
 
-#: src/dos/programs/mixer.cpp:841
+#: src/dos/programs/mixer.cpp:843
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH"
 msgid ""
@@ -10492,7 +10533,7 @@ msgstr ""
 "Intensità alimentazione incrociata non valida per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset];\n"
 "deve essere un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:846
+#: src/dos/programs/mixer.cpp:848
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL"
 msgid ""
@@ -10502,7 +10543,7 @@ msgstr ""
 "Livello di coro non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset];\n"
 "deve essere un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:851
+#: src/dos/programs/mixer.cpp:853
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_REVERB_LEVEL"
 msgid ""
@@ -10512,7 +10553,7 @@ msgstr ""
 "Livello di riverbero non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset];\n"
 "deve essere un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:856
+#: src/dos/programs/mixer.cpp:858
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH"
 msgid ""
@@ -10522,7 +10563,7 @@ msgstr ""
 "Intensità alimentazione incrociata mancante dopo [color=white]x[reset] per il canale [color=light-cyan]%s[reset];\n"
 "è necessario fornire un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:861
+#: src/dos/programs/mixer.cpp:863
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL"
 msgid ""
@@ -10532,7 +10573,7 @@ msgstr ""
 "Livello di coro mancante dopo [color=white]c[reset] per il canale [color=light-cyan]%s[reset];\n"
 "è necessario fornire un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:866
+#: src/dos/programs/mixer.cpp:868
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_REVERB_LEVEL"
 msgid ""
@@ -10542,7 +10583,7 @@ msgstr ""
 "Livello di riverbero mancante dopo [color=white]r[reset] per il canale [color=light-cyan]%s[reset];\n"
 "è necessario fornire un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:871
+#: src/dos/programs/mixer.cpp:873
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH"
 msgid ""
@@ -10552,7 +10593,7 @@ msgstr ""
 "Intensità alimentazione incrociata a livello globale [color=white]%s[reset] non valida;\n"
 "deve essere un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:875
+#: src/dos/programs/mixer.cpp:877
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL"
 msgid ""
@@ -10562,7 +10603,7 @@ msgstr ""
 "Livello di coro a livello globale [color=white]%s[reset] non valido;\n"
 "deve essere un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:879
+#: src/dos/programs/mixer.cpp:881
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL"
 msgid ""
@@ -10572,7 +10613,7 @@ msgstr ""
 "Livello di riverbero a livello globale [color=white]%s[reset] non valido;\n"
 "deve essere un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:883
+#: src/dos/programs/mixer.cpp:885
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH"
 msgid ""
@@ -10582,7 +10623,7 @@ msgstr ""
 "Intensità alimentazione incrociata a livello globale mancante dopo [color=white]x[reset];\n"
 "è necessario fornire un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:887
+#: src/dos/programs/mixer.cpp:889
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL"
 msgid ""
@@ -10592,7 +10633,7 @@ msgstr ""
 "Livello di coro a livello globale mancante dopo [color=white]c[reset];\n"
 "è necessario fornire un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:891
+#: src/dos/programs/mixer.cpp:893
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL"
 msgid ""
@@ -10602,19 +10643,19 @@ msgstr ""
 "Livello di riverbero a livello globale mancante dopo [color=white]r[reset];\n"
 "è necessario fornire un numero compreso tra 0 e 100"
 
-#: src/dos/programs/mixer.cpp:895
+#: src/dos/programs/mixer.cpp:897
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND"
 msgid "Missing command for the [color=light-cyan]%s[reset] channel"
 msgstr "Comando mancante per il canale [color=light-cyan]%s[reset]"
 
-#: src/dos/programs/mixer.cpp:898
+#: src/dos/programs/mixer.cpp:900
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"
 msgid "Invalid command for the [color=light-cyan]%s[reset] channel: [color=white]%s[reset]"
 msgstr "Comando non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]"
 
-#: src/dos/programs/mixer.cpp:902
+#: src/dos/programs/mixer.cpp:904
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_DEPRECATED"
 msgid "Channel name [color=light-cyan]%s[reset] is deprecated, use [color=light-cyan]%s[reset] instead"
@@ -10681,7 +10722,7 @@ msgstr ""
 "      Hercules           80x25\n"
 "      CGA, PCjr, Tandy   40x25, 80x25\n"
 "      EGA                40x25, 80x25, 80x43\n"
-"      SVGA (non-S3)      40x25, 80x25, 80x28, 80x30, 80x34, 80x43, 80x50\n"
+"      SVGA (non S3)      40x25, 80x25, 80x28, 80x30, 80x34, 80x43, 80x50\n"
 "      SVGA (S3)          40x25, tutte le modalità a 80 e 132 colonne\n"
 "\n"
 "  - Le modalità 132x28, 132x30 e 132x34 sono disponibili solo se 'vesa_modes'\n"
@@ -10996,7 +11037,7 @@ msgid ""
 "%s mounted as %c drive:\n"
 "%s"
 msgstr ""
-"%s montato come unità %c:\n"
+"%s montata come unità %c:\n"
 "%s"
 
 #: src/dos/programs/mount_common.cpp:77
@@ -11011,13 +11052,13 @@ msgctxt "PROGRAM_MOUNT_READONLY"
 msgid "Mounted read-only\n"
 msgstr "Montato in modalità sola lettura\n"
 
-#: src/dos/programs/mount.cpp:1147
+#: src/dos/programs/mount.cpp:1166
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP"
 msgid "Mount a directory or an image file to a drive letter.\n"
 msgstr "Monta una directory o un file immagine su una lettera di unità.\n"
 
-#: src/dos/programs/mount.cpp:1150
+#: src/dos/programs/mount.cpp:1169
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG"
 msgid ""
@@ -11128,7 +11169,7 @@ msgstr ""
 "\n"
 "Esempi:\n"
 
-#: src/dos/programs/mount.cpp:1199
+#: src/dos/programs/mount.cpp:1218
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_WIN32"
 msgid ""
@@ -11148,7 +11189,7 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disco01.img disco02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1208
+#: src/dos/programs/mount.cpp:1227
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_MACOSX"
 msgid ""
@@ -11170,7 +11211,7 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disco01.img disco02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1218
+#: src/dos/programs/mount.cpp:1237
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_OTHER"
 msgid ""
@@ -11192,13 +11233,13 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disco01.img disco02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1228
+#: src/dos/programs/mount.cpp:1247
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_CDROMS_FOUND"
 msgid "CD-ROMs found: %d\n"
 msgstr "CD-ROM trovati: %d\n"
 
-#: src/dos/programs/mount.cpp:1229
+#: src/dos/programs/mount.cpp:1248
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ERROR_1"
 msgid "Directory or file %s doesn't exist.\n"
@@ -11206,67 +11247,67 @@ msgstr ""
 "La directory o il file %s non esiste.\n"
 "\n"
 
-#: src/dos/programs/mount.cpp:1231
+#: src/dos/programs/mount.cpp:1250
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ERROR_2"
 msgid "%s isn't a directory or valid image file.\n"
 msgstr "%s non è una directory o un file immagine valido.\n"
 
-#: src/dos/programs/mount.cpp:1234
+#: src/dos/programs/mount.cpp:1253
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ILL_TYPE"
-msgid "Illegal type %s\n"
-msgstr "Tipo %s non valido\n"
+msgid "Illegal type %s"
+msgstr "Tipo %s non valido"
 
-#: src/dos/programs/mount.cpp:1235
+#: src/dos/programs/mount.cpp:1254
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ALREADY_MOUNTED"
 msgid "Drive %c already mounted with %s\n"
 msgstr "Unità %c già montata come %s\n"
 
-#: src/dos/programs/mount.cpp:1236
+#: src/dos/programs/mount.cpp:1255
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"
 msgid "Drive %c isn't mounted.\n"
 msgstr "L'unità %c non è montata.\n"
 
-#: src/dos/programs/mount.cpp:1238
+#: src/dos/programs/mount.cpp:1257
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_SUCCESS"
 msgid "Drive %c has successfully been removed.\n"
 msgstr "L'unità %c è stata rimossa con successo.\n"
 
-#: src/dos/programs/mount.cpp:1241
+#: src/dos/programs/mount.cpp:1260
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"
 msgid "Virtual Drives can not be unMOUNTed.\n"
 msgstr "Le unità virtuali non possono essere smontate.\n"
 
-#: src/dos/programs/mount.cpp:1244
+#: src/dos/programs/mount.cpp:1263
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_DRIVEID_ERROR"
 msgid "'%c' is not a valid drive identifier.\n"
 msgstr "'%c' non è un identificatore di unità valido.\n"
 
-#: src/dos/programs/mount.cpp:1247
+#: src/dos/programs/mount.cpp:1266
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_WARNING_WIN"
 msgid "[color=light-red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n"
 msgstr "[color=light-red]Montare C:\\ NON è consigliato. Si prega di montare una sottodirectory.[reset]\n"
 
-#: src/dos/programs/mount.cpp:1250
+#: src/dos/programs/mount.cpp:1269
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_WARNING_OTHER"
 msgid "[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n"
 msgstr "[color=light-red]Montare / NON è consigliato. Si prega di montare una sottodirectory.[reset]\n"
 
-#: src/dos/programs/mount.cpp:1253
+#: src/dos/programs/mount.cpp:1272
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_NO_OPTION"
 msgid "Warning: Ignoring unsupported option '%s'.\n"
 msgstr "Avviso: l'opzione '%s' non è supportata e sarà ignorata.\n"
 
-#: src/dos/programs/mount.cpp:1256
+#: src/dos/programs/mount.cpp:1275
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_NO_BASE"
 msgid ""
@@ -11276,13 +11317,13 @@ msgstr ""
 "Deve essere montata una directory normale prima di poter aggiungere una\n"
 "sovrapposizione.\n"
 
-#: src/dos/programs/mount.cpp:1260
+#: src/dos/programs/mount.cpp:1279
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"
 msgid "The overlay is NOT compatible with the drive that is specified.\n"
 msgstr "La sovrapposizione NON è compatibile con l'unità specificata.\n"
 
-#: src/dos/programs/mount.cpp:1263
+#: src/dos/programs/mount.cpp:1282
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_MIXED_BASE"
 msgid ""
@@ -11293,31 +11334,31 @@ msgstr ""
 "percorso, relativo o assoluto, dell'unità sottostante.\n"
 "Non mescolare percorsi relativi e assoluti.\n"
 
-#: src/dos/programs/mount.cpp:1267
+#: src/dos/programs/mount.cpp:1286
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE"
 msgid "The overlay directory can not be the same as underlying drive.\n"
 msgstr "La directory di sovrapposizione non può essere la stessa dell'unità sottostante\n"
 
-#: src/dos/programs/mount.cpp:1270
+#: src/dos/programs/mount.cpp:1289
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR"
 msgid "Something went wrong.\n"
 msgstr "Qualcosa è andato storto.\n"
 
-#: src/dos/programs/mount.cpp:1271
+#: src/dos/programs/mount.cpp:1290
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_STATUS"
 msgid "Overlay %s on drive %c mounted.\n"
 msgstr "Sovrapposizione %s nell'unità %c montata.\n"
 
-#: src/dos/programs/mount.cpp:1273
+#: src/dos/programs/mount.cpp:1292
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_INVALID_CHS"
 msgid "Invalid CHS format. Use -chs cylinders,heads,sectors\n"
 msgstr "Formato CTS non valido. Utilizzare -chs cilindri,testine,settori\n"
 
-#: src/dos/programs/mount.cpp:1276
+#: src/dos/programs/mount.cpp:1295
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_REL_ABS"
 msgid ""
@@ -11328,19 +11369,19 @@ msgstr ""
 "percorso, relativo o assoluto, dell'unità sottostante.\n"
 "Non mescolare percorsi relativi e assoluti.\n"
 
-#: src/dos/programs/mount.cpp:1280
+#: src/dos/programs/mount.cpp:1299
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_SAME_FS"
 msgid "The overlay needs to be on the same filesystem as the underlying drive.\n"
 msgstr "La sovrapposizione deve trovarsi sullo stesso file system dell'unità sottostante.\n"
 
-#: src/dos/programs/mount.cpp:1283
+#: src/dos/programs/mount.cpp:1302
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_UNKNOWN_ERROR"
 msgid "Something went wrong.\n"
 msgstr "Qualcosa è andato storto.\n"
 
-#: src/dos/programs/mount.cpp:1286
+#: src/dos/programs/mount.cpp:1305
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_SPECIFY2"
 msgid "Must specify a drive letter A/B/C/D or drive number 0/1/2/3 to mount image at.\n"
@@ -11348,7 +11389,7 @@ msgstr ""
 "È necessario specificare una lettera di unità A/B/C/D o un numero di unità\n"
 "0/1/2/3 su cui montare l'immagine.\n"
 
-#: src/dos/programs/mount.cpp:1289
+#: src/dos/programs/mount.cpp:1308
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"
 msgid ""
@@ -11366,19 +11407,19 @@ msgstr ""
 "Per le immagini CD-ROM:\n"
 "  [color=light-green]imgmount[reset] [color=white]UNITÀ[reset] [color=light-cyan]FILEIMMAGINE[reset] -t iso\n"
 
-#: src/dos/programs/mount.cpp:1297
+#: src/dos/programs/mount.cpp:1316
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_STATUS_NONE"
 msgid "No drive available.\n"
 msgstr "Nessuna unità disponibile.\n"
 
-#: src/dos/programs/mount.cpp:1299
+#: src/dos/programs/mount.cpp:1318
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE"
 msgid "No available IDE controllers. Drive will not have IDE emulation.\n"
 msgstr "Nessun controller IDE disponibile. L'unità non avrà l'emulazione IDE.\n"
 
-#: src/dos/programs/mount.cpp:1302
+#: src/dos/programs/mount.cpp:1321
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_INVALID_IMAGE"
 msgid ""
@@ -11388,7 +11429,7 @@ msgstr ""
 "Impossibile caricare il file immagine.\n"
 "Verifica che il percorso sia corretto e che l'immagine sia accessibile.\n"
 
-#: src/dos/programs/mount.cpp:1306
+#: src/dos/programs/mount.cpp:1325
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_INVALID_GEOMETRY"
 msgid ""
@@ -11401,31 +11442,31 @@ msgstr ""
 "In alternativa: -size BytePerSettore,Settori,Testine,Cilindri\n"
 "\n"
 
-#: src/dos/programs/mount.cpp:1311
+#: src/dos/programs/mount.cpp:1330
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_FILE_NOT_FOUND"
 msgid "Image file not found.\n"
 msgstr "File immagine non trovato.\n"
 
-#: src/dos/programs/mount.cpp:1313
+#: src/dos/programs/mount.cpp:1332
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_ALREADY_MOUNTED"
 msgid "Drive already mounted at that letter.\n"
 msgstr "Unità già montata con la stessa lettera.\n"
 
-#: src/dos/programs/mount.cpp:1316
+#: src/dos/programs/mount.cpp:1335
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_CANT_CREATE"
 msgid "Can't create drive from file.\n"
 msgstr "Impossibile creare l'unità dal file.\n"
 
-#: src/dos/programs/mount.cpp:1317
+#: src/dos/programs/mount.cpp:1336
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_MOUNT_NUMBER"
 msgid "Drive number %d mounted as %s.\n"
 msgstr "Unità numero %d montata come %s.\n"
 
-#: src/dos/programs/mount.cpp:1319
+#: src/dos/programs/mount.cpp:1338
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_DEPRECATED"
 msgid ""
@@ -12241,13 +12282,13 @@ msgctxt "PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED"
 msgid "[reset][color=brown]Driver not unloaded: configured to stay resident[reset]\n"
 msgstr "[reset][color=brown]Driver non disabilitato: configurato per rimanere residente[reset]\n"
 
-#: src/shell/autoexec.cpp:736
+#: src/shell/autoexec.cpp:806
 #, c-format, no-wrap
 msgctxt "AUTOEXEC_BAT_GENERATED"
 msgid "generated from configuration and command line"
 msgstr "generato dal file di configurazione e dalla riga di comando"
 
-#: src/shell/autoexec.cpp:738
+#: src/shell/autoexec.cpp:808
 #, c-format, no-wrap
 msgctxt "AUTOEXEC_BAT_CONFIG_SECTION"
 msgid "from [autoexec] section"
