@@ -81,6 +81,8 @@ the three major DOS gaming eras. Naturally, these are only general guidelines
 and there are always exceptions, but most people would agree with this order
 of preference (most desirable options come first).
 
+TODO(CL) make sure every sound card is present in this list
+
 **Early DOS era (1982--1987)**
 
 <div class="compact" markdown>

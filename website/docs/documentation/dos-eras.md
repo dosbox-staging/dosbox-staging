@@ -1,12 +1,13 @@
 ---
+title: The DOS eras
 toc_depth: 1
 ---
 
-TODO(JN) on this entire page, cross-link hardware device names marked up with
+# The DOS eras
+
+TODO(CL) on this entire page, cross-link hardware device names marked up with
 bold to other sections where possible (e.g. to Roland MT-32, Sound Blaster,
 etc.)
-
-# The DOS eras
 
 The DOS era spanned roughly 15 years --- from the original IBM PC in 1981 to
 the final wave of DOS games in the late 1990s. Hardware evolved dramatically

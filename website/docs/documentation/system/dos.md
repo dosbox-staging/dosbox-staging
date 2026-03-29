@@ -38,7 +38,7 @@ following command line arguments:
 
 !!! note 
 
-    Use the [language](../general/#language) setting in the `[dosbox]` section
+    Use the [language](general.md#language) setting in the `[dosbox]` section
     to set the language of DOSBox Staging's own interface.
 
 ## Configuration settings

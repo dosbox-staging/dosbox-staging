@@ -1,6 +1,6 @@
 # Roland MT-32
 
-The **Roland MT-32 Multi-Timbre Sound Module** was released in 1987 by Roland
+The **Roland MT-32** multi-timbre sound module was released in 1987 by Roland
 Corporation, the iconic Japanese manufacturer of electronic musical
 instruments. It featured Roland's novel, patented Linear Arithmetic (LA)
 Synthesis which combined sample playback with digital synthesis,  capable of
@@ -152,21 +152,20 @@ and _"cm32l mame roms"_.
 
 ### Listing the installed ROMs
 
-In DOSBox Staging you'll be able to run the command `MIXER /LISTMIDI` to check
-which ROMs are being detected and currently used. This should translate into:
+Run the `MIXER /LISTMIDI` command to see the list of available MT-32 ROMs:
 
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/1557255/113753268-c0f47480-96c2-11eb-892e-b3107e475bb4.png">
-</p>
+TODO(JN) screenshot
 
-In the screen above, `mt32_107` is the user's selected model. The green
+In the above screenshot, `mt32_107` is the currently active model. The green
 highlighted **'y'** additionally indicates which directory will be used during
-the actual loading.
+the actual loading. TODO rewrite this
 
-Note that *both* the control and PCM ROMs need to be present for a given
-model. If some model could not be detected, or you're getting `Failed to find
-ROMs for model <model_name>` error at startup, make sure that both ROM sets
-have been copied to your ROM directory for that model.
+!!! warning
+
+    Both the control and PCM ROMs need to be present for a given
+    model. If some model could not be detected, or you're getting `Failed to find
+    ROMs for model <model_name>` error at startup, make sure that both ROM sets
+    have been copied to your ROM directory for that model.
 
 
 
@@ -174,7 +173,7 @@ have been copied to your ROM directory for that model.
 ### ROM lookup paths
 
 If `romdir` is not set, DOSBox Staging searches the following directories for
-ROM files (in order). You can also place ROMs in an `mt32-roms` subfolder
+MT-32 ROM files (in order). You can also place ROMs in an `mt32-roms` subfolder
 inside the game's working directory.
 
 **Windows**

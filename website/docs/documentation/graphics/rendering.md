@@ -43,29 +43,6 @@ appropriate monitor emulation based on the current video mode:
 - `crt-auto-arcade-sharp` --- A sharper arcade variant that retains the thick
   scanlines but with the sharpness of a typical PC monitor.
 
-### When to use which
-
-- **`crt-auto`** (the default) is the right choice for the vast majority of
-  games. VGA adapters double-scan low-resolution modes (320&times;200 becomes
-  640&times;400), so on a real VGA monitor, you see tightly-packed scanlines
-  rather than thick ones. `crt-auto` reproduces this accurately.
-
-- **`crt-auto-machine`** is useful when you emulate a specific older machine
-  type (e.g., `machine = ega` or `machine = cga`). It emulates a fixed CRT
-  appropriate for that adapter, so CGA/EGA modes displayed on an emulated VGA
-  machine appear double-scanned with chunky pixels, exactly as they would on
-  real hardware.
-
-- **`crt-auto-arcade`** and **`crt-auto-arcade-sharp`** give you the thick
-  15 kHz scanline look of arcade and home computer monitors. This is a fantasy
-  option for PC games --- no real VGA monitor looked like this --- but it's fun
-  for playing DOS ports of Amiga and Atari ST games, or if you simply prefer
-  the look.
-
-If you don't like CRT shaders, set `shader` to `sharp` to get crisp
-pixel-perfect output. The deprecated legacy CRT shaders are still available
-as a [separate download](https://archive.org/download/dosbox-staging-legacy-svn-shaders/svn-shaders.zip).
-
 
 ## Shader presets
 
@@ -103,9 +80,13 @@ SCANLINES_STRENGTH = 0.65
 
 The `[settings]` section can include:
 
+<div class="compact" markdown>
+
 - `force_single_scan` --- Force single scanning for double-scanned modes.
 - `force_no_pixel_doubling` --- Disable pixel doubling.
 - `linear_filtering` --- Enable or disable bilinear texture filtering.
+
+</div>
 
 The `[parameters]` section overrides shader-specific parameters declared in
 the shader source.
@@ -124,9 +105,9 @@ integer_scaling = vertical
 
 The correct aspect ratio is always maintained, so the other dimension's
 scaling factor may become fractional. With the `sharp` shader, this is not a
-problem as the interpolation band is at most 1 pixel wide at the edges ---
-still sharp, especially at 1440p or 4K. With CRT shaders, non-integer
-horizontal scaling is practically a non-issue.
+problem as the interpolation band is at most 1 pixel wide at the edges, which
+is sharp, especially at 1440p or 4K. With CRT shaders, non-integer horizontal
+scaling is practically a non-issue.
 
 The default `auto` mode enables vertical integer scaling only for the adaptive
 CRT shaders, with refinements: 3.5x and 4.5x scaling factors are also
@@ -391,22 +372,19 @@ You can set the rendering parameters in the `[render]` configuration section.
       (also known as "no bilinear"). This results in the sharpest possible
       image at the expense of uneven pixels, especially with non-square pixel
       aspect ratios (this is less of an issue on high resolution monitors).
-    - `jinc2` -- Upscale the image using jinc 2-lobe interpolation with
-      anti-ringing. This blends together dithered colour patterns at the cost
-      of image sharpness.
 
     </div>
 
     The following short aliases are also available: `sharp` (for
     `interpolation/sharp`), `bilinear` (for `interpolation/bilinear`),
-    `nearest` (for `interpolation/nearest`), `jinc2` (for
-    `interpolation/jinc2`).
+    `nearest` (for `interpolation/nearest`).
 
     The bundled shaders include:
 
     - **Interpolation**: `sharp`, `bilinear`, `nearest`, `catmull-rom`
-    - **CRT**: `crt-hyllian` (used by the adaptive CRT shaders),
-      `vga-1080p`, `vga-1080p-fake-double-scan`
+    - **CRT**: `crt-hyllian`,
+      `vga-1080p`, `vga-1080p-fake-double-scan` (all used by the adaptive CRT
+      shaders with different presets)
     - **Scaler**: `advinterp2x`, `advinterp3x`, `advmame2x`, `advmame3x`,
       `xbr-lv2-3d`, `xbr-lv2-noblend`, `xbr-lv3`
 

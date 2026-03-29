@@ -16,7 +16,7 @@ setting.
 The crossfeed presets only apply to the **OPL** and **CMS** mixer channels by
 default, as these are the two devices that typically feature hard-panned
 sounds. You can apply crossfeed to other channels as well with the
-[DOSBox mixer](dosbox-mixer.md) `MIXER` command (e.g., `MIXER GUS x50`).
+[DOSBox mixer](mixer.md) `MIXER` command (e.g., `MIXER GUS x50`).
 
 `off`
 : No crossfeed (default).

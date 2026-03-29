@@ -10,7 +10,7 @@ MIDI music nirvana in its full glory!
 Because MIDI plays such a pivotal role in DOS gaming history, it is important
 to understand its origins and how it works at a basic level.
 
-## A brief introduction to MIDI
+### A brief introduction to MIDI
 
 The MIDI standard (Musical Instrument Digital Interface) was created in the
 early 1980s to allow audio equipment from different manufacturers to
@@ -31,7 +31,7 @@ the instruments, while the sound module is responsible for generating the
 actual sounds using its on-board samples or synthesis capabilities.
 
 
-## MIDI in DOS gaming
+### MIDI in DOS gaming
 
 In the beginning, all DOS games came on floppies. Even if a game came on 10
 floppies or more, there was simply not enough space for long musical pieces
@@ -52,12 +52,12 @@ the sound module directly to your sound card.
 DOS games featuring MIDI music support either or both of the following two
 major MIDI standards:
 
-- [Roland MT-32 and variants](sound-devices/roland-mt-32.md) --- Released in
+- [Roland MT-32 and variants](roland-mt-32.md) --- Released in
   1987, this module was the only option for MIDI music in DOS games until
   about 1992. Most notably, you need the MT-32 for the best music in older
   Sierra and LucasArts adventure games.
 
-- [General MIDI](sound-devices/general-midi.md) --- The world's first General
+- [General MIDI](general-midi.md) --- The world's first General
   MIDI capable module, the Roland Sound Canvas SC-55, was released 1991.
   Games started adding General MIDI support from about 1992 onwards, which
   resulted in the MT-32 losing most of its relevance by the mid-90s.
@@ -65,7 +65,7 @@ major MIDI standards:
 You can read more about these modules in their respective documentation sections.
 
 
-## Setting up MIDI
+### Setting up MIDI
 
 DOSBox emulates a Roland MPU-401 compatible MIDI interface which is enabled by
 default. The emulated MPU-401 operates in the so-called *Intelligent Mode*
@@ -77,7 +77,7 @@ MIDI related settings are to be configured in the `[midi]` section. The most
 common usage scenario is to leave [mididevice](#mididevice) at its default
 `auto` setting, then set [midiconfig](#midiconfig) to:
 
-- `mt32` to use the built-in [Roland MT-32](sound-devices/roland-mt-32.md) emulation,
+- `mt32` to use the built-in [Roland MT-32](roland-mt-32.md) emulation,
 - `fluidsynth` to use the built-in [FluidSynth](#) MIDI synthesiser,
 - or to an ID that identifies an external MIDI device.
 
@@ -89,7 +89,8 @@ external MIDI devices.
     To easily switch between a built-in and an external MIDI device per game
     (typically between the built-in MT-32 emulation and Roland's Sound Canvas
     VA running in an external MIDI host program), you can use the [layered
-    configuration approach](../configuration.md#config-layering) to your advantage.
+    configuration approach](../../configuration.md#config-layering) to your
+    advantage.
 
     As an example, to easily switch between the built-in MT-32 emulation and
     an external MIDI device that contains "loopMIDI" in its name, put this
@@ -164,17 +165,17 @@ MIDI related settings are to be configured in the `[midi]` section.
         [midiconfig](#midiconfig) setting.
 
       - `fluidsynth` --- The built-in FluidSynth MIDI synthesiser (SoundFont
-        player). See the [FluidSynth](sound-devices/general-midi.md#fluidsynth)
-        configuration settings for further details.
+        player). See the [FluidSynth](general-midi.md#fluidsynth) configuration
+        settings for further details.
 
       - `mt32` --- The built-in Roland MT-32 synthesiser. See the [Roland
-        MT-32](sound-devices/roland-mt-32.md#configuration-settings)
+        MT-32](roland-mt-32.md#configuration-settings)
         configuration settings for further details.
 
       - `soundcanvas` --- The internal Roland SC-55 synthesiser (requires a
-        CLAP audio plugin). See the
-        [Sound Canvas](sound-devices/general-midi.md#sound-canvas)
-        configuration settings for further details.
+        CLAP audio plugin). See the [Sound
+        Canvas](general-midi.md#sound-canvas) configuration settings for
+        further details.
 
       - `coreaudio` *(macOS only)* --- Use the built-in macOS MIDI synthesiser.
         The SoundFont to use can be specified with [midiconfig](#midiconfig).

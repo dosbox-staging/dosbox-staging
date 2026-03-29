@@ -165,6 +165,8 @@ nav:
         - documentation/system/cpu.md
         - documentation/system/dos.md
 
+      - documentation/storage.md
+
       - Input:
         - documentation/input/overview.md
         - documentation/input/keyboard.md
@@ -181,17 +183,18 @@ nav:
       - Sound:
         - documentation/sound/overview.md
         - documentation/sound/on-subjectivity.md
-        - documentation/sound/dosbox-mixer.md
+        - documentation/sound/mixer.md
         - documentation/sound/mixer-effects.md
         - documentation/sound/analog-output-filters.md
-        - documentation/sound/midi.md
         - Sound devices:
           - documentation/sound/sound-devices/adlib-cms-sound-blaster.md
           - documentation/sound/sound-devices/roland-mt-32.md
+          - documentation/sound/sound-devices/midi.md
           - documentation/sound/sound-devices/general-midi.md
           - documentation/sound/sound-devices/pc-speaker.md
           - documentation/sound/sound-devices/tandy.md
           - documentation/sound/sound-devices/gravis-ultrasound.md
+          - documentation/sound/sound-devices/cd-da.md
           - documentation/sound/sound-devices/ibm-ps1audio.md
           - documentation/sound/sound-devices/covox-variants.md
           - documentation/sound/sound-devices/innovation.md
