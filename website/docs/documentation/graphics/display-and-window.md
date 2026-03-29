@@ -189,12 +189,6 @@ section.
 
 ##### fullscreen
 
-:   Number of display to use; values depend on OS and user settings (`0` by
-    default).
-
-
-##### fullscreen
-
 :   Start in fullscreen mode.
 
     Possible values: `on`, `off` *default*{ .default }

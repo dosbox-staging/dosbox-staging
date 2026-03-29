@@ -76,4 +76,7 @@ section.
     !!! note
 
         Setting this to a higher value than the number of logical CPUs your
-        hardware supports is very likely to harm performance.
+        hardware supports is very likely to harm performance. This has been
+        measured to scale well up to 8--16 threads, but it has not been tested
+        on a many-core CPU. If you have a Threadripper or similar CPU, please
+        let us know how it goes.
