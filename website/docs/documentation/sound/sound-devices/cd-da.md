@@ -14,11 +14,8 @@ TODO physical CD-ROM
 
 ### Mixer channel
 
-CD-DA audio is output to the **CDAUDIO** for mounted CD-ROM images.
-
-For physical CD-ROM devices, the **CDAUDIO** channel has numbered suffixes
-appened, (**CDAUDIO_0**, **CDAUDIO_1**, etc.). This is to avoid conflicts with
-multiple drives.
+CD-DA audio is output to the **CDAUDIO** mixer channel for mounted CD-ROM
+images.
 
 
 ### Supported disc image formats

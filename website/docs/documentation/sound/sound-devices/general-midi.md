@@ -65,7 +65,7 @@ enthusiasts who own an actual SC-55 or other hardware synthesiser.
 
 ### Mixer channels
 
-Sound Canvas outputs to the **SOUNDCANVAS** mixer channel. and FluidSynth to
+Sound Canvas outputs to the **SOUNDCANVAS** mixer channel, and FluidSynth to
 the **FSYNTH** mixer channel.
 
 
