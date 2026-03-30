@@ -238,6 +238,16 @@ modes are available.
     The S3 Trio64 is *not* compatible with Tandy, PCjr, or Hercules graphics.
     Games requiring these standards need the corresponding `machine` type.
 
+!!! tip
+
+    Some games and GOG releases ship with **UniVBE** (Universal VESA BIOS
+    Extensions), a third-party VESA driver from the 1990s. DOSBox Staging's
+    built-in VESA implementation is fully compliant, making UniVBE
+    unnecessary --- and it can actually cause graphical glitches. If a game
+    has trouble with SVGA modes, check for a bundled `UNIVBE.EXE` or
+    `UVCONFIG.EXE` and try preventing it from loading (remove the line from
+    the game's batch file, or rename the file).
+
 Two variants are available for specific compatibility needs:
 
 - `machine = vesa_oldvbe` --- Same S3 Trio64, but limited to VESA VBE 1.2.
