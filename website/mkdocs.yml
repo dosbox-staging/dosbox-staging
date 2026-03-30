@@ -153,28 +153,19 @@ nav:
       - getting-started/next-steps.md
 
   - Documentation:
-      - documentation/introduction.md
-      - documentation/dos-primer.md
-      - documentation/dos-eras.md
-      - documentation/dma-and-irq.md
+      - Getting oriented:
+        - documentation/introduction.md
+        - documentation/dos-primer.md
+        - documentation/dos-eras.md
 
-      - documentation/configuration.md
-      - documentation/command-line.md
-      - documentation/commands.md
-
-      - System:
-        - documentation/system/general.md
-        - documentation/system/cpu.md
-        - documentation/system/dos.md
-
-      - documentation/storage.md
-
-      - Input:
-        - documentation/input/overview.md
-        - documentation/input/keyboard.md
-        - documentation/input/mouse.md
-        - documentation/input/joystick.md
-        - documentation/input/keymapper.md
+      - Using DOSBox:
+        - documentation/configuration.md
+        - documentation/command-line.md
+        - documentation/commands.md
+        - documentation/storage.md
+        - documentation/hardware-resources.md
+        - documentation/capture.md
+        - documentation/webserver.md
 
       - Graphics:
         - documentation/graphics/adapters.md
@@ -205,13 +196,22 @@ nav:
           - documentation/sound/sound-devices/imfc.md
         - documentation/sound/disk-noise.md
 
+      - Input:
+        - documentation/input/overview.md
+        - documentation/input/keyboard.md
+        - documentation/input/mouse.md
+        - documentation/input/joystick.md
+        - documentation/input/keymapper.md
+
       - Networking:
         - documentation/networking/serial-ports.md
         - documentation/networking/ipx.md
         - documentation/networking/ethernet.md
 
-      - documentation/capture.md
-      - documentation/webserver.md
+      - System:
+        - documentation/system/general.md
+        - documentation/system/cpu.md
+        - documentation/system/dos.md
 
       - Appendices:
         - documentation/appendices/shortcuts.md
