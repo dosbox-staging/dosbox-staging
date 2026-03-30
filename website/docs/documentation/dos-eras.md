@@ -16,10 +16,12 @@ time. Matching the emulated hardware to a game's era gives the most authentic
 experience.
 
 The key settings to adjust are [`machine`](system/general.md#machine)
-(graphics standard), [`cputype`](system/cpu.md#cputype),
+(graphics standard; see [Graphics adapters](graphics/adapters.md) for an
+overview), [`cputype`](system/cpu.md#cputype),
 [`cpu_cycles`](system/cpu.md#cpu_cycles) (CPU speed), and the [sound
 device](sound/overview.md). See [A short DOS primer](dos-primer.md) for an
-explanation of these concepts.
+explanation of these concepts and [Hardware resource settings](dma-and-irq.md)
+for configuring I/O addresses, IRQs, and DMA channels.
 
 
 ## The early days (1981--1984)
