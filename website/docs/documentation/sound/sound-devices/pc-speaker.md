@@ -30,9 +30,9 @@ even produce sounds where the `discrete` model produces none (e.g.,
 `discrete` only if a specific game has problems with the `impulse` model.
 
 
-### Mixer channel
+## Mixer channel
 
-The PC speaker outputs to the **PCSPEAKER** mixer channel.
+The PC speaker outputs to the **PCSPEAKER** [mixer](../mixer.md) channel.
 
 
 ## Configuration settings

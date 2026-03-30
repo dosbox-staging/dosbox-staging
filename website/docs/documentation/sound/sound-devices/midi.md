@@ -10,7 +10,7 @@ MIDI music nirvana in its full glory!
 Because MIDI plays such a pivotal role in DOS gaming history, it is important
 to understand its origins and how it works at a basic level.
 
-### A brief introduction to MIDI
+## A brief introduction to MIDI
 
 The MIDI standard (Musical Instrument Digital Interface) was created in the
 early 1980s to allow audio equipment from different manufacturers to
@@ -31,7 +31,7 @@ the instruments, while the sound module is responsible for generating the
 actual sounds using its on-board samples or synthesis capabilities.
 
 
-### MIDI in DOS gaming
+## MIDI in DOS gaming
 
 In the beginning, all DOS games came on floppies. Even if a game came on 10
 floppies or more, there was simply not enough space for long musical pieces
@@ -72,7 +72,7 @@ with each game. There is no other reliable way to know for sure --- game
 manuals and setup utilities often omit or misrepresent MIDI support.
 
 
-### Setting up MIDI
+## Setting up MIDI
 
 DOSBox emulates a Roland MPU-401 compatible MIDI interface which is enabled by
 default. The emulated MPU-401 operates in the so-called *Intelligent Mode*
@@ -119,7 +119,7 @@ external MIDI devices.
     ```
 
 
-### Using external MIDI hardware
+## Using external MIDI hardware
 
 If you own a physical MIDI sound module (an MT-32, SC-55, or similar), you
 can connect it to your computer and have DOSBox Staging send MIDI data
