@@ -168,6 +168,11 @@ nav:
         - documentation/capture.md
         - documentation/webserver.md
 
+      - System:
+        - documentation/system/general.md
+        - documentation/system/cpu.md
+        - documentation/system/dos.md
+
       - Graphics:
         - documentation/graphics/adapters.md
         - documentation/graphics/display-and-window.md
@@ -182,6 +187,7 @@ nav:
         - documentation/sound/mixer.md
         - documentation/sound/mixer-effects.md
         - documentation/sound/analog-output-filters.md
+        - documentation/sound/disk-noise.md
         - Sound devices:
           - documentation/sound/sound-devices/adlib-cms-sound-blaster.md
           - documentation/sound/sound-devices/roland-mt-32.md
@@ -195,7 +201,6 @@ nav:
           - documentation/sound/sound-devices/covox-variants.md
           - documentation/sound/sound-devices/innovation.md
           - documentation/sound/sound-devices/imfc.md
-        - documentation/sound/disk-noise.md
 
       - Input:
         - documentation/input/overview.md
@@ -208,11 +213,6 @@ nav:
         - documentation/networking/serial-ports.md
         - documentation/networking/ipx.md
         - documentation/networking/ethernet.md
-
-      - System:
-        - documentation/system/general.md
-        - documentation/system/cpu.md
-        - documentation/system/dos.md
 
       - Appendices:
         - documentation/appendices/shortcuts.md
