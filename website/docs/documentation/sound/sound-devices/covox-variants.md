@@ -10,7 +10,7 @@ era.
 
 The Covox Speech Thing (1986) was a simple R-2R resistor ladder DAC that
 plugged into the parallel port. It was cheap to build (even as a DIY project)
-and provided 8-bit mono audio output. A number of games supported it,
+and provided 8-bit mono audio output. Around 60 games supported it,
 including several Sierra titles and [Leisure Suit Larry 1
 VGA](https://www.mobygames.com/game/413/leisure-suit-larry-1-in-the-land-of-the-lounge-lizards/).
 
@@ -19,7 +19,8 @@ VGA](https://www.mobygames.com/game/413/leisure-suit-larry-1-in-the-land-of-the-
 
 The Disney Sound Source (1990) was a parallel port audio device
 backwards-compatible with the Covox Speech Thing, but it added a small FIFO
-buffer and control logic to reduce CPU overhead during playback. DOSBox
+buffer and control logic to reduce CPU overhead during playback. Around 150
+games supported it, making it the most popular parallel port audio device. DOSBox
 Staging emulates the Disney Sound Source, which is also compatible with Covox
 Speech Thing titles and Intersound MDO software.
 
