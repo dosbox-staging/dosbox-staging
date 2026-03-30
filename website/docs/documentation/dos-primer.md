@@ -47,6 +47,10 @@ is analogous to CPU speed --- more cycles means a faster emulated computer.
 The default settings work well for the vast majority of games, but some titles
 require specific speed ranges to run correctly.
 
+See [CPU settings](system/cpu.md) for cycle ranges per era and how to fine-tune
+speed. The [Getting Started guide](../getting-started/passport-to-adventure.md#cpu-sensitive-games)
+walks through a practical example of adjusting CPU speed for a specific game.
+
 
 ## Video
 
@@ -67,6 +71,13 @@ CRT emulation shaders that reproduce the look of the original hardware. This
 makes a surprisingly large difference --- pixel art that looks harsh and
 blocky on a modern flat panel comes alive with the subtle blending and
 scanlines of the CRT emulation.
+
+See [Graphics adapters](graphics/adapters.md) for details on each emulated
+adapter, and [Rendering](graphics/rendering.md) for shader and display
+options. The Getting Started guide covers
+[choosing a graphics adapter](../getting-started/enhancing-prince-of-persia.md#graphics-options)
+and [aspect ratios](../getting-started/advanced-graphics-options.md#aspect-ratios-square-pixels-black-borders)
+with practical examples.
 
 
 ## Audio
@@ -104,6 +115,12 @@ studio-quality pre-recorded music played directly from the game disc. This
 bypassed the sound card entirely for music, delivering a dramatic leap in
 audio fidelity.
 
+See [Sound overview](sound/overview.md) for a guide to selecting the best
+audio option for each era. The Getting Started guide walks through
+[configuring sound devices](../getting-started/passport-to-adventure.md#sound-options)
+and [setting up Roland MT-32 sound](../getting-started/beneath-a-steel-sky.md#setting-up-roland-mt-32-sound)
+step by step.
+
 
 ## Input peripherals
 
@@ -115,6 +132,9 @@ computers.
 Many DOS games also support **[analog joysticks](input/joystick.md)**. Digital joysticks were a
 rarity on the platform.
 
+See [Input overview](input/overview.md) for keyboard, mouse, and joystick
+configuration, and the [Key mapper](input/keymapper.md) for remapping
+controls.
 
 
 ## Storage
@@ -144,6 +164,11 @@ This is in stark contrast with the home computers of the era that used
 magnetic tapes and floppies for storage due to cost considerations well into
 the 1990s.
 
+See [Storage](storage.md) for details on drive letters, mounting directories
+and disk images, and the different media types. The Getting Started guide
+demonstrates [setting up a game directory](../getting-started/setting-up-prince-of-persia.md#the-c-drive)
+and [mounting a CD-ROM image](../getting-started/beneath-a-steel-sky.md#mounting-a-cd-rom-image).
+
 
 ## Memory
 
@@ -157,7 +182,12 @@ topic --- no one enjoyed dealing with this stuff back in the day. The good
 news is that you don't need to know anything about it to use DOSBox Staging
 effectively. The vast majority of games and applications work well with the
 default 16 MB of extended memory, and usually there is no advantage to
-changing this. 
+changing this.
+
+See [DOS settings --- Memory](system/dos.md#memory) for the EMS, XMS, and UMB
+memory options, and [General --- memsize](system/general.md#memsize) for
+changing the total amount of RAM.
+
 
 ## MS-DOS
 
@@ -176,6 +206,12 @@ executable.
 DOSBox Staging emulates a DOS-compatible environment, so you don't need to
 install MS-DOS separately. The emulated DOS command line works just like the
 real thing.
+
+See [DOS commands](commands.md) for a list of all available commands, and
+[Configuration files](configuration.md) for how DOSBox Staging's config
+system works. The Getting Started guide covers
+[configuration basics](../getting-started/setting-up-prince-of-persia.md#auto-executing-commands-at-startup)
+and [layered configs](../getting-started/passport-to-adventure.md#layered-configurations).
 
 
 ## Windows 3.1
