@@ -20,7 +20,7 @@ The key settings to adjust are [`machine`](system/general.md#machine)
 overview), [`cputype`](system/cpu.md#cputype),
 [`cpu_cycles`](system/cpu.md#cpu_cycles) (CPU speed), and the [sound
 device](sound/overview.md). See [A short DOS primer](dos-primer.md) for an
-explanation of these concepts and [Hardware resource settings](dma-and-irq.md)
+explanation of these concepts and [Hardware resource settings](hardware-resources.md)
 for configuring I/O addresses, IRQs, and DMA channels.
 
 
