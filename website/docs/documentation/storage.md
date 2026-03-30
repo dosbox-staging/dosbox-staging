@@ -72,7 +72,10 @@ DOSBox Staging provides two special drives in addition to whatever you mount:
 ## Automounting
 
 The easiest way to set up drives is automounting. Place your game files in a
-`drives/` directory structure, and DOSBox mounts them automatically on startup.
+`drives/` directory structure, and DOSBox mounts them automatically on
+startup. The
+[Getting Started guide](../getting-started/setting-up-prince-of-persia.md#the-c-drive)
+demonstrates this approach step by step.
 
 
 ### Directory structure

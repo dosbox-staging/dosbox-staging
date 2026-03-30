@@ -12,7 +12,9 @@ mid-1980s games written for CGA, Tandy, or Hercules hardware, or demoscene
 productions targeting specific SVGA chipsets.
 
 For an overview of which graphics standard was typical in each era, see
-[The DOS eras](../dos-eras.md).
+[The DOS eras](../dos-eras.md). The
+[Getting Started guide](../../getting-started/enhancing-prince-of-persia.md#graphics-options)
+walks through switching between adapters for a specific game.
 
 
 ## Monochrome adapters

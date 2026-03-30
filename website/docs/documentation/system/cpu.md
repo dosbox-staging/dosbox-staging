@@ -17,7 +17,9 @@ cycles. 386-era titles want roughly 3,000–6,000. 486-class games like
 25,000 but might need up 50,000 cycles for a completely smooth experience.
 Late Pentium-era titles such as [Quake](https://www.mobygames.com/game/374/quake/)
 need 50,000 to 100,000 cycles or even more. See the [cpu_cycles](#cpu_cycles)
-table for further details.
+table for further details, or the
+[Getting Started guide](../../getting-started/beneath-a-steel-sky.md#adjusting-the-emulated-cpu-speed)
+for a practical walkthrough of finding the right speed.
 
 The `auto` setting for [core](#core) is the most sensible default — it uses the faster
 `dynamic` recompiler for protected-mode games and the more accurate `normal`
