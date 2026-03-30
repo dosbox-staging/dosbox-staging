@@ -3,7 +3,7 @@
 The **Roland MT-32** multi-timbre sound module was released in 1987 by Roland
 Corporation, the iconic Japanese manufacturer of electronic musical
 instruments. It featured Roland's novel, patented Linear Arithmetic (LA)
-Synthesis which combined sample playback with digital synthesis,  capable of
+Synthesis which combined sample playback with digital synthesis, capable of
 producing a wide range of realistic and synthesised sounds. As the little
 brother of Roland's flagship Roland D-50 synthesiser released in the same
 year, it was aimed at the hobbyist musician market.
@@ -230,11 +230,11 @@ and _"cm32l mame roms"_.
 
 Run the `MIXER /LISTMIDI` command to see the list of available MT-32 ROMs:
 
-TODO(JN) screenshot
+<!-- TODO(JN) screenshot -->
 
 In the above screenshot, `mt32_107` is the currently active model. The green
 highlighted **'y'** additionally indicates which directory will be used during
-the actual loading. TODO rewrite this
+the actual loading. <!-- TODO rewrite this -->
 
 !!! warning
 

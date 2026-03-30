@@ -31,7 +31,7 @@ The Innovation SSI-2001 outputs to the **INNOVATION** mixer channel.
 </div>
 
 
-## Configuration parameters
+## Configuration settings
 
 You can set the parameters of the Innovation SSI-2001 card in the
 `[innovation]` configuration section.

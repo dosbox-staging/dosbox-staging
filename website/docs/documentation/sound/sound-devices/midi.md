@@ -1,6 +1,6 @@
 # MIDI
 
-Between about 1998 and 1994, MIDI music was *the* ultimate high-end audio
+Between about 1988 and 1994, MIDI music was *the* ultimate high-end audio
 option in DOS gaming, offering never-heard-before realism and CD quality audio
 fidelity. Not many could afford the high price tag of MIDI sound modules back
 in the day --- they often sold for 3 to 5 times higher as a Sound Blaster card.
@@ -85,7 +85,7 @@ common usage scenario is to leave [mididevice](#mididevice) at its default
 `auto` setting, then set [midiconfig](#midiconfig) to:
 
 - `mt32` to use the built-in [Roland MT-32](roland-mt-32.md) emulation,
-- `fluidsynth` to use the built-in [FluidSynth](#) MIDI synthesiser,
+- `fluidsynth` to use the built-in [FluidSynth](general-midi.md#fluidsynth) MIDI synthesiser,
 - or to an ID that identifies an external MIDI device.
 
 You can use the `mixer /listmidi` DOS command to see the list of available
@@ -231,13 +231,13 @@ MIDI related settings are to be configured in the `[midi]` section.
     - `intelligent` *default*{ .default } --- The intelligent mode was present
       on the original MPU-401 manufactured by Roland and on some clones. It
       provides MIDI sequencer features and a precise MIDI event sending
-      mechanism via timestamped messages among a few other things. Applications could offload MIDI related , freeing up
+      mechanism via timestamped messages among a few other things. Applications could offload MIDI-related tasks, freeing up
       slow CPUs to do other tasks. Earlier MT-32 games depend on these
       features and will not produce sound in `uart` mode.
 
     - `uart` --- Use UART mode of the MPU-401 that simply forwards each byte
       written to the MPU to the MIDI device in real-time. Sound Blaster cards
-      can only operate in UART mode, and virtually all General MIDI games need
+      can only operate in UART mode, and virtually all General MIDI games
       require only UART mode.
 
 
