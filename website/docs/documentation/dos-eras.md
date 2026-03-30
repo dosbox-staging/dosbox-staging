@@ -479,65 +479,7 @@ sbtype = sb16
 mididevice = soundcanvas
 ```
 
-### Running Windows 3.1
-
-You'll need Windows 3.1 (or Windows for Workgroups 3.11) installation media
-as floppy disk images or files extracted from them. Mount them, run `SETUP`,
-and install into `C:\WINDOWS` choosing **386 Enhanced** mode when prompted.
-After installation, launch Windows with the `WIN` command.
-
-Setting `cputype` to `pentium` is important --- some Windows 3.1 games
-require it. Give Windows at least 16 MB of RAM.
-
-!!! warning
-
-    Windows 9x (95, 98, ME) is **not** supported by DOSBox Staging.
-
-
-#### Driver installation
-
-After the base Windows installation, you'll want to install drivers for
-proper graphics, audio, and MIDI support. Install each driver from within
-Windows via **Control Panel** or by running the driver's `SETUP`/`INSTALL`
-program. Always back up your `C:\WINDOWS` directory before installing
-drivers.
-
-**Video** --- Install the
-[S3 Vision 964 v1.41B5](https://github.com/dosbox-staging/dosbox-staging/files/11050083/s3-964-141B5.ZIP)
-driver. Extract the ZIP to a directory accessible from DOS (e.g.,
-`C:\DRIVERS\S3`), then run `SETUP` from the DOS prompt (outside Windows),
-navigate to the Display section, select "Other", point to the driver
-directory, and choose "640&times;480, 256 colours" as a safe default. Higher
-resolutions up to 1600&times;1200 are available with `vmemsize = 4`.
-
-**Audio** --- Install the
-[Sound Blaster 16 driver](https://github.com/dosbox-staging/dosbox-staging/files/11039394/SB16W3X.ZIP).
-Extract to `C:\DRIVERS\SB16` and run `INSTALL` from within Windows. Choose
-"Full Installation". When prompted for hardware settings, use DOSBox's
-defaults: base address 220, IRQ 7, DMA 1, HDMA 5. After installation,
-delete the `CONFIG.SYS` and `AUTOEXEC.BAT` files that the installer
-generates --- they are not needed under DOSBox. Test by playing
-`C:\WINDOWS\CANYON.MID` in Media Player.
-
-**MIDI** --- After installing the Sound Blaster 16 driver, open **Control
-Panel &rarr; MIDI Mapper** and select "SB16 All MIDI" for the best results.
-This routes MIDI output through DOSBox's configured
-[`mididevice`](sound/sound-devices/midi.md#mididevice), so you can use
-FluidSynth, MT-32 emulation, or Sound Canvas emulation for Windows 3.1
-games.
-
-**Mouse** --- The built-in PS/2 mouse driver that Windows installs by
-default works fine. The two-button mouse without a scroll wheel was the
-standard throughout the DOS era --- scroll wheels only became common in the
-late 1990s. DOSBox emulates a two-button mouse by default, which is the
-safest setting. Only a small number of early-to-mid 90s Windows games
-support a third mouse button; if you need it, configure the
-[`dos_mouse_driver`](input/mouse.md) setting accordingly. For seamless mouse
-integration (the mouse pointer moves freely between the DOSBox window and
-your desktop), you can install the
-[VirtualBox mouse driver](https://git.javispedro.com/cgit/vbmouse.git/about/).
-
-For a full walkthrough with screenshots, see the
-[Windows](https://github.com/dosbox-staging/dosbox-staging/wiki/Windows)
-wiki page.
+For a step-by-step guide to installing and configuring Windows 3.1 inside
+DOSBox Staging --- including video, audio, MIDI, and mouse driver setup ---
+see the [Running Windows 3.1](windows-31.md) chapter.
 
