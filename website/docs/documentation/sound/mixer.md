@@ -107,29 +107,29 @@ following:
 The below table lists all possible mixer channels with links to the respective
 sections of the manual where they're described in detail.
 
-| Channel name  | Device                                       | Stereo? |
-| ------------- | -------------------------------------------- | --------|
-| `CDAUDIO`     | [CD-DA digital audio](sound-devices/cd-da.md)              | Yes
-| `CMS`         | [Creative Music System (C/MS) synthesiser](sound-devices/adlib-cms-sound-blaster.md#cms) | Yes
-| `COVOX`       | [Covox Speech Thing digital audio](sound-devices/covox-variants.md#covox-speech-thing) | No
-| `DISNEY`      | [Disney Sound Source (DSS) digital audio](sound-devices/covox-variants.md#disney-sound-source) | No
-| `DISKNOISE`   | [Disk noise emulation](disk-noise.md) | No
-| `FSYNTH`      | [FluidSynth MIDI synthesiser](sound-devices/general-midi.md#fluidsynth) | Yes
-| `GUS`         | [Gravis UltraSound digital audio](sound-devices/gravis-ultrasound.md) | Yes
-| `IMFC`        | [IBM Music Feature Card](sound-devices/imfc.md) | Yes
-| `MASTER`      | Master output channel                        | Yes
-| `INNOVATION`  | [Innovation SSI-2001 synthesiser](sound-devices/innovation.md) | No
-| `MT32`        | [Roland MT-32 MIDI synthesiser](sound-devices/roland-mt-32.md) | Yes
-| `OPL`         | [Yamaha OPL synthesiser](sound-devices/adlib-cms-sound-blaster.md) | Yes[^stereo]
-| `PCSPEAKER`   | [PC speaker](sound-devices/pc-speaker.md)    | No
-| `PS1`         | [IBM PS/1 Audio synthesiser](sound-devices/ibm-ps1audio.md) | No
-| `PS1DAC`      | [IBM PS/1 Audio digital audio](sound-devices/ibm-ps1audio.md) | No
-| `REELMAGIC`   | [ReelMagic MPEG audio](../graphics/reelmagic.md) | Yes
-| `SB`          | [Sound Blaster digital audio](sound-devices/adlib-cms-sound-blaster.md) | Yes[^stereo]
-| `SOUNDCANVAS` | [Roland Sound Canvas synthesiser](sound-devices/general-midi.md#sound-canvas) | Yes
-| `STON1`       | [Stereo-on-1 digital audio](sound-devices/covox-variants.md#stereo-on-1-dac) | Yes
-| `TANDY`       | [Tandy 1000 synthesiser](sound-devices/tandy.md) | No
-| `TANDYDAC`    | [Tandy 1000 digital audio](sound-devices/tandy.md) | No
+| Channel name    | Device                                       | Stereo? |
+| --------------- | -------------------------------------------- | --------|
+| **CDAUDIO**     | [CD-DA digital audio](sound-devices/cd-da.md)              | Yes
+| **CMS**         | [Creative Music System (C/MS) synthesiser](sound-devices/adlib-cms-sound-blaster.md#cms) | Yes
+| **COVOX**       | [Covox Speech Thing digital audio](sound-devices/covox-variants.md#covox-speech-thing) | No
+| **DISNEY**      | [Disney Sound Source (DSS) digital audio](sound-devices/covox-variants.md#disney-sound-source) | No
+| **DISKNOISE**   | [Disk noise emulation](disk-noise.md) | No
+| **FSYNTH**      | [FluidSynth MIDI synthesiser](sound-devices/general-midi.md#fluidsynth) | Yes
+| **GUS**         | [Gravis UltraSound digital audio](sound-devices/gravis-ultrasound.md) | Yes
+| **IMFC**        | [IBM Music Feature Card](sound-devices/imfc.md) | Yes
+| **MASTER**      | Master output channel                        | Yes
+| **INNOVATION**  | [Innovation SSI-2001 synthesiser](sound-devices/innovation.md) | No
+| **MT32**        | [Roland MT-32 MIDI synthesiser](sound-devices/roland-mt-32.md) | Yes
+| **OPL**         | [Yamaha OPL synthesiser](sound-devices/adlib-cms-sound-blaster.md) | Yes[^stereo]
+| **PCSPEAKER**   | [PC speaker](sound-devices/pc-speaker.md)    | No
+| **PS1**         | [IBM PS/1 Audio synthesiser](sound-devices/ibm-ps1audio.md) | No
+| **PS1DAC**      | [IBM PS/1 Audio digital audio](sound-devices/ibm-ps1audio.md) | No
+| **REELMAGIC**   | [ReelMagic MPEG audio](../graphics/reelmagic.md) | Yes
+| **SB**          | [Sound Blaster digital audio](sound-devices/adlib-cms-sound-blaster.md) | Yes[^stereo]
+| **SOUNDCANVAS** | [Roland Sound Canvas synthesiser](sound-devices/general-midi.md#sound-canvas) | Yes
+| **STON1**       | [Stereo-on-1 digital audio](sound-devices/covox-variants.md#stereo-on-1-dac) | Yes
+| **TANDY**       | [Tandy 1000 synthesiser](sound-devices/tandy.md) | No
+| **TANDYDAC**    | [Tandy 1000 digital audio](sound-devices/tandy.md) | No
 
 </div>
 
