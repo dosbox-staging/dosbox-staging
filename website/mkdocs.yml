@@ -156,6 +156,7 @@ nav:
       - documentation/introduction.md
       - documentation/dos-primer.md
       - documentation/dos-eras.md
+      - documentation/dma-and-irq.md
 
       - documentation/configuration.md
       - documentation/command-line.md
@@ -172,8 +173,10 @@ nav:
         - documentation/input/keyboard.md
         - documentation/input/mouse.md
         - documentation/input/joystick.md
+        - documentation/input/keymapper.md
 
       - Graphics:
+        - documentation/graphics/adapters.md
         - documentation/graphics/display-and-window.md
         - documentation/graphics/rendering.md
         - documentation/graphics/composite-video.md
