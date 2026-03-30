@@ -91,8 +91,6 @@ of preference (most desirable options come first). The
 [Getting Started guide](../../getting-started/passport-to-adventure.md#sound-options)
 demonstrates configuring various sound devices for a specific game.
 
-TODO(CL) make sure every sound card is present in this list
-
 **Early DOS era (1982--1987)**
 
 <div class="compact" markdown>
@@ -111,6 +109,10 @@ TODO(CL) make sure every sound card is present in this list
 - [AdLib Music Synthesizer Card](sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card)
 - [Tandy 3 Voice](sound-devices/tandy.md)
 - [Game Blaster / Creative Music System (C/MS)](sound-devices/adlib-cms-sound-blaster.md#creative-music-system-cms-game-blaster)
+- [IBM Music Feature Card](sound-devices/imfc.md)
+- [Innovation SSI-2001](sound-devices/innovation.md)
+- [Covox / Disney Sound Source](sound-devices/covox-variants.md)
+- [IBM PS/1 Audio Card](sound-devices/ibm-ps1audio.md)
 - [PC speaker](sound-devices/pc-speaker.md)
 
 </div>
@@ -125,6 +127,9 @@ TODO(CL) make sure every sound card is present in this list
 - [Sound Blaster 16](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16)
 - [Sound Blaster Pro](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro) / [Sound Blaster Pro 2.0](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro-20)
 - [Sound Blaster](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-10)
+- [AdLib Gold 1000](sound-devices/adlib-cms-sound-blaster.md#adlib-gold-1000)
+- [CD-DA](sound-devices/cd-da.md)
+- [Covox / Disney Sound Source](sound-devices/covox-variants.md)
 
 </div>
 

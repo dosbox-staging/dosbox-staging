@@ -5,10 +5,6 @@ toc_depth: 1
 
 # The DOS eras
 
-TODO(CL) on this entire page, cross-link hardware device names marked up with
-bold to other sections where possible (e.g. to Roland MT-32, Sound Blaster,
-etc.)
-
 The DOS era spanned roughly 15 years --- from the original IBM PC in 1981 to
 the final wave of DOS games in the late 1990s. Hardware evolved dramatically
 during this period, and games were designed for the capabilities of their
@@ -150,7 +146,7 @@ which added digital audio playback. The 386 CPU provided the processing power
 to drive increasingly ambitious games. This period marks the moment PC gaming
 became a serious force.
 
-For those with deeper pockets, the **Roland MT-32** sound module (released in
+For those with deeper pockets, the [**Roland MT-32**](sound/sound-devices/roland-mt-32.md) sound module (released in
 1987) offered dramatically superior music through its LA synthesis engine.
 Sierra On-Line was an early champion, and many late-80s games sound remarkably
 better on the MT-32 compared to AdLib or Sound Blaster FM. It remained
@@ -216,12 +212,12 @@ Pro and 16 added stereo output, and the Gravis UltraSound offered advanced
 wavetable synthesis. Hard drives became affordable for home users, and games
 grew to fill them.
 
-The **Roland Sound Canvas SC-55**, released in 1991, became the reference
-device for **General MIDI** game music, offering a standardised set of 128
+The [**Roland Sound Canvas SC-55**](sound/sound-devices/general-midi.md#sound-canvas-emulation), released in 1991, became the reference
+device for [**General MIDI**](sound/sound-devices/general-midi.md) game music, offering a standardised set of 128
 realistic instrument sounds. Many games from this era supported both General
 MIDI and the MT-32 --- the Sound Canvas for its broad instrument palette, and
 the MT-32 for its distinctive character and the many titles already composed
-for it. The **Roland CM-32L**, a cost-reduced MT-32 variant with extra sound
+for it. The [**Roland CM-32L**](sound/sound-devices/roland-mt-32.md#the-cm-32l----recommended-default), a cost-reduced MT-32 variant with extra sound
 effects, was also popular.
 
 ### Notable games
@@ -292,7 +288,7 @@ the golden age of DOS gaming, the period that produced many of the platform's
 most celebrated titles that served as blueprints for the modern gaming
 industry.
 
-By this point, the **Roland Sound Canvas** (and General MIDI in general) had
+By this point, the [**Roland Sound Canvas**](sound/sound-devices/general-midi.md#sound-canvas-emulation) (and General MIDI in general) had
 become the dominant standard for game music, displacing the MT-32. Most
 Pentium-era games with MIDI support target General MIDI as their primary
 option, and the SC-55 remains the best way to hear these soundtracks as
