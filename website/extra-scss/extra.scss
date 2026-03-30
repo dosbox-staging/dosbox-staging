@@ -139,7 +139,6 @@ small {
 
 .md-nav {
   font-size: 0.72rem;
-
 }
 @media screen and (max-width: 76.1875em) {
   .md-nav--primary .md-nav__title[for=__drawer] {
@@ -444,6 +443,9 @@ small {
       &:first-child {
         padding-left: 0;
       }
+    }
+    code {
+      white-space: nowrap;
     }
     ul {
       margin-left: 0;
