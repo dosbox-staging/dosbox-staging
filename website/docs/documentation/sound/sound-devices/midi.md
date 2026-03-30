@@ -64,6 +64,13 @@ major MIDI standards:
 
 You can read more about these modules in their respective documentation sections.
 
+Many games support multiple MIDI devices, and the best choice is not always
+obvious. The community-maintained [List of MT-32-compatible computer
+games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
+on the VOGONS Wiki is the definitive reference for which MIDI device to use
+with each game. There is no other reliable way to know for sure --- game
+manuals and setup utilities often omit or misrepresent MIDI support.
+
 
 ### Setting up MIDI
 
