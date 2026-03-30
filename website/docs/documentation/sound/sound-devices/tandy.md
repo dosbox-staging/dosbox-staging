@@ -78,7 +78,7 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 120 Hz + 2nd order low-pass at 4.8 kHz).
+    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 120 Hz, and 2nd order low-pass at 4.8 kHz).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
@@ -105,7 +105,7 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 120 Hz + 2nd order low-pass at 4.8 kHz).
+    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 120 Hz, and 2nd order low-pass at 4.8 kHz).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
