@@ -147,15 +147,69 @@ rely on CTF.
 
 ### FluidSynth
 
-FluidSynth is a software MIDI synthesiser that uses **SoundFont** sample
-banks to generate audio. It's lighter on CPU than Sound Canvas emulation and
-very flexible --- you can swap SoundFonts to change the character of the
-music. The trade-off is that no SoundFont perfectly matches the SC-55's
-sound; results range from "close enough" to "noticeably different" depending
-on the SoundFont and the game.
+FluidSynth is a built-in software MIDI synthesiser that uses **SoundFont**
+(`.sf2`) sample banks to generate audio. Unlike Sound Canvas emulation, it
+does not attempt to replicate any specific hardware device --- instead, the
+character of the music depends entirely on which SoundFont you load. This
+makes it very flexible but also means results vary: a good SoundFont can
+sound close to an SC-55 on many games, while a poor one can sound noticeably
+wrong.
 
-For a step-by-step walkthrough of setting up FluidSynth with a specific
-game, see the [Star Wars: Dark
+FluidSynth is lighter on CPU than Sound Canvas emulation and is a good
+option when you don't have SC-55 ROMs or when you prefer a particular
+SoundFont's character.
+
+#### SoundFont setup
+
+Download a SoundFont file and place it in the `soundfonts` directory inside
+your DOSBox configuration folder:
+
+<div class="compact" markdown>
+
+| Platform | SoundFont directory                                    |
+|----------|--------------------------------------------------------|
+| Windows  | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundfonts\` |
+| macOS    | `~/Library/Preferences/DOSBox/soundfonts/`             |
+| Linux    | `~/.config/dosbox/soundfonts/`                         |
+
+</div>
+
+Then set the [`soundfont`](#soundfont) option to the filename (the `.sf2`
+extension can be omitted):
+
+``` ini
+[midi]
+mididevice = fluidsynth
+
+[fluidsynth]
+soundfont = GeneralUser-GS
+```
+
+#### Recommended SoundFonts
+
+**[GeneralUser GS](https://schristiancollins.com/generaluser.php)** is the
+best all-round choice for DOS gaming. It offers well-balanced instruments,
+good General MIDI and GS compatibility, and consistently pleasant results
+across a wide range of games. This is what we recommend for most users.
+
+Other options worth trying:
+
+- **[FluidR3_GM_GS](https://github.com/musescore/MuseScore/tree/master/share/sound)** ---
+  Comes bundled with MuseScore. Fairly close to SC-55 character on many
+  titles, though some instruments can sound thin.
+- **Creative 4MB GM/GS/MT** (`4GMGSMT.SF2`) --- The SoundFont shipped with
+  Creative Labs AWE32/AWE64 sound cards. A nostalgic choice that
+  approximates SC-55 characteristics, though at a lower sample quality.
+
+!!! tip
+
+    Some SoundFonts are louder or quieter than others. Use the
+    [`soundfont_volume`](#soundfont_volume) setting to normalise the volume,
+    or append a percentage to the `soundfont` value (e.g.,
+    `soundfont = Arachno 40` to reduce it to 40%).
+
+For a hands-on walkthrough of setting up FluidSynth with a specific game,
+see the [Star Wars: Dark
 Forces](../../../getting-started/star-wars-dark-forces.md#setting-up-general-midi-sound)
 chapter of the getting started guide.
 
