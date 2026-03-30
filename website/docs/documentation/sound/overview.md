@@ -1,5 +1,13 @@
 # Sound overview
 
+!!! important
+
+    Most DOS sound cards require correct **I/O base address**, **IRQ**, and
+    **DMA** settings to function. When a game's setup utility asks for these
+    values, they must match the DOSBox Staging configuration. See
+    [Hardware resource settings](../dma-and-irq.md) for a quick reference of
+    the defaults and troubleshooting tips.
+
 ## Audio support in DOS games
 
 Audio support in DOS games is a complex topic that is both fascinating and
