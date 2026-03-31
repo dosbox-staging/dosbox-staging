@@ -1,10 +1,10 @@
 # CD-DA audio
 
-Many DOS games from the mid-1990s onwards used CD-DA (Red Book audio) tracks
-for music. These are standard audio tracks on a CD-ROM that bypass the sound
-card entirely, delivering studio-quality pre-recorded music directly from the
-game disc. DOSBox Staging supports CD-DA playback from disc images with audio
-tracks in various formats.
+Many DOS games from the mid-1990s onwards used **CD-DA (Red Book audio)**
+tracks for music. These are standard audio tracks on a CD-ROM that bypass the
+sound card entirely, delivering studio-quality pre-recorded music directly
+from the game disc. DOSBox Staging supports CD-DA playback from disc images
+with audio tracks in various formats.
 
 CD-DA playback requires no special configuration. Mount a disc image with
 audio tracks using the [`MOUNT` command](../../storage.md#mounting-cd-rom-images)

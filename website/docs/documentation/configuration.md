@@ -22,14 +22,14 @@ location:
 
 Run DOSBox Staging with the [`--printconf`](command-line.md#-printconf)
 argument from the command line to see the exact path on your system. On macOS
-and Linux, you can use [`--editconf`](command-line.md#-editconf) to open it
-directly in a text editor.
+and Linux, you can use [`--editconf`](command-line.md#-editconf) to open the
+primary config in your default text editor.
 
 A **local configuration file** named `dosbox.conf` can be placed in a game's
 directory. DOSBox Staging automatically loads it when started from that
-directory, making it easy to maintain per-game settings. The
-[Getting Started guide](../getting-started/passport-to-adventure.md#layered-configurations)
-walks through creating per-game configs in detail.
+directory, making it easy to maintain per-game settings. The [Getting Started
+guide](../getting-started/passport-to-adventure.md#layered-configurations)
+walks through creating several per-game configs in detail.
 
 ## Portable setup
 
@@ -63,15 +63,15 @@ config and only override what's needed per game.
 
 Config files are divided into sections, each starting with a `[section]`
 header. Settings use `key = value` syntax. Lines starting with `#` are
-comments.
+comments and are ignored.
 
 ```ini
 [render]
-# Use a sharp pixel shader instead of the default CRT emulation
+# Use the 'sharp' shader instead of the default CRT emulation
 shader = sharp
 
 [cpu]
-# Set 486 DX2/66 speed
+# Set 486DX2/66 speed
 cpu_cycles = 25000
 
 [autoexec]
@@ -89,7 +89,7 @@ The `[autoexec]` section is special; see [Autoexec](#autoexec) for details.
 
     ```ini
     [cpu]
-    cpu_cycles = 25000  # Set 486 DX2/66 speed
+    cpu_cycles = 25000  # Set 486DX2/66 speed
     ```
 
 ## Autoexec
@@ -99,14 +99,15 @@ file](configuration.md). Each line in this section is executed at startup as a
 DOS command.
 
 Unlike other configuration sections, the `[autoexec]` section does not contain
-individual settings. Instead, it's a freeform block of DOS commands that are
-run sequentially when DOSBox starts up, similar to the `AUTOEXEC.BAT` file on
-a real DOS PC.
+individual settings. Instead, it's a freeform block of DOS commands, one
+command per line, that are run sequentially when DOSBox starts up. This is
+similar to how the `AUTOEXEC.BAT` file works on a real DOS PC.
 
-Here's an example configuration that launches the game from the C: drive, then
-exits DOSBox Staging after you quit the game (from the [Getting started
+Here's an example configuration that launches a game executable `PRINCE`
+from the C: drive, then exits DOSBox Staging after you quit the game (taken from the
+[Getting started
 guide](../getting-started/enhancing-prince-of-persia.md#final-configuration);
-you can find more such config examples in the guide):
+you will find more such config examples there):
 
 ```ini
 [sdl]
@@ -133,11 +134,10 @@ how autoexec sections from multiple config files are handled.
 
 ## Generating a default config
 
-If you want to start fresh, delete your primary config file (or run
-[`--eraseconf`](command-line.md#-eraseconf) and DOSBox Staging will create a
-new one with default settings on next launch. You can also use
-[`--printconf`](command-line.md#-printconf) to find the file and edit it
-manually.
+If you want to start fresh, delete your primary config file (use
+[`--printconf`](command-line.md#-printconf) to find the file) or run
+[`--eraseconf`](command-line.md#-eraseconf). DOSBox Staging will create a new
+primary config with default settings on next launch.
 
 See [Command-line usage](command-line.md) for all available launch options.
 

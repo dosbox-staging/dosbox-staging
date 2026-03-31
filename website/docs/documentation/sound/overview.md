@@ -108,7 +108,7 @@ demonstrates configuring various sound devices for a specific game.
 - [Sound Blaster](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-10)
 - [AdLib Music Synthesizer Card](sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card)
 - [Tandy 3 Voice](sound-devices/tandy.md)
-- [Game Blaster / Creative Music System (C/MS)](sound-devices/adlib-cms-sound-blaster.md#creative-music-system-cms-game-blaster)
+- [Game Blaster / Creative Music System (CMS)](sound-devices/adlib-cms-sound-blaster.md#creative-music-system-cms-game-blaster)
 - [IBM Music Feature Card](sound-devices/imfc.md)
 - [Innovation SSI-2001](sound-devices/innovation.md)
 - [Covox / Disney Sound Source](sound-devices/covox-variants.md)

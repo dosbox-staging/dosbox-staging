@@ -32,27 +32,32 @@ especially C: for the hard disk and D: for the CD-ROM.
 
 If you grew up with modern computers where everything lives on a single
 internal SSD, the DOS storage landscape might seem alien. DOS PCs used three
-types of storage media, each with its own drive letter:
+types of storage media, each with its own drive letter.
 
-**Floppy disks** (drives A: and B:) were the primary way software was
-distributed. Games came on one or more floppies and usually had to be
-**installed** to the hard disk before you could play --- unlike a console
-cartridge, you couldn't just insert a floppy and go. Two form factors
-existed: the flexible 5.25-inch disk (1981--late 1980s) and the sturdier
-3.5-inch disk (late 1980s--mid 1990s). See
-[Floppy disk formats](#floppy-disk-formats) for the full list of supported
-sizes.
+### Floppy disks
 
-**Hard disks** (drive C: and up) held the operating system and installed
-games. Capacities ranged from 10--20 MB in 1985 to over 1 GB by the
-mid-1990s. The DOS FAT16 filesystem limits individual partitions to **2 GB**
---- larger disks needed multiple partitions.
+Floppy disks (drives A: and B:) were the primary way software was distributed.
+Games came on one or more floppies and usually had to be **installed** to the
+hard disk before you could play --- unlike a console cartridge, you couldn't
+just insert a floppy and go. Two form factors existed: the flexible 5.25-inch
+disk (1981--late 1980s) and the sturdier 3.5-inch disk (late 1980s--mid
+1990s). See [Floppy disk formats](#floppy-disk-formats) for the full list of
+supported sizes.
 
-**CD-ROMs** (typically drive D:) appeared in the early 1990s and became
-mainstream by 1994--1995. A single CD held 650--700 MB --- roughly 500
-floppy disks' worth. This enabled full-motion video, voice acting, and
-CD-quality audio soundtracks. Some games ran entirely from the CD; others
-installed partially to the hard disk.
+### Hard disks
+
+Hard disks (drive C: and up) held the operating system and installed games.
+Capacities ranged from 10--20 MB in 1985 to over 1 GB by the mid-1990s. The
+DOS FAT16 filesystem limits individual partitions to **2 GB** --- larger disks
+needed multiple partitions.
+
+### CD-ROMs
+
+CD-ROMS (typically drive D:) appeared in the early 1990s and became mainstream
+by 1994--1995. A single CD held 650--700 MB --- roughly 500 floppy disks'
+worth. This enabled full-motion video, voice acting, and CD-quality audio
+soundtracks. Some games ran entirely from the CD; others installed partially
+to the hard disk.
 
 
 ## DOSBox Staging drives

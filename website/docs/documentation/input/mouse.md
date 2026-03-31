@@ -1,6 +1,6 @@
 # Mouse
 
-DOSBox Staging includes a built-in mouse driver which is enabled by default,
+DOSBox Staging includes a **built-in mouse driver** which is enabled by default,
 so you don't need to load a real DOS mouse driver manually (e.g., `MOUSE.COM`
 or `CTMOUSE`). The vast majority of DOS games that require a mouse will work
 out-of-the-box --- you'll only need to tinker with the mouse settings for a
@@ -35,12 +35,12 @@ gaming. The vast majority of DOS software was written for --- and tested with
 
 DOSBox Staging emulates a two-button mouse by default
 ([`builtin_dos_mouse_driver_model`](#builtin_dos_mouse_driver_model) =
-`2button`), and this is the safest setting. Only a small number of games
-from the 90s support a third mouse button, and some games will misbehave if
-an unexpected middle button press is detected. If you know a game supports
-three buttons, enable it explicitly by setting the model to `3button`. The
-`wheel` option exists for the rare DOS application or Windows 3.1 setup that
-can use a scroll wheel, but no DOS game is known to use it.
+`2button`), and this is the safest setting. Only a small number of games from
+the 90s support a third mouse button, and some games will misbehave if an
+unexpected middle button press is detected. If you know a game supports three
+buttons, enable it explicitly by setting the model to `3button`. The `wheel`
+option exists for the rare DOS application or [Windows 3.1](windows-3.1) setup
+that can use a scroll wheel, but no DOS game is known to use it.
 
 
 ## Serial mice

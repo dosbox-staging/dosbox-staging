@@ -1,9 +1,10 @@
 # Gravis UltraSound
 
-The Gravis UltraSound (GUS) was released in 1992 by an unlikely manufacturer:
-Canadian joystick company Advanced Gravis. Its audio capabilities were far
-ahead of anything else on the consumer market --- wavetable synthesis, stereo
-sound, and up to 32 channels of simultaneous playback.
+The **Gravis UltraSound (or just GUS)** was released in 1992 by an unlikely
+manufacturer: Canadian joystick company Advanced Gravis. Its audio
+capabilities were far ahead of anything else on the consumer market ---
+wavetable synthesis, stereo sound, and up to 32 channels of simultaneous
+playback.
 
 The catch? The GUS made no attempt at backwards compatibility with AdLib or
 Sound Blaster cards. Programs had to be written specifically for it. Many DOS
