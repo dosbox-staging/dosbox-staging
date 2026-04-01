@@ -217,20 +217,20 @@ life for budget users. Sound hardware matured rapidly; the [Sound Blaster
 Pro](sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro) and
 [16](sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16) added
 stereo output, and the [Gravis
-UltraSound](documentation/sound/sound-devices/gravis-ultrasound.md) offered
+UltraSound](sound/sound-devices/gravis-ultrasound.md) offered
 advanced wavetable synthesis which far outclassed the Amiga's impressive sound
 capabilities. Hard drives became affordable for home users, and games grew to
 fill them.
 
-The [**Roland Sound Canvas
-SC-55**](sound/sound-devices/general-midi.md#sound-canvas-emulation), released
-in 1991, became the reference device for [**General
-MIDI**](sound/sound-devices/general-midi.md) game music, offering a
-standardised set of 128 realistic-sounding instruments. Many games from this
-era supported both General MIDI and the MT-32. The [**Roland
-CM-32L**](sound/sound-devices/roland-mt-32.md#the-cm-32l----recommended-default),
-a cost-reduced MT-32 variant with extra sound effects, was also popular and
-many games took advantage of it (typically LucasArts games).
+The [Roland Sound Canvas
+SC-55](sound/sound-devices/general-midi.md#sound-canvas-emulation), released
+in 1991, became the reference device for [General
+MIDI](sound/sound-devices/general-midi.md) game music, offering a standardised
+set of 128 realistic-sounding instruments. Many games from this era supported
+both General MIDI and the MT-32. The [Roland
+CM-32L](sound/sound-devices/roland-mt-32.md#the-cm-32l), a cost-reduced MT-32
+variant with extra sound effects, was also popular and many games took
+advantage of it (typically LucasArts games).
 
 ### Notable games
 

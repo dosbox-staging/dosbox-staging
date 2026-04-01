@@ -44,11 +44,6 @@ Music System and AdLib synthesisers were used in games, only these MIDI sound
 modules were capable of producing much higher quality music using sampled
 sounds of real-world instruments.
 
-Initially, you had to buy the **Roland MPU-401** MIDI interface to connect an
-external MIDI sound module to your PC. Later on, sound cards started
-incorporating integrated MPU-401 compatible interfaces, so you could connect
-the sound module directly to your sound card.
-
 DOS games featuring MIDI music support either or both of the following two
 major MIDI standards:
 
@@ -71,14 +66,25 @@ on the VOGONS Wiki is the definitive reference for which MIDI device to use
 with each game. There is no other reliable way to know for sure --- game
 manuals and setup utilities often omit or misrepresent MIDI support.
 
+## Roland MPU-401 MIDI interface
+
+Initially, you had to buy the **Roland MPU-401** MIDI interface to connect an
+external MIDI sound module to your PC. This was an external box connected to
+your PC which then you hooked up to another external box, your sound module.
+Later on, sound cards started incorporating integrated MPU-401 compatible
+interfaces, so you could connect the sound module directly to your sound card.
+
+DOSBox Staging emulates a Roland MPU-401 compatible MIDI interface which is
+enabled by default. The emulated MPU-401 operates in the so-called
+**Intelligent Mode** out-of-the-box; this provides certain extra features many
+older games depend on. The other, more recent mode is **UART Mode**. Older
+titles often require Intelligent Mode, most more recent ones work fine with
+either.
+
+See [mpu401](#mpu401) for more details.
+
 
 ## Setting up MIDI
-
-DOSBox emulates a Roland MPU-401 compatible MIDI interface which is enabled by
-default. The emulated MPU-401 operates in the so-called **Intelligent Mode**
-out-of-the-box; this provides certain extra features many older games depend
-on, and more recent games that do not use these feature are generally not
-affected negatively by it.
 
 MIDI related settings are to be configured in the `[midi]` section. The most
 common usage scenario is to leave [mididevice](#mididevice) at its default
