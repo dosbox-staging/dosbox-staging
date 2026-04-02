@@ -466,47 +466,10 @@ def get_contributor_list(items):
     return sorted(authors, key=str.casefold)
 
 
-def append_contributor_list(markdown, items):
-    markdown = f'{markdown}## Commit authors\n\n<div class="authors">\n<ul>\n'
-
-    for i in get_contributor_list(items):
-        markdown = f"{markdown}  <li>{i}</li>\n"
-
-    return f"{markdown}</ul>\n</div>\n"
-
-
-def summary_process_pull_requests_csv(items, csv_fname):
-    remaining = items
-    result = []
-
-    for filter_def in FILTERS:
-        [filtered, remaining] = filter_category(remaining, filter_def)
-
-        for item in filtered:
-            item["category"] = filter_def["category"]
-            result.append(item)
-
-    sort_items(remaining)
-
-    for item in remaining:
-        item["category"] = "other"
-        result.append(item)
-
-    write_csv(result, csv_fname)
-
-
-def append_category_markdown(markdown, items, category_name):
-    markdown = f"{markdown}## Full PR list of {category_name}\n\n"
-
-    for i in items:
-        pr_link = f"[#{i['number']}]({i['url']})"
-        item_md = f"  - {i['title']} ({pr_link})"
-        if "backport" in i["labels"]:
-            item_md += " _[backport]_"
-
-        markdown += item_md + "\n"
-
-    return f"{markdown}\n\n"
+def summary_query_pull_requests(csv_fname, start_time):
+    items = fetch_all_pull_requests_since(start_time)
+    write_csv(items, csv_fname)
+    print(f"{len(items)} pull requests written to '{csv_fname}'")
 
 
 MARKDOWN_HEADER = """> [!WARNING]
@@ -575,6 +538,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 
+def summary_process_pull_requests_markdown(items, markdown_fname):
+    markdown = generate_markdown(items, MARKDOWN_HEADER)
+
+    with open(markdown_fname, "w", newline="", encoding="UTF-8") as f:
+        f.write(markdown)
+
+
+def append_category_markdown(markdown, items, category_name):
+    markdown = f"{markdown}## Full PR list of {category_name}\n\n"
+
+    for i in items:
+        pr_link = f"[#{i['number']}]({i['url']})"
+        item_md = f"  - {i['title']} ({pr_link})"
+        if "backport" in i["labels"]:
+            item_md += " _[backport]_"
+
+        markdown += item_md + "\n"
+
+    return f"{markdown}\n\n"
+
+
+def append_contributor_list(markdown, items):
+    markdown = f'{markdown}## Commit authors\n\n<div class="authors">\n<ul>\n'
+
+    for i in get_contributor_list(items):
+        markdown = f"{markdown}  <li>{i}</li>\n"
+
+    return f"{markdown}</ul>\n</div>\n"
+
+
 def generate_markdown(items, header):
     remaining = items
     markdown = header
@@ -595,11 +588,24 @@ def generate_markdown(items, header):
     return markdown
 
 
-def summary_process_pull_requests_markdown(items, markdown_fname):
-    markdown = generate_markdown(items, MARKDOWN_HEADER)
+def summary_process_pull_requests_csv(items, csv_fname):
+    remaining = items
+    result = []
 
-    with open(markdown_fname, "w", newline="", encoding="UTF-8") as f:
-        f.write(markdown)
+    for filter_def in FILTERS:
+        [filtered, remaining] = filter_category(remaining, filter_def)
+
+        for item in filtered:
+            item["category"] = filter_def["category"]
+            result.append(item)
+
+    sort_items(remaining)
+
+    for item in remaining:
+        item["category"] = "other"
+        result.append(item)
+
+    write_csv(result, csv_fname)
 
 
 def summary_process_pull_requests_html(items, html_fname, version_tag):
@@ -618,20 +624,58 @@ def summary_process_pull_requests_html(items, html_fname, version_tag):
         f.write(html)
 
 
-def write_json(items, output_json):
-    with open(output_json, "w", encoding="UTF-8") as f:
-        json.dump(items, f, indent=2, ensure_ascii=False)
+def make_upsert_release_payload(tag, name, description):
+    return json.dumps({
+        "tag_name": tag,
+        "target_commitish": "main",
+        "name": name,
+        "body": description,
+        "draft": False,
+        "prerelease": True,
+        "generate_release_notes": False
+    })
 
 
-def read_json(fname):
-    with open(fname, encoding="UTF-8") as f:
-        return json.load(f)
+def update_release(release_id, tag, name, description):
+    url = f"{RELEASES_BASE_URL}/{release_id}"
+    data = make_upsert_release_payload(tag, name, description)
+
+    r = requests.patch(url, headers=create_headers(), data=data,
+                       timeout=HTTP_TIMEOUT_SEC)
+
+    if r.status_code != 200:
+        print_api_error(data, r)
+        sys.exit(1)
+
+    return json.loads(r.text)
 
 
-def summary_query_pull_requests(csv_fname, start_time):
-    items = fetch_all_pull_requests_since(start_time)
-    write_csv(items, csv_fname)
-    print(f"{len(items)} pull requests written to '{csv_fname}'")
+def create_release(tag, name, description):
+    url = RELEASES_BASE_URL
+    data = make_upsert_release_payload(tag, name, description)
+
+    r = requests.post(url, headers=create_headers(), data=data,
+                      timeout=HTTP_TIMEOUT_SEC)
+
+    if r.status_code != 201:
+        print_api_error(data, r)
+        sys.exit(1)
+
+    return json.loads(r.text)
+
+
+def summary_publish_prerelease(markdown_file, tag):
+    release_id = get_prerelease_id_by_tag(tag)
+
+    with open(markdown_file, encoding="UTF-8") as f:
+        description = f.read()
+
+    name = f"{tag} release notes preview"
+
+    if release_id:
+        update_release(release_id, tag, name, description)
+    else:
+        create_release(tag, name, description)
 
 
 def website_query_pull_requests(json_fname, start_time):
@@ -640,36 +684,22 @@ def website_query_pull_requests(json_fname, start_time):
     print(f"{len(items)} pull requests written to '{json_fname}'")
 
 
+def website_process_pull_requests(json_fname, version, markdown_fname):
+    items = read_json(json_fname)
+    items = [i for i in items if "backport" not in i["labels"]]
+
+    markdown = website_generate_markdown(items, version)
+
+    with open(markdown_fname, "w", encoding="UTF-8") as f:
+        f.write(markdown)
+
+    print(f"Website release notes draft written to '{markdown_fname}'")
+
+
 TEMPLATE_PLACEHOLDER_PHRASES = [
     "If this is a user-facing change",
     "Remove the section if no notes are needed",
 ]
-
-
-def extract_release_notes(body):
-    """Extract the 'Release notes' section from a PR description."""
-    if not body:
-        return None
-
-    match = re.search(r"^#\s+Release notes\s*$", body, re.MULTILINE | re.IGNORECASE)
-    if not match:
-        return None
-
-    rest = body[match.end():]
-
-    # Find the next first level heading or end of string
-    next_heading = re.search(r"^#\s+\w", rest, re.MULTILINE)
-    content = rest[:next_heading.start()] if next_heading else rest
-    content = normalise_newlines(content.strip())
-
-    if not content:
-        return None
-
-    for phrase in TEMPLATE_PLACEHOLDER_PHRASES:
-        if phrase in content:
-            return None
-
-    return content
 
 
 def categorize_pull_requests(items):
@@ -696,6 +726,32 @@ def append_collapsible_pr_list(md, items, title):
         md += f"    - {item['title']} (#{item['number']})\n"
     md += "\n\n"
     return md
+
+
+def extract_release_notes(body):
+    """Extract the 'Release notes' section from a PR description."""
+    if not body:
+        return None
+
+    match = re.search(r"^#\s+Release notes\s*$", body, re.MULTILINE | re.IGNORECASE)
+    if not match:
+        return None
+
+    rest = body[match.end():]
+
+    # Find the next first level heading or end of string
+    next_heading = re.search(r"^#\s+\w", rest, re.MULTILINE)
+    content = rest[:next_heading.start()] if next_heading else rest
+    content = normalise_newlines(content.strip())
+
+    if not content:
+        return None
+
+    for phrase in TEMPLATE_PLACEHOLDER_PHRASES:
+        if phrase in content:
+            return None
+
+    return content
 
 
 def append_narrative_prs(md, items):
@@ -806,70 +862,14 @@ project, on which DOSBox Staging is based.
     return md
 
 
-def website_process_pull_requests(json_fname, version, markdown_fname):
-    items = read_json(json_fname)
-    items = [i for i in items if "backport" not in i["labels"]]
-
-    markdown = website_generate_markdown(items, version)
-
-    with open(markdown_fname, "w", encoding="UTF-8") as f:
-        f.write(markdown)
-
-    print(f"Website release notes draft written to '{markdown_fname}'")
+def read_json(fname):
+    with open(fname, encoding="UTF-8") as f:
+        return json.load(f)
 
 
-def make_upsert_release_payload(tag, name, description):
-    return json.dumps({
-        "tag_name": tag,
-        "target_commitish": "main",
-        "name": name,
-        "body": description,
-        "draft": False,
-        "prerelease": True,
-        "generate_release_notes": False
-    })
-
-
-def create_release(tag, name, description):
-    url = RELEASES_BASE_URL
-    data = make_upsert_release_payload(tag, name, description)
-
-    r = requests.post(url, headers=create_headers(), data=data,
-                      timeout=HTTP_TIMEOUT_SEC)
-
-    if r.status_code != 201:
-        print_api_error(data, r)
-        sys.exit(1)
-
-    return json.loads(r.text)
-
-
-def update_release(release_id, tag, name, description):
-    url = f"{RELEASES_BASE_URL}/{release_id}"
-    data = make_upsert_release_payload(tag, name, description)
-
-    r = requests.patch(url, headers=create_headers(), data=data,
-                       timeout=HTTP_TIMEOUT_SEC)
-
-    if r.status_code != 200:
-        print_api_error(data, r)
-        sys.exit(1)
-
-    return json.loads(r.text)
-
-
-def summary_publish_prerelease(markdown_file, tag):
-    release_id = get_prerelease_id_by_tag(tag)
-
-    with open(markdown_file, encoding="UTF-8") as f:
-        description = f.read()
-
-    name = f"{tag} release notes preview"
-
-    if release_id:
-        update_release(release_id, tag, name, description)
-    else:
-        create_release(tag, name, description)
+def write_json(items, output_json):
+    with open(output_json, "w", encoding="UTF-8") as f:
+        json.dump(items, f, indent=2, ensure_ascii=False)
 
 
 # pylint: disable=too-many-branches
