@@ -4,10 +4,12 @@
 # SPDX-License-Identifier: MIT
 
 """
-Create and publish DOSBox Staging release notes.
+Create release notes draft for DOSBox Staging.
 
 The GitHub access token must be set in the GITHUB_ACCESS_TOKEN env var.
-The token must have 'repo' scope.
+
+The token must have the following scopes:
+  repo, workflow, write:packages, delete:packages
 
 """
 
@@ -103,117 +105,153 @@ FILTERS = [
 ]
 
 
+# ANSI colour helpers — automatically disabled when stdout is not a TTY
+# (e.g. when output is piped or redirected).
+def _ansi(code):
+    def apply(text):
+        if sys.stdout.isatty():
+            return f"\033[{code}m{text}\033[0m"
+        return text
+    return apply
+
+_BOLD  = _ansi("1")
+_GREEN = _ansi("32")
+_CYAN  = _ansi("36")
+_YELLOW = _ansi("33")
+_DIM   = _ansi("2")
+
+
+class CustomFormatter(argparse.RawDescriptionHelpFormatter):
+    """Coloured, grouped help for both the top-level and subcommand parsers."""
+
+    # Top-level: render subcommand list
+    def _format_action(self, action):
+        if action.nargs == argparse.PARSER:
+            rows = [(name, sub.description or "")
+                    for name, sub in action.choices.items()]
+
+            lines = []
+            last_prefix = None
+            col = 30
+
+            for name, help_text in rows:
+                prefix = name.split(".")[0]
+                if prefix != last_prefix:
+                    if lines:
+                        lines.append("")
+                    last_prefix = prefix
+
+                styled_name = _GREEN(f"{name:<{col}}")
+                lines.append(f"  {styled_name}{help_text}")
+
+            lines.append(
+                f"\n{_DIM('Run')} "
+                f"{_CYAN('./release-notes-drafter.py <command> --help')} "
+                f"{_DIM('for command-specific usage.')}"
+            )
+            return "\n".join(lines) + "\n"
+
+        # Subcommand: colour option names and positional arg names
+        result = super()._format_action(action)
+        if action.option_strings:
+            for opt in action.option_strings:
+                result = result.replace(opt, _CYAN(opt), 1)
+        elif action.dest != argparse.SUPPRESS:
+            result = result.replace(action.dest, _GREEN(action.dest), 1)
+        return result
+
+    # Colour section headers (e.g. "positional arguments:")
+    def start_section(self, heading):
+        super().start_section(_BOLD(_YELLOW(heading)) if heading else heading)
+
+    # Colour the "usage:" prefix
+    def _format_usage(self, usage, actions, groups, prefix):
+        if prefix is None:
+            prefix = _BOLD("usage: ")
+        return super()._format_usage(usage, actions, groups, prefix)
+
+
 def setup_arg_parser(parser):
-    parser.add_argument(
-        "ACTION",
-        choices=["summary.query", "summary.process", "summary.publish",
-                 "website.query", "website.process"],
-        help="""summary.query
-  Queries information about all pull requests merged to the 'main'
-  branch since the last public DOSBox Staging release and writes
-  the results to a CSV file.
+    fmt = CustomFormatter
+    subparsers = parser.add_subparsers(dest="ACTION", required=True,
+                                       metavar="<command>")
 
-summary.process
-  Processes the CSV output of the 'summary.query' action and generates the
-  release notes draft either in Markdown or CSV format.
-
-summary.publish
-  Publishes (creates or updates) the release notes draft.
-
-website.query
-  Queries all pull requests merged to 'main' since the last public
-  release, including their full descriptions, and writes the results
-  to a JSON file.
-
-website.process
-  Processes the JSON output of the 'website.query' action and generates
-  a detailed release notes draft for the website.
-"""
+    # summary.query
+    # -----------------------------------------------------------------
+    p = subparsers.add_parser(
+        "summary.query",
+        description="Fetch merged PRs and write to CSV.",
+        formatter_class=fmt,
     )
+    p.add_argument("out_pull_requests_csv",
+                   help="output CSV file for pull requests")
+    p.add_argument("--start_time",
+                   help="include PRs after this datetime "
+                        "(defaults to RELEASE_START_TIME from set-common-vars/action.yml)")
 
-    query_args = parser.add_argument_group(title="common query arguments")
-
-    query_args.add_argument(
-        "--start_time",
-        help="""include pull requests after this datetime
-(defaults to RELEASE_START_TIME from set-common-vars/action.yml)
-"""
+    # summary.process_markdown
+    # -----------------------------------------------------------------
+    p = subparsers.add_parser(
+        "summary.process_markdown",
+        description="Generate release notes Markdown from CSV.",
+        formatter_class=fmt,
     )
+    p.add_argument("in_pull_requests_csv", help="input CSV file")
+    p.add_argument("out_markdown",         help="output Markdown file")
 
-    process_args = parser.add_argument_group(title="common process arguments")
-
-    process_args.add_argument(
-        "--out_markdown_file",
-        help="""write output to a Markdown file
-"""
+    # summary.process_html
+    # -----------------------------------------------------------------
+    p = subparsers.add_parser(
+        "summary.process_html",
+        description="Generate release notes HTML from CSV.",
+        formatter_class=fmt,
     )
+    p.add_argument("in_pull_requests_csv", help="input CSV file")
+    p.add_argument("process_version_tag",  help="version tag (e.g. v0.83.0-alpha)")
+    p.add_argument("out_html",             help="output HTML file")
 
-    summary_query_args = parser.add_argument_group(title="summary.query arguments")
-
-    summary_query_args.add_argument(
-        "--out_pull_requests_csv",
-        help="output CSV file containing the pull requests"
+    # summary.process_csv
+    # -----------------------------------------------------------------
+    p = subparsers.add_parser(
+        "summary.process_csv",
+        description="Generate categorised CSV from input CSV.",
+        formatter_class=fmt,
     )
+    p.add_argument("in_pull_requests_csv", help="input CSV file")
+    p.add_argument("out_categorised_csv",  help="output categorised CSV file")
 
-    summary_process_args = parser.add_argument_group(title="summary.process arguments")
-
-    summary_process_args.add_argument(
-        "--input_csv_file",
-        help="""input CSV file containing the pull requests
-        """
+    # summary.publish
+    # -----------------------------------------------------------------
+    p = subparsers.add_parser(
+        "summary.publish",
+        description="Publish (create or update) the release notes draft.",
+        formatter_class=fmt,
     )
+    p.add_argument("in_markdown",          help="input Markdown file")
+    p.add_argument("publish_version_tag",  help="version tag (e.g. v0.83.0-alpha)")
 
-    summary_process_args.add_argument(
-        "--out_csv_file",
-        help="""write categorised PRs to a CSV file
-        """
+    # website.query
+    # -----------------------------------------------------------------
+    p = subparsers.add_parser(
+        "website.query",
+        description="Fetch merged PRs with descriptions and write to JSON.",
+        formatter_class=fmt,
     )
+    p.add_argument("out_pull_requests_json", help="output JSON file")
+    p.add_argument("--start_time",
+                   help="include PRs after this datetime "
+                        "(defaults to RELEASE_START_TIME from set-common-vars/action.yml)")
 
-    summary_process_args.add_argument(
-        "--out_html_file",
-        help="""write release notes to an HTML file
-(to be included in the development build artifacts)
-
-"""
+    # website.process_markdown
+    # -----------------------------------------------------------------
+    p = subparsers.add_parser(
+        "website.process_markdown",
+        description="Generate detailed website release notes from JSON.",
+        formatter_class=fmt,
     )
-
-    summary_process_args.add_argument(
-        "--html_version_tag",
-        help="version tag of the release notes draft (e.g., v0.83.0-alpha)"
-    )
-
-    summary_publish_args = parser.add_argument_group(title="summary.publish arguments")
-
-    summary_publish_args.add_argument(
-        "--release_notes_file",
-        help="""release notes Markdown file
-
-"""
-    )
-
-    summary_publish_args.add_argument(
-        "--publish_version_tag",
-        help="the release notes will be published under this tag (e.g., v0.83.0-alpha)"
-    )
-
-    website_query_args = parser.add_argument_group(title="website.query arguments")
-
-    website_query_args.add_argument(
-        "--out_json_file",
-        help="output JSON file containing pull requests with descriptions"
-    )
-
-    website_process_args = parser.add_argument_group(title="website.process arguments")
-
-    website_process_args.add_argument(
-        "--input_json_file",
-        help="input JSON file from 'website.query'"
-    )
-
-    website_process_args.add_argument(
-        "--version",
-        help="release version number (e.g., 0.83.0)"
-    )
+    p.add_argument("in_pull_requests_json", help="input JSON file from website.query")
+    p.add_argument("process_version_tag",   help="version tag (e.g. v0.83.0-alpha)")
+    p.add_argument("out_markdown",          help="output Markdown file")
 
 
 def get_default_start_time():
@@ -611,7 +649,7 @@ def summary_process_pull_requests_csv(items, csv_fname):
     print(f"Categorised pull requests CSV written to '{csv_fname}'")
 
 
-def summary_process_pull_requests_html(items, html_fname, version_tag):
+def summary_process_pull_requests_html(items, version_tag, html_fname):
     markdown = generate_markdown(items, HTML_HEADER)
 
     # Convert markdown to HTML
@@ -738,14 +776,17 @@ def extract_release_notes(body):
     if not body:
         return None
 
-    match = re.search(r"^#\s+Release notes\s*$", body, re.MULTILINE | re.IGNORECASE)
+    body = normalise_newlines(body)
+
+    match = re.search(r"^#\s+Release notes\s*$", body, re.MULTILINE |
+                      re.IGNORECASE)
     if not match:
         return None
 
     rest = body[match.end():]
 
     # Find the next first level heading or end of string
-    next_heading = re.search(r"^#\s+\w", rest, re.MULTILINE)
+    next_heading = re.search(r"^#\sManual testing\s*$", rest, re.MULTILINE)
     content = rest[:next_heading.start()] if next_heading else rest
     content = normalise_newlines(content.strip())
 
@@ -816,12 +857,16 @@ TODO: Add upgrade instructions
         if prs:
             md += f"## {heading}\n\n"
             md = append_narrative_prs(md, prs)
-            md = append_collapsible_pr_list(md, prs, filter_titles[category])
+            md = append_collapsible_pr_list(md, prs,
+                                            filter_titles[category])
 
     # General section: narrative from misc-enhancements/misc-fixes,
     # collapsible lists for all "general" sub-categories
     general_narrative = ["misc-enhancements", "misc-fixes"]
-    general_collapsible_only = ["documentation", "project-maintenance", "other"]
+
+    general_collapsible_only = ["documentation", "project-maintenance",
+                                "other"]
+
     all_general = general_narrative + general_collapsible_only
 
     if any(categories.get(cat) for cat in all_general):
@@ -841,10 +886,12 @@ TODO: Add upgrade instructions
     if loc_prs:
         md += "## Localisation\n\n"
         md = append_narrative_prs(md, loc_prs)
-        md = append_collapsible_pr_list(md, loc_prs, filter_titles["localisation"])
+        md = append_collapsible_pr_list(md, loc_prs,
+                                        filter_titles["localisation"])
 
     # Contributors & Thank you
-    contributors = "\n".join(f"- {a}" for a in get_contributor_list(items))
+    contributors = "\n".join(f"- {a}" for a in
+                             get_contributor_list(items))
 
     md += f"""\
 ## Contributors
@@ -877,18 +924,17 @@ def write_json(items, output_json):
         json.dump(items, f, indent=2, ensure_ascii=False)
 
 
-# pylint: disable=too-many-branches
 def main():
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawTextHelpFormatter,
+        formatter_class=CustomFormatter,
         description=__doc__
     )
     setup_arg_parser(parser)
     args = parser.parse_args()
 
     actions_requiring_token = [
-        "summary.query", "summary.process", "summary.publish",
-        "website.query"
+        "summary.query", "summary.process_markdown", "summary.process_html",
+        "summary.process_csv", "summary.publish", "website.query"
     ]
 
     global GITHUB_ACCESS_TOKEN
@@ -903,68 +949,40 @@ def main():
             start_time = args.start_time or get_default_start_time()
             if not start_time:
                 parser.error("--start_time must be specified")
+            summary_query_pull_requests(args.out_pull_requests_csv,
+                                        start_time)
 
-            if not args.out_pull_requests_csv:
-                parser.error("--out_pull_requests_csv must be specified")
+        case "summary.process_markdown":
+            items = read_csv(args.in_pull_requests_csv)
+            summary_process_pull_requests_markdown(items,
+                                                   args.out_markdown)
 
-            summary_query_pull_requests(args.out_pull_requests_csv, start_time)
+        case "summary.process_html":
+            items = read_csv(args.in_pull_requests_csv)
+            summary_process_pull_requests_html(items,
+                                               args.process_version_tag,
+                                               args.out_html)
 
-        case "summary.process":
-            if not args.input_csv_file:
-                parser.error("--input_csv_file must be specified")
-
-            if not args.out_markdown_file and not args.out_csv_file and not args.out_html_file:
-                parser.error("one of --out_markdown_file, --out_csv_file, or "
-                             "--out_html_file must be specified")
-
-            items = read_csv(args.input_csv_file)
-
-            if args.out_markdown_file:
-                summary_process_pull_requests_markdown(items, args.out_markdown_file)
-
-            if args.out_html_file:
-                if not args.html_version_tag:
-                    parser.error("--html_version_tag of the release notes draft must "
-                                 "be specified")
-
-                summary_process_pull_requests_html(items, args.out_html_file,
-                                           args.html_version_tag)
-
-            if args.out_csv_file:
-                summary_process_pull_requests_csv(items, args.out_csv_file)
+        case "summary.process_csv":
+            items = read_csv(args.in_pull_requests_csv)
+            summary_process_pull_requests_csv(items,
+                                              args.out_categorised_csv)
 
         case "summary.publish":
-            if not args.release_notes_file:
-                parser.error("--release_notes_file must be specified")
-
-            if not args.publish_version_tag:
-                parser.error("--publish_version_tag must be specified")
-
-            summary_publish_prerelease(args.release_notes_file, args.publish_version_tag)
+            summary_publish_prerelease(args.in_markdown,
+                                       args.publish_version_tag)
 
         case "website.query":
             start_time = args.start_time or get_default_start_time()
             if not start_time:
                 parser.error("--start_time must be specified")
+            website_query_pull_requests(args.out_pull_requests_json,
+                                        start_time)
 
-            if not args.out_json_file:
-                parser.error("--out_json_file must be specified")
-
-            website_query_pull_requests(args.out_json_file, start_time)
-
-        case "website.process":
-            if not args.input_json_file:
-                parser.error("--input_json_file must be specified")
-
-            if not args.version:
-                parser.error("--version must be specified")
-
-            if not args.out_markdown_file:
-                parser.error("--out_markdown_file must be specified")
-
-            website_process_pull_requests(args.input_json_file,
-                                          args.version,
-                                          args.out_markdown_file)
+        case "website.process_markdown":
+            website_process_pull_requests(args.in_pull_requests_json,
+                                          args.process_version_tag,
+                                          args.out_markdown)
 
 
 if __name__ == "__main__":
