@@ -32,20 +32,17 @@ jobs:
         run: |
           ./scripts/tools/release-notes-drafter.py \
               summary.query \
-              --start_time            $RELEASE_START_TIME \
-              --out_pull_requests_csv pull-requests.csv
+              --start_time $RELEASE_START_TIME pull-requests.csv
 
       - name: Generate release notes
         run: |
           ./scripts/tools/release-notes-drafter.py \
-              summary.process \
-              --input_csv_file    pull-requests.csv \
-              --out_markdown_file release-notes.md
+              summary.process_markdown \
+              pull-requests.csv release-notes.md
 
       - name: Publish release notes preview
         run: |
           ./scripts/tools/release-notes-drafter.py \
               summary.publish \
-              --release_notes_file  release-notes.md \
-              --publish_version_tag $PRE_RELEASE_TAG
+              release-notes.md $PRE_RELEASE_TAG
 
