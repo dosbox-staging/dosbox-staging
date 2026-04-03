@@ -8,6 +8,8 @@ vcpkg_from_github(
         deps.patch
         alsa-dep-fix.patch
         cxx-linkage-pkgconfig.diff
+        # Upstream commit 05c9b16183743925e59a489c4348141c8a050603, remove this patch on next SDL release.
+        alsa-sig.patch
 )
 
 if (VCPKG_TARGET_IS_OSX)
