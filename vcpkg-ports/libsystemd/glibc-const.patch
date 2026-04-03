@@ -1,0 +1,177 @@
+commit 0bc360a7ee9c9c258354a85a0fdd66a91bdead03
+Author: Daniel Bomar <dbdaniel42@gmail.com>
+Date:   Fri Apr 3 11:40:43 2026 -0500
+
+    Fix compiling on newer versions of Clang
+
+diff --git a/src/basic/sort-util.h b/src/basic/sort-util.h
+index 9c818bd747..b19fba4ac1 100644
+--- a/src/basic/sort-util.h
++++ b/src/basic/sort-util.h
+@@ -31,7 +31,7 @@ static inline void* bsearch_safe(const void *key, const void *base,
+                 return NULL;
+ 
+         assert(base);
+-        return bsearch(key, base, nmemb, size, compar);
++        return (void *)bsearch(key, base, nmemb, size, compar);
+ }
+ 
+ #define typesafe_bsearch(k, b, n, func)                                 \
+diff --git a/src/basic/string-util.c b/src/basic/string-util.c
+index 171a368059..ca77898f4e 100644
+--- a/src/basic/string-util.c
++++ b/src/basic/string-util.c
+@@ -1055,7 +1055,7 @@ int split_pair(const char *s, const char *sep, char **l, char **r) {
+         if (isempty(sep))
+                 return -EINVAL;
+ 
+-        x = strstr(s, sep);
++        x = (char *)strstr(s, sep);
+         if (!x)
+                 return -EINVAL;
+ 
+@@ -1402,7 +1402,7 @@ char* find_line_startswith(const char *haystack, const char *needle) {
+         /* Finds the first line in 'haystack' that starts with the specified string. Returns a pointer to the
+          * first character after it */
+ 
+-        p = strstr(haystack, needle);
++        p = (char *)strstr(haystack, needle);
+         if (!p)
+                 return NULL;
+ 
+@@ -1513,7 +1513,7 @@ char* strrstr(const char *haystack, const char *needle) {
+         /* Special case: for the empty string we return the very last possible occurrence, i.e. *after* the
+          * last char, not before. */
+         if (*needle == 0)
+-                return strchr(haystack, 0);
++                return (char *)strchr(haystack, 0);
+ 
+         for (const char *p = strstr(haystack, needle), *q; p; p = q) {
+                 q = strstr(p + 1, needle);
+diff --git a/src/basic/string-util.h b/src/basic/string-util.h
+index cc6aa183c0..f578c869f8 100644
+--- a/src/basic/string-util.h
++++ b/src/basic/string-util.h
+@@ -30,7 +30,7 @@
+ static inline char* strstr_ptr(const char *haystack, const char *needle) {
+         if (!haystack || !needle)
+                 return NULL;
+-        return strstr(haystack, needle);
++        return (char *)strstr(haystack, needle);
+ }
+ 
+ static inline char* strstrafter(const char *haystack, const char *needle) {
+diff --git a/src/basic/unit-name.c b/src/basic/unit-name.c
+index 43c15213ef..2eb0676566 100644
+--- a/src/basic/unit-name.c
++++ b/src/basic/unit-name.c
+@@ -230,7 +230,7 @@ int unit_name_change_suffix(const char *n, const char *suffix, char **ret) {
+         if (!unit_suffix_is_valid(suffix))
+                 return -EINVAL;
+ 
+-        assert_se(e = strrchr(n, '.'));
++        assert_se(e = (char *)strrchr(n, '.'));
+ 
+         a = e - n;
+         b = strlen(suffix);
+@@ -531,7 +531,7 @@ bool unit_name_is_hashed(const char *name) {
+         if (!unit_name_is_valid(name, UNIT_NAME_PLAIN))
+                 return false;
+ 
+-        assert_se(s = strrchr(name, '.'));
++        assert_se(s = (char *)strrchr(name, '.'));
+ 
+         if (s - name < UNIT_NAME_HASH_LENGTH_CHARS + 1)
+                 return false;
+@@ -556,7 +556,7 @@ int unit_name_hash_long(const char *name, char **ret) {
+         if (strlen(name) < UNIT_NAME_MAX)
+                 return -EMSGSIZE;
+ 
+-        suffix = strrchr(name, '.');
++        suffix = (char *)strrchr(name, '.');
+         if (!suffix)
+                 return -EINVAL;
+ 
+diff --git a/src/libsystemd/sd-bus/sd-bus.c b/src/libsystemd/sd-bus/sd-bus.c
+index 3ea12fc371..b6f4a9fada 100644
+--- a/src/libsystemd/sd-bus/sd-bus.c
++++ b/src/libsystemd/sd-bus/sd-bus.c
+@@ -1446,14 +1446,14 @@ int bus_set_address_system_remote(sd_bus *b, const char *host) {
+         if (*host == '[') {
+                 char *t;
+ 
+-                rbracket = strchr(host, ']');
++                rbracket = (char *)strchr(host, ']');
+                 if (!rbracket)
+                         return -EINVAL;
+                 t = strndupa_safe(host + 1, rbracket - host - 1);
+                 e = bus_address_escape(t);
+                 if (!e)
+                         return -ENOMEM;
+-        } else if ((a = strchr(host, '@'))) {
++        } else if ((a = (char *)strchr(host, '@'))) {
+                 if (*(a + 1) == '[') {
+                         _cleanup_free_ char *t = NULL;
+ 
+@@ -1473,7 +1473,7 @@ int bus_set_address_system_remote(sd_bus *b, const char *host) {
+         }
+ 
+         /* Let's see if a port was given */
+-        m = strchr(rbracket ? rbracket + 1 : host, ':');
++        m = (char *)strchr(rbracket ? rbracket + 1 : host, ':');
+         if (m) {
+                 char *t;
+                 bool got_forward_slash = false;
+@@ -1496,7 +1496,7 @@ int bus_set_address_system_remote(sd_bus *b, const char *host) {
+         }
+ 
+         /* Let's see if a machine was given */
+-        m = strchr(rbracket ? rbracket + 1 : host, '/');
++        m = (char *)strchr(rbracket ? rbracket + 1 : host, '/');
+         if (m) {
+                 m++;
+ interpret_port_as_machine_old_syntax:
+diff --git a/src/libsystemd/sd-hwdb/sd-hwdb.c b/src/libsystemd/sd-hwdb/sd-hwdb.c
+index 588fb0313b..df01346f1d 100644
+--- a/src/libsystemd/sd-hwdb/sd-hwdb.c
++++ b/src/libsystemd/sd-hwdb/sd-hwdb.c
+@@ -101,7 +101,7 @@ static const struct trie_node_f *node_lookup_f(sd_hwdb *hwdb, const struct trie_
+         struct trie_child_entry_f search;
+ 
+         search.c = c;
+-        child = bsearch(&search, (const char *)node + le64toh(hwdb->head->node_size), node->children_count,
++        child = (void *)bsearch(&search, (const char *)node + le64toh(hwdb->head->node_size), node->children_count,
+                         le64toh(hwdb->head->child_entry_size), trie_children_cmp_f);
+         if (child)
+                 return trie_node_from_off(hwdb, child->child_off);
+diff --git a/src/libsystemd/sd-journal/catalog.c b/src/libsystemd/sd-journal/catalog.c
+index 7dcc35d8d5..519debb1bb 100644
+--- a/src/libsystemd/sd-journal/catalog.c
++++ b/src/libsystemd/sd-journal/catalog.c
+@@ -541,7 +541,7 @@ static const char *find_id(void *p, sd_id128_t id) {
+                         strncpy(key.language, loc, len);
+                         key.language[len] = '\0';
+ 
+-                        f = bsearch(&key,
++                        f = (void *)bsearch(&key,
+                                     (const uint8_t*) p + le64toh(h->header_size),
+                                     le64toh(h->n_items),
+                                     le64toh(h->catalog_item_size),
+@@ -552,7 +552,7 @@ static const char *find_id(void *p, sd_id128_t id) {
+                                 e = strchr(key.language, '_');
+                                 if (e) {
+                                         *e = 0;
+-                                        f = bsearch(&key,
++                                        f = (void *)bsearch(&key,
+                                                     (const uint8_t*) p + le64toh(h->header_size),
+                                                     le64toh(h->n_items),
+                                                     le64toh(h->catalog_item_size),
+@@ -564,7 +564,7 @@ static const char *find_id(void *p, sd_id128_t id) {
+ 
+         if (!f) {
+                 zero(key.language);
+-                f = bsearch(&key,
++                f = (void *)bsearch(&key,
+                             (const uint8_t*) p + le64toh(h->header_size),
+                             le64toh(h->n_items),
+                             le64toh(h->catalog_item_size),
