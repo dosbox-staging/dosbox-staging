@@ -69,14 +69,6 @@ bool ShaderDescriptor::EnforceAutoIntegerScaling() const
 	return (shader_name != ShaderName::Sharp);
 }
 
-ShaderManager::~ShaderManager()
-{
-	for (const auto& [_, shader] : shader_cache) {
-		glDeleteProgram(shader.program_object);
-	}
-	shader_cache.clear();
-}
-
 std::optional<Shader> ShaderManager::LoadShader(const std::string& shader_name)
 {
 	if (!shader_cache.contains(shader_name)) {
