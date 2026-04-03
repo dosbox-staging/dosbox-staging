@@ -544,6 +544,8 @@ def summary_process_pull_requests_markdown(items, markdown_fname):
     with open(markdown_fname, "w", newline="", encoding="UTF-8") as f:
         f.write(markdown)
 
+    print(f"Release notes draft Markdown written to '{markdown_fname}'")
+
 
 def append_category_markdown(markdown, items, category_name):
     markdown = f"{markdown}## Full PR list of {category_name}\n\n"
@@ -606,6 +608,7 @@ def summary_process_pull_requests_csv(items, csv_fname):
         result.append(item)
 
     write_csv(result, csv_fname)
+    print(f"Categorised pull requests CSV written to '{csv_fname}'")
 
 
 def summary_process_pull_requests_html(items, html_fname, version_tag):
@@ -622,6 +625,8 @@ def summary_process_pull_requests_html(items, html_fname, version_tag):
 
     with open(html_fname, "w", newline="", encoding="UTF-8") as f:
         f.write(html)
+
+    print(f"Release notes draft HTML written to '{html_fname}'")
 
 
 def make_upsert_release_payload(tag, name, description):
