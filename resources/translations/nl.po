@@ -184,8 +184,8 @@ msgstr ""
 "\n"
 "  --erasemapper            Het standaard mapper-bestand verwijderen.\n"
 "\n"
-"  --securemode             Zet de veilige modus aan door de commando's MOUNT en\n"
-"                           IMGMOUNT uit te schakelen.\n"
+"  --securemode             Zet de veilige modus aan door het MOUNT commando\n"
+"                           uit te schakelen.\n"
 "\n"
 "  --socket <nummer>        Nullmodem uitvoeren op het opgegeven socketnummer.\n"
 "\n"
@@ -2671,7 +2671,7 @@ msgctxt "KEYBOARD_MOD_ADJECTIVE_RIGHT"
 msgid "Right"
 msgstr "Rechts"
 
-#: src/gui/shader_manager.cpp:352
+#: src/gui/render/shader_manager.cpp:385
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_1"
 msgid ""
@@ -2681,7 +2681,7 @@ msgstr ""
 "List van GLSL shaders\n"
 "------------------------------"
 
-#: src/gui/shader_manager.cpp:355
+#: src/gui/render/shader_manager.cpp:388
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_2"
 msgid ""
@@ -2691,19 +2691,19 @@ msgstr ""
 "De bovenstaande shaders kunnen gebruikt worden in de 'shader'\n"
 "configuratie-instelling, zonder pad of .glsl extensie."
 
-#: src/gui/shader_manager.cpp:359
+#: src/gui/render/shader_manager.cpp:392
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NOT_EXISTS"
 msgid "Path '%s' does not exist."
 msgstr "Pad '%s' bestaat niet."
 
-#: src/gui/shader_manager.cpp:360
+#: src/gui/render/shader_manager.cpp:393
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NO_SHADERS"
 msgid "Path '%s' has no shaders."
 msgstr "Pad '%s' heeft geen shaders."
 
-#: src/gui/shader_manager.cpp:361
+#: src/gui/render/shader_manager.cpp:394
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_LIST"
 msgid "Path '%s' has:"
@@ -3290,7 +3290,7 @@ msgctxt "TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE"
 msgid "seamless mouse, %s+F10 or middle-click to capture"
 msgstr "naadloze muis, %s+F10 of middenklik om te vangen"
 
-#: src/gui/sdl_gui.cpp:2569
+#: src/gui/sdl_gui.cpp:2580
 #, c-format, no-wrap
 msgctxt "DISPLAY_INVALID_VSYNC_SETTING"
 msgid ""
@@ -3643,7 +3643,7 @@ msgid ""
 "the drive's directory, with content as follows:\n"
 "\n"
 "  [drive]\n"
-"  type     = dir, overlay, floppy, or cdrom\n"
+"  type     = dir, overlay, floppy, cdrom or iso (same as cdrom)\n"
 "  label    = custom_label\n"
 "  path     = path-specification (e.g., path = %%path%%;c:\\tools)\n"
 "  override_drive = mount the directory to this drive instead (default empty)\n"
@@ -3651,13 +3651,13 @@ msgid ""
 "  readonly = on or off"
 msgstr ""
 "Koppelt 'drives/[c]'-mappen als stations bij het opstarten, waarbij [c] een\n"
-"kleine letter is van a tot y. De map 'drives' kan worden verstrekt ten opzichte\n"
-"van de huidige map of via ingebouwde bronnen.\n"
+"kleine letter is van a tot y (standaard 'on'). De map 'drives' kan worden\n"
+"verstrekt ten opzichte van de huidige map of via ingebouwde bronnen.\n"
 "Koppel-instellingen kunnen optioneel worden geleverd met behulp van een\n"
 "[c].conf-bestand naast de map van de schijf, met de volgende inhoud:\n"
 "\n"
 "  [schijf]\n"
-"  type     = dir, overlay, floppy, of cdrom\n"
+"  type     = dir, overlay, floppy, cdrom of iso (zelfde als cdrom)\n"
 "  label    = aangepast_label\n"
 "  path     = pad-specificatie, dwz: pad = %%path%%;c:\\tools\n"
 "  override_drive = koppel de map i.p.v. aan dit station (standaard leeg)\n"
@@ -3825,10 +3825,6 @@ msgid ""
 "             aspect ratios (this is less of an issue on high resolution\n"
 "             monitors).\n"
 "\n"
-"  jinc2:     Upscale the image using jinc 2-lobe interpolation with anti-ringing.\n"
-"             This blends together dithered color patterns at the cost of image\n"
-"             sharpness.\n"
-"\n"
 "Start DOSBox Staging with the '--list-shaders' command line option to see the\n"
 "full list of available shaders. You can also use an absolute or relative path to\n"
 "a file. In all cases, you may omit the shader's '.glsl' file extension."
@@ -3883,10 +3879,6 @@ msgstr ""
 "             de scherpst mogelijke afbeelding ten koste van ongelijkmatige\n"
 "             pixels, vooral bij niet-vierkante pixelverhoudingen (dit is minder\n"
 "             een probleem op monitoren met een hoge resolutie).\n"
-"\n"
-"  jinc2:     Vergroot de afbeelding met behulp van Jinc 2-lobe interpolatie met\n"
-"             anti-ringing. Dit mengt geditherde kleurpatronen samen ten koste\n"
-"             van de scherpte van de afbeelding.\n"
 "\n"
 "Start DOSBox Staging met de opdrachtregeloptie '--list-shaders' om de volledige\n"
 "lijst met beschikbare shaders te bekijken. U kunt ook een absoluut of relatief\n"
@@ -4407,38 +4399,46 @@ msgstr ""
 msgctxt "CONFIG_CRT_COLOR_PROFILE"
 msgid ""
 "Set a CRT colour profile for more authentic video output emulation ('auto' by\n"
-"default). All profiles have a built-in colour temperature (white point) that you\n"
-"can tweak further with the 'color_temperature' setting. Possible values:\n"
+"default). Possible values:\n"
 "\n"
-"  auto:       Select an authentic colour profile for adaptive CRT shaders;\n"
-"              for any other shader, use 'none' (default).\n"
+"  auto:       Select an authentic colour profile appropriate for the currently\n"
+"              active adaptive CRT shader (e.g. 'crt-auto'), or the current\n"
+"              machine type for regular shaders (e.g., 'sharp').\n"
 "\n"
 "  none:       Display raw colours without any colour profile transforms.\n"
 "\n"
 "  ebu:        EBU standard phosphor emulation, used in high-end professional CRT\n"
-"              monitors, such as the Sony BVM/PVM series (6500K white point).\n"
+"              monitors, such as the Sony BVM/PVM series.\n"
 "\n"
-"  p22:        P22 phosphor emulation, the most commonly used in lower-end CRT\n"
-"              monitors (6500K white point).\n"
+"  p22:        P22 phosphor emulation, most commonly used in lower-end CRT\n"
+"              monitors.\n"
 "\n"
 "  smpte-c:    SMPT \"C\" phosphor emulation, the standard for American broadcast\n"
-"              video monitors (6500K white point).\n"
+"              video monitors.\n"
 "\n"
 "  philips:    Philips CRT monitor colours typical to 15 kHz home computer\n"
-"              monitors, such as the Commodore 1084S (~6100K white point).\n"
-"              Needs a wide gamut DCI-P3 display for the best results.\n"
+"              monitors (e.g. the Commodore 1084S). The intended use of this\n"
+"              profile is with 'colour_temperature' set to 6500. The output then\n"
+"              will look yellowish due to the ~6100 K colour temperature typical\n"
+"              to Philips CRTs \"baked into\" this profile. You can still tweak \n"
+"              'colour_temperature' to adjust the white balance. Needs a wide\n"
+"              gamut DCI-P3 display for the most accurate results.\n"
 "\n"
-"  trinitron:  Typical Sony Trinitron CRT TV and monitor colours (~9300K\n"
-"              white point). Needs a wide gamut DCI-P3 display for the best\n"
-"              results."
+"  trinitron:  Typical Sony Trinitron CRT TV and monitor colours. The intended\n"
+"              use of this profile is with 'colour_temperature' set to 6500. The\n"
+"              output then will look blueish due to the ~9300 K colour\n"
+"              temperature typical to Trinitron CRTs \"baked into\" this profile.\n"
+"              You can still tweak 'colour_temperature' to adjust the relative\n"
+"              white balance. Needs a wide gamut DCI-P3 display for the most\n"
+"              accurate results."
 msgstr ""
-"Stel een CRT-kleurprofiel in voor een meer authentieke video-uitvoeremulatie\n"
-"(standaard 'auto'). Alle profielen hebben een ingebouwde kleurtemperatuur\n"
-"(witpunt) die u verder kunt aanpassen met de instelling 'color_temperature'.\n"
-"Mogelijke waarden:\n"
+"Stel een CRT-kleurprofiel in voor een meer authentieke emulatie van de\n"
+"video-uitvoer (standaard 'auto'). Mogelijke waarden:\n"
 "\n"
-"  auto:       Selecteer een authentiek kleurprofiel voor adaptieve CRT-shaders;\n"
-"              voor alle andere shaders gebruikt u 'none' (standaard).\n"
+"  auto:       Selecteer een authentiek kleurprofiel dat geschikt is voor de\n"
+"              momenteel actieve adaptieve CRT-shader (bijv. 'crt-auto'), of\n"
+"              voor het huidige machinetype voor reguliere shaders (bijv.\n"
+"              'sharp').\n"
 "\n"
 "  none:       Toon onbewerkte kleuren zonder kleurprofieltransformaties.\n"
 "\n"
@@ -4453,13 +4453,23 @@ msgstr ""
 "              broadcast-videomonitoren (witpunt 6500K).\n"
 "\n"
 "  philips:    De kleuren van een Philips CRT-monitor zijn typisch voor 15 kHz-\n"
-"              monitoren voor thuisgebruik, zoals de Commodore 1084S (witpunt van\n"
-"              ongeveer 6100K). Voor de beste resultaten is een DCI-P3-scherm met\n"
-"              breed kleurbereik nodig.\n"
+"              monitoren voor thuiscomputers (bijv. de Commodore 1084S). Dit\n"
+"              profiel is bedoeld voor gebruik met 'colour_temperature' ingesteld\n"
+"              op 6500. De uitvoer zal er dan gelig uitzien vanwege de\n"
+"              kleurtemperatuur van ~6100 K die typisch is voor Philips CRT-\n"
+"              monitoren en die in dit profiel is ingebouwd. U kunt\n"
+"              'colour_temperature' nog steeds aanpassen om de witbalans te\n"
+"              corrigeren. Voor de meest nauwkeurige resultaten is een\n"
+"              DCI-P3-scherm met breed kleurenbereik vereist.\n"
 "\n"
-"  trinitron:  De kleuren van een typische Sony Trinitron CRT-tv en -monitor zijn\n"
-"              typisch (witpunt van ongeveer 9300K). Voor de beste resultaten is\n"
-"              een DCI-P3-scherm met breed kleurbereik nodig."
+"  trinitron:  Typische kleuren van Sony Trinitron CRT-tv's en -monitoren. Dit\n"
+"              profiel is bedoeld voor gebruik met 'colour_temperature' ingesteld\n"
+"              op 6500. De uitvoer zal er dan blauwachtig uitzien vanwege de\n"
+"              typische kleurtemperatuur van ~9300 K van Trinitron CRT's die in\n"
+"              dit profiel is \"ingebouwd\". U kunt 'colour_temperature' nog steeds\n"
+"              aanpassen om de relatieve witbalans te corrigeren. Voor de meest\n"
+"              nauwkeurige resultaten is een DCI-P3-scherm met breed\n"
+"              kleurenbereik vereist."
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
@@ -4565,35 +4575,34 @@ msgid ""
 "Set the colour temperature (white point) of the video output ('auto' by\n"
 "default). Possible values:\n"
 "\n"
-"  auto:      Select an authentic colour temperature for adaptive CRT shaders;\n"
-"             for any other shader, use 6500 (default).\n"
-"\n"
+"  auto:      Select an authentic colour temperature appropriate for the\n"
+"             currently active adaptive CRT shader (e.g. 'crt-auto'), or the\n"
+"             current machine type for regular shaders (e.g., 'sharp').\n"
+"             \n"
 "  <number>:  Specify colour temperature in Kelvin (K). Valid range is 3000 to\n"
-"             10000. The Kelvin value only makes sense if 'crt_color_profile' is\n"
-"             set to 'none' or to one of the profiles with 6500K white point,\n"
-"             otherwise it acts as a relative colour temperature adjustment (less\n"
-"             then 6500 results in warmer colours, more than 6500 in cooler\n"
-"             colours)."
+"             10000. 6500 K is the neutral point for most modern displays. Values\n"
+"             below 6500 result in warmer colours, values above 6500 in cooler\n"
+"             colours."
 msgstr ""
 "Stel de kleurtemperatuur (witpunt) van de video-uitvoer in ('auto' standaard).\n"
 "Mogelijke waarden:\n"
 "\n"
-"  auto:     Selecteer een authentieke kleurtemperatuur voor adaptieve CRT-\n"
-"            shaders; gebruik voor elke andere shader 6500 (standaard).\n"
+"  auto:     Selecteer een authentieke kleurtemperatuur die geschikt is voor\n"
+"            de momenteel actieve adaptieve CRT-shader (bijv. 'crt-auto'), of\n"
+"            voor het huidige machinetype voor reguliere shaders (bijv.\n"
+"            'sharp').\n"
 "\n"
-"  <waarde>: Specificeer de kleurtemperatuur in Kelvin (K). Geldig bereik is\n"
-"            3000 tot 10000. De Kelvin-waarde is alleen relevant als\n"
-"            'crt_color_profile' is ingesteld op 'none' of op een van de\n"
-"            profielen met een witpunt van 6500K. Anders fungeert deze als een\n"
-"            relatieve aanpassing van de kleurtemperatuur (minder dan 6500\n"
-"            resulteert in warmere kleuren, meer dan 6500 in koelere kleuren)."
+"  <waarde>: Geef de kleurtemperatuur op in Kelvin (K). Het geldige bereik is\n"
+"            3000 tot 10000. 6500 K is het neutrale punt voor de meeste\n"
+"            moderne beeldschermen. Waarden onder 6500 resulteren in warmere\n"
+"            kleuren, waarden boven 6500 in koelere kleuren."
 
 #: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_COLOR_TEMPERATURE_LUMA_PRESERVE"
 msgid ""
-"Preserve image luminosity prior to colour temperature adjustment (0 by\n"
-"default). Valid range is 0 to 100. 0 doesn't perform any luminosity\n"
+"Preserve luminosity of the video output prior to colour temperature adjustment\n"
+"(0 by default). Valid range is 0 to 100. 0 doesn't perform any luminosity \n"
 "preservation, 100 fully preserves the luminosity. Values greater than 0 result\n"
 "in inaccurate colour temperatures in the brighter shades, so it's best to set\n"
 "this to 0 or close to 0 if your monitor is bright enough."
@@ -4697,7 +4706,47 @@ msgstr ""
 "           de 'full' sterkte gebruiken om alle mogelijke\n"
 "           interferentiepatronen volledig te elimineren."
 
-#: src/gui/render/render.cpp:2790
+#: src/config/setup.cpp:262
+#, c-format, no-wrap
+msgctxt "CONFIG_DEDITHERING"
+msgid ""
+"Remove checkerboard dither patterns from the video output ('off' by default).\n"
+"Useful with CGA and EGA games that use dither patterns to create the illusion\n"
+"of more colours with the limited CGA/EGA palettes. Possible values:\n"
+"\n"
+"  off:       Disable dedithering (default).\n"
+"  on:        Enable dedithering (at full strength).\n"
+"\n"
+"  <number>:  Set dedithering strength from 0 (off) to 100 (full strength). Lower\n"
+"             values result in a subtle softening of dither patterns; higher\n"
+"             values blend between the original and the dedithered image.\n"
+"\n"
+"Notes:\n"
+"   - Dedithering only works in OpenGL output mode.\n"
+"\n"
+"   - Dedithering is applied to rendered screenshots, but not to raw and upscaled\n"
+"     screenshots and video captures."
+msgstr ""
+"Verwijder schaakbordditheringpatronen uit de video-uitvoer (standaard 'off').\n"
+"Handig voor CGA- en EGA-games die ditheringpatronen gebruiken om de illusie van\n"
+"meer kleuren te creëren met de beperkte CGA/EGA-kleurenpaletten.\n"
+"Mogelijke waarden:\n"
+"\n"
+"  off:       Dedithering uitschakelen (standaard).\n"
+"  on:        Dedithering inschakelen (op volle sterkte).\n"
+"\n"
+"  <waarde>:  Stel de sterkte van dedithering in van 0 (uit) tot 100 (volledige\n"
+"             sterkte). Lagere waarden resulteren in een subtiele verzachting van\n"
+"             de ditheringpatronen; hogere waarden zorgen voor een vloeiende\n"
+"             overgang tussen het originele en het gededitherde beeld.\n"
+"\n"
+"Opmerkingen:\n"
+"   - Dedithering werkt alleen in de OpenGL-uitvoermodus.\n"
+"\n"
+"   - Dedithering wordt toegepast op gerenderde screenshots, maar niet op\n"
+"     onbewerkte en opgeschaalde screenshots en video-opnamen."
+
+#: src/gui/render/render.cpp:2906
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_RENAMED"
 msgid ""
@@ -4707,7 +4756,7 @@ msgstr ""
 "De ingebouwde shader [color=white]'%s'[reset] is hernoemd naar [color=white]'%s'[reset];\n"
 "gebruik [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:2794
+#: src/gui/render/render.cpp:2910
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_FALLBACK"
 msgid ""
@@ -4717,7 +4766,7 @@ msgstr ""
 "Fout bij het instellen van shader [color=white]'%s'[reset],\n"
 "terugvallen op [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:2798
+#: src/gui/render/render.cpp:2914
 #, c-format, no-wrap
 msgctxt "RENDER_DEFAULT_SHADER_PRESET_FALLBACK"
 msgid ""
@@ -4894,7 +4943,7 @@ msgid ""
 "\n"
 "  pentium:       Same as '486' but with Pentium CPUID, Pentium CR register\n"
 "                 behaviour, and RDTSC instruction support. Recommended for\n"
-"                 Windows 3.x games (e.g., Betrayal in Antara).\n"
+"                 Windows 3.1 games (e.g., Betrayal in Antara).\n"
 "\n"
 "  pentium_mmx:   Same as 'pentium' plus MMX instruction set support. Very few\n"
 "                 games use MMX instructions; it's mostly only useful for\n"
@@ -4902,7 +4951,6 @@ msgid ""
 msgstr ""
 "CPU-type dat geëmuleerd moet worden (standaard 'auto'). U dient dit alleen te\n"
 "wijzigen als het programma niet correct werkt met 'auto'. Mogelijke waarden:\n"
-"U moet dit alleen wijzigen als het programma niet correct werkt op 'auto'.\n"
 "\n"
 "  auto:          De snelste en meest compatibele instelling (standaard).\n"
 "                 Technisch gezien is dit '386_fast' plus 486 CPUID, 486 CR\n"
@@ -5261,7 +5309,7 @@ msgid ""
 "  seamless:  Let the mouse move seamlessly between the DOSBox window and the\n"
 "             rest of the desktop; captures only with middle-click or hotkey.\n"
 "             Seamless mouse does not work correctly with all the games.\n"
-"             Windows 3.1x can be made compatible with a custom mouse driver.\n"
+"             Windows 3.1 can be made compatible with a custom mouse driver.\n"
 "\n"
 "  nomouse:   Hide the mouse and don't send mouse input to the game.\n"
 "\n"
@@ -5386,8 +5434,8 @@ msgid ""
 "    built-in driver.\n"
 "\n"
 "  - The driver is auto-disabled if you boot into real MS-DOS or Windows 9x\n"
-"    under DOSBox. Under Windows 3.x, the driver is not disabled, but the\n"
-"    Windows 3.x mouse driver takes over.\n"
+"    under DOSBox. Under Windows 3.1, the driver is not disabled, but the\n"
+"    Windows 3.1 mouse driver takes over.\n"
 "\n"
 "  - To use a real DOS mouse driver (e.g., MOUSE.COM or CTMOUSE.EXE), configure\n"
 "    the mouse type with `ps2_mouse_model` or `com_mouse_model`, then load the\n"
@@ -5414,7 +5462,6 @@ msgstr ""
 "           vanaf station Z uit te voeren.\n"
 "\n"
 "Opmerkingen:\n"
-"\n"
 "  - De instellingen `ps2_mouse_model` en `com_mouse_model` hebben geen invloed\n"
 "    op het ingebouwde stuurprogramma.\n"
 "\n"
@@ -5449,7 +5496,7 @@ msgid ""
 "\n"
 "  wheel:    3 buttons + wheel, supports the CuteMouse WheelAPI version 1.0.\n"
 "            No DOS game uses the mouse wheel, only a handful of DOS applications\n"
-"            and Windows 3.x with special third-party drivers."
+"            and Windows 3.1 with special third-party drivers."
 msgstr ""
 "Stel het muismodel in dat gesimuleerd moet worden door het ingebouwde DOS-\n"
 "muisstuurprogramma ('2button' standaard). Mogelijke waarden:\n"
@@ -5634,7 +5681,7 @@ msgstr ""
 msgctxt "CONFIG_VMWARE_MOUSE"
 msgid ""
 "VMware mouse interface ('on' by default). Fully compatible only with 3rd party\n"
-"Windows 3.1x driver.\n"
+"Windows 3.1 driver.\n"
 "\n"
 "Note: Requires PS/2 mouse to be enabled."
 msgstr ""
@@ -5648,7 +5695,7 @@ msgstr ""
 msgctxt "CONFIG_VIRTUALBOX_MOUSE"
 msgid ""
 "VirtualBox mouse interface ('on' by default). Fully compatible only with 3rd\n"
-"party Windows 3.1x driver.\n"
+"party Windows 3.1 driver.\n"
 "\n"
 "Note: Requires PS/2 mouse to be enabled."
 msgstr ""
@@ -6133,7 +6180,10 @@ msgctxt "CONFIG_FSYNTH_CHORUS"
 msgid ""
 "Configure the FluidSynth chorus ('auto' by default). Possible values:\n"
 "\n"
-"  auto:      Enable chorus, except for known problematic SoundFonts (default).\n"
+"  auto:      Automatically apply optimised settings for common SoundFonts, or\n"
+"             enable chorus with the default settings for all other Soundfonts\n"
+"             (default).\n"
+"\n"
 "  on:        Always enable chorus.\n"
 "  off:       Disable chorus.\n"
 "\n"
@@ -6152,17 +6202,19 @@ msgid ""
 msgstr ""
 "Configureer de FluidSynth-chorus (standaard 'auto'). Mogelijke waarden:\n"
 "\n"
-"  auto:      Chorus inschakelen, behalve voor bekende problematische SoundFonts\n"
-"             (standaard).\n"
+"  auto:      Automatisch geoptimaliseerde instellingen toepassen voor\n"
+"             veelgebruikte SoundFonts, of chorus inschakelen met de\n"
+"             standaardinstellingen voor alle andere Soundfonts (standaard).\n"
+"\n"
 "  on:        Chorus altijd inschakelen.\n"
 "  off:       Chorus uitschakelen.\n"
 "\n"
 "  <op-maat>: Aangepaste instelling via vijf door spaties gescheiden waarden:\n"
-"               - voice-count: Integer van 0 tot 99\n"
-"               - level: Decimaal van 0.0 tot 10.0\n"
-"               - speed: Decimaal van 0.1 tot 5.0 (in Hz)\n"
-"               - depth: Decimaal van 0.0 tot 21.0\n"
-"               - modulation-wave: 'sine' of 'triangle'\n"
+"               - voice-count:      Integer van 0 tot 99\n"
+"               - level:            Decimaal van 0.0 tot 10.0\n"
+"               - speed:            Decimaal van 0.1 tot 5.0 (in Hz)\n"
+"               - depth:            Decimaal van 0.0 tot 21.0\n"
+"               - modulation-wave:  'sine' of 'triangle'\n"
 "             Bijvoorbeeld: 'fsynth_chorus = 3 1.2 0.3 8.0 sine'\n"
 "\n"
 "Opmerking: U kunt de FluidSynth-chorus uitschakelen en in plaats daarvan de\n"
@@ -6176,7 +6228,10 @@ msgctxt "CONFIG_FSYNTH_REVERB"
 msgid ""
 "Configure the FluidSynth reverb ('auto' by default). Possible values:\n"
 "\n"
-"  auto:      Enable reverb (default).\n"
+"  auto:      Automatically apply optimised settings for common SoundFonts, or\n"
+"             enable reverb with the default settings for all other Soundfonts\n"
+"             (default).\n"
+"\n"
 "  on:        Enable reverb.\n"
 "  off:       Disable reverb.\n"
 "\n"
@@ -6194,15 +6249,18 @@ msgid ""
 msgstr ""
 "Configureer de FluidSynth-reverb (standaard 'auto'). Mogelijke waarden:\n"
 "\n"
-"  auto:      Reverb inschakelen (standaard).\n"
+"  auto:      Automatisch geoptimaliseerde instellingen toepassen voor\n"
+"             veelgebruikte SoundFonts, of nagalm inschakelen met de\n"
+"             standaardinstellingen voor alle andere Soundfonts (standaard).\n"
+"\n"
 "  on:        Reverb inschakelen.\n"
 "  off:       Reverb uitschakelen.\n"
 "\n"
 "  <op-maat>: Aangepaste instelling via vier door spaties gescheiden waarden:\n"
-"               - room-size: Decimaal van 0.0 tot 1.0\n"
-"               - damping: Decimaal van 0.0 tot 1.0\n"
-"               - width is: Decimaal van 0.0 tot 100.0\n"
-"               - level is: Decimaal van 0.0 tot 1.0\n"
+"               - kamergrootte:  Decimaal van 0.0 tot 1.0\n"
+"               - demping:       Decimaal van 0.0 tot 1.0\n"
+"               - breedte:       Decimaal van 0.0 tot 100.0\n"
+"               - level:         Decimaal van 0.0 tot 1.0\n"
 "             Bijvoorbeeld: 'fsynth_reverb = 0.61 0.23 0.76 0.56'\n"
 "\n"
 "Opmerking: U kunt de FluidSynth-reverb uitschakelen en in plaats daarvan de\n"
@@ -6224,25 +6282,25 @@ msgstr ""
 "  off:       Filter de uitgang niet (standaard).\n"
 "  <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details."
 
-#: src/midi/fluidsynth.cpp:1115
+#: src/midi/fluidsynth.cpp:1304
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_NO_SOUNDFONTS"
 msgid "No available SoundFonts"
 msgstr "Geen beschikbare SoundFonts"
 
-#: src/midi/fluidsynth.cpp:1117
+#: src/midi/fluidsynth.cpp:1306
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_SOUNDFONT_DIR"
 msgid "Invalid [color=light-green]soundfont_dir[reset] setting; cannot open directory [color=white]'%s'[reset], using ''"
 msgstr "Ongeldige instelling voor [color=lichtgroen]soundfont_dir[reset]; kan map [color=white]'%s'[reset] niet openen met ''"
 
-#: src/midi/fluidsynth.cpp:1121
+#: src/midi/fluidsynth.cpp:1310
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_ERROR_LOADING_SOUNDFONT"
 msgid "Error loading SoundFont [color=white]'%s'[reset]"
 msgstr "Fout bij laden van SoundFont [color=white]'%s'[reset]"
 
-#: src/midi/fluidsynth.cpp:1124
+#: src/midi/fluidsynth.cpp:1313
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_EFFECT_PARAMETER"
 msgid ""
@@ -6252,7 +6310,7 @@ msgstr ""
 "Ongeldige [color=light-green]'%s'[reset] synthparameter (%s): [color=white]%s[reset];\n"
 "moet tussen %.2f en %.2f liggen, gebruik [color=white]'%s'[reset]"
 
-#: src/midi/fluidsynth.cpp:1129
+#: src/midi/fluidsynth.cpp:1318
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_CHORUS_WAVE"
 msgid ""
@@ -6262,7 +6320,7 @@ msgstr ""
 "Ongeldige [color=light-green]'fsynth_chorus'[reset] synthparameter (modulatiegolftype): [color=white]%s[reset];\n"
 "moet [color=white]'sinus'[reset] of [color=white]'driehoek'[reset] zijn"
 
-#: src/midi/fluidsynth.cpp:1134
+#: src/midi/fluidsynth.cpp:1323
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_NUM_EFFECT_PARAMS"
 msgid ""
@@ -6331,13 +6389,13 @@ msgstr ""
 "  off:       Filter de uitvoer niet.\n"
 "  <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details."
 
-#: src/midi/soundcanvas.cpp:927
+#: src/midi/soundcanvas.cpp:932
 #, c-format, no-wrap
 msgctxt "SC55_MODELS_LABEL"
 msgid "SC-55 models    "
 msgstr "SC-55 modelen   "
 
-#: src/midi/soundcanvas.cpp:928
+#: src/midi/soundcanvas.cpp:933
 #, c-format, no-wrap
 msgctxt "SOUNDCANVAS_ACTIVE_MODEL_LABEL"
 msgid "Active model:    "
@@ -7928,11 +7986,11 @@ msgstr ""
 #, c-format, no-wrap
 msgctxt "CONFIG_FILE_LOCKING"
 msgid ""
-"Enable file locking via emulating SHARE.EXE ('auto' by default). This is required\n"
-"for some Windows 3.1x applications to work properly. It generally does not cause\n"
-"problems for DOS games except in rare cases (e.g., Astral Blur demo). If you\n"
-"experience crashes related to file permissions, you can try disabling this.\n"
-"Possible values:\n"
+"Enable file locking via emulating SHARE.EXE ('auto' by default). This is\n"
+"required for some Windows 3.1 applications to work properly. It generally does\n"
+"not cause problems for DOS games except in rare cases (e.g., Astral Blur demo).\n"
+"If you experience crashes related to file permissions, you can try disabling\n"
+"this. Possible values:\n"
 "\n"
 "  auto:  Enable file locking only when Windows 3.1 is running.\n"
 "  on:    Always enable file locking.\n"
@@ -8116,11 +8174,11 @@ msgstr "TCP-poort om aan te binden."
 msgctxt "AUTOEXEC_CONFIGFILE_HELP"
 msgid ""
 "Each line in this section is executed at startup as a DOS command.\n"
-"Important: The [autoexec] section must be the last section in the config!"
+"Important: The [autoexec] section must be the last section in the config!\n"
 msgstr ""
 "Elke regel in deze sectie wordt bij het opstarten uitgevoerd als een\n"
 "DOS-opdracht.\n"
-"Belangrijk: De sectie [autoexec] moet de laatste sectie in de config zijn!"
+"Belangrijk: De sectie [autoexec] moet de laatste sectie in de config zijn!\n"
 
 #: src/dosbox.cpp:1105
 #, c-format, no-wrap
@@ -8577,37 +8635,55 @@ msgctxt "BIOS_REBOOTING_1"
 msgid "Rebooting in 1 second..."
 msgstr "Herstarten binnen 1 seconde..."
 
-#: src/dos/programs/mount_common.cpp:81
+#: src/dos/programs/mount_common.cpp:82
 #, c-format, no-wrap
 msgctxt "MOUNT_TYPE_LOCAL_DIRECTORY"
 msgid "Local directory"
 msgstr "Lokale map"
 
-#: src/dos/programs/mount_common.cpp:82
+#: src/dos/programs/mount_common.cpp:83
 #, c-format, no-wrap
 msgctxt "MOUNT_TYPE_CDROM"
 msgid "CD-ROM drive"
 msgstr "CD-ROM station"
 
-#: src/dos/programs/mount_common.cpp:83
+#: src/dos/programs/mount_common.cpp:84
 #, c-format, no-wrap
 msgctxt "MOUNT_TYPE_FAT"
 msgid "FAT image"
 msgstr "FAT bestand"
 
-#: src/dos/programs/mount_common.cpp:84
-#, c-format, no-wrap
-msgctxt "MOUNT_TYPE_ISO"
-msgid "ISO image"
-msgstr "ISO bestand"
-
 #: src/dos/programs/mount_common.cpp:85
 #, c-format, no-wrap
-msgctxt "MOUNT_TYPE_VIRTUAL"
-msgid "Internal virtual drive"
-msgstr "Interne virtuele schijf"
+msgctxt "MOUNT_TYPE_FAT_PLURAL"
+msgid "FAT images"
+msgstr "FAT bestanden"
 
 #: src/dos/programs/mount_common.cpp:86
+#, c-format, no-wrap
+msgctxt "MOUNT_TYPE_CDIMAGE"
+msgid "CD-ROM image"
+msgstr "CD-ROM bestand"
+
+#: src/dos/programs/mount_common.cpp:87
+#, c-format, no-wrap
+msgctxt "MOUNT_TYPE_CDIMAGE_PLURAL"
+msgid "CD-ROM images"
+msgstr "CD-ROM bestanden"
+
+#: src/dos/programs/mount_common.cpp:88
+#, c-format, no-wrap
+msgctxt "MOUNT_TYPE_VIRTUAL"
+msgid "Internal drive"
+msgstr "Interne schijf"
+
+#: src/dos/programs/mount_common.cpp:89
+#, c-format, no-wrap
+msgctxt "MOUNT_TYPE_OVERLAY"
+msgid "Overlay drive"
+msgstr "Overlay schijf"
+
+#: src/dos/programs/mount_common.cpp:90
 #, c-format, no-wrap
 msgctxt "MOUNT_TYPE_UNKNOWN"
 msgid "unknown drive"
@@ -8688,19 +8764,19 @@ msgid ""
 "  [color=light-green]boot[reset] [color=white]c:[reset]\n"
 "  [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]\n"
 msgstr ""
-"Start DOSBox Staging op vanaf een DOS-schijf of schijfimage.\n"
+"Starten vanaf een opstartbare DOS-schijf of diskette bestand.\n"
 "\n"
 "Gebruik:\n"
-"  [color=light-green]boot[reset] [color=white]SCHIJF[reset]\n"
+"  [color=light-green]boot[reset] [color=white]STATION[reset]\n"
 "  [color=light-green]boot[reset] [color=light-cyan]IMAGEBESTAND[reset]\n"
 "\n"
 "Parameters:\n"
-"  [color=white]SCHIJF[reset] is een schijf om van op te starten, moet [color=white]A:[reset], [color=white]C:[reset], of [color=white]D:[reset] zijn.\n"
-"  [color=light-cyan]IMAGEBESTAND[reset] is een of meer floppy-images, gescheiden door spaties.\n"
+"  [color=white]STATION[reset] is een station om van op te starten, moet [color=white]A:[reset], [color=white]C:[reset], of [color=white]D:[reset] zijn.\n"
+"  [color=light-cyan]IMAGEBESTAND[reset] is een of meer diskette images, gescheiden door spaties.\n"
 "\n"
 "Opmerkingen:\n"
 "  Er moet eerder een DOS-stationsletter zijn aangekoppeld met de opdracht\n"
-"  [color=light-green]imgmount[reset]. Het DOS-station of de schijfimage moet opstartbaar zijn en\n"
+"  [color=light-green]mount[reset]. Het DOS-station of de schijfimage moet opstartbaar zijn en\n"
 "  DOS-systeembestanden bevatten. Als er meer dan één schijfkopie is opgegeven,\n"
 "  kunt u deze verwisselen met een sneltoets.\n"
 "\n"
@@ -8736,19 +8812,19 @@ msgid ""
 "pressing [color=yellow]%s+F4[reset], and -l specifies the mounted drive to boot from. If no drive\n"
 "letter is specified, this defaults to booting from the A drive. The only\n"
 "bootable drive letters are A, C, and D. For booting from a hard drive (C or D),\n"
-"the image should have already been mounted using the [color=light-blue]IMGMOUNT[reset] command.\n"
+"the image should have already been mounted using the [color=light-blue]MOUNT[reset] command.\n"
 "\n"
 "Type [color=light-blue]BOOT /?[reset] for the syntax of this command.\n"
 msgstr ""
-"Dit commando start DOSBox Staging op vanaf een diskette of een harde schijf.\n"
+"Dit commando start een opstartbaar diskette of harde schijf bestand\n"
 "\n"
 "Met dit commando kan men een opeenvolging van diskettes specificeren,\n"
-"verwisselbaar door op %s+F4 te drukken, en -l specificeert de gekoppelde\n"
+"verwisselbaar door op [color=yellow]%s+F4[reset] te drukken, en -l specificeert de gekoppelde\n"
 "schijf om vanaf op te starten. Als er geen schijfletter is opgegeven, wordt\n"
 "dit standaard ingesteld op opstarten vanaf de A-schijf.\n"
 "De enige opstartbare schijfletters zijn A, C en D. Voor het opstarten vanaf\n"
 "een harde schijf (C of D), zal de image al moeten zijn aangekoppeld met het\n"
-"[color=light-blue]IMGMOUNT[reset]-commando.\n"
+"[color=light-blue]MOUNT[reset]-commando.\n"
 "\n"
 "Typ [color=light-blue]BOOT /?[reset] voor de syntaxis van deze opdracht.\n"
 
@@ -9198,9 +9274,9 @@ msgstr ""
 "Als het niet werkt, moet misschien het label van de CD-ROM worden opgeven:\n"
 "[color=light-blue]mount D C:\\example -t cdrom -label CDLABEL[reset]\n"
 "\n"
-"Bovendien kunt u [color=light-blue]imgmount[reset] gebruiken om iso- of cue/bin-images te koppelen:\n"
-"[color=light-blue]imgmount D C:\\cd.iso -t cdrom[reset]\n"
-"[color=light-blue]imgmount D C:\\cd.cue -t cdrom[reset]\n"
+"Bovendien kunt u [color=light-blue]mount[reset] gebruiken om iso- of cue/bin-images te koppelen:\n"
+"[color=light-blue]mount D C:\\cd.iso -t cdrom[reset]\n"
+"[color=light-blue]mount D C:\\cd.cue -t cdrom[reset]\n"
 
 #: src/dos/programs/intro.cpp:162
 #, c-format, no-wrap
@@ -9226,7 +9302,7 @@ msgstr ""
 "Als het niet werkt, moet misschien het label van de CD-ROM worden opgeven:\n"
 "[color=light-blue]mount D ~/example -t cdrom -label CDLABEL[reset]\n"
 "\n"
-"Bovendien kunt u [color=light-blue]imgmount[reset] gebruiken om iso- of cue/bin-images te koppelen:\n"
+"Bovendien kunt u [color=light-blue]mount[reset] gebruiken om iso- of cue/bin-images te koppelen:\n"
 "[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]\n"
 "[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]\n"
 
@@ -10112,7 +10188,7 @@ msgctxt "PROGRAM_MEM_ERROR_NO_EMS"
 msgid "No Expanded Memory (EMS) found.\n"
 msgstr "Geen Expanded geheugen (EMS) gevonden.\n"
 
-#: src/dos/programs/mixer.cpp:790
+#: src/dos/programs/mixer.cpp:792
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_HELP_LONG"
 msgid ""
@@ -10174,61 +10250,61 @@ msgstr ""
 "  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
 "  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]master[reset] [color=white]40[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]"
 
-#: src/dos/programs/mixer.cpp:820
+#: src/dos/programs/mixer.cpp:822
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_HEADER_LAYOUT"
 msgid "%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s"
 msgstr "%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s"
 
-#: src/dos/programs/mixer.cpp:823
+#: src/dos/programs/mixer.cpp:825
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_HEADER_LABELS"
 msgid "[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]"
 msgstr "[color=white]Kanaal       Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]"
 
-#: src/dos/programs/mixer.cpp:826
+#: src/dos/programs/mixer.cpp:828
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_OFF"
 msgid "off"
 msgstr "uit"
 
-#: src/dos/programs/mixer.cpp:827
+#: src/dos/programs/mixer.cpp:829
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_STEREO"
 msgid "Stereo"
 msgstr "Stereo"
 
-#: src/dos/programs/mixer.cpp:828
+#: src/dos/programs/mixer.cpp:830
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_REVERSE"
 msgid "Reverse"
 msgstr "Omgekeerd"
 
-#: src/dos/programs/mixer.cpp:829
+#: src/dos/programs/mixer.cpp:831
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_MONO"
 msgid "Mono"
 msgstr "Mono"
 
-#: src/dos/programs/mixer.cpp:831
+#: src/dos/programs/mixer.cpp:833
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INACTIVE_CHANNEL"
 msgid "Channel [color=light-cyan]%s[reset] is not active"
 msgstr "Kanaal [color=light-cyan]%s[reset] is niet actief"
 
-#: src/dos/programs/mixer.cpp:834
+#: src/dos/programs/mixer.cpp:836
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"
 msgid "Invalid global command: [color=white]%s[reset]"
 msgstr "Ongeldig globaal commando: [color=white]%s[reset]"
 
-#: src/dos/programs/mixer.cpp:837
+#: src/dos/programs/mixer.cpp:839
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"
 msgid "Invalid volume for the [color=light-cyan]%s[reset] channel: [color=white]%s[reset]"
 msgstr "Ongeldig volume voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset] (voer MIXER /? uit voor hulp)"
 
-#: src/dos/programs/mixer.cpp:841
+#: src/dos/programs/mixer.cpp:843
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH"
 msgid ""
@@ -10238,7 +10314,7 @@ msgstr ""
 "Ongeldige crossfeed sterkte voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset]\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:846
+#: src/dos/programs/mixer.cpp:848
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL"
 msgid ""
@@ -10248,7 +10324,7 @@ msgstr ""
 "Ongeldig chorus niveau voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset]\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:851
+#: src/dos/programs/mixer.cpp:853
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_REVERB_LEVEL"
 msgid ""
@@ -10258,7 +10334,7 @@ msgstr ""
 "Ongeldig reverb niveau voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset]\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:856
+#: src/dos/programs/mixer.cpp:858
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH"
 msgid ""
@@ -10268,7 +10344,7 @@ msgstr ""
 "Ontbrekende crossfeed-sterkte na [color=white]X[reset] voor het [color=light-cyan]%s[reset]-kanaal\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:861
+#: src/dos/programs/mixer.cpp:863
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL"
 msgid ""
@@ -10278,7 +10354,7 @@ msgstr ""
 "Ontbrekend chorusniveau na [color=white]C[reset] voor het [color=light-cyan]%s[reset]-kanaal\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:866
+#: src/dos/programs/mixer.cpp:868
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_REVERB_LEVEL"
 msgid ""
@@ -10288,7 +10364,7 @@ msgstr ""
 "Ontbrekend reverb niveau na [color=white]R[reset] voor het [color=light-cyan]%s[reset] kanaal\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:871
+#: src/dos/programs/mixer.cpp:873
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH"
 msgid ""
@@ -10298,7 +10374,7 @@ msgstr ""
 "Ongeldige globale crossfeed sterkte [color=white]%s[reset]\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:875
+#: src/dos/programs/mixer.cpp:877
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL"
 msgid ""
@@ -10308,7 +10384,7 @@ msgstr ""
 "Ongeldig globaal chorus niveau [color=white]%s[reset]\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:879
+#: src/dos/programs/mixer.cpp:881
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL"
 msgid ""
@@ -10318,7 +10394,7 @@ msgstr ""
 "Ongeldig global reverb level [color=white]%s[reset]\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:883
+#: src/dos/programs/mixer.cpp:885
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH"
 msgid ""
@@ -10328,7 +10404,7 @@ msgstr ""
 "Ontbrekende globale crossfeed sterkte na [color=white]X[reset]\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:887
+#: src/dos/programs/mixer.cpp:889
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL"
 msgid ""
@@ -10338,7 +10414,7 @@ msgstr ""
 "Ontbrekend globaal chorusniveau na [color=white]C[reset]\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:891
+#: src/dos/programs/mixer.cpp:893
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL"
 msgid ""
@@ -10348,19 +10424,19 @@ msgstr ""
 "Ontbrekend globaal reverb niveau na [color=white]R[reset]\n"
 "moet een getal tussen 0 en 100 zijn"
 
-#: src/dos/programs/mixer.cpp:895
+#: src/dos/programs/mixer.cpp:897
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND"
 msgid "Missing command for the [color=light-cyan]%s[reset] channel"
 msgstr "Ontbrekend commando voor het [color=light-cyan]%s[reset]-kanaal"
 
-#: src/dos/programs/mixer.cpp:898
+#: src/dos/programs/mixer.cpp:900
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"
 msgid "Invalid command for the [color=light-cyan]%s[reset] channel: [color=white]%s[reset]"
 msgstr "Ongeldige opdracht voor het [color=light-cyan]%s[reset]-kanaal: [color=white]%s[reset]"
 
-#: src/dos/programs/mixer.cpp:902
+#: src/dos/programs/mixer.cpp:904
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_DEPRECATED"
 msgid "Channel name [color=light-cyan]%s[reset] is deprecated, use [color=light-cyan]%s[reset] instead"
@@ -10710,47 +10786,57 @@ msgstr "Type"
 
 #: src/dos/programs/mount_common.cpp:72
 #, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_STATUS_PATH"
+msgid "Path"
+msgstr "Pad"
+
+#: src/dos/programs/mount_common.cpp:73
+#, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_STATUS_LABEL"
 msgid "Label"
 msgstr "Label"
 
-#: src/dos/programs/mount_common.cpp:73
+#: src/dos/programs/mount_common.cpp:74
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_STATUS_NAME"
 msgid "Image name"
 msgstr "Imagenaam"
 
-#: src/dos/programs/mount_common.cpp:74
+#: src/dos/programs/mount_common.cpp:75
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_STATUS_SLOT"
 msgid "Swap slot"
 msgstr "Wissel slot"
 
-#: src/dos/programs/mount_common.cpp:75
+#: src/dos/programs/mount_common.cpp:76
+#, c-format, no-wrap
+msgctxt "PROGRAM_MOUNT_RESULT"
+msgid ""
+"%s mounted as %c drive:\n"
+"%s"
+msgstr ""
+"%s gekoppeld as %c station:\n"
+"%s"
+
+#: src/dos/programs/mount_common.cpp:77
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_STATUS_2"
 msgid "%s mounted as %c drive\n"
-msgstr "%s gekoppeld als %c schijf\n"
+msgstr "%s gekoppeld als %c station\n"
 
-#: src/dos/programs/mount_common.cpp:76
-#, c-format, no-wrap
-msgctxt "PROGRAM_MOUNT_STATUS_1"
-msgid "The currently mounted drives are:\n"
-msgstr "De momenteel gekoppelde schijven zijn:\n"
-
-#: src/dos/programs/mount_common.cpp:77
+#: src/dos/programs/mount_common.cpp:78
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_READONLY"
 msgid "Mounted read-only\n"
 msgstr "Alleen-lezen gekoppeld\n"
 
-#: src/dos/programs/mount.cpp:1063
+#: src/dos/programs/mount.cpp:1166
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP"
 msgid "Mount a directory or an image file to a drive letter.\n"
 msgstr "Een map of imagebestand koppelen aan een stationsletter.\n"
 
-#: src/dos/programs/mount.cpp:1066
+#: src/dos/programs/mount.cpp:1169
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG"
 msgid ""
@@ -10856,7 +10942,7 @@ msgstr ""
 "\n"
 "Voorbeelden:\n"
 
-#: src/dos/programs/mount.cpp:1115
+#: src/dos/programs/mount.cpp:1218
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_WIN32"
 msgid ""
@@ -10876,7 +10962,7 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1124
+#: src/dos/programs/mount.cpp:1227
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_MACOSX"
 msgid ""
@@ -10898,7 +10984,7 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1134
+#: src/dos/programs/mount.cpp:1237
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_OTHER"
 msgid ""
@@ -10921,79 +11007,79 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 "\n"
 
-#: src/dos/programs/mount.cpp:1144
+#: src/dos/programs/mount.cpp:1247
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_CDROMS_FOUND"
 msgid "CD-ROMs found: %d\n"
 msgstr "CD-ROM's gevonden: %d\n"
 
-#: src/dos/programs/mount.cpp:1145
+#: src/dos/programs/mount.cpp:1248
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ERROR_1"
 msgid "Directory or file %s doesn't exist.\n"
 msgstr "Map %s of bestand bestaat niet.\n"
 
-#: src/dos/programs/mount.cpp:1147
+#: src/dos/programs/mount.cpp:1250
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ERROR_2"
 msgid "%s isn't a directory or valid image file.\n"
 msgstr "%s is geen map of geldig image bestand.\n"
 
-#: src/dos/programs/mount.cpp:1150
+#: src/dos/programs/mount.cpp:1253
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ILL_TYPE"
-msgid "Illegal type %s\n"
-msgstr "Illegaal type %s\n"
+msgid "Illegal type %s"
+msgstr "Illegaal type %s"
 
-#: src/dos/programs/mount.cpp:1151
+#: src/dos/programs/mount.cpp:1254
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ALREADY_MOUNTED"
 msgid "Drive %c already mounted with %s\n"
 msgstr "Schijf %c al gekoppeld met %s\n"
 
-#: src/dos/programs/mount.cpp:1152
+#: src/dos/programs/mount.cpp:1255
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"
 msgid "Drive %c isn't mounted.\n"
 msgstr "Schijf %c is niet aangekoppeld.\n"
 
-#: src/dos/programs/mount.cpp:1154
+#: src/dos/programs/mount.cpp:1257
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_SUCCESS"
 msgid "Drive %c has successfully been removed.\n"
 msgstr "Schijf %c is succesvol verwijderd.\n"
 
-#: src/dos/programs/mount.cpp:1157
+#: src/dos/programs/mount.cpp:1260
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"
 msgid "Virtual Drives can not be unMOUNTed.\n"
 msgstr "Virtuele schijven kunnen niet worden losgekoppeld.\n"
 
-#: src/dos/programs/mount.cpp:1160
+#: src/dos/programs/mount.cpp:1263
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_DRIVEID_ERROR"
 msgid "'%c' is not a valid drive identifier.\n"
 msgstr "'%c' is geen geldige schijf-ID.\n"
 
-#: src/dos/programs/mount.cpp:1163
+#: src/dos/programs/mount.cpp:1266
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_WARNING_WIN"
 msgid "[color=light-red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n"
 msgstr "[color=light-red]Koppelen van c:\\ is NIET aanbevolen. Koppel de volgende keer een (sub)map.[reset]\n"
 
-#: src/dos/programs/mount.cpp:1166
+#: src/dos/programs/mount.cpp:1269
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_WARNING_OTHER"
 msgid "[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n"
 msgstr "[color=light-red]Koppelen van / is NIET aanbevolen. Koppel de volgende keer een (sub)map.[reset]\n"
 
-#: src/dos/programs/mount.cpp:1169
+#: src/dos/programs/mount.cpp:1272
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_NO_OPTION"
 msgid "Warning: Ignoring unsupported option '%s'.\n"
 msgstr "Waarschuwing: Negeren van niet-ondersteunde optie '%s'.\n"
 
-#: src/dos/programs/mount.cpp:1172
+#: src/dos/programs/mount.cpp:1275
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_NO_BASE"
 msgid ""
@@ -11003,13 +11089,13 @@ msgstr ""
 "Een normale map moet eerst worden gekoppeldd voordat er een overlay bovenop\n"
 "kan worden toegevoegd.\n"
 
-#: src/dos/programs/mount.cpp:1176
+#: src/dos/programs/mount.cpp:1279
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"
 msgid "The overlay is NOT compatible with the drive that is specified.\n"
 msgstr "De overlay is NIET compatibel met de opgegeven schijf.\n"
 
-#: src/dos/programs/mount.cpp:1179
+#: src/dos/programs/mount.cpp:1282
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_MIXED_BASE"
 msgid ""
@@ -11019,31 +11105,31 @@ msgstr ""
 "De overlay moet worden gespecificeerd met dezelfde adressering als de\n"
 "onderliggende schijf. Geen vermenging van relatieve en absolute paden.\n"
 
-#: src/dos/programs/mount.cpp:1183
+#: src/dos/programs/mount.cpp:1286
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE"
 msgid "The overlay directory can not be the same as underlying drive.\n"
 msgstr "De overlay-map mag niet hetzelfde zijn als de onderliggende schijf.\n"
 
-#: src/dos/programs/mount.cpp:1186
+#: src/dos/programs/mount.cpp:1289
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR"
 msgid "Something went wrong.\n"
 msgstr "Er is iets fout gegaan.\n"
 
-#: src/dos/programs/mount.cpp:1187
+#: src/dos/programs/mount.cpp:1290
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_STATUS"
 msgid "Overlay %s on drive %c mounted.\n"
 msgstr "Overlay %s op schijf %c gekoppeld.\n"
 
-#: src/dos/programs/mount.cpp:1189
+#: src/dos/programs/mount.cpp:1292
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_INVALID_CHS"
 msgid "Invalid CHS format. Use -chs cylinders,heads,sectors\n"
 msgstr "Ongeldig CHS formaat. Gebruik -chs cilinders,hoofden,sectoren\n"
 
-#: src/dos/programs/mount.cpp:1192
+#: src/dos/programs/mount.cpp:1295
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_REL_ABS"
 msgid ""
@@ -11054,7 +11140,7 @@ msgstr ""
 "onderliggende schijf. Het is niet toegestaan ​​om relatieve en absolute paden te\n"
 "combineren.\n"
 
-#: src/dos/programs/mount.cpp:1196
+#: src/dos/programs/mount.cpp:1299
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_SAME_FS"
 msgid "The overlay needs to be on the same filesystem as the underlying drive.\n"
@@ -11062,13 +11148,13 @@ msgstr ""
 "De overlay moet zich op hetzelfde bestandssysteem bevinden als de onderliggende\n"
 "schijf.\n"
 
-#: src/dos/programs/mount.cpp:1199
+#: src/dos/programs/mount.cpp:1302
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_UNKNOWN_ERROR"
 msgid "Something went wrong.\n"
 msgstr "Er is iets misgegaan.\n"
 
-#: src/dos/programs/mount.cpp:1202
+#: src/dos/programs/mount.cpp:1305
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_SPECIFY2"
 msgid "Must specify a drive letter A/B/C/D or drive number 0/1/2/3 to mount image at.\n"
@@ -11076,7 +11162,7 @@ msgstr ""
 "Een stationsletter A/B/C/D of een stationsnummer 0/1/2/3 moet worden opegegeven\n"
 "waarop de image moet worden gekoppeld.\n"
 
-#: src/dos/programs/mount.cpp:1205
+#: src/dos/programs/mount.cpp:1308
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"
 msgid ""
@@ -11094,19 +11180,19 @@ msgstr ""
 "Voor cd-romimages:\n"
 "  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]IMAGEBESTAND[reset] -t iso\n"
 
-#: src/dos/programs/mount.cpp:1213
+#: src/dos/programs/mount.cpp:1316
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_STATUS_NONE"
 msgid "No drive available.\n"
 msgstr "Geen schijf beschikbaar\n"
 
-#: src/dos/programs/mount.cpp:1215
+#: src/dos/programs/mount.cpp:1318
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE"
 msgid "No available IDE controllers. Drive will not have IDE emulation.\n"
 msgstr "Geen beschikbare IDE-controllers. Drive zal geen IDE-emulatie hebben.\n"
 
-#: src/dos/programs/mount.cpp:1218
+#: src/dos/programs/mount.cpp:1321
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_INVALID_IMAGE"
 msgid ""
@@ -11116,7 +11202,7 @@ msgstr ""
 "Kon imagebestand niet laden.\n"
 "Controleer of het pad correct is en de image toegankelijk is.\n"
 
-#: src/dos/programs/mount.cpp:1222
+#: src/dos/programs/mount.cpp:1325
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_INVALID_GEOMETRY"
 msgid ""
@@ -11128,31 +11214,31 @@ msgstr ""
 "Gebruik parameter -chs Cilinders,Hoofden,Sectoren om de geometrie op te geven.\n"
 "Alternatief: -size BytesPerSector,Sectoren,Hoofden,Cilinders\n"
 
-#: src/dos/programs/mount.cpp:1227
+#: src/dos/programs/mount.cpp:1330
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_FILE_NOT_FOUND"
 msgid "Image file not found.\n"
 msgstr "Imagebestand niet gevonden.\n"
 
-#: src/dos/programs/mount.cpp:1229
+#: src/dos/programs/mount.cpp:1332
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_ALREADY_MOUNTED"
 msgid "Drive already mounted at that letter.\n"
 msgstr "Schijf al gekoppeld op die letter.\n"
 
-#: src/dos/programs/mount.cpp:1232
+#: src/dos/programs/mount.cpp:1335
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_CANT_CREATE"
 msgid "Can't create drive from file.\n"
 msgstr "Kan geen schijf maken van bestand.\n"
 
-#: src/dos/programs/mount.cpp:1233
+#: src/dos/programs/mount.cpp:1336
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_MOUNT_NUMBER"
 msgid "Drive number %d mounted as %s.\n"
 msgstr "Drive nummer %d gekoppeld als %s\n"
 
-#: src/dos/programs/mount.cpp:1235
+#: src/dos/programs/mount.cpp:1338
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_DEPRECATED"
 msgid ""
@@ -11960,13 +12046,13 @@ msgctxt "PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED"
 msgid "[reset][color=brown]Driver not unloaded: configured to stay resident[reset]\n"
 msgstr "[reset][color=brown]Stuurprogramma niet geladen: ingesteld om resident te blijven[reset]\n"
 
-#: src/shell/autoexec.cpp:736
+#: src/shell/autoexec.cpp:806
 #, c-format, no-wrap
 msgctxt "AUTOEXEC_BAT_GENERATED"
 msgid "generated from configuration and command line"
 msgstr "gegenereerd van de configuratie- en opdrachtregel"
 
-#: src/shell/autoexec.cpp:738
+#: src/shell/autoexec.cpp:808
 #, c-format, no-wrap
 msgctxt "AUTOEXEC_BAT_CONFIG_SECTION"
 msgid "from [autoexec] section"
