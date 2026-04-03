@@ -199,6 +199,10 @@ OpenGlRenderer::~OpenGlRenderer()
 		input_texture.texture = 0;
 	}
 
+	// ShaderPipeline destructor makes some gl calls.
+	// Do that here before we delete the context.
+	shader_pipeline = {};
+
 	if (context) {
 		SDL_GL_DeleteContext(context);
 		context = {};
