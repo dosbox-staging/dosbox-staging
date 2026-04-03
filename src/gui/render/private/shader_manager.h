@@ -49,7 +49,7 @@ public:
 
 private:
 	ShaderManager() = default;
-	~ShaderManager();
+	~ShaderManager() = default;
 
 	// prevent copying
 	ShaderManager(const ShaderManager&) = delete;
