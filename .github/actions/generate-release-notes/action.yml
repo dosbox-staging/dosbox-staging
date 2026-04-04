@@ -28,9 +28,8 @@ runs:
         GITHUB_ACCESS_TOKEN: ${{ inputs.github_token }}
       run: |
         ./scripts/tools/release-notes-drafter.py \
-            query \
-            --start_time            $RELEASE_START_TIME \
-            --out_pull_requests_csv pull-requests.csv
+            summary.query \
+            --start_time $RELEASE_START_TIME pull-requests.csv
 
     - name: Generate HTML release notes
       shell: bash
@@ -40,7 +39,5 @@ runs:
         mkdir -p "$(dirname "${{ inputs.output_path }}")"
 
         ./scripts/tools/release-notes-drafter.py \
-            process \
-            --input_csv_file   pull-requests.csv \
-            --html_version_tag $DOSBOX_VERSION_AND_HASH \
-            --out_html_file    "${{ inputs.output_path }}"
+            summary.process_html \
+            pull-requests.csv $DOSBOX_VERSION_AND_HASH "${{ inputs.output_path }}"

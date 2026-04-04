@@ -494,4 +494,4 @@ valid-metaclass-classmethod-first-arg=cls
 # Exceptions that will emit a warning when being caught. Defaults to
 # "BaseException, Exception".
 overgeneral-exceptions=builtins.BaseException,
-                       Exception
+                       builtins.Exception
