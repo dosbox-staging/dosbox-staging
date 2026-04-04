@@ -9,8 +9,6 @@ add_library(libresidfp STATIC
   FilterModelConfig.cpp
   FilterModelConfig6581.cpp
   FilterModelConfig8580.cpp
-  Integrator6581.cpp
-  Integrator8580.cpp
   OpAmp.cpp
   SID.cpp
   Spline.cpp
