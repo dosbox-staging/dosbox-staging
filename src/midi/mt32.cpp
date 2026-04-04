@@ -365,7 +365,7 @@ static void init_mt32_config_settings(SectionProp& sec_prop)
 	                     mt32_204_model.GetName(),
 	                     mt32_203_model.GetName()});
 	str_prop->SetHelp(
-	        "Roland MT-32/CM-32ML model to use ('auto' by default). You must have the ROM\n"
+	        "Roland MT-32/CM-32L model to use ('auto' by default). You must have the ROM\n"
 	        "files for the selected model available (see 'romdir'). The lookup for the best\n"
 	        "models is performed in order as listed. Possible values:\n"
 	        "\n"
@@ -384,7 +384,7 @@ static void init_mt32_config_settings(SectionProp& sec_prop)
 
 	str_prop = sec_prop.AddString("romdir", when_idle, "");
 	str_prop->SetHelp(
-	        "The directory containing the Roland MT-32/CM-32ML ROMs (unset by default).\n"
+	        "The directory containing the Roland MT-32/CM-32L ROMs (unset by default).\n"
 	        "The directory can be absolute or relative, or leave it unset to use the\n"
 	        "'mt32-roms' directory in your DOSBox configuration directory. Other common\n"
 	        "system locations will be checked as well.\n"

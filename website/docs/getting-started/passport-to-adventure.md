@@ -69,7 +69,9 @@ Let's see what `config -h viewport` gives us!
 That's quite a handy online help system, isn't it? As the bottom line
 indicates, you can press ++space++ to go to the next page, ++enter++ to
 advance to the next line, or ++q++ to quit the help viewer. The help viewer
-will also automatically quit once we've reached the end of the output.
+will also automatically quit once we've reached the end of the output. You
+can also find the full description of all settings in the
+[manual](../documentation/introduction.md).
 
 You can run `config -h <section_name>`, too, to get the names of all available
 settings in a given config section. For example, this is the result of `config
@@ -92,10 +94,11 @@ the _local_ `dosbox.conf` _configuration_ found in the folder from which it
 was started from (the game's folder). Because of this loading order, you can
 override any primary config setting in your local config.
 
-This *layered configuration* approach is very useful; you can apply broad,
-general settings in your primary configuration that will apply to all games,
-then fine-tune these defaults on a per-game basis via local `dosbox.conf`
-configs in the individual game folders. Because of this, the primary
+This *layered configuration* approach is very useful (see
+[Configuration](../documentation/configuration.md) for the full details);
+you can apply broad, general settings in your primary configuration that
+will apply to all games, then fine-tune these defaults on a per-game basis
+via local `dosbox.conf` configs in the individual game folders. Because of this, the primary
 configuration is sometimes also referred to as the _default_ or _global
 configuration_.
 
@@ -240,6 +243,9 @@ options next!
 
 
 ## Sound options
+
+For a complete overview of all emulated sound devices, see the
+[Sound](../documentation/sound/overview.md) section of the manual.
 
 ### Sound Blaster / AdLib sound
 
@@ -609,12 +615,12 @@ The below screenshots illustrate the difference between the "true EGA" and
     reach the artistic genius of the EGA originals, plus often they don't have
     the exact same gameplay either. This is especially true for the three
     classic LucasArts games included in this demo collection. Check out the
-    comparison and analysis of the EGA versus VGA versions of **Indiana Jones
-    and the Last Crusade** and **Loom**
+    comparison and analysis of the EGA versus VGA versions of [**Indiana Jones
+    and the Last Crusade**](https://www.mobygames.com/game/534/indiana-jones-and-the-last-crusade-the-graphic-adventure/) and [**Loom**](https://www.mobygames.com/game/176/loom/)
     [here](https://www.superrune.com/tutorials/lucasfilm_ega.php).
 
     In [another article](https://www.arcadeattack.co.uk/brian-moriarty/),
-    Brian Moriatry, the creator of **Loom**, shares his opinion about the VGA
+    Brian Moriatry, the creator of [**Loom**](https://www.mobygames.com/game/176/loom/), shares his opinion about the VGA
     remake of the game (he calls it "an abomination", so apparently, he's quite
     unimpressed...) Note that about one-third of the original game's dialogue
     had been cut from the VGA remake.
@@ -651,8 +657,9 @@ The rationale behind the "magic 89% value" is explained in detail in the last
 
 ## CPU sensitive games
 
-Certain older games, such as these three demos, are sensitive to CPU speed.
-
+Certain older games, such as these three demos, are sensitive to CPU speed
+(see the [CPU](../documentation/system/cpu.md) page for a full discussion of
+cycles settings).
 
 This can manifest in different ways:
 

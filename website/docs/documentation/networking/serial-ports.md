@@ -1,0 +1,91 @@
+# Serial ports
+
+DOSBox Staging emulates four COM (serial) ports, the same ones DOS programs
+used for modems, serial mice, and direct cable connections.
+
+The most common use case is modem multiplayer. Setting a serial port to
+`modem` mode turns your internet connection into a virtual phone line ---
+dial-up multiplayer without the phone bill. Games like
+[Doom](https://www.mobygames.com/game/1068/doom/),
+[Rise of the Triad](https://www.mobygames.com/game/418/rise-of-the-triad-dark-war/),
+and [Terminal Velocity](https://www.mobygames.com/game/635/terminal-velocity/)
+all supported modem play, and this is how you'd get them talking to each
+other today.
+
+For a direct two-player link, `nullmodem` mode connects two DOSBox
+instances over TCP without emulating the modem handshake. This is the
+simplest way to get head-to-head play working.
+
+You can also attach a serial mouse to a COM port for the rare game that
+specifically requires one, rather than using the built-in PS/2
+[mouse](../input/mouse.md) driver.
+
+
+For setting up multiplayer games over serial connections, see the
+[Multiplayer](multiplayer.md) chapter.
+
+
+## Configuration settings
+
+You can set the serial port parameters in the `[serial]` configuration
+section.
+
+
+##### phonebookfile
+
+:   File used to map fake phone numbers to addresses (`phonebook.txt` by
+    default).
+
+
+##### serial1
+
+:   Set type of device connected to the COM1 port.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `dummy` *default*{ .default } -- Emulate the port without a device
+      attached to it.
+    - `disabled` -- Disable the port.
+    - `mouse` -- Emulate a serial mouse attached to the port.
+    - `modem` -- Emulate a modem attached to the port.
+    - `nullmodem` -- Emulate a null modem attached to the port.
+    - `direct` -- Emulate a direct serial link.
+
+    </div>
+
+    Additional parameters must be on the same line in the form of
+    `PARAMETER:VALUE`. The optional `irq` parameter is common for all types.
+    Available parameters:
+
+    <div class="compact" markdown>
+
+    - For `mouse`: `model` (optional; overrides the `com_mouse_model`
+      setting).
+    - For `direct`: `realport` (required), `rxdelay` (optional). E.g.,
+      `realport:COM1`, `realport:ttyS0`.
+    - For `modem`: `listenport`, `sock`, `bps` (all optional).
+    - For `nullmodem`: `server`, `rxdelay`, `txdelay`, `telnet`, `usedtr`,
+      `transparent`, `port`, `inhsocket`, `sock` (all optional).
+
+    </div>
+
+    The `sock` parameter specifies the protocol to use at both sides of the
+    connection. Valid values are `0` for TCP, and `1` for ENet reliable UDP.
+    Example: `serial1 = modem listenport:5000 sock:1`
+
+
+##### serial2
+
+:   See [serial1](#serial1) (`dummy` by default).
+
+
+##### serial3
+
+:   See [serial1](#serial1) (`disabled` by default).
+
+
+##### serial4
+
+:   See [serial1](#serial1) (`disabled` by default).

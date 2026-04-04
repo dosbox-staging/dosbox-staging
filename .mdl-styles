@@ -2,6 +2,8 @@ all
 
 rule 'MD029', :style => :ordered	# ordered lists must use running numbers
 
+exclude_rule 'MD001'    # allow skipping header levels
+
 exclude_rule 'MD005'    # don't try to enforce consistent list indentation
                         # (buggy, gets confused with complex nestings)
 

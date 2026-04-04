@@ -54,7 +54,7 @@ Download the latest installer from our [Windows
 releases](../releases/windows.md) page, then proceed with the installation.
 Just accept the default options; don't change anything.
 
-Make sure to read the section about dealing with [Microsoft Defender SmartScreen](../releases/windows.md#microsoft-defender-smartscreen).
+Make sure to read the section about dealing with [Microsoft Defender SmartScreen](../releases/windows.md#windows-defender).
 
 <h3>macOS</h3>
 

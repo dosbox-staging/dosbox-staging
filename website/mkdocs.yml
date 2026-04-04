@@ -57,6 +57,10 @@ markdown_extensions:
   - toc:
       permalink: true
 
+# Hooks
+hooks:
+  - hooks/toc_depth.py
+
 # Plugins
 plugins:
   - search
@@ -64,6 +68,12 @@ plugins:
       slide_effect: 'none'
       skip_classes:
         - skip-lightbox
+
+  - privacy:
+      enabled: !ENV [OFFLINE_MANUAL, false]
+  - optimize:
+      enabled: !ENV [OFFLINE_MANUAL, false]
+
   - redirects:
         redirect_maps:
           # Convenience redirects for top level sections (so for example
@@ -141,6 +151,74 @@ nav:
       - getting-started/star-wars-dark-forces.md
       - getting-started/advanced-graphics-options.md
       - getting-started/next-steps.md
+
+  - Documentation:
+      - Getting oriented:
+        - documentation/introduction.md
+        - documentation/how-to-use-this-manual.md
+        - documentation/dos-primer.md
+        - documentation/dos-eras.md
+
+      - Using DOSBox Staging:
+        - documentation/configuration.md
+        - documentation/command-line.md
+        - documentation/commands.md
+        - documentation/storage.md
+        - documentation/hardware-resources.md
+        - documentation/capture.md
+        - documentation/http-api.md
+        - documentation/windows-31.md
+
+      - System:
+        - documentation/system/general.md
+        - documentation/system/cpu.md
+        - documentation/system/dos.md
+
+      - Graphics:
+        - documentation/graphics/adapters.md
+        - documentation/graphics/display-and-window.md
+        - documentation/graphics/rendering.md
+        - documentation/graphics/composite-video.md
+        - documentation/graphics/3dfx-voodoo.md
+        - documentation/graphics/reelmagic.md
+
+      - Sound:
+        - documentation/sound/overview.md
+        - documentation/sound/on-subjectivity.md
+        - documentation/sound/mixer.md
+        - documentation/sound/mixer-effects.md
+        - documentation/sound/analog-output-filters.md
+        - documentation/sound/disk-noise.md
+        - Sound devices:
+          - documentation/sound/sound-devices/adlib-cms-sound-blaster.md
+          - documentation/sound/sound-devices/roland-mt-32.md
+          - documentation/sound/sound-devices/midi.md
+          - documentation/sound/sound-devices/general-midi.md
+          - documentation/sound/sound-devices/pc-speaker.md
+          - documentation/sound/sound-devices/tandy.md
+          - documentation/sound/sound-devices/gravis-ultrasound.md
+          - documentation/sound/sound-devices/cd-da.md
+          - documentation/sound/sound-devices/ibm-ps1audio.md
+          - documentation/sound/sound-devices/covox-variants.md
+          - documentation/sound/sound-devices/innovation.md
+          - documentation/sound/sound-devices/imfc.md
+
+      - Input:
+        - documentation/input/overview.md
+        - documentation/input/keyboard.md
+        - documentation/input/mouse.md
+        - documentation/input/joystick.md
+        - documentation/input/keymapper.md
+
+      - Networking:
+        - documentation/networking/serial-ports.md
+        - documentation/networking/ipx.md
+        - documentation/networking/ethernet.md
+        - documentation/networking/multiplayer.md
+
+      - Appendices:
+        - documentation/appendices/shortcuts.md
+        - documentation/appendices/keymapper.md
 
   - Get involved:
       - get-involved/index.md
