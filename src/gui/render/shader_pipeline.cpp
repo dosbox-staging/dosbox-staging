@@ -13,9 +13,8 @@
 #include "glad/gl.h"
 
 // must be included after dosbox_config.h
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include <SDL_syswm.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
 
 CHECK_NARROWING();
 

@@ -12,14 +12,21 @@
     "opusfile",
     "fluidsynth",
     {
-      "name": "sdl2",
+      "name": "sdl3",
       "platform": "linux",
-      "features": ["alsa", "dbus", "ibus", "wayland", "x11"]
-    }, {
-      "name": "sdl2",
+      "features": [
+        "alsa",
+        "ibus",
+        "vulkan",
+        "wayland",
+        "x11"
+      ]
+    },
+    {
+      "name": "sdl3",
       "platform": "!linux"
     },
-    "sdl2-image",
+    "sdl3-image",
     "speexdsp",
     "zlib-ng",
     {
@@ -27,5 +34,5 @@
       "host": true
     }
   ],
-  "builtin-baseline": "6283825b81bb60f952af1d0703638df1de611243"
+  "builtin-baseline": "26283ac5e8a068561a718ce18b169bfad84c7dab"
 }

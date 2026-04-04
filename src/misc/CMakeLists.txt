@@ -5,12 +5,9 @@ target_sources(libdosboxcommon PRIVATE
   dos_rwops.cpp
   fs_utils.cpp
   fs_utils_posix.cpp
-  fs_utils_win32.cpp
   help_util.cpp
   host_locale.cpp
   host_locale_macos.cpp
-  host_locale_posix.cpp
-  host_locale_win32.cpp
   image_decoder.cpp
   iso_locale_codes.cpp
   messages_adjust.cpp
@@ -21,6 +18,17 @@ target_sources(libdosboxcommon PRIVATE
   unicode_encodings.cpp
   video.cpp
 )
+
+if (WIN32)
+  target_sources(libdosboxcommon PRIVATE
+    fs_utils_win32.cpp
+    host_locale_win32.cpp
+  )
+endif()
+
+if (NOT WIN32 AND NOT C_COREFOUNDATION)
+  target_sources(libdosboxcommon PRIVATE host_locale_posix.cpp)
+endif()
 
 target_sources(dosbox PRIVATE messages.cpp)
 

@@ -2,7 +2,6 @@ target_sources(libdosboxcommon PRIVATE
   cdrom.cpp
   cdrom_image.cpp
   cdrom_ioctl_linux.cpp
-  cdrom_win32.cpp
   dos.cpp
   dos_classes.cpp
   dos_code_page.cpp
@@ -29,7 +28,6 @@ target_sources(libdosboxcommon PRIVATE
 
   programs/attrib.cpp
   programs/autotype.cpp
-  programs/biostest.cpp
   programs/boot.cpp
   programs/choice.cpp
   programs/clip.cpp
@@ -59,8 +57,16 @@ target_sources(libdosboxcommon PRIVATE
   programs/tree.cpp
 )
 
+if (WIN32)
+  target_sources(libdosboxcommon PRIVATE cdrom_win32.cpp)
+endif()
+
+if (OPT_DEBUGGER)
+  target_sources(libdosboxcommon PRIVATE programs/biostest.cpp)
+endif()
+
 target_sources(dosbox PRIVATE dos_files.cpp)
 
 target_link_libraries(libdosboxcommon PRIVATE
-  $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
+  $<IF:$<TARGET_EXISTS:SDL3_image::SDL3_image>,SDL3_image::SDL3_image,SDL3_image::SDL3_image-static>
 )
