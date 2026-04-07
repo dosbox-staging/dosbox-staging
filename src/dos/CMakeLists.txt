@@ -34,13 +34,12 @@ target_sources(libdosboxcommon PRIVATE
   programs/choice.cpp
   programs/clip.cpp
   programs/help.cpp
-  programs/makeimg.cpp
-  programs/imgmount.cpp
   programs/intro.cpp
   programs/keyb.cpp
   programs/loadfix.cpp
   programs/loadrom.cpp
   programs/ls.cpp
+  programs/makeimg.cpp
   programs/mem.cpp
   programs/mixer.cpp
   programs/mode.cpp

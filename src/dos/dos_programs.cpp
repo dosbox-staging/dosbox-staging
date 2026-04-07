@@ -10,13 +10,12 @@
 #include "programs/choice.h"
 #include "programs/clip.h"
 #include "programs/help.h"
-#include "programs/makeimg.h"
-#include "programs/imgmount.h"
 #include "programs/intro.h"
 #include "programs/keyb.h"
 #include "programs/loadfix.h"
 #include "programs/loadrom.h"
 #include "programs/ls.h"
+#include "programs/makeimg.h"
 #include "programs/mem.h"
 #include "programs/mixer.h"
 #include "programs/mode.h"
@@ -70,13 +69,12 @@ void DOS_SetupPrograms()
 	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
 	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramCreate);
 	PROGRAMS_MakeFile("HELP.COM", ProgramCreate<HELP>);
-	PROGRAMS_MakeFile("MAKEIMG.COM", ProgramCreate<MAKEIMG>);
-	PROGRAMS_MakeFile("IMGMOUNT.COM", ProgramCreate<IMGMOUNT>);
 	PROGRAMS_MakeFile("INTRO.COM", ProgramCreate<INTRO>);
 	PROGRAMS_MakeFile("KEYB.COM", ProgramCreate<KEYB>);
 	PROGRAMS_MakeFile("LOADFIX.COM", ProgramCreate<LOADFIX>);
 	PROGRAMS_MakeFile("LOADROM.COM", ProgramCreate<LOADROM>);
 	PROGRAMS_MakeFile("LS.COM", ProgramCreate<LS>);
+	PROGRAMS_MakeFile("MAKEIMG.COM", ProgramCreate<MAKEIMG>);
 	PROGRAMS_MakeFile("MEM.COM", ProgramCreate<MEM>);
 	PROGRAMS_MakeFile("MIXER.COM", ProgramCreate<MIXER>);
 	PROGRAMS_MakeFile("MODE.COM", ProgramCreate<MODE>);
@@ -91,6 +89,10 @@ void DOS_SetupPrograms()
 	PROGRAMS_MakeFile("SHOWPIC.EXE", ProgramCreate<SHOWPIC>);
 	PROGRAMS_MakeFile("SUBST.EXE", ProgramCreate<SUBST>);
 	PROGRAMS_MakeFile("TREE.COM", ProgramCreate<TREE>);
+
+	// This will allow MOUNT to be invoked as IMGMOUNT for backward
+	// compatibility (with a deprecation warning).
+	PROGRAMS_MakeFile("IMGMOUNT.COM", ProgramCreate<MOUNT>);
 
 	REELMAGIC_MaybeCreateFmpdrvExecutable();
 

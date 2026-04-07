@@ -1112,6 +1112,13 @@ void MOUNT::Run(void)
 {
 	MountParameters params;
 
+	if (std::string{cmd->GetFileName()} == "Z:\\IMGMOUNT.COM") {
+		// Print deprecation notice
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "IMGMOUNT",
+		                      "PROGRAM_IMGMOUNT_DEPRECATED");
+	}
+
 	// Hack to allow long commandlines
 	ChangeToLongCmd();
 
@@ -1336,6 +1343,6 @@ void MOUNT::AddMessages()
 	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER", "Drive number %d mounted as %s.\n");
 
 	MSG_Add("PROGRAM_IMGMOUNT_DEPRECATED",
-	        "[color=yellow]Note: 'imgmount' is deprecated.[reset]\n"
-	        "Use 'mount' for both directories and disk images.");
+	        "The [color=light-green]IMGMOUNT[reset] command is deprecated; "
+	        "please use [color=light-green]MOUNT[/reset] instead.[reset]");
 }
