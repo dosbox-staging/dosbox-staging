@@ -350,6 +350,22 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	return true;
 }
 
+// Return string representation of MSCDEX_AddDrive error code
+static const char* mscdex_error_to_message_id(const int error, const bool is_image_file)
+{
+	switch (error) {
+	case 0: return "MSCDEX_SUCCESS";
+	case 1: return "MSCDEX_ERROR_MULTIPLE_CDROMS";
+	case 2: return "MSCDEX_ERROR_NOT_SUPPORTED";
+	case 3:
+		return is_image_file ? "MSCDEX_ERROR_OPEN" : "MSCDEX_ERROR_PATH";
+	case 4: return "MSCDEX_TOO_MANY_DRIVES";
+	case 5: return "MSCDEX_LIMITED_SUPPORT";
+	case 6: return "MSCDEX_INVALID_FILEFORMAT";
+	default: return "MSCDEX_UNKNOWN_ERROR";
+	}
+}
+
 bool MOUNT::MountImageIso(MountParameters& params)
 {
 	if (Drives.at(drive_index(params.drive))) {
@@ -366,27 +382,11 @@ bool MOUNT::MountImageIso(MountParameters& params)
 		iso_images.push_back(std::make_shared<isoDrive>(
 		        params.drive, iso_path.c_str(), params.mediaid, error));
 
-		// Error handling switch
-		const char* msg_id = nullptr;
-		switch (error) { //-V785
-		case 0: break;
-		case 1: msg_id = "MSCDEX_ERROR_MULTIPLE_CDROMS"; break;
-		case 2: msg_id = "MSCDEX_ERROR_NOT_SUPPORTED"; break;
-		case 3: msg_id = "MSCDEX_ERROR_OPEN"; break;
-		case 4: msg_id = "MSCDEX_TOO_MANY_DRIVES"; break;
-		case 5: msg_id = "MSCDEX_LIMITED_SUPPORT"; break;
-		case 6: msg_id = "MSCDEX_INVALID_FILEFORMAT"; break;
-		default: msg_id = "MSCDEX_UNKNOWN_ERROR"; break;
-		}
-
-		if (msg_id) { //-V547
+		// error: report and leave
+		if (error) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      msg_id);
-		}
-
-		// error: clean up and leave
-		if (error) { //-V547
+			                      mscdex_error_to_message_id(error, true));
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
 			                      "PROGRAM_IMGMOUNT_CANT_CREATE");
@@ -416,7 +416,9 @@ bool MOUNT::MountImageIso(MountParameters& params)
 	}
 
 	// Print status message (success)
-	WriteOut(MSG_Get("MSCDEX_SUCCESS"));
+	NOTIFY_DisplayInfoMessage(Notification::Source::Console,
+	                          "MOUNT",
+	                          mscdex_error_to_message_id(0, true));
 
 	std::string mount_message = (params.paths.size() > 1)
 	                                  ? MSG_Get("MOUNT_TYPE_CDIMAGE_PLURAL")
@@ -596,6 +598,10 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 		}
 	} else if (params.type == "iso") {
 		str_size = "2048,1,65535,0";
+		// mediaid is used in staging to differentiate between floppy
+		// and non-floppy for cache rescan, disk noise and I/O timing.
+		// The same value was used in the original dosbox code
+		params.mediaid = MediaId::HardDisk;
 	} else {
 		// Type parameter validation should prevent this from happening
 		assert(params.type == "hdd");
@@ -1045,6 +1051,34 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 			safe_strcpy(newdrive->curdir, ldp->curdir);
 		}
 		Drives.at(drive_index(params.drive)) = nullptr;
+	} else if (params.type == "iso") {
+		// Mount a host directory as a CD-ROM drive.
+		int error = 0;
+		newdrive  = std::make_shared<cdromDrive>(params.drive,
+		                                         final_path.c_str(),
+		                                         params.sizes[0],
+		                                         int8_tize,
+		                                         params.sizes[2],
+		                                         0,
+		                                         params.mediaid,
+		                                         error);
+
+		const char* msg_id = mscdex_error_to_message_id(error, false);
+		if (error == 0) {
+			NOTIFY_DisplayInfoMessage(Notification::Source::Console,
+			                          "MOUNT",
+			                          msg_id);
+		} else {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      msg_id);
+		}
+
+		// Errors 1-4 are fatal; 0 (success) and 5 (limited support
+		// for subdirectory mounts) allow the drive to be registered.
+		if (error && error != 5) {
+			return;
+		}
 	} else {
 		const auto section = get_section("dosbox");
 		// Standard directory mount
@@ -1083,7 +1117,8 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 	// check if volume label is given and don't allow it to updated in the
 	// future
 	if (!params.label.empty()) {
-		newdrive->dirCache.SetLabel(params.label.c_str(), false, false);
+		const auto is_cdrom = (params.type == "iso");
+		newdrive->dirCache.SetLabel(params.label.c_str(), is_cdrom, false);
 
 	} else if (params.type == "dir" || params.type == "overlay") {
 		// For hard drives set the label to DRIVELETTER_Drive.
