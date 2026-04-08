@@ -1,25 +1,36 @@
 # Covox variants
 
+Several inexpensive parallel port DAC devices appeared in the late 1980s as
+a cheap way to get digital audio output from a PC. They were far simpler
+than a Sound Blaster — just a small dongle that plugged into your printer
+port — but they could play back digitised sound and speech at decent quality
+for the era.
 
 
 ## Covox Speech Thing
 
+The Covox Speech Thing (1986) was a simple R-2R resistor ladder DAC that
+plugged into the parallel port. It was cheap to build (even as a DIY
+project) and provided 8-bit mono audio output. A number of games supported
+it, including several Sierra titles and *Leisure Suit Larry 1 VGA*.
+
+
 ## Disney Sound Source
 
-Covox introduced the Covox Speech Thing parallel port sound dongle in 1987,
-while Disney introduced the Disney Sound Source in 1990, which is backwards
-compatible with the Covox, but adds a FIFO buffer and logic to reduce CPU
-overhead.
+The Disney Sound Source (1990) was a parallel port audio device
+backwards-compatible with the Covox Speech Thing, but it added a small FIFO
+buffer and control logic to reduce CPU overhead during playback. DOSBox
+Staging emulates the Disney Sound Source, which is also compatible with
+Covox Speech Thing titles and Intersound MDO software.
 
-These parallel port devices only provide a DAC at a low frequency for playback
-of digital samples, and has no FM sound.
-
-DOSBox-X provides emulation for the Disney Sound Source, which is effectively
-backward compatible with the earlier Covox Speech Thing. Also games compatible
-with the Intersound MDO should work with this, as it is effectively a Covox
-Speech Thing clone.
 
 ## Stereo-on-1 DAC
+
+The Stereo-on-1 was a stereo variant of the parallel port DAC concept. It
+split the parallel port's 8 data lines into two 4-bit channels — one for
+left, one for right — giving you stereo output at the cost of halving the
+bit depth. Less common than the mono Covox, but supported by some tracker
+players and a handful of games.
 
 
 ## Configuration settings
