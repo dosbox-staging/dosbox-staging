@@ -39,7 +39,7 @@ DOSBox Staging emulates a two-button mouse by default
 the 90s support a third mouse button, and some games will misbehave if an
 unexpected middle button press is detected. If you know a game supports three
 buttons, enable it explicitly by setting the model to `3button`. The `wheel`
-option exists for the rare DOS application or [Windows 3.1](windows-3.1) setup
+option exists for the rare DOS application or [Windows 3.1](../windows-31.md) setup
 that can use a scroll wheel, but no DOS game is known to use it.
 
 

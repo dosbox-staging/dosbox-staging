@@ -58,6 +58,10 @@ Multiple config files can be loaded, and later values override earlier ones:
 This layering system lets you keep your general preferences in the primary
 config and only override what's needed per game.
 
+Refer to this section of the [Getting Started
+guide](../getting-started/passport-to-adventure.md#layered-configurations) for a
+more detailed description.
+
 
 ## Syntax
 

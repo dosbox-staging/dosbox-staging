@@ -61,15 +61,17 @@ As a rule of thumb:
   notes the recommended revision for each game.
 
 
-## The CM-32L --- recommended default
+## The CM-32L
 
-The **CM-32L** (1989) is generally the best overall choice. It is fully
-compatible with MT-32 "new" games and adds 33 extra sound effects (gunshots,
-explosions, dog barks, footsteps, etc.) that a handful of games use for
-enhanced audio. A few titles --- including
-[Curse of Enchantia](https://www.mobygames.com/game/740/curse-of-enchantia/)
-and [Fire & Ice](https://www.mobygames.com/game/7386/fire-ice/) --- only
-sound complete on a CM-32L.
+The **Roland CM-32L** released in 1989 --- an MT-32 variant tailored for
+gaming --- is generally the best overall choice. It is fully compatible with
+MT-32 "new" games and adds 33 extra sound effects (gunshots, explosions, dog
+barks, footsteps, etc.) that a handful of games use for enhanced audio. A few
+titles only sound complete on a CM-32L (e.g., [Curse of
+Enchantia](https://www.mobygames.com/game/740/curse-of-enchantia/) and [Fire &
+Ice](https://www.mobygames.com/game/7386/fire-ice/)). LucasArts was one of the
+main game studios that typically took advantage of the extra sound effects of
+the module.
 
 DOSBox Staging's `model = auto` setting prefers the CM-32L when its ROMs are
 available, falling back to the best available MT-32 model otherwise. For
@@ -141,18 +143,26 @@ For a step-by-step walkthrough of setting up the MT-32 with a specific game,
 see the [Beneath a Steel Sky](../../../getting-started/beneath-a-steel-sky.md#setting-up-roland-mt-32-sound)
 chapter of the getting started guide.
 
-DOSBox Staging emulates both the MT-32 sound module and the MPU-401 MIDI
-interface needed to communicate with it. The emulated MPU-401 supports
-*Intelligent Mode*, which some older games require. Most later games only
-need the simpler *UART Mode*.
+DOSBox Staging emulates both the MT-32 sound module and the [MPU-401 MIDI
+interface](midi.md#roland-mpu-401-midi-interface) needed to communicate with
+it. The emulated MPU-401 supports the so-called **Intelligent Mode**, which
+most older games require (e.g., all older Sierra adventures). Most later games
+only need the much simpler **UART Mode**. Intelligent mode fully supports UART
+mode, so it'
 
 ``` ini
 [midi]
 mididevice = mt32
+mpu401 = uart
 
 [mt32]
-model  = auto
 romdir = /path/to/mt32-roms
+
+# Picks the CM-32L if available; best overall model except for old games
+model = auto
+
+# Early MT-32 games need this (e.g., older Sierra adventures)
+model = mt32_old
 ```
 
 !!! tip
