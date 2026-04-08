@@ -24,6 +24,43 @@ manufacturers recorded their own instrument samples, playback can sound
 noticeably different from one device to another — but the SC-55 is the gold
 standard for what the composer intended.
 
+### The MT-32 to General MIDI transition
+
+MIDI sound in DOS games evolved through three distinct periods:
+
+- **1987--1991: MT-32 era** --- The [Roland MT-32](roland-mt-32.md) was the
+  only MIDI option. Sierra On-Line, LucasArts, and Origin Systems led the
+  way with dedicated MT-32 music.
+- **1991--1993: transition** --- The SC-55 and General MIDI standard arrived.
+  Many games supported both MT-32 and GM, giving players a choice. Games
+  like [Indiana Jones and the Fate of Atlantis](https://www.mobygames.com/game/198/indiana-jones-and-the-fate-of-atlantis/)
+  and [Star Wars: X-Wing](https://www.mobygames.com/game/195/star-wars-x-wing/)
+  sound excellent on either device.
+- **1993 onwards: GM dominance** --- General MIDI became the standard. MT-32
+  support faded as the SC-55 was cheaper, more widely available, and
+  standardised. By 1995, very few new games included MT-32 support.
+
+??? note "Notable games with General MIDI support"
+
+    <div class="compact" markdown>
+
+    - [Day of the Tentacle (1993)](https://www.mobygames.com/game/659/maniac-mansion-day-of-the-tentacle/)
+    - [Descent (1995)](https://www.mobygames.com/game/454/descent/)
+    - [Doom (1993)](https://www.mobygames.com/game/1068/doom/)
+    - [Duke Nukem 3D (1996)](https://www.mobygames.com/game/365/duke-nukem-3d/)
+    - [Full Throttle (1995)](https://www.mobygames.com/game/414/full-throttle/)
+    - [Gabriel Knight (1993)](https://www.mobygames.com/game/665/gabriel-knight-sins-of-the-fathers/)
+    - [Monkey Island 2 (1991)](https://www.mobygames.com/game/289/monkey-island-2-lechucks-revenge/)
+    - [Sam & Max Hit the Road (1993)](https://www.mobygames.com/game/672/sam-max-hit-the-road/)
+    - [Star Wars: Dark Forces (1995)](https://www.mobygames.com/game/379/star-wars-dark-forces/)
+    - [Star Wars: TIE Fighter (1994)](https://www.mobygames.com/game/204/star-wars-tie-fighter/)
+    - [System Shock (1994)](https://www.mobygames.com/game/545/system-shock/)
+    - [The Dig (1995)](https://www.mobygames.com/game/499/the-dig/)
+    - [Ultima VII (1992)](https://www.mobygames.com/game/608/ultima-vii-the-black-gate/)
+    - [WarCraft II (1995)](https://www.mobygames.com/game/1339/warcraft-ii-tides-of-darkness/)
+
+    </div>
+
 Determining whether a game supports General MIDI, the Roland MT-32, or both
 is not always obvious from the setup utility alone. The community-maintained
 [List of MT-32-compatible computer games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
@@ -51,15 +88,76 @@ sample-accurate playback of the actual SC-55 sound engine --- as close to the
 real hardware as you can get without owning one.
 
 
+### Sound Canvas revisions
+
+The SC-55 went through several firmware revisions. The most important
+difference is **Capital Tone Fallback (CTF)** --- a Roland GS feature that
+ensures correct instrument playback when a game requests a GS "variation
+tone" that isn't available on the module. Without CTF, the module may play
+silence or the wrong instrument. Many DOS games rely on CTF for correct
+audio, particularly for percussion and instrument variations.
+
+Due to a patent dispute with Yamaha, Roland was forced to remove CTF from
+later firmware revisions. This makes the choice of firmware version
+significant for DOS gaming.
+
+DOSBox Staging emulates the following Sound Canvas firmware versions:
+
+<div class="compact" markdown>
+
+| Model | Version | `soundcanvas_model` | CTF | Notes |
+|-------|---------|---------------------|-----|-------|
+| SC-55 | v1.00 | `sc55_100` | Yes | First release; some instrument mapping bugs |
+| SC-55 | v1.10 | `sc55_110` | Yes | Bug fixes |
+| SC-55 | v1.20 | `sc55_120` | Yes | Corrected instrument #122; GS reset |
+| SC-55 | v1.21 | `sc55_121` | Yes | Fixed NRPN processing bugs --- **recommended** |
+| SC-55 | v2.00 | `sc55_200` | No | CTF removed (Yamaha patent dispute) |
+| SC-55mk2 | v1.00 | `sc55mk2_100` | No | 28 voices, 354 sounds; no CTF |
+| SC-55mk2 | v1.01 | `sc55mk2_101` | No | Minor revisions |
+
+</div>
+
+The **SC-55 v1.21** is the best overall choice for DOS gaming --- it has
+Capital Tone Fallback, correct instrument mappings, and all known firmware
+bugs fixed. DOSBox Staging's `soundcanvas_model = auto` prefers v1.21 when
+its ROM is available. Avoid v2.00 and the Mk II versions for games that
+rely on CTF.
+
+??? note "Games that require Capital Tone Fallback for correct audio"
+
+    These games use GS variation tones that depend on CTF. On SC-55 v2.00
+    or Mk II firmware (which lack CTF), certain instruments or percussion
+    will sound incorrect or be silent.
+
+    <div class="compact" markdown>
+
+    - [Blood (1997)](https://www.mobygames.com/game/793/blood/)
+    - [Duke Nukem 3D (1996)](https://www.mobygames.com/game/365/duke-nukem-3d/)
+    - [Dune II (1992)](https://www.mobygames.com/game/327/dune-ii-the-building-of-a-dynasty/)
+    - [Extreme Assault (1997)](https://www.mobygames.com/game/3165/extreme-assault/)
+    - [Hexen (1995)](https://www.mobygames.com/game/383/hexen-beyond-heretic/)
+    - [Might and Magic IV (1992)](https://www.mobygames.com/game/451/might-and-magic-clouds-of-xeen/)
+    - [Might and Magic V (1993)](https://www.mobygames.com/game/452/might-and-magic-darkside-of-xeen/)
+    - [Shadow Warrior (1997)](https://www.mobygames.com/game/1779/shadow-warrior/)
+    - [The Elder Scrolls: Arena (1994)](https://www.mobygames.com/game/1704/the-elder-scrolls-arena/)
+    - [WarCraft II (1995)](https://www.mobygames.com/game/1339/warcraft-ii-tides-of-darkness/)
+
+    </div>
+
+
 ### FluidSynth
 
-For a step-by-step walkthrough of setting up FluidSynth with a specific game,
-see the [Star Wars: Dark
+FluidSynth is a software MIDI synthesiser that uses **SoundFont** sample
+banks to generate audio. It's lighter on CPU than Sound Canvas emulation and
+very flexible --- you can swap SoundFonts to change the character of the
+music. The trade-off is that no SoundFont perfectly matches the SC-55's
+sound; results range from "close enough" to "noticeably different" depending
+on the SoundFont and the game.
+
+For a step-by-step walkthrough of setting up FluidSynth with a specific
+game, see the [Star Wars: Dark
 Forces](../../../getting-started/star-wars-dark-forces.md#setting-up-general-midi-sound)
 chapter of the getting started guide.
-
-Alternatively, you can use FluidSynth which is a MIDI synthesiser based on the SoundFont
-2 specification. TODO 
 
 
 ### External MIDI devices
