@@ -27,7 +27,7 @@ concurrency:
 jobs:
   generate_release_notes:
     name:    Generate release notes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     steps:
       - name: Check out repository
@@ -217,7 +217,7 @@ jobs:
     name: Merge release & debugger artifacts (${{ matrix.arch }} )
     needs: build_windows_release
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     strategy:
       matrix:
         # TODO reinstate ARM64 build at some point, but we'll need to build the
