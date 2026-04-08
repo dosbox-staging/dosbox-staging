@@ -48,17 +48,17 @@ tracks at 16-bit 44.1kHz, all games were using hardware synthesisers for music
 playback.
 
 These most well-known of these was the [AdLib Music Synthesizer
-Card](../sound-devices/adlib-cms-sound-blaster/#adlib-music-synthesizer-card),
+Card](sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card),
 or just **AdLib** in short, which was almost universally supported by all
 games from about 1990 onwards. Before that, the [Tandy 3
-Voice](../sound-devices/tandy/) was the only step-up from the built-in PC
+Voice](sound-devices/tandy.md) was the only step-up from the built-in PC
 speaker, but only the PCjr or Tandy versions of some games. Of course, these
 simple synthesisers could only approximate the sound of realistic
 instruments, and the result always unmistakably sounded like early electronic
 music.
 
-[Roland MT-32](../sound-devices/roland-mt-32/) and [General
-MIDI](../sound-devices/general-midi/) music of later DOS era games followed
+[Roland MT-32](sound-devices/roland-mt-32.md) and [General
+MIDI](sound-devices/general-midi.md) music of later DOS era games followed
 the same basic principle, but utilising much more expensive external sound
 modules instead. These were the top-of-the-line sound devices of the day,
 capable of convincingly emulating the sound of real instruments, and producing
@@ -89,8 +89,8 @@ of preference (most desirable options come first).
 
 <div class="compact" markdown>
 
-- [Tandy 3 Voice](../sound-devices/tandy/)
-- [PC speaker](../sound-devices/pc-speaker/)
+- [Tandy 3 Voice](sound-devices/tandy.md)
+- [PC speaker](sound-devices/pc-speaker.md)
 
 </div>
 
@@ -98,12 +98,12 @@ of preference (most desirable options come first).
 
 <div class="compact" markdown>
 
-- [Roland MT-32](../sound-devices/roland-mt-32/)
-- [Sound Blaster](../sound-devices/adlib-cms-sound-blaster/#sound-blaster-10)
-- [AdLib Music Synthesizer Card](../sound-devices/adlib-cms-sound-blaster/#adlib-music-synthesizer-card)
-- [Tandy 3 Voice](../sound-devices/tandy/)
-- [Game Blaster / Creative Music System (C/MS)](../sound-devices/adlib-cms-sound-blaster#creative-music-system-cms-game-blaster)
-- [PC speaker](../sound-devices/pc-speaker/)
+- [Roland MT-32](sound-devices/roland-mt-32.md)
+- [Sound Blaster](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-10)
+- [AdLib Music Synthesizer Card](sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card)
+- [Tandy 3 Voice](sound-devices/tandy.md)
+- [Game Blaster / Creative Music System (C/MS)](sound-devices/adlib-cms-sound-blaster.md#creative-music-system-cms-game-blaster)
+- [PC speaker](sound-devices/pc-speaker.md)
 
 </div>
 
@@ -111,12 +111,12 @@ of preference (most desirable options come first).
 
 <div class="compact" markdown>
 
-- [General MIDI](../sound-devices/general-midi/)
-- [Roland MT-32](../sound-devices/roland-mt-32/)
-- [Gravis UltraSound](../sound-devices/gravis-ultrasound/)
-- [Sound Blaster 16](../sound-devices/adlib-cms-sound-blaster/#sound-blaster-16)
-- [Sound Blaster Pro](../sound-devices/adlib-cms-sound-blaster/#sound-blaster-pro) / [Sound Blaster Pro 2.0](../sound-devices/adlib-cms-sound-blaster/#sound-blaster-pro-20)
-- [Sound Blaster](../sound-devices/adlib-cms-sound-blaster/#sound-blaster-10)
+- [General MIDI](sound-devices/general-midi.md)
+- [Roland MT-32](sound-devices/roland-mt-32.md)
+- [Gravis UltraSound](sound-devices/gravis-ultrasound.md)
+- [Sound Blaster 16](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16)
+- [Sound Blaster Pro](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro) / [Sound Blaster Pro 2.0](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro-20)
+- [Sound Blaster](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-10)
 
 </div>
 

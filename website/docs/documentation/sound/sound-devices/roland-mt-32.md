@@ -124,7 +124,7 @@ Alternatively, you can create `mt32-roms` subfolders in your individual game
 folders to hold these ROMs, then DOSBox will find them when started from these
 game folders.
 
-You can customise where DOSBox looks for these ROMs, see the [romdir](romdir)
+You can customise where DOSBox looks for these ROMs, see the [romdir](#romdir)
 configuration setting for further details.
 
 
@@ -266,7 +266,7 @@ Roland MT-32 settings are to be configured in the `[mt32]` section.
 
     - `off` *default*{ .default } -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
       for details.
 
 

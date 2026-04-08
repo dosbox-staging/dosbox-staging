@@ -19,7 +19,7 @@ a lot less configuration than with older DOSBox versions. Most games and
 applications require no tweaking and will work fine with the stock
 settings. However, the extensive configuration options and advanced features
 are available if you wish to delve deeper. Please refer to the [Feature
-highlights](../index.md#feature-highlights) on our front page to learn more
+highlights](../index.md) on our front page to learn more
 about these.
 
 The key features for developers are summarised [here](https://github.com/dosbox-staging/dosbox-staging?tab=readme-ov-file#key-features-for-developers).

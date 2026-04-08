@@ -58,7 +58,7 @@ Gravis UltraSound settings are to be configured in the `[gus]` section.
     - `on` *default*{ .default } -- Filter the output.
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
       for details.
 
 
