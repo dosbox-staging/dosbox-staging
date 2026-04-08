@@ -323,6 +323,103 @@ sbtype = sbpro1
     This is the only card supported by the known OEM releases of Microsoft Windows
     3.0a with Multimedia Extensions.
 
+??? note "Games with dual OPL2 stereo music"
+
+    The following games are known to support stereo dual OPL2 music when
+    configured for the Sound Blaster Pro (`sbtype = sbpro1`). Select
+    "Sound Blaster Pro" (or just "Sound Blaster" in some cases) in the game's
+    sound setup to hear stereo OPL.
+
+    <div class="compact" markdown>
+
+    - 11th Hour, The
+    - Amberstar
+    - Azrael's Tear
+    - B-17 Flying Fortress
+    - Battle Isle 2200
+    - BattleTech: The Crescent Hawks' Revenge
+    - Blackthorne
+    - Body Blows
+    - Castle of Dr. Brain
+    - Cobra Mission
+    - Command Adventures: Starship
+    - Conquests of the Longbow
+    - Darklands
+    - David Leadbetter's Greens
+    - Death Gate
+    - Der Clou (The Clue!)
+    - Discworld
+    - Dragonsphere
+    - Dune II
+    - Dungeon Master II
+    - EcoQuest: The Search for Cetus
+    - Elvira: Mistress of the Dark
+    - F-117A Nighthawk Stealth Fighter 2.0
+    - F-15 Strike Eagle III
+    - Fleet Defender
+    - Formula One Grand Prix
+    - Gobliins 2
+    - Gods
+    - Golden Axe
+    - Gunship 2000
+    - Harrier Jump Jet
+    - Heroes of Might and Magic 2
+    - Hi-Octane
+    - Hocus Pocus
+    - Hoyle's Official Book of Games Volume 3
+    - Indiana Jones and the Fate of Atlantis
+    - Inherit The Earth: Quest For The Orb
+    - Jill of the Jungle
+    - Jones in the Fast Lane
+    - King's Quest V
+    - Knights of Xentar
+    - Legend of Kyrandia
+    - Leisure Suit Larry 1 VGA
+    - Leisure Suit Larry 5
+    - Leisure Suit Larry 6
+    - Lord of the Rings Volume 1
+    - Lord of the Rings Volume 2
+    - Master of Magic
+    - Master of Orion
+    - Mixed-Up Mother Goose
+    - Mixed-Up Fairy Tales
+    - Pirates! Gold
+    - Police Quest III
+    - Prince of Persia 2
+    - Quest for Glory II
+    - Quest for Glory IV
+    - Return of the Phantom
+    - Settlers II, The
+    - Sid Meier's Civilization
+    - Sid Meier's Colonization
+    - Sid Meier's Railroad Tycoon Deluxe
+    - Silpheed
+    - Space Quest I VGA
+    - Space Quest III
+    - Space Quest IV
+    - Special Forces
+    - Star Wars: Dark Forces
+    - Stone Age
+    - Street Fighter II
+    - Strike Commander
+    - Stronghold
+    - Summer Challenge
+    - Supaplex
+    - System Shock
+    - Theme Hospital
+    - Ultima Underworld
+    - Ultima Underworld II
+    - William Shatner's TekWar
+    - Wing Commander
+    - Winter Challenge
+    - Witchhaven
+    - Witchhaven II
+    - Wolf
+    - X-Com: UFO Defense
+    - Xatax
+    - Z
+
+    </div>
 
 
 ## Sound Blaster Pro 2.0
@@ -353,6 +450,45 @@ sbtype = sbpro2
     in the game's sound setup. Failing to do so will produce mono OPL sound at
     best, or no sound at all at worst.
 
+??? note "Games with OPL3 stereo music"
+
+    The following games are known to support OPL3 stereo music. Configure the
+    game for the Sound Blaster Pro 2.0 (`sbtype = sbpro2`) or Sound Blaster 16
+    (`sbtype = sb16`) to hear stereo OPL3 output.
+
+    <div class="compact" markdown>
+
+    - Cybersphere
+    - Dark Forces
+    - Darklands
+    - Descent
+    - Descent 2 (if CD audio is disabled)
+    - Doom (requires `SET DMXOPTION=-phase -opl3` in the autoexec)
+    - Doom 2 (requires `SET DMXOPTION=-phase -opl3` in the autoexec)
+    - Dune (on AdLib Gold)
+    - Dungeon Master 2
+    - Fleet Defender
+    - FlixMix
+    - Gabriel Knight
+    - Hexen (requires `SET DMXOPTION=-phase -opl3` in the autoexec)
+    - King's Quest VI
+    - Lost Vikings, The
+    - Magic Carpet 2
+    - Sam & Max Hit the Road
+    - Settlers II, The
+    - Sid Meier's Civilization (requires updated sound drivers)
+    - SimCity 2000
+    - SlipSpeed
+    - Stonekeep
+    - System Shock
+    - Tetris Classic
+    - Theme Hospital
+    - TIE Fighter
+    - WarCraft II
+    - Xatax
+
+    </div>
+
 
 ## Sound Blaster 16
 
@@ -377,6 +513,59 @@ Use the following setting to enable Sound Blaster 16 emulation:
 [sblaster]
 sbtype = sb16
 ```
+
+??? note "Games with true 16-bit digital audio"
+
+    While most games advertised Sound Blaster 16 support, the majority only
+    played back 8-bit samples due to floppy disk storage constraints. Starting
+    around 1995, CD-ROM titles began incorporating genuine 16-bit recordings,
+    typically at 22 kHz. The jump from 8-bit to 16-bit is noticeable primarily
+    as reduced background noise; the higher sampling rate often matters more to
+    the perceived audio quality than the bit depth alone.
+
+    The following games are known to use true 16-bit digital audio with the
+    Sound Blaster 16 (`sbtype = sb16`):
+
+    <div class="compact" markdown>
+
+    - AH-64D Longbow
+    - Blood
+    - Command & Conquer
+    - Command & Conquer: Red Alert
+    - Crusader: No Remorse
+    - Crusader: No Regret
+    - Descent II
+    - Duke Nukem 3D
+    - Dungeon Keeper
+    - EcoQuest 2
+    - Eradicator
+    - Fade to Black
+    - Freddy Pharkas
+    - FX Fighter
+    - Gabriel Knight
+    - Gabriel Knight 2
+    - Hi-Octane
+    - King's Quest VII
+    - Leisure Suit Larry 6
+    - M.A.X.
+    - Mission Critical
+    - Pepper's Adventures in Time
+    - Police Quest IV
+    - Quake
+    - Quest for Glory IV
+    - Rise of the Triad
+    - Shadow Warrior
+    - Shattered Steel
+    - Slater and Charlie Go Camping
+    - Space Quest 6
+    - Star Trek: The Next Generation
+    - Torin's Passage
+    - Under a Killing Moon
+    - The Pandora Directive
+    - Wing Commander III
+    - Wing Commander IV
+
+    </div>
 
 
 ## AdLib Gold 1000
