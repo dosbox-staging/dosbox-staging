@@ -1,0 +1,48 @@
+// SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+#include "manual.h"
+
+#include "misc/support.h"
+#include "more_output.h"
+#include "utils/checks.h"
+
+#include <SDL_misc.h>
+
+CHECK_NARROWING();
+
+void MANUAL::Run(void)
+{
+	// Print usage
+	if (HelpRequested()) {
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_MANUAL_HELP"));
+		output.AddString("\n");
+		output.AddString(MSG_Get("PROGRAM_MANUAL_HELP_LONG"));
+		output.Display();
+		return;
+	}
+
+	const auto url =
+	        std::string{"file://"} +
+	        get_resource_path("docs/manual/about-this-manual.html").string();
+
+	if (SDL_OpenURL(url.c_str()) == -1) {
+		SDL_OpenURL("https://www.dosbox-staging.org/manual/");
+	}
+}
+
+void MANUAL::AddMessages()
+{
+	MSG_Add("PROGRAM_MANUAL_HELP",
+	        "Open the DOSBox Staging user manual in the default browser.\n");
+
+	MSG_Add("PROGRAM_MANUAL_HELP_LONG",
+	        "Usage:\n"
+	        "  [color=light-green]manual[reset]\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - This will open an offline copy of the user manual bundled with your DOSBox\n"
+	        "    Staging installation; you don't need an internet connection to read the\n"
+	        "    manual.\n");
+}
