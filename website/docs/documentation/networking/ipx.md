@@ -1,5 +1,7 @@
 # IPX
 
+## Overview
+
 IPX was *the* LAN protocol for DOS multiplayer gaming. If you ever hauled
 your PC to a friend's house for a LAN party — pizza, CRTs, and a tangle of
 coaxial cable — IPX is what made *Doom*, *Duke Nukem 3D*, *Warcraft II*,

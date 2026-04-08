@@ -97,7 +97,7 @@ pages.
 
 ##### `--noautoexec`
 
-:   Don't run DOS commands from any `[autoexec]` sections.
+:   Don't run DOS commands from any [autoexec](autoexec.md) sections.
 
 
 ##### `--exit`
@@ -107,7 +107,7 @@ pages.
 
 ##### `--fullscreen`
 
-:   Start in fullscreen mode.
+:   Start in [fullscreen](graphics/display-and-window.md#fullscreen) mode.
 
 
 ##### `--lang <lang_file>`
@@ -152,7 +152,7 @@ pages.
 
 ##### `--startmapper`
 
-:   Launch the key mapper GUI directly.
+:   Launch the key mapper GUI directly. See [Keyboard shortcuts](shortcuts.md).
 
 
 ##### `--erasemapper`

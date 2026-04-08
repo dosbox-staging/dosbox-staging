@@ -116,7 +116,7 @@ TODO image
     To easily switch between a built-in and an external MIDI device per game
     (typically between the built-in MT-32 emulation and Roland's Sound Canvas
     VA running in an external MIDI host program), you can use the [layered
-    configuration approach](TODO) to your advantage.
+    configuration approach](../configuration.md#config-layering) to your advantage.
 
     As an example, to easily switch between the built-in MT-32 emulation and
     an external MIDI device that contains "loopMIDI" in its name, put this

@@ -1,5 +1,7 @@
 # Serial ports
 
+## Overview
+
 DOSBox Staging emulates four COM (serial) ports, the same ones DOS programs
 used for modems, serial mice, and direct cable connections.
 
@@ -14,7 +16,8 @@ instances over TCP without emulating the modem handshake. This is the
 simplest way to get head-to-head play working.
 
 You can also attach a serial mouse to a COM port for the rare game that
-specifically requires one, rather than using the built-in PS/2 mouse driver.
+specifically requires one, rather than using the built-in PS/2
+[mouse](../input/mouse.md) driver.
 
 
 ## Configuration settings
