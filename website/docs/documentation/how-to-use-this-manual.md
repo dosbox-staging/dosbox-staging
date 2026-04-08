@@ -64,6 +64,9 @@ Practical information about operating the emulator day-to-day.
   and MIDI capture.
 - [Web server](webserver.md) --- The built-in web interface for remote
   control.
+- [Running Windows 3.1](windows-31.md) --- Installing and configuring
+  Windows 3.1 inside DOSBox Staging, including video, audio, MIDI, and mouse
+  driver setup.
 
 
 ### System, graphics, sound, input, networking
