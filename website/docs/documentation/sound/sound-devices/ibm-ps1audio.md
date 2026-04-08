@@ -6,7 +6,7 @@ like the PCjr or Tandy 1000, as they all use the same or similar TI sound
 chips. By the time the PS/1 Audio card was released, the Sound Blaster was
 already available, making it largely obsolete.
 
-## Mixer channels
+### Mixer channels
 
 The PS/1 Audio synthesiser outputs to the **PS1** mixer channel, and the DAC
 to the **PS1DAC** channel.
@@ -67,7 +67,7 @@ IBM PS/1 Audio settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 160 Hz + 1st order low-pass at 2.1 kHz).
+    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 160 Hz, and 1st order low-pass at 2.1 kHz).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
@@ -80,7 +80,7 @@ IBM PS/1 Audio settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 160 Hz + 1st order low-pass at 2.1 kHz).
+    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 160 Hz, and 1st order low-pass at 2.1 kHz).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
