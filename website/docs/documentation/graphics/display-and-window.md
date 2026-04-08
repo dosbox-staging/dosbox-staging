@@ -18,13 +18,57 @@ at all — the out-of-the-box settings work well for the vast majority of
 games.
 
 
+## Presentation modes
+
+DOSBox presents frames when new content is available, which means the
+effective frame rate can vary between 0 FPS (if the screen content isn't
+changing) and the DOS vertical refresh rate (typically up to ~70 Hz). This is
+**Variable Frame Rate (VFR)** presentation.
+
+DOSBox Staging also supports **Constant Frame Rate (CFR)** presentation, which
+presents frames at a constant rate defined by the emulated DOS rate, as well
+as two hybrid modes:
+
+- **Synced CFR** --- Constant frame rate synchronised with the host's refresh
+  rate. Presents only the most recently updated frame when the DOS rate
+  exceeds the host rate.
+
+- **Throttled VFR** --- Variable frame rate throttled to the display's rate.
+  Presents only the most recently updated frame when the DOS rate exceeds the
+  host rate.
+
+By default, DOSBox Staging inspects runtime conditions and picks the optimal
+mode. Power users can force a specific mode via the
+[presentation_mode](#presentation_mode) setting.
+
+<figure markdown>
+  ![Earthworm Jim (synced CFR)](https://www.dosbox-staging.org/static/images/release-notes/0.79.0/synced-cfr-earthworm-jim.png){ loading=lazy }
+
+  <figcaption markdown>
+  Synced CFR mode selected due to vsync-enforced video drivers
+  </figcaption>
+</figure>
+
+
+## Window transparency
+
+The DOSBox Staging window can be made transparent so you can see through it to
+other windows behind it. Set the
+[window_transparency](#window_transparency) value between `0` (fully opaque,
+default) and `90` (highly transparent).
+
+![Transparent window](https://www.dosbox-staging.org/static/images/release-notes/0.79.0/transparent-window.png){ loading=lazy }
+
+
 ## Configuration settings
 
 You can set the display and window parameters in the `[sdl]` configuration
 section.
 
 
-##### display
+### Window
+
+##### fullscreen
 
 :   Number of display to use; values depend on OS and user settings (`0` by
     default).
@@ -45,126 +89,6 @@ section.
 
     - `standard` *default*{ .default } -- Use the standard fullscreen mode
       of your operating system.
-
-
-##### mapperfile
-
-:   Path to the mapper file (`mapper-sdl2-XYZ.map` by default, where XYZ is
-    the current version). Pre-configured maps are bundled in
-    `resources/mapperfiles`. These can be loaded by name, e.g., with
-    `mapperfile = xbox/xenon2.map`.
-
-    !!! note
-
-        The `--resetmapper` command line option only deletes the default
-        mapper file.
-
-
-##### mute_when_inactive
-
-:   Mute the sound when the window is inactive.
-
-    Possible values: `on`, `off` *default*{ .default }
-
-
-##### output
-
-:   Rendering backend to use for graphics output. Only the `opengl` backend
-    has shader support and is thus the preferred option. The `texture` backend
-    is only provided as a last resort fallback if OpenGL is not available or
-    the OpenGL driver is not Core Profile 3.3 compliant.
-
-    Possible values:
-
-    <div class="compact" markdown>
-
-    - `opengl` *default*{ .default } -- OpenGL backend with shader support.
-    - `texture` -- SDL's texture backend with bilinear interpolation.
-    - `texturenb` -- SDL's texture backend with nearest-neighbour
-      interpolation (no bilinear).
-
-    </div>
-
-
-##### pause_when_inactive
-
-:   Pause emulation when the window is inactive.
-
-    Possible values: `on`, `off` *default*{ .default }
-
-
-##### presentation_mode
-
-:   Set the frame presentation mode.
-
-    Possible values:
-
-    - `auto` *default*{ .default } -- Use `host-rate` if
-      [vsync](#vsync) is enabled, otherwise use `dos-rate`.
-    - `dos-rate` -- Present frames at the refresh rate of the emulated DOS
-      video mode. This is the best option on variable refresh rate (VRR)
-      monitors. [vsync](#vsync) is not available with `dos-rate`
-      presentation.
-    - `host-rate` -- Present frames at the refresh rate of the host display.
-      Use this with [vsync](#vsync) enabled on fixed refresh rate monitors
-      for fast-paced games where tearing is a problem. `host-rate` combined
-      with [vsync](#vsync) disabled can be a good workaround on systems that
-      always enforce blocking vsync at the OS level (e.g., forced 60 Hz
-      vsync could cause problems with VGA games presenting frames at 70 Hz).
-
-
-##### screensaver
-
-:   Use `allow` or `block` to override the `SDL_VIDEO_ALLOW_SCREENSAVER`
-    environment variable which usually blocks the OS screensaver while the
-    emulator is running.
-
-    Possible values: `auto` *default*{ .default }, `allow`, `block`
-
-
-##### texture_renderer
-
-:   Render driver to use in `texture` output mode. Use
-    `texture_renderer = auto` for an automatic choice (`auto` by default).
-
-
-##### vsync
-
-:   Set the host video driver's vertical synchronization (vsync) mode.
-
-    Possible values:
-
-    - `off` *default*{ .default } -- Disable vsync in both windowed and
-      fullscreen mode. This is the best option on variable refresh rate (VRR)
-      monitors running in VRR mode to get perfect frame pacing, no tearing,
-      and low input lag. On fixed refresh rate monitors (or VRR monitors in
-      fixed refresh mode), disabling vsync might cause visible tearing in
-      fast-paced games.
-
-    - `on` -- Enable vsync in both windowed and fullscreen mode. This can
-      prevent tearing in fast-paced games but will increase input lag. Vsync
-      is only available with `host-rate` presentation (see
-      [presentation_mode](#presentation_mode)).
-
-    - `fullscreen-only` -- Enable vsync in fullscreen mode only. This might
-      be useful if your operating system enforces vsync in windowed mode and
-      the `on` setting causes audio glitches or other issues in windowed mode
-      only. Vsync is only available with `host-rate` presentation (see
-      [presentation_mode](#presentation_mode)).
-
-    !!! note
-
-        - For perfectly smooth scrolling in 2D games (e.g., in Pinball Dreams
-          and Epic Pinball), you'll need a VRR monitor running in VRR mode
-          and vsync disabled. The scrolling in 70 Hz VGA games will always
-          appear juddery on 60 Hz fixed refresh rate monitors even with vsync
-          enabled.
-
-        - Usually, you'll only get perfectly smooth 2D scrolling in
-          fullscreen mode, even on a VRR monitor.
-
-        - For the best results, disable all frame cappers and global vsync
-          overrides in your video driver settings.
 
 
 ##### window_decorations
@@ -249,3 +173,137 @@ section.
 
 :   Set the transparency of the DOSBox Staging window (`0` by default).
     Valid range from 0 (no transparency) to 90 (high transparency).
+
+
+### Display
+
+##### display
+
+:   Number of display to use; values depend on OS and user settings (`0` by
+    default).
+
+
+##### output
+
+:   Rendering backend to use for graphics output. Only the `opengl` backend
+    has shader support and is thus the preferred option. The `texture` backend
+    is only provided as a last resort fallback if OpenGL is not available or
+    the OpenGL driver is not Core Profile 3.3 compliant.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `opengl` *default*{ .default } -- OpenGL backend with shader support.
+    - `texture` -- SDL's texture backend with bilinear interpolation.
+    - `texturenb` -- SDL's texture backend with nearest-neighbour
+      interpolation (no bilinear).
+
+    </div>
+
+
+##### texture_renderer
+
+:   Render driver to use in `texture` output mode. Use
+    `texture_renderer = auto` for an automatic choice (`auto` by default).
+
+
+### Presentation
+
+##### presentation_mode
+
+:   Set the frame presentation mode.
+
+    Possible values:
+
+    - `auto` *default*{ .default } -- Use `host-rate` if
+      [vsync](#vsync) is enabled, otherwise use `dos-rate`.
+    - `dos-rate` -- Present frames at the refresh rate of the emulated DOS
+      video mode. This is the best option on variable refresh rate (VRR)
+      monitors. [vsync](#vsync) is not available with `dos-rate`
+      presentation.
+    - `host-rate` -- Present frames at the refresh rate of the host display.
+      Use this with [vsync](#vsync) enabled on fixed refresh rate monitors
+      for fast-paced games where tearing is a problem. `host-rate` combined
+      with [vsync](#vsync) disabled can be a good workaround on systems that
+      always enforce blocking vsync at the OS level (e.g., forced 60 Hz
+      vsync could cause problems with VGA games presenting frames at 70 Hz).
+
+
+##### vsync
+
+:   Set the host video driver's vertical synchronization (vsync) mode.
+
+    Possible values:
+
+    - `off` *default*{ .default } -- Disable vsync in both windowed and
+      fullscreen mode. This is the best option on variable refresh rate (VRR)
+      monitors running in VRR mode to get perfect frame pacing, no tearing,
+      and low input lag. On fixed refresh rate monitors (or VRR monitors in
+      fixed refresh mode), disabling vsync might cause visible tearing in
+      fast-paced games.
+
+    - `on` -- Enable vsync in both windowed and fullscreen mode. This can
+      prevent tearing in fast-paced games but will increase input lag. Vsync
+      is only available with `host-rate` presentation (see
+      [presentation_mode](#presentation_mode)).
+
+    - `fullscreen-only` -- Enable vsync in fullscreen mode only. This might
+      be useful if your operating system enforces vsync in windowed mode and
+      the `on` setting causes audio glitches or other issues in windowed mode
+      only. Vsync is only available with `host-rate` presentation (see
+      [presentation_mode](#presentation_mode)).
+
+    !!! note
+
+        - For perfectly smooth scrolling in 2D games (e.g., in Pinball Dreams
+          and Epic Pinball), you'll need a VRR monitor running in VRR mode
+          and vsync disabled. The scrolling in 70 Hz VGA games will always
+          appear juddery on 60 Hz fixed refresh rate monitors even with vsync
+          enabled.
+
+        - Usually, you'll only get perfectly smooth 2D scrolling in
+          fullscreen mode, even on a VRR monitor.
+
+        - For the best results, disable all frame cappers and global vsync
+          overrides in your video driver settings.
+
+
+### Behaviour
+
+##### mute_when_inactive
+
+:   Mute the sound when the window is inactive.
+
+    Possible values: `on`, `off` *default*{ .default }
+
+
+##### pause_when_inactive
+
+:   Pause emulation when the window is inactive.
+
+    Possible values: `on`, `off` *default*{ .default }
+
+
+##### screensaver
+
+:   Use `allow` or `block` to override the `SDL_VIDEO_ALLOW_SCREENSAVER`
+    environment variable which usually blocks the OS screensaver while the
+    emulator is running.
+
+    Possible values: `auto` *default*{ .default }, `allow`, `block`
+
+
+### Other
+
+##### mapperfile
+
+:   Path to the mapper file (`mapper-sdl2-XYZ.map` by default, where XYZ is
+    the current version). Pre-configured maps are bundled in
+    `resources/mapperfiles`. These can be loaded by name, e.g., with
+    `mapperfile = xbox/xenon2.map`.
+
+    !!! note
+
+        The `--resetmapper` command line option only deletes the default
+        mapper file.
