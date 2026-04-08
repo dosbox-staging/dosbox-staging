@@ -44,4 +44,4 @@ private:
 	void WaitForKeypress() const;
 };
 
-#endif // DOSBOX_PROGRAM_SHOPIC_H
+#endif // DOSBOX_PROGRAM_SHOWPIC_H
