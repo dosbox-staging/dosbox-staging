@@ -1,4 +1,4 @@
-# Hardware resource settings
+# Hardware resources
 
 DOS has no automatic hardware detection or plug-and-play. Expansion cards like
 sound cards and network adapters each occupy a set of **hardware resources**:
