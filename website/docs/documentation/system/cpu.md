@@ -18,15 +18,17 @@ for a completely smooth experience. Late Pentium-era titles such as **Quake**
 need 50,000 to 100,000 cycles or even more. See the [cpu_cycles](#cpu_cycles)
 table for further details.
 
+TODO(CL) link game names to mobygames
+
 The `auto` setting for [core](#core) is the most sensible default — it uses the faster
 `dynamic` recompiler for protected-mode games and the more accurate `normal`
 interpreter for real-mode programs. You'll rarely need to override this.
 
 ## Protected and real mode
 
-DOS games released before about 1993 use *real mode* (the legacy 16-bit
+DOS games released before about 1993 use **real mode** (the legacy 16-bit
 programming model of the Intel 386), while games from 1993 onwards almost
-exclusively use *protected mode* (full 32-bit operation). The important
+exclusively use **protected mode** (full 32-bit operation). The important
 distinction is that most CPU-hungry games are protected mode games (e.g., FPS
 games and flight simulators), while older real mode games generally have much
 less demanding performance requirements.

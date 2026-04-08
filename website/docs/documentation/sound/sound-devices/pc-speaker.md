@@ -25,6 +25,8 @@ and **Duke Nukem** (2D), and can even produce sounds where the `discrete`
 model produces none (e.g., **Wizball**). Fall back to `discrete` only if a
 specific game has problems with the `impulse` model.
 
+TODO(CL) game links to mobygames 
+
 
 ## Configuration settings
 

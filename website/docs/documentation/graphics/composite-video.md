@@ -4,7 +4,7 @@
 
 Before dedicated RGB monitors became common in the late 1980s, many home PC
 users connected their computers to TVs or composite video monitors. The
-NTSC composite signal creates what are known as "artifact colours" —
+NTSC composite signal creates what are known as "artifact colours", which are
 interference patterns that produce up to 16 colours from CGA's usual
 4-colour palette. It sounds like a bug, but game developers deliberately
 exploited it.
@@ -16,13 +16,14 @@ composite, they transform into something surprisingly colourful and
 detailed.
 
 Early and late revision CGA cards produce slightly different artifact
-patterns. The `era` setting lets you choose which to emulate — this matters
+patterns. The `era` setting lets you choose which to emulate --- this matters
 because some games were designed for one revision or the other.
 
 DOSBox Staging automatically enables composite emulation when a game
 switches to the 640×200 composite mode. For the more common 320×200 modes,
 you'll need to set `composite = on` manually.
 
+TODO(CL) link game names to mobygames
 
 ## Configuration settings
 

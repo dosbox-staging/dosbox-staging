@@ -8,9 +8,9 @@ used for modems, serial mice, and direct cable connections.
 The most common use case is modem multiplayer. Setting a serial port to
 `modem` mode turns your internet connection into a virtual phone line ---
 dial-up multiplayer without the phone bill. Games like
-[*Doom*](https://www.mobygames.com/game/1068/doom/),
-[*Rise of the Triad*](https://www.mobygames.com/game/418/rise-of-the-triad-dark-war/),
-and [*Terminal Velocity*](https://www.mobygames.com/game/635/terminal-velocity/)
+[Doom](https://www.mobygames.com/game/1068/doom/),
+[Rise of the Triad](https://www.mobygames.com/game/418/rise-of-the-triad-dark-war/),
+and [Terminal Velocity](https://www.mobygames.com/game/635/terminal-velocity/)
 all supported modem play, and this is how you'd get them talking to each
 other today.
 

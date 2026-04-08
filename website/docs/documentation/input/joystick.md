@@ -18,6 +18,8 @@ actually matter. If your character drifts without input or the axes feel
 off, adjusting the deadzone or using the joystick calibration hotkeys (see
 [Keyboard shortcuts](../appendices/shortcuts.md)) can help sort things out.
 
+TODO(CL) link game names to mobygames
+
 
 ## Joystick calibration
 

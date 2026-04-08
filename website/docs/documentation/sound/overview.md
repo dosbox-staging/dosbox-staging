@@ -23,7 +23,7 @@ the practical gamer only needs to be familiar with the 4-5 most common ones.
 But before that, we need to gain some understanding on how audio in DOS games
 generally works.
 
-### Synthesised sound
+## Synthesised sound
 
 Initially, music and sound effects in computer games were not stored as
 digitised waveforms of audio recordings (as are WAV, FLAC and MP3 files, for
@@ -66,7 +66,7 @@ CD-quality soundtracks in the right hands. The communication between the
 computer and these external modules was also standardised.
 
 
-### Digital sound
+## Digital sound
 
 Some audio cards had ADPCM decompression capabilities
 implemented in hardware that could cut down storage requirements to a tenth,
@@ -74,11 +74,7 @@ but support was not universal across sound cards, and developers had to go
 with the least common denominator format, which was uncompressed audio.
 
 
-
-## Configuring games for audio
-
-
-### Selecting the best audio option
+## Selecting the best audio option
 
 It is a bit less confusing to look at the best audio options separately for
 the three major DOS gaming eras. Naturally, these are only general guidelines
