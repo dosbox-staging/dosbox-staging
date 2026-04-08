@@ -44,6 +44,25 @@ appropriate monitor emulation based on the current video mode:
 - `crt-auto-arcade-sharp` --- A sharper arcade variant that retains the thick
   scanlines but with the sharpness of a typical PC monitor.
 
+### When to use which
+
+- **`crt-auto`** (the default) is the right choice for the vast majority of
+  games. VGA adapters double-scan low-resolution modes (320&times;200 becomes
+  640&times;400), so on a real VGA monitor, you see tightly-packed scanlines
+  rather than thick ones. `crt-auto` reproduces this accurately.
+
+- **`crt-auto-machine`** is useful when you emulate a specific older machine
+  type (e.g., `machine = ega` or `machine = cga`). It emulates a fixed CRT
+  appropriate for that adapter, so CGA/EGA modes displayed on an emulated VGA
+  machine appear double-scanned with chunky pixels, exactly as they would on
+  real hardware.
+
+- **`crt-auto-arcade`** and **`crt-auto-arcade-sharp`** give you the thick
+  15 kHz scanline look of arcade and home computer monitors. This is a fantasy
+  option for PC games --- no real VGA monitor looked like this --- but it's fun
+  for playing DOS ports of Amiga and Atari ST games, or if you simply prefer
+  the look.
+
 Here are the shaders in action at 4K resolution (click on images to view at
 full size):
 
@@ -188,8 +207,31 @@ allowed, and integer scaling is disabled above 5.0x.
 ## Aspect ratio & viewport
 
 Most DOS games used non-square pixels and were designed for 4:3 CRT displays.
+The standard 320&times;200 VGA mode fills a 4:3 screen completely, which is
+only possible if each pixel is a slightly tall rectangle --- exactly 20% taller
+than wide, giving a pixel aspect ratio (PAR) of 1:1.2 (or 5:6). You can derive
+this from the display: 4:3 scales to 320:240, and 240 / 200 = 1.2.
+
 Aspect ratio correction is enabled by default (`aspect = auto`) so games look
-as intended.
+as intended. Without it, 320&times;200 content appears squished on modern
+square-pixel displays.
+
+A small number of DOS games need square pixels (`aspect = square-pixels`).
+These are typically European games ported from the PAL Amiga, where the
+original art was designed for square pixels at 320&times;256. Studios
+known for this include Revolution Software (*Beneath a Steel Sky*, *Lure of
+the Temptress*), Delphine Software (*Another World*, *Flashback*), and
+Coktel Vision (*Gobliiins* series). The tell-tale sign is scanned or
+hand-drawn artwork that appears vertically stretched with aspect ratio
+correction enabled.
+
+Pixels are square (1:1 PAR) in 640&times;480 and higher resolutions. A few
+other modes have their own non-square PARs: 640&times;350 EGA (1:1.37 PAR),
+640&times;200 EGA (1:2.4 PAR), and 720&times;348 Hercules (1:1.55 PAR).
+DOSBox Staging handles all of these automatically. For a more detailed
+explanation of pixel aspect ratios with worked examples, see the
+[Advanced graphics options](../../getting-started/advanced-graphics-options.md#aspect-ratios-square-pixels-black-borders)
+chapter of the getting started guide.
 
 The `stretch` mode calculates the aspect ratio from the viewport dimensions,
 allowing you to force arbitrary aspect ratios. For example, to stretch a game
