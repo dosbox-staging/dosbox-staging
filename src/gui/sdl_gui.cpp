@@ -2840,7 +2840,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "current version). Pre-configured maps are bundled in 'resources/mapperfiles'.\n"
 	        "These can be loaded by name, e.g., with 'mapperfile = xbox/xenon2.map'.\n"
 	        "\n"
-	        "Note: The '--resetmapper' command line option only deletes the default mapper\n"
+	        "Note: The '--erasemapper' command line option only deletes the default mapper\n"
 	        "      file.");
 
 	pstring = section.AddString("screensaver", Always, "auto");
