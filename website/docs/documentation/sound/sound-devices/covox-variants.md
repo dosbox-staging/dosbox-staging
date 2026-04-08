@@ -33,6 +33,23 @@ bit depth. Less common than the mono Covox, but supported by some tracker
 players and a handful of games.
 
 
+## Audio comparison
+
+Each device model has a different character due to its hardware design and
+output filtering. The Disney Sound Source, which included a small speaker
+inside it, sounds noticeably different from the unfiltered Covox.
+
+<div class="compact" markdown>
+
+| `lpt_dac` | Examples (ModPlay Pro & Star Control II's 8-bit Pkunk MOD)                                                                              |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `disney`  | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/modplay-pkunk-lpt-dac-disney.flac"> Your browser does not support the <code>audio</code> element.</audio> |
+| `covox`   | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/modplay-pkunk-lpt-dac-covox.flac"> Your browser does not support the <code>audio</code> element.</audio>  |
+| `ston1`   | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/modplay-pkunk-lpt-dac-ston1.flac"> Your browser does not support the <code>audio</code> element.</audio>  |
+
+</div>
+
+
 ## Configuration settings
 
 Parallel port DAC settings are to be configured in the `[speaker]` section.
