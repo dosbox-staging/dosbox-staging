@@ -1,9 +1,9 @@
 # PC speaker
 
-The PC speaker was the built-in speaker in every IBM PC and compatible from
-day one. It was really only meant for simple beeps and diagnostic codes, but
-it ended up as the lowest common denominator for PC game audio --- every PC
-had one, so every game could count on it being there.
+The **PC speaker** was the built-in speaker in every IBM PC and compatible
+from day one. It was really only meant for simple beeps and diagnostic codes,
+but it ended up as the lowest common denominator for PC game audio --- every
+PC had one, so every game could count on it being there.
 
 Technically, it's a single-channel square-wave generator. Not exactly hi-fi.
 But with clever programming tricks, developers managed to coax surprisingly

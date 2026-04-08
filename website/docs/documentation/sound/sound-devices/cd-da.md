@@ -6,13 +6,22 @@ card entirely, delivering studio-quality pre-recorded music directly from the
 game disc. DOSBox Staging supports CD-DA playback from disc images with audio
 tracks in various formats.
 
+CD-DA playback requires no special configuration. Mount a disc image with
+audio tracks using the [`MOUNT` command](../../storage.md#mounting-cd-rom-images)
+and the game will handle playback automatically.
 
-## Mixer channel
+TODO physical CD-ROM
 
-CD-DA audio is output to the `CDAUDIO` mixer channel.
+### Mixer channel
+
+CD-DA audio is output to the **CDAUDIO** for mounted CD-ROM images.
+
+For physical CD-ROM devices, the **CDAUDIO** channel has numbered suffixes
+appened, (**CDAUDIO_0**, **CDAUDIO_1**, etc.). This is to avoid conflicts with
+multiple drives.
 
 
-## Supported disc image formats
+### Supported disc image formats
 
 CD-DA audio tracks are supported in the following disc image formats:
 
@@ -26,7 +35,7 @@ CD-DA audio tracks are supported in the following disc image formats:
     tracks; they cannot contain audio tracks. Use CUE/BIN for discs with audio.
 
 
-## Supported audio track formats
+### Supported audio track formats
 
 When using CUE sheets, audio tracks can reference compressed audio files
 instead of raw PCM data in BIN files. The following audio formats are
@@ -42,40 +51,3 @@ The standard Red Book audio format is 44.1 kHz, 16-bit stereo PCM. Mono audio
 tracks are automatically converted to stereo during playback.
 
 
-## CUE sheet example
-
-A typical CUE sheet for a game with data and audio tracks using compressed
-audio:
-
-```
-FILE "game_data.bin" BINARY
-  TRACK 01 MODE1/2048
-    INDEX 01 00:00:00
-FILE "track02.flac" FLAC
-  TRACK 02 AUDIO
-    INDEX 01 00:00:00
-FILE "track03.flac" FLAC
-  TRACK 03 AUDIO
-    INDEX 01 00:00:00
-```
-
-!!! tip
-
-    Converting CD audio tracks to FLAC is recommended as it provides
-    lossless compression while significantly reducing file sizes compared to
-    raw BIN files.
-
-
-## Digital Audio Extraction
-
-Some CD player software and games use Digital Audio Extraction (DAE) to read
-audio data directly from the disc rather than using the CD-ROM drive's analog
-audio output. DAE is only compatible with 44.1 kHz audio tracks; tracks at
-other sample rates will not work with DAE.
-
-
-## Configuration
-
-CD-DA playback requires no special configuration. Mount a disc image with
-audio tracks using the [`MOUNT` command](../storage.md#mounting-cd-rom-images)
-and the game will handle playback automatically.

@@ -25,7 +25,7 @@ noticeably different from one device to another — but the SC-55 is the gold
 standard for what the composer intended.
 
 For a more detailed introduction to MIDI and its role in DOS gaming, see the
-[MIDI overview](../midi.md).
+[MIDI overview](midi.md).
 
 The **Yamaha DB50XG** and **MU-series** (MU50, MU80, MU100, etc.) are
 alternative MIDI modules that offer excellent SC-55 compatibility with a more
@@ -37,40 +37,41 @@ article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-
 DOSBox Staging offers two main ways to get General MIDI playback:
 
 
-## FluidSynth
+### Sound Canvas emulation
+
+For the most accurate SC-55 reproduction, DOSBox Staging supports Roland Sound
+Canvas emulation via the Nuked SC55 CLAP audio plugin. This provides
+sample-accurate playback of the actual SC-55 sound engine --- as close to the
+real hardware as you can get without owning one.
+
+
+### FluidSynth
 
 For a step-by-step walkthrough of setting up FluidSynth with a specific game,
 see the [Star Wars: Dark
 Forces](../../../getting-started/star-wars-dark-forces.md#setting-up-general-midi-sound)
 chapter of the getting started guide.
 
-FluidSynth is a real-time software MIDI synthesiser based on the SoundFont
-2 specification, and it's built right into DOSBox Staging. Load a good
-SoundFont (the bundled `default.sf2` gets you started), and you'll have
-decent GM playback without any additional hardware. For a more authentic
-Sound Canvas sound, look for SoundFonts sampled from real SC-55 hardware.
+Alternatively, you can use FluidSynth which is a MIDI synthesiser based on the SoundFont
+2 specification. TODO 
 
 
-## Sound Canvas emulation
-
-For the most accurate SC-55 reproduction, DOSBox Staging supports Roland Sound
-Canvas emulation via CLAP audio plugins. This provides sample-accurate
-playback of the actual SC-55 sound engine --- as close to the real hardware as
-you can get without owning one.
-
-
-## External MIDI devices
+### External MIDI devices
 
 If you have a real MIDI device connected to your computer, DOSBox Staging
 can send MIDI output directly to it. This is the ultimate option for
 enthusiasts who own an actual SC-55 or other hardware synthesiser.
 
 
+### Mixer channels
+
+Sound Canvas outputs to the **SOUNDCANVAS** mixer channel. and FluidSynth to
+the **FSYNTH** mixer channel.
+
+
 ## Configuration settings
 
 ### FluidSynth
-
-FluidSynth outputs to the **FSYNTH** mixer channel.
 
 FluidSynth settings are to be configured in the `[fluidsynth]` section.
 
@@ -166,8 +167,6 @@ FluidSynth settings are to be configured in the `[fluidsynth]` section.
 
 
 ### Sound Canvas
-
-Sound Canvas outputs to the **SOUNDCANVAS** mixer channel.
 
 Sound Canvas settings are to be configured in the `[soundcanvas]` section.
 

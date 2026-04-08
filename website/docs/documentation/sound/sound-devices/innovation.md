@@ -5,6 +5,10 @@ Released in April 1989 by Innovation Computer Corporation, utilizing the MOS
 
 Very few games support this sound option.
 
+### Mixer channel
+
+The Innovation SSI-2001 outputs to the **INNOVATION** mixer channel.
+
 
 ## Compatible games
 
@@ -25,11 +29,6 @@ Very few games support this sound option.
 - [Windwalker](https://www.mobygames.com/game/1636/windwalker/)
 
 </div>
-
-
-### Mixer channel
-
-The Innovation SSI-2001 outputs to the **INNOVATION** mixer channel.
 
 
 ## Configuration parameters
