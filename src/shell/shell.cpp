@@ -711,38 +711,37 @@ void SHELL_InitAndRun()
 	MSG_Add("SHELL_CMD_SUBST_FAILURE", "SUBST failed, the target drive may already exist.\nNote it is only possible to use SUBST on local drives.");
 
 	MSG_Add("SHELL_STARTUP_BEGIN",
-	        "[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗\n"
-	        "║ [color=light-green]Welcome to DOSBox Staging %-40s[color=white] ║\n"
-	        "║                                                                    ║\n"
-	        "║ For the [color=cyan]Getting Started guide[color=white] for new users type: [color=yellow]GUIDE[color=white]            ║\n"
-	        "║ For the the [color=cyan]User Manual[color=white] type: [color=yellow]MANUAL[color=white]                               ║\n"
-	        "║                                                                    ║\n"
-	        "║ To adjust the emulated CPU speed, use [color=light-red]%s+F11[color=white] and [color=light-red]%s+F12[color=white].%s%s       ║\n"
-	        "║ To activate the keymapper [color=light-red]%s+F1[color=white].%s                                 ║\n"
-	        "║                                                                    ║\n");
+	        "[bgcolor=blue][color=white]╔═══════════════════════════════════════════════════════════════════════╗\n"
+	        "║ [color=light-green]Welcome to DOSBox Staging %-40s[color=white]    ║\n"
+	        "║                                                                       ║\n"
+	        "║ For the [color=yellow]Getting Started guide[color=white] for new users, run the [color=light-green]GUIDE[color=white] command.   ║\n"
+	        "║ For the [color=yellow]User Manual[color=white], run the [color=light-green]MANUAL[color=white] command.                          ║\n"
+	        "║                                                                       ║\n"
+	        "║ To adjust the emulated CPU speed, press [color=light-red]%s+F11[color=white] and [color=light-red]%s+F12[color=white].%s%s        ║\n"
+	        "║ To open the keymapper, press [color=light-red]%s+F1[color=white].%s                                 ║\n"
+	        "║                                                                       ║\n");
 
 	MSG_Add("SHELL_STARTUP_CGA",
-	        "║ DOSBox supports Composite CGA mode.                                ║\n"
-	        "║ Use [color=light-red]F12[color=white] to set composite output ON, OFF, or AUTO (default).        ║\n"
-	        "║ [color=light-red]F10[color=white] selects the CGA settings to change and [color=light-red](%s+)F11[color=white] changes it.   ║\n"
-	        "║                                                                    ║\n");
+	        "║ Press [color=light-red]F12[color=white] to set composite output ON, OFF, or AUTO (default).         ║\n"
+	        "║ [color=light-red]F10[color=white] selects the composite setting to change and [color=light-red](%s+)F11[color=white] changes it. ║\n"
+	        "║                                                                       ║\n");
 
 	MSG_Add("SHELL_STARTUP_CGA_MONO",
-	        "║ Use [color=light-red]F11[color=white] to cycle through green, amber, white and paper-white mode, ║\n"
-	        "║ and [color=light-red]%s+F11[color=white] to change contrast/brightness settings.                ║\n"
-	        "║                                                                    ║\n");
+	        "║ Press [color=light-red]F11[color=white] to cycle through green, amber, white and paper-white mode,  ║\n"
+	        "║ and [color=light-red]%s+F11[color=white] to change contrast/brightness settings.                   ║\n"
+	        "║                                                                       ║\n");
 
 	MSG_Add("SHELL_STARTUP_HERC",
-	        "║ Use [color=light-red]F11[color=white] to cycle through white, amber, and green monochrome color. ║\n"
-	        "║                                                                    ║\n");
+	        "║ Press [color=light-red]F11[color=white] to cycle through white, amber, and green monochrome color.  ║\n"
+	        "║                                                                       ║\n");
 
 	MSG_Add("SHELL_STARTUP_DEBUG",
-	        "║ Press [color=light-red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. ║\n"
-	        "║                                                                    ║\n");
+	        "║ Press [color=light-red]%s+Pause[color=white] to enter the debugger or start the exe with [color=light-green]DEBUG[color=white].    ║\n"
+	        "║                                                                       ║\n");
 
 	MSG_Add("SHELL_STARTUP_END",
-	        "║ [color=yellow]https://www.dosbox-staging.org[color=white]                                     ║\n"
-	        "╚════════════════════════════════════════════════════════════════════╝[reset]\n"
+	        "║ [color=yellow]https://www.dosbox-staging.org[color=white]                                        ║\n"
+	        "╚═══════════════════════════════════════════════════════════════════════╝[reset]\n"
 	        "\n");
 
 	MSG_Add("SHELL_STARTUP_SUB",
