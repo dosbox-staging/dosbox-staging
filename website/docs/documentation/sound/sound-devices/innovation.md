@@ -1,30 +1,30 @@
 # Innovation SSI-2001
 
-Released in April 1989 by Innovation Computer Corporation, utilizing the MOS
-6581 (aka SID) chip, as found in the Commodore 64.
+The ultra-rare **Innovation SSI-2001** card was released in April 1989 by
+Innovation Computer Corporation, utilizing the MOS 6581 (aka SID) chip, as
+found in the Commodore 64.
 
-Very few games support this sound option.
+Only a small handful of games support this truly unique sound option.
 
+??? note "Games with Innovation SS-2001 support"
 
-## Compatible games
+    <div class="compact" markdown>
 
-<div class="compact" markdown>
+    - [Airball](https://www.mobygames.com/game/44/airball/)
+    - [Bad Blood](https://www.mobygames.com/game/2127/bad-blood/)
+    - [Battle Chess II: Chinese Chess](https://www.mobygames.com/game/1301/battle-chess-ii-chinese-chess/)
+    - [BattleTech: The Crescent Hawks' Revenge](https://www.mobygames.com/game/233/battletech-the-crescent-hawks-revenge/)
+    - [F-19 Stealth Fighter](https://www.mobygames.com/game/512/f-19-stealth-fighter/)
+    - [Falcon A.T.](https://www.mobygames.com/game/1628/falcon-at/)
+    - [Harpoon](https://www.mobygames.com/game/8308/harpoon/)
+    - [Joe Montana Football](https://www.mobygames.com/game/21183/joe-montana-football/)
+    - [J.R.R. Tolkien's The Lord of the Rings, Vol. I](https://www.mobygames.com/game/3870/jrr-tolkiens-the-lord-of-the-rings-vol-i/)
+    - [Red Storm Rising](https://www.mobygames.com/game/1655/red-storm-rising/)
+    - [Super Jeopardy!](https://www.mobygames.com/game/33449/super-jeopardy/)
+    - [Ultima VI: The False Prophet](https://www.mobygames.com/game/104/ultima-vi-the-false-prophet/)
+    - [Windwalker](https://www.mobygames.com/game/1636/windwalker/)
 
-- [Airball](https://www.mobygames.com/game/44/airball/)
-- [Bad Blood](https://www.mobygames.com/game/2127/bad-blood/)
-- [Battle Chess II: Chinese Chess](https://www.mobygames.com/game/1301/battle-chess-ii-chinese-chess/)
-- [BattleTech: The Crescent Hawks' Revenge](https://www.mobygames.com/game/233/battletech-the-crescent-hawks-revenge/)
-- [F-19 Stealth Fighter](https://www.mobygames.com/game/512/f-19-stealth-fighter/)
-- [Falcon A.T.](https://www.mobygames.com/game/1628/falcon-at/)
-- [Harpoon](https://www.mobygames.com/game/8308/harpoon/)
-- [Joe Montana Football](https://www.mobygames.com/game/21183/joe-montana-football/)
-- [J.R.R. Tolkien's The Lord of the Rings, Vol. I](https://www.mobygames.com/game/3870/jrr-tolkiens-the-lord-of-the-rings-vol-i/)
-- [Red Storm Rising](https://www.mobygames.com/game/1655/red-storm-rising/)
-- [Super Jeopardy!](https://www.mobygames.com/game/33449/super-jeopardy/)
-- [Ultima VI: The False Prophet](https://www.mobygames.com/game/104/ultima-vi-the-false-prophet/)
-- [Windwalker](https://www.mobygames.com/game/1636/windwalker/)
-
-</div>
+    </div>
 
 
 ## Mixer channel

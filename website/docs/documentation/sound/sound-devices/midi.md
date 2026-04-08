@@ -1,19 +1,19 @@
 # MIDI
 
-Between about 1988 and 1994, MIDI music was *the* ultimate high-end audio
+Between about 1988 and 1994, **MIDI music** was *the* ultimate high-end audio
 option in DOS gaming, offering never-heard-before realism and CD quality audio
 fidelity. Not many could afford the high price tag of MIDI sound modules back
-in the day --- they often sold for 3 to 5 times higher as a Sound Blaster card.
-But thanks to the wonders of emulation, now all DOS enthusiasts can experience
-MIDI music nirvana in its full glory!
+in the day --- they often sold for 3 to 5 times higher as a Sound Blaster
+card. But thanks to the wonders of emulation, now all DOS enthusiasts can
+experience MIDI music nirvana in its full glory!
 
 Because MIDI plays such a pivotal role in DOS gaming history, it is important
 to understand its origins and how it works at a basic level.
 
 ## A brief introduction to MIDI
 
-The MIDI standard (Musical Instrument Digital Interface) was created in the
-early 1980s to allow audio equipment from different manufacturers to
+The **MIDI standard (Musical Instrument Digital Interface)** was created in
+the early 1980s to allow audio equipment from different manufacturers to
 communicate with each other. Originally aimed at the professional market, it
 soon found its way into home studios and computer games thanks to the home
 computer revolution.
@@ -44,7 +44,7 @@ Music System and AdLib synthesisers were used in games, only these MIDI sound
 modules were capable of producing much higher quality music using sampled
 sounds of real-world instruments.
 
-Initially, you had to buy the Roland MPU-401 MIDI interface to connect an
+Initially, you had to buy the **Roland MPU-401** MIDI interface to connect an
 external MIDI sound module to your PC. Later on, sound cards started
 incorporating integrated MPU-401 compatible interfaces, so you could connect
 the sound module directly to your sound card.
@@ -75,7 +75,7 @@ manuals and setup utilities often omit or misrepresent MIDI support.
 ## Setting up MIDI
 
 DOSBox emulates a Roland MPU-401 compatible MIDI interface which is enabled by
-default. The emulated MPU-401 operates in the so-called *Intelligent Mode*
+default. The emulated MPU-401 operates in the so-called **Intelligent Mode**
 out-of-the-box; this provides certain extra features many older games depend
 on, and more recent games that do not use these feature are generally not
 affected negatively by it.

@@ -8,9 +8,9 @@ so on --- so that music written for one GM device would sound recognisable on
 any other.
 
 The Roland SC-55, released the same year, was the first Sound Canvas module
-and quickly became the de facto standard for DOS game music. Roland's own
-"GS" (General Standard) extension sat on top of GM, adding extra
-instruments, percussion kits, and digital effects while remaining fully
+and quickly became the de facto standard for DOS game music. Roland's own **GS
+(General Standard)** extension sat on top of GM, adding extra instruments,
+percussion kits, and digital effects while remaining fully
 backwards-compatible with the core GM specification.
 
 Most DOS game composers wrote and tested their music on Roland Sound Canvas
@@ -21,7 +21,7 @@ hardware. Games like [Monkey Island
 3D](https://www.mobygames.com/game/365/duke-nukem-3d/) all sound their best
 when played through an SC-55 or a compatible device. Since different GM
 manufacturers recorded their own instrument samples, playback can sound
-noticeably different from one device to another — but the SC-55 is the gold
+noticeably different from one device to another, but the SC-55 is the gold
 standard for what the composer intended.
 
 ## The MT-32 to General MIDI transition
@@ -83,7 +83,7 @@ DOSBox Staging offers two main ways to get General MIDI playback:
 ## Sound Canvas emulation
 
 For the most accurate SC-55 reproduction, DOSBox Staging supports Roland Sound
-Canvas emulation via the Nuked SC55 CLAP audio plugin. This provides
+Canvas emulation via the **Nuked SC55 CLAP** audio plugin. This provides
 sample-accurate playback of the actual SC-55 sound engine --- as close to the
 real hardware as you can get without owning one.
 
@@ -123,7 +123,7 @@ bugs fixed. DOSBox Staging's `soundcanvas_model = auto` prefers v1.21 when
 its ROM is available. Avoid v2.00 and the Mk II versions for games that
 rely on CTF.
 
-??? note "Games that require Capital Tone Fallback for correct audio"
+??? note "Games that require Capital Tone Fallback (CTF) for correct audio"
 
     These games use GS variation tones that depend on CTF. On SC-55 v2.00
     or Mk II firmware (which lack CTF), certain instruments or percussion
@@ -147,13 +147,12 @@ rely on CTF.
 
 ## FluidSynth
 
-FluidSynth is a built-in software MIDI synthesiser that uses **SoundFont**
+**FluidSynth** is a built-in software MIDI synthesiser that uses **SoundFont**
 (`.sf2`) sample banks to generate audio. Unlike Sound Canvas emulation, it
 does not attempt to replicate any specific hardware device --- instead, the
 character of the music depends entirely on which SoundFont you load. This
-makes it very flexible but also means results vary: a good SoundFont can
-sound close to an SC-55 on many games, while a poor one can sound noticeably
-wrong.
+makes it very flexible but also means results vary: a good SoundFont can sound
+close to an SC-55 on many games, while a poor one can sound noticeably wrong.
 
 FluidSynth is lighter on CPU than Sound Canvas emulation and is a good
 option when you don't have SC-55 ROMs or when you prefer a particular

@@ -162,7 +162,7 @@ nav:
         - documentation/storage.md
         - documentation/hardware-resources.md
         - documentation/capture.md
-        - documentation/webserver.md
+        - documentation/http-api.md
         - documentation/windows-31.md
 
       - System:
