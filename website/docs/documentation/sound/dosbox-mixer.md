@@ -91,3 +91,80 @@ sections of the manual where they're described in detail.
 
 ## Mixer signal flow diagram
 
+
+## Configuration settings
+
+Mixer settings are to be configured in the `[mixer]` section. For effects
+settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#configuration-settings).
+
+
+##### blocksize
+
+:   Block size of the host audio device in sample frames (`512` by default).
+    Valid range is 64 to 8192. Should be set to power-of-two values (e.g.,
+    256, 512, 1024). Larger values might help with sound stuttering but will
+    introduce more latency. Also see [negotiate](#negotiate).
+
+
+##### compressor
+
+:   Enable the auto-leveling compressor on the master channel to prevent
+    clipping of the audio output.
+
+    Possible values: `on` *default*{ .default }, `off`
+
+
+##### denoiser
+
+:   Remove low-level residual noise from the output of the OPL synth and the
+    Roland Sound Canvas. The emulation of these devices is accurate to the
+    original hardware, which includes the emulation of very low-level
+    semi-random noise. Although this is authentic, most people would find it
+    slightly annoying.
+
+    Possible values:
+
+    - `on` *default*{ .default } -- Enable the denoiser on the OPL and
+      SOUNDCANVAS channels. The denoiser does not introduce any sound quality
+      degradation; it only removes the barely audible residual noise in quiet
+      passages.
+    - `off` -- Disable the denoiser.
+
+
+##### negotiate
+
+:   Negotiate a possibly better [blocksize](#blocksize) setting (`on` by
+    default). Enable if you're not getting audio or the sound is stuttering
+    with your `blocksize` setting. Disable to force the manually set
+    `blocksize` value.
+
+    Possible values: `on` *default*{ .default }, `off`
+
+
+##### nosound
+
+:   Enable silent mode (`off` by default). Sound is still emulated in silent
+    mode, but DOSBox outputs no sound to the host. Capturing the emulated
+    audio output to a WAV file works in silent mode.
+
+    Possible values: `on`, `off` *default*{ .default }
+
+
+##### prebuffer
+
+:   How many milliseconds of sound to render in advance on top of
+    [blocksize](#blocksize) (`20` by default). Larger values might help with
+    sound stuttering but will introduce more latency.
+
+
+##### rate
+
+:   Sample rate of DOSBox's internal audio mixer in Hz (`48000` by default).
+    Valid range is 8000 to 96000 Hz. The vast majority of consumer-grade audio
+    hardware uses a native rate of 48000 Hz.
+
+    !!! note
+
+        The OS will most likely resample non-standard sample rates to 48000 Hz
+        anyway. Recommend leaving this as-is unless you have good reason to
+        change it.
