@@ -416,13 +416,98 @@ really takes advantage of the AdLib Gold and its surround module is the
 adventure game **Dune** from 1992.
 
 Use the following settings to enable AdLib Gold 1000 emulation. Typically, you
-would use the card together with a Sound Blaster for digital audio.
+would use the card together with a Sound Blaster for digital audio. The setup
+utility of [Dune](https://en.wikipedia.org/wiki/Dune_(video_game)) should
+auto-detect AdLib Gold and the surround module correctly with these settings.
 
 ``` ini
 [sblaster]
-sbtype = sbpro2
+sbtype = sb16
 oplmode = opl3gold
 ```
+
+
+## ESS Enhanced FM Audio (ESFM)
+
+**ESFM** is the OPL3-compatible FM synthesiser found on later ESS AudioDrive
+cards. In "legacy mode", ESFM is fully compatible with the Yamaha OPL3 and
+yields almost identical output on most material. What sets it apart is its
+"native mode", which offers advanced synthesis features surpassing the OPL3's
+capabilities---it bridges the gap between synthetic-sounding OPL music and
+sample-based MIDI music.
+
+Since ESFM was released in 1995, only a handful of games support native mode,
+but in the few that do, the results sound quite spectacular.
+
+- To run ESFM in **legacy mode**, use `oplmode = esfm` with any Sound Blaster
+  model and configure the game for Sound Blaster and AdLib/OPL as usual.
+
+- To use **native mode**, set `sbtype = ess` and configure the **ESS Technology
+  ES1688, ES1788, ES1888 Enhanced FM Audio** MIDI music driver in the game's
+  setup utility (most games that support ESFM natively use the Miles Sound
+  System). For the digital audio driver, select the Sound Blaster Pro option
+  (ESS AudioDrive cards are Sound Blaster Pro compatible).
+
+``` ini
+[sblaster]
+sbtype = ess
+```
+
+### Games with ESFM Enhanced FM support
+
+<div class="compact" markdown>
+
+- 11th Hour, The
+- Advanced Civilization
+- Callahan's Crosstime Saloon
+- Gene Machine, The
+- Heaven's Dawn
+- Heroes of Might and Magic II
+- Magic Carpet 2
+- Settlers II, The
+- Shannara
+- Theme Hospital
+- WarCraft II
+- Z
+
+</div>
+
+
+### Audio comparison: ESFM vs OPL
+
+<div class="compact" markdown>
+
+| Game                                          | Audio example                                                                                                                 |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Heroes of Might and Magic II --- Title (ESFM)   | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heroes2-title-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| Heroes of Might and Magic II --- Title (OPL)  | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heroes2-title-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| Heroes of Might and Magic II --- In-game (ESFM)      | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heroes2-ingame-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| Heroes of Might and Magic II --- In-game (OPL)         | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heroes2-ingame-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| The Settlers 2 --- Track 5 (ESFM)   | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/settlers2-track5-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| The Settlers 2 --- Track 5 (OPL)    | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/settlers2-track5-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| The Settlers 2 --- Track 14 (ESFM)    | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/settlers2-track14-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| The Settlers 2 --- Track 14 (OPL)    | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/settlers2-track14-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| The Gene Machine (ESFM)  | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/the-gene-machine-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| The Gene Machine (OPL)  | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/the-gene-machine-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| Heaven's Dawn (ESFM)  | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heavens-dawn-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| Heaven's Dawn (OPL)  | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/heavens-dawn-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+
+</div>
+
+!!! tip
+
+    You can also try to "retrofit" the `ESFM.MID` driver from Miles Sound
+    System games that have it into earlier ones that don't. For example,
+    **Discworld** sounds great with the ESFM driver from **Heaven's Dawn**.
+
+    <div class="compact" markdown>
+
+    |                    |                                                                                                                     |
+    | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+    | Discworld (ESFM)   | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/discworld-kitchen-esfm.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+    | Discworld (OPL)    | <audio controls src="https://dosbox-staging.github.io/static/audio/release-notes/0.82.0/discworld-kitchen-opl.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+
+    </div>
 
 
 ## Configuration settings
@@ -721,10 +806,29 @@ The number after the `T` parameter describes the type of the card:
 
     Possible values: `on`, `off` *default*{ .default }
 
-    This should only be used as a last resort to fix popping in games that
-    play PCM audio using the OPL synthesiser on a Sound Blaster or AdLib
-    card, such as Golden Eagle (1991), Wizardry 6 (1990), and Wizardry 7
-    (1992).
+    Some games play digitised music and sound effects using the OPL (AdLib)
+    channels by rapidly changing the volume in very crude steps, similar to
+    how the Disney Sound Source and Covox LPT DAC operate. This can produce
+    annoying pops. Enable this setting to eliminate them.
+
+    Known affected games: Golden Eagle (1991), Wizardry VI: Bane of the
+    Cosmic Forge (1990), Wizardry VII (1992).
+
+    Recommended settings for **Wizardry VI** when configured for AdLib sound:
+
+    ``` ini
+    [sblaster]
+    sbtype = none
+    oplmode = opl2
+    opl_remove_dc_bias = true
+    opl_filter = lpf 2 5500
+
+    [speaker]
+    pcspeaker = off
+
+    [autoexec]
+    mixer opl 500
+    ```
 
 
 ##### oplmode
