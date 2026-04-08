@@ -16,24 +16,33 @@ location:
 | macOS | `~/Library/Preferences/DOSBox/dosbox-staging.conf` |
 | Linux | `~/.config/dosbox/dosbox-staging.conf` |
 
-Run `--printconf` to see the exact path on your system, or `--editconf` to
-open it directly in a text editor.
+Run DOSBox Staging with the [`--printconf`](command-line.md#-printconf) argument from the command line to see the exact path on your
+system. On macOS and Linux, you can use
+[`--editconf`](command-line.md#-editconf) to open it directly in a text
+editor.
 
 A **local configuration file** named `dosbox.conf` can be placed in a
 game's directory. DOSBox Staging automatically loads it when started from
 that directory, making it easy to maintain per-game settings.
+
+### Portable setup
+
+TODO
 
 
 ## Config layering
 
 Multiple config files can be loaded, and later values override earlier ones:
 
-1. The primary config file loads first (unless `--noprimaryconf` is used).
-2. A local `dosbox.conf` in the working directory loads next (unless
-   `--nolocalconf` is used).
-3. Any files specified via `--conf` on the command line load in the order
-   given.
-4. Individual `--set` overrides are applied last and take highest priority.
+1. The primary config file is loaded first (unless the
+   [`--noprimaryconf`](command-line.md#-noprimaryconf) command line parameter
+   is used).
+2. A local `dosbox.conf` in the working directory is loaded next (unless
+   [`--nolocalconf`](command-line.md#-nolocalconf) is used).
+3. Additional config files specified via [`--conf`](command-line.md#-conf) are
+   applied in the order given.
+4. Individual [`--set <setting>=<value>`](command-line.md#-set-settingvalue)
+   overrides are applied last and take highest priority.
 
 This layering system lets you keep your general preferences in the primary
 config and only override what's needed per game.
@@ -51,19 +60,36 @@ comments.
 shader = sharp
 
 [cpu]
+# Set 486 DX2/66 speed
 cpu_cycles = 25000
+
+[autoexec]
+c:
+mixer opl 50
+prince
 ```
 
 The `[autoexec]` section is special — it contains DOS commands that run at
 startup, similar to `AUTOEXEC.BAT`. It must always be the last section in
 the file. See [Autoexec](autoexec.md) for details.
 
+!!! warning "End of line comments"
+
+    You cannot use `#` for end of line comments, e.g., this will result in an
+    error:
+
+    ```ini
+    [cpu]
+    cpu_cycles = 25000  # Set 486 DX2/66 speed
+    ```
+
+
 
 ## Generating a default config
 
 If you want to start fresh, delete your primary config file (or run
-`--eraseconf`) and DOSBox Staging will create a new one with default
+[`--eraseconf`](command-line.md#-eraseconf) and DOSBox Staging will create a new one with default
 settings on next launch. You can also use
-`--printconf` to find the file and edit it manually.
+[`--printconf`](command-line.md#-printconf) to find the file and edit it manually.
 
 See [Command-line usage](command-line.md) for all available launch options.
