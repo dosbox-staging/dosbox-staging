@@ -60,7 +60,7 @@ PC speaker settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output (emulates a small speaker in an acoustic environment).
+    - `on` *default*{ .default } -- Filter the output. This emulates a small speaker in an acoustic environment using a built-in multi-stage filter.
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)

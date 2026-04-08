@@ -804,8 +804,7 @@ The number after the `T` parameter describes the type of the card:
 
 :   Filter for the Creative Music System (CMS) / Game Blaster output:
 
-    - `on` *default*{ .default } -- Filter the CMS output (1st order (6dB/oct)
-      low-pass filter at 6kHz).
+    - `on` *default*{ .default } -- Filter the CMS output. This applies a 1st order low-pass filter at 6 kHz (`lpf 1 6000`).
     - `off` -- Don't filter the CMS output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
