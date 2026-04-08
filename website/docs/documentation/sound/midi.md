@@ -15,47 +15,22 @@ to understand its origins and how it works at a basic level.
 ## A brief introduction to MIDI
 
 The MIDI standard (Musical Instrument Digital Interface) was created in the
-early 1980s with the original intention to make communication between audio
-equipment produced by different manufacturers easier. It was aimed at the
-professional market, but thanks to the home computer revolution of the 80s, it
-eventually found its way into home studios, and then into computer games as
-well.
+early 1980s to allow audio equipment from different manufacturers to
+communicate with each other. Originally aimed at the professional market, it
+soon found its way into home studios and computer games thanks to the home
+computer revolution.
 
-To understand MIDI and the motivation behind it, let's look at how a simple
-integrated synthesiser works. The synthesiser has a piano keyboard, some sort
-of electronic circuitry that generates sounds, and an integrated speaker. When
-you press keys on the keyboard, the synthesiser plays sounds through its
-little speaker.
-
-This works well if you only have a single synthesiser, but after a while
-people wanted to make things more modular. In a more flexible setup, a single
-keyboard could control one or more sound modules which would be connected to
-an audio mixer. The keyboard and the sound modules could even come from
-different manufacturers --- for this to work, the introduction of an open
-communication standard was needed, and thus MIDI was born.
-
-In the above example, whenever you press a key on the keyboard, a short MIDI
-message is transmitted to the sound module, instructing it to play a certain
-instrument at a certain pitch. Because the communication is all digital, the
-human keyboard player and the keyboard itself can be easily replaced with a
-computer. A so-called MIDI sequencer program could send thousands of MIDI
-messages at precisely timed intervals, potentially controlling a full
-orchestra's worth of musical instruments! It's easy to see how this novel
-computer-aided approach to music production and performance had completely
-revolutionised the music industry in the 80s.
+MIDI is essentially a communication protocol. When you press a key on a MIDI
+keyboard, a short message is sent to a sound module instructing it to play a
+certain instrument at a certain pitch. Because the communication is digital,
+the keyboard can be replaced with a computer --- a MIDI sequencer program can
+send thousands of precisely timed messages, controlling a full orchestra's
+worth of instruments.
 
 MIDI compositions are best viewed as the computer music equivalent of sheet
-music. A MIDI score only contains note data and abstract descriptions of
-the instruments that should play them --- the generation of the actual
-sounds is entirely the MIDI sound module's responsibility using its on-board
-samples or sound synthesis capabilities.
-
-MIDI is a great early example of a successful open-source technology --- forty
-years after its inception, it's still widely used for a variety of purposes,
-ranging from traditional music production to automating theatrical lighting
-and live sound show control.
-
-TODO(CL) too wordy, trim it down a bit to about 50-60% the length
+music --- a MIDI score only contains note data and abstract descriptions of
+the instruments, while the sound module is responsible for generating the
+actual sounds using its on-board samples or synthesis capabilities.
 
 
 ## MIDI in DOS gaming
