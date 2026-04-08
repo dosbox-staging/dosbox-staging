@@ -19,6 +19,9 @@ generic Tandy computer as follows:
 machine = tandy
 ```
 
+See [`machine`](../../system/general.md#machine) for more details on machine
+types.
+
 Later Tandy 1000 models added support for digital audio as well.
 
 ``` ini
@@ -31,7 +34,8 @@ sbtype = none
     Due to resource conflicts, DOSBox cannot emulate the Tandy DAC and Sound Blaster digital
     audio at the same time. If you want to emulate the Tandy DAC in addition
     to the Tandy synthesiser, you need to disable Sound Blaster emulation by
-    setting `sbtype` to `none` as shown above.
+    setting [`sbtype`](../sound-devices/adlib-cms-sound-blaster.md#sbtype) to
+    `none` as shown above.
 
 !!! note
 

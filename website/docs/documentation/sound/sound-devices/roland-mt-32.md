@@ -89,7 +89,7 @@ romdir = /path/to/mt32-roms
 
 !!! tip
 
-    Using the layering approach of DOSBox [configuration files], you can pick
+    Using the layering approach of DOSBox [configuration files](../../configuration.md#config-layering), you can pick
     one specific MT-32 model per game.
 
 

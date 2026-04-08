@@ -1,5 +1,7 @@
 # Rendering
 
+## Overview
+
 DOSBox Staging uses adaptive CRT shaders by default that emulate the look
 of period-appropriate monitors. A VGA game gets a VGA-style CRT look, an
 EGA game gets an EGA-era monitor, and so on. The result is surprisingly
@@ -29,10 +31,10 @@ appropriate monitor emulation based on the current video mode:
 - `crt-auto` (default) --- Prioritises developer intent and how people
   experienced games at the time. VGA games appear double-scanned (as on a real
   VGA monitor), EGA games appear single-scanned with thicker scanlines, and so
-  on, regardless of the `machine` setting.
+  on, regardless of the [`machine`](../system/general.md#machine) setting.
 
 - `crt-auto-machine` --- Emulates a fixed CRT monitor for the video adapter
-  configured via the `machine` setting. CGA and EGA modes on a VGA machine
+  configured via the [`machine`](../system/general.md#machine) setting. CGA and EGA modes on a VGA machine
   always appear double-scanned with chunky pixels, as on a real VGA adapter.
 
 - `crt-auto-arcade` --- A fantasy option that emulates a 15 kHz arcade or home
@@ -441,9 +443,9 @@ You can set the rendering parameters in the `[render]` configuration section.
       prioritises developer intent and how people experienced the games at
       the time of release. An appropriate shader variant is auto-selected
       based on the graphics standard of the current video mode and the
-      viewport size, irrespective of the `machine` setting.
+      viewport size, irrespective of the [`machine`](../system/general.md#machine) setting.
     - `crt-auto-machine` -- A variation of `crt-auto`; this emulates a fixed
-      CRT monitor for the video adapter configured via the `machine` setting.
+      CRT monitor for the video adapter configured via the [`machine`](../system/general.md#machine) setting.
     - `crt-auto-arcade` -- Emulation of an arcade or home computer monitor
       with a less sharp image and thick scanlines in low-resolution video
       modes. This is a fantasy option that never existed in real life, but it
@@ -476,8 +478,8 @@ You can set the rendering parameters in the `[render]` configuration section.
 
     !!! note
 
-        Start DOSBox Staging with the `--list-shaders` command line option to
-        see the full list of available shaders. You can also use an absolute
+        Start DOSBox Staging with the [`--list-shaders`](../command-line.md#-list-shaders)
+        command line option to see the full list of available shaders. You can also use an absolute
         or relative path to a file. In all cases, you may omit the shader's
         `.glsl` file extension.
 
