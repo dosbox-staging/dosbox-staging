@@ -32,6 +32,13 @@ one for right), giving you stereo output at the cost of halving the bit depth.
 Less common than the mono Covox, but supported by some tracker players and a
 handful of games.
 
+### Mixer channels
+
+The Covox Speech Thing outputs to the **COVOX** mixer channel, the Disney
+Sound Source to the **DISNEY** channel, and the Stereo-on-1 to the **STON1**
+channel.
+
+
 ## Configuration settings
 
 Parallel port DAC settings are to be configured in the `[speaker]` section.
@@ -59,7 +66,10 @@ Parallel port DAC settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output.
+    - `on` *default*{ .default } -- Filter the output. The default filter
+      varies by device: Disney Sound Source uses a 2nd order high-pass at
+      100 Hz + 2nd order low-pass at 2 kHz; Covox Speech Thing and
+      Stereo-on-1 use a 2nd order low-pass at 9 kHz.
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)

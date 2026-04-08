@@ -30,6 +30,11 @@ even produce sounds where the `discrete` model produces none (e.g.,
 `discrete` only if a specific game has problems with the `impulse` model.
 
 
+### Mixer channel
+
+The PC speaker outputs to the **PCSPEAKER** mixer channel.
+
+
 ## Configuration settings
 
 PC speaker settings are to be configured in the `[speaker]` section.
@@ -55,7 +60,7 @@ PC speaker settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output.
+    - `on` *default*{ .default } -- Filter the output (emulates a small speaker in an acoustic environment).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)

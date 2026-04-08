@@ -23,6 +23,11 @@ sound its best on a GUS. Games with native GUS support, like [Star Control
 II](https://www.mobygames.com/game/179/star-control-ii/), also benefited
 enormously from its superior audio capabilities.
 
+### Mixer channel
+
+The Gravis UltraSound outputs to the **GUS** mixer channel.
+
+
 ## Configuration settings
 
 Gravis UltraSound settings are to be configured in the `[gus]` section.
@@ -53,7 +58,7 @@ Gravis UltraSound settings are to be configured in the `[gus]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output.
+    - `on` *default*{ .default } -- Filter the output (1st order low-pass at 8 kHz).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
