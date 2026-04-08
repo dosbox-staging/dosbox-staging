@@ -409,8 +409,10 @@ sky
 
 ## Changing the emulated Sound Blaster model
 
-DOSBox emulates the Sound Blaster 16 by default. This card can emulate
-all earlier Sound Blaster models and offers the widest compatibility with DOS
+DOSBox emulates the Sound Blaster 16 by default (see the [Sound
+Blaster](../documentation/sound/sound-devices/adlib-cms-sound-blaster.md)
+page for all available models and settings). This card can emulate all
+earlier Sound Blaster models and offers the widest compatibility with DOS
 games.
 
 But back in the day, there were more Sound Blaster variants and clones you
@@ -486,8 +488,9 @@ the narrator starts speaking. Well, if you haven't, watch it now!
 
 What's happening here? DOS gaming spans almost two decades, and many different
 CPUs were in use during that period, all having wildly different performance
-or *clock speeds*. DOSBox doesn't emulate any specific CPU but a "generic"
-one. So how does it know the speed at which to run a particular game then?
+or *clock speeds* (see [CPU](../documentation/system/cpu.md) for the full
+reference). DOSBox doesn't emulate any specific CPU but a "generic" one. So
+how does it know the speed at which to run a particular game then?
 
 It doesn't.
 
@@ -677,8 +680,10 @@ sound card was capable of. They were the Cadillacs of DOS gaming audio for a
 while (they were priced accordingly, too), and many find they still sound
 excellent even by today's standards.
 
-DOSBox Staging can emulate all common variants of the MT-32 family, but it
-requires ROM dumps of the original hardware devices to do so. So first, we
+DOSBox Staging can emulate all common variants of the MT-32 family (see the
+[Roland MT-32](../documentation/sound/sound-devices/roland-mt-32.md) page
+for the full documentation), but it requires ROM dumps of the original
+hardware devices to do so. So first, we
 need to download these ROMs [from here](https://archive.org/details/Roland-MT-32-ROMs)
 as a ZIP package, then copy the contents of the archive into our designated
 MT&#8209;32 ROM folder:
@@ -858,9 +863,10 @@ appear vertically stretched on-screen. In fact, they appear _exactly 20%
 taller_ than they should (just trust me on that for a moment).
 
 So, where's this magical 20% vertical stretch factor coming from? DOSBox
-Staging enables aspect ratio correction by default to make 320&times;200
-graphics appear exactly as it would on a 4:3 aspect ratio VGA monitor, which
-requires pixels to be drawn 20% taller. This is the most sensible default as
+Staging enables [aspect ratio
+correction](../documentation/graphics/rendering.md#aspect-ratio-viewport)
+by default to make 320&times;200 graphics appear exactly as it would on a
+4:3 aspect ratio VGA monitor, which requires pixels to be drawn 20% taller. This is the most sensible default as
 aspect ratio correction is *absolutely needed* for the vast majority of DOS
 games to look correct, but there are exceptions---this game is one of those
 rare cases. One of the tell-tale signs is that the artwork in the intro was

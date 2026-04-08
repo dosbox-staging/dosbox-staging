@@ -59,6 +59,10 @@ It was common for PC games released from 1988 to 1992 to support the Roland MT-3
     additional digital music to be played on the Sound Blaster.
 
 
+For a step-by-step walkthrough of setting up the MT-32 with a specific game,
+see the [Beneath a Steel Sky](../../../getting-started/beneath-a-steel-sky.md#setting-up-roland-mt-32-sound)
+chapter of the getting started guide.
+
 DOSBox Staging emulates both the MT-32 sound module and the MPU-401 MIDI
 interface needed to communicate with it. The emulated MPU-401 supports
 *Intelligent Mode*, which some older games require. Most later games only
