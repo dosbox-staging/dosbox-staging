@@ -16,49 +16,21 @@ instruments, percussion kits, and digital effects while remaining fully
 backwards-compatible with the core GM specification.
 
 Most DOS game composers wrote and tested their music on Roland Sound Canvas
-hardware. Games like *Monkey Island 2*, *Ultima VII*, *Doom*, and
-*Duke Nukem 3D* all sound their best when played through an SC-55 or a
+hardware. Games like [*Monkey Island 2*](https://www.mobygames.com/game/289/monkey-island-2-lechucks-revenge/), [*Ultima VII*](https://www.mobygames.com/game/608/ultima-vii-the-black-gate/), [*Doom*](https://www.mobygames.com/game/1068/doom/), and
+[*Duke Nukem 3D*](https://www.mobygames.com/game/365/duke-nukem-3d/) all sound their best when played through an SC-55 or a
 compatible device. Since different GM manufacturers recorded their own
 instrument samples, playback can sound noticeably different from one device
 to another — but the SC-55 is the gold standard for what the composer
 intended.
 
-TODO(CL) insert mobygames links to games
-
-### A brief history of MIDI in DOS gaming
-
-TODO(CL) this is redundant, we already have midi.md that gives an overview.
-try to merge this into the midi.md page, get rid of the redundant info, etc.
-
-The **Roland MT-32**, released in 1987, was the first sound module that made
-realistic-sounding music in DOS games a possibility. In 1991, Roland released
-its successor, the **Roland Sound Canvas SC-55** --- the world's first device
-to support the General MIDI standard.
-
-MIDI itself only defines a communication protocol between devices; it says
-nothing about how instruments should sound. General MIDI (GM) remedied this
-with 128 standard instrument definitions (e.g., instrument #1 is always
-Acoustic Grand Piano, #36 is always Fretless Bass). This made
-interoperation between GM-compliant devices possible --- any GM module could
-play any GM music and produce recognisable results.
-
-In practice, though, most composers and gamers had the SC-55, establishing
-it as the de facto standard. Music could sound unbalanced on other GM
-modules that deviated too much from the SC-55's sound.
-
-The SC-55 also supports **Roland GS** (General Standard), Roland's
-vendor-specific GM extension with extra instruments, percussion kits, and
-effects. Many DOS games rely on these GS features and sound wrong without
-them.
+For a more detailed introduction to MIDI and its role in DOS gaming, see the
+[MIDI overview](../midi.md).
 
 The **Yamaha DB50XG** and **MU-series** (MU50, MU80, MU100, etc.) are
 alternative MIDI modules that offer excellent SC-55 compatibility with a
 more modern and punchy sonic character. Many enthusiasts prefer them to the
-SC-55 in certain games.
-
-For a detailed comparison of how these modules stack up against the SC-55,
-see [this article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/).
-
+SC-55 in certain games. For a detailed comparison of how these modules stack
+up against the SC-55, see [this article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/).
 
 DOSBox Staging offers two main ways to get General MIDI playback:
 
