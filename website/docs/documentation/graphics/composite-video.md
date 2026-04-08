@@ -23,6 +23,44 @@ DOSBox Staging automatically enables composite emulation when a game
 switches to the 640×200 composite mode. For the more common 320×200 modes,
 you'll need to set `composite = on` manually.
 
+Composite emulation is available for the `cga`, `pcjr`, and `tandy`
+[machine types](adapters.md#cga-and-its-descendants).
+
+
+## Notable composite games
+
+The following games were designed for or look significantly better on a
+composite monitor. For these titles, set `composite = on` and adjust the
+[hue](#hue) until colours look natural (blue sky, green grass).
+
+??? note "Sierra AGI adventures"
+
+    These are the quintessential composite games --- the artists designed
+    all graphics specifically for NTSC artifact colours.
+
+    - [King's Quest (1984)](https://www.mobygames.com/game/122/kings-quest/)
+    - [King's Quest II (1985)](https://www.mobygames.com/game/123/kings-quest-ii-romancing-the-throne/)
+    - [The Black Cauldron (1986)](https://www.mobygames.com/game/1012/the-black-cauldron/)
+    - [Space Quest (1986)](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/)
+    - [Police Quest (1987)](https://www.mobygames.com/game/113/police-quest-in-pursuit-of-the-death-angel/)
+    - [Leisure Suit Larry (1987)](https://www.mobygames.com/game/379/leisure-suit-larry-in-the-land-of-the-lounge-lizards/)
+    - [Gold Rush! (1988)](https://www.mobygames.com/game/221/gold-rush/)
+    - [Mixed-Up Mother Goose (1987)](https://www.mobygames.com/game/1614/mixed-up-mother-goose/)
+    - [Donald Duck's Playground (1986)](https://www.mobygames.com/game/5154/donald-ducks-playground/)
+
+??? note "Other games that benefit from composite mode"
+
+    - [California Games (1987)](https://www.mobygames.com/game/86/california-games/)
+    - [Pitstop II (1984)](https://www.mobygames.com/game/9157/pitstop-ii/)
+    - [Alley Cat (1984)](https://www.mobygames.com/game/190/alley-cat/)
+    - [Rick Dangerous (1989)](https://www.mobygames.com/game/2423/rick-dangerous/)
+    - [Thexder (1987)](https://www.mobygames.com/game/1247/thexder/)
+    - [Silpheed (1988)](https://www.mobygames.com/game/1252/silpheed/)
+    - [Windwalker (1989)](https://www.mobygames.com/game/4165/windwalker/)
+    - [Zak McKracken and the Alien Mindbenders (1988)](https://www.mobygames.com/game/634/zak-mckracken-and-the-alien-mindbenders/) (CGA version)
+    - [Maniac Mansion (1987)](https://www.mobygames.com/game/714/maniac-mansion/) (CGA version)
+
+
 ## Configuration settings
 
 You can set the CGA composite video parameters in the `[composite]`
