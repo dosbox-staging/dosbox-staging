@@ -34,6 +34,17 @@ musician for the job!
 Most people could only afford an AdLib or a Sound Blaster back in the day, but
 given that now everybody has the option to listen to these soundtracks in
 their original form, true to the composers' intentions, not doing so feels
-almost like a sacrilige.
+almost like a sacrilege.
 
-TODO(CL) feels incomplete. finish this somehow in 1-2 paragraphs
+But the picture isn't always this clear-cut. Some games were composed
+primarily for OPL synthesis, with MT-32 or General MIDI support added as an
+afterthought. Others have OPL soundtracks with such character and charm that
+many players genuinely prefer them over the "objectively better" MIDI
+versions. And a handful of titles simply sound best on the Gravis UltraSound
+or with raw FM synthesis.
+
+The takeaway is simple: always try the different audio options your game
+supports. Start with the highest-ranked option from the [suggested
+preferences](overview.md#selecting-the-best-audio-option), but don't be
+afraid to switch if another device sounds better to your ears. The "right"
+choice is whichever one brings you the most enjoyment.
