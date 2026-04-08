@@ -41,6 +41,7 @@ libdos_sources = files(
     'programs/loadrom.cpp',
     'programs/ls.cpp',
     'programs/makeimg.cpp',
+    'programs/manual.cpp',
     'programs/mem.cpp',
     'programs/mixer.cpp',
     'programs/mode.cpp',

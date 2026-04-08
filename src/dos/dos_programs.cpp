@@ -16,6 +16,7 @@
 #include "programs/loadrom.h"
 #include "programs/ls.h"
 #include "programs/makeimg.h"
+#include "programs/manual.h"
 #include "programs/mem.h"
 #include "programs/mixer.h"
 #include "programs/mode.h"
@@ -75,6 +76,7 @@ void DOS_SetupPrograms()
 	PROGRAMS_MakeFile("LOADROM.COM", ProgramCreate<LOADROM>);
 	PROGRAMS_MakeFile("LS.COM", ProgramCreate<LS>);
 	PROGRAMS_MakeFile("MAKEIMG.COM", ProgramCreate<MAKEIMG>);
+	PROGRAMS_MakeFile("MANUAL.COM", ProgramCreate<MANUAL>);
 	PROGRAMS_MakeFile("MEM.COM", ProgramCreate<MEM>);
 	PROGRAMS_MakeFile("MIXER.COM", ProgramCreate<MIXER>);
 	PROGRAMS_MakeFile("MODE.COM", ProgramCreate<MODE>);
