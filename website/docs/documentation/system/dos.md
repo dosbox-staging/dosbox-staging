@@ -8,11 +8,27 @@ games from the entire DOS era. A handful of very late titles check for DOS
 7.0, and some very early ones expect DOS 3.0, but these are edge cases you'll
 likely never hit.
 
-XMS, EMS, and UMB are different memory management schemes from the DOS era. If
-those acronyms mean nothing to you, don't worry --- they're all enabled by
-default and you can safely ignore them. On the rare occasion a game misbehaves
-(usually an old title that chokes on EMS), disabling the offending memory type
-is a quick fix.
+### Memory management
+
+The first IBM PCs only supported up to 640 KB of memory --- the so-called
+"conventional memory" that DOS programs can access directly. As PCs gained more
+RAM, a patchwork of standards emerged to make the extra memory available:
+
+- **XMS** (Extended Memory) --- the main pool of memory above 1 MB. This is
+  what the [memsize](general.md#memsize) setting controls (16 MB by default).
+  Nearly all games from the late DOS era use XMS.
+
+- **EMS** (Expanded Memory) --- an older scheme that maps 64 KB pages of
+  memory into the conventional memory area. Some early to mid-1990s games
+  require EMS; a few older titles may actually malfunction if it's enabled.
+
+- **UMB** (Upper Memory Blocks) --- small pockets of memory between 640 KB
+  and 1 MB, used to free up conventional memory by loading drivers and TSRs
+  into them.
+
+All three are enabled by default and you can safely ignore them. On the rare
+occasion a game misbehaves (usually an old title that chokes on EMS),
+disabling the offending memory type is a quick fix.
 
 ## Regional settings
 
