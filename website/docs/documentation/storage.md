@@ -31,29 +31,28 @@ especially C: for the hard disk and D: for the CD-ROM.
 ## DOS storage media
 
 If you grew up with modern computers where everything lives on a single
-internal SSD, the DOS storage landscape might seem alien. Here's a quick
-overview of the media types you'll encounter.
+internal SSD, the DOS storage landscape might seem alien. DOS PCs used three
+types of storage media, each with its own drive letter:
 
-**Floppy disks** were the primary removable storage medium throughout the DOS
-era. The two main form factors were the 5.25-inch disk (common in the early
-to mid 1980s; 360 KB or 1.2 MB capacity) and the 3.5-inch disk (from the
-late 1980s onwards; 720 KB or 1.44 MB). Many games shipped on multiple floppy
-disks --- it wasn't unusual for a late-era game to come on 10 or more disks
-that had to be inserted one at a time during installation.
+**Floppy disks** (drives A: and B:) were the primary way software was
+distributed. Games came on one or more floppies and usually had to be
+**installed** to the hard disk before you could play --- unlike a console
+cartridge, you couldn't just insert a floppy and go. Two form factors
+existed: the flexible 5.25-inch disk (1981--late 1980s) and the sturdier
+3.5-inch disk (late 1980s--mid 1990s). See
+[Floppy disk formats](#floppy-disk-formats) for the full list of supported
+sizes.
 
-**Hard disks** became common in home PCs from the mid-1980s. Capacities grew
-rapidly: 10--20 MB was typical around 1985, 40--120 MB by the early 1990s,
-and 500 MB to 1 GB by the mid-1990s. Unlike console cartridges, most DOS
-games had to be **installed** --- files were copied from the floppy disks (or
-later, CD-ROM) onto the hard disk before you could play. This installation
-step was a standard part of the PC gaming experience.
+**Hard disks** (drive C: and up) held the operating system and installed
+games. Capacities ranged from 10--20 MB in 1985 to over 1 GB by the
+mid-1990s. The DOS FAT16 filesystem limits individual partitions to **2 GB**
+--- larger disks needed multiple partitions.
 
-**CD-ROMs** appeared in the early 1990s and became mainstream by 1994--1995.
-A single CD could hold 650--700 MB --- the equivalent of roughly 500 floppy
-disks. This enormous capacity enabled full-motion video, CD-quality audio
-soundtracks, and voice acting that simply wasn't possible on floppies. Some
-games ran entirely from the CD; others required a partial installation to the
-hard disk while still reading data from the disc during gameplay.
+**CD-ROMs** (typically drive D:) appeared in the early 1990s and became
+mainstream by 1994--1995. A single CD held 650--700 MB --- roughly 500
+floppy disks' worth. This enabled full-motion video, voice acting, and
+CD-quality audio soundtracks. Some games ran entirely from the CD; others
+installed partially to the hard disk.
 
 
 ## DOSBox Staging drives
@@ -192,8 +191,38 @@ mount C /path/to/saves -t overlay
 mount A floppy.img -t floppy
 ```
 
-Supported floppy image formats: `.img`, `.ima` (raw sector images). Common
-sizes from 360 KB (5.25" DD) to 2.88 MB (3.5" ED) are automatically detected.
+Supported floppy image formats: `.img`, `.ima` (raw sector images).
+
+#### Floppy disk formats
+
+The 5.25-inch disk was a flexible magnetic disk visible through a slot in its
+cardboard sleeve. The 3.5-inch disk housed the magnetic medium in a rigid
+plastic shell with a spring-loaded metal shutter. Capacities grew as
+recording density improved: **DD** (Double Density), **HD** (High Density),
+and **ED** (Extra Density) describe the magnetic coating and recording
+method. Some software distributors squeezed extra capacity using non-standard
+formats like Microsoft's **DMF** (Distribution Media Format) at 1.68 MB or
+IBM's **XDF** at 1.84 MB.
+
+DOSBox Staging supports all standard PC floppy formats and several extended
+formats. The format is detected automatically from the image file size.
+
+<div class="compact" markdown>
+
+| Size   | Type  | Capacity | Notes                             |
+|--------|-------|----------|-----------------------------------|
+| 5.25"  | SS/DD | 160 KB   | Original IBM PC (1981)            |
+| 5.25"  | SS/DD | 180 KB   | 9 sectors/track variant           |
+| 5.25"  | DS/DD | 320 KB   | Double-sided (1982)               |
+| 5.25"  | DS/DD | 360 KB   | Standard 5.25" DD                 |
+| 5.25"  | DS/HD | 1.2 MB   | Standard 5.25" HD                 |
+| 3.5"   | DS/DD | 720 KB   | Standard 3.5" DD                  |
+| 3.5"   | DS/HD | 1.44 MB  | Standard 3.5" HD                  |
+| 3.5"   | DS/HD | 1.68 MB  | Microsoft DMF                     |
+| 3.5"   | DS/HD | 1.72 MB  | Microsoft DMF (82-track variant)  |
+| 3.5"   | DS/ED | 2.88 MB  | Extra Density (rare)              |
+
+</div>
 
 ### Mounting CD-ROM images
 
@@ -275,6 +304,49 @@ boot -l c
 Drive numbers 0 and 1 correspond to floppy drives A: and B:; 2 and 3
 correspond to hard disks C: and D:.
 
+!!! note "Booter games"
+
+    Some early games (roughly 1981--1986) bypassed DOS entirely and booted
+    directly from floppy disk. These "booter" games took over the whole
+    machine, using non-standard disk formats as a form of copy protection
+    and to squeeze out every last byte of available memory. They need the
+    `boot` command shown above rather than `mount`.
+
+??? note "Notable booter games"
+
+    <div class="compact" markdown>
+
+    - [Alley Cat (1984)](https://www.mobygames.com/game/190/alley-cat/)
+    - [Archon (1984)](https://www.mobygames.com/game/227/archon-the-light-and-the-dark/)
+    - [BC's Quest for Tires (1983)](https://www.mobygames.com/game/6561/bcs-quest-for-tires/)
+    - [Bouncing Babies (1984)](https://www.mobygames.com/game/11736/bouncing-babies/)
+    - [Dig Dug (1983)](https://www.mobygames.com/game/7563/dig-dug/)
+    - [Flight Simulator 2.0 (1984)](https://www.mobygames.com/game/1552/microsoft-flight-simulator-20/)
+    - [Hitchhiker's Guide to the Galaxy (1984)](https://www.mobygames.com/game/252/the-hitchhikers-guide-to-the-galaxy/)
+    - [Karateka (1986)](https://www.mobygames.com/game/1583/karateka/)
+    - [King's Quest (1984)](https://www.mobygames.com/game/123/kings-quest/)
+    - [Lode Runner (1983)](https://www.mobygames.com/game/17011/lode-runner/)
+    - [M.U.L.E. (1983)](https://www.mobygames.com/game/1826/mule/)
+    - [Pac-Man (1983)](https://www.mobygames.com/game/13851/pac-man/)
+    - [Paratrooper (1982)](https://www.mobygames.com/game/795/paratrooper/)
+    - [Zork I (1982)](https://www.mobygames.com/game/4/zork-the-great-underground-empire/)
+
+    </div>
+
+
+### DOS filesystem limitations
+
+DOS filenames follow the **8.3** convention: a maximum of 8 characters for
+the name and 3 for the extension (e.g., `DUKE3D.EXE`). Names are
+case-insensitive, cannot contain spaces, and only a limited set of special
+characters is allowed. When mounting host directories, DOSBox Staging
+automatically truncates long filenames to 8.3 format for DOS programs.
+
+The FAT16 filesystem used by DOS limits individual partitions to a maximum
+of **2 GB**. Larger hard disk images must be split into multiple partitions.
+DOSBox Staging also supports FAT12 (used on floppy disks) and FAT32
+(used by Windows 95/98, with a theoretical 2 TB limit).
+
 
 ### Unmounting drives
 
@@ -296,3 +368,6 @@ Storage-related settings are in the `[dosbox]` section:
 - [`floppy_disk_speed`](system/general.md#floppy_disk_speed)
 
 </div>
+
+For emulated drive sounds (floppy chatter, hard disk clicking), see
+[Disk noise](sound/disk-noise.md).
