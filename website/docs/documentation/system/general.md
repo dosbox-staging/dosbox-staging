@@ -20,6 +20,29 @@ instantaneous — some titles use disk loading time as a crude timing
 mechanism. Most users won't need to touch these settings at all.
 
 
+## Video memory delay
+
+The [vmem_delay](#vmem_delay) setting emulates the CPU-throttling effect of
+accessing slow video memory via the ISA bus on old video cards. This can fix
+flashing graphics and speed issues in Hercules, CGA, EGA, and early VGA games.
+
+Enable it only on a per-game basis as it slows down emulation. The following
+games benefit from `vmem_delay = on`:
+
+<div class="compact" markdown>
+
+- **Corncob 3-D**
+- **Corncob Deluxe**
+- **Crazy Brix** (`vmem_delay = 2000` and `cycles = 70000`)
+- **Future Wars** (also needs `cycles = 1000`)
+- **Gold of the Aztecs, The**
+- **Hostages** (also needs `cycles = 1500`)
+- **Operation Stealth** (when VGA or EGA is selected in the game's setup)
+- **Quest for Glory II** (fixes too-fast vertical scrolling in the intro)
+
+</div>
+
+
 ## Configuration settings
 
 You can set the general system parameters in the `[dosbox]` configuration
