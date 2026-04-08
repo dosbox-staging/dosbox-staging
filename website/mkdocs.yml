@@ -209,6 +209,7 @@ nav:
         - documentation/networking/serial-ports.md
         - documentation/networking/ipx.md
         - documentation/networking/ethernet.md
+        - documentation/networking/multiplayer.md
 
       - Appendices:
         - documentation/appendices/shortcuts.md
