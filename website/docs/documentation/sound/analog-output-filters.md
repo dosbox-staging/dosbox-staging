@@ -72,7 +72,7 @@ Examples:
   (6dB/octave) low-pass filter at 6.5kHz:
 
     ```
-    hpf 3 120 lfp 1 6500
+    hpf 3 120 lpf 1 6500
     ```
 
 

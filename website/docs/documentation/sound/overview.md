@@ -55,7 +55,7 @@ certain notes. In essence, before the advent of the CD-ROM that could hold
 tracks at 16-bit 44.1kHz, all games were using hardware synthesisers for music
 playback.
 
-These most well-known of these was the [AdLib Music Synthesizer
+The most well-known of these was the [AdLib Music Synthesizer
 Card](sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card),
 or just **AdLib** in short, which was almost universally supported by all
 games from about 1990 onwards. Before that, the [Tandy 3

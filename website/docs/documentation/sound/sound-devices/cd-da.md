@@ -10,7 +10,7 @@ CD-DA playback requires no special configuration. Mount a disc image with
 audio tracks using the [`MOUNT` command](../../storage.md#mounting-cd-rom-images)
 and the game will handle playback automatically.
 
-TODO physical CD-ROM
+<!-- TODO physical CD-ROM -->
 
 ### Mixer channel
 

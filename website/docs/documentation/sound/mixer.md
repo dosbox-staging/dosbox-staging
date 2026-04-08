@@ -29,7 +29,7 @@ that you can use from the DOS command line. If you run `MIXER` without any
 arguments, it prints out the current state of the mixer. This is what we get
 with the default configuration:
 
-TODO insert image
+<!-- TODO insert image -->
 
 As we can see, we have four channels enabled by default:
 
@@ -114,7 +114,7 @@ following:
 
 - Set the global crossfeed to 30 (`x30`)
 - Set the volume of the `OPL` channel to 150%, the reverb level to 50, and the
-    chorus level to 30 (`fm 150 r50 c30`)
+    chorus level to 30 (`opl 150 r50 c30`)
 - Set the crossfeed of the `SB` channel to 10 and use reverse stereo (`sb x10
     reverse`)
 

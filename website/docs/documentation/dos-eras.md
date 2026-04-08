@@ -355,7 +355,7 @@ mididevice = soundcanvas
 By the mid-1990s, Windows 95 and DirectX were rapidly taking over PC gaming.
 The final wave of DOS games pushed hardware hard --- fast Pentiums and Pentium
 MMX processors, AWE32/64 wavetable sound cards, and SVGA graphics at
-640&times;480 or higher resultion with early Voodoo 3D acceleration. These
+640&times;480 or higher resolution with early Voodoo 3D acceleration. These
 late DOS titles often demanded top-of-the-line hardware and represent the
 platform's technical peak, even as the ecosystem was transitioning to Windows.
 
@@ -395,8 +395,6 @@ platform's technical peak, even as the ecosystem was transitioning to Windows.
 ``` ini
 [dosbox]
 machine = svga_s3
-
-[dosbox]
 memsize = 32
 
 [cpu]
@@ -432,7 +430,7 @@ classics well worth rediscovering.
 - [Myst (1993)](https://www.mobygames.com/game/1223/myst/) --- landmark first-person adventure
 - [The Journeyman Project (1993)](https://www.mobygames.com/game/22007/the-journeyman-project/) --- time-travel sci-fi puzzle adventure
 - [The Dark Eye (1995)](https://www.mobygames.com/game/1782/the-dark-eye/) --- surreal Edgar Allan Poe horror adventure
-- [Shivers (1995)](https://www.mobygames.com/game/663/shivers/) ---  horror-themed first-person adventure
+- [Shivers (1995)](https://www.mobygames.com/game/663/shivers/) --- horror-themed first-person adventure
 - [Dust: A Tale of the Wired West (1995)](https://www.mobygames.com/game/3990/dust-a-tale-of-the-wired-west/) --- FMV western adventure
 - [Burn:Cycle (1995)](https://www.mobygames.com/game/3962/burncycle/) --- cyberpunk FMV adventure
 - [Civilization II (1996)](https://www.mobygames.com/game/15/sid-meiers-civilization-ii/) --- definitive Windows 3.1 strategy game
