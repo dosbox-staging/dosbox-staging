@@ -48,7 +48,7 @@ expects. See [com_mouse_model](#com_mouse_model) for details.
 
 Multiple physical mice can be mapped to specific emulated mouse interfaces,
 enabling two-player split-screen gaming using two USB mice on a single
-computer (e.g., in [**The Settlers**](https://www.mobygames.com/game/425/serf-city-life-is-feudal/) and [**The Settlers II**](https://www.mobygames.com/game/598/the-settlers-ii-veni-vidi-vici/)). Use the
+computer (e.g., in [The Settlers](https://www.mobygames.com/game/425/serf-city-life-is-feudal/) and [The Settlers II](https://www.mobygames.com/game/598/the-settlers-ii-veni-vidi-vici/)). Use the
 `MOUSECTL` command on the DOS command line to set the per-interface mouse
 configurations.
 
@@ -144,8 +144,8 @@ You can set the mouse parameters in the `[mouse]` configuration section.
 
         Known games requiring the threshold to be set to `2`:
 
-        - [**Ultima Underworld: The Stygian Abyss**](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/)
-        - [**Ultima Underworld II: Labyrinth of Worlds**](https://www.mobygames.com/game/691/ultima-underworld-ii-labyrinth-of-worlds/)
+        - [Ultima Underworld: The Stygian Abyss](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/)
+        - [Ultima Underworld II: Labyrinth of Worlds](https://www.mobygames.com/game/691/ultima-underworld-ii-labyrinth-of-worlds/)
 
 
 ##### builtin_dos_mouse_driver_options

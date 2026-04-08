@@ -16,8 +16,8 @@ instruments, percussion kits, and digital effects while remaining fully
 backwards-compatible with the core GM specification.
 
 Most DOS game composers wrote and tested their music on Roland Sound Canvas
-hardware. Games like [*Monkey Island 2*](https://www.mobygames.com/game/289/monkey-island-2-lechucks-revenge/), [*Ultima VII*](https://www.mobygames.com/game/608/ultima-vii-the-black-gate/), [*Doom*](https://www.mobygames.com/game/1068/doom/), and
-[*Duke Nukem 3D*](https://www.mobygames.com/game/365/duke-nukem-3d/) all sound their best when played through an SC-55 or a
+hardware. Games like [Monkey Island 2](https://www.mobygames.com/game/289/monkey-island-2-lechucks-revenge/), [Ultima VII](https://www.mobygames.com/game/608/ultima-vii-the-black-gate/), [Doom](https://www.mobygames.com/game/1068/doom/), and
+[Duke Nukem 3D](https://www.mobygames.com/game/365/duke-nukem-3d/) all sound their best when played through an SC-55 or a
 compatible device. Since different GM manufacturers recorded their own
 instrument samples, playback can sound noticeably different from one device
 to another — but the SC-55 is the gold standard for what the composer

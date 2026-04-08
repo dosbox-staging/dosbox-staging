@@ -5,8 +5,8 @@
 The ReelMagic (marketed as REALmagic) was an MPEG-1 hardware decoder card
 from Sigma Designs, released in 1993. At a time when PCs could barely
 handle software video playback, this card enabled smooth full-motion video
-in a handful of DOS games — *Return to Zork*, *Lord of the Rings*,
-and *The Horde* among them.
+in a handful of DOS games — [Return to Zork](https://www.mobygames.com/game/1219/return-to-zork/), [Lord of the Rings](https://www.mobygames.com/game/3870/jrr-tolkiens-the-lord-of-the-rings-vol-i/),
+and [The Horde](https://www.mobygames.com/game/6142/the-horde/) among them.
 
 Only a small number of titles ever supported it, so this is a niche feature.
 If you're not specifically trying to run one of those games, you can safely
