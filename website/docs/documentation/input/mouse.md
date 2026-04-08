@@ -57,7 +57,7 @@ See the [Dual mouse gaming](https://github.com/dosbox-staging/dosbox-staging/wik
 
 ## Seamless mode
 
-For Windows 3.1x running inside DOSBox, seamless mouse integration is
+For Windows 3.1 running inside DOSBox, seamless mouse integration is
 available when using a compatible mouse driver --- with this enabled, the
 mouse cursor can be moved freely between the host desktop and the DOSBox
 Staging window (see [`mouse_capture`](#mouse_capture)).
@@ -96,8 +96,8 @@ You can set the mouse parameters in the `[mouse]` configuration section.
           built-in driver.
 
         - The driver is auto-disabled if you boot into real MS-DOS or Windows
-          9x under DOSBox. Under Windows 3.x, the driver is not disabled,
-          but the Windows 3.x mouse driver takes over.
+          9x under DOSBox. Under Windows 3.1, the driver is not disabled,
+          but the Windows 3.1 mouse driver takes over.
 
         - To use a real DOS mouse driver (e.g., `MOUSE.COM` or
           `CTMOUSE.EXE`), configure the mouse type with
@@ -120,7 +120,7 @@ You can set the mouse parameters in the `[mouse]` configuration section.
       this if the game is known to support a 3-button mouse.
     - `wheel` -- 3 buttons + wheel, supports the CuteMouse WheelAPI version
       1.0. No DOS game uses the mouse wheel, only a handful of DOS
-      applications and Windows 3.x with special third-party drivers.
+      applications and Windows 3.1 with special third-party drivers.
 
     </div>
 
@@ -211,7 +211,7 @@ You can set the mouse parameters in the `[mouse]` configuration section.
       correctly on some host operating systems.
     - `seamless` -- Let the mouse move seamlessly between the DOSBox window
       and the rest of the desktop; captures only with middle-click or hotkey.
-      Seamless mouse does not work correctly with all the games. Windows 3.1x
+      Seamless mouse does not work correctly with all the games. Windows 3.1
       can be made compatible with a custom mouse driver.
     - `nomouse` -- Hide the mouse and don't send mouse input to the game.
 
@@ -295,7 +295,7 @@ You can set the mouse parameters in the `[mouse]` configuration section.
 ##### virtualbox_mouse
 
 :   VirtualBox mouse interface. Fully compatible only with 3rd party Windows
-    3.1x driver.
+    3.1 driver.
 
     Possible values: `on` *default*{ .default }, `off`
 
@@ -306,7 +306,7 @@ You can set the mouse parameters in the `[mouse]` configuration section.
 
 ##### vmware_mouse
 
-:   VMware mouse interface. Fully compatible only with 3rd party Windows 3.1x
+:   VMware mouse interface. Fully compatible only with 3rd party Windows 3.1
     driver.
 
     Possible values: `on` *default*{ .default }, `off`
