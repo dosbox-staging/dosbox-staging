@@ -29,14 +29,14 @@ games benefit from `vmem_delay = on`:
 
 <div class="compact" markdown>
 
-- [**Corncob 3-D**](https://www.mobygames.com/game/40284/corncob-3-d-the-other-worlds-campaign/)
-- [**Corncob Deluxe**](https://www.mobygames.com/game/3480/corncob-deluxe/)
-- **Crazy Brix** (`vmem_delay = 2000` and `cpu_cycles = 70000`)
-- [**Future Wars**](https://www.mobygames.com/game/2205/future-wars-adventures-in-time/) (also needs `cpu_cycles = 1000`)
-- [**Gold of the Aztecs, The**](https://www.mobygames.com/game/17245/the-gold-of-the-aztecs/)
-- [**Hostages**](https://www.mobygames.com/game/6939/hostage-rescue-mission/) (also needs `cpu_cycles = 1500`)
-- [**Operation Stealth**](https://www.mobygames.com/game/2236/007-james-bond-the-stealth-affair/) (when VGA or EGA is selected in the game's setup)
-- [**Quest for Glory II**](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/) (fixes the too fast vertical scrolling in the intro)
+- [Corncob 3-D](https://www.mobygames.com/game/40284/corncob-3-d-the-other-worlds-campaign/)
+- [Corncob Deluxe](https://www.mobygames.com/game/3480/corncob-deluxe/)
+- Crazy Brix (`vmem_delay = 2000` and `cpu_cycles = 70000`)
+- [Future Wars](https://www.mobygames.com/game/2205/future-wars-adventures-in-time/) (also needs `cpu_cycles = 1000`)
+- [Gold of the Aztecs, The](https://www.mobygames.com/game/17245/the-gold-of-the-aztecs/)
+- [Hostages](https://www.mobygames.com/game/6939/hostage-rescue-mission/) (also needs `cpu_cycles = 1500`)
+- [Operation Stealth](https://www.mobygames.com/game/2236/007-james-bond-the-stealth-affair/) (when VGA or EGA is selected in the game's setup)
+- [Quest for Glory II](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/) (fixes the too fast vertical scrolling in the intro)
 
 </div>
 
@@ -131,7 +131,7 @@ section.
       they cause timing problems in Build Engine games.
 
     - `halfline` -- Same as `compatible`, but the 120h VESA mode is replaced
-      with a special halfline mode used by Extreme Assault. Use only if
+      with a special halfline mode used by [Extreme Assault](https://www.mobygames.com/game/1396/extreme-assault/). Use only if
       needed.
 
     - `all` -- All modes are available, including extra DOSBox-specific VESA
@@ -185,7 +185,7 @@ section.
 
 :   Emulate accurate per-scanline VGA rendering. Currently, you need to
     disable this for a few games, otherwise they will crash at startup
-    (e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors).
+    (e.g., [Deus](https://www.mobygames.com/game/5001/deus/), [Ishar 3](https://www.mobygames.com/game/7702/ishar-3-the-seven-gates-of-infinity/), [Robinson's Requiem](https://www.mobygames.com/game/4797/robinsons-requiem/), [Time Warriors](https://www.mobygames.com/game/22845/time-warriors/)).
 
     Possible values: `on` *default*{ .default }, `off`
 
