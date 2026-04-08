@@ -1,5 +1,7 @@
 # IBM Music Feature Card
 
+## Overview
+
 The IBM Music Feature Card (IMFC) was released by IBM in 1987 as a
 MIDI-capable sound card for the IBM PC and compatible machines. It featured a
 Yamaha FB-01 FM synthesiser module and an MPU-401 compatible MIDI interface.
@@ -13,6 +15,8 @@ ports.
 ## Compatible games
 
 <div class="compact" markdown>
+
+TODO(CL) mobygames links
 
 - Codename: Iceman
 - Colonel's Bequest, The

@@ -1,5 +1,7 @@
 # IBM PS/1 Audio Card
 
+## Overview
+
 Optional audio card released in 1990 for IBM PS/1 computers (models 2011 and
 2121). Relatively few games support this option, and the FM sounds very much
 like the PCjr or Tandy 1000, as they all use the same or similar TI sound
@@ -13,6 +15,8 @@ PS/1 Audio support appears primarily in Sierra SCI1-era titles. Many of these
 games detect PS/1 Audio automatically.
 
 <div class="compact" markdown>
+
+TODO(CL) mobygames links
 
 - BattleTech: The Crescent Hawks' Revenge
 - Castle of Dr. Brain

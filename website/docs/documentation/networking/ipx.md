@@ -15,6 +15,8 @@ with `IPXNET STARTSERVER` at the DOS prompt; others connect with
 Enable IPX support here, then use the `IPXNET` command inside DOS to manage
 connections.
 
+TODO(CL) mobygames links
+
 
 ## Configuration settings
 

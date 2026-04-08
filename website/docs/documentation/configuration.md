@@ -29,7 +29,7 @@ A **local configuration file** named `dosbox.conf` can be placed in a
 game's directory. DOSBox Staging automatically loads it when started from
 that directory, making it easy to maintain per-game settings.
 
-### Portable setup
+## Portable setup
 
 If a `dosbox-staging.conf` file is placed in the same directory as the DOSBox
 Staging executable, DOSBox will use that directory as its configuration
@@ -77,9 +77,7 @@ mixer opl 50
 prince
 ```
 
-The `[autoexec]` section is special — it contains DOS commands that run at
-startup, similar to `AUTOEXEC.BAT`. It must always be the last section in
-the file. See [Autoexec](autoexec.md) for details.
+The `[autoexec]` section is special; see [Autoexec](#autoexec) for details.
 
 !!! warning "End of line comments"
 
@@ -91,6 +89,43 @@ the file. See [Autoexec](autoexec.md) for details.
     cpu_cycles = 25000  # Set 486 DX2/66 speed
     ```
 
+## Autoexec
+
+The `[autoexec]` section is the last section in the [configuration
+file](configuration.md). Each line in this section is executed at startup as a
+DOS command.
+
+Unlike other configuration sections, the `[autoexec]` section does not contain
+individual settings. Instead, it's a freeform block of DOS commands that are
+run sequentially when DOSBox starts up, similar to the `AUTOEXEC.BAT` file on
+a real DOS PC.
+
+Here's an example configuration that launches the game from the C: drive, then
+exits DOSBox Staging after you quit the game (from the [Getting started
+guide](../getting-started/enhancing-prince-of-persia.md#final-configuration);
+you can find more such config examples in the guide):
+
+```ini
+[sdl]
+fullscreen = on
+pause_when_inactive = yes
+
+[mixer]
+reverb = large
+chorus = normal
+
+[autoexec]
+c:
+prince
+exit
+```
+
+!!! important
+
+    The `[autoexec]` section must be the last section in the config file.
+
+See the [autoexec_section](system/general.md#autoexec_section) setting for
+how autoexec sections from multiple config files are handled.
 
 
 ## Generating a default config

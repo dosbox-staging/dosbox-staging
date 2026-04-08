@@ -11,10 +11,12 @@ This is a niche but powerful feature — useful for running DOS TCP/IP
 software, BBS door games, or network-aware applications that go beyond
 simple IPX multiplayer.
 
-Fair warning: setting this up requires installing a DOS packet driver, a
-DHCP client, and a TCP/IP stack inside DOS. It's not for the faint of
-heart, but if you enjoy tinkering with vintage networking, you'll feel right
-at home.
+!!! warning "Fair warning"
+
+    Setting this up requires installing a DOS packet driver, a
+    DHCP client, and a TCP/IP stack inside DOS. It's not for the faint of
+    heart, but if you enjoy tinkering with vintage networking, you'll feel right
+    at home.
 
 
 ## Configuration settings

@@ -144,6 +144,8 @@ which added digital audio playback. The 386 CPU provided the processing power
 to drive increasingly ambitious games. This period marks the moment PC gaming
 became a serious force.
 
+TODO(CL) mention MT-32
+
 ### Notable games
 
 <div class="compact" markdown>
@@ -166,12 +168,12 @@ became a serious force.
 
 <div class="compact" markdown>
 
-| Component   | Typical spec             |
-| ----------- | --------------           |
-| CPU         | Intel 386DX, 25--33 MHz  |
-| Graphics    | VGA                      |
-| Sound       | Sound Blaster (or AdLib) |
-| RAM         | 1--4 MB                  |
+| Component   | Typical spec                             |
+| ----------- | --------------                           |
+| CPU         | Intel 386DX, 25--33 MHz                  |
+| Graphics    | VGA                                      |
+| Sound       | Sound Blaster (or AdLib)<br>Roland MT-32 |
+| RAM         | 1--4 MB                                  |
 
 </div>
 
@@ -179,11 +181,18 @@ became a serious force.
 ### DOSBox Staging config
 
 ``` ini
+[dosbox]
+machine = svga_s3
+
 [cpu]
 cpu_cycles = 6000
 
 [sblaster]
 sbtype = sb1
+
+[midi]
+mididevice = mt32
+model = mt32_old
 ```
 
 
@@ -195,6 +204,8 @@ life for budget users. Sound hardware matured rapidly --- the Sound Blaster
 Pro and 16 added stereo output, and the Gravis UltraSound offered advanced
 wavetable synthesis. Hard drives became affordable for home users, and games
 grew to fill them.
+
+TODO(CL) mention Sound Canvas and that some games still supported the MT-32
 
 ### Notable games
 
@@ -219,12 +230,12 @@ grew to fill them.
 
 ### Typical hardware
 
-| Component   | Typical spec                 |
-| ----------- | --------------               |
-| CPU         | Intel 486DX2, 33--66 MHz     |
-| Graphics    | VGA                          |
-| Sound       | Sound Blaster Pro 2 (or GUS) |
-| RAM         | 4--16 MB                     |
+| Component   | Typical spec                                                   |
+| ----------- | --------------                                                 |
+| CPU         | Intel 486DX2, 33--66 MHz                                       |
+| Graphics    | VGA                                                            |
+| Sound       | Sound Blaster Pro 2 (or GUS)<br>Roland MT-32 (or General MIDI) |
+| RAM         | 4--16 MB                                                       |
 
 </div>
 
@@ -232,18 +243,27 @@ grew to fill them.
 ### DOSBox Staging config
 
 ``` ini
+[dosbox]
+machine = svga_s3
+
 [cpu]
 cpu_cycles = 30000
+
+[sblaster]
+sbtype = sbpro2
 
 [gus]
 # Only enable it for games that use the Gravis Ultrasound
 gus = on
 
-[sblaster]
-sbtype = sbpro2
+[midi]
+mididevice = mt32
+model = cm32l
 ```
 
-Alternatively, use `sbtype = sb16` to emulate the Sound Blaster 16.
+Alternatively, use `sbtype = sb16` to emulate the Sound Blaster 16, and
+`mididevice = soundcanvas` to emulate the Roland Sound Canvas SC-55.
+
 
 ## The Pentium era (1993--1996)
 
@@ -254,6 +274,8 @@ ushering in the era of full-motion video and CD audio soundtracks. This was
 the golden age of DOS gaming --- the period that produced many of the
 platform's most celebrated titles that served as blueprints for the modern
 gaming industry.
+
+TODO(CL) mention Sound Canvas is the most common MIDI device now
 
 ### Notable games
 
@@ -280,12 +302,12 @@ gaming industry.
 
 <div class="compact" markdown>
 
-| Component   | Typical spec               |
-| ----------- | --------------             |
-| CPU         | Intel Pentium, 90--133 MHz |
-| Graphics    | SVGA (                     |
-| Sound       | Sound Blaster 16           |
-| RAM         | 16 MB                      |
+| Component   | Typical spec                              |
+| ----------- | --------------                            |
+| CPU         | Intel Pentium, 90--133 MHz                |
+| Graphics    | SVGA                                      |
+| Sound       | Sound Blaster 16 (or GUS)<br>General MIDI |
+| RAM         | 16 MB                                     |
 
 </div>
 
@@ -293,11 +315,21 @@ gaming industry.
 ### DOSBox Staging config
 
 ``` ini
+[dosbox]
+machine = svga_s3
+
 [cpu]
 cpu_cycles = 80000
 
 [sblaster]
 sbtype = sb16
+
+[gus]
+# Only enable it for games that use the Gravis Ultrasound
+gus = on
+
+[midi]
+mididevice = soundcanvas
 ```
 
 
@@ -331,12 +363,12 @@ platform's technical peak, even as the ecosystem was transitioning to Windows.
 
 <div class="compact" markdown>
 
-| Component   | Typical spec                    |
-| ----------- | --------------                  |
-| CPU         | Intel Pentium MMX, 166--233 MHz |
-| Graphics    | SVGA                            |
-| Sound       | Sound Blaster 16 (or AWE32)     |
-| RAM         | 32 MB                           |
+| Component   | Typical spec                                      |
+| ----------- | --------------                                    |
+| CPU         | Intel Pentium MMX, 166--233 MHz                   |
+| Graphics    | SVGA                                              |
+| Sound       | Sound Blaster 16 / AWE32 (or GUS)<br>General MIDI |
+| RAM         | 32 MB                                             |
 
 </div>
 
@@ -345,14 +377,25 @@ platform's technical peak, even as the ecosystem was transitioning to Windows.
 
 ``` ini
 [dosbox]
+machine = svga_s3
+
+[dosbox]
 memsize = 32
 
 [cpu]
+cputype = pentium_mmx
 # 640x480 3D might require up to 400000 to run smoothly
 cpu_cycles = 150000
 
 [sblaster]
 sbtype = sb16
+
+[gus]
+# Only enable it for games that use the Gravis Ultrasound
+gus = on
+
+[midi]
+mididevice = soundcanvas
 ```
 
 
@@ -381,4 +424,35 @@ classics well worth rediscovering.
 - [Blue Heat (1997)](https://www.mobygames.com/game/4954/blue-heat/) --- mature-themed video adventure
 
 </div>
+
+
+<div class="compact" markdown>
+
+### Typical hardware
+
+| Component   | Typical spec                     |
+| ----------- | --------------                   |
+| CPU         | Intel 486DX2, 33--66 MHz         |
+| Graphics    | VGA                              |
+| Sound       | Sound Blaster 16<br>General MIDI |
+| RAM         | 4--16 MB                         |
+
+</div>
+
+
+### DOSBox Staging config
+
+``` ini
+[dosbox]
+machine = svga_s3
+
+[cpu]
+cpu_cycles = 30000
+
+[sblaster]
+sbtype = sb16
+
+[midi]
+mididevice = soundcanvas
+```
 

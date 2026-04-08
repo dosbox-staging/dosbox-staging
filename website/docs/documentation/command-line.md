@@ -1,5 +1,7 @@
 # Command-line usage
 
+## Overview
+
 The simplest way to launch a game is to pass its path directly to DOSBox
 Staging. It's smart enough to figure out what to do: if you pass a
 directory, it's mounted as the C: drive; if you pass an executable, its

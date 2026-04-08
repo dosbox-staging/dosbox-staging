@@ -1,5 +1,7 @@
 # Keyboard
 
+## Overview
+
 DOSBox Staging captures your keyboard input and passes it straight to the
 emulated DOS environment — most keys just work without any fuss.
 

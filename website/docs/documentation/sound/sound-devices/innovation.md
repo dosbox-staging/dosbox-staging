@@ -1,5 +1,7 @@
 # Innovation SSI-2001
 
+## Overview
+
 Released in April 1989 by Innovation Computer Corporation, utilizing the MOS
 6581 (aka SID) chip, as found in the Commodore 64.
 
@@ -9,6 +11,8 @@ Very few games support this sound option.
 ## Compatible games
 
 <div class="compact" markdown>
+
+TODO(CL) mobygames links
 
 - Airball
 - Bad Blood
