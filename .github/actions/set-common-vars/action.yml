@@ -3,7 +3,7 @@ name: Set common env vars
 # Assumes the repo has already been checked out
 
 runs:
-  using: "composite"
+  using: composite
   steps:
     - name: Set version vars
       shell: bash

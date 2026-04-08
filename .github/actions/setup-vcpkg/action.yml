@@ -20,7 +20,7 @@ inputs:
     default: ""
 
 runs:
-  using: "composite"
+  using: composite
   steps:
     - name: Set vcpkg env variables
       if: ${{ runner.os != 'Windows'}}
