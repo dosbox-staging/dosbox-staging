@@ -25,6 +25,24 @@ horizontal and vertical mouse movement has different sensitivity. You can
 "normalise" the X and Y axis sensitivity or adjust the global sensitivity with
 the [`mouse_sensitivity`](#mouse_sensitivity) setting.
 
+## DOS-era mice
+
+The standard PC mouse throughout the DOS era had two buttons and no scroll
+wheel. Scroll wheels did not exist on consumer mice until Microsoft
+introduced the IntelliMouse in 1996, well into the twilight years of DOS
+gaming. The vast majority of DOS software was written for --- and tested with
+--- a simple two-button mouse.
+
+DOSBox Staging emulates a two-button mouse by default
+([`builtin_dos_mouse_driver_model`](#builtin_dos_mouse_driver_model) =
+`2button`), and this is the safest setting. Only a small number of games
+from the 90s support a third mouse button, and some games will misbehave if
+an unexpected middle button press is detected. If you know a game supports
+three buttons, enable it explicitly by setting the model to `3button`. The
+`wheel` option exists for the rare DOS application or Windows 3.1 setup that
+can use a scroll wheel, but no DOS game is known to use it.
+
+
 ## Serial mice
 
 DOSBox Staging can emulate several serial (COM port) mouse types:
