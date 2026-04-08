@@ -1,5 +1,7 @@
 # Command-line usage
 
+## Simple usage
+
 The simplest way to launch a game is to pass its path directly to DOSBox
 Staging. It's smart enough to figure out what to do: if you pass a directory,
 it's mounted as the C: drive; if you pass an executable, its parent directory
@@ -11,13 +13,36 @@ dosbox /path/to/game/GAME.EXE
 dosbox disk.img
 ```
 
+## Preferred usage
+
+While this might be alright for some quick testing, a much better way is to
+organise games into subfolders and put a `dosbox.conf` **local configuration**
+into each which contains your game-specific settings and tweaks.
+
 Config files can be layered with [`--conf`](#-conf-config_file); later files
-override earlier ones. For quick one-off tweaks without editing a file, use
-[`--set`](#-set-settingvalue):
+override earlier ones. This way you can inject extra settings into your
+DOSBox session, overriding values from the local config:
 
 ```
-dosbox --conf game.conf --set cpu_cycles=25000
+dosbox --conf extra.conf
 ```
+
+For quick one-off tweaks without editing any files, use [`--set`](#-set-settingvalue). If you want to set multiple settings, no problem --- just provide multiple `--set` arguments:
+
+```
+dosbox --set machine=ega --set cpu_cycles=5000
+```
+
+Of course, you can combine these techniques:
+
+```
+dosbox --conf extra.conf --set cpu_cycles=25000
+```
+
+See [Config layering](../configuration/#config-layering) for more info.
+
+
+## Discovery
 
 Several [`--list-*` options](#discovery) are handy for discovering what's
 available on your system: shaders, keyboard layouts, country codes, and code
