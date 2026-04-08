@@ -164,6 +164,49 @@ monitor, resulting in more subdued and pleasant colours --- especially
 apparent on the greens.
 
 
+## Automatic image adjustments
+
+When [crt_color_profile](#crt_color_profile), [color_temperature](#color_temperature),
+or [black_level](#black_level) are set to `auto`, DOSBox automatically selects
+appropriate values based on the active shader and the current video mode.
+
+The selection logic depends on the shader mode:
+
+- **`crt-auto`** selects settings based on the graphics standard of the
+  current video mode (CGA, EGA, VGA, etc.), irrespective of the `machine`
+  setting. EGA modes that reprogram the VGA's 18-bit DAC palette get VGA
+  settings to reflect that they require VGA hardware.
+
+- **`crt-auto-machine`** selects settings based on the emulated machine type
+  configured via the `machine` setting.
+
+- **`crt-auto-arcade`** and **`crt-auto-arcade-sharp`** always use
+  fixed arcade monitor settings.
+
+- **Regular shaders** (e.g., `sharp`, `bilinear`) select settings based on
+  the emulated machine type.
+
+In all modes, composite video always uses composite-specific settings
+regardless of the machine type.
+
+The following table shows the automatically selected values:
+
+| Video mode      | CRT profile | Colour temp (K) | Black level |
+|-----------------|-------------|:----------------:|:-----------:|
+| Monochrome      | None        | 6500             | 0           |
+| Composite       | SMPTE-C     | 6500             | 0.53        |
+| CGA / PCjr      | P22         | 9300             | 0.65        |
+| EGA / Tandy     | P22         | 9300             | 0.60        |
+| VGA / SVGA      | P22         | 7800             | 0           |
+| Arcade          | Philips     | 6500             | 0.50        |
+
+!!! note
+
+    The black level values shown are for DCI-P3 colour spaces with gamma
+    2.6 or higher. For lower-gamma colour spaces (sRGB, Display P3), the
+    black level is halved.
+
+
 ## Configuration settings
 
 You can set the rendering parameters in the `[render]` configuration section.
