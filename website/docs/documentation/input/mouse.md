@@ -1,5 +1,23 @@
 # Mouse
 
+DOSBox Staging includes a built-in mouse driver, so you don't need to load
+`MOUSE.COM` or `CTMOUSE` inside DOS. The built-in driver provides lower
+latency and smoother movement than a real DOS mouse driver — your
+point-and-click adventures (*Monkey Island*, *Day of the Tentacle*) and FPS
+games (*Doom*, *Quake*) will thank you.
+
+Click inside the DOSBox window to capture the mouse; press the middle mouse
+button or ++ctrl+f10++ / ++cmd+f10++ to release it. If your mouse has no
+middle button, the keyboard shortcut is your friend.
+
+The `mouse_raw_input` setting bypasses your host OS's mouse acceleration,
+giving you consistent sensitivity regardless of your desktop settings. This
+is particularly useful for games where precise mouse control matters.
+
+For Windows 3.1x running inside DOSBox, seamless mouse integration is
+available when using a compatible mouse driver — the mouse cursor moves
+freely between the host and guest without manual capture.
+
 
 ## Configuration settings
 
