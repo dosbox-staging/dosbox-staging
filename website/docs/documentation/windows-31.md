@@ -107,16 +107,12 @@ games --- just change the `mididevice` setting in your DOSBox config.
 The built-in PS/2 mouse driver that Windows installs by default works fine
 and requires no additional configuration.
 
-The standard mouse of the DOS era had two buttons and no scroll wheel ---
-scroll wheels simply did not exist on consumer mice until the late 1990s.
-DOSBox emulates this two-button, no-wheel mouse by default, and this is the
-safest setting for the vast majority of games and applications.
-
-A small number of 90s games do support a third mouse button, but you must
-explicitly enable three-button mouse emulation for those titles via the
-[`dos_mouse_driver`](input/mouse.md) setting. Leaving two-button emulation
-as the default avoids compatibility issues with software that doesn't expect
-a middle button.
+The two-button mouse without a scroll wheel was the standard throughout the
+DOS era --- scroll wheels only became common in the late 1990s. DOSBox
+emulates a two-button mouse by default, which is the safest setting. Only a
+small number of early-to-mid 90s Windows games support a third mouse button;
+if you need it, enable three-button mouse emulation via the
+[`dos_mouse_driver`](input/mouse.md) setting.
 
 For seamless mouse integration (the pointer moves freely between the DOSBox
 window and your desktop without needing to capture/release it), install the
