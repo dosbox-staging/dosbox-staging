@@ -28,18 +28,16 @@ development studios.
 
 For example, Sierra On-Line was famous for attracting high-profile musicians
 to compose the Roland MT-32 "master" soundtracks for many of their post-1987
-adventure games. Their first game with Roland MT-32 support was **King's Quest
-IV: The Perils of Rosella** released in 1988, which was the first PC game to
+adventure games. Their first game with Roland MT-32 support was [**King's Quest
+IV: The Perils of Rosella**](https://www.mobygames.com/game/129/kings-quest-iv-the-perils-of-rosella/) released in 1988, which was the first PC game to
 feature a fully-orchestrated soundtrack written by a professional media
 composer, William Goldstein.
 
-Similary, the music of **Police Quest III: The Kindred** from 1991 was
+Similary, the music of [**Police Quest III: The Kindred**](https://www.mobygames.com/game/148/police-quest-3-the-kindred/) from 1991 was
 composed by Jan Hammer of Miami Vice fame specifically for the Roland MT-32.
 Jan Hammer was very fond of the LA synthesis employed by the bigger brother of
 the MT-32, the venerable Roland D-50 synthesiser which was a staple of 80s pop
 music. Sierra simply couldn't have found a more suitable musician for the job!
-
-TODO(CL) link game names to mobygames
 
 Most people could only afford an AdLib or a Sound Blaster back in the day, but
 given that now everybody has the option to listen to these soundtracks in their

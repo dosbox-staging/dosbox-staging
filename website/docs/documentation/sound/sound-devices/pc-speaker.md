@@ -9,8 +9,8 @@ had one, so every game could count on it being there.
 
 Technically, it's a single-channel square-wave generator. Not exactly hi-fi.
 But with clever programming tricks, developers managed to coax surprisingly
-decent sound out of it. Games like *Alley Cat* and *Sopwith* made the most
-of its musical abilities, while *Castle Wolfenstein* even managed digitised
+decent sound out of it. Games like [*Alley Cat*](https://www.mobygames.com/game/190/alley-cat/) and [*Sopwith*](https://www.mobygames.com/game/1380/sopwith/) made the most
+of its musical abilities, while [*Castle Wolfenstein*](https://www.mobygames.com/game/3115/castle-wolfenstein/) even managed digitised
 speech — impressive given the hardware's severe limitations.
 
 Sound quality varied quite a bit depending on the actual speaker hardware
@@ -20,12 +20,10 @@ that sounded thinner and quieter.
 
 PC speaker emulation is enabled by default. The `impulse` model provides
 the most faithful reproduction of the actual speaker hardware; it generally
-improves the accuracy of square-wave effects in games like **Commander Keen**
-and **Duke Nukem** (2D), and can even produce sounds where the `discrete`
-model produces none (e.g., **Wizball**). Fall back to `discrete` only if a
+improves the accuracy of square-wave effects in games like [**Commander Keen**](https://www.mobygames.com/game/216/commander-keen-1-marooned-on-mars/)
+and [**Duke Nukem**](https://www.mobygames.com/game/559/duke-nukem/) (2D), and can even produce sounds where the `discrete`
+model produces none (e.g., [**Wizball**](https://www.mobygames.com/game/526/wizball/)). Fall back to `discrete` only if a
 specific game has problems with the `impulse` model.
-
-TODO(CL) game links to mobygames 
 
 
 ## Configuration settings

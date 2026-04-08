@@ -9,7 +9,7 @@ interference patterns that produce up to 16 colours from CGA's usual
 4-colour palette. It sounds like a bug, but game developers deliberately
 exploited it.
 
-Games like *King's Quest*, *Space Quest*, and many other Sierra AGI titles
+Games like [*King's Quest*](https://www.mobygames.com/game/122/kings-quest/), [*Space Quest*](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/), and many other Sierra AGI titles
 were specifically designed to look their best on composite monitors. Viewed
 on an RGB monitor, these games appear as garish 4-colour affairs; on
 composite, they transform into something surprisingly colourful and
@@ -22,8 +22,6 @@ because some games were designed for one revision or the other.
 DOSBox Staging automatically enables composite emulation when a game
 switches to the 640×200 composite mode. For the more common 320×200 modes,
 you'll need to set `composite = on` manually.
-
-TODO(CL) link game names to mobygames
 
 ## Configuration settings
 
