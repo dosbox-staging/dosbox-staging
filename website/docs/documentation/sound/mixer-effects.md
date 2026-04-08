@@ -2,6 +2,39 @@
 
 ## Crossfeed
 
+Listening to audio on headphones where certain sounds are only present in
+either the left or the right channel can be a rather distracting and
+unpleasant experience. This is most noticeable on Dual OPL and CMS
+(Game Blaster) game soundtracks where instruments are hard-panned 100% left
+or 100% right in the stereo field.
+
+Crossfeed remedies this by mixing a portion of the left channel's signal into
+the right channel, and vice versa, creating a more natural listening
+experience. The default crossfeed strength is 40%, which is a good general
+setting.
+
+The crossfeed presets only apply to the **OPL** and **CMS** mixer channels by
+default, as these are the two devices that typically feature hard-panned
+sounds. You can apply crossfeed to other channels as well with the `MIXER`
+command (e.g., `MIXER GUS x50`).
+
+`off`
+: No crossfeed (default).
+
+`on`
+: Enables the `normal` preset.
+
+`light`
+: Light crossfeed (strength 15).
+
+`normal`
+: Normal crossfeed (strength 40).
+
+`strong`
+: Strong crossfeed (strength 65).
+
+You can fine-tune per-channel crossfeed levels via mixer commands.
+
 
 ## Reverb
 
@@ -57,6 +90,51 @@ Enable chorus globally to add a sense of stereo movement to the sound:
 : An obvious and upfront chorus effect.
 
 You can fine-tune per-channel chorus levels via mixer commands.
+
+
+## Combining effects
+
+Crossfeed, reverb, and chorus can be combined, and doing so is highly
+recommended for achieving the best results. Together with the
+[analog output filters](analog-output-filters.md), these effects can
+give old DOS game soundtracks a new life.
+
+Suggested audio configurations for many games are available
+[on the wiki](https://github.com/dosbox-staging/dosbox-staging/wiki/Audio-configuration-recommendations).
+
+
+## Audio examples
+
+The below recordings showcase how crossfeed, reverb, chorus, and output stage
+filters work in tandem across a variety of sound devices and games.
+
+<figure markdown>
+  <video controls width=760>
+    <source src="https://www.dosbox-staging.org/static/videos/release-notes/0.79.0/alone-in-the-dark-intro.webm" type="video/webm; codecs=vp9,opus">
+    <source src="https://www.dosbox-staging.org/static/videos/release-notes/0.79.0/alone-in-the-dark-intro.mp4" type="video/mp4">
+    Your browser does not support the <code>video</code> element.
+  </video>
+
+  <figcaption markdown>
+  Alone in the Dark (1992, floppy version) --- introduction
+  </figcaption>
+</figure>
+
+<div class="compact" markdown>
+
+| Game                                          | Type           | Audio example                                                                                                                 |
+| --------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Alone in the Dark<br>(floppy version)         | OPL2           | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/alone-in-the-dark.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| Warcraft: Orcs & Humans                       | OPL3           | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/warcraft.mp3"> Your browser does not support the <code>audio</code> element.</audio>            |
+| Dungeon Master II:<br>The Legend of Skullkeep | Dual&nbsp;OPL2 | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/dungeon-master-ii.mp3"> Your browser does not support the <code>audio</code> element.</audio>   |
+| Ultima Underworld I: The Stygian Abyss        | Dual OPL2      | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/ultima-underworld-i.mp3"> Your browser does not support the <code>audio</code> element.</audio> |
+| Elvira: Mistress of the Dark                  | Dual&nbsp;OPL2 | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/elvira.mp3"> Your browser does not support the <code>audio</code> element.</audio>              |
+| Skate or Die!                                 | Tandy          | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/skate-or-die.mp3"> Your browser does not support the <code>audio</code> element.</audio>        |
+| Zak McKracken and the Alien Mindbenders       | Tandy          | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/zak.mp3"> Your browser does not support the <code>audio</code> element.</audio>                 |
+| Budokan: The Martial Spirit                   | CMS            | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/budokan.mp3"> Your browser does not support the <code>audio</code> element.</audio>             |
+| The Secret of Monkey Island                   | CMS            | <audio controls src="https://www.dosbox-staging.org/static/audio/release-notes/0.79.0/monkey-island.mp3"> Your browser does not support the <code>audio</code> element.</audio>       |
+
+</div>
 
 
 ## Configuration settings
