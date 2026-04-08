@@ -87,7 +87,9 @@ denominator format, which was uncompressed audio.
 It is a bit less confusing to look at the best audio options separately for
 the three major DOS gaming eras. Naturally, these are only general guidelines
 and there are always exceptions, but most people would agree with this order
-of preference (most desirable options come first).
+of preference (most desirable options come first). The
+[Getting Started guide](../../getting-started/passport-to-adventure.md#sound-options)
+demonstrates configuring various sound devices for a specific game.
 
 TODO(CL) make sure every sound card is present in this list
 

@@ -27,7 +27,9 @@ directly in a text editor.
 
 A **local configuration file** named `dosbox.conf` can be placed in a game's
 directory. DOSBox Staging automatically loads it when started from that
-directory, making it easy to maintain per-game settings.
+directory, making it easy to maintain per-game settings. The
+[Getting Started guide](../getting-started/passport-to-adventure.md#layered-configurations)
+walks through creating per-game configs in detail.
 
 ## Portable setup
 
