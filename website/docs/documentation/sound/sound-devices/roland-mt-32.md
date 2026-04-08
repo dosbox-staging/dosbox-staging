@@ -22,12 +22,59 @@ as the AdLib, it remained out of reach for most computer users.
 
 ### MT-32 variants
 
+Roland produced several revisions and related models. Understanding the
+differences matters because some games sound different --- or even
+malfunction --- on the wrong revision.
 
-It was common for PC games released from 1988 to 1992 to support the Roland
-MT-32. During this era, the MT-32 was followed by the MT-100 which was an
-MT-32 'new' combined with a Roland PR-100 sequencer. A little later, Roland
-introduced their "Computer Music" series: the CM-32L and CM-64, both released
-in 1989.
+<div class="compact" markdown>
+
+| Model | Year | `model` value | Key differences |
+|-------|------|---------------|-----------------|
+| MT-32 "old" (v1.0x) | 1987 | `mt32_old` | Original hardware; some games exploit firmware quirks |
+| MT-32 "new" (v2.0x) | 1987 | `mt32_new` | Faster CPU, lower noise floor, revised instrument samples |
+| MT-100 | 1988 | --- | MT-32 "new" with built-in sequencer |
+| CM-32L | 1989 | `cm32l` | MT-32 "new" compatible + 33 extra sound effects |
+| LAPC-I | 1989 | --- | CM-32L on an ISA card (same ROMs) |
+| CM-64 | 1989 | --- | CM-32L + CM-32P (added PCM instrument bank) |
+
+</div>
+
+
+### Choosing between "old" and "new"
+
+The MT-32 was revised within its first year. The "new" revision (ROM v2.0x)
+has a faster CPU and lower background noise, but Roland also reorganised
+some of the instrument samples. Games composed on the original "old" hardware
+(ROM v1.0x) may sound subtly different on the "new" revision --- certain
+instruments have a different timbre, and a few games exploit firmware quirks
+that were fixed in the newer ROMs.
+
+As a rule of thumb:
+
+- **Early Sierra games** (1988--1990) --- King's Quest IV, Police Quest II,
+  Space Quest III, Leisure Suit Larry 2/3 --- were composed on "old" hardware
+  and generally sound more authentic on `mt32_old`.
+- **Games from 1991 onwards** --- and most LucasArts titles --- work well on
+  either revision.
+- When in doubt, the VOGONS Wiki
+  [compatibility list](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
+  notes the recommended revision for each game.
+
+
+### The CM-32L --- recommended default
+
+The **CM-32L** (1989) is generally the best overall choice. It is fully
+compatible with MT-32 "new" games and adds 33 extra sound effects (gunshots,
+explosions, dog barks, footsteps, etc.) that a handful of games use for
+enhanced audio. A few titles --- including
+[Curse of Enchantia](https://www.mobygames.com/game/740/curse-of-enchantia/)
+and [Fire & Ice](https://www.mobygames.com/game/7386/fire-ice/) --- only
+sound complete on a CM-32L.
+
+DOSBox Staging's `model = auto` setting prefers the CM-32L when its ROMs are
+available, falling back to the best available MT-32 model otherwise. For
+early Sierra titles that sound best on "old" hardware, override with
+`model = mt32_old` in a per-game config.
 
 
 ### MIDI before General MIDI
@@ -60,6 +107,28 @@ in 1989.
     be generally preferred to the plain Roland MT-32 option as it might enable 
     additional digital music to be played on the Sound Blaster.
 
+
+??? note "Notable games with MT-32 support"
+
+    <div class="compact" markdown>
+
+    - [Indiana Jones and the Last Crusade (1989)](https://www.mobygames.com/game/197/indiana-jones-and-the-last-crusade-the-graphic-adventure/)
+    - [King's Quest IV (1988)](https://www.mobygames.com/game/133/kings-quest-iv-the-perils-of-rosella/)
+    - [King's Quest V (1990)](https://www.mobygames.com/game/134/kings-quest-v-absence-makes-the-heart-go-yonder/)
+    - [King's Quest VI (1992)](https://www.mobygames.com/game/135/kings-quest-vi-heir-today-gone-tomorrow/)
+    - [Leisure Suit Larry 3 (1989)](https://www.mobygames.com/game/146/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsating-pectorals/)
+    - [Loom (1990)](https://www.mobygames.com/game/176/loom/)
+    - [Monkey Island (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/)
+    - [Monkey Island 2 (1991)](https://www.mobygames.com/game/289/monkey-island-2-lechucks-revenge/)
+    - [Police Quest II (1988)](https://www.mobygames.com/game/142/police-quest-2-the-vengeance/)
+    - [Quest for Glory I (1989)](https://www.mobygames.com/game/148/quest-for-glory-i-so-you-want-to-be-a-hero/)
+    - [Space Quest III (1989)](https://www.mobygames.com/game/139/space-quest-iii-the-pirates-of-pestulon/)
+    - [Space Quest IV (1991)](https://www.mobygames.com/game/140/space-quest-iv-roger-wilco-and-the-time-rippers/)
+    - [Ultima VI (1990)](https://www.mobygames.com/game/372/ultima-vi-the-false-prophet/)
+    - [Wing Commander (1990)](https://www.mobygames.com/game/1509/wing-commander/)
+    - [Wing Commander II (1991)](https://www.mobygames.com/game/377/wing-commander-ii-vengeance-of-the-kilrathi/)
+
+    </div>
 
 Not all games that list "Roland MT-32" in their setup utility actually
 support it properly --- and many games with excellent MT-32 music don't
