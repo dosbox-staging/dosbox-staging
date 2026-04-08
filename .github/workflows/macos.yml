@@ -27,7 +27,7 @@ concurrency:
 jobs:
   generate_release_notes:
     name:    Generate release notes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     steps:
       - name: Check out repository
