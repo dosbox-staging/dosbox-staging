@@ -77,12 +77,12 @@ the sound module directly to your sound card.
 DOS games featuring MIDI music support either or both of the following two
 major MIDI standards:
 
-- [Roland MT-32 and variants](../sound-devices/roland-mt-32) --- Released in
+- [Roland MT-32 and variants](sound-devices/roland-mt-32.md) --- Released in
   1987, this module was the only option for MIDI music in DOS games until
   about 1992. Most notably, you need the MT-32 for the best music in older
   Sierra and LucasArts adventure games.
 
-- [General MIDI](../sound-devices/general-midi) --- The world's first General
+- [General MIDI](sound-devices/general-midi.md) --- The world's first General
   MIDI capable module, the Roland Sound Canvas SC-55, was released 1991.
   Games started adding General MIDI support from about 1992 onwards, which
   resulted in the MT-32 losing most of its relevance by the mid-90s.
@@ -191,16 +191,16 @@ MIDI related settings are to be configured in the `[midi]` section.
         [midiconfig](#midiconfig) setting.
 
       - `fluidsynth` --- The built-in FluidSynth MIDI synthesiser (SoundFont
-        player). See the [FluidSynth](../sound-devices/general-midi/#fluidsynth)
+        player). See the [FluidSynth](sound-devices/general-midi.md#fluidsynth)
         configuration settings for further details.
 
       - `mt32` --- The built-in Roland MT-32 synthesiser. See the [Roland
-        MT-32](../sound-devices/roland-mt-32/#configuration-settings)
+        MT-32](sound-devices/roland-mt-32.md#configuration-settings)
         configuration settings for further details.
 
       - `soundcanvas` --- The internal Roland SC-55 synthesiser (requires a
         CLAP audio plugin). See the
-        [Sound Canvas](../sound-devices/general-midi/#sound-canvas)
+        [Sound Canvas](sound-devices/general-midi.md#sound-canvas)
         configuration settings for further details.
 
       - `coreaudio` *(macOS only)* --- Use the built-in macOS MIDI synthesiser.

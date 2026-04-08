@@ -50,7 +50,7 @@ You can set the parameters of the Innovation SSI-2001 card in the
 
     - `off` *default*{ .default } -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
       for details.
 
 

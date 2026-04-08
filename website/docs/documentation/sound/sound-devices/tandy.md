@@ -75,7 +75,7 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
     - `on` *default*{ .default } -- Filter the output.
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
       for details.
 
 
@@ -89,7 +89,7 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
       play forever.
     - `on` -- Wait 0.5s before fading out over a 0.5s period.
     - `<custom>` -- Custom fade-out definition; see
-      [opl_fadeout](../adlib-cms-sound-blaster/#opl_fadeout) for details on
+      [opl_fadeout](adlib-cms-sound-blaster.md#opl_fadeout) for details on
       the format.
 
 
@@ -102,5 +102,5 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
     - `on` *default*{ .default } -- Filter the output.
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../../analog-output-filters/#custom-filter-settings)
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
       for details.

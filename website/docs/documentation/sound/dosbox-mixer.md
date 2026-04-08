@@ -133,7 +133,6 @@ sections of the manual where they're described in detail.
 </div>
 
 [^stereo]: The output can either mono or stereo, depending on the selected model.
-[^modem]: Used by the modem emulation; not a regular sound output device.
 
 
 ## Mixer signal flow diagram
