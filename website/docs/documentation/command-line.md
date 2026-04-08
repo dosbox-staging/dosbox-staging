@@ -152,7 +152,8 @@ pages.
 
 ##### `--startmapper`
 
-:   Launch the key mapper GUI directly. See [Keyboard shortcuts](shortcuts.md).
+:   Launch the key mapper GUI directly. See
+    [Keyboard shortcuts](appendices/shortcuts.md).
 
 
 ##### `--erasemapper`
