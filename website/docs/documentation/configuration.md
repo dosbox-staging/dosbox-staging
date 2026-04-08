@@ -10,11 +10,15 @@ feel familiar.
 The **primary configuration file** is stored in a platform-specific
 location:
 
-| Platform | Path |
-|---|---|
-| Windows | `%LOCALAPPDATA%\DOSBox\dosbox-staging.conf` |
-| macOS | `~/Library/Preferences/DOSBox/dosbox-staging.conf` |
-| Linux | `~/.config/dosbox/dosbox-staging.conf` |
+<div class="compact" markdown>
+
+| Platform | Path                                               |
+| ---      | ---                                                |
+| Windows  | `%LOCALAPPDATA%\DOSBox\dosbox-staging.conf`        |
+| macOS    | `~/Library/Preferences/DOSBox/dosbox-staging.conf` |
+| Linux    | `~/.config/dosbox/dosbox-staging.conf`             |
+
+</div>
 
 Run DOSBox Staging with the [`--printconf`](command-line.md#-printconf) argument from the command line to see the exact path on your
 system. On macOS and Linux, you can use
@@ -27,7 +31,7 @@ that directory, making it easy to maintain per-game settings.
 
 ### Portable setup
 
-TODO
+TODO(CL) typically windows user will use a portable setup
 
 
 ## Config layering

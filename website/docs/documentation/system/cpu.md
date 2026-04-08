@@ -122,19 +122,31 @@ section.
     Ballpark cycles values for common CPUs (treat as starting points, then
     fine-tune per game):
 
-    | CPU              | Cycles |
-    | ---------------- | ------ |
-    | 8088 (4.77 MHz)  | 300    |
-    | 286-8            | 700    |
-    | 286-12           | 1500   |
-    | 386SX-20         | 3000   |
-    | 386DX-33         | 6000   |
-    | 386DX-40         | 8000   |
-    | 486DX-33         | 12000  |
-    | 486DX/2-66       | 25000  |
-    | Pentium 90       | 50000  |
-    | Pentium MMX-166  | 100000 |
-    | Pentium II 300   | 200000 |
+    <div class="compact" markdown>
+
+    TODO(CL) add year or release to the table for each CPU (extra last column)
+
+    | Emulated CPU      |  MHz | Cycles
+    |-------------------|-----:|-------:
+    | 8088              | 4.77 |    300
+    | 286               |    8 |    700
+    | 286               |   12 |   1500
+    | 286               |   25 |   3000
+    | 386DX             |   25 |   4500
+    | 386DX             |   33 |   6000
+    | 386DX             |   40 |   9000
+    | 486DX             |   33 |  12000
+    | 486DX2            |   66 |  25000
+    | 486DX4            |  100 |  35000
+    | Intel Pentium     |   90 |  50000
+    | Intel Pentium     |  100 |  60000
+    | Intel Pentium     |  120 |  75000
+    | Intel Pentium     |  133 |  80000
+    | Intel Pentium MMX |  166 | 100000
+    | Intel Pentium II  |  300 | 200000
+    | Intel Pentium III |  866 | 400000
+
+    </div>
 
     !!! note
 
