@@ -100,6 +100,15 @@ C:\ULTRASND\ULTRAMID.EXE
     - [Turrican II](https://www.mobygames.com/game/1652/turrican-ii-the-final-fight/)
 
 
+For a comprehensive list of games with GUS support (both native and
+UltraMID), consult the official **GLIST.TXT** compatibility list maintained
+by Gravis:
+
+- [gravisultrasound.com](http://www.gravisultrasound.com/files/documentation/GLIST.TXT)
+- [retronn.de mirror](https://retronn.de/ftp/driver/Gravis/UltraSound/GAMES/GLIST.TXT)
+- [dk.toastednet.org mirror](http://dk.toastednet.org/GUS/TEXT/GLIST.TXT)
+
+
 ### Setting up the GUS environment
 
 For games that need the patch files (UltraMID titles), you'll need to set up
