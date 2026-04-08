@@ -74,8 +74,8 @@ mismatch.
 
 !!! note
 
-    For perfectly smooth scrolling in 2D games (e.g., Pinball Dreams, Epic
-    Pinball), you'll need a VRR monitor running in VRR mode with vsync
+    For perfectly smooth scrolling in 2D games (e.g., [Pinball Dreams](https://www.mobygames.com/game/703/pinball-dreams/), [Epic
+    Pinball](https://www.mobygames.com/game/263/epic-pinball/)), you'll need a VRR monitor running in VRR mode with vsync
     disabled. The scrolling in 70 Hz VGA games will always appear juddery on
     60 Hz fixed refresh rate monitors, even with vsync enabled.
 
@@ -146,10 +146,10 @@ graphics adapter (CGA, EGA, VGA, Hercules) and any resolution, and can be
 combined with any shader.
 
 Games that benefit most from dedithering include early Sierra SCI0 adventures
-([*Leisure Suit Larry 2*](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/) & [*3*](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/), [*Quest for Glory I*](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) & [*II*](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/), [*Space Quest III*](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)),
-EGA LucasArts titles ([*The Secret of Monkey Island*](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) EGA version, [*Loom*](https://www.mobygames.com/game/176/loom/)),
-and early Legend Entertainment games ([*Spellcasting 101*](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/), [*Timequest*](https://www.mobygames.com/game/1026/timequest/),
-[*Gateway*](https://www.mobygames.com/game/317/frederik-pohls-gateway/)).
+([Leisure Suit Larry 2](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/) & [3](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/), [Quest for Glory I](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) & [II](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/), [Space Quest III](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)),
+EGA LucasArts titles ([The Secret of Monkey Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) EGA version, [Loom](https://www.mobygames.com/game/176/loom/)),
+and early Legend Entertainment games ([Spellcasting 101](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/), [Timequest](https://www.mobygames.com/game/1026/timequest/),
+[Gateway](https://www.mobygames.com/game/317/frederik-pohls-gateway/)).
 
 !!! note
 
@@ -174,11 +174,11 @@ HUDs, UI frames, subtitles, and mouse cursors untouched.
 
 Both common interlacing patterns are supported: standard line interlacing
 (alternating black horizontal lines, used by most games) and dot interlacing
-(a checkerboard pattern, used by the CD-ROM versions of [*Dune*](https://www.mobygames.com/game/380/dune/) and [*KGB*](https://www.mobygames.com/game/2894/kgb/)).
+(a checkerboard pattern, used by the CD-ROM versions of [Dune](https://www.mobygames.com/game/380/dune/) and [KGB](https://www.mobygames.com/game/2894/kgb/)).
 
-Games that benefit from deinterlacing include [*Wing Commander IV*](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/),
-[*Phantasmagoria*](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/), [*Gabriel Knight 2*](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/), [*Crusader: No Remorse*](https://www.mobygames.com/game/851/crusader-no-remorse/), [*Crusader: No
-Regret*](https://www.mobygames.com/game/852/crusader-no-regret/), [*CyberMage*](https://www.mobygames.com/game/791/cybermage-darklight-awakening/), [*Angel Devoid*](https://www.mobygames.com/game/3468/angel-devoid-face-of-the-enemy/), and [*Heroes of Might and Magic II*](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/),
+Games that benefit from deinterlacing include [Wing Commander IV](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/),
+[Phantasmagoria](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/), [Gabriel Knight 2](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/), [Crusader: No Remorse](https://www.mobygames.com/game/851/crusader-no-remorse/), [Crusader: No
+Regret](https://www.mobygames.com/game/852/crusader-no-regret/), [CyberMage](https://www.mobygames.com/game/791/cybermage-darklight-awakening/), [Angel Devoid](https://www.mobygames.com/game/3468/angel-devoid-face-of-the-enemy/), and [Heroes of Might and Magic II](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/),
 among others. Enable it per-game rather than globally for best results.
 
 ## Configuration settings
@@ -377,8 +377,8 @@ section.
 
     !!! note
 
-        - For perfectly smooth scrolling in 2D games (e.g., in Pinball Dreams
-          and Epic Pinball), you'll need a VRR monitor running in VRR mode
+        - For perfectly smooth scrolling in 2D games (e.g., in [Pinball Dreams](https://www.mobygames.com/game/703/pinball-dreams/)
+          and [Epic Pinball](https://www.mobygames.com/game/263/epic-pinball/)), you'll need a VRR monitor running in VRR mode
           and vsync disabled. The scrolling in 70 Hz VGA games will always
           appear juddery on 60 Hz fixed refresh rate monitors even with vsync
           enabled.
