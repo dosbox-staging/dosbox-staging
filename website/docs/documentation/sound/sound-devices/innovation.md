@@ -27,6 +27,11 @@ Very few games support this sound option.
 </div>
 
 
+### Mixer channel
+
+The Innovation SSI-2001 outputs to the **INNOVATION** mixer channel.
+
+
 ## Configuration parameters
 
 You can set the parameters of the Innovation SSI-2001 card in the

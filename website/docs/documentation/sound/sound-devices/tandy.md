@@ -46,6 +46,12 @@ sbtype = none
     **Tandy 1000 SL, TL, HL series** or something similar.
 
 
+### Mixer channels
+
+The Tandy synthesiser outputs to the **TANDY** mixer channel, and the DAC to
+the **TANDYDAC** channel.
+
+
 ## Configuration settings
 
 Tandy 3 Voice settings are to be configured in the `[speaker]` section.
@@ -72,7 +78,7 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output.
+    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 120 Hz + 2nd order low-pass at 4.8 kHz).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
@@ -99,7 +105,7 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output.
+    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 120 Hz + 2nd order low-pass at 4.8 kHz).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)

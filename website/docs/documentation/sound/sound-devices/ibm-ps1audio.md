@@ -44,6 +44,12 @@ games detect PS/1 Audio automatically.
 </div>
 
 
+### Mixer channels
+
+The PS/1 Audio synthesiser outputs to the **PS1** mixer channel, and the DAC
+to the **PS1DAC** channel.
+
+
 ## Configuration settings
 
 IBM PS/1 Audio settings are to be configured in the `[speaker]` section.
@@ -62,7 +68,7 @@ IBM PS/1 Audio settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output.
+    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 160 Hz + 1st order low-pass at 2.1 kHz).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
@@ -75,7 +81,7 @@ IBM PS/1 Audio settings are to be configured in the `[speaker]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output.
+    - `on` *default*{ .default } -- Filter the output (3rd order high-pass at 160 Hz + 1st order low-pass at 2.1 kHz).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
