@@ -8,7 +8,7 @@ Staging automatically detects your modern USB controller and maps it to the
 emulated game port.
 
 Some flight simulators of the era expected very specific hardware.
-*Wing Commander*, *X-Wing*, and *F-15 Strike Eagle III* were often played
+[*Wing Commander*](https://www.mobygames.com/game/3/wing-commander/), [*X-Wing*](https://www.mobygames.com/game/536/star-wars-x-wing/), and [*F-15 Strike Eagle III*](https://www.mobygames.com/game/445/f-15-strike-eagle-iii/) were often played
 with dedicated flight sticks, and some titles had built-in support for the
 Thrustmaster FCS or CH Flightstick Pro. The `joysticktype` setting lets you
 emulate these specific stick types if a game requires it.
@@ -17,8 +17,6 @@ Because the original game port was analog, deadzone and calibration settings
 actually matter. If your character drifts without input or the axes feel
 off, adjusting the deadzone or using the joystick calibration hotkeys (see
 [Keyboard shortcuts](../appendices/shortcuts.md)) can help sort things out.
-
-TODO(CL) link game names to mobygames
 
 
 ## Joystick calibration

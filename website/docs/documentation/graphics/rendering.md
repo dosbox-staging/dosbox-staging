@@ -12,7 +12,7 @@ Most DOS games used non-square pixels — a 320×200 image was stretched to
 fill a 4:3 CRT monitor. Aspect ratio correction is enabled by default so
 games look as they were intended. Without it, everything appears slightly
 squished, which is especially noticeable with pixel art-heavy games like
-*Monkey Island* or *Loom*.
+[*Monkey Island*](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) or [*Loom*](https://www.mobygames.com/game/176/loom/).
 
 The image adjustment controls — brightness, contrast, saturation, colour
 temperature — work much like the knobs on an old CRT monitor. They're
@@ -21,8 +21,6 @@ differences in display characteristics.
 
 If you prefer a crisp, pixel-perfect look without any CRT emulation, set
 `shader = sharp`. For completely unprocessed output, use `shader = none`.
-
-TODO(CL) link game names to mobygames
 
 
 ## CRT shaders
@@ -221,13 +219,11 @@ square-pixel displays.
 A small number of DOS games need square pixels (`aspect = square-pixels`).
 These are typically European games ported from the PAL Amiga, where the
 original art was designed for square pixels at 320&times;256. Studios
-known for this include Revolution Software (*Beneath a Steel Sky*, *Lure of
-the Temptress*), Delphine Software (*Another World*, *Flashback*), and
-Coktel Vision (*Gobliiins* series). The tell-tale sign is scanned or
+known for this include Revolution Software ([*Beneath a Steel Sky*](https://www.mobygames.com/game/386/beneath-a-steel-sky/), [*Lure of
+the Temptress*](https://www.mobygames.com/game/1134/lure-of-the-temptress/)), Delphine Software ([*Another World*](https://www.mobygames.com/game/564/out-of-this-world/), [*Flashback*](https://www.mobygames.com/game/555/flashback-the-quest-for-identity/)), and
+Coktel Vision ([*Gobliiins*](https://www.mobygames.com/game/1154/gobliiins/) series). The tell-tale sign is scanned or
 hand-drawn artwork that appears vertically stretched with aspect ratio
 correction enabled.
-
-TODO(CL) link game names to mobygames
 
 Pixels are square (1:1 PAR) in 640&times;480 and higher resolutions. A few
 other modes have their own non-square PARs: 640&times;350 EGA (1:1.37 PAR),
