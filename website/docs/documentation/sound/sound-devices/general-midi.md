@@ -177,7 +177,7 @@ Sound Canvas settings are to be configured in the `[soundcanvas]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output (1st order low-pass at 11 kHz).
+    - `on` *default*{ .default } -- Filter the output. This applies a 1st order low-pass filter at 11 kHz (`lpf 1 11000`).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)

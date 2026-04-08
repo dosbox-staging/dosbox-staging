@@ -66,7 +66,7 @@ IBM Music Feature Card settings are to be configured in the `[imfc]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output (2nd order low-pass at 3.5 kHz).
+    - `on` *default*{ .default } -- Filter the output. This applies a 2nd order low-pass filter at 3.5 kHz (`lpf 2 3500`).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
