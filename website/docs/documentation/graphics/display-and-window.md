@@ -37,7 +37,10 @@ rate. This is intended for fixed refresh rate monitors (typically 60 Hz) with
 [vsync](#vsync) enabled to eliminate screen tearing in fast-paced games.
 
 The default `auto` mode selects `dos-rate` when vsync is off and `host-rate`
-when vsync is on, which is the right choice for most setups.
+when vsync is on, which is the right choice for most setups. For a practical
+example of configuring vsync and presentation modes for a specific game, see
+the [Star Wars: Dark Forces](../../getting-started/star-wars-dark-forces.md#display-refresh-rate)
+chapter of the getting started guide.
 
 In practice, most users fall into one of three categories:
 
@@ -49,12 +52,46 @@ In practice, most users fall into one of three categories:
 - **Fixed 60 Hz monitor, slower games** (RPGs, adventures, strategy): The
   defaults work fine --- tearing is rarely noticeable in these genres.
 
+### Refresh rates of DOS graphics standards
+
+Each DOS graphics standard has its own native refresh rate. The mismatch
+between these rates and a typical 60 Hz fixed refresh rate display is the
+main source of judder in DOS games.
+
+| Graphics standard      | Refresh rate                                                                     |
+|------------------------|----------------------------------------------------------------------------------|
+| SVGA and VESA          | 70 Hz or higher --- 640&times;480 or higher extended and VESA modes              |
+| VGA                    | 60 Hz --- 640&times;480 standard mode only<br>70 Hz --- all other standard modes |
+| CGA, PCjr, Tandy, EGA  | 60 Hz                                                                            |
+| Hercules               | 50 Hz                                                                            |
+
+Most VGA games run at 70 Hz. On a fixed 60 Hz display, the 60/70 Hz
+mismatch causes a slight but perceptible judder on scrolling and
+animation. A VRR monitor eliminates this entirely by syncing to the
+emulated refresh rate. On fixed-rate monitors, enabling vsync prevents
+tearing but cannot eliminate the judder inherent in the refresh rate
+mismatch.
+
 !!! note
 
     For perfectly smooth scrolling in 2D games (e.g., Pinball Dreams, Epic
     Pinball), you'll need a VRR monitor running in VRR mode with vsync
     disabled. The scrolling in 70 Hz VGA games will always appear juddery on
     60 Hz fixed refresh rate monitors, even with vsync enabled.
+
+!!! tip "Creating custom 60 and 70 Hz screen modes"
+
+    On fixed-rate monitors, you can create custom screen modes that match
+    the DOS refresh rate exactly. Use the Nvidia Control Panel or [Custom
+    Resolution Utility
+    (CRU)](https://www.monitortests.com/forum/Thread-Custom-Resolution-Utility-CRU)
+    on Windows. Enable *CVT reduced blanking* (CVT-RB or CVT-RBv2) to
+    reach 70 Hz. For the best results, use the exact fractional
+    **59.713 Hz** and **70.086 Hz** refresh rates for the nominal "60 Hz"
+    and "70 Hz" DOS rates, respectively. The drawback is that you need to
+    set the appropriate refresh rate before starting DOSBox Staging, and
+    games that switch between different refresh rates cannot be fully
+    accommodated this way.
 
 
 ## Dedithering

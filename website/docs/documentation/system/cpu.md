@@ -71,6 +71,20 @@ Always aim for the *lowest* cycles value that gives adequate performance ---
 overdoing it only increases the chance of audio glitches and wastes host CPU
 resources.
 
+!!! warning "Speed-sensitive games"
+
+    Some games, particularly those from the 1980s and early 1990s, are
+    sensitive to CPU speed. Setting cycles too high can cause them to run too
+    fast, behave erratically, or crash outright (e.g., "integer divide by 0"
+    errors). A few games may even fail sound card detection and refuse to
+    start if the emulated CPU is too fast. If a game misbehaves, try
+    lowering the cycles before investigating other causes.
+
+
+For a hands-on walkthrough of finding the right cycles setting for a specific
+game, see the [Beneath a Steel Sky](../../getting-started/beneath-a-steel-sky.md#adjusting-the-emulated-cpu-speed)
+chapter of the getting started guide.
+
 
 ## Configuration examples
 
