@@ -547,7 +547,7 @@ You can set the rendering parameters in the `[render]` configuration section.
     best to set this to 0 or close to 0 if your monitor is bright enough.
 
 
-### Color palettes
+### Colour palettes
 
 ##### cga_colors
 

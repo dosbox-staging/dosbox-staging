@@ -23,7 +23,7 @@ adventure games. Their first game with Roland MT-32 support was
 released in 1988, which was the first PC game to feature a fully-orchestrated
 soundtrack written by a professional media composer, William Goldstein.
 
-Similary, the music of
+Similarly, the music of
 [Police Quest III: The Kindred](https://www.mobygames.com/game/148/police-quest-3-the-kindred/)
 from 1991 was composed by Jan Hammer of Miami Vice fame specifically for the
 Roland MT-32. Jan Hammer was very fond of the LA synthesis employed by the

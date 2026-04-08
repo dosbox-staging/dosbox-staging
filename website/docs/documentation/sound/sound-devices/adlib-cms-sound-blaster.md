@@ -247,7 +247,7 @@ as the successor of their Game Blaster card. It was the first sound card on
 the market to have digital audio playback capabilities; it could output 8-bit
 digital audio at up to 23kHz sample rates on a single mono channel. Full
 compatibility with the CMS and the AdLib (Yamaha OPL2) played a critical role
-in the card's enourmous success. In less than a year, the Sound Blaster became
+in the card's enormous success. In less than a year, the Sound Blaster became
 the best-selling expansion card for the PC.
 
 This had transformed DOS gaming, as games could use realistic digital audio
