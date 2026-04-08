@@ -21,18 +21,13 @@ The guide is hands-on and assumes no prior DOS knowledge. Later chapters build
 on earlier ones, so work through them in order rather than skipping ahead.
 Even experienced users tend to pick up useful techniques from it.
 
-!!! tip
-
-    The Getting Started guide is separate from this manual --- look for it in
-    the **Getting started** tab at the top of the page.
-
 
 ## What's in this manual
 
 ### Getting oriented
 
-The section you're reading now. It provides the background knowledge that
-makes the rest of the manual make sense.
+The section you're reading now. It gives you the foundation for everything
+else that follows.
 
 - [Introduction](introduction.md) --- What DOSBox Staging is, how it differs
   from full PC emulators, and a brief history of the project.
@@ -62,7 +57,7 @@ Practical information about operating the emulator day-to-day.
   setup utility asks.
 - [Capture](capture.md) --- Screenshots, audio recording, video recording,
   and MIDI capture.
-- [Web server](webserver.md) --- The built-in web interface for remote
+- [HTTP API](http-api.md) --- The built-in HTTP API for remote
   control.
 - [Running Windows 3.1](windows-31.md) --- Installing and configuring
   Windows 3.1 inside DOSBox Staging, including video, audio, MIDI, and mouse

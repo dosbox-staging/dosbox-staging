@@ -13,8 +13,8 @@ recommended hardware settings.
 
 ## Installation
 
-You'll need Windows 3.1 (or Windows for Workgroups 3.11) installation media
---- either as floppy disk images or files extracted from them.
+You'll need **Windows 3.1** (or **Windows for Workgroups 3.11**) installation
+media, either as floppy disk images or the files extracted from them.
 
 - Mount your installation files so they're accessible from DOS (e.g., copy
   them to `C:\INSTALL`).
@@ -29,7 +29,7 @@ Use the following DOSBox configuration:
 ``` ini
 [dosbox]
 machine = svga_s3
-memsize = 16
+memsize = 32
 
 [cpu]
 cpu_cycles = 30000
@@ -42,8 +42,11 @@ sbtype = sb16
 mididevice = soundcanvas
 ```
 
-Setting `cputype` to `pentium` is important --- some Windows 3.1 games
-(e.g., [Betrayal in Antara](https://www.mobygames.com/game/1763/betrayal-in-antara/)) require it. Give Windows at least 16 MB of RAM.
+!!! warning
+
+    Setting `cputype` to `pentium` is important --- some Windows 3.1 games (e.g.,
+    [Betrayal in Antara](https://www.mobygames.com/game/1763/betrayal-in-antara/))
+    require it.
 
 !!! tip
 
@@ -65,7 +68,7 @@ driver for proper SVGA support inside Windows.
 - Higher resolutions up to 1600&times;1200 are available if you set
   [`vmemsize`](system/general.md#vmemsize) to `4` or higher.
 
-!!! note
+!!! important
 
     Always install the video driver *after* the initial Windows
     installation, not during it. Back up your `C:\WINDOWS` directory before
@@ -86,7 +89,7 @@ for digital audio and OPL music inside Windows.
     - DMA: **1**
     - High DMA: **5**
 - After installation, delete the `CONFIG.SYS` and `AUTOEXEC.BAT` files the
-  installer generates --- they are not needed under DOSBox.
+  installer generates; they are not needed under DOSBox.
 - Test by playing `C:\WINDOWS\CANYON.MID` in Media Player.
 
 
@@ -99,8 +102,10 @@ After installing the Sound Blaster 16 driver, configure MIDI output:
 
 This routes MIDI output through DOSBox's configured
 [`mididevice`](sound/sound-devices/midi.md#mididevice), so you can use
-FluidSynth, Sound Canvas emulation, or MT-32 emulation for Windows 3.1
-games --- just change the `mididevice` setting in your DOSBox config.
+[FluidSynth](sound/sound-devices/general-midi.md#fluidsynth), [Sound Canvas
+SC-55](sound/sound-devices/general-midi.md#sound-canvas-emulation),
+or [Roland MT-32](sound/sound-devices/roland-mt-32.md) emulation for Windows
+3.1 games --- just change the `mididevice` setting in your DOSBox config.
 
 
 ## Mouse setup

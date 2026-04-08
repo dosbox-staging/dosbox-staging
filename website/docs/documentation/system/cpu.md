@@ -88,9 +88,18 @@ resources.
     lowering the cycles before investigating other causes.
 
 
-For a hands-on walkthrough of finding the right cycles setting for a specific
-game, see the [Beneath a Steel Sky](../../getting-started/beneath-a-steel-sky.md#adjusting-the-emulated-cpu-speed)
-chapter of the getting started guide.
+For a hands-on walkthrough of finding the right cycles setting for specific
+games, the [Getting Started guide](../getting-started/index.md)
+walks you through a few a practical examples:
+
+<div class="compact" markdown>
+
+- [Passport to Adventure](../getting-started/passport-to-adventure.md#cpu-sensitive-games)
+- [Beneath a Steel Sky](../getting-started/beneath-a-steel-sky.md#adjusting-the-emulated-cpu-speed)
+- [Star Wars Dark Forces](../getting-started/star-wars-dark-forces.md#setting-the-emulated-cpu-speed)
+
+</div>
+
 
 
 ## Configuration examples

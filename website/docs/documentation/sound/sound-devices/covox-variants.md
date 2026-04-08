@@ -1,10 +1,10 @@
 # Covox variants
 
-Several inexpensive parallel port DAC devices appeared in the late 1980s as a
-cheap way to get digital audio output from a PC. They were far simpler than a
-Sound Blaster --- just a small dongle that plugged into your printer port ---
-but they could play back digitised sound and speech at decent quality for the
-era.
+Several inexpensive Covox variants **Covox variants** (digital-to-analog
+converter (DAC) devices) appeared in the late 1980s as a cheap way to get
+digital audio output from a PC. They were far simpler than a Sound Blaster ---
+just a small dongle that plugged into your parallel port --- but they could
+play back digitised sound and speech at decent quality for the era.
 
 ## Covox Speech Thing
 
@@ -75,6 +75,7 @@ Parallel port DAC settings are to be configured in the `[speaker]` section.
         | Disney Sound Source | 2nd order high-pass at 100 Hz, and 2nd order low-pass at 2 kHz | `hpf 2 100 lpf 2 2000` |
         | Covox Speech Thing | 2nd order low-pass at 9 kHz | `lpf 2 9000` |
         | Stereo-on-1 | 2nd order low-pass at 9 kHz | `lpf 2 9000` |
+
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
