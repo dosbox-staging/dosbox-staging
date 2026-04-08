@@ -64,6 +64,12 @@ plugins:
       slide_effect: 'none'
       skip_classes:
         - skip-lightbox
+
+  - privacy:
+      enabled: !ENV [OFFLINE_MANUAL, false]
+  - optimize:
+      enabled: !ENV [OFFLINE_MANUAL, false]
+
   - redirects:
         redirect_maps:
           # Convenience redirects for top level sections (so for example
@@ -145,6 +151,7 @@ nav:
   - Documentation:
       - documentation/introduction.md
       - documentation/dos-primer.md
+      - documentation/dos-eras.md
 
       - documentation/configuration.md
       - documentation/command-line.md
