@@ -144,7 +144,12 @@ which added digital audio playback. The 386 CPU provided the processing power
 to drive increasingly ambitious games. This period marks the moment PC gaming
 became a serious force.
 
-TODO(CL) mention MT-32
+For those with deeper pockets, the **Roland MT-32** sound module (released in
+1987) offered dramatically superior music through its LA synthesis engine.
+Sierra On-Line was an early champion, and many late-80s games sound
+remarkably better on the MT-32 compared to AdLib or Sound Blaster FM. It
+remained expensive and never became mainstream, but it's widely regarded as
+the best way to experience game music from this period.
 
 ### Notable games
 
@@ -205,7 +210,13 @@ Pro and 16 added stereo output, and the Gravis UltraSound offered advanced
 wavetable synthesis. Hard drives became affordable for home users, and games
 grew to fill them.
 
-TODO(CL) mention Sound Canvas and that some games still supported the MT-32
+The **Roland Sound Canvas SC-55**, released in 1991, became the reference
+device for **General MIDI** game music, offering a standardised set of 128
+realistic instrument sounds. Many games from this era supported both General
+MIDI and the MT-32 --- the Sound Canvas for its broad instrument palette, and
+the MT-32 for its distinctive character and the many titles already composed
+for it. The **Roland CM-32L**, a cost-reduced MT-32 variant with extra sound
+effects, was also popular.
 
 ### Notable games
 
@@ -275,7 +286,11 @@ the golden age of DOS gaming --- the period that produced many of the
 platform's most celebrated titles that served as blueprints for the modern
 gaming industry.
 
-TODO(CL) mention Sound Canvas is the most common MIDI device now
+By this point, the **Roland Sound Canvas** (and General MIDI in general) had
+become the dominant standard for game music, displacing the MT-32. Most
+Pentium-era games with MIDI support target General MIDI as their primary
+option, and the SC-55 remains the best way to hear these soundtracks as
+intended.
 
 ### Notable games
 
