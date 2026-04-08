@@ -67,9 +67,13 @@ Parallel port DAC settings are to be configured in the `[speaker]` section.
     Possible values:
 
     - `on` *default*{ .default } -- Filter the output. The default filter
-      varies by device: Disney Sound Source uses a 2nd order high-pass at
-      100 Hz + 2nd order low-pass at 2 kHz; Covox Speech Thing and
-      Stereo-on-1 use a 2nd order low-pass at 9 kHz.
+      varies by device:
+
+        | Device | Default filter |
+        | --- | --- |
+        | Disney Sound Source | 2nd order high-pass at 100 Hz, and 2nd order low-pass at 2 kHz |
+        | Covox Speech Thing | 2nd order low-pass at 9 kHz |
+        | Stereo-on-1 | 2nd order low-pass at 9 kHz |
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
