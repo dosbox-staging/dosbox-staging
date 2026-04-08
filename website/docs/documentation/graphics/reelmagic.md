@@ -12,7 +12,22 @@ Only a small number of titles ever supported it, so this is a niche feature.
 If you're not specifically trying to run one of those games, you can safely
 ignore this section entirely.
 
-TODO(CL) complete list of supported reelmagic games here
+The following DOS games are known to use the ReelMagic card:
+
+<div class="compact" markdown>
+
+- Crime Patrol
+- Crime Patrol 2: Drug Wars
+- Dragon's Lair
+- Entity
+- Flash Traffic: City of Angels
+- Lord of the Rings (Interplay, 1993)
+- Man Enough
+- Return to Zork
+- Space Ace
+- The Horde
+
+</div>
 
 
 ## Configuration settings

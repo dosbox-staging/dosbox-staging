@@ -24,12 +24,52 @@ interpreter for real-mode programs. You'll rarely need to override this.
 
 ## Protected and real mode
 
-TODO(CL) adapt/generalise from the getting started guide
+DOS games released before about 1993 use *real mode* (the legacy 16-bit
+programming model of the Intel 386), while games from 1993 onwards almost
+exclusively use *protected mode* (full 32-bit operation). The important
+distinction is that most CPU-hungry games are protected mode games (e.g., FPS
+games and flight simulators), while older real mode games generally have much
+less demanding performance requirements.
+
+DOSBox Staging detects the current mode automatically and applies different
+default speeds:
+
+- **Real mode**: 3000 cycles/ms (roughly a 386SX at 20 MHz)
+- **Protected mode**: 60,000 cycles/ms (roughly a Pentium at 90 MHz)
+
+The conservative real mode default prevents older speed-sensitive games from
+running too fast. The higher protected mode default gives demanding games the
+headroom they need.
+
+You can easily tell which mode a game uses by watching the cycles value in the
+DOSBox Staging window's title bar --- it will show 3000 in real mode and
+60,000 in protected mode (assuming default settings). You can also spot
+protected mode games by the presence of DOS extenders such as `DOS4GW.EXE`,
+`PMODEW.EXE`, or `CWSDPMI.EXE` in their game directories.
 
 
-## Finding the correct cycles setting for a game 
+## Finding the correct cycles setting for a game
 
-TODO(CL) adapt/generalise from the getting started guide
+While the defaults get most games *running*, manual tweaking is often needed
+to make a game run *smoothly*. Setting the cycles too high wastes host CPU
+power that could be used for glitch-free audio emulation --- there's no
+benefit to emulating a faster CPU than the game actually needs.
+
+Use the [cpu_cycles](#cpu_cycles) table as a starting point: look up what CPU
+the game was designed for, set the corresponding cycles value, then fine-tune
+from there. For 2D games from the 90s, 25,000 cycles (486DX2/66 level) handles
+virtually everything. 3D games typically need 50,000--100,000 cycles (Pentium
+range), and 3D SVGA gaming at 640&times;480 or above may require 200,000+
+cycles.
+
+You can adjust the cycles on the fly while playing with ++ctrl+f11++ to
+decrease by 20% and ++ctrl+f12++ to increase by 10% (++cmd+f11++ and
+++cmd+f12++ on macOS). Once you've found a good value, update your config
+to match.
+
+Always aim for the *lowest* cycles value that gives adequate performance ---
+overdoing it only increases the chance of audio glitches and wastes host CPU
+resources.
 
 
 ## Configuration examples
