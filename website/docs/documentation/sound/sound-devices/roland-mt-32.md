@@ -59,26 +59,10 @@ It was common for PC games released from 1988 to 1992 to support the Roland MT-3
     additional digital music to be played on the Sound Blaster.
 
 
-TODO(CL) the following paragraphs contain way too much technical information.
-we need to vastly simplify all that.
-
-Earlier DOS games that provide a Roland MT-32 sound option frequently use Normal mode during initialisation, or when communicating with the card. Most later games including those that support General MIDI typically only use the more basic UART mode. This mode is much simpler to implement, so almost all hardware that claims to be MPU-401 compatible will have this mode as standard. The Sound Blaster 16 and up only support MPU-401 UART mode, making them unsuitable as a reliable interface for older DOS games with MT-32 support. The older Sound Blasters do not support MPU-401 at all (the game port's pinouts are not MPU-401 compatible). 
-
-
-
-DOSBox supports the MPU-401 (MIDI Processing Unit) interface created in 1984 by the Japanese audio company Roland to enable customers to connect MIDI-compatible devices to their home computers. Initially, this interface support was through standalone cards, but partial support was later incorporated into many third-party sound and joystick add-on cards.
-
-
-The Roland MT-32 Multi-Timbre Sound Module from 1987 was a programmable synthesiser that supported up to 32 notes played at once using a 16-bit DAC at a sample rate of 32000 HZ. This standalone device required an MPU-401 interface installed on the host machine to connect to and use on a PC.
-
-
-Also, in 1989 Roland released the first of a series of CM (Computer Module) sound modules. Some of which improved but were also mostly compatible with the MT32 module. Models included the CM-32L, an improved MT-32 with 33 added sound-effect samples. And the CM-64 was a more expensive model of the CM32L with extra functionality geared toward computer musicians.
-
-To complicate things, MPU-401 has two modes, ‘intelligent’ and ‘UART,’ otherwise called dumb mode. Many ‘MPU-401 compatible’ cards and devices only support UART mode. In UART mode, the attached MPU-401 component acts as a dumb playback device.
-
-While the intelligent mode, the attached device handles part of the audio processing. This more complex mode allows computers with the slowest generation of Intel PC CPUs (such as the 8086 and 8088) to handle MIDI playback. But intelligent mode had become redundant when support for these CPUs was abandoned in favour of faster chips that could handle the audio processing.
-
-
+DOSBox Staging emulates both the MT-32 sound module and the MPU-401 MIDI
+interface needed to communicate with it. The emulated MPU-401 supports
+*Intelligent Mode*, which some older games require. Most later games only
+need the simpler *UART Mode*.
 
 ``` ini
 [midi]
@@ -106,9 +90,10 @@ the original hardware to work.
     therefore they cannot be bundled with DOSBox. You need to provide these
     ROM files yourself to get any sound out of the MT-32 emulation.
 
-Both versioned and unversioned ROM sets are supported---these are explained in
-detail below. Once you have acquired the necessary ROM sets, it's recommended
-to copy them to the default ROM directory:
+ROMs are identified by their checksums, so file names do not matter. Both
+interleaved and non-interleaved ROM dumps are supported. Once you have
+acquired the necessary ROM sets, it's recommended to copy them to the default
+ROM directory:
 
 <div class="compact" markdown>
 
@@ -131,31 +116,11 @@ configuration setting for further details.
 
 
 
-### Unversioned ROMs
+### Supported ROM sets
 
-TODO(CL) we don't use the versioned / unversioned concept anymore. we detect
-ROMs by their hashes. look at the config setting's description for more info
-and the code; the ROM section needs to be revisited and simplified.
-
-Unversioned ROMs must be named as follows:
-
-<div class="compact" markdown>
-
-- `CM32L_CONTROL.ROM`
-- `CM32L_PCM.ROM`
-- `MT32_CONTROL.ROM`
-- `MT32_PCM.ROM`
-
-</div>
-
-### Versioned ROMs
-
-Versioned ROMs are part of the MAME video game preservation project. Learn
-more by searching for _"mt32 mame roms"_ and _"cm32l mame roms"_. These ROM
-sets support the following models:
-
-
-Interleaved ROM dumps
+The following ROM sets are supported. These originate from the MAME video
+game preservation project --- learn more by searching for _"mt32 mame roms"_
+and _"cm32l mame roms"_.
 
 <div class="compact" markdown>
 
@@ -199,42 +164,30 @@ have been copied to your ROM directory for that model.
 
 
 
+### ROM lookup paths
 
+If `romdir` is not set, DOSBox Staging searches the following directories for
+ROM files (in order). You can also place ROMs in an `mt32-roms` subfolder
+inside the game's working directory.
 
-TODO(CL) we need to document the lookup paths below, but it needs major
-cleanup and fact-checking based on the code.
+**Windows**
 
-### Windows
+1. `%LOCALAPPDATA%\DOSBox\mt32-roms\`
+2. `C:\mt32-rom-data\`
 
-CROSS_GetPlatformConfigDir() + "mt32-roms\\",
-"C:\\mt32-rom-data\\",
+**macOS**
 
-### macOS
+1. `~/Library/Preferences/DOSBox/mt32-roms/`
+2. `~/Library/Audio/Sounds/MT32-Roms/`
+3. `/usr/local/share/mt32-rom-data/`
+4. `/usr/share/mt32-rom-data/`
 
-CROSS_GetPlatformConfigDir() + "mt32-roms/",
-CROSS_ResolveHome("~/Library/Audio/Sounds/MT32-Roms/"),
-"/usr/local/share/mt32-rom-data/",
-"/usr/share/mt32-rom-data/",
+**Linux**
 
-### Linux
-
-if XDG_DATA_HOME set:
-  $XDG_DATA_HOME/dosbox/mt32-roms/
-  $XDG_DATA_HOME/mt32-rom-data/
-else:
-  $HOME/.local/share/dosbox/mt32-roms/
-  $HOME/.local/share/mt32-rom-data/
-
-if XDG_DATA_DIRS set:
-  XDG_DATA_DIRS/mt32-rom-data/
-else:
-  /usr/local/share/mt32-rom-data/
-  /usr/share/mt32-rom-data/
-
-if XDG_CONF_HOME set:
-  $XDG_CONF_HOME/mt32-roms
-else:
-  $HOME/.config/mt32-roms
+1. `$XDG_DATA_HOME/dosbox/mt32-roms/` (defaults to `~/.local/share/dosbox/mt32-roms/`)
+2. `$XDG_DATA_HOME/mt32-rom-data/` (defaults to `~/.local/share/mt32-rom-data/`)
+3. `$XDG_DATA_DIRS/mt32-rom-data/` (defaults to `/usr/local/share/mt32-rom-data/` and `/usr/share/mt32-rom-data/`)
+4. `$XDG_CONFIG_HOME/dosbox/mt32-roms/` (defaults to `~/.config/dosbox/mt32-roms/`)
 
 
 ## Configuration settings
