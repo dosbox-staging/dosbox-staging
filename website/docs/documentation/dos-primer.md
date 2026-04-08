@@ -196,6 +196,12 @@ gives the platform its name. It provides the basic services needed to run
 programs: managing files on disk, loading programs into memory, and handling
 input/output to hardware devices.
 
+MS-DOS was released in 1981 alongside the original IBM PC and went through
+many versions, the last being 6.22 in 1994. Each version added features ---
+subdirectory support in 2.0 (1983), memory management in 5.0 (1991) --- but
+all maintained backward compatibility. DOSBox Staging emulates a
+DOS 5.0-compatible environment by default.
+
 DOS is a command-line operating system --- there is no graphical desktop. You
 interact with it by typing commands at a prompt (e.g., the famous `C:\>`
 prompt). Basic navigation involves commands like `DIR` to list files, `CD` to

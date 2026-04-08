@@ -20,7 +20,8 @@ You'll need Windows 3.1 (or Windows for Workgroups 3.11) installation media
   them to `C:\INSTALL`).
 - Run `SETUP` from the installation directory.
 - Install into `C:\WINDOWS`.
-- When prompted, choose **386 Enhanced** mode.
+- When prompted, choose **386 Enhanced** mode (requires a 386 or better,
+  which DOSBox always emulates).
 - After installation completes, launch Windows with the `WIN` command.
 
 Use the following DOSBox configuration:

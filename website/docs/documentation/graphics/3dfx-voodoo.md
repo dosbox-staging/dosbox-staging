@@ -3,7 +3,9 @@
 The **3dfx Voodoo** released in 1996 was a dedicated 3D-only accelerator card;
 it couldn't even output 2D graphics on its own. You'd install it alongside
 your regular video card and connect them with a pass-through cable. A
-gloriously awkward setup, but the results were stunning for the era.
+gloriously awkward setup, but the results were stunning for the era. When a
+Glide game launched, the Voodoo took over the display output; when you quit,
+the signal switched back to your 2D card.
 
 Games accessed the Voodoo through 3dfx's proprietary Glide API. Titles like
 [Tomb Raider](https://www.mobygames.com/game/348/tomb-raider/),
