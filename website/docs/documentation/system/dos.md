@@ -7,7 +7,7 @@ number, memory management, and regional settings.
 
 The reported DOS version defaults to 5.0, which covers the vast majority of
 games from the entire DOS era. A handful of very late titles check for DOS
-7.0, and some very early ones expect DOS 3.x, but these are edge cases
+7.0, and some very early ones expect DOS 3.0, but these are edge cases
 you'll likely never hit.
 
 XMS, EMS, and UMB are different memory management schemes from the DOS era.
@@ -162,7 +162,7 @@ You can set the DOS parameters in the `[dos]` configuration section.
 ##### file_locking
 
 :   Enable file locking via emulating `SHARE.EXE`. This is required for some
-    Windows 3.1x applications to work properly. It generally does not cause
+    Windows 3.1 applications to work properly. It generally does not cause
     problems for DOS games except in rare cases (e.g., Astral Blur demo). If
     you experience crashes related to file permissions, you can try disabling
     this.
