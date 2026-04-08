@@ -119,6 +119,36 @@ external MIDI devices.
     ```
 
 
+### Using external MIDI hardware
+
+If you own a physical MIDI sound module (an MT-32, SC-55, or similar), you
+can connect it to your computer and have DOSBox Staging send MIDI data
+directly to it. This is the ultimate option for enthusiasts who want
+authentic hardware playback.
+
+You'll need a **USB MIDI interface** (e.g., Roland UM-ONE mk2) to connect
+the module to a modern computer. The MIDI cable carries note data only ---
+you'll also need audio cables from the module's line outputs to your
+speakers or audio interface.
+
+To set it up:
+
+- Connect the USB MIDI interface and power on the sound module.
+- Run `MIXER /LISTMIDI` at the DOSBox DOS prompt to list available MIDI
+  devices and find your interface's name or ID.
+- Set `mididevice` to `port` and `midiconfig` to the device name (or
+  numeric ID):
+
+``` ini
+[midi]
+mididevice = port
+midiconfig = UM-ONE
+```
+
+Name-based identification is preferred over numeric IDs, as the numbers
+can change when you unplug and reattach USB devices.
+
+
 ## Configuration settings
 
 MIDI related settings are to be configured in the `[midi]` section.
