@@ -79,7 +79,12 @@ Sky](beneath-a-steel-sky.md/#aspect-ratio-correction) example.
     720&times;348 Hercules graphics mode (1:1.5517 PAR).
 
 
-## Integer scaling 
+## Integer scaling
+
+See [Integer scaling](../documentation/graphics/rendering.md#integer-scaling)
+and [Aspect ratio &
+viewport](../documentation/graphics/rendering.md#aspect-ratio-viewport) in
+the manual for the full configuration reference.
 
 That explains the black bars on the sides, but what about the letterboxing we
 sometimes see above and below the image? Why doesn't the graphics fill the
