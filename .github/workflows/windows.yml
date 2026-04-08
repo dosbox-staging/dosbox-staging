@@ -25,6 +25,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build_documentation:
+    name:    Build documentation
+    runs-on: ubuntu-slim
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          submodules: false
+
+      - name: Build documentation
+        uses: ./.github/actions/build-documentation
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: documentation
+          path: documentation
+          retention-days: 1
+
   generate_release_notes:
     name:    Generate release notes
     runs-on: ubuntu-slim
@@ -179,6 +199,13 @@ jobs:
           mkdir $PLUGINS_DIR
           cp nuked-sc55-clap/* $PLUGINS_DIR
 
+      - name: Download documentation
+        if:   ${{ !matrix.conf.debugger }}
+        uses: actions/download-artifact@v8
+        with:
+          name: documentation
+          path: ${{ env.PACKAGE_DIR }}/resources/docs
+
       - name: Download release notes HTML
         if:   ${{ !matrix.conf.debugger }}
         uses: actions/download-artifact@v8
@@ -301,6 +328,11 @@ jobs:
           mv $PACKAGE_DIR/*          out/program
           mv out/program/dosbox*.exe out
 
+      - name: Download documentation
+        uses: actions/download-artifact@v8
+        with:
+          name: documentation
+          path: out/resources/docs
 
       - name: Build Windows installer
         shell: pwsh
