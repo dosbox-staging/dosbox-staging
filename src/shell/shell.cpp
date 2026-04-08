@@ -714,27 +714,32 @@ void SHELL_InitAndRun()
 	        "[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗\n"
 	        "║ [color=light-green]Welcome to DOSBox Staging %-40s[color=white] ║\n"
 	        "║                                                                    ║\n"
-	        "║ For a short introduction for new users type: [color=yellow]INTRO[color=white]                 ║\n"
-	        "║ For supported shell commands type: [color=yellow]HELP[color=white]                            ║\n"
+	        "║ For the [color=cyan]Getting Started guide[color=white] for new users type: [color=yellow]GUIDE[color=white]            ║\n"
+	        "║ For the the [color=cyan]User Manual[color=white] type: [color=yellow]MANUAL[color=white]                               ║\n"
 	        "║                                                                    ║\n"
 	        "║ To adjust the emulated CPU speed, use [color=light-red]%s+F11[color=white] and [color=light-red]%s+F12[color=white].%s%s       ║\n"
 	        "║ To activate the keymapper [color=light-red]%s+F1[color=white].%s                                 ║\n"
 	        "║                                                                    ║\n");
+
 	MSG_Add("SHELL_STARTUP_CGA",
 	        "║ DOSBox supports Composite CGA mode.                                ║\n"
 	        "║ Use [color=light-red]F12[color=white] to set composite output ON, OFF, or AUTO (default).        ║\n"
 	        "║ [color=light-red]F10[color=white] selects the CGA settings to change and [color=light-red](%s+)F11[color=white] changes it.   ║\n"
 	        "║                                                                    ║\n");
+
 	MSG_Add("SHELL_STARTUP_CGA_MONO",
 	        "║ Use [color=light-red]F11[color=white] to cycle through green, amber, white and paper-white mode, ║\n"
 	        "║ and [color=light-red]%s+F11[color=white] to change contrast/brightness settings.                ║\n"
 	        "║                                                                    ║\n");
+
 	MSG_Add("SHELL_STARTUP_HERC",
 	        "║ Use [color=light-red]F11[color=white] to cycle through white, amber, and green monochrome color. ║\n"
 	        "║                                                                    ║\n");
+
 	MSG_Add("SHELL_STARTUP_DEBUG",
 	        "║ Press [color=light-red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. ║\n"
 	        "║                                                                    ║\n");
+
 	MSG_Add("SHELL_STARTUP_END",
 	        "║ [color=yellow]https://www.dosbox-staging.org[color=white]                                     ║\n"
 	        "╚════════════════════════════════════════════════════════════════════╝[reset]\n"
