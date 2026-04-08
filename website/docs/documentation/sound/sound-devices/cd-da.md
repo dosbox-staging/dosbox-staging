@@ -12,13 +12,8 @@ and the game will handle playback automatically.
 
 <!-- TODO physical CD-ROM -->
 
-### Mixer channel
 
-CD-DA audio is output to the **CDAUDIO** mixer channel for mounted CD-ROM
-images.
-
-
-### Supported disc image formats
+## Supported disc image formats
 
 CD-DA audio tracks are supported in the following disc image formats:
 
@@ -32,7 +27,7 @@ CD-DA audio tracks are supported in the following disc image formats:
     tracks; they cannot contain audio tracks. Use CUE/BIN for discs with audio.
 
 
-### Supported audio track formats
+## Supported audio track formats
 
 When using CUE sheets, audio tracks can reference compressed audio files
 instead of raw PCM data in BIN files. The following audio formats are
@@ -46,5 +41,11 @@ supported:
 
 The standard Red Book audio format is 44.1 kHz, 16-bit stereo PCM. Mono audio
 tracks are automatically converted to stereo during playback.
+
+
+## Mixer channel
+
+CD-DA audio is output to the **CDAUDIO** [mixer](../mixer.md) channel for
+mounted CD-ROM images.
 
 

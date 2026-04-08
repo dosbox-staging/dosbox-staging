@@ -6,7 +6,7 @@ Sound Blaster --- just a small dongle that plugged into your printer port ---
 but they could play back digitised sound and speech at decent quality for the
 era.
 
-### Covox Speech Thing
+## Covox Speech Thing
 
 The Covox Speech Thing (1986) was a simple R-2R resistor ladder DAC that
 plugged into the parallel port. It was cheap to build (even as a DIY project)
@@ -15,7 +15,7 @@ including several Sierra titles and [Leisure Suit Larry 1
 VGA](https://www.mobygames.com/game/413/leisure-suit-larry-1-in-the-land-of-the-lounge-lizards/).
 
 
-### Disney Sound Source
+## Disney Sound Source
 
 The Disney Sound Source (1990) was a parallel port audio device
 backwards-compatible with the Covox Speech Thing, but it added a small FIFO
@@ -25,7 +25,7 @@ Staging emulates the Disney Sound Source, which is also compatible with Covox
 Speech Thing titles and Intersound MDO software.
 
 
-### Stereo-on-1 DAC
+## Stereo-on-1 DAC
 
 The Stereo-on-1 was a stereo variant of the parallel port DAC concept. It
 split the parallel port's 8 data lines into two 4-bit channels (one for left,
@@ -33,11 +33,11 @@ one for right), giving you stereo output at the cost of halving the bit depth.
 Less common than the mono Covox, but supported by some tracker players and a
 handful of games.
 
-### Mixer channels
+## Mixer channels
 
-The Covox Speech Thing outputs to the **COVOX** mixer channel, the Disney
-Sound Source to the **DISNEY** channel, and the Stereo-on-1 to the **STON1**
-channel.
+The Covox Speech Thing outputs to the **COVOX** [mixer](../mixer.md) channel,
+the Disney Sound Source to the **DISNEY** channel, and the Stereo-on-1 to the
+**STON1** channel.
 
 
 ## Configuration settings

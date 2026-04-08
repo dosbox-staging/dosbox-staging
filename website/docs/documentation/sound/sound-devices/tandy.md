@@ -46,7 +46,7 @@ sbtype = none
     **Tandy 1000 SL, TL, HL series** or something similar.
 
 
-### Games with enhanced Tandy sound
+## Games with enhanced Tandy sound
 
 Many games from the mid-1980s included enhanced audio for Tandy and PCjr
 hardware. While Tandy graphics are roughly comparable to EGA (16 colours at
@@ -146,10 +146,10 @@ enhancement available for these games before the AdLib era.
     </div>
 
 
-### Mixer channels
+## Mixer channels
 
-The Tandy synthesiser outputs to the **TANDY** mixer channel, and the DAC to
-the **TANDYDAC** channel.
+The Tandy synthesiser outputs to the **TANDY** [mixer](../mixer.md) channel,
+and the DAC to the **TANDYDAC** channel.
 
 
 ## Configuration settings

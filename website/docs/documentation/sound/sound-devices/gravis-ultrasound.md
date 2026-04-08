@@ -64,7 +64,7 @@ gus = on
 
 Around 100 games support the GUS through **UltraMID**, a MIDI translation
 layer. These games send standard MIDI commands (just like they would to a
-Roland MT-32 or General MIDI device), and the UltraMID driver translates them
+[Roland MT-32](roland-mt-32.md) or [General MIDI](general-midi.md) device), and the UltraMID driver translates them
 into GUS hardware calls, loading the appropriate instrument samples from disk.
 
 The result can sound very good --- somewhere between FM synthesis and true
@@ -109,7 +109,7 @@ by Gravis:
 - [dk.toastednet.org mirror](http://dk.toastednet.org/GUS/TEXT/GLIST.TXT)
 
 
-### Setting up the GUS environment
+## Setting up the GUS environment
 
 For games that need the patch files (UltraMID titles), you'll need to set up
 the GUS directory structure. The expected layout is:
@@ -144,7 +144,7 @@ ultradir = C:\ULTRASND
     directory setup for UltraMID games.
 
 
-### GUS-only configuration
+## GUS-only configuration
 
 If you want to emulate a system with *only* a GUS and no Sound Blaster (as
 some purists had in the 1990s), disable the other sound devices:
@@ -163,9 +163,9 @@ each other, or when you want to ensure a game uses its GUS code path
 exclusively.
 
 
-### Mixer channel
+## Mixer channel
 
-The Gravis UltraSound outputs to the **GUS** mixer channel.
+The Gravis UltraSound outputs to the **GUS** [mixer](../mixer.md) channel.
 
 
 ## Configuration settings

@@ -14,13 +14,13 @@ level. They took an interest in the MT-32, which lead to Sierra adding support
 for the module to most of their games from 1988 onwards. Other companies soon
 started following Sierra's lead, which turned the Roland MT-32 a de facto
 standard for high-end audio in DOS gaming in the 1988 to 1992 period until
-General MIDI and CD Audio took over.
+[General MIDI](general-midi.md) and [CD Audio](cd-da.md) took over.
 
 As the Roland MT-32 was considerably more expensive than other options, such
-as the AdLib, it remained out of reach for most computer users. 
+as the [AdLib](adlib-cms-sound-blaster.md#adlib-music-synthesizer-card), it remained out of reach for most computer users. 
 
 
-### MT-32 variants
+## MT-32 variants
 
 Roland produced several revisions and related models. Understanding the
 differences matters because some games sound different --- or even
@@ -40,7 +40,7 @@ malfunction --- on the wrong revision.
 </div>
 
 
-### Choosing between "old" and "new"
+## Choosing between "old" and "new"
 
 The MT-32 was revised within its first year. The "new" revision (ROM v2.0x)
 has a faster CPU and lower background noise, but Roland also reorganised
@@ -61,7 +61,7 @@ As a rule of thumb:
   notes the recommended revision for each game.
 
 
-### The CM-32L --- recommended default
+## The CM-32L --- recommended default
 
 The **CM-32L** (1989) is generally the best overall choice. It is fully
 compatible with MT-32 "new" games and adds 33 extra sound effects (gunshots,
@@ -77,7 +77,7 @@ early Sierra titles that sound best on "old" hardware, override with
 `model = mt32_old` in a per-game config.
 
 
-### MIDI before General MIDI
+## MIDI before General MIDI
 
 
 !!! important
@@ -272,9 +272,9 @@ inside the game's working directory.
 4. `$XDG_CONFIG_HOME/dosbox/mt32-roms/` (defaults to `~/.config/dosbox/mt32-roms/`)
 
 
-### Mixer channel
+## Mixer channel
 
-The Roland MT-32 outputs to the **MT32** mixer channel.
+The Roland MT-32 outputs to the **MT32** [mixer](../mixer.md) channel.
 
 
 ## Configuration settings
