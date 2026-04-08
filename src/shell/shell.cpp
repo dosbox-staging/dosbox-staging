@@ -459,16 +459,14 @@ void DOS_Shell::Run()
 #if C_DEBUGGER
 			WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"), MMOD2_NAME);
 #endif
-			if (is_machine_cga()) {
-				if (is_machine_cga_mono()) {
-					WriteOut(MSG_Get("SHELL_STARTUP_CGA_MONO"),
-					         MMOD2_NAME);
-				} else {
-					WriteOut(MSG_Get("SHELL_STARTUP_CGA"),
-					         MMOD2_NAME);
-				}
-			}
-			if (is_machine_hercules()) {
+			if (is_machine_cga_mono()) {
+				WriteOut(MSG_Get("SHELL_STARTUP_CGA_MONO"),
+				         MMOD2_NAME);
+
+			} else if (is_machine_cga() || is_machine_pcjr_or_tandy()) {
+				WriteOut(MSG_Get("SHELL_STARTUP_CGA"), MMOD2_NAME);
+
+			} else if (is_machine_hercules()) {
 				WriteOut(MSG_Get("SHELL_STARTUP_HERC"));
 			}
 			WriteOut(MSG_Get("SHELL_STARTUP_END"));
