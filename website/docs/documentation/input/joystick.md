@@ -17,6 +17,37 @@ off, adjusting the deadzone or using the joystick calibration hotkeys can
 help sort things out.
 
 
+## Joystick calibration
+
+Most DOS games with analog joystick support include built-in calibration.
+However, some games have poor or limited calibration, resulting in drift or
+offset despite calibration attempts.
+
+For these cases, enable the
+[use_joy_calibration_hotkeys](#use_joy_calibration_hotkeys) setting and
+adjust the joystick position in real time. Each tap of the hotkeys logs the
+calibration values, which you can then save in a per-game config:
+
+``` ini
+[joystick]
+use_joy_calibration_hotkeys = off
+joy_x_calibration           = 0.576211,0.02
+joy_y_calibration           = 0.5474,-0.005
+```
+
+<figure markdown>
+  <video controls width=760>
+    <source src="https://www.dosbox-staging.org/static/videos/release-notes/0.79.0/joystick-calibration-hotkey-demo.webm" type="video/webm; codecs=vp9,opus">
+    <source src="https://www.dosbox-staging.org/static/videos/release-notes/0.79.0/joystick-calibration-hotkey-demo.mp4" type="video/mp4">
+    Your browser does not support the <code>video</code> element.
+  </video>
+
+  <figcaption markdown>
+  Joystick calibration hotkeys in action
+  </figcaption>
+</figure>
+
+
 ## Configuration settings
 
 You can set the joystick parameters in the `[joystick]` configuration
