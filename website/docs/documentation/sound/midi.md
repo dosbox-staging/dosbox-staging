@@ -1,7 +1,5 @@
 # MIDI
 
-## Overview
-
 Between about 1998 and 1994, MIDI music was *the* ultimate high-end audio
 option in DOS gaming, offering never-heard-before realism and CD quality audio
 fidelity. Not many could afford the high price tag of MIDI sound modules back
@@ -127,7 +125,7 @@ MIDI related settings are to be configured in the `[midi]` section.
 
     <div class="compact" markdown>
 
-    | `mididevice` setting | `midiconfig` setting
+    | `mididevice` setting | `midiconfig` setting   
     | -------------------- | ----------------------
     | `none`               | N/A
     | `fluidsynth`         | N/A

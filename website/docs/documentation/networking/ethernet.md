@@ -1,15 +1,13 @@
 # Ethernet
 
-## Overview
-
 DOSBox Staging can emulate a Novell NE2000-compatible network card, giving
 your emulated DOS machine full TCP/IP networking capabilities. The virtual
 network provides DHCP, so the emulated machine gets its own IP address just
 like a real computer on a LAN.
 
-This is a niche but powerful feature — useful for running DOS TCP/IP
-software, BBS door games, or network-aware applications that go beyond
-simple IPX multiplayer.
+This is a niche but powerful feature, useful for running DOS TCP/IP software,
+BBS door games, or network-aware applications that go beyond simple IPX
+multiplayer.
 
 !!! warning "Fair warning"
 

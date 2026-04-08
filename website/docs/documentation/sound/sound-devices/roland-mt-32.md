@@ -1,7 +1,5 @@
 # Roland MT-32
 
-## Overview
-
 The **Roland MT-32 Multi-Timbre Sound Module** was released in 1987 by Roland
 Corporation, the iconic Japanese manufacturer of electronic musical
 instruments. It featured Roland's novel, patented Linear Arithmetic (LA)
@@ -25,7 +23,11 @@ as the AdLib, it remained out of reach for most computer users.
 ### MT-32 variants
 
 
-It was common for PC games released from 1988 to 1992 to support the Roland MT-32. During this era, the MT-32 was followed by the MT-100 which was an MT-32 'new' combined with a Roland PR-100 sequencer. A little later, Roland introduced their "Computer Music" series: the CM-32L and CM-64, both released in 1989.
+It was common for PC games released from 1988 to 1992 to support the Roland
+MT-32. During this era, the MT-32 was followed by the MT-100 which was an
+MT-32 'new' combined with a Roland PR-100 sequencer. A little later, Roland
+introduced their "Computer Music" series: the CM-32L and CM-64, both released
+in 1989.
 
 
 ### MIDI before General MIDI
@@ -79,8 +81,9 @@ romdir = /path/to/mt32-roms
 
 !!! tip
 
-    Using the layering approach of DOSBox [configuration files](../../configuration.md#config-layering), you can pick
-    one specific MT-32 model per game.
+    Using the layering approach of DOSBox [configuration
+    files](../../configuration.md#config-layering), you can pick one specific
+    MT-32 model per game.
 
 
 ## Roland ROM images

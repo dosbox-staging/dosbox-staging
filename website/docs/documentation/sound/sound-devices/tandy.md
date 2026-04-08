@@ -1,11 +1,9 @@
 # Tandy 3 Voice
 
-## Overview
-
 The **Tandy 3 Voice** audio was introduced with the Tandy 1000 IBM PC clone
 released in 1984, which was as a clone of the short-lived IBM PCjr.
 
-Life was simple in the 80s---most games only supported the PC speaker, but
+Life was simple in the 80s --- most games only supported the PC speaker, but
 some of them had enhanced sound on the Tandy 1000 IBM PC compatible.
 
 The enhanced sound hardware of the Tandy lineup was an integral, non-removable

@@ -1,8 +1,8 @@
 # Configuration
 
-DOSBox Staging uses plain-text configuration files to control every aspect
-of the emulation. If you've ever edited an `.ini` file, the format will
-feel familiar.
+DOSBox Staging uses plain-text configuration files to control every aspect of
+the emulation. If you've ever edited an `.ini` file, the format will feel
+familiar.
 
 
 ## Config file locations
@@ -20,14 +20,14 @@ location:
 
 </div>
 
-Run DOSBox Staging with the [`--printconf`](command-line.md#-printconf) argument from the command line to see the exact path on your
-system. On macOS and Linux, you can use
-[`--editconf`](command-line.md#-editconf) to open it directly in a text
-editor.
+Run DOSBox Staging with the [`--printconf`](command-line.md#-printconf)
+argument from the command line to see the exact path on your system. On macOS
+and Linux, you can use [`--editconf`](command-line.md#-editconf) to open it
+directly in a text editor.
 
-A **local configuration file** named `dosbox.conf` can be placed in a
-game's directory. DOSBox Staging automatically loads it when started from
-that directory, making it easy to maintain per-game settings.
+A **local configuration file** named `dosbox.conf` can be placed in a game's
+directory. DOSBox Staging automatically loads it when started from that
+directory, making it easy to maintain per-game settings.
 
 ## Portable setup
 
@@ -47,8 +47,9 @@ Multiple config files can be loaded, and later values override earlier ones:
    is used).
 2. A local `dosbox.conf` in the working directory is loaded next (unless
    [`--nolocalconf`](command-line.md#-nolocalconf) is used).
-3. Additional config files specified via [`--conf`](command-line.md#-conf-config_file) are
-   applied in the order given.
+3. Additional config files specified via
+   [`--conf`](command-line.md#-conf-config_file) are applied in the order
+   given.
 4. Individual [`--set <setting>=<value>`](command-line.md#-set-settingvalue)
    overrides are applied last and take highest priority.
 
@@ -131,8 +132,10 @@ how autoexec sections from multiple config files are handled.
 ## Generating a default config
 
 If you want to start fresh, delete your primary config file (or run
-[`--eraseconf`](command-line.md#-eraseconf) and DOSBox Staging will create a new one with default
-settings on next launch. You can also use
-[`--printconf`](command-line.md#-printconf) to find the file and edit it manually.
+[`--eraseconf`](command-line.md#-eraseconf) and DOSBox Staging will create a
+new one with default settings on next launch. You can also use
+[`--printconf`](command-line.md#-printconf) to find the file and edit it
+manually.
 
 See [Command-line usage](command-line.md) for all available launch options.
+

@@ -1,23 +1,22 @@
 # 3dfx Voodoo
 
-## Overview
+The 3dfx Voodoo released in 1996 was a dedicated 3D-only accelerator card; it
+couldn't even output 2D graphics on its own. You'd install it alongside your
+regular video card and connect them with a pass-through cable. A gloriously
+awkward setup, but the results were stunning for the era.
 
-The 3dfx Voodoo (1996) was a dedicated 3D-only accelerator card — it
-couldn't even output 2D graphics on its own. You'd install it alongside
-your regular video card and connect them with a pass-through cable. A
-gloriously awkward setup, but the results were stunning for the era.
-
-Games accessed the Voodoo through 3dfx's proprietary Glide API. Titles
-like [Tomb Raider](https://www.mobygames.com/game/348/tomb-raider/), [Quake](https://www.mobygames.com/game/374/quake/), and [Need for Speed II SE](https://www.mobygames.com/game/2113/need-for-speed-ii-se/) looked dramatically
-better with Voodoo hardware — and these are among the late DOS-era games
-that DOSBox Staging can bring back to life.
+Games accessed the Voodoo through 3dfx's proprietary Glide API. Titles like
+[Tomb Raider](https://www.mobygames.com/game/348/tomb-raider/),
+[Quake](https://www.mobygames.com/game/374/quake/), and [Need for Speed II
+SE](https://www.mobygames.com/game/2113/need-for-speed-ii-se/) looked
+dramatically better with Voodoo hardware.
 
 Most Glide games need a DOS driver file called `GLIDE2X.OVL` placed in the
 game's directory. Many games shipped with their own version of this driver;
 for those that didn't, you'll need to provide a suitable one.
 
-DOSBox Staging emulates the Voodoo at the hardware level — no shortcuts or
-OpenGL passthrough — which makes it CPU-intensive but very accurate. Voodoo
+DOSBox Staging emulates the Voodoo at the hardware level -- no shortcuts or
+OpenGL passthrough --- which makes it CPU-intensive but very accurate. Voodoo
 emulation is enabled by default, so most DOS Glide games should work out of
 the box.
 

@@ -1,7 +1,5 @@
 # Display & window
 
-## Overview
-
 DOSBox Staging opens in a resizable window by default. Press
 ++alt+enter++ to toggle fullscreen mode.
 

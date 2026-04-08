@@ -1,11 +1,9 @@
 # Command-line usage
 
-## Overview
-
 The simplest way to launch a game is to pass its path directly to DOSBox
-Staging. It's smart enough to figure out what to do: if you pass a
-directory, it's mounted as the C: drive; if you pass an executable, its
-parent directory is mounted and the program runs automatically.
+Staging. It's smart enough to figure out what to do: if you pass a directory,
+it's mounted as the C: drive; if you pass an executable, its parent directory
+is mounted and the program runs automatically.
 
 ```
 dosbox /path/to/game/
@@ -33,8 +31,9 @@ pages.
 :   - If `PATH` is a directory, it's mounted as the C: drive.
     - If it's a bootable disk image (IMA or IMG file), it's booted.
     - If it's a CD-ROM image (e.g., an ISO file), it's mounted as the D: drive.
-    - If it's a DOS executable (a file with BAT, COM, or EXE extension), its parent directory is mounted as C: and the
-    executable is run. When the executable exits, DOSBox Staging quits.
+    - If it's a DOS executable (a file with BAT, COM, or EXE extension), its
+      parent directory is mounted as C: and the executable is run. When the
+      executable exits, DOSBox Staging quits.
 
 
 ### Configuration

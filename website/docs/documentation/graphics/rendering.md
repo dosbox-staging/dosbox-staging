@@ -1,18 +1,17 @@
 # Rendering
 
-## Overview
-
 DOSBox Staging uses adaptive CRT shaders by default that emulate the look
 of period-appropriate monitors. A VGA game gets a VGA-style CRT look, an
 EGA game gets an EGA-era monitor, and so on. The result is surprisingly
 close to what these games looked like on the real hardware they were
 designed for.
 
-Most DOS games used non-square pixels — a 320×200 image was stretched to
-fill a 4:3 CRT monitor. Aspect ratio correction is enabled by default so
-games look as they were intended. Without it, everything appears slightly
-squished, which is especially noticeable with pixel art-heavy games like
-[Monkey Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) or [Loom](https://www.mobygames.com/game/176/loom/).
+Most DOS games used non-square pixels — a 320×200 image was stretched to fill
+a 4:3 CRT monitor. Aspect ratio correction is enabled by default so games look
+as they were intended. Without it, everything appears slightly squished, which
+is especially noticeable with pixel art-heavy games like [Monkey
+Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) or
+[Loom](https://www.mobygames.com/game/176/loom/).
 
 The image adjustment controls — brightness, contrast, saturation, colour
 temperature — work much like the knobs on an old CRT monitor. They're
@@ -63,120 +62,6 @@ appropriate monitor emulation based on the current video mode:
   for playing DOS ports of Amiga and Atari ST games, or if you simply prefer
   the look.
 
-Here are the shaders in action at 4K resolution (click on images to view at
-full size):
-
-<div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/release-notes/0.81.0/gods.jpg" >
-    ![Gods --- 320&times;200 VGA](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/gods-small.jpg){ loading="lazy" .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Gods --- 320&times;200 VGA
-  </figcaption>
-</figure>
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/release-notes/0.81.0/ultima-underworld.jpg" >
-    ![Ultima Underworld: The Stygian Abyss -- 320&times;200 VGA](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/ultima-underworld-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Ultima Underworld: The Stygian Abyss ---<br>320&times;200 VGA
-  </figcaption>
-</figure>
-
-</div>
-<div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/release-notes/0.81.0/celtic-tales.jpg" >
-    ![Celtic Tales: Balor of the Evil Eye -- 640&times;480 VGA](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/celtic-tales-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Celtic Tales: Balor of the Evil Eye --- 640&times;480 VGA
-  </figcaption>
-</figure>
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/release-notes/0.81.0/dark-seed.jpg" >
-    ![Dark Seed --640&times;350 EGA](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/dark-seed-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Dark Seed --- 640&times;350 EGA
-  </figcaption>
-</figure>
-
-</div>
-<div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/release-notes/0.81.0/monkey-island.jpg" >
-    ![The Secret of Monkey Island -- 320&times;200 EGA](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/monkey-island-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  The Secret of Monkey Island --- 320&times;200 EGA
-  </figcaption>
-</figure>
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/release-notes/0.81.0/space-quest-iii.jpg" >
-    ![Space Quest III: The Pirates of Pestulon -- 320&times;200 EGA](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/space-quest-iii-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Space Quest III: The Pirates of Pestulon --- 320&times;200 EGA
-  </figcaption>
-</figure>
-
-</div>
-<div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/release-notes/0.81.0/wizardry.jpg" >
-    ![Wizardry: Proving Grounds of the Mad Overlord -- 320&times;200 CGA](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/wizardry-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Wizardry: Proving Grounds of the Mad Overlord --- 320&times;200 CGA
-  </figcaption>
-</figure>
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/release-notes/0.81.0/smoker.jpg" >
-    ![Smoker by Fairfax --320&times;200 15kHz "arcade" shader](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/smoker-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Smoker by Fairfax ---<br>320&times;200 15kHz "arcade" shader
-  </figcaption>
-</figure>
-
-</div>
-<div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/release-notes/0.81.0/zak.jpg" >
-    ![Zak McKracken and the Alien Mindbenders -- 320&times;200 CGA composite](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/zak-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Zak McKracken and the Alien Mindbenders ---<br>320&times;200 CGA composite
-  </figcaption>
-</figure>
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/release-notes/0.81.0/starblade.jpg" >
-    ![Starblade -- 720&times;348 Hercules](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/starblade-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Starblade --- 720&times;348 Hercules
-  </figcaption>
-</figure>
-
-</div>
-
 If you don't like CRT shaders, set `shader` to `sharp` to get crisp
 pixel-perfect output. The deprecated legacy CRT shaders are still available
 as a [separate download](https://archive.org/download/dosbox-staging-legacy-svn-shaders/svn-shaders.zip).
@@ -195,9 +80,9 @@ integer_scaling = vertical
 
 The correct aspect ratio is always maintained, so the other dimension's
 scaling factor may become fractional. With the `sharp` shader, this is not a
-problem as the interpolation band is at most 1 pixel wide at the edges---still
-sharp, especially at 1440p or 4K. With CRT shaders, non-integer horizontal
-scaling is practically a non-issue.
+problem as the interpolation band is at most 1 pixel wide at the edges ---
+still sharp, especially at 1440p or 4K. With CRT shaders, non-integer
+horizontal scaling is practically a non-issue.
 
 The default `auto` mode enables vertical integer scaling only for the adaptive
 CRT shaders, with refinements: 3.5x and 4.5x scaling factors are also
@@ -263,26 +148,6 @@ Use the _Stretch Axis_, _Inc Stretch_, and _Dec Stretch_ hotkey actions to
 adjust stretching in real-time, then copy the logged viewport setting to your
 config.
 
-<div class="image-grid" markdown>
-
-<figure markdown>
-  ![Prince of Persia (default)](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/pop-hercules.png){ loading=lazy }
-
-  <figcaption markdown>
-  Prince of Persia without any custom stretching
-  </figcaption>
-</figure>
-
-<figure markdown>
-  ![Prince of Persia (aspect ratio corrected)](https://www.dosbox-staging.org/static/images/release-notes/0.81.0/pop-hercules-aspect-corrected.jpg){ loading=lazy }
-
-  <figcaption markdown>
-  Prince of Persia with `aspect = stretch` and `viewport = relative 112% 173%`
-  </figcaption>
-</figure>
-
-</div>
-
 
 ## CGA palette override
 
@@ -294,82 +159,9 @@ Several built-in presets are available, including Amiga and Atari ST colours
 for Sierra AGI games, various CGA/EGA monitor emulations, and Commodore 64
 inspired colours. Custom palettes can also be specified.
 
-[Defender of the Crown](https://www.mobygames.com/game/181/defender-of-the-crown/)
-
 The `tandy-warm` preset emulates colours as they appear on an actual Tandy
-monitor, resulting in more subdued and pleasant colours---especially apparent
-on the greens.
-
-<div class="image-grid" markdown>
-
-<figure markdown>
-  ![Defender of the Crown (default)](https://www.dosbox-staging.org/static/images/release-notes/0.79.0/dotc-default.png){ loading=lazy }
-
-  <figcaption markdown>
-  `cga_colors = default`
-  </figcaption>
-</figure>
-
-<figure markdown>
-  ![Defender of the Crown (tandy-warm)](https://www.dosbox-staging.org/static/images/release-notes/0.79.0/dotc-tandy-warm.png){ loading=lazy }
-
-  <figcaption markdown>
-  `cga_colors = tandy-warm`
-  </figcaption>
-</figure>
-
-</div>
-
-
-[Gold Rush!](https://www.mobygames.com/game/440/gold-rush/)
-
-The Amiga/Atari ST ports of Sierra AGI games use a tweaked CGA palette with
-improved skin tones and sky colours.
-
-<div class="image-grid" markdown>
-
-<figure markdown>
-  ![Gold Rush! (default)](https://www.dosbox-staging.org/static/images/release-notes/0.79.0/gold-rush-default.png){ loading=lazy }
-
-  <figcaption markdown>
-  `cga_colors = default`
-  </figcaption>
-</figure>
-
-<figure markdown>
-  ![Gold Rush! (agi-amigaish)](https://www.dosbox-staging.org/static/images/release-notes/0.79.0/gold-rush-agi-amigaish.png){ loading=lazy }
-
-  <figcaption markdown>
-  `cga_colors = agi-amigaish`
-  </figcaption>
-</figure>
-
-</div>
-
-
-[Zak McKracken and the Alien Mindbenders](https://www.mobygames.com/game/305/zak-mckracken-and-the-alien-mindbenders/)
-
-Play the PC version with Tandy sound and Commodore 64 colours!
-
-<div class="image-grid" markdown>
-
-<figure markdown>
-  ![Zak McKracken (default)](https://www.dosbox-staging.org/static/images/release-notes/0.79.0/zak-default.png){ loading=lazy }
-
-  <figcaption markdown>
-  `cga_colors = default`
-  </figcaption>
-</figure>
-
-<figure markdown>
-  ![Zak McKracken (colodore)](https://www.dosbox-staging.org/static/images/release-notes/0.79.0/zak-colodore.png){ loading=lazy }
-
-  <figcaption markdown>
-  `cga_colors = colodore`
-  </figcaption>
-</figure>
-
-</div>
+monitor, resulting in more subdued and pleasant colours --- especially
+apparent on the greens.
 
 
 ## Configuration settings

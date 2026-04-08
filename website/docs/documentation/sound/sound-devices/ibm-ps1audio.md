@@ -1,7 +1,5 @@
 # IBM PS/1 Audio Card
 
-## Overview
-
 Optional audio card released in 1990 for IBM PS/1 computers (models 2011 and
 2121). Relatively few games support this option, and the FM sounds very much
 like the PCjr or Tandy 1000, as they all use the same or similar TI sound

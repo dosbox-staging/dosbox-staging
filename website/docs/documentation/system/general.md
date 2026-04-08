@@ -1,7 +1,5 @@
 # General
 
-## Overview
-
 The `[dosbox]` section contains the core system settings — what type of
 machine to emulate, the amount of memory, and various general emulator
 options.
@@ -9,9 +7,9 @@ options.
 The [machine](#machine) setting selects which video adapter to emulate. The
 default `svga_s3` (an S3 Trio64 SVGA card) covers the widest range of games.
 You'll only need to change it for titles that specifically require CGA, EGA,
-Tandy, or Hercules graphics. The [Getting Started
-guide](../../getting-started/setting-up-prince-of-persia.md) walks through
-several practical example of this.
+Tandy, or Hercules graphics. The
+[Getting Started guide](../../getting-started/setting-up-prince-of-persia.md)
+walks through several practical example of this.
 
 The default 16 MB of RAM set via [memsize](#memsize) is more than enough for
 nearly all DOS software. A few late DOS-era games need 32 MB, but these are
@@ -188,7 +186,10 @@ section.
 
 :   Emulate accurate per-scanline VGA rendering. Currently, you need to
     disable this for a few games, otherwise they will crash at startup
-    (e.g., [Deus](https://www.mobygames.com/game/5001/deus/), [Ishar 3](https://www.mobygames.com/game/7702/ishar-3-the-seven-gates-of-infinity/), [Robinson's Requiem](https://www.mobygames.com/game/4797/robinsons-requiem/), [Time Warriors](https://www.mobygames.com/game/22845/time-warriors/)).
+    (e.g., [Deus](https://www.mobygames.com/game/5001/deus/),
+    [Ishar 3](https://www.mobygames.com/game/7702/ishar-3-the-seven-gates-of-infinity/),
+    [Robinson's Requiem](https://www.mobygames.com/game/4797/robinsons-requiem/),
+    [Time Warriors](https://www.mobygames.com/game/22845/time-warriors/)).
 
     Possible values: `on` *default*{ .default }, `off`
 

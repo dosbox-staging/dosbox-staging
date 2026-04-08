@@ -1,20 +1,18 @@
 # DOS
 
-## Overview
-
 The `[dos]` section controls the emulated DOS environment itself — version
 number, memory management, and regional settings.
 
 The reported DOS version defaults to 5.0, which covers the vast majority of
 games from the entire DOS era. A handful of very late titles check for DOS
-7.0, and some very early ones expect DOS 3.0, but these are edge cases
-you'll likely never hit.
+7.0, and some very early ones expect DOS 3.0, but these are edge cases you'll
+likely never hit.
 
-XMS, EMS, and UMB are different memory management schemes from the DOS era.
-If those acronyms mean nothing to you, don't worry — they're all enabled by
-default and you can safely ignore them. On the rare occasion a game
-misbehaves (usually an old title that chokes on EMS), disabling the
-offending memory type is a quick fix.
+XMS, EMS, and UMB are different memory management schemes from the DOS era. If
+those acronyms mean nothing to you, don't worry --- they're all enabled by
+default and you can safely ignore them. On the rare occasion a game misbehaves
+(usually an old title that chokes on EMS), disabling the offending memory type
+is a quick fix.
 
 ## Regional settings
 
@@ -34,9 +32,9 @@ regardless of the country setting.
 To see what's available on your system, start DOSBox Staging with the
 following command line arguments:
 
-- [`--list-countries`](../command-line.md#-list-countries) — lists all supported countries with their numeric codes
-- [`--list-layouts`](../command-line.md#-list-layouts) — lists all supported keyboard layouts with their codes
-- [`--list-code-pages`](../command-line.md#-list-code-pages) — lists all bundled code pages (screen fonts)
+- [`--list-countries`](../command-line.md#-list-countries) --- lists all supported countries with their numeric codes
+- [`--list-layouts`](../command-line.md#-list-layouts) --- lists all supported keyboard layouts with their codes
+- [`--list-code-pages`](../command-line.md#-list-code-pages) --- lists all bundled code pages (screen fonts)
 
 !!! note 
 

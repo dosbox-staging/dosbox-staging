@@ -1,7 +1,5 @@
 # DOSBox mixer
 
-## Overview
-
 The DOSBox mixer combines the output of all emulated sound devices into a
 final stereo signal. Each device gets its own mixer channel, and you can
 adjust volume, stereo panning, reverb, chorus, and crossfeed levels
@@ -10,9 +8,8 @@ independently per channel.
 The mixer uses a 32-bit floating-point processing path internally, so
 individual channels cannot be overloaded into clipping by high per-channel
 volume settings. A fixed 20 Hz high-pass filter on the master output removes
-DC offset and subsonic rumble. An auto-levelling
-[compressor](#compressor) on the master channel prevents clipping of the final
-output.
+DC offset and subsonic rumble. An auto-levelling [compressor](#compressor) on
+the master channel prevents clipping of the final output.
 
 The default master volume is 50% (-6 dB) to avoid audible distortion in games
 with loud output. You can raise it per game as needed (e.g., `MIXER MASTER
@@ -45,7 +42,7 @@ As we can see, we have four channels enabled by default:
 
 There is an important thing to note here: some emulated sound devices contain
 multiple sub-devices, each having their own mixer channel. The Sound Blaster 16
-is such a device---its digital output is routed to the
+is such a device --- its digital output is routed to the
 `SB` channel, while the output of the onboard Yamaha OPL3 synthesiser chip has
 its dedicated `OPL` channel.
 
@@ -53,7 +50,7 @@ This is actually similar to how the Sound Blaster software mixer works on later 
 Blaster cards. The `MIXER` command extends this concept so you can adjust the
 parameters of all emulated audio devices via a unified interface.
 
-If you can't remember all this, don't worry---just run `MIXER /?` to display
+If you can't remember all this, don't worry --- just run `MIXER /?` to display
 a handy little summary all available options.
 
 ## Changing channel settings
