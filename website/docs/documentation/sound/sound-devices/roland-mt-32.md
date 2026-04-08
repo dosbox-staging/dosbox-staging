@@ -61,6 +61,13 @@ in 1989.
     additional digital music to be played on the Sound Blaster.
 
 
+Not all games that list "Roland MT-32" in their setup utility actually
+support it properly --- and many games with excellent MT-32 music don't
+advertise it prominently. The most reliable way to check is the community-maintained
+[List of MT-32-compatible computer games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
+on the VOGONS Wiki, which also notes which MT-32 model version works best for
+each title.
+
 For a step-by-step walkthrough of setting up the MT-32 with a specific game,
 see the [Beneath a Steel Sky](../../../getting-started/beneath-a-steel-sky.md#setting-up-roland-mt-32-sound)
 chapter of the getting started guide.

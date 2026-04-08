@@ -24,6 +24,12 @@ manufacturers recorded their own instrument samples, playback can sound
 noticeably different from one device to another — but the SC-55 is the gold
 standard for what the composer intended.
 
+Determining whether a game supports General MIDI, the Roland MT-32, or both
+is not always obvious from the setup utility alone. The community-maintained
+[List of MT-32-compatible computer games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
+on the VOGONS Wiki is the most comprehensive reference for which MIDI devices
+each game supports and which produces the best results.
+
 For a more detailed introduction to MIDI and its role in DOS gaming, see the
 [MIDI overview](midi.md).
 
