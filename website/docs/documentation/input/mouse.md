@@ -52,6 +52,8 @@ computer (e.g., in **The Settlers** and **The Settlers II**). Use the
 `MOUSECTL` command on the DOS command line to set the per-interface mouse
 configurations.
 
+TODO(CL) link game names to mobygames
+
 See the [Dual mouse gaming](https://github.com/dosbox-staging/dosbox-staging/wiki/Dual-Mouse-Gaming) wiki page for setup details.
 
 

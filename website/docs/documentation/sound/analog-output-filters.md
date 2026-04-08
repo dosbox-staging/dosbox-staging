@@ -14,20 +14,26 @@ these filters either emulate the analog output filters of the original
 hardware, or the sound coming out of a small band-limited speaker in an
 acoustic environment.
 
+TODO(CL) insert links for the settings names
+
 For Sound Blaster, the `sb_filter` parameter defaults to `modern`, which uses
 the simple linear interpolation method of previous DOSBox versions. Set it to
 `auto` to enable accurate analog output filter emulation that matches the
 filters of the selected Sound Blaster model. OPL and CMS filters are also
 accurately emulated.
 
-Some devices---such as the Gravis UltraSound, Roland MT-32, FluidSynth,
-Innovation SSI-2001, and the IBM Music Feature Card---don't have hardware
+TODO(CL) link to the sound device manual pages
+
+Some devices, such as the Gravis UltraSound, Roland MT-32, FluidSynth,
+Innovation SSI-2001, and the IBM Music Feature Card, don't have hardware
 output filters to emulate, but you can apply custom filters to them if
 desired.
 
 The following per-device filter settings are available:
 
 <div class="compact" markdown>
+
+TODO(CL) insert links to these settings
 
 - `sb_filter` --- Sound Blaster digital audio
 - `opl_filter` --- OPL synthesiser
