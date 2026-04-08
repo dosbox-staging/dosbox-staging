@@ -22,6 +22,8 @@ with a specific model, or require a driver to be loaded. Please refer to the
 further details.
 
 
+## Sound Blaster overview
+
 ### On-board synthesisers
 
 In addition to their digital audio playback capabilities (also referred to as
@@ -60,8 +62,9 @@ their main capabilities:
 
 ### Mixer channels
 
-The digital audio of the Sound Blaster is output to the **SB** mixer channel,
-while the AdLib (OPL) synthesiser has its own dedicated **OPL** channel. Both
+The digital audio of the Sound Blaster is output to the **SB**
+[mixer](../mixer.md) channel, while the AdLib (OPL) synthesiser has its own
+dedicated **OPL** channel. Both
 channels can be either mono or stereo, depending on the particular Sound
 Blaster model being emulated.
 
@@ -183,7 +186,33 @@ little bit of research, experiment, and trust your ears.
 
 ---
 
-## AdLib Music Synthesizer Card
+## Creative Music System (CMS) / Game Blaster
+
+The **Creative Music System** (also referred to as **CMS** or **C/MS**) was
+released in August 1987 by Creative Technology. This was the first sound card
+of the company, it sounded like a much simpler variant of the AdLib card, and
+it did not sell that well.
+
+The card was rebranded as **Game Blaster** a year later, without making any
+changes to the hardware.
+
+Use the following setting to enable Game Blaster emulation:
+
+``` ini
+[sblaster]
+sbtype = gb
+```
+
+!!! note
+
+    As the CMS is also present on the Sound Blaster 1.0, and optionally on the
+    Sound Blaster 2.0, CMS support in some early games might only work with
+    either the Game Blaster or one of the Sound Blaster models, but not both.
+
+
+## FM synthesisers
+
+### AdLib Music Synthesizer Card
 
 The **AdLib Music Synthesizer Card** (typically simply referred to as
 **AdLib**) was released by Ad Lib in 1987. It was the first popular sound card
@@ -215,32 +244,89 @@ oplmode = opl2
     a future version.
 
 
+### AdLib Gold 1000
 
-## Creative Music System (CMS) / Game Blaster
+The **AdLib Gold 1000** was released in 1992. It has a Yamaha OPL3 chip and a
+stereo audio processor on-board, and it also supports 12-bit digital audio. An
+optional surround module is available to add further spatial effects to the
+OPL output (e.g., chorus and reverb).
 
-The **Creative Music System** (also referred to as **CMS** or **C/MS**) was
-released in August 1987 by Creative Technology. This was the first sound card
-of the company, it sounded like a much simpler variant of the AdLib card, and
-it did not sell that well.
+DOSBox fully emulates the card, including the surround module, except for the
+digital audio capabilities.
 
-The card was rebranded as **Game Blaster** a year later, without making any
-changes to the hardware.
+Very few games have direct support for the AdLib Gold 1000, and no known game
+makes use of its digital audio features. The single game in existence that
+really takes advantage of the AdLib Gold and its surround module is the
+adventure game **Dune** from 1992.
 
-Use the following setting to enable Game Blaster emulation:
+Use the following settings to enable AdLib Gold 1000 emulation. Typically, you
+would use the card together with a Sound Blaster for digital audio. The setup
+utility of [Dune](https://en.wikipedia.org/wiki/Dune_(video_game)) should
+auto-detect AdLib Gold and the surround module correctly with these settings.
 
 ``` ini
 [sblaster]
-sbtype = gb
+sbtype = sb16
+oplmode = opl3gold
 ```
 
-!!! note
 
-    As the CMS is also present on the Sound Blaster 1.0, and optionally on the
-    Sound Blaster 2.0, CMS support in some early games might only work with
-    either the Game Blaster or one of the Sound Blaster models, but not both.
+### ESS Enhanced FM Audio (ESFM)
+
+**ESFM** is the OPL3-compatible FM synthesiser found on later ESS AudioDrive
+cards. In "legacy mode", ESFM is fully compatible with the Yamaha OPL3 and
+yields almost identical output on most material. What sets it apart is its
+"native mode", which offers advanced synthesis features surpassing the OPL3's
+capabilities --- it bridges the gap between synthetic-sounding OPL music and
+sample-based MIDI music.
+
+Since ESFM was released in 1995, only a handful of games support native mode,
+but in the few that do, the results sound quite spectacular.
+
+- To run ESFM in **legacy mode**, use `oplmode = esfm` with any Sound Blaster
+  model and configure the game for Sound Blaster and AdLib/OPL as usual.
+
+- To use **native mode**, set `sbtype = ess` and configure the **ESS Technology
+  ES1688, ES1788, ES1888 Enhanced FM Audio** MIDI music driver in the game's
+  setup utility (most games that support ESFM natively use the Miles Sound
+  System). For the digital audio driver, select the Sound Blaster Pro option
+  (ESS AudioDrive cards are Sound Blaster Pro compatible).
+
+``` ini
+[sblaster]
+sbtype = ess
+```
+
+#### Games with ESFM support
+
+<div class="compact" markdown>
+
+- [Advanced Civilization](https://www.mobygames.com/game/5297/advanced-civilization/)
+- [Callahan's Crosstime Saloon](https://www.mobygames.com/game/2150/callahans-crosstime-saloon/)
+- [Heaven's Dawn](https://www.mobygames.com/game/45120/heavens-dawn/)
+- [Heroes of Might and Magic II](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
+- [Magic Carpet 2](https://www.mobygames.com/game/790/magic-carpet-2-the-netherworlds/)
+- [Shannara](https://www.mobygames.com/game/3208/shannara/)
+- [The 11th Hour](https://www.mobygames.com/game/567/the-11th-hour/)
+- [The Gene Machine](https://www.mobygames.com/game/1121/the-gene-machine/)
+- [The Settlers II](https://www.mobygames.com/game/598/the-settlers-ii-veni-vidi-vici/)
+- [Theme Hospital](https://www.mobygames.com/game/674/theme-hospital/)
+- [WarCraft II](https://www.mobygames.com/game/1339/warcraft-ii-tides-of-darkness/)
+- [Z](https://www.mobygames.com/game/346/z/)
+
+</div>
 
 
-## Sound Blaster 1.0
+!!! tip
+
+    You can also try to "retrofit" the `ESFM.MID` driver from Miles Sound
+    System games that have it into earlier ones that don't. For example,
+    **Discworld** sounds great with the ESFM driver from **Heaven's Dawn**.
+
+
+## Sound Blaster models
+
+### Sound Blaster 1.0
 
 The original **Sound Blaster 1.0** was released by Creative Technology in 1989
 as the successor of their Game Blaster card. It was the first sound card on
@@ -267,7 +353,7 @@ sbtype = sb1
     Sound Blaster 1.0 and no other models.
 
 
-## Sound Blaster 2.0
+### Sound Blaster 2.0
 
 The **Sound Blaster 2.0** was released by Creative Technology in October 1991.
 Similarly to its predecessor, the Sound Blaster 1.0, it can play back 8-bit
@@ -286,7 +372,7 @@ sbtype = sb2
 ```
 
 
-## Sound Blaster Pro
+### Sound Blaster Pro
 
 The **Sound Blaster Pro** (retroactively also referred to as **Sound Blaster
 Pro 1.0**) was released by Creative Technology in May 1991. This was the first
@@ -422,7 +508,7 @@ sbtype = sbpro1
     </div>
 
 
-## Sound Blaster Pro 2.0
+### Sound Blaster Pro 2.0
 
 The **Sound Blaster Pro 2.0** was released by Creative Technology in 1991,
 quickly replacing its predecessor, the Sound Blaster Pro.
@@ -490,7 +576,7 @@ sbtype = sbpro2
     </div>
 
 
-## Sound Blaster 16
+### Sound Blaster 16
 
 The **Sound Blaster 16** was released by Creative Technology in June 1992.
 This is the first Sound Blaster card to support CD-quality sound (stereo
@@ -566,86 +652,6 @@ sbtype = sb16
     - Wing Commander IV
 
     </div>
-
-
-## AdLib Gold 1000
-
-The **AdLib Gold 1000** was released in 1992. It has a Yamaha OPL3 chip and a
-stereo audio processor on-board, and it also supports 12-bit digital audio. An
-optional surround module is available to add further spatial effects to the
-OPL output (e.g., chorus and reverb).
-
-DOSBox fully emulates the card, including the surround module, except for the
-digital audio capabilities.
-
-Very few games have direct support for the AdLib Gold 1000, and no known game
-makes use of its digital audio features. The single game in existence that
-really takes advantage of the AdLib Gold and its surround module is the
-adventure game **Dune** from 1992.
-
-Use the following settings to enable AdLib Gold 1000 emulation. Typically, you
-would use the card together with a Sound Blaster for digital audio. The setup
-utility of [Dune](https://en.wikipedia.org/wiki/Dune_(video_game)) should
-auto-detect AdLib Gold and the surround module correctly with these settings.
-
-``` ini
-[sblaster]
-sbtype = sb16
-oplmode = opl3gold
-```
-
-
-## ESS Enhanced FM Audio (ESFM)
-
-**ESFM** is the OPL3-compatible FM synthesiser found on later ESS AudioDrive
-cards. In "legacy mode", ESFM is fully compatible with the Yamaha OPL3 and
-yields almost identical output on most material. What sets it apart is its
-"native mode", which offers advanced synthesis features surpassing the OPL3's
-capabilities --- it bridges the gap between synthetic-sounding OPL music and
-sample-based MIDI music.
-
-Since ESFM was released in 1995, only a handful of games support native mode,
-but in the few that do, the results sound quite spectacular.
-
-- To run ESFM in **legacy mode**, use `oplmode = esfm` with any Sound Blaster
-  model and configure the game for Sound Blaster and AdLib/OPL as usual.
-
-- To use **native mode**, set `sbtype = ess` and configure the **ESS Technology
-  ES1688, ES1788, ES1888 Enhanced FM Audio** MIDI music driver in the game's
-  setup utility (most games that support ESFM natively use the Miles Sound
-  System). For the digital audio driver, select the Sound Blaster Pro option
-  (ESS AudioDrive cards are Sound Blaster Pro compatible).
-
-``` ini
-[sblaster]
-sbtype = ess
-```
-
-### Games with ESFM support
-
-<div class="compact" markdown>
-
-- [Advanced Civilization](https://www.mobygames.com/game/5297/advanced-civilization/)
-- [Callahan's Crosstime Saloon](https://www.mobygames.com/game/2150/callahans-crosstime-saloon/)
-- [Heaven's Dawn](https://www.mobygames.com/game/45120/heavens-dawn/)
-- [Heroes of Might and Magic II](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
-- [Magic Carpet 2](https://www.mobygames.com/game/790/magic-carpet-2-the-netherworlds/)
-- [Shannara](https://www.mobygames.com/game/3208/shannara/)
-- [The 11th Hour](https://www.mobygames.com/game/567/the-11th-hour/)
-- [The Gene Machine](https://www.mobygames.com/game/1121/the-gene-machine/)
-- [The Settlers II](https://www.mobygames.com/game/598/the-settlers-ii-veni-vidi-vici/)
-- [Theme Hospital](https://www.mobygames.com/game/674/theme-hospital/)
-- [WarCraft II](https://www.mobygames.com/game/1339/warcraft-ii-tides-of-darkness/)
-- [Z](https://www.mobygames.com/game/346/z/)
-
-</div>
-
-
-!!! tip
-
-    You can also try to "retrofit" the `ESFM.MID` driver from Miles Sound
-    System games that have it into earlier ones that don't. For example,
-    **Discworld** sounds great with the ESFM driver from **Heaven's Dawn**.
 
 
 ## Configuration settings

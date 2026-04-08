@@ -24,7 +24,7 @@ manufacturers recorded their own instrument samples, playback can sound
 noticeably different from one device to another — but the SC-55 is the gold
 standard for what the composer intended.
 
-### The MT-32 to General MIDI transition
+## The MT-32 to General MIDI transition
 
 MIDI sound in DOS games evolved through three distinct periods:
 
@@ -80,7 +80,7 @@ article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-
 DOSBox Staging offers two main ways to get General MIDI playback:
 
 
-### Sound Canvas emulation
+## Sound Canvas emulation
 
 For the most accurate SC-55 reproduction, DOSBox Staging supports Roland Sound
 Canvas emulation via the Nuked SC55 CLAP audio plugin. This provides
@@ -88,7 +88,7 @@ sample-accurate playback of the actual SC-55 sound engine --- as close to the
 real hardware as you can get without owning one.
 
 
-### Sound Canvas revisions
+## Sound Canvas revisions
 
 The SC-55 went through several firmware revisions. The most important
 difference is **Capital Tone Fallback (CTF)** --- a Roland GS feature that
@@ -145,7 +145,7 @@ rely on CTF.
     </div>
 
 
-### FluidSynth
+## FluidSynth
 
 FluidSynth is a built-in software MIDI synthesiser that uses **SoundFont**
 (`.sf2`) sample banks to generate audio. Unlike Sound Canvas emulation, it
@@ -159,7 +159,7 @@ FluidSynth is lighter on CPU than Sound Canvas emulation and is a good
 option when you don't have SC-55 ROMs or when you prefer a particular
 SoundFont's character.
 
-#### SoundFont setup
+### SoundFont setup
 
 Download a SoundFont file and place it in the `soundfonts` directory inside
 your DOSBox configuration folder:
@@ -185,7 +185,7 @@ mididevice = fluidsynth
 soundfont = GeneralUser-GS
 ```
 
-#### Recommended SoundFonts
+### Recommended SoundFonts
 
 **[GeneralUser GS](https://schristiancollins.com/generaluser.php)** is the
 best all-round choice for DOS gaming. It offers well-balanced instruments,
@@ -214,17 +214,17 @@ Forces](../../../getting-started/star-wars-dark-forces.md#setting-up-general-mid
 chapter of the getting started guide.
 
 
-### External MIDI devices
+## External MIDI devices
 
 If you have a real MIDI device connected to your computer, DOSBox Staging
 can send MIDI output directly to it. This is the ultimate option for
 enthusiasts who own an actual SC-55 or other hardware synthesiser.
 
 
-### Mixer channels
+## Mixer channels
 
-Sound Canvas outputs to the **SOUNDCANVAS** mixer channel, and FluidSynth to
-the **FSYNTH** mixer channel.
+Sound Canvas outputs to the **SOUNDCANVAS** [mixer](../mixer.md) channel, and
+FluidSynth to the **FSYNTH** channel.
 
 
 ## Configuration settings

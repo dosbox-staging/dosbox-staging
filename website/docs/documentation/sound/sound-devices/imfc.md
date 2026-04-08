@@ -1,18 +1,14 @@
 # IBM Music Feature Card
 
 The IBM Music Feature Card (IMFC) was released by IBM in 1987 as a
-MIDI-capable sound card for the IBM PC and compatible machines. It featured a
-Yamaha FB-01 FM synthesiser module and an MPU-401 compatible MIDI interface.
+[MIDI](midi.md)-capable sound card for the IBM PC and compatible machines. It
+featured a Yamaha FB-01 FM synthesiser module and an MPU-401 compatible MIDI
+interface.
 
 Very few games support the IBM Music Feature Card. It was primarily aimed at
 musicians and MIDI enthusiasts rather than gamers. Sierra was essentially the
 only game company to support it, along with a handful of Game Arts/Falcom
 ports.
-
-
-### Mixer channel
-
-The IBM Music Feature Card outputs to the **IMFC** mixer channel.
 
 
 ## Compatible games
@@ -39,6 +35,11 @@ The IBM Music Feature Card outputs to the **IMFC** mixer channel.
 - [Thexder 2](https://www.mobygames.com/game/64/fire-hawk-thexder-the-second-contact/)
 
 </div>
+
+
+## Mixer channel
+
+The IBM Music Feature Card outputs to the **IMFC** [mixer](../mixer.md) channel.
 
 
 ## Configuration settings
