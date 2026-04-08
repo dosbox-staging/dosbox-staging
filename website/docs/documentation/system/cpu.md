@@ -57,10 +57,14 @@ benefit to emulating a faster CPU than the game actually needs.
 
 Use the [cpu_cycles](#cpu_cycles) table as a starting point: look up what CPU
 the game was designed for, set the corresponding cycles value, then fine-tune
-from there. For 2D games from the 90s, 25,000 cycles (486DX2/66 level) handles
-virtually everything. 3D games typically need 50,000--100,000 cycles (Pentium
-range), and 3D SVGA gaming at 640&times;480 or above may require 200,000+
-cycles.
+from there:
+
+- **Early DOS games** from the 1980s usually run fine at 3,000 cycles (386SX/20
+  level)
+- For **2D games** from the 1990s, 25,000 cycles (486DX2/66 level) handles
+  virtually everything
+- **3D games** typically need 50,000--100,000 cycles (Pentium range)
+- **3D SVGA gaming** at 640&times;480 or above may require 200,000+ cycles
 
 You can adjust the cycles on the fly while playing with ++ctrl+f11++ to
 decrease by 20% and ++ctrl+f12++ to increase by 10% (++cmd+f11++ and
@@ -88,7 +92,7 @@ chapter of the getting started guide.
 
 ## Configuration examples
 
-**Fixed speed globally** --- Roughly emulates an i486DX2-66 in both real and
+**Fixed speed globally** --- Roughly emulates an 486DX2/66 in both real and
 protected mode:
 
 ``` ini
@@ -97,8 +101,8 @@ cpu_cycles = 25000
 cpu_cycles_protected = auto
 ```
 
-**Different real and protected mode speeds** --- 20k cycles for real mode,
-400k for protected mode, with throttling enabled so the host CPU doesn't get
+**Different real and protected mode speeds** --- 20,000 cycles for real mode,
+400,000 for protected mode, with throttling enabled so the host CPU doesn't get
 overloaded:
 
 ``` ini

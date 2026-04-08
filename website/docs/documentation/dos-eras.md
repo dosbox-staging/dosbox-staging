@@ -282,9 +282,9 @@ Intel's Pentium processor arrived in 1993 and rapidly became the standard for
 serious gaming. The Sound Blaster 16 was ubiquitous, SVGA cards pushed
 higher resolutions and colour depths, and CD-ROM drives became standard,
 ushering in the era of full-motion video and CD audio soundtracks. This was
-the golden age of DOS gaming --- the period that produced many of the
-platform's most celebrated titles that served as blueprints for the modern
-gaming industry.
+the golden age of DOS gaming, the period that produced many of the platform's
+most celebrated titles that served as blueprints for the modern gaming
+industry.
 
 By this point, the **Roland Sound Canvas** (and General MIDI in general) had
 become the dominant standard for game music, displacing the MT-32. Most
@@ -398,9 +398,9 @@ machine = svga_s3
 memsize = 32
 
 [cpu]
-cputype = pentium_mmx
-# 640x480 3D might require up to 400000 to run smoothly
+# 640x480+ 3D might require up to 400000 for smooth framerates
 cpu_cycles = 150000
+cputype = pentium_mmx
 
 [sblaster]
 sbtype = sb16
@@ -418,7 +418,7 @@ mididevice = soundcanvas
 
 DOSBox Staging fully supports Windows 3.x, which was not a standalone
 operating system but an operating environment running on top of DOS. A number
-of games were released exclusively for Windows 3.1 with no DOS version ---
+of games were released exclusively for Windows 3.x with no DOS version ---
 particularly full-motion video (FMV) adventures and multimedia titles that
 leveraged Windows' built-in video and audio support. Many of these are cult
 classics well worth rediscovering.
@@ -463,6 +463,8 @@ machine = svga_s3
 
 [cpu]
 cpu_cycles = 30000
+# This is important; some Windows 3.x games require it
+cputype = pentium
 
 [sblaster]
 sbtype = sb16

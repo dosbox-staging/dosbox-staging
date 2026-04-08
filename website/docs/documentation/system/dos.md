@@ -24,9 +24,6 @@ the box. If you need to override the defaults — perhaps you're running a
 German game on an English system, or you need a specific date format — a
 few settings let you fine-tune the regional behaviour.
 
-The [language](#language) setting controls the language of DOSBox Staging's
-own user interface messages.
-
 The [country](#country) setting controls DOS-level formatting conventions:
 date and time format, decimal separators, currency symbols, and so on. The
 [keyboard_layout](#keyboard_layout) setting selects the DOS keyboard layout,
@@ -41,6 +38,10 @@ following command line arguments:
 - [`--list-layouts`](../command-line.md#-list-layouts) — lists all supported keyboard layouts with their codes
 - [`--list-code-pages`](../command-line.md#-list-code-pages) — lists all bundled code pages (screen fonts)
 
+!!! note 
+
+    Use the [language](../general/#language) setting in the `[dosbox]` section
+    to set the language of DOSBox Staging's own interface.
 
 ## Configuration settings
 
