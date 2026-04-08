@@ -11,26 +11,28 @@ dosbox /path/to/game/GAME.EXE
 dosbox disk.img
 ```
 
-Config files can be layered with `--conf` — later files override earlier
-ones. For quick one-off tweaks without editing a file, use `--set`:
+Config files can be layered with [`--conf`](#-conf-config_file); later files
+override earlier ones. For quick one-off tweaks without editing a file, use
+[`--set`](#-set-settingvalue):
 
 ```
 dosbox --conf game.conf --set cpu_cycles=25000
 ```
 
-Several `--list-*` options are handy for discovering what's available on
-your system: shaders, keyboard layouts, country codes, and code pages.
+Several [`--list-*` options](#discovery) are handy for discovering what's
+available on your system: shaders, keyboard layouts, country codes, and code
+pages.
 
 
 ## Command-line reference
 
 ##### PATH
 
-:   If `PATH` is a directory, it's mounted as C:. If it's a bootable disk
-    image (IMA/IMG), it's booted. If it's a CD-ROM image (CUE/ISO), it's
-    mounted as D:. If it's a DOS executable (BAT/COM/EXE), its parent
-    directory is mounted as C: and the executable is run. When the
-    executable exits, DOSBox Staging quits.
+:   - If `PATH` is a directory, it's mounted as the C: drive.
+    - If it's a bootable disk image (IMA or IMG file), it's booted.
+    - If it's a CD-ROM image (e.g., an ISO file), it's mounted as the D: drive.
+    - If it's a DOS executable (a file with BAT, COM, or EXE extension), its parent directory is mounted as C: and the
+    executable is run. When the executable exits, DOSBox Staging quits.
 
 
 ### Configuration
@@ -58,7 +60,8 @@ your system: shaders, keyboard layouts, country codes, and code pages.
 
 ##### `--editconf`
 
-:   Open the primary configuration file in a text editor.
+:   Open the primary configuration file in the default text editor in the
+    terminal (e.g., the one set via `$EDITOR`).
 
 
 ##### `--eraseconf`
@@ -68,7 +71,8 @@ your system: shaders, keyboard layouts, country codes, and code pages.
 
 ##### `--noprimaryconf`
 
-:   Don't load or create the primary configuration file.
+:   Don't load the primary configuration file if it exists, and don't create
+    and load it if it doesn't exist.
 
 
 ##### `--nolocalconf`
@@ -87,8 +91,8 @@ your system: shaders, keyboard layouts, country codes, and code pages.
 
 ##### `-c <command>`
 
-:   Run the specified DOS command before handling `PATH`. Multiple `-c`
-    options can be specified.
+:   Run the specified DOS command before handling [`PATH`](#path). Multiple
+    `-c` options can be specified.
 
 
 ##### `--noautoexec`
@@ -109,17 +113,14 @@ your system: shaders, keyboard layouts, country codes, and code pages.
 ##### `--lang <lang_file>`
 
 :   Start with the specified language file. Set to `auto` to detect the
-    language from the host OS.
+    language from the host OS (this is the default).
 
 
 ##### `--machine <type>`
 
 :   Emulate a specific machine type. The machine type affects both the
-    emulated video and sound hardware.
-
-    Possible values: `hercules`, `cga`, `cga_mono`, `tandy`, `pcjr`, `ega`,
-    `svga_s3` *(default)*, `svga_et3000`, `svga_et4000`, `svga_paradise`,
-    `vesa_nolfb`, `vesa_oldvbe`.
+    emulated video and sound hardware. See [machine](system/general.md#machine)
+    for further details.
 
 
 ### Discovery
@@ -127,13 +128,13 @@ your system: shaders, keyboard layouts, country codes, and code pages.
 ##### `--list-countries`
 
 :   List all supported countries with their numeric codes, for use with the
-    `country` config setting.
+    [country](system/dos.md#country) config setting.
 
 
 ##### `--list-layouts`
 
 :   List all supported keyboard layouts with their codes, for use with the
-    `keyboard_layout` config setting.
+    [keyboard_layout](system/dos.md#keyboard_layout) config setting.
 
 
 ##### `--list-code-pages`
@@ -143,8 +144,8 @@ your system: shaders, keyboard layouts, country codes, and code pages.
 
 ##### `--list-shaders`
 
-:   List all available shaders and their paths, for use with the `shader`
-    config setting.
+:   List all available shaders and their paths, for use with the
+    [shader](graphics/rendering.md#shader) config setting.
 
 
 ### Mapper
