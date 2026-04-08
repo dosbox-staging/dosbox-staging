@@ -4,26 +4,33 @@
 
 DOSBox Staging includes a built-in mouse driver which is enabled by default,
 so you don't need to load a real DOS mouse driver manually (e.g., `MOUSE.COM`
-or `CTMOUSE`). The built-in driver provides lower latency and smoother
-movement than a real DOS mouse driver and uses less memory. You'll only need
-to tinker with the mouse settings for niche use cases and a handful of
-problematic games --- the vast majority of DOS games that require a mouse will
-work out-of-the-box.
+or `CTMOUSE`). The vast majority of DOS games that require a mouse will work
+out-of-the-box --- you'll only need to tinker with the mouse settings for a
+small handful of problematic games, of if you have very specific niche needs.
+The built-in driver provides lower latency and smoother movement than a real
+DOS mouse driver and uses less memory, so it's the best option for most
+people.
 
-To capture the mouse, click inside the DOSBox window, then press the middle
-mouse button or ++ctrl+f10++ / ++cmd+f10++ to release it (see [Keyboard
-shortcuts](../shortcuts.md)). If your mouse has no middle button, the keyboard
-shortcut is your friend.
+To capture the mouse, click inside the DOSBox window. By default, the DOSBox
+Staging window's titlebar indicates if the mouse is captured. To release the
+mouse, press the middle mouse button or ++ctrl+f10++ / ++cmd+f10++ (see
+[Keyboard shortcuts](../shortcuts.md)). If your mouse has no middle button,
+the keyboard shortcut is your friend. 
 
 The [`mouse_raw_input`](#mouse_raw_input) setting bypasses your host OS's
 mouse acceleration, giving you consistent sensitivity regardless of your
 desktop settings. This is particularly useful for games where precise mouse
-control matters.
+control matters (e.g., fast-paced FPS games).
+
+Many DOS games differ wildly in how they handle mouse movement. In many games,
+horizontal and vertical mouse movement has different sensitivity. You can
+"normalise" the X and Y axis sensitivity or adjust the global sensitivity with
+the [`mouse_sensitivity`](#mouse_sensitivity) setting.
 
 For Windows 3.1x running inside DOSBox, seamless mouse integration is
-available when using a compatible mouse driver---the mouse cursor moves
-freely between the host and guest without manual capture (see
-[`mouse_capture`](#mouse_capture)).
+available when using a compatible mouse driver --- with this enabled, the
+mouse cursor can be moved freely between the host desktop and the DOSBox
+Staging window (see [`mouse_capture`](#mouse_capture)).
 
 
 ## Serial mice
