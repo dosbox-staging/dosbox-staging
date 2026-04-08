@@ -317,8 +317,7 @@ on-board Yamaha OPL2 chips to support stereo synthesised sound.
 
 This is the only Sound Blaster model with such a dual OPL2 configuration; many
 games take advantage of it and output stereo OPL music when configured for the
-Sound Blaster Pro. Please refer to the [List of games that support stereo OPL
-sound](TODO) for further details.
+Sound Blaster Pro.
 
 Use the following setting to enable Sound Blaster Pro emulation:
 
@@ -354,8 +353,7 @@ It is functionally the same as the earlier Sound Blaster Pro with one key
 difference: instead of the dual OPL2 chips, it sports a single Yamaha OPL3
 chip also capable of producing stereo sound. The OPL3 has perfect backward
 compatibility with the single-OPL2 configuration of earlier cards, but not
-with dual OPL2. Please refer to the [List of games that support stereo OPL
-sound](TODO) for further details.
+with dual OPL2.
 
 Use the following setting to enable Sound Blaster Pro 2.0 emulation:
 
@@ -634,7 +632,7 @@ The number after the `T` parameter describes the type of the card:
 
     </div>
 
-    TODO -- audio samples
+    <!-- TODO audio samples -->
 
 
 ##### sb_filter_always_on
@@ -797,7 +795,7 @@ The number after the `T` parameter describes the type of the card:
 
     </div>
 
-    TODO -- audio samples
+    <!-- TODO audio samples -->
 
 
 ##### opl_remove_dc_bias
