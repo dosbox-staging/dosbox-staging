@@ -25,6 +25,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build_documentation:
+    name:    Build documentation
+    runs-on: ubuntu-slim
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          submodules: false
+
+      - name: Build documentation
+        uses: ./.github/actions/build-documentation
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: documentation
+          path: documentation
+          retention-days: 1
+
   generate_release_notes:
     name:    Generate release notes
     runs-on: ubuntu-slim
@@ -145,11 +165,15 @@ jobs:
       - name: Install brew depedencies
         run: HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --overwrite librsvg
 
-      - name: Download binaries
+      - name: Download all temporary artifacts
         uses: actions/download-artifact@v8
+
+      - name: Dump workspace contents
+        run: find $RUNNER_WORKSPACE
 
       - name: Package
         run: |
+          mv documentation Resources/docs
           mv Resources ../
           ./scripts/packaging/create-package.sh \
               -p macos \
@@ -183,6 +207,7 @@ jobs:
           mkdir "$PLUGINS_DIR"
           cp -R nuked-sc55-clap/* "$PLUGINS_DIR"
 
+
       - name: Create DMG disk image
         run: |
           ln -s /Applications dist/
@@ -195,11 +220,6 @@ jobs:
               -ov \
               -format UDZO "dosbox-staging-macOS-universal-$DOSBOX_VERSION_AND_HASH.dmg"
 
-
-      - name: Download release notes HTML
-        uses: actions/download-artifact@v8
-        with:
-          name: release-notes-html
 
       - name: Upload DMG disk image
         uses: actions/upload-artifact@v7
