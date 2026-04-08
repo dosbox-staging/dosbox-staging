@@ -15,6 +15,10 @@ be able to run DOS games effectively. While this is enough to get started, we
 encourage you to expand your knowledge on the subject over time in the areas
 you're interested in.
 
+TODO(CL) bolded text in this entire chapter should link to relevant
+documentation sections if applicable (e.g. **Gravis UltraSound (GUS)**,
+**Sound Blaster**, etc.)
+
 
 ## Modularity
 

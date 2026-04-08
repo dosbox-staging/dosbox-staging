@@ -16,6 +16,7 @@ To release it, press the middle mouse button, or use ++ctrl+f10++ /
 
 For details on each input type, see the dedicated pages:
 
-- [Keyboard](keyboard.md) — keyboard capture settings
-- [Mouse](mouse.md) — built-in mouse driver, sensitivity, capture behaviour
-- [Joystick](joystick.md) — game port emulation, controller mapping, calibration
+- [Keyboard](keyboard.md) --- keyboard capture settings
+- [Mouse](mouse.md) --- built-in mouse driver, sensitivity, capture behaviour
+- [Joystick](joystick.md) --- game port emulation, controller mapping,
+  calibration

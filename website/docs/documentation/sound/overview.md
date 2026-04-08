@@ -30,11 +30,11 @@ digitised waveforms of audio recordings (as are WAV, FLAC and MP3 files, for
 instance). The biggest reason for this were the memory and storage limitations
 of these early computers. An IBM PC with 640 *kilobytes* of on-board memory
 could store only a little more than a minute's worth of 8-bit 10kHz digitised
-audio---and that would leave no space for the operating system and the program
-itself! Most home users could not afford a hard drive throughout the 1980s,
-and even when they started to become common in the early 90s, games were still
-coming on multiple floppy disks that could typically only hold 720kB or 1.44MB
-worth of data.
+audio --- and that would leave no space for the operating system and the
+program itself! Most home users could not afford a hard drive throughout the
+1980s, and even when they started to become common in the early 90s, games
+were still coming on multiple floppy disks that could typically only hold
+720kB or 1.44MB worth of data.
 
 Yet we know that many of these games had quite elaborate, sometimes hour-long
 soundtracks! So how did they do it?
@@ -68,10 +68,10 @@ computer and these external modules was also standardised.
 
 ## Digital sound
 
-Some audio cards had ADPCM decompression capabilities
-implemented in hardware that could cut down storage requirements to a tenth,
-but support was not universal across sound cards, and developers had to go
-with the least common denominator format, which was uncompressed audio.
+Some audio cards had ADPCM decompression capabilities implemented in hardware
+that could cut down storage requirements to a tenth, but support was not
+universal across sound cards, and developers had to go with the least common
+denominator format, which was uncompressed audio.
 
 
 ## Selecting the best audio option

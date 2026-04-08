@@ -34,7 +34,7 @@ applications of the past.
 ## Is it an emulator?
 
 Not quite. "True" computer emulators are built to mimic the entire target
-system as closely as possible at the hardware level---ideally, the emulated
+system as closely as possible at the hardware level --- ideally, the emulated
 system should be indistinguishable from the real thing. When using such an
 emulator, you'd need to install an operating system of your choosing onto the
 emulated hardware before running games and applications. Naturally, you
@@ -83,17 +83,17 @@ booting time is involved; the game will start immediately, not "knowing" any
 better if it's running inside DOSBox, a complete computer emulator, or on
 period-accurate hardware from the 1980s or 90s!
 
-Need a different sound card? Just change a line or two in the config---DOSBox
-will take care of the rest.
+Need a different sound card? Just change a line or two in the config ---
+DOSBox will take care of the rest.
 
 Is the processor too fast or slow? Change a single config value, or better yet,
 adjust the speed while playing the game. 
 
-DOSBox makes it easy to experiment with various settings---which is important,
-as most DOS games offer a variety of sound and graphics options well worth
-playing with. Due to its simplicity, it makes it easy to maintain an extensive
-collection of games, each fine-tuned for the best possible experience,
-according to your preferences. 
+DOSBox makes it easy to experiment with various settings --- which is
+important, as most DOS games offer a variety of sound and graphics options
+well worth playing with. Due to its simplicity, it makes it easy to maintain
+an extensive collection of games, each fine-tuned for the best possible
+experience, according to your preferences. 
 
 
 ## A bit of history

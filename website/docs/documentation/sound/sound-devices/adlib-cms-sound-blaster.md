@@ -1,9 +1,7 @@
 # AdLib, CMS & Sound Blaster
 
-## Overview
-
 For many who owned a gaming PC in the 1990s, the name **Sound Blaster** is a
-synonym for "sound card"---and rightly so, as the Sound Blaster family of
+synonym for "sound card" --- and rightly so, as the Sound Blaster family of
 cards by Creative Technology was the de facto standard for DOS gaming. The
 first Sound Blaster was released in 1989, and it quickly became the
 best-selling expansion card for the PC. Virtually all games from 1990 onwards
@@ -18,10 +16,10 @@ compatibility with games,
 
 Most games that support the AdLib or Sound Blaster work fine with the DOSBox
 defaults, and don't require you to load any DOS drivers. A small percentage of
-games, however---especially from the early Sound Blaster days---only work with
-a specific model, or require a driver to be loaded. Please refer to the [List
-of games that require a sound driver](#){ external } on the wiki for further
-details.
+games, however --- especially from the early Sound Blaster days --- only work
+with a specific model, or require a driver to be loaded. Please refer to the
+[List of games that require a sound driver](#){ external } on the wiki for
+further details.
 
 
 ### On-board synthesisers
@@ -51,7 +49,7 @@ The below table lists all Sound Blaster models emulated by DOSBox, along with
 their main capabilities:
 
 | Model                                                         | `sbtype` value | Digital audio                          | Synthesiser                 |
-| -----                                                         | -------------- | -------------                          | -----------                 |
+| ------------------------------------------------------------- | -------------- | -------------------------------------- | --------------------------- |
 | [Game Blaster](#creative-music-system-cms-game-blaster)       | `gb`           | N/A                                    | CMS (stereo)                |
 | [Sound Blaster 1.0](#sound-blaster-10)                        | `sb1`          | 8-bit mono 23kHz                       | OPL2 (mono)<br>CMS (stereo) |
 | [Sound Blaster 2.0](#sound-blaster-20)                        | `sb2`          | 8-bit mono 23kHz                       | OPL2 (mono)<br>CMS (stereo) |
@@ -159,9 +157,9 @@ Dual OPL2 support
 To provide a good out-of-the-box experience that works well enough with most
 games without tinkering, DOSBox defaults to the imaginary `modern` [filter
 setting](#sb_filter) on all Sound Blaster models. This implements simple
-linear-interpolation instead of accurately emulating the analog output
-filter---this makes most games sound decent regardless of the Sound Blaster
-model in use, but it's not authentic.
+linear-interpolation instead of accurately emulating the analog output filter
+--- this makes most games sound decent regardless of the Sound Blaster model
+in use, but it's not authentic.
 
 For the best authentic results, set the most appropriate Sound Blaster model
 for each game via the [sb_type](#sbtype) configuration setting. Additionally,
@@ -414,7 +412,7 @@ oplmode = opl3gold
 cards. In "legacy mode", ESFM is fully compatible with the Yamaha OPL3 and
 yields almost identical output on most material. What sets it apart is its
 "native mode", which offers advanced synthesis features surpassing the OPL3's
-capabilities---it bridges the gap between synthetic-sounding OPL music and
+capabilities --- it bridges the gap between synthetic-sounding OPL music and
 sample-based MIDI music.
 
 Since ESFM was released in 1995, only a handful of games support native mode,

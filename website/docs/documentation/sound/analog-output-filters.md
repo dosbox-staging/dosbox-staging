@@ -1,12 +1,10 @@
 # Analog output filter emulation
 
-## Overview
-
 Most DOS-era sound cards feature an output low-pass filter (and sometimes a
 high-pass filter too) that plays an important role in giving their sound its
-character. DOSBox Staging accurately emulates these analog output stage filters
-for all supported sound devices, resulting in a more period-accurate and
-pleasant listening experience.
+character. DOSBox Staging accurately emulates these analog output stage
+filters for all supported sound devices, resulting in a more period-accurate
+and pleasant listening experience.
 
 Filters are enabled by default for small-speaker audio systems (PC Speaker,
 PS/1 Audio, Tandy, and the various LPT DAC options). Depending on the device,
@@ -14,16 +12,19 @@ these filters either emulate the analog output filters of the original
 hardware, or the sound coming out of a small band-limited speaker in an
 acoustic environment.
 
-For [Sound Blaster](sound-devices/adlib-cms-sound-blaster.md), the [`sb_filter`](sound-devices/adlib-cms-sound-blaster.md#sb_filter) parameter defaults to `modern`, which uses
-the simple linear interpolation method of previous DOSBox versions. Set it to
-`auto` to enable accurate analog output filter emulation that matches the
-filters of the selected Sound Blaster model. OPL and CMS filters are also
-accurately emulated.
+For [Sound Blaster](sound-devices/adlib-cms-sound-blaster.md), the
+[`sb_filter`](sound-devices/adlib-cms-sound-blaster.md#sb_filter) parameter
+defaults to `modern`, which uses the simple linear interpolation method of
+previous DOSBox versions. Set it to `auto` to enable accurate analog output
+filter emulation that matches the filters of the selected Sound Blaster model.
+OPL and CMS filters are also accurately emulated.
 
-Some devices, such as the [Gravis UltraSound](sound-devices/gravis-ultrasound.md), [Roland MT-32](sound-devices/roland-mt-32.md), [FluidSynth](sound-devices/general-midi.md#fluidsynth),
-[Innovation SSI-2001](sound-devices/innovation.md), and the [IBM Music Feature Card](sound-devices/imfc.md), don't have hardware
-output filters to emulate, but you can apply custom filters to them if
-desired.
+Some devices, such as the [Gravis UltraSound](sound-devices/gravis-ultrasound.md),
+[Roland MT-32](sound-devices/roland-mt-32.md),
+[FluidSynth](sound-devices/general-midi.md#fluidsynth),
+[Innovation SSI-2001](sound-devices/innovation.md), and the
+[IBM Music Feature Card](sound-devices/imfc.md), don't have hardware output
+filters to emulate, but you can apply custom filters to them if desired.
 
 The following per-device filter settings are available:
 

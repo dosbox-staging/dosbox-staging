@@ -1,7 +1,5 @@
 # Serial ports
 
-## Overview
-
 DOSBox Staging emulates four COM (serial) ports, the same ones DOS programs
 used for modems, serial mice, and direct cable connections.
 

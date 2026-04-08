@@ -1,12 +1,10 @@
 # General MIDI
 
-## Overview
-
 **General MIDI (GM)** was introduced in 1991 to solve a simple but annoying
 problem: MIDI could tell a synthesiser *what notes to play*, but not *which
 instruments to use*. GM standardised the instrument assignments — program
 number 1 is always an acoustic grand piano, program 41 is always a violin, and
-so on — so that music written for one GM device would sound recognisable on
+so on --- so that music written for one GM device would sound recognisable on
 any other.
 
 The Roland SC-55, released the same year, was the first Sound Canvas module
@@ -16,21 +14,25 @@ instruments, percussion kits, and digital effects while remaining fully
 backwards-compatible with the core GM specification.
 
 Most DOS game composers wrote and tested their music on Roland Sound Canvas
-hardware. Games like [Monkey Island 2](https://www.mobygames.com/game/289/monkey-island-2-lechucks-revenge/), [Ultima VII](https://www.mobygames.com/game/608/ultima-vii-the-black-gate/), [Doom](https://www.mobygames.com/game/1068/doom/), and
-[Duke Nukem 3D](https://www.mobygames.com/game/365/duke-nukem-3d/) all sound their best when played through an SC-55 or a
-compatible device. Since different GM manufacturers recorded their own
-instrument samples, playback can sound noticeably different from one device
-to another — but the SC-55 is the gold standard for what the composer
-intended.
+hardware. Games like [Monkey Island
+2](https://www.mobygames.com/game/289/monkey-island-2-lechucks-revenge/),
+[Ultima VII](https://www.mobygames.com/game/608/ultima-vii-the-black-gate/),
+[Doom](https://www.mobygames.com/game/1068/doom/), and [Duke Nukem
+3D](https://www.mobygames.com/game/365/duke-nukem-3d/) all sound their best
+when played through an SC-55 or a compatible device. Since different GM
+manufacturers recorded their own instrument samples, playback can sound
+noticeably different from one device to another — but the SC-55 is the gold
+standard for what the composer intended.
 
 For a more detailed introduction to MIDI and its role in DOS gaming, see the
 [MIDI overview](../midi.md).
 
 The **Yamaha DB50XG** and **MU-series** (MU50, MU80, MU100, etc.) are
-alternative MIDI modules that offer excellent SC-55 compatibility with a
-more modern and punchy sonic character. Many enthusiasts prefer them to the
-SC-55 in certain games. For a detailed comparison of how these modules stack
-up against the SC-55, see [this article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/).
+alternative MIDI modules that offer excellent SC-55 compatibility with a more
+modern and punchy sonic character. Many enthusiasts prefer them to the SC-55
+in certain games. For a detailed comparison of how these modules stack up
+against the SC-55, see [this
+article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/).
 
 DOSBox Staging offers two main ways to get General MIDI playback:
 
@@ -38,7 +40,8 @@ DOSBox Staging offers two main ways to get General MIDI playback:
 ## FluidSynth
 
 For a step-by-step walkthrough of setting up FluidSynth with a specific game,
-see the [Star Wars: Dark Forces](../../../getting-started/star-wars-dark-forces.md#setting-up-general-midi-sound)
+see the [Star Wars: Dark
+Forces](../../../getting-started/star-wars-dark-forces.md#setting-up-general-midi-sound)
 chapter of the getting started guide.
 
 FluidSynth is a real-time software MIDI synthesiser based on the SoundFont
@@ -50,10 +53,10 @@ Sound Canvas sound, look for SoundFonts sampled from real SC-55 hardware.
 
 ## Sound Canvas emulation
 
-For the most accurate SC-55 reproduction, DOSBox Staging supports Roland
-Sound Canvas emulation via CLAP audio plugins. This provides
-sample-accurate playback of the actual SC-55 sound engine — as close to the
-real hardware as you can get without owning one.
+For the most accurate SC-55 reproduction, DOSBox Staging supports Roland Sound
+Canvas emulation via CLAP audio plugins. This provides sample-accurate
+playback of the actual SC-55 sound engine --- as close to the real hardware as
+you can get without owning one.
 
 
 ## External MIDI devices
