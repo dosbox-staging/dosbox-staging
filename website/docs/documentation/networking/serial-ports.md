@@ -21,6 +21,10 @@ specifically requires one, rather than using the built-in PS/2
 [mouse](../input/mouse.md) driver.
 
 
+For setting up multiplayer games over serial connections, see the
+[Multiplayer](multiplayer.md) chapter.
+
+
 ## Configuration settings
 
 You can set the serial port parameters in the `[serial]` configuration
