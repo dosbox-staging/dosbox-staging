@@ -67,6 +67,50 @@ pixel-perfect output. The deprecated legacy CRT shaders are still available
 as a [separate download](https://archive.org/download/dosbox-staging-legacy-svn-shaders/svn-shaders.zip).
 
 
+## Shader presets
+
+Shaders can be configured with presets that override their default settings
+and parameters. Presets are specified using the `SHADER_NAME:PRESET_NAME`
+format in the `shader` setting. If no preset is specified, the shader's
+built-in defaults are used.
+
+For example:
+
+``` ini
+[render]
+shader = crt/crt-hyllian:vga-4k
+```
+
+The adaptive CRT shaders (`crt-auto`, `crt-auto-machine`, `crt-auto-arcade`,
+`crt-auto-arcade-sharp`) automatically select the appropriate preset based on
+the graphics standard and viewport resolution. For example, `crt-auto` might
+resolve to `crt/crt-hyllian:cga-1080p` for a CGA game at 1080p, or
+`crt/crt-hyllian:vga-4k` for a VGA game at 4K resolution. The `sharp` shader
+is used as a fallback below 3x vertical scaling.
+
+Preset files are INI-format files that can override shader settings and
+parameters:
+
+``` ini
+[settings]
+force_single_scan = yes
+force_no_pixel_doubling = yes
+
+[parameters]
+BEAM_MIN_WIDTH     = 0.70
+SCANLINES_STRENGTH = 0.65
+```
+
+The `[settings]` section can include:
+
+- `force_single_scan` --- Force single scanning for double-scanned modes.
+- `force_no_pixel_doubling` --- Disable pixel doubling.
+- `linear_filtering` --- Enable or disable bilinear texture filtering.
+
+The `[parameters]` section overrides shader-specific parameters declared in
+the shader source.
+
+
 ## Integer scaling
 
 The `integer_scaling` setting constrains the horizontal or vertical scaling
@@ -352,6 +396,23 @@ You can set the rendering parameters in the `[render]` configuration section.
       of image sharpness.
 
     </div>
+
+    The following short aliases are also available: `sharp` (for
+    `interpolation/sharp`), `bilinear` (for `interpolation/bilinear`),
+    `nearest` (for `interpolation/nearest`), `jinc2` (for
+    `interpolation/jinc2`).
+
+    The bundled shaders include:
+
+    - **Interpolation**: `sharp`, `bilinear`, `nearest`, `catmull-rom`
+    - **CRT**: `crt-hyllian` (used by the adaptive CRT shaders),
+      `vga-1080p`, `vga-1080p-fake-double-scan`
+    - **Scaler**: `advinterp2x`, `advinterp3x`, `advmame2x`, `advmame3x`,
+      `xbr-lv2-3d`, `xbr-lv2-noblend`, `xbr-lv3`
+
+    Shaders are located in subdirectories; use the full path (e.g.,
+    `interpolation/catmull-rom` or `scaler/xbr-lv3`). The `.glsl` extension
+    can be omitted.
 
     !!! note
 
