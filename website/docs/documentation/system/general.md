@@ -7,9 +7,11 @@ options.
 The [machine](#machine) setting selects which video adapter to emulate. The
 default `svga_s3` (an S3 Trio64 SVGA card) covers the widest range of games.
 You'll only need to change it for titles that specifically require CGA, EGA,
-Tandy, or Hercules graphics. The
+Tandy, or Hercules graphics. See
+[Graphics adapters](../graphics/adapters.md) for a detailed overview of each
+adapter, or the
 [Getting Started guide](../../getting-started/setting-up-prince-of-persia.md)
-walks through several practical example of this.
+for a practical walkthrough.
 
 The default 16 MB of RAM set via [memsize](#memsize) is more than enough for
 nearly all DOS software. A few late DOS-era games need 32 MB, but these are
