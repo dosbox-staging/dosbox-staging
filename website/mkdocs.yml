@@ -156,6 +156,7 @@ nav:
 
       - documentation/configuration.md
       - documentation/command-line.md
+      - documentation/commands.md
 
       - System:
         - documentation/system/general.md
