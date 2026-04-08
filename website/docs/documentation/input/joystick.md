@@ -1,5 +1,7 @@
 # Joystick
 
+## Overview
+
 The classic DOS game port was a 15-pin connector supporting up to 4 analog
 axes and 4 buttons — just enough for two basic 2-button joysticks. DOSBox
 Staging automatically detects your modern USB controller and maps it to the
@@ -34,19 +36,6 @@ use_joy_calibration_hotkeys = off
 joy_x_calibration           = 0.576211,0.02
 joy_y_calibration           = 0.5474,-0.005
 ```
-
-<figure markdown>
-  <video controls width=760>
-    <source src="https://www.dosbox-staging.org/static/videos/release-notes/0.79.0/joystick-calibration-hotkey-demo.webm" type="video/webm; codecs=vp9,opus">
-    <source src="https://www.dosbox-staging.org/static/videos/release-notes/0.79.0/joystick-calibration-hotkey-demo.mp4" type="video/mp4">
-    Your browser does not support the <code>video</code> element.
-  </video>
-
-  <figcaption markdown>
-  Joystick calibration hotkeys in action
-  </figcaption>
-</figure>
-
 
 ## Configuration settings
 

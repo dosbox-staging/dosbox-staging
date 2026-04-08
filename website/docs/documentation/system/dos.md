@@ -16,10 +16,37 @@ default and you can safely ignore them. On the rare occasion a game
 misbehaves (usually an old title that chokes on EMS), disabling the
 offending memory type is a quick fix.
 
+## Regional settings
+
+DOSBox Staging automatically detects your host operating system's language
+and keyboard layout, so in most cases it just does the right thing out of
+the box. If you need to override the defaults — perhaps you're running a
+German game on an English system, or you need a specific date format — a
+few settings let you fine-tune the regional behaviour.
+
+The [language](#language) setting controls the language of DOSBox Staging's
+own user interface messages.
+
+The [country](#country) setting controls DOS-level formatting conventions:
+date and time format, decimal separators, currency symbols, and so on. The
+[keyboard_layout](#keyboard_layout) setting selects the DOS keyboard layout,
+determining which characters are produced by which keys.
+[locale_period](dos.md#locale_period) lets you specify the decimal separator
+regardless of the country setting.
+
+To see what's available on your system, start DOSBox Staging with the
+following command line arguments:
+
+- [`--list-countries`](../command-line.md#-list-countries) — lists all supported countries with their numeric codes
+- [`--list-layouts`](../command-line.md#-list-layouts) — lists all supported keyboard layouts with their codes
+- [`--list-code-pages`](../command-line.md#-list-code-pages) — lists all bundled code pages (screen fonts)
+
 
 ## Configuration settings
 
 You can set the DOS parameters in the `[dos]` configuration section.
+
+TODO(CL) group settings by category, e.g. memory settings
 
 
 ##### country

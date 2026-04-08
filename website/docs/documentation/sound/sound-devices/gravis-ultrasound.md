@@ -1,5 +1,7 @@
 # Gravis UltraSound
 
+## Overview
+
 The Gravis UltraSound (GUS) was released in 1992 by an unlikely
 manufacturer: Canadian joystick company Advanced Gravis. Its audio
 capabilities were far ahead of anything else on the consumer market —

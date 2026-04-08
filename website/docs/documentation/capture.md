@@ -1,5 +1,7 @@
 # Capture
 
+## Overview
+
 DOSBox Staging can capture screenshots, record audio, and record video
 directly from the emulator. By default, all captures are saved to the
 `capture` directory in the current working directory. You can change this with

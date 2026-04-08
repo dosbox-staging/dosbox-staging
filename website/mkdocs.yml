@@ -156,13 +156,10 @@ nav:
       - documentation/configuration.md
       - documentation/command-line.md
 
-      - documentation/autoexec.md
-
       - System:
         - documentation/system/general.md
         - documentation/system/cpu.md
         - documentation/system/dos.md
-        - documentation/system/regional.md
 
       - Input:
         - documentation/input/overview.md
