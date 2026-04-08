@@ -1,4 +1,4 @@
-# DOS commands & programs
+# DOS commands
 
 DOSBox Staging provides a comprehensive set of commands available at the DOS
 prompt. Most are clean-room reimplementations of classic MS-DOS commands,
