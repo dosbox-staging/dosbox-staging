@@ -1,5 +1,22 @@
 # Display & window
 
+DOSBox Staging opens in a resizable window by default. Press
+++alt+enter++ to toggle fullscreen mode — no need to dig through config
+files for that.
+
+The `opengl` output mode is the recommended default because it's required
+for CRT shaders and other post-processing effects. If your system doesn't
+support OpenGL, `texture` is a solid fallback that still looks good.
+
+For monitors with variable refresh rates (G-Sync, FreeSync, or VRR),
+you'll want to disable `vsync` for the smoothest frame pacing. On
+fixed-rate monitors, enable it to prevent screen tearing.
+
+Window size and position are remembered between sessions, so you only need
+to set things up once. Most users won't need to change the display defaults
+at all — the out-of-the-box settings work well for the vast majority of
+games.
+
 
 ## Configuration settings
 
