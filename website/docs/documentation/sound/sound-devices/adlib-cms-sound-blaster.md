@@ -432,7 +432,7 @@ but in the few that do, the results sound quite spectacular.
 sbtype = ess
 ```
 
-### Games with ESFM Enhanced FM support
+### Games with ESFM support
 
 <div class="compact" markdown>
 

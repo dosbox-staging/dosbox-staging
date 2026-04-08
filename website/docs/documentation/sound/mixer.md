@@ -29,6 +29,8 @@ that you can use from the DOS command line. If you run `MIXER` without any
 arguments, it prints out the current state of the mixer. This is what we get
 with the default configuration:
 
+TODO insert image
+
 As we can see, we have four channels enabled by default:
 
 - `MASTER` -- This is the final summed stereo output of all other
@@ -41,10 +43,10 @@ As we can see, we have four channels enabled by default:
 - `SB` -- Stereo digital audio output of the emulated Sound Blaster 16 card.
 
 There is an important thing to note here: some emulated sound devices contain
-multiple sub-devices, each having their own mixer channel. The Sound Blaster 16
-is such a device --- its digital output is routed to the
-`SB` channel, while the output of the onboard Yamaha OPL3 synthesiser chip has
-its dedicated `OPL` channel.
+multiple sub-devices, each having their own mixer channel. The Sound Blaster
+16 is such a device; its digital output is routed to the `SB` channel, while
+the output of the onboard Yamaha OPL3 synthesiser chip has its dedicated `OPL`
+channel.
 
 This is actually similar to how the Sound Blaster software mixer works on later Sound
 Blaster cards. The `MIXER` command extends this concept so you can adjust the
@@ -107,7 +109,7 @@ sections of the manual where they're described in detail.
 
 | Channel name  | Device                                       | Stereo? |
 | ------------- | -------------------------------------------- | --------|
-| `CDAUDIO`     | [CD-DA digital audio](cd-da.md)              | Yes
+| `CDAUDIO`     | [CD-DA digital audio](sound-devices/cd-da.md)              | Yes
 | `CMS`         | [Creative Music System (C/MS) synthesiser](sound-devices/adlib-cms-sound-blaster.md#cms) | Yes
 | `COVOX`       | [Covox Speech Thing digital audio](sound-devices/covox-variants.md#covox-speech-thing) | No
 | `DISNEY`      | [Disney Sound Source (DSS) digital audio](sound-devices/covox-variants.md#disney-sound-source) | No

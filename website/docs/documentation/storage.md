@@ -32,9 +32,9 @@ from the built-in resources directory.
 
 Automounting also supports disk images for floppy and CD-ROM drives:
 
-- Place `.img` or `.ima` floppy images in `drives/a/` or `drives/b/` to mount
+- Place IMG or IMA floppy images in `drives/a/` or `drives/b/` to mount
   them as floppy drives.
-- Place `.iso`, `.cue`, or `.mds` CD-ROM images in any drive directory (e.g.,
+- Place ISO, CUE/BIN, or MDS/MDF CD-ROM images in any drive directory (e.g.,
   `drives/d/`) to mount them as CD-ROM drives.
 
 When image files are detected, DOSBox automatically uses the appropriate mount
@@ -65,10 +65,15 @@ Available options:
 | `verbose`          | `on`, `off`                                   | Show mount command output during startup.         |
 
 
-## Mounting with the MOUNT command
+## Manual mounting
 
-For more control, use the `MOUNT` command directly --- either at the DOS prompt
+For more control, use the `MOUNT` command directly, either at the DOS prompt
 or in the `[autoexec]` section of your config file.
+
+!!! note
+
+    `IMGMOUNT` is deprecated. Use `MOUNT` for both directories and disk
+    images.
 
 
 ### Mounting directories
@@ -87,18 +92,8 @@ make game files accessible to DOS.
 mount A floppy.img -t floppy
 ```
 
-Multiple floppy images can be mounted for disk swapping:
-
-```
-mount A disk1.img disk2.img disk3.img -t floppy
-```
-
-Use ++primary_mod+f4++ to cycle between disks during gameplay. Wildcard
-patterns are also supported (e.g., `mount A disk*.img -t floppy`).
-
 Supported floppy image formats: `.img`, `.ima` (raw sector images). Common
 sizes from 360 KB (5.25" DD) to 2.88 MB (3.5" ED) are automatically detected.
-
 
 ### Mounting CD-ROM images
 
@@ -115,8 +110,26 @@ Supported CD-ROM image formats:
 - **MDS/MDF** --- Alcohol 120% disc images.
 
 For games with CD-DA music, use CUE/BIN or MDS/MDF format images with audio
-tracks. See [CD-DA audio](sound/cd-da.md) for details on supported audio track
-formats.
+tracks. See [CD-DA audio](sound/sound-devices/cd-da.md) for details on
+supported audio track formats.
+
+
+### Mounting multiple images
+
+You can mount multiple images at the same drive letter:
+
+```
+mount A disk1.img disk2.img disk3.img -t floppy
+```
+
+Wildcard patterns are also supported:
+
+```
+mount A cd/*.cue -t iso
+```
+
+Press the ++ctrl+f4++ / ++cmd+f4++ hotkeys to cycle between the mounted images
+during gameplay. 
 
 
 ### Mounting hard disk images
@@ -149,44 +162,14 @@ mount 2 win95.img -t hdd -fs none -chs 304,64,63
 boot -l c
 ```
 
-!!! note
-
-    `IMGMOUNT` is deprecated. Use `MOUNT` for both directories and disk
-    images.
-
-
 ## Configuration settings
 
-Storage-related settings are in the `[dosbox]` section.
+Storage-related settings are in the `[dosbox]` section:
 
+<div class="compact" markdown>
 
-##### automount
+- [automount](system/dos.md#automount)
+- [hard_disk_speed](system/dos.md#hard_disk_speed)
+- [floppy_disk_speed](system/dos.md#floppy_disk_speed)
 
-:   Mount `drives/[c]` directories as drives on startup, where `[c]` is a
-    lowercase drive letter from `a` to `y`.
-
-    Possible values: `on` *default*{ .default }, `off`
-
-
-##### hard_disk_speed
-
-:   Set the emulated hard disk speed.
-
-    Possible values:
-
-    - `maximum` *default*{ .default } -- As fast as possible, no slowdown.
-    - `fast` -- Typical mid-1990s hard disk speed (~15 MB/s).
-    - `medium` -- Typical early 1990s hard disk speed (~2.5 MB/s).
-    - `slow` -- Typical 1980s hard disk speed (~600 kB/s).
-
-
-##### floppy_disk_speed
-
-:   Set the emulated floppy disk speed.
-
-    Possible values:
-
-    - `maximum` *default*{ .default } -- As fast as possible, no slowdown.
-    - `fast` -- Extra-high density (ED) floppy speed (~120 kB/s).
-    - `medium` -- High density (HD) floppy speed (~60 kB/s).
-    - `slow` -- Double density (DD) floppy speed (~30 kB/s).
+</div>

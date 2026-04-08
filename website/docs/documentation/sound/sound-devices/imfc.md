@@ -10,6 +10,11 @@ only game company to support it, along with a handful of Game Arts/Falcom
 ports.
 
 
+### Mixer channel
+
+The IBM Music Feature Card outputs to the **IMFC** mixer channel.
+
+
 ## Compatible games
 
 <div class="compact" markdown>
@@ -34,11 +39,6 @@ ports.
 - [Thexder 2](https://www.mobygames.com/game/64/fire-hawk-thexder-the-second-contact/)
 
 </div>
-
-
-### Mixer channel
-
-The IBM Music Feature Card outputs to the **IMFC** mixer channel.
 
 
 ## Configuration settings

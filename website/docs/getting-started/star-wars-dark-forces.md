@@ -676,7 +676,7 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 
 ## Dynamic range compression
 
-See the [DOSBox mixer](../documentation/sound/dosbox-mixer.md) page for the
+See the [DOSBox mixer](../documentation/sound/mixer.md) page for the
 full mixer reference and [Mixer
 effects](../documentation/sound/mixer-effects.md) for reverb, chorus, and
 crossfeed.
@@ -750,7 +750,7 @@ help.)
 ## Minimising audio glitches
 
 See also [Minimising audio
-glitches](../documentation/sound/dosbox-mixer.md#minimising-audio-glitches)
+glitches](../documentation/sound/mixer.md#minimising-audio-glitches)
 in the manual.
 
 Even after setting the optimal cycles value for a game to limit the emulated
