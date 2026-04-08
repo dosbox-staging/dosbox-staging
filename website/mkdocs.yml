@@ -1,6 +1,5 @@
 # Project information
 site_name: DOSBox Staging
-site_url: https://www.dosbox-staging.org/
 site_author: DOSBox Staging Authors
 site_description: >-
   DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices.
@@ -57,6 +56,10 @@ markdown_extensions:
   - toc:
       permalink: true
 
+# Extra
+extra:
+  offline_mode: !ENV [OFFLINE, false]
+
 # Plugins
 plugins:
   - search
@@ -65,10 +68,15 @@ plugins:
       skip_classes:
         - skip-lightbox
 
-  - privacy:
-      enabled: !ENV [OFFLINE_MANUAL, false]
-  - optimize:
-      enabled: !ENV [OFFLINE_MANUAL, false]
+  - group:
+      enabled: !ENV [OFFLINE, false]
+      plugins:
+      - offline
+      - privacy
+      - exclude:
+          glob:
+            - "index.md"
+            - "releases/*"
 
   - redirects:
         redirect_maps:
