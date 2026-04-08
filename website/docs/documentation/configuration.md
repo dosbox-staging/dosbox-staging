@@ -31,7 +31,11 @@ that directory, making it easy to maintain per-game settings.
 
 ### Portable setup
 
-TODO(CL) typically windows user will use a portable setup
+If a `dosbox-staging.conf` file is placed in the same directory as the DOSBox
+Staging executable, DOSBox will use that directory as its configuration
+directory instead of the platform-specific location. This is useful for
+running DOSBox from a USB drive or keeping everything self-contained in a
+single folder --- a setup commonly preferred by Windows users.
 
 
 ## Config layering
