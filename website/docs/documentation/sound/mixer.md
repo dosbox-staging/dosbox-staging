@@ -88,6 +88,24 @@ Set the crossfeed strength of a channel with `X` followed by the level:
 For details on what crossfeed does and the available presets, see
 [Mixer effects --- Crossfeed](mixer-effects.md#crossfeed).
 
+### Reverse stereo
+
+Swap the left and right channels of a stereo mixer channel:
+
+    MIXER SB REVERSE
+
+Some Sound Blaster models --- particularly the Sound Blaster Pro 1.0 --- had
+the left and right digital audio channels reversed compared to later cards.
+Games developed and tested on these cards may have their stereo image
+flipped when emulating a different Sound Blaster model (typically the
+default Sound Blaster 16).
+
+If sound effects in a game seem to come from the wrong direction (e.g., an
+enemy on the left of the screen produces sound from the right speaker),
+try reversing the `SB` channel. This only affects the specified channel's
+output; other channels (like `OPL`) have their own independent stereo field.
+
+
 ### Advanced usage
 
 You may change the settings of more than one channel in a single command.
@@ -183,8 +201,22 @@ settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#confi
 
 ##### compressor
 
-:   Enable the auto-leveling compressor on the master channel to prevent
-    clipping of the audio output.
+:   Enable the auto-levelling dynamic range compressor on the master channel.
+
+    The compressor automatically reduces the volume of loud peaks to prevent
+    harsh clipping distortion. This is especially useful in games with wide
+    dynamic range --- explosions and sound effects that are much louder than
+    the background music.
+
+    The trade-off is a subtle "pumping" effect: when a loud sound triggers
+    the compressor, it briefly pulls down the overall volume, which can
+    cause the background music to dip noticeably. For most games, the
+    compressor works transparently and you won't notice it.
+
+    If you hear distracting volume pumping, a better approach is to **lower
+    the master volume** (e.g., `MIXER MASTER 50`) so that peaks stay below
+    the clipping level and the compressor stays inactive. You can also lower
+    individual channel volumes to tame specific loud devices.
 
     Possible values: `on` *default*{ .default }, `off`
 
