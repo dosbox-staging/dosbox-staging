@@ -436,20 +436,18 @@ sbtype = ess
 
 <div class="compact" markdown>
 
-TODO(CL) link games to mobygames
-
-- 11th Hour, The
-- Advanced Civilization
-- Callahan's Crosstime Saloon
-- Gene Machine, The
-- Heaven's Dawn
-- Heroes of Might and Magic II
-- Magic Carpet 2
-- Settlers II, The
-- Shannara
-- Theme Hospital
-- WarCraft II
-- Z
+- [Advanced Civilization](https://www.mobygames.com/game/5297/advanced-civilization/)
+- [Callahan's Crosstime Saloon](https://www.mobygames.com/game/2150/callahans-crosstime-saloon/)
+- [Heaven's Dawn](https://www.mobygames.com/game/45120/heavens-dawn/)
+- [Heroes of Might and Magic II](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
+- [Magic Carpet 2](https://www.mobygames.com/game/790/magic-carpet-2-the-netherworlds/)
+- [Shannara](https://www.mobygames.com/game/3208/shannara/)
+- [The 11th Hour](https://www.mobygames.com/game/567/the-11th-hour/)
+- [The Gene Machine](https://www.mobygames.com/game/1121/the-gene-machine/)
+- [The Settlers II](https://www.mobygames.com/game/598/the-settlers-ii-veni-vidi-vici/)
+- [Theme Hospital](https://www.mobygames.com/game/674/theme-hospital/)
+- [WarCraft II](https://www.mobygames.com/game/1339/warcraft-ii-tides-of-darkness/)
+- [Z](https://www.mobygames.com/game/346/z/)
 
 </div>
 
@@ -590,8 +588,8 @@ The number after the `T` parameter describes the type of the card:
 
 ##### sb_filter_always_on
 
-:   Force the Sound Blaster digital audio filter to be always on (disallow
-    programs from turning the filter off on models that allow this).
+:   Force the Sound Blaster Pro 2 filter to be always on. Other Sound
+    Blaster models don't allow toggling the filter in software.
 
     Possible values: `on`, `off` *default*{ .default }
 
@@ -623,7 +621,7 @@ The number after the `T` parameter describes the type of the card:
 
 :   Allow the Sound Blaster mixer to modify the DOSBox mixer.
 
-    Possible values: `on`, `off` *default*{ .default }
+    Possible values: `on` *default*{ .default }, `off`
 
     Starting with the Sound Blaster Pro, programs can adjust the volume of the
     digital audio, OPL, and CD Audio channels via the Sound Blaster software
@@ -678,50 +676,19 @@ The number after the `T` parameter describes the type of the card:
 
 ##### opl_fadeout
 
-:   OPL mode to emulate.
-
-    DOSBox uses the highly accurate NukedOPL library to achieve a nearly
-    bit-perfect emulation of the Yamaha OPL chips.
+:   Fade out hanging notes on the OPL synth.
 
     Possible values:
 
-      - `none` -- Disable OPL emulation.
-
-      - `auto` *default*{ .default } -- Automaticaly select the appropriate OPL
-        mode for the emulated Sound Blaster card, based on the value of the
-        [sbtype](#sbtype) setting (see [Emulated Sound Blaster
-        models](#emulated-sound-blaster-models) for an overview).
-
-      - `cms` -- Two Philips SAA1099 chips in a stereo configuration as used
-        on the Creative Music System / Game Blaster (*not* OPL compatible).
-
-      - `opl2` -- A single Yamaha YM3812 (OPL2) as found on the original AdLib
-        Music Synthesizer Card and early Sound Blaster models.
-
-      - `dualopl2` -- Two Yamaha OPL2 chips in a stereo configuration as
-         found on the Sound Blaster Pro 1.0.
-
-      - `opl3` -- Yamaha YMF262 (OPL3) as found on the Sound Blaster Pro 2.0
-        and later cards.
-
-      - `opl3gold` -- Yamaha OPL3 as found on the AdLib Gold 1000. Also
-        enables the emulation of the on-board Philips TDA8425 Hi-fi Stereo
-        Audio Processor, plus the Yamaha YM7128 Surround Processor found on
-        the optional surround module.
-
-      - `esfm` -- ESS ESFM (enhanced Yamaha OPL3 compatible FM synth).
-        Use with `sbtype = ess` for ESS Enhanced FM music. Can also be used
-        with original Sound Blaster models for ESFM-flavoured OPL.
-
-    !!! note
-
-        When `oplmode` is set to `opl2`, CMS emulation is always enabled as
-        well. This is legacy DOSBox behaviour, and will be addressed in a
-        future version.
-
-        Also, `cms` should not be an OPL mode as it has nothing to do with
-        Yamaha OPL; it's an entirely different chip from Philips. This is
-        another legacy wrinkle that will be ironed out in the future.
+    - `off` *default*{ .default } -- Don't fade out hanging notes.
+    - `fade` -- Fade out hanging notes. You should only enable this in games
+      that sometimes play hanging notes that never stop (e.g., Bard's Tale).
+    - `<custom>` -- A custom fade-out definition in the following format:
+      `WAIT FADE`, where `WAIT` is how long after the last I/O port write
+      fading begins (between 100 and 5000 milliseconds), and `FADE` is the
+      fade-out period (between 10 and 3000 milliseconds). Examples:
+        - `300 200` (wait 300 ms before fading out over a 200 ms period)
+        - `1000 3000` (wait 1 second before fading out over 3 seconds)
 
 
 
@@ -791,43 +758,31 @@ The number after the `T` parameter describes the type of the card:
 
     Possible values:
 
-      - `none` -- Disable OPL emulation.
+      - `auto` *default*{ .default } -- Use the appropriate model determined
+        by [sbtype](#sbtype).
 
-      - `auto` *default*{ .default } -- Automaticaly select the appropriate OPL
-        mode for the emulated Sound Blaster card, based on the value of the
-        [sbtype](#sbtype) setting (see [Emulated Sound Blaster
-        models](#emulated-sound-blaster-models) for an overview).
+      - `opl2` -- Yamaha OPL2 (YM3812, mono).
 
-      - `cms` -- Two Philips SAA1099 chips in a stereo configuration as used
-        on the Creative Music System / Game Blaster (*not* OPL compatible).
+      - `dualopl2` -- Dual OPL2 (two OPL2 chips in stereo configuration).
 
-      - `opl2` -- A single Yamaha YM3812 (OPL2) as found on the original AdLib
-        Music Synthesizer Card and early Sound Blaster models.
+      - `opl3` -- Yamaha OPL3 (YMF262, stereo).
 
-      - `dualopl2` -- Two Yamaha OPL2 chips in a stereo configuration as
-         found on the Sound Blaster Pro 1.0.
-
-      - `opl3` -- Yamaha YMF262 (OPL3) as found on the Sound Blaster Pro 2.0
-        and later cards.
-
-      - `opl3gold` -- Yamaha OPL3 as found on the AdLib Gold 1000. Also
-        enables the emulation of the on-board Philips TDA8425 Hi-fi Stereo
-        Audio Processor, plus the Yamaha YM7128 Surround Processor found on
-        the optional surround module.
+      - `opl3gold` -- OPL3 and the optional AdLib Gold Surround module. Use
+        with `sbtype = sb16` to emulate the AdLib Gold 1000.
 
       - `esfm` -- ESS ESFM (enhanced Yamaha OPL3 compatible FM synth).
-        Use with `sbtype = ess` for ESS Enhanced FM music. Can also be used
-        with original Sound Blaster models for ESFM-flavoured OPL.
+
+      - `none`/`off` -- Disable OPL emulation.
 
     !!! note
 
-        When `oplmode` is set to `opl2`, CMS emulation is always enabled as
-        well. This is legacy DOSBox behaviour, and will be addressed in a
-        future version.
+        - `sbtype = none` and `oplmode = opl2` emulates the original AdLib
+          card.
 
-        Also, `cms` should not be an OPL mode as it has nothing to do with
-        Yamaha OPL; it's an entirely different chip from Philips. This is
-        another legacy wrinkle that will be ironed out in the future.
+        - Only `oplmode = esfm` is not enough to get ESS Enhanced FM music
+          in games; you'll also need to set `sbtype = ess`. `oplmode = esfm`
+          is useful to get ESFM-flavoured OPL with original Sound Blaster
+          models.
 
 
 ### CMS

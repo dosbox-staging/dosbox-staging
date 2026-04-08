@@ -168,10 +168,11 @@ settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#confi
 
 ##### blocksize
 
-:   Block size of the host audio device in sample frames (`512` by default).
-    Valid range is 64 to 8192. Should be set to power-of-two values (e.g.,
-    256, 512, 1024). Larger values might help with sound stuttering but will
-    introduce more latency. Also see [negotiate](#negotiate).
+:   Block size of the host audio device in sample frames (`1024` on Windows,
+    `512` on other platforms by default). Valid range is 64 to 8192. Should
+    be set to power-of-two values (e.g., 256, 512, 1024). Larger values
+    might help with sound stuttering but will introduce more latency. Also
+    see [negotiate](#negotiate).
 
 
 ##### compressor
@@ -201,12 +202,12 @@ settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#confi
 
 ##### negotiate
 
-:   Negotiate a possibly better [blocksize](#blocksize) setting (`on` by
-    default). Enable if you're not getting audio or the sound is stuttering
-    with your `blocksize` setting. Disable to force the manually set
-    `blocksize` value.
+:   Negotiate a possibly better [blocksize](#blocksize) setting (`off` on
+    Windows, `on` on other platforms by default). Enable if you're not
+    getting audio or the sound is stuttering with your `blocksize` setting.
+    Disable to force the manually set `blocksize` value.
 
-    Possible values: `on` *default*{ .default }, `off`
+    Possible values: `on`, `off`
 
 
 ##### nosound
@@ -221,8 +222,9 @@ settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#confi
 ##### prebuffer
 
 :   How many milliseconds of sound to render in advance on top of
-    [blocksize](#blocksize) (`20` by default). Larger values might help with
-    sound stuttering but will introduce more latency.
+    [blocksize](#blocksize) (`25` on Windows, `20` on other platforms by
+    default). Larger values might help with sound stuttering but will
+    introduce more latency.
 
 
 ##### rate
