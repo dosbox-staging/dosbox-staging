@@ -12,7 +12,7 @@ Most DOS games used non-square pixels — a 320×200 image was stretched to
 fill a 4:3 CRT monitor. Aspect ratio correction is enabled by default so
 games look as they were intended. Without it, everything appears slightly
 squished, which is especially noticeable with pixel art-heavy games like
-[*Monkey Island*](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) or [*Loom*](https://www.mobygames.com/game/176/loom/).
+[Monkey Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) or [Loom](https://www.mobygames.com/game/176/loom/).
 
 The image adjustment controls — brightness, contrast, saturation, colour
 temperature — work much like the knobs on an old CRT monitor. They're
@@ -219,9 +219,9 @@ square-pixel displays.
 A small number of DOS games need square pixels (`aspect = square-pixels`).
 These are typically European games ported from the PAL Amiga, where the
 original art was designed for square pixels at 320&times;256. Studios
-known for this include Revolution Software ([*Beneath a Steel Sky*](https://www.mobygames.com/game/386/beneath-a-steel-sky/), [*Lure of
-the Temptress*](https://www.mobygames.com/game/1134/lure-of-the-temptress/)), Delphine Software ([*Another World*](https://www.mobygames.com/game/564/out-of-this-world/), [*Flashback*](https://www.mobygames.com/game/555/flashback-the-quest-for-identity/)), and
-Coktel Vision ([*Gobliiins*](https://www.mobygames.com/game/1154/gobliiins/) series). The tell-tale sign is scanned or
+known for this include Revolution Software ([Beneath a Steel Sky](https://www.mobygames.com/game/386/beneath-a-steel-sky/), [Lure of
+the Temptress](https://www.mobygames.com/game/1134/lure-of-the-temptress/)), Delphine Software ([Another World](https://www.mobygames.com/game/564/out-of-this-world/), [Flashback](https://www.mobygames.com/game/555/flashback-the-quest-for-identity/)), and
+Coktel Vision ([Gobliiins](https://www.mobygames.com/game/1154/gobliiins/) series). The tell-tale sign is scanned or
 hand-drawn artwork that appears vertically stretched with aspect ratio
 correction enabled.
 
@@ -294,7 +294,7 @@ Several built-in presets are available, including Amiga and Atari ST colours
 for Sierra AGI games, various CGA/EGA monitor emulations, and Commodore 64
 inspired colours. Custom palettes can also be specified.
 
-**Defender of the Crown**
+[Defender of the Crown](https://www.mobygames.com/game/181/defender-of-the-crown/)
 
 The `tandy-warm` preset emulates colours as they appear on an actual Tandy
 monitor, resulting in more subdued and pleasant colours---especially apparent
@@ -321,7 +321,7 @@ on the greens.
 </div>
 
 
-**Gold Rush!**
+[Gold Rush!](https://www.mobygames.com/game/440/gold-rush/)
 
 The Amiga/Atari ST ports of Sierra AGI games use a tweaked CGA palette with
 improved skin tones and sky colours.
@@ -347,7 +347,7 @@ improved skin tones and sky colours.
 </div>
 
 
-**Zak McKracken and the Alien Mindbenders**
+[Zak McKracken and the Alien Mindbenders](https://www.mobygames.com/game/305/zak-mckracken-and-the-alien-mindbenders/)
 
 Play the PC version with Tandy sound and Commodore 64 colours!
 
