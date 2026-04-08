@@ -66,13 +66,15 @@ Practical information about operating the emulator day-to-day.
   control.
 
 
-### Graphics, sound, input, networking, system
+### System, graphics, sound, input, networking
 
 These sections document the emulated hardware and its configuration in
 detail. Each typically opens with a conversational overview explaining the
 hardware and when you'd want to change the defaults, followed by the
 detailed configuration reference.
 
+- **[System](system/general.md)** --- Core emulator settings: machine type,
+  CPU speed and type, memory, disk speed, and DOS shell options.
 - **[Graphics](graphics/adapters.md)** --- Video adapters (CGA through SVGA),
   display settings, CRT shaders, composite video, 3dfx Voodoo, and
   ReelMagic.
@@ -83,8 +85,6 @@ detailed configuration reference.
   and the key mapper for remapping controls.
 - **[Networking](networking/serial-ports.md)** --- Serial ports, IPX
   networking, and Ethernet emulation.
-- **[System](system/general.md)** --- Core emulator settings: machine type,
-  CPU speed and type, memory, disk speed, and DOS shell options.
 
 
 ### Appendices
