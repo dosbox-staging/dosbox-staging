@@ -153,8 +153,8 @@ You can set the mouse parameters in the `[mouse]` configuration section.
 
         Known games requiring the threshold to be set to `2`:
 
-        - **Ultima Underworld: The Stygian Abyss**
-        - **Ultima Underworld II: Labyrinth of Worlds**
+        - [**Ultima Underworld: The Stygian Abyss**](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/)
+        - [**Ultima Underworld II: Labyrinth of Worlds**](https://www.mobygames.com/game/691/ultima-underworld-ii-labyrinth-of-worlds/)
 
 
 ##### builtin_dos_mouse_driver_options

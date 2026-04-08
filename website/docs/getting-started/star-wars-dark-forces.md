@@ -283,7 +283,7 @@ tearing is barely noticeable in these games.
 
 
 Again, you have absolutely no control over the vertical syncing behaviour in
-most DOS games. For example, Commander Keen 4--6, Doom, and many other FPS
+most DOS games. For example, [Commander Keen 4--6](https://www.mobygames.com/game/219/commander-keen-4-secret-of-the-oracle/), [Doom](https://www.mobygames.com/game/1068/doom/), and many other FPS
 games have hardcoded vsync with a fixed 35 FPS cap. These games were
 programmed with fixed refresh rates in mind from the ground up; trying to
 disable the vsync or altering the FPS cap would break them (but the

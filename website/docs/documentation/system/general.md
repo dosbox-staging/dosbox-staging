@@ -33,14 +33,14 @@ games benefit from `vmem_delay = on`:
 
 <div class="compact" markdown>
 
-- **Corncob 3-D**
-- **Corncob Deluxe**
+- [**Corncob 3-D**](https://www.mobygames.com/game/40284/corncob-3-d-the-other-worlds-campaign/)
+- [**Corncob Deluxe**](https://www.mobygames.com/game/3480/corncob-deluxe/)
 - **Crazy Brix** (`vmem_delay = 2000` and `cpu_cycles = 70000`)
-- **Future Wars** (also needs `cpu_cycles = 1000`)
-- **Gold of the Aztecs, The**
-- **Hostages** (also needs `cpu_cycles = 1500`)
-- **Operation Stealth** (when VGA or EGA is selected in the game's setup)
-- **Quest for Glory II** (fixes too-fast vertical scrolling in the intro)
+- [**Future Wars**](https://www.mobygames.com/game/2205/future-wars-adventures-in-time/) (also needs `cpu_cycles = 1000`)
+- [**Gold of the Aztecs, The**](https://www.mobygames.com/game/17245/the-gold-of-the-aztecs/)
+- [**Hostages**](https://www.mobygames.com/game/6939/hostage-rescue-mission/) (also needs `cpu_cycles = 1500`)
+- [**Operation Stealth**](https://www.mobygames.com/game/2236/007-james-bond-the-stealth-affair/) (when VGA or EGA is selected in the game's setup)
+- [**Quest for Glory II**](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/) (fixes too-fast vertical scrolling in the intro)
 
 </div>
 
