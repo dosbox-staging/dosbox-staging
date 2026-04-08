@@ -151,10 +151,11 @@ nav:
   - Documentation:
       - Getting oriented:
         - documentation/introduction.md
+        - documentation/how-to-use-this-manual.md
         - documentation/dos-primer.md
         - documentation/dos-eras.md
 
-      - Using DOSBox:
+      - Using DOSBox Staging:
         - documentation/configuration.md
         - documentation/command-line.md
         - documentation/commands.md
