@@ -2,7 +2,7 @@
 
 The table below lists every mappable action in DOSBox Staging. Actions with
 no default binding can be assigned to any key or button combination through
-the key mapper.
+the [key mapper](../input/keymapper.md).
 
 | Event name     | Description                      | Default (Win/Linux) | Default (macOS)   |
 | ---            | ---                              | ---                 | ---               |
