@@ -1,5 +1,19 @@
 # DOS
 
+The `[dos]` section controls the emulated DOS environment itself — version
+number, memory management, and regional settings.
+
+The reported DOS version defaults to 5.0, which covers the vast majority of
+games from the entire DOS era. A handful of very late titles check for DOS
+7.0, and some very early ones expect DOS 3.x, but these are edge cases
+you'll likely never hit.
+
+XMS, EMS, and UMB are different memory management schemes from the DOS era.
+If those acronyms mean nothing to you, don't worry — they're all enabled by
+default and you can safely ignore them. On the rare occasion a game
+misbehaves (usually an old title that chokes on EMS), disabling the
+offending memory type is a quick fix.
+
 
 ## Configuration settings
 
