@@ -1982,7 +1982,7 @@ static void set_screen_font(const ScreenFont& screen_font,
 
 		const auto memory = RealToPhysical(int10.rom.font_16);
 		for (uint16_t idx = 0; idx < font.size(); ++idx) {
-			phys_writeb(memory + idx, font.at(idx));
+			phys_writeb(memory + idx, font[idx]);
 		}
 	};
 
@@ -1992,7 +1992,7 @@ static void set_screen_font(const ScreenFont& screen_font,
 
 		const auto memory = RealToPhysical(int10.rom.font_14);
 		for (uint16_t idx = 0; idx < font.size(); ++idx) {
-			phys_writeb(memory + idx, font.at(idx));
+			phys_writeb(memory + idx, font[idx]);
 		}
 	};
 
@@ -2005,10 +2005,10 @@ static void set_screen_font(const ScreenFont& screen_font,
 		const auto memory_2 = RealToPhysical(int10.rom.font_8_second);
 
 		for (uint16_t idx = 0; idx < middle; ++idx) {
-			phys_writeb(memory_1 + idx, font.at(idx));
+			phys_writeb(memory_1 + idx, font[idx]);
 		}
 		for (uint16_t idx = middle; idx < font.size(); ++idx) {
-			phys_writeb(memory_2 - middle + idx, font.at(idx));
+			phys_writeb(memory_2 - middle + idx, font[idx]);
 		}
 	};
 
