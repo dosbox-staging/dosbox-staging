@@ -1979,6 +1979,7 @@ static void set_screen_font(const ScreenFont& screen_font,
 	auto set_font_8x16 = [](const ScreenFont& screen_font) {
 		auto font = screen_font.font_8x16;
 		font.resize(ScreenFont::FullSize_8x16, 0);
+
 		const auto memory = RealToPhysical(int10.rom.font_16);
 		for (uint16_t idx = 0; idx < font.size(); ++idx) {
 			phys_writeb(memory + idx, font.at(idx));
@@ -1988,6 +1989,7 @@ static void set_screen_font(const ScreenFont& screen_font,
 	auto set_font_8x14 = [](const ScreenFont& screen_font) {
 		auto font = screen_font.font_8x14;
 		font.resize(ScreenFont::FullSize_8x14, 0);
+
 		const auto memory = RealToPhysical(int10.rom.font_14);
 		for (uint16_t idx = 0; idx < font.size(); ++idx) {
 			phys_writeb(memory + idx, font.at(idx));
@@ -1997,9 +1999,11 @@ static void set_screen_font(const ScreenFont& screen_font,
 	auto set_font_8x8 = [](const ScreenFont& screen_font) {
 		auto font = screen_font.font_8x8;
 		font.resize(ScreenFont::FullSize_8x8, 0);
+
 		const auto middle   = static_cast<uint16_t>(font.size() / 2);
 		const auto memory_1 = RealToPhysical(int10.rom.font_8_first);
 		const auto memory_2 = RealToPhysical(int10.rom.font_8_second);
+
 		for (uint16_t idx = 0; idx < middle; ++idx) {
 			phys_writeb(memory_1 + idx, font.at(idx));
 		}
@@ -2040,6 +2044,7 @@ static void set_screen_font(const ScreenFont& screen_font,
 	if (CurMode->type == M_TEXT) {
 		INT10_ReloadFont();
 	}
+
 	INT10_SetupRomMemoryChecksum();
 }
 
