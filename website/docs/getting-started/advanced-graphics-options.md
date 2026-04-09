@@ -29,7 +29,7 @@ pillarboxing! Sure, that would be true if the pixels of the 320&times;200 VGA
 mode were perfect little squares, but they are not. How so?
 
 As mentioned, 320&times;200 graphics completely fill the screen on a 4:3
-aspect ratio CRT---but that's only possible if the pixels are not perfect
+aspect ratio CRT --- but that's only possible if the pixels are not perfect
 squares but slightly tall rectangles. With square pixels, you'd get some
 _letterboxing_ below the image (the horizontal version of pillarboxing), as
 shown in the image below. If you do the maths, it turns out the pixels need to
@@ -39,9 +39,9 @@ be exactly 20% taller than wide.
   ![Displaying a 4:3 image on a 16:9 flat screen](https://www.dosbox-staging.org/static/images/getting-started/monitor-aspect-ratios2.png){ .skip-lightbox style="width: 25rem; margin: 1.5rem 0;" }
 
   <figcaption markdown>
-  Left: 320&times;200 pixel image with square pixels on a 4:3 monitor---there
+  Left: 320&times;200 pixel image with square pixels on a 4:3 monitor --- there
   is some letterboxing below the image; Right: the same image with 20% taller
-  pixels on the same monitor---the image fills the screen completely.
+  pixels on the same monitor --- the image fills the screen completely.
   </figcaption>
 </figure>
 
@@ -67,7 +67,7 @@ Sky](beneath-a-steel-sky.md/#aspect-ratio-correction) example.
     certainly did not help matters either. The unfortunate situation is that
     you're much more likely to encounter videos and screenshots of DOS games
     in the wrong aspect ratio (using square pixels) on the Internet today.
-    Well, that's only true for more recently created content---if you check
+    Well, that's only true for more recently created content --- if you check
     out any old computer magazine from the 1980s and the '90s, most
     screenshots are shown in the correct aspect ratio (but rarely the
     magazines got it wrong too...)
@@ -95,7 +95,7 @@ Again, we need a little history lesson to understand what's going on. CRT
 monitors did not have a fixed pixel grid-like modern flat panels; they were a
 lot more flexible and could display *any* resolution within the physical
 limits of the monitor. They did not even have discrete "pixels" in the sense
-that modern flat panels do---the image was literally projected onto the
+that modern flat panels do --- the image was literally projected onto the
 screen, similarly to how a movie projector works.
 
 Modern flat screens, however, do have a fixed native resolution. The scanlines
@@ -129,7 +129,7 @@ integer_scaling = off
 ```
 
 If you don't have a 4K monitor or you like to play your games in windowed
-mode, you'll need to experiment a bit---some monitor resolution, window size,
+mode, you'll need to experiment a bit --- some monitor resolution, window size,
 and DOS video mode combinations look fine without integer scaling, some will
 result in interference patterns.
 
@@ -178,7 +178,7 @@ display!
 Well, 14" VGA monitors were still the most affordable and thus most popular
 option until the mid-1990s, close to the end of the DOS era. Before that, CGA
 and EGA monitors were typically 12" or 14", and monochrome Hercules monitors
-only 10" or 12". And these are just the "nominal" diagonal screen sizes---the
+only 10" or 12". And these are just the "nominal" diagonal screen sizes --- the
 actual visible area was about 1.5 to 2 inches smaller!
 
 To emulate the physical image size you'd get on a typical 14" VGA monitor,
@@ -246,7 +246,7 @@ will start looking overly blocky from a normal viewing distance.
 
 !!! danger "The magic of 89% explained"
 
-    This is hardcore mode---only the brave and the mathematically inclined
+    This is hardcore mode --- only the brave and the mathematically inclined
     shall prevail! 🤓 🧠 📚
 
 

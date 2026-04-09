@@ -59,7 +59,7 @@ repository owners.
     issues can happen if you start using different library versions, different
     compilers, different compiler flags or revisions, etc. Many of these
     issues are hard to notice without being intimately familiar with
-    our software and doing hundreds of hours of testing---the amount of
+    our software and doing hundreds of hours of testing --- the amount of
     testing we typically put into each release.
 
     Therefore, if you believe you've found a bug, and you're not using our

@@ -47,7 +47,7 @@ every participant can enjoy the discussion.
 
 ## :material-piggy-bank-outline: Make a donation
 
-**DOSBox Staging** is an entirely volunteer-based effort---we're
+**DOSBox Staging** is an entirely volunteer-based effort --- we're
 not getting paid for our activities. However, we have some running
 expenses and need to invest in hardware, licenses, and other non-trivial
 expenses to keep the team and the project going.

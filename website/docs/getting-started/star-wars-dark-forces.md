@@ -45,7 +45,7 @@ What does this accomplish?
 !!! note Exercise
 
     Read the help text of the `echo` and `mode` commands (e.g., run `mode /?`)
-    and play around with the various options. You can't break anything---if
+    and play around with the various options. You can't break anything --- if
     something weird happens, just restart DOSBox Staging.
 
 
@@ -110,7 +110,7 @@ and then pressing the ++1++ key.
 Having to press the ++1++ key every time we start the game is not the end of
 the world, but it's not great either. Luckily, there's a way to automate
 that; the handy `autotype` DOSBox Staging command does exactly what it says on
-the tin---it can "auto-type" fake keypresses for you!
+the tin --- it can "auto-type" fake keypresses for you!
 
 This is what we need to put into our `[autoexec]` section to start the game
 without manual intervention:
@@ -168,7 +168,7 @@ To achieve the smoothest possible motion, we have two options:
 - Using **specific fixed refresh rates** on non-VRR monitors --- Even if
   you're not a lucky owner of a VRR display, your monitor might support a
   fixed 70 Hz refresh rate if you create a custom screen mode for it. This
-  is highly hardware-dependent, but there's no harm in trying it out---it will
+  is highly hardware-dependent, but there's no harm in trying it out --- it will
   either work or not; you can't damage your monitor.
 
 
@@ -219,7 +219,7 @@ by DOSBox Staging:
 
 Dark Forces always synchronises its screen updates to the refresh rate of the
 emulated VGA card, which is 70 Hz in the standard 320&times;200 VGA mode the
-game uses. Vertical syncing is hardcoded in the game---it cannot be turned
+game uses. Vertical syncing is hardcoded in the game --- it cannot be turned
 off, and that's the end of it.
 
 But that's only vsync at the level of the emulated VGA card. DOSBox itself
@@ -245,11 +245,11 @@ on your setup.
 
 What complicates matters is that not all DOS games do vertical syncing. Games
 that don't would tear on real hardware, too, and DOSBox can't do anything about
-that---it just accurately emulates how the game behaves. Without DOSBox-level
+that --- it just accurately emulates how the game behaves. Without DOSBox-level
 vsync, you'd get _double tearing_ in such games! We can't "fix" that at the
 emulator level; that would require making changes to the games' code. Many
 pre-rendered cutscenes and FMV games tear really badly on real hardware, too,
-on CRTs---that's the "authentic DOS experience" for you! :sunglasses:
+on CRTs --- that's the "authentic DOS experience" for you! :sunglasses:
 
 But, as mentioned previously, the good news is that games that don't do vsync
 are usually slower-paced adventure, strategy, and role-playing titles that only
@@ -320,13 +320,13 @@ To recap, the following variations are possible when it comes to vsync:
     ("let the application decide") and only tweak vsync on a per application
     basis.
 
-    Various frame limiter utilities have similar effects---make sure they're
+    Various frame limiter utilities have similar effects --- make sure they're
     not running when you use DOSBox Staging, or whitelist individual games to
     be frame limited instead of letting them throttle every program globally.
 
     By the way, forcing vsync globally would wreak havoc not just on DOSBox
     Staging, but pretty much every single home computer and console
-    emulator---that's just how they work. In contrast to modern 3D games, they
+    emulator --- that's just how they work. In contrast to modern 3D games, they
     need full control over frame pacing and vsync without any external "help".
 
 
@@ -450,7 +450,7 @@ called FluidSynth (see the [General
 MIDI](../documentation/sound/sound-devices/general-midi.md) page for the
 full reference). Unlike the MT-32 emulation, FluidSynth does not attempt to
 mimic any specific hardware device but a generic MIDI sound module. This sound
-module doesn't have any built-in sounds---you need to load so-called
+module doesn't have any built-in sounds --- you need to load so-called
 **SoundFont files** (`.sf2` extension) into FluidSynth to get any sound out of
 it; these contain the instrument definitions and the sound data.
 
@@ -555,7 +555,7 @@ realistic the General MIDI rendition of this orchestral piece sounds compared
 to the OPL synth.
 
 Of course, you can always try other GM or GS-compatible SoundFonts
-too---that's the beauty of General MIDI!
+too --- that's the beauty of General MIDI!
 [FluidR3_GM_GS](https://archive.org/details/fluidr3-gm-gs) and
 [Creative Labs 4M GM_4gmgsmt](https://archive.org/download/free-soundfonts-sf2-2019-04/Creative%20Labs%204M%20GM_4gmgsmt.sf2)
 are good candidates as they sound fairly close to the SC-55 sound set. The
@@ -601,7 +601,7 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
     ```
 
     This will scale back the volume to 40%. A few SoundFonts are _extremely
-    loud_---you need to turn the volume down to 10-20% to get usable levels.
+    loud_ --- you need to turn the volume down to 10-20% to get usable levels.
     It's a mystery what the authors were thinking...
 
 
@@ -615,7 +615,7 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
     games take advantage of that to create custom sounds. In contrast, General
     MIDI modules are generally weaker in the synthesis department but feature
     more realistic-sounding real-world instruments with a less malleable
-    sound. The soundtrack of Dark Forces showcases this very well---you can’t
+    sound. The soundtrack of Dark Forces showcases this very well --- you can’t
     get such realistic orchestral music out of an MT-32.
 
     Whenever you configure a game for MIDI sound, you should consult the
@@ -766,7 +766,7 @@ response to some action with a longer delay (e.g., when shooting with a gun).
 The default `blocksize` value is 1024 on Windows and 512 on macOS and Linux
 (specified in number of audio frames). The default `prebuffer` size is
 25 on Windows and 20 on the other platforms (specified in
-milliseconds). You can experiment with increasing these settings---doubling
+milliseconds). You can experiment with increasing these settings --- doubling
 them is a good start. Generally, `prebuffer` can be anything and `blocksize`
 should be set to one of these values: 256, 512, 1024, 2048, 4096, or 8192.
 

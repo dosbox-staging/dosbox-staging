@@ -55,7 +55,7 @@ executable file in DOSBox!
 
 Most DOS games need a hard drive as a *hard requirement* (okay, I'll show
 myself to the door...), but DOSBox doesn't have access to your computer's hard
-drive by default where your programs and documents reside---we need to tell it
+drive by default where your programs and documents reside --- we need to tell it
 which folder to use as its "virtual DOS hard drive". This is called
 *mounting*; we *mount* a folder as the "DOS hard drive", the contents of which
 are then available to DOSBox as the *C drive*. All drives in DOS are assigned
@@ -93,7 +93,7 @@ up with the following folder structure:
     If you're a Windows user, do not confuse your *real* C drive, where your
     operating system and programs are stored, with the "virtual DOS C drive" of
     DOSBox. It is important to understand the distinction between these two as
-    they are completely separate concepts---DOSBox will *not* see the contents
+    they are completely separate concepts --- DOSBox will *not* see the contents
     of your real C drive by default (or the contents of any of your other
     drives, for that matter).
 
@@ -186,7 +186,7 @@ Local directory drives/c/ mounted as C drive
 Z:\>_
 ```
 
-The first line is pretty straightforward---it tells us that DOSBox mounted
+The first line is pretty straightforward --- it tells us that DOSBox mounted
 `drives/c` we created earlier as the "C drive".
 
 The second line is the DOS prompt. DOS has a command line interface that
@@ -205,7 +205,7 @@ After the semicolon is the path of the current folder or current *directory*
 in DOS terminology; this is currently the *root directory* of the `Z` drive as
 indicated by the `\` (backslash) character. The `>` character just signifies
 the end of the prompt, and the blinking underscore (`_`) character after it
-is---guess what?---the cursor.
+is --- guess what? --- the cursor.
 
 Okay, enough theory; type in `C:`, and then press ++enter++ to switch
 to the C drive. The prompt should now reflect that we're in the root directory
@@ -278,7 +278,7 @@ command with the `*.exe` wildcard search pattern!
 
 But instead of typing in `dir *.exe`, press ++up++ a few times until `dir`
 appears in the command line, then type in the rest (++space++ character
-followed by `*.exe`). This handy feature is called *command history*---you can
+followed by `*.exe`). This handy feature is called *command history*--- you can
 move forward and backward in the list of previously executed commands with the ++down++
 and ++up++ keys, respectively. Best of all, the command history is preserved
 across DOSBox Staging restarts.
@@ -439,7 +439,7 @@ rectangles on modern flat screens, the art looks bland, sterile, and loses its
 default; to give people a chance to see the art of DOS games in their full
 glory as the developers intended.
 
-The remarkable thing about the feature is that it's "zero config"---it
+The remarkable thing about the feature is that it's "zero config" --- it
 automatically adapts to the changing circumstances to always produce the
 correct CRT look based on the emulated graphics adapter, the current DOS video
 mode, the window size, and the native resolution of your monitor. You don't
@@ -512,7 +512,7 @@ to save space):
 Starting up DOSBox Staging from the `Prince of Persia` folder should now launch the
 game right away without any manual intervention!
 
-So far, so good---now, let's see how we can use the advanced features offered
+So far, so good --- now, let's see how we can use the advanced features offered
 by DOSBox Staging to our advantage!
 
 

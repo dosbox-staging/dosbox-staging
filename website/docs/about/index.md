@@ -10,7 +10,7 @@ hide:
 **DOSBox Staging** is a modern continuation of DOSBox with advanced features
 and current development practices.
 
-It is a (mostly) drop-in replacement for older DOSBox versions---your
+It is a (mostly) drop-in replacement for older DOSBox versions --- your
 existing configurations will continue to work, and you will have access to
 many advanced features.
 
