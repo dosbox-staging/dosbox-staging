@@ -385,11 +385,12 @@ void ShaderPipeline::SetDeditheringStrength(const float strength)
 {
 	dedithering_strength = strength;
 
+	const auto enable_dedithering = (strength > 0.0f);
+
 	if (!IsPipelineComplete()) {
+		config.dedithering_enabled = enable_dedithering;
 		return;
 	}
-
-	const auto enable_dedithering = (strength > 0.0f);
 
 	if (config.dedithering_enabled != enable_dedithering) {
 		config.dedithering_enabled = enable_dedithering;
