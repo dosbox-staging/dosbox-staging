@@ -29,11 +29,13 @@ Even experienced users tend to pick up useful techniques from it.
 The section you're reading now. It gives you the foundation for everything
 else that follows.
 
-- [Introduction](introduction.md) --- What DOSBox Staging is, how it differs
-  from full PC emulators, and a brief history of the project.
+- [What is DOSBox Staging?](what-is-dosbox-staging.md) --- What DOSBox Staging
+  is, how it differs from full PC emulators, and a brief history of the project.
+
 - [A short DOS primer](dos-primer.md) --- Key concepts about how DOS works:
   the command prompt, drive letters, configuration files. Read this if you've
   never used DOS before.
+
 - [The DOS eras](dos-eras.md) --- A timeline of PC hardware from 1981 to
   1998, with recommended DOSBox settings for each period. Useful for matching
   the emulated hardware to a game's era.
@@ -46,19 +48,26 @@ Practical information about operating the emulator day-to-day.
 - [Configuration files](configuration.md) --- How DOSBox Staging's layered
   configuration system works: global settings, per-game configs, and the
   autoexec section.
+
 - [Command-line usage](command-line.md) --- Flags and options for launching
   DOSBox Staging from a terminal.
+
 - [DOS commands](commands.md) --- Every command available at the DOS prompt,
   from MOUNT and CONFIG to standard DOS commands like DIR and COPY.
+
 - [Storage](storage.md) --- How DOS uses drive letters, mounting directories
   and disk images, floppy/CD-ROM/hard disk handling.
+
 - [Hardware resources](hardware-resources.md) --- I/O addresses, IRQs, and
   DMA channels --- what they are and how to configure them when a game's
   setup utility asks.
+
 - [Capture](capture.md) --- Screenshots, audio recording, video recording,
   and MIDI capture.
+
 - [HTTP API](http-api.md) --- The built-in HTTP API for remote
   control.
+
 - [Running Windows 3.1](windows-31.md) --- Installing and configuring
   Windows 3.1 inside DOSBox Staging, including video, audio, MIDI, and mouse
   driver setup.
@@ -73,14 +82,18 @@ detailed configuration reference.
 
 - **[System](system/general.md)** --- Core emulator settings: machine type,
   CPU speed and type, memory, disk speed, and DOS shell options.
+
 - **[Graphics](graphics/adapters.md)** --- Video adapters (CGA through SVGA),
   display settings, CRT shaders, composite video, 3dfx Voodoo, and
   ReelMagic.
+
 - **[Sound](sound/overview.md)** --- All emulated audio devices from the PC
   speaker to the Roland MT-32 and Sound Canvas, plus the mixer, effects, and
   output filters.
+
 - **[Input](input/overview.md)** --- Keyboard, mouse, joystick configuration,
   and the key mapper for remapping controls.
+
 - **[Networking](networking/serial-ports.md)** --- Serial ports, IPX
   networking, and Ethernet emulation.
 
@@ -89,6 +102,7 @@ detailed configuration reference.
 
 - [Keyboard shortcuts](appendices/shortcuts.md) --- Quick reference for all
   default hotkeys.
+
 - [Keymapper reference](appendices/keymapper.md) --- Table of every mappable
   action and its default binding.
 
