@@ -85,7 +85,7 @@ jobs:
           mkdir -p "${reportdir}"
 
           pvs-studio-analyzer analyze \
-            -a 63 \
+            -a '64;GA;OP;CS;MISRA' \
             -e subprojects -e src/libs \
             -s .pvs-suppress \
             -j "$(nproc)" \
