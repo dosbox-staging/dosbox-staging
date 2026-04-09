@@ -1460,12 +1460,16 @@ bool DOS_FCBFindFirst(uint16_t seg, uint16_t offset)
 
 bool DOS_FCBFindNext(uint16_t seg, uint16_t offset)
 {
-	DOS_FCB fcb(seg, offset);
-	RealPt old_dta = dos.dta();
+	auto old_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
-	bool ret=DOS_FindNext();
+
+	bool ret = DOS_FindNext();
 	dos.dta(old_dta);
-	if (ret) SaveFindResult(fcb);
+
+	if (ret) {
+		DOS_FCB fcb(seg, offset);
+		SaveFindResult(fcb);
+	}
 	return ret;
 }
 
@@ -1852,13 +1856,16 @@ bool DOS_UnlockFile(const uint16_t entry, const uint32_t pos, const uint32_t len
 		return false;
 	}
 
-	const auto last = Files[handle]->region_locks.end();
-	for (auto it = Files[handle]->region_locks.begin(); it != last; ++it) {
+	auto& region_locks = Files[handle]->region_locks;
+	const auto last    = region_locks.end();
+
+	for (auto it = region_locks.begin(); it != last; ++it) {
 		if (it->pos == pos && it->len == len) {
-			Files[handle]->region_locks.erase(it);
+			region_locks.erase(it);
 			return true;
 		}
 	}
+
 	DOS_SetError(DOSERR_LOCK_VIOLATION);
 	return false;
 }
