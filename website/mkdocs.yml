@@ -76,6 +76,7 @@ plugins:
           # `/releases/` takes you to `releases/windows/` instead of a 404).
           #
           'releases/index.md':        'releases/windows.md'
+          'documentation/index.md':   'documentation/about-this-manual.md'
           'getting-started/index.md': 'getting-started/introduction.md'
 
           # Redirect RC release notes to the final notes
@@ -150,6 +151,8 @@ nav:
 
   - Documentation:
       - Introduction:
+        - documentation/index.md   # dummy page for redirecting
+
         - documentation/about-this-manual.md
         - documentation/what-is-dosbox-staging.md
         - documentation/dos-primer.md
