@@ -424,7 +424,7 @@ Switch back to DOSBox --- the game will resume. Nifty, isn't it?
 
 !!! warning "Pause gotchas"
 
-    All input is disabled in the manually paused state—the only thing you can
+    All input is disabled in the manually paused state --- the only thing you can
     do is press the pause shortcut again to unpause the emulator. In windowed
     mode, the paused state is indicated in the DOSBox Staging window's title
     bar.

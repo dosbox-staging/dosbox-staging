@@ -1,6 +1,6 @@
 # DOS
 
-The `[dos]` section controls the emulated DOS environment itself — version
+The `[dos]` section controls the emulated DOS environment itself --- version
 number, memory management, and regional settings.
 
 The reported DOS version defaults to 5.0, which covers the vast majority of
@@ -34,8 +34,8 @@ disabling the offending memory type is a quick fix.
 
 DOSBox Staging automatically detects your host operating system's language
 and keyboard layout, so in most cases it just does the right thing out of
-the box. If you need to override the defaults — perhaps you're running a
-German game on an English system, or you need a specific date format — a
+the box. If you need to override the defaults --- perhaps you're running a
+German game on an English system, or you need a specific date format --- a
 few settings let you fine-tune the regional behaviour.
 
 The [country](#country) setting controls DOS-level formatting conventions:

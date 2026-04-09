@@ -199,7 +199,7 @@ in it at any given point in time.
 Let's analyse the prompt a little bit. It always starts with a letter followed
 by a semicolon, which denotes the current drive. Right after startup, this is
 always the `Z` drive. This is a special drive that's always available; DOSBox
-stores some of its commands on it—you don't need to worry about it now.
+stores some of its commands on it --- you don't need to worry about it now.
 
 After the semicolon is the path of the current folder or current *directory*
 in DOS terminology; this is currently the *root directory* of the `Z` drive as

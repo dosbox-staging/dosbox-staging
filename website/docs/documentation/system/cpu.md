@@ -12,7 +12,7 @@ sweet spot for each game is part of the charm of retro gaming.
 As a rough guide: early 8088-era games
 ([Alley Cat](https://www.mobygames.com/game/190/alley-cat/),
 [Sopwith](https://www.mobygames.com/game/1380/sopwith/)) need around 300
-cycles. 386-era titles want roughly 3,000–6,000. 486-class games like
+cycles. 386-era titles want roughly 3,000--6,000. 486-class games like
 [Doom](https://www.mobygames.com/game/1068/doom/) are playable at around
 25,000 but might need up 50,000 cycles for a completely smooth experience.
 Late Pentium-era titles such as [Quake](https://www.mobygames.com/game/374/quake/)
@@ -21,7 +21,7 @@ table for further details, or the
 [Getting Started guide](../../getting-started/beneath-a-steel-sky.md#adjusting-the-emulated-cpu-speed)
 for a practical walkthrough of finding the right speed.
 
-The `auto` setting for [core](#core) is the most sensible default — it uses the faster
+The `auto` setting for [core](#core) is the most sensible default --- it uses the faster
 `dynamic` recompiler for protected-mode games and the more accurate `normal`
 interpreter for real-mode programs. You'll rarely need to override this.
 
