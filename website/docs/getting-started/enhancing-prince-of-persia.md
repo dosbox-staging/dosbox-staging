@@ -159,7 +159,7 @@ thick scanline look.
   </a>
 
   <figcaption markdown>
-  Prince of Persia in EGA mode---EGA monitors can display 200-line modes
+  Prince of Persia in EGA mode --- EGA monitors can display 200-line modes
   without line doubling, so we'll get the "fat scanline" look
   </figcaption>
 </figure>
@@ -182,7 +182,7 @@ forget to put on your safety goggles! :sunglasses:
 machine = cga
 ```
 
-Ready? Behold the formidable 4-colour CGA graphics---and what four colours those
+Ready? Behold the formidable 4-colour CGA graphics --- and what four colours those
 are! Similarly to EGA, CGA is capable of displaying true 200-line modes.
 
 <figure markdown>
@@ -419,8 +419,8 @@ switch to a different window? You can easily achieve that by enabling the
 pause_when_inactive = yes
 ```
 
-Restart the game and switch to a different window---DOSBox will pause itself.
-Switch back to DOSBox---the game will resume. Nifty, isn't it?
+Restart the game and switch to a different window --- DOSBox will pause itself.
+Switch back to DOSBox --- the game will resume. Nifty, isn't it?
 
 !!! warning "Pause gotchas"
 

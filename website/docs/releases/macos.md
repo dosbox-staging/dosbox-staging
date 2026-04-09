@@ -61,7 +61,7 @@ build.
 - ++ctrl++ click (or right-click) on the **DOSBox Staging** app, then click
   **Open**.
 - Click **OK** to close the appearing dialog.
-- Open the app a second time---now Gatekeeper will show an
+- Open the app a second time --- now Gatekeeper will show an
   **Open** button. Press this to launch DOSBox Staging.
 
 <figure markdown>

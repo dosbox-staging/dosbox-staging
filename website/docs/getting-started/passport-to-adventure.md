@@ -104,7 +104,7 @@ configuration_.
 
 As DOSBox Staging comes with sensible defaults, you can keep these local
 configs quite minimal, as we've already seen. There's absolutely no need to
-specify every single setting in your local game-specific config---that would
+specify every single setting in your local game-specific config --- that would
 make configurations very cumbersome to manage, plus it would be very difficult
 to see what settings have been changed from their defaults for a particular
 game.
@@ -158,7 +158,7 @@ effectively only see the last page. Yep, that's DOS for you!
 
 Fortunately, there is a way to fix this: we can "pipe" the output of the `type` command
 through the `more` command that will paginate the preceding command's output,
-just like the `config` command does. The `|` is called the "pipe" character---how fitting! You can
+just like the `config` command does. The `|` is called the "pipe" character --- how fitting! You can
 type it by pressing ++shift+backslash++, which is located above the ++enter++
 key on the standard US keyboard.
 
@@ -318,7 +318,7 @@ chorus = normal
         usually yield the exact same result.
 
         The AdLib card, however, had no support for digital audio, so it's
-        preferable to pick the Sound Blaster option if the game offers both---
+        preferable to pick the Sound Blaster option if the game offers both ---
         you might also get digital speech and sound effects by doing so.
 
     - **Sound Blaster MIDI** is a weird thing. Most later games after 1992
@@ -421,7 +421,7 @@ help you find these pre-1990 Tandy specials.
 
 [wiki-tandy]: https://github.com/dosbox-staging/dosbox-staging/wiki/Games-with-enhanced-Tandy-&-PCjr-graphics-and-sound
 
-DOSBox can emulate a Tandy machine---we only need to instruct it to do so in
+DOSBox can emulate a Tandy machine --- we only need to instruct it to do so in
 our config:
 
 ```ini
@@ -543,7 +543,7 @@ The below screenshots illustrate the difference between the "true EGA" and
   </a>
 
   <figcaption markdown>
-  Indiana Jones and the Last Crusade ---<br>EGA as displayed on VGA monitors
+  Indiana Jones and the Last Crusade --- <br>EGA as displayed on VGA monitors
   </figcaption>
 </figure>
 
@@ -553,7 +553,7 @@ The below screenshots illustrate the difference between the "true EGA" and
   </a>
 
   <figcaption markdown>
-  Indiana Jones and the Last Crusade ---<br>"True EGA" emulation
+  Indiana Jones and the Last Crusade --- <br>"True EGA" emulation
   </figcaption>
 </figure>
 
@@ -567,7 +567,7 @@ The below screenshots illustrate the difference between the "true EGA" and
   </a>
 
   <figcaption markdown>
-  The Secret of Monkey Island ---<br>EGA as displayed on VGA monitors
+  The Secret of Monkey Island --- <br>EGA as displayed on VGA monitors
   </figcaption>
 </figure>
 
@@ -577,7 +577,7 @@ The below screenshots illustrate the difference between the "true EGA" and
   </a>
 
   <figcaption markdown>
-  The Secret of Monkey Island ---<br>"True EGA" emulation
+  The Secret of Monkey Island --- <br>"True EGA" emulation
   </figcaption>
 </figure>
 

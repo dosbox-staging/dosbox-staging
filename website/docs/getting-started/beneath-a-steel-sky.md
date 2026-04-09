@@ -47,7 +47,7 @@ to the names of the games; then, you can use Spotlight Search to start a game.
 For example, rename *Start DOSBox Staging* in the `Prince of Persia` folder to
 *Prince of Persia*. Start Spotlight Search by pressing ++cmd+space++, then
 type in "Prince". The *Prince of Persia* icon will show up in the search
-results---you can simply press ++enter++ on it to launch the game.
+results --- you can simply press ++enter++ on it to launch the game.
 
 
 <h3>Linux</h3>
@@ -210,7 +210,7 @@ settings:
 </figure>
 
 English is fine, and the game has auto-detected our sound card correctly
-(Sound Blaster 16---this is the sound card DOSBox emulates by default), so
+(Sound Blaster 16 --- this is the sound card DOSBox emulates by default), so
 accept these settings for now. And now, the counterintuitive part: to
 finish the installation and save the settings, we need to press the *Exit
 Install* button, which will take us to the (guess what?) *Exit Install*
@@ -225,7 +225,7 @@ exit the installer.
 
 As you can see, this is not exactly a masterclass in user interface design,
 but it does the job. Expect many DOS-era install and setup utilities to be
-similarly slightly illogical---often, it's not completely obvious what to do,
+similarly slightly illogical --- often, it's not completely obvious what to do,
 but it's not too hard to figure out either. Reading the manual or some trial
 and error might help, too.
 
@@ -326,7 +326,7 @@ you've had enough, uncomment the last `sky` command in the `[autoexec]` section
 ## Adjusting volume levels
 
 After starting the game, don't watch the intro just yet; press ++esc++ to jump
-straight to the opening scene. There's music playing---so far so good. Move
+straight to the opening scene. There's music playing --- so far so good. Move
 the cursor over the door on the right side of the screen, and when it turns
 into a crosshair and the word "Door" appears next to it, press the left mouse
 button to inspect it. Lo and behold, you'll hear our protagonist speak! But
@@ -461,7 +461,7 @@ of course.
 sbmixer = off
 ```
 
-Well, that's another way to fix the issue---the speech is now loud and
+Well, that's another way to fix the issue --- the speech is now loud and
 clear!
 
 But it's a bit too loud. While the balance between the music and speech was
@@ -528,7 +528,7 @@ emulated CPU speed is often required to make any particular game run
 particularly problematic because there might not be enough power left for
 smooth, glitch-free audio emulation. There's zero point in emulating a faster
 CPU than the game needs as all that extra work could be put to better
-use---such as smoother audio emulation.
+use --- such as smoother audio emulation.
 
 Beyond a Steel Sky is a protected mode game, but how we do know that? Let's
 comment out the last `sky` command in the `[autoexec]` section to prevent the
@@ -556,7 +556,7 @@ SKY.EXE - 60000 cycles/ms - to capture the mouse press...
 right after that? `60000 cycles/ms`! That's the tell-tale sign of a protected mode game
 because 60&thinsp;000 cycles is our protected mode default.
 
-And that's the crux of the problem---there's not enough horsepower left to
+And that's the crux of the problem --- there's not enough horsepower left to
 emulate the time-critical audio output without stuttering and glitches. The
 solution is kind of obvious: instead of letting DOSBox run amok with the CPU
 emulation, we'll restrict it to a reasonable speed. `cpu_cycles` sets the
@@ -605,7 +605,7 @@ Ok, so why set `cpu_cycles_protected` to 25&thinsp;000 and not any other number?
 that a 386 or better processor is required. Indeed, the game works fine at
 6000 cycles, which approximates a 386DX CPU running at 33 MHz, but the loading
 times are a bit on the slow side. Setting the CPU cycles to
-25&thinsp;000---which roughly corresponds to a 486DX2/66---speeds up the
+25&thinsp;000 --- which roughly corresponds to a 486DX2/66 --- speeds up the
 loading considerably without causing any negative side effects. This is not
 surprising as the DX2/66 was one of the
 most popular CPUs in the 1990s for gaming. This is [what Wikipedia says about
@@ -643,7 +643,7 @@ You can look up this handy table in the online help as well with the
 Always treat these values only as starting points; as explained
 previously, accurately emulating the speed of any given processor is not
 possible due to the "abstract" nature of DOSBox's CPU emulation approach. But
-from a practical point of view, this does not matter much---you just need to find
+from a practical point of view, this does not matter much --- you just need to find
 the optimal cycles value the game works well with.
 
 If you're playing 2D games from the 90s, an emulated 486DX2/66 will handle
@@ -662,7 +662,7 @@ bar.
 
 Always try to find the minimum cycles value for each game that gives you an
 adequate performance to conserve host CPU power and reduce the likelihood of
-audio glitches---overdoing it only makes things worse. Here's a
+audio glitches --- overdoing it only makes things worse. Here's a
 [List of CPU speed sensitive games](https://www.vogonswiki.com/index.php/List_of_CPU_speed_sensitive_games)
 that should give you further tips and pointers.
 
@@ -784,7 +784,7 @@ with modern sensibilities. You'll get used to it.
 This particular game turns things up a notch and does *not* copy the
 combined installer-and-setup utility into `C:\SKY` as one would rightly expect. To
 reconfigure the game, you'll need to run `INSTALL.EXE` from the CD, so from the
-D drive (I've told you---setting up the game itself is often part of the
+D drive (I've told you --- setting up the game itself is often part of the
 adventure!)
 
 So let's do that. As we've already installed the game on our C drive, we'll
@@ -799,7 +799,7 @@ nothing went sideways, we should hear the much-improved, glorious MT-32
 soundtrack! Now we're cooking with gas!
 
 So let's inspect our favourite door one more time by moving the cursor over it
-and then pressing the left mouse button---hey, where did the voice-over go?!
+and then pressing the left mouse button --- hey, where did the voice-over go?!
 Yeah... you've probably glossed over this little detail in the tip from the
 MT-32 wiki page:
 
@@ -810,7 +810,7 @@ What this means for us ordinary mortals is that the original game can either
 use the MT-32 for MIDI music and sound effects, and you get *no* digital
 speech, or only the Sound Blaster for OPL music, digital sound effects, *and*
 speech. MT-32 MIDI music and sound effects combined with digital
-speech via the Sound Blaster---the computer says no, buddy.
+speech via the Sound Blaster --- the computer says no, buddy.
 
 The game has just taught us an important life lesson: you can't have
 everything, especially not in the world of older DOS games. You'll have to
@@ -868,7 +868,7 @@ correction](../documentation/graphics/rendering.md#aspect-ratio-viewport)
 by default to make 320&times;200 graphics appear exactly as it would on a
 4:3 aspect ratio VGA monitor, which requires pixels to be drawn 20% taller. This is the most sensible default as
 aspect ratio correction is *absolutely needed* for the vast majority of DOS
-games to look correct, but there are exceptions---this game is one of those
+games to look correct, but there are exceptions --- this game is one of those
 rare cases. One of the tell-tale signs is that the artwork in the intro was
 scanned using square pixels, and we need to disable aspect ratio correction
 for such games. With aspect ratio correction disabled, we'll *always* get
@@ -1104,7 +1104,7 @@ The patched game is clearly superior, but you can still run the original
 version: just uncomment the three lines below `# original game`,
 then comment out the two lines after `# patched game`. You can switch
 between Roland MT-32 and Sound Blaster & AdLib sound at will by only
-reconfiguring the game via `INSTALL.EXE`---you won't need to make any further
+reconfiguring the game via `INSTALL.EXE` --- you won't need to make any further
 changes to the DOSBox config.
 
 !!! note "About reverb presets"

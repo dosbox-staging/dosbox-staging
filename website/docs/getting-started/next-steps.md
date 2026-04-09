@@ -4,7 +4,7 @@
 
 All good things must come to an end, and this guide is no different!
 
-Congratulations---now you should be able to use DOSBox Staging fairly
+Congratulations --- now you should be able to use DOSBox Staging fairly
 confidently at a basic level, and we've actually touched on quite a few
 intermediate topics as well. Armed with the basics, now you have a much
 greater chance to figure things out on your own, and you'll be able  to ask
@@ -16,7 +16,7 @@ configuration options in the primary configuration file; look around on [our
 wiki](https://github.com/dosbox-staging/dosbox-staging/wiki); familiarise
 yourself with our [feature highlights](https://www.dosbox-staging.org/);
 read the release notes on our [releases
-page](https://www.dosbox-staging.org/releases/windows/)---there are plenty
+page](https://www.dosbox-staging.org/releases/windows/) --- there are plenty
 of learning opportunities if you wish to delve deeper!
 
 If you're stuck with something, you can always ask questions from the DOSBox
@@ -66,7 +66,7 @@ series is a good start, but you can pretty much pick any of his videos
 at random, and I guarantee you'll learn something interesting. His aptly titled
 *three-and-a-half-hour long (!)*
 [Roland MT-32, CM-32L, CM-64, CM-500 Ultimate Tutorial](https://www.youtube.com/watch?v=OLvsaJ4h-VY&list=PL5T8bmLxd_T1F2g3aoYCu2brKtGTlbyY_&index=6)
-is a work of art---probably there isn't anything more to say on the subject!
+is a work of art --- probably there isn't anything more to say on the subject!
 
 
 [DOSBox game compatibility list](https://www.dosbox.com/comp_list.php?letter=a)
@@ -86,7 +86,7 @@ them or work around them.
 : An acronym for **Very Old Games On New Systems**, this forum is an oasis for
 all retro-hardware and retro-gaming enthusiasts, mainly focusing on PC
 compatibles and DOSBox-related things. The combined knowledge of the community
-on all things DOS and retro-PC is next to none---try asking any obscure
+on all things DOS and retro-PC is next to none --- try asking any obscure
 question, and there's a good chance you'll get a very detailed (and correct!)
 answer within a few hours.
 

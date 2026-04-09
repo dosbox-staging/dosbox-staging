@@ -49,7 +49,7 @@ bar for ourselves.
 
 - **leave with class**, without drama or bitterness, when resigning for any
   reason. We champion your rights under the terms of the GPL to fork the code
-  and create a new project---just as we stand on the shoulders of those who gave
+  and create a new project --- just as we stand on the shoulders of those who gave
   us the right to create this project.
 
 

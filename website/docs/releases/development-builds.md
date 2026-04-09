@@ -283,7 +283,7 @@ or orange colour), then compare your current and old configs and update your
 settings accordingly.
 
 Check out the new config descriptions for guidance, and also make sure to read
-the release notes carefully---everything you need to know about upgrading your
+the release notes carefully --- everything you need to know about upgrading your
 settings is described there.
 
 

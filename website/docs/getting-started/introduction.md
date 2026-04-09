@@ -12,7 +12,7 @@ not DOSBox Staging. And even if you're a [long-time Staging
 user](#a-note-for-existing-dosbox-staging-users), we're quite certain you will
 learn a few new useful things and techniques from it.
 
-The guide has been written in the spirit of "teaching a man how to fish"---the
+The guide has been written in the spirit of "teaching a man how to fish" --- the
 games are only vehicles to teach you the basics that you can apply to any DOS
 game you wish to play later. Consequently, the choice of games doesn't matter
 that much (although we tried to pick from the all-time classics).
@@ -23,7 +23,7 @@ in previous ones, so *do not skip a chapter* just because you're not
 interested in a particular game! You don't have to play it if you don't want
 to; going through the setup procedure and learning how to troubleshoot various
 issues is what this is all about. All necessary files will be provided, and no
-familiarity with IBM PCs and the MS-DOS environment is required---everything
+familiarity with IBM PCs and the MS-DOS environment is required --- everything
 you need to know will be explained as we go. The only assumption is that you
 can perform basic everyday computer tasks, such as copying files, unpacking
 ZIP archives, and editing text files.
@@ -63,7 +63,7 @@ releases](../releases/macos.md) page, then simply drag the DOSBox Staging
 icon into your Applications folder. Both Intel and Apple silicon are
 supported.
 
-Don't delete the `.dmg` installer disk image just yet---we'll need it later.
+Don't delete the `.dmg` installer disk image just yet --- we'll need it later.
 
 
 <h3>Linux</h3>
