@@ -679,8 +679,8 @@ static void handle_auto_image_adjustment_settings(const VideoMode& video_mode)
 				        settings.black_level;
 				set_image_adjustment_settings();
 
-				LOG_INFO("RENDER: Auto-switched to %g black level",
-				         settings.black_level);
+				LOG_INFO("RENDER: Auto-switched to %d black level",
+				         iround(settings.black_level * 100));
 			}
 		}
 
