@@ -40,9 +40,11 @@ struct RenderedImage {
 
 	RenderedImage deep_copy() const
 	{
+		// Duplicate object; note this will only create a shallow copy
+		// of `image_data` as it's just a pointer
 		RenderedImage copy = *this;
 
-		// Deep-copy image and palette data
+		// Deep-copy image data
 		const auto image_data_num_bytes = static_cast<uint32_t>(
 		        params.height * pitch);
 
@@ -50,8 +52,6 @@ struct RenderedImage {
 
 		assert(image_data);
 		std::memcpy(copy.image_data, image_data, image_data_num_bytes);
-
-		copy.palette = palette;
 
 		return copy;
 	}

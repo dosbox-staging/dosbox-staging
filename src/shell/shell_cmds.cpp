@@ -617,11 +617,14 @@ std::string shorten_path(const std::string& path, const size_t max_len)
 
 	// Extract parts of the path which can't be shortened
 
-	std::string path_prefix = {}; // part which has to stay untouched
-	std::string path_middle = path;
-	std::string path_suffix = {}; // part which has to stay untouched
+	// Parts which have to stay untouched
+	std::string path_prefix = {};
+	std::string path_suffix = {};
 
-	if (!path_middle.empty() && path_middle.back() == '\\') {
+	auto path_middle = path;
+	assert(!path_middle.empty());
+
+	if (path_middle.back() == '\\') {
 		// Input ends with backslash
 		path_suffix = "\\";
 		path_middle.pop_back();
@@ -630,6 +633,7 @@ std::string shorten_path(const std::string& path, const size_t max_len)
 	if (path_middle.size() >= 2 && path_middle[1] == ':' &&
 	    ((path_middle[0] >= 'a' && path_middle[0] <= 'z') ||
 	     (path_middle[0] >= 'A' && path_middle[0] <= 'Z'))) {
+
 		// Input starts with DRIVE:
 		if (path_middle.size() >= 3 && path_middle[2] == '\\') {
 			path_prefix = path_middle.substr(0, 3);
