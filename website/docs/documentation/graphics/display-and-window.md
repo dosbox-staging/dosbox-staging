@@ -14,7 +14,7 @@ fixed-rate monitors, enable it to prevent screen tearing.
 
 Window size and position are remembered between sessions, so you only need
 to set things up once. Most users won't need to change the display defaults
-at all — the out-of-the-box settings work well for the vast majority of
+at all --- the out-of-the-box settings work well for the vast majority of
 games.
 
 

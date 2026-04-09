@@ -1,6 +1,6 @@
 # General
 
-The `[dosbox]` section contains the core system settings — what type of
+The `[dosbox]` section contains the core system settings --- what type of
 machine to emulate, the amount of memory, and various general emulator
 options.
 

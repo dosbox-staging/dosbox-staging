@@ -1,7 +1,7 @@
 # Joystick
 
 The classic DOS game port was a 15-pin connector supporting up to 4 analog
-axes and 4 buttons — just enough for two basic 2-button joysticks. DOSBox
+axes and 4 buttons --- just enough for two basic 2-button joysticks. DOSBox
 Staging automatically detects your modern USB controller and maps it to the
 emulated game port.
 
