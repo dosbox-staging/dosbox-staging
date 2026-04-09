@@ -88,12 +88,12 @@ enabled in the [joystick settings](../input/joystick.md).
 
 These shortcuts are only available when emulating specific machine types.
 
-| Shortcut    | Machine type | Action                           |
-| ---         | ---          | ---                              |
-| ++f11++     | Hercules     | Cycle Hercules palette           |
-| ++f11++     | CGA (mono)   | Cycle mono CGA palette           |
-| ++f12++     | CGA (colour) | Toggle CGA composite mode        |
-| ++f10++     | CGA / PCjr   | Select composite adjustment knob |
-| ++f11++     | CGA / PCjr   | Increase composite control       |
-| ++alt+f11++ | CGA / PCjr   | Decrease composite control       |
+| Shortcut    | Machine type             | Action                           |
+| ---         | ---                      | ---                              |
+| ++f11++     | `hercules`               | Cycle Hercules palette           |
+| ++f11++     | `cga_mono`               | Cycle mono CGA palette           |
+| ++f12++     | `cga` / `pcjr` / `tandy` | Toggle composite mode            |
+| ++f10++     | `cga` / `pcjr` / `tandy` | Select composite adjustment knob |
+| ++f11++     | `cga` / `pcjr` / `tandy` | Increase composite adjustment    |
+| ++alt+f11++ | `cga` / `pcjr` / `tandy` | Decrease composite adjustment    |
 

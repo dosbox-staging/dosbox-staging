@@ -1,6 +1,6 @@
 # Key mapper
 
-The key mapper lets you rebind any keyboard key, mouse button, or joystick
+The **key mapper** lets you rebind any keyboard key, mouse button, or joystick
 control to any emulated input event. It is the central tool for customising
 controls in DOSBox Staging --- whether you need to swap two keys, assign a
 gamepad button to a keyboard action, or build a complete controller profile

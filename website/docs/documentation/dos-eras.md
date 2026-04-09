@@ -7,7 +7,9 @@ toc_depth: 2
 The DOS era spanned a bit more than 15 years --- from the original IBM PC in
 1981 to the final wave of DOS games in the late 1990s. Hardware evolved
 dramatically during this period, and games were designed for the capabilities
-of their time. Matching the emulated hardware to a game's era is often a
+of their time.
+
+Matching the emulated hardware to a game's era is often a
 necessity as the game won't even start up otherwise. But even if it would,
 using period-authentic emulated hardware is preferable for
 getting an optimal, creator-intended experience.
