@@ -1266,7 +1266,15 @@ static float get_dedithering_strength()
 
 static void set_dedithering()
 {
-	GFX_GetRenderer()->SetDeditheringStrength(get_dedithering_strength());
+	const auto strength = get_dedithering_strength();
+
+	GFX_GetRenderer()->SetDeditheringStrength(strength);
+
+	LOG_INFO("RENDER: Dedithering %s",
+	         (strength == 0.0f) ? "disabled"
+	                            : format_str("enabled (%d strength)",
+	                                         iround(strength * 100))
+	                                      .c_str());
 }
 
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
