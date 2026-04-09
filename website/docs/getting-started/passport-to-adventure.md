@@ -71,7 +71,7 @@ indicates, you can press ++space++ to go to the next page, ++enter++ to
 advance to the next line, or ++q++ to quit the help viewer. The help viewer
 will also automatically quit once we've reached the end of the output. You
 can also find the full description of all settings in the
-[manual](../documentation/about-this-manual.md).
+[manual](../documentation/index.md).
 
 You can run `config -h <section_name>`, too, to get the names of all available
 settings in a given config section. For example, this is the result of `config

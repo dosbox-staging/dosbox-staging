@@ -297,24 +297,24 @@ but in the few that do, the results sound quite spectacular.
 sbtype = ess
 ```
 
-#### Games with ESFM support
+??? note "Games with ESFM support"
 
-<div class="compact" markdown>
+    <div class="compact" markdown>
 
-- [Advanced Civilization](https://www.mobygames.com/game/5297/advanced-civilization/)
-- [Callahan's Crosstime Saloon](https://www.mobygames.com/game/2150/callahans-crosstime-saloon/)
-- [Heaven's Dawn](https://www.mobygames.com/game/45120/heavens-dawn/)
-- [Heroes of Might and Magic II](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
-- [Magic Carpet 2](https://www.mobygames.com/game/790/magic-carpet-2-the-netherworlds/)
-- [Shannara](https://www.mobygames.com/game/3208/shannara/)
-- [The 11th Hour](https://www.mobygames.com/game/567/the-11th-hour/)
-- [The Gene Machine](https://www.mobygames.com/game/1121/the-gene-machine/)
-- [The Settlers II](https://www.mobygames.com/game/598/the-settlers-ii-veni-vidi-vici/)
-- [Theme Hospital](https://www.mobygames.com/game/674/theme-hospital/)
-- [WarCraft II](https://www.mobygames.com/game/1339/warcraft-ii-tides-of-darkness/)
-- [Z](https://www.mobygames.com/game/346/z/)
+    - [Advanced Civilization](https://www.mobygames.com/game/5297/advanced-civilization/)
+    - [Callahan's Crosstime Saloon](https://www.mobygames.com/game/2150/callahans-crosstime-saloon/)
+    - [Heaven's Dawn](https://www.mobygames.com/game/45120/heavens-dawn/)
+    - [Heroes of Might and Magic II](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
+    - [Magic Carpet 2](https://www.mobygames.com/game/790/magic-carpet-2-the-netherworlds/)
+    - [Shannara](https://www.mobygames.com/game/3208/shannara/)
+    - [The 11th Hour](https://www.mobygames.com/game/567/the-11th-hour/)
+    - [The Gene Machine](https://www.mobygames.com/game/1121/the-gene-machine/)
+    - [The Settlers II](https://www.mobygames.com/game/598/the-settlers-ii-veni-vidi-vici/)
+    - [Theme Hospital](https://www.mobygames.com/game/674/theme-hospital/)
+    - [WarCraft II](https://www.mobygames.com/game/1339/warcraft-ii-tides-of-darkness/)
+    - [Z](https://www.mobygames.com/game/346/z/)
 
-</div>
+    </div>
 
 
 !!! tip

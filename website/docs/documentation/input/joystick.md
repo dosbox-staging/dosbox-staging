@@ -3,7 +3,7 @@
 The classic DOS game port was a 15-pin connector supporting up to 4 analog
 axes and 4 buttons --- just enough for two basic 2-button joysticks. DOSBox
 Staging automatically detects your modern USB controller and maps it to the
-emulated game port.
+emulated analog joystick.
 
 Some flight simulators of the era expected very specific hardware. [Wing
 Commander](https://www.mobygames.com/game/3/wing-commander/),

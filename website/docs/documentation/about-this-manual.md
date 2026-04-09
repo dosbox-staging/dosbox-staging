@@ -1,20 +1,19 @@
 # About this manual
 
-Welcome to the DOSBox Staging user manual --- your complete guide to getting
-the most out of the emulator. It covers everything from basic concepts to the
-detailed configuration of every emulated device. You don't need to read it
-cover to cover --- most people dip in when they need to configure something
+Welcome to the **DOSBox Staging user manual** --- your complete guide to
+getting the most out of the emulator. It covers everything from basic concepts
+to the detailed configuration of every emulated device. You don't need to read
+it cover to cover --- most people dip in when they need to configure something
 specific or understand how a feature works.
 
 
 ## Start with the Getting Started guide
 
 If you're new to DOSBox Staging --- or even if you've used other DOSBox
-versions before --- the
-**[Getting Started guide](../getting-started/introduction.md)** is the single
-best place to begin. It walks you through setting up several games from
-scratch, teaching the core concepts you'll use every day: mounting drives,
-configuring sound and graphics, and tweaking settings per game.
+versions before --- the [Getting Started guide](../getting-started/index.md)
+is the single best place to begin. It walks you through setting up several
+games from scratch, teaching the core concepts you'll use every day: mounting
+drives, configuring sound and graphics, and tweaking settings per game.
 
 The guide is hands-on and assumes no prior DOS knowledge. Later chapters build
 on earlier ones, so work through them in order rather than skipping ahead.
@@ -108,14 +107,20 @@ detailed configuration reference.
 
 ## Getting help for specific commands
 
-Every DOSBox command has built-in help. Type `COMMAND /?` at the DOS prompt
-for detailed usage --- for example, `MOUNT /?` or `CONFIG /?`. You can also
-type `HELP` to see the most common commands, or `HELP /ALL` for the complete
-list.
+Every DOSBox command has built-in help.
+
+Run `COMMAND /?` at the DOS prompt for detailed usage (for example, `MOUNT
+/?`).
+
+You can also run `HELP` to see the most common commands, or `HELP /ALL` for
+the complete list.
 
 
 ## If you're not sure where to look
 
-The search bar at the top of the page works well for finding specific settings
-or topics. If you know the name of a configuration setting (like `cpu_cycles`
-or `sbtype`), searching for it will take you directly to its documentation.
+The search bar in the top right corner of this page works well for finding
+specific settings or topics.
+
+If you know the name of a configuration setting (like
+`cpu_cycles` or `sbtype`), searching for it will take you directly to its
+documentation.

@@ -123,5 +123,5 @@ efforts, bring modern development practices to the project with long-term
 maintainability in mind, and revitalise DOSBox development in general.
 Subsequently, the project got the blessing of original DOSBox author **Sjoerd
 "Harekiet" van der Berg**, and if you're reading this, it means it's doing
-rather well! :sunglasses:
+rather well!
 

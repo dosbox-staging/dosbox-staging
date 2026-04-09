@@ -53,7 +53,7 @@ Enable reverb globally to add a sense of space to the sound:
 
 `small`
 : Adds a subtle sense of space; good for games that use a single synth
-  channel (typically OPL) for both music and sound effects.
+  channel (typically **OPL**) for both music and sound effects.
 
 `medium`
 : Medium room preset that works well with a wide variety of games.
@@ -134,11 +134,12 @@ Mixer effects settings are to be configured in the `[mixer]` section.
 
 ##### crossfeed
 
-:   Set crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many
-    games pan the instruments 100% left and 100% right in the stereo field on
-    these audio devices which is unpleasant to listen to in headphones. With
-    crossfeed enabled, a portion of the left channel signal is mixed into the
-    right channel and vice versa, creating a more natural listening experience.
+:   Set crossfeed on the **OPL** and **CMS** (Game Blaster) mixer channels.
+    Many games pan the instruments 100% left and 100% right in the stereo
+    field on these audio devices which is unpleasant to listen to in
+    headphones. With crossfeed enabled, a portion of the left channel signal
+    is mixed into the right channel and vice versa, creating a more natural
+    listening experience.
 
     Possible values:
 

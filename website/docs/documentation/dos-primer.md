@@ -9,11 +9,12 @@ turn the thing on and off. That's it!
 In contrast, IBM PC compatibles running the DOS operating system are much more
 complex beasts. While DOSBox Staging vastly simplifies things and takes the
 major hurdles out of the equation, you are still expected to have a minimum
-understanding of the hardware and the platform to get the most out of it. This
-primer intends to give you a very compressed crash-course --- just enough to
-be able to run DOS games effectively. While this is enough to get started, we
-encourage you to expand your knowledge on the subject over time in the areas
-you're interested in.
+understanding of the hardware and the platform to get the most out of it.
+
+This primer intends to give you a very compressed crash-course --- just enough
+to be able to run DOS games effectively. While this is enough to get started,
+we encourage you to expand your knowledge on the subject over time in the
+areas you're interested in.
 
 ## Modularity
 

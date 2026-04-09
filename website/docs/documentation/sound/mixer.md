@@ -1,7 +1,7 @@
 # DOSBox mixer
 
-The DOSBox mixer combines the output of all emulated sound devices into a
-final stereo signal. Each device gets its own mixer channel, and you can
+The **DOSBox mixer** combines the output of all emulated sound devices into a
+final stereo signal. Each device gets its own **mixer channel**, and you can
 adjust volume, stereo panning, reverb, chorus, and crossfeed levels
 independently per channel.
 
@@ -33,20 +33,23 @@ with the default configuration:
 
 As we can see, we have four channels enabled by default:
 
-- `MASTER` -- This is the final summed stereo output of all other
-    mixer channels. The `MASTER` channel is always enabled, always comes first,
-    and is always stereo.
+- **MASTER** -- This is the final summed stereo output of all other
+    mixer channels. The **MASTER** channel is always enabled, always comes
+    first, and is always stereo.
 
-- `OPL` -- Stereo output of the Yamaha OPL3 synthesiser on the emulated
-    Sound Blaster 16 card.
-- `PCSPEAKER` -- Mono output of the ubiquitous small loudspeaker built into most old IBM PC compatibles.
-- `SB` -- Stereo digital audio output of the emulated Sound Blaster 16 card.
+- **OPL** -- Output of the [Yamaha OPL FM synthesizer](sound-devices/adlib-cms-sound-blaster.md#fm-synthesisers) (usually part of an emulated [Sound Blaster](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-models) card, or a standalone [AdLib Music Synthesizer Card](sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card)). Can be mono or stereo, depending on the emulated FM synthesizer.
+
+- **PCSPEAKER** -- Mono output of the ubiquitous small loudspeaker built into most old IBM PC compatibles.
+
+- **SB** -- Digital audio output of the emulated [Sound Blaster
+  card](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-models). Can be
+  mono or stereo, depending on the emulated model.
 
 There is an important thing to note here: some emulated sound devices contain
 multiple sub-devices, each having their own mixer channel. The Sound Blaster
-16 is such a device; its digital output is routed to the `SB` channel, while
-the output of the onboard Yamaha OPL3 synthesiser chip has its dedicated `OPL`
-channel.
+16 is such a device; its digital output is routed to the **SB** channel, while
+the output of the onboard Yamaha OPL3 synthesiser chip has its dedicated
+**OPL** channel.
 
 This is actually similar to how the Sound Blaster software mixer works on later Sound
 Blaster cards. The `MIXER` command extends this concept so you can adjust the
@@ -63,7 +66,7 @@ Set the volume of a channel as a percentage:
 
     MIXER OPL 150
 
-This sets the `OPL` channel to 150% volume. You can set the left and right
+This sets the **OPL** channel to 150% volume. You can set the left and right
 channels independently by separating the values with a colon:
 
     MIXER OPL 200:100
@@ -75,9 +78,9 @@ the level:
 
     MIXER OPL R50 C30
 
-This sets the `OPL` channel's reverb level to 50 and chorus level to 30.
-For details on the available presets and what reverb and chorus do, see
-[Mixer effects](mixer-effects.md).
+This sets the **OPL** channel's reverb level to 50 and chorus level to 30. For
+details on the available presets and what reverb and chorus do, see [Mixer
+effects](mixer-effects.md).
 
 ### Crossfeed
 
@@ -94,16 +97,19 @@ Swap the left and right channels of a stereo mixer channel:
 
     MIXER SB REVERSE
 
-Some Sound Blaster models --- particularly the Sound Blaster Pro 1.0 --- had
-the left and right digital audio channels reversed compared to later cards.
-Games developed and tested on these cards may have their stereo image
-flipped when emulating a different Sound Blaster model (typically the
-default Sound Blaster 16).
+Some [Sound Blaster
+models](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-models) ---
+particularly the [Sound Blaster
+Pro](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro) --- had the
+left and right digital audio channels reversed compared to later cards. Games
+developed and tested on these cards may have their stereo image flipped when
+emulating a different Sound Blaster model (typically the default [Sound
+Blaster 16](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16)).
 
 If sound effects in a game seem to come from the wrong direction (e.g., an
-enemy on the left of the screen produces sound from the right speaker),
-try reversing the `SB` channel. This only affects the specified channel's
-output; other channels (like `OPL`) have their own independent stereo field.
+enemy on the left of the screen produces sound from the right speaker), try
+reversing the **SB** channel. This only affects the specified channel's
+output; other channels (like **OPL**) have their own independent stereo field.
 
 
 ### Advanced usage
@@ -113,9 +119,11 @@ For example, the command `MIXER x30 opl 150 r50 c30 sb x10 reverse` accomplishes
 following:
 
 - Set the global crossfeed to 30 (`x30`)
-- Set the volume of the `OPL` channel to 150%, the reverb level to 50, and the
+
+- Set the volume of the **OPL** channel to 150%, the reverb level to 50, and the
     chorus level to 30 (`opl 150 r50 c30`)
-- Set the crossfeed of the `SB` channel to 10 and use reverse stereo (`sb x10
+
+- Set the crossfeed of the **SB** channel to 10 and use reverse stereo (`sb x10
     reverse`)
 
 ## List of mixer channels
@@ -213,9 +221,9 @@ settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#confi
     cause the background music to dip noticeably. For most games, the
     compressor works transparently and you won't notice it.
 
-    If you hear distracting volume pumping, a better approach is to **lower
-    the master volume** (e.g., `MIXER MASTER 50`) so that peaks stay below
-    the clipping level and the compressor stays inactive. You can also lower
+    If you hear distracting volume pumping, a better approach is to lower the
+    master volume (e.g., `MIXER MASTER 50`) so that peaks stay below the
+    clipping level and the compressor stays inactive. You can also lower
     individual channel volumes to tame specific loud devices.
 
     Possible values: `on` *default*{ .default }, `off`
@@ -231,10 +239,10 @@ settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#confi
 
     Possible values:
 
-    - `on` *default*{ .default } -- Enable the denoiser on the OPL and
-      SOUNDCANVAS channels. The denoiser does not introduce any sound quality
-      degradation; it only removes the barely audible residual noise in quiet
-      passages.
+    - `on` *default*{ .default } -- Enable the denoiser on the **OPL** and
+      **SOUNDCANVAS** channels. The denoiser does not introduce any sound
+      quality degradation; it only removes the barely audible residual noise in
+      quiet passages.
     - `off` -- Disable the denoiser.
 
 

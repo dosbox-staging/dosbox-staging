@@ -1,8 +1,8 @@
 # Input overview
 
-DOSBox Staging emulates the standard DOS input trinity: keyboard, mouse,
-and joystick. For most games, everything works out of the box without any
-configuration.
+DOSBox Staging emulates the standard DOS input trinity: **keyboard**,
+**mouse**, and **joystick**. For most games, everything works out of the box
+without any configuration.
 
 The built-in **[key mapper](keymapper.md)** (++ctrl+f1++ on Windows/Linux,
 ++cmd+f1++ on macOS) lets you remap any key or joystick control. This is handy
