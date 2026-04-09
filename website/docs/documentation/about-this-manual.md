@@ -1,11 +1,10 @@
-# How to use this manual
+# About this manual
 
-This manual is the complete reference for DOSBox Staging. It covers
-everything from basic concepts to detailed configuration of every emulated
-device. You don't need to read it cover to cover --- most people dip in when
-they need to configure something specific or understand how a feature works.
-
-This page will help you find the right starting point.
+Welcome to the DOSBox Staging user manual --- your complete guide to getting
+the most out of the emulator. It covers everything from basic concepts to the
+detailed configuration of every emulated device. You don't need to read it
+cover to cover --- most people dip in when they need to configure something
+specific or understand how a feature works.
 
 
 ## Start with the Getting Started guide
@@ -24,7 +23,7 @@ Even experienced users tend to pick up useful techniques from it.
 
 ## What's in this manual
 
-### Getting oriented
+### Introduction
 
 The section you're reading now. It gives you the foundation for everything
 else that follows.
