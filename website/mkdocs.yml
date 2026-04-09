@@ -149,8 +149,8 @@ nav:
       - getting-started/next-steps.md
 
   - Documentation:
-      - Getting oriented:
-        - documentation/how-to-use-this-manual.md
+      - Introduction:
+        - documentation/about-this-manual.md
         - documentation/what-is-dosbox-staging.md
         - documentation/dos-primer.md
         - documentation/dos-eras.md
