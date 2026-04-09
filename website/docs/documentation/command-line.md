@@ -27,7 +27,9 @@ DOSBox session, overriding values from the local config:
 dosbox --conf extra.conf
 ```
 
-For quick one-off tweaks without editing any files, use [`--set`](#-set-settingvalue). If you want to set multiple settings, no problem --- just provide multiple `--set` arguments:
+For quick one-off tweaks without editing any files, use
+[`--set`](#-set-settingvalue). If you want to set multiple settings, no
+problem --- just provide multiple `--set` arguments:
 
 ```
 dosbox --set machine=ega --set cpu_cycles=5000
@@ -39,7 +41,7 @@ Of course, you can combine these techniques:
 dosbox --conf extra.conf --set cpu_cycles=25000
 ```
 
-See [Config layering](../configuration/#config-layering) for more info.
+See [Config layering](configuration.md#config-layering) for more info.
 
 
 ## Discovery

@@ -1,6 +1,4 @@
-# Introduction
-
-## What is DOSBox Staging?
+# What is DOSBox Staging?
 
 **DOSBox Staging** is a tool that allows you to run software written for the
 MS-DOS operating system and the Windows 3.1 operating environment on modern

@@ -150,8 +150,8 @@ nav:
 
   - Documentation:
       - Getting oriented:
-        - documentation/introduction.md
         - documentation/how-to-use-this-manual.md
+        - documentation/what-is-dosbox-staging.md
         - documentation/dos-primer.md
         - documentation/dos-eras.md
 
