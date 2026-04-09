@@ -1177,9 +1177,9 @@ static void set_deinterlacing(const SectionProp& section)
 {
 	using enum DeinterlacingStrength;
 
-	render.deinterlacing_strength = [&]() {
-		const std::string pref = section.GetStringLowCase("deinterlacing");
+	const std::string pref = section.GetStringLowCase("deinterlacing");
 
+	render.deinterlacing_strength = [&]() {
 		if (has_false(pref)) {
 			return Off;
 
@@ -1212,6 +1212,11 @@ static void set_deinterlacing(const SectionProp& section)
 			return Off;
 		}
 	}();
+
+	LOG_INFO("RENDER: Deinterlacing %s",
+	         (render.deinterlacing_strength == Off)
+	                 ? "disabled"
+	                 : format_str("enabled ('%s' strength)", pref.c_str()).c_str());
 }
 
 constexpr int DeditheringStrengthMin = 0;
