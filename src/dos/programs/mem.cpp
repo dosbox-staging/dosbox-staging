@@ -909,11 +909,12 @@ MEM::McbChainInfo MEM::GetMcbChainInfo(const uint16_t start_segment)
 		}
 
 		chain_info.emplace_back();
-		chain_info.back().mcb_segment = mcb_segment;
+		auto& last_entry = chain_info.back();
 
-		chain_info.back().type        = mcb.GetType();
-		chain_info.back().size_bytes  = mcb.GetSize() * RealSegmentSize;
-		chain_info.back().psp_segment = mcb.GetPSPSeg();
+		last_entry.mcb_segment = mcb_segment;
+		last_entry.type        = mcb.GetType();
+		last_entry.size_bytes  = mcb.GetSize() * RealSegmentSize;
+		last_entry.psp_segment = mcb.GetPSPSeg();
 
 		char buffer[9];
 		mcb.GetFileName(&buffer[0]);
@@ -1232,9 +1233,11 @@ MEM::BiosMemoryMap MEM::GetBiosMemoryMap()
 		}
 
 		memory_map.emplace_back();
-		memory_map.back().base   = real_readq(segment, 0);
-		memory_map.back().length = real_readq(segment, 8);
-		memory_map.back().type   = real_readd(segment, 16);
+
+		auto& last_entry  = memory_map.back();
+		last_entry.base   = real_readq(segment, 0);
+		last_entry.length = real_readq(segment, 8);
+		last_entry.type   = real_readd(segment, 16);
 	}
 
 	DOS_FreeMemory(segment);
