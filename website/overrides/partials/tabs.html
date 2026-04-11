@@ -1,0 +1,16 @@
+{% import "partials/tabs-item.html" as item with context %}
+<nav class="md-tabs" aria-label="{{ lang.t('tabs') }}" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      {% for nav_item in nav.items %}
+        {% if config.extra.offline_mode and nav_item.title == "Releases" %}
+          <li class="md-tabs__item">
+            <a href="http://www.dosbox-staging.org/releases/" class="md-tabs__link">Releases</a>
+          </li>
+        {% else %}
+          {{ item.render(nav_item) }}
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+</nav>
