@@ -13254,73 +13254,67 @@ void MusicFeatureCard::RegisterIoHandlers(const io_port_t port)
 	assert(writeHandlers.size() == NumIoHandlers);
 
 	auto read_piu0 = std::bind(&MusicFeatureCard::readPortPIU0, this, _1, _2);
-	readHandlers.at(0).Install(port_piu0, read_piu0, io_width_t::byte);
+	readHandlers[0].Install(port_piu0, read_piu0, io_width_t::byte);
 
 	auto write_piu0 = std::bind(&MusicFeatureCard::writePortPIU0, this, _1, _2, _3);
-	writeHandlers.at(0).Install(port_piu0, write_piu0, io_width_t::byte);
+	writeHandlers[0].Install(port_piu0, write_piu0, io_width_t::byte);
 
 	auto read_piu1 = std::bind(&MusicFeatureCard::readPortPIU1, this, _1, _2);
-	readHandlers.at(1).Install(port_piu1, read_piu1, io_width_t::byte);
+	readHandlers[1].Install(port_piu1, read_piu1, io_width_t::byte);
 
 	auto write_piu1 = std::bind(&MusicFeatureCard::writePortPIU1, this, _1, _2, _3);
-	writeHandlers.at(1).Install(port_piu1, write_piu1, io_width_t::byte);
+	writeHandlers[1].Install(port_piu1, write_piu1, io_width_t::byte);
 
 	auto read_piu2 = std::bind(&MusicFeatureCard::readPortPIU2, this, _1, _2);
-	readHandlers.at(2).Install(port_piu2, read_piu2, io_width_t::byte);
+	readHandlers[2].Install(port_piu2, read_piu2, io_width_t::byte);
 
 	auto write_piu2 = std::bind(&MusicFeatureCard::writePortPIU2, this, _1, _2, _3);
-	writeHandlers.at(2).Install(port_piu2, write_piu2, io_width_t::byte);
+	writeHandlers[2].Install(port_piu2, write_piu2, io_width_t::byte);
 
 	auto read_pcr = std::bind(&MusicFeatureCard::readPortPCR, this, _1, _2);
-	readHandlers.at(3).Install(port_pcr, read_pcr, io_width_t::byte);
+	readHandlers[3].Install(port_pcr, read_pcr, io_width_t::byte);
 
 	auto write_pcr = std::bind(&MusicFeatureCard::writePortPCR, this, _1, _2, _3);
-	writeHandlers.at(3).Install(port_pcr, write_pcr, io_width_t::byte);
+	writeHandlers[3].Install(port_pcr, write_pcr, io_width_t::byte);
 
 	auto read_cntr0 = std::bind(&MusicFeatureCard::readPortCNTR0, this, _1, _2);
-	readHandlers.at(4).Install(port_cntr0, read_cntr0, io_width_t::byte);
+	readHandlers[4].Install(port_cntr0, read_cntr0, io_width_t::byte);
 
 	auto write_cntr0 = std::bind(&MusicFeatureCard::writePortCNTR0, this, _1, _2, _3);
-	writeHandlers.at(4).Install(port_cntr0, write_cntr0, io_width_t::byte);
+	writeHandlers[4].Install(port_cntr0, write_cntr0, io_width_t::byte);
 
 	auto read_cntr1 = std::bind(&MusicFeatureCard::readPortCNTR1, this, _1, _2);
-	readHandlers.at(5).Install(port_cntr1, read_cntr1, io_width_t::byte);
+	readHandlers[5].Install(port_cntr1, read_cntr1, io_width_t::byte);
 
 	auto write_cntr1 = std::bind(&MusicFeatureCard::writePortCNTR1, this, _1, _2, _3);
-	writeHandlers.at(5).Install(port_cntr1, write_cntr1, io_width_t::byte);
+	writeHandlers[5].Install(port_cntr1, write_cntr1, io_width_t::byte);
 
 	auto read_cntr2 = std::bind(&MusicFeatureCard::readPortCNTR2, this, _1, _2);
-	readHandlers.at(6).Install(port_cntr2, read_cntr2, io_width_t::byte);
+	readHandlers[6].Install(port_cntr2, read_cntr2, io_width_t::byte);
 
 	auto write_cntr2 = std::bind(&MusicFeatureCard::writePortCNTR2, this, _1, _2, _3);
-	writeHandlers.at(6).Install(port_cntr2, write_cntr2, io_width_t::byte);
+	writeHandlers[6].Install(port_cntr2, write_cntr2, io_width_t::byte);
 
 	auto read_tcwr = std::bind(&MusicFeatureCard::readPortTCWR, this, _1, _2);
-	readHandlers.at(7).Install(port_tcwr, read_tcwr, io_width_t::byte);
+	readHandlers[7].Install(port_tcwr, read_tcwr, io_width_t::byte);
 
 	auto write_tcwr = std::bind(&MusicFeatureCard::writePortTCWR, this, _1, _2, _3);
-	writeHandlers.at(7).Install(port_tcwr, write_tcwr, io_width_t::byte);
+	writeHandlers[7].Install(port_tcwr, write_tcwr, io_width_t::byte);
 
 	// ports [+C],[+D],[+E],[+F] all map to the TSR
 	auto read_tcr = std::bind(&MusicFeatureCard::readPortTCR, this, _1, _2);
 	auto write_tcr = std::bind(&MusicFeatureCard::writePortTCR, this, _1, _2, _3);
 	for (io_port_t i = 0; i < 4; i++) {
-		readHandlers.at(8 + i).Install(port_tcr + i, read_tcr, io_width_t::byte);
-		writeHandlers.at(8 + i).Install(port_tcr + i,
-		                                write_tcr,
-		                                io_width_t::byte);
+		readHandlers[8 + i].Install(port_tcr + i, read_tcr, io_width_t::byte);
+		writeHandlers[8 + i].Install(port_tcr + i, write_tcr, io_width_t::byte);
 	}
 
 	// ports [+8],[+9],[+A],[+B] all map to the TCR
 	auto read_tsr = std::bind(&MusicFeatureCard::readPortTSR, this, _1, _2);
 	auto write_tsr = std::bind(&MusicFeatureCard::writePortTSR, this, _1, _2, _3);
 	for (io_port_t i = 0; i < 4; i++) {
-		readHandlers.at(12 + i).Install(port_tsr + i,
-		                                read_tsr,
-		                                io_width_t::byte);
-		writeHandlers.at(12 + i).Install(port_tsr + i,
-		                                 write_tsr,
-		                                 io_width_t::byte);
+		readHandlers[12 + i].Install(port_tsr + i, read_tsr, io_width_t::byte);
+		writeHandlers[12 + i].Install(port_tsr + i, write_tsr, io_width_t::byte);
 	}
 }
 

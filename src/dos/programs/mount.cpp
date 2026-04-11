@@ -383,7 +383,7 @@ bool MOUNT::MountImageIso(MountParameters& params)
 		        params.drive, iso_path.c_str(), params.mediaid, error));
 
 		// error: report and leave
-		if (error) {
+		if (error) { //-V547
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
 			                      mscdex_error_to_message_id(error, true));
@@ -1064,7 +1064,7 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 		                                         error);
 
 		const char* msg_id = mscdex_error_to_message_id(error, false);
-		if (error == 0) {
+		if (error == 0) { //-V457
 			NOTIFY_DisplayInfoMessage(Notification::Source::Console,
 			                          "MOUNT",
 			                          msg_id);
@@ -1076,7 +1076,7 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 
 		// Errors 1-4 are fatal; 0 (success) and 5 (limited support
 		// for subdirectory mounts) allow the drive to be registered.
-		if (error && error != 5) {
+		if (error && error != 5) { //-V560
 			return;
 		}
 	} else {
