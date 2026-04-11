@@ -71,7 +71,7 @@ indicates, you can press ++space++ to go to the next page, ++enter++ to
 advance to the next line, or ++q++ to quit the help viewer. The help viewer
 will also automatically quit once we've reached the end of the output. You
 can also find the full description of all settings in the
-[manual](../documentation/index.md).
+[manual](../manual/index.md).
 
 You can run `config -h <section_name>`, too, to get the names of all available
 settings in a given config section. For example, this is the result of `config
@@ -95,7 +95,7 @@ was started from (the game's folder). Because of this loading order, you can
 override any primary config setting in your local config.
 
 This *layered configuration* approach is very useful (see
-[Configuration](../documentation/configuration.md) for the full details);
+[Configuration](../manual/configuration.md) for the full details);
 you can apply broad, general settings in your primary configuration that
 will apply to all games, then fine-tune these defaults on a per-game basis
 via local `dosbox.conf` configs in the individual game folders. Because of this, the primary
@@ -245,7 +245,7 @@ options next!
 ## Sound options
 
 For a complete overview of all emulated sound devices, see the
-[Sound](../documentation/sound/overview.md) section of the manual.
+[Sound](../manual/sound/overview.md) section of the manual.
 
 ### Sound Blaster / AdLib sound
 
@@ -658,7 +658,7 @@ The rationale behind the "magic 89% value" is explained in detail in the last
 ## CPU sensitive games
 
 Certain older games, such as these three demos, are sensitive to CPU speed
-(see the [CPU](../documentation/system/cpu.md) page for a full discussion of
+(see the [CPU](../manual/system/cpu.md) page for a full discussion of
 cycles settings).
 
 This can manifest in different ways:

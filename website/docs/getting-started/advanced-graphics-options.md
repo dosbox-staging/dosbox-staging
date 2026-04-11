@@ -81,9 +81,9 @@ Sky](beneath-a-steel-sky.md/#aspect-ratio-correction) example.
 
 ## Integer scaling
 
-See [Integer scaling](../documentation/graphics/rendering.md#integer-scaling)
+See [Integer scaling](../manual/graphics/rendering.md#integer-scaling)
 and [Aspect ratio &
-viewport](../documentation/graphics/rendering.md#aspect-ratio-viewport) in
+viewport](../manual/graphics/rendering.md#aspect-ratio-viewport) in
 the manual for the full configuration reference.
 
 That explains the black bars on the sides, but what about the letterboxing we
