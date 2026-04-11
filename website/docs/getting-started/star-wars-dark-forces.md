@@ -135,7 +135,7 @@ on our wiki for assorted real-life examples.
 
 ## Display refresh rate
 
-See [Presentation modes](../documentation/graphics/display-and-window.md#presentation-modes)
+See [Presentation modes](../manual/graphics/display-and-window.md#presentation-modes)
 in the manual for the full reference on refresh rates and vsync.
 
 Dark Forces uses the 320&times;200 256-colour VGA screen mode, just like the
@@ -447,7 +447,7 @@ MIDI standard**.
 
 DOSBox Staging comes with an integrated General MIDI-compliant synthesiser
 called FluidSynth (see the [General
-MIDI](../documentation/sound/sound-devices/general-midi.md) page for the
+MIDI](../manual/sound/sound-devices/general-midi.md) page for the
 full reference). Unlike the MT-32 emulation, FluidSynth does not attempt to
 mimic any specific hardware device but a generic MIDI sound module. This sound
 module doesn't have any built-in sounds --- you need to load so-called
@@ -676,9 +676,9 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 
 ## Dynamic range compression
 
-See the [DOSBox mixer](../documentation/sound/mixer.md) page for the
+See the [DOSBox mixer](../manual/sound/mixer.md) page for the
 full mixer reference and [Mixer
-effects](../documentation/sound/mixer-effects.md) for reverb, chorus, and
+effects](../manual/sound/mixer-effects.md) for reverb, chorus, and
 crossfeed.
 
 If a game has loud music and you set the output level of your soundcard too
@@ -750,7 +750,7 @@ help.)
 ## Minimising audio glitches
 
 See also [Minimising audio
-glitches](../documentation/sound/mixer.md#minimising-audio-glitches)
+glitches](../manual/sound/mixer.md#minimising-audio-glitches)
 in the manual.
 
 Even after setting the optimal cycles value for a game to limit the emulated

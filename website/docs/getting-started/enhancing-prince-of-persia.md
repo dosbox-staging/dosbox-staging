@@ -140,7 +140,7 @@ has a fixed 16-colour palette.
 
 To run Prince of Persia in EGA mode, you simply need to tell DOSBox to emulate
 a machine equipped with an EGA adapter (see the
-[`machine`](../documentation/system/general.md#machine) setting for the full
+[`machine`](../manual/system/general.md#machine) setting for the full
 list of emulated machines). That can be easily done by adding the following
 configuration snippet:
 
@@ -290,7 +290,7 @@ key.
 ### Sharp pixels
 
 If you _really_ prefer sharp pixels over authentic CRT emulation (see
-[CRT shaders](../documentation/graphics/rendering.md#crt-shaders) for a
+[CRT shaders](../manual/graphics/rendering.md#crt-shaders) for a
 detailed overview), you only need to add a single line to the `[render]`
 config section:
 
@@ -349,7 +349,7 @@ physical game controller plugged in. Either way, the game will always "see" a
 joystick at startup and will therefore auto-switch to joystick mode.
 
 From this, it follows that if we disable the joystick in the config (see the
-[Joystick](../documentation/input/joystick.md) page for all available
+[Joystick](../manual/input/joystick.md) page for all available
 settings), the game will have no other choice than to default to keyboard
 mode:
 
