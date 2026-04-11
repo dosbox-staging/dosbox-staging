@@ -1,10 +1,10 @@
 # About this manual
 
-Welcome to the **DOSBox Staging user manual** --- your complete guide to
-getting the most out of the emulator. It covers everything from basic concepts
-to the detailed configuration of every emulated device. You don't need to read
-it cover to cover --- most people dip in when they need to configure something
-specific or understand how a feature works.
+Welcome to the **DOSBox Staging v0.83.0 user manual** --- your complete guide
+to getting the most out of the emulator. It covers everything from basic
+concepts to the detailed configuration of every emulated device. You don't
+need to read it cover to cover --- most people dip in when they need to
+configure something specific or understand how a feature works.
 
 
 ## Start with the Getting Started guide
