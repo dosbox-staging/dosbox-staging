@@ -2010,7 +2010,7 @@ static Bitu int33_handler()
 		break;
 	case 0x13:
 		// MS MOUSE v5.0+ - set double-speed threshold
-		set_double_speed_threshold(reg_bx);
+		set_double_speed_threshold(reg_dx);
 		break;
 	case 0x14:
 		// MS MOUSE v3.0+ - exchange event-handler
