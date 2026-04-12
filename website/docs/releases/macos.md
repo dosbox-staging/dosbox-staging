@@ -64,9 +64,9 @@ build.
 - Open the app a second time --- now Gatekeeper will show an
   **Open** button. Press this to launch DOSBox Staging.
 
-<figure markdown>
-  ![Gatekeeper window](images/gatekeeper.png){width=400}
-</figure>
+{{ figure(
+    "images/gatekeeper.png", alt="Gatekeeper window", small=False, width="400"
+) }}
 
 
 Apple's Gatekeeper feature only permits the running of notarized software, one
