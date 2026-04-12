@@ -115,13 +115,13 @@ Click the **Run anyway** button in the second dialog.
 
 <div class="image-grid" markdown>
 
-<figure markdown>
-  ![SmartScreen window 1](images/smartscreen1.png)
-</figure>
+{{ figure(
+    "images/smartscreen1.png", alt="SmartScreen window 1", small=False
+) }}
 
-<figure markdown>
-  ![SmartScreen window 2](images/smartscreen2.png)
-</figure>
+{{ figure(
+    "images/smartscreen2.png", alt="SmartScreen window 2", small=False
+) }}
 
 </div>
 
@@ -134,9 +134,9 @@ faster.
 In your installation folder, right-click on the `dosbox.exe`, select **Properties**, tick
 **Unblock** in the appearing dialog, then press **Ok**.
 
-<figure markdown>
-  ![Properties window](images/properties.png)
-</figure>
+{{ figure(
+    "images/properties.png", alt="Properties window", small=False
+) }}
 
 Consider also performing [Method 3](#method-3) to make DOSBox Staging start up
 faster.
