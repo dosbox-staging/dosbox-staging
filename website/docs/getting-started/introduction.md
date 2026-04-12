@@ -88,9 +88,11 @@ We recommend Windows users install the free and open-source
 Accept the default installer options; this will give you a handy *Open with
 Notepad++* right-click context menu entry in Windows Explorer.
 
-<figure markdown>
-  ![Editing a DOSBox configuration file in Notepad++](https://www.dosbox-staging.org/static/images/getting-started/notepad++.png){ loading=lazy }
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/notepad++.png",
+    alt="Editing a DOSBox configuration file in Notepad++",
+    small=False
+) }}
 
 
 <h3>macOS</h3>
@@ -105,9 +107,11 @@ for macOS, which is perfect for the job.
     screenshot below (it's the combo-box to the left of the *Tab Size*
     combo-box in the status bar).
 
-<figure markdown>
-  ![Editing a DOSBox configuration file in TextMate](https://www.dosbox-staging.org/static/images/getting-started/textmate.png){ loading=lazy }
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/textmate.png",
+    alt="Editing a DOSBox configuration file in TextMate",
+    small=False
+) }}
 
 
 <h3>Linux</h3>

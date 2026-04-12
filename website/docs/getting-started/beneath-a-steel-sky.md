@@ -193,9 +193,12 @@ We're greeted by a pretty standard-looking text-mode installer. Either press
 any key or wait a few seconds to progress to the second screen, where you'll
 need to select the installation path:
 
-<figure markdown>
-  ![Beneath a Steel Sky setup -- Installation path](https://www.dosbox-staging.org/static/images/getting-started/bass-setup1.png){ loading=lazy width=80% }
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/bass-setup1.png",
+    alt="Beneath a Steel Sky setup -- Installation path",
+    small=False,
+    width="80%"
+) }}
 
 You can navigate the interface with the cursor keys, ++esc++, ++enter++, and
 the mouse. The default `C:\SKY` install location is perfectly fine, so just
@@ -205,9 +208,12 @@ The installer will take us now to the setup screen where we can select the
 language of the in-game text (the voice-acting is English-only), and the sound
 settings:
 
-<figure markdown>
-  ![Beneath a Steel Sky setup -- Game settings](https://www.dosbox-staging.org/static/images/getting-started/bass-setup2.png){ loading=lazy width=80% }
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/bass-setup2.png",
+    alt="Beneath a Steel Sky setup -- Game settings",
+    small=False,
+    width="80%"
+) }}
 
 English is fine, and the game has auto-detected our sound card correctly
 (Sound Blaster 16 --- this is the sound card DOSBox emulates by default), so
@@ -216,9 +222,12 @@ finish the installation and save the settings, we need to press the *Exit
 Install* button, which will take us to the (guess what?) *Exit Install*
 dialog:
 
-<figure markdown>
-  ![Beneath a Steel Sky setup -- Finalising the setup](https://www.dosbox-staging.org/static/images/getting-started/bass-setup3.png){ loading=lazy width=80% }
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/bass-setup3.png",
+    alt="Beneath a Steel Sky setup -- Finalising the setup",
+    small=False,
+    width="80%"
+) }}
 
 Here you need to press the *Save Setup* button to finalise the settings and
 exit the installer.
@@ -877,14 +886,12 @@ explained in a lot more detail in the [advanced graphics
 options](advanced-graphics-options.md#aspect-ratios-square-pixels-black-borders)
 chapter at the end.
 
-<figure markdown>
-  ![Left: Screenshot from the intro with aspect ratio correction disabled (square pixels), Right: The original image from the comic book included with the game](https://www.dosbox-staging.org/static/images/getting-started/bass-aspect.jpg){ loading=lazy width=90% }
-
-  <figcaption>
-  Left: Screenshot from the intro with aspect ratio correction disabled (square pixels)<br>
-  Right: The original image from the comic book included with the game
-  </figcaption>
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/bass-aspect.jpg",
+    "Left: Screenshot from the intro with aspect ratio correction disabled (square pixels)<br>Right: The original image from the comic book included with the game",
+    small=False,
+    width="90%"
+) }}
 
 
 That's quite easy to do, and we're also setting the viewport resolution to 4x
@@ -898,29 +905,15 @@ viewport = 1280x800
 ```
 
 <div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/bass-ingame1.jpg" >
-    ![Beneath a Steel Sky with aspect ratio correction disabled](https://www.dosbox-staging.org/static/images/getting-started/bass-ingame1-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Beneath a Steel Sky with aspect ratio correction disabled
-  </figcaption>
-</figure>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/bass-ingame2.jpg" >
-    ![Well, we won't escape this way...](https://www.dosbox-staging.org/static/images/getting-started/bass-ingame2-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Well, we won't escape this way...
-  </figcaption>
-</figure>
-
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/bass-ingame1.jpg",
+    "Beneath a Steel Sky with aspect ratio correction disabled"
+) }}
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/bass-ingame2.jpg",
+    "Well, we won't escape this way..."
+) }}
 </div>
-
 
 Of course, this would've been a very misguided effort if it had only fixed the
 intro graphics but not the in-game visuals. Fortunately, it turns out both the
@@ -1046,15 +1039,10 @@ glshader = crt-auto-arcade
 Now you can play the game with Amiga-like graphics and MT-32 or OPL sound from
 a strange parallel universe! 😎
 
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/bass-amiga.jpg" >
-    ![Beneath a Steel Sky from a parallel universe running on an Amiga in 256-colour mode](https://www.dosbox-staging.org/static/images/getting-started/bass-amiga-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Beneath a Steel Sky from a parallel universe running on an Amiga in 256-colour mode
-  </figcaption>
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/bass-amiga.jpg",
+    "Beneath a Steel Sky from a parallel universe running on an Amiga in 256-colour mode"
+) }}
 
 
 ## Final configuration
