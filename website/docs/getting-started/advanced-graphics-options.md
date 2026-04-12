@@ -14,13 +14,12 @@ CRT screen. When displaying such 4:3 aspect ratio content on a 16:9 modern
 flat panel, you'll get black bars on the sides of the image. This is called
 _pillarboxing_.
 
-<figure markdown>
-  ![Displaying a 4:3 image on a 16:9 flat screen](https://www.dosbox-staging.org/static/images/getting-started/monitor-aspect-ratios1.png){ .skip-lightbox style="width: 25rem; margin: 1.5rem 0;" }
-
-  <figcaption markdown>
-  Pillarboxing in action: black bars fill the extra space<br>when the aspect ratio of the screen and the image do not match
-  </figcaption>
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/monitor-aspect-ratios1.png",
+    "Pillarboxing in action: black bars fill the extra space<br>when the aspect ratio of the screen and the image do not match",
+    lightbox=False,
+    style="width: 25rem; margin: 1.5rem 0;"
+) }}
 
 Hang on a second; something is not right here! 320:200 can be simplified to
 16:10, which is quite close to 16:9, which means 320&times;200 resolution
@@ -35,15 +34,12 @@ _letterboxing_ below the image (the horizontal version of pillarboxing), as
 shown in the image below. If you do the maths, it turns out the pixels need to
 be exactly 20% taller than wide.
 
-<figure markdown>
-  ![Displaying a 4:3 image on a 16:9 flat screen](https://www.dosbox-staging.org/static/images/getting-started/monitor-aspect-ratios2.png){ .skip-lightbox style="width: 25rem; margin: 1.5rem 0;" }
-
-  <figcaption markdown>
-  Left: 320&times;200 pixel image with square pixels on a 4:3 monitor --- there
-  is some letterboxing below the image; Right: the same image with 20% taller
-  pixels on the same monitor --- the image fills the screen completely.
-  </figcaption>
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/monitor-aspect-ratios2.png",
+    "Left: 320&times;200 pixel image with square pixels on a 4:3 monitor --- there is some letterboxing below the image; Right: the same image with 20% taller pixels on the same monitor --- the image fills the screen completely.",
+    lightbox=False,
+    style="width: 25rem; margin: 1.5rem 0;"
+) }}
 
 Here's how to derive it: 4:3 can be rewritten as 320:240 if you multiply both
 the numerator and denominator by 80. Then 240 divided by 200 is 1.2, so the
@@ -314,15 +310,9 @@ aspect = stretch
 viewport = relative 112% 173%
 ```
 
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-aspect-corrected.jpg" >
-    ![Prince of Persia in Hercules mode with custom stretch factors to make the image fill our 4:3 "emulated CRT screen"](https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-aspect-corrected-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Prince of Persia in Hercules mode with custom stretch factors<br>
-  to make the image fill our 4:3 "emulated CRT screen".
-  </figcaption>
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-aspect-corrected.jpg",
+    "Prince of Persia in Hercules mode with custom stretch factors<br>to make the image fill our 4:3 \"emulated CRT screen\"."
+) }}
 
 

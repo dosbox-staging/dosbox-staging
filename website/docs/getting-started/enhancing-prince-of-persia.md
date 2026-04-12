@@ -79,15 +79,10 @@ which is enabled by default. As mentioned previously, make sure to view all
 screenshots at 100% magnification to avoid weird artifacts caused by the
 browser rescaling the image.
 
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg" >
-    ![Prince of Persia in VGA mode with the default settings](https://www.dosbox-staging.org/static/images/getting-started/pop-vga-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Prince of Persia in VGA mode with the default settings
-  </figcaption>
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg",
+    "Prince of Persia in VGA mode with the default settings"
+) }}
 
 But wait a minute, this doesn't look like anything I'm used to from console
 emulators. Where are those visible thick scanlines?
@@ -153,16 +148,10 @@ This is how the game looks with the fixed 16-colour EGA palette. Unlike VGA,
 EGA monitors can display true 320&times;200 resolution with the well-known
 thick scanline look.
 
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-ega.jpg" >
-    ![Prince of Persia in EGA mode](https://www.dosbox-staging.org/static/images/getting-started/pop-ega-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Prince of Persia in EGA mode --- EGA monitors can display 200-line modes
-  without line doubling, so we'll get the "fat scanline" look
-  </figcaption>
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-ega.jpg",
+    "Prince of Persia in EGA mode --- EGA monitors can display 200-line modes without line doubling, so we'll get the \"fat scanline\" look"
+) }}
 
 
 ### CGA
@@ -185,15 +174,10 @@ machine = cga
 Ready? Behold the formidable 4-colour CGA graphics --- and what four colours those
 are! Similarly to EGA, CGA is capable of displaying true 200-line modes.
 
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-cga.jpg" >
-    ![Prince of Persia in CGA mode. Yeah, it's not pretty...](https://www.dosbox-staging.org/static/images/getting-started/pop-cga-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Prince of Persia in CGA mode. Yeah, it's not pretty...
-  </figcaption>
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-cga.jpg",
+    "Prince of Persia in CGA mode. Yeah, it's not pretty..."
+) }}
 
 !!! tip
 
@@ -218,16 +202,11 @@ in this case; this is exactly how the game would look on a PC equipped with a
 Hercules card connected to a period-accurate monochrome monitor (but we'll
 examine some advanced techniques on [how to fix that](advanced-graphics-options.md#custom-aspect-ratios)).
 
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-amber.png" >
-    ![Prince of Persia in Hercules mode using the default 'amber' palette](https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-amber.png){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Prince of Persia in Hercules mode using the default `amber` palette
-  </figcaption>
-</figure>
-
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-amber.png",
+    "Prince of Persia in Hercules mode using the default `amber` palette",
+    small=False
+) }}
 
 Monochrome monitors come in different colours, and DOSBox Staging can emulate
 all these variations via the `monochrome_palette` setting. The available
@@ -242,29 +221,17 @@ You can also cycle between these while the game is running with the ++f11++
 key.
 
 <div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-green.png" >
-    ![Hercules mode using the 'green' palette](https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-green.png){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Hercules mode using the `green` palette
-  </figcaption>
-</figure>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-white.png" >
-    ![Hercules mode using the 'white' palette](https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-white.png){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Hercules mode using the `white` palette
-  </figcaption>
-</figure>
-
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-green.png",
+    "Hercules mode using the `green` palette",
+    small=False
+) }}
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-white.png",
+    "Hercules mode using the `white` palette",
+    small=False
+) }}
 </div>
-
 
 !!! note "Only for masochists and archeologists!"
 

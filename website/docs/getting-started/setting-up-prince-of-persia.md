@@ -174,9 +174,7 @@ this case).
 
 You'll be greeted by the following window when starting DOSBox Staging:
 
-<figure markdown>
-  ![DOSBox start screen](https://www.dosbox-staging.org/static/images/getting-started/dosbox-start.png){ loading=lazy }
-</figure>
+![DOSBox start screen](https://www.dosbox-staging.org/static/images/getting-started/dosbox-start.png){ loading=lazy }
 
 Let's ignore the polite welcome message for now and focus on the text below
 the big blue rectangle:
@@ -336,30 +334,15 @@ backstory.
     extension. So you could have started the game with the `prince` command as
     well.
 
-
 <div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-title.jpg" >
-    ![Prince of Persia -- Title screen](https://www.dosbox-staging.org/static/images/getting-started/pop-title-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Prince of Persia --- Title screen
-  </figcaption>
-</figure>
-
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-intro.jpg" >
-    ![Prince of Persia -- Scene from the intro sequence](https://www.dosbox-staging.org/static/images/getting-started/pop-intro-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Prince of Persia --- Scene from the intro sequence
-  </figcaption>
-</figure>
-
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-title.jpg",
+    "Prince of Persia --- Title screen"
+) }}
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-intro.jpg",
+    "Prince of Persia --- Scene from the intro sequence"
+) }}
 </div>
 
 If you keep watching, the game will enter demo mode, where the protagonist
@@ -378,15 +361,10 @@ combinations on your own, but reading the *Controlling Your Movements* section
 of the [user manual][pop-manual] should definitely help. The manual also
 contains helpful hints and a full list of available keyboard shortcuts.
 
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg" >
-    ![This is where the adventure starts!](https://www.dosbox-staging.org/static/images/getting-started/pop-vga-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  This is where the adventure starts!
-  </figcaption>
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg",
+    "This is where the adventure starts!"
+) }}
 
 Congratulations, you've got your very first DOS game running in DOSBox
 Staging! Have some fun, try to find the sword, overcome a few guards, and

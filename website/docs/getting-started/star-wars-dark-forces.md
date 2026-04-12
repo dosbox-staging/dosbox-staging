@@ -94,15 +94,10 @@ and will even play some test sounds.
 After the setup has been completed, start the game by running `demo` again
 and then pressing the ++1++ key.
 
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/dark-forces-ingame.jpg" >
-    ![Star Wars: Dark Forces -- Opening scene](https://www.dosbox-staging.org/static/images/getting-started/dark-forces-ingame-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Star Wars: Dark Forces --- Opening scene
-  </figcaption>
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/dark-forces-ingame.jpg",
+    "Star Wars: Dark Forces --- Opening scene"
+) }}
 
 
 ## Autotype
@@ -529,9 +524,12 @@ music:
 
 The final configuration should look like this:
 
-<figure markdown>
-  ![Star Wars: Dark Forces setup --- Advanced sound settings](https://www.dosbox-staging.org/static/images/getting-started/dark-forces-midi.png){ loading=lazy width=80% }
-</figure>
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/dark-forces-midi.png",
+    alt="Star Wars: Dark Forces setup --- Advanced sound settings",
+    small=False,
+    width="80%"
+) }}
 
 Press ++enter++ on the *Test Music* menu item and you should hear the start of
 the Imperial March playing with much more realistic instruments!

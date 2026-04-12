@@ -216,31 +216,18 @@ Crusade**), mainly because it plays a nice long version of the famous Indiana
 Jones theme during the intro, and we're going to investigate the various sound
 options next!
 
-
 <div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/indy3-title.png" >
-    ![Indiana Jones and the Last Crusade -- Title screen](https://www.dosbox-staging.org/static/images/getting-started/indy3-title-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Indiana Jones and the Last Crusade --- Title screen
-  </figcaption>
-</figure>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/indy3-start.png" >
-    ![Indiana Jones and the Last Crusade -- Opening scene](https://www.dosbox-staging.org/static/images/getting-started/indy3-start-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Indiana Jones and the Last Crusade --- Opening scene
-  </figcaption>
-</figure>
-
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/indy3-title.png",
+    "Indiana Jones and the Last Crusade --- Title screen",
+    small_name="indy3-title-small.jpg"
+) }}
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/indy3-start.png",
+    "Indiana Jones and the Last Crusade --- Opening scene",
+    small_name="indy3-start-small.jpg"
+) }}
 </div>
-
 
 ## Sound options
 
@@ -534,79 +521,40 @@ appropriate for the configured `machine` type, which is VGA by default.
 The below screenshots illustrate the difference between the "true EGA" and
 "EGA as displayed on VGA" look:
 
-
 <div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-vga.png" >
-    ![Indiana Jones and the Last Crusade -- EGA as displayed on VGA monitors](https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-vga-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Indiana Jones and the Last Crusade --- <br>EGA as displayed on VGA monitors
-  </figcaption>
-</figure>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-ega.jpg" >
-    ![Indiana Jones and the Last Crusade -- "True EGA" emulation](https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Indiana Jones and the Last Crusade --- <br>"True EGA" emulation
-  </figcaption>
-</figure>
-
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-vga.png",
+    "Indiana Jones and the Last Crusade ---<br>EGA as displayed on VGA monitors",
+    small_name="indy3-ingame-vga-small.jpg"
+) }}
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-ega.jpg",
+    "Indiana Jones and the Last Crusade ---<br>\"True EGA\" emulation"
+) }}
 </div>
 
 <div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-vga.jpg" >
-    ![The Secret of Monkey Island -- EGA as displayed on VGA monitors](https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-vga-small.jpeg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  The Secret of Monkey Island --- <br>EGA as displayed on VGA monitors
-  </figcaption>
-</figure>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-ega.jpg" >
-    ![The Secret of Monkey Island -- "True EGA" emulation](https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  The Secret of Monkey Island --- <br>"True EGA" emulation
-  </figcaption>
-</figure>
-
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-vga.jpg",
+    "The Secret of Monkey Island ---<br>EGA as displayed on VGA monitors",
+    small_name="monkey-ingame-vga-small.jpeg"
+) }}
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-ega.jpg",
+    "The Secret of Monkey Island ---<br>\"True EGA\" emulation"
+) }}
 </div>
 
 <div class="image-grid" markdown>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-vga.jpg" >
-    ![Loom -- EGA as displayed on VGA monitors](https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-vga-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Loom --- EGA as displayed on VGA monitors
-  </figcaption>
-</figure>
-
-<figure markdown>
-  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-ega.jpg" >
-    ![Loom -- "True EGA" emulation](https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
-  </a>
-
-  <figcaption markdown>
-  Loom --- "True EGA" emulation
-  </figcaption>
-</figure>
-
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-vga.jpg",
+    "Loom --- EGA as displayed on VGA monitors"
+) }}
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-ega.jpg",
+    "Loom --- \"True EGA\" emulation"
+) }}
 </div>
-
 
 !!! info "On recolouring the classics"
 
