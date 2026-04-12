@@ -4,6 +4,7 @@
 
 # Other
 compile
+documentation
 build.log
 clean.log
 make.log
@@ -97,3 +98,6 @@ cmake-build-*/
 
 # VS Code CMake Tools test discovery cache
 cmake_test_discovery_*.json
+
+# Python
+__pycache__
