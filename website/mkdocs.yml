@@ -63,6 +63,7 @@ extra:
 # Plugins
 plugins:
   - search
+  - macros
   - glightbox:
       slide_effect: 'none'
       skip_classes:
