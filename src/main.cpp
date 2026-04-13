@@ -330,7 +330,11 @@ static void init_logger(const CommandLineArguments& args, int argc, char* argv[]
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
 
-	loguru::init(argc, argv);
+	// Don't use loguru's crash handler for SIGTERM, just let SDL handle it
+	// to perform a clean shutdown.
+	loguru::Options options = {};
+	options.signal_options.sigterm = false;
+	loguru::init(argc, argv, options);
 }
 
 static void maybe_write_primary_config(const CommandLineArguments& args)
