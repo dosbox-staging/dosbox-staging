@@ -25,26 +25,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_documentation:
-    name:    Build documentation
-    runs-on: ubuntu-slim
-    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-        with:
-          submodules: false
-
-      - name: Build documentation
-        uses: ./.github/actions/build-documentation
-
-      - name: Upload documentation artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: documentation
-          path: documentation
-          retention-days: 1
-
   generate_release_notes:
     name:    Generate release notes
     runs-on: ubuntu-slim
@@ -146,7 +126,7 @@ jobs:
           set -xo pipefail
           export CC=${{ matrix.conf.cc }}
           export CXX=${{ matrix.conf.cxx }}
-          cmake ${{ matrix.conf.cmake_flags }} --preset ${{ matrix.conf.cmake_preset }}
+          cmake ${{ matrix.conf.cmake_flags }} -DOPT_DOCUMENTATION=ON --preset ${{ matrix.conf.cmake_preset }}
           cmake --build --preset ${{ matrix.conf.cmake_preset }} 2>&1 | tee build.log
 
       - name: Run tests
@@ -196,7 +176,7 @@ jobs:
       - name: Build release
         run: |
           set -x
-          cmake --preset release-linux-vcpkg
+          cmake -DOPT_DOCUMENTATION=ON --preset release-linux-vcpkg
           cmake --build --preset release-linux-vcpkg
 
       - name: Dump workspace contents
@@ -242,12 +222,6 @@ jobs:
           PLUGINS_DIR="dosbox-staging-linux-x86_64-$DOSBOX_VERSION_AND_HASH/plugins"
           mkdir $PLUGINS_DIR
           cp nuked-sc55-clap/* $PLUGINS_DIR
-
-      - name: Download documentation
-        uses: actions/download-artifact@v8
-        with:
-          name: documentation
-          path: "dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}/resources/docs"
 
       - name: Download release notes HTML
         uses: actions/download-artifact@v8

@@ -62,7 +62,7 @@ jobs:
           set -x
           export CC=clang
           export CXX=clang++
-          cmake --preset debug-linux-vcpkg -DOPT_TESTS=OFF
+          cmake --preset debug-linux-vcpkg -DOPT_TESTS=OFF -DOPT_DOCUMENTATION=ON
 
           # TODO Consider using the the PV-Studio CMake integration instead
           # of calling the `pvs-studio-analyzer` directly. That might be a
