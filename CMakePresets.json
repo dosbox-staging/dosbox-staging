@@ -170,6 +170,22 @@
         "UseMultiToolTask": "true",
         "EnforceProcessCountAcrossBuilds": "true"
       }
+    },
+    {
+      "name": "debug-windows-manual",
+      "displayName": "Debug (Windows, with offline manual)",
+      "inherits": "debug-windows",
+      "cacheVariables": {
+        "OPT_DOCUMENTATION": "ON"
+      }
+    },
+    {
+      "name": "release-windows-manual",
+      "displayName": "Release (Windows, with offline manual)",
+      "inherits": "release-windows",
+      "cacheVariables": {
+        "OPT_DOCUMENTATION": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -233,6 +249,16 @@
     {
       "name": "release-windows",
       "configurePreset" : "release-windows",
+      "configuration": "Release"
+    },
+    {
+      "name": "debug-windows-manual",
+      "configurePreset" : "debug-windows-manual",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-windows-manual",
+      "configurePreset" : "release-windows-manual",
       "configuration": "Release"
     }
   ],
@@ -326,6 +352,22 @@
     {
       "name": "release-windows",
       "configurePreset" : "release-windows",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug-windows-manual",
+      "configurePreset" : "debug-windows-manual",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release-windows-manual",
+      "configurePreset" : "release-windows-manual",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
