@@ -373,6 +373,9 @@ endif()
 # Tests
 option(OPT_TESTS "Enable tests" ON)
 
+# Offline documentation
+option(OPT_DOCUMENTATION "Build offline documentation" OFF)
+
 if (OPT_TESTS)
   enable_testing()
 endif()
@@ -478,6 +481,13 @@ set(RESOURCES_PATH "resources")
 # Generate asset copy commands and add them as a dependency
 include(cmake/add_copy_assets.cmake)
 add_copy_assets()
+
+# Build offline documentation (must come after add_copy_assets because
+# it adds a dependency on the copy_assets target)
+if (OPT_DOCUMENTATION)
+  include(cmake/add_build_documentation.cmake)
+  add_build_documentation()
+endif()
 
 include_directories(
   src
