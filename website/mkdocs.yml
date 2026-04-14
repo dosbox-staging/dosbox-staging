@@ -60,6 +60,10 @@ markdown_extensions:
 extra:
   offline_mode: !ENV [OFFLINE, false]
 
+# Hooks
+hooks:
+  - hooks/offline.py
+
 # Plugins
 plugins:
   - search
@@ -77,6 +81,8 @@ plugins:
       - exclude:
           glob:
             - "index.md"
+            - "getting-started/index.md"
+            - "manual/index.md"
             - "releases/*"
 
   - redirects:

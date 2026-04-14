@@ -28,6 +28,7 @@ jobs:
         run: |
           sudo apt-get install python3-setuptools
           sudo pip3 install pylint beautifulsoup4 html5lib
+          sudo pip3 install -r extras/documentation/mkdocs-package-requirements.txt
 
       - name: Run pylint
         run:  ./scripts/linting/verify-python.sh
