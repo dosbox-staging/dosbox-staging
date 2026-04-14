@@ -528,6 +528,15 @@ target_link_libraries(dosbox PRIVATE
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )
 
+# Remove MkDocs source-tree caches (website/.cache, __pycache__, site)
+add_custom_target(clean-manual
+  COMMAND "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_SOURCE_DIR}/website/.cache"
+  COMMAND "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_SOURCE_DIR}/website/__pycache__"
+  COMMAND "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_SOURCE_DIR}/website/site"
+  COMMENT "Removing MkDocs caches"
+  VERBATIM
+)
+
 # Add installation rules
 include(cmake/add_install_rules.cmake)
 add_install_rules()
