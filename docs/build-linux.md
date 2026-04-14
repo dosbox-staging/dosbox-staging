@@ -57,6 +57,9 @@ These are generic, distro-independent building instructions.
 - Git
 - CMake
 - pkg-config
+- Python 3 with the `venv` module (only needed if you want to build the
+  [offline documentation](#offline-documentation); install `python3-venv` on
+  Debian/Ubuntu)
 
 ### Install the dependencies (development packages are needed, too)
 
@@ -123,7 +126,7 @@ Release build:
 ```bash
 sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
              autoconf autoconf-archive automake bison libtool libgl1-mesa-dev \
-             libsdl2-dev
+             libsdl2-dev python3-venv
 ```
 
 ### Install the vcpkg tool
@@ -260,6 +263,105 @@ build/debug-linux/tests/dosbox_tests --gtest_filter=DOS_FilesTest.DOS_MakeName_B
 
 See the [ctest documentation](https://cmake.org/cmake/help/v3.31/manual/ctest.1.html)
 for the full list of available options.
+
+
+## Offline documentation
+
+Self-contained offline HTML documentation can optionally be built as part of
+the CMake build. The output appears in the build directory at
+`build/<preset>/resources/docs/` — this is the same documentation bundled
+with the release packages.
+
+Documentation building is **off by default**. To enable it:
+
+```bash
+cmake --preset=debug-linux -DOPT_DOCUMENTATION=ON
+cmake --build --preset=debug-linux
+```
+
+To rebuild just the documentation after editing content:
+
+```bash
+cmake --build --preset debug-linux --target rebuild_documentation
+```
+
+### Prerequisites
+
+Python 3 with the `venv` module is required. On Debian and Ubuntu, the `venv`
+module is shipped in a separate package that may not be installed by default:
+
+```bash
+sudo apt-get install python3-venv
+```
+
+No other manual setup is needed — the build automatically creates a Python
+virtual environment in the build directory and installs all MkDocs dependencies
+into it.
+
+### Best-effort
+
+If Python is not available or is missing required modules (`venv`, `ensurepip`),
+the build proceeds normally without documentation — a warning is shown during
+CMake configuration, but the build is **never aborted**.
+
+### Caching
+
+There are two independent cache layers that make successive builds fast:
+
+1. **Python venv and pip packages** — stored in the build directory at
+   `_mkdocs_venv/`. The virtual environment is created once per build directory.
+   pip only re-runs when `extras/documentation/mkdocs-package-requirements.txt`
+   is modified.
+
+2. **Downloaded external assets** — the mkdocs-material privacy plugin caches
+   downloaded web fonts, images, and scripts in `website/.cache/` in the source
+   tree (this directory is git-ignored). Because it lives outside the build
+   directory, it persists across clean builds and across different build
+   configurations (debug, release, etc.).
+
+> [!IMPORTANT]
+> The privacy plugin only downloads assets from a small set of trusted
+> sources: **Google Fonts** (fonts.googleapis.com, fonts.gstatic.com),
+> **www.dosbox-staging.org** (our GitHub Pages website, completely under our
+> control), and a few well-known CDNs used by the MkDocs Material theme
+> (cdn.jsdelivr.net, unpkg.com, mirrors.creativecommons.org). No content from
+> untrusted origins is ever fetched. The build uses the system CA certificate
+> bundle instead of Python's built-in certifi bundle, so VPNs that perform
+> SSL inspection work without issues. If the build fails with certificate
+> errors, set the `SSL_CERT_FILE` environment variable to your
+> organisation's CA bundle path.
+
+### Rebuilding after documentation changes
+
+Changes to markdown files under `website/docs/` do not automatically trigger a
+rebuild — globbing hundreds of files into CMake's dependency tracking would be
+impractical. To rebuild after editing documentation content:
+
+```bash
+# Option 1: Use the dedicated rebuild target
+cmake --build --preset debug-linux --target rebuild_documentation
+
+# Option 2: Invalidate the build stamp (triggers rebuild on next normal build)
+touch website/mkdocs.yml
+```
+
+### Forcing a full rebuild
+
+To rebuild documentation from scratch, delete the build stamp from the build
+directory:
+
+```bash
+rm build/debug-linux/_mkdocs_build_stamp
+```
+
+### Cleaning all documentation caches
+
+To remove all MkDocs caches from the source tree (`website/.cache`,
+`website/__pycache__`, `website/site`):
+
+```bash
+cmake --build --preset debug-linux --target clean-manual
+```
 
 
 ## Sanitizer build
