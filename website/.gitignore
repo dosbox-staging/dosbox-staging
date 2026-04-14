@@ -1,3 +1,4 @@
 site
 *.css.map
-hooks/
+hooks/*
+!hooks/*.py
