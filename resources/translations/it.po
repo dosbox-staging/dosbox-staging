@@ -3,17 +3,19 @@
 # Before editing read the translation manual:
 # https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/TRANSLATING.md
 #
-
 msgid ""
 msgstr ""
 "Project-Id-Version: dosbox-staging\n"
 "Report-Msgid-Bugs-To: https://github.com/dosbox-staging/dosbox-staging/issues\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "Language: it\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"MIME-Version: 1.0\n"
-"X-Generator: DOSBox Staging 0.83.0-alpha\n"
-
+"X-Generator: Poedit 3.5\n"
 
 #. Do not translate this, set it according to the instruction!
 #: #METADATA
@@ -24,7 +26,6 @@ msgid ""
 "Writing script used in this language, can be one of:\n"
 "Latin, Arabic, Armenian, Cherokee, Cyrillic, Georgian, Greek, Hebrew"
 msgstr "Latin"
-
 
 #: src/main.cpp:100
 #, c-format, no-wrap
@@ -2669,7 +2670,7 @@ msgctxt "KEYBOARD_MOD_ADJECTIVE_RIGHT"
 msgid "Right"
 msgstr "Destro"
 
-#: src/gui/render/shader_manager.cpp:385
+#: src/gui/render/shader_manager.cpp:377
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_1"
 msgid ""
@@ -2679,7 +2680,7 @@ msgstr ""
 "Elenco degli shader GLSL disponibili\n"
 "------------------------------------"
 
-#: src/gui/render/shader_manager.cpp:388
+#: src/gui/render/shader_manager.cpp:380
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_2"
 msgid ""
@@ -2690,19 +2691,19 @@ msgstr ""
 "nell'opzione di configurazione 'shader', senza la necessità di specificare\n"
 "il percorso o l'estensione .glsl."
 
-#: src/gui/render/shader_manager.cpp:392
+#: src/gui/render/shader_manager.cpp:384
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NOT_EXISTS"
 msgid "Path '%s' does not exist."
 msgstr "Il percorso '%s' non esiste."
 
-#: src/gui/render/shader_manager.cpp:393
+#: src/gui/render/shader_manager.cpp:385
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NO_SHADERS"
 msgid "Path '%s' has no shaders."
 msgstr "Il percorso '%s' non contiene shader."
 
-#: src/gui/render/shader_manager.cpp:394
+#: src/gui/render/shader_manager.cpp:386
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_LIST"
 msgid "Path '%s' has:"
@@ -4265,7 +4266,7 @@ msgstr ""
 "(es. (255, 0, 255) per magenta). I 16 colori sono ordinati come segue:\n"
 "\n"
 "  nero, blu, verde, ciano, rosso, magenta, marrone, grigio-chiaro,\n"
-"  grigio-scuro, azzurro, verde-chiaro, ciano-chiaro, rosso-chiaro,\n"
+"  grigio-scuro, azzurro, verde-chiaro, turchese, rosso-chiaro,\n"
 "  magenta-chiaro, giallo, e bianco.\n"
 "\n"
 "I loro valori predefiniti, mostrati qui in formato codice esadecimale a 6 cifre\n"
@@ -4331,7 +4332,7 @@ msgid ""
 "               with 6500K white point and sRGB gamma (default)."
 msgstr ""
 "\n"
-"  srgb:       Spazio colore sRGB con punto di bianco a 6500K e curva del\n"
+"  srgb:       Spazio colore sRGB con punto di bianco a 6500 K e curva del\n"
 "              gamma sRGB (predefinito)."
 
 #: src/config/setup.cpp:278
@@ -4344,7 +4345,7 @@ msgid ""
 msgstr ""
 "\n"
 "  display-p3: Spazio colore Display P3 ad ampia gamma cromatica con punto di\n"
-"              bianco a 6500K e curva del gamma sRGB."
+"              bianco a 6500 K e curva del gamma sRGB."
 
 #: src/config/setup.cpp:278
 #, c-format, no-wrap
@@ -4372,26 +4373,26 @@ msgid ""
 msgstr ""
 "\n"
 "  dci-p3:     Spazio colore standard DCI-P3 ad ampia gamma cromatica con punto\n"
-"              di bianco DCI (~6300K) e curva del gamma 2,6. Se i bianchi e i\n"
-"              grigi dovessero presentare una tonalità verdastra con il monitor\n"
-"              in uso in modalità DCI-P3, utilizzare invece 'dci-p3-d65'.\n"
+"              di bianco DCI (circa 6300 K) e curva del gamma 2,6. Se i bianchi\n"
+"              e i grigi dovessero presentare una tonalità verdastra con il\n"
+"              monitor in uso in modalità DCI-P3, utilizzare invece 'dci-p3-d65'\n"
 "\n"
 "  dci-p3-d65: Variante dello spazio colore DCI-P3 con punto di bianco D65\n"
-"              (6500K) e curva del gamma 2,6. Se i bianchi e i grigi dovessero\n"
+"              (6500 K) e curva del gamma 2,6. Se i bianchi e i grigi dovessero\n"
 "              presentare una tonalità giallastra con il monitor in uso in\n"
 "              modalità DCI-P3, utilizzare invece 'dci-p3'.\n"
 "\n"
 "  modern-p3:  Opzione adatta ai monitor di consumo/da gioco che raggiungono\n"
 "              solo circa il 90%% di copertura dello spazio colore DCI-P3\n"
-"              (punto di bianco a 6500K, curva del gamma sRGB). Se la copertura\n"
+"              (punto di bianco a 6500 K, curva del gamma sRGB). Se la copertura\n"
 "              DCI-P3 del monitor in uso è vicina al 100%%, utilizzare gli altri\n"
 "              spazi colore DCI-P3.\n"
 "\n"
 "  adobe-rgb:  Spazio colore AdobeRGB 2020 ad ampia gamma cromatica con punto di\n"
-"              bianco a 6500K e curva del gamma 2,2.\n"
+"              bianco a 6500 K e curva del gamma 2,2.\n"
 "\n"
 "  rec-2020:   Spazio colore Rec.2020 ad ampia gamma cromatica con punto di\n"
-"              bianco a 6500K e curva del gamma 2,2."
+"              bianco a 6500 K e curva del gamma 2,2."
 
 #: src/config/setup.cpp:278
 #, c-format, no-wrap
@@ -4404,9 +4405,10 @@ msgid ""
 msgstr ""
 "\n"
 "Note:\n"
-"  - La conversione dello spazio colore viene applicata solo alle istantanee dello\n"
-"    schermo renderizzate ('rendered'). Le istantanee non elaborate ('raw'),\n"
-"    ridimensionate ('upscaled') e le acquisizioni video sono sempre in sRGB."
+"  - La conversione dello spazio colore viene applicata solo alle istantanee\n"
+"    dello schermo renderizzate ('rendered'). Le istantanee non elaborate\n"
+"    ('raw'), ridimensionate ('upscaled') e le acquisizioni video sono sempre\n"
+"    in sRGB."
 
 #: src/config/setup.cpp:278
 #, c-format, no-wrap
@@ -4496,17 +4498,17 @@ msgid ""
 "\n"
 "  philips:    Philips CRT monitor colours typical to 15 kHz home computer\n"
 "              monitors (e.g. the Commodore 1084S). The intended use of this\n"
-"              profile is with 'colour_temperature' set to 6500. The output then\n"
+"              profile is with 'color_temperature' set to 6500. The output then\n"
 "              will look yellowish due to the ~6100 K colour temperature typical\n"
 "              to Philips CRTs \"baked into\" this profile. You can still tweak \n"
-"              'colour_temperature' to adjust the white balance. Needs a wide\n"
+"              'color_temperature' to adjust the white balance. Needs a wide\n"
 "              gamut DCI-P3 display for the most accurate results.\n"
 "\n"
 "  trinitron:  Typical Sony Trinitron CRT TV and monitor colours. The intended\n"
-"              use of this profile is with 'colour_temperature' set to 6500. The\n"
+"              use of this profile is with 'color_temperature' set to 6500. The\n"
 "              output then will look blueish due to the ~9300 K colour\n"
 "              temperature typical to Trinitron CRTs \"baked into\" this profile.\n"
-"              You can still tweak 'colour_temperature' to adjust the relative\n"
+"              You can still tweak 'color_temperature' to adjust the relative\n"
 "              white balance. Needs a wide gamut DCI-P3 display for the most\n"
 "              accurate results."
 msgstr ""
@@ -4832,7 +4834,7 @@ msgstr ""
 "    schermo renderizzate ('rendered') e non a quelle non elaborate ('raw'),\n"
 "    ridimensionate ('upscaled') o alle acquisizioni video."
 
-#: src/gui/render/render.cpp:2906
+#: src/gui/render/render.cpp:2919
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_RENAMED"
 msgid ""
@@ -4842,7 +4844,7 @@ msgstr ""
 "Lo shader integrato [color=white]'%s'[reset] è stato rinominato in [color=white]'%s'[reset];\n"
 "utilizzo di [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:2910
+#: src/gui/render/render.cpp:2923
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_FALLBACK"
 msgid ""
@@ -4852,7 +4854,7 @@ msgstr ""
 "Errore durante la selezione dello shader [color=white]'%s'[reset];\n"
 "ripiego su [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:2914
+#: src/gui/render/render.cpp:2927
 #, c-format, no-wrap
 msgctxt "RENDER_DEFAULT_SHADER_PRESET_FALLBACK"
 msgid ""
@@ -8741,7 +8743,7 @@ msgid ""
 "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
 "Please use the suggested alternatives; support will be removed in the future.[reset]\n"
 msgstr ""
-"[color=light-red]Questa opzione è deprecata, ed è supportata solo per compatibilità con i vecchi\\n\"\n"
+"[color=light-red]Questa opzione è deprecata, ed è supportata solo per compatibilità con i vecchi\n"
 "file di configurazione. Si prega di utilizzare le alternative suggerite;\n"
 "il supporto a questa opzione sarà rimosso in futuro.[reset]\n"
 
@@ -9157,431 +9159,43 @@ msgctxt "PROGRAM_CLIP_READ_ERROR"
 msgid "Error reading input stream.\n"
 msgstr "Errore durante la lettura del flusso dati.\n"
 
-#: src/dos/programs/makeimg.cpp:1489
+#: src/dos/programs/guide.cpp:41
 #, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_HELP_LONG"
-msgid ""
-"Create a new empty disk image.\n"
-"\n"
-"Usage:\n"
-"  [color=light-green]makeimg[reset] [color=light-cyan]FILE[reset] [color=white]-t TYPE[reset] [PARAMETERS]\n"
-"\n"
-"Parameters:\n"
-"  -t [color=white]TYPE[reset]      Disk type:\n"
-"               [color=light-cyan]fd_2880kb[reset], [color=light-cyan]fd_1440kb[reset], [color=light-cyan]fd_1200kb[reset], [color=light-cyan]fd_720kb[reset], \n"
-"               [color=light-cyan]fd_360kb[reset], [color=light-cyan]fd_320kb[reset], [color=light-cyan]fd_180kb[reset], [color=light-cyan]fd_160kb[reset],\n"
-"               [color=light-cyan]hd_20mb[reset], [color=light-cyan]hd_40mb[reset], [color=light-cyan]hd_80mb[reset], [color=light-cyan]hd_120mb[reset],\n"
-"               [color=light-cyan]hd_250mb[reset], [color=light-cyan]hd_520mb[reset], [color=light-cyan]hd_1gb[reset], [color=light-cyan]hd_2gb[reset]\n"
-"               or [color=light-cyan]hd[reset] (requires -size or -chs).\n"
-"\n"
-"  -size [color=white]X[reset]      Size in MB (for [color=light-cyan]hd[reset] type).\n"
-"  -chs [color=white]C,H,S[reset]   Geometry (Cylinders, Heads, Sectors).\n"
-"  -fat [color=white]FF[reset]      Filesystem type ([color=light-cyan]-fat 12[reset], [color=light-cyan]-fat 16[reset] or [color=light-cyan]-fat 32[reset]).\n"
-"               Default is determined automatically.\n"
-"  -noformat    Do not format the filesystem (raw image).\n"
-"  -label [color=white]NAME[reset]  Volume label.\n"
-"\n"
-"  -writetodos\n"
-"  -d           Write image to the emulated DOS filesystem instead\n"
-"               of the host filesystem.\n"
-"\n"
-"Examples:\n"
-"  [color=light-green]makeimg[reset] [color=light-cyan]floppy.img[reset] -t [color=light-cyan]fd_1440kb[reset] -label [color=white]MYDISK[reset]\n"
-"  [color=light-green]makeimg[reset] [color=light-cyan]hdd.img[reset] -t [color=light-cyan]hd[reset] -size [color=white]500[reset]\n"
-"  [color=light-green]makeimg[reset] [color=light-cyan]C:\\IMAGES\\HDD120.IMG[reset] -t [color=light-cyan]hd_120mb[reset] -fat [color=white]32[reset] -d\n"
-"\n"
-"Notes:\n"
-"  - By default, the image file will be created in the current working\n"
-"    directory on the host filesystem, or at the absolute host path.\n"
-"  - When using the [color=white]-writetodos[reset] option, ensure the target path is a mounted\n"
-"    local directory (not inside another disk image).\n"
-msgstr ""
-"Crea una nuova immagine disco vuota.\n"
-"\n"
-"Utilizzo:\n"
-"  [color=light-green]makeimg[reset] [color=light-cyan]FILE[reset] [color=white]-t TIPO[reset] [PARAMETRI]\n"
-"\n"
-"Parametri:\n"
-"  -t [color=white]TIPO[reset]      Tipo di disco:\n"
-"               [color=light-cyan]fd_2880kb[reset], [color=light-cyan]fd_1440kb[reset], [color=light-cyan]fd_1200kb[reset], [color=light-cyan]fd_720kb[reset], \n"
-"               [color=light-cyan]fd_360kb[reset], [color=light-cyan]fd_320kb[reset], [color=light-cyan]fd_180kb[reset], [color=light-cyan]fd_160kb[reset],\n"
-"               [color=light-cyan]hd_20mb[reset], [color=light-cyan]hd_40mb[reset], [color=light-cyan]hd_80mb[reset], [color=light-cyan]hd_120mb[reset],\n"
-"               [color=light-cyan]hd_250mb[reset], [color=light-cyan]hd_520mb[reset], [color=light-cyan]hd_1gb[reset], [color=light-cyan]hd_2gb[reset]\n"
-"               o [color=light-cyan]hd[reset] (richiede -size o -chs).\n"
-"\n"
-"  -size [color=white]X[reset]      Dimensione in MB (per tipo [color=light-cyan]hd[reset]).\n"
-"  -chs [color=white]C,T,S[reset]   Geometria (Cilindri, Testine, Settori).\n"
-"  -fat [color=white]FF[reset]      Tipo di file system ([color=light-cyan]-fat 12[reset], [color=light-cyan]-fat 16[reset] o [color=light-cyan]-fat 32[reset]).\n"
-"               L'impostazione predefinita viene determinata automaticamente.\n"
-"  -noformat    Non formatta il file system (immagine Raw).\n"
-"  -label [color=white]NOME[reset]  Etichetta del volume.\n"
-"\n"
-"  -writetodos\n"
-"  -d           Scrive l'immagine sul file system DOS emulato anziché su quello\n"
-"               del sistema operativo primario.\n"
-"\n"
-"Esempi:\n"
-"  [color=light-green]makeimg[reset] [color=light-cyan]floppy.img[reset] -t [color=light-cyan]fd_1440kb[reset] -label [color=white]ILMIODISCO[reset]\n"
-"  [color=light-green]makeimg[reset] [color=light-cyan]hdd.img[reset] -t [color=light-cyan]hd[reset] -size [color=white]500[reset]\n"
-"  [color=light-green]makeimg[reset] [color=light-cyan]C:\\IMMAGINI\\HDD120.IMG[reset] -t [color=light-cyan]hd_120mb[reset] -fat [color=white]32[reset] -d\n"
-"\n"
-"Note:\n"
-"  - Per impostazione predefinita, il file immagine verrà creato nella directory\n"
-"    di lavoro corrente o nel percorso assoluto specificato sul file system del\n"
-"    sistema operativo primario.\n"
-"  - Quando si utilizza il parametro [color=white]-writetodos[reset], assicurarsi che il percorso di\n"
-"    destinazione sia una directory locale montata (non all'interno di un'altra\n"
-"    immagine disco).\n"
+msgctxt "PROGRAM_GUIDE_HELP"
+msgid "Open the DOSBox Staging Getting Started guide in the default browser.\n"
+msgstr "Apre la Guida Introduttiva di DOSBox Staging nel browser predefinito.\n"
 
-#: src/dos/programs/makeimg.cpp:1526
+#: src/dos/programs/guide.cpp:44
 #, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_MISSING_SIZE"
-msgid "You must specify -size or -chs for custom hard disks."
-msgstr "Per i dischi rigidi personalizzati, è necessario specificare -size o -chs."
-
-#: src/dos/programs/makeimg.cpp:1528
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_INVALID_TYPE"
-msgid "Unknown disk type: [color=light-cyan]%s[reset]"
-msgstr "Tipo di disco sconosciuto: [color=light-cyan]%s[reset]"
-
-#: src/dos/programs/makeimg.cpp:1530
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_BAD_SIZE"
-msgid "Invalid disk size calculated."
-msgstr "Dimensione del disco calcolata non valida."
-
-#: src/dos/programs/makeimg.cpp:1531
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_FILE_EXISTS"
-msgid "File [color=light-cyan]%s[reset] already exists. Use -force to overwrite."
-msgstr "Il file [color=light-cyan]%s[reset] esiste già. Utilizzare -force per sovrascrivere."
-
-#: src/dos/programs/makeimg.cpp:1533
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_CANNOT_WRITE"
-msgid "Cannot open file [color=light-cyan]%s[reset] for writing."
-msgstr "Impossibile aprire il file [color=light-cyan]%s[reset] per l'operazione di scrittura."
-
-#: src/dos/programs/makeimg.cpp:1535
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_SPACE_ERROR"
-msgid "Disk full or cannot allocate image size."
-msgstr "Disco pieno o impossibile allocare la dimensione dell'immagine."
-
-#: src/dos/programs/makeimg.cpp:1537
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_CREATED"
-msgid "Created [color=light-cyan]%s[reset] [CHS: %u, %u, %u]"
-msgstr "[color=light-cyan]%s[reset] creato [CTS: %u, %u, %u]"
-
-#: src/dos/programs/makeimg.cpp:1539
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_FORMATTED"
-msgid ""
-"\n"
-"Formatted as [color=light-cyan]FAT%s[reset]"
-msgstr ""
-"\n"
-"Formattato come [color=light-cyan]FAT%s[reset]"
-
-#: src/dos/programs/makeimg.cpp:1541
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_CONFIRM_HOST"
-msgid ""
-"Image will be created on the [color=light-green]HOST[reset] filesystem at:\n"
-"  [color=light-cyan]%s[reset]\n"
-"\n"
-"Proceed? (Y/N)\n"
-msgstr ""
-"L'immagine verrà creata sul file system del sistema operativo [color=light-green]PRIMARIO[reset] in:\n"
-"  [color=light-cyan]%s[reset]\n"
-"\n"
-"Procedere? (Y/N)\n"
-
-#: src/dos/programs/makeimg.cpp:1544
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_CONFIRM_DOS"
-msgid ""
-"Image will be created on the [color=light-green]DOS[reset] filesystem at:\n"
-"  [color=light-cyan]%s[reset]\n"
-"  Host path: %s\n"
-"\n"
-"Proceed? (Y/N)\n"
-msgstr ""
-"L'immagine verrà creata sul file system [color=light-green]DOS[reset] in:\n"
-"  [color=light-cyan]%s[reset]\n"
-"  Percorso sistema: %s\n"
-"\n"
-"Procedere? (Y/N)\n"
-
-#: src/dos/programs/makeimg.cpp:1548
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_ABORTED"
-msgid ""
-"\n"
-"Operation aborted."
-msgstr ""
-"\n"
-"Operazione interrotta."
-
-#: src/dos/programs/makeimg.cpp:1549
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_INVALID_PATH"
-msgid "Invalid DOS path: %s"
-msgstr "Percorso DOS non valido: %s"
-
-#: src/dos/programs/makeimg.cpp:1550
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_INVALID_DRIVE"
-msgid "Target drive is invalid."
-msgstr "L'unità di destinazione non è valida."
-
-#: src/dos/programs/makeimg.cpp:1551
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_DRIVE_READONLY"
-msgid "Target drive is read-only."
-msgstr "L'unità di destinazione è di sola lettura."
-
-#: src/dos/programs/makeimg.cpp:1552
-#, c-format, no-wrap
-msgctxt "SHELL_CMD_MAKEIMG_NOT_LOCAL_DRIVE"
-msgid ""
-"Cannot create image inside another disk image.\n"
-"Target must be a mounted local directory."
-msgstr ""
-"Non è possibile creare un'immagine all'interno di un'altra immagine disco.\n"
-"Il percorso di destinazione deve essere una directory locale montata."
-
-#: src/dos/programs/intro.cpp:94
-#, c-format, no-wrap
-msgctxt "PROGRAM_INTRO_HELP"
-msgid "Display a full-screen introduction to DOSBox Staging.\n"
-msgstr "Visualizza un'introduzione a schermo intero in DOSBox Staging.\n"
-
-#: src/dos/programs/intro.cpp:96
-#, c-format, no-wrap
-msgctxt "PROGRAM_INTRO_HELP_LONG"
+msgctxt "PROGRAM_GUIDE_HELP_LONG"
 msgid ""
 "Usage:\n"
-"  [color=light-green]intro[reset]\n"
-"  [color=light-green]intro[reset] [color=white]PAGE[reset]\n"
-"\n"
-"Parameters:\n"
-"  [color=white]PAGE[reset]  page name to display, including [color=white]cdrom[reset], [color=white]mount[reset], and [color=white]special[reset]\n"
+"  [color=light-green]guide[reset]\n"
 "\n"
 "Notes:\n"
-"  Running [color=light-green]intro[reset] without an argument displays one information page at a time;\n"
-"  press any key to move to the next page. If a page name is provided, then the\n"
-"  specified page will be displayed directly.\n"
+"  - This will open a local offline copy of the Getting Started guide bundled\n"
+"    with your DOSBox Staging installation; you don't need an internet connection\n"
+"    to read the bundled guide.\n"
 "\n"
-"Examples:\n"
-"  [color=light-green]intro[reset]\n"
-"  [color=light-green]intro[reset] [color=white]cdrom[reset]\n"
+"  - The offline documentation is located in the 'docs' subfolder of your\n"
+"    DOSBox Staging 'resources' folder.\n"
+"\n"
+"  - If the offline documentation cannot be found, the command will open the\n"
+"    guide on the project website (requires internet connection)."
 msgstr ""
 "Utilizzo:\n"
-"  [color=light-green]intro[reset]\n"
-"  [color=light-green]intro[reset] [color=white]PAGINA[reset]\n"
-"\n"
-"Parametri:\n"
-"  [color=white]PAGINA[reset]  nome della pagina da visualizzare, incluso [color=white]cdrom[reset], [color=white]mount[reset] e [color=white]special[reset]\n"
+"  [color=light-green]guide[reset]\n"
 "\n"
 "Note:\n"
-"  L'esecuzione di [color=light-green]intro[reset] senza un argomento, permette di visualizzare una pagina\n"
-"  di informazioni alla volta; premere un tasto qualsiasi per passare alla\n"
-"  pagina successiva. Se viene fornito il nome della pagina, verrà visualizzata\n"
-"  direttamente quella specificata.\n"
+"  - Questo comando aprirà una copia non in linea della Guida Introduttiva,\n"
+"    inclusa nell'installazione di DOSBox Staging; per visualizzare la guida,\n"
+"    non è necessaria alcuna connessione a Internet.\n"
 "\n"
-"Esempi:\n"
-"  [color=light-green]intro[reset]\n"
-"  [color=light-green]intro[reset] [color=white]cdrom[reset]\n"
-
-#: src/dos/programs/intro.cpp:112
-#, c-format, no-wrap
-msgctxt "PROGRAM_INTRO"
-msgid ""
-"[erases=entire][color=light-green]Welcome to DOSBox Staging[reset], an x86 emulator with sound and graphics.\n"
-"DOSBox creates a shell for you which looks like old plain DOS.\n"
+"  - La documentazione non in linea è situata nella cartella 'resources/docs'\n"
+"    di DOSBox Staging.\n"
 "\n"
-"For information about basic mount type [color=light-blue]intro mount[reset]\n"
-"For information about CD-ROM support type [color=light-blue]intro cdrom[reset]\n"
-"For information about special keys type [color=light-blue]intro special[reset]\n"
-"For more information, visit DOSBox Staging wiki:[color=light-blue]\n"
-"https://github.com/dosbox-staging/dosbox-staging/wiki[reset]\n"
-"\n"
-"[color=light-red]DOSBox will stop/exit without a warning if an error occurred![reset]\n"
-msgstr ""
-"[erases=entire][color=light-green]Benvenuto in DOSBox Staging[reset], un emulatore di x86 con audio e grafica.\n"
-"DOSBox crea una shell simile al vecchio DOS.\n"
-"\n"
-"Per informazioni sul montaggio delle unità, digita [color=light-blue]intro mount[reset]\n"
-"Per informazioni sul supporto CD-ROM, digita [color=light-blue]intro cdrom[reset]\n"
-"Per informazioni sui tasti speciali, digita [color=light-blue]intro special[reset]\n"
-"Per ulteriori informazioni, visita il wiki di DOSBox Staging:[color=light-blue]\n"
-"https://github.com/dosbox-staging/dosbox-staging/wiki[reset]\n"
-"\n"
-"[color=light-red]In caso di errori, DOSBox si interromperà e terminerà senza preavvisi![reset]\n"
-
-#: src/dos/programs/intro.cpp:123
-#, c-format, no-wrap
-msgctxt "PROGRAM_INTRO_MOUNT_START"
-msgid ""
-"[erases=entire][color=light-green]Here are some commands to get you started:[reset]\n"
-"Before you can use the files located on your own filesystem,\n"
-"you have to mount the directory containing the files.\n"
-"\n"
-msgstr ""
-"[erases=entire][color=light-green]Ecco alcuni comandi utili per iniziare:[reset]\n"
-"Prima di poter accedere ai file sul disco,\n"
-"è necessario montare la directory che li contiene.\n"
-"\n"
-
-#: src/dos/programs/intro.cpp:129
-#, c-format, no-wrap
-msgctxt "PROGRAM_INTRO_MOUNT_WINDOWS"
-msgid ""
-"[bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗\n"
-"║ [color=light-green]mount c c:\\dosgames\\ [color=white]will create a C drive with c:\\dosgames as contents.║\n"
-"║                                                                         ║\n"
-"║ [color=light-green]c:\\dosgames\\ [color=white]is an example. Replace it with your own games directory.   ║\n"
-"╚═════════════════════════════════════════════════════════════════════════╝[reset]\n"
-msgstr ""
-"[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════════╗\n"
-"║ [color=light-green]mount c c:\\giochi\\ [color=white]creerà un'unità C con il contenuto di c:\\giochi.      ║\n"
-"║                                                                          ║\n"
-"║ [color=light-green]c:\\giochi\\ [color=white]è un esempio. Sostituiscilo con la tua directory dei giochi.  ║\n"
-"╚══════════════════════════════════════════════════════════════════════════╝[reset]\n"
-
-#: src/dos/programs/intro.cpp:136
-#, c-format, no-wrap
-msgctxt "PROGRAM_INTRO_MOUNT_OTHER"
-msgid ""
-"[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════╗\n"
-"║ [color=light-green]mount c ~/dosgames[color=white] will create a C drive with ~/dosgames as contents.║\n"
-"║                                                                      ║\n"
-"║ [color=light-green]~/dosgames[color=white] is an example. Replace it with your own games directory.  ║\n"
-"╚══════════════════════════════════════════════════════════════════════╝[reset]\n"
-msgstr ""
-"[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════════╗\n"
-"║ [color=light-green]mount c ~/giochi[color=white] creerà un'unità C con il contenuto di ~/giochi.       ║\n"
-"║                                                                        ║\n"
-"║ [color=light-green]~/giochi[color=white] è un esempio. Sostituiscilo con la tua directory dei giochi.  ║\n"
-"╚════════════════════════════════════════════════════════════════════════╝[reset]\n"
-
-#: src/dos/programs/intro.cpp:143
-#, c-format, no-wrap
-msgctxt "PROGRAM_INTRO_MOUNT_END"
-msgid ""
-"After successfully mounting the disk you can type [color=light-blue]c:[reset] to go to your freshly\n"
-"mounted C-drive. Typing [color=light-blue]dir[reset] there will show its contents. [color=light-blue]cd[reset] will allow you to\n"
-"enter a directory (recognised by the [color=yellow][][reset] in a directory listing).\n"
-"You can run programs/files with extensions [color=red].exe .bat[reset] and [color=red].com[reset].\n"
-msgstr ""
-"Dopo aver montato con successo il disco, puoi digitare [color=light-blue]c:[reset] per spostarti nella\n"
-"tua nuova unità C. Una volta qui, digita [color=light-blue]dir[reset] per visualizzarne il contenuto.\n"
-"Il comando [color=light-blue]cd[reset] ti permette di spostarti all'interno di una directory\n"
-"(riconoscibile da [color=yellow][][reset] o dal contrassegno [color=yellow]<DIR>[reset] nell'elenco mostrato a schermo).\n"
-"Puoi eseguire programmi/file con estensione [color=red].exe[reset], [color=red].bat[reset] e [color=red].com[reset].\n"
-
-#: src/dos/programs/intro.cpp:150
-#, c-format, no-wrap
-msgctxt "PROGRAM_INTRO_CDROM_WINDOWS"
-msgid ""
-"[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]\n"
-"The [color=light-blue]mount[reset] command works on all normal directories. It installs MSCDEX and marks\n"
-"the files as read-only.\n"
-"Usually this is enough for most games:\n"
-"[color=light-blue]mount D C:\\example -t cdrom[reset]\n"
-"If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
-"[color=light-blue]mount D C:\\example -t cdrom -label CDLABEL[reset]\n"
-"\n"
-"Additionally, you can use [color=light-blue]imgmount[reset] to mount ISO or CUE/BIN images:\n"
-"[color=light-blue]imgmount D C:\\cd.iso -t cdrom[reset]\n"
-"[color=light-blue]imgmount D C:\\cd.cue -t cdrom[reset]\n"
-msgstr ""
-"[erases=entire][color=light-green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]\n"
-"Il comando [color=light-blue]mount[reset] funziona con tutte le directory normali, installa MSCDEX e\n"
-"contrassegna i file in sola lettura.\n"
-"Solitamente, ciò è sufficiente per la maggior parte dei giochi:\n"
-"[color=light-blue]mount D C:\\esempio -t cdrom[reset]\n"
-"Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:\n"
-"[color=light-blue]mount D C:\\esempio -t cdrom -label ETICHETTACD[reset]\n"
-"\n"
-"Inoltre puoi usare [color=light-blue]imgmount[reset] per montare immagini ISO o CUE/BIN:\n"
-"[color=light-blue]imgmount D C:\\cd.iso -t cdrom[reset]\n"
-"[color=light-blue]imgmount D C:\\cd.cue -t cdrom[reset]\n"
-
-#: src/dos/programs/intro.cpp:162
-#, c-format, no-wrap
-msgctxt "PROGRAM_INTRO_CDROM_OTHER"
-msgid ""
-"[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]\n"
-"The [color=light-blue]mount[reset] command works on all normal directories. It installs MSCDEX and marks\n"
-"the files as read-only.\n"
-"Usually this is enough for most games:\n"
-"[color=light-blue]mount D ~/example -t cdrom[reset]\n"
-"If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
-"[color=light-blue]mount D ~/example -t cdrom -label CDLABEL[reset]\n"
-"\n"
-"Additionally, you can use [color=light-blue]imgmount[reset] to mount ISO or CUE/BIN images:\n"
-"[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]\n"
-"[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]\n"
-msgstr ""
-"[erases=entire][color=light-green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]\n"
-"Il comando [color=light-blue]mount[reset] funziona su tutte le directory normali, installa MSCDEX e\n"
-"contrassegna i file in sola lettura.\n"
-"Solitamente, ciò è sufficiente per la maggior parte dei giochi:\n"
-"[color=light-blue]mount D ~/esempio -t cdrom[reset]\n"
-"Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:\n"
-"[color=light-blue]mount D ~/esempio -t cdrom -label ETICHETTACD[reset]\n"
-"\n"
-"Inoltre puoi usare [color=light-blue]imgmount[reset] per montare immagini ISO o CUE/BIN:\n"
-"[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]\n"
-"[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]\n"
-
-#: src/dos/programs/intro.cpp:174
-#, c-format, no-wrap
-msgctxt "PROGRAM_INTRO_SPECIAL"
-msgid ""
-"[erases=entire][color=light-green]Special keys:[reset]\n"
-"These are the default keybindings.\n"
-"They can be changed in the [color=brown]keymapper[reset].\n"
-"\n"
-"[color=yellow]%s+Enter[reset]  Switch between fullscreen and window mode.\n"
-"[color=yellow]%s+Pause[reset]  Pause/Unpause emulator.\n"
-"[color=yellow]%s+F1[reset]   %s Start the [color=brown]keymapper[reset].\n"
-"[color=yellow]%s+F4[reset]   %s Swap mounted disk image, scan for changes on all drives.\n"
-"[color=yellow]%s+F5[reset]     Save a screenshot of the rendered image.\n"
-"[color=yellow]%s+F5[reset]   %s Save a screenshot of the DOS pre-rendered image.\n"
-"[color=yellow]%s+F6[reset]   %s Start/Stop recording sound output to a wave file.\n"
-"[color=yellow]%s+F7[reset]   %s Start/Stop recording video output to a zmbv file.\n"
-"[color=yellow]%s+F8[reset]   %s Mute/Unmute the audio.\n"
-"[color=yellow]%s+F9[reset]   %s Shutdown emulator.\n"
-"[color=yellow]%s+F10[reset]  %s Capture/Release the mouse.\n"
-"[color=yellow]%s+F11[reset]  %s Slow down emulation.\n"
-"[color=yellow]%s+F12[reset]  %s Speed up emulation.\n"
-"[color=yellow]%s+F12[reset]    Unlock speed (turbo button/fast forward).\n"
-msgstr ""
-"[erases=entire][color=light-green]Tasti speciali:[reset]\n"
-"Queste sono le combinazioni di tasti predefinite.\n"
-"Possono essere modificate nel [color=brown]mappatore dei tasti[reset].\n"
-"\n"
-"[color=yellow]%s+Invio[reset]  Passa dalla modalità a schermo intero a quella in finestra\n"
-"           e viceversa.\n"
-"[color=yellow]%s+Pausa[reset]  Mette in Pausa/Riprende l'emulazione.\n"
-"[color=yellow]%s+F1[reset]   %s Avvia il [color=brown]mappatore dei tasti[reset].\n"
-"[color=yellow]%s+F4[reset]   %s Passa tra le immagini disco montate, scansiona tutte le unità per\n"
-"           rilevare modifiche.\n"
-"[color=yellow]%s+F5[reset]     Scatta un'istantanea dello schermo (immagine renderizzata).\n"
-"[color=yellow]%s+F5[reset]   %s Scatta un'istantanea dello schermo (immagine ridimensionata).\n"
-"[color=yellow]%s+F6[reset]   %s Avvia/Ferma la registrazione dell'uscita audio in un file wave.\n"
-"[color=yellow]%s+F7[reset]   %s Avvia/Ferma la registrazione dell'uscita video in un file zmbv.\n"
-"[color=yellow]%s+F8[reset]   %s Disattiva/Attiva l'audio.\n"
-"[color=yellow]%s+F9[reset]   %s Chiude l'emulatore.\n"
-"[color=yellow]%s+F10[reset]  %s Cattura/Rilascia il mouse.\n"
-"[color=yellow]%s+F11[reset]  %s Rallenta l'emulazione.\n"
-"[color=yellow]%s+F12[reset]  %s Accelera l'emulazione.\n"
-"[color=yellow]%s+F12[reset]    Sblocca la velocità (pulsante turbo/avanzamento rapido).\n"
+"  - Se la documentazione non in linea è irreperibile, il comando aprirà la\n"
+"    guida sul sito web del progetto (richiede una connessione a Internet)."
 
 #: src/dos/programs/keyb.cpp:339
 #, c-format, no-wrap
@@ -9993,7 +9607,241 @@ msgstr ""
 "  [color=light-green]ls[reset] [color=light-cyan]file.txt[reset]\n"
 "  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]\n"
 
-#: src/dos/programs/mem.cpp:1246
+#: src/dos/programs/makeimg.cpp:1489
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_HELP_LONG"
+msgid ""
+"Create a new empty disk image.\n"
+"\n"
+"Usage:\n"
+"  [color=light-green]makeimg[reset] [color=light-cyan]FILE[reset] [color=white]-t TYPE[reset] [PARAMETERS]\n"
+"\n"
+"Parameters:\n"
+"  -t [color=white]TYPE[reset]      Disk type:\n"
+"               [color=light-cyan]fd_2880kb[reset], [color=light-cyan]fd_1440kb[reset], [color=light-cyan]fd_1200kb[reset], [color=light-cyan]fd_720kb[reset], \n"
+"               [color=light-cyan]fd_360kb[reset], [color=light-cyan]fd_320kb[reset], [color=light-cyan]fd_180kb[reset], [color=light-cyan]fd_160kb[reset],\n"
+"               [color=light-cyan]hd_20mb[reset], [color=light-cyan]hd_40mb[reset], [color=light-cyan]hd_80mb[reset], [color=light-cyan]hd_120mb[reset],\n"
+"               [color=light-cyan]hd_250mb[reset], [color=light-cyan]hd_520mb[reset], [color=light-cyan]hd_1gb[reset], [color=light-cyan]hd_2gb[reset]\n"
+"               or [color=light-cyan]hd[reset] (requires -size or -chs).\n"
+"\n"
+"  -size [color=white]X[reset]      Size in MB (for [color=light-cyan]hd[reset] type).\n"
+"  -chs [color=white]C,H,S[reset]   Geometry (Cylinders, Heads, Sectors).\n"
+"  -fat [color=white]FF[reset]      Filesystem type ([color=light-cyan]-fat 12[reset], [color=light-cyan]-fat 16[reset] or [color=light-cyan]-fat 32[reset]).\n"
+"               Default is determined automatically.\n"
+"  -noformat    Do not format the filesystem (raw image).\n"
+"  -label [color=white]NAME[reset]  Volume label.\n"
+"\n"
+"  -writetodos\n"
+"  -d           Write image to the emulated DOS filesystem instead\n"
+"               of the host filesystem.\n"
+"\n"
+"Examples:\n"
+"  [color=light-green]makeimg[reset] [color=light-cyan]floppy.img[reset] -t [color=light-cyan]fd_1440kb[reset] -label [color=white]MYDISK[reset]\n"
+"  [color=light-green]makeimg[reset] [color=light-cyan]hdd.img[reset] -t [color=light-cyan]hd[reset] -size [color=white]500[reset]\n"
+"  [color=light-green]makeimg[reset] [color=light-cyan]C:\\IMAGES\\HDD120.IMG[reset] -t [color=light-cyan]hd_120mb[reset] -fat [color=white]32[reset] -d\n"
+"\n"
+"Notes:\n"
+"  - By default, the image file will be created in the current working\n"
+"    directory on the host filesystem, or at the absolute host path.\n"
+"  - When using the [color=white]-writetodos[reset] option, ensure the target path is a mounted\n"
+"    local directory (not inside another disk image).\n"
+msgstr ""
+"Crea una nuova immagine disco vuota.\n"
+"\n"
+"Utilizzo:\n"
+"  [color=light-green]makeimg[reset] [color=light-cyan]FILE[reset] [color=white]-t TIPO[reset] [PARAMETRI]\n"
+"\n"
+"Parametri:\n"
+"  -t [color=white]TIPO[reset]      Tipo di disco:\n"
+"               [color=light-cyan]fd_2880kb[reset], [color=light-cyan]fd_1440kb[reset], [color=light-cyan]fd_1200kb[reset], [color=light-cyan]fd_720kb[reset], \n"
+"               [color=light-cyan]fd_360kb[reset], [color=light-cyan]fd_320kb[reset], [color=light-cyan]fd_180kb[reset], [color=light-cyan]fd_160kb[reset],\n"
+"               [color=light-cyan]hd_20mb[reset], [color=light-cyan]hd_40mb[reset], [color=light-cyan]hd_80mb[reset], [color=light-cyan]hd_120mb[reset],\n"
+"               [color=light-cyan]hd_250mb[reset], [color=light-cyan]hd_520mb[reset], [color=light-cyan]hd_1gb[reset], [color=light-cyan]hd_2gb[reset]\n"
+"               o [color=light-cyan]hd[reset] (richiede -size o -chs).\n"
+"\n"
+"  -size [color=white]X[reset]      Dimensione in MB (per tipo [color=light-cyan]hd[reset]).\n"
+"  -chs [color=white]C,T,S[reset]   Geometria (Cilindri, Testine, Settori).\n"
+"  -fat [color=white]FF[reset]      Tipo di file system ([color=light-cyan]-fat 12[reset], [color=light-cyan]-fat 16[reset] o [color=light-cyan]-fat 32[reset]).\n"
+"               L'impostazione predefinita viene determinata automaticamente.\n"
+"  -noformat    Non formatta il file system (immagine Raw).\n"
+"  -label [color=white]NOME[reset]  Etichetta del volume.\n"
+"\n"
+"  -writetodos\n"
+"  -d           Scrive l'immagine sul file system DOS emulato anziché su quello\n"
+"               del sistema operativo primario.\n"
+"\n"
+"Esempi:\n"
+"  [color=light-green]makeimg[reset] [color=light-cyan]floppy.img[reset] -t [color=light-cyan]fd_1440kb[reset] -label [color=white]ILMIODISCO[reset]\n"
+"  [color=light-green]makeimg[reset] [color=light-cyan]hdd.img[reset] -t [color=light-cyan]hd[reset] -size [color=white]500[reset]\n"
+"  [color=light-green]makeimg[reset] [color=light-cyan]C:\\IMMAGINI\\HDD120.IMG[reset] -t [color=light-cyan]hd_120mb[reset] -fat [color=white]32[reset] -d\n"
+"\n"
+"Note:\n"
+"  - Per impostazione predefinita, il file immagine verrà creato nella directory\n"
+"    di lavoro corrente o nel percorso assoluto specificato sul file system del\n"
+"    sistema operativo primario.\n"
+"  - Quando si utilizza il parametro [color=white]-writetodos[reset], assicurarsi che il percorso di\n"
+"    destinazione sia una directory locale montata (non all'interno di un'altra\n"
+"    immagine disco).\n"
+
+#: src/dos/programs/makeimg.cpp:1526
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_MISSING_SIZE"
+msgid "You must specify -size or -chs for custom hard disks."
+msgstr "Per i dischi rigidi personalizzati, è necessario specificare -size o -chs."
+
+#: src/dos/programs/makeimg.cpp:1528
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_INVALID_TYPE"
+msgid "Unknown disk type: [color=light-cyan]%s[reset]"
+msgstr "Tipo di disco sconosciuto: [color=light-cyan]%s[reset]"
+
+#: src/dos/programs/makeimg.cpp:1530
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_BAD_SIZE"
+msgid "Invalid disk size calculated."
+msgstr "Dimensione del disco calcolata non valida."
+
+#: src/dos/programs/makeimg.cpp:1531
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_FILE_EXISTS"
+msgid "File [color=light-cyan]%s[reset] already exists. Use -force to overwrite."
+msgstr "Il file [color=light-cyan]%s[reset] esiste già. Utilizzare -force per sovrascrivere."
+
+#: src/dos/programs/makeimg.cpp:1533
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_CANNOT_WRITE"
+msgid "Cannot open file [color=light-cyan]%s[reset] for writing."
+msgstr "Impossibile aprire il file [color=light-cyan]%s[reset] per l'operazione di scrittura."
+
+#: src/dos/programs/makeimg.cpp:1535
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_SPACE_ERROR"
+msgid "Disk full or cannot allocate image size."
+msgstr "Disco pieno o impossibile allocare la dimensione dell'immagine."
+
+#: src/dos/programs/makeimg.cpp:1537
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_CREATED"
+msgid "Created [color=light-cyan]%s[reset] [CHS: %u, %u, %u]"
+msgstr "[color=light-cyan]%s[reset] creato [CTS: %u, %u, %u]"
+
+#: src/dos/programs/makeimg.cpp:1539
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_FORMATTED"
+msgid ""
+"\n"
+"Formatted as [color=light-cyan]FAT%s[reset]"
+msgstr ""
+"\n"
+"Formattato come [color=light-cyan]FAT%s[reset]"
+
+#: src/dos/programs/makeimg.cpp:1541
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_CONFIRM_HOST"
+msgid ""
+"Image will be created on the [color=light-green]HOST[reset] filesystem at:\n"
+"  [color=light-cyan]%s[reset]\n"
+"\n"
+"Proceed? (Y/N)\n"
+msgstr ""
+"L'immagine verrà creata sul file system del sistema operativo [color=light-green]PRIMARIO[reset] in:\n"
+"  [color=light-cyan]%s[reset]\n"
+"\n"
+"Procedere? (Y/N)\n"
+
+#: src/dos/programs/makeimg.cpp:1544
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_CONFIRM_DOS"
+msgid ""
+"Image will be created on the [color=light-green]DOS[reset] filesystem at:\n"
+"  [color=light-cyan]%s[reset]\n"
+"  Host path: %s\n"
+"\n"
+"Proceed? (Y/N)\n"
+msgstr ""
+"L'immagine verrà creata sul file system [color=light-green]DOS[reset] in:\n"
+"  [color=light-cyan]%s[reset]\n"
+"  Percorso sistema: %s\n"
+"\n"
+"Procedere? (Y/N)\n"
+
+#: src/dos/programs/makeimg.cpp:1548
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_ABORTED"
+msgid ""
+"\n"
+"Operation aborted."
+msgstr ""
+"\n"
+"Operazione interrotta."
+
+#: src/dos/programs/makeimg.cpp:1549
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_INVALID_PATH"
+msgid "Invalid DOS path: %s"
+msgstr "Percorso DOS non valido: %s"
+
+#: src/dos/programs/makeimg.cpp:1550
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_INVALID_DRIVE"
+msgid "Target drive is invalid."
+msgstr "L'unità di destinazione non è valida."
+
+#: src/dos/programs/makeimg.cpp:1551
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_DRIVE_READONLY"
+msgid "Target drive is read-only."
+msgstr "L'unità di destinazione è di sola lettura."
+
+#: src/dos/programs/makeimg.cpp:1552
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_MAKEIMG_NOT_LOCAL_DRIVE"
+msgid ""
+"Cannot create image inside another disk image.\n"
+"Target must be a mounted local directory."
+msgstr ""
+"Non è possibile creare un'immagine all'interno di un'altra immagine disco.\n"
+"Il percorso di destinazione deve essere una directory locale montata."
+
+#: src/dos/programs/manual.cpp:41
+#, c-format, no-wrap
+msgctxt "PROGRAM_MANUAL_HELP"
+msgid "Open the DOSBox Staging user manual in the default browser.\n"
+msgstr "Apre il Manuale Utente di DOSBox Staging nel browser predefinito.\n"
+
+#: src/dos/programs/manual.cpp:44
+#, c-format, no-wrap
+msgctxt "PROGRAM_MANUAL_HELP_LONG"
+msgid ""
+"Usage:\n"
+"  [color=light-green]manual[reset]\n"
+"\n"
+"Notes:\n"
+"  - This will open a local offline copy of the user manual guide bundled with\n"
+"    your DOSBox Staging installation; you don't need an internet connection to\n"
+"    read the bundled manual.\n"
+"\n"
+"  - The offline documentation is located in the 'docs' subfolder of your\n"
+"    DOSBox Staging 'resources' folder.\n"
+"\n"
+"  - If the offline documentation cannot be found, the command will open the\n"
+"    guide on the project website (requires internet connection)."
+msgstr ""
+"Utilizzo:\n"
+"  [color=light-green]manual[reset]\n"
+"\n"
+"Note:\n"
+"  - Questo comando aprirà una copia non in linea del Manuale Utente, inclusa\n"
+"    nell'installazione di DOSBox Staging; per esaminare il manuale, non è\n"
+"    necessaria alcuna connessione a Internet.\n"
+"\n"
+"  - La documentazione non in linea è situata nella cartella 'resources/docs'\n"
+"    di DOSBox Staging.\n"
+"\n"
+"  - Se la documentazione non in linea è irreperibile, il comando aprirà la\n"
+"    guida sul sito web del progetto (richiede una connessione a Internet)."
+
+#: src/dos/programs/mem.cpp:1249
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_HELP_LONG"
 msgid ""
@@ -10046,385 +9894,385 @@ msgstr ""
 "Esempi:\n"
 "  [color=light-green]mem[reset]\n"
 
-#: src/dos/programs/mem.cpp:1273
+#: src/dos/programs/mem.cpp:1276
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_SUMMARY_TABLE_HEADER"
 msgid "[color=white]Memory Type           Total        Used         Free[reset]"
 msgstr "[color=white]Tipo di memoria      Totale       Usata        Libera[reset]"
 
-#: src/dos/programs/mem.cpp:1275
+#: src/dos/programs/mem.cpp:1278
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_SUMMARY_TABLE_HORIZONTAL_LINE"
 msgid "----------------   ----------   ----------   ----------"
 msgstr "----------------   ----------   ----------   ----------"
 
-#: src/dos/programs/mem.cpp:1277
+#: src/dos/programs/mem.cpp:1280
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_SUMMARY_TABLE_ROW_FORMAT"
 msgid "[color=light-cyan]%-16s[reset]   %10s   %10s   %10s"
 msgstr "[color=light-cyan]%-16s[reset]   %10s   %10s   %10s"
 
-#: src/dos/programs/mem.cpp:1280
+#: src/dos/programs/mem.cpp:1283
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_CONVENTIONAL"
 msgid "Conventional"
 msgstr "Convenzionale"
 
-#: src/dos/programs/mem.cpp:1281
+#: src/dos/programs/mem.cpp:1284
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_UMB"
 msgid "Upper (UMB)"
 msgstr "Superiore (UMB)"
 
-#: src/dos/programs/mem.cpp:1282
+#: src/dos/programs/mem.cpp:1285
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_HMA"
 msgid "High (HMA)"
 msgstr "Alta (HMA)"
 
-#: src/dos/programs/mem.cpp:1283
+#: src/dos/programs/mem.cpp:1286
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_XMS"
 msgid "Extended (XMS)"
 msgstr "Estesa (XMS)"
 
-#: src/dos/programs/mem.cpp:1284
+#: src/dos/programs/mem.cpp:1287
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_EMS"
 msgid "Expanded (EMS)"
 msgstr "Espansa (EMS)"
 
-#: src/dos/programs/mem.cpp:1285
+#: src/dos/programs/mem.cpp:1288
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_UNDER_1MB"
 msgid "Total under 1 MB"
 msgstr "Tot. inf. a 1 MB"
 
-#: src/dos/programs/mem.cpp:1287
+#: src/dos/programs/mem.cpp:1290
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_LABEL_LARGEST"
 msgid "Largest free Conventional Memory block"
 msgstr "Blocco di memoria convenzionale libero più grande"
 
-#: src/dos/programs/mem.cpp:1289
+#: src/dos/programs/mem.cpp:1292
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_LABEL_LARGEST_UMB"
 msgid "Largest free Upper Memory (UMB) block"
 msgstr "Blocco di memoria superiore (UMB) libero più grande"
 
-#: src/dos/programs/mem.cpp:1292
+#: src/dos/programs/mem.cpp:1295
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_BYTES"
 msgid "bytes"
 msgstr "byte"
 
-#: src/dos/programs/mem.cpp:1296
+#: src/dos/programs/mem.cpp:1299
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_CLASSIFY_TITLE"
 msgid "Modules using memory below 1 MB:"
 msgstr "Moduli che utilizzano memoria al di sotto di 1 MB:"
 
-#: src/dos/programs/mem.cpp:1297
+#: src/dos/programs/mem.cpp:1300
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_CLASSIFY_TABLE_HEADER"
 msgid "[color=white]Name        PSP         Total      =   Conventional  +   Upper (UMB)[reset]"
 msgstr "[color=white]Nome        PSP        Totale     =   Convenzionale  +    Superiore[reset]"
 
-#: src/dos/programs/mem.cpp:1299
+#: src/dos/programs/mem.cpp:1302
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_CLASSIFY_TABLE_HORIZONTAL_LINE"
 msgid "--------   -----   ---------------   ---------------   ---------------"
 msgstr "--------   -----   ---------------   ---------------   ---------------"
 
-#: src/dos/programs/mem.cpp:1301
+#: src/dos/programs/mem.cpp:1304
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_CLASSIFY_TABLE_ROW_FORMAT"
 msgid "%-8s%c  %04Xh   %15s   %s   %15s"
 msgstr "%-8s%c  %04Xh   %15s   %s   %15s"
 
-#: src/dos/programs/mem.cpp:1304
+#: src/dos/programs/mem.cpp:1307
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_CLASSIFY_FREE"
 msgid "free"
 msgstr "libera"
 
-#: src/dos/programs/mem.cpp:1308
+#: src/dos/programs/mem.cpp:1311
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_DEBUG_TITLE_CONVENTIONAL"
 msgid "Conventional Memory MCB chain:"
 msgstr "Catena MCB della memoria convenzionale:"
 
-#: src/dos/programs/mem.cpp:1310
+#: src/dos/programs/mem.cpp:1313
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_DEBUG_TITLE_UPPER"
 msgid "Upper Memory MCB chain #%u:"
 msgstr "Catena MCB #%u della memoria superiore:"
 
-#: src/dos/programs/mem.cpp:1313
+#: src/dos/programs/mem.cpp:1316
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_DEBUG_TABLE_HEADER"
 msgid "[color=white]Segment        Size        Name       PSP   Type[reset]"
 msgstr "[color=white]Segmento    Dimensione     Nome       PSP   Tipo[reset]"
 
-#: src/dos/programs/mem.cpp:1315
+#: src/dos/programs/mem.cpp:1318
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_DEBUG_TABLE_HORIZONTAL_LINE"
 msgid "-------   ---------------  --------  -----  -------------"
 msgstr "--------  ---------------  --------  -----  -------------"
 
-#: src/dos/programs/mem.cpp:1317
+#: src/dos/programs/mem.cpp:1320
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_DEBUG_TABLE_ROW_FORMAT"
 msgid " %04Xh %c  %15s  %-8s  %04Xh  %s"
 msgstr " %04Xh %c  %15s  %-8s  %04Xh  %s"
 
-#: src/dos/programs/mem.cpp:1322
+#: src/dos/programs/mem.cpp:1325
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TITLE_CONVENTIONAL"
 msgid "Free segments in Conventional Memory:"
 msgstr "Segmenti liberi nella memoria convenzionale:"
 
-#: src/dos/programs/mem.cpp:1324
+#: src/dos/programs/mem.cpp:1327
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TITLE_UPPER"
 msgid "Free segments in Upper Memory (UMB):"
 msgstr "Segmenti liberi nella memoria superiore (UMB):"
 
-#: src/dos/programs/mem.cpp:1327
+#: src/dos/programs/mem.cpp:1330
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TABLE_HEADER"
 msgid "[color=white]Segment         Size[reset]"
 msgstr "[color=white]Segmento    Dimensione[reset]"
 
-#: src/dos/programs/mem.cpp:1329
+#: src/dos/programs/mem.cpp:1332
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TABLE_HORIZONTAL_LINE"
 msgid "-------   ---------------"
 msgstr "--------  ---------------"
 
-#: src/dos/programs/mem.cpp:1331
+#: src/dos/programs/mem.cpp:1334
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TABLE_ROW_FORMAT"
 msgid " %04Xh %c  %15s"
 msgstr " %04Xh %c  %15s"
 
-#: src/dos/programs/mem.cpp:1333
+#: src/dos/programs/mem.cpp:1336
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TABLE_UNDERLINE"
 msgid "          ---------------"
 msgstr "          ---------------"
 
-#: src/dos/programs/mem.cpp:1335
+#: src/dos/programs/mem.cpp:1338
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TABLE_SUMMARY"
 msgid "Total:    %s"
 msgstr "Totale:   %s"
 
-#: src/dos/programs/mem.cpp:1340
+#: src/dos/programs/mem.cpp:1343
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TITLE"
 msgid "Module '%s' (PSP segment %04Xh) uses the following memory:"
 msgstr "Il modulo '%s' (segmento PSP %04Xh) utilizza la seguente memoria:"
 
-#: src/dos/programs/mem.cpp:1343
+#: src/dos/programs/mem.cpp:1346
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TABLE_HEADER"
 msgid "[color=white]Segment         Size        Type[reset]"
 msgstr "[color=white]Segmento    Dimensione      Tipo[reset]"
 
-#: src/dos/programs/mem.cpp:1345
+#: src/dos/programs/mem.cpp:1348
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TABLE_HORIZONTAL_LINE"
 msgid "-------   ---------------   -------------"
 msgstr "--------  ---------------   -------------"
 
-#: src/dos/programs/mem.cpp:1347
+#: src/dos/programs/mem.cpp:1350
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TABLE_ROW_FORMAT"
 msgid " %04Xh    %s   %s"
 msgstr " %04Xh    %s   %s"
 
-#: src/dos/programs/mem.cpp:1349
+#: src/dos/programs/mem.cpp:1352
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TABLE_UNDERLINE"
 msgid "          ---------------"
 msgstr "          ---------------"
 
-#: src/dos/programs/mem.cpp:1351
+#: src/dos/programs/mem.cpp:1354
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TABLE_SUMMARY"
 msgid "Total:    %s"
 msgstr "Totale:   %s"
 
-#: src/dos/programs/mem.cpp:1356
+#: src/dos/programs/mem.cpp:1359
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_FREE"
 msgid "(free)"
 msgstr "(libera)"
 
-#: src/dos/programs/mem.cpp:1357
+#: src/dos/programs/mem.cpp:1360
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_SYSTEM"
 msgid "System data"
 msgstr "Dati di sistema"
 
-#: src/dos/programs/mem.cpp:1358
+#: src/dos/programs/mem.cpp:1361
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_RESERVED"
 msgid "Reserved area"
 msgstr "Area riservata"
 
-#: src/dos/programs/mem.cpp:1359
+#: src/dos/programs/mem.cpp:1362
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_PROGRAM"
 msgid "Program"
 msgstr "Programma"
 
-#: src/dos/programs/mem.cpp:1360
+#: src/dos/programs/mem.cpp:1363
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_ENVIRONMENT"
 msgid "Environment"
 msgstr "Ambiente"
 
-#: src/dos/programs/mem.cpp:1361
+#: src/dos/programs/mem.cpp:1364
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_DATA"
 msgid "Data"
 msgstr "Dati"
 
-#: src/dos/programs/mem.cpp:1363
+#: src/dos/programs/mem.cpp:1366
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_TITLE"
 msgid "Detailed Extended Memory (XMS) information:"
 msgstr "Informazioni dettagliate sulla memoria estesa (XMS):"
 
-#: src/dos/programs/mem.cpp:1366
+#: src/dos/programs/mem.cpp:1369
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_VERSION"
 msgid "XMS version"
 msgstr "Versione XMS"
 
-#: src/dos/programs/mem.cpp:1367
+#: src/dos/programs/mem.cpp:1370
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_DRIVER"
 msgid "Driver revision"
 msgstr "Versione driver"
 
-#: src/dos/programs/mem.cpp:1368
+#: src/dos/programs/mem.cpp:1371
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_HMA"
 msgid "High Memory (HMA)"
 msgstr "Area di memoria alta (HMA)"
 
-#: src/dos/programs/mem.cpp:1369
+#: src/dos/programs/mem.cpp:1372
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_TOTAL"
 msgid "Total XMS memory"
 msgstr "Memoria XMS totale"
 
-#: src/dos/programs/mem.cpp:1370
+#: src/dos/programs/mem.cpp:1373
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_FREE"
 msgid "Free XMS memory"
 msgstr "Memoria XMS libera"
 
-#: src/dos/programs/mem.cpp:1371
+#: src/dos/programs/mem.cpp:1374
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_LARGEST"
 msgid "Largest free XMS block"
 msgstr "Blocco di memoria estesa (XMS) libero più grande"
 
-#: src/dos/programs/mem.cpp:1373
+#: src/dos/programs/mem.cpp:1376
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_HMA_FREE"
 msgid "free"
 msgstr "libera"
 
-#: src/dos/programs/mem.cpp:1374
+#: src/dos/programs/mem.cpp:1377
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_HMA_NOT_AVAILABLE"
 msgid "not available"
 msgstr "non disponibile"
 
-#: src/dos/programs/mem.cpp:1378
+#: src/dos/programs/mem.cpp:1381
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_TITLE"
 msgid "Detailed Expanded Memory (EMS) information:"
 msgstr "Informazioni dettagliate sulla memoria espansa (EMS):"
 
-#: src/dos/programs/mem.cpp:1381
+#: src/dos/programs/mem.cpp:1384
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_TABLE_HEADER"
 msgid "[color=white]Handle   Name         Pages         Size[reset]"
 msgstr "[color=white]Handle   Nome        Pagine   Dimensione[reset]"
 
-#: src/dos/programs/mem.cpp:1383
+#: src/dos/programs/mem.cpp:1386
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_TABLE_HORIZONTAL_LINE"
 msgid "------   --------   -------   ----------"
 msgstr "------   --------   -------   ----------"
 
-#: src/dos/programs/mem.cpp:1385
+#: src/dos/programs/mem.cpp:1388
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_TABLE_ROW_FORMAT"
 msgid "   %3d   %-8s   %7s   %10s"
 msgstr "   %3d   %-8s   %7s   %10s"
 
-#: src/dos/programs/mem.cpp:1388
+#: src/dos/programs/mem.cpp:1391
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_VERSION"
 msgid "EMS version"
 msgstr "Versione EMS"
 
-#: src/dos/programs/mem.cpp:1389
+#: src/dos/programs/mem.cpp:1392
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_SEGMENT"
 msgid "Frame segment"
 msgstr "Segmento blocco"
 
-#: src/dos/programs/mem.cpp:1390
+#: src/dos/programs/mem.cpp:1393
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_HANDLES_TOTAL"
 msgid "Total handles"
 msgstr "Handle totali"
 
-#: src/dos/programs/mem.cpp:1391
+#: src/dos/programs/mem.cpp:1394
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_HANDLES_FREE"
 msgid "Free handles"
 msgstr "Handle liberi"
 
-#: src/dos/programs/mem.cpp:1392
+#: src/dos/programs/mem.cpp:1395
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_TOTAL"
 msgid "Total EMS memory"
 msgstr "Memoria EMS totale"
 
-#: src/dos/programs/mem.cpp:1393
+#: src/dos/programs/mem.cpp:1396
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_FREE"
 msgid "Free EMS memory"
 msgstr "Memoria EMS libera"
 
-#: src/dos/programs/mem.cpp:1397
+#: src/dos/programs/mem.cpp:1400
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_ASTERISK"
 msgid "* - the currently running MEM command"
 msgstr "* - comando MEM attualmente in esecuzione"
 
-#: src/dos/programs/mem.cpp:1401
+#: src/dos/programs/mem.cpp:1404
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_ERROR_NO_MODULE"
 msgid "No module '%s' in memory.\n"
 msgstr "Nessun modulo '%s' in memoria.\n"
 
-#: src/dos/programs/mem.cpp:1402
+#: src/dos/programs/mem.cpp:1405
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_ERROR_NO_XMS"
 msgid "No Extended Memory (XMS) found.\n"
 msgstr "Nessuna memoria estesa (XMS) trovata.\n"
 
-#: src/dos/programs/mem.cpp:1403
+#: src/dos/programs/mem.cpp:1406
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_ERROR_NO_EMS"
 msgid "No Expanded Memory (EMS) found.\n"
@@ -10999,8 +10847,8 @@ msgstr ""
 #: src/dos/programs/mount_common.cpp:65
 #, c-format, no-wrap
 msgctxt "MSCDEX_LIMITED_SUPPORT"
-msgid "MSCDEX: Mounted subdirectory: limited support.\n"
-msgstr "MSCDEX: Sottodirectory montata: supporto limitato.\n"
+msgid "MSCDEX: Mounted subdirectory: limited support."
+msgstr "MSCDEX: Sottodirectory montata: supporto limitato."
 
 #: src/dos/programs/mount_common.cpp:66
 #, c-format, no-wrap
@@ -11078,13 +10926,13 @@ msgctxt "PROGRAM_MOUNT_READONLY"
 msgid "Mounted read-only\n"
 msgstr "Montato in modalità sola lettura\n"
 
-#: src/dos/programs/mount.cpp:1166
+#: src/dos/programs/mount.cpp:1208
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP"
 msgid "Mount a directory or an image file to a drive letter.\n"
 msgstr "Monta una directory o un file immagine su una lettera di unità.\n"
 
-#: src/dos/programs/mount.cpp:1169
+#: src/dos/programs/mount.cpp:1211
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG"
 msgid ""
@@ -11195,7 +11043,7 @@ msgstr ""
 "\n"
 "Esempi:\n"
 
-#: src/dos/programs/mount.cpp:1218
+#: src/dos/programs/mount.cpp:1260
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_WIN32"
 msgid ""
@@ -11215,7 +11063,7 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disco01.img disco02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1227
+#: src/dos/programs/mount.cpp:1269
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_MACOSX"
 msgid ""
@@ -11237,7 +11085,7 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disco01.img disco02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1237
+#: src/dos/programs/mount.cpp:1279
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_OTHER"
 msgid ""
@@ -11259,13 +11107,13 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disco01.img disco02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1247
+#: src/dos/programs/mount.cpp:1289
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_CDROMS_FOUND"
 msgid "CD-ROMs found: %d\n"
 msgstr "CD-ROM trovati: %d\n"
 
-#: src/dos/programs/mount.cpp:1248
+#: src/dos/programs/mount.cpp:1290
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ERROR_1"
 msgid "Directory or file %s doesn't exist.\n"
@@ -11273,67 +11121,67 @@ msgstr ""
 "La directory o il file %s non esiste.\n"
 "\n"
 
-#: src/dos/programs/mount.cpp:1250
+#: src/dos/programs/mount.cpp:1292
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ERROR_2"
 msgid "%s isn't a directory or valid image file.\n"
 msgstr "%s non è una directory o un file immagine valido.\n"
 
-#: src/dos/programs/mount.cpp:1253
+#: src/dos/programs/mount.cpp:1295
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ILL_TYPE"
 msgid "Illegal type %s"
 msgstr "Tipo %s non valido"
 
-#: src/dos/programs/mount.cpp:1254
+#: src/dos/programs/mount.cpp:1296
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ALREADY_MOUNTED"
 msgid "Drive %c already mounted with %s\n"
 msgstr "Unità %c già montata come %s\n"
 
-#: src/dos/programs/mount.cpp:1255
+#: src/dos/programs/mount.cpp:1297
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"
 msgid "Drive %c isn't mounted.\n"
 msgstr "L'unità %c non è montata.\n"
 
-#: src/dos/programs/mount.cpp:1257
+#: src/dos/programs/mount.cpp:1299
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_SUCCESS"
 msgid "Drive %c has successfully been removed.\n"
 msgstr "L'unità %c è stata rimossa con successo.\n"
 
-#: src/dos/programs/mount.cpp:1260
+#: src/dos/programs/mount.cpp:1302
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"
 msgid "Virtual Drives can not be unMOUNTed.\n"
 msgstr "Le unità virtuali non possono essere smontate.\n"
 
-#: src/dos/programs/mount.cpp:1263
+#: src/dos/programs/mount.cpp:1305
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_DRIVEID_ERROR"
 msgid "'%c' is not a valid drive identifier.\n"
 msgstr "'%c' non è un identificatore di unità valido.\n"
 
-#: src/dos/programs/mount.cpp:1266
+#: src/dos/programs/mount.cpp:1308
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_WARNING_WIN"
 msgid "[color=light-red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n"
 msgstr "[color=light-red]Montare C:\\ NON è consigliato. Si prega di montare una sottodirectory.[reset]\n"
 
-#: src/dos/programs/mount.cpp:1269
+#: src/dos/programs/mount.cpp:1311
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_WARNING_OTHER"
 msgid "[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n"
 msgstr "[color=light-red]Montare / NON è consigliato. Si prega di montare una sottodirectory.[reset]\n"
 
-#: src/dos/programs/mount.cpp:1272
+#: src/dos/programs/mount.cpp:1314
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_NO_OPTION"
 msgid "Warning: Ignoring unsupported option '%s'.\n"
 msgstr "Avviso: l'opzione '%s' non è supportata e sarà ignorata.\n"
 
-#: src/dos/programs/mount.cpp:1275
+#: src/dos/programs/mount.cpp:1317
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_NO_BASE"
 msgid ""
@@ -11343,13 +11191,13 @@ msgstr ""
 "Deve essere montata una directory normale prima di poter aggiungere una\n"
 "sovrapposizione.\n"
 
-#: src/dos/programs/mount.cpp:1279
+#: src/dos/programs/mount.cpp:1321
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"
 msgid "The overlay is NOT compatible with the drive that is specified.\n"
 msgstr "La sovrapposizione NON è compatibile con l'unità specificata.\n"
 
-#: src/dos/programs/mount.cpp:1282
+#: src/dos/programs/mount.cpp:1324
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_MIXED_BASE"
 msgid ""
@@ -11360,31 +11208,31 @@ msgstr ""
 "percorso, relativo o assoluto, dell'unità sottostante.\n"
 "Non mescolare percorsi relativi e assoluti.\n"
 
-#: src/dos/programs/mount.cpp:1286
+#: src/dos/programs/mount.cpp:1328
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE"
 msgid "The overlay directory can not be the same as underlying drive.\n"
 msgstr "La directory di sovrapposizione non può essere la stessa dell'unità sottostante\n"
 
-#: src/dos/programs/mount.cpp:1289
+#: src/dos/programs/mount.cpp:1331
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR"
 msgid "Something went wrong.\n"
 msgstr "Qualcosa è andato storto.\n"
 
-#: src/dos/programs/mount.cpp:1290
+#: src/dos/programs/mount.cpp:1332
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_STATUS"
 msgid "Overlay %s on drive %c mounted.\n"
 msgstr "Sovrapposizione %s nell'unità %c montata.\n"
 
-#: src/dos/programs/mount.cpp:1292
+#: src/dos/programs/mount.cpp:1334
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_INVALID_CHS"
 msgid "Invalid CHS format. Use -chs cylinders,heads,sectors\n"
 msgstr "Formato CTS non valido. Utilizzare -chs cilindri,testine,settori\n"
 
-#: src/dos/programs/mount.cpp:1295
+#: src/dos/programs/mount.cpp:1337
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_REL_ABS"
 msgid ""
@@ -11395,19 +11243,19 @@ msgstr ""
 "percorso, relativo o assoluto, dell'unità sottostante.\n"
 "Non mescolare percorsi relativi e assoluti.\n"
 
-#: src/dos/programs/mount.cpp:1299
+#: src/dos/programs/mount.cpp:1341
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_SAME_FS"
 msgid "The overlay needs to be on the same filesystem as the underlying drive.\n"
 msgstr "La sovrapposizione deve trovarsi sullo stesso file system dell'unità sottostante.\n"
 
-#: src/dos/programs/mount.cpp:1302
+#: src/dos/programs/mount.cpp:1344
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_UNKNOWN_ERROR"
 msgid "Something went wrong.\n"
 msgstr "Qualcosa è andato storto.\n"
 
-#: src/dos/programs/mount.cpp:1305
+#: src/dos/programs/mount.cpp:1347
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_SPECIFY2"
 msgid "Must specify a drive letter A/B/C/D or drive number 0/1/2/3 to mount image at.\n"
@@ -11415,7 +11263,7 @@ msgstr ""
 "È necessario specificare una lettera di unità A/B/C/D o un numero di unità\n"
 "0/1/2/3 su cui montare l'immagine.\n"
 
-#: src/dos/programs/mount.cpp:1308
+#: src/dos/programs/mount.cpp:1350
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"
 msgid ""
@@ -11433,19 +11281,19 @@ msgstr ""
 "Per le immagini CD-ROM:\n"
 "  [color=light-green]imgmount[reset] [color=white]UNITÀ[reset] [color=light-cyan]FILEIMMAGINE[reset] -t iso\n"
 
-#: src/dos/programs/mount.cpp:1316
+#: src/dos/programs/mount.cpp:1358
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_STATUS_NONE"
 msgid "No drive available.\n"
 msgstr "Nessuna unità disponibile.\n"
 
-#: src/dos/programs/mount.cpp:1318
+#: src/dos/programs/mount.cpp:1360
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE"
 msgid "No available IDE controllers. Drive will not have IDE emulation.\n"
 msgstr "Nessun controller IDE disponibile. L'unità non avrà l'emulazione IDE.\n"
 
-#: src/dos/programs/mount.cpp:1321
+#: src/dos/programs/mount.cpp:1363
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_INVALID_IMAGE"
 msgid ""
@@ -11455,7 +11303,7 @@ msgstr ""
 "Impossibile caricare il file immagine.\n"
 "Verifica che il percorso sia corretto e che l'immagine sia accessibile.\n"
 
-#: src/dos/programs/mount.cpp:1325
+#: src/dos/programs/mount.cpp:1367
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_INVALID_GEOMETRY"
 msgid ""
@@ -11468,39 +11316,35 @@ msgstr ""
 "In alternativa: -size BytePerSettore,Settori,Testine,Cilindri\n"
 "\n"
 
-#: src/dos/programs/mount.cpp:1330
+#: src/dos/programs/mount.cpp:1372
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_FILE_NOT_FOUND"
 msgid "Image file not found.\n"
 msgstr "File immagine non trovato.\n"
 
-#: src/dos/programs/mount.cpp:1332
+#: src/dos/programs/mount.cpp:1374
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_ALREADY_MOUNTED"
 msgid "Drive already mounted at that letter.\n"
 msgstr "Unità già montata con la stessa lettera.\n"
 
-#: src/dos/programs/mount.cpp:1335
+#: src/dos/programs/mount.cpp:1377
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_CANT_CREATE"
 msgid "Can't create drive from file.\n"
 msgstr "Impossibile creare l'unità dal file.\n"
 
-#: src/dos/programs/mount.cpp:1336
+#: src/dos/programs/mount.cpp:1378
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_MOUNT_NUMBER"
 msgid "Drive number %d mounted as %s.\n"
 msgstr "Unità numero %d montata come %s.\n"
 
-#: src/dos/programs/mount.cpp:1338
+#: src/dos/programs/mount.cpp:1380
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_DEPRECATED"
-msgid ""
-"[color=yellow]Note: 'imgmount' is deprecated.[reset]\n"
-"Use 'mount' for both directories and disk images."
-msgstr ""
-"[color=yellow]Nota: il comando 'imgmount' è stato deprecato.[reset]\n"
-"Utilizzare 'mount' sia per le directory che per le immagini disco."
+msgid "The [color=light-green]IMGMOUNT[reset] command is deprecated; please use [color=light-green]MOUNT[reset] instead."
+msgstr "Il comando [color=light-green]IMGMOUNT[reset] è stato deprecato. Si prega di utilizzare il comando [color=light-green]MOUNT[reset]."
 
 #: src/dos/programs/mouse.cpp:167
 #, c-format, no-wrap
@@ -12320,121 +12164,121 @@ msgctxt "AUTOEXEC_BAT_CONFIG_SECTION"
 msgid "from [autoexec] section"
 msgstr "dalla sezione [autoexec]"
 
-#: src/shell/shell.cpp:555
+#: src/shell/shell.cpp:553
 #, c-format, no-wrap
 msgctxt "SHELL_ILLEGAL_PATH"
 msgid "Illegal path.\n"
 msgstr "Percorso non valido.\n"
 
-#: src/shell/shell.cpp:556
+#: src/shell/shell.cpp:554
 #, c-format, no-wrap
 msgctxt "SHELL_ILLEGAL_FILE_NAME"
 msgid "Illegal filename.\n"
 msgstr "Nome file non valido.\n"
 
-#: src/shell/shell.cpp:557
+#: src/shell/shell.cpp:555
 #, c-format, no-wrap
 msgctxt "SHELL_ILLEGAL_SWITCH"
 msgid "Illegal switch: %s\n"
 msgstr "Opzione non valida: %s\n"
 
-#: src/shell/shell.cpp:558
+#: src/shell/shell.cpp:556
 #, c-format, no-wrap
 msgctxt "SHELL_ILLEGAL_SWITCH_COMBO"
 msgid "Illegal switch combination.\n"
 msgstr "Combinazione di opzioni non valida.\n"
 
-#: src/shell/shell.cpp:559
+#: src/shell/shell.cpp:557
 #, c-format, no-wrap
 msgctxt "SHELL_MISSING_PARAMETER"
 msgid "Required parameter missing.\n"
 msgstr "Parametro richiesto mancante.\n"
 
-#: src/shell/shell.cpp:560
+#: src/shell/shell.cpp:558
 #, c-format, no-wrap
 msgctxt "SHELL_TOO_MANY_PARAMETERS"
 msgid "Too many parameters.\n"
 msgstr "Troppi parametri.\n"
 
-#: src/shell/shell.cpp:561
+#: src/shell/shell.cpp:559
 #, c-format, no-wrap
 msgctxt "SHELL_EXPECTED_FILE_NOT_DIR"
 msgid "Expected a file, not a directory.\n"
 msgstr "Previsto un file, non una directory.\n"
 
-#: src/shell/shell.cpp:562
+#: src/shell/shell.cpp:560
 #, c-format, no-wrap
 msgctxt "SHELL_SYNTAX_ERROR"
 msgid "Incorrect command syntax.\n"
 msgstr "Sintassi del comando errata.\n"
 
-#: src/shell/shell.cpp:563
+#: src/shell/shell.cpp:561
 #, c-format, no-wrap
 msgctxt "SHELL_ACCESS_DENIED"
 msgid "Access denied - '%s'\n"
 msgstr "Accesso negato - '%s'\n"
 
-#: src/shell/shell.cpp:564
+#: src/shell/shell.cpp:562
 #, c-format, no-wrap
 msgctxt "SHELL_FILE_CREATE_ERROR"
 msgid "File creation error - '%s'\n"
 msgstr "Errore nella creazione del file - '%s'\n"
 
-#: src/shell/shell.cpp:565
+#: src/shell/shell.cpp:563
 #, c-format, no-wrap
 msgctxt "SHELL_FILE_OPEN_ERROR"
 msgid "File open error - '%s'\n"
 msgstr "Errore di apertura del file - '%s'\n"
 
-#: src/shell/shell.cpp:566
+#: src/shell/shell.cpp:564
 #, c-format, no-wrap
 msgctxt "SHELL_FILE_NOT_FOUND"
 msgid "File not found - '%s'\n"
 msgstr "File non trovato - '%s'\n"
 
-#: src/shell/shell.cpp:567
+#: src/shell/shell.cpp:565
 #, c-format, no-wrap
 msgctxt "SHELL_FILE_EXISTS"
 msgid "File '%s' already exists.\n"
 msgstr "Il file '%s' esiste già.\n"
 
-#: src/shell/shell.cpp:568
+#: src/shell/shell.cpp:566
 #, c-format, no-wrap
 msgctxt "SHELL_DIRECTORY_NOT_FOUND"
 msgid "Directory not found - '%s'\n"
 msgstr "Directory non trovata - '%s'\n"
 
-#: src/shell/shell.cpp:569
+#: src/shell/shell.cpp:567
 #, c-format, no-wrap
 msgctxt "SHELL_NO_SUBDIRS_TO_DISPLAY"
 msgid "No subdirectories to display.\n"
 msgstr "Nessuna sottodirectory da visualizzare.\n"
 
-#: src/shell/shell.cpp:570
+#: src/shell/shell.cpp:568
 #, c-format, no-wrap
 msgctxt "SHELL_NO_FILES_SUBDIRS_TO_DISPLAY"
 msgid "No files or subdirectories to display.\n"
 msgstr "Nessun file o sottodirectory da visualizzare.\n"
 
-#: src/shell/shell.cpp:571
+#: src/shell/shell.cpp:569
 #, c-format, no-wrap
 msgctxt "SHELL_READ_ERROR"
 msgid "Error reading file - '%s'\n"
 msgstr "Errore durante la lettura del file - '%s'\n"
 
-#: src/shell/shell.cpp:572
+#: src/shell/shell.cpp:570
 #, c-format, no-wrap
 msgctxt "SHELL_WRITE_ERROR"
 msgid "Error writing file - '%s'\n"
 msgstr "Errore durante la scrittura del file - '%s'\n"
 
-#: src/shell/shell.cpp:573
+#: src/shell/shell.cpp:571
 #, c-format, no-wrap
 msgctxt "SHELL_CANT_RUN_UNDER_WINDOWS"
 msgid "This command cannot be executed under Microsoft Windows.\n"
 msgstr "Questo comando non può essere eseguito in Microsoft Windows.\n"
 
-#: src/shell/shell.cpp:577
+#: src/shell/shell.cpp:575
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_HELP"
 msgid ""
@@ -12444,7 +12288,7 @@ msgstr ""
 "Per una lista di tutti i comandi supportati, esegui [color=yellow]help /all[reset].\n"
 "Segue una breve lista dei comandi più comuni:\n"
 
-#: src/shell/shell.cpp:579
+#: src/shell/shell.cpp:577
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_COMMAND_HELP_LONG"
 msgid ""
@@ -12492,31 +12336,31 @@ msgstr ""
 "  [color=light-green]command[reset] /c [color=light-cyan]echo[reset] [color=white]Ciao mondo![reset]\n"
 "  [color=light-green]command[reset] /init [color=light-cyan]dir[reset]\n"
 
-#: src/shell/shell.cpp:601
+#: src/shell/shell.cpp:599
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_ECHO_ON"
 msgid "Echo is on.\n"
 msgstr "Echo attivato.\n"
 
-#: src/shell/shell.cpp:602
+#: src/shell/shell.cpp:600
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_ECHO_OFF"
 msgid "Echo is off.\n"
 msgstr "Echo disattivato.\n"
 
-#: src/shell/shell.cpp:604
+#: src/shell/shell.cpp:602
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CHDIR_ERROR"
 msgid "Unable to change to: %s\n"
 msgstr "Impossibile spostarsi in: %s\n"
 
-#: src/shell/shell.cpp:605
+#: src/shell/shell.cpp:603
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CHDIR_HINT"
 msgid "Hint: To change to a different drive, run [color=yellow]%c:[reset]\n"
 msgstr "Suggerimento: Per spostarti su un'altra unità, esegui [color=yellow]%c:[reset]\n"
 
-#: src/shell/shell.cpp:607
+#: src/shell/shell.cpp:605
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CHDIR_HINT_2"
 msgid ""
@@ -12526,43 +12370,43 @@ msgstr ""
 "Il nome della directory è più lungo di 8 caratteri e/o contiene spazi.\n"
 "Prova [color=yellow]cd %s[reset]\n"
 
-#: src/shell/shell.cpp:610
+#: src/shell/shell.cpp:608
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CHDIR_HINT_3"
 msgid "You are still on drive Z:; change to a mounted drive with [color=yellow]C:[reset].\n"
 msgstr "Sei ancora nell'unità Z:; passa ad un'unità montata con [color=yellow]C:[reset].\n"
 
-#: src/shell/shell.cpp:612
+#: src/shell/shell.cpp:610
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DATE_HELP"
 msgid "Display or change the internal date.\n"
 msgstr "Visualizza o modifica la data interna.\n"
 
-#: src/shell/shell.cpp:613
+#: src/shell/shell.cpp:611
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DATE_ERROR"
 msgid "The specified date is not correct.\n"
 msgstr "La data specificata non è corretta.\n"
 
-#: src/shell/shell.cpp:614
+#: src/shell/shell.cpp:612
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DATE_DAYS"
 msgid "3SunMonTueWedThuFriSat"
 msgstr "3DomLunMarMerGioVenSab"
 
-#: src/shell/shell.cpp:615
+#: src/shell/shell.cpp:613
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DATE_NOW"
 msgid "Current date: "
 msgstr "Data corrente: "
 
-#: src/shell/shell.cpp:616
+#: src/shell/shell.cpp:614
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DATE_SETHLP"
 msgid "Run [color=yellow]date %s[reset] to change the current date.\n"
 msgstr "Esegui [color=yellow]date %s[reset] per modificare la data corrente.\n"
 
-#: src/shell/shell.cpp:618
+#: src/shell/shell.cpp:616
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DATE_HELP_LONG"
 msgid ""
@@ -12603,31 +12447,31 @@ msgstr ""
 "  [color=light-green]date[reset] /h\n"
 "  [color=light-green]date[reset] [color=light-cyan]%s[reset]\n"
 
-#: src/shell/shell.cpp:637
+#: src/shell/shell.cpp:635
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_TIME_HELP"
 msgid "Display or change the internal time.\n"
 msgstr "Visualizza o modifica l'ora interna.\n"
 
-#: src/shell/shell.cpp:638
+#: src/shell/shell.cpp:636
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_TIME_ERROR"
 msgid "The specified time is not correct.\n"
 msgstr "L'ora specificata non è corretta.\n"
 
-#: src/shell/shell.cpp:639
+#: src/shell/shell.cpp:637
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_TIME_NOW"
 msgid "Current time: "
 msgstr "Ora attuale: "
 
-#: src/shell/shell.cpp:640
+#: src/shell/shell.cpp:638
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_TIME_SETHLP"
 msgid "Run [color=yellow]time %s[reset] to change the current time.\n"
 msgstr "Esegui [color=yellow]time %s[reset] per modificare l'orario corrente.\n"
 
-#: src/shell/shell.cpp:641
+#: src/shell/shell.cpp:639
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_TIME_HELP_LONG"
 msgid ""
@@ -12668,79 +12512,79 @@ msgstr ""
 "  [color=light-green]time[reset] /h\n"
 "  [color=light-green]time[reset] [color=light-cyan]%s[reset]\n"
 
-#: src/shell/shell.cpp:660
+#: src/shell/shell.cpp:658
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MKDIR_ERROR"
 msgid "Unable to make: %s.\n"
 msgstr "Impossibile creare: %s.\n"
 
-#: src/shell/shell.cpp:661
+#: src/shell/shell.cpp:659
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_RMDIR_ERROR"
 msgid "Unable to remove: %s.\n"
 msgstr "Impossibile rimuovere: %s.\n"
 
-#: src/shell/shell.cpp:663
+#: src/shell/shell.cpp:661
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DEL_ERROR"
 msgid "Unable to delete: %s.\n"
 msgstr "Impossibile eliminare: %s.\n"
 
-#: src/shell/shell.cpp:665
+#: src/shell/shell.cpp:663
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SET_NOT_SET"
 msgid "Environment variable '%s' not defined.\n"
 msgstr "Variabile di ambiente '%s' non definita.\n"
 
-#: src/shell/shell.cpp:666
+#: src/shell/shell.cpp:664
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SET_OUT_OF_SPACE"
 msgid "Not enough environment space left.\n"
 msgstr "Spazio di ambiente insufficiente.\n"
 
-#: src/shell/shell.cpp:667
+#: src/shell/shell.cpp:665
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SET_OPTION_P_UNSUPPORTED"
 msgid "Option /P is not supported; please use the CHOICE command.\n"
 msgstr "L'opzione /P non è supportata; si prega di utilizzare il comando CHOICE.\n"
 
-#: src/shell/shell.cpp:670
+#: src/shell/shell.cpp:668
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_IF_EXIST_MISSING_FILENAME"
 msgid "IF EXIST: Missing filename.\n"
 msgstr "IF EXIST: Manca il nome del file.\n"
 
-#: src/shell/shell.cpp:671
+#: src/shell/shell.cpp:669
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER"
 msgid "IF ERRORLEVEL: Missing number.\n"
 msgstr "IF ERRORLEVEL: Manca il numero.\n"
 
-#: src/shell/shell.cpp:672
+#: src/shell/shell.cpp:670
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER"
 msgid "IF ERRORLEVEL: Invalid number.\n"
 msgstr "IF ERRORLEVEL: Numero non valido.\n"
 
-#: src/shell/shell.cpp:674
+#: src/shell/shell.cpp:672
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_GOTO_MISSING_LABEL"
 msgid "No label supplied to GOTO command.\n"
 msgstr "Nessuna etichetta fornita al comando GOTO.\n"
 
-#: src/shell/shell.cpp:675
+#: src/shell/shell.cpp:673
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_GOTO_LABEL_NOT_FOUND"
 msgid "GOTO: Label '%s' not found.\n"
 msgstr "GOTO: Etichetta '%s' non trovata.\n"
 
-#: src/shell/shell.cpp:677
+#: src/shell/shell.cpp:675
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DUPLICATE_REDIRECTION"
 msgid "Duplicate redirection: %s\n"
 msgstr "Reindirizzamento duplicato: %s\n"
 
-#: src/shell/shell.cpp:679
+#: src/shell/shell.cpp:677
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_FAILED_PIPE"
 msgid ""
@@ -12751,31 +12595,31 @@ msgstr ""
 "Impossibile creare/aprire un file temporaneo per operazione di concatenamento.\n"
 "Controllare la variabile %%TEMP%%.\n"
 
-#: src/shell/shell.cpp:681
+#: src/shell/shell.cpp:679
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DIR_VOLUME"
 msgid " Volume in drive %c is %s\n"
 msgstr " Il volume nell'unità %c è %s\n"
 
-#: src/shell/shell.cpp:682
+#: src/shell/shell.cpp:680
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DIR_INTRO"
 msgid " Directory of %s\n"
 msgstr " Directory di %s\n"
 
-#: src/shell/shell.cpp:683
+#: src/shell/shell.cpp:681
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DIR_BYTES_USED"
 msgid "%17d file(s) %21s bytes\n"
 msgstr "%17d File %21s byte\n"
 
-#: src/shell/shell.cpp:684
+#: src/shell/shell.cpp:682
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DIR_BYTES_FREE"
 msgid "%17d dir(s)  %21s bytes free\n"
 msgstr "%17d Directory  %15s byte disponibili\n"
 
-#: src/shell/shell.cpp:686
+#: src/shell/shell.cpp:684
 #, c-format, no-wrap
 msgctxt "SHELL_EXECUTE_DRIVE_NOT_FOUND"
 msgid ""
@@ -12786,25 +12630,25 @@ msgstr ""
 "È necessario prima montare l'unità con il comando [color=yellow]mount[reset].\n"
 "Per maggiori informazioni, esegui [color=yellow]intro[reset] o [color=yellow]intro mount[reset].\n"
 
-#: src/shell/shell.cpp:689
+#: src/shell/shell.cpp:687
 #, c-format, no-wrap
 msgctxt "SHELL_EXECUTE_ILLEGAL_COMMAND"
 msgid "Illegal command: %s\n"
 msgstr "Comando non valido: %s\n"
 
-#: src/shell/shell.cpp:690
+#: src/shell/shell.cpp:688
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_PAUSE"
 msgid "Press any key to continue..."
 msgstr "Premere un tasto per continuare . . ."
 
-#: src/shell/shell.cpp:691
+#: src/shell/shell.cpp:689
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_PAUSE_HELP"
 msgid "Wait for a keystroke to continue.\n"
 msgstr "Attende la pressione di un tasto per continuare.\n"
 
-#: src/shell/shell.cpp:693
+#: src/shell/shell.cpp:691
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_PAUSE_HELP_LONG"
 msgid ""
@@ -12837,25 +12681,25 @@ msgstr ""
 "Esempi:\n"
 "  [color=light-green]pause[reset]\n"
 
-#: src/shell/shell.cpp:708
+#: src/shell/shell.cpp:706
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_COPY_FAILURE"
 msgid "Copy failure: %s.\n"
 msgstr "Errore durante la copia: %s.\n"
 
-#: src/shell/shell.cpp:709
+#: src/shell/shell.cpp:707
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_COPY_SUCCESS"
 msgid "   %d File(s) copied.\n"
 msgstr "   %d File copiato/i.\n"
 
-#: src/shell/shell.cpp:710
+#: src/shell/shell.cpp:708
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SUBST_NO_REMOVE"
 msgid "Unable to remove, drive not in use.\n"
 msgstr "Impossibile rimuovere, unità non in uso.\n"
 
-#: src/shell/shell.cpp:711
+#: src/shell/shell.cpp:709
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SUBST_FAILURE"
 msgid ""
@@ -12865,103 +12709,100 @@ msgstr ""
 "SUBST fallito, l'unità di destinazione potrebbe già esistere.\n"
 "Si noti che è possibile utilizzare SUBST solo su unità locali."
 
-#: src/shell/shell.cpp:713
+#: src/shell/shell.cpp:711
 #, c-format, no-wrap
 msgctxt "SHELL_STARTUP_BEGIN"
 msgid ""
-"[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗\n"
-"║ [color=light-green]Welcome to DOSBox Staging %-40s[color=white] ║\n"
-"║                                                                    ║\n"
-"║ For a short introduction for new users type: [color=yellow]INTRO[color=white]                 ║\n"
-"║ For supported shell commands type: [color=yellow]HELP[color=white]                            ║\n"
-"║                                                                    ║\n"
-"║ To adjust the emulated CPU speed, use [color=light-red]%s+F11[color=white] and [color=light-red]%s+F12[color=white].%s%s       ║\n"
-"║ To activate the keymapper [color=light-red]%s+F1[color=white].%s                                 ║\n"
-"║                                                                    ║\n"
+"[bgcolor=blue][color=white]╔═══════════════════════════════════════════════════════════════════════╗\n"
+"║ [color=light-green]Welcome to DOSBox Staging %-40s[color=white]    ║\n"
+"║                                                                       ║\n"
+"║ For the [color=yellow]Getting Started guide[color=white] for new users, run the [color=light-green]GUIDE[color=white] command.   ║\n"
+"║ For the [color=yellow]User Manual[color=white], run the [color=light-green]MANUAL[color=white] command.                          ║\n"
+"║                                                                       ║\n"
+"║ To adjust the emulated CPU speed, press [color=light-red]%s+F11[color=white] and [color=light-red]%s+F12[color=white].%s%s        ║\n"
+"║ To open the keymapper, press [color=light-red]%s+F1[color=white].%s                                 ║\n"
+"║                                                                       ║\n"
 msgstr ""
-"[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════╗\n"
-"║ [color=light-green]Benvenuto in DOSBox Staging %-40s[color=white] ║\n"
-"║                                                                      ║\n"
-"║ Per una breve introduzione per i nuovi utenti, digita: [color=yellow]INTRO[color=white]         ║\n"
-"║ Per la lista dei comandi della shell supportati, digita: [color=yellow]HELP[color=white]        ║\n"
-"║                                                                      ║\n"
-"║ Per regolare la velocità della CPU emulata, usa [color=light-red]%s+F11[color=white] e [color=light-red]%s+F12[color=white].%s%s ║\n"
-"║ Per attivare il mappatore dei tasti, usa [color=light-red]%s+F1[color=white].%s                    ║\n"
-"║                                                                      ║\n"
+"[bgcolor=blue][color=white]╔═══════════════════════════════════════════════════════════════════════╗\n"
+"║ [color=light-green]Benvenuto in DOSBox Staging %-40s[color=white]  ║\n"
+"║                                                                       ║\n"
+"║ Per visualizzare la [color=yellow]Guida Introduttiva[color=white], esegui il comando [color=light-green]GUIDE[color=white].      ║\n"
+"║ Per esaminare il [color=yellow]Manuale Utente[color=white], esegui il comando [color=light-green]MANUAL[color=white].            ║\n"
+"║                                                                       ║\n"
+"║ Per regolare la velocità della CPU emulata, premi [color=light-red]%s+F11[color=white] e [color=light-red]%s+F12[color=white].%s%s║\n"
+"║ Per aprire il mappatore dei tasti, premi [color=light-red]%s+F1[color=white].%s                     ║\n"
+"║                                                                       ║\n"
 
-#: src/shell/shell.cpp:723
+#: src/shell/shell.cpp:722
 #, c-format, no-wrap
 msgctxt "SHELL_STARTUP_CGA"
 msgid ""
-"║ DOSBox supports Composite CGA mode.                                ║\n"
-"║ Use [color=light-red]F12[color=white] to set composite output ON, OFF, or AUTO (default).        ║\n"
-"║ [color=light-red]F10[color=white] selects the CGA settings to change and [color=light-red](%s+)F11[color=white] changes it.   ║\n"
-"║                                                                    ║\n"
+"║ Press [color=light-red]F12[color=white] to set composite output ON, OFF, or AUTO (default).         ║\n"
+"║ [color=light-red]F10[color=white] selects the composite setting to change and [color=light-red](%s+)F11[color=white] changes it. ║\n"
+"║                                                                       ║\n"
 msgstr ""
-"║ DOSBox supporta la modalità CGA con video composito.                 ║\n"
-"║ Usa [color=light-red]F12[color=white] per impostare l'uscita composita su ON, OFF o AUTO           ║\n"
-"║ (predefinito).                                                       ║\n"
-"║ Usa [color=light-red]F10[color=white] per selezionare le impostazioni CGA da modificare e [color=light-red]%s+F11[color=white]  ║\n"
-"║ per effettuare le modifiche.                                         ║\n"
-"║                                                                      ║\n"
+"║ Premi [color=light-red]F12[color=white] per impostare l'uscita video composito su ON, OFF o AUTO.   ║\n"
+"║ Premi [color=light-red]F10[color=white] per selezionare le impostazioni video composito da          ║\n"
+"║ modificare e [color=light-red](%s+)F11[color=white] per effettuare le modifiche.                   ║\n"
+"║                                                                       ║\n"
 
-#: src/shell/shell.cpp:728
+#: src/shell/shell.cpp:727
 #, c-format, no-wrap
 msgctxt "SHELL_STARTUP_CGA_MONO"
 msgid ""
-"║ Use [color=light-red]F11[color=white] to cycle through green, amber, white and paper-white mode, ║\n"
-"║ and [color=light-red]%s+F11[color=white] to change contrast/brightness settings.                ║\n"
-"║                                                                    ║\n"
+"║ Press [color=light-red]F11[color=white] to cycle through green, amber, white and paper-white mode,  ║\n"
+"║ and [color=light-red]%s+F11[color=white] to change contrast/brightness settings.                   ║\n"
+"║                                                                       ║\n"
 msgstr ""
-"║ Usa [color=light-red]F11[color=white] per scorrere le modalità verde, ambra, bianco e bianco-carta,║\n"
-"║ e [color=light-red]%s+F11[color=white] per modificare le impostazioni di contrasto/luminosità.    ║\n"
-"║                                                                      ║\n"
+"║ Premi [color=light-red]F11[color=white] per scorrere le modalità verde, ambra, bianco e bianco-carta║\n"
+"║ e [color=light-red]%s+F11[color=white] per modificare le impostazioni di contrasto/luminosità.     ║\n"
+"║                                                                       ║\n"
 
 #: src/shell/shell.cpp:732
 #, c-format, no-wrap
 msgctxt "SHELL_STARTUP_HERC"
 msgid ""
-"║ Use [color=light-red]F11[color=white] to cycle through white, amber, and green monochrome color. ║\n"
-"║                                                                    ║\n"
+"║ Press [color=light-red]F11[color=white] to cycle through white, amber, and green monochrome color.  ║\n"
+"║                                                                       ║\n"
 msgstr ""
-"║ Usa [color=light-red]F11[color=white] per scorrere i colori monocromatici bianco, ambra e verde.   ║\n"
-"║                                                                      ║\n"
+"║ Premi [color=light-red]F11[color=white] per scorrere i colori monocromatici bianco, ambra e verde.  ║\n"
+"║                                                                       ║\n"
 
-#: src/shell/shell.cpp:735
+#: src/shell/shell.cpp:736
 #, c-format, no-wrap
 msgctxt "SHELL_STARTUP_DEBUG"
 msgid ""
-"║ Press [color=light-red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. ║\n"
-"║                                                                    ║\n"
+"║ Press [color=light-red]%s+Pause[color=white] to enter the debugger or start the exe with [color=light-green]DEBUG[color=white].    ║\n"
+"║                                                                       ║\n"
 msgstr ""
-"║ Premi [color=light-red]%s+Pause[color=white] per avviare il debugger o avvia l'exe con [color=yellow]DEBUG[color=white].      ║\n"
-"║                                                                      ║\n"
+"║ Premi [color=light-red]%s+Pause[color=white] per accedere al debugger o esegui il comando [color=yellow]DEBUG[color=white].   ║\n"
+"║                                                                       ║\n"
 
-#: src/shell/shell.cpp:738
+#: src/shell/shell.cpp:740
 #, c-format, no-wrap
 msgctxt "SHELL_STARTUP_END"
 msgid ""
-"║ [color=yellow]https://www.dosbox-staging.org[color=white]                                     ║\n"
-"╚════════════════════════════════════════════════════════════════════╝[reset]\n"
+"║ [color=yellow]https://www.dosbox-staging.org[color=white]                                        ║\n"
+"╚═══════════════════════════════════════════════════════════════════════╝[reset]\n"
 "\n"
 msgstr ""
-"║ [color=yellow]https://www.dosbox-staging.org[color=white]                                       ║\n"
-"╚══════════════════════════════════════════════════════════════════════╝[reset]\n"
+"║ [color=yellow]https://www.dosbox-staging.org[color=white]                                        ║\n"
+"╚═══════════════════════════════════════════════════════════════════════╝[reset]\n"
 "\n"
 
-#: src/shell/shell.cpp:743
+#: src/shell/shell.cpp:745
 #, c-format, no-wrap
 msgctxt "SHELL_STARTUP_SUB"
 msgid "[color=light-green]dosbox-staging %s[reset]\n"
 msgstr "[color=light-green]dosbox-staging %s[reset]\n"
 
-#: src/shell/shell.cpp:746
+#: src/shell/shell.cpp:748
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CHDIR_HELP"
 msgid "Display or change the current directory.\n"
 msgstr "Visualizza o cambia la directory corrente.\n"
 
-#: src/shell/shell.cpp:747
+#: src/shell/shell.cpp:749
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CHDIR_HELP_LONG"
 msgid ""
@@ -12995,13 +12836,13 @@ msgstr ""
 "  [color=light-green]cd[reset]\n"
 "  [color=light-green]cd[reset] [color=light-cyan]laMiaDirectory[reset]\n"
 
-#: src/shell/shell.cpp:763
+#: src/shell/shell.cpp:765
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CLS_HELP"
 msgid "Clear the DOS screen.\n"
 msgstr "Cancella il contenuto dello schermo.\n"
 
-#: src/shell/shell.cpp:764
+#: src/shell/shell.cpp:766
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CLS_HELP_LONG"
 msgid ""
@@ -13032,13 +12873,13 @@ msgstr ""
 "Esempi:\n"
 "  [color=light-green]cls[reset]\n"
 
-#: src/shell/shell.cpp:778
+#: src/shell/shell.cpp:780
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DIR_HELP"
 msgid "Display a list of files and subdirectories in a directory.\n"
 msgstr "Visualizza un elenco di file e sottodirectory in una directory.\n"
 
-#: src/shell/shell.cpp:780
+#: src/shell/shell.cpp:782
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DIR_HELP_LONG"
 msgid ""
@@ -13094,13 +12935,13 @@ msgstr ""
 "  [color=light-green]dir[reset] [color=light-cyan]giochi.*[reset] /p\n"
 "  [color=light-green]dir[reset] [color=light-cyan]c:\\giochi\\*.exe[reset] /b /o[color=white]-d[reset]\n"
 
-#: src/shell/shell.cpp:804
+#: src/shell/shell.cpp:806
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_ECHO_HELP"
 msgid "Display messages and enable/disable command echoing.\n"
 msgstr "Visualizza i messaggi o attiva/disattiva la ripetizione dei comandi.\n"
 
-#: src/shell/shell.cpp:806
+#: src/shell/shell.cpp:808
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_ECHO_HELP_LONG"
 msgid ""
@@ -13138,13 +12979,13 @@ msgstr ""
 "  [color=light-green]echo[reset] [color=light-cyan]off[reset]\n"
 "  [color=light-green]echo[reset] [color=light-cyan]Ciao mondo![reset]\n"
 
-#: src/shell/shell.cpp:823
+#: src/shell/shell.cpp:825
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_EXIT_HELP"
 msgid "Exit from the DOS shell.\n"
 msgstr "Permette di uscire dall'interprete dei comandi DOS.\n"
 
-#: src/shell/shell.cpp:824
+#: src/shell/shell.cpp:826
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_EXIT_HELP_LONG"
 msgid ""
@@ -13175,13 +13016,13 @@ msgstr ""
 "Esempi:\n"
 "  [color=light-green]exit[reset]\n"
 
-#: src/shell/shell.cpp:838
+#: src/shell/shell.cpp:840
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_HELP_HELP"
 msgid "Display help information for DOS commands.\n"
 msgstr "Visualizza la guida per i comandi DOS.\n"
 
-#: src/shell/shell.cpp:840
+#: src/shell/shell.cpp:842
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_HELP_HELP_LONG"
 msgid ""
@@ -13221,13 +13062,13 @@ msgstr ""
 "  [color=light-green]help[reset] [color=light-cyan]dir[reset]\n"
 "  [color=light-green]help[reset] /all\n"
 
-#: src/shell/shell.cpp:858
+#: src/shell/shell.cpp:860
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MKDIR_HELP"
 msgid "Create a directory.\n"
 msgstr "Crea una nuova directory.\n"
 
-#: src/shell/shell.cpp:859
+#: src/shell/shell.cpp:861
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MKDIR_HELP_LONG"
 msgid ""
@@ -13261,13 +13102,13 @@ msgstr ""
 "  [color=light-green]md[reset] [color=light-cyan]nuovaDir[reset]\n"
 "  [color=light-green]md[reset] [color=light-cyan]c:\\giochi\\dir[reset]\n"
 
-#: src/shell/shell.cpp:875
+#: src/shell/shell.cpp:877
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_RMDIR_HELP"
 msgid "Remove a directory.\n"
 msgstr "Elimina (rimuove) dal disco una directory vuota.\n"
 
-#: src/shell/shell.cpp:876
+#: src/shell/shell.cpp:878
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_RMDIR_HELP_LONG"
 msgid ""
@@ -13297,13 +13138,13 @@ msgstr ""
 "Esempi:\n"
 "  [color=light-green]rd[reset] [color=light-cyan]directoryVuota[reset]\n"
 
-#: src/shell/shell.cpp:890
+#: src/shell/shell.cpp:892
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SET_HELP"
 msgid "Display or change environment variables.\n"
 msgstr "Visualizza, imposta o rimuove le variabili d'ambiente.\n"
 
-#: src/shell/shell.cpp:891
+#: src/shell/shell.cpp:893
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SET_HELP_LONG"
 msgid ""
@@ -13339,13 +13180,13 @@ msgstr ""
 "  [color=light-green]set[reset]\n"
 "  [color=light-green]set[reset] [color=white]nome[reset]=[color=light-cyan]valore[reset]\n"
 
-#: src/shell/shell.cpp:908
+#: src/shell/shell.cpp:910
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_IF_HELP"
 msgid "Perform conditional processing in batch programs.\n"
 msgstr "Esegue un'elaborazione condizionale in programmi batch.\n"
 
-#: src/shell/shell.cpp:910
+#: src/shell/shell.cpp:912
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_IF_HELP_LONG"
 msgid ""
@@ -13395,13 +13236,13 @@ msgstr ""
 "  [color=light-green]if[reset] [color=white]\"%%variabile%%\"==\"stringa\"[reset] echo Ciao mondo!\n"
 "  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]file.txt[reset] exit\n"
 
-#: src/shell/shell.cpp:933
+#: src/shell/shell.cpp:935
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_GOTO_HELP"
 msgid "Jump to a labeled line in a batch program.\n"
 msgstr "Indirizza ad una riga etichettata di un programma batch.\n"
 
-#: src/shell/shell.cpp:935
+#: src/shell/shell.cpp:937
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_GOTO_HELP_LONG"
 msgid ""
@@ -13433,13 +13274,13 @@ msgstr ""
 "Esempi:\n"
 "  [color=light-green]goto[reset] [color=light-cyan]etichetta[reset]\n"
 
-#: src/shell/shell.cpp:949
+#: src/shell/shell.cpp:951
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SHIFT_HELP"
 msgid "Left-shift command-line parameters in a batch program.\n"
 msgstr "Cambia la posizione dei parametri sostituibili in un programma batch\n"
 
-#: src/shell/shell.cpp:950
+#: src/shell/shell.cpp:952
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SHIFT_HELP_LONG"
 msgid ""
@@ -13470,13 +13311,13 @@ msgstr ""
 "Esempi:\n"
 "  [color=light-green]shift[reset]\n"
 
-#: src/shell/shell.cpp:964
+#: src/shell/shell.cpp:966
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_TYPE_HELP"
 msgid "Display the contents of a text file.\n"
 msgstr "Visualizza il contenuto di uno o più file di testo.\n"
 
-#: src/shell/shell.cpp:965
+#: src/shell/shell.cpp:967
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_TYPE_HELP_LONG"
 msgid ""
@@ -13508,13 +13349,13 @@ msgstr ""
 "  [color=light-green]type[reset] [color=light-cyan]testo.txt[reset]\n"
 "  [color=light-green]type[reset] [color=light-cyan]c:\\dos\\leggimi.txt[reset]\n"
 
-#: src/shell/shell.cpp:980
+#: src/shell/shell.cpp:982
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_REM_HELP"
 msgid "Add comments in a batch program.\n"
 msgstr "Aggiunge commenti in un programma batch.\n"
 
-#: src/shell/shell.cpp:981
+#: src/shell/shell.cpp:983
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_REM_HELP_LONG"
 msgid ""
@@ -13545,7 +13386,7 @@ msgstr ""
 "Esempi:\n"
 "  [color=light-green]rem[reset] [color=light-cyan]Questo è il mio programma batch di prova.[reset]\n"
 
-#: src/shell/shell.cpp:995
+#: src/shell/shell.cpp:997
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_NO_WILD"
 msgid "This is a simple version of the command, no wildcards allowed!\n"
@@ -13553,13 +13394,13 @@ msgstr ""
 "Questa è una versione semplificata del comando, non puoi usare caratteri jolly!\n"
 "\n"
 
-#: src/shell/shell.cpp:997
+#: src/shell/shell.cpp:999
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_RENAME_HELP"
 msgid "Rename one or more files.\n"
 msgstr "Rinomina uno o più file.\n"
 
-#: src/shell/shell.cpp:998
+#: src/shell/shell.cpp:1000
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_RENAME_HELP_LONG"
 msgid ""
@@ -13595,13 +13436,13 @@ msgstr ""
 "  [color=light-green]ren[reset] [color=white]vecchioNome[reset] [color=light-cyan]nuovoNome[reset]\n"
 "  [color=light-green]ren[reset] [color=white]c:\\dos\\file.txt[reset] [color=light-cyan]f.txt[reset]\n"
 
-#: src/shell/shell.cpp:1015
+#: src/shell/shell.cpp:1017
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DELETE_HELP"
 msgid "Remove one or more files.\n"
 msgstr "Elimina uno o più file.\n"
 
-#: src/shell/shell.cpp:1016
+#: src/shell/shell.cpp:1018
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_DELETE_HELP_LONG"
 msgid ""
@@ -13643,13 +13484,13 @@ msgstr ""
 "  [color=light-green]del[reset] [color=light-cyan]c*.*[reset]\n"
 "  [color=light-green]del[reset] [color=light-cyan]a?b.c*[reset]\n"
 
-#: src/shell/shell.cpp:1036
+#: src/shell/shell.cpp:1038
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_COPY_HELP"
 msgid "Copy one or more files.\n"
 msgstr "Copia uno o più file in un'altra posizione.\n"
 
-#: src/shell/shell.cpp:1037
+#: src/shell/shell.cpp:1039
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_COPY_HELP_LONG"
 msgid ""
@@ -13690,13 +13531,13 @@ msgstr ""
 "  [color=light-green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=light-cyan]file3.txt[reset]\n"
 "  [color=light-green]copy[reset] [color=white]..\\c*.*[reset]\n"
 
-#: src/shell/shell.cpp:1056
+#: src/shell/shell.cpp:1058
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CALL_HELP"
 msgid "Start a batch program from within another batch program.\n"
 msgstr "Richiama un programma batch da un altro programma batch.\n"
 
-#: src/shell/shell.cpp:1058
+#: src/shell/shell.cpp:1060
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CALL_HELP_LONG"
 msgid ""
@@ -13730,13 +13571,13 @@ msgstr ""
 "  [color=light-green]call[reset] [color=white]batch.bat[reset]\n"
 "  [color=light-green]call[reset] [color=white]file.bat[reset] [color=light-cyan]Ciao mondo![reset]\n"
 
-#: src/shell/shell.cpp:1073
+#: src/shell/shell.cpp:1075
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SUBST_HELP"
 msgid "Assign an internal directory to a drive.\n"
 msgstr "Associa un percorso di ricerca ad una lettera di unità.\n"
 
-#: src/shell/shell.cpp:1074
+#: src/shell/shell.cpp:1076
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_SUBST_HELP_LONG"
 msgid ""
@@ -13772,13 +13613,13 @@ msgstr ""
 "  [color=light-green]subst[reset] [color=white]d:[reset] [color=light-cyan]c:\\giochi[reset]\n"
 "  [color=light-green]subst[reset] [color=white]e:[reset] [color=light-cyan]/d[reset]\n"
 
-#: src/shell/shell.cpp:1091
+#: src/shell/shell.cpp:1093
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_LOADHIGH_HELP"
 msgid "Load a DOS program into upper memory.\n"
 msgstr "Carica un programma nell'area di memoria superiore.\n"
 
-#: src/shell/shell.cpp:1092
+#: src/shell/shell.cpp:1094
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_LOADHIGH_HELP_LONG"
 msgid ""
@@ -13815,13 +13656,13 @@ msgstr ""
 "Esempi:\n"
 "  [color=light-green]lh[reset] [color=light-cyan]apptsr[reset] [color=white]argomenti[reset]\n"
 
-#: src/shell/shell.cpp:1109
+#: src/shell/shell.cpp:1111
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_ATTRIB_HELP"
 msgid "Display or change file attributes.\n"
 msgstr "Visualizza o modifica gli attributi dei file.\n"
 
-#: src/shell/shell.cpp:1111
+#: src/shell/shell.cpp:1113
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_ATTRIB_HELP_LONG"
 msgid ""
@@ -13862,25 +13703,25 @@ msgstr ""
 "  [color=light-green]attrib[reset] [color=light-cyan]file.txt[reset]\n"
 "  [color=light-green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=light-cyan]*.txt[reset]\n"
 
-#: src/shell/shell.cpp:1130
+#: src/shell/shell.cpp:1132
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_ATTRIB_GET_ERROR"
 msgid "Unable to get attributes: %s\n"
 msgstr "Impossibile ottenere gli attributi: %s\n"
 
-#: src/shell/shell.cpp:1131
+#: src/shell/shell.cpp:1133
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_ATTRIB_SET_ERROR"
 msgid "Unable to set attributes: %s\n"
 msgstr "Impossibile impostare gli attributi: %s\n"
 
-#: src/shell/shell.cpp:1133
+#: src/shell/shell.cpp:1135
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CHOICE_HELP"
 msgid "Wait for a keypress and set an ERRORLEVEL value.\n"
 msgstr "Attende la pressione di un tasto e imposta un valore ERRORLEVEL.\n"
 
-#: src/shell/shell.cpp:1135
+#: src/shell/shell.cpp:1137
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CHOICE_HELP_LONG"
 msgid ""
@@ -13927,7 +13768,7 @@ msgstr ""
 "  [color=light-green]choice[reset] /t:[color=white]y[reset],[color=light-magenta]2[reset] [color=light-cyan]Continuare?[reset]\n"
 "  [color=light-green]choice[reset] /c:[color=white]abc[reset] /s [color=light-cyan]Digita la lettera a, b, o c[reset]\n"
 
-#: src/shell/shell.cpp:1156
+#: src/shell/shell.cpp:1158
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CHOICE_EOF"
 msgid ""
@@ -13937,7 +13778,7 @@ msgstr ""
 "\n"
 "[color=light-red]Scelta fallita[reset]: il flusso dei dati immessi è terminato senza una scelta valida.\n"
 
-#: src/shell/shell.cpp:1157
+#: src/shell/shell.cpp:1159
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_CHOICE_ABORTED"
 msgid ""
@@ -13947,13 +13788,13 @@ msgstr ""
 "\n"
 "[color=yellow]Scelta annullata.[reset]\n"
 
-#: src/shell/shell.cpp:1159
+#: src/shell/shell.cpp:1161
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_PATH_HELP"
 msgid "Display or set a search path for executable files.\n"
 msgstr "Visualizza o imposta un percorso di ricerca per i file eseguibili.\n"
 
-#: src/shell/shell.cpp:1161
+#: src/shell/shell.cpp:1163
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_PATH_HELP_LONG"
 msgid ""
@@ -13991,13 +13832,13 @@ msgstr ""
 "  [color=light-green]path[reset]\n"
 "  [color=light-green]path[reset] [color=light-cyan]Z:\\;C:\\DOS[reset]\n"
 
-#: src/shell/shell.cpp:1178
+#: src/shell/shell.cpp:1180
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_VER_HELP"
 msgid "Display the DOS version.\n"
 msgstr "Visualizza la versione DOS.\n"
 
-#: src/shell/shell.cpp:1179
+#: src/shell/shell.cpp:1181
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_VER_HELP_LONG"
 msgid ""
@@ -14028,7 +13869,7 @@ msgstr ""
 "Esempi:\n"
 "  [color=light-green]ver[reset]\n"
 
-#: src/shell/shell.cpp:1192
+#: src/shell/shell.cpp:1194
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_VER_VER"
 msgid ""
@@ -14038,19 +13879,19 @@ msgstr ""
 "DOSBox Staging versione %s\n"
 "DOS versione %d.%02d\n"
 
-#: src/shell/shell.cpp:1194
+#: src/shell/shell.cpp:1196
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_VER_INVALID"
 msgid "The specified DOS version is not correct.\n"
 msgstr "La versione DOS specificata non è corretta.\n"
 
-#: src/shell/shell.cpp:1196
+#: src/shell/shell.cpp:1198
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_VOL_HELP"
 msgid "Display the disk volume and serial number, if they exist.\n"
 msgstr "Visualizza l'etichetta di volume e il numero di serie del disco.\n"
 
-#: src/shell/shell.cpp:1198
+#: src/shell/shell.cpp:1200
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_VOL_HELP_LONG"
 msgid ""
@@ -14081,7 +13922,7 @@ msgstr ""
 "  [color=light-green]vol[reset]\n"
 "  [color=light-green]vol[reset] [color=light-cyan]c:[reset]\n"
 
-#: src/shell/shell.cpp:1211
+#: src/shell/shell.cpp:1213
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_VOL_OUTPUT"
 msgid ""
@@ -14095,13 +13936,13 @@ msgstr ""
 " Il numero di serie del volume è %04X-%04X\n"
 "\n"
 
-#: src/shell/shell.cpp:1217
+#: src/shell/shell.cpp:1219
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MOVE_HELP"
 msgid "Move files and rename files and directories.\n"
 msgstr "Consente di spostare file e rinominare file e directory.\n"
 
-#: src/shell/shell.cpp:1219
+#: src/shell/shell.cpp:1221
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MOVE_HELP_LONG"
 msgid ""
@@ -14146,19 +13987,19 @@ msgstr ""
 "  [color=light-green]move[reset] [color=white]origine.bat[reset] [color=light-cyan]nuovo.bat[reset]\n"
 "  [color=light-green]move[reset] [color=white]file1.txt,file2.txt[reset] [color=light-cyan]dir[reset]\n"
 
-#: src/shell/shell.cpp:1239
+#: src/shell/shell.cpp:1241
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE"
 msgid "Cannot move multiple files to a single file.\n"
 msgstr "Impossibile spostare più file in un singolo file.\n"
 
-#: src/shell/shell.cpp:1241
+#: src/shell/shell.cpp:1243
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_FOR_HELP"
 msgid "Run a specified command for each string in a set.\n"
 msgstr "Esegue il comando specificato per ogni file o stringa di un gruppo.\n"
 
-#: src/shell/shell.cpp:1243
+#: src/shell/shell.cpp:1245
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_FOR_HELP_LONG"
 msgid ""
@@ -14235,4 +14076,3 @@ msgstr "Comandi Vari"
 msgctxt "HELP_UTIL_CATEGORY_UNKNOWN"
 msgid "Unknown Command"
 msgstr "Comando Sconosciuto"
-
