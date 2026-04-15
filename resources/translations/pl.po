@@ -4817,7 +4817,7 @@ msgstr ""
 #, fuzzy, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_NUM_EFFECT_PARAMS"
 msgid ""
-"Invalid number of [color=light-green]'%s'[reset] parameters: [color=white]%d[/reset];\n"
+"Invalid number of [color=light-green]'%s'[reset] parameters: [color=white]%d[reset];\n"
 "must be %d space-separated values, using [color=white]'auto'[reset]"
 msgstr ""
 
@@ -6700,7 +6700,7 @@ msgstr "Brak parametru '%s' w sekcji [%s]\n"
 #, fuzzy, c-format, no-wrap
 msgctxt "PROGRAM_CONFIG_SET_SYNTAX"
 msgid "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n"
-msgstr "Składnia: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/reset] [color=white]PARAMETR[/reset][=][color=white]WARTOŚĆ[/reset]\n"
+msgstr "Składnia: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] [color=white]PARAMETR[reset][=][color=white]WARTOŚĆ[reset]\n"
 
 #: src/dos/programs.cpp:1076
 #, fuzzy, c-format, no-wrap

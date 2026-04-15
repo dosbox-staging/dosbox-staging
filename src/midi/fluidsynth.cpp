@@ -1322,7 +1322,7 @@ static void register_fluidsynth_text_messages()
 
 	MSG_Add("FLUIDSYNTH_INVALID_NUM_EFFECT_PARAMS",
 	        "Invalid number of [color=light-green]'%s'[reset] parameters: "
-	        "[color=white]%d[/reset];\n"
+	        "[color=white]%d[reset];\n"
 	        "must be %d space-separated values, using [color=white]'auto'[reset]");
 }
 

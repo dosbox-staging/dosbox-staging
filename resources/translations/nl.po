@@ -6324,10 +6324,10 @@ msgstr ""
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_NUM_EFFECT_PARAMS"
 msgid ""
-"Invalid number of [color=light-green]'%s'[reset] parameters: [color=white]%d[/reset];\n"
+"Invalid number of [color=light-green]'%s'[reset] parameters: [color=white]%d[reset];\n"
 "must be %d space-separated values, using [color=white]'auto'[reset]"
 msgstr ""
-"Ongeldig aantal [color=light-green]'%s'[reset] parameters: [color=white]%d[/reset];\n"
+"Ongeldig aantal [color=light-green]'%s'[reset] parameters: [color=white]%d[reset];\n"
 "moeten %d door spaties gescheiden waarden zijn, met behulp van [color=white]'auto'[reset]"
 
 #: src/config/setup.cpp:262

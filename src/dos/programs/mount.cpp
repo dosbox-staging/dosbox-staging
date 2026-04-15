@@ -1379,5 +1379,5 @@ void MOUNT::AddMessages()
 
 	MSG_Add("PROGRAM_IMGMOUNT_DEPRECATED",
 	        "The [color=light-green]IMGMOUNT[reset] command is deprecated; "
-	        "please use [color=light-green]MOUNT[/reset] instead.[reset]");
+	        "please use [color=light-green]MOUNT[reset] instead.");
 }
