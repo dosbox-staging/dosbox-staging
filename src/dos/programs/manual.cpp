@@ -9,7 +9,7 @@
 #include "more_output.h"
 #include "utils/checks.h"
 
-#include <SDL_misc.h>
+#include <SDL3/SDL.h>
 
 CHECK_NARROWING();
 
