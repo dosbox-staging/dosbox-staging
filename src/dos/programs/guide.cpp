@@ -46,7 +46,13 @@ void GUIDE::AddMessages()
 	        "  [color=light-green]guide[reset]\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - This will open an offline copy of the Getting Started guide bundled with\n"
-	        "    your DOSBox Staging installation; you don't need an internet connection to\n"
-	        "    read the guide.\n");
+	        "  - This will open a local offline copy of the Getting Started guide bundled\n"
+	        "    with your DOSBox Staging installation; you don't need an internet connection\n"
+	        "    to read the bundled guide.\n"
+	        "\n"
+	        "  - The offline documentation is located in the 'docs' subfolder of your\n"
+	        "    DOSBox Staging 'resources' folder.\n"
+	        "\n"
+	        "  - If the offline documentation cannot be found, the command will open the\n"
+	        "    guide on the project website (requires internet connection).");
 }
