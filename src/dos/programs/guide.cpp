@@ -3,6 +3,8 @@
 
 #include "guide.h"
 
+#include <filesystem>
+
 #include "misc/support.h"
 #include "more_output.h"
 #include "utils/checks.h"
@@ -23,11 +25,13 @@ void GUIDE::Run(void)
 		return;
 	}
 
-	const auto url =
-	        std::string{"file://"} +
-	        get_resource_path("docs/getting-started/introduction.html").string();
+	const auto path = get_resource_path("docs/getting-started/introduction.html");
 
-	if (SDL_OpenURL(url.c_str()) == -1) {
+	if (std::filesystem::exists(path)) {
+		const auto url = std::string{"file://"} + path.string();
+		SDL_OpenURL(url.c_str());
+
+	} else {
 		SDL_OpenURL("https://www.dosbox-staging.org/getting-started/");
 	}
 }
