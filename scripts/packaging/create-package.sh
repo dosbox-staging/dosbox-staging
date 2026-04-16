@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 set -e
@@ -66,7 +66,7 @@ install_doc()
             	install_file "${filename}" "${macos_content_dir}/doc/licenses/$(basename ${filename})"
             done
             install_file "${build_dir}/LICENSE" "${macos_content_dir}/SharedSupport/LICENSE"
-            install_file docs/README.template       "${macos_content_dir}/SharedSupport/README"
+            install_file docs/README.template   "${macos_content_dir}/SharedSupport/README"
             readme_tmpl="${macos_content_dir}/SharedSupport/README"
             ;;
         windows)
@@ -74,17 +74,20 @@ install_doc()
             	install_file "${filename}" "${pkg_dir}/doc/licenses/$(basename ${filename})"
             done
             install_file "${build_dir}/../doc/LICENSE" "${pkg_dir}/LICENSE.txt"
-            install_file docs/README.template       "${pkg_dir}/README.txt"
+            install_file docs/README.template          "${pkg_dir}/README.txt"
             readme_tmpl="${pkg_dir}/README.txt"
             ;;
     esac
+
     # Fill template variables in README.template
     if [[ "$git_branch" == "refs/tags/"* ]] && [[ "$git_branch" != *"-"* ]]; then
         version_tag=`echo $git_branch | awk '{print substr($0,11);exit}'`
         package_information="release $version_tag"
+
     elif [[ "$git_branch" == "release/"* ]]; then
         version_tag=`git describe --tags | cut -f1 -d"-"`
         package_information="release $version_tag"
+
     elif [ -n "$git_branch" ] && [ -n "$git_commit" ]; then
         package_information="a development branch named $git_branch with commit $git_commit"
     else
@@ -95,7 +98,7 @@ install_doc()
         if [ "$(uname)" = "Darwin" ]; then
             sed -i '' -e "s|%PACKAGE_INFORMATION%|$package_information|" "$readme_tmpl"
         else
-            sed -i -e "s|%PACKAGE_INFORMATION%|$package_information|" "$readme_tmpl"
+            sed -i    -e "s|%PACKAGE_INFORMATION%|$package_information|" "$readme_tmpl"
         fi
     fi
 
@@ -103,7 +106,7 @@ install_doc()
         if [ "$(uname)" = "Darwin" ]; then
             sed -i '' -e "s|%GITHUB_REPO%|$git_repo|" "$readme_tmpl"
         else
-            sed -i -e "s|%GITHUB_REPO%|$git_repo|" "$readme_tmpl"
+            sed -i    -e "s|%GITHUB_REPO%|$git_repo|" "$readme_tmpl"
         fi
     fi
 }
@@ -154,12 +157,12 @@ pkg_macos()
     lipo dosbox-x86_64/dosbox dosbox-arm64/dosbox -create -output dosbox-universal/dosbox
 
     install -d   "${macos_content_dir}/MacOS/"
-    install      dosbox-universal/dosbox                 "${macos_content_dir}/MacOS/"
+    install      dosbox-universal/dosbox                "${macos_content_dir}/MacOS/"
     install_file extras/macos/Info.plist.template       "${macos_content_dir}/Info.plist"
     install_file extras/macos/PkgInfo                   "${macos_content_dir}/PkgInfo"
     install_file extras/icons/macos/dosbox-staging.icns "${macos_content_dir}/Resources/"
 
-    sed -i '' -e "s|%VERSION%|${dbox_version}|"       "${macos_content_dir}/Info.plist"
+    sed -i '' -e "s|%VERSION%|${dbox_version}|"         "${macos_content_dir}/Info.plist"
 
 	# Install start commands
 	start_command="Start DOSBox Staging.command"
@@ -186,11 +189,11 @@ pkg_windows()
     cp "${build_dir}/dosbox.exe"  "${pkg_dir}/dosbox.exe"
 
     # Copy dll files
-    cp "${build_dir}"/*.dll                  "${pkg_dir}/"
+    cp "${build_dir}"/*.dll       "${pkg_dir}/"
 
     # Copy MSVC C++ redistributable files
-    cp docs/vc_redist.txt                    "${pkg_dir}/doc/vc_redist.txt"
-    cp "$VC_REDIST_DIR"/*.dll                "${pkg_dir}/"
+    cp docs/vc_redist.txt         "${pkg_dir}/doc/vc_redist.txt"
+    cp "$VC_REDIST_DIR"/*.dll     "${pkg_dir}/"
 }
 
 # Get GitHub CI environment variables if available. The CLI options
