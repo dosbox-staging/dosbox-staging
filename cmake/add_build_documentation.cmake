@@ -248,6 +248,11 @@ function(add_build_documentation)
             --config-file "${MKDOCS_CONFIG}"
             --site-dir "${MKDOCS_OUTPUT_DIR}"
 
+    COMMAND "${CMAKE_COMMAND}" -E remove
+            "${MKDOCS_OUTPUT_DIR}/404.html"
+            "${MKDOCS_OUTPUT_DIR}/sitemap.xml"
+            "${MKDOCS_OUTPUT_DIR}/sitemap.xml.gz"
+
     COMMAND "${CMAKE_COMMAND}" -E touch "${MKDOCS_BUILD_STAMP}"
 
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/website"
