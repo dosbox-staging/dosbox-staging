@@ -747,7 +747,7 @@ void TITLEBAR_AddConfigSettings()
 	        "                        'Title':   Custom name. Alternatively, you can use\n"
 	        "                                   \"Title\", (Title), <Title> or [Title] form.\n"
 	        "\n"
-	        "                      Note: With some software (like Windows 3.1x in enhanced\n"
+	        "                      Note: With some software (like Windows 3.1 in enhanced\n"
 	        "                      mode) it is impossible to recognize the full program\n"
 	        "                      name or path; in such cases 'segment' is used instead.\n"
 	        "\n"
