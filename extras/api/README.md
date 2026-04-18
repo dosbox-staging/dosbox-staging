@@ -1,8 +1,10 @@
-# REST API Examples
+# HTTP API examples
 
-These files provide examples for interacting with the DOSBox REST API. Open
-http://localhost:8080/ while DOSBox is running to learn more about the API.
-Also check out the provided `api.js` wrapper.
+These files provide examples for interacting with the DOSBox HTTP API. Make
+sure to enable the API by setting `webserver_enabled = on` in the `[webserver]`
+config section and restart Staging. Then open http://localhost:8080/ while
+DOSBox is running to learn more about the API. Also check out the provided
+`api.js` wrapper.
 
 These files here need to be placed in the `webserver` dir inside your DOSBox
 config directory to use them.
@@ -33,9 +35,9 @@ The Memory Scanner is a lightweight version of tools like Cheat Engine. It
 identifies where specific values are stored in memory by iteratively tracking
 changes.
 
-    1. Begin by searching for a known value (e.g., your current ammo count).
-    2. Filter the results by performing actions in-game that change that value.
-    3. Repeat until you have isolated the specific memory address.
+1. Begin by searching for a known value (e.g., your current ammo count).
+2. Filter the results by performing actions in-game that change that value.
+3. Repeat until you have isolated the specific memory address.
 
 Try finding the ammo address for the Commander Keen demo from above yourself.
 It usually only takes a few iterations.
