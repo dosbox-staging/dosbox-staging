@@ -43,7 +43,7 @@ Try finding the ammo address for the Commander Keen demo from above yourself.
 It usually only takes a few iterations.
 
 
-## Hex viewer
+## Memory viewer
 
 http://localhost:8080/memory.html
 
