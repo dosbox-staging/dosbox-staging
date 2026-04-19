@@ -174,12 +174,18 @@ document.addEventListener("DOMContentLoaded", () => {
     head on to the [Windows](windows.md), [macOS](macos.md), or
     [Linux](linux.md) download pages.
 
+
 !!! info
 
-    The development builds are hosted on GitHub; you need to have a GitHub
+    The **development builds** are hosted on GitHub; you'll need a GitHub
     account to download them. If you're not logged in to GitHub, you will see
-    the build artifacts but clicking on their names won't initiate the
+    the build artifacts, but clicking on their names won't initiate the
     download.
+
+    We release a new dev snapshot build whenever a PR is merged. Make sure to
+    check out the automaticaly generated **release notes HTML** included with
+    the snapshot builds. This lists all the changes since the last stable
+    release, with links to the individual PRs on GitHub.
 
 
 <div class="compact">
