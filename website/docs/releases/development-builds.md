@@ -52,7 +52,7 @@ function set_build_version(gh_api_artifacts, os_name) {
         //
         let platform_re = "[\\w-]*"
         let version_re  = "(\\d+\.\\d+\.\\d+)"
-        let hash_re     = "([\\w-\.]+)"
+        let hash_re     = "(alpha-[\\w-\\.]{5})"
 
         let re = `dosbox-staging-${platform_re}-${version_re}-${hash_re}`
         let release = data.artifacts.find(a => a.name.match(re))
