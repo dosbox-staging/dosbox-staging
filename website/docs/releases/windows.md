@@ -7,6 +7,11 @@ hide:
 
 ## Current stable version
 
+!!! tip
+
+    If you're new to DOSBox Staging, we highly recommend reading the
+    [Getting Started guide](../getting-started/index.md) first.
+
 <section class="release-downloads" markdown>
 
 - [Download DOSBox Staging 0.82.2 (x86_64, Installer)][0_82_2_INSTALLER]
@@ -25,13 +30,10 @@ hide:
 
 DOSBox Staging requires **64-bit Windows 8, 10, or 11**.
 
-Check out the [0.82.2 release notes](release-notes/0.82.2.md) to learn about
+Read the [0.82.2 release notes](release-notes/0.82.2.md) to learn about
 the changes and improvements introduced in this release.
 
-If you're new to DOSBox Staging, we highly recommend following the
-[Getting started guide](../getting-started/index.md).
-
-!!! important
+!!! warning "Important"
 
     If Windows Security prevents you from running DOSBox Staging via **Windows
     Defender SmartScreen** (the built-in Windows antivirus), please follow

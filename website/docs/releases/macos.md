@@ -7,6 +7,11 @@ hide:
 
 ## Current stable version
 
+!!! tip
+
+    If you're new to DOSBox Staging, we highly recommend reading the
+    [Getting Started guide](../getting-started/index.md) first.
+
 <section class="release-downloads" markdown>
 
 [Download DOSBox Staging 0.82.2 Universal Binary (dmg)][0_82_2]
@@ -20,11 +25,8 @@ sha256: 3b83bb63a7314212b207ae19b82ffd15<wbr>bac6ddc3a2e96d65a425343b4e9bd4a2
 DOSBos Staging requires **macOS 11 (Big Sur) or later**, and supports both
 Intel and Apple silicon Macs.
 
-Check out the [0.82.2 release notes](release-notes/0.82.2.md) to learn about
+Read our the [0.82.2 release notes](release-notes/0.82.2.md) to learn about
 the changes and improvements introduced by this release.
-
-If you're new to DOSBox Staging, we highly recommend following the
-[Getting started guide](../getting-started/index.md).
 
 
 ## Hardware requirements
