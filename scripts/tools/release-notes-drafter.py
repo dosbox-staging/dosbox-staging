@@ -7,9 +7,7 @@
 Create release notes draft for DOSBox Staging.
 
 The GitHub access token must be set in the GITHUB_ACCESS_TOKEN env var.
-
-The token must have the following scopes:
-  repo, workflow, write:packages, delete:packages
+You must use a classic personal access token with 'repo' scope.
 
 """
 
