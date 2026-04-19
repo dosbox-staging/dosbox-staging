@@ -139,7 +139,14 @@ function set_ci_status(workflow_file, os_name, description) {
         build_link_tr_el.appendChild(build_link)
 
         let build_date = new Date(status.updated_at)
-        get_build_date_el(os_name).textContent = build_date.toUTCString()
+
+        let date_string_utc = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'UTC', timeZoneName: 'short',
+            year: 'numeric', month: 'short', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        }).format(build_date);
+
+        get_build_date_el(os_name).textContent = date_string_utc
 
         set_build_version(status.artifacts_url, os_name)
       })
