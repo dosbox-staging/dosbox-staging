@@ -86,15 +86,6 @@ These [snapshot builds](development-builds.md) might be slow or unstable as they
 are designed with developers and testers in mind.
 
 
-## Experimental Windows ARM64 builds
-
-We started providing experimental Windows ARM64 packages for devices such as
-the Snapdragon X Elite. Note we don't provide any official support for these
-builds yet.
-
-The ARM64 packages can be downloaded from our [development builds](development-builds.md) page.
-
-
 ## Windows Defender
 
 Windows Defender (the built-in Windows antivirus starting from Windows 8)
