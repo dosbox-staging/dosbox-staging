@@ -24,8 +24,10 @@ void Command::WaitForCompletion(const uint32_t timeout_ms)
 void Bridge::ExecuteCommand(Command& cmd, const uint32_t timeout_ms)
 {
 	std::unique_lock<std::mutex> lock(mtx);
+
 	cmd.done = false;
 	queue.push_back(&cmd);
+
 	bool success = cv.wait_for(lock,
 	                           std::chrono::milliseconds(timeout_ms),
 	                           [&] { return cmd.done; });
@@ -42,6 +44,7 @@ void Bridge::ExecuteCommand(Command& cmd, const uint32_t timeout_ms)
 void Bridge::ProcessRequests()
 {
 	std::lock_guard<std::mutex> lock(mtx);
+
 	if (queue.empty()) {
 		return;
 	}
@@ -49,6 +52,7 @@ void Bridge::ProcessRequests()
 		cmd->Execute();
 		cmd->done = true;
 	}
+
 	queue.clear();
 	cv.notify_all();
 }
