@@ -57,14 +57,14 @@ static void setup_api_handlers()
 {
 	server.Get("/api/cpu", CpuInfoCommand::Get);
 
+	server.Get("/api/dos", DosInfoCommand::Get);
+
+	server.Post("/api/memory/allocate", AllocMemoryCommand::Post);
+	server.Post("/api/memory/free", FreeMemoryCommand::Post);
 	server.Get("/api/memory/:offset/:len", ReadMemCommand::Get);
 	server.Get("/api/memory/:segment/:offset/:len", ReadMemCommand::Get);
 	server.Put("/api/memory/:offset", WriteMemCommand::Put);
 	server.Put("/api/memory/:segment/:offset", WriteMemCommand::Put);
-	server.Post("/api/memory/allocate", AllocMemoryCommand::Post);
-	server.Post("/api/memory/free", FreeMemoryCommand::Post);
-
-	server.Get("/api/dos", DosInfoCommand::Get);
 }
 
 static std::string strip_port(const std::string& host)
