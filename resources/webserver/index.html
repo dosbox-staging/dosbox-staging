@@ -25,7 +25,7 @@
 
         <p>
             For example, <a
-              href="./api/memory/0/0x100000">api/memory/0/0x100000</a>
+              href="./api/v1/memory/0/0x100000">api/v1/memory/0/0x100000</a>
             downloads a snapshot of the entire lower memory area.
         </p>
 
@@ -45,12 +45,12 @@
         </p>
 
         <section id="docs">
-            <h2 class="single">GET /api/cpu/state</h2>
+            <h2 class="single">GET /api/v1/cpu/state</h2>
             <p>Read the state of the CPU. Returns the values of all CPU
             registers.</p>
 
-            <h2 class="first">GET /api/memory/:offset/:len</h2>
-            <h2 class="last">GET /api/memory/:segment/:offset/:len</h2>
+            <h2 class="first">GET /api/v1/memory/:offset/:len</h2>
+            <h2 class="last">GET /api/v1/memory/:segment/:offset/:len</h2>
 
             <p>Read memory from the given address.</p>
 
@@ -62,8 +62,8 @@
               application/json</code> to request a JSON response with the data
             encoded in Base64.</p>
 
-            <h2 class="first">PUT /api/memory/:offset</h2>
-            <h2 class="last">PUT /api/memory/:segment/:offset</h2>
+            <h2 class="first">PUT /api/v1/memory/:offset</h2>
+            <h2 class="last">PUT /api/v1/memory/:segment/:offset</h2>
 
             <p>Write memory to the given address.</p>
             <p>Path parameters work the same as for GET.</p>
@@ -82,7 +82,7 @@
             not match the <code>If-Match</code> header.</p>
 
 
-            <h2 class="single">POST /api/memory/allocate</h2>
+            <h2 class="single">POST /api/v1/memory/allocate</h2>
             <p>Allocate memory.</p>
             <p><strong>Request</strong></p>
             <pre><code>{
@@ -106,7 +106,7 @@
 
             <p>The XMS allocator only supports <code>best_fit</code>.</p>
 
-            <h2 class="single">POST /api/memory/free</h2>
+            <h2 class="single">POST /api/v1/memory/free</h2>
             <p>Frees allocated memory at the given address.</p>
             <p><strong>Request</strong></p>
             <pre><code>{
@@ -114,11 +114,11 @@
 }</code></pre>
             <p>Returns 400 on invalid addresses.</p>
 
-            <h2 class="single">GET /api/dos/internals</h2>
+            <h2 class="single">GET /api/v1/dos/internals</h2>
             <p>Retrieve pointers to internal DOS data structures like the DOS
             swappable area and list of lists.</p>
 
-            <h2 class="single">GET /api/info</h2>
+            <h2 class="single">GET /api/v1/info</h2>
             <p>Retrieve DOSBox version and relevant paths.</p>
         </section>
     </div>
@@ -126,7 +126,7 @@
     <script>
         async function updateVersion() {
             try {
-              const response = await fetch('/api/info');
+              const response = await fetch('/api/v1/info');
               if (!response.ok) throw new Error('Fetch error');
               const data = await response.json();
               const versionElement = document.querySelector('.header-subtitle');

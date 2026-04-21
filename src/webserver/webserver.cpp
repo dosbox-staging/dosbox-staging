@@ -55,16 +55,16 @@ static httplib::Server server;
 
 static void setup_api_handlers()
 {
-	server.Get("/api/cpu/state", CpuStateCommand::Get);
+	server.Get("/api/v1/cpu/state", CpuStateCommand::Get);
 
-	server.Get("/api/dos/internals", DosInternalsCommand::Get);
+	server.Get("/api/v1/dos/internals", DosInternalsCommand::Get);
 
-	server.Post("/api/memory/allocate", AllocMemoryCommand::Post);
-	server.Post("/api/memory/free", FreeMemoryCommand::Post);
-	server.Get("/api/memory/:offset/:len", ReadMemoryCommand::Get);
-	server.Get("/api/memory/:segment/:offset/:len", ReadMemoryCommand::Get);
-	server.Put("/api/memory/:offset", WriteMemoryCommand::Put);
-	server.Put("/api/memory/:segment/:offset", WriteMemoryCommand::Put);
+	server.Post("/api/v1/memory/allocate", AllocMemoryCommand::Post);
+	server.Post("/api/v1/memory/free", FreeMemoryCommand::Post);
+	server.Get("/api/v1/memory/:offset/:len", ReadMemoryCommand::Get);
+	server.Get("/api/v1/memory/:segment/:offset/:len", ReadMemoryCommand::Get);
+	server.Put("/api/v1/memory/:offset", WriteMemoryCommand::Put);
+	server.Put("/api/v1/memory/:segment/:offset", WriteMemoryCommand::Put);
 }
 
 static std::string strip_port(const std::string& host)
@@ -140,7 +140,7 @@ static void run(std::string addr, int port)
 
 	server.set_exception_handler(error_handler);
 
-	server.Get("/api/info", [=](auto, auto& res) {
+	server.Get("/api/v1/info", [=](auto, auto& res) {
 		json j;
 		j["configHome"]      = get_config_dir();
 		j["configWebserver"] = config_home;
