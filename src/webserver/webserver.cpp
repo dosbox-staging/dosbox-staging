@@ -106,8 +106,7 @@ static void setup_host_validation(const std::string& addr, int port)
 	server.set_pre_routing_handler(
 	        [allowed = std::move(allowed)](const httplib::Request& req,
 	                                       httplib::Response& res) {
-		        const auto host = strip_port(
-		                req.get_header_value("Host"));
+		        const auto host = strip_port(req.get_header_value("Host"));
 
 		        if (allowed.find(host) == allowed.end()) {
 			        LOG_WARNING("WEBSERVER: Rejected request with Host header '%s'",
@@ -155,9 +154,9 @@ static void init_config_settings(SectionProp& section)
 
 	auto enabled = section.AddBool("webserver_enabled", OnlyAtStart, false);
 	enabled->SetHelp(
-			"Enable the HTTP REST API that exposes internal state and memory (disabled by\n"  
-			"default). Open http://localhost:8080 in a browser (or use the configured port)\n"  
-			"to view the API documentation.");
+	        "Enable the HTTP REST API that exposes internal state and memory (disabled by\n"
+	        "default). Open http://localhost:8080 in a browser (or use the configured port)\n"
+	        "to view the API documentation.");
 	auto bind_ip = section.AddString("webserver_bind_address",
 	                                 OnlyAtStart,
 	                                 "127.0.0.1");

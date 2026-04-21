@@ -41,22 +41,14 @@ static Segment str_to_base_segment(const std::string_view str)
 static uint32_t base_segment_to_offset(const Segment segment)
 {
 	switch (segment) {
-	case Segment::CS:
-		return SegPhys(SegNames::cs);
-	case Segment::SS:
-		return SegPhys(SegNames::ss);
-	case Segment::DS:
-		return SegPhys(SegNames::ds);
-	case Segment::ES:
-		return SegPhys(SegNames::es);
-	case Segment::FS:
-		return SegPhys(SegNames::fs);
-	case Segment::GS:
-		return SegPhys(SegNames::gs);
-	case Segment::None:
-		return 0;
-	default:
-		return 0;
+	case Segment::CS: return SegPhys(SegNames::cs);
+	case Segment::SS: return SegPhys(SegNames::ss);
+	case Segment::DS: return SegPhys(SegNames::ds);
+	case Segment::ES: return SegPhys(SegNames::es);
+	case Segment::FS: return SegPhys(SegNames::fs);
+	case Segment::GS: return SegPhys(SegNames::gs);
+	case Segment::None: return 0;
+	default: return 0;
 	}
 }
 

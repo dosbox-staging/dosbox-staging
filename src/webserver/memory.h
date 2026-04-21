@@ -69,4 +69,4 @@ private:
 
 } // namespace Webserver
 
-#endif //DOSBOX_WEBSERVER_MEMORY_H
+#endif // DOSBOX_WEBSERVER_MEMORY_H

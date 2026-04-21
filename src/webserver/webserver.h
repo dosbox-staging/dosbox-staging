@@ -16,7 +16,7 @@
 
 namespace Webserver {
 
-constexpr auto TypeJson = "application/json";
+constexpr auto TypeJson   = "application/json";
 constexpr auto TypeBinary = "application/octet-stream";
 
 enum class Source {
