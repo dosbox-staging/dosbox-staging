@@ -15,9 +15,9 @@ namespace Webserver {
 
 enum class Segment { None, CS, SS, DS, ES, FS, GS };
 
-class ReadMemCommand : public Command {
+class ReadMemoryCommand : public Command {
 public:
-	ReadMemCommand(const Segment base, const uint32_t offset, const uint32_t len)
+	ReadMemoryCommand(const Segment base, const uint32_t offset, const uint32_t len)
 	        : base(base),
 	          offset(offset),
 	          len(len)

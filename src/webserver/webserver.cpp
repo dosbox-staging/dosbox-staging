@@ -61,8 +61,8 @@ static void setup_api_handlers()
 
 	server.Post("/api/memory/allocate", AllocMemoryCommand::Post);
 	server.Post("/api/memory/free", FreeMemoryCommand::Post);
-	server.Get("/api/memory/:offset/:len", ReadMemCommand::Get);
-	server.Get("/api/memory/:segment/:offset/:len", ReadMemCommand::Get);
+	server.Get("/api/memory/:offset/:len", ReadMemoryCommand::Get);
+	server.Get("/api/memory/:segment/:offset/:len", ReadMemoryCommand::Get);
 	server.Put("/api/memory/:offset", WriteMemCommand::Put);
 	server.Put("/api/memory/:segment/:offset", WriteMemCommand::Put);
 }
