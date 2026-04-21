@@ -110,7 +110,7 @@ export class DOSBoxApi {
     }
 
     async getDosInfo() {
-        const res = await this._request('dos');
+        const res = await this._request('dos/internals');
         return await res.json();
     }
 }
