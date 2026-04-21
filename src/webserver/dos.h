@@ -13,7 +13,7 @@ namespace Webserver {
 // breakages if these ever change and users hard-code these offsets. It's not
 // a place to pull random info that can also be read by the client from these
 // addresses directly.
-class DosInfoCommand : public Command {
+class DosInternalsCommand : public Command {
 	// Usually retrieved with int 21h, ah=0x52
 	uint16_t list_of_lists = {};
 	// Usually retrieved with int 21h ax=0x5d06

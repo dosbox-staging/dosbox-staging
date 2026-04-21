@@ -20,18 +20,18 @@ namespace Webserver {
 
 constexpr int DosBlockSize = 16;
 
-void DosInfoCommand::Execute()
+void DosInternalsCommand::Execute()
 {
 	list_of_lists      = RealToPhysical(dos_infoblock.GetPointer());
 	dos_swappable_area = PhysicalMake(DOS_SDA_SEG, DOS_SDA_OFS);
 	first_shell        = PhysicalMake(DOS_FIRST_SHELL, 0);
 
-	LOG_DEBUG("API: DosInfoCommand()");
+	LOG_DEBUG("API: DosInternalsCommand()");
 }
 
-void DosInfoCommand::Get(const httplib::Request&, httplib::Response& res)
+void DosInternalsCommand::Get(const httplib::Request&, httplib::Response& res)
 {
-	DosInfoCommand cmd;
+	DosInternalsCommand cmd;
 	cmd.WaitForCompletion();
 
 	json j;

@@ -57,7 +57,7 @@ static void setup_api_handlers()
 {
 	server.Get("/api/cpu", CpuInfoCommand::Get);
 
-	server.Get("/api/dos/internals", DosInfoCommand::Get);
+	server.Get("/api/dos/internals", DosInternalsCommand::Get);
 
 	server.Post("/api/memory/allocate", AllocMemoryCommand::Post);
 	server.Post("/api/memory/free", FreeMemoryCommand::Post);
