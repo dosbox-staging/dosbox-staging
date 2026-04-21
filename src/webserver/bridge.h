@@ -11,9 +11,9 @@
 
 namespace Webserver {
 
-class DebugCommand {
+class Command {
 public:
-	virtual ~DebugCommand() {}
+	virtual ~Command() {}
 	virtual void Execute() = 0;
 
 	void WaitForCompletion(const uint32_t timeout_ms = 250);
@@ -34,7 +34,7 @@ public:
 	static Bridge& Instance();
 
 	// Called by the web server thread
-	void ExecuteCommand(DebugCommand& cmd, const uint32_t timeout_ms);
+	void ExecuteCommand(Command& cmd, const uint32_t timeout_ms);
 
 	// Called by the main thread running the CPU emulation
 	void ProcessRequests();
@@ -42,7 +42,7 @@ public:
 private:
 	std::mutex mtx                   = {};
 	std::condition_variable cv       = {};
-	std::vector<DebugCommand*> queue = {};
+	std::vector<Command*> queue      = {};
 
 	Bridge(const Bridge&)            = delete;
 	Bridge& operator=(const Bridge&) = delete;

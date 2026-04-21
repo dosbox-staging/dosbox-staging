@@ -36,7 +36,7 @@ struct Registers {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Registers, eax, ebx, ecx, edx, esi, edi, esp,
                                    ebp, eip, flags, cs, ds, es, ss, fs, gs)
 
-class CpuInfoCommand : public DebugCommand {
+class CpuInfoCommand : public Command {
 public:
 	void Execute() override;
 	static void Get(const httplib::Request&, httplib::Response&);

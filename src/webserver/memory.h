@@ -15,7 +15,7 @@ namespace Webserver {
 
 enum class Segment { None, CS, SS, DS, ES, FS, GS };
 
-class ReadMemCommand : public DebugCommand {
+class ReadMemCommand : public Command {
 public:
 	ReadMemCommand(const Segment base, const uint32_t offset, const uint32_t len)
 	        : base(base),
@@ -39,7 +39,7 @@ private:
 	Registers regs          = {};
 };
 
-class WriteMemCommand : public DebugCommand {
+class WriteMemCommand : public Command {
 public:
 	WriteMemCommand(const Segment base, const uint32_t offset,
 	                std::string data, std::string expected_data)

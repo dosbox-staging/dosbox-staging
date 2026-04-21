@@ -16,12 +16,12 @@ Bridge& Bridge::Instance()
 	return instance;
 }
 
-void DebugCommand::WaitForCompletion(const uint32_t timeout_ms)
+void Command::WaitForCompletion(const uint32_t timeout_ms)
 {
 	Bridge::Instance().ExecuteCommand(*this, timeout_ms);
 }
 
-void Bridge::ExecuteCommand(DebugCommand& cmd, const uint32_t timeout_ms)
+void Bridge::ExecuteCommand(Command& cmd, const uint32_t timeout_ms)
 {
 	std::unique_lock<std::mutex> lock(mtx);
 	cmd.done = false;
