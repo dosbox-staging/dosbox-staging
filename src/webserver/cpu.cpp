@@ -35,15 +35,15 @@ void Registers::load()
 	this->gs    = SegValue(SegNames::gs);
 }
 
-void CpuInfoCommand::Execute()
+void CpuStateCommand::Execute()
 {
 	regs.load();
-	LOG_DEBUG("API: CpuInfoCommand()");
+	LOG_DEBUG("API: CpuStateCommand()");
 }
 
-void CpuInfoCommand::Get(const httplib::Request&, httplib::Response& res)
+void CpuStateCommand::Get(const httplib::Request&, httplib::Response& res)
 {
-	CpuInfoCommand cmd;
+	CpuStateCommand cmd;
 	cmd.WaitForCompletion();
 
 	json j;
