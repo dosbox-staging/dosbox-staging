@@ -116,7 +116,7 @@ static Bitu normal_loop()
 
 	while (true) {
 		if (PIC_RunQueue()) {
-			Webserver::DebugBridge::Instance().ProcessRequests();
+			Webserver::Bridge::Instance().ProcessRequests();
 
 			ret = (*cpudecoder)();
 			if (ret < 0) {
