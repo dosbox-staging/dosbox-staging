@@ -32,11 +32,12 @@ enum class AllocStrategy { FirstFit, BestFit, LastFit };
 
 class AllocMemoryCommand : public DebugCommand {
 public:
-	AllocMemoryCommand(const uint16_t bytes, const MemoryArea area, const AllocStrategy strategy)
+	AllocMemoryCommand(const uint16_t bytes, const MemoryArea area,
+	                   const AllocStrategy strategy)
 	        : area(area),
 	          strategy(strategy),
 	          bytes(bytes)
-	          
+
 	{}
 
 	void Execute() override;
