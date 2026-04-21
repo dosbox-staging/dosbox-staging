@@ -73,12 +73,12 @@ static void parse_mem_addr(const httplib::Request& req, Segment& segment,
 	}
 }
 
-void ReadMemCommand::Execute()
+void ReadMemoryCommand::Execute()
 {
 	regs.load();
 	effective_addr = base_segment_to_offset(base) + offset;
 
-	LOG_DEBUG("API: ReadMemCommand(0x%06x, %d)", effective_addr, len);
+	LOG_DEBUG("API: ReadMemoryCommand(0x%06x, %d)", effective_addr, len);
 
 	const uint64_t mem_total = static_cast<uint64_t>(MEM_TotalPages()) *
 	                           MemPageSize;
@@ -96,7 +96,7 @@ void ReadMemCommand::Execute()
 	MEM_BlockRead(effective_addr, memory.data(), len);
 }
 
-void ReadMemCommand::Get(const Request& req, Response& res)
+void ReadMemoryCommand::Get(const Request& req, Response& res)
 {
 	// 128 MiB per request ought to be enough for everyone.
 	// This limit just prevents bad things when accidentally requesting an
@@ -107,7 +107,7 @@ void ReadMemCommand::Get(const Request& req, Response& res)
 	uint32_t offset;
 	parse_mem_addr(req, segment, offset);
 
-	ReadMemCommand cmd(segment, offset, num_bytes);
+	ReadMemoryCommand cmd(segment, offset, num_bytes);
 	cmd.WaitForCompletion();
 
 	if (!cmd.error.empty()) {
