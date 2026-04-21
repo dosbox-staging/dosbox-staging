@@ -131,11 +131,11 @@ void ReadMemoryCommand::Get(const Request& req, Response& res)
 	}
 }
 
-void WriteMemCommand::Execute()
+void WriteMemoryCommand::Execute()
 {
 	effective_addr = base_segment_to_offset(base) + offset;
 
-	LOG_DEBUG("API: WriteMemCommand(0x%06x, %d)", effective_addr, data.size());
+	LOG_DEBUG("API: WriteMemoryCommand(0x%06x, %d)", effective_addr, data.size());
 
 	const uint64_t mem_total = static_cast<uint64_t>(MEM_TotalPages()) *
 	                           MemPageSize;
@@ -168,7 +168,7 @@ void WriteMemCommand::Execute()
 	MEM_BlockWrite(effective_addr, data.data(), data.size());
 }
 
-void WriteMemCommand::Put(const httplib::Request& req, httplib::Response& res)
+void WriteMemoryCommand::Put(const httplib::Request& req, httplib::Response& res)
 {
 	Segment segment;
 	uint32_t offset;
@@ -210,7 +210,7 @@ void WriteMemCommand::Put(const httplib::Request& req, httplib::Response& res)
 		expected_data = base64::from_base64(etag);
 	}
 
-	WriteMemCommand cmd(segment, offset, std::move(data), std::move(expected_data));
+	WriteMemoryCommand cmd(segment, offset, std::move(data), std::move(expected_data));
 	cmd.WaitForCompletion();
 
 	if (!cmd.error.empty()) {

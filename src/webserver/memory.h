@@ -39,10 +39,10 @@ private:
 	Registers regs          = {};
 };
 
-class WriteMemCommand : public Command {
+class WriteMemoryCommand : public Command {
 public:
-	WriteMemCommand(const Segment base, const uint32_t offset,
-	                std::string data, std::string expected_data)
+	WriteMemoryCommand(const Segment base, const uint32_t offset,
+	                   std::string data, std::string expected_data)
 	        : base(base),
 	          offset(offset),
 	          data(std::move(data)),
