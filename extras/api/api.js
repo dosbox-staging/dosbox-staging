@@ -1,5 +1,5 @@
 export class DOSBoxApi {
-    constructor(baseUrl = '/api') {
+    constructor(baseUrl = '/api/v1') {
         this.baseUrl = baseUrl.replace(/\/$/, '');
     }
 
