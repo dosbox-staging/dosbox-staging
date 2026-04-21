@@ -55,7 +55,7 @@ static httplib::Server server;
 
 static void setup_api_handlers()
 {
-	server.Get("/api/cpu/state", CpuInfoCommand::Get);
+	server.Get("/api/cpu/state", CpuStateCommand::Get);
 
 	server.Get("/api/dos/internals", DosInternalsCommand::Get);
 
