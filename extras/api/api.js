@@ -12,7 +12,7 @@ export class DOSBoxApi {
     }
 
     async getCpu() {
-        const res = await this._request('/cpu');
+        const res = await this._request('/cpu/state');
         return await res.json();
     }
 
