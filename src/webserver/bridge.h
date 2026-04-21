@@ -24,14 +24,14 @@ public:
 	std::string error = {};
 
 private:
-	friend class DebugBridge;
+	friend class Bridge;
 
 	bool done = false;
 };
 
-class DebugBridge {
+class Bridge {
 public:
-	static DebugBridge& Instance();
+	static Bridge& Instance();
 
 	// Called by the web server thread
 	void ExecuteCommand(DebugCommand& cmd, const uint32_t timeout_ms);
@@ -44,9 +44,9 @@ private:
 	std::condition_variable cv       = {};
 	std::vector<DebugCommand*> queue = {};
 
-	DebugBridge(const DebugBridge&)            = delete;
-	DebugBridge& operator=(const DebugBridge&) = delete;
-	DebugBridge()                              = default;
+	Bridge(const Bridge&)            = delete;
+	Bridge& operator=(const Bridge&) = delete;
+	Bridge()                         = default;
 };
 
 } // namespace Webserver

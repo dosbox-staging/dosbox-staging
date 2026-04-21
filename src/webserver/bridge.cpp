@@ -10,18 +10,18 @@
 
 namespace Webserver {
 
-DebugBridge& DebugBridge::Instance()
+Bridge& Bridge::Instance()
 {
-	static DebugBridge instance;
+	static Bridge instance;
 	return instance;
 }
 
 void DebugCommand::WaitForCompletion(const uint32_t timeout_ms)
 {
-	DebugBridge::Instance().ExecuteCommand(*this, timeout_ms);
+	Bridge::Instance().ExecuteCommand(*this, timeout_ms);
 }
 
-void DebugBridge::ExecuteCommand(DebugCommand& cmd, const uint32_t timeout_ms)
+void Bridge::ExecuteCommand(DebugCommand& cmd, const uint32_t timeout_ms)
 {
 	std::unique_lock<std::mutex> lock(mtx);
 	cmd.done = false;
@@ -39,7 +39,7 @@ void DebugBridge::ExecuteCommand(DebugCommand& cmd, const uint32_t timeout_ms)
 	}
 }
 
-void DebugBridge::ProcessRequests()
+void Bridge::ProcessRequests()
 {
 	std::lock_guard<std::mutex> lock(mtx);
 	if (queue.empty()) {
