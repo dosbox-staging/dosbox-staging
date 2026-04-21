@@ -34,6 +34,7 @@ static void error_handler(const httplib::Request&, httplib::Response& res,
 {
 	json j;
 	std::string msg;
+
 	try {
 		if (ep) {
 			std::rethrow_exception(ep);
@@ -43,8 +44,10 @@ static void error_handler(const httplib::Request&, httplib::Response& res,
 	} catch (...) {
 		msg = "Unknown error";
 	}
+
 	j["error"] = msg;
 	res.status = httplib::StatusCode::InternalServerError_500;
+
 	send_json(res, j);
 }
 
@@ -53,12 +56,14 @@ static httplib::Server server;
 static void setup_api_handlers()
 {
 	server.Get("/api/cpu", CpuInfoCommand::Get);
+
 	server.Get("/api/memory/:offset/:len", ReadMemCommand::Get);
 	server.Get("/api/memory/:segment/:offset/:len", ReadMemCommand::Get);
 	server.Put("/api/memory/:offset", WriteMemCommand::Put);
 	server.Put("/api/memory/:segment/:offset", WriteMemCommand::Put);
 	server.Post("/api/memory/allocate", AllocMemoryCommand::Post);
 	server.Post("/api/memory/free", FreeMemoryCommand::Post);
+
 	server.Get("/api/dos", DosInfoCommand::Get);
 }
 
@@ -72,6 +77,7 @@ static std::string strip_port(const std::string& host)
 		}
 		return host;
 	}
+
 	// IPv4 or hostname: 127.0.0.1:8080
 	const auto colon = host.rfind(':');
 	if (colon != std::string::npos) {
@@ -111,8 +117,10 @@ static void setup_host_validation(const std::string& addr, int port)
 		        if (allowed.find(host) == allowed.end()) {
 			        LOG_WARNING("WEBSERVER: Rejected request with Host header '%s'",
 			                    req.get_header_value("Host").c_str());
+
 			        res.status = httplib::StatusCode::Forbidden_403;
 			        res.set_content("Forbidden", "text/plain");
+
 			        return httplib::Server::HandlerResponse::Handled;
 		        }
 		        return httplib::Server::HandlerResponse::Unhandled;
@@ -123,25 +131,31 @@ static void run(std::string addr, int port)
 {
 	const auto resource_home = get_resource_path("webserver").string();
 	const auto config_home = (get_config_dir() / DefaultWebserverDir).string();
+
 	server.set_mount_point("/", config_home);
 	server.set_mount_point("/", resource_home);
 
 	setup_api_handlers();
 	setup_host_validation(addr, port);
+
 	server.set_exception_handler(error_handler);
+
 	server.Get("/api/info", [=](auto, auto& res) {
 		json j;
 		j["configHome"]      = get_config_dir();
 		j["configWebserver"] = config_home;
 		j["version"]         = DOSBOX_GetDetailedVersion();
+
 		send_json(res, j);
 	});
 
 	LOG_INFO("WEBSERVER: Starting HTTP REST API on http://%s:%d",
 	         addr.c_str(),
 	         port);
+
 	LOG_INFO("WEBSERVER: Using document root directory '%s'",
 	         config_home.c_str());
+
 	auto ok = server.listen(addr, port);
 	if (!ok) {
 		LOG_WARNING("WEBSERVER: Failed to bind to %s:%d", addr.c_str(), port);
@@ -176,10 +190,13 @@ static void init_config_settings(SectionProp& section)
 void WEBSERVER_Init()
 {
 	auto section = get_section("webserver");
+
 	if (section->GetBool("webserver_enabled")) {
 		auto addr = section->GetString("webserver_bind_address");
 		auto port = section->GetInt("webserver_port");
+
 		std::thread thread(Webserver::run, addr, port);
+
 		thread.detach();
 	}
 }
@@ -192,6 +209,8 @@ void WEBSERVER_Destroy()
 void WEBSERVER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
+
 	auto section = conf->AddSection("webserver");
+
 	Webserver::init_config_settings(*section);
 }

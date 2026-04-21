@@ -25,6 +25,7 @@ void DosInfoCommand::Execute()
 	list_of_lists      = RealToPhysical(dos_infoblock.GetPointer());
 	dos_swappable_area = PhysicalMake(DOS_SDA_SEG, DOS_SDA_OFS);
 	first_shell        = PhysicalMake(DOS_FIRST_SHELL, 0);
+
 	LOG_DEBUG("API: DosInfoCommand()");
 }
 
@@ -37,6 +38,7 @@ void DosInfoCommand::Get(const httplib::Request&, httplib::Response& res)
 	j["listOfLists"]      = cmd.list_of_lists;
 	j["dosSwappableArea"] = cmd.dos_swappable_area;
 	j["firstShell"]       = cmd.first_shell;
+
 	send_json(res, j);
 }
 
@@ -47,6 +49,7 @@ void AllocMemoryCommand::AllocDos()
 	uint16_t segment  = 0;
 
 	uint16_t new_strategy = 0;
+
 	switch (area) {
 	case MemoryArea::Conv:
 		switch (strategy) {
@@ -62,6 +65,7 @@ void AllocMemoryCommand::AllocDos()
 		default: assertm(false, "Invalid alloc strategy"); break;
 		}
 		break;
+
 	case MemoryArea::Uma:
 		switch (strategy) {
 		case AllocStrategy::FirstFit:
@@ -78,15 +82,18 @@ void AllocMemoryCommand::AllocDos()
 		break;
 	default: assertm(false, "Invalid memory area"); break;
 	}
+
 	DOS_SetMemAllocStrategy(new_strategy);
 
 	auto ok = DOS_AllocateMemory(&segment, &blocks);
 	addr    = PhysicalMake(segment, 0);
+
 	LOG_DEBUG("API: AllocMemoryCommand(%d): result=%d, %d bytes at %p (DOS allocator)",
 	          bytes,
 	          ok,
 	          blocks * DosBlockSize,
 	          addr);
+
 	DOS_SetMemAllocStrategy(old_strategy);
 
 	if (!ok) {
@@ -124,11 +131,14 @@ void AllocMemoryCommand::Post(const httplib::Request& req, httplib::Response& re
 {
 	auto j        = json::parse(req.body);
 	uint32_t size = j.at("size");
+
 	auto area     = MemoryArea::Conv;
 	auto strategy = AllocStrategy::BestFit;
+
 	if (j.contains("area")) {
 		std::string req_area = j["area"];
 		upcase(req_area);
+
 		if (req_area == "CONV") {
 			area = MemoryArea::Conv;
 		} else if (req_area == "UMA") {
@@ -139,9 +149,11 @@ void AllocMemoryCommand::Post(const httplib::Request& req, httplib::Response& re
 			throw std::invalid_argument("Invalid memory area: " + req_area);
 		}
 	}
+
 	if (j.contains("strategy")) {
 		std::string req_strategy = j["strategy"];
 		upcase(req_strategy);
+
 		if (req_strategy == "FIRST_FIT") {
 			strategy = AllocStrategy::FirstFit;
 		} else if (req_strategy == "BEST_FIT") {
@@ -152,6 +164,7 @@ void AllocMemoryCommand::Post(const httplib::Request& req, httplib::Response& re
 			throw std::invalid_argument("Invalid alloc strategy: " +
 			                            req_strategy);
 		}
+
 		if (area == MemoryArea::Xms && strategy != AllocStrategy::BestFit) {
 			throw std::invalid_argument(
 			        "XMS allocator only supports best_fit");
@@ -180,8 +193,10 @@ void FreeMemoryCommand::Execute()
 	} else {
 		auto free_before = MEM_FreeTotal();
 		MEM_ReleasePages(addr / MEM_PAGE_SIZE);
+
 		auto released = static_cast<int64_t>(MEM_FreeTotal()) - free_before;
 		success = released > 0;
+
 		LOG_DEBUG("API: FreeMemoryCommand(%p): released=%d (page allocator)",
 		          addr,
 		          released);
