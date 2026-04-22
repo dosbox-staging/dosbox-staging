@@ -188,6 +188,43 @@ primary config with default settings on next launch.
 
 See [Command-line usage](command-line.md) for all available launch options.
 
+## Changing settings at runtime
+
+Most configuration settings can be changed while DOSBox is running, directly
+from the DOS prompt. This is useful for experimenting with settings without
+restarting --- you can try different shaders, adjust audio levels, or tweak
+CPU speed on the fly and hear or see the difference immediately.
+
+There are two ways to change a setting:
+
+- **Full form**: `config -set SECTION SETTING = VALUE` (e.g.,
+  `config -set render shader = sharp`)
+- **Shortcut form**: `SETTING = VALUE` (e.g., `shader = sharp`)
+
+The shortcut form works for most settings and is the quickest way to
+experiment. If a value is invalid, the error is displayed in the DOS console
+so you can see what went wrong.
+
+To get help for any setting, use the `/?` shortcut:
+
+```
+sbtype /?
+shader /?
+```
+
+This is equivalent to `config -h SETTINGNAME` but much quicker to type.
+
+Some settings --- such as [`machine`](system/general.md#machine) --- require
+a reboot to take effect. After changing such a setting, use `config -r` to
+restart DOSBox. The setting's help text will tell you if a restart is needed.
+
+!!! tip
+
+    You can use `config -wc` to write the current settings to a new config
+    file, which is handy after you've found the right values by experimenting
+    at runtime.
+
+
 ## Configuration best practices
 
 [Local configurations](#local-configuration) are great for customising
