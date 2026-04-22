@@ -24,9 +24,16 @@ section.
 ##### keyboard_capture
 
 :   Capture system keyboard shortcuts. When enabled, most system shortcuts
-    such as Alt+Tab are captured and sent to DOSBox Staging. This is useful
-    for Windows 3.1 and some DOS programs with unchangeable keyboard
-    shortcuts that conflict with system shortcuts.
+    are captured and sent to DOSBox Staging instead of being intercepted by
+    the host OS. Examples of captured shortcuts:
+
+    - ++alt+tab++ (task switching on all platforms)
+    - ++ctrl+esc++ (Start menu on Windows)
+    - ++ctrl+f4++ (virtual desktop switching on KDE)
+    - ++ctrl+left++ (show desktop on macOS)
+
+    This is particularly useful for [Windows 3.1](../windows-31.md) and DOS
+    programs that use key combinations which conflict with your OS shortcuts.
 
     Possible values: `on`, `off` *default*{ .default }
 

@@ -73,11 +73,37 @@ See the [Dual mouse gaming](https://github.com/dosbox-staging/dosbox-staging/wik
 
 ## Seamless mode
 
-For Windows 3.1 running inside DOSBox, seamless mouse integration is
-available when using a compatible mouse driver --- with this enabled, the
-mouse cursor can be moved freely between the host desktop and the DOSBox
-Staging window (see [`mouse_capture`](#mouse_capture)).
+For [Windows 3.1](../windows-31.md) running inside DOSBox, seamless mouse
+integration is available when using a compatible mouse driver --- with this
+enabled, the mouse cursor can be moved freely between the host desktop and
+the DOSBox Staging window (see [`mouse_capture`](#mouse_capture)).
 
+The built-in mouse driver has been reworked for better Windows 3.1
+compatibility. The mouse now works properly in the Windows 3.1 MS-DOS Prompt
+run in a window --- the previous garbled display and janky mouse movement
+issues are gone. If the new mouse code causes problems, set
+[`builtin_dos_mouse_driver`](#builtin_dos_mouse_driver) to `no-tsr` to
+revert to previous behaviour.
+
+!!! note
+
+    Multiple DOS windows under Windows 3.1 are not supported.
+
+
+## Troubleshooting
+
+A few games have specific mouse issues that can be resolved with the built-in
+driver settings:
+
+- **Games that misinterpret the middle button** (e.g.,
+  [Eye of the Beholder](https://www.mobygames.com/game/1441/eye-of-the-beholder/))
+  --- set [`builtin_dos_mouse_driver_model`](#builtin_dos_mouse_driver_model)
+  to `2button`.
+
+- **Mouse cursor doesn't move with slow mouse movements** (e.g., Ultima
+  Underworld I/II) --- set
+  [`builtin_dos_mouse_driver_move_threshold`](#builtin_dos_mouse_driver_move_threshold)
+  to `2`.
 
 
 ## Configuration settings

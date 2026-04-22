@@ -26,9 +26,7 @@ The interface provides the following controls:
 - **Del** --- Remove the currently displayed binding from the selected event.
 - **Next** --- Cycle through multiple bindings for the same event (an event
   can have more than one binding).
-- **Save** --- Save the current mappings to a mapper file and return to the
-  game.
-- **Exit** --- Return to the game without saving.
+- **Exit** --- Return to the game. All changes are saved automatically.
 
 </div>
 
@@ -48,10 +46,12 @@ To swap two keys (for example, Y and Z on a German keyboard layout):
 5. Now click the **Z** key on the virtual keyboard.
 6. Click **Del** to remove its default binding.
 7. Click **Add**, then press the physical **Y** key.
-8. Click **Save** to store the mappings.
+8. Click **Exit** to return to the game.
 
 The same process works for any key --- click the event on the virtual layout,
-remove the old binding, add a new one.
+remove the old binding, add a new one. All changes are saved automatically
+to the [mapper file](#mapper-files). To discard all customisations and start
+fresh, see [Resetting the mapper](#resetting-the-mapper).
 
 
 ## Remapping joystick axes
@@ -62,7 +62,7 @@ To invert a joystick axis (e.g., reverse the Y-axis):
 2. Click **Del** to remove the default binding.
 3. Click **Add**, then push your physical joystick in the *opposite* direction.
 4. Repeat for the other direction of the same axis.
-5. Click **Save**.
+5. Click **Exit** to return to the game.
 
 
 ## Mapping controller buttons to keys
@@ -77,7 +77,7 @@ play keyboard-only DOS games with a controller. The basic approach:
 3. Click **Add**, then press the corresponding button or direction on your
    controller.
 4. Repeat for all keys the game uses.
-5. Click **Save**.
+5. Click **Exit** to return to the game.
 
 !!! tip
 
