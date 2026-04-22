@@ -48,6 +48,9 @@ game by pressing ++ctrl+q++. Not strictly necessary, but it's a nice touch.
     Apple has decided for you that your MacBook doesn't need a Home key,
     ++cmd+opt+fn+left++ should do the trick.
 
+    See the [Shortcuts](../manual/appendices/shortcuts.md) appendix in the
+    manual for the full list of available keyboard shortcuts.
+
 
 ## Graphics options
 

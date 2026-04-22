@@ -317,6 +317,12 @@ C:\>_
     as DOSBox automatically converts all filenames in our `drives/c` folder to
     uppercase behind the scenes.
 
+!!! tip "Want to learn more about DOS?"
+
+    The [DOS primer](../manual/dos-primer.md) in the manual covers the basics
+    of the DOS environment, and the [Commands](../manual/commands.md) page
+    documents all available built-in commands.
+
 
 ## Starting the game
 

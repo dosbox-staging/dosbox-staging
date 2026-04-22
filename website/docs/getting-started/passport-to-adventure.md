@@ -191,7 +191,9 @@ the ++ctrl+f10++ shortcut (++cmd+f10++ on macOS). The title bar of the DOSBox
 Staging window informs you about the current mouse capture state.
 
 It's also possible to tell DOSBox Staging to start with the mouse captured
-(this might not work on all operating systems, though):
+(this might not work on all operating systems, though). See the
+[Mouse](../manual/input/mouse.md) page in the manual for all available capture
+modes and mouse settings.
 
 ```ini
 [mouse]
