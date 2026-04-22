@@ -162,6 +162,36 @@ sections of the manual where they're described in detail.
 [^stereo]: The output can either mono or stereo, depending on the selected model.
 
 
+## Denoiser
+
+The [OPL synth](sound-devices/adlib-cms-sound-blaster.md) and the original
+SC-55 mk1 [Sound Canvas](sound-devices/general-midi.md#sound-canvas-emulation)
+models produce very low-level residual noise as part of their faithful
+hardware emulation. This noise is authentic --- real hardware behaved the same
+way --- but it can be slightly annoying on good-quality headphones or in quiet
+passages.
+
+The [`denoiser`](#denoiser) (technically a noise gate) removes this residual
+noise without degrading the useful audio signal in any way. It is enabled by
+default.
+
+The Sound Canvas noise affects all games on mk1 models. The OPL noise is only
+triggered by some games:
+
+??? note "Games with noticeable OPL residual noise"
+
+    <div class="compact" markdown>
+
+    - [Beneath a Steel Sky](https://www.mobygames.com/game/386/beneath-a-steel-sky/) --- audible constant noise during the intro
+    - [Doom](https://www.mobygames.com/game/1068/doom/) --- chord-like noise at the start of the E2M2 level music
+    - [Frederik Pohl's Gateway](https://www.mobygames.com/game/317/frederik-pohls-gateway/) / [Gateway II: Homeworld](https://www.mobygames.com/game/318/gateway-ii-homeworld/) --- hanging note after exiting to DOS
+    - [Gods](https://www.mobygames.com/game/1511/gods/) --- audible noise in-game between the quiet sound effects
+    - [Tetris Classic (1992)](https://www.mobygames.com/game/4539/tetris-classic/) --- buzzing noise after each level's intro music has finished playing
+    - [Wizardry 6: Bane of the Cosmic Forge](https://www.mobygames.com/game/709/wizardry-bane-of-the-cosmic-forge/) --- hanging notes after sound effects
+
+    </div>
+
+
 ## Minimising audio glitches
 
 Even after setting the optimal [cpu_cycles](../system/cpu.md#cpu_cycles)

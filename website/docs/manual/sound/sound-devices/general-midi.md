@@ -87,6 +87,44 @@ Canvas emulation via the **Nuked SC55 CLAP** audio plugin. This provides
 sample-accurate playback of the actual SC-55 sound engine --- as close to the
 real hardware as you can get without owning one.
 
+### Sound Canvas setup
+
+To enable Sound Canvas emulation, set the MIDI device and place the required
+ROM files:
+
+``` ini
+[midi]
+mididevice = soundcanvas
+```
+
+Download the SC-55 ROM files and place them in the `soundcanvas-roms`
+directory inside your DOSBox configuration folder:
+
+<div class="compact" markdown>
+
+| Platform | ROM directory                                           |
+|----------|---------------------------------------------------------|
+| Windows  | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundcanvas-roms\` |
+| macOS    | `~/Library/Preferences/DOSBox/soundcanvas-roms/`        |
+| Linux    | `~/.config/dosbox/soundcanvas-roms/`                    |
+
+</div>
+
+You can also set a custom ROM directory via the
+[`soundcanvas_rom_dir`](#soundcanvas_rom_dir) setting.
+
+!!! note
+
+    Sound Canvas emulation is CPU-intensive. You'll need a mid-range or better
+    desktop-class CPU from the last 5--7 years for glitch-free playback. If
+    your system struggles, [FluidSynth](#fluidsynth) with a good SoundFont is
+    a lighter alternative.
+
+!!! tip
+
+    You can switch between Sound Canvas models on the fly by changing the
+    [`soundcanvas_model`](#soundcanvas_model) setting --- no restart needed.
+
 
 ## Sound Canvas revisions
 
@@ -206,6 +244,13 @@ Other options worth trying:
     [`soundfont_volume`](#soundfont_volume) setting to normalise the volume,
     or append a percentage to the `soundfont` value (e.g.,
     `soundfont = Arachno 40` to reduce it to 40%).
+
+!!! tip
+
+    You can switch SoundFonts on the fly by changing the
+    [`soundfont`](#soundfont) setting while FluidSynth is active --- no restart
+    needed. Changing any `[fluidsynth]` setting takes effect immediately and
+    triggers a SoundFont reload.
 
 For a hands-on walkthrough of setting up FluidSynth with a specific game,
 see the [Star Wars: Dark
