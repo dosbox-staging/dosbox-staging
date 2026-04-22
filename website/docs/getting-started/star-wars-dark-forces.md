@@ -554,7 +554,7 @@ to the OPL synth.
 
 Of course, you can always try other GM or GS-compatible SoundFonts
 too --- that's the beauty of General MIDI!
-[FluidR3_GM_GS](https://archive.org/details/fluidr3-gm-gs) and
+[FluidR3_GM_GS](https://github.com/musescore/MuseScore/tree/master/share/sound) and
 [Creative Labs 4M GM_4gmgsmt](https://archive.org/download/free-soundfonts-sf2-2019-04/Creative%20Labs%204M%20GM_4gmgsmt.sf2)
 are good candidates as they sound fairly close to the SC-55 sound set. The
 [list of recommended SoundFonts](https://github.com/dosbox-staging/dosbox-staging/wiki/MIDI#soundfonts)
