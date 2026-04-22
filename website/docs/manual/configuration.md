@@ -1,14 +1,23 @@
 # Configuration
 
 DOSBox Staging uses plain-text configuration files to control every aspect of
-the emulation. If you've ever edited an `.ini` file, the format will feel
-familiar.
+the emulation. If you've ever edited an `.ini` file, the [syntax](#syntax)
+will feel familiar.
+
+The two main configuration types in DOSBox Staging are the [primary
+configuration](#primary-configuration) and [local
+configuration](#local-configuration). They have the exact same format and you
+can configure the same things in both --- they only different by their
+purpose and their location on the filesystem.
 
 
-## Config file locations
+## Primary configuration
 
-The **primary configuration file** is stored in a platform-specific
-location:
+The primary configuration holds **global settings** for DOSBox Staging. It is
+always loaded if it exists; if it doesn't, it will be created when you start
+the emulator with the default settings.
+
+The primary config file is stored in a platform-specific location:
 
 <div class="compact" markdown>
 
@@ -20,16 +29,50 @@ location:
 
 </div>
 
-Run DOSBox Staging with the [`--printconf`](command-line.md#-printconf)
-argument from the command line to see the exact path on your system. On macOS
-and Linux, you can use [`--editconf`](command-line.md#-editconf) to open the
-primary config in your default text editor.
+On Linux, the primary config is looked up in other common XDG path locations as
+well.
 
-A **local configuration file** named `dosbox.conf` can be placed in a game's
-directory. DOSBox Staging automatically loads it when started from that
-directory, making it easy to maintain per-game settings. The [Getting Started
+Run DOSBox Staging with the [`--printconf`](command-line.md#-printconf)
+argument from the command line to see the exact path on your system. You can
+use [`--editconf`](command-line.md#-editconf) to open the primary config in
+your default text editor.
+
+## Local configuration
+
+DOSBox Staging also supports **local configurations**, which are also referred
+to as **per-game configs**. If DOSBox finds a config named `dosbox.conf` in its
+startup folder (working directory), it will load it _after_ the primary
+configuration, thus potentially overriding global settings.
+
+Local configs are typically used in setups where you create a subfolder for
+each game in your "DOS games" folder. Broad settings applicable for each game
+should live in your primary config, then per-game overrides in the local
+configs. 
+
+This folder structure illustrates how a per-game setup would typically look
+like:
+
+```
+DOS Games
+├── Azrael's Tear
+│   └── dosbox.conf
+│       ...
+├── Dungeon Master
+│   └── dosbox.conf
+│       ...
+├── Ultima Underworld
+│   └── dosbox.conf
+│       ...
+...
+```
+
+The [Getting Started
 guide](../getting-started/passport-to-adventure.md#layered-configurations)
 walks through creating several per-game configs in detail.
+
+
+command-line/#-working-dir-path
+
 
 ## Portable setup
 
@@ -144,4 +187,13 @@ If you want to start fresh, delete your primary config file (use
 primary config with default settings on next launch.
 
 See [Command-line usage](command-line.md) for all available launch options.
+
+## Configuration best practices
+
+[Local configurations](#local-configuration) are great for customising
+settings per game without using a fully-populated config for every single
+game. That approach is very inflexible (e.g., if you want all your DOS games
+to start in fullscreen mode, you'd need to set `fullscreen = off` in the
+configuration of every single game if you use fully-populated configs).
+
 
