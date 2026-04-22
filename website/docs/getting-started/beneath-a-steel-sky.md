@@ -650,7 +650,7 @@ popular processors:
 </div>
 
 You can look up this handy table in the online help as well with the
-`config -h cpu_cycles` command.
+`cpu_cycles /?` command.
 
 Always treat these values only as starting points; as explained
 previously, accurately emulating the speed of any given processor is not

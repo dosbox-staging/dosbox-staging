@@ -59,10 +59,10 @@ Here are the locations of `dosbox-staging.conf` on each platform:
 ## Online help
 
 If you know the exact name of a configuration setting, you can display its
-explanatory text using the built-in `config` command. The invocation is
-`config -h <setting_name>`. 
+explanatory text by typing the setting's name followed by `/?`. Alternatively,
+you can use the `config -h <setting_name>` syntax.
 
-Let's see what `config -h viewport` gives us!
+Let's see what `viewport /?` gives us!
 
 ![Displaying the description of a config setting using the 'config' command](https://www.dosbox-staging.org/static/images/getting-started/config-help.png){ loading=lazy style="margin: 0.9rem 0;" }
 
