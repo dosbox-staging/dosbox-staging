@@ -900,7 +900,7 @@ fit to fullscreen:
 
 ```ini
 [render]
-aspect = off
+aspect = square-pixels
 viewport = 1280x800
 ```
 
@@ -942,7 +942,7 @@ So, the rules of thumb:
   usually means the game was primarily intended for the NTSC-only North
   American market, so you need aspect ratio correction.)
 
-**`aspect = off`**
+**`aspect = square-pixels`**
 
 - For most games primarily developed by European studios for the Amiga
   or Atari ST.
@@ -1057,7 +1057,7 @@ cpu_cycles_protected = 25000
 fullscreen = on
 
 [render]
-aspect = off
+aspect = square-pixels
 viewport = 1280x800
 
 # uncomment for arcade monitor emulation
