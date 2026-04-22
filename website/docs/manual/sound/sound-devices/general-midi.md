@@ -207,7 +207,7 @@ your DOSBox configuration folder:
 |----------|--------------------------------------------------------|
 | Windows  | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundfonts\` |
 | macOS    | `~/Library/Preferences/DOSBox/soundfonts/`             |
-| Linux    | `~/.config/dosbox/soundfonts/`                         |
+| Linux    | `~/.local/share/dosbox/soundfonts/`                    |
 
 </div>
 
