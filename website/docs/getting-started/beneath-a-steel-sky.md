@@ -631,18 +631,21 @@ popular processors:
 
 <div class="compact center-table" markdown>
 
-| Emulated CPU      |    MHz |   MIPS | Approx. cycles
-|-------------------|-------:|-------:|-----------------:
-| 8088              |   4.77 |   ~0.3 |              300
-| 286               |      8 |   ~0.7 |              700
-| 286               |     12 |   ~1.5 |             1500
-| **386SX**         | **20** | **~3** |         **3000**
-| 386DX             |     33 |     ~6 |             6000
-| 486DX             |     33 |    ~12 |    12&thinsp;000
-| 486DX2            |     66 |    ~25 |    25&thinsp;000
-| Intel Pentium     |     90 |    ~50 |    50&thinsp;000
-| Intel Pentium MMX |    166 |   ~100 |   100&thinsp;000
-| Intel Pentium II  |    300 |   ~200 |   200&thinsp;000
+| Emulated CPU      |    MHz | Cycles | Year
+|-------------------|-------:|-------:|-----:
+| 8088              |   4.77 |    300 | 1981
+| 286               |      8 |    700 | 1984
+| 286               |     12 |   1500 | 1986
+| **286**           | **25** | **3000** | **1988**
+| 386DX             |     25 |   4500 | 1988
+| 386DX             |     33 |   6000 | 1989
+| 486DX             |     33 | 12&thinsp;000 | 1990
+| 486DX2            |     66 | 25&thinsp;000 | 1992
+| 486DX4            |    100 | 35&thinsp;000 | 1994
+| Intel Pentium     |     90 | 50&thinsp;000 | 1994
+| Intel Pentium     |    100 | 60&thinsp;000 | 1994
+| Intel Pentium MMX |    166 | 100&thinsp;000 | 1997
+| Intel Pentium II  |    300 | 200&thinsp;000 | 1997
 
 </div>
 
