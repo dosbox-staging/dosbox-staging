@@ -24,7 +24,7 @@ mode 80x43
 
 What does this accomplish?
 
-- `@echo off` is a special command; with "echo" disabled, the remaining 
+- `@echo off` is a special command; with "echo" disabled, the remaining
   commands in the `[autoexec]` section won't be printed as they are executed
   when you start DOSBox Staging. The `@` character at the start of the line
   ensures the `echo off` command itself is not printed either (you can prefix
@@ -453,71 +453,73 @@ the full reference):
   files (`.sf2`) to generate audio. Lighter on CPU and more flexible, but
   the results depend on which SoundFont you load.
 
-You can read more about the history of MIDI in DOS gaming at the end of this
-section, but the short practical summary is as follows:
 
-- The **Roland Sound Canvas SC-55** was the de-facto standard General MIDI
-  sound module until the very end of the DOS years (around 1997). Most
-  composers had an SC-55, so the music was tuned to sound best on it.
+### Sound Canvas emulation
 
-We'll start with FluidSynth as it's the simpler option to set up. Unlike the
-MT-32 or Sound Canvas emulation, FluidSynth does not attempt to mimic any
-specific hardware device but a generic MIDI sound module. This sound module
-doesn't have any built-in sounds --- you need to load so-called **SoundFont
-files** (`.sf2` extension) into FluidSynth to get any sound out of it; these
-contain the instrument definitions and the sound data.
+DOSBox Staging can emulate the Roland Sound Canvas SC-55 directly, providing
+sample-accurate playback of the actual SC-55 sound engine --- as close to the
+real hardware as you can get without owning one.
 
-One extra detail is that Roland went a bit beyond the General MIDI standard in
-their Sound Canvas series; these modules actually support the **General
-Standard** (also referred to as **Roland GS**, or just **GS**), which is
-basically General MIDI plus a few Roland-specific enhancements. Many games use
-these extra features, and while General MIDI compatible SoundFonts will work
-with them, it's recommended to use GS-compatible ones for the best
-results.
+Roland went a bit beyond the General MIDI standard in their Sound Canvas
+series; these modules actually support the **General Standard** (also referred
+to as **Roland GS**, or just **GS**), which is basically General MIDI plus a
+few Roland-specific enhancements. Many games take advantage of these extra
+features.
 
-One such SoundFont is [GeneralUser GS][generaluser-gs]. Download the latest
-version (v2.0.1 at the time of writing this), unzip the package, then copy the
-SoundFont file with the `.sf2` extension into its designated folder:
-
-[generaluser-gs]: https://schristiancollins.com/generaluser.php
+Just like the MT-32, Sound Canvas emulation requires ROM dumps of the original
+hardware. Start by downloading the ROM files from
+[here](https://archive.org/details/nuked-sc-55-clap-rom-files), unpack the
+ZIP archive, then move the contents of the `Nuked-SC55-Resources/ROMs/` folder
+into the DOSBox Staging `soundcanvas-roms` folder:
 
 <div class="compact" markdown>
 
-| <!-- --> | <!-- -->
-|----------|----------
-| **Windows**  | `C:\Users\%USERNAME%\AppData\Local\DOSBox\soundfonts\`
-| **macOS**    | `~/Library/Preferences/DOSBox/soundfonts/`
-| **Linux**    | `~/.config/dosbox/soundfonts`
+| <!-- -->    | <!-- -->
+| ----------  | ----------
+| **Windows** | `C:\Users\%USERNAME%\AppData\Local\DOSBox\soundcanvas-roms\`
+| **macOS**   | `~/Library/Preferences/DOSBox/soundcanvas-roms/`
+| **Linux**   | `~/.local/share/dosbox/soundcanvas-roms/`
 
 </div>
 
-You can use the `mixer /listmidi` command to get the list of available
-SoundFonts. If you've copied the SF2 file into the correct folder, you
-should see the following:
+This is what the contents of `soundcanvas-roms` should look like:
 
-![MIXER /LISTMIDI showing the list of available SoundFonts](https://www.dosbox-staging.org/static/images/getting-started/fluidsynth-listmidi.png){ loading=lazy }
+```
+soundcanvas-roms
+├── SC-55-v1.10
+│   ├── sc55_rom1.bin
+│   ├── sc55_rom2.bin
+│   ├── sc55_waverom1.bin
+│   ├── sc55_waverom2.bin
+│   └── sc55_waverom3.bin
+├── SC-55-v1.20
+│   ...
+├── SC-55-v1.21
+...
+```
 
+Now start up DOSBox Staging and verify that the Sound Canvas plugin is
+functional by running `MIXER /LISTMIDI`. The Sound Canvas section should look
+like this:
 
-The next step is to configure FluidSynth to use this SoundFont. The name of
-the SoundFont might be slightly different if a new version has been released
-since the writing of this guide, so make sure you use the correct filename for
-the `soundfont` setting. As you can see, you can omit the `.sf2` extension
-from the name.
+![Sound Canvas models listed by MIXER /LISTMIDI](images/soundcanvas-models.png)
 
+DOSBox Staging will prefer the **SC-55 v1.21** firmware when available, which
+is the best overall choice for DOS gaming.
+
+To enable Sound Canvas emulation, add the following to your config:
 
 ```ini
 [midi]
-mididevice = fluidsynth
-
-[fluidsynth]
-soundfont = GeneralUser-GS
+mididevice = soundcanvas
 ```
 
-The only thing left to do is to reconfigure the game to use General MIDI for
-music:
+Re-run `MIXER /LISTMIDI` to confirm the Sound Canvas is now active:
 
-- Comment out the `autotype` command in the `[autoexec]` section and restart
-  DOSBox.
+![Sound Canvas active in MIXER /LISTMIDI](images/soundcanvas-models-active.png)
+
+Now let's reconfigure the game to use General MIDI for music. Comment out the
+`autotype` command in the `[autoexec]` section and restart DOSBox, then:
 
 - Press ++3++ in the startup menu to reconfigure the sound settings, then
   ++c++ to do a custom setup.
@@ -555,10 +557,67 @@ the Imperial March playing with much more realistic instruments!
     sometimes you need to enter them manually. The default DOSBox settings are
     port (I/O address) **220**, IRQ (interrupt) **7**, and DMA channel **1**.
 
-
 It's worth watching the whole intro at this point to appreciate how much more
 realistic the General MIDI rendition of this orchestral piece sounds compared
 to the OPL synth.
+
+!!! note
+
+    Sound Canvas emulation is CPU-intensive. You'll need a mid-range or
+    better desktop-class CPU from the last 5--7 years for glitch-free
+    playback. If your system struggles, FluidSynth with a good SoundFont is
+    a lighter alternative that still sounds great.
+
+
+### FluidSynth
+
+Unlike the MT-32 or Sound Canvas emulation, FluidSynth does not attempt to
+mimic any specific hardware device but a generic MIDI sound module. This sound
+module doesn't have any built-in sounds --- you need to load so-called
+**SoundFont files** (`.sf2` extension) into FluidSynth to get any sound out
+of it; these contain the instrument definitions and the sound data. Since many
+DOS games use Roland GS extensions, it's recommended to use GS-compatible
+SoundFonts for the best results.
+
+One such SoundFont is [GeneralUser GS][generaluser-gs]. Download the latest
+version (v2.0.1 at the time of writing this), unzip the package, then copy the
+SoundFont file with the `.sf2` extension into its designated folder:
+
+[generaluser-gs]: https://schristiancollins.com/generaluser.php
+
+<div class="compact" markdown>
+
+| <!-- -->    | <!-- -->
+| ----------  | ----------
+| **Windows** | `C:\Users\%USERNAME%\AppData\Local\DOSBox\soundfonts\`
+| **macOS**   | `~/Library/Preferences/DOSBox/soundfonts/`
+| **Linux**   | `~/.local/share/dosbox/soundfonts/`
+
+</div>
+
+You can use the `mixer /listmidi` command to get the list of available
+SoundFonts. If you've copied the SF2 file into the correct folder, you
+should see the following:
+
+![MIXER /LISTMIDI showing the list of available SoundFonts](https://www.dosbox-staging.org/static/images/getting-started/fluidsynth-listmidi.png){ loading=lazy }
+
+
+To configure FluidSynth, add the following to your config. The name of the
+SoundFont might be slightly different if a new version has been released since
+the writing of this guide, so make sure you use the correct filename for the
+`soundfont` setting. You can omit the `.sf2` extension from the name.
+
+
+```ini
+[midi]
+mididevice = fluidsynth
+
+[fluidsynth]
+soundfont = GeneralUser-GS
+```
+
+The game configuration is the same as described in the previous section ---
+select *General MIDI* on port `330` in the sound setup utility.
 
 Of course, you can always try other GM or GS-compatible SoundFonts
 too --- that's the beauty of General MIDI!
@@ -611,89 +670,17 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
     It's a mystery what the authors were thinking...
 
 
-### Setting up Sound Canvas emulation
-
-FluidSynth with a good SoundFont can get you close to the original SC-55
-sound, but if you want the real thing, DOSBox Staging can also emulate the
-Roland Sound Canvas SC-55 directly. This provides sample-accurate playback of
-the actual SC-55 sound engine --- as close to the real hardware as you can get
-without owning one.
-
-Just like the MT-32, Sound Canvas emulation requires ROM dumps of the original
-hardware. Start by downloading the ROM files from
-[here](https://archive.org/details/nuked-sc-55-clap-rom-files), unpack the
-ZIP archive, then move the contents of the `Nuked-SC55-Resources/ROMs/` folder
-into the DOSBox Staging `soundcanvas-roms` folder:
-
-<div class="compact" markdown>
-
-| <!-- -->    | <!-- -->
-| ----------  | ----------
-| **Windows** | `C:\Users\%USERNAME%\AppData\Local\DOSBox\soundcanvas-roms\`
-| **macOS**   | `~/Library/Preferences/DOSBox/soundcanvas-roms/`
-| **Linux**   | `~/.local/share/dosbox/soundcanvas-roms/`
-
-</div>
-
-This is what the contents of `soundcanvas-roms` should look like:
-
-```
-soundcanvas-roms
-├── SC-55-v1.10
-│   ├── sc55_rom1.bin
-│   ├── sc55_rom2.bin
-│   ├── sc55_waverom1.bin
-│   ├── sc55_waverom2.bin
-│   └── sc55_waverom3.bin
-├── SC-55-v1.20
-│   ...
-├── SC-55-v1.21
-...
-```
-
-Now start up DOSBox Staging and verify that the Sound Canvas plugin is
-functional by running `MIXER /LISTMIDI`. The Sound Canvas section should look
-like this:
-
-![Sound Canvas models listed by MIXER /LISTMIDI](images/soundcanvas-models.png)
-
-DOSBox Staging will prefer the **SC-55 v1.21** firmware when available, which
-is the best overall choice for DOS gaming.
-
-To enable Sound Canvas emulation, simply use the following instead of the
-FluidSynth configuration:
-
-```ini
-[midi]
-mididevice = soundcanvas
-```
-
-Re-run `MIXER /LISTMIDI` to confirm the Sound Canvas is now active:
-
-![Sound Canvas active in MIXER /LISTMIDI](images/soundcanvas-models-active.png)
-
-The game configuration is exactly the same (General MIDI on port 330); the
-only difference is the `mididevice` setting.
-
-!!! note
-
-    Sound Canvas emulation is CPU-intensive. You'll need a mid-range or
-    better desktop-class CPU from the last 5--7 years for glitch-free
-    playback. If your system struggles, FluidSynth with a good SoundFont is
-    a lighter alternative that still sounds great.
-
-
 !!! warning "Roland MT-32 is not General MIDI"
 
     Do not confuse the Roland MT-32 family of MIDI sound modules with General
     MIDI modules! Music composed for the MT-32 often sounds *utterly wrong* on a
-    General MIDI device, and vice versa. Yes, they both have “MIDI” in their
+    General MIDI device, and vice versa. Yes, they both have "MIDI" in their
     names, but that only refers to the MIDI communication protocol. The MT-32
     range of devices are programmable synthesisers, and most MT-32 supporting
     games take advantage of that to create custom sounds. In contrast, General
     MIDI modules are generally weaker in the synthesis department but feature
     more realistic-sounding real-world instruments with a less malleable
-    sound. The soundtrack of Dark Forces showcases this very well --- you can’t
+    sound. The soundtrack of Dark Forces showcases this very well --- you can't
     get such realistic orchestral music out of an MT-32.
 
     Whenever you configure a game for MIDI sound, you should consult the
@@ -704,7 +691,7 @@ only difference is the `mididevice` setting.
     information is often wrong. So you *absolutely* need this list to get the
     best MIDI music out of a game.
 
-    Quite confusingly, there’s a large list of games that claim MT-32
+    Quite confusingly, there's a large list of games that claim MT-32
     compatibility but only sound correct on a General MIDI module. Make sure
     to check the [List of games that falsely claim MT-32
     compatibility](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games#Games_that_falsely_claim_MT-32_compatibility)
@@ -718,7 +705,7 @@ only difference is the `mididevice` setting.
     Roland released its successor, the iconic **Roland Sound Canvas SC-55**.
 
     The SC-55 shaped DOS gaming history in significant ways: it was the
-    world’s first device to support the **General MIDI standard**. MIDI only
+    world's first device to support the **General MIDI standard**. MIDI only
     defines a communication mechanism between MIDI-capable devices (e.g., a
     sound module and your computer). But it remains silent on how the
     different instruments should sound. General MIDI (GM) remedied this with
@@ -732,10 +719,10 @@ only difference is the `mididevice` setting.
     the musical composition and the particular sound module. Most composers
     and gamers had the SC-55, establishing it as a de facto standard. This
     means music could sound unbalanced and weird on other GM sound modules if
-    they deviated too much from the “gold standard” SC-55 sound.
+    they deviated too much from the "gold standard" SC-55 sound.
 
     Additionally, the SC-55 also supports the **General Standard** (**Roland
-    GS**, or only **GS** in short), which is Roland’s vendor-specific General
+    GS**, or only **GS** in short), which is Roland's vendor-specific General
     MIDI extension. Many games make good use of these extra features and sound
     wrong in their absence. This means that alternative MIDI modules need to
     support both the GM *and* the GS standards to sound correct with DOS
@@ -748,7 +735,6 @@ only difference is the `mididevice` setting.
     fact, many prefer them to the SC-55 in certain DOS games. If you are
     curious about how these Yamaha modules stack up against the SC-55, [this
     article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/) might be of interest.
-
 
 
 
