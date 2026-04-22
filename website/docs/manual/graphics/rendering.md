@@ -114,6 +114,84 @@ CRT shaders, with refinements: 3.5x and 4.5x scaling factors are also
 allowed, and integer scaling is disabled above 5.0x.
 
 
+## Dedithering
+
+Many DOS games used dithering --- alternating pixel patterns --- to simulate
+more colours than their limited palette could display. This was especially
+common in 16-colour EGA games, where checkerboard patterns created the
+illusion of intermediate shades.
+
+The [`dedithering`](#dedithering) setting detects these checkerboard patterns
+and blends them into solid colours. It works with any graphics adapter (CGA,
+EGA, VGA, Hercules) and any resolution, and can be combined with any shader.
+
+??? note "Games that benefit from dedithering"
+
+    <div class="compact" markdown>
+
+    - [Leisure Suit Larry 2](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/) & [3](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/)
+    - [Quest for Glory I](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) & [II](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/)
+    - [Space Quest III](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)
+    - [The Secret of Monkey Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) (EGA version)
+    - [Loom](https://www.mobygames.com/game/176/loom/)
+    - [Spellcasting 101](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/)
+    - [Timequest](https://www.mobygames.com/game/1026/timequest/)
+    - [Gateway](https://www.mobygames.com/game/317/frederik-pohls-gateway/)
+
+    </div>
+
+!!! note
+
+    Dedithering is *not* a more authentic representation. On real PC CRT
+    monitors, dither patterns were clearly visible --- blending them into solid
+    colours was only a thing on consoles connected to consumer TV sets. For a
+    more authentic look, use [`shader`](#shader) `= crt-auto` instead.
+
+
+## Deinterlacing
+
+Many 90s DOS games displayed full-motion video (FMV) using interlaced
+rendering, showing only every second line of the video frame. This halved
+storage requirements and looked fine on small CRTs where the brain filled in
+the gaps, but on modern flat screens the alternating black lines look
+distracting and halve the apparent brightness.
+
+The [`deinterlacing`](#deinterlacing) setting automatically detects interlaced
+regions within each frame and reconstructs the missing lines. The detection is
+intelligent; it only touches interlaced areas while leaving HUDs, UI frames,
+subtitles, and mouse cursors untouched.
+
+Both common interlacing patterns are supported: standard line interlacing
+(alternating black horizontal lines, used by most games) and dot interlacing
+(a checkerboard pattern, used by the CD-ROM versions of
+[Dune](https://www.mobygames.com/game/380/dune/) and
+[KGB](https://www.mobygames.com/game/2894/kgb/)).
+
+Enable deinterlacing per-game rather than globally for best results.
+
+??? note "Games that benefit from deinterlacing"
+
+    <div class="compact" markdown>
+
+    - [Wing Commander IV](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/)
+    - [Phantasmagoria](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/)
+    - [Gabriel Knight 2](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/)
+    - [Crusader: No Remorse](https://www.mobygames.com/game/851/crusader-no-remorse/)
+    - [Crusader: No Regret](https://www.mobygames.com/game/852/crusader-no-regret/)
+    - [CyberMage](https://www.mobygames.com/game/791/cybermage-darklight-awakening/)
+    - [Angel Devoid](https://www.mobygames.com/game/3468/angel-devoid-face-of-the-enemy/)
+    - [Heroes of Might and Magic II](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
+
+    </div>
+
+!!! note
+
+    Enabling vertical [`integer_scaling`](#integer_scaling) is recommended on
+    lower resolution displays to avoid interference artifacts when using lower
+    deinterlacing strengths. Alternatively, use `full` strength to completely
+    eliminate all potential interference patterns.
+
+
 ## Aspect ratio & viewport
 
 Most DOS games used non-square pixels and were designed for 4:3 CRT displays.
