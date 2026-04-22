@@ -791,7 +791,7 @@ mididevice = fluidsynth
 
 [fluidsynth]
 # not needed if you set this in the primary config
-soundfont = GeneralUser GS v1.471
+soundfont = GeneralUser-GS
 
 [autoexec]
 c:
