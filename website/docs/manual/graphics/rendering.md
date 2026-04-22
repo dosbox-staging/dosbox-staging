@@ -17,6 +17,18 @@ The image adjustment controls --- brightness, contrast, saturation, colour
 temperature --- work much like the knobs on an old CRT monitor. They're
 useful for fine-tuning the picture to your taste or compensating for
 differences in display characteristics.
+[CRT colour profiles](#crt-colour-profiles) go a step further, emulating
+the distinct phosphor colours of different monitor types, and on
+[wide gamut displays](#wide-gamut--colour-accuracy) these profiles can
+reproduce CRT colours that fall outside the standard sRGB colour space.
+For Hercules and CGA mono machines, the
+[`monochrome_palette`](#monochrome_palette) setting offers the classic amber,
+green, white, and paperwhite terminal looks.
+
+Beyond CRT emulation, DOSBox Staging can also
+[blend away dither patterns](#dedithering) in old EGA and CGA games, and
+[deinterlace FMV video](#deinterlacing) to remove the distracting black lines
+found in many 90s games.
 
 If you prefer a crisp, pixel-perfect look without any CRT emulation, set
 `shader = sharp`. For completely unprocessed output, use `shader = none`.
@@ -267,11 +279,85 @@ monitor, resulting in more subdued and pleasant colours --- especially
 apparent on the greens.
 
 
+## Wide gamut & colour accuracy
+
+CRT monitors used phosphor coatings with colour gamuts that often fall outside
+the sRGB colour space used by most modern displays. P22, Trinitron, and
+Philips phosphors all have saturated primaries that sRGB simply cannot
+reproduce. A wide gamut display (DCI-P3 or wider) lets DOSBox Staging render
+these colours faithfully, getting closer to what games looked like on real
+hardware.
+
+The practical benefit depends on your operating system:
+
+- **macOS** always outputs in the Display P3 colour space. The OS handles the
+  conversion to your monitor's actual colour profile automatically. This gives
+  you the most accurate results out of the box.
+
+- **Windows and Linux** currently output sRGB. A DCI-P3 monitor still helps
+  because the [Philips](#crt_color_profile) and
+  [Trinitron](#crt_color_profile) profiles push colours toward the gamut
+  boundary, but full accuracy requires macOS or a future colour-managed
+  rendering path on these platforms.
+
+If you have a wide gamut display, the `auto` defaults for
+[`crt_color_profile`](#crt_color_profile) and
+[`color_space`](#color_space) give you accurate colours out of the box. The
+Philips and Trinitron profiles show the biggest difference on DCI-P3 versus
+sRGB displays.
+
+
+## CRT colour profiles
+
+Different CRT monitors used different phosphor chemistries, giving each a
+distinct colour character. DOSBox Staging can emulate these via the
+[`crt_color_profile`](#crt_color_profile) setting.
+
+- **P22** phosphors were the most common in PC monitors, producing warmer,
+  slightly desaturated colours. This is what most people saw when playing DOS
+  games.
+- **SMPTE-C** (broadcast standard) is close to P22 but with tighter colour
+  tolerances, used in professional video monitors.
+- **EBU** phosphors are the European broadcast standard, found in high-end
+  professional monitors like the Sony BVM/PVM series.
+- **Philips** home computer monitors (e.g., the Commodore 1084S) had
+  distinctly warm, yellowish whites at roughly 6100K.
+- **Trinitron** (Sony) monitors were known for punchy, vivid colours with a
+  cool blue-white colour temperature around 9300K.
+
+The `auto` setting picks the profile that matches the era: CGA and EGA games
+get P22 (matching the monitors of that era), VGA games also get P22,
+composite video gets SMPTE-C, and the arcade shaders use Philips. See the
+[Automatic image adjustments](#automatic-image-adjustments) table for the full
+mapping.
+
+
+## Monochrome display emulation
+
+For `hercules` and `cga_mono` machine types, the
+[`monochrome_palette`](#monochrome_palette) setting offers four classic
+terminal looks:
+
+- **Amber** --- the warm orange-yellow glow of monochrome terminals like the
+  IBM 5151 with an amber phosphor. This was the most common monochrome display
+  in offices and the most comfortable for extended reading.
+- **Green** --- the classic green phosphor look of the original IBM 5151 green
+  screen, a staple of the early PC era.
+- **White** --- a cool blue-white typical of later monochrome VGA monitors.
+- **Paperwhite** --- the Hercules-era paperwhite phosphor, a warmer, slightly
+  yellowish white that's easier on the eyes than pure white.
+
+You can cycle through the available palettes via hotkeys during gameplay.
+
+
 ## Automatic image adjustments
 
-When [crt_color_profile](#crt_color_profile), [color_temperature](#color_temperature),
-or [black_level](#black_level) are set to `auto`, DOSBox automatically selects
-appropriate values based on the active shader and the current video mode.
+When [`crt_color_profile`](#crt_color_profile),
+[`color_temperature`](#color_temperature), or [`black_level`](#black_level)
+are set to `auto`, DOSBox picks period-appropriate values for each video mode.
+The result is that CGA and EGA games look like they did on the slightly warm,
+high-colour-temperature monitors of the 1980s, while VGA games get the cooler,
+more neutral look of 90s PC monitors.
 
 The selection logic depends on the shader mode:
 
@@ -584,9 +670,13 @@ You can set the rendering parameters in the `[render]` configuration section.
 
 ##### color_space
 
-:   Set the colour space of the video output. On macOS, this is always
-    `display-p3`; the OS performs the conversion to the colour profile set in
-    your system settings.
+:   Set the colour space of the video output. Wide gamut colour spaces can
+    reproduce CRT phosphor colours that fall outside the sRGB gamut --- see
+    [Wide gamut & colour accuracy](#wide-gamut--colour-accuracy) for details.
+
+    On macOS, this is always `display-p3`; the OS performs the conversion to
+    the colour profile set in your system settings. On Windows and Linux, the
+    effective output is currently sRGB.
 
     Possible values:
 
