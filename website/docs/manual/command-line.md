@@ -112,7 +112,8 @@ pages.
 ##### `--working-dir <path>`
 
 :   Set the working directory for DOSBox Staging. DOSBox will act as if
-    started from this directory.
+    started from this directory. If a local `dosbox.conf` configuration exists
+    in this folder, it will be loaded after the primary config.
 
 
 ### Startup behaviour

@@ -40,12 +40,14 @@ your default text editor.
 ## Local configuration
 
 DOSBox Staging also supports **local configurations**, which are also referred
-to as **per-game configs**. If DOSBox finds a config named `dosbox.conf` in its
-startup folder (working directory), it will load it _after_ the primary
-configuration, thus potentially overriding global settings.
+to as **per-game configuration**. If DOSBox finds a config named
+`dosbox.conf` in its startup folder (working directory), it will load it
+_after_ the primary configuration, thus potentially overriding global
+settings.
 
 Local configs are typically used in setups where you create a subfolder for
-each game in your "DOS games" folder. Broad settings applicable for each game
+each game in your "DOS games" folder. Broad settings controlling general
+emulator behaviour and settings applicable for applicable for each game
 should live in your primary config, then per-game overrides in the local
 configs. 
 
@@ -70,8 +72,9 @@ The [Getting Started
 guide](../getting-started/passport-to-adventure.md#layered-configurations)
 walks through creating several per-game configs in detail.
 
-
-command-line/#-working-dir-path
+If you start DOSBox Staging from a different folder, you can still set the
+[working directory](../command-line/#-working-dir-path) via command line
+arguments, then the local `dosbox.conf` will be loaded from that directory.
 
 
 ## Portable setup
@@ -82,10 +85,24 @@ directory instead of the platform-specific location. This is useful for
 running DOSBox from a USB drive or keeping everything self-contained in a
 single folder --- a setup commonly preferred by Windows users.
 
+!!! tip
+
+    You can "convert" a non-portable installation intto a portable one by moving
+    the primary config from its platform-specific location into the directory
+    where the DOSBox Staging executable resides.
+
 
 ## Config layering
 
-Multiple config files can be loaded, and later values override earlier ones:
+In addition to the [primary](#primary-configuration) and [local
+configuration](#local-configuration), you can specify additional config files
+to be loaded with the [`--conf`](command-line.md#-conf-config_file) command
+line argument. The possibilities don't end there; you can also set config
+values directly via [`--set
+<setting>=<value>`](command-line.md#-set-settingvalue) arguments.
+
+The various configuration mechanism are applied in this order (later values
+override earlier ones):
 
 1. The primary config file is loaded first (unless the
    [`--noprimaryconf`](command-line.md#-noprimaryconf) command line parameter
@@ -154,7 +171,7 @@ Here's an example configuration that launches a game executable `PRINCE`
 from the C: drive, then exits DOSBox Staging after you quit the game (taken from the
 [Getting started
 guide](../getting-started/enhancing-prince-of-persia.md#final-configuration);
-you will find more such config examples there):
+you'll find more such config examples there):
 
 ```ini
 [sdl]
@@ -197,9 +214,11 @@ CPU speed on the fly and hear or see the difference immediately.
 
 There are two ways to change a setting:
 
-- **Full form**: `config -set SECTION SETTING = VALUE` (e.g.,
-  `config -set render shader = sharp`)
-- **Shortcut form**: `SETTING = VALUE` (e.g., `shader = sharp`)
+- **Full form**: `CONFIG -set section setting = value`(e.g.,
+  `CONFIG -set render shader = sharp`)
+
+- **Shortcut form**: `setting = value`, or simply `setting value` (e.g.,
+  `shader = sharp`, or just `shader sharp`)
 
 The shortcut form works for most settings and is the quickest way to
 experiment. If a value is invalid, the error is displayed in the DOS console
@@ -212,25 +231,43 @@ sbtype /?
 shader /?
 ```
 
-This is equivalent to `config -h SETTINGNAME` but much quicker to type.
+This is equivalent to `CONFIG -h setting` but much quicker to type.
 
 Some settings --- such as [`machine`](system/general.md#machine) --- require
-a reboot to take effect. After changing such a setting, use `config -r` to
+a reboot to take effect. After changing such a setting, use `CONFIG -r` to
 restart DOSBox. The setting's help text will tell you if a restart is needed.
 
 !!! tip
 
-    You can use `config -wc` to write the current settings to a new config
+    You can use `CONFIG -wc` to write the current settings to a new config
     file, which is handy after you've found the right values by experimenting
     at runtime.
 
 
 ## Configuration best practices
 
-[Local configurations](#local-configuration) are great for customising
-settings per game without using a fully-populated config for every single
-game. That approach is very inflexible (e.g., if you want all your DOS games
-to start in fullscreen mode, you'd need to set `fullscreen = off` in the
-configuration of every single game if you use fully-populated configs).
+- [Local configurations](#local-configuration) are great for customising
+  your settings per game. This is especially true if you're interested in
+  playing games from different [DOS eras](../dos-eras/) that require very different
+  hardware configurations.
 
+- As DOSBox Staging comes with sensible defaults, you can keep your
+  local configs quite minimal. There’s absolutely no need to
+  specify every single setting in your local game-specific configs.
+  Fully-populated configs are very cumbersome to manage if you have a large
+  game library. The Getting Started guide contains
+  several such local config examples ([Prince of Persia](../../getting-started/enhancing-prince-of-persia/#final-configuration),
+  [Passport to Adventure](../../getting-started/passport-to-adventure/#final-configuration),
+  [Beneath A Steel Sky](../../getting-started/beneath-a-steel-sky/#final-configuration),
+  [Star Wars: Dark Forces](../../getting-started/star-wars-dark-forces/#final-configuration)).
 
+- A good, easy-to-manage approach is to only change settings in the primary
+  config that affect the general workings of the emulator (e.g.,
+  [fullscreen](../graphics/display-and-window/#fullscreen),
+  [pause_when_inactive](../graphics/display-and-window/#pause_when_inactive),
+  [language](../system/general/#language), setting the [master
+  volume](../sound/mixer/#volume), etc.) Settings that set up specific
+  hardware required by a game can then go into the local configs. If you
+  reconfigure hardware in the primary config, there's always a risk that
+  games configured for a certain hardware in their setup utility will stop
+  working.
