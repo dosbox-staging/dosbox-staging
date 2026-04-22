@@ -156,9 +156,9 @@ Make sure to check with the `--version` argument that you're running DOSBox
 Staging and not some other DOSBox variant:
 
     % dosbox --version
-    dosbox-staging, version 0.81.0
+    dosbox-staging, version 0.83.0
 
-    Copyright (C) 2020-2022  The DOSBox Staging Team
+    Copyright (C) 2020-2026  The DOSBox Staging Team
     License: GNU GPL-2.0-or-later <https://www.gnu.org/licenses/gpl-2.0.html>
 
 Alternatively, create a shell script or a shortcut on your desktop that
