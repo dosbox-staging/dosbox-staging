@@ -620,8 +620,10 @@ the actual SC-55 sound engine --- as close to the real hardware as you can get
 without owning one.
 
 Just like the MT-32, Sound Canvas emulation requires ROM dumps of the original
-hardware. Download the SC-55 ROM files and place them in the
-`soundcanvas-roms` directory inside your DOSBox configuration folder:
+hardware. Start by downloading the ROM files from
+[here](https://archive.org/details/nuked-sc-55-clap-rom-files), unpack the
+ZIP archive, then move the contents of the `Nuked-SC55-Resources/ROMs/` folder
+into the DOSBox Staging `soundcanvas-roms` folder:
 
 <div class="compact" markdown>
 
@@ -629,14 +631,34 @@ hardware. Download the SC-55 ROM files and place them in the
 | ----------  | ----------
 | **Windows** | `C:\Users\%USERNAME%\AppData\Local\DOSBox\soundcanvas-roms\`
 | **macOS**   | `~/Library/Preferences/DOSBox/soundcanvas-roms/`
-| **Linux**   | `~/.config/dosbox/soundcanvas-roms/`
+| **Linux**   | `~/.local/share/dosbox/soundcanvas-roms/`
 
 </div>
 
-If the ROM files are in the right place, `mixer /listmidi` will list the
-available Sound Canvas firmware versions. DOSBox Staging will prefer the
-**SC-55 v1.21** firmware when available, which is the best overall choice for
-DOS gaming.
+This is what the contents of `soundcanvas-roms` should look like:
+
+```
+soundcanvas-roms
+├── SC-55-v1.10
+│   ├── sc55_rom1.bin
+│   ├── sc55_rom2.bin
+│   ├── sc55_waverom1.bin
+│   ├── sc55_waverom2.bin
+│   └── sc55_waverom3.bin
+├── SC-55-v1.20
+│   ...
+├── SC-55-v1.21
+...
+```
+
+Now start up DOSBox Staging and verify that the Sound Canvas plugin is
+functional by running `MIXER /LISTMIDI`. The Sound Canvas section should look
+like this:
+
+![Sound Canvas models listed by MIXER /LISTMIDI](images/soundcanvas-models.png)
+
+DOSBox Staging will prefer the **SC-55 v1.21** firmware when available, which
+is the best overall choice for DOS gaming.
 
 To enable Sound Canvas emulation, simply use the following instead of the
 FluidSynth configuration:
@@ -646,9 +668,12 @@ FluidSynth configuration:
 mididevice = soundcanvas
 ```
 
-That's it --- no SoundFonts to choose, no volume tweaking. The game
-configuration is exactly the same (General MIDI on port 330); the only
-difference is the `mididevice` setting.
+Re-run `MIXER /LISTMIDI` to confirm the Sound Canvas is now active:
+
+![Sound Canvas active in MIXER /LISTMIDI](images/soundcanvas-models-active.png)
+
+The game configuration is exactly the same (General MIDI on port 330); the
+only difference is the `mididevice` setting.
 
 !!! note
 

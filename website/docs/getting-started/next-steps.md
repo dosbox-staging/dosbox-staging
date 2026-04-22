@@ -11,8 +11,14 @@ greater chance to figure things out on your own, and you'll be able  to ask
 more specific, directed questions from the more experienced members of the
 community when seeking help.
 
-So what's next? Try setting up a few more games yourself; peruse the various
-configuration options in the primary configuration file; look around on [our
+So what's next? The [user manual](../manual/index.md) is the natural
+continuation of this guide --- it covers every aspect of DOSBox Staging in
+detail, including all configuration settings, sound devices, graphics options,
+and much more. The [DOS primer](../manual/dos-primer.md) and
+[Commands](../manual/commands.md) pages are particularly useful if you want to
+get more comfortable with the DOS command line.
+
+Beyond that, try setting up a few more games yourself; look around on [our
 wiki](https://github.com/dosbox-staging/dosbox-staging/wiki); familiarise
 yourself with our [feature highlights](https://www.dosbox-staging.org/);
 read the release notes on our [releases
