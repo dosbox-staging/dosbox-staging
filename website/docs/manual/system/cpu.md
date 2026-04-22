@@ -249,10 +249,16 @@ section.
 
 ##### cpu_idle
 
-:   Reduce the CPU usage in the DOS shell and in some applications when
-    DOSBox is idle. This is done by emulating the HLT CPU instruction, so it
-    might interfere with other power management tools such as DOSidle and
-    FDAPM when enabled.
+:   Reduce host CPU usage when the DOS shell or an application is idle. With
+    [`cpu_cycles`](#cpu_cycles) set to `max`, this can reduce host CPU core
+    usage from ~100% to around 25% when the shell is idle.
+
+    This also makes the shell more multitasking-friendly, which benefits
+    [Windows 3.1](../windows-31.md) DOS prompts.
+
+    The feature works by emulating the HLT CPU instruction, so it might
+    interfere with third-party DOS power management tools such as DOSidle and
+    FDAPM --- disable it if you use those.
 
     Possible values: `on` *default*{ .default }, `off`
 

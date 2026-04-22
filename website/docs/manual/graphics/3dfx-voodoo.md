@@ -44,8 +44,10 @@ section.
 ##### voodoo_bilinear_filtering
 
 :   Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing
-    effect. Bilinear filtering can impact frame rates on slower systems; try
-    turning it off if you're not getting adequate performance.
+    effect. This is enabled by default to match the look of real Voodoo
+    hardware, which always applied bilinear texture filtering. Disabling it
+    gives a sharper but less authentic look, and may help performance on
+    slower systems.
 
     Possible values: `on` *default*{ .default }, `off`
 

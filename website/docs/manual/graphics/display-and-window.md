@@ -158,6 +158,10 @@ section.
 
     - `standard` *default*{ .default } -- Use the standard fullscreen mode
       of your operating system.
+    - `forced-borderless` -- Force borderless fullscreen operation on Windows.
+      Use this if your graphics card driver opts out of fullscreen
+      optimisations, resulting in exclusive fullscreen that makes Alt+Tabbing
+      cumbersome. This mode is only available on Windows.
 
 
 ##### window_decorations
