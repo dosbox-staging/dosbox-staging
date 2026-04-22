@@ -195,11 +195,11 @@ DOS is *not* a multitasking operating system; you can only do a single thing
 in it at any given point in time.
 
 Let's analyse the prompt a little bit. It always starts with a letter followed
-by a semicolon, which denotes the current drive. Right after startup, this is
+by a colon, which denotes the current drive. Right after startup, this is
 always the `Z` drive. This is a special drive that's always available; DOSBox
 stores some of its commands on it --- you don't need to worry about it now.
 
-After the semicolon is the path of the current folder or current *directory*
+After the colon is the path of the current folder or current *directory*
 in DOS terminology; this is currently the *root directory* of the `Z` drive as
 indicated by the `\` (backslash) character. The `>` character just signifies
 the end of the prompt, and the blinking underscore (`_`) character after it

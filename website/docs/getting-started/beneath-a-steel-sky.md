@@ -329,7 +329,7 @@ you've had enough, uncomment the last `sky` command in the `[autoexec]` section
 
     You cannot switch to a different drive with the `cd` command (e.g., `cd
     z:` or `cd z` won't work); you *must* use the drive letter followed by a
-    semicolon (`z:` in this example).
+    colon (`z:` in this example).
 
 
 ## Adjusting volume levels
