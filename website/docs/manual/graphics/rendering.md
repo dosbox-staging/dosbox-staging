@@ -39,69 +39,23 @@ If you prefer a crisp, pixel-perfect look without any CRT emulation, set
 DOSBox Staging includes adaptive CRT shaders that automatically select the
 appropriate monitor emulation based on the current video mode:
 
-- `crt-auto` (default) --- Prioritises developer intent and how people
-  experienced games at the time. VGA games appear double-scanned (as on a real
-  VGA monitor), EGA games appear single-scanned with thicker scanlines, and so
-  on, regardless of the [`machine`](../system/general.md#machine) setting.
+- **`crt-auto`** *default*{ .default } --- Prioritises developer intent and
+  how people experienced games at the time. VGA games appear double-scanned
+  (as on a real VGA monitor), EGA games appear single-scanned with thicker
+  scanlines, and so on, regardless of the
+  [`machine`](../system/general.md#machine) setting.
 
-- `crt-auto-machine` --- Emulates a fixed CRT monitor for the video adapter
-  configured via the [`machine`](../system/general.md#machine) setting. CGA and EGA modes on a VGA machine
-  always appear double-scanned with chunky pixels, as on a real VGA adapter.
+- **`crt-auto-machine`** --- Emulates a fixed CRT monitor for the video
+  adapter configured via the [`machine`](../system/general.md#machine)
+  setting. CGA and EGA modes on a VGA machine always appear double-scanned
+  with chunky pixels, as on a real VGA adapter.
 
-- `crt-auto-arcade` --- A fantasy option that emulates a 15 kHz arcade or home
-  computer monitor with thick scanlines in low-resolution modes. Fun for
+- **`crt-auto-arcade`** --- A fantasy option that emulates a 15 kHz arcade or
+  home computer monitor with thick scanlines in low-resolution modes. Fun for
   playing DOS VGA ports of Amiga and Atari ST games.
 
-- `crt-auto-arcade-sharp` --- A sharper arcade variant that retains the thick
-  scanlines but with the sharpness of a typical PC monitor.
-
-
-## Shader presets
-
-Shaders can be configured with presets that override their default settings
-and parameters. Presets are specified using the `SHADER_NAME:PRESET_NAME`
-format in the `shader` setting. If no preset is specified, the shader's
-built-in defaults are used.
-
-For example:
-
-``` ini
-[render]
-shader = crt/crt-hyllian:vga-4k
-```
-
-The adaptive CRT shaders (`crt-auto`, `crt-auto-machine`, `crt-auto-arcade`,
-`crt-auto-arcade-sharp`) automatically select the appropriate preset based on
-the graphics standard and viewport resolution. For example, `crt-auto` might
-resolve to `crt/crt-hyllian:cga-1080p` for a CGA game at 1080p, or
-`crt/crt-hyllian:vga-4k` for a VGA game at 4K resolution. The `sharp` shader
-is used as a fallback below 3x vertical scaling.
-
-Preset files are INI-format files that can override shader settings and
-parameters:
-
-``` ini
-[settings]
-force_single_scan = yes
-force_no_pixel_doubling = yes
-
-[parameters]
-BEAM_MIN_WIDTH     = 0.70
-SCANLINES_STRENGTH = 0.65
-```
-
-The `[settings]` section can include:
-
-<div class="compact" markdown>
-
-- `force_single_scan` --- Force single scanning for double-scanned modes.
-- `force_no_pixel_doubling` --- Disable pixel doubling.
-- `linear_filtering` --- Enable or disable bilinear texture filtering.
-
-</div>
-
-The `[parameters]` section overrides shader-specific parameters declared in
-the shader source.
+- **`crt-auto-arcade-sharp`** --- A sharper arcade variant that retains the
+  thick scanlines but with the sharpness of a typical PC monitor.
 
 
 ## Integer scaling
@@ -124,84 +78,6 @@ scaling is practically a non-issue.
 The default `auto` mode enables vertical integer scaling only for the adaptive
 CRT shaders, with refinements: 3.5x and 4.5x scaling factors are also
 allowed, and integer scaling is disabled above 5.0x.
-
-
-## Dedithering
-
-Many DOS games used dithering --- alternating pixel patterns --- to simulate
-more colours than their limited palette could display. This was especially
-common in 16-colour EGA games, where checkerboard patterns created the
-illusion of intermediate shades.
-
-The [`dedithering`](#dedithering) setting detects these checkerboard patterns
-and blends them into solid colours. It works with any graphics adapter (CGA,
-EGA, VGA, Hercules) and any resolution, and can be combined with any shader.
-
-??? note "Games that benefit from dedithering"
-
-    <div class="compact" markdown>
-
-    - [Leisure Suit Larry 2](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/) & [3](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/)
-    - [Quest for Glory I](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) & [II](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/)
-    - [Space Quest III](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)
-    - [The Secret of Monkey Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) (EGA version)
-    - [Loom](https://www.mobygames.com/game/176/loom/)
-    - [Spellcasting 101](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/)
-    - [Timequest](https://www.mobygames.com/game/1026/timequest/)
-    - [Gateway](https://www.mobygames.com/game/317/frederik-pohls-gateway/)
-
-    </div>
-
-!!! note
-
-    Dedithering is *not* a more authentic representation. On real PC CRT
-    monitors, dither patterns were clearly visible --- blending them into solid
-    colours was only a thing on consoles connected to consumer TV sets. For a
-    more authentic look, use [`shader`](#shader) `= crt-auto` instead.
-
-
-## Deinterlacing
-
-Many 90s DOS games displayed full-motion video (FMV) using interlaced
-rendering, showing only every second line of the video frame. This halved
-storage requirements and looked fine on small CRTs where the brain filled in
-the gaps, but on modern flat screens the alternating black lines look
-distracting and halve the apparent brightness.
-
-The [`deinterlacing`](#deinterlacing) setting automatically detects interlaced
-regions within each frame and reconstructs the missing lines. The detection is
-intelligent; it only touches interlaced areas while leaving HUDs, UI frames,
-subtitles, and mouse cursors untouched.
-
-Both common interlacing patterns are supported: standard line interlacing
-(alternating black horizontal lines, used by most games) and dot interlacing
-(a checkerboard pattern, used by the CD-ROM versions of
-[Dune](https://www.mobygames.com/game/380/dune/) and
-[KGB](https://www.mobygames.com/game/2894/kgb/)).
-
-Enable deinterlacing per-game rather than globally for best results.
-
-??? note "Games that benefit from deinterlacing"
-
-    <div class="compact" markdown>
-
-    - [Wing Commander IV](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/)
-    - [Phantasmagoria](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/)
-    - [Gabriel Knight 2](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/)
-    - [Crusader: No Remorse](https://www.mobygames.com/game/851/crusader-no-remorse/)
-    - [Crusader: No Regret](https://www.mobygames.com/game/852/crusader-no-regret/)
-    - [CyberMage](https://www.mobygames.com/game/791/cybermage-darklight-awakening/)
-    - [Angel Devoid](https://www.mobygames.com/game/3468/angel-devoid-face-of-the-enemy/)
-    - [Heroes of Might and Magic II](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
-
-    </div>
-
-!!! note
-
-    Enabling vertical [`integer_scaling`](#integer_scaling) is recommended on
-    lower resolution displays to avoid interference artifacts when using lower
-    deinterlacing strengths. Alternatively, use `full` strength to completely
-    eliminate all potential interference patterns.
 
 
 ## Aspect ratio & viewport
@@ -264,65 +140,26 @@ adjust stretching in real-time, then copy the logged viewport setting to your
 config.
 
 
-## CGA palette override
-
-The 16-colour CGA/EGA RGBI palette can be overridden with alternative colour
-interpretations via the `cga_colors` setting. This affects CGA/EGA-like modes
-even on emulated VGA or Tandy graphics adapters.
-
-Several built-in presets are available, including Amiga and Atari ST colours
-for Sierra AGI games, various CGA/EGA monitor emulations, and Commodore 64
-inspired colours. Custom palettes can also be specified.
-
-The `tandy-warm` preset emulates colours as they appear on an actual Tandy
-monitor, resulting in more subdued and pleasant colours --- especially
-apparent on the greens.
-
-
-## Wide gamut & colour accuracy
-
-CRT monitors used phosphor coatings with colour gamuts that often fall outside
-the sRGB colour space used by most modern displays. P22, Trinitron, and
-Philips phosphors all have saturated primaries that sRGB simply cannot
-reproduce. A wide gamut display (DCI-P3 or wider) lets DOSBox Staging render
-these colours faithfully, getting closer to what games looked like on real
-hardware.
-
-The practical benefit depends on your operating system:
-
-- **macOS** always outputs in the Display P3 colour space. The OS handles the
-  conversion to your monitor's actual colour profile automatically. This gives
-  you the most accurate results out of the box.
-
-- **Windows and Linux** currently output sRGB. A DCI-P3 monitor still helps
-  because the [Philips](#crt_color_profile) and
-  [Trinitron](#crt_color_profile) profiles push colours toward the gamut
-  boundary, but full accuracy requires macOS or a future colour-managed
-  rendering path on these platforms.
-
-If you have a wide gamut display, the `auto` defaults for
-[`crt_color_profile`](#crt_color_profile) and
-[`color_space`](#color_space) give you accurate colours out of the box. The
-Philips and Trinitron profiles show the biggest difference on DCI-P3 versus
-sRGB displays.
-
-
 ## CRT colour profiles
 
 Different CRT monitors used different phosphor chemistries, giving each a
 distinct colour character. DOSBox Staging can emulate these via the
 [`crt_color_profile`](#crt_color_profile) setting.
 
-- **P22** phosphors were the most common in PC monitors, producing warmer,
+- **`p22`** --- P22 phosphors were the most common in PC monitors, producing warmer,
   slightly desaturated colours. This is what most people saw when playing DOS
   games.
-- **SMPTE-C** (broadcast standard) is close to P22 but with tighter colour
-  tolerances, used in professional video monitors.
-- **EBU** phosphors are the European broadcast standard, found in high-end
+
+- **`smpte-c`** --- SMPT-C broadcast standard phosphors are close to P22 but with tighter
+  colour tolerances, used in professional video monitors.
+
+- **`ebu`** --- EBU phosphors are the European broadcast standard, found in high-end
   professional monitors like the Sony BVM/PVM series.
-- **Philips** home computer monitors (e.g., the Commodore 1084S) had
+
+- **`philips`** --- Philips home computer monitors (e.g., the Commodore 1084S) had
   distinctly warm, yellowish whites at roughly 6100K.
-- **Trinitron** (Sony) monitors were known for punchy, vivid colours with a
+
+- **`trinitron`** --- Sony Trinitrion monitors were known for punchy, vivid colours with a
   cool blue-white colour temperature around 9300K.
 
 The `auto` setting picks the profile that matches the era: CGA and EGA games
@@ -338,13 +175,16 @@ For `hercules` and `cga_mono` machine types, the
 [`monochrome_palette`](#monochrome_palette) setting offers four classic
 terminal looks:
 
-- **Amber** --- the warm orange-yellow glow of monochrome terminals like the
+- **`amber`** --- the warm orange-yellow glow of monochrome terminals like the
   IBM 5151 with an amber phosphor. This was the most common monochrome display
   in offices and the most comfortable for extended reading.
-- **Green** --- the classic green phosphor look of the original IBM 5151 green
+
+- **`green`** --- the classic green phosphor look of the original IBM 5151 green
   screen, a staple of the early PC era.
-- **White** --- a cool blue-white typical of later monochrome VGA monitors.
-- **Paperwhite** --- the Hercules-era paperwhite phosphor, a warmer, slightly
+
+- **`white`** --- a cool blue-white typical of later monochrome VGA monitors.
+
+- **`paperwhite`** --- the Hercules-era paperwhite phosphor, a warmer, slightly
   yellowish white that's easier on the eyes than pure white.
 
 You can cycle through the available palettes via hotkeys during gameplay.
@@ -394,6 +234,179 @@ The following table shows the automatically selected values:
     The black level values shown are for DCI-P3 colour spaces with gamma
     2.6 or higher. For lower-gamma colour spaces (sRGB, Display P3), the
     black level is halved.
+
+
+## Wide gamut & colour accuracy
+
+CRT monitors used phosphor coatings with colour gamuts that often fall outside
+the sRGB colour space used by most modern displays. P22, Trinitron, and
+Philips phosphors all have saturated primaries that sRGB simply cannot
+reproduce. A wide gamut display (DCI-P3 or wider) lets DOSBox Staging render
+these colours faithfully, getting closer to what games looked like on real
+hardware.
+
+The practical benefit depends on your operating system:
+
+- **macOS** always outputs in the Display P3 colour space. The OS handles the
+  conversion to your monitor's actual colour profile automatically. This gives
+  you the most accurate results out of the box.
+
+- **Windows and Linux** currently output sRGB. A DCI-P3 monitor still helps
+  because the [Philips](#crt_color_profile) and
+  [Trinitron](#crt_color_profile) profiles push colours toward the gamut
+  boundary, but full accuracy requires macOS or a future colour-managed
+  rendering path on these platforms.
+
+If you have a wide gamut display, the `auto` defaults for
+[`crt_color_profile`](#crt_color_profile) and
+[`color_space`](#color_space) give you accurate colours out of the box. The
+Philips and Trinitron profiles show the biggest difference on DCI-P3 versus
+sRGB displays.
+
+
+
+## Deinterlacing
+
+Many 90s DOS games displayed full-motion video (FMV) using interlaced
+rendering, showing only every second line of the video frame. This halved
+storage requirements and looked fine on small CRTs where the brain filled in
+the gaps, but on modern flat screens the alternating black lines look
+distracting and halve the apparent brightness.
+
+The [`deinterlacing`](#deinterlacing) setting automatically detects interlaced
+regions within each frame and reconstructs the missing lines. The detection is
+intelligent; it only touches interlaced areas while leaving HUDs, UI frames,
+subtitles, and mouse cursors untouched.
+
+Both common interlacing patterns are supported: standard line interlacing
+(alternating black horizontal lines, used by most games) and dot interlacing
+(a checkerboard pattern, used by the CD-ROM versions of
+[Dune](https://www.mobygames.com/game/380/dune/) and
+[KGB](https://www.mobygames.com/game/2894/kgb/)).
+
+Enable deinterlacing per-game rather than globally for best results.
+
+??? note "Games that benefit from deinterlacing"
+
+    <div class="compact" markdown>
+
+    - [Wing Commander IV](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/)
+    - [Phantasmagoria](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/)
+    - [Gabriel Knight 2](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/)
+    - [Crusader: No Remorse](https://www.mobygames.com/game/851/crusader-no-remorse/)
+    - [Crusader: No Regret](https://www.mobygames.com/game/852/crusader-no-regret/)
+    - [CyberMage](https://www.mobygames.com/game/791/cybermage-darklight-awakening/)
+    - [Angel Devoid](https://www.mobygames.com/game/3468/angel-devoid-face-of-the-enemy/)
+    - [Heroes of Might and Magic II](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
+
+    </div>
+
+!!! note
+
+    Enabling vertical [`integer_scaling`](#integer_scaling) is recommended on
+    lower resolution displays to avoid interference artifacts when using lower
+    deinterlacing strengths. Alternatively, use `full` strength to completely
+    eliminate all potential interference patterns.
+
+
+## Dedithering
+
+Many DOS games used dithering --- alternating pixel patterns --- to simulate
+more colours than their limited palette could display. This was especially
+common in 16-colour EGA games, where checkerboard patterns created the
+illusion of intermediate shades.
+
+The [`dedithering`](#dedithering) setting detects these checkerboard patterns
+and blends them into solid colours. It works with any graphics adapter (CGA,
+EGA, VGA, Hercules) and any resolution, and can be combined with any shader.
+
+??? note "Games that benefit from dedithering"
+
+    <div class="compact" markdown>
+
+    - [Leisure Suit Larry 2](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/) & [3](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/)
+    - [Quest for Glory I](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) & [II](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/)
+    - [Space Quest III](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)
+    - [The Secret of Monkey Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) (EGA version)
+    - [Loom](https://www.mobygames.com/game/176/loom/)
+    - [Spellcasting 101](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/)
+    - [Timequest](https://www.mobygames.com/game/1026/timequest/)
+    - [Gateway](https://www.mobygames.com/game/317/frederik-pohls-gateway/)
+
+    </div>
+
+!!! note
+
+    Dedithering is *not* a more authentic representation. On real PC CRT
+    monitors, dither patterns were clearly visible --- blending them into solid
+    colours was only a thing on consoles connected to consumer TV sets. For a
+    more authentic look, use [`shader`](#shader) `= crt-auto` instead.
+
+
+## CGA palette override
+
+The 16-colour CGA/EGA RGBI palette can be overridden with alternative colour
+interpretations via the `cga_colors` setting. This affects CGA/EGA-like modes
+even on emulated VGA or Tandy graphics adapters.
+
+Several built-in presets are available, including Amiga and Atari ST colours
+for Sierra AGI games, various CGA/EGA monitor emulations, and Commodore 64
+inspired colours. Custom palettes can also be specified.
+
+The `tandy-warm` preset emulates colours as they appear on an actual Tandy
+monitor, resulting in more subdued and pleasant colours --- especially
+apparent on the greens.
+
+
+## Shader presets
+
+Shaders can be configured with presets that override their default settings
+and parameters. Presets are specified using the `SHADER_NAME:PRESET_NAME`
+format in the `shader` setting. If no preset is specified, the shader's
+built-in defaults are used.
+
+For example:
+
+``` ini
+[render]
+shader = crt/crt-hyllian:vga-4k
+```
+
+The adaptive CRT shaders (`crt-auto`, `crt-auto-machine`, `crt-auto-arcade`,
+`crt-auto-arcade-sharp`) automatically select the appropriate preset based on
+the graphics standard and viewport resolution. For example, `crt-auto` might
+resolve to `crt/crt-hyllian:cga-1080p` for a CGA game at 1080p, or
+`crt/crt-hyllian:vga-4k` for a VGA game at 4K resolution. The `sharp` shader
+is used as a fallback below 3x vertical scaling.
+
+Preset files are INI-format files that can override shader settings and
+parameters:
+
+``` ini
+[settings]
+force_single_scan = yes
+force_no_pixel_doubling = yes
+
+[parameters]
+BEAM_MIN_WIDTH     = 0.70
+SCANLINES_STRENGTH = 0.65
+```
+
+The `[settings]` section can include:
+
+<div class="compact" markdown>
+
+- `force_single_scan` --- Force single scanning for double-scanned modes.
+- `force_no_pixel_doubling` --- Disable pixel doubling.
+- `linear_filtering` --- Enable or disable bilinear texture filtering.
+
+</div>
+
+The `[parameters]` section overrides shader-specific parameters declared in
+the shader source.
+
+
+
 
 
 ## Configuration settings
