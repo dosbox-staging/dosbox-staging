@@ -97,8 +97,10 @@ ROM files:
 mididevice = soundcanvas
 ```
 
-Download the SC-55 ROM files and place them in the `soundcanvas-roms`
-directory inside your DOSBox configuration folder:
+Download the SC-55 ROM files from
+[here](https://archive.org/details/nuked-sc-55-clap-rom-files), unpack the
+ZIP archive, then move the contents of the `Nuked-SC55-Resources/ROMs/` folder
+into the `soundcanvas-roms` directory inside your DOSBox configuration folder:
 
 <div class="compact" markdown>
 
@@ -106,9 +108,25 @@ directory inside your DOSBox configuration folder:
 |----------|---------------------------------------------------------|
 | Windows  | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundcanvas-roms\` |
 | macOS    | `~/Library/Preferences/DOSBox/soundcanvas-roms/`        |
-| Linux    | `~/.config/dosbox/soundcanvas-roms/`                    |
+| Linux    | `~/.local/share/dosbox/soundcanvas-roms/`               |
 
 </div>
+
+This is what the contents of `soundcanvas-roms` should look like:
+
+```
+soundcanvas-roms
+├── SC-55-v1.10
+│   ├── sc55_rom1.bin
+│   ├── sc55_rom2.bin
+│   ├── sc55_waverom1.bin
+│   ├── sc55_waverom2.bin
+│   └── sc55_waverom3.bin
+├── SC-55-v1.20
+│   ...
+├── SC-55-v1.21
+...
+```
 
 You can also set a custom ROM directory via the
 [`soundcanvas_rom_dir`](#soundcanvas_rom_dir) setting.
