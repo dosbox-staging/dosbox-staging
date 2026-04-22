@@ -140,7 +140,7 @@ static void run(std::string addr, int port)
 
 	server.set_exception_handler(error_handler);
 
-	server.Get("/api/v1/info", [=](auto, auto& res) {
+	server.Get("/api/v1/dosbox/info", [=](auto, auto& res) {
 		json j;
 		j["configHome"]      = get_config_dir();
 		j["configWebserver"] = config_home;

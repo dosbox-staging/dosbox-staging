@@ -118,7 +118,7 @@
             <p>Retrieve pointers to internal DOS data structures like the DOS
             swappable area and list of lists.</p>
 
-            <h2 class="single">GET /api/v1/info</h2>
+            <h2 class="single">GET /api/v1/dosbox/info</h2>
             <p>Retrieve DOSBox version and relevant paths.</p>
         </section>
     </div>
@@ -126,7 +126,7 @@
     <script>
         async function updateVersion() {
             try {
-              const response = await fetch('/api/v1/info');
+              const response = await fetch('/api/v1/dosbox/info');
               if (!response.ok) throw new Error('Fetch error');
               const data = await response.json();
               const versionElement = document.querySelector('.header-subtitle');
