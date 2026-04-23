@@ -228,34 +228,3 @@ gamers ever owned. Low-resolution art was never meant to be seen that large.
     Q.E.D. :sunglasses:
 
 
-## Custom aspect ratios
-
-DOSBox Staging also has a "stretch everything" mode for when aspect ratio
-authenticity isn't the priority:
-
-```ini
-[render]
-aspect = stretch
-```
-
-This stretches the image to fill the viewport regardless of aspect ratio. It's
-hard to argue it matters much for text adventures or abstract games --- though
-for anything with carefully drawn art, opinions vary.
-
-You can also specify custom stretch factors to emulate the horizontal and
-vertical stretch controls of a CRT. For example, to correct the [squashed
-look](../../getting-started/enhancing-prince-of-persia.md#hercules) of
-Hercules graphics in Prince of Persia:
-
-```ini
-[render]
-aspect = stretch
-viewport = relative 112% 173%
-```
-
-{{ figure(
-    "https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-aspect-corrected.jpg",
-    "Prince of Persia in Hercules mode with custom stretch factors<br>to make the image fill our 4:3 \"emulated CRT screen\"."
-) }}
-
-

@@ -1,11 +1,11 @@
 # IBM PS/1 Audio Card
 
-DOSBox Staging can emulate the rare **PS/1 Audio Card** released in 1990 for
-IBM PS/1 computers (models 2011 and 2121). Relatively few games support this
-option, and the FM sounds very much like the PCjr or [Tandy 1000](tandy.md),
-as they all use the same or similar TI sound chips. By the time the PS/1 Audio
-Card was released, the Sound Blaster was already available, making it largely
-obsolete.
+DOSBox Staging can emulate the rare **IBM PS/1 Audio Card** released in 1990
+for IBM PS/1 computers (models 2011 and 2121). Relatively few games support
+this option, and the FM sounds very much like the PCjr or [Tandy
+1000](tandy.md), as they all use the same or similar TI sound chips. By the
+time the PS/1 Audio Card was released, the Sound Blaster was already
+available, making it largely obsolete.
 
 PS/1 Audio support appears primarily in Sierra SCI1-era titles. Many of these
 games detect the card automatically.

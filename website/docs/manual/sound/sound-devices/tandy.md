@@ -1,49 +1,66 @@
 # Tandy 3 Voice
 
-The **Tandy 3 Voice** audio was introduced with the Tandy 1000 IBM PC clone
-released in 1984, which was as a clone of the short-lived IBM PCjr.
+The [Tandy 1000](../../graphics/adapters.md#tandy-1000), released in 1984, was
+essentially a clone of the short-lived [IBM
+PCjr](../../graphics/adapters.md#tandy-1000), and it carried over the PCjr's
+enhanced sound hardware almost wholesale. Both machines used the same Texas
+Instruments SN76489 programmable sound generator chip (or close variants of
+it), producing three square-wave voices plus a noise channel. In practice, the
+two are functionally identical from a game's perspective, which is why **Tandy
+sound** and **PCjr sound** are often used interchangeably. We call it **Tandy
+3 Voice** because the Tandy 1000 succeeded where the PCjr failed --- it was
+the machine that actually made this sound hardware matter.
 
-Life was simple in the 80s --- most games only supported the PC speaker, but
-some of them had enhanced sound on the Tandy 1000 IBM PC compatible.
+## Using Tandy sound
 
-The enhanced sound hardware of the Tandy lineup was an integral, non-removable
-part of the computer, and was not available as an add-on card for non-Tandy
-machines. Therefore, most Tandy games simply check if they're running on a
-Tandy, and if so, make use of its integrated sound and graphics capabilities.
+Life was simple in the early 80s --- most games only supported the PC speaker,
+but some offered enhanced sound on the Tandy 1000. The enhanced sound hardware
+was an integral, non-removable part of the computer, not available as an
+add-on card for standard PCs. Most Tandy-compatible games simply check whether
+they're running on a Tandy machine, and if so, make use of its integrated
+sound and graphics capabilities.
 
-To play Tandy games with Tandy sound, you need to enable the emulation of a
-generic Tandy computer as follows:
+To play Tandy games with Tandy sound, enable the emulation of a generic Tandy
+computer:
 
 ``` ini
 [dosbox]
 machine = tandy
 ```
 
+As explained above, you'll get Tandy 3 Voice sound when emulating an IBM PCjr,
+too:
+
+``` ini
+[dosbox]
+machine = pcjr
+```
+
 See [`machine`](../../system/general.md#machine) for more details on machine
 types.
 
-Later Tandy 1000 models added support for digital audio as well.
+Later Tandy 1000 models added support for digital audio as well. Due to
+resource conflicts, DOSBox cannot emulate the Tandy DAC and Sound Blaster
+digital audio simultaneously. To use the Tandy DAC alongside the Tandy
+synthesiser, disable Sound Blaster emulation by setting
+[`sbtype`](../sound-devices/adlib-cms-sound-blaster.md#sbtype) to `none` in
+the `[sblaster]` section.
 
 ``` ini
+[dosbox]
+machine = tandy
+
 [sblaster]
 sbtype = none
 ```
 
-!!! warning
-
-    Due to resource conflicts, DOSBox cannot emulate the Tandy DAC and Sound Blaster digital
-    audio at the same time. If you want to emulate the Tandy DAC in addition
-    to the Tandy synthesiser, you need to disable Sound Blaster emulation by
-    setting [`sbtype`](../sound-devices/adlib-cms-sound-blaster.md#sbtype) to
-    `none` as shown above.
-
 !!! note
 
-    Tandy 3 Voice sound is sometimes referred to as **Tandy 1000** or
-    **IBM PCjr** in the game’s sound setup program.
+    Tandy 3 Voice sound is sometimes listed as ***Tandy 1000*** or ***IBM
+    PCjr*** in a game's sound setup.
 
-    Tandy digital sound is sometimes called **Tandy with DAC** or
-    **Tandy 1000 SL, TL, HL series** or something similar.
+    Tandy digital sound may appear as **Tandy with DAC** or **Tandy 1000
+    SL/TL/HL series** or similar.
 
 
 ## Games with enhanced Tandy sound

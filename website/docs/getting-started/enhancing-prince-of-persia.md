@@ -205,7 +205,7 @@ Here's how it looks. Oldschool! The slightly squashed aspect ratio is correct
 in this case; this is exactly how the game would look on a PC equipped with a
 Hercules card connected to a period-accurate monochrome monitor (we present
 some advanced techniques on [how to fix
-that](../manual/graphics/aspect-ratios.md#custom-aspect-ratios) in the user
+that](../manual/graphics/rendering.md#custom-aspect-ratios) in the user
 manual).
 
 {{ figure(

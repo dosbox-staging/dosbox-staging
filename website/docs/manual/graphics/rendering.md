@@ -105,11 +105,17 @@ other modes have their own non-square PARs: 640&times;350 EGA (1:1.37 PAR),
 Staging handles all of these automatically. For a more detailed explanation of
 pixel aspect ratios, see [Aspect ratios & black borders](aspect-ratios.md).
 
-The `stretch` mode calculates the aspect ratio from the viewport dimensions,
+
+### Custom aspect ratios
+
+DOSBox Staging also has a "stretch everything" mode for when aspect ratio
+authenticity isn't the priority.
+
+The `stretch` aspect mode calculates the aspect ratio from the viewport dimensions,
 allowing you to force arbitrary aspect ratios. For example, to stretch a game
 to fill the entire screen:
 
-``` ini
+```ini
 [sdl]
 fullscreen = on
 
@@ -119,21 +125,35 @@ viewport = fit
 integer_scaling = off
 ```
 
-The `relative` viewport mode starts from a 4:3 rectangle and scales it by
-horizontal and vertical stretch factors. This is useful for aspect-correcting
-lazy Hercules conversions that reused EGA/VGA assets. For example, Prince of
-Persia in Hercules mode:
+It's hard to argue it matters much for text adventures or abstract games ---
+though for anything with carefully drawn art, opinions vary.
 
-``` ini
+The `relative` viewport mode starts from a 4:3 rectangle and scales it by
+horizontal and vertical stretch factors. With this, you can emulate the
+horizontal and vertical stretch controls of a CRT. This is useful for
+aspect-correcting lazy Hercules conversions that reused EGA/VGA assets.
+
+For example, to correct the [squashed
+look](adapters.md#hercules-graphics-card-hgc) of Hercules graphics in [Prince
+of Persia](https://www.mobygames.com/game/196/prince-of-persia/):
+
+```ini
 [render]
 aspect = stretch
 viewport = relative 112% 173%
 integer_scaling = off
 ```
 
-Use the _Stretch Axis_, _Inc Stretch_, and _Dec Stretch_ hotkey actions to
-adjust stretching in real-time, then copy the logged viewport setting to your
-config.
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-aspect-corrected.jpg",
+    "Prince of Persia in Hercules mode with custom stretch factors<br>to make the image fill our 4:3 \"emulated CRT screen\"."
+) }}
+
+
+Use the **Stretch Axis**, **Inc Stretch**, and **Dec Stretch** hotkey actions
+to adjust stretching in real-time (you'll need to map them in the [key
+mapper](../input/keymapper.md) first), then copy the logged viewport setting to
+your config.
 
 
 ## CRT colour profiles

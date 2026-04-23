@@ -11,27 +11,27 @@ this reason, they are also sometimes called LPT DAC devices.
 
 ## Covox Speech Thing
 
-The **Covox Speech Thing** released in 1986 was a simple R-2R resistor ladder
-DAC that plugged into the parallel port. It was cheap to build (even as a DIY
-project) and provided 8-bit mono audio output. Around 60 games supported it,
-including several Sierra titles.
+Released in 1986, the **Covox Speech Thing** (or just **Covox**) was a simple,
+cheap DAC that plugged into the parallel port --- popular enough that it was
+often built as a DIY project. It provided 8-bit mono audio output and was
+supported by around 60 games, including several Sierra titles.
 
 ## Disney Sound Source
 
-The **Disney Sound Source** introduced in 1990 was a parallel port audio
-device backwards-compatible with the Covox Speech Thing, but it added a small
-FIFO buffer and control logic to reduce CPU overhead during playback. Around
-150 games supported it, making it the most popular parallel port audio device.
-DOSBox Staging emulates the Disney Sound Source, which is also compatible with
-Covox Speech Thing titles and Intersound MDO software.
+Introduced in 1990, the **Disney Sound Source** was a parallel port audio
+device backwards-compatible with the [Covox Speech Thing](#covox-speech-thing),
+but with lower CPU overhead during playback. It was supported by around 150
+games, making it the most popular parallel port audio device. DOSBox Staging
+emulates the Disney Sound Source, which is also compatible with Covox Speech
+Thing titles and Intersound MDO software.
 
 ## Stereo-on-1 DAC
 
-The **Stereo-on-1** was a stereo variant of the parallel port DAC concept. It
-split the parallel port's 8 data lines into two 4-bit channels (one for left,
-one for right), giving you stereo output at the cost of halving the bit depth.
-Less common than the mono Covox, but supported by some tracker players and a
-handful of games.
+The **Stereo-on-1** was a stereo variant of the parallel port DAC concept,
+splitting the signal into left and right channels at the cost of halving the
+bit depth. Less common than the mono [Covox](#covox-speech-thing), but
+supported by some tracker music players and a handful of games.
+
 
 ## Mixer channels
 
