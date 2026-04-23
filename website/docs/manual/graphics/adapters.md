@@ -10,7 +10,7 @@ games, from standard VGA through high-resolution SVGA. You only need to
 change it for titles that specifically require an older standard, typically
 early to mid-1980s games written for [CGA](#cga), [Tandy](#tandy-1000), or
 [Hercules](#hercules-graphics-card) hardware, or demoscene productions
-targeting specific SVGA chipsets.
+targeting specific [SVGA chipsets](#vga-and-svga).
 
 For an overview of which graphics standard was typical in each era, see
 [The DOS eras](../dos-eras.md). The
@@ -227,16 +227,16 @@ more colours than the 16-colour palette could display directly.
 ## VGA and SVGA
 
 IBM's **Video Graphics Array** or **VGA** from 1987 was the last IBM graphics
-standard that PC clone manufacturers widely adopted. VGA
-introduced the iconic Mode 13h --- 256 colours from a palette of 262,144 at
-320&times;200 --- which became *the* standard DOS gaming mode from the late
-1980s through the mid-1990s. VGA also introduced analog video output,
-replacing the digital RGBI output of earlier standards.
+standard that PC clone manufacturers widely adopted. VGA introduced the iconic
+**Mode 13h** --- 256 colours from a palette of 262,144 at 320&times;200 ---
+which became *the* standard DOS gaming mode from the late 1980s through the
+mid-1990s. VGA also introduced analog video output, replacing the digital RGBI
+output of earlier standards.
 
 There is no dedicated VGA-only machine type in DOSBox Staging. All SVGA
-adapters below are fully backward-compatible with VGA (and by extension CGA
-and EGA), so any of them will work for VGA games. The default `svga_s3` is
-the best general-purpose choice.
+adapters below are fully backward-compatible with VGA (and by extension
+[CGA](#cga) and [EGA](#ega)), so any of them will work for VGA games. The
+default `svga_s3` is the best general-purpose choice.
 
 !!! note
 
@@ -249,11 +249,11 @@ the best general-purpose choice.
     original VGA implementation. See also
     [`vga_render_per_scanline`](../system/general.md#vga_render_per_scanline).
 
-**SVGA** (Super VGA) is a loose term for any VGA superset offering higher
+**SVGA (Super VGA)** is a loose term for any VGA superset offering higher
 resolutions and colour depths. Because each manufacturer implemented their own
 extensions, the VESA BIOS Extensions (VBE) standard was created to provide a
 uniform programming interface. DOSBox Staging emulates four SVGA chipsets,
-ranging from late 1980s designs to the mid-1990s S3 Trio64.
+ranging from late 1980s designs to the mid-1990s [S3 Trio64](#s3-trio64).
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg",
@@ -313,7 +313,7 @@ a game or demo explicitly lists ET4000 support, this is your machine type.
 
 `machine = svga_s3` *default*{ .default }
 
-The **S3 Trio64** fro 1994 is the default machine type and the most capable
+The **S3 Trio64** from 1994 is the default machine type and the most capable
 adapter in DOSBox Staging. By the mid-1990s, S3 cards were ubiquitous, and the
 Trio64 represents the peak of the DOS-era SVGA landscape. It provides full
 VESA VBE 2.0 support with a linear framebuffer, defaults to 4 MB of video
