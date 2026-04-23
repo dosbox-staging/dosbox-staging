@@ -9,7 +9,8 @@ For the full "waiting for the game to load" experience, pair disk noises
 with throttled disk speeds (see the
 [floppy_disk_speed](../system/general.md#floppy_disk_speed) and
 [hard_disk_speed](../system/general.md#hard_disk_speed) settings). The
-volume is adjustable via the `DISKNOISE` mixer channel.
+volume is adjustable via the `DISKNOISE` [mixer
+channel](mixer.md#list-of-mixer-channels).
 
 
 ## Configuration settings

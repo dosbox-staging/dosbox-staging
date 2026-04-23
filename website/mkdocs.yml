@@ -201,7 +201,7 @@ nav:
         - manual/sound/on-subjectivity.md
         - manual/sound/mixer.md
         - manual/sound/mixer-effects.md
-        - manual/sound/analog-output-filters.md
+        - manual/sound/output-filters.md
         - manual/sound/disk-noise.md
         - Sound devices:
           - manual/sound/sound-devices/adlib-cms-sound-blaster.md

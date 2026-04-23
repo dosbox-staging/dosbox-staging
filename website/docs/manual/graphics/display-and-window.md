@@ -1,21 +1,19 @@
 # Display & window
 
-DOSBox Staging opens in a resizable window by default. Press
-++alt+enter++ to toggle fullscreen mode.
+DOSBox Staging opens in a resizable window by default --- press ++alt+Enter++
+to toggle fullscreen at any time. For most games, the out-of-the-box display
+settings will serve you well and need no adjustment. This chapter covers the
+cases where you might want to dig deeper.
 
-The `opengl` [output mode](#output) is the recommended default because it's required
-for CRT shaders and other post-processing effects (see
-[Rendering](rendering.md)). If your system doesn't
-support OpenGL, `texture` is a solid fallback that still looks good.
-
-For monitors with variable refresh rates (G-Sync, FreeSync, or VRR), you'll
-want to disable [`vsync`](#vsync) for the smoothest frame pacing. On
-fixed-rate monitors, enable it to prevent screen tearing.
-
-Window size and position are remembered between sessions, so you only need
-to set things up once. Most users won't need to change the display defaults
-at all --- the out-of-the-box settings work well for the vast majority of
-games.
+The most important decision for most users is how to handle [frame
+presentation](#frame-presentation) and [vsync](#vsync). If you have a
+variable refresh rate monitor (G-Sync, FreeSync, or VRR), the defaults
+give you perfect frame pacing with no tearing and no further configuration
+needed. On a fixed refresh rate monitor, enabling vsync eliminates tearing
+in fast-paced games, but it can't fully solve the judder that comes from the
+mismatch between DOS refresh rates and your display's fixed rate. Most VGA
+games run at 70 Hz, and that difference is perceptible in scrolling and
+animation. A VRR monitor is the only complete solution.
 
 For image output settings such as shaders, CRT emulation, aspect ratio
 correction, dedithering, deinterlacing, and image adjustments, see

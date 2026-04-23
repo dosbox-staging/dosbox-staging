@@ -101,10 +101,9 @@ correction enabled.
 
 Pixels are square (1:1 PAR) in 640&times;480 and higher resolutions. A few
 other modes have their own non-square PARs: 640&times;350 EGA (1:1.37 PAR),
-640&times;200 EGA (1:2.4 PAR), and 720&times;348 Hercules (1:1.55 PAR).
-DOSBox Staging handles all of these automatically. For a more detailed
-explanation of pixel aspect ratios with worked examples, see 
-[Aspect ratios & black borders](aspect-ratios.md).
+640&times;200 EGA (1:2.4 PAR), and 720&times;348 Hercules (1:1.55 PAR). DOSBox
+Staging handles all of these automatically. For a more detailed explanation of
+pixel aspect ratios, see [Aspect ratios & black borders](aspect-ratios.md).
 
 The `stretch` mode calculates the aspect ratio from the viewport dimensions,
 allowing you to force arbitrary aspect ratios. For example, to stretch a game

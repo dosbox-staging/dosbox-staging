@@ -148,8 +148,9 @@ enhancement available for these games before the AdLib era.
 
 ## Mixer channels
 
-The Tandy synthesiser outputs to the **TANDY** [mixer](../mixer.md) channel,
-and the DAC to the **TANDYDAC** channel.
+The Tandy synthesiser outputs to the **TANDY** [mixer
+channel](../mixer.md#list-of-mixer-channels), and the DAC to the **TANDYDAC**
+channel.
 
 
 ## Configuration settings
@@ -195,7 +196,7 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
     - `on` *default*{ .default } -- Filter the output. This applies a 3rd order high-pass filter at 120 Hz, and a 2nd order low-pass filter at 4.8 kHz (`hpf 3 120 lpf 2 4800`).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
 
@@ -208,7 +209,7 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
     - `on` *default*{ .default } -- Filter the output. This applies a 3rd order high-pass filter at 120 Hz, and a 2nd order low-pass filter at 4.8 kHz (`hpf 3 120 lpf 2 4800`).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
 

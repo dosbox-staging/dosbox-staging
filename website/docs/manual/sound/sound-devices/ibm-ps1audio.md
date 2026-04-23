@@ -46,8 +46,9 @@ games detect the card automatically.
 
 ## Mixer channels
 
-The PS/1 Audio synthesiser outputs to the **PS1** [mixer](../mixer.md)
-channel, and the DAC to the **PS1DAC** channel.
+The PS/1 Audio synthesiser outputs to the **PS1** [mixer
+channel](../mixer.md#list-of-mixer-channels), and the DAC to the **PS1DAC**
+channel.
 
 
 ## Configuration settings
@@ -71,7 +72,7 @@ IBM PS/1 Audio settings are to be configured in the `[speaker]` section.
     - `on` *default*{ .default } -- Filter the output. This applies a 3rd order high-pass filter at 160 Hz, and a 1st order low-pass filter at 2.1 kHz (`hpf 3 160 lpf 1 2100`).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
 
@@ -84,7 +85,7 @@ IBM PS/1 Audio settings are to be configured in the `[speaker]` section.
     - `on` *default*{ .default } -- Filter the output. This applies a 3rd order high-pass filter at 160 Hz, and a 1st order low-pass filter at 2.1 kHz (`hpf 3 160 lpf 1 2100`).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
 

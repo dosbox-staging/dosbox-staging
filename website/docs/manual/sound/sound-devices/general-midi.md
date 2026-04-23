@@ -285,8 +285,9 @@ enthusiasts who own an actual SC-55 or other hardware synthesiser.
 
 ## Mixer channels
 
-Sound Canvas outputs to the **SOUNDCANVAS** [mixer](../mixer.md) channel, and
-FluidSynth to the **FSYNTH** channel.
+Sound Canvas outputs to the **SOUNDCANVAS** [mixer
+channel](../mixer.md#list-of-mixer-channels), and FluidSynth to the **FSYNTH**
+channel.
 
 
 ## Configuration settings
@@ -382,7 +383,7 @@ FluidSynth settings are to be configured in the `[fluidsynth]` section.
 
     - `off` *default*{ .default } -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
 
@@ -426,7 +427,7 @@ Sound Canvas settings are to be configured in the `[soundcanvas]` section.
     - `on` *default*{ .default } -- Filter the output. This applies a 1st order low-pass filter at 11 kHz (`lpf 1 11000`).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
 

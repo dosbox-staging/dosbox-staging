@@ -284,7 +284,8 @@ inside the game's working directory.
 
 ## Mixer channel
 
-The Roland MT-32 outputs to the **MT32** [mixer](../mixer.md) channel.
+The Roland MT-32 outputs to the **MT32** [mixer
+channel](../mixer.md#list-of-mixer-channels).
 
 
 ## Configuration settings
@@ -338,7 +339,7 @@ Roland MT-32 settings are to be configured in the `[mt32]` section.
 
     - `off` *default*{ .default } -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
 

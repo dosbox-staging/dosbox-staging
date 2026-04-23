@@ -96,7 +96,7 @@ You can fine-tune per-channel chorus levels via mixer commands.
 
 Crossfeed, reverb, and chorus can be combined, and doing so is highly
 recommended for achieving the best results. Together with the
-[analog output filters](analog-output-filters.md), these effects can
+[analog output filters](output-filters.md), these effects can
 give old DOS game soundtracks a new life.
 
 Suggested audio configurations for many games are available

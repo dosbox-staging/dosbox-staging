@@ -29,7 +29,8 @@ Only a small handful of games support this truly unique sound option.
 
 ## Mixer channel
 
-The Innovation SSI-2001 outputs to the **INNOVATION** [mixer](../mixer.md) channel.
+The Innovation SSI-2001 outputs to the **INNOVATION** [mixer
+channel](../mixer.md#list-of-mixer-channels).
 
 
 ## Configuration settings
@@ -84,7 +85,7 @@ You can set the parameters of the Innovation SSI-2001 card in the
 
     - `off` *default*{ .default } -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
 

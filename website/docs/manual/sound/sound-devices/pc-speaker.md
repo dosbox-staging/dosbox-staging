@@ -32,7 +32,8 @@ even produce sounds where the `discrete` model produces none (e.g.,
 
 ## Mixer channel
 
-The PC speaker outputs to the **PCSPEAKER** [mixer](../mixer.md) channel.
+The PC speaker outputs to the **PCSPEAKER** [mixer
+channel](../mixer.md#list-of-mixer-channels).
 
 
 ## Configuration settings
@@ -63,5 +64,5 @@ PC speaker settings are to be configured in the `[speaker]` section.
     - `on` *default*{ .default } -- Filter the output. This emulates a small speaker in an acoustic environment using a built-in multi-stage filter.
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.

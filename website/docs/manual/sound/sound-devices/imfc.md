@@ -39,7 +39,8 @@ ports.
 
 ## Mixer channel
 
-The IBM Music Feature Card outputs to the **IMFC** [mixer](../mixer.md) channel.
+The IBM Music Feature Card outputs to the **IMFC** [mixer
+channel](../mixer.md#list-of-mixer-channels).
 
 
 ## Configuration settings
@@ -77,7 +78,7 @@ IBM Music Feature Card settings are to be configured in the `[imfc]` section.
     - `on` *default*{ .default } -- Filter the output. This applies a 2nd order low-pass filter at 3.5 kHz (`lpf 2 3500`).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
 

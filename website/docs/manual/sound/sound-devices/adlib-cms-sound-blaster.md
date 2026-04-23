@@ -62,11 +62,11 @@ their main capabilities:
 
 ### Mixer channels
 
-The digital audio of the Sound Blaster is output to the **SB**
-[mixer](../mixer.md) channel, while the AdLib (OPL) synthesiser has its own
-dedicated **OPL** channel. Both
-channels can be either mono or stereo, depending on the particular Sound
-Blaster model being emulated.
+The digital audio of the Sound Blaster is output to the **SB** [mixer
+channel](../mixer.md#list-of-mixer-channels), while the AdLib (OPL)
+synthesiser has its own dedicated **OPL** channel. Both channels can be either
+mono or stereo, depending on the particular Sound Blaster model being
+emulated.
 
 The Creative Music System synthesiser has its own dedicated **CMS** channel,
 which is always stereo.
@@ -761,7 +761,7 @@ The number after the `T` parameter describes the type of the card:
       to enable model-authentic filter emulation.
     - `off` -- Don't filter the digital audio output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
     These are the model specific low-pass filter settings for the digital
@@ -901,7 +901,7 @@ The number after the `T` parameter describes the type of the card:
     - `sb1`, `sb2`, `sbpro1`, `sbpro2`, `sb16` -- Use the OPL filter of this Sound Blaster model.
     - `off` -- Don't filter the OPL output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
     These are the model specific low-pass filter settings for OPL output: 
@@ -1008,6 +1008,6 @@ The number after the `T` parameter describes the type of the card:
     - `on` *default*{ .default } -- Filter the CMS output. This applies a 1st order low-pass filter at 6 kHz (`lpf 1 6000`).
     - `off` -- Don't filter the CMS output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 

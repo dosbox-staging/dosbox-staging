@@ -45,7 +45,7 @@ tracks are automatically converted to stereo during playback.
 
 ## Mixer channel
 
-CD-DA audio is output to the **CDAUDIO** [mixer](../mixer.md) channel for
-mounted CD-ROM images.
+CD-DA audio is output to the **CDAUDIO** [mixer
+channel](../mixer.md#list-of-mixer-channels) for mounted CD-ROM images.
 
 

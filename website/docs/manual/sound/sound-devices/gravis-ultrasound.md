@@ -166,7 +166,7 @@ exclusively.
 
 ## Mixer channel
 
-The Gravis UltraSound outputs to the **GUS** [mixer](../mixer.md) channel.
+The Gravis UltraSound outputs to the **GUS** [mixer channel](../mixer.md#list-of-mixer-channels).
 
 
 ## Configuration settings
@@ -234,7 +234,7 @@ Gravis UltraSound settings are to be configured in the `[gus]` section.
     - `on` *default*{ .default } -- Filter the output. This applies a 1st order low-pass filter at 8 kHz (`lpf 1 8000`).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      [Custom filter settings](../output-filters.md#custom-filter-settings)
       for details.
 
 
