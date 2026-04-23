@@ -20,7 +20,7 @@ getting an optimal, creator-intended experience.
 The IBM PC launched in 1981 as a business machine, but games appeared almost
 immediately. The hardware was modest: an Intel 8088 running at 4.77 MHz,
 monochrome [Hercules
-graphics](graphics/adapters.md#hercules-graphics-card-hgc) , or [CGA
+graphics](graphics/adapters.md#hercules-graphics-card) , or [CGA
 graphics](graphics/adapters.md#cga-and-its-descendants) offering four colours
 at 320&times;200 resolution, and the [PC
 speaker](sound/sound-devices/pc-speaker.md) as the only sound source. Software

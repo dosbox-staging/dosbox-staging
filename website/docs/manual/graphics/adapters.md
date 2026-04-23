@@ -5,11 +5,12 @@ adapter DOSBox Staging emulates. This determines the graphics modes available
 to DOS programs and, in some cases, enables additional hardware like sound
 chips.
 
-The default `svga_s3` (S3 Trio64) covers the widest range of games --- from
-standard VGA through high-resolution SVGA. You only need to change it for
-titles that specifically require an older standard, typically early to
-mid-1980s games written for CGA, Tandy, or Hercules hardware, or demoscene
-productions targeting specific SVGA chipsets.
+The default **`svga_s3`** ([S3 Trio64](#s3-trio64)) covers the widest range of
+games, from standard VGA through high-resolution SVGA. You only need to
+change it for titles that specifically require an older standard, typically
+early to mid-1980s games written for [CGA](#cga), [Tandy](#tandy-1000), or
+[Hercules](#hercules-graphics-card) hardware, or demoscene productions
+targeting specific SVGA chipsets.
 
 For an overview of which graphics standard was typical in each era, see
 [The DOS eras](../dos-eras.md). The
@@ -17,17 +18,16 @@ For an overview of which graphics standard was typical in each era, see
 walks through switching between adapters for a specific game.
 
 
-## Monochrome adapters
-
-### Hercules Graphics Card (HGC)
+## Hercules Graphics Card
 
 `machine = hercules`
 
-The **Hercules Graphics Card**, released in 1982 by Hercules Computer Technology,
-was the first widely available card to combine MDA-compatible text with
-bitmapped graphics on IBM PC compatibles. Its 720&times;348 monochrome
-graphics mode offered the highest resolution available to standard PC monitors
-until VGA arrived five years later.
+The **Hercules Graphics Card** (also referred to as **HGC** or just
+**Hercules**), released in 1982 by Hercules Computer Technology, was the first
+widely available card to combine MDA-compatible text with bitmapped graphics
+on IBM PC compatibles. Its 720&times;348 monochrome graphics mode offered the
+highest resolution available to standard PC monitors until VGA arrived five
+years later.
 
 Hercules was hugely popular for business software and CAD programs. Game
 support was more limited --- most action games required colour --- but titles
@@ -173,7 +173,7 @@ Setting `machine = tandy` also enables
 
 ## Composite video
 
-The [CGA](#cga), [PCjr](#ibm-pcjr), and [Tandy](#tand-1000) adapters all
+The [CGA](#cga), [PCjr](#ibm-pcjr), and [Tandy](#tandy-1000) adapters all
 support [composite video emulation](composite-video.md). On real hardware,
 connecting these cards to an NTSC composite monitor or TV produced "artifact
 colours" --- interference patterns in the analogue signal that create far more
@@ -376,11 +376,11 @@ Two variants are available for specific compatibility needs:
 DOSBox Staging also emulates two add-on cards that work alongside the primary
 video adapter:
 
-- **[3dfx Voodoo](3dfx-voodoo.md)** --- The iconic 3D accelerator (1996).
-  Enabled by default; games access it through the Glide API.
+- **[3dfx Voodoo](3dfx-voodoo.md)** --- The iconic 3D accelerator released in
+  1996.
 
 - **[ReelMagic](reelmagic.md)** --- Sigma Designs MPEG-1 hardware decoder
-  (1993) for full-motion video in a handful of DOS titles.
+  from 1993 for full-motion video in a handful of DOS titles.
 
-These are independent of the `machine` setting and can be used with any
-adapter.
+These are independent of the [machine](../system/general.md#machine) setting
+and can be used with any adapter.

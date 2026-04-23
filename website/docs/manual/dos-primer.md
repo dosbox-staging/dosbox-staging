@@ -66,7 +66,7 @@ specific game.
 ## Video
 
 The original IBM PC supported only two graphics standards: monochrome
-[Hercules](graphics/adapters.md#hercules-graphics-card-hgc) and
+[Hercules](graphics/adapters.md#hercules-graphics-card) and
 [CGA](graphics/adapters.md#cga-and-its-descendants) (Color Graphics Adapter)
 with just four colours at 320&times;200. [EGA](graphics/adapters.md#ega)
 (Enhanced Graphics Adapter) raised this to 16 colours in 1984, and

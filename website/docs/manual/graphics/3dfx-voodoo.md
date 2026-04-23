@@ -1,11 +1,19 @@
 # 3dfx Voodoo
 
+Released in 1996, the **3dfx Voodoo** was a dedicated 3D-only accelerator ---
+it handled nothing but 3D rendering. You'd install it alongside your regular
+video card and connect the two with a pass-through cable --- a gloriously
+awkward arrangement that made your PC look like it was held together with good
+intentions. But the results were something else. Smoother geometry, bilinear
+filtering, atmospheric fog effects: things that simply weren't possible on a
+CPU alone.
+
 Games accessed the Voodoo through 3dfx's proprietary **Glide API**, which
 talked to the hardware directly and unlocked effects that software rendering
 couldn't touch. When a Glide game launched, the Voodoo took over the display
 entirely; quit to DOS, and the signal fell back to your 2D card. Titles like
 [Tomb Raider](https://www.mobygames.com/game/348/tomb-raider/) and [Screamer
-2](https://www.mobygames.com/game/375/screamer-2/)were transformed by it. Even
+2](https://www.mobygames.com/game/375/screamer-2/) were transformed by it. Even
 the fastest Pentium MMX machines could barely manage software-rendered 3D at
 640&times;480 — we're talking single-digit framerates. The Voodoo was a luxury, but
 what a luxury it was!
@@ -15,10 +23,11 @@ game's directory. Many shipped with their own version of this driver;
 for those that didn't, you'll need to supply a suitable one (not all drivers
 work with every game).
 
-DOSBox Staging emulates the Voodoo at the hardware level --- no shortcuts or
-OpenGL passthrough --- which makes it CPU-intensive but highly accurate. Voodoo
+DOSBox Staging emulates the Voodoo at the hardware level (no shortcuts or
+OpenGL passthrough), which makes it CPU-intensive but highly accurate. Voodoo
 emulation is enabled by default, so most DOS Glide games should work out of
-the box.
+the box. If a game doesn't use Voodoo graphics, there is not performance
+penalty whatsoever.
 
 ??? note "Complete list of DOS games with 3dfx Voodoo graphics support"
 

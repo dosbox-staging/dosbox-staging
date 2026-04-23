@@ -3,9 +3,9 @@
 Before dedicated RGB monitors became common in the late 1980s, many home PC
 users connected their computers to TVs or composite video monitors. The NTSC
 composite signal introduces interference patterns that produce unexpected
-colours --- a phenomenon known as _artifact colours_ --- expanding CGA's usual
-4-colour palette to as many as 16. It sounds like a bug, but developers
-deliberately exploited it.
+colours --- a phenomenon known as _artifact colours_ --- expanding
+[CGA's](adapters.md#cga) usual 4-colour palette to as many as 16. It sounds
+like a bug, but developers deliberately exploited it.
 
 CGA's two graphics modes --- **320&times;200 medium resolution** and
 **640&times;200 high resolution** --- both produce artifact colours on a
@@ -15,8 +15,9 @@ composite output. Counterintuitively, 640×200 is a monochrome mode --- it
 outputs only black and white pixels --- but it's precisely that high-frequency
 alternating pattern that the composite signal smears into colour.
 
-Composite emulation is available for the `cga`, `pcjr`, and `tandy`
-[machine types](adapters.md#cga-and-its-descendants).
+Composite emulation is available for the [CGA](adapters.md#cga), [IBM
+PCjr](adapters.md#ibm-pcjr), and [Tandy 1000](adapters.md#tandy-1000) [machine
+types](adapters.md#cga-and-its-descendants).
 
 ## Composite support in games
 

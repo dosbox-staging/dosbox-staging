@@ -134,7 +134,7 @@ horizontal and vertical stretch controls of a CRT. This is useful for
 aspect-correcting lazy Hercules conversions that reused EGA/VGA assets.
 
 For example, to correct the [squashed
-look](adapters.md#hercules-graphics-card-hgc) of Hercules graphics in [Prince
+look](adapters.md#hercules-graphics-card) of Hercules graphics in [Prince
 of Persia](https://www.mobygames.com/game/196/prince-of-persia/):
 
 ```ini
