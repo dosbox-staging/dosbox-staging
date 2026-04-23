@@ -111,9 +111,10 @@ look so it looks approximately similar to the real thing.
     modern widescreen displays. This is normal.
 
     However, there is also *letterboxing* (horizontal black bars) above and
-    below the image. We'll explain why that's necessary in the last [advanced
-    graphics options](advanced-graphics-options.md) chapter. Feel free to take
-    a detour if you wish to gain an understanding of these details now.
+    below the image. The reason for this is explained in detail in the [Aspect
+    ratios & black borders] options](../manual/graphics/aspect-ratios.md)
+    section of the user manual. Feel free to take a detour if you wish to gain
+    an understanding of these details now.
 
     Alternatively, if you're on a 4K (UHD, 3840x2160) or better screen, you
     can put this into your `[render]` section to get rid of pillarboxing
@@ -199,8 +200,10 @@ machine = hercules
 
 Here's how it looks. Oldschool! The slightly squashed aspect ratio is correct
 in this case; this is exactly how the game would look on a PC equipped with a
-Hercules card connected to a period-accurate monochrome monitor (but we'll
-examine some advanced techniques on [how to fix that](advanced-graphics-options.md#custom-aspect-ratios)).
+Hercules card connected to a period-accurate monochrome monitor (we present
+some advanced techniques on [how to fix
+that](../manual/graphics/aspect-ratios.md#custom-aspect-ratios) in the user
+manual).
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-amber.png",
@@ -257,19 +260,19 @@ key.
 ### Sharp pixels
 
 If you _really_ prefer sharp pixels over authentic CRT emulation (see
-[CRT shaders](../manual/graphics/rendering.md#crt-shaders) for a
+[CRT shaders](../manual/graphics/rendering.md#adaptive-crt-shaders) for a
 detailed overview), you only need to add a single line to the `[render]`
 config section:
 
 ```ini
 [render]
-glshader = sharp
+shader = sharp
 ```
 
-That's it! Switching to the `sharp` shader will also make the image fill the screen
-vertically, so no more letterboxing. The reason for this (and a lot more) will
-be explained in the [advanced graphics options](advanced-graphics-options.md)
-chapter.
+That's it! Switching to the `sharp` shader will also make the image fill the
+screen vertically, so no more letterboxing. The reason for this (and a lot
+more) are explained in the [Aspect ratios & black borders]
+options](../manual/graphics/aspect-ratios.md) section of the user manual.
 
 Keep in mind, though, that the rest of the guide assumes you're using the CRT
 emulation.
@@ -533,7 +536,7 @@ no_such_config_param = 42
 machine = mcp
 
 [render]
-glshader = xsharp
+shader = xsharp
 ```
 
 As expected, we'll see some warnings and errors in the logs after a restart:

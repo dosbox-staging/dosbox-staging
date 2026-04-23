@@ -1,40 +1,42 @@
 # Rendering
 
-DOSBox Staging uses adaptive CRT shaders by default that emulate the look
-of period-appropriate monitors. A VGA game gets a VGA-style CRT look, an
-EGA game gets an EGA-era monitor, and so on. The result is surprisingly
-close to what these games looked like on the real hardware they were
-designed for.
+DOSBox Staging uses [adaptive CRT shaders](#adaptive-crt-shaders) by default
+that emulate the look of period-appropriate monitors. A VGA game gets a
+VGA-style CRT look, an EGA game gets an EGA-era monitor, and so on. The
+results are surprisingly close to what these games looked like on the real
+hardware they were designed for.
 
-Most DOS games used non-square pixels --- a 320×200 image was stretched to fill
-a 4:3 CRT monitor. Aspect ratio correction is enabled by default so games look
-as they were intended. Without it, everything appears slightly squished, which
-is especially noticeable with pixel art-heavy games like [Monkey
-Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) or
-[Loom](https://www.mobygames.com/game/176/loom/).
+If you prefer a crisp, pixel-perfect look without any CRT emulation, set
+`shader = sharp`. For completely unprocessed output, use `shader = none`.
 
-The image adjustment controls --- brightness, contrast, saturation, colour
-temperature --- work much like the knobs on an old CRT monitor. They're
+Most DOS games used non-square pixels, e.g., the most commonly used
+320&times;200 resolution was stretched to fill 4:3 aspect ratio CRT monitors,
+resulting in slightly tall pixels. [Aspect ratio
+correction](#aspect-ratio-scaling) is enabled by default so to ensure these
+games look as intended. With aspect ratio correction disabled, 320&times;200
+games would appear slightly squished; this is especially noticeable in games
+that feature common everyday objects and human characters (for example, you'll
+get the notorious "stumpy Guybrush" in [Monkey
+Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/)).
+
+The [image adjustment](#image_adjustments) controls --- brightness, contrast, saturation, colour
+temperature, etc. --- work much like the knobs on an old CRT monitor. They're
 useful for fine-tuning the picture to your taste or compensating for
 differences in display characteristics.
 [CRT colour profiles](#crt-colour-profiles) go a step further, emulating
 the distinct phosphor colours of different monitor types, and on
-[wide gamut displays](#wide-gamut--colour-accuracy) these profiles can
-reproduce CRT colours that fall outside the standard sRGB colour space.
-For Hercules and CGA mono machines, the
-[`monochrome_palette`](#monochrome_palette) setting offers the classic amber,
-green, white, and paperwhite terminal looks.
+[wide gamut displays](#wide-gamut-colour-accuracy) these profiles can
+reproduce CRT colours that fall outside the standard sRGB colour space more
+accurately. For Hercules and CGA mono machines, we offer authentic [monochrome
+display emulation](#monochrome-display-emulation) options mimicking classic
+amber, green, white, and paperwhite looks.
 
 Beyond CRT emulation, DOSBox Staging can also
 [blend away dither patterns](#dedithering) in old EGA and CGA games, and
 [deinterlace FMV video](#deinterlacing) to remove the distracting black lines
 found in many 90s games.
 
-If you prefer a crisp, pixel-perfect look without any CRT emulation, set
-`shader = sharp`. For completely unprocessed output, use `shader = none`.
-
-
-## CRT shaders
+## Adaptive CRT shaders
 
 DOSBox Staging includes adaptive CRT shaders that automatically select the
 appropriate monitor emulation based on the current video mode:
@@ -60,14 +62,13 @@ appropriate monitor emulation based on the current video mode:
 
 ## Integer scaling
 
-The `integer_scaling` setting constrains the horizontal or vertical scaling
-factor to integer values when upscaling the image. This avoids uneven
-scanlines and interference artifacts with CRT shaders.
+The [integer_scaling](#integer_scaling) setting constrains the horizontal or
+vertical scaling factor to integer values when upscaling the image. This
+avoids uneven scanlines and interference artifacts with CRT shaders.
 
-``` ini
-[render]
-integer_scaling = vertical
-```
+The default `auto` mode enables vertical integer scaling only for the adaptive
+CRT shaders, with refinements: 3.5x and 4.5x scaling factors are also
+allowed, and integer scaling is disabled above 5.0x.
 
 The correct aspect ratio is always maintained, so the other dimension's
 scaling factor may become fractional. With the `sharp` shader, this is not a
@@ -75,9 +76,6 @@ problem as the interpolation band is at most 1 pixel wide at the edges, which
 is sharp, especially at 1440p or 4K. With CRT shaders, non-integer horizontal
 scaling is practically a non-issue.
 
-The default `auto` mode enables vertical integer scaling only for the adaptive
-CRT shaders, with refinements: 3.5x and 4.5x scaling factors are also
-allowed, and integer scaling is disabled above 5.0x.
 
 
 ## Aspect ratio & viewport
@@ -105,9 +103,8 @@ Pixels are square (1:1 PAR) in 640&times;480 and higher resolutions. A few
 other modes have their own non-square PARs: 640&times;350 EGA (1:1.37 PAR),
 640&times;200 EGA (1:2.4 PAR), and 720&times;348 Hercules (1:1.55 PAR).
 DOSBox Staging handles all of these automatically. For a more detailed
-explanation of pixel aspect ratios with worked examples, see the
-[Advanced graphics options](../../getting-started/advanced-graphics-options.md#aspect-ratios-square-pixels-black-borders)
-chapter of the getting started guide.
+explanation of pixel aspect ratios with worked examples, see 
+[Aspect ratios & black borders](aspect-ratios.md).
 
 The `stretch` mode calculates the aspect ratio from the viewport dimensions,
 allowing you to force arbitrary aspect ratios. For example, to stretch a game
@@ -579,83 +576,6 @@ You can set the rendering parameters in the `[render]` configuration section.
 
 ### Image adjustments
 
-##### brightness
-
-:   Set the brightness of the video output (`45` by default). Valid range is
-    0 to 100. This emulates the brightness control of CRT monitors that sets
-    the black point; higher values will result in raised blacks.
-
-
-##### contrast
-
-:   Set the contrast of the video output (`65` by default). Valid range is 0
-    to 100. This emulates the contrast control of CRT monitors that sets the
-    white point; higher values will result in raised blacks (lower the
-    [brightness](#brightness) control to compensate).
-
-
-##### digital_contrast
-
-:   Set the digital contrast of the video output (`0` by default). Valid
-    range is -50 to 50. This works very differently from the
-    [contrast](#contrast) virtual monitor setting; digital contrast is applied
-    to the raw RGB values of the framebuffer image.
-
-
-##### gamma
-
-:   Set the gamma of the video output (`0` by default). Valid range is -50
-    to 50. This is additional gamma adjustment relative to the emulated
-    virtual monitor's gamma.
-
-
-##### saturation
-
-:   Set the saturation of the video output (`0` by default). Valid range is
-    -50 to 50. This is digital saturation applied to the raw RGB values of
-    the framebuffer image, similarly to [digital_contrast](#digital_contrast).
-
-
-##### black_level
-
-:   Raise the black level of the video output. It is applied before the
-    [brightness](#brightness) and [contrast](#contrast) settings which can
-    also raise the black level, so it effectively acts as a black level
-    boost.
-
-    Possible values:
-
-    - `auto` *default*{ .default } -- Raise the black level for PCjr, Tandy,
-      CGA and EGA video modes only for adaptive CRT shaders; for any other
-      shader, use 0.
-    - `<number>` -- Set the black level raise amount. Valid range is 0 to
-      100. 0 does not raise the black level.
-
-    !!! note
-
-        Raising the black level is useful for "black scanline" emulation;
-        this adds visual interest to PCjr, Tandy, CGA, and EGA games with
-        simple graphics.
-
-
-##### red_gain
-
-:   Set gain factor of the video output's red channel (`100` by default).
-    Valid range is 0 to 200. 100 results in no gain change.
-
-
-##### green_gain
-
-:   Set gain factor of the video output's green channel (`100` by default).
-    Valid range is 0 to 200. 100 results in no gain change.
-
-
-##### blue_gain
-
-:   Set gain factor of the video output's blue channel (`100` by default).
-    Valid range is 0 to 200. 100 results in no gain change.
-
-
 ##### image_adjustments
 
 :   Enable image adjustments. When disabled, the image adjustment settings in
@@ -681,27 +601,100 @@ You can set the rendering parameters in the `[render]` configuration section.
           `CONFIG -wc` command.
 
 
-##### color_space
+##### crt_color_profile
 
-:   Set the colour space of the video output. Wide gamut colour spaces can
-    reproduce CRT phosphor colours that fall outside the sRGB gamut --- see
-    [Wide gamut & colour accuracy](#wide-gamut--colour-accuracy) for details.
-
-    On macOS, this is always `display-p3`; the OS performs the conversion to
-    the colour profile set in your system settings. On Windows and Linux, the
-    effective output is currently sRGB.
+:   Set a CRT colour profile for more authentic video output emulation. All
+    profiles have a built-in colour temperature (white point) that you can
+    tweak further with the [color_temperature](#color_temperature) setting.
 
     Possible values:
 
-    - `display-p3` -- Display P3 wide gamut colour space with 6500K white
-      point and sRGB gamma.
+    <div class="compact" markdown>
+
+    - `auto` *default*{ .default } -- Select an authentic colour profile
+      appropriate for the currently active adaptive CRT shader (e.g.,
+      `crt-auto`), or the current machine type for regular shaders (e.g.,
+      `sharp`).
+    - `none` -- Display raw colours without any colour profile transforms.
+      This will result in inaccurate colours and gamma on modern displays
+      compared to how games looked on a real CRT in the 1980s and 90s.
+    - `ebu` -- EBU standard phosphor emulation, used in high-end professional
+      CRT monitors, such as the Sony BVM/PVM series.
+    - `p22` -- P22 phosphor emulation, most common in lower-end CRT monitors.
+    - `smpte-c` -- SMPTE "C" phosphor emulation, the standard for American
+      broadcast video monitors.
+    - `philips` -- Philips CRT monitor colours typical to 15 kHz home
+      computer monitors (e.g., the Commodore 1084S). The intended use of
+      this profile is with `color_temperature` set to 6500. The output will
+      look yellowish due to the ~6100 K Philips CRT colour temperature
+      "baked into" the profile. You can still tweak the relative white
+      balance by changing `color_temperature`. Needs a DCI-P3 display for
+      the most accurate results.
+    - `trinitron` -- Typical Sony Trinitron CRT TV and monitor colours. The
+      intended use of this profile is with `color_temperature` set to 6500.
+      The output will look blueish due to the ~9300 K Trinitron CRT colour
+      temperature "baked into" the profile. You can still tweak the relative
+      white balance by changing `color_temperature`. Needs a DCI-P3 display
+      for the most accurate results.
+
+    </div>
+
+
+##### brightness
+
+:   Set the brightness of the video output (`45` by default). Valid range is
+    0 to 100. This emulates the brightness control of CRT monitors that sets
+    the black point; higher values will result in raised blacks.
+
+
+##### contrast
+
+:   Set the contrast of the video output (`65` by default). Valid range is 0
+    to 100. This emulates the contrast control of CRT monitors that sets the
+    white point; higher values will result in raised blacks (lower the
+    [brightness](#brightness) control to compensate).
+
+
+##### gamma
+
+:   Set the gamma of the video output (`0` by default). Valid range is -50
+    to 50. This is additional gamma adjustment relative to the emulated
+    virtual monitor's gamma.
+
+
+##### digital_contrast
+
+:   Set the digital contrast of the video output (`0` by default). Valid
+    range is -50 to 50. This works very differently from the
+    [contrast](#contrast) virtual monitor setting; digital contrast is applied
+    to the raw RGB values of the framebuffer image.
+
+##### black_level
+
+:   Raise the black level of the video output. It is applied before the
+    [brightness](#brightness) and [contrast](#contrast) settings which can
+    also raise the black level, so it effectively acts as a black level
+    boost.
+
+    Possible values:
+
+    - `auto` *default*{ .default } -- Raise the black level for PCjr, Tandy,
+      CGA and EGA video modes only for adaptive CRT shaders; for any other
+      shader, use 0.
+    - `<number>` -- Set the black level raise amount. Valid range is 0 to
+      100. 0 does not raise the black level.
 
     !!! note
 
-        Colour space transforms are applied to rendered screenshots, but not
-        to raw and upscaled screenshots and video captures (those are always
-        in sRGB).
+        Raising the black level is useful for "black scanline" emulation;
+        this adds visual interest to PCjr, Tandy, CGA, and EGA games with
+        simple graphics.
 
+##### saturation
+
+:   Set the saturation of the video output (`0` by default). Valid range is
+    -50 to 50. This is digital saturation applied to the raw RGB values of
+    the framebuffer image, similarly to [digital_contrast](#digital_contrast).
 
 ##### color_temperature
 
@@ -728,7 +721,60 @@ You can set the rendering parameters in the `[render]` configuration section.
     best to set this to 0 or close to 0 if your monitor is bright enough.
 
 
-### Colour palettes
+##### red_gain
+
+:   Set gain factor of the video output's red channel (`100` by default).
+    Valid range is 0 to 200. 100 results in no gain change.
+
+
+##### green_gain
+
+:   Set gain factor of the video output's green channel (`100` by default).
+    Valid range is 0 to 200. 100 results in no gain change.
+
+
+##### blue_gain
+
+:   Set gain factor of the video output's blue channel (`100` by default).
+    Valid range is 0 to 200. 100 results in no gain change.
+
+
+### Other
+
+##### color_space
+
+:   Set the colour space of the video output. Wide gamut colour spaces can
+    reproduce CRT phosphor colours that fall outside the sRGB gamut --- see
+    [Wide gamut & colour accuracy](#wide-gamut-colour-accuracy) for details.
+
+    On macOS, this is always `display-p3`; the OS performs the conversion to
+    the colour profile set in your system settings. On Windows and Linux, the
+    effective output is currently sRGB.
+
+    Possible values:
+
+    - `display-p3` -- Display P3 wide gamut colour space with 6500K white
+      point and sRGB gamma.
+
+    !!! note
+
+        Colour space transforms are applied to rendered screenshots, but not
+        to raw and upscaled screenshots and video captures (those are always
+        in sRGB).
+
+
+##### monochrome_palette
+
+:   Set the palette for monochrome display emulation. Works only with the
+    `hercules` and `cga_mono` machine types.
+
+    Possible values: `amber` *default*{ .default }, `green`, `white`,
+    `paperwhite`.
+
+    !!! note
+
+        You can also cycle through the available palettes via hotkeys.
+
 
 ##### cga_colors
 
@@ -778,60 +824,6 @@ You can set the rendering parameters in the `[render]` configuration section.
         (see [crt_color_profile](#crt_color_profile),
         [brightness](#brightness), [saturation](#saturation), etc.)
 
-
-##### monochrome_palette
-
-:   Set the palette for monochrome display emulation. Works only with the
-    `hercules` and `cga_mono` machine types.
-
-    Possible values: `amber` *default*{ .default }, `green`, `white`,
-    `paperwhite`.
-
-    !!! note
-
-        You can also cycle through the available palettes via hotkeys.
-
-
-##### crt_color_profile
-
-:   Set a CRT colour profile for more authentic video output emulation. All
-    profiles have a built-in colour temperature (white point) that you can
-    tweak further with the [color_temperature](#color_temperature) setting.
-
-    Possible values:
-
-    <div class="compact" markdown>
-
-    - `auto` *default*{ .default } -- Select an authentic colour profile
-      appropriate for the currently active adaptive CRT shader (e.g.,
-      `crt-auto`), or the current machine type for regular shaders (e.g.,
-      `sharp`).
-    - `none` -- Display raw colours without any colour profile transforms.
-      This will result in inaccurate colours and gamma on modern displays
-      compared to how games looked on a real CRT in the 1980s and 90s.
-    - `ebu` -- EBU standard phosphor emulation, used in high-end professional
-      CRT monitors, such as the Sony BVM/PVM series.
-    - `p22` -- P22 phosphor emulation, most common in lower-end CRT monitors.
-    - `smpte-c` -- SMPTE "C" phosphor emulation, the standard for American
-      broadcast video monitors.
-    - `philips` -- Philips CRT monitor colours typical to 15 kHz home
-      computer monitors (e.g., the Commodore 1084S). The intended use of
-      this profile is with `color_temperature` set to 6500. The output will
-      look yellowish due to the ~6100 K Philips CRT colour temperature
-      "baked into" the profile. You can still tweak the relative white
-      balance by changing `color_temperature`. Needs a DCI-P3 display for
-      the most accurate results.
-    - `trinitron` -- Typical Sony Trinitron CRT TV and monitor colours. The
-      intended use of this profile is with `color_temperature` set to 6500.
-      The output will look blueish due to the ~9300 K Trinitron CRT colour
-      temperature "baked into" the profile. You can still tweak the relative
-      white balance by changing `color_temperature`. Needs a DCI-P3 display
-      for the most accurate results.
-
-    </div>
-
-
-### Other
 
 ##### deinterlacing
 
@@ -886,3 +878,4 @@ You can set the rendering parameters in the `[render]` configuration section.
 
         - Dedithering is applied to rendered screenshots, but not to raw and
           upscaled screenshots and video captures.
+

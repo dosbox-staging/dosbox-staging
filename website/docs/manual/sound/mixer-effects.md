@@ -108,30 +108,6 @@ Suggested audio configurations for many games are available
 Mixer effects settings are to be configured in the `[mixer]` section.
 
 
-##### chorus
-
-:   Chorus effect that adds a sense of stereo movement to the sound.
-
-    Possible values:
-
-    <div class="compact" markdown>
-
-    - `off` *default*{ .default } -- No chorus.
-    - `on` -- Enable chorus (normal preset).
-    - `light` -- A light chorus effect (especially suited for synth music that
-      features lots of white noise).
-    - `normal` -- Normal chorus that works well with a wide variety of games.
-    - `strong` -- An obvious and upfront chorus effect.
-
-    </div>
-
-    !!! note
-
-        The presets apply the chorus effect to the synth channels only (except
-        for synths with built-in chorus, e.g., the Roland MT-32). Use the
-        `MIXER` command to fine-tune the chorus levels per channel.
-
-
 ##### crossfeed
 
 :   Set crossfeed on the **OPL** and **CMS** (Game Blaster) mixer channels.
@@ -189,3 +165,29 @@ Mixer effects settings are to be configured in the `[mixer]` section.
         channels (except for synths with built-in reverb, e.g., the Roland
         MT-32), and a subtle amount to the digital audio channels. Use the
         `MIXER` command to fine-tune the reverb levels per channel.
+
+
+##### chorus
+
+:   Chorus effect that adds a sense of stereo movement to the sound.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `off` *default*{ .default } -- No chorus.
+    - `on` -- Enable chorus (normal preset).
+    - `light` -- A light chorus effect (especially suited for synth music that
+      features lots of white noise).
+    - `normal` -- Normal chorus that works well with a wide variety of games.
+    - `strong` -- An obvious and upfront chorus effect.
+
+    </div>
+
+    !!! note
+
+        The presets apply the chorus effect to the synth channels only (except
+        for synths with built-in chorus, e.g., the Roland MT-32). Use the
+        `MIXER` command to fine-tune the chorus levels per channel.
+
+

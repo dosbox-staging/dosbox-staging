@@ -872,9 +872,8 @@ The number after the `T` parameter describes the type of the card:
 !!! note
 
     Some games trigger low-level residual noise from the OPL synth in quiet
-    passages. The [denoiser](../mixer.md#denoiser) removes this without
-    degrading sound quality --- see [Denoiser](../mixer.md#denoiser) for
-    details and a list of affected games.
+    passages. The [Denoiser](../mixer.md#denoiser) removes this without
+    degrading sound quality.
 
 ##### opl_fadeout
 

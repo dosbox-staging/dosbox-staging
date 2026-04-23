@@ -41,17 +41,6 @@ section.
     Possible values: `on` *default*{ .default }, `off`
 
 
-##### voodoo_bilinear_filtering
-
-:   Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing
-    effect. This is enabled by default to match the look of real Voodoo
-    hardware, which always applied bilinear texture filtering. Disabling it
-    gives a sharper but less authentic look, and may help performance on
-    slower systems.
-
-    Possible values: `on` *default*{ .default }, `off`
-
-
 ##### voodoo_memsize
 
 :   Set the amount of video memory for 3dfx Voodoo graphics. The memory is
@@ -84,3 +73,16 @@ section.
         measured to scale well up to 8--16 threads, but it has not been tested
         on a many-core CPU. If you have a Threadripper or similar CPU, please
         let us know how it goes.
+
+
+##### voodoo_bilinear_filtering
+
+:   Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing
+    effect. This is enabled by default to match the look of real Voodoo
+    hardware, which always applied bilinear texture filtering. Disabling it
+    gives a sharper but less authentic look, and may help performance on
+    slower systems.
+
+    Possible values: `on` *default*{ .default }, `off`
+
+

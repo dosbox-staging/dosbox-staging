@@ -73,7 +73,7 @@ guide](../getting-started/passport-to-adventure.md#layered-configurations)
 walks through creating several per-game configs in detail.
 
 If you start DOSBox Staging from a different folder, you can still set the
-[working directory](../command-line/#-working-dir-path) via command line
+[working directory](command-line.md#-working-dir-path) via command line
 arguments, then the local `dosbox.conf` will be loaded from that directory.
 
 
@@ -248,7 +248,7 @@ restart DOSBox. The setting's help text will tell you if a restart is needed.
 
 - [Local configurations](#local-configuration) are great for customising
   your settings per game. This is especially true if you're interested in
-  playing games from different [DOS eras](../dos-eras/) that require very different
+  playing games from different [DOS eras](dos-eras.md) that require very different
   hardware configurations.
 
 - As DOSBox Staging comes with sensible defaults, you can keep your
@@ -256,17 +256,17 @@ restart DOSBox. The setting's help text will tell you if a restart is needed.
   specify every single setting in your local game-specific configs.
   Fully-populated configs are very cumbersome to manage if you have a large
   game library. The Getting Started guide contains
-  several such local config examples ([Prince of Persia](../../getting-started/enhancing-prince-of-persia/#final-configuration),
-  [Passport to Adventure](../../getting-started/passport-to-adventure/#final-configuration),
-  [Beneath A Steel Sky](../../getting-started/beneath-a-steel-sky/#final-configuration),
-  [Star Wars: Dark Forces](../../getting-started/star-wars-dark-forces/#final-configuration)).
+  several such local config examples ([Prince of Persia](../getting-started/enhancing-prince-of-persia.md#final-configuration),
+  [Passport to Adventure](../getting-started/passport-to-adventure.md#final-configuration),
+  [Beneath A Steel Sky](../getting-started/beneath-a-steel-sky.md#final-configuration),
+  [Star Wars: Dark Forces](../getting-started/star-wars-dark-forces.md#final-configuration)).
 
 - A good, easy-to-manage approach is to only change settings in the primary
   config that affect the general workings of the emulator (e.g.,
-  [fullscreen](../graphics/display-and-window/#fullscreen),
-  [pause_when_inactive](../graphics/display-and-window/#pause_when_inactive),
-  [language](../system/general/#language), setting the [master
-  volume](../sound/mixer/#volume), etc.) Settings that set up specific
+  [fullscreen](graphics/display-and-window.md#fullscreen),
+  [pause_when_inactive](graphics/display-and-window.md#pause_when_inactive),
+  [language](system/general.md#language), setting the [master
+  volume](sound/mixer.md#volume), etc.) Settings that set up specific
   hardware required by a game can then go into the local configs. If you
   reconfigure hardware in the primary config, there's always a risk that
   games configured for a certain hardware in their setup utility will stop

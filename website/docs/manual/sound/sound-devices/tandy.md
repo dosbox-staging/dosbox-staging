@@ -172,19 +172,6 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
     - `off` -- Disable Tandy/PCjr sound.
 
 
-##### tandy_dac_filter
-
-:   Filter for the Tandy DAC output.
-
-    Possible values:
-
-    - `on` *default*{ .default } -- Filter the output. This applies a 3rd order high-pass filter at 120 Hz, and a 2nd order low-pass filter at 4.8 kHz (`hpf 3 120 lpf 2 4800`).
-    - `off` -- Don't filter the output.
-    - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
-      for details.
-
-
 ##### tandy_fadeout
 
 :   Fade out the Tandy synth output after the last IO port write.
@@ -210,3 +197,18 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
       for details.
+
+
+##### tandy_dac_filter
+
+:   Filter for the Tandy DAC output.
+
+    Possible values:
+
+    - `on` *default*{ .default } -- Filter the output. This applies a 3rd order high-pass filter at 120 Hz, and a 2nd order low-pass filter at 4.8 kHz (`hpf 3 120 lpf 2 4800`).
+    - `off` -- Don't filter the output.
+    - `<custom>` -- Custom filter definition; see
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      for details.
+
+

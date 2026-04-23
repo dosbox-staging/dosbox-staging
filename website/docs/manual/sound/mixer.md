@@ -176,9 +176,9 @@ noise without degrading the useful audio signal in any way. It is enabled by
 default.
 
 The Sound Canvas noise affects all games on mk1 models. The OPL noise is only
-triggered by some games:
+triggered by some games.
 
-??? note "Games with noticeable OPL residual noise"
+??? note "Games having the OPL residual noise issue"
 
     <div class="compact" markdown>
 
@@ -227,6 +227,27 @@ resources that could otherwise go towards glitch-free audio emulation.
 Mixer settings are to be configured in the `[mixer]` section. For effects
 settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#configuration-settings).
 
+##### nosound
+
+:   Enable silent mode (`off` by default). Sound is still emulated in silent
+    mode, but DOSBox outputs no sound to the host. Capturing the emulated
+    audio output to a WAV file works in silent mode.
+
+    Possible values: `on`, `off` *default*{ .default }
+
+
+##### rate
+
+:   Sample rate of DOSBox's internal audio mixer in Hz (`48000` by default).
+    Valid range is 8000 to 96000 Hz. The vast majority of consumer-grade audio
+    hardware uses a native rate of 48000 Hz.
+
+    !!! note
+
+        The OS will most likely resample non-standard sample rates to 48000 Hz
+        anyway. Recommend leaving this as-is unless you have good reason to
+        change it.
+
 
 ##### blocksize
 
@@ -235,6 +256,24 @@ settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#confi
     be set to power-of-two values (e.g., 256, 512, 1024). Larger values
     might help with sound stuttering but will introduce more latency. Also
     see [negotiate](#negotiate).
+
+
+##### prebuffer
+
+:   How many milliseconds of sound to render in advance on top of
+    [blocksize](#blocksize) (`25` on Windows, `20` on other platforms by
+    default). Larger values might help with sound stuttering but will
+    introduce more latency.
+
+
+##### negotiate
+
+:   Negotiate a possibly better [blocksize](#blocksize) setting (`off` on
+    Windows, `on` on other platforms by default). Enable if you're not
+    getting audio or the sound is stuttering with your `blocksize` setting.
+    Disable to force the manually set `blocksize` value.
+
+    Possible values: `on`, `off`
 
 
 ##### compressor
@@ -276,41 +315,3 @@ settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#confi
     - `off` -- Disable the denoiser.
 
 
-##### negotiate
-
-:   Negotiate a possibly better [blocksize](#blocksize) setting (`off` on
-    Windows, `on` on other platforms by default). Enable if you're not
-    getting audio or the sound is stuttering with your `blocksize` setting.
-    Disable to force the manually set `blocksize` value.
-
-    Possible values: `on`, `off`
-
-
-##### nosound
-
-:   Enable silent mode (`off` by default). Sound is still emulated in silent
-    mode, but DOSBox outputs no sound to the host. Capturing the emulated
-    audio output to a WAV file works in silent mode.
-
-    Possible values: `on`, `off` *default*{ .default }
-
-
-##### prebuffer
-
-:   How many milliseconds of sound to render in advance on top of
-    [blocksize](#blocksize) (`25` on Windows, `20` on other platforms by
-    default). Larger values might help with sound stuttering but will
-    introduce more latency.
-
-
-##### rate
-
-:   Sample rate of DOSBox's internal audio mixer in Hz (`48000` by default).
-    Valid range is 8000 to 96000 Hz. The vast majority of consumer-grade audio
-    hardware uses a native rate of 48000 Hz.
-
-    !!! note
-
-        The OS will most likely resample non-standard sample rates to 48000 Hz
-        anyway. Recommend leaving this as-is unless you have good reason to
-        change it.

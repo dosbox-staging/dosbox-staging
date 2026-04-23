@@ -316,18 +316,6 @@ Roland MT-32 settings are to be configured in the `[mt32]` section.
         Run `MIXER /LISTMIDI` to see the list of available models.
 
 
-##### mt32_filter
-
-:   Filter for the Roland MT-32/CM-32L audio output.
-
-    Possible values:
-
-    - `off` *default*{ .default } -- Don't filter the output.
-    - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
-      for details.
-
-
 ##### romdir
 
 :   The directory containing the Roland MT-32/CM-32L ROMs (unset by default).
@@ -340,4 +328,17 @@ Roland MT-32 settings are to be configured in the `[mt32]` section.
         The file names of the ROM files do not matter; the ROMs are identified
         by their checksums. Both interleaved and non-interleaved ROM files are
         supported.
+
+
+##### mt32_filter
+
+:   Filter for the Roland MT-32/CM-32L audio output.
+
+    Possible values:
+
+    - `off` *default*{ .default } -- Don't filter the output.
+    - `<custom>` -- Custom filter definition; see
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      for details.
+
 

@@ -89,12 +89,6 @@ configuration section. CGA composite monitor emulation is only available for
         copy the new settings from the logs into your config.
 
 
-##### convergence
-
-:   Set the sharpness of the CGA composite image (`0` by default). Valid
-    range is -50 to 50.
-
-
 ##### era
 
 :   Era of CGA composite monitor to emulate.
@@ -117,3 +111,11 @@ configuration section. CGA composite monitor emulation is only available for
     is -360 to 360. For example, adjust until the sky appears blue and the
     grass green in the game. This emulates the tint knob of CGA composite
     monitors which often had to be adjusted for each game.
+
+
+##### convergence
+
+:   Set the sharpness of the CGA composite image (`0` by default). Valid
+    range is -50 to 50.
+
+

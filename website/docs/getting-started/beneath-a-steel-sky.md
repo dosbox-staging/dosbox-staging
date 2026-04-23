@@ -882,9 +882,8 @@ rare cases. One of the tell-tale signs is that the artwork in the intro was
 scanned using square pixels, and we need to disable aspect ratio correction
 for such games. With aspect ratio correction disabled, we'll *always* get
 square pixels, no matter what (1:1 pixel aspect ratio, or PAR). All this is
-explained in a lot more detail in the [advanced graphics
-options](advanced-graphics-options.md#aspect-ratios-square-pixels-black-borders)
-chapter at the end.
+explained in a lot more detail in the [Aspect ratios & black borders]
+options](../manual/graphics/aspect-ratios.md) section of the user manual.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/bass-aspect.jpg",
@@ -967,8 +966,9 @@ Silmarils, Team 17, Thalamus, Thalion, Ubisoft*
     image to completely fill the screen. DOSBox Staging does this aspect ratio
     correction by default, which results in games primarily developed for DOS
     PCs assuming 1:1.2 pixel aspect ratio to look correct (as the artist
-    intended). We'll get to the detailed mathematical derivation of the 1:1.2
-    PAR in [the last chapter](advanced-graphics-options.md#aspect-ratios-square-pixels-black-borders).
+    intended). The detailed mathematical derivation of the 1:1.2 PAR is
+    explained in the [Aspect ratios & black
+    borders](../manual/graphics/aspect-ratios.md) section of the user manual.
 
     But what about games where the leading platform was the Amiga or the Atari
     ST, and the game was developed by a European studio? The analog TV
@@ -1033,7 +1033,7 @@ We can enable this special fantasy mode with the following setting:
 
 ```ini
 [render]
-glshader = crt-auto-arcade
+shader = crt-auto-arcade
 ```
 
 Now you can play the game with Amiga-like graphics and MT-32 or OPL sound from
@@ -1061,7 +1061,7 @@ aspect = off
 viewport = 1280x800
 
 # uncomment for arcade monitor emulation
-#glshader = crt-auto-arcade
+#shader = crt-auto-arcade
 
 [sblaster]
 sbmixer = off

@@ -178,6 +178,38 @@ section.
       use the `normal` core for such programs.
 
 
+##### cputype
+
+:   CPU type to emulate. You should only change this if the program doesn't
+    run correctly on `auto`.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `auto` *default*{ .default } -- The fastest and most compatible
+      setting. Technically, this is `386_fast` plus 486 CPUID, 486 CR
+      register behaviour, and extra 486 instructions.
+    - `386` -- 386 CPUID and 386-specific page access level calculation.
+    - `386_fast` -- Same as `386` but with loose page privilege checks which
+      is much faster.
+    - `386_prefetch` -- Same as `386_fast` plus accurate CPU prefetch queue
+      emulation. Requires `core = normal`. This setting is necessary for
+      programs that self-modify their code or employ anti-debugging tricks.
+      Games that require `386_prefetch` include Contra, FIFA International
+      Soccer (1994), Terminator 1, and X-Men: Madness in The Murderworld.
+    - `486` -- 486 CPUID, 486+ specific page access level calculation, 486 CR
+      register behaviour, and extra 486 instructions.
+    - `pentium` -- Same as `486` but with Pentium CPUID, Pentium CR register
+      behaviour, and RDTSC instruction support. Recommended for Windows 3.1
+      games (e.g., Betrayal in Antara).
+    - `pentium_mmx` -- Same as `pentium` plus MMX instruction set support.
+      Very few games use MMX instructions; it's mostly only useful for
+      demoscene productions.
+
+    </div>
+
+
 ##### cpu_cycles
 
 :   Speed of the emulated CPU (`3000` by default). If
@@ -247,6 +279,30 @@ section.
         See [cpu_cycles](#cpu_cycles) for further info.
 
 
+##### cpu_throttle
+
+:   Throttle down the number of emulated CPU cycles dynamically if your host
+    CPU cannot keep up. Only affects fixed cycles settings. When enabled, the
+    number of cycles per millisecond can vary; this might cause issues in
+    some DOS programs.
+
+    Possible values: `on`, `off` *default*{ .default }
+
+
+##### cycledown
+
+:   Number of cycles to subtract with the `Dec Cycles`
+    [hotkey](../appendices/shortcuts.md) (`20` by default). Values lower than
+    100 are treated as a percentage decrease.
+
+
+##### cycleup
+
+:   Number of cycles to add with the `Inc Cycles`
+    [hotkey](../appendices/shortcuts.md) (`10` by default). Values lower than
+    100 are treated as a percentage increase.
+
+
 ##### cpu_idle
 
 :   Reduce host CPU usage when the DOS shell or an application is idle. With
@@ -263,57 +319,3 @@ section.
     Possible values: `on` *default*{ .default }, `off`
 
 
-##### cpu_throttle
-
-:   Throttle down the number of emulated CPU cycles dynamically if your host
-    CPU cannot keep up. Only affects fixed cycles settings. When enabled, the
-    number of cycles per millisecond can vary; this might cause issues in
-    some DOS programs.
-
-    Possible values: `on`, `off` *default*{ .default }
-
-
-##### cputype
-
-:   CPU type to emulate. You should only change this if the program doesn't
-    run correctly on `auto`.
-
-    Possible values:
-
-    <div class="compact" markdown>
-
-    - `auto` *default*{ .default } -- The fastest and most compatible
-      setting. Technically, this is `386_fast` plus 486 CPUID, 486 CR
-      register behaviour, and extra 486 instructions.
-    - `386` -- 386 CPUID and 386-specific page access level calculation.
-    - `386_fast` -- Same as `386` but with loose page privilege checks which
-      is much faster.
-    - `386_prefetch` -- Same as `386_fast` plus accurate CPU prefetch queue
-      emulation. Requires `core = normal`. This setting is necessary for
-      programs that self-modify their code or employ anti-debugging tricks.
-      Games that require `386_prefetch` include Contra, FIFA International
-      Soccer (1994), Terminator 1, and X-Men: Madness in The Murderworld.
-    - `486` -- 486 CPUID, 486+ specific page access level calculation, 486 CR
-      register behaviour, and extra 486 instructions.
-    - `pentium` -- Same as `486` but with Pentium CPUID, Pentium CR register
-      behaviour, and RDTSC instruction support. Recommended for Windows 3.1
-      games (e.g., Betrayal in Antara).
-    - `pentium_mmx` -- Same as `pentium` plus MMX instruction set support.
-      Very few games use MMX instructions; it's mostly only useful for
-      demoscene productions.
-
-    </div>
-
-
-##### cycledown
-
-:   Number of cycles to subtract with the `Dec Cycles`
-    [hotkey](../appendices/shortcuts.md) (`20` by default). Values lower than
-    100 are treated as a percentage decrease.
-
-
-##### cycleup
-
-:   Number of cycles to add with the `Inc Cycles`
-    [hotkey](../appendices/shortcuts.md) (`10` by default). Values lower than
-    100 are treated as a percentage increase.

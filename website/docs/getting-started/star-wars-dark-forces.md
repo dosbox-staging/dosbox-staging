@@ -130,7 +130,7 @@ on our wiki for assorted real-life examples.
 
 ## Display refresh rate
 
-See [Presentation modes](../manual/graphics/display-and-window.md#presentation-modes)
+See [Presentation modes](../manual/graphics/display-and-window.md#frame-presentation)
 in the manual for the full reference on refresh rates and vsync.
 
 Dark Forces uses the 320&times;200 256-colour VGA screen mode, just like the

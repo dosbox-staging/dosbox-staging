@@ -52,34 +52,6 @@ section.
 
 ### Video adapter
 
-##### dos_rate
-
-:   Override the emulated DOS video mode's refresh rate with a custom rate.
-
-    Possible values:
-
-    - `default` *default*{ .default } -- Don't override; use the emulated
-      DOS video mode's refresh rate.
-    - `host` -- Override the refresh rate of all DOS video modes with the
-      refresh rate of your monitor. This might allow you to play some 70 Hz
-      VGA games with perfect [vsync](../graphics/display-and-window.md#vsync)
-      on a 60 Hz fixed refresh rate monitor.
-    - `<number>` -- Override the refresh rate of all DOS video modes with a
-      fixed rate specified in Hz (valid range is from 24.000 to 1000.000).
-      This is a niche option for a select few fast-paced mid to late 1990s 3D
-      games for high refresh rate gaming.
-
-    !!! important
-
-        Many games will misbehave when overriding the DOS video mode's
-        refresh rate with non-standard values. This can manifest in glitchy
-        video, sped-up or slowed-down audio, jerky mouse movement, mouse
-        button presses not being registered, and even gameplay bugs.
-        Overriding the DOS refresh rate is a hack that only works acceptably
-        with a small subset of all DOS games (typically mid to late 1990s
-        games).
-
-
 ##### machine
 
 :   Set the video adapter or machine to emulate.
@@ -117,6 +89,15 @@ section.
       framebuffer" hack (needed only by a few games).
 
     </div>
+
+##### vmemsize
+
+:   Video memory in MB (1--8) or KB (256 to 8192). See the
+    [machine](#machine) setting for the list of valid options and defaults
+    per adapter.
+
+    Possible values: `auto` *default*{ .default } (uses the default for the
+    selected video adapter), or a specific size in MB or KB.
 
 
 ##### vesa_modes
@@ -177,6 +158,35 @@ section.
     </div>
 
 
+##### dos_rate
+
+:   Override the emulated DOS video mode's refresh rate with a custom rate.
+
+    Possible values:
+
+    - `default` *default*{ .default } -- Don't override; use the emulated
+      DOS video mode's refresh rate.
+    - `host` -- Override the refresh rate of all DOS video modes with the
+      refresh rate of your monitor. This might allow you to play some 70 Hz
+      VGA games with perfect [vsync](../graphics/display-and-window.md#vsync)
+      on a 60 Hz fixed refresh rate monitor.
+    - `<number>` -- Override the refresh rate of all DOS video modes with a
+      fixed rate specified in Hz (valid range is from 24.000 to 1000.000).
+      This is a niche option for a select few fast-paced mid to late 1990s 3D
+      games for high refresh rate gaming.
+
+    !!! important
+
+        Many games will misbehave when overriding the DOS video mode's
+        refresh rate with non-standard values. This can manifest in glitchy
+        video, sped-up or slowed-down audio, jerky mouse movement, mouse
+        button presses not being registered, and even gameplay bugs.
+        Overriding the DOS refresh rate is a hack that only works acceptably
+        with a small subset of all DOS games (typically mid to late 1990s
+        games).
+
+
+
 ##### vga_8dot_font
 
 :   Use 8-pixel-wide fonts on VGA adapters.
@@ -214,16 +224,6 @@ section.
 
         Only set this on a per-game basis when necessary as it slows down
         the whole emulator.
-
-
-##### vmemsize
-
-:   Video memory in MB (1--8) or KB (256 to 8192). See the
-    [machine](#machine) setting for the list of valid options and defaults
-    per adapter.
-
-    Possible values: `auto` *default*{ .default } (uses the default for the
-    selected video adapter), or a specific size in MB or KB.
 
 
 ### Memory
@@ -272,15 +272,20 @@ section.
 
 ### DOS & shell
 
-##### allow_write_protected_files
+##### language
 
-:   Many games open all their files with writable permissions; even files that
-    they never modify. This setting lets you write-protect those files while
-    still allowing the game to read them. A second use-case: if you're using a
-    copy-on-write or network-based filesystem, this setting avoids triggering
-    write operations for these write-protected files.
+:   Select the DOS messages language.
 
-    Possible values: `on` *default*{ .default }, `off`
+    Possible values:
+
+    - `auto` *default*{ .default } -- Detect the language from the host OS.
+    - `<value>` -- Load a translation from the given file.
+
+    !!! note
+
+        The following language files are available: `de`, `en`, `es`, `fr`,
+        `it`, `nl`, `pl`, `pt_BR`, and `ru`. English is built-in; the rest
+        is stored in the bundled `resources/translations` directory.
 
 
 ##### autoexec_section
@@ -309,20 +314,42 @@ section.
     Possible values: `on` *default*{ .default }, `off`
 
 
-##### language
+##### startup_verbosity
 
-:   Select the DOS messages language.
+:   Controls verbosity prior to displaying the program.
 
     Possible values:
 
-    - `auto` *default*{ .default } -- Detect the language from the host OS.
-    - `<value>` -- Load a translation from the given file.
+    <div class="compact" markdown>
 
-    !!! note
+    - `auto` *default*{ .default } -- `low` if exec or dir is passed,
+      otherwise `high`.
+    - `high` -- Show welcome banner and early stdout.
+    - `low` -- Show early stdout only.
+    - `quiet` -- Don't show welcome banner or early stdout.
 
-        The following language files are available: `de`, `en`, `es`, `fr`,
-        `it`, `nl`, `pl`, `pt_BR`, and `ru`. English is built-in; the rest
-        is stored in the bundled `resources/translations` directory.
+    </div>
+
+
+##### shell_config_shortcuts
+
+:   Allow shortcuts for simpler configuration management. E.g., instead of
+    `config -set sbtype sb16`, it is enough to execute `sbtype sb16`, and
+    instead of `config -get sbtype`, you can just execute the `sbtype`
+    command.
+
+    Possible values: `on` *default*{ .default }, `off`
+
+
+##### allow_write_protected_files
+
+:   Many games open all their files with writable permissions; even files that
+    they never modify. This setting lets you write-protect those files while
+    still allowing the game to read them. A second use-case: if you're using a
+    copy-on-write or network-based filesystem, this setting avoids triggering
+    write operations for these write-protected files.
+
+    Possible values: `on` *default*{ .default }, `off`
 
 
 ##### mcb_fault_strategy
@@ -342,28 +369,3 @@ section.
     </div>
 
 
-##### shell_config_shortcuts
-
-:   Allow shortcuts for simpler configuration management. E.g., instead of
-    `config -set sbtype sb16`, it is enough to execute `sbtype sb16`, and
-    instead of `config -get sbtype`, you can just execute the `sbtype`
-    command.
-
-    Possible values: `on` *default*{ .default }, `off`
-
-
-##### startup_verbosity
-
-:   Controls verbosity prior to displaying the program.
-
-    Possible values:
-
-    <div class="compact" markdown>
-
-    - `auto` *default*{ .default } -- `low` if exec or dir is passed,
-      otherwise `high`.
-    - `high` -- Show welcome banner and early stdout.
-    - `low` -- Show early stdout only.
-    - `quiet` -- Don't show welcome banner or early stdout.
-
-    </div>

@@ -193,6 +193,38 @@ Gravis UltraSound settings are to be configured in the `[gus]` section.
     Possible values: `on`, `off` *default*{ .default }
 
 
+##### gusbase
+
+:   The IO base address of the Gravis UltraSound.
+
+    Possible values: `210`, `220`, `230`, `240` *default*{ .default }, `250`,
+    `260`.
+
+
+##### gusirq
+
+:   The IRQ number of the Gravis UltraSound.
+
+    Possible values: `2`, `3`, `5` *default*{ .default }, `7`, `11`, `12`,
+    `15`.
+
+
+##### gusdma
+
+:   The DMA channel of the Gravis UltraSound.
+
+    Possible values: `1`, `3` *default*{ .default }, `5`, `6`, `7`.
+
+
+##### ultradir
+
+:   Path to the UltraSound directory (`C:\ULTRASND` by default). This should
+    have a `MIDI` subdirectory containing the patches (instrument files)
+    required by some games for MIDI music playback. Not all games need these
+    patches; many GUS-native games and all demos upload their own custom sounds
+    instead.
+
+
 ##### gus_filter
 
 :   Filter for the Gravis UltraSound audio output.
@@ -206,33 +238,3 @@ Gravis UltraSound settings are to be configured in the `[gus]` section.
       for details.
 
 
-##### gusbase
-
-:   The IO base address of the Gravis UltraSound.
-
-    Possible values: `210`, `220`, `230`, `240` *default*{ .default }, `250`,
-    `260`.
-
-
-##### gusdma
-
-:   The DMA channel of the Gravis UltraSound.
-
-    Possible values: `1`, `3` *default*{ .default }, `5`, `6`, `7`.
-
-
-##### gusirq
-
-:   The IRQ number of the Gravis UltraSound.
-
-    Possible values: `2`, `3`, `5` *default*{ .default }, `7`, `11`, `12`,
-    `15`.
-
-
-##### ultradir
-
-:   Path to the UltraSound directory (`C:\ULTRASND` by default). This should
-    have a `MIDI` subdirectory containing the patches (instrument files)
-    required by some games for MIDI music playback. Not all games need these
-    patches; many GUS-native games and all demos upload their own custom sounds
-    instead.

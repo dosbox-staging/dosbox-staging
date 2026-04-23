@@ -62,6 +62,19 @@ IBM PS/1 Audio settings are to be configured in the `[speaker]` section.
     Possible values: `on`, `off` *default*{ .default }
 
 
+##### ps1audio_filter
+
+:   Filter for the PS/1 Audio synth output.
+
+    Possible values:
+
+    - `on` *default*{ .default } -- Filter the output. This applies a 3rd order high-pass filter at 160 Hz, and a 1st order low-pass filter at 2.1 kHz (`hpf 3 160 lpf 1 2100`).
+    - `off` -- Don't filter the output.
+    - `<custom>` -- Custom filter definition; see
+      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
+      for details.
+
+
 ##### ps1audio_dac_filter
 
 :   Filter for the PS/1 Audio DAC output.
@@ -75,14 +88,3 @@ IBM PS/1 Audio settings are to be configured in the `[speaker]` section.
       for details.
 
 
-##### ps1audio_filter
-
-:   Filter for the PS/1 Audio synth output.
-
-    Possible values:
-
-    - `on` *default*{ .default } -- Filter the output. This applies a 3rd order high-pass filter at 160 Hz, and a 1st order low-pass filter at 2.1 kHz (`hpf 3 160 lpf 1 2100`).
-    - `off` -- Don't filter the output.
-    - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
-      for details.

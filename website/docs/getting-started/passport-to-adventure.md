@@ -503,7 +503,7 @@ VGA-style line-doubling changes the feel of EGA graphics, and many prefer the
 original EGA look. After all, this is what the artists saw on their screens
 when creating the artwork. Because of this, the authentic CRT emulation
 feature displays EGA graphics with the "true EGA look" out of the box with the
-`glshader = crt-auto` setting.
+`shader = crt-auto` setting.
 
 However, if you grew up with a VGA-equipped PC, then you only ever saw EGA
 games double-scanned. To appease such people, you can instruct DOSBox Staging
@@ -512,7 +512,7 @@ to emulate a double-scanning VGA card in all screen modes with the
 
 ```ini
 [render]
-glshader = crt-auto-machine
+shader = crt-auto-machine
 ```
 
 Technically, this setting instructs DOSBox Staging to emulate a CRT monitor
@@ -598,9 +598,9 @@ sensibilities" and the authentic original experience. It's still on the large
 end of the spectrum, but not overly so. If you go higher than this, the
 graphics will start looking overly blocky from a normal viewing distance.
 
-The rationale behind the "magic 89% value" is explained in detail in the last
-[advanced graphics options](advanced-graphics-options.md#custom-viewport-resolution) chapter.
-
+The rationale behind the "magic 89% value" is explained in detail in the
+[Aspect ratios & black borders] options](../manual/graphics/aspect-ratios.md)
+section of the user manual.
 
 
 ## CPU sensitive games
@@ -678,7 +678,7 @@ mouse_capture = onstart
 [render]
 viewport = 89%
 # uncomment for double-scanned VGA CRT emulation
-#glshader = crt-auto-machine
+#shader = crt-auto-machine
 
 [sblaster]
 # uncomment for Game Blaster audio

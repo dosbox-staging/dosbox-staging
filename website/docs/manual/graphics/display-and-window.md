@@ -22,7 +22,7 @@ correction, dedithering, deinterlacing, and image adjustments, see
 [Rendering](rendering.md).
 
 
-## Presentation modes
+## Frame presentation
 
 DOSBox Staging offers two frame presentation strategies, controlled by the
 [presentation_mode](#presentation_mode) setting:
@@ -31,14 +31,13 @@ DOSBox Staging offers two frame presentation strategies, controlled by the
 mode (e.g., 70 Hz for standard VGA). This is the ideal choice for variable
 refresh rate (VRR) monitors (G-Sync, FreeSync, or VRR) --- the display
 synchronises directly to the emulated refresh rate, giving you perfect frame
-pacing with no tearing and low input lag. No configuration is needed; the
-defaults just work.
+pacing with no tearing and low input lag.
 
 - **`host-rate`** presents the most recent frame at the host display's refresh
 rate. This is intended for fixed refresh rate monitors (typically 60 Hz) with
 [vsync](#vsync) enabled to eliminate screen tearing in fast-paced games.
 
-The default `auto` mode selects `dos-rate` when vsync is off and `host-rate`
+The default **`auto`** mode selects `dos-rate` when vsync is off and `host-rate`
 when vsync is on, which is the right choice for most setups. For a practical
 example of configuring vsync and presentation modes for a specific game, see
 the [Star Wars: Dark Forces](../../getting-started/star-wars-dark-forces.md#display-refresh-rate)
@@ -46,11 +45,13 @@ chapter of the getting started guide.
 
 In practice, most users fall into one of three categories:
 
-- **VRR monitor**: Use the defaults (`dos-rate`, vsync off). Perfect pacing,
-  no tearing.
+- **VRR monitor**: Use the defaults (`dos-rate` and `vsync` will be off).
+  Perfect pacing, no tearing.
+
 - **Fixed 60 Hz monitor, fast-paced games**: Set `vsync = on` to eliminate
   tearing in fullscreen. The `auto` presentation mode will switch to
   `host-rate` accordingly.
+
 - **Fixed 60 Hz monitor, slower games** (RPGs, adventures, strategy): The
   defaults work fine --- tearing is rarely noticeable in these genres.
 
@@ -67,12 +68,12 @@ main source of judder in DOS games.
 | CGA, PCjr, Tandy, EGA  | 60 Hz                                                                            |
 | Hercules               | 50 Hz                                                                            |
 
-Most VGA games run at 70 Hz. On a fixed 60 Hz display, the 60/70 Hz
-mismatch causes a slight but perceptible judder on scrolling and
-animation. A VRR monitor eliminates this entirely by syncing to the
-emulated refresh rate. On fixed-rate monitors, enabling vsync prevents
-tearing but cannot eliminate the judder inherent in the refresh rate
-mismatch.
+Most VGA games run at 70 Hz. On a fixed 60 Hz display, the 60/70 Hz mismatch
+causes perceptible judder on scrolling and animation. A VRR monitor eliminates
+this entirely by syncing to the emulated refresh rate (the frame presentation
+of the emulator dictates the effective refresh rate of the monitor). On
+fixed-rate monitors, enabling vsync prevents tearing but cannot eliminate the
+judder inherent in the refresh rate mismatch.
 
 !!! note
 
@@ -103,26 +104,47 @@ at _two levels_:
 - The game itself might not care about vsync, so it would tear on real
   hardware too (DOSBox faithfully emulates this).
 
-- DOSBox Staging might not present the emulated frames to the host operating
-  system vsync'ed, which could result in a _second layer_ of tearing, solely
-  introduced by the emulator.
+- DOSBox might not present the emulated frames to the host operating
+  system vsync'ed, which could result in a _second layer_ of tearing on fixed
+  refresh monitors, solely introduced by the emulator.
 
-To get zero tearing, _both_ conditions must be met: the game must vsync its
-own video output (i.e., no tearing on real hardware), and vsync must be
-enabled at the DOSBox Staging level.
+To get zero tearing on **fixed refresh rate** monitors, both conditions must
+be met: the game must vsync its own video output (i.e., no tearing on real
+hardware), and [vsync](#vsync) must be enabled at the DOSBox Staging level.
 
-You have no control over the game's own vsync behaviour. Many DOS games
-hardcode it (e.g., Doom runs at a fixed 35 FPS with vsync). The DOSBox-level
-vsync is what you can control via the [vsync](#vsync) setting.
+On **VRR monitors**, the [vsync](#vsync) setting must be left at its default `off` setting
+--- the monitor will sync automatically to the emulator's frame presentation
+rate, so you'll get no additional tearing.
+
+The most important thing to understand is that you have no control over the
+game's own vsync behaviour. Many DOS games hardcode it (e.g.,
+[Doom](https://www.mobygames.com/game/1068/doom/) runs at a fixed 35 FPS with
+vsync). With games that ignore vsync and thus on real hardware too, the best
+you can do is not to introduce _additional_ tearing at the emulator level.
+
+The below table summarise all possible combinations between game and DOSBox
+level vsync on **fixed refresh monitors**:
 
 <div class="compact vsync" markdown>
 
 | Game uses vsync? | DOSBox vsync enabled? | Result
-| --- | --- | ---
-| yes | yes | No tearing
-| no  | yes | Some tearing (also present on real hardware)
-| yes | no  | Bad tearing (in fast-paced games)
-| no  | no  | Very bad double tearing (in fast-paced games)
+| ---              | ---                   | ---
+| yes              | yes                   | No tearing
+| no               | yes                   | Some tearing (also present on real hardware)
+| yes              | no                    | Bad tearing (in fast-paced games)
+| no               | no                    | Very bad double tearing (in fast-paced games)
+
+</div>
+
+The below table summarise all possible combinations between game and DOSBox
+level vsync on **fixed refresh monitors**:
+
+<div class="compact vsync" markdown>
+
+| Game uses vsync? | Result
+| ---              | ---
+| yes              | No tearing
+| no               | Some tearing (also present on real hardware)
 
 </div>
 

@@ -61,6 +61,13 @@ IBM Music Feature Card settings are to be configured in the `[imfc]` section.
     Possible values: `2A20` *default*{ .default }, `2A30`.
 
 
+##### imfc_irq
+
+:   The IRQ number of the IBM Music Feature Card.
+
+    Possible values: `2`, `3` *default*{ .default }, `4`, `5`, `6`, `7`.
+
+
 ##### imfc_filter
 
 :   Filter for the IBM Music Feature Card output.
@@ -74,8 +81,3 @@ IBM Music Feature Card settings are to be configured in the `[imfc]` section.
       for details.
 
 
-##### imfc_irq
-
-:   The IRQ number of the IBM Music Feature Card.
-
-    Possible values: `2`, `3` *default*{ .default }, `4`, `5`, `6`, `7`.

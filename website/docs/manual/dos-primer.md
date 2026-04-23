@@ -81,16 +81,16 @@ package, making it the best overall gaming PC until about 1987. Many mid-1980s
 games look and sound noticeably better in Tandy mode.
 
 Because DOS games were designed for CRT monitors, DOSBox Staging includes [CRT
-emulation shaders](graphics/rendering.md#crt-shaders) that reproduce the look
-of the original hardware. This makes a surprisingly large difference --- pixel
-art that looks harsh and blocky on a modern flat panel comes alive with the
-subtle blending and scanlines of the CRT emulation.
+emulation shaders](graphics/rendering.md#adaptive-crt-shaders) that reproduce
+the look of the original hardware. This makes a surprisingly large difference
+--- pixel art that looks harsh and blocky on a modern flat panel comes alive
+with the subtle blending and scanlines of the CRT emulation.
 
 See [Graphics adapters](graphics/adapters.md) for details on each emulated
 adapter, and [Rendering](graphics/rendering.md) for shader and display
 options. The Getting Started guide covers
 [choosing a graphics adapter](../getting-started/enhancing-prince-of-persia.md#graphics-options)
-and [aspect ratios](../getting-started/advanced-graphics-options.md#aspect-ratios-square-pixels-black-borders)
+and [aspect ratios](graphics/aspect-ratios.md)
 with practical examples.
 
 

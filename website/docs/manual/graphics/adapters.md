@@ -143,7 +143,7 @@ resolution. DOSBox emulates EGA with a fixed 256 KB of video memory.
 EGA was the dominant PC graphics standard from roughly 1985 to 1990. Many
 celebrated games of this period were designed for it, including SimCity, the
 Sierra AGI and early SCI adventures, and LucasArts titles like Maniac Mansion
-and Zak McKracken. Most EGA games used [dithering](display-and-window.md#dedithering)
+and Zak McKracken. Most EGA games used [dithering](rendering.md#dedithering)
 to simulate more colours than the 16-colour palette could display directly.
 
 !!! note

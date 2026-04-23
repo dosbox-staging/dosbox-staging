@@ -37,6 +37,35 @@ The Innovation SSI-2001 outputs to the **INNOVATION** [mixer](../mixer.md) chann
 You can set the parameters of the Innovation SSI-2001 card in the
 `[innovation]` configuration section.
 
+
+##### sidmodel
+
+:   Model of chip to emulate in the Innovation SSI-2001 card:
+
+    - `none` *default*{ .default } --  Disables the card.
+    - `auto` --  Selects the 6581 chip.
+    - `6581` --  The original chip, known for its bassy and rich character.
+    - `8580` --  A later revision that more closely matched the SID specification.
+               It fixed the 6581's DC bias and is less prone to distortion.
+               The 8580 is an option on reproduction cards, like the DuoSID.
+
+##### sidport
+
+:   The IO port address of the Innovation SSI-2001.
+
+    Possible values: `240`, `260`, `280` *default*{ .default }, `2a0`, `2c0`.
+
+
+##### sidclock
+
+:   The SID chip's clock frequency, which is jumperable on reproduction cards:
+
+    - `default` *default*{ .default } -- Uses 0.895 MHz, per the original SSI-2001 card.
+    - `c64ntsc` -- Uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.
+    - `c64pal` --  Uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.
+    - `hardsid` -- Uses 1.000 MHz, available on the DuoSID.
+
+
 ##### 6581filter
 
 :   The SID's analog filtering meant that each chip was physically unique.
@@ -58,32 +87,4 @@ You can set the parameters of the Innovation SSI-2001 card in the
       [Custom filter settings](../analog-output-filters.md#custom-filter-settings)
       for details.
 
-
-##### sidclock
-
-:   The SID chip's clock frequency, which is jumperable on reproduction cards:
-
-    - `default` *default*{ .default } -- Uses 0.895 MHz, per the original SSI-2001 card.
-    - `c64ntsc` -- Uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.
-    - `c64pal` --  Uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.
-    - `hardsid` -- Uses 1.000 MHz, available on the DuoSID.
-
-
-##### sidmodel
-
-:   Model of chip to emulate in the Innovation SSI-2001 card:
-
-    - `none` *default*{ .default } --  Disables the card.
-    - `auto` --  Selects the 6581 chip.
-    - `6581` --  The original chip, known for its bassy and rich character.
-    - `8580` --  A later revision that more closely matched the SID specification.
-               It fixed the 6581's DC bias and is less prone to distortion.
-               The 8580 is an option on reproduction cards, like the DuoSID.
-
-
-##### sidport
-
-:   The IO port address of the Innovation SSI-2001.
-
-    Possible values: `240`, `260`, `280` *default*{ .default }, `2a0`, `2c0`.
 

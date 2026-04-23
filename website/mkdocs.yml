@@ -161,7 +161,6 @@ nav:
       - getting-started/passport-to-adventure.md
       - getting-started/beneath-a-steel-sky.md
       - getting-started/star-wars-dark-forces.md
-      - getting-started/advanced-graphics-options.md
       - getting-started/next-steps.md
 
   - User manual:
@@ -192,6 +191,7 @@ nav:
         - manual/graphics/adapters.md
         - manual/graphics/display-and-window.md
         - manual/graphics/rendering.md
+        - manual/graphics/aspect-ratios.md
         - manual/graphics/composite-video.md
         - manual/graphics/3dfx-voodoo.md
         - manual/graphics/reelmagic.md

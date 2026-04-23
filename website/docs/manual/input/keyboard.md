@@ -21,6 +21,11 @@ The keyboard capture setting is configured in the `[sdl]` configuration
 section.
 
 
+##### keyboard_layout
+
+:   See [keyboard_layout](../system/dos.md#keyboard_layout).
+
+
 ##### keyboard_capture
 
 :   Capture system keyboard shortcuts. When enabled, most system shortcuts
@@ -38,6 +43,3 @@ section.
     Possible values: `on`, `off` *default*{ .default }
 
 
-##### keyboard_layout
-
-:   See [keyboard_layout](../system/dos.md#keyboard_layout).

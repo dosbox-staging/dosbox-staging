@@ -160,6 +160,36 @@ can change when you unplug and reattach USB devices.
 MIDI related settings are to be configured in the `[midi]` section.
 
 
+##### mididevice
+
+:   Selects the MIDI device where data from the emulated MPU-401 MIDI
+    interface is sent.
+
+    Possible values:
+
+      - `port` *default*{ .default } --- A MIDI port of the host operating
+        system's MIDI interface. You can configure the port to use with the
+        [midiconfig](#midiconfig) setting.
+
+      - `fluidsynth` --- The built-in FluidSynth MIDI synthesiser (SoundFont
+        player). See the [FluidSynth](general-midi.md#fluidsynth) configuration
+        settings for further details.
+
+      - `mt32` --- The built-in Roland MT-32 synthesiser. See the [Roland
+        MT-32](roland-mt-32.md#configuration-settings)
+        configuration settings for further details.
+
+      - `soundcanvas` --- The internal Roland SC-55 synthesiser (requires a
+        CLAP audio plugin). See the [Sound
+        Canvas](general-midi.md#sound-canvas) configuration settings for
+        further details.
+
+      - `coreaudio` *(macOS only)* --- Use the built-in macOS MIDI synthesiser.
+        The SoundFont to use can be specified with [midiconfig](#midiconfig).
+
+      - `none` --- Disable MIDI output.
+
+
 ##### midiconfig
 
 :   Configuration options for the selected MIDI device.
@@ -195,35 +225,6 @@ MIDI related settings are to be configured in the `[midi]` section.
         overflowing. In that case, add `delaysysex`, e.g., `midiconfig = 2
         delaysysex`.
 
-
-##### mididevice
-
-:   Selects the MIDI device where data from the emulated MPU-401 MIDI
-    interface is sent.
-
-    Possible values:
-
-      - `port` *default*{ .default } --- A MIDI port of the host operating
-        system's MIDI interface. You can configure the port to use with the
-        [midiconfig](#midiconfig) setting.
-
-      - `fluidsynth` --- The built-in FluidSynth MIDI synthesiser (SoundFont
-        player). See the [FluidSynth](general-midi.md#fluidsynth) configuration
-        settings for further details.
-
-      - `mt32` --- The built-in Roland MT-32 synthesiser. See the [Roland
-        MT-32](roland-mt-32.md#configuration-settings)
-        configuration settings for further details.
-
-      - `soundcanvas` --- The internal Roland SC-55 synthesiser (requires a
-        CLAP audio plugin). See the [Sound
-        Canvas](general-midi.md#sound-canvas) configuration settings for
-        further details.
-
-      - `coreaudio` *(macOS only)* --- Use the built-in macOS MIDI synthesiser.
-        The SoundFont to use can be specified with [midiconfig](#midiconfig).
-
-      - `none` --- Disable MIDI output.
 
 
 ##### mpu401
