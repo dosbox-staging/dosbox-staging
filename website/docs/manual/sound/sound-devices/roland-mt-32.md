@@ -17,7 +17,8 @@ standard for high-end audio in DOS gaming in the 1988 to 1992 period until
 [General MIDI](general-midi.md) and [CD Audio](cd-da.md) took over.
 
 As the Roland MT-32 was considerably more expensive than other options, such
-as the [AdLib](adlib-cms-sound-blaster.md#adlib-music-synthesizer-card), it remained out of reach for most computer users. 
+as the [AdLib](adlib-cms-sound-blaster.md#adlib-music-synthesizer-card), it
+remained out of reach for most computer users. 
 
 
 ## MT-32 variants
@@ -28,14 +29,14 @@ malfunction --- on the wrong revision.
 
 <div class="compact" markdown>
 
-| Model | Year | `model` value | Key differences |
-|-------|------|---------------|-----------------|
-| MT-32 "old" (v1.0x) | 1987 | `mt32_old` | Original hardware; some games exploit firmware quirks |
-| MT-32 "new" (v2.0x) | 1987 | `mt32_new` | Faster CPU, lower noise floor, revised instrument samples |
-| MT-100 | 1988 | --- | MT-32 "new" with built-in sequencer |
-| CM-32L | 1989 | `cm32l` | MT-32 "new" compatible + 33 extra sound effects |
-| LAPC-I | 1989 | --- | CM-32L on an ISA card (same ROMs) |
-| CM-64 | 1989 | --- | CM-32L + CM-32P (added PCM instrument bank) |
+| Model               | Year   | `model` value   | Key differences                                           |
+| -------             | ------ | --------------- | -----------------                                         |
+| MT-32 "old" (v1.0x) | 1987   | `mt32_old`      | Original hardware; some games exploit firmware quirks     |
+| MT-32 "new" (v2.0x) | 1987   | `mt32_new`      | Faster CPU, lower noise floor, revised instrument samples |
+| MT-100              | 1988   | ---             | MT-32 "new" with built-in sequencer                       |
+| CM-32L              | 1989   | `cm32l`         | MT-32 "new" compatible + 33 extra sound effects           |
+| LAPC-I              | 1989   | ---             | CM-32L on an ISA card (same ROMs)                         |
+| CM-64               | 1989   | ---             | CM-32L + CM-32P (added PCM instrument bank)               |
 
 </div>
 
@@ -54,8 +55,10 @@ As a rule of thumb:
 - **Early Sierra games** (1988--1990) --- King's Quest IV, Police Quest II,
   Space Quest III, Leisure Suit Larry 2/3 --- were composed on "old" hardware
   and generally sound more authentic on `mt32_old`.
+
 - **Games from 1991 onwards** --- and most LucasArts titles --- work well on
   either revision.
+
 - When in doubt, the VOGONS Wiki
   [compatibility list](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
   notes the recommended revision for each game.

@@ -145,7 +145,7 @@ integer_scaling = off
 ```
 
 {{ figure(
-    "https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-aspect-corrected.jpg",
+    "https://www.dosbox-staging.org/static/images/manual/pop-hercules-aspect-corrected.jpg",
     "Prince of Persia in Hercules mode with custom stretch factors<br>to make the image fill our 4:3 \"emulated CRT screen\"."
 ) }}
 
