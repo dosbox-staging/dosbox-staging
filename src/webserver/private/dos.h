@@ -3,7 +3,8 @@
 
 #ifndef DOSBOX_WEBSERVER_DOS_H
 #define DOSBOX_WEBSERVER_DOS_H
-#include "bridge.h"
+
+#include "webserver/bridge.h"
 
 #include "libs/http/http.h"
 
