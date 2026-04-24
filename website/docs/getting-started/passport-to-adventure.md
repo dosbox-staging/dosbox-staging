@@ -130,7 +130,7 @@ folder in `DOS Games` next to `Prince of Persia` and name it `Passport to
 Adventure`. Create the `drives` subfolder in it and the `c` subfolder in the
 `drives` folder.
 
-Download the [ZIP archive][passport] from the [Passport of Adventure][passport-item]
+Download the [ZIP archive][passport] from the [Passport to Adventure][passport-item]
 item at the Internet Archive, then extract its contents into the `c` subfolder.
 
 [passport]: https://archive.org/download/PassportToAdventure/PassportToAdventuredemo1990lucasartsadventureCompilation.zip
@@ -601,7 +601,7 @@ end of the spectrum, but not overly so. If you go higher than this, the
 graphics will start looking overly blocky from a normal viewing distance.
 
 The rationale behind the "magic 89% value" is explained in detail in the
-[Aspect ratios & black borders] options](../manual/graphics/aspect-ratios.md)
+[Aspect ratios & black borders](../manual/graphics/aspect-ratios.md)
 section of the user manual.
 
 
