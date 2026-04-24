@@ -4,7 +4,7 @@
 #ifndef DOSBOX_WEBSERVER_MEMORY_H
 #define DOSBOX_WEBSERVER_MEMORY_H
 
-#include "bridge.h"
+#include "webserver/bridge.h"
 #include "cpu.h"
 
 #include <limits>
