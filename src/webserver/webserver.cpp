@@ -3,9 +3,9 @@
 
 #include "webserver.h"
 #include "bridge.h"
-#include "cpu.h"
-#include "dos.h"
-#include "memory.h"
+#include "private/cpu.h"
+#include "private/dos.h"
+#include "private/memory.h"
 
 #include <set>
 #include <string>
