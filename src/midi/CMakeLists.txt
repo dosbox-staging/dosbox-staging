@@ -1,5 +1,4 @@
 target_sources(libdosboxcommon PRIVATE
-  alsa.cpp
   coreaudio.cpp
   coremidi.cpp
   fluidsynth.cpp
@@ -7,7 +6,6 @@ target_sources(libdosboxcommon PRIVATE
   mt32.cpp
   mt32_lasynth_model.cpp
   soundcanvas.cpp
-  win32.cpp
 )
 
 target_link_libraries(libdosboxcommon PRIVATE
@@ -16,10 +14,15 @@ target_link_libraries(libdosboxcommon PRIVATE
 )
 
 if (C_ALSA)
+  target_sources(libdosboxcommon PRIVATE alsa.cpp)
   target_link_libraries(libdosboxcommon PRIVATE ALSA::ALSA)
 endif()
 
 if (C_COREMIDI)
   target_link_libraries(libdosboxcommon PRIVATE "-framework CoreFoundation")
   target_link_libraries(libdosboxcommon PRIVATE "-framework CoreMIDI")
+endif()
+
+if (WIN32)
+  target_sources(libdosboxcommon PRIVATE win32.cpp)
 endif()
