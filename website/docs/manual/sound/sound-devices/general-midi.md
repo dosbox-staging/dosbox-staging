@@ -108,7 +108,7 @@ into the `soundcanvas-roms` directory inside your DOSBox configuration folder:
 |----------|---------------------------------------------------------|
 | Windows  | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundcanvas-roms\` |
 | macOS    | `~/Library/Preferences/DOSBox/soundcanvas-roms/`        |
-| Linux    | `~/.local/share/dosbox/soundcanvas-roms/`               |
+| Linux    | `~/.config/dosbox/soundcanvas-roms/`               |
 
 </div>
 
@@ -221,11 +221,11 @@ your DOSBox configuration folder:
 
 <div class="compact" markdown>
 
-| Platform | SoundFont directory                                    |
-|----------|--------------------------------------------------------|
-| Windows  | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundfonts\` |
-| macOS    | `~/Library/Preferences/DOSBox/soundfonts/`             |
-| Linux    | `~/.local/share/dosbox/soundfonts/`                    |
+| Platform   | SoundFont directory                                      |
+| ---------- | -------------------------------------------------------- |
+| Windows    | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundfonts\`   |
+| macOS      | `~/Library/Preferences/DOSBox/soundfonts/`               |
+| Linux      | `~/.config/dosbox/soundfonts/`                           |
 
 </div>
 
