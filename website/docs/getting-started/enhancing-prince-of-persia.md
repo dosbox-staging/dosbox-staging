@@ -115,9 +115,9 @@ look so it looks approximately similar to the real thing.
 
     However, there is also *letterboxing* (horizontal black bars) above and
     below the image. The reason for this is explained in detail in the [Aspect
-    ratios & black borders] options](../manual/graphics/aspect-ratios.md)
-    section of the user manual. Feel free to take a detour if you wish to gain
-    an understanding of these details now.
+    ratios & black borders](../manual/graphics/aspect-ratios.md) section of
+    the user manual. Feel free to take a detour if you wish to gain an
+    understanding of these details now.
 
     Alternatively, if you're on a 4K (UHD, 3840x2160) or better screen, you
     can put this into your `[render]` section to get rid of pillarboxing
@@ -274,8 +274,8 @@ shader = sharp
 
 That's it! Switching to the `sharp` shader will also make the image fill the
 screen vertically, so no more letterboxing. The reason for this (and a lot
-more) are explained in the [Aspect ratios & black borders]
-options](../manual/graphics/aspect-ratios.md) section of the user manual.
+more) are explained in the [Aspect ratios & black
+borders](../manual/graphics/aspect-ratios.md) section of the user manual.
 
 Keep in mind, though, that the rest of the guide assumes you're using the CRT
 emulation.

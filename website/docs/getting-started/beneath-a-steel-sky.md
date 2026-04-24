@@ -97,7 +97,7 @@ is equivalent to having a CD-ROM drive in our emulated computer assigned to
 the drive letter D and inserting the game CD into it.
 
 Mounting an image file, such as a floppy or CD-ROM image, is accomplished with
-the `imgmount` command. It is pretty simple to use: the first argument is the
+the `MOUNT` command. It is pretty simple to use: the first argument is the
 drive letter (`d`), the second the path to the CD-ROM image (`cd/cdrom1.iso`),
 and the third the type of the image file (`-t iso`).
 
@@ -106,7 +106,7 @@ So this is what we need to put into our config:
 
 ```ini
 [autoexec]
-imgmount d cd/cdrom1.iso -t iso
+mount d cd/cdrom1.iso -t iso
 ```
 
 !!! warning
@@ -114,11 +114,11 @@ imgmount d cd/cdrom1.iso -t iso
     If you've decided to keep the original name of the ISO, you'll need to
     enclose it in double quotes because it contains spaces:
 
-        imgmount d "cd/Beneath a Steel Sky (1995)(Virgin).iso" -t iso
+        mount d "cd/Beneath a Steel Sky (1995)(Virgin).iso" -t iso
 
     If you're on Linux, make sure to get the casing of the ISO file exactly
     right. Commands that operate on emulated DOS drives are case-insensitive,
-    just like real MS-DOS, but `imgmount` opens a file on your host directly,
+    just like real MS-DOS, but `MOUNT` opens a file on your host directly,
     so the casing rules of your host filesystem apply.
 
 !!! tip
@@ -128,7 +128,7 @@ imgmount d cd/cdrom1.iso -t iso
     `cdrom2.iso`, and so on, it's easier to reuse the mount commands between
     configs.
 
-You can always run `imgmount /?` or `help imgmount` if you need a little
+You can always run `MOUNT /?` or `HELP MOUNT` if you need a little
 reminder on how to use the command (although the full list of options can be a
 little overwhelming).
 
@@ -137,7 +137,7 @@ everything is set up correctly:
 
 ``` { . .dos-prompt }
 Local directory drives/c/ mounted as C drive
-Z:\>imgmount d cd/cdrom1.iso -t iso
+Z:\>mount d cd/cdrom1.iso -t iso
 MSCDEX installed.
 ISO image cd/cdrom1.iso mounted as D drive
 Z:\>_
@@ -147,7 +147,7 @@ MSCDEX is the name of the MS-DOS CD-ROM driver, and the following line just
 informs us that our CD image has been mounted as drive D. Time to get down to
 business then!
 
-!!! danger "Always mount CD-ROM images with `imgmount`"
+!!! danger "Always mount CD-ROM images with `MOUNT`"
 
     While you could mount CD-ROM images outside of DOSBox with other programs,
     too (e.g., Daemon Tools, ImgDrive, WinCDEmu, or the built-in Windows 10/11
@@ -155,7 +155,7 @@ business then!
     compatibility problems. That's because these tools don't emulate the
     MSCDEX MS-DOS driver that DOS games expect.
 
-    For a trouble-free life, always use the built-in `imgmount` command.
+    For a trouble-free life, always use the built-in `MOUNT` command.
     There's nothing to gain from using these 3rd party mounting tools for
     DOS games.
 
@@ -263,7 +263,7 @@ don't want to start the game just yet:
 
 ```ini
 [autoexec]
-imgmount d cd/cdrom1.iso -t iso
+mount d cd/cdrom1.iso -t iso
 c:
 cd \sky
 #sky
@@ -409,7 +409,7 @@ startup script.
 
 ```ini
 [autoexec]
-imgmount D "cd/cdrom1.iso" -t iso
+mount D "cd/cdrom1.iso" -t iso
 c:
 cd sky
 mixer opl 50 sb 500 /noshow
@@ -441,7 +441,7 @@ command in the `[autoexec]` section by prefixing it with a `#` character:
 
 ```ini
 [autoexec]
-imgmount D "cd/cdrom1.iso" -t iso
+mount D "cd/cdrom1.iso" -t iso
 c:
 cd sky
 #mixer opl 50 sb 500 /noshow
@@ -1077,7 +1077,7 @@ reverb = large
 chorus = strong
 
 [autoexec]
-imgmount d "cd/cdrom1.iso" -t iso
+mount d "cd/cdrom1.iso" -t iso
 
 # original game
 #c:
