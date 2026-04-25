@@ -6,6 +6,7 @@
 #include "cpu.h"
 #include "dos.h"
 #include "memory.h"
+#include "video.h"
 
 #include <set>
 #include <string>
@@ -65,6 +66,9 @@ static void setup_api_handlers()
 	server.Get("/api/v1/memory/:segment/:offset/:len", ReadMemoryCommand::Get);
 	server.Put("/api/v1/memory/:offset", WriteMemoryCommand::Put);
 	server.Put("/api/v1/memory/:segment/:offset", WriteMemoryCommand::Put);
+
+	server.Get("/api/v1/video/frame", VideoHandlers::GetFrame);
+	server.Get("/api/v1/video/frame/info", VideoHandlers::GetFrameInfo);
 }
 
 static std::string strip_port(const std::string& host)

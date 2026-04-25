@@ -8,6 +8,7 @@
     "gtest",
     "iir1",
     "libmt32emu",
+    "libjpeg-turbo",
     "libpng",
     "opusfile",
     "fluidsynth",

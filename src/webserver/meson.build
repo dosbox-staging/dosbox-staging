@@ -3,14 +3,17 @@ libwebserver_sources = [
     'cpu.cpp',
     'dos.cpp',
     'memory.cpp',
+    'video.cpp',
     'webserver.cpp',
 ]
+
+jpeg_dep = dependency('libjpeg', required: true)
 
 libwebserver = static_library(
     'webserver',
     libwebserver_sources,
     include_directories: incdir,
-    dependencies: [],
+    dependencies: [png_dep, jpeg_dep],
     cpp_args: warnings,
 )
 
