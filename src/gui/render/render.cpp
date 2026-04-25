@@ -31,10 +31,37 @@
 #include "utils/math_utils.h"
 #include "utils/string_utils.h"
 
+#include "render_shared.h"
+
+#include <atomic>
+
 CHECK_NARROWING();
 
 Render render;
 ScalerLineHandler RENDER_DrawLine;
+
+static std::mutex shared_frame_mutex;
+static RenderedImage shared_frame = {};
+static std::atomic<bool> shared_frame_available{false};
+
+void RENDER_UpdateSharedFrame(const RenderedImage& image)
+{
+	std::lock_guard<std::mutex> lock(shared_frame_mutex);
+	shared_frame.free();
+	shared_frame = image.deep_copy();
+	shared_frame_available.store(true);
+}
+
+RenderedImage RENDER_GetSharedFrame()
+{
+	std::lock_guard<std::mutex> lock(shared_frame_mutex);
+	return shared_frame.deep_copy();
+}
+
+bool RENDER_HasSharedFrame()
+{
+	return shared_frame_available.load();
+}
 
 static void render_callback(GFX_CallbackFunctions_t function);
 
@@ -314,9 +341,11 @@ static void handle_capture_frame()
 		// The video capturer doesn't create a copy, and consequently
 		// doesn't free the rendered image either.
 		CAPTURE_AddFrame(new_image, frames_per_second);
+		RENDER_UpdateSharedFrame(new_image);
 
 	} else {
 		CAPTURE_AddFrame(image, frames_per_second);
+		RENDER_UpdateSharedFrame(image);
 	}
 }
 
