@@ -258,12 +258,26 @@ void VideoHandlers::GetFrameInfo(const httplib::Request&, httplib::Response& res
 
 	auto frame = RENDER_GetSharedFrame();
 
+	const auto& vm = frame.params.video_mode;
+
 	json j;
 	j["width"]        = frame.params.width;
 	j["height"]       = frame.params.height;
 	j["pixel_format"] = pixel_format_name(frame.params.pixel_format);
 	j["pitch"]        = frame.pitch;
 	j["is_paletted"]  = frame.is_paletted();
+
+	j["video_mode"]["width"]             = vm.width;
+	j["video_mode"]["height"]            = vm.height;
+	j["video_mode"]["is_graphics_mode"]  = vm.is_graphics_mode;
+	j["video_mode"]["is_double_scanned"] = vm.is_double_scanned_mode;
+	j["video_mode"]["graphics_standard"] = to_string(vm.graphics_standard);
+	j["video_mode"]["color_depth"]       = to_string(vm.color_depth);
+	j["video_mode"]["bios_mode_number"]  = vm.bios_mode_number;
+
+	j["rendered_double_scan"] = frame.params.rendered_double_scan;
+	j["double_width"]         = frame.params.double_width;
+	j["double_height"]        = frame.params.double_height;
 
 	frame.free();
 

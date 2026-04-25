@@ -341,11 +341,9 @@ static void handle_capture_frame()
 		// The video capturer doesn't create a copy, and consequently
 		// doesn't free the rendered image either.
 		CAPTURE_AddFrame(new_image, frames_per_second);
-		RENDER_UpdateSharedFrame(new_image);
 
 	} else {
 		CAPTURE_AddFrame(image, frames_per_second);
-		RENDER_UpdateSharedFrame(image);
 	}
 }
 
@@ -387,6 +385,27 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 
 	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
 		handle_capture_frame();
+	}
+
+	{
+		RenderedImage image = {};
+		image.params        = render.src;
+		image.image_data    = reinterpret_cast<uint8_t*>(
+                        render.scale.cache.data());
+		image.palette = render.palette.rgb;
+		image.pitch   = render.scale.cache_pitch;
+
+		// When scan doubling is baked into the render cache (e.g.,
+		// VGA mode 13h on the texture/surface backend), the cache
+		// contains twice as many rows as the native resolution.
+		// Use video_mode.height for the true native height and
+		// skip every other row by doubling the pitch.
+		if (render.src.rendered_double_scan) {
+			image.params.height = render.src.video_mode.height;
+			image.pitch         = render.scale.cache_pitch * 2;
+		}
+
+		RENDER_UpdateSharedFrame(image);
 	}
 
 	// Only deinterlace the output if the frame has changed
