@@ -4,7 +4,7 @@
 #ifndef DOSBOX_WEBSERVER_CPU_H
 #define DOSBOX_WEBSERVER_CPU_H
 
-#include "bridge.h"
+#include "webserver/bridge.h"
 
 #include "libs/http/http.h"
 #include "libs/json/json.h"

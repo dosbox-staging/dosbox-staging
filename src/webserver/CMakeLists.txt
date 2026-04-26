@@ -3,6 +3,7 @@ target_sources(libdosboxcommon PRIVATE
   webserver.cpp
   cpu.cpp
   memory.cpp
-  dos.cpp)
+  dos.cpp
+  dosbox.cpp)
 
 target_link_libraries(libdosboxcommon PRIVATE simde)

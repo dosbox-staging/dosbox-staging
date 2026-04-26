@@ -3,9 +3,10 @@
 
 #include "webserver.h"
 #include "bridge.h"
-#include "cpu.h"
-#include "dos.h"
-#include "memory.h"
+#include "private/cpu.h"
+#include "private/dos.h"
+#include "private/dosbox.h"
+#include "private/memory.h"
 
 #include <set>
 #include <string>
@@ -58,6 +59,8 @@ static void setup_api_handlers()
 	server.Get("/api/v1/cpu/state", CpuStateCommand::Get);
 
 	server.Get("/api/v1/dos/internals", DosInternalsCommand::Get);
+
+	server.Post("/api/v1/dosbox/shutdown", ShutdownCommand::Post);
 
 	server.Post("/api/v1/memory/allocate", AllocMemoryCommand::Post);
 	server.Post("/api/v1/memory/free", FreeMemoryCommand::Post);
