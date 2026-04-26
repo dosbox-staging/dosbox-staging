@@ -94,6 +94,10 @@ plugins:
           'manual/index.md':          'manual/about-this-manual.md'
           'getting-started/index.md': 'getting-started/introduction.md'
 
+          # Version redirects
+          '0.83/manual/index.md':          'manual/about-this-manual.md'
+          '0.83/getting-started/index.md': 'getting-started/introduction.md'
+
           # Redirect RC release notes to the final notes
           'releases/release-notes/0.82.0-rc.md': 'releases/release-notes/0.82.0.md'
           'releases/release-notes/0.81.0-rc.md': 'releases/release-notes/0.81.0.md'

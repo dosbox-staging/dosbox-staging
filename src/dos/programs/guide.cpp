@@ -32,7 +32,7 @@ void GUIDE::Run(void)
 		SDL_OpenURL(url.c_str());
 
 	} else {
-		SDL_OpenURL("https://www.dosbox-staging.org/getting-started/");
+		SDL_OpenURL("https://www.dosbox-staging.org/0.83/getting-started/");
 	}
 }
 
