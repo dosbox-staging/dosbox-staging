@@ -13,7 +13,7 @@ you'll get black bars on the sides of the image -- this is called
 **pillarboxing**.
 
 {{ figure(
-    "https://www.dosbox-staging.org/static/images/getting-started/monitor-aspect-ratios1.png",
+    "https://www.dosbox-staging.org/static/images/manual/monitor-aspect-ratios1.png",
     "Pillarboxing in action: black bars fill the extra space<br>when the aspect ratio of the screen and the image do not match",
     lightbox=False,
     style="width: 25rem; margin: 1.5rem 0;"
@@ -32,7 +32,7 @@ sides by 80. Then 240 divided by 200 is 1.2, so the pixel aspect ratio (PAR)
 is 1:1.2, or 5:6.
 
 {{ figure(
-    "https://www.dosbox-staging.org/static/images/getting-started/monitor-aspect-ratios2.png",
+    "https://www.dosbox-staging.org/static/images/manual/monitor-aspect-ratios2.png",
     "Left: 320&times;200 pixel image with square pixels on a 4:3 monitor --- there is some letterboxing below the image; Right: the same image with 20% taller pixels on the same monitor --- the image fills the screen completely.",
     lightbox=False,
     style="width: 25rem; margin: 1.5rem 0;"

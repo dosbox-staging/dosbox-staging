@@ -328,7 +328,8 @@ static std::deque<std_fs::path> get_rom_dirs()
 	// Get potential ROM directories from the environment and/or system
 	auto rom_dirs = get_platform_rom_dirs();
 
-	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
+	// Get the user's configured ROM directory; otherwise use
+	// 'soundcanvas-roms'
 	std_fs::path selected_romdir = get_soundcanvas_section()->GetString(
 	        "soundcanvas_rom_dir");
 
