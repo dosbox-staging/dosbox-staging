@@ -2,7 +2,7 @@
 
 ## Foreword
 
-Welcome to the **DOSBox Staging v0.83.0 Getting Started guide**!
+Welcome to the **DOSBox Staging v0.83 Getting Started guide**!
 
 This guide will gently introduce you to the wonderful world of DOSBox by
 setting up a few example games from scratch. Although it's primarily intended
