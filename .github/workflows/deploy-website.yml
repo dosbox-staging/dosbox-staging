@@ -1,4 +1,5 @@
 name: Deploy website
+permissions: read-all
 
 on:
   workflow_dispatch:
@@ -19,17 +20,17 @@ jobs:
 
   build_and_deploy_website:
     needs: linting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Check out MkDocs sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.source_branch }}
           submodules: false
           path: dosbox-staging
 
       - name: Check out organisation GitHub Pages repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.ACCESS_TOKEN_REPO }}
           repository: dosbox-staging/dosbox-staging.github.io
@@ -48,7 +49,8 @@ jobs:
       - name: Install mkdocs
         run: |
           cd dosbox-staging
-          pip install -r contrib/documentation/mkdocs-package-requirements.txt
+          pip3 install --upgrade pip
+          pip3 install -r extras/documentation/mkdocs-package-requirements.txt
 
       - name: Get current documentation Git hash
         run: |
@@ -66,6 +68,8 @@ jobs:
                   -not -path "."            `# ignore current dir` \
                   -not -path "./static"     `# ignore manually managed 'static' dir` \
                   -not -path "./static/*"   `# ignore manually managed 'static' dir contents` \
+                  -not -path "./tools"      `# ignore manually managed 'tools' dir` \
+                  -not -path "./tools/*"    `# ignore manually managed 'tools' dir contents` \
                   -not -path "./preview"    `# ignore 'preview' dir` \
                   -not -path "./preview/*"  `# ignore 'preview' dir contents` \
                   -not -name "README.md"    `# ignore 'README.md'` \
@@ -83,7 +87,7 @@ jobs:
           cp -R $MKDOCS_SRC_PATH/docs/.well-known $DEST_PATH
           touch $DEST_PATH/.nojekyll
 
-      - name: Setup Git config
+      - name: Set up Git config
         run: |
           cd dosbox-staging.github.io
           git config user.name "GitHub Actions Bot"
