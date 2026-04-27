@@ -7,6 +7,11 @@ hide:
 
 ## Current stable version
 
+!!! tip
+
+    If you're new to DOSBox Staging, we highly recommend reading the
+    [Getting Started guide](../getting-started/index.md) first.
+
 <section class="release-downloads" markdown>
 
 [Download DOSBox Staging 0.82.2 (x86_64)][0_82_2]
@@ -17,7 +22,6 @@ sha256: bc229df72ea103b7865cdca67324772d<wbr>bffa8e58866477e69a79638b723a0442
 
 </section>
 
-
 Our official build runs on most desktop Linux distributions (x86\_64 only for
 now). It only depends on the C/C++, ALSA, and OpenGL system libraries; all
 other libraries are statically linked.
@@ -25,11 +29,8 @@ other libraries are statically linked.
 Please run the `install-icons.sh` script included with the release to install
 the application icons.
 
-Check out the [0.82.2 release notes](release-notes/0.82.2.md) to learn
+Read the [0.82.2 release notes](release-notes/0.82.2.md) to learn
 about the changes and improvements introduced in this release.
-
-If you're new to DOSBox Staging, we highly recommend following the
-[Getting started guide](../getting-started/index.md).
 
 
 ## Hardware requirements
@@ -59,7 +60,7 @@ repository owners.
     issues can happen if you start using different library versions, different
     compilers, different compiler flags or revisions, etc. Many of these
     issues are hard to notice without being intimately familiar with
-    our software and doing hundreds of hours of testing---the amount of
+    our software and doing hundreds of hours of testing --- the amount of
     testing we typically put into each release.
 
     Therefore, if you believe you've found a bug, and you're not using our

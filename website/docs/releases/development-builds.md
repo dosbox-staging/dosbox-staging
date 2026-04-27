@@ -52,7 +52,7 @@ function set_build_version(gh_api_artifacts, os_name) {
         //
         let platform_re = "[\\w-]*"
         let version_re  = "(\\d+\.\\d+\.\\d+)"
-        let hash_re     = "([\\w-\.]+)"
+        let hash_re     = "(alpha-[\\w-\\.]{5})"
 
         let re = `dosbox-staging-${platform_re}-${version_re}-${hash_re}`
         let release = data.artifacts.find(a => a.name.match(re))
@@ -139,7 +139,14 @@ function set_ci_status(workflow_file, os_name, description) {
         build_link_tr_el.appendChild(build_link)
 
         let build_date = new Date(status.updated_at)
-        get_build_date_el(os_name).textContent = build_date.toUTCString()
+
+        let date_string_utc = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'UTC', timeZoneName: 'short',
+            year: 'numeric', month: 'short', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+        }).format(build_date);
+
+        get_build_date_el(os_name).textContent = date_string_utc
 
         set_build_version(status.artifacts_url, os_name)
       })
@@ -167,12 +174,18 @@ document.addEventListener("DOMContentLoaded", () => {
     head on to the [Windows](windows.md), [macOS](macos.md), or
     [Linux](linux.md) download pages.
 
+
 !!! info
 
-    The development builds are hosted on GitHub; you need to have a GitHub
+    The **development builds** are hosted on GitHub; you'll need a GitHub
     account to download them. If you're not logged in to GitHub, you will see
-    the build artifacts but clicking on their names won't initiate the
+    the build artifacts, but clicking on their names won't initiate the
     download.
+
+    We release a new dev snapshot build whenever a PR is merged. Make sure to
+    check out the automaticaly generated **release notes HTML** included with
+    the snapshot builds. This lists all the changes since the last stable
+    release, with links to the individual PRs on GitHub.
 
 
 <div class="compact">
@@ -283,7 +296,7 @@ or orange colour), then compare your current and old configs and update your
 settings accordingly.
 
 Check out the new config descriptions for guidance, and also make sure to read
-the release notes carefully---everything you need to know about upgrading your
+the release notes carefully --- everything you need to know about upgrading your
 settings is described there.
 
 
