@@ -61,6 +61,7 @@ constexpr auto EstimatedFileSeekIoOverheadInBytes     = 512;
 
 void DOS_NotifyBooting()
 {
+	DOS_UninstallHardwareInterruptStacks();
 	is_guest_booted = true;
 	DOS_ClearLaunchedProgramNames();
 }
@@ -1752,6 +1753,8 @@ private:
 public:
 	DOS(Section* sec)
 	{
+		const SectionProp* section = static_cast<SectionProp*>(sec);
+
 		callback[0].Install(DOS_20Handler, CB_IRET, "DOS Int 20");
 		callback[0].Set_RealVec(0x20);
 
@@ -1791,6 +1794,9 @@ public:
 		DOS_SetupMemory();								/* Setup first MCB */
 		DOS_SetupPrograms();
 		DOS_SetupMisc();							/* Some additional dos interrupts */
+		if (DOS_ShouldUseHardwareInterruptStacks(*section)) {
+			DOS_InstallHardwareInterruptStacks(*section);
+		}
 		DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(25); /* Else the next call gives a warning. */
 		DOS_SetDefaultDrive(25);
 
@@ -1799,7 +1805,6 @@ public:
 		dos.direct_output=false;
 		dos.internal_output=false;
 
-		const SectionProp* section = static_cast<SectionProp*>(sec);
 		std::string args = section->GetString("ver");
 		std::string word = strip_word(args);
 		const auto new_version = DOS_ParseVersion(word.c_str(), args.c_str());
@@ -1826,6 +1831,8 @@ public:
 		// without throwing an inevitable `DOS: Too many devices added`
 		// exception
 		DOS_ShutDownDevices();
+
+		DOS_UninstallHardwareInterruptStacks();
 
 		DOS_FreeTableMemory();
 	}
@@ -1910,6 +1917,32 @@ static void init_dos_settings(SectionProp& section)
 
 	pbool = section.AddBool("umb", WhenIdle, true);
 	pbool->SetHelp("Enable UMB memory support ('on' by default).");
+
+	pstring = section.AddString("interrupt_stacks", OnlyAtStart, "auto");
+	pstring->SetValues({"auto", "on", "off"});
+	pstring->SetHelp(
+	        "Use DOS-style private stacks for hardware interrupts ('auto' by default).\n"
+	        "This can improve compatibility with programs that expect timer callbacks to\n"
+	        "run on a DOS-owned interrupt stack. Possible values:\n"
+	        "\n"
+	        "  auto:  Enable interrupt stacks on AT-class machine types.\n"
+	        "  on:    Always enable interrupt stacks.\n"
+	        "  off:   Disable interrupt stacks.");
+
+	auto pint = section.AddInt("interrupt_stack_count", OnlyAtStart, 9);
+	pint->SetMinMax(8, 64);
+	pint->SetHelp(
+	        "Set the number of private stacks for hardware interrupts. This mirrors the\n"
+	        "first value in the DOS CONFIG.SYS 'STACKS=count,size' setting. The default is\n"
+	        "9, matching MS-DOS. This setting is ignored when 'interrupt_stacks' is 'off'.");
+
+	pint = section.AddInt("interrupt_stack_size", OnlyAtStart, 128);
+	pint->SetMinMax(32, 512);
+	pint->SetHelp(
+	        "Set the size of each private hardware interrupt stack in bytes. This mirrors\n"
+	        "the second value in the DOS CONFIG.SYS 'STACKS=count,size' setting. The\n"
+	        "default is 128, matching MS-DOS. This setting is ignored when\n"
+	        "'interrupt_stacks' is 'off'.");
 
 	pstring = section.AddString("pcjr_memory_config", OnlyAtStart, "expanded");
 	pstring->SetValues({"expanded", "standard"});
