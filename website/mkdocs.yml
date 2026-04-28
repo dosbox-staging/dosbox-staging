@@ -27,6 +27,10 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+# Custom JavaScript
+extra_javascript:
+  - assets/javascripts/version-selector.js
+
 # Extensions
 markdown_extensions:
   - abbr
@@ -63,6 +67,7 @@ extra:
 # Hooks
 hooks:
   - hooks/offline.py
+  - hooks/versions.py
 
 # Plugins
 plugins:
@@ -84,6 +89,7 @@ plugins:
             - "getting-started/index.md"
             - "manual/index.md"
             - "releases/*"
+            - "versions.json"
 
   - redirects:
         redirect_maps:
