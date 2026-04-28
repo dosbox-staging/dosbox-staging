@@ -7,7 +7,7 @@
 #include <cassert>
 #include <fstream>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "dosbox.h"
 #include "gui/render/render_backend.h"
