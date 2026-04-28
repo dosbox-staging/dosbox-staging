@@ -86,23 +86,36 @@ plugins:
       - exclude:
           glob:
             - "index.md"
-            - "getting-started/index.md"
-            - "manual/index.md"
+            - "0.83/getting-started/index.md"
+            - "0.83/manual/index.md"
             - "releases/*"
             - "versions.json"
 
   - redirects:
         redirect_maps:
-          # Convenience redirects for top level sections (so for example
-          # `/releases/` takes you to `releases/windows/` instead of a 404).
-          #
-          'releases/index.md':        'releases/windows.md'
-          'manual/index.md':          'manual/about-this-manual.md'
-          'getting-started/index.md': 'getting-started/introduction.md'
+          'releases/index.md': 'releases/windows.md'
 
-          # Version redirects
-          '0.83/manual/index.md':          'manual/about-this-manual.md'
-          '0.83/getting-started/index.md': 'getting-started/introduction.md'
+          # ---------------------------------------------------------------
+          # UPDATE THESE REDIRECTS WHEN A NEW VERSION IS RELEASED
+          # Change 0.83 to the new version number in all targets below.
+          # ---------------------------------------------------------------
+
+          # Section index redirects (unversioned -> latest version)
+          'manual/index.md':          '0.83/manual/about-this-manual.md'
+          'getting-started/index.md': '0.83/getting-started/introduction.md'
+
+          # Section index redirects (current version)
+          '0.83/manual/index.md':          '0.83/manual/about-this-manual.md'
+          '0.83/getting-started/index.md': '0.83/getting-started/introduction.md'
+
+          # Unversioned getting-started paths -> latest version
+          'getting-started/introduction.md':                '0.83/getting-started/introduction.md'
+          'getting-started/setting-up-prince-of-persia.md': '0.83/getting-started/setting-up-prince-of-persia.md'
+          'getting-started/enhancing-prince-of-persia.md':  '0.83/getting-started/enhancing-prince-of-persia.md'
+          'getting-started/passport-to-adventure.md':       '0.83/getting-started/passport-to-adventure.md'
+          'getting-started/beneath-a-steel-sky.md':         '0.83/getting-started/beneath-a-steel-sky.md'
+          'getting-started/star-wars-dark-forces.md':       '0.83/getting-started/star-wars-dark-forces.md'
+          'getting-started/next-steps.md':                  '0.83/getting-started/next-steps.md'
 
           # Redirect RC release notes to the final notes
           'releases/release-notes/0.82.0-rc.md': 'releases/release-notes/0.82.0.md'
@@ -164,86 +177,86 @@ nav:
     - releases/development-builds.md
 
   - Getting started:
-      - getting-started/index.md   # dummy page for redirecting
+      - 0.83/getting-started/index.md   # dummy page for redirecting
 
-      - getting-started/introduction.md
-      - getting-started/setting-up-prince-of-persia.md
-      - getting-started/enhancing-prince-of-persia.md
-      - getting-started/passport-to-adventure.md
-      - getting-started/beneath-a-steel-sky.md
-      - getting-started/star-wars-dark-forces.md
-      - getting-started/next-steps.md
+      - 0.83/getting-started/introduction.md
+      - 0.83/getting-started/setting-up-prince-of-persia.md
+      - 0.83/getting-started/enhancing-prince-of-persia.md
+      - 0.83/getting-started/passport-to-adventure.md
+      - 0.83/getting-started/beneath-a-steel-sky.md
+      - 0.83/getting-started/star-wars-dark-forces.md
+      - 0.83/getting-started/next-steps.md
 
   - User manual:
       - Introduction:
-        - manual/index.md   # dummy page for redirecting
+        - 0.83/manual/index.md   # dummy page for redirecting
 
-        - manual/about-this-manual.md
-        - manual/what-is-dosbox-staging.md
-        - manual/dos-primer.md
-        - manual/dos-eras.md
+        - 0.83/manual/about-this-manual.md
+        - 0.83/manual/what-is-dosbox-staging.md
+        - 0.83/manual/dos-primer.md
+        - 0.83/manual/dos-eras.md
 
       - Using DOSBox Staging:
-        - manual/configuration.md
-        - manual/command-line.md
-        - manual/commands.md
-        - manual/storage.md
-        - manual/hardware-resources.md
-        - manual/capture.md
-        - manual/http-api.md
-        - manual/windows-31.md
+        - 0.83/manual/configuration.md
+        - 0.83/manual/command-line.md
+        - 0.83/manual/commands.md
+        - 0.83/manual/storage.md
+        - 0.83/manual/hardware-resources.md
+        - 0.83/manual/capture.md
+        - 0.83/manual/http-api.md
+        - 0.83/manual/windows-31.md
 
       - System:
-        - manual/system/general.md
-        - manual/system/cpu.md
-        - manual/system/dos.md
+        - 0.83/manual/system/general.md
+        - 0.83/manual/system/cpu.md
+        - 0.83/manual/system/dos.md
 
       - Graphics:
-        - manual/graphics/adapters.md
-        - manual/graphics/display-and-window.md
-        - manual/graphics/rendering.md
-        - manual/graphics/aspect-ratios.md
-        - manual/graphics/composite-video.md
-        - manual/graphics/3dfx-voodoo.md
-        - manual/graphics/reelmagic.md
+        - 0.83/manual/graphics/adapters.md
+        - 0.83/manual/graphics/display-and-window.md
+        - 0.83/manual/graphics/rendering.md
+        - 0.83/manual/graphics/aspect-ratios.md
+        - 0.83/manual/graphics/composite-video.md
+        - 0.83/manual/graphics/3dfx-voodoo.md
+        - 0.83/manual/graphics/reelmagic.md
 
       - Sound:
-        - manual/sound/overview.md
-        - manual/sound/on-subjectivity.md
-        - manual/sound/mixer.md
-        - manual/sound/mixer-effects.md
-        - manual/sound/output-filters.md
-        - manual/sound/disk-noise.md
+        - 0.83/manual/sound/overview.md
+        - 0.83/manual/sound/on-subjectivity.md
+        - 0.83/manual/sound/mixer.md
+        - 0.83/manual/sound/mixer-effects.md
+        - 0.83/manual/sound/output-filters.md
+        - 0.83/manual/sound/disk-noise.md
         - Sound devices:
-          - manual/sound/sound-devices/adlib-cms-sound-blaster.md
-          - manual/sound/sound-devices/roland-mt-32.md
-          - manual/sound/sound-devices/midi.md
-          - manual/sound/sound-devices/general-midi.md
-          - manual/sound/sound-devices/pc-speaker.md
-          - manual/sound/sound-devices/tandy.md
-          - manual/sound/sound-devices/gravis-ultrasound.md
-          - manual/sound/sound-devices/cd-da.md
-          - manual/sound/sound-devices/ibm-ps1audio.md
-          - manual/sound/sound-devices/covox-variants.md
-          - manual/sound/sound-devices/innovation.md
-          - manual/sound/sound-devices/imfc.md
+          - 0.83/manual/sound/sound-devices/adlib-cms-sound-blaster.md
+          - 0.83/manual/sound/sound-devices/roland-mt-32.md
+          - 0.83/manual/sound/sound-devices/midi.md
+          - 0.83/manual/sound/sound-devices/general-midi.md
+          - 0.83/manual/sound/sound-devices/pc-speaker.md
+          - 0.83/manual/sound/sound-devices/tandy.md
+          - 0.83/manual/sound/sound-devices/gravis-ultrasound.md
+          - 0.83/manual/sound/sound-devices/cd-da.md
+          - 0.83/manual/sound/sound-devices/ibm-ps1audio.md
+          - 0.83/manual/sound/sound-devices/covox-variants.md
+          - 0.83/manual/sound/sound-devices/innovation.md
+          - 0.83/manual/sound/sound-devices/imfc.md
 
       - Input:
-        - manual/input/overview.md
-        - manual/input/keyboard.md
-        - manual/input/mouse.md
-        - manual/input/joystick.md
-        - manual/input/keymapper.md
+        - 0.83/manual/input/overview.md
+        - 0.83/manual/input/keyboard.md
+        - 0.83/manual/input/mouse.md
+        - 0.83/manual/input/joystick.md
+        - 0.83/manual/input/keymapper.md
 
       - Networking:
-        - manual/networking/serial-ports.md
-        - manual/networking/ipx.md
-        - manual/networking/ethernet.md
-        - manual/networking/multiplayer.md
+        - 0.83/manual/networking/serial-ports.md
+        - 0.83/manual/networking/ipx.md
+        - 0.83/manual/networking/ethernet.md
+        - 0.83/manual/networking/multiplayer.md
 
       - Appendices:
-        - manual/appendices/shortcuts.md
-        - manual/appendices/keymapper.md
+        - 0.83/manual/appendices/shortcuts.md
+        - 0.83/manual/appendices/keymapper.md
 
   - Get involved:
       - get-involved/index.md

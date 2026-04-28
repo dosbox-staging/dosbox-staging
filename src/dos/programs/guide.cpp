@@ -8,6 +8,7 @@
 #include "misc/support.h"
 #include "more_output.h"
 #include "utils/checks.h"
+#include "utils/string_utils.h"
 
 #include <SDL_misc.h>
 
@@ -25,7 +26,9 @@ void GUIDE::Run(void)
 		return;
 	}
 
-	const auto path = get_resource_path("docs/getting-started/introduction.html");
+	const auto path = get_resource_path(
+	        format_str("docs/%s/getting-started/introduction.html",
+	                   DOSBOX_VERSION_SHORT));
 
 	if (std::filesystem::exists(path)) {
 		const auto url = std::string{"file://"} + path.string();

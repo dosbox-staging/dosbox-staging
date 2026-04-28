@@ -8,6 +8,7 @@
 #include "misc/support.h"
 #include "more_output.h"
 #include "utils/checks.h"
+#include "utils/string_utils.h"
 
 #include <SDL_misc.h>
 
@@ -25,7 +26,9 @@ void MANUAL::Run(void)
 		return;
 	}
 
-	const auto path = get_resource_path("docs/manual/about-this-manual.html");
+	const auto path = get_resource_path(
+	        format_str("docs/%s/manual/about-this-manual.html",
+	                   DOSBOX_VERSION_SHORT));
 
 	if (std::filesystem::exists(path)) {
 		const auto url = std::string{"file://"} + path.string();
