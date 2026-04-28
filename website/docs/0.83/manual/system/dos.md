@@ -70,6 +70,31 @@ on the emulated PCjr. The default `expanded` provides 640 KB and is compatible
 with most games. A few very old PCjr titles ([Jumpman](https://www.mobygames.com/game/80/jumpman/), [Troll](https://www.mobygames.com/game/14214/troll/)) require the
 `standard` 128 KB layout.
 
+## Interrupt stacks
+
+The [`stacks`](#stacks) setting replicates the `STACKS=count,size` directive
+that MS-DOS 3.2 introduced in `CONFIG.SYS`. It maintains a small private pool
+of stacks; whenever a hardware interrupt fires, DOSBox Staging switches to a
+free slot before invoking the handler, then restores the original stack on the
+way out.
+
+The default `auto` enables the feature on AT-class [`machine`](general.md#machine) types, using the
+same defaults MS-DOS used --- 9 stacks of 128 bytes each. It is disabled
+automatically on PC/XT-class machines (e.g., `cga`, `pcjr`, `tandy`), since this
+was the default under DOS. You will rarely need to change this; it exists for
+the edge case where a specific program misbehaves with interrupt stacks
+enabled, or needs a different stack count or size.
+
+!!! note
+
+    When a hardware interrupt fires --- a timer tick, a key press, and so on ---
+    the CPU briefly pauses the running program and executes the interrupt
+    handler, using the program's own stack for that purpose. Most programs leave
+    enough stack space for this to work without issue. A small number of older
+    programs allocate a very tight stack, however, and can crash or corrupt
+    their own data if an interrupt handler (and any handlers it triggers in
+    turn) together need more space than the program left available.
+
 ## Configuration settings
 
 You can set the DOS parameters in the `[dos]` configuration section.
@@ -174,3 +199,34 @@ You can set the DOS parameters in the `[dos]` configuration section.
 :   File containing persistent command line history (`shell_history.txt` by
     default). Setting it to empty disables persistent shell history.
 
+
+### Interrupt stacks
+
+##### stacks
+
+:   Use DOS-style private stacks for hardware interrupts ('auto' by default).
+    When a wrapped hardware interrupt fires, DOSBox Staging switches to one
+    stack from a private pool before invoking the previous handler. Disabling
+    this means each running program must have enough stack space for hardware
+    interrupts (and any chained handlers) itself. Most programs work correctly
+    without it; a few legacy programs depend on it to avoid corrupting their
+    own stack.
+
+    Note: the current implementation wraps the timer interrupt (INT 08h, IRQ0)
+    and the keyboard interrupt (INT 09h, IRQ1). MS-DOS's STACKS feature wraps
+    additional hardware-IRQ vectors; coverage may be expanded in future
+    versions.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `auto` *default*{ .default } -- Enable on AT-class machine types with
+      the MS-DOS defaults (9 stacks of 128 bytes each). Disable on PC/XT-class
+      machine types (e.g., `cga`, `pcjr`, `tandy`).
+    - `count,size` -- Allocate `count` private stacks of `size` bytes each,
+      e.g. 'stacks = 9,128'. Equivalent to the DOS 'STACKS=count,size' setting;
+      'count' must be 8-64, 'size' must be 32-512.
+    - `0,0` -- Disable; use the interrupted program's stack.
+
+    </div>
