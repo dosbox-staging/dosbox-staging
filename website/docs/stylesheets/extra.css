@@ -74,26 +74,21 @@ small {
 /* Dev site banner                                                          */
 /*--------------------------------------------------------------------------*/
 .dev-site {
-  display: none;
-}
-.dev-site.banner {
   background: #cc3010;
   text-align: center;
   padding: 0.8rem;
   position: sticky;
+  top: 0;
+  z-index: 4;
 }
-.dev-site.banner p {
+.dev-site p {
   color: #ff9;
   font-size: 0.8rem;
   margin: 0.1rem;
 }
-.dev-site.banner a {
+.dev-site a {
   font-weight: bold;
   text-decoration: underline;
-}
-
-.show {
-  display: block !important;
 }
 
 /*--------------------------------------------------------------------------*/

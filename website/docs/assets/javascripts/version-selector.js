@@ -21,7 +21,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 return r.json();
             })
             .then(function (sections) { populate(sections, deployPrefix); })
-            .catch(function () {});
+            .then(adjustScrollMargin)
+            .catch(adjustScrollMargin);
+    } else {
+        adjustScrollMargin();
     }
 
     function populate(sections, deployPrefix) {
@@ -132,6 +135,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
             var header = document.querySelector(".md-header");
             header.parentNode.insertBefore(banner, header);
+        }
+    }
+
+    // Bump --md-scroll-margin to account for any banners above the header
+    function adjustScrollMargin() {
+        var extra = 0;
+
+        var devBanner = document.querySelector(".dev-site:not([hidden])");
+        if (devBanner) {
+            extra += devBanner.offsetHeight;
+        }
+
+        var versionBanner = document.querySelector(".md-banner--warning");
+        if (versionBanner) {
+            extra += versionBanner.offsetHeight;
+        }
+
+        if (extra > 0) {
+          var current = getComputedStyle(document.documentElement)
+            .getPropertyValue("--md-scroll-margin");
+
+          var base = parseFloat(current) || 0;
+
+          document.documentElement.style.setProperty(
+              "--md-scroll-margin", (base + extra) + "px"
+          );
         }
     }
 });
