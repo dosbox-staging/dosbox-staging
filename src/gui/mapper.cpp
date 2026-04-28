@@ -88,6 +88,8 @@ static std::vector<CHandlerEvent *> handlergroup;
 static std::list<CBind *> all_binds;
 static std::queue<std::string> auto_type_queue = {};
 
+static SDL_Keysym last_key_pressed = {};
+
 typedef std::list<CBind *> CBindList;
 typedef std::list<CBind *>::iterator CBindList_it;
 typedef std::vector<CBindGroup *>::iterator CBindGroup_it;
@@ -2644,6 +2646,9 @@ void MAPPER_CheckEvent(SDL_Event *event)
 	case SDL_JOYDEVICEADDED:
 		MAPPER_HandleJoyDeviceEvent(&event->jdevice);
 		return;
+	case SDL_KEYDOWN:
+		last_key_pressed = event->key.keysym;
+		break;
 	default: break;
 	}
 
@@ -2652,6 +2657,11 @@ void MAPPER_CheckEvent(SDL_Event *event)
 			return;
 		}
 	}
+}
+
+SDL_Keysym MAPPER_GetLastKeyPressed()
+{
+	return last_key_pressed;
 }
 
 void MAPPER_HandleJoyDeviceEvent(SDL_JoyDeviceEvent* event)

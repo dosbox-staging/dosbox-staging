@@ -294,19 +294,45 @@ void GFX_RequestExit(const bool pressed)
 	}
 }
 
-#if defined(MACOSX)
-static bool is_command_pressed(const SDL_Event event)
+static bool is_unpause_event(const SDL_Event event, const SDL_Keysym unpause_key)
 {
-	return (event.key.keysym.mod == KMOD_RGUI ||
-	        event.key.keysym.mod == KMOD_LGUI);
+	if (event.type != SDL_KEYDOWN) {
+		return false;
+	}
+
+	if (event.key.keysym.sym == unpause_key.sym) {
+		// These are the only mods we're going to care about.
+		// Others mods include caps lock and num lock which we should not look at.
+		constexpr uint16_t ModMask = KMOD_CTRL | KMOD_SHIFT | KMOD_ALT | KMOD_GUI;
+		const uint16_t unpause_mod = unpause_key.mod & ModMask;
+		if ((event.key.keysym.mod & unpause_mod) == unpause_mod) {
+			return true;
+		}
+	}
+
+	// Also check previously hard-coded Alt+Pause on Windows/Linux
+	// and Command+P on Mac to ensure we don't have regressions.
+	#if defined(MACOSX)
+	constexpr uint16_t DefaultMod = KMOD_GUI;
+	constexpr int32_t DefaultKey = SDLK_p;
+	#else
+	constexpr uint16_t DefaultMod = KMOD_ALT;
+	constexpr int32_t DefaultKey = SDLK_PAUSE;
+	#endif
+	return event.key.keysym.sym == DefaultKey && (event.key.keysym.mod & DefaultMod);
 }
-#endif
 
 [[maybe_unused]] static void pause_emulation(bool pressed)
 {
 	if (!pressed) {
 		return;
 	}
+
+	// Bit of a hack but this is the key that was used to pause so let's also check it to unpause.
+	// We should really be relying on MAPPER_CheckEvent() but that is not possible inside this janky pause loop.
+	// TODO: In the future, re-work pause logic so we use the main event loop all the time.
+	const auto unpause_key = MAPPER_GetLastKeyPressed();
+
 	const auto inkeymod = static_cast<uint16_t>(SDL_GetModState());
 
 	sdl.is_paused = true;
@@ -341,15 +367,7 @@ static bool is_command_pressed(const SDL_Event event)
 			break;
 
 		case SDL_KEYDOWN:
-#if defined(MACOSX)
-			// Pause/unpause is hardcoded to Command+P on macOS
-			if (is_command_pressed(event) &&
-			    event.key.keysym.sym == SDLK_p) {
-#else
-			// Pause/unpause is hardcoded to Alt+Pause on Window &
-			// Linux
-			if (event.key.keysym.sym == SDLK_PAUSE) {
-#endif
+			if (is_unpause_event(event, unpause_key)) {
 				const uint16_t outkeymod = event.key.keysym.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
