@@ -88,4 +88,6 @@ constexpr int MaxBindNameLength = 100;
  */
 void MAPPER_HandleJoyDeviceEvent(SDL_JoyDeviceEvent* event);
 
+SDL_Keysym MAPPER_GetLastKeyPressed();
+
 #endif // DOSBOX_MAPPER_H
