@@ -366,3 +366,82 @@ generate a new token when this happens as described below.
 
 After these steps, the deploy website action should run without errors.
 
+## Versioning
+
+The user manual and the Getting Started guide live under a version prefix
+(e.g., `website/docs/0.83/manual/`, `website/docs/0.83/getting-started/`).
+Other sections (`about/`, `releases/`, `get-involved/`) are unversioned.
+
+A custom version selector in the site header lets users switch between
+versions. It reads `website/docs/versions.json` to know which versions
+exist and which sections each version has.
+
+Previously published versions persist in our GitHub Pages repository from
+earlier deploys. The source tree in the DOSBox Staging code repository (this
+repo) only contains the *current* version's content.
+
+### Releasing a new version (e.g., 0.83 to 0.84)
+
+#### Rename the version directory
+
+```
+cd website
+git mv docs/0.83/manual          docs/0.84/manual
+git mv docs/0.83/getting-started docs/0.84/getting-started
+```
+
+#### Update `versions.json`
+
+Add the new version at the top of each section's list (descending order).
+The build will warn if the latest version is missing from any section:
+
+```json
+{
+  "manual": [
+    "0.84",
+    "0.83"
+  ],
+  "getting-started": [
+    "0.84",
+    "0.83",
+    "0.82"
+  ]
+}
+```
+
+#### Update `mkdocs.yml`
+
+You'll need to bump the version number from 0.83 to 0.84 in a few places:
+
+- **Nav paths** -- every `0.83/manual/...` and `0.83/getting-started/...`
+  entry in the `nav:` section.
+
+- **Redirect targets** -- the block marked with
+  `UPDATE THESE REDIRECTS WHEN A NEW VERSION IS RELEASED`. Change all `0.83`
+  targets to `0.84`.
+
+- **Exclude globs** -- in the offline `group:` block:
+
+  ```yaml
+  - "0.84/getting-started/index.md"
+  - "0.84/manual/index.md"
+  ```
+
+#### Update `hooks/offline.py`
+
+Update `DUMMY_INDEX_PAGES` to use the new version prefix:
+
+```python
+DUMMY_INDEX_PAGES = {
+    "0.84/getting-started/index.md",
+    "0.84/manual/index.md",
+}
+```
+
+#### Verify
+
+```
+cd website
+mkdocs build        # should produce no warnings
+mkdocs serve        # check version selector works on versioned pages
+```
