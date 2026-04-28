@@ -271,7 +271,10 @@ static uint8_t callback_setup_extra(const callback_number_t callback_number,
 		add_instruction_1(0x1e);                   // push ds
 		add_instruction_1(0x50);                   // push ax
 		add_instruction_1(0x52);                   // push dx
+		add_instruction_1(0x55);                   // push bp
+		add_instruction_2(0x31, 0xed);             // xor bp, bp
 		add_instruction_2(0xcd, 0x1c);             // int 0x1c
+		add_instruction_1(0x5d);                   // pop bp
 		add_instruction_1(0xfa);                   // cli
 		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
 		add_instruction_2(0xe6, 0x20);             // out 0x20, al

@@ -1264,8 +1264,10 @@ public:
 		// pseudocode for CB_IRQ0:
 		//	sti
 		//	callback INT8_Handler
-		//	push ds,ax,dx
+		//	push ds,ax,dx,bp
+		//	xor bp,bp
 		//	int 0x1c
+		//	pop bp
 		//	cli
 		//	mov al, 0x20
 		//	out 0x20, al
