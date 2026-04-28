@@ -128,6 +128,17 @@ def on_config(config):
     config["nav"] = _strip_dummy_pages_from_nav(config["nav"])
     log.debug("Stripped dummy index pages from nav")
 
+    # The version selector fetches versions.json at runtime, which is
+    # pointless in offline builds. The JSON file itself is excluded via
+    # the exclude plugin; strip the script reference too so the generated
+    # HTML doesn't contain a <script> tag pointing at nothing.
+
+    config["extra_javascript"] = [
+        js for js in config["extra_javascript"]
+        if "version-selector" not in str(js)
+    ]
+    log.debug("Stripped version-selector from extra_javascript")
+
     # --- Redirects: clear all redirect_maps ---------------------------
     #
     # The redirects plugin is loaded outside the offline group block, so
