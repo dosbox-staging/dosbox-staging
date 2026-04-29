@@ -35,7 +35,9 @@ void MANUAL::Run(void)
 		SDL_OpenURL(url.c_str());
 
 	} else {
-		SDL_OpenURL("https://www.dosbox-staging.org/0.83/manual/");
+		const auto url = format_str("https://www.dosbox-staging.org/%s/manual/",
+		                            DOSBOX_VERSION_SHORT);
+		SDL_OpenURL(url.c_str());
 	}
 }
 
