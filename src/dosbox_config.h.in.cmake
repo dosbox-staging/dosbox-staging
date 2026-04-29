@@ -8,6 +8,8 @@
 // 0.81.1-alpha)
 #define DOSBOX_VERSION "${DOSBOX_VERSION}"
 
+#define DOSBOX_VERSION_SHORT "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
+
 // Minimum 5-char long Git hash of the build; can be longer to guarantee
 // uniqueness (e.g., da3c5, c22ef8)
 #define BUILD_GIT_HASH "${BUILD_GIT_HASH}"
