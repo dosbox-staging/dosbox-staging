@@ -110,7 +110,7 @@ accomplished slightly differently on each platform:
 
     After installing DOSBox Staging, it's highly recommended that you open it
     once using the Start Menu shortcut of the desktop icon [as described
-    here](../releases/windows.md#windows-defender); otherwise, the
+    here](../../releases/windows.md#windows-defender); otherwise, the
     instructions below might not work.
 
 If you have used the installer with the default options to set up DOSBox
@@ -521,8 +521,8 @@ by DOSBox Staging to our advantage!
     Astute readers might have noticed that the guide sometimes refers to
     "DOSBox Staging" and sometimes to just "DOSBox". Why is that?
 
-    As explained on our [About page](../about/index.md), DOSBox Staging is a
-    modern continuation of the original DOSBox project. Technically, DOSBox
+    As explained on our [About page](../../about/index.md), DOSBox Staging is
+    a modern continuation of the original DOSBox project. Technically, DOSBox
     Staging is an open-source fork of and separate project from the
     [SourceForge-hosted DOSBox project](https://sourceforge.net/projects/dosbox/).
 
