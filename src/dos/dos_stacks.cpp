@@ -3,7 +3,6 @@
 
 #include "dos/dos.h"
 
-#include <algorithm>
 #include <vector>
 
 #include "cpu/callback.h"
@@ -18,18 +17,16 @@ namespace {
 
 constexpr uint8_t Irq0Vector = 0x08;
 
-// Match the MS-DOS defaults used when STACKS is active.
+// Match the MS-DOS defaults used when STACKS is active. The configurable
+// minimum/maximum bounds are enforced by SetMinMax() on the config keys in
+// dos.cpp; the value of MaxActiveInterrupts must track that maximum.
 constexpr uint8_t DefaultStackCount = 9;
-constexpr uint8_t MinStackCount     = 8;
-constexpr uint8_t MaxStackCount     = 64;
 constexpr uint16_t DefaultStackSize = 128;
-constexpr uint16_t MinStackSize     = 32;
-constexpr uint16_t MaxStackSize     = 512;
 
 constexpr uint16_t EntrySize   = 8;
 constexpr uint16_t WrapperSize = 0x20;
 constexpr uint16_t TableOffset = WrapperSize;
-constexpr uint8_t MaxActiveInterrupts = MaxStackCount;
+constexpr uint8_t MaxActiveInterrupts = 64;
 
 struct StackEntry {
 	bool allocated    = false;
@@ -285,16 +282,31 @@ void DOS_InstallHardwareInterruptStacks(const SectionProp& section)
 		return;
 	}
 
-	stacks.stack_count = check_cast<uint8_t>(
-	        std::clamp(section.GetInt("interrupt_stack_count"),
-	                   static_cast<int>(MinStackCount),
-	                   static_cast<int>(MaxStackCount)));
-	stacks.stack_size = check_cast<uint16_t>(
-	        std::clamp(section.GetInt("interrupt_stack_size"),
-	                   static_cast<int>(MinStackSize),
-	                   static_cast<int>(MaxStackSize)));
+	stacks.stack_count = check_cast<uint8_t>(section.GetInt("interrupt_stack_count"));
+	stacks.stack_size  = check_cast<uint16_t>(section.GetInt("interrupt_stack_size"));
 
-	stacks.segment         = DOS_GetMemory(get_required_paragraphs());
+	// Allocate the wrapper, table and stack pool from conventional memory
+	// via the DOS MCB chain, matching MS-DOS's STACKS layout. Mark the
+	// owning PSP as MCB_DOS so the block is treated as kernel-owned and is
+	// not freed when programs exit.
+	uint16_t segment            = 0;
+	const uint16_t requested    = get_required_paragraphs();
+	uint16_t blocks             = requested;
+	const uint16_t saved_psp    = dos.psp();
+	dos.psp(MCB_DOS);
+	const bool allocated = DOS_AllocateMemory(&segment, &blocks);
+	dos.psp(saved_psp);
+
+	if (!allocated) {
+		LOG_WARNING("DOS: Could not allocate %u paragraphs for hardware interrupt stacks "
+		            "(largest free block: %u paragraphs); feature disabled",
+		            requested, blocks);
+		return;
+	}
+
+	DOS_MCB(check_cast<uint16_t>(segment - 1)).SetFileName("SD      ");
+
+	stacks.segment         = segment;
 	stacks.irq0_wrapper    = RealMake(stacks.segment, 0);
 	stacks.old_irq0_vector = RealGetVec(Irq0Vector);
 
