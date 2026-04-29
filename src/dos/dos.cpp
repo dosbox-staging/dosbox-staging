@@ -1922,25 +1922,29 @@ static void init_dos_settings(SectionProp& section)
 	pstring->SetValues({"auto", "on", "off"});
 	pstring->SetHelp(
 	        "Use DOS-style private stacks for hardware interrupts ('auto' by default).\n"
-	        "This can improve compatibility with programs that expect timer callbacks to\n"
-	        "run on a DOS-owned interrupt stack. Possible values:\n"
+	        "When a hardware interrupt occurs, DOSBox Staging can allocate one stack from\n"
+	        "the configured pool for the interrupt handler. Disabling this is similar to\n"
+	        "setting 'STACKS=0,0' in DOS: each running program must then have enough stack\n"
+	        "space to handle hardware interrupts itself. Many programs work correctly with\n"
+	        "interrupt stacks disabled, but unstable programs may need the default values.\n"
 	        "\n"
 	        "  auto:  Enable interrupt stacks on AT-class machine types.\n"
-	        "  on:    Always enable interrupt stacks.\n"
-	        "  off:   Disable interrupt stacks.");
+	        "  on:    Always allocate private stacks for hardware interrupts.\n"
+	        "  off:   Allocate no private stacks for hardware interrupts.");
 
 	auto pint = section.AddInt("interrupt_stack_count", OnlyAtStart, 9);
 	pint->SetMinMax(8, 64);
 	pint->SetHelp(
-	        "Set the number of private stacks for hardware interrupts. This mirrors the\n"
-	        "first value in the DOS CONFIG.SYS 'STACKS=count,size' setting. The default is\n"
-	        "9, matching MS-DOS. This setting is ignored when 'interrupt_stacks' is 'off'.");
+	        "Set the number of private stacks to allocate for hardware interrupts. This is\n"
+	        "equivalent to the first value in the DOS 'STACKS=count,size' setting. The\n"
+	        "default is 9, matching MS-DOS. This setting is ignored when\n"
+	        "'interrupt_stacks' is 'off'.");
 
 	pint = section.AddInt("interrupt_stack_size", OnlyAtStart, 128);
 	pint->SetMinMax(32, 512);
 	pint->SetHelp(
-	        "Set the size of each private hardware interrupt stack in bytes. This mirrors\n"
-	        "the second value in the DOS CONFIG.SYS 'STACKS=count,size' setting. The\n"
+	        "Set the size of each private hardware interrupt stack, in bytes. This is\n"
+	        "equivalent to the second value in the DOS 'STACKS=count,size' setting. The\n"
 	        "default is 128, matching MS-DOS. This setting is ignored when\n"
 	        "'interrupt_stacks' is 'off'.");
 
