@@ -219,15 +219,15 @@ your changes.
 
 ### Changing the stylesheet
 
-The `docs/stylesheets/extra.css` CSS file is generated from the
-`docs/extra-scss/extra.scss` [SASS](https://sass-lang.com/) source file.
+The `docs/assets/stylesheets/extra.css` CSS file is generated from the
+`extra-scss/extra.scss` [SASS](https://sass-lang.com/) source file.
 
 To live preview editing the SASS source file, you'll need to run the below
 command from the `website` directory _in addition to_ running `mkdocs server`
 (so you'll need to open two command prompts):
 
 ```
-sass --watch extra-scss/extra.scss:docs/stylesheets/extra.css
+sass --watch extra-scss/extra.scss:docs/assets/stylesheets/extra.css
 ```
 
 To generate the CSS file just once without live preview, drop the `--watch`
