@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2026 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // DOS-style private stacks for hardware interrupts (MS-DOS 3.2+ STACKS=count,size).
