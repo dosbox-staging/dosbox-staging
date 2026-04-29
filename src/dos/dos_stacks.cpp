@@ -26,16 +26,22 @@
 #include "ints/bios.h"
 #include "misc/support.h"
 #include "utils/math_utils.h"
+#include "utils/string_utils.h"
 
 namespace {
 
 constexpr uint8_t Irq0Vector = 0x08;
 
-// Match the MS-DOS defaults used when STACKS is active. The configurable
-// minimum/maximum bounds are enforced by SetMinMax() on the config keys in
-// dos.cpp; the value of MaxNestedInterrupts must track that maximum.
+// Match the MS-DOS defaults used when STACKS is active. Min/Max bounds are
+// validated when parsing the 'stacks' setting; MaxNestedInterrupts must track
+// MaxStackCount because each nested interrupt consumes one entry in the
+// active-LIFO.
 constexpr uint8_t DefaultStackCount = 9;
 constexpr uint16_t DefaultStackSize = 128;
+constexpr uint8_t MinStackCount     = 8;
+constexpr uint8_t MaxStackCount     = 64;
+constexpr uint16_t MinStackSize     = 32;
+constexpr uint16_t MaxStackSize     = 512;
 
 constexpr uint16_t EntrySize   = 8;
 constexpr uint16_t WrapperSize = 0x20;
@@ -318,26 +324,87 @@ Bitu leave_irq_stack()
 	return CBRET_NONE;
 }
 
+// Parse the `stacks` setting into a usable configuration. The setting is
+// either the literal `auto` (use defaults, gated on AT-class machine type) or
+// a `count,size` pair where `0,0` disables the feature and any other pair
+// must lie within [Min,Max]StackCount and [Min,Max]StackSize. On invalid
+// input the feature is treated as disabled; warnings are logged only when
+// `log_warnings` is true so the parser can be invoked twice without
+// double-reporting the same problem.
+struct StacksConfig {
+	bool enabled    = false;
+	uint8_t count   = DefaultStackCount;
+	uint16_t size   = DefaultStackSize;
+};
+
+StacksConfig parse_stacks_setting(const std::string& setting, const bool log_warnings)
+{
+	if (setting == "auto") {
+		StacksConfig config = {};
+		config.enabled = is_machine_ega_or_better();
+		return config;
+	}
+
+	auto warn_invalid = [&]() {
+		if (log_warnings) {
+			LOG_WARNING("DOS: Invalid 'stacks' value '%s'; expected 'auto' or "
+			            "'count,size'. Disabling.",
+			            setting.c_str());
+		}
+	};
+
+	const auto parts = split_with_empties(setting, ',');
+	if (parts.size() != 2) {
+		warn_invalid();
+		return {};
+	}
+
+	const auto count_opt = parse_int(parts[0]);
+	const auto size_opt  = parse_int(parts[1]);
+	if (!count_opt || !size_opt) {
+		warn_invalid();
+		return {};
+	}
+
+	const int count = *count_opt;
+	const int size  = *size_opt;
+
+	if (count == 0 && size == 0) {
+		return {}; // explicitly disabled
+	}
+
+	if (count < MinStackCount || count > MaxStackCount ||
+	    size < MinStackSize || size > MaxStackSize) {
+		if (log_warnings) {
+			LOG_WARNING("DOS: 'stacks=%s' values out of range; count must be "
+			            "%u-%u and size must be %u-%u. Disabling.",
+			            setting.c_str(), MinStackCount, MaxStackCount,
+			            MinStackSize, MaxStackSize);
+		}
+		return {};
+	}
+
+	StacksConfig config = {};
+	config.enabled      = true;
+	config.count        = check_cast<uint8_t>(count);
+	config.size         = check_cast<uint16_t>(size);
+	return config;
+}
+
 } // namespace
 
 // Decide whether to install the wrapper based on the `stacks` setting. `auto`
 // is treated as a proxy for "modern enough to plausibly run software that
 // needs this": EGA-or-better machines roughly correlate with the MS-DOS 3.2+
 // era where games started to assume STACKS= was available, and we explicitly
-// match MS-DOS in not installing on PCjr-class hardware.
+// match MS-DOS in not installing on PCjr-class hardware. This is also where
+// invalid `stacks` values are reported, since we are guaranteed to run once
+// at startup.
 bool DOS_ShouldUseInterruptStacks(const SectionProp& section)
 {
-	const std::string setting = section.GetString("stacks");
-
-	if (setting == "off") {
-		return false;
-	}
-	if (setting == "on") {
-		return true;
-	}
-
-	assert(setting == "auto");
-	return is_machine_ega_or_better();
+	return parse_stacks_setting(section.GetString("stacks"),
+	                            /*log_warnings=*/true)
+	        .enabled;
 }
 
 void DOS_InstallInterruptStacks(const SectionProp& section)
@@ -346,8 +413,14 @@ void DOS_InstallInterruptStacks(const SectionProp& section)
 		return;
 	}
 
-	stacks.stack_count = check_cast<uint8_t>(section.GetInt("stacks_count"));
-	stacks.stack_size  = check_cast<uint16_t>(section.GetInt("stacks_size"));
+	const auto config = parse_stacks_setting(section.GetString("stacks"),
+	                                         /*log_warnings=*/false);
+	if (!config.enabled) {
+		return;
+	}
+
+	stacks.stack_count = config.count;
+	stacks.stack_size  = config.size;
 
 	// Allocate the wrapper, table and stack pool from conventional memory
 	// via the DOS MCB chain, matching MS-DOS's STACKS layout. Mark the
