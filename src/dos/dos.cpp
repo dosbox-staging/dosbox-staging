@@ -1918,11 +1918,11 @@ static void init_dos_settings(SectionProp& section)
 	pbool = section.AddBool("umb", WhenIdle, true);
 	pbool->SetHelp("Enable UMB memory support ('on' by default).");
 
-	pstring = section.AddString("timer_interrupt_stacks", OnlyAtStart, "off");
+	pstring = section.AddString("timer_interrupt_stacks", OnlyAtStart, "auto");
 	pstring->SetValues({"auto", "on", "off"});
 	pstring->SetHelp(
 	        "Use DOS-style private stacks for the timer interrupt (INT 08h, IRQ0)\n"
-	        "('off' by default). When the timer interrupt fires, DOSBox Staging can\n"
+	        "('auto' by default). When the timer interrupt fires, DOSBox Staging can\n"
 	        "switch to one stack from a private pool before invoking the BIOS handler.\n"
 	        "Disabling this is similar to setting 'STACKS=0,0' in DOS: each running\n"
 	        "program must then have enough stack space for the timer ISR (and any\n"
