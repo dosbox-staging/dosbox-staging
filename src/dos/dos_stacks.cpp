@@ -1,6 +1,20 @@
 // SPDX-FileCopyrightText:  2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+// DOS-style private stacks for hardware interrupts (MS-DOS 3.2+ STACKS=count,size).
+//
+// When a wrapped hardware IRQ fires, a small real-mode wrapper switches SS:SP
+// to a stack drawn from a private pool, calls the previous handler, and
+// restores SS:SP on the way out. This protects programs whose own stacks are
+// too tight to absorb BIOS ISRs plus any chained handlers.
+//
+// The current implementation wraps only the timer interrupt (INT 08h, IRQ0).
+// MS-DOS additionally wraps INT 02h and several other hardware-IRQ vectors;
+// coverage may be expanded later with no change to the public surface.
+//
+// The wrapper, entry table, and stack pool live in a single conventional-
+// memory segment owned by MCB_DOS so the block survives program exits.
+
 #include "dos/dos.h"
 
 #include <vector>
@@ -28,6 +42,10 @@ constexpr uint16_t WrapperSize = 0x20;
 constexpr uint16_t TableOffset = WrapperSize;
 constexpr uint8_t MaxNestedInterrupts = 64;
 
+// One slot in the stack pool. `allocated` tracks whether the slot is in use;
+// `saved_ss`/`saved_sp` hold the interrupted program's SS:SP so leave_irq_stack
+// can restore it; `new_sp` is the precomputed top of this slot's stack within
+// the pool segment.
 struct StackEntry {
 	bool allocated    = false;
 	uint16_t saved_ss = 0;
@@ -35,6 +53,14 @@ struct StackEntry {
 	uint16_t new_sp   = 0;
 };
 
+// Runtime state for the interrupt-stack wrapper. The wrapper code, the per-slot
+// table, and the stack pool all live in `segment` at offsets 0, TableOffset,
+// and get_stack_area_offset() respectively.
+//
+// `active_depth` counts nested interrupts that have an entry in `active_entries`
+// (which may itself be -1 if the pool was exhausted at entry); `untracked_depth`
+// counts nested interrupts that arrived after `active_entries` was already full.
+// Their sum is the true nesting depth, and both must be unwound on the way out.
 struct InterruptStacks {
 	bool installed                = false;
 	bool exhausted_warning_logged = false;
@@ -58,6 +84,11 @@ struct InterruptStacks {
 
 InterruptStacks stacks = {};
 
+// Segment layout: [wrapper code | per-slot table | stack pool].
+// The wrapper occupies bytes [0, WrapperSize); the table follows at TableOffset
+// with `stack_count` entries of EntrySize bytes; the stack pool fills the rest,
+// each slot sized `stack_size`. The helpers below derive offsets and sizes from
+// those constants and the runtime configuration.
 uint16_t get_stack_area_offset()
 {
 	return check_cast<uint16_t>(TableOffset + stacks.stack_count * EntrySize);
@@ -97,6 +128,12 @@ void write_far_call(PhysPt& address, const RealPt target)
 	address += 2;
 }
 
+// Lay down the IRQ0 wrapper at the start of the segment. The wrapper runs on
+// the interrupted program's stack on entry; the enter callback then switches
+// SS:SP to a private slot. We push flags and far-call the previous IRQ0
+// handler so its iret unwinds correctly back to the instruction after the
+// call. The leave callback then restores the original SS:SP before our own
+// iret returns to the interrupted program.
 void write_irq0_wrapper()
 {
 	auto address = RealToPhysical(stacks.irq0_wrapper);
@@ -110,6 +147,11 @@ void write_irq0_wrapper()
 	phys_writeb(address++, 0xcf); // iret
 }
 
+// Zero the segment and populate the per-slot table. Each table entry holds the
+// alloc flag and (filled in at runtime) the saved SS:SP; each stack slot has
+// its table-entry offset written into the top word. The latter mirrors the
+// MS-DOS layout and helps both DOSBox-side debugging and any DOS code that
+// inspects the stack area directly.
 void initialise_stack_pool()
 {
 	const auto base = PhysicalMake(stacks.segment, 0);
@@ -159,6 +201,11 @@ void reset_runtime_state()
 	stacks.next_entry      = DefaultStackCount - 1;
 }
 
+// Pick the next free slot, or return -1 if the pool is exhausted. We start
+// at `next_entry` and walk downwards (wrapping at zero), which matches the
+// MS-DOS "hi-mem first" allocation order: the deepest-nested interrupt gets
+// the lowest-addressed slot. The intent is that if a slot does overflow, it
+// clobbers another pool slot rather than the interrupted program's stack.
 int16_t allocate_stack_entry()
 {
 	for (uint8_t i = 0; i < stacks.stack_count; ++i) {
@@ -184,6 +231,13 @@ int16_t allocate_stack_entry()
 	return -1;
 }
 
+// Callback fired by the wrapper before chaining to the previous IRQ0 handler.
+// Allocates a slot, saves the interrupted SS:SP into both the runtime entry
+// and its mirror in the in-segment table, then switches SS:SP to the top of
+// the slot. If allocation fails (pool exhausted, or `active_entries` LIFO
+// already full), the previous handler runs on the interrupted stack — the
+// same fallback MS-DOS uses. BP is also pointed at the new top, matching the
+// real MS-DOS wrapper's behaviour.
 Bitu enter_irq_stack()
 {
 	if (!stacks.installed) {
@@ -220,6 +274,11 @@ Bitu enter_irq_stack()
 	return CBRET_NONE;
 }
 
+// Counterpart to enter_irq_stack: pop the most recent slot off the LIFO,
+// restore SS:SP from the saved entry, free the slot, and clear the in-segment
+// mirror. The `untracked_depth` branch unwinds the pathological case where
+// the LIFO overflowed on entry; in that case there was no slot to switch to,
+// so there is nothing to restore here either.
 Bitu leave_irq_stack()
 {
 	if (!stacks.installed) {
@@ -261,6 +320,11 @@ Bitu leave_irq_stack()
 
 } // namespace
 
+// Decide whether to install the wrapper based on the `stacks` setting. `auto`
+// is treated as a proxy for "modern enough to plausibly run software that
+// needs this": EGA-or-better machines roughly correlate with the MS-DOS 3.2+
+// era where games started to assume STACKS= was available, and we explicitly
+// match MS-DOS in not installing on PCjr-class hardware.
 bool DOS_ShouldUseInterruptStacks(const SectionProp& section)
 {
 	const std::string setting = section.GetString("stacks");
@@ -320,6 +384,11 @@ void DOS_InstallInterruptStacks(const SectionProp& section)
 	stacks.installed = true;
 }
 
+// Reverse the install sequence at shutdown. We restore the IVT only if we
+// still own the vector; if a TSR has hooked over us, unhooking would corrupt
+// its chain, so we leave the vector alone and log a warning. The conventional-
+// memory segment itself is not freed here — it is owned by MCB_DOS and will
+// be reclaimed when the DOS kernel tears down.
 void DOS_UninstallInterruptStacks()
 {
 	if (!stacks.installed) {
