@@ -61,7 +61,7 @@ constexpr auto EstimatedFileSeekIoOverheadInBytes     = 512;
 
 void DOS_NotifyBooting()
 {
-	DOS_UninstallHardwareInterruptStacks();
+	DOS_UninstallTimerInterruptStacks();
 	is_guest_booted = true;
 	DOS_ClearLaunchedProgramNames();
 }
@@ -1794,8 +1794,8 @@ public:
 		DOS_SetupMemory();								/* Setup first MCB */
 		DOS_SetupPrograms();
 		DOS_SetupMisc();							/* Some additional dos interrupts */
-		if (DOS_ShouldUseHardwareInterruptStacks(*section)) {
-			DOS_InstallHardwareInterruptStacks(*section);
+		if (DOS_ShouldUseTimerInterruptStacks(*section)) {
+			DOS_InstallTimerInterruptStacks(*section);
 		}
 		DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(25); /* Else the next call gives a warning. */
 		DOS_SetDefaultDrive(25);
@@ -1832,7 +1832,7 @@ public:
 		// exception
 		DOS_ShutDownDevices();
 
-		DOS_UninstallHardwareInterruptStacks();
+		DOS_UninstallTimerInterruptStacks();
 
 		DOS_FreeTableMemory();
 	}
@@ -1918,35 +1918,37 @@ static void init_dos_settings(SectionProp& section)
 	pbool = section.AddBool("umb", WhenIdle, true);
 	pbool->SetHelp("Enable UMB memory support ('on' by default).");
 
-	pstring = section.AddString("interrupt_stacks", OnlyAtStart, "auto");
+	pstring = section.AddString("timer_interrupt_stacks", OnlyAtStart, "off");
 	pstring->SetValues({"auto", "on", "off"});
 	pstring->SetHelp(
-	        "Use DOS-style private stacks for hardware interrupts ('auto' by default).\n"
-	        "When a hardware interrupt occurs, DOSBox Staging can allocate one stack from\n"
-	        "the configured pool for the interrupt handler. Disabling this is similar to\n"
-	        "setting 'STACKS=0,0' in DOS: each running program must then have enough stack\n"
-	        "space to handle hardware interrupts itself. Many programs work correctly with\n"
-	        "interrupt stacks disabled, but unstable programs may need the default values.\n"
+	        "Use DOS-style private stacks for the timer interrupt (INT 08h, IRQ0)\n"
+	        "('off' by default). When the timer interrupt fires, DOSBox Staging can\n"
+	        "switch to one stack from a private pool before invoking the BIOS handler.\n"
+	        "Disabling this is similar to setting 'STACKS=0,0' in DOS: each running\n"
+	        "program must then have enough stack space for the timer ISR (and any\n"
+	        "chained INT 1Ch handlers) itself. Most programs work correctly without it;\n"
+	        "a few legacy programs depend on it to avoid corrupting their own stack.\n"
 	        "\n"
-	        "  auto:  Enable interrupt stacks on AT-class machine types.\n"
-	        "  on:    Always allocate private stacks for hardware interrupts.\n"
-	        "  off:   Allocate no private stacks for hardware interrupts.");
+	        "Note: this is narrower than MS-DOS's STACKS feature, which also wraps\n"
+	        "other hardware-IRQ vectors. Only the timer is wrapped here.\n"
+	        "\n"
+	        "  auto:  Enable on AT-class machine types.\n"
+	        "  on:    Always allocate the private timer-interrupt stack pool.\n"
+	        "  off:   Use the interrupted program's stack.");
 
-	auto pint = section.AddInt("interrupt_stack_count", OnlyAtStart, 9);
+	auto pint = section.AddInt("timer_interrupt_stack_count", OnlyAtStart, 9);
 	pint->SetMinMax(8, 64);
 	pint->SetHelp(
-	        "Set the number of private stacks to allocate for hardware interrupts. This is\n"
-	        "equivalent to the first value in the DOS 'STACKS=count,size' setting. The\n"
-	        "default is 9, matching MS-DOS. This setting is ignored when\n"
-	        "'interrupt_stacks' is 'off'.");
+	        "Number of private stacks in the timer-interrupt pool. Equivalent to the\n"
+	        "first value in the DOS 'STACKS=count,size' setting. The default of 9\n"
+	        "matches MS-DOS. Ignored when 'timer_interrupt_stacks' is 'off'.");
 
-	pint = section.AddInt("interrupt_stack_size", OnlyAtStart, 128);
+	pint = section.AddInt("timer_interrupt_stack_size", OnlyAtStart, 128);
 	pint->SetMinMax(32, 512);
 	pint->SetHelp(
-	        "Set the size of each private hardware interrupt stack, in bytes. This is\n"
-	        "equivalent to the second value in the DOS 'STACKS=count,size' setting. The\n"
-	        "default is 128, matching MS-DOS. This setting is ignored when\n"
-	        "'interrupt_stacks' is 'off'.");
+	        "Size in bytes of each private timer-interrupt stack. Equivalent to the\n"
+	        "second value in the DOS 'STACKS=count,size' setting. The default of 128\n"
+	        "matches MS-DOS. Ignored when 'timer_interrupt_stacks' is 'off'.");
 
 	pstring = section.AddString("pcjr_memory_config", OnlyAtStart, "expanded");
 	pstring->SetValues({"expanded", "standard"});
