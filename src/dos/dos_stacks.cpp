@@ -19,14 +19,14 @@ constexpr uint8_t Irq0Vector = 0x08;
 
 // Match the MS-DOS defaults used when STACKS is active. The configurable
 // minimum/maximum bounds are enforced by SetMinMax() on the config keys in
-// dos.cpp; the value of MaxNestedTimerInterrupts must track that maximum.
+// dos.cpp; the value of MaxNestedInterrupts must track that maximum.
 constexpr uint8_t DefaultStackCount = 9;
 constexpr uint16_t DefaultStackSize = 128;
 
 constexpr uint16_t EntrySize   = 8;
 constexpr uint16_t WrapperSize = 0x20;
 constexpr uint16_t TableOffset = WrapperSize;
-constexpr uint8_t MaxNestedTimerInterrupts = 64;
+constexpr uint8_t MaxNestedInterrupts = 64;
 
 struct StackEntry {
 	bool allocated    = false;
@@ -35,7 +35,7 @@ struct StackEntry {
 	uint16_t new_sp   = 0;
 };
 
-struct TimerInterruptStacks {
+struct InterruptStacks {
 	bool installed                = false;
 	bool exhausted_warning_logged = false;
 
@@ -56,7 +56,7 @@ struct TimerInterruptStacks {
 	uint8_t next_entry      = DefaultStackCount - 1;
 };
 
-TimerInterruptStacks stacks = {};
+InterruptStacks stacks = {};
 
 uint16_t get_stack_area_offset()
 {
@@ -119,7 +119,7 @@ void initialise_stack_pool()
 	}
 
 	stacks.entries.assign(stacks.stack_count, {});
-	stacks.active_entries.assign(MaxNestedTimerInterrupts, -1);
+	stacks.active_entries.assign(MaxNestedInterrupts, -1);
 
 	for (uint8_t i = 0; i < stacks.stack_count; ++i) {
 		const auto entry_offset = check_cast<uint16_t>(TableOffset +
@@ -178,7 +178,7 @@ int16_t allocate_stack_entry()
 	}
 
 	if (!stacks.exhausted_warning_logged) {
-		LOG_WARNING("DOS: Timer interrupt stack pool exhausted; using interrupted stack");
+		LOG_WARNING("DOS: Interrupt stack pool exhausted; using interrupted stack");
 		stacks.exhausted_warning_logged = true;
 	}
 	return -1;
@@ -261,9 +261,9 @@ Bitu leave_irq_stack()
 
 } // namespace
 
-bool DOS_ShouldUseTimerInterruptStacks(const SectionProp& section)
+bool DOS_ShouldUseInterruptStacks(const SectionProp& section)
 {
-	const std::string setting = section.GetString("timer_interrupt_stacks");
+	const std::string setting = section.GetString("stacks");
 
 	if (setting == "off") {
 		return false;
@@ -276,14 +276,14 @@ bool DOS_ShouldUseTimerInterruptStacks(const SectionProp& section)
 	return is_machine_ega_or_better();
 }
 
-void DOS_InstallTimerInterruptStacks(const SectionProp& section)
+void DOS_InstallInterruptStacks(const SectionProp& section)
 {
 	if (stacks.installed) {
 		return;
 	}
 
-	stacks.stack_count = check_cast<uint8_t>(section.GetInt("timer_interrupt_stack_count"));
-	stacks.stack_size  = check_cast<uint16_t>(section.GetInt("timer_interrupt_stack_size"));
+	stacks.stack_count = check_cast<uint8_t>(section.GetInt("stacks_count"));
+	stacks.stack_size  = check_cast<uint16_t>(section.GetInt("stacks_size"));
 
 	// Allocate the wrapper, table and stack pool from conventional memory
 	// via the DOS MCB chain, matching MS-DOS's STACKS layout. Mark the
@@ -298,7 +298,7 @@ void DOS_InstallTimerInterruptStacks(const SectionProp& section)
 	dos.psp(saved_psp);
 
 	if (!allocated) {
-		LOG_WARNING("DOS: Could not allocate %u paragraphs for timer interrupt stacks "
+		LOG_WARNING("DOS: Could not allocate %u paragraphs for interrupt stacks "
 		            "(largest free block: %u paragraphs); feature disabled",
 		            requested, blocks);
 		return;
@@ -320,7 +320,7 @@ void DOS_InstallTimerInterruptStacks(const SectionProp& section)
 	stacks.installed = true;
 }
 
-void DOS_UninstallTimerInterruptStacks()
+void DOS_UninstallInterruptStacks()
 {
 	if (!stacks.installed) {
 		return;
@@ -329,7 +329,7 @@ void DOS_UninstallTimerInterruptStacks()
 	if (RealGetVec(Irq0Vector) == stacks.irq0_wrapper) {
 		RealSetVec(Irq0Vector, stacks.old_irq0_vector);
 	} else {
-		LOG_WARNING("DOS: IRQ0 vector changed while timer interrupt stacks were installed");
+		LOG_WARNING("DOS: IRQ0 vector changed while interrupt stacks were installed");
 	}
 
 	stacks.enter_callback.Uninstall();

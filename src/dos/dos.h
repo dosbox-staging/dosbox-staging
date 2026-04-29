@@ -305,9 +305,9 @@ void DOS_FreeProcessMemory(uint16_t pspseg);
 uint16_t DOS_GetMemory(uint16_t pages);
 void DOS_FreeTableMemory();
 
-bool DOS_ShouldUseTimerInterruptStacks(const SectionProp& section);
-void DOS_InstallTimerInterruptStacks(const SectionProp& section);
-void DOS_UninstallTimerInterruptStacks();
+bool DOS_ShouldUseInterruptStacks(const SectionProp& section);
+void DOS_InstallInterruptStacks(const SectionProp& section);
+void DOS_UninstallInterruptStacks();
 bool DOS_SetMemAllocStrategy(uint16_t strat);
 void DOS_SetMcbFaultStrategy(const char *mcb_fault_strategy_pref);
 uint16_t DOS_GetMemAllocStrategy(void);
