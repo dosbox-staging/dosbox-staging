@@ -75,31 +75,30 @@ small {
   }
 }
 
+.md-version__current {
+  top: 1px;
+}
+
 /*--------------------------------------------------------------------------*/
 /* Dev site banner                                                          */
 /*--------------------------------------------------------------------------*/
 .dev-site {
-  display: none;
+  background: #cc3010;
+  text-align: center;
+  padding: 0.8rem;
+  position: sticky;
+  top: 0;
+  z-index: 4;
 
-  &.banner {
-    background: #cc3010;
-    text-align: center;
-    padding: 0.8rem;
-    position: sticky;
-
-    p {
-      color: #ff9;
-      font-size: 0.80rem;
-      margin: 0.1rem;
-    }
-    a {
-      font-weight: bold;
-      text-decoration: underline;
-    }
+  p {
+    color: #ff9;
+    font-size: 0.80rem;
+    margin: 0.1rem;
   }
-}
-.show {
-  display: block !important;
+  a {
+    font-weight: bold;
+    text-decoration: underline;
+  }
 }
 
 /*--------------------------------------------------------------------------*/
