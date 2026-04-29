@@ -74,10 +74,11 @@ jobs:
                   -not -path "./preview/*"  `# ignore 'preview' dir contents` \
                   -not -name "README.md"    `# ignore 'README.md'` \
                   -not -name "CNAME"        `# ignore CNAME` \
-                  -not -regex '\./[0-9]\.[0-9]{2}/manual'             `# ignore x.yz/manual dir` \
-                  -not -regex '\./[0-9]\.[0-9]{2}/manual/.*'          `# ignore x.yz/manual contents` \
-                  -not -regex '\./[0-9]\.[0-9]{2}/getting-started'    `# ignore x.yz/getting-started dir` \
-                  -not -regex '\./[0-9]\.[0-9]{2}/getting-started/.*' `# ignore x.yz/getting-started contents` \
+                  -not -regex '\./[0-9]\.[0-9][0-9]'                    `# ignore x.yz dir` \
+                  -not -regex '\./[0-9]\.[0-9][0-9]/manual'             `# ignore x.yz/manual dir` \
+                  -not -regex '\./[0-9]\.[0-9][0-9]/manual/.*'          `# ignore x.yz/manual contents` \
+                  -not -regex '\./[0-9]\.[0-9][0-9]/getting-started'    `# ignore x.yz/getting-started dir` \
+                  -not -regex '\./[0-9]\.[0-9][0-9]/getting-started/.*' `# ignore x.yz/getting-started contents` \
               )
               echo $FILES | xargs git rm -rf --
           fi
