@@ -193,13 +193,14 @@ void initialise_stack_pool()
 
 void reset_runtime_state()
 {
+	stacks.entries.clear();
+	stacks.active_entries.clear();
+
 	stacks.installed                = false;
 	stacks.exhausted_warning_logged = false;
 	stacks.segment                  = 0;
 	stacks.old_irq0_vector          = 0;
 	stacks.irq0_wrapper             = 0;
-	stacks.entries.clear();
-	stacks.active_entries.clear();
 	stacks.stack_count     = DefaultStackCount;
 	stacks.stack_size      = DefaultStackSize;
 	stacks.active_depth    = 0;
