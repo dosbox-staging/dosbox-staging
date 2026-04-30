@@ -472,7 +472,7 @@ void DOS_UninstallInterruptStacks()
 	if (RealGetVec(Irq0Vector) == stacks.irq0_wrapper) {
 		RealSetVec(Irq0Vector, stacks.old_irq0_vector);
 	} else {
-		LOG_WARNING("DOS: IRQ0 vector changed while interrupt stacks were installed");
+		LOG_INFO("DOS: IRQ0 vector changed while interrupt stacks were installed");
 	}
 
 	stacks.enter_callback.Uninstall();
