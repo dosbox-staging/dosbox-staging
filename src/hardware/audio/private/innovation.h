@@ -37,8 +37,11 @@ private:
 
 	// Managed objects
 	MixerChannelPtr channel               = nullptr;
+
 	IO_ReadHandleObject read_handler      = {};
+	IO_ReadHandleObject read_entertainer_id_handler = {};
 	IO_WriteHandleObject write_handler    = {};
+
 	std::unique_ptr<reSIDfp::SID> service = {};
 	std::queue<float> fifo                = {};
 	std::mutex mutex                      = {};
