@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "cpu.h"
-#include "bridge.h"
 #include "webserver.h"
+#include "bridge.h"
+#include "private/cpu.h"
 
 #include "libs/base64/base64.h"
 #include "libs/http/http.h"
