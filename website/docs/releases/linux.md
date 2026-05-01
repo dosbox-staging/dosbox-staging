@@ -33,6 +33,25 @@ Read the [0.82.2 release notes](release-notes/0.82.2.md) to learn
 about the changes and improvements introduced in this release.
 
 
+## 0.83.0 release candidate
+
+!!! warning "Release candidate warning"
+
+    Release candidates are intended for experienced early adopters willing to
+    help us stabilise the next DOSBox Staging version for the final release.
+    Regular users should download the [current stable version](#current-stable-version)
+    instead.
+
+    - [Download DOSBox Staging 0.83.0-RC1 (x86_64)]()
+      <br>
+      <small>
+      sha256: TODO<wbr>TODO
+      </small>
+
+    Check out the [0.83.0-RC release notes](release-notes/0.83.0-rc.md) to learn
+    about the changes and improvements introduced in this release.
+
+
 ## Hardware requirements
 
 From the x86 family of processors, a processor with SSSE3 (Supplemental

@@ -40,6 +40,31 @@ the changes and improvements introduced in this release.
     [these instructions](#windows-defender).
 
 
+## 0.83.0 release candidate
+
+!!! warning "Release candidate warning"
+
+    Release candidates are intended for experienced early adopters willing to
+    help us stabilise the next DOSBox Staging version for the final release.
+    Regular users should download the [current stable version](#current-stable-version)
+    instead.
+
+    - [Download DOSBox Staging 0.83.0-RC1 (x86_64, Installer)]()
+      <br>
+      <small>
+      sha256: TODO<wbr>TODO
+      </small>
+
+    - [Download DOSBox Staging 0.83.0-RC1 (x86_64, Portable ZIP)]()
+      <br>
+      <small>
+      sha256: TODO<wbr>TODO
+      </small>
+
+    Check out the [0.83.0-RC release notes](release-notes/0.83.0-rc.md) to learn
+    about the changes and improvements introduced in this release.
+
+
 ## Hardware requirements
 
 An x86 processor with SSSE3 (Supplemental Streaming SIMD Extensions 3) is
