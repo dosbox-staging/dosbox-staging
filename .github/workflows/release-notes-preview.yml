@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  PRE_RELEASE_TAG:   0.83.0-alpha
+  PRE_RELEASE_TAG:   0.83.0-RC1
   GITHUB_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN_RELEASE_DRAFTER }}
 
 jobs:
