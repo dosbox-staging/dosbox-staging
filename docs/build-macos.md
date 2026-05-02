@@ -334,6 +334,7 @@ As sanitizer availability and performance are highly dependent on the concrete
 platform (CPU, OS, compiler), you might need to manually adapt the
 `SANITIZER_FLAGS` variable in the `CMakeLists.txt` file to suit your needs.
 
+
 ## Using FluidSynth and Slirp during local development
 
 FluidSynth and Slirp are difficult and time-consuming to build, therefore they
@@ -376,3 +377,72 @@ to the FluidSynth MIDI synth or NE2000 networking via Slirp.
 
 You'll only need to do this once after a successful build. If you delete the
 CMake build folder, redo step 4.
+
+
+## Setting up local dev environment for code signing
+
+The prerequisite for code signing is an Apple Developer membership. The
+following steps describe how to set up the necessary certificates and
+credentials in the Keychain for the [notarizer
+script](/scripts/packaging/macos/notarize-macos-dmg.sh) for local code
+signing.
+
+### Import the dev certificates into the Keychain
+
+1. Start XCode, then go to **Settings / Accounts**.
+
+2. Click on the **+** button in the bottom left corner and select **Apple
+   Account**.
+
+3. Select the newly added account and click on **Manage Certificates** in the
+   bottom right corner.
+
+4. Click on the **+** button and add all available certificates (probably
+   **Apple Development Certificates** is only one needed, but it doesn't hurt
+   to add them all). 
+
+5. Quit XCode, then open Keychain Access and verify the new certificates and
+   keys have been imported. Search for "developer" --- you should see a bunch
+   of entries, including **Developer ID Application: <Your Name>
+   (_<TEAM_ID>_)**. You might need to wait a minute or two for the entries to
+   show up in the Keychain.
+
+Your Team ID is the 10-character alphanumeric code in parentheses on your
+certificate, e.g. **Developer ID Application: Your Name (X4MF6H9XZ6)**
+
+
+### Store the authentication credentials in the Keychain
+
+These instructions are adapted from [here](https://github.com/electron/notarize/blob/main/README.md).
+
+1. Generate an app-specific password for your Apple ID [as described here](https://support.apple.com/en-us/102654).
+
+2. Run the following command to store your credentials securely in the
+   Keychain (you can change the new keychain profile name from
+   `notary-tool-profile` to anything else you like):
+
+       xcrun notarytool store-credentials "notary-tool-profile" \
+           --apple-id "<your-apple-id>" \
+           --team-id "<10-char-team-id>" 
+           --password "<app-specific-pw>"
+
+   You should get the following input if all went well:
+
+       Validating your credentials...
+       Success. Credentials validated.
+       Credentials saved to Keychain.
+       To use them, specify `--keychain-profile "notary-tool-profile"`
+
+3. **[Optional]** Create a new script to set the env vars required by the
+   [notarizer script](/scripts/packaging/macos/notarize-macos-dmg.sh) script:
+
+       export DEVELOPER_IDENTITY="Developer ID Application: Your Name (X4MF6H9XZ6)"
+       export KEYCHAIN_PROFILE="notary-tool-profile"
+
+
+## Code signing the application bundle
+
+Once the the local dev environment for code signing is set up, you can sign
+the application bundle built on GitHub CI with the [notarizer
+script](/scripts/packaging/macos/notarize-macos-dmg.sh).
+
