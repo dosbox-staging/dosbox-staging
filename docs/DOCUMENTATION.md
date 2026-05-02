@@ -64,7 +64,7 @@ Other work-in-progress documentation revisions might be published under the
 Use the [preview feature](#previewing-website--documentation-changes-locally)
 of MkDocs to proofread your changes from start to finish. Make sure the text
 flows well, conforms to our
-[guidelines](#general-documenetation-writing-guidelines), and **run the text
+[guidelines](#general-documentation-writing-guidelines), and **run the text
 through a spellchecker** and fix all mistakes. This ensures the professional,
 high-quality results we're striving for. Also, relying on the reviewer to
 catch and flag typos and grammatical errors is a waste of everybody's time.
