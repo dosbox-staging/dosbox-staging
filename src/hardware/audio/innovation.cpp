@@ -100,10 +100,32 @@ Innovation::Innovation(const std::string_view model_choice,
 	                                   sample_rate_hz,
 	                                   passband);
 
+	if (model_choice == "auto") {
+		// Both the Innovation and Microprose's The Entertainer used a
+		// SID 6581 on default ports 0x280-0x29D. The Entertainer also
+		// used I/O address 0x200 for identification, which always
+		// return the magic value 0xA5.
+		// https://forum.vcfed.org/index.php?threads/the-entertainer-sound-card-exposed.41255/
+		// https://nerdlypleasures.blogspot.com/2014/01/sid-and-dos-unlikely-but-true-bedfellows.html
+
+		constexpr io_port_t DefaultBasePort   = 0x280;
+		constexpr io_port_t EntertainerIdPort = 0x200;
+		constexpr uint8_t EntertainerIdValue  = 0xA5;
+
+		base_port = DefaultBasePort;
+
+		read_entertainer_id_handler.Install(
+		        EntertainerIdPort,
+		        [](io_port_t, io_width_t) { return EntertainerIdValue; },
+		        io_width_t::byte,
+		        1);
+	} else {
+		base_port = check_cast<io_port_t>(port_choice);
+	}
+
 	// Setup and assign the port address
 	const auto read_from = std::bind(&Innovation::ReadFromPort, this, _1, _2);
 	const auto write_to = std::bind(&Innovation::WriteToPort, this, _1, _2, _3);
-	base_port = check_cast<io_port_t>(port_choice);
 	read_handler.Install(base_port, read_from, io_width_t::byte, 0x20);
 	write_handler.Install(base_port, write_to, io_width_t::byte, 0x20);
 
@@ -146,6 +168,7 @@ Innovation::~Innovation()
 
 	// Remove the IO handlers before removing the SID device
 	read_handler.Uninstall();
+	read_entertainer_id_handler.Uninstall();
 	write_handler.Uninstall();
 
 	// Deregister the mixer channel and remove it
@@ -289,7 +312,9 @@ static void init_innovation_config_settings(SectionProp& sec_prop)
 	        "Model of chip to emulate in the Innovation SSI-2001 card ('none' by default).\n"
 	        "Possible values:\n"
 	        "\n"
-	        "  auto:  Use the 6581 chip.\n"
+	        "  auto:  Emulates the default Innovation SSI-2001 configuration and\n"
+	        "         Microprose's The Entertainer variant using the standard 6581\n"
+	        "         chip on IO port 280. This is compatible with all SID-based games.\n"
 	        "\n"
 	        "  6581:  The original chip, known for its bassy and rich character.\n"
 	        "\n"
