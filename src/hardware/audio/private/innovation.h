@@ -17,10 +17,8 @@
 
 class Innovation {
 public:
-	Innovation(const std::string_view model_choice,
-	           const std::string_view clock_choice,
-	           int filter_strength_6581, int filter_strength_8580,
-	           int port_choice, const std::string& channel_filter_choice);
+	Innovation(const int sid_filter_strength,
+	           const std::string& channel_filter_choice);
 
 	~Innovation();
 
@@ -47,9 +45,7 @@ private:
 	std::mutex mutex                      = {};
 
 	// Initial configuration
-	double chip_clock            = 0.0;
-	double ms_per_clock          = 0.0;
-	io_port_t base_port          = 0;
+	const double ms_per_clock    = 0.0;
 	int idle_after_silent_frames = 0;
 
 	// Runtime states
