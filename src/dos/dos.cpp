@@ -61,6 +61,7 @@ constexpr auto EstimatedFileSeekIoOverheadInBytes     = 512;
 
 void DOS_NotifyBooting()
 {
+	DOS_UninstallInterruptStacks();
 	is_guest_booted = true;
 	DOS_ClearLaunchedProgramNames();
 }
@@ -1752,6 +1753,8 @@ private:
 public:
 	DOS(Section* sec)
 	{
+		const SectionProp* section = static_cast<SectionProp*>(sec);
+
 		callback[0].Install(DOS_20Handler, CB_IRET, "DOS Int 20");
 		callback[0].Set_RealVec(0x20);
 
@@ -1791,6 +1794,9 @@ public:
 		DOS_SetupMemory();								/* Setup first MCB */
 		DOS_SetupPrograms();
 		DOS_SetupMisc();							/* Some additional dos interrupts */
+		if (DOS_ShouldUseInterruptStacks(*section)) {
+			DOS_InstallInterruptStacks(*section);
+		}
 		DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(25); /* Else the next call gives a warning. */
 		DOS_SetDefaultDrive(25);
 
@@ -1799,7 +1805,6 @@ public:
 		dos.direct_output=false;
 		dos.internal_output=false;
 
-		const SectionProp* section = static_cast<SectionProp*>(sec);
 		std::string args = section->GetString("ver");
 		std::string word = strip_word(args);
 		const auto new_version = DOS_ParseVersion(word.c_str(), args.c_str());
@@ -1826,6 +1831,8 @@ public:
 		// without throwing an inevitable `DOS: Too many devices added`
 		// exception
 		DOS_ShutDownDevices();
+
+		DOS_UninstallInterruptStacks();
 
 		DOS_FreeTableMemory();
 	}
@@ -1910,6 +1917,28 @@ static void init_dos_settings(SectionProp& section)
 
 	pbool = section.AddBool("umb", WhenIdle, true);
 	pbool->SetHelp("Enable UMB memory support ('on' by default).");
+
+	pstring = section.AddString("stacks", OnlyAtStart, "auto");
+	pstring->SetHelp(
+	        "Use DOS-style private stacks for hardware interrupts ('auto' by default).\n"
+	        "When a wrapped hardware interrupt fires, DOSBox Staging switches to one\n"
+	        "stack from a private pool before invoking the previous handler. Disabling\n"
+	        "this means each running program must have enough stack space for hardware\n"
+	        "interrupts (and any chained handlers) itself. Most programs work correctly\n"
+	        "without it; a few legacy programs depend on it to avoid corrupting their\n"
+	        "own stack.\n"
+	        "\n"
+	        "Note: the current implementation only wraps the timer interrupt (INT 08h,\n"
+	        "IRQ0). MS-DOS's STACKS feature wraps additional hardware-IRQ vectors;\n"
+	        "coverage may be expanded in future versions.\n"
+	        "\n"
+	        "  auto:        Enable on AT-class machine types with the MS-DOS defaults\n"
+	        "               (9 stacks of 128 bytes each). Disable on PC/XT-class machine\n"
+			"               types (e.g., cga, pcjr, tandy).\n"
+	        "  count,size:  Allocate `count` private stacks of `size` bytes each, e.g.\n"
+	        "               'stacks = 9,128'. Equivalent to the DOS 'STACKS=count,size'\n"
+	        "               setting; 'count' must be 8-64, 'size' must be 32-512.\n"
+	        "  0,0:         Disable; use the interrupted program's stack.");
 
 	pstring = section.AddString("pcjr_memory_config", OnlyAtStart, "expanded");
 	pstring->SetValues({"expanded", "standard"});
