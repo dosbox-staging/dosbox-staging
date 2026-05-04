@@ -2022,6 +2022,8 @@ static void notify_sdl_setting_updated(SectionProp& section,
 
 #if C_OPENGL && defined(MACOSX)
 		update_viewport();
+		RENDER_SetScanAndPixelDoubling();
+		GFX_ResetScreen();
 #endif
 
 	} else if (prop_name == "window_position") {
@@ -2361,6 +2363,9 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		sdl.display_number = new_display_number;
 
 		update_viewport();
+		RENDER_SetScanAndPixelDoubling();
+		GFX_ResetScreen();
+
 		notify_new_mouse_screen_params();
 		return true;
 	}
@@ -2374,6 +2379,9 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		check_and_handle_dpi_change(sdl.window, new_width);
 		update_viewport();
+		RENDER_SetScanAndPixelDoubling();
+		GFX_ResetScreen();
+
 		notify_new_mouse_screen_params();
 		return true;
 	}
