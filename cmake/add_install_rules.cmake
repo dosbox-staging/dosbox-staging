@@ -41,7 +41,7 @@ function(add_install_rules)
     endforeach()
 
     # Bundle the resources
-    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}${RESOURCE_COPY_PATH}/"
+    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${RESOURCE_COPY_PATH}"
             DESTINATION "${INSTALL_DIR_RESOURCES}")
 
     # Bundle required licenses
