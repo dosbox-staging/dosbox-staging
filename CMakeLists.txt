@@ -1,5 +1,20 @@
 cmake_minimum_required(VERSION 3.25)
 
+# The project only tests preset build configurations, so we use
+# the IS_PRESET_USED variable to check and recommend using a preset.
+
+if (NOT IS_PRESET_USED)
+  message(WARNING
+    "\nPer docs/build-*.md, we recommend using a platform-specific preset.
+     cmake --preset <name>"
+  )
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} --list-presets
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  )
+  message("")
+endif()
+
 set(VCPKG_USE_HOST_TOOLS ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL
