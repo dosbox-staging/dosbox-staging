@@ -163,7 +163,7 @@ function(add_build_documentation)
   set(MKDOCS_VENV_DIR      "${CMAKE_BINARY_DIR}/_mkdocs_venv")
   set(MKDOCS_REQUIREMENTS  "${CMAKE_SOURCE_DIR}/extras/documentation/mkdocs-package-requirements.txt")
   set(MKDOCS_CONFIG        "${CMAKE_SOURCE_DIR}/website/mkdocs.yml")
-  set(MKDOCS_OUTPUT_DIR    "${CMAKE_CURRENT_BINARY_DIR}${RESOURCE_COPY_PATH}/docs")
+  set(MKDOCS_OUTPUT_DIR    "${CMAKE_CURRENT_BINARY_DIR}/${RESOURCE_COPY_PATH}/docs")
   set(MKDOCS_PIP_STAMP     "${MKDOCS_VENV_DIR}/.pip_install_stamp")
   set(MKDOCS_BUILD_STAMP   "${CMAKE_BINARY_DIR}/_mkdocs_build_stamp")
 
