@@ -536,7 +536,7 @@ void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second)
 // The same reasoning applies to nearest-neighbour interpolation in texture
 // output mode.
 //
-static void set_scan_and_pixel_doubling()
+void RENDER_SetScanAndPixelDoubling()
 {
 	bool force_vga_single_scan   = false;
 	bool force_no_pixel_doubling = false;
@@ -720,7 +720,7 @@ static bool handle_shader_auto_switching(const VideoMode& video_mode,
 		return false;
 	}
 
-	set_scan_and_pixel_doubling();
+	RENDER_SetScanAndPixelDoubling();
 
 	if (reinit_renderer) {
 		// No need to reinit the renderer if the double scaning
@@ -793,11 +793,11 @@ static bool set_shader(const std::string& descriptor)
 		                      descriptor.c_str(),
 		                      ShaderName::Sharp);
 
-		set_scan_and_pixel_doubling();
+		RENDER_SetScanAndPixelDoubling();
 		return true;
 
 	case Ok:
-		set_scan_and_pixel_doubling();
+		RENDER_SetScanAndPixelDoubling();
 		handle_auto_image_adjustment_settings(VGA_GetCurrentVideoMode());
 		set_image_adjustment_settings();
 		return true;
@@ -847,7 +847,7 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 
 	GFX_GetRenderer()->ForceReloadCurrentShader();
 
-	set_scan_and_pixel_doubling();
+	RENDER_SetScanAndPixelDoubling();
 
 	// The shader settings might have been changed (e.g. force_single_scan,
 	// force_no_pixel_doubling), so force re-rendering the image using the
