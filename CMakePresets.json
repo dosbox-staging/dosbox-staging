@@ -10,8 +10,7 @@
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/../resources"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -23,8 +22,7 @@
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/../resources"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
@@ -35,7 +33,6 @@
       "binaryDir": "${sourceDir}/build/debug-linux",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/resources",
         "USE_SYSTEM_LIBS": "ON"
       }
     },
@@ -47,7 +44,6 @@
       "binaryDir": "${sourceDir}/build/release-linux",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/resources",
         "USE_SYSTEM_LIBS": "ON"
       }
     },
@@ -60,8 +56,7 @@
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/resources"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -73,8 +68,7 @@
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/resources"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
@@ -87,8 +81,7 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/Resources"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -101,8 +94,7 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/Resources"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
@@ -116,8 +108,7 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/Resources"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
@@ -131,8 +122,7 @@
         "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/Resources"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
@@ -145,8 +135,7 @@
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/Resources"
+        "CMAKE_BUILD_TYPE": "Debug"
       },
       "environment": {
         "UseMultiToolTask": "true",
@@ -163,8 +152,7 @@
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/Resources"
+        "CMAKE_BUILD_TYPE": "Release"
       },
       "environment": {
         "UseMultiToolTask": "true",

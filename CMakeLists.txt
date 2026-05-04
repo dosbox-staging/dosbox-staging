@@ -475,8 +475,15 @@ set(LICENSE_FILES
   licenses/Zlib.txt
 )
 
-# Set the directory with resources to bundle
+# The source of the resources, relative to the source root
 set(RESOURCES_PATH "resources")
+
+# The copy target of the resources, relative to the compiled binary
+if (APPLE OR WIN32)
+  set(RESOURCE_COPY_PATH "Resources" CACHE STRING "Resources copy target relative to binary")
+else()
+  set(RESOURCE_COPY_PATH "resources" CACHE STRING "Resources copy target relative to binary")
+endif()
 
 # Generate asset copy commands and add them as a dependency
 include(cmake/add_copy_assets.cmake)
