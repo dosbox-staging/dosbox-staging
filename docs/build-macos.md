@@ -1,8 +1,12 @@
 # Building on macOS
 
-macOS builds can be created using the Meson buildsystem, compiled using the
-Clang or GCC compilers, and provided with dependencies using the Homebrew or
-MacPorts package managers.
+macOS builds can be created using CMake or the Meson build tools, compiled
+using the Clang or GCC compilers, and provided with dependencies using the
+Homebrew or MacPorts package managers.
+
+We recommend using CMake with presets because they're CI-tested and produce a
+binary using consistent compiler flags. Run `cmake --list-presets` to list the
+presets.
 
 We recommend using Homebrew and Clang because Apple's Core SDKs can be used
 only with Apple's fork of the Clang compiler.

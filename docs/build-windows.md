@@ -1,6 +1,11 @@
 # Building on Windows
 
-Windows builds can be created using:
+Windows builds can be created using CMake, Visual Studio, or Meson:
+
+- CMake is used to produce the official release package, and therefore is the
+  recommended build tool. We also recommend using presets because they're
+  CI-tested and produce a binary using consistent compiler flags. Run `cmake
+  --list-presets` to list the presets.
 
 - Visual Studio 2022 IDE suite with Clang/LLVM compiler, and vcpkg to provide
   dependencies. This is the fully-supported toolchain used to create release
@@ -9,13 +14,6 @@ Windows builds can be created using:
 - The Clang or GCC compilers using the Meson build system running within the
   MSYS2 environment to provide dependencies (deprecated, support will be probably
   removed in the future).
-
-> **Note**
->
-> CMake support is currently an experimental internal-only, work-in-progress
-> feature; it's not ready for public consumption yet. Please ignore the
-> `CMakeLists.txt` files in the source tree.
-
 
 ## Build using Visual Studio
 

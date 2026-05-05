@@ -4,8 +4,12 @@ Two build methods are available for Linux — using the [system libraries](#buil
 provided by your Linux distribution or using the [vcpkg tool](#building-using-vcpkg)
 to fetch and compile dependencies.
 
-The vcpkg method is used by the team to provide our official binaries, which are
-intended to be run on different distros — they only depend on glibc.
+Both library options are available using CMake presets, which we highly
+recommend because they're CI-tested and produce a binary using consistent
+compiler flags. Run `cmake --list-presets` to list the presets.
+
+The vcpkg presets are used by the team to provide our official binaries, which
+are intended to be run on different distros — they only depend on glibc.
 
 ## Packaging
 
