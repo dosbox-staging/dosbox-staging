@@ -592,9 +592,9 @@ endif()
 
 # Remove MkDocs source-tree caches (website/.cache, __pycache__, site)
 add_custom_target(clean-manual
-  COMMAND "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_SOURCE_DIR}/website/.cache"
-  COMMAND "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_SOURCE_DIR}/website/__pycache__"
-  COMMAND "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_SOURCE_DIR}/website/site"
+  COMMAND "${CMAKE_COMMAND}" -E rm -rf "${CMAKE_SOURCE_DIR}/website/.cache"
+  COMMAND "${CMAKE_COMMAND}" -E rm -rf "${CMAKE_SOURCE_DIR}/website/__pycache__"
+  COMMAND "${CMAKE_COMMAND}" -E rm -rf "${CMAKE_SOURCE_DIR}/website/site"
   COMMENT "Removing MkDocs caches"
   VERBATIM
 )
