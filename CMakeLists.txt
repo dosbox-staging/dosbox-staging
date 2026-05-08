@@ -498,9 +498,6 @@ endif()
 pkg_check_modules(SPEEXDSP REQUIRED IMPORTED_TARGET speexdsp)
 
 add_executable(dosbox src/main.cpp src/dosbox.cpp)
-target_include_directories(
-  dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
-)
 if (OPT_DEBUGGER)
   set_target_properties(dosbox PROPERTIES OUTPUT_NAME dosbox_with_debugger)
 endif()
@@ -539,13 +536,19 @@ if (OPT_DOCUMENTATION)
   add_build_documentation()
 endif()
 
-include_directories(
+# Project-wide include paths used by the main library and standalone
+# libraries that reference project headers (dosbox_config.h, etc.).
+# Using an INTERFACE library makes these paths explicit per-target
+# instead of polluting every target via global include_directories().
+add_library(project_headers INTERFACE)
+target_include_directories(project_headers INTERFACE
   src
   src/libs
   ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
 add_library(libdosboxcommon STATIC)
+target_link_libraries(libdosboxcommon PUBLIC project_headers)
 
 
 # Add tests before src so that the dosbox_tests target is

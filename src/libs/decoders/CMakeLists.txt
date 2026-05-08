@@ -9,6 +9,7 @@ add_library(libdecoders STATIC
 )
 
 target_include_directories(libdecoders PUBLIC ..)
+target_link_libraries(libdecoders PRIVATE project_headers)
 
 if(USE_SYSTEM_LIBS)
   pkg_check_modules(OPUSFILE REQUIRED IMPORTED_TARGET opusfile)

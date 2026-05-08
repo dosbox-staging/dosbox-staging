@@ -51,6 +51,7 @@ add_library(libpdcurses STATIC
 
 target_include_directories(libpdcurses PUBLIC . pdcurses)
 
-target_link_libraries(
-  libpdcurses PRIVATE $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+target_link_libraries(libpdcurses PRIVATE
+  project_headers
+  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )

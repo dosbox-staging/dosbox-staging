@@ -19,3 +19,4 @@ add_library(libresidfp STATIC
 )
 
 target_include_directories(libresidfp PUBLIC ..)
+target_link_libraries(libresidfp PRIVATE project_headers)
