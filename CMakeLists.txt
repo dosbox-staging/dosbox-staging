@@ -32,7 +32,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ccache support
 find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
+if (CCACHE_PROGRAM)
   set(CMAKE_C_COMPILER_LAUNCHER   "${CCACHE_PROGRAM}")
   set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
   # Direct mode is 10-fold quicker than non-direct mode
@@ -479,7 +479,7 @@ target_include_directories(
   dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 if (OPT_DEBUGGER)
-  set_target_properties( dosbox PROPERTIES OUTPUT_NAME dosbox_with_debugger)
+  set_target_properties(dosbox PROPERTIES OUTPUT_NAME dosbox_with_debugger)
 endif()
 
 # Bundle licenses, but skip the ones that are not relevant for
@@ -539,7 +539,7 @@ add_subdirectory(src)
 # This is required for Linux to use all features of std::atomic.
 find_library(LIBATOMIC libatomic.so.1)
 
-if(LIBATOMIC)
+if (LIBATOMIC)
   target_link_libraries(libdosboxcommon PRIVATE ${LIBATOMIC})
 endif()
 
