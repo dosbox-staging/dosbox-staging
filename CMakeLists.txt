@@ -563,7 +563,11 @@ add_subdirectory(src)
 # This is used by GCC and Clang by default on Linux.
 # Mac and Windows don't need this except for maybe MSYS2.
 # This is required for Linux to use all features of std::atomic.
-find_library(LIBATOMIC libatomic.so.1)
+#
+# The versioned libatomic.so.1 fallback is needed because some Linux
+# environments only ship the runtime library without the unversioned
+# libatomic.so dev symlink that find_library(NAMES atomic) expects.
+find_library(LIBATOMIC NAMES atomic libatomic.so.1)
 
 if (LIBATOMIC)
   target_link_libraries(libdosboxcommon PRIVATE ${LIBATOMIC})
