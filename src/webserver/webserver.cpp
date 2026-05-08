@@ -186,11 +186,15 @@ static void init_config_settings(SectionProp& section)
 
 } // namespace Webserver
 
+static bool is_webserver_enabled = false;
+
 void WEBSERVER_Init()
 {
 	auto section = get_section("webserver");
 
 	if (section->GetBool("webserver_enabled")) {
+		is_webserver_enabled = true;
+
 		const auto addr = section->GetString("webserver_bind_address");
 		const auto port = section->GetInt("webserver_port");
 		const auto resource_home = get_resource_path("webserver").string();
@@ -213,4 +217,9 @@ void WEBSERVER_AddConfigSection(const ConfigPtr& conf)
 	auto section = conf->AddSection("webserver");
 
 	Webserver::init_config_settings(*section);
+}
+
+bool WEBSERVER_IsEnabled()
+{
+	return is_webserver_enabled;
 }
