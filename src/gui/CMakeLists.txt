@@ -16,6 +16,8 @@ target_sources(libdosboxcommon PRIVATE
   render/shader_pipeline.cpp
 )
 
-target_link_libraries(libdosboxcommon PRIVATE
-  OpenGL::GL
-  $<IF:$<BOOL:${C_OPENGL}>,libglad,>)
+target_link_libraries(libdosboxcommon PRIVATE OpenGL::GL)
+
+if (C_OPENGL)
+  target_link_libraries(libdosboxcommon PRIVATE libglad)
+endif()
