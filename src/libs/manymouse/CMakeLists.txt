@@ -1,5 +1,5 @@
 
-if(C_MANYMOUSE)
+if (C_MANYMOUSE)
 
   add_library(libmanymouse STATIC)
   target_link_libraries(libmanymouse PRIVATE project_headers)
@@ -12,8 +12,12 @@ if(C_MANYMOUSE)
     x11_xinput2.c
   )
 
-  target_link_libraries(dosbox PRIVATE
-    $<IF:$<BOOL:${SUPPORT_XINPUT2}>,${X11_Xinput_LIB},>
-  )
+  if (APPLE)
+    target_link_libraries(libmanymouse PRIVATE "-framework IOKit")
+  endif()
+
+  if (SUPPORT_XINPUT2)
+    target_link_libraries(libmanymouse PRIVATE ${X11_Xinput_LIB})
+  endif()
 
 endif()
