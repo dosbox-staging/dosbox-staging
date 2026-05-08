@@ -449,20 +449,22 @@ find_package(PkgConfig REQUIRED)
 #
 # On vcpkg builds, zlib-ng is always available (listed in vcpkg.json).
 # On system-libs builds (Linux), try zlib-ng first, fall back to plain zlib.
-# C_SYSTEM_ZLIB_NG controls whether the native zlib-ng API (zng_*) or the
-# standard zlib API is used in the ZMBV codec.
+# C_ZLIB_NG controls whether the native zlib-ng API (zlib-ng.h, zng_*)
+# or the standard zlib API (zlib.h) is used in the ZMBV codec.
 if (USE_SYSTEM_LIBS)
   pkg_check_modules(ZLIB_NG IMPORTED_TARGET zlib-ng)
+
   if (ZLIB_NG_FOUND)
-    set(C_SYSTEM_ZLIB_NG ON)
+    set(C_ZLIB_NG ON)
     set(ZMBV_ZLIB_TARGET PkgConfig::ZLIB_NG)
   else()
     find_package(ZLIB REQUIRED)
     set(ZMBV_ZLIB_TARGET ZLIB::ZLIB)
   endif()
-else()
+
+else() # vcpkg path
   find_package(zlib-ng CONFIG REQUIRED)
-  set(C_SYSTEM_ZLIB_NG ON)
+  set(C_ZLIB_NG ON)
   set(ZMBV_ZLIB_TARGET zlib-ng::zlib)
 endif()
 

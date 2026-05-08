@@ -114,8 +114,8 @@
  * between operating systems.
  */
 
-// Define to 1 when zlib-ng support is provided by the system
-#mesondefine C_SYSTEM_ZLIB_NG
+// Define to 1 when using the native zlib-ng API
+#mesondefine C_ZLIB_NG
 
 // Defined if function clock_gettime is available
 #mesondefine HAVE_CLOCK_GETTIME
