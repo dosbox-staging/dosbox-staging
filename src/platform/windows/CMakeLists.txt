@@ -5,6 +5,6 @@ target_sources(dosbox PRIVATE
     dosbox.manifest
 )
 
-if(OPT_TESTS)
+if (OPT_TESTS)
     target_sources(dosbox_tests PRIVATE dosbox.manifest)
 endif()
