@@ -1,3 +1,3 @@
-add_library(libnuked STATIC opl3.c)
+add_library(nuked STATIC opl3.c)
 
-target_include_directories(libnuked PUBLIC ..)
+target_include_directories(nuked PUBLIC ..)

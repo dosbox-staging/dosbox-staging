@@ -1,4 +1,4 @@
-add_library(libdecoders STATIC
+add_library(decoders STATIC
   flac.c
   mp3.cpp
   mp3_seek_table.cpp
@@ -8,18 +8,18 @@ add_library(libdecoders STATIC
   wav.c
 )
 
-target_include_directories(libdecoders PUBLIC ..)
-target_link_libraries(libdecoders PRIVATE project_headers)
+target_include_directories(decoders PUBLIC ..)
+target_link_libraries(decoders PRIVATE project_headers)
 
 if (USE_SYSTEM_LIBS)
   pkg_check_modules(OPUSFILE REQUIRED IMPORTED_TARGET opusfile)
-  target_link_libraries(libdecoders PRIVATE PkgConfig::OPUSFILE)
+  target_link_libraries(decoders PRIVATE PkgConfig::OPUSFILE)
 else()
   find_package(OpusFile REQUIRED)
-  target_link_libraries(libdecoders PRIVATE OpusFile::opusfile)
+  target_link_libraries(decoders PRIVATE OpusFile::opusfile)
 endif()
 
-target_link_libraries(libdecoders
+target_link_libraries(decoders
   PRIVATE
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )

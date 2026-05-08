@@ -1,4 +1,4 @@
-target_sources(libdosboxcommon PRIVATE
+target_sources(dosboxcommon PRIVATE
   ansi_code_markup.cpp
   console.cpp
   cross.cpp
@@ -28,10 +28,10 @@ if (OPT_TESTS)
   target_sources(dosbox_tests PRIVATE messages_stubs.cpp)
 endif()
 
-target_include_directories(libdosboxcommon PRIVATE ../libs/include)
-target_link_libraries(libdosboxcommon PRIVATE libwhereami)
+target_include_directories(dosboxcommon PRIVATE ../libs/include)
+target_link_libraries(dosboxcommon PRIVATE whereami)
 
 # Shlwapi needed for PathFileExistsW
 if (WIN32)
-  target_link_libraries(libdosboxcommon PRIVATE Shlwapi)
+  target_link_libraries(dosboxcommon PRIVATE Shlwapi)
 endif()

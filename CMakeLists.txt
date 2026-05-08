@@ -548,8 +548,8 @@ target_include_directories(project_headers INTERFACE
   ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
-add_library(libdosboxcommon STATIC)
-target_link_libraries(libdosboxcommon PUBLIC project_headers)
+add_library(dosboxcommon STATIC)
+target_link_libraries(dosboxcommon PUBLIC project_headers)
 
 
 # Add tests before src so that the dosbox_tests target is
@@ -571,17 +571,17 @@ add_subdirectory(src)
 find_library(LIBATOMIC NAMES atomic libatomic.so.1)
 
 if (LIBATOMIC)
-  target_link_libraries(libdosboxcommon PRIVATE ${LIBATOMIC})
+  target_link_libraries(dosboxcommon PRIVATE ${LIBATOMIC})
 endif()
 
-target_link_libraries(libdosboxcommon PRIVATE
+target_link_libraries(dosboxcommon PRIVATE
   $<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,iir::iir_static>
   loguru
-  libdecoders
+  decoders
 )
 
 target_link_libraries(dosbox PRIVATE
-  libdosboxcommon
+  dosboxcommon
   $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )

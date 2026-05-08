@@ -1,1 +1,1 @@
-target_sources(libdosboxcommon PRIVATE fpu.cpp)
+target_sources(dosboxcommon PRIVATE fpu.cpp)

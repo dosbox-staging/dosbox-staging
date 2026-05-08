@@ -3,9 +3,9 @@ set(DEBUGGER_SRC
   debugger_disasm.cpp
   debugger_gui.cpp)
 
-target_sources(libdosboxcommon PRIVATE
+target_sources(dosboxcommon PRIVATE
   debugger.cpp
   debugger_disasm.cpp
   debugger_gui.cpp)
 
-target_link_libraries(libdosboxcommon PRIVATE libpdcurses)
+target_link_libraries(dosboxcommon PRIVATE pdcurses)

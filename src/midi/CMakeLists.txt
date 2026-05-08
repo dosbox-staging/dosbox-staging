@@ -1,4 +1,4 @@
-target_sources(libdosboxcommon PRIVATE
+target_sources(dosboxcommon PRIVATE
   alsa.cpp
   coreaudio.cpp
   coremidi.cpp
@@ -10,17 +10,17 @@ target_sources(libdosboxcommon PRIVATE
   win32.cpp
 )
 
-target_link_libraries(libdosboxcommon PRIVATE FluidSynth::libfluidsynth)
+target_link_libraries(dosboxcommon PRIVATE FluidSynth::libfluidsynth)
 
 if (C_MT32EMU)
-  target_link_libraries(libdosboxcommon PRIVATE MT32Emu::mt32emu)
+  target_link_libraries(dosboxcommon PRIVATE MT32Emu::mt32emu)
 endif()
 
 if (C_ALSA)
-  target_link_libraries(libdosboxcommon PRIVATE ALSA::ALSA)
+  target_link_libraries(dosboxcommon PRIVATE ALSA::ALSA)
 endif()
 
 if (C_COREMIDI)
-  target_link_libraries(libdosboxcommon PRIVATE "-framework CoreFoundation")
-  target_link_libraries(libdosboxcommon PRIVATE "-framework CoreMIDI")
+  target_link_libraries(dosboxcommon PRIVATE "-framework CoreFoundation")
+  target_link_libraries(dosboxcommon PRIVATE "-framework CoreMIDI")
 endif()

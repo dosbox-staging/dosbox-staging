@@ -1,4 +1,4 @@
-target_sources(libdosboxcommon PRIVATE 
+target_sources(dosboxcommon PRIVATE 
   callback.cpp
   core_dyn_x86.cpp
   core_dynrec.cpp
@@ -12,4 +12,4 @@ target_sources(libdosboxcommon PRIVATE
   modrm.cpp
   paging.cpp)
 
-target_link_libraries(libdosboxcommon PRIVATE simde)
+target_link_libraries(dosboxcommon PRIVATE simde)

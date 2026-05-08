@@ -1,4 +1,4 @@
-target_sources(libdosboxcommon PRIVATE
+target_sources(dosboxcommon PRIVATE
   cdrom.cpp
   cdrom_image.cpp
   cdrom_ioctl_linux.cpp
@@ -61,6 +61,6 @@ target_sources(libdosboxcommon PRIVATE
 
 target_sources(dosbox PRIVATE dos_files.cpp)
 
-target_link_libraries(libdosboxcommon PRIVATE
+target_link_libraries(dosboxcommon PRIVATE
   $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
 )

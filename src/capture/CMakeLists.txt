@@ -1,4 +1,4 @@
-target_sources(libdosboxcommon PRIVATE 
+target_sources(dosboxcommon PRIVATE 
   capture.cpp
   capture_audio.cpp
   capture_midi.cpp
@@ -9,6 +9,6 @@ target_sources(libdosboxcommon PRIVATE
   image/image_scaler.cpp
   image/png_writer.cpp)
 
-target_link_libraries(libdosboxcommon PRIVATE 
+target_link_libraries(dosboxcommon PRIVATE 
   zmbv
   PNG::PNG)

@@ -1,8 +1,8 @@
-target_sources(libdosboxcommon PRIVATE
+target_sources(dosboxcommon PRIVATE
   bridge.cpp
   webserver.cpp
   cpu.cpp
   memory.cpp
   dos.cpp)
 
-target_link_libraries(libdosboxcommon PRIVATE simde)
+target_link_libraries(dosboxcommon PRIVATE simde)

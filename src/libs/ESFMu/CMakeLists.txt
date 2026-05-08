@@ -1,6 +1,6 @@
-add_library(libesfmu STATIC
+add_library(esfmu STATIC
   esfm.c
   esfm_registers.c
 )
 
-target_include_directories(libesfmu PUBLIC ..)
+target_include_directories(esfmu PUBLIC ..)

@@ -1,4 +1,4 @@
-target_sources(libdosboxcommon PRIVATE
+target_sources(dosboxcommon PRIVATE
   bios.cpp
   bios_disk.cpp
   bios_keyboard.cpp
