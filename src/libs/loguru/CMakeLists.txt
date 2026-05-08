@@ -6,7 +6,6 @@ check_include_files("${STACK_INCLUDES}" HAS_STACK_INCLUDES LANGUAGE CXX)
 
 if (HAS_STACK_INCLUDES)
 	target_compile_definitions(loguru PRIVATE LOGURU_STACKTRACES=1)
-	target_link_options(dosbox PRIVATE "-rdynamic")
 endif()
 
 if (NOT MSVC)
