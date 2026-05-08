@@ -1,6 +1,6 @@
 # Display & window
 
-DOSBox Staging opens in a resizable window by default --- press ++alt+Enter++
+DOSBox Staging opens in a resizable window by default --- press ++alt+enter++
 to toggle fullscreen at any time. For most games, the out-of-the-box display
 settings will serve you well and need no adjustment. This chapter covers the
 cases where you might want to dig deeper.
