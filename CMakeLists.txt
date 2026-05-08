@@ -441,6 +441,10 @@ set(CUSTOM_DATADIR "${CMAKE_INSTALL_FULL_DATADIR}")
 set(project_name "${PROJECT_NAME}")
 set(version      "${PROJECT_VERSION}")
 
+# PkgConfig is needed for speexdsp (no cmake config in vcpkg) and
+# for zlib-ng detection on system-libs builds.
+find_package(PkgConfig REQUIRED)
+
 configure_file(
   src/dosbox_config.h.in.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/include/dosbox_config.h
@@ -456,7 +460,6 @@ endif()
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
 # Find common external dependencies
-find_package(PkgConfig REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image CONFIG REQUIRED)
 find_package(iir REQUIRED)
@@ -467,6 +470,8 @@ find_package(FluidSynth REQUIRED CONFIG)
 if (C_ALSA)
   find_package(ALSA REQUIRED)
 endif()
+
+# SpeexDSP: vcpkg has no cmake config, only a .pc file
 pkg_check_modules(SPEEXDSP REQUIRED IMPORTED_TARGET speexdsp)
 
 add_executable(dosbox src/main.cpp src/dosbox.cpp)
