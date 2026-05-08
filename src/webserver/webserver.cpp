@@ -127,9 +127,8 @@ static void setup_host_validation(const std::string& addr, int port)
 	        });
 }
 
-static void run(std::string addr, int port)
+static void run(const std::string addr, const int port, const std::string resource_home)
 {
-	const auto resource_home = get_resource_path("webserver").string();
 	const auto config_home = (get_config_dir() / DefaultWebserverDir).string();
 
 	server.set_mount_point("/", config_home);
@@ -192,10 +191,11 @@ void WEBSERVER_Init()
 	auto section = get_section("webserver");
 
 	if (section->GetBool("webserver_enabled")) {
-		auto addr = section->GetString("webserver_bind_address");
-		auto port = section->GetInt("webserver_port");
+		const auto addr = section->GetString("webserver_bind_address");
+		const auto port = section->GetInt("webserver_port");
+		const auto resource_home = get_resource_path("webserver").string();
 
-		std::thread thread(Webserver::run, addr, port);
+		std::thread thread(Webserver::run, addr, port, resource_home);
 
 		thread.detach();
 	}
