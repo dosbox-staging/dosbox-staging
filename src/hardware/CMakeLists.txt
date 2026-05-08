@@ -85,8 +85,11 @@ target_link_libraries(libdosboxcommon PRIVATE
   libym7128bemu
   libriffcpp
   libtalchorus
-  $<IF:$<BOOL:${C_MANYMOUSE}>,libmanymouse,>
   libnuked
   PkgConfig::SPEEXDSP
 )
+
+if (C_MANYMOUSE)
+  target_link_libraries(libdosboxcommon PRIVATE libmanymouse)
+endif()
 
