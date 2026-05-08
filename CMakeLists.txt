@@ -581,6 +581,11 @@ target_link_libraries(dosbox PRIVATE
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )
 
+# Export dynamic symbols so loguru's stack traces can resolve names
+if (HAS_STACK_INCLUDES)
+  target_link_options(dosbox PRIVATE "-rdynamic")
+endif()
+
 # Remove MkDocs source-tree caches (website/.cache, __pycache__, site)
 add_custom_target(clean-manual
   COMMAND "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_SOURCE_DIR}/website/.cache"
