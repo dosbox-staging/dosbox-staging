@@ -9,7 +9,7 @@
 
 #include "dosbox_config.h"
 
-#if defined(C_SYSTEM_ZLIB_NG)
+#if C_SYSTEM_ZLIB_NG
 #include <zlib-ng.h>
 #define deflateInit2 zng_deflateInit2
 #define deflateReset zng_deflateReset

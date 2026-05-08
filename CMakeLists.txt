@@ -445,6 +445,27 @@ set(version      "${PROJECT_VERSION}")
 # for zlib-ng detection on system-libs builds.
 find_package(PkgConfig REQUIRED)
 
+# Detect zlib-ng (preferred) or plain zlib for the ZMBV video codec.
+#
+# On vcpkg builds, zlib-ng is always available (listed in vcpkg.json).
+# On system-libs builds (Linux), try zlib-ng first, fall back to plain zlib.
+# C_SYSTEM_ZLIB_NG controls whether the native zlib-ng API (zng_*) or the
+# standard zlib API is used in the ZMBV codec.
+if (USE_SYSTEM_LIBS)
+  pkg_check_modules(ZLIB_NG IMPORTED_TARGET zlib-ng)
+  if (ZLIB_NG_FOUND)
+    set(C_SYSTEM_ZLIB_NG ON)
+    set(ZMBV_ZLIB_TARGET PkgConfig::ZLIB_NG)
+  else()
+    find_package(ZLIB REQUIRED)
+    set(ZMBV_ZLIB_TARGET ZLIB::ZLIB)
+  endif()
+else()
+  find_package(zlib-ng CONFIG REQUIRED)
+  set(C_SYSTEM_ZLIB_NG ON)
+  set(ZMBV_ZLIB_TARGET zlib-ng::zlib)
+endif()
+
 configure_file(
   src/dosbox_config.h.in.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/include/dosbox_config.h
