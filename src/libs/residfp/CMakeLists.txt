@@ -1,4 +1,4 @@
-add_library(libresidfp STATIC
+add_library(residfp STATIC
   resample/SincResampler.cpp
   Dac.cpp
   EnvelopeGenerator.cpp
@@ -18,5 +18,5 @@ add_library(libresidfp STATIC
   WaveformGenerator.cpp
 )
 
-target_include_directories(libresidfp PUBLIC ..)
-target_link_libraries(libresidfp PRIVATE project_headers)
+target_include_directories(residfp PUBLIC ..)
+target_link_libraries(residfp PRIVATE project_headers)

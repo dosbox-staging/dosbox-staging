@@ -1,4 +1,4 @@
-target_sources(libdosboxcommon PRIVATE 
+target_sources(dosboxcommon PRIVATE 
   audio/adlib_gold.cpp
   audio/cms.cpp
   audio/covox.cpp
@@ -79,17 +79,17 @@ target_sources(libdosboxcommon PRIVATE
 
 target_sources(dosbox PRIVATE port_containers.cpp)
 
-target_link_libraries(libdosboxcommon PRIVATE
-  libesfmu
-  libresidfp
-  libym7128bemu
-  libriffcpp
-  libtalchorus
-  libnuked
+target_link_libraries(dosboxcommon PRIVATE
+  esfmu
+  residfp
+  ym7128bemu
+  riffcpp
+  talchorus
+  nuked
   PkgConfig::SPEEXDSP
 )
 
 if (C_MANYMOUSE)
-  target_link_libraries(libdosboxcommon PRIVATE libmanymouse)
+  target_link_libraries(dosboxcommon PRIVATE manymouse)
 endif()
 

@@ -1,4 +1,4 @@
-target_sources(libdosboxcommon PRIVATE
+target_sources(dosboxcommon PRIVATE
   autoexec.cpp
   command_line.cpp
   file_reader.cpp

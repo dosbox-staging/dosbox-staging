@@ -3,11 +3,11 @@ if (APPLE)
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_library(libglad STATIC debug/src/gl.c)
-  target_include_directories(libglad PUBLIC debug/include)
+  add_library(glad STATIC debug/src/gl.c)
+  target_include_directories(glad PUBLIC debug/include)
 
 else() # Release
-  add_library(libglad STATIC release/src/gl.c)
-  target_include_directories(libglad PUBLIC release/include)
+  add_library(glad STATIC release/src/gl.c)
+  target_include_directories(glad PUBLIC release/include)
 
 endif()

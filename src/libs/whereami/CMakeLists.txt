@@ -1,3 +1,3 @@
-add_library(libwhereami STATIC whereami.c)
+add_library(whereami STATIC whereami.c)
 
-target_include_directories(libwhereami PUBLIC .)
+target_include_directories(whereami PUBLIC .)
