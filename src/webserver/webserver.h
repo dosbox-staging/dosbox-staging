@@ -72,5 +72,6 @@ void send_json(httplib::Response& res, const nlohmann::json& j);
 void WEBSERVER_Init();
 void WEBSERVER_Destroy();
 void WEBSERVER_AddConfigSection(const ConfigPtr& conf);
+bool WEBSERVER_IsEnabled();
 
 #endif // DOSBOX_WEBSERVER_H
