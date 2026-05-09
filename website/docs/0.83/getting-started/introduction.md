@@ -1,8 +1,15 @@
 # Introduction
 
+!!! warning
+
+    This is the **release candidate version** of the DOSBox Staging 0.83.0
+    Getting Started guide. While the majority of content is accurate, not all
+    sections have been fully proofread and polished. An updated version will
+    be published with the final 0.83.0 release.
+
 ## Foreword
 
-Welcome to the **DOSBox Staging v0.83 Getting Started guide**!
+Welcome to the **DOSBox Staging 0.83 Getting Started guide**!
 
 This guide will gently introduce you to the wonderful world of DOSBox by
 setting up a few example games from scratch. Although it's primarily intended

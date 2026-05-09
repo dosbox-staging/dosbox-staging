@@ -1,6 +1,13 @@
 # About this manual
 
-Welcome to the **DOSBox Staging v0.83 user manual** --- your complete guide
+!!! warning
+
+    This is the **release candidate version** of the DOSBox Staging 0.83.0
+    user manual. While the majority of content is accurate, not all sections
+    have been fully proofread and polished. An updated version will be
+    published with the final 0.83.0 release.
+
+Welcome to the **DOSBox Staging 0.83 user manual** --- your complete guide
 to getting the most out of the emulator. It covers everything from basic
 concepts to the detailed configuration of every emulated device. You don't
 need to read it cover to cover --- most people dip in when they need to
