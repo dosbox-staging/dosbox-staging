@@ -112,7 +112,7 @@ jobs:
         if:    ${{ !matrix.conf.debugger }}
         shell: pwsh
         run: |
-          ctest --preset release-windows 2>&1 | Tee-Object -FilePath tests.log
+          ctest -j 4 --preset release-windows 2>&1 | Tee-Object -FilePath tests.log
 
       - name:  Build release with debugger
         if:    ${{ matrix.conf.debugger }}

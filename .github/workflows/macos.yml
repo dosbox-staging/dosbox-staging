@@ -98,7 +98,7 @@ jobs:
       - name: Run tests
         run: |
           set -xo pipefail
-          ctest --preset release-macos-${{ matrix.conf.arch }} 2>&1 | tee tests.log
+          ctest -j 4 --preset release-macos-${{ matrix.conf.arch }} 2>&1 | tee tests.log
 
       - name: Dump workspace contents
         run: find $RUNNER_WORKSPACE
