@@ -132,7 +132,7 @@ jobs:
       - name: Run tests
         run: |
           set -xo pipefail
-          ctest --preset ${{ matrix.conf.cmake_preset }} 2>&1 | tee tests.log
+          ctest -j 4 --preset ${{ matrix.conf.cmake_preset }} 2>&1 | tee tests.log
 
       - name: Summarize warnings
         env:
