@@ -2033,7 +2033,7 @@ msgstr "non-standard"
 #, c-format, no-wrap
 msgctxt "KEYBOARD_LAYOUT_NAME_US"
 msgid "US (standard, QWERTY/national)"
-msgstr "US (standard, QWERTY/national)"
+msgstr "US (standard, QWERTY/nationale)"
 
 #: src/dos/dos_locale.cpp:1695
 #, c-format, no-wrap
@@ -2357,13 +2357,13 @@ msgstr "Géorgien (QWERTY/national)"
 #, c-format, no-wrap
 msgctxt "KEYBOARD_LAYOUT_NAME_KK"
 msgid "Kazakh (QWERTY/national)"
-msgstr "Kazakh (QWERTY/national)"
+msgstr "Kazakh (QWERTY/nationale)"
 
 #: src/dos/dos_locale.cpp:1695
 #, c-format, no-wrap
 msgctxt "KEYBOARD_LAYOUT_NAME_KK476"
 msgid "Kazakh (476, QWERTY/national)"
-msgstr "Kazakh (476, QWERTY/national)"
+msgstr "Kazakh (476, QWERTY/nationale)"
 
 #: src/dos/dos_locale.cpp:1695
 #, c-format, no-wrap
@@ -2603,7 +2603,7 @@ msgstr "Turc (non-standard)"
 #, c-format, no-wrap
 msgctxt "KEYBOARD_LAYOUT_NAME_TT"
 msgid "Tatar (standard, QWERTY/national)"
-msgstr "Tatar (standard, QWERTY/national)"
+msgstr "Tatar (standard, QWERTY/nationale)"
 
 #: src/dos/dos_locale.cpp:1695
 #, c-format, no-wrap
@@ -8234,7 +8234,7 @@ msgstr ""
 " lancement. La saisie démarre après [color=light-cyan]WAIT[reset] secondes, puis chaque\n"
 " touche est envoyée toutes les [color=white]PACE[reset] secondes. Le caractère\n"
 " [color=light-cyan],[reset] ajoute un délai [color=white]PACE[reset] supplémentaire.\n"
-" [color=white]WAIT[reset] et [color=white]PACE[reset] valent 2 et 0.5 par défaut si non sspécifiés.\n"
+" [color=white]WAIT[reset] et [color=white]PACE[reset] valent 2 et 0.5 par défaut si non spécifiés.\n"
 " La liste des noms de touches disponibles est affichée avec l'option -list.\n"
 "\n"
 "Exemples :\n"
@@ -9826,13 +9826,13 @@ msgstr "[color=white]Canal        Volume    Volume (dB)   Mode     Xfeed  Reverb
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_OFF"
 msgid "off"
-msgstr "off"
+msgstr "désactivé"
 
 #: src/dos/programs/mixer.cpp:827
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MIXER_CHANNEL_STEREO"
 msgid "Stereo"
-msgstr "Stereo"
+msgstr "Stéréo"
 
 #: src/dos/programs/mixer.cpp:828
 #, c-format, no-wrap
