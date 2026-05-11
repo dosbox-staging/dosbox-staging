@@ -117,10 +117,6 @@ plugins:
           'getting-started/star-wars-dark-forces.md':       '0.83/getting-started/star-wars-dark-forces.md'
           'getting-started/next-steps.md':                  '0.83/getting-started/next-steps.md'
 
-          # Redirect RC release notes to the final notes
-          'releases/release-notes/0.82.0-rc.md': 'releases/release-notes/0.82.0.md'
-          'releases/release-notes/0.81.0-rc.md': 'releases/release-notes/0.81.0.md'
-
           # Redirects for the old "downloads" pages
           'downloads/windows.md': 'releases/windows.md'
           'downloads/macos.md':   'releases/macos.md'
@@ -153,7 +149,7 @@ nav:
     - Linux: releases/linux.md
 
     - Release notes:
-      - 0.83.0-RC1: releases/release-notes/0.83.0-rc.md
+      - 0.83.0-RC1: releases/release-notes/0.83.0-rc1.md
       - 0.82.2: releases/release-notes/0.82.2.md
       - 0.82.1: releases/release-notes/0.82.1.md
       - 0.82.0: releases/release-notes/0.82.0.md

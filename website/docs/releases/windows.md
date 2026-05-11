@@ -49,19 +49,19 @@ the changes and improvements introduced in this release.
     Regular users should download the [current stable version](#current-stable-version)
     instead.
 
-    - [Download DOSBox Staging 0.83.0-RC1 (x86_64, Installer)]()
+    - [Download DOSBox Staging 0.83.0-RC1 (x86_64, Installer)][0_83_0-rc1-installer]
       <br>
       <small>
-      sha256: TODO<wbr>TODO
+      sha256: e9f36c63afdba5f400da01631d8af9d7<wbr>c8cdef13c90ec6276a5286057f7672f3
       </small>
 
-    - [Download DOSBox Staging 0.83.0-RC1 (x86_64, Portable ZIP)]()
+    - [Download DOSBox Staging 0.83.0-RC1 (x86_64, Portable ZIP)][0_83_0-rc1-zip]
       <br>
       <small>
-      sha256: TODO<wbr>TODO
+      sha256: ca0721806fdf72c964e75a5d945f1a9b<wbr>b1b23f1a62e23b1003e3f77f9f6499b9
       </small>
 
-    Check out the [0.83.0-RC release notes](release-notes/0.83.0-rc.md) to learn
+    Check out the [0.83.0-RC1 release notes](release-notes/0.83.0-rc1.md) to learn
     about the changes and improvements introduced in this release.
 
 
@@ -384,6 +384,9 @@ command-line install parameters, please see [Inno's documentation page](https://
   <small>
   sha256: 738d2ae2101384f2eeaf1895de64cf1b<wbr>4c76eaf7873de7e15b7f52145dfed7e7
   </small>
+
+[0_83_0-rc1-installer]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.0-rc1/dosbox-staging-windows-x64-v0.83.0-RC1-setup.exe
+[0_83_0-rc1-zip]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.0-rc1/dosbox-staging-windows-x64-v0.83.0-RC1.zip
 
 [0_82_2_INSTALLER]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-windows-x64-v0.82.2-setup.exe
 [0_82_2_ZIP]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-windows-x64-v0.82.2.zip
