@@ -38,13 +38,13 @@ the changes and improvements introduced by this release.
     Regular users should download the [current stable version](#current-stable-version)
     instead.
 
-    - [Download DOSBox Staging 0.83.0-RC1 Universal Binary (dmg)]()
+    - [Download DOSBox Staging 0.83.0-RC1 Universal Binary (dmg)][0_83_0-rc1]
       <br>
       <small>
-      sha256: TODO<wbr>TODO
+      sha256: e413196e88a7cc6f98a24ff5730a43bf<wbr>9a09d75661d53746716bdf256acee81e
       </small>
 
-    Check out the [0.83.0-RC release notes](release-notes/0.83.0-rc.md) to learn
+    Check out the [0.83.0-RC1 release notes](release-notes/0.83.0-rc1.md) to learn
     about the changes and improvements introduced in this release.
 
 
@@ -224,6 +224,7 @@ article](https://support.apple.com/en-us/102445) for further info.
   sha256: 8a5c12d1b6567d6e981acd76e30dec41<wbr>a73a699963b714f4f1dcf0fc853fc9f6
   </small>
 
+[0_83_0-rc1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.0-rc1/dosbox-staging-macOS-v0.83.0-RC1.dmg
 [0_82_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-macOS-v0.82.2.dmg
 [0_82_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.1/dosbox-staging-macOS-v0.82.1.dmg
 [0_82_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0/dosbox-staging-macOS-v0.82.0.dmg
