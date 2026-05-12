@@ -101,11 +101,11 @@ plugins:
           # ---------------------------------------------------------------
 
           # Section index redirects (unversioned -> latest version)
-          'manual/index.md':          '0.83/manual/about-this-manual.md'
+          'manual/index.md':          '0.83/manual/introduction/about-this-manual.md'
           'getting-started/index.md': '0.83/getting-started/introduction.md'
 
           # Section index redirects (current version)
-          '0.83/manual/index.md':          '0.83/manual/about-this-manual.md'
+          '0.83/manual/index.md':          '0.83/manual/introduction/about-this-manual.md'
           '0.83/getting-started/index.md': '0.83/getting-started/introduction.md'
 
           # Unversioned getting-started paths -> latest version
@@ -185,23 +185,20 @@ nav:
 
   - User manual:
       - Introduction:
-        - 0.83/manual/index.md   # dummy page for redirecting
-
-        - 0.83/manual/about-this-manual.md
-        - 0.83/manual/what-is-dosbox-staging.md
-        - 0.83/manual/dos-primer.md
-        - 0.83/manual/dos-eras.md
+        - 0.83/manual/introduction/about-this-manual.md
+        - 0.83/manual/introduction/what-is-dosbox-staging.md
+        - 0.83/manual/introduction/dos-primer.md
+        - 0.83/manual/introduction/dos-eras.md
 
       - Using DOSBox Staging:
-        - 0.83/manual/configuration.md
-        - 0.83/manual/command-line.md
-        - 0.83/manual/shell.md
-        - 0.83/manual/commands.md
-        - 0.83/manual/storage.md
-        - 0.83/manual/hardware-resources.md
-        - 0.83/manual/capture.md
-        - 0.83/manual/http-api.md
-        - 0.83/manual/windows-31.md
+        - 0.83/manual/using-dosbox-staging/configuration.md
+        - 0.83/manual/using-dosbox-staging/command-line.md
+        - 0.83/manual/using-dosbox-staging/shell.md
+        - 0.83/manual/using-dosbox-staging/commands.md
+        - 0.83/manual/using-dosbox-staging/storage.md
+        - 0.83/manual/using-dosbox-staging/hardware-resources.md
+        - 0.83/manual/using-dosbox-staging/capture.md
+        - 0.83/manual/using-dosbox-staging/windows-31.md
 
       - System:
         - 0.83/manual/system/general.md
@@ -250,6 +247,8 @@ nav:
         - 0.83/manual/networking/ipx.md
         - 0.83/manual/networking/ethernet.md
         - 0.83/manual/networking/multiplayer.md
+
+      - 0.83/manual/http-api.md
 
       - Appendices:
         - 0.83/manual/appendices/shortcuts.md

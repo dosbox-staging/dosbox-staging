@@ -84,7 +84,7 @@ Tab completion prioritises executable files (`.COM`, `.EXE`, `.BAT`) over
 other file types, so the most likely match appears first. When used with the
 `CD` command, only directories are shown.
 
-The [Getting Started guide](../getting-started/setting-up-prince-of-persia.md#installing-the-game)
+The [Getting Started guide](../../getting-started/setting-up-prince-of-persia.md#installing-the-game)
 walks through tab completion with a practical example.
 
 
@@ -95,7 +95,7 @@ history is persistent across sessions --- your commands are saved to a
 file (by default `shell_history.txt`) and restored when you next start DOSBox
 Staging.
 
-See the [`shell_history_file`](system/dos.md#shell_history_file) setting to
+See the [`shell_history_file`](../system/dos.md#shell_history_file) setting to
 change the history file location or disable persistent history.
 
 
@@ -137,7 +137,7 @@ typing `ECHO %PATH%` prints its value.
 By default, variable expansion is enabled when the emulated DOS version is
 7.0 or above (matching the behaviour of FreeDOS and MS-DOS 7.0's
 `COMMAND.COM`). You can force it on or off with the
-[`expand_shell_variable`](system/dos.md#expand_shell_variable) setting.
+[`expand_shell_variable`](../system/dos.md#expand_shell_variable) setting.
 
 !!! note
 
@@ -172,7 +172,7 @@ Some practical examples:
 | `DIR | MORE`             | Show the current directory's contents and paginate the output
 | `TYPE README.TXT | CLIP` | Copy the contents of `README.TXT` to the clipboard
 
-The [Getting Started guide](../getting-started/passport-to-adventure.md#installing-the-game)
+The [Getting Started guide](../../getting-started/passport-to-adventure.md#installing-the-game)
 demonstrates piping with a practical example.
 
 
@@ -219,13 +219,12 @@ characters many DOS applications use for their text-mode interfaces. Localised
 DOS installations used different code pages (e.g., **850** for Western
 European languages or **866** for Cyrillic).
 
-DOS localisation is a complex topic; keyboard layouts, display fonts,
-and file name handling all depend on code page settings and can interact
-in surprising ways. The [`KEYB`](commands.md) command can be used to switch
-keyboard layouts; see also the
-[`keyboard_layout`](system/dos.md#keyboard_layout) setting. A dedicated
-localisation chapter covering this topic in depth is planned for a future
-manual revision.
+DOS localisation is a complex topic; keyboard layouts, display fonts, and file
+name handling all depend on code page settings and can interact in surprising
+ways. The [`KEYB`](commands.md) command can be used to switch keyboard
+layouts; see also the [`keyboard_layout`](../system/dos.md#keyboard_layout)
+setting. A dedicated localisation chapter covering this topic in depth is
+planned for a future manual revision.
 
 
 ## Batch files & automation

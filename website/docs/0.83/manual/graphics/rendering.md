@@ -587,7 +587,7 @@ You can set the rendering parameters in the `[render]` configuration section.
 
     !!! note
 
-        Start DOSBox Staging with the [`--list-shaders`](../command-line.md#-list-shaders)
+        Start DOSBox Staging with the [`--list-shaders`](../using-dosbox-staging/command-line.md#-list-shaders)
         command line option to see the full list of available shaders. You can also use an absolute
         or relative path to a file. In all cases, you may omit the shader's
         `.glsl` file extension.

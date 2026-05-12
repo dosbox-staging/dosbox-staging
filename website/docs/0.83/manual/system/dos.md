@@ -48,9 +48,15 @@ regardless of the country setting.
 To see what's available on your system, start DOSBox Staging with the
 following command line arguments:
 
-- [`--list-countries`](../command-line.md#-list-countries) --- lists all supported countries with their numeric codes
-- [`--list-layouts`](../command-line.md#-list-layouts) --- lists all supported keyboard layouts with their codes
-- [`--list-code-pages`](../command-line.md#-list-code-pages) --- lists all bundled code pages (screen fonts)
+- [`--list-countries`](../using-dosbox-staging/command-line.md#-list-countries)
+  --- lists all supported countries with their numeric codes
+
+- [`--list-layouts`](../using-dosbox-staging/command-line.md#-list-layouts)
+  --- lists all supported keyboard layouts with their codes
+
+- [`--list-code-pages`](../using-dosbox-staging/command-line.md#-list-code-pages)
+  --- lists all bundled code pages (screen fonts)
+
 
 !!! note 
 
@@ -73,8 +79,8 @@ You can set the DOS parameters in the `[dos]` configuration section.
     !!! note
 
         The list of country codes can be displayed using the
-        [`--list-countries`](../command-line.md#-list-countries) command-line
-        argument.
+        [`--list-countries`](../using-dosbox-staging/command-line.md#-list-countries)
+        command-line argument.
 
 
 ##### keyboard_layout
@@ -88,8 +94,9 @@ You can set the DOS parameters in the `[dos]` configuration section.
     !!! note
 
         The list of supported keyboard layout codes can be displayed using
-        the [`--list-layouts`](../command-line.md#-list-layouts) command-line
-        argument (e.g., `uk` is the British English layout).
+        the
+        [`--list-layouts`](../using-dosbox-staging/command-line.md#-list-layouts)
+        command-line argument (e.g., `uk` is the British English layout).
 
 
 ##### locale_period

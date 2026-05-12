@@ -45,13 +45,13 @@ this is what it means.
 These devices have I/O, IRQ, and/or DMA settings you can change in the DOSBox
 Staging configuration:
 
-| Device | I/O base | IRQ | DMA | High DMA | Config section |
-|--------|----------|-----|-----|----------|----------------|
-| [Sound Blaster](sound/sound-devices/adlib-cms-sound-blaster.md) | 220 | 7 | 1 | 5 | `[sblaster]` |
-| [Gravis UltraSound](sound/sound-devices/gravis-ultrasound.md) | 240 | 5 | 3 | --- | `[gus]` |
-| [IBM Music Feature Card](sound/sound-devices/imfc.md) | 2A20 | 3 | --- | --- | `[imfc]` |
-| [Innovation SSI-2001](sound/sound-devices/innovation.md) | 280 | --- | --- | --- | `[innovation]` |
-| [NE2000 Ethernet](networking/ethernet.md) | 300 | 3 | --- | --- | `[ethernet]` |
+| Device                                                             | I/O base   | IRQ   | DMA   | High DMA   | Config section   |
+| --------                                                           | ---------- | ----- | ----- | ---------- | ---------------- |
+| [Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md) | 220        | 7     | 1     | 5          | `[sblaster]`     |
+| [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md)   | 240        | 5     | 3     | ---        | `[gus]`          |
+| [IBM Music Feature Card](../sound/sound-devices/imfc.md)           | 2A20       | 3     | ---   | ---        | `[imfc]`         |
+| [Innovation SSI-2001](../sound/sound-devices/innovation.md)        | 280        | ---   | ---   | ---        | `[innovation]`   |
+| [NE2000 Ethernet](../networking/ethernet.md)                       | 300        | 3     | ---   | ---        | `[ethernet]`     |
 
 !!! tip
 
@@ -66,16 +66,16 @@ Staging configuration:
 These devices use hardcoded resource assignments that cannot be changed in the
 configuration:
 
-| Device | I/O base | IRQ | DMA |
-|--------|----------|-----|-----|
-| [AdLib / OPL](sound/sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card) (FM synth) | 388 | --- | --- |
-| [MPU-401](sound/sound-devices/midi.md) (MIDI interface) | 330 | 9 | --- |
-| [Tandy DAC](sound/sound-devices/tandy.md) | C4 | 7 | 1 |
-| [Tandy / PCjr PSG](sound/sound-devices/tandy.md) | C0 | --- | --- |
-| [PC speaker](sound/sound-devices/pc-speaker.md) | 61 | --- | --- |
-| [Parallel port DACs](sound/sound-devices/covox-variants.md) (Covox, Disney, Stereo-on-1) | 378 | --- | --- |
-| [IBM PS/1 Audio](sound/sound-devices/ibm-ps1audio.md) | 200--205 | --- | --- |
-| Serial ports (COM1 / COM2 / COM3 / COM4) | 3F8 / 2F8 / 3E8 / 2E8 | 4 / 3 / 4 / 3 | --- |
+| Device                                                                                                   | I/O base              | IRQ           | DMA   |
+| --------                                                                                                 | ----------            | -----         | ----- |
+| [AdLib / OPL](../sound/sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card) (FM synth) | 388                   | ---           | ---   |
+| [MPU-401](../sound/sound-devices/midi.md) (MIDI interface)                                               | 330                   | 9             | ---   |
+| [Tandy DAC](../sound/sound-devices/tandy.md)                                                             | C4                    | 7             | 1     |
+| [Tandy / PCjr PSG](../sound/sound-devices/tandy.md)                                                      | C0                    | ---           | ---   |
+| [PC speaker](../sound/sound-devices/pc-speaker.md)                                                       | 61                    | ---           | ---   |
+| [Parallel port DACs](../sound/sound-devices/covox-variants.md) (Covox, Disney, Stereo-on-1)              | 378                   | ---           | ---   |
+| [IBM PS/1 Audio](../sound/sound-devices/ibm-ps1audio.md)                                                 | 200--205              | ---           | ---   |
+| Serial ports (COM1 / COM2 / COM3 / COM4)                                                                 | 3F8 / 2F8 / 3E8 / 2E8 | 4 / 3 / 4 / 3 | ---   |
 
 !!! note
 
@@ -132,8 +132,8 @@ for its Sound Blaster setup, set `sbbase = 240` in the `[sblaster]` section.
 Double-check that the I/O address, IRQ, *and* DMA channel all match between
 the game's configuration and the DOSBox config. Many games silently fail if
 even one value is wrong. Also verify that the correct
-[`sbtype`](sound/sound-devices/adlib-cms-sound-blaster.md#sbtype) is selected
---- some games only work with specific Sound Blaster models.
+[`sbtype`](../sound/sound-devices/adlib-cms-sound-blaster.md#sbtype) is
+selected --- some games only work with specific Sound Blaster models.
 
 For Sound Blaster 16 games with no 16-bit audio, make sure the high DMA
 channel is also set correctly in both the game and DOSBox config.
@@ -157,9 +157,12 @@ the reason, and the defaults should work.
 
 ## Further reading
 
-- [AdLib, CMS & Sound Blaster](sound/sound-devices/adlib-cms-sound-blaster.md)
+- [AdLib, CMS & Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md)
   --- detailed Sound Blaster configuration and model selection
-- [Gravis UltraSound](sound/sound-devices/gravis-ultrasound.md) --- GUS
+
+- [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md) --- GUS
   resource settings and usage modes
-- [Sound overview](sound/overview.md) --- general guide to DOS game audio
-- [Ethernet](networking/ethernet.md) --- NE2000 network card configuration
+
+- [Sound overview](../sound/overview.md) --- general guide to DOS game audio
+
+- [Ethernet](../networking/ethernet.md) --- NE2000 network card configuration

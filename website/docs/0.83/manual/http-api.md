@@ -1,9 +1,9 @@
 # HTTP API
 
-DOSBox Staging can expose an HTTP REST API that gives external tools access
-to the internal state of the emulated machine. Use cases include displaying
-game information in external overlays, game modding, memory inspection, bug
-investigation, function hooking, and building cheat tools.
+DOSBox Staging can expose an **HTTP REST API** that gives external tools
+access to the internal state of the emulated machine. Use cases include
+displaying game information in external overlays, game modding, memory
+inspection, bug investigation, function hooking, and building cheat tools.
 
 All endpoints access the internal state atomically between steps of the
 emulated CPU. They are never executed during natively implemented DOS
@@ -158,7 +158,7 @@ see the built-in API documentation.
 The `extras/api/` directory in the DOSBox Staging source tree contains
 ready-to-use HTML tools and a JavaScript API wrapper. To use them, copy the
 files to the `webserver` directory inside your DOSBox
-[configuration](configuration.md#primary-configuration) folder.
+[configuration](using-dosbox-staging/configuration.md#primary-configuration) folder.
 
 
 ### Memory Monitor

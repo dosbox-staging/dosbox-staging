@@ -39,7 +39,7 @@ DOSBox Staging emulates a two-button mouse by default
 the 90s support a third mouse button, and some games will misbehave if an
 unexpected middle button press is detected. If you know a game supports three
 buttons, enable it explicitly by setting the model to `3button`. The `wheel`
-option exists for the rare DOS application or [Windows 3.1](../windows-31.md) setup
+option exists for the rare DOS application or [Windows 3.1](../using-dosbox-staging/windows-31.md) setup
 that can use a scroll wheel, but no DOS game is known to use it.
 
 
@@ -73,7 +73,7 @@ See the [Dual mouse gaming](https://github.com/dosbox-staging/dosbox-staging/wik
 
 ## Seamless mode
 
-For [Windows 3.1](../windows-31.md) running inside DOSBox, seamless mouse
+For [Windows 3.1](../using-dosbox-staging/windows-31.md) running inside DOSBox, seamless mouse
 integration is available when using a compatible mouse driver --- with this
 enabled, the mouse cursor can be moved freely between the host desktop and
 the DOSBox Staging window (see [`mouse_capture`](#mouse_capture)).

@@ -424,5 +424,5 @@ section.
 
     !!! note
 
-        The [`--erasemapper`](../command-line.md#-erasemapper) command line
+        The [`--erasemapper`](../using-dosbox-staging/command-line.md#-erasemapper) command line
         option only deletes the default mapper file.

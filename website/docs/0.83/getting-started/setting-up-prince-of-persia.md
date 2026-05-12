@@ -72,7 +72,7 @@ inside your game folder. This `drives` folder is a "magic" folder with a
 special purpose: all its subfolders with single-letter names are automatically
 mounted as DOS drives with the same letter. This mechanism to auto-mount
 subfolders like `drives/c` and `drives/d` as DOS drives is called
-[automounting](../../0.83/manual/storage.md#automounting) and is unique to
+[automounting](../manual/using-dosbox-staging/storage.md#automounting) and is unique to
 DOSBox Staging.
 
 In our case, we only need a single C drive, so we'll create a `c` subfolder
@@ -96,7 +96,7 @@ structure:
     stuck around for backwards compatibility.
 
     You can learn more about MS-DOS-era storage options and MS-DOS drives in
-    the [Storage](../../0.83/manual/storage.md) section of the user manual.
+    the [Storage](../manual/using-dosbox-staging/storage.md) section of the user manual.
 
 
 !!! important "Attention, Windows users!"
@@ -264,7 +264,7 @@ C:\>_
 Well, that's what we put into our virtual C drive, so nothing too spectacular
 so far. We'll execute `pop1demo.exe` next! Type in `pop` and press the ++tab++
 key once to instruct DOSBox to complete the filename for you. This handy
-feature is called **[tab completion](../manual/shell.md#tab-completion)**, and it saves you from a lot of typing.
+feature is called **[tab completion](../manual/using-dosbox-staging/shell.md#tab-completion)**, and it saves you from a lot of typing.
 Press ++tab++ a few more times and observe how it alternates between
 `POP1.TXT` and `POP1DEMO.EXE` --- this makes sense as these are the only two
 files in the current directory that start with `pop`.
@@ -308,7 +308,7 @@ command with the `*.exe` wildcard search pattern!
 
 But instead of typing in `dir *.exe`, press ++up++ a few times until `dir`
 appears in the command line, then type in the rest (++space++ character
-followed by `*.exe`). This handy feature is called **[command history](../manual/shell.md#command-history)** --- you
+followed by `*.exe`). This handy feature is called **[command history](../manual/using-dosbox-staging/shell.md#command-history)** --- you
 can move forward and backward in the list of previously executed commands with
 the ++down++ and ++up++ keys, respectively. Best of all, the command history
 is preserved across DOSBox Staging restarts.
@@ -356,8 +356,8 @@ C:\>_
 
 !!! tip "Want to learn more about DOS?"
 
-    The [DOS primer](../manual/dos-primer.md) in the manual covers the basics
-    of the DOS environment, and the [Commands](../manual/commands.md) page
+    The [DOS primer](../manual/introduction/dos-primer.md) in the manual covers the basics
+    of the DOS environment, and the [Commands](../manual/using-dosbox-staging/commands.md) page
     documents all available built-in commands.
 
 

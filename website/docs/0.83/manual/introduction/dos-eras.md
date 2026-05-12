@@ -20,12 +20,12 @@ getting an optimal, creator-intended experience.
 The IBM PC launched in 1981 as a business machine, but games appeared almost
 immediately. The hardware was modest: an Intel 8088 running at 4.77 MHz,
 monochrome [Hercules
-graphics](graphics/adapters.md#hercules-graphics-card) , or [CGA
-graphics](graphics/adapters.md#cga-and-its-descendants) offering four colours
+graphics](../graphics/adapters.md#hercules-graphics-card) , or [CGA
+graphics](../graphics/adapters.md#cga-and-its-descendants) offering four colours
 at 320&times;200 resolution, and the [PC
-speaker](sound/sound-devices/pc-speaker.md) as the only sound source. Software
-arrived on 360 KB [floppy disks](storage.md#floppy-disks), and many early
-games were ["booter"](storage.md#booting-from-images) titles that ran directly
+speaker](../sound/sound-devices/pc-speaker.md) as the only sound source. Software
+arrived on 360 KB [floppy disks](../using-dosbox-staging/storage.md#floppy-disks), and many early
+games were ["booter"](../using-dosbox-staging/storage.md#booting-from-images) titles that ran directly
 from the floppy and did not require a hard drive or even an operating system.
 
 ### Notable games
@@ -80,13 +80,13 @@ adapter.
 ## EGA and Tandy (1984--1987)
 
 The IBM PC/AT introduced the 286 CPU in 1984 alongside [EGA
-graphics](graphics/adapters.md#ega), which offered 16 colours graphics --- a
+graphics](../graphics/adapters.md#ega), which offered 16 colours graphics --- a
 big step up from the fixed 4-colour palettes of CGA. Around the same time,
-Tandy cloned the failed [IBM PCjr](graphics/adapters.md#ibm-pcjr)'s enhanced
+Tandy cloned the failed [IBM PCjr](../graphics/adapters.md#ibm-pcjr)'s enhanced
 graphics and sound hardware into the much more successful [Tandy
-1000](graphics/adapters.md#tandy-1000) line, giving budget-conscious gamers
+1000](../graphics/adapters.md#tandy-1000) line, giving budget-conscious gamers
 16-colour graphics and three-voice sound. The [PC
-speaker](sound/sound-devices/pc-speaker.md) remained the dominant sound source
+speaker](../sound/sound-devices/pc-speaker.md) remained the dominant sound source
 on non-Tandy machines, though the AdLib card appeared in 1987 to change that.
 
 ### Notable games
@@ -140,18 +140,18 @@ cpu_cycles = 1500
 ## The VGA and Sound Blaster revolution (1987--1990)
 
 Two hardware breakthroughs transformed PC gaming in the late 1980s. [VGA
-graphics](graphics/adapters.md#vga-and-svga) arrived in 1987 with 256 colours
+graphics](../graphics/adapters.md#vga-and-svga) arrived in 1987 with 256 colours
 at 320&times;200 resolution, enabling visuals that could finally rival the
 glorious Commodore Amiga. On the audio side, the
-[AdLib](sound/sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card)
+[AdLib](../sound/sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card)
 card brought FM synthesis to the PC in 1987, followed by the [Sound
-Blaster](sound/sound-devices/adlib-cms-sound-blaster.md) in 1989 which added
+Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md) in 1989 which added
 digital audio playback. The 386 CPU provided the processing power to drive
 increasingly ambitious games. This period marks the moment PC gaming became a
 serious force.
 
 For those with deeper pockets, the [Roland
-MT-32](sound/sound-devices/roland-mt-32.md) sound module (released in 1987)
+MT-32](../sound/sound-devices/roland-mt-32.md) sound module (released in 1987)
 offered dramatically superior music through its LA synthesis engine. Sierra
 On-Line was an early champion of the MT-32, and most of their late-80s games
 sound remarkably better on the MT-32 compared to AdLib option (which is no
@@ -215,21 +215,21 @@ model = mt32_old
 The 486 brought a huge performance leap in the early 1990s. The AMD 386DX-40
 offered near-486 performance at a fraction of the cost, extending the 386's
 life for budget users. Sound hardware matured rapidly; the [Sound Blaster
-Pro](sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro) and
-[16](sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16) added
+Pro](../sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro) and
+[16](../sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16) added
 stereo output, and the [Gravis
-UltraSound](sound/sound-devices/gravis-ultrasound.md) offered
+UltraSound](../sound/sound-devices/gravis-ultrasound.md) offered
 advanced wavetable synthesis which far outclassed the Amiga's impressive sound
 capabilities. Hard drives became affordable for home users, and games grew to
 fill them.
 
 The [Roland Sound Canvas
-SC-55](sound/sound-devices/general-midi.md#sound-canvas-emulation), released
+SC-55](../sound/sound-devices/general-midi.md#sound-canvas-emulation), released
 in 1991, became the reference device for [General
-MIDI](sound/sound-devices/general-midi.md) game music, offering a standardised
+MIDI](../sound/sound-devices/general-midi.md) game music, offering a standardised
 set of 128 realistic-sounding instruments. Many games from this era supported
 both General MIDI and the MT-32. The [Roland
-CM-32L](sound/sound-devices/roland-mt-32.md#the-cm-32l), a cost-reduced MT-32
+CM-32L](../sound/sound-devices/roland-mt-32.md#the-cm-32l), a cost-reduced MT-32
 variant with extra sound effects, was also popular and many games took
 advantage of it (typically LucasArts games).
 
@@ -295,16 +295,16 @@ Alternatively, use `sbtype = sb16` to emulate the Sound Blaster 16, and
 
 Intel's Pentium processor arrived in 1993 and rapidly became the standard for
 serious gaming. The [Sound Blaster
-16](sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16) was
-ubiquitous, [SVGA cards](graphics/adapters.md#vga-and-svga) pushed higher
-resolutions and colour depths, and [CD-ROM drives](storage.md#cd-roms) became
+16](../sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16) was
+ubiquitous, [SVGA cards](../graphics/adapters.md#vga-and-svga) pushed higher
+resolutions and colour depths, and [CD-ROM drives](../using-dosbox-staging/storage.md#cd-roms) became
 standard, ushering in the era of full-motion video and [CD audio
-soundtracks](sound/sound-devices/cd-da.md). This was the golden age of DOS
+soundtracks](../sound/sound-devices/cd-da.md). This was the golden age of DOS
 gaming, the period that produced many of the platform's most celebrated titles
 that served as blueprints for the modern gaming industry.
 
 By this point, General MIDI via the [Roland Sound Canvas
-SC-55](sound/sound-devices/general-midi.md#sound-canvas-emulation) had become
+SC-55](../sound/sound-devices/general-midi.md#sound-canvas-emulation) had become
 the dominant standard for game music, gradually displacing the MT-32.
 Most Pentium-era games with MIDI support target General MIDI as their primary
 music option, and the SC-55 remains the best way to hear these soundtracks as
@@ -371,10 +371,10 @@ mididevice = soundcanvas
 By the mid-1990s, Windows 95 and DirectX were rapidly taking over PC gaming.
 The final wave of DOS games pushed hardware hard --- fast Pentiums and Pentium
 MMX processors, [Sound Blaster
-16](sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16) or AWE32
-wavetable sound cards, and [SVGA graphics](graphics/adapters.md#vga-and-svga)
+16](../sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16) or AWE32
+wavetable sound cards, and [SVGA graphics](../graphics/adapters.md#vga-and-svga)
 at 640&times;480 or higher resolution with early [Voodoo 3D
-acceleration](graphics/3dfx-voodoo.md). These late DOS titles often demanded
+acceleration](../graphics/3dfx-voodoo.md). These late DOS titles often demanded
 top-of-the-line hardware and represent the platform's technical peak, even as
 the ecosystem was transitioning to Windows.
 
@@ -435,7 +435,7 @@ mididevice = soundcanvas
 
 ## Windows 3.1 games
 
-DOSBox Staging fully supports [Windows 3.1](windows-31.md), which was not a standalone
+DOSBox Staging fully supports [Windows 3.1](../using-dosbox-staging/windows-31.md), which was not a standalone
 operating system but an operating environment running on top of DOS. A number
 of games were released exclusively for Windows 3.1 with no DOS version ---
 particularly full-motion video (FMV) adventures and multimedia titles that
@@ -494,5 +494,5 @@ mididevice = soundcanvas
 
 For a step-by-step guide to installing and configuring Windows 3.1 inside
 DOSBox Staging --- including video, audio, MIDI, and mouse driver setup ---
-see the [Running Windows 3.1](windows-31.md) chapter.
+see the [Running Windows 3.1](../using-dosbox-staging/windows-31.md) chapter.
 

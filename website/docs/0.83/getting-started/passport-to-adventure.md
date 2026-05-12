@@ -71,7 +71,7 @@ indicates, you can press ++space++ to go to the next page, ++enter++ to
 advance to the next line, or ++q++ to quit the help viewer. The help viewer
 will also automatically quit once we've reached the end of the output. You
 can also find the full description of all settings in the
-[manual](../manual/index.md).
+[manual](../manual/introduction/about-this-manual.md).
 
 You can run `config -h <section_name>`, too, to get the names of all available
 settings in a given config section. For example, this is the result of `config
@@ -95,7 +95,7 @@ was started from (the game's folder). Because of this loading order, you can
 override any primary config setting in your local config.
 
 This *layered configuration* approach is very useful (see
-[Configuration](../manual/configuration.md) for the full details);
+[Configuration](../manual/using-dosbox-staging/configuration.md) for the full details);
 you can apply broad, general settings in your primary configuration that
 will apply to all games, then fine-tune these defaults on a per-game basis
 via local `dosbox.conf` configs in the individual game folders. Because of this, the primary

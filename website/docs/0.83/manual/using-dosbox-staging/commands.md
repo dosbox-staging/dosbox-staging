@@ -117,10 +117,9 @@ These commands are specific to DOSBox Staging and have no MS-DOS equivalent.
 
 ## Bundled third-party programs
 
-DOSBox Staging ships a small number of
-[FreeDOS](https://www.freedos.org/) utilities as pre-compiled binaries on
-the Y: drive. When the Y: drive is
-[automounted](system/general.md#automount) (enabled by default), the
+DOSBox Staging ships a small number of [FreeDOS](https://www.freedos.org/)
+utilities as pre-compiled binaries on the Y: drive. When the Y: drive is
+[automounted](../system/general.md#automount) (enabled by default), the
 `Y:\DOS` directory is added to the PATH automatically, making these commands
 available from any drive.
 
