@@ -234,7 +234,8 @@ real thing.
 
 The [Getting started guide](../getting-started/setting-up-prince-of-persia.md)
 gives you a gentle introduction to using DOS to configure and launch games.
-See [DOS commands](commands.md) for a list of all available commands, and
+See [The DOSBox shell](shell.md) for a detailed look at the command-line
+shell, [DOS commands](commands.md) for a list of all available commands, and
 [DOS](system/dos.md) to learn how to customise the emulated DOS environment.
 
 

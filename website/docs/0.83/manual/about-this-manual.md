@@ -57,6 +57,9 @@ Practical information about operating the emulator day-to-day.
 - [Command-line usage](command-line.md) --- Flags and options for launching
   DOSBox Staging from a terminal.
 
+- [The DOSBox shell](shell.md) --- How the DOS command-line shell works:
+  line editing, tab completion, command history, piping, and more.
+
 - [DOS commands](commands.md) --- Every command available at the DOS prompt,
   from MOUNT and CONFIG to standard DOS commands like DIR and COPY.
 

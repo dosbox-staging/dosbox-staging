@@ -7,6 +7,10 @@ from MS-DOS source code. A number of additional commands are specific to
 DOSBox Staging and provide emulator management features like mounting drives
 and controlling the audio mixer.
 
+See [The DOSBox shell](shell.md) to learn about the shell itself ---
+line editing, tab completion, command history, piping, and other interactive
+features.
+
 !!! tip
 
     Type `HELP` at the DOS prompt to see the most commonly used commands, or
