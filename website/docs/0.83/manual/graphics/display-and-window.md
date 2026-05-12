@@ -25,13 +25,13 @@ correction, dedithering, deinterlacing, and image adjustments, see
 DOSBox Staging offers two frame presentation strategies, controlled by the
 [presentation_mode](#presentation_mode) setting:
 
-- **`dos-rate`** presents frames at the refresh rate of the emulated DOS video
+- [`dos-rate`](#dos-rate) presents frames at the refresh rate of the emulated DOS video
 mode (e.g., 70 Hz for standard VGA). This is the ideal choice for variable
 refresh rate (VRR) monitors (G-Sync, FreeSync, or VRR) --- the display
 synchronises directly to the emulated refresh rate, giving you perfect frame
 pacing with no tearing and low input lag.
 
-- **`host-rate`** presents the most recent frame at the host display's refresh
+- [`host-rate`](#host-rate) presents the most recent frame at the host display's refresh
 rate. This is intended for fixed refresh rate monitors (typically 60 Hz) with
 [vsync](#vsync) enabled to eliminate screen tearing in fast-paced games.
 
@@ -52,6 +52,7 @@ In practice, most users fall into one of three categories:
 
 - **Fixed 60 Hz monitor, slower games** (RPGs, adventures, strategy): The
   defaults work fine --- tearing is rarely noticeable in these genres.
+
 
 ### Refresh rates of DOS graphics standards
 
@@ -93,6 +94,31 @@ judder inherent in the refresh rate mismatch.
     set the appropriate refresh rate before starting DOSBox Staging, and
     games that switch between different refresh rates cannot be fully
     accommodated this way.
+
+
+### Variable refresh rate notes
+
+**AMD FreeSync**, **Nvidia G-Sync**, and **HDMI 2.1 VRR** are all supported. Just enable
+variable refresh in your driver settings, set your desktop to the maximum
+refresh rate of your monitor, and choose the "let the application decide"
+vsync option. DOSBox Staging will automatically take advantage of VRR with the
+default settings.
+
+!!! danger
+
+    Do **not** use any frame limiters; those are only useful for modern games,
+    not emulators. Frame limiters **will cause** DOSBox Staging to
+    malfunction! Similarly, do **not** force vsync globally or for DOSBox
+    Staging specifically.
+
+!!! warning "Apple ProMotion notes"
+
+    **Apple ProMotion** is not "true VRR" like FreeSync and G-Sync. It was not
+    designed for the same low-latency, dynamic VRR experience, but primarily
+    for power efficiency on portable devices. However, if you connect your Mac
+    to a true VRR external monitor and select "Variable" refresh rate in
+    System Settings, you can take full advantage of VRR in DOSBox Staging.
+
 
 ### Vsync
 
@@ -146,7 +172,7 @@ level vsync on **fixed refresh monitors**:
 
 </div>
 
-!!! warning
+!!! danger
 
     Do **not** force vsync globally at the GPU driver level (e.g., in Nvidia
     Control Panel or similar). Leave the global vsync settings at their
