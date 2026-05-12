@@ -69,7 +69,7 @@ DOSBox Staging provides two special drives in addition to whatever you mount:
   [DOS commands & programs](commands.md) for the full list.
 
 - **Y:** contains a small set of bundled third-party utilities (DEBUG,
-  DELTREE, XCOPY). It is [automounted](system/general.md#automount) by
+  DELTREE, XCOPY). It is [automounted](../system/general.md#automount) by
   default with its `Y:\DOS` directory added to the PATH.
 
 
@@ -78,7 +78,7 @@ DOSBox Staging provides two special drives in addition to whatever you mount:
 The easiest way to set up drives is automounting. Place your game files in a
 `drives/` directory structure, and DOSBox mounts them automatically on
 startup. The
-[Getting Started guide](../getting-started/setting-up-prince-of-persia.md#the-c-drive)
+[Getting Started guide](../../getting-started/setting-up-prince-of-persia.md#the-c-drive)
 demonstrates this approach step by step.
 
 
@@ -244,7 +244,7 @@ Supported CD-ROM image formats:
 - **MDS/MDF** --- Alcohol 120% disc images.
 
 For games with CD-DA music, use CUE/BIN or MDS/MDF format images with audio
-tracks. See [CD-DA audio](sound/sound-devices/cd-da.md) for details on
+tracks. See [CD-DA audio](../sound/sound-devices/cd-da.md) for details on
 supported audio track formats.
 
 
@@ -368,11 +368,11 @@ Storage-related settings are in the `[dosbox]` section:
 
 <div class="compact" markdown>
 
-- [`automount`](system/general.md#automount)
-- [`hard_disk_speed`](system/general.md#hard_disk_speed)
-- [`floppy_disk_speed`](system/general.md#floppy_disk_speed)
+- [`automount`](../system/general.md#automount)
+- [`hard_disk_speed`](../system/general.md#hard_disk_speed)
+- [`floppy_disk_speed`](../system/general.md#floppy_disk_speed)
 
 </div>
 
 For emulated drive sounds (floppy chatter, hard disk clicking), see
-[Disk noise](sound/disk-noise.md).
+[Disk noise](../sound/disk-noise.md).

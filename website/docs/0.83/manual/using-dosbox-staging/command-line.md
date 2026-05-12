@@ -136,7 +136,7 @@ pages.
 
 ##### `--fullscreen`
 
-:   Start in [fullscreen](graphics/display-and-window.md#fullscreen) mode.
+:   Start in [fullscreen](../graphics/display-and-window.md#fullscreen) mode.
 
 
 ##### `--lang <lang_file>`
@@ -148,8 +148,8 @@ pages.
 ##### `--machine <type>`
 
 :   Emulate a specific machine type. The machine type affects both the
-    emulated video and sound hardware. See [machine](system/general.md#machine)
-    for further details.
+    emulated video and sound hardware. See
+    [machine](../system/general.md#machine) for further details.
 
 
 ### Discovery
@@ -157,13 +157,13 @@ pages.
 ##### `--list-countries`
 
 :   List all supported countries with their numeric codes, for use with the
-    [country](system/dos.md#country) config setting.
+    [country](../system/dos.md#country) config setting.
 
 
 ##### `--list-layouts`
 
 :   List all supported keyboard layouts with their codes, for use with the
-    [keyboard_layout](system/dos.md#keyboard_layout) config setting.
+    [keyboard_layout](../system/dos.md#keyboard_layout) config setting.
 
 
 ##### `--list-code-pages`
@@ -174,7 +174,7 @@ pages.
 ##### `--list-shaders`
 
 :   List all available shaders and their paths, for use with the
-    [shader](graphics/rendering.md#shader) config setting.
+    [shader](../graphics/rendering.md#shader) config setting.
 
 
 ### Mapper
@@ -182,7 +182,7 @@ pages.
 ##### `--startmapper`
 
 :   Launch the key mapper GUI directly. See
-    [Keyboard shortcuts](appendices/shortcuts.md).
+    [Keyboard shortcuts](../appendices/shortcuts.md).
 
 
 ##### `--erasemapper`

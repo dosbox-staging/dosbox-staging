@@ -208,7 +208,7 @@ For convenience, here are the common Xbox controller mappings:
 ## Resetting the mapper
 
 If your key mappings get into a broken state, use the
-[`--erasemapper`](../command-line.md#-erasemapper) command line option to
+[`--erasemapper`](../using-dosbox-staging/command-line.md#-erasemapper) command line option to
 delete the default mapper file and reset all bindings to their defaults.
 
 !!! warning

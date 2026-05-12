@@ -17,7 +17,7 @@ configure something specific or understand how a feature works.
 ## Start with the Getting Started guide
 
 If you're new to DOSBox Staging --- or even if you've used other DOSBox
-versions before --- the [Getting Started guide](../getting-started/index.md)
+versions before --- the [Getting Started guide](../../getting-started/index.md)
 is the single best place to begin. It walks you through setting up several
 games from scratch, teaching the core concepts you'll use every day: mounting
 drives, configuring sound and graphics, and tweaking settings per game.
@@ -50,33 +50,33 @@ else that follows.
 
 Practical information about operating the emulator day-to-day.
 
-- [Configuration files](configuration.md) --- How DOSBox Staging's layered
+- [Configuration files](../using-dosbox-staging/configuration.md) --- How DOSBox Staging's layered
   configuration system works: global settings, per-game configs, and the
   autoexec section.
 
-- [Command-line usage](command-line.md) --- Flags and options for launching
+- [Command-line usage](../using-dosbox-staging/command-line.md) --- Flags and options for launching
   DOSBox Staging from a terminal.
 
-- [The DOSBox shell](shell.md) --- How the DOS command-line shell works:
+- [The DOSBox shell](../using-dosbox-staging/shell.md) --- How the DOS command-line shell works:
   line editing, tab completion, command history, piping, and more.
 
-- [DOS commands](commands.md) --- Every command available at the DOS prompt,
+- [DOS commands](../using-dosbox-staging/commands.md) --- Every command available at the DOS prompt,
   from MOUNT and CONFIG to standard DOS commands like DIR and COPY.
 
-- [Storage](storage.md) --- How DOS uses drive letters, mounting directories
+- [Storage](../using-dosbox-staging/storage.md) --- How DOS uses drive letters, mounting directories
   and disk images, floppy/CD-ROM/hard disk handling.
 
-- [Hardware resources](hardware-resources.md) --- I/O addresses, IRQs, and
+- [Hardware resources](../using-dosbox-staging/hardware-resources.md) --- I/O addresses, IRQs, and
   DMA channels --- what they are and how to configure them when a game's
   setup utility asks.
 
-- [Capture](capture.md) --- Screenshots, audio recording, video recording,
+- [Capture](../using-dosbox-staging/capture.md) --- Screenshots, audio recording, video recording,
   and MIDI capture.
 
-- [HTTP API](http-api.md) --- The built-in HTTP API for remote
+- [HTTP API](../http-api.md) --- The built-in HTTP API for remote
   control.
 
-- [Running Windows 3.1](windows-31.md) --- Installing and configuring
+- [Running Windows 3.1](../using-dosbox-staging/windows-31.md) --- Installing and configuring
   Windows 3.1 inside DOSBox Staging, including video, audio, MIDI, and mouse
   driver setup.
 
@@ -88,30 +88,30 @@ detail. Each typically opens with a conversational overview explaining the
 hardware and when you'd want to change the defaults, followed by the
 detailed configuration reference.
 
-- **[System](system/general.md)** --- Core emulator settings: machine type,
+- **[System](../system/general.md)** --- Core emulator settings: machine type,
   CPU speed and type, memory, disk speed, and DOS shell options.
 
-- **[Graphics](graphics/adapters.md)** --- Video adapters (CGA through SVGA),
+- **[Graphics](../graphics/adapters.md)** --- Video adapters (CGA through SVGA),
   display settings, CRT shaders, composite video, 3dfx Voodoo, and
   ReelMagic.
 
-- **[Sound](sound/overview.md)** --- All emulated audio devices from the PC
+- **[Sound](../sound/overview.md)** --- All emulated audio devices from the PC
   speaker to the Roland MT-32 and Sound Canvas, plus the mixer, effects, and
   output filters.
 
-- **[Input](input/overview.md)** --- Keyboard, mouse, joystick configuration,
+- **[Input](../input/overview.md)** --- Keyboard, mouse, joystick configuration,
   and the key mapper for remapping controls.
 
-- **[Networking](networking/serial-ports.md)** --- Serial ports, IPX
+- **[Networking](../networking/serial-ports.md)** --- Serial ports, IPX
   networking, and Ethernet emulation.
 
 
 ### Appendices
 
-- [Keyboard shortcuts](appendices/shortcuts.md) --- Quick reference for all
+- [Keyboard shortcuts](../appendices/shortcuts.md) --- Quick reference for all
   default hotkeys.
 
-- [Keymapper reference](appendices/keymapper.md) --- Table of every mappable
+- [Keymapper reference](../appendices/keymapper.md) --- Table of every mappable
   action and its default binding.
 
 

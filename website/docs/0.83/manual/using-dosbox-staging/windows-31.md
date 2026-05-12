@@ -1,9 +1,9 @@
 # Running Windows 3.1
 
 DOSBox Staging fully supports Windows 3.1, which was not a standalone
-operating system but an operating environment running on top of DOS. A
-number of games were released exclusively for Windows 3.1 --- see
-[The DOS eras](dos-eras.md#windows-31-games) for notable titles and
+operating system but an operating environment running on top of DOS. A number
+of games were released exclusively for Windows 3.1 --- see [The DOS
+eras](../introduction/dos-eras.md#windows-31-games) for notable titles and
 recommended hardware settings.
 
 !!! warning
@@ -66,7 +66,7 @@ driver for proper SVGA support inside Windows.
 - Point to the driver directory and choose **640&times;480, 256 colours** as
   a safe starting point.
 - Higher resolutions up to 1600&times;1200 are available if you set
-  [`vmemsize`](system/general.md#vmemsize) to `4` or higher.
+  [`vmemsize`](../system/general.md#vmemsize) to `4` or higher.
 
 !!! important
 
@@ -101,10 +101,10 @@ After installing the Sound Blaster 16 driver, configure MIDI output:
 - Select **SB16 All MIDI** as the active setup.
 
 This routes MIDI output through DOSBox's configured
-[`mididevice`](sound/sound-devices/midi.md#mididevice), so you can use
-[FluidSynth](sound/sound-devices/general-midi.md#fluidsynth), [Sound Canvas
-SC-55](sound/sound-devices/general-midi.md#sound-canvas-emulation),
-or [Roland MT-32](sound/sound-devices/roland-mt-32.md) emulation for Windows
+[`mididevice`](../sound/sound-devices/midi.md#mididevice), so you can use
+[FluidSynth](../sound/sound-devices/general-midi.md#fluidsynth), [Sound Canvas
+SC-55](../sound/sound-devices/general-midi.md#sound-canvas-emulation),
+or [Roland MT-32](../sound/sound-devices/roland-mt-32.md) emulation for Windows
 3.1 games --- just change the `mididevice` setting in your DOSBox config.
 
 
@@ -118,7 +118,7 @@ DOS era --- scroll wheels only became common in the late 1990s. DOSBox
 emulates a two-button mouse by default, which is the safest setting. Only a
 small number of early-to-mid 90s Windows games support a third mouse button;
 if you need it, enable three-button mouse emulation via the
-[`dos_mouse_driver`](input/mouse.md) setting.
+[`dos_mouse_driver`](../input/mouse.md) setting.
 
 For seamless mouse integration (the pointer moves freely between the DOSBox
 window and your desktop without needing to capture/release it), install the

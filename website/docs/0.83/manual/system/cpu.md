@@ -310,7 +310,7 @@ section.
     usage from ~100% to around 25% when the shell is idle.
 
     This also makes the shell more multitasking-friendly, which benefits
-    [Windows 3.1](../windows-31.md) DOS prompts.
+    [Windows 3.1](../using-dosbox-staging/windows-31.md) DOS prompts.
 
     The feature works by emulating the HLT CPU instruction, so it might
     interfere with third-party DOS power management tools such as DOSidle and

@@ -13,7 +13,7 @@ early to mid-1980s games written for [CGA](#cga), [Tandy](#tandy-1000), or
 targeting specific [SVGA chipsets](#vga-and-svga).
 
 For an overview of which graphics standard was typical in each era, see
-[The DOS eras](../dos-eras.md). The
+[The DOS eras](../introduction/dos-eras.md). The
 [Getting Started guide](../../getting-started/enhancing-prince-of-persia.md#graphics-options)
 walks through switching between adapters for a specific game.
 

@@ -7,7 +7,7 @@ from the game disc. DOSBox Staging supports CD-DA playback from disc images
 with audio tracks in various formats.
 
 CD-DA playback requires no special configuration. Mount a disc image with
-audio tracks using the [`MOUNT` command](../../storage.md#mounting-cd-rom-images)
+audio tracks using the [`MOUNT` command](../../using-dosbox-staging/storage.md#mounting-cd-rom-images)
 and the game will handle playback automatically.
 
 <!-- TODO physical CD-ROM -->

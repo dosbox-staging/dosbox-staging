@@ -37,7 +37,7 @@ section.
     - ++ctrl+f4++ (virtual desktop switching on KDE)
     - ++ctrl+left++ (show desktop on macOS)
 
-    This is particularly useful for [Windows 3.1](../windows-31.md) and DOS
+    This is particularly useful for [Windows 3.1](../using-dosbox-staging/windows-31.md) and DOS
     programs that use key combinations which conflict with your OS shortcuts.
 
     Possible values: `on`, `off` *default*{ .default }

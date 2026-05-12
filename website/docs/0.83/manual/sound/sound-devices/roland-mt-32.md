@@ -171,7 +171,7 @@ model = mt32_old
 !!! tip
 
     Using the layering approach of DOSBox [configuration
-    files](../../configuration.md#config-layering), you can pick one specific
+    files](../../using-dosbox-staging/configuration.md#config-layering), you can pick one specific
     MT-32 model per game.
 
 

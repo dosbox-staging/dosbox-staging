@@ -69,7 +69,7 @@ DOS Games
 ```
 
 The [Getting Started
-guide](../getting-started/passport-to-adventure.md#layered-configurations)
+guide](../../getting-started/passport-to-adventure.md#layered-configurations)
 walks through creating several per-game configs in detail.
 
 If you start DOSBox Staging from a different folder, you can still set the
@@ -119,7 +119,7 @@ This layering system lets you keep your general preferences in the primary
 config and only override what's needed per game.
 
 Refer to this section of the [Getting Started
-guide](../getting-started/passport-to-adventure.md#layered-configurations) for a
+guide](../../getting-started/passport-to-adventure.md#layered-configurations) for a
 more detailed description.
 
 
@@ -170,7 +170,7 @@ similar to how the `AUTOEXEC.BAT` file works on a real DOS PC.
 Here's an example configuration that launches a game executable `PRINCE`
 from the C: drive, then exits DOSBox Staging after you quit the game (taken from the
 [Getting started
-guide](../getting-started/enhancing-prince-of-persia.md#final-configuration);
+guide](../../getting-started/enhancing-prince-of-persia.md#final-configuration);
 you'll find more such config examples there):
 
 ```ini
@@ -192,7 +192,7 @@ exit
 
     The `[autoexec]` section must be the last section in the config file.
 
-See the [autoexec_section](system/general.md#autoexec_section) setting for
+See the [autoexec_section](../system/general.md#autoexec_section) setting for
 how autoexec sections from multiple config files are handled.
 
 
@@ -233,9 +233,10 @@ shader /?
 
 This is equivalent to `CONFIG -h setting` but much quicker to type.
 
-Some settings --- such as [`machine`](system/general.md#machine) --- require
-a reboot to take effect. After changing such a setting, use `CONFIG -r` to
-restart DOSBox. The setting's help text will tell you if a restart is needed.
+Some settings --- such as [`machine`](../system/general.md#machine) ---
+require a reboot to take effect. After changing such a setting, use `CONFIG
+-r` to restart DOSBox. The setting's help text will tell you if a restart is
+needed.
 
 !!! tip
 
@@ -248,25 +249,25 @@ restart DOSBox. The setting's help text will tell you if a restart is needed.
 
 - [Local configurations](#local-configuration) are great for customising
   your settings per game. This is especially true if you're interested in
-  playing games from different [DOS eras](dos-eras.md) that require very different
-  hardware configurations.
+  playing games from different [DOS eras](../introduction/dos-eras.md) that
+  require very different hardware configurations.
 
 - As DOSBox Staging comes with sensible defaults, you can keep your
   local configs quite minimal. There’s absolutely no need to
   specify every single setting in your local game-specific configs.
   Fully-populated configs are very cumbersome to manage if you have a large
   game library. The Getting Started guide contains
-  several such local config examples ([Prince of Persia](../getting-started/enhancing-prince-of-persia.md#final-configuration),
-  [Passport to Adventure](../getting-started/passport-to-adventure.md#final-configuration),
-  [Beneath A Steel Sky](../getting-started/beneath-a-steel-sky.md#final-configuration),
-  [Star Wars: Dark Forces](../getting-started/star-wars-dark-forces.md#final-configuration)).
+  several such local config examples ([Prince of Persia](../../getting-started/enhancing-prince-of-persia.md#final-configuration),
+  [Passport to Adventure](../../getting-started/passport-to-adventure.md#final-configuration),
+  [Beneath A Steel Sky](../../getting-started/beneath-a-steel-sky.md#final-configuration),
+  [Star Wars: Dark Forces](../../getting-started/star-wars-dark-forces.md#final-configuration)).
 
 - A good, easy-to-manage approach is to only change settings in the primary
   config that affect the general workings of the emulator (e.g.,
-  [fullscreen](graphics/display-and-window.md#fullscreen),
-  [pause_when_inactive](graphics/display-and-window.md#pause_when_inactive),
-  [language](system/general.md#language), setting the [master
-  volume](sound/mixer.md#volume), etc.) Settings that set up specific
+  [fullscreen](../graphics/display-and-window.md#fullscreen),
+  [pause_when_inactive](../graphics/display-and-window.md#pause_when_inactive),
+  [language](../system/general.md#language), setting the [master
+  volume](../sound/mixer.md#volume), etc.) Settings that set up specific
   hardware required by a game can then go into the local configs. If you
   reconfigure hardware in the primary config, there's always a risk that
   games configured for a certain hardware in their setup utility will stop
