@@ -25,13 +25,13 @@ correction, dedithering, deinterlacing, and image adjustments, see
 DOSBox Staging offers two frame presentation strategies, controlled by the
 [presentation_mode](#presentation_mode) setting:
 
-- [`dos-rate`](#dos-rate) presents frames at the refresh rate of the emulated DOS video
+- **`dos-rate`** presents frames at the refresh rate of the emulated DOS video
 mode (e.g., 70 Hz for standard VGA). This is the ideal choice for variable
 refresh rate (VRR) monitors (G-Sync, FreeSync, or VRR) --- the display
 synchronises directly to the emulated refresh rate, giving you perfect frame
 pacing with no tearing and low input lag.
 
-- [`host-rate`](#host-rate) presents the most recent frame at the host display's refresh
+- **`host-rate`* presents the most recent frame at the host display's refresh
 rate. This is intended for fixed refresh rate monitors (typically 60 Hz) with
 [vsync](#vsync) enabled to eliminate screen tearing in fast-paced games.
 
