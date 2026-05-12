@@ -89,8 +89,8 @@ drives:
 
 ```
 drives/
-  c/          -> mounted as C:
-  d/          -> mounted as D:
+  c/     -> mounted as C:
+  d/     -> mounted as D:
 ```
 
 The `drives/` folder is looked up relative to the current working directory or
