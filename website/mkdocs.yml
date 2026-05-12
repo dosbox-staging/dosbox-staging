@@ -195,6 +195,7 @@ nav:
       - Using DOSBox Staging:
         - 0.83/manual/configuration.md
         - 0.83/manual/command-line.md
+        - 0.83/manual/shell.md
         - 0.83/manual/commands.md
         - 0.83/manual/storage.md
         - 0.83/manual/hardware-resources.md
