@@ -1,3 +1,7 @@
+---
+toc_depth: 3
+---
+
 # Beneath a Steel Sky
 
 The next game we're going to set up is [Beneath a Steel
@@ -14,7 +18,7 @@ launching our growing collection of games more easily. Having to navigate to
 the game's folder whenever we want to launch gets old really fast. Here's
 how we can skip this step:
 
-<h3>Windows</h3>
+#### Windows
 
 1. Create a batch file called `Start DOSBox Staging.bat` with the following
     content:
@@ -39,7 +43,7 @@ how we can skip this step:
    batch file it references).
 
 
-<h3>macOS</h3>
+#### macOS
 
 You can rename the *Start DOSBox Staging* icons in the individual game folders
 to the names of the games; then, you can use Spotlight Search to start a game.
@@ -50,7 +54,7 @@ type in "Prince". The *Prince of Persia* icon will show up in the search
 results --- you can simply press ++enter++ on it to launch the game.
 
 
-<h3>Linux</h3>
+#### Linux
 
 The easiest way is to create a shell script with the following content (of
 course, modify the path passed in with the `--working-dir` option so it points
