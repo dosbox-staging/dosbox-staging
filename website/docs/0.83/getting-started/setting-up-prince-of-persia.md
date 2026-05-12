@@ -1,3 +1,7 @@
+---
+toc_depth: 3
+---
+
 # Setting up Prince of Persia
 
 ## First steps
@@ -6,21 +10,22 @@ We will set up the demo version of [Prince of
 Persia](https://www.mobygames.com/game/196/prince-of-persia/), the classic
 cinematic platformer from 1990, as our first example. It was a landmark game,
 and it can still provide countless hours of entertainment if you like
-platformers that require you to exercise that pesky grey matter a bit, too.
+platformers that require you to exercise that pesky grey matter a bit.
 
 First of all, we'll create a new folder to store all our DOS games. We'll
 use `DOS Games` throughout this guide, but you can pick any name you like.
 It's best to create this folder in your regular documents folder so DOSBox
 Staging has full read and write access to it (don't put it in a system folder,
-e.g., `Program Files` on Windows). Each game will have its dedicated subfolder
-under `DOS Games`, so let's create our first one called `Prince of Persia`.
+e.g., `Program Files` on Windows). Each game will have its own dedicated
+subfolder under `DOS Games`, so let's create our first one called `Prince of
+Persia`.
 
 Now download [pop1.zip][pop1] from the [Prince of Persia demo page][pop-demo]
 and extract its contents into `DOS Games/Prince of Persia`. The archive
 contains only two files: `pop1.txt` (a regular text file) and `pop1demo.exe`
 (an MS-DOS executable). Let's open `pop1.txt` in our text editor!
 
-[pop1]: https://www.dosgamesarchive.com/file/prince-of-persia/pop1
+[pop1]: https://www.dosgamesarchive.com/file/prince-of-persia/pop1demo
 [pop-demo]: https://www.dosgamesarchive.com/download/prince-of-persia
 
     It's like an Arabian Nights movie come to life... with you as the star!
@@ -38,122 +43,144 @@ than enough for our purposes here; you can always get the full game later.
 But there are no further instructions, so what should we do next? Well,
 setting up old DOS games is not all that dissimilar to solving adventure game
 puzzles. Getting past these puzzles requires some logical thinking, a little
-bit of background knowledge, and an element of trial and error is occasionally
-involved as well. Well, the user manual often helps, too, if you happen to own
+bit of background knowledge, and the occasional bit of trial and error.
+Of course, the user manual often helps, too, if you happen to own
 the original or can procure a [scanned copy][pop-manual] online (most often
 you can).
 
 [pop-manual]: https://ia600809.us.archive.org/29/items/princeofpersia_201708_201708/prince-of-persia_dos_04ra.pdf
 
 Luckily, this is an easy one: executable files (programs or scripts you can
-start) under MS-DOS have the `.EXE`, `.COM` or `.BAT` file extension. Looking
-at `pop1demo.exe` the solution is quite obvious: we'll need to run this
+start) under MS-DOS have the `.EXE`, `.COM`, or `.BAT` file extension. Looking
+at `pop1demo.exe`, the solution is quite obvious: we'll need to run this
 executable file in DOSBox!
 
 
 ## The C drive
 
 Most DOS games need a hard drive as a *hard requirement* (okay, I'll show
-myself to the door...), but DOSBox doesn't have access to your computer's hard
-drive by default where your programs and documents reside --- we need to tell it
-which folder to use as its "virtual DOS hard drive". This is called
-*mounting*; we *mount* a folder as the "DOS hard drive", the contents of which
-are then available to DOSBox as the *C drive*. All drives in DOS are assigned
-to the letters of the English alphabet (just like in Windows), and the C drive
-is usually your first hard drive.
+myself to the door...), but by default, DOSBox Staging doesn't have access to
+your computer's hard drive where your programs and documents reside --- we
+need to tell it which folder to use as its "virtual DOS hard drive". This is
+called **mounting**; we mount a folder as the "DOS hard drive", the contents
+of which are then available to DOSBox as the **C drive**. All drives in DOS
+are assigned letters from the English alphabet (just like in Windows), and the
+C drive is usually your first hard drive.
 
 The recommended way to mount the C drive is to create a `drives` subfolder
 inside your game folder. This `drives` folder is a "magic" folder with a
-special purpose: all its subfolders having single-letter names are
-automatically mounted as DOS drives with the same letter. In our case, we only
-need a single C drive, so we'll create a `c` subfolder inside our `drives`
-folder (technically, it does not make a difference whether you use uppercase or
-lowercase `C` on Windows and macOS, but it does in Linux).
-We'll then copy the files from the `pop1.zip` archive into `drives/c` to end
-up with the following folder structure:
+special purpose: all its subfolders with single-letter names are automatically
+mounted as DOS drives with the same letter. This mechanism to auto-mount
+subfolders like `drives/c` and `drives/d` as DOS drives is called
+[automounting](../../0.83/manual/storage.md#automounting) and is unique to
+DOSBox Staging.
+
+In our case, we only need a single C drive, so we'll create a `c` subfolder
+inside our `drives` folder (technically, it does not make a difference whether
+you use uppercase or lowercase "letter C" on Windows and macOS, but it does in
+Linux, so we recommend always using lowercase). We'll then copy the files from
+the `pop1.zip` archive into `drives/c` to end up with the following folder
+structure:
 
 ![Prince of Persia folder structure](images/prince-of-persia-dirtree1.png){ .skip-lightbox style="width: 16.5rem; margin: 0.3rem max(calc((50% - 16.5rem/2) * 0.85), 0rem);" }
 
-
-
 !!! info "Origins of the C drive"
 
-    Have you ever wondered where the name "C drive" in Windows is coming from?
+    Have you ever wondered where the name "C drive" on Windows comes from?
     This is something Windows inherited from its MS-DOS heritage (which in
     turn inherited it from CP/M). In DOS, all drives are assigned letters from
     A to Z. Most computers of the era had two floppy drives, so letters A and
-    B were reserved for them or other removable media and the first hard
-    drive partition was usually assigned to the letter C. We no longer have
+    B were reserved for them or other removable media, and the first hard
+    drive partition was usually assigned the letter C. We no longer have
     floppy drives in our computers as standard equipment, but this tradition
-    stuck around for backwards-compatibility reasons.
+    stuck around for backwards compatibility.
+
+    You can learn more about MS-DOS-era storage options and MS-DOS drives in
+    the [Storage](../../0.83/manual/storage.md) section of the user manual.
 
 
 !!! important "Attention, Windows users!"
 
     If you're a Windows user, do not confuse your *real* C drive, where your
-    operating system and programs are stored, with the "virtual DOS C drive" of
-    DOSBox. It is important to understand the distinction between these two as
-    they are completely separate concepts --- DOSBox will *not* see the contents
-    of your real C drive by default (or the contents of any of your other
-    drives, for that matter).
+    operating system and programs are stored, with the "virtual DOS C drive"
+    emulated inside DOSBox. You'll want to understand the distinction between
+    the two as they are completely separate concepts --- DOSBox will *not* see
+    the contents of your real Windows C drive by default (or the contents of
+    any of your other drives, for that matter).
 
 
 ## Starting DOSBox Staging
 
 Okay, with our C drive set up and ready to go, the next step is to start
 DOSBox Staging from our `DOS Games/Prince of Persia` folder. This is
-accomplished slightly differently on each platform:
+accomplished slightly differently on each platform.
 
-<h3>Windows</h3>
+#### Windows
 
-!!! warning First things first
+!!! warning "First things first"
 
-    After installing DOSBox Staging, it's highly recommended that you open it
-    once using the Start Menu shortcut of the desktop icon [as described
-    here](../../releases/windows.md#windows-defender); otherwise, the
+    After installing DOSBox Staging, we strongly recommended starting it once
+    using the Start Menu shortcut or the desktop icon [as described
+    here](../../releases/windows.md#windows-defender). Otherwise, the
     instructions below might not work.
 
 If you have used the installer with the default options to set up DOSBox
-Staging (and it's highly recommended to do so while you're still learning the
-ropes), simply right-click on the `Prince of Persia` folder in Windows
-Explorer and select the *Open with DOSBox Staging* in the context menu.
+Staging (and we recommended doing so while you're still learning the ropes),
+simply right-click on the `Prince of Persia` folder in Windows Explorer and
+select **Open with DOSBox Staging** in the context menu.
 
-Alternatively, you can enter the folder, right-click anywhere on the blank
-area inside it, and then select *Open with DOSBox Staging* in the context
-menu.
+Alternatively, navigate to the folder in Windows Explorer, right-click
+anywhere on the blank area inside it, and then select **Open with DOSBox
+Staging** in the context menu.
 
-<h3>macOS</h3>
+#### macOS
+
+##### Method 1 — document packages
+
+The simplest way on macOS is to use DOSBox Staging document packages. Simply
+add the **.dosbox** extension to the game folder's name in Finder (so **Prince
+of Persia** becomes **Prince of Persia.dosbox**), then double-click it to
+launch DOSBox Staging.
+
+##### Method 2 — launch icons
+
+We instructed you not to delete the DMG disk image just yet, remember? If you
+missed that, please download it again, then do the following:
 
 1. Mount the DOSBox Staging installer `.dmg` image file.
-2. Copy the *Start DOSBox Staging* icon the window that appears into the
-   `Prince of Persia` folder.
+
+2. Copy the **Start DOSBox Staging** icon from the window that appears into
+   the `Prince of Persia` folder.
+
 3. Right-click or ++ctrl++-click the icon, then select the topmost
-   *Open* menu item.
+   **Open** menu item.
+
 4. A dialog with the following text will appear: *macOS cannot verify the
    developer of "Start DOSBox Staging". Are you sure you want to open it?*
+
 5. Press the *Open* button.
+
 6. A dialog will open, asking for permission to allow DOSBox Staging access
-   to your Documents folder. Click on the *OK* button.
+   to your Documents folder. Click the *OK* button.
 
 
-You only need to perform this procedure once when opening the *Start DOSBox
-Staging* icon for the first time. After the first launch, you can use it like
-any other regular icon.
+You only need to perform this procedure the first time you open the **Start
+DOSBox Staging**. After the first launch, you can use it like any other
+regular icon.
 
 !!! tip
 
-    To avoid having to repeat these steps whenever you set up a new game, copy
-    an icon on which you have already performed this initial procedure into
-    your new game folder rather than copying the original one from the `.dmg`
-    file.
+    You don't need to repeat this procedure for every new game. Once you've
+    opened an icon once, just copy that same icon into any future game folder
+    --- no need to fetch a fresh one from the `.dmg` each time.
 
-<h3>Linux</h3>
+#### Linux
 
 Open your favourite terminal and `cd` into the `Prince of Persia` directory,
 then run the `dosbox` command from there.
 
-Make sure to check with the `--version` argument that you're running DOSBox
-Staging and not some other DOSBox variant:
+Use the `--version` argument to check that you're running DOSBox Staging and
+not some other DOSBox variant:
 
     % dosbox --version
     dosbox-staging, version 0.83.0
@@ -176,6 +203,8 @@ You'll be greeted by the following window when starting DOSBox Staging:
 
 ![DOSBox start screen](https://www.dosbox-staging.org/static/images/getting-started/dosbox-start.png){ loading=lazy }
 
+<!-- TODO update screenshot, make sure it has the automounting message  -->
+
 Let's ignore the polite welcome message for now and focus on the text below
 the big blue rectangle:
 
@@ -184,28 +213,31 @@ Local directory drives/c/ mounted as C drive
 Z:\>_
 ```
 
-The first line is pretty straightforward --- it tells us that DOSBox mounted
-`drives/c` we created earlier as the "C drive".
+The first line is pretty straightforward --- it tells us that DOSBox Staging
+mounted `drives/c` we created earlier as the "C drive". In MS-DOS, folders are
+called **directories** --- the various DOSBox messages usually use the word
+"directory", and we'll use the two terms interchangeably in this guide.
 
-The second line is the DOS prompt. DOS has a command line interface that
+The second line is the **DOS prompt**. DOS has a command line interface that
 predates graphical user interfaces we're accustomed to from modern operating
 systems. We get DOS to do things by typing in commands, and if we manage to do
 this correctly, DOS will follow our instructions to the letter (pun intended).
 DOS is *not* a multitasking operating system; you can only do a single thing
 in it at any given point in time.
 
-Let's analyse the prompt a little bit. It always starts with a letter followed
+Let's analyse the prompt a little bit: it always starts with a letter followed
 by a colon, which denotes the current drive. Right after startup, this is
-always the `Z` drive. This is a special drive that's always available; DOSBox
-stores some of its commands on it --- you don't need to worry about it now.
+always the **Z drive**. This is a special drive that's always available; DOSBox
+stores some of its commands on it --- you don't need to worry about it for
+now.
 
-After the colon is the path of the current folder or current *directory*
-in DOS terminology; this is currently the *root directory* of the `Z` drive as
-indicated by the `\` (backslash) character. The `>` character just signifies
-the end of the prompt, and the blinking underscore (`_`) character after it
-is --- guess what? --- the cursor.
+After the colon is the path of the current folder or current *directory* in
+DOS terminology; this is currently the **root directory** (topmost directory)
+of the Z drive as indicated by the `\` (backslash) character. The `>`
+character just signifies the end of the prompt, and the blinking underscore
+(`_`) character after it is --- guess what? --- the cursor.
 
-Okay, enough theory; type in `C:`, and then press ++enter++ to switch
+Okay, enough theory! Type in `C:`, and then press ++enter++ to switch
 to the C drive. The prompt should now reflect that we're in the root directory
 of the C drive:
 
@@ -232,9 +264,9 @@ C:\>_
 Well, that's what we put into our virtual C drive, so nothing too spectacular
 so far. We'll execute `pop1demo.exe` next! Type in `pop` and press the ++tab++
 key once to instruct DOSBox to complete the filename for you. This handy
-feature is called *tab completion*, and it saves you from a lot of typing!
+feature is called **[tab completion](../manual/shell.md#tab-completion)**, and it saves you from a lot of typing.
 Press ++tab++ a few more times and observe how it alternates between
-`POP1.TXT` and `POP1DEMO.EXE`; this makes sense as these are the only two
+`POP1.TXT` and `POP1DEMO.EXE` --- this makes sense as these are the only two
 files in the current directory that start with `pop`.
 
 !!! important "DOS filenames"
@@ -242,8 +274,8 @@ files in the current directory that start with `pop`.
     DOS filenames are always uppercase and are limited to 8 characters, plus
     an optional 3-character file extension. It does not matter whether you
     type in lowercase or uppercase letters because DOS will always convert
-    them to uppercase before dealing with your input. Tab completion always
-    uses uppercase because... I guess it just looks nice.
+    them to uppercase before processing your commands. Tab completion always
+    uses uppercase because... well, I guess it just looks nicer!
 
 Okay, let's make sure `POP1DEMO.EXE` is displayed in the prompt, then press
 ++enter++ to run this executable file. It turns out this is a
@@ -276,10 +308,10 @@ command with the `*.exe` wildcard search pattern!
 
 But instead of typing in `dir *.exe`, press ++up++ a few times until `dir`
 appears in the command line, then type in the rest (++space++ character
-followed by `*.exe`). This handy feature is called *command history*--- you can
-move forward and backward in the list of previously executed commands with the ++down++
-and ++up++ keys, respectively. Best of all, the command history is preserved
-across DOSBox Staging restarts.
+followed by `*.exe`). This handy feature is called **[command history](../manual/shell.md#command-history)** --- you
+can move forward and backward in the list of previously executed commands with
+the ++down++ and ++up++ keys, respectively. Best of all, the command history
+is preserved across DOSBox Staging restarts.
 
 Okay, so here's what the output looks like:
 
@@ -301,6 +333,11 @@ C:\>_
     contents in a wide list format. This command highlights executable files
     in green (`.EXE`, `.COM`, and `.BAT` file extensions) and directories
     (folders) in blue.
+
+    Another way is to use the special `dir.exe` syntax --- this will list all
+    files with the `.exe` extension. You can use this form with other
+    extensions too, of course.
+
 
 
 !!! note "FAT filesystem"

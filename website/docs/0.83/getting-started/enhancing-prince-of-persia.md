@@ -1,5 +1,8 @@
-# Enhancing Prince of Persia
+---
+toc_depth: 3
+---
 
+# Enhancing Prince of Persia
 
 ## Fullscreen mode
 
@@ -476,13 +479,13 @@ a continuous stream of timestamped messages in a separate window.
 
 The behaviour of the log window is different on each platform:
 
-<h3>Windows</h3>
+#### Windows
 
 The log window is opened by default when you start DOSBox Staging. You can
 hide the log window by passing the `--noconsole` argument to the DOSBox
 Staging executable.
 
-<h3>macOS</h3>
+#### macOS
 
 DOSBox Staging does not open the log window by default when started via its
 application icon or with the *Start DOSBox Staging* icon you copied from the
@@ -501,7 +504,7 @@ icon).
     double-click on it.
 
 
-<h3>Linux</h3>
+#### Linux
 
 Start DOSBox Staging from the terminal, and the logs will appear there.
 
