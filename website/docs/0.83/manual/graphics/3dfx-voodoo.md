@@ -82,8 +82,7 @@ CPU's actual core count will hurt performance rather than help it.
 
 Real Voodoo hardware always applied bilinear texture filtering, and
 [`voodoo_bilinear_filtering`](#voodoo_bilinear_filtering) matches that
-behaviour by default. Disabling it produces sharper but blockier textures and
-may improve performance on slower systems.
+behaviour by default. Disabling it produces sharper but blockier textures.
 
 
 ## Configuration settings
