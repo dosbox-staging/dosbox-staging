@@ -80,16 +80,16 @@ The default `auto` only enables it when Windows 3.1 is running, as it's
 required for some Windows 3.1 applications. In rare cases (e.g., Astral Blur
 demo), it can cause crashes in DOS games --- set it to `off` if that happens.
 
-## Shell and history
+## Shell settings
 
-The DOS shell supports persistent command history across sessions via the
-[`shell_history_file`](#shell_history_file) setting. Set it to empty to disable
-persistent history.
-
-The [`expand_shell_variable`](#expand_shell_variable) setting controls whether
-environment variables like `%PATH%` are expanded in the command shell. The
-default `auto` enables this for DOS 7.0+ (matching real FreeDOS and MS-DOS 7
-behaviour).
+The DOS shell supports persistent
+[command history](../using-dosbox-staging/shell.md#command-history) and
+environment variable expansion. The
+[`shell_history_file`](#shell_history_file) setting controls where the history
+is stored; set it to empty to disable persistence. The
+[`expand_shell_variable`](#expand_shell_variable) setting controls whether
+variables like `%PATH%` are expanded in commands --- the default `auto` enables
+this for DOS 7.0+ (matching real FreeDOS and MS-DOS 7 behaviour).
 
 ## PCjr memory
 
