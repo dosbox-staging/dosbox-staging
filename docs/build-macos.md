@@ -34,6 +34,9 @@ Tools need to be installed and the license agreed to.
 
 3. Install build dependencies using either Homebrew or MacPorts.
 
+You might need to run `sudo xcodebuild -license` as well to accept the license
+agreements again if the CMake build step fails.
+
 
 ## Installing dependencies
 
@@ -77,6 +80,15 @@ cd dosbox-staging
 meson setup build
 meson compile -C build
 ```
+
+## Troubleshooting tips
+
+- **No CMAKE_C_COMPILER could be found.** --- Make sure you don't have any
+  pending Xcode updates that haven't been completed yet.
+
+- **Random CMake errors**. --- You might need to run `sudo xcodebuild
+  -license` to accept the license agreements again. This usually happens after
+  an Xcode upgrade.
 
 
 ## Offline documentation
@@ -403,7 +415,7 @@ signing.
 
 4. Click on the **+** button and add all available certificates (probably
    **Apple Development Certificates** is only one needed, but it doesn't hurt
-   to add them all). 
+   to add them all).
 
 5. Quit XCode, then open Keychain Access and verify the new certificates and
    keys have been imported. Search for "developer" --- you should see a bunch
@@ -427,7 +439,7 @@ These instructions are adapted from [here](https://github.com/electron/notarize/
 
        xcrun notarytool store-credentials "notary-tool-profile" \
            --apple-id "<your-apple-id>" \
-           --team-id "<10-char-team-id>" 
+           --team-id "<10-char-team-id>"
            --password "<app-specific-pw>"
 
    You should get the following input if all went well:
