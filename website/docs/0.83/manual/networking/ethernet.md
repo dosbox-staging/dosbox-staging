@@ -100,4 +100,4 @@ section.
 
 :   Forward one or more UDP ports from the host into the DOS guest (unset by
     default). The format is the same as for
-    [tcp_port_forwards](#tcp_port_forwards).
+    [`tcp_port_forwards`](#tcp_port_forwards).

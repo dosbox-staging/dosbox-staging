@@ -7,8 +7,8 @@ satisfying about hearing the floppy drive chatter while a game loads.
 
 For the full "waiting for the game to load" experience, pair disk noises
 with throttled disk speeds (see the
-[floppy_disk_speed](../system/general.md#floppy_disk_speed) and
-[hard_disk_speed](../system/general.md#hard_disk_speed) settings). The
+[`floppy_disk_speed`](../system/general.md#floppy_disk_speed) and
+[`hard_disk_speed`](../system/general.md#hard_disk_speed) settings). The
 volume is adjustable via the `DISKNOISE` [mixer
 channel](mixer.md#list-of-mixer-channels).
 
@@ -26,7 +26,7 @@ section.
 
 :   Enable emulated floppy disk noises. Plays spinning disk and seek noise
     sounds when enabled. It's recommended to set
-    [floppy_disk_speed](../system/general.md#floppy_disk_speed) to lower than
+    [`floppy_disk_speed`](../system/general.md#floppy_disk_speed) to lower than
     `maximum` for an authentic experience.
 
     Possible values:
@@ -49,7 +49,7 @@ section.
 
 :   Enable emulated hard disk noises. Plays spinning disk and seek noise
     sounds when enabled. It's recommended to set
-    [hard_disk_speed](../system/general.md#hard_disk_speed) to lower than
+    [`hard_disk_speed`](../system/general.md#hard_disk_speed) to lower than
     `maximum` for an authentic experience.
 
     Possible values:

@@ -81,14 +81,14 @@ older games depend on. The other, more recent mode is **UART Mode**. Older
 titles often require Intelligent Mode, most more recent ones work fine with
 either.
 
-See [mpu401](#mpu401) for more details.
+See [`mpu401`](#mpu401) for more details.
 
 
 ## Setting up MIDI
 
 MIDI related settings are to be configured in the `[midi]` section. The most
-common usage scenario is to leave [mididevice](#mididevice) at its default
-`auto` setting, then set [midiconfig](#midiconfig) to:
+common usage scenario is to leave [`mididevice`](#mididevice) at its default
+`auto` setting, then set [`midiconfig`](#midiconfig) to:
 
 - `mt32` to use the built-in [Roland MT-32](roland-mt-32.md) emulation,
 - `fluidsynth` to use the built-in [FluidSynth](general-midi.md#fluidsynth) MIDI synthesiser,
@@ -170,7 +170,7 @@ MIDI related settings are to be configured in the `[midi]` section.
 
       - `port` *default*{ .default } --- A MIDI port of the host operating
         system's MIDI interface. You can configure the port to use with the
-        [midiconfig](#midiconfig) setting.
+        [`midiconfig`](#midiconfig) setting.
 
       - `fluidsynth` --- The built-in FluidSynth MIDI synthesiser (SoundFont
         player). See the [FluidSynth](general-midi.md#fluidsynth) configuration
@@ -186,7 +186,7 @@ MIDI related settings are to be configured in the `[midi]` section.
         further details.
 
       - `coreaudio` *(macOS only)* --- Use the built-in macOS MIDI synthesiser.
-        The SoundFont to use can be specified with [midiconfig](#midiconfig).
+        The SoundFont to use can be specified with [`midiconfig`](#midiconfig).
 
       - `none` --- Disable MIDI output.
 
@@ -195,7 +195,7 @@ MIDI related settings are to be configured in the `[midi]` section.
 
 :   Configuration options for the selected MIDI device.
 
-    Depending on the [mididevice](#mididevice) setting, the `midiconfig`
+    Depending on the [`mididevice`](#mididevice) setting, the `midiconfig`
     setting is interpreted as follows:
 
     <div class="compact" markdown>

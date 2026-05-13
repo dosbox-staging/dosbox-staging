@@ -57,7 +57,7 @@ To enable a serial mouse, use the `SERIAL 1 mouse` command (this attaches it
 to the COM1 port), or edit the [Serial ports](../networking/serial-ports.md)
 configuration.
 By default, DOSBox Staging tries to determine what type of mouse the program
-expects. See [com_mouse_model](#com_mouse_model) for details.
+expects. See [`com_mouse_model`](#com_mouse_model) for details.
 
 
 ## Dual mouse gaming
@@ -133,8 +133,8 @@ You can set the mouse parameters in the `[mouse]` configuration section.
 
     !!! note
 
-        - The [ps2_mouse_model](#ps2_mouse_model) and
-          [com_mouse_model](#com_mouse_model) settings have no effect on the
+        - The [`ps2_mouse_model`](#ps2_mouse_model) and
+          [`com_mouse_model`](#com_mouse_model) settings have no effect on the
           built-in driver.
 
         - The driver is auto-disabled if you boot into real MS-DOS or Windows
@@ -143,8 +143,8 @@ You can set the mouse parameters in the `[mouse]` configuration section.
 
         - To use a real DOS mouse driver (e.g., `MOUSE.COM` or
           `CTMOUSE.EXE`), configure the mouse type with
-          [ps2_mouse_model](#ps2_mouse_model) or
-          [com_mouse_model](#com_mouse_model), then load the driver.
+          [`ps2_mouse_model`](#ps2_mouse_model) or
+          [`com_mouse_model`](#com_mouse_model), then load the driver.
 
 
 ##### builtin_dos_mouse_driver_model
@@ -217,7 +217,7 @@ You can set the mouse parameters in the `[mouse]` configuration section.
 :   Set the default COM (serial) mouse model, or in other words, the type of
     the virtual mouse plugged into the emulated COM ports. The setting has no
     effect on the built-in mouse driver (see
-    [builtin_dos_mouse_driver](#builtin_dos_mouse_driver)).
+    [`builtin_dos_mouse_driver`](#builtin_dos_mouse_driver)).
 
     Possible values:
 
@@ -319,7 +319,7 @@ You can set the mouse parameters in the `[mouse]` configuration section.
 :   Set the PS/2 AUX port mouse model, or in other words, the type of the
     virtual mouse plugged into the emulated PS/2 mouse port. The setting has
     no effect on the built-in mouse driver (see
-    [builtin_dos_mouse_driver](#builtin_dos_mouse_driver)).
+    [`builtin_dos_mouse_driver`](#builtin_dos_mouse_driver)).
 
     Possible values:
 

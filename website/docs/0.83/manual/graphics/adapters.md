@@ -382,5 +382,5 @@ video adapter:
 - **[ReelMagic](reelmagic.md)** --- Sigma Designs MPEG-1 hardware decoder
   from 1993 for full-motion video in a handful of DOS titles.
 
-These are independent of the [machine](../system/general.md#machine) setting
+These are independent of the [`machine`](../system/general.md#machine) setting
 and can be used with any adapter.

@@ -6,7 +6,7 @@ settings will serve you well and need no adjustment. This chapter covers the
 cases where you might want to dig deeper.
 
 The most important decision for most users is how to handle [frame
-presentation](#frame-presentation) and [vsync](#vsync). If you have a variable
+presentation](#frame-presentation) and [`vsync`](#vsync). If you have a variable
 refresh rate monitor (AMD FreeSync, Nvidia G-Sync, or HDMI 2.1 VRR), the
 defaults give you perfect frame pacing with no tearing and no further
 configuration needed, regardless of any custom refresh rates a program might
@@ -30,7 +30,7 @@ correction, dedithering, deinterlacing, and image adjustments, see
 ## Frame presentation
 
 DOSBox Staging offers two frame presentation strategies, controlled by the
-[presentation_mode](#presentation_mode) setting:
+[`presentation_mode`](#presentation_mode) setting:
 
 - **`dos-rate`** presents frames at the refresh rate of the emulated DOS video
   mode (e.g., 70 Hz for standard VGA). This is the ideal choice for variable
@@ -40,7 +40,7 @@ DOSBox Staging offers two frame presentation strategies, controlled by the
 
 - **`host-rate`** presents the most recent frame at the host display's refresh
   rate. This is intended for fixed refresh rate monitors (typically 60 Hz)
-  with [vsync](#vsync) enabled to eliminate screen tearing in fast-paced
+  with [`vsync`](#vsync) enabled to eliminate screen tearing in fast-paced
   games.
 
 The default **`auto`** mode selects `dos-rate` when vsync is off and
@@ -104,30 +104,6 @@ judder inherent in the refresh rate mismatch.
     enabled.
 
 
-### Variable refresh rate notes
-
-**AMD FreeSync**, **Nvidia G-Sync**, and **HDMI 2.1 VRR** are all supported.
-Just enable variable refresh in your driver settings, set your desktop to the
-maximum refresh rate of your monitor, and choose the "let the application
-decide" vsync option. DOSBox Staging will automatically take advantage of VRR
-with the default settings.
-
-!!! danger
-
-    Do **not** use any frame limiters; those are only useful for modern games,
-    not emulators. Frame limiters **will cause** DOSBox Staging to
-    malfunction! Similarly, do **not** force vsync globally or for DOSBox
-    Staging specifically.
-
-!!! warning "Apple ProMotion notes"
-
-    **Apple ProMotion** is not "true VRR" like FreeSync and G-Sync. It was not
-    designed for the same low-latency, dynamic VRR experience, but primarily
-    for power efficiency on portable devices. However, if you connect your Mac
-    to a true VRR external monitor and select "Variable" refresh rate in
-    System Settings, you can take full advantage of VRR in DOSBox Staging.
-
-
 ### Vsync
 
 Because we're running a game inside an emulator, tearing can be introduced
@@ -142,9 +118,9 @@ at _two levels_:
 
 To get zero tearing on **fixed refresh rate** monitors, both conditions must
 be met: the game must vsync its own video output (i.e., no tearing on real
-hardware), and [vsync](#vsync) must be enabled at the DOSBox Staging level.
+hardware), and [`vsync`](#vsync) must be enabled at the DOSBox Staging level.
 
-On **VRR monitors**, the [vsync](#vsync) setting must be left at its default
+On **VRR monitors**, the [`vsync`](#vsync) setting must be left at its default
 `off` setting --- the monitor will sync automatically to the emulator's frame
 presentation rate, so you'll get no additional tearing.
 
@@ -185,16 +161,40 @@ refresh rate (VRR) monitors**:
     Do **not** force vsync globally at the GPU driver level (e.g., in Nvidia
     Control Panel or similar). Leave the global vsync settings at their
     defaults ("let the application decide") and only configure vsync via the
-    DOSBox Staging [vsync](#vsync) setting. Forcing global vsync causes
+    DOSBox Staging [`vsync`](#vsync) setting. Forcing global vsync causes
     problems with virtually all emulators, not just DOSBox Staging.
+
+
+### Variable refresh rate (VRR) tips
+
+**AMD FreeSync**, **Nvidia G-Sync**, and **HDMI 2.1 VRR** are all supported.
+Just enable variable refresh in your driver settings, set your desktop to the
+maximum refresh rate of your monitor, and choose the "let the application
+decide" vsync option. DOSBox Staging will automatically take advantage of VRR
+with the default settings.
+
+!!! warning "Apple ProMotion notes"
+
+    **Apple ProMotion** is not "true VRR" like FreeSync and G-Sync. It was not
+    designed for the same low-latency, dynamic VRR experience, but primarily
+    for power efficiency on portable devices. However, if you connect your Mac
+    to a true VRR external monitor and select "Variable" refresh rate in
+    System Settings, you can take full advantage of VRR in DOSBox Staging.
+
+!!! danger
+
+    Do **not** use any frame limiters; those are only useful for modern games,
+    not emulators. Frame limiters **will cause** DOSBox Staging to
+    malfunction! Similarly, do **not** force vsync globally or for DOSBox
+    Staging specifically.
 
 
 ### Fixed refresh monitor tips
 
 The simplest thing to do on fixed refresh monitors is to leave
-[`vsync`](#vsync) disabled. The tearing will only be noticeable in fast-paces
-games, like first-person shooters. In games with mostly static screesn (RPGs,
-adventures, and strategy games) the tearing is virtually unnoticeable.
+[`vsync`](#vsync) disabled. The tearing will only be noticeable in fast-paced
+3D games and smooth-scrolling 2D games. In games with mostly static screens
+(RPGs, adventures, and strategy games) the tearing is virtually unnoticeable.
 
 If really want to use vsync, you can create custom screen modes that match the
 DOS refresh rate exactly. Use the Nvidia Control Panel or [Custom Resolution
@@ -217,19 +217,19 @@ it on a per-game basis.
 
 ## Window settings
 
-The [window_size](#window_size) and [window_position](#window_position)
+The [`window_size`](#window_size) and [`window_position`](#window_position)
 settings control where and how large the DOSBox Staging window appears on
 startup. You can still resize the window freely after launch --- these only set
 the initial state. The named sizes (`small`, `medium`, `large`) are relative to
 your desktop, while the `WxH` format lets you request an exact size in logical
 units.
 
-On multi-monitor setups, use [display](#display) to select which screen DOSBox
-opens on, and [window_position](#window_position) to fine-tune placement.
+On multi-monitor setups, use [`display`](#display) to select which screen DOSBox
+opens on, and [`window_position`](#window_position) to fine-tune placement.
 
-[window_decorations](#window_decorations) controls whether the operating
+[`window_decorations`](#window_decorations) controls whether the operating
 system's title bar and window borders are shown.
-[window_transparency](#window_transparency) sets the window transparency level
+[`window_transparency`](#window_transparency) sets the window transparency level
 (0--90%).
 
 !!! note
@@ -241,7 +241,7 @@ system's title bar and window borders are shown.
 
 ## Titlebar customisation
 
-The [window_titlebar](#window_titlebar) setting controls what information
+The [`window_titlebar`](#window_titlebar) setting controls what information
 appears in the window's title bar. It accepts a space-separated list of
 parameters, each in `key=value` format.
 
@@ -260,21 +260,18 @@ Here are a few useful configurations:
 **Minimal** --- show only "DOSBox Staging", nothing else:
 
 ``` ini
-[sdl]
 window_titlebar = program=none dosbox=always cycles=off mouse=off
 ```
 
 **Custom game title** --- replace the program name with your own text:
 
 ``` ini
-[sdl]
 window_titlebar = program="Ultima VII" version=simple
 ```
 
 **Full detail** --- show the full program path and DOSBox version:
 
 ``` ini
-[sdl]
 window_titlebar = program=path version=detailed cycles=on mouse=full
 ```
 
@@ -439,17 +436,17 @@ section.
     Possible values:
 
     - `auto` *default*{ .default } -- Use `host-rate` if
-      [vsync](#vsync) is enabled, otherwise use `dos-rate`.
+      [`vsync`](#vsync) is enabled, otherwise use `dos-rate`.
 
     - `dos-rate` -- Present frames at the refresh rate of the emulated DOS
       video mode. This is the best option on variable refresh rate (VRR)
-      monitors. [vsync](#vsync) is not available with `dos-rate`
+      monitors. [`vsync`](#vsync) is not available with `dos-rate`
       presentation.
 
     - `host-rate` -- Present frames at the refresh rate of the host display.
-      Use this with [vsync](#vsync) enabled on fixed refresh rate monitors
+      Use this with [`vsync`](#vsync) enabled on fixed refresh rate monitors
       for fast-paced games where tearing is a problem. `host-rate` combined
-      with [vsync](#vsync) disabled can be a good workaround on systems that
+      with [`vsync`](#vsync) disabled can be a good workaround on systems that
       always enforce blocking vsync at the OS level (e.g., forced 60 Hz
       vsync could cause problems with VGA games presenting frames at 70 Hz).
 
@@ -470,13 +467,13 @@ section.
     - `on` -- Enable vsync in both windowed and fullscreen mode. This can
       prevent tearing in fast-paced games but will increase input lag. Vsync
       is only available with `host-rate` presentation (see
-      [presentation_mode](#presentation_mode)).
+      [`presentation_mode`](#presentation_mode)).
 
     - `fullscreen-only` -- Enable vsync in fullscreen mode only. This might
       be useful if your operating system enforces vsync in windowed mode and
       the `on` setting causes audio glitches or other issues in windowed mode
       only. Vsync is only available with `host-rate` presentation (see
-      [presentation_mode](#presentation_mode)).
+      [`presentation_mode`](#presentation_mode)).
 
     !!! note
 

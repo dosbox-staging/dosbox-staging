@@ -200,7 +200,7 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
       play forever.
     - `on` -- Wait 0.5s before fading out over a 0.5s period.
     - `<custom>` -- Custom fade-out definition; see
-      [opl_fadeout](adlib-cms-sound-blaster.md#opl_fadeout) for details on
+      [`opl_fadeout`](adlib-cms-sound-blaster.md#opl_fadeout) for details on
       the format.
 
 

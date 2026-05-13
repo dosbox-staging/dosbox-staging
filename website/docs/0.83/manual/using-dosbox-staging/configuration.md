@@ -192,7 +192,7 @@ exit
 
     The `[autoexec]` section must be the last section in the config file.
 
-See the [autoexec_section](../system/general.md#autoexec_section) setting for
+See the [`autoexec_section`](../system/general.md#autoexec_section) setting for
 how autoexec sections from multiple config files are handled.
 
 
@@ -264,9 +264,9 @@ needed.
 
 - A good, easy-to-manage approach is to only change settings in the primary
   config that affect the general workings of the emulator (e.g.,
-  [fullscreen](../graphics/display-and-window.md#fullscreen),
-  [pause_when_inactive](../system/general.md#pause_when_inactive),
-  [language](../system/general.md#language), setting the [master
+  [`fullscreen`](../graphics/display-and-window.md#fullscreen),
+  [`pause_when_inactive`](../system/general.md#pause_when_inactive),
+  [`language`](../system/general.md#language), setting the [master
   volume](../sound/mixer.md#volume), etc.) Settings that set up specific
   hardware required by a game can then go into the local configs. If you
   reconfigure hardware in the primary config, there's always a risk that

@@ -187,7 +187,7 @@ Gravis UltraSound settings are to be configured in the `[gus]` section.
 
 :   Enable Gravis UltraSound emulation. Many games and all demos upload their
     own sounds, but some rely on the instrument patch files included with the
-    GUS for MIDI playback (see [ultradir](#ultradir) for details). Some games
+    GUS for MIDI playback (see [`ultradir`](#ultradir) for details). Some games
     also require `ULTRAMID.EXE` to be loaded prior to starting the game.
 
     Possible values: `on`, `off` *default*{ .default }
