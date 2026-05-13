@@ -272,11 +272,28 @@ Other options worth trying:
 
 ### SoundFont locations
 
-By default, DOSBox Staging looks for SoundFont files in the `soundfonts`
-directory inside your configuration folder, as well as common system
-locations. If you keep your SoundFonts elsewhere, set
-[`soundfont_dir`](#soundfont_dir) to that directory --- DOSBox will search it
-first before falling back to the default locations.
+If [`soundfont_dir`](#soundfont_dir) is set, DOSBox Staging searches that
+directory first. Otherwise, it searches the following directories for
+SoundFont files (in order):
+
+**Windows**
+
+1. `%LOCALAPPDATA%\DOSBox\soundfonts\`
+2. `C:\soundfonts\`
+
+**macOS**
+
+1. `~/Library/Preferences/DOSBox/soundfonts/`
+2. `~/Library/Audio/Sounds/Banks/`
+
+**Linux**
+
+1. `$XDG_DATA_HOME/dosbox/soundfonts/` (defaults to `~/.local/share/dosbox/soundfonts/`)
+2. `$XDG_DATA_HOME/soundfonts/` (defaults to `~/.local/share/soundfonts/`)
+3. `$XDG_DATA_HOME/sounds/sf2/` (defaults to `~/.local/share/sounds/sf2/`)
+4. `$XDG_DATA_DIRS/soundfonts/` (defaults to `/usr/local/share/soundfonts/` and `/usr/share/soundfonts/`)
+5. `$XDG_DATA_DIRS/sounds/sf2/` (defaults to `/usr/local/share/sounds/sf2/` and `/usr/share/sounds/sf2/`)
+6. `$XDG_CONFIG_HOME/dosbox/soundfonts/` (defaults to `~/.config/dosbox/soundfonts/`)
 
 
 ### FluidSynth reverb and chorus
