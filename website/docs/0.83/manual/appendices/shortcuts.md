@@ -14,14 +14,15 @@ All bindings can be customised in the key mapper, accessible via
 
 ### General
 
-| Windows / Linux   | macOS             | Action             |
-| ---               | ---               | ---                |
-| ++ctrl+f1++       | ++cmd+f1++        | Open key mapper    |
-| ++alt+enter++     | ++alt+enter++     | Toggle fullscreen  |
-| ++alt+pause++     | ++cmd+p++         | Pause emulation    |
-| ++ctrl+f9++       | ++cmd+f9++        | Shut down DOSBox   |
-| ++ctrl+alt+home++ | ++cmd+ctrl+home++ | Restart DOSBox     |
-| ++alt+f12++       | ++alt+f12++       | Toggle turbo speed |
+| Windows / Linux   | macOS             | Action                  |
+| ---               | ---               | ---                     |
+| ++alt+enter++     | ++alt+enter++     | Toggle fullscreen       |
+| ++alt+pause++     | ++cmd+p++         | Pause emulation         |
+| ++ctrl+f1++       | ++cmd+f1++        | Open key mapper         |
+| ++ctrl+f4++       | ++cmd+f4++        | Swap mounted disk image |
+| ++alt+f12++       | ++alt+f12++       | Toggle turbo speed      |
+| ++ctrl+alt+home++ | ++cmd+ctrl+home++ | Restart DOSBox          |
+| ++ctrl+f9++       | ++cmd+f9++        | Shut down DOSBox        |
 
 
 ### CPU
@@ -62,7 +63,6 @@ All bindings can be customised in the key mapper, accessible via
 | Windows / Linux | macOS       | Action                  |
 | ---             | ---         | ---                     |
 | ++ctrl+f10++    | ++cmd+f10++ | Toggle mouse capture    |
-| ++ctrl+f4++     | ++cmd+f4++  | Swap mounted disk image |
 
 
 ### Joystick calibration
@@ -97,3 +97,19 @@ These shortcuts are only available when emulating specific machine types.
 | ++f11++     | `cga` / `pcjr` / `tandy` | Increase composite adjustment    |
 | ++alt+f11++ | `cga` / `pcjr` / `tandy` | Decrease composite adjustment    |
 
+
+### Image adjustments
+
+| Windows         | macOS           | Action                            |
+| ---             | ---             | ----                              |
+| ++win+alt+f9++  | ++cmd+alt+f9++  | Previous image adjustment setting |
+| ++win+alt+f10++ | ++cmd+alt+f10++ | Next image adjustment setting     |
+| ++win+alt+f11++ | ++cmd+alt+f11++ | Decrease current setting          |
+| ++win+alt+f12++ | ++cmd+alt+f12++ | Increase current setting          |
+
+| Linux            | Action                            |
+| ---              | ----                              |
+| ++meta+alt+f9++  | Previous image adjustment setting |
+| ++meta+alt+f10++ | Next image adjustment setting     |
+| ++meta+alt+f11++ | Decrease current setting          |
+| ++meta+alt+f12++ | Increase current setting          |
