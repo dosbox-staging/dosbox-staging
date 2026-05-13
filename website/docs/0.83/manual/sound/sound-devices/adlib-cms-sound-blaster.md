@@ -656,6 +656,12 @@ sbtype = sb16
 
 ## Audio artifact mitigation
 
+Real Sound Blaster and OPL hardware exhibited certain audio quirks --- startup
+pops, hanging notes, DC bias --- that were simply part of the experience at the
+time. DOSBox Staging faithfully emulates these behaviours, but also provides
+settings to mitigate them when strict authenticity is less important than a
+clean listening experience. These settings are best applied on a per-game basis.
+
 When a Sound Blaster card powers on, there is a brief transient pop before
 the DMA audio stabilises. The [`sbwarmup`](#sbwarmup) setting silences the
 initial DMA output for a configurable number of milliseconds (100 by default)
