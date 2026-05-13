@@ -65,6 +65,18 @@ DOSBox Staging will revert to sharp pixels (the `sharp` shader). For example,
 for the 640&times;480 VGA mode, the viewport height must be 480 &times; 3 =
 1440 pixels or greater.
 
+!!! note "VGA double scanning"
+
+    The 320&times;200 mode is double-scanned to 640&times;400 on VGA ---
+    that's just how the VGA hardware works, and emulating this is required for
+    authentic-looking results (two scanlines per pixel is the iconic
+    low-resolution VGA look). On all other graphics adapters, 320&times;200 is
+    single-scanned, so it remains 320&times;200.
+
+    On 1080p, the auto CRT shaders employ some "fake double scanning" trickery
+    to maximise the image for emulated VGA modes.
+
+
 ## Integer scaling
 
 The [`integer_scaling`](#integer_scaling) setting constrains the horizontal or
