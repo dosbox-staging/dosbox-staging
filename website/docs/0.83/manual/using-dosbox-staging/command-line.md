@@ -157,13 +157,13 @@ pages.
 ##### `--list-countries`
 
 :   List all supported countries with their numeric codes, for use with the
-    [`country`](../system/dos.md#country) config setting.
+    [`country`](../system/localisation.md#country) config setting.
 
 
 ##### `--list-layouts`
 
 :   List all supported keyboard layouts with their codes, for use with the
-    [`keyboard_layout`](../system/dos.md#keyboard_layout) config setting.
+    [`keyboard_layout`](../system/localisation.md#keyboard_layout) config setting.
 
 
 ##### `--list-code-pages`

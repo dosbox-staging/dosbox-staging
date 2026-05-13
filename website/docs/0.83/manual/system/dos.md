@@ -32,36 +32,8 @@ disabling the offending memory type is a quick fix.
 
 ## Regional settings
 
-DOSBox Staging automatically detects your host operating system's language
-and keyboard layout, so in most cases it just does the right thing out of
-the box. If you need to override the defaults --- perhaps you're running a
-German game on an English system, or you need a specific date format --- a
-few settings let you fine-tune the regional behaviour.
-
-The [`country`](#country) setting controls DOS-level formatting conventions:
-date and time format, decimal separators, currency symbols, and so on. The
-[`keyboard_layout`](#keyboard_layout) setting selects the DOS keyboard layout,
-determining which characters are produced by which keys.
-[`locale_period`](dos.md#locale_period) lets you specify the decimal separator
-regardless of the country setting.
-
-To see what's available on your system, start DOSBox Staging with the
-following command line arguments:
-
-- [`--list-countries`](../using-dosbox-staging/command-line.md#-list-countries)
-  --- lists all supported countries with their numeric codes
-
-- [`--list-layouts`](../using-dosbox-staging/command-line.md#-list-layouts)
-  --- lists all supported keyboard layouts with their codes
-
-- [`--list-code-pages`](../using-dosbox-staging/command-line.md#-list-code-pages)
-  --- lists all bundled code pages (screen fonts)
-
-
-!!! note 
-
-    Use the [`language`](general.md#language) setting in the `[dosbox]` section
-    to set the language of DOSBox Staging's own interface.
+For language, country, keyboard layout, and code page settings, see the
+dedicated [Localisation](localisation.md) chapter.
 
 ## DOS version and compatibility
 
@@ -101,57 +73,6 @@ with most games. A few very old PCjr titles ([Jumpman](https://www.mobygames.com
 ## Configuration settings
 
 You can set the DOS parameters in the `[dos]` configuration section.
-
-
-### Regional settings
-
-##### country
-
-:   Set DOS country code (`auto` by default). This affects country-specific
-    information such as date, time, and decimal formats. If set to `auto`, it
-    selects the country code reflecting the host OS settings.
-
-    !!! note
-
-        The list of country codes can be displayed using the
-        [`--list-countries`](../using-dosbox-staging/command-line.md#-list-countries)
-        command-line argument.
-
-
-##### keyboard_layout
-
-:   Keyboard layout code (`auto` by default). Set to `auto` to guess the
-    values from the host OS settings. The layout can be followed by the code
-    page number, e.g., `uk 850` selects a Western European screen font. After
-    startup, use the `KEYB` command to manage keyboard layouts and code pages
-    (run `HELP KEYB` for details).
-
-    !!! note
-
-        The list of supported keyboard layout codes can be displayed using
-        the
-        [`--list-layouts`](../using-dosbox-staging/command-line.md#-list-layouts)
-        command-line argument (e.g., `uk` is the British English layout).
-
-
-##### locale_period
-
-:   Set locale epoch.
-
-    Possible values:
-
-    <div class="compact" markdown>
-
-    - `native` *default*{ .default } -- Re-use current host OS settings,
-      regardless of the country set; use `modern` data to fill in the gaps
-      when the DOS locale system is too limited to follow the desktop
-      settings.
-    - `historic` -- If data is available for the given country, mimic old DOS
-      behaviour when displaying time, dates, or numbers.
-    - `modern` -- Follow current day practices for user experience more
-      consistent with typical host systems.
-
-    </div>
 
 
 ### Memory

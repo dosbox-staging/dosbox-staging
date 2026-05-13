@@ -17,9 +17,6 @@ The default 16 MB of RAM set via [`memsize`](#memsize) is more than enough for
 nearly all DOS software. A few late DOS-era games need 32 MB, but these are
 rare exceptions.
 
-The [`language`](#language) setting controls the language of DOSBox Staging's
-own user interface messages.
-
 
 ## General behaviour
 
@@ -312,22 +309,6 @@ The settings below are configured in the `[sdl]` section.
 
 
 ### DOS & shell
-
-##### language
-
-:   Select the DOS messages language.
-
-    Possible values:
-
-    - `auto` *default*{ .default } -- Detect the language from the host OS.
-    - `<value>` -- Load a translation from the given file.
-
-    !!! note
-
-        The following language files are available: `de`, `en`, `es`, `fr`,
-        `it`, `nl`, `pl`, `pt_BR`, and `ru`. English is built-in; the rest
-        is stored in the bundled `resources/translations` directory.
-
 
 ##### autoexec_section
 

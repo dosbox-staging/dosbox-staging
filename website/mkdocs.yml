@@ -204,6 +204,7 @@ nav:
         - 0.83/manual/system/general.md
         - 0.83/manual/system/cpu.md
         - 0.83/manual/system/dos.md
+        - 0.83/manual/system/localisation.md
 
       - Graphics:
         - 0.83/manual/graphics/adapters.md

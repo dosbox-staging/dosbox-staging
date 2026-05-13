@@ -266,7 +266,7 @@ needed.
   config that affect the general workings of the emulator (e.g.,
   [`fullscreen`](../graphics/display-and-window.md#fullscreen),
   [`pause_when_inactive`](../system/general.md#pause_when_inactive),
-  [`language`](../system/general.md#language), setting the [master
+  [`language`](../system/localisation.md#language), setting the [master
   volume](../sound/mixer.md#volume), etc.) Settings that set up specific
   hardware required by a game can then go into the local configs. If you
   reconfigure hardware in the primary config, there's always a risk that

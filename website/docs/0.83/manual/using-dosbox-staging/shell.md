@@ -222,9 +222,8 @@ European languages or **866** for Cyrillic).
 DOS localisation is a complex topic; keyboard layouts, display fonts, and file
 name handling all depend on code page settings and can interact in surprising
 ways. The [`KEYB`](commands.md) command can be used to switch keyboard
-layouts; see also the [`keyboard_layout`](../system/dos.md#keyboard_layout)
-setting. A dedicated localisation chapter covering this topic in depth is
-planned for a future manual revision.
+layouts; see the [Localisation](../system/localisation.md) chapter for details
+on keyboard layouts, code pages, and regional settings.
 
 
 ## Batch files & automation
