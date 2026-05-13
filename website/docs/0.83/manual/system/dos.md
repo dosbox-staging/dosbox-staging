@@ -95,7 +95,7 @@ behaviour).
 
 The [`pcjr_memory_config`](#pcjr_memory_config) setting controls memory layout
 on the emulated PCjr. The default `expanded` provides 640 KB and is compatible
-with most games. A few very old PCjr titles (Jumpman, Troll) require the
+with most games. A few very old PCjr titles ([Jumpman](https://www.mobygames.com/game/80/jumpman/), [Troll](https://www.mobygames.com/game/14214/troll/)) require the
 `standard` 128 KB layout.
 
 ## Configuration settings

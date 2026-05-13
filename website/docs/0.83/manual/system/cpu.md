@@ -150,10 +150,13 @@ The default `auto` is the fastest and most compatible option --- technically a
 it.
 
 - `386_prefetch` is needed for games that use self-modifying code or
-  anti-debugging tricks (requires `core = normal`). Known games: Contra, FIFA
-  International Soccer (1994), Terminator 1, X-Men: Madness in The
-  Murderworld.
-- `pentium` is recommended for Windows 3.1 games (e.g., Betrayal in Antara)
+  anti-debugging tricks (requires `core = normal`). Known games:
+  [Contra](https://www.mobygames.com/game/60474/contra/),
+  [FIFA International Soccer](https://www.mobygames.com/game/155/fifa-international-soccer/) (1994),
+  [Terminator 1](https://www.mobygames.com/game/1543/the-terminator/),
+  [X-Men: Madness in The Murderworld](https://www.mobygames.com/game/6162/x-men-madness-in-murderworld/).
+- `pentium` is recommended for Windows 3.1 games (e.g.,
+  [Betrayal in Antara](https://www.mobygames.com/game/1763/betrayal-in-antara/))
   as it adds RDTSC instruction support.
 - `pentium_mmx` adds MMX instructions, mostly useful for demoscene
   productions.
