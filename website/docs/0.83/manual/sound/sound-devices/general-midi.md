@@ -270,6 +270,30 @@ Other options worth trying:
     needed. Changing any `[fluidsynth]` setting takes effect immediately and
     triggers a SoundFont reload.
 
+### SoundFont locations
+
+By default, DOSBox Staging looks for SoundFont files in the `soundfonts`
+directory inside your configuration folder, as well as common system
+locations. If you keep your SoundFonts elsewhere, set
+[`soundfont_dir`](#soundfont_dir) to that directory --- DOSBox will search it
+first before falling back to the default locations.
+
+
+### FluidSynth reverb and chorus
+
+The [`fsynth_reverb`](#fsynth_reverb) and [`fsynth_chorus`](#fsynth_chorus)
+settings apply reverb and chorus effects *within the FluidSynth synthesiser
+engine itself*, before the audio reaches the DOSBox mixer. This is separate
+from the mixer-level [`reverb`](../mixer-effects.md#reverb) and
+[`chorus`](../mixer-effects.md#chorus) effects, which are applied after
+mixing to all audio channels. The FluidSynth effects only affect MIDI
+playback through FluidSynth.
+
+The default `auto` mode applies optimised settings for common SoundFonts. You
+can disable them and rely on the mixer-level effects instead, use both
+together, or fine-tune with custom parameters.
+
+
 For a hands-on walkthrough of setting up FluidSynth with a specific game,
 see the [Star Wars: Dark
 Forces](../../../getting-started/star-wars-dark-forces.md#setting-up-general-midi-sound)

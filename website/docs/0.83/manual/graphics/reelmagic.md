@@ -30,6 +30,21 @@ The following DOS games are known to use the ReelMagic card:
 </div>
 
 
+## Troubleshooting video playback
+
+ReelMagic games encode their MPEG video streams using a 32-bit key for copy
+protection. DOSBox Staging auto-detects this key for most games, but if videos
+play incorrectly (wrong speed, garbled frames), you may need to set
+[`reelmagic_key`](#reelmagic_key) manually. The `common` key works for most
+titles; The Horde uses a unique key (`thehorde`). A custom hex value can be
+provided for other games.
+
+If videos still play at the wrong speed despite the correct key, try
+overriding [`reelmagic_fcode`](#reelmagic_fcode) with a specific frame rate
+code (1--7). The default `0` auto-detects the rate from the video stream.
+Common values: 1=23.976, 2=24, 3=25, 4=29.97, 5=30 FPS.
+
+
 ## Configuration settings
 
 You can set the ReelMagic parameters in the `[reelmagic]` configuration

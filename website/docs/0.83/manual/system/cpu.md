@@ -142,6 +142,37 @@ cpu_cycles_protected = max
     the lowest fixed cycles value that runs the game at an acceptable speed.
 
 
+## CPU type
+
+The [`cputype`](#cputype) setting controls which CPU architecture is emulated.
+The default `auto` is the fastest and most compatible option --- technically a
+386 with 486 extensions and CPUID. Only change it if a specific game requires
+it.
+
+- `386_prefetch` is needed for games that use self-modifying code or
+  anti-debugging tricks (requires `core = normal`). Known games: Contra, FIFA
+  International Soccer (1994), Terminator 1, X-Men: Madness in The
+  Murderworld.
+- `pentium` is recommended for Windows 3.1 games (e.g., Betrayal in Antara)
+  as it adds RDTSC instruction support.
+- `pentium_mmx` adds MMX instructions, mostly useful for demoscene
+  productions.
+
+
+## Adjusting speed at runtime
+
+The [`cycleup`](#cycleup) and [`cycledown`](#cycledown) settings control how
+much the CPU speed changes when you press the increase/decrease hotkeys
+(++ctrl+f12++ / ++ctrl+f11++ on Windows/Linux, ++cmd+f12++ / ++cmd+f11++ on
+macOS). Values below 100 are treated as a percentage change; values of 100 or
+above are treated as a fixed number of cycles to add or subtract.
+
+The [`cpu_idle`](#cpu_idle) setting reduces host CPU usage when DOSBox is idle
+(e.g., waiting for input at the DOS prompt) by emulating the HLT instruction.
+It's enabled by default. Disable it if it conflicts with DOS power management
+tools like DOSidle or FDAPM.
+
+
 ## Configuration settings
 
 You can set the CPU emulation parameters in the `[cpu]` configuration

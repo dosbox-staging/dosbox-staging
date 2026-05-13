@@ -22,6 +22,19 @@ noticeable with the Roland MT-32, FluidSynth, OPL synth, and Red Book CD
 Audio.
 
 
+## Sample rate and silent mode
+
+The [`nosound`](#nosound) setting enables silent mode --- sound is still
+emulated but no audio reaches the host. This is useful for capturing audio to
+WAV files without hearing it, or for running DOSBox on systems without audio
+hardware.
+
+The [`rate`](#rate) setting controls the mixer's internal sample rate in Hz.
+The default 48000 Hz matches the native rate of virtually all modern audio
+hardware. Changing this is almost never necessary --- if you set a non-standard
+rate, the OS will resample to 48000 Hz anyway.
+
+
 ## The MIXER command
 
 To manage all these mixer channels, DOSBox provides the handy `MIXER` command
@@ -216,6 +229,11 @@ The `blocksize` should be a power of two: 256, 512, 1024, 2048, 4096, or
 8192. The `prebuffer` can be any value in milliseconds. Increase
 further if glitches persist, but keep in mind that larger buffers mean more
 noticeable input-to-sound delay.
+
+The [`negotiate`](#negotiate) setting lets the audio driver override your
+[`blocksize`](#blocksize) with a value it considers optimal. It's enabled by
+default on macOS and Linux; disable it only if you need to force a specific
+buffer size.
 
 Also make sure your [`cpu_cycles`](../system/cpu.md#cpu_cycles) isn't set
 higher than the game actually needs --- overdoing it wastes host CPU

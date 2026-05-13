@@ -199,6 +199,14 @@ resolution, and compare-and-swap operations. TypeScript type definitions are
 available in `api.d.ts`.
 
 
+The API server listens on
+[`webserver_bind_address`](#webserver_bind_address) (default `127.0.0.1`,
+localhost only) and [`webserver_port`](#webserver_port) (default `8080`). The
+default binding restricts access to the local machine. Do not bind to `0.0.0.0`
+or an external interface unless you understand the security implications --- the
+API provides full control over DOSBox internals, including memory access.
+
+
 ## Configuration settings
 
 You can set the web server parameters in the `[webserver]` configuration

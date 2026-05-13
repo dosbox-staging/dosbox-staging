@@ -169,6 +169,17 @@ exclusively.
 The Gravis UltraSound outputs to the **GUS** [mixer channel](../mixer.md#list-of-mixer-channels).
 
 
+## Hardware configuration
+
+The [`gusbase`](#gusbase), [`gusirq`](#gusirq), and [`gusdma`](#gusdma)
+settings configure the I/O address, interrupt, and DMA channel of the emulated
+GUS. The defaults (address 240, IRQ 5, DMA 3) are chosen to avoid conflicts
+with the Sound Blaster card, allowing both to coexist. Some games and demos
+expect the GUS factory defaults of address 220, IRQ 11, DMA 1. Note that
+certain versions of the DOS/4GW extender cannot handle IRQs above 7, so IRQ 11
+may cause problems with those titles.
+
+
 ## Configuration settings
 
 Gravis UltraSound settings are to be configured in the `[gus]` section.

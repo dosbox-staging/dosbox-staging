@@ -106,6 +106,47 @@ driver settings:
   to `2`.
 
 
+## Advanced driver options
+
+The [`builtin_dos_mouse_driver_options`](#builtin_dos_mouse_driver_options)
+setting accepts a list of options that address rare edge cases:
+
+- **`immediate`** --- Updates mouse movement counters without waiting for the
+  next interrupt, reducing input latency. This can help in fast-paced FPS and
+  arcade games, but is known to cause issues with
+  [Ultima Underworld: The Stygian Abyss](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/) and
+  [Ultima Underworld II: Labyrinth of Worlds](https://www.mobygames.com/game/691/ultima-underworld-ii-labyrinth-of-worlds/).
+
+- **`modern`** --- Emulates Microsoft mouse driver v7.0+ behaviour instead of
+  v6.0. Only [Descent II](https://www.mobygames.com/game/2509/descent-ii/)
+  with the official Voodoo patch is known to require this.
+
+- **`no-granularity`** --- Disables mouse position granularity filtering. Only
+  [Joan of Arc: Siege & the Sword](https://www.mobygames.com/game/3769/joan-of-arc-siege-the-sword/)
+  in Hercules mode is known to require this.
+
+You can combine multiple options; for example,
+`builtin_dos_mouse_driver_options = immediate, modern`.
+
+
+## Mouse capture and multi-monitor
+
+[`mouse_middle_release`](#mouse_middle_release) is enabled by default and lets
+you release the captured mouse by middle-clicking. Disable it if the game uses
+the middle mouse button.
+
+[`mouse_multi_display_aware`](#mouse_multi_display_aware) allows seamless mouse
+behaviour and pointer release to work in fullscreen on multi-monitor systems.
+Disable it if DOSBox incorrectly detects multiple displays (e.g., mirrored
+displays or an HDMI audio receiver showing up as a monitor).
+
+[`virtualbox_mouse`](#virtualbox_mouse) and
+[`vmware_mouse`](#vmware_mouse) enable virtual mouse interfaces for third-party
+[Windows 3.1](../using-dosbox-staging/windows-31.md) mouse drivers. Both
+default to on and are only relevant when running Windows 3.1 under DOSBox with
+custom drivers that use these protocols.
+
+
 ## Configuration settings
 
 You can set the mouse parameters in the `[mouse]` configuration section.
