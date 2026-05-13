@@ -837,7 +837,7 @@ The number after the `T` parameter describes the type of the card:
 
     <div class="compact" markdown>
 
-    - `none` -- Disable Sound Blaster emulation.
+    - `none`/`off` -- Disable Sound Blaster emulation.
     - `gb` -- [Creative Music System (CMS) / Game Blaster](#creative-music-system-cms-game-blaster)
     - `sb1` -- [Sound Blaster 1.0](#sound-blaster-10)
     - `sb2` -- [Sound Blaster 2.0](#sound-blaster-20)
