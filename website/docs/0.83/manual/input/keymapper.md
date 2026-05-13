@@ -95,8 +95,7 @@ binding. By default, the file is named `mapper-sdl2-<version>.map` and is
 stored alongside your primary config file.
 
 You can specify a custom mapper file path via the
-[`mapperfile`](../graphics/display-and-window.md#mapperfile) setting in the
-`[sdl]` section:
+[`mapperfile`](#mapperfile) setting in the `[sdl]` section:
 
 ``` ini
 [sdl]
@@ -215,6 +214,23 @@ delete the default mapper file and reset all bindings to their defaults.
 
     `--erasemapper` only deletes the default mapper file. If you're using a
     custom `mapperfile` path, you'll need to delete or edit that file manually.
+
+
+## Configuration settings
+
+The setting below is configured in the `[sdl]` section.
+
+##### mapperfile
+
+:   Path to the mapper file (`mapper-sdl2-XYZ.map` by default, where XYZ is
+    the current version). Pre-configured maps are bundled in
+    `resources/mapperfiles`. These can be loaded by name, e.g., with
+    `mapperfile = xbox/xenon2.map`.
+
+    !!! note
+
+        The [`--erasemapper`](../using-dosbox-staging/command-line.md#-erasemapper)
+        command line option only deletes the default mapper file.
 
 
 ## Limitations
