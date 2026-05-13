@@ -1,8 +1,8 @@
 # General
 
-The `[dosbox]` section contains the core system settings --- what type of
-machine to emulate, the amount of memory, and various general emulator
-options.
+This chapter covers general emulator settings from the `[dosbox]` and `[sdl]`
+configuration sections --- what type of machine to emulate, the amount of
+memory, and various general emulator options.
 
 The [machine](#machine) setting selects which video adapter to emulate. The
 default `svga_s3` (an S3 Trio64 SVGA card) covers the widest range of games.
@@ -19,6 +19,23 @@ rare exceptions.
 
 The [language](#language) setting controls the language of DOSBox Staging's
 own user interface messages.
+
+
+## General behaviour
+
+When you switch away from DOSBox Staging (e.g., by pressing Alt+Tab), the
+emulator keeps running in the background by default --- sound and all. If
+you'd rather not hear game music while you're doing something else,
+[mute_when_inactive](#mute_when_inactive) silences the audio output whenever
+the window loses focus.
+[pause_when_inactive](#pause_when_inactive) goes a step further and pauses the
+entire emulation, which is useful for games that don't have a built-in pause
+function.
+
+The [screensaver](#screensaver) setting controls whether the OS screensaver is
+allowed to activate while DOSBox is running. By default, it's blocked to
+prevent the screensaver from kicking in during a long cutscene or a game that
+doesn't require constant input.
 
 
 ## Video memory delay
@@ -48,6 +65,33 @@ games benefit from `vmem_delay = on`:
 
 You can set the general system parameters in the `[dosbox]` configuration
 section.
+
+
+### General behaviour
+
+The settings below are configured in the `[sdl]` section.
+
+##### mute_when_inactive
+
+:   Mute the sound when the window is inactive.
+
+    Possible values: `on`, `off` *default*{ .default }
+
+
+##### pause_when_inactive
+
+:   Pause emulation when the window is inactive.
+
+    Possible values: `on`, `off` *default*{ .default }
+
+
+##### screensaver
+
+:   Use `allow` or `block` to override the `SDL_VIDEO_ALLOW_SCREENSAVER`
+    environment variable which usually blocks the OS screensaver while the
+    emulator is running.
+
+    Possible values: `auto` *default*{ .default }, `allow`, `block`
 
 
 ### Video adapter
