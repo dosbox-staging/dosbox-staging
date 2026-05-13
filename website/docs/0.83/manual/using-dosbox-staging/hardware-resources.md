@@ -50,7 +50,6 @@ Staging configuration:
 | [Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md) | 220        | 7     | 1     | 5          | [`sbbase`](../sound/sound-devices/adlib-cms-sound-blaster.md#sbbase), [`irq`](../sound/sound-devices/adlib-cms-sound-blaster.md#irq), [`dma`](../sound/sound-devices/adlib-cms-sound-blaster.md#dma), [`hdma`](../sound/sound-devices/adlib-cms-sound-blaster.md#hdma) |
 | [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md)   | 240        | 5     | 3     | ---        | [`gusbase`](../sound/sound-devices/gravis-ultrasound.md#gusbase), [`gusirq`](../sound/sound-devices/gravis-ultrasound.md#gusirq), [`gusdma`](../sound/sound-devices/gravis-ultrasound.md#gusdma) |
 | [IBM Music Feature Card](../sound/sound-devices/imfc.md)           | 2A20       | 3     | ---   | ---        | [`imfc_base`](../sound/sound-devices/imfc.md#imfc_base), [`imfc_irq`](../sound/sound-devices/imfc.md#imfc_irq) |
-| [Innovation SSI-2001](../sound/sound-devices/innovation.md)        | 280        | ---   | ---   | ---        | (fixed) |
 | [NE2000 Ethernet](../networking/ethernet.md)                       | 300        | 3     | ---   | ---        | [`nicbase`](../networking/ethernet.md#nicbase), [`nicirq`](../networking/ethernet.md#nicirq) |
 
 !!! tip
@@ -74,6 +73,7 @@ configuration:
 | [Tandy / PCjr PSG](../sound/sound-devices/tandy.md)                                                      | C0                    | ---           | ---   |
 | [PC speaker](../sound/sound-devices/pc-speaker.md)                                                       | 61                    | ---           | ---   |
 | [Parallel port DACs](../sound/sound-devices/covox-variants.md) (Covox, Disney, Stereo-on-1)              | 378                   | ---           | ---   |
+| [Innovation SSI-2001](../sound/sound-devices/innovation.md)                                               | 280                   | ---           | ---   |
 | [IBM PS/1 Audio](../sound/sound-devices/ibm-ps1audio.md)                                                 | 200--205              | ---           | ---   |
 | Serial ports (COM1 / COM2 / COM3 / COM4)                                                                 | 3F8 / 2F8 / 3E8 / 2E8 | 4 / 3 / 4 / 3 | ---   |
 
