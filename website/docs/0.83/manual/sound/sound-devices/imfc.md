@@ -57,7 +57,7 @@ IBM Music Feature Card settings are to be configured in the `[imfc]` section.
 
 ##### imfc_base
 
-:   The IO base address of the IBM Music Feature Card.
+:   The I/O base address of the IBM Music Feature Card.
 
     Possible values: `2A20` *default*{ .default }, `2A30`.
 

@@ -33,77 +33,115 @@ is important because each requires a different DOSBox configuration.
 
 ### Native GUS
 
-Approximately 40 games have native GUS support. These titles use the card's
-hardware mixing to play tracker-style music, uploading their own samples
-directly to the GUS's on-board RAM --- no patch files or drivers needed. This
+These games use the card's hardware mixing directly, uploading their own
+samples to the GUS's on-board RAM --- no patch files or drivers needed. This
 is the GUS at its best: crystal-clear multi-channel audio mixed in hardware
-with a very low noise floor.
-
-??? note "Notable native GUS games"
-
-    - [Star Control II](https://www.mobygames.com/game/179/star-control-ii/)
-    - [Doom](https://www.mobygames.com/game/1068/doom/)
-    - [Epic Pinball](https://www.mobygames.com/game/263/epic-pinball/)
-    - [One Must Fall: 2097](https://www.mobygames.com/game/2862/one-must-fall-2097/)
-    - [Jazz Jackrabbit](https://www.mobygames.com/game/1487/jazz-jackrabbit/)
-    - [Tyrian](https://www.mobygames.com/game/2064/tyrian/)
-
-All demoscene productions with GUS support also fall into this category ---
-they upload their own instrument samples and use the hardware mixer directly.
-
-Native GUS games typically need only `gus = on` in the config. Select "Gravis
-UltraSound" (or similar) in the game's setup utility. No patch files or TSRs
-are required.
+with a very low noise floor. Native GUS games need only `gus = on` in the
+config. Select "Gravis UltraSound" (or similar) in the game's setup utility.
 
 ``` ini
 [gus]
 gus = on
 ```
 
+??? note "Notable native GUS games"
 
-### Gravis UltraMID
+    <div class="compact" markdown>
 
-Around 100 games support the GUS through **UltraMID**, a MIDI translation
-layer. These games send standard MIDI commands (just like they would to a
-[Roland MT-32](roland-mt-32.md) or [General MIDI](general-midi.md) device), and the UltraMID driver translates them
-into GUS hardware calls, loading the appropriate instrument samples from disk.
+    - [Al-Qadim: The Genie's Curse](https://www.mobygames.com/game/6731/al-qadim-the-genies-curse/)
+    - [Command & Conquer](https://www.mobygames.com/game/564/command-conquer/)
+    - [Discworld](https://www.mobygames.com/game/1201/discworld/)
+    - [Epic Pinball](https://www.mobygames.com/game/263/epic-pinball/)
+    - [Jazz Jackrabbit](https://www.mobygames.com/game/1487/jazz-jackrabbit/)
+    - [One Must Fall: 2097](https://www.mobygames.com/game/2862/one-must-fall-2097/)
+    - [Simon the Sorcerer](https://www.mobygames.com/game/749/simon-the-sorcerer/)
+    - [Star Control II](https://www.mobygames.com/game/179/star-control-ii/)
+    - [Tyrian](https://www.mobygames.com/game/2064/tyrian/)
+    - [Zone 66](https://www.mobygames.com/game/1638/zone-66/)
 
-The result can sound very good --- somewhere between FM synthesis and true
-General MIDI --- but it requires the GUS patch files to be installed. The
-patches must be placed in the directory pointed to by
-[`ultradir`](#ultradir) (default `C:\ULTRASND`), with the MIDI instrument
-bank in a `MIDI` subdirectory.
+    </div>
 
-Some UltraMID titles also require `ULTRAMID.EXE` to be loaded as a TSR before
-starting the game. When this is the case, add it to the `[autoexec]` section:
+All demoscene productions with GUS support also fall into this category ---
+they upload their own instrument samples and use the hardware mixer directly.
+
+
+### GUS MIDI with patch files
+
+These games have a built-in GUS driver that sends MIDI commands and loads
+instrument samples (patch files) from the [`ultradir`](#ultradir) directory to
+use as wavetable instruments. The GUS acts as a MIDI synthesiser --- the result
+can sound very good, somewhere between FM synthesis and true General MIDI. The
+patch files must be placed in a `MIDI` subdirectory under
+[`ultradir`](#ultradir) (default `C:\ULTRASND`).
 
 ``` ini
 [gus]
 gus = on
+ultradir = C:\ULTRASND
+```
+
+??? note "Notable GUS MIDI games"
+
+    <div class="compact" markdown>
+
+    - [Dark Sun: Shattered Lands](https://www.mobygames.com/game/1498/dark-sun-shattered-lands/)
+    - [Doom](https://www.mobygames.com/game/1068/doom/)
+    - [Dune II](https://www.mobygames.com/game/321/dune-ii-the-building-of-a-dynasty/)
+    - [Gabriel Knight: Sins of the Fathers](https://www.mobygames.com/game/1079/gabriel-knight-sins-of-the-fathers/)
+    - [Heretic](https://www.mobygames.com/game/1594/heretic/)
+    - [Hexen](https://www.mobygames.com/game/866/hexen-beyond-heretic/)
+    - [Lands of Lore: The Throne of Chaos](https://www.mobygames.com/game/501/lands-of-lore-the-throne-of-chaos/)
+    - [Rise of the Triad](https://www.mobygames.com/game/768/rise-of-the-triad-dark-war/)
+    - [Warcraft: Orcs & Humans](https://www.mobygames.com/game/1591/warcraft-orcs-humans/)
+    - [Warcraft II: Tides of Darkness](https://www.mobygames.com/game/481/warcraft-ii-tides-of-darkness/)
+
+    </div>
+
+
+### UltraMID
+
+These games have no GUS-specific code at all --- they send standard MIDI
+commands as if talking to a [Roland MT-32](roland-mt-32.md) or [General
+MIDI](general-midi.md) device. The `ULTRAMID.EXE` TSR provided by Gravis
+intercepts these MIDI commands and translates them into GUS hardware calls,
+loading instrument samples from the patch files on disk. Load `ULTRAMID.EXE`
+before starting the game:
+
+``` ini
+[gus]
+gus = on
+ultradir = C:\ULTRASND
 
 [autoexec]
 C:\ULTRASND\ULTRAMID.EXE
 ```
 
-!!! tip
-
-    If the game's setup utility offers both "Gravis UltraSound" and
-    "GUS MIDI" (or similar), try the native GUS option first --- it usually
-    sounds better. Fall back to the MIDI/UltraMID option if the native one
-    produces no music.
-
 ??? note "Notable UltraMID games"
 
+    <div class="compact" markdown>
+
+    - [Betrayal at Krondor](https://www.mobygames.com/game/236/betrayal-at-krondor/)
+    - [Eye of the Beholder](https://www.mobygames.com/game/1441/eye-of-the-beholder/)
     - [Hocus Pocus](https://www.mobygames.com/game/1237/hocus-pocus/)
-    - [Rise of the Triad](https://www.mobygames.com/game/768/rise-of-the-triad-dark-war/)
-    - [Raptor: Call of the Shadows](https://www.mobygames.com/game/1289/raptor-call-of-the-shadows/)
-    - [Blake Stone: Aliens of Gold](https://www.mobygames.com/game/1371/blake-stone-aliens-of-gold/)
-    - [Turrican II](https://www.mobygames.com/game/1652/turrican-ii-the-final-fight/)
+    - [Indiana Jones and the Fate of Atlantis](https://www.mobygames.com/game/1358/indiana-jones-and-the-fate-of-atlantis/)
+    - [Master of Orion](https://www.mobygames.com/game/466/master-of-orion/)
+    - [Monkey Island 2: LeChuck's Revenge](https://www.mobygames.com/game/616/monkey-island-2-lechucks-revenge/)
+    - [Sam & Max Hit the Road](https://www.mobygames.com/game/373/sam-max-hit-the-road/)
+    - [The 7th Guest](https://www.mobygames.com/game/561/the-7th-guest/)
+    - [Ultima Underworld: The Stygian Abyss](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/)
+    - [X-COM: UFO Defense](https://www.mobygames.com/game/1358/x-com-ufo-defense/)
 
+    </div>
 
-For a comprehensive list of games with GUS support (both native and
-UltraMID), consult the official **GLIST.TXT** compatibility list maintained
-by Gravis:
+!!! tip
+
+    If a game's setup utility offers both "Gravis UltraSound" and
+    "General MIDI" (or similar), the GUS option usually sounds better ---
+    it means the game has a built-in GUS driver. Fall back to the General
+    MIDI option with UltraMID if the GUS option doesn't work.
+
+For a comprehensive list of games with GUS support, consult the official
+**GLIST.TXT** compatibility list maintained by Gravis:
 
 - [gravisultrasound.com](http://www.gravisultrasound.com/files/documentation/GLIST.TXT)
 - [retronn.de mirror](https://retronn.de/ftp/driver/Gravis/UltraSound/GAMES/GLIST.TXT)
@@ -112,7 +150,8 @@ by Gravis:
 
 ## Setting up the GUS environment
 
-For games that need the patch files (UltraMID titles), you'll need to set up
+For games that need the patch files ([GUS MIDI](#gus-midi-with-patch-files) and
+[UltraMID](#ultramid) titles), you'll need to set up
 the GUS directory structure. The expected layout is:
 
 ```
@@ -140,9 +179,10 @@ ultradir = C:\ULTRASND
 
 !!! note
 
-    Native GUS games and all demos do *not* need the patch files --- they
-    upload their own instrument samples. You only need the `ULTRASND`
-    directory setup for UltraMID games.
+    [Native GUS](#native-gus) games and all demos do *not* need the patch
+    files --- they upload their own instrument samples. You only need the
+    `ULTRASND` directory setup for [GUS MIDI](#gus-midi-with-patch-files)
+    and [UltraMID](#ultramid) games.
 
 
 ## GUS-only configuration
@@ -172,10 +212,11 @@ The Gravis UltraSound outputs to the **GUS** [mixer channel](../mixer.md#list-of
 ## Hardware configuration
 
 The [`gusbase`](#gusbase), [`gusirq`](#gusirq), and [`gusdma`](#gusdma)
-settings configure the I/O address, interrupt, and DMA channel of the emulated
-GUS. The defaults (address 240, IRQ 5, DMA 3) are chosen to avoid conflicts
-with the Sound Blaster card, allowing both to coexist. Some games and demos
-expect the GUS factory defaults of address 220, IRQ 11, DMA 1. Note that
+settings configure the I/O base address, interrupt, and DMA channel of the
+emulated GUS. The defaults (base address 240, IRQ 5, DMA 3) are chosen to
+avoid conflicts with the Sound Blaster card, allowing both to coexist. Some
+games and demos expect the GUS factory defaults of base address 220, IRQ 11,
+DMA 1. Note that
 certain versions of the DOS/4GW extender cannot handle IRQs above 7, so IRQ 11
 may cause problems with those titles.
 
@@ -206,7 +247,7 @@ Gravis UltraSound settings are to be configured in the `[gus]` section.
 
 ##### gusbase
 
-:   The IO base address of the Gravis UltraSound.
+:   The I/O base address of the Gravis UltraSound.
 
     Possible values: `210`, `220`, `230`, `240` *default*{ .default }, `250`,
     `260`.
