@@ -161,12 +161,16 @@ can change when you unplug and reattach USB devices.
 
 By default, DOSBox Staging corrects common MIDI protocol errors in the output
 of DOS games. Many games send "All Notes Off" messages instead of proper
-per-note Note Off commands, which can cause hanging notes or editing problems
-when recording MIDI to a sequencer. The [`raw_midi_output`](#raw_midi_output)
-setting disables these corrections. This produces no audible difference --- it
-only affects how the MIDI data stream is represented. Enable it only if you
-need the unmodified MIDI output for debugging or working with music
-applications.
+per-note Note Off commands. DOSBox converts these to individual Note Off
+messages for each active note, which prevents hanging notes and makes recorded
+MIDI data easier to edit in a sequencer. This also fixes the infamous hanging
+notes issue with the Roland RA-50 external MIDI module, which does not
+implement the "All Notes Off" message at all.
+
+The [`raw_midi_output`](#raw_midi_output) setting disables these corrections.
+This produces no audible difference on most synthesisers --- it only affects
+how the MIDI data stream is represented. Enable it only if you need the
+unmodified MIDI output for debugging or working with music applications.
 
 
 ## Configuration settings
