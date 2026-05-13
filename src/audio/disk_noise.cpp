@@ -25,6 +25,18 @@ CHECK_NARROWING();
 static std::unique_ptr<DiskNoises> disk_noises    = nullptr;
 static const unsigned int DiskNoiseSampleRateInHz = 22050;
 
+const char* to_string(const DiskNoiseMode disk_noise_mode)
+{
+	switch (disk_noise_mode) {
+	case DiskNoiseMode::Off: return "off";
+	case DiskNoiseMode::SeekOnly: return "seek-only";
+	case DiskNoiseMode::On: return "on";
+	default:
+		assertm(false, "Invalid DiskNoiseMode enum");
+		return "unknown disk noise mode";
+	}
+}
+
 DiskNoises::DiskNoises(const DiskNoiseMode floppy_disk_noise_mode,
                        const DiskNoiseMode hard_disk_noise_mode,
                        const std::string& spin_up, const std::string& spin,
@@ -382,8 +394,13 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
         : disk_noise_mode(disk_noise_mode),
           disk_type(disk_type)
 {
+
+	LOG_INFO("DISKNOISE: %s noise emulation %s",
+	         to_string(disk_type),
+	         to_string(disk_noise_mode));
+
+	// Do not continue further if disk noise is disabled
 	if (disk_noise_mode == DiskNoiseMode::Off) {
-		LOG_INFO("DISKNOISE: Disk noise emulation disabled");
 		return;
 	}
 

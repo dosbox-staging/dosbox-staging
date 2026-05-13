@@ -137,8 +137,35 @@ static uint16_t DOS_GetAmount(void) {
 #include "cpu/cpu.h"
 #endif
 
+const char* to_string(const DiskType disk_type)
+{
+	switch (disk_type) {
+	case DiskType::Floppy: return "floppy";
+	case DiskType::HardDisk: return "hard disk";
+	case DiskType::CdRom: return "CD-ROM";
+	default: assertm(false, "Invalid DiskType"); return "unknown disk type";
+	}
+}
+
+const char* to_string(const DiskSpeed disk_speed)
+{
+	switch (disk_speed) {
+	case DiskSpeed::Maximum: return "maximum";
+	case DiskSpeed::Fast: return "fast";
+	case DiskSpeed::Medium: return "medium";
+	case DiskSpeed::Slow: return "slow";
+	default:
+		assertm(false, "Invalid DiskSpeed");
+		return "unknown disk speed";
+	}
+}
+
 void DOS_SetDiskSpeed(DiskSpeed disk_speed, DiskType disk_type)
 {
+	LOG_INFO("DOS: Setting %s disk speed to %s",
+	         to_string(disk_type),
+	         to_string(disk_speed));
+
 	switch (disk_type) {
 	case DiskType::Floppy: disk_settings.fdd_disk_speed = disk_speed; break;
 	case DiskType::HardDisk:
