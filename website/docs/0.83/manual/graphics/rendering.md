@@ -465,8 +465,9 @@ The available adjustments are:
 - [`red_gain`](#red_gain), [`green_gain`](#green_gain), and
   [`blue_gain`](#blue_gain) adjust individual colour channel gain.
 
-The image adjustment settings can be tweaked in real-time using hotkeys --- use
-the "Previous/Next Image Adjustment" hotkeys to select a setting and
+The image adjustment settings can be tweaked in real-time using
+[hotkeys](../appendices/shortcuts.md#image-adjustments) --- use
+"Previous/Next Image Adjustment" to select a setting and
 "Increase/Decrease" to adjust its value. The adjusted values are logged so you
 can copy them into your config file. Alternatively, use the `CONFIG -wc` DOS
 command to write the current settings to a config file.
