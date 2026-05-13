@@ -20,8 +20,9 @@ multiplayer.
 ## NE2000 hardware settings
 
 The [`nicbase`](#nicbase), [`nicirq`](#nicirq), and [`macaddr`](#macaddr)
-settings configure the I/O address, interrupt, and MAC address of the emulated
-NE2000 card. The defaults (base address 300, IRQ 3) are chosen to avoid
+settings configure the I/O base address, interrupt, and MAC address of the
+emulated NE2000 card. The defaults (base address 300, IRQ 3) are chosen to
+avoid
 conflicts with the Sound Blaster (base address 220) and Gravis UltraSound
 (base address 240). Your DOS packet driver and TCP/IP stack must be configured
 with the same base address and IRQ. The MAC address only needs to be changed

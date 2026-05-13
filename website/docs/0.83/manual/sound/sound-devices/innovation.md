@@ -44,7 +44,7 @@ You can set the parameters of the Innovation SSI-2001 card in the
 ##### innovation
 
 :   Enable emulation of the Innovation SSI-2001 and Microprose's "The
-Entertainer" sound cards on base port of 280. These use the iconic MOS 6581 SID
+Entertainer" sound cards on base address 280. These use the iconic MOS 6581 SID
 chip of the Commodore 64 personal computer from the 1980s. Only 15 games are
 known to support these cards.
 
