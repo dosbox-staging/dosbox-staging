@@ -442,6 +442,33 @@ the shader source.
 
 
 
+## Image adjustments
+
+The image adjustment system emulates the controls of a CRT monitor. The
+[`image_adjustments`](#image_adjustments) setting enables or disables all
+adjustments. When disabled, the raw RGB values from the emulated video adapter
+are displayed without any processing (except colour space conversion).
+
+The available adjustments are: [`brightness`](#brightness) and
+[`contrast`](#contrast) emulate the corresponding CRT monitor knobs ---
+brightness sets the black point, contrast sets the white point.
+[`gamma`](#gamma) applies additional gamma correction relative to the emulated
+monitor's gamma. [`digital_contrast`](#digital_contrast) and
+[`saturation`](#saturation) are applied directly to the raw framebuffer RGB
+values, unlike the CRT-emulating brightness/contrast controls.
+[`color_temperature`](#color_temperature) adjusts the white point in Kelvin;
+[`color_temperature_luma_preserve`](#color_temperature_luma_preserve) controls
+how much luminosity is preserved during the adjustment.
+[`red_gain`](#red_gain), [`green_gain`](#green_gain), and
+[`blue_gain`](#blue_gain) adjust individual colour channel gain.
+
+The image adjustment settings can be tweaked in real-time using hotkeys --- use
+the "Previous/Next Image Adjustment" hotkeys to select a setting and
+"Increase/Decrease" to adjust its value. The adjusted values are logged so you
+can copy them into your config file. Alternatively, use the `CONFIG -wc` DOS
+command to write the current settings to a config file.
+
+
 ## Configuration settings
 
 You can set the rendering parameters in the `[render]` configuration section.

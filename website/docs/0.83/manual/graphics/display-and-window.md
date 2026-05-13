@@ -215,6 +215,24 @@ rely on the original refresh rate for timing and may not work correctly. Try
 it on a per-game basis.
 
 
+## Fullscreen and display output
+
+DOSBox Staging starts in a window by default. Set [`fullscreen`](#fullscreen)
+to `on` to launch directly into fullscreen, or press ++alt+enter++ to toggle
+between windowed and fullscreen at any time. On Windows, if Alt+Tabbing out of
+fullscreen is slow or disruptive (typically caused by the graphics driver
+opting out of fullscreen optimisations, resulting in exclusive fullscreen), set
+[`fullscreen_mode`](#fullscreen_mode) to `forced-borderless` to force
+borderless fullscreen instead. This option is only available on Windows.
+
+The [`output`](#output) setting selects the rendering backend. The default
+`opengl` backend is the only one with shader support, and most users should
+never need to change it. The `texture` and `texturenb` backends exist as
+fallbacks for systems that lack OpenGL 3.3 Core Profile support.
+[`texture_renderer`](#texture_renderer) is only relevant when using one of the
+texture backends; the default `auto` value selects the best available driver.
+
+
 ## Window settings
 
 The [`window_size`](#window_size) and [`window_position`](#window_position)
@@ -429,6 +447,9 @@ section.
 
 ### Presentation
 
+The [`dos_rate`](#dos_rate) setting below is in the `[dosbox]` section; the
+rest are in `[sdl]`.
+
 ##### presentation_mode
 
 :   Set the frame presentation mode.
@@ -449,6 +470,34 @@ section.
       with [`vsync`](#vsync) disabled can be a good workaround on systems that
       always enforce blocking vsync at the OS level (e.g., forced 60 Hz
       vsync could cause problems with VGA games presenting frames at 70 Hz).
+
+
+##### dos_rate
+
+:   Override the emulated DOS video mode's refresh rate with a custom rate.
+
+    Possible values:
+
+    - `default` *default*{ .default } -- Don't override; use the emulated
+      DOS video mode's refresh rate.
+    - `host` -- Override the refresh rate of all DOS video modes with the
+      refresh rate of your monitor. This might allow you to play some 70 Hz
+      VGA games with perfect [`vsync`](#vsync) on a 60 Hz fixed refresh rate
+      monitor.
+    - `<number>` -- Override the refresh rate of all DOS video modes with a
+      fixed rate specified in Hz (valid range is from 24.000 to 1000.000).
+      This is a niche option for a select few fast-paced mid to late 1990s 3D
+      games for high refresh rate gaming.
+
+    !!! important
+
+        Many games will misbehave when overriding the DOS video mode's
+        refresh rate with non-standard values. This can manifest in glitchy
+        video, sped-up or slowed-down audio, jerky mouse movement, mouse
+        button presses not being registered, and even gameplay bugs.
+        Overriding the DOS refresh rate is a hack that only works acceptably
+        with a small subset of all DOS games (typically mid to late 1990s
+        games).
 
 
 ##### vsync

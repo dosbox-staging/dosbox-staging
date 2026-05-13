@@ -63,6 +63,41 @@ following command line arguments:
     Use the [`language`](general.md#language) setting in the `[dosbox]` section
     to set the language of DOSBox Staging's own interface.
 
+## DOS version and compatibility
+
+The [`ver`](#ver) setting controls which DOS version is reported to programs.
+The default `5.0` is the most widely compatible. Some older games require
+`3.3`, while a few late-era programs need `6.22` or `7.1`. Setting the DOS
+version to 7.0 or above automatically enables environment variable expansion
+in the DOS shell (see [`expand_shell_variable`](#expand_shell_variable)).
+
+The [`setver_table_file`](#setver_table_file) setting provides persistent
+storage for the `SETVER` command, which lets you report a different DOS version
+to specific programs without changing the global version.
+
+The [`file_locking`](#file_locking) setting emulates `SHARE.EXE` file locking.
+The default `auto` only enables it when Windows 3.1 is running, as it's
+required for some Windows 3.1 applications. In rare cases (e.g., Astral Blur
+demo), it can cause crashes in DOS games --- set it to `off` if that happens.
+
+## Shell and history
+
+The DOS shell supports persistent command history across sessions via the
+[`shell_history_file`](#shell_history_file) setting. Set it to empty to disable
+persistent history.
+
+The [`expand_shell_variable`](#expand_shell_variable) setting controls whether
+environment variables like `%PATH%` are expanded in the command shell. The
+default `auto` enables this for DOS 7.0+ (matching real FreeDOS and MS-DOS 7
+behaviour).
+
+## PCjr memory
+
+The [`pcjr_memory_config`](#pcjr_memory_config) setting controls memory layout
+on the emulated PCjr. The default `expanded` provides 640 KB and is compatible
+with most games. A few very old PCjr titles (Jumpman, Troll) require the
+`standard` 128 KB layout.
+
 ## Configuration settings
 
 You can set the DOS parameters in the `[dos]` configuration section.

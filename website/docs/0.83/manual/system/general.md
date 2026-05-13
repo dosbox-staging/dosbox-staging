@@ -38,6 +38,28 @@ prevent the screensaver from kicking in during a long cutscene or a game that
 doesn't require constant input.
 
 
+## VESA and VGA options
+
+The [`vesa_modes`](#vesa_modes) setting controls which VESA video modes are
+available beyond the standard VGA modes. The default `compatible` setting
+provides the safest set of modes --- it excludes 320x200 high colour modes
+(which weren't properly supported until the late 1990s) and certain 256-colour
+linear framebuffer modes that cause timing problems in Build Engine games (Duke
+Nukem 3D, Shadow Warrior, Blood). The `all` setting adds these extra modes and
+is sometimes needed by late 1990s demoscene productions. Use `halfline` only
+for Extreme Assault, which requires a special halfline VESA mode. See
+[`vesa_modes`](#vesa_modes) for the full resolution table.
+
+VGA text mode normally uses 9-pixel-wide character cells.
+[`vga_8dot_font`](#vga_8dot_font) forces 8-pixel-wide characters instead. Very
+few programs need this.
+
+[`vga_render_per_scanline`](#vga_render_per_scanline) is enabled by default and
+emulates accurate per-scanline VGA rendering. A few games crash at startup with
+it enabled (Deus, Ishar 3, Robinson's Requiem, Time Warriors) --- disable it on
+a per-game basis for those titles.
+
+
 ## Video memory delay
 
 The [`vmem_delay`](#vmem_delay) setting emulates the CPU-throttling effect of
@@ -200,35 +222,6 @@ The settings below are configured in the `[sdl]` section.
     - 848&times;480 widescreen modes (8/15/16/32-bit)
 
     </div>
-
-
-##### dos_rate
-
-:   Override the emulated DOS video mode's refresh rate with a custom rate.
-
-    Possible values:
-
-    - `default` *default*{ .default } -- Don't override; use the emulated
-      DOS video mode's refresh rate.
-    - `host` -- Override the refresh rate of all DOS video modes with the
-      refresh rate of your monitor. This might allow you to play some 70 Hz
-      VGA games with perfect [`vsync`](../graphics/display-and-window.md#vsync)
-      on a 60 Hz fixed refresh rate monitor.
-    - `<number>` -- Override the refresh rate of all DOS video modes with a
-      fixed rate specified in Hz (valid range is from 24.000 to 1000.000).
-      This is a niche option for a select few fast-paced mid to late 1990s 3D
-      games for high refresh rate gaming.
-
-    !!! important
-
-        Many games will misbehave when overriding the DOS video mode's
-        refresh rate with non-standard values. This can manifest in glitchy
-        video, sped-up or slowed-down audio, jerky mouse movement, mouse
-        button presses not being registered, and even gameplay bugs.
-        Overriding the DOS refresh rate is a hack that only works acceptably
-        with a small subset of all DOS games (typically mid to late 1990s
-        games).
-
 
 
 ##### vga_8dot_font

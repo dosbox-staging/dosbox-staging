@@ -157,6 +157,18 @@ Name-based identification is preferred over numeric IDs, as the numbers
 can change when you unplug and reattach USB devices.
 
 
+## MIDI output corrections
+
+By default, DOSBox Staging corrects common MIDI protocol errors in the output
+of DOS games. Many games send "All Notes Off" messages instead of proper
+per-note Note Off commands, which can cause hanging notes or editing problems
+when recording MIDI to a sequencer. The [`raw_midi_output`](#raw_midi_output)
+setting disables these corrections. This produces no audible difference --- it
+only affects how the MIDI data stream is represented. Enable it only if you
+need the unmodified MIDI output for debugging or working with music
+applications.
+
+
 ## Configuration settings
 
 MIDI related settings are to be configured in the `[midi]` section.

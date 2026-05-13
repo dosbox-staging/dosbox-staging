@@ -37,6 +37,27 @@ joy_x_calibration           = 0.576211,0.02
 joy_y_calibration           = 0.5474,-0.005
 ```
 
+## Advanced joystick settings
+
+The [`timed`](#timed) setting is enabled by default and emulates the original
+DOS game port's RC timing circuit for reading joystick positions. If your
+joystick drifts despite calibration, try disabling it --- the simpler untimed
+mode sometimes works better with certain USB controllers.
+[`circularinput`](#circularinput) compensates for analog sticks that are
+physically constrained to circular motion; pushing into a corner only reaches
+about 71% of the maximum range, and enabling this maps the circular input to a
+square coordinate space so you get full range in all directions.
+
+[`autofire`](#autofire) toggles each button on and off every frame while held,
+simulating rapid fire for arcade-style and shoot-em-up games.
+[`swap34`](#swap34) swaps the X and Y axes of the second joystick (axes 3 and
+4 in DOS game port terminology) if they appear reversed.
+[`buttonwrap`](#buttonwrap) makes extra controller buttons wrap around to the
+beginning of the emulated button set --- for example, if emulation provides 4
+buttons and your controller has 8, button 5 acts as button 1, button 6 as
+button 2, and so on. Without wrapping, excess buttons are simply ignored.
+
+
 ## Configuration settings
 
 You can set the joystick parameters in the `[joystick]` configuration

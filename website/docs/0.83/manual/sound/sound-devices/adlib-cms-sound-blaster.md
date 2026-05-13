@@ -654,6 +654,27 @@ sbtype = sb16
     </div>
 
 
+## Audio artifact mitigation
+
+When a Sound Blaster card powers on, there is a brief transient pop before
+the DMA audio stabilises. The [`sbwarmup`](#sbwarmup) setting silences the
+initial DMA output for a configurable number of milliseconds (100 by default)
+to suppress these startup pops. Reduce it if initial audio is getting cut off.
+
+Some games don't properly send note-off commands to the OPL FM synthesiser,
+resulting in notes that play forever. The [`opl_fadeout`](#opl_fadeout) setting
+monitors OPL port activity and fades out any remaining sound after the game
+stops writing to the chip. Known affected games include Bard's Tale. The
+`fade` preset waits 500 ms then fades over 500 ms; custom timing can be
+specified as two values in milliseconds.
+
+A small number of games play PCM (sampled) audio through the OPL synthesiser
+rather than using it for FM synthesis. This can cause clicking and popping due
+to DC bias in the OPL output. The [`opl_remove_dc_bias`](#opl_remove_dc_bias)
+setting removes this bias. Only enable it for known affected games: Golden
+Eagle (1991), Wizardry 6 (1990), and Wizardry 7 (1992).
+
+
 ## Configuration settings
 
 Due to their tightly coupled nature, all AdLib, Creative Music System (CMS),
