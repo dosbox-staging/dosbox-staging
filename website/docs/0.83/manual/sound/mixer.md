@@ -22,17 +22,21 @@ noticeable with the Roland MT-32, FluidSynth, OPL synth, and Red Book CD
 Audio.
 
 
-## Sample rate and silent mode
+## Audio output configuration
 
-The [`nosound`](#nosound) setting enables silent mode --- sound is still
-emulated but no audio reaches the host. This is useful for capturing audio to
-WAV files without hearing it, or for running DOSBox on systems without audio
-hardware.
+The mixer's internal sample rate is set via [`rate`](#rate). The default
+48000 Hz matches the native rate of virtually all modern audio hardware, and
+changing it is almost never necessary --- the OS will resample non-standard
+rates to 48000 Hz anyway.
 
-The [`rate`](#rate) setting controls the mixer's internal sample rate in Hz.
-The default 48000 Hz matches the native rate of virtually all modern audio
-hardware. Changing this is almost never necessary --- if you set a non-standard
-rate, the OS will resample to 48000 Hz anyway.
+The [`nosound`](#nosound) setting enables silent mode. Sound is still fully
+emulated, but no audio reaches the host. This can be useful for capturing
+the emulated audio output to a WAV file without hearing it, or for running
+DOSBox on headless systems without audio hardware.
+
+For buffer tuning ([`blocksize`](#blocksize), [`prebuffer`](#prebuffer),
+[`negotiate`](#negotiate)) and troubleshooting audio glitches, see
+[Minimising audio glitches](#minimising-audio-glitches) below.
 
 
 ## The MIXER command
