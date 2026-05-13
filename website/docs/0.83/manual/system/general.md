@@ -45,9 +45,13 @@ available beyond the standard VGA modes. The default `compatible` setting
 provides the safest set of modes --- it excludes 320x200 high colour modes
 (which weren't properly supported until the late 1990s) and certain 256-colour
 linear framebuffer modes that cause timing problems in Build Engine games (Duke
-Nukem 3D, Shadow Warrior, Blood). The `all` setting adds these extra modes and
-is sometimes needed by late 1990s demoscene productions. Use `halfline` only
-for Extreme Assault, which requires a special halfline VESA mode. See
+[Duke Nukem 3D](https://www.mobygames.com/game/365/duke-nukem-3d/),
+[Shadow Warrior](https://www.mobygames.com/game/1779/shadow-warrior/),
+[Blood](https://www.mobygames.com/game/793/blood/)). The `all` setting adds
+these extra modes and is sometimes needed by late 1990s demoscene productions.
+Use `halfline` only for
+[Extreme Assault](https://www.mobygames.com/game/1396/extreme-assault/), which
+requires a special halfline VESA mode. See
 [`vesa_modes`](#vesa_modes) for the full resolution table.
 
 VGA text mode normally uses 9-pixel-wide character cells.
