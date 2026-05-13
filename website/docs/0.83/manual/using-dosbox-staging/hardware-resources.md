@@ -69,6 +69,7 @@ configuration:
 | --------                                                                                                 | ----------            | -----         | ----- |
 | [AdLib / OPL](../sound/sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card) (FM synth) | 388                   | ---           | ---   |
 | [MPU-401](../sound/sound-devices/midi.md) (MIDI interface)                                               | 330                   | 9             | ---   |
+| [Game port](../input/joystick.md) (joystick)                                                             | 201                   | ---           | ---   |
 | [Tandy DAC](../sound/sound-devices/tandy.md)                                                             | C4                    | 7             | 1     |
 | [Tandy / PCjr PSG](../sound/sound-devices/tandy.md)                                                      | C0                    | ---           | ---   |
 | [PC speaker](../sound/sound-devices/pc-speaker.md)                                                       | 61                    | ---           | ---   |
