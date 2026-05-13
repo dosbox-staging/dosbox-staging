@@ -338,7 +338,9 @@ FluidSynth settings are to be configured in the `[fluidsynth]` section.
 
     Possible values:
 
-    - `auto` *default*{ .default } -- Enable reverb.
+    - `auto` *default*{ .default } -- Automatically apply optimised settings
+      for common SoundFonts, or enable reverb with the default settings for
+      all other SoundFonts.
     - `on` -- Enable reverb.
     - `off` -- Disable reverb.
     - `<custom>` -- Custom setting via four space-separated values:
@@ -359,8 +361,9 @@ FluidSynth settings are to be configured in the `[fluidsynth]` section.
 
     Possible values:
 
-    - `auto` *default*{ .default } -- Enable chorus, except for known
-      problematic SoundFonts.
+    - `auto` *default*{ .default } -- Automatically apply optimised settings
+      for common SoundFonts, or enable chorus with the default settings for
+      all other SoundFonts.
     - `on` -- Always enable chorus.
     - `off` -- Disable chorus.
     - `<custom>` -- Custom setting via five space-separated values:

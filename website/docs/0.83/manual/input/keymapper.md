@@ -83,8 +83,8 @@ play keyboard-only DOS games with a controller. The basic approach:
 
     When using a controller this way, set `joysticktype = hidden` in the
     `[joystick]` section so the game doesn't detect the controller as a
-    joystick. You may also want to set `capture_mouse = nomouse` in the
-    `[sdl]` section to prevent analog stick movement from being interpreted as
+    joystick. You may also want to set `mouse_capture = nomouse` in the
+    `[mouse]` section to prevent analog stick movement from being interpreted as
     mouse input.
 
 

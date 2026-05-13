@@ -86,13 +86,14 @@ See [`mpu401`](#mpu401) for more details.
 
 ## Setting up MIDI
 
-MIDI related settings are to be configured in the `[midi]` section. The most
-common usage scenario is to leave [`mididevice`](#mididevice) at its default
-`auto` setting, then set [`midiconfig`](#midiconfig) to:
+MIDI related settings are to be configured in the `[midi]` section. Set the
+[`mididevice`](#mididevice) setting to select which MIDI device to use:
 
 - `mt32` to use the built-in [Roland MT-32](roland-mt-32.md) emulation,
 - `fluidsynth` to use the built-in [FluidSynth](general-midi.md#fluidsynth) MIDI synthesiser,
-- or to an ID that identifies an external MIDI device.
+- `soundcanvas` to use the built-in [Sound Canvas](general-midi.md#sound-canvas) emulation,
+- or `port` (the default) to send MIDI data to an external device configured
+  via [`midiconfig`](#midiconfig).
 
 You can use the `mixer /listmidi` DOS command to see the list of available
 external MIDI devices.
@@ -200,21 +201,21 @@ MIDI related settings are to be configured in the `[midi]` section.
 
     <div class="compact" markdown>
 
-    | `mididevice` setting | `midiconfig` setting   
+    | `mididevice` setting | `midiconfig` setting
     | -------------------- | ----------------------
     | `none`               | N/A
     | `fluidsynth`         | N/A
     | `mt32`               | N/A
-    | `auto`               | <ul><li>`mt32` --- Use the built-in MT-32 synthesiser</li><li>`fluidsynth` --- Use the built-in FluidSynth MIDI synthesiser</li><li>`ID [delaysysex]` --- Use MIDI device external to DOSBox with this ID. The `delaysysex` option might be needed for some older external MIDI modules.</li></ul>
-    | `coreaudio`          | Name of the SoundFont to use.
-    | `coremidi`           | N/A
+    | `soundcanvas`        | N/A
+    | `port`               | `ID [delaysysex]` --- Use the MIDI device with this ID. The `delaysysex` option might be needed for some older external MIDI modules.
+    | `coreaudio`          | Path to the SoundFont to use.
 
     </div>
 
-    In `auto` mode, the `ID` can be either the numeric identifier of the MIDI
-    device (MIDI port) or a part of its name. Using the name-based
-    identification is preferable as the numbers can change if you unplug then
-    reattach your external MIDI adapters or audio interfaces.
+    With `mididevice = port`, the `ID` can be either the numeric identifier
+    of the MIDI device (MIDI port) or a part of its name. Using the
+    name-based identification is preferable as the numbers can change if you
+    unplug then reattach your external MIDI adapters or audio interfaces.
 
     Use the `mixer /listmidi` command to list the IDs and names of all MIDI
     devices available on your system.

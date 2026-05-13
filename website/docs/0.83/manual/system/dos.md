@@ -166,7 +166,7 @@ You can set the DOS parameters in the `[dos]` configuration section.
 
 :   Set DOS version in `MAJOR.MINOR` format (`5.0` by default). A single
     number is treated as the major version. Common settings are `3.3`, `5.0`,
- 
+    `6.22`, and `7.1`.
 
 ##### expand_shell_variable
 
@@ -217,7 +217,4 @@ You can set the DOS parameters in the `[dos]` configuration section.
 
 :   File containing persistent command line history (`shell_history.txt` by
     default). Setting it to empty disables persistent shell history.
-
-
-   `6.22`, and `7.1`.
 
