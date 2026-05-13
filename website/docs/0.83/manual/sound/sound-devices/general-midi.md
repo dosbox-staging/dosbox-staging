@@ -306,9 +306,22 @@ from the mixer-level [`reverb`](../mixer-effects.md#reverb) and
 mixing to all audio channels. The FluidSynth effects only affect MIDI
 playback through FluidSynth.
 
-The default `auto` mode applies optimised settings for common SoundFonts. You
-can disable them and rely on the mixer-level effects instead, use both
-together, or fine-tune with custom parameters.
+The default `auto` mode applies optimised reverb and chorus settings for the
+following SoundFonts (detected by filename or embedded metadata):
+
+<div class="compact" markdown>
+
+- **GeneralUser GS** --- custom reverb and chorus
+- **AWE32 SynthGS** --- custom reverb and chorus
+- **SB Live! 4GMGSMT** --- custom reverb and chorus
+- **FluidR3** --- chorus disabled (the SoundFont has its own)
+- **SC-55 SoundFont** (Trevor0402) --- custom reverb and chorus
+
+</div>
+
+All other SoundFonts get sensible default reverb and chorus settings. You can
+disable the FluidSynth effects and rely on the mixer-level effects instead,
+use both together, or fine-tune with custom parameters.
 
 
 For a hands-on walkthrough of setting up FluidSynth with a specific game,
