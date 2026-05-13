@@ -311,11 +311,11 @@ following SoundFonts (detected by filename or embedded metadata):
 
 <div class="compact" markdown>
 
-- **GeneralUser GS** --- custom reverb and chorus
-- **AWE32 SynthGS** --- custom reverb and chorus
-- **SB Live! 4GMGSMT** --- custom reverb and chorus
-- **FluidR3** --- chorus disabled (the SoundFont has its own)
-- **SC-55 SoundFont** (Trevor0402) --- custom reverb and chorus
+- [**GeneralUser GS**](https://schristiancollins.com/generaluser.php) --- custom reverb and chorus
+- [**AWE32 SynthGS**](https://github.com/mrbumpy409/AWE32-midi-conversions/blob/main/gm-soundfonts/synthgs-sf2_04-compat.sf2) --- custom reverb and chorus
+- [**SB Live! 4GMGSMT**](https://github.com/mrbumpy409/AWE32-midi-conversions/blob/main/gm-soundfonts/4gmgsmt-sf2_04-compat.sf2) --- custom reverb and chorus
+- [**FluidR3**](https://archive.org/download/fluidr3-gm-gs) --- chorus disabled (the SoundFont has its own)
+- [**SC-55 SoundFont**](https://archive.org/download/500-soundfonts-full-gm-sets/) (Trevor0402) --- custom reverb and chorus
 
 </div>
 
