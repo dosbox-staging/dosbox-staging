@@ -23,7 +23,7 @@ section.
 
 ##### keyboard_layout
 
-:   See [keyboard_layout](../system/dos.md#keyboard_layout).
+:   See [`keyboard_layout`](../system/dos.md#keyboard_layout).
 
 
 ##### keyboard_capture

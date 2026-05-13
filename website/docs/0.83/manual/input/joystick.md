@@ -26,7 +26,7 @@ However, some games have poor or limited calibration, resulting in drift or
 offset despite calibration attempts.
 
 For these cases, enable the
-[use_joy_calibration_hotkeys](#use_joy_calibration_hotkeys) setting and
+[`use_joy_calibration_hotkeys`](#use_joy_calibration_hotkeys) setting and
 adjust the joystick position in real time. Each tap of the hotkeys logs the
 calibration values, which you can then save in a per-game config:
 
@@ -145,7 +145,7 @@ section.
       respectively.
 
     Each tap will report X or Y calibration values you can set in
-    [joy_x_calibration](#joy_x_calibration) and
-    [joy_y_calibration](#joy_y_calibration). When you find parameters that
+    [`joy_x_calibration`](#joy_x_calibration) and
+    [`joy_y_calibration`](#joy_y_calibration). When you find parameters that
     work, quit the game, switch this setting back to `off`, and populate the
     reported calibration parameters.

@@ -8,7 +8,7 @@ independently per channel.
 The mixer uses a 32-bit floating-point processing path internally, so
 individual channels cannot be overloaded into clipping by high per-channel
 volume settings. A fixed 20 Hz high-pass filter on the master output removes
-DC offset and subsonic rumble. An auto-levelling [compressor](#compressor) on
+DC offset and subsonic rumble. An auto-levelling [`compressor`](#compressor) on
 the master channel prevents clipping of the final output.
 
 The default master volume is 50% (-6 dB) to avoid audible distortion in games
@@ -194,7 +194,7 @@ triggered by some games.
 
 ## Minimising audio glitches
 
-Even after setting the optimal [cpu_cycles](../system/cpu.md#cpu_cycles)
+Even after setting the optimal [`cpu_cycles`](../system/cpu.md#cpu_cycles)
 value, you may hear occasional clicks or pops. This depends on your
 particular hardware, audio driver, and operating system combination.
 
@@ -217,7 +217,7 @@ The `blocksize` should be a power of two: 256, 512, 1024, 2048, 4096, or
 further if glitches persist, but keep in mind that larger buffers mean more
 noticeable input-to-sound delay.
 
-Also make sure your [cpu_cycles](../system/cpu.md#cpu_cycles) isn't set
+Also make sure your [`cpu_cycles`](../system/cpu.md#cpu_cycles) isn't set
 higher than the game actually needs --- overdoing it wastes host CPU
 resources that could otherwise go towards glitch-free audio emulation.
 
@@ -255,20 +255,20 @@ settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#confi
     `512` on other platforms by default). Valid range is 64 to 8192. Should
     be set to power-of-two values (e.g., 256, 512, 1024). Larger values
     might help with sound stuttering but will introduce more latency. Also
-    see [negotiate](#negotiate).
+    see [`negotiate`](#negotiate).
 
 
 ##### prebuffer
 
 :   How many milliseconds of sound to render in advance on top of
-    [blocksize](#blocksize) (`25` on Windows, `20` on other platforms by
+    [`blocksize`](#blocksize) (`25` on Windows, `20` on other platforms by
     default). Larger values might help with sound stuttering but will
     introduce more latency.
 
 
 ##### negotiate
 
-:   Negotiate a possibly better [blocksize](#blocksize) setting (`off` on
+:   Negotiate a possibly better [`blocksize`](#blocksize) setting (`off` on
     Windows, `on` on other platforms by default). Enable if you're not
     getting audio or the sound is stuttering with your `blocksize` setting.
     Disable to force the manually set `blocksize` value.

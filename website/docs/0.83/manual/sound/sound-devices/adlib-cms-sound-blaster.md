@@ -97,10 +97,10 @@ little help, here are the values to use:
 
 | Setting                                | Config setting    | Default value |
 | -------------------------------------- | ----------------- | ------------- |
-| Base address (or I/O address, or port) | [sbbase](#sbbase) | 220           |
-| IRQ (or interrupt)                     | [irq](#irq)       | 7             |
-| DMA (or low DMA)                       | [dma](#dma)       | 1             |
-| High DMA (or HDMA)                     | [hdma](#hdma)     | 5             |
+| Base address (or I/O address, or port) | [`sbbase`](#sbbase) | 220           |
+| IRQ (or interrupt)                     | [`irq`](#irq)       | 7             |
+| DMA (or low DMA)                       | [`dma`](#dma)       | 1             |
+| High DMA (or HDMA)                     | [`hdma`](#hdma)     | 5             |
 
 </div>
 
@@ -165,8 +165,8 @@ linear-interpolation instead of accurately emulating the analog output filter
 in use, but it's not authentic.
 
 For the best authentic results, set the most appropriate Sound Blaster model
-for each game via the [sb_type](#sbtype) configuration setting. Additionally,
-set the [sb_filter](#sb_filter) setting to `auto` to let DOSBox select the
+for each game via the [`sb_type`](#sbtype) configuration setting. Additionally,
+set the [`sb_filter`](#sb_filter) setting to `auto` to let DOSBox select the
 output filter appropriate for the emulated Sound Blaster model.
 
 For example, use the following settings to enable authentic Sound Blaster Pro
@@ -239,7 +239,7 @@ oplmode = opl2
 
 !!! note
 
-    When [oplmode](#oplmode) is set to `opl2`, CMS emulation is always
+    When [`oplmode`](#oplmode) is set to `opl2`, CMS emulation is always
     enabled as well. This is legacy DOSBox behaviour, and will be addressed in
     a future version.
 
@@ -399,7 +399,7 @@ sbtype = sbpro1
     equipped Sound Blaster Pro 1.0, or the OPL3 chip of later models (OPL3 is
     capable of stereo sound in a single chip). It is important to configure
     these games for the appropriate Sound Blaster model via the
-    [sbtype](#sbtype) setting, and select the same model in the game's sound
+    [`sbtype`](#sbtype) setting, and select the same model in the game's sound
     setup. Failing to do so will produce mono OPL sound at best, or no sound
     at all at worst.
 
@@ -532,7 +532,7 @@ sbtype = sbpro2
     equipped Sound Blaster Pro 1.0, or the OPL3 chip of later models, such as
     the Sound Blaster Pro 2.0 (OPL3 is capable of stereo sound in a single
     chip). It is important to configure these games for the appropriate Sound
-    Blaster model via the [sbtype](#sbtype) setting, and select the same model
+    Blaster model via the [`sbtype`](#sbtype) setting, and select the same model
     in the game's sound setup. Failing to do so will produce mono OPL sound at
     best, or no sound at all at worst.
 
@@ -681,10 +681,10 @@ The meaning of the space-separated values are as follows:
 
 <div class="compact" markdown>
 
-- `Axyz` --- base address ([sbbase](#sbbase))
-- `Ix` --- IRQ number ([irq](#irq))
-- `Dx` --- DMA channel ([dma](#dma))
-- `Hx` --- High DMA channel ([hdma](#hdma))
+- `Axyz` --- base address ([`sbbase`](#sbbase))
+- `Ix` --- IRQ number ([`irq`](#irq))
+- `Dx` --- DMA channel ([`dma`](#dma))
+- `Hx` --- High DMA channel ([`hdma`](#hdma))
 
 </div>
 
@@ -751,7 +751,7 @@ The number after the `T` parameter describes the type of the card:
 
 :   Filter settings for the Sound Blaster digital audio output:
 
-    - `auto` -- Use the appropriate filter determined by the [sbtype](#sbtype)
+    - `auto` -- Use the appropriate filter determined by the [`sbtype`](#sbtype)
       setting.
     - `sb1`, `sb2`, `sbpro1`, `sbpro2`, `sb16` -- Use the digital audio filter
       of this Sound Blaster model.
@@ -897,7 +897,7 @@ The number after the `T` parameter describes the type of the card:
 
 :   Filter settings for the OPL output:
 
-    - `auto` *default*{ .default } -- Use the appropriate filter determined by the [sbtype](#sbtype) setting.
+    - `auto` *default*{ .default } -- Use the appropriate filter determined by the [`sbtype`](#sbtype) setting.
     - `sb1`, `sb2`, `sbpro1`, `sbpro2`, `sb16` -- Use the OPL filter of this Sound Blaster model.
     - `off` -- Don't filter the OPL output.
     - `<custom>` -- Custom filter definition; see
@@ -960,7 +960,7 @@ The number after the `T` parameter describes the type of the card:
     Possible values:
 
       - `auto` *default*{ .default } -- Use the appropriate model determined
-        by [sbtype](#sbtype).
+        by [`sbtype`](#sbtype).
 
       - `opl2` -- Yamaha OPL2 (YM3812, mono).
 

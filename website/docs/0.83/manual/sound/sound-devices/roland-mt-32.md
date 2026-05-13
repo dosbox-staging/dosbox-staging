@@ -207,7 +207,7 @@ Alternatively, you can create `mt32-roms` subfolders in your individual game
 folders to hold these ROMs, then DOSBox will find them when started from these
 game folders.
 
-You can customise where DOSBox looks for these ROMs, see the [romdir](#romdir)
+You can customise where DOSBox looks for these ROMs, see the [`romdir`](#romdir)
 configuration setting for further details.
 
 
@@ -299,7 +299,7 @@ Roland MT-32 settings are to be configured in the `[mt32]` section.
 ##### model
 
 :   Roland MT-32/CM-32L model to use. You must have the ROM files for the
-    selected model available (see [romdir](#romdir)). The lookup for the best
+    selected model available (see [`romdir`](#romdir)). The lookup for the best
     models is performed in order as listed.
 
     Possible values:

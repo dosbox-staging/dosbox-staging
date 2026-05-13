@@ -35,7 +35,7 @@ fallback at all.
 
 DOSBox Staging automatically enables composite emulation when a game switches
 to the 640&times;200 composite mode. For the more common 320&times;200 modes,
-you'll need to enable the [composite](#composite) setting manually.
+you'll need to enable the [`composite`](#composite) setting manually.
 
 ??? note "Notable games with composite video support"
 
@@ -79,21 +79,21 @@ you'll need to enable the [composite](#composite) setting manually.
 Artifact colours are sensitive to the phase of the composite signal, which
 means the hue can drift between different cards and setups. Real NTSC monitors
 had a physical tint dial for exactly this reason, and IBM even included a
-"COLOR ADJUST" trimpot on the PC motherboard to compensate. The [hue](#hue) setting
+"COLOR ADJUST" trimpot on the PC motherboard to compensate. The [`hue`](#hue) setting
 lets you replicate that adjustment --- if colours look off, this is the first
 thing to tweak. Adjust the hue setting for each game until the colours look
 as expected (e.g., blue skies, green grass).
 
 Early and late CGA card revisions produce slightly different artifact
 patterns, and some games were designed with one revision in mind. The
-[era](#era) setting lets you choose which to emulate.
+[`era`](#era) setting lets you choose which to emulate.
 
 
 ## Configuration settings
 
 You can set the CGA composite video parameters in the `[composite]`
 configuration section. CGA composite monitor emulation is only available for
-`cga`, `pcjr`, and `tandy` [machine](../system/general.md#machine) types.
+`cga`, `pcjr`, and `tandy` [`machine`](../system/general.md#machine) types.
 
 
 ##### composite
@@ -113,7 +113,7 @@ configuration section. CGA composite monitor emulation is only available for
     !!! note
 
         Fine-tune the composite emulation settings (e.g.,
-        [hue](#hue)) using the composite hotkeys, then
+        [`hue`](#hue)) using the composite hotkeys, then
         copy the new settings from the logs into your config.
 
 

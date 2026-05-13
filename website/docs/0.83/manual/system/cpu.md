@@ -1,6 +1,6 @@
 # CPU
 
-The [cpu_cycles](#cpu_cycles) setting controls the speed of the emulated CPU;
+The [`cpu_cycles`](#cpu_cycles) setting controls the speed of the emulated CPU;
 it's the single most important performance setting in DOSBox Staging. Getting
 it right can mean the difference between a game that plays perfectly and one
 that stutters, crawls, or races through its intro sequence.
@@ -16,12 +16,12 @@ cycles. 386-era titles want roughly 3,000--6,000. 486-class games like
 [Doom](https://www.mobygames.com/game/1068/doom/) are playable at around
 25,000 but might need up 50,000 cycles for a completely smooth experience.
 Late Pentium-era titles such as [Quake](https://www.mobygames.com/game/374/quake/)
-need 50,000 to 100,000 cycles or even more. See the [cpu_cycles](#cpu_cycles)
+need 50,000 to 100,000 cycles or even more. See the [`cpu_cycles`](#cpu_cycles)
 table for further details, or the
 [Getting Started guide](../../getting-started/beneath-a-steel-sky.md#adjusting-the-emulated-cpu-speed)
 for a practical walkthrough of finding the right speed.
 
-The `auto` setting for [core](#core) is the most sensible default --- it uses the faster
+The `auto` setting for [`core`](#core) is the most sensible default --- it uses the faster
 `dynamic` recompiler for protected-mode games and the more accurate `normal`
 interpreter for real-mode programs. You'll rarely need to override this.
 
@@ -58,7 +58,7 @@ to make a game run *smoothly*. Setting the cycles too high wastes host CPU
 power that could be used for glitch-free audio emulation --- there's no
 benefit to emulating a faster CPU than the game actually needs.
 
-Use the [cpu_cycles](#cpu_cycles) table as a starting point: look up what CPU
+Use the [`cpu_cycles`](#cpu_cycles) table as a starting point: look up what CPU
 the game was designed for, set the corresponding cycles value, then fine-tune
 from there:
 
@@ -213,7 +213,7 @@ section.
 ##### cpu_cycles
 
 :   Speed of the emulated CPU (`3000` by default). If
-    [cpu_cycles_protected](#cpu_cycles_protected) is on `auto`, this sets the
+    [`cpu_cycles_protected`](#cpu_cycles_protected) is on `auto`, this sets the
     cycles for both real and protected mode programs.
 
     Possible values:
@@ -266,7 +266,7 @@ section.
 
     Possible values:
 
-    - `auto` -- Use the [cpu_cycles](#cpu_cycles) setting.
+    - `auto` -- Use the [`cpu_cycles`](#cpu_cycles) setting.
     - `<number>` -- Emulate a fixed number of cycles per millisecond (roughly
       equivalent to MIPS). Valid range is from 50 to 2000000.
     - `max` -- Emulate as many cycles as your host CPU can handle on a single
@@ -276,7 +276,7 @@ section.
 
     !!! note
 
-        See [cpu_cycles](#cpu_cycles) for further info.
+        See [`cpu_cycles`](#cpu_cycles) for further info.
 
 
 ##### cpu_throttle

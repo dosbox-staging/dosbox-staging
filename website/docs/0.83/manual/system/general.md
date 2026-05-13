@@ -4,7 +4,7 @@ This chapter covers general emulator settings from the `[dosbox]` and `[sdl]`
 configuration sections --- what type of machine to emulate, the amount of
 memory, and various general emulator options.
 
-The [machine](#machine) setting selects which video adapter to emulate. The
+The [`machine`](#machine) setting selects which video adapter to emulate. The
 default `svga_s3` (an S3 Trio64 SVGA card) covers the widest range of games.
 You'll only need to change it for titles that specifically require CGA, EGA,
 Tandy, or Hercules graphics. See
@@ -13,11 +13,11 @@ adapter, or the
 [Getting Started guide](../../getting-started/setting-up-prince-of-persia.md)
 for a practical walkthrough.
 
-The default 16 MB of RAM set via [memsize](#memsize) is more than enough for
+The default 16 MB of RAM set via [`memsize`](#memsize) is more than enough for
 nearly all DOS software. A few late DOS-era games need 32 MB, but these are
 rare exceptions.
 
-The [language](#language) setting controls the language of DOSBox Staging's
+The [`language`](#language) setting controls the language of DOSBox Staging's
 own user interface messages.
 
 
@@ -26,13 +26,13 @@ own user interface messages.
 When you switch away from DOSBox Staging (e.g., by pressing Alt+Tab), the
 emulator keeps running in the background by default --- sound and all. If
 you'd rather not hear game music while you're doing something else,
-[mute_when_inactive](#mute_when_inactive) silences the audio output whenever
+[`mute_when_inactive`](#mute_when_inactive) silences the audio output whenever
 the window loses focus.
-[pause_when_inactive](#pause_when_inactive) goes a step further and pauses the
+[`pause_when_inactive`](#pause_when_inactive) goes a step further and pauses the
 entire emulation, which is useful for games that don't have a built-in pause
 function.
 
-The [screensaver](#screensaver) setting controls whether the OS screensaver is
+The [`screensaver`](#screensaver) setting controls whether the OS screensaver is
 allowed to activate while DOSBox is running. By default, it's blocked to
 prevent the screensaver from kicking in during a long cutscene or a game that
 doesn't require constant input.
@@ -40,7 +40,7 @@ doesn't require constant input.
 
 ## Video memory delay
 
-The [vmem_delay](#vmem_delay) setting emulates the CPU-throttling effect of
+The [`vmem_delay`](#vmem_delay) setting emulates the CPU-throttling effect of
 accessing slow video memory via the ISA bus on old video cards. This can fix
 flashing graphics and speed issues in Hercules, CGA, EGA, and early VGA games.
 
@@ -105,9 +105,9 @@ The settings below are configured in the `[sdl]` section.
     <div class="compact" markdown>
 
     - `hercules` -- Hercules Graphics Card (HGC) (see
-      [monochrome_palette](../graphics/rendering.md#monochrome_palette)).
+      [`monochrome_palette`](../graphics/rendering.md#monochrome_palette)).
     - `cga_mono` -- CGA adapter connected to a monochrome monitor (see
-      [monochrome_palette](../graphics/rendering.md#monochrome_palette)).
+      [`monochrome_palette`](../graphics/rendering.md#monochrome_palette)).
     - `cga` -- IBM Color Graphics Adapter (CGA). Also enables composite
       video emulation (see
       [Composite video](../graphics/composite-video.md)).
@@ -118,16 +118,16 @@ The settings below are configured in the `[sdl]` section.
     - `ega` -- IBM Enhanced Graphics Adapter (EGA).
     - `svga_paradise` -- Paradise PVGA1A SVGA card (no VESA VBE; 512K vmem
       by default, can be set to 256K or 1MB with
-      [vmemsize](#vmemsize)). This is the closest to IBM's original VGA
+      [`vmemsize`](#vmemsize)). This is the closest to IBM's original VGA
       adapter.
     - `svga_et3000` -- Tseng Labs ET3000 SVGA card (no VESA VBE; fixed 512K
       vmem).
     - `svga_et4000` -- Tseng Labs ET4000 SVGA card (no VESA VBE; 1MB vmem
       by default, can be set to 256K or 512K with
-      [vmemsize](#vmemsize)).
+      [`vmemsize`](#vmemsize)).
     - `svga_s3` *default*{ .default } -- S3 Trio64 (VESA VBE 2.0; 4MB vmem
       by default, can be set to 512K, 1MB, 2MB, or 8MB with
-      [vmemsize](#vmemsize)).
+      [`vmemsize`](#vmemsize)).
     - `vesa_oldvbe` -- Same as `svga_s3` but limited to VESA VBE 1.2.
     - `vesa_nolfb` -- Same as `svga_s3` (VESA VBE 2.0), plus the "no linear
       framebuffer" hack (needed only by a few games).
@@ -137,7 +137,7 @@ The settings below are configured in the `[sdl]` section.
 ##### vmemsize
 
 :   Video memory in MB (1--8) or KB (256 to 8192). See the
-    [machine](#machine) setting for the list of valid options and defaults
+    [`machine`](#machine) setting for the list of valid options and defaults
     per adapter.
 
     Possible values: `auto` *default*{ .default } (uses the default for the
@@ -152,7 +152,7 @@ The settings below are configured in the `[sdl]` section.
 
     - `compatible` *default*{ .default } -- Only the most compatible VESA
       modes for the configured video memory size. Recommended with 4 or 8 MB
-      of video memory ([vmemsize](#vmemsize)) for the widest compatibility
+      of video memory ([`vmemsize`](#vmemsize)) for the widest compatibility
       with games. 320x200 high colour modes are excluded as they were not
       properly supported until the late '90s. The 256-colour linear
       framebuffer 320x240, 400x300, and 512x384 modes are also excluded as
@@ -212,7 +212,7 @@ The settings below are configured in the `[sdl]` section.
       DOS video mode's refresh rate.
     - `host` -- Override the refresh rate of all DOS video modes with the
       refresh rate of your monitor. This might allow you to play some 70 Hz
-      VGA games with perfect [vsync](../graphics/display-and-window.md#vsync)
+      VGA games with perfect [`vsync`](../graphics/display-and-window.md#vsync)
       on a 60 Hz fixed refresh rate monitor.
     - `<number>` -- Override the refresh rate of all DOS video modes with a
       fixed rate specified in Hz (valid range is from 24.000 to 1000.000).

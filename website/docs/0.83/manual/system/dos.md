@@ -15,7 +15,7 @@ The first IBM PCs only supported up to 640 KB of memory --- the so-called
 RAM, a patchwork of standards emerged to make the extra memory available:
 
 - **XMS** (Extended Memory) --- the main pool of memory above 1 MB. This is
-  what the [memsize](general.md#memsize) setting controls (16 MB by default).
+  what the [`memsize`](general.md#memsize) setting controls (16 MB by default).
   Nearly all games from the late DOS era use XMS.
 
 - **EMS** (Expanded Memory) --- an older scheme that maps 64 KB pages of
@@ -38,11 +38,11 @@ the box. If you need to override the defaults --- perhaps you're running a
 German game on an English system, or you need a specific date format --- a
 few settings let you fine-tune the regional behaviour.
 
-The [country](#country) setting controls DOS-level formatting conventions:
+The [`country`](#country) setting controls DOS-level formatting conventions:
 date and time format, decimal separators, currency symbols, and so on. The
-[keyboard_layout](#keyboard_layout) setting selects the DOS keyboard layout,
+[`keyboard_layout`](#keyboard_layout) setting selects the DOS keyboard layout,
 determining which characters are produced by which keys.
-[locale_period](dos.md#locale_period) lets you specify the decimal separator
+[`locale_period`](dos.md#locale_period) lets you specify the decimal separator
 regardless of the country setting.
 
 To see what's available on your system, start DOSBox Staging with the
@@ -60,7 +60,7 @@ following command line arguments:
 
 !!! note 
 
-    Use the [language](general.md#language) setting in the `[dosbox]` section
+    Use the [`language`](general.md#language) setting in the `[dosbox]` section
     to set the language of DOSBox Staging's own interface.
 
 ## Configuration settings
