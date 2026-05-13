@@ -84,6 +84,8 @@ enum MediaId : uint8_t {
 };
 
 enum class DiskType { Floppy, HardDisk, CdRom };
+const char* to_string(DiskType disk_type);
+const char* to_string(DiskSpeed disk_speed);
 
 #define DOS_FILES   255
 #define DOS_DRIVES  26
