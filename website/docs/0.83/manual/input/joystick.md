@@ -39,10 +39,15 @@ joy_y_calibration           = 0.5474,-0.005
 
 ## Advanced joystick settings
 
-The [`timed`](#timed) setting is enabled by default and emulates the original
-DOS game port's RC timing circuit for reading joystick positions. If your
-joystick drifts despite calibration, try disabling it --- the simpler untimed
-mode sometimes works better with certain USB controllers.
+The [`timed`](#timed) setting controls how joystick positions are measured.
+When enabled (the default), positions are timed using the emulated system
+clock, which makes calibration independent of the CPU
+[`cpu_cycles`](../system/cpu.md#cpu_cycles) setting. When disabled, positions
+are measured by counting port reads --- just like real hardware --- which means
+changing CPU cycles will throw off joystick calibration. The timed mode works
+well for most setups, but if your joystick drifts despite calibration, try
+disabling it --- the simpler untimed mode sometimes works better with certain
+USB controllers.
 [`circularinput`](#circularinput) compensates for analog sticks that are
 physically constrained to circular motion; pushing into a corner only reaches
 about 71% of the maximum range, and enabling this maps the circular input to a
