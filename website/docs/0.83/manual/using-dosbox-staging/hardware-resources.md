@@ -45,13 +45,13 @@ this is what it means.
 These devices have I/O, IRQ, and/or DMA settings you can change in the DOSBox
 Staging configuration:
 
-| Device                                                             | I/O base   | IRQ   | DMA   | High DMA   | Config section   |
-| --------                                                           | ---------- | ----- | ----- | ---------- | ---------------- |
-| [Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md) | 220        | 7     | 1     | 5          | `[sblaster]`     |
-| [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md)   | 240        | 5     | 3     | ---        | `[gus]`          |
-| [IBM Music Feature Card](../sound/sound-devices/imfc.md)           | 2A20       | 3     | ---   | ---        | `[imfc]`         |
-| [Innovation SSI-2001](../sound/sound-devices/innovation.md)        | 280        | ---   | ---   | ---        | `[innovation]`   |
-| [NE2000 Ethernet](../networking/ethernet.md)                       | 300        | 3     | ---   | ---        | `[ethernet]`     |
+| Device                                                             | I/O base   | IRQ   | DMA   | High DMA   | Config settings |
+| --------                                                           | ---------- | ----- | ----- | ---------- | --------------- |
+| [Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md) | 220        | 7     | 1     | 5          | [`sbbase`](../sound/sound-devices/adlib-cms-sound-blaster.md#sbbase), [`irq`](../sound/sound-devices/adlib-cms-sound-blaster.md#irq), [`dma`](../sound/sound-devices/adlib-cms-sound-blaster.md#dma), [`hdma`](../sound/sound-devices/adlib-cms-sound-blaster.md#hdma) |
+| [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md)   | 240        | 5     | 3     | ---        | [`gusbase`](../sound/sound-devices/gravis-ultrasound.md#gusbase), [`gusirq`](../sound/sound-devices/gravis-ultrasound.md#gusirq), [`gusdma`](../sound/sound-devices/gravis-ultrasound.md#gusdma) |
+| [IBM Music Feature Card](../sound/sound-devices/imfc.md)           | 2A20       | 3     | ---   | ---        | [`imfc_base`](../sound/sound-devices/imfc.md#imfc_base), [`imfc_irq`](../sound/sound-devices/imfc.md#imfc_irq) |
+| [Innovation SSI-2001](../sound/sound-devices/innovation.md)        | 280        | ---   | ---   | ---        | (fixed) |
+| [NE2000 Ethernet](../networking/ethernet.md)                       | 300        | 3     | ---   | ---        | [`nicbase`](../networking/ethernet.md#nicbase), [`nicirq`](../networking/ethernet.md#nicirq) |
 
 !!! tip
 
@@ -157,12 +157,13 @@ the reason, and the defaults should work.
 
 ## Further reading
 
-- [AdLib, CMS & Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md)
-  --- detailed Sound Blaster configuration and model selection
-
-- [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md) --- GUS
-  resource settings and usage modes
-
 - [Sound overview](../sound/overview.md) --- general guide to DOS game audio
-
+- [AdLib, CMS & Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md)
+  --- Sound Blaster configuration and model selection
+- [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md) --- GUS
+  configuration and patch files
+- [IBM Music Feature Card](../sound/sound-devices/imfc.md) --- IMFC configuration
+- [Innovation SSI-2001](../sound/sound-devices/innovation.md) --- SID chip card
+- [MIDI](../sound/sound-devices/midi.md) --- MPU-401 MIDI interface
+- [Serial ports](../networking/serial-ports.md) --- COM port configuration
 - [Ethernet](../networking/ethernet.md) --- NE2000 network card configuration
