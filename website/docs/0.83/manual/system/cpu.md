@@ -145,9 +145,8 @@ cpu_cycles_protected = max
 ## CPU type
 
 The [`cputype`](#cputype) setting controls which CPU architecture is emulated.
-The default `auto` is the fastest and most compatible option --- technically a
-386 with 486 extensions and CPUID. Only change it if a specific game requires
-it.
+The default `auto` is the most compatible option --- technically a 386 with 486
+extensions and CPUID. Only change it if a specific game requires it.
 
 - `386_prefetch` is needed for games that use self-modifying code or
   anti-debugging tricks (requires `core = normal`). Known games:
@@ -162,13 +161,16 @@ it.
   productions.
 
 
-## Adjusting speed at runtime
+## CPU speed
 
 The [`cycleup`](#cycleup) and [`cycledown`](#cycledown) settings control how
-much the CPU speed changes when you press the increase/decrease hotkeys
-(++ctrl+f12++ / ++ctrl+f11++ on Windows/Linux, ++cmd+f12++ / ++cmd+f11++ on
-macOS). Values below 100 are treated as a percentage change; values of 100 or
-above are treated as a fixed number of cycles to add or subtract.
+much the CPU speed changes when you press the increase/decrease
+[hotkeys](../appendices/shortcuts.md#cpu). Values below 100 are treated as a
+percentage change; values of 100 or above are treated as a fixed number of
+cycles to add or subtract.
+
+
+## Idle CPU usage
 
 The [`cpu_idle`](#cpu_idle) setting reduces host CPU usage when DOSBox is idle
 (e.g., waiting for input at the DOS prompt) by emulating the HLT instruction.
