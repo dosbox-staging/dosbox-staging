@@ -449,18 +449,21 @@ The image adjustment system emulates the controls of a CRT monitor. The
 adjustments. When disabled, the raw RGB values from the emulated video adapter
 are displayed without any processing (except colour space conversion).
 
-The available adjustments are: [`brightness`](#brightness) and
-[`contrast`](#contrast) emulate the corresponding CRT monitor knobs ---
-brightness sets the black point, contrast sets the white point.
-[`gamma`](#gamma) applies additional gamma correction relative to the emulated
-monitor's gamma. [`digital_contrast`](#digital_contrast) and
-[`saturation`](#saturation) are applied directly to the raw framebuffer RGB
-values, unlike the CRT-emulating brightness/contrast controls.
-[`color_temperature`](#color_temperature) adjusts the white point in Kelvin;
-[`color_temperature_luma_preserve`](#color_temperature_luma_preserve) controls
-how much luminosity is preserved during the adjustment.
-[`red_gain`](#red_gain), [`green_gain`](#green_gain), and
-[`blue_gain`](#blue_gain) adjust individual colour channel gain.
+The available adjustments are:
+
+- [`brightness`](#brightness) and [`contrast`](#contrast) emulate the
+  corresponding CRT monitor knobs --- brightness sets the black point, contrast
+  sets the white point.
+- [`gamma`](#gamma) applies additional gamma correction relative to the
+  emulated monitor's gamma.
+- [`digital_contrast`](#digital_contrast) and [`saturation`](#saturation) are
+  applied directly to the raw framebuffer RGB values, unlike the CRT-emulating
+  brightness/contrast controls.
+- [`color_temperature`](#color_temperature) adjusts the white point in Kelvin;
+  [`color_temperature_luma_preserve`](#color_temperature_luma_preserve)
+  controls how much luminosity is preserved during the adjustment.
+- [`red_gain`](#red_gain), [`green_gain`](#green_gain), and
+  [`blue_gain`](#blue_gain) adjust individual colour channel gain.
 
 The image adjustment settings can be tweaked in real-time using hotkeys --- use
 the "Previous/Next Image Adjustment" hotkeys to select a setting and
