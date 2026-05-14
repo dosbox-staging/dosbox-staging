@@ -74,11 +74,8 @@ jobs:
                   -not -path "./preview/*"  `# ignore 'preview' dir contents` \
                   -not -name "README.md"    `# ignore 'README.md'` \
                   -not -name "CNAME"        `# ignore CNAME` \
-                  -not -regex '\./[0-9]\.[0-9][0-9]'                    `# ignore x.yz dir` \
-                  -not -regex '\./[0-9]\.[0-9][0-9]/manual'             `# ignore x.yz/manual dir` \
-                  -not -regex '\./[0-9]\.[0-9][0-9]/manual/.*'          `# ignore x.yz/manual contents` \
-                  -not -regex '\./[0-9]\.[0-9][0-9]/getting-started'    `# ignore x.yz/getting-started dir` \
-                  -not -regex '\./[0-9]\.[0-9][0-9]/getting-started/.*' `# ignore x.yz/getting-started contents` \
+                  -not -path "./0.82/getting-started"    `# ignore earlier documentation versions` \
+                  -not -path "./0.82/getting-started/*"
               )
               echo $FILES | xargs git rm -rf --
           fi
@@ -90,7 +87,7 @@ jobs:
           TEMP_PATH=$(pwd)/temp-out
           DEST_PATH=$(pwd)/${{ env.dest_path_prefix }}
 
-          mkdocs build --config-file $MKDOCS_SRC_PATH/mkdocs.yml --site-dir $TEMP_PATH 
+          mkdocs build --config-file $MKDOCS_SRC_PATH/mkdocs.yml --site-dir $TEMP_PATH
           cp -rf $TEMP_PATH/* $DEST_PATH
           rm -rf $TEMP_PATH
           touch $DEST_PATH/.nojekyll
