@@ -34,7 +34,7 @@ restart DOSBox:
 webserver_enabled = on
 ```
 
-Then open `http://localhost:8080/` in a browser while DOSBox is running to
+Then open `http://localhost:8086/` in a browser while DOSBox is running to
 see the built-in API documentation.
 
 
@@ -201,7 +201,7 @@ available in `api.d.ts`.
 
 The API server listens on
 [`webserver_bind_address`](#webserver_bind_address) (default `127.0.0.1`,
-localhost only) and [`webserver_port`](#webserver_port) (default `8080`). The
+localhost only) and [`webserver_port`](#webserver_port) (default `8086`). The
 default binding restricts access to the local machine. Do not bind to `0.0.0.0`
 or an external interface unless you understand the security implications --- the
 API provides full control over DOSBox internals, including memory access.
@@ -223,7 +223,7 @@ section.
 ##### webserver_enabled
 
 :   Enable the HTTP REST API that exposes internal state and memory. Open
-    `http://localhost:8080` in a browser (or use the configured port) to view
+    `http://localhost:8086` in a browser (or use the configured port) to view
     the API documentation.
 
     Possible values: `on`, `off` *default*{ .default }
@@ -231,4 +231,4 @@ section.
 
 ##### webserver_port
 
-:   TCP port to bind to (`8080` by default).
+:   TCP port to bind to (`8086` by default).
