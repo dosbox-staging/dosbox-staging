@@ -72,10 +72,10 @@ jobs:
                   -not -path "./tools/*"    `# ignore manually managed 'tools' dir contents` \
                   -not -path "./preview"    `# ignore 'preview' dir` \
                   -not -path "./preview/*"  `# ignore 'preview' dir contents` \
-                  -not -name "README.md"    `# ignore 'README.md'` \
-                  -not -name "CNAME"        `# ignore CNAME` \
-                  -not -path "./0.82/getting-started"    `# ignore earlier documentation versions` \
-                  -not -path "./0.82/getting-started/*"
+                  -not -path "./README.md"  `# ignore 'README.md'` \
+                  -not -path "./CNAME"      `# ignore 'CNAME'` \
+                  -not -path "./0.82"       `# ignore earlier documentation versions` \
+                  -not -path "./0.82/*"
               )
               echo $FILES | xargs git rm -rf --
           fi
