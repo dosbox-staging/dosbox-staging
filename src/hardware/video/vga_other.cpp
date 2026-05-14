@@ -660,11 +660,11 @@ static void log_crt_knob_value()
 		break;
 
 	case CrtKnob::Hue:
-		LOG_MSG("COMPOSITE: composite_hue =  %d", hue.get());
+		LOG_MSG("COMPOSITE: hue =  %d", hue.get());
 		break;
 
 	case CrtKnob::Convergence:
-		LOG_MSG("COMPOSITE: composite_convergence =  %d", convergence.get());
+		LOG_MSG("COMPOSITE: convergence =  %d", convergence.get());
 		break;
 
 	case CrtKnob::LastValue:
@@ -1567,8 +1567,8 @@ static void init_composite_settings(SectionProp& section)
 	        "         mode if the game uses it (default). You need to enable composite mode\n"
 	        "         manually for the 320x200 mode.\n"
 	        "\n"
-	        "Note: Fine-tune the composite emulation settings (e.g., 'composite_hue') using\n"
-	        "      the composite hotkeys, then copy the new settings from the logs into your\n"
+	        "Note: Fine-tune the composite emulation settings (e.g., 'hue') using the\n"
+	        "      composite hotkeys, then copy the new settings from the logs into your\n"
 	        "      config.");
 
 	str_prop = section.AddString("era", WhenIdle, "auto");
