@@ -168,7 +168,7 @@ static void init_config_settings(SectionProp& section)
 	auto enabled = section.AddBool("webserver_enabled", OnlyAtStart, false);
 	enabled->SetHelp(
 	        "Enable the HTTP REST API that exposes internal state and memory (disabled by\n"
-	        "default). Open http://localhost:8080 in a browser (or use the configured port)\n"
+	        "default). Open http://localhost:8086 in a browser (or use the configured port)\n"
 	        "to view the API documentation.");
 	auto bind_ip = section.AddString("webserver_bind_address",
 	                                 OnlyAtStart,
@@ -179,7 +179,7 @@ static void init_config_settings(SectionProp& section)
 	        "\n"
 	        "By default only local connections are allowed.");
 
-	auto bind_port = section.AddInt("webserver_port", OnlyAtStart, 8080);
+	auto bind_port = section.AddInt("webserver_port", OnlyAtStart, 8086);
 	bind_port->SetMinMax(1, 0xFFFF);
 	bind_port->SetHelp("TCP port to bind to.");
 }
