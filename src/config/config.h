@@ -12,8 +12,8 @@
 #include <vector>
 
 #include "config/setup.h"
-#include "shell/command_line.h"
 #include "misc/std_filesystem.h"
+#include "shell/command_line.h"
 
 // clang-format off
 enum class StartupVerbosity {
@@ -61,9 +61,9 @@ public:
 	CommandLineArguments arguments = {};
 
 private:
-	std::deque<Section*> sections            = {};
+	std::deque<Section*> sections                = {};
 	AutoExecSection overwritten_autoexec_section = {};
-	std::string overwritten_autoexec_conf    = {};
+	std::string overwritten_autoexec_conf        = {};
 
 	bool secure_mode = false;
 
