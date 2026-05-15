@@ -1046,6 +1046,8 @@ Hex SectionProp::GetHex(const std::string& _propname) const
 
 bool SectionProp::HandleInputLine(const std::string& line)
 {
+	assert(control);
+
 	// Parse a configuration setting in the 'setting_name = setting_value'
 	// format
 	const std::string::size_type loc = line.find('=');
@@ -1074,12 +1076,12 @@ bool SectionProp::HandleInputLine(const std::string& line)
 	trim(setting_value_str);
 
 	// Find the configuration setting and try to set it
-	for (auto& p : properties) {
-		if (strcasecmp(p->propname.c_str(), setting_name.c_str()) != 0) {
+	for (auto& prop : properties) {
+		if (strcasecmp(prop->propname.c_str(), setting_name.c_str()) != 0) {
 			continue;
 		}
 
-		if (p->IsDeprecated()) {
+		if (prop->IsDeprecated()) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "CONFIG",
 			                      "PROGRAM_CONFIG_DEPRECATED_SETTING",
@@ -1090,12 +1092,14 @@ bool SectionProp::HandleInputLine(const std::string& line)
 			                      create_setting_help_msg_name(
 			                              setting_name));
 
-			if (!p->IsDeprecatedButAllowed()) {
+			if (!prop->IsDeprecatedButAllowed()) {
 				return false;
 			}
 		}
 
-		return p->SetValue(setting_value_str);
+		control->AppendParsedSetting(GetName(), prop->propname);
+
+		return prop->SetValue(setting_value_str);;
 	}
 
 	// We couldn't find the config setting; display an error
