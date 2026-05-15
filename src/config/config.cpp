@@ -136,11 +136,11 @@ Config& Config::operator=(Config&& source) noexcept
 	}
 
 	// Move each member
-	cmdline         = std::move(source.cmdline);
-	sections        = std::move(source.sections);
-	secure_mode     = std::move(source.secure_mode);
-	startup_params  = std::move(source.startup_params);
-	config_files    = std::move(source.config_files);
+	cmdline        = std::move(source.cmdline);
+	sections       = std::move(source.sections);
+	secure_mode    = std::move(source.secure_mode);
+	startup_params = std::move(source.startup_params);
+	config_files   = std::move(source.config_files);
 
 	loaded_config_paths_canonical = std::move(source.loaded_config_paths_canonical);
 
