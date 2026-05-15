@@ -1479,6 +1479,32 @@ static void save_window_size(const int w, const int h)
 		sdl.windowed.canvas_size.w = w;
 		sdl.windowed.canvas_size.h = h;
 	}
+
+	set_section_property_value("sdl", "window_size", format_str("%dx%d", w, h));
+}
+
+static void handle_window_size_pref_after_config_load()
+{
+	assert(control);
+
+	constexpr auto SectionName    = "sdl";
+	constexpr auto LegacyPrefName = "windowresolution";
+	constexpr auto NewPrefName    = "window_size";
+
+	const auto legacy_pref_order = control->GetSettingParseOrder(SectionName,
+	                                                             LegacyPrefName);
+
+	const auto new_pref_order = control->GetSettingParseOrder(SectionName,
+	                                                          NewPrefName);
+
+	if (legacy_pref_order > new_pref_order) {
+		const auto legacy_pref = get_sdl_section()->GetString(LegacyPrefName);
+
+		// Move setting from the legacy setting into the new one
+		set_section_property_value(SectionName, NewPrefName, legacy_pref);
+	}
+
+	set_section_property_value(SectionName, LegacyPrefName, "");
 }
 
 // Takes in:
@@ -1493,15 +1519,7 @@ static void save_window_size(const int w, const int h)
 //
 static void configure_window_size()
 {
-	const auto window_size_pref = []() {
-		const auto legacy_pref = get_sdl_section()->GetString(
-		        "windowresolution");
-		if (!legacy_pref.empty()) {
-			set_section_property_value("sdl", "windowresolution", "");
-			set_section_property_value("sdl", "window_size", legacy_pref);
-		}
-		return get_sdl_section()->GetString("window_size");
-	}();
+	const auto window_size_pref = get_sdl_section()->GetString("window_size");
 
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
@@ -1537,6 +1555,19 @@ static void configure_window_size()
 	        refined_size.x,
 	        refined_size.y,
 	        sdl.display_number);
+}
+
+static void set_window_size()
+{
+	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless &&
+	    sdl.is_fullscreen) {
+
+		sdl.fullscreen.prev_window.width = sdl.windowed.width;
+
+		sdl.fullscreen.prev_window.height = sdl.windowed.height;
+	} else {
+		SDL_SetWindowSize(sdl.window, sdl.windowed.width, sdl.windowed.height);
+	}
 }
 
 static void save_window_position_from_conf()
@@ -1902,6 +1933,8 @@ void GFX_InitAndStartGui()
 	configure_renderer();
 
 	save_window_position_from_conf();
+
+	handle_window_size_pref_after_config_load();
 	configure_window_size();
 
 	sdl.draw.render_width_px  = minimum_window_size.x;
@@ -2045,18 +2078,20 @@ static void notify_sdl_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "window_size") {
 		configure_window_size();
+		set_window_size();
 
-		if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless &&
-		    sdl.is_fullscreen) {
+	} else if (prop_name == "windowresolution") {
+		// Move setting from the legacy setting into the new one
+		constexpr auto LegacyPrefName = "windowresolution";
+		constexpr auto NewPrefName    = "window_size";
 
-			sdl.fullscreen.prev_window.width = sdl.windowed.width;
+		const auto legacy_pref = get_sdl_section()->GetString(LegacyPrefName);
 
-			sdl.fullscreen.prev_window.height = sdl.windowed.height;
-		} else {
-			SDL_SetWindowSize(sdl.window,
-			                  sdl.windowed.width,
-			                  sdl.windowed.height);
-		}
+		set_section_property_value("sdl", LegacyPrefName, "");
+		set_section_property_value("sdl", NewPrefName, legacy_pref);
+
+		configure_window_size();
+		set_window_size();
 
 	} else if (prop_name == "window_titlebar") {
 		TITLEBAR_ReadConfig();
@@ -2262,10 +2297,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		if (!sdl.is_fullscreen) {
 			save_window_size(width, height);
-
-			set_section_property_value("sdl",
-			                           "window_size",
-			                           format_str("%dx%d", width, height));
 		}
 
 		if (width != last_width && height != last_height) {
