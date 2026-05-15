@@ -3,7 +3,7 @@
 These files provide examples for interacting with the DOSBox Staging HTTP API.
 Make sure to enable the API by setting `webserver_enabled = on` in the
 `[webserver]` config section and restart Staging. Then open
-http://localhost:8080/ while DOSBox is running to learn more about the API.
+http://localhost:8086/ while DOSBox is running to learn more about the API.
 Also check out the provided `api.js` wrapper.
 
 These files here need to be placed in the `webserver` dir inside your DOSBox
@@ -12,7 +12,7 @@ config directory to use them.
 
 ## Memory monitor
 
-http://localhost:8080/memory_monitor.html
+http://localhost:8086/memory_monitor.html
 
 Monitor and manipulate memory locations live.
 
@@ -29,7 +29,7 @@ You will now see the current values for lives and ammo. Yes, you can edit them.
 
 ## Memory scanner
 
-http://localhost:8080/memory_scanner.html
+http://localhost:8086/memory_scanner.html
 
 The Memory Scanner is a lightweight version of tools like Cheat Engine. It
 identifies where specific values are stored in memory by iteratively tracking
@@ -45,6 +45,6 @@ It usually only takes a few iterations.
 
 ## Memory viewer
 
-http://localhost:8080/memory.html
+http://localhost:8086/memory.html
 
 A memory viewer with a disassembler.
