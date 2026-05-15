@@ -602,3 +602,30 @@ void Config::ParseArguments()
 
 	arguments.editconf = cmdline->FindRemoveOptionalArgument("editconf");
 }
+
+static std::string make_scoped_setting_name(const std::string& section_name,
+                                            const std::string& property_name)
+{
+	return format_str("%s.%s", section_name.c_str(), property_name.c_str());
+}
+
+void Config::AppendParsedSetting(const std::string& section_name,
+                                 const std::string& property_name)
+{
+	parsed_settings.emplace_back(
+	        make_scoped_setting_name(section_name, property_name));
+}
+
+int Config::GetSettingParseOrder(const std::string& section_name,
+                                 const std::string& property_name)
+{
+	const auto it = std::ranges::find(parsed_settings,
+	                                  make_scoped_setting_name(section_name,
+	                                                           property_name));
+
+	if (it == parsed_settings.end()) {
+		return -1;
+	} else {
+		return it - parsed_settings.begin();
+	}
+}
