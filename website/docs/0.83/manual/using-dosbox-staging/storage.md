@@ -196,7 +196,18 @@ mount C /path/to/saves -t overlay
 mount A floppy.img -t floppy
 ```
 
-Supported floppy image formats: `.img`, `.ima` (raw sector images).
+Supported floppy image formats: `.img`, `.ima`, `.dsk` (raw sector images),
+`.vfd` (Virtual Floppy Disk), `.flp` (raw floppy image).
+
+Numeric extensions matching standard floppy sizes are also recognised:
+`.360`, `.720`, `.1200`, `.1440`.
+
+When using `.img`, `.ima`, or `.dsk` files without an explicit `-t floppy`
+flag, DOSBox Staging detects the image type automatically by matching the
+file size against known floppy disk geometries (see
+[Floppy disk formats](#floppy-disk-formats) below). Images that match a
+standard floppy size are mounted as floppy drives; all others are mounted as
+hard disk images.
 
 #### Floppy disk formats
 
