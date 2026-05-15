@@ -173,17 +173,17 @@ double GFX_GetHostRefreshRate()
 
 	if (display_in_use < 0) {
 		LOG_ERR("SDL: Could not get the current window index: %s",
-				SDL_GetError());
+		        SDL_GetError());
 		return DefaultHostRefreshRateHz;
 	}
 	if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
 		LOG_ERR("SDL: Could not get the current display mode: %s",
-				SDL_GetError());
+		        SDL_GetError());
 		return DefaultHostRefreshRateHz;
 	}
 	if (mode.refresh_rate < RefreshRateMin) {
 		LOG_WARNING("SDL: Got a strange refresh rate of %d Hz",
-					mode.refresh_rate);
+		            mode.refresh_rate);
 		return DefaultHostRefreshRateHz;
 	}
 
@@ -302,24 +302,27 @@ static bool is_unpause_event(const SDL_Event event, const SDL_Keysym unpause_key
 
 	if (event.key.keysym.sym == unpause_key.sym) {
 		// These are the only mods we're going to care about.
-		// Others mods include caps lock and num lock which we should not look at.
-		constexpr uint16_t ModMask = KMOD_CTRL | KMOD_SHIFT | KMOD_ALT | KMOD_GUI;
+		// Others mods include caps lock and num lock which we should
+		// not look at.
+		constexpr uint16_t ModMask = KMOD_CTRL | KMOD_SHIFT | KMOD_ALT |
+		                             KMOD_GUI;
 		const uint16_t unpause_mod = unpause_key.mod & ModMask;
 		if ((event.key.keysym.mod & unpause_mod) == unpause_mod) {
 			return true;
 		}
 	}
 
-	// Also check previously hard-coded Alt+Pause on Windows/Linux
-	// and Command+P on Mac to ensure we don't have regressions.
-	#if defined(MACOSX)
+// Also check previously hard-coded Alt+Pause on Windows/Linux
+// and Command+P on Mac to ensure we don't have regressions.
+#if defined(MACOSX)
 	constexpr uint16_t DefaultMod = KMOD_GUI;
-	constexpr int32_t DefaultKey = SDLK_p;
-	#else
+	constexpr int32_t DefaultKey  = SDLK_p;
+#else
 	constexpr uint16_t DefaultMod = KMOD_ALT;
-	constexpr int32_t DefaultKey = SDLK_PAUSE;
-	#endif
-	return event.key.keysym.sym == DefaultKey && (event.key.keysym.mod & DefaultMod);
+	constexpr int32_t DefaultKey  = SDLK_PAUSE;
+#endif
+	return event.key.keysym.sym == DefaultKey &&
+	       (event.key.keysym.mod & DefaultMod);
 }
 
 [[maybe_unused]] static void pause_emulation(bool pressed)
@@ -328,9 +331,12 @@ static bool is_unpause_event(const SDL_Event event, const SDL_Keysym unpause_key
 		return;
 	}
 
-	// Bit of a hack but this is the key that was used to pause so let's also check it to unpause.
-	// We should really be relying on MAPPER_CheckEvent() but that is not possible inside this janky pause loop.
-	// TODO: In the future, re-work pause logic so we use the main event loop all the time.
+	// Bit of a hack but this is the key that was used to pause so let's
+	// also check it to unpause. We should really be relying on
+	// MAPPER_CheckEvent() but that is not possible inside this janky pause
+	// loop.
+	// TODO: In the future, re-work pause logic so we use the main event
+	// loop all the time.
 	const auto unpause_key = MAPPER_GetLastKeyPressed();
 
 	const auto inkeymod = static_cast<uint16_t>(SDL_GetModState());
@@ -646,7 +652,7 @@ static void set_minimum_window_size()
 
 	constexpr auto MinimumWidth = 640;
 
-	minimum_window_size  = {iround(MinimumWidth), iround(minimum_height)};
+	minimum_window_size = {iround(MinimumWidth), iround(minimum_height)};
 
 	// The SDL documentation is incorrect; this will set the minimum window
 	// size in logical units, not pixels.
@@ -1838,7 +1844,8 @@ void GFX_InitSdl()
 
 	// Initialise SDL (timer is needed for title bar animations)
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
-		E_Exit("SDL: Failed to init SDL video and timer: %s", SDL_GetError());
+		E_Exit("SDL: Failed to init SDL video and timer: %s",
+		       SDL_GetError());
 	}
 
 	if (is_using_kmsdrm_driver() && !check_kmsdrm_setting()) {
@@ -1866,7 +1873,8 @@ void GFX_InitSdl()
 	// Check for .dosbox document packages dropped from Finder
 	// (double-click to open or drag-and-drop onto the app icon)
 
-	// Sleep briefly to allow the OS time to queue the drop event before we poll.
+	// Sleep briefly to allow the OS time to queue the drop event before we
+	// poll.
 	SDL_Delay(100);
 
 	SDL_Event event;
@@ -2059,7 +2067,8 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		}
 
 	} else {
-		LOG_WARNING("SDL: Runtime change unhandled for property: '%s'", prop_name.c_str());
+		LOG_WARNING("SDL: Runtime change unhandled for property: '%s'",
+		            prop_name.c_str());
 	}
 }
 
@@ -2375,7 +2384,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		// The window size has changed either as a result of an API call
 		// or through the system or user changing the window size.
-		const auto new_width  = event.window.data1;
+		const auto new_width = event.window.data1;
 
 		check_and_handle_dpi_change(sdl.window, new_width);
 		update_viewport();
@@ -2700,11 +2709,12 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "                      borderless mode might result in decreased performance\n"
 	        "                      and slightly worse frame pacing (e.g., scrolling in 2D\n"
 	        "                      games not appearing perfectly smooth).");
-	pstring->SetValues({"standard",
+	pstring->SetValues({
+	        "standard",
 #ifdef WIN32
-	                    "forced-borderless",
+	        "forced-borderless",
 #endif
-	                    });
+	});
 
 	pstring->SetDeprecatedWithAlternateValue("desktop", "standard");
 
@@ -2894,7 +2904,7 @@ void GFX_Quit()
 	// Renderer must be destoryed before SDL_Quit() is called.
 	// Otherwise we can get segfaults and sadness.
 	sdl.renderer = {};
-	sdl.window = nullptr;
+	sdl.window   = nullptr;
 
 	SDL_Quit();
 #endif
