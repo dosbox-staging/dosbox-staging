@@ -9,6 +9,7 @@
 #include <deque>
 #include <functional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "config/setup.h"
@@ -64,6 +65,8 @@ private:
 	std::deque<Section*> sections                = {};
 	AutoExecSection overwritten_autoexec_section = {};
 	std::string overwritten_autoexec_conf        = {};
+
+	std::vector<std::string> parsed_settings = {};
 
 	bool secure_mode = false;
 
@@ -144,6 +147,17 @@ public:
 	}
 
 	StartupVerbosity GetStartupVerbosity() const;
+
+	// Should be called after a config setting is parsed when reading the
+	// config files to store the setting parse order.
+	void AppendParsedSetting(const std::string& section_name,
+	                         const std::string& property_name);
+
+	// Return the parse order of the setting during reading the config files.
+	// Higher numbers means the setting was parsed later. -1 is returned if
+	// the setting wasn't set in the configs.
+	int GetSettingParseOrder(const std::string& section_name,
+	                         const std::string& property_name);
 };
 
 using ConfigPtr = std::unique_ptr<Config>;
