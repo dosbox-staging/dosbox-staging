@@ -3,7 +3,7 @@
 ## Overview
 
 See the comment at the top of
-[src/hardware/video/vga_draw.cpp](src/hardware/video/vga_draw.cpp) for a
+[src/hardware/video/vga_draw.cpp](/src/hardware/video/vga_draw.cpp) for a
 high-level overview of the VGA rendering.
 
 
