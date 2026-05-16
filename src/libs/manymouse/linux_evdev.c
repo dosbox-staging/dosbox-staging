@@ -151,7 +151,7 @@ static int poll_mouse(MouseStruct *mouse, ManyMouseEvent *outevent)
 } /* poll_mouse */
 
 
-static int init_mouse(__attribute__((unused)) const char *fname, int fd)
+static int init_mouse(const char *fname, int fd)
 {
     MouseStruct *mouse = &mice[available_mice];
     int has_absolutes = 0;

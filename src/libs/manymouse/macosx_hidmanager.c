@@ -144,8 +144,7 @@ static inline int oldEvent(const AbsoluteTime *a, const AbsoluteTime *b)
 
 
 /* Callback fires whenever a device is unplugged/lost/whatever. */
-static void unplugged_callback(void *ctx, __attribute__((unused)) IOReturn res,
-                               __attribute__((unused)) void *sender)
+static void unplugged_callback(void *ctx, IOReturn res, void *sender)
 {
     const unsigned int idx = (unsigned int) ((size_t) ctx);
     if ((idx < physical_mice) && (mice[idx].device) && (mice[idx].logical >= 0))
@@ -172,8 +171,7 @@ static void unplugged_callback(void *ctx, __attribute__((unused)) IOReturn res,
 
 
 /* Callback fires for new mouse input events. */
-static void input_callback(void *ctx, IOReturn res,
-                           __attribute__((unused)) void *sender,
+static void input_callback(void *ctx, IOReturn res, void *sender,
                            IOHIDValueRef val)
 {
     const unsigned int idx = (unsigned int) ((size_t) ctx);
@@ -237,9 +235,7 @@ static void input_callback(void *ctx, IOReturn res,
 
 
 /* We ignore hotplugs...this callback is only for initial device discovery. */
-static void enum_callback(__attribute__((unused)) void *ctx,
-                          IOReturn res,
-                          __attribute__((unused)) void *sender,
+static void enum_callback(void *ctx, IOReturn res, void *sender,
                           IOHIDDeviceRef device)
 {
     if (res == kIOReturnSuccess)
@@ -372,16 +368,8 @@ static void macosx_hidmanager_quit(void)
 
 static int macosx_hidmanager_init(void)
 {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wtautological-pointer-compare"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Waddress"
-
     if (IOHIDManagerCreate == NULL)
         return -1;  /* weak symbol is NULL...we don't have OS X >= 10.5.0 */
-
-#pragma GCC diagnostic pop
-#pragma clang diagnostic pop
 
     macosx_hidmanager_quit();  /* just in case... */
 
