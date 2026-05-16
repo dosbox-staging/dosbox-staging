@@ -14,11 +14,15 @@ Most third party libraries used by Staging are licensed under the
 GPL-2.0-or-later terms, however there are some exceptions:
 
 - MAME's Philips SAA1099 and Texas Instruments SN76489 emulators,
-  under the src/hardware/mame directory, are both licensed under
-  the BSD 3-Clause terms.
+  under the src/hardware/audio/mame and src/hardware/audio/private/mame
+  directories, are both licensed under the BSD 3-Clause terms.
+
+- MAME's 3dfx Voodoo Graphics emulator by Aaron Giles, in file
+  src/hardware/video/voodoo.cpp, which is licensed under the
+  BSD-3-Clause AND GPL-2.0-or-later terms.
 
 - MandrakeSoft's National Semiconductor NE2000 emulator, in file
-  src/hardware/ne2000.cpp, which is licensed under the
+  src/hardware/network/ne2000.cpp, which is licensed under the
   LGPL-2.1-or-later terms.
 
 - DOS code pages to Unicode mapping definition files in the
@@ -32,17 +36,17 @@ GPL-2.0-or-later terms, however there are some exceptions:
    - decoders/stb.h, stb_vorbis.h: Public Domain
    - enet: MIT
    - ESFMu: LGPL-2
-   - ghc: MIT
+   - glad: (WTFPL OR CC0-1.0) AND Apache-2.0
    - http: MIT
    - json: MIT
    - libslirp headers: BSD 3-Clause
-   - ManyMouse: Zlib
-   - Nuked OPL3: LGPL-2
    - loguru: Public Domain
+   - ManyMouse: Zlib
    - mverb: GPL-3
+   - Nuked OPL3: LGPL-2
    - PDcurses: Public Domain
    - PL_MPEG: MIT
-   - residfp: GLP-2
+   - residfp: GPL-2
    - riffcpp: Zlib
    - simde: MIT
    - simpleini: MIT
