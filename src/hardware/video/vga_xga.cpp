@@ -676,7 +676,7 @@ void XGA_DrawWait(uint32_t val, io_width_t width)
 			}
 			switch (xga.waitcmd.buswidth) {
 			case XGA_8_BIT: // 8 bit
-				DrawWaitSub(mixmode, val);
+				DrawWaitSub(mixmode, val); //-V1037
 				break;
 			case 0x20 | XGA_8_BIT: // 16 bit
 				for (uint8_t i = 0; i < len; ++i) {
@@ -711,11 +711,11 @@ void XGA_DrawWait(uint32_t val, io_width_t width)
 				[[fallthrough]];
 
 			case 0x40 | XGA_32_BIT: // 32 bit
-				DrawWaitSub(mixmode, val);
+				DrawWaitSub(mixmode, val); //-V1037
 				break;
 			case 0x20 | XGA_15_BIT: // 16 bit
 			case 0x20 | XGA_16_BIT: // 16 bit
-				DrawWaitSub(mixmode, val);
+				DrawWaitSub(mixmode, val); //-V1037
 				break;
 			case 0x40 | XGA_15_BIT: // 32 bit
 			case 0x40 | XGA_16_BIT: // 32 bit
@@ -743,12 +743,7 @@ void XGA_DrawWait(uint32_t val, io_width_t width)
 				chunks = 1;
 				break;
 			case 0x20: // 16 bit
-				chunksize = 16;
-				if (len == 4)
-					chunks = 2;
-				else
-					chunks = 1;
-				break;
+				[[fallthrough]];
 			case 0x40: // 32 bit
 				chunksize = 16;
 				if (len == 4)
@@ -770,7 +765,8 @@ void XGA_DrawWait(uint32_t val, io_width_t width)
 					const auto lshift = (((n & 0xF8) +
 					                      (8 - (n & 0x7))) -
 					                     1) + chunksize * k;
-					const auto mask = static_cast<uint64_t>(1) << lshift;
+					const auto mask = static_cast<uint64_t>(1) //-V610
+					               << lshift;
 
 					mixmode = (val & mask) ? xga.foremix
 					                       : xga.backmix;
@@ -1359,7 +1355,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 		xga.destx2 = static_cast<uint16_t>(val & 0x3fff);
 		break;
 	case 0x8110: // WORD error term (see PORT 92E8h)
-		xga.ErrTerm = val & 0x3fff;
+		xga.ErrTerm = val & 0x3fff; //-V1037
 		break;
 
 	case 0x8120: // packed MMIO: DWORD background color (see PORT A2E8h)
@@ -1415,7 +1411,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 			xga.MAPcount = (val >> 16) & 0x0fff;
 		break;
 	case 0x814a: xga.MAPcount = val & 0x0fff; break;
-	case 0x92e8: xga.ErrTerm = val & 0x3fff; break;
+	case 0x92e8: xga.ErrTerm = val & 0x3fff; break; //-V1037
 	case 0x96e8: xga.MAPcount = val & 0x0fff; break;
 	case 0x9ae8:
 	case 0x8118: // Trio64V+ packed MMIO
