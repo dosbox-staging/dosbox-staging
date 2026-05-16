@@ -16,6 +16,7 @@
 #include "hardware/port.h"
 #include "ints/int10.h"
 #include "misc/support.h"
+#include "utils/string_utils.h"
 
 void PCI_AddSVGAS3_Device();
 
@@ -724,15 +725,20 @@ void filter_compatible_s3_vesa_modes()
 	        {hash(1600, 1200, M_LIN32),                               mb_8},
 	};
 
-	dram_size_t dram_size = mb_1;
-
-	switch (vga.vmemsize) {
-	case 512 * 1024: dram_size = kb_512; break;
-	case 1024 * 1024: dram_size = mb_1; break;
-	case 2048 * 1024: dram_size = mb_2; break;
-	case 4096 * 1024: dram_size = mb_4; break;
-	case 8192 * 1024: dram_size = mb_8; break;
-	}
+	const auto dram_size = [&]() -> dram_size_t {
+		switch (vga.vmemsize) {
+		case 512 * 1024: return kb_512;
+		case 1024 * 1024: return mb_1;
+		case 2048 * 1024: return mb_2;
+		case 4096 * 1024: return mb_4;
+		case 8192 * 1024: return mb_8;
+		default:
+			assertm(false,
+			        format_str("Unexpected vga.memsize size: %d",
+			                   vga.vmemsize));
+			return {};
+		};
+	}();
 
 	auto mode_allowed = [&](const VideoModeBlock& m) {
 		// Only allow standard text modes
