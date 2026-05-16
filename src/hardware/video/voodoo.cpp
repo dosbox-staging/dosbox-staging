@@ -343,10 +343,10 @@ static constexpr uint8_t dither_matrix_2x2[16] =
 #define EXTRACT_555x_TO_888(val, a, b, c)					\
 	(a) = (((val) >> 8) & 0xf8) | (((val) >> 13) & 0x07);	\
 	(b) = (((val) >> 3) & 0xf8) | (((val) >> 8) & 0x07);	\
-	(c) = (((val) << 2) & 0xf8) | (((val) >> 3) & 0x07);	\
+	(c) = (((val) << 2) & 0xf8) | (((val) >> 3) & 0x07);
 
-#define EXTRACT_1555_TO_8888(val, a, b, c, d)				\
-	(a) = ((int16_t)(val) >> 15) & 0xff;						\
+#define EXTRACT_1555_TO_8888(val, a, b, c, d) \
+	(a) = ((val) & 0x8000) ? 0xff : 0x00;				\
 	EXTRACT_x555_TO_888(val, b, c, d)						\
 
 #define EXTRACT_5551_TO_8888(val, a, b, c, d)				\
@@ -1127,7 +1127,7 @@ inline int32_t float_to_int32(const uint32_t data, const int fixedbits)
 	// Clamp the exponent to the type's shift limit
 	constexpr auto max_shift = std::numeric_limits<int32_t>::digits;
 	int exponent = ((data >> 23) & 0xff) - 127 - 23 + fixedbits;
-	exponent = std::clamp(exponent, -max_shift, max_shift);
+	exponent = std::clamp(exponent, -max_shift, max_shift); //-V764
 
 	int32_t result = (data & 0x7fffff) | 0x800000;
 
@@ -6085,8 +6085,8 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 			break;
 
 		case 16*0 + 2:		/* ARGB, 16-bit ARGB 1-5-5-5 */
-			EXTRACT_1555_TO_8888(data, sa[0], sr[0], sg[0], sb[0]);
-			EXTRACT_1555_TO_8888(data >> 16, sa[1], sr[1], sg[1], sb[1]);
+		        EXTRACT_1555_TO_8888(data, sa[0], sr[0], sg[0], sb[0]); //-V1037
+		        EXTRACT_1555_TO_8888(data >> 16, sa[1], sr[1], sg[1], sb[1]);
 			mask = LFB_RGB_PRESENT | LFB_ALPHA_PRESENT | ((LFB_RGB_PRESENT | LFB_ALPHA_PRESENT) << 4);
 			offset <<= 1;
 			break;
@@ -6178,8 +6178,8 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 			break;
 
 		case 16*0 + 14:		/* ARGB, 32-bit depth+ARGB 1-5-5-5 */
-			sw[0] = data >> 16;
-			EXTRACT_1555_TO_8888(data, sa[0], sr[0], sg[0], sb[0]);
+		        sw[0] = data >> 16; //-V1037
+		        EXTRACT_1555_TO_8888(data, sa[0], sr[0], sg[0], sb[0]);
 			mask = LFB_RGB_PRESENT | LFB_ALPHA_PRESENT | LFB_DEPTH_PRESENT_MSW;
 			break;
 		case 16*1 + 14:		/* ABGR, 32-bit depth+ARGB 1-5-5-5 */
