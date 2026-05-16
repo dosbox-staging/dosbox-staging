@@ -30,8 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
 
-#define MAYBE_UNUSED(x) (void)(x)
-
 // ============================================================================
 
 char const* YM7128B_GetVersion(void)
@@ -527,7 +525,7 @@ YM7128B_Float YM7128B_OversamplerFloat_Process(
 
 void YM7128B_ChipFixed_Ctor(YM7128B_ChipFixed* self)
 {
-    MAYBE_UNUSED(self);
+
     assert(self);
 }
 
@@ -535,7 +533,7 @@ void YM7128B_ChipFixed_Ctor(YM7128B_ChipFixed* self)
 
 void YM7128B_ChipFixed_Dtor(YM7128B_ChipFixed* self)
 {
-    MAYBE_UNUSED(self);
+
     assert(self);
 }
 
@@ -573,7 +571,7 @@ void YM7128B_ChipFixed_Start(YM7128B_ChipFixed* self)
 
 void YM7128B_ChipFixed_Stop(YM7128B_ChipFixed* self)
 {
-    MAYBE_UNUSED(self);
+
     assert(self);
 }
 
@@ -682,7 +680,7 @@ void YM7128B_ChipFixed_Write(
 
 void YM7128B_ChipFloat_Ctor(YM7128B_ChipFloat* self)
 {
-    MAYBE_UNUSED(self);
+
     assert(self);
 }
 
@@ -690,7 +688,7 @@ void YM7128B_ChipFloat_Ctor(YM7128B_ChipFloat* self)
 
 void YM7128B_ChipFloat_Dtor(YM7128B_ChipFloat* self)
 {
-    MAYBE_UNUSED(self);
+
     assert(self);
 }
 
@@ -728,7 +726,7 @@ void YM7128B_ChipFloat_Start(YM7128B_ChipFloat* self)
 
 void YM7128B_ChipFloat_Stop(YM7128B_ChipFloat* self)
 {
-    MAYBE_UNUSED(self);
+
     assert(self);
 }
 
@@ -888,7 +886,7 @@ void YM7128B_ChipIdeal_Start(YM7128B_ChipIdeal* self)
 
 void YM7128B_ChipIdeal_Stop(YM7128B_ChipIdeal* self)
 {
-    MAYBE_UNUSED(self);
+
     assert(self);
 }
 
@@ -1079,7 +1077,7 @@ void YM7128B_ChipShort_Start(YM7128B_ChipShort* self)
 
 void YM7128B_ChipShort_Stop(YM7128B_ChipShort* self)
 {
-    MAYBE_UNUSED(self);
+
     assert(self);
 }
 
