@@ -140,9 +140,10 @@ static uint16_t Fetchw() {
 	if (pq_valid && (core.cseip>=pq_start) && (core.cseip+2<pq_start+CPU_PrefetchQueueSize)) {
 		temp=prefetch_buffer[core.cseip-pq_start]|
 			(prefetch_buffer[core.cseip-pq_start+1]<<8);
-		if ((core.cseip+2>=pq_start+CPU_PrefetchQueueSize-4) &&
-			(core.cseip+2<pq_start+CPU_PrefetchQueueSize)) {
-			Bitu remaining_bytes=pq_start+CPU_PrefetchQueueSize-(core.cseip+2);
+		if ((core.cseip + 2 >= pq_start + CPU_PrefetchQueueSize - 4) &&
+		    (core.cseip + 2 < pq_start + CPU_PrefetchQueueSize)) { //-V560
+			Bitu remaining_bytes = pq_start + CPU_PrefetchQueueSize -
+			                       (core.cseip + 2);
 			for (Bitu i=0; i<remaining_bytes; i++) prefetch_buffer[i]=prefetch_buffer[core.cseip+2-pq_start+i];
 			for (Bitu i=remaining_bytes; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=LoadMb(core.cseip+2+i);
 			pq_start=core.cseip+2;
@@ -168,9 +169,10 @@ static uint32_t Fetchd() {
 			(prefetch_buffer[core.cseip-pq_start+1]<<8)|
 			(prefetch_buffer[core.cseip-pq_start+2]<<16)|
 			(prefetch_buffer[core.cseip-pq_start+3]<<24);
-		if ((core.cseip+4>=pq_start+CPU_PrefetchQueueSize-4) &&
-			(core.cseip+4<pq_start+CPU_PrefetchQueueSize)) {
-			Bitu remaining_bytes=pq_start+CPU_PrefetchQueueSize-(core.cseip+4);
+		if ((core.cseip + 4 >= pq_start + CPU_PrefetchQueueSize - 4) &&
+		    (core.cseip + 4 < pq_start + CPU_PrefetchQueueSize)) { //-V560
+			Bitu remaining_bytes = pq_start + CPU_PrefetchQueueSize -
+			                       (core.cseip + 4);
 			for (Bitu i=0; i<remaining_bytes; i++) prefetch_buffer[i]=prefetch_buffer[core.cseip+4-pq_start+i];
 			for (Bitu i=remaining_bytes; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=LoadMb(core.cseip+4+i);
 			pq_start=core.cseip+4;
