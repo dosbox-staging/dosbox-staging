@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <array>
 #include <memory>
+#include <vector>
 
 #include "dos/dos.h"
 #include "hardware/memory.h"
@@ -25,6 +26,8 @@ struct DiskGeometry {
 	uint16_t cylcount;  /* Cylinders per side */
 	uint16_t biosval;   /* Type to return from BIOS */
 };
+
+const std::vector<DiskGeometry>& BIOS_GetDiskGeometryList();
 
 class imageDisk  {
 public:
