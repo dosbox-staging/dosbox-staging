@@ -544,7 +544,6 @@ endif()
 add_library(project_headers INTERFACE)
 target_include_directories(project_headers INTERFACE
   src
-  src/libs
   ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
@@ -574,9 +573,9 @@ if (LIBATOMIC)
   target_link_libraries(dosboxcommon PRIVATE ${LIBATOMIC})
 endif()
 
+target_link_libraries(dosboxcommon PUBLIC loguru)
 target_link_libraries(dosboxcommon PRIVATE
   $<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,iir::iir_static>
-  loguru
   decoders
 )
 

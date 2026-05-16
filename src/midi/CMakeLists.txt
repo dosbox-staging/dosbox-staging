@@ -10,7 +10,7 @@ target_sources(dosboxcommon PRIVATE
   win32.cpp
 )
 
-target_link_libraries(dosboxcommon PRIVATE FluidSynth::libfluidsynth)
+target_link_libraries(dosboxcommon PRIVATE FluidSynth::libfluidsynth clap)
 
 if (C_MT32EMU)
   target_link_libraries(dosboxcommon PRIVATE MT32Emu::mt32emu)

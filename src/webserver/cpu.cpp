@@ -5,9 +5,9 @@
 #include "bridge.h"
 #include "webserver.h"
 
-#include "libs/base64/base64.h"
-#include "libs/http/http.h"
-#include "libs/json/json.h"
+#include "base64/base64.h"
+#include "http/http.h"
+#include "json/json.h"
 
 #include "cpu/registers.h"
 

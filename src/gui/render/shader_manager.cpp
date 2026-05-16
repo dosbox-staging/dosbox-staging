@@ -15,7 +15,7 @@
 #pragma clang diagnostic ignored "-Weffc++"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
-#include <simpleini/SimpleIni.h>
+#include "simpleini/SimpleIni.h"
 #pragma GCC diagnostic pop
 #pragma clang diagnostic pop
 

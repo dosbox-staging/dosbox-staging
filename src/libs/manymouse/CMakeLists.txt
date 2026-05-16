@@ -2,6 +2,7 @@
 if (C_MANYMOUSE)
 
   add_library(manymouse STATIC)
+  target_include_directories(manymouse PUBLIC ..)
   target_link_libraries(manymouse PRIVATE project_headers)
   target_sources(manymouse PRIVATE
     linux_evdev.c

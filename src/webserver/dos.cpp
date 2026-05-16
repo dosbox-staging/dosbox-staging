@@ -5,8 +5,8 @@
 #include "bridge.h"
 #include "webserver.h"
 
-#include "libs/http/http.h"
-#include "libs/json/json.h"
+#include "http/http.h"
+#include "json/json.h"
 
 #include "cpu/paging.h"
 #include "cpu/registers.h"
