@@ -408,7 +408,7 @@ bool CpiReader::IsCopyrightString() const
 	if (remaining < 2) {
 		return true;
 	}
-	const size_t value = content[offset] + (content[offset + 1] << 8);
+	const size_t value = content[offset] + (content[offset + 1] << 8); //-V557
 	if (value > remaining) {
 		return true;
 	}
