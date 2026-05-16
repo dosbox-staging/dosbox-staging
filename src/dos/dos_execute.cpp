@@ -449,11 +449,15 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 	}
 	RealPt csip,sssp;
 	if (iscom) {
-		csip=RealMake(pspseg,0x100);
-		if (memsize<0x1000) {
-			LOG(LOG_EXEC,LOG_WARN)("COM format with only %X paragraphs available",memsize);
+		csip = RealMake(pspseg, 0x100); //-V614
+		if (memsize < 0x1000) {         //-V614
+			LOG(LOG_EXEC,
+			    LOG_WARN)("COM format with only %X paragraphs available",
+			              memsize);
 			sssp=RealMake(pspseg,(memsize<<4)-2);
-		} else sssp=RealMake(pspseg,0xfffe);
+		} else {
+			sssp = RealMake(pspseg, 0xfffe);
+		}
 		mem_writew(RealToPhysical(sssp),0);
 	} else {
 		csip=RealMake(loadseg+head.initCS,head.initIP);
@@ -466,8 +470,9 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		CONSOLE_ResetLastWrittenChar('\0');
 	}
 
-	if ((flags==LOAD) || (flags==LOADNGO)) {
-		/* Get Caller's program CS:IP of the stack and set termination address to that */
+	if ((flags == LOAD) || (flags == LOADNGO)) { //-V560
+		/* Get Caller's program CS:IP of the stack and set termination
+		 * address to that */
 		RealSetVec(0x22,RealMake(real_readw(SegValue(ss),reg_sp+2),real_readw(SegValue(ss),reg_sp)));
 		reg_sp-=18;
 		DOS_PSP callpsp(dos.psp());
@@ -538,7 +543,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		return true;
 	}
 
-	if (flags==LOADNGO) {
+	if (flags == LOADNGO) { //-V547
 		if ((reg_sp>0xfffe) || (reg_sp<18)) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
 		/* Set the stack for new program */
 		SegSet16(ss,RealSegment(sssp));reg_sp=RealOffset(sssp);
