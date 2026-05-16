@@ -25,7 +25,6 @@ struct diskGeo {
 	uint16_t cylcount;  /* Cylinders per side */
 	uint16_t biosval;   /* Type to return from BIOS */
 };
-extern diskGeo DiskGeometryList[];
 
 class imageDisk  {
 public:
