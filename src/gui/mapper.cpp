@@ -2060,29 +2060,30 @@ static void CreateLayout() {
 	constexpr int32_t margin        = 5;
 	constexpr auto pos_x = [](int32_t x) { return x * button_width + margin; };
 	constexpr auto pos_y = [](int32_t y) { return 10 + y * button_height; };
-	AddKeyButtonEvent(pos_x(0), pos_y(0), button_width, button_height, "ESC", "esc", KBD_esc);
+	// TODO: consider making Add*Event functions return void
+	AddKeyButtonEvent(pos_x(0), pos_y(0), button_width, button_height, "ESC", "esc", KBD_esc); //-V773
 	for (i = 0; i < 12; i++) {
-		AddKeyButtonEvent(pos_x(2 + i), pos_y(0), button_width, button_height, combo_f[i].title, combo_f[i].entry, combo_f[i].key);
+		AddKeyButtonEvent(pos_x(2 + i), pos_y(0), button_width, button_height, combo_f[i].title, combo_f[i].entry, combo_f[i].key); //-V773
 	}
 	for (i = 0; i < 14; i++) {
-		AddKeyButtonEvent(pos_x(i), pos_y(1), button_width, button_height, combo_1[i].title, combo_1[i].entry, combo_1[i].key);
+		AddKeyButtonEvent(pos_x(i), pos_y(1), button_width, button_height, combo_1[i].title, combo_1[i].entry, combo_1[i].key); //-V773
 	}
 
-	AddKeyButtonEvent(pos_x(0), pos_y(2), button_width * 2, button_height, "TAB", "tab", KBD_tab);
+	AddKeyButtonEvent(pos_x(0), pos_y(2), button_width * 2, button_height, "TAB", "tab", KBD_tab); //-V773
 	for (i = 0; i < 12; i++) {
-		AddKeyButtonEvent(pos_x(2 + i), pos_y(2), button_width, button_height, combo_2[i].title, combo_2[i].entry, combo_2[i].key);
+		AddKeyButtonEvent(pos_x(2 + i), pos_y(2), button_width, button_height, combo_2[i].title, combo_2[i].entry, combo_2[i].key); //-V773
 	}
 
-	AddKeyButtonEvent(pos_x(14), pos_y(2), button_width * 2, button_height * 2, "ENTER", "enter", KBD_enter);
+	AddKeyButtonEvent(pos_x(14), pos_y(2), button_width * 2, button_height * 2, "ENTER", "enter", KBD_enter); //-V773
 
 	caps_lock_event = AddKeyButtonEvent(pos_x(0), pos_y(3), button_width * 2, button_height, "CLCK", "capslock", KBD_capslock);
 	for (i = 0; i < 12; i++) {
-		AddKeyButtonEvent(pos_x(2 + i), pos_y(3), button_width, button_height, combo_3[i].title, combo_3[i].entry, combo_3[i].key);
+		AddKeyButtonEvent(pos_x(2 + i), pos_y(3), button_width, button_height, combo_3[i].title, combo_3[i].entry, combo_3[i].key); //-V773
 	}
 
-	AddKeyButtonEvent(pos_x(0), pos_y(4), button_width * 2, button_height, "SHIFT", "lshift", KBD_leftshift);
+	AddKeyButtonEvent(pos_x(0), pos_y(4), button_width * 2, button_height, "SHIFT", "lshift", KBD_leftshift); //-V773
 	for (i = 0; i < 12; i++) {
-		AddKeyButtonEvent(pos_x(2 + i),
+		AddKeyButtonEvent(pos_x(2 + i), //-V773
 		                  pos_y(4),
 		                  button_width,
 		                  button_height,
@@ -2090,70 +2091,70 @@ static void CreateLayout() {
 		                  combo_4[i].entry,
 		                  combo_4[i].key);
 	}
-	AddKeyButtonEvent(pos_x(14), pos_y(4), button_width * 2, button_height, "SHIFT", "rshift", KBD_rightshift);
+	AddKeyButtonEvent(pos_x(14), pos_y(4), button_width * 2, button_height, "SHIFT", "rshift", KBD_rightshift); //-V773
 
 	/* Bottom Row */
-	AddKeyButtonEvent(pos_x(0), pos_y(5), button_width * 2, button_height, MMOD1_NAME, "lctrl", KBD_leftctrl);
+	AddKeyButtonEvent(pos_x(0), pos_y(5), button_width * 2, button_height, MMOD1_NAME, "lctrl", KBD_leftctrl); //-V773
 
 #if !defined(MACOSX)
-	AddKeyButtonEvent(pos_x(2), pos_y(5), button_width * 2, button_height, MMOD3_NAME, "lgui", KBD_leftgui);
-	AddKeyButtonEvent(pos_x(4), pos_y(5), button_width * 2, button_height, MMOD2_NAME, "lalt", KBD_leftalt);
+	AddKeyButtonEvent(pos_x(2), pos_y(5), button_width * 2, button_height, MMOD3_NAME, "lgui", KBD_leftgui); //-V773
+	AddKeyButtonEvent(pos_x(4), pos_y(5), button_width * 2, button_height, MMOD2_NAME, "lalt", KBD_leftalt); //-V773
 #else
-	AddKeyButtonEvent(pos_x(2), pos_y(5), button_width * 2, button_height, MMOD2_NAME, "lalt", KBD_leftalt);
-	AddKeyButtonEvent(pos_x(4), pos_y(5), button_width * 2, button_height, MMOD3_NAME, "lgui", KBD_leftgui);
+	AddKeyButtonEvent(pos_x(2), pos_y(5), button_width * 2, button_height, MMOD2_NAME, "lalt", KBD_leftalt); //-V773
+	AddKeyButtonEvent(pos_x(4), pos_y(5), button_width * 2, button_height, MMOD3_NAME, "lgui", KBD_leftgui); //-V773
 #endif
 
-	AddKeyButtonEvent(pos_x(6), pos_y(5), button_width * 4, button_height, "SPACE", "space", KBD_space);
+	AddKeyButtonEvent(pos_x(6), pos_y(5), button_width * 4, button_height, "SPACE", "space", KBD_space); //-V773
 
 #if !defined(MACOSX)
-	AddKeyButtonEvent(pos_x(10), pos_y(5), button_width * 2, button_height, MMOD2_NAME, "ralt", KBD_rightalt);
-	AddKeyButtonEvent(pos_x(12), pos_y(5), button_width * 2, button_height, MMOD3_NAME, "rgui", KBD_rightgui);
+	AddKeyButtonEvent(pos_x(10), pos_y(5), button_width * 2, button_height, MMOD2_NAME, "ralt", KBD_rightalt); //-V773
+	AddKeyButtonEvent(pos_x(12), pos_y(5), button_width * 2, button_height, MMOD3_NAME, "rgui", KBD_rightgui); //-V773
 #else
-	AddKeyButtonEvent(pos_x(10), pos_y(5), button_width * 2, button_height, MMOD3_NAME, "rgui", KBD_rightgui);
-	AddKeyButtonEvent(pos_x(12), pos_y(5), button_width * 2, button_height, MMOD2_NAME, "ralt", KBD_rightalt);
+	AddKeyButtonEvent(pos_x(10), pos_y(5), button_width * 2, button_height, MMOD3_NAME, "rgui", KBD_rightgui); //-V773
+	AddKeyButtonEvent(pos_x(12), pos_y(5), button_width * 2, button_height, MMOD2_NAME, "ralt", KBD_rightalt); //-V773
 #endif
 
-	AddKeyButtonEvent(pos_x(14), pos_y(5), button_width * 2, button_height, MMOD1_NAME, "rctrl", KBD_rightctrl);
+	AddKeyButtonEvent(pos_x(14), pos_y(5), button_width * 2, button_height, MMOD1_NAME, "rctrl", KBD_rightctrl); //-V773
 
 	/* Arrow Keys */
 #define XO 17
 #define YO 0
 
-	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO), button_width, button_height, "PRT", "printscreen", KBD_printscreen);
-	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO), button_width, button_height, "SCL", "scrolllock", KBD_scrolllock);
-	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO), button_width, button_height, "PAU", "pause", KBD_pause);
-	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO + 1), button_width, button_height, "INS", "insert", KBD_insert);
-	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 1), button_width, button_height, "HOM", "home", KBD_home);
-	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 1), button_width, button_height, "PUP", "pageup", KBD_pageup);
-	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO + 2), button_width, button_height, "DEL", "delete", KBD_delete);
-	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 2), button_width, button_height, "END", "end", KBD_end);
-	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 2), button_width, button_height, "PDN", "pagedown", KBD_pagedown);
-	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 4), button_width, button_height, "\x18", "up", KBD_up);
-	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO + 5), button_width, button_height, "\x1B", "left", KBD_left);
-	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 5), button_width, button_height, "\x19", "down", KBD_down);
-	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 5), button_width, button_height, "\x1A", "right", KBD_right);
+	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO), button_width, button_height, "PRT", "printscreen", KBD_printscreen); //-V773
+	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO), button_width, button_height, "SCL", "scrolllock", KBD_scrolllock); //-V773
+	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO), button_width, button_height, "PAU", "pause", KBD_pause); //-V773
+	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO + 1), button_width, button_height, "INS", "insert", KBD_insert); //-V773
+	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 1), button_width, button_height, "HOM", "home", KBD_home); //-V773
+	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 1), button_width, button_height, "PUP", "pageup", KBD_pageup); //-V773
+	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO + 2), button_width, button_height, "DEL", "delete", KBD_delete); //-V773
+	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 2), button_width, button_height, "END", "end", KBD_end); //-V773
+	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 2), button_width, button_height, "PDN", "pagedown", KBD_pagedown); //-V773
+	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 4), button_width, button_height, "\x18", "up", KBD_up); //-V773
+	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO + 5), button_width, button_height, "\x1B", "left", KBD_left); //-V773
+	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 5), button_width, button_height, "\x19", "down", KBD_down); //-V773
+	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 5), button_width, button_height, "\x1A", "right", KBD_right); //-V773
 #undef XO
 #undef YO
 #define XO 0
 #define YO 7
 	/* Numeric KeyPad */
 	num_lock_event = AddKeyButtonEvent(pos_x(XO), pos_y(YO), button_width, button_height, "NUM", "numlock", KBD_numlock);
-	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO), button_width, button_height, "/", "kp_divide", KBD_kpdivide);
-	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO), button_width, button_height, "*", "kp_multiply", KBD_kpmultiply);
-	AddKeyButtonEvent(pos_x(XO + 3), pos_y(YO), button_width, button_height, "-", "kp_minus", KBD_kpminus);
-	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO + 1), button_width, button_height, "7", "kp_7", KBD_kp7);
-	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 1), button_width, button_height, "8", "kp_8", KBD_kp8);
-	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 1), button_width, button_height, "9", "kp_9", KBD_kp9);
-	AddKeyButtonEvent(pos_x(XO + 3), pos_y(YO + 1), button_width, button_height * 2, "+", "kp_plus", KBD_kpplus);
-	AddKeyButtonEvent(pos_x(XO), pos_y(YO + 2), button_width, button_height, "4", "kp_4", KBD_kp4);
-	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 2), button_width, button_height, "5", "kp_5", KBD_kp5);
-	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 2), button_width, button_height, "6", "kp_6", KBD_kp6);
-	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO + 3), button_width, button_height, "1", "kp_1", KBD_kp1);
-	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 3), button_width, button_height, "2", "kp_2", KBD_kp2);
-	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 3), button_width, button_height, "3", "kp_3", KBD_kp3);
-	AddKeyButtonEvent(pos_x(XO + 3), pos_y(YO + 3), button_width, button_height * 2, "ENT", "kp_enter", KBD_kpenter);
-	AddKeyButtonEvent(pos_x(XO), pos_y(YO + 4), button_width * 2, button_height, "0", "kp_0", KBD_kp0);
-	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 4), button_width, button_height, ".", "kp_period", KBD_kpperiod);
+	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO), button_width, button_height, "/", "kp_divide", KBD_kpdivide); //-V773
+	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO), button_width, button_height, "*", "kp_multiply", KBD_kpmultiply); //-V773
+	AddKeyButtonEvent(pos_x(XO + 3), pos_y(YO), button_width, button_height, "-", "kp_minus", KBD_kpminus); //-V773
+	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO + 1), button_width, button_height, "7", "kp_7", KBD_kp7); //-V773
+	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 1), button_width, button_height, "8", "kp_8", KBD_kp8); //-V773
+	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 1), button_width, button_height, "9", "kp_9", KBD_kp9); //-V773
+	AddKeyButtonEvent(pos_x(XO + 3), pos_y(YO + 1), button_width, button_height * 2, "+", "kp_plus", KBD_kpplus); //-V773
+	AddKeyButtonEvent(pos_x(XO), pos_y(YO + 2), button_width, button_height, "4", "kp_4", KBD_kp4); //-V773
+	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 2), button_width, button_height, "5", "kp_5", KBD_kp5); //-V773
+	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 2), button_width, button_height, "6", "kp_6", KBD_kp6); //-V773
+	AddKeyButtonEvent(pos_x(XO + 0), pos_y(YO + 3), button_width, button_height, "1", "kp_1", KBD_kp1); //-V773
+	AddKeyButtonEvent(pos_x(XO + 1), pos_y(YO + 3), button_width, button_height, "2", "kp_2", KBD_kp2); //-V773
+	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 3), button_width, button_height, "3", "kp_3", KBD_kp3); //-V773
+	AddKeyButtonEvent(pos_x(XO + 3), pos_y(YO + 3), button_width, button_height * 2, "ENT", "kp_enter", KBD_kpenter); //-V773
+	AddKeyButtonEvent(pos_x(XO), pos_y(YO + 4), button_width * 2, button_height, "0", "kp_0", KBD_kp0); //-V773
+	AddKeyButtonEvent(pos_x(XO + 2), pos_y(YO + 4), button_width, button_height, ".", "kp_period", KBD_kpperiod); //-V773
 
 #undef XO
 #undef YO
@@ -2163,7 +2164,7 @@ static void CreateLayout() {
 	/* Mouse Buttons */
 	new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Mouse");
 
-	AddMouseButtonEvent(pos_x(XO + 0),
+	AddMouseButtonEvent(pos_x(XO + 0), //-V773
 	                    pos_y(YO),
 	                    button_width,
 	                    button_height,
@@ -2171,7 +2172,7 @@ static void CreateLayout() {
 	                    "mouse_left",
 	                    MouseButtonId::Left);
 
-	AddMouseButtonEvent(pos_x(XO + 1),
+	AddMouseButtonEvent(pos_x(XO + 1), //-V773
 	                    pos_y(YO),
 	                    button_width,
 	                    button_height,
@@ -2179,7 +2180,7 @@ static void CreateLayout() {
 	                    "mouse_middle",
 	                    MouseButtonId::Middle);
 
-	AddMouseButtonEvent(pos_x(XO + 2),
+	AddMouseButtonEvent(pos_x(XO + 2), //-V773
 	                    pos_y(YO),
 	                    button_width,
 	                    button_height,
@@ -2196,21 +2197,21 @@ static void CreateLayout() {
 
 	/* Joystick Buttons/Texts */
 	/* Buttons 1+2 of 1st Joystick */
-	AddJButtonButton(pos_x(XO), pos_y(YO) + y_offs, button_width, button_height, "1", 0, 0);
-	AddJButtonButton(pos_x(XO + 2), pos_y(YO) + y_offs, button_width, button_height, "2", 0, 1);
+	AddJButtonButton(pos_x(XO), pos_y(YO) + y_offs, button_width, button_height, "1", 0, 0); //-V773
+	AddJButtonButton(pos_x(XO + 2), pos_y(YO) + y_offs, button_width, button_height, "2", 0, 1); //-V773
 	/* Axes 1+2 (X+Y) of 1st Joystick */
 	CJAxisEvent* cjaxis = AddJAxisButton(pos_x(XO + 1), pos_y(YO) + y_offs, button_width, button_height, "Y-", 0, 1, false, nullptr);
-	AddJAxisButton(pos_x(XO + 1), pos_y(YO + 1) + y_offs, button_width, button_height, "Y+", 0, 1, true, cjaxis);
+	AddJAxisButton(pos_x(XO + 1), pos_y(YO + 1) + y_offs, button_width, button_height, "Y+", 0, 1, true, cjaxis); //-V773
 	cjaxis = AddJAxisButton(pos_x(XO), pos_y(YO + 1) + y_offs, button_width, button_height, "X-", 0, 0, false, nullptr);
-	AddJAxisButton(pos_x(XO + 2), pos_y(YO + 1) + y_offs, button_width, button_height, "X+", 0, 0, true, cjaxis);
+	AddJAxisButton(pos_x(XO + 2), pos_y(YO + 1) + y_offs, button_width, button_height, "X+", 0, 0, true, cjaxis); //-V773
 
 	CJAxisEvent * tmp_ptr;
 
 	assert(joytype != JOY_UNSET);
 	if (joytype == JOY_2AXIS) {
 		/* Buttons 1+2 of 2nd Joystick */
-		AddJButtonButton(pos_x(XO + 4), pos_y(YO) + y_offs, button_width, button_height, "1", 1, 0);
-		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO) + y_offs, button_width, button_height, "2", 1, 1);
+		AddJButtonButton(pos_x(XO + 4), pos_y(YO) + y_offs, button_width, button_height, "1", 1, 0); //-V773
+		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO) + y_offs, button_width, button_height, "2", 1, 1); //-V773
 		/* Buttons 3+4 of 1st Joystick, not accessible */
 		AddJButtonButton_hidden(0,2);
 		AddJButtonButton_hidden(0,3);
@@ -2231,8 +2232,8 @@ static void CreateLayout() {
 		(void)tmp_ptr;
 	} else {
 		/* Buttons 3+4 of 1st Joystick */
-		AddJButtonButton(pos_x(XO + 4), pos_y(YO) + y_offs, button_width, button_height, "3", 0, 2);
-		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO) + y_offs, button_width, button_height, "4", 0, 3);
+		AddJButtonButton(pos_x(XO + 4), pos_y(YO) + y_offs, button_width, button_height, "3", 0, 2); //-V773
+		AddJButtonButton(pos_x(XO + 4 + 2), pos_y(YO) + y_offs, button_width, button_height, "4", 0, 3); //-V773
 		/* Buttons 1+2 of 2nd Joystick, not accessible */
 		AddJButtonButton_hidden(1, 0);
 		AddJButtonButton_hidden(1, 1);
@@ -2255,8 +2256,8 @@ static void CreateLayout() {
 
 	if (joytype == JOY_CH) {
 		/* Buttons 5+6 of 1st Joystick */
-		AddJButtonButton(pos_x(XO + 8), pos_y(YO) + y_offs, button_width, button_height, "5", 0, 4);
-		AddJButtonButton(pos_x(XO + 8 + 2), pos_y(YO) + y_offs, button_width, button_height, "6", 0, 5);
+		AddJButtonButton(pos_x(XO + 8), pos_y(YO) + y_offs, button_width, button_height, "5", 0, 4); //-V773
+		AddJButtonButton(pos_x(XO + 8 + 2), pos_y(YO) + y_offs, button_width, button_height, "6", 0, 5); //-V773
 	} else {
 		/* Buttons 5+6 of 1st Joystick, not accessible */
 		AddJButtonButton_hidden(0, 4);
