@@ -72,7 +72,7 @@ static struct
  {0,            0,      0,           0,            0,           0}
 };
 
-void PDC_set_keyboard_binary([[maybe_unused]] bool on)
+void PDC_set_keyboard_binary(bool on)
 {
     PDC_LOG(("PDC_set_keyboard_binary() - called\n"));
 }

@@ -403,11 +403,11 @@ void PDC_reset_shell_mode(void)
     PDC_flushinp();
 }
 
-void PDC_restore_screen_mode([[maybe_unused]] int i)
+void PDC_restore_screen_mode(int i)
 {
 }
 
-void PDC_save_screen_mode([[maybe_unused]] int i)
+void PDC_save_screen_mode(int i)
 {
 }
 
