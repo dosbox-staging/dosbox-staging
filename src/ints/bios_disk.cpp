@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 #include <utility>
+#include <vector>
 
 #include "cpu/callback.h"
 #include "cpu/registers.h"
@@ -15,7 +16,7 @@
 #include "hardware/memory.h"
 #include "utils/string_utils.h"
 
-diskGeo DiskGeometryList[] = {
+static const std::vector<diskGeo> disk_geometry_list = {
         { 160,  8, 1, 40, 0}, // SS/DD 5.25"
         { 180,  9, 1, 40, 0}, // SS/DD 5.25"
         { 200, 10, 1, 40, 0}, // SS/DD 5.25" (booters)
@@ -30,7 +31,6 @@ diskGeo DiskGeometryList[] = {
         {1720, 21, 2, 82, 4}, // DS/HD 3.5"  (DMF)
         {1840, 23, 2, 80, 4}, // DS/HD 3.5"  (XDF)
         {2880, 36, 2, 80, 6}, // DS/ED 3.5"
-        {   0,  0, 0,  0, 0}
 };
 
 callback_number_t call_int13 = 0;
@@ -254,23 +254,21 @@ imageDisk::imageDisk(FILE* img_file, const char* img_name, uint32_t img_size_k,
 	memset(diskname, 0, 512);
 	safe_strcpy(diskname, img_name);
 	if (!is_hdd) {
-		uint8_t i      = 0;
 		bool founddisk = false;
-		while (DiskGeometryList[i].ksize != 0x0) {
-			if ((DiskGeometryList[i].ksize == img_size_k) ||
-			    (DiskGeometryList[i].ksize + 1 == img_size_k)) {
-				if (DiskGeometryList[i].ksize != img_size_k) {
+		for (uint8_t i = 0; i < disk_geometry_list.size(); ++i) {
+			const auto& geo = disk_geometry_list[i];
+			if (geo.ksize == img_size_k || geo.ksize + 1 == img_size_k) {
+				if (geo.ksize != img_size_k) {
 					LOG_MSG("ImageLoader: image file with additional data, might not load!");
 				}
 				founddisk  = true;
 				active     = true;
 				floppytype = i;
-				heads      = DiskGeometryList[i].headscyl;
-				cylinders  = DiskGeometryList[i].cylcount;
-				sectors    = DiskGeometryList[i].secttrack;
+				heads      = geo.headscyl;
+				cylinders  = geo.cylcount;
+				sectors    = geo.secttrack;
 				break;
 			}
-			i++;
 		}
 		if (!founddisk) {
 			active = false;
@@ -302,7 +300,7 @@ void imageDisk::Get_Geometry(uint32_t* getHeads, uint32_t* getCyl,
 uint8_t imageDisk::GetBiosType(void)
 {
 	if (!hardDrive) {
-		return (uint8_t)DiskGeometryList[floppytype].biosval;
+		return static_cast<uint8_t>(disk_geometry_list[floppytype].biosval);
 	} else {
 		return 0;
 	}
