@@ -1083,7 +1083,7 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 		                                         error);
 
 		const char* msg_id = mscdex_error_to_message_id(error, false);
-		if (error == 0) { //-V457
+		if (error == 0) { //-V457 //-V547
 			NOTIFY_DisplayInfoMessage(Notification::Source::Console,
 			                          "MOUNT",
 			                          msg_id);
