@@ -434,7 +434,7 @@ public:
 	{
 		selector &= ~7ul;
 		const auto nonbitu_selector = check_cast<PhysPt>(selector);
-		if (selector >= table_limit) {
+		if (selector >= table_limit) { //-V1051
 			return false;
 		}
 		desc.Load(table_base + nonbitu_selector);
