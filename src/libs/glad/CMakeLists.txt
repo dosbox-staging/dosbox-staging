@@ -1,7 +1,3 @@
-if (APPLE)
-  add_compile_options("-Wno-cast-function-type-mismatch")
-endif()
-
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_library(glad STATIC debug/src/gl.c)
   target_include_directories(glad SYSTEM PUBLIC debug/include)
@@ -11,3 +7,5 @@ else() # Release
   target_include_directories(glad SYSTEM PUBLIC release/include)
 
 endif()
+
+disable_warnings(glad)

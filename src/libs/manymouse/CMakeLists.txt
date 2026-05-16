@@ -21,4 +21,5 @@ if (C_MANYMOUSE)
     target_link_libraries(manymouse PRIVATE ${X11_Xinput_LIB})
   endif()
 
+  disable_warnings(manymouse)
 endif()

@@ -4,3 +4,5 @@ add_library(esfmu STATIC
 )
 
 target_include_directories(esfmu SYSTEM PUBLIC ..)
+
+disable_warnings(esfmu)
