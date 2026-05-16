@@ -18,7 +18,7 @@
 #define BIOS_MAX_DISK 10
 
 #define MAX_SWAPPABLE_DISKS 20
-struct diskGeo {
+struct DiskGeometry {
 	uint32_t ksize;  /* Size in kilobytes */
 	uint16_t secttrack; /* Sectors per track */
 	uint16_t headscyl;  /* Heads per cylinder */

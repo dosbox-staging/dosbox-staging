@@ -16,7 +16,7 @@
 #include "hardware/memory.h"
 #include "utils/string_utils.h"
 
-static const std::vector<diskGeo> disk_geometry_list = {
+static const std::vector<DiskGeometry> disk_geometry_list = {
         { 160,  8, 1, 40, 0}, // SS/DD 5.25"
         { 180,  9, 1, 40, 0}, // SS/DD 5.25"
         { 200, 10, 1, 40, 0}, // SS/DD 5.25" (booters)
