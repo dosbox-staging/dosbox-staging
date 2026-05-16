@@ -133,7 +133,6 @@ void AllocMemoryCommand::Post(const httplib::Request& req, httplib::Response& re
 	uint32_t size = j.at("size");
 
 	auto area     = MemoryArea::Conv;
-	auto strategy = AllocStrategy::BestFit;
 
 	if (j.contains("area")) {
 		std::string req_area = j["area"];
@@ -150,25 +149,30 @@ void AllocMemoryCommand::Post(const httplib::Request& req, httplib::Response& re
 		}
 	}
 
-	if (j.contains("strategy")) {
-		std::string req_strategy = j["strategy"];
-		upcase(req_strategy);
+	const auto strategy = [&]() {
+		using enum AllocStrategy;
 
-		if (req_strategy == "FIRST_FIT") {
-			strategy = AllocStrategy::FirstFit;
-		} else if (req_strategy == "BEST_FIT") {
-			strategy = AllocStrategy::BestFit;
-		} else if (req_strategy == "LAST_FIT") {
-			strategy = AllocStrategy::LastFit;
+		if (j.contains("strategy")) {
+			std::string req_strategy = j["strategy"];
+			upcase(req_strategy);
+
+			if (req_strategy == "FIRST_FIT") {
+				return FirstFit;
+			} else if (req_strategy == "BEST_FIT") {
+				return BestFit;
+			} else if (req_strategy == "LAST_FIT") {
+				return LastFit;
+			} else {
+				throw std::invalid_argument(
+				        "Invalid alloc strategy: " + req_strategy);
+			}
 		} else {
-			throw std::invalid_argument("Invalid alloc strategy: " +
-			                            req_strategy);
+			return BestFit;
 		}
+	}();
 
-		if (area == MemoryArea::Xms && strategy != AllocStrategy::BestFit) {
-			throw std::invalid_argument(
-			        "XMS allocator only supports best_fit");
-		}
+	if (area == MemoryArea::Xms && strategy != AllocStrategy::BestFit) {
+		throw std::invalid_argument("XMS allocator only supports best_fit");
 	}
 
 	AllocMemoryCommand cmd(size, area, strategy);
