@@ -180,6 +180,8 @@ void FPU_ESC1_Normal(Bitu rm) {
 			break;
 		case 0x02:       /* UNKNOWN */
 		case 0x03:       /* ILLEGAL */
+		case 0x06:       /* FTSTP (cyrix)*/
+		case 0x07:       /* UNKNOWN */
 			FPU_LOG_WARN(1,false,group,sub);
 			break;
 		case 0x04:       /* FTST */
@@ -187,10 +189,6 @@ void FPU_ESC1_Normal(Bitu rm) {
 			break;
 		case 0x05:       /* FXAM */
 			FPU_FXAM();
-			break;
-		case 0x06:       /* FTSTP (cyrix)*/
-		case 0x07:       /* UNKNOWN */
-			FPU_LOG_WARN(1,false,group,sub);
 			break;
 		}
 		break;
