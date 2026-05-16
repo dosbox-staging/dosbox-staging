@@ -521,8 +521,8 @@ l_M_Ed:
 		return CBRET_NONE;
 	case D_CLTS:
 		if (cpu.pmode && cpu.cpl) goto illegalopcode;
-		cpu.cr0&=(~CR0_TASKSWITCH);
-		goto nextopcode;
+	        cpu.cr0 &= (~CR0_TASKSWITCH); //-V784
+	        goto nextopcode;
 	case D_ICEBP:
 		CPU_SW_Interrupt_NoIOPLCheck(1,GetIP());
 		continue;
