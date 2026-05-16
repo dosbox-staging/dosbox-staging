@@ -777,12 +777,13 @@ static void cache_closeblock()
 // Replaced silent C-casting with explicit const-casting; when upstream will
 // revert this change bring back the previous version and remove this comment.
 //
+// TODO: change parameter type from const uint8_t* to uint8_t*
 
 // place an 8bit value into the cache
 
 static inline void cache_addb(uint8_t val, const uint8_t *pos)
 {
-	*const_cast<uint8_t *>(pos) = val;
+	*const_cast<uint8_t*>(pos) = val; //-V2018
 }
 
 static inline void cache_addb(uint8_t val)
@@ -795,7 +796,7 @@ static inline void cache_addb(uint8_t val)
 
 static inline void cache_addw(uint16_t val, const uint8_t *pos)
 {
-	write_unaligned_uint16(const_cast<uint8_t *>(pos), val);
+	write_unaligned_uint16(const_cast<uint8_t*>(pos), val); //-V2018
 }
 
 static inline void cache_addw(uint16_t val)
@@ -808,7 +809,7 @@ static inline void cache_addw(uint16_t val)
 
 static inline void cache_addd(uint32_t val, const uint8_t *pos)
 {
-	write_unaligned_uint32(const_cast<uint8_t *>(pos), val);
+	write_unaligned_uint32(const_cast<uint8_t*>(pos), val); //-V2018
 }
 
 static inline void cache_addd(uint32_t val)
@@ -821,7 +822,7 @@ static inline void cache_addd(uint32_t val)
 
 static inline void cache_addq(uint64_t val, const uint8_t *pos)
 {
-	write_unaligned_uint64(const_cast<uint8_t *>(pos), val);
+	write_unaligned_uint64(const_cast<uint8_t*>(pos), val); //-V2018
 }
 
 static inline void cache_addq(uint64_t val)
