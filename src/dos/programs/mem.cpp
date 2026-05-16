@@ -514,6 +514,7 @@ std::string MEM::DisplayXms(MoreOutputStrings& output) const
 	output.AddString("\n\n");
 
 	ValueList values = {};
+	values.reserve(8);
 
 	const auto label_version = MSG_Get("PROGRAM_MEM_XMS_LABEL_VERSION");
 	const auto label_driver  = MSG_Get("PROGRAM_MEM_XMS_LABEL_DRIVER");
@@ -620,6 +621,7 @@ void MEM::DisplayEmsValues(MoreOutputStrings& output,
                            const EmsExtraInfo& info) const
 {
 	ValueList values = {};
+	values.reserve(9);
 
 	const auto label_version = MSG_Get("PROGRAM_MEM_EMS_LABEL_VERSION");
 	const auto value_version = format_str("%u.%02u",
