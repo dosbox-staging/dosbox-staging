@@ -1,5 +1,5 @@
 add_library(loguru STATIC loguru.cpp)
-target_include_directories(loguru PUBLIC ..)
+target_include_directories(loguru SYSTEM PUBLIC ..)
 
 set(STACK_INCLUDES cxxabi.h dlfcn.h execinfo.h)
 

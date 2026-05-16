@@ -8,7 +8,7 @@ add_library(decoders STATIC
   wav.c
 )
 
-target_include_directories(decoders PUBLIC ..)
+target_include_directories(decoders SYSTEM PUBLIC ..)
 target_link_libraries(decoders PRIVATE project_headers)
 
 if (USE_SYSTEM_LIBS)

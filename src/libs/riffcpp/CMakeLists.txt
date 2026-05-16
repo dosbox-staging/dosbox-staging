@@ -3,4 +3,4 @@ add_library(riffcpp STATIC
   riffcpp.cpp
 )
 
-target_include_directories(riffcpp PUBLIC .)
+target_include_directories(riffcpp SYSTEM PUBLIC .)
