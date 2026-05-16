@@ -844,9 +844,7 @@ static Bitu INT15_Handler(void) {
 		}
 		break;
 	case 0x90:	/* OS HOOK - DEVICE BUSY */
-		CALLBACK_SCF(false);
-		reg_ah=0;
-		break;
+		[[fallthrough]];
 	case 0x91:	/* OS HOOK - DEVICE POST */
 		CALLBACK_SCF(false);
 		reg_ah=0;
