@@ -355,9 +355,9 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	} else if (state.should_capture_on_click) {
 		state.hint_id = MouseHint::ReleasedHotkeyAnyButton;
 	} else if (state.should_capture_on_middle) {
-		state.hint_id = state.is_seamless
-	                    ? MouseHint::SeamlessHotkeyMiddle
-	                    : MouseHint::ReleasedHotkeyMiddle;
+		state.hint_id = state.is_seamless //-V547
+		                      ? MouseHint::SeamlessHotkeyMiddle
+		                      : MouseHint::ReleasedHotkeyMiddle;
 	} else {
 		state.hint_id = state.is_seamless
 	                    ? MouseHint::SeamlessHotkey
