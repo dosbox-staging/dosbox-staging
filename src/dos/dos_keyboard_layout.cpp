@@ -631,8 +631,10 @@ bool KeyboardLayout::SetMapKey(const uint8_t key, const uint16_t layouted_key,
 	} else {
 		// non-command
 		if (diacritics_character>0) {
-			if (diacritics_character-200>=diacritics_entries) diacritics_character = 0;
-			else {
+			if (diacritics_character < 200 ||
+			    diacritics_character - 200 >= diacritics_entries) {
+				diacritics_character = 0;
+			} else {
 				uint16_t diacritics_start=0;
 				// search start of subtable
 				for (uint16_t i=0; i<diacritics_character-200; i++)
