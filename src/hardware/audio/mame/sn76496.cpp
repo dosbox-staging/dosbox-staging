@@ -147,17 +147,11 @@
 //When you go over this create sample
 #define RATE_MAX (1 << 10)
 
-sn76496_base_device::sn76496_base_device(const char *tag,
-                                         int feedbackmask,
-                                         int noisetap1,
-                                         int noisetap2,
-                                         bool negate,
-                                         bool stereo,
-                                         int clockdivider,
-                                         bool ncr,
-                                         bool sega,
-                                         device_t *owner,
-                                         uint32_t clock)
+sn76496_base_device::sn76496_base_device(const char* tag,
+                                         int feedbackmask, int noisetap1,
+                                         int noisetap2, bool negate, bool stereo,
+                                         int clockdivider, bool ncr, bool sega,
+                                         device_t* owner, uint32_t clock)
         : device_t(tag, owner, clock),
           device_sound_interface(),
           m_ready_state(false),
