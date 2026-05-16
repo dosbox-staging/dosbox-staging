@@ -124,8 +124,8 @@
 		break;
 	CASE_0F_B(0x06)												/* CLTS */
 		if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
-		cpu.cr0&=(~CR0_TASKSWITCH);
-		break;
+                cpu.cr0 &= (~CR0_TASKSWITCH); //-V784
+                break;
 	CASE_0F_B(0x08)												/* INVD */
 	CASE_0F_B(0x09)												/* WBINVD */
 		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
