@@ -322,9 +322,9 @@ public:
 static uint8_t findFreeInt(void)
 {
 	//"FMPDRV.EXE" installs itself into a free IVT slot starting at 0x80...
-	for (uint8_t intNum = 0x80; intNum; ++intNum) {
-		if (RealGetVec(intNum) == 0)
-			return intNum;
+	for (int intNum = 0x80; intNum <= 0xFF; ++intNum) {
+		if (RealGetVec(static_cast<uint8_t>(intNum)) == 0)
+			return static_cast<uint8_t>(intNum);
 	}
 	return 0x00; // failed
 }
@@ -347,13 +347,12 @@ static bool FMPDRV_InstallINTHandler()
 	if (_installedInterruptNumber != 0)
 		return true; // already installed
 	_installedInterruptNumber = findFreeInt();
-	if (_installedInterruptNumber == 0) {
+	if (_installedInterruptNumber == 0) { //-V547
 		LOG(LOG_REELMAGIC, LOG_ERROR)
 		("Unable to install INT handler due to no free IVT slots!");
 		return false; // hard to beleive this could actually happen... but need to account
 		              // for...
 	}
-
 
 	// Taking the upper 8 bits if the callback number is always zero because
 	// the maximum callback number is only 128. So we just confirm that here.
