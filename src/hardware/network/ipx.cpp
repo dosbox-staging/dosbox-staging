@@ -424,7 +424,7 @@ static void handleIpxRequest(void) {
 			        RealSegment(tmpECB->getESRAddr()),
 			        RealOffset(tmpECB->getESRAddr()));*/
 		}
-		break;
+		break; //-V773
 
 	case 0x0005: // SCHEDULE IPX EVENT
 	case 0x0007: // SCHEDULE SPECIAL IPX EVENT
@@ -498,7 +498,7 @@ static void handleIpxRequest(void) {
 
 	default: LOG_WARNING("Unhandled IPX function: %4x", reg_bx); break;
 	}
-}
+} //-V773
 
 // Entrypoint handler
 Bitu IPX_Handler(void) {
