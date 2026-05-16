@@ -9,8 +9,4 @@ if (HAS_STACK_INCLUDES)
 	target_compile_definitions(loguru PRIVATE LOGURU_STACKTRACES=1)
 endif()
 
-if (NOT MSVC)
-	set_source_files_properties(loguru.cpp
-                                    PROPERTIES COMPILE_OPTIONS
-                                    "-Wno-duplicated-branches")
-endif()
+disable_warnings(loguru)

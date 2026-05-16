@@ -59,3 +59,5 @@ target_link_libraries(pdcurses PRIVATE
   project_headers
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )
+
+disable_warnings(pdcurses)

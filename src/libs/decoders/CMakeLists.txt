@@ -23,3 +23,5 @@ target_link_libraries(decoders
   PRIVATE
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )
+
+disable_warnings(decoders)

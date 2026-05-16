@@ -4,3 +4,5 @@ add_library(riffcpp STATIC
 )
 
 target_include_directories(riffcpp SYSTEM PUBLIC .)
+
+disable_warnings(riffcpp)

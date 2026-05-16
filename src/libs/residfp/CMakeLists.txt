@@ -20,3 +20,5 @@ add_library(residfp STATIC
 
 target_include_directories(residfp SYSTEM PUBLIC ..)
 target_link_libraries(residfp PRIVATE project_headers)
+
+disable_warnings(residfp)
