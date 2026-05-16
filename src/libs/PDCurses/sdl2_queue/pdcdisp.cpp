@@ -507,7 +507,7 @@ void PDC_transform_line(int lineno, int x, int len, const chtype *srcp)
     _new_packet(old_attr, lineno, x, i, srcp);
 }
 
-static Uint32 _blink_timer(Uint32 interval, [[maybe_unused]] void *param)
+static Uint32 _blink_timer(Uint32 interval, void *param)
 {
     SDL_Event event;
 
