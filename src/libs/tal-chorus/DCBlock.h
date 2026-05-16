@@ -33,7 +33,7 @@ class DCBlock
   {
   }
 
-  ~DCBlock() = default;
+  ~DCBlock() { }
 
   inline void tick(float *sample, float cutoff)
   {
