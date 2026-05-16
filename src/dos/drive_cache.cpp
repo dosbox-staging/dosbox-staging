@@ -649,8 +649,12 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 	do {
 		pos = strchr(start,CROSS_FILESPLIT);
 		if (pos) {
-			safe_strncpy(dir, start,
-			             static_cast<unsigned int>(pos - start) < sizeof(dir) ? pos - start + 1 : sizeof(dir));
+			safe_strncpy(dir, //-V220
+			             start,
+			             static_cast<unsigned int>(pos - start) <
+			                             sizeof(dir)
+			                     ? pos - start + 1
+			                     : sizeof(dir));
 		}
 		else {
 			safe_strcpy(dir, start);
