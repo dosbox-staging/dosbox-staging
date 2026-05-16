@@ -31,15 +31,7 @@
 #endif
 #include <asio.hpp>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 #include "enet/include/enet.h"
-#pragma GCC diagnostic pop
-#pragma clang diagnostic pop
 
 enum class SocketType {
 	Tcp  = 0,

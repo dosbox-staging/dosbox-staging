@@ -11,13 +11,7 @@
 
 #include <SDL.h>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weffc++"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weffc++"
 #include "simpleini/SimpleIni.h"
-#pragma GCC diagnostic pop
-#pragma clang diagnostic pop
 
 #include "misc/notifications.h"
 #include "utils/checks.h"
