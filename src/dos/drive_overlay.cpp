@@ -1112,6 +1112,7 @@ void Overlay_Drive::add_special_file_to_disk(const char* dosname, const char* op
 	}
 	if (!f) {
 		LOG_ERR("DOS: Failed to create overlay file '%s'", overlayname);
+		return;
 	}
 	char buf[5] = {'e','m','p','t','y'};
 	fwrite(buf,5,1,f);
