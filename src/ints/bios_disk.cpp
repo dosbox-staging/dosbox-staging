@@ -33,6 +33,11 @@ static const std::vector<DiskGeometry> disk_geometry_list = {
         {2880, 36, 2, 80, 6}, // DS/ED 3.5"
 };
 
+const std::vector<DiskGeometry>& BIOS_GetDiskGeometryList()
+{
+	return disk_geometry_list;
+}
+
 callback_number_t call_int13 = 0;
 Bitu diskparm0, diskparm1;
 static uint8_t last_status;
