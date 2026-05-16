@@ -43,9 +43,14 @@ endif()
 # Disable the noisy narrowing and conversion warnings by default. Use the
 # CHECK_NARROWING() macro to opt-in these checks on a per-file basis. See
 # `src/util/checks.h` for details.
+#
+# Warning flags are set globally via add_compile_options() rather than
+# per-target because the project wants consistent diagnostics across all
+# compiled code. Vendored third-party libraries under src/libs/ opt out
+# via disable_warnings() which applies -w to suppress all warnings.
 if (MSVC)
   # /W4 displays level 1, level 2, and level 3 warnings, and all level 4
-  #(informational) warnings that aren't off by default.
+  # (informational) warnings that aren't off by default.
   add_compile_options("/wd4244" "/MP" "/W4")
 
   # Disable cl/clangcl warnings about insecure C functions
