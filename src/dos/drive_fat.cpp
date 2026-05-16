@@ -1362,7 +1362,7 @@ nextfile:
 	}
 	memset(find_name,0,DOS_NAMELENGTH_ASCII);
 	memset(extension,0,4);
-	memcpy(find_name,&sectbuf[entryoffset].entryname[0],8);
+	memcpy(find_name, &sectbuf[entryoffset].entryname[0], 8); //-V1086
 	memcpy(extension,&sectbuf[entryoffset].entryname[8],3);
 	trimString(&find_name[0], sizeof(find_name));
 	trimString(&extension[0], sizeof(extension));
