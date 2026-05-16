@@ -487,7 +487,7 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 	dyn_savestate(&callstate);
 
 	const uint8_t *page_brk;
-	opcode(tmp).set64().setea(gensrc->index,-1,0,dword?3:1).Emit8(0x8D); // lea tmp, [dst+(dword?3:1)]
+	opcode(tmp).set64().setea(gensrc->index, -1, 0, dword ? 3 : 1).Emit8(0x8D); // lea tmp, [dst+(dword?3:1)] //-V807
 	if (dword) {
 		opcode(4).set64().setimm(~0xFFF,4).setrm(tmp).Emit8(0x81); // and tmp, ~0xFFF
 		opcode(gensrc->index).set64().setrm(tmp).Emit8(0x39); // cmp tmp,src
@@ -549,7 +549,7 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=fals
 	opcode(tmp).setrm(gensrc->index).Emit8(0x8B); // mov tmp, src
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmp,12
 	// mov tmp, [8*tmp+paging.tlb.read(rbp)]
-	opcode(tmp)
+	opcode(tmp) //-V807
 	        .set64()
 	        .setea(5, tmp, 3, (Bits)PAGING_GetReadBaseAddress() - (Bits)&cpu_regs)
 	        .Emit8(0x8B);
@@ -597,7 +597,7 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 	dyn_savestate(&callstate);
 
 	const uint8_t *page_brk;
-	opcode(tmp).set64().setea(gendst->index,-1,0,dword?3:1).Emit8(0x8D); // lea tmp, [dst+(dword?3:1)]
+	opcode(tmp).set64().setea(gendst->index, -1, 0, dword ? 3 : 1).Emit8(0x8D); // lea tmp, [dst+(dword?3:1)] //-V807
 	if (dword) {
 		opcode(4).set64().setimm(~0xFFF,4).setrm(tmp).Emit8(0x81); // and tmp, ~0xFFF
 		opcode(gendst->index).set64().setrm(tmp).Emit8(0x39); // cmp tmp,dst
@@ -653,7 +653,7 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	opcode(tmp).setrm(gendst->index).Emit8(0x8B); // mov tmpd, dst
 	opcode(5).setrm(tmp).setimm(12,1).Emit8(0xC1); // shr tmpd,12
 	// mov tmp, [8*tmp+paging.tlb.write(rbp)]
-	opcode(tmp)
+	opcode(tmp) //-V807
 	        .set64()
 	        .setea(5, tmp, 3, (Bits)PAGING_GetWriteBaseAddress() - (Bits)&cpu_regs)
 	        .Emit8(0x8B);
@@ -874,8 +874,8 @@ skip_extend_word:
 							if (reg_ea!=DREG(EA)) gen_releasereg(DREG(EA));
 							return;
 						}
-						imm=(int32_t)val;
-					}
+					        imm = (int32_t)val; //-V220
+				        }
 					break;
 				case 6:base=DREG(ESI);segbase=DREG(DS);break;
 				case 7:base=DREG(EDI);segbase=DREG(DS);break;
@@ -918,8 +918,8 @@ skip_extend_word:
 				if (reg_ea!=DREG(EA)) gen_releasereg(DREG(EA));
 				return;
 			}
-			
-			imm=(int32_t)val;
+
+			imm = (int32_t)val; //-V220
 			break;
 			}
 		}
@@ -1917,13 +1917,13 @@ static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bit
 	decode.block->page.start=decode.page.index;
 	codepage->AddCacheBlock(decode.block);
 
-	auto cache_addr = static_cast<void *>(
-	        const_cast<uint8_t *>(decode.block->cache.start));
+	auto cache_addr = static_cast<void*>(
+	        const_cast<uint8_t*>(decode.block->cache.start)); //-V2018
 	constexpr size_t cache_bytes = CACHE_MAXSIZE;
 
 	dyn_mem_write(cache_addr, cache_bytes);
 	for (i = 0; i < G_MAX; i++) {
-		DynRegs[i].flags&=~(DYNFLG_ACTIVE|DYNFLG_CHANGED);
+		DynRegs[i].flags &= ~(DYNFLG_ACTIVE | DYNFLG_CHANGED); //-V784
 		DynRegs[i].genreg=nullptr;
 	}
 	gen_reinit();
