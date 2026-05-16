@@ -28,7 +28,7 @@ if (OPT_TESTS)
   target_sources(dosbox_tests PRIVATE messages_stubs.cpp)
 endif()
 
-target_include_directories(dosboxcommon PRIVATE ../libs/include)
+target_include_directories(dosboxcommon SYSTEM PRIVATE ../libs/include)
 target_link_libraries(dosboxcommon PRIVATE whereami)
 
 # Shlwapi needed for PathFileExistsW

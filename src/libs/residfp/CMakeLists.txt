@@ -18,5 +18,5 @@ add_library(residfp STATIC
   WaveformGenerator.cpp
 )
 
-target_include_directories(residfp PUBLIC ..)
+target_include_directories(residfp SYSTEM PUBLIC ..)
 target_link_libraries(residfp PRIVATE project_headers)

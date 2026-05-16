@@ -53,7 +53,7 @@ add_library(pdcurses STATIC
   sdl2_queue/pdcutil.cpp
 )
 
-target_include_directories(pdcurses PUBLIC . pdcurses)
+target_include_directories(pdcurses SYSTEM PUBLIC . pdcurses)
 
 target_link_libraries(pdcurses PRIVATE
   project_headers

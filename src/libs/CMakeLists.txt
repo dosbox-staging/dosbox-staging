@@ -24,5 +24,3 @@ add_subdirectory(tal-chorus)
 add_subdirectory(whereami)
 add_subdirectory(YM7128B_emu)
 add_subdirectory(zmbv)
-
-include_directories(.)
