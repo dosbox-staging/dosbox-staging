@@ -451,9 +451,9 @@
 			break;
 		}
 	CASE_W(0x8b)												/* MOV Gw,Ew */
-		{	
-			GetRMrw;
-			if (rm >= 0xc0 ) {GetEArw;*rmrw=*earw;}
+		{
+	                GetRMrw; //-V1037
+	                if (rm >= 0xc0 ) {GetEArw;*rmrw=*earw;}
 			else {GetEAa;*rmrw=LoadMw(eaa);}
 			break;
 		}
