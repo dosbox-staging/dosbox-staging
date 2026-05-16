@@ -50,7 +50,9 @@ static void cmos_checktimer(void) {
 	PIC_RemoveEvents(cmos_timerevent);
 	if (cmos.timer.div<=2) cmos.timer.div+=7;
 	cmos.timer.delay = (1000.0 / (32768.0 / (1 << (cmos.timer.div - 1))));
-	if (!cmos.timer.div || !cmos.timer.enabled) return;
+	if (!cmos.timer.enabled) {
+		return;
+	}
 	LOG(LOG_PIT, LOG_NORMAL)("RTC Timer at %.2f hz", 1000.0 / static_cast<double>(cmos.timer.delay));
 	//	PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
 	/* A rtc is always running */
@@ -201,12 +203,12 @@ static uint8_t cmos_readreg(io_port_t, io_width_t)
 		}
 		return 0;
 	case 0x1b:
-		if (imageDiskList[2]) {
+		if (imageDiskList[2]) { //-V1037
 			return (imageDiskList[2]->cylinders & 0xff);
 		}
 		return 0;
 	case 0x1c:
-		if (imageDiskList[2]) {
+		if (imageDiskList[2]) { //-V1037
 			return ((imageDiskList[2]->cylinders & 0xff00) >> 8);
 		}
 		return 0;
@@ -216,7 +218,7 @@ static uint8_t cmos_readreg(io_port_t, io_width_t)
 		}
 		return 0;
 	case 0x1e:
-		if (imageDiskList[2]) {
+		if (imageDiskList[2]) { //-V1037
 			return 0xff;
 		}
 		return 0;
@@ -252,12 +254,12 @@ static uint8_t cmos_readreg(io_port_t, io_width_t)
 		}
 		return 0;
 	case 0x24:
-		if (imageDiskList[3]) {
+		if (imageDiskList[3]) { //-V1037
 			return (imageDiskList[3]->cylinders & 0xff);
 		}
 		return 0;
 	case 0x25:
-		if (imageDiskList[3]) {
+		if (imageDiskList[3]) { //-V1037
 			return ((imageDiskList[3]->cylinders & 0xff00) >> 8);
 		}
 		return 0;
@@ -267,7 +269,7 @@ static uint8_t cmos_readreg(io_port_t, io_width_t)
 		}
 		return 0;
 	case 0x27:
-		if (imageDiskList[3]) {
+		if (imageDiskList[3]) { //-V1037
 			return 0xff;
 		}
 		return 0;
