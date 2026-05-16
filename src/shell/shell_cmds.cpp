@@ -800,7 +800,7 @@ void DOS_Shell::CMD_DIR(char* args)
 	std::string line = {};
 	if (const auto envvar = psp->GetEnvironmentValue("DIRCMD")){
 		line = std::string(args) + " " + *envvar;
-		args=const_cast<char*>(line.c_str());
+		args = line.data();
 	}
 
 	bool has_option_wide = scan_and_remove_cmdline_switch(args, "W");
@@ -2217,7 +2217,7 @@ static std::vector<std::string> cmd_move_parse_sources(const char*& args)
 	std::vector<std::string> sources;
 
 	// Sources are separated by commas and terminated by a trailing space
-	while (parsing) {
+	while (parsing) { //-V1044
 		const auto ch = *args;
 		switch (ch) {
 		case '"':
@@ -2273,7 +2273,7 @@ static std::string cmd_move_parse_destination(const char*& args)
 	bool parsing      = true;
 	bool inside_quote = false;
 
-	while (parsing) {
+	while (parsing) { //-V1044
 		const auto ch = *args;
 		switch (ch) {
 		case '"':

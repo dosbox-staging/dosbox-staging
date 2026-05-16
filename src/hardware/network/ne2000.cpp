@@ -288,11 +288,14 @@ io_val_t bx_ne2k_c::chipmem_read(io_port_t address, io_width_t io_len)
   if (/*(address >=0) && */address <= 31) {
     retval = BX_NE2K_THIS s.macaddr[address];
     if ((io_len == io_width_t::word) || (io_len == io_width_t::dword)) {
-      retval |= (unsigned int)(BX_NE2K_THIS s.macaddr[address + 1u] << 8u);
-	  if (io_len == io_width_t::dword) {
-			retval |= (unsigned int)(BX_NE2K_THIS s.macaddr[address + 2u] << 16u);
-			retval |= (unsigned int)(BX_NE2K_THIS s.macaddr[address + 3u] << 24u);
-	  }
+      if (address + 1u <= 31)
+        retval |= static_cast<unsigned int>(BX_NE2K_THIS s.macaddr[address + 1u] << 8u);
+      if (io_len == io_width_t::dword) {
+        if (address + 2u <= 31)
+          retval |= static_cast<unsigned int>(BX_NE2K_THIS s.macaddr[address + 2u] << 16u);
+        if (address + 3u <= 31)
+          retval |= static_cast<unsigned int>(BX_NE2K_THIS s.macaddr[address + 3u] << 24u);
+      }
     }
     return (retval);
   }
@@ -300,11 +303,14 @@ io_val_t bx_ne2k_c::chipmem_read(io_port_t address, io_width_t io_len)
   if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
     retval = BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART];
     if ((io_len == io_width_t::word) || (io_len == io_width_t::dword)) {
-      retval |= (unsigned int)(BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] << 8u);
+      if (address + 1 < BX_NE2K_MEMEND)
+        retval |= static_cast<unsigned int>(BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] << 8u);
     }
-	if (io_len == io_width_t::dword) {
-       retval |= (unsigned int)(BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 2] << 16u);
-       retval |= (unsigned int)(BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 3] << 24u);
+    if (io_len == io_width_t::dword) {
+      if (address + 2 < BX_NE2K_MEMEND)
+        retval |= static_cast<unsigned int>(BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 2] << 16u);
+      if (address + 3 < BX_NE2K_MEMEND)
+        retval |= static_cast<unsigned int>(BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 3] << 24u);
     }
     return (retval);
   }
@@ -323,8 +329,9 @@ bx_ne2k_c::chipmem_write(io_port_t address, io_val_t data, io_width_t io_len)
 
   if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
     BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART] = value & 0xff;
-    if (io_len == io_width_t::word)
-      BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] = value >> 8;
+    if ((io_len == io_width_t::word) && (address + 1 < BX_NE2K_MEMEND)) {
+	    BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] = value >> 8;
+    }
   } else
     BX_DEBUG("out-of-bounds chipmem write, %04X", address);
 }
