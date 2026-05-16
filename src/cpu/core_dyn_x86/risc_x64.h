@@ -237,7 +237,7 @@ public:
 		}
 		dynreg    = _dynreg;
 		last_used = x64gen.last_used;
-		dynreg->flags&=~DYNFLG_CHANGED;
+		dynreg->flags&=~DYNFLG_CHANGED; //-V784
 		dynreg->genreg=this;
 		if ((!stale) && (dynreg->flags & (DYNFLG_LOAD|DYNFLG_ACTIVE))) {
 			opcode(index).setabsaddr(dynreg->data).Emit8(0x8B); // mov r32, []
@@ -248,7 +248,7 @@ public:
 		if (!((Bitu)dynreg)) {
 			IllegalOption("GenReg->Save");
 		}
-		dynreg->flags &= ~DYNFLG_CHANGED;
+		dynreg->flags &= ~DYNFLG_CHANGED; //-V784
 		opcode(index).setabsaddr(dynreg->data).Emit8(0x89); // mov [], r32
 	}
 	void Release(void) {
@@ -258,7 +258,7 @@ public:
 		if (dynreg->flags & DYNFLG_CHANGED && dynreg->flags & DYNFLG_SAVE) {
 			Save();
 		}
-		dynreg->flags&=~(DYNFLG_CHANGED|DYNFLG_ACTIVE);
+		dynreg->flags&=~(DYNFLG_CHANGED|DYNFLG_ACTIVE); //-V784
 		dynreg->genreg = nullptr;
 		dynreg = nullptr;
 	}
@@ -278,9 +278,9 @@ static BlockReturn (*gen_runcode)(const uint8_t *code) = gen_runcodeInit;
 static BlockReturn gen_runcodeInit(const uint8_t *code) {
 	const uint8_t* oldpos = cache.pos;
 	cache.pos = &cache_code_link_blocks[128];
-	gen_runcode = (BlockReturn(*)(const uint8_t*))cache.pos;
+	gen_runcode = (BlockReturn(*)(const uint8_t*))cache.pos; //-V2018
 
-	auto cache_addr = static_cast<void *>(const_cast<uint8_t *>(cache.pos));
+	auto cache_addr = static_cast<void *>(const_cast<uint8_t *>(cache.pos)); //-V2018
 	constexpr size_t cache_bytes = CACHE_MAXSIZE;
 
 	dyn_mem_write(cache_addr, cache_bytes);
@@ -428,7 +428,7 @@ static void gen_preloadreg(DynReg * dynreg) {
 static void gen_releasereg(DynReg * dynreg) {
 	GenReg * genreg=dynreg->genreg;
 	if (genreg) genreg->Release();
-	else dynreg->flags&=~(DYNFLG_ACTIVE|DYNFLG_CHANGED);
+	else dynreg->flags&=~(DYNFLG_ACTIVE|DYNFLG_CHANGED); //-V784
 }
 
 static void gen_setupreg(DynReg * dnew,DynReg * dsetup) {
@@ -608,7 +608,7 @@ static void gen_load_imm(int index,Bitu imm) {
 		opcode(index).setrm(index).Emit8(0x33); // xor r32,r32
 	else if ((uint32_t)imm==imm)
 		opcode(index).setimm(imm,4).Emit8Reg(0xB8); // MOV r32, imm32
-	else if ((int32_t)imm==(Bits)imm)
+	else if ((int32_t)imm==(Bits)imm) //-V220
 		opcode(0).set64().setimm(imm,4).setrm(index).Emit8(0xC7); // mov r64, simm32
 	else
 		opcode(index).set64().setabsaddr((void*)imm).Emit8(0x8D); // lea r64, [imm]
@@ -681,8 +681,11 @@ static void gen_dop_byte_imm_mem(DualOps op,DynReg * dr1,Bitu di1,void* data) {
 		dst->notusable=true;
 		int src = GetNextReg(di1!=0);
 		dst->notusable=false;
-		if ((uint32_t)addr == (Bitu)addr) opcode(src).setimm(addr,4).Emit8Reg(0xB8);
-		else opcode(src).setimm(addr,8).set64().Emit8Reg(0xB8);
+		if ((uint32_t)addr == (Bitu)addr) { //-V220
+			opcode(src).setimm(addr, 4).Emit8Reg(0xB8);
+		} else {
+			opcode(src).setimm(addr, 8).set64().Emit8Reg(0xB8);
+		}
 		i = opcode(dst->index,true,di1).setea(src);
 	}
 
@@ -834,7 +837,7 @@ static void gen_dop_word_imm(DualOps op,bool dword,DynReg * dr1,Bits imm) {
 	if (!dword) {
 		i.setword();
 		imm = (int16_t)imm;
-	} else imm = (int32_t)imm;
+	} else imm = (int32_t)imm; //-V220
 	if (op <= DOP_OR && (int8_t)imm==imm) {
 		i.setimm(imm, 1);
 		tmp = 0x83;
@@ -898,7 +901,7 @@ static void gen_dop_word_imm_mem(DualOps op,bool dword,DynReg * dr1,void* data) 
 		if (dr1->genreg)
 			dr1->genreg->dynreg = nullptr;
 		x64gen.regs[X64_REG_RAX]->Load(dr1, true);
-		if ((uint32_t)addr == (Bitu)addr) {
+		if ((uint32_t)addr == (Bitu)addr) { //-V220
 			cache_addb(0x67);
 			opcode(0).setimm(addr,4).Emit8Reg(0xA1);
 		} else
@@ -910,8 +913,11 @@ static void gen_dop_word_imm_mem(DualOps op,bool dword,DynReg * dr1,void* data) 
 		dst->notusable=true;
 		int src = GetNextReg();
 		dst->notusable=false;
-		if ((uint32_t)addr == (Bitu)addr) opcode(src).setimm(addr,4).Emit8Reg(0xB8);
-		else opcode(src).setimm(addr,8).set64().Emit8Reg(0xB8);
+		if ((uint32_t)addr == (Bitu)addr) { //-V220
+			opcode(src).setimm(addr, 4).Emit8Reg(0xB8);
+		} else {
+			opcode(src).setimm(addr, 8).set64().Emit8Reg(0xB8);
+		}
 		i = opcode(dst->index,dword).setea(src);
 	}
 	gen_dop_word(op,dr1,i);
@@ -1158,7 +1164,7 @@ static void gen_call_write(DynReg * dr,uint32_t val,Bitu write_size) {
 
 static const uint8_t * gen_create_branch(BranchTypes type) {
 	/* First free all registers */
-	cache_addw(0x70+type);
+	cache_addw(0x70+type); //-V2006
 	return (cache.pos-1);
 }
 
@@ -1254,7 +1260,7 @@ static void gen_load_flags(DynReg * dynreg) {
 
 static void gen_save_host_direct(void* data, Bitu imm)
 {
-	if ((int32_t)imm != (Bits)imm) {
+	if ((int32_t)imm != (Bits)imm) { //-V220
 		opcode(0).setimm(imm,4).setabsaddr(data).Emit8(0xC7); // mov dword[], imm32 (low dword)
 		opcode(0).setimm(imm>>32,4).setabsaddr((uint8_t*)data+4).Emit8(0xC7); // high dword
 	} else
@@ -1268,7 +1274,7 @@ static void gen_return(BlockReturn retcode) {
 	if (retcode==0) cache_addw(0xc033);		// xor eax,eax
 	else {
 		cache_addb(0xb8);		//MOV EAX, retcode
-		cache_addd(retcode);
+		cache_addd(retcode); //-V2006
 	}
 	opcode(4).setea(4,-1,0,CALLSTACK-8).Emit8(0xFF); // jmp [rsp+CALLSTACK-8]
 }
@@ -1283,7 +1289,7 @@ static void gen_return_fast(BlockReturn retcode,bool ret_exception=false) {
 		if (retcode==0) cache_addw(0xc033);		// xor eax,eax
 		else {
 			cache_addb(0xb8);		//MOV EAX, retcode
-			cache_addd(retcode);
+			cache_addd(retcode); //-V2006
 		}
 	}
 	opcode(4).setea(4,-1,0,CALLSTACK-8).Emit8(0xFF); // jmp [rsp+CALLSTACK]
@@ -1314,11 +1320,11 @@ static void (*gen_dh_fpu_save)(void)  = gen_dh_fpu_saveInit;
 static void gen_dh_fpu_saveInit(void) {
 	const uint8_t* oldpos = cache.pos;
 	cache.pos = &cache_code_link_blocks[64];
-	gen_dh_fpu_save = (void(*)(void))cache.pos;
+	gen_dh_fpu_save = (void(*)(void))cache.pos; //-V2018
 
 	Bitu addr = (Bitu)&dyn_dh_fpu;
-	
-	auto cache_addr = static_cast<void *>(const_cast<uint8_t *>(cache.pos));
+
+	auto cache_addr = static_cast<void *>(const_cast<uint8_t *>(cache.pos)); //-V2018
 	constexpr size_t cache_bytes = CACHE_MAXSIZE;
 
 	dyn_mem_write(cache_addr, cache_bytes);
