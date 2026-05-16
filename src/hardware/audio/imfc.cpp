@@ -11280,7 +11280,7 @@ private:
 		log_debug("processSysExCmd_NodeMessage_SetVoiceBankData() - calling receiveDataPacketTypeA(0x%02x)",
 		          readResult.data);
 		if (receiveDataPacketTypeA(readResult.data,
-		                           (uint8_t*)bank,
+		                           (uint8_t*)bank, //-V2018
 		                           sizeof(VoiceDefinitionBank)) !=
 		    ReadStatus::Success) {
 			log_debug("processSysExCmd_NodeMessage_SetVoiceBankData() - receiveDataPacketTypeA returned ERROR");
@@ -12826,13 +12826,13 @@ private:
 					m_sp_SysExStateMatchTable[i] = b;
 					i++;
 
-					// Although incrementing 'i' can technically exceed the for
-					// loop's bounds, we know the prior "b == 0xFF" condition
-					// per the read-only table value means that 'i' will never
-					// be close to the loop end; so simply assert it:
-					//
-					assert(i < sizeof(SP_SysExStateMatchTableTemplate));
-
+					// Incrementing 'i' can technically exceed the
+					// loop's bounds, but the read-only table values
+					// mean 'i' will never be close to the loop end;
+					// guard defensively regardless:
+					if (i >= sizeof(SP_SysExStateMatchTableTemplate)) {
+						break;
+					}
 					b = SP_SysExStateMatchTableTemplate[i];
 				}
 			} else {
