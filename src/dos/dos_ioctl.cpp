@@ -60,7 +60,10 @@ bool DOS_IOCTL(void) {
 			if (Files[handle]->GetInformation() & 0x8000) {	//Check for device
 				const auto device_ptr = dynamic_cast<DOS_Device*>(
 				        Files[handle].get());
-				assert(device_ptr);
+				if (!device_ptr) {
+					DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+					return false;
+				}
 				reg_al = device_ptr->GetStatus(true);
 			} else {
 				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
@@ -75,8 +78,13 @@ bool DOS_IOCTL(void) {
 			uint16_t retcode=0;
 			const auto device_ptr = dynamic_cast<DOS_Device*>(
 			        Files[handle].get());
-			assert(device_ptr);
-			if (device_ptr->ReadFromControlChannel(bufptr, reg_cx, &retcode)) {
+			if (!device_ptr) {
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+				return false;
+			}
+			if (device_ptr->ReadFromControlChannel(bufptr,
+			                                       reg_cx,
+			                                       &retcode)) {
 				reg_ax = retcode;
 				return true;
 			}
@@ -90,8 +98,13 @@ bool DOS_IOCTL(void) {
 			uint16_t retcode=0;
 			const auto device_ptr = dynamic_cast<DOS_Device*>(
 			        Files[handle].get());
-			assert(device_ptr);
-			if (device_ptr->WriteToControlChannel(bufptr, reg_cx, &retcode)) {
+			if (!device_ptr) {
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+				return false;
+			}
+			if (device_ptr->WriteToControlChannel(bufptr,
+			                                      reg_cx,
+			                                      &retcode)) {
 				reg_ax = retcode;
 				return true;
 			}
@@ -119,7 +132,10 @@ bool DOS_IOCTL(void) {
 		if (Files[handle]->GetInformation() & EXT_DEVICE_BIT) {
 			const auto device_ptr = dynamic_cast<DOS_Device*>(
 			        Files[handle].get());
-			assert(device_ptr);
+			if (!device_ptr) {
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+				return false;
+			}
 			reg_al = device_ptr->GetStatus(false);
 			return true;
 		}
