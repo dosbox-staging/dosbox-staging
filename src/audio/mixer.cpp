@@ -2149,9 +2149,7 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 
 	// Assert that we're not attempting to do both LERP and Speex resample
 	// We can do one or neither
-	assert((do_lerp_upsample && !do_resample) ||
-	       (!do_lerp_upsample && do_resample) ||
-	       (!do_lerp_upsample && !do_resample));
+	assert(!(do_lerp_upsample && do_resample));
 
 	ConvertSamplesAndMaybeZohUpsample<Type, stereo, signeddata, nativeorder>(
 	        data, num_frames);
