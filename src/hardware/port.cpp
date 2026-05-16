@@ -377,8 +377,10 @@ public:
 			          static_cast<int>(writers),
 			          8 << i);
 
-			total_bytes += readers * sizeof(io_read_f) + sizeof(io_read_handlers[i]);
-			total_bytes += writers * sizeof(io_write_f) + sizeof(io_write_handlers[i]);
+			total_bytes += readers * sizeof(io_read_f) +
+			               sizeof(io_read_handlers[i]); //-V1055
+			total_bytes += writers * sizeof(io_write_f) +
+			               sizeof(io_write_handlers[i]); //-V1055
 			io_read_handlers[i].clear();
 			io_write_handlers[i].clear();
 		}
