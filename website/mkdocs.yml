@@ -255,6 +255,89 @@ nav:
         - 0.83/manual/appendices/shortcuts.md
         - 0.83/manual/appendices/keymapper.md
 
+  - Getting started:
+      - 0.84/getting-started/index.md   # dummy page for redirecting
+
+      - 0.84/getting-started/introduction.md
+      - 0.84/getting-started/setting-up-prince-of-persia.md
+      - 0.84/getting-started/enhancing-prince-of-persia.md
+      - 0.84/getting-started/passport-to-adventure.md
+      - 0.84/getting-started/beneath-a-steel-sky.md
+      - 0.84/getting-started/star-wars-dark-forces.md
+      - 0.84/getting-started/next-steps.md
+
+  - User manual:
+      - Introduction:
+        - 0.84/manual/introduction/about-this-manual.md
+        - 0.84/manual/introduction/what-is-dosbox-staging.md
+        - 0.84/manual/introduction/dos-primer.md
+        - 0.84/manual/introduction/dos-eras.md
+
+      - Using DOSBox Staging:
+        - 0.84/manual/using-dosbox-staging/configuration.md
+        - 0.84/manual/using-dosbox-staging/command-line.md
+        - 0.84/manual/using-dosbox-staging/shell.md
+        - 0.84/manual/using-dosbox-staging/commands.md
+        - 0.84/manual/using-dosbox-staging/storage.md
+        - 0.84/manual/using-dosbox-staging/hardware-resources.md
+        - 0.84/manual/using-dosbox-staging/capture.md
+        - 0.84/manual/using-dosbox-staging/windows-31.md
+
+      - System:
+        - 0.84/manual/system/general.md
+        - 0.84/manual/system/cpu.md
+        - 0.84/manual/system/dos.md
+        - 0.84/manual/system/localisation.md
+
+      - Graphics:
+        - 0.84/manual/graphics/adapters.md
+        - 0.84/manual/graphics/display-and-window.md
+        - 0.84/manual/graphics/rendering.md
+        - 0.84/manual/graphics/aspect-ratios.md
+        - 0.84/manual/graphics/composite-video.md
+        - 0.84/manual/graphics/3dfx-voodoo.md
+        - 0.84/manual/graphics/reelmagic.md
+
+      - Sound:
+        - 0.84/manual/sound/overview.md
+        - 0.84/manual/sound/on-subjectivity.md
+        - 0.84/manual/sound/mixer.md
+        - 0.84/manual/sound/mixer-effects.md
+        - 0.84/manual/sound/output-filters.md
+        - 0.84/manual/sound/disk-noise.md
+        - Sound devices:
+          - 0.84/manual/sound/sound-devices/adlib-cms-sound-blaster.md
+          - 0.84/manual/sound/sound-devices/roland-mt-32.md
+          - 0.84/manual/sound/sound-devices/midi.md
+          - 0.84/manual/sound/sound-devices/general-midi.md
+          - 0.84/manual/sound/sound-devices/pc-speaker.md
+          - 0.84/manual/sound/sound-devices/tandy.md
+          - 0.84/manual/sound/sound-devices/gravis-ultrasound.md
+          - 0.84/manual/sound/sound-devices/cd-da.md
+          - 0.84/manual/sound/sound-devices/ibm-ps1audio.md
+          - 0.84/manual/sound/sound-devices/covox-variants.md
+          - 0.84/manual/sound/sound-devices/innovation.md
+          - 0.84/manual/sound/sound-devices/imfc.md
+
+      - Input:
+        - 0.84/manual/input/overview.md
+        - 0.84/manual/input/keyboard.md
+        - 0.84/manual/input/mouse.md
+        - 0.84/manual/input/joystick.md
+        - 0.84/manual/input/keymapper.md
+
+      - Networking:
+        - 0.84/manual/networking/serial-ports.md
+        - 0.84/manual/networking/ipx.md
+        - 0.84/manual/networking/ethernet.md
+        - 0.84/manual/networking/multiplayer.md
+
+      - 0.84/manual/http-api.md
+
+      - Appendices:
+        - 0.84/manual/appendices/shortcuts.md
+        - 0.84/manual/appendices/keymapper.md
+
   - Get involved:
       - get-involved/index.md
       - get-involved/code-of-conduct.md
