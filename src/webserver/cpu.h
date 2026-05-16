@@ -6,8 +6,8 @@
 
 #include "bridge.h"
 
-#include "libs/http/http.h"
-#include "libs/json/json.h"
+#include "http/http.h"
+#include "json/json.h"
 
 namespace Webserver {
 

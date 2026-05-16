@@ -5,4 +5,4 @@ target_sources(dosboxcommon PRIVATE
   memory.cpp
   dos.cpp)
 
-target_link_libraries(dosboxcommon PRIVATE simde)
+target_link_libraries(dosboxcommon PRIVATE simde base64 httplib json)

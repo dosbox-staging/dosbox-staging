@@ -9,7 +9,7 @@
 
 #include "misc/compiler.h"
 
-#include "libs/loguru/loguru.hpp"
+#include "loguru/loguru.hpp"
 
 enum LOG_TYPES {
 	LOG_ALL,

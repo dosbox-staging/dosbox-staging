@@ -11,3 +11,5 @@ target_sources(dosboxcommon PRIVATE
   noise_gate.cpp
   opl_capture.cpp
 )
+
+target_link_libraries(dosboxcommon PRIVATE clap mverb)

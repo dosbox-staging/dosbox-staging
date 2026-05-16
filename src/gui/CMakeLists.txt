@@ -16,7 +16,7 @@ target_sources(dosboxcommon PRIVATE
   render/shader_pipeline.cpp
 )
 
-target_link_libraries(dosboxcommon PRIVATE OpenGL::GL)
+target_link_libraries(dosboxcommon PRIVATE OpenGL::GL simpleini)
 
 if (C_OPENGL)
   target_link_libraries(dosboxcommon PRIVATE glad)

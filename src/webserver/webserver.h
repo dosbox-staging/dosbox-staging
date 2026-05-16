@@ -9,8 +9,8 @@
 #include <limits>
 #include <string>
 
-#include <libs/http/http.h>
-#include <libs/json/json.h>
+#include "http/http.h"
+#include "json/json.h"
 
 #include "config/config.h"
 

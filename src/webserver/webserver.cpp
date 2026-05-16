@@ -11,8 +11,8 @@
 #include <string>
 #include <thread>
 
-#include "libs/http/http.h"
-#include "libs/json/json.h"
+#include "http/http.h"
+#include "json/json.h"
 
 #include "config/config.h"
 #include "dosbox.h"
