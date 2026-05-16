@@ -5,11 +5,6 @@
 #include <memory>
 #include <riffcpp.hpp>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weffc++"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weffc++"
-
 using iter = riffcpp::Chunk::iterator;
 
 class riffcpp::Chunk::iterator::impl {
@@ -237,6 +232,3 @@ riffcpp::Chunk::iterator::iterator(const iter &it) {
 
   pimpl = im;
 }
-
-#pragma GCC diagnostic pop
-#pragma clang diagnostic pop
