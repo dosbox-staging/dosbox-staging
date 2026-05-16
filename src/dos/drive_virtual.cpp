@@ -132,8 +132,6 @@ char* VFILE_Generate_8x3(const char* name, const unsigned int position)
 		}
 		num++;
 	}
-	reset_str(sfn);
-	return sfn;
 }
 
 void VFILE_Register(const char *name,
