@@ -478,7 +478,7 @@ void DOS_DTA::GetSearchParams(FatAttributeFlags& attr, char* pattern) const
 	attr = SGET_BYTE(sDTA, sattr);
 	char temp[11];
 	MEM_BlockRead(pt+offsetof(sDTA,sname),temp,11);
-	memcpy(pattern,temp,8);
+	memcpy(pattern, temp, 8); //-V1086
 	pattern[8]='.';
 	memcpy(&pattern[9],&temp[8],3);
 	pattern[12]=0;
