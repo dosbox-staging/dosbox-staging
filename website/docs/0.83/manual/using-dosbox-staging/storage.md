@@ -467,8 +467,9 @@ floppy images for [disk swapping](#disk-swapping).
     Some early games (roughly 1981--1986) bypassed DOS entirely and booted
     directly from floppy disk. These "booter" games took over the whole
     machine, using non-standard disk formats as a form of copy protection
-    and to squeeze out every last byte of available memory. They need the
-    `boot` command shown above rather than `mount`.
+    and to squeeze out every last byte of available memory. Their disks do
+    not contain a DOS filesystem, so they cannot be mounted as regular
+    drives --- they must be run with the `boot` command shown above.
 
 ??? note "Notable booter games"
 
