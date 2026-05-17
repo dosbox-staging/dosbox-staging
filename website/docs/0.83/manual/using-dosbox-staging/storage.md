@@ -212,8 +212,8 @@ mount G cd4.cue
 
 !!! note
 
-    CD-ROM drive letters must be continuous --- D, E, F, G works, but
-    D, F, H does not.
+    CD-ROM drive letters must be continuous --- D:, E:, F:, G: works,
+    but D:, F:, H: does not.
 
 This also works with automounting --- place each CD image in its own drive
 directory:
