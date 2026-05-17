@@ -47,11 +47,11 @@ that can use a scroll wheel, but no DOS game is known to use it.
 
 DOSBox Staging can emulate several serial (COM port) mouse types:
 
-- **Microsoft mouse** --- 2 buttons, the most widely compatible type.
-- **Logitech mouse** --- 3 buttons, mostly compatible with Microsoft mouse.
-- **Wheel mouse** --- 3 buttons + wheel, mostly compatible with Microsoft mouse.
+- **Microsoft mouse** --- 2 buttons, the most widely compatible type
+- **Logitech mouse** --- 3 buttons, mostly compatible with Microsoft mouse
+- **Wheel mouse** --- 3 buttons + wheel, mostly compatible with Microsoft mouse
 - **Mouse Systems mouse** --- 3 buttons, an older protocol NOT compatible with
-  Microsoft mice. A few programs require this type.
+  Microsoft mice. A few programs require this type
 
 To enable a serial mouse, use the `SERIAL 1 mouse` command (this attaches it
 to the COM1 port), or edit the [Serial ports](../networking/serial-ports.md)
