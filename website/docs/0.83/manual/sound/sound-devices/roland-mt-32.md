@@ -14,7 +14,7 @@ level. They took an interest in the MT-32, which lead to Sierra adding support
 for the module to most of their games from 1988 onwards. Other companies soon
 started following Sierra's lead, which turned the Roland MT-32 a de facto
 standard for high-end audio in DOS gaming in the 1988 to 1992 period until
-[General MIDI](general-midi.md) and [CD Audio](cd-da.md) took over.
+[General MIDI](../midi.md#the-general-midi-standard) and [CD Audio](cd-da.md) took over.
 
 As the Roland MT-32 was considerably more expensive than other options, such
 as the [AdLib](adlib-cms-sound-blaster.md#adlib-music-synthesizer-card), it
@@ -147,7 +147,7 @@ see the [Beneath a Steel Sky](../../../getting-started/beneath-a-steel-sky.md#se
 chapter of the getting started guide.
 
 DOSBox Staging emulates both the MT-32 sound module and the [MPU-401 MIDI
-interface](midi.md#roland-mpu-401-midi-interface) needed to communicate with
+interface](../midi.md#roland-mpu-401-midi-interface) needed to communicate with
 it. The emulated MPU-401 supports the so-called **Intelligent Mode**, which
 most older games require (e.g., all older Sierra adventures). Most later games
 only need the much simpler **UART Mode**. Intelligent mode fully supports UART

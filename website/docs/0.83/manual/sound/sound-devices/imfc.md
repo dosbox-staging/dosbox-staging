@@ -1,7 +1,7 @@
 # IBM Music Feature Card
 
 The **IBM Music Feature Card (IMFC)** was released by IBM in 1987 as a
-[MIDI](midi.md)-capable sound card for the IBM PC and compatible machines. It
+[MIDI](../midi.md)-capable sound card for the IBM PC and compatible machines. It
 featured a Yamaha FB-01 FM synthesiser module and an MPU-401 compatible MIDI
 interface.
 

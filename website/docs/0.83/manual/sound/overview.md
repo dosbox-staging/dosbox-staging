@@ -66,7 +66,7 @@ instruments, and the result always unmistakably sounded like early electronic
 music.
 
 [Roland MT-32](sound-devices/roland-mt-32.md) and [General
-MIDI](sound-devices/general-midi.md) music of later DOS era games followed
+MIDI](midi.md#the-general-midi-standard) music of later DOS era games followed
 the same basic principle, but utilising much more expensive external sound
 modules instead. These were the top-of-the-line sound devices of the day,
 capable of convincingly emulating the sound of real instruments, and producing
@@ -121,7 +121,7 @@ demonstrates configuring various sound devices for a specific game.
 
 <div class="compact" markdown>
 
-- [General MIDI](sound-devices/general-midi.md)
+- [Sound Canvas](sound-devices/sound-canvas.md) / [FluidSynth](sound-devices/fluidsynth.md)
 - [Roland MT-32](sound-devices/roland-mt-32.md)
 - [Gravis UltraSound](sound-devices/gravis-ultrasound.md)
 - [Sound Blaster 16](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16)
