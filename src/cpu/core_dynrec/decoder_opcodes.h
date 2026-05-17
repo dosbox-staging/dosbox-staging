@@ -389,10 +389,11 @@ static void dyn_push_seg(uint8_t seg) {
 	MOV_SEG_VAL_TO_HOST_REG(FC_OP1,seg);
 	if (decode.big_op) {
 		gen_extend_word(false,FC_OP1);
-		gen_call_function_raw((void*)&dynrec_push_dword);
+		gen_call_function_raw((void*)&dynrec_push_dword_checked);
 	} else {
-		gen_call_function_raw((void*)&dynrec_push_word);
+		gen_call_function_raw((void*)&dynrec_push_word_checked);
 	}
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_pop_seg(uint8_t seg) {
@@ -402,8 +403,12 @@ static void dyn_pop_seg(uint8_t seg) {
 
 static void dyn_push_reg(uint8_t reg) {
 	MOV_REG_WORD_TO_HOST_REG(FC_OP1,reg,decode.big_op);
-	if (decode.big_op) gen_call_function_raw((void*)&dynrec_push_dword);
-	else gen_call_function_raw((void*)&dynrec_push_word);
+	if (decode.big_op) {
+		gen_call_function_raw((void*)&dynrec_push_dword_checked);
+	} else {
+		gen_call_function_raw((void*)&dynrec_push_word_checked);
+	}
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_pop_reg(uint8_t reg) {
@@ -414,18 +419,23 @@ static void dyn_pop_reg(uint8_t reg) {
 
 static void dyn_push_byte_imm(int8_t imm) {
 	gen_mov_dword_to_reg_imm(FC_OP1,(uint32_t)imm);
-	if (decode.big_op) gen_call_function_raw((void*)&dynrec_push_dword);
-	else gen_call_function_raw((void*)&dynrec_push_word);
+	if (decode.big_op) {
+		gen_call_function_raw((void*)&dynrec_push_dword_checked);
+	} else {
+		gen_call_function_raw((void*)&dynrec_push_word_checked);
+	}
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_push_word_imm(Bitu imm) {
 	if (decode.big_op) {
 		gen_mov_dword_to_reg_imm(FC_OP1,imm);
-		gen_call_function_raw((void*)&dynrec_push_dword);
+		gen_call_function_raw((void*)&dynrec_push_dword_checked);
 	} else {
 		gen_mov_word_to_reg_imm(FC_OP1,(uint16_t)imm);
-		gen_call_function_raw((void*)&dynrec_push_word);
+		gen_call_function_raw((void*)&dynrec_push_word_checked);
 	}
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_pop_ev(void) {
