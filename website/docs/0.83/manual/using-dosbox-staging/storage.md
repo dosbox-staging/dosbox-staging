@@ -353,18 +353,43 @@ formats. The format is detected automatically from the image file size.
 
 | Size   | Type  | Capacity | Notes                             |
 |--------|-------|----------|-----------------------------------|
-| 5.25"  | SS/DD | 160 KB   | Original IBM PC (1981)            |
+| 5.25"  | SS/DD | 160 KB   | Original IBM PC                   |
 | 5.25"  | SS/DD | 180 KB   | 9 sectors/track variant           |
-| 5.25"  | DS/DD | 320 KB   | Double-sided (1982)               |
+| 5.25"  | SS/DD | 200 KB   | 10 sectors/track ¹             |
+| 5.25"  | DS/DD | 320 KB   | Double-sided                      |
 | 5.25"  | DS/DD | 360 KB   | Standard 5.25" DD                 |
+| 5.25"  | DS/DD | 400 KB   | 10 sectors/track ¹             |
 | 5.25"  | DS/HD | 1.2 MB   | Standard 5.25" HD                 |
+| 5.25"  | DS/HD | 1.52 MB  | IBM XDF ²                        |
 | 3.5"   | DS/DD | 720 KB   | Standard 3.5" DD                  |
 | 3.5"   | DS/HD | 1.44 MB  | Standard 3.5" HD                  |
-| 3.5"   | DS/HD | 1.68 MB  | Microsoft DMF                     |
-| 3.5"   | DS/HD | 1.72 MB  | Microsoft DMF (82-track variant)  |
-| 3.5"   | DS/ED | 2.88 MB  | Extra Density (rare)              |
+| 3.5"   | DS/HD | 1.68 MB  | Microsoft DMF ³                  |
+| 3.5"   | DS/HD | 1.72 MB  | Microsoft DMF ³ (82-track)       |
+| 3.5"   | DS/HD | 1.84 MB  | IBM XDF ²                        |
+| 3.5"   | DS/ED | 2.88 MB  | Extra Density ⁴                  |
 
 </div>
+
+*¹ Non-standard formats using 10 sectors per track instead of the usual 8
+or 9. These cannot be created or read by standard MS-DOS and were used
+exclusively by [booter games](#booting-from-images), notably Electronic Arts
+titles such as
+[Seven Cities of Gold (1984)](https://www.mobygames.com/game/3451/the-seven-cities-of-gold/)
+and
+[Marble Madness (1984)](https://www.mobygames.com/game/466/marble-madness/),
+as a form of copy protection.*
+
+*² IBM's eXtended Density Format, used by IBM for distributing OS/2 and
+PC DOS 7. Uses variable sector sizes to squeeze extra capacity out of
+standard HD disks.*
+
+*³ Microsoft's Distribution Media Format, used for distributing Windows
+and Office on fewer floppies. Uses 21 sectors per track. The 82-track
+variant has slightly higher capacity at the expense of compatibility.*
+
+*⁴ Introduced in 1990 on the NeXTcube and IBM PS/2. Required special
+drives and disks that were significantly more expensive than standard HD
+hardware, so the format never saw widespread adoption.*
 
 ### Mounting CD-ROM images
 
