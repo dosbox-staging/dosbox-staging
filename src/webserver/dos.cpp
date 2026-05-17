@@ -132,22 +132,27 @@ void AllocMemoryCommand::Post(const httplib::Request& req, httplib::Response& re
 	auto j        = json::parse(req.body);
 	uint32_t size = j.at("size");
 
-	auto area     = MemoryArea::Conv;
+	const auto area = [&]() {
+		using enum MemoryArea;
 
-	if (j.contains("area")) {
-		std::string req_area = j["area"];
-		upcase(req_area);
+		if (j.contains("area")) {
+			std::string req_area = j["area"];
+			upcase(req_area);
 
-		if (req_area == "CONV") {
-			area = MemoryArea::Conv;
-		} else if (req_area == "UMA") {
-			area = MemoryArea::Uma;
-		} else if (req_area == "XMS") {
-			area = MemoryArea::Xms;
+			if (req_area == "CONV") {
+				return Conv;
+			} else if (req_area == "UMA") {
+				return Uma;
+			} else if (req_area == "XMS") {
+				return Xms;
+			} else {
+				throw std::invalid_argument(
+				        "Invalid memory area: " + req_area);
+			}
 		} else {
-			throw std::invalid_argument("Invalid memory area: " + req_area);
+			return Conv;
 		}
-	}
+	}();
 
 	const auto strategy = [&]() {
 		using enum AllocStrategy;
