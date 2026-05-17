@@ -220,9 +220,7 @@ std::string MOUSECTL::GetMapStatusStr(const MouseMapStatus map_status)
 	case MouseMapStatus::Disabled:
 		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED");
 
-	default:
-		assert(false); // missing implementation
-		return nullptr;
+	default: assert(false); return {};
 	}
 }
 

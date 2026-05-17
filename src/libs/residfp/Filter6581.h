@@ -29,6 +29,9 @@
 
 #include "Filter.h"
 #include "FilterModelConfig6581.h"
+// Required before the class definition: unique_ptr<Integrator6581> = {} triggers
+// the constexpr destructor in C++23, which requires the type to be complete.
+#include "Integrator6581.h"
 
 namespace reSIDfp
 {

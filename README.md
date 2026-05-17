@@ -52,7 +52,7 @@ Development builds are automatically created on every commit merged to the `main
 | **Feature**                | **Status**                          |
 | -------------------------- | -------------------------------     |
 | **Version control**        | Git                                 |
-| **Language**               | C++20                               |
+| **Language**               | C++23                               |
 | **Logging**                | Loguru for C++<sup>[3]</sup>        |
 | **Build system**           | CMake + Ninja or Visual Studio 2022 |
 | **Dependency manager**     | vcpkg                               |

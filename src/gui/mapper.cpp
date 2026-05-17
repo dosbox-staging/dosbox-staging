@@ -81,9 +81,21 @@ static void SetActiveEvent(CEvent * event);
 static void SetActiveBind(CBind * _bind);
 extern uint8_t int10_font_14[256 * 14];
 
-static std::vector<std::unique_ptr<CEvent>> events;
-static std::vector<std::unique_ptr<CButton>> buttons;
-static std::vector<CBindGroup *> bindgroups;
+// C++23 std::default_delete requires the type to be complete at instantiation,
+// but CEvent/CButton register themselves in these vectors from their
+// constructors, so the vectors must be declared before the class definitions.
+// Using a custom deleter avoids the completeness check at the declaration site.
+template <typename T>
+struct DeferredDelete {
+	void operator()(T* p) const
+	{
+		delete p;
+	}
+};
+
+static std::vector<std::unique_ptr<CEvent, DeferredDelete<CEvent>>> events;
+static std::vector<std::unique_ptr<CButton, DeferredDelete<CButton>>> buttons;
+static std::vector<CBindGroup*> bindgroups;
 static std::vector<CHandlerEvent *> handlergroup;
 static std::list<CBind *> all_binds;
 static std::queue<std::string> auto_type_queue = {};

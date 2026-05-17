@@ -57,7 +57,7 @@ These are generic, distro-independent building instructions.
 
 ### Install the necessary build tools
 
-- GCC or Clang compiler (the compiler has to support C++20)
+- GCC or Clang compiler (the compiler has to support C++23)
 - Git
 - CMake
 - pkg-config
@@ -406,7 +406,7 @@ Install dependencies listed in [README.md](README.md). Although `ccache` is
 optional, we recommend installing it because Meson will use it to greatly speed
 up builds. The minimum set of dependencies is:
 
-- C/C++ compiler with support for C++20
+- C/C++ compiler with support for C++23
 - SDL >= 2.0.5
 - Opusfile
 - Meson >= 0.56
