@@ -320,12 +320,11 @@ mount C /path/to/saves -t overlay
 ### Mounting floppy images
 
 ```
-mount A floppy.img -t floppy
+mount A floppy.img
 ```
 
-The `-t floppy` flag is required --- floppy images are not auto-detected.
-Supported formats: `.img`, `.ima` (raw sector images). The correct floppy
-geometry is determined automatically from the image file size.
+Use `-t floppy` if auto-detection picks the wrong type. Supported floppy
+image formats: `.img`, `.ima` (raw sector images).
 
 #### Floppy disk formats
 
