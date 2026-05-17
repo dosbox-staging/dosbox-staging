@@ -1,10 +1,20 @@
 # Running Windows 3.1
 
 DOSBox Staging fully supports Windows 3.1, which was not a standalone
-operating system but an operating environment running on top of DOS. A number
-of games were released exclusively for Windows 3.1 --- see [The DOS
-eras](../introduction/dos-eras.md#windows-31-games) for notable titles and
-recommended hardware settings.
+operating system but an operating environment running on top of DOS. Windows
+3.1 was the platform that kicked off the CD-ROM gaming era: its built-in
+multimedia support made it the natural home for FMV-heavy interactive movies
+and lavish point-and-click adventures that were simply too large for floppy
+disk — titles like
+[Myst](https://www.mobygames.com/game/1223/myst/),
+[The Journeyman Project](https://www.mobygames.com/game/22007/the-journeyman-project/),
+and the cult Western adventure
+[Dust: A Tale of the Wired West](https://www.mobygames.com/game/3990/dust-a-tale-of-the-wired-west/).
+Many of these games were never ported elsewhere and can only be played this
+way.
+
+See [The DOS eras](../introduction/dos-eras.md#windows-31-games) for more
+notable titles and recommended hardware settings.
 
 !!! warning
 
@@ -18,13 +28,18 @@ media, either as floppy disk images or the files extracted from them.
 
 - Mount your installation files so they're accessible from DOS (e.g., copy
   them to `C:\INSTALL`).
+
 - Run `SETUP` from the installation directory.
+
 - Install into `C:\WINDOWS`.
-- When prompted, choose **386 Enhanced** mode (requires a 386 or better,
-  which DOSBox always emulates).
+
+- When prompted, choose **386 Enhanced** mode (technically, DOSBox Staging
+  alwyas emulates at least the 386 instruction set)
+
 - After installation completes, launch Windows with the `WIN` command.
 
-Use the following DOSBox configuration:
+Use the following DOSBox configuration (adapt
+[`mididevice`](../sound/midi.md#mididevice)for your [MIDI setup](#midi-setup)):
 
 ``` ini
 [dosbox]
@@ -32,13 +47,16 @@ machine = svga_s3
 memsize = 32
 
 [cpu]
-cpu_cycles = 30000
+# Emulate era-authentic 486DX2/66 speeds
+cpu_cycles = 25000
 cputype = pentium
 
 [sblaster]
 sbtype = sb16
 
 [midi]
+# Alternatively, set it to 'mt32' or 'fluidsynth',
+# or don't set it if you don't care about MIDI
 mididevice = soundcanvas
 ```
 
@@ -61,10 +79,14 @@ Install the
 driver for proper SVGA support inside Windows.
 
 - Extract the ZIP to a directory accessible from DOS (e.g., `C:\DRIVERS\S3`).
+
 - Exit Windows and run `SETUP` from the DOS prompt.
+
 - Navigate to the **Display** section and select **Other**.
+
 - Point to the driver directory and choose **640&times;480, 256 colours** as
   a safe starting point.
+
 - Higher resolutions up to 1600&times;1200 are available if you set
   [`vmemsize`](../system/general.md#vmemsize) to `4` or higher.
 
@@ -79,17 +101,27 @@ driver for proper SVGA support inside Windows.
 
 Install the
 [Sound Blaster 16 driver](https://github.com/dosbox-staging/dosbox-staging/files/11039394/SB16W3X.ZIP)
-for digital audio and OPL music inside Windows.
+for digital audio and OPL music.
 
-- Extract to `C:\DRIVERS\SB16` and run `INSTALL` from within Windows.
+- Extract to `C:\DRIVERS\SB16` and run `INSTALL` from the DOS prompt (the
+  installer is a DOS program; won't work from Windows).
+
 - Choose **Full Installation**.
-- When prompted for hardware settings, use DOSBox's defaults:
+
+- When prompted for hardware settings, use the DOSBox Staging defaults:
+
+    <div class="compact" markdown>
+
     - Base address: **220**
     - IRQ: **7**
     - DMA: **1**
     - High DMA: **5**
+
+    </div>
+
 - After installation, delete the `CONFIG.SYS` and `AUTOEXEC.BAT` files the
   installer generates; they are not needed under DOSBox.
+
 - Test by playing `C:\WINDOWS\CANYON.MID` in Media Player.
 
 
@@ -102,10 +134,11 @@ After installing the Sound Blaster 16 driver, configure MIDI output:
 
 This routes MIDI output through DOSBox's configured
 [`mididevice`](../sound/midi.md#mididevice), so you can use
-[FluidSynth](../sound/sound-devices/fluidsynth.md), [Sound Canvas
-SC-55](../sound/sound-devices/sound-canvas.md),
-or [Roland MT-32](../sound/sound-devices/roland-mt-32.md) emulation for Windows
-3.1 games --- just change the `mididevice` setting in your DOSBox config.
+[Roland MT-32](../sound/sound-devices/roland-mt-32.md),
+[Sound Canvas SC-55](../sound/sound-devices/sound-canvas.md),
+or [FluidSynth](../sound/sound-devices/fluidsynth.md), 
+emulation for Windows 3.1 games --- just change the `mididevice` setting in
+your DOSBox config.
 
 
 ## Mouse setup
