@@ -48,16 +48,16 @@ gus = on
 
     <div class="compact" markdown>
 
-    - [Al-Qadim: The Genie's Curse](https://www.mobygames.com/game/6731/al-qadim-the-genies-curse/)
-    - [Command & Conquer](https://www.mobygames.com/game/564/command-conquer/)
-    - [Discworld](https://www.mobygames.com/game/1201/discworld/)
-    - [Epic Pinball](https://www.mobygames.com/game/263/epic-pinball/)
-    - [Jazz Jackrabbit](https://www.mobygames.com/game/1487/jazz-jackrabbit/)
-    - [One Must Fall: 2097](https://www.mobygames.com/game/2862/one-must-fall-2097/)
-    - [Simon the Sorcerer](https://www.mobygames.com/game/749/simon-the-sorcerer/)
-    - [Star Control II](https://www.mobygames.com/game/179/star-control-ii/)
-    - [Tyrian](https://www.mobygames.com/game/2064/tyrian/)
-    - [Zone 66](https://www.mobygames.com/game/1638/zone-66/)
+    - [Al-Qadim: The Genie's Curse (1994)](https://www.mobygames.com/game/6731/al-qadim-the-genies-curse/)
+    - [Command & Conquer (1995)](https://www.mobygames.com/game/564/command-conquer/)
+    - [Discworld (1995)](https://www.mobygames.com/game/1201/discworld/)
+    - [Epic Pinball (1993)](https://www.mobygames.com/game/263/epic-pinball/)
+    - [Jazz Jackrabbit (1994)](https://www.mobygames.com/game/1487/jazz-jackrabbit/)
+    - [One Must Fall: 2097 (1994)](https://www.mobygames.com/game/2862/one-must-fall-2097/)
+    - [Simon the Sorcerer (1993)](https://www.mobygames.com/game/749/simon-the-sorcerer/)
+    - [Star Control II (1992)](https://www.mobygames.com/game/179/star-control-ii/)
+    - [Tyrian (1995)](https://www.mobygames.com/game/2064/tyrian/)
+    - [Zone 66 (1993)](https://www.mobygames.com/game/1638/zone-66/)
 
     </div>
 
@@ -84,16 +84,16 @@ ultradir = C:\ULTRASND
 
     <div class="compact" markdown>
 
-    - [Dark Sun: Shattered Lands](https://www.mobygames.com/game/1498/dark-sun-shattered-lands/)
-    - [Doom](https://www.mobygames.com/game/1068/doom/)
-    - [Dune II](https://www.mobygames.com/game/321/dune-ii-the-building-of-a-dynasty/)
-    - [Gabriel Knight: Sins of the Fathers](https://www.mobygames.com/game/1079/gabriel-knight-sins-of-the-fathers/)
-    - [Heretic](https://www.mobygames.com/game/1594/heretic/)
-    - [Hexen](https://www.mobygames.com/game/866/hexen-beyond-heretic/)
-    - [Lands of Lore: The Throne of Chaos](https://www.mobygames.com/game/501/lands-of-lore-the-throne-of-chaos/)
-    - [Rise of the Triad](https://www.mobygames.com/game/768/rise-of-the-triad-dark-war/)
-    - [Warcraft: Orcs & Humans](https://www.mobygames.com/game/1591/warcraft-orcs-humans/)
-    - [Warcraft II: Tides of Darkness](https://www.mobygames.com/game/481/warcraft-ii-tides-of-darkness/)
+    - [Dark Sun: Shattered Lands (1993)](https://www.mobygames.com/game/1498/dark-sun-shattered-lands/)
+    - [Doom (1993)](https://www.mobygames.com/game/1068/doom/)
+    - [Dune II (1992)](https://www.mobygames.com/game/321/dune-ii-the-building-of-a-dynasty/)
+    - [Gabriel Knight: Sins of the Fathers (1993)](https://www.mobygames.com/game/1079/gabriel-knight-sins-of-the-fathers/)
+    - [Heretic (1994)](https://www.mobygames.com/game/1594/heretic/)
+    - [Hexen (1995)](https://www.mobygames.com/game/866/hexen-beyond-heretic/)
+    - [Lands of Lore: The Throne of Chaos (1993)](https://www.mobygames.com/game/501/lands-of-lore-the-throne-of-chaos/)
+    - [Rise of the Triad (1995)](https://www.mobygames.com/game/768/rise-of-the-triad-dark-war/)
+    - [Warcraft: Orcs & Humans (1994)](https://www.mobygames.com/game/1591/warcraft-orcs-humans/)
+    - [Warcraft II: Tides of Darkness (1995)](https://www.mobygames.com/game/481/warcraft-ii-tides-of-darkness/)
 
     </div>
 
@@ -120,16 +120,16 @@ C:\ULTRASND\ULTRAMID.EXE
 
     <div class="compact" markdown>
 
-    - [Betrayal at Krondor](https://www.mobygames.com/game/236/betrayal-at-krondor/)
-    - [Eye of the Beholder](https://www.mobygames.com/game/1441/eye-of-the-beholder/)
-    - [Hocus Pocus](https://www.mobygames.com/game/1237/hocus-pocus/)
-    - [Indiana Jones and the Fate of Atlantis](https://www.mobygames.com/game/1358/indiana-jones-and-the-fate-of-atlantis/)
-    - [Master of Orion](https://www.mobygames.com/game/466/master-of-orion/)
-    - [Monkey Island 2: LeChuck's Revenge](https://www.mobygames.com/game/616/monkey-island-2-lechucks-revenge/)
-    - [Sam & Max Hit the Road](https://www.mobygames.com/game/373/sam-max-hit-the-road/)
-    - [The 7th Guest](https://www.mobygames.com/game/561/the-7th-guest/)
-    - [Ultima Underworld: The Stygian Abyss](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/)
-    - [X-COM: UFO Defense](https://www.mobygames.com/game/1358/x-com-ufo-defense/)
+    - [Betrayal at Krondor (1993)](https://www.mobygames.com/game/236/betrayal-at-krondor/)
+    - [Eye of the Beholder (1991)](https://www.mobygames.com/game/1441/eye-of-the-beholder/)
+    - [Hocus Pocus (1994)](https://www.mobygames.com/game/1237/hocus-pocus/)
+    - [Indiana Jones and the Fate of Atlantis (1992)](https://www.mobygames.com/game/1358/indiana-jones-and-the-fate-of-atlantis/)
+    - [Master of Orion (1993)](https://www.mobygames.com/game/466/master-of-orion/)
+    - [Monkey Island 2: LeChuck's Revenge (1991)](https://www.mobygames.com/game/616/monkey-island-2-lechucks-revenge/)
+    - [Sam & Max Hit the Road (1993)](https://www.mobygames.com/game/373/sam-max-hit-the-road/)
+    - [The 7th Guest (1993)](https://www.mobygames.com/game/561/the-7th-guest/)
+    - [Ultima Underworld: The Stygian Abyss (1992)](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/)
+    - [X-COM: UFO Defense (1994)](https://www.mobygames.com/game/1358/x-com-ufo-defense/)
 
     </div>
 

@@ -16,16 +16,16 @@ The following DOS games are known to use the ReelMagic card:
 
 <div class="compact" markdown>
 
-- [Crime Patrol](https://www.mobygames.com/game/459/crime-patrol/)
-- [Crime Patrol 2: Drug Wars](https://www.mobygames.com/game/768/drug-wars/)
-- [Dragon's Lair](https://www.mobygames.com/game/1504/dragons-lair/)
-- [Entity](https://www.mobygames.com/game/6072/entity/)
-- [Flash Traffic: City of Angels](https://www.mobygames.com/game/14651/flash-traffic-city-of-angels/)
-- [Lord of the Rings](https://www.mobygames.com/game/3870/jrr-tolkiens-the-lord-of-the-rings-vol-i/) (Interplay, 1993)
-- [Man Enough](https://www.mobygames.com/game/29122/man-enough/)
-- [Return to Zork](https://www.mobygames.com/game/1219/return-to-zork/)
-- [Space Ace](https://www.mobygames.com/game/6009/space-ace/)
-- [The Horde](https://www.mobygames.com/game/6142/the-horde/)
+- [Crime Patrol (1993)](https://www.mobygames.com/game/459/crime-patrol/)
+- [Crime Patrol 2: Drug Wars (1993)](https://www.mobygames.com/game/768/drug-wars/)
+- [Dragon's Lair (1993)](https://www.mobygames.com/game/1504/dragons-lair/)
+- [Entity (1995)](https://www.mobygames.com/game/6072/entity/)
+- [Flash Traffic: City of Angels (1994)](https://www.mobygames.com/game/14651/flash-traffic-city-of-angels/)
+- [Lord of the Rings (1990)](https://www.mobygames.com/game/3870/jrr-tolkiens-the-lord-of-the-rings-vol-i/)
+- [Man Enough (1994)](https://www.mobygames.com/game/29122/man-enough/)
+- [Return to Zork (1993)](https://www.mobygames.com/game/1219/return-to-zork/)
+- [Space Ace (1994)](https://www.mobygames.com/game/6009/space-ace/)
+- [The Horde (1994)](https://www.mobygames.com/game/6142/the-horde/)
 
 </div>
 

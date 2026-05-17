@@ -199,12 +199,12 @@ triggered by some games.
 
     <div class="compact" markdown>
 
-    - [Beneath a Steel Sky](https://www.mobygames.com/game/386/beneath-a-steel-sky/) --- audible constant noise during the intro
-    - [Doom](https://www.mobygames.com/game/1068/doom/) --- chord-like noise at the start of the E2M2 level music
-    - [Frederik Pohl's Gateway](https://www.mobygames.com/game/317/frederik-pohls-gateway/) / [Gateway II: Homeworld](https://www.mobygames.com/game/318/gateway-ii-homeworld/) --- hanging note after exiting to DOS
-    - [Gods](https://www.mobygames.com/game/1511/gods/) --- audible noise in-game between the quiet sound effects
+    - [Beneath a Steel Sky (1994)](https://www.mobygames.com/game/386/beneath-a-steel-sky/) --- audible constant noise during the intro
+    - [Doom (1993)](https://www.mobygames.com/game/1068/doom/) --- chord-like noise at the start of the E2M2 level music
+    - [Frederik Pohl's Gateway (1992)](https://www.mobygames.com/game/317/frederik-pohls-gateway/) / [Gateway II: Homeworld (1993)](https://www.mobygames.com/game/318/gateway-ii-homeworld/) --- hanging note after exiting to DOS
+    - [Gods (1992)](https://www.mobygames.com/game/1511/gods/) --- audible noise in-game between the quiet sound effects
     - [Tetris Classic (1992)](https://www.mobygames.com/game/4539/tetris-classic/) --- buzzing noise after each level's intro music has finished playing
-    - [Wizardry 6: Bane of the Cosmic Forge](https://www.mobygames.com/game/709/wizardry-bane-of-the-cosmic-forge/) --- hanging notes after sound effects
+    - [Wizardry 6: Bane of the Cosmic Forge (1990)](https://www.mobygames.com/game/709/wizardry-bane-of-the-cosmic-forge/) --- hanging notes after sound effects
 
     </div>
 
