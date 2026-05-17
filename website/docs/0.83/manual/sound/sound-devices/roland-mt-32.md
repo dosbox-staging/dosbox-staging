@@ -52,8 +52,8 @@ that were fixed in the newer ROMs.
 
 As a rule of thumb:
 
-- **Early Sierra games** (1988--1990) --- King's Quest IV, Police Quest II,
-  Space Quest III, Leisure Suit Larry 2/3 --- were composed on "old" hardware
+- **Early Sierra games** (1988--1990) --- [King's Quest IV](https://www.mobygames.com/game/129/kings-quest-iv-the-perils-of-rosella/), [Police Quest II](https://www.mobygames.com/game/147/police-quest-2-the-vengeance/),
+  [Space Quest III](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/), [Leisure Suit Larry 2](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/)/[3](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/) --- were composed on "old" hardware
   and generally sound more authentic on `mt32_old`.
 
 - **Games from 1991 onwards** --- and most LucasArts titles --- work well on
