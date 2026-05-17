@@ -1974,6 +1974,30 @@ static void DRC_CALL_CONV dynrec_push_dword(uint32_t value) {
 	reg_esp=new_esp;
 }
 
+static bool DRC_CALL_CONV dynrec_push_word_checked(uint16_t value) DRC_FC;
+static bool DRC_CALL_CONV dynrec_push_word_checked(uint16_t value)
+{
+	const uint32_t new_esp = (reg_esp & cpu.stack.notmask) |
+	                         ((reg_esp - 2) & cpu.stack.mask);
+	if (mem_writew_checked(SegPhys(ss) + (new_esp & cpu.stack.mask), value)) {
+		return true;
+	}
+	reg_esp = new_esp;
+	return false;
+}
+
+static bool DRC_CALL_CONV dynrec_push_dword_checked(uint32_t value) DRC_FC;
+static bool DRC_CALL_CONV dynrec_push_dword_checked(uint32_t value)
+{
+	const uint32_t new_esp = (reg_esp & cpu.stack.notmask) |
+	                         ((reg_esp - 4) & cpu.stack.mask);
+	if (mem_writed_checked(SegPhys(ss) + (new_esp & cpu.stack.mask), value)) {
+		return true;
+	}
+	reg_esp = new_esp;
+	return false;
+}
+
 static uint16_t DRC_CALL_CONV dynrec_pop_word(void) DRC_FC;
 static uint16_t DRC_CALL_CONV dynrec_pop_word(void) {
 	uint16_t val=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
