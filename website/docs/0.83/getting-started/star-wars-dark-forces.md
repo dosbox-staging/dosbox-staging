@@ -440,20 +440,22 @@ Our previous example game, Beneath A Steel Sky, supports the Roland MT-32 MIDI
 sound module to provide more realistic-sounding music than what the Sound
 Blaster's OPL synthesiser is capable of. Dark Forces, however, was composed
 for a newer family of MIDI sound modules that support the so-called **General
-MIDI standard**.
+MIDI standard**. By the time Dark Forces was released in 1995, General MIDI
+had largely replaced the MT-32 as the standard for high-end game music. To
+learn more about the history and differences between these standards, see the
+[MIDI](../manual/sound/midi.md#the-general-midi-standard) chapter.
 
-DOSBox Staging offers two ways to get General MIDI playback (see the
-[General MIDI](../manual/sound/sound-devices/general-midi.md) page for
-the full reference):
+DOSBox Staging offers two ways to get General MIDI playback:
 
-- **Sound Canvas emulation** --- sample-accurate emulation of the Roland SC-55,
-  the de-facto standard General MIDI sound module for DOS games. This is the
-  most authentic option but requires SC-55 ROM files and a reasonably powerful
-  CPU.
+- **[Sound Canvas](../manual/sound/sound-devices/sound-canvas.md) emulation**
+  --- sample-accurate emulation of the Roland SC-55, the de facto standard
+  General MIDI sound module for DOS games. This is the most authentic option
+  but requires SC-55 ROM files and a reasonably powerful CPU.
 
-- **FluidSynth** --- a built-in software MIDI synthesiser that uses SoundFont
-  files (`.sf2`) to generate audio. Lighter on CPU and more flexible, but
-  the results depend on which SoundFont you load.
+- **[FluidSynth](../manual/sound/sound-devices/fluidsynth.md)** --- a built-in
+  software MIDI synthesiser that uses SoundFont files (`.sf2`) to generate
+  audio. Lighter on CPU and more flexible, but the results depend on which
+  SoundFont you load.
 
 
 ### Sound Canvas emulation

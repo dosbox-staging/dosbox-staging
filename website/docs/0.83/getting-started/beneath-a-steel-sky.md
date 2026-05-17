@@ -694,7 +694,10 @@ modules. These were external devices you could connect to your PC that offered
 far more realistic and higher-quality music than any Sound Blaster or AdLib
 sound card was capable of. They were the Cadillacs of DOS gaming audio for a
 while (they were priced accordingly, too), and many find they still sound
-excellent even by today's standards.
+excellent even by today's standards. The [MIDI](../manual/sound/midi.md)
+chapter explains how MIDI works and how to
+[choose the right device](../manual/sound/midi.md#which-midi-device-should-i-use)
+for each game.
 
 DOSBox Staging can emulate all common variants of the MT-32 family (see the
 [Roland MT-32](../manual/sound/sound-devices/roland-mt-32.md) page
