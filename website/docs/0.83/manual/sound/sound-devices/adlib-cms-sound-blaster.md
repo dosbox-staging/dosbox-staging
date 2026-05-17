@@ -418,92 +418,92 @@ sbtype = sbpro1
 
     <div class="compact" markdown>
 
-    - 11th Hour, The
-    - Amberstar
-    - Azrael's Tear
-    - B-17 Flying Fortress
-    - Battle Isle 2200
-    - BattleTech: The Crescent Hawks' Revenge
-    - Blackthorne
-    - Body Blows
-    - Castle of Dr. Brain
-    - Cobra Mission
-    - Command Adventures: Starship
-    - Conquests of the Longbow
-    - Darklands
-    - David Leadbetter's Greens
-    - Death Gate
-    - Der Clou (The Clue!)
-    - Discworld
-    - Dragonsphere
-    - Dune II
-    - Dungeon Master II
-    - EcoQuest: The Search for Cetus
-    - Elvira: Mistress of the Dark
-    - F-117A Nighthawk Stealth Fighter 2.0
-    - F-15 Strike Eagle III
-    - Fleet Defender
-    - Formula One Grand Prix
-    - Gobliins 2
-    - Gods
-    - Golden Axe
-    - Gunship 2000
-    - Harrier Jump Jet
-    - Heroes of Might and Magic 2
-    - Hi-Octane
-    - Hocus Pocus
-    - Hoyle's Official Book of Games Volume 3
-    - Indiana Jones and the Fate of Atlantis
-    - Inherit The Earth: Quest For The Orb
-    - Jill of the Jungle
-    - Jones in the Fast Lane
-    - King's Quest V
-    - Knights of Xentar
-    - Legend of Kyrandia
-    - Leisure Suit Larry 1 VGA
-    - Leisure Suit Larry 5
-    - Leisure Suit Larry 6
-    - Lord of the Rings Volume 1
-    - Lord of the Rings Volume 2
-    - Master of Magic
-    - Master of Orion
-    - Mixed-Up Mother Goose
-    - Mixed-Up Fairy Tales
-    - Pirates! Gold
-    - Police Quest III
-    - Prince of Persia 2
-    - Quest for Glory II
-    - Quest for Glory IV
-    - Return of the Phantom
-    - Settlers II, The
-    - Sid Meier's Civilization
-    - Sid Meier's Colonization
-    - Sid Meier's Railroad Tycoon Deluxe
-    - Silpheed
-    - Space Quest I VGA
-    - Space Quest III
-    - Space Quest IV
-    - Special Forces
-    - Star Wars: Dark Forces
-    - Stone Age
-    - Street Fighter II
-    - Strike Commander
-    - Stronghold
-    - Summer Challenge
-    - Supaplex
-    - System Shock
-    - Theme Hospital
-    - Ultima Underworld
-    - Ultima Underworld II
-    - William Shatner's TekWar
-    - Wing Commander
-    - Winter Challenge
-    - Witchhaven
-    - Witchhaven II
-    - Wolf
-    - X-Com: UFO Defense
-    - Xatax
-    - Z
+    - [11th Hour, The (1995)](https://www.mobygames.com/game/567/the-11th-hour/)
+    - [Amberstar (1992)](https://www.mobygames.com/game/3160/amberstar/)
+    - [Azrael's Tear (1996)](https://www.mobygames.com/game/1852/azraels-tear/)
+    - [B-17 Flying Fortress (1992)](https://www.mobygames.com/game/1756/b-17-flying-fortress/)
+    - [Battle Isle 2200 (1994)](https://www.mobygames.com/game/3420/battle-isle-2200/)
+    - [BattleTech: The Crescent Hawks' Revenge (1990)](https://www.mobygames.com/game/233/battletech-the-crescent-hawks-revenge/)
+    - [Blackthorne (1994)](https://www.mobygames.com/game/1445/blackthorne/)
+    - [Body Blows (1993)](https://www.mobygames.com/game/1970/body-blows/)
+    - [Castle of Dr. Brain (1991)](https://www.mobygames.com/game/1523/castle-of-dr-brain/)
+    - [Cobra Mission (1992)](https://www.mobygames.com/game/3404/cobra-mission/)
+    - [Command Adventures: Starship (1993)](https://www.mobygames.com/game/23005/command-adventures-starship/)
+    - [Conquests of the Longbow (1991)](https://www.mobygames.com/game/1967/conquests-of-the-longbow-the-legend-of-robin-hood/)
+    - [Darklands (1992)](https://www.mobygames.com/game/258/darklands/)
+    - [David Leadbetter's Greens (1991)](https://www.mobygames.com/game/11959/david-leadbetters-greens/)
+    - [Death Gate (1994)](https://www.mobygames.com/game/175/death-gate/)
+    - [Der Clou! (The Clue!) (1994)](https://www.mobygames.com/game/2568/the-clue/)
+    - [Discworld (1995)](https://www.mobygames.com/game/184/discworld/)
+    - [Dragonsphere (1994)](https://www.mobygames.com/game/2257/dragonsphere/)
+    - [Dune II (1992)](https://www.mobygames.com/game/321/dune-ii-the-building-of-a-dynasty/)
+    - [Dungeon Master II (1995)](https://www.mobygames.com/game/914/dungeon-master-ii-skullkeep/)
+    - [EcoQuest: The Search for Cetus (1991)](https://www.mobygames.com/game/584/ecoquest-the-search-for-cetus/)
+    - [Elvira: Mistress of the Dark (1990)](https://www.mobygames.com/game/4050/elvira/)
+    - [F-117A Nighthawk Stealth Fighter 2.0 (1991)](https://www.mobygames.com/game/655/f-117a-nighthawk-stealth-fighter-20/)
+    - [F-15 Strike Eagle III (1992)](https://www.mobygames.com/game/445/f-15-strike-eagle-iii/)
+    - [Fleet Defender (1994)](https://www.mobygames.com/game/4540/fleet-defender/)
+    - [Formula One Grand Prix (1992)](https://www.mobygames.com/game/2071/world-circuit/)
+    - [Gobliins 2 (1992)](https://www.mobygames.com/game/2625/gobliins-2-the-prince-buffoon/)
+    - [Gods (1992)](https://www.mobygames.com/game/1511/gods/)
+    - [Golden Axe (1990)](https://www.mobygames.com/game/199/golden-axe/)
+    - [Gunship 2000 (1991)](https://www.mobygames.com/game/891/gunship-2000/)
+    - [Harrier Jump Jet (1992)](https://www.mobygames.com/game/886/jump-jet/)
+    - [Heroes of Might and Magic II (1996)](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
+    - [Hi-Octane (1995)](https://www.mobygames.com/game/2208/hi-octane/)
+    - [Hocus Pocus (1994)](https://www.mobygames.com/game/1237/hocus-pocus/)
+    - [Hoyle's Official Book of Games Volume 3 (1991)](https://www.mobygames.com/game/2124/hoyle-official-book-of-games-volume-3/)
+    - [Indiana Jones and the Fate of Atlantis (1992)](https://www.mobygames.com/game/1358/indiana-jones-and-the-fate-of-atlantis/)
+    - [Inherit The Earth: Quest For The Orb (1994)](https://www.mobygames.com/game/4008/inherit-the-earth-quest-for-the-orb/)
+    - [Jill of the Jungle (1992)](https://www.mobygames.com/game/774/jill-of-the-jungle/)
+    - [Jones in the Fast Lane (1990)](https://www.mobygames.com/game/370/jones-in-the-fast-lane/)
+    - [King's Quest V (1990)](https://www.mobygames.com/game/130/kings-quest-v-absence-makes-the-heart-go-yonder/)
+    - [Knights of Xentar (1994)](https://www.mobygames.com/game/1665/knights-of-xentar/)
+    - [Legend of Kyrandia (1992)](https://www.mobygames.com/game/394/fables-fiends-the-legend-of-kyrandia-book-one/)
+    - [Leisure Suit Larry 1 VGA (1991)](https://www.mobygames.com/game/413/leisure-suit-larry-1-in-the-land-of-the-lounge-lizards/)
+    - [Leisure Suit Larry 5 (1991)](https://www.mobygames.com/game/408/leisure-suit-larry-5-passionate-patti-does-a-little-undercover-w/)
+    - [Leisure Suit Larry 6 (1993)](https://www.mobygames.com/game/407/leisure-suit-larry-6-shape-up-or-slip-out/)
+    - [Lord of the Rings Volume 1 (1990)](https://www.mobygames.com/game/3870/jrr-tolkiens-the-lord-of-the-rings-vol-i/)
+    - [Lord of the Rings Volume 2 (1993)](https://www.mobygames.com/game/1480/jrr-tolkiens-the-lord-of-the-rings-vol-ii-the-two-towers/)
+    - [Master of Magic (1994)](https://www.mobygames.com/game/200/master-of-magic/)
+    - [Master of Orion (1993)](https://www.mobygames.com/game/466/master-of-orion/)
+    - [Mixed-Up Mother Goose (1987)](https://www.mobygames.com/game/22295/mixed-up-mother-goose/)
+    - [Mixed-Up Fairy Tales (1991)](https://www.mobygames.com/game/6880/mixed-up-fairy-tales/)
+    - [Pirates! Gold (1993)](https://www.mobygames.com/game/166/pirates-gold/)
+    - [Police Quest III (1991)](https://www.mobygames.com/game/148/police-quest-3-the-kindred/)
+    - [Prince of Persia 2 (1993)](https://www.mobygames.com/game/78/prince-of-persia-2-the-shadow-the-flame/)
+    - [Quest for Glory II (1990)](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/)
+    - [Quest for Glory IV (1994)](https://www.mobygames.com/game/119/quest-for-glory-shadows-of-darkness/)
+    - [Return of the Phantom (1993)](https://www.mobygames.com/game/2011/return-of-the-phantom/)
+    - [Settlers II, The (1996)](https://www.mobygames.com/game/598/the-settlers-ii-veni-vidi-vici/)
+    - [Sid Meier's Civilization (1991)](https://www.mobygames.com/game/585/sid-meiers-civilization/)
+    - [Sid Meier's Colonization (1994)](https://www.mobygames.com/game/366/sid-meiers-colonization/)
+    - [Sid Meier's Railroad Tycoon Deluxe (1993)](https://www.mobygames.com/game/4037/sid-meiers-railroad-tycoon-deluxe/)
+    - [Silpheed (1988)](https://www.mobygames.com/game/167/silpheed/)
+    - [Space Quest I VGA (1991)](https://www.mobygames.com/game/187/space-quest-i-roger-wilco-in-the-sarien-encounter/)
+    - [Space Quest III (1989)](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)
+    - [Space Quest IV (1991)](https://www.mobygames.com/game/143/space-quest-iv-roger-wilco-and-the-time-rippers/)
+    - [Special Forces (1992)](https://www.mobygames.com/game/5816/special-forces/)
+    - [Star Wars: Dark Forces (1995)](https://www.mobygames.com/game/379/star-wars-dark-forces/)
+    - [Stone Age (1992)](https://www.mobygames.com/game/23765/stone-age/)
+    - [Street Fighter II (1992)](https://www.mobygames.com/game/6239/street-fighter-ii/)
+    - [Strike Commander (1993)](https://www.mobygames.com/game/1365/strike-commander/)
+    - [Stronghold (1993)](https://www.mobygames.com/game/482/stronghold/)
+    - [Summer Challenge (1992)](https://www.mobygames.com/game/2109/summer-challenge/)
+    - [Supaplex (1991)](https://www.mobygames.com/game/2106/supaplex/)
+    - [System Shock (1994)](https://www.mobygames.com/game/545/system-shock/)
+    - [Theme Hospital (1997)](https://www.mobygames.com/game/674/theme-hospital/)
+    - [Ultima Underworld (1992)](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/)
+    - [Ultima Underworld II (1993)](https://www.mobygames.com/game/691/ultima-underworld-ii-labyrinth-of-worlds/)
+    - [William Shatner's TekWar (1995)](https://www.mobygames.com/game/2420/william-shatners-tekwar/)
+    - [Wing Commander (1990)](https://www.mobygames.com/game/3/wing-commander/)
+    - [Winter Challenge (1991)](https://www.mobygames.com/game/2110/the-games-winter-challenge/)
+    - [Witchhaven (1995)](https://www.mobygames.com/game/3318/witchaven/)
+    - [Witchhaven II (1996)](https://www.mobygames.com/game/3514/witchaven-ii-blood-vengeance/)
+    - [Wolf (1994)](https://www.mobygames.com/game/754/wolf/)
+    - [X-Com: UFO Defense (1994)](https://www.mobygames.com/game/1358/x-com-ufo-defense/)
+    - [Xatax (1994)](https://www.mobygames.com/game/1263/xatax/)
+    - [Z (1996)](https://www.mobygames.com/game/346/z/)
 
     </div>
 
@@ -544,34 +544,34 @@ sbtype = sbpro2
 
     <div class="compact" markdown>
 
-    - Cybersphere
-    - Dark Forces
-    - Darklands
-    - Descent
-    - Descent 2 (if CD audio is disabled)
-    - Doom (requires `SET DMXOPTION=-phase -opl3` in the autoexec)
-    - Doom 2 (requires `SET DMXOPTION=-phase -opl3` in the autoexec)
-    - Dune (on AdLib Gold)
-    - Dungeon Master 2
-    - Fleet Defender
-    - FlixMix
-    - Gabriel Knight
-    - Hexen (requires `SET DMXOPTION=-phase -opl3` in the autoexec)
-    - King's Quest VI
-    - Lost Vikings, The
-    - Magic Carpet 2
-    - Sam & Max Hit the Road
-    - Settlers II, The
-    - Sid Meier's Civilization (requires updated sound drivers)
-    - SimCity 2000
-    - SlipSpeed
-    - Stonekeep
-    - System Shock
-    - Tetris Classic
-    - Theme Hospital
-    - TIE Fighter
-    - WarCraft II
-    - Xatax
+    - [Cybersphere (1993)](https://www.mobygames.com/game/79550/cybersphere/)
+    - [Dark Forces (1995)](https://www.mobygames.com/game/379/star-wars-dark-forces/)
+    - [Darklands (1992)](https://www.mobygames.com/game/258/darklands/)
+    - [Descent (1995)](https://www.mobygames.com/game/454/descent/)
+    - [Descent 2 (1996)](https://www.mobygames.com/game/694/descent-ii/) (if CD audio is disabled)
+    - [Doom (1993)](https://www.mobygames.com/game/1068/doom/) (requires `SET DMXOPTION=-phase -opl3` in the autoexec)
+    - [Doom 2 (1994)](https://www.mobygames.com/game/299/doom-ii/) (requires `SET DMXOPTION=-phase -opl3` in the autoexec)
+    - [Dune (1992)](https://www.mobygames.com/game/380/dune/) (on AdLib Gold)
+    - [Dungeon Master 2 (1995)](https://www.mobygames.com/game/914/dungeon-master-ii-skullkeep/)
+    - [Fleet Defender (1994)](https://www.mobygames.com/game/4540/fleet-defender/)
+    - [FlixMix (1995)](https://www.mobygames.com/game/13819/flixmix/)
+    - [Gabriel Knight (1993)](https://www.mobygames.com/game/665/gabriel-knight-sins-of-the-fathers/)
+    - [Hexen (1995)](https://www.mobygames.com/game/383/hexen-beyond-heretic/) (requires `SET DMXOPTION=-phase -opl3` in the autoexec)
+    - [King's Quest VI (1992)](https://www.mobygames.com/game/131/kings-quest-vi-heir-today-gone-tomorrow/)
+    - [Lost Vikings, The (1993)](https://www.mobygames.com/game/1547/the-lost-vikings/)
+    - [Magic Carpet 2 (1995)](https://www.mobygames.com/game/790/magic-carpet-2-the-netherworlds/)
+    - [Sam & Max Hit the Road (1993)](https://www.mobygames.com/game/672/sam-max-hit-the-road/)
+    - [Settlers II, The (1996)](https://www.mobygames.com/game/598/the-settlers-ii-veni-vidi-vici/)
+    - [Sid Meier's Civilization (1991)](https://www.mobygames.com/game/585/sid-meiers-civilization/) (requires updated sound drivers)
+    - [SimCity 2000 (1994)](https://www.mobygames.com/game/657/simcity-2000/)
+    - [SlipSpeed (2020)](https://www.mobygames.com/game/144988/slipspeed/)
+    - [Stonekeep (1995)](https://www.mobygames.com/game/1876/stonekeep/)
+    - [System Shock (1994)](https://www.mobygames.com/game/545/system-shock/)
+    - [Tetris Classic (1992)](https://www.mobygames.com/game/27780/tetris-classic/)
+    - [Theme Hospital (1997)](https://www.mobygames.com/game/674/theme-hospital/)
+    - [TIE Fighter (1994)](https://www.mobygames.com/game/240/star-wars-tie-fighter/)
+    - [WarCraft II (1995)](https://www.mobygames.com/game/1339/warcraft-ii-tides-of-darkness/)
+    - [Xatax (1994)](https://www.mobygames.com/game/1263/xatax/)
 
     </div>
 
