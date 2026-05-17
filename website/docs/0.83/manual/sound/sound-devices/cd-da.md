@@ -33,11 +33,11 @@ When using CUE sheets, audio tracks can reference compressed audio files
 instead of raw PCM data in BIN files. The following audio formats are
 supported:
 
-- **FLAC** --- Free Lossless Audio Codec. Recommended for lossless compression.
-- **Opus** --- Modern lossy codec with excellent quality at low bitrates.
-- **Ogg Vorbis** --- Widely used lossy codec.
-- **MP3** --- MPEG-1 Layer 3.
-- **WAV** --- Uncompressed PCM audio.
+- **FLAC** --- Free Lossless Audio Codec; recommended for lossless compression
+- **Opus** --- Modern lossy codec with excellent quality at low bitrates
+- **Ogg Vorbis** --- Widely used lossy codec
+- **MP3** --- MPEG-1 Layer 3
+- **WAV** --- Uncompressed PCM audio
 
 The standard Red Book audio format is 44.1 kHz, 16-bit stereo PCM. Mono audio
 tracks are automatically converted to stereo during playback.
