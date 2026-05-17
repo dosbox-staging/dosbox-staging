@@ -1,4 +1,4 @@
-# The DOSBox shell
+# The DOS shell
 
 When you start DOSBox Staging, you're greeted by a command prompt --- something
 like `Z:\>` or `C:\>`. This is the **shell**, the DOS command interpreter that
@@ -54,7 +54,7 @@ See [DOS commands](commands.md) for the complete command reference.
 The shell supports full command-line editing. You can move the cursor, insert
 and delete characters, and recall previous commands --- all features that
 required a separate `DOSKEY` utility on real MS-DOS systems (shipped with
-MS-DOS 5.0 in 1991), but are built into DOSBox Staging's shell.
+MS-DOS 5.0 in 1991), but are built into DOSBox Staging's DOS shell.
 
 <div class="compact" markdown>
 
