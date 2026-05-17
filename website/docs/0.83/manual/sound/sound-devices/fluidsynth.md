@@ -150,9 +150,9 @@ FluidSynth settings are to be configured in the `[fluidsynth]` section.
 
     <div class="compact" markdown>
 
-    - The user-defined SoundFont directory (see [`soundfont_dir`](#soundfont_dir)).
-    - The `soundfonts` directory in your DOSBox configuration directory.
-    - Other common system locations.
+    - The user-defined SoundFont directory (see [`soundfont_dir`](#soundfont_dir))
+    - The `soundfonts` directory in your DOSBox configuration directory
+    - Other common system locations
 
     </div>
 

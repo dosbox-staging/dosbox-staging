@@ -21,7 +21,7 @@ CD-DA audio tracks are supported in the following disc image formats:
     format for disc images with audio tracks. Audio tracks can be stored as raw
     PCM in the BIN file or as separate compressed audio files (see below).
 
-- **MDS/MDF** --- Alcohol 120% disc image format.
+- **MDS/MDF** --- Alcohol 120% disc image format
 
 - **ISO** --- Standard ISO 9660 images. Note: ISO images only contain data
     tracks; they cannot contain audio tracks. Use CUE/BIN for discs with audio.
