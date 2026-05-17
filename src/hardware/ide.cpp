@@ -6,8 +6,9 @@
 #include "ide.h"
 
 #include <algorithm>
-#include <cmath>
+#include <bit>
 #include <cassert>
+#include <cmath>
 
 #include "audio/mixer.h"
 #include "config/config.h"

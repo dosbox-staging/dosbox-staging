@@ -26,6 +26,9 @@
 #include <memory>
 
 #include "siddefs-fp.h"
+// Required before the class definition because unique_ptr<Voice> voice[3] = {}
+// triggers the constexpr destructor in C++23, which requires a complete type.
+#include "Voice.h"
 
 namespace reSIDfp
 {
@@ -35,7 +38,6 @@ class Filter6581;
 class Filter8580;
 class ExternalFilter;
 class Potentiometer;
-class Voice;
 class Resampler;
 
 /**

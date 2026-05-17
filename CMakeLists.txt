@@ -27,7 +27,7 @@ project(dosbox-staging
 
 set(DOSBOX_VERSION ${PROJECT_VERSION}-RC1)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ccache support

@@ -27,7 +27,7 @@ conventions — do not reformat it.
 
 # Language
 
-- C++20; use the standard library over C-style alternatives
+- C++23; use the standard library over C-style alternatives
 - Never use C++ iostreams
 - Never use C string functions — only `std::string` and `std::string_view`
 - Never write `using namespace std;`

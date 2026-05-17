@@ -78,7 +78,7 @@ The rules outlined below apply to new code landing in the `main` branch.
 
 ### Language standard
 
-We use C++20 while avoiding the more complex areas of C++ and object-oriented
+We use C++23 while avoiding the more complex areas of C++ and object-oriented
 design. To clarify:
 
 - Avoid designing your code in a complex object-oriented style. This does not
@@ -86,7 +86,7 @@ design. To clarify:
   inheritance, overblown class hierarchies, operator overloading, iostreams
   for stdout/stderr, etc".
 
-- C++20 has a [rich standard library](https://en.cppreference.com/w/cpp/20),
+- C++23 has a [rich standard library](https://en.cppreference.com/w/cpp/23),
   use it. We use [STL
   containers](https://en.cppreference.com/w/cpp/container),
   [std::filesystem](https://en.cppreference.com/w/cpp/filesystem), and various
