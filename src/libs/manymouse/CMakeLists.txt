@@ -14,7 +14,7 @@ if (C_MANYMOUSE)
   )
 
   if (APPLE)
-    target_link_libraries(manymouse PRIVATE "-framework IOKit")
+    target_link_libraries(manymouse PRIVATE ${IOKit_LIBRARY})
   endif()
 
   if (SUPPORT_XINPUT2)
