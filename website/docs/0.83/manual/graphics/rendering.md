@@ -323,14 +323,14 @@ Enable deinterlacing per-game rather than globally for best results.
 
     <div class="compact" markdown>
 
-    - [Wing Commander IV](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/)
-    - [Phantasmagoria](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/)
-    - [Gabriel Knight 2](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/)
-    - [Crusader: No Remorse](https://www.mobygames.com/game/851/crusader-no-remorse/)
-    - [Crusader: No Regret](https://www.mobygames.com/game/852/crusader-no-regret/)
-    - [CyberMage](https://www.mobygames.com/game/791/cybermage-darklight-awakening/)
-    - [Angel Devoid](https://www.mobygames.com/game/3468/angel-devoid-face-of-the-enemy/)
-    - [Heroes of Might and Magic II](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
+    - [Wing Commander IV (1996)](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/)
+    - [Phantasmagoria (1995)](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/)
+    - [Gabriel Knight 2 (1995)](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/)
+    - [Crusader: No Remorse (1995)](https://www.mobygames.com/game/851/crusader-no-remorse/)
+    - [Crusader: No Regret (1996)](https://www.mobygames.com/game/852/crusader-no-regret/)
+    - [CyberMage (1995)](https://www.mobygames.com/game/791/cybermage-darklight-awakening/)
+    - [Angel Devoid (1996)](https://www.mobygames.com/game/3468/angel-devoid-face-of-the-enemy/)
+    - [Heroes of Might and Magic II (1996)](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
 
     </div>
 
@@ -357,14 +357,14 @@ EGA, VGA, Hercules) and any resolution, and can be combined with any shader.
 
     <div class="compact" markdown>
 
-    - [Leisure Suit Larry 2](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/) & [3](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/)
-    - [Quest for Glory I](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) & [II](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/)
-    - [Space Quest III](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)
-    - [The Secret of Monkey Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) (EGA version)
-    - [Loom](https://www.mobygames.com/game/176/loom/)
-    - [Spellcasting 101](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/)
-    - [Timequest](https://www.mobygames.com/game/1026/timequest/)
-    - [Gateway](https://www.mobygames.com/game/317/frederik-pohls-gateway/)
+    - [Leisure Suit Larry 2 (1988)](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/) & [3](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/)
+    - [Quest for Glory I (1989)](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) & [II](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/)
+    - [Space Quest III (1989)](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)
+    - [The Secret of Monkey Island (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) (EGA version)
+    - [Loom (1990)](https://www.mobygames.com/game/176/loom/)
+    - [Spellcasting 101 (1990)](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/)
+    - [Timequest (1991)](https://www.mobygames.com/game/1026/timequest/)
+    - [Gateway (1992)](https://www.mobygames.com/game/317/frederik-pohls-gateway/)
 
     </div>
 
