@@ -400,16 +400,15 @@ mount D game.mds
 ```
 
 The image type is auto-detected from the file extension (`.cue`, `.iso`,
-`.bin`, `.mds`, `.ccd`), so `-t iso` is not needed. Supported CD-ROM image
-formats:
+`.bin`, `.mds`), so `-t iso` is not needed. Supported CD-ROM image formats:
 
-- **CUE/BIN** --- CUE sheet with data and optional audio tracks.
-- **ISO** --- Standard ISO 9660 images (data only).
-- **MDS/MDF** --- Alcohol 120% disc images.
+- **CUE/BIN** --- CUE sheet with data and optional audio tracks
+- **ISO** --- Standard ISO 9660 images (data only)
+- **MDS/MDF** --- Alcohol 120% disc images
 
 For games with CD-DA music, use CUE/BIN or MDS/MDF format images with audio
-tracks. See [CD-DA audio](../sound/sound-devices/cd-da.md) for details on
-supported audio track formats.
+tracks. See [CD-DA audio](../sound/sound-devices/cd-da.md#supported-audio-track-formats)
+for details on supported audio track formats.
 
 
 ### Mounting multiple images
