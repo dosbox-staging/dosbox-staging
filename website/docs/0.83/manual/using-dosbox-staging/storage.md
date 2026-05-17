@@ -76,7 +76,7 @@ DOSBox Staging provides two special drives in addition to whatever you mount:
 ## Automounting
 
 The easiest way to set up drives is automounting. Place your game files in a
-`drives/` directory structure, and DOSBox mounts them automatically on
+`drives/` directory structure, and DOSBox Staging mounts them automatically on
 startup. The
 [Getting Started guide](../../getting-started/setting-up-prince-of-persia.md#the-c-drive)
 demonstrates this approach step by step.
@@ -106,6 +106,10 @@ Automounting also supports disk images for floppy and CD-ROM drives:
 - Place ISO, CUE/BIN, or MDS/MDF CD-ROM images in any drive directory (e.g.,
   `drives/d/`) to mount them as CD-ROM drives.
 
+When multiple images are placed in the same directory, they are all mounted
+and you can switch between them during gameplay --- see
+[Disk swapping](#disk-swapping) below.
+
 When image files are detected, DOSBox automatically uses the appropriate mount
 type.
 
@@ -134,6 +138,130 @@ Available options:
 | `verbose`          | `on`, `off`                                   | Show mount command output during startup.         |
 
 
+## Disk swapping
+
+Many DOS games shipped on multiple floppy disks or CDs. During installation or
+gameplay, the game would prompt you to remove one disk and insert the next
+(e.g., "Please insert Disk 2"). On a real PC you would physically eject the
+disk and slide in the next one --- in DOSBox Staging, you press
+++ctrl+f4++ / ++cmd+f4++ instead. The currently active image is printed to
+the log after each swap.
+
+
+### Swapping with automounting
+
+Place multiple disk images in the same drive directory and DOSBox Staging
+mounts them all automatically. For example, for a three-disk floppy game:
+
+```
+drives/
+  a/
+    disk1.img
+    disk2.img
+    disk3.img
+```
+
+When the game prompts you to insert the next disk, press ++ctrl+f4++ /
+++cmd+f4++ to cycle to the next image.
+
+The same approach works for multi-CD games --- place all your CD images in
+`drives/d/` and swap between them with the hotkey.
+
+
+### Swapping with the MOUNT command
+
+You can also mount multiple images to the same drive letter manually:
+
+```
+mount A disk1.img disk2.img disk3.img -t floppy
+```
+
+Wildcard patterns are supported too:
+
+```
+mount D cd/*.cue
+```
+
+Press ++ctrl+f4++ / ++cmd+f4++ to cycle between them during gameplay.
+
+
+### Swapping booted disk images
+
+The `boot` command also accepts multiple floppy images:
+
+```
+boot disk1.ima disk2.ima disk3.ima
+```
+
+The same ++ctrl+f4++ / ++cmd+f4++ hotkey swaps between them. See
+[Booting from images](#booting-from-images) for more on the `boot` command.
+
+
+### Using multiple CD-ROM drives
+
+Some games supported multiple physical CD-ROM drives instead of swapping.
+Rather than mounting all CDs to one drive letter, you can mount each CD to its
+own consecutive drive letter:
+
+```
+mount D cd1.cue
+mount E cd2.cue
+mount F cd3.cue
+mount G cd4.cue
+```
+
+!!! note
+
+    CD-ROM drive letters must be continuous --- D, E, F, G works, but
+    D, F, H does not.
+
+This also works with automounting --- place each CD image in its own drive
+directory:
+
+```
+drives/
+  d/
+    cd1.cue
+  e/
+    cd2.cue
+  f/
+    cd3.cue
+  g/
+    cd4.cue
+```
+
+This approach is needed for games that expect multiple CD drives to be
+available simultaneously, such as
+[Under a Killing Moon (1994)](https://www.mobygames.com/game/850/under-a-killing-moon/)
+which shipped on four CDs and could run with all four drives mounted at once.
+
+!!! tip
+
+    Name your image files with sequential numbers (e.g., `disk01.img`,
+    `disk02.img`) so they sort into the correct order. Images are sorted
+    using natural ordering, so `img10` comes after `img9`, not after `img1`.
+    When the game prompts you to swap, press the hotkey **before** confirming
+    the in-game prompt. Run `MOUNT` with no arguments to see all mounted
+    drives and their images --- the currently active image is listed first.
+
+??? note "Notable multi-disk games"
+
+    <div class="compact" markdown>
+
+    - [Wing Commander (1990)](https://www.mobygames.com/game/3/wing-commander/) --- multiple 5.25" or 3.5" floppies
+    - [The Secret of Monkey Island (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) --- 4 or 8 floppies depending on disk size
+    - [Indiana Jones and the Fate of Atlantis (1992)](https://www.mobygames.com/game/316/indiana-jones-and-the-fate-of-atlantis/) --- 11 HD floppies
+    - [Day of the Tentacle (1993)](https://www.mobygames.com/game/719/maniac-mansion-day-of-the-tentacle/) --- 6 HD floppies
+    - [Sam & Max Hit the Road (1993)](https://www.mobygames.com/game/745/sam-max-hit-the-road/) --- 6 HD floppies
+    - [Phantasmagoria (1995)](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/) --- 7 CDs
+    - [The Beast Within: A Gabriel Knight Mystery (1995)](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/) --- 6 CDs
+    - [Wing Commander IV: The Price of Freedom (1996)](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/) --- 6 CDs
+    - [Riven: The Sequel to Myst (1997)](https://www.mobygames.com/game/1262/riven-the-sequel-to-myst/) --- 5 CDs
+    - [Baldur's Gate (1998)](https://www.mobygames.com/game/712/baldurs-gate/) --- 5 CDs
+
+    </div>
+
+
 ## Manual mounting
 
 For more control, use the `MOUNT` command directly, either at the DOS prompt
@@ -155,26 +283,25 @@ mount C /path/to/game/files
 This mounts a host directory as a DOS hard disk drive. This is the most common
 way to make game files accessible to DOS.
 
-By default, directory-mounted hard disks report approximately 250 MB of free
-space. Some games check for free disk space and refuse to install if there
-isn't enough. Use the `-freesize` flag to adjust the reported free space (in
-MB for hard disks, KB for floppies):
+!!! warning
 
-```
-mount C /path/to/game -freesize 1024
-```
+    Some games check for free disk space and refuse to install if there isn't
+    enough. Directory-mounted hard disks report approximately 250 MB of free
+    space by default. Use the `-freesize` flag to adjust it (in MB for hard
+    disks, KB for floppies):
 
-#### Volume labels
+    ```
+    mount C /path/to/game -freesize 1024
+    ```
 
-Some games --- particularly those with copy protection --- check the volume
-label of the drive. Use the `-label` flag to set it explicitly:
+!!! warning
 
-```
-mount A /path/to/floppy -t floppy -label DISK1
-```
+    Some games --- particularly those with copy protection --- check the
+    volume label of the drive. Use the `-label` flag to set it explicitly:
 
-This is most commonly needed for floppy-based games that verify the disk
-label during copy protection checks.
+    ```
+    mount A /path/to/floppy -t floppy -label DISK1
+    ```
 
 
 #### Overlay mounts
@@ -193,21 +320,20 @@ mount C /path/to/saves -t overlay
 ### Mounting floppy images
 
 ```
-mount A floppy.img -t floppy
+mount A floppy.img
 ```
 
+Use `-t floppy` if auto-detection picks the wrong type (see below).
+
 Supported floppy image formats: `.img`, `.ima`, `.dsk` (raw sector images),
-`.vfd` (Virtual Floppy Disk), `.flp` (raw floppy image).
+`.vfd` (Virtual Floppy Disk), `.flp` (raw floppy image), and numeric
+extensions matching standard floppy sizes: `.360`, `.720`, `.1200`, `.1440`.
 
-Numeric extensions matching standard floppy sizes are also recognised:
-`.360`, `.720`, `.1200`, `.1440`.
-
-When using `.img`, `.ima`, or `.dsk` files without an explicit `-t floppy`
-flag, DOSBox Staging detects the image type automatically by matching the
-file size against known floppy disk geometries (see
-[Floppy disk formats](#floppy-disk-formats) below). Images that match a
-standard floppy size are mounted as floppy drives; all others are mounted as
-hard disk images.
+Files with `.vfd`, `.flp`, or numeric extensions are always auto-detected as
+floppy images, so `-t floppy` is not needed. For `.img`, `.ima`, and `.dsk`
+files, DOSBox Staging checks the file size against known floppy disk
+geometries (see [Floppy disk formats](#floppy-disk-formats) below) ---
+matching images are mounted as floppy drives; all others as hard disk images.
 
 #### Floppy disk formats
 
@@ -243,12 +369,14 @@ formats. The format is detected automatically from the image file size.
 ### Mounting CD-ROM images
 
 ```
-mount D game.cue -t iso
-mount D game.iso -t iso
-mount D game.mds -t iso
+mount D game.cue
+mount D game.iso
+mount D game.mds
 ```
 
-Supported CD-ROM image formats:
+The image type is auto-detected from the file extension (`.cue`, `.iso`,
+`.bin`, `.mds`, `.ccd`), so `-t iso` is not needed. Supported CD-ROM image
+formats:
 
 - **CUE/BIN** --- CUE sheet with data and optional audio tracks.
 - **ISO** --- Standard ISO 9660 images (data only).
@@ -261,33 +389,22 @@ supported audio track formats.
 
 ### Mounting multiple images
 
-You can mount multiple images at the same drive letter:
-
-```
-mount A disk1.img disk2.img disk3.img -t floppy
-```
-
-Wildcard patterns are also supported:
-
-```
-mount D cd/*.cue -t iso
-```
-
-Press the ++ctrl+f4++ / ++cmd+f4++ hotkeys to cycle between the mounted images
-during gameplay. This is essential for multi-disk games that prompt you to
-insert the next disk.
+You can mount multiple images at the same drive letter. See
+[Disk swapping](#disk-swapping) for the full details and examples.
 
 
 ### Mounting hard disk images
 
 ```
-mount C hdd.img -t hdd
+mount C hdd.img
 ```
 
-For images that require explicit geometry:
+The image type is auto-detected from the file extension (`.img`, `.ima`,
+`.dsk`, `.vhd`), so `-t hdd` is not needed. For images that require explicit
+geometry:
 
 ```
-mount C hdd.img -t hdd -chs 304,64,63
+mount C hdd.img -chs 304,64,63
 ```
 
 FAT12, FAT16, and FAT32 filesystems are supported.
@@ -318,7 +435,8 @@ boot -l c
 ```
 
 Drive numbers 0 and 1 correspond to floppy drives A: and B:; 2 and 3
-correspond to hard disks C: and D:.
+correspond to hard disks C: and D:. The `boot` command also supports multiple
+floppy images for [disk swapping](#disk-swapping).
 
 !!! note "Booter games"
 
