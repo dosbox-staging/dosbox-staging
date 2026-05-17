@@ -143,8 +143,7 @@ section.
 :   Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing
     effect. This is enabled by default to match the look of real Voodoo
     hardware, which always applied bilinear texture filtering. Disabling it
-    gives a sharper but less authentic look, and may help performance on
-    slower systems.
+    gives a sharper but less authentic look.
 
     Possible values: `on` *default*{ .default }, `off`
 
