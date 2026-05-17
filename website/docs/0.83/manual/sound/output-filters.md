@@ -25,7 +25,7 @@ OPL and CMS filters are also accurately emulated.
 
 Some devices, such as the [Gravis UltraSound](sound-devices/gravis-ultrasound.md),
 [Roland MT-32](sound-devices/roland-mt-32.md),
-[FluidSynth](sound-devices/general-midi.md#fluidsynth),
+[FluidSynth](sound-devices/fluidsynth.md),
 [Innovation SSI-2001](sound-devices/innovation.md), and the
 [IBM Music Feature Card](sound-devices/imfc.md), don't have hardware output
 filters to emulate. These devices typically have clean, full-range output by
@@ -37,7 +37,7 @@ The following per-device filter settings are available:
 <div class="compact" markdown>
 
 - [`cms_filter`](sound-devices/adlib-cms-sound-blaster.md#cms_filter) --- Creative Music System (Game Blaster)
-- [`fsynth_filter`](sound-devices/general-midi.md#fsynth_filter) --- FluidSynth (custom only)
+- [`fsynth_filter`](sound-devices/fluidsynth.md#fsynth_filter) --- FluidSynth (custom only)
 - [`gus_filter`](sound-devices/gravis-ultrasound.md#gus_filter) --- Gravis UltraSound (custom only)
 - [`imfc_filter`](sound-devices/imfc.md#imfc_filter) --- IBM Music Feature Card (custom only)
 - [`innovation_filter`](sound-devices/innovation.md#innovation_filter) --- Innovation SSI-2001 (custom only)

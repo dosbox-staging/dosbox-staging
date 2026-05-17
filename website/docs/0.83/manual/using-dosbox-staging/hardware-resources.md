@@ -68,7 +68,7 @@ configuration:
 | Device                                                                                                   | I/O base              | IRQ           | DMA   |
 | --------                                                                                                 | ----------            | -----         | ----- |
 | [AdLib / OPL](../sound/sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card) (FM synth) | 388                   | ---           | ---   |
-| [MPU-401](../sound/sound-devices/midi.md) (MIDI interface)                                               | 330                   | 9             | ---   |
+| [MPU-401](../sound/midi.md) (MIDI interface)                                               | 330                   | 9             | ---   |
 | [Game port](../input/joystick.md) (joystick)                                                             | 201                   | ---           | ---   |
 | [Tandy DAC](../sound/sound-devices/tandy.md)                                                             | C4                    | 7             | 1     |
 | [Tandy / PCjr PSG](../sound/sound-devices/tandy.md)                                                      | C0                    | ---           | ---   |
@@ -165,6 +165,6 @@ the reason, and the defaults should work.
   configuration and patch files
 - [IBM Music Feature Card](../sound/sound-devices/imfc.md) --- IMFC configuration
 - [Innovation SSI-2001](../sound/sound-devices/innovation.md) --- SID chip card
-- [MIDI](../sound/sound-devices/midi.md) --- MPU-401 MIDI interface
+- [MIDI](../sound/midi.md) --- MPU-401 MIDI interface
 - [Serial ports](../networking/serial-ports.md) --- COM port configuration
 - [Ethernet](../networking/ethernet.md) --- NE2000 network card configuration

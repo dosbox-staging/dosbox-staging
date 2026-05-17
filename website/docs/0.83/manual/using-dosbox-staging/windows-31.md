@@ -101,9 +101,9 @@ After installing the Sound Blaster 16 driver, configure MIDI output:
 - Select **SB16 All MIDI** as the active setup.
 
 This routes MIDI output through DOSBox's configured
-[`mididevice`](../sound/sound-devices/midi.md#mididevice), so you can use
-[FluidSynth](../sound/sound-devices/general-midi.md#fluidsynth), [Sound Canvas
-SC-55](../sound/sound-devices/general-midi.md#sound-canvas-emulation),
+[`mididevice`](../sound/midi.md#mididevice), so you can use
+[FluidSynth](../sound/sound-devices/fluidsynth.md), [Sound Canvas
+SC-55](../sound/sound-devices/sound-canvas.md),
 or [Roland MT-32](../sound/sound-devices/roland-mt-32.md) emulation for Windows
 3.1 games --- just change the `mididevice` setting in your DOSBox config.
 

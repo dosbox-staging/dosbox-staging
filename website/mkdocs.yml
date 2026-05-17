@@ -220,13 +220,14 @@ nav:
         - 0.83/manual/sound/on-subjectivity.md
         - 0.83/manual/sound/mixer.md
         - 0.83/manual/sound/mixer-effects.md
+        - 0.83/manual/sound/midi.md
         - 0.83/manual/sound/output-filters.md
         - 0.83/manual/sound/disk-noise.md
         - Sound devices:
           - 0.83/manual/sound/sound-devices/adlib-cms-sound-blaster.md
           - 0.83/manual/sound/sound-devices/roland-mt-32.md
-          - 0.83/manual/sound/sound-devices/midi.md
-          - 0.83/manual/sound/sound-devices/general-midi.md
+          - 0.83/manual/sound/sound-devices/sound-canvas.md
+          - 0.83/manual/sound/sound-devices/fluidsynth.md
           - 0.83/manual/sound/sound-devices/pc-speaker.md
           - 0.83/manual/sound/sound-devices/tandy.md
           - 0.83/manual/sound/sound-devices/gravis-ultrasound.md

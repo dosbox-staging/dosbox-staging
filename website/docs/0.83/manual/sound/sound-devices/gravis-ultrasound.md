@@ -102,7 +102,7 @@ ultradir = C:\ULTRASND
 
 These games have no GUS-specific code at all --- they send standard MIDI
 commands as if talking to a [Roland MT-32](roland-mt-32.md) or [General
-MIDI](general-midi.md) device. The `ULTRAMID.EXE` TSR provided by Gravis
+MIDI](../midi.md#the-general-midi-standard) device. The `ULTRAMID.EXE` TSR provided by Gravis
 intercepts these MIDI commands and translates them into GUS hardware calls,
 loading instrument samples from the patch files on disk. Load `ULTRAMID.EXE`
 before starting the game:

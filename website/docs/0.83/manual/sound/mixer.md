@@ -157,7 +157,7 @@ sections of the manual where they're described in detail.
 | **COVOX**       | [Covox Speech Thing digital audio](sound-devices/covox-variants.md#covox-speech-thing) | No
 | **DISNEY**      | [Disney Sound Source (DSS) digital audio](sound-devices/covox-variants.md#disney-sound-source) | No
 | **DISKNOISE**   | [Disk noise emulation](disk-noise.md) | No
-| **FSYNTH**      | [FluidSynth MIDI synthesiser](sound-devices/general-midi.md#fluidsynth) | Yes
+| **FSYNTH**      | [FluidSynth MIDI synthesiser](sound-devices/fluidsynth.md) | Yes
 | **GUS**         | [Gravis UltraSound digital audio](sound-devices/gravis-ultrasound.md) | Yes
 | **IMFC**        | [IBM Music Feature Card](sound-devices/imfc.md) | Yes
 | **MASTER**      | Master output channel                        | Yes
@@ -169,7 +169,7 @@ sections of the manual where they're described in detail.
 | **PS1DAC**      | [IBM PS/1 Audio digital audio](sound-devices/ibm-ps1audio.md) | No
 | **REELMAGIC**   | [ReelMagic MPEG audio](../graphics/reelmagic.md) | Yes
 | **SB**          | [Sound Blaster digital audio](sound-devices/adlib-cms-sound-blaster.md) | Yes[^stereo]
-| **SOUNDCANVAS** | [Roland Sound Canvas synthesiser](sound-devices/general-midi.md#sound-canvas) | Yes
+| **SOUNDCANVAS** | [Roland Sound Canvas synthesiser](sound-devices/sound-canvas.md) | Yes
 | **STON1**       | [Stereo-on-1 digital audio](sound-devices/covox-variants.md#stereo-on-1-dac) | Yes
 | **TANDY**       | [Tandy 1000 synthesiser](sound-devices/tandy.md) | No
 | **TANDYDAC**    | [Tandy 1000 digital audio](sound-devices/tandy.md) | No
@@ -182,7 +182,7 @@ sections of the manual where they're described in detail.
 ## Denoiser
 
 The [OPL synth](sound-devices/adlib-cms-sound-blaster.md) and the original
-SC-55 mk1 [Sound Canvas](sound-devices/general-midi.md#sound-canvas-emulation)
+SC-55 mk1 [Sound Canvas](sound-devices/sound-canvas.md)
 models produce very low-level residual noise as part of their faithful
 hardware emulation. This noise is authentic --- real hardware behaved the same
 way --- but it can be slightly annoying on good-quality headphones or in quiet
