@@ -151,7 +151,7 @@ extensions and CPUID. Only change it if a specific game requires it.
 - `386_prefetch` is needed for games that use self-modifying code or
   anti-debugging tricks (requires `core = normal`). Known games:
   [Contra](https://www.mobygames.com/game/60474/contra/),
-  [FIFA International Soccer](https://www.mobygames.com/game/155/fifa-international-soccer/) (1994),
+  [FIFA International Soccer](https://www.mobygames.com/game/155/fifa-international-soccer/),
   [Terminator 1](https://www.mobygames.com/game/1543/the-terminator/),
   [X-Men: Madness in The Murderworld](https://www.mobygames.com/game/6162/x-men-madness-in-murderworld/).
 - `pentium` is recommended for Windows 3.1 games (e.g.,
