@@ -1,7 +1,5 @@
 name: Cleanup website preview (PR)
-permissions:
-  contents: read
-  pull-requests: write
+permissions: read-all
 
 on:
   pull_request:
@@ -22,6 +20,9 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch'
       || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-slim
     env:
       PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
