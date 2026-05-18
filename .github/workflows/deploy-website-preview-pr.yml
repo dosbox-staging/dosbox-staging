@@ -1,0 +1,68 @@
+name: Deploy website preview (PR)
+
+# NOTE: keep workflow-level permissions as `read-all`. Setting fine-grained
+# permissions here (e.g. `pull-requests: write`) causes GitHub to fail this
+# workflow at startup with `startup_failure` when it calls deploy-website.yml
+# as a reusable workflow. The `pull-requests: write` permission needed by
+# the `comment` job is set at the job level instead.
+permissions: read-all
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+    # PRs against release/* (or anything other than main) are excluded — release
+    # deploys to the live site stay manual via deploy-website.yml.
+    branches: [main]
+    paths:
+      - 'website/**'
+
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number (used for the preview/pr-<N> path and sticky comment)'
+        required: true
+        type: string
+      branch:
+        description: 'Branch to deploy from'
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-website-preview-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || github.event.pull_request.head.repo.full_name == github.repository
+    uses: ./.github/workflows/deploy-website.yml
+    with:
+      source_branch: ${{ github.event.pull_request.head.ref || github.event.inputs.branch }}
+      destination_prefix: pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+    secrets: inherit
+
+  comment:
+    needs: deploy
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-slim
+
+    steps:
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: website-preview
+          number: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+          message: |
+            > [!TIP]
+            > ## 📖 [Website preview for this PR](https://www.dosbox-staging.org/preview/pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}/)
+            > Updated for commit `${{ github.event.pull_request.head.sha || github.event.inputs.branch }}`.
+
+            > [!WARNING]
+            > The deployed preview can take a few minutes to actually become visible at this URL after this comment was created or updated. Give it a short wait and refresh if you see an outdated version or a 404.
+
