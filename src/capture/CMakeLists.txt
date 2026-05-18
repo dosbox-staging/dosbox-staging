@@ -7,8 +7,11 @@ target_sources(dosboxcommon PRIVATE
   image/image_capturer.cpp
   image/image_saver.cpp
   image/image_scaler.cpp
-  image/png_writer.cpp)
+  image/png_writer.cpp
+  video/zmbv.cpp
+)
 
 target_link_libraries(dosboxcommon PRIVATE 
-  zmbv
-  PNG::PNG)
+  ${ZMBV_ZLIB_TARGET}
+  PNG::PNG
+)

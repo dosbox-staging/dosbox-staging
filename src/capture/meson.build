@@ -7,7 +7,10 @@ libcapture_sources = files(
     'image/image_saver.cpp',
     'image/image_scaler.cpp',
     'image/png_writer.cpp',
+    'video/zmbv.cpp',
 )
+
+zlib_or_ng_dep = system_zlib_ng_dep.found() ? system_zlib_ng_dep : zlib_dep
 
 libcapture = static_library(
     'capture',
@@ -15,7 +18,7 @@ libcapture = static_library(
     include_directories: incdir,
     dependencies: [
         libloguru_dep,
-        libzmbv_dep,
+        zlib_or_ng_dep,
         png_dep,
         sdl2_dep,
     ],

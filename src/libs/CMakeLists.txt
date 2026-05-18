@@ -8,6 +8,7 @@
 #
 # Adding -w (GCC/Clang) or /w (MSVC) to each vendored target suppresses all
 # warnings during their own compilation, complementing the SYSTEM approach.
+
 function(disable_warnings target)
   target_compile_options(${target} PRIVATE
     $<IF:$<CXX_COMPILER_ID:MSVC>,/w,-w>
@@ -39,4 +40,3 @@ add_subdirectory(simpleini)
 add_subdirectory(tal-chorus)
 add_subdirectory(whereami)
 add_subdirectory(YM7128B_emu)
-add_subdirectory(zmbv)
