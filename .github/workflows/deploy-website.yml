@@ -14,6 +14,17 @@ on:
         description: 'Deploy to this path prefix (leave empty for the current version)'
         type: string
 
+  workflow_call:
+    inputs:
+      source_branch:
+        description: 'Branch to deploy the website from'
+        required: true
+        type: string
+
+      destination_prefix:
+        description: 'Deploy to this path prefix (leave empty for the current version)'
+        type: string
+
 jobs:
   linting:
     uses: ./.github/workflows/linting.yml
