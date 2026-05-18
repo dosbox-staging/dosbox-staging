@@ -105,5 +105,11 @@ jobs:
           git add .
           git add .nojekyll
           git commit -m "Deployed current website (${{ env.source_git_hash }})"
-          git push
+
+          # Retry on non-fast-forward: a cancelled sibling run (cancel-in-progress
+          # is not synchronous) may land its push between our checkout and ours.
+          for i in 1 2 3; do
+            git push && break
+            git pull --rebase
+          done
 
