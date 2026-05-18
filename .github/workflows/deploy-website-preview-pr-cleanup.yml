@@ -1,0 +1,64 @@
+name: Cleanup website preview (PR)
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number whose preview should be removed'
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-website-preview-pr-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  cleanup:
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-slim
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+    steps:
+      - name: Check out Pages repo
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.ACCESS_TOKEN_REPO }}
+          repository: dosbox-staging/dosbox-staging.github.io
+          ref: master
+          submodules: false
+
+      - name: Remove preview if present
+        run: |
+          PREVIEW_DIR="preview/pr-${PR_NUMBER}"
+          if [[ -d "$PREVIEW_DIR" ]]; then
+            git config user.name "GitHub Actions Bot"
+            git config user.email "<>"
+            git rm -rf "$PREVIEW_DIR"
+            git commit -m "Remove preview for PR #${PR_NUMBER}"
+            # Retry on non-fast-forward: a cancelled deploy for the same PR
+            # may still be mid-`git push` when we get here (cancel-in-progress
+            # is not synchronous). Rebase + retry ensures cleanup wins.
+            for i in 1 2 3; do
+              git push && break
+              git pull --rebase
+            done
+            echo "cleaned=true" >> "$GITHUB_ENV"
+          else
+            echo "cleaned=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Update sticky comment
+        if: env.cleaned == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: website-preview
+          number: ${{ env.PR_NUMBER }}
+          message: |
+            📖 Website preview removed.
