@@ -88,6 +88,7 @@ jobs:
           DEST_PATH=$(pwd)/${{ env.dest_path_prefix }}
 
           mkdocs build --config-file $MKDOCS_SRC_PATH/mkdocs.yml --site-dir $TEMP_PATH
+          mkdir -p $DEST_PATH
           cp -rf $TEMP_PATH/* $DEST_PATH
           rm -rf $TEMP_PATH
           touch $DEST_PATH/.nojekyll
