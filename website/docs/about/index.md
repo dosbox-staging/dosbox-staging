@@ -154,3 +154,6 @@ playing multiplayer DOS games over Ethernet).
 
     Do note, however, that the lack of such log messages **does not** imply or
     guarantee bug-free operation!
+
+<!-- smoketest v2: trigger website-preview workflow -->
+
