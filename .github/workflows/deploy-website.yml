@@ -31,6 +31,10 @@ jobs:
 
   build_and_deploy_website:
     needs: linting
+    # linting.yml's own `if:` skips it on same-repo PRs (it's already run on
+    # push). Without this guard the dependent job would be skipped too,
+    # cascading to skip the deploy when called via workflow_call from a PR.
+    if: ${{ always() && (needs.linting.result == 'success' || needs.linting.result == 'skipped') }}
     runs-on: ubuntu-slim
     steps:
       - name: Check out MkDocs sources
@@ -115,6 +119,13 @@ jobs:
           cd dosbox-staging.github.io
           git add .
           git add .nojekyll
+          # Skip if the rebuilt site is byte-identical (e.g. a PR push that
+          # only changed non-website files but the PR overall touches
+          # website/**, so the workflow still fires).
+          if git diff --cached --quiet; then
+            echo "No changes to publish."
+            exit 0
+          fi
           git commit -m "Deployed current website (${{ env.source_git_hash }})"
           # Retry on non-fast-forward: a cancelled sibling run (cancel-in-progress
           # is not synchronous) may land its push between our checkout and ours.
