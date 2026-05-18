@@ -1,0 +1,16 @@
+name: TEST minimal PR deploy
+permissions: read-all
+
+on:
+  pull_request:
+    types: [synchronize]
+    paths:
+      - 'website/**'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-website.yml
+    with:
+      source_branch: claude-smoketest-website-deploys
+      destination_prefix: smoketest-min
+    secrets: inherit
