@@ -65,4 +65,5 @@ jobs:
           header: website-preview
           number: ${{ env.PR_NUMBER }}
           message: |
-            📖 Website preview removed.
+            > [!NOTE]
+            > ## 📖 Website preview removed

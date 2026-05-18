@@ -52,6 +52,6 @@ jobs:
           header: website-preview
           number: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
           message: |
-            📖 **Website preview:** https://www.dosbox-staging.org/preview/pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}/
-
-            _Updated for commit ${{ github.event.pull_request.head.sha || github.event.inputs.branch }}._
+            > [!TIP]
+            > ## 📖 [Website preview for this PR](https://www.dosbox-staging.org/preview/pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}/)
+            > Updated for commit `${{ github.event.pull_request.head.sha || github.event.inputs.branch }}`.
