@@ -159,6 +159,36 @@ these sparingly.
 > **Always double-check** the success of your deploy on the live website after
 > a few minutes to confirm you haven't screwed up the deploy!
 
+### Automatic preview deploys for PRs and `main`
+
+You don't need to run the Deploy website action by hand to preview your
+changes once they're in a PR or merged to `main`. Two things happen
+automatically:
+
+- **PRs against `main` that change anything under `website/`** are built
+  and published at `https://www.dosbox-staging.org/preview/pr-<xxxx>/`, where
+  `<xxxx>` is the numeric PR identifier from the end of the PR's URL. A sticky
+  comment on the PR links to the preview and is updated on every push; the
+  preview is removed when the PR closes.
+
+- **Merges to `main` that touch `website/`** republish the preview of the
+  work-in-progress alpha version (next release) at
+  `https://www.dosbox-staging.org/preview/main/`.
+
+> [!WARNING] The preview may take a few minutes to appear live
+> After the GitHub Actions workflow finishes, the deployed preview can take a
+> minute or two to actually become visible at its URL. Give it a short wait
+> and refresh if you see an outdated version or a 404.
+
+Auto-deploys are deliberately limited to:
+
+- **In-repo PRs only.** PRs from forks are skipped (the deploy uses a
+  personal access token we can't safely hand to fork-controlled code).
+
+- **PRs targeting `main` only.** PRs against `release/*` are excluded ---
+  live website deploys off the latest `release/*` branch remain a
+  deliberate manual step (see the two subsections above).
+
 
 ## Previewing website & documentation changes locally
 
