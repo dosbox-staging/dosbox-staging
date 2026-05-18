@@ -14,7 +14,7 @@ on:
         type: string
 
 concurrency:
-  group: deploy-website-preview-pr-${{ github.event.pull_request.number || inputs.pr_number }}
+  group: deploy-website-preview-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
   cancel-in-progress: true
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
       || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-slim
     env:
-      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+      PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
     steps:
       - name: Check out Pages repo
         uses: actions/checkout@v6
