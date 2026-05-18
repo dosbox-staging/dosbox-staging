@@ -1,7 +1,8 @@
 name: Cleanup website preview (PR)
-permissions:
-  contents: read
-  pull-requests: write
+# Workflow-level permissions kept as `read-all`; see the matching note in
+# deploy-website-preview-pr.yml. `pull-requests: write` is set at the job
+# level on `cleanup` instead.
+permissions: read-all
 
 on:
   pull_request:
@@ -14,7 +15,7 @@ on:
         type: string
 
 concurrency:
-  group: deploy-website-preview-pr-${{ github.event.pull_request.number || inputs.pr_number }}
+  group: deploy-website-preview-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
   cancel-in-progress: true
 
 jobs:
@@ -22,9 +23,12 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch'
       || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-slim
     env:
-      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+      PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
     steps:
       - name: Check out Pages repo
         uses: actions/checkout@v6
