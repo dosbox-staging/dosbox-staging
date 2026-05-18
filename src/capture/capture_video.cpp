@@ -5,6 +5,7 @@
 #include "capture.h"
 
 #include "private/capture_video.h"
+#include "video/zmbv.h"
 
 #include <cassert>
 #include <cmath>
@@ -12,8 +13,6 @@
 #include "hardware/memory.h"
 #include "misc/support.h"
 #include "utils/math_utils.h"
-
-#include "zmbv/zmbv.h"
 
 static constexpr auto NumSampleFramesInBuffer = 16 * 1024;
 
