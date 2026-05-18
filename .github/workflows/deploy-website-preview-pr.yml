@@ -17,6 +17,10 @@ on:
         required: true
         type: string
 
+concurrency:
+  group: deploy-website-preview-pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     if: >-
