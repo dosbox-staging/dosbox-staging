@@ -1,7 +1,5 @@
 name: Deploy website preview (PR)
-permissions:
-  contents: read
-  pull-requests: write
+permissions: read-all
 
 on:
   pull_request:
