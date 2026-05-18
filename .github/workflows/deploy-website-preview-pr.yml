@@ -6,12 +6,24 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'website/**'
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number (used for the preview/pr-<N> path and sticky comment)'
+        required: true
+        type: string
+      branch:
+        description: 'Branch to deploy from'
+        required: true
+        type: string
 
 jobs:
   deploy:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || github.event.pull_request.head.repo.full_name == github.repository
     uses: ./.github/workflows/deploy-website.yml
     with:
-      source_branch: ${{ github.event.pull_request.head.ref }}
-      destination_prefix: pr-${{ github.event.pull_request.number }}
+      source_branch: ${{ github.event.pull_request.head.ref || github.event.inputs.branch }}
+      destination_prefix: pr-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
     secrets: inherit

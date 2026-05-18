@@ -31,6 +31,8 @@ jobs:
 
   build_and_deploy_website:
     needs: linting
+    # linting.yml skips itself on same-repo PRs (already linted on push) — allow that
+    if: ${{ always() && (needs.linting.result == 'success' || needs.linting.result == 'skipped') }}
     runs-on: ubuntu-slim
     steps:
       - name: Check out MkDocs sources
