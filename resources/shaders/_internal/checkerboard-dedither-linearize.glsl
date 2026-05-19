@@ -12,6 +12,7 @@
 /*
 
 #pragma name        CheckerboardDedither_Linearize
+#pragma wrap_mode0  ClampToEdge
 #pragma output_size VideoMode
 
 #pragma linear_filtering off
