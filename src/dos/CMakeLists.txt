@@ -1,7 +1,6 @@
 target_sources(dosboxcommon PRIVATE
   cdrom.cpp
   cdrom_image.cpp
-  cdrom_ioctl_linux.cpp
   cdrom_win32.cpp
   dos.cpp
   dos_classes.cpp
@@ -58,6 +57,11 @@ target_sources(dosboxcommon PRIVATE
   programs/subst.cpp
   programs/tree.cpp
 )
+
+# Linux-only CD-ROM ioctl backend
+if (DOSBOX_PLATFORM_LINUX)
+  target_sources(dosboxcommon PRIVATE cdrom_ioctl_linux.cpp)
+endif()
 
 # Debugger-only DOS command (see biostest.h)
 if (OPT_DEBUGGER)
