@@ -232,6 +232,26 @@ inline const char* to_string(const ShaderOutputSize s)
 	}
 }
 
+enum class TextureWrapMode {
+	Repeat,
+	MirroredRepeat,
+	ClampToEdge,
+	ClampToBorder
+};
+
+inline const char* to_string(const TextureWrapMode m)
+{
+	using enum TextureWrapMode;
+
+	switch (m) {
+	case Repeat: return "Repeat";
+	case MirroredRepeat: return "MirroredRepeat";
+	case ClampToEdge: return "ClampToEdge";
+	case ClampToBorder: return "ClampToBorder";
+	default: assertm(false, "Invalid TextureWrapMode value"); return "";
+	}
+}
+
 struct ShaderInfo {
 	// Resolved shader name without the file extension. The name might
 	// optionally contain a relative or absolute directory path.
@@ -240,8 +260,13 @@ struct ShaderInfo {
 	// Name of the shader pass set via `#pragma name`
 	std::string pass_name = {};
 
+	// Input texture IDs and wrap modes (parallel vectors;
+	// set via `#pragma inputN` / `#pragma wrap_modeN`)
 	std::vector<std::string> input_ids = {"Previous"};
-	ShaderOutputSize output_size       = ShaderOutputSize::Previous;
+	std::vector<TextureWrapMode> input_wrap_modes = {TextureWrapMode::ClampToEdge};
+
+	// Output size mode set via `#pragma output_size`
+	ShaderOutputSize output_size = ShaderOutputSize::Previous;
 
 	ShaderPreset default_preset = {};
 };

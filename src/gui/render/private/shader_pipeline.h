@@ -108,8 +108,14 @@ private:
 
 	std::optional<Shader> main_shader = {};
 
-	GLuint nearest_sampler = 0;
-	GLuint linear_sampler  = 0;
+	// Pre-created OpenGL sampler objects, one per (filter, wrap)
+	// combination. Indexed by [TextureFilterMode][TextureWrapMode].
+	static constexpr size_t NumFilterModes        = 2;
+	static constexpr size_t NumWrapModes          = 4;
+	GLuint samplers[NumFilterModes][NumWrapModes] = {};
+
+	GLuint GetSampler(const TextureFilterMode filter,
+	                  const TextureWrapMode wrap) const;
 
 	// ---------------------------------------------------------------------
 	// Shader passes

@@ -13,10 +13,11 @@
 namespace ShaderPragma {
 
 struct ParseResult {
-	ShaderPreset preset                = {};
-	std::string pass_name              = {};
-	std::vector<std::string> input_ids = {};
-	ShaderOutputSize output_size       = {};
+	ShaderPreset preset                           = {};
+	std::string pass_name                         = {};
+	std::vector<std::string> input_ids            = {};
+	std::vector<TextureWrapMode> input_wrap_modes = {};
+	ShaderOutputSize output_size                  = {};
 };
 
 // Parse all `#pragma` directives from the GLSL source of a shader. Returns

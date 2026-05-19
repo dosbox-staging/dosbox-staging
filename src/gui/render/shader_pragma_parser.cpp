@@ -180,6 +180,49 @@ std::optional<std::pair<int, std::string>> parse_input_pragma(const std::string&
 	return {};
 }
 
+std::optional<std::pair<int, TextureWrapMode>> parse_wrap_mode_pragma(const std::string& pragma)
+{
+	// Shader wrap mode format:
+	//
+	//   #pragma wrap_mode0 ClampToEdge
+	//   #pragma wrap_mode1 Repeat
+	//   ...
+	//
+	const auto parts = split(strip_prefix(pragma, "wrap_mode"));
+	if (parts.size() != 2) {
+		return {};
+	}
+
+	const auto maybe_int = parse_int(parts[0]);
+	if (!maybe_int) {
+		return {};
+	}
+
+	using enum TextureWrapMode;
+
+	const auto& mode_str = parts[1];
+
+	if (mode_str == "Repeat") {
+		return {
+		        {*maybe_int, Repeat}
+                };
+	} else if (mode_str == "MirroredRepeat") {
+		return {
+		        {*maybe_int, MirroredRepeat}
+                };
+	} else if (mode_str == "ClampToEdge") {
+		return {
+		        {*maybe_int, ClampToEdge}
+                };
+	} else if (mode_str == "ClampToBorder") {
+		return {
+		        {*maybe_int, ClampToBorder}
+                };
+	}
+
+	return {};
+}
+
 } // namespace
 
 std::optional<ParseResult> Parse(const std::string& shader_name,
@@ -193,8 +236,11 @@ std::optional<ParseResult> Parse(const std::string& shader_name,
 	// The default preset has no name
 	result.preset.name.clear();
 
-	std::unordered_map<int, std::string> input_ids = {};
-	auto highest_input_index                       = -1;
+	std::unordered_map<int, std::string> input_ids      = {};
+	std::unordered_map<int, TextureWrapMode> wrap_modes = {};
+
+	auto highest_input_index     = -1;
+	auto highest_wrap_mode_index = -1;
 
 	try {
 		const std::regex re("\\s*#pragma\\s+(.+)");
@@ -264,6 +310,24 @@ std::optional<ParseResult> Parse(const std::string& shader_name,
 					has_errors = true;
 				}
 
+			} else if (pragma.starts_with("wrap_mode")) {
+				if (const auto maybe_result = parse_wrap_mode_pragma(
+				            pragma);
+				    maybe_result) {
+
+					const auto& [wrap_index,
+					             wrap_mode] = *maybe_result;
+
+					wrap_modes[wrap_index] = wrap_mode;
+
+					highest_wrap_mode_index = std::max(
+					        wrap_index, highest_wrap_mode_index);
+				} else {
+					LOG_ERR("RENDER: Invalid wrap mode pragma: '%s'",
+					        pragma.c_str());
+					has_errors = true;
+				}
+
 			} else {
 				bool parse_ok = false;
 
@@ -312,6 +376,26 @@ std::optional<ParseResult> Parse(const std::string& shader_name,
 		for (auto i = 0; i <= highest_input_index; ++i) {
 			result.input_ids.emplace_back(input_ids[i]);
 		}
+	}
+
+	// Validate and store per-input texture wrap modes
+	const auto num_inputs_resolved = check_cast<int>(result.input_ids.size());
+
+	if (highest_wrap_mode_index >= num_inputs_resolved) {
+		LOG_ERR("RENDER: Shader wrap mode index %d has no matching input "
+		        "(shader has %d input(s))",
+		        highest_wrap_mode_index,
+		        num_inputs_resolved);
+
+		has_errors = true;
+	}
+
+	result.input_wrap_modes.reserve(num_inputs_resolved);
+	for (auto i = 0; i < num_inputs_resolved; ++i) {
+		const auto it = wrap_modes.find(i);
+		result.input_wrap_modes.push_back(
+		        it != wrap_modes.end() ? it->second
+		                               : TextureWrapMode::ClampToEdge);
 	}
 
 	if (has_errors) {
