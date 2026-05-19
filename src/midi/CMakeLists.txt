@@ -4,8 +4,12 @@ target_sources(dosboxcommon PRIVATE
   mt32.cpp
   mt32_lasynth_model.cpp
   soundcanvas.cpp
-  win32.cpp
 )
+
+# Windows-only MIDI backend
+if (WIN32)
+  target_sources(dosboxcommon PRIVATE win32.cpp)
+endif()
 
 # macOS-only CoreAudio MIDI backend
 if (C_COREAUDIO)
