@@ -1414,9 +1414,9 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 			        integer_scale_factor);
 		}
 
-		// Handles the `sharp` shader fallback when the viewport
-		// is is too small for CRT shaders; integer scaling is
-		// then disabled.
+		// Non-CRT shader (including the `sharp` shader fallback
+		// when the viewport is too small for CRT shaders);
+		// integer scaling is then disabled.
 		return draw_size_fit_px;
 	};
 
