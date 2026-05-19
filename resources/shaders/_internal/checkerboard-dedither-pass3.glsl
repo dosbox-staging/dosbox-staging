@@ -14,6 +14,8 @@
 #pragma name        CheckerboardDedither_Pass3
 #pragma input0      Previous
 #pragma input1      CheckerboardDedither_Linearize
+#pragma wrap_mode0  ClampToEdge
+#pragma wrap_mode1  ClampToEdge
 #pragma output_size VideoMode
 
 #pragma linear_filtering off
