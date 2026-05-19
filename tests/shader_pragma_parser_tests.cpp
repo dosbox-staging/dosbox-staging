@@ -330,6 +330,93 @@ TEST(ShaderPragmaParser, SetSettingInvalidValue)
 }
 
 // ----------------------------------------------------------------------------
+// #pragma wrap_modeN
+// ----------------------------------------------------------------------------
+
+TEST(ShaderPragmaParser, WrapModeDefaultsToClampToEdge)
+{
+	const auto result = Parse("test", "");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->input_wrap_modes,
+	          (std::vector<TextureWrapMode>{TextureWrapMode::ClampToEdge}));
+}
+
+TEST(ShaderPragmaParser, WrapModeAllValidValues)
+{
+	const std::string source =
+	        "#pragma input0 In0\n"
+	        "#pragma input1 In1\n"
+	        "#pragma input2 In2\n"
+	        "#pragma input3 In3\n"
+	        "#pragma wrap_mode0 Repeat\n"
+	        "#pragma wrap_mode1 MirroredRepeat\n"
+	        "#pragma wrap_mode2 ClampToEdge\n"
+	        "#pragma wrap_mode3 ClampToBorder\n";
+
+	const auto result = Parse("test", source);
+
+	ASSERT_TRUE(result.has_value());
+
+	using enum TextureWrapMode;
+	EXPECT_EQ(result->input_wrap_modes,
+	          (std::vector<TextureWrapMode>{
+	                  Repeat, MirroredRepeat, ClampToEdge, ClampToBorder}));
+}
+
+TEST(ShaderPragmaParser, WrapModeUnspecifiedInputsDefault)
+{
+	// Two inputs, only the first has a wrap mode set explicitly.
+	const std::string source =
+	        "#pragma input0 In0\n"
+	        "#pragma input1 In1\n"
+	        "#pragma wrap_mode0 Repeat\n";
+
+	const auto result = Parse("test", source);
+
+	ASSERT_TRUE(result.has_value());
+
+	using enum TextureWrapMode;
+	EXPECT_EQ(result->input_wrap_modes,
+	          (std::vector<TextureWrapMode>{Repeat, ClampToEdge}));
+}
+
+TEST(ShaderPragmaParser, WrapModeWithImplicitDefaultInput)
+{
+	// No `inputN` pragmas: the implicit `input0 Previous` is used,
+	// and `wrap_mode0` applies to it.
+	const auto result = Parse("test", "#pragma wrap_mode0 MirroredRepeat\n");
+
+	ASSERT_TRUE(result.has_value());
+	EXPECT_EQ(result->input_ids, (std::vector<std::string>{"Previous"}));
+
+	EXPECT_EQ(result->input_wrap_modes,
+	          (std::vector<TextureWrapMode>{TextureWrapMode::MirroredRepeat}));
+}
+
+TEST(ShaderPragmaParser, WrapModeInvalidValue)
+{
+	EXPECT_FALSE(Parse("test", "#pragma wrap_mode0 Bogus\n").has_value());
+}
+
+TEST(ShaderPragmaParser, WrapModeNonNumericIndex)
+{
+	EXPECT_FALSE(Parse("test", "#pragma wrap_modeX Repeat\n").has_value());
+}
+
+TEST(ShaderPragmaParser, WrapModeMissingValue)
+{
+	EXPECT_FALSE(Parse("test", "#pragma wrap_mode0\n").has_value());
+}
+
+TEST(ShaderPragmaParser, WrapModeIndexOutOfRange)
+{
+	// Only `input0` exists (implicitly), but wrap_mode5 is specified.
+	EXPECT_FALSE(Parse("test", "#pragma wrap_mode5 Repeat\n").has_value());
+}
+
+// ----------------------------------------------------------------------------
 // Multi-pragma combinations
 // ----------------------------------------------------------------------------
 
@@ -340,6 +427,8 @@ TEST(ShaderPragmaParser, FullShaderHeader)
 	        "#pragma name CrtHyllian_Main\n"
 	        "#pragma input0 Previous\n"
 	        "#pragma input1 ImageAdjustments\n"
+	        "#pragma wrap_mode0 ClampToBorder\n"
+	        "#pragma wrap_mode1 Repeat\n"
 	        "#pragma output_size Viewport\n"
 	        "#pragma linear_filtering off\n"
 	        "#pragma force_single_scan on\n"
@@ -355,6 +444,10 @@ TEST(ShaderPragmaParser, FullShaderHeader)
 
 	EXPECT_EQ(result->input_ids,
 	          (std::vector<std::string>{"Previous", "ImageAdjustments"}));
+
+	EXPECT_EQ(result->input_wrap_modes,
+	          (std::vector<TextureWrapMode>{TextureWrapMode::ClampToBorder,
+	                                        TextureWrapMode::Repeat}));
 
 	EXPECT_EQ(result->output_size, ShaderOutputSize::Viewport);
 

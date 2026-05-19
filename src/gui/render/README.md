@@ -274,3 +274,23 @@ Example:
 ```
 #pragma parameter PHOSPHOR_LAYOUT "PHOSPHOR LAYOUT" 2.0 0.0 19.0 1.0
 ```
+
+#### wrap_modeN
+
+Specifies the wrap mode for the input texture with index N (see `inputN`).
+If unset, the setting defaults to `ClampToEdge`.
+
+Valid values:
+
+- `Repeat` — Corresponds to `GL_REPEAT`
+- `MirroredRepeat` —  Corresponds to `GL_MIRRORED_REPEAT`
+- `ClampToEdge` —  Corresponds to `GL_CLAMP_TO_EDGE`
+- `ClampToBorder` —  Corresponds to `GL_CLAMP_TO_BORDER`
+
+
+
+Example:
+
+```
+#pragma wrap_mode0 Repeat
+```

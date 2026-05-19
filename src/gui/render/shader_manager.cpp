@@ -172,6 +172,7 @@ std::optional<Shader> ShaderManager::LoadAndBuildShader(const std::string& shade
 	shader.info = {shader_name,
 	               pragmas.pass_name,
 	               pragmas.input_ids,
+	               pragmas.input_wrap_modes,
 	               pragmas.output_size,
 	               pragmas.preset};
 

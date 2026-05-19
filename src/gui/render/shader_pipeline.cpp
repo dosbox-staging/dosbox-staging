@@ -21,21 +21,28 @@ CHECK_NARROWING();
 
 std::string ShaderPass::ToString() const
 {
-	return format_str(
-	        "shader.info.name:        %s\n"
-	        "shader.info.pass_name:   %s\n"
-	        "shader.info.input_ids:   %s\n"
-	        "shader.info.output_size: %s\n"
-	        "shader.program_object:   %d\n\n"
+	std::vector<std::string> wrap_mode_names = {};
+	for (const auto mode : shader.info.input_wrap_modes) {
+		wrap_mode_names.emplace_back(to_string(mode));
+	}
 
-	        "in_textures:             %s\n"
-	        "out_size:                %s\n"
-	        "out_fbo:                 %d\n"
-	        "out_texture:             %d\n",
+	return format_str(
+	        "shader.info.name:             %s\n"
+	        "shader.info.pass_name:        %s\n"
+	        "shader.info.input_ids:        %s\n"
+	        "shader.info.input_wrap_modes: %s\n"
+	        "shader.info.output_size:      %s\n"
+	        "shader.program_object:        %d\n\n"
+
+	        "in_textures:                  %s\n"
+	        "out_size:                     %s\n"
+	        "out_fbo:                      %d\n"
+	        "out_texture:                  %d\n",
 
 	        shader.info.name.c_str(),
 	        shader.info.pass_name.c_str(),
 	        join(shader.info.input_ids).c_str(),
+	        join(wrap_mode_names).c_str(),
 	        to_string(shader.info.output_size),
 	        shader.program_object,
 
@@ -60,31 +67,89 @@ ShaderPipeline::~ShaderPipeline()
 	DestroySamplers();
 }
 
+static GLint to_gl_filter(const TextureFilterMode m)
+{
+	using enum TextureFilterMode;
+
+	switch (m) {
+	case NearestNeighbour: return GL_NEAREST;
+	case Bilinear: return GL_LINEAR;
+	default: assertm(false, "Invalid TextureFilterMode"); return GL_LINEAR;
+	}
+}
+
+static GLint to_gl_wrap(const TextureWrapMode m)
+{
+	using enum TextureWrapMode;
+
+	switch (m) {
+	case Repeat: return GL_REPEAT;
+	case MirroredRepeat: return GL_MIRRORED_REPEAT;
+	case ClampToEdge: return GL_CLAMP_TO_EDGE;
+	case ClampToBorder: return GL_CLAMP_TO_BORDER;
+	default:
+		assertm(false, "Invalid TextureWrapMode");
+		return GL_CLAMP_TO_EDGE;
+	}
+}
+
 void ShaderPipeline::CreateSamplers()
 {
-	glGenSamplers(1, &nearest_sampler);
-	glSamplerParameteri(nearest_sampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glSamplerParameteri(nearest_sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glSamplerParameteri(nearest_sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glSamplerParameteri(nearest_sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	using enum TextureFilterMode;
+	using enum TextureWrapMode;
 
-	glGenSamplers(1, &linear_sampler);
-	glSamplerParameteri(linear_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glSamplerParameteri(linear_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glSamplerParameteri(linear_sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glSamplerParameteri(linear_sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	constexpr TextureFilterMode filters[] = {NearestNeighbour, Bilinear};
+	constexpr TextureWrapMode wraps[]     = {Repeat,
+	                                         MirroredRepeat,
+	                                         ClampToEdge,
+	                                         ClampToBorder};
+
+	for (const auto filter : filters) {
+		for (const auto wrap : wraps) {
+			const auto f = static_cast<size_t>(filter);
+			const auto w = static_cast<size_t>(wrap);
+
+			const auto gl_filter = to_gl_filter(filter);
+			const auto gl_wrap   = to_gl_wrap(wrap);
+
+			glGenSamplers(1, &samplers[f][w]);
+
+			glSamplerParameteri(samplers[f][w],
+			                    GL_TEXTURE_MIN_FILTER,
+			                    gl_filter);
+
+			glSamplerParameteri(samplers[f][w],
+			                    GL_TEXTURE_MAG_FILTER,
+			                    gl_filter);
+
+			glSamplerParameteri(samplers[f][w], GL_TEXTURE_WRAP_S, gl_wrap);
+			glSamplerParameteri(samplers[f][w], GL_TEXTURE_WRAP_T, gl_wrap);
+		}
+	}
 }
 
 void ShaderPipeline::DestroySamplers()
 {
-	if (nearest_sampler) {
-		glDeleteSamplers(1, &nearest_sampler);
-		nearest_sampler = 0;
+	for (size_t f = 0; f < NumFilterModes; ++f) {
+		for (size_t w = 0; w < NumWrapModes; ++w) {
+			if (samplers[f][w]) {
+				glDeleteSamplers(1, &samplers[f][w]);
+				samplers[f][w] = 0;
+			}
+		}
 	}
-	if (linear_sampler) {
-		glDeleteSamplers(1, &linear_sampler);
-		linear_sampler = 0;
-	}
+}
+
+GLuint ShaderPipeline::GetSampler(const TextureFilterMode filter,
+                                  const TextureWrapMode wrap) const
+{
+	const auto f = static_cast<size_t>(filter);
+	const auto w = static_cast<size_t>(wrap);
+
+	assert(f < NumFilterModes);
+	assert(w < NumWrapModes);
+
+	return samplers[f][w];
 }
 
 bool ShaderPipeline::IsPipelineComplete() const
@@ -309,9 +374,8 @@ GLuint ShaderPipeline::CreateTexture(const DosBox::Rect& size,
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
+	// Wrap mode is set on the bound sampler object in `RenderPass()`,
+	// per the `#pragma wrap_modeN` of each shader pass input.
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
@@ -433,26 +497,19 @@ void ShaderPipeline::RenderPass(const ShaderPass& pass,
 	glBindFramebuffer(GL_FRAMEBUFFER, pass.out_fbo);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	const auto& info = pass.shader.info;
+	const auto filter_mode = info.default_preset.settings.texture_filter_mode;
+
 	for (size_t i = 0; i < pass.in_textures.size(); ++i) {
 		glActiveTexture(GL_TEXTURE0 + check_cast<GLenum>(i));
 		glBindTexture(GL_TEXTURE_2D, pass.in_textures[i]);
 
-		// Bind sampler with the requested filter mode to the texture unit
-		const auto& preset = pass.shader.info.default_preset;
+		// Bind sampler with the requested filter and wrap mode to the
+		// texture unit
+		const auto wrap_mode = info.input_wrap_modes[i];
 
-		const auto texture_unit = check_cast<GLuint>(i);
-
-		switch (preset.settings.texture_filter_mode) {
-		case TextureFilterMode::NearestNeighbour:
-			glBindSampler(texture_unit, nearest_sampler);
-			break;
-
-		case TextureFilterMode::Bilinear:
-			glBindSampler(texture_unit, linear_sampler);
-			break;
-
-		default: assertm(false, "Invalid TextureFilterMode");
-		}
+		glBindSampler(check_cast<GLuint>(i),
+		              GetSampler(filter_mode, wrap_mode));
 	}
 
 	// Set up viewport
