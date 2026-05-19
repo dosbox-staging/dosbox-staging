@@ -57,10 +57,11 @@ ShaderDescriptor ShaderDescriptor::FromString(const std::string& descriptor,
 
 bool ShaderDescriptor::EnforceAutoIntegerScaling() const
 {
-	// Turn off vertical integer scaling for the 'sharp' shader
-	// in 'integer_scaling = auto' mode
+	// 'integer_scaling = auto' enables integer scaling only for the CRT
+	// shaders (either set via the adaptive meta-shaders, e.g., `crt-auto`, or
+	// directly via `crt/crt-hyllian:4k` or similar).
 	//
-	return (shader_name != ShaderName::Sharp);
+	return shader_name.starts_with("crt/");
 }
 
 std::optional<Shader> ShaderManager::LoadShader(const std::string& shader_name)
