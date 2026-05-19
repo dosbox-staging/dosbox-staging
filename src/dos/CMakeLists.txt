@@ -30,7 +30,6 @@ target_sources(dosboxcommon PRIVATE
 
   programs/attrib.cpp
   programs/autotype.cpp
-  programs/biostest.cpp
   programs/boot.cpp
   programs/choice.cpp
   programs/clip.cpp
@@ -59,6 +58,11 @@ target_sources(dosboxcommon PRIVATE
   programs/subst.cpp
   programs/tree.cpp
 )
+
+# Debugger-only DOS command (see biostest.h)
+if (OPT_DEBUGGER)
+  target_sources(dosboxcommon PRIVATE programs/biostest.cpp)
+endif()
 
 target_sources(dosbox PRIVATE dos_files.cpp)
 
