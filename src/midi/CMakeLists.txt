@@ -1,5 +1,4 @@
 target_sources(dosboxcommon PRIVATE
-  coremidi.cpp
   fluidsynth.cpp
   midi.cpp
   mt32.cpp
@@ -25,7 +24,9 @@ if (C_ALSA)
   target_link_libraries(dosboxcommon PRIVATE ALSA::ALSA)
 endif()
 
+# macOS-only CoreMIDI backend
 if (C_COREMIDI)
+  target_sources(dosboxcommon PRIVATE coremidi.cpp)
   target_link_libraries(dosboxcommon PRIVATE "-framework CoreFoundation")
   target_link_libraries(dosboxcommon PRIVATE "-framework CoreMIDI")
 endif()
