@@ -1,5 +1,4 @@
 target_sources(dosboxcommon PRIVATE
-  alsa.cpp
   coreaudio.cpp
   coremidi.cpp
   fluidsynth.cpp
@@ -16,7 +15,9 @@ if (C_MT32EMU)
   target_link_libraries(dosboxcommon PRIVATE MT32Emu::mt32emu)
 endif()
 
+# Linux-only ALSA MIDI backend
 if (C_ALSA)
+  target_sources(dosboxcommon PRIVATE alsa.cpp)
   target_link_libraries(dosboxcommon PRIVATE ALSA::ALSA)
 endif()
 
