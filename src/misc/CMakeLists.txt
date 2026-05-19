@@ -4,7 +4,6 @@ target_sources(dosboxcommon PRIVATE
   cross.cpp
   dos_rwops.cpp
   fs_utils.cpp
-  fs_utils_win32.cpp
   help_util.cpp
   host_locale.cpp
   host_locale_macos.cpp
@@ -35,7 +34,9 @@ endif()
 target_include_directories(dosboxcommon SYSTEM PRIVATE ../libs/include)
 target_link_libraries(dosboxcommon PRIVATE whereami)
 
-# Shlwapi needed for PathFileExistsW
+# Windows-only filesystem helpers
 if (WIN32)
+  target_sources(dosboxcommon PRIVATE fs_utils_win32.cpp)
+  # Shlwapi needed for PathFileExistsW
   target_link_libraries(dosboxcommon PRIVATE Shlwapi)
 endif()
