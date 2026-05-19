@@ -6,9 +6,11 @@ target_sources(dosboxcommon PRIVATE
   soundcanvas.cpp
 )
 
-# Windows-only MIDI backend
-if (WIN32)
-  target_sources(dosboxcommon PRIVATE win32.cpp)
+# macOS-only CoreMIDI backend
+if (C_COREMIDI)
+  target_sources(dosboxcommon PRIVATE coremidi.cpp)
+  target_link_libraries(dosboxcommon PRIVATE "-framework CoreFoundation")
+  target_link_libraries(dosboxcommon PRIVATE "-framework CoreMIDI")
 endif()
 
 # macOS-only CoreAudio MIDI backend
@@ -16,10 +18,9 @@ if (C_COREAUDIO)
   target_sources(dosboxcommon PRIVATE coreaudio.cpp)
 endif()
 
-target_link_libraries(dosboxcommon PRIVATE FluidSynth::libfluidsynth clap)
-
-if (C_MT32EMU)
-  target_link_libraries(dosboxcommon PRIVATE MT32Emu::mt32emu)
+# Windows-only MIDI backend
+if (WIN32)
+  target_sources(dosboxcommon PRIVATE win32.cpp)
 endif()
 
 # Linux-only ALSA MIDI backend
@@ -28,9 +29,9 @@ if (C_ALSA)
   target_link_libraries(dosboxcommon PRIVATE ALSA::ALSA)
 endif()
 
-# macOS-only CoreMIDI backend
-if (C_COREMIDI)
-  target_sources(dosboxcommon PRIVATE coremidi.cpp)
-  target_link_libraries(dosboxcommon PRIVATE "-framework CoreFoundation")
-  target_link_libraries(dosboxcommon PRIVATE "-framework CoreMIDI")
+if (C_MT32EMU)
+  target_link_libraries(dosboxcommon PRIVATE MT32Emu::mt32emu)
 endif()
+
+target_link_libraries(dosboxcommon PRIVATE FluidSynth::libfluidsynth clap)
+
