@@ -30,7 +30,7 @@ endif()
 
 # Linux-only locale detection
 if (DOSBOX_PLATFORM_LINUX)
-  target_sources(dosboxcommon PRIVATE host_locale_posix.cpp)
+  target_sources(dosboxcommon PRIVATE host_locale_linux.cpp)
 endif()
 
 target_sources(dosbox PRIVATE messages.cpp)
