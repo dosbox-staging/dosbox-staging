@@ -1,5 +1,4 @@
 target_sources(dosboxcommon PRIVATE
-  coreaudio.cpp
   coremidi.cpp
   fluidsynth.cpp
   midi.cpp
@@ -8,6 +7,11 @@ target_sources(dosboxcommon PRIVATE
   soundcanvas.cpp
   win32.cpp
 )
+
+# macOS-only CoreAudio MIDI backend
+if (C_COREAUDIO)
+  target_sources(dosboxcommon PRIVATE coreaudio.cpp)
+endif()
 
 target_link_libraries(dosboxcommon PRIVATE FluidSynth::libfluidsynth clap)
 
