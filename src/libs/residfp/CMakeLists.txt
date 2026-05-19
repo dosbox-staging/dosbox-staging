@@ -9,14 +9,18 @@ add_library(residfp STATIC
   FilterModelConfig.cpp
   FilterModelConfig6581.cpp
   FilterModelConfig8580.cpp
-  Integrator6581.cpp
-  Integrator8580.cpp
   OpAmp.cpp
   SID.cpp
   Spline.cpp
   WaveformCalculator.cpp
   WaveformGenerator.cpp
 )
+
+# Integrator6581.cpp and Integrator8580.cpp are intentionally omitted.
+#
+# With RESID_INLINING=1 (hardcoded in siddefs-fp.h) the file bodies are fully
+# inlined into the headers, so they would compile to empty translation units.
+# This results in linker warnings on at least macOS.
 
 target_include_directories(residfp SYSTEM PUBLIC ..)
 target_link_libraries(residfp PRIVATE project_headers)
