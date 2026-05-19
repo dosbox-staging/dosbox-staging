@@ -17,14 +17,24 @@ target_sources(dosboxcommon PRIVATE
   video.cpp
 )
 
-# Linux & macOS-only filesystem helpers
-if (NOT WIN32)
-  target_sources(dosboxcommon PRIVATE fs_utils_posix.cpp)
+# Windows-only filesystem helpers and locale detection
+if (WIN32)
+  target_sources(dosboxcommon PRIVATE
+    fs_utils_win32.cpp
+    host_locale_win32.cpp
+  )
+  # Shlwapi needed for PathFileExistsW
+  target_link_libraries(dosboxcommon PRIVATE Shlwapi)
 endif()
 
 # macOS-only locale detection
 if (C_COREFOUNDATION)
   target_sources(dosboxcommon PRIVATE host_locale_macos.cpp)
+endif()
+
+# Linux & macOS-only filesystem helpers
+if (NOT WIN32)
+  target_sources(dosboxcommon PRIVATE fs_utils_posix.cpp)
 endif()
 
 # Linux-only locale detection
@@ -41,12 +51,3 @@ endif()
 target_include_directories(dosboxcommon SYSTEM PRIVATE ../libs/include)
 target_link_libraries(dosboxcommon PRIVATE whereami)
 
-# Windows-only filesystem helpers and locale detection
-if (WIN32)
-  target_sources(dosboxcommon PRIVATE
-    fs_utils_win32.cpp
-    host_locale_win32.cpp
-  )
-  # Shlwapi needed for PathFileExistsW
-  target_link_libraries(dosboxcommon PRIVATE Shlwapi)
-endif()
