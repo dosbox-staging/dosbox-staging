@@ -4,7 +4,6 @@ target_sources(dosboxcommon PRIVATE
   cross.cpp
   dos_rwops.cpp
   fs_utils.cpp
-  fs_utils_posix.cpp
   fs_utils_win32.cpp
   help_util.cpp
   host_locale.cpp
@@ -21,6 +20,11 @@ target_sources(dosboxcommon PRIVATE
   unicode_encodings.cpp
   video.cpp
 )
+
+# Linux & macOS-only filesystem helpers
+if (NOT WIN32)
+  target_sources(dosboxcommon PRIVATE fs_utils_posix.cpp)
+endif()
 
 target_sources(dosbox PRIVATE messages.cpp)
 
