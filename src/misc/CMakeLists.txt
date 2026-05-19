@@ -6,7 +6,6 @@ target_sources(dosboxcommon PRIVATE
   fs_utils.cpp
   help_util.cpp
   host_locale.cpp
-  host_locale_win32.cpp
   image_decoder.cpp
   iso_locale_codes.cpp
   messages_adjust.cpp
@@ -42,9 +41,12 @@ endif()
 target_include_directories(dosboxcommon SYSTEM PRIVATE ../libs/include)
 target_link_libraries(dosboxcommon PRIVATE whereami)
 
-# Windows-only filesystem helpers
+# Windows-only filesystem helpers and locale detection
 if (WIN32)
-  target_sources(dosboxcommon PRIVATE fs_utils_win32.cpp)
+  target_sources(dosboxcommon PRIVATE
+    fs_utils_win32.cpp
+    host_locale_win32.cpp
+  )
   # Shlwapi needed for PathFileExistsW
   target_link_libraries(dosboxcommon PRIVATE Shlwapi)
 endif()
