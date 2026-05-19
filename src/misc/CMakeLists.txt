@@ -6,7 +6,6 @@ target_sources(dosboxcommon PRIVATE
   fs_utils.cpp
   help_util.cpp
   host_locale.cpp
-  host_locale_posix.cpp
   host_locale_win32.cpp
   image_decoder.cpp
   iso_locale_codes.cpp
@@ -27,6 +26,11 @@ endif()
 # macOS-only locale detection
 if (C_COREFOUNDATION)
   target_sources(dosboxcommon PRIVATE host_locale_macos.cpp)
+endif()
+
+# Linux-only locale detection
+if (DOSBOX_PLATFORM_LINUX)
+  target_sources(dosboxcommon PRIVATE host_locale_posix.cpp)
 endif()
 
 target_sources(dosbox PRIVATE messages.cpp)
