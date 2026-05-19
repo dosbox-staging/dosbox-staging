@@ -14,6 +14,7 @@ target_sources(dosboxcommon PRIVATE
   render/shader.cpp
   render/shader_manager.cpp
   render/shader_pipeline.cpp
+  render/shader_pragma_parser.cpp
 )
 
 target_link_libraries(dosboxcommon PRIVATE OpenGL::GL simpleini)

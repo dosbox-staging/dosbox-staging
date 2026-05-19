@@ -11,8 +11,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "glad/gl.h"
-
 namespace SymbolicShaderName {
 
 constexpr auto AutoGraphicsStandard = "crt-auto";
