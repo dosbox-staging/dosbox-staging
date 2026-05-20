@@ -36,6 +36,7 @@ Beyond CRT emulation, DOSBox Staging can also
 [deinterlace FMV video](#deinterlacing) to remove the distracting black lines
 found in many 90s games.
 
+
 ## Adaptive CRT shaders
 
 DOSBox Staging includes adaptive CRT shaders that automatically select the
@@ -99,9 +100,9 @@ scaling is practically a non-issue.
 
 Most DOS games used non-square pixels and were designed for 4:3 CRT displays.
 The standard 320&times;200 VGA mode fills a 4:3 screen completely, which is
-only possible if each pixel is a slightly tall rectangle --- exactly 20% taller
-than wide, giving a pixel aspect ratio (PAR) of 1:1.2 (or 5:6). You can derive
-this from the display: 4:3 scales to 320:240, and 240 / 200 = 1.2.
+only possible if each pixel is a slightly tall rectangle --- exactly 20%
+taller than wide, giving a pixel aspect ratio (PAR) of 1:1.2 (or 5:6). You can
+derive this from the display: 4:3 scales to 320:240, and 240 / 200 = 1.2.
 
 Aspect ratio correction is enabled by default (`aspect = auto`) so games look
 as intended. Without it, 320&times;200 content appears squished on modern
@@ -109,12 +110,15 @@ square-pixel displays.
 
 A small number of DOS games need square pixels (`aspect = square-pixels`).
 These are typically European games ported from the PAL Amiga, where the
-original art was designed for square pixels at 320&times;256. Studios
-known for this include Revolution Software ([Beneath a Steel Sky](https://www.mobygames.com/game/386/beneath-a-steel-sky/), [Lure of
-the Temptress](https://www.mobygames.com/game/1134/lure-of-the-temptress/)), Delphine Software ([Another World](https://www.mobygames.com/game/564/out-of-this-world/), [Flashback](https://www.mobygames.com/game/555/flashback-the-quest-for-identity/)), and
-Coktel Vision ([Gobliiins](https://www.mobygames.com/game/1154/gobliiins/) series). The tell-tale sign is scanned or
-hand-drawn artwork that appears vertically stretched with aspect ratio
-correction enabled.
+original art was designed for square pixels at 320&times;256. Studios known
+for this include Revolution Software
+([Beneath a Steel Sky](https://www.mobygames.com/game/386/beneath-a-steel-sky/),
+[Lure of the Temptress](https://www.mobygames.com/game/1134/lure-of-the-temptress/)),
+Delphine Software ([Another World](https://www.mobygames.com/game/564/out-of-this-world/),
+[Flashback](https://www.mobygames.com/game/555/flashback-the-quest-for-identity/)),
+and Coktel Vision ([Gobliiins](https://www.mobygames.com/game/1154/gobliiins/)
+series). The tell-tale sign is scanned or hand-drawn artwork that appears
+vertically stretched with aspect ratio correction enabled.
 
 Pixels are square (1:1 PAR) in 640&times;480 and higher resolutions. A few
 other modes have their own non-square PARs: 640&times;350 EGA (1:1.37 PAR),
@@ -128,9 +132,9 @@ pixel aspect ratios, see [Aspect ratios & black borders](aspect-ratios.md).
 DOSBox Staging also has a "stretch everything" mode for when aspect ratio
 authenticity isn't the priority.
 
-The `stretch` aspect mode calculates the aspect ratio from the viewport dimensions,
-allowing you to force arbitrary aspect ratios. For example, to stretch a game
-to fill the entire screen:
+The `stretch` aspect mode calculates the aspect ratio from the viewport
+dimensions, allowing you to force arbitrary aspect ratios. For example, to
+stretch a game to fill the entire screen:
 
 ```ini
 [sdl]
@@ -179,27 +183,26 @@ Different CRT monitors used different phosphor chemistries, giving each a
 distinct colour character. DOSBox Staging can emulate these via the
 [`crt_color_profile`](#crt_color_profile) setting.
 
-- **`p22`** --- P22 phosphors were the most common in PC monitors, producing warmer,
-  slightly desaturated colours. This is what most people saw when playing DOS
-  games.
+- **`p22`** --- P22 phosphors were the most common in PC monitors, producing
+  warmer, slightly desaturated colours. This is what most people saw when
+  playing DOS games.
 
-- **`smpte-c`** --- SMPT-C broadcast standard phosphors are close to P22 but with tighter
-  colour tolerances, used in professional video monitors.
+- **`smpte-c`** --- SMPT-C broadcast standard phosphors are close to P22 but
+  with tighter colour tolerances, used in professional video monitors.
 
-- **`ebu`** --- EBU phosphors are the European broadcast standard, found in high-end
-  professional monitors like the Sony BVM/PVM series.
+- **`ebu`** --- EBU phosphors are the European broadcast standard, found in
+  high-end professional monitors like the Sony BVM/PVM series.
 
-- **`philips`** --- Philips home computer monitors (e.g., the Commodore 1084S) had
-  distinctly warm, yellowish whites at roughly 6100K.
+- **`philips`** --- Philips home computer monitors (e.g., the Commodore 1084S)
+  had distinctly warm, yellowish whites at roughly 6100K.
 
-- **`trinitron`** --- Sony Trinitrion monitors were known for punchy, vivid colours with a
-  cool blue-white colour temperature around 9300K.
+- **`trinitron`** --- Sony Trinitrion monitors were known for punchy, vivid
+  colours with a cool blue-white colour temperature around 9300K.
 
 The `auto` setting picks the profile that matches the era: CGA and EGA games
-get P22 (matching the monitors of that era), VGA games also get P22,
-composite video gets SMPTE-C, and the arcade shaders use Philips. See the
-[Automatic image adjustments](#automatic-image-adjustments) table for the full
-mapping.
+get P22 (matching the monitors of that era), VGA games also get P22, composite
+video gets SMPTE-C, and the arcade shaders use Philips. See the [Automatic
+image adjustments](#automatic-image-adjustments) table for the full mapping.
 
 
 ## Monochrome display emulation
@@ -212,13 +215,13 @@ terminal looks:
   IBM 5151 with an amber phosphor. This was the most common monochrome display
   in offices and the most comfortable for extended reading.
 
-- **`green`** --- the classic green phosphor look of the original IBM 5151 green
-  screen, a staple of the early PC era.
+- **`green`** --- the classic green phosphor look of the original IBM 5151
+  green screen, a staple of the early PC era.
 
 - **`white`** --- a cool blue-white typical of later monochrome VGA monitors.
 
-- **`paperwhite`** --- the Hercules-era paperwhite phosphor, a warmer, slightly
-  yellowish white that's easier on the eyes than pure white.
+- **`paperwhite`** --- the Hercules-era paperwhite phosphor, a warmer,
+  slightly yellowish white that's easier on the eyes than pure white.
 
 You can cycle through the available palettes via hotkeys during gameplay.
 
@@ -295,7 +298,6 @@ If you have a wide gamut display, the `auto` defaults for
 [`color_space`](#color_space) give you accurate colours out of the box. The
 Philips and Trinitron profiles show the biggest difference on DCI-P3 versus
 sRGB displays.
-
 
 
 ## Deinterlacing
@@ -439,9 +441,6 @@ The `[parameters]` section overrides shader-specific parameters declared in
 the shader source.
 
 
-
-
-
 ## Image adjustments
 
 The image adjustment system emulates the controls of a CRT monitor. The
@@ -454,14 +453,18 @@ The available adjustments are:
 - [`brightness`](#brightness) and [`contrast`](#contrast) emulate the
   corresponding CRT monitor knobs --- brightness sets the black point, contrast
   sets the white point.
+
 - [`gamma`](#gamma) applies additional gamma correction relative to the
   emulated monitor's gamma.
+
 - [`digital_contrast`](#digital_contrast) and [`saturation`](#saturation) are
   applied directly to the raw framebuffer RGB values, unlike the CRT-emulating
   brightness/contrast controls.
+
 - [`color_temperature`](#color_temperature) adjusts the white point in Kelvin;
   [`color_temperature_luma_preserve`](#color_temperature_luma_preserve)
   controls how much luminosity is preserved during the adjustment.
+
 - [`red_gain`](#red_gain), [`green_gain`](#green_gain), and
   [`blue_gain`](#blue_gain) adjust individual colour channel gain.
 
@@ -586,13 +589,18 @@ You can set the rendering parameters in the `[render]` configuration section.
       prioritises developer intent and how people experienced the games at
       the time of release. An appropriate shader variant is auto-selected
       based on the graphics standard of the current video mode and the
-      viewport size, irrespective of the [`machine`](../system/general.md#machine) setting.
+      viewport size, irrespective of the
+      [`machine`](../system/general.md#machine) setting.
+
     - `crt-auto-machine` -- A variation of `crt-auto`; this emulates a fixed
-      CRT monitor for the video adapter configured via the [`machine`](../system/general.md#machine) setting.
+      CRT monitor for the video adapter configured via the
+      [`machine`](../system/general.md#machine) setting.
+
     - `crt-auto-arcade` -- Emulation of an arcade or home computer monitor
       with a less sharp image and thick scanlines in low-resolution video
       modes. This is a fantasy option that never existed in real life, but it
       can be a lot of fun, especially with DOS ports of Amiga games.
+
     - `crt-auto-arcade-sharp` -- A sharper arcade shader variant for those
       who like the thick scanlines but want to retain the sharpness of a
       typical PC monitor.
@@ -607,8 +615,10 @@ You can set the rendering parameters in the `[render]` configuration section.
       resulting in a sharp image with minimum blur while maintaining the
       correct pixel aspect ratio. This is the recommended option for those
       who don't want to use the adaptive CRT shaders.
+
     - `bilinear` -- Upscale the image using bilinear interpolation (results
       in a blurry image).
+
     - `nearest` -- Upscale the image using nearest-neighbour interpolation
       (also known as "no bilinear"). This results in the sharpest possible
       image at the expense of uneven pixels, especially with non-square pixel
@@ -623,9 +633,11 @@ You can set the rendering parameters in the `[render]` configuration section.
     The bundled shaders include:
 
     - **Interpolation**: `sharp`, `bilinear`, `nearest`, `catmull-rom`
+
     - **CRT**: `crt-hyllian`,
       `vga-1080p`, `vga-1080p-fake-double-scan` (all used by the adaptive CRT
       shaders with different presets)
+
     - **Scaler**: `advinterp2x`, `advinterp3x`, `advmame2x`, `advmame3x`,
       `xbr-lv2-3d`, `xbr-lv2-noblend`, `xbr-lv3`
 
@@ -635,10 +647,11 @@ You can set the rendering parameters in the `[render]` configuration section.
 
     !!! note
 
-        Start DOSBox Staging with the [`--list-shaders`](../using-dosbox-staging/command-line.md#-list-shaders)
-        command line option to see the full list of available shaders. You can also use an absolute
-        or relative path to a file. In all cases, you may omit the shader's
-        `.glsl` file extension.
+        Start DOSBox Staging with the
+        [`--list-shaders`](../using-dosbox-staging/command-line.md#-list-shaders)
+        command line option to see the full list of available shaders. You can
+        also use an absolute or relative path to a file. In all cases, you may
+        omit the shader's `.glsl` file extension.
 
 
 ### Image adjustments
@@ -682,14 +695,19 @@ You can set the rendering parameters in the `[render]` configuration section.
       appropriate for the currently active adaptive CRT shader (e.g.,
       `crt-auto`), or the current machine type for regular shaders (e.g.,
       `sharp`).
+
     - `none` -- Display raw colours without any colour profile transforms.
       This will result in inaccurate colours and gamma on modern displays
       compared to how games looked on a real CRT in the 1980s and 90s.
+
     - `ebu` -- EBU standard phosphor emulation, used in high-end professional
       CRT monitors, such as the Sony BVM/PVM series.
+
     - `p22` -- P22 phosphor emulation, most common in lower-end CRT monitors.
+
     - `smpte-c` -- SMPTE "C" phosphor emulation, the standard for American
       broadcast video monitors.
+
     - `philips` -- Philips CRT monitor colours typical to 15 kHz home
       computer monitors (e.g., the Commodore 1084S). The intended use of
       this profile is with `color_temperature` set to 6500. The output will
@@ -697,6 +715,7 @@ You can set the rendering parameters in the `[render]` configuration section.
       "baked into" the profile. You can still tweak the relative white
       balance by changing `color_temperature`. Needs a DCI-P3 display for
       the most accurate results.
+
     - `trinitron` -- Typical Sony Trinitron CRT TV and monitor colours. The
       intended use of this profile is with `color_temperature` set to 6500.
       The output will look blueish due to the ~9300 K Trinitron CRT colour
@@ -733,8 +752,8 @@ You can set the rendering parameters in the `[render]` configuration section.
 
 :   Set the digital contrast of the video output (`0` by default). Valid
     range is -50 to 50. This works very differently from the
-    [`contrast`](#contrast) virtual monitor setting; digital contrast is applied
-    to the raw RGB values of the framebuffer image.
+    [`contrast`](#contrast) virtual monitor setting; digital contrast is
+    applied to the raw RGB values of the framebuffer image.
 
 ##### black_level
 
@@ -748,6 +767,7 @@ You can set the rendering parameters in the `[render]` configuration section.
     - `auto` *default*{ .default } -- Raise the black level for PCjr, Tandy,
       CGA and EGA video modes only for adaptive CRT shaders; for any other
       shader, use 0.
+
     - `<number>` -- Set the black level raise amount. Valid range is 0 to
       100. 0 does not raise the black level.
 
@@ -760,8 +780,8 @@ You can set the rendering parameters in the `[render]` configuration section.
 ##### saturation
 
 :   Set the saturation of the video output (`0` by default). Valid range is
-    -50 to 50. This is digital saturation applied to the raw RGB values of
-    the framebuffer image, similarly to [`digital_contrast`](#digital_contrast).
+    -50 to 50. This is digital saturation applied to the raw RGB values of the
+    framebuffer image, similarly to [`digital_contrast`](#digital_contrast).
 
 ##### color_temperature
 
@@ -773,6 +793,7 @@ You can set the rendering parameters in the `[render]` configuration section.
       appropriate for the currently active adaptive CRT shader (e.g.,
       `crt-auto`), or the current machine type for regular shaders (e.g.,
       `sharp`).
+
     - `<number>` -- Specify colour temperature in Kelvin (K). Valid range is
       3000 to 10000. 6500 K is the neutral point for most modern displays.
       Values below 6500 result in warmer colours, values above 6500 in
@@ -855,26 +876,35 @@ You can set the rendering parameters in the `[render]` configuration section.
 
     - `default` *default*{ .default } -- The canonical CGA palette, as
       emulated by VGA adapters.
+
     - `tandy <bl>` -- Emulation of an idealised Tandy monitor with adjustable
       brown level. The brown level can be provided as an optional second
       parameter (0--red, 50--brown, 100--dark yellow; defaults to 50).
+
     - `tandy-warm` -- Emulation of the actual colour output of an unknown
       Tandy monitor. Intended to be used with `crt_color_profile = none` and
       `color_temperature = 6500`.
+
     - `ibm5153 <c>` -- Emulation of the actual colour output of an IBM 5153
       monitor with a unique contrast control that dims non-bright colours
       only. The contrast can be optionally provided as a second parameter (0
       to 100; defaults to 100). Intended to be used with
       `crt_color_profile = none` and `color_temperature = 6500`.
+
     - `agi-amiga-v1`, `agi-amiga-v2`, `agi-amiga-v3` -- Palettes used by the
       Amiga ports of Sierra AGI games.
+
     - `agi-amigaish` -- A mix of EGA and Amiga colours used by the Sarien
       AGI-interpreter.
+
     - `scumm-amiga` -- Palette used by the Amiga ports of LucasArts EGA
       games.
+
     - `colodore` -- Commodore 64 inspired colours based on the Colodore
       palette.
+
     - `colodore-sat` -- Colodore palette with 20% more saturation.
+
     - `dga16` -- A modern take on the canonical CGA palette with dialled back
       contrast.
 
@@ -904,13 +934,18 @@ You can set the rendering parameters in the `[render]` configuration section.
     <div class="compact" markdown>
 
     - `off` *default*{ .default } -- Disable deinterlacing.
+
     - `on` -- Enable deinterlacing at `medium` strength.
+
     - `light` -- Light deinterlacing. Black scanlines are softened to mimic
       the CRT look.
+
     - `medium` -- Medium deinterlacing. Best balance between removing black
       lines, increasing brightness, and keeping the higher resolution look.
+
     - `strong` -- Strong deinterlacing. Image brightness is almost completely
       restored at the expense of diminishing the higher resolution look.
+
     - `full` -- Full deinterlacing. Completely removes black lines and
       maximises brightness, but the image will appear blockier.
 
@@ -933,7 +968,9 @@ You can set the rendering parameters in the `[render]` configuration section.
     Possible values:
 
     - `off` *default*{ .default } -- Disable dedithering.
+
     - `on` -- Enable dedithering (at full strength).
+
     - `<number>` -- Set dedithering strength from 0 (off) to 100 (full
       strength). Lower values result in a subtle softening of dither
       patterns; higher values blend between the original and the dedithered
