@@ -233,8 +233,12 @@ nav:
       - Graphics settings:
         - 0.83/manual/graphics/adapters.md
         - 0.83/manual/graphics/display-and-window.md
-        - 0.83/manual/graphics/rendering.md
-        - 0.83/manual/graphics/aspect-ratios.md
+        - Rendering:
+          - 0.83/manual/graphics/rendering/overview.md
+          - 0.83/manual/graphics/rendering/shaders.md
+          - 0.83/manual/graphics/rendering/aspect-ratios-and-scaling.md
+          - 0.83/manual/graphics/rendering/colour-and-image-adjustments.md
+          - 0.83/manual/graphics/rendering/special-features.md
         - 0.83/manual/graphics/composite-video.md
         - 0.83/manual/graphics/3dfx-voodoo.md
         - 0.83/manual/graphics/reelmagic.md
@@ -294,4 +298,3 @@ nav:
 not_in_nav: |
   # To silence the warning about the custom `index.md` front page
   /index.md
-
