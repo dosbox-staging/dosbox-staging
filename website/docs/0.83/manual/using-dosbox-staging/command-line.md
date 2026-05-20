@@ -174,7 +174,7 @@ pages.
 ##### `--list-shaders`
 
 :   List all available shaders and their paths, for use with the
-    [`shader`](../graphics/rendering.md#shader) config setting.
+    [`shader`](../graphics/rendering/shaders.md#shader) config setting.
 
 
 ### Mapper

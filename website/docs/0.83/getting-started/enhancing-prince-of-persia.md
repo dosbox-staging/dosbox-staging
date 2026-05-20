@@ -208,7 +208,7 @@ Here's how it looks. Oldschool! The slightly squashed aspect ratio is correct
 in this case; this is exactly how the game would look on a PC equipped with a
 Hercules card connected to a period-accurate monochrome monitor (we present
 some advanced techniques on [how to fix
-that](../manual/graphics/rendering.md#custom-aspect-ratios) in the user
+that](../manual/graphics/rendering/aspect-ratios-and-scaling.md#custom-aspect-ratios) in the user
 manual).
 
 {{ figure(
@@ -266,7 +266,7 @@ key.
 ### Sharp pixels
 
 If you _really_ prefer sharp pixels over authentic CRT emulation (see
-[CRT shaders](../manual/graphics/rendering.md#adaptive-crt-shaders) for a
+[CRT shaders](../manual/graphics/rendering/shaders.md#adaptive-crt-shaders) for a
 detailed overview), you only need to add a single line to the `[render]`
 config section:
 
@@ -584,4 +584,3 @@ dark. You've been warned!
 
 Okay, we've pretty much maxed out Prince of Persia for demonstration purposes.
 Time to move on to another game!
-

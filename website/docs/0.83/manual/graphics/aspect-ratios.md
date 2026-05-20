@@ -43,14 +43,14 @@ session! Most of the time, you won't need to worry about aspect ratio
 correctness because DOSBox Staging handles that automatically for you. There
 is a small but significant number of games, though, where forcing square
 pixels yields better results (one good example is the game [Beneath the Steel
-Sky](../../getting-started/beneath-a-steel-sky.md/#aspect-ratio-correction)
+Sky](../../getting-started/beneath-a-steel-sky.md#aspect-ratio-correction)
 from the [Getting Started guide](../../getting-started/index.md)).
 
 Most of the time you won't need to worry about any of this --- DOSBox Staging
 handles aspect ratio correction automatically. There is a small but
 significant number of games, though, where forcing square pixels yields better
 results ([Beneath the Steel
-Sky](../../getting-started/beneath-a-steel-sky.md/#aspect-ratio-correction)
+Sky](../../getting-started/beneath-a-steel-sky.md#aspect-ratio-correction)
 from the [Getting Started guide](../../getting-started/index.md)) is one good
 example).
 
@@ -111,8 +111,9 @@ integer_scaling = off
 On lower-resolution monitors or in windowed mode, you'll need to experiment —
 some combinations look fine, others will produce interference patterns.
 
-See [Integer scaling](rendering.md#integer-scaling) and [Aspect ratio &
-viewport](rendering.md#aspect-ratio-viewport) in the manual for the full
+See [Integer scaling](rendering/aspect-ratios-and-scaling.md#integer-scaling)
+and [Aspect ratio & viewport](rendering/aspect-ratios-and-scaling.md#aspect)
+in the manual for the full
 configuration reference.
 
 
@@ -226,5 +227,3 @@ gamers ever owned. Low-resolution art was never meant to be seen that large.
       viewable area of a typical 19" CRT.
 
     Q.E.D. :sunglasses:
-
-

@@ -36,7 +36,9 @@ and a number of Sierra and other titles that shipped with Hercules drivers.
 
 DOSBox Staging emulates the Hercules with selectable monochrome phosphor
 palettes (amber, green, white, paperwhite) that can be cycled with ++f11++ or
-set via the [`monochrome_palette`](rendering.md#monochrome_palette) setting.
+set via the
+[`monochrome_palette`](rendering/colour-and-image-adjustments.md#monochrome_palette)
+setting.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-amber.png",
@@ -206,7 +208,7 @@ text adventures that benefited from the extra detail. Legend Entertainment's
 [Spellcasting 101](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/)
 and [Timequest](https://www.mobygames.com/game/1026/timequest/) are good
 examples of games built specifically around it. Most games used
-[dithering](rendering.md#dedithering) creatively to simulate more colours than
+[dithering](rendering/special-features.md#dedithering) creatively to simulate more colours than
 the 16-colour palette could display directly.
 
 !!! note
