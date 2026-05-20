@@ -56,7 +56,7 @@ tracks at 16-bit 44.1kHz, all games were using hardware synthesisers for music
 playback.
 
 The most well-known of these was the [AdLib Music Synthesizer
-Card](sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card),
+Card](sound-devices/adlib.md#adlib-music-synthesizer-card),
 or just **AdLib** in short, which was almost universally supported by all
 games from about 1990 onwards. Before that, the [Tandy 3
 Voice](sound-devices/tandy.md) was the only step-up from the built-in PC
@@ -105,10 +105,10 @@ demonstrates configuring various sound devices for a specific game.
 <div class="compact" markdown>
 
 - [Roland MT-32](sound-devices/roland-mt-32.md)
-- [Sound Blaster](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-10)
-- [AdLib Music Synthesizer Card](sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card)
+- [Sound Blaster](sound-devices/sound-blaster.md#sound-blaster-10)
+- [AdLib Music Synthesizer Card](sound-devices/adlib.md#adlib-music-synthesizer-card)
 - [Tandy 3 Voice](sound-devices/tandy.md)
-- [Game Blaster / Creative Music System (CMS)](sound-devices/adlib-cms-sound-blaster.md#creative-music-system-cms-game-blaster)
+- [Game Blaster / Creative Music System (CMS)](sound-devices/cms.md)
 - [IBM Music Feature Card](sound-devices/imfc.md)
 - [Innovation SSI-2001](sound-devices/innovation.md)
 - [Covox / Disney Sound Source](sound-devices/covox-variants.md)
@@ -124,10 +124,10 @@ demonstrates configuring various sound devices for a specific game.
 - [Sound Canvas](sound-devices/sound-canvas.md) / [FluidSynth](sound-devices/fluidsynth.md)
 - [Roland MT-32](sound-devices/roland-mt-32.md)
 - [Gravis UltraSound](sound-devices/gravis-ultrasound.md)
-- [Sound Blaster 16](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16)
-- [Sound Blaster Pro](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro) / [Sound Blaster Pro 2.0](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro-20)
-- [Sound Blaster](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-10)
-- [AdLib Gold 1000](sound-devices/adlib-cms-sound-blaster.md#adlib-gold-1000)
+- [Sound Blaster 16](sound-devices/sound-blaster.md#sound-blaster-16)
+- [Sound Blaster Pro](sound-devices/sound-blaster.md#sound-blaster-pro) / [Sound Blaster Pro 2.0](sound-devices/sound-blaster.md#sound-blaster-pro-20)
+- [Sound Blaster](sound-devices/sound-blaster.md#sound-blaster-10)
+- [AdLib Gold 1000](sound-devices/adlib.md#adlib-gold-1000)
 - [CD-DA](sound-devices/cd-da.md)
 - [Covox / Disney Sound Source](sound-devices/covox-variants.md)
 

@@ -3,7 +3,7 @@
 Several inexpensive **Covox variants** appeared in the late 1980s as a cheap
 way to get digital audio output from a PC. These small digital-to-analog
 converter (DAC) devices were far simpler than a [Sound
-Blaster](adlib-cms-sound-blaster.md) — just a dongle that plugged into the
+Blaster](sound-blaster.md) — just a dongle that plugged into the
 parallel port, also known as the LPT (Line Print Terminal) port — but they
 could play back digitised sound and speech at decent quality for the era. For
 this reason, they are also sometimes called LPT DAC devices.

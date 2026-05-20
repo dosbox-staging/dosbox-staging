@@ -82,7 +82,7 @@ section.
     !!! note
 
         Addresses 220 and 240 might not be available as they're assigned to
-        the [Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md#sbbase)
+        the [Sound Blaster](../sound/sound-devices/sound-blaster.md#sbbase)
         and [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md#gusbase)
         by default.
 
