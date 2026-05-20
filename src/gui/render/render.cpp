@@ -1682,19 +1682,22 @@ static void init_render_settings(SectionProp& section)
 	        "other dimension. If the image is larger than the viewport, the integer scaling\n"
 	        "constraint is auto-disabled (same as 'off'). Possible values:\n"
 	        "\n"
-	        "  auto:        A special vertical mode auto-enabled only for the adaptive CRT\n"
-	        "               shaders (see `shader`). This mode has refinements over standard\n"
-	        "               vertical integer scaling: 3.5x and 4.5x scaling factors are also\n"
-	        "               allowed, and integer scaling is disabled above 5.0x scaling.\n"
+	        "  auto:        A special vertical mode auto-enabled only for the CRT shaders\n"
+	        "               (see `shader`). This mode has refinements over standard vertical\n"
+	        "               integer scaling: 3.5x and 4.5x scaling factors are also allowed,\n"
+	        "               and integer scaling is disabled above 5.0x scaling.\n"
 	        "\n"
-	        "  vertical:    Constrain the vertical scaling factor to integer values.\n"
-	        "               This is the recommended setting for third-party shaders to avoid\n"
-	        "               uneven scanlines and interference artifacts.\n"
+	        "  vertical:    Constrain the vertical scaling factor to integer values. This is\n"
+	        "               the recommended setting for 3rd party CRT shaders with scanline\n"
+	        "               simulation to avoid uneven scanlines and interference artifacts.\n"
+	        "               For the built-in CRT shaders, use 'auto'.\n"
 	        "\n"
-	        "  horizontal:  Constrain the horizontal scaling factor to integer values.\n"
+	        "  horizontal:  Constrain the horizontal scaling factor to integer values. Might\n"
+	        "               be useful on low-resolution displays to optimise for horizontal\n"
+	        "               text sharpness.\n"
 	        "\n"
-	        "  off:         No integer scaling constraint is applied; the image fills the\n"
-	        "               viewport while maintaining the configured aspect ratio.");
+	        "  off:         Apply no integer scaling constraint; the image fills the viewport\n"
+	        "               while maintaining the configured aspect ratio.");
 
 	string_prop = section.AddString("viewport", Always, "fit");
 	string_prop->SetHelp(
