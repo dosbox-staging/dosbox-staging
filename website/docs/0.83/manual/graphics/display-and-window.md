@@ -24,7 +24,7 @@ chapter and use the defaults.
 
 For image output settings such as shaders, CRT emulation, aspect ratio
 correction, dedithering, deinterlacing, and image adjustments, see
-[Rendering](rendering/shaders.md).
+[Rendering](rendering/overview.md).
 
 
 ## Frame presentation
@@ -538,4 +538,3 @@ rest are in `[sdl]`.
 
         - For the best results, disable all frame cappers and global vsync
           overrides in your video driver settings.
-

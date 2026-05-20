@@ -87,7 +87,7 @@ the look of the original hardware. This makes a surprisingly large difference
 with the subtle blending and scanlines of the CRT emulation.
 
 See [Graphics adapters](../graphics/adapters.md) for details on each emulated
-adapter, and [Rendering](../graphics/rendering/shaders.md) for shader and display
+adapter, and [Rendering](../graphics/rendering/overview.md) for shader and display
 options. The Getting Started guide covers
 [choosing a graphics adapter](../../getting-started/enhancing-prince-of-persia.md#graphics-options)
 and [aspect ratios](../graphics/aspect-ratios.md)
