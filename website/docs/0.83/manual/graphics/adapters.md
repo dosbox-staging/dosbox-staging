@@ -6,9 +6,9 @@ to DOS programs and, in some cases, enables additional hardware like sound
 chips.
 
 The default **`svga_s3`** ([S3 Trio64](#s3-trio64)) covers the widest range of
-games, from standard VGA through high-resolution SVGA. You only need to
-change it for titles that specifically require an older standard, typically
-early to mid-1980s games written for [CGA](#cga), [Tandy](#tandy-1000), or
+games, from standard VGA through high-resolution SVGA. You only need to change
+it for titles that specifically require an older standard, typically early to
+mid-1980s games written for [CGA](#cga), [Tandy](#tandy-1000), or
 [Hercules](#hercules-graphics-card) hardware, or demoscene productions
 targeting specific [SVGA chipsets](#vga-and-svga).
 
@@ -36,8 +36,7 @@ and a number of Sierra and other titles that shipped with Hercules drivers.
 
 DOSBox Staging emulates the Hercules with selectable monochrome phosphor
 palettes (amber, green, white, paperwhite) that can be cycled with ++f11++ or
-set via the
-[`monochrome_palette`](rendering.md#monochrome_palette) setting.
+set via the [`monochrome_palette`](rendering.md#monochrome_palette) setting.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-amber.png",
@@ -122,9 +121,9 @@ opportunity, cloned the PCjr's enhanced graphics and sound into the [Tandy
 their Radio Shack stores nationwide in the USA. The rest is history --- the
 PCjr is a footnote, the Tandy 1000 is beloved.
 
-Setting `machine = pcjr` enables PCjr graphics, [PCjr
-sound](../sound/sound-devices/tandy.md) and [composite
-video](composite-video.md) emulation.
+Setting `machine = pcjr` enables PCjr graphics,
+[PCjr sound](../sound/sound-devices/tandy.md) and
+[composite video](composite-video.md) emulation.
 
 
 ### Tandy 1000
@@ -157,14 +156,12 @@ advantage over standard PCs.
 
 Combined with enhanced graphics and sound, the Tandy 1000 was the best
 consumer-grade DOS gaming platform of the mid-1980s. Many Sierra titles
-([King's Quest](https://www.mobygames.com/game/122/kings-quest/), [Space
-Quest](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/),
-[Leisure Suit
-Larry](https://www.mobygames.com/game/379/leisure-suit-larry-in-the-land-of-the-lounge-lizards/)),
-[Defender of the
-Crown](https://www.mobygames.com/game/181/defender-of-the-crown/), and [Sid
-Meier's Pirates!](https://www.mobygames.com/game/214/sid-meiers-pirates/) look
-and sound noticeably better in Tandy mode compared to standard CGA.
+([King's Quest](https://www.mobygames.com/game/122/kings-quest/),
+[Space Quest](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/),
+[Leisure Suit Larry](https://www.mobygames.com/game/379/leisure-suit-larry-in-the-land-of-the-lounge-lizards/)),
+[Defender of the Crown](https://www.mobygames.com/game/181/defender-of-the-crown/),
+and [Sid Meier's Pirates!](https://www.mobygames.com/game/214/sid-meiers-pirates/)
+look and sound noticeably better in Tandy mode compared to standard CGA.
 
 Setting `machine = tandy` also enables
 [Tandy sound](../sound/sound-devices/tandy.md) and
@@ -182,9 +179,9 @@ elsewhere deliberately exploited this effect.
 
 DOSBox Staging faithfully emulates composite output for all three adapters,
 including adjustable hue, saturation, contrast, and brightness. This is
-essential for playing early Sierra AGI games ([King's
-Quest](https://www.mobygames.com/game/122/kings-quest/), [Space
-Quest](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/))
+essential for playing early Sierra AGI games
+([King's Quest](https://www.mobygames.com/game/122/kings-quest/),
+[Space Quest](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/))
 as the artists intended. See [Composite video](composite-video.md) for
 configuration details and hotkeys.
 
@@ -200,23 +197,23 @@ memory.
 
 EGA was the dominant PC graphics standard from roughly 1985 to 1990. Most
 celebrated games of the period, including
-[Loom](https://www.mobygames.com/game/176/loom/), [The Secret of Monkey
-Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/), and
-the early Sierra adventures, ran in 16-colour 320&times;200, a resolution
+[Loom](https://www.mobygames.com/game/176/loom/),
+[The Secret of Monkey Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/),
+and the early Sierra adventures, ran in 16-colour 320&times;200, a resolution
 shared equally by [EGA](#ega) and [Tandy](#tandy-1000). EGA's higher 640×350
 resolution was used mainly by strategy titles, simulations, and illustrated
 text adventures that benefited from the extra detail. Legend Entertainment's
-[Spellcasting
-101](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/)
-and [Timequest]() are good examples of games built specifically around it.
-Most games used [dithering](rendering.md#dedithering) creatively to simulate
-more colours than the 16-colour palette could display directly.
+[Spellcasting 101](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/)
+and [Timequest](https://www.mobygames.com/game/1026/timequest/) are good
+examples of games built specifically around it. Most games used
+[dithering](rendering.md#dedithering) creatively to simulate more colours than
+the 16-colour palette could display directly.
 
 !!! note
 
-    EGA is *not* backward compatible with Hercules/MDA text modes.
-    Games expecting CGA monitor behaviour on an EGA card may also
-    show differences, as DOSBox emulates the EGA with an EGA-class monitor.
+    EGA is *not* backward compatible with Hercules/MDA text modes. Games
+    expecting CGA monitor behaviour on an EGA card may also show differences,
+    as DOSBox emulates the EGA with an EGA-class monitor.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/pop-ega.jpg",
@@ -242,10 +239,10 @@ default `svga_s3` is the best general-purpose choice.
 
     A small number of games and demos rely on per-scanline VGA timing tricks
     that change graphics settings mid-frame (e.g.,
-    [Lemmings](https://www.mobygames.com/game/683/lemmings/), [Pinball
-    Fantasies](https://www.mobygames.com/game/571/pinball-fantasies/), [Alien
-    Carnage](https://www.mobygames.com/game/522/alien-carnage/)). These may
-    need the `svga_paradise` machine type, which is the closest to IBM's
+    [Lemmings](https://www.mobygames.com/game/683/lemmings/),
+    [Pinball Fantasies](https://www.mobygames.com/game/571/pinball-fantasies/),
+    [Alien Carnage](https://www.mobygames.com/game/522/alien-carnage/)). These
+    may need the `svga_paradise` machine type, which is the closest to IBM's
     original VGA implementation. See also
     [`vga_render_per_scanline`](../system/general.md#vga_render_per_scanline).
 
@@ -296,8 +293,8 @@ occasional title written specifically for this chipset.
 
 `machine = svga_et4000`
 
-The **Tseng Labs ET4000** (1989) was the successor to the ET3000 and one of the
-most popular SVGA chipsets of the early 1990s — widely adopted,
+The **Tseng Labs ET4000** (1989) was the successor to the ET3000 and one of
+the most popular SVGA chipsets of the early 1990s — widely adopted,
 well-supported, and significantly more capable than its predecessor. It offers
 a wider range of extended modes and defaults to 1 MB of video memory
 (configurable to 256 KB or 512 KB via
@@ -335,16 +332,17 @@ modes are exposed to software.
 
     Some games and GOG releases ship with **UniVBE** (Universal VESA BIOS
     Extensions), a third-party VESA driver from the 1990s. DOSBox Staging's
-    built-in VESA implementation is fully compliant, making UniVBE
-    unnecessary --- and it can actually cause graphical glitches. If a game
-    has trouble with SVGA modes, check for a bundled `UNIVBE.EXE` or
-    `UVCONFIG.EXE` and try preventing it from loading (remove the line from
-    the game's batch file, or rename the file).
+    built-in VESA implementation is fully compliant, making UniVBE unnecessary
+    --- and it can actually cause graphical glitches. If a game has trouble
+    with SVGA modes, check for a bundled `UNIVBE.EXE` or `UVCONFIG.EXE` and
+    try preventing it from loading (remove the line from the game's batch
+    file, or rename the file).
 
 Two variants are available for specific compatibility needs:
 
 - `machine = vesa_oldvbe` --- Same S3 Trio64, but limited to VESA VBE 1.2.
   Use for games that malfunction with VBE 2.0.
+
 - `machine = vesa_nolfb` --- S3 Trio64 with VESA VBE 2.0 but without the
   linear framebuffer hack. Needed by a small number of titles.
 
@@ -353,20 +351,20 @@ Two variants are available for specific compatibility needs:
 
 <div class="compact" markdown>
 
-| `machine` value    | Adapter                                          | Year   | Max colours                   | Max resolution           |
-| ------------------ | ------------------------------------------------ | ------ | ----------------------        | ------------------------ |
-| `hercules`         | Hercules HGC                                     | 1982   | 2 (monochrome)                | 720&times;348            |
-| `cga_mono`         | CGA (monochrome&nbsp;monitor)                    | 1981   | 16 (monochrome)               | 640&times;200            |
-| `cga`              | CGA                                              | 1981   | 4 (16&nbsp;in&nbsp;composite) | 640&times;200            |
-| `pcjr`             | PCjr                                             | 1983   | 16                            | 640&times;200            |
-| `tandy`            | Tandy 1000                                       | 1984   | 16                            | 640&times;200            |
-| `ega`              | EGA                                              | 1984   | 16                            | 640&times;350            |
-| `svga_paradise`    | Paradise PVGA1A                                  | 1988   | 256                           | 1024&times;768           |
-| `svga_et3000`      | Tseng Labs ET3000                                | 1987   | 256                           | 1024&times;768           |
-| `svga_et4000`      | Tseng Labs ET4000                                | 1989   | 65K                           | 1280&times;1024          |
-| `svga_s3`          | S3 Trio64, VBE 2.0 *default*{ .default }         | 1994   | 16.7M                         | 1600&times;1200          |
-| `vesa_oldvbe`      | S3 Trio64, VBE 1.2                               | 1994   | 16.7M                         | 1600&times;1200          |
-| `vesa_nolfb`       | S3 Trio64, VBE 2.0 (no&nbsp;LFB)                 | 1994   | 16.7M                         | 1600&times;1200          |
+| `machine` value    | Adapter                                          | Year   | Max colours                   | Max resolution
+| ------------------ | ------------------------------------------------ | ------ | ----------------------        | ----------------
+| `hercules`         | Hercules HGC                                     | 1982   | 2 (monochrome)                | 720&times;348
+| `cga_mono`         | CGA (monochrome&nbsp;monitor)                    | 1981   | 16 (monochrome)               | 640&times;200
+| `cga`              | CGA                                              | 1981   | 4 (16&nbsp;in&nbsp;composite) | 640&times;200
+| `pcjr`             | PCjr                                             | 1983   | 16                            | 640&times;200
+| `tandy`            | Tandy 1000                                       | 1984   | 16                            | 640&times;200
+| `ega`              | EGA                                              | 1984   | 16                            | 640&times;350
+| `svga_paradise`    | Paradise PVGA1A                                  | 1988   | 256                           | 1024&times;768
+| `svga_et3000`      | Tseng Labs ET3000                                | 1987   | 256                           | 1024&times;768
+| `svga_et4000`      | Tseng Labs ET4000                                | 1989   | 65K                           | 1280&times;1024
+| `svga_s3`          | S3 Trio64, VBE 2.0 *default*{ .default }         | 1994   | 16.7M                         | 1600&times;1200
+| `vesa_oldvbe`      | S3 Trio64, VBE 1.2                               | 1994   | 16.7M                         | 1600&times;1200
+| `vesa_nolfb`       | S3 Trio64, VBE 2.0 (no&nbsp;LFB)                 | 1994   | 16.7M                         | 1600&times;1200
 
 </div>
 
