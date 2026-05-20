@@ -143,9 +143,9 @@ Two hardware breakthroughs transformed PC gaming in the late 1980s. [VGA
 graphics](../graphics/adapters.md#vga-and-svga) arrived in 1987 with 256 colours
 at 320&times;200 resolution, enabling visuals that could finally rival the
 glorious Commodore Amiga. On the audio side, the
-[AdLib](../sound/sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card)
+[AdLib](../sound/sound-devices/adlib.md#adlib-music-synthesizer-card)
 card brought FM synthesis to the PC in 1987, followed by the [Sound
-Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md) in 1989 which added
+Blaster](../sound/sound-devices/sound-blaster.md) in 1989 which added
 digital audio playback. The 386 CPU provided the processing power to drive
 increasingly ambitious games. This period marks the moment PC gaming became a
 serious force.
@@ -215,8 +215,8 @@ model = mt32_old
 The 486 brought a huge performance leap in the early 1990s. The AMD 386DX-40
 offered near-486 performance at a fraction of the cost, extending the 386's
 life for budget users. Sound hardware matured rapidly; the [Sound Blaster
-Pro](../sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro) and
-[16](../sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16) added
+Pro](../sound/sound-devices/sound-blaster.md#sound-blaster-pro) and
+[16](../sound/sound-devices/sound-blaster.md#sound-blaster-16) added
 stereo output, and the [Gravis
 UltraSound](../sound/sound-devices/gravis-ultrasound.md) offered
 advanced wavetable synthesis which far outclassed the Amiga's impressive sound
@@ -295,7 +295,7 @@ Alternatively, use `sbtype = sb16` to emulate the Sound Blaster 16, and
 
 Intel's Pentium processor arrived in 1993 and rapidly became the standard for
 serious gaming. The [Sound Blaster
-16](../sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16) was
+16](../sound/sound-devices/sound-blaster.md#sound-blaster-16) was
 ubiquitous, [SVGA cards](../graphics/adapters.md#vga-and-svga) pushed higher
 resolutions and colour depths, and [CD-ROM drives](../using-dosbox-staging/storage.md#cd-roms) became
 standard, ushering in the era of full-motion video and [CD audio
@@ -371,7 +371,7 @@ mididevice = soundcanvas
 By the mid-1990s, Windows 95 and DirectX were rapidly taking over PC gaming.
 The final wave of DOS games pushed hardware hard --- fast Pentiums and Pentium
 MMX processors, [Sound Blaster
-16](../sound/sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16) or AWE32
+16](../sound/sound-devices/sound-blaster.md#sound-blaster-16) or AWE32
 wavetable sound cards, and [SVGA graphics](../graphics/adapters.md#vga-and-svga)
 at 640&times;480 or higher resolution with early [Voodoo 3D
 acceleration](../graphics/3dfx-voodoo.md). These late DOS titles often demanded

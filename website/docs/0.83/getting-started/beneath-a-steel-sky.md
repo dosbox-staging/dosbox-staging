@@ -423,7 +423,7 @@ sky
 ## Changing the emulated Sound Blaster model
 
 DOSBox emulates the Sound Blaster 16 by default (see the [Sound
-Blaster](../manual/sound/sound-devices/adlib-cms-sound-blaster.md)
+Blaster](../manual/sound/sound-devices/sound-blaster.md)
 page for all available models and settings). This card can emulate all
 earlier Sound Blaster models and offers the widest compatibility with DOS
 games.

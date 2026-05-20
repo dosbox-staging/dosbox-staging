@@ -47,7 +47,7 @@ Staging configuration:
 
 | Device                                                             | I/O base   | IRQ   | DMA   | High DMA   | Config settings |
 | --------                                                           | ---------- | ----- | ----- | ---------- | --------------- |
-| [Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md) | 220        | 7     | 1     | 5          | [`sbbase`](../sound/sound-devices/adlib-cms-sound-blaster.md#sbbase), [`irq`](../sound/sound-devices/adlib-cms-sound-blaster.md#irq), [`dma`](../sound/sound-devices/adlib-cms-sound-blaster.md#dma), [`hdma`](../sound/sound-devices/adlib-cms-sound-blaster.md#hdma) |
+| [Sound Blaster](../sound/sound-devices/sound-blaster.md) | 220        | 7     | 1     | 5          | [`sbbase`](../sound/sound-devices/sound-blaster.md#sbbase), [`irq`](../sound/sound-devices/sound-blaster.md#irq), [`dma`](../sound/sound-devices/sound-blaster.md#dma), [`hdma`](../sound/sound-devices/sound-blaster.md#hdma) |
 | [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md)   | 240        | 5     | 3     | ---        | [`gusbase`](../sound/sound-devices/gravis-ultrasound.md#gusbase), [`gusirq`](../sound/sound-devices/gravis-ultrasound.md#gusirq), [`gusdma`](../sound/sound-devices/gravis-ultrasound.md#gusdma) |
 | [IBM Music Feature Card](../sound/sound-devices/imfc.md)           | 2A20       | 3     | ---   | ---        | [`imfc_base`](../sound/sound-devices/imfc.md#imfc_base), [`imfc_irq`](../sound/sound-devices/imfc.md#imfc_irq) |
 | [NE2000 Ethernet](../networking/ethernet.md)                       | 300        | 3     | ---   | ---        | [`nicbase`](../networking/ethernet.md#nicbase), [`nicirq`](../networking/ethernet.md#nicirq) |
@@ -67,7 +67,7 @@ configuration:
 
 | Device                                                                                                   | I/O base              | IRQ           | DMA   |
 | --------                                                                                                 | ----------            | -----         | ----- |
-| [AdLib / OPL](../sound/sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card) (FM synth) | 388                   | ---           | ---   |
+| [AdLib / OPL](../sound/sound-devices/adlib.md#adlib-music-synthesizer-card) (FM synth) | 388                   | ---           | ---   |
 | [MPU-401](../sound/midi.md) (MIDI interface)                                               | 330                   | 9             | ---   |
 | [Game port](../input/joystick.md) (joystick)                                                             | 201                   | ---           | ---   |
 | [Tandy DAC](../sound/sound-devices/tandy.md)                                                             | C4                    | 7             | 1     |
@@ -133,7 +133,7 @@ for its Sound Blaster setup, set `sbbase = 240` in the `[sblaster]` section.
 Double-check that the I/O address, IRQ, *and* DMA channel all match between
 the game's configuration and the DOSBox config. Many games silently fail if
 even one value is wrong. Also verify that the correct
-[`sbtype`](../sound/sound-devices/adlib-cms-sound-blaster.md#sbtype) is
+[`sbtype`](../sound/sound-devices/sound-blaster.md#sbtype) is
 selected --- some games only work with specific Sound Blaster models.
 
 For Sound Blaster 16 games with no 16-bit audio, make sure the high DMA
@@ -159,8 +159,8 @@ the reason, and the defaults should work.
 ## Further reading
 
 - [Sound overview](../sound/overview.md) --- general guide to DOS game audio
-- [AdLib, CMS & Sound Blaster](../sound/sound-devices/adlib-cms-sound-blaster.md)
-  --- Sound Blaster configuration and model selection
+- [AdLib](../sound/sound-devices/adlib.md) --- AdLib configuration
+- [Sound Blaster](../sound/sound-devices/sound-blaster.md) and --- Sound Blaster configuration
 - [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md) --- GUS
   configuration and patch files
 - [IBM Music Feature Card](../sound/sound-devices/imfc.md) --- IMFC configuration

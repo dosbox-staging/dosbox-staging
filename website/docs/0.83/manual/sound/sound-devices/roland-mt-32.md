@@ -17,7 +17,7 @@ standard for high-end audio in DOS gaming in the 1988 to 1992 period until
 [General MIDI](../midi.md#the-general-midi-standard) and [CD Audio](cd-da.md) took over.
 
 As the Roland MT-32 was considerably more expensive than other options, such
-as the [AdLib](adlib-cms-sound-blaster.md#adlib-music-synthesizer-card), it
+as the [AdLib](adlib.md#adlib-music-synthesizer-card), it
 remained out of reach for most computer users. 
 
 

@@ -8,7 +8,7 @@ playback.
 
 The catch? The GUS made no attempt at backwards compatibility with AdLib or
 Sound Blaster cards. Programs had to be written specifically for it. Many DOS
-gamers kept a [Sound Blaster](adlib-cms-sound-blaster.md) alongside their GUS
+gamers kept a [Sound Blaster](sound-blaster.md) alongside their GUS
 for titles that lacked native support --- and in DOSBox Staging, you can do the
 same by enabling both devices in your configuration.
 
@@ -25,13 +25,13 @@ II](https://www.mobygames.com/game/179/star-control-ii/), also benefited
 enormously from its superior audio capabilities.
 
 
-## How games use the GUS
+## How programs use the GUS
 
 Software used the GUS in several distinct ways. Understanding the difference
 is important because each requires a different DOSBox configuration.
 
 
-### Native GUS
+### Native support
 
 These games use the card's hardware mixing directly, uploading their own
 samples to the GUS's on-board RAM --- no patch files or drivers needed. This
@@ -102,10 +102,10 @@ ultradir = C:\ULTRASND
 
 These games have no GUS-specific code at all --- they send standard MIDI
 commands as if talking to a [Roland MT-32](roland-mt-32.md) or [General
-MIDI](../midi.md#the-general-midi-standard) device. The `ULTRAMID.EXE` TSR provided by Gravis
-intercepts these MIDI commands and translates them into GUS hardware calls,
-loading instrument samples from the patch files on disk. Load `ULTRAMID.EXE`
-before starting the game:
+MIDI](../midi.md#the-general-midi-standard) device. The `ULTRAMID.EXE` TSR
+provided by Gravis intercepts these MIDI commands and translates them into GUS
+hardware calls, loading instrument samples from the patch files on disk. Load
+`ULTRAMID.EXE` before starting the game:
 
 ``` ini
 [gus]
@@ -143,16 +143,20 @@ C:\ULTRASND\ULTRAMID.EXE
 For a comprehensive list of games with GUS support, consult the official
 **GLIST.TXT** compatibility list maintained by Gravis:
 
+<div class="compact" markdown>
+
 - [gravisultrasound.com](http://www.gravisultrasound.com/files/documentation/GLIST.TXT)
 - [retronn.de mirror](https://retronn.de/ftp/driver/Gravis/UltraSound/GAMES/GLIST.TXT)
 - [dk.toastednet.org mirror](http://dk.toastednet.org/GUS/TEXT/GLIST.TXT)
 
+</div>
+
 
 ## Setting up the GUS environment
 
-For games that need the patch files ([GUS MIDI](#gus-midi-with-patch-files) and
-[UltraMID](#ultramid) titles), you'll need to set up
-the GUS directory structure. The expected layout is:
+For games that need the patch files ([GUS MIDI](#gus-midi-with-patch-files)
+and [UltraMID](#ultramid) titles), you'll need to set up the GUS directory
+structure. The expected layout is:
 
 ```
 C:\ULTRASND\
@@ -179,10 +183,21 @@ ultradir = C:\ULTRASND
 
 !!! note
 
-    [Native GUS](#native-gus) games and all demos do *not* need the patch
+    [Native GUS](#native-support) games and all demos do *not* need the patch
     files --- they upload their own instrument samples. You only need the
-    `ULTRASND` directory setup for [GUS MIDI](#gus-midi-with-patch-files)
-    and [UltraMID](#ultramid) games.
+    `ULTRASND` directory setup for [GUS MIDI](#gus-midi-with-patch-files) and
+    [UltraMID](#ultramid) games.
+
+
+## Hardware configuration
+
+The [`gusbase`](#gusbase), [`gusirq`](#gusirq), and [`gusdma`](#gusdma)
+settings configure the I/O base address, interrupt, and DMA channel of the
+emulated GUS. The defaults (base address 240, IRQ 5, DMA 3) are chosen to
+avoid conflicts with the Sound Blaster card, allowing both to coexist. Some
+games and demos expect the GUS factory defaults of base address 220, IRQ 11,
+DMA 1. Note that certain versions of the DOS/4GW extender cannot handle IRQs
+above 7, so IRQ 11 may cause problems with those titles.
 
 
 ## GUS-only configuration
@@ -207,18 +222,6 @@ exclusively.
 ## Mixer channel
 
 The Gravis UltraSound outputs to the **GUS** [mixer channel](../mixer.md#list-of-mixer-channels).
-
-
-## Hardware configuration
-
-The [`gusbase`](#gusbase), [`gusirq`](#gusirq), and [`gusdma`](#gusdma)
-settings configure the I/O base address, interrupt, and DMA channel of the
-emulated GUS. The defaults (base address 240, IRQ 5, DMA 3) are chosen to
-avoid conflicts with the Sound Blaster card, allowing both to coexist. Some
-games and demos expect the GUS factory defaults of base address 220, IRQ 11,
-DMA 1. Note that
-certain versions of the DOS/4GW extender cannot handle IRQs above 7, so IRQ 11
-may cause problems with those titles.
 
 
 ## Configuration settings
