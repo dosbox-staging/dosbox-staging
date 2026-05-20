@@ -54,12 +54,12 @@ As we can see, we have four channels enabled by default:
     mixer channels. The **MASTER** channel is always enabled, always comes
     first, and is always stereo.
 
-- **OPL** -- Output of the [Yamaha OPL FM synthesizer](sound-devices/adlib-cms-sound-blaster.md#fm-synthesisers) (usually part of an emulated [Sound Blaster](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-models) card, or a standalone [AdLib Music Synthesizer Card](sound-devices/adlib-cms-sound-blaster.md#adlib-music-synthesizer-card)). Can be mono or stereo, depending on the emulated FM synthesizer.
+- **OPL** -- Output of the [Yamaha OPL FM synthesizer](sound-devices/adlib-cms.md#fm-synthesisers) (usually part of an emulated [Sound Blaster](sound-devices/sound-blaster.md#sound-blaster-models) card, or a standalone [AdLib Music Synthesizer Card](sound-devices/adlib-cms.md#adlib-music-synthesizer-card)). Can be mono or stereo, depending on the emulated FM synthesizer.
 
 - **PCSPEAKER** -- Mono output of the ubiquitous small loudspeaker built into most old IBM PC compatibles.
 
 - **SB** -- Digital audio output of the emulated [Sound Blaster
-  card](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-models). Can be
+  card](sound-devices/sound-blaster.md#sound-blaster-models). Can be
   mono or stereo, depending on the emulated model.
 
 There is an important thing to note here: some emulated sound devices contain
@@ -115,13 +115,13 @@ Swap the left and right channels of a stereo mixer channel:
     MIXER SB REVERSE
 
 Some [Sound Blaster
-models](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-models) ---
+models](sound-devices/sound-blaster.md#sound-blaster-models) ---
 particularly the [Sound Blaster
-Pro](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-pro) --- had the
+Pro](sound-devices/sound-blaster.md#sound-blaster-pro) --- had the
 left and right digital audio channels reversed compared to later cards. Games
 developed and tested on these cards may have their stereo image flipped when
 emulating a different Sound Blaster model (typically the default [Sound
-Blaster 16](sound-devices/adlib-cms-sound-blaster.md#sound-blaster-16)).
+Blaster 16](sound-devices/sound-blaster.md#sound-blaster-16)).
 
 If sound effects in a game seem to come from the wrong direction (e.g., an
 enemy on the left of the screen produces sound from the right speaker), try
@@ -153,7 +153,7 @@ sections of the manual where they're described in detail.
 | Channel name    | Device                                       | Stereo? |
 | --------------- | -------------------------------------------- | --------|
 | **CDAUDIO**     | [CD-DA digital audio](sound-devices/cd-da.md)              | Yes
-| **CMS**         | [Creative Music System (C/MS) synthesiser](sound-devices/adlib-cms-sound-blaster.md#cms) | Yes
+| **CMS**         | [Creative Music System (C/MS) synthesiser](sound-devices/adlib-cms.md#cms) | Yes
 | **COVOX**       | [Covox Speech Thing digital audio](sound-devices/covox-variants.md#covox-speech-thing) | No
 | **DISNEY**      | [Disney Sound Source (DSS) digital audio](sound-devices/covox-variants.md#disney-sound-source) | No
 | **DISKNOISE**   | [Disk noise emulation](disk-noise.md) | No
@@ -163,12 +163,12 @@ sections of the manual where they're described in detail.
 | **MASTER**      | Master output channel                        | Yes
 | **INNOVATION**  | [Innovation SSI-2001 synthesiser](sound-devices/innovation.md) | No
 | **MT32**        | [Roland MT-32 MIDI synthesiser](sound-devices/roland-mt-32.md) | Yes
-| **OPL**         | [Yamaha OPL synthesiser](sound-devices/adlib-cms-sound-blaster.md) | Yes[^stereo]
+| **OPL**         | [Yamaha OPL synthesiser](sound-devices/adlib-cms.md) | Yes[^stereo]
 | **PCSPEAKER**   | [PC speaker](sound-devices/pc-speaker.md)    | No
 | **PS1**         | [IBM PS/1 Audio synthesiser](sound-devices/ibm-ps1audio.md) | No
 | **PS1DAC**      | [IBM PS/1 Audio digital audio](sound-devices/ibm-ps1audio.md) | No
 | **REELMAGIC**   | [ReelMagic MPEG audio](../graphics/reelmagic.md) | Yes
-| **SB**          | [Sound Blaster digital audio](sound-devices/adlib-cms-sound-blaster.md) | Yes[^stereo]
+| **SB**          | [Sound Blaster digital audio](sound-devices/sound-blaster.md) | Yes[^stereo]
 | **SOUNDCANVAS** | [Roland Sound Canvas synthesiser](sound-devices/sound-canvas.md) | Yes
 | **STON1**       | [Stereo-on-1 digital audio](sound-devices/covox-variants.md#stereo-on-1-dac) | Yes
 | **TANDY**       | [Tandy 1000 synthesiser](sound-devices/tandy.md) | No
@@ -181,7 +181,7 @@ sections of the manual where they're described in detail.
 
 ## Denoiser
 
-The [OPL synth](sound-devices/adlib-cms-sound-blaster.md) and the original
+The [OPL synth](sound-devices/adlib-cms.md) and the original
 SC-55 mk1 [Sound Canvas](sound-devices/sound-canvas.md)
 models produce very low-level residual noise as part of their faithful
 hardware emulation. This noise is authentic --- real hardware behaved the same
