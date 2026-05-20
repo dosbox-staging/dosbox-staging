@@ -43,7 +43,7 @@ Later Tandy 1000 models added support for digital audio as well. Due to
 resource conflicts, DOSBox cannot emulate the Tandy DAC and Sound Blaster
 digital audio simultaneously. To use the Tandy DAC alongside the Tandy
 synthesiser, disable Sound Blaster emulation by setting
-[`sbtype`](../sound-devices/adlib-cms-sound-blaster.md#sbtype) to `none` in
+[`sbtype`](../sound-devices/sound-blaster.md#sbtype) to `none` in
 the `[sblaster]` section.
 
 ``` ini
@@ -211,7 +211,7 @@ Tandy 3 Voice settings are to be configured in the `[speaker]` section.
       play forever.
     - `on` -- Wait 0.5s before fading out over a 0.5s period.
     - `<custom>` -- Custom fade-out definition; see
-      [`opl_fadeout`](adlib-cms-sound-blaster.md#opl_fadeout) for details on
+      [`opl_fadeout`](adlib-cms.md#opl_fadeout) for details on
       the format.
 
 

@@ -8,7 +8,7 @@ playback.
 
 The catch? The GUS made no attempt at backwards compatibility with AdLib or
 Sound Blaster cards. Programs had to be written specifically for it. Many DOS
-gamers kept a [Sound Blaster](adlib-cms-sound-blaster.md) alongside their GUS
+gamers kept a [Sound Blaster](sound-blaster.md) alongside their GUS
 for titles that lacked native support --- and in DOSBox Staging, you can do the
 same by enabling both devices in your configuration.
 
