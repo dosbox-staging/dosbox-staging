@@ -88,15 +88,15 @@ games look and sound noticeably better on a Tandy computer than on a standard
 IBM PC equipped with a CGA or EGA adapter.
 
 Because DOS games were designed for CRT monitors, DOSBox Staging includes [CRT
-emulation shaders](../graphics/rendering.md#adaptive-crt-shaders) that
+emulation shaders](../graphics/rendering/shaders.md#adaptive-crt-shaders) that
 reproduce the look of this archaic display technology. This makes a
 surprisingly large difference --- pixel art that looks harsh and blocky on a
 modern flat panel comes alive with the subtle blending and scanlines of the
 CRT emulation.
 
 See [Graphics adapters](../graphics/adapters.md) for details on each emulated
-adapter, and [Rendering](../graphics/rendering.md) for shader and display
-options. The Getting Started guide covers [choosing a graphics
+adapter, and [Rendering](../graphics/rendering.md/overview.md) for shader and
+display options. The Getting Started guide covers [choosing a graphics
 adapter](../../getting-started/enhancing-prince-of-persia.md#graphics-options)
 and [aspect ratios](../graphics/aspect-ratios.md) with practical examples.
 
