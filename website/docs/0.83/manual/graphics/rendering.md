@@ -3,26 +3,26 @@
 DOSBox Staging uses [adaptive CRT shaders](#adaptive-crt-shaders) by default
 that emulate the look of period-appropriate monitors. A VGA game gets a
 VGA-style CRT look, an EGA game gets an EGA-era monitor, and so on. The
-results are surprisingly close to what these games looked like on the real
-hardware they were designed for.
-
-If you prefer a crisp, pixel-perfect look without any CRT emulation, set
-`shader = sharp`. For completely unprocessed output, use `shader = none`.
+results are very close to what these games looked like on the real hardware
+they were designed for. If you prefer a crisp "sharp pixel" look without any
+CRT emulation, set [`shader`](#shader) to `sharp`.
 
 Most DOS games used non-square pixels, e.g., the most commonly used
 320&times;200 resolution was stretched to fill 4:3 aspect ratio CRT monitors,
-resulting in slightly tall pixels. [Aspect ratio
+resulting in slightly tall pixels (1:1.2 pixel aspect ratio). [Aspect ratio
 correction](#aspect-ratio-scaling) is enabled by default so to ensure these
 games look as intended. With aspect ratio correction disabled, 320&times;200
 games would appear slightly squished; this is especially noticeable in games
 that feature common everyday objects and human characters (for example, you'll
-get the notorious "stumpy Guybrush" in [Monkey
-Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/)).
+get the notorious "stumpy Guybrush" in
+[Monkey Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/)).
+You can even stretch the image horizontally and vertically like on a real CRT
+monitor to set up [custom aspect ratios](#custom-aspect-ratios).
 
-The [image adjustment](#image_adjustments) controls --- brightness, contrast, saturation, colour
-temperature, etc. --- work much like the knobs on an old CRT monitor. They're
-useful for fine-tuning the picture to your taste or compensating for
-differences in display characteristics.
+The [image adjustment](#image_adjustments) controls --- brightness, contrast,
+saturation, colour temperature, etc. --- work much like the knobs on an old
+CRT monitor. They're useful for fine-tuning the picture to your taste or
+compensating for differences in display characteristics.
 [CRT colour profiles](#crt-colour-profiles) go a step further, emulating
 the distinct phosphor colours of different monitor types, and on
 [wide gamut displays](#wide-gamut-colour-accuracy) these profiles can
@@ -31,10 +31,11 @@ accurately. For Hercules and CGA mono machines, we offer authentic [monochrome
 display emulation](#monochrome-display-emulation) options mimicking classic
 amber, green, white, and paperwhite looks.
 
-Beyond CRT emulation, DOSBox Staging can also
-[blend away dither patterns](#dedithering) in old EGA and CGA games, and
-[deinterlace FMV video](#deinterlacing) to remove the distracting black lines
-found in many 90s games.
+Beyond authentically emulating real CRT monitors, DOSBox Staging also offers
+visual enhancements that are impossible to do on real hardware: [blending away
+dither patterns](#dedithering) in old EGA and CGA games, and [deinterlacing
+FMV videos](#deinterlacing) to remove the distracting black lines found in
+many 90s games.
 
 
 ## Adaptive CRT shaders
@@ -60,40 +61,165 @@ appropriate monitor emulation based on the current video mode:
 - **`crt-auto-arcade-sharp`** --- A sharper arcade variant that retains the
   thick scanlines but with the sharpness of a typical PC monitor.
 
-The CRT shaders generally need at least 3 times the vertical resolution of the
-emulated video mode to function. If the vertical resolution is less than that,
-DOSBox Staging will revert to sharp pixels (the `sharp` shader). For example,
-for the 640&times;480 VGA mode, the viewport height must be 480 &times; 3 =
-1440 pixels or greater.
+For a full explanation of how double scanning affects these shaders, see
+[VGA double scanning](#vga-double-scanning).
 
-!!! note "VGA double scanning"
+### 1080p special cases
 
-    The 320&times;200 mode is double-scanned to 640&times;400 on VGA ---
-    that's just how the VGA hardware works, and emulating this is required for
-    authentic-looking results (two scanlines per pixel is the iconic
-    low-resolution VGA look). On all other graphics adapters, 320&times;200 is
-    single-scanned, so it remains 320&times;200.
+The adaptive CRT shaders normally require at least 3&times; the vertical
+resolution of the emulated DOS video mode to display crisp scanlines without
+wavy vertical interference patterns. On a 1080p display, a double-scanned
+320&times;200 game has an effective height of 400 lines, which means the
+highest usable integer scale is 2&times;, leaving substantial black borders
+around a relatively small upscaled image. Two special shaders activate
+automatically under `crt-auto` to improve the situation:
 
-    On 1080p, the auto CRT shaders employ some "fake double scanning" trickery
-    to maximise the image for emulated VGA modes.
+- **`vga-1080p-fake-double-scan`** --- Used for 320&times;200 content. Rather
+  than treating the source image as 640&times;400, this shader treats it as
+  320&times;200 and applies a higher integer scale, then overlays an
+  alternating line pattern to simulate the double-scan look. It's not
+  pixel-perfect, but the feel is authentic and the image fills the screen far
+  better.
+
+- **`vga-1080p`** --- Used for 640&times;480 content. This mode upscales at
+  exactly 2&times; to 1280&times;960 with the same alternating line overlay.
+  Not fake double scanning --- 640&times;480 is a square-pixel mode that
+  doesn't double-scan --- just a purpose-built upscaler that makes the most
+  of a 1080p viewport.
+
+Both activate transparently under `crt-auto`. You can also set them explicitly
+via the [`shader`](#shader) setting, though in most cases there's no reason
+to.
+
+
+
+## VGA double scanning
+
+[VGA adapters](../adapters/#vga-and-svga) are the most common for DOS gaming,
+therefore it's essential to understand one of their important pecularities.
+
+VGA hardware **double-scans** any video mode with fewer than 400 lines --- it
+draws each scanline twice, producing two physical scanlines per each
+logical pixel row. This affects the most common DOS gaming resolutions:
+320&times;200, 320&times;240, and 640&times;350 among others.
+
+This is a fundamental difference between VGA and every graphics standard that
+came before it. CGA and EGA monitors, home computer monitors, TVs, and arcade
+monitors could all display "true" low-resolution video --- one scanline per
+pixel row, exactly as the hardware produced it. On those displays, individual
+scanlines were thick and clearly visible, giving low-resolution content its
+characteristic chunky "fat scanline" look beloved by retro enthusiasts. VGA
+monitors physically could not do this. The signal frequency of a true
+320&times;200 mode is incompatible with VGA monitors; double scanning was the
+only way to display it at all. With each line drawn twice, the resulting
+analog signal is literally identical to a true 640&times;400 mode --- a VGA
+monitor has no way to distinguish between the two. The scanlines on VGA
+monitors are vanishingly fine, closer in character to a high-end broadcast
+monitor like a Sony PVM or BVM than to the bold scanline look of a CGA monitor
+or an arcade cabinet. That refined, almost scanline-free look *is* what DOS
+VGA games looked like on real hardware. Instead of "chunky scanlines", VGA
+monitors are know for their "chunk pixels" --- in low resolution modes, each
+320&times;200 "pixel" was in fact drawn as a sharp little 2-by-2 pixel
+rectangle at 640x400 resolution.
+
+This means the double-scanned rendering of low-resolution VGA modes is not a
+stylistic choice, not a DOSBox Staging quirk, and not something that can be
+"fixed" --- it is the hardware reality of VGA, full stop. If you're coming
+from experience with an Amiga, Atari ST, Commodore 64, a games console, or
+even a CGA or EGA PC, this behaviour will feel unfamiliar. That's expected.
+VGA was genuinely different in this respect.
+
+DOSBox Staging replicates this peculiarity of the VGA hardware faithfully, and
+the adaptive CRT shaders are designed around it.
+
+This has a direct consequence for [integer scaling](#integer-scaling): a
+320&times;200 VGA game has an effective internal resolution of 640&times;400.
+A 4&times; integer scale therefore produces a 2560&times;1600 image, not
+1280&times;800 (but we have implement some special quality-of-life consessions
+for [1080p monitor users](#1080p-special-cases)). Keep this in mind when
+configuring scaling factors or troubleshooting unexpected black borders.
+
+If you prefer the thick scanline look of a CGA monitor or arcade cabinet --- a
+look that was never actually available on VGA hardware --- the
+[`crt-auto-arcade`](#adaptive-crt-shaders) and
+[`crt-auto-arcade-sharp`](#adaptive-crt-shaders) shaders offer exactly that as
+a deliberate fantasy option. It's particularly enjoyable with DOS ports of
+Amiga and Atari ST games that were originally designed for 15 kHz displays ---
+now you can enjoy these games with the original look and the often very
+different PC music.
+
+!!! note "Why VGA double-scans low-resolution modes"
+
+    CGA and EGA monitors operated at a lower horizontal sync frequency than
+    VGA monitors, which standardised on a fixed higher rate. Existing DOS
+    games used low-resolution modes that fell below VGA's operating range, so
+    IBM's VGA hardware needed a way to bridge the gap. The solution was
+    elegant: draw each scanline twice, doubling the number of output lines per
+    frame and lifting the signal into VGA's frequency range. The visual side
+    effect --- two physical scanlines per logical pixel row --- gave
+    low-resolution VGA games their characteristic "chunky pixel" appearance.
+    What began as a technical compromise eventually became an aesthetic
+    identity.
+
+    The real reason for this solution was to simplify the implementation and
+    thus lower the cost of (at that time) high-resolution VGA monitors. Early
+    VGA monitor were indeed simple fixed-sync devices. SVGA monitors
+    eventually evolved into multi-sync displays, but this early design
+    decision stuck --- most SVGA monitors never gained the ability to sync
+    down to 15 kHz horizontal rates necessary for displaying "true 200-line"
+    content. This is why Amiga and Atari ST users needed to buy expensive scan
+    doubler hardware to connect their computers outputting 15 kHz video to PC
+    SVGA monitors.
 
 
 ## Integer scaling
 
 The [`integer_scaling`](#integer_scaling) setting constrains the horizontal or
-vertical scaling factor to integer values when upscaling the image. This
-avoids uneven scanlines and interference artifacts with CRT shaders.
+vertical scaling factor to integer values when upscaling the image. The
+correct aspect ratio is always maintained, so the other dimension's scaling
+factor may become fractional.
 
-The default `auto` mode enables vertical integer scaling only for the adaptive
-CRT shaders, with refinements: 3.5x and 4.5x scaling factors are also
-allowed, and integer scaling is disabled above 5.0x.
+The `vertical` setting avoids uneven scanlines and interference artifacts with
+CRT shaders or the [deinterlacing](#deinterlacing) feature. You could just use
+this, but there is an enhanced vertical scaling setting called `auto` that
+works in tandem with the [adaptive CRT shaders](#adaptive-crt-shaders)
+(this is the default). This mode activates vertical integer scaling only for
+the CRT shaders.
 
-The correct aspect ratio is always maintained, so the other dimension's
-scaling factor may become fractional. With the `sharp` shader, this is not a
-problem as the interpolation band is at most 1 pixel wide at the edges, which
-is sharp, especially at 1440p or 4K. With CRT shaders, non-integer horizontal
-scaling is practically a non-issue.
+Note that the [1080p special-case shaders](#1080p-special-cases) alter the
+effective source resolution for 320&times;200 and 640&times;480 content, which
+affects the scaling ratios you'd otherwise expect.
 
+Generally, the CRT shaders need at least 3 times the vertical resolution of
+the emulated video mode to function. For example, the 800&times;600 SVGA mode
+needs at least 1800 pixels vertically (and 2400 pixels horizontally, given
+this mode has square (1:1) pixel aspect ratio). If the viewport is smaller,
+DOSBox Staging will turn off CRT emulation and revert to the `sharp` shader.
+
+You can test this by resizing your window with the default settings --- you'll
+see the image "snap" between the integer scaling ratios, and you can see
+messages about the automatic shader switches in the log window. You'll also
+notice that the upscaled image might have some letterboxing, pillarboxing, or
+both, depending on the window size. This is an unavoidable consequence of
+integer scaling --- read the [Aspect ratios & black
+borders](aspect-ratios.md) chapter for further explanation.
+
+The `auto` mode has some refinements over the standard `vertical` mode: 3.5x
+and 4.5x scaling factors are also allowed, and integer scaling is disabled
+above 5.0x.
+
+The `horizontal` integer scaling mode is included more for completeness' sake,
+but it can be useful on low-resolution displays to maximise horizontal text
+sharpness in text-heavy games.
+
+!!! note "About fractional scaling ratios"
+
+    With the `sharp` shader, fractional scaling is not a problem as the
+    interpolation band is at most 1 pixel wide at the edges, which is sharp,
+    especially at 1440p or 4K. With CRT shaders, non-integer horizontal
+    scaling is practically a non-issue --- the CRT shading artifacts (i.e.,
+    the phosphor mask pattern) will effectively mask any minor unevenness even
+    on low-resolution displays.
 
 
 ## Aspect ratio & viewport
@@ -101,8 +227,8 @@ scaling is practically a non-issue.
 Most DOS games used non-square pixels and were designed for 4:3 CRT displays.
 The standard 320&times;200 VGA mode fills a 4:3 screen completely, which is
 only possible if each pixel is a slightly tall rectangle --- exactly 20%
-taller than wide, giving a pixel aspect ratio (PAR) of 1:1.2 (or 5:6). You can
-derive this from the display: 4:3 scales to 320:240, and 240 / 200 = 1.2.
+taller than wide, giving a pixel aspect ratio (PAR) of 1:1.2 (or 5:6). You
+can derive this from the display: 4:3 scales to 320:240, and 240 / 200 = 1.2.
 
 Aspect ratio correction is enabled by default (`aspect = auto`) so games look
 as intended. Without it, 320&times;200 content appears squished on modern
@@ -122,9 +248,10 @@ vertically stretched with aspect ratio correction enabled.
 
 Pixels are square (1:1 PAR) in 640&times;480 and higher resolutions. A few
 other modes have their own non-square PARs: 640&times;350 EGA (1:1.37 PAR),
-640&times;200 EGA (1:2.4 PAR), and 720&times;348 Hercules (1:1.55 PAR). DOSBox
-Staging handles all of these automatically. For a more detailed explanation of
-pixel aspect ratios, see [Aspect ratios & black borders](aspect-ratios.md).
+640&times;200 EGA (1:2.4 PAR), and 720&times;348 Hercules (1:1.55 PAR).
+DOSBox Staging handles all of these automatically. For a more detailed
+explanation of pixel aspect ratios, see [Aspect ratios & black
+borders](aspect-ratios.md).
 
 
 ### Custom aspect ratios
@@ -173,8 +300,8 @@ integer_scaling = off
 
 Use the **Stretch Axis**, **Inc Stretch**, and **Dec Stretch** hotkey actions
 to adjust stretching in real-time (you'll need to map them in the [key
-mapper](../input/keymapper.md) first), then copy the logged viewport setting to
-your config.
+mapper](../input/keymapper.md) first), then copy the logged viewport setting
+to your config.
 
 
 ## CRT colour profiles
@@ -196,7 +323,7 @@ distinct colour character. DOSBox Staging can emulate these via the
 - **`philips`** --- Philips home computer monitors (e.g., the Commodore 1084S)
   had distinctly warm, yellowish whites at roughly 6100K.
 
-- **`trinitron`** --- Sony Trinitrion monitors were known for punchy, vivid
+- **`trinitron`** --- Sony Trinitron monitors were known for punchy, vivid
   colours with a cool blue-white colour temperature around 9300K.
 
 The `auto` setting picks the profile that matches the era: CGA and EGA games
@@ -431,8 +558,10 @@ The `[settings]` section can include:
 
 <div class="compact" markdown>
 
-- `force_single_scan` --- Force single scanning for double-scanned modes.
-- `force_no_pixel_doubling` --- Disable pixel doubling.
+- `force_single_scan` --- Force single scanning for double-scanned modes. See
+  [VGA double scanning](#vga-double-scanning).
+- `force_no_pixel_doubling` --- Disable pixel doubling. See
+  [VGA double scanning](#vga-double-scanning).
 - `linear_filtering` --- Enable or disable bilinear texture filtering.
 
 </div>
@@ -503,10 +632,10 @@ You can set the rendering parameters in the `[render]` configuration section.
       Amiga games) need square pixels to appear as the artists intended.
 
     - `stretch` -- Calculate the aspect ratio from the viewport's dimensions.
-      Combined with the [`viewport`](#viewport) setting, this mode is useful to
-      force arbitrary aspect ratios (e.g., stretching DOS games to fullscreen
-      on 16:9 displays) and to emulate the horizontal and vertical stretch
-      controls of CRT monitors.
+      Combined with the [`viewport`](#viewport) setting, this mode is useful
+      to force arbitrary aspect ratios (e.g., stretching DOS games to
+      fullscreen on 16:9 displays) and to emulate the horizontal and vertical
+      stretch controls of CRT monitors.
 
 
 ##### integer_scaling
@@ -526,7 +655,7 @@ You can set the rendering parameters in the `[render]` configuration section.
       scaling factors are also allowed, and integer scaling is disabled above
       5.0x scaling.
 
-    - `vertical`` -- Constrain the vertical scaling factor to integer values.
+    - `vertical` -- Constrain the vertical scaling factor to integer values.
       This is the recommended setting for 3rd party CRT shaders with scanline
       emulation to avoid uneven scanlines and interference artifacts. For the
       built-in CRT shaders, use `auto`. This mode is also recommended on
@@ -988,4 +1117,3 @@ You can set the rendering parameters in the `[render]` configuration section.
 
         - Dedithering is applied to rendered screenshots, but not to raw and
           upscaled screenshots and video captures.
-
