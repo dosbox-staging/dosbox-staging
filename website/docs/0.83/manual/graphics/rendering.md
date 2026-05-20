@@ -511,26 +511,32 @@ You can set the rendering parameters in the `[render]` configuration section.
 
 ##### integer_scaling
 
-:   Constrain the horizontal or vertical scaling factor to the largest
-    integer value so the image still fits into the viewport. The configured
-    aspect ratio is always maintained according to the [`aspect`](#aspect) and
-    [`viewport`](#viewport) settings, which may result in a non-integer scaling
-    factor in the other dimension. If the image is larger than the viewport,
-    the integer scaling constraint is auto-disabled (same as `off`).
+:   Constrain the horizontal or vertical scaling factor to the largest integer
+    value so the image still fits into the viewport. The configured aspect
+    ratio is always maintained according to the [`aspect`](#aspect) and
+    [`viewport`](#viewport) settings, which may result in a non-integer
+    scaling factor in the other dimension. If the image is larger than the
+    viewport, the integer scaling constraint is auto-disabled (same as `off`).
 
     Possible values:
 
     - `auto` *default*{ .default } -- A special vertical mode auto-enabled
-      only for the adaptive CRT shaders (see [`shader`](#shader)). This mode
-      has refinements over standard vertical integer scaling: 3.5x and 4.5x
+      only for the CRT shaders (see [`shader`](#shader)). This mode has
+      refinements over standard vertical integer scaling: 3.5x and 4.5x
       scaling factors are also allowed, and integer scaling is disabled above
       5.0x scaling.
-    - `vertical` -- Constrain the vertical scaling factor to integer values.
-      This is the recommended setting for third-party shaders to avoid uneven
-      scanlines and interference artifacts.
+
+    - `vertical`` -- Constrain the vertical scaling factor to integer values.
+      This is the recommended setting for 3rd party CRT shaders with scanline
+      emulation to avoid uneven scanlines and interference artifacts. For the
+      built-in CRT shaders, use `auto`. This mode is also recommended on
+      low-resolution displays with [`deinterlacing`](#deinterlacing) enabled.
+
     - `horizontal` -- Constrain the horizontal scaling factor to integer
-      values.
-    - `off` -- No integer scaling constraint is applied; the image fills the
+      values. Might be useful on low-resolution displays to optimise for
+      horizontal text sharpness.
+
+    - `off` -- Apply no integer scaling constraint; the image fills the
       viewport while maintaining the configured aspect ratio.
 
 
