@@ -351,7 +351,7 @@ make the total audio output too quiet. Worse yet, the setting doesn't get
 saved, so you'd need to do this every single time when starting up the game.
 
 As we've [learned
-before](passport-to-adventure.md/#sound-blaster-adlib-sound), games with Sound
+before](passport-to-adventure.md#sound-blaster-adlib-sound), games with Sound
 Blaster support tend to use the sound card's OPL synthesiser for the music and
 its digital audio capabilities for the speech. As the OPL synth and the
 digital audio have their dedicated mixer channels, their volumes can be
@@ -883,7 +883,7 @@ taller_ than they should (just trust me on that for a moment).
 
 So, where's this magical 20% vertical stretch factor coming from? DOSBox
 Staging enables [aspect ratio
-correction](../manual/graphics/rendering.md#aspect-ratio-viewport)
+correction](../manual/graphics/rendering/aspect-ratios-and-scaling.md#aspect)
 by default to make 320&times;200 graphics appear exactly as it would on a
 4:3 aspect ratio VGA monitor, which requires pixels to be drawn 20% taller. This is the most sensible default as
 aspect ratio correction is *absolutely needed* for the vast majority of DOS
@@ -1116,4 +1116,3 @@ changes to the DOSBox config.
     (PCM) outputs, such as the `SB` channel, mostly just to help the PCM
     output blend better with the synthesiser's output (e.g., the `OPL`
     channel), which features a prominent reverb.
-

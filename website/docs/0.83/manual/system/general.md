@@ -128,9 +128,9 @@ The settings below are configured in the `[sdl]` section.
     <div class="compact" markdown>
 
     - `hercules` -- Hercules Graphics Card (HGC) (see
-      [`monochrome_palette`](../graphics/rendering.md#monochrome_palette)).
+      [`monochrome_palette`](../graphics/rendering/colour-and-image-adjustments.md#monochrome_palette)).
     - `cga_mono` -- CGA adapter connected to a monochrome monitor (see
-      [`monochrome_palette`](../graphics/rendering.md#monochrome_palette)).
+      [`monochrome_palette`](../graphics/rendering/colour-and-image-adjustments.md#monochrome_palette)).
     - `cga` -- IBM Color Graphics Adapter (CGA). Also enables composite
       video emulation (see
       [Composite video](../graphics/composite-video.md)).
@@ -389,5 +389,4 @@ The settings below are configured in the `[sdl]` section.
     - `deny` -- Quit (and report) when faults are detected.
 
     </div>
-
 

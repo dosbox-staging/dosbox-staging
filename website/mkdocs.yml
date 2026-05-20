@@ -126,6 +126,7 @@ plugins:
 
           # Renamed sound-device documentation pages
           '0.83/manual/sound/sound-devices/adlib-cms-sound-blaster.md': '0.83/manual/sound/sound-devices/sound-blaster.md'
+          '0.83/manual/graphics/rendering.md': '0.83/manual/graphics/rendering/overview.md'
 
           'downloads/release-notes/0.80.1.md': 'releases/release-notes/0.80.1.md'
           'downloads/release-notes/0.80.0.md': 'releases/release-notes/0.80.0.md'
@@ -212,7 +213,12 @@ nav:
       - Graphics:
         - 0.83/manual/graphics/adapters.md
         - 0.83/manual/graphics/display-and-window.md
-        - 0.83/manual/graphics/rendering.md
+        - Rendering:
+          - 0.83/manual/graphics/rendering/overview.md
+          - 0.83/manual/graphics/rendering/shaders.md
+          - 0.83/manual/graphics/rendering/aspect-ratios-and-scaling.md
+          - 0.83/manual/graphics/rendering/colour-and-image-adjustments.md
+          - 0.83/manual/graphics/rendering/special-features.md
         - 0.83/manual/graphics/aspect-ratios.md
         - 0.83/manual/graphics/composite-video.md
         - 0.83/manual/graphics/3dfx-voodoo.md
@@ -272,4 +278,3 @@ nav:
 not_in_nav: |
   # To silence the warning about the custom `index.md` front page
   /index.md
-
