@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2026 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <cassert>
@@ -8,7 +8,6 @@
 #include "utils/string_utils.h"
 #include "misc/support.h"
 
-#if defined(LINUX)
 #include <fcntl.h>
 #include <limits.h>
 #include <linux/cdrom.h>
@@ -356,5 +355,3 @@ bool CDROM_Interface_Ioctl::HasDataTrack() const
 {
 	return true; /*TODO*/
 }
-
-#endif // Linux

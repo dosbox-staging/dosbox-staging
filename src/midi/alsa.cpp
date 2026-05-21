@@ -4,8 +4,6 @@
 
 #include "private/alsa.h"
 
-#if C_ALSA
-
 #include <cassert>
 #include <cstring>
 #include <functional>
@@ -398,5 +396,3 @@ void ALSA_ListDevices(MidiDeviceAlsa* device, MoreOutputStrings& output)
 
 	output.AddString("\n");
 }
-
-#endif // C_ALSA

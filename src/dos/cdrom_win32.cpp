@@ -6,8 +6,6 @@
 #include "utils/string_utils.h"
 #include "misc/support.h"
 
-#if defined(WIN32)
-
 #include <devioctl.h>
 #include <ntddcdrm.h>
 #include <windows.h>
@@ -374,5 +372,3 @@ std::vector<int16_t> CDROM_Interface_Win32::ReadAudio(const uint32_t sector,
 
 	return audio_frames;
 }
-
-#endif // WIN32

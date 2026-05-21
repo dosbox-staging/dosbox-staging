@@ -4,8 +4,6 @@
 
 #include "private/win32.h"
 
-#ifdef WIN32
-
 void MIDI_WIN32_ListDevices([[maybe_unused]] MidiDeviceWin32* device,
                             MoreOutputStrings& output)
 {
@@ -20,5 +18,3 @@ void MIDI_WIN32_ListDevices([[maybe_unused]] MidiDeviceWin32* device,
 
 	output.AddString("\n");
 }
-
-#endif // WIN32
