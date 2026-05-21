@@ -96,12 +96,10 @@ static std::unique_ptr<MidiDevice> create_device(
 #endif
 
 	// External MIDI devices
-#if C_COREMIDI
+#if defined(MACOSX)
 	if (name == CoreMidi) {
 		return std::make_unique<MidiDeviceCoreMidi>(config.c_str());
 	}
-#endif
-#if C_COREAUDIO
 	if (name == CoreAudio) {
 		return std::make_unique<MidiDeviceCoreAudio>(config.c_str());
 	}
@@ -639,7 +637,7 @@ public:
 
 		if (device_pref == MidiDevicePortPref) {
 			// Use system-level MIDI interface of the host OS
-#if C_COREMIDI
+#if defined(MACOSX)
 			// macOS
 			midi.device = create_device(MidiDeviceName::CoreMidi,
 			                            midiconfig_prefs);
@@ -697,23 +695,21 @@ void MIDI_ListDevices(MoreOutputStrings& output)
 	                           : nullptr,
 
 	                   output);
-#if C_COREMIDI
+#if defined(MACOSX)
 	write_device_name(MidiDeviceName::CoreMidi);
 
 	COREMIDI_ListDevices((device_name == MidiDeviceName::CoreMidi)
 	                             ? dynamic_cast<MidiDeviceCoreMidi*>(device_ptr)
 	                             : nullptr,
 	                     output);
-#endif
-#if C_COREAUDIO
+
 	write_device_name(MidiDeviceName::CoreAudio);
 
 	COREAUDIO_ListDevices((device_name == MidiDeviceName::CoreAudio)
 	                              ? dynamic_cast<MidiDeviceCoreAudio*>(device_ptr)
 	                              : nullptr,
 	                      output);
-#endif
-#if defined(WIN32)
+#elif defined(WIN32)
 	write_device_name(MidiDeviceName::Win32);
 
 	MIDI_WIN32_ListDevices((device_name == MidiDeviceName::Win32)
@@ -832,7 +828,7 @@ static void init_mididevice_settings(SectionProp& secprop)
 	str_prop->SetOptionHelp("none", "  none:         Disable MIDI output.");
 
 	str_prop->SetValues({MidiDevicePortPref,
-#if C_COREAUDIO
+#if defined(MACOSX)
 	                     MidiDeviceName::CoreAudio,
 #endif
 
@@ -888,10 +884,10 @@ static void init_midiconfig_settings(SectionProp& secprop)
 	        "    after the port ID or name (e.g., 'midiconfig = 2 delaysysex').");
 
 	str_prop->SetEnabledOptions({
-#if (C_COREMIDI == 1 || defined(WIN32))
+#if (defined(MACOSX) || defined(WIN32))
 		"windows_or_macos",
 #endif
-#if C_COREAUDIO
+#if defined(MACOSX)
 		        "coreaudio",
 #endif
 #if C_ALSA

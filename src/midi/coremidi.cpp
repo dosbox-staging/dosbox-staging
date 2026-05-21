@@ -4,8 +4,6 @@
 
 #include "private/coremidi.h"
 
-#if C_COREMIDI
-
 #include <sstream>
 
 #include "dos/programs.h"
@@ -186,5 +184,3 @@ void COREMIDI_ListDevices([[maybe_unused]] MidiDeviceCoreMidi* device,
 
 	output.AddString("\n");
 }
-
-#endif // C_COREMIDI

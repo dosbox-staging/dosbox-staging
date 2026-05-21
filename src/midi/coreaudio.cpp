@@ -7,8 +7,6 @@
 #include "dos/programs.h"
 #include "dos/programs/more_output.h"
 
-#if C_COREAUDIO
-
 void COREAUDIO_ListDevices([[maybe_unused]] MidiDeviceCoreAudio* device,
                            MoreOutputStrings& output)
 {
@@ -16,5 +14,3 @@ void COREAUDIO_ListDevices([[maybe_unused]] MidiDeviceCoreAudio* device,
 	output.AddString(MSG_Get("MIDI_DEVICE_LIST_NOT_SUPPORTED"));
 	output.AddString("\n\n");
 }
-
-#endif // C_COREAUDIO

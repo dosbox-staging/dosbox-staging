@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <vector>
 
-#if C_COREFOUNDATION
+#if defined(MACOSX)
 #	include <CoreFoundation/CoreFoundation.h>
 #endif
 
@@ -574,7 +574,7 @@ bool get_expanded_files(const std::string &path,
 	}
 }
 
-#if C_COREFOUNDATION
+#if defined(MACOSX)
 std::string cfstr_to_string(CFStringRef source)
 {
 	if (!source)

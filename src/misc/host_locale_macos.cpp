@@ -3,8 +3,6 @@
 
 #include "dosbox.h"
 
-#if C_COREFOUNDATION
-
 #include "host_locale.h"
 
 #include "utils/checks.h"
@@ -848,5 +846,3 @@ void StdLibLocale::DetectTimeDateFormat([[maybe_unused]] const std::locale& loca
 		date_separator = candidate_1;
 	}
 }
-
-#endif
