@@ -851,7 +851,7 @@ StdLibLocale::StdLibLocale()
 
 // On macOS the C++ standard library returns generic values. To get the real
 // values, we need to refer to the CoreFoundation API.
-#if !C_COREFOUNDATION
+#if !defined(MACOSX)
 
 void StdLibLocale::GetNumericFormat(const std::locale& locale)
 {

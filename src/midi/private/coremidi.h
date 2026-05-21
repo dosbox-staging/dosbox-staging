@@ -9,8 +9,6 @@
 
 #include "dos/programs/more_output.h"
 
-#if C_COREMIDI
-
 #include <CoreMIDI/MIDIServices.h>
 #include <string>
 
@@ -43,7 +41,5 @@ private:
 };
 
 void COREMIDI_ListDevices(MidiDeviceCoreMidi* device, MoreOutputStrings& output);
-
-#endif // C_COREMIDI
 
 #endif // DOSBOX_MIDI_COREMIDI_H

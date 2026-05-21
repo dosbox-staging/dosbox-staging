@@ -89,18 +89,6 @@
 // an assumption about availability based on OS type.
 #cmakedefine01 SUPPORT_XINPUT2
 
-// Compiler supports Core Audio headers
-#cmakedefine01 C_COREAUDIO
-
-// Compiler supports Core MIDI headers
-#cmakedefine01 C_COREMIDI
-
-// Compiler supports Core Foundation headers
-#cmakedefine01 C_COREFOUNDATION
-
-// Compiler supports Core Services headers
-#cmakedefine01 C_CORESERVICES
-
 // Define to 1 to enable ALSA MIDI support
 #cmakedefine01 C_ALSA
 

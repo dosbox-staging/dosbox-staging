@@ -4,7 +4,6 @@
 #include "dosbox.h"
 
 #if !defined(WIN32)
-#if !C_COREFOUNDATION
 
 #include "host_locale.h"
 
@@ -1428,5 +1427,4 @@ const HostLanguages& GetHostLanguages()
 	return *locale;
 }
 
-#endif
 #endif

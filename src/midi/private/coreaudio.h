@@ -10,8 +10,6 @@
 #include "dos/programs/more_output.h"
 #include "utils/string_utils.h"
 
-#if C_COREAUDIO
-
 #include <AudioToolbox/AUGraph.h>
 #include <CoreServices/CoreServices.h>
 
@@ -226,7 +224,5 @@ private:
 #undef RequireNoErr
 
 void COREAUDIO_ListDevices(MidiDeviceCoreAudio* device, MoreOutputStrings& output);
-
-#endif // C_COREAUDIO
 
 #endif // DOSBOX_MIDI_COREAUDIO_H
