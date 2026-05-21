@@ -109,7 +109,7 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
+          sudo apt-get install -y $(cat extras/linux/ubuntu-22.04-packages.txt)
 
       - name: Set up vcpkg
         uses: ./.github/actions/setup-vcpkg
@@ -161,7 +161,7 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
+          sudo apt-get install -y $(cat extras/linux/ubuntu-22.04-packages.txt)
 
       - name: Set up vcpkg
         uses: ./.github/actions/setup-vcpkg
