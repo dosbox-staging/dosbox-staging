@@ -6,21 +6,18 @@ target_sources(dosboxcommon PRIVATE
   soundcanvas.cpp
 )
 
-# macOS-only CoreMIDI backend
-if (C_COREMIDI)
+if (DOSBOX_PLATFORM_WINDOWS)
+  # Windows-only MIDI backend
+  target_sources(dosboxcommon PRIVATE win32.cpp)
+
+elseif (DOSBOX_PLATFORM_MACOS)
+  # macOS-only CoreMIDI backend
   target_sources(dosboxcommon PRIVATE coremidi.cpp)
   target_link_libraries(dosboxcommon PRIVATE "-framework CoreFoundation")
   target_link_libraries(dosboxcommon PRIVATE "-framework CoreMIDI")
-endif()
 
-# macOS-only CoreAudio MIDI backend
-if (C_COREAUDIO)
+  # macOS-only CoreAudio MIDI backend
   target_sources(dosboxcommon PRIVATE coreaudio.cpp)
-endif()
-
-# Windows-only MIDI backend
-if (WIN32)
-  target_sources(dosboxcommon PRIVATE win32.cpp)
 endif()
 
 # Linux-only ALSA MIDI backend
