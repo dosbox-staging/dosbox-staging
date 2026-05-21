@@ -1,6 +1,6 @@
 # Building on Windows
 
-Windows builds can be created using CMake, Visual Studio, or Meson:
+Windows builds can be created using CMake and Visual Studio:
 
 - CMake is used to produce the official release package, and therefore is the
   recommended build tool. We also recommend using presets because they're
@@ -11,9 +11,6 @@ Windows builds can be created using CMake, Visual Studio, or Meson:
   dependencies. This is the fully-supported toolchain used to create release
   builds.
 
-- The Clang or GCC compilers using the Meson build system running within the
-  MSYS2 environment to provide dependencies (deprecated, support will be probably
-  removed in the future).
 
 ## Build using Visual Studio
 
@@ -195,7 +192,7 @@ delete the DOSBox Staging project in Visual Studio, delete the `.vs` folder
 inside the local repo folder, then follow the instructions in
 **Importing the CMake project** to reimport the project.
 
-### Cmake configurations have disappeared
+### CMake configurations have disappeared
 
 If the CMake configurations have disappeared from the toolbar after updating
 Visual Studio or the local DOSBox Staging repository, try **Rescan Solution**

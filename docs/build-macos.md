@@ -1,8 +1,8 @@
 # Building on macOS
 
-macOS builds can be created using CMake or the Meson build tools, compiled
-using the Clang or GCC compilers, and provided with dependencies using the
-Homebrew or MacPorts package managers.
+macOS builds can be created using the CMake build tool, compiled using the
+Clang compiler, and provided with dependencies using the Homebrew or MacPorts
+package managers.
 
 We recommend using CMake with presets because they're CI-tested and produce a
 binary using consistent compiler flags. Run `cmake --list-presets` to list the
@@ -47,8 +47,7 @@ agreements again if the CMake build step fails.
 2. Install the minimum set of dependencies and related tools:
 
     ```shell
-    brew install cmake ccache meson sdl2 asio opusfile \
-                 pkg-config python3
+    brew install cmake ccache pkg-config python3
     ```
 
 3. Add `brew` to your shell path:
@@ -65,20 +64,30 @@ agreements again if the CMake build step fails.
 2. Install the minimum set of dependencies and related tools:
 
     ```shell
-    sudo port install cmake ccache meson libsdl2 asio opusfile \
-                      glib2 pkgconfig python311
+    sudo port install cmake ccache pkgconfig python314
     ```
 
 ## Building
 
 Once you have dependencies installed using either environment, clone the
-repository and enter its directory:
+repository:
 
 ```shell
 git clone https://github.com/dosbox-staging/dosbox-staging.git
-cd dosbox-staging
-meson setup build
-meson compile -C build
+```
+
+To build the debug version, execute the following from the repo root:
+
+```shell
+cmake --preset=debug-macos
+cmake --build --preset=debug-macos
+```
+
+To build the release version:
+
+```shell
+cmake --preset=release-macos
+cmake --build --preset=release-macos
 ```
 
 ## Troubleshooting tips

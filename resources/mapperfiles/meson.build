@@ -1,3 +1,0 @@
-resource_dirs = [
-    'xbox',
-]

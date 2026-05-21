@@ -20,7 +20,7 @@ The `"resources"` can be provided in two ways:
 
 1. Along-side the executable, as a portable package:
 
-    Meson and Visual Studio both populate the build area with the compiled
+    Visual Studio both populate the build area with the compiled
     `"dosbox"` executable (plus DLLs on Windows) and the `"resources"`
     directory relative to it, which together form a stand-alone and portable
     application.
@@ -30,35 +30,6 @@ The `"resources"` can be provided in two ways:
 
 2. Pointed to by the `XDG_DATA_HOME` or `XDG_DATA_DIRS` paths.
 
-    If you want to install the software using `meson install` into a `--prefix`
-    and/or `--datadir` location(s), then the `XDG_DATA_DIRS` or `XDG_DATA_HOME`
-    need to point to the corresponding installation areas.
-
-    Specifically:
-
-    - if meson is setup **without** `--prefix` and **without** -`-datadir` then
-      the path: `"/usr/local/share"` needs to exist in either `XDG_DATA_DIRS` or
-      `XDG_DATA_HOME`.
-
-    - if meson is setup **with** `--prefix` but **without** `--datadir`, then
-      the path: `"${prefix}/share"` needs to exist in either `XDG_DATA_DIRS` or
-      `XDG_DATA_HOME`.
-
-    - if meson is setup **without** `--prefix` and a **non-absolute**
-      `--datadir` then the path `"/usr/local/${datadir}"` needs to exist in
-      either `XDG_DATA_DIRS` or `XDG_DATA_HOME`.
-
-    - if meson is setup **with** `--prefix` and a **non-absolute** `--datadir`
-      then the path `"${prefix}/{$datadir}"` needs to exist in either
-      `XDG_DATA_DIRS` or `XDG_DATA_HOME`.
-
-    - if meson is setup with an **absolute** `--datadir`, regardless if
-      `--prefix` is used or not, then the path `"${datadir}"` needs to exist in
-      either `XDG_DATA_DIRS` or `XDG_DATA_HOME`.
-
-Please note that the above `/usr/local` and `/usr/local/share` paths are not
-merely examples, they are hard-coded literal paths per the [XDG
-specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html).
 
 ## How the resources are found during runtime
 
@@ -106,11 +77,6 @@ These get parsed and become a persistent carrying "load" for source editors and
 development IDEs. They generate false-positives when grepping the source for
 number patterns, so much so that they often flood the screen and need extra
 effort to filter them out.
-
-Q: How are the `"resources"` deployed into the build area by Meson?
-
-A: Read the `resources/meson.build` This meson file copies the resource
-files into the build area.
 
 Q: How are the `"resources"` deployed into the build area by Visual Studio?
 

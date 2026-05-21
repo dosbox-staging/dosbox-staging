@@ -114,14 +114,6 @@ the [plugin's GitHub repository](https://github.com/johnnovak/Nuked-SC55-CLAP/) 
 CLAP is _not_ a DOSBox Staging project).
 
 
-## Get the sources
-
-Clone the repository (one-time step):
-
-``` shell
-git clone https://github.com/dosbox-staging/dosbox-staging.git
-```
-
 ## Build instructions
 
 Please refer to the platform specific build instructions:
@@ -130,114 +122,6 @@ Please refer to the platform specific build instructions:
 - [macOS](docs/build-macos.md)
 - [Linux](docs/build-linux.md)
 
-> **Note**
->
-> CMake support is currently an experimental internal-only, work-in-progress
-> feature; it's not ready for public consumption yet. Please ignore the
-> `CMakeLists.txt` files in the source tree.
-
-
-### Linux, macOS
-
-Install build dependencies appropriate for your OS:
-
-``` shell
-# Fedora
-sudo dnf install ccache gcc-c++ meson alsa-lib-devel libatomic libpng-devel \
-                 SDL2-devel asio-devel opusfile-devel \
-                 fluidsynth-devel iir1-devel mt32emu-devel libslirp-devel \
-                 speexdsp-devel libXi-devel zlib-ng-devel
-```
-
-``` shell
-# Debian, Ubuntu
-sudo apt install ccache build-essential libasound2-dev libatomic1 libpng-dev \
-                 libsdl2-dev libasio-dev libopusfile-dev \
-                 libfluidsynth-dev libslirp-dev libspeexdsp-dev libxi-dev
-
-# Install Meson on Debian-11 "Bullseye" or Ubuntu-21.04 and newer
-sudo apt install meson
-```
-
-``` shell
-# Arch, Manjaro
-sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net \
-               asio opusfile fluidsynth libslirp speexdsp libxi pkgconf
-```
-
-``` shell
-# openSUSE
-sudo zypper install ccache gcc gcc-c++ meson alsa-devel libatomic1 libpng-devel \
-                    libSDL2-devel asio-devel \
-                    opusfile-devel fluidsynth-devel libmt32emu-devel libslirp-devel \
-                    speexdsp libXi-devel
-```
-
-``` shell
-# macOS
-xcode-select --install
-brew install cmake ccache meson libpng sdl2 asio opusfile \
-     fluid-synth libslirp pkg-config python3 speexdsp
-```
-
-### Build and stay up-to-date with the latest sources
-
-1. Check out the main branch:
-
-    ``` shell
-    # commit or stash any personal code changes
-    git checkout main -f
-    ```
-
-2. Pull the latest updates. This is necessary every time you want a new build:
-
-    ``` shell
-    git pull
-    ```
-
-3. Set up the build. This is a one-time step either after cloning the repo or
-    cleaning your working directories:
-
-    ``` shell
-    meson setup build
-    ```
-
-    The above enables all of DOSBox Staging's functional features. If you're
-    interested in seeing all of Meson's setup options, run `meson configure`.
-
-4. Compile the sources. This is necessary every time you want a new build:
-
-    ``` shell
-    meson compile -C build
-    ```
-
-    Your binary is: `build/dosbox`
-
-    The binary depends on local resources relative to it, so we suggest
-    symlinking to the binary from your `PATH`, such as into `~/.local/bin/`.
-
-
-### Windows – Visual Studio (2022 or newer)
-
-First, you need to setup [vcpkg] to install build dependencies. Once vcpkg
-is bootstrapped, open PowerShell and run:
-
-``` powershell
-PS:\> .\vcpkg integrate install
-```
-
-This step will ensure that MSVC can use vcpkg to build, find and links all
-dependencies.
-
-Start Visual Studio and open the file `vs\dosbox.sln`. Make sure you have
-`x64` selected as the solution platform.  Use **Ctrl+Shift+B** to build all
-projects.
-
-Note, the first time you build a configuration, dependencies will be built
-automatically and stored in the `vcpkg_installed` directory. This can take
-a significant length of time.
-
-[vcpkg]: https://github.com/microsoft/vcpkg
 
 ## Imported branches, community patches, old forks
 
@@ -262,7 +146,6 @@ git fetch origin "refs/notes/*:refs/notes/*"
 
 Please refer to the [documentation guide](DOCUMENTATION.md) before making
 changes to the website or the documentation.
-
 
 [`svn/*`]:     https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F
 [`svn/trunk`]: https://github.com/dosbox-staging/dosbox-staging/tree/svn/trunk

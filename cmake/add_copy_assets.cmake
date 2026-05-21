@@ -15,8 +15,7 @@ function(add_copy_assets)
   file(GLOB_RECURSE RESOURCE_FILES
        RELATIVE "${CMAKE_SOURCE_DIR}/${RESOURCES_PATH}"
        "${CMAKE_SOURCE_DIR}/${RESOURCES_PATH}/*")
-  # Filter out build system and GIT related files
-  list(FILTER RESOURCE_FILES EXCLUDE REGEX "(.*/)*meson\.build$")
+  # Filter out Git files
   list(FILTER RESOURCE_FILES EXCLUDE REGEX "(.*/)*\.git[a-z]+$")
 
   # Generate list of resource files with destination paths
