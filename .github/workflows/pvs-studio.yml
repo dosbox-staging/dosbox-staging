@@ -39,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
+          sudo apt-get install -y $(cat extras/linux/ubuntu-22.04-packages.txt)
           sudo apt-get install pvs-studio
 
       - name: Set up vcpkg
