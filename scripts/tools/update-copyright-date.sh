@@ -43,7 +43,7 @@ filter_new_files () {
 	done
 }
 
-# C, C++, headers, shell scripts, meson template inputs
+# C, C++, headers, shell scripts, CMake template inputs
 # Run both SPDX and Copyright (C) patterns on each file
 find_files | filter_new_files | xargs "${sed_inplace[@]}" -e "$spdx_sed_script" -e "$copyright_c_sed_script"
 

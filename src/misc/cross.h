@@ -54,7 +54,6 @@
 	#define cross_off_t __int64
 #else
 	// All other platforms should have POSIX fstream 'o' support
-	// Note: Meson automatically sets preprocessor defines for us
 
 	// Check that off_t is 64 bits
 	static_assert(sizeof(off_t) == sizeof(int64_t), "off_t not 64 bits");
