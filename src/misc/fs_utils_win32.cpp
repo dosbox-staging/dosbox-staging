@@ -3,8 +3,6 @@
 
 #include "utils/fs_utils.h"
 
-#if defined(WIN32)
-
 // Windows header needed for PathFileExistsW
 #include "Shlwapi.h"
 
@@ -393,5 +391,3 @@ bool local_drive_rename_file_or_directory(const char* old_path, const char* new_
 	}
 	return MoveFileW(utf16_old_path, utf16_new_path);
 }
-
-#endif
