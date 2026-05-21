@@ -20,7 +20,7 @@ add_subdirectory(shell)
 add_subdirectory(utils)
 add_subdirectory(webserver)
 
-if (WIN32)
+if (DOSBOX_PLATFORM_WINDOWS)
   add_subdirectory(platform/windows)
 endif()
 
