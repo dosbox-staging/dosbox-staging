@@ -113,4 +113,10 @@ export class DOSBoxApi {
         const res = await this._request('dos/internals');
         return await res.json();
     }
+
+    async shutdown()  {
+        await this._request('dosbox/shutdown', {
+            method: 'POST'
+        });
+    }
 }
