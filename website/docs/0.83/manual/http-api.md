@@ -152,6 +152,11 @@ see the built-in API documentation.
 
 :   Returns DOSBox Staging version and relevant filesystem paths.
 
+### Shutdown
+
+`POST /api/v1/dosbox/shutdown`
+
+:   Request a graceful shutdown of DOSBox Staging.
 
 ## Example tools
 
