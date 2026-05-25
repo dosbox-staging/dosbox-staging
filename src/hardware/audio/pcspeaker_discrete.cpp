@@ -196,6 +196,20 @@ void PcSpeakerDiscrete::ForwardPIT(const float newindex)
 	}
 }
 
+// Control word written for channel 2: drain pending audio with the old state,
+// then park in a safe sentinel until SetCounter installs the new count.
+void PcSpeakerDiscrete::SetPITControl(const PitMode /*pit_mode*/)
+{
+	const auto newindex = static_cast<float>(PIC_TickIndex());
+	ForwardPIT(newindex);
+
+	prev_pit_mode = pit_mode;
+	pit_last      = 0;
+	pit_mode      = PitMode::InterruptOnTerminalCount;
+
+	channel->WakeUp();
+}
+
 // PIT-mode activation
 void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 {
@@ -245,7 +259,7 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 
 	case PitMode::SquareWaveAlias:
 	case PitMode::SquareWave:
-		if (count == 0 || count < minimum_tick_rate) {
+		if (count < minimum_tick_rate) {
 			// skip frequencies that can't be represented
 			pit_last = 0;
 			pit_mode = PitMode::InterruptOnTerminalCount;

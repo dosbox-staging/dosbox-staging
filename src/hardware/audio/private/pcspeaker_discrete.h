@@ -24,7 +24,7 @@ public:
 	void SetFilterState(const FilterState filter_state) override;
 	bool TryParseAndSetCustomFilter(const std::string& filter_choice) override;
 	void SetCounter(const int cntr, const PitMode m) override;
-	void SetPITControl(const PitMode) override {}
+	void SetPITControl(const PitMode pit_mode) override;
 	void SetType(const PpiPortB& b) override;
 	void PicCallback(const int requested_frames) override;
 

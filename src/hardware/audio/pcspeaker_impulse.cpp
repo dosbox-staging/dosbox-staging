@@ -1,491 +1,319 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
-// SPDX-FileCopyrightText:  2011-2011  ripa, from vogons.org
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-// NOTE: a lot of this code assumes that the callback is called every emulated
-// millisecond
 
 #include "private/pcspeaker_impulse.h"
 
+#include <algorithm>
+#include <cmath>
+
 #include "utils/checks.h"
-#include "utils/math_utils.h"
 
 CHECK_NARROWING();
 
-// Comment out the following to use the reference implementation.
-#define USE_LOOKUP_TABLES 1
-
-void PcSpeakerImpulse::AddPITOutput(const float index)
-{
-	if (prev_port_b.speaker_output) {
-		AddImpulse(index, pit.amplitude);
-	}
-}
-
-void PcSpeakerImpulse::ForwardPIT(const float new_index)
-{
-	auto passed = new_index - pit.last_index;
-
-	auto delay_base = pit.last_index;
-
-	pit.last_index = new_index;
-
-	switch (pit.mode) {
-	case PitMode::Inactive: return;
-
-	case PitMode::InterruptOnTerminalCount:
-		if (pit.index >= pit.max_ms) {
-			/// counter reached zero before previous call so do nothing
-			return;
-		}
-		pit.index += passed;
-		if (pit.index >= pit.max_ms) {
-			// counter reached zero between previous and this call
-			const auto delay = delay_base + pit.max_ms - pit.index + passed;
-			pit.amplitude    = positive_amplitude;
-			AddPITOutput(delay);
-		}
-		return;
-
-	case PitMode::OneShot:
-		if (pit.mode1_waiting_for_counter) {
-			// assert output amplitude is high
-			return; // counter not written yet
-		}
-		if (pit.mode1_waiting_for_trigger) {
-			// assert output amplitude is high
-			return; // no pulse yet
-		}
-		if (pit.index >= pit.max_ms) {
-			// counter reached zero before previous call so do nothing
-			return;
-		}
-		pit.index += passed;
-		if (pit.index >= pit.max_ms) {
-			// counter reached zero between previous and this call
-			const auto delay = delay_base + pit.max_ms - pit.index + passed;
-			pit.amplitude    = positive_amplitude;
-			AddPITOutput(delay);
-			// finished with this pulse
-			pit.mode1_waiting_for_trigger = 1;
-		}
-		return;
-
-	case PitMode::RateGenerator:
-	case PitMode::RateGeneratorAlias:
-		while (passed > 0) {
-			// passed the initial low cycle?
-			if (pit.index >= pit.half_ms) {
-				// Start a new low cycle
-				if ((pit.index + passed) >= pit.max_ms) {
-					const auto delay = pit.max_ms - pit.index;
-					delay_base += delay;
-					passed -= delay;
-					pit.amplitude = negative_amplitude;
-					AddPITOutput(delay_base);
-					pit.index = 0;
-				} else {
-					pit.index += passed;
-					return;
-				}
-			} else {
-				if ((pit.index + passed) >= pit.half_ms) {
-					const auto delay = pit.half_ms - pit.index;
-					delay_base += delay;
-					passed -= delay;
-					pit.amplitude = positive_amplitude;
-					AddPITOutput(delay_base);
-					pit.index = pit.half_ms;
-				} else {
-					pit.index += passed;
-					return;
-				}
-			}
-		}
-		break;
-
-	case PitMode::SquareWave:
-	case PitMode::SquareWaveAlias:
-		if (!pit.mode3_counting)
-			break;
-		while (passed > 0) {
-			// Determine where in the wave we're located
-			if (pit.index >= pit.half_ms) {
-				if ((pit.index + passed) >= pit.max_ms) {
-					const auto delay = pit.max_ms - pit.index;
-					delay_base += delay;
-					passed -= delay;
-					pit.amplitude = positive_amplitude;
-					AddPITOutput(delay_base);
-					pit.index = 0;
-					// Load the new count
-					pit.max_ms  = pit.new_max_ms;
-					pit.half_ms = pit.new_half_ms;
-				} else {
-					pit.index += passed;
-					return;
-				}
-			} else {
-				if ((pit.index + passed) >= pit.half_ms) {
-					const auto delay = pit.half_ms - pit.index;
-					delay_base += delay;
-					passed -= delay;
-					pit.amplitude = negative_amplitude;
-					AddPITOutput(delay_base);
-					pit.index = pit.half_ms;
-					// Load the new count
-					pit.max_ms  = pit.new_max_ms;
-					pit.half_ms = pit.new_half_ms;
-				} else {
-					pit.index += passed;
-					return;
-				}
-			}
-		}
-		break;
-
-	case PitMode::SoftwareStrobe:
-		if (pit.index < pit.max_ms) {
-			// Check if we're gonna pass the end this block
-			if (pit.index + passed >= pit.max_ms) {
-				const auto delay = pit.max_ms - pit.index;
-				delay_base += delay;
-				// passed -= delay; // not currently used
-				pit.amplitude = negative_amplitude;
-				// No new events unless reprogrammed
-				AddPITOutput(delay_base);
-				pit.index = pit.max_ms;
-			} else
-				pit.index += passed;
-		}
-		break;
-	default:
-		// other modes not implemented
-		break;
-	}
-}
-
-void PcSpeakerImpulse::SetPITControl(const PitMode pit_mode)
-{
-	const auto new_index = static_cast<float>(PIC_TickIndex());
-	ForwardPIT(new_index);
-#ifdef SPKR_DEBUGGING
-	LOG_INFO("PCSPEAKER: %f pit command: %s", PIC_FullIndex(), pit_mode_to_string(pit_mode));
+#if 0
+#define DEBUG_PCSPEAKER 1
 #endif
-	// TODO: implement all modes
-	switch (pit_mode) {
-	case PitMode::OneShot:
-		pit.mode      = pit_mode;
-		pit.amplitude = positive_amplitude;
 
-		pit.mode1_waiting_for_counter = 1;
-		pit.mode1_waiting_for_trigger = 0;
-		break;
-
-	case PitMode::SquareWave:
-	case PitMode::SquareWaveAlias:
-		pit.mode      = pit_mode;
-		pit.amplitude = positive_amplitude;
-
-		pit.mode3_counting = false;
-		break;
-
-	default: return;
-	}
-	AddPITOutput(new_index);
-}
-
-void PcSpeakerImpulse::SetCounter(const int cntr, const PitMode pit_mode)
+// Unnormalized sinc: sinc(0) = 1, sinc(x) = sin(x)/x
+static constexpr double sinc(const double x)
 {
-#ifdef SPKR_DEBUGGING
-	LOG_INFO("PCSPEAKER: %f counter: %u, mode: %s", PIC_FullIndex(), cntr, pit_mode_to_string(pit_mode));
-#endif
-	const auto new_index = static_cast<float>(PIC_TickIndex());
-
-	const auto duration_of_count_ms = ms_per_pit_tick * static_cast<float>(cntr);
-	ForwardPIT(new_index);
-
-	switch (pit_mode) {
-	case PitMode::InterruptOnTerminalCount:
-		// used with "realsound" (PWM)
-		pit.index = 0;
-
-		pit.amplitude = negative_amplitude;
-		pit.max_ms    = duration_of_count_ms;
-
-		AddPITOutput(new_index);
-		break;
-
-	case PitMode::OneShot: // used by Star Control 1
-		pit.mode1_pending_max = duration_of_count_ms;
-		if (pit.mode1_waiting_for_counter) {
-			// assert output amplitude is high
-			pit.mode1_waiting_for_counter = 0;
-			pit.mode1_waiting_for_trigger = 1;
-		}
-		break;
-
-	// Single cycle low, rest low high generator
-	case PitMode::RateGenerator:
-	case PitMode::RateGeneratorAlias:
-		pit.index     = 0;
-		pit.amplitude = negative_amplitude;
-
-		AddPITOutput(new_index);
-
-		pit.max_ms  = duration_of_count_ms;
-		pit.half_ms = ms_per_pit_tick;
-		break;
-
-	case PitMode::SquareWave:
-	case PitMode::SquareWaveAlias:
-		if (cntr < minimum_counter) {
-			// avoid breaking digger music
-			pit.amplitude = positive_amplitude;
-			pit.mode      = PitMode::Inactive;
-
-			AddPITOutput(new_index);
-			return;
-		}
-		pit.new_max_ms  = duration_of_count_ms;
-		pit.new_half_ms = pit.new_max_ms / 2;
-		if (!pit.mode3_counting) {
-			pit.index = 0;
-
-			pit.max_ms  = pit.new_max_ms;
-			pit.half_ms = pit.new_half_ms;
-			if (prev_port_b.timer2_gating) {
-				pit.mode3_counting = true;
-				// probably not necessary
-				pit.amplitude = positive_amplitude;
-				AddPITOutput(new_index);
-			}
-		}
-		break;
-
-	case PitMode::SoftwareStrobe:
-		pit.amplitude = positive_amplitude;
-		AddPITOutput(new_index);
-		pit.index  = 0;
-		pit.max_ms = duration_of_count_ms;
-		break;
-
-	default:
-#ifdef SPKR_DEBUGGING
-		LOG_WARNING("PCSPEAKER: Unhandled speaker PIT mode: '%s' at %f", pit_mode_to_string(pit_mode), PIC_FullIndex());
-#endif
-		return;
+	if (x == 0.0) {
+		return 1.0;
 	}
-	pit.mode = pit_mode;
-}
-
-void PcSpeakerImpulse::SetType(const PpiPortB &port_b)
-{
-#ifdef SPKR_DEBUGGING
-	LOG_INFO("PCSPEAKER: %f output: %s, clock gate %s",
-	         PIC_FullIndex(),
-	         port_b.speaker_output ? "pit" : "forced low",
-	         port_b.timer2_gating ? "on" : "off");
-#endif
-	const auto new_index = static_cast<float>(PIC_TickIndex());
-	ForwardPIT(new_index);
-	// pit clock gate enable rising edge is a trigger
-	const bool pit_trigger = !prev_port_b.timer2_gating && port_b.timer2_gating;
-
-	prev_port_b.data = port_b.data;
-	if (pit_trigger) {
-		switch (pit.mode) {
-		case PitMode::OneShot:
-			if (pit.mode1_waiting_for_counter) {
-				// assert output amplitude is high
-				break;
-			}
-			pit.amplitude = negative_amplitude;
-			pit.index     = 0;
-			pit.max_ms    = pit.mode1_pending_max;
-
-			pit.mode1_waiting_for_trigger = 0;
-			break;
-
-		case PitMode::SquareWave:
-		case PitMode::SquareWaveAlias:
-			pit.mode3_counting = true;
-			// pit.new_max_ms = pit.new_max_ms; // typo or bug?
-			pit.index       = 0;
-			pit.max_ms      = pit.new_max_ms;
-			pit.new_half_ms = pit.new_max_ms / 2;
-			pit.half_ms     = pit.new_half_ms;
-			pit.amplitude   = positive_amplitude;
-			break;
-
-		default:
-			// TODO: implement other modes
-			break;
-		}
-	} else if (!port_b.timer2_gating) {
-		switch (pit.mode) {
-		case PitMode::OneShot:
-			// gate amplitude does not affect mode1
-			break;
-
-		case PitMode::SquareWave:
-		case PitMode::SquareWaveAlias:
-			// low gate forces pit output high
-			pit.amplitude      = positive_amplitude;
-			pit.mode3_counting = false;
-			break;
-
-		default:
-			// TODO: implement other modes
-			break;
-		}
-	}
-	if (port_b.speaker_output) {
-		AddImpulse(new_index, pit.amplitude);
-	} else {
-		AddImpulse(new_index, negative_amplitude);
-	}
-}
-
-// TODO: check if this is accurate
-static double sinc(const double t)
-{
-	double result = 1.0;
-
-	constexpr auto sinc_accuracy = 20;
-	for (auto k = 1; k < sinc_accuracy; ++k) {
-		result *= cos(t / pow(2.0, k));
-	}
-	return result;
+	return std::sin(x) / x;
 }
 
 float PcSpeakerImpulse::CalcImpulse(const double t) const
 {
-	// raised-cosine-windowed sinc function
-	const double fs = sample_rate_hz;
-	const auto fc   = fs / (2 + static_cast<double>(cutoff_margin));
-	const auto q    = static_cast<double>(sinc_filter_quality);
-	if ((0 < t) && (t * fs < q)) {
-		const auto window    = 1.0 + cos(2 * fs * M_PI * (q / (2 * fs) - t) / q);
-		const auto amplitude = window * (sinc(2 * fc * M_PI * (t - q / (2 * fs)))) / 2.0;
-		return static_cast<float>(amplitude);
-	} else
-		return 0.0f;
+	// Raised-cosine-windowed sinc, identical to the impulse model
+	constexpr double Fs = SampleRateHz;
+	constexpr double Fc = Fs / (2.0 + CutoffMargin);
+	constexpr double Q  = static_cast<double>(SincFilterQuality);
+
+	// The model integrates these impulses, so the integrated step height is
+	// proportional to the sum of the taps, which grows with the sample rate
+	// (more taps span the same fixed-duration window). Normalise by the
+	// reference rate so the step height (output loudness) matches
+	// the original 32 kHz model.
+	constexpr double Gain = ReferenceSampleRateHz / Fs;
+
+	float res = 0.0f;
+
+	if ((0 < t) && (t * Fs < Q)) {
+		constexpr auto Midpoint = Q / (2.0 * Fs);
+		const auto window = 1.0 +
+		                    std::cos(2.0 * Fs * M_PI * (Midpoint - t) / Q);
+		const auto amplitude = Gain * window *
+		                       sinc(2.0 * Fc * M_PI * (t - Midpoint)) / 2.0;
+		res = static_cast<float>(amplitude);
+	}
+
+	return res;
 }
 
-void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
+void PcSpeakerImpulse::HandleWakeUp()
 {
-	if (channel->WakeUp())
-		pit.prev_amplitude = neutral_amplitude;
+	if (channel->WakeUp()) {
+		prev_amplitude = NeutralAmplitude;
+	}
+}
 
-	// Did the amplitude change?
-	if (amplitude == pit.prev_amplitude)
+void PcSpeakerImpulse::InitializeLut()
+{
+	const auto sample_step = 1.0 /
+	                         (static_cast<double>(SampleRateHz) *
+	                          SincOversamplingFactor);
+
+	double sample_time = 0.0;
+	for (auto it = impulse_lut.begin(); it != impulse_lut.end(); ++it) {
+		*it = CalcImpulse(sample_time);
+		sample_time += sample_step;
+	}
+}
+
+void PcSpeakerImpulse::AddImpulse(const float index, const int16_t amplitude)
+{
+	if (amplitude == prev_amplitude) {
 		return;
-
-	pit.prev_amplitude = amplitude;
-	// Make sure the time index is valid
-	index = clamp(index, 0.0f, 1.0f);
-
-#ifdef USE_LOOKUP_TABLES
-	// Use pre-calculated sinc lookup tables
-	const auto samples_in_impulse = index * sample_rate_per_ms;
-	auto phase = static_cast<int>(samples_in_impulse * sinc_oversampling_factor) %
-	             sinc_oversampling_factor;
-	auto offset = static_cast<int>(samples_in_impulse);
-	if (phase != 0) {
-		offset++;
-		phase = sinc_oversampling_factor - phase;
 	}
+	prev_amplitude = amplitude;
 
-	for (auto i = 0; i < sinc_filter_quality; ++i) {
-		const auto wave_i    = check_cast<uint16_t>(offset + i);
-		const auto impulse_i = check_cast<uint16_t>(
-		        phase + i * sinc_oversampling_factor);
-		waveform_deque.at(wave_i) += amplitude * impulse_lut.at(impulse_i);
+	const auto clamped = std::clamp(index, 0.0f, 1.0f);
+
+	const auto base      = static_cast<double>(clamped) * SampleRatePerMs;
+	const auto phase_raw = static_cast<int>(base * SincOversamplingFactor) %
+	                       SincOversamplingFactor;
+
+	const auto offset = static_cast<int>(base) + (phase_raw != 0 ? 1 : 0);
+
+	const auto phase = (phase_raw != 0) ? (SincOversamplingFactor - phase_raw)
+	                                    : 0;
+	const auto k_start = (phase_raw == 0) ? 1 : 0;
+
+	const auto k_end = std::min(SincFilterQuality,
+	                            static_cast<int>(waveform.size()) - offset);
+
+	for (auto k = k_start; k < k_end; ++k) {
+		waveform[static_cast<size_t>(offset) + static_cast<size_t>(k)] +=
+		        amplitude *
+		        impulse_lut[static_cast<size_t>(phase) +
+		                    static_cast<size_t>(k) * static_cast<size_t>(SincOversamplingFactor)];
+	}
+}
+
+int16_t PcSpeakerImpulse::OutputAmplitude(const bool speaker_enabled,
+                                          const OutputState output)
+{
+	if (!speaker_enabled) {
+		return NegativeAmplitude;
+	}
+	return (output == OutputState::High) ? PositiveAmplitude : NegativeAmplitude;
+}
+
+void PcSpeakerImpulse::ApplyTransitions(const std::vector<PitCounter::Transition>& transitions,
+                                        const float index_base,
+                                        const bool speaker_enabled)
+{
+	for (const auto& t : transitions) {
+		const auto index = index_base + t.offset_ms;
+		AddImpulse(index, OutputAmplitude(speaker_enabled, t.output));
 	}
 }
 
-#else
-	// Mathematically intensive reference implementation
-	const auto portion_of_ms = static_cast <double>(index) / MillisInSecond;
-	for (size_t i = 0; i < waveform_deque.size(); ++i) {
-		const auto impulse_time = static_cast<double>(i) / sample_rate_hz -
-		                          portion_of_ms;
+float PcSpeakerImpulse::SyncPitToTick()
+{
+	HandleWakeUp();
 
-		waveform_deque[i] += amplitude * CalcImpulse(impulse_time);
+	const auto index = static_cast<float>(PIC_TickIndex());
+	const auto delta = index - pit_last_index;
+	if (delta > 0.0f) {
+		const auto t = pit_counter.Advance(delta);
+		ApplyTransitions(t, pit_last_index, port_b.speaker_output);
 	}
+	pit_last_index = index;
+	return index;
 }
+
+// Control word written (timer.cpp calls this before SetCounter when mode changes)
+void PcSpeakerImpulse::SetPITControl(const PitMode pit_mode)
+{
+#ifdef DEBUG_PCSPEAKER
+	LOG_INFO("PCSPEAKER: %.3f ctrl=%s gate=%d m3=%d spk=%d",
+	         PIC_FullIndex(),
+	         pit_mode_to_string(pit_mode),
+	         pit_counter.IsGateEnabled(),
+	         pit_counter.IsMode3Active(),
+	         static_cast<int>(port_b.speaker_output));
 #endif
+	const auto index = SyncPitToTick();
+
+	const auto t = pit_counter.WriteControl(pit_mode);
+	ApplyTransitions(t, index, port_b.speaker_output);
+}
+
+// Count register written
+void PcSpeakerImpulse::SetCounter(const int counter, const PitMode pit_mode)
+{
+#ifdef DEBUG_PCSPEAKER
+	LOG_INFO("PCSPEAKER: %.3f counter=%d mode=%s gate=%d m3=%d spk=%d under=%d",
+	         PIC_FullIndex(),
+	         counter,
+	         pit_mode_to_string(pit_mode),
+	         pit_counter.IsGateEnabled(),
+	         pit_counter.IsMode3Active(),
+	         static_cast<int>(port_b.speaker_output),
+	         static_cast<int>(have_undersampled_reload));
+#endif
+	const auto index = SyncPitToTick();
+
+	const bool is_square = (pit_mode == PitMode::SquareWave ||
+	                        pit_mode == PitMode::SquareWaveAlias);
+
+	if (is_square && counter > 0 && counter < MinimumCounter) {
+		// Counter is too high-frequency to represent at our sample
+		// rate. Rapid reloads of undersampled counts are used by some
+		// programs as a noise source; toggle amplitude for each such
+		// reload.
+		const auto now_ms = static_cast<float>(PIC_FullIndex());
+		const auto previous_reload_gap_ms = now_ms - undersampled_reload_ms;
+		const auto is_rapid_reload = have_undersampled_reload &&
+		                             previous_reload_gap_ms >= 0.0f &&
+		                             previous_reload_gap_ms <=
+		                                     MaxUndersampledReloadGapMs;
+
+		if (port_b.timer2_gating_and_speaker_out.all() && is_rapid_reload) {
+			// Toggle — emit whatever the opposite of current output is
+			const int16_t toggled = (prev_amplitude == PositiveAmplitude)
+			                              ? NegativeAmplitude
+			                              : PositiveAmplitude;
+			AddImpulse(index, toggled);
+		}
+
+		// Stop the PIT from producing further output at the old
+		// frequency. Without this, Advance() keeps oscillating at the
+		// prior valid period.
+		pit_counter.Invalidate();
+
+		have_undersampled_reload = true;
+		undersampled_reload_ms   = now_ms;
+		return;
+	}
+
+	have_undersampled_reload = false;
+
+	const auto t = pit_counter.WriteCount(counter);
+	ApplyTransitions(t, index, port_b.speaker_output);
+
+	// If a gate-rising edge was suppressed while in undersampled state,
+	// pit_counter.gate is still false. Sync it now so oscillation can start.
+	// In the normal path (gate already synced), EnableGate(true) is a no-op.
+	if (port_b.timer2_gating) {
+		const auto gate_t = pit_counter.EnableGate(true);
+		ApplyTransitions(gate_t, index, port_b.speaker_output);
+	}
+
+#ifdef DEBUG_PCSPEAKER
+	LOG_INFO("PCSPEAKER: %.3f counter=%d -> gate=%d m3=%d",
+	         PIC_FullIndex(),
+	         counter,
+	         pit_counter.IsGateEnabled(),
+	         pit_counter.IsMode3Active());
+#endif
+}
+
+// Port B changed (speaker_output and/or timer2_gating bits)
+void PcSpeakerImpulse::SetType(const PpiPortB& new_port_b)
+{
+#ifdef DEBUG_PCSPEAKER
+	LOG_INFO("PCSPEAKER: %.3f type spk=%d gate=%d (was spk=%d gate=%d) m3=%d under=%d",
+	         PIC_FullIndex(),
+	         static_cast<int>(new_port_b.speaker_output),
+	         static_cast<int>(new_port_b.timer2_gating),
+	         static_cast<int>(port_b.speaker_output),
+	         static_cast<int>(port_b.timer2_gating),
+	         pit_counter.IsMode3Active(),
+	         static_cast<int>(have_undersampled_reload));
+#endif
+	const auto index = SyncPitToTick();
+
+	const bool gate_changed = new_port_b.timer2_gating != port_b.timer2_gating;
+	const bool speaker_enabled = new_port_b.speaker_output;
+	port_b.data                = new_port_b.data;
+
+	const bool gate_triggered = gate_changed && new_port_b.timer2_gating;
+
+	if (gate_changed) {
+		// Don't allow a gate-rising edge to restart the PIT while we
+		// are in the undersampled-suppressed state; the stored period
+		// is ultrasonic. Gate-falling still propagates so modes 2/3
+		// correctly force output HIGH.
+		if (!gate_triggered || !have_undersampled_reload) {
+			const auto t = pit_counter.EnableGate(new_port_b.timer2_gating);
+			ApplyTransitions(t, index, speaker_enabled);
+		}
+	}
+
+	AddImpulse(index,
+	           OutputAmplitude(speaker_enabled, pit_counter.GetOutputState()));
+}
 
 void PcSpeakerImpulse::PicCallback(const int requested_frames)
 {
-	ForwardPIT(1.0f);
-	pit.last_index = 0;
+	HandleWakeUp();
+
+	// Advance PIT to end of this 1 ms tick
+	const auto remaining = 1.0f - pit_last_index;
+	if (remaining > 0.0f) {
+		const auto t = pit_counter.Advance(remaining);
+		ApplyTransitions(t, pit_last_index, port_b.speaker_output);
+	}
+	pit_last_index = 0.0f;
+
+	render_buf.clear();
+
 	int remaining_frames = requested_frames;
 
-	static float accumulator = 0;
-	while (remaining_frames > 0 && waveform_deque.size()) {
-		// Pop the first sample off the waveform
-		accumulator += waveform_deque.front();
-		waveform_deque.pop_front();
-		waveform_deque.push_back(0.0f);
+	while (remaining_frames > 0 && !waveform.empty()) {
+		accumulator += waveform.front();
+		waveform.pop_front();
+		waveform.push_back(0.0f);
 
-		// std::move only used here because it won't compile without
-		// This is just a float so it's safe to use afterwards
-		output_queue.NonblockingEnqueue(std::move(accumulator));
+		render_buf.emplace_back(accumulator);
 		--remaining_frames;
 
-		// Keep a tally of sequential silence so we can sleep the channel
-		tally_of_silence = fabsf(accumulator) > 1.0f
+		tally_of_silence = (std::abs(accumulator) > 1.0f)
 		                         ? 0
 		                         : tally_of_silence + 1;
 
-		// Scale down the running volume amplitude. Eventually it will
-		// hit 0 if no other waveforms are generated.
-		accumulator *= sinc_amplitude_fade;
+		accumulator *= SincAmplitudeFade;
 	}
 
-	// Write silence if the waveform deque ran out
-	if (remaining_frames)
-		pit.prev_amplitude = neutral_amplitude;
-
-	while (remaining_frames) {
-		output_queue.NonblockingEnqueue(neutral_amplitude);
+	// Pad with silence if waveform deque ran out
+	if (remaining_frames > 0) {
+		prev_amplitude = NeutralAmplitude;
+	}
+	while (remaining_frames > 0) {
+		render_buf.emplace_back(NeutralAmplitude);
 		++tally_of_silence;
 		--remaining_frames;
 	}
-}
 
-void PcSpeakerImpulse::InitializeImpulseLUT()
-{
-	assert(impulse_lut.size() == sinc_filter_width);
-
-	for (auto i = 0u; i < sinc_filter_width; ++i) {
-		impulse_lut[i] = CalcImpulse(i / (static_cast<double>(sample_rate_hz) *
-		                                  sinc_oversampling_factor));
-	}
+	output_queue.NonblockingBulkEnqueue(render_buf);
 }
 
 void PcSpeakerImpulse::SetFilterState(const FilterState filter_state)
 {
 	assert(channel);
 
-	// Setup filters
 	if (filter_state == FilterState::On) {
-		// The filters are meant to emulate the bandwidth limited
-		// sound of the small PC speaker. This more accurately
-		// reflects people's actual experience of the PC speaker
-		// sound than the raw unfiltered output, and it's a lot
-		// more pleasant to listen to, especially in headphones.
-		constexpr auto hp_order          = 3;
-		constexpr auto hp_cutoff_freq_hz = 120;
-		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
+		constexpr auto HpOrder        = 3;
+		constexpr auto HpCutoffFreqHz = 120;
+		channel->ConfigureHighPassFilter(HpOrder, HpCutoffFreqHz);
 		channel->SetHighPassFilter(FilterState::On);
 
-		constexpr auto lp_order          = 3;
-		constexpr auto lp_cutoff_freq_hz = 4300;
-		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
+		constexpr auto LpOrder        = 3;
+		constexpr auto LpCutoffFreqHz = 4300;
+		channel->ConfigureLowPassFilter(LpOrder, LpCutoffFreqHz);
 		channel->SetLowPassFilter(FilterState::On);
 	} else {
 		channel->SetHighPassFilter(FilterState::Off);
@@ -501,46 +329,39 @@ bool PcSpeakerImpulse::TryParseAndSetCustomFilter(const std::string& filter_choi
 
 PcSpeakerImpulse::PcSpeakerImpulse()
 {
-	// The implementation is tuned to working with sample rates that are
-	// multiples of 8000, such as 8 Khz, 16 Khz, or 32 Khz. Anything besides
-	// these will produce unwanted artifacts.
-	static_assert(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
-	static_assert(sample_rate_hz % 1000 == 0,
-	              "Sample rate must be a multiple of 1000");
+	static_assert(SampleRateHz > 0 && SampleRateHz % 8000 == 0,
+	              "Sample rate must be a multiple of 8000 to avoid artifacts");
 
-	InitializeImpulseLUT();
+	InitializeLut();
+	waveform.resize(WaveformSize, 0.0f);
 
-	// Size the waveform queue
-	constexpr auto waveform_size = sinc_filter_quality + sample_rate_per_ms;
-	waveform_deque.resize(waveform_size, 0.0f);
-
-	// Register the sound channel
-	constexpr bool Stereo = false;
-	constexpr bool SignedData = true;
+	constexpr bool Stereo      = false;
+	constexpr bool SignedData  = true;
 	constexpr bool NativeOrder = true;
-	const auto callback = std::bind(MIXER_PullFromQueueCallback<PcSpeakerImpulse, float, Stereo, SignedData, NativeOrder>,
-	                                std::placeholders::_1,
-	                                this);
+
+	const auto callback = [this](int frames) {
+		MIXER_PullFromQueueCallback<PcSpeakerImpulse, float, Stereo, SignedData, NativeOrder>(
+		        frames, this);
+	};
 
 	channel = MIXER_AddChannel(callback,
-	                           sample_rate_hz,
-	                           device_name,
+	                           SampleRateHz,
+	                           DeviceName,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
 	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::Synthesizer});
 	assert(channel);
 
-	LOG_MSG("%s: Initialised %s model", device_name, model_name);
+	channel->SetPeakAmplitude(PositiveAmplitude);
 
-	channel->SetPeakAmplitude(positive_amplitude);
+	LOG_MSG("%s: Initialised %s model", DeviceName, ModelName);
 }
 
 PcSpeakerImpulse::~PcSpeakerImpulse()
 {
-	LOG_MSG("%s: Shutting down %s model", device_name, model_name);
+	LOG_MSG("%s: Shutting down %s model", DeviceName, ModelName);
 
-	// Deregister the mixer channel, after which it's cleaned up
 	assert(channel);
 	MIXER_DeregisterChannel(channel);
 }
