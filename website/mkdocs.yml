@@ -204,6 +204,14 @@ nav:
         - 0.83/manual/using-dosbox-staging/capture.md
         - 0.83/manual/using-dosbox-staging/windows-31.md
 
+      - Game setup tips:
+        - 0.83/manual/game-setup-tips/overview.md
+        - 0.83/manual/game-setup-tips/cpu-and-memory.md
+        - 0.83/manual/game-setup-tips/sound.md
+        - 0.83/manual/game-setup-tips/graphics.md
+        - 0.83/manual/game-setup-tips/mouse.md
+        - 0.83/manual/game-setup-tips/troubleshooting.md
+
       - System:
         - 0.83/manual/system/general.md
         - 0.83/manual/system/cpu.md
