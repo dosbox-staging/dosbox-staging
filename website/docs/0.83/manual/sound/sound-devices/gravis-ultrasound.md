@@ -189,15 +189,111 @@ ultradir = C:\ULTRASND
     [UltraMID](#ultramid) games.
 
 
-## Hardware configuration
+## Default settings
 
-The [`gusbase`](#gusbase), [`gusirq`](#gusirq), and [`gusdma`](#gusdma)
-settings configure the I/O base address, interrupt, and DMA channel of the
-emulated GUS. The defaults (base address 240, IRQ 5, DMA 3) are chosen to
-avoid conflicts with the Sound Blaster card, allowing both to coexist. Some
-games and demos expect the GUS factory defaults of base address 220, IRQ 11,
-DMA 1. Note that certain versions of the DOS/4GW extender cannot handle IRQs
-above 7, so IRQ 11 may cause problems with those titles.
+The default Gravis UltraSound settings shown below have been selected to avoid
+conflicts with the Sound Blaster card, allowing both to coexist. Most games
+can auto-detect the presence of the Gravis UltraSound card and these settings,
+but in case they need a little help, here are the values to use:
+
+<div class="compact" markdown>
+
+| Setting                                | Config setting        | Default value
+| -------------------------------------- | -----------------     | -------------
+| Base address (or I/O address, or port) | [`gusbase`](#gusbase) | 240
+| IRQ (or interrupt)                     | [`gusirq`](#gusirq)   | 5
+| DMA                                    | [`gusdma`](#gusdma)   | 3
+
+</div>
+
+If you have configured a game for Gravis UltraSound audio but there is no
+sound at all, or if the game hangs or crashes, first double check that the
+above settings have been set in the game's configuration. Some games don't let
+you to set all of them manually and just assume some common fixed values
+instead. If all fails, try using the [Factory settings](#factory-settings).
+
+
+## Factory settings
+
+It was common to use the [above settings](#default-settings) for the GUS when
+paired with a Sound Blaster card in the same PC, so most games and demos work
+fine these these, but a few expect the GUS factory default. If a game or demo
+doesn't detect the GUS, locks up, or doesn't have sound when configured for
+Gravis UltraSound, it's worth trying the below factory settings:
+
+<div class="compact" markdown>
+
+| Setting                                | Config setting        | Default value
+| -------------------------------------- | -----------------     | -------------
+| Base address (or I/O address, or port) | [`gusbase`](#gusbase) | 220
+| IRQ (or interrupt)                     | [`gusirq`](#gusirq)   | 11
+| DMA                                    | [`gusdma`](#gusdma)   | 1
+
+</div>
+
+It's also recommended to disable the Sound Blaster emulation for these
+problematic titles by setting [sbtype](sound-blaster.md#sbtype) to `off`.
+Certain versions of the DOS/4GW extender cannot handle IRQs above 7, so IRQ 11
+may cause problems with some programs --- try setting [gusirq](#gusirq) to 7 as
+the last resort.
+
+
+## Environment variables
+
+Many DOS programs use the [ULTRASND](#ultrasnd-variable) and
+[ULTRADIR](#ultradir-variable) DOS environment variables to auto-detect and
+auto-configure the Gravis UltraSound card. On a real machine, these variable
+are set up in `AUTOEXEC.BAT` during the GUS driver installation process.
+
+DOSBox Staging injects these environment variables at startup based on the
+card's configuration in the `[gus]` section. You should never set them
+manually.
+
+To view the values of the variables, execute the `SET ULTRASND` or `SET
+ULTRADIR` DOS command, respectively.
+
+#### ULTRASND variable
+
+The `ULTRASND` variable contains the hardware settings of the card.
+
+For example, this is the `SET ULTRASND` output you'll get with the default settings:
+
+```
+ULTRASND=240,3,3,5,5
+```
+
+The meaning of the comma-separated values are as follows:
+
+<div class="compact" markdown>
+
+- **port** --- the base address ([`gusbase`](#gusbase))
+
+- **dma1** --- First DMA channel for playback ([`gusdma`](#gusdma))
+
+- **dma2** --- Second DMA channel for recording (always the same as the first
+    DMA channel in DOSBox Staging)
+
+- **irq1** --- First IRQ (interrupt) number for playback ([`gusirq`](#gusirq))
+
+- **irq2** --- Second IRQ (interrupt) number for recording (always the same as
+  the first IRQ in DOSBox Staging)
+
+</div>
+
+
+#### ULTRADIR variable
+
+This variable tells GUS software where to find the system files and
+[instrument patches](#gus-midi-with-patch-files) required to play back MIDI
+music. It contains the [ultradir](#ultradir) path, so you must set this
+correctly.
+
+A typical `SET ULTRADIR` output:
+
+```
+ULTRADIR=C:\ULTRASND
+```
+
 
 
 ## GUS-only configuration
@@ -227,16 +323,6 @@ The Gravis UltraSound outputs to the **GUS** [mixer channel](../mixer.md#list-of
 ## Configuration settings
 
 Gravis UltraSound settings are to be configured in the `[gus]` section.
-
-!!! note
-
-    The default settings of base address 240, IRQ 5, and DMA 3 have been
-    chosen so the GUS can coexist with a Sound Blaster card. This works fine
-    for the majority of programs, but some games and demos expect the GUS
-    factory defaults of base address 220, IRQ 11, and DMA 1. The default
-    IRQ 11 is also problematic with specific versions of the DOS4GW extender
-    that cannot handle IRQs above 7.
-
 
 ##### gus
 
