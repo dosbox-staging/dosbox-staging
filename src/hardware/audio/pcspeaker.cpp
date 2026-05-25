@@ -72,7 +72,9 @@ static void init_pcspeaker_settings(SectionProp& section)
 	        "              in a small number of programs.\n"
 	        "\n"
 	        "  discrete:   Legacy simplified PC speaker emulation; only use this on specific\n"
-	        "              titles that give you problems with the 'impulse' model.\n"
+	        "              titles that give you problems with the 'impulse' model,\n"
+	        "              and please report any issues. The discrete model is\n"
+	        "              deprecated and will be removed in a future release.\n"
 	        "\n"
 	        "  none, off:  Don't emulate the PC speaker.");
 	pstring->SetValues({"impulse", "discrete", "none", "off"});

@@ -1,20 +1,23 @@
-// SPDX-FileSPDText:X Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_PCSPEAKER_IMPULSE_H
 #define DOSBOX_PCSPEAKER_IMPULSE_H
 
 #include "pcspeaker.h"
+#include "pcspeaker_pit.h"
 
 #include <array>
 #include <deque>
 #include <string>
+#include <vector>
 
 #include "audio/channel_names.h"
 #include "config/setup.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "misc/support.h"
+#include "utils/math_utils.h"
 
 class PcSpeakerImpulse final : public PcSpeaker {
 public:
@@ -23,87 +26,110 @@ public:
 
 	void SetFilterState(const FilterState filter_state) override;
 	bool TryParseAndSetCustomFilter(const std::string& filter_choice) override;
-	void SetCounter(const int cntr, const PitMode pit_mode) override;
+	void SetCounter(const int counter, const PitMode pit_mode) override;
 	void SetPITControl(const PitMode pit_mode) override;
 	void SetType(const PpiPortB& port_b) override;
 	void PicCallback(const int requested_frames) override;
 
 private:
-	void AddImpulse(float index, const int16_t amplitude);
-	void AddPITOutput(const float index);
-	void ForwardPIT(const float new_index);
-	float CalcImpulse(const double t) const;
-	void InitializeImpulseLUT();
+	void AddImpulse(const float index, const int16_t amplitude);
+	float CalcImpulse(double t) const;
+	void InitializeLut();
+	void ApplyTransitions(const std::vector<PitCounter::Transition>& transitions,
+	                      const float index_base, const bool speaker_enabled);
 
-	// Constants
-	static constexpr auto device_name = ChannelName::PcSpeaker;
-	static constexpr auto model_name  = "impulse";
+	// Wake, advance the PIT to the current position within this 1ms tick,
+	// emitting any transitions that occurred since the last sync. Returns the
+	// new position (PIC_TickIndex). Shared preamble of the public entry points.
+	float SyncPitToTick();
 
-	// Amplitude constants
+	// Output amplitude for a given speaker-enable and PIT output level.
+	static int16_t OutputAmplitude(const bool speaker_enabled,
+	                               const OutputState output);
 
-	// The impulse PWM scalar was manually adjusted to roughly match voltage
-	// levels recorded from a hardware PC speaker
-	// Ref:https://github.com/dosbox-staging/dosbox-staging/files/9494469/3.audio.samples.zip
-	static constexpr float pwm_scalar = 0.5f;
+	// Wake the channel and reset dedup state if we were sleeping. While
+	// asleep the mixer emits silence, so prev_amplitude must be reset to
+	// neutral on wake or AddImpulse may dedup-skip a legitimate emission.
+	// Call at the top of any public entry point that may produce impulses.
+	void HandleWakeUp();
 
-	static constexpr int16_t positive_amplitude = static_cast<int16_t>(
-	        Max16BitSampleValue * pwm_scalar);
+	static constexpr auto DeviceName = ChannelName::PcSpeaker;
+	static constexpr auto ModelName  = "impulse";
 
-	static constexpr int16_t negative_amplitude = -positive_amplitude;
-	static constexpr int16_t neutral_amplitude  = 0;
+	// Amplitude: manually tuned to roughly match hardware voltage levels.
+	// Ref:
+	// https://github.com/dosbox-staging/dosbox-staging/files/9494469/3.audio.samples.zip
+	static constexpr float PwmScalar = 0.5f;
 
-	static constexpr float ms_per_pit_tick = 1000.0f / PIT_TICK_RATE;
+	static constexpr int16_t PositiveAmplitude = static_cast<int16_t>(
+	        Max16BitSampleValue * PwmScalar);
+	static constexpr int16_t NegativeAmplitude = -PositiveAmplitude;
+	static constexpr int16_t NeutralAmplitude  = 0;
 
-	// Mixer channel constants
-	static constexpr auto sample_rate_hz     = 32000;
-	static constexpr auto sample_rate_per_ms = sample_rate_hz / 1000;
+	// Fixed sample rate; must be a multiple of 1000 so each 1ms PIC callback
+	// produces an exact integer number of samples (SampleRateHz / 1000).
+	static constexpr auto SampleRateHz    = 48000;
+	static constexpr auto SampleRatePerMs = SampleRateHz / 1000;
 
-	static constexpr auto minimum_counter = 2 * PIT_TICK_RATE / sample_rate_hz;
+	// Minimum PIT count representable at this sample rate (Nyquist)
+	static constexpr auto MinimumCounter = ceil_sdivide(2 * PIT_TICK_RATE,
+	                                                    SampleRateHz);
 
-	// must be greater than 0.0f
-	static constexpr float cutoff_margin = 0.2f;
+	// Reference sample rate of the original impulse model; the cutoff
+	// frequency is kept constant (not scaled with SampleRateHz) so the
+	// two models are tonally equivalent.
+	static constexpr auto ReferenceSampleRateHz = 32000.0;
+	static constexpr auto ReferenceCutoffMargin = 0.2;
+	static constexpr auto CutoffMargin = (SampleRateHz / ReferenceSampleRateHz) *
+	                                             (2.0 + ReferenceCutoffMargin) -
+	                                     2.0;
 
-	// Should be selected based on sampling rate
-	static constexpr float sinc_amplitude_fade     = 0.999f;
-	static constexpr auto sinc_filter_quality      = 100;
-	static constexpr auto sinc_oversampling_factor = 32;
+	static constexpr float SincAmplitudeFade = 0.999f;
 
-	static constexpr auto sinc_filter_width = sinc_filter_quality *
-	                                          sinc_oversampling_factor;
+	// Keep the same 3.125 ms impulse span as the former 32 kHz /
+	// 100-tap configuration.
+	static constexpr auto SincFilterDurationUs = 3125;
+	static constexpr auto SincFilterQuality =
+	        ceil_sdivide(SampleRateHz * SincFilterDurationUs, 1'000'000);
 
-	static constexpr float max_possible_pit_ms = 1320000.0f / PIT_TICK_RATE;
+	static constexpr auto SincOversamplingFactor = 32;
+	static constexpr auto SincLutSize = SincFilterQuality * SincOversamplingFactor;
 
-	// Compound types and containers
-	struct PitState {
-		// PIT starts in mode 3 (SquareWave) at ~903 Hz (pit_max) with
-		// positive amplitude
-		float max_ms            = max_possible_pit_ms;
-		float new_max_ms        = max_possible_pit_ms;
-		float half_ms           = max_possible_pit_ms / 2.0f;
-		float new_half_ms       = max_possible_pit_ms / 2.0f;
-		float index             = 0.0f;
-		float last_index        = 0.0f;
-		float mode1_pending_max = 0.0f;
+	// Undersampled mode 3: rapid reloads used as a noise source
+	static constexpr float MaxUndersampledReloadGapMs = 1.0f;
 
-		// PIT boolean state
-		bool mode1_waiting_for_counter = false;
-		bool mode1_waiting_for_trigger = true;
-		bool mode3_counting            = false;
+	PitCounter pit_counter = {};
 
-		PitMode mode = PitMode::SquareWave;
+	// Waveform accumulation buffer; large enough for one ms plus sinc tail.
+	// This stores fractional impulse contributions until they are integrated
+	// into output samples in PicCallback().
+	static constexpr auto WaveformSize = SincFilterQuality + SampleRatePerMs;
+	std::deque<float> waveform = {};
 
-		int16_t amplitude      = positive_amplitude;
-		int16_t prev_amplitude = negative_amplitude;
-	} pit = {};
+	std::array<float, SincLutSize> impulse_lut = {};
 
-	std::deque<float> waveform_deque = {};
+	// Position within current tick advanced so far (ms, 0..1)
+	float pit_last_index = 0.0f;
 
-	std::array<float, sinc_filter_width> impulse_lut = {};
+	// Running amplitude integrator
+	float accumulator = 0.0f;
 
-	PpiPortB prev_port_b = {};
-
+	// Silence tracking for channel sleep
 	int tally_of_silence = 0;
-};
 
+	// Port B state (speaker_output + timer2_gating) from the Intel 8255
+	// Programmable Peripheral Interface (PPI).
+	PpiPortB port_b = {};
+
+	// Undersampled mode 3 reload tracking
+	bool have_undersampled_reload = false;
+	float undersampled_reload_ms  = 0.0f;
+
+	// Amplitude at last impulse. Re-emitting an identical level would apply
+	// another impulse step at the same level and incorrectly bias loudness.
+	int16_t prev_amplitude = NeutralAmplitude;
+
+	std::vector<float> render_buf = {};
+};
 
 #endif // DOSBOX_PCSPEAKER_IMPULSE_H

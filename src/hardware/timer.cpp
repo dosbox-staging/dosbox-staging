@@ -66,10 +66,12 @@ struct PIT_Block {
 
 	uint16_t read_latch  = 0;
 	uint16_t write_latch = 0;
+	uint8_t status_latch = 0;
 
-	PitMode mode          = PitMode::Inactive;
-	AccessMode read_mode  = AccessMode::Latch;
-	AccessMode write_mode = AccessMode::Latch;
+	PitMode mode           = PitMode::Inactive;
+	AccessMode access_mode = AccessMode::Latch;
+	AccessMode read_mode   = AccessMode::Latch;
+	AccessMode write_mode  = AccessMode::Latch;
 
 	bool bcd               = false;
 	bool go_read_latch     = false;
@@ -124,11 +126,6 @@ constexpr auto& channel_2 = pit[2];
 
 static bool gate2;
 
-static uint8_t latched_timerstatus;
-// the timer status can not be overwritten until it is read or the timer was
-// reprogrammed.
-static bool latched_timerstatus_locked;
-
 const char* pit_mode_to_string(const PitMode mode)
 {
 	switch (mode) {
@@ -148,22 +145,23 @@ const char* pit_mode_to_string(const PitMode mode)
 
 // The maximum decimal count can go beyond 16-bit, beacuse a
 // count of zero was used to represent 65536 ticks.
-constexpr int32_t max_bcd_count = 9999;
-constexpr int32_t max_dec_count = 0x10000;
-constexpr int32_t get_max_count(const PIT_Block& channel)
+constexpr int32_t MaxBcdCount = 9999;
+constexpr int32_t MaxDecCount = 0x10000;
+
+// A programmed count of 0 represents one more tick than the max representable
+// value: 65536 in binary mode, 10000 in BCD mode.
+// Ref: https://wiki.osdev.org/Programmable_Interval_Timer
+constexpr int32_t ZeroBcdCount    = MaxBcdCount + 1;
+constexpr int32_t ZeroBinaryCount = MaxDecCount;
+constexpr int32_t get_zero_count_ticks(const PIT_Block& channel)
 {
-	return channel.bcd ? max_bcd_count : max_dec_count;
+	return channel.bcd ? ZeroBcdCount : ZeroBinaryCount;
 }
 
 constexpr int update_channel_delay(PIT_Block& channel)
 {
-	// Since the frequency can't be divided by 0 in a sane way, many
-	// implementations use 0 to represent the value 65536 (or 10000
-	// when programmed in BCD mode).
-	// Ref: https://wiki.osdev.org/Programmable_Interval_Timer
-	//
 	const auto freq_divider = channel.count ? channel.count
-	                                        : (get_max_count(channel) + 1);
+	                                        : get_zero_count_ticks(channel);
 
 	channel.delay = 1000.0 * freq_divider / PIT_TICK_RATE;
 	return freq_divider;
@@ -226,44 +224,36 @@ static bool counter_output(const PIT_Block& channel)
 }
 static void status_latch(PIT_Block& channel)
 {
-	// the timer status can not be overwritten until it is read or the timer
-	// was reprogrammed.
-	if (!latched_timerstatus_locked) {
-		latched_timerstatus = 0;
-		// Timer Status Word
-		// 0: BCD
-		// 1-3: Timer mode
-		// 4-5: read/load mode
-		// 6: "NULL" - this is 0 if "the counter value is in the
-		// counter" ;) should rarely be 1 (i.e. on exotic modes) 7: OUT
-		// - the logic level on the Timer output pin
-		if (channel.bcd) {
-			latched_timerstatus |= 0x1;
-		}
-
-		latched_timerstatus |= (static_cast<uint8_t>(channel.mode) & 7) << 1;
-
-		if (channel.read_mode == AccessMode::Latch ||
-		    channel.read_mode == AccessMode::Both) {
-			latched_timerstatus |= 0x30;
-		} else if (channel.read_mode == AccessMode::Low) {
-			latched_timerstatus |= 0x10;
-		} else if (channel.read_mode == AccessMode::High) {
-			latched_timerstatus |= 0x20;
-		}
-
-		if (counter_output(channel)) {
-			latched_timerstatus |= 0x80;
-		}
-		if (channel.mode_changed) {
-			latched_timerstatus |= 0x40;
-		}
-
-		// The first thing that is being read from this counter now is
-		// the counter status.
-		channel.counterstatus_set  = true;
-		latched_timerstatus_locked = true;
+	// The 8254 keeps one status latch per counter. Repeated status latch
+	// commands for the same counter are ignored until the latched status is
+	// read or the counter is reprogrammed.
+	if (channel.counterstatus_set) {
+		return;
 	}
+
+	channel.status_latch = 0;
+	// Timer Status Word
+	// 0: BCD
+	// 1-3: Timer mode
+	// 4-5: programmed read/load mode
+	// 6: NULL count
+	// 7: OUT pin state
+	if (channel.bcd) {
+		channel.status_latch |= 0x1;
+	}
+
+	channel.status_latch |= (static_cast<uint8_t>(channel.mode) & 7) << 1;
+	channel.status_latch |= static_cast<uint8_t>(channel.access_mode) << 4;
+
+	if (counter_output(channel)) {
+		channel.status_latch |= 0x80;
+	}
+	if (channel.mode_changed) {
+		channel.status_latch |= 0x40;
+	}
+
+	// The first thing read from this counter is now the counter status.
+	channel.counterstatus_set = true;
 }
 static void counter_latch(PIT_Block& channel)
 {
@@ -279,7 +269,7 @@ static void counter_latch(PIT_Block& channel)
 
 	auto save_read_latch = [&](double latch_time) {
 		// Latch is a 16-bit counter, wrap it to ensure it doesn't overflow
-		const auto wrapped = iround(latch_time) % UINT16_MAX;
+		const auto wrapped = iround(latch_time) & UINT16_MAX;
 		channel.read_latch = check_cast<uint16_t>(wrapped);
 	};
 
@@ -308,12 +298,11 @@ static void counter_latch(PIT_Block& channel)
 			if (channel.bcd) {
 				elapsed_ms = fmod(elapsed_ms,
 				                  period_of_1k_pit_ticks * 10000.0);
-				save_read_latch(max_bcd_count -
+				save_read_latch(MaxBcdCount -
 				                elapsed_ms * PIT_TICK_RATE_KHZ);
 			} else {
 				elapsed_ms = fmod(elapsed_ms,
-				                  period_of_1k_pit_ticks *
-				                          max_dec_count);
+				                  period_of_1k_pit_ticks * MaxDecCount);
 				save_read_latch(0xffff -
 				                elapsed_ms * PIT_TICK_RATE_KHZ);
 			}
@@ -361,6 +350,17 @@ static void counter_latch(PIT_Block& channel)
 	}
 }
 
+static void counter_latch_if_unlatched(PIT_Block& channel)
+{
+	// The 8254 ignores repeated count-latch commands for a counter until
+	// the previously latched count is read.
+	if (!channel.go_read_latch) {
+		return;
+	}
+
+	counter_latch(channel);
+}
+
 static void write_latch(io_port_t port, io_val_t value, io_width_t)
 {
 	const auto val         = check_cast<uint8_t>(value);
@@ -398,16 +398,16 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 	if (channel.write_mode != AccessMode::Latch) {
 
 		channel.count = channel.write_latch ? channel.write_latch
-		                                    : get_max_count(channel);
+		                                    : get_zero_count_ticks(channel);
 
 		if ((!channel.mode_changed) &&
 		    (channel.mode == PitMode::RateGenerator ||
 		     channel.mode == PitMode::RateGeneratorAlias) &&
 		    (channel_num == 0)) {
 			// In mode 2 writing another value has no direct
-			// effect on the count until the old one has run
-			// out. This might apply to other modes too.
-			// This is not fixed for PIT2 yet!!
+			// effect on the count until the old one has run out.
+			// For PIT2 (PC speaker) this deferral is handled
+			// inside PitCounter::WriteCount.
 			channel.update_count = true;
 			return;
 		}
@@ -456,9 +456,8 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 	uint8_t ret = 0;
 
 	if (channel.counterstatus_set) {
-		channel.counterstatus_set  = false;
-		latched_timerstatus_locked = false;
-		ret                        = latched_timerstatus;
+		channel.counterstatus_set = false;
+		ret                       = channel.status_latch;
 	} else {
 		if (channel.go_read_latch) {
 			counter_latch(channel);
@@ -542,7 +541,7 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 	const ReadBackStatus rbs = {val};
 
 	if (rbs.access_mode.none()) {
-		counter_latch(channel);
+		counter_latch_if_unlatched(channel);
 		return;
 	}
 
@@ -553,18 +552,18 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 	counter_latch(channel);
 	channel.bcd = rbs.bcd_state;
 	if (channel.bcd) {
-		channel.count = std::min(channel.count, max_bcd_count);
+		channel.count = std::min(channel.count, MaxBcdCount);
 	}
 
 	// Timer is being reprogrammed, unlock the status
 	if (channel.counterstatus_set) {
-		channel.counterstatus_set  = false;
-		latched_timerstatus_locked = false;
+		channel.counterstatus_set = false;
 	}
 	channel.start         = PIC_FullIndex(); // for undocumented newmode
 	channel.go_read_latch = true;
 	channel.update_count  = false;
 	channel.counting      = false;
+	channel.access_mode   = static_cast<AccessMode>(rbs.access_mode.val());
 	channel.read_mode     = static_cast<AccessMode>(rbs.access_mode.val());
 	channel.write_mode    = static_cast<AccessMode>(rbs.access_mode.val());
 	channel.mode          = static_cast<PitMode>(rbs.pit_mode.val());
@@ -586,8 +585,6 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 		} else {
 			PIC_DeActivateIRQ(0);
 		}
-	} else if (channel_num == 2) {
-		PCSPEAKER_SetCounter(0, PitMode::SquareWave);
 	}
 	channel.mode_changed = true;
 	if (channel_num == 2) {
@@ -602,25 +599,26 @@ static void latch_all_channels(const uint8_t val)
 	// Latch multiple pit counters
 	if ((val & 0x20) == 0) {
 		if (val & 0x02) {
-			counter_latch(channel_0);
+			counter_latch_if_unlatched(channel_0);
 		}
 		if (val & 0x04) {
-			counter_latch(channel_1);
+			counter_latch_if_unlatched(channel_1);
 		}
 		if (val & 0x08) {
-			counter_latch(channel_2);
+			counter_latch_if_unlatched(channel_2);
 		}
 	}
 
 	// Status and values can be latched simultaneously
 	if ((val & 0x10) == 0) {
 		// Latch status words
-		// but only 1 status can be latched simultaneously
 		if (val & 0x02) {
 			status_latch(channel_0);
-		} else if (val & 0x04) {
+		}
+		if (val & 0x04) {
 			status_latch(channel_1);
-		} else if (val & 0x08) {
+		}
+		if (val & 0x08) {
 			status_latch(channel_2);
 		}
 	}
@@ -713,9 +711,11 @@ public:
 
 		// Initialize channel 0
 		channel_0.bcd               = false;
-		channel_0.count             = get_max_count(channel_0);
+		channel_0.count             = get_zero_count_ticks(channel_0);
 		channel_0.read_latch        = 0;
 		channel_0.write_latch       = 0;
+		channel_0.status_latch      = 0;
+		channel_0.access_mode       = AccessMode::Both;
 		channel_0.read_mode         = AccessMode::Both;
 		channel_0.write_mode        = AccessMode::Both;
 		channel_0.mode              = PitMode::SquareWave;
@@ -726,6 +726,8 @@ public:
 		// Initialize channel 1
 		channel_1.bcd               = false;
 		channel_1.count             = 18;
+		channel_1.status_latch      = 0;
+		channel_1.access_mode       = AccessMode::Low;
 		channel_1.read_mode         = AccessMode::Low;
 		channel_1.write_mode        = AccessMode::Both;
 		channel_1.mode              = PitMode::RateGenerator;
@@ -735,7 +737,9 @@ public:
 		// Initialize channel 2
 		channel_2.bcd               = false;
 		channel_2.count             = 1320;
-		channel_2.read_latch        = 1320;             // MadTv1
+		channel_2.read_latch        = 1320; // MadTv1
+		channel_2.status_latch      = 0;
+		channel_2.access_mode       = AccessMode::Both;
 		channel_2.read_mode         = AccessMode::Both; // Chuck Yeager
 		channel_2.write_mode        = AccessMode::Both;
 		channel_2.mode              = PitMode::SquareWave;
@@ -747,8 +751,7 @@ public:
 		update_channel_delay(channel_1);
 		update_channel_delay(channel_2);
 
-		latched_timerstatus_locked = false;
-		gate2                      = false;
+		gate2 = false;
 		PIC_AddEvent(PIT0_Event, channel_0.delay);
 	}
 	~TIMER()
