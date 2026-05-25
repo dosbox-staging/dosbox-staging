@@ -1,7 +1,3 @@
----
-toc_depth: 3
----
-
 # Sound Blaster
 
 For many who owned a gaming PC in the 1990s, the name **Sound Blaster** is a
@@ -12,16 +8,16 @@ best-selling expansion card for the PC. Virtually all games from 1990 onwards
 had Sound Blaster support in some shape or form, and this remained unchanged
 for the rest of the DOS-era until the late 90s.
 
-DOSBox can emulate all major revisions of the Sound Blaster family. One of the
-most common models was the [Sound Blaster 16](#sound-blaster-16) which has
-good (but not perfect) backward-compatibility with earlier cards. This is the
-sound card DOSBox emulates by default to ensure the widest possible
-compatibility with games.
+DOSBox Staging can emulate all major revisions of the Sound Blaster family.
+One of the most common models was the [Sound Blaster 16](#sound-blaster-16)
+which has good (but not perfect) backward-compatibility with earlier cards.
+This is the sound card DOSBox Staging emulates by default to ensure the widest
+possible compatibility with games.
 
-Most games that support the Sound Blaster work fine with the DOSBox defaults,
-and don't require you to load any DOS drivers. A small percentage of games,
-however --- especially from the early Sound Blaster days --- only work with a
-specific model, or require a driver to be loaded. Please refer to the
+Most games that support the Sound Blaster work fine with the DOSBox Staging
+defaults, and don't require you to load any DOS drivers. A small percentage of
+games, however --- especially from the early Sound Blaster days --- only work
+with a specific model, or require a driver to be loaded. Please refer to the
 [List of games that require a sound driver](#){ external } on the wiki for
 further details.
 
@@ -39,8 +35,8 @@ of these is the [AdLib](adlib.md#adlib-music-synthesizer-card) that is present
 on all Sound Blaster cards. The AdLib is also referred to as **OPL sound**
 (after the Yamaha OPL range of chips responsible for the "AdLib sound"), or
 **FM sound** (after the OPL chip's FM sound synthesis capabilities). DOSBox
-uses the highly accurate NukedOPL library to achieve a nearly bit-perfect
-emulation of the OPL chips.
+Staging uses the highly accurate NukedOPL library to achieve a nearly
+bit-perfect emulation of the OPL chips.
 
 The other less common synthesiser is the [Creative Music System](cms.md) (also
 referred to as **C/MS**, or **CMS**) which is only present on the earliest
@@ -78,8 +74,8 @@ description of the config settings for troubleshooting tips.
 
 ## Sound Blaster models
 
-The below table lists all Sound Blaster models emulated by DOSBox, along with
-their main capabilities:
+The below table lists all Sound Blaster models emulated by DOSBox Staging,
+along with their main capabilities:
 
 | Model                                                         | `sbtype` value | Digital audio                          | Synthesiser
 | ------------------------------------------------------------- | -------------- | -------------------------------------- | ---------------------------
@@ -349,14 +345,13 @@ This is the first Sound Blaster card to support CD-quality sound (stereo
 chip that has perfect backward-compatibility with OPL2 (but not dual OPL2),
 and supports stereo operation in a single chip.
 
-DOSBox emulates the Sound Blaster 16 by default. Most games either support
-this card directly, or will work with selecting an earlier Sound Blaster model
-in the game's setup, making use of the card's backward-compatibility feature.
-This is a good overall default, but if you're an audio enthusiast or would
-just like to get the best possible experience out of a given game, reading the
-[Selecting the best Sound Blaster model for a
-game](#selecting-the-best-sound-blaster-model) section is highly
-recommended.
+DOSBox Staging emulates the Sound Blaster 16 by default. Most games either
+support this card directly, or will work with selecting an earlier Sound
+Blaster model in the game's setup, making use of the card's
+backward-compatibility feature. This is a good overall default, but if you're
+an audio enthusiast or would just like to get the best possible experience out
+of a given game, reading the [Selecting the best Sound Blaster model for a
+game](#selecting-the-best-sound-blaster-model) section is highly recommended.
 
 Use the following setting to enable Sound Blaster 16 emulation:
 
@@ -419,10 +414,53 @@ sbtype = sb16
     </div>
 
 
+## Environment variables
+
+Many DOS programs use the `BLASTER` DOS environment variable to auto-detect
+and auto-configure the Sound Blaster card. On a real machine, this variable is
+set up in `AUTOEXEC.BAT` during the Sound Blaster driver installation process.
+
+DOSBox Staging injects the `BLASTER` environment variable at startup based on
+the card's configuration in the `[sblaster]` section. You should never set
+this variable manually.
+
+To view the value of the variable, execute the `SET BLASTER` DOS
+command. For example, this is the output you'll get with the default settings:
+
+```
+BLASTER=A220 I7 D1 H5 T6
+```
+
+The meaning of the space-separated values are as follows:
+
+<div class="compact" markdown>
+
+- `Axyz` --- base address ([`sbbase`](#sbbase))
+- `Ix` --- IRQ (interrupt) number ([`irq`](#irq))
+- `Dx` --- DMA channel ([`dma`](#dma))
+- `Hx` --- High DMA channel ([`hdma`](#hdma))
+
+</div>
+
+The number after the `T` parameter describes the type of the card:
+
+<div class="compact" markdown>
+
+- `1` -- Sound Blaster 1.x
+- `2` --  Sound Blaster Pro
+- `3` --  Sound Blaster 2.x
+- `4` --  Sound Blaster Pro 2
+- `5` --  Sound Blaster Pro MCA *--- not used by DOSBox Staging*
+- `6` --  Sound Blaster 16, 32, AWE32/64, or ViBRA
+- `10` -- Sound Blaster MCA *--- not used by DOSBox Staging*
+
+</div>
+
+
 ## Selecting the best Sound Blaster model
 
-DOSBox emulates the [Sound Blaster 16](#sound-blaster-16) by default to ensure
-the widest overall compatibility with DOS games. This lowest common
+DOSBox Staging emulates the [Sound Blaster 16](#sound-blaster-16) by default
+to ensure the widest overall compatibility with DOS games. This lowest common
 denominator setting will serve you well if you just want to play some games
 with minimum hassle. If that's the case, you might as well stop reading this
 chapter now, and only come back to it if you've encountered issues with
@@ -468,16 +506,17 @@ imperfect and is plagued by a range of issues:
     the Sound Blaster Pro 1.0 and no other model.
 
 To provide a good out-of-the-box experience that works well enough with most
-games without tinkering, DOSBox defaults to the imaginary `modern` [filter
-setting](#sb_filter) on all Sound Blaster models. This implements simple
-linear-interpolation instead of accurately emulating the analog output filter
---- this makes most games sound decent regardless of the Sound Blaster model
-in use, but it's not authentic.
+games without tinkering, DOSBox Staging defaults to the imaginary `modern`
+[filter setting](#sb_filter) on all Sound Blaster models. This implements
+simple linear-interpolation instead of accurately emulating the analog output
+filter --- this makes most games sound decent regardless of the Sound Blaster
+model in use, but it's not authentic.
 
 For the best authentic results, set the most appropriate Sound Blaster model
-for each game via the [`sb_type`](#sbtype) configuration setting. Additionally,
-set the [`sb_filter`](#sb_filter) setting to `auto` to let DOSBox select the
-output filter appropriate for the emulated Sound Blaster model.
+for each game via the [`sb_type`](#sbtype) configuration setting.
+Additionally, set the [`sb_filter`](#sb_filter) setting to `auto` to let
+DOSBox Staging select the output filter appropriate for the emulated Sound
+Blaster model.
 
 For example, use the following settings to enable authentic Sound Blaster Pro
 1.0 emulation with dual OPL2 support:
@@ -522,15 +561,15 @@ The [Creative Music System (CMS)](cms.md) synthesiser has its own dedicated
 **CMS** channel, which is always stereo.
 
 The upshot of this is that the digital audio and synthesiser volumes can be
-adjusted independently via the DOSBox mixer (e.g., in games that use
+adjusted independently via the DOSBox Staging mixer (e.g., in games that use
 digital audio for speech and sound effects, and the synthesiser for music).
 
 !!! note
 
     Starting with the Sound Blaster Pro, programs can adjust the volume of the
     digital audio, OPL, and CD Audio channels via the Sound Blaster software
-    mixer. By default, DOSBox forwards these adjustments to the DOSBox mixer,
-    allowing programs to change the volumes of these channels. This can
+    mixer. By default, DOSBox Staging forwards these adjustments to the DOSBox
+    mixer, allowing programs to change the volumes of these channels. This can
     potentially result in your manually set volumes being overridden. To
     prevent this from happening, set the [`sbmixer`](#sbmixer) configuration
     setting to `off`.
@@ -543,45 +582,74 @@ The Sound Blaster settings are configured in the `[sblaster]` section. The
 [Creative Music System](cms.md) and [AdLib](adlib.md) and page covers the
 related OPL and CMS settings that also live in this section.
 
-Many DOS programs use the `BLASTER` DOS environment variable to auto-detect
-and auto-configure the Sound Blaster card. On a real machine, this variable is
-set up in `AUTOEXEC.BAT` during the Sound Blaster driver installation process.
 
-DOSBox injects the `BLASTER` environment variable at startup based on the
-card's configuration in the `[sblaster]` section. You should never set this
-variable manually.
+##### sbtype
 
-To view the value of the variable, execute the `SET BLASTER` DOS
-command. For example, this is the output you'll get with the default settings:
+:   Sound Blaster model to emulate.
 
-```
-BLASTER=A220 I7 D1 H5 T6
-```
+    Possible values:
 
-The meaning of the space-separated values are as follows:
+    <div class="compact" markdown>
 
-<div class="compact" markdown>
+    - `none`/`off` -- Disable Sound Blaster emulation.
+    - `gb` -- [Creative Music System (CMS) / Game Blaster](cms.md)
+    - `sb1` -- [Sound Blaster 1.0](#sound-blaster-10)
+    - `sb2` -- [Sound Blaster 2.0](#sound-blaster-20)
+    - `sbpro1` -- [Sound Blaster Pro](#sound-blaster-pro)
+    - `sbpro2` -- [Sound Blaster Pro 2.0](#sound-blaster-pro-20)
+    - `sb16` *default*{ .default } -- [Sound Blaster 16](#sound-blaster-16)
+    - `ess` -- ESS ES1688 AudioDrive. The ESS DAC is not emulated but the
+      card is Sound Blaster Pro compatible; just configure the game for Sound
+      Blaster digital sound. Use this for getting ESS Enhanced FM music via
+      the card's ESFM synthesiser in games that support it.
 
-- `Axyz` --- base address ([`sbbase`](#sbbase))
-- `Ix` --- IRQ number ([`irq`](#irq))
-- `Dx` --- DMA channel ([`dma`](#dma))
-- `Hx` --- High DMA channel ([`hdma`](#hdma))
+    </div>
 
-</div>
+    Please refer to the [Sound Blaster models](#sound-blaster-models) section for an overview of the
+    capabilities of the different models.
 
-The number after the `T` parameter describes the type of the card:
 
-<div class="compact" markdown>
+##### sbbase
 
-- `1` -- Sound Blaster 1.x
-- `2` --  Sound Blaster Pro
-- `3` --  Sound Blaster 2.x
-- `4` --  Sound Blaster Pro 2
-- `5` --  Sound Blaster Pro MCA *--- not used by DOSBox*
-- `6` --  Sound Blaster 16, 32, AWE32/64, or ViBRA
-- `10` -- Sound Blaster MCA *--- not used by DOSBox*
+:   The base address (also referred to as I/O address, or port) of the Game
+    Blaster / Sound Blaster.
 
-</div>
+    Possible values: `220` *default*{ .default }, `240`, `260`, `280`, `2a0`, `2c0`, `2e0`, `300`.
+
+    You can typically only choose between `220`, `240` and `260` on real cards.
+
+    The AdLib Music Synthesizer Card has a fixed base address of `380` that
+    cannot be changed. Games can access the Yamaha OPL chip on Sound Blaster
+    cards either at base address `380` (this is the AdLib compatibility mode),
+    or at the Sound Blaster's base address.
+
+    !!! important
+
+        Virtually all games with Game Blaster / Creative Music System (CMS)
+        support only work with the base address set to `220`. A significant
+        number of early 90s games with Sound Blaster support also assume a
+        base address of `220` and do not let the user the change it, making
+        this the most compatible setting.
+
+
+##### irq
+
+:   The IRQ (interrupt) number of the Game Blaster / Sound Blaster.
+
+    Possible values: `3`, `5`, `7` *default*{ .default }, `9`, `10`, `11`, `12`.
+
+    You can typically only choose between `3`, `5`, `7` and `10` on real cards,
+
+    Many games do not recognize IRQs higher than 7.
+
+    !!! important
+
+        Cards before the Sound Blaster 16 defaulted to IRQ 7. From the Sound
+        Blaster 16 onwards, the default had been changed to IRQ 5. Because of
+        this, many earlier games assume IRQ 7 and do not let the user to
+        change it. Games that assume IRQ 5 are rarer, making `7` the overall
+        most compatible setting.
+
 
 
 ##### dma
@@ -609,23 +677,32 @@ The number after the `T` parameter describes the type of the card:
     You can typically only choose between `5`, `6` and `7` on real cards.
 
 
-##### irq
+##### sbmixer
 
-:   The IRQ (interrupt) number of the Game Blaster / Sound Blaster.
+:   Allow the Sound Blaster mixer to modify the DOSBox mixer.
 
-    Possible values: `3`, `5`, `7` *default*{ .default }, `9`, `10`, `11`, `12`.
+    Possible values: `on` *default*{ .default }, `off`
 
-    You can typically only choose between `3`, `5`, `7` and `10` on real cards,
+    Starting with the Sound Blaster Pro, programs can adjust the volume of the
+    digital audio, OPL, and CD Audio channels via the Sound Blaster software
+    mixer. By default, DOSBox forwards these adjustments to the DOSBox mixer
+    which can potentially result in your manually set volumes being
+    overridden. To prevent this from happening, set the `sbmixer`
+    configuration setting to `off` to retain full manual control over the
+    channel volumes. Note that this might break some games that use the mixer
+    to achieve certain effects (e.g., dynamically lowering the music volume
+    when voice-overs are playing).
 
-    Many games do not recognize IRQs higher than 7.
 
-    !!! important
+##### sbwarmup
 
-        Cards before the Sound Blaster 16 defaulted to IRQ 7. From the Sound
-        Blaster 16 onwards, the default had been changed to IRQ 5. Because of
-        this, many earlier games assume IRQ 7 and do not let the user to
-        change it. Games that assume IRQ 5 are rarer, making `7` the overall
-        most compatible setting.
+:   Silence initial digital audio after card power-on for this many
+    milliseconds.
+
+    Default value: `100`
+
+    This mitigates pops heard when starting many Sound Blaster based games.
+    Reduce this if you notice initial playback is missing digital audio.
 
 
 ##### sb_filter
@@ -669,80 +746,4 @@ The number after the `T` parameter describes the type of the card:
 
     Possible values: `on`, `off` *default*{ .default }
 
-
-##### sbbase
-
-:   The base address (also referred to as I/O address, or port) of the Game
-    Blaster / Sound Blaster.
-
-    Possible values: `220` *default*{ .default }, `240`, `260`, `280`, `2a0`, `2c0`, `2e0`, `300`.
-
-    You can typically only choose between `220`, `240` and `260` on real cards.
-
-    The AdLib Music Synthesizer Card has a fixed base address of `380` that
-    cannot be changed. Games can access the Yamaha OPL chip on Sound Blaster
-    cards either at base address `380` (this is the AdLib compatibility mode),
-    or at the Sound Blaster's base address.
-
-    !!! important
-
-        Virtually all games with Game Blaster / Creative Music System (CMS)
-        support only work with the base address set to `220`. A significant
-        number of early 90s games with Sound Blaster support also assume a
-        base address of `220` and do not let the user the change it, making
-        this the most compatible setting.
-
-
-##### sbmixer
-
-:   Allow the Sound Blaster mixer to modify the DOSBox mixer.
-
-    Possible values: `on` *default*{ .default }, `off`
-
-    Starting with the Sound Blaster Pro, programs can adjust the volume of the
-    digital audio, OPL, and CD Audio channels via the Sound Blaster software
-    mixer. By default, DOSBox forwards these adjustments to the DOSBox mixer
-    which can potentially result in your manually set volumes being
-    overridden. To prevent this from happening, set the `sbmixer`
-    configuration setting to `off` to retain full manual control over the
-    channel volumes. Note that this might break some games that use the mixer
-    to achieve certain effects (e.g., dynamically lowering the music volume
-    when voice-overs are playing).
-
-
-##### sbtype
-
-:   Sound Blaster model to emulate.
-
-    Possible values:
-
-    <div class="compact" markdown>
-
-    - `none`/`off` -- Disable Sound Blaster emulation.
-    - `gb` -- [Creative Music System (CMS) / Game Blaster](cms.md)
-    - `sb1` -- [Sound Blaster 1.0](#sound-blaster-10)
-    - `sb2` -- [Sound Blaster 2.0](#sound-blaster-20)
-    - `sbpro1` -- [Sound Blaster Pro](#sound-blaster-pro)
-    - `sbpro2` -- [Sound Blaster Pro 2.0](#sound-blaster-pro-20)
-    - `sb16` *default*{ .default } -- [Sound Blaster 16](#sound-blaster-16)
-    - `ess` -- ESS ES1688 AudioDrive. The ESS DAC is not emulated but the
-      card is Sound Blaster Pro compatible; just configure the game for Sound
-      Blaster digital sound. Use this for getting ESS Enhanced FM music via
-      the card's ESFM synthesiser in games that support it.
-
-    </div>
-
-    Please refer to the [Sound Blaster models](#sound-blaster-models) section for an overview of the
-    capabilities of the different models.
-
-
-##### sbwarmup
-
-:   Silence initial digital audio after card power-on for this many
-    milliseconds.
-
-    Default value: `100`
-
-    This mitigates pops heard when starting many Sound Blaster based games.
-    Reduce this if you notice initial playback is missing digital audio.
 
