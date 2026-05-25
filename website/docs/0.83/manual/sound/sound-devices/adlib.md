@@ -1,44 +1,23 @@
-# AdLib & CMS
+# AdLib (OPL)
 
-The **AdLib Music Synthesizer Card** and **Creative Music System** (CMS, also
-sold as the Game Blaster) were the two major pre-Sound Blaster music options
-for IBM PC compatibles. Their synthesis chips also appeared on early
-[Sound Blaster](sound-blaster.md) cards, which is why DOSBox Staging keeps
-their settings in the shared `[sblaster]` configuration section.
+This page covers the **AdLib Music Synthesizer Card**, the **AdLib Gold
+1000**, and the OPL3-compatible **ESS Enhanced FM (ESFM)** synthesiser --- all
+FM synthesisers built around Yamaha's OPL chip family or compatible designs.
+Because the OPL chip also appeared on every DOS-era [Sound
+Blaster](sound-blaster.md), their settings live the shared `[sblaster]`
+configuration section alongside the Sound Blaster's own. DOSBox Staging uses
+the cycle-accurate Nuked OPL3 emulator for effectively bit-identical OPL
+output. 
 
-Use this page for standalone AdLib, OPL, CMS, Game Blaster, AdLib Gold, and
-ESS ESFM configuration. For Sound Blaster digital audio, model selection, and
-IRQ/DMA settings, see [Sound Blaster](sound-blaster.md).
-
-
-## Creative Music System (CMS) / Game Blaster
-
-The **Creative Music System** (also referred to as **CMS** or **C/MS**) was
-released in August 1987 by Creative Technology. This was the first sound card
-of the company, it sounded like a much simpler variant of the AdLib card, and
-it did not sell that well.
-
-The card was rebranded as **Game Blaster** a year later, without making any
-changes to the hardware.
-
-Use the following setting to enable Game Blaster emulation:
-
-``` ini
-[sblaster]
-sbtype = gb
-```
-
-!!! note
-
-    As the CMS is also present on the Sound Blaster 1.0, and optionally on the
-    Sound Blaster 2.0, CMS support in some early games might only work with
-    either the Game Blaster or one of the Sound Blaster models, but not both.
+DOS games typically split their audio into two streams handled by different
+hardware: [synthesised music](../overview.md#synthesised-sound) (notes played
+by a chip like OPL) and [digital sound](../overview.md#digital-sound)
+(pre-recorded samples used for speech and sound effects). Most DOS games split
+audio across two devices: an AdLib-family card for music (covered here) and a
+[Sound Blaster](sound-blaster.md) for speech and sound effects.
 
 
-
-## FM synthesisers
-
-### AdLib Music Synthesizer Card
+## AdLib Music Synthesizer Card
 
 The **AdLib Music Synthesizer Card** (typically simply referred to as
 **AdLib**) was released by Ad Lib in 1987. It was the first popular sound card
@@ -52,10 +31,11 @@ result of this is that virtually all DOS games from 1990 onwards support the
 AdLib, at least as a fallback option.
 
 Digital audio is not supported on the card, but some games were able to
-approximate it with various tricks (e.g., **F-15 Strike Eagle II** by
-MicroProse).
+approximate it with clever programming tricks (e.g., [F-15 Strike Eagle
+II](https://www.mobygames.com/game/1737/f-15-strike-eagle-ii/) by MicroProse).
 
-Use the following settings to enable AdLib (OPL2) emulation:
+Use the following settings to emulate the original standalone AdLib Music
+Synthesizer Card:
 
 ``` ini
 [sblaster]
@@ -63,32 +43,36 @@ sbtype = none
 oplmode = opl2
 ```
 
+Only very old 80s games will need a standalone AdLib card. More recent games
+generally need a [Sound Blaster]() which comes with a built-in AdLib (OPL)
+synthesizer. See [Emulated Sound Blaster models](sound-blaster.md#emulated-sound-blaster-models) for details.
+
 !!! note
 
-    When [`oplmode`](#oplmode) is set to `opl2`, CMS emulation is always
-    enabled as well. This is legacy DOSBox behaviour, and will be addressed in
-    a future version.
+    When [`oplmode`](#oplmode) is set to `opl2`, [CMS emulation](cms.md) is
+    always enabled as well. This is legacy DOSBox behaviour, and will be
+    addressed in a future version.
 
 
-### AdLib Gold 1000
+## AdLib Gold 1000
 
 The **AdLib Gold 1000** was released in 1992. It has a Yamaha OPL3 chip and a
 stereo audio processor on-board, and it also supports 12-bit digital audio. An
-optional surround module is available to add further spatial effects to the
+optional surround module was available to add further spatial effects to the
 OPL output (e.g., chorus and reverb).
 
-DOSBox fully emulates the card, including the surround module, except for the
-digital audio capabilities.
+DOSBox Staging fully emulates the card, including the surround module, except
+for its digital audio capabilities.
 
 Very few games have direct support for the AdLib Gold 1000, and no known game
 makes use of its digital audio features. The single game in existence that
 really takes advantage of the AdLib Gold and its surround module is the
-adventure game **Dune** from 1992.
+adventure game [Dune](https://www.mobygames.com/game/380/dune/) from 1992.
 
 Use the following settings to enable AdLib Gold 1000 emulation. Typically, you
 would use the card together with a Sound Blaster for digital audio. The setup
 utility of [Dune](https://en.wikipedia.org/wiki/Dune_(video_game)) should
-auto-detect AdLib Gold and the surround module correctly with these settings.
+auto-detect AdLib Gold and the surround module correctly with these settings:
 
 ``` ini
 [sblaster]
@@ -97,26 +81,30 @@ oplmode = opl3gold
 ```
 
 
-### ESS Enhanced FM Audio (ESFM)
+## ESS Enhanced FM Audio (ESFM)
 
 **ESFM** is the OPL3-compatible FM synthesiser found on later ESS AudioDrive
 cards. In "legacy mode", ESFM is fully compatible with the Yamaha OPL3 and
-yields almost identical output on most material. What sets it apart is its
+yields almost identical output on most materials. What sets it apart is its
 "native mode", which offers advanced synthesis features surpassing the OPL3's
 capabilities --- it bridges the gap between synthetic-sounding OPL music and
 sample-based MIDI music.
 
-Since ESFM was released in 1995, only a handful of games support native mode,
-but in the few that do, the results sound quite spectacular.
+Since ESFM was released in 1995, just a few years before the end of the DOS
+era, only a handful of games support native mode, butn in the few that do, the
+results often sound spectacular.
 
-- To run ESFM in **legacy mode**, use `oplmode = esfm` with any [Sound Blaster](sound-blaster.md)
-  model and configure the game for Sound Blaster and AdLib/OPL as usual.
+- To run ESFM in **legacy mode**, use `oplmode = esfm` with any
+  [Sound Blaster](sound-blaster.md) model and configure the game for Sound
+  Blaster and AdLib/OPL as usual. There's usually not much to be gained from
+  this, the output will generally sound identical to OPL2.
 
-- To use **native mode**, set [`sbtype = ess`](sound-blaster.md#sbtype) and configure the **ESS Technology
-  ES1688, ES1788, ES1888 Enhanced FM Audio** MIDI music driver in the game's
-  setup utility (most games that support ESFM natively use the Miles Sound
-  System). For the digital audio driver, select the Sound Blaster Pro option
-  (ESS AudioDrive cards are Sound Blaster Pro compatible).
+- To use **native mode**, set [`sbtype = ess`](sound-blaster.md#sbtype) and
+  configure the **ESS Technology ES1688, ES1788, ES1888 Enhanced FM Audio**
+  MIDI music driver in the game's setup utility (most games that support ESFM
+  natively use the Miles Sound System). For the digital audio driver, select
+  the Sound Blaster Pro option (ESS AudioDrive cards are Sound Blaster Pro
+  compatible).
 
 ``` ini
 [sblaster]
@@ -147,8 +135,15 @@ sbtype = ess
 
     You can also try to "retrofit" the `ESFM.MID` driver from Miles Sound
     System games that have it into earlier ones that don't. For example,
-    **Discworld** sounds great with the ESFM driver from **Heaven's Dawn**.
+    [Discworld](https://www.mobygames.com/game/184/discworld/) sounds great
+    with the ESFM driver from
+    [Heaven's Dawn](https://www.mobygames.com/game/45120/heavens-dawn/).
 
+
+## Mixer channel
+
+All emulated AdLib (OPL) synthesizers outputs to the **OPL** [mixer
+channel](../mixer.md#list-of-mixer-channels).
 
 
 ## Audio artifact mitigation
@@ -156,8 +151,8 @@ sbtype = ess
 Real OPL hardware exhibited certain audio quirks --- hanging notes and DC bias
 in particular --- that were simply part of the experience at the time. DOSBox
 Staging faithfully emulates these behaviours, but also provides settings to
-mitigate them when strict authenticity is less important than a clean listening
-experience. These settings are best applied on a per-game basis.
+mitigate them when strict authenticity is less important than an improved
+listening experience. These settings are best applied on a per-game basis.
 
 Some games don't properly send note-off commands to the OPL FM synthesiser,
 resulting in notes that play forever. The [`opl_fadeout`](#opl_fadeout) setting
@@ -167,20 +162,23 @@ stops writing to the chip. Known affected games include [The Bard's Tale](https:
 specified as two values in milliseconds.
 
 A small number of games play PCM (sampled) audio through the OPL synthesiser
-rather than using it for FM synthesis. This can cause clicking and popping due
-to DC bias in the OPL output. The [`opl_remove_dc_bias`](#opl_remove_dc_bias)
-setting removes this bias. Only enable it for known affected games: [Golden Eagle](https://www.mobygames.com/game/44953/golden-eagle/),
-[Wizardry 6](https://www.mobygames.com/game/709/wizardry-bane-of-the-cosmic-forge/), and
-[Wizardry 7](https://www.mobygames.com/game/1561/wizardry-crusaders-of-the-dark-savant/).
+via clever programming tricks rather than using it for FM synthesis. This can
+cause clicking and popping due to DC bias in the output --- the
+[`opl_remove_dc_bias`](#opl_remove_dc_bias) setting removes this bias. Only
+enable it for known affected games: [Golden
+Eagle](https://www.mobygames.com/game/44953/golden-eagle/), [Wizardry
+6](https://www.mobygames.com/game/709/wizardry-bane-of-the-cosmic-forge/), and
+[Wizardry
+7](https://www.mobygames.com/game/1561/wizardry-crusaders-of-the-dark-savant/).
 
 For Sound Blaster startup-pop mitigation, see [Sound Blaster](sound-blaster.md#audio-artifact-mitigation).
 
 
 ## Configuration settings
 
-The AdLib, OPL, CMS, and Game Blaster settings are configured in the
-`[sblaster]` section. The related Sound Blaster digital-audio settings are
-covered on the [Sound Blaster](sound-blaster.md#configuration-settings) page.
+The AdLib settings are configured in the `[sblaster]` section. The related
+Sound Blaster digital-audio settings are covered on the [Sound
+Blaster](sound-blaster.md#configuration-settings) page.
 
 ### OPL
 
@@ -269,8 +267,8 @@ covered on the [Sound Blaster](sound-blaster.md#configuration-settings) page.
 
 :   OPL mode to emulate.
 
-    DOSBox uses the highly accurate NukedOPL library to achieve a nearly
-    bit-perfect emulation of the Yamaha OPL chips.
+    DOSBox Staging uses the highly accurate NukedOPL library to achieve a
+    nearly bit-perfect emulation of the Yamaha OPL chips.
 
     Possible values:
 
@@ -299,31 +297,3 @@ covered on the [Sound Blaster](sound-blaster.md#configuration-settings) page.
           in games; you'll also need to set [`sbtype = ess`](sound-blaster.md#sbtype). `oplmode = esfm`
           is useful to get ESFM-flavoured OPL with original Sound Blaster
           models.
-
-
-
-### CMS
-
-##### cms
-
-:   Enable CMS emulation.
-
-    Possible values:
-
-    - `auto` *default*{ .default } -- Auto-enable CMS emulation for [Sound
-      Blaster 1](sound-blaster.md#sound-blaster-10) and Game Blaster.
-    - `on` -- Enable CMS emulation on [Sound Blaster 1](sound-blaster.md#sound-blaster-10) and [2](sound-blaster.md#sound-blaster-20).
-    - `off` -- Disable CMS emulation (except when the Game Blaster is
-      selected).
-
-
-##### cms_filter
-
-:   Filter for the Creative Music System (CMS) / Game Blaster output:
-
-    - `on` *default*{ .default } -- Filter the CMS output. This applies a 1st order low-pass filter at 6 kHz (`lpf 1 6000`).
-    - `off` -- Don't filter the CMS output.
-    - `<custom>` -- Custom filter definition; see
-      [Custom filter settings](../output-filters.md#custom-filter-settings)
-      for details.
-

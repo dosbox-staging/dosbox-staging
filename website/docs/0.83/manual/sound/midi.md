@@ -40,9 +40,10 @@ compared to digital audio (generally, just a few tens of kilobytes per
 composition), MIDI music was an ideal match for DOS games before the
 wide-spread adoption of the CD-ROM with its huge 650 to 700 megabytes of
 capacity on a single CD. This is similar in principle to how the [Creative
-Music System and AdLib](sound-devices/adlib-cms.md) synthesisers were used in games, only these MIDI sound
-modules were capable of producing much higher quality music using sampled
-sounds of real-world instruments.
+Music System](sound-devices/cms.md) and [AdLib](sound-devices/cms.md)
+synthesisers were used in games, only these MIDI sound modules were capable of
+producing much higher quality music using sampled sounds of real-world
+instruments.
 
 
 ## The General MIDI standard

@@ -143,7 +143,7 @@ Two hardware breakthroughs transformed PC gaming in the late 1980s. [VGA
 graphics](../graphics/adapters.md#vga-and-svga) arrived in 1987 with 256 colours
 at 320&times;200 resolution, enabling visuals that could finally rival the
 glorious Commodore Amiga. On the audio side, the
-[AdLib](../sound/sound-devices/adlib-cms.md#adlib-music-synthesizer-card)
+[AdLib](../sound/sound-devices/adlib.md#adlib-music-synthesizer-card)
 card brought FM synthesis to the PC in 1987, followed by the [Sound
 Blaster](../sound/sound-devices/sound-blaster.md) in 1989 which added
 digital audio playback. The 386 CPU provided the processing power to drive

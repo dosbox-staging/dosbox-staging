@@ -107,7 +107,7 @@ providing three-voice sound via a built-in chip that made it the best gaming
 PC for sound until dedicated sound cards arrived.
 
 Real audio came to the PC platform in the late 1987 with the
-[AdLib](../sound/sound-devices/adlib-cms.md#fm-synthesisers) card
+[AdLib](../sound/sound-devices/adlib.md) card
 using FM synthesis, followed by Creative's [Sound
 Blaster](../sound/sound-devices/sound-blaster.md) in 1989 which added
 digital audio playback. The Sound Blaster became the de facto standard, and

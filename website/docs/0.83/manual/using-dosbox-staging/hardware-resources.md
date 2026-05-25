@@ -67,7 +67,7 @@ configuration:
 
 | Device                                                                                                   | I/O base              | IRQ           | DMA   |
 | --------                                                                                                 | ----------            | -----         | ----- |
-| [AdLib / OPL](../sound/sound-devices/adlib-cms.md#adlib-music-synthesizer-card) (FM synth) | 388                   | ---           | ---   |
+| [AdLib / OPL](../sound/sound-devices/adlib.md#adlib-music-synthesizer-card) (FM synth) | 388                   | ---           | ---   |
 | [MPU-401](../sound/midi.md) (MIDI interface)                                               | 330                   | 9             | ---   |
 | [Game port](../input/joystick.md) (joystick)                                                             | 201                   | ---           | ---   |
 | [Tandy DAC](../sound/sound-devices/tandy.md)                                                             | C4                    | 7             | 1     |
@@ -159,8 +159,8 @@ the reason, and the defaults should work.
 ## Further reading
 
 - [Sound overview](../sound/overview.md) --- general guide to DOS game audio
-- [Sound Blaster](../sound/sound-devices/sound-blaster.md) and [AdLib & CMS](../sound/sound-devices/adlib-cms.md)
-  --- Sound Blaster, AdLib, and CMS configuration
+- [AdLib](../sound/sound-devices/adlib.md) --- AdLib configuration
+- [Sound Blaster](../sound/sound-devices/sound-blaster.md) and --- Sound Blaster configuration
 - [Gravis UltraSound](../sound/sound-devices/gravis-ultrasound.md) --- GUS
   configuration and patch files
 - [IBM Music Feature Card](../sound/sound-devices/imfc.md) --- IMFC configuration

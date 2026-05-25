@@ -124,9 +124,6 @@ plugins:
 
           'downloads/development-builds.md': 'releases/development-builds.md'
 
-          # Renamed sound-device documentation pages
-          '0.83/manual/sound/sound-devices/adlib-cms-sound-blaster.md': '0.83/manual/sound/sound-devices/sound-blaster.md'
-
           'downloads/release-notes/0.80.1.md': 'releases/release-notes/0.80.1.md'
           'downloads/release-notes/0.80.0.md': 'releases/release-notes/0.80.0.md'
           'downloads/release-notes/0.79.1.md': 'releases/release-notes/0.79.1.md'
@@ -227,19 +224,20 @@ nav:
         - 0.83/manual/sound/output-filters.md
         - 0.83/manual/sound/disk-noise.md
         - Sound devices:
-          - 0.83/manual/sound/sound-devices/adlib-cms.md
+          - 0.83/manual/sound/sound-devices/pc-speaker.md
+          - 0.83/manual/sound/sound-devices/tandy.md
+          - 0.83/manual/sound/sound-devices/cms.md
+          - 0.83/manual/sound/sound-devices/adlib.md
+          - 0.83/manual/sound/sound-devices/covox-variants.md
           - 0.83/manual/sound/sound-devices/sound-blaster.md
           - 0.83/manual/sound/sound-devices/roland-mt-32.md
           - 0.83/manual/sound/sound-devices/sound-canvas.md
           - 0.83/manual/sound/sound-devices/fluidsynth.md
-          - 0.83/manual/sound/sound-devices/pc-speaker.md
-          - 0.83/manual/sound/sound-devices/tandy.md
           - 0.83/manual/sound/sound-devices/gravis-ultrasound.md
           - 0.83/manual/sound/sound-devices/cd-da.md
           - 0.83/manual/sound/sound-devices/ibm-ps1audio.md
-          - 0.83/manual/sound/sound-devices/covox-variants.md
-          - 0.83/manual/sound/sound-devices/innovation.md
           - 0.83/manual/sound/sound-devices/imfc.md
+          - 0.83/manual/sound/sound-devices/innovation.md
 
       - Input:
         - 0.83/manual/input/overview.md

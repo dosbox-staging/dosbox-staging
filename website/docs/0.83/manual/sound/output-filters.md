@@ -36,14 +36,14 @@ The following per-device filter settings are available:
 
 <div class="compact" markdown>
 
-- [`cms_filter`](sound-devices/adlib-cms.md#cms_filter) --- Creative Music System (Game Blaster)
+- [`cms_filter`](sound-devices/cms.md#cms_filter) --- Creative Music System (Game Blaster)
 - [`fsynth_filter`](sound-devices/fluidsynth.md#fsynth_filter) --- FluidSynth (custom only)
 - [`gus_filter`](sound-devices/gravis-ultrasound.md#gus_filter) --- Gravis UltraSound (custom only)
 - [`imfc_filter`](sound-devices/imfc.md#imfc_filter) --- IBM Music Feature Card (custom only)
 - [`innovation_filter`](sound-devices/innovation.md#innovation_filter) --- Innovation SSI-2001 (custom only)
 - [`lpt_dac_filter`](sound-devices/covox-variants.md#lpt_dac_filter) --- LPT DAC devices (Covox, Disney, Stereo-on-1)
 - [`mt32_filter`](sound-devices/roland-mt-32.md#mt32_filter) --- Roland MT-32 (custom only)
-- [`opl_filter`](sound-devices/adlib-cms.md#opl_filter) --- OPL synthesiser
+- [`opl_filter`](sound-devices/adlib.md#opl_filter) --- OPL synthesiser
 - [`pcspeaker_filter`](sound-devices/pc-speaker.md#pcspeaker_filter) --- PC Speaker
 - [`ps1audio_dac_filter`](sound-devices/ibm-ps1audio.md#ps1audio_dac_filter) --- IBM PS/1 Audio DAC
 - [`ps1audio_filter`](sound-devices/ibm-ps1audio.md#ps1audio_filter) --- IBM PS/1 Audio synthesiser
