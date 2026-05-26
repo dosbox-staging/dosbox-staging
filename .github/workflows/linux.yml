@@ -298,3 +298,10 @@ jobs:
           name: dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}.tar.xz
           path: dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}.tar.xz
           archive: false
+
+      - name:  Report repo cache usage
+        if:    always()
+        shell: bash
+        run:   gh cache list --limit 50 --sort size_in_bytes --order desc
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

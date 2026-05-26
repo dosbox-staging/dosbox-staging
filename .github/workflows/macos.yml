@@ -128,6 +128,13 @@ jobs:
           path: build/release-macos-${{ matrix.conf.arch }}/Resources
           overwrite: true
 
+      - name:  Report repo cache usage
+        if:    always()
+        shell: bash
+        run:   gh cache list --limit 50 --sort size_in_bytes --order desc
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
   publish_universal_build:
     name:    Publish universal build
