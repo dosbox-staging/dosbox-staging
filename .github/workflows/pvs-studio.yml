@@ -29,18 +29,39 @@ jobs:
       - name: Set up CMake
         uses: lukka/get-cmake@591817e96fcad43505fb4eae36172462abb3a42e # v4.3.3
 
-      - name: Configure PVS-Studio repository
+      - name: Load apt package list
+        id:   apt_pkgs
+        run:  echo "list=$(tr '\n' ' ' < extras/linux/ubuntu-24.04-packages.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Refresh apt index
+        run:  sudo apt-get update
+
+      # Cache standard deps before configuring the PVS-Studio repo:
+      # if that repo flakes, regular packages are still available.
+      - name: Install apt dependencies
+        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
+        with:
+          packages: ${{ steps.apt_pkgs.outputs.list }}
+          version:  "1.0"
+
+      # PVS-Studio's external apt repo flakes. wget has native --tries;
+      # apt-get uses ./.github/actions/retry. cache-apt-pkgs-action
+      # doesn't help -- the repo isn't a standard PPA.
+      - name: Fetch PVS-Studio apt key and sources list
         run: |
           set -xeu
-          wget -q -O - https://files.pvs-studio.com/etc/pubkey.txt | sudo apt-key add -
-          sudo wget -O /etc/apt/sources.list.d/viva64.list https://files.pvs-studio.com/etc/viva64.list
-          sudo apt-get update
+          wget -q --tries=3 --waitretry=10 -O - https://files.pvs-studio.com/etc/pubkey.txt | sudo apt-key add -
+          sudo wget --tries=3 --waitretry=10 -O /etc/apt/sources.list.d/viva64.list https://files.pvs-studio.com/etc/viva64.list
 
-      - name: Install dependencies
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get install -y $(cat extras/linux/ubuntu-24.04-packages.txt)
-          sudo apt-get install pvs-studio
+      - name: Refresh apt index (PVS-Studio repo)
+        uses: ./.github/actions/retry
+        with:
+          cmd: sudo apt-get update
+
+      - name: Install PVS-Studio
+        uses: ./.github/actions/retry
+        with:
+          cmd: sudo DEBIAN_FRONTEND=noninteractive apt-get install -y pvs-studio
 
       - name: Set up vcpkg
         uses: ./.github/actions/setup-vcpkg
