@@ -61,11 +61,21 @@ jobs:
             echo "dest_path_prefix=preview/${{ inputs.destination_prefix }}" >> "$GITHUB_ENV"
           fi
 
+      # Manual actions/cache rather than setup-python@v5: ubuntu-slim
+      # has preinstalled Python we don't want replaced.
+      - name: Cache pip downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('dosbox-staging/extras/documentation/mkdocs-package-requirements.txt') }}
+
       - name: Install mkdocs
         run: |
           cd dosbox-staging
           pip3 install --upgrade pip
-          pip3 install -r extras/documentation/mkdocs-package-requirements.txt
+          # --retries / --timeout: survive intermittent PyPI hiccups.
+          pip3 install --retries 5 --timeout 60 \
+            -r extras/documentation/mkdocs-package-requirements.txt
 
       - name: Get current documentation Git hash
         run: |
