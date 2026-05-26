@@ -18,15 +18,24 @@ jobs:
         with:
           submodules: false
 
-      - name: Update packages
+      # cache-apt-pkgs-action validates packages via apt-cache before its own
+      # apt-get update; ubuntu-slim's index is empty until we refresh it, so
+      # without this the action would fail.
+      - name: Refresh apt index
         run:  sudo apt-get update
+
+      # Bump 'version:' to force-invalidate the cache
+      - name: Install apt dependencies
+        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
+        with:
+          packages: python3-setuptools ruby-full appstream-util
+          version: "1.0"
 
       - name: Run shellcheck
         run:  ./scripts/linting/verify-bash.sh
 
       - name: Install pylint
         run: |
-          sudo apt-get install python3-setuptools
           sudo pip3 install pylint beautifulsoup4 html5lib
           sudo pip3 install -r extras/documentation/mkdocs-package-requirements.txt
 
@@ -35,15 +44,11 @@ jobs:
 
       - name: Install markdownlint
         run: |
-          sudo apt-get install ruby-full
           ruby --version
           sudo gem install mdl
 
       - name: Run markdownlint
         run:  ./scripts/linting/verify-markdown.sh
-
-      - name: Install appstream-util
-        run:  sudo apt-get install appstream-util
 
       - name: Verify metainfo.xml
         run:  appstream-util validate-relax --nonet extras/linux/org.dosbox_staging.dosbox_staging.metainfo.xml
