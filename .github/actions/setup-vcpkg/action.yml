@@ -22,11 +22,17 @@ inputs:
 runs:
   using: composite
   steps:
+    # We use a two-staged vcpkg caching schema:
+    #
+    # - vcpkg_downloads_cache: cache for the downloaded source files
+    # - vcpkg_bin_cache: compiled output cache
+    #
     - name: Set vcpkg env variables
       if: ${{ runner.os != 'Windows'}}
       shell: bash
       run: |
         echo "VCPKG_ROOT=${VCPKG_INSTALLATION_ROOT}" >> $GITHUB_ENV
+        echo "VCPKG_DOWNLOADS=${{ github.workspace }}/vcpkg_downloads" >> $GITHUB_ENV
         echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_bin_cache" >> $GITHUB_ENV
         echo "DOSBOX_VCPKG_BASELINE=$(jq -r .\"builtin-baseline\" ./vcpkg.json)" >> $GITHUB_ENV
 
@@ -35,6 +41,7 @@ runs:
       shell: pwsh
       run: |
         Write-Output "VCPKG_ROOT=$Env:VCPKG_INSTALLATION_ROOT" >> $Env:GITHUB_ENV
+        Write-Output "VCPKG_DOWNLOADS=C:\vcpkg_downloads" >> $Env:GITHUB_ENV
         Write-Output "VCPKG_DEFAULT_BINARY_CACHE=C:\vcpkg_bin_cache" >> $Env:GITHUB_ENV
         $baseline = (Get-Content .\vcpkg.json | ConvertFrom-Json)."builtin-baseline"
         Write-Output "DOSBOX_VCPKG_BASELINE=${baseline}" >> $Env:GITHUB_ENV
@@ -79,3 +86,31 @@ runs:
       shell: pwsh
       run: |
         New-Item -Path "${Env:VCPKG_DEFAULT_BINARY_CACHE}" -ItemType Directory
+
+    # Per-OS key: downloads/tools/ has platform-specific binaries.
+    # Compiler/ImageVersion are intentionally omitted -- tarballs are
+    # toolchain-independent, so runner-image bumps shouldn't invalidate.
+    - name:  Set vcpkg downloads cache key
+      id:    vcpkg_downloads_cache_key
+      shell: bash
+      run: |
+        echo "cacheKey=vcpkg-${VCPKG_SHORT_HASH}-downloads-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-ports/**') }}" >> $GITHUB_OUTPUT
+
+    - name: Restore vcpkg downloads cache
+      uses: actions/cache@v4
+      id:   vcpkg_downloads_cache
+      with:
+        path: ${{ env.VCPKG_DOWNLOADS }}
+        key:  ${{ steps.vcpkg_downloads_cache_key.outputs.cacheKey }}
+
+    - name: Create downloads cache directory
+      if: ${{ steps.vcpkg_downloads_cache.outputs.cache-hit != 'true' && runner.os != 'Windows'}}
+      shell: bash
+      run: |
+        mkdir -p "${VCPKG_DOWNLOADS}"
+
+    - name: Create downloads cache directory (Windows)
+      if: ${{ steps.vcpkg_downloads_cache.outputs.cache-hit != 'true' && runner.os == 'Windows'}}
+      shell: pwsh
+      run: |
+        New-Item -Path "${Env:VCPKG_DOWNLOADS}" -ItemType Directory -Force
