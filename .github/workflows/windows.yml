@@ -159,7 +159,9 @@ jobs:
           set -x
           ZIP_NAME=dosbox-vcpkg-deps-windows-${{ matrix.conf.arch }}.zip
 
-          curl -L https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$VCPKG_EXT_DEPS_VERSION/$ZIP_NAME -o $ZIP_NAME
+          # Retry on transient GitHub release-asset CDN flakes.
+          curl -fL --retry 5 --retry-all-errors --retry-delay 10 \
+            https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$VCPKG_EXT_DEPS_VERSION/$ZIP_NAME -o $ZIP_NAME
           unzip $ZIP_NAME -d vcpkg-deps
 
           cp vcpkg-deps/release/* "$PACKAGE_DIR"
@@ -172,7 +174,9 @@ jobs:
           set -x
           ZIP_NAME=Nuked-SC55-CLAP-windows-${{ matrix.conf.arch }}-$NUKED_SC55_CLAP_VERSION.zip
 
-          curl -L https://github.com/johnnovak/Nuked-SC55-CLAP/releases/download/$NUKED_SC55_CLAP_VERSION/$ZIP_NAME -o $ZIP_NAME
+          # Retry on transient GitHub release-asset CDN flakes.
+          curl -fL --retry 5 --retry-all-errors --retry-delay 10 \
+            https://github.com/johnnovak/Nuked-SC55-CLAP/releases/download/$NUKED_SC55_CLAP_VERSION/$ZIP_NAME -o $ZIP_NAME
           unzip $ZIP_NAME -d nuked-sc55-clap
 
           PLUGINS_DIR="$PACKAGE_DIR/plugins"

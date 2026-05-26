@@ -238,7 +238,9 @@ jobs:
           set -x
           ZIP_NAME=dosbox-vcpkg-deps-linux-x86_64.zip
 
-          wget -nv https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$VCPKG_EXT_DEPS_VERSION/$ZIP_NAME
+          # Retry on transient GitHub release-asset CDN flakes.
+          wget -nv --tries=5 --waitretry=10 --retry-connrefused \
+            https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$VCPKG_EXT_DEPS_VERSION/$ZIP_NAME
           unzip $ZIP_NAME -d vcpkg-deps
 
           LIB_DIR="dosbox-staging-linux-x86_64-$DOSBOX_VERSION_AND_HASH/lib"
@@ -251,7 +253,9 @@ jobs:
           set -x
           ZIP_NAME=Nuked-SC55-CLAP-linux-x86_64-$NUKED_SC55_CLAP_VERSION.zip
 
-          curl -L https://github.com/johnnovak/Nuked-SC55-CLAP/releases/download/$NUKED_SC55_CLAP_VERSION/$ZIP_NAME -o $ZIP_NAME
+          # Retry on transient GitHub release-asset CDN flakes.
+          curl -fL --retry 5 --retry-all-errors --retry-delay 10 \
+            https://github.com/johnnovak/Nuked-SC55-CLAP/releases/download/$NUKED_SC55_CLAP_VERSION/$ZIP_NAME -o $ZIP_NAME
           unzip $ZIP_NAME -d nuked-sc55-clap
 
           PLUGINS_DIR="dosbox-staging-linux-x86_64-$DOSBOX_VERSION_AND_HASH/plugins"
