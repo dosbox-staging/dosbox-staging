@@ -64,10 +64,14 @@ jobs:
       # Manual actions/cache rather than setup-python@v5: ubuntu-slim
       # has preinstalled Python we don't want replaced.
       - name: Cache pip downloads
+        id:   pip_cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: pip-${{ runner.os }}-${{ hashFiles('dosbox-staging/extras/documentation/mkdocs-package-requirements.txt') }}
+
+      - name: Report pip cache status
+        run:  echo "pip cache hit:" "${{ steps.pip_cache.outputs.cache-hit || 'false' }}"
 
       - name: Install mkdocs
         run: |

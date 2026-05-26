@@ -114,3 +114,10 @@ runs:
       shell: pwsh
       run: |
         New-Item -Path "${Env:VCPKG_DOWNLOADS}" -ItemType Directory -Force
+
+    # 'true' = cache hit; 'false' = miss.
+    - name:  Report vcpkg cache status
+      shell: bash
+      run: |
+        echo "vcpkg binary cache hit:    ${{ steps.vcpkg_bin_cache.outputs.cache-hit || 'false' }}"
+        echo "vcpkg downloads cache hit: ${{ steps.vcpkg_downloads_cache.outputs.cache-hit || 'false' }}"

@@ -39,10 +39,14 @@ jobs:
       # Cache standard deps before configuring the PVS-Studio repo:
       # if that repo flakes, regular packages are still available.
       - name: Install apt dependencies
+        id:   apt_cache
         uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
         with:
           packages: ${{ steps.apt_pkgs.outputs.list }}
           version:  "1.0"
+
+      - name: Report apt cache status
+        run:  echo "apt cache hit:" "${{ steps.apt_cache.outputs.cache-hit || 'false' }}"
 
       # PVS-Studio's external apt repo flakes. wget has native --tries;
       # apt-get uses ./.github/actions/retry. cache-apt-pkgs-action
