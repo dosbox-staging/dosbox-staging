@@ -26,10 +26,14 @@ jobs:
 
       # Bump 'version:' to force-invalidate the cache
       - name: Install apt dependencies
+        id:   apt_cache
         uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
         with:
           packages: python3-setuptools ruby-full appstream-util
           version: "1.0"
+
+      - name: Report apt cache status
+        run:  echo "apt cache hit:" "${{ steps.apt_cache.outputs.cache-hit || 'false' }}"
 
       - name: Run shellcheck
         run:  ./scripts/linting/verify-bash.sh
