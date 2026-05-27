@@ -1,0 +1,43 @@
+name: Retry shell command
+description: Run a shell command with linear backoff. Use only when the command has no built-in retry facilities.
+
+inputs:
+  cmd:
+    description: 'Shell command to run'
+    required: true
+
+  attempts:
+    description: 'Maximum attempts'
+    required: false
+    default: '3'
+
+  base-delay:
+    description: 'Delay seconds, multiplied by attempt number'
+    required: false
+    default: '10'
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        RETRY_CMD: ${{ inputs.cmd }}
+        RETRY_ATTEMPTS: ${{ inputs.attempts }}
+        RETRY_BASE_DELAY: ${{ inputs.base-delay }}
+      run: |
+        set -u
+        for i in $(seq 1 "$RETRY_ATTEMPTS"); do
+          # Add collapsible GitHub log sections with ::group::/::endgroup::
+          echo "::group::Attempt $i/$RETRY_ATTEMPTS: $RETRY_CMD"
+          if bash -c "$RETRY_CMD"; then
+            echo "::endgroup::"
+            exit 0
+          fi
+          echo "::endgroup::"
+
+          if [ "$i" = "$RETRY_ATTEMPTS" ]; then
+            echo "::error::Command failed after $RETRY_ATTEMPTS attempts: $RETRY_CMD"
+            exit 1
+          fi
+          sleep $((i * RETRY_BASE_DELAY))
+        done
