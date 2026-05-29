@@ -13,6 +13,9 @@ make.log
 *.defines
 missed.txt
 
+# Default CMake build dir
+/build
+
 # VCPKG
 vcpkg_installed
 
