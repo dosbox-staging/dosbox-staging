@@ -20,7 +20,7 @@ The `"resources"` can be provided in two ways:
 
 1. Along-side the executable, as a portable package:
 
-    Visual Studio both populate the build area with the compiled
+    Visual Studio both populates the build area with the compiled
     `"dosbox"` executable (plus DLLs on Windows) and the `"resources"`
     directory relative to it, which together form a stand-alone and portable
     application.
