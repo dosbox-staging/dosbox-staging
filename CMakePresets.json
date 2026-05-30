@@ -88,7 +88,8 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_XCODE_ATTRIBUTE_COMPILATION_CACHE_ENABLE_CACHING": "YES"
       }
     },
     {
@@ -102,7 +103,8 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_XCODE_ATTRIBUTE_COMPILATION_CACHE_ENABLE_CACHING": "YES"
       }
     },
     {
