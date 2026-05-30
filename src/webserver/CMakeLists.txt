@@ -2,6 +2,7 @@ target_sources(dosboxcommon PRIVATE
   bridge.cpp
   webserver.cpp
   cpu.cpp
+  drives.cpp
   memory.cpp
   dos.cpp
   dosbox.cpp)
