@@ -134,6 +134,35 @@ see the built-in API documentation.
     Returns HTTP 400 on invalid addresses.
 
 
+### Drive cycling
+
+`POST /api/v1/drives/:letter/cycle`
+
+:   Cycle to the next disk image on the specified drive. The `:letter`
+    parameter is a single drive letter (case-insensitive).
+
+    See [Disk swapping](using-dosbox-staging/storage.md#disk-swapping)
+    for background on multi-disk setups.
+
+    Response:
+
+    ``` json
+    {
+        "drive": "A",
+        "current_disk_image_index": 1,
+        "total_disk_images": 3,
+        "disk_image_paths": [
+            "disk1.img",
+            "disk2.img",
+            "disk3.img"
+        ]
+    }
+    ```
+
+    - **400** --- invalid drive letter
+    - **422** --- drive has no disk images attached
+
+
 ### DOS information
 
 `GET /api/v1/dos/internals`
