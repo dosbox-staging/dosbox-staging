@@ -56,6 +56,7 @@ public:
 	static void CycleDisks(int drive, bool notify);
 	static void CycleAllDisks(void);
 	static char *GetDrivePosition(int drive);
+	static int GetCurrentDiskIndex(int drive);
 
 	static void Init();
 

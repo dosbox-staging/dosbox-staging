@@ -318,6 +318,11 @@ char *DriveManager::GetDrivePosition(int drive)
 	return swap_position;
 }
 
+int DriveManager::GetCurrentDiskIndex(int drive)
+{
+	return drive_infos.at(drive).current_disk;
+}
+
 void DriveManager::Init()
 {
 	// setup drive_infos structure
