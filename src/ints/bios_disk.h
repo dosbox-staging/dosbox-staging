@@ -6,9 +6,10 @@
 
 #include "dosbox.h"
 
-#include <cstdio>
 #include <array>
+#include <cstdio>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "dos/dos.h"
@@ -92,5 +93,15 @@ void swapInDisks(unsigned int swap_position);
 
 void swapInNextDisk(void);
 bool getSwapRequest(void);
+
+struct DriveCycleResult {
+	enum class Status { Success, DriveNotMounted };
+	Status status                        = Status::DriveNotMounted;
+	int current_index                    = 0;
+	int total_images                     = 0;
+	std::vector<std::string> image_paths = {};
+};
+
+DriveCycleResult BIOS_CycleDiskImageForDrive(int drive);
 
 #endif

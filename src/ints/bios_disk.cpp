@@ -164,6 +164,37 @@ void swapInNextDisk(bool pressed)
 	swapping_requested = true;
 }
 
+DriveCycleResult BIOS_CycleDiskImageForDrive(int drive)
+{
+	DriveCycleResult result = {};
+
+	if (drive < 0 || drive >= DOS_DRIVES || !Drives.at(drive)) {
+		result.status = DriveCycleResult::Status::DriveNotMounted;
+		return result;
+	}
+
+	const auto& images = DriveManager::GetFilesystemImages(drive);
+
+	if (images.size() > 1) {
+		DriveManager::CycleDisks(drive, true);
+		Drives.at(drive)->EmptyCache();
+	}
+
+	const auto& updated_images = DriveManager::GetFilesystemImages(drive);
+
+	result.status        = DriveCycleResult::Status::Success;
+	result.total_images  = static_cast<int>(updated_images.size());
+	result.current_index = DriveManager::GetCurrentDiskIndex(drive);
+
+	for (const auto& img : updated_images) {
+		if (img) {
+			result.image_paths.emplace_back(img->GetInfo());
+		}
+	}
+
+	return result;
+}
+
 uint8_t imageDisk::Read_Sector(uint32_t head, uint32_t cylinder,
                                uint32_t sector, void* data)
 {
