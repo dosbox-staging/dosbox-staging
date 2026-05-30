@@ -38,6 +38,13 @@ export interface DosBoxInfo {
 	configWebserver: string;
 }
 
+export interface DriveCycleResponse {
+	drive: string;
+	current_disk_image_index: number;
+	total_disk_images: number;
+	disk_image_paths: string[];
+}
+
 export class DOSBoxApi {
     constructor(baseUrl?: string);
     getCpu(): Promise<CpuResponse>;
@@ -53,4 +60,5 @@ export class DOSBoxApi {
     free(physicalAddress: number): Promise<void>;
 	shutdown(): Promise<void>;
     getDosInfo(): Promise<DosInfo>;
+	cycleDrive(letter: string): Promise<DriveCycleResponse>;
 }

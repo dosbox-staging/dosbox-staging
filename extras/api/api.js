@@ -119,4 +119,11 @@ export class DOSBoxApi {
             method: 'POST'
         });
     }
+
+    async cycleDrive(letter) {
+        const res = await this._request(`drives/${letter.toLowerCase()}/cycle`, {
+            method: 'POST'
+        });
+        return await res.json();
+    }
 }
