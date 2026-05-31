@@ -28,6 +28,9 @@
 #include "gui/titlebar.h"
 #include "utils/math_utils.h"
 
+struct _SDL_AudioStream;
+typedef struct _SDL_AudioStream SDL_AudioStream;
+
 // The mixer callback can accept a static function or a member function
 // using a std::bind. The callback typically requests enough frames to
 // fill one millisecond with of audio. For an audio channel running at
@@ -119,18 +122,18 @@ struct MixerChannelSettings {
 
 enum class ResampleMethod {
 	// If the channel sample rate is higher than the mixer sample rate,
-	// we'll do proper downsampling via Speex (e.g., when the mixer rate is
-	// 44,100 Hz but the Sound Blaster is running at its 45,454 Hz maximum
-	// rate, or the OPL channel at its native 49,716 Hz rate).
+	// we'll do proper downsampling (e.g., when the mixer rate is 44,100 Hz
+	// but the Sound Blaster is running at its 45,454 Hz maximum rate, or
+	// the OPL channel at its native 49,716 Hz rate).
 	LerpUpsampleOrResample,
 
 	// Upsample from the channel sample rate to the zero-order-hold target
 	// frequency first (this is basically the "nearest-neighbour" equivalent
-	// in audio), then resample to the mixer rate with Speex. This method
+	// in audio), then resample to the mixer rate. This method
 	// faithfully emulates the metallic, crunchy sound of old DACs.
 	ZeroOrderHoldAndResample,
 
-	// Resample from the channel sample rate to the mixer rate with Speex.
+	// Resample from the channel sample rate to the mixer rate.
 	// This is mathematically correct, high-quality resampling that cuts all
 	// frequencies below the Nyquist frequency using a brickwall filter
 	// (everything below half the channel's sample rate is cut).
@@ -148,10 +151,6 @@ constexpr auto DefaultReverbPreset = ReverbPreset::Medium;
 enum class ChorusPreset { None, Light, Normal, Strong };
 
 constexpr auto DefaultChorusPreset = ChorusPreset::Normal;
-
-// forward declarations
-struct SpeexResamplerState_;
-typedef SpeexResamplerState_ SpeexResamplerState;
 
 class MixerChannel {
 public:
@@ -407,8 +406,10 @@ private:
 	} zoh_upsampler = {};
 
 	struct {
-		SpeexResamplerState* state = nullptr;
-	} speex_resampler = {};
+		SDL_AudioStream* stream = nullptr;
+		int in_rate_hz          = 0;
+		int out_rate_hz         = 0;
+	} audio_stream = {};
 
 	struct {
 		NoiseGate processor;

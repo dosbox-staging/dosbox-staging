@@ -12,8 +12,6 @@
 #include <optional>
 #include <sys/types.h>
 
-#include <speex/speex_resampler.h>
-
 #include "mverb/MVerb.h"
 #include "tal-chorus/ChorusEngine.h"
 
@@ -903,7 +901,7 @@ void MixerChannel::Enable(const bool should_enable)
 //   - Linear interpolation resampling only if:
 //         channel_rate_hz < mixer_rate_hz
 //
-//   - Speex resampling only if:
+//   - SDL AudioStream resampling only if:
 //         channel_rate_hz > mixer_rate_hz
 //
 //   - No resampling if:
@@ -911,11 +909,11 @@ void MixerChannel::Enable(const bool should_enable)
 //
 // ZeroOrderHoldAndResample
 // ------------------------
-//   - Speex resampling only if:
+//   - SDL AudioStream resampling only if:
 //         channel_rate_hz > zoh_target_freq_hz AND
 //         channel_rate_hz != mixer_rate_hz
 //
-//   - neither ZoH upsampling nor Speex resampling if:
+//   - neither ZoH upsampling nor SDL AudioStream resampling if:
 //         channel_rate_hz >= zoh_target_rate_hz AND
 //         channel_rate_hz == mixer_rate_hz
 //
@@ -923,13 +921,13 @@ void MixerChannel::Enable(const bool should_enable)
 //         channel_rate_hz < zoh_target_freq_hz AND
 //         zoh_target_rate_hz == mixer_rate_hz
 //
-//   - both ZoH upsampling AND Speex resampling if:
+//   - both ZoH upsampling AND SDL AudioStream resampling if:
 //         channel_rate_hz < zoh_target_rate_hz AND
 //         zoh_target_rate_hz != mixer_rate_hz
 //
 // Resample
 // --------
-//   - Speex resampling if:
+//   - SDL AudioStream resampling if:
 //   	   channel_rate_hz != mixer_rate_hz
 //
 void MixerChannel::ConfigureResampler()
@@ -947,52 +945,37 @@ void MixerChannel::ConfigureResampler()
 	do_zoh_upsample  = false;
 	do_resample      = false;
 
-	auto configure_speex_resampler = [&](const int _in_rate_hz) {
-		const spx_uint32_t in_rate_hz  = _in_rate_hz;
-		const spx_uint32_t out_rate_hz = mixer_rate_hz;
+	auto configure_sdl_audio_stream = [&](const int in_rate_hz) {
+		const auto out_rate_hz = mixer_rate_hz;
 
-		// Only init the resampler once
-		if (!speex_resampler.state) {
+		const auto rates_changed = audio_stream.in_rate_hz != in_rate_hz ||
+		                           audio_stream.out_rate_hz != out_rate_hz;
 
-			// Always stereo
-			constexpr auto NumChannels = 2;
-
-			// According to the Speex authors, a quality of 3 is
-			// acceptable for most desktop uses and even a qualitiy
-			// of 0 has decent enough sound (but artifacts might be
-			// heard).
-			//
-			// In our testing on a large number of DOS soundtracks,
-			// a quality of 4 yielded virtually identical sounding
-			// resampled audio (e.g., on OPL music with lots of
-			// treble-heavy fast transients), so we went with a
-			// quality 5 to be on the safe side. This has a good
-			// balance between quality, and latency, and processing
-			// power.
-			//
-			// Relevant comment from an Opus developer:
-			//
-			// "The higher settings are mostly for audiophiles,
-			// spectrograms and bragging rights. In practice, I
-			// cannot hear the difference between settings 5 and 10,
-			// despite the large difference in complexity (and
-			// overly sensitive spectrograms)."
-			//
-			// Source:
-			// https://hydrogenaud.io/index.php/topic,113655.msg935704.html#msg935704
-			//
-			constexpr auto ResampleQuality = 5;
-
-			speex_resampler.state = speex_resampler_init(NumChannels,
-			                                             in_rate_hz,
-			                                             out_rate_hz,
-			                                             ResampleQuality,
-			                                             nullptr);
+		if (audio_stream.stream && rates_changed) {
+			SDL_FreeAudioStream(audio_stream.stream);
+			audio_stream = {};
 		}
 
-		speex_resampler_set_rate(speex_resampler.state, in_rate_hz, out_rate_hz);
+		if (!audio_stream.stream) {
+			constexpr auto NumChannels = 2;
 
-		LOG_DEBUG("%s: Speex resampler is on, input rate: %d Hz, output rate: %d Hz",
+			audio_stream.stream = SDL_NewAudioStream(AUDIO_F32SYS,
+			                                         NumChannels,
+			                                         in_rate_hz,
+			                                         AUDIO_F32SYS,
+			                                         NumChannels,
+			                                         out_rate_hz);
+			if (!audio_stream.stream) {
+				E_Exit("%s: Failed to create SDL audio stream: %s",
+				       name.c_str(),
+				       SDL_GetError());
+			}
+
+			audio_stream.in_rate_hz  = in_rate_hz;
+			audio_stream.out_rate_hz = out_rate_hz;
+		}
+
+		LOG_DEBUG("%s: SDL AudioStream resampler is on, input rate: %d Hz, output rate: %d Hz",
 		          name.c_str(),
 		          in_rate_hz,
 		          out_rate_hz);
@@ -1009,7 +992,7 @@ void MixerChannel::ConfigureResampler()
 #endif
 		} else if (channel_rate_hz > mixer_rate_hz) {
 			do_resample = true;
-			configure_speex_resampler(channel_rate_hz);
+			configure_sdl_audio_stream(channel_rate_hz);
 
 		} else {
 			// channel_rate_hz == mixer_rate_hz
@@ -1028,7 +1011,7 @@ void MixerChannel::ConfigureResampler()
 #endif
 			if (zoh_upsampler.target_rate_hz != mixer_rate_hz) {
 				do_resample = true;
-				configure_speex_resampler(zoh_upsampler.target_rate_hz);
+				configure_sdl_audio_stream(zoh_upsampler.target_rate_hz);
 			}
 
 		} else {
@@ -1037,7 +1020,7 @@ void MixerChannel::ConfigureResampler()
 			//
 			if (channel_rate_hz != mixer_rate_hz) {
 				do_resample = true;
-				configure_speex_resampler(channel_rate_hz);
+				configure_sdl_audio_stream(channel_rate_hz);
 			}
 		}
 		break;
@@ -1045,13 +1028,13 @@ void MixerChannel::ConfigureResampler()
 	case ResampleMethod::Resample:
 		if (channel_rate_hz != mixer_rate_hz) {
 			do_resample = true;
-			configure_speex_resampler(channel_rate_hz);
+			configure_sdl_audio_stream(channel_rate_hz);
 		}
 		break;
 	}
 }
 
-// Clear the resampler and prime its input queue with zeroes
+// Clear the resampler and any queued input
 void MixerChannel::ClearResampler()
 {
 	std::lock_guard lock(mutex);
@@ -1063,14 +1046,11 @@ void MixerChannel::ClearResampler()
 		InitZohUpsamplerState();
 	}
 	if (do_resample) {
-		assert(speex_resampler.state);
-		speex_resampler_reset_mem(speex_resampler.state);
-		speex_resampler_skip_zeros(speex_resampler.state);
+		assert(audio_stream.stream);
+		SDL_AudioStreamClear(audio_stream.stream);
 
 #ifdef DEBUG_MIXER
-		LOG_DEBUG("%s: Speex resampler cleared and primed %d-frame input queue",
-		          name.c_str(),
-		          speex_resampler_get_input_latency(speex_resampler.state));
+		LOG_DEBUG("%s: SDL AudioStream resampler cleared", name.c_str());
 #endif
 	}
 }
@@ -1929,20 +1909,6 @@ void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
 	}
 }
 
-static spx_uint32_t estimate_max_out_frames(SpeexResamplerState* resampler_state,
-                                            const spx_uint32_t in_frames)
-{
-	assert(resampler_state);
-	assert(in_frames);
-
-	spx_uint32_t ratio_num = 0;
-	spx_uint32_t ratio_den = 0;
-	speex_resampler_get_ratio(resampler_state, &ratio_num, &ratio_den);
-	assert(ratio_num && ratio_den);
-
-	return ceil_udivide(in_frames * ratio_den, ratio_num);
-}
-
 AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame frame)
 {
 	// Pan mono sample using -6dB linear pan law in the stereo field
@@ -2139,16 +2105,16 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 	// - No upsampling or resampling
 	// - LERP  upsampling only
 	// - ZoH   upsampling only
-	// - Speex resampling only
-	// - ZoH upsampling followed by Speex resampling
+	// - SDL AudioStream resampling only
+	// - ZoH upsampling followed by SDL AudioStream resampling
 
 	// Zero-order-hold upsampling is performed in
 	// ConvertSamplesAndMaybeZohUpsample to reduce the number of temporary
 	// buffers and to simplify the code.
 	//
 
-	// Assert that we're not attempting to do both LERP and Speex resample
-	// We can do one or neither
+	// Assert that we're not attempting to both LERP and resample.
+	// We can do one or neither.
 	assert(!(do_lerp_upsample && do_resample));
 
 	ConvertSamplesAndMaybeZohUpsample<Type, stereo, signeddata, nativeorder>(
@@ -2202,36 +2168,54 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 			}
 		}
 	} else if (do_resample) {
-		auto in_frames = check_cast<spx_uint32_t>(convert_buffer.size());
+		assert(audio_stream.stream);
 
-		auto out_frames = check_cast<spx_uint32_t>(
-		        estimate_max_out_frames(speex_resampler.state, in_frames));
+		const auto input_bytes = check_cast<int>(convert_buffer.size() *
+		                                         sizeof(AudioFrame));
 
-		// Store this as a temporary variable
-		// out_frames gets modified by Speex to reflect the actual
-		// frames it wrote
-		const auto estimated_frames = out_frames;
-
-		audio_frames.resize(audio_frames_starting_size + estimated_frames);
-
-		// These are vectors of AudioFrame which is just 2 packed floats
 		const auto input_ptr = reinterpret_cast<const float*>(
 		        convert_buffer.data());
+
+		if (SDL_AudioStreamPut(audio_stream.stream, input_ptr, input_bytes) <
+		    0) {
+			E_Exit("%s: Failed to queue samples into SDL audio stream: %s",
+			       name.c_str(),
+			       SDL_GetError());
+		}
+
+		const auto output_bytes = SDL_AudioStreamAvailable(audio_stream.stream);
+		if (output_bytes < 0) {
+			E_Exit("%s: Failed to query SDL audio stream: %s",
+			       name.c_str(),
+			       SDL_GetError());
+		}
+		if (output_bytes == 0) {
+			return;
+		}
+
+		assert(output_bytes % sizeof(AudioFrame) == 0);
+		const auto output_frames = check_cast<size_t>(
+		        output_bytes / sizeof(AudioFrame));
+
+		audio_frames.resize(audio_frames_starting_size + output_frames);
 
 		auto output_ptr = reinterpret_cast<float*>(
 		        audio_frames.data() + audio_frames_starting_size);
 
-		speex_resampler_process_interleaved_float(speex_resampler.state,
-		                                          input_ptr,
-		                                          &in_frames,
-		                                          output_ptr,
-		                                          &out_frames);
+		const auto bytes_read = SDL_AudioStreamGet(audio_stream.stream,
+		                                           output_ptr,
+		                                           output_bytes);
+		if (bytes_read < 0) {
+			E_Exit("%s: Failed to get samples from SDL audio stream: %s",
+			       name.c_str(),
+			       SDL_GetError());
+		}
 
-		// 'out_frames' now contains the actual number of
-		// resampled frames, so ensure the number of output frames
-		// is within the logical size.
-		assert(out_frames <= estimated_frames);
-		audio_frames.resize(audio_frames_starting_size + out_frames); // only shrinks
+		assert(bytes_read <= output_bytes);
+		assert(bytes_read % sizeof(AudioFrame) == 0);
+		audio_frames.resize(audio_frames_starting_size +
+		                    (bytes_read / sizeof(AudioFrame))); // only
+		                                                        // shrinks
 	} else {
 		audio_frames.insert(audio_frames.end(),
 		                    convert_buffer.begin(),
@@ -2372,9 +2356,9 @@ void MixerChannel::SetSettings(const MixerChannelSettings& s)
 
 MixerChannel::~MixerChannel()
 {
-	if (speex_resampler.state) {
-		speex_resampler_destroy(speex_resampler.state);
-		speex_resampler.state = nullptr;
+	if (audio_stream.stream) {
+		SDL_FreeAudioStream(audio_stream.stream);
+		audio_stream.stream = nullptr;
 	}
 }
 

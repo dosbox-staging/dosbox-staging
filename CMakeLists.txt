@@ -440,10 +440,6 @@ set(CUSTOM_DATADIR "${CMAKE_INSTALL_FULL_DATADIR}")
 set(project_name "${PROJECT_NAME}")
 set(version      "${PROJECT_VERSION}")
 
-# PkgConfig is needed for speexdsp (no cmake config in vcpkg) and
-# for zlib-ng detection on system-libs builds.
-find_package(PkgConfig REQUIRED)
-
 # Detect zlib-ng (preferred) or plain zlib for the ZMBV video codec.
 #
 # On vcpkg builds, zlib-ng is always available (listed in vcpkg.json).
@@ -493,9 +489,6 @@ find_package(FluidSynth REQUIRED CONFIG)
 if (C_ALSA)
   find_package(ALSA REQUIRED)
 endif()
-
-# SpeexDSP: vcpkg has no cmake config, only a .pc file
-pkg_check_modules(SPEEXDSP REQUIRED IMPORTED_TARGET speexdsp)
 
 add_executable(dosbox src/main.cpp src/dosbox.cpp)
 if (OPT_DEBUGGER)

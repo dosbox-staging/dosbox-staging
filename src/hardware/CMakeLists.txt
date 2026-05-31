@@ -88,7 +88,7 @@ target_link_libraries(dosboxcommon PRIVATE
   talchorus
   nuked
   plmpeg
-  PkgConfig::SPEEXDSP
+  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )
 
 if (C_MANYMOUSE)

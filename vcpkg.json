@@ -20,7 +20,6 @@
       "platform": "!linux"
     },
     "sdl2-image",
-    "speexdsp",
     "zlib-ng",
     {
       "name": "pkgconf",
