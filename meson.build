@@ -192,6 +192,7 @@ if is_optimized_buildtype
         '-frename-registers',
         '-ffunction-sections',
         '-fdata-sections',
+        '--param=max-gcse-memory=512000',
     ]
     extra_link_flags += ['-Wl,--gc-sections']
 endif
