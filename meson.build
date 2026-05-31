@@ -710,7 +710,7 @@ endif
 # Meson needs to be new enough to setup the zlib-ng CMake project, so
 # check if Meson is too old:
 #
-if try_builtin_zlib_ng and meson.version() < '1.3.0'
+if try_builtin_zlib_ng and meson.version().version_compare('<1.3.0')
     zlib_ng_provider = 'skipped (meson is < 1.3.0)'
     try_builtin_zlib_ng = false
 endif
