@@ -1888,6 +1888,14 @@ void IDEATADevice::data_write(uint32_t v, io_width_t width)
 		io_completion();
 }
 
+// Yo dawg MSVC-Clang likes to complain about pragmas
+// So here's a pragma so you stop complaining about pragmas
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
+
+#pragma pvs(push)
+#pragma pvs(disable: 524)
+
 void IDEATAPICDROMDevice::prepare_read(uint32_t offset, uint32_t size)
 {
 	/* I/O must be WORD ALIGNED */
@@ -1913,6 +1921,7 @@ void IDEATAPICDROMDevice::prepare_write(uint32_t offset, uint32_t size)
 }
 
 void IDEATADevice::prepare_write(uint32_t offset, uint32_t size)
+
 {
 	/* I/O must be WORD ALIGNED */
 	assert((offset & 1) == 0);
@@ -1935,6 +1944,10 @@ void IDEATADevice::prepare_read(uint32_t offset, uint32_t size)
 	assert(sector_i <= sector_total);
 	assert(sector_total <= sizeof(sector));
 }
+
+#pragma pvs(pop)
+
+#pragma clang diagnostic pop
 
 void IDEATAPICDROMDevice::generate_mmc_inquiry()
 {
