@@ -442,20 +442,25 @@ void Opl::AudioCallback(const int requested_frames)
 		        fifo.size());
 	}
 #endif
+
+	render_buf.clear();
+
 	auto frames_remaining = requested_frames;
 
-	// First, send any frames we've queued since the last callback
+	// Drain any cycle-accurate frames queued by RenderUpToNow
 	while (frames_remaining && fifo.size()) {
-		channel->AddSamples_sfloat(1, &fifo.front()[0]);
+		render_buf.push_back(fifo.front());
 		fifo.pop();
 		--frames_remaining;
 	}
-	// If the queue's run dry, render the remainder and sync-up our time datum
+	// Render the remainder
 	while (frames_remaining) {
-		const auto frame = RenderFrame();
-		channel->AddSamples_sfloat(1, &frame[0]);
+		render_buf.emplace_back(RenderFrame());
 		--frames_remaining;
 	}
+
+	channel->AddSamples_sfloat(requested_frames,
+	                           reinterpret_cast<float*>(render_buf.data()));
 	last_rendered_ms = PIC_AtomicIndex();
 }
 

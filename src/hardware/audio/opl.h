@@ -9,6 +9,7 @@
 #include <cmath>
 #include <memory>
 #include <queue>
+#include <vector>
 
 #include "ESFMu/esfm.h"
 #include "nuked/opl3.h"
@@ -121,6 +122,8 @@ private:
 	// Playback related
 	double last_rendered_ms = 0.0;
 	double ms_per_frame     = 0.0;
+
+	std::vector<AudioFrame> render_buf = {};
 
 	// Last selected address in the chip for the different modes
 	union {
