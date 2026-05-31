@@ -9,6 +9,7 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <vector>
 
 #include "residfp/SID.h"
 
@@ -42,6 +43,7 @@ private:
 
 	std::unique_ptr<reSIDfp::SID> service = {};
 	std::queue<float> fifo                = {};
+	std::vector<float> render_buf         = {};
 	std::mutex mutex                      = {};
 
 	// Initial configuration

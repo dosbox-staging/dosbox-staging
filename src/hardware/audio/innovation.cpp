@@ -209,25 +209,26 @@ void Innovation::AudioCallback(const int requested_frames)
 
 	std::lock_guard lock(mutex);
 
-	// if (fifo.size())
-	//	LOG_MSG("INNOVATION: Queued %2lu cycle-accurate frames",
-	// fifo.size());
+	render_buf.clear();
 
 	auto frames_remaining = requested_frames;
 
-	// First, send any frames we've queued since the last callback
+	// Drain any cycle-accurate frames queued by RenderUpToNow
 	while (frames_remaining && fifo.size()) {
-		channel->AddSamples_mfloat(1, &fifo.front());
+		render_buf.push_back(fifo.front());
 		fifo.pop();
 		--frames_remaining;
 	}
-	// If the queue's run dry, render the remainder and sync-up our time datum
+	// Render the remainder
 	while (frames_remaining) {
 		if (float frame = 0.0f; MaybeRenderFrame(frame)) {
-			channel->AddSamples_mfloat(1, &frame);
+			render_buf.push_back(frame);
 		}
 		--frames_remaining;
 	}
+
+	channel->AddSamples_mfloat(static_cast<int>(render_buf.size()),
+	                           render_buf.data());
 	last_rendered_ms = PIC_AtomicIndex();
 }
 
