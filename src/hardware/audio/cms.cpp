@@ -247,20 +247,26 @@ void Cms::AudioCallback(const int requested_frames)
 	}
 #endif
 
+	render_buf.clear();
+
 	auto frames_remaining = requested_frames;
 
-	// First, add any frames we've queued since the last callback
+	// Drain any cycle-accurate frames queued by RenderUpToNow
 	while (frames_remaining && fifo.size()) {
-		channel->AddSamples_sfloat(1, &fifo.front()[0]);
+		render_buf.push_back(fifo.front());
 		fifo.pop();
 		--frames_remaining;
 	}
-	// If the queue's run dry, render the remainder and sync-up our time datum
+	// Render the remainder
 	while (frames_remaining) {
-		auto frame = RenderFrame();
-		channel->AddSamples_sfloat(1, &frame[0]);
+		render_buf.emplace_back(RenderFrame());
 		--frames_remaining;
 	}
+
+	// Submit the whole batch at once so the speex resampler processes
+	// one block instead of one frame per call.
+	channel->AddSamples_sfloat(requested_frames,
+	                           reinterpret_cast<float*>(render_buf.data()));
 	last_rendered_ms = PIC_AtomicIndex();
 }
 

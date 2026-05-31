@@ -59,7 +59,8 @@ private:
 
 	std::unique_ptr<saa1099_device> devices[2] = {};
 
-	std::queue<AudioFrame> fifo = {};
+	std::queue<AudioFrame> fifo        = {};
+	std::vector<AudioFrame> render_buf = {};
 
 	std::mutex mutex = {};
 
