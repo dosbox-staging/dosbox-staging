@@ -5,6 +5,7 @@
 #ifndef DOSBOX_PROGRAM_MOUNT_H
 #define DOSBOX_PROGRAM_MOUNT_H
 
+#include "dos/dos.h"
 #include "dos/programs.h"
 #include <array>
 #include <string>
@@ -25,7 +26,8 @@ struct MountParameters {
 	bool is_ide               = false;
 	int8_t ide_index          = -1;
 	bool is_second_cable_slot = false;
-	uint8_t mediaid           = 0;
+	// Defaulting to Hard Disk prevents obscure issues in games like Hyperspace 
+	uint8_t mediaid           = MediaId::HardDisk;
 	// 0-3 vs A-Z
 	bool is_drive_number = false;
 };
