@@ -88,7 +88,7 @@ libhardware = static_library(
         libloguru_dep,
         libnuked_dep,
         libresidfp_dep,
-        libriffcpp,
+        libriffcpp_dep,
         libslirp_dep,
         libym7128bemu_dep,
         libzmbv_dep,

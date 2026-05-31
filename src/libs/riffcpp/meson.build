@@ -1,7 +1,7 @@
 libriffcpp_sources = files(
     'membuffer.cpp',
     'riffcpp.cpp',
-
+)
 
 libriffcpp = static_library('riffcpp', libriffcpp_sources)
 

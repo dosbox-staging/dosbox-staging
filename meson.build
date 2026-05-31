@@ -1159,6 +1159,7 @@ subdir('src/libs/decoders')
 subdir('src/libs/nuked')
 subdir('src/libs/ESFMu')
 subdir('src/libs/residfp')
+subdir('src/libs/riffcpp')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
 
