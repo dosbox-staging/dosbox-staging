@@ -3148,8 +3148,9 @@ private:
 
 	// Playback related
 	MixerChannelPtr audio_channel = nullptr;
-	std::queue<AudioFrame> fifo   = {};
-	double last_rendered_ms       = 0.0;
+	std::queue<AudioFrame> fifo        = {};
+	std::vector<AudioFrame> render_buf = {};
+	double last_rendered_ms            = 0.0;
 	double ms_per_render          = 0.0;
 
 	int tl_tab[TL_TAB_LEN]{};
@@ -5001,20 +5002,26 @@ void ym2151_device::sound_stream_update(const int requested_frames)
 	// if (fifo.size())
 	//	LOG_MSG("IMFC: Queued %2lu cycle-accurate frames", fifo.size());
 
+	render_buf.clear();
+
 	auto frames_remaining = requested_frames;
 
-	// First, send any frames we've queued since the last callback
+	// Drain any cycle-accurate frames queued by RenderUpToNow
 	while (frames_remaining && fifo.size()) {
-		audio_channel->AddSamples_sfloat(1, &fifo.front()[0]);
+		render_buf.push_back(fifo.front());
 		fifo.pop();
 		--frames_remaining;
 	}
-	// If the queue's run dry, render the remainder and sync-up our time datum
+	// Render the remainder
 	while (frames_remaining) {
-		const auto frame = RenderFrame();
-		audio_channel->AddSamples_sfloat(1, &frame[0]);
+		render_buf.emplace_back(RenderFrame());
 		--frames_remaining;
 	}
+
+	// Submit the whole batch at once so the speex resampler processes
+	// one block instead of one frame per call.
+	audio_channel->AddSamples_sfloat(requested_frames,
+	                                 reinterpret_cast<float*>(render_buf.data()));
 	last_rendered_ms = PIC_AtomicIndex();
 }
 
