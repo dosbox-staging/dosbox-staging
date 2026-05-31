@@ -62,35 +62,46 @@ jobs:
 #        arch: [x64, arm64]
         arch: [x64]
         conf:
-          - name: GCC 12, Ubuntu 22.04
-            os: ubuntu-22.04
+          - name: GCC 13, Ubuntu 24.04
+            os: ubuntu-24.04
             cmake_preset: release-linux-vcpkg
             cc:  gcc
             cxx: g++
+            compiler_version: "13"
             max_warnings: 0
 
-          - name: Clang 15, Ubuntu 22.04
-            os: ubuntu-22.04
+          - name: GCC 14, Ubuntu 24.04
+            os: ubuntu-24.04
+            cmake_preset: release-linux-vcpkg
+            cc:  gcc
+            cxx: g++
+            compiler_version: "14"
+            max_warnings: 0
+
+          - name: GCC 15, Ubuntu 24.04
+            os: ubuntu-24.04
+            cmake_preset: release-linux-vcpkg
+            cc:  gcc
+            cxx: g++
+            compiler_version: "15"
+            gcc_ppa: ppa:ubuntu-toolchain-r/test
+            max_warnings: 0
+
+          - name: Clang 18, Ubuntu 24.04
+            os: ubuntu-24.04
             cmake_preset: release-linux-vcpkg
             cc:  clang
             cxx: clang++
+            compiler_version: "18"
             max_warnings: 0
 
-          - name: GCC 12, Ubuntu 22.04, debugger build
-            os: ubuntu-22.04
+          - name: GCC 13, Ubuntu 24.04, debugger build
+            os: ubuntu-24.04
             cmake_preset: debug-linux-vcpkg
             cmake_flags: -DOPT_HEAVY_DEBUGGER=ON
             cc:  gcc
             cxx: g++
-            max_warnings: 0
-
-          # TODO turn this into a minimal build target once we have CMake
-          # feature toggling implemented
-          - name: GCC 11, Ubuntu 22.04
-            os: ubuntu-22.04
-            cmake_preset: release-linux-vcpkg
-            cc:  gcc
-            cxx: g++
+            compiler_version: "13"
             max_warnings: 0
 
     steps:
@@ -109,7 +120,30 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y $(cat extras/linux/ubuntu-22.04-packages.txt)
+          sudo apt-get install -y $(cat extras/linux/ubuntu-24.04-packages.txt)
+
+
+      - name: Install GCC ${{ matrix.conf.compiler_version }} and switch alternative
+        if: ${{ matrix.conf.cc == 'gcc' && matrix.conf.compiler_version != '13' }}
+        run: |
+          set -xeu
+          export DEBIAN_FRONTEND=noninteractive
+
+          if [ -n "${{ matrix.conf.gcc_ppa }}" ]; then
+            sudo add-apt-repository -y "${{ matrix.conf.gcc_ppa }}"
+            sudo apt-get update
+          fi
+
+          ver="${{ matrix.conf.compiler_version }}"
+          sudo apt-get install -y "gcc-${ver}" "g++-${ver}"
+
+          sudo update-alternatives --install /usr/bin/gcc gcc "/usr/bin/gcc-${ver}" 100 \
+            --slave /usr/bin/g++ g++ "/usr/bin/g++-${ver}"
+
+          sudo update-alternatives --set gcc "/usr/bin/gcc-${ver}"
+          gcc --version
+          g++ --version
+
 
       - name: Set up vcpkg
         uses: ./.github/actions/setup-vcpkg
@@ -117,6 +151,7 @@ jobs:
           name_os: linux
           arch: "${{ matrix.arch }}"
           compiler: "${{ matrix.conf.cc }}"
+          compiler_version: "${{ matrix.conf.compiler_version }}"
 
       - name: Log environment
         run: ./scripts/ci/log-env.sh
@@ -142,7 +177,7 @@ jobs:
 
   build_linux_release:
     name:    Release build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:   generate_release_notes
     if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     steps:
@@ -161,7 +196,7 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y $(cat extras/linux/ubuntu-22.04-packages.txt)
+          sudo apt-get install -y $(cat extras/linux/ubuntu-24.04-packages.txt)
 
       - name: Set up vcpkg
         uses: ./.github/actions/setup-vcpkg
