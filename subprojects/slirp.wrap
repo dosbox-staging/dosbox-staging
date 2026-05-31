@@ -1,10 +1,10 @@
 [wrap-file]
-directory = libslirp-v4.7.0
-source_url = https://gitlab.freedesktop.org/slirp/libslirp/-/archive/v4.7.0/libslirp-v4.7.0.tar.gz
-source_fallback_url = https://mirror.rackspace.com/gentoo/distfiles/libslirp-4.7.0.tar.gz
-source_filename = libslirp-v4.7.0.tar.gz
-source_hash = 9398f0ec5a581d4e1cd6856b88ae83927e458d643788c3391a39e61b75db3d3b
-wrapdb_version = 4.7.0-1
+directory = libslirp-v4.9.1
+source_url = https://gitlab.freedesktop.org/slirp/libslirp/-/archive/v4.9.1/libslirp-v4.9.1.tar.gz
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/slirp_4.9.1-1/libslirp-v4.9.1.tar.gz
+source_filename = libslirp-v4.9.1.tar.gz
+source_hash = 3970542143b7c11e6a09a4d2b50f30a133473c41f15ed0bdcc3b7a1c450d9a5c
+wrapdb_version = 4.9.1-1
 
 [provide]
-slirp = libslirp_dep
+slirp = libslirp_libdep
