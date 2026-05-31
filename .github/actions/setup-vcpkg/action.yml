@@ -14,7 +14,7 @@ inputs:
     required: false
     default: ""
 
-  compiler_vers:
+  compiler_version:
     description: "Compiler version"
     required: false
     default: ""
@@ -58,8 +58,8 @@ runs:
       shell: bash
       run: |
         if [ -n "${{ inputs.compiler }}" ]; then INPUTS_COMPILER="${{ inputs.compiler }}-"; fi
-        if [ -n "${{ inputs.compiler_vers }}" ]; then INPUTS_COMPILER_VERS="${{ inputs.compiler_vers }}-"; fi
-        echo "cacheKey=vcpkg-${VCPKG_SHORT_HASH}-bin-cache-${{ inputs.name_os }}-${{ inputs.arch }}-${INPUTS_COMPILER}${INPUTS_COMPILER_VERS}${ImageOS}-${ImageVersion}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-ports/**') }}" >> $GITHUB_OUTPUT
+        if [ -n "${{ inputs.compiler_version }}" ]; then INPUTS_COMPILER_VERSION="${{ inputs.compiler_version }}-"; fi
+        echo "cacheKey=vcpkg-${VCPKG_SHORT_HASH}-bin-cache-${{ inputs.name_os }}-${{ inputs.arch }}-${INPUTS_COMPILER}${INPUTS_COMPILER_VERSION}${ImageOS}-${ImageVersion}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-ports/**') }}" >> $GITHUB_OUTPUT
 
     - name: Restore vcpkg binary cache
       uses: actions/cache@v4
