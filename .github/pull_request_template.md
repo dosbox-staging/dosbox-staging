@@ -43,10 +43,12 @@ The change has been manually tested on:
 
 _Please tick the items as you have addressed them. Don't remove items; leave the ones that are not applicable unchecked._
 
+- [ ] I am a human, I have read and understood the [project's policy on the use of generative AI tools](https://github.com/dosbox-staging/dosbox-staging/blob/master/docs/CONTRIBUTING.md#policy-on-the-use-of-generative-ai-tools), and I have acted in accordance to it.
+
 I have:
 
 - [ ] followed the project's [contributing guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/master/docs/CONTRIBUTING.md) and [code of conduct](https://github.com/dosbox-staging/dosbox-staging/blob/master/docs/CODE_OF_CONDUCT.md).
-- [ ] performed a self-review of my code.
+- [ ] performed a self-review of my work (especially important for AI-assisted contributions).
 - [ ] commented on the particularly hard-to-understand areas of my code.
 - [ ] split my work into well-defined, bisectable commits, and I [named my commits well](https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/CONTRIBUTING.md#commit-messages).
 - [ ] applied the appropriate labels (bug, enhancement, refactoring, documentation, etc.)
