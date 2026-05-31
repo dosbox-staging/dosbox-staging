@@ -391,6 +391,7 @@ private:
 	MixerChannelPtr channel            = nullptr;
 	IO_WriteHandleObject write_handler = {};
 	std::queue<float> fifo             = {};
+	std::vector<float> render_buf      = {};
 	std::mutex mutex                   = {};
 	sn76496_device device;
 
@@ -510,20 +511,23 @@ void Ps1Synth::AudioCallback(const int requested_frames)
 	}
 #endif
 
+	render_buf.clear();
+
 	auto frames_remaining = requested_frames;
 
-	// First, send any frames we've queued since the last callback
+	// Drain any cycle-accurate frames queued by RenderUpToNow
 	while (frames_remaining && fifo.size()) {
-		channel->AddSamples_mfloat(1, &fifo.front());
+		render_buf.push_back(fifo.front());
 		fifo.pop();
 		--frames_remaining;
 	}
-	// If the queue's run dry, render the remainder and sync-up our time datum
+	// Render the remainder
 	while (frames_remaining) {
-		float sample = RenderSample();
-		channel->AddSamples_mfloat(1, &sample);
+		render_buf.emplace_back(RenderSample());
 		--frames_remaining;
 	}
+
+	channel->AddSamples_mfloat(requested_frames, render_buf.data());
 	last_rendered_ms = PIC_AtomicIndex();
 }
 
