@@ -1068,7 +1068,11 @@ void DOSBOX_InitModuleConfigsAndMessages()
 #if C_MT32EMU
 	MT32_AddConfigSection(control);
 #endif
+
+#if C_FLUIDSYNTH
 	FSYNTH_AddConfigSection(control);
+#endif
+
 	SOUNDCANVAS_AddConfigSection(control);
 
 	// The MIDI section must be added *after* the FluidSynth, MT-32 and

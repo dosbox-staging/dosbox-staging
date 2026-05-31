@@ -3,6 +3,8 @@
 
 #include "private/fluidsynth.h"
 
+#if C_FLUIDSYNTH
+
 #include <bitset>
 #include <cassert>
 #include <compare>
@@ -1336,3 +1338,5 @@ void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 	init_fluidsynth_config_settings(*section);
 	register_fluidsynth_text_messages();
 }
+
+#endif // C_FLUIDSYNTH

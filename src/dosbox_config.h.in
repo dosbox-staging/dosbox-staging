@@ -94,6 +94,9 @@
 // an assumption about availability based on OS type.
 #mesondefine SUPPORT_XINPUT2
 
+// Compiler supports FluidSynth
+#mesondefine C_FLUIDSYNTH
+
 // Compiler supports Core Audio headers
 #mesondefine C_COREAUDIO
 
