@@ -25,4 +25,10 @@ add_library(residfp STATIC
 target_include_directories(residfp SYSTEM PUBLIC ..)
 target_link_libraries(residfp PRIVATE project_headers)
 
+if (C_TARGET_CPU_ARM)
+  target_compile_definitions(residfp PRIVATE HAVE_ARM_NEON_H)
+elseif (C_TARGET_CPU_X86)
+  target_compile_definitions(residfp PRIVATE HAVE_EMMINTRIN_H)
+endif()
+
 disable_warnings(residfp)
