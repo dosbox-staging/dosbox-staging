@@ -1,13 +1,13 @@
 [wrap-file]
 directory = speexdsp-1.2.1
 source_url = https://downloads.xiph.org/releases/speex/speexdsp-1.2.1.tar.gz
-source_fallback_url = https://ftp.osuosl.org/pub/xiph/releases/speex/speexdsp-1.2.1.tar.gz
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/speexdsp_1.2.1-8/speexdsp-1.2.1.tar.gz
 source_filename = speexdsp-1.2.1.tar.gz
 source_hash = 8c777343e4a6399569c72abc38a95b24db56882c83dbdb6c6424a5f4aeb54d3d
-patch_filename = speexdsp_1.2.1-7_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/speexdsp_1.2.1-7/get_patch
-patch_hash = 2e6ea56de3e8c20089c038acc1eb63745004e3935929f40e0afcfcfe05532952
-wrapdb_version = 1.2.1-7
+patch_filename = speexdsp_1.2.1-8_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/speexdsp_1.2.1-8/get_patch
+patch_hash = de2332a8cb2ebda12712d3a269c344613263c5275fe5fb4a775663d9f7e8cd8f
+wrapdb_version = 1.2.1-8
 
 [provide]
 speexdsp = speexdsp_dep
