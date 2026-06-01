@@ -888,13 +888,27 @@ have_fd_zero = (
 )
 
 # SDL Image
+
+# The AVIF, JXL, TIF, and WEBP formats are supported through external
+# libraries, some of them creating many layers of additional dependencies.
+
+allow_extended_image_formats = get_option('allow_extended_image_formats')
+
 sdl2_image_dep = dependency(
     'SDL2_image',
     version: ['>= 2.6.3', '< 3'],
     static: ('sdl2_image' in static_libs_list or prefers_static_libs),
-    default_options: default_wrap_options,
+    default_options: default_wrap_options + [
+        'test=' + wants_tests.to_string(),
+        'avif=' + (allow_extended_image_formats ? 'auto' : 'disabled'),
+        'jxl='  + (allow_extended_image_formats ? 'auto' : 'disabled'),
+        'tif='  + (allow_extended_image_formats ? 'auto' : 'disabled'),
+        'webp=' + (allow_extended_image_formats ? 'auto' : 'disabled'),
+    ],
     include_type: 'system',
 )
+
+
 
 # slirp (depends on glib)
 libslirp_dep = optional_dep

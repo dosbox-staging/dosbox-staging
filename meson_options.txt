@@ -27,6 +27,13 @@ option(
 )
 
 option(
+    'allow_extended_image_formats',
+    type: 'boolean',
+    value: true,
+    description: 'Let SDL-image link to AVIF, JXL, TIFF, and WEBP libraries',
+)
+
+option(
     'use_slirp',
     type: 'boolean',
     value: true,
