@@ -5018,10 +5018,7 @@ void ym2151_device::sound_stream_update(const int requested_frames)
 		--frames_remaining;
 	}
 
-	// Submit the whole batch at once so the speex resampler processes
-	// one block instead of one frame per call.
-	audio_channel->AddSamples_sfloat(requested_frames,
-	                                 reinterpret_cast<float*>(render_buf.data()));
+	audio_channel->AddAudioFrames(render_buf);
 	last_rendered_ms = PIC_AtomicIndex();
 }
 

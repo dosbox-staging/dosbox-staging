@@ -265,8 +265,7 @@ void Cms::AudioCallback(const int requested_frames)
 
 	// Submit the whole batch at once so the speex resampler processes
 	// one block instead of one frame per call.
-	channel->AddSamples_sfloat(requested_frames,
-	                           reinterpret_cast<float*>(render_buf.data()));
+	channel->AddAudioFrames(render_buf);
 	last_rendered_ms = PIC_AtomicIndex();
 }
 
