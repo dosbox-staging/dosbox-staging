@@ -1125,34 +1125,6 @@ static void OPL3_ProcessSlot(opl3_slot *slot)
     OPL3_SlotGenerate(slot);
 }
 
-/* Inline pre-check for trivially-silent slots. Avoids the OPL3_ProcessSlot
- * function-call prologue (stmdb of 8 regs + 8 prologue loads + matching
- * ldmia) for the common case of a fully-attenuated, key-off, idle slot.
- * Mirrors the inner trivial branch of OPL3_ProcessSlot's existing fast path.
- *
- * Invariant: the six idempotent fields (fbmod, prout, eg_out, pg_reset,
- * eg_gen, pg_phase_out) are guaranteed to already be at their steady-silence
- * values whenever this short-circuit fires, because the transition INTO this
- * state always goes through OPL3_ProcessSlot, which writes them. No code path
- * outside ProcessSlot writes those fields, so they stay correct without
- * needing to be re-written each sample. */
-static inline void OPL3_ProcessSlotMaybeInline(opl3_slot *slot)
-{
-    if (!slot->key && slot->eg_rout == 0x1ff
-        && slot->slot_num != 13 && slot->slot_num != 16 && slot->slot_num != 17
-        && slot->channel->fb == 0 && slot->pg_inc == 0 && slot->out == 0
-        && *slot->mod == 0 && slot->eg_tl_ksl == 0 && *slot->trem == 0
-        && slot->pg_phase == 0 && slot->reg_vib == 0 && slot->reg_wf == 0)
-    {
-        opl3_chip *chip = slot->chip;
-        uint32_t noise = chip->noise;
-        uint8_t n_bit = ((noise >> 14) ^ noise) & 0x01;
-        chip->noise = (noise >> 1) | (n_bit << 22);
-        return;
-    }
-    OPL3_ProcessSlot(slot);
-}
-
 void OPL3_Generate4Ch(opl3_chip *chip, int16_t *buf4)
 {
     opl3_channel *channel;
@@ -1173,7 +1145,7 @@ void OPL3_Generate4Ch(opl3_chip *chip, int16_t *buf4)
     for (ii = 0; ii < 36; ii++)
 #endif
     {
-        OPL3_ProcessSlotMaybeInline(&chip->slot[ii]);
+        OPL3_ProcessSlot(&chip->slot[ii]);
     }
 
     mix[0] = mix[1] = 0;
@@ -1210,7 +1182,7 @@ void OPL3_Generate4Ch(opl3_chip *chip, int16_t *buf4)
 #if OPL_QUIRK_CHANNELSAMPLEDELAY
     for (ii = 15; ii < 18; ii++)
     {
-        OPL3_ProcessSlotMaybeInline(&chip->slot[ii]);
+        OPL3_ProcessSlot(&chip->slot[ii]);
     }
 #endif
 
@@ -1220,7 +1192,7 @@ void OPL3_Generate4Ch(opl3_chip *chip, int16_t *buf4)
 #if OPL_QUIRK_CHANNELSAMPLEDELAY
     for (ii = 18; ii < 33; ii++)
     {
-        OPL3_ProcessSlotMaybeInline(&chip->slot[ii]);
+        OPL3_ProcessSlot(&chip->slot[ii]);
     }
 #endif
 
@@ -1253,7 +1225,7 @@ void OPL3_Generate4Ch(opl3_chip *chip, int16_t *buf4)
 #if OPL_QUIRK_CHANNELSAMPLEDELAY
     for (ii = 33; ii < 36; ii++)
     {
-        OPL3_ProcessSlotMaybeInline(&chip->slot[ii]);
+        OPL3_ProcessSlot(&chip->slot[ii]);
     }
 #endif
 
