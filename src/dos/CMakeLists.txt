@@ -1,3 +1,14 @@
+# GCC 16 complains about disabled optimizations on this file
+# We have max-gcse-memory=300000 set globally but this file needs more
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set_source_files_properties(
+    dos_locale_data.cpp
+    TARGET_DIRECTORY dosboxcommon
+    PROPERTIES
+    COMPILE_OPTIONS "--param;max-gcse-memory=600000"
+  )
+endif()
+
 target_sources(dosboxcommon PRIVATE
   cdrom.cpp
   cdrom_image.cpp
