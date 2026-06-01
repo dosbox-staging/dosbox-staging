@@ -459,8 +459,7 @@ void Opl::AudioCallback(const int requested_frames)
 		--frames_remaining;
 	}
 
-	channel->AddSamples_sfloat(requested_frames,
-	                           reinterpret_cast<float*>(render_buf.data()));
+	channel->AddAudioFrames(render_buf);
 	last_rendered_ms = PIC_AtomicIndex();
 }
 
