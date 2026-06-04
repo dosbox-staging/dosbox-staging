@@ -79,6 +79,15 @@ small {
   top: 1px;
 }
 
+// The active header topic gets z-index:0 from Material, putting it in a
+// painting tie with .md-tabs__list (which becomes a stacking context via
+// contain:content). Tabs come later in the DOM, so they paint on top of
+// the version selector dropdown, breaking :hover when the cursor moves
+// past the header bottom. Lift the active topic above the tabs.
+.md-header__title--active .md-header__topic + .md-header__topic {
+  z-index: 4;
+}
+
 /*--------------------------------------------------------------------------*/
 /* Dev site banner                                                          */
 /*--------------------------------------------------------------------------*/
