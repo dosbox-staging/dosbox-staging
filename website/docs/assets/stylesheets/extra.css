@@ -95,6 +95,16 @@ small {
   text-decoration: underline;
 }
 
+.md-banner--warning {
+  position: sticky;
+  top: var(--dev-banner-height, 0px);
+  z-index: 4;
+}
+
+.md-header {
+  top: calc(var(--dev-banner-height, 0px) + var(--warning-banner-height, 0px));
+}
+
 /*--------------------------------------------------------------------------*/
 /* Header & Navigation                                                      */
 /*--------------------------------------------------------------------------*/
