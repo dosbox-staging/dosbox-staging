@@ -110,6 +110,19 @@ small {
   }
 }
 
+// Stack the outdated-version warning and the header below the dev-site
+// banner when scrolled. Banner heights come from version-selector.js
+// via CSS variables; default to 0 when a banner is absent.
+.md-banner--warning {
+  position: sticky;
+  top: var(--dev-banner-height, 0px);
+  z-index: 4;
+}
+
+.md-header {
+  top: calc(var(--dev-banner-height, 0px) + var(--warning-banner-height, 0px));
+}
+
 /*--------------------------------------------------------------------------*/
 /* Header & Navigation                                                      */
 /*--------------------------------------------------------------------------*/

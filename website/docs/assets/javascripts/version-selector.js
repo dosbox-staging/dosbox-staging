@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
         adjustScrollMargin();
     }
 
+
     function populate(sections, deployPrefix) {
         // Detect current version and section from URL
         var currentVersion = null;
@@ -105,11 +106,9 @@ document.addEventListener("DOMContentLoaded", function () {
         var latestVersion = availableVersions[0];
 
         if (currentVersion !== latestVersion) {
-            var banner = document.createElement("div");
-            banner.setAttribute("data-md-color-scheme", "default");
-
             var aside = document.createElement("aside");
             aside.className = "md-banner md-banner--warning";
+            aside.setAttribute("data-md-color-scheme", "default");
 
             var inner = document.createElement("div");
             inner.className = "md-banner__inner md-grid md-typeset";
@@ -131,27 +130,46 @@ document.addEventListener("DOMContentLoaded", function () {
             inner.appendChild(link);
 
             aside.appendChild(inner);
-            banner.appendChild(aside);
 
             var header = document.querySelector(".md-header");
-            header.parentNode.insertBefore(banner, header);
+            header.parentNode.insertBefore(aside, header);
         }
     }
 
-    // Bump --md-scroll-margin to account for any banners above the header
+    // Expose banner heights so the header and warning banner can stack
+    // beneath the dev-site banner via CSS, and bump --md-scroll-margin so
+    // anchor jumps clear the banners.
     function adjustScrollMargin() {
-        var extra = 0;
-
         var devBanner = document.querySelector(".dev-site:not([hidden])");
-        if (devBanner) {
-            extra += devBanner.offsetHeight;
-        }
-
         var versionBanner = document.querySelector(".md-banner--warning");
-        if (versionBanner) {
-            extra += versionBanner.offsetHeight;
+
+        function measure(el) {
+            return el ? el.getBoundingClientRect().height : 0;
         }
 
+        function updateHeights() {
+            document.documentElement.style.setProperty(
+                "--dev-banner-height", measure(devBanner) + "px"
+            );
+            document.documentElement.style.setProperty(
+                "--warning-banner-height", measure(versionBanner) + "px"
+            );
+        }
+
+        updateHeights();
+
+        // Re-measure after web fonts load and on viewport resize, since
+        // banner heights depend on both.
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(updateHeights);
+        }
+        if (typeof ResizeObserver !== "undefined") {
+            var observer = new ResizeObserver(updateHeights);
+            if (devBanner) observer.observe(devBanner);
+            if (versionBanner) observer.observe(versionBanner);
+        }
+
+        var extra = measure(devBanner) + measure(versionBanner);
         if (extra > 0) {
           var current = getComputedStyle(document.documentElement)
             .getPropertyValue("--md-scroll-margin");
