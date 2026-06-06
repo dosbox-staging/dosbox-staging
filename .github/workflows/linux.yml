@@ -116,13 +116,17 @@ jobs:
       - name: Set up CMake
         uses: lukka/get-cmake@591817e96fcad43505fb4eae36172462abb3a42e # v4.3.3
 
-<<<<<<< HEAD
-      - name: Install dependencies
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get update
-          sudo apt-get install -y $(cat extras/linux/ubuntu-24.04-packages.txt)
+      - name: Load apt package list
+        id:   apt_pkgs
+        run:  echo "list=$(tr '\n' ' ' < extras/linux/ubuntu-24.04-packages.txt)" >> "$GITHUB_OUTPUT"
 
+      # See linting.yml for notes on this action.
+      - name: Install apt dependencies
+        id:   apt_cache
+        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
+        with:
+          packages: ${{ steps.apt_pkgs.outputs.list }}
+          version:  "1.0"
 
       - name: Install GCC ${{ matrix.conf.compiler_version }} and switch alternative
         if: ${{ matrix.conf.cc == 'gcc' && matrix.conf.compiler_version != '13' }}
@@ -145,19 +149,6 @@ jobs:
           gcc --version
           g++ --version
 
-=======
-      - name: Load apt package list
-        id:   apt_pkgs
-        run:  echo "list=$(tr '\n' ' ' < extras/linux/ubuntu-22.04-packages.txt)" >> "$GITHUB_OUTPUT"
-
-      # Package list from extras/linux/ubuntu-22.04-packages.txt (also used outside CI).
-      - name: Install apt dependencies
-        id:   apt_cache
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
-        with:
-          packages: ${{ steps.apt_pkgs.outputs.list }}
-          version:  "1.0"
->>>>>>> 4f676a070 (ci: Cache apt packages with cache-apt-pkgs-action)
 
       - name: Report apt cache status
         run:  echo "apt cache hit:" "${{ steps.apt_cache.outputs.cache-hit || 'false' }}"
