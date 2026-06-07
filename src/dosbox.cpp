@@ -787,6 +787,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	auto section = conf->AddSection("dosbox");
 	section->AddUpdateHandler(notify_dosbox_setting_updated);
 
+
 	auto pstring = section->AddString("language", Always, "auto");
 
 	pstring->SetHelp(
@@ -801,6 +802,31 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "\n"
 	        "  - English is built-in, the rest is stored in the bundled\n"
 	        "    'resources/translations' directory.");
+	
+	//option for logging to file
+	pstring = section->AddString("log_type", OnlyAtStart, "console");
+	pstring->SetValues(
+		{"console",
+		"file",
+		"both",
+		"none"}
+	);
+	pstring->SetHelp(
+		"Set the option you would like to log errors.\n"
+		"Possible values:\n"
+		"console:            Log errors to command line interface.\n"
+		"file:               Log errors to a file on disk.\n"
+		"both:               Log errors to file on disk and command line interface.\n"
+		"none:               Disable all logging.\n"
+	);
+	pstring = section->AddPath("log_file", OnlyAtStart, "./log/dosbox-staging.log.4");
+    //might have to  have a set value for log file
+	pstring->SetHelp(
+		"Set path for where the log file is stored\n"
+		"Possible values:\n"
+		"<Custom>:     Custom path user prefers.\n"
+		"./log/dosbox-staging.log.4:       default path"
+	);
 
 	pstring = section->AddString("machine", OnlyAtStart, "svga_s3");
 	pstring->SetValues({"hercules",
