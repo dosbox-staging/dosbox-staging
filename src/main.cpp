@@ -335,6 +335,8 @@ static void init_logger(const CommandLineArguments& args, int argc, char* argv[]
 	loguru::Options options = {};
 	options.signal_options.sigterm = false;
 	loguru::init(argc, argv, options);
+
+	
 }
 
 static void maybe_write_primary_config(const CommandLineArguments& args)

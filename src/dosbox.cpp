@@ -732,6 +732,25 @@ static void dosbox_realinit(SectionProp& section)
 	} else {
 		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::Floppy);
 	}
+
+	//set log type and log path
+	const auto user_log_type = section.GetString("log_type");
+	if (user_log_type == "console"){
+		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING; //set console on
+	}
+	else if (user_log_type == "file"){
+		const auto user_log_loc = section.GetString("log_file");
+		loguru::add_file(user_log_loc.c_str(),loguru::FileMode::Truncate, loguru::Verbosity_MAX);
+		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; //set console off
+	}
+	else if (user_log_type == "both"){
+		const auto user_log_loc = section.GetString("log_file");
+		loguru::add_file(user_log_loc.c_str(),loguru::FileMode::Truncate, loguru::Verbosity_MAX);
+
+	}
+	else { //dont display logs
+		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; //set console off
+	}
 }
 
 void DOSBOX_Init()
