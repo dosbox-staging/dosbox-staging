@@ -65,7 +65,7 @@ jobs:
       # has preinstalled Python we don't want replaced.
       - name: Cache pip downloads
         id:   pip_cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: pip-${{ runner.os }}-${{ hashFiles('dosbox-staging/extras/documentation/mkdocs-package-requirements.txt') }}
