@@ -71,13 +71,13 @@
 #include "shell/autoexec.h"
 #include "shell/shell.h"
 #include "utils/math_utils.h"
-#include "webserver/webserver.h"
 #include "webserver/bridge.h"
+#include "webserver/webserver.h"
 
-MachineType machine   = MachineType::None;
-SvgaType    svga_type = SvgaType::None;
+MachineType machine = MachineType::None;
+SvgaType svga_type  = SvgaType::None;
 
-static LoopHandler * loop;
+static LoopHandler* loop;
 
 static struct {
 	int64_t remain    = {};
@@ -103,7 +103,8 @@ void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled)
 	ticks.scheduled = ticks_scheduled;
 }
 
-void Null_Init([[maybe_unused]] Section *sec) {
+void Null_Init([[maybe_unused]] Section* sec)
+{
 	// do nothing
 }
 
@@ -323,7 +324,8 @@ static void increase_ticks()
 					         (ratio_not_removed +
 					          1024.0 / (static_cast<double>(ratio)));
 
-					new_cycle_max = static_cast<int>(CPU_CycleMax * r + 1);
+					new_cycle_max = static_cast<int>(
+					        CPU_CycleMax * r + 1);
 				} else {
 					auto ratio_with_removed = static_cast<int64_t>(
 					        ((static_cast<double>(ratio) - 1024.0) *
@@ -446,10 +448,12 @@ static void DOSBOX_UnlockSpeed(bool pressed)
 		MIXER_EnableFastForwardMode();
 
 		if (CPU_CycleAutoAdjust) {
-			autoadjust = true;
+			autoadjust          = true;
 			CPU_CycleAutoAdjust = false;
 			CPU_CycleMax /= 3;
-			if (CPU_CycleMax<1000) CPU_CycleMax=1000;
+			if (CPU_CycleMax < 1000) {
+				CPU_CycleMax = 1000;
+			}
 		}
 	} else {
 		LOG_MSG("Fast Forward OFF");
@@ -457,7 +461,7 @@ static void DOSBOX_UnlockSpeed(bool pressed)
 		MIXER_DisableFastForwardMode();
 
 		if (autoadjust) {
-			autoadjust = false;
+			autoadjust          = false;
 			CPU_CycleAutoAdjust = true;
 		}
 	}
@@ -467,7 +471,8 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 {
 	const auto arguments = &control->arguments;
 	if (!arguments->machine.empty()) {
-		//update value in config (else no matching against suggested values
+		// update value in config (else no matching against suggested
+		// values
 		section.HandleInputLine(std::string("machine=") + arguments->machine);
 	}
 
@@ -506,7 +511,7 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 		int10.vesa_nolfb = true;
 	} else if (machine_str == "vesa_oldvbe") {
 
-		svga_type = SvgaType::S3;
+		svga_type         = SvgaType::S3;
 		int10.vesa_oldvbe = true;
 
 	} else if (machine_str == "svga_et3000") {
@@ -733,23 +738,28 @@ static void dosbox_realinit(SectionProp& section)
 		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::Floppy);
 	}
 
-	//set log type and log path
+	// set log type and log path
 	const auto user_log_type = section.GetString("log_type");
-	if (user_log_type == "console"){
-		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING; //set console on
-	}
-	else if (user_log_type == "file"){
+	if (user_log_type == "console") {
+		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING; // set
+		                                                        // console
+		                                                        // on
+	} else if (user_log_type == "file") {
 		const auto user_log_loc = section.GetString("log_file");
-		loguru::add_file(user_log_loc.c_str(),loguru::FileMode::Truncate, loguru::Verbosity_MAX);
-		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; //set console off
-	}
-	else if (user_log_type == "both"){
+		loguru::add_file(user_log_loc.c_str(),
+		                 loguru::FileMode::Truncate,
+		                 loguru::Verbosity_MAX);
+		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; // set console
+		                                                    // off
+	} else if (user_log_type == "both") {
 		const auto user_log_loc = section.GetString("log_file");
-		loguru::add_file(user_log_loc.c_str(),loguru::FileMode::Truncate, loguru::Verbosity_MAX);
+		loguru::add_file(user_log_loc.c_str(),
+		                 loguru::FileMode::Truncate,
+		                 loguru::Verbosity_MAX);
 
-	}
-	else { //dont display logs
-		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; //set console off
+	} else { // dont display logs
+		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; // set console
+		                                                    // off
 	}
 }
 
@@ -792,8 +802,8 @@ static void notify_dosbox_setting_updated(const SectionProp& section,
 		VGA_SetRefreshRateMode(section.GetString("dos_rate"));
 
 	} else if (prop_name == "shell_config_shortcuts") {
-		// No need to re-init anything; the setting is always queried when
-		// executing a command.
+		// No need to re-init anything; the setting is always queried
+		// when executing a command.
 	}
 }
 
@@ -805,7 +815,6 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 
 	auto section = conf->AddSection("dosbox");
 	section->AddUpdateHandler(notify_dosbox_setting_updated);
-
 
 	auto pstring = section->AddString("language", Always, "auto");
 
@@ -821,31 +830,25 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "\n"
 	        "  - English is built-in, the rest is stored in the bundled\n"
 	        "    'resources/translations' directory.");
-	
-	//option for logging to file
+
+	// option for logging to file
 	pstring = section->AddString("log_type", OnlyAtStart, "console");
-	pstring->SetValues(
-		{"console",
-		"file",
-		"both",
-		"none"}
-	);
+	pstring->SetValues({"console", "file", "both", "none"});
 	pstring->SetHelp(
-		"Set the option you would like to log errors.\n"
-		"Possible values:\n"
-		"console:            Log errors to command line interface.\n"
-		"file:               Log errors to a file on disk.\n"
-		"both:               Log errors to file on disk and command line interface.\n"
-		"none:               Disable all logging.\n"
-	);
-	pstring = section->AddPath("log_file", OnlyAtStart, "./log/dosbox-staging.log.4");
-    //might have to  have a set value for log file
+	        "Set the option you would like to log errors.\n"
+	        "Possible values:\n"
+	        "console:            Log errors to command line interface.\n"
+	        "file:               Log errors to a file on disk.\n"
+	        "both:               Log errors to file on disk and command line interface.\n"
+	        "none:               Disable all logging.\n");
+	const auto log_path = get_config_dir();
+	pstring = section->AddPath("log_file", OnlyAtStart, log_path.string());
+	// might have to  have a set value for log file
 	pstring->SetHelp(
-		"Set path for where the log file is stored\n"
-		"Possible values:\n"
-		"<Custom>:     Custom path user prefers.\n"
-		"./log/dosbox-staging.log.4:       default path"
-	);
+	        "Set path for where the log file is stored\n"
+	        "Possible values:\n"
+	        "<Custom>:     Custom path user prefers.\n"
+	        "./log/dosbox-staging.log.4:       default path");
 
 	pstring = section->AddString("machine", OnlyAtStart, "svga_s3");
 	pstring->SetValues({"hercules",
