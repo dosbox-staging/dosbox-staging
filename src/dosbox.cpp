@@ -745,16 +745,16 @@ static void dosbox_realinit(SectionProp& section)
 		                                                        // console
 		                                                        // on
 	} else if (user_log_type == "file") {
-		const auto user_log_loc = section.GetString("log_file");
+		const auto user_log_loc = section.GetString("log_path");
 		loguru::add_file(user_log_loc.c_str(),
-		                 loguru::FileMode::Truncate,
+		                 loguru::FileMode::Append,
 		                 loguru::Verbosity_MAX);
 		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; // set console
 		                                                    // off
 	} else if (user_log_type == "both") {
-		const auto user_log_loc = section.GetString("log_file");
+		const auto user_log_loc = section.GetString("log_path");
 		loguru::add_file(user_log_loc.c_str(),
-		                 loguru::FileMode::Truncate,
+		                 loguru::FileMode::Append,
 		                 loguru::Verbosity_MAX);
 
 	} else { // dont display logs
@@ -841,14 +841,12 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "file:               Log errors to a file on disk.\n"
 	        "both:               Log errors to file on disk and command line interface.\n"
 	        "none:               Disable all logging.\n");
-	const auto log_path = get_config_dir();
-	pstring = section->AddPath("log_file", OnlyAtStart, log_path.c_str());
-	// might have to  have a set value for log file
+	const auto log_path = get_config_dir() / "logs";
+	const auto log_path_str = log_path.string();
+	pstring = section->AddPath("log_path", OnlyAtStart, log_path_str.c_str());
 	pstring->SetHelp(
-	        "Set path for where the log file is stored\n"
-	        "Possible values:\n"
-	        "<Custom>:     Custom path user prefers.\n"
-	        "./log/dosbox-staging.log.4:       default path");
+	        "Path to the directory where log files are stored.\n"
+        	"Defaults to a 'logs' folder in the DOSBox configuration directory.");
 
 	pstring = section->AddString("machine", OnlyAtStart, "svga_s3");
 	pstring->SetValues({"hercules",
