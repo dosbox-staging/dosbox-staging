@@ -842,7 +842,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "both:               Log errors to file on disk and command line interface.\n"
 	        "none:               Disable all logging.\n");
 	const auto log_path = get_config_dir();
-	pstring = section->AddPath("log_file", OnlyAtStart, log_path.string());
+	pstring = section->AddPath("log_file", OnlyAtStart, log_path.c_str());
 	// might have to  have a set value for log file
 	pstring->SetHelp(
 	        "Set path for where the log file is stored\n"
