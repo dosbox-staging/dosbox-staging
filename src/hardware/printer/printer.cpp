@@ -70,15 +70,14 @@ CPrinter::CPrinter(uint16_t dpi, const uint16_t width, const uint16_t height,
 		                      static_cast<Real64>(10);
 
 		// Create page
-		page = SDL_CreateRGBSurface(
-		        SDL_SWSURFACE,
-		        static_cast<int>(default_page_width * dpi),
-		        static_cast<int>(default_page_height * dpi),
-		        8,
-		        0,
-		        0,
-		        0,
-		        0);
+		page = SDL_CreateRGBSurface(SDL_SWSURFACE,
+		                            static_cast<int>(default_page_width * dpi),
+		                            static_cast<int>(default_page_height * dpi),
+		                            8,
+		                            0,
+		                            0,
+		                            0,
+		                            0);
 
 		// Set a grey palette
 		SDL_Palette* palette = page->format->palette;
@@ -154,7 +153,8 @@ void CPrinter::ResetPrinter()
 	densl                       = 1;
 	densy                       = 2;
 	densz                       = 3;
-	char_tables[0]              = 0; // Italics
+	// Char table slot 0 is reserved for italics; slots 1..3 default to CP437.
+	char_tables[0] = 0;
 	char_tables[1] = char_tables[2] = char_tables[3] = 437;
 	defined_unit                                     = -1;
 	multipoint                                       = false;
@@ -173,8 +173,7 @@ void CPrinter::ResetPrinter()
 
 	// Default tabs => Each eight characters
 	for (uint64_t i = 0; i < 32; i++) {
-		horiz_tabs[i] = static_cast<Real64>(i * 8) /
-		                static_cast<Real64>(cpi);
+		horiz_tabs[i] = static_cast<Real64>(i * 8) / static_cast<Real64>(cpi);
 	}
 	num_horiz_tabs = 32;
 
@@ -352,7 +351,8 @@ void CPrinter::UpdateFont()
 		if (style & STYLE_DOUBLEHEIGHT) {
 			vertPoints *= 2.0;
 		}
-	} else { // multipoint true
+	} else {
+		// Multipoint (scalable) mode.
 		act_cpi     = multi_cpi;
 		horizPoints = vertPoints = multi_point_size;
 	}
@@ -1118,9 +1118,9 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			num_param    = 0;
 			break;
 		case 0x274: // Assign character table (ESC (t)
-			// codepages has 15 entries (indices 0..14). The upstream
-			// bounds check '< 16' was off by one and would index out
-			// of bounds when params[3] == 15.
+			// codepages has 15 entries (indices 0..14). The
+			// upstream bounds check '< 16' was off by one and would
+			// index out of bounds when params[3] == 15.
 			if (params[2] < 4 && params[3] < 15) {
 				char_tables[params[2]] = codepages[params[3]];
 				// LOG_MSG("curr table: %d, p2: %d, p3:
@@ -1457,7 +1457,7 @@ void CPrinter::PrintChar(uint8_t ch)
 	FT_Render_Glyph(cur_font->glyph, FT_RENDER_MODE_NORMAL);
 
 	const auto penX = static_cast<uint16_t>(PixX() + cur_font->glyph->bitmap_left);
-	uint16_t penY   = static_cast<uint16_t>(PixY() - cur_font->glyph->bitmap_top +
+	uint16_t penY = static_cast<uint16_t>(PixY() - cur_font->glyph->bitmap_top +
 	                                      cur_font->size->metrics.ascender / 64);
 
 	if (style & STYLE_SUBSCRIPT) {
@@ -1508,21 +1508,24 @@ void CPrinter::PrintChar(uint8_t ch)
 	if ((score != SCORE_NONE) &&
 	    (style & (STYLE_UNDERLINE | STYLE_STRIKETHROUGH | STYLE_OVERSCORE))) {
 		// Find out where to put the line
-		uint16_t lineY = static_cast<uint16_t>(PixY());
+		uint16_t lineY      = static_cast<uint16_t>(PixY());
 		const double height = static_cast<double>(
-		        cur_font->size->metrics.height >>
-		        6); // TODO height is fixed point madness...
+		        cur_font->size->metrics.height >> 6); // TODO height is
+		                                              // fixed point
+		                                              // madness...
 
 		if (style & STYLE_UNDERLINE) {
-			lineY = static_cast<uint16_t>(PixY() + static_cast<uint16_t>(height * 0.9));
+			lineY = static_cast<uint16_t>(
+			        PixY() + static_cast<uint16_t>(height * 0.9));
 		} else if (style & STYLE_STRIKETHROUGH) {
-			lineY = static_cast<uint16_t>(PixY() + static_cast<uint16_t>(height * 0.45));
+			lineY = static_cast<uint16_t>(
+			        PixY() + static_cast<uint16_t>(height * 0.45));
 		} else if (style & STYLE_OVERSCORE) {
 			lineY = static_cast<uint16_t>(
 			        PixY() - (((score == SCORE_DOUBLE) ||
-			                 (score == SCORE_DOUBLEBROKEN))
-			                        ? 5
-			                        : 0));
+			                   (score == SCORE_DOUBLEBROKEN))
+			                          ? 5
+			                          : 0));
 		}
 
 		DrawLine(lineStart,
@@ -1535,8 +1538,7 @@ void CPrinter::PrintChar(uint8_t ch)
 			// score is DOUBLE or DOUBLEBROKEN here; the upstream
 			// expression also tested SCORE_SINGLEBROKEN which is
 			// unreachable in this branch.
-			DrawLine(lineStart, PixX(), lineY + 5,
-			         score == SCORE_DOUBLEBROKEN);
+			DrawLine(lineStart, PixX(), lineY + 5, score == SCORE_DOUBLEBROKEN);
 		}
 	}
 	// If the next character would go beyond the right margin, line-wrap.
@@ -1759,8 +1761,8 @@ void CPrinter::PrintBitGraph(const uint8_t ch)
 	// TODO figure this out for 360dpi mode in windows
 
 	//	uint64_t pixsizeX = dpi/bit_graph.horiz_dens > 0?
-	//dpi/bit_graph.horiz_dens : 1; 	uint64_t pixsizeY =
-	//dpi/bit_graph.vert_dens > 0? dpi/bit_graph.vert_dens : 1;
+	// dpi/bit_graph.horiz_dens : 1; 	uint64_t pixsizeY =
+	// dpi/bit_graph.vert_dens > 0? dpi/bit_graph.vert_dens : 1;
 
 	for (uint64_t i = 0; i < bit_graph.bytes_column; i++) // for each byte
 	{
@@ -1772,7 +1774,8 @@ void CPrinter::PrintBitGraph(const uint8_t ch)
 						     page->w) &&
 						    (static_cast<int>(PixY() + yy) <
 						     page->h)) {
-							*(static_cast<uint8_t*>(page->pixels) +
+							*(static_cast<uint8_t*>(
+							          page->pixels) +
 							  (PixX() + xx) +
 							  (PixY() + yy) * page->pitch) |=
 							        (color | 0x1F);
@@ -1834,10 +1837,11 @@ static void find_next_name(const char* front, const char* ext, char* fname)
 		                             i,
 		                             ext);
 		if (written < 0 || static_cast<size_t>(written) >= FnameBufSize) {
-			LOG_WARNING("PRINTER: page filename for docpath '%s' "
-			            "exceeds %zu chars; page output disabled",
-			            document_path,
-			            FnameBufSize);
+			LOG_WARNING(
+			        "PRINTER: page filename for docpath '%s' "
+			        "exceeds %zu chars; page output disabled",
+			        document_path,
+			        FnameBufSize);
 			fname[0] = 0;
 			return;
 		}
@@ -1847,12 +1851,13 @@ static void find_next_name(const char* front, const char* ext, char* fname)
 		}
 		fclose(test);
 	}
-	LOG_WARNING("PRINTER: docpath already contains %d %s files matching "
-	            "'%s<N>%s'; overwriting the last one",
-	            FindNextNameAttempts,
-	            front,
-	            front,
-	            ext);
+	LOG_WARNING(
+	        "PRINTER: docpath already contains %d %s files matching "
+	        "'%s<N>%s'; overwriting the last one",
+	        FindNextNameAttempts,
+	        front,
+	        front,
+	        ext);
 	// fname holds the final attempt; let the caller overwrite it.
 }
 
@@ -1884,14 +1889,18 @@ void CPrinter::OutputPage()
 		}
 
 		/* First try to alloacte the png structures */
-		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
+		                                  nullptr,
+		                                  nullptr,
+		                                  nullptr);
 		if (!png_ptr) {
 			fclose(fp);
 			return;
 		}
 		info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr) {
-			png_destroy_write_struct(&png_ptr, static_cast<png_infopp>(nullptr));
+			png_destroy_write_struct(&png_ptr,
+			                         static_cast<png_infopp>(nullptr));
 			fclose(fp);
 			return;
 		}
@@ -2159,7 +2168,8 @@ bool CPrinter::IsBlank()
 
 	for (uint16_t y = 0; y < page->h; y++) {
 		for (uint16_t x = 0; x < page->w; x++) {
-			if (*(static_cast<uint8_t*>(page->pixels) + x + (y * page->pitch)) != 0) {
+			if (*(static_cast<uint8_t*>(page->pixels) + x +
+			      (y * page->pitch)) != 0) {
 				blank = false;
 			}
 		}
@@ -2347,7 +2357,7 @@ void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t 
 	conf_output_device[sizeof(conf_output_device) - 1] = 0;
 	conf_multipage_output                              = multipage;
 	printer_timeout                                    = timeout_ms;
-	timeout_dirty                                      = (printer_timeout == 0);
+	timeout_dirty = (printer_timeout == 0);
 }
 
 void PRINTER_FormFeed(const bool pressed)
