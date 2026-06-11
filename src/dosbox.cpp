@@ -739,27 +739,25 @@ static void dosbox_realinit(SectionProp& section)
 	}
 
 	// set log type and log path
-	const auto user_log_type = section.GetString("log_type");
-	if (user_log_type == "console") {
-		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING; // set
-		                                                        // console
-		                                                        // on
-	} else if (user_log_type == "file") {
+	const auto user_log_destination = section.GetString("log_destination");
+	if (user_log_destination == "console") {
+		// set console on
+		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING; 
+	} else if (user_log_destination == "file") {
 		const auto user_log_loc = section.GetString("log_path");
 		loguru::add_file(user_log_loc.c_str(),
 		                 loguru::FileMode::Append,
 		                 loguru::Verbosity_MAX);
-		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; // set console
-		                                                    // off
-	} else if (user_log_type == "both") {
+		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; 
+	} else if (user_log_destination == "console-and-file") {
 		const auto user_log_loc = section.GetString("log_path");
 		loguru::add_file(user_log_loc.c_str(),
 		                 loguru::FileMode::Append,
 		                 loguru::Verbosity_MAX);
 
-	} else { // dont display logs
-		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; // set console
-		                                                    // off
+	} else { // don't display logs
+		// set console off
+		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; 
 	}
 }
 
@@ -832,15 +830,15 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "    'resources/translations' directory.");
 
 	// option for logging to file
-	pstring = section->AddString("log_type", OnlyAtStart, "console");
-	pstring->SetValues({"console", "file", "both", "none"});
+	pstring = section->AddString("log_destination", OnlyAtStart, "console-and-file");
+	pstring->SetValues({"console", "file", "console-and-file", "off"});
 	pstring->SetHelp(
-	        "Set the option you would like to log errors.\n"
-	        "Possible values:\n"
-	        "console:            Log errors to command line interface.\n"
-	        "file:               Log errors to a file on disk.\n"
-	        "both:               Log errors to file on disk and command line interface.\n"
-	        "none:               Disable all logging.\n");
+			"Set the logging destination. ('console-and-file' by default).\n"
+			"Possible values:\n"
+			"console:  Log messages to the command line interface.\n"
+			"file:  Log messages to a file on disk.\n"
+			"console-and-file:  Log messages to both a file and the command line interface. (default)\n"
+			"off:  Disable all logging.\n");
 	const auto log_path = get_config_dir() / "logs";
 	const auto log_path_str = log_path.string();
 	pstring = section->AddPath("log_path", OnlyAtStart, log_path_str.c_str());
