@@ -2329,12 +2329,21 @@ void PRINTER_FormFeed(const bool pressed)
 
 void PRINTER_Reset()
 {
+	// Cancel pending timeout events first so PRINTER_EventHandler can't
+	// fire on a half-destroyed printer.
 	PIC_RemoveEvents(PRINTER_EventHandler);
+	timeout_dirty = false;
 	if (default_printer) {
 		delete default_printer;
 		default_printer = NULL;
 	}
-	inited = false;
+	// The IO handlers in printer_glue stay installed across Reset/Init
+	// cycles; clear the LPT register state so a stale strobe sequence
+	// from before a previous Reset can't trigger lazy construction with
+	// stale data.
+	data_register    = 0;
+	control_register = 0x04;
+	inited           = false;
 }
 
 #endif
