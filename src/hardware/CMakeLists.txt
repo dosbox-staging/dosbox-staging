@@ -42,6 +42,7 @@ target_sources(dosboxcommon PRIVATE
   printer/printer.cpp
   printer/printer_charmaps.cpp
   printer/printer_glue.cpp
+  printer/printer_glyph.cpp
   printer/printer_png.cpp
   printer/printer_ps.cpp
 
