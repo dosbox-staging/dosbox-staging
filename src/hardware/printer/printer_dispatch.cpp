@@ -17,6 +17,8 @@
 
 CHECK_NARROWING();
 
+namespace VirtualPrinter {
+
 // ESC/P2 opcode constants.
 // The high byte distinguishes the escape-sequence family:
 //   0x000 - 0x0ff : single-byte ESC commands ('ESC <ch>')
@@ -1494,5 +1496,7 @@ void Printer::PrintBitGraph(const uint8_t ch)
 	// Advance to the left
 	cur_x += static_cast<Real64>(1) / static_cast<Real64>(bit_graph.horiz_dens);
 }
+
+} // namespace VirtualPrinter
 
 #endif // C_PRINTER

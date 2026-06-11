@@ -17,6 +17,8 @@
 
 CHECK_NARROWING();
 
+namespace VirtualPrinter {
+
 // zlib compression levels duplicated locally to avoid pulling in zlib.h.
 static constexpr int ZBestCompression = 9;
 static constexpr int ZDefaultStrategy = 0;
@@ -31,15 +33,16 @@ bool write_png_page(SDL_Surface* page, const std_fs::path& out_path)
 		return false;
 	}
 
-	png_structp png_ptr = png_create_write_struct(
-	        PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
+	                                              nullptr,
+	                                              nullptr,
+	                                              nullptr);
 	if (!png_ptr) {
 		return false;
 	}
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr) {
-		png_destroy_write_struct(&png_ptr,
-		                         static_cast<png_infopp>(nullptr));
+		png_destroy_write_struct(&png_ptr, static_cast<png_infopp>(nullptr));
 		return false;
 	}
 
@@ -51,9 +54,15 @@ bool write_png_page(SDL_Surface* page, const std_fs::path& out_path)
 	png_set_compression_method(png_ptr, 8);
 	png_set_compression_buffer_size(png_ptr, 8192);
 
-	png_set_IHDR(png_ptr, info_ptr, page->w, page->h, 8,
-	             PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
-	             PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+	png_set_IHDR(png_ptr,
+	             info_ptr,
+	             page->w,
+	             page->h,
+	             8,
+	             PNG_COLOR_TYPE_PALETTE,
+	             PNG_INTERLACE_NONE,
+	             PNG_COMPRESSION_TYPE_DEFAULT,
+	             PNG_FILTER_TYPE_DEFAULT);
 
 	std::array<png_color, 256> palette = {};
 	for (int i = 0; i < 256; i++) {
@@ -83,13 +92,17 @@ bool write_png_page(SDL_Surface* page, const std_fs::path& out_path)
 	return true;
 }
 
+} // namespace VirtualPrinter
+
 #else // !C_PRINTER || !C_LIBPNG
 
 #if C_PRINTER
+namespace VirtualPrinter {
 bool write_png_page(SDL_Surface*, const std_fs::path&)
 {
 	return false;
 }
+} // namespace VirtualPrinter
 #endif
 
 #endif

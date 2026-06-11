@@ -78,7 +78,7 @@ protected:
 		std_fs::remove_all(output_dir, ec);
 		std_fs::create_directories(output_dir, ec);
 
-		Printer printer(TestDpi,
+		VirtualPrinter::Printer printer(TestDpi,
 		                 TestPageWidth10,
 		                 TestPageHeight10,
 		                 output_format,

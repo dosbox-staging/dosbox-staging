@@ -15,6 +15,8 @@
 
 CHECK_NARROWING();
 
+namespace VirtualPrinter {
+
 void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
                           const uint8_t blue_max, uint8_t color_id,
                           SDL_Palette* palette)
@@ -193,5 +195,7 @@ void Printer::DrawLine(const uint64_t fromx, const uint64_t tox,
 	}
 	SDL_UnlockSurface(page);
 }
+
+} // namespace VirtualPrinter
 
 #endif // C_PRINTER

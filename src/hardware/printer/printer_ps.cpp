@@ -17,6 +17,8 @@
 
 CHECK_NARROWING();
 
+namespace VirtualPrinter {
+
 // PostScript output state machine
 // -------------------------------
 // Each PRINTER_WriteControl strobe that completes a page triggers an
@@ -42,8 +44,7 @@ void Printer::OutputPagePostScript()
 	FILE_unique_ptr psfile = std::move(output_handle);
 
 	if (!psfile) {
-		const auto out_path = find_next_name(multipage_output ? "doc"
-		                                                      : "page",
+		const auto out_path = find_next_name(multipage_output ? "doc" : "page",
 		                                     ".ps");
 		if (!out_path) {
 			return;
@@ -70,8 +71,7 @@ void Printer::OutputPagePostScript()
 		multipage_counter = 1;
 	}
 
-	fprintf(psfile.get(), "%%%%Page: %i %i\n", multipage_counter,
-	        multipage_counter);
+	fprintf(psfile.get(), "%%%%Page: %i %i\n", multipage_counter, multipage_counter);
 	fprintf(psfile.get(),
 	        "%i %i scale\n",
 	        static_cast<uint16_t>(default_page_width * 72),
@@ -92,12 +92,11 @@ void Printer::OutputPagePostScript()
 
 	uint32_t pix          = 0;
 	const uint32_t numpix = page->h * page->w;
-	ascii85_buffer_pos    = ascii85_cur_col = 0;
+	ascii85_buffer_pos = ascii85_cur_col = 0;
 
 	while (pix < numpix) {
 		// Compress data using RLE.
-		if ((pix < numpix - 2) &&
-		    (GetPixel(pix) == GetPixel(pix + 1)) &&
+		if ((pix < numpix - 2) && (GetPixel(pix) == GetPixel(pix + 1)) &&
 		    (GetPixel(pix) == GetPixel(pix + 2))) {
 			// Three or more pixels with the same colour: RLE run.
 			uint8_t sameCount = 3;
@@ -169,7 +168,8 @@ void Printer::FprintAscii85(FILE* file, uint16_t byte)
 {
 	if (byte != 256) {
 		if (byte < 256) {
-			ascii85_buffer[ascii85_buffer_pos++] = static_cast<uint8_t>(byte);
+			ascii85_buffer[ascii85_buffer_pos++] = static_cast<uint8_t>(
+			        byte);
 		}
 
 		if (ascii85_buffer_pos == 4 || byte == 257) {
@@ -177,8 +177,7 @@ void Printer::FprintAscii85(FILE* file, uint16_t byte)
 			                    << 24 |
 			               static_cast<uint32_t>(ascii85_buffer[1])
 			                       << 16 |
-			               static_cast<uint32_t>(ascii85_buffer[2])
-			                       << 8 |
+			               static_cast<uint32_t>(ascii85_buffer[2]) << 8 |
 			               static_cast<uint32_t>(ascii85_buffer[3]);
 
 			// Deal with special case.
@@ -233,5 +232,7 @@ void Printer::FprintAscii85(FILE* file, uint16_t byte)
 		fprintf(file, ">\n");
 	}
 }
+
+} // namespace VirtualPrinter
 
 #endif // C_PRINTER

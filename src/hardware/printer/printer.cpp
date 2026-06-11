@@ -29,6 +29,10 @@
 
 CHECK_NARROWING();
 
+using VirtualPrinter::Printer;
+
+static void PRINTER_EventHandler([[maybe_unused]] uint32_t param);
+
 static std::unique_ptr<Printer> default_printer = nullptr;
 
 static uint16_t conf_dpi, conf_width, conf_height;
@@ -38,6 +42,8 @@ static std_fs::path document_path;
 // static const char* font_path;
 static std::string conf_output_device;
 static bool conf_multipage_output;
+
+namespace VirtualPrinter {
 
 // Printer::FillPalette lives in printer_glyph.cpp.
 
@@ -266,8 +272,6 @@ void Printer::SelectCodepage(const uint16_t codepage)
 // Printer::UpdateFont lives in printer_glyph.cpp.
 
 // Printer::ProcessCommandChar lives in printer_dispatch.cpp.
-
-static void PRINTER_EventHandler([[maybe_unused]] uint32_t param);
 
 void Printer::NewPage(const bool save, const bool reset_x)
 {
@@ -579,6 +583,8 @@ uint8_t Printer::GetPixel(const uint32_t num)
 	return *(static_cast<uint8_t*>(page->pixels) + (num % page->w) +
 	         ((num / page->w) * page->pitch));
 }
+
+} // namespace VirtualPrinter
 
 // LPT register bit positions (see src/hardware/lpt.h for the wider
 // staging definitions; we duplicate the few we use here as named
