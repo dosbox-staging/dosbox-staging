@@ -38,11 +38,11 @@ static bool confmultipageOutput;
 
 void CPrinter::FillPalette(const uint8_t redmax, const uint8_t greenmax, const uint8_t bluemax, uint8_t colorID, SDL_Palette* pal)
 {
-	float red=redmax/30.9f;
-	float green=greenmax/30.9f;
-	float blue=bluemax/30.9f;
+	const float red=redmax/30.9f;
+	const float green=greenmax/30.9f;
+	const float blue=bluemax/30.9f;
 
-	uint8_t colormask=colorID<<=5;
+	const uint8_t colormask=colorID<<=5;
 
 	for(int i = 0; i < 32;i++) {
 		pal->colors[i+colormask].r=static_cast<Uint8>(255-(red*static_cast<float>(i)));
@@ -648,7 +648,7 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 				if (unitSize < 0)
 					unitSize = static_cast<Real64>(60.0);
 
-				Real64 newX = leftMargin + (static_cast<Real64>(PARAM16(0))/unitSize);
+				const Real64 newX = leftMargin + (static_cast<Real64>(PARAM16(0))/unitSize);
 				if (newX <= rightMargin)
 					curX = newX;
 			}
@@ -855,7 +855,7 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 			break;
 		case 0x5c: // Set relative horizontal print position (ESC \)
 			{
-				int16_t toMove = PARAM16(0);
+				const int16_t toMove = PARAM16(0);
 				Real64 unitSize = definedUnit;
 				if (unitSize < 0)
 					unitSize = static_cast<Real64>(printQuality==QUALITY_DRAFT?120.0:180.0);
@@ -1000,7 +1000,7 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 				Real64 unitSize = definedUnit;
 				if (unitSize < 0)
 					unitSize = static_cast<Real64>(360.0);
-				Real64 newPos = topMargin + ((static_cast<Real64>(PARAM16(2))) * unitSize);
+				const Real64 newPos = topMargin + ((static_cast<Real64>(PARAM16(2))) * unitSize);
 				if (newPos > bottomMargin)
 					newPage(true,false);
 				else
@@ -1030,7 +1030,7 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 				Real64 unitSize = definedUnit;
 				if (unitSize < 0)
 					unitSize = static_cast<Real64>(360.0);
-				Real64 newPos = curY + (static_cast<Real64>(static_cast<int16_t>(PARAM16(2))) * unitSize);
+				const Real64 newPos = curY + (static_cast<Real64>(static_cast<int16_t>(PARAM16(2))) * unitSize);
 				if (newPos > topMargin)
 				{
 					if (newPos > bottomMargin)
@@ -1242,7 +1242,7 @@ void CPrinter::printChar(uint8_t ch)
 	// Render a high-quality bitmap
 	FT_Render_Glyph(curFont->glyph, FT_RENDER_MODE_NORMAL);
 
-	uint16_t penX = PIXX + curFont->glyph->bitmap_left;
+	const uint16_t penX = PIXX + curFont->glyph->bitmap_left;
 	uint16_t penY = PIXY - curFont->glyph->bitmap_top + curFont->size->metrics.ascender/64;
 
 	if (style & STYLE_SUBSCRIPT) penY += curFont->glyph->bitmap.rows / 2;
@@ -1269,7 +1269,7 @@ void CPrinter::printChar(uint8_t ch)
 	SDL_UnlockSurface(page);
 
 	// For line printing
-	uint16_t lineStart = PIXX;
+	const uint16_t lineStart = PIXX;
 
 	// advance the cursor to the right
 	Real64 x_advance;
@@ -1288,7 +1288,7 @@ void CPrinter::printChar(uint8_t ch)
 	{
 		// Find out where to put the line
 		uint16_t lineY = PIXY;
-		double height = (curFont->size->metrics.height>>6); // TODO height is fixed point madness...
+		const double height = (curFont->size->metrics.height>>6); // TODO height is fixed point madness...
 
 		if (style & STYLE_UNDERLINE) lineY = PIXY + static_cast<uint16_t>(height*0.9);
 		else if (style & STYLE_STRIKETHROUGH) lineY = PIXY + static_cast<uint16_t>(height*0.45);
@@ -1337,8 +1337,8 @@ void CPrinter::drawLine(const uint64_t fromx, const uint64_t tox, const uint64_t
 {
 	SDL_LockSurface(page);
 
-	uint64_t breakmod = dpi / 15;
-	uint64_t gapstart = (breakmod * 4)/5;
+	const uint64_t breakmod = dpi / 15;
+	const uint64_t gapstart = (breakmod * 4)/5;
 
 	// Draw anti-aliased line
 	for (uint64_t x=fromx; x<=tox; x++)
@@ -1483,7 +1483,7 @@ void CPrinter::printBitGraph(const uint8_t ch)
 	if (bitGraph.readBytesColumn < bitGraph.bytesColumn)
 		return;
 
-	Real64 oldY = curY;
+	const Real64 oldY = curY;
 
 	SDL_LockSurface(page);
 
@@ -1535,7 +1535,7 @@ void CPrinter::formFeed()
 static void findNextName(const char* front, const char* ext, char* fname)
 {
 	uint64_t i = 1;
-	uint64_t slen = strlen(document_path);
+	const uint64_t slen = strlen(document_path);
 	if(slen>(200-15)) {
 		fname[0]=0;
 		return;
@@ -1688,7 +1688,7 @@ void CPrinter::outputPage()
 		SDL_LockSurface(page);
 
 		uint32_t pix = 0;
-		uint32_t numpix = page->h*page->w;
+		const uint32_t numpix = page->h*page->w;
 		ASCII85BufferPos = ASCII85CurCol = 0;
 
 		while (pix < numpix)
@@ -1699,7 +1699,7 @@ void CPrinter::outputPage()
 			{
 				// Found three or more pixels with the same color
 				uint8_t sameCount = 3;
-				uint8_t col = getPixel(pix);
+				const uint8_t col = getPixel(pix);
 				while (sameCount < 128 && sameCount+pix < numpix && col == getPixel(pix+sameCount))
 					sameCount++;
 
