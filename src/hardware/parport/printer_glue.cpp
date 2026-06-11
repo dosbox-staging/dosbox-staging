@@ -64,35 +64,35 @@ void install_io_handlers(const io_port_t lpt_port)
 	state.data_write->Install(
 	        data_port,
 	        [](io_port_t /*port*/, io_val_t val, io_width_t /*width*/) {
-		        PRINTER_writedata(0, val, 1);
+		        PRINTER_WriteData(0, val, 1);
 	        },
 	        io_width_t::byte);
 
 	state.data_read->Install(
 	        data_port,
 	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return static_cast<io_val_t>(PRINTER_readdata(0, 1));
+		        return static_cast<io_val_t>(PRINTER_ReadData(0, 1));
 	        },
 	        io_width_t::byte);
 
 	state.status_read->Install(
 	        status_port,
 	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return static_cast<io_val_t>(PRINTER_readstatus(0, 1));
+		        return static_cast<io_val_t>(PRINTER_ReadStatus(0, 1));
 	        },
 	        io_width_t::byte);
 
 	state.control_write->Install(
 	        control_port,
 	        [](io_port_t /*port*/, io_val_t val, io_width_t /*width*/) {
-		        PRINTER_writecontrol(0, val, 1);
+		        PRINTER_WriteControl(0, val, 1);
 	        },
 	        io_width_t::byte);
 
 	state.control_read->Install(
 	        control_port,
 	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return static_cast<io_val_t>(PRINTER_readcontrol(0, 1));
+		        return static_cast<io_val_t>(PRINTER_ReadControl(0, 1));
 	        },
 	        io_width_t::byte);
 }
@@ -204,9 +204,9 @@ void PRINTER_Init()
 	state.docpath       = section.GetString("docpath");
 	state.output_format = section.GetString("printoutput");
 
-	const auto dpi       = static_cast<int>(section.GetInt("dpi"));
-	const auto width     = static_cast<int>(section.GetInt("width"));
-	const auto height    = static_cast<int>(section.GetInt("height"));
+	const auto dpi       = static_cast<uint16_t>(section.GetInt("dpi"));
+	const auto width     = static_cast<uint16_t>(section.GetInt("width"));
+	const auto height    = static_cast<uint16_t>(section.GetInt("height"));
 	const auto multipage = section.GetBool("multipage");
 	const auto timeout   = section.GetInt("timeout");
 
