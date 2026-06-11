@@ -9,6 +9,7 @@
 #if !defined __PRINTER_H
 #define __PRINTER_H
 
+#include <array>
 #include <string>
 
 #include "misc/support.h"
@@ -219,7 +220,7 @@ private:
 	uint8_t num_param = 0, needed_param = 0;
 
 	// Buffer for the read parameters.
-	uint8_t params[20] = {};
+	std::array<uint8_t, 20> params = {};
 
 	// Bitmask of currently active text styles.
 	PrinterStyle style = {};
@@ -245,12 +246,12 @@ private:
 	Real64 line_spacing = 0.0;
 
 	// Currently configured horizontal tabs (in inch).
-	Real64 horiz_tabs[32]  = {};
-	uint8_t num_horiz_tabs = 0;
+	std::array<Real64, 32> horiz_tabs = {};
+	uint8_t num_horiz_tabs            = 0;
 
 	// Currently configured vertical tabs (in inch).
-	Real64 vert_tabs[16]  = {};
-	uint8_t num_vert_tabs = 0;
+	std::array<Real64, 16> vert_tabs = {};
+	uint8_t num_vert_tabs            = 0;
 
 	// Currently selected character table / charset.
 	uint8_t cur_char_table = 0;
@@ -288,7 +289,7 @@ private:
 		uint16_t rem_bytes = 0;
 
 		// Bytes of the current and last column.
-		uint8_t column[6] = {};
+		std::array<uint8_t, 6> column = {};
 
 		// Bytes read so far for the current column.
 		uint8_t read_bytes_column = 0;
@@ -298,10 +299,10 @@ private:
 	uint8_t densk = 0, densl = 0, densy = 0, densz = 0;
 
 	// Currently used ASCII => Unicode mapping.
-	uint16_t cur_map[256] = {};
+	std::array<uint16_t, 256> cur_map = {};
 
 	// Character tables (codepage slots 0..3, see ESC ( t).
-	uint16_t char_tables[4] = {};
+	std::array<uint16_t, 4> char_tables = {};
 
 	// Unit used by some ESC/P2 commands (negative => use default).
 	Real64 defined_unit = -1.0;
@@ -340,9 +341,9 @@ private:
 	uint16_t multipage_counter = 0;
 
 	// State of the ASCII85 encoder used by PostScript output.
-	uint8_t ascii85_buffer[4]  = {};
-	uint8_t ascii85_buffer_pos = 0;
-	uint8_t ascii85_cur_col    = 0;
+	std::array<uint8_t, 4> ascii85_buffer = {};
+	uint8_t ascii85_buffer_pos            = 0;
+	uint8_t ascii85_cur_col               = 0;
 };
 
 #endif

@@ -12,6 +12,7 @@
 #include "misc/support.h"
 #include "printer_charmaps.h"
 #include "printer_if.h"
+#include <array>
 #include <math.h>
 #include <memory>
 #include <optional>
@@ -1974,7 +1975,7 @@ void Printer::OutputPage()
 
 		png_structp png_ptr;
 		png_infop info_ptr;
-		png_color palette[256];
+		std::array<png_color, 256> palette = {};
 		uint64_t i;
 
 		// Open the actual file. RAII closes on any return path.
@@ -2022,7 +2023,7 @@ void Printer::OutputPage()
 			palette[i].green = page->format->palette->colors[i].g;
 			palette[i].blue  = page->format->palette->colors[i].b;
 		}
-		png_set_PLTE(png_ptr, info_ptr, palette, 256);
+		png_set_PLTE(png_ptr, info_ptr, palette.data(), 256);
 
 		SDL_LockSurface(page);
 
