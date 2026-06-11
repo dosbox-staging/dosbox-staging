@@ -163,7 +163,7 @@ void Printer::ResetPrinter()
 	hmi                                              = -1.0;
 	msb                                              = 255;
 	num_print_as_char                                = 0;
-	lq_typeface                                      = courier;
+	lq_typeface                                      = Typeface::Courier;
 
 	SelectCodepage(char_tables[cur_char_table]);
 
@@ -288,16 +288,16 @@ void Printer::UpdateFont()
 	const char* font_filename = "roman.ttf";
 
 	switch (lq_typeface) {
-	case roman: font_filename = "roman.ttf"; break;
+	case Typeface::Roman: font_filename = "roman.ttf"; break;
 
-	case sansserif: font_filename = "sansserif.ttf"; break;
+	case Typeface::SansSerif: font_filename = "sansserif.ttf"; break;
 
-	case courier: font_filename = "courier.ttf"; break;
+	case Typeface::Courier: font_filename = "courier.ttf"; break;
 
-	case script: font_filename = "script.ttf"; break;
+	case Typeface::Script: font_filename = "script.ttf"; break;
 
-	case ocra:
-	case ocrb: font_filename = "ocra.ttf"; break;
+	case Typeface::OcrA:
+	case Typeface::OcrB: font_filename = "ocra.ttf"; break;
 
 	default: font_filename = "roman.ttf"; break;
 	}
@@ -1121,7 +1121,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		}
 		case 0x6b: // Select typeface (ESC k)
 			if (params[0] <= 11 || params[0] == 30 || params[0] == 31) {
-				lq_typeface = (Typeface)params[0];
+				lq_typeface = static_cast<Typeface>(params[0]);
 			}
 			UpdateFont();
 			break;

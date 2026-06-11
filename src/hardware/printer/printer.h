@@ -51,21 +51,21 @@ constexpr int ZDefaultStrategy = 0;
 // 3-bit colour ID in the top 3 bits. Black is sub-palette 7.
 constexpr uint8_t ColorBlack = 7 << 5;
 
-enum Typeface {
-	roman = 0,
-	sansserif,
-	courier,
-	prestige,
-	script,
-	ocrb,
-	ocra,
-	orator,
-	orators,
-	scriptc,
-	romant,
-	sansserifh,
-	svbusaba = 30,
-	svjittra = 31
+enum class Typeface {
+	Roman = 0,
+	SansSerif,
+	Courier,
+	Prestige,
+	Script,
+	OcrB,
+	OcrA,
+	Orator,
+	OratorS,
+	ScriptC,
+	RomanT,
+	SansSerifH,
+	Svbusaba = 30,
+	Svjittra = 31,
 };
 
 class Printer {
@@ -240,7 +240,7 @@ private:
 	uint8_t print_quality = 0;
 
 	// Typeface used in LQ printing mode.
-	Typeface lq_typeface = roman;
+	Typeface lq_typeface = Typeface::Roman;
 
 	// Extra space between two characters (set by program, in inch).
 	Real64 extra_intra_space = 0.0;
