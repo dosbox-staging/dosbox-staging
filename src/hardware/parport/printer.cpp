@@ -1869,7 +1869,7 @@ uint64_t PRINTER_readdata([[maybe_unused]] const uint64_t port, [[maybe_unused]]
 void PRINTER_writedata([[maybe_unused]] const uint64_t port, const uint64_t val, [[maybe_unused]] const uint64_t iolen) {
 	dataregister=val;
 }
-uint8_t controlreg = 0x04;
+static uint8_t controlreg = 0x04;
 
 uint64_t PRINTER_readstatus([[maybe_unused]] const uint64_t port, [[maybe_unused]] const uint64_t iolen) {
 	//LOG_MSG("PRINTER_readstatus CS:IP %8x:%8x",SegValue(cs),reg_eip);
@@ -1951,16 +1951,12 @@ uint64_t PRINTER_readcontrol([[maybe_unused]] const uint64_t port, [[maybe_unuse
 	return 0xe0|(defaultPrinter->getAutofeed()?0x02:0x00) | (controlreg&0xfd);
 }
 
-void PRINTER_Shutdown([[maybe_unused]] Section* sec)
-{
-	if (defaultPrinter)
-	{
-		delete defaultPrinter;
-		defaultPrinter = NULL;
-	}
-}
+// PRINTER_Shutdown used to be registered via Section_prop::AddDestroyFunction
+// in the upstream PRINTER_Init. dosbox-staging drives the printer lifecycle
+// from printer_glue.cpp via PRINTER_Reset, so the function is no longer
+// reachable and has been removed.
 
-bool inited = false;
+static bool inited = false;
 bool PRINTER_isInited() {
 	return inited;
 }
