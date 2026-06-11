@@ -142,7 +142,7 @@ void Printer::ResetPrinter()
 	line_spacing                = static_cast<Real64>(1) / 6;
 	cpi                         = 10.0;
 	cur_char_table              = 1;
-	style                       = 0;
+	style.data                  = 0;
 	extra_intra_space           = 0.0;
 	print_upper_contr           = true;
 	bit_graph.rem_bytes         = 0;
@@ -160,7 +160,7 @@ void Printer::ResetPrinter()
 	hmi                                              = -1.0;
 	msb                                              = 255;
 	num_print_as_char                                = 0;
-	lq_typeface                                      = courier;
+	lq_typeface                                      = Typeface::Courier;
 
 	SelectCodepage(char_tables[cur_char_table]);
 
@@ -285,16 +285,16 @@ void Printer::UpdateFont()
 	const char* font_filename = "roman.ttf";
 
 	switch (lq_typeface) {
-	case roman: font_filename = "roman.ttf"; break;
+	case Typeface::Roman: font_filename = "roman.ttf"; break;
 
-	case sansserif: font_filename = "sansserif.ttf"; break;
+	case Typeface::SansSerif: font_filename = "sansserif.ttf"; break;
 
-	case courier: font_filename = "courier.ttf"; break;
+	case Typeface::Courier: font_filename = "courier.ttf"; break;
 
-	case script: font_filename = "script.ttf"; break;
+	case Typeface::Script: font_filename = "script.ttf"; break;
 
-	case ocra:
-	case ocrb: font_filename = "ocra.ttf"; break;
+	case Typeface::OcrA:
+	case Typeface::OcrB: font_filename = "ocra.ttf"; break;
 
 	default: font_filename = "roman.ttf"; break;
 	}
@@ -340,32 +340,32 @@ void Printer::UpdateFont()
 		                break;
 		}
 	*/
-		if (!(style & STYLE_CONDENSED)) {
+		if (!(style.condensed)) {
 			horizPoints *= 10.0 / cpi;
 			vertPoints *= 10.0 / cpi;
 		}
 
-		if (!(style & STYLE_PROP)) {
-			if ((cpi == 10.0) && (style & STYLE_CONDENSED)) {
+		if (!(style.prop)) {
+			if ((cpi == 10.0) && (style.condensed)) {
 				act_cpi = 17.14;
 				horizPoints *= 10.0 / 17.14;
 			}
-			if ((cpi == 12.0) && (style & STYLE_CONDENSED)) {
+			if ((cpi == 12.0) && (style.condensed)) {
 				act_cpi = 20.0;
 				horizPoints *= 10.0 / 20.0;
 				vertPoints *= 10.0 / 12.0;
 			}
-		} else if (style & STYLE_CONDENSED) {
+		} else if (style.condensed) {
 			horizPoints /= 2.0;
 		}
 
-		if ((style & STYLE_DOUBLEWIDTH) ||
-		    (style & STYLE_DOUBLEWIDTHONELINE)) {
+		if ((style.doublewidth) ||
+		    (style.doublewidth_oneline)) {
 			act_cpi /= 2.0;
 			horizPoints *= 2.0;
 		}
 
-		if (style & STYLE_DOUBLEHEIGHT) {
+		if (style.doubleheight) {
 			vertPoints *= 2.0;
 		}
 	} else {
@@ -374,7 +374,7 @@ void Printer::UpdateFont()
 		horizPoints = vertPoints = multi_point_size;
 	}
 
-	if ((style & STYLE_SUPERSCRIPT) || (style & STYLE_SUBSCRIPT)) {
+	if ((style.superscript) || (style.subscript)) {
 		horizPoints *= 2.0 / 3.0;
 		vertPoints *= 2.0 / 3.0;
 		act_cpi /= 2.0 / 3.0;
@@ -386,7 +386,7 @@ void Printer::UpdateFont()
 	                 dpi,
 	                 dpi);
 
-	if (style & STYLE_ITALICS || char_tables[cur_char_table] == 0) {
+	if (style.italics || char_tables[cur_char_table] == 0) {
 		FT_Matrix matrix;
 		matrix.xx = 0x10000L;
 		matrix.xy = (FT_Fixed)(0.20 * 0x10000L);
@@ -725,7 +725,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case 0x0e: // Select double-width printing (one line) (ESC SO)
 			if (!multipoint) {
 				hmi = -1;
-				style |= STYLE_DOUBLEWIDTHONELINE;
+				style.doublewidth_oneline = 1;
 				UpdateFont();
 			}
 			break;
@@ -733,7 +733,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case 0x0f: // Select condensed printing (ESC SI)
 			if (!multipoint && (cpi != 15.0)) {
 				hmi = -1;
-				style |= STYLE_CONDENSED;
+				style.condensed = 1;
 				UpdateFont();
 			}
 			break;
@@ -749,7 +749,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case 0x20: // Set intercharacter space (ESC SP)
 			if (!multipoint) {
 				extra_intra_space = static_cast<Real64>(params[0]) /
-				                    (print_quality == QUALITY_DRAFT
+				                    (print_quality == PrintQuality::Draft
 				                             ? 120
 				                             : 180);
 				hmi = -1;
@@ -760,29 +760,30 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case 0x21: // Master select (ESC !)
 			cpi = params[0] & 0x01 ? 12 : 10;
 
-			// Reset first seven bits
-			style &= 0xFF80;
+			// Reset the first seven style bits (prop..superscript) and
+			// rebuild them from the master-select byte below.
+			style.data &= 0xFF80;
 			if (params[0] & 0x02) {
-				style |= STYLE_PROP;
+				style.prop = 1;
 			}
 			if (params[0] & 0x04) {
-				style |= STYLE_CONDENSED;
+				style.condensed = 1;
 			}
 			if (params[0] & 0x08) {
-				style |= STYLE_BOLD;
+				style.bold = 1;
 			}
 			if (params[0] & 0x10) {
-				style |= STYLE_DOUBLESTRIKE;
+				style.doublestrike = 1;
 			}
 			if (params[0] & 0x20) {
-				style |= STYLE_DOUBLEWIDTH;
+				style.doublewidth = 1;
 			}
 			if (params[0] & 0x40) {
-				style |= STYLE_ITALICS;
+				style.italics = 1;
 			}
 			if (params[0] & 0x80) {
-				score = SCORE_SINGLE;
-				style |= STYLE_UNDERLINE;
+				score = ScoreType::Single;
+				style.underline = 1;
 			}
 
 			hmi        = -1;
@@ -824,11 +825,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		case 0x2d: // Turn underline on/off (ESC -)
 			if (params[0] == 0 || params[0] == 48) {
-				style &= ~STYLE_UNDERLINE;
+				style.underline = 0;
 			}
 			if (params[0] == 1 || params[0] == 49) {
-				style |= STYLE_UNDERLINE;
-				score = SCORE_SINGLE;
+				style.underline = 1;
+				score = ScoreType::Single;
 			}
 			UpdateFont();
 			break;
@@ -850,12 +851,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		case 0x34: // Select italic font (ESC 4)
-			style |= STYLE_ITALICS;
+			style.italics = 1;
 			UpdateFont();
 			break;
 
 		case 0x35: // Cancel italic font (ESC 5)
-			style &= ~STYLE_ITALICS;
+			style.italics = 0;
 			UpdateFont();
 			break;
 
@@ -918,21 +919,21 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		case 0x45: // Select bold font (ESC E)
-			style |= STYLE_BOLD;
+			style.bold = 1;
 			UpdateFont();
 			break;
 
 		case 0x46: // Cancel bold font (ESC F)
-			style &= ~STYLE_BOLD;
+			style.bold = 0;
 			UpdateFont();
 			break;
 
 		case 0x47: // Select dobule-strike printing (ESC G)
-			style |= STYLE_DOUBLESTRIKE;
+			style.doublestrike = 1;
 			break;
 
 		case 0x48: // Cancel double-strike printing (ESC H)
-			style &= ~STYLE_DOUBLESTRIKE;
+			style.doublestrike = 0;
 			break;
 
 		case 0x4a: // Advance print position vertically (ESC J n)
@@ -1003,16 +1004,17 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		case 0x53: // Select superscript/subscript printing (ESC S)
 			if (params[0] == 0 || params[0] == 48) {
-				style |= STYLE_SUBSCRIPT;
+				style.subscript = 1;
 			}
 			if (params[0] == 1 || params[1] == 49) {
-				style |= STYLE_SUPERSCRIPT;
+				style.superscript = 1;
 			}
 			UpdateFont();
 			break;
 
 		case 0x54: // Cancel superscript/subscript printing (ESC T)
-			style &= 0xFFFF - STYLE_SUPERSCRIPT - STYLE_SUBSCRIPT;
+			style.superscript = 0;
+			style.subscript   = 0;
 			UpdateFont();
 			break;
 
@@ -1024,10 +1026,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			if (!multipoint) {
 				hmi = -1;
 				if (params[0] == 0 || params[0] == 48) {
-					style &= ~STYLE_DOUBLEWIDTH;
+					style.doublewidth = 0;
 				}
 				if (params[0] == 1 || params[0] == 49) {
-					style |= STYLE_DOUBLEWIDTH;
+					style.doublewidth = 1;
 				}
 				UpdateFont();
 			}
@@ -1043,7 +1045,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			if (params[0] > 0) // Set CPI
 			{
 				if (params[0] == 1) { // Proportional spacing
-					style |= STYLE_PROP;
+					style.prop = 1;
 				} else if (params[0] >= 5) {
 					multi_cpi = static_cast<Real64>(360) /
 					            static_cast<Real64>(params[0]);
@@ -1073,7 +1075,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			Real64 unitSize      = defined_unit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(
-				        print_quality == QUALITY_DRAFT ? 120.0
+				        print_quality == PrintQuality::Draft ? 120.0
 				                                       : 180.0);
 			}
 			cur_x += static_cast<Real64>(
@@ -1118,7 +1120,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		}
 		case 0x6b: // Select typeface (ESC k)
 			if (params[0] <= 11 || params[0] == 30 || params[0] == 31) {
-				lq_typeface = (Typeface)params[0];
+				lq_typeface = static_cast<Typeface>(params[0]);
 			}
 			UpdateFont();
 			break;
@@ -1133,11 +1135,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		case 0x70: // Turn proportional mode on/off (ESC p)
 			if (params[0] == 0 || params[0] == 48) {
-				style &= (0xffff - STYLE_PROP);
+				style.prop = 0;
 			}
 			if (params[0] == 1 || params[0] == 49) {
-				style |= STYLE_PROP;
-				print_quality = QUALITY_LQ;
+				style.prop = 1;
+				print_quality = PrintQuality::Lq;
 			}
 			multipoint = false;
 			hmi        = -1;
@@ -1172,10 +1174,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case 0x77: // Turn double-height printing on/off (ESC w)
 			if (!multipoint) {
 				if (params[0] == 0 || params[0] == 48) {
-					style &= ~STYLE_DOUBLEHEIGHT;
+					style.doubleheight = 0;
 				}
 				if (params[0] == 1 || params[0] == 49) {
-					style |= STYLE_DOUBLEHEIGHT;
+					style.doubleheight = 1;
 				}
 				UpdateFont();
 			}
@@ -1183,12 +1185,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		case 0x78: // Select LQ or draft (ESC x)
 			if (params[0] == 0 || params[0] == 48) {
-				print_quality = QUALITY_DRAFT;
-				style |= STYLE_CONDENSED;
+				print_quality = PrintQuality::Draft;
+				style.condensed = 1;
 			}
 			if (params[0] == 1 || params[0] == 49) {
-				print_quality = QUALITY_LQ;
-				style &= ~STYLE_CONDENSED;
+				print_quality = PrintQuality::Lq;
+				style.condensed = 0;
 			}
 			hmi = -1;
 			UpdateFont();
@@ -1220,18 +1222,19 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		case 0x22d: // Select line/score (ESC (-)
-			style &= ~(STYLE_UNDERLINE | STYLE_STRIKETHROUGH |
-			           STYLE_OVERSCORE);
-			score = params[4];
-			if (score) {
+			style.underline     = 0;
+		style.strikethrough = 0;
+		style.overscore     = 0;
+			score = static_cast<ScoreType>(params[4]);
+			if (score != ScoreType::None) {
 				if (params[3] == 1) {
-					style |= STYLE_UNDERLINE;
+					style.underline = 1;
 				}
 				if (params[3] == 2) {
-					style |= STYLE_STRIKETHROUGH;
+					style.strikethrough = 1;
 				}
 				if (params[3] == 3) {
-					style |= STYLE_OVERSCORE;
+					style.overscore = 1;
 				}
 			}
 			UpdateFont();
@@ -1400,14 +1403,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 				cur_y = moveTo;
 			}
 		}
-		if (style & STYLE_DOUBLEWIDTHONELINE) {
-			style &= 0xFFFF - STYLE_DOUBLEWIDTHONELINE;
+		if (style.doublewidth_oneline) {
+			style.doublewidth_oneline = 0;
 			UpdateFont();
 		}
 		return true;
 	case 0x0c: // Form feed (FF)
-		if (style & STYLE_DOUBLEWIDTHONELINE) {
-			style &= 0xFFFF - STYLE_DOUBLEWIDTHONELINE;
+		if (style.doublewidth_oneline) {
+			style.doublewidth_oneline = 0;
 			UpdateFont();
 		}
 		NewPage(true, true);
@@ -1419,8 +1422,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		}
 		[[fallthrough]];
 	case 0x0a: // Line feed
-		if (style & STYLE_DOUBLEWIDTHONELINE) {
-			style &= 0xFFFF - STYLE_DOUBLEWIDTHONELINE;
+		if (style.doublewidth_oneline) {
+			style.doublewidth_oneline = 0;
 			UpdateFont();
 		}
 		cur_x = left_margin;
@@ -1432,14 +1435,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	case 0x0e: // Select Real64-width printing (one line) (SO)
 		if (!multipoint) {
 			hmi = -1;
-			style |= STYLE_DOUBLEWIDTHONELINE;
+			style.doublewidth_oneline = 1;
 			UpdateFont();
 		}
 		return true;
 	case 0x0f: // Select condensed printing (SI)
 		if (!multipoint && (cpi != 15.0)) {
 			hmi = -1;
-			style |= STYLE_CONDENSED;
+			style.condensed = 1;
 			UpdateFont();
 		}
 		return true;
@@ -1448,7 +1451,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		return true;
 	case 0x12: // Cancel condensed printing (DC2)
 		hmi = -1;
-		style &= ~STYLE_CONDENSED;
+		style.condensed = 0;
 		UpdateFont();
 		return true;
 	case 0x13: // Deselect printer (DC3)
@@ -1456,7 +1459,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		return true;
 	case 0x14: // Cancel double-width printing (one line) (DC4)
 		hmi = -1;
-		style &= ~STYLE_DOUBLEWIDTHONELINE;
+		style.doublewidth_oneline = 0;
 		UpdateFont();
 		return true;
 	case 0x18: // Cancel line (CAN)
@@ -1556,7 +1559,7 @@ void Printer::PrintChar(uint8_t ch)
 	uint16_t penY = static_cast<uint16_t>(PixY() - cur_font->glyph->bitmap_top +
 	                                      cur_font->size->metrics.ascender / 64);
 
-	if (style & STYLE_SUBSCRIPT) {
+	if (style.subscript) {
 		penY = static_cast<uint16_t>(penY + cur_font->glyph->bitmap.rows / 2);
 	}
 
@@ -1567,14 +1570,14 @@ void Printer::PrintChar(uint8_t ch)
 	BlitGlyph(cur_font->glyph->bitmap, penX + 1, penY, true);
 
 	// Doublestrike => Print the glyph a second time one pixel below
-	if (style & STYLE_DOUBLESTRIKE) {
+	if (style.doublestrike) {
 		BlitGlyph(cur_font->glyph->bitmap, penX, penY + 1, true);
 		BlitGlyph(cur_font->glyph->bitmap, penX + 1, penY + 1, true);
 	}
 
 	// Bold => Print the glyph a second time one pixel to the right
 	// or be a bit more bold...
-	if (style & STYLE_BOLD) {
+	if (style.bold) {
 		BlitGlyph(cur_font->glyph->bitmap, penX + 1, penY, true);
 		BlitGlyph(cur_font->glyph->bitmap, penX + 2, penY, true);
 		BlitGlyph(cur_font->glyph->bitmap, penX + 3, penY, true);
@@ -1586,7 +1589,7 @@ void Printer::PrintChar(uint8_t ch)
 
 	// advance the cursor to the right
 	Real64 x_advance;
-	if (style & STYLE_PROP) {
+	if (style.prop) {
 		x_advance = static_cast<Real64>(
 		        static_cast<Real64>(cur_font->glyph->advance.x) /
 		        static_cast<Real64>(dpi * 64));
@@ -1601,8 +1604,8 @@ void Printer::PrintChar(uint8_t ch)
 	cur_x += x_advance;
 
 	// Draw lines if desired
-	if ((score != SCORE_NONE) &&
-	    (style & (STYLE_UNDERLINE | STYLE_STRIKETHROUGH | STYLE_OVERSCORE))) {
+	if ((score != ScoreType::None) &&
+	    (style.underline || style.strikethrough || style.overscore)) {
 		// Find out where to put the line
 		uint16_t lineY      = static_cast<uint16_t>(PixY());
 		const double height = static_cast<double>(
@@ -1610,16 +1613,16 @@ void Printer::PrintChar(uint8_t ch)
 		                                              // fixed point
 		                                              // madness...
 
-		if (style & STYLE_UNDERLINE) {
+		if (style.underline) {
 			lineY = static_cast<uint16_t>(
 			        PixY() + static_cast<uint16_t>(height * 0.9));
-		} else if (style & STYLE_STRIKETHROUGH) {
+		} else if (style.strikethrough) {
 			lineY = static_cast<uint16_t>(
 			        PixY() + static_cast<uint16_t>(height * 0.45));
-		} else if (style & STYLE_OVERSCORE) {
+		} else if (style.overscore) {
 			lineY = static_cast<uint16_t>(
-			        PixY() - (((score == SCORE_DOUBLE) ||
-			                   (score == SCORE_DOUBLEBROKEN))
+			        PixY() - (((score == ScoreType::Double) ||
+			                   (score == ScoreType::DoubleBroken))
 			                          ? 5
 			                          : 0));
 		}
@@ -1627,14 +1630,14 @@ void Printer::PrintChar(uint8_t ch)
 		DrawLine(lineStart,
 		         PixX(),
 		         lineY,
-		         score == SCORE_SINGLEBROKEN || score == SCORE_DOUBLEBROKEN);
+		         score == ScoreType::SingleBroken || score == ScoreType::DoubleBroken);
 
 		// draw second line if needed
-		if ((score == SCORE_DOUBLE) || (score == SCORE_DOUBLEBROKEN)) {
+		if ((score == ScoreType::Double) || (score == ScoreType::DoubleBroken)) {
 			// score is DOUBLE or DOUBLEBROKEN here; the upstream
-			// expression also tested SCORE_SINGLEBROKEN which is
+			// expression also tested ScoreType::SingleBroken which is
 			// unreachable in this branch.
-			DrawLine(lineStart, PixX(), lineY + 5, score == SCORE_DOUBLEBROKEN);
+			DrawLine(lineStart, PixX(), lineY + 5, score == ScoreType::DoubleBroken);
 		}
 	}
 	// If the next character would go beyond the right margin, line-wrap.
