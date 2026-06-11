@@ -2173,13 +2173,38 @@ uint8_t CPrinter::GetPixel(const uint32_t num)
 	         ((num / page->w) * page->pitch));
 }
 
-// Latched copies of the LPT port registers that printer.cpp drives.
+// LPT register bit positions (see src/hardware/lpt.h for the wider
+// staging definitions; we duplicate the few we use here as named
+// constants rather than pulling in the unions).
 namespace {
+
+// Control register (write-only, base + 2).
+constexpr uint8_t kCtrlStrobe     = 0x01;
+constexpr uint8_t kCtrlAutoLf     = 0x02;
+constexpr uint8_t kCtrlInitialise = 0x04;
+constexpr uint8_t kCtrlReservedHi = 0xe0; // unused bits, read back as 1
+// Mask used when echoing the control register back in
+// PRINTER_ReadControl: keep everything except auto_lf, which the
+// printer reports based on its own state.
+constexpr uint8_t kCtrlReadMask = 0xfd;
+
+// Status register (read-only, base + 1).
+constexpr uint8_t kStatusReservedLow = 0x1f; // reserved-low + select_in
+constexpr uint8_t kStatusAckHigh     = 0x40;
+constexpr uint8_t kStatusBusyHigh    = 0x80;
+
+// Status value when no CPrinter exists yet. ERROR/ACK/BUSY high
+// (their inverted polarity means "no error, no ack, not busy"),
+// select_in high, paper_out low, irq low.
+constexpr uint8_t kStatusNoPrinter = 0xdf;
+
+// Latched copies of the LPT port registers that printer.cpp drives.
 struct LptRegisters {
 	uint8_t data    = 0;
-	uint8_t control = 0x04;
+	uint8_t control = kCtrlInitialise;
 };
 LptRegisters lpt{};
+
 } // namespace
 
 uint64_t PRINTER_ReadData([[maybe_unused]] const uint64_t port,
@@ -2197,27 +2222,19 @@ void PRINTER_WriteData([[maybe_unused]] const uint64_t port, const uint64_t val,
 uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
                             [[maybe_unused]] const uint64_t iolen)
 {
-	// LOG_MSG("PRINTER_ReadStatus CS:IP %8x:%8x",SegValue(cs),reg_eip);
-	//  Don't create a CPrinter unless the program really wants to print
-	//  Return standard: No error, printer online, no Ack and not busy
+	// Don't create a CPrinter unless the program really wants to print.
 	if (!default_printer) {
-		return 0xDF;
+		return kStatusNoPrinter;
 	}
 
-	// Printer is always online and never reports an error
-	uint8_t status = 0x1f; // 0x18;
-
-	//	if (lpt.control&0x08==0)
-	//		status |= 0x10;
-
+	// Printer is always online and never reports an error.
+	uint8_t status = kStatusReservedLow;
 	if (!default_printer->IsBusy()) {
-		status |= 0x80;
+		status |= kStatusBusyHigh;
 	}
-
 	if (!default_printer->Ack()) {
-		status |= 0x40;
+		status |= kStatusAckHigh;
 	}
-
 	return status;
 }
 
@@ -2253,15 +2270,14 @@ static void PRINTER_EventHandler([[maybe_unused]] const uint32_t param)
 void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t val,
                           [[maybe_unused]] const uint64_t iolen)
 {
-	// LOG_MSG("PRINTER_WriteControl CS:IP %8x:%8x",SegValue(cs),reg_eip);
-	//  init printer if bit 4 is switched on
-	if ((val & 0x04) && default_printer && (!(lpt.control & 0x04))) {
+	// Rising edge on the INITIALISE bit triggers a hard reset.
+	if ((val & kCtrlInitialise) && default_printer &&
+	    !(lpt.control & kCtrlInitialise)) {
 		default_printer->ResetPrinterHard();
 	}
 
-	// data is strobed to the parallel printer on the falling edge of strobe
-	// bit
-	if (!(val & 0x1) && (lpt.control & 0x1)) {
+	// Data is strobed to the printer on the falling edge of the STROBE bit.
+	if (!(val & kCtrlStrobe) && (lpt.control & kCtrlStrobe)) {
 		if (!default_printer) {
 			default_printer = new CPrinter(conf_dpi,
 			                               conf_width,
@@ -2280,21 +2296,19 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 
 	lpt.control = val;
 	if (default_printer) {
-		default_printer->SetAutofeed((val & 0x02) > 0);
+		default_printer->SetAutofeed((val & kCtrlAutoLf) != 0);
 	}
 }
 
 uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
                              [[maybe_unused]] const uint64_t iolen)
 {
-	// LOG_MSG("PRINTER_ReadControl CS:IP %8x:%8x",SegValue(cs),reg_eip);
-	//  Don't create a CPrinter unless the program really wants to print
+	// Don't create a CPrinter unless the program really wants to print.
 	if (!default_printer) {
-		return 0xe0 | lpt.control; // 0xe8;
+		return kCtrlReservedHi | lpt.control;
 	}
-
-	return 0xe0 | (default_printer->GetAutofeed() ? 0x02 : 0x00) |
-	       (lpt.control & 0xfd);
+	const uint8_t auto_lf = default_printer->GetAutofeed() ? kCtrlAutoLf : 0;
+	return kCtrlReservedHi | auto_lf | (lpt.control & kCtrlReadMask);
 }
 
 // PRINTER_Shutdown used to be registered via Section_prop::AddDestroyFunction
@@ -2353,7 +2367,7 @@ void PRINTER_Reset()
 	// from before a previous Reset can't trigger lazy construction with
 	// stale data.
 	lpt.data    = 0;
-	lpt.control = 0x04;
+	lpt.control = kCtrlInitialise;
 }
 
 #endif
