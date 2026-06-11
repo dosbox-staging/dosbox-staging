@@ -33,7 +33,7 @@ static const char* document_path;
 static char confoutputDevice[50];
 static bool confmultipageOutput;
 
-void CPrinter::FillPalette(Bit8u redmax, Bit8u greenmax, Bit8u bluemax, Bit8u colorID, SDL_Palette* pal)
+void CPrinter::FillPalette(const Bit8u redmax, const Bit8u greenmax, const Bit8u bluemax, Bit8u colorID, SDL_Palette* pal)
 {
 	float red=redmax/30.9f;
 	float green=greenmax/30.9f;
@@ -48,7 +48,7 @@ void CPrinter::FillPalette(Bit8u redmax, Bit8u greenmax, Bit8u bluemax, Bit8u co
 	}
 }
 
-CPrinter::CPrinter(Bit16u dpi, Bit16u width, Bit16u height, char* output, bool multipageOutput) 
+CPrinter::CPrinter(Bit16u dpi, const Bit16u width, const Bit16u height, char* output, bool multipageOutput) 
 {
 	if (FT_Init_FreeType(&FTlib))
 	{
@@ -187,7 +187,7 @@ CPrinter::~CPrinter(void)
 	}
 };
 
-void CPrinter::selectCodepage(Bit16u cp)
+void CPrinter::selectCodepage(const Bit16u cp)
 {
 	const Bit16u* mapToUse = NULL;
 
@@ -367,7 +367,7 @@ void CPrinter::updateFont()
 	}
 }
 
-bool CPrinter::processCommandChar(Bit8u ch)
+bool CPrinter::processCommandChar(const Bit8u ch)
 {
 	if (ESCSeen || FSSeen)
 	{
@@ -1179,7 +1179,7 @@ bool CPrinter::processCommandChar(Bit8u ch)
 
 static void PRINTER_EventHandler([[maybe_unused]] uint32_t param);
 
-void CPrinter::newPage(bool save, bool resetx)
+void CPrinter::newPage(const bool save, const bool resetx)
 {
 	PIC_RemoveEvents(PRINTER_EventHandler);
 	if(printer_timout) timeout_dirty=false;
@@ -1305,7 +1305,7 @@ void CPrinter::printChar(Bit8u ch)
 	}
 }
 
-void CPrinter::blitGlyph(FT_Bitmap bitmap, Bit16u destx, Bit16u desty, bool add) {
+void CPrinter::blitGlyph(const FT_Bitmap bitmap, const Bit16u destx, const Bit16u desty, const bool add) {
 	for (Bitu y=0; y<bitmap.rows; y++) {
 		for (Bitu x=0; x<bitmap.width; x++) {
 			// Read pixel from glyph bitmap
@@ -1329,7 +1329,7 @@ void CPrinter::blitGlyph(FT_Bitmap bitmap, Bit16u destx, Bit16u desty, bool add)
 	}
 }
 
-void CPrinter::drawLine(Bitu fromx, Bitu tox, Bitu y, bool broken)
+void CPrinter::drawLine(const Bitu fromx, const Bitu tox, const Bitu y, const bool broken)
 {
 	SDL_LockSurface(page);
 
@@ -1353,7 +1353,7 @@ void CPrinter::drawLine(Bitu fromx, Bitu tox, Bitu y, bool broken)
 	SDL_UnlockSurface(page);
 }
 
-void CPrinter::setAutofeed(bool feed) {
+void CPrinter::setAutofeed(const bool feed) {
 	autoFeed = feed;
 }
 
@@ -1375,7 +1375,7 @@ bool CPrinter::ack() {
 	return false;
 }
 
-void CPrinter::setupBitImage(Bit8u dens, Bit16u numCols) {
+void CPrinter::setupBitImage(const Bit8u dens, const Bit16u numCols) {
 	switch (dens)
 	{
 	case 0:
@@ -1470,7 +1470,7 @@ void CPrinter::setupBitImage(Bit8u dens, Bit16u numCols) {
 	bitGraph.readBytesColumn = 0;
 }
 
-void CPrinter::printBitGraph(Bit8u ch)
+void CPrinter::printBitGraph(const Bit8u ch)
 {
 	bitGraph.column[bitGraph.readBytesColumn++] = ch;
 	bitGraph.remBytes--;
@@ -1851,23 +1851,23 @@ bool CPrinter::isBlank() {
 	return blank;
 }
 
-Bit8u CPrinter::getPixel(Bit32u num) {
+Bit8u CPrinter::getPixel(const Bit32u num) {
 	// Respect the pitch
 	return *((Bit8u*)page->pixels + (num % page->w) + ((num / page->w) * page->pitch));
 }
 
 static Bit8u dataregister; // contents of the parallel port data register
 
-Bitu PRINTER_readdata([[maybe_unused]] Bitu port, [[maybe_unused]] Bitu iolen) {
+Bitu PRINTER_readdata([[maybe_unused]] const Bitu port, [[maybe_unused]] const Bitu iolen) {
 	return dataregister;
 }
 
-void PRINTER_writedata([[maybe_unused]] Bitu port, Bitu val, [[maybe_unused]] Bitu iolen) {
+void PRINTER_writedata([[maybe_unused]] const Bitu port, const Bitu val, [[maybe_unused]] const Bitu iolen) {
 	dataregister=val;
 }
 Bit8u controlreg = 0x04;
 
-Bitu PRINTER_readstatus([[maybe_unused]] Bitu port, [[maybe_unused]] Bitu iolen) {
+Bitu PRINTER_readstatus([[maybe_unused]] const Bitu port, [[maybe_unused]] const Bitu iolen) {
 	//LOG_MSG("PRINTER_readstatus CS:IP %8x:%8x",SegValue(cs),reg_eip);
 	// Don't create a CPrinter unless the program really wants to print
 	// Return standard: No error, printer online, no ack and not busy
@@ -1889,7 +1889,7 @@ Bitu PRINTER_readstatus([[maybe_unused]] Bitu port, [[maybe_unused]] Bitu iolen)
 	return status;
 }
 
-static void FormFeed(bool pressed) {
+static void FormFeed(const bool pressed) {
 	if(pressed)
 		if (defaultPrinter) {
 			PIC_RemoveEvents(PRINTER_EventHandler);
@@ -1900,7 +1900,7 @@ static void FormFeed(bool pressed) {
 }
 
 
-static void PRINTER_EventHandler([[maybe_unused]] uint32_t param) {
+static void PRINTER_EventHandler([[maybe_unused]] const uint32_t param) {
 	//LOG_MSG("printerevent");
 	if(timeout_dirty) { // add another
 		PIC_AddEvent(PRINTER_EventHandler,static_cast<float>(printer_timout),0);
@@ -1912,7 +1912,7 @@ static void PRINTER_EventHandler([[maybe_unused]] uint32_t param) {
 	}
 }
 
-void PRINTER_writecontrol([[maybe_unused]] Bitu port, Bitu val, [[maybe_unused]] Bitu iolen)
+void PRINTER_writecontrol([[maybe_unused]] const Bitu port, const Bitu val, [[maybe_unused]] const Bitu iolen)
 {
 	//LOG_MSG("PRINTER_writecontrol CS:IP %8x:%8x",SegValue(cs),reg_eip);
 	// init printer if bit 4 is switched on
@@ -1937,7 +1937,7 @@ void PRINTER_writecontrol([[maybe_unused]] Bitu port, Bitu val, [[maybe_unused]]
 		defaultPrinter->setAutofeed((val & 0x02)>0);
 }
 
-Bitu PRINTER_readcontrol([[maybe_unused]] Bitu port, [[maybe_unused]] Bitu iolen)
+Bitu PRINTER_readcontrol([[maybe_unused]] const Bitu port, [[maybe_unused]] const Bitu iolen)
 {
 	//LOG_MSG("PRINTER_readcontrol CS:IP %8x:%8x",SegValue(cs),reg_eip);
 	// Don't create a CPrinter unless the program really wants to print
@@ -1975,9 +1975,7 @@ bool PRINTER_isInited() {
 //   PRINTER_isInited    -- queried by printer_glue and lpt_dac to
 //                          coordinate port ownership.
 
-void PRINTER_Configure(uint16_t dpi, uint16_t width, uint16_t height,
-                       const char* docpath, const char* output_format,
-                       bool multipage, int timeout_ms)
+void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t height, const char* docpath, const char* output_format, const bool multipage, const int timeout_ms)
 {
 	confdpi = dpi;
 	confwidth = width;
@@ -1992,7 +1990,7 @@ void PRINTER_Configure(uint16_t dpi, uint16_t width, uint16_t height,
 	inited = true;
 }
 
-void PRINTER_FormFeed(bool pressed)
+void PRINTER_FormFeed(const bool pressed)
 {
 	FormFeed(pressed);
 }
