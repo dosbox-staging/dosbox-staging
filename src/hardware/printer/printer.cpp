@@ -13,6 +13,7 @@
 #include "printer_charmaps.h"
 #include "printer_if.h"
 #include <math.h>
+#include <memory>
 #include <vector>
 
 #include "hardware/pic.h" // for timeout
@@ -23,7 +24,7 @@ CHECK_NARROWING();
 extern void GFX_CaptureMouse(void);
 extern bool mouselocked;
 
-static Printer* default_printer = nullptr;
+static std::unique_ptr<Printer> default_printer = nullptr;
 
 static uint16_t conf_dpi, conf_width, conf_height;
 static uint64_t printer_timeout;
@@ -2406,11 +2407,9 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 	// Data is strobed to the printer on the falling edge of the STROBE bit.
 	if (!(val & CtrlStrobe) && (lpt.control & CtrlStrobe)) {
 		if (!default_printer) {
-			default_printer = new Printer(conf_dpi,
-			                              conf_width,
-			                              conf_height,
-			                              conf_output_device,
-			                              conf_multipage_output);
+			default_printer = std::make_unique<Printer>(
+			        conf_dpi, conf_width, conf_height,
+			        conf_output_device, conf_multipage_output);
 		}
 		default_printer->PrintChar(lpt.data);
 		if (!timeout_dirty) {
@@ -2485,10 +2484,7 @@ void PRINTER_Reset()
 	// fire on a half-destroyed printer.
 	PIC_RemoveEvents(PRINTER_EventHandler);
 	timeout_dirty = false;
-	if (default_printer) {
-		delete default_printer;
-		default_printer = nullptr;
-	}
+	default_printer.reset();
 	// The IO handlers in printer_glue stay installed across Reset/Init
 	// cycles; clear the LPT register state so a stale strobe sequence
 	// from before a previous Reset can't trigger lazy construction with
