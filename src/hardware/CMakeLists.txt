@@ -39,9 +39,9 @@ target_sources(dosboxcommon PRIVATE
   network/ipxserver.cpp
   network/ne2000.cpp
 
-  parport/printer.cpp
-  parport/printer_charmaps.cpp
-  parport/printer_glue.cpp
+  printer/printer.cpp
+  printer/printer_charmaps.cpp
+  printer/printer_glue.cpp
 
   serialport/misc_util.cpp
   serialport/nullmodem.cpp
