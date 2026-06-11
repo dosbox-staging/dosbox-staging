@@ -66,7 +66,19 @@ Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
 		                            0,
 		                            0);
 
-		// Set a grey palette
+		// The 8-bit palette is sliced into 8 sub-palettes of 32 entries
+		// each. The high 3 bits of a pixel select the sub-palette (the
+		// 'colour ID'), the low 5 bits select intensity within that
+		// sub-palette (0 = white, 31 = saturated).
+		//
+		// Sub-palette indices are chosen so that overprinting two
+		// colours ORs the bits of their IDs to produce a third
+		// reasonable colour, mirroring how real ribbon overprinting
+		// works (e.g. magenta=001 OR yellow=100 -> red=101).
+		//
+		// Sub-palette 0 is the 'all white' page background and gets
+		// hand-initialised below; the other seven are derived from
+		// (red_max, green_max, blue_max) tuples by FillPalette.
 		SDL_Palette* palette = page->format->palette;
 
 		for (uint64_t i = 0; i < 32; i++) {
@@ -74,28 +86,14 @@ Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
 			palette->colors[i].g = 255;
 			palette->colors[i].b = 255;
 		}
-		// 0 = all white needed for logic 000
-		FillPalette(0, 0, 0, 1, palette);
-		// 1 = magenta* 001
-		FillPalette(0, 255, 0, 1, palette);
-		// 2 = cyan*    010
-		FillPalette(255, 0, 0, 2, palette);
-		// 3 = "violet" 011
-		FillPalette(255, 255, 0, 3, palette);
-		// 4 = yellow*  100
-		FillPalette(0, 0, 255, 4, palette);
-		// 5 = red      101
-		FillPalette(0, 255, 255, 5, palette);
-		// 6 = green    110
-		FillPalette(255, 0, 255, 6, palette);
-		// 7 = black    111
-		FillPalette(255, 255, 255, 7, palette);
-
-		// yyyxxxxx bit pattern: yyy=color xxxxx = intensity: 31=max
-		// Printing colors on top of each other ORs them and gets the
-		// correct resulting color.
-		// i.e. magenta on blank page yyy=001
-		// then yellow on magenta 001 | 100 = 101 = red
+		FillPalette(0, 0, 0, 1, palette);     // 001 black-as-magenta slot
+		FillPalette(0, 255, 0, 1, palette);   // 001 magenta
+		FillPalette(255, 0, 0, 2, palette);   // 010 cyan
+		FillPalette(255, 255, 0, 3, palette); // 011 violet
+		FillPalette(0, 0, 255, 4, palette);   // 100 yellow
+		FillPalette(0, 255, 255, 5, palette); // 101 red
+		FillPalette(255, 0, 255, 6, palette); // 110 green
+		FillPalette(255, 255, 255, 7, palette); // 111 black
 
 		color = ColorBlack;
 

@@ -17,6 +17,24 @@
 
 CHECK_NARROWING();
 
+// PostScript output state machine
+// -------------------------------
+// Each PRINTER_WriteControl strobe that completes a page triggers an
+// OutputPage call which lands here.
+//
+// Single-page mode (multipage_output = false): every page opens a new
+// .ps file, writes header + showpage + EOF, and closes it. output_handle
+// stays null between calls.
+//
+// Multi-page mode  (multipage_output = true): the first page opens a
+// new .ps file and writes the header; subsequent pages reuse the same
+// FILE handle, parked in the output_handle member. The user presses
+// Ctrl+F2 (form-feed) -> FinishMultipage runs, writes the EOF marker,
+// and closes the handle.
+//
+// FILE_unique_ptr move semantics: the file handle migrates between the
+// local psfile and the member output_handle on each call so the
+// destructor closes it automatically on any unexpected return path.
 void Printer::OutputPagePostScript()
 {
 	// If multipage mode is continuing, take ownership back from the
@@ -131,6 +149,22 @@ void Printer::OutputPagePostScript()
 	}
 }
 
+// ASCII85 encoder
+// ---------------
+// Encodes binary bytes as printable ASCII for embedding in a PostScript
+// stream. Four input bytes are packed into a 32-bit value and emitted
+// as five base-85 digits (offset by '!' = 33). Special cases:
+//
+//   byte = 0..255  -> regular input byte. Buffer fills to 4, then flush.
+//   byte = 256     -> sentinel: end of stream. Flush partial tuple and
+//                     emit the '~>' terminator.
+//   byte = 257     -> sentinel: flush partial tuple now (used by the
+//                     stream-end path; doesn't itself produce input data).
+//
+// Lines are wrapped at 79 columns. An all-zero tuple is emitted as the
+// single character 'z' (PS-standard shorthand). The encoder also avoids
+// starting a line with '%', which PostScript treats as the start of a
+// comment.
 void Printer::FprintAscii85(FILE* file, uint16_t byte)
 {
 	if (byte != 256) {
