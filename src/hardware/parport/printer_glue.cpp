@@ -62,35 +62,35 @@ void install_io_handlers(const io_port_t lpt_port)
 	state.data_write->Install(
 	        data_port,
 	        [](io_port_t /*port*/, io_val_t val, io_width_t /*width*/) {
-		        PRINTER_writedata(0, val, 1);
+		        PRINTER_WriteData(0, val, 1);
 	        },
 	        io_width_t::byte);
 
 	state.data_read->Install(
 	        data_port,
 	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return PRINTER_readdata(0, 1);
+		        return PRINTER_ReadData(0, 1);
 	        },
 	        io_width_t::byte);
 
 	state.status_read->Install(
 	        status_port,
 	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return PRINTER_readstatus(0, 1);
+		        return PRINTER_ReadStatus(0, 1);
 	        },
 	        io_width_t::byte);
 
 	state.control_write->Install(
 	        control_port,
 	        [](io_port_t /*port*/, io_val_t val, io_width_t /*width*/) {
-		        PRINTER_writecontrol(0, val, 1);
+		        PRINTER_WriteControl(0, val, 1);
 	        },
 	        io_width_t::byte);
 
 	state.control_read->Install(
 	        control_port,
 	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return PRINTER_readcontrol(0, 1);
+		        return PRINTER_ReadControl(0, 1);
 	        },
 	        io_width_t::byte);
 }

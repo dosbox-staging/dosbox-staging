@@ -84,9 +84,9 @@ protected:
 		                 output_format,
 		                 false);
 		for (const auto b : bytes) {
-			printer.printChar(b);
+			printer.PrintChar(b);
 		}
-		printer.formFeed();
+		printer.FormFeed();
 
 		return output_dir / "page1.png";
 	}

@@ -9,16 +9,16 @@
 
 #include <cstdint>
 
-uint64_t PRINTER_readdata(uint64_t port,uint64_t iolen);
-void PRINTER_writedata(uint64_t port,uint64_t val,uint64_t iolen);
-uint64_t PRINTER_readstatus(uint64_t port,uint64_t iolen);
-void PRINTER_writecontrol(uint64_t port,uint64_t val, uint64_t iolen);
-uint64_t PRINTER_readcontrol(uint64_t port,uint64_t iolen);
+uint64_t PRINTER_ReadData(uint64_t port,uint64_t iolen);
+void PRINTER_WriteData(uint64_t port,uint64_t val,uint64_t iolen);
+uint64_t PRINTER_ReadStatus(uint64_t port,uint64_t iolen);
+void PRINTER_WriteControl(uint64_t port,uint64_t val, uint64_t iolen);
+uint64_t PRINTER_ReadControl(uint64_t port,uint64_t iolen);
 
-bool PRINTER_isInited();
+bool PRINTER_IsInited();
 
 // Set the printer config values that are read at lazy CPrinter
-// construction time inside PRINTER_writecontrol. The strings must outlive
+// construction time inside PRINTER_WriteControl. The strings must outlive
 // the printer instance (i.e. the caller owns the buffers).
 void PRINTER_Configure(uint16_t dpi, uint16_t width, uint16_t height,
                        const char* docpath, const char* output_format,

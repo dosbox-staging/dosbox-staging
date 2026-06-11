@@ -7,8 +7,8 @@
 typedef struct {
 	uint64_t codepage;
 	const uint16_t* map;
-} CHARMAP;
+} Charmap;
 
-extern const CHARMAP charmap[];
+extern const Charmap charmap[];
 extern const uint16_t codepages[15];
-extern const uint16_t intCharSets[15][12];
+extern const uint16_t int_char_sets[15][12];
