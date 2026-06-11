@@ -41,9 +41,7 @@ struct PageBitmap {
 
 	int width  = 0;
 	int height = 0;
-	// Bytes per row. Always == width for our buffer, but kept as a
-	// separate field for parity with the SDL_Surface idiom we
-	// replaced (and so callers reading scanlines work unchanged).
+	// Bytes per row. Equals width for our contiguous buffer.
 	int pitch = 0;
 
 	uint8_t& at(int x, int y) { return pixels[x + y * pitch]; }
