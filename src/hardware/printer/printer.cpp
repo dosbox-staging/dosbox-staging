@@ -752,7 +752,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case 0x20: // Set intercharacter space (ESC SP)
 			if (!multipoint) {
 				extra_intra_space = static_cast<Real64>(params[0]) /
-				                    (print_quality == QUALITY_DRAFT
+				                    (print_quality == PrintQuality::Draft
 				                             ? 120
 				                             : 180);
 				hmi = -1;
@@ -785,7 +785,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 				style.italics = 1;
 			}
 			if (params[0] & 0x80) {
-				score = SCORE_SINGLE;
+				score = ScoreType::Single;
 				style.underline = 1;
 			}
 
@@ -832,7 +832,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			if (params[0] == 1 || params[0] == 49) {
 				style.underline = 1;
-				score = SCORE_SINGLE;
+				score = ScoreType::Single;
 			}
 			UpdateFont();
 			break;
@@ -1078,7 +1078,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			Real64 unitSize      = defined_unit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(
-				        print_quality == QUALITY_DRAFT ? 120.0
+				        print_quality == PrintQuality::Draft ? 120.0
 				                                       : 180.0);
 			}
 			cur_x += static_cast<Real64>(
@@ -1142,7 +1142,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			if (params[0] == 1 || params[0] == 49) {
 				style.prop = 1;
-				print_quality = QUALITY_LQ;
+				print_quality = PrintQuality::Lq;
 			}
 			multipoint = false;
 			hmi        = -1;
@@ -1188,11 +1188,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		case 0x78: // Select LQ or draft (ESC x)
 			if (params[0] == 0 || params[0] == 48) {
-				print_quality = QUALITY_DRAFT;
+				print_quality = PrintQuality::Draft;
 				style.condensed = 1;
 			}
 			if (params[0] == 1 || params[0] == 49) {
-				print_quality = QUALITY_LQ;
+				print_quality = PrintQuality::Lq;
 				style.condensed = 0;
 			}
 			hmi = -1;
@@ -1228,8 +1228,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			style.underline     = 0;
 		style.strikethrough = 0;
 		style.overscore     = 0;
-			score = params[4];
-			if (score) {
+			score = static_cast<ScoreType>(params[4]);
+			if (score != ScoreType::None) {
 				if (params[3] == 1) {
 					style.underline = 1;
 				}
@@ -1607,7 +1607,7 @@ void Printer::PrintChar(uint8_t ch)
 	cur_x += x_advance;
 
 	// Draw lines if desired
-	if ((score != SCORE_NONE) &&
+	if ((score != ScoreType::None) &&
 	    (style.underline || style.strikethrough || style.overscore)) {
 		// Find out where to put the line
 		uint16_t lineY      = static_cast<uint16_t>(PixY());
@@ -1624,8 +1624,8 @@ void Printer::PrintChar(uint8_t ch)
 			        PixY() + static_cast<uint16_t>(height * 0.45));
 		} else if (style.overscore) {
 			lineY = static_cast<uint16_t>(
-			        PixY() - (((score == SCORE_DOUBLE) ||
-			                   (score == SCORE_DOUBLEBROKEN))
+			        PixY() - (((score == ScoreType::Double) ||
+			                   (score == ScoreType::DoubleBroken))
 			                          ? 5
 			                          : 0));
 		}
@@ -1633,14 +1633,14 @@ void Printer::PrintChar(uint8_t ch)
 		DrawLine(lineStart,
 		         PixX(),
 		         lineY,
-		         score == SCORE_SINGLEBROKEN || score == SCORE_DOUBLEBROKEN);
+		         score == ScoreType::SingleBroken || score == ScoreType::DoubleBroken);
 
 		// draw second line if needed
-		if ((score == SCORE_DOUBLE) || (score == SCORE_DOUBLEBROKEN)) {
+		if ((score == ScoreType::Double) || (score == ScoreType::DoubleBroken)) {
 			// score is DOUBLE or DOUBLEBROKEN here; the upstream
-			// expression also tested SCORE_SINGLEBROKEN which is
+			// expression also tested ScoreType::SingleBroken which is
 			// unreachable in this branch.
-			DrawLine(lineStart, PixX(), lineY + 5, score == SCORE_DOUBLEBROKEN);
+			DrawLine(lineStart, PixX(), lineY + 5, score == ScoreType::DoubleBroken);
 		}
 	}
 	// If the next character would go beyond the right margin, line-wrap.

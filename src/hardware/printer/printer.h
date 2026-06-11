@@ -45,14 +45,23 @@ union PrinterStyle {
 	bit_view<12, 1> doubleheight;
 };
 
-#define SCORE_NONE         0x00
-#define SCORE_SINGLE       0x01
-#define SCORE_DOUBLE       0x02
-#define SCORE_SINGLEBROKEN 0x05
-#define SCORE_DOUBLEBROKEN 0x06
+enum class ScoreType : uint8_t {
+	None         = 0x00,
+	Single       = 0x01,
+	Double       = 0x02,
+	SingleBroken = 0x05,
+	DoubleBroken = 0x06,
+};
 
-#define QUALITY_DRAFT 0x01
-#define QUALITY_LQ    0x02
+enum class PrintQuality : uint8_t {
+	// Power-on default. Not yet selected by the application via ESC x.
+	// Treated as 'not Draft' by code that checks for the draft mode
+	// specifically, matching the upstream behaviour where this byte
+	// was indeterminate / typically zero before first use.
+	None  = 0x00,
+	Draft = 0x01,
+	Lq    = 0x02,
+};
 
 // Palette is split into 8 sub-palettes of 32 colours each, indexed by a
 // 3-bit colour ID in the top 3 bits. Black is sub-palette 7.
@@ -216,8 +225,8 @@ private:
 	// account).
 	Real64 cpi = 0.0, act_cpi = 0.0;
 
-	// Score for lines (see SCORE_* constants).
-	uint8_t score = 0;
+	// Score (underline / strikethrough / overscore) style for lines.
+	ScoreType score = ScoreType::None;
 
 	// Margins of the page (in inch).
 	Real64 top_margin = 0.0, bottom_margin = 0.0, right_margin = 0.0,
@@ -243,8 +252,8 @@ private:
 	// Currently selected character table / charset.
 	uint8_t cur_char_table = 0;
 
-	// Print quality (see QUALITY_* constants).
-	uint8_t print_quality = 0;
+	// Print quality.
+	PrintQuality print_quality = PrintQuality::None;
 
 	// Typeface used in LQ printing mode.
 	Typeface lq_typeface = Typeface::Roman;
