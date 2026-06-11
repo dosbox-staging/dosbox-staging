@@ -5,6 +5,7 @@
   "version": "0.84.0-alpha",
   "dependencies": [
     "asio",
+    "freetype",
     "gtest",
     "iir1",
     "libmt32emu",
