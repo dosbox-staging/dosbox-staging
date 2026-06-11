@@ -11,7 +11,7 @@
 // than exact-pixel comparisons so they survive font / rendering
 // tweaks in later commits without churning reference PNGs.
 
-#include "hardware/parport/printer.h"
+#include "hardware/printer/printer.h"
 
 #include <cstdint>
 #include <cstdio>
@@ -23,7 +23,7 @@
 #include <png.h>
 
 #include "misc/std_filesystem.h"
-#include "hardware/parport/printer_if.h"
+#include "hardware/printer/printer_if.h"
 
 #include "dosbox_test_fixture.h"
 
