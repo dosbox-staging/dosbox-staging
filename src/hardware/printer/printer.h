@@ -9,6 +9,7 @@
 #if !defined __PRINTER_H
 #define __PRINTER_H
 
+#include "misc/support.h"
 #include "misc/types.h"
 #include "utils/bit_view.h"
 
@@ -325,8 +326,9 @@ private:
 	// Output method selected by the user.
 	char* output = nullptr;
 
-	// If not null, additional pages will be appended to the given handle.
-	FILE* output_handle = nullptr;
+	// If non-null, multipage mode is active and additional pages get
+	// appended to the open handle until FormFeed closes it.
+	FILE_unique_ptr output_handle = nullptr;
 
 	// If true, all pages of a print job are combined into one file until
 	// the "eject page" key is pressed.
