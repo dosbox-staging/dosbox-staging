@@ -484,16 +484,48 @@ static Bitu INT12_Handler(void) {
 	return CBRET_NONE;
 }
 
+// INT 17h printer service. DX selects the parallel port (0..2 ->
+// LPT1..3); the base I/O port is read from the BIOS data area at
+// 0040:0008 + DX*2. AH on return is the LPT status byte (timeout=bit0,
+// I/O error=bit3, selected=bit4, paper out=bit5, ack=bit6, busy=bit7).
 static Bitu INT17_Handler(void) {
 	LOG(LOG_BIOS,LOG_NORMAL)("INT17:Function %X",reg_ah);
+	if (reg_dx > 2) {
+		reg_ah = 0x01;	// time out
+		return CBRET_NONE;
+	}
+	const uint16_t base = mem_readw(BIOS_ADDRESS_LPT1 + reg_dx * 2);
+	if (base == 0) {
+		reg_ah = 0x01;	// time out
+		return CBRET_NONE;
+	}
+	const uint16_t data_port    = base;
+	const uint16_t status_port  = static_cast<uint16_t>(base + 1);
+	const uint16_t control_port = static_cast<uint16_t>(base + 2);
+
 	switch (reg_ah) {
-	case 0x00:              /* PRINTER: Write Character */
-		reg_ah=1;	/* Report a timeout */
+	case 0x00: {		/* PRINTER: Write Character */
+		IO_WriteB(data_port, reg_al);
+		const uint8_t control = static_cast<uint8_t>(
+		        IO_ReadB(control_port) & 0xfd);	// clear auto-lf
+		// STROBE is active-low on the wire; the printer triggers on
+		// the 1 -> 0 transition of control bit 0. Pulse it high,
+		// then low (this is the strobe), then high again.
+		IO_WriteB(control_port, control | 0x01);
+		IO_WriteB(control_port, control & 0xfe);
+		IO_WriteB(control_port, control | 0x01);
+		reg_ah = static_cast<uint8_t>(IO_ReadB(status_port));
 		break;
-	case 0x01:		/* PRINTER: Initialize port */
+	}
+	case 0x01: {		/* PRINTER: Initialize port: pulse INIT (bit 2) */
+		const uint8_t control = static_cast<uint8_t>(IO_ReadB(control_port));
+		IO_WriteB(control_port, control & 0xfb);
+		IO_WriteB(control_port, control | 0x04);
+		reg_ah = static_cast<uint8_t>(IO_ReadB(status_port));
 		break;
+	}
 	case 0x02:		/* PRINTER: Get Status */
-		reg_ah=0;	
+		reg_ah = static_cast<uint8_t>(IO_ReadB(status_port));
 		break;
 	};
 	return CBRET_NONE;
