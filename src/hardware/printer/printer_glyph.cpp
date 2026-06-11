@@ -16,8 +16,7 @@ CHECK_NARROWING();
 namespace VirtualPrinter {
 
 void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
-                          const uint8_t blue_max, uint8_t color_id,
-                          SDL_Palette* palette)
+                          const uint8_t blue_max, uint8_t color_id)
 {
 	const float red   = red_max / 30.9f;
 	const float green = green_max / 30.9f;
@@ -26,12 +25,10 @@ void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
 	const uint8_t color_mask = color_id <<= 5;
 
 	for (int i = 0; i < 32; i++) {
-		palette->colors[i + color_mask].r = static_cast<Uint8>(
-		        255 - (red * static_cast<float>(i)));
-		palette->colors[i + color_mask].g = static_cast<Uint8>(
-		        255 - (green * static_cast<float>(i)));
-		palette->colors[i + color_mask].b = static_cast<Uint8>(
-		        255 - (blue * static_cast<float>(i)));
+		auto& c = page.palette[i + color_mask];
+		c.r = static_cast<uint8_t>(255 - (red * static_cast<float>(i)));
+		c.g = static_cast<uint8_t>(255 - (green * static_cast<float>(i)));
+		c.b = static_cast<uint8_t>(255 - (blue * static_cast<float>(i)));
 	}
 }
 
@@ -142,11 +139,11 @@ void Printer::BlitGlyph(const FT_Bitmap bitmap, const uint16_t destx,
 			uint8_t source = *(bitmap.buffer + x + y * bitmap.pitch);
 
 			// Ignore background and don't go over the border.
-			if (source > 0 && (static_cast<int>(destx + x) < page->w) &&
-			    (static_cast<int>(desty + y) < page->h)) {
-				uint8_t* target = static_cast<uint8_t*>(page->pixels) +
+			if (source > 0 && (static_cast<int>(destx + x) < page.width) &&
+			    (static_cast<int>(desty + y) < page.height)) {
+				uint8_t* target = page.pixels.data() +
 				                  (x + destx) +
-				                  (y + desty) * page->pitch;
+				                  (y + desty) * page.pitch;
 				source >>= 3;
 
 				if (add) {
@@ -167,8 +164,6 @@ void Printer::BlitGlyph(const FT_Bitmap bitmap, const uint16_t destx,
 void Printer::DrawLine(const uint64_t fromx, const uint64_t tox,
                        const uint64_t y, const bool broken)
 {
-	SDL_LockSurface(page);
-
 	const uint64_t breakmod = dpi / 15;
 	const uint64_t gapstart = (breakmod * 4) / 5;
 
@@ -176,22 +171,18 @@ void Printer::DrawLine(const uint64_t fromx, const uint64_t tox,
 	for (uint64_t x = fromx; x <= tox; x++) {
 		// Skip parts if broken line or going over the border.
 		if ((!broken || (x % breakmod <= gapstart)) &&
-		    (static_cast<int>(x) < page->w)) {
-			if (y > 0 && static_cast<int>(y - 1) < page->h) {
-				*(static_cast<uint8_t*>(page->pixels) + x +
-				  (y - 1) * page->pitch) = 240;
+		    (static_cast<int>(x) < page.width)) {
+			if (y > 0 && static_cast<int>(y - 1) < page.height) {
+				page.pixels[x + (y - 1) * page.pitch] = 240;
 			}
-			if (static_cast<int>(y) < page->h) {
-				*(static_cast<uint8_t*>(page->pixels) + x +
-				  y * page->pitch) = !broken ? 255 : 240;
+			if (static_cast<int>(y) < page.height) {
+				page.pixels[x + y * page.pitch] = !broken ? 255 : 240;
 			}
-			if (static_cast<int>(y + 1) < page->h) {
-				*(static_cast<uint8_t*>(page->pixels) + x +
-				  (y + 1) * page->pitch) = 240;
+			if (static_cast<int>(y + 1) < page.height) {
+				page.pixels[x + (y + 1) * page.pitch] = 240;
 			}
 		}
 	}
-	SDL_UnlockSurface(page);
 }
 
 } // namespace VirtualPrinter
