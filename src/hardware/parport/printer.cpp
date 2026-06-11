@@ -1528,7 +1528,7 @@ void CPrinter::formFeed()
 	finishMultipage();
 }
 
-static void findNextName(char* front, char* ext, char* fname)
+static void findNextName(const char* front, const char* ext, char* fname)
 {
 	Bitu i = 1;
 	Bitu slen = strlen(document_path);
