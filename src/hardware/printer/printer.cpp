@@ -54,8 +54,7 @@ CPrinter::CPrinter(uint16_t dpi, const uint16_t width, const uint16_t height,
                    char* output, bool multipage_output)
 {
 	if (FT_Init_FreeType(&ft_lib)) {
-		LOG(LOG_MISC, LOG_ERROR)(
-		        "PRINTER: Unable to init Freetype2. Printing disabled");
+		LOG_ERR("PRINTER: Unable to init Freetype2. Printing disabled");
 		page = nullptr;
 	} else {
 		this->dpi              = dpi;
@@ -118,7 +117,7 @@ CPrinter::CPrinter(uint16_t dpi, const uint16_t width, const uint16_t height,
 		ResetPrinter();
 
 		// Win32 host-printer pass-through removed (out of scope).
-		LOG(LOG_MISC, LOG_NORMAL)("PRINTER: Enabled");
+		LOG_MSG("PRINTER: Enabled");
 	}
 }
 
@@ -201,8 +200,8 @@ void CPrinter::SelectCodepage(const uint16_t codepage)
 		i++;
 	}
 	if (map_to_use == nullptr) {
-		LOG(LOG_MISC,
-		    LOG_WARN)("Unsupported codepage %i. Using CP437 instead.", codepage);
+		LOG_WARNING("PRINTER: Unsupported codepage %i. Using CP437 instead.",
+		            codepage);
 		SelectCodepage(437);
 		return;
 	} /*
@@ -306,7 +305,7 @@ void CPrinter::UpdateFont()
 
 	if (font_path.empty() ||
 	    FT_New_Face(ft_lib, font_path.string().c_str(), 0, &cur_font)) {
-		LOG_MSG("Unable to load font %s", font_filename);
+		LOG_WARNING("PRINTER: Unable to load font %s", font_filename);
 		cur_font = nullptr;
 	}
 
@@ -611,8 +610,7 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 		           // (ESC &)
 		case 0x3a: // Copy ROM to RAM
 		           // (ESC :)
-			LOG(LOG_MISC,
-			    LOG_ERROR)("User-defined characters not supported!");
+			LOG_ERR("PRINTER: User-defined characters not supported");
 			return true;
 		case 0x28: // Two bytes sequence
 			return true;
@@ -1240,8 +1238,7 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		case 0x242: // Bar code setup and print (ESC (B)
-			LOG(LOG_MISC,
-			    LOG_ERROR)("PRINTER: Bardcode printing not supported");
+			LOG_ERR("PRINTER: Barcode printing not supported");
 			// Find out how many bytes to skip
 			needed_param = static_cast<uint8_t>(Param16(0));
 			num_param    = 0;
@@ -1838,9 +1835,7 @@ void CPrinter::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 		bit_graph.bytes_column = 6;
 		break;
 
-	default:
-		LOG(LOG_MISC,
-		    LOG_ERROR)("PRINTER: Unsupported bit image density %i", density);
+	default: LOG_ERR("PRINTER: Unsupported bit image density %i", density);
 	}
 
 	bit_graph.rem_bytes         = num_cols * bit_graph.bytes_column;
