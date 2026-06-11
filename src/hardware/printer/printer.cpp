@@ -2286,12 +2286,6 @@ uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
 // from printer_glue.cpp via PRINTER_Reset, so the function is no longer
 // reachable and has been removed.
 
-static bool inited = false;
-bool PRINTER_IsInited()
-{
-	return inited;
-}
-
 // Config-reading, IO-handler installation, and mapper key binding live in
 // printer_glue.cpp. This file exposes the C-style hooks that printer_glue
 // drives:
@@ -2303,8 +2297,9 @@ bool PRINTER_IsInited()
 //   PRINTER_Reset       -- destroys the CPrinter singleton (flushes any
 //                          open multipage doc) so Destroy/Init cycles
 //                          work cleanly.
-//   PRINTER_IsInited    -- queried by printer_glue and lpt_dac to
-//                          coordinate port ownership.
+//
+// Lifecycle state (active / inactive) lives entirely in printer_glue's
+// PrinterState; this file deliberately has no equivalent flag.
 
 void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t height,
                        const char* docpath, const char* output_format,
@@ -2318,8 +2313,7 @@ void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t 
 	conf_output_device[sizeof(conf_output_device) - 1] = 0;
 	conf_multipage_output                              = multipage;
 	printer_timeout                                    = timeout_ms;
-	timeout_dirty = (printer_timeout == 0);
-	inited        = true;
+	timeout_dirty                                      = (printer_timeout == 0);
 }
 
 void PRINTER_FormFeed(const bool pressed)
@@ -2343,7 +2337,6 @@ void PRINTER_Reset()
 	// stale data.
 	data_register    = 0;
 	control_register = 0x04;
-	inited           = false;
 }
 
 #endif
