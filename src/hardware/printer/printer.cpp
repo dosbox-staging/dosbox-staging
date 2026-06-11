@@ -649,9 +649,10 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			return true;
 		}
 
-		if (needed_param > 0) {
-			return true;
-		}
+		// Every case above sets needed_param to a positive value (the
+		// default branch also returns directly), so we always have
+		// pending parameters at this point.
+		return true;
 	}
 
 	// Ignore VFU channel setting
@@ -1121,7 +1122,10 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			num_param    = 0;
 			break;
 		case 0x274: // Assign character table (ESC (t)
-			if (params[2] < 4 && params[3] < 16) {
+			// codepages has 15 entries (indices 0..14). The upstream
+			// bounds check '< 16' was off by one and would index out
+			// of bounds when params[3] == 15.
+			if (params[2] < 4 && params[3] < 15) {
 				char_tables[params[2]] = codepages[params[3]];
 				// LOG_MSG("curr table: %d, p2: %d, p3:
 				// %d",cur_char_table,params[2],params[3]);
@@ -1532,11 +1536,11 @@ void CPrinter::PrintChar(uint8_t ch)
 
 		// draw second line if needed
 		if ((score == SCORE_DOUBLE) || (score == SCORE_DOUBLEBROKEN)) {
-			DrawLine(lineStart,
-			         PIXX,
-			         lineY + 5,
-			         score == SCORE_SINGLEBROKEN ||
-			                 score == SCORE_DOUBLEBROKEN);
+			// score is DOUBLE or DOUBLEBROKEN here; the upstream
+			// expression also tested SCORE_SINGLEBROKEN which is
+			// unreachable in this branch.
+			DrawLine(lineStart, PIXX, lineY + 5,
+			         score == SCORE_DOUBLEBROKEN);
 		}
 	}
 	// If the next character would go beyond the right margin, line-wrap.
