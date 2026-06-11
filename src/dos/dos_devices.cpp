@@ -13,6 +13,7 @@
 #include "dos.h"
 #include "dos/drives.h"
 #include "hardware/memory.h"
+#include "hardware/port.h"
 #include "ints/bios.h"
 #include "misc/support.h"
 
@@ -307,6 +308,27 @@ public:
 	{
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
+	}
+	// Strobe each byte out to the LPT1 data + control ports. Mirrors
+	// the per-byte handshake INT 17h does for direct BIOS callers, so
+	// apps that open the LPT1 character device reach the same hardware.
+	bool Write(uint8_t* data, uint16_t* size) override
+	{
+		const uint16_t base = mem_readw(BIOS_ADDRESS_LPT1);
+		if (base == 0 || size == nullptr) {
+			return false;
+		}
+		const uint16_t data_port    = base;
+		const uint16_t control_port = static_cast<uint16_t>(base + 2);
+		for (uint16_t i = 0; i < *size; ++i) {
+			IO_WriteB(data_port, data[i]);
+			const uint8_t control = static_cast<uint8_t>(
+			        IO_ReadB(control_port) & 0xfd);
+			IO_WriteB(control_port, control | 0x01);
+			IO_WriteB(control_port, control & 0xfe);
+			IO_WriteB(control_port, control | 0x01);
+		}
+		return true;
 	}
 };
 
