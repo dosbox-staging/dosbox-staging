@@ -163,9 +163,9 @@ protected:
 		                 false /*multipageOutput*/);
 
 		for (const auto byte : bytes) {
-			printer.printChar(byte);
+			printer.PrintChar(byte);
 		}
-		printer.formFeed();
+		printer.FormFeed();
 
 		return output_dir / "page1.png";
 	}
