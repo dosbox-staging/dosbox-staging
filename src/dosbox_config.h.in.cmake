@@ -92,6 +92,12 @@
 // Define to 1 to enable ALSA MIDI support
 #cmakedefine01 C_ALSA
 
+// Define to 1 to enable virtual ESC/P2 printer support
+#cmakedefine01 C_PRINTER
+
+// Define to 1 to enable PNG output from the virtual printer
+#cmakedefine01 C_LIBPNG
+
 
 // Defines for checking availability of standard functions and structs.
 //

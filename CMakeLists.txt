@@ -337,6 +337,9 @@ if (OPT_OPENGL)
   set(C_OPENGL ON)
 endif()
 
+set(C_PRINTER ON)
+set(C_LIBPNG ON)
+
 option(OPT_MT32EMU "Enable Roland MT-32 emulation support" ON)
 if (OPT_MT32EMU)
   set(C_MT32EMU ON)
