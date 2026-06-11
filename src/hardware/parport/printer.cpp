@@ -35,16 +35,16 @@ static bool confmultipageOutput;
 
 void CPrinter::FillPalette(Bit8u redmax, Bit8u greenmax, Bit8u bluemax, Bit8u colorID, SDL_Palette* pal)
 {
-	float red=redmax/30.9;
-	float green=greenmax/30.9;
-	float blue=bluemax/30.9;
+	float red=redmax/30.9f;
+	float green=greenmax/30.9f;
+	float blue=bluemax/30.9f;
 
 	Bit8u colormask=colorID<<=5;
 
 	for(int i = 0; i < 32;i++) {
-		pal->colors[i+colormask].r=255-(red*static_cast<float>(i));
-		pal->colors[i+colormask].g=255-(green*static_cast<float>(i));
-		pal->colors[i+colormask].b=255-(blue*static_cast<float>(i));
+		pal->colors[i+colormask].r=static_cast<Uint8>(255-(red*static_cast<float>(i)));
+		pal->colors[i+colormask].g=static_cast<Uint8>(255-(green*static_cast<float>(i)));
+		pal->colors[i+colormask].b=static_cast<Uint8>(255-(blue*static_cast<float>(i)));
 	}
 }
 
@@ -1312,7 +1312,7 @@ void CPrinter::blitGlyph(FT_Bitmap bitmap, Bit16u destx, Bit16u desty, bool add)
 			Bit8u source = *(bitmap.buffer + x + y*bitmap.pitch);
 
 			// Ignore background and don't go over the border
-			if (source > 0 && (destx+x < page->w) && (desty+y < page->h) ) {
+			if (source > 0 && (static_cast<int>(destx+x) < page->w) && (static_cast<int>(desty+y) < page->h) ) {
 				Bit8u* target = (Bit8u*)page->pixels + (x+destx) + (y+desty)*page->pitch;
 				source>>=3;
 				
@@ -1340,13 +1340,13 @@ void CPrinter::drawLine(Bitu fromx, Bitu tox, Bitu y, bool broken)
 	for (Bitu x=fromx; x<=tox; x++)
 	{
 		// Skip parts if broken line or going over the border
-		if ((!broken || (x%breakmod <= gapstart)) && (x < page->w))
+		if ((!broken || (x%breakmod <= gapstart)) && (static_cast<int>(x) < page->w))
 		{
-			if (y > 0 && (y-1) < page->h)
+			if (y > 0 && static_cast<int>(y-1) < page->h)
 				*((Bit8u*)page->pixels + x + (y-1)*page->pitch) = 240;
-			if (y < page->h)
+			if (static_cast<int>(y) < page->h)
 				*((Bit8u*)page->pixels + x + y*page->pitch) = !broken?255:240;
-			if (y+1 < page->h)
+			if (static_cast<int>(y+1) < page->h)
 				*((Bit8u*)page->pixels + x + (y+1)*page->pitch) = 240;
 		}
 	}
@@ -1501,7 +1501,7 @@ void CPrinter::printBitGraph(Bit8u ch)
 			if (bitGraph.column[i] & j) {
 				for (Bitu xx=0; xx<pixsizeX; xx++)
 					for (Bitu yy=0; yy<pixsizeY; yy++) {
-						if (((PIXX + xx) < page->w) && ((PIXY + yy) < page->h))
+						if ((static_cast<int>(PIXX + xx) < page->w) && (static_cast<int>(PIXY + yy) < page->h))
 							*((Bit8u*)page->pixels + (PIXX+xx) + (PIXY+yy)*page->pitch) |= (color|0x1F);
 					}
 			} // else white pixel
@@ -1618,7 +1618,7 @@ void CPrinter::outputPage()
 
 		// Allocate an array of scanline pointers
 		row_pointers = (png_bytep*)malloc(page->h*sizeof(png_bytep));
-		for (i=0; i<page->h; i++) 
+		for (i=0; static_cast<int>(i)<page->h; i++)
 			row_pointers[i] = ((Bit8u*)page->pixels+(i*page->pitch));
 
 		// tell the png library what to encode.
