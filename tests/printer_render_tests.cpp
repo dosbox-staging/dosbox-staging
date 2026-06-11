@@ -16,8 +16,8 @@
 // reference and commit it. The next test run will pass as now the reference
 // image exists.
 
-#include "hardware/parport/printer.h"
-#include "hardware/parport/printer_if.h"
+#include "hardware/printer/printer.h"
+#include "hardware/printer/printer_if.h"
 
 #include <array>
 #include <cstdint>

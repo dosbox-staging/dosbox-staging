@@ -51,7 +51,7 @@
 #include "hardware/memory.h"
 #include "hardware/network/ipx.h"
 #include "hardware/network/ne2000.h"
-#include "hardware/parport/printer_glue.h"
+#include "hardware/printer/printer_glue.h"
 #include "hardware/pci_bus.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
