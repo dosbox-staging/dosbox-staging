@@ -354,7 +354,7 @@ private:
 	uint16_t num_print_as_char = 0;
 
 	// Output method selected by the user ("png" / "ps" / ...).
-	std::string output;
+	std::string output = {};
 
 	// If non-null, multipage mode is active and additional pages get
 	// appended to the open handle until FormFeed closes it.
