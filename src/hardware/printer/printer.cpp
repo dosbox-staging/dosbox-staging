@@ -1994,34 +1994,28 @@ void Printer::OutputPage()
 		png_color palette[256];
 		uint64_t i;
 
-		/* Open the actual file */
-		FILE* fp = fopen(fname, "wb");
+		// Open the actual file. RAII closes on any return path.
+		FILE_unique_ptr fp{fopen(fname, "wb")};
 		if (!fp) {
-			LOG(LOG_MISC,
-			    LOG_ERROR)("PRINTER: Can't open file %s for printer output",
-			               fname);
+			LOG_ERR("PRINTER: Can't open file %s for printer output",
+			        fname);
 			return;
 		}
 
-		/* First try to alloacte the png structures */
+		// Allocate the PNG write structures.
 		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-		                                  nullptr,
-		                                  nullptr,
-		                                  nullptr);
+		                                  nullptr, nullptr, nullptr);
 		if (!png_ptr) {
-			fclose(fp);
 			return;
 		}
 		info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr) {
 			png_destroy_write_struct(&png_ptr,
 			                         static_cast<png_infopp>(nullptr));
-			fclose(fp);
 			return;
 		}
 
-		/* Finalize the initing of png library */
-		png_init_io(png_ptr, fp);
+		png_init_io(png_ptr, fp.get());
 		png_set_compression_level(png_ptr, ZBestCompression);
 
 		/* set other zlib parameters */
@@ -2065,8 +2059,8 @@ void Printer::OutputPage()
 
 		SDL_UnlockSurface(page);
 
-		fclose(fp);
 		png_destroy_write_struct(&png_ptr, &info_ptr);
+		// fp closes here via FILE_unique_ptr destructor.
 	}
 #endif
 	else if (strcasecmp(output, "ps") == 0) {
