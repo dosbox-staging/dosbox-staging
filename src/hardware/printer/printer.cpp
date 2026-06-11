@@ -26,9 +26,6 @@
 
 CHECK_NARROWING();
 
-extern void GFX_CaptureMouse(void);
-extern bool mouselocked;
-
 static std::unique_ptr<Printer> default_printer = nullptr;
 
 static uint16_t conf_dpi, conf_width, conf_height;
