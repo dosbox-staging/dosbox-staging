@@ -1802,32 +1802,40 @@ void CPrinter::FormFeed()
 	FinishMultipage();
 }
 
+// Cap on how many existing page<N>.<ext> files we'll skip past before
+// giving up. Sized to match the largest sensible print job; well beyond
+// anything a real DOS application will produce in one session.
+static constexpr int kFindNextNameAttempts = 10000;
+
 static void find_next_name(const char* front, const char* ext, char* fname)
 {
-	uint64_t i          = 1;
 	const uint64_t slen = strlen(document_path);
 	if (slen > (200 - 15)) {
+		LOG_WARNING("PRINTER: docpath is too long (%llu chars); "
+		            "page output disabled",
+		            static_cast<unsigned long long>(slen));
 		fname[0] = 0;
 		return;
 	}
 	FILE* test = NULL;
-	do {
+	for (int i = 1; i <= kFindNextNameAttempts; ++i) {
 		strcpy(fname, document_path);
 #ifdef WIN32
 		const char* const pathstring = "\\%s%d%s";
 #else
 		const char* const pathstring = "/%s%d%s";
 #endif
-		sprintf(fname + strlen(fname),
-		        pathstring,
-		        front,
-		        static_cast<int>(i++),
-		        ext);
+		sprintf(fname + strlen(fname), pathstring, front, i, ext);
 		test = fopen(fname, "rb");
-		if (test != NULL) {
-			fclose(test);
+		if (test == NULL) {
+			return; // free slot
 		}
-	} while (test != NULL);
+		fclose(test);
+	}
+	LOG_WARNING("PRINTER: docpath already contains %d %s files matching "
+	            "'%s<N>%s'; overwriting the last one",
+	            kFindNextNameAttempts, front, front, ext);
+	// fname holds the final attempt; let the caller overwrite it.
 }
 
 void CPrinter::OutputPage()
