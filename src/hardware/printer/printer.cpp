@@ -1808,25 +1808,36 @@ void CPrinter::FormFeed()
 // anything a real DOS application will produce in one session.
 static constexpr int kFindNextNameAttempts = 10000;
 
+// Size of the caller-owned fname buffer (CPrinter::OutputPage's stack
+// array). Keep in sync with that declaration.
+static constexpr size_t kFnameBufSize = 200;
+
+#ifdef WIN32
+constexpr char kPathSep = '\\';
+#else
+constexpr char kPathSep = '/';
+#endif
+
 static void find_next_name(const char* front, const char* ext, char* fname)
 {
-	const uint64_t slen = strlen(document_path);
-	if (slen > (200 - 15)) {
-		LOG_WARNING("PRINTER: docpath is too long (%llu chars); "
-		            "page output disabled",
-		            static_cast<unsigned long long>(slen));
-		fname[0] = 0;
-		return;
-	}
 	FILE* test = nullptr;
 	for (int i = 1; i <= kFindNextNameAttempts; ++i) {
-		strcpy(fname, document_path);
-#ifdef WIN32
-		const char* const pathstring = "\\%s%d%s";
-#else
-		const char* const pathstring = "/%s%d%s";
-#endif
-		sprintf(fname + strlen(fname), pathstring, front, i, ext);
+		const int written = snprintf(fname,
+		                             kFnameBufSize,
+		                             "%s%c%s%d%s",
+		                             document_path,
+		                             kPathSep,
+		                             front,
+		                             i,
+		                             ext);
+		if (written < 0 || static_cast<size_t>(written) >= kFnameBufSize) {
+			LOG_WARNING("PRINTER: page filename for docpath '%s' "
+			            "exceeds %zu chars; page output disabled",
+			            document_path,
+			            kFnameBufSize);
+			fname[0] = 0;
+			return;
+		}
 		test = fopen(fname, "rb");
 		if (test == nullptr) {
 			return; // free slot
@@ -1835,7 +1846,10 @@ static void find_next_name(const char* front, const char* ext, char* fname)
 	}
 	LOG_WARNING("PRINTER: docpath already contains %d %s files matching "
 	            "'%s<N>%s'; overwriting the last one",
-	            kFindNextNameAttempts, front, front, ext);
+	            kFindNextNameAttempts,
+	            front,
+	            front,
+	            ext);
 	// fname holds the final attempt; let the caller overwrite it.
 }
 
