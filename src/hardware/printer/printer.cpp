@@ -779,10 +779,10 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			}
 		} break;
 		case 0x85a: // Print 24-bit hex-density graphics (FS Z)
-			SetupBitImage(40, PARAM16(0));
+			SetupBitImage(40, static_cast<uint16_t>(PARAM16(0)));
 			break;
 		case 0x2a: // Select bit image (ESC *)
-			SetupBitImage(params[0], PARAM16(1));
+			SetupBitImage(params[0], static_cast<uint16_t>(PARAM16(1)));
 			break;
 		case 0x2b:  // Set n/360-inch line spacing (ESC +)
 		case 0x833: // Set n/360-inch line spacing (FS 3)
@@ -889,10 +889,10 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 		case 0x4b: // Select 60-dpi graphics (ESC K)
-			SetupBitImage(densk, PARAM16(0));
+			SetupBitImage(densk, static_cast<uint16_t>(PARAM16(0)));
 			break;
 		case 0x4c: // Select 120-dpi graphics (ESC L)
-			SetupBitImage(densl, PARAM16(0));
+			SetupBitImage(densl, static_cast<uint16_t>(PARAM16(0)));
 			break;
 		case 0x4d: // Select 10.5-point, 12-cpi (ESC M)
 			cpi        = 12;
@@ -992,10 +992,10 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 		case 0x59: // Select 120-dpi, double-speed graphics (ESC Y)
-			SetupBitImage(densy, PARAM16(0));
+			SetupBitImage(densy, static_cast<uint16_t>(PARAM16(0)));
 			break;
 		case 0x5a: // Select 240-dpi graphics (ESC Z)
-			SetupBitImage(densz, PARAM16(0));
+			SetupBitImage(densz, static_cast<uint16_t>(PARAM16(0)));
 			break;
 		case 0x5c: // Set relative horizontal print position (ESC \)
 		{
@@ -1071,7 +1071,7 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			if (params[0] == 0 || params[0] > 6) {
 				color = COLOR_BLACK;
 			} else {
-				color = params[0] << 5;
+				color = static_cast<uint8_t>(params[0] << 5);
 			}
 			break;
 		case 0x73: // Select low-speed mode (ESC s)
@@ -1486,7 +1486,7 @@ void CPrinter::PrintChar(uint8_t ch)
 	SDL_UnlockSurface(page);
 
 	// For line printing
-	const uint16_t lineStart = PIXX;
+	const uint16_t lineStart = static_cast<uint16_t>(PIXX);
 
 	// advance the cursor to the right
 	Real64 x_advance;
