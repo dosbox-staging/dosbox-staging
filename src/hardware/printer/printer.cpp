@@ -33,21 +33,22 @@ static const char* document_path;
 static char conf_output_device[50];
 static bool conf_multipage_output;
 
-void Printer::FillPalette(const uint8_t redmax, const uint8_t greenmax,
-                          const uint8_t bluemax, uint8_t colorID, SDL_Palette* pal)
+void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
+                          const uint8_t blue_max, uint8_t color_id,
+                          SDL_Palette* palette)
 {
-	const float red   = redmax / 30.9f;
-	const float green = greenmax / 30.9f;
-	const float blue  = bluemax / 30.9f;
+	const float red   = red_max / 30.9f;
+	const float green = green_max / 30.9f;
+	const float blue  = blue_max / 30.9f;
 
-	const uint8_t colormask = colorID <<= 5;
+	const uint8_t color_mask = color_id <<= 5;
 
 	for (int i = 0; i < 32; i++) {
-		pal->colors[i + colormask].r = static_cast<Uint8>(
+		palette->colors[i + color_mask].r = static_cast<Uint8>(
 		        255 - (red * static_cast<float>(i)));
-		pal->colors[i + colormask].g = static_cast<Uint8>(
+		palette->colors[i + color_mask].g = static_cast<Uint8>(
 		        255 - (green * static_cast<float>(i)));
-		pal->colors[i + colormask].b = static_cast<Uint8>(
+		palette->colors[i + color_mask].b = static_cast<Uint8>(
 		        255 - (blue * static_cast<float>(i)));
 	}
 }
@@ -189,21 +190,21 @@ Printer::~Printer(void)
 	}
 }
 
-void Printer::SelectCodepage(const uint16_t cp)
+void Printer::SelectCodepage(const uint16_t codepage)
 {
-	const uint16_t* mapToUse = nullptr;
+	const uint16_t* map_to_use = nullptr;
 
 	uint64_t i = 0;
 	while (charmap[i].codepage != 0) {
-		if (charmap[i].codepage == cp) {
-			mapToUse = charmap[i].map;
+		if (charmap[i].codepage == codepage) {
+			map_to_use = charmap[i].map;
 			break;
 		}
 		i++;
 	}
-	if (mapToUse == nullptr) {
+	if (map_to_use == nullptr) {
 		LOG_WARNING("PRINTER: Unsupported codepage %i. Using CP437 instead.",
-		            cp);
+		            codepage);
 		SelectCodepage(437);
 		return;
 	} /*
@@ -268,7 +269,7 @@ void Printer::SelectCodepage(const uint16_t cp)
 	 }*/
 
 	for (int i = 0; i < 256; i++) {
-		cur_map[i] = mapToUse[i];
+		cur_map[i] = map_to_use[i];
 	}
 }
 
@@ -1477,7 +1478,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 static void PRINTER_EventHandler([[maybe_unused]] uint32_t param);
 
-void Printer::NewPage(const bool save, const bool resetx)
+void Printer::NewPage(const bool save, const bool reset_x)
 {
 	PIC_RemoveEvents(PRINTER_EventHandler);
 	if (printer_timeout) {
@@ -1488,7 +1489,7 @@ void Printer::NewPage(const bool save, const bool resetx)
 		OutputPage();
 	}
 
-	if (resetx) {
+	if (reset_x) {
 		cur_x = left_margin;
 	}
 	cur_y = top_margin;
@@ -1736,9 +1737,9 @@ bool Printer::Ack()
 	return false;
 }
 
-void Printer::SetupBitImage(const uint8_t dens, const uint16_t numCols)
+void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 {
-	switch (dens) {
+	switch (density) {
 	case 0:
 		bit_graph.horiz_dens   = 60;
 		bit_graph.vert_dens    = 60;
@@ -1837,10 +1838,10 @@ void Printer::SetupBitImage(const uint8_t dens, const uint16_t numCols)
 		bit_graph.bytes_column = 6;
 		break;
 
-	default: LOG_ERR("PRINTER: Unsupported bit image density %i", dens);
+	default: LOG_ERR("PRINTER: Unsupported bit image density %i", density);
 	}
 
-	bit_graph.rem_bytes         = numCols * bit_graph.bytes_column;
+	bit_graph.rem_bytes         = num_cols * bit_graph.bytes_column;
 	bit_graph.read_bytes_column = 0;
 }
 
@@ -2187,14 +2188,14 @@ void Printer::OutputPage()
 	}
 }
 
-void Printer::FprintAscii85(FILE* f, uint16_t b)
+void Printer::FprintAscii85(FILE* file, uint16_t byte)
 {
-	if (b != 256) {
-		if (b < 256) {
-			ascii85_buffer[ascii85_buffer_pos++] = static_cast<uint8_t>(b);
+	if (byte != 256) {
+		if (byte < 256) {
+			ascii85_buffer[ascii85_buffer_pos++] = static_cast<uint8_t>(byte);
 		}
 
-		if (ascii85_buffer_pos == 4 || b == 257) {
+		if (ascii85_buffer_pos == 4 || byte == 257) {
 			uint32_t num = static_cast<uint32_t>(ascii85_buffer[0])
 			                    << 24 |
 			               static_cast<uint32_t>(ascii85_buffer[1])
@@ -2203,11 +2204,11 @@ void Printer::FprintAscii85(FILE* f, uint16_t b)
 			               static_cast<uint32_t>(ascii85_buffer[3]);
 
 			// Deal with special case
-			if (num == 0 && b != 257) {
-				fprintf(f, "z");
+			if (num == 0 && byte != 257) {
+				fprintf(file, "z");
 				if (++ascii85_cur_col >= 79) {
 					ascii85_cur_col = 0;
-					fprintf(f, "\n");
+					fprintf(file, "\n");
 				}
 			} else {
 				char buffer[5];
@@ -2222,16 +2223,16 @@ void Printer::FprintAscii85(FILE* f, uint16_t b)
 				// Make sure a line never starts with a % (which
 				// may be mistaken as start of a comment)
 				if (ascii85_cur_col == 0 && buffer[0] == '%') {
-					fprintf(f, " ");
+					fprintf(file, " ");
 				}
 
 				for (int i = 0;
-				     i < ((b != 257) ? 5 : ascii85_buffer_pos + 1);
+				     i < ((byte != 257) ? 5 : ascii85_buffer_pos + 1);
 				     i++) {
-					fprintf(f, "%c", buffer[i]);
+					fprintf(file, "%c", buffer[i]);
 					if (++ascii85_cur_col >= 79) {
 						ascii85_cur_col = 0;
-						fprintf(f, "\n");
+						fprintf(file, "\n");
 					}
 				}
 			}
@@ -2239,19 +2240,19 @@ void Printer::FprintAscii85(FILE* f, uint16_t b)
 			ascii85_buffer_pos = 0;
 		}
 
-	} else // Close string
-	{
-		// Partial tupel if there are still bytes in the buffer
+	} else {
+		// Close ASCII85 string. Pad partial tuple with zero bytes and
+		// emit '~>' end-of-data marker.
 		if (ascii85_buffer_pos > 0) {
 			for (uint8_t i = ascii85_buffer_pos; i < 4; i++) {
 				ascii85_buffer[i] = 0;
 			}
 
-			FprintAscii85(f, 257);
+			FprintAscii85(file, 257);
 		}
 
-		fprintf(f, "~");
-		fprintf(f, ">\n");
+		fprintf(file, "~");
+		fprintf(file, ">\n");
 	}
 }
 

@@ -104,9 +104,9 @@ public:
 	bool IsBlank();
 
 private:
-	// used to fill the color "sub-pallettes"
-	void FillPalette(uint8_t redmax, uint8_t greenmax, uint8_t bluemax,
-	                 uint8_t colorID, SDL_Palette* pal);
+	// Fill one of the eight 32-entry colour sub-palettes.
+	void FillPalette(uint8_t red_max, uint8_t green_max, uint8_t blue_max,
+	                 uint8_t color_id, SDL_Palette* palette);
 
 	// Checks if given char belongs to a command and process it. If false,
 	// the character should be printed
@@ -119,7 +119,7 @@ private:
 	void UpdateFont();
 
 	// Clears page. If save is true, saves the current page to a bitmap
-	void NewPage(bool save, bool resetx);
+	void NewPage(bool save, bool reset_x);
 
 	// Blits the given glyph on the page surface. If add is true, the values
 	// of bitmap are added to the values of the pixels in the page
@@ -130,14 +130,14 @@ private:
 	void DrawLine(uint64_t fromx, uint64_t tox, uint64_t y, bool broken);
 
 	// Setup the bit_graph structure
-	void SetupBitImage(uint8_t dens, uint16_t numCols);
+	void SetupBitImage(uint8_t density, uint16_t num_cols);
 
 	// Process a character that is part of bit image. Must be called iff
 	// bit_graph.rem_bytes > 0.
 	void PrintBitGraph(uint8_t ch);
 
 	// Copies the codepage mapping from the constant array to CurMap
-	void SelectCodepage(uint16_t cp);
+	void SelectCodepage(uint16_t codepage);
 
 	// Output current page
 	void OutputPage();
@@ -161,7 +161,7 @@ private:
 
 	// Prints out a byte using ASCII85 encoding (only outputs something
 	// every four bytes). When b>255, closes the ASCII85 string
-	void FprintAscii85(FILE* f, uint16_t b);
+	void FprintAscii85(FILE* file, uint16_t byte);
 
 	// Closes a multipage document
 	void FinishMultipage();
