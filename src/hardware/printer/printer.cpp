@@ -1947,7 +1947,7 @@ void CPrinter::OutputPage()
 
 		// Continue postscript file?
 		if (output_handle != nullptr) {
-			psfile = static_cast<FILE*>(output_handle);
+			psfile = output_handle;
 		}
 
 		// Create new file?
@@ -2137,7 +2137,7 @@ void CPrinter::FinishMultipage()
 {
 	if (output_handle != nullptr) {
 		if (strcasecmp(output, "ps") == 0) {
-			FILE* psfile = static_cast<FILE*>(output_handle);
+			FILE* psfile = output_handle;
 			fprintf(psfile, "%%%%Pages: %i\n", multipage_counter);
 			fprintf(psfile, "%%%%EOF\n");
 			fclose(psfile);

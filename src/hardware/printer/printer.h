@@ -233,9 +233,9 @@ private:
 	uint16_t num_print_as_char = 0; // Number of bytes to print as characters
 	                                // (even when normally control codes)
 
-	char* output        = nullptr; // Output method selected by user
-	void* output_handle = nullptr; // If not null, additional pages will be
-	                               // appended to the given handle
+	char* output         = nullptr; // Output method selected by user
+	FILE* output_handle  = nullptr; // If not null, additional pages will be
+	                                // appended to the given handle
 	bool multipage_output = false; // If true, all pages are combined to one
 	                               // file/print job etc. until the "eject
 	                               // page" button is pressed
