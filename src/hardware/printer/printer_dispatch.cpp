@@ -1443,8 +1443,6 @@ void Printer::PrintBitGraph(const uint8_t ch)
 
 	const Real64 oldY = cur_y;
 
-	SDL_LockSurface(page);
-
 	// When page dpi is greater than graphics dpi, the drawn pixels get
 	// "bigger"
 	uint64_t pixsizeX = 1;
@@ -1468,13 +1466,12 @@ void Printer::PrintBitGraph(const uint8_t ch)
 				for (uint64_t xx = 0; xx < pixsizeX; xx++) {
 					for (uint64_t yy = 0; yy < pixsizeY; yy++) {
 						if ((static_cast<int>(PixX() + xx) <
-						     page->w) &&
+						     page.width) &&
 						    (static_cast<int>(PixY() + yy) <
-						     page->h)) {
-							*(static_cast<uint8_t*>(
-							          page->pixels) +
-							  (PixX() + xx) +
-							  (PixY() + yy) * page->pitch) |=
+						     page.height)) {
+							page.pixels[(PixX() + xx) +
+							            (PixY() + yy) *
+							                    page.pitch] |=
 							        (color | 0x1F);
 						}
 					}
@@ -1486,8 +1483,6 @@ void Printer::PrintBitGraph(const uint8_t ch)
 			         static_cast<Real64>(bit_graph.vert_dens);
 		}
 	}
-
-	SDL_UnlockSurface(page);
 
 	cur_y = oldY;
 

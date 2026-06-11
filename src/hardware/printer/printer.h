@@ -10,7 +10,9 @@
 #define __PRINTER_H
 
 #include <array>
+#include <cstdint>
 #include <string>
+#include <vector>
 
 #include "misc/support.h"
 #include "misc/types.h"
@@ -20,12 +22,33 @@
 #include <png.h>
 #endif
 
-#include "SDL.h"
-
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 namespace VirtualPrinter {
+
+// Page bitmap. 8-bit palette-indexed, contiguous storage (no row
+// padding), one entry per pixel.
+struct PageBitmap {
+	std::vector<uint8_t> pixels = {};
+
+	struct RgbColor {
+		uint8_t r = 0;
+		uint8_t g = 0;
+		uint8_t b = 0;
+	};
+	std::array<RgbColor, 256> palette = {};
+
+	int width  = 0;
+	int height = 0;
+	// Bytes per row. Always == width for our buffer, but kept as a
+	// separate field for parity with the SDL_Surface idiom we
+	// replaced (and so callers reading scanlines work unchanged).
+	int pitch = 0;
+
+	uint8_t& at(int x, int y) { return pixels[x + y * pitch]; }
+	uint8_t at(int x, int y) const { return pixels[x + y * pitch]; }
+};
 
 // zlib compression levels duplicated locally to avoid pulling in zlib.h.
 constexpr int ZBestCompression = 9;
@@ -126,9 +149,9 @@ public:
 	bool IsBlank();
 
 private:
-	// Fill one of the eight 32-entry colour sub-palettes.
+	// Fill one of the eight 32-entry colour sub-palettes in 'page'.
 	void FillPalette(uint8_t red_max, uint8_t green_max, uint8_t blue_max,
-	                 uint8_t color_id, SDL_Palette* palette);
+	                 uint8_t color_id);
 
 	// Checks if given char belongs to a command and process it. If false,
 	// the character should be printed
@@ -197,8 +220,8 @@ private:
 	// FreeType2 library used to render the characters.
 	FT_Library ft_lib = nullptr;
 
-	// Surface representing the current page.
-	SDL_Surface* page = nullptr;
+	// Off-screen bitmap of the current page.
+	PageBitmap page = {};
 
 	// The font currently used to render characters.
 	FT_Face cur_font = nullptr;

@@ -8,15 +8,16 @@
 
 #if C_PRINTER
 
-#include "SDL.h"
-
 #include "misc/std_filesystem.h"
+#include "printer.h"
 
 namespace VirtualPrinter {
 
-// Encode 'page' (an 8-bit indexed SDL surface) as a single-page PNG at
+// Encode the given 8-bit indexed page bitmap as a single-page PNG at
 // out_path. Returns false on open / library failure (a warning is logged).
-bool write_png_page(SDL_Surface* page, const std_fs::path& out_path);
+// 'page' is non-const because libpng's png_set_rows takes a non-const
+// pointer; the function does not modify the page.
+bool write_png_page(PageBitmap& page, const std_fs::path& out_path);
 
 } // namespace VirtualPrinter
 

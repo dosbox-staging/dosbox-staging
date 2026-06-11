@@ -78,20 +78,18 @@ void Printer::OutputPagePostScript()
 	        static_cast<uint16_t>(default_page_height * 72));
 	fprintf(psfile.get(),
 	        "%i %i 8 [%i 0 0 -%i 0 %i]\n",
-	        page->w,
-	        page->h,
-	        page->w,
-	        page->h,
-	        page->h);
+	        page.width,
+	        page.height,
+	        page.width,
+	        page.height,
+	        page.height);
 	fprintf(psfile.get(), "currentfile\n");
 	fprintf(psfile.get(), "/ASCII85Decode filter\n");
 	fprintf(psfile.get(), "/RunLengthDecode filter\n");
 	fprintf(psfile.get(), "image\n");
 
-	SDL_LockSurface(page);
-
 	uint32_t pix          = 0;
-	const uint32_t numpix = page->h * page->w;
+	const uint32_t numpix = page.height * page.width;
 	ascii85_buffer_pos = ascii85_cur_col = 0;
 
 	while (pix < numpix) {
@@ -132,8 +130,6 @@ void Printer::OutputPagePostScript()
 	// Write end-of-data marker for the RLE + ASCII85 filters.
 	FprintAscii85(psfile.get(), 128);
 	FprintAscii85(psfile.get(), 256);
-
-	SDL_UnlockSurface(page);
 
 	fprintf(psfile.get(), "showpage\n");
 

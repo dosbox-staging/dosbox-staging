@@ -19,11 +19,7 @@ CHECK_NARROWING();
 
 namespace VirtualPrinter {
 
-// zlib compression levels duplicated locally to avoid pulling in zlib.h.
-static constexpr int ZBestCompression = 9;
-static constexpr int ZDefaultStrategy = 0;
-
-bool write_png_page(SDL_Surface* page, const std_fs::path& out_path)
+bool write_png_page(PageBitmap& page, const std_fs::path& out_path)
 {
 	// Open the output file. RAII closes on any return path.
 	FILE_unique_ptr fp{fopen(out_path.string().c_str(), "wb")};
@@ -56,8 +52,8 @@ bool write_png_page(SDL_Surface* page, const std_fs::path& out_path)
 
 	png_set_IHDR(png_ptr,
 	             info_ptr,
-	             page->w,
-	             page->h,
+	             page.width,
+	             page.height,
 	             8,
 	             PNG_COLOR_TYPE_PALETTE,
 	             PNG_INTERLACE_NONE,
@@ -66,26 +62,20 @@ bool write_png_page(SDL_Surface* page, const std_fs::path& out_path)
 
 	std::array<png_color, 256> palette = {};
 	for (int i = 0; i < 256; i++) {
-		palette[i].red   = page->format->palette->colors[i].r;
-		palette[i].green = page->format->palette->colors[i].g;
-		palette[i].blue  = page->format->palette->colors[i].b;
+		const auto& c = page.palette[i];
+		palette[i].red   = c.r;
+		palette[i].green = c.g;
+		palette[i].blue  = c.b;
 	}
 	png_set_PLTE(png_ptr, info_ptr, palette.data(), 256);
 
-	SDL_LockSurface(page);
-
-	// Scanline pointers; std::vector owns the storage so any future
-	// early-return path doesn't leak.
-	std::vector<png_bytep> row_pointers(page->h);
-	for (int i = 0; i < page->h; i++) {
-		row_pointers[i] = static_cast<uint8_t*>(page->pixels) +
-		                  (i * page->pitch);
+	std::vector<png_bytep> row_pointers(page.height);
+	for (int i = 0; i < page.height; i++) {
+		row_pointers[i] = page.pixels.data() + (i * page.pitch);
 	}
 
 	png_set_rows(png_ptr, info_ptr, row_pointers.data());
 	png_write_png(png_ptr, info_ptr, 0, nullptr);
-
-	SDL_UnlockSurface(page);
 
 	png_destroy_write_struct(&png_ptr, &info_ptr);
 	// fp closes here via FILE_unique_ptr destructor.
@@ -98,7 +88,7 @@ bool write_png_page(SDL_Surface* page, const std_fs::path& out_path)
 
 #if C_PRINTER
 namespace VirtualPrinter {
-bool write_png_page(SDL_Surface*, const std_fs::path&)
+bool write_png_page(PageBitmap&, const std_fs::path&)
 {
 	return false;
 }
