@@ -2173,20 +2173,26 @@ uint8_t CPrinter::GetPixel(const uint32_t num)
 	         ((num / page->w) * page->pitch));
 }
 
-static uint8_t data_register; // contents of the parallel port data register
+// Latched copies of the LPT port registers that printer.cpp drives.
+namespace {
+struct LptRegisters {
+	uint8_t data    = 0;
+	uint8_t control = 0x04;
+};
+LptRegisters lpt{};
+} // namespace
 
 uint64_t PRINTER_ReadData([[maybe_unused]] const uint64_t port,
                           [[maybe_unused]] const uint64_t iolen)
 {
-	return data_register;
+	return lpt.data;
 }
 
 void PRINTER_WriteData([[maybe_unused]] const uint64_t port, const uint64_t val,
                        [[maybe_unused]] const uint64_t iolen)
 {
-	data_register = val;
+	lpt.data = val;
 }
-static uint8_t control_register = 0x04;
 
 uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
                             [[maybe_unused]] const uint64_t iolen)
@@ -2201,7 +2207,7 @@ uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
 	// Printer is always online and never reports an error
 	uint8_t status = 0x1f; // 0x18;
 
-	//	if (control_register&0x08==0)
+	//	if (lpt.control&0x08==0)
 	//		status |= 0x10;
 
 	if (!default_printer->IsBusy()) {
@@ -2249,13 +2255,13 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 {
 	// LOG_MSG("PRINTER_WriteControl CS:IP %8x:%8x",SegValue(cs),reg_eip);
 	//  init printer if bit 4 is switched on
-	if ((val & 0x04) && default_printer && (!(control_register & 0x04))) {
+	if ((val & 0x04) && default_printer && (!(lpt.control & 0x04))) {
 		default_printer->ResetPrinterHard();
 	}
 
 	// data is strobed to the parallel printer on the falling edge of strobe
 	// bit
-	if (!(val & 0x1) && (control_register & 0x1)) {
+	if (!(val & 0x1) && (lpt.control & 0x1)) {
 		if (!default_printer) {
 			default_printer = new CPrinter(conf_dpi,
 			                               conf_width,
@@ -2263,7 +2269,7 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 			                               conf_output_device,
 			                               conf_multipage_output);
 		}
-		default_printer->PrintChar(data_register);
+		default_printer->PrintChar(lpt.data);
 		if (!timeout_dirty) {
 			PIC_AddEvent(PRINTER_EventHandler,
 			             static_cast<float>(printer_timeout),
@@ -2272,7 +2278,7 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 		}
 	}
 
-	control_register = val;
+	lpt.control = val;
 	if (default_printer) {
 		default_printer->SetAutofeed((val & 0x02) > 0);
 	}
@@ -2284,11 +2290,11 @@ uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
 	// LOG_MSG("PRINTER_ReadControl CS:IP %8x:%8x",SegValue(cs),reg_eip);
 	//  Don't create a CPrinter unless the program really wants to print
 	if (!default_printer) {
-		return 0xe0 | control_register; // 0xe8;
+		return 0xe0 | lpt.control; // 0xe8;
 	}
 
 	return 0xe0 | (default_printer->GetAutofeed() ? 0x02 : 0x00) |
-	       (control_register & 0xfd);
+	       (lpt.control & 0xfd);
 }
 
 // PRINTER_Shutdown used to be registered via Section_prop::AddDestroyFunction
@@ -2345,8 +2351,8 @@ void PRINTER_Reset()
 	// cycles; clear the LPT register state so a stale strobe sequence
 	// from before a previous Reset can't trigger lazy construction with
 	// stale data.
-	data_register    = 0;
-	control_register = 0x04;
+	lpt.data    = 0;
+	lpt.control = 0x04;
 }
 
 #endif
