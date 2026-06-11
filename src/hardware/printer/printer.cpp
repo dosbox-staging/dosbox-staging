@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "misc/std_filesystem.h"
+#include "utils/string_utils.h"
 
 #include "hardware/pic.h" // for timeout
 #include "utils/checks.h"
@@ -34,7 +35,7 @@ static uint64_t printer_timeout;
 static bool timeout_dirty;
 static std_fs::path document_path;
 // static const char* font_path;
-static char conf_output_device[50];
+static std::string conf_output_device;
 static bool conf_multipage_output;
 
 void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
@@ -58,7 +59,7 @@ void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
 }
 
 Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
-                 char* output, bool multipage_output)
+                 const std::string& output, bool multipage_output)
 {
 	if (FT_Init_FreeType(&ft_lib)) {
 		LOG_ERR("PRINTER: Unable to init Freetype2. Printing disabled");
@@ -1960,12 +1961,12 @@ static std::optional<std_fs::path> find_next_name(const std::string& prefix,
 
 void Printer::OutputPage()
 {
-	if (strcasecmp(output, "printer") == 0) {
+	if (iequals(output, "printer")) {
 		// Win32 host-printer pass-through removed (out of scope).
 		LOG_MSG("PRINTER: Direct printing not supported");
 	}
 #ifdef C_LIBPNG
-	else if (strcasecmp(output, "png") == 0) {
+	else if (iequals(output, "png")) {
 		const auto out_path = find_next_name("page", ".png");
 		if (!out_path) {
 			return;
@@ -2045,7 +2046,7 @@ void Printer::OutputPage()
 		// fp closes here via FILE_unique_ptr destructor.
 	}
 #endif
-	else if (strcasecmp(output, "ps") == 0) {
+	else if (iequals(output, "ps")) {
 		// If multipage mode is continuing, take ownership back from the
 		// member; otherwise open a fresh file.
 		FILE_unique_ptr psfile = std::move(output_handle);
@@ -2237,10 +2238,10 @@ void Printer::FinishMultipage()
 	if (!output_handle) {
 		return;
 	}
-	if (strcasecmp(output, "ps") == 0) {
+	if (iequals(output, "ps")) {
 		fprintf(output_handle.get(), "%%%%Pages: %i\n", multipage_counter);
 		fprintf(output_handle.get(), "%%%%EOF\n");
-	} else if (strcasecmp(output, "printer") == 0) {
+	} else if (iequals(output, "printer")) {
 		// Win32 host-printer pass-through removed (out of scope).
 	}
 	// FILE_unique_ptr destructor fcloses on reset.
@@ -2438,11 +2439,10 @@ void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t 
 	conf_width    = width;
 	conf_height   = height;
 	document_path = docpath ? docpath : "";
-	strncpy(&conf_output_device[0], output_format, sizeof(conf_output_device) - 1);
-	conf_output_device[sizeof(conf_output_device) - 1] = 0;
-	conf_multipage_output                              = multipage;
-	printer_timeout                                    = timeout_ms;
-	timeout_dirty = (printer_timeout == 0);
+	conf_output_device    = output_format ? output_format : "";
+	conf_multipage_output = multipage;
+	printer_timeout       = timeout_ms;
+	timeout_dirty         = (printer_timeout == 0);
 }
 
 void PRINTER_FormFeed(const bool pressed)
