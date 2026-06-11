@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Integration tests for the virtual printer. Each test feeds a
-// known ESC/P byte sequence to a freshly-constructed CPrinter and
+// known ESC/P byte sequence to a freshly-constructed Printer and
 // inspects the rendered PNG.
 //
 // The tests run early in the branch's history (right after the
@@ -78,7 +78,7 @@ protected:
 		std_fs::remove_all(output_dir, ec);
 		std_fs::create_directories(output_dir, ec);
 
-		CPrinter printer(TestDpi,
+		Printer printer(TestDpi,
 		                 TestPageWidth10,
 		                 TestPageHeight10,
 		                 output_format,

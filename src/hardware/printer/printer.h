@@ -68,15 +68,15 @@ enum Typeface {
 	svjittra = 31
 };
 
-class CPrinter {
+class Printer {
 public:
-	CPrinter(uint16_t dpi, uint16_t width, uint16_t height, char* output,
-	         bool multipage_output);
-	virtual ~CPrinter();
+	Printer(uint16_t dpi, uint16_t width, uint16_t height, char* output,
+	        bool multipage_output);
+	virtual ~Printer();
 
-	// Owns FreeType/SDL resources and a singleton CPrinter* — don't copy.
-	CPrinter(const CPrinter&)            = delete;
-	CPrinter& operator=(const CPrinter&) = delete;
+	// Owns FreeType/SDL resources and a singleton Printer* — don't copy.
+	Printer(const Printer&)            = delete;
+	Printer& operator=(const Printer&) = delete;
 
 	// Process one character sent to virtual printer
 	void PrintChar(uint8_t ch);
