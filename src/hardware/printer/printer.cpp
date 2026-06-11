@@ -32,7 +32,7 @@ static std::unique_ptr<Printer> default_printer = nullptr;
 static uint16_t conf_dpi, conf_width, conf_height;
 static uint64_t printer_timeout;
 static bool timeout_dirty;
-static const char* document_path;
+static std_fs::path document_path;
 // static const char* font_path;
 static char conf_output_device[50];
 static bool conf_multipage_output;
@@ -1938,7 +1938,8 @@ static constexpr int FindNextNameAttempts = 10000;
 static std::optional<std_fs::path> find_next_name(const std::string& prefix,
                                                   const std::string& ext)
 {
-	const std_fs::path docdir = document_path ? document_path : ".";
+	const std_fs::path docdir = document_path.empty() ? std_fs::path{"."}
+	                                                  : document_path;
 	for (int i = 1; i <= FindNextNameAttempts; ++i) {
 		std_fs::path candidate = docdir /
 		                         (prefix + std::to_string(i) + ext);
@@ -2436,7 +2437,7 @@ void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t 
 	conf_dpi      = dpi;
 	conf_width    = width;
 	conf_height   = height;
-	document_path = docpath;
+	document_path = docpath ? docpath : "";
 	strncpy(&conf_output_device[0], output_format, sizeof(conf_output_device) - 1);
 	conf_output_device[sizeof(conf_output_device) - 1] = 0;
 	conf_multipage_output                              = multipage;
