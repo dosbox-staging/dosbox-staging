@@ -10,6 +10,7 @@
 #define __PRINTER_H
 
 #include "misc/types.h"
+#include "utils/bit_view.h"
 
 #ifdef C_LIBPNG
 #include <png.h>
@@ -24,19 +25,25 @@
 constexpr int ZBestCompression = 9;
 constexpr int ZDefaultStrategy = 0;
 
-#define STYLE_PROP               0x01
-#define STYLE_CONDENSED          0x02
-#define STYLE_BOLD               0x04
-#define STYLE_DOUBLESTRIKE       0x08
-#define STYLE_DOUBLEWIDTH        0x10
-#define STYLE_ITALICS            0x20
-#define STYLE_UNDERLINE          0x40
-#define STYLE_SUPERSCRIPT        0x80
-#define STYLE_SUBSCRIPT          0x100
-#define STYLE_STRIKETHROUGH      0x200
-#define STYLE_OVERSCORE          0x400
-#define STYLE_DOUBLEWIDTHONELINE 0x800
-#define STYLE_DOUBLEHEIGHT       0x1000
+// Currently-active text style flags. Modelled on LptStatusRegister in
+// src/hardware/lpt.h: writes go through the named bit_view members,
+// reads through either the members or the 'data' field for masking.
+union PrinterStyle {
+	uint16_t data = 0;
+	bit_view<0, 1> prop;
+	bit_view<1, 1> condensed;
+	bit_view<2, 1> bold;
+	bit_view<3, 1> doublestrike;
+	bit_view<4, 1> doublewidth;
+	bit_view<5, 1> italics;
+	bit_view<6, 1> underline;
+	bit_view<7, 1> superscript;
+	bit_view<8, 1> subscript;
+	bit_view<9, 1> strikethrough;
+	bit_view<10, 1> overscore;
+	bit_view<11, 1> doublewidth_oneline;
+	bit_view<12, 1> doubleheight;
+};
 
 #define SCORE_NONE         0x00
 #define SCORE_SINGLE       0x01
@@ -202,8 +209,8 @@ private:
 	// Buffer for the read parameters.
 	uint8_t params[20] = {};
 
-	// Bitmask of currently active text styles (see STYLE_* constants).
-	uint16_t style = 0;
+	// Bitmask of currently active text styles.
+	PrinterStyle style = {};
 
 	// CPI value set by program and the actual one (taking font types into
 	// account).
