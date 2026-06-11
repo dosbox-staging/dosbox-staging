@@ -76,8 +76,8 @@ CPrinter::CPrinter(uint16_t dpi, const uint16_t width, const uint16_t height,
 		// Create page
 		page = SDL_CreateRGBSurface(
 		        SDL_SWSURFACE,
-		        static_cast<uint64_t>(default_page_width * dpi),
-		        static_cast<uint64_t>(default_page_height * dpi),
+		        static_cast<int>(default_page_width * dpi),
+		        static_cast<int>(default_page_height * dpi),
 		        8,
 		        0,
 		        0,
@@ -177,7 +177,8 @@ void CPrinter::ResetPrinter()
 
 	// Default tabs => Each eight characters
 	for (uint64_t i = 0; i < 32; i++) {
-		horiz_tabs[i] = i * 8 * (1 / static_cast<Real64>(cpi));
+		horiz_tabs[i] = static_cast<Real64>(i * 8) /
+		                static_cast<Real64>(cpi);
 	}
 	num_horiz_tabs = 32;
 
@@ -998,7 +999,7 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			break;
 		case 0x5c: // Set relative horizontal print position (ESC \)
 		{
-			const int16_t toMove = PARAM16(0);
+			const int16_t toMove = static_cast<int16_t>(PARAM16(0));
 			Real64 unitSize      = defined_unit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(
@@ -1116,7 +1117,7 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			top_margin    = 0.0;
 			break;
 		case 0x101: // Skip unsupported ESC ( command
-			needed_param = PARAM16(0);
+			needed_param = static_cast<uint8_t>(PARAM16(0));
 			num_param    = 0;
 			break;
 		case 0x274: // Assign character table (ESC (t)
@@ -1150,7 +1151,7 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			LOG(LOG_MISC,
 			    LOG_ERROR)("PRINTER: Bardcode printing not supported");
 			// Find out how many bytes to skip
-			needed_param = PARAM16(0);
+			needed_param = static_cast<uint8_t>(PARAM16(0));
 			num_param    = 0;
 			break;
 		case 0x243: // Set page length in defined unit (ESC (C)
@@ -1181,7 +1182,7 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			}
 		} break;
 		case 0x25e: // Print data as characters (ESC (^)
-			num_print_as_char = PARAM16(0);
+			num_print_as_char = static_cast<uint16_t>(PARAM16(0));
 			break;
 		case 0x263: // Set page format (ESC (c)
 			if (defined_unit > 0) {
@@ -1455,12 +1456,12 @@ void CPrinter::PrintChar(uint8_t ch)
 	// Render a high-quality bitmap
 	FT_Render_Glyph(cur_font->glyph, FT_RENDER_MODE_NORMAL);
 
-	const uint16_t penX = PIXX + cur_font->glyph->bitmap_left;
-	uint16_t penY       = PIXY - cur_font->glyph->bitmap_top +
-	                cur_font->size->metrics.ascender / 64;
+	const auto penX = static_cast<uint16_t>(PIXX + cur_font->glyph->bitmap_left);
+	uint16_t penY   = static_cast<uint16_t>(PIXY - cur_font->glyph->bitmap_top +
+	                                      cur_font->size->metrics.ascender / 64);
 
 	if (style & STYLE_SUBSCRIPT) {
-		penY += cur_font->glyph->bitmap.rows / 2;
+		penY = static_cast<uint16_t>(penY + cur_font->glyph->bitmap.rows / 2);
 	}
 
 	// Copy bitmap into page
@@ -1507,19 +1508,21 @@ void CPrinter::PrintChar(uint8_t ch)
 	if ((score != SCORE_NONE) &&
 	    (style & (STYLE_UNDERLINE | STYLE_STRIKETHROUGH | STYLE_OVERSCORE))) {
 		// Find out where to put the line
-		uint16_t lineY      = PIXY;
-		const double height = (cur_font->size->metrics.height >>
-		                       6); // TODO height is fixed point madness...
+		uint16_t lineY = static_cast<uint16_t>(PIXY);
+		const double height = static_cast<double>(
+		        cur_font->size->metrics.height >>
+		        6); // TODO height is fixed point madness...
 
 		if (style & STYLE_UNDERLINE) {
-			lineY = PIXY + static_cast<uint16_t>(height * 0.9);
+			lineY = static_cast<uint16_t>(PIXY + static_cast<uint16_t>(height * 0.9));
 		} else if (style & STYLE_STRIKETHROUGH) {
-			lineY = PIXY + static_cast<uint16_t>(height * 0.45);
+			lineY = static_cast<uint16_t>(PIXY + static_cast<uint16_t>(height * 0.45));
 		} else if (style & STYLE_OVERSCORE) {
-			lineY = PIXY - (((score == SCORE_DOUBLE) ||
+			lineY = static_cast<uint16_t>(
+			        PIXY - (((score == SCORE_DOUBLE) ||
 			                 (score == SCORE_DOUBLEBROKEN))
 			                        ? 5
-			                        : 0);
+			                        : 0));
 		}
 
 		DrawLine(lineStart,
@@ -2216,7 +2219,7 @@ uint64_t PRINTER_ReadData([[maybe_unused]] const uint64_t port,
 void PRINTER_WriteData([[maybe_unused]] const uint64_t port, const uint64_t val,
                        [[maybe_unused]] const uint64_t iolen)
 {
-	lpt.data = val;
+	lpt.data = static_cast<uint8_t>(val);
 }
 
 uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
@@ -2294,7 +2297,7 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 		}
 	}
 
-	lpt.control = val;
+	lpt.control = static_cast<uint8_t>(val);
 	if (default_printer) {
 		default_printer->SetAutofeed((val & kCtrlAutoLf) != 0);
 	}

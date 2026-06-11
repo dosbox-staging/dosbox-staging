@@ -71,6 +71,10 @@ public:
 	         bool multipage_output);
 	virtual ~CPrinter();
 
+	// Owns FreeType/SDL resources and a singleton CPrinter* — don't copy.
+	CPrinter(const CPrinter&)            = delete;
+	CPrinter& operator=(const CPrinter&) = delete;
+
 	// Process one character sent to virtual printer
 	void PrintChar(uint8_t ch);
 
@@ -210,7 +214,7 @@ private:
 		uint8_t column[6] = {}; // Bytes of the current and last column
 		uint8_t read_bytes_column = 0; // Bytes read so far for the
 		                               // current column
-	} bit_graph;
+	} bit_graph{};
 
 	uint8_t densk = 0, densl = 0, densy = 0, densz = 0; // Image density
 	                                                    // modes used in ESC
