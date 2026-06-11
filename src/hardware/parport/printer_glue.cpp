@@ -17,6 +17,9 @@
 #include "hardware/port.h"
 #include "misc/support.h"
 #include "printer_if.h"
+#include "utils/checks.h"
+
+CHECK_NARROWING();
 
 namespace {
 

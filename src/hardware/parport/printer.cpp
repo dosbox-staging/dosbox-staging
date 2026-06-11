@@ -15,6 +15,9 @@
 #include "printer_charmaps.h"
 
 #include "hardware/pic.h" // for timeout
+#include "utils/checks.h"
+
+CHECK_NARROWING();
 
 extern void GFX_CaptureMouse(void);
 extern bool mouselocked;
