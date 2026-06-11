@@ -50,71 +50,61 @@ Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
 {
 	if (FT_Init_FreeType(&ft_lib)) {
 		LOG_ERR("PRINTER: Unable to init Freetype2. Printing disabled");
-		page = nullptr;
-	} else {
-		this->dpi              = dpi;
-		this->output           = output;
-		this->multipage_output = multipage_output;
-
-		default_page_width = static_cast<Real64>(width) /
-		                     static_cast<Real64>(10);
-		default_page_height = static_cast<Real64>(height) /
-		                      static_cast<Real64>(10);
-
-		// Create page
-		page = SDL_CreateRGBSurface(SDL_SWSURFACE,
-		                            static_cast<int>(default_page_width * dpi),
-		                            static_cast<int>(default_page_height * dpi),
-		                            8,
-		                            0,
-		                            0,
-		                            0,
-		                            0);
-
-		// The 8-bit palette is sliced into 8 sub-palettes of 32 entries
-		// each. The high 3 bits of a pixel select the sub-palette (the
-		// 'colour ID'), the low 5 bits select intensity within that
-		// sub-palette (0 = white, 31 = saturated).
-		//
-		// Sub-palette indices are chosen so that overprinting two
-		// colours ORs the bits of their IDs to produce a third
-		// reasonable colour, mirroring how real ribbon overprinting
-		// works (e.g. magenta=001 OR yellow=100 -> red=101).
-		//
-		// Sub-palette 0 is the 'all white' page background and gets
-		// hand-initialised below; the other seven are derived from
-		// (red_max, green_max, blue_max) tuples by FillPalette.
-		SDL_Palette* palette = page->format->palette;
-
-		for (uint64_t i = 0; i < 32; i++) {
-			palette->colors[i].r = 255;
-			palette->colors[i].g = 255;
-			palette->colors[i].b = 255;
-		}
-		// Eight sub-palettes (colour ID 1..7 in the upper 3 bits of
-		// each pixel byte; ID 0 is the all-white page background
-		// initialised above).
-		FillPalette(0, 0, 0, 1, palette);
-		FillPalette(0, 255, 0, 1, palette);
-		FillPalette(255, 0, 0, 2, palette);
-		FillPalette(255, 255, 0, 3, palette);
-		FillPalette(0, 0, 255, 4, palette);
-		FillPalette(0, 255, 255, 5, palette);
-		FillPalette(255, 0, 255, 6, palette);
-		FillPalette(255, 255, 255, 7, palette);
-
-		color = ColorBlack;
-
-		cur_font  = nullptr;
-		char_read = false;
-		auto_feed = false;
-		output_handle.reset();
-
-		ResetPrinter();
-
-		// Win32 host-printer pass-through removed (out of scope).
-		LOG_MSG("PRINTER: Enabled");
+		return;
 	}
+
+	this->dpi              = dpi;
+	this->output           = output;
+	this->multipage_output = multipage_output;
+
+	default_page_width = static_cast<Real64>(width) /
+	                     static_cast<Real64>(10);
+	default_page_height = static_cast<Real64>(height) /
+	                      static_cast<Real64>(10);
+
+	page.width  = static_cast<int>(default_page_width * dpi);
+	page.height = static_cast<int>(default_page_height * dpi);
+	page.pitch  = page.width;
+	page.pixels.assign(static_cast<size_t>(page.pitch) *
+	                           static_cast<size_t>(page.height),
+	                   0);
+
+	// The 8-bit palette is sliced into 8 sub-palettes of 32 entries
+	// each. The high 3 bits of a pixel select the sub-palette (the
+	// 'colour ID'), the low 5 bits select intensity within that
+	// sub-palette (0 = white, 31 = saturated).
+	//
+	// Sub-palette indices are chosen so that overprinting two
+	// colours ORs the bits of their IDs to produce a third
+	// reasonable colour, mirroring how real ribbon overprinting
+	// works (e.g. magenta=001 OR yellow=100 -> red=101).
+	//
+	// Sub-palette 0 is the 'all white' page background and gets
+	// hand-initialised below; the other seven are derived from
+	// (red_max, green_max, blue_max) tuples by FillPalette.
+	for (uint64_t i = 0; i < 32; i++) {
+		auto& c = page.palette[i];
+		c.r = c.g = c.b = 255;
+	}
+	FillPalette(0, 0, 0, 1);
+	FillPalette(0, 255, 0, 1);
+	FillPalette(255, 0, 0, 2);
+	FillPalette(255, 255, 0, 3);
+	FillPalette(0, 0, 255, 4);
+	FillPalette(0, 255, 255, 5);
+	FillPalette(255, 0, 255, 6);
+	FillPalette(255, 255, 255, 7);
+
+	color = ColorBlack;
+
+	cur_font  = nullptr;
+	char_read = false;
+	auto_feed = false;
+	output_handle.reset();
+
+	ResetPrinter();
+
+	LOG_MSG("PRINTER: Enabled");
 }
 
 void Printer::ResetPrinterHard()
@@ -176,10 +166,9 @@ void Printer::ResetPrinter()
 Printer::~Printer(void)
 {
 	FinishMultipage();
-	if (page != nullptr) {
-		SDL_FreeSurface(page);
-		page = nullptr;
+	if (ft_lib != nullptr) {
 		FT_Done_FreeType(ft_lib);
+		ft_lib = nullptr;
 	}
 }
 
@@ -287,23 +276,15 @@ void Printer::NewPage(const bool save, const bool reset_x)
 	}
 	cur_y = top_margin;
 
-	SDL_Rect rect;
-	rect.x = 0;
-	rect.y = 0;
-	rect.w = page->w;
-	rect.h = page->h;
-	SDL_FillRect(page, &rect, SDL_MapRGB(page->format, 255, 255, 255));
-
-	/*for(int i = 0; i < 256; i++)
-	{
-	*(static_cast<uint8_t*>(page->pixels)+i)=i;
-	}*/
+	// Palette index 0 lives in sub-palette 0 (all-white), so a zeroed
+	// pixel buffer is a blank white page.
+	std::fill(page.pixels.begin(), page.pixels.end(), 0);
 }
 
 void Printer::PrintChar(uint8_t ch)
 {
 	char_read = true;
-	if (page == nullptr) {
+	if (page.pixels.empty()) {
 		return;
 	}
 
@@ -357,8 +338,6 @@ void Printer::PrintChar(uint8_t ch)
 	}
 
 	// Copy bitmap into page
-	SDL_LockSurface(page);
-
 	BlitGlyph(cur_font->glyph->bitmap, penX, penY, false);
 	BlitGlyph(cur_font->glyph->bitmap, penX + 1, penY, true);
 
@@ -375,7 +354,6 @@ void Printer::PrintChar(uint8_t ch)
 		BlitGlyph(cur_font->glyph->bitmap, penX + 2, penY, true);
 		BlitGlyph(cur_font->glyph->bitmap, penX + 3, penY, true);
 	}
-	SDL_UnlockSurface(page);
 
 	// For line printing
 	const uint16_t lineStart = static_cast<uint16_t>(PixX());
@@ -527,11 +505,6 @@ void Printer::OutputPage()
 		}
 	} else if (iequals(output, "ps")) {
 		OutputPagePostScript();
-	} else {
-		const auto out_path = find_next_name("page", ".bmp");
-		if (out_path) {
-			SDL_SaveBMP(page, out_path->string().c_str());
-		}
 	}
 }
 
@@ -554,28 +527,18 @@ void Printer::FinishMultipage()
 
 bool Printer::IsBlank()
 {
-	bool blank = true;
-
-	SDL_LockSurface(page);
-
-	for (uint16_t y = 0; y < page->h; y++) {
-		for (uint16_t x = 0; x < page->w; x++) {
-			if (*(static_cast<uint8_t*>(page->pixels) + x +
-			      (y * page->pitch)) != 0) {
-				blank = false;
-			}
+	for (uint8_t b : page.pixels) {
+		if (b != 0) {
+			return false;
 		}
 	}
-
-	SDL_UnlockSurface(page);
-	return blank;
+	return true;
 }
 
 uint8_t Printer::GetPixel(const uint32_t num)
 {
-	// Respect the pitch
-	return *(static_cast<uint8_t*>(page->pixels) + (num % page->w) +
-	         ((num / page->w) * page->pitch));
+	return page.pixels[(num % page.width) +
+	                   ((num / page.width) * page.pitch)];
 }
 
 } // namespace VirtualPrinter
