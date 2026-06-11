@@ -25,10 +25,10 @@ namespace {
 
 struct PrinterState {
 	std::unique_ptr<IO_WriteHandleObject> data_write;
-	std::unique_ptr<IO_ReadHandleObject>  data_read;
-	std::unique_ptr<IO_ReadHandleObject>  status_read;
+	std::unique_ptr<IO_ReadHandleObject> data_read;
+	std::unique_ptr<IO_ReadHandleObject> status_read;
 	std::unique_ptr<IO_WriteHandleObject> control_write;
-	std::unique_ptr<IO_ReadHandleObject>  control_read;
+	std::unique_ptr<IO_ReadHandleObject> control_read;
 
 	// Lifetimes for strings passed by raw pointer into printer.cpp's
 	// PRINTER_Configure (which stores the pointers verbatim).
@@ -42,8 +42,12 @@ PrinterState state{};
 
 io_port_t lpt_port_for_name(const std::string& name)
 {
-	if (name == "lpt2") return Lpt2Port;
-	if (name == "lpt3") return Lpt3Port;
+	if (name == "lpt2") {
+		return Lpt2Port;
+	}
+	if (name == "lpt3") {
+		return Lpt3Port;
+	}
 	return Lpt1Port;
 }
 
@@ -117,7 +121,7 @@ void PRINTER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 	auto section = conf->AddSection("printer");
-	auto& s = *static_cast<SectionProp*>(section);
+	auto& s      = *static_cast<SectionProp*>(section);
 
 	using enum Property::Changeable::Value;
 
@@ -188,42 +192,50 @@ void PRINTER_Init()
 	}
 
 	const auto port_name = section.GetString("printer_port");
-	const auto lpt_port = lpt_port_for_name(port_name);
+	const auto lpt_port  = lpt_port_for_name(port_name);
 
 	if (IO_HasWriteHandler(lpt_port)) {
 		LOG_WARNING(
 		        "PRINTER: Port %s (%03xh) is already in use by another device;"
 		        " printer disabled. Set 'printer_port' to a free LPT port.",
-		        port_name.c_str(), lpt_port);
+		        port_name.c_str(),
+		        lpt_port);
 		return;
 	}
 
-	state.docpath = section.GetString("docpath");
+	state.docpath       = section.GetString("docpath");
 	state.output_format = section.GetString("printoutput");
 
-	const auto dpi    = static_cast<uint16_t>(section.GetInt("dpi"));
-	const auto width  = static_cast<uint16_t>(section.GetInt("width"));
-	const auto height = static_cast<uint16_t>(section.GetInt("height"));
+	const auto dpi       = static_cast<uint16_t>(section.GetInt("dpi"));
+	const auto width     = static_cast<uint16_t>(section.GetInt("width"));
+	const auto height    = static_cast<uint16_t>(section.GetInt("height"));
 	const auto multipage = section.GetBool("multipage");
-	const auto timeout = section.GetInt("timeout");
+	const auto timeout   = section.GetInt("timeout");
 
-	PRINTER_Configure(dpi, width, height,
+	PRINTER_Configure(dpi,
+	                  width,
+	                  height,
 	                  state.docpath.c_str(),
 	                  state.output_format.c_str(),
-	                  multipage, timeout);
+	                  multipage,
+	                  timeout);
 
 	install_io_handlers(lpt_port);
 
 	if (!mapper_handler_registered) {
-		MAPPER_AddHandler(formfeed_handler, SDL_SCANCODE_F2, PRIMARY_MOD,
-		                  "ejectpage", "Eject page");
+		MAPPER_AddHandler(formfeed_handler,
+		                  SDL_SCANCODE_F2,
+		                  PRIMARY_MOD,
+		                  "ejectpage",
+		                  "Eject page");
 		mapper_handler_registered = true;
 	}
 
 	state.active = true;
 
 	LOG_MSG("PRINTER: Initialised virtual ESC/P2 printer on %s (%03xh)",
-	        port_name.c_str(), lpt_port);
+	        port_name.c_str(),
+	        lpt_port);
 }
 
 void PRINTER_Destroy()

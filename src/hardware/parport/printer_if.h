@@ -9,11 +9,11 @@
 
 #include <cstdint>
 
-uint64_t PRINTER_ReadData(uint64_t port,uint64_t iolen);
-void PRINTER_WriteData(uint64_t port,uint64_t val,uint64_t iolen);
-uint64_t PRINTER_ReadStatus(uint64_t port,uint64_t iolen);
-void PRINTER_WriteControl(uint64_t port,uint64_t val, uint64_t iolen);
-uint64_t PRINTER_ReadControl(uint64_t port,uint64_t iolen);
+uint64_t PRINTER_ReadData(uint64_t port, uint64_t iolen);
+void PRINTER_WriteData(uint64_t port, uint64_t val, uint64_t iolen);
+uint64_t PRINTER_ReadStatus(uint64_t port, uint64_t iolen);
+void PRINTER_WriteControl(uint64_t port, uint64_t val, uint64_t iolen);
+uint64_t PRINTER_ReadControl(uint64_t port, uint64_t iolen);
 
 bool PRINTER_IsInited();
 
