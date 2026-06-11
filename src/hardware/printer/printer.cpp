@@ -13,6 +13,7 @@
 #include "printer_charmaps.h"
 #include "printer_if.h"
 #include <math.h>
+#include <vector>
 
 #include "hardware/pic.h" // for timeout
 #include "utils/checks.h"
@@ -1853,7 +1854,6 @@ void CPrinter::OutputPage()
 
 		png_structp png_ptr;
 		png_infop info_ptr;
-		png_bytep* row_pointers;
 		png_color palette[256];
 		uint64_t i;
 
@@ -1908,29 +1908,24 @@ void CPrinter::OutputPage()
 
 		SDL_LockSurface(page);
 
-		// Allocate an array of scanline pointers
-		row_pointers = reinterpret_cast<png_bytep*>(
-		        malloc(page->h * sizeof(png_bytep)));
+		// Array of scanline pointers, owned by std::vector so we don't
+		// need to manually free it before returning.
+		std::vector<png_bytep> row_pointers(page->h);
 		for (i = 0; static_cast<int>(i) < page->h; i++) {
-			row_pointers[i] = (static_cast<uint8_t*>(page->pixels) + (i * page->pitch));
+			row_pointers[i] = static_cast<uint8_t*>(page->pixels) +
+			                  (i * page->pitch);
 		}
 
 		// tell the png library what to encode.
-		png_set_rows(png_ptr, info_ptr, row_pointers);
+		png_set_rows(png_ptr, info_ptr, row_pointers.data());
 
 		// Write image to file
 		png_write_png(png_ptr, info_ptr, 0, nullptr);
 
 		SDL_UnlockSurface(page);
 
-		/*close file*/
 		fclose(fp);
-
-		/*Destroy PNG structs*/
 		png_destroy_write_struct(&png_ptr, &info_ptr);
-
-		/*clean up dynamically allocated RAM.*/
-		free(row_pointers);
 	}
 #endif
 	else if (strcasecmp(output, "ps") == 0) {
