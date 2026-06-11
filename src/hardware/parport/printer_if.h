@@ -9,11 +9,11 @@
 
 #include <cstdint>
 
-Bitu PRINTER_readdata(Bitu port,Bitu iolen);
-void PRINTER_writedata(Bitu port,Bitu val,Bitu iolen);
-Bitu PRINTER_readstatus(Bitu port,Bitu iolen);
-void PRINTER_writecontrol(Bitu port,Bitu val, Bitu iolen);
-Bitu PRINTER_readcontrol(Bitu port,Bitu iolen);
+uint64_t PRINTER_readdata(uint64_t port,uint64_t iolen);
+void PRINTER_writedata(uint64_t port,uint64_t val,uint64_t iolen);
+uint64_t PRINTER_readstatus(uint64_t port,uint64_t iolen);
+void PRINTER_writecontrol(uint64_t port,uint64_t val, uint64_t iolen);
+uint64_t PRINTER_readcontrol(uint64_t port,uint64_t iolen);
 
 bool PRINTER_isInited();
 
