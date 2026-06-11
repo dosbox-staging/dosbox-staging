@@ -119,7 +119,7 @@ CPrinter::CPrinter(Bit16u dpi, const Bit16u width, const Bit16u height, char* ou
 		// Win32 host-printer pass-through removed (out of scope).
 		LOG(LOG_MISC,LOG_NORMAL)("PRINTER: Enabled");
 	}
-};
+}
 
 void CPrinter::resetPrinterHard()
 {
@@ -185,7 +185,7 @@ CPrinter::~CPrinter(void)
 		page = NULL;
 		FT_Done_FreeType(FTlib);
 	}
-};
+}
 
 void CPrinter::selectCodepage(const Bit16u cp)
 {
@@ -1120,6 +1120,7 @@ bool CPrinter::processCommandChar(const Bit8u ch)
 		curX = leftMargin;
 		if (!autoFeed)
 			return true;
+		[[fallthrough]];
 	case 0x0a:		// Line feed
 		if (style & STYLE_DOUBLEWIDTHONELINE)
 		{
@@ -1545,7 +1546,7 @@ static void findNextName(const char* front, const char* ext, char* fname)
 #else 
 		const char* const pathstring = "/%s%d%s";
 #endif
-		sprintf(fname+strlen(fname), pathstring, front,i++,ext);
+		sprintf(fname+strlen(fname), pathstring, front, static_cast<int>(i++), ext);
 		test = fopen(fname, "rb");
 		if (test != NULL)
 			fclose(test);

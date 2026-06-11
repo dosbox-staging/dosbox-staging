@@ -283,6 +283,7 @@ const CHARMAP charmap[] = {
 	{857, cp857Map},
 	{860, cp860Map},
 	{861, cp861Map},
+	{862, cp862Map},
 	{863, cp863Map},
 	{864, cp864Map},
 	{865, cp865Map},
