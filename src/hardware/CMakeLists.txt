@@ -39,6 +39,9 @@ target_sources(dosboxcommon PRIVATE
   network/ipxserver.cpp
   network/ne2000.cpp
 
+  parport/printer.cpp
+  parport/printer_charmaps.cpp
+
   serialport/misc_util.cpp
   serialport/nullmodem.cpp
   serialport/serialdummy.cpp
@@ -89,6 +92,7 @@ target_link_libraries(dosboxcommon PRIVATE
   nuked
   plmpeg
   PkgConfig::SPEEXDSP
+  Freetype::Freetype
 )
 
 if (C_MANYMOUSE)
