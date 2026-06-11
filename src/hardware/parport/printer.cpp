@@ -1969,14 +1969,50 @@ bool PRINTER_isInited() {
 	return inited;
 }
 
-// Config-reading, IO-handler installation, and mapper key binding have
-// been moved to printer_glue.cpp to keep this file's coupling to staging
-// limited to the few API renames forced by upstream drift. The free
-// functions in this file still expose the printer's public C interface:
-//   PRINTER_readdata / writedata / readstatus / writecontrol / readcontrol
-//   PRINTER_isInited
-// plus the static FormFeed() for the timeout path.
-//
-// PRINTER_Init lives in printer_glue.cpp.
+// Config-reading, IO-handler installation, and mapper key binding live in
+// printer_glue.cpp. This file exposes the C-style hooks that printer_glue
+// drives:
+//   PRINTER_Configure   -- writes the static config values (dpi, paper
+//                          size, output format, etc.) that the lazy
+//                          CPrinter constructor reads on first use.
+//   PRINTER_FormFeed    -- public wrapper around the static FormFeed for
+//                          the mapper handler.
+//   PRINTER_Reset       -- destroys the CPrinter singleton (flushes any
+//                          open multipage doc) so Destroy/Init cycles
+//                          work cleanly.
+//   PRINTER_isInited    -- queried by printer_glue and lpt_dac to
+//                          coordinate port ownership.
+
+void PRINTER_Configure(uint16_t dpi, uint16_t width, uint16_t height,
+                       const char* docpath, const char* output_format,
+                       bool multipage, int timeout_ms)
+{
+	confdpi = dpi;
+	confwidth = width;
+	confheight = height;
+	document_path = docpath;
+	strncpy(&confoutputDevice[0], output_format,
+	        sizeof(confoutputDevice) - 1);
+	confoutputDevice[sizeof(confoutputDevice) - 1] = 0;
+	confmultipageOutput = multipage;
+	printer_timout = timeout_ms;
+	timeout_dirty = (printer_timout == 0);
+	inited = true;
+}
+
+void PRINTER_FormFeed(bool pressed)
+{
+	FormFeed(pressed);
+}
+
+void PRINTER_Reset()
+{
+	PIC_RemoveEvents(PRINTER_EventHandler);
+	if (defaultPrinter) {
+		delete defaultPrinter;
+		defaultPrinter = NULL;
+	}
+	inited = false;
+}
 
 #endif

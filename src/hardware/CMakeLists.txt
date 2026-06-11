@@ -41,6 +41,7 @@ target_sources(dosboxcommon PRIVATE
 
   parport/printer.cpp
   parport/printer_charmaps.cpp
+  parport/printer_glue.cpp
 
   serialport/misc_util.cpp
   serialport/nullmodem.cpp
