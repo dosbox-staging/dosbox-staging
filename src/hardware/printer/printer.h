@@ -20,8 +20,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#define Z_BEST_COMPRESSION 9
-#define Z_DEFAULT_STRATEGY 0
+// zlib compression levels duplicated locally to avoid pulling in zlib.h.
+constexpr int ZBestCompression = 9;
+constexpr int ZDefaultStrategy = 0;
 
 #define STYLE_PROP               0x01
 #define STYLE_CONDENSED          0x02
@@ -46,7 +47,9 @@
 #define QUALITY_DRAFT 0x01
 #define QUALITY_LQ    0x02
 
-#define COLOR_BLACK 7 << 5
+// Palette is split into 8 sub-palettes of 32 colours each, indexed by a
+// 3-bit colour ID in the top 3 bits. Black is sub-palette 7.
+constexpr uint8_t ColorBlack = 7 << 5;
 
 enum Typeface {
 	roman = 0,
@@ -138,6 +141,23 @@ private:
 
 	// Output current page
 	void OutputPage();
+
+	// Decode a little-endian 16-bit ESC/P2 parameter starting at params[i].
+	uint16_t Param16(int i) const
+	{
+		return static_cast<uint16_t>(params[i + 1] * 256 + params[i]);
+	}
+
+	// Current head position expressed as a pixel coordinate at the
+	// configured DPI.
+	uint64_t PixX() const
+	{
+		return static_cast<uint64_t>(floor(cur_x * dpi + 0.5));
+	}
+	uint64_t PixY() const
+	{
+		return static_cast<uint64_t>(floor(cur_y * dpi + 0.5));
+	}
 
 	// Prints out a byte using ASCII85 encoding (only outputs something
 	// every four bytes). When b>255, closes the ASCII85 string
