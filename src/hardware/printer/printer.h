@@ -18,6 +18,7 @@
 #define __PRINTER_H
 
 #include "misc/types.h"
+#include "utils/bit_view.h"
 
 #include <png.h>
 #include "SDL.h"
@@ -29,48 +30,63 @@
 constexpr int ZBestCompression = 9;
 constexpr int ZDefaultStrategy = 0;
 
-#define STYLE_PROP               0x01
-#define STYLE_CONDENSED          0x02
-#define STYLE_BOLD               0x04
-#define STYLE_DOUBLESTRIKE       0x08
-#define STYLE_DOUBLEWIDTH        0x10
-#define STYLE_ITALICS            0x20
-#define STYLE_UNDERLINE          0x40
-#define STYLE_SUPERSCRIPT        0x80
-#define STYLE_SUBSCRIPT          0x100
-#define STYLE_STRIKETHROUGH      0x200
-#define STYLE_OVERSCORE          0x400
-#define STYLE_DOUBLEWIDTHONELINE 0x800
-#define STYLE_DOUBLEHEIGHT       0x1000
+// Currently-active text style flags. Modelled on LptStatusRegister in
+// src/hardware/parallelport/lpt.h: writes go through the named bit_view members,
+// reads through either the members or the 'data' field for masking.
+union PrinterStyle {
+	uint16_t data = 0;
+	bit_view<0, 1> prop;
+	bit_view<1, 1> condensed;
+	bit_view<2, 1> bold;
+	bit_view<3, 1> doublestrike;
+	bit_view<4, 1> doublewidth;
+	bit_view<5, 1> italics;
+	bit_view<6, 1> underline;
+	bit_view<7, 1> superscript;
+	bit_view<8, 1> subscript;
+	bit_view<9, 1> strikethrough;
+	bit_view<10, 1> overscore;
+	bit_view<11, 1> doublewidth_oneline;
+	bit_view<12, 1> doubleheight;
+};
 
-#define SCORE_NONE         0x00
-#define SCORE_SINGLE       0x01
-#define SCORE_DOUBLE       0x02
-#define SCORE_SINGLEBROKEN 0x05
-#define SCORE_DOUBLEBROKEN 0x06
+enum class ScoreType : uint8_t {
+	None         = 0x00,
+	Single       = 0x01,
+	Double       = 0x02,
+	SingleBroken = 0x05,
+	DoubleBroken = 0x06,
+};
 
-#define QUALITY_DRAFT 0x01
-#define QUALITY_LQ    0x02
+enum class PrintQuality : uint8_t {
+	// Power-on default. Not yet selected by the application via ESC x.
+	// Treated as 'not Draft' by code that checks for the draft mode
+	// specifically, matching the upstream behaviour where this byte
+	// was indeterminate / typically zero before first use.
+	None  = 0x00,
+	Draft = 0x01,
+	Lq    = 0x02,
+};
 
 // Palette is split into 8 sub-palettes of 32 colours each, indexed by a
 // 3-bit colour ID in the top 3 bits. Black is sub-palette 7.
 constexpr uint8_t ColorBlack = 7 << 5;
 
-enum Typeface {
-	roman = 0,
-	sansserif,
-	courier,
-	prestige,
-	script,
-	ocrb,
-	ocra,
-	orator,
-	orators,
-	scriptc,
-	romant,
-	sansserifh,
-	svbusaba = 30,
-	svjittra = 31
+enum class Typeface {
+	Roman = 0,
+	SansSerif,
+	Courier,
+	Prestige,
+	Script,
+	OcrB,
+	OcrA,
+	Orator,
+	OratorS,
+	ScriptC,
+	RomanT,
+	SansSerifH,
+	Svbusaba = 30,
+	Svjittra = 31,
 };
 
 class Printer {
@@ -207,15 +223,15 @@ private:
 	// Buffer for the read parameters.
 	uint8_t params[20] = {};
 
-	// Bitmask of currently active text styles (see STYLE_* constants).
-	uint16_t style = 0;
+	// Bitmask of currently active text styles.
+	PrinterStyle style = {};
 
 	// CPI value set by program and the actual one (taking font types into
 	// account).
 	Real64 cpi = 0.0, act_cpi = 0.0;
 
-	// Score for lines (see SCORE_* constants).
-	uint8_t score = 0;
+	// Score (underline / strikethrough / overscore) style for lines.
+	ScoreType score = ScoreType::None;
 
 	// Margins of the page (in inch).
 	Real64 top_margin = 0.0, bottom_margin = 0.0, right_margin = 0.0,
@@ -241,11 +257,11 @@ private:
 	// Currently selected character table / charset.
 	uint8_t cur_char_table = 0;
 
-	// Print quality (see QUALITY_* constants).
-	uint8_t print_quality = 0;
+	// Print quality.
+	PrintQuality print_quality = PrintQuality::None;
 
 	// Typeface used in LQ printing mode.
-	Typeface lq_typeface = roman;
+	Typeface lq_typeface = Typeface::Roman;
 
 	// Extra space between two characters (set by program, in inch).
 	Real64 extra_intra_space = 0.0;

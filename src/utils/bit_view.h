@@ -119,8 +119,8 @@ private:
 	static_assert(view_width > 0,
 	              "the bit_view's width needs to span at least one bit");
 
-	static_assert(view_index + view_width <= std::numeric_limits<uint8_t>::digits,
-	              "the bit_view's extents need to fit within an uint8_t data type");
+	static_assert(view_index + view_width <= std::numeric_limits<data_type>::digits,
+	              "the bit_view's extents need to fit within the deduced data type");
 
 	// ensure the right-hand-side fits in the data type
 	template <typename rhs_type>
