@@ -23,7 +23,8 @@
 #include "printer_png.h"
 #include "utils/string_utils.h"
 
-#include "hardware/pic.h" // for timeout
+// PIC_AddEvent / PIC_RemoveEvents drive the form-feed timeout.
+#include "hardware/pic.h"
 #include "utils/checks.h"
 
 CHECK_NARROWING();
@@ -86,14 +87,17 @@ Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
 			palette->colors[i].g = 255;
 			palette->colors[i].b = 255;
 		}
-		FillPalette(0, 0, 0, 1, palette);     // 001 black-as-magenta slot
-		FillPalette(0, 255, 0, 1, palette);   // 001 magenta
-		FillPalette(255, 0, 0, 2, palette);   // 010 cyan
-		FillPalette(255, 255, 0, 3, palette); // 011 violet
-		FillPalette(0, 0, 255, 4, palette);   // 100 yellow
-		FillPalette(0, 255, 255, 5, palette); // 101 red
-		FillPalette(255, 0, 255, 6, palette); // 110 green
-		FillPalette(255, 255, 255, 7, palette); // 111 black
+		// Eight sub-palettes (colour ID 1..7 in the upper 3 bits of
+		// each pixel byte; ID 0 is the all-white page background
+		// initialised above).
+		FillPalette(0, 0, 0, 1, palette);
+		FillPalette(0, 255, 0, 1, palette);
+		FillPalette(255, 0, 0, 2, palette);
+		FillPalette(255, 255, 0, 3, palette);
+		FillPalette(0, 0, 255, 4, palette);
+		FillPalette(0, 255, 255, 5, palette);
+		FillPalette(255, 0, 255, 6, palette);
+		FillPalette(255, 255, 255, 7, palette);
 
 		color = ColorBlack;
 
@@ -195,7 +199,8 @@ void Printer::SelectCodepage(const uint16_t codepage)
 	} /*
 	 switch(cp)
 	 {
-	 case 0: // Italics, use cp437
+	 // Italics, use cp437
+	 case 0:
 	 case 437:
 	         mapToUse = (uint16_t*)&cp437_map;
 	         break;
@@ -392,12 +397,11 @@ void Printer::PrintChar(uint8_t ch)
 	// Draw lines if desired
 	if ((score != ScoreType::None) &&
 	    (style.underline || style.strikethrough || style.overscore)) {
-		// Find out where to put the line
+		// Find out where to put the line.
+		// TODO height is in fixed-point format from FreeType.
 		uint16_t lineY      = static_cast<uint16_t>(PixY());
 		const double height = static_cast<double>(
-		        cur_font->size->metrics.height >> 6); // TODO height is
-		                                              // fixed point
-		                                              // madness...
+		        cur_font->size->metrics.height >> 6);
 
 		if (style.underline) {
 			lineY = static_cast<uint16_t>(
@@ -416,14 +420,19 @@ void Printer::PrintChar(uint8_t ch)
 		DrawLine(lineStart,
 		         PixX(),
 		         lineY,
-		         score == ScoreType::SingleBroken || score == ScoreType::DoubleBroken);
+		         score == ScoreType::SingleBroken ||
+		                 score == ScoreType::DoubleBroken);
 
 		// draw second line if needed
-		if ((score == ScoreType::Double) || (score == ScoreType::DoubleBroken)) {
+		if ((score == ScoreType::Double) ||
+		    (score == ScoreType::DoubleBroken)) {
 			// score is DOUBLE or DOUBLEBROKEN here; the upstream
-			// expression also tested ScoreType::SingleBroken which is
-			// unreachable in this branch.
-			DrawLine(lineStart, PixX(), lineY + 5, score == ScoreType::DoubleBroken);
+			// expression also tested ScoreType::SingleBroken which
+			// is unreachable in this branch.
+			DrawLine(lineStart,
+			         PixX(),
+			         lineY + 5,
+			         score == ScoreType::DoubleBroken);
 		}
 	}
 	// If the next character would go beyond the right margin, line-wrap.
@@ -489,8 +498,7 @@ std::optional<std_fs::path> find_next_name(const std::string& prefix,
 	const std_fs::path docdir = document_path.empty() ? std_fs::path{"."}
 	                                                  : document_path;
 	for (int i = 1; i <= FindNextNameAttempts; ++i) {
-		std_fs::path candidate = docdir /
-		                         (prefix + std::to_string(i) + ext);
+		std_fs::path candidate = docdir / (prefix + std::to_string(i) + ext);
 		std::error_code ec;
 		if (!std_fs::exists(candidate, ec)) {
 			return candidate;
@@ -678,9 +686,11 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 	// Data is strobed to the printer on the falling edge of the STROBE bit.
 	if (!(val & CtrlStrobe) && (lpt.control & CtrlStrobe)) {
 		if (!default_printer) {
-			default_printer = std::make_unique<Printer>(
-			        conf_dpi, conf_width, conf_height,
-			        conf_output_device, conf_multipage_output);
+			default_printer = std::make_unique<Printer>(conf_dpi,
+			                                            conf_width,
+			                                            conf_height,
+			                                            conf_output_device,
+			                                            conf_multipage_output);
 		}
 		default_printer->PrintChar(lpt.data);
 		if (!timeout_dirty) {
@@ -733,10 +743,10 @@ void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t 
                        const char* docpath, const char* output_format,
                        const bool multipage, const int timeout_ms)
 {
-	conf_dpi      = dpi;
-	conf_width    = width;
-	conf_height   = height;
-	document_path = docpath ? docpath : "";
+	conf_dpi              = dpi;
+	conf_width            = width;
+	conf_height           = height;
+	document_path         = docpath ? docpath : "";
 	conf_output_device    = output_format ? output_format : "";
 	conf_multipage_output = multipage;
 	printer_timeout       = timeout_ms;

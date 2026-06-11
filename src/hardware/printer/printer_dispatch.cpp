@@ -28,213 +28,206 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		num_param          = 0;
 
 		switch (esc_cmd) {
-		case 0x02: // Undocumented
-		case 0x0a: // Reverse line feed
-		           // (ESC LF)
-		case 0x0c: // Return to top of current page
-		           // (ESC FF)
-		case 0x0e: // Select double-width printing (one line)
-		           // (ESC SO)
-		case 0x0f: // Select condensed printing
-		           // (ESC SI)
-		case 0x23: // Cancel MSB control
-		           // (ESC #)
-		case 0x30: // Select 1/8-inch line spacing
-		           // (ESC 0)
-		case 0x31: // Select 7/60-inch line spacing
-		           // (ESC 1)
-		case 0x32: // Select 1/6-inch line spacing
-		           // (ESC 2)
-		case 0x34: // Select italic font
-		           // (ESC 4)
-		case 0x35: // Cancel italic font
-		           // (ESC 5)
-		case 0x36: // Enable printing of upper control codes
-		           // (ESC 6)
-		case 0x37: // Enable upper control codes
-		           // (ESC 7)
-		case 0x38: // Disable paper-out detector
-		           // (ESC 8)
-		case 0x39: // Enable paper-out detector
-		           // (ESC 9)
-		case 0x3c: // Unidirectional mode (one line)
-		           // (ESC <)
-		case 0x3d: // Set MSB to 0
-		           // (ESC =)
-		case 0x3e: // Set MSB to 1
-		           // (ESC >)
-		case 0x40: // Initialize printer
-		           // (ESC @)
-		case 0x45: // Select bold font
-		           // (ESC E)
-		case 0x46: // Cancel bold font
-		           // (ESC F)
-		case 0x47: // Select double-strike printing
-		           // (ESC G)
-		case 0x48: // Cancel double-strike printing
-		           // (ESC H)
-		case 0x4d: // Select 10.5-point, 12-cpi
-		           // (ESC M)
-		case 0x4f: // Cancel bottom margin [conflict]
-		           // (ESC O)
-		case 0x50: // Select 10.5-point, 10-cpi
-		           // (ESC P)
-		case 0x54: // Cancel superscript/subscript printing
-		           // (ESC T)
-		case 0x5e: // Enable printing of all character codes on next
-		           // character	(ESC ^)
-		case 0x67: // Select 10.5-point, 15-cpi
-		           // (ESC g)
+		// Undocumented
+		case 0x02:
+		// (ESC LF) — Reverse line feed
+		case 0x0a:
+		// (ESC FF) — Return to top of current page
+		case 0x0c:
+		// (ESC SO) — Select double-width printing (one line)
+		case 0x0e:
+		// (ESC SI) — Select condensed printing
+		case 0x0f:
+		// (ESC #) — Cancel MSB control
+		case 0x23:
+		// (ESC 0) — Select 1/8-inch line spacing
+		case 0x30:
+		// (ESC 1) — Select 7/60-inch line spacing
+		case 0x31:
+		// (ESC 2) — Select 1/6-inch line spacing
+		case 0x32:
+		// (ESC 4) — Select italic font
+		case 0x34:
+		// (ESC 5) — Cancel italic font
+		case 0x35:
+		// (ESC 6) — Enable printing of upper control codes
+		case 0x36:
+		// (ESC 7) — Enable upper control codes
+		case 0x37:
+		// (ESC 8) — Disable paper-out detector
+		case 0x38:
+		// (ESC 9) — Enable paper-out detector
+		case 0x39:
+		// (ESC <) — Unidirectional mode (one line)
+		case 0x3c:
+		// (ESC =) — Set MSB to 0
+		case 0x3d:
+		// (ESC >) — Set MSB to 1
+		case 0x3e:
+		// (ESC @) — Initialize printer
+		case 0x40:
+		// (ESC E) — Select bold font
+		case 0x45:
+		// (ESC F) — Cancel bold font
+		case 0x46:
+		// (ESC G) — Select double-strike printing
+		case 0x47:
+		// (ESC H) — Cancel double-strike printing
+		case 0x48:
+		// (ESC M) — Select 10.5-point, 12-cpi
+		case 0x4d:
+		// (ESC O) — Cancel bottom margin [conflict]
+		case 0x4f:
+		// (ESC P) — Select 10.5-point, 10-cpi
+		case 0x50:
+		// (ESC T) — Cancel superscript/subscript printing
+		case 0x54:
+		// (ESC ^) — Enable printing of all character codes on next
+		// character
+		case 0x5e:
+		// (ESC g) — Select 10.5-point, 15-cpi
+		case 0x67:
 
-		case 0x834: // Select italic font
-		            // (FS 4)	(= ESC 4)
-		case 0x835: // Cancel italic font
-		            // (FS 5)	(= ESC 5)
-		case 0x846: // Select forward feed mode
-		            // (FS F)
-		case 0x852: // Select reverse feed mode
-		            // (FS R)
-			needed_param = 0;
-			break;
+		// (FS 4)	(= ESC 4) — Select italic font
+		case 0x834:
+		// (FS 5)	(= ESC 5) — Cancel italic font
+		case 0x835:
+		// (FS F) — Select forward feed mode
+		case 0x846:
+		// (FS R) — Select reverse feed mode
+		case 0x852: needed_param = 0; break;
 
-		case 0x19: // Control paper loading/ejecting
-		           // (ESC EM)
-		case 0x20: // Set intercharacter space
-		           // (ESC SP)
-		case 0x21: // Master select
-		           // (ESC !)
-		case 0x2b: // Set n/360-inch line spacing
-		           // (ESC +)
-		case 0x2d: // Turn underline on/off
-		           // (ESC -)
-		case 0x2f: // Select vertical tab channel
-		           // (ESC /)
-		case 0x33: // Set n/180-inch line spacing
-		           // (ESC 3)
-		case 0x41: // Set n/60-inch line spacing
-		           // (ESC A)
-		case 0x43: // Set page length in lines
-		           // (ESC C)
-		case 0x49: // Select character type and print pitch
-		           // (ESC I)
-		case 0x4a: // Advance print position vertically
-		           // (ESC J)
-		case 0x4e: // Set bottom margin
-		           // (ESC N)
-		case 0x51: // Set right margin
-		           // (ESC Q)
-		case 0x52: // Select an international character set
-		           // (ESC R)
-		case 0x53: // Select superscript/subscript printing
-		           // (ESC S)
-		case 0x55: // Turn unidirectional mode on/off
-		           // (ESC U)
+		// (ESC EM) — Control paper loading/ejecting
+		case 0x19:
+		// (ESC SP) — Set intercharacter space
+		case 0x20:
+		// (ESC !) — Master select
+		case 0x21:
+		// (ESC +) — Set n/360-inch line spacing
+		case 0x2b:
+		// (ESC -) — Turn underline on/off
+		case 0x2d:
+		// (ESC /) — Select vertical tab channel
+		case 0x2f:
+		// (ESC 3) — Set n/180-inch line spacing
+		case 0x33:
+		// (ESC A) — Set n/60-inch line spacing
+		case 0x41:
+		// (ESC C) — Set page length in lines
+		case 0x43:
+		// (ESC I) — Select character type and print pitch
+		case 0x49:
+		// (ESC J) — Advance print position vertically
+		case 0x4a:
+		// (ESC N) — Set bottom margin
+		case 0x4e:
+		// (ESC Q) — Set right margin
+		case 0x51:
+		// (ESC R) — Select an international character set
+		case 0x52:
+		// (ESC S) — Select superscript/subscript printing
+		case 0x53:
+		// (ESC U) — Turn unidirectional mode on/off
+		case 0x55:
 		// case 0x56: // Repeat data
 		// (ESC V)
-		case 0x57: // Turn double-width printing on/off
-		           // (ESC W)
-		case 0x61: // Select justification
-		           // (ESC a)
-		case 0x66: // Absolute horizontal tab in columns [conflict]
-		           // (ESC f)
-		case 0x68: // Select double or quadruple size
-		           // (ESC h)
-		case 0x69: // Immediate print
-		           // (ESC i)
-		case 0x6a: // Reverse paper feed
-		           // (ESC j)
-		case 0x6b: // Select typeface
-		           // (ESC k)
-		case 0x6c: // Set left margin
-		           // (ESC 1)
-		case 0x70: // Turn proportional mode on/off
-		           // (ESC p)
-		case 0x72: // Select printing color
-		           // (ESC r)
-		case 0x73: // Low-speed mode on/off
-		           // (ESC s)
-		case 0x74: // Select character table
-		           // (ESC t)
-		case 0x77: // Turn double-height printing on/off
-		           // (ESC w)
-		case 0x78: // Select LQ or draft
-		           // (ESC x)
-		case 0x7e: // Select/Deselect slash zero
-		           // (ESC ~)
+		// (ESC W) — Turn double-width printing on/off
+		case 0x57:
+		// (ESC a) — Select justification
+		case 0x61:
+		// (ESC f) — Absolute horizontal tab in columns [conflict]
+		case 0x66:
+		// (ESC h) — Select double or quadruple size
+		case 0x68:
+		// (ESC i) — Immediate print
+		case 0x69:
+		// (ESC j) — Reverse paper feed
+		case 0x6a:
+		// (ESC k) — Select typeface
+		case 0x6b:
+		// (ESC 1) — Set left margin
+		case 0x6c:
+		// (ESC p) — Turn proportional mode on/off
+		case 0x70:
+		// (ESC r) — Select printing color
+		case 0x72:
+		// (ESC s) — Low-speed mode on/off
+		case 0x73:
+		// (ESC t) — Select character table
+		case 0x74:
+		// (ESC w) — Turn double-height printing on/off
+		case 0x77:
+		// (ESC x) — Select LQ or draft
+		case 0x78:
+		// (ESC ~) — Select/Deselect slash zero
+		case 0x7e:
 
-		case 0x832: // Select 1/6-inch line spacing
-		            // (FS 2)	(= ESC 2)
-		case 0x833: // Set n/360-inch line spacing
-		            // (FS 3)	(= ESC +)
-		case 0x841: // Set n/60-inch line spacing
-		            // (FS A)	(= ESC A)
-		case 0x843: // Select LQ type style
-		            // (FS C)	(= ESC k)
-		case 0x845: // Select character width
-		            // (FS E)
-		case 0x849: // Select character table
-		            // (FS I)	(= ESC t)
-		case 0x853: // Select High Speed/High Density elite pitch
-		            // (FS S)
-		case 0x856: // Turn double-height printing on/off
-		            // (FS V)	(= ESC w)
-			needed_param = 1;
-			break;
+		// (FS 2)	(= ESC 2) — Select 1/6-inch line spacing
+		case 0x832:
+		// (FS 3)	(= ESC +) — Set n/360-inch line spacing
+		case 0x833:
+		// (FS A)	(= ESC A) — Set n/60-inch line spacing
+		case 0x841:
+		// (FS C)	(= ESC k) — Select LQ type style
+		case 0x843:
+		// (FS E) — Select character width
+		case 0x845:
+		// (FS I)	(= ESC t) — Select character table
+		case 0x849:
+		// (FS S) — Select High Speed/High Density elite pitch
+		case 0x853:
+		// (FS V)	(= ESC w) — Turn double-height printing on/off
+		case 0x856: needed_param = 1; break;
 
-		case 0x24:  // Set absolute horizontal print position
-		            // (ESC $)
-		case 0x3f:  // Reassign bit-image mode
-		            // (ESC ?)
-		case 0x4b:  // Select 60-dpi graphics
-		            // (ESC K)
-		case 0x4c:  // Select 120-dpi graphics
-		            // (ESC L)
-		case 0x59:  // Select 120-dpi, double-speed graphics
-		            // (ESC Y)
-		case 0x5a:  // Select 240-dpi graphics
-		            // (ESC Z)
-		case 0x5c:  // Set relative horizontal print position
-		            // (ESC \)
-		case 0x63:  // Set horizontal motion index (HMI)	[conflict]
-		            // (ESC c)
-		case 0x65:  // Set vertical tab stops every n lines
-		            // (ESC e)
-		case 0x85a: // Print 24-bit hex-density graphics
-		            // (FS Z)
-			needed_param = 2;
-			break;
+		// (ESC $) — Set absolute horizontal print position
+		case 0x24:
+		// (ESC ?) — Reassign bit-image mode
+		case 0x3f:
+		// (ESC K) — Select 60-dpi graphics
+		case 0x4b:
+		// (ESC L) — Select 120-dpi graphics
+		case 0x4c:
+		// (ESC Y) — Select 120-dpi, double-speed graphics
+		case 0x59:
+		// (ESC Z) — Select 240-dpi graphics
+		case 0x5a:
+		// (ESC \) — Set relative horizontal print position
+		case 0x5c:
+		// (ESC c) — Set horizontal motion index (HMI)	[conflict]
+		case 0x63:
+		// (ESC e) — Set vertical tab stops every n lines
+		case 0x65:
+		// (FS Z) — Print 24-bit hex-density graphics
+		case 0x85a: needed_param = 2; break;
 
-		case 0x2a: // Select bit image
-		           // (ESC *)
-		case 0x58: // Select font by pitch and point [conflict]
-		           // (ESC X)
-			needed_param = 3;
-			break;
+		// (ESC *) — Select bit image
+		case 0x2a:
+		// (ESC X) — Select font by pitch and point [conflict]
+		case 0x58: needed_param = 3; break;
 
-		case 0x5b: // Select character height, width, line spacing
-			needed_param = 7;
-			break;
+		// Select character height, width, line spacing
+		case 0x5b: needed_param = 7; break;
 
-		case 0x62: // Set vertical tabs in VFU channels
-		           // (ESC b)
-		case 0x42: // Set vertical tabs
-		           // (ESC B)
-			num_vert_tabs = 0;
-			return true;
-		case 0x44: // Set horizontal tabs
-		           // (ESC D)
-			num_horiz_tabs = 0;
-			return true;
-		case 0x25: // Select user-defined set
-		           // (ESC %)
-		case 0x26: // Define user-defined characters
-		           // (ESC &)
-		case 0x3a: // Copy ROM to RAM
-		           // (ESC :)
+		// (ESC b) — Set vertical tabs in VFU channels
+		case 0x62:
+		// (ESC B) — Set vertical tabs
+		case 0x42: num_vert_tabs = 0; return true;
+
+		// (ESC D) — Set horizontal tabs
+		case 0x44: num_horiz_tabs = 0; return true;
+
+		// (ESC %) — Select user-defined set
+		case 0x25:
+		// (ESC &) — Define user-defined characters
+		case 0x26:
+		// (ESC :) — Copy ROM to RAM
+		case 0x3a:
 			LOG_ERR("PRINTER: User-defined characters not supported");
 			return true;
-		case 0x28: // Two bytes sequence
-			return true;
+
+		// Two bytes sequence
+		case 0x28: return true;
+
 		default:
 			LOG_MSG("PRINTER: Unknown command %s (%02Xh) %c , unable to skip parameters.",
 			        (esc_cmd & 0x800) ? "FS" : "ESC",
@@ -256,29 +249,28 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		esc_cmd = 0x200 + ch;
 
 		switch (esc_cmd) {
-		case 0x242: // Bar code setup and print (ESC (B)
-		case 0x25e: // Print data as characters (ESC (^)
-			needed_param = 2;
-			break;
+		// Bar code setup and print (ESC (B)
+		case 0x242:
+		// Print data as characters (ESC (^)
+		case 0x25e: needed_param = 2; break;
 
-		case 0x255: // Set unit (ESC (U)
-			needed_param = 3;
-			break;
+		// Set unit (ESC (U)
+		case 0x255: needed_param = 3; break;
 
-		case 0x243: // Set page length in defined unit (ESC (C)
-		case 0x256: // Set absolute vertical print position (ESC (V)
-		case 0x276: // Set relative vertical print position (ESC (v)
-			needed_param = 4;
-			break;
+		// Set page length in defined unit (ESC (C)
+		case 0x243:
+		// Set absolute vertical print position (ESC (V)
+		case 0x256:
+		// Set relative vertical print position (ESC (v)
+		case 0x276: needed_param = 4; break;
 
-		case 0x274: // Assign character table (ESC (t)
-		case 0x22d: // Select line/score (ESC (-)
-			needed_param = 5;
-			break;
+		// Assign character table (ESC (t)
+		case 0x274:
+		// Select line/score (ESC (-)
+		case 0x22d: needed_param = 5; break;
 
-		case 0x263: // Set page format (ESC (c)
-			needed_param = 6;
-			break;
+		// Set page format (ESC (c)
+		case 0x263: needed_param = 6; break;
 
 		default:
 			// ESC ( commands are always followed by a "number of
@@ -339,35 +331,41 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 	if (esc_cmd != 0) {
 		switch (esc_cmd) {
-		case 0x02: // Undocumented
+		// Undocumented
+		case 0x02:
 			// Ignore
 			break;
 
-		case 0x0e: // Select double-width printing (one line) (ESC SO)
+		// Select double-width printing (one line) (ESC SO)
+		case 0x0e:
 			if (!multipoint) {
-				hmi = -1;
+				hmi                       = -1;
 				style.doublewidth_oneline = 1;
 				UpdateFont();
 			}
 			break;
 
-		case 0x0f: // Select condensed printing (ESC SI)
+		// Select condensed printing (ESC SI)
+		case 0x0f:
 			if (!multipoint && (cpi != 15.0)) {
-				hmi = -1;
+				hmi             = -1;
 				style.condensed = 1;
 				UpdateFont();
 			}
 			break;
 
-		case 0x19: // Control paper loading/ejecting (ESC EM)
+		// Control paper loading/ejecting (ESC EM)
+		case 0x19:
 			// We are not really loading paper, so most commands can
 			// be ignored
 			if (params[0] == 'R') {
-				NewPage(true, false); // TODO resetx?
+				// TODO confirm reset_x semantics here.
+				NewPage(true, false);
 			}
 			break;
 
-		case 0x20: // Set intercharacter space (ESC SP)
+		// Set intercharacter space (ESC SP)
+		case 0x20:
 			if (!multipoint) {
 				extra_intra_space = static_cast<Real64>(params[0]) /
 				                    (print_quality == PrintQuality::Draft
@@ -378,11 +376,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x21: // Master select (ESC !)
+		// Master select (ESC !)
+		case 0x21:
 			cpi = params[0] & 0x01 ? 12 : 10;
 
-			// Reset the first seven style bits (prop..superscript) and
-			// rebuild them from the master-select byte below.
+			// Reset the first seven style bits (prop..superscript)
+			// and rebuild them from the master-select byte below.
 			style.data &= 0xFF80;
 			if (params[0] & 0x02) {
 				style.prop = 1;
@@ -403,7 +402,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 				style.italics = 1;
 			}
 			if (params[0] & 0x80) {
-				score = ScoreType::Single;
+				score           = ScoreType::Single;
 				style.underline = 1;
 			}
 
@@ -412,12 +411,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		case 0x23: // Cancel MSB control (ESC #)
-			msb = 255;
-			break;
+		// Cancel MSB control (ESC #)
+		case 0x23: msb = 255; break;
 
-		case 0x24: // Set absolute horizontal print position (ESC $)
-		{
+		// Set absolute horizontal print position (ESC $)
+		case 0x24: {
 			Real64 unitSize = defined_unit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(60.0);
@@ -431,77 +429,82 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 		} break;
 
-		case 0x85a: // Print 24-bit hex-density graphics (FS Z)
+		// Print 24-bit hex-density graphics (FS Z)
+		case 0x85a:
 			SetupBitImage(40, static_cast<uint16_t>(Param16(0)));
 			break;
 
-		case 0x2a: // Select bit image (ESC *)
+		// Select bit image (ESC *)
+		case 0x2a:
 			SetupBitImage(params[0], static_cast<uint16_t>(Param16(1)));
 			break;
 
-		case 0x2b:  // Set n/360-inch line spacing (ESC +)
-		case 0x833: // Set n/360-inch line spacing (FS 3)
+		// Set n/360-inch line spacing (ESC +)
+		case 0x2b:
+		// Set n/360-inch line spacing (FS 3)
+		case 0x833:
 			line_spacing = static_cast<Real64>(params[0]) / 360;
 			break;
 
-		case 0x2d: // Turn underline on/off (ESC -)
+		// Turn underline on/off (ESC -)
+		case 0x2d:
 			if (params[0] == 0 || params[0] == 48) {
 				style.underline = 0;
 			}
 			if (params[0] == 1 || params[0] == 49) {
 				style.underline = 1;
-				score = ScoreType::Single;
+				score           = ScoreType::Single;
 			}
 			UpdateFont();
 			break;
 
-		case 0x2f: // Select vertical tab channel (ESC /)
+		// Select vertical tab channel (ESC /)
+		case 0x2f:
 			// Ignore
 			break;
 
-		case 0x30: // Select 1/8-inch line spacing (ESC 0)
-			line_spacing = static_cast<Real64>(1) / 8;
-			break;
+		// Select 1/8-inch line spacing (ESC 0)
+		case 0x30: line_spacing = static_cast<Real64>(1) / 8; break;
 
-		case 0x32: // Select 1/6-inch line spacing (ESC 2)
-			line_spacing = static_cast<Real64>(1) / 6;
-			break;
+		// Select 1/6-inch line spacing (ESC 2)
+		case 0x32: line_spacing = static_cast<Real64>(1) / 6; break;
 
-		case 0x33: // Set n/180-inch line spacing (ESC 3)
+		// Set n/180-inch line spacing (ESC 3)
+		case 0x33:
 			line_spacing = static_cast<Real64>(params[0]) / 180;
 			break;
 
-		case 0x34: // Select italic font (ESC 4)
+		// Select italic font (ESC 4)
+		case 0x34:
 			style.italics = 1;
 			UpdateFont();
 			break;
 
-		case 0x35: // Cancel italic font (ESC 5)
+		// Cancel italic font (ESC 5)
+		case 0x35:
 			style.italics = 0;
 			UpdateFont();
 			break;
 
-		case 0x36: // Enable printing of upper control codes (ESC 6)
-			print_upper_contr = true;
-			break;
+		// Enable printing of upper control codes (ESC 6)
+		case 0x36: print_upper_contr = true; break;
 
-		case 0x37: // Enable upper control codes (ESC 7)
-			print_upper_contr = false;
-			break;
+		// Enable upper control codes (ESC 7)
+		case 0x37: print_upper_contr = false; break;
 
-		case 0x3c: // Unidirectional mode (one line) (ESC <)
+		// Unidirectional mode (one line) (ESC <)
+		case 0x3c:
 			// We don't have a print head, so just ignore this
 			break;
 
-		case 0x3d: // Set MSB to 0 (ESC =)
-			msb = 0;
-			break;
+		// Set MSB to 0 (ESC =)
+		case 0x3d: msb = 0; break;
 
-		case 0x3e: // Set MSB to 1 (ESC >)
-			msb = 1;
-			break;
+		// Set MSB to 1 (ESC >)
+		case 0x3e: msb = 1; break;
 
-		case 0x3f: // Reassign bit-image mode (ESC ?)
+		// Reassign bit-image mode (ESC ?)
+		case 0x3f:
 			if (params[0] == 75) {
 				densk = params[1];
 			}
@@ -516,16 +519,17 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x40: // Initialize printer (ESC @)
-			ResetPrinter();
-			break;
+		// Initialize printer (ESC @)
+		case 0x40: ResetPrinter(); break;
 
-		case 0x41: // Set n/60-inch line spacing
+		// Set n/60-inch line spacing
+		case 0x41:
 		case 0x841:
 			line_spacing = static_cast<Real64>(params[0]) / 60;
 			break;
 
-		case 0x43: // Set page length in lines (ESC C)
+		// Set page length in lines (ESC C)
+		case 0x43:
 			if (params[0] != 0) {
 				page_height = bottom_margin = static_cast<Real64>(
 				                                      params[0]) *
@@ -539,25 +543,26 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x45: // Select bold font (ESC E)
+		// Select bold font (ESC E)
+		case 0x45:
 			style.bold = 1;
 			UpdateFont();
 			break;
 
-		case 0x46: // Cancel bold font (ESC F)
+		// Cancel bold font (ESC F)
+		case 0x46:
 			style.bold = 0;
 			UpdateFont();
 			break;
 
-		case 0x47: // Select dobule-strike printing (ESC G)
-			style.doublestrike = 1;
-			break;
+		// Select dobule-strike printing (ESC G)
+		case 0x47: style.doublestrike = 1; break;
 
-		case 0x48: // Cancel double-strike printing (ESC H)
-			style.doublestrike = 0;
-			break;
+		// Cancel double-strike printing (ESC H)
+		case 0x48: style.doublestrike = 0; break;
 
-		case 0x4a: // Advance print position vertically (ESC J n)
+		// Advance print position vertically (ESC J n)
+		case 0x4a:
 			cur_y += static_cast<Real64>(
 			        static_cast<Real64>(params[0]) / 180);
 			if (cur_y > bottom_margin) {
@@ -565,44 +570,52 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x4b: // Select 60-dpi graphics (ESC K)
+		// Select 60-dpi graphics (ESC K)
+		case 0x4b:
 			SetupBitImage(densk, static_cast<uint16_t>(Param16(0)));
 			break;
 
-		case 0x4c: // Select 120-dpi graphics (ESC L)
+		// Select 120-dpi graphics (ESC L)
+		case 0x4c:
 			SetupBitImage(densl, static_cast<uint16_t>(Param16(0)));
 			break;
 
-		case 0x4d: // Select 10.5-point, 12-cpi (ESC M)
+		// Select 10.5-point, 12-cpi (ESC M)
+		case 0x4d:
 			cpi        = 12;
 			hmi        = -1;
 			multipoint = false;
 			UpdateFont();
 			break;
 
-		case 0x4e: // Set bottom margin (ESC N)
+		// Set bottom margin (ESC N)
+		case 0x4e:
 			top_margin = 0.0;
 			bottom_margin = static_cast<Real64>(params[0]) * line_spacing;
 			break;
 
-		case 0x4f: // Cancel bottom (and top) margin
+		// Cancel bottom (and top) margin
+		case 0x4f:
 			top_margin    = 0.0;
 			bottom_margin = page_height;
 			break;
 
-		case 0x50: // Select 10.5-point, 10-cpi (ESC P)
+		// Select 10.5-point, 10-cpi (ESC P)
+		case 0x50:
 			cpi        = 10;
 			hmi        = -1;
 			multipoint = false;
 			UpdateFont();
 			break;
 
-		case 0x51: // Set right margin
+		// Set right margin
+		case 0x51:
 			right_margin = static_cast<Real64>(params[0] - 1.0) /
 			               static_cast<Real64>(cpi);
 			break;
 
-		case 0x52: // Select an international character set (ESC R)
+		// Select an international character set (ESC R)
+		case 0x52:
 			if (params[0] <= 13 || params[0] == 64) {
 				if (params[0] == 64) {
 					params[0] = 14;
@@ -623,7 +636,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x53: // Select superscript/subscript printing (ESC S)
+		// Select superscript/subscript printing (ESC S)
+		case 0x53:
 			if (params[0] == 0 || params[0] == 48) {
 				style.subscript = 1;
 			}
@@ -633,17 +647,20 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		case 0x54: // Cancel superscript/subscript printing (ESC T)
+		// Cancel superscript/subscript printing (ESC T)
+		case 0x54:
 			style.superscript = 0;
 			style.subscript   = 0;
 			UpdateFont();
 			break;
 
-		case 0x55: // Turn unidirectional mode on/off (ESC U)
+		// Turn unidirectional mode on/off (ESC U)
+		case 0x55:
 			// We don't have a print head, so just ignore this
 			break;
 
-		case 0x57: // Turn double-width printing on/off (ESC W)
+		// Turn double-width printing on/off (ESC W)
+		case 0x57:
 			if (!multipoint) {
 				hmi = -1;
 				if (params[0] == 0 || params[0] == 48) {
@@ -656,7 +673,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x58: // Select font by pitch and point (ESC X)
+		// Select font by pitch and point (ESC X)
+		case 0x58:
 			multipoint = true;
 			// Copy currently non-multipoint CPI if no value was set
 			// so far
@@ -682,53 +700,60 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		case 0x59: // Select 120-dpi, double-speed graphics (ESC Y)
+		// Select 120-dpi, double-speed graphics (ESC Y)
+		case 0x59:
 			SetupBitImage(densy, static_cast<uint16_t>(Param16(0)));
 			break;
 
-		case 0x5a: // Select 240-dpi graphics (ESC Z)
+		// Select 240-dpi graphics (ESC Z)
+		case 0x5a:
 			SetupBitImage(densz, static_cast<uint16_t>(Param16(0)));
 			break;
 
-		case 0x5c: // Set relative horizontal print position (ESC \)
-		{
+		// Set relative horizontal print position (ESC \)
+		case 0x5c: {
 			const int16_t toMove = static_cast<int16_t>(Param16(0));
 			Real64 unitSize      = defined_unit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(
-				        print_quality == PrintQuality::Draft ? 120.0
-				                                       : 180.0);
+				        print_quality == PrintQuality::Draft
+				                ? 120.0
+				                : 180.0);
 			}
 			cur_x += static_cast<Real64>(
 			        static_cast<Real64>(toMove) / unitSize);
 		} break;
 
-		case 0x61: // Select justification (ESC a)
+		// Select justification (ESC a)
+		case 0x61:
 			// Ignore
 			break;
 
-		case 0x63: // Set horizontal motion index (HMI) (ESC c)
+		// Set horizontal motion index (HMI) (ESC c)
+		case 0x63:
 			hmi = static_cast<Real64>(Param16(0)) /
 			      static_cast<Real64>(360.0);
 			extra_intra_space = 0.0;
 			break;
 
-		case 0x67: // Select 10.5-point, 15-cpi (ESC g)
+		// Select 10.5-point, 15-cpi (ESC g)
+		case 0x67:
 			cpi        = 15;
 			hmi        = -1;
 			multipoint = false;
 			UpdateFont();
 			break;
 
-		case 0x846: // Select forward feed mode (FS F) - set reverse not
-		            // implemented yet
+		// implemented yet — Select forward feed mode (FS F) - set
+		// reverse not
+		case 0x846:
 			if (line_spacing < 0) {
 				line_spacing *= -1;
 			}
 			break;
 
-		case 0x6a: // Reverse paper feed (ESC j)
-		{
+		// Reverse paper feed (ESC j)
+		case 0x6a: {
 			Real64 reverse = static_cast<Real64>(Param16(0)) /
 			                 static_cast<Real64>(216.0);
 			reverse = cur_y - reverse;
@@ -739,14 +764,16 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 		}
-		case 0x6b: // Select typeface (ESC k)
+		// Select typeface (ESC k)
+		case 0x6b:
 			if (params[0] <= 11 || params[0] == 30 || params[0] == 31) {
 				lq_typeface = static_cast<Typeface>(params[0]);
 			}
 			UpdateFont();
 			break;
 
-		case 0x6c: // Set left margin (ESC l)
+		// Set left margin (ESC l)
+		case 0x6c:
 			left_margin = static_cast<Real64>(params[0] - 1.0) /
 			              static_cast<Real64>(cpi);
 			if (cur_x < left_margin) {
@@ -754,12 +781,13 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x70: // Turn proportional mode on/off (ESC p)
+		// Turn proportional mode on/off (ESC p)
+		case 0x70:
 			if (params[0] == 0 || params[0] == 48) {
 				style.prop = 0;
 			}
 			if (params[0] == 1 || params[0] == 49) {
-				style.prop = 1;
+				style.prop    = 1;
 				print_quality = PrintQuality::Lq;
 			}
 			multipoint = false;
@@ -767,7 +795,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		case 0x72: // Select printing color (ESC r)
+		// Select printing color (ESC r)
+		case 0x72:
 
 			if (params[0] == 0 || params[0] > 6) {
 				color = ColorBlack;
@@ -776,12 +805,15 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x73: // Select low-speed mode (ESC s)
+		// Select low-speed mode (ESC s)
+		case 0x73:
 			// Ignore
 			break;
 
-		case 0x74:  // Select character table (ESC t)
-		case 0x849: // Select character table (FS I)
+		// Select character table (ESC t)
+		case 0x74:
+		// Select character table (FS I)
+		case 0x849:
 			if (params[0] < 4) {
 				cur_char_table = params[0];
 			}
@@ -792,7 +824,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		case 0x77: // Turn double-height printing on/off (ESC w)
+		// Turn double-height printing on/off (ESC w)
+		case 0x77:
 			if (!multipoint) {
 				if (params[0] == 0 || params[0] == 48) {
 					style.doubleheight = 0;
@@ -804,31 +837,35 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x78: // Select LQ or draft (ESC x)
+		// Select LQ or draft (ESC x)
+		case 0x78:
 			if (params[0] == 0 || params[0] == 48) {
-				print_quality = PrintQuality::Draft;
+				print_quality   = PrintQuality::Draft;
 				style.condensed = 1;
 			}
 			if (params[0] == 1 || params[0] == 49) {
-				print_quality = PrintQuality::Lq;
+				print_quality   = PrintQuality::Lq;
 				style.condensed = 0;
 			}
 			hmi = -1;
 			UpdateFont();
 			break;
 
-		case 0x100: // Set page length in inches (ESC C NUL)
+		// Set page length in inches (ESC C NUL)
+		case 0x100:
 			page_height   = static_cast<Real64>(params[0]);
 			bottom_margin = page_height;
 			top_margin    = 0.0;
 			break;
 
-		case 0x101: // Skip unsupported ESC ( command
+		// Skip unsupported ESC ( command
+		case 0x101:
 			needed_param = static_cast<uint8_t>(Param16(0));
 			num_param    = 0;
 			break;
 
-		case 0x274: // Assign character table (ESC (t)
+		// Assign character table (ESC (t)
+		case 0x274:
 			// codepages has 15 entries (indices 0..14). The
 			// upstream bounds check '< 16' was off by one and would
 			// index out of bounds when params[3] == 15.
@@ -842,11 +879,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x22d: // Select line/score (ESC (-)
+		// Select line/score (ESC (-)
+		case 0x22d:
 			style.underline     = 0;
-		style.strikethrough = 0;
-		style.overscore     = 0;
-			score = static_cast<ScoreType>(params[4]);
+			style.strikethrough = 0;
+			style.overscore     = 0;
+			score               = static_cast<ScoreType>(params[4]);
 			if (score != ScoreType::None) {
 				if (params[3] == 1) {
 					style.underline = 1;
@@ -861,14 +899,16 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		case 0x242: // Bar code setup and print (ESC (B)
+		// Bar code setup and print (ESC (B)
+		case 0x242:
 			LOG_ERR("PRINTER: Barcode printing not supported");
 			// Find out how many bytes to skip
 			needed_param = static_cast<uint8_t>(Param16(0));
 			num_param    = 0;
 			break;
 
-		case 0x243: // Set page length in defined unit (ESC (C)
+		// Set page length in defined unit (ESC (C)
+		case 0x243:
 			if (params[0] != 0 && defined_unit > 0) {
 				page_height = bottom_margin = (static_cast<Real64>(
 				                                      Param16(2))) *
@@ -877,13 +917,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x255: // Set unit (ESC (U)
+		// Set unit (ESC (U)
+		case 0x255:
 			defined_unit = static_cast<Real64>(params[2]) /
 			               static_cast<Real64>(3600);
 			break;
 
-		case 0x256: // Set absolute vertical print position (ESC (V)
-		{
+		// Set absolute vertical print position (ESC (V)
+		case 0x256: {
 			Real64 unitSize = defined_unit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(360.0);
@@ -898,11 +939,13 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 		} break;
 
-		case 0x25e: // Print data as characters (ESC (^)
+		// Print data as characters (ESC (^)
+		case 0x25e:
 			num_print_as_char = static_cast<uint16_t>(Param16(0));
 			break;
 
-		case 0x263: // Set page format (ESC (c)
+		// Set page format (ESC (c)
+		case 0x263:
 			if (defined_unit > 0) {
 				Real64 newTop, newBottom;
 				newTop = (static_cast<Real64>(Param16(2))) *
@@ -928,8 +971,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		case 0x276: // Set relative vertical print position (ESC (v)
-		{
+		// Set relative vertical print position (ESC (v)
+		case 0x276: {
 			Real64 unitSize = defined_unit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(360.0);
@@ -966,13 +1009,16 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	}
 
 	switch (ch) {
-	case 0x00: // NUL is ignored by the printer
-		return true;
-	case 0x07: // Beeper (BEL)
+	// NUL is ignored by the printer
+	case 0x00: return true;
+
+	// Beeper (BEL)
+	case 0x07:
 		// BEEEP!
 		return true;
-	case 0x08: // Backspace (BS)
-	{
+
+	// Backspace (BS)
+	case 0x08: {
 		Real64 newX = cur_x - (1 / static_cast<Real64>(act_cpi));
 		if (hmi > 0) {
 			newX = cur_x - hmi;
@@ -982,8 +1028,9 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		}
 	}
 		return true;
-	case 0x09: // Tab horizontally (HT)
-	{
+
+	// Tab horizontally (HT)
+	case 0x09: {
 		// Find tab right to current pos
 		Real64 moveTo = -1;
 		for (uint8_t i = 0; i < num_horiz_tabs; i++) {
@@ -997,7 +1044,9 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		}
 	}
 		return true;
-	case 0x0b:                        // Tab vertically (VT)
+
+	// Tab vertically (VT)
+	case 0x0b:
 		if (num_vert_tabs == 0) { // All tabs cancelled => Act like CR
 			cur_x = left_margin;
 		} else if (num_vert_tabs == 255) // No tabs set since reset =>
@@ -1029,20 +1078,25 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 		}
 		return true;
-	case 0x0c: // Form feed (FF)
+
+	// Form feed (FF)
+	case 0x0c:
 		if (style.doublewidth_oneline) {
 			style.doublewidth_oneline = 0;
 			UpdateFont();
 		}
 		NewPage(true, true);
 		return true;
-	case 0x0d: // Carriage Return (CR)
+
+	// Carriage Return (CR)
+	case 0x0d:
 		cur_x = left_margin;
 		if (!auto_feed) {
 			return true;
 		}
 		[[fallthrough]];
-	case 0x0a: // Line feed
+	// Line feed
+	case 0x0a:
 		if (style.doublewidth_oneline) {
 			style.doublewidth_oneline = 0;
 			UpdateFont();
@@ -1053,44 +1107,58 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			NewPage(true, false);
 		}
 		return true;
-	case 0x0e: // Select Real64-width printing (one line) (SO)
+
+	// Select Real64-width printing (one line) (SO)
+	case 0x0e:
 		if (!multipoint) {
-			hmi = -1;
+			hmi                       = -1;
 			style.doublewidth_oneline = 1;
 			UpdateFont();
 		}
 		return true;
-	case 0x0f: // Select condensed printing (SI)
+
+	// Select condensed printing (SI)
+	case 0x0f:
 		if (!multipoint && (cpi != 15.0)) {
-			hmi = -1;
+			hmi             = -1;
 			style.condensed = 1;
 			UpdateFont();
 		}
 		return true;
-	case 0x11: // Select printer (DC1)
+
+	// Select printer (DC1)
+	case 0x11:
 		// Ignore
 		return true;
-	case 0x12: // Cancel condensed printing (DC2)
-		hmi = -1;
+
+	// Cancel condensed printing (DC2)
+	case 0x12:
+		hmi             = -1;
 		style.condensed = 0;
 		UpdateFont();
 		return true;
-	case 0x13: // Deselect printer (DC3)
+
+	// Deselect printer (DC3)
+	case 0x13:
 		// Ignore
 		return true;
-	case 0x14: // Cancel double-width printing (one line) (DC4)
-		hmi = -1;
+
+	// Cancel double-width printing (one line) (DC4)
+	case 0x14:
+		hmi                       = -1;
 		style.doublewidth_oneline = 0;
 		UpdateFont();
 		return true;
-	case 0x18: // Cancel line (CAN)
-		return true;
-	case 0x1b: // ESC
-		esc_seen = true;
-		return true;
-	case 0x1c: // FS (IBM commands)
-		fs_seen = true;
-		return true;
+
+	// Cancel line (CAN)
+	case 0x18: return true;
+
+	// ESC
+	case 0x1b: esc_seen = true; return true;
+
+	// FS (IBM commands)
+	case 0x1c: fs_seen = true; return true;
+
 	default: return false;
 	}
 
@@ -1252,12 +1320,11 @@ void Printer::PrintBitGraph(const uint8_t ch)
 						}
 					}
 				}
-			} // else white pixel
+			}
 
+			// TODO line-wrap when cur_y goes past bottom margin.
 			cur_y += static_cast<Real64>(1) /
-			         static_cast<Real64>(bit_graph.vert_dens); // TODO
-			                                                   // line
-			                                                   // wrap?
+			         static_cast<Real64>(bit_graph.vert_dens);
 		}
 	}
 
