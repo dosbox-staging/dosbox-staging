@@ -1861,11 +1861,13 @@ void CPrinter::OutputPage()
 		/* First try to alloacte the png structures */
 		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 		if (!png_ptr) {
+			fclose(fp);
 			return;
 		}
 		info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr) {
 			png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+			fclose(fp);
 			return;
 		}
 
