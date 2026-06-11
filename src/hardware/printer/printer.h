@@ -161,6 +161,8 @@ private:
 
 	// Output current page
 	void OutputPage();
+	// PostScript encoder; lives in printer_ps.cpp.
+	void OutputPagePostScript();
 
 	// Decode a little-endian 16-bit ESC/P2 parameter starting at params[i].
 	uint16_t Param16(int i) const
