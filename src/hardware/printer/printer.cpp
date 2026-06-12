@@ -324,7 +324,29 @@ void Printer::PrintChar(uint8_t ch)
 	// Render a high-quality bitmap
 	FT_Render_Glyph(cur_font->glyph, FT_RENDER_MODE_NORMAL);
 
-	const auto penX = static_cast<uint16_t>(PixX() + cur_font->glyph->bitmap_left);
+	// Fixed-pitch centring. A proportional font (Roman, Sans Serif)
+	// forced into a 1/act_cpi inch cell would otherwise sit
+	// left-aligned with a visible gap on the right of every char.
+	// Shift narrow glyphs to the middle of the cell to even that out.
+	//
+	// Skip this for native monospace fonts. Their bitmap_left already
+	// positions glyphs correctly within the advance cell, and shifting would
+	// misalign the CP437 box-drawing characters, where `│`/`─`/`┼` would land
+	// at different X positions and break grids.
+	uint16_t centre_offset = 0;
+
+	if (!style.prop && act_cpi > 0.0 && !FT_IS_FIXED_WIDTH(cur_font)) {
+		const auto cell_px = static_cast<uint16_t>(dpi / act_cpi);
+		const auto glyph_w = static_cast<uint16_t>(cur_font->glyph->bitmap.width);
+
+		if (cell_px > glyph_w) {
+			centre_offset = static_cast<uint16_t>((cell_px - glyph_w) / 2);
+		}
+	}
+
+	const auto penX = static_cast<uint16_t>(
+	        PixX() + cur_font->glyph->bitmap_left + centre_offset);
+
 	uint16_t penY = static_cast<uint16_t>(PixY() - cur_font->glyph->bitmap_top +
 	                                      cur_font->size->metrics.ascender / 64);
 
