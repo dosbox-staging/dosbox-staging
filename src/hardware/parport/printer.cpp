@@ -260,39 +260,29 @@ void CPrinter::updateFont()
 	if (curFont != NULL)
 		FT_Done_Face(curFont);
 
-	const char* fontName;
+	// Map the Epson typeface enum to a font filename in resources/fonts/
+	const char* font_filename = "roman.ttf";
 
 	switch (LQtypeFace)
 	{
-	case roman:
-		fontName = "./FONTS/roman.ttf";
-		break;
-	case sansserif:
-		fontName = "./FONTS/sansserif.ttf";
-		break;
-	case courier:
-		fontName = "./FONTS/courier.ttf";
-		break;
-	case script:
-		fontName = "./FONTS/script.ttf";
-		break;
-	case ocra:
-	case ocrb:
-		fontName = "./FONTS/ocra.ttf";
-		break;
-	default:
-		fontName = "./FONTS/roman.ttf";
-	}
-	
-	std::string configfont = get_config_dir().string();
-	configfont += "/";
-	configfont += fontName;
-	fontName = configfont.c_str();
+	case roman: font_filename = "roman.ttf"; break;
+	case sansserif: font_filename = "sansserif.ttf"; break;
+	case courier: font_filename = "courier.ttf"; break;
+	case script: font_filename = "script.ttf"; break;
 
-	if (FT_New_Face(FTlib, fontName, 0, &curFont))
-	{
-		//LOG(LOG_MISC,LOG_ERROR)("Unable to load font %s", fontName);
-		LOG_MSG("Unable to load font %s", fontName);
+	case ocra:
+	case ocrb: font_filename = "ocra.ttf"; break;
+
+	default: font_filename = "roman.ttf"; break;
+	}
+
+	// get_resource_path walks the standard hierarchy (bundled
+	// resources first, the user's config dir last as an override).
+	const auto font_path = get_resource_path("fonts", font_filename);
+
+	if (font_path.empty() ||
+	    FT_New_Face(FTlib, font_path.string().c_str(), 0, &curFont)) {
+		LOG_MSG("Unable to load font %s", font_filename);
 		curFont = NULL;
 	}
 
