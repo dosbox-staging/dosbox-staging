@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "misc/std_filesystem.h"
+#include "postscript_passthrough.h"
 #include "printer_internal.h"
 #include "printer_png.h"
 #include "utils/string_utils.h"
@@ -35,6 +36,7 @@ using VirtualPrinter::PrinterModel;
 static void PRINTER_EventHandler([[maybe_unused]] uint32_t param);
 
 static std::unique_ptr<Printer> default_printer = nullptr;
+static std::unique_ptr<VirtualPrinter::PostScriptPassthrough> postscript_sink = nullptr;
 
 static PrinterModel conf_model     = PrinterModel::None;
 static uint16_t conf_dpi           = 360;
@@ -584,32 +586,44 @@ uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
 	return status;
 }
 
-static void trigger_form_feed(const bool pressed)
-{
-	if (pressed) {
-		if (default_printer) {
-			PIC_RemoveEvents(PRINTER_EventHandler);
-			if (printer_timeout) {
-				timeout_dirty = false;
-			}
+enum class FormFeedSource {
+	UserEjectKey,
+	IdleTimeout,
+};
 
-			default_printer->FormFeed();
-		}
+static void trigger_form_feed(const FormFeedSource source)
+{
+	PIC_RemoveEvents(PRINTER_EventHandler);
+	if (printer_timeout) {
+		timeout_dirty = false;
+	}
+
+	const char* source_str = (source == FormFeedSource::UserEjectKey)
+	                                 ? "user eject key"
+	                                 : "idle timeout";
+
+	if (default_printer) {
+		LOG_MSG("PRINTER: Form feed (%s)", source_str);
+		default_printer->FormFeed();
+	}
+	if (postscript_sink) {
+		LOG_MSG("PRINTER: Closing PostScript job (%s)", source_str);
+		postscript_sink->Close();
 	}
 }
 
 static void PRINTER_EventHandler([[maybe_unused]] const uint32_t param)
 {
-	// LOG_MSG("printerevent");
-	if (timeout_dirty) { // add another
+	if (timeout_dirty) {
+		// More data arrived since this event was queued — push the
+		// timeout further out and re-fire later.
 		PIC_AddEvent(PRINTER_EventHandler,
 		             static_cast<float>(printer_timeout),
 		             0);
-		// LOG_MSG("timeout renew");
 		timeout_dirty = false;
 	} else {
 		timeout_dirty = false;
-		trigger_form_feed(true);
+		trigger_form_feed(FormFeedSource::IdleTimeout);
 	}
 }
 
@@ -624,13 +638,22 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 
 	// Data is strobed to the printer on the falling edge of the STROBE bit.
 	if (!(val & CtrlStrobe) && (lpt.control & CtrlStrobe)) {
-		if (!default_printer && conf_model == PrinterModel::EpsonDotMatrix) {
-			default_printer = std::make_unique<Printer>(conf_dpi,
-			                                            conf_page_width_in,
-			                                            conf_page_height_in);
-		}
-		if (default_printer) {
-			default_printer->PrintChar(lpt.data);
+		if (conf_model == PrinterModel::EpsonDotMatrix) {
+			if (!default_printer) {
+				default_printer = std::make_unique<Printer>(
+				        conf_dpi,
+				        conf_page_width_in,
+				        conf_page_height_in);
+			}
+			if (default_printer) {
+				default_printer->PrintChar(lpt.data);
+			}
+		} else if (conf_model == PrinterModel::PostScript) {
+			if (!postscript_sink) {
+				postscript_sink = std::make_unique<
+				        VirtualPrinter::PostScriptPassthrough>();
+			}
+			postscript_sink->Write(lpt.data);
 		}
 		if (!timeout_dirty) {
 			PIC_AddEvent(PRINTER_EventHandler,
@@ -722,7 +745,9 @@ void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
 
 void PRINTER_FormFeed(const bool pressed)
 {
-	trigger_form_feed(pressed);
+	if (pressed) {
+		trigger_form_feed(FormFeedSource::UserEjectKey);
+	}
 }
 
 void PRINTER_Reset()
@@ -732,6 +757,7 @@ void PRINTER_Reset()
 	PIC_RemoveEvents(PRINTER_EventHandler);
 	timeout_dirty = false;
 	default_printer.reset();
+	postscript_sink.reset();
 	// The IO handlers in printer_glue stay installed across Reset/Init
 	// cycles; clear the LPT register state so a stale strobe sequence
 	// from before a previous Reset can't trigger lazy construction with
