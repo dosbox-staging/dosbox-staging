@@ -190,6 +190,10 @@ bool mapper_handler_registered = false;
 
 } // namespace
 
+// Forward declaration: the change-handler reuses Init/Destroy.
+void PRINTER_Init();
+void PRINTER_Destroy();
+
 void PRINTER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
@@ -197,6 +201,20 @@ void PRINTER_AddConfigSection(const ConfigPtr& conf)
 	auto& s      = *static_cast<SectionProp*>(section);
 
 	using enum Property::Changeable::Value;
+
+	// Any printer-section property change at the DOS prompt
+	// re-initialises the whole printer subsystem. The user is
+	// expected not to reconfigure mid-print (same contract as
+	// turning off a real printer mid-job: the in-flight page
+	// is lost).
+	s.AddUpdateHandler(
+	        [](SectionProp& /*sec*/, const std::string& prop_name) {
+		        LOG_MSG("PRINTER: Configuration changed (%s), "
+		                "re-initialising",
+		                prop_name.c_str());
+		        PRINTER_Destroy();
+		        PRINTER_Init();
+	        });
 
 	auto pstring = s.AddString("printer_model", WhenIdle, "none");
 	pstring->SetHelp(
