@@ -190,9 +190,8 @@ bool mapper_handler_registered = false;
 
 } // namespace
 
-// Forward declaration: the change-handler reuses Init/Destroy.
-void PRINTER_Init();
-void PRINTER_Destroy();
+// PRINTER_Init and PRINTER_Destroy are declared in printer_glue.h
+// (included at the top of this file) — the change-handler reuses them.
 
 void PRINTER_AddConfigSection(const ConfigPtr& conf)
 {
