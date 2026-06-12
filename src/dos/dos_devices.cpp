@@ -294,6 +294,20 @@ public:
 	}
 };
 
+// LPT1 character device. Gets matched by DOS_FindDevice on any name
+// that resolves to "LPT1" (with or without trailing colon, with or
+// without a directory prefix, with or without an extension — see the
+// header comment on DOS_FindDevice for the full reservation rules).
+//
+// Writes go through the standard parallel-port handshake: each byte
+// is placed on the data port at base+0, then control bit 0 is
+// pulsed high -> low -> high to strobe it through (the falling
+// edge triggers the printer; see hardware/printer code for the
+// receive side).
+//
+// LPT2 and LPT3 don't have dedicated device classes today; opening
+// them as DOS character devices falls through to device_NUL (writes
+// are silently discarded).
 class device_LPT1 final : public device_NUL {
 public:
 	device_LPT1()
@@ -382,6 +396,31 @@ DOS_File &DOS_File::operator=(const DOS_File &orig)
 	return *this;
 }
 
+// Match `name` against the device table. Returns the device index
+// (0..DOS_DEVICES-1) or DOS_DEVICES if no match.
+//
+// Devices are reserved across the entire filesystem in MS-DOS, not
+// just the root: `LPT1`, `subdir\LPT1`, `Z:\foo\bar\CON.txt` all
+// resolve to the device (this is the famous "you can't have a file
+// called CON" reservation). The mechanism here:
+//
+//   1. DOS_MakeName parses the name into a (drive, fullpath) pair
+//      with normalised case and resolved `.` / `..`. Trailing
+//      colons on device names (LPT1:, CON:) are stripped at this
+//      layer, so we don't see them here.
+//   2. We strip the directory component via strrchr('\\').
+//   3. We strip the extension via strrchr('.').
+//   4. The remaining name_part is matched against the Devices
+//      array (case-sensitive — DOS_MakeName already upper-cased).
+//
+// Both DOS_OpenFile and DOS_CreateFile call this BEFORE looking up
+// a file in the file system; that's how the global reservation
+// works in practice.
+//
+// Staging quirk: step 1 ALSO performs a TestDir() check on the
+// directory component, so a name like `nonexistent\LPT1` will NOT
+// match the LPT1 device — the path validation fails first. Real
+// MS-DOS is more permissive here. See docs/dos-name-handling.md.
 uint8_t DOS_FindDevice(const char* name)
 {
 	/* should only check for the names before the dot and spacepadded */

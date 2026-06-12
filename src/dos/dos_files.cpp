@@ -218,6 +218,27 @@ void DOS_SetDefaultDrive(uint8_t drive) {
 	if (drive<DOS_DRIVES && ((drive<2) || Drives[drive])) {dos.current_drive = drive; DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(drive);}
 }
 
+// Parse a DOS name into a (drive, fullpath) pair.
+//
+// DOS accepts three name shapes in the same syntactic position:
+//
+//   1. Filenames:    "foo.txt", "subdir\bar.txt", "Z:\AUTOEXEC.BAT".
+//   2. Drive specs:  "A:", "C:" (exactly two characters; means
+//                    "current dir on that drive"). May appear as a
+//                    prefix (`C:foo` = file foo on C:) or standalone.
+//   3. Device names: "CON", "PRN", "AUX", "NUL", "LPT1"-"LPT3",
+//                    "COM1"-"COM4". With OR without an optional
+//                    trailing colon ("LPT1" and "LPT1:" are the
+//                    same). Case-insensitive.
+//
+// This function only knows how to parse names; it doesn't know
+// files from devices. Device matching happens downstream in
+// DOS_FindDevice, which is called BEFORE the file-system lookup
+// in DOS_OpenFile and DOS_CreateFile. That's how staging mirrors
+// MS-DOS's global device-name reservation ("you can't have a file
+// called CON") — devices win in any directory.
+//
+// See docs/dos-name-handling.md for the full narrative.
 bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 {
 	if(!name || *name == 0 || *name == ' ') {
@@ -232,14 +253,19 @@ bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 	Bitu r,w;
 	uint8_t c;
 	*drive = DOS_GetDefaultDrive();
-	/* First get the drive */
+	// Consume an optional 2-char drive prefix. Only fires when
+	// name[1] == ':' — that's what distinguishes a drive ref
+	// ("A:foo") from a single-letter filename ("A"). Anything
+	// longer ending in `:` (like "LPT1:") is a device-name
+	// trailing colon and is handled below, after the char-copy
+	// loop, not here.
 	if (name_int[1]==':') {
 		*drive=(name_int[0] | 0x20)-'a';
 		name_int+=2;
 	}
-	if (*drive>=DOS_DRIVES || !Drives[*drive]) { 
+	if (*drive>=DOS_DRIVES || !Drives[*drive]) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
-		return false; 
+		return false;
 	}
 	r=0;w=0;
 	while (r < DOS_PATHLENGTH && name_int[r] != 0) {
@@ -251,6 +277,30 @@ bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 	}
 	while (r>0 && name_int[r-1]==' ') r--;
 	if (r>=DOS_PATHLENGTH) { DOS_SetError(DOSERR_PATH_NOT_FOUND);return false; }
+
+	// Real MS-DOS lets device names take an optional trailing colon
+	// ("LPT1:", "CON:", "PRN:", "NUL:", "COM1:", "AUX:"). Strip it
+	// here so the per-char validation loop below doesn't reject the
+	// `:` as an illegal character.
+	//
+	// Drive specs ("C:") were already consumed at the top of this
+	// function via the `name_int += 2` branch when name_int[1]==':',
+	// so by the time we reach this point, any trailing `:` is the
+	// device-name punctuation kind, not a drive prefix.
+	//
+	// The `w > 1` guard ensures we don't strip a bare lone colon
+	// (`":"`) to an empty name — that input was malformed before
+	// the fix and should still fail.
+	//
+	// We don't validate whether the stripped name is actually a
+	// device — that's downstream (DOS_FindDevice does the matching).
+	// Names like "foo:" become "foo" silently, which matches MS-DOS's
+	// permissive behaviour and what shell.cpp's redirect parser
+	// already does for `> foo:` redirections. See
+	// docs/dos-name-handling.md for the full story.
+	if (w > 1 && upname[w-1] == ':') {
+		w--;
+	}
 	upname[w]=0;
 	/* Now parse the new file name to make the final filename */
 	if (upname[0]!='\\') strcpy(fullname,Drives[*drive]->curdir);
@@ -324,6 +374,12 @@ bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 				if((strlen(tempdir) - strlen(ext)) > 8) memmove(tempdir + 8, ext, 5);
 			} else tempdir[8]=0;
 
+			// Validate each character of this path component
+			// against the DOS-8.3 allowed set: A-Z, 0-9, upper-ASCII,
+			// and a small set of symbols. Trailing colons on device
+			// names were stripped before we got here, so seeing
+			// `:` in this loop means an internal colon (e.g.
+			// "foo:bar"), which is illegal.
 			const auto tempdir_len = strlen(tempdir);
 			for (size_t i = 0; i < tempdir_len; ++i) {
 				c = tempdir[i];
@@ -767,8 +823,13 @@ bool DOS_FlushFile(uint16_t entry) {
 bool DOS_CreateFile(const char* name, FatAttributeFlags attributes,
                     uint16_t* entry, bool fcb)
 {
-	// Creation of a device is the same as opening it
-	// Tc201 installer
+	// Try the device table first. Devices win over any same-named
+	// file anywhere on the filesystem — this is the famous MS-DOS
+	// "you can't have a file called CON" reservation, and it
+	// applies across all directories (DOS_FindDevice strips the
+	// path and extension before matching). `LPT1`, `subdir\LPT1`,
+	// and `LPT1:` all resolve here. Tc201 installer relied on
+	// CreateFile-on-device working the same as OpenFile-on-device.
 	if (DOS_FindDevice(name) != DOS_DEVICES)
 		return DOS_OpenFile(name, OPEN_READ, entry, fcb);
 
@@ -825,7 +886,12 @@ bool DOS_CreateFile(const char* name, FatAttributeFlags attributes,
 
 bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb)
 {
-	/* First check for devices */
+	// Device match wins over file lookup, anywhere on the
+	// filesystem. This is how `LPT1`, `subdir\LPT1`, and `LPT1:`
+	// all open the LPT1 device regardless of any same-named
+	// file on disk (DOS_FindDevice strips path and extension
+	// before matching). Mirrors MS-DOS's global device-name
+	// reservation. See docs/dos-name-handling.md.
 	if (flags>2) LOG(LOG_FILES,LOG_ERROR)("Special file open command %X file %s",flags,name);
 	else LOG(LOG_FILES,LOG_NORMAL)("file open command %X file %s",flags,name);
 

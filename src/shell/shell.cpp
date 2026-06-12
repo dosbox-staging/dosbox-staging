@@ -140,8 +140,16 @@ std::optional<DOS_Shell::RedirectionResults> DOS_Shell::GetRedirection(
 			const auto tail_whitespace = (*m)[Tail].str();
 
 			// Real MS-DOS lets redirection targets be punctuated
-			// with an optional colon. We allow the same and strip
-			// it off if because the actual target doesn't end in it.
+			// with an optional colon ("> LPT1:", "< CON:"). We
+			// allow the same here.
+			//
+			// Defence in depth: DOS_MakeName now also strips a
+			// trailing colon (so the same redirection would work
+			// even without this strip), but this caller-side
+			// strip stays — it's cheap, it kept the redirection
+			// working before the parser fix, and removing it
+			// would conflate two changes. See
+			// docs/dos-name-handling.md for the parser-side story.
 			std::string target = (*m)[Target].str();
 			assert(!target.empty());
 			if (target.back() == ':') {
