@@ -63,6 +63,33 @@ void assert_DOS_MakeName(const char* const input, bool exp_result,
 	}
 }
 
+// Helpers for the device-reservation tests. We don't pin a specific
+// device index because the index depends on registration order;
+// instead we just check "is some device" or "same device".
+// SCOPED_TRACE adds the failing name to gtest output without iostreams
+// (the project forbids them); format_str is the project's printf-style
+// formatter from utils/string_utils.h.
+void assert_DOS_FindDevice_matches(const char* const name)
+{
+	SCOPED_TRACE(format_str("name: %s", name));
+	EXPECT_NE(DOS_FindDevice(name), DOS_DEVICES);
+}
+
+void assert_DOS_FindDevice_no_match(const char* const name)
+{
+	SCOPED_TRACE(format_str("name: %s", name));
+	EXPECT_EQ(DOS_FindDevice(name), DOS_DEVICES);
+}
+
+void assert_DOS_FindDevice_same(const char* const a, const char* const b)
+{
+	SCOPED_TRACE(format_str("a: %s  b: %s", a, b));
+	const auto idx_a = DOS_FindDevice(a);
+	const auto idx_b = DOS_FindDevice(b);
+	EXPECT_NE(idx_a, DOS_DEVICES);
+	EXPECT_EQ(idx_a, idx_b);
+}
+
 TEST_F(DOS_FilesTest, DOS_MakeName_Basic_Failures)
 {
 	// make sure we get failures, not explosions
@@ -259,6 +286,172 @@ TEST_F(DOS_FilesTest, DOS_MakeName_Colon_Illegal_Paths)
 	assert_DOS_MakeName(" :..\\tmp.txt", false);
 	assert_DOS_MakeName(": \\tmp.txt", false);
 	assert_DOS_MakeName(":", false);
+}
+
+// ---------------------------------------------------------------------------
+// DOS name semantics — the three name shapes
+//
+// DOS accepts filenames, drive specs ("A:"), and device names ("LPT1",
+// "LPT1:"). The optional trailing colon on device names is the same
+// punctuation that follows a drive letter; real MS-DOS treats
+// `LPT1` and `LPT1:` as identical references to the LPT1 device.
+//
+// The tests below capture how each shape is parsed, including the
+// less-obvious cases (single-letter filenames vs drive letters,
+// device-name reservation across all paths, what's still illegal).
+// See docs/dos-name-handling.md for the full narrative.
+// ---------------------------------------------------------------------------
+
+// Group 1 — plain filenames: regression guard for the normal-path
+// flow. These should pass on current code and stay passing after the
+// trailing-colon fix.
+TEST_F(DOS_FilesTest, DOS_MakeName_PlainFilenames)
+{
+	safe_strcpy(Drives.at(25)->curdir, "");
+	assert_DOS_MakeName("AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
+	assert_DOS_MakeName("autoexec.bat", true, "AUTOEXEC.BAT", 25);
+	assert_DOS_MakeName("subdir\\foo.txt", true, "SUBDIR\\FOO.TXT", 25);
+	assert_DOS_MakeName("Z:\\AUTOEXEC.BAT", true, "AUTOEXEC.BAT", 25);
+	assert_DOS_MakeName("foo", true, "FOO", 25);
+	// Single-letter name WITHOUT a colon is a filename, not a drive
+	// ref. The drive-prefix branch fires only when name[1] == ':'.
+	assert_DOS_MakeName("a", true, "A", 25);
+}
+
+// Group 2 — drive specs: regression guard. The 2-char drive prefix
+// must keep working before and after the trailing-colon fix. Drive
+// specs are consumed at the very top of DOS_MakeName (name_int += 2);
+// the trailing-colon-strip we add later operates on the remaining
+// path component, never on the drive prefix.
+//
+// Only Z: is mounted in the test fixture, so we only verify mounted
+// drive specs. The unmounted-drive failure path is already covered
+// by DOS_MakeName_Basic_Failures.
+TEST_F(DOS_FilesTest, DOS_MakeName_DriveSpecs)
+{
+	safe_strcpy(Drives.at(25)->curdir, "");
+	assert_DOS_MakeName("Z:", true, "", 25);
+	assert_DOS_MakeName("Z:foo.txt", true, "FOO.TXT", 25);
+	assert_DOS_MakeName("z:foo.txt", true, "FOO.TXT", 25);
+}
+
+// Group 3 — trailing colon on device names. THIS IS THE BUG.
+// On current code these all FAIL because the per-char validation
+// loop in DOS_MakeName rejects ':'. After the fix they parse to the
+// same fullname as the no-colon form.
+TEST_F(DOS_FilesTest, DOS_MakeName_DeviceNamesTrailingColon)
+{
+	safe_strcpy(Drives.at(25)->curdir, "");
+	assert_DOS_MakeName("LPT1:", true, "LPT1", 25);
+	assert_DOS_MakeName("CON:", true, "CON", 25);
+	assert_DOS_MakeName("PRN:", true, "PRN", 25);
+	assert_DOS_MakeName("NUL:", true, "NUL", 25);
+	assert_DOS_MakeName("AUX:", true, "AUX", 25);
+	assert_DOS_MakeName("COM1:", true, "COM1", 25);
+	// Case-normalised the same way as plain filenames.
+	assert_DOS_MakeName("lpt1:", true, "LPT1", 25);
+	assert_DOS_MakeName("Con:", true, "CON", 25);
+}
+
+// Group 4 — drive prefix combined with a device name that also has
+// the trailing colon. The drive prefix is consumed first; the
+// trailing colon strip handles the rest.
+TEST_F(DOS_FilesTest, DOS_MakeName_DriveAndDeviceTrailingColon)
+{
+	safe_strcpy(Drives.at(25)->curdir, "");
+	assert_DOS_MakeName("Z:LPT1:", true, "LPT1", 25);
+	assert_DOS_MakeName("Z:CON:", true, "CON", 25);
+	assert_DOS_MakeName("z:lpt1:", true, "LPT1", 25);
+}
+
+// Group 5 — device-name resolution and the trailing-colon equivalence.
+//
+// Note on staging's path-prefix behaviour: DOS_FindDevice calls
+// `Drives[drive]->TestDir(...)` on the parent directory before
+// matching against the device table, so a path-prefixed device name
+// like `subdir\LPT1` only resolves to the device if `subdir` actually
+// exists on that drive. This is stricter than real MS-DOS (which
+// always shadows devices) and is an existing staging behaviour
+// independent of our trailing-colon fix. We don't test the
+// path-prefixed reservation here to avoid coupling this test to the
+// test fixture's directory layout.
+//
+// What we DO test: the basic device-name match works, extension is
+// stripped, and after the trailing-colon fix the colon form
+// resolves to the SAME device as the no-colon form.
+TEST_F(DOS_FilesTest, DOS_FindDevice_TrailingColonEquivalence)
+{
+	safe_strcpy(Drives.at(25)->curdir, "");
+
+	// The basics — these pass today.
+	assert_DOS_FindDevice_matches("LPT1");
+	assert_DOS_FindDevice_matches("CON");
+	assert_DOS_FindDevice_matches("NUL");
+	// Extensions are stripped by DOS_FindDevice before matching.
+	assert_DOS_FindDevice_matches("LPT1.txt");
+	assert_DOS_FindDevice_matches("CON.dat");
+
+	// Trailing-colon forms (THE BUG): these fail today, pass after fix.
+	assert_DOS_FindDevice_matches("LPT1:");
+	assert_DOS_FindDevice_matches("CON:");
+	assert_DOS_FindDevice_matches("NUL:");
+
+	// And the trailing-colon form resolves to the same device as the
+	// no-colon form.
+	assert_DOS_FindDevice_same("LPT1", "LPT1:");
+	assert_DOS_FindDevice_same("CON", "CON:");
+	assert_DOS_FindDevice_same("NUL", "NUL:");
+}
+
+// Group 6 — single letters are NOT device names. The drive-prefix
+// branch fires only when name[1] == ':'; without the colon, a
+// single-letter input is just a one-char filename.
+TEST_F(DOS_FilesTest, DOS_FindDevice_SingleLettersNotReserved)
+{
+	safe_strcpy(Drives.at(25)->curdir, "");
+	assert_DOS_FindDevice_no_match("A");
+	assert_DOS_FindDevice_no_match("Z");
+	assert_DOS_FindDevice_no_match("X");
+}
+
+// Group 7 — what's still illegal after the fix. We strip only a
+// FINAL colon; internal ones still hit the per-char validation loop
+// and fail. Multiple trailing colons strip one and the second still
+// fails. This is the guardrail keeping us from accepting genuinely
+// malformed names.
+TEST_F(DOS_FilesTest, DOS_MakeName_StillIllegal_InternalColons)
+{
+	safe_strcpy(Drives.at(25)->curdir, "");
+	// Internal colon: not a drive prefix (drive prefix is 2 chars),
+	// not a trailing device colon either.
+	assert_DOS_MakeName("foo:bar", false);
+	assert_DOS_MakeName("Z:\\foo:bar", false);
+	// Double trailing colon: we strip one, the other fails.
+	assert_DOS_MakeName("LPT1::", false);
+	assert_DOS_MakeName("foo::", false);
+	// Colon-as-path-separator (e.g. "LPT1:\\foo") — the colon is
+	// internal once you account for the path continuation.
+	assert_DOS_MakeName("LPT1:\\foo", false);
+}
+
+// Group 8 — the documented lenience. A trailing colon on a non-device
+// name silently becomes the same name without the colon. This matches
+// MS-DOS's permissive parser and what shell.cpp's redirect strip
+// already does for `> foo:` redirections. We bake the choice in so
+// it's intentional rather than an accident.
+//
+// Caveat: an unmounted-drive-letter input like "X:" (with X not in
+// Drives[]) currently errors at the drive-prefix branch. After the
+// fix it bypasses that branch (because name[1]==':' but Drives[X]
+// is null), then strips the colon, and becomes the filename "X" on
+// the default drive. Real-world impact: nil; nobody types unmounted
+// drive letters intentionally.
+TEST_F(DOS_FilesTest, DOS_MakeName_TrailingColonLenience)
+{
+	safe_strcpy(Drives.at(25)->curdir, "");
+	// Non-device name with trailing colon: strips to the bare name.
+	assert_DOS_MakeName("foo:", true, "FOO", 25);
+	assert_DOS_MakeName("HELLO:", true, "HELLO", 25);
 }
 
 // ensures a fix for dark forces installer
