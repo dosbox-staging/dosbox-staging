@@ -10,6 +10,8 @@
 
 #if C_PRINTER
 
+#include <set>
+
 #include "misc/logging.h"
 #include "utils/checks.h"
 
@@ -1152,18 +1154,28 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 		} break;
 
-		default:
-			if (esc_cmd < 0x100) {
-				// LOG(LOG_MISC,LOG_WARN)
-				LOG_MSG("PRINTER: Skipped unsupported command ESC %c (%02X)",
-				        esc_cmd,
-				        esc_cmd);
-			} else {
-				// LOG(LOG_MISC,LOG_WARN)
-				LOG_MSG("PRINTER: Skipped unsupported command ESC ( %c (%02X)",
-				        esc_cmd - 0x200,
-				        esc_cmd - 0x200);
+		default: {
+			// One LOG_WARNING per opcode for the entire session.
+			// Many DOS apps send a stream of the same unsupported
+			// opcodes (MSB control, paper-out detector etc.); a
+			// per-invocation log would drown out everything else.
+			static std::set<uint16_t> warned;
+			if (warned.insert(esc_cmd).second) {
+				if (esc_cmd < 0x100) {
+					LOG_WARNING(
+					        "PRINTER: ESC %c (%02Xh) recognised but not "
+					        "implemented; output may be incorrect",
+					        esc_cmd,
+					        esc_cmd);
+				} else {
+					LOG_WARNING(
+					        "PRINTER: ESC ( %c (%02Xh) recognised but not "
+					        "implemented; output may be incorrect",
+					        esc_cmd - 0x200,
+					        esc_cmd - 0x200);
+				}
 			}
+		}
 		}
 
 		esc_cmd = 0;
