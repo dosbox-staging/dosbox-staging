@@ -19,6 +19,7 @@ add_executable(dosbox_tests
     messages_adjust_tests.cpp
     mixer_tests.cpp
     port_containers_tests.cpp
+    printer_render_tests.cpp
     program_mixer_tests.cpp
     rect_tests.cpp
     rgb_tests.cpp
