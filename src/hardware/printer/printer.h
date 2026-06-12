@@ -90,6 +90,13 @@ enum class PrintQuality : uint8_t {
 	Lq    = 0x02,
 };
 
+// Top-level dispatch: what kind of printer the user picked.
+enum class PrinterModel {
+	None,
+	EpsonDotMatrix,
+	PostScript,
+};
+
 // Palette is split into 8 sub-palettes of 32 colours each, indexed by a
 // 3-bit colour ID in the top 3 bits. Black is sub-palette 7.
 constexpr uint8_t ColorBlack = 7 << 5;
@@ -113,8 +120,8 @@ enum class Typeface {
 
 class Printer {
 public:
-	Printer(uint16_t dpi, uint16_t width, uint16_t height,
-	        const std::string& output, bool multipage_output);
+	// page_width_in and page_height_in are inches (Real64).
+	Printer(uint16_t dpi, Real64 page_width_in, Real64 page_height_in);
 	virtual ~Printer();
 
 	// Owns FreeType/SDL resources and a singleton Printer* — don't copy.
@@ -182,10 +189,8 @@ private:
 	// Copies the codepage mapping from the constant array to CurMap
 	void SelectCodepage(uint16_t codepage);
 
-	// Output current page
+	// Output current page as a PNG file.
 	void OutputPage();
-	// PostScript encoder; lives in printer_ps.cpp.
-	void OutputPagePostScript();
 
 	// Decode a little-endian 16-bit ESC/P2 parameter starting at params[i].
 	uint16_t Param16(int i) const
@@ -203,13 +208,6 @@ private:
 	{
 		return static_cast<uint64_t>(floor(cur_y * dpi + 0.5));
 	}
-
-	// Prints out a byte using ASCII85 encoding (only outputs something
-	// every four bytes). When b>255, closes the ASCII85 string
-	void FprintAscii85(FILE* file, uint16_t byte);
-
-	// Closes a multipage document
-	void FinishMultipage();
 
 	// Returns value of the num-th pixel (couting left-right, top-down) in a
 	// safe way
@@ -351,24 +349,6 @@ private:
 	// codes).
 	uint16_t num_print_as_char = 0;
 
-	// Output method selected by the user ("png" / "ps" / ...).
-	std::string output = {};
-
-	// If non-null, multipage mode is active and additional pages get
-	// appended to the open handle until FormFeed closes it.
-	FILE_unique_ptr output_handle = nullptr;
-
-	// If true, all pages of a print job are combined into one file until
-	// the "eject page" key is pressed.
-	bool multipage_output = false;
-
-	// Current page index when printing a multipage document.
-	uint16_t multipage_counter = 0;
-
-	// State of the ASCII85 encoder used by PostScript output.
-	std::array<uint8_t, 4> ascii85_buffer = {};
-	uint8_t ascii85_buffer_pos            = 0;
-	uint8_t ascii85_cur_col               = 0;
 };
 
 } // namespace VirtualPrinter

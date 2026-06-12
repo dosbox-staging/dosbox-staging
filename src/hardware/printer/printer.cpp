@@ -30,25 +30,26 @@
 CHECK_NARROWING();
 
 using VirtualPrinter::Printer;
+using VirtualPrinter::PrinterModel;
 
 static void PRINTER_EventHandler([[maybe_unused]] uint32_t param);
 
 static std::unique_ptr<Printer> default_printer = nullptr;
 
-static uint16_t conf_dpi, conf_width, conf_height;
-static uint64_t printer_timeout;
-static bool timeout_dirty;
+static PrinterModel conf_model     = PrinterModel::None;
+static uint16_t conf_dpi           = 360;
+static Real64 conf_page_width_in   = 8.27;  // A4
+static Real64 conf_page_height_in  = 11.69; // A4
+static uint64_t printer_timeout    = 500;
+static bool timeout_dirty          = false;
 static std_fs::path document_path;
-// static const char* font_path;
-static std::string conf_output_device;
-static bool conf_multipage_output;
 
 namespace VirtualPrinter {
 
 // Printer::FillPalette lives in printer_glyph.cpp.
 
-Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
-                 const std::string& output, bool multipage_output)
+Printer::Printer(uint16_t dpi, const Real64 page_width_in,
+                 const Real64 page_height_in)
 {
 	if (FT_Init_FreeType(&ft_lib)) {
 		LOG_ERR("PRINTER: Unable to init Freetype2. Printing disabled");
@@ -56,13 +57,9 @@ Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
 	}
 
 	this->dpi              = dpi;
-	this->output           = output;
-	this->multipage_output = multipage_output;
 
-	default_page_width = static_cast<Real64>(width) /
-	                     static_cast<Real64>(10);
-	default_page_height = static_cast<Real64>(height) /
-	                      static_cast<Real64>(10);
+	default_page_width  = page_width_in;
+	default_page_height = page_height_in;
 
 	page.width  = static_cast<int>(default_page_width * dpi);
 	page.height = static_cast<int>(default_page_height * dpi);
@@ -102,11 +99,10 @@ Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
 	cur_font  = nullptr;
 	char_read = false;
 	auto_feed = false;
-	output_handle.reset();
 
 	ResetPrinter();
 
-	LOG_MSG("PRINTER: Enabled");
+	LOG_MSG("PRINTER: Print job started");
 }
 
 void Printer::ResetPrinterHard()
@@ -167,7 +163,6 @@ void Printer::ResetPrinter()
 
 Printer::~Printer(void)
 {
-	FinishMultipage();
 	if (ft_lib != nullptr) {
 		FT_Done_FreeType(ft_lib);
 		ft_lib = nullptr;
@@ -463,8 +458,6 @@ void Printer::FormFeed()
 {
 	// Don't output blank pages
 	NewPage(!IsBlank(), true);
-
-	FinishMultipage();
 }
 
 // Cap on how many existing <prefix><N><ext> files we'll skip past before
@@ -498,37 +491,14 @@ std::optional<std_fs::path> find_next_name(const std::string& prefix,
 
 void Printer::OutputPage()
 {
-	if (iequals(output, "printer")) {
-		// Win32 host-printer pass-through removed (out of scope).
-		LOG_MSG("PRINTER: Direct printing not supported");
-	}
 #ifdef C_LIBPNG
-	else if (iequals(output, "png")) {
-		if (const auto out_path = find_next_name("page", ".png")) {
-			write_png_page(page, *out_path);
+	if (const auto out_path = find_next_name("page", ".png")) {
+		if (write_png_page(page, *out_path)) {
+			LOG_MSG("PRINTER: Wrote page to %s",
+			        out_path->string().c_str());
 		}
 	}
 #endif
-	else if (iequals(output, "ps")) {
-		OutputPagePostScript();
-	}
-}
-
-// Printer::FprintAscii85 lives in printer_ps.cpp.
-
-void Printer::FinishMultipage()
-{
-	if (!output_handle) {
-		return;
-	}
-	if (iequals(output, "ps")) {
-		fprintf(output_handle.get(), "%%%%Pages: %i\n", multipage_counter);
-		fprintf(output_handle.get(), "%%%%EOF\n");
-	} else if (iequals(output, "printer")) {
-		// Win32 host-printer pass-through removed (out of scope).
-	}
-	// FILE_unique_ptr destructor fcloses on reset.
-	output_handle.reset();
 }
 
 bool Printer::IsBlank()
@@ -654,14 +624,14 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 
 	// Data is strobed to the printer on the falling edge of the STROBE bit.
 	if (!(val & CtrlStrobe) && (lpt.control & CtrlStrobe)) {
-		if (!default_printer) {
+		if (!default_printer && conf_model == PrinterModel::EpsonDotMatrix) {
 			default_printer = std::make_unique<Printer>(conf_dpi,
-			                                            conf_width,
-			                                            conf_height,
-			                                            conf_output_device,
-			                                            conf_multipage_output);
+			                                            conf_page_width_in,
+			                                            conf_page_height_in);
 		}
-		default_printer->PrintChar(lpt.data);
+		if (default_printer) {
+			default_printer->PrintChar(lpt.data);
+		}
 		if (!timeout_dirty) {
 			PIC_AddEvent(PRINTER_EventHandler,
 			             static_cast<float>(printer_timeout),
@@ -708,18 +678,46 @@ uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
 // Lifecycle state (active / inactive) lives entirely in printer_glue's
 // PrinterState; this file deliberately has no equivalent flag.
 
-void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t height,
-                       const char* docpath, const char* output_format,
-                       const bool multipage, const int timeout_ms)
+void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
+                       const double page_width_in, const double page_height_in,
+                       const std::string& output_dir, const int timeout_ms)
 {
-	conf_dpi              = dpi;
-	conf_width            = width;
-	conf_height           = height;
-	document_path         = docpath ? docpath : "";
-	conf_output_device    = output_format ? output_format : "";
-	conf_multipage_output = multipage;
-	printer_timeout       = timeout_ms;
-	timeout_dirty         = (printer_timeout == 0);
+	switch (model) {
+	case PrinterModelKind::None:
+		conf_model = PrinterModel::None;
+		break;
+	case PrinterModelKind::EpsonDotMatrix:
+		conf_model = PrinterModel::EpsonDotMatrix;
+		break;
+	case PrinterModelKind::PostScript:
+		conf_model = PrinterModel::PostScript;
+		break;
+	}
+
+	conf_dpi            = dpi;
+	conf_page_width_in  = page_width_in;
+	conf_page_height_in = page_height_in;
+
+	document_path   = output_dir.empty() ? std_fs::path{"."}
+	                                     : std_fs::path{output_dir};
+	printer_timeout = static_cast<uint64_t>(timeout_ms);
+	timeout_dirty   = (printer_timeout == 0);
+
+	// Auto-create the output directory if it doesn't exist (existing
+	// behaviour was a confusing per-file error on first page write).
+	if (!document_path.empty()) {
+		std::error_code ec;
+		if (!std_fs::exists(document_path, ec)) {
+			if (std_fs::create_directories(document_path, ec)) {
+				LOG_MSG("PRINTER: Created output directory %s",
+				        document_path.string().c_str());
+			} else if (ec) {
+				LOG_ERR("PRINTER: Failed to create output directory %s: %s",
+				        document_path.string().c_str(),
+				        ec.message().c_str());
+			}
+		}
+	}
 }
 
 void PRINTER_FormFeed(const bool pressed)

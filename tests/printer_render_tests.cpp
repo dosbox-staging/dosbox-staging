@@ -32,14 +32,12 @@ namespace {
 // Test pages: 180 dpi, 5"x4" = 900x720 pixels. Big enough to fit
 // a couple of lines of plain text plus a bit-image stripe.
 constexpr uint16_t TestDpi          = 180;
-constexpr uint16_t TestPageWidth10  = 50; // tenths of inch = 5.0"
-constexpr uint16_t TestPageHeight10 = 40; // tenths of inch = 4.0"
+constexpr double   TestPageWidthIn  = 5.0;
+constexpr double   TestPageHeightIn = 4.0;
 
 class PrinterRenderTest : public DOSBoxTestFixture {
 protected:
 	std_fs::path output_dir;
-	std::string  docpath_storage;
-	char         output_format[8] = "png";
 
 	void SetUp() override
 	{
@@ -54,13 +52,11 @@ protected:
 		std_fs::remove_all(output_dir, ec);
 		std_fs::create_directories(output_dir, ec);
 
-		docpath_storage = output_dir.string();
-		PRINTER_Configure(TestDpi,
-		                  TestPageWidth10,
-		                  TestPageHeight10,
-		                  docpath_storage.c_str(),
-		                  "png",
-		                  false,
+		PRINTER_Configure(PrinterModelKind::EpsonDotMatrix,
+		                  TestDpi,
+		                  TestPageWidthIn,
+		                  TestPageHeightIn,
+		                  output_dir.string(),
 		                  0);
 	}
 
@@ -79,10 +75,8 @@ protected:
 		std_fs::create_directories(output_dir, ec);
 
 		VirtualPrinter::Printer printer(TestDpi,
-		                 TestPageWidth10,
-		                 TestPageHeight10,
-		                 output_format,
-		                 false);
+		                                TestPageWidthIn,
+		                                TestPageHeightIn);
 		for (const auto b : bytes) {
 			printer.PrintChar(b);
 		}

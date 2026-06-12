@@ -7,7 +7,9 @@
 
 #if C_PRINTER
 
+#include <cstdlib>
 #include <memory>
+#include <regex>
 #include <string>
 
 #include "config/config.h"
@@ -15,9 +17,11 @@
 #include "gui/mapper.h"
 #include "hardware/lpt.h"
 #include "hardware/port.h"
+#include "misc/logging.h"
 #include "misc/support.h"
 #include "printer_if.h"
 #include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 
@@ -30,13 +34,82 @@ struct PrinterState {
 	std::unique_ptr<IO_WriteHandleObject> control_write;
 	std::unique_ptr<IO_ReadHandleObject> control_read;
 
-	// Lifetimes for strings passed by raw pointer into printer.cpp's
-	// PRINTER_Configure (which stores the pointers verbatim).
-	std::string docpath;
-	std::string output_format;
-
 	bool active = false;
 };
+
+// Recognised page-size presets in inches. The "common DOS-era sizes
+// users actually saw" list — A3/Tabloid/Fanfold are wide-carriage
+// (LQ-1170, FX-100, FX-1050, etc.); the others fit any model.
+struct PageSizePreset {
+	std::string_view name;
+	double width_in;
+	double height_in;
+};
+
+constexpr PageSizePreset PageSizePresets[] = {
+        {"a3",      29.7 / 2.54, 42.0 / 2.54},
+        {"a4",      21.0 / 2.54, 29.7 / 2.54},
+        {"a5",      14.8 / 2.54, 21.0 / 2.54},
+        {"letter",  8.5,         11.0},
+        {"legal",   8.5,         14.0},
+        {"tabloid", 11.0,        17.0},
+        {"fanfold", 14.875,      11.0},
+};
+
+// Parse a printer_page_size string. Accepts case-insensitive preset
+// names (A3, A4, A5, Letter, Legal, Tabloid, Fanfold) or explicit
+// dimensions in the form "<W>x<H>cm" or "<W>x<H>inch" / "<W>x<H>in".
+// Returns true on success, with width_in / height_in set to inches.
+bool parse_page_size(const std::string& input, double& width_in,
+                     double& height_in)
+{
+	std::string lower = input;
+	for (auto& c : lower) {
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+
+	for (const auto& preset : PageSizePresets) {
+		if (lower == preset.name) {
+			width_in  = preset.width_in;
+			height_in = preset.height_in;
+			return true;
+		}
+	}
+
+	// Explicit dimensions: "<num>x<num>cm" or "<num>x<num>inch|in".
+	static const std::regex re(
+	        R"(^\s*([0-9]+(?:\.[0-9]+)?)\s*x\s*([0-9]+(?:\.[0-9]+)?)\s*(cm|inch|in)\s*$)",
+	        std::regex::optimize);
+	std::smatch m;
+	if (!std::regex_match(lower, m, re)) {
+		return false;
+	}
+	const double w    = std::stod(m[1].str());
+	const double h    = std::stod(m[2].str());
+	const auto& unit  = m[3].str();
+	const double mult = (unit == "cm") ? (1.0 / 2.54) : 1.0;
+
+	width_in  = w * mult;
+	height_in = h * mult;
+
+	// Sanity check — reject zero, negative, or absurd values.
+	if (width_in <= 0.0 || height_in <= 0.0 || width_in > 50.0 ||
+	    height_in > 50.0) {
+		return false;
+	}
+	return true;
+}
+
+PrinterModelKind parse_printer_model(const std::string& s)
+{
+	if (s == "epson_dot_matrix") {
+		return PrinterModelKind::EpsonDotMatrix;
+	}
+	if (s == "postscript") {
+		return PrinterModelKind::PostScript;
+	}
+	return PrinterModelKind::None;
+}
 
 PrinterState state{};
 
@@ -125,54 +198,72 @@ void PRINTER_AddConfigSection(const ConfigPtr& conf)
 
 	using enum Property::Changeable::Value;
 
-	auto pbool = s.AddBool("printer", WhenIdle, false);
-	pbool->SetHelp(
-	        "Enable the virtual ESC/P2 dot-matrix printer ('off' by default).\n"
-	        "Pages are written to files in the 'docpath' directory in the\n"
-	        "format selected by 'printoutput'. The emulated printer responds\n"
-	        "to Epson ESC/P2 escape sequences and produces text and graphics\n"
-	        "output. Requires TTF font files (roman.ttf, sansserif.ttf,\n"
-	        "courier.ttf, script.ttf, ocra.ttf) in the staging config dir.");
-
-	auto pstring = s.AddString("printer_port", WhenIdle, "lpt1");
+	auto pstring = s.AddString("printer_model", WhenIdle, "none");
 	pstring->SetHelp(
-	        "Which parallel port the virtual printer attaches to ('lpt1' by\n"
-	        "default). Most DOS apps target LPT1. Use 'lpt2' or 'lpt3' if\n"
-	        "you also need an LPT DAC (Disney / Covox / Stereo-on-1) on LPT1.");
+	        "Which kind of virtual printer to emulate.\n"
+	        "\n"
+	        "  none:             Printer disabled. (default)\n"
+	        "  epson_dot_matrix: Emulate an Epson dot-matrix printer\n"
+	        "                    (ESC/P and ESC/P 2 dialects). Best fit\n"
+	        "                    for the Epson LQ-870 driver in DOS apps.\n"
+	        "                    Writes one PNG per page.\n"
+	        "  postscript:       Passthrough PostScript printer. The DOS\n"
+	        "                    app sends raw PostScript; we save it\n"
+	        "                    verbatim to a .ps file. Use this when\n"
+	        "                    your DOS app targets a PostScript printer\n"
+	        "                    (Apple LaserWriter, generic PostScript).");
+	pstring->SetValues({"none", "epson_dot_matrix", "postscript"});
+
+	pstring = s.AddString("printer_port", WhenIdle, "lpt1");
+	pstring->SetHelp(
+	        "Which parallel port the virtual printer attaches to. Most\n"
+	        "DOS apps target LPT1. Use 'lpt2' or 'lpt3' if you also need\n"
+	        "an LPT DAC (Disney / Covox / Stereo-on-1) on LPT1.");
 	pstring->SetValues({"lpt1", "lpt2", "lpt3"});
 
-	auto pint = s.AddInt("dpi", WhenIdle, 360);
-	pint->SetHelp("Output resolution in dots per inch (default 360).");
-
-	pint = s.AddInt("width", WhenIdle, 85);
-	pint->SetHelp("Paper width in tenths of an inch (default 85 = 8.5\").");
-
-	pint = s.AddInt("height", WhenIdle, 110);
-	pint->SetHelp("Paper height in tenths of an inch (default 110 = 11\").");
-
-	pstring = s.AddString("printoutput", WhenIdle, "png");
-	pstring->SetHelp(
-	        "Output file format ('png' by default). Possible values:\n"
+	auto pint = s.AddInt("printer_dpi", WhenIdle, 360);
+	pint->SetHelp(
+	        "Only applies when printer_model = epson_dot_matrix. Ignored\n"
+	        "in PostScript mode (the PostScript file defines its own\n"
+	        "resolution).\n"
 	        "\n"
-	        "  png:  One PNG file per page.\n"
-	        "  ps:   PostScript Level 2; multipage docs go in one .ps file\n"
-	        "        when 'multipage = on'.");
-	pstring->SetValues({"png", "ps"});
+	        "Output resolution in dots per inch (default 360). Higher\n"
+	        "values produce sharper output and larger PNG files.");
 
-	pstring = s.AddString("docpath", WhenIdle, ".");
+	pstring = s.AddString("printer_page_size", WhenIdle, "A4");
 	pstring->SetHelp(
-	        "Directory where output pages are written (default: current\n"
-	        "working directory).");
+	        "Only applies when printer_model = epson_dot_matrix. Ignored\n"
+	        "in PostScript mode (the PostScript file defines its own\n"
+	        "page size).\n"
+	        "\n"
+	        "Output page size. Accepts a named preset or explicit\n"
+	        "dimensions. Presets:\n"
+	        "\n"
+	        "  A3       (29.7x42 cm) -- wide-carriage Epson only.\n"
+	        "  A4       (21x29.7 cm) -- the European default.\n"
+	        "  A5       (14.8x21 cm).\n"
+	        "  Letter   (8.5x11 inch) -- US default.\n"
+	        "  Legal    (8.5x14 inch) -- long US.\n"
+	        "  Tabloid  (11x17 inch) -- wide US, ~A3.\n"
+	        "  Fanfold  (14.875x11 inch) -- 'green-bar' tractor-feed\n"
+	        "           continuous paper, the classic DOS-era format.\n"
+	        "\n"
+	        "Or specify exact dimensions, e.g. '21x29.7cm',\n"
+	        "'8.5x11inch', '9.5x11inch' (narrow tractor-feed).");
 
-	pbool = s.AddBool("multipage", WhenIdle, false);
-	pbool->SetHelp(
-	        "Combine all pages from a single print job into one PostScript\n"
-	        "file ('off' by default). Press Ctrl+F2 to close the document.");
+	pstring = s.AddString("printer_output_dir", WhenIdle, ".");
+	pstring->SetHelp(
+	        "Directory where output files are written (PNGs in dot-matrix\n"
+	        "mode, .ps files in PostScript mode). Default is the current\n"
+	        "working directory. The directory is auto-created if it\n"
+	        "doesn't exist.");
 
-	pint = s.AddInt("timeout", WhenIdle, 500);
+	pint = s.AddInt("printer_timeout", WhenIdle, 500);
 	pint->SetHelp(
 	        "Inactivity timeout in milliseconds after which an unfinished\n"
-	        "page is auto-ejected (default 500ms). Set to 0 to disable.");
+	        "page is auto-ejected. Default 500ms. Set to 0 to disable\n"
+	        "auto-eject; you can also eject manually via the 'ejectpage'\n"
+	        "mapper action (default Ctrl+F2, fully remappable).");
 }
 
 void PRINTER_Init()
@@ -187,7 +278,9 @@ void PRINTER_Init()
 	}
 	auto& section = *section_base;
 
-	if (!section.GetBool("printer")) {
+	const auto model_str = section.GetString("printer_model");
+	const auto model     = parse_printer_model(model_str);
+	if (model == PrinterModelKind::None) {
 		return;
 	}
 
@@ -203,22 +296,23 @@ void PRINTER_Init()
 		return;
 	}
 
-	state.docpath       = section.GetString("docpath");
-	state.output_format = section.GetString("printoutput");
+	const auto dpi      = static_cast<uint16_t>(section.GetInt("printer_dpi"));
+	const auto size_str = section.GetString("printer_page_size");
+	const auto out_dir  = section.GetString("printer_output_dir");
+	const auto timeout  = section.GetInt("printer_timeout");
 
-	const auto dpi       = static_cast<uint16_t>(section.GetInt("dpi"));
-	const auto width     = static_cast<uint16_t>(section.GetInt("width"));
-	const auto height    = static_cast<uint16_t>(section.GetInt("height"));
-	const auto multipage = section.GetBool("multipage");
-	const auto timeout   = section.GetInt("timeout");
+	double page_w_in = 0.0;
+	double page_h_in = 0.0;
+	if (!parse_page_size(size_str, page_w_in, page_h_in)) {
+		LOG_WARNING(
+		        "PRINTER: Invalid printer_page_size '%s'; falling back to A4."
+		        " Use a preset (A3, A4, A5, Letter, Legal, Tabloid, Fanfold)"
+		        " or an explicit '<W>x<H>cm' / '<W>x<H>inch' value.",
+		        size_str.c_str());
+		parse_page_size("A4", page_w_in, page_h_in);
+	}
 
-	PRINTER_Configure(dpi,
-	                  width,
-	                  height,
-	                  state.docpath.c_str(),
-	                  state.output_format.c_str(),
-	                  multipage,
-	                  timeout);
+	PRINTER_Configure(model, dpi, page_w_in, page_h_in, out_dir, timeout);
 
 	install_io_handlers(lpt_port);
 
@@ -233,9 +327,26 @@ void PRINTER_Init()
 
 	state.active = true;
 
-	LOG_MSG("PRINTER: Initialised virtual ESC/P2 printer on %s (%03xh)",
-	        port_name.c_str(),
-	        lpt_port);
+	const char* model_name = (model == PrinterModelKind::EpsonDotMatrix)
+	                                 ? "Epson dot-matrix"
+	                                 : "PostScript passthrough";
+
+	if (model == PrinterModelKind::EpsonDotMatrix) {
+		LOG_MSG("PRINTER: Initialised %s on %s (%03xh), %dx%d page at %d dpi, output dir %s",
+		        model_name,
+		        port_name.c_str(),
+		        lpt_port,
+		        static_cast<int>(page_w_in * 100 + 0.5),
+		        static_cast<int>(page_h_in * 100 + 0.5),
+		        dpi,
+		        out_dir.c_str());
+	} else {
+		LOG_MSG("PRINTER: Initialised %s on %s (%03xh), output dir %s",
+		        model_name,
+		        port_name.c_str(),
+		        lpt_port,
+		        out_dir.c_str());
+	}
 }
 
 void PRINTER_Destroy()
