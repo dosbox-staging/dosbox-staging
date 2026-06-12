@@ -8,6 +8,9 @@
 
 #include "printer.h"
 
+#include <chrono>
+#include <unordered_map>
+
 #include "misc/logging.h"
 #include "utils/checks.h"
 
@@ -129,6 +132,12 @@ constexpr auto FsSelectReverseFeedMode                             = 0x852;
 constexpr auto FsSelectHighSpeedHighDensityElitePitch              = 0x853;
 constexpr auto FsTurnDoubleHeightPrintingOnOff                     = 0x856;
 constexpr auto FsPrint24BitHexDensityGraphics                      = 0x85a;
+
+// Per-opcode debounce interval for unsupported-command warnings.
+// Many DOS apps emit the same unsupported opcode repeatedly; muting
+// outright (once-per-session) hides bursts that come back later,
+// logging every invocation drowns the log.
+constexpr std::chrono::seconds UnsupportedOpcodeLogInterval{3};
 
 } // namespace
 
@@ -1150,18 +1159,32 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 		} break;
 
-		default:
-			if (esc_cmd < 0x100) {
-				// LOG(LOG_MISC,LOG_WARN)
-				LOG_MSG("PRINTER: Skipped unsupported command ESC %c (%02X)",
-				        esc_cmd,
-				        esc_cmd);
-			} else {
-				// LOG(LOG_MISC,LOG_WARN)
-				LOG_MSG("PRINTER: Skipped unsupported command ESC ( %c (%02X)",
-				        esc_cmd - 0x200,
-				        esc_cmd - 0x200);
+		default: {
+			using Clock = std::chrono::steady_clock;
+			static std::unordered_map<uint16_t, Clock::time_point> last_warned;
+
+			const auto now = Clock::now();
+			auto it        = last_warned.find(esc_cmd);
+
+			if (it == last_warned.end() ||
+			    now - it->second >= UnsupportedOpcodeLogInterval) {
+				if (esc_cmd < 0x100) {
+					LOG_WARNING(
+					        "PRINTER: ESC %c (%02Xh) recognised but not "
+					        "implemented; output may be incorrect",
+					        esc_cmd,
+					        esc_cmd);
+				} else {
+					LOG_WARNING(
+					        "PRINTER: ESC ( %c (%02Xh) recognised but not "
+					        "implemented; output may be incorrect",
+					        esc_cmd - 0x200,
+					        esc_cmd - 0x200);
+				}
+
+				last_warned[esc_cmd] = now;
 			}
+		}
 		}
 
 		esc_cmd = 0;
