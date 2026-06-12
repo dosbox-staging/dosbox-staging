@@ -47,18 +47,13 @@ void Printer::UpdateFont()
 	const char* font_filename = "roman.ttf";
 
 	switch (lq_typeface) {
-	case Typeface::Roman: font_filename = "roman.ttf"; break;
-
+	case Typeface::Roman:     font_filename = "roman.ttf";     break;
 	case Typeface::SansSerif: font_filename = "sansserif.ttf"; break;
-
-	case Typeface::Courier: font_filename = "courier.ttf"; break;
-
-	case Typeface::Script: font_filename = "script.ttf"; break;
-
+	case Typeface::Courier:   font_filename = "courier.ttf";   break;
+	case Typeface::Script:    font_filename = "script.ttf";    break;
 	case Typeface::OcrA:
-	case Typeface::OcrB: font_filename = "ocra.ttf"; break;
-
-	default: font_filename = "roman.ttf"; break;
+	case Typeface::OcrB:      font_filename = "ocra.ttf";      break;
+	default:                  font_filename = "roman.ttf";     break;
 	}
 
 	// get_resource_path walks the standard hierarchy (bundled
