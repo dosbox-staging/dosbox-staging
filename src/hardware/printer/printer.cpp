@@ -358,29 +358,39 @@ void Printer::PrintChar(uint8_t ch)
 	const auto penX = static_cast<uint16_t>(
 	        PixX() + cur_font->glyph->bitmap_left + centre_offset);
 
-	uint16_t penY = static_cast<uint16_t>(PixY() - cur_font->glyph->bitmap_top +
+	uint16_t pen_y = static_cast<uint16_t>(PixY() - cur_font->glyph->bitmap_top +
 	                                      cur_font->size->metrics.ascender / 64);
 
+	// Sub- and superscript vertical shift. The spec (escp2ref.pdf
+	// C-129) only describes the *direction* ("lower part" vs "upper
+	// part" of normal character space) and leaves the exact offset
+	// to the printer. We match escapy's choice (rise = point_size /
+	// 3), computed in UpdateFont() from the font's actual ascender
+	// at both the normal and 2/3-scaled sizes — see
+	// Printer::subscript_shift_px / superscript_shift_px.
 	if (style.subscript) {
-		penY = static_cast<uint16_t>(penY + cur_font->glyph->bitmap.rows / 2);
+		pen_y = static_cast<uint16_t>(pen_y + subscript_shift_px);
+	}
+	if (style.superscript) {
+		pen_y = static_cast<uint16_t>(pen_y - superscript_shift_px);
 	}
 
 	// Copy bitmap into page
-	BlitGlyph(cur_font->glyph->bitmap, penX, penY, false);
-	BlitGlyph(cur_font->glyph->bitmap, penX + 1, penY, true);
+	BlitGlyph(cur_font->glyph->bitmap, penX, pen_y, false);
+	BlitGlyph(cur_font->glyph->bitmap, penX + 1, pen_y, true);
 
 	// Doublestrike => Print the glyph a second time one pixel below
 	if (style.doublestrike) {
-		BlitGlyph(cur_font->glyph->bitmap, penX, penY + 1, true);
-		BlitGlyph(cur_font->glyph->bitmap, penX + 1, penY + 1, true);
+		BlitGlyph(cur_font->glyph->bitmap, penX, pen_y + 1, true);
+		BlitGlyph(cur_font->glyph->bitmap, penX + 1, pen_y + 1, true);
 	}
 
 	// Bold => Print the glyph a second time one pixel to the right
 	// or be a bit more bold...
 	if (style.bold) {
-		BlitGlyph(cur_font->glyph->bitmap, penX + 1, penY, true);
-		BlitGlyph(cur_font->glyph->bitmap, penX + 2, penY, true);
-		BlitGlyph(cur_font->glyph->bitmap, penX + 3, penY, true);
+		BlitGlyph(cur_font->glyph->bitmap, penX + 1, pen_y, true);
+		BlitGlyph(cur_font->glyph->bitmap, penX + 2, pen_y, true);
+		BlitGlyph(cur_font->glyph->bitmap, penX + 3, pen_y, true);
 	}
 
 	// For line printing

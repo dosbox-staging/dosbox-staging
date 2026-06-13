@@ -46,16 +46,11 @@ void Printer::UpdateFont()
 
 	switch (lq_typeface) {
 	case Typeface::Roman: font_filename = "roman.ttf"; break;
-
 	case Typeface::SansSerif: font_filename = "sansserif.ttf"; break;
-
 	case Typeface::Courier: font_filename = "courier.ttf"; break;
-
 	case Typeface::Script: font_filename = "script.ttf"; break;
-
 	case Typeface::OcrA:
 	case Typeface::OcrB: font_filename = "ocra.ttf"; break;
-
 	default: font_filename = "roman.ttf"; break;
 	}
 
@@ -109,9 +104,49 @@ void Printer::UpdateFont()
 	}
 
 	if ((style.superscript) || (style.subscript)) {
+		// Capture the *normal* ascender before scaling, then scale.
+		// Used at render time to position sub/super glyphs so their
+		// baselines match escapy's rise = point_size / 3 (in PDF
+		// baseline units). The exact pixel delta differs per font
+		// because each font's ascender/em ratio differs, so we read
+		// it from the live FT face rather than approximating it as a
+		// y_ppem multiplier.
+		FT_Set_Char_Size(cur_font,
+		                 static_cast<uint16_t>(horizPoints) * 64,
+		                 static_cast<uint16_t>(vertPoints) * 64,
+		                 dpi,
+		                 dpi);
+
+		const auto ascender_normal_px = cur_font->size->metrics.ascender / 64;
+
+		const double original_vert_pts = vertPoints;
+
 		horizPoints *= 2.0 / 3.0;
 		vertPoints *= 2.0 / 3.0;
 		act_cpi /= 2.0 / 3.0;
+
+		FT_Set_Char_Size(cur_font,
+		                 static_cast<uint16_t>(horizPoints) * 64,
+		                 static_cast<uint16_t>(vertPoints) * 64,
+		                 dpi,
+		                 dpi);
+
+		const auto ascender_scaled_px = cur_font->size->metrics.ascender / 64;
+
+		const auto delta_px = static_cast<int>(ascender_normal_px -
+		                                       ascender_scaled_px);
+
+		// escapy's rise in pixels = original_pt * (dpi / 72) / 3.
+		// Truncate original_vert_pts the same way the FT_Set_Char_Size
+		// call above does, so the math matches what FT actually saw.
+		const auto rise_px = static_cast<int>(original_vert_pts) * dpi /
+		                     72 / 3;
+
+		subscript_shift_px   = rise_px + delta_px;
+		superscript_shift_px = rise_px - delta_px;
+	} else {
+		subscript_shift_px   = 0;
+		superscript_shift_px = 0;
 	}
 
 	FT_Set_Char_Size(cur_font,
@@ -141,8 +176,7 @@ void Printer::BlitGlyph(const FT_Bitmap bitmap, const uint16_t destx,
 			// Ignore background and don't go over the border.
 			if (source > 0 && (static_cast<int>(destx + x) < page.width) &&
 			    (static_cast<int>(desty + y) < page.height)) {
-				uint8_t* target = page.pixels.data() +
-				                  (x + destx) +
+				uint8_t* target = page.pixels.data() + (x + destx) +
 				                  (y + desty) * page.pitch;
 				source >>= 3;
 

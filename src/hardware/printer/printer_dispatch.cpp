@@ -817,12 +817,16 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// parameter is 0 / '0' (subscript) or 1 / '1' (superscript).
 		// Earlier code read params[1] for the '1' check, which is
 		// out of bounds for a one-param command.
+		// Select superscript / subscript printing (ESC S n) -- per
+		// escp2ref.pdf C-129: n = 0 or 48 selects the *upper* part
+		// of the character space (superscript); n = 1 or 49 selects
+		// the *lower* part (subscript).
 		case EscSelectSuperscriptSubscriptPrinting: // 0x53
 			if (params[0] == 0 || params[0] == 48) {
-				style.subscript = 1;
+				style.superscript = 1;
 			}
 			if (params[0] == 1 || params[0] == 49) {
-				style.superscript = 1;
+				style.subscript = 1;
 			}
 			UpdateFont();
 			break;
