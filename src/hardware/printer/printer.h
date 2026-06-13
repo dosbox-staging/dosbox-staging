@@ -286,6 +286,16 @@ private:
 	// driver -- it's a data-stream property, not a model property.
 	int pins = 24;
 
+	// Subscript / superscript vertical pixel shift, computed in
+	// UpdateFont() from the current font's ascender at both the
+	// normal and 2/3-scaled sizes. Matches escapy's rise =
+	// point_size / 3 (in PDF baseline units) translated into our
+	// raster frame, where the scaled font's natural baseline differs
+	// from the normal font's by
+	// (ascender_normal - ascender_scaled).
+	int subscript_shift_px   = 0;
+	int superscript_shift_px = 0;
+
 	// Size of one line (in inch).
 	Real64 line_spacing = 0.0;
 
