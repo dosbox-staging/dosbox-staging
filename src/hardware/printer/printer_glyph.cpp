@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <string>
 
+#include "utils/rgb.h"
+
 #include "misc/cross.h"
 #include "misc/logging.h"
 #include "misc/support.h"
@@ -19,19 +21,22 @@ namespace VirtualPrinter {
 void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
                           const uint8_t blue_max, const uint8_t color_id)
 {
-	const float red   = red_max / 30.9f;
-	const float green = green_max / 30.9f;
-	const float blue  = blue_max / 30.9f;
-
 	PagePixel pixel{};
-	pixel.color_id          = color_id;
+	pixel.color_id           = color_id;
 	const uint8_t color_mask = pixel.data;
 
-	for (int i = 0; i < 32; i++) {
+	// Coverage = i/31 is accumulated in linear light: 0 = paper, 1 =
+	// fully inked. Per-channel residual linear luminance is 1 -
+	// coverage * (channel_max/255). We sRGB-encode for display so a
+	// 50% coverage shows as perceptually mid-grey rather than the
+	// linearly-encoded L=128 which looks too dark and produces
+	// visible moire on sub-pixel-aligned dither patterns.
+	for (int i = 0; i < 32; ++i) {
 		auto& c = page.palette[i + color_mask];
-		c.r = static_cast<uint8_t>(255 - (red * static_cast<float>(i)));
-		c.g = static_cast<uint8_t>(255 - (green * static_cast<float>(i)));
-		c.b = static_cast<uint8_t>(255 - (blue * static_cast<float>(i)));
+		const float coverage = static_cast<float>(i) / 31.0f;
+		c.r = linear_to_srgb8_lut(1.0f - coverage * (red_max / 255.0f));
+		c.g = linear_to_srgb8_lut(1.0f - coverage * (green_max / 255.0f));
+		c.b = linear_to_srgb8_lut(1.0f - coverage * (blue_max / 255.0f));
 	}
 }
 
