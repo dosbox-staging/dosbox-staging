@@ -363,16 +363,18 @@ void Printer::PrintChar(uint8_t ch)
 	const auto penX = static_cast<uint16_t>(
 	        PixX() + cur_font->glyph->bitmap_left + centre_offset);
 
-	uint16_t pen_y = static_cast<uint16_t>(PixY() - cur_font->glyph->bitmap_top +
-	                                      cur_font->size->metrics.ascender / 64);
+	// Anchor every glyph to the per-line baseline captured in
+	// UpdateFont() so that double-height chars extend upward from the
+	// shared baseline and normal-size chars on the same line stay on
+	// the baseline.
+	uint16_t pen_y = static_cast<uint16_t>(PixY() + line_baseline_anchor_px -
+	                                       cur_font->glyph->bitmap_top);
 
 	// Sub- and superscript vertical shift. The spec (escp2ref.pdf
 	// C-129) only describes the *direction* ("lower part" vs "upper
-	// part" of normal character space) and leaves the exact offset
-	// to the printer. We match escapy's choice (rise = point_size /
-	// 3), computed in UpdateFont() from the font's actual ascender
-	// at both the normal and 2/3-scaled sizes — see
-	// Printer::subscript_shift_px / superscript_shift_px.
+	// part" of normal character space) and leaves the exact offset to
+	// the printer. We use rise = point_size / 3 (in PDF baseline units,
+	// converted to pixels in UpdateFont).
 	if (style.subscript) {
 		pen_y = static_cast<uint16_t>(pen_y + subscript_shift_px);
 	}
