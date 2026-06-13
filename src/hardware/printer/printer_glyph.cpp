@@ -45,6 +45,10 @@ void Printer::UpdateFont()
 	if (cur_font != nullptr) {
 		FT_Done_Face(cur_font);
 	}
+	if (mono_box_font != nullptr) {
+		FT_Done_Face(mono_box_font);
+		mono_box_font = nullptr;
+	}
 
 	// Map the Epson typeface enum to a font filename. We ship
 	// Liberation Serif / Sans / Mono renamed to these slot names
@@ -70,6 +74,17 @@ void Printer::UpdateFont()
 	    FT_New_Face(ft_lib, font_path.string().c_str(), 0, &cur_font)) {
 		LOG_WARNING("PRINTER: Unable to load font %s", font_filename);
 		cur_font = nullptr;
+	}
+
+	// Always load the monospace fallback. PrintChar swaps to it for
+	// box-drawing / block-element chars when cur_font isn't itself
+	// monospace and we're in fixed-pitch mode -- proportional fonts
+	// (Roman / Sans Serif / Script) have variable advance widths even
+	// for box chars and so misalign in a grid.
+	const auto mono_path = get_resource_path("fonts", "courier.ttf");
+	if (mono_path.empty() ||
+	    FT_New_Face(ft_lib, mono_path.string().c_str(), 0, &mono_box_font)) {
+		mono_box_font = nullptr;
 	}
 
 	double horizPoints = 10.5;
@@ -137,6 +152,7 @@ void Printer::UpdateFont()
 		horizPoints *= 2.0 / 3.0;
 		vertPoints *= 2.0 / 3.0;
 		act_cpi /= 2.0 / 3.0;
+
 	} else {
 		subscript_shift_px   = 0;
 		superscript_shift_px = 0;
@@ -148,12 +164,82 @@ void Printer::UpdateFont()
 	                 dpi,
 	                 dpi);
 
+	cur_horiz_points = horizPoints;
+	cur_vert_points  = vertPoints;
+
+	// Size the mono fallback to the same dimensions so PrintChar can
+	// swap to it for box-drawing chars in fixed-pitch mode without re-
+	// sizing per glyph.
+	if (mono_box_font != nullptr) {
+		FT_Set_Char_Size(mono_box_font,
+		                 points_to_26_6(horizPoints),
+		                 points_to_26_6(vertPoints),
+		                 dpi,
+		                 dpi);
+	}
+
+	// Pick the face that PrintChar will actually render box chars on:
+	// the mono fallback in fixed-pitch mode (so proportional-typeface
+	// docs still get cell-aligned box-drawing chars, matching real
+	// Epson which used a typeface-agnostic box-drawing bitmap set);
+	// otherwise the active typeface itself.
+	FT_Face box_face = (!style.prop && mono_box_font != nullptr) ? mono_box_font
+	                                                             : cur_font;
+	natural_em_height_px = ft26_6_to_pixels(box_face->size->metrics.height);
+
+	// Compute the horizontal point size that stretches box_face's em
+	// to exactly fill the 1/cpi cell; the bitmap overhang baked into
+	// each box-drawing glyph then bridges the cell seam. Engages only
+	// when box_face is monospace and its natural advance is narrower
+	// than the cell at the configured cpi. PrintChar does the matching
+	// vertical stretch lazily because it depends on line_spacing.
+	box_fill_horiz_points = 0.0;
+	box_fill_em_px        = 0;
+
+	if (!style.prop && act_cpi > 0.0 && FT_IS_FIXED_WIDTH(box_face)) {
+		const auto natural_advance_px = ft26_6_to_pixels(
+		        box_face->size->metrics.max_advance);
+
+		const auto cell_px = static_cast<int>(dpi / act_cpi);
+
+		if (natural_advance_px > 0 && cell_px > natural_advance_px) {
+			box_fill_horiz_points = horizPoints *
+			                        BoxFillOvershootHorizontal *
+			                        static_cast<double>(cell_px) /
+			                        static_cast<double>(natural_advance_px);
+
+			// Read em-width at the stretched size; restore the
+			// natural-size font afterwards. Use the raw cast (no
+			// truncation) so this em-width matches what PrintChar
+			// will compute when it sets the same fractional point
+			// size for the actual render.
+			FT_Set_Char_Size(box_face,
+			                 static_cast<FT_F26Dot6>(box_fill_horiz_points *
+			                                         Ft26Dot6Unit),
+			                 static_cast<FT_F26Dot6>(vertPoints *
+			                                         Ft26Dot6Unit),
+			                 dpi,
+			                 dpi);
+
+			box_fill_em_px = ft26_6_to_pixels(
+			        box_face->size->metrics.max_advance);
+
+			FT_Set_Char_Size(box_face,
+			                 points_to_26_6(horizPoints),
+			                 points_to_26_6(vertPoints),
+			                 dpi,
+			                 dpi);
+		}
+	}
+
 	if (style.italics || char_tables[cur_char_table] == 0) {
 		FT_Matrix matrix;
+
 		matrix.xx = 0x10000L;
 		matrix.xy = (FT_Fixed)(0.20 * 0x10000L);
 		matrix.yx = 0;
 		matrix.yy = 0x10000L;
+
 		FT_Set_Transform(cur_font, &matrix, 0);
 	}
 }

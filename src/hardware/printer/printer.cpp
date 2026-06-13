@@ -331,14 +331,58 @@ void Printer::PrintChar(uint8_t ch)
 		ch = 0x20;
 	}
 
+	// Box-drawing chars (U+2500..U+257F) and block elements
+	// (U+2580..U+259F) are designed to tile across cell boundaries. In
+	// fixed-pitch mode we render them from the mono fallback face
+	// (independent of the active typeface), matching real Epson which
+	// shipped a typeface-agnostic box-drawing bitmap set. The face is
+	// then temporarily stretched in both axes so its em exactly fills
+	// the 1/cpi horizontal cell and the line_spacing vertical cell;
+	// the bitmap overhang baked into each glyph bridges the seam.
+	const auto unicode = cur_map[ch];
+	const bool is_box_char = unicode >= 0x2500 && unicode <= 0x259F;
+	FT_Face render_face = (is_box_char && !style.prop && mono_box_font != nullptr)
+	                              ? mono_box_font
+	                              : cur_font;
+	const bool apply_box_fill = is_box_char &&
+	                            box_fill_horiz_points > 0.0 &&
+	                            line_spacing > 0.0 &&
+	                            natural_em_height_px > 0;
+
+	int box_fill_em_h_px   = 0;
+	int box_fill_em_asc_px = 0;
+	if (apply_box_fill) {
+		const auto cell_h_px = static_cast<int>(line_spacing * dpi);
+		const auto box_fill_vert_points = cur_vert_points * BoxFillOvershootVertical *
+		                                  static_cast<double>(cell_h_px) /
+		                                  static_cast<double>(natural_em_height_px);
+		FT_Set_Char_Size(render_face,
+		                 static_cast<FT_F26Dot6>(box_fill_horiz_points *
+		                                         Ft26Dot6Unit),
+		                 static_cast<FT_F26Dot6>(box_fill_vert_points *
+		                                         Ft26Dot6Unit),
+		                 dpi,
+		                 dpi);
+		box_fill_em_h_px   = ft26_6_to_pixels(render_face->size->metrics.height);
+		box_fill_em_asc_px = ft26_6_to_pixels(render_face->size->metrics.ascender);
+	}
+
 	// Find the glyph for the char to render
-	FT_UInt index = FT_Get_Char_Index(cur_font, cur_map[ch]);
+	FT_UInt index = FT_Get_Char_Index(render_face, unicode);
 
 	// Load the glyph
-	FT_Load_Glyph(cur_font, index, FT_LOAD_DEFAULT);
+	FT_Load_Glyph(render_face, index, FT_LOAD_DEFAULT);
 
 	// Render a high-quality bitmap
-	FT_Render_Glyph(cur_font->glyph, FT_RENDER_MODE_NORMAL);
+	FT_Render_Glyph(render_face->glyph, FT_RENDER_MODE_NORMAL);
+
+	if (apply_box_fill) {
+		FT_Set_Char_Size(render_face,
+		                 static_cast<FT_F26Dot6>(cur_horiz_points * Ft26Dot6Unit),
+		                 static_cast<FT_F26Dot6>(cur_vert_points * Ft26Dot6Unit),
+		                 dpi,
+		                 dpi);
+	}
 
 	// Fixed-pitch centring. A proportional font (Roman, Sans Serif)
 	// forced into a 1/act_cpi inch cell would otherwise sit
@@ -351,24 +395,56 @@ void Printer::PrintChar(uint8_t ch)
 	// at different X positions and break grids.
 	uint16_t centre_offset = 0;
 
-	if (!style.prop && act_cpi > 0.0 && !FT_IS_FIXED_WIDTH(cur_font)) {
-		const auto cell_px = static_cast<uint16_t>(dpi / act_cpi);
-		const auto glyph_w = static_cast<uint16_t>(cur_font->glyph->bitmap.width);
+	if (!style.prop && act_cpi > 0.0 && !FT_IS_FIXED_WIDTH(render_face)) {
+		const auto cell_px = static_cast<int>(dpi / act_cpi);
+		const auto glyph_w = static_cast<int>(render_face->glyph->bitmap.width);
 
 		if (cell_px > glyph_w) {
 			centre_offset = static_cast<uint16_t>((cell_px - glyph_w) / 2);
 		}
 	}
 
-	const auto penX = static_cast<uint16_t>(
-	        PixX() + cur_font->glyph->bitmap_left + centre_offset);
+	// For box-fill chars, centre the stretched em on the cell using a
+	// constant offset so every box-drawing glyph gets the same
+	// horizontal positioning -- features anchored to em-centre
+	// (verticals, line crossings) all land at cell-centre across the
+	// grid. Centring by the glyph's own bitmap.width would shift each
+	// glyph differently and break grid alignment.
+	int signed_pen_x = 0;
+
+	if (apply_box_fill && act_cpi > 0.0) {
+		const auto cell_px = static_cast<int>(dpi / act_cpi);
+
+		signed_pen_x = static_cast<int>(PixX()) +
+		              (cell_px - box_fill_em_px) / 2 +
+		              render_face->glyph->bitmap_left;
+	} else {
+		signed_pen_x = static_cast<int>(PixX()) +
+		              render_face->glyph->bitmap_left + centre_offset;
+	}
+
+	const uint16_t pen_x = static_cast<uint16_t>(signed_pen_x < 0 ? 0 : signed_pen_x);
 
 	// Anchor every glyph to the per-line baseline captured in
 	// UpdateFont() so that double-height chars extend upward from the
 	// shared baseline and normal-size chars on the same line stay on
-	// the baseline.
-	uint16_t pen_y = static_cast<uint16_t>(PixY() + line_baseline_anchor_px -
-	                                       cur_font->glyph->bitmap_top);
+	// the baseline. Box-fill chars override this with em-centring on
+	// the line cell.
+	int signed_pen_y = 0;
+
+	if (apply_box_fill) {
+		const auto cell_h_px = static_cast<int>(line_spacing * dpi);
+
+		const auto em_top_y  = static_cast<int>(PixY()) +
+		                      (cell_h_px - box_fill_em_h_px) / 2;
+
+		signed_pen_y = em_top_y + box_fill_em_asc_px -
+		              render_face->glyph->bitmap_top;
+	} else {
+		signed_pen_y = static_cast<int>(PixY()) + line_baseline_anchor_px -
+		              render_face->glyph->bitmap_top;
+	}
+	uint16_t pen_y = static_cast<uint16_t>(signed_pen_y < 0 ? 0 : signed_pen_y);
 
 	// Sub- and superscript vertical shift. The spec (escp2ref.pdf
 	// C-129) only describes the *direction* ("lower part" vs "upper
@@ -383,21 +459,21 @@ void Printer::PrintChar(uint8_t ch)
 	}
 
 	// Copy bitmap into page
-	BlitGlyph(cur_font->glyph->bitmap, penX, pen_y, false);
-	BlitGlyph(cur_font->glyph->bitmap, penX + 1, pen_y, true);
+	BlitGlyph(render_face->glyph->bitmap, pen_x, pen_y, false);
+	BlitGlyph(render_face->glyph->bitmap, pen_x + 1, pen_y, true);
 
 	// Doublestrike => Print the glyph a second time one pixel below
 	if (style.doublestrike) {
-		BlitGlyph(cur_font->glyph->bitmap, penX, pen_y + 1, true);
-		BlitGlyph(cur_font->glyph->bitmap, penX + 1, pen_y + 1, true);
+		BlitGlyph(render_face->glyph->bitmap, pen_x, pen_y + 1, true);
+		BlitGlyph(render_face->glyph->bitmap, pen_x + 1, pen_y + 1, true);
 	}
 
 	// Bold => Print the glyph a second time one pixel to the right
 	// or be a bit more bold...
 	if (style.bold) {
-		BlitGlyph(cur_font->glyph->bitmap, penX + 1, pen_y, true);
-		BlitGlyph(cur_font->glyph->bitmap, penX + 2, pen_y, true);
-		BlitGlyph(cur_font->glyph->bitmap, penX + 3, pen_y, true);
+		BlitGlyph(render_face->glyph->bitmap, pen_x + 1, pen_y, true);
+		BlitGlyph(render_face->glyph->bitmap, pen_x + 2, pen_y, true);
+		BlitGlyph(render_face->glyph->bitmap, pen_x + 3, pen_y, true);
 	}
 
 	// For line printing
@@ -406,9 +482,11 @@ void Printer::PrintChar(uint8_t ch)
 	// advance the cursor to the right
 	double x_advance;
 	if (style.prop) {
-		x_advance = static_cast<double>(
-		        static_cast<double>(cur_font->glyph->advance.x) /
-		        static_cast<double>(dpi * 64));
+		// advance.x is in 26.6 pixel units; divide by dpi * Ft26Dot6Unit
+		// in a single step to keep sub-pixel precision before
+		// converting to inches.
+		x_advance = static_cast<double>(render_face->glyph->advance.x) /
+		            static_cast<double>(dpi * Ft26Dot6Unit);
 	} else {
 		if (hmi < 0) {
 			x_advance = 1 / static_cast<double>(act_cpi);
@@ -559,8 +637,7 @@ bool Printer::IsBlank()
 
 uint8_t Printer::GetPixel(const uint32_t num)
 {
-	return page.pixels[(num % page.width) +
-	                   ((num / page.width) * page.pitch)];
+	return page.pixels[(num % page.width) + ((num / page.width) * page.pitch)];
 }
 
 } // namespace VirtualPrinter
@@ -649,12 +726,12 @@ static void trigger_form_feed(const bool pressed)
 
 static void printer_event_handler([[maybe_unused]] const uint32_t param)
 {
-	// LOG_MSG("printerevent");
-	if (timeout_dirty) { // add another
+	if (timeout_dirty) {
+		// More data arrived since this event was queued — push the
+		// timeout further out and re-fire later.
 		PIC_AddEvent(printer_event_handler,
 		             static_cast<float>(printer_timeout),
 		             0);
-		// LOG_MSG("timeout renew");
 		timeout_dirty = false;
 	} else {
 		timeout_dirty = false;
@@ -733,8 +810,7 @@ void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
                        const std::string& output_dir, const int timeout_ms)
 {
 	switch (model) {
-	case PrinterModelKind::None:
-		conf_model = PrinterModel::None;
+	case PrinterModelKind::None: conf_model = PrinterModel::None; break;
 		break;
 	case PrinterModelKind::EpsonDotMatrix9Pin:
 		conf_model = PrinterModel::EpsonDotMatrix;

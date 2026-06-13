@@ -85,6 +85,18 @@ static constexpr int ft26_6_to_pixels(const FT_Pos value)
 	return static_cast<int>(value / Ft26Dot6Unit);
 }
 
+// CP437 box-drawing and block-element glyphs are scaled so their em
+// exactly fills the cell (1/cpi inch horizontally, line_spacing inch
+// vertically) in both axes. At 1.0 there's no overshoot beyond the
+// cell -- adjacent glyphs touch via the bitmap overhang the font
+// designer baked into the box-drawing chars (a few px past the em on
+// each side, so they can connect in a terminal with zero kerning).
+// The guard in UpdateFont skips the stretch when the font's natural
+// advance is already >= cell, so this is a no-op for fonts whose
+// design size matches the configured cpi.
+constexpr double BoxFillOvershootHorizontal = 1.00;
+constexpr double BoxFillOvershootVertical   = 1.00;
+
 // Currently-active text style flags. Modelled on LptStatusRegister in
 // src/hardware/parallelport/lpt.h: writes go through the named bit_view
 // members, reads through either the members or the 'data' field for masking.
@@ -284,6 +296,14 @@ private:
 	// The font currently used to render characters.
 	FT_Face cur_font = nullptr;
 
+	// Monospace fallback (courier.ttf), loaded in parallel with
+	// cur_font. PrintChar swaps to this for CP437 box-drawing and
+	// block-element glyphs when in fixed-pitch mode (style.prop = 0)
+	// so the box chars from a proportional typeface line up on the
+	// grid -- proportional fonts have variable advance widths even for
+	// box-drawing chars. Mirrors escapy's approach.
+	FT_Face mono_box_font = nullptr;
+
 	uint8_t color = 0;
 
 	// Position of the print head (in inch).
@@ -338,6 +358,28 @@ private:
 	// shares the same baseline regardless of which size each char ends
 	// up at.
 	int line_baseline_anchor_px = 0;
+
+	// Current font horizontal/vertical point sizes as last passed to
+	// FT_Set_Char_Size in UpdateFont(). PrintChar uses these to restore
+	// the font size after temporarily applying the box-fill stretch.
+	double cur_horiz_points = 0.0;
+	double cur_vert_points  = 0.0;
+
+	// Horizontal point size used to render CP437 box-drawing and
+	// block-element chars (U+2500..U+259F). Set in UpdateFont(); zero
+	// when the natural advance already fills the cell or for
+	// proportional fonts. PrintChar computes the matching vertical
+	// stretch lazily because it depends on the current line_spacing.
+	double box_fill_horiz_points = 0.0;
+
+	// Em width in pixels at box_fill_horiz_points. Used in PrintChar
+	// for em-centring on the cell so features anchored to em-centre
+	// (verticals, line crossings) line up across the grid.
+	int box_fill_em_px = 0;
+
+	// Natural em-height at cur_vert_points (read in UpdateFont). Used
+	// in PrintChar to compute the lazy vertical box-fill stretch.
+	int natural_em_height_px = 0;
 
 	// Subscript / superscript vertical pixel shift. Equals
 	// rise = point_size / 3 (PDF baseline units, converted to pixels).
