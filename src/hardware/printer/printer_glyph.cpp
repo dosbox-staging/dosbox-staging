@@ -93,57 +93,43 @@ void Printer::UpdateFont()
 			act_cpi /= 2.0;
 			horizPoints *= 2.0;
 		}
-
-		if (style.doubleheight) {
-			vertPoints *= 2.0;
-		}
 	} else {
 		// Multipoint (scalable) mode.
 		act_cpi     = multi_cpi;
 		horizPoints = vertPoints = multi_point_size;
 	}
 
+	// Capture the natural-size ascender BEFORE the double-height and
+	// sub/super scalings that follow. This is the per-line baseline
+	// anchor, used in PrintChar so that every glyph on the line shares
+	// the same baseline regardless of which size it ends up rendered at.
+	// Taller glyphs (double-height) extend upward from the baseline;
+	// shorter glyphs (sub/super) sit on it.
+	FT_Set_Char_Size(cur_font,
+	                 static_cast<uint16_t>(horizPoints) * 64,
+	                 static_cast<uint16_t>(vertPoints) * 64,
+	                 dpi,
+	                 dpi);
+	line_baseline_anchor_px = static_cast<int>(
+	        cur_font->size->metrics.ascender / 64);
+
+	if (!multipoint && style.doubleheight) {
+		vertPoints *= 2.0;
+	}
+
 	if ((style.superscript) || (style.subscript)) {
-		// Capture the *normal* ascender before scaling, then scale.
-		// Used at render time to position sub/super glyphs so their
-		// baselines match escapy's rise = point_size / 3 (in PDF
-		// baseline units). The exact pixel delta differs per font
-		// because each font's ascender/em ratio differs, so we read
-		// it from the live FT face rather than approximating it as a
-		// y_ppem multiplier.
-		FT_Set_Char_Size(cur_font,
-		                 static_cast<uint16_t>(horizPoints) * 64,
-		                 static_cast<uint16_t>(vertPoints) * 64,
-		                 dpi,
-		                 dpi);
-
-		const auto ascender_normal_px = cur_font->size->metrics.ascender / 64;
-
-		const double original_vert_pts = vertPoints;
+		// Vertical shift = point_size / 3 (PDF baseline units),
+		// converted to pixels. With baseline anchoring above, the shift
+		// is the rise expressed in pixels -- no per-font delta
+		// correction is needed because the baseline is now constant
+		// across font-size changes.
+		const auto rise_px = static_cast<int>(vertPoints) * dpi / 72 / 3;
+		subscript_shift_px   = rise_px;
+		superscript_shift_px = rise_px;
 
 		horizPoints *= 2.0 / 3.0;
 		vertPoints *= 2.0 / 3.0;
 		act_cpi /= 2.0 / 3.0;
-
-		FT_Set_Char_Size(cur_font,
-		                 static_cast<uint16_t>(horizPoints) * 64,
-		                 static_cast<uint16_t>(vertPoints) * 64,
-		                 dpi,
-		                 dpi);
-
-		const auto ascender_scaled_px = cur_font->size->metrics.ascender / 64;
-
-		const auto delta_px = static_cast<int>(ascender_normal_px -
-		                                       ascender_scaled_px);
-
-		// escapy's rise in pixels = original_pt * (dpi / 72) / 3.
-		// Truncate original_vert_pts the same way the FT_Set_Char_Size
-		// call above does, so the math matches what FT actually saw.
-		const auto rise_px = static_cast<int>(original_vert_pts) * dpi /
-		                     72 / 3;
-
-		subscript_shift_px   = rise_px + delta_px;
-		superscript_shift_px = rise_px - delta_px;
 	} else {
 		subscript_shift_px   = 0;
 		superscript_shift_px = 0;

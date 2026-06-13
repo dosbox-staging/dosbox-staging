@@ -286,13 +286,18 @@ private:
 	// driver -- it's a data-stream property, not a model property.
 	int pins = 24;
 
-	// Subscript / superscript vertical pixel shift, computed in
-	// UpdateFont() from the current font's ascender at both the
-	// normal and 2/3-scaled sizes. Matches escapy's rise =
-	// point_size / 3 (in PDF baseline units) translated into our
-	// raster frame, where the scaled font's natural baseline differs
-	// from the normal font's by
-	// (ascender_normal - ascender_scaled).
+	// Per-line baseline anchor in pixels relative to PixY(). Captured
+	// in UpdateFont() at the natural (cpi-derived, no double-height,
+	// no sub/super) point size so that every glyph rendered on the line
+	// shares the same baseline regardless of which size each char ends
+	// up at.
+	int line_baseline_anchor_px = 0;
+
+	// Subscript / superscript vertical pixel shift. Equals
+	// rise = point_size / 3 (PDF baseline units, converted to pixels).
+	// With the per-line baseline anchor above, the shift is just the
+	// rise -- no per-font delta correction is needed because the
+	// baseline stays constant across font-size changes within the line.
 	int subscript_shift_px   = 0;
 	int superscript_shift_px = 0;
 
