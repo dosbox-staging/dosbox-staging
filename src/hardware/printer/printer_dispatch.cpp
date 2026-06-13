@@ -586,11 +586,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			SetupBitImage(params[0], static_cast<uint16_t>(Param16(1)));
 			break;
 
-		// Set n/360-inch line spacing (ESC +)
+		// Set n/360-inch line spacing (ESC + / FS 3) -- 24/48-pin only
+		// per escp2ref.pdf C-29 ("Not available on 9-pin printers").
+		// On a 9-pin printer model, ignore.
 		case EscSetN360InchLineSpacing: // 0x2b
-		// Set n/360-inch line spacing (FS 3)
-		case FsSetN360InchLineSpacing: // 0x833
-			line_spacing = static_cast<Real64>(params[0]) / 360;
+		case FsSetN360InchLineSpacing:  // 0x833
+			if (pins != 9) {
+				line_spacing = static_cast<Real64>(params[0]) / 360.0;
+			}
 			break;
 
 		// Turn underline on/off (ESC -)
@@ -620,9 +623,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			line_spacing = static_cast<Real64>(1) / 6;
 			break; // 0x32
 
-		// Set n/180-inch line spacing (ESC 3)
+		// Set line spacing (ESC 3) -- n/180 for 24/48-pin, n/216 for
+		// 9-pin (escp2ref.pdf C-37).
 		case EscSetN180InchLineSpacing: // 0x33
-			line_spacing = static_cast<Real64>(params[0]) / 180;
+			line_spacing = static_cast<Real64>(params[0]) /
+			               (pins == 9 ? 216.0 : 180.0);
 			break;
 
 		// Select italic font (ESC 4)
@@ -687,10 +692,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			ResetPrinter();
 			break; // 0x40
 
-		// Set n/60-inch line spacing
+		// Set line spacing (ESC A / FS A) -- n/60 for 24/48-pin,
+		// n/72 for 9-pin (escp2ref.pdf C-39).
 		case EscSetN60InchLineSpacing: // 0x41
 		case FsSetN60InchLineSpacing:  // 0x841
-			line_spacing = static_cast<Real64>(params[0]) / 60;
+			line_spacing = static_cast<Real64>(params[0]) /
+			               (pins == 9 ? 72.0 : 60.0);
 			break;
 
 		// Set page length in lines (ESC C)
@@ -730,10 +737,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			style.doublestrike = 0;
 			break; // 0x48
 
-		// Advance print position vertically (ESC J n)
+		// Advance print position vertically (ESC J n) -- n/180 for
+		// 24/48-pin, n/216 for 9-pin (escp2ref.pdf R-62).
 		case EscAdvancePrintPositionVertically: // 0x4a
-			cur_y += static_cast<Real64>(
-			        static_cast<Real64>(params[0]) / 180);
+			cur_y += static_cast<Real64>(params[0]) /
+			         (pins == 9 ? 216.0 : 180.0);
 			if (cur_y > bottom_margin) {
 				NewPage(true, false);
 			}
@@ -1464,6 +1472,13 @@ void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 		break;
 
 	default: LOG_ERR("PRINTER: Unsupported bit image density %i", density);
+	}
+
+	// 9-pin printers use 1/72-inch vertical pitch for the low-density
+	// modes (dot density < 32); higher densities are 24/48-pin only and
+	// aren't reachable from a 9-pin driver anyway.
+	if (pins == 9 && density < 32) {
+		bit_graph.vert_dens = 72;
 	}
 
 	bit_graph.rem_bytes         = num_cols * bit_graph.bytes_column;

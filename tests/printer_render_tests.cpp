@@ -94,7 +94,7 @@ protected:
 		std_fs::remove_all(output_dir, ec);
 		std_fs::create_directories(output_dir, ec);
 
-		PRINTER_Configure(PrinterModelKind::EpsonDotMatrix,
+		PRINTER_Configure(PrinterModelKind::EpsonDotMatrix24Pin,
 		                  TestDpi,
 		                  TestPageWidthIn,
 		                  TestPageHeightIn,
@@ -130,7 +130,7 @@ protected:
 	// default is A4 portrait; our default test page is 5x5 inches).
 	std_fs::path render_with_page(const std::vector<uint8_t>& bytes,
 	                              const uint16_t dpi, const double width_in,
-	                              const double height_in, const int /*pins*/ = 24)
+	                              const double height_in, const int pins = 24)
 	{
 		std::error_code ec;
 		std_fs::remove_all(output_dir, ec);
@@ -138,14 +138,17 @@ protected:
 
 		// Refresh global config in case the test uses a different page
 		// size than the default established in SetUp().
-		PRINTER_Configure(PrinterModelKind::EpsonDotMatrix,
+		const auto model = (pins == 9)
+		                           ? PrinterModelKind::EpsonDotMatrix9Pin
+		                           : PrinterModelKind::EpsonDotMatrix24Pin;
+		PRINTER_Configure(model,
 		                  dpi,
 		                  width_in,
 		                  height_in,
 		                  output_dir.string(),
 		                  5000 /*timeout_ms*/);
 
-		VirtualPrinter::Printer printer(dpi, width_in, height_in);
+		VirtualPrinter::Printer printer(dpi, width_in, height_in, pins);
 
 		for (const auto byte : bytes) {
 			printer.PrintChar(byte);
@@ -668,6 +671,30 @@ TEST_F(PrinterRenderTest, Graphics_Density72_Escapy44Col)
 	expect_matches_reference(rendered_path, "Graphics_Density72_Escapy44Col");
 }
 
+// ---------------------------------------------------------------------------
+// 9-pin variants of the low-density tests. Same byte stream, but the
+// printer is in 9-pin mode (pins=9): vertical_resolution becomes 1/72
+// instead of 1/60. The visible consequence: at the 180-dpi page DPI
+// each dot renders 180/72 = 2.5 px tall (clamped to 2) instead of 3
+// px tall.
+//
+// Reference renders produced with `pins=9` in escapy and visually
+// compared before these PNGs were committed.
+
+// Density 0 9-pin (60h x 72v, 1 byte/col).
+TEST_F(PrinterRenderTest, Graphics_Density0_9pin_Escapy44Col)
+{
+	const auto rendered = render_with_pins(bit_image_44col_stream(0), 9);
+	expect_matches_reference(rendered, "Graphics_Density0_9pin_Escapy44Col");
+}
+
+// Density 1 9-pin (120h x 72v).
+TEST_F(PrinterRenderTest, Graphics_Density1_9pin_Escapy44Col)
+{
+	const auto rendered = render_with_pins(bit_image_44col_stream(1), 9);
+	expect_matches_reference(rendered, "Graphics_Density1_9pin_Escapy44Col");
+}
+
 // ESC J line-spacing-divisor cross-check. Two rows of escapy's
 // data_44_columns fixture separated by `ESC J 24`. The vertical
 // gap between the rows is:
@@ -696,6 +723,14 @@ TEST_F(PrinterRenderTest, Graphics_EscJVerticalFeed_Escapy44Col)
 {
 	const auto rendered = render(bit_image_44col_two_rows_esc_j(1, 24));
 	expect_matches_reference(rendered, "Graphics_EscJVerticalFeed_Escapy44Col");
+}
+
+TEST_F(PrinterRenderTest, Graphics_EscJVerticalFeed_9pin_Escapy44Col)
+{
+	const auto rendered = render_with_pins(bit_image_44col_two_rows_esc_j(1, 24),
+	                                       9);
+	expect_matches_reference(rendered,
+	                         "Graphics_EscJVerticalFeed_9pin_Escapy44Col");
 }
 
 // Helper: emit one "<typeface name>: <style description> <SAMPLE>"

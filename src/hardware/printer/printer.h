@@ -50,8 +50,14 @@ struct PageBitmap {
 	// Bytes per row. Equals width for our contiguous buffer.
 	int pitch = 0;
 
-	uint8_t& at(int x, int y) { return pixels[x + y * pitch]; }
-	uint8_t at(int x, int y) const { return pixels[x + y * pitch]; }
+	uint8_t& at(int x, int y)
+	{
+		return pixels[x + y * pitch];
+	}
+	uint8_t at(int x, int y) const
+	{
+		return pixels[x + y * pitch];
+	}
 };
 
 // zlib compression levels duplicated locally to avoid pulling in zlib.h.
@@ -126,8 +132,12 @@ enum class Typeface {
 
 class Printer {
 public:
-	// page_width_in and page_height_in are inches (Real64).
-	Printer(uint16_t dpi, Real64 page_width_in, Real64 page_height_in);
+	// page_width_in and page_height_in are inches (Real64). pins selects
+	// the printer head pin count (9 = FX/LX series, 24 = LQ series).
+	// 9-pin printers use different line-spacing divisors and lack
+	// several ESC/P 2 commands; the dispatch code branches on `pins`.
+	Printer(uint16_t dpi, Real64 page_width_in, Real64 page_height_in,
+	        int pins = 24);
 	virtual ~Printer();
 
 	// Owns FreeType/SDL resources and a singleton Printer* — don't copy.
@@ -271,6 +281,11 @@ private:
 	// Default size of the page (in inch).
 	Real64 default_page_width = 0.0, default_page_height = 0.0;
 
+	// Printer head pin count: 9 (FX/LX) or 24 (LQ). 48-pin printing
+	// happens through ESC * densities 71/72/73 on a 24-pin printer
+	// driver -- it's a data-stream property, not a model property.
+	int pins = 24;
+
 	// Size of one line (in inch).
 	Real64 line_spacing = 0.0;
 
@@ -354,7 +369,6 @@ private:
 	// Number of bytes to print as characters (even when normally control
 	// codes).
 	uint16_t num_print_as_char = 0;
-
 };
 
 } // namespace VirtualPrinter

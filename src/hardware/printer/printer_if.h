@@ -13,9 +13,15 @@
 // Which printer the user picked. Mirrors VirtualPrinter::PrinterModel but
 // kept in plain enum form so the C-style cross-module API doesn't depend
 // on the dot-matrix internals header.
+//
+// EpsonDotMatrix24Pin is the 24-pin LQ family (default, ESC/P + ESC/P 2).
+// EpsonDotMatrix9Pin is the 9-pin FX/LX family (older ESC/P only -- has
+// different line-spacing divisors and lacks several ESC/P 2 commands;
+// see Printer::pins branches in printer_dispatch.cpp).
 enum class PrinterModelKind {
 	None,
-	EpsonDotMatrix,
+	EpsonDotMatrix9Pin,
+	EpsonDotMatrix24Pin,
 	PostScript,
 };
 

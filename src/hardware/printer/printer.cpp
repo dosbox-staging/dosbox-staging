@@ -34,12 +34,13 @@ static void PRINTER_EventHandler([[maybe_unused]] uint32_t param);
 
 static std::unique_ptr<Printer> default_printer = nullptr;
 
-static PrinterModel conf_model     = PrinterModel::None;
-static uint16_t conf_dpi           = 360;
-static Real64 conf_page_width_in   = 8.27;  // A4
-static Real64 conf_page_height_in  = 11.69; // A4
-static uint64_t printer_timeout    = 500;
-static bool timeout_dirty          = false;
+static PrinterModel conf_model    = PrinterModel::None;
+static uint16_t conf_dpi          = 360;
+static Real64 conf_page_width_in  = 8.27;  // A4
+static Real64 conf_page_height_in = 11.69; // A4
+static int conf_pins              = 24;    // 9 = FX/LX, 24 = LQ
+static uint64_t printer_timeout   = 500;
+static bool timeout_dirty         = false;
 static std_fs::path document_path;
 
 namespace VirtualPrinter {
@@ -47,14 +48,15 @@ namespace VirtualPrinter {
 // Printer::FillPalette lives in printer_glyph.cpp.
 
 Printer::Printer(uint16_t dpi, const Real64 page_width_in,
-                 const Real64 page_height_in)
+                 const Real64 page_height_in, const int pins)
 {
 	if (FT_Init_FreeType(&ft_lib)) {
 		LOG_ERR("PRINTER: Unable to init Freetype2. Printing disabled");
 		return;
 	}
 
-	this->dpi              = dpi;
+	this->dpi  = dpi;
+	this->pins = pins;
 
 	default_page_width  = page_width_in;
 	default_page_height = page_height_in;
@@ -657,7 +659,8 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 		if (!default_printer && conf_model == PrinterModel::EpsonDotMatrix) {
 			default_printer = std::make_unique<Printer>(conf_dpi,
 			                                            conf_page_width_in,
-			                                            conf_page_height_in);
+			                                            conf_page_height_in,
+			                                            conf_pins);
 		}
 		if (default_printer) {
 			default_printer->PrintChar(lpt.data);
@@ -716,8 +719,13 @@ void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
 	case PrinterModelKind::None:
 		conf_model = PrinterModel::None;
 		break;
-	case PrinterModelKind::EpsonDotMatrix:
+	case PrinterModelKind::EpsonDotMatrix9Pin:
 		conf_model = PrinterModel::EpsonDotMatrix;
+		conf_pins  = 9;
+		break;
+	case PrinterModelKind::EpsonDotMatrix24Pin:
+		conf_model = PrinterModel::EpsonDotMatrix;
+		conf_pins  = 24;
 		break;
 	case PrinterModelKind::PostScript:
 		conf_model = PrinterModel::PostScript;
