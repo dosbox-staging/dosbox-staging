@@ -65,8 +65,8 @@ constexpr int ZBestCompression = 9;
 constexpr int ZDefaultStrategy = 0;
 
 // Currently-active text style flags. Modelled on LptStatusRegister in
-// src/hardware/parallelport/lpt.h: writes go through the named bit_view members,
-// reads through either the members or the 'data' field for masking.
+// src/hardware/parallelport/lpt.h: writes go through the named bit_view
+// members, reads through either the members or the 'data' field for masking.
 union PrinterStyle {
 	uint16_t data = 0;
 	bit_view<0, 1> prop;
@@ -214,6 +214,18 @@ private:
 	// Process a character that is part of bit image. Must be called iff
 	// bit_graph.rem_bytes > 0.
 	void PrintBitGraph(uint8_t ch);
+
+	// Blit a single bit-image dot into the page bitmap using linear
+	// coverage anti-aliasing. The dot is a 1/horiz_dens by 1/vert_dens
+	// inch rectangle whose corners are passed in page-pixel
+	// coordinates (may be fractional). For each page pixel the dot's
+	// bounding box touches, dx*dy is the area of overlap in [0, 1],
+	// scaled to MaxIntensity and added to the pixel's intensity field
+	// (capped at MaxIntensity). The pixel's colour-ID bits are set to
+	// the head's current colour. This preserves overprint semantics:
+	// overlapping dots accumulate intensity rather than replacing it.
+	void BlitAntialiasedDot(double left_px, double right_px, double top_px,
+	                        double bottom_px);
 
 	// Copies the codepage mapping from the constant array to CurMap
 	void SelectCodepage(uint16_t codepage);
@@ -365,6 +377,13 @@ private:
 
 		// Bytes read so far for the current column.
 		uint8_t read_bytes_column = 0;
+
+		// Column index and cur_x at the start of the current ESC *
+		// run. PrintBitGraph derives each column's position as
+		// `base_x + col_index/horiz_dens` rather than accumulating
+		// cur_x by 1/horiz_dens per call.
+		uint16_t col_index = 0;
+		double base_x      = 0.0;
 	} bit_graph{};
 
 	// Image density modes used by the ESC K / L / Y / Z commands.

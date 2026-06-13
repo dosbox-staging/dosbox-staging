@@ -8,7 +8,9 @@
 
 #include "printer.h"
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <unordered_map>
 
 #include "misc/logging.h"
@@ -588,9 +590,9 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Set absolute horizontal print position (ESC $)
 		case Esc::SetAbsoluteHorizontalPrintPosition: { // 0x24
-			Real64 unitSize = defined_unit;
+			double unitSize = defined_unit;
 			if (unitSize < 0) {
-				unitSize = static_cast<Real64>(60.0);
+				unitSize = CoarseVerticalDivisor24Pin;
 			}
 
 			const Real64 newX = left_margin +
@@ -617,7 +619,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::SetN360InchLineSpacing: // 0x2b
 		case Fs::SetN360InchLineSpacing:  // 0x833
 			if (pins != 9) {
-				line_spacing = static_cast<Real64>(params[0]) / 360.0;
+				line_spacing = static_cast<double>(params[0]) /
+				               DefinedUnitDivisor;
 			}
 			break;
 
@@ -730,7 +733,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Set page length in lines (ESC C)
 		case Esc::SetPageLengthInLines: // 0x43
 			if (params[0] != 0) {
-				page_height = bottom_margin = static_cast<Real64>(
+				page_height = bottom_margin = static_cast<double>(
 				                                      params[0]) *
 				                              line_spacing;
 			} else // == 0 => Set page length in inches
@@ -973,6 +976,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			cur_y = (new_y < left_margin) ? left_margin : new_y;
 			break;
 		}
+
 		// Select typeface (ESC k)
 		case Esc::SelectTypeface: // 0x6b
 			if (params[0] <= 11 || params[0] == 30 || params[0] == 31) {
@@ -1194,7 +1198,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::ParenSetRelativeVerticalPrintPosition: { // 0x276
 			Real64 unitSize = defined_unit;
 			if (unitSize < 0) {
-				unitSize = static_cast<Real64>(360.0);
+				unitSize = DefinedUnitDivisor;
 			}
 			const Real64 newPos = cur_y +
 			                      (static_cast<Real64>(static_cast<int16_t>(
@@ -1516,8 +1520,34 @@ void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 
 	bit_graph.rem_bytes         = num_cols * bit_graph.bytes_column;
 	bit_graph.read_bytes_column = 0;
+	bit_graph.col_index         = 0;
+	bit_graph.base_x            = cur_x;
 }
 
+// Bit-image rendering.
+//
+// The DOS app sends columns of bytes; each byte is 8 vertically-stacked
+// dots; columns advance horizontally by 1/horiz_dens inch. We accept
+// one byte per Write() call until a full column has arrived, then blit
+// every set bit in that column onto the page bitmap.
+//
+// Dot placement uses linear coverage anti-aliasing rather than naive
+// nearest-neighbour stamping. At any common combination of graphics
+// density and page DPI the dot pitch in inches doesn't align with the
+// page-pixel grid (a 60-dpi dot on a 360-dpi page is 6 pixels wide; a
+// 72-dpi dot on a 233-dpi page lands on fractional pixel boundaries),
+// so naive stamping produces visible staircase edges. Coverage AA
+// spreads each dot's "ink" over the pixels it overlaps in proportion
+// to the area of overlap.
+//
+// Overlapping dots accumulate intensity (capped at MaxIntensity)
+// rather than replacing each other. This matches the dot-fattening of
+// a real Epson head — overprinted dots are darker than single passes.
+//
+// Column and dot positions are derived from indices into the run (see
+// SetupBitImage / bit_graph.col_index) rather than accumulating cur_x
+// / cur_y one step at a time, to avoid floating-point drift across
+// long bit-image runs.
 void Printer::PrintBitGraph(const uint8_t ch)
 {
 	bit_graph.column[bit_graph.read_bytes_column++] = ch;
@@ -1528,54 +1558,87 @@ void Printer::PrintBitGraph(const uint8_t ch)
 		return;
 	}
 
-	const Real64 oldY = cur_y;
+	const auto inv_h = 1.0 / static_cast<double>(bit_graph.horiz_dens);
+	const auto inv_v = 1.0 / static_cast<double>(bit_graph.vert_dens);
 
-	// When page dpi is greater than graphics dpi, each dot of the
-	// graphics stream becomes a rectangle of (dpi/h_dens) x (dpi/v_dens)
-	// page pixels. Scaling is unconditional — the `adjacent` flag is a
-	// print-head physical property unrelated to pixel size (ESC/P 2
-	// reference C-177).
-	const uint64_t pixsizeX = dpi / bit_graph.horiz_dens > 0
-	                                ? dpi / bit_graph.horiz_dens
-	                                : 1;
-	const uint64_t pixsizeY = dpi / bit_graph.vert_dens > 0
-	                                ? dpi / bit_graph.vert_dens
-	                                : 1;
+	const auto dot_w_px = dpi * inv_h;
+	const auto dot_h_px = dpi * inv_v;
 
-	for (uint64_t i = 0; i < bit_graph.bytes_column; i++) // for each byte
-	{
-		for (uint64_t j = 128; j != 0; j >>= 1) { // for each bit
+	const auto left_px = (bit_graph.base_x + bit_graph.col_index * inv_h) * dpi;
+	const auto right_px = left_px + dot_w_px;
+	const auto old_y_px = cur_y * dpi;
+
+	int dot_index = 0;
+	for (auto i = 0; i < bit_graph.bytes_column; ++i) {
+		for (auto j = 128; j != 0; j >>= 1) {
 			if (bit_graph.column[i] & j) {
-				for (uint64_t xx = 0; xx < pixsizeX; xx++) {
-					for (uint64_t yy = 0; yy < pixsizeY; yy++) {
-						if ((static_cast<int>(PixX() + xx) <
-						     page.width) &&
-						    (static_cast<int>(PixY() + yy) <
-						     page.height)) {
-							auto& pixel = *reinterpret_cast<PagePixel*>(
-							        &page.pixels[(PixX() + xx) +
-							                     (PixY() + yy) *
-							                             page.pitch]);
-							pixel.intensity = MaxIntensity;
-							pixel.color_id = static_cast<uint8_t>(
-							        pixel.color_id | (color >> 5));
-						}
-					}
-				}
-			}
+				const auto top_px = old_y_px + dot_index * dot_h_px;
+				const auto bottom_px = top_px + dot_h_px;
 
-			// TODO line-wrap when cur_y goes past bottom margin.
-			cur_y += static_cast<Real64>(1) /
-			         static_cast<Real64>(bit_graph.vert_dens);
+				BlitAntialiasedDot(left_px, right_px, top_px, bottom_px);
+			}
+			++dot_index;
 		}
 	}
 
-	cur_y = oldY;
-
 	bit_graph.read_bytes_column = 0;
+	++bit_graph.col_index;
 
-	// Advance to the left
-	cur_x += static_cast<Real64>(1) / static_cast<Real64>(bit_graph.horiz_dens);
+	cur_x = bit_graph.base_x + bit_graph.col_index * inv_h;
+}
+
+void Printer::BlitAntialiasedDot(const double left_px, const double right_px,
+                                 const double top_px, const double bottom_px)
+{
+	// Clip the dot's bounding box to the page pixel grid.
+	const auto x0 = std::max(0, static_cast<int>(std::floor(left_px)));
+	const auto x1 = std::min(page.width, static_cast<int>(std::ceil(right_px)));
+
+	const auto y0 = std::max(0, static_cast<int>(std::floor(top_px)));
+	const auto y1 = std::min(page.height,
+	                         static_cast<int>(std::ceil(bottom_px)));
+
+	for (int py = y0; py < y1; ++py) {
+		// Vertical overlap of the dot with this pixel row, in [0, 1].
+		const auto dy = std::min(static_cast<double>(py + 1), bottom_px) -
+		                std::max(static_cast<double>(py), top_px);
+
+		if (dy <= 0.0) {
+			continue;
+		}
+
+		for (int px = x0; px < x1; ++px) {
+			// Horizontal overlap with this pixel column.
+			const auto dx = std::min(static_cast<double>(px + 1),
+			                         right_px) -
+			                std::max(static_cast<double>(px), left_px);
+
+			if (dx <= 0.0) {
+				continue;
+			}
+
+			// dx * dy is the area of the dot-pixel overlap in
+			// [0, 1]. Maps directly to the fraction of
+			// MaxIntensity to add to the pixel. Round to nearest.
+			const auto coverage = dx * dy;
+			const auto add      = static_cast<int>(
+                                coverage * MaxIntensity + 0.5);
+
+			auto& pixel = *reinterpret_cast<PagePixel*>(
+			        &page.pixels[px + py * page.pitch]);
+
+			const int new_intensity = std::min(MaxIntensity,
+			                                   pixel.intensity + add);
+
+			// Stamp the head's colour-ID over whatever was
+			// there. Overprint semantics: a coloured dot landing
+			// on a previously-coloured pixel replaces the
+			// colour-ID but adds to the intensity.
+			pixel.intensity = static_cast<uint8_t>(new_intensity);
+			pixel.color_id  = static_cast<uint8_t>(
+			        pixel.color_id | (color >> 5));
+		}
+	}
 }
 
 } // namespace VirtualPrinter
