@@ -160,8 +160,11 @@ bool parse_page_size(const std::string& input, double& width_in, double& height_
 
 PrinterModelKind parse_printer_model(const std::string& s)
 {
+	if (s == "epson-9pin") {
+		return PrinterModelKind::EpsonDotMatrix9Pin;
+	}
 	if (s == "epson-24pin") {
-		return PrinterModelKind::EpsonDotMatrix;
+		return PrinterModelKind::EpsonDotMatrix24Pin;
 	}
 	if (s == "postscript") {
 		return PrinterModelKind::PostScript;
@@ -276,16 +279,25 @@ void PRINTER_AddConfigSection(const ConfigPtr& conf)
 	pstring->SetHelp(
 	        "Type of virtual printer to emulate ('none' by default).\n"
 	        "\n"
-	        "  none:         Printer disabled. (default)\n"
+	        "  none:         No printer emulation (default).\n"
+	        "\n"
+	        "  epson-9pin:   9-pin Epson FX/LX-series printer. Use for older DOS programs\n"
+	        "                that target an FX-80 / LX-series driver. Line spacing will look\n"
+	        "                wrong if you use the 'epson-24pin' model with these drivers, and\n"
+	        "                you might get vertically stretched graphics as well. Writes one\n"
+	        "                PNG image per page in the capture directory (see 'capture').\n"
 	        "\n"
 	        "  epson-24pin:  24-pin Epson LQ-series dot-matrix printer (ESC/P and ESC/P 2\n"
 	        "                dialects). Best fit for the Epson LQ-870 / LQ-850 / LQ-550\n"
-	        "                drivers. Writes one PNG per page.\n"
+	        "                drivers. Writes one PNG image per page in the capture directory\n"
+	        "                (see 'capture').\n"
 	        "\n"
 	        "  postscript:   Saves the raw PostScript data sent by the program to a file. Use\n"
 	        "                this when your programs targets a PostScript printer (e.g.,\n"
-	        "                Apple LaserWriter, or generic PostScript).");
-	pstring->SetValues({"none", "epson-24pin", "postscript"});
+	        "                Apple LaserWriter, or generic PostScript). Writes a single\n"
+	        "                PostScript file with .ps extension to the capture directory (see\n"
+	        "                'capture').");
+	pstring->SetValues({"none", "epson-24pin", "epson-9pin", "postscript"});
 
 	pstring = s.AddString("printer_port", WhenIdle, "lpt1");
 	pstring->SetHelp(
@@ -431,7 +443,10 @@ void PRINTER_Init()
 
 	const char* model_name = "";
 	switch (model) {
-	case PrinterModelKind::EpsonDotMatrix:
+	case PrinterModelKind::EpsonDotMatrix9Pin:
+		model_name = "Epson dot-matrix (9-pin)";
+		break;
+	case PrinterModelKind::EpsonDotMatrix24Pin:
 		model_name = "Epson dot-matrix (24-pin)";
 		break;
 
@@ -442,7 +457,8 @@ void PRINTER_Init()
 	case PrinterModelKind::None: break;
 	}
 
-	const bool is_dot_matrix = (model == PrinterModelKind::EpsonDotMatrix);
+	const bool is_dot_matrix = (model == PrinterModelKind::EpsonDotMatrix9Pin ||
+	                            model == PrinterModelKind::EpsonDotMatrix24Pin);
 	if (is_dot_matrix) {
 		LOG_MSG("PRINTER: Initialised %s on %s (%03xh), %dx%d page at %d dpi, output dir %s",
 		        model_name,
