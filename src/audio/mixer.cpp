@@ -2573,46 +2573,37 @@ static void capture_callback()
 	CAPTURE_AddAudioData(mixer.sample_rate_hz, num_frames, frames.data());
 }
 
-static void SDLCALL old_mixer_callback([[maybe_unused]] void* userdata,
-                                   Uint8* stream, int bytes_requested)
+static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
+                                   SDL_AudioStream* stream,
+                                   int additional_amount,
+                                   [[maybe_unused]] int total_amount)
 {
-	assert(bytes_requested > 0);
+	if (additional_amount <= 0) {
+		return;
+	}
+
+	static std::vector<AudioFrame> output = {};
 
 	constexpr int BytesPerAudioFrame = sizeof(AudioFrame);
 
-	const auto frames_requested = check_cast<size_t>(bytes_requested /
-	                                                 BytesPerAudioFrame);
+	const auto frames_requested = check_cast<size_t>(additional_amount /
+	                                                  BytesPerAudioFrame);
 
 	// Mac OSX has been observed to be problematic if we ever block inside
 	// SDL's callback. This ensures that we do not block waiting for more
-	// audio. In the queue has run dry, we write what we have available and
+	// audio. If the queue has run dry, we write what we have available and
 	// the rest of the request is silence.
 	const auto frames_to_dequeue = std::min(mixer.final_output.Size(),
 	                                        frames_requested);
 
-	const auto frame_stream = reinterpret_cast<AudioFrame*>(stream);
+	output.resize(frames_requested);
 
-	const auto frames_received = mixer.final_output.BulkDequeue(frame_stream,
-	                                                            frames_to_dequeue);
+	const auto frames_received = mixer.final_output.BulkDequeue(output.data(),
+	                                                             frames_to_dequeue);
 	// Satisfy any shortfall with silence
-	std::fill(frame_stream + frames_received,
-	          frame_stream + frames_requested,
-	          AudioFrame{});
-}
+	std::fill(output.begin() + frames_received, output.end(), AudioFrame{});
 
-static void SDLCALL mixer_callback(void *userdata, 
-								   SDL_AudioStream *stream, 
-								   int additional_amount, 
-								   [[maybe_unused]] int total_amount)
-{
-	if (additional_amount > 0) {
-		Uint8 *data = SDL_stack_alloc(Uint8, additional_amount);
-		if (data) {
-			old_mixer_callback(userdata, data, additional_amount);
-			SDL_PutAudioStreamData(stream, data, additional_amount);
-			SDL_stack_free(data);
-		}
-	}
+	SDL_PutAudioStreamData(stream, output.data(), additional_amount);
 }
 
 static void mixer_thread_loop()
