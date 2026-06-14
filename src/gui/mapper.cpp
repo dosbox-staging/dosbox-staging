@@ -3146,7 +3146,11 @@ void MAPPER_DisplayUI() {
 	MIXER_UnlockMixerThread();
 
 	SDL_DestroyTexture(mapper.font_atlas);
-	SDL_SetRenderLogicalPresentation(mapper.renderer, 0, 0, SDL_LOGICAL_PRESENTATION_STRETCH);
+	if (!SDL_SetRenderLogicalPresentation(
+	            mapper.renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED)) {
+		LOG_WARNING("MAPPER: Failed to disable renderer logical presentation: %s",
+		            SDL_GetError());
+	}
 	SDL_SetRenderDrawColor(mapper.renderer,
 	                       color_black.red,
 	                       color_black.green,
