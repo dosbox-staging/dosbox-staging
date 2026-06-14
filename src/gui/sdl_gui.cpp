@@ -2173,13 +2173,32 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 
 			switch (ev.type) {
 			case SDL_EVENT_QUIT: GFX_RequestExit(true); break;
+			case SDL_EVENT_WINDOW_FOCUS_LOST:
+			case SDL_EVENT_WINDOW_MINIMIZED:
 			case SDL_EVENT_WINDOW_FOCUS_GAINED:
 			case SDL_EVENT_WINDOW_RESTORED:
 			case SDL_EVENT_WINDOW_EXPOSED: {
 				const auto we = ev.type;
-				// ...existing code...
+
+				if (we == SDL_EVENT_WINDOW_FOCUS_GAINED ||
+				    we == SDL_EVENT_WINDOW_RESTORED ||
+				    we == SDL_EVENT_WINDOW_EXPOSED) {
+					sdl.is_paused = false;
+					TITLEBAR_RefreshTitle();
+
+					if (we == SDL_EVENT_WINDOW_FOCUS_GAINED) {
+						sdl.is_paused = false;
+						apply_active_settings();
+					}
+				}
+
+				// Release ALT keys, otherwise ALT can stick and cause problems.
+				KEYBOARD_AddKey(KBD_leftalt, false);
+				KEYBOARD_AddKey(KBD_rightalt, false);
+
 				if (we == SDL_EVENT_WINDOW_RESTORED) {
-					// ...existing code...
+					// We may need to re-create a texture and more.
+					GFX_ResetScreen();
 				}
 			} break;
 			}
