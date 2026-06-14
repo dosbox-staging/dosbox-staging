@@ -29,109 +29,114 @@ namespace VirtualPrinter {
 //   0x800 - 0x8ff : 'FS <ch>' commands (some are aliases of ESC variants)
 namespace {
 
-constexpr auto EscUndoc02                                          = 0x02;
-constexpr auto EscReverseLineFeed                                  = 0x0a;
-constexpr auto EscReturnToTopOfCurrentPage                         = 0x0c;
-constexpr auto EscSelectDoubleWidthPrinting                        = 0x0e;
-constexpr auto EscSelectCondensedPrinting                          = 0x0f;
-constexpr auto EscControlPaperLoadingEjecting                      = 0x19;
-constexpr auto EscSetIntercharacterSpace                           = 0x20;
-constexpr auto EscMasterSelect                                     = 0x21;
-constexpr auto EscCancelMsbControl                                 = 0x23;
-constexpr auto EscSetAbsoluteHorizontalPrintPosition               = 0x24;
-constexpr auto EscSelectUserDefinedSet                             = 0x25;
-constexpr auto EscDefineUserDefinedCharacters                      = 0x26;
-constexpr auto EscTwoBytesSequence                                 = 0x28;
-constexpr auto EscSelectBitImage                                   = 0x2a;
-constexpr auto EscSetN360InchLineSpacing                           = 0x2b;
-constexpr auto EscTurnUnderlineOnOff                               = 0x2d;
-constexpr auto EscSelectVerticalTabChannel                         = 0x2f;
-constexpr auto EscSelect18InchLineSpacing                          = 0x30;
-constexpr auto EscSelect760InchLineSpacing                         = 0x31;
-constexpr auto EscSelect16InchLineSpacing                          = 0x32;
-constexpr auto EscSetN180InchLineSpacing                           = 0x33;
-constexpr auto EscSelectItalicFont                                 = 0x34;
-constexpr auto EscCancelItalicFont                                 = 0x35;
-constexpr auto EscEnablePrintingOfUpperControlCodes                = 0x36;
-constexpr auto EscEnableUpperControlCodes                          = 0x37;
-constexpr auto EscDisablePaperOutDetector                          = 0x38;
-constexpr auto EscEnablePaperOutDetector                           = 0x39;
-constexpr auto EscCopyRomToRam                                     = 0x3a;
-constexpr auto EscUnidirectionalMode                               = 0x3c;
-constexpr auto EscSetMsbTo0                                        = 0x3d;
-constexpr auto EscSetMsbTo1                                        = 0x3e;
-constexpr auto EscReassignBitImageMode                             = 0x3f;
-constexpr auto EscInitializePrinter                                = 0x40;
-constexpr auto EscSetN60InchLineSpacing                            = 0x41;
-constexpr auto EscSetVerticalTabs                                  = 0x42;
-constexpr auto EscSetPageLengthInLines                             = 0x43;
-constexpr auto EscSetHorizontalTabs                                = 0x44;
-constexpr auto EscSelectBoldFont                                   = 0x45;
-constexpr auto EscCancelBoldFont                                   = 0x46;
-constexpr auto EscSelectDoubleStrikePrinting                       = 0x47;
-constexpr auto EscCancelDoubleStrikePrinting                       = 0x48;
-constexpr auto EscSelectCharacterTypePrintPitch                    = 0x49;
-constexpr auto EscAdvancePrintPositionVertically                   = 0x4a;
-constexpr auto EscSelect60DpiGraphics                              = 0x4b;
-constexpr auto EscSelect120DpiGraphics                             = 0x4c;
-constexpr auto EscSelect105Point12Cpi                              = 0x4d;
-constexpr auto EscSetBottomMargin                                  = 0x4e;
-constexpr auto EscCancelBottomMargin                               = 0x4f;
-constexpr auto EscSelect105Point10Cpi                              = 0x50;
-constexpr auto EscSetRightMargin                                   = 0x51;
-constexpr auto EscSelectInternationalCharacterSet                  = 0x52;
-constexpr auto EscSelectSuperscriptSubscriptPrinting               = 0x53;
-constexpr auto EscCancelSuperscriptSubscriptPrinting               = 0x54;
-constexpr auto EscTurnUnidirectionalModeOnOff                      = 0x55;
-constexpr auto EscTurnDoubleWidthPrintingOnOff                     = 0x57;
-constexpr auto EscSelectFontPitchPoint                             = 0x58;
-constexpr auto EscSelect120DpiDoubleSpeedGraphics                  = 0x59;
-constexpr auto EscSelect240DpiGraphics                             = 0x5a;
-constexpr auto EscSelectCharacterHeightWidthLineSpacing            = 0x5b;
-constexpr auto EscSetRelativeHorizontalPrintPosition               = 0x5c;
-constexpr auto EscEnablePrintingOfAllCharacterCodesOnNextCharacter = 0x5e;
-constexpr auto EscSelectJustification                              = 0x61;
-constexpr auto EscSetVerticalTabsInVfuChannels                     = 0x62;
-constexpr auto EscSetHorizontalMotionIndex                         = 0x63;
-constexpr auto EscSetVerticalTabStopsEveryNLines                   = 0x65;
-constexpr auto EscAbsoluteHorizontalTabInColumns                   = 0x66;
-constexpr auto EscSelect105Point15Cpi                              = 0x67;
-constexpr auto EscSelectDoubleQuadrupleSize                        = 0x68;
-constexpr auto EscImmediatePrint                                   = 0x69;
-constexpr auto EscReversePaperFeed                                 = 0x6a;
-constexpr auto EscSelectTypeface                                   = 0x6b;
-constexpr auto EscSetLeftMargin                                    = 0x6c;
-constexpr auto EscTurnProportionalModeOnOff                        = 0x70;
-constexpr auto EscSelectPrintingColor                              = 0x72;
-constexpr auto EscLowSpeedModeOnOff                                = 0x73;
-constexpr auto EscSelectCharacterTable                             = 0x74;
-constexpr auto EscTurnDoubleHeightPrintingOnOff                    = 0x77;
-constexpr auto EscSelectLqDraft                                    = 0x78;
-constexpr auto EscSelectDeselectSlashZero                          = 0x7e;
-constexpr auto EscSetPageLengthInInches                            = 0x100;
-constexpr auto EscSkipUnsupportedEscCommand                        = 0x101;
-constexpr auto EscParenSelectLineScore                             = 0x22d;
-constexpr auto EscParenBarCodeSetupPrint                           = 0x242;
-constexpr auto EscParenSetPageLengthInDefinedUnit                  = 0x243;
-constexpr auto EscParenSetUnit                                     = 0x255;
-constexpr auto EscParenSetAbsoluteVerticalPrintPosition            = 0x256;
-constexpr auto EscParenPrintDataAsCharacters                       = 0x25e;
-constexpr auto EscParenSetPageFormat                               = 0x263;
-constexpr auto EscParenAssignCharacterTable                        = 0x274;
-constexpr auto EscParenSetRelativeVerticalPrintPosition            = 0x276;
-constexpr auto FsSelect16InchLineSpacing                           = 0x832;
-constexpr auto FsSetN360InchLineSpacing                            = 0x833;
-constexpr auto FsSelectItalicFont                                  = 0x834;
-constexpr auto FsCancelItalicFont                                  = 0x835;
-constexpr auto FsSetN60InchLineSpacing                             = 0x841;
-constexpr auto FsSelectLqTypeStyle                                 = 0x843;
-constexpr auto FsSelectCharacterWidth                              = 0x845;
-constexpr auto FsSelectForwardFeedMode                             = 0x846;
-constexpr auto FsSelectCharacterTable                              = 0x849;
-constexpr auto FsSelectReverseFeedMode                             = 0x852;
-constexpr auto FsSelectHighSpeedHighDensityElitePitch              = 0x853;
-constexpr auto FsTurnDoubleHeightPrintingOnOff                     = 0x856;
-constexpr auto FsPrint24BitHexDensityGraphics                      = 0x85a;
+namespace Esc {
+constexpr auto Undoc02                                          = 0x02;
+constexpr auto ReverseLineFeed                                  = 0x0a;
+constexpr auto ReturnToTopOfCurrentPage                         = 0x0c;
+constexpr auto SelectDoubleWidthPrinting                        = 0x0e;
+constexpr auto SelectCondensedPrinting                          = 0x0f;
+constexpr auto ControlPaperLoadingEjecting                      = 0x19;
+constexpr auto SetIntercharacterSpace                           = 0x20;
+constexpr auto MasterSelect                                     = 0x21;
+constexpr auto CancelMsbControl                                 = 0x23;
+constexpr auto SetAbsoluteHorizontalPrintPosition               = 0x24;
+constexpr auto SelectUserDefinedSet                             = 0x25;
+constexpr auto DefineUserDefinedCharacters                      = 0x26;
+constexpr auto TwoBytesSequence                                 = 0x28;
+constexpr auto SelectBitImage                                   = 0x2a;
+constexpr auto SetN360InchLineSpacing                           = 0x2b;
+constexpr auto TurnUnderlineOnOff                               = 0x2d;
+constexpr auto SelectVerticalTabChannel                         = 0x2f;
+constexpr auto Select18InchLineSpacing                          = 0x30;
+constexpr auto Select760InchLineSpacing                         = 0x31;
+constexpr auto Select16InchLineSpacing                          = 0x32;
+constexpr auto SetN180InchLineSpacing                           = 0x33;
+constexpr auto SelectItalicFont                                 = 0x34;
+constexpr auto CancelItalicFont                                 = 0x35;
+constexpr auto EnablePrintingOfUpperControlCodes                = 0x36;
+constexpr auto EnableUpperControlCodes                          = 0x37;
+constexpr auto DisablePaperOutDetector                          = 0x38;
+constexpr auto EnablePaperOutDetector                           = 0x39;
+constexpr auto CopyRomToRam                                     = 0x3a;
+constexpr auto UnidirectionalMode                               = 0x3c;
+constexpr auto SetMsbTo0                                        = 0x3d;
+constexpr auto SetMsbTo1                                        = 0x3e;
+constexpr auto ReassignBitImageMode                             = 0x3f;
+constexpr auto InitializePrinter                                = 0x40;
+constexpr auto SetN60InchLineSpacing                            = 0x41;
+constexpr auto SetVerticalTabs                                  = 0x42;
+constexpr auto SetPageLengthInLines                             = 0x43;
+constexpr auto SetHorizontalTabs                                = 0x44;
+constexpr auto SelectBoldFont                                   = 0x45;
+constexpr auto CancelBoldFont                                   = 0x46;
+constexpr auto SelectDoubleStrikePrinting                       = 0x47;
+constexpr auto CancelDoubleStrikePrinting                       = 0x48;
+constexpr auto SelectCharacterTypePrintPitch                    = 0x49;
+constexpr auto AdvancePrintPositionVertically                   = 0x4a;
+constexpr auto Select60DpiGraphics                              = 0x4b;
+constexpr auto Select120DpiGraphics                             = 0x4c;
+constexpr auto Select105Point12Cpi                              = 0x4d;
+constexpr auto SetBottomMargin                                  = 0x4e;
+constexpr auto CancelBottomMargin                               = 0x4f;
+constexpr auto Select105Point10Cpi                              = 0x50;
+constexpr auto SetRightMargin                                   = 0x51;
+constexpr auto SelectInternationalCharacterSet                  = 0x52;
+constexpr auto SelectSuperscriptSubscriptPrinting               = 0x53;
+constexpr auto CancelSuperscriptSubscriptPrinting               = 0x54;
+constexpr auto TurnUnidirectionalModeOnOff                      = 0x55;
+constexpr auto TurnDoubleWidthPrintingOnOff                     = 0x57;
+constexpr auto SelectFontPitchPoint                             = 0x58;
+constexpr auto Select120DpiDoubleSpeedGraphics                  = 0x59;
+constexpr auto Select240DpiGraphics                             = 0x5a;
+constexpr auto SelectCharacterHeightWidthLineSpacing            = 0x5b;
+constexpr auto SetRelativeHorizontalPrintPosition               = 0x5c;
+constexpr auto EnablePrintingOfAllCharacterCodesOnNextCharacter = 0x5e;
+constexpr auto SelectJustification                              = 0x61;
+constexpr auto SetVerticalTabsInVfuChannels                     = 0x62;
+constexpr auto SetHorizontalMotionIndex                         = 0x63;
+constexpr auto SetVerticalTabStopsEveryNLines                   = 0x65;
+constexpr auto AbsoluteHorizontalTabInColumns                   = 0x66;
+constexpr auto Select105Point15Cpi                              = 0x67;
+constexpr auto SelectDoubleQuadrupleSize                        = 0x68;
+constexpr auto ImmediatePrint                                   = 0x69;
+constexpr auto ReversePaperFeed                                 = 0x6a;
+constexpr auto SelectTypeface                                   = 0x6b;
+constexpr auto SetLeftMargin                                    = 0x6c;
+constexpr auto TurnProportionalModeOnOff                        = 0x70;
+constexpr auto SelectPrintingColor                              = 0x72;
+constexpr auto LowSpeedModeOnOff                                = 0x73;
+constexpr auto SelectCharacterTable                             = 0x74;
+constexpr auto TurnDoubleHeightPrintingOnOff                    = 0x77;
+constexpr auto SelectLqDraft                                    = 0x78;
+constexpr auto SelectDeselectSlashZero                          = 0x7e;
+constexpr auto SetPageLengthInInches                            = 0x100;
+constexpr auto SkipUnsupportedEscCommand                        = 0x101;
+constexpr auto ParenSelectLineScore                             = 0x22d;
+constexpr auto ParenBarCodeSetupPrint                           = 0x242;
+constexpr auto ParenSetPageLengthInDefinedUnit                  = 0x243;
+constexpr auto ParenSetUnit                                     = 0x255;
+constexpr auto ParenSetAbsoluteVerticalPrintPosition            = 0x256;
+constexpr auto ParenPrintDataAsCharacters                       = 0x25e;
+constexpr auto ParenSetPageFormat                               = 0x263;
+constexpr auto ParenAssignCharacterTable                        = 0x274;
+constexpr auto ParenSetRelativeVerticalPrintPosition            = 0x276;
+} // namespace Esc
+
+namespace Fs {
+constexpr auto Select16InchLineSpacing              = 0x832;
+constexpr auto SetN360InchLineSpacing               = 0x833;
+constexpr auto SelectItalicFont                     = 0x834;
+constexpr auto CancelItalicFont                     = 0x835;
+constexpr auto SetN60InchLineSpacing                = 0x841;
+constexpr auto SelectLqTypeStyle                    = 0x843;
+constexpr auto SelectCharacterWidth                 = 0x845;
+constexpr auto SelectForwardFeedMode                = 0x846;
+constexpr auto SelectCharacterTable                 = 0x849;
+constexpr auto SelectReverseFeedMode                = 0x852;
+constexpr auto SelectHighSpeedHighDensityElitePitch = 0x853;
+constexpr auto TurnDoubleHeightPrintingOnOff        = 0x856;
+constexpr auto Print24BitHexDensityGraphics         = 0x85a;
+} // namespace Fs
 
 // Per-opcode debounce interval for unsupported-command warnings.
 // Many DOS apps emit the same unsupported opcode repeatedly; muting
@@ -153,218 +158,218 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		switch (esc_cmd) {
 		// Undocumented
-		case EscUndoc02: // 0x02
+		case Esc::Undoc02: // 0x02
 		// (ESC LF) — Reverse line feed
-		case EscReverseLineFeed: // 0x0a
+		case Esc::ReverseLineFeed: // 0x0a
 		// (ESC FF) — Return to top of current page
-		case EscReturnToTopOfCurrentPage: // 0x0c
+		case Esc::ReturnToTopOfCurrentPage: // 0x0c
 		// (ESC SO) — Select double-width printing (one line)
-		case EscSelectDoubleWidthPrinting: // 0x0e
+		case Esc::SelectDoubleWidthPrinting: // 0x0e
 		// (ESC SI) — Select condensed printing
-		case EscSelectCondensedPrinting: // 0x0f
+		case Esc::SelectCondensedPrinting: // 0x0f
 		// (ESC #) — Cancel MSB control
-		case EscCancelMsbControl: // 0x23
+		case Esc::CancelMsbControl: // 0x23
 		// (ESC 0) — Select 1/8-inch line spacing
-		case EscSelect18InchLineSpacing: // 0x30
+		case Esc::Select18InchLineSpacing: // 0x30
 		// (ESC 1) — Select 7/60-inch line spacing
-		case EscSelect760InchLineSpacing: // 0x31
+		case Esc::Select760InchLineSpacing: // 0x31
 		// (ESC 2) — Select 1/6-inch line spacing
-		case EscSelect16InchLineSpacing: // 0x32
+		case Esc::Select16InchLineSpacing: // 0x32
 		// (ESC 4) — Select italic font
-		case EscSelectItalicFont: // 0x34
+		case Esc::SelectItalicFont: // 0x34
 		// (ESC 5) — Cancel italic font
-		case EscCancelItalicFont: // 0x35
+		case Esc::CancelItalicFont: // 0x35
 		// (ESC 6) — Enable printing of upper control codes
-		case EscEnablePrintingOfUpperControlCodes: // 0x36
+		case Esc::EnablePrintingOfUpperControlCodes: // 0x36
 		// (ESC 7) — Enable upper control codes
-		case EscEnableUpperControlCodes: // 0x37
+		case Esc::EnableUpperControlCodes: // 0x37
 		// (ESC 8) — Disable paper-out detector
-		case EscDisablePaperOutDetector: // 0x38
+		case Esc::DisablePaperOutDetector: // 0x38
 		// (ESC 9) — Enable paper-out detector
-		case EscEnablePaperOutDetector: // 0x39
+		case Esc::EnablePaperOutDetector: // 0x39
 		// (ESC <) — Unidirectional mode (one line)
-		case EscUnidirectionalMode: // 0x3c
+		case Esc::UnidirectionalMode: // 0x3c
 		// (ESC =) — Set MSB to 0
-		case EscSetMsbTo0: // 0x3d
+		case Esc::SetMsbTo0: // 0x3d
 		// (ESC >) — Set MSB to 1
-		case EscSetMsbTo1: // 0x3e
+		case Esc::SetMsbTo1: // 0x3e
 		// (ESC @) — Initialize printer
-		case EscInitializePrinter: // 0x40
+		case Esc::InitializePrinter: // 0x40
 		// (ESC E) — Select bold font
-		case EscSelectBoldFont: // 0x45
+		case Esc::SelectBoldFont: // 0x45
 		// (ESC F) — Cancel bold font
-		case EscCancelBoldFont: // 0x46
+		case Esc::CancelBoldFont: // 0x46
 		// (ESC G) — Select double-strike printing
-		case EscSelectDoubleStrikePrinting: // 0x47
+		case Esc::SelectDoubleStrikePrinting: // 0x47
 		// (ESC H) — Cancel double-strike printing
-		case EscCancelDoubleStrikePrinting: // 0x48
+		case Esc::CancelDoubleStrikePrinting: // 0x48
 		// (ESC M) — Select 10.5-point, 12-cpi
-		case EscSelect105Point12Cpi: // 0x4d
+		case Esc::Select105Point12Cpi: // 0x4d
 		// (ESC O) — Cancel bottom margin [conflict]
-		case EscCancelBottomMargin: // 0x4f
+		case Esc::CancelBottomMargin: // 0x4f
 		// (ESC P) — Select 10.5-point, 10-cpi
-		case EscSelect105Point10Cpi: // 0x50
+		case Esc::Select105Point10Cpi: // 0x50
 		// (ESC T) — Cancel superscript/subscript printing
-		case EscCancelSuperscriptSubscriptPrinting: // 0x54
+		case Esc::CancelSuperscriptSubscriptPrinting: // 0x54
 		// (ESC ^) — Enable printing of all character codes on next
 		// character
-		case EscEnablePrintingOfAllCharacterCodesOnNextCharacter: // 0x5e
+		case Esc::EnablePrintingOfAllCharacterCodesOnNextCharacter: // 0x5e
 		// (ESC g) — Select 10.5-point, 15-cpi
-		case EscSelect105Point15Cpi: // 0x67
+		case Esc::Select105Point15Cpi: // 0x67
 
 		// (FS 4)	(= ESC 4) — Select italic font
-		case FsSelectItalicFont: // 0x834
+		case Fs::SelectItalicFont: // 0x834
 		// (FS 5)	(= ESC 5) — Cancel italic font
-		case FsCancelItalicFont: // 0x835
+		case Fs::CancelItalicFont: // 0x835
 		// (FS F) — Select forward feed mode
-		case FsSelectForwardFeedMode: // 0x846
+		case Fs::SelectForwardFeedMode: // 0x846
 		// (FS R) — Select reverse feed mode
-		case FsSelectReverseFeedMode:
+		case Fs::SelectReverseFeedMode:
 			needed_param = 0;
 			break; // 0x852
 
 		// (ESC EM) — Control paper loading/ejecting
-		case EscControlPaperLoadingEjecting: // 0x19
+		case Esc::ControlPaperLoadingEjecting: // 0x19
 		// (ESC SP) — Set intercharacter space
-		case EscSetIntercharacterSpace: // 0x20
+		case Esc::SetIntercharacterSpace: // 0x20
 		// (ESC !) — Master select
-		case EscMasterSelect: // 0x21
+		case Esc::MasterSelect: // 0x21
 		// (ESC +) — Set n/360-inch line spacing
-		case EscSetN360InchLineSpacing: // 0x2b
+		case Esc::SetN360InchLineSpacing: // 0x2b
 		// (ESC -) — Turn underline on/off
-		case EscTurnUnderlineOnOff: // 0x2d
+		case Esc::TurnUnderlineOnOff: // 0x2d
 		// (ESC /) — Select vertical tab channel
-		case EscSelectVerticalTabChannel: // 0x2f
+		case Esc::SelectVerticalTabChannel: // 0x2f
 		// (ESC 3) — Set n/180-inch line spacing
-		case EscSetN180InchLineSpacing: // 0x33
+		case Esc::SetN180InchLineSpacing: // 0x33
 		// (ESC A) — Set n/60-inch line spacing
-		case EscSetN60InchLineSpacing: // 0x41
+		case Esc::SetN60InchLineSpacing: // 0x41
 		// (ESC C) — Set page length in lines
-		case EscSetPageLengthInLines: // 0x43
+		case Esc::SetPageLengthInLines: // 0x43
 		// (ESC I) — Select character type and print pitch
-		case EscSelectCharacterTypePrintPitch: // 0x49
+		case Esc::SelectCharacterTypePrintPitch: // 0x49
 		// (ESC J) — Advance print position vertically
-		case EscAdvancePrintPositionVertically: // 0x4a
+		case Esc::AdvancePrintPositionVertically: // 0x4a
 		// (ESC N) — Set bottom margin
-		case EscSetBottomMargin: // 0x4e
+		case Esc::SetBottomMargin: // 0x4e
 		// (ESC Q) — Set right margin
-		case EscSetRightMargin: // 0x51
+		case Esc::SetRightMargin: // 0x51
 		// (ESC R) — Select an international character set
-		case EscSelectInternationalCharacterSet: // 0x52
+		case Esc::SelectInternationalCharacterSet: // 0x52
 		// (ESC S) — Select superscript/subscript printing
-		case EscSelectSuperscriptSubscriptPrinting: // 0x53
+		case Esc::SelectSuperscriptSubscriptPrinting: // 0x53
 		// (ESC U) — Turn unidirectional mode on/off
-		case EscTurnUnidirectionalModeOnOff: // 0x55
+		case Esc::TurnUnidirectionalModeOnOff: // 0x55
 		// case 0x56: // Repeat data
 		// (ESC V)
 		// (ESC W) — Turn double-width printing on/off
-		case EscTurnDoubleWidthPrintingOnOff: // 0x57
+		case Esc::TurnDoubleWidthPrintingOnOff: // 0x57
 		// (ESC a) — Select justification
-		case EscSelectJustification: // 0x61
+		case Esc::SelectJustification: // 0x61
 		// (ESC f) — Absolute horizontal tab in columns [conflict]
-		case EscAbsoluteHorizontalTabInColumns: // 0x66
+		case Esc::AbsoluteHorizontalTabInColumns: // 0x66
 		// (ESC h) — Select double or quadruple size
-		case EscSelectDoubleQuadrupleSize: // 0x68
+		case Esc::SelectDoubleQuadrupleSize: // 0x68
 		// (ESC i) — Immediate print
-		case EscImmediatePrint: // 0x69
+		case Esc::ImmediatePrint: // 0x69
 		// (ESC j) — Reverse paper feed
-		case EscReversePaperFeed: // 0x6a
+		case Esc::ReversePaperFeed: // 0x6a
 		// (ESC k) — Select typeface
-		case EscSelectTypeface: // 0x6b
+		case Esc::SelectTypeface: // 0x6b
 		// (ESC 1) — Set left margin
-		case EscSetLeftMargin: // 0x6c
+		case Esc::SetLeftMargin: // 0x6c
 		// (ESC p) — Turn proportional mode on/off
-		case EscTurnProportionalModeOnOff: // 0x70
+		case Esc::TurnProportionalModeOnOff: // 0x70
 		// (ESC r) — Select printing color
-		case EscSelectPrintingColor: // 0x72
+		case Esc::SelectPrintingColor: // 0x72
 		// (ESC s) — Low-speed mode on/off
-		case EscLowSpeedModeOnOff: // 0x73
+		case Esc::LowSpeedModeOnOff: // 0x73
 		// (ESC t) — Select character table
-		case EscSelectCharacterTable: // 0x74
+		case Esc::SelectCharacterTable: // 0x74
 		// (ESC w) — Turn double-height printing on/off
-		case EscTurnDoubleHeightPrintingOnOff: // 0x77
+		case Esc::TurnDoubleHeightPrintingOnOff: // 0x77
 		// (ESC x) — Select LQ or draft
-		case EscSelectLqDraft: // 0x78
+		case Esc::SelectLqDraft: // 0x78
 		// (ESC ~) — Select/Deselect slash zero
-		case EscSelectDeselectSlashZero: // 0x7e
+		case Esc::SelectDeselectSlashZero: // 0x7e
 
 		// (FS 2)	(= ESC 2) — Select 1/6-inch line spacing
-		case FsSelect16InchLineSpacing: // 0x832
+		case Fs::Select16InchLineSpacing: // 0x832
 		// (FS 3)	(= ESC +) — Set n/360-inch line spacing
-		case FsSetN360InchLineSpacing: // 0x833
+		case Fs::SetN360InchLineSpacing: // 0x833
 		// (FS A)	(= ESC A) — Set n/60-inch line spacing
-		case FsSetN60InchLineSpacing: // 0x841
+		case Fs::SetN60InchLineSpacing: // 0x841
 		// (FS C)	(= ESC k) — Select LQ type style
-		case FsSelectLqTypeStyle: // 0x843
+		case Fs::SelectLqTypeStyle: // 0x843
 		// (FS E) — Select character width
-		case FsSelectCharacterWidth: // 0x845
+		case Fs::SelectCharacterWidth: // 0x845
 		// (FS I)	(= ESC t) — Select character table
-		case FsSelectCharacterTable: // 0x849
+		case Fs::SelectCharacterTable: // 0x849
 		// (FS S) — Select High Speed/High Density elite pitch
-		case FsSelectHighSpeedHighDensityElitePitch: // 0x853
+		case Fs::SelectHighSpeedHighDensityElitePitch: // 0x853
 		// (FS V)	(= ESC w) — Turn double-height printing on/off
-		case FsTurnDoubleHeightPrintingOnOff:
+		case Fs::TurnDoubleHeightPrintingOnOff:
 			needed_param = 1;
 			break; // 0x856
 
 		// (ESC $) — Set absolute horizontal print position
-		case EscSetAbsoluteHorizontalPrintPosition: // 0x24
+		case Esc::SetAbsoluteHorizontalPrintPosition: // 0x24
 		// (ESC ?) — Reassign bit-image mode
-		case EscReassignBitImageMode: // 0x3f
+		case Esc::ReassignBitImageMode: // 0x3f
 		// (ESC K) — Select 60-dpi graphics
-		case EscSelect60DpiGraphics: // 0x4b
+		case Esc::Select60DpiGraphics: // 0x4b
 		// (ESC L) — Select 120-dpi graphics
-		case EscSelect120DpiGraphics: // 0x4c
+		case Esc::Select120DpiGraphics: // 0x4c
 		// (ESC Y) — Select 120-dpi, double-speed graphics
-		case EscSelect120DpiDoubleSpeedGraphics: // 0x59
+		case Esc::Select120DpiDoubleSpeedGraphics: // 0x59
 		// (ESC Z) — Select 240-dpi graphics
-		case EscSelect240DpiGraphics: // 0x5a
+		case Esc::Select240DpiGraphics: // 0x5a
 		// (ESC \) — Set relative horizontal print position
-		case EscSetRelativeHorizontalPrintPosition: // 0x5c
+		case Esc::SetRelativeHorizontalPrintPosition: // 0x5c
 		// (ESC c) — Set horizontal motion index (HMI)	[conflict]
-		case EscSetHorizontalMotionIndex: // 0x63
+		case Esc::SetHorizontalMotionIndex: // 0x63
 		// (ESC e) — Set vertical tab stops every n lines
-		case EscSetVerticalTabStopsEveryNLines: // 0x65
+		case Esc::SetVerticalTabStopsEveryNLines: // 0x65
 		// (FS Z) — Print 24-bit hex-density graphics
-		case FsPrint24BitHexDensityGraphics:
+		case Fs::Print24BitHexDensityGraphics:
 			needed_param = 2;
 			break; // 0x85a
 
 		// (ESC *) — Select bit image
-		case EscSelectBitImage: // 0x2a
+		case Esc::SelectBitImage: // 0x2a
 		// (ESC X) — Select font by pitch and point [conflict]
-		case EscSelectFontPitchPoint:
+		case Esc::SelectFontPitchPoint:
 			needed_param = 3;
 			break; // 0x58
 
 		// Select character height, width, line spacing
-		case EscSelectCharacterHeightWidthLineSpacing:
+		case Esc::SelectCharacterHeightWidthLineSpacing:
 			needed_param = 7;
 			break; // 0x5b
 
 		// (ESC b) — Set vertical tabs in VFU channels
-		case EscSetVerticalTabsInVfuChannels: // 0x62
+		case Esc::SetVerticalTabsInVfuChannels: // 0x62
 		// (ESC B) — Set vertical tabs
-		case EscSetVerticalTabs:
+		case Esc::SetVerticalTabs:
 			num_vert_tabs = 0;
 			return true; // 0x42
 
 		// (ESC D) — Set horizontal tabs
-		case EscSetHorizontalTabs:
+		case Esc::SetHorizontalTabs:
 			num_horiz_tabs = 0;
 			return true; // 0x44
 
 		// (ESC %) — Select user-defined set
-		case EscSelectUserDefinedSet: // 0x25
+		case Esc::SelectUserDefinedSet: // 0x25
 		// (ESC &) — Define user-defined characters
-		case EscDefineUserDefinedCharacters: // 0x26
+		case Esc::DefineUserDefinedCharacters: // 0x26
 		// (ESC :) — Copy ROM to RAM
-		case EscCopyRomToRam: // 0x3a
+		case Esc::CopyRomToRam: // 0x3a
 			LOG_ERR("PRINTER: User-defined characters not supported");
 			return true;
 
 		// Two bytes sequence
-		case EscTwoBytesSequence: return true; // 0x28
+		case Esc::TwoBytesSequence: return true; // 0x28
 
 		default:
 			LOG_MSG("PRINTER: Unknown command %s (%02Xh) %c , unable to skip parameters.",
@@ -388,35 +393,35 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		switch (esc_cmd) {
 		// Bar code setup and print (ESC (B)
-		case EscParenBarCodeSetupPrint: // 0x242
+		case Esc::ParenBarCodeSetupPrint: // 0x242
 		// Print data as characters (ESC (^)
-		case EscParenPrintDataAsCharacters:
+		case Esc::ParenPrintDataAsCharacters:
 			needed_param = 2;
 			break; // 0x25e
 
 		// Set unit (ESC (U)
-		case EscParenSetUnit:
+		case Esc::ParenSetUnit:
 			needed_param = 3;
 			break; // 0x255
 
 		// Set page length in defined unit (ESC (C)
-		case EscParenSetPageLengthInDefinedUnit: // 0x243
+		case Esc::ParenSetPageLengthInDefinedUnit: // 0x243
 		// Set absolute vertical print position (ESC (V)
-		case EscParenSetAbsoluteVerticalPrintPosition: // 0x256
+		case Esc::ParenSetAbsoluteVerticalPrintPosition: // 0x256
 		// Set relative vertical print position (ESC (v)
-		case EscParenSetRelativeVerticalPrintPosition:
+		case Esc::ParenSetRelativeVerticalPrintPosition:
 			needed_param = 4;
 			break; // 0x276
 
 		// Assign character table (ESC (t)
-		case EscParenAssignCharacterTable: // 0x274
+		case Esc::ParenAssignCharacterTable: // 0x274
 		// Select line/score (ESC (-)
-		case EscParenSelectLineScore:
+		case Esc::ParenSelectLineScore:
 			needed_param = 5;
 			break; // 0x22d
 
 		// Set page format (ESC (c)
-		case EscParenSetPageFormat: needed_param = 6; break; // 0x263
+		case Esc::ParenSetPageFormat: needed_param = 6; break; // 0x263
 
 		default:
 			// ESC ( commands are always followed by a "number of
@@ -478,12 +483,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	if (esc_cmd != 0) {
 		switch (esc_cmd) {
 		// Undocumented
-		case EscUndoc02: // 0x02
+		case Esc::Undoc02: // 0x02
 			// Ignore
 			break;
 
 		// Select double-width printing (one line) (ESC SO)
-		case EscSelectDoubleWidthPrinting: // 0x0e
+		case Esc::SelectDoubleWidthPrinting: // 0x0e
 			if (!multipoint) {
 				hmi                       = -1;
 				style.doublewidth_oneline = 1;
@@ -492,7 +497,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Select condensed printing (ESC SI)
-		case EscSelectCondensedPrinting: // 0x0f
+		case Esc::SelectCondensedPrinting: // 0x0f
 			if (!multipoint && (cpi != 15.0)) {
 				hmi             = -1;
 				style.condensed = 1;
@@ -501,7 +506,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Control paper loading/ejecting (ESC EM)
-		case EscControlPaperLoadingEjecting: // 0x19
+		case Esc::ControlPaperLoadingEjecting: // 0x19
 			// We are not really loading paper, so most commands can
 			// be ignored
 			if (params[0] == 'R') {
@@ -510,7 +515,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Set intercharacter space (ESC SP)
-		case EscSetIntercharacterSpace: // 0x20
+		case Esc::SetIntercharacterSpace: // 0x20
 			if (!multipoint) {
 				extra_intra_space = static_cast<Real64>(params[0]) /
 				                    (print_quality == PrintQuality::Draft
@@ -522,7 +527,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Master select (ESC !)
-		case EscMasterSelect: // 0x21
+		case Esc::MasterSelect: // 0x21
 			cpi = params[0] & 0x01 ? 12 : 10;
 
 			// Reset the first seven style bits (prop..superscript)
@@ -557,12 +562,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Cancel MSB control (ESC #)
-		case EscCancelMsbControl:
+		case Esc::CancelMsbControl:
 			msb = 255;
 			break; // 0x23
 
 		// Set absolute horizontal print position (ESC $)
-		case EscSetAbsoluteHorizontalPrintPosition: { // 0x24
+		case Esc::SetAbsoluteHorizontalPrintPosition: { // 0x24
 			Real64 unitSize = defined_unit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(60.0);
@@ -577,27 +582,27 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		} break;
 
 		// Print 24-bit hex-density graphics (FS Z)
-		case FsPrint24BitHexDensityGraphics: // 0x85a
+		case Fs::Print24BitHexDensityGraphics: // 0x85a
 			SetupBitImage(40, static_cast<uint16_t>(Param16(0)));
 			break;
 
 		// Select bit image (ESC *)
-		case EscSelectBitImage: // 0x2a
+		case Esc::SelectBitImage: // 0x2a
 			SetupBitImage(params[0], static_cast<uint16_t>(Param16(1)));
 			break;
 
 		// Set n/360-inch line spacing (ESC + / FS 3) -- 24/48-pin only
 		// per escp2ref.pdf C-29 ("Not available on 9-pin printers").
 		// On a 9-pin printer model, ignore.
-		case EscSetN360InchLineSpacing: // 0x2b
-		case FsSetN360InchLineSpacing:  // 0x833
+		case Esc::SetN360InchLineSpacing: // 0x2b
+		case Fs::SetN360InchLineSpacing:  // 0x833
 			if (pins != 9) {
 				line_spacing = static_cast<Real64>(params[0]) / 360.0;
 			}
 			break;
 
 		// Turn underline on/off (ESC -)
-		case EscTurnUnderlineOnOff: // 0x2d
+		case Esc::TurnUnderlineOnOff: // 0x2d
 			if (params[0] == 0 || params[0] == 48) {
 				style.underline = 0;
 			}
@@ -609,66 +614,66 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Select vertical tab channel (ESC /)
-		case EscSelectVerticalTabChannel: // 0x2f
+		case Esc::SelectVerticalTabChannel: // 0x2f
 			// Ignore
 			break;
 
 		// Select 1/8-inch line spacing (ESC 0)
-		case EscSelect18InchLineSpacing:
+		case Esc::Select18InchLineSpacing:
 			line_spacing = static_cast<Real64>(1) / 8;
 			break; // 0x30
 
 		// Select 1/6-inch line spacing (ESC 2)
-		case EscSelect16InchLineSpacing:
+		case Esc::Select16InchLineSpacing:
 			line_spacing = static_cast<Real64>(1) / 6;
 			break; // 0x32
 
 		// Set line spacing (ESC 3) -- n/180 for 24/48-pin, n/216 for
 		// 9-pin (escp2ref.pdf C-37).
-		case EscSetN180InchLineSpacing: // 0x33
+		case Esc::SetN180InchLineSpacing: // 0x33
 			line_spacing = static_cast<Real64>(params[0]) /
 			               (pins == 9 ? 216.0 : 180.0);
 			break;
 
 		// Select italic font (ESC 4)
-		case EscSelectItalicFont: // 0x34
+		case Esc::SelectItalicFont: // 0x34
 			style.italics = 1;
 			UpdateFont();
 			break;
 
 		// Cancel italic font (ESC 5)
-		case EscCancelItalicFont: // 0x35
+		case Esc::CancelItalicFont: // 0x35
 			style.italics = 0;
 			UpdateFont();
 			break;
 
 		// Enable printing of upper control codes (ESC 6)
-		case EscEnablePrintingOfUpperControlCodes:
+		case Esc::EnablePrintingOfUpperControlCodes:
 			print_upper_contr = true;
 			break; // 0x36
 
 		// Enable upper control codes (ESC 7)
-		case EscEnableUpperControlCodes:
+		case Esc::EnableUpperControlCodes:
 			print_upper_contr = false;
 			break; // 0x37
 
 		// Unidirectional mode (one line) (ESC <)
-		case EscUnidirectionalMode: // 0x3c
+		case Esc::UnidirectionalMode: // 0x3c
 			// We don't have a print head, so just ignore this
 			break;
 
 		// Set MSB to 0 (ESC =)
-		case EscSetMsbTo0:
+		case Esc::SetMsbTo0:
 			msb = 0;
 			break; // 0x3d
 
 		// Set MSB to 1 (ESC >)
-		case EscSetMsbTo1:
+		case Esc::SetMsbTo1:
 			msb = 1;
 			break; // 0x3e
 
 		// Reassign bit-image mode (ESC ?)
-		case EscReassignBitImageMode: // 0x3f
+		case Esc::ReassignBitImageMode: // 0x3f
 			if (params[0] == 75) {
 				densk = params[1];
 			}
@@ -687,21 +692,21 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// page before clobbering state; DOS drivers typically end a job
 		// with ESC @ to clean up, and the last content fragment lives
 		// in the page buffer until something flushes it.
-		case EscInitializePrinter:
+		case Esc::InitializePrinter:
 			FormFeed();
 			ResetPrinter();
 			break; // 0x40
 
 		// Set line spacing (ESC A / FS A) -- n/60 for 24/48-pin,
 		// n/72 for 9-pin (escp2ref.pdf C-39).
-		case EscSetN60InchLineSpacing: // 0x41
-		case FsSetN60InchLineSpacing:  // 0x841
 			line_spacing = static_cast<Real64>(params[0]) /
 			               (pins == 9 ? 72.0 : 60.0);
+		case Esc::SetN60InchLineSpacing: // 0x41
+		case Fs::SetN60InchLineSpacing:  // 0x841
 			break;
 
 		// Set page length in lines (ESC C)
-		case EscSetPageLengthInLines: // 0x43
+		case Esc::SetPageLengthInLines: // 0x43
 			if (params[0] != 0) {
 				page_height = bottom_margin = static_cast<Real64>(
 				                                      params[0]) *
@@ -716,49 +721,50 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Select bold font (ESC E)
-		case EscSelectBoldFont: // 0x45
+		case Esc::SelectBoldFont: // 0x45
 			style.bold = 1;
 			UpdateFont();
 			break;
 
 		// Cancel bold font (ESC F)
-		case EscCancelBoldFont: // 0x46
+		case Esc::CancelBoldFont: // 0x46
 			style.bold = 0;
 			UpdateFont();
 			break;
 
 		// Select dobule-strike printing (ESC G)
-		case EscSelectDoubleStrikePrinting:
+		case Esc::SelectDoubleStrikePrinting:
 			style.doublestrike = 1;
 			break; // 0x47
 
 		// Cancel double-strike printing (ESC H)
-		case EscCancelDoubleStrikePrinting:
+		case Esc::CancelDoubleStrikePrinting:
 			style.doublestrike = 0;
 			break; // 0x48
 
 		// Advance print position vertically (ESC J n) -- n/180 for
 		// 24/48-pin, n/216 for 9-pin (escp2ref.pdf R-62).
-		case EscAdvancePrintPositionVertically: // 0x4a
+		case Esc::AdvancePrintPositionVertically: // 0x4a
 			cur_y += static_cast<Real64>(params[0]) /
 			         (pins == 9 ? 216.0 : 180.0);
+
 			if (cur_y > bottom_margin) {
 				NewPage(true, false);
 			}
 			break;
 
 		// Select 60-dpi graphics (ESC K)
-		case EscSelect60DpiGraphics: // 0x4b
+		case Esc::Select60DpiGraphics: // 0x4b
 			SetupBitImage(densk, static_cast<uint16_t>(Param16(0)));
 			break;
 
 		// Select 120-dpi graphics (ESC L)
-		case EscSelect120DpiGraphics: // 0x4c
+		case Esc::Select120DpiGraphics: // 0x4c
 			SetupBitImage(densl, static_cast<uint16_t>(Param16(0)));
 			break;
 
 		// Select 10.5-point, 12-cpi (ESC M)
-		case EscSelect105Point12Cpi: // 0x4d
+		case Esc::Select105Point12Cpi: // 0x4d
 			cpi        = 12;
 			hmi        = -1;
 			multipoint = false;
@@ -766,19 +772,19 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Set bottom margin (ESC N)
-		case EscSetBottomMargin: // 0x4e
+		case Esc::SetBottomMargin: // 0x4e
 			top_margin = 0.0;
 			bottom_margin = static_cast<Real64>(params[0]) * line_spacing;
 			break;
 
 		// Cancel bottom (and top) margin
-		case EscCancelBottomMargin: // 0x4f
+		case Esc::CancelBottomMargin: // 0x4f
 			top_margin    = 0.0;
 			bottom_margin = page_height;
 			break;
 
 		// Select 10.5-point, 10-cpi (ESC P)
-		case EscSelect105Point10Cpi: // 0x50
+		case Esc::Select105Point10Cpi: // 0x50
 			cpi        = 10;
 			hmi        = -1;
 			multipoint = false;
@@ -786,13 +792,13 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Set right margin
-		case EscSetRightMargin: // 0x51
 			right_margin = static_cast<Real64>(params[0] - 1.0) /
 			               static_cast<Real64>(cpi);
+		case Esc::SetRightMargin: // 0x51
 			break;
 
 		// Select an international character set (ESC R)
-		case EscSelectInternationalCharacterSet: // 0x52
+		case Esc::SelectInternationalCharacterSet: // 0x52
 			if (params[0] <= 13 || params[0] == 64) {
 				if (params[0] == 64) {
 					params[0] = 14;
@@ -821,7 +827,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// escp2ref.pdf C-129: n = 0 or 48 selects the *upper* part
 		// of the character space (superscript); n = 1 or 49 selects
 		// the *lower* part (subscript).
-		case EscSelectSuperscriptSubscriptPrinting: // 0x53
+		case Esc::SelectSuperscriptSubscriptPrinting: // 0x53
 			if (params[0] == 0 || params[0] == 48) {
 				style.superscript = 1;
 			}
@@ -832,19 +838,19 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Cancel superscript/subscript printing (ESC T)
-		case EscCancelSuperscriptSubscriptPrinting: // 0x54
+		case Esc::CancelSuperscriptSubscriptPrinting: // 0x54
 			style.superscript = 0;
 			style.subscript   = 0;
 			UpdateFont();
 			break;
 
 		// Turn unidirectional mode on/off (ESC U)
-		case EscTurnUnidirectionalModeOnOff: // 0x55
+		case Esc::TurnUnidirectionalModeOnOff: // 0x55
 			// We don't have a print head, so just ignore this
 			break;
 
 		// Turn double-width printing on/off (ESC W)
-		case EscTurnDoubleWidthPrintingOnOff: // 0x57
+		case Esc::TurnDoubleWidthPrintingOnOff: // 0x57
 			if (!multipoint) {
 				hmi = -1;
 				if (params[0] == 0 || params[0] == 48) {
@@ -858,7 +864,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Select font by pitch and point (ESC X)
-		case EscSelectFontPitchPoint: // 0x58
+		case Esc::SelectFontPitchPoint: // 0x58
 			multipoint = true;
 			// Copy currently non-multipoint CPI if no value was set
 			// so far
@@ -885,17 +891,17 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Select 120-dpi, double-speed graphics (ESC Y)
-		case EscSelect120DpiDoubleSpeedGraphics: // 0x59
+		case Esc::Select120DpiDoubleSpeedGraphics: // 0x59
 			SetupBitImage(densy, static_cast<uint16_t>(Param16(0)));
 			break;
 
 		// Select 240-dpi graphics (ESC Z)
-		case EscSelect240DpiGraphics: // 0x5a
+		case Esc::Select240DpiGraphics: // 0x5a
 			SetupBitImage(densz, static_cast<uint16_t>(Param16(0)));
 			break;
 
 		// Set relative horizontal print position (ESC \)
-		case EscSetRelativeHorizontalPrintPosition: { // 0x5c
+		case Esc::SetRelativeHorizontalPrintPosition: { // 0x5c
 			const int16_t toMove = static_cast<int16_t>(Param16(0));
 			Real64 unitSize      = defined_unit;
 			if (unitSize < 0) {
@@ -909,19 +915,19 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		} break;
 
 		// Select justification (ESC a)
-		case EscSelectJustification: // 0x61
+		case Esc::SelectJustification: // 0x61
 			// Ignore
 			break;
 
 		// Set horizontal motion index (HMI) (ESC c)
-		case EscSetHorizontalMotionIndex: // 0x63
+		case Esc::SetHorizontalMotionIndex: // 0x63
 			hmi = static_cast<Real64>(Param16(0)) /
 			      static_cast<Real64>(360.0);
 			extra_intra_space = 0.0;
 			break;
 
 		// Select 10.5-point, 15-cpi (ESC g)
-		case EscSelect105Point15Cpi: // 0x67
+		case Esc::Select105Point15Cpi: // 0x67
 			cpi        = 15;
 			hmi        = -1;
 			multipoint = false;
@@ -930,7 +936,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// implemented yet — Select forward feed mode (FS F) - set
 		// reverse not
-		case FsSelectForwardFeedMode: // 0x846
+		case Fs::SelectForwardFeedMode: // 0x846
 			if (line_spacing < 0) {
 				line_spacing *= -1;
 			}
@@ -941,7 +947,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// originally read Param16 (two bytes), which made the reverse
 		// amount depend on whatever was left in params[1] from the
 		// previous command.
-		case EscReversePaperFeed: { // 0x6a
+		case Esc::ReversePaperFeed: { // 0x6a
 			Real64 reverse = static_cast<Real64>(params[0]) /
 			                 static_cast<Real64>(216.0);
 			reverse = cur_y - reverse;
@@ -953,7 +959,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 		}
 		// Select typeface (ESC k)
-		case EscSelectTypeface: // 0x6b
+		case Esc::SelectTypeface: // 0x6b
 			if (params[0] <= 11 || params[0] == 30 || params[0] == 31) {
 				lq_typeface = static_cast<Typeface>(params[0]);
 			}
@@ -965,7 +971,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Clamp to 0 because real ESC/P drivers use n = 0 as a "no
 		// margin" / reset shorthand, and the (n - 1) subtraction would
 		// otherwise underflow to a negative position.
-		case EscSetLeftMargin: // 0x6c
+		case Esc::SetLeftMargin: // 0x6c
 			left_margin = static_cast<Real64>(params[0] - 1.0) /
 			              static_cast<Real64>(cpi);
 
@@ -978,7 +984,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Turn proportional mode on/off (ESC p)
-		case EscTurnProportionalModeOnOff: // 0x70
+		case Esc::TurnProportionalModeOnOff: // 0x70
 			if (params[0] == 0 || params[0] == 48) {
 				style.prop = 0;
 			}
@@ -992,7 +998,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Select printing color (ESC r)
-		case EscSelectPrintingColor: // 0x72
+		case Esc::SelectPrintingColor: // 0x72
 
 			if (params[0] == 0 || params[0] > 6) {
 				color = ColorBlack;
@@ -1002,14 +1008,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Select low-speed mode (ESC s)
-		case EscLowSpeedModeOnOff: // 0x73
+		case Esc::LowSpeedModeOnOff: // 0x73
 			// Ignore
 			break;
 
 		// Select character table (ESC t)
-		case EscSelectCharacterTable: // 0x74
+		case Esc::SelectCharacterTable: // 0x74
 		// Select character table (FS I)
-		case FsSelectCharacterTable: // 0x849
+		case Fs::SelectCharacterTable: // 0x849
 			if (params[0] < 4) {
 				cur_char_table = params[0];
 			}
@@ -1021,7 +1027,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Turn double-height printing on/off (ESC w)
-		case EscTurnDoubleHeightPrintingOnOff: // 0x77
+		case Esc::TurnDoubleHeightPrintingOnOff: // 0x77
 			if (!multipoint) {
 				if (params[0] == 0 || params[0] == 48) {
 					style.doubleheight = 0;
@@ -1034,7 +1040,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Select LQ or draft (ESC x)
-		case EscSelectLqDraft: // 0x78
+		case Esc::SelectLqDraft: // 0x78
 			if (params[0] == 0 || params[0] == 48) {
 				print_quality   = PrintQuality::Draft;
 				style.condensed = 1;
@@ -1048,20 +1054,20 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Set page length in inches (ESC C NUL)
-		case EscSetPageLengthInInches: // 0x100
 			page_height   = static_cast<Real64>(params[0]);
+		case Esc::SetPageLengthInInches: // 0x100
 			bottom_margin = page_height;
 			top_margin    = 0.0;
 			break;
 
 		// Skip unsupported ESC ( command
-		case EscSkipUnsupportedEscCommand: // 0x101
+		case Esc::SkipUnsupportedEscCommand: // 0x101
 			needed_param = static_cast<uint8_t>(Param16(0));
 			num_param    = 0;
 			break;
 
 		// Assign character table (ESC (t)
-		case EscParenAssignCharacterTable: // 0x274
+		case Esc::ParenAssignCharacterTable: // 0x274
 			// codepages has 15 entries (indices 0..14). The
 			// upstream bounds check '< 16' was off by one and would
 			// index out of bounds when params[3] == 15.
@@ -1076,7 +1082,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Select line/score (ESC (-)
-		case EscParenSelectLineScore: // 0x22d
+		case Esc::ParenSelectLineScore: // 0x22d
 			style.underline     = 0;
 			style.strikethrough = 0;
 			style.overscore     = 0;
@@ -1096,7 +1102,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Bar code setup and print (ESC (B)
-		case EscParenBarCodeSetupPrint: // 0x242
+		case Esc::ParenBarCodeSetupPrint: // 0x242
 			LOG_ERR("PRINTER: Barcode printing not supported");
 			// Find out how many bytes to skip
 			needed_param = static_cast<uint8_t>(Param16(0));
@@ -1104,7 +1110,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Set page length in defined unit (ESC (C)
-		case EscParenSetPageLengthInDefinedUnit: // 0x243
+		case Esc::ParenSetPageLengthInDefinedUnit: // 0x243
 			if (params[0] != 0 && defined_unit > 0) {
 				page_height = bottom_margin = (static_cast<Real64>(
 				                                      Param16(2))) *
@@ -1114,13 +1120,13 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Set unit (ESC (U)
-		case EscParenSetUnit: // 0x255
 			defined_unit = static_cast<Real64>(params[2]) /
 			               static_cast<Real64>(3600);
+		case Esc::ParenSetUnit: // 0x255
 			break;
 
 		// Set absolute vertical print position (ESC (V)
-		case EscParenSetAbsoluteVerticalPrintPosition: { // 0x256
+		case Esc::ParenSetAbsoluteVerticalPrintPosition: { // 0x256
 			Real64 unitSize = defined_unit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(360.0);
@@ -1136,12 +1142,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		} break;
 
 		// Print data as characters (ESC (^)
-		case EscParenPrintDataAsCharacters: // 0x25e
+		case Esc::ParenPrintDataAsCharacters: // 0x25e
 			num_print_as_char = static_cast<uint16_t>(Param16(0));
 			break;
 
 		// Set page format (ESC (c)
-		case EscParenSetPageFormat: // 0x263
+		case Esc::ParenSetPageFormat: // 0x263
 			if (defined_unit > 0) {
 				Real64 newTop, newBottom;
 				newTop = (static_cast<Real64>(Param16(2))) *
@@ -1168,7 +1174,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Set relative vertical print position (ESC (v)
-		case EscParenSetRelativeVerticalPrintPosition: { // 0x276
+		case Esc::ParenSetRelativeVerticalPrintPosition: { // 0x276
 			Real64 unitSize = defined_unit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(360.0);
