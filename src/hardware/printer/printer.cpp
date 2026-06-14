@@ -111,27 +111,36 @@ void Printer::ResetPrinterHard()
 
 void Printer::ResetPrinter()
 {
-	color = ColorBlack;
-	cur_x = cur_y = 0.0;
-	esc_seen      = false;
-	fs_seen       = false;
-	esc_cmd       = 0;
+	color     = ColorBlack;
+	esc_seen  = false;
+	fs_seen   = false;
+	esc_cmd   = 0;
 	num_param = needed_param = 0;
-	top_margin               = 0.0;
-	left_margin              = 0.0;
-	right_margin = page_width = default_page_width;
-	bottom_margin = page_height = default_page_height;
-	line_spacing                = static_cast<Real64>(1) / 6;
-	cpi                         = 10.0;
-	cur_char_table              = 1;
-	style.data                  = 0;
-	extra_intra_space           = 0.0;
-	print_upper_contr           = true;
-	bit_graph.rem_bytes         = 0;
-	densk                       = 0;
-	densl                       = 1;
-	densy                       = 2;
-	densz                       = 3;
+
+	// Default printable-area margins of 0.25 inch on all sides match
+	// escapy's reference impl and approximate the non-printable area
+	// of real Epson dot-matrix printers (see escp2ref.pdf Feature
+	// Summary per-model "Nonprintable area" lines, e.g. F-33 for LQ-850).
+	constexpr Real64 DefaultMarginIn = 0.25;
+	top_margin                       = DefaultMarginIn;
+	left_margin                      = DefaultMarginIn;
+	page_width                       = default_page_width;
+	page_height                      = default_page_height;
+	right_margin                     = default_page_width - DefaultMarginIn;
+	bottom_margin       = default_page_height - DefaultMarginIn;
+	cur_x               = left_margin;
+	cur_y               = top_margin;
+	line_spacing        = static_cast<Real64>(1) / 6;
+	cpi                 = 10.0;
+	cur_char_table      = 1;
+	style.data          = 0;
+	extra_intra_space   = 0.0;
+	print_upper_contr   = true;
+	bit_graph.rem_bytes = 0;
+	densk               = 0;
+	densl               = 1;
+	densy               = 2;
+	densz               = 3;
 	// Char table slot 0 is reserved for italics; slots 1..3 default to CP437.
 	char_tables[0] = 0;
 	char_tables[1] = char_tables[2] = char_tables[3] = 437;
