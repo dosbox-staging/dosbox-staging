@@ -924,9 +924,13 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		// Reverse paper feed (ESC j)
+		// Reverse paper feed (ESC j). The parameter is a single byte
+		// (range 0-255) per the ESC/P 2 reference (C-213). The handler
+		// originally read Param16 (two bytes), which made the reverse
+		// amount depend on whatever was left in params[1] from the
+		// previous command.
 		case EscReversePaperFeed: { // 0x6a
-			Real64 reverse = static_cast<Real64>(Param16(0)) /
+			Real64 reverse = static_cast<Real64>(params[0]) /
 			                 static_cast<Real64>(216.0);
 			reverse = cur_y - reverse;
 			if (reverse < left_margin) {
