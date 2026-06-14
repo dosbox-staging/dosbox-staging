@@ -12,7 +12,7 @@
 #include <string_view>
 
 #include "audio/mixer.h"
-#include "hardware/lpt.h"
+#include "hardware/parallelport/lpt.h"
 #include "hardware/port.h"
 #include "utils/rwqueue.h"
 
