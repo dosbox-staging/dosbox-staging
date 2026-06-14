@@ -123,12 +123,14 @@ void Printer::ResetPrinter()
 	// printers (see escp2ref.pdf Feature Summary per-model "Nonprintable
 	// area" lines, e.g. F-33 for LQ-850).
 	constexpr double DefaultMarginIn = 0.25;
-	top_margin                       = DefaultMarginIn;
-	left_margin                      = DefaultMarginIn;
-	page_width                       = default_page_width;
-	page_height                      = default_page_height;
-	right_margin                     = default_page_width - DefaultMarginIn;
-	bottom_margin       = default_page_height - DefaultMarginIn;
+
+	top_margin    = DefaultMarginIn;
+	left_margin   = DefaultMarginIn;
+	page_width    = default_page_width;
+	page_height   = default_page_height;
+	right_margin  = default_page_width - DefaultMarginIn;
+	bottom_margin = default_page_height - DefaultMarginIn;
+
 	cur_x               = left_margin;
 	cur_y               = top_margin;
 	line_spacing        = static_cast<double>(1) / 6;
@@ -138,21 +140,24 @@ void Printer::ResetPrinter()
 	extra_intra_space   = 0.0;
 	print_upper_contr   = true;
 	bit_graph.rem_bytes = 0;
-	densk               = 0;
-	densl               = 1;
-	densy               = 2;
-	densz               = 3;
+
+	densk = 0;
+	densl = 1;
+	densy = 2;
+	densz = 3;
+
 	// Char table slot 0 is reserved for italics; slots 1..3 default to CP437.
 	char_tables[0] = 0;
 	char_tables[1] = char_tables[2] = char_tables[3] = 437;
-	defined_unit                                     = -1;
-	multipoint                                       = false;
-	multi_point_size                                 = 0.0;
-	multi_cpi                                        = 0.0;
-	hmi                                              = -1.0;
-	msb                                              = 255;
-	num_print_as_char                                = 0;
-	lq_typeface                                      = Typeface::Roman;
+
+	defined_unit      = -1;
+	multipoint        = false;
+	multi_point_size  = 0.0;
+	multi_cpi         = 0.0;
+	hmi               = -1.0;
+	msb               = 255;
+	num_print_as_char = 0;
+	lq_typeface       = Typeface::Roman;
 
 	SelectCodepage(char_tables[cur_char_table]);
 
@@ -198,76 +203,12 @@ void Printer::SelectCodepage(const uint16_t codepage)
 		            codepage);
 		SelectCodepage(437);
 		return;
-	} /*
-	 switch(cp)
-	 {
-	 // Italics, use cp437
-	 case 0:
-	 case 437:
-	         map_to_use = (uint16_t*)&cp437_map;
-	         break;
-
-	 case 737:
-	         map_to_use = (uint16_t*)&cp737_map;
-	         break;
-
-	 case 775:
-	         map_to_use = (uint16_t*)&cp775_map;
-	         break;
-
-	 case 850:
-	         map_to_use = (uint16_t*)&cp850_map;
-	         break;
-
-	 case 852:
-	         map_to_use = (uint16_t*)&cp852_map;
-	         break;
-
-	 case 855:
-	         map_to_use = (uint16_t*)&cp855_map;
-	         break;
-
-	 case 857:
-	         map_to_use = (uint16_t*)&cp857_map;
-	         break;
-
-	 case 860:
-	         map_to_use = (uint16_t*)&cp860_map;
-	         break;
-
-	 case 861:
-	         map_to_use = (uint16_t*)&cp861_map;
-	         break;
-
-	 case 863:
-	         map_to_use = (uint16_t*)&cp863_map;
-	         break;
-
-	 case 864:
-	         map_to_use = (uint16_t*)&cp864_map;
-	         break;
-
-	 case 865:
-	         map_to_use = (uint16_t*)&cp865_map;
-	         break;
-
-	 case 866:
-	         map_to_use = (uint16_t*)&cp866_map;
-	         break;
-
-	 default:
-	         LOG(LOG_MISC,LOG_WARN)("Unsupported codepage %i. Using CP437
-	 instead.", cp); map_to_use = (uint16_t*)&cp437_map;
-	 }*/
+	}
 
 	for (int i = 0; i < 256; i++) {
 		cur_map[i] = map_to_use[i];
 	}
 }
-
-// Printer::UpdateFont lives in printer_glyph.cpp.
-
-// Printer::ProcessCommandChar lives in printer_dispatch.cpp.
 
 void Printer::NewPage(const bool save, const bool reset_x)
 {
@@ -334,23 +275,29 @@ void Printer::PrintChar(uint8_t ch)
 	// then temporarily stretched in both axes so its em exactly fills
 	// the 1/cpi horizontal cell and the line_spacing vertical cell;
 	// the bitmap overhang baked into each glyph bridges the seam.
-	const auto unicode     = cur_map[ch];
+	const auto unicode = cur_map[ch];
+
 	const bool is_box_char = unicode >= 0x2500 && unicode <= 0x259F;
+
 	FT_Face render_face = (is_box_char && !style.prop && mono_box_font != nullptr)
 	                            ? mono_box_font
 	                            : cur_font;
+
 	const bool apply_box_fill = is_box_char && box_fill_horiz_points > 0.0 &&
 	                            line_spacing > 0.0 && natural_em_height_px > 0;
 
 	int box_fill_em_h_px   = 0;
 	int box_fill_em_asc_px = 0;
+
 	if (apply_box_fill) {
 		const auto cell_h_px = static_cast<int>(line_spacing * dpi);
+
 		const auto box_fill_vert_points = cur_vert_points *
 		                                  BoxFillOvershootVertical *
 		                                  static_cast<double>(cell_h_px) /
 		                                  static_cast<double>(
 		                                          natural_em_height_px);
+
 		FT_Set_Char_Size(render_face,
 		                 static_cast<FT_F26Dot6>(box_fill_horiz_points *
 		                                         Ft26Dot6Unit),
@@ -358,7 +305,9 @@ void Printer::PrintChar(uint8_t ch)
 		                                         Ft26Dot6Unit),
 		                 dpi,
 		                 dpi);
+
 		box_fill_em_h_px = ft26_6_to_pixels(render_face->size->metrics.height);
+
 		box_fill_em_asc_px = ft26_6_to_pixels(
 		        render_face->size->metrics.ascender);
 	}
@@ -386,9 +335,9 @@ void Printer::PrintChar(uint8_t ch)
 	// Shift narrow glyphs to the middle of the cell to even that out.
 	//
 	// Skip this for native monospace fonts. Their bitmap_left already
-	// positions glyphs correctly within the advance cell, and shifting would
-	// misalign the CP437 box-drawing characters, where `│`/`─`/`┼` would land
-	// at different X positions and break grids.
+	// positions glyphs correctly within the advance cell, and shifting
+	// would misalign the CP437 box-drawing characters, where `│`/`─`/`┼`
+	// would land at different X positions and break grids.
 	uint16_t centre_offset = 0;
 
 	if (!style.prop && act_cpi > 0.0 && !FT_IS_FIXED_WIDTH(render_face)) {
@@ -432,7 +381,7 @@ void Printer::PrintChar(uint8_t ch)
 	if (apply_box_fill) {
 		const auto cell_h_px = static_cast<int>(line_spacing * dpi);
 
-		const auto em_top_y  = static_cast<int>(PixY()) +
+		const auto em_top_y = static_cast<int>(PixY()) +
 		                      (cell_h_px - box_fill_em_h_px) / 2;
 
 		signed_pen_y = em_top_y + box_fill_em_asc_px -
@@ -478,6 +427,7 @@ void Printer::PrintChar(uint8_t ch)
 
 	// advance the cursor to the right
 	double x_advance;
+
 	if (style.prop) {
 		// advance.x is in 26.6 pixel units; divide by dpi *
 		// Ft26Dot6Unit in a single step to keep sub-pixel precision
@@ -491,24 +441,29 @@ void Printer::PrintChar(uint8_t ch)
 			x_advance = hmi;
 		}
 	}
+
 	x_advance += extra_intra_space;
 	cur_x += x_advance;
 
 	// Draw lines if desired
 	if ((score != ScoreType::None) &&
 	    (style.underline || style.strikethrough || style.overscore)) {
+
 		// Find out where to put the line.
 		// TODO height is in fixed-point format from FreeType.
-		uint16_t lineY      = static_cast<uint16_t>(PixY());
+		uint16_t lineY = static_cast<uint16_t>(PixY());
+
 		const double height = static_cast<double>(
 		        cur_font->size->metrics.height >> 6);
 
 		if (style.underline) {
 			lineY = static_cast<uint16_t>(
 			        PixY() + static_cast<uint16_t>(height * 0.9));
+
 		} else if (style.strikethrough) {
 			lineY = static_cast<uint16_t>(
 			        PixY() + static_cast<uint16_t>(height * 0.45));
+
 		} else if (style.overscore) {
 			lineY = static_cast<uint16_t>(
 			        PixY() - (((score == ScoreType::Double) ||
@@ -526,6 +481,7 @@ void Printer::PrintChar(uint8_t ch)
 		// draw second line if needed
 		if ((score == ScoreType::Double) ||
 		    (score == ScoreType::DoubleBroken)) {
+
 			// score is DOUBLE or DOUBLEBROKEN here; the upstream
 			// expression also tested ScoreType::SingleBroken which
 			// is unreachable in this branch.
@@ -539,6 +495,7 @@ void Printer::PrintChar(uint8_t ch)
 	if ((cur_x + x_advance) > right_margin) {
 		cur_x = left_margin;
 		cur_y += line_spacing;
+
 		if (cur_y > bottom_margin) {
 			NewPage(true, false);
 		}
@@ -573,10 +530,6 @@ bool Printer::Ack()
 	return false;
 }
 
-// Printer::SetupBitImage lives in printer_dispatch.cpp.
-
-// Printer::PrintBitGraph lives in printer_dispatch.cpp.
-
 void Printer::FormFeed()
 {
 	// Don't output blank pages
@@ -597,11 +550,13 @@ std::optional<std_fs::path> find_next_name(const std::string& prefix,
 	                                                  : document_path;
 	for (int i = 1; i <= FindNextNameAttempts; ++i) {
 		std_fs::path candidate = docdir / (prefix + std::to_string(i) + ext);
+
 		std::error_code ec;
 		if (!std_fs::exists(candidate, ec)) {
 			return candidate;
 		}
 	}
+
 	LOG_WARNING(
 	        "PRINTER: docpath already contains %d %s files matching "
 	        "'%s<N>%s'; output disabled",
@@ -609,6 +564,7 @@ std::optional<std_fs::path> find_next_name(const std::string& prefix,
 	        prefix.c_str(),
 	        prefix.c_str(),
 	        ext.c_str());
+
 	return std::nullopt;
 }
 
@@ -798,14 +754,17 @@ void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
 	switch (model) {
 	case PrinterModelKind::None: conf_model = PrinterModel::None; break;
 		break;
+
 	case PrinterModelKind::EpsonDotMatrix9Pin:
 		conf_model = PrinterModel::EpsonDotMatrix;
 		conf_pins  = 9;
 		break;
+
 	case PrinterModelKind::EpsonDotMatrix24Pin:
 		conf_model = PrinterModel::EpsonDotMatrix;
 		conf_pins  = 24;
 		break;
+
 	case PrinterModelKind::PostScript:
 		conf_model = PrinterModel::PostScript;
 		break;
@@ -846,7 +805,9 @@ void PRINTER_Reset()
 	// Cancel pending timeout events first so printer_event_handler can't
 	// fire on a half-destroyed printer.
 	PIC_RemoveEvents(printer_event_handler);
+
 	default_printer.reset();
+
 	// The IO handlers in printer_glue stay installed across Reset/Init
 	// cycles; clear the LPT register state so a stale strobe sequence
 	// from before a previous Reset can't trigger lazy construction with
