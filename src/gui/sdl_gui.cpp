@@ -1858,10 +1858,12 @@ void GFX_InitSdl()
 	}
 
 	// Log runtime SDL version
+	const auto sdl_version = SDL_GetVersion();
+
 	LOG_MSG("SDL: Version %d.%d.%d initialised",
-	        SDL_MAJOR_VERSION,
-	        SDL_MINOR_VERSION,
-	        SDL_MICRO_VERSION);
+	        SDL_VERSIONNUM_MAJOR(sdl_version),
+	        SDL_VERSIONNUM_MINOR(sdl_version),
+	        SDL_VERSIONNUM_MICRO(sdl_version));
 	LOG_MSG("SDL: %s video initialised", SDL_GetCurrentVideoDriver());
 
 #ifdef MACOSX
