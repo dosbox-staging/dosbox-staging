@@ -11,7 +11,7 @@
 #include "config/config.h"
 #include "config/setup.h"
 #include "gui/mapper.h"
-#include "hardware/lpt.h"
+#include "hardware/parallelport/lpt.h"
 #include "hardware/port.h"
 #include "misc/support.h"
 #include "printer_if.h"
