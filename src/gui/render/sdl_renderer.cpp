@@ -96,19 +96,36 @@ SDL_WindowFlags SdlRenderer::OpenGlDriverCrashWorkaround(const std::string_view 
 
 bool SdlRenderer::InitRenderer(const std::string& render_driver)
 {
-	if (render_driver != "auto" &&
-	    (SDL_SetHint(SDL_HINT_RENDER_DRIVER, render_driver.c_str()) == false)) {
+	const auto has_specific_driver = (render_driver != "auto");
 
-		// TODO convert to notification?
-		LOG_WARNING(
-		        "SDL: Error setting '%s' SDL render driver; "
-		        "falling back to automatic selection",
-		        render_driver.c_str());
-
-		set_section_property_value("sdl", "texture_renderer", "auto");
+	if (has_specific_driver &&
+	    !SDL_SetHint(SDL_HINT_RENDER_DRIVER, render_driver.c_str())) {
+		LOG_WARNING("SDL: Error setting '%s' SDL render driver hint: %s",
+		            render_driver.c_str(),
+		            SDL_GetError());
 	}
 
 	renderer = SDL_CreateRenderer(window, nullptr);
+	if (!renderer && has_specific_driver) {
+		const auto initial_error = std::string(SDL_GetError());
+
+		if (!SDL_ResetHint(SDL_HINT_RENDER_DRIVER)) {
+			LOG_WARNING("SDL: Error resetting SDL render driver hint: %s",
+			            SDL_GetError());
+		}
+
+		renderer = SDL_CreateRenderer(window, nullptr);
+		if (renderer) {
+			LOG_WARNING(
+			        "SDL: Error creating '%s' SDL render driver (%s); "
+			        "falling back to automatic selection",
+			        render_driver.c_str(),
+			        initial_error.c_str());
+
+			set_section_property_value("sdl", "texture_renderer", "auto");
+		}
+	}
+
 	if (!renderer) {
 		LOG_ERR("SDL: Error creating renderer: %s", SDL_GetError());
 		return false;
