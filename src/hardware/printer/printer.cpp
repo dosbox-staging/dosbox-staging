@@ -2249,7 +2249,7 @@ uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
 	return status;
 }
 
-static void FormFeed(const bool pressed)
+static void trigger_form_feed(const bool pressed)
 {
 	if (pressed) {
 		if (default_printer) {
@@ -2274,7 +2274,7 @@ static void PRINTER_EventHandler([[maybe_unused]] const uint32_t param)
 		timeout_dirty = false;
 	} else {
 		timeout_dirty = false;
-		FormFeed(true);
+		trigger_form_feed(true);
 	}
 }
 
@@ -2333,8 +2333,9 @@ uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
 //   PRINTER_Configure   -- writes the static config values (dpi, paper
 //                          size, output format, etc.) that the lazy
 //                          CPrinter constructor reads on first use.
-//   PRINTER_FormFeed    -- public wrapper around the static FormFeed for
-//                          the mapper handler.
+//   PRINTER_FormFeed    -- public wrapper around the static
+//                          trigger_form_feed used by the mapper
+//                          handler in printer_glue.
 //   PRINTER_Reset       -- destroys the CPrinter singleton (flushes any
 //                          open multipage doc) so Destroy/Init cycles
 //                          work cleanly.
@@ -2359,7 +2360,7 @@ void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t 
 
 void PRINTER_FormFeed(const bool pressed)
 {
-	FormFeed(pressed);
+	trigger_form_feed(pressed);
 }
 
 void PRINTER_Reset()
