@@ -15,6 +15,8 @@
 
 CHECK_NARROWING();
 
+namespace VirtualPrinter {
+
 // PostScript output state machine
 // -------------------------------
 // Each PRINTER_WriteControl strobe that completes a page triggers an
@@ -228,3 +230,6 @@ void Printer::FprintAscii85(FILE* file, uint16_t byte)
 		fprintf(file, ">\n");
 	}
 }
+
+} // namespace VirtualPrinter
+

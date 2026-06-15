@@ -30,6 +30,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+namespace VirtualPrinter {
+
 // zlib compression levels duplicated locally to avoid pulling in zlib.h.
 constexpr int ZBestCompression = 9;
 constexpr int ZDefaultStrategy = 0;
@@ -352,5 +354,7 @@ private:
 	uint8_t ascii85_buffer_pos            = 0;
 	uint8_t ascii85_cur_col               = 0;
 };
+
+} // namespace VirtualPrinter
 
 #endif

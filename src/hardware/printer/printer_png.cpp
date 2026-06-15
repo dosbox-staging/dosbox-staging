@@ -15,6 +15,8 @@
 
 CHECK_NARROWING();
 
+namespace VirtualPrinter {
+
 // zlib compression levels duplicated locally to avoid pulling in zlib.h.
 static constexpr int ZBestCompression = 9;
 static constexpr int ZDefaultStrategy = 0;
@@ -87,3 +89,6 @@ bool write_png_page(SDL_Surface* page, const std_fs::path& out_path)
 	// fp closes here via FILE_unique_ptr destructor.
 	return true;
 }
+
+} // namespace VirtualPrinter
+
