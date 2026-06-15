@@ -16,11 +16,9 @@
 
 #include "hardware/pic.h" // for timeout
 #include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
-
-extern void GFX_CaptureMouse(void);
-extern bool mouselocked;
 
 static std::unique_ptr<Printer> default_printer = nullptr;
 
@@ -1977,11 +1975,11 @@ void Printer::OutputPage()
 {
 	char fname[200];
 
-	if (strcasecmp(output, "printer") == 0) {
+	if (iequals(output, "printer")) {
 		// Win32 host-printer pass-through removed (out of scope).
 		LOG_MSG("PRINTER: Direct printing not supported");
 	}
-	else if (strcasecmp(output, "png") == 0) {
+	else if (iequals(output, "png")) {
 		// Find a page that does not exists
 		find_next_name("page", ".png", &fname[0]);
 
@@ -2060,7 +2058,7 @@ void Printer::OutputPage()
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		// fp closes here via FILE_unique_ptr destructor.
 	}
-	else if (strcasecmp(output, "ps") == 0) {
+	else if (iequals(output, "ps")) {
 		// If multipage mode is continuing, take ownership back from the
 		// member; otherwise open a fresh file.
 		FILE_unique_ptr psfile = std::move(output_handle);
@@ -2255,10 +2253,10 @@ void Printer::FinishMultipage()
 	if (!output_handle) {
 		return;
 	}
-	if (strcasecmp(output, "ps") == 0) {
+	if (iequals(output, "ps")) {
 		fprintf(output_handle.get(), "%%%%Pages: %i\n", multipage_counter);
 		fprintf(output_handle.get(), "%%%%EOF\n");
-	} else if (strcasecmp(output, "printer") == 0) {
+	} else if (iequals(output, "printer")) {
 		// Win32 host-printer pass-through removed (out of scope).
 	}
 	// FILE_unique_ptr destructor fcloses on reset.
