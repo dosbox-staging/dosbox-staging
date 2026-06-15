@@ -27,7 +27,7 @@ jobs:
       # Bump 'version:' to force-invalidate the cache
       - name: Install apt dependencies
         id:   apt_cache
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.6.0
+        uses: awalsh128/cache-apt-pkgs-action@681749ae568c81c2037cb9185e38b709b261bd2f # v1.6.1
         with:
           packages: python3-setuptools ruby-full appstream-util
           version: "1.0"
