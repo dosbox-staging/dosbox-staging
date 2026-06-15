@@ -1117,7 +1117,10 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			num_param    = 0;
 			break;
 		case 0x274: // Assign character table (ESC (t)
-			if (params[2] < 4 && params[3] < 16) {
+			// codepages has 15 entries (indices 0..14). The
+			// upstream bounds check '< 16' was off by one and would
+			// index out of bounds when params[3] == 15.
+			if (params[2] < 4 && params[3] < 15) {
 				char_tables[params[2]] = codepages[params[3]];
 				// LOG_MSG("curr table: %d, p2: %d, p3:
 				// %d",cur_char_table,params[2],params[3]);
