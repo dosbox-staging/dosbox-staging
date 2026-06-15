@@ -10,7 +10,6 @@
 #include "misc/support.h"
 #include "printer_charmaps.h"
 #include "printer_if.h"
-#include "printer_png.h"
 #include <array>
 #include <math.h>
 #include <memory>
@@ -18,9 +17,12 @@
 #include <vector>
 
 #include "misc/std_filesystem.h"
+#include "printer_internal.h"
+#include "printer_png.h"
 #include "utils/string_utils.h"
 
-#include "hardware/pic.h" // for timeout
+// PIC_AddEvent / PIC_RemoveEvents drive the form-feed timeout.
+#include "hardware/pic.h"
 #include "utils/checks.h"
 
 CHECK_NARROWING();
@@ -34,6 +36,8 @@ static std_fs::path document_path;
 // static const char* font_path;
 static std::string conf_output_device;
 static bool conf_multipage_output;
+
+// Printer::FillPalette lives in printer_glyph.cpp.
 
 Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
                  const std::string& output, bool multipage_output)
@@ -61,7 +65,19 @@ Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
 		                            0,
 		                            0);
 
-		// Set a grey palette
+		// The 8-bit palette is sliced into 8 sub-palettes of 32 entries
+		// each. The high 3 bits of a pixel select the sub-palette (the
+		// 'colour ID'), the low 5 bits select intensity within that
+		// sub-palette (0 = white, 31 = saturated).
+		//
+		// Sub-palette indices are chosen so that overprinting two
+		// colours ORs the bits of their IDs to produce a third
+		// reasonable colour, mirroring how real ribbon overprinting
+		// works (e.g. magenta=001 OR yellow=100 -> red=101).
+		//
+		// Sub-palette 0 is the 'all white' page background and gets
+		// hand-initialised below; the other seven are derived from
+		// (red_max, green_max, blue_max) tuples by FillPalette.
 		SDL_Palette* palette = page->format->palette;
 
 		for (uint64_t i = 0; i < 32; i++) {
@@ -69,28 +85,17 @@ Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
 			palette->colors[i].g = 255;
 			palette->colors[i].b = 255;
 		}
-		// 0 = all white needed for logic 000
+		// Eight sub-palettes (colour ID 1..7 in the upper 3 bits of
+		// each pixel byte; ID 0 is the all-white page background
+		// initialised above).
 		FillPalette(0, 0, 0, 1, palette);
-		// 1 = magenta* 001
 		FillPalette(0, 255, 0, 1, palette);
-		// 2 = cyan*    010
 		FillPalette(255, 0, 0, 2, palette);
-		// 3 = "violet" 011
 		FillPalette(255, 255, 0, 3, palette);
-		// 4 = yellow*  100
 		FillPalette(0, 0, 255, 4, palette);
-		// 5 = red      101
 		FillPalette(0, 255, 255, 5, palette);
-		// 6 = green    110
 		FillPalette(255, 0, 255, 6, palette);
-		// 7 = black    111
 		FillPalette(255, 255, 255, 7, palette);
-
-		// yyyxxxxx bit pattern: yyy=color xxxxx = intensity: 31=max
-		// Printing colors on top of each other ORs them and gets the
-		// correct resulting color.
-		// i.e. magenta on blank page yyy=001
-		// then yellow on magenta 001 | 100 = 101 = red
 
 		color = ColorBlack;
 
@@ -192,7 +197,8 @@ void Printer::SelectCodepage(const uint16_t codepage)
 	} /*
 	 switch(cp)
 	 {
-	 case 0: // Italics, use cp437
+	 // Italics, use cp437
+	 case 0:
 	 case 437:
 	         map_to_use = (uint16_t*)&cp437_map;
 	         break;
@@ -389,12 +395,11 @@ void Printer::PrintChar(uint8_t ch)
 	// Draw lines if desired
 	if ((score != ScoreType::None) &&
 	    (style.underline || style.strikethrough || style.overscore)) {
-		// Find out where to put the line
+		// Find out where to put the line.
+		// TODO height is in fixed-point format from FreeType.
 		uint16_t lineY      = static_cast<uint16_t>(PixY());
 		const double height = static_cast<double>(
-		        cur_font->size->metrics.height >> 6); // TODO height is
-		                                              // fixed point
-		                                              // madness...
+		        cur_font->size->metrics.height >> 6);
 
 		if (style.underline) {
 			lineY = static_cast<uint16_t>(
@@ -413,14 +418,19 @@ void Printer::PrintChar(uint8_t ch)
 		DrawLine(lineStart,
 		         PixX(),
 		         lineY,
-		         score == ScoreType::SingleBroken || score == ScoreType::DoubleBroken);
+		         score == ScoreType::SingleBroken ||
+		                 score == ScoreType::DoubleBroken);
 
 		// draw second line if needed
-		if ((score == ScoreType::Double) || (score == ScoreType::DoubleBroken)) {
+		if ((score == ScoreType::Double) ||
+		    (score == ScoreType::DoubleBroken)) {
 			// score is DOUBLE or DOUBLEBROKEN here; the upstream
-			// expression also tested ScoreType::SingleBroken which is
-			// unreachable in this branch.
-			DrawLine(lineStart, PixX(), lineY + 5, score == ScoreType::DoubleBroken);
+			// expression also tested ScoreType::SingleBroken which
+			// is unreachable in this branch.
+			DrawLine(lineStart,
+			         PixX(),
+			         lineY + 5,
+			         score == ScoreType::DoubleBroken);
 		}
 	}
 	// If the next character would go beyond the right margin, line-wrap.
@@ -432,6 +442,8 @@ void Printer::PrintChar(uint8_t ch)
 		}
 	}
 }
+
+// Printer::BlitGlyph and Printer::DrawLine live in printer_glyph.cpp.
 
 void Printer::SetAutofeed(const bool feed)
 {
@@ -459,6 +471,10 @@ bool Printer::Ack()
 	return false;
 }
 
+// Printer::SetupBitImage lives in printer_dispatch.cpp.
+
+// Printer::PrintBitGraph lives in printer_dispatch.cpp.
+
 void Printer::FormFeed()
 {
 	// Don't output blank pages
@@ -472,11 +488,10 @@ void Printer::FormFeed()
 // anything a real DOS application will produce in one session.
 static constexpr int FindNextNameAttempts = 10000;
 
-// Build the next free path of the form <document_path>/<prefix><N><ext>
-// (N counting from 1). Returns std::nullopt if more than
-// FindNextNameAttempts files in the series already exist.
-static std::optional<std_fs::path> find_next_name(const std::string& prefix,
-                                                  const std::string& ext)
+// Defined here, declared in printer_internal.h for use from the
+// output backends in printer_png.cpp / printer_ps.cpp.
+std::optional<std_fs::path> find_next_name(const std::string& prefix,
+                                           const std::string& ext)
 {
 	const std_fs::path docdir = document_path.empty() ? std_fs::path{"."}
 	                                                  : document_path;
@@ -507,121 +522,7 @@ void Printer::OutputPage()
 			write_png_page(page, *out_path);
 		}
 	} else if (iequals(output, "ps")) {
-		// If multipage mode is continuing, take ownership back from the
-		// member; otherwise open a fresh file.
-		FILE_unique_ptr psfile = std::move(output_handle);
-
-		if (!psfile) {
-			const auto out_path = find_next_name(
-			        multipage_output ? "doc" : "page", ".ps");
-			if (!out_path) {
-				return;
-			}
-
-			psfile = FILE_unique_ptr{
-			        fopen(out_path->string().c_str(), "wb")};
-			if (!psfile) {
-				LOG_ERR("PRINTER: Can't open file %s for printer output",
-				        out_path->string().c_str());
-				return;
-			}
-
-			// Print header.
-			fprintf(psfile.get(), "%%!PS-Adobe-3.0\n");
-			fprintf(psfile.get(), "%%%%Pages: (atend)\n");
-			fprintf(psfile.get(),
-			        "%%%%BoundingBox: 0 0 %i %i\n",
-			        static_cast<uint16_t>(default_page_width * 72),
-			        static_cast<uint16_t>(default_page_height * 72));
-			fprintf(psfile.get(), "%%%%Creator: DOSBOX Virtual Printer\n");
-			fprintf(psfile.get(), "%%%%DocumentData: Clean7Bit\n");
-			fprintf(psfile.get(), "%%%%LanguageLevel: 2\n");
-			fprintf(psfile.get(), "%%%%EndComments\n");
-			multipage_counter = 1;
-		}
-
-		fprintf(psfile.get(),
-		        "%%%%Page: %i %i\n",
-		        multipage_counter,
-		        multipage_counter);
-		fprintf(psfile.get(),
-		        "%i %i scale\n",
-		        static_cast<uint16_t>(default_page_width * 72),
-		        static_cast<uint16_t>(default_page_height * 72));
-		fprintf(psfile.get(),
-		        "%i %i 8 [%i 0 0 -%i 0 %i]\n",
-		        page->w,
-		        page->h,
-		        page->w,
-		        page->h,
-		        page->h);
-		fprintf(psfile.get(), "currentfile\n");
-		fprintf(psfile.get(), "/ASCII85Decode filter\n");
-		fprintf(psfile.get(), "/RunLengthDecode filter\n");
-		fprintf(psfile.get(), "image\n");
-
-		SDL_LockSurface(page);
-
-		uint32_t pix          = 0;
-		const uint32_t numpix = page->h * page->w;
-		ascii85_buffer_pos = ascii85_cur_col = 0;
-
-		while (pix < numpix) {
-			// Compress data using RLE
-
-			if ((pix < numpix - 2) &&
-			    (GetPixel(pix) == GetPixel(pix + 1)) &&
-			    (GetPixel(pix) == GetPixel(pix + 2))) {
-				// Found three or more pixels with the same color
-				uint8_t sameCount = 3;
-				const uint8_t col = GetPixel(pix);
-				while (sameCount < 128 && sameCount + pix < numpix &&
-				       col == GetPixel(pix + sameCount)) {
-					sameCount++;
-				}
-
-				FprintAscii85(psfile.get(), 257 - sameCount);
-				FprintAscii85(psfile.get(), 255 - col);
-
-				// Skip ahead
-				pix += sameCount;
-			} else {
-				// Find end of heterogenous area
-				uint8_t diffCount = 1;
-				while (diffCount < 128 && diffCount + pix < numpix &&
-				       ((diffCount + pix < numpix - 2) ||
-				        (GetPixel(pix + diffCount) !=
-				         GetPixel(pix + diffCount + 1)) ||
-				        (GetPixel(pix + diffCount) !=
-				         GetPixel(pix + diffCount + 2)))) {
-					diffCount++;
-				}
-
-				FprintAscii85(psfile.get(), diffCount - 1);
-				for (uint8_t i = 0; i < diffCount; i++) {
-					FprintAscii85(psfile.get(),
-					              255 - GetPixel(pix++));
-				}
-			}
-		}
-
-		// Write EOD for RLE and ASCII85
-		FprintAscii85(psfile.get(), 128);
-		FprintAscii85(psfile.get(), 256);
-
-		SDL_UnlockSurface(page);
-
-		fprintf(psfile.get(), "showpage\n");
-
-		if (multipage_output) {
-			multipage_counter++;
-			output_handle = std::move(psfile);
-		} else {
-			fprintf(psfile.get(), "%%%%Pages: 1\n");
-			fprintf(psfile.get(), "%%%%EOF\n");
-			// psfile closes here via FILE_unique_ptr destructor.
-			output_handle.reset();
-		}
+		OutputPagePostScript();
 	} else {
 		const auto out_path = find_next_name("page", ".bmp");
 		if (out_path) {
@@ -630,73 +531,7 @@ void Printer::OutputPage()
 	}
 }
 
-void Printer::FprintAscii85(FILE* file, uint16_t byte)
-{
-	if (byte != 256) {
-		if (byte < 256) {
-			ascii85_buffer[ascii85_buffer_pos++] = static_cast<uint8_t>(byte);
-		}
-
-		if (ascii85_buffer_pos == 4 || byte == 257) {
-			uint32_t num = static_cast<uint32_t>(ascii85_buffer[0])
-			                    << 24 |
-			               static_cast<uint32_t>(ascii85_buffer[1])
-			                       << 16 |
-			               static_cast<uint32_t>(ascii85_buffer[2]) << 8 |
-			               static_cast<uint32_t>(ascii85_buffer[3]);
-
-			// Deal with special case
-			if (num == 0 && byte != 257) {
-				fprintf(file, "z");
-				if (++ascii85_cur_col >= 79) {
-					ascii85_cur_col = 0;
-					fprintf(file, "\n");
-				}
-			} else {
-				char buffer[5];
-				for (int8_t i = 4; i >= 0; i--) {
-					buffer[i] = static_cast<uint8_t>(
-					        static_cast<uint32_t>(num) %
-					        static_cast<uint32_t>(85));
-					buffer[i] += 33;
-					num /= static_cast<uint32_t>(85);
-				}
-
-				// Make sure a line never starts with a % (which
-				// may be mistaken as start of a comment)
-				if (ascii85_cur_col == 0 && buffer[0] == '%') {
-					fprintf(file, " ");
-				}
-
-				for (int i = 0;
-				     i < ((byte != 257) ? 5 : ascii85_buffer_pos + 1);
-				     i++) {
-					fprintf(file, "%c", buffer[i]);
-					if (++ascii85_cur_col >= 79) {
-						ascii85_cur_col = 0;
-						fprintf(file, "\n");
-					}
-				}
-			}
-
-			ascii85_buffer_pos = 0;
-		}
-
-	} else // Close string
-	{
-		// Partial tupel if there are still bytes in the buffer
-		if (ascii85_buffer_pos > 0) {
-			for (uint8_t i = ascii85_buffer_pos; i < 4; i++) {
-				ascii85_buffer[i] = 0;
-			}
-
-			FprintAscii85(file, 257);
-		}
-
-		fprintf(file, "~");
-		fprintf(file, ">\n");
-	}
-}
+// Printer::FprintAscii85 lives in printer_ps.cpp.
 
 void Printer::FinishMultipage()
 {
@@ -905,9 +740,9 @@ void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t 
                        const char* docpath, const char* output_format,
                        const bool multipage, const int timeout_ms)
 {
-	conf_dpi      = dpi;
-	conf_width    = width;
-	conf_height   = height;
+	conf_dpi              = dpi;
+	conf_width            = width;
+	conf_height           = height;
 	document_path         = docpath ? docpath : "";
 	conf_output_device    = output_format ? output_format : "";
 	conf_multipage_output = multipage;

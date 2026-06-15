@@ -45,6 +45,7 @@ target_sources(dosboxcommon PRIVATE
   printer/printer_glue.cpp
   printer/printer_glyph.cpp
   printer/printer_png.cpp
+  printer/printer_ps.cpp
 
   serialport/misc_util.cpp
   serialport/nullmodem.cpp
