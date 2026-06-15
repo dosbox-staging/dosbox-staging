@@ -95,8 +95,8 @@ enum class Typeface {
 
 class Printer {
 public:
-	Printer(uint16_t dpi, uint16_t width, uint16_t height, char* output,
-	        bool multipage_output);
+	Printer(uint16_t dpi, uint16_t width, uint16_t height,
+	        const std::string& output, bool multipage_output);
 	virtual ~Printer();
 
 	// Owns FreeType/SDL resources and a singleton Printer* — don't copy.
@@ -331,8 +331,8 @@ private:
 	// codes).
 	uint16_t num_print_as_char = 0;
 
-	// Output method selected by the user.
-	char* output = nullptr;
+	// Output method selected by the user ("png" / "ps" / ...).
+	std::string output;
 
 	// If non-null, multipage mode is active and additional pages get
 	// appended to the open handle until FormFeed closes it.

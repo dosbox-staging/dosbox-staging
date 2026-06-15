@@ -50,7 +50,7 @@ void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
 }
 
 Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
-                   char* output, bool multipage_output)
+                 const std::string& output, bool multipage_output)
 {
 	if (FT_Init_FreeType(&ft_lib)) {
 		LOG_ERR("PRINTER: Unable to init Freetype2. Printing disabled");
