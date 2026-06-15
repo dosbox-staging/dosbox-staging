@@ -30,6 +30,10 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+// zlib compression levels duplicated locally to avoid pulling in zlib.h.
+constexpr int ZBestCompression = 9;
+constexpr int ZDefaultStrategy = 0;
+
 // Currently-active text style flags. Modelled on LptStatusRegister in
 // src/hardware/parallelport/lpt.h: writes go through the named bit_view members,
 // reads through either the members or the 'data' field for masking.
@@ -162,6 +166,8 @@ private:
 
 	// Output current page
 	void OutputPage();
+	// PostScript encoder; lives in printer_ps.cpp.
+	void OutputPagePostScript();
 
 	// Decode a little-endian 16-bit ESC/P2 parameter starting at params[i].
 	uint16_t Param16(int i) const
