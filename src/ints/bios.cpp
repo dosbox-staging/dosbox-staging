@@ -20,6 +20,7 @@
 #include "hardware/input/joystick.h"
 #include "hardware/input/mouse.h"
 #include "hardware/memory.h"
+#include "hardware/parallelport/lpt.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "hardware/serialport/serialport.h"
@@ -484,16 +485,104 @@ static Bitu INT12_Handler(void) {
 	return CBRET_NONE;
 }
 
-static Bitu INT17_Handler(void) {
-	LOG(LOG_BIOS,LOG_NORMAL)("INT17:Function %X",reg_ah);
+// The raw LPT status register at port base+1 reports ACK (bit 6)
+// and ERROR (bit 3) as active-low signals; the BIOS convention is
+// active-high for both. The helper below reads the raw register,
+// flips those two bits, and zeroes the reserved low 3 bits.
+static uint8_t lpt_to_bios_status(const uint16_t status_port)
+{
+	LptStatusRegister raw = {};
+	raw.data              = static_cast<uint8_t>(IO_ReadB(status_port));
+
+	LptStatusRegister bios = {};
+
+	// LptStatusRegister defaults data to 0xff; zero it so the BIOS-only
+	// low 3 bits (timeout + 2 unused) start clean and aren't left set.
+	bios.data = 0;
+
+	// high = not busy in both
+	bios.busy = raw.busy;
+
+	// flip active-low to active-high
+	bios.ack = !raw.ack;
+
+	bios.paper_out = raw.paper_out;
+	bios.select_in = raw.select_in;
+
+	// flip active-low to active-high
+	bios.error = !raw.error;
+
+	return bios.data;
+}
+
+// INT 17h printer service.
+//
+// Parameters:
+//   DX - selects the parallel port (0..2 -> LPT1..3); the base I/O port is
+//   read from the BIOS data area at 0040:0008 + DX*2.
+//
+// Returns:
+//   AH - the BIOS printer status byte:
+//          bit 0: timeout
+//          bit 3: I/O error
+//          bit 4: selected
+//          bit 5: paper out
+//          bit 6: ack
+//          bit 7: not busy
+//
+static Bitu INT17_Handler(void)
+{
+	LOG(LOG_BIOS, LOG_NORMAL)("INT17:Function %X", reg_ah);
+
+	if (reg_dx > 2) {
+		// time out
+		reg_ah = 0x01;
+		return CBRET_NONE;
+	}
+
+	const uint16_t base = mem_readw(BIOS_ADDRESS_LPT1 + reg_dx * 2);
+	if (base == 0) {
+		// time out
+		reg_ah = 0x01;
+		return CBRET_NONE;
+	}
+
+	const uint16_t data_port    = base;
+	const uint16_t status_port  = static_cast<uint16_t>(base + 1);
+	const uint16_t control_port = static_cast<uint16_t>(base + 2);
+
 	switch (reg_ah) {
-	case 0x00:              /* PRINTER: Write Character */
-		reg_ah=1;	/* Report a timeout */
+	case 0x00: { // PRINTER: Write Character
+		IO_WriteB(data_port, reg_al);
+
+		// clear auto-line feed
+		const uint8_t control = static_cast<uint8_t>(
+		        IO_ReadB(control_port) & 0xfd);
+
+		// Strobe the byte through the data + control ports: BIOS code does:
+		// write AL to base+0, then pulse control bit 0 high -> low -> high
+		// (the falling edge is the strobe). AH on return is the status byte.
+		// AH=01 pulses INIT (control bit 2) low -> high. AH=02 returns the
+		// status byte.
+		IO_WriteB(control_port, control | 0x01);
+		IO_WriteB(control_port, control & 0xfe);
+		IO_WriteB(control_port, control | 0x01);
+
+		reg_ah = lpt_to_bios_status(status_port);
 		break;
-	case 0x01:		/* PRINTER: Initialize port */
+	}
+
+	case 0x01: { // PRINTER: Initialize port: pulse INIT (bit 2)
+		const uint8_t control = static_cast<uint8_t>(IO_ReadB(control_port));
+
+		IO_WriteB(control_port, control & 0xfb);
+		IO_WriteB(control_port, control | 0x04);
+
+		reg_ah = lpt_to_bios_status(status_port);
 		break;
-	case 0x02:		/* PRINTER: Get Status */
-		reg_ah=0;	
+	}
+	case 0x02: // PRINTER: Get Status
+		reg_ah = lpt_to_bios_status(status_port);
 		break;
 	};
 	return CBRET_NONE;
