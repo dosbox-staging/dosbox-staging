@@ -426,6 +426,13 @@ important for bisecting, and we strictly enforce it. You can simply just run
 `scripts/tools/compile-commits.sh` to compile all commits of the PR you're
 working on.
 
+Pass `--test` to also run the ctest suite after each commit compiles, or
+`--test-filter PATTERN` to run only the tests matching `PATTERN` (this implies
+`--test`). For example:
+
+    $ scripts/tools/compile-commits.sh debug-linux --test
+    $ scripts/tools/compile-commits.sh debug-linux --test-filter DOS_FilesTest
+
 
 ### clang-format
 
