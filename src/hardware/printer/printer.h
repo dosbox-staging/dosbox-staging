@@ -239,7 +239,7 @@ private:
 	                                // (even when normally control codes)
 
 	char* output        = nullptr; // Output method selected by user
-	void* output_handle = nullptr; // If not null, additional pages will be
+	FILE* output_handle = nullptr; // If not null, additional pages will be
 	                               // appended to the given handle
 	bool multipage_output = false; // If true, all pages are combined to one
 	                               // file/print job etc. until the "eject
