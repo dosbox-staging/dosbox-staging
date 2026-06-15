@@ -20,7 +20,7 @@ uint64_t PRINTER_ReadControl(uint64_t port, uint64_t iolen);
 // the printer instance (i.e. the caller owns the buffers).
 void PRINTER_Configure(uint16_t dpi, uint16_t width, uint16_t height,
                        const char* docpath, const char* output_format,
-                       bool multipage, int timeout_ms);
+                       int timeout_ms);
 
 // Trigger a form-feed (eject the current page). Called from the mapper
 // (Ctrl+F2 by default) and from the inactivity-timeout PIC event.

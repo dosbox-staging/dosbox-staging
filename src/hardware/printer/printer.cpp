@@ -39,23 +39,21 @@ static bool timeout_dirty;
 static std_fs::path document_path;
 // static const char* font_path;
 static std::string conf_output_device;
-static bool conf_multipage_output;
 
 namespace VirtualPrinter {
 
 // Printer::FillPalette lives in printer_glyph.cpp.
 
 Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
-                 const std::string& output, bool multipage_output)
+                 const std::string& output)
 {
 	if (FT_Init_FreeType(&ft_lib)) {
 		LOG_ERR("PRINTER: Unable to init Freetype2. Printing disabled");
 		return;
 	}
 
-	this->dpi              = dpi;
-	this->output           = output;
-	this->multipage_output = multipage_output;
+	this->dpi    = dpi;
+	this->output = output;
 
 	default_page_width = static_cast<Real64>(width) /
 	                     static_cast<Real64>(10);
@@ -100,7 +98,6 @@ Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
 	cur_font  = nullptr;
 	char_read = false;
 	auto_feed = false;
-	output_handle.reset();
 
 	ResetPrinter();
 
@@ -165,7 +162,6 @@ void Printer::ResetPrinter()
 
 Printer::~Printer(void)
 {
-	FinishMultipage();
 	if (ft_lib != nullptr) {
 		FT_Done_FreeType(ft_lib);
 		ft_lib = nullptr;
@@ -461,8 +457,6 @@ void Printer::FormFeed()
 {
 	// Don't output blank pages
 	NewPage(!IsBlank(), true);
-
-	FinishMultipage();
 }
 
 // Cap on how many existing <prefix><N><ext> files we'll skip past before
@@ -503,26 +497,7 @@ void Printer::OutputPage()
 		if (const auto out_path = find_next_name("page", ".png")) {
 			write_png_page(page, *out_path);
 		}
-	} else if (iequals(output, "ps")) {
-		OutputPagePostScript();
 	}
-}
-
-// Printer::FprintAscii85 lives in printer_ps.cpp.
-
-void Printer::FinishMultipage()
-{
-	if (!output_handle) {
-		return;
-	}
-	if (iequals(output, "ps")) {
-		fprintf(output_handle.get(), "%%%%Pages: %i\n", multipage_counter);
-		fprintf(output_handle.get(), "%%%%EOF\n");
-	} else if (iequals(output, "printer")) {
-		// Win32 host-printer pass-through removed (out of scope).
-	}
-	// FILE_unique_ptr destructor fcloses on reset.
-	output_handle.reset();
 }
 
 bool Printer::IsBlank()
@@ -655,8 +630,7 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 			default_printer = std::make_unique<Printer>(conf_dpi,
 			                                            conf_width,
 			                                            conf_height,
-			                                            conf_output_device,
-			                                            conf_multipage_output);
+			                                            conf_output_device);
 		}
 		default_printer->PrintChar(lpt.data);
 		if (!timeout_dirty) {
@@ -707,16 +681,15 @@ uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
 
 void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t height,
                        const char* docpath, const char* output_format,
-                       const bool multipage, const int timeout_ms)
+                       const int timeout_ms)
 {
-	conf_dpi              = dpi;
-	conf_width            = width;
-	conf_height           = height;
-	document_path         = docpath ? docpath : "";
-	conf_output_device    = output_format ? output_format : "";
-	conf_multipage_output = multipage;
-	printer_timeout       = timeout_ms;
-	timeout_dirty         = (printer_timeout == 0);
+	conf_dpi           = dpi;
+	conf_width         = width;
+	conf_height        = height;
+	document_path      = docpath ? docpath : "";
+	conf_output_device = output_format ? output_format : "";
+	printer_timeout    = timeout_ms;
+	timeout_dirty      = (printer_timeout == 0);
 }
 
 void PRINTER_FormFeed(const bool pressed)
