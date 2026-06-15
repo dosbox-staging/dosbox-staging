@@ -11,6 +11,7 @@
 #include "printer_charmaps.h"
 #include "printer_if.h"
 #include <math.h>
+#include <memory>
 #include <vector>
 
 #include "hardware/pic.h" // for timeout
@@ -109,10 +110,10 @@ Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
 
 		color = ColorBlack;
 
-		cur_font      = nullptr;
-		char_read     = false;
-		auto_feed     = false;
-		output_handle = nullptr;
+		cur_font  = nullptr;
+		char_read = false;
+		auto_feed = false;
+		output_handle.reset();
 
 		ResetPrinter();
 
@@ -1989,34 +1990,30 @@ void Printer::OutputPage()
 		png_color palette[256];
 		uint64_t i;
 
-		/* Open the actual file */
-		FILE* fp = fopen(fname, "wb");
+		// Open the actual file. RAII closes on any return path.
+		FILE_unique_ptr fp{fopen(fname, "wb")};
 		if (!fp) {
-			LOG(LOG_MISC,
-			    LOG_ERROR)("PRINTER: Can't open file %s for printer output",
-			               fname);
+			LOG_ERR("PRINTER: Can't open file %s for printer output",
+			        fname);
 			return;
 		}
 
-		/* First try to alloacte the png structures */
+		// Allocate the PNG write structures.
 		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
 		                                  nullptr,
 		                                  nullptr,
 		                                  nullptr);
 		if (!png_ptr) {
-			fclose(fp);
 			return;
 		}
 		info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr) {
 			png_destroy_write_struct(&png_ptr,
 			                         static_cast<png_infopp>(nullptr));
-			fclose(fp);
 			return;
 		}
 
-		/* Finalize the initing of png library */
-		png_init_io(png_ptr, fp);
+		png_init_io(png_ptr, fp.get());
 		png_set_compression_level(png_ptr, ZBestCompression);
 
 		/* set other zlib parameters */
@@ -2060,63 +2057,61 @@ void Printer::OutputPage()
 
 		SDL_UnlockSurface(page);
 
-		fclose(fp);
 		png_destroy_write_struct(&png_ptr, &info_ptr);
+		// fp closes here via FILE_unique_ptr destructor.
 	}
 	else if (strcasecmp(output, "ps") == 0) {
-		FILE* psfile = nullptr;
+		// If multipage mode is continuing, take ownership back from the
+		// member; otherwise open a fresh file.
+		FILE_unique_ptr psfile = std::move(output_handle);
 
-		// Continue postscript file?
-		if (output_handle != nullptr) {
-			psfile = output_handle;
-		}
-
-		// Create new file?
-		if (psfile == nullptr) {
+		if (!psfile) {
 			if (!multipage_output) {
 				find_next_name("page", ".ps", &fname[0]);
 			} else {
 				find_next_name("doc", ".ps", &fname[0]);
 			}
 
-			psfile = fopen(fname, "wb");
+			psfile = FILE_unique_ptr{fopen(fname, "wb")};
 			if (!psfile) {
-				LOG(LOG_MISC,
-				    LOG_ERROR)("PRINTER: Can't open file %s for printer output",
-				               fname);
+				LOG_ERR("PRINTER: Can't open file %s for printer output",
+				        fname);
 				return;
 			}
 
-			// Print header
-			fprintf(psfile, "%%!PS-Adobe-3.0\n");
-			fprintf(psfile, "%%%%Pages: (atend)\n");
-			fprintf(psfile,
+			// Print header.
+			fprintf(psfile.get(), "%%!PS-Adobe-3.0\n");
+			fprintf(psfile.get(), "%%%%Pages: (atend)\n");
+			fprintf(psfile.get(),
 			        "%%%%BoundingBox: 0 0 %i %i\n",
 			        static_cast<uint16_t>(default_page_width * 72),
 			        static_cast<uint16_t>(default_page_height * 72));
-			fprintf(psfile, "%%%%Creator: DOSBOX Virtual Printer\n");
-			fprintf(psfile, "%%%%DocumentData: Clean7Bit\n");
-			fprintf(psfile, "%%%%LanguageLevel: 2\n");
-			fprintf(psfile, "%%%%EndComments\n");
+			fprintf(psfile.get(), "%%%%Creator: DOSBOX Virtual Printer\n");
+			fprintf(psfile.get(), "%%%%DocumentData: Clean7Bit\n");
+			fprintf(psfile.get(), "%%%%LanguageLevel: 2\n");
+			fprintf(psfile.get(), "%%%%EndComments\n");
 			multipage_counter = 1;
 		}
 
-		fprintf(psfile, "%%%%Page: %i %i\n", multipage_counter, multipage_counter);
-		fprintf(psfile,
+		fprintf(psfile.get(),
+		        "%%%%Page: %i %i\n",
+		        multipage_counter,
+		        multipage_counter);
+		fprintf(psfile.get(),
 		        "%i %i scale\n",
 		        static_cast<uint16_t>(default_page_width * 72),
 		        static_cast<uint16_t>(default_page_height * 72));
-		fprintf(psfile,
+		fprintf(psfile.get(),
 		        "%i %i 8 [%i 0 0 -%i 0 %i]\n",
 		        page->w,
 		        page->h,
 		        page->w,
 		        page->h,
 		        page->h);
-		fprintf(psfile, "currentfile\n");
-		fprintf(psfile, "/ASCII85Decode filter\n");
-		fprintf(psfile, "/RunLengthDecode filter\n");
-		fprintf(psfile, "image\n");
+		fprintf(psfile.get(), "currentfile\n");
+		fprintf(psfile.get(), "/ASCII85Decode filter\n");
+		fprintf(psfile.get(), "/RunLengthDecode filter\n");
+		fprintf(psfile.get(), "image\n");
 
 		SDL_LockSurface(page);
 
@@ -2138,8 +2133,8 @@ void Printer::OutputPage()
 					sameCount++;
 				}
 
-				FprintAscii85(psfile, 257 - sameCount);
-				FprintAscii85(psfile, 255 - col);
+				FprintAscii85(psfile.get(), 257 - sameCount);
+				FprintAscii85(psfile.get(), 255 - col);
 
 				// Skip ahead
 				pix += sameCount;
@@ -2155,29 +2150,30 @@ void Printer::OutputPage()
 					diffCount++;
 				}
 
-				FprintAscii85(psfile, diffCount - 1);
+				FprintAscii85(psfile.get(), diffCount - 1);
 				for (uint8_t i = 0; i < diffCount; i++) {
-					FprintAscii85(psfile, 255 - GetPixel(pix++));
+					FprintAscii85(psfile.get(),
+					              255 - GetPixel(pix++));
 				}
 			}
 		}
 
 		// Write EOD for RLE and ASCII85
-		FprintAscii85(psfile, 128);
-		FprintAscii85(psfile, 256);
+		FprintAscii85(psfile.get(), 128);
+		FprintAscii85(psfile.get(), 256);
 
 		SDL_UnlockSurface(page);
 
-		fprintf(psfile, "showpage\n");
+		fprintf(psfile.get(), "showpage\n");
 
 		if (multipage_output) {
 			multipage_counter++;
-			output_handle = psfile;
+			output_handle = std::move(psfile);
 		} else {
-			fprintf(psfile, "%%%%Pages: 1\n");
-			fprintf(psfile, "%%%%EOF\n");
-			fclose(psfile);
-			output_handle = nullptr;
+			fprintf(psfile.get(), "%%%%Pages: 1\n");
+			fprintf(psfile.get(), "%%%%EOF\n");
+			// psfile closes here via FILE_unique_ptr destructor.
+			output_handle.reset();
 		}
 	} else {
 		// Find a page that does not exists
@@ -2256,17 +2252,17 @@ void Printer::FprintAscii85(FILE* file, uint16_t byte)
 
 void Printer::FinishMultipage()
 {
-	if (output_handle != nullptr) {
-		if (strcasecmp(output, "ps") == 0) {
-			FILE* psfile = output_handle;
-			fprintf(psfile, "%%%%Pages: %i\n", multipage_counter);
-			fprintf(psfile, "%%%%EOF\n");
-			fclose(psfile);
-		} else if (strcasecmp(output, "printer") == 0) {
-			// Win32 host-printer pass-through removed (out of scope).
-		}
-		output_handle = nullptr;
+	if (!output_handle) {
+		return;
 	}
+	if (strcasecmp(output, "ps") == 0) {
+		fprintf(output_handle.get(), "%%%%Pages: %i\n", multipage_counter);
+		fprintf(output_handle.get(), "%%%%EOF\n");
+	} else if (strcasecmp(output, "printer") == 0) {
+		// Win32 host-printer pass-through removed (out of scope).
+	}
+	// FILE_unique_ptr destructor fcloses on reset.
+	output_handle.reset();
 }
 
 bool Printer::IsBlank()
