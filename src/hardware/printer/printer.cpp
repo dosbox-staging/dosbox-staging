@@ -11,6 +11,7 @@
 #include "printer_charmaps.h"
 #include "printer_if.h"
 #include <math.h>
+#include <vector>
 
 #include "hardware/pic.h" // for timeout
 #include "utils/checks.h"
@@ -1399,7 +1400,7 @@ void CPrinter::NewPage(const bool save, const bool reset_x)
 
 	/*for(int i = 0; i < 256; i++)
 	{
-	*((uint8_t*)page->pixels+i)=i;
+	*(static_cast<uint8_t*>(page->pixels)+i)=i;
 	}*/
 }
 
@@ -1558,7 +1559,7 @@ void CPrinter::BlitGlyph(const FT_Bitmap bitmap, const uint16_t destx,
 			// Ignore background and don't go over the border
 			if (source > 0 && (static_cast<int>(destx + x) < page->w) &&
 			    (static_cast<int>(desty + y) < page->h)) {
-				uint8_t* target = (uint8_t*)page->pixels +
+				uint8_t* target = static_cast<uint8_t*>(page->pixels) +
 				                  (x + destx) +
 				                  (y + desty) * page->pitch;
 				source >>= 3;
@@ -1592,15 +1593,15 @@ void CPrinter::DrawLine(const uint64_t fromx, const uint64_t tox,
 		if ((!broken || (x % breakmod <= gapstart)) &&
 		    (static_cast<int>(x) < page->w)) {
 			if (y > 0 && static_cast<int>(y - 1) < page->h) {
-				*((uint8_t*)page->pixels + x +
+				*(static_cast<uint8_t*>(page->pixels) + x +
 				  (y - 1) * page->pitch) = 240;
 			}
 			if (static_cast<int>(y) < page->h) {
-				*((uint8_t*)page->pixels + x +
+				*(static_cast<uint8_t*>(page->pixels) + x +
 				  y * page->pitch) = !broken ? 255 : 240;
 			}
 			if (static_cast<int>(y + 1) < page->h) {
-				*((uint8_t*)page->pixels + x +
+				*(static_cast<uint8_t*>(page->pixels) + x +
 				  (y + 1) * page->pitch) = 240;
 			}
 		}
@@ -1770,7 +1771,8 @@ void CPrinter::PrintBitGraph(const uint8_t ch)
 						     page->w) &&
 						    (static_cast<int>(PIXY + yy) <
 						     page->h)) {
-							*((uint8_t*)page->pixels +
+							*(static_cast<uint8_t*>(
+							          page->pixels) +
 							  (PIXX + xx) +
 							  (PIXY + yy) * page->pitch) |=
 							        (color | 0x1F);
@@ -1870,7 +1872,6 @@ void CPrinter::OutputPage()
 
 		png_structp png_ptr;
 		png_infop info_ptr;
-		png_bytep* row_pointers;
 		png_color palette[256];
 		uint64_t i;
 
@@ -1884,14 +1885,18 @@ void CPrinter::OutputPage()
 		}
 
 		/* First try to alloacte the png structures */
-		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
+		                                  nullptr,
+		                                  nullptr,
+		                                  nullptr);
 		if (!png_ptr) {
 			fclose(fp);
 			return;
 		}
 		info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr) {
-			png_destroy_write_struct(&png_ptr, (png_infopp)nullptr);
+			png_destroy_write_struct(&png_ptr,
+			                         static_cast<png_infopp>(nullptr));
 			fclose(fp);
 			return;
 		}
@@ -1925,35 +1930,31 @@ void CPrinter::OutputPage()
 
 		SDL_LockSurface(page);
 
-		// Allocate an array of scanline pointers
-		row_pointers = (png_bytep*)malloc(page->h * sizeof(png_bytep));
+		// Array of scanline pointers, owned by std::vector so we don't
+		// need to manually free it before returning.
+		std::vector<png_bytep> row_pointers(page->h);
 		for (i = 0; static_cast<int>(i) < page->h; i++) {
-			row_pointers[i] = ((uint8_t*)page->pixels + (i * page->pitch));
+			row_pointers[i] = static_cast<uint8_t*>(page->pixels) +
+			                  (i * page->pitch);
 		}
 
 		// tell the png library what to encode.
-		png_set_rows(png_ptr, info_ptr, row_pointers);
+		png_set_rows(png_ptr, info_ptr, row_pointers.data());
 
 		// Write image to file
 		png_write_png(png_ptr, info_ptr, 0, nullptr);
 
 		SDL_UnlockSurface(page);
 
-		/*close file*/
 		fclose(fp);
-
-		/*Destroy PNG structs*/
 		png_destroy_write_struct(&png_ptr, &info_ptr);
-
-		/*clean up dynamically allocated RAM.*/
-		free(row_pointers);
 	}
 	else if (strcasecmp(output, "ps") == 0) {
 		FILE* psfile = nullptr;
 
 		// Continue postscript file?
 		if (output_handle != nullptr) {
-			psfile = (FILE*)output_handle;
+			psfile = static_cast<FILE*>(output_handle);
 		}
 
 		// Create new file?
@@ -2143,7 +2144,7 @@ void CPrinter::FinishMultipage()
 {
 	if (output_handle != nullptr) {
 		if (strcasecmp(output, "ps") == 0) {
-			FILE* psfile = (FILE*)output_handle;
+			FILE* psfile = static_cast<FILE*>(output_handle);
 			fprintf(psfile, "%%%%Pages: %i\n", multipage_counter);
 			fprintf(psfile, "%%%%EOF\n");
 			fclose(psfile);
@@ -2162,7 +2163,8 @@ bool CPrinter::IsBlank()
 
 	for (uint16_t y = 0; y < page->h; y++) {
 		for (uint16_t x = 0; x < page->w; x++) {
-			if (*((uint8_t*)page->pixels + x + (y * page->pitch)) != 0) {
+			if (*(static_cast<uint8_t*>(page->pixels) + x +
+			      (y * page->pitch)) != 0) {
 				blank = false;
 			}
 		}
@@ -2175,7 +2177,7 @@ bool CPrinter::IsBlank()
 uint8_t CPrinter::GetPixel(const uint32_t num)
 {
 	// Respect the pitch
-	return *((uint8_t*)page->pixels + (num % page->w) +
+	return *(static_cast<uint8_t*>(page->pixels) + (num % page->w) +
 	         ((num / page->w) * page->pitch));
 }
 
