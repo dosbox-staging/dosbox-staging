@@ -179,10 +179,13 @@ void IO_FreeWriteHandler(io_port_t port,
 	}
 }
 
-void IO_ReadHandleObject::Install(const io_port_t port,
-                                  const io_read_f handler,
-                                  const io_width_t max_width,
-                                  const io_port_t range)
+bool IO_HasWriteHandler(const io_port_t port)
+{
+	return io_write_byte_handler.find(port) != io_write_byte_handler.end();
+}
+
+void IO_ReadHandleObject::Install(const io_port_t port, const io_read_f handler,
+                                  const io_width_t max_width, const io_port_t range)
 {
 	if (!installed) {
 		installed = true;
