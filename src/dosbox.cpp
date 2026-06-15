@@ -55,6 +55,7 @@
 #include "hardware/memory.h"
 #include "hardware/network/ipx.h"
 #include "hardware/network/ne2000.h"
+#include "hardware/parport/printer_glue.h"
 #include "hardware/pci_bus.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
@@ -1579,6 +1580,7 @@ void DOSBOX_InitModuleConfigsAndMessages()
 	IMFC_AddConfigSection(control);
 	INNOVATION_AddConfigSection(control);
 	SPEAKER_AddConfigSection(control);
+	PRINTER_AddConfigSection(control);
 
 	DISKNOISE_AddConfigSection(control);
 	REELMAGIC_AddConfigSection(control);
@@ -1638,6 +1640,7 @@ void DOSBOX_InitModules()
 	IMFC_Init();
 	INNOVATION_Init();
 	SPEAKER_Init();
+	PRINTER_Init();
 
 	REELMAGIC_Init();
 
@@ -1676,6 +1679,7 @@ void DOSBOX_DestroyModules()
 
 	REELMAGIC_Destroy();
 
+	PRINTER_Destroy();
 	SPEAKER_Destroy();
 	INNOVATION_Destroy();
 	IMFC_Destroy();
