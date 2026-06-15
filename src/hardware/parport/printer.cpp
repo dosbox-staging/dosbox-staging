@@ -1173,7 +1173,7 @@ bool CPrinter::processCommandChar(Bit8u ch)
 	return false;
 }
 
-static void PRINTER_EventHandler(uint32_t param);
+static void PRINTER_EventHandler([[maybe_unused]] uint32_t param);
 
 void CPrinter::newPage(bool save, bool resetx)
 {
@@ -1852,16 +1852,16 @@ Bit8u CPrinter::getPixel(Bit32u num) {
 
 static Bit8u dataregister; // contents of the parallel port data register
 
-Bitu PRINTER_readdata(Bitu port,Bitu iolen) {
+Bitu PRINTER_readdata([[maybe_unused]] Bitu port, [[maybe_unused]] Bitu iolen) {
 	return dataregister;
 }
 
-void PRINTER_writedata(Bitu port,Bitu val,Bitu iolen) {
+void PRINTER_writedata([[maybe_unused]] Bitu port, Bitu val, [[maybe_unused]] Bitu iolen) {
 	dataregister=val;
 }
 Bit8u controlreg = 0x04;
 
-Bitu PRINTER_readstatus(Bitu port,Bitu iolen) {
+Bitu PRINTER_readstatus([[maybe_unused]] Bitu port, [[maybe_unused]] Bitu iolen) {
 	//LOG_MSG("PRINTER_readstatus CS:IP %8x:%8x",SegValue(cs),reg_eip);
 	// Don't create a CPrinter unless the program really wants to print
 	// Return standard: No error, printer online, no ack and not busy
@@ -1894,7 +1894,7 @@ static void FormFeed(bool pressed) {
 }
 
 
-static void PRINTER_EventHandler(uint32_t param) {
+static void PRINTER_EventHandler([[maybe_unused]] uint32_t param) {
 	//LOG_MSG("printerevent");
 	if(timeout_dirty) { // add another
 		PIC_AddEvent(PRINTER_EventHandler,(float)printer_timout,0);
@@ -1906,7 +1906,7 @@ static void PRINTER_EventHandler(uint32_t param) {
 	}
 }
 
-void PRINTER_writecontrol(Bitu port,Bitu val, Bitu iolen)
+void PRINTER_writecontrol([[maybe_unused]] Bitu port, Bitu val, [[maybe_unused]] Bitu iolen)
 {
 	//LOG_MSG("PRINTER_writecontrol CS:IP %8x:%8x",SegValue(cs),reg_eip);
 	// init printer if bit 4 is switched on
@@ -1931,7 +1931,7 @@ void PRINTER_writecontrol(Bitu port,Bitu val, Bitu iolen)
 		defaultPrinter->setAutofeed((val & 0x02)>0);
 }
 
-Bitu PRINTER_readcontrol(Bitu port,Bitu iolen)
+Bitu PRINTER_readcontrol([[maybe_unused]] Bitu port, [[maybe_unused]] Bitu iolen)
 {
 	//LOG_MSG("PRINTER_readcontrol CS:IP %8x:%8x",SegValue(cs),reg_eip);
 	// Don't create a CPrinter unless the program really wants to print
@@ -1941,7 +1941,7 @@ Bitu PRINTER_readcontrol(Bitu port,Bitu iolen)
 	return 0xe0|(defaultPrinter->getAutofeed()?0x02:0x00) | (controlreg&0xfd);
 }
 
-void PRINTER_Shutdown(Section* sec)
+void PRINTER_Shutdown([[maybe_unused]] Section* sec)
 {
 	if (defaultPrinter)
 	{
