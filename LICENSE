@@ -72,12 +72,26 @@ The following 3rd party binaries are shipped with DOSBox Staging:
 
 - FreeDOS CPI files in resources/freedos-cpi are GPL-2.0 licensed;
   these are hand-drawn bitmap fonts, so they don't have a source code; original repositories:
-   - https://gitlab.com/FreeDOS/base/cpidos (the main code page pack)
-   - https://github.com/FDOS/cpi (ISO/KOI/MAC/WIN code page packs)
+    - https://gitlab.com/FreeDOS/base/cpidos (the main code page pack)
+    - https://github.com/FDOS/cpi (ISO/KOI/MAC/WIN code page packs)
   The code page files were originally in the CPX format, they were decompressed into the CPI format.
 
 - FreeDOS keyboard layout files in resources/freedos-keyboard are GPL-2.0 licensed;
   source code: https://gitlab.com/FreeDOS/base/keyb_lay
+
+- TTF fonts in resources/fonts released under the SIL Open Font License
+  Version 1.1; original repositories:
+   - IBM Plex Serif / Sans — https://github.com/IBM/plex
+     (roman.ttf, sansserif.ttf, script.ttf)
+   - Old Timey Mono — https://github.com/dse/old-timey-mono-font
+     (courier.ttf; also used as the internal fallback face for CP437
+      box-drawing and graphic glyphs)
+
+- OCR-A TrueType font (resources/fonts/ocra.ttf) by John Sauter,
+  released into the public domain. The shapes conform to ANSI X3.17-1977
+  and were derived from MetaFont sources by Tor Lillqvist and Richard B.
+  Wales. Original project:
+   - https://sourceforge.net/projects/ocr-a-font/
 
 The DOSBox Staging repository contains full snapshots of the original
 repositories in the extras/dos-programs directory.
