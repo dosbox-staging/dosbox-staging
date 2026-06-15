@@ -252,6 +252,7 @@ nav:
         - 0.83/manual/networking/ethernet.md
         - 0.83/manual/networking/multiplayer.md
 
+      - 0.83/manual/printing.md
       - 0.83/manual/http-api.md
 
       - Appendices:

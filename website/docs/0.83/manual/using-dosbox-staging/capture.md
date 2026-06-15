@@ -38,8 +38,8 @@ Capture settings are to be configured in the `[capture]` section.
 ##### capture_dir
 
 :   Directory where the various captures are saved, such as audio, video,
-    MIDI, and screenshot captures (`capture` in the current working directory
-    by default).
+    MIDI, screenshot, and virtual printer output (`capture` in the current
+    working directory by default).
 
 
 ##### default_image_capture_formats
