@@ -58,6 +58,12 @@ void IO_FreeWriteHandler(io_port_t port,
                          io_width_t max_width,
                          io_port_t range = 1);
 
+// True if any device currently has a write handler registered on the given
+// port. Use this to detect device-vs-device port conflicts before calling
+// IO_RegisterWriteHandler / IO_WriteHandleObject::Install (which silently
+// overwrite the previous handler).
+bool IO_HasWriteHandler(io_port_t port);
+
 /* Classes to manage the IO objects created by the various devices.
  * The io objects will remove itself on destruction.*/
 class IO_Base{
