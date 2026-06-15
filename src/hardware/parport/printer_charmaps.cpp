@@ -4,6 +4,9 @@
 
 #include "printer_charmaps.h"
 #include "misc/support.h"
+#include "utils/checks.h"
+
+CHECK_NARROWING();
 
 // Various ASCII codepage to unicode maps
 
