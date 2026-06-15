@@ -274,20 +274,21 @@ static const Bit16u cp866Map[256] = {
 };
 
 const CHARMAP charmap[] = {
-	{437, cp437Map},
-	{737, cp737Map},
-	{775, cp775Map},
-	{850, cp850Map},
-	{852, cp852Map},
-	{855, cp855Map},
-	{857, cp857Map},
-	{860, cp860Map},
-	{861, cp861Map},
-	{863, cp863Map},
-	{864, cp864Map},
-	{865, cp865Map},
-	{866, cp866Map},
-	{0, NULL},
+        {437, cp437Map},
+        {737, cp737Map},
+        {775, cp775Map},
+        {850, cp850Map},
+        {852, cp852Map},
+        {855, cp855Map},
+        {857, cp857Map},
+        {860, cp860Map},
+        {861, cp861Map},
+        {862, cp862Map},
+        {863, cp863Map},
+        {864, cp864Map},
+        {865, cp865Map},
+        {866, cp866Map},
+        {  0,     NULL},
 };
 
 const Bit16u codepages[15] = {0, 437, 932, 850, 851, 853, 855, 860, 863, 865, 852, 857, 862, 864, 866};
