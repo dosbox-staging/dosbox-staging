@@ -3,6 +3,8 @@
 
 #include "sdl_renderer.h"
 
+#include <memory>
+
 #include <SDL3/SDL.h>
 
 #include "gui/private/common.h"
@@ -420,7 +422,7 @@ RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_p
 
 	image.is_flipped_vertically = false;
 
-	// SDL2 pixel formats are a bit weird coming from OpenGL...
+	// SDL pixel formats are a bit weird coming from OpenGL...
 	// You would think SDL_PIXELFORMAT_XBGR8888 is an alias of
 	// SDL_PIXELFORMAT_BGR24, but the two are actually very
 	// different:
@@ -437,9 +439,25 @@ RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_p
 	//
 	const SDL_Rect read_rect_px = to_sdl_rect(output_rect_px);
 
-	if (SDL_RenderReadPixels(renderer, &read_rect_px) == nullptr) {
-
+	const std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surface(
+	        SDL_RenderReadPixels(renderer, &read_rect_px), SDL_DestroySurface);
+	if (!surface) {
 		LOG_ERR("SDL: Error reading pixels from the texture renderer: %s",
+		        SDL_GetError());
+		return image;
+	}
+
+	// Unlike SDL2, SDL3 returns the pixels in the renderer's native format,
+	// so convert them into the BGR24 destination buffer in a single step.
+	if (!SDL_ConvertPixels(image.params.width,
+	                       image.params.height,
+	                       surface->format,
+	                       surface->pixels,
+	                       surface->pitch,
+	                       SDL_PIXELFORMAT_BGR24,
+	                       image.image_data,
+	                       image.pitch)) {
+		LOG_ERR("SDL: Error converting texture renderer pixels: %s",
 		        SDL_GetError());
 	}
 
