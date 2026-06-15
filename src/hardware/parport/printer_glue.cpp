@@ -15,6 +15,9 @@
 #include "hardware/port.h"
 #include "misc/support.h"
 #include "printer_if.h"
+#include "utils/checks.h"
+
+CHECK_NARROWING();
 
 namespace {
 
@@ -68,14 +71,14 @@ void install_io_handlers(const io_port_t lpt_port)
 	state.data_read->Install(
 	        data_port,
 	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return PRINTER_readdata(0, 1);
+		        return static_cast<io_val_t>(PRINTER_readdata(0, 1));
 	        },
 	        io_width_t::byte);
 
 	state.status_read->Install(
 	        status_port,
 	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return PRINTER_readstatus(0, 1);
+		        return static_cast<io_val_t>(PRINTER_readstatus(0, 1));
 	        },
 	        io_width_t::byte);
 
@@ -89,7 +92,7 @@ void install_io_handlers(const io_port_t lpt_port)
 	state.control_read->Install(
 	        control_port,
 	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return PRINTER_readcontrol(0, 1);
+		        return static_cast<io_val_t>(PRINTER_readcontrol(0, 1));
 	        },
 	        io_width_t::byte);
 }

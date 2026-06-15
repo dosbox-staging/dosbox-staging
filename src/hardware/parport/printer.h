@@ -213,7 +213,7 @@ private:
 		uint8_t column[6] = {}; // Bytes of the current and last column
 		uint8_t readBytesColumn = 0; // Bytes read so far for the
 		                             // current column
-	} bitGraph;
+	} bitGraph{};
 
 	uint8_t densk = 0, densl = 0, densy = 0, densz = 0; // Image density
 	                                                    // modes used in ESC

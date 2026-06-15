@@ -13,6 +13,9 @@
 #include "printer_charmaps.h"
 
 #include "hardware/pic.h" // for timeout
+#include "utils/checks.h"
+
+CHECK_NARROWING();
 
 extern void GFX_CaptureMouse(void);
 extern bool mouselocked;
@@ -70,15 +73,14 @@ CPrinter::CPrinter(uint16_t dpi, const uint16_t width, const uint16_t height,
 		                    static_cast<Real64>(10);
 
 		// Create page
-		page = SDL_CreateRGBSurface(
-		        SDL_SWSURFACE,
-		        static_cast<uint64_t>(defaultPageWidth * dpi),
-		        static_cast<uint64_t>(defaultPageHeight * dpi),
-		        8,
-		        0,
-		        0,
-		        0,
-		        0);
+		page = SDL_CreateRGBSurface(SDL_SWSURFACE,
+		                            static_cast<int>(defaultPageWidth * dpi),
+		                            static_cast<int>(defaultPageHeight * dpi),
+		                            8,
+		                            0,
+		                            0,
+		                            0,
+		                            0);
 
 		// Set a grey palette
 		SDL_Palette* palette = page->format->palette;
@@ -173,7 +175,7 @@ void CPrinter::resetPrinter()
 
 		// Default tabs => Each eight characters
 	        for (uint64_t i = 0; i < 32; i++) {
-		        horiztabs[i] = i * 8 * (1 / static_cast<Real64>(cpi));
+		        horiztabs[i] = static_cast<Real64>(i * 8) / static_cast<Real64>(cpi);
 	        }
 	        numHorizTabs = 32;
 
@@ -666,10 +668,10 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 			        }
 		} break;
 		case 0x85a: // Print 24-bit hex-density graphics (FS Z)
-			setupBitImage(40, PARAM16(0));
+			setupBitImage(40, static_cast<uint16_t>(PARAM16(0)));
 			break;
 		case 0x2a: // Select bit image (ESC *)
-			setupBitImage(params[0], PARAM16(1));
+			setupBitImage(params[0], static_cast<uint16_t>(PARAM16(1)));
 			break;
 		case 0x2b: // Set n/360-inch line spacing (ESC +)
 		case 0x833: // Set n/360-inch line spacing (FS 3)
@@ -771,10 +773,10 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 				newPage(true,false);
 			break;
 		case 0x4b: // Select 60-dpi graphics (ESC K)
-			setupBitImage(densk, PARAM16(0));
+			setupBitImage(densk, static_cast<uint16_t>(PARAM16(0)));
 			break;
 		case 0x4c: // Select 120-dpi graphics (ESC L)
-			setupBitImage(densl, PARAM16(0));
+			setupBitImage(densl, static_cast<uint16_t>(PARAM16(0)));
 			break;
 		case 0x4d: // Select 10.5-point, 12-cpi (ESC M)
 			cpi = 12;
@@ -865,14 +867,14 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 			updateFont();
 			break;
 		case 0x59: // Select 120-dpi, double-speed graphics (ESC Y)
-			setupBitImage(densy, PARAM16(0));
+			setupBitImage(densy, static_cast<uint16_t>(PARAM16(0)));
 			break;
 		case 0x5a: // Select 240-dpi graphics (ESC Z)
-			setupBitImage(densz, PARAM16(0));
+			setupBitImage(densz, static_cast<uint16_t>(PARAM16(0)));
 			break;
 		case 0x5c: // Set relative horizontal print position (ESC \)
 			{
-			const int16_t toMove = PARAM16(0);
+			const int16_t toMove = static_cast<int16_t>(PARAM16(0));
 			Real64 unitSize      = definedUnit;
 			if (unitSize < 0) {
 				unitSize = static_cast<Real64>(
@@ -935,7 +937,7 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 		case 0x72: // Select printing color (ESC r)
 			
 			if(params[0]==0 || params[0] > 6) color = COLOR_BLACK;
-			else color = params[0]<<5;       
+			else color = static_cast<uint8_t>(params[0]<<5);       
 			break;
 		case 0x73: // Select low-speed mode (ESC s)
 			// Ignore
@@ -977,7 +979,7 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 			topMargin = 0.0;
 			break;
 		case 0x101: // Skip unsupported ESC ( command
-			neededParam = PARAM16(0);
+			neededParam = static_cast<uint8_t>(PARAM16(0));
 			numParam = 0;
 			break;
 		case 0x274: // Assign character table (ESC (t)
@@ -1006,7 +1008,7 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 		case 0x242: // Bar code setup and print (ESC (B)
 			LOG(LOG_MISC,LOG_ERROR)("PRINTER: Bardcode printing not supported");
 			// Find out how many bytes to skip
-			neededParam = PARAM16(0);
+			neededParam = static_cast<uint8_t>(PARAM16(0));
 			numParam = 0;
 			break;
 		case 0x243: // Set page length in defined unit (ESC (C)
@@ -1038,7 +1040,7 @@ bool CPrinter::processCommandChar(const uint8_t ch)
 			        }
 		} break;
 		case 0x25e: // Print data as characters (ESC (^)
-			numPrintAsChar = PARAM16(0);
+			numPrintAsChar = static_cast<uint16_t>(PARAM16(0));
 			break;
 		case 0x263: // Set page format (ESC (c)
 			if (definedUnit > 0)
@@ -1286,11 +1288,11 @@ void CPrinter::printChar(uint8_t ch)
 	// Render a high-quality bitmap
 	FT_Render_Glyph(curFont->glyph, FT_RENDER_MODE_NORMAL);
 
-	const uint16_t penX = PIXX + curFont->glyph->bitmap_left;
-	uint16_t penY       = PIXY - curFont->glyph->bitmap_top +
-	                curFont->size->metrics.ascender / 64;
+	const auto penX = static_cast<uint16_t>(PIXX + curFont->glyph->bitmap_left);
+	uint16_t penY = static_cast<uint16_t>(PIXY - curFont->glyph->bitmap_top +
+	                                      curFont->size->metrics.ascender / 64);
 
-	if (style & STYLE_SUBSCRIPT) penY += curFont->glyph->bitmap.rows / 2;
+	if (style & STYLE_SUBSCRIPT) penY = static_cast<uint16_t>(penY + curFont->glyph->bitmap.rows / 2);
 
 	// Copy bitmap into page
 	SDL_LockSurface(page);
@@ -1314,7 +1316,7 @@ void CPrinter::printChar(uint8_t ch)
 	SDL_UnlockSurface(page);
 
 	// For line printing
-	const uint16_t lineStart = PIXX;
+	const uint16_t lineStart = static_cast<uint16_t>(PIXX);
 
 	// advance the cursor to the right
 	Real64 x_advance;
@@ -1336,19 +1338,24 @@ void CPrinter::printChar(uint8_t ch)
 		(STYLE_UNDERLINE|STYLE_STRIKETHROUGH|STYLE_OVERSCORE)))
 	{
 		// Find out where to put the line
-		uint16_t lineY      = PIXY;
-		const double height = (curFont->size->metrics.height >>
-		                       6); // TODO height is fixed point madness...
+		uint16_t lineY      = static_cast<uint16_t>(PIXY);
+		const double height = static_cast<double>(
+		        curFont->size->metrics.height >> 6); // TODO height is
+		                                              // fixed point
+		                                              // madness...
 
 		if (style & STYLE_UNDERLINE) {
-			lineY = PIXY + static_cast<uint16_t>(height * 0.9);
+			lineY = static_cast<uint16_t>(
+			        PIXY + static_cast<uint16_t>(height * 0.9));
 		} else if (style & STYLE_STRIKETHROUGH) {
-			lineY = PIXY + static_cast<uint16_t>(height * 0.45);
+			lineY = static_cast<uint16_t>(
+			        PIXY + static_cast<uint16_t>(height * 0.45));
 		} else if (style & STYLE_OVERSCORE) {
-			lineY = PIXY - (((score == SCORE_DOUBLE) ||
+			lineY = static_cast<uint16_t>(
+			        PIXY - (((score == SCORE_DOUBLE) ||
 			                 (score == SCORE_DOUBLEBROKEN))
 			                        ? 5
-			                        : 0);
+			                        : 0));
 		}
 
 		drawLine(lineStart, PIXX, lineY, score==SCORE_SINGLEBROKEN || score==SCORE_DOUBLEBROKEN);
@@ -1980,7 +1987,7 @@ uint64_t PRINTER_readdata([[maybe_unused]] const uint64_t port,
 void PRINTER_writedata([[maybe_unused]] const uint64_t port, const uint64_t val,
                        [[maybe_unused]] const uint64_t iolen)
 {
-	dataregister = val;
+	dataregister = static_cast<uint8_t>(val);
 }
 static uint8_t controlreg = 0x04;
 
@@ -2058,7 +2065,7 @@ void PRINTER_writecontrol([[maybe_unused]] const uint64_t port, const uint64_t v
 		}
 	}
 
-	controlreg=val;
+	controlreg = static_cast<uint8_t>(val);
 	if (defaultPrinter)
 		defaultPrinter->setAutofeed((val & 0x02)>0);
 }
