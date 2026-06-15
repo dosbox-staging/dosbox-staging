@@ -318,7 +318,8 @@ private:
 	// True if last read character was an ESC (0x1B).
 	bool esc_seen = false;
 
-	// True if last read character was an FS (0x1C) (IBM commands).
+	// True if last read character was an FS (0x1C). We don't emulate
+	// IBM PPDS mode, so the next byte is logged and discarded.
 	bool fs_seen = false;
 
 	// Numbers of parameters already read / needed to process command.
