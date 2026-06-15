@@ -1804,32 +1804,56 @@ void CPrinter::FormFeed()
 	FinishMultipage();
 }
 
+// Cap on how many existing page<N>.<ext> files we'll skip past before
+// giving up. Sized to match the largest sensible print job; well beyond
+// anything a real DOS application will produce in one session.
+static constexpr int kFindNextNameAttempts = 10000;
+
+// Size of the caller-owned fname buffer (CPrinter::OutputPage's stack
+// array). Keep in sync with that declaration.
+static constexpr size_t kFnameBufSize = 200;
+
+#ifdef WIN32
+constexpr char kPathSep = '\\';
+#else
+constexpr char kPathSep = '/';
+#endif
+
 static void find_next_name(const char* front, const char* ext, char* fname)
 {
-	uint64_t i          = 1;
-	const uint64_t slen = strlen(document_path);
-	if (slen > (200 - 15)) {
-		fname[0] = 0;
-		return;
-	}
 	FILE* test = nullptr;
-	do {
-		strcpy(fname, document_path);
-#ifdef WIN32
-		const char* const pathstring = "\\%s%d%s";
-#else
-		const char* const pathstring = "/%s%d%s";
-#endif
-		sprintf(fname + strlen(fname),
-		        pathstring,
-		        front,
-		        static_cast<int>(i++),
-		        ext);
-		test = fopen(fname, "rb");
-		if (test != nullptr) {
-			fclose(test);
+	for (int i = 1; i <= kFindNextNameAttempts; ++i) {
+		const int written = snprintf(fname,
+		                             kFnameBufSize,
+		                             "%s%c%s%d%s",
+		                             document_path,
+		                             kPathSep,
+		                             front,
+		                             i,
+		                             ext);
+		if (written < 0 || static_cast<size_t>(written) >= kFnameBufSize) {
+			LOG_WARNING(
+			        "PRINTER: page filename for docpath '%s' "
+			        "exceeds %zu chars; page output disabled",
+			        document_path,
+			        kFnameBufSize);
+			fname[0] = 0;
+			return;
 		}
-	} while (test != nullptr);
+		test = fopen(fname, "rb");
+		if (test == nullptr) {
+			return; // free slot
+		}
+		fclose(test);
+	}
+	LOG_WARNING(
+	        "PRINTER: docpath already contains %d %s files matching "
+	        "'%s<N>%s'; overwriting the last one",
+	        kFindNextNameAttempts,
+	        front,
+	        front,
+	        ext);
+	// fname holds the final attempt; let the caller overwrite it.
 }
 
 void CPrinter::OutputPage()
