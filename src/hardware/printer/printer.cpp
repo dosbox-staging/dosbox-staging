@@ -1812,36 +1812,36 @@ void CPrinter::FormFeed()
 // Cap on how many existing page<N>.<ext> files we'll skip past before
 // giving up. Sized to match the largest sensible print job; well beyond
 // anything a real DOS application will produce in one session.
-static constexpr int kFindNextNameAttempts = 10000;
+static constexpr int FindNextNameAttempts = 10000;
 
 // Size of the caller-owned fname buffer (CPrinter::OutputPage's stack
 // array). Keep in sync with that declaration.
-static constexpr size_t kFnameBufSize = 200;
+static constexpr size_t FnameBufSize = 200;
 
 #ifdef WIN32
-constexpr char kPathSep = '\\';
+constexpr char PathSep = '\\';
 #else
-constexpr char kPathSep = '/';
+constexpr char PathSep = '/';
 #endif
 
 static void find_next_name(const char* front, const char* ext, char* fname)
 {
 	FILE* test = nullptr;
-	for (int i = 1; i <= kFindNextNameAttempts; ++i) {
+	for (int i = 1; i <= FindNextNameAttempts; ++i) {
 		const int written = snprintf(fname,
-		                             kFnameBufSize,
+		                             FnameBufSize,
 		                             "%s%c%s%d%s",
 		                             document_path,
-		                             kPathSep,
+		                             PathSep,
 		                             front,
 		                             i,
 		                             ext);
-		if (written < 0 || static_cast<size_t>(written) >= kFnameBufSize) {
+		if (written < 0 || static_cast<size_t>(written) >= FnameBufSize) {
 			LOG_WARNING(
 			        "PRINTER: page filename for docpath '%s' "
 			        "exceeds %zu chars; page output disabled",
 			        document_path,
-			        kFnameBufSize);
+			        FnameBufSize);
 			fname[0] = 0;
 			return;
 		}
@@ -1854,7 +1854,7 @@ static void find_next_name(const char* front, const char* ext, char* fname)
 	LOG_WARNING(
 	        "PRINTER: docpath already contains %d %s files matching "
 	        "'%s<N>%s'; overwriting the last one",
-	        kFindNextNameAttempts,
+	        FindNextNameAttempts,
 	        front,
 	        front,
 	        ext);
@@ -2190,32 +2190,32 @@ uint8_t CPrinter::GetPixel(const uint32_t num)
 namespace {
 
 // Control register (write-only, base + 2).
-constexpr uint8_t kCtrlStrobe     = 0x01;
-constexpr uint8_t kCtrlAutoLf     = 0x02;
-constexpr uint8_t kCtrlInitialise = 0x04;
+constexpr uint8_t CtrlStrobe     = 0x01;
+constexpr uint8_t CtrlAutoLf     = 0x02;
+constexpr uint8_t CtrlInitialise = 0x04;
 // unused bits, read back as 1
-constexpr uint8_t kCtrlReservedHi = 0xe0;
+constexpr uint8_t CtrlReservedHi = 0xe0;
 
 // Mask used when echoing the control register back in
 // PRINTER_ReadControl: keep everything except auto_lf, which the
 // printer reports based on its own state.
-constexpr uint8_t kCtrlReadMask = 0xfd;
+constexpr uint8_t CtrlReadMask = 0xfd;
 
 // Status register (read-only, base + 1)
 // reserved-low + select_in
-constexpr uint8_t kStatusReservedLow = 0x1f;
-constexpr uint8_t kStatusAckHigh     = 0x40;
-constexpr uint8_t kStatusBusyHigh    = 0x80;
+constexpr uint8_t StatusReservedLow = 0x1f;
+constexpr uint8_t StatusAckHigh     = 0x40;
+constexpr uint8_t StatusBusyHigh    = 0x80;
 
 // Status value when no CPrinter exists yet. ERROR/ACK/BUSY high
 // (their inverted polarity means "no error, no ack, not busy"),
 // select_in high, paper_out low, irq low.
-constexpr uint8_t kStatusNoPrinter = 0xdf;
+constexpr uint8_t StatusNoPrinter = 0xdf;
 
 // Latched copies of the LPT port registers that printer.cpp drives.
 struct LptRegisters {
 	uint8_t data    = 0;
-	uint8_t control = kCtrlInitialise;
+	uint8_t control = CtrlInitialise;
 };
 LptRegisters lpt{};
 
@@ -2238,16 +2238,16 @@ uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
 {
 	// Don't create a CPrinter unless the program really wants to print.
 	if (!default_printer) {
-		return kStatusNoPrinter;
+		return StatusNoPrinter;
 	}
 
 	// Printer is always online and never reports an error.
-	uint8_t status = kStatusReservedLow;
+	uint8_t status = StatusReservedLow;
 	if (!default_printer->IsBusy()) {
-		status |= kStatusBusyHigh;
+		status |= StatusBusyHigh;
 	}
 	if (!default_printer->Ack()) {
-		status |= kStatusAckHigh;
+		status |= StatusAckHigh;
 	}
 	return status;
 }
@@ -2285,13 +2285,13 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
                           [[maybe_unused]] const uint64_t iolen)
 {
 	// Rising edge on the INITIALISE bit triggers a hard reset.
-	if ((val & kCtrlInitialise) && default_printer &&
-	    !(lpt.control & kCtrlInitialise)) {
+	if ((val & CtrlInitialise) && default_printer &&
+	    !(lpt.control & CtrlInitialise)) {
 		default_printer->ResetPrinterHard();
 	}
 
 	// Data is strobed to the printer on the falling edge of the STROBE bit.
-	if (!(val & kCtrlStrobe) && (lpt.control & kCtrlStrobe)) {
+	if (!(val & CtrlStrobe) && (lpt.control & CtrlStrobe)) {
 		if (!default_printer) {
 			default_printer = new CPrinter(conf_dpi,
 			                               conf_width,
@@ -2310,7 +2310,7 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 
 	lpt.control = static_cast<uint8_t>(val);
 	if (default_printer) {
-		default_printer->SetAutofeed((val & kCtrlAutoLf) != 0);
+		default_printer->SetAutofeed((val & CtrlAutoLf) != 0);
 	}
 }
 
@@ -2319,10 +2319,10 @@ uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
 {
 	// Don't create a CPrinter unless the program really wants to print.
 	if (!default_printer) {
-		return kCtrlReservedHi | lpt.control;
+		return CtrlReservedHi | lpt.control;
 	}
-	const uint8_t auto_lf = default_printer->GetAutofeed() ? kCtrlAutoLf : 0;
-	return kCtrlReservedHi | auto_lf | (lpt.control & kCtrlReadMask);
+	const uint8_t auto_lf = default_printer->GetAutofeed() ? CtrlAutoLf : 0;
+	return CtrlReservedHi | auto_lf | (lpt.control & CtrlReadMask);
 }
 
 // PRINTER_Shutdown used to be registered via Section_prop::AddDestroyFunction
@@ -2381,5 +2381,5 @@ void PRINTER_Reset()
 	// from before a previous Reset can't trigger lazy construction with
 	// stale data.
 	lpt.data    = 0;
-	lpt.control = kCtrlInitialise;
+	lpt.control = CtrlInitialise;
 }
