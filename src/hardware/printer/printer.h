@@ -76,6 +76,10 @@ public:
 	        bool multipage_output);
 	virtual ~CPrinter();
 
+	// Owns FreeType/SDL resources and a singleton CPrinter* — don't copy.
+	CPrinter(const CPrinter&)            = delete;
+	CPrinter& operator=(const CPrinter&) = delete;
+
 	// Process one character sent to virtual printer
 	void PrintChar(uint8_t ch);
 

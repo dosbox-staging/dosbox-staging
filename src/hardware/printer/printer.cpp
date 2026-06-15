@@ -645,9 +645,10 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 			return true;
 		}
 
-		if (needed_param > 0) {
-			return true;
-		}
+		// Every case above sets needed_param to a positive value (the
+		// default branch also returns directly), so we always have
+		// pending parameters at this point.
+		return true;
 	}
 
 	// Ignore VFU channel setting
@@ -1534,11 +1535,10 @@ void CPrinter::PrintChar(uint8_t ch)
 
 		// draw second line if needed
 		if ((score == SCORE_DOUBLE) || (score == SCORE_DOUBLEBROKEN)) {
-			DrawLine(lineStart,
-			         PIXX,
-			         lineY + 5,
-			         score == SCORE_SINGLEBROKEN ||
-			                 score == SCORE_DOUBLEBROKEN);
+			// score is DOUBLE or DOUBLEBROKEN here; the upstream
+			// expression also tested SCORE_SINGLEBROKEN which is
+			// unreachable in this branch.
+			DrawLine(lineStart, PIXX, lineY + 5, score == SCORE_DOUBLEBROKEN);
 		}
 	}
 	// If the next character would go beyond the right margin, line-wrap.
