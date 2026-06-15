@@ -21,7 +21,7 @@ CHECK_NARROWING();
 extern void GFX_CaptureMouse(void);
 extern bool mouselocked;
 
-static CPrinter* default_printer = nullptr;
+static Printer* default_printer = nullptr;
 
 static uint16_t conf_dpi, conf_width, conf_height;
 static uint64_t printer_timeout;
@@ -31,7 +31,7 @@ static const char* document_path;
 static char conf_output_device[50];
 static bool conf_multipage_output;
 
-void CPrinter::FillPalette(const uint8_t red_max, const uint8_t green_max,
+void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
                            const uint8_t blue_max, uint8_t color_id, SDL_Palette* palette)
 {
 	const float red   = red_max / 30.9f;
@@ -50,7 +50,7 @@ void CPrinter::FillPalette(const uint8_t red_max, const uint8_t green_max,
 	}
 }
 
-CPrinter::CPrinter(uint16_t dpi, const uint16_t width, const uint16_t height,
+Printer::Printer(uint16_t dpi, const uint16_t width, const uint16_t height,
                    char* output, bool multipage_output)
 {
 	if (FT_Init_FreeType(&ft_lib)) {
@@ -121,13 +121,13 @@ CPrinter::CPrinter(uint16_t dpi, const uint16_t width, const uint16_t height,
 	}
 }
 
-void CPrinter::ResetPrinterHard()
+void Printer::ResetPrinterHard()
 {
 	char_read = false;
 	ResetPrinter();
 }
 
-void CPrinter::ResetPrinter()
+void Printer::ResetPrinter()
 {
 	color = ColorBlack;
 	cur_x = cur_y = 0.0;
@@ -177,7 +177,7 @@ void CPrinter::ResetPrinter()
 	num_vert_tabs = 255;
 }
 
-CPrinter::~CPrinter(void)
+Printer::~Printer(void)
 {
 	FinishMultipage();
 	if (page != nullptr) {
@@ -187,7 +187,7 @@ CPrinter::~CPrinter(void)
 	}
 }
 
-void CPrinter::SelectCodepage(const uint16_t codepage)
+void Printer::SelectCodepage(const uint16_t codepage)
 {
 	const uint16_t* map_to_use = nullptr;
 
@@ -270,7 +270,7 @@ void CPrinter::SelectCodepage(const uint16_t codepage)
 	}
 }
 
-void CPrinter::UpdateFont()
+void Printer::UpdateFont()
 {
 	//	char buffer[1000];
 
@@ -396,7 +396,7 @@ void CPrinter::UpdateFont()
 	}
 }
 
-bool CPrinter::ProcessCommandChar(const uint8_t ch)
+bool Printer::ProcessCommandChar(const uint8_t ch)
 {
 	if (esc_seen || fs_seen) {
 		esc_cmd = ch;
@@ -1475,7 +1475,7 @@ bool CPrinter::ProcessCommandChar(const uint8_t ch)
 
 static void PRINTER_EventHandler([[maybe_unused]] uint32_t param);
 
-void CPrinter::NewPage(const bool save, const bool reset_x)
+void Printer::NewPage(const bool save, const bool reset_x)
 {
 	PIC_RemoveEvents(PRINTER_EventHandler);
 	if (printer_timeout) {
@@ -1504,7 +1504,7 @@ void CPrinter::NewPage(const bool save, const bool reset_x)
 	}*/
 }
 
-void CPrinter::PrintChar(uint8_t ch)
+void Printer::PrintChar(uint8_t ch)
 {
 	char_read = true;
 	if (page == nullptr) {
@@ -1647,7 +1647,7 @@ void CPrinter::PrintChar(uint8_t ch)
 	}
 }
 
-void CPrinter::BlitGlyph(const FT_Bitmap bitmap, const uint16_t destx,
+void Printer::BlitGlyph(const FT_Bitmap bitmap, const uint16_t destx,
                          const uint16_t desty, const bool add)
 {
 	for (uint64_t y = 0; y < bitmap.rows; y++) {
@@ -1678,7 +1678,7 @@ void CPrinter::BlitGlyph(const FT_Bitmap bitmap, const uint16_t destx,
 	}
 }
 
-void CPrinter::DrawLine(const uint64_t fromx, const uint64_t tox,
+void Printer::DrawLine(const uint64_t fromx, const uint64_t tox,
                         const uint64_t y, const bool broken)
 {
 	SDL_LockSurface(page);
@@ -1708,23 +1708,23 @@ void CPrinter::DrawLine(const uint64_t fromx, const uint64_t tox,
 	SDL_UnlockSurface(page);
 }
 
-void CPrinter::SetAutofeed(const bool feed)
+void Printer::SetAutofeed(const bool feed)
 {
 	auto_feed = feed;
 }
 
-bool CPrinter::GetAutofeed()
+bool Printer::GetAutofeed()
 {
 	return auto_feed;
 }
 
-bool CPrinter::IsBusy()
+bool Printer::IsBusy()
 {
 	// We're never busy
 	return false;
 }
 
-bool CPrinter::Ack()
+bool Printer::Ack()
 {
 	// Acknowledge last char read
 	if (char_read) {
@@ -1734,7 +1734,7 @@ bool CPrinter::Ack()
 	return false;
 }
 
-void CPrinter::SetupBitImage(const uint8_t density, const uint16_t num_cols)
+void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 {
 	switch (density) {
 	case 0:
@@ -1842,7 +1842,7 @@ void CPrinter::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 	bit_graph.read_bytes_column = 0;
 }
 
-void CPrinter::PrintBitGraph(const uint8_t ch)
+void Printer::PrintBitGraph(const uint8_t ch)
 {
 	bit_graph.column[bit_graph.read_bytes_column++] = ch;
 	bit_graph.rem_bytes--;
@@ -1909,7 +1909,7 @@ void CPrinter::PrintBitGraph(const uint8_t ch)
 	cur_x += static_cast<Real64>(1) / static_cast<Real64>(bit_graph.horiz_dens);
 }
 
-void CPrinter::FormFeed()
+void Printer::FormFeed()
 {
 	// Don't output blank pages
 	NewPage(!IsBlank(), true);
@@ -1922,7 +1922,7 @@ void CPrinter::FormFeed()
 // anything a real DOS application will produce in one session.
 static constexpr int FindNextNameAttempts = 10000;
 
-// Size of the caller-owned fname buffer (CPrinter::OutputPage's stack
+// Size of the caller-owned fname buffer (Printer::OutputPage's stack
 // array). Keep in sync with that declaration.
 static constexpr size_t FnameBufSize = 200;
 
@@ -1969,7 +1969,7 @@ static void find_next_name(const char* front, const char* ext, char* fname)
 	// fname holds the final attempt; let the caller overwrite it.
 }
 
-void CPrinter::OutputPage()
+void Printer::OutputPage()
 {
 	char fname[200];
 
@@ -2183,7 +2183,7 @@ void CPrinter::OutputPage()
 	}
 }
 
-void CPrinter::FprintAscii85(FILE* file, uint16_t byte)
+void Printer::FprintAscii85(FILE* file, uint16_t byte)
 {
 	if (byte != 256) {
 		if (byte < 256) {
@@ -2251,7 +2251,7 @@ void CPrinter::FprintAscii85(FILE* file, uint16_t byte)
 	}
 }
 
-void CPrinter::FinishMultipage()
+void Printer::FinishMultipage()
 {
 	if (output_handle != nullptr) {
 		if (strcasecmp(output, "ps") == 0) {
@@ -2266,7 +2266,7 @@ void CPrinter::FinishMultipage()
 	}
 }
 
-bool CPrinter::IsBlank()
+bool Printer::IsBlank()
 {
 	bool blank = true;
 
@@ -2285,7 +2285,7 @@ bool CPrinter::IsBlank()
 	return blank;
 }
 
-uint8_t CPrinter::GetPixel(const uint32_t num)
+uint8_t Printer::GetPixel(const uint32_t num)
 {
 	// Respect the pitch
 	return *(static_cast<uint8_t*>(page->pixels) + (num % page->w) +
@@ -2315,7 +2315,7 @@ constexpr uint8_t StatusReservedLow = 0x1f;
 constexpr uint8_t StatusAckHigh     = 0x40;
 constexpr uint8_t StatusBusyHigh    = 0x80;
 
-// Status value when no CPrinter exists yet. ERROR/ACK/BUSY high
+// Status value when no Printer exists yet. ERROR/ACK/BUSY high
 // (their inverted polarity means "no error, no ack, not busy"),
 // select_in high, paper_out low, irq low.
 constexpr uint8_t StatusNoPrinter = 0xdf;
@@ -2344,7 +2344,7 @@ void PRINTER_WriteData([[maybe_unused]] const uint64_t port, const uint64_t val,
 uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
                             [[maybe_unused]] const uint64_t iolen)
 {
-	// Don't create a CPrinter unless the program really wants to print.
+	// Don't create a Printer unless the program really wants to print.
 	if (!default_printer) {
 		return StatusNoPrinter;
 	}
@@ -2401,7 +2401,7 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 	// Data is strobed to the printer on the falling edge of the STROBE bit.
 	if (!(val & CtrlStrobe) && (lpt.control & CtrlStrobe)) {
 		if (!default_printer) {
-			default_printer = new CPrinter(conf_dpi,
+			default_printer = new Printer(conf_dpi,
 			                               conf_width,
 			                               conf_height,
 			                               conf_output_device,
@@ -2425,7 +2425,7 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
                              [[maybe_unused]] const uint64_t iolen)
 {
-	// Don't create a CPrinter unless the program really wants to print.
+	// Don't create a Printer unless the program really wants to print.
 	if (!default_printer) {
 		return CtrlReservedHi | lpt.control;
 	}
@@ -2443,11 +2443,11 @@ uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
 // drives:
 //   PRINTER_Configure   -- writes the static config values (dpi, paper
 //                          size, output format, etc.) that the lazy
-//                          CPrinter constructor reads on first use.
+//                          Printer constructor reads on first use.
 //   PRINTER_FormFeed    -- public wrapper around the static
 //                          trigger_form_feed used by the mapper
 //                          handler in printer_glue.
-//   PRINTER_Reset       -- destroys the CPrinter singleton (flushes any
+//   PRINTER_Reset       -- destroys the Printer singleton (flushes any
 //                          open multipage doc) so Destroy/Init cycles
 //                          work cleanly.
 //
