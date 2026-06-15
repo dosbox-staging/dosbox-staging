@@ -10,6 +10,7 @@
 #include "misc/support.h"
 #include "printer_charmaps.h"
 #include "printer_if.h"
+#include "printer_png.h"
 #include <array>
 #include <math.h>
 #include <memory>
@@ -1959,85 +1960,9 @@ void Printer::OutputPage()
 		// Win32 host-printer pass-through removed (out of scope).
 		LOG_MSG("PRINTER: Direct printing not supported");
 	} else if (iequals(output, "png")) {
-		const auto out_path = find_next_name("page", ".png");
-		if (!out_path) {
-			return;
+		if (const auto out_path = find_next_name("page", ".png")) {
+			write_png_page(page, *out_path);
 		}
-
-		png_structp png_ptr;
-		png_infop info_ptr;
-		std::array<png_color, 256> palette = {};
-		uint64_t i;
-
-		// Open the actual file. RAII closes on any return path.
-		FILE_unique_ptr fp{fopen(out_path->string().c_str(), "wb")};
-		if (!fp) {
-			LOG_ERR("PRINTER: Can't open file %s for printer output",
-			        out_path->string().c_str());
-			return;
-		}
-
-		// Allocate the PNG write structures.
-		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-		                                  nullptr,
-		                                  nullptr,
-		                                  nullptr);
-		if (!png_ptr) {
-			return;
-		}
-		info_ptr = png_create_info_struct(png_ptr);
-		if (!info_ptr) {
-			png_destroy_write_struct(&png_ptr,
-			                         static_cast<png_infopp>(nullptr));
-			return;
-		}
-
-		png_init_io(png_ptr, fp.get());
-		png_set_compression_level(png_ptr, ZBestCompression);
-
-		/* set other zlib parameters */
-		png_set_compression_mem_level(png_ptr, 8);
-		png_set_compression_strategy(png_ptr, ZDefaultStrategy);
-		png_set_compression_window_bits(png_ptr, 15);
-		png_set_compression_method(png_ptr, 8);
-		png_set_compression_buffer_size(png_ptr, 8192);
-
-		png_set_IHDR(png_ptr,
-		             info_ptr,
-		             page->w,
-		             page->h,
-		             8,
-		             PNG_COLOR_TYPE_PALETTE,
-		             PNG_INTERLACE_NONE,
-		             PNG_COMPRESSION_TYPE_DEFAULT,
-		             PNG_FILTER_TYPE_DEFAULT);
-		for (i = 0; i < 256; i++) {
-			palette[i].red   = page->format->palette->colors[i].r;
-			palette[i].green = page->format->palette->colors[i].g;
-			palette[i].blue  = page->format->palette->colors[i].b;
-		}
-		png_set_PLTE(png_ptr, info_ptr, palette.data(), 256);
-
-		SDL_LockSurface(page);
-
-		// Array of scanline pointers, owned by std::vector so we don't
-		// need to manually free it before returning.
-		std::vector<png_bytep> row_pointers(page->h);
-		for (i = 0; static_cast<int>(i) < page->h; i++) {
-			row_pointers[i] = static_cast<uint8_t*>(page->pixels) +
-			                  (i * page->pitch);
-		}
-
-		// tell the png library what to encode.
-		png_set_rows(png_ptr, info_ptr, row_pointers.data());
-
-		// Write image to file
-		png_write_png(png_ptr, info_ptr, 0, nullptr);
-
-		SDL_UnlockSurface(page);
-
-		png_destroy_write_struct(&png_ptr, &info_ptr);
-		// fp closes here via FILE_unique_ptr destructor.
 	} else if (iequals(output, "ps")) {
 		// If multipage mode is continuing, take ownership back from the
 		// member; otherwise open a fresh file.
