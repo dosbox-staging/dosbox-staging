@@ -28,7 +28,6 @@ namespace VirtualPrinter {
 //   0x100 - 0x1ff : internal sentinels used by the param-collection state
 //                   machine (no real ESC byte; see ProcessData)
 //   0x200 - 0x2ff : two-byte 'ESC ( <ch>' commands
-//   0x800 - 0x8ff : 'FS <ch>' commands (some are aliases of ESC variants)
 namespace {
 
 namespace Esc {
@@ -124,22 +123,6 @@ constexpr auto ParenAssignCharacterTable                        = 0x274;
 constexpr auto ParenSetRelativeVerticalPrintPosition            = 0x276;
 } // namespace Esc
 
-namespace Fs {
-constexpr auto Select16InchLineSpacing              = 0x832;
-constexpr auto SetN360InchLineSpacing               = 0x833;
-constexpr auto SelectItalicFont                     = 0x834;
-constexpr auto CancelItalicFont                     = 0x835;
-constexpr auto SetN60InchLineSpacing                = 0x841;
-constexpr auto SelectLqTypeStyle                    = 0x843;
-constexpr auto SelectCharacterWidth                 = 0x845;
-constexpr auto SelectForwardFeedMode                = 0x846;
-constexpr auto SelectCharacterTable                 = 0x849;
-constexpr auto SelectReverseFeedMode                = 0x852;
-constexpr auto SelectHighSpeedHighDensityElitePitch = 0x853;
-constexpr auto TurnDoubleHeightPrintingOnOff        = 0x856;
-constexpr auto Print24BitHexDensityGraphics         = 0x85a;
-} // namespace Fs
-
 // ESC/P vertical motion divisors. Vertical positions and line spacings
 // arrive as integer parameter bytes that we divide by these constants
 // to get inches. 9-pin printers use a finer base unit than 24/48-pin
@@ -170,13 +153,33 @@ constexpr std::chrono::seconds UnsupportedOpcodeLogInterval{3};
 
 bool Printer::ProcessCommandChar(const uint8_t ch)
 {
-	if (esc_seen || fs_seen) {
-		esc_cmd = ch;
-		if (fs_seen) {
-			esc_cmd |= 0x800;
+	if (fs_seen) {
+		fs_seen = false;
+
+		using Clock = std::chrono::steady_clock;
+		static std::unordered_map<uint8_t, Clock::time_point> last_warned;
+
+		const auto now = Clock::now();
+		auto it        = last_warned.find(ch);
+
+		if (it == last_warned.end() ||
+		    now - it->second >= UnsupportedOpcodeLogInterval) {
+			LOG_WARNING(
+			        "PRINTER: FS %c (%02Xh) not supported "
+			        "(IBM PPDS mode is not emulated); output "
+			        "may be incorrect",
+			        ch,
+			        ch);
+
+			last_warned[ch] = now;
 		}
-		esc_seen = fs_seen = false;
-		num_param          = 0;
+		return true;
+	}
+
+	if (esc_seen) {
+		esc_cmd  = ch;
+		esc_seen = false;
+		num_param = 0;
 
 		switch (esc_cmd) {
 		// Undocumented
@@ -238,17 +241,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::EnablePrintingOfAllCharacterCodesOnNextCharacter: // 0x5e
 		// (ESC g) — Select 10.5-point, 15-cpi
 		case Esc::Select105Point15Cpi: // 0x67
-
-		// (FS 4)	(= ESC 4) — Select italic font
-		case Fs::SelectItalicFont: // 0x834
-		// (FS 5)	(= ESC 5) — Cancel italic font
-		case Fs::CancelItalicFont: // 0x835
-		// (FS F) — Select forward feed mode
-		case Fs::SelectForwardFeedMode: // 0x846
-		// (FS R) — Select reverse feed mode
-		case Fs::SelectReverseFeedMode:
 			needed_param = 0;
-			break; // 0x852
+			break;
 
 		// (ESC EM) — Control paper loading/ejecting
 		case Esc::ControlPaperLoadingEjecting: // 0x19
@@ -314,25 +308,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::SelectLqDraft: // 0x78
 		// (ESC ~) — Select/Deselect slash zero
 		case Esc::SelectDeselectSlashZero: // 0x7e
-
-		// (FS 2)	(= ESC 2) — Select 1/6-inch line spacing
-		case Fs::Select16InchLineSpacing: // 0x832
-		// (FS 3)	(= ESC +) — Set n/360-inch line spacing
-		case Fs::SetN360InchLineSpacing: // 0x833
-		// (FS A)	(= ESC A) — Set n/60-inch line spacing
-		case Fs::SetN60InchLineSpacing: // 0x841
-		// (FS C)	(= ESC k) — Select LQ type style
-		case Fs::SelectLqTypeStyle: // 0x843
-		// (FS E) — Select character width
-		case Fs::SelectCharacterWidth: // 0x845
-		// (FS I)	(= ESC t) — Select character table
-		case Fs::SelectCharacterTable: // 0x849
-		// (FS S) — Select High Speed/High Density elite pitch
-		case Fs::SelectHighSpeedHighDensityElitePitch: // 0x853
-		// (FS V)	(= ESC w) — Turn double-height printing on/off
-		case Fs::TurnDoubleHeightPrintingOnOff:
 			needed_param = 1;
-			break; // 0x856
+			break;
 
 		// (ESC $) — Set absolute horizontal print position
 		case Esc::SetAbsoluteHorizontalPrintPosition: // 0x24
@@ -352,10 +329,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::SetHorizontalMotionIndex: // 0x63
 		// (ESC e) — Set vertical tab stops every n lines
 		case Esc::SetVerticalTabStopsEveryNLines: // 0x65
-		// (FS Z) — Print 24-bit hex-density graphics
-		case Fs::Print24BitHexDensityGraphics:
 			needed_param = 2;
-			break; // 0x85a
+			break;
 
 		// (ESC *) — Select bit image
 		case Esc::SelectBitImage: // 0x2a
@@ -394,8 +369,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::TwoBytesSequence: return true; // 0x28
 
 		default:
-			LOG_MSG("PRINTER: Unknown command %s (%02Xh) %c , unable to skip parameters.",
-			        (esc_cmd & 0x800) ? "FS" : "ESC",
+			LOG_MSG("PRINTER: Unknown command ESC (%02Xh) %c , unable to skip parameters.",
 			        esc_cmd,
 			        esc_cmd);
 
@@ -603,21 +577,15 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 		} break;
 
-		// Print 24-bit hex-density graphics (FS Z)
-		case Fs::Print24BitHexDensityGraphics: // 0x85a
-			SetupBitImage(40, static_cast<uint16_t>(Param16(0)));
-			break;
-
 		// Select bit image (ESC *)
 		case Esc::SelectBitImage: // 0x2a
 			SetupBitImage(params[0], static_cast<uint16_t>(Param16(1)));
 			break;
 
-		// Set n/360-inch line spacing (ESC + / FS 3) -- 24/48-pin only
+		// Set n/360-inch line spacing (ESC +) -- 24/48-pin only
 		// per escp2ref.pdf C-29 ("Not available on 9-pin printers").
 		// On a 9-pin printer model, ignore.
 		case Esc::SetN360InchLineSpacing: // 0x2b
-		case Fs::SetN360InchLineSpacing:  // 0x833
 			if (pins != 9) {
 				line_spacing = static_cast<double>(params[0]) /
 				               DefinedUnitDivisor;
@@ -721,10 +689,9 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			ResetPrinter();
 			break; // 0x40
 
-		// Set line spacing (ESC A / FS A) -- n/60 for 24/48-pin,
+		// Set line spacing (ESC A) -- n/60 for 24/48-pin,
 		// n/72 for 9-pin (escp2ref.pdf C-39).
 		case Esc::SetN60InchLineSpacing: // 0x41
-		case Fs::SetN60InchLineSpacing:  // 0x841
 			line_spacing = static_cast<double>(params[0]) /
 			               (pins == 9 ? CoarseVerticalDivisor9Pin
 			                          : CoarseVerticalDivisor24Pin);
@@ -957,19 +924,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		// implemented yet — Select forward feed mode (FS F) - set
-		// reverse not
-		case Fs::SelectForwardFeedMode: // 0x846
-			if (line_spacing < 0) {
-				line_spacing *= -1;
-			}
-			break;
-
-		case Esc::ReversePaperFeed: { // 0x6a
 		// Reverse paper feed (ESC j) -- 9-pin only per escp2ref.pdf
 		// C-213, single-byte parameter, n/216 inch reverse. Featured
 		// only on EX-800, EX-1000, FX-80/85/100/185/286, JX-80.
 		// Old FX-* DOS app drivers may still emit it.
+		case Esc::ReversePaperFeed: { // 0x6a
 			const double reverse = static_cast<double>(params[0]) /
 			                       FineVerticalDivisor9Pin;
 			const double new_y = cur_y - reverse;
@@ -1035,8 +994,6 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Select character table (ESC t)
 		case Esc::SelectCharacterTable: // 0x74
-		// Select character table (FS I)
-		case Fs::SelectCharacterTable: // 0x849
 			if (params[0] < 4) {
 				cur_char_table = params[0];
 			}
@@ -1396,7 +1353,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	// ESC
 	case 0x1b: esc_seen = true; return true;
 
-	// FS (IBM commands)
+	// FS (0x1C). Real Epson printers run in either ESC/P mode or IBM
+	// ProPrinter emulation mode (DIP-switch selectable, mutually
+	// exclusive). FS is only meaningful in IBM mode, which we don't
+	// emulate. Discard the FS byte and the opcode byte that follows;
+	// the latter is logged once per opcode (see top of this function).
 	case 0x1c: fs_seen = true; return true;
 
 	default: return false;
