@@ -10,8 +10,12 @@
 
 #include "misc/std_filesystem.h"
 
+namespace VirtualPrinter {
+
 // Encode 'page' (an 8-bit indexed SDL surface) as a single-page PNG at
 // out_path. Returns false on open / library failure (a warning is logged).
 bool write_png_page(SDL_Surface* page, const std_fs::path& out_path);
 
-#endif
+} // namespace VirtualPrinter
+
+#endif // DOSBOX_PRINTER_PNG_H

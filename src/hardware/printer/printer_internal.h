@@ -16,10 +16,14 @@
 #include "misc/logging.h"
 #include "misc/std_filesystem.h"
 
+namespace VirtualPrinter {
+
 // Build the next free path of the form <document_path>/<prefix><N><ext>
 // (N counting from 1). Returns std::nullopt if more than 10000 files in
 // the series already exist or the docpath is unusable.
 std::optional<std_fs::path> find_next_name(const std::string& prefix,
                                            const std::string& ext);
 
-#endif
+} // namespace VirtualPrinter
+
+#endif // DOSBOX_PRINTER_INTERNAL_H

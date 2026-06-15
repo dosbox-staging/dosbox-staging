@@ -15,6 +15,8 @@
 
 CHECK_NARROWING();
 
+namespace VirtualPrinter {
+
 bool Printer::ProcessCommandChar(const uint8_t ch)
 {
 	if (esc_seen || fs_seen) {
@@ -1334,3 +1336,5 @@ void Printer::PrintBitGraph(const uint8_t ch)
 	// Advance to the left
 	cur_x += static_cast<Real64>(1) / static_cast<Real64>(bit_graph.horiz_dens);
 }
+
+} // namespace VirtualPrinter
