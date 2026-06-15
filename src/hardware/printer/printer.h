@@ -30,10 +30,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-// zlib compression levels duplicated locally to avoid pulling in zlib.h.
-constexpr int ZBestCompression = 9;
-constexpr int ZDefaultStrategy = 0;
-
 // Currently-active text style flags. Modelled on LptStatusRegister in
 // src/hardware/parallelport/lpt.h: writes go through the named bit_view members,
 // reads through either the members or the 'data' field for masking.
