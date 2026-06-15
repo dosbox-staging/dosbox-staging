@@ -94,14 +94,11 @@ protected:
 		std_fs::remove_all(output_dir, ec);
 		std_fs::create_directories(output_dir, ec);
 
-		// Sets document_path global so CPrinter writes pages under
-		// output_dir as page1.png, page2.png, ...
-		docpath_holder = output_dir.string();
-		PRINTER_Configure(TestDpi,
-		                  static_cast<uint16_t>(TestPageWidthIn * 10),
-		                  static_cast<uint16_t>(TestPageHeightIn * 10),
-		                  docpath_holder.c_str(),
-		                  "png",
+		PRINTER_Configure(PrinterModelKind::EpsonDotMatrix,
+		                  TestDpi,
+		                  TestPageWidthIn,
+		                  TestPageHeightIn,
+		                  output_dir.string(),
 		                  5000 /*timeout_ms*/);
 	}
 
@@ -141,18 +138,14 @@ protected:
 
 		// Refresh global config in case the test uses a different page
 		// size than the default established in SetUp().
-		docpath_holder = output_dir.string();
-		PRINTER_Configure(dpi,
-		                  static_cast<uint16_t>(width_in * 10),
-		                  static_cast<uint16_t>(height_in * 10),
-		                  docpath_holder.c_str(),
-		                  "png",
+		PRINTER_Configure(PrinterModelKind::EpsonDotMatrix,
+		                  dpi,
+		                  width_in,
+		                  height_in,
+		                  output_dir.string(),
 		                  5000 /*timeout_ms*/);
 
-		VirtualPrinter::Printer printer(dpi,
-		                                static_cast<uint16_t>(width_in * 10),
-		                                static_cast<uint16_t>(height_in * 10),
-		                                std::string("png"));
+		VirtualPrinter::Printer printer(dpi, width_in, height_in);
 
 		for (const auto byte : bytes) {
 			printer.PrintChar(byte);

@@ -96,6 +96,13 @@ enum class PrintQuality : uint8_t {
 	Lq    = 0x02,
 };
 
+// Top-level dispatch: what kind of printer the user picked.
+enum class PrinterModel {
+	None,
+	EpsonDotMatrix,
+	PostScript,
+};
+
 // Palette is split into 8 sub-palettes of 32 colours each, indexed by a
 // 3-bit colour ID in the top 3 bits. Black is sub-palette 7.
 constexpr uint8_t ColorBlack = 7 << 5;
@@ -119,8 +126,8 @@ enum class Typeface {
 
 class Printer {
 public:
-	Printer(uint16_t dpi, uint16_t width, uint16_t height,
-	        const std::string& output);
+	// page_width_in and page_height_in are inches (Real64).
+	Printer(uint16_t dpi, Real64 page_width_in, Real64 page_height_in);
 	virtual ~Printer();
 
 	// Owns FreeType/SDL resources and a singleton Printer* — don't copy.
@@ -188,7 +195,7 @@ private:
 	// Copies the codepage mapping from the constant array to CurMap
 	void SelectCodepage(uint16_t codepage);
 
-	// Output current page
+	// Output current page as a PNG file.
 	void OutputPage();
 
 	// Decode a little-endian 16-bit ESC/P2 parameter starting at params[i].
@@ -348,8 +355,6 @@ private:
 	// codes).
 	uint16_t num_print_as_char = 0;
 
-	// Output method selected by the user ("png" / ...).
-	std::string output = {};
 };
 
 } // namespace VirtualPrinter
