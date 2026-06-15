@@ -156,7 +156,7 @@ protected:
 		std::strncpy(output_format, "png", sizeof(output_format) - 1);
 		output_format[sizeof(output_format) - 1] = '\0';
 
-		CPrinter printer(dpi,
+		Printer printer(dpi,
 		                 static_cast<uint16_t>(width_in * 10),
 		                 static_cast<uint16_t>(height_in * 10),
 		                 output_format,
