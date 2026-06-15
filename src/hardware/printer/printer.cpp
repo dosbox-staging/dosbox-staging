@@ -10,13 +10,17 @@
 #include "misc/support.h"
 #include "printer_charmaps.h"
 #include "printer_if.h"
+#include <array>
 #include <math.h>
 #include <memory>
+#include <optional>
 #include <vector>
+
+#include "misc/std_filesystem.h"
+#include "utils/string_utils.h"
 
 #include "hardware/pic.h" // for timeout
 #include "utils/checks.h"
-#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 
@@ -25,9 +29,9 @@ static std::unique_ptr<Printer> default_printer = nullptr;
 static uint16_t conf_dpi, conf_width, conf_height;
 static uint64_t printer_timeout;
 static bool timeout_dirty;
-static const char* document_path;
+static std_fs::path document_path;
 // static const char* font_path;
-static char conf_output_device[50];
+static std::string conf_output_device;
 static bool conf_multipage_output;
 
 void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
@@ -1919,80 +1923,57 @@ void Printer::FormFeed()
 	FinishMultipage();
 }
 
-// Cap on how many existing page<N>.<ext> files we'll skip past before
+// Cap on how many existing <prefix><N><ext> files we'll skip past before
 // giving up. Sized to match the largest sensible print job; well beyond
 // anything a real DOS application will produce in one session.
 static constexpr int FindNextNameAttempts = 10000;
 
-// Size of the caller-owned fname buffer (Printer::OutputPage's stack
-// array). Keep in sync with that declaration.
-static constexpr size_t FnameBufSize = 200;
-
-#ifdef WIN32
-constexpr char PathSep = '\\';
-#else
-constexpr char PathSep = '/';
-#endif
-
-static void find_next_name(const char* front, const char* ext, char* fname)
+// Build the next free path of the form <document_path>/<prefix><N><ext>
+// (N counting from 1). Returns std::nullopt if more than
+// FindNextNameAttempts files in the series already exist.
+static std::optional<std_fs::path> find_next_name(const std::string& prefix,
+                                                  const std::string& ext)
 {
-	FILE* test = nullptr;
+	const std_fs::path docdir = document_path.empty() ? std_fs::path{"."}
+	                                                  : document_path;
 	for (int i = 1; i <= FindNextNameAttempts; ++i) {
-		const int written = snprintf(fname,
-		                             FnameBufSize,
-		                             "%s%c%s%d%s",
-		                             document_path,
-		                             PathSep,
-		                             front,
-		                             i,
-		                             ext);
-		if (written < 0 || static_cast<size_t>(written) >= FnameBufSize) {
-			LOG_WARNING(
-			        "PRINTER: page filename for docpath '%s' "
-			        "exceeds %zu chars; page output disabled",
-			        document_path,
-			        FnameBufSize);
-			fname[0] = 0;
-			return;
+		std_fs::path candidate = docdir / (prefix + std::to_string(i) + ext);
+		std::error_code ec;
+		if (!std_fs::exists(candidate, ec)) {
+			return candidate;
 		}
-		test = fopen(fname, "rb");
-		if (test == nullptr) {
-			return; // free slot
-		}
-		fclose(test);
 	}
 	LOG_WARNING(
 	        "PRINTER: docpath already contains %d %s files matching "
-	        "'%s<N>%s'; overwriting the last one",
+	        "'%s<N>%s'; output disabled",
 	        FindNextNameAttempts,
-	        front,
-	        front,
-	        ext);
-	// fname holds the final attempt; let the caller overwrite it.
+	        prefix.c_str(),
+	        prefix.c_str(),
+	        ext.c_str());
+	return std::nullopt;
 }
 
 void Printer::OutputPage()
 {
-	char fname[200];
-
 	if (iequals(output, "printer")) {
 		// Win32 host-printer pass-through removed (out of scope).
 		LOG_MSG("PRINTER: Direct printing not supported");
-	}
-	else if (iequals(output, "png")) {
-		// Find a page that does not exists
-		find_next_name("page", ".png", &fname[0]);
+	} else if (iequals(output, "png")) {
+		const auto out_path = find_next_name("page", ".png");
+		if (!out_path) {
+			return;
+		}
 
 		png_structp png_ptr;
 		png_infop info_ptr;
-		png_color palette[256];
+		std::array<png_color, 256> palette = {};
 		uint64_t i;
 
 		// Open the actual file. RAII closes on any return path.
-		FILE_unique_ptr fp{fopen(fname, "wb")};
+		FILE_unique_ptr fp{fopen(out_path->string().c_str(), "wb")};
 		if (!fp) {
 			LOG_ERR("PRINTER: Can't open file %s for printer output",
-			        fname);
+			        out_path->string().c_str());
 			return;
 		}
 
@@ -2035,7 +2016,7 @@ void Printer::OutputPage()
 			palette[i].green = page->format->palette->colors[i].g;
 			palette[i].blue  = page->format->palette->colors[i].b;
 		}
-		png_set_PLTE(png_ptr, info_ptr, palette, 256);
+		png_set_PLTE(png_ptr, info_ptr, palette.data(), 256);
 
 		SDL_LockSurface(page);
 
@@ -2057,23 +2038,23 @@ void Printer::OutputPage()
 
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		// fp closes here via FILE_unique_ptr destructor.
-	}
-	else if (iequals(output, "ps")) {
+	} else if (iequals(output, "ps")) {
 		// If multipage mode is continuing, take ownership back from the
 		// member; otherwise open a fresh file.
 		FILE_unique_ptr psfile = std::move(output_handle);
 
 		if (!psfile) {
-			if (!multipage_output) {
-				find_next_name("page", ".ps", &fname[0]);
-			} else {
-				find_next_name("doc", ".ps", &fname[0]);
+			const auto out_path = find_next_name(
+			        multipage_output ? "doc" : "page", ".ps");
+			if (!out_path) {
+				return;
 			}
 
-			psfile = FILE_unique_ptr{fopen(fname, "wb")};
+			psfile = FILE_unique_ptr{
+			        fopen(out_path->string().c_str(), "wb")};
 			if (!psfile) {
 				LOG_ERR("PRINTER: Can't open file %s for printer output",
-				        fname);
+				        out_path->string().c_str());
 				return;
 			}
 
@@ -2174,9 +2155,10 @@ void Printer::OutputPage()
 			output_handle.reset();
 		}
 	} else {
-		// Find a page that does not exists
-		find_next_name("page", ".bmp", &fname[0]);
-		SDL_SaveBMP(page, fname);
+		const auto out_path = find_next_name("page", ".bmp");
+		if (out_path) {
+			SDL_SaveBMP(page, out_path->string().c_str());
+		}
 	}
 }
 
@@ -2458,12 +2440,11 @@ void PRINTER_Configure(const uint16_t dpi, const uint16_t width, const uint16_t 
 	conf_dpi      = dpi;
 	conf_width    = width;
 	conf_height   = height;
-	document_path = docpath;
-	strncpy(&conf_output_device[0], output_format, sizeof(conf_output_device) - 1);
-	conf_output_device[sizeof(conf_output_device) - 1] = 0;
-	conf_multipage_output                              = multipage;
-	printer_timeout                                    = timeout_ms;
-	timeout_dirty = (printer_timeout == 0);
+	document_path         = docpath ? docpath : "";
+	conf_output_device    = output_format ? output_format : "";
+	conf_multipage_output = multipage;
+	printer_timeout       = timeout_ms;
+	timeout_dirty         = (printer_timeout == 0);
 }
 
 void PRINTER_FormFeed(const bool pressed)
