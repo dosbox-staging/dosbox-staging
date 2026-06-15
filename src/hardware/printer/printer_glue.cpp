@@ -207,15 +207,13 @@ void PRINTER_Init()
 	const auto dpi       = static_cast<uint16_t>(section.GetInt("dpi"));
 	const auto width     = static_cast<uint16_t>(section.GetInt("width"));
 	const auto height    = static_cast<uint16_t>(section.GetInt("height"));
-	const auto multipage = section.GetBool("multipage");
-	const auto timeout   = section.GetInt("timeout");
+	const auto timeout = section.GetInt("timeout");
 
 	PRINTER_Configure(dpi,
 	                  width,
 	                  height,
 	                  state.docpath.c_str(),
 	                  state.output_format.c_str(),
-	                  multipage,
 	                  timeout);
 
 	install_io_handlers(lpt_port);

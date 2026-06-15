@@ -102,7 +102,6 @@ protected:
 		                  static_cast<uint16_t>(TestPageHeightIn * 10),
 		                  docpath_holder.c_str(),
 		                  "png",
-		                  false /*multipage*/,
 		                  5000 /*timeout_ms*/);
 	}
 
@@ -148,19 +147,12 @@ protected:
 		                  static_cast<uint16_t>(height_in * 10),
 		                  docpath_holder.c_str(),
 		                  "png",
-		                  false /*multipage*/,
 		                  5000 /*timeout_ms*/);
 
-		// CPrinter takes a writable char* for the output format.
-		char output_format[8];
-		std::strncpy(output_format, "png", sizeof(output_format) - 1);
-		output_format[sizeof(output_format) - 1] = '\0';
-
 		VirtualPrinter::Printer printer(dpi,
-		                 static_cast<uint16_t>(width_in * 10),
-		                 static_cast<uint16_t>(height_in * 10),
-		                 output_format,
-		                 false /*multipageOutput*/);
+		                                static_cast<uint16_t>(width_in * 10),
+		                                static_cast<uint16_t>(height_in * 10),
+		                                std::string("png"));
 
 		for (const auto byte : bytes) {
 			printer.PrintChar(byte);
