@@ -15,8 +15,6 @@ uint64_t PRINTER_ReadStatus(uint64_t port, uint64_t iolen);
 void PRINTER_WriteControl(uint64_t port, uint64_t val, uint64_t iolen);
 uint64_t PRINTER_ReadControl(uint64_t port, uint64_t iolen);
 
-bool PRINTER_IsInited();
-
 // Set the printer config values that are read at lazy CPrinter
 // construction time inside PRINTER_WriteControl. The strings must outlive
 // the printer instance (i.e. the caller owns the buffers).
