@@ -20,7 +20,7 @@ CHECK_NARROWING();
 extern void GFX_CaptureMouse(void);
 extern bool mouselocked;
 
-static CPrinter* default_printer = NULL;
+static CPrinter* default_printer = nullptr;
 
 #define PARAM16(I) (params[I + 1] * 256 + params[I])
 #define PIXX       (static_cast<uint64_t>(floor(cur_x * dpi + 0.5)))
@@ -59,7 +59,7 @@ CPrinter::CPrinter(uint16_t dpi, const uint16_t width, const uint16_t height,
 	if (FT_Init_FreeType(&ft_lib)) {
 		LOG(LOG_MISC, LOG_ERROR)(
 		        "PRINTER: Unable to init Freetype2. Printing disabled");
-		page = NULL;
+		page = nullptr;
 	} else {
 		this->dpi              = dpi;
 		this->output           = output;
@@ -113,10 +113,10 @@ CPrinter::CPrinter(uint16_t dpi, const uint16_t width, const uint16_t height,
 
 		color = COLOR_BLACK;
 
-		cur_font      = NULL;
+		cur_font      = nullptr;
 		char_read     = false;
 		auto_feed     = false;
-		output_handle = NULL;
+		output_handle = nullptr;
 
 		ResetPrinter();
 
@@ -183,16 +183,16 @@ void CPrinter::ResetPrinter()
 CPrinter::~CPrinter(void)
 {
 	FinishMultipage();
-	if (page != NULL) {
+	if (page != nullptr) {
 		SDL_FreeSurface(page);
-		page = NULL;
+		page = nullptr;
 		FT_Done_FreeType(ft_lib);
 	}
 }
 
 void CPrinter::SelectCodepage(const uint16_t codepage)
 {
-	const uint16_t* map_to_use = NULL;
+	const uint16_t* map_to_use = nullptr;
 
 	uint64_t i = 0;
 	while (charmap[i].codepage != 0) {
@@ -202,7 +202,7 @@ void CPrinter::SelectCodepage(const uint16_t codepage)
 		}
 		i++;
 	}
-	if (map_to_use == NULL) {
+	if (map_to_use == nullptr) {
 		LOG(LOG_MISC,
 		    LOG_WARN)("Unsupported codepage %i. Using CP437 instead.", codepage);
 		SelectCodepage(437);
@@ -264,7 +264,7 @@ void CPrinter::UpdateFont()
 {
 	//	char buffer[1000];
 
-	if (cur_font != NULL) {
+	if (cur_font != nullptr) {
 		FT_Done_Face(cur_font);
 	}
 
@@ -291,7 +291,7 @@ void CPrinter::UpdateFont()
 	if (font_path.empty() ||
 	    FT_New_Face(ft_lib, font_path.string().c_str(), 0, &cur_font)) {
 		LOG_MSG("Unable to load font %s", font_filename);
-		cur_font = NULL;
+		cur_font = nullptr;
 	}
 
 	Real64 horizPoints = 10.5;
@@ -1406,7 +1406,7 @@ void CPrinter::NewPage(const bool save, const bool reset_x)
 void CPrinter::PrintChar(uint8_t ch)
 {
 	char_read = true;
-	if (page == NULL) {
+	if (page == nullptr) {
 		return;
 	}
 
@@ -1812,7 +1812,7 @@ static void find_next_name(const char* front, const char* ext, char* fname)
 		fname[0] = 0;
 		return;
 	}
-	FILE* test = NULL;
+	FILE* test = nullptr;
 	do {
 		strcpy(fname, document_path);
 #ifdef WIN32
@@ -1826,10 +1826,10 @@ static void find_next_name(const char* front, const char* ext, char* fname)
 		        static_cast<int>(i++),
 		        ext);
 		test = fopen(fname, "rb");
-		if (test != NULL) {
+		if (test != nullptr) {
 			fclose(test);
 		}
-	} while (test != NULL);
+	} while (test != nullptr);
 }
 
 void CPrinter::OutputPage()
@@ -1860,14 +1860,14 @@ void CPrinter::OutputPage()
 		}
 
 		/* First try to alloacte the png structures */
-		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
 		if (!png_ptr) {
 			fclose(fp);
 			return;
 		}
 		info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr) {
-			png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+			png_destroy_write_struct(&png_ptr, (png_infopp)nullptr);
 			fclose(fp);
 			return;
 		}
@@ -1911,7 +1911,7 @@ void CPrinter::OutputPage()
 		png_set_rows(png_ptr, info_ptr, row_pointers);
 
 		// Write image to file
-		png_write_png(png_ptr, info_ptr, 0, NULL);
+		png_write_png(png_ptr, info_ptr, 0, nullptr);
 
 		SDL_UnlockSurface(page);
 
@@ -1925,15 +1925,15 @@ void CPrinter::OutputPage()
 		free(row_pointers);
 	}
 	else if (strcasecmp(output, "ps") == 0) {
-		FILE* psfile = NULL;
+		FILE* psfile = nullptr;
 
 		// Continue postscript file?
-		if (output_handle != NULL) {
+		if (output_handle != nullptr) {
 			psfile = (FILE*)output_handle;
 		}
 
 		// Create new file?
-		if (psfile == NULL) {
+		if (psfile == nullptr) {
 			if (!multipage_output) {
 				find_next_name("page", ".ps", &fname[0]);
 			} else {
@@ -2038,7 +2038,7 @@ void CPrinter::OutputPage()
 			fprintf(psfile, "%%%%Pages: 1\n");
 			fprintf(psfile, "%%%%EOF\n");
 			fclose(psfile);
-			output_handle = NULL;
+			output_handle = nullptr;
 		}
 	} else {
 		// Find a page that does not exists
@@ -2117,7 +2117,7 @@ void CPrinter::FprintAscii85(FILE* file, uint16_t byte)
 
 void CPrinter::FinishMultipage()
 {
-	if (output_handle != NULL) {
+	if (output_handle != nullptr) {
 		if (strcasecmp(output, "ps") == 0) {
 			FILE* psfile = (FILE*)output_handle;
 			fprintf(psfile, "%%%%Pages: %i\n", multipage_counter);
@@ -2126,7 +2126,7 @@ void CPrinter::FinishMultipage()
 		} else if (strcasecmp(output, "printer") == 0) {
 			// Win32 host-printer pass-through removed (out of scope).
 		}
-		output_handle = NULL;
+		output_handle = nullptr;
 	}
 }
 
@@ -2324,7 +2324,7 @@ void PRINTER_Reset()
 	PIC_RemoveEvents(PRINTER_EventHandler);
 	if (default_printer) {
 		delete default_printer;
-		default_printer = NULL;
+		default_printer = nullptr;
 	}
 	inited = false;
 }

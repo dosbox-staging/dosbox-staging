@@ -460,7 +460,7 @@ const Charmap charmap[] = {
         {864, cp864_map},
         {865, cp865_map},
         {866, cp866_map},
-        {  0,      NULL},
+        {  0,   nullptr},
 };
 
 const uint16_t codepages[15] =
