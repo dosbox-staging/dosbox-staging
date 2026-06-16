@@ -64,6 +64,27 @@ struct PageBitmap {
 constexpr int ZBestCompression = 9;
 constexpr int ZDefaultStrategy = 0;
 
+// FreeType uses signed 26.6 fixed-point for sub-pixel metrics (size
+// metrics, glyph advances, character sizes passed to FT_Set_Char_Size).
+// Multiply a whole-pixel/point value by Ft26Dot6Unit to convert it into
+// 26.6 form, divide by Ft26Dot6Unit to convert back. Use points_to_26_6
+// / ft26_6_to_pixels at the call site to keep the conversion readable.
+constexpr int Ft26Dot6Unit = 64;
+
+// Truncates the fractional part of `pts` before converting -- matches
+// the historical behaviour of `static_cast<uint16_t>(pts) * 64` that the
+// printer code has used since DOSBox 0.74. Callers that need sub-point
+// precision should multiply explicitly.
+static constexpr FT_F26Dot6 points_to_26_6(const double pts)
+{
+	return static_cast<FT_F26Dot6>(static_cast<int>(pts)) * Ft26Dot6Unit;
+}
+
+static constexpr int ft26_6_to_pixels(const FT_Pos value)
+{
+	return static_cast<int>(value / Ft26Dot6Unit);
+}
+
 // Currently-active text style flags. Modelled on LptStatusRegister in
 // src/hardware/parallelport/lpt.h: writes go through the named bit_view
 // members, reads through either the members or the 'data' field for masking.

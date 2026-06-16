@@ -114,12 +114,11 @@ void Printer::UpdateFont()
 	// Taller glyphs (double-height) extend upward from the baseline;
 	// shorter glyphs (sub/super) sit on it.
 	FT_Set_Char_Size(cur_font,
-	                 static_cast<uint16_t>(horizPoints) * 64,
-	                 static_cast<uint16_t>(vertPoints) * 64,
+	                 points_to_26_6(horizPoints),
+	                 points_to_26_6(vertPoints),
 	                 dpi,
 	                 dpi);
-	line_baseline_anchor_px = static_cast<int>(
-	        cur_font->size->metrics.ascender / 64);
+	line_baseline_anchor_px = ft26_6_to_pixels(cur_font->size->metrics.ascender);
 
 	if (!multipoint && style.doubleheight) {
 		vertPoints *= 2.0;
@@ -144,8 +143,8 @@ void Printer::UpdateFont()
 	}
 
 	FT_Set_Char_Size(cur_font,
-	                 static_cast<uint16_t>(horizPoints) * 64,
-	                 static_cast<uint16_t>(vertPoints) * 64,
+	                 points_to_26_6(horizPoints),
+	                 points_to_26_6(vertPoints),
 	                 dpi,
 	                 dpi);
 
