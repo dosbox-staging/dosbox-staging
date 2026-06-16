@@ -373,7 +373,7 @@ void expect_matches_reference(const std_fs::path& rendered, const std::string& t
 	}
 }
 
-void write_indexed8(const std_fs::path& out, const Fraction& par, const VideoMode& mode)
+void write_indexed8(const std_fs::path& out, const PngMetadata& metadata)
 {
 	FILE* fp = fopen(out.string().c_str(), "wb");
 	ASSERT_NE(fp, nullptr);
@@ -383,7 +383,7 @@ void write_indexed8(const std_fs::path& out, const Fraction& par, const VideoMod
 
 	{
 		PngWriter w;
-		ASSERT_TRUE(w.InitIndexed8(fp, TestWidth, TestHeight, par, mode, palette));
+		ASSERT_TRUE(w.InitIndexed8(fp, TestWidth, TestHeight, palette, metadata));
 
 		for (int y = 0; y < TestHeight; ++y) {
 			w.WriteRow(pixels.begin() + y * TestWidth);
@@ -392,7 +392,7 @@ void write_indexed8(const std_fs::path& out, const Fraction& par, const VideoMod
 	fclose(fp);
 }
 
-void write_rgb888(const std_fs::path& out, const Fraction& par, const VideoMode& mode)
+void write_rgb888(const std_fs::path& out, const PngMetadata& metadata)
 {
 	FILE* fp = fopen(out.string().c_str(), "wb");
 	ASSERT_NE(fp, nullptr);
@@ -401,7 +401,7 @@ void write_rgb888(const std_fs::path& out, const Fraction& par, const VideoMode&
 
 	{
 		PngWriter w;
-		ASSERT_TRUE(w.InitRgb888(fp, TestWidth, TestHeight, par, mode));
+		ASSERT_TRUE(w.InitRgb888(fp, TestWidth, TestHeight, metadata));
 
 		for (int y = 0; y < TestHeight; ++y) {
 			w.WriteRow(pixels.begin() +
@@ -415,36 +415,40 @@ void write_rgb888(const std_fs::path& out, const Fraction& par, const VideoMode&
 
 TEST(PngWriterTest, Indexed8_FromVideoMode)
 {
-	const auto mode = make_test_video_mode();
-	const auto out  = tmp_output_path("Indexed8_FromVideoMode");
+	const auto mode     = make_test_video_mode();
+	const auto metadata = PngMetadata::FromVideoMode(mode);
+	const auto out      = tmp_output_path("Indexed8_FromVideoMode");
 
-	write_indexed8(out, mode.pixel_aspect_ratio, mode);
+	write_indexed8(out, metadata);
 	expect_matches_reference(out, "Indexed8_FromVideoMode");
 }
 
 TEST(PngWriterTest, Indexed8_FromVideoModeAsSquare)
 {
-	const auto mode = make_test_video_mode();
-	const auto out  = tmp_output_path("Indexed8_FromVideoModeAsSquare");
+	const auto mode     = make_test_video_mode();
+	const auto metadata = PngMetadata::FromVideoModeAsSquare(mode);
+	const auto out      = tmp_output_path("Indexed8_FromVideoModeAsSquare");
 
-	write_indexed8(out, Fraction(1, 1), mode);
+	write_indexed8(out, metadata);
 	expect_matches_reference(out, "Indexed8_FromVideoModeAsSquare");
 }
 
 TEST(PngWriterTest, Rgb888_FromVideoMode)
 {
-	const auto mode = make_test_video_mode();
-	const auto out  = tmp_output_path("Rgb888_FromVideoMode");
+	const auto mode     = make_test_video_mode();
+	const auto metadata = PngMetadata::FromVideoMode(mode);
+	const auto out      = tmp_output_path("Rgb888_FromVideoMode");
 
-	write_rgb888(out, mode.pixel_aspect_ratio, mode);
+	write_rgb888(out, metadata);
 	expect_matches_reference(out, "Rgb888_FromVideoMode");
 }
 
 TEST(PngWriterTest, Rgb888_FromVideoModeAsSquare)
 {
-	const auto mode = make_test_video_mode();
-	const auto out  = tmp_output_path("Rgb888_FromVideoModeAsSquare");
+	const auto mode     = make_test_video_mode();
+	const auto metadata = PngMetadata::FromVideoModeAsSquare(mode);
+	const auto out      = tmp_output_path("Rgb888_FromVideoModeAsSquare");
 
-	write_rgb888(out, Fraction(1, 1), mode);
+	write_rgb888(out, metadata);
 	expect_matches_reference(out, "Rgb888_FromVideoModeAsSquare");
 }

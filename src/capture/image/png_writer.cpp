@@ -14,6 +14,18 @@
 
 CHECK_NARROWING();
 
+PngMetadata PngMetadata::FromVideoMode(const VideoMode& mode)
+{
+	return PngMetadata{mode.pixel_aspect_ratio, mode};
+}
+
+PngMetadata PngMetadata::FromVideoModeAsSquare(const VideoMode& mode)
+{
+	constexpr auto SquarePixelAspectRatio = Fraction{1};
+
+	return PngMetadata{SquarePixelAspectRatio, mode};
+}
+
 PngWriter::~PngWriter()
 {
 	FinalisePng();
@@ -25,22 +37,30 @@ PngWriter::~PngWriter()
 	png_info_ptr = nullptr;
 }
 
-bool PngWriter::InitRgb888(FILE* fp, const int width, const int height,
-                           const Fraction& pixel_aspect_ratio,
-                           const VideoMode& video_mode)
+bool PngWriter::InitRgb888(FILE* fp, const int width, const int height)
 {
 	if (!Init(fp)) {
 		return false;
 	}
 
 	constexpr auto IsPaletted = false;
-	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, IsPaletted, {});
+	WritePngInfo(width, height, IsPaletted, {}, nullptr);
+	return true;
+}
+
+bool PngWriter::InitRgb888(FILE* fp, const int width, const int height,
+                           const PngMetadata& metadata)
+{
+	if (!Init(fp)) {
+		return false;
+	}
+
+	constexpr auto IsPaletted = false;
+	WritePngInfo(width, height, IsPaletted, {}, &metadata);
 	return true;
 }
 
 bool PngWriter::InitIndexed8(FILE* fp, const int width, const int height,
-                             const Fraction& pixel_aspect_ratio,
-                             const VideoMode& video_mode,
                              const std::array<Rgb888, NumVgaColors>& palette)
 {
 	if (!Init(fp)) {
@@ -48,8 +68,26 @@ bool PngWriter::InitIndexed8(FILE* fp, const int width, const int height,
 	}
 
 	constexpr auto IsPaletted = true;
-	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, IsPaletted, palette);
+	WritePngInfo(width, height, IsPaletted, palette, nullptr);
 	return true;
+}
+
+bool PngWriter::InitIndexed8(FILE* fp, const int width, const int height,
+                             const std::array<Rgb888, NumVgaColors>& palette,
+                             const PngMetadata& metadata)
+{
+	if (!Init(fp)) {
+		return false;
+	}
+
+	constexpr auto IsPaletted = true;
+	WritePngInfo(width, height, IsPaletted, palette, &metadata);
+	return true;
+}
+
+void PngWriter::SetCompressionLevel(const int level)
+{
+	compression_level = level;
 }
 
 bool PngWriter::Init(FILE* fp)
@@ -87,24 +125,27 @@ void PngWriter::SetPngCompressionsParams()
 	assert(png_ptr);
 
 	// Default compression (equal to level 6) is the sweet spot between
-	// speed and compression. Z_BEST_COMPRESSION (level 9) rarely results in
-	// smaller file sizes, but makes the compression significantly slower
-	// (by several folds).
-	png_set_compression_level(png_ptr, Z_DEFAULT_COMPRESSION);
+	// speed and compression. Z_BEST_COMPRESSION (level 9) rarely results
+	// in smaller file sizes, but makes the compression significantly
+	// slower (by several folds). Printer page output overrides this via
+	// SetCompressionLevel because pages favour size over encode speed.
+	const auto level = (compression_level < 0) ? Z_DEFAULT_COMPRESSION
+	                                           : compression_level;
+	png_set_compression_level(png_ptr, level);
 
-	// Larger buffer sizes (e.g. 64K or 128K) could significantly speed up
-	// decompression, but not compression.
+	// Larger buffer sizes (e.g. 64K or 128K) could significantly speed
+	// up decompression, but not compression.
 	constexpr auto default_buffer_size = 8192;
 	png_set_compression_buffer_size(png_ptr, default_buffer_size);
 
-	// The "fast" filters are not only the fastest, but also result in the
-	// best compression ratios on average.
+	// The "fast" filters are not only the fastest, but also result in
+	// the best compression ratios on average.
 	constexpr auto default_filter_method = 0;
 	png_set_filter(png_ptr, default_filter_method, PNG_ALL_FILTERS);
 
-	// Do not change the below settings; they are parameters for the zlib
-	// compression library and changing them might result in invalid PNG
-	// files.
+	// Do not change the below settings; they are parameters for the
+	// zlib compression library and changing them might result in
+	// invalid PNG files.
 	constexpr auto default_mem_level = 8;
 	png_set_compression_mem_level(png_ptr, default_mem_level);
 
@@ -115,10 +156,9 @@ void PngWriter::SetPngCompressionsParams()
 	png_set_compression_method(png_ptr, Z_DEFLATED);
 }
 
-void PngWriter::WritePngInfo(const int width, const int height,
-                             const Fraction& pixel_aspect_ratio,
-                             const VideoMode& video_mode, const bool is_paletted,
-                             const std::array<Rgb888, NumVgaColors>& palette)
+void PngWriter::WritePngInfo(const int width, const int height, const bool is_paletted,
+                             const std::array<Rgb888, NumVgaColors>& palette,
+                             const PngMetadata* metadata)
 {
 	assert(png_ptr);
 	assert(png_info_ptr);
@@ -149,76 +189,84 @@ void PngWriter::WritePngInfo(const int width, const int height,
 		png_set_PLTE(png_ptr, png_info_ptr, palette_data, NumPaletteEntries);
 	}
 
+	if (metadata) {
 #ifdef PNG_gAMA_SUPPORTED
-	// It's not strictly necessary to write this chunk, but it's recommended
-	// by the spec.
-	png_set_gAMA(png_ptr, png_info_ptr, 1 / 2.2);
+		// It's not strictly necessary to write this chunk, but it's
+		// recommended by the spec.
+		png_set_gAMA(png_ptr, png_info_ptr, 1 / 2.2);
 #endif
 
 #ifdef PNG_pHYs_SUPPORTED
-	// "The pHYs chunk specifies the intended pixel size or aspect ratio for
-	// display of the image."
-	//
-	// "If the pHYs chunk is not present, pixels are assumed to be square,
-	// and the physical size of each pixel is unspecified."
-	//
-	// Although as of now pretty much all programs ignore the pHYs chunk and
-	// simply assume square pixels, we're writing the correct pixel aspect
-	// ratio in the hope that in the future applications will handle the
-	// pHYs chunk appropriately.
-	//
-	// Source:
-	//   Portable Network Graphics (PNG) Specification (Second Edition)
-	//   https://www.w3.org/TR/2003/REC-PNG-20031110/#11pHYs)
-	//
-	const auto pixels_per_unit_x = static_cast<uint32_t>(
-	        pixel_aspect_ratio.Num());
+		// "The pHYs chunk specifies the intended pixel size or aspect
+		// ratio for display of the image."
+		//
+		// "If the pHYs chunk is not present, pixels are assumed to be
+		// square, and the physical size of each pixel is unspecified."
+		//
+		// Although as of now pretty much all programs ignore the pHYs
+		// chunk and simply assume square pixels, we're writing the
+		// correct pixel aspect ratio in the hope that in the future
+		// applications will handle the pHYs chunk appropriately.
+		//
+		// Source:
+		//   Portable Network Graphics (PNG) Specification (Second
+		//   Edition)
+		//   https://www.w3.org/TR/2003/REC-PNG-20031110/#11pHYs)
+		//
+		const auto& par              = metadata->PixelAspectRatio();
+		const auto pixels_per_unit_x = static_cast<uint32_t>(par.Num());
+		const auto pixels_per_unit_y = static_cast<uint32_t>(par.Denom());
 
-	const auto pixels_per_unit_y = static_cast<uint32_t>(
-	        pixel_aspect_ratio.Denom());
+		// "When the unit specifier is 0, the pHYs chunk defines pixel
+		// aspect ratio only; the actual size of the pixels remains
+		// unspecified."
+		const auto unit_type = 0;
 
-	// "When the unit specifier is 0, the pHYs chunk defines pixel aspect
-	// ratio only; the actual size of the pixels remains unspecified."
-	auto unit_type = 0;
-
-	png_set_pHYs(png_ptr, png_info_ptr, pixels_per_unit_x, pixels_per_unit_y, unit_type);
+		png_set_pHYs(png_ptr,
+		             png_info_ptr,
+		             pixels_per_unit_x,
+		             pixels_per_unit_y,
+		             unit_type);
 #endif
 
 #ifdef PNG_TEXT_SUPPORTED
-	constexpr int MaxNumText   = 2;
-	png_text texts[MaxNumText] = {};
+		constexpr int MaxNumText   = 2;
+		png_text texts[MaxNumText] = {};
 
-	char software_keyword[] = "Software";
-	static_assert(sizeof(software_keyword) < 80, "libpng limit");
-	char software_value[] = DOSBOX_PROJECT_NAME " " DOSBOX_VERSION;
+		char software_keyword[] = "Software";
+		static_assert(sizeof(software_keyword) < 80, "libpng limit");
+		char software_value[] = DOSBOX_PROJECT_NAME " " DOSBOX_VERSION;
 
-	texts[0].compression = PNG_TEXT_COMPRESSION_NONE;
-	texts[0].key         = static_cast<png_charp>(software_keyword);
-	texts[0].text        = static_cast<png_charp>(software_value);
-	texts[0].text_length = sizeof(software_value);
+		texts[0].compression = PNG_TEXT_COMPRESSION_NONE;
+		texts[0].key         = static_cast<png_charp>(software_keyword);
+		texts[0].text        = static_cast<png_charp>(software_value);
+		texts[0].text_length = sizeof(software_value);
 
-	auto num_text = 1;
+		auto num_text = 1;
 
-	char source_keyword[] = "Source";
-	static_assert(sizeof(source_keyword) < 80, "libpng limit");
+		char source_keyword[] = "Source";
+		static_assert(sizeof(source_keyword) < 80, "libpng limit");
 
-	auto source_value = format_str(
-	        "source resolution: %dx%d; source pixel aspect ratio: %d:%d (1:%1.6f)",
-	        video_mode.width,
-	        video_mode.height,
-	        video_mode.pixel_aspect_ratio.Num(),
-	        video_mode.pixel_aspect_ratio.Denom(),
-	        video_mode.pixel_aspect_ratio.Inverse().ToDouble());
+		const auto& source_mode = metadata->SourceVideoMode();
 
-	texts[1].compression = PNG_TEXT_COMPRESSION_NONE;
-	texts[1].key         = static_cast<png_charp>(source_keyword);
-	texts[1].text        = source_value.data();
-	texts[1].text_length = source_value.size();
+		auto source_value = format_str(
+		        "source resolution: %dx%d; source pixel aspect ratio: %d:%d (1:%1.6f)",
+		        source_mode.width,
+		        source_mode.height,
+		        source_mode.pixel_aspect_ratio.Num(),
+		        source_mode.pixel_aspect_ratio.Denom(),
+		        source_mode.pixel_aspect_ratio.Inverse().ToDouble());
 
-	++num_text;
+		texts[1].compression = PNG_TEXT_COMPRESSION_NONE;
+		texts[1].key         = static_cast<png_charp>(source_keyword);
+		texts[1].text        = source_value.data();
+		texts[1].text_length = source_value.size();
 
-	png_set_text(png_ptr, png_info_ptr, texts, num_text);
+		++num_text;
+
+		png_set_text(png_ptr, png_info_ptr, texts, num_text);
 #endif
+	}
 
 	png_write_info(png_ptr, png_info_ptr);
 }
@@ -236,4 +284,3 @@ void PngWriter::FinalisePng()
 	const png_infop end_info_ptr = nullptr;
 	png_write_end(png_ptr, end_info_ptr);
 }
-
