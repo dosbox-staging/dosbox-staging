@@ -21,7 +21,14 @@ enum class CaptureType {
 	RawImage,
 	UpscaledImage,
 	RenderedImage,
-	SerialLog
+	SerialLog,
+
+	// Virtual printer output. PrinterPng is Epson dot-matrix raster
+	// output; the other two are passthrough streams that the host
+	// processes outside the emulator.
+	PrinterPng,
+	PrinterPostScript,
+	PrinterRaw,
 };
 
 enum class CaptureState { Off, Pending, InProgress };

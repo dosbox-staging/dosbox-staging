@@ -48,6 +48,10 @@ static struct {
 		int32_t video              = 1;
 		int32_t image              = 1;
 		int32_t serial_log         = 1;
+
+		int32_t printer_png        = 1;
+		int32_t printer_postscript = 1;
+		int32_t printer_raw        = 1;
 	} next_index = {};
 
 	void reset()
@@ -110,6 +114,11 @@ static const char* capture_type_to_string(const CaptureType type)
 
 	case CaptureType::SerialLog: return "serial log";
 
+	case CaptureType::PrinterPng: return "printer output (PNG)";
+	case CaptureType::PrinterPostScript:
+		return "printer output (PostScript)";
+	case CaptureType::PrinterRaw: return "printer output (raw)";
+
 	default: assertm(false, "Unknown CaptureType"); return "";
 	}
 }
@@ -130,6 +139,10 @@ static const char* capture_type_to_basename(const CaptureType type)
 
 	case CaptureType::SerialLog: return "serial";
 
+	case CaptureType::PrinterPng:
+	case CaptureType::PrinterPostScript:
+	case CaptureType::PrinterRaw: return "print";
+
 	default: assertm(false, "Unknown CaptureType"); return "";
 	}
 }
@@ -149,6 +162,10 @@ static const char* capture_type_to_extension(const CaptureType type)
 	case CaptureType::RenderedImage: return ".png";
 
 	case CaptureType::SerialLog: return ".serlog";
+
+	case CaptureType::PrinterPng: return ".png";
+	case CaptureType::PrinterPostScript: return ".ps";
+	case CaptureType::PrinterRaw: return ".prn";
 
 	default: assertm(false, "Unknown CaptureType"); return "";
 	}
@@ -235,6 +252,18 @@ static void set_next_capture_index(const CaptureType type, int32_t index)
 		capture.next_index.serial_log = index;
 		break;
 
+	case CaptureType::PrinterPng:
+		capture.next_index.printer_png = index;
+		break;
+
+	case CaptureType::PrinterPostScript:
+		capture.next_index.printer_postscript = index;
+		break;
+
+	case CaptureType::PrinterRaw:
+		capture.next_index.printer_raw = index;
+		break;
+
 	default: assertm(false, "Unknown CaptureType");
 	}
 }
@@ -251,15 +280,20 @@ static bool maybe_create_capture_dir_and_init_capture_indices()
 		return false;
 	}
 
-	constexpr CaptureType all_capture_types[] = {CaptureType::Audio,
-	                                             CaptureType::Midi,
-	                                             CaptureType::RawOplStream,
-	                                             CaptureType::RadOplInstruments,
-	                                             CaptureType::Video,
-	                                             CaptureType::RawImage,
-	                                             CaptureType::UpscaledImage,
-	                                             CaptureType::RenderedImage,
-	                                             CaptureType::SerialLog};
+	constexpr CaptureType all_capture_types[] = {
+	        CaptureType::Audio,
+	        CaptureType::Midi,
+	        CaptureType::RawOplStream,
+	        CaptureType::RadOplInstruments,
+	        CaptureType::Video,
+	        CaptureType::RawImage,
+	        CaptureType::UpscaledImage,
+	        CaptureType::RenderedImage,
+	        CaptureType::SerialLog,
+	        CaptureType::PrinterPng,
+	        CaptureType::PrinterPostScript,
+	        CaptureType::PrinterRaw,
+	};
 
 	for (auto type : all_capture_types) {
 		const auto index = find_highest_capture_index(type);
@@ -298,6 +332,13 @@ int32_t get_next_capture_index(const CaptureType type)
 	case CaptureType::RenderedImage: return capture.next_index.image++;
 
 	case CaptureType::SerialLog: return capture.next_index.serial_log++;
+
+	case CaptureType::PrinterPng: return capture.next_index.printer_png++;
+
+	case CaptureType::PrinterPostScript:
+		return capture.next_index.printer_postscript++;
+
+	case CaptureType::PrinterRaw: return capture.next_index.printer_raw++;
 
 	default: assertm(false, "Unknown CaptureType"); return 0;
 	}
