@@ -63,7 +63,7 @@ static decoder_element decoders[] =
 
 typedef struct __SOUND_ERRMSGTYPE__
 {
-    Uint64 tid;
+    SDL_ThreadID tid;
     int error_available;
     char error_string[128];
     struct __SOUND_ERRMSGTYPE__ *next;
@@ -187,7 +187,7 @@ const Sound_DecoderInfo **Sound_AvailableDecoders(void)
 static ErrMsg *findErrorForCurrentThread(void)
 {
     ErrMsg *i;
-    Uint64 tid;
+    SDL_ThreadID tid;
 
     if (error_msgs != NULL)
     {

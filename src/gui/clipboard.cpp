@@ -58,7 +58,7 @@ static void maybe_fetch_text_from_host()
 	bool has_host_content_changed = false;
 	std::string new_host_text = {};
 
-	if (false == SDL_HasClipboardText()) {
+	if (!SDL_HasClipboardText()) {
 		// Host has no text in the clipboard
 		if (!clipboard.host_text_utf8.empty()) {
 			has_host_content_changed = true;
