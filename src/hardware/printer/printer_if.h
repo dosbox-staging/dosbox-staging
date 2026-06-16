@@ -23,6 +23,7 @@ enum class PrinterModelKind {
 	EpsonDotMatrix9Pin,
 	EpsonDotMatrix24Pin,
 	PostScript,
+	Passthrough,
 };
 
 uint64_t PRINTER_ReadData(uint64_t port, uint64_t iolen);

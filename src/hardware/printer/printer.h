@@ -140,6 +140,7 @@ enum class PrinterModel {
 	None,
 	EpsonDotMatrix,
 	PostScript,
+	RawPassthrough,
 };
 
 // Page bitmap pixel encoding. Each byte packs a 5-bit intensity in
