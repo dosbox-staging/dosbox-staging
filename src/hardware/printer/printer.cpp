@@ -161,9 +161,14 @@ void Printer::ResetPrinter()
 
 	NewPage(false, true);
 
-	// Default tabs => Each eight characters
+	// Default tabs -- one every 8 characters, measured from the left
+	// margin (not from the page origin). Matches escapy's default tab
+	// table and the Epson ESC/P spec (ESC D description: "absolute
+	// position from the left margin").
 	for (uint64_t i = 0; i < 32; i++) {
-		horiz_tabs[i] = static_cast<Real64>(i * 8) / static_cast<Real64>(cpi);
+		horiz_tabs[i] = left_margin +
+		                static_cast<Real64>((i + 1) * 8) /
+		                        static_cast<Real64>(cpi);
 	}
 	num_horiz_tabs = 32;
 
