@@ -138,6 +138,22 @@ constexpr auto TurnDoubleHeightPrintingOnOff        = 0x856;
 constexpr auto Print24BitHexDensityGraphics         = 0x85a;
 } // namespace Fs
 
+// ESC/P vertical motion divisors. Vertical positions and line spacings
+// arrive as integer parameter bytes that we divide by these constants
+// to get inches. 9-pin printers use a finer base unit than 24/48-pin
+// ones for the same commands (escp2ref.pdf C-37, R-62).
+constexpr double FineVerticalDivisor24Pin = 180.0;
+constexpr double FineVerticalDivisor9Pin  = 216.0;
+
+// ESCP2 'defined unit' divisor used by ESC ( U, ESC ( C, and the
+// ESC + / ESC ( V family when a custom unit hasn't been selected.
+constexpr double DefinedUnitDivisor = 360.0;
+
+// ESC \ (relative horizontal motion) divisors. 1/120-inch units in
+// draft mode, 1/180-inch units in LQ mode (escp2ref.pdf C-207).
+constexpr double RelativeHorizontalDivisorDraft = 120.0;
+constexpr double RelativeHorizontalDivisorLq    = 180.0;
+
 // Per-opcode debounce interval for unsupported-command warnings.
 // Many DOS apps emit the same unsupported opcode repeatedly; muting
 // outright (once-per-session) hides bursts that come back later,
@@ -631,8 +647,9 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Set line spacing (ESC 3) -- n/180 for 24/48-pin, n/216 for
 		// 9-pin (escp2ref.pdf C-37).
 		case Esc::SetN180InchLineSpacing: // 0x33
-			line_spacing = static_cast<Real64>(params[0]) /
-			               (pins == 9 ? 216.0 : 180.0);
+			line_spacing = static_cast<double>(params[0]) /
+			               (pins == 9 ? FineVerticalDivisor9Pin
+			                          : FineVerticalDivisor24Pin);
 			break;
 
 		// Select italic font (ESC 4)
@@ -745,9 +762,9 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Advance print position vertically (ESC J n) -- n/180 for
 		// 24/48-pin, n/216 for 9-pin (escp2ref.pdf R-62).
 		case Esc::AdvancePrintPositionVertically: // 0x4a
-			cur_y += static_cast<Real64>(params[0]) /
-			         (pins == 9 ? 216.0 : 180.0);
-
+			cur_y += static_cast<double>(params[0]) /
+			         (pins == 9 ? FineVerticalDivisor9Pin
+			                    : FineVerticalDivisor24Pin);
 			if (cur_y > bottom_margin) {
 				NewPage(true, false);
 			}
@@ -905,10 +922,9 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			const int16_t toMove = static_cast<int16_t>(Param16(0));
 			Real64 unitSize      = defined_unit;
 			if (unitSize < 0) {
-				unitSize = static_cast<Real64>(
-				        print_quality == PrintQuality::Draft
-				                ? 120.0
-				                : 180.0);
+				unitSize = (print_quality == PrintQuality::Draft)
+				                 ? RelativeHorizontalDivisorDraft
+				                 : RelativeHorizontalDivisorLq;
 			}
 			cur_x += static_cast<Real64>(
 			        static_cast<Real64>(toMove) / unitSize);
@@ -921,8 +937,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Set horizontal motion index (HMI) (ESC c)
 		case Esc::SetHorizontalMotionIndex: // 0x63
-			hmi = static_cast<Real64>(Param16(0)) /
-			      static_cast<Real64>(360.0);
+			hmi = static_cast<double>(Param16(0)) / DefinedUnitDivisor;
 			extra_intra_space = 0.0;
 			break;
 
@@ -942,20 +957,15 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		// Reverse paper feed (ESC j). The parameter is a single byte
-		// (range 0-255) per the ESC/P 2 reference (C-213). The handler
-		// originally read Param16 (two bytes), which made the reverse
-		// amount depend on whatever was left in params[1] from the
-		// previous command.
 		case Esc::ReversePaperFeed: { // 0x6a
-			Real64 reverse = static_cast<Real64>(params[0]) /
-			                 static_cast<Real64>(216.0);
-			reverse = cur_y - reverse;
-			if (reverse < left_margin) {
-				cur_y = left_margin;
-			} else {
-				cur_y = reverse;
-			}
+		// Reverse paper feed (ESC j) -- 9-pin only per escp2ref.pdf
+		// C-213, single-byte parameter, n/216 inch reverse. Featured
+		// only on EX-800, EX-1000, FX-80/85/100/185/286, JX-80.
+		// Old FX-* DOS app drivers may still emit it.
+			const double reverse = static_cast<double>(params[0]) /
+			                       FineVerticalDivisor9Pin;
+			const double new_y = cur_y - reverse;
+			cur_y = (new_y < left_margin) ? left_margin : new_y;
 			break;
 		}
 		// Select typeface (ESC k)
@@ -1463,6 +1473,10 @@ void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 		bit_graph.bytes_column = 3;
 		break;
 
+	// Densities 71/72/73 are 48-pin modes (6 bytes per column).
+	// Only printer in the ESC/P 2 reference (Dec 1997) that uses
+	// these is the TLQ-4800 (F-75) - the world's first 48-pin
+	// impact printer. Niche, but in scope: real driver exists.
 	case 71:
 		bit_graph.horiz_dens   = 180;
 		bit_graph.vert_dens    = 360;
@@ -1487,9 +1501,8 @@ void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 	default: LOG_ERR("PRINTER: Unsupported bit image density %i", density);
 	}
 
-	// 9-pin printers use 1/72-inch vertical pitch for the low-density
-	// modes (dot density < 32); higher densities are 24/48-pin only and
-	// aren't reachable from a 9-pin driver anyway.
+	// modes (escp2ref.pdf C-177). The higher densities (>= 32) are
+	// 24/48-pin only and aren't reachable from a 9-pin driver anyway.
 	if (pins == 9 && density < 32) {
 		bit_graph.vert_dens = 72;
 	}
