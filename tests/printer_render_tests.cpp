@@ -2968,7 +2968,7 @@ TEST_F(PrinterRawPassthroughTest, PreservesEveryByteIncludingFormFeed)
 	}
 	sink.Close();
 
-	const auto out_path = output_dir / "doc0001.prn";
+	const auto out_path = output_dir / "print0001.prn";
 	ASSERT_TRUE(std_fs::exists(out_path));
 
 	const auto written = read_file_bytes(out_path);
@@ -2994,8 +2994,8 @@ TEST_F(PrinterRawPassthroughTest, CloseStartsNewFile)
 	}
 	sink.Close();
 
-	const auto path1 = output_dir / "doc0001.prn";
-	const auto path2 = output_dir / "doc0002.prn";
+	const auto path1 = output_dir / "print0001.prn";
+	const auto path2 = output_dir / "print0002.prn";
 	ASSERT_TRUE(std_fs::exists(path1));
 	ASSERT_TRUE(std_fs::exists(path2));
 
