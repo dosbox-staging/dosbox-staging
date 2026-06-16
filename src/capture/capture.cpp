@@ -22,6 +22,7 @@
 #include "misc/support.h"
 #include "utils/checks.h"
 #include "utils/fs_utils.h"
+#include "utils/indexed_filenames.h"
 #include "utils/string_utils.h"
 
 // must be included after dosbox_config.h
@@ -180,41 +181,32 @@ static bool create_capture_directory()
 
 static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
 {
-	// Find existing capture file with the highest index
-	std::string filename_start = capture_type_to_basename(type);
-	lowcase(filename_start);
-
-	int32_t highest_index = 0;
-	std::error_code ec    = {};
-
-	for (const auto& entry : std_fs::directory_iterator(capture.path, ec)) {
-		if (ec) {
-			LOG_WARNING("CAPTURE: Cannot open directory '%s': %s",
-			            capture.path.string().c_str(),
-			            ec.message().c_str());
-			return {};
-		}
-		if (!entry.is_regular_file(ec)) {
-			continue;
-		}
-		auto stem = entry.path().stem().string();
-		lowcase(stem);
-
-		if (stem.starts_with(filename_start)) {
-			auto index_str = strip_prefix(stem, filename_start);
-
-			// Strip "-raw" or "-rendered" postfix if it's there
-			if (const auto dash_pos = index_str.find('-');
-			    dash_pos != std::string::npos) {
-				index_str = index_str.substr(0, dash_pos);
-			}
-			const auto index = parse_int(index_str);
-			if (index) {
-				highest_index = std::max(highest_index, *index);
-			}
-		}
+	std::error_code ec = {};
+	if (!std_fs::is_directory(capture.path, ec)) {
+		LOG_WARNING("CAPTURE: Cannot open directory '%s': %s",
+		            capture.path.string().c_str(),
+		            ec.message().c_str());
+		return {};
 	}
-	return highest_index;
+
+	const std::string_view basename  = capture_type_to_basename(type);
+	const std::string_view extension = capture_type_to_extension(type);
+
+	// The three image variants of one capture event share a counter,
+	// so scan all three postfixes and return the max. See
+	// capture_type_to_postfix for the postfix-per-type table.
+	if (type == CaptureType::RawImage || type == CaptureType::UpscaledImage ||
+	    type == CaptureType::RenderedImage) {
+		const std::string ext(extension);
+		return std::max(
+		        {find_highest_file_index(capture.path, basename, "-raw" + ext),
+		         find_highest_file_index(capture.path, basename, ext),
+		         find_highest_file_index(capture.path,
+		                                 basename,
+		                                 "-rendered" + ext)});
+	}
+
+	return find_highest_file_index(capture.path, basename, extension);
 }
 
 static void set_next_capture_index(const CaptureType type, int32_t index)
@@ -313,12 +305,12 @@ int32_t get_next_capture_index(const CaptureType type)
 
 std_fs::path generate_capture_filename(const CaptureType type, const int32_t index)
 {
-	const auto filename = format_str("%s%04d%s%s",
-	                                    capture_type_to_basename(type),
-	                                    index,
-	                                    capture_type_to_postfix(type),
-	                                    capture_type_to_extension(type));
-	return {capture.path / filename};
+	const auto suffix = std::string(capture_type_to_postfix(type)) +
+	                    capture_type_to_extension(type);
+	const auto filename = format_indexed_filename(capture_type_to_basename(type),
+	                                              index,
+	                                              suffix);
+	return capture.path / filename;
 }
 
 FILE* CAPTURE_CreateFile(const CaptureType type,
