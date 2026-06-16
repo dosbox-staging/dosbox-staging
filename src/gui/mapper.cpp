@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <list>
+#include <memory>
 #include <queue>
 #include <vector>
 
@@ -645,7 +646,9 @@ public:
 		JOYSTICK_Enable(emustick,true);
 
 		int num_joysticks;
-		SDL_JoystickID* joysticks = SDL_GetJoysticks(&num_joysticks);
+		const auto joysticks =
+		        std::unique_ptr<SDL_JoystickID[], decltype(&SDL_free)>(
+		                SDL_GetJoysticks(&num_joysticks), SDL_free);
 
 		sdl_joystick = SDL_OpenJoystick(joysticks[0]);
 		stick_id     = SDL_GetJoystickID(sdl_joystick);
@@ -2829,7 +2832,8 @@ static void QueryJoysticks()
 
 	// Record how many joysticks are present and set our desired minimum axis
 	int num_joysticks = 0;
-	const auto joysticks = SDL_GetJoysticks(&num_joysticks);
+	const auto joysticks = std::unique_ptr<SDL_JoystickID[], decltype(&SDL_free)>(
+	        SDL_GetJoysticks(&num_joysticks), SDL_free);
 	if (joysticks == nullptr) {
 		LOG_WARNING("MAPPER: SDL_GetJoysticks() failed: %s", SDL_GetError());
 		LOG_WARNING("MAPPER: Skipping further joystick checks");
@@ -2871,8 +2875,6 @@ static void QueryJoysticks()
 		SDL_CloseJoystick(stick);
 	}
 
-	SDL_free(joysticks);
-	
 	// Set the type of joystick based on which are useable
 	const bool first_usable = useable[0];
 	const bool second_usable = useable[1];
