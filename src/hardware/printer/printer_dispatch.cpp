@@ -1372,8 +1372,8 @@ void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 		break;
 
 	case 3:
-		bit_graph.horiz_dens   = 60;
-		bit_graph.vert_dens    = 240;
+		bit_graph.horiz_dens   = 240;
+		bit_graph.vert_dens    = 60;
 		bit_graph.adjacent     = false;
 		bit_graph.bytes_column = 1;
 		break;
