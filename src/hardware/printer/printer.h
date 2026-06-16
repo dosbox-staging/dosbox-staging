@@ -109,8 +109,21 @@ enum class PrinterModel {
 	PostScript,
 };
 
-// Palette is split into 8 sub-palettes of 32 colours each, indexed by a
-// 3-bit colour ID in the top 3 bits. Black is sub-palette 7.
+// Page bitmap pixel encoding. Each byte packs a 5-bit intensity in
+// the bottom bits (0 = white background, 31 = full saturation) and a
+// 3-bit colour ID in the top bits. Writes go through the named
+// bit_view members, reads through either the members or the 'data'
+// field for masking. Modelled on PrinterStyle above.
+union PagePixel {
+	uint8_t data = 0;
+	bit_view<0, 5> intensity;
+	bit_view<5, 3> color_id;
+};
+
+constexpr int MaxIntensity = 31;
+
+// Palette is split into 8 sub-palettes of 32 colours each, indexed by
+// the 3-bit colour ID. Black is sub-palette 7.
 constexpr uint8_t ColorBlack = 7 << 5;
 
 enum class Typeface {
