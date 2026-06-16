@@ -19,6 +19,8 @@
 #include "misc/std_filesystem.h"
 #include "printer_internal.h"
 #include "printer_png.h"
+#include "raw_passthrough.h"
+#include "utils/indexed_filenames.h"
 #include "utils/string_utils.h"
 
 // PIC_AddEvent / PIC_RemoveEvents drive the form-feed timeout.
@@ -33,6 +35,7 @@ using VirtualPrinter::PrinterModel;
 static void printer_event_handler([[maybe_unused]] uint32_t param);
 
 static std::unique_ptr<Printer> default_printer = nullptr;
+static std::unique_ptr<VirtualPrinter::RawPassthrough> raw_sink = nullptr;
 
 static PrinterModel conf_model    = PrinterModel::None;
 static uint16_t conf_dpi          = 360;
@@ -568,6 +571,24 @@ std::optional<std_fs::path> find_next_name(const std::string& prefix,
 	return std::nullopt;
 }
 
+std::optional<std_fs::path> find_next_indexed_path(const std::string_view basename,
+                                                   const std::string_view suffix)
+{
+	const std_fs::path docdir = document_path.empty() ? std_fs::path{"."}
+	                                                  : document_path;
+
+	std::error_code ec = {};
+	if (!std_fs::is_directory(docdir, ec)) {
+		LOG_WARNING("PRINTER: docpath '%s' is not a readable directory",
+		            docdir.string().c_str());
+		return std::nullopt;
+	}
+
+	const auto next_index = find_highest_file_index(docdir, basename, suffix) + 1;
+	const auto filename = format_indexed_filename(basename, next_index, suffix);
+	return docdir / filename;
+}
+
 void Printer::OutputPage()
 {
 	if (const auto out_path = find_next_name("page", ".png")) {
@@ -671,6 +692,10 @@ static void trigger_form_feed(const bool pressed)
 		if (default_printer) {
 			default_printer->FormFeed();
 		}
+		if (raw_sink) {
+			LOG_MSG("PRINTER: Closing raw passthrough job");
+			raw_sink->Close();
+		}
 	}
 }
 
@@ -690,14 +715,22 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 
 	// Data is strobed to the printer on the falling edge of the STROBE bit.
 	if (!(val & CtrlStrobe) && (lpt.control & CtrlStrobe)) {
-		if (!default_printer && conf_model == PrinterModel::EpsonDotMatrix) {
-			default_printer = std::make_unique<Printer>(conf_dpi,
-			                                            conf_page_width_in,
-			                                            conf_page_height_in,
-			                                            conf_pins);
-		}
-		if (default_printer) {
-			default_printer->PrintChar(lpt.data);
+		if (conf_model == PrinterModel::EpsonDotMatrix) {
+			if (!default_printer) {
+				default_printer = std::make_unique<Printer>(
+				        conf_dpi,
+				        conf_page_width_in,
+				        conf_page_height_in,
+				        conf_pins);
+			}
+			if (default_printer) {
+				default_printer->PrintChar(lpt.data);
+			}
+		} else if (conf_model == PrinterModel::RawPassthrough) {
+			if (!raw_sink) {
+				raw_sink = std::make_unique<VirtualPrinter::RawPassthrough>();
+			}
+			raw_sink->Write(lpt.data);
 		}
 		if (printer_timeout) {
 			PIC_RemoveEvents(printer_event_handler);
@@ -768,6 +801,10 @@ void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
 	case PrinterModelKind::PostScript:
 		conf_model = PrinterModel::PostScript;
 		break;
+
+	case PrinterModelKind::Passthrough:
+		conf_model = PrinterModel::RawPassthrough;
+		break;
 	}
 
 	conf_dpi            = dpi;
@@ -807,6 +844,7 @@ void PRINTER_Reset()
 	PIC_RemoveEvents(printer_event_handler);
 
 	default_printer.reset();
+	raw_sink.reset();
 
 	// The IO handlers in printer_glue stay installed across Reset/Init
 	// cycles; clear the LPT register state so a stale strobe sequence

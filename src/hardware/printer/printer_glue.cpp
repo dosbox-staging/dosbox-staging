@@ -169,6 +169,9 @@ PrinterModelKind parse_printer_model(const std::string& s)
 	if (s == "postscript") {
 		return PrinterModelKind::PostScript;
 	}
+	if (s == "passthrough") {
+		return PrinterModelKind::Passthrough;
+	}
 	return PrinterModelKind::None;
 }
 
@@ -296,8 +299,17 @@ void PRINTER_AddConfigSection(const ConfigPtr& conf)
 	        "                this when your programs targets a PostScript printer (e.g.,\n"
 	        "                Apple LaserWriter, or generic PostScript). Writes a single\n"
 	        "                PostScript file with .ps extension to the capture directory (see\n"
-	        "                'capture').");
-	pstring->SetValues({"none", "epson-24pin", "epson-9pin", "postscript"});
+	        "                'capture').\n"
+	        "\n"
+	        "  passthrough:  Raw byte-stream capture. The data sent to the printer is written\n"
+	        "                to a .prn file with no changes. Use this for printer languages\n"
+	        "                other than PostScript or ESC/P (HP PCL, HP-GL, Canon BJL, etc.),\n"
+	        "                or when you want a raw capture for offline processing. One file\n"
+	        "                is created per print session; the session ends after\n"
+	        "                'printer_timeout' ms of inactivity or on a manual eject\n"
+	        "                (Ctrl+F2).");
+	pstring->SetValues(
+	        {"none", "epson-9pin", "epson-24pin", "postscript", "passthrough"});
 
 	pstring = s.AddString("printer_port", WhenIdle, "lpt1");
 	pstring->SetHelp(
@@ -345,9 +357,9 @@ void PRINTER_AddConfigSection(const ConfigPtr& conf)
 	pstring = s.AddString("printer_output_dir", WhenIdle, ".");
 	pstring->SetHelp(
 	        "Directory where output files are written (PNGs in dot-matrix\n"
-	        "mode, .ps files in PostScript mode). Default is the current\n"
-	        "working directory. The directory is auto-created if it\n"
-	        "doesn't exist.");
+	        "mode, .ps files in PostScript mode, .prn files in passthrough\n"
+	        "mode). Default is the current working directory. The directory\n"
+	        "is auto-created if it doesn't exist.");
 
 	pint = s.AddInt("printer_timeout", WhenIdle, 10000);
 	pint->SetHelp(
@@ -446,12 +458,17 @@ void PRINTER_Init()
 	case PrinterModelKind::EpsonDotMatrix9Pin:
 		model_name = "Epson dot-matrix (9-pin)";
 		break;
+
 	case PrinterModelKind::EpsonDotMatrix24Pin:
 		model_name = "Epson dot-matrix (24-pin)";
 		break;
 
 	case PrinterModelKind::PostScript:
 		model_name = "PostScript passthrough";
+		break;
+
+	case PrinterModelKind::Passthrough:
+		model_name = "Raw passthrough";
 		break;
 
 	case PrinterModelKind::None: break;
