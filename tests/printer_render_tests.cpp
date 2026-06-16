@@ -16,8 +16,12 @@
 // reference and commit it. The next test run will pass as now the reference
 // image exists.
 
+#include "capture/capture.h"
+#include "config/setup.h"
+#include "hardware/printer/postscript_passthrough.h"
 #include "hardware/printer/printer.h"
 #include "hardware/printer/printer_if.h"
+#include "hardware/printer/raw_passthrough.h"
 
 #include <array>
 #include <cstdint>
@@ -94,23 +98,29 @@ protected:
 		std_fs::remove_all(output_dir, ec);
 		std_fs::create_directories(output_dir, ec);
 
+		auto* capture_section = get_section("capture");
+		ASSERT_NE(capture_section, nullptr);
+		capture_section->HandleInputLine("capture_dir = " +
+		                                 output_dir.string());
+		CAPTURE_Init();
+
 		PRINTER_Configure(PrinterModelKind::EpsonDotMatrix24Pin,
 		                  TestDpi,
 		                  TestPageWidthIn,
 		                  TestPageHeightIn,
-		                  output_dir.string(),
 		                  5000 /*timeout_ms*/);
 	}
 
 	void TearDown() override
 	{
 		PRINTER_Reset();
+		CAPTURE_Destroy();
 		DOSBoxTestFixture::TearDown();
 	}
 
 	// Drive the virtual printer with the given bytes, flush, and return the
 	// path to the PNG it produced. Clears output_dir first so the file is
-	// always page1.png.
+	// always page0001.png.
 	std_fs::path render(const std::vector<uint8_t>& bytes)
 	{
 		return render_with_pins(bytes, 24);
@@ -136,6 +146,11 @@ protected:
 		std_fs::remove_all(output_dir, ec);
 		std_fs::create_directories(output_dir, ec);
 
+		// Reset capture so its index counter rescans the now-empty
+		// dir and starts at page0001.png again.
+		CAPTURE_Destroy();
+		CAPTURE_Init();
+
 		// Refresh global config in case the test uses a different page
 		// size than the default established in SetUp().
 		const auto model = (pins == 9)
@@ -145,7 +160,6 @@ protected:
 		                  dpi,
 		                  width_in,
 		                  height_in,
-		                  output_dir.string(),
 		                  5000 /*timeout_ms*/);
 
 		VirtualPrinter::Printer printer(dpi, width_in, height_in, pins);
@@ -2733,6 +2747,352 @@ TEST_F(PrinterRenderTest, Dispatch_CAN_MovesToLeftMargin)
 	                                       DispatchTestPageWidth,
 	                                       DispatchTestPageHeight);
 	expect_matches_reference(rendered, "Dispatch_CAN_MovesToLeftMargin");
+}
+
+// ---------------------------------------------------------------------------
+// PostScript passthrough.
+//
+// Our PostScript mode is a byte-for-byte passthrough — we don't
+// interpret PostScript. The DOS app sends PostScript code that
+// references the Adobe Base-14 fonts (Times, Helvetica, Courier
+// and their bold/italic variants) which every PostScript renderer
+// has built in.
+//
+// The test feeds a multi-font PostScript document through the
+// PostScriptPassthrough class and asserts the output `.ps` file
+// is byte-identical to the input (modulo the `^D` end-of-job
+// marker which we strip). No rendering involved.
+//
+// This test uses a fresh fixture because the dot-matrix
+// PrinterRenderTest's SetUp configures for EpsonDotMatrix.
+class PrinterPostScriptTest : public DOSBoxTestFixture {
+protected:
+	std_fs::path output_dir;
+
+	void SetUp() override
+	{
+		DOSBoxTestFixture::SetUp();
+
+		const auto* test_info =
+		        testing::UnitTest::GetInstance()->current_test_info();
+
+		output_dir = std_fs::temp_directory_path() /
+		             ("dosbox_printer_ps_test_" +
+		              std::string(test_info->name()));
+
+		std::error_code ec;
+		std_fs::remove_all(output_dir, ec);
+		std_fs::create_directories(output_dir, ec);
+
+		auto* capture_section = get_section("capture");
+		ASSERT_NE(capture_section, nullptr);
+		capture_section->HandleInputLine("capture_dir = " +
+		                                 output_dir.string());
+		CAPTURE_Init();
+
+		PRINTER_Configure(PrinterModelKind::PostScript,
+		                  0,
+		                  0.0,
+		                  0.0,
+		                  0 /*timeout_ms*/);
+	}
+
+	void TearDown() override
+	{
+		PRINTER_Reset();
+		CAPTURE_Destroy();
+		DOSBoxTestFixture::TearDown();
+	}
+};
+
+TEST_F(PrinterPostScriptTest, MultiFontDocument)
+{
+	// Multi-font / multi-style PostScript document referencing
+	// the Adobe Base-14 fonts. Trailing 0x04 is the
+	// end-of-job marker our passthrough strips before closing.
+	const std::string ps_document = R"(%!PS-Adobe-3.0
+%%Title: dosbox-staging printer test
+%%Pages: 1
+%%EndComments
+
+%%Page: 1 1
+/show-line {
+  moveto show
+} def
+
+/Times-Roman findfont 18 scalefont setfont
+72 720 (Times-Roman regular) show-line
+
+/Times-Bold findfont 18 scalefont setfont
+72 690 (Times-Bold) show-line
+
+/Times-Italic findfont 18 scalefont setfont
+72 660 (Times-Italic) show-line
+
+/Times-BoldItalic findfont 18 scalefont setfont
+72 630 (Times-BoldItalic) show-line
+
+/Helvetica findfont 18 scalefont setfont
+72 580 (Helvetica regular) show-line
+
+/Helvetica-Bold findfont 18 scalefont setfont
+72 550 (Helvetica-Bold) show-line
+
+/Helvetica-Oblique findfont 18 scalefont setfont
+72 520 (Helvetica-Oblique) show-line
+
+/Helvetica-BoldOblique findfont 18 scalefont setfont
+72 490 (Helvetica-BoldOblique) show-line
+
+/Courier findfont 18 scalefont setfont
+72 440 (Courier regular) show-line
+
+/Courier-Bold findfont 18 scalefont setfont
+72 410 (Courier-Bold) show-line
+
+/Courier-Oblique findfont 18 scalefont setfont
+72 380 (Courier-Oblique) show-line
+
+/Courier-BoldOblique findfont 18 scalefont setfont
+72 350 (Courier-BoldOblique) show-line
+
+/Times-Roman findfont 10 scalefont setfont
+72 300 (10pt) show-line
+/Times-Roman findfont 14 scalefont setfont
+72 270 (14pt) show-line
+/Times-Roman findfont 24 scalefont setfont
+72 230 (24pt) show-line
+
+showpage
+%%EOF
+)";
+	const auto eot                = static_cast<char>(0x04);
+
+	// Feed the document through the passthrough sink.
+	VirtualPrinter::PostScriptPassthrough sink;
+	for (const char c : ps_document) {
+		sink.Write(static_cast<uint8_t>(c));
+	}
+	sink.Write(static_cast<uint8_t>(eot));
+
+	// The sink closes itself on ^D; output file is doc0001.ps in
+	// the output_dir.
+	const auto out_path = output_dir / "doc0001.ps";
+	ASSERT_TRUE(std_fs::exists(out_path));
+
+	std::ifstream in(out_path, std::ios::binary);
+	const std::string written((std::istreambuf_iterator<char>(in)),
+	                          std::istreambuf_iterator<char>());
+
+	// Output should be the input verbatim, MINUS the ^D marker.
+	EXPECT_EQ(written, ps_document);
+}
+
+// ---------------------------------------------------------------------------
+// Raw passthrough.
+//
+// The passthrough printer model captures the LPT byte stream verbatim
+// — no filtering on form-feed (0x0C) or any other control byte, because
+// PCL / ESC/P / HP-GL bit-image commands embed raw payloads that may
+// contain those bytes as data. Close() closes the current file; the
+// next Write() lazy-opens a new one.
+
+class PrinterRawPassthroughTest : public DOSBoxTestFixture {
+protected:
+	std_fs::path output_dir;
+
+	void SetUp() override
+	{
+		DOSBoxTestFixture::SetUp();
+
+		const auto* test_info =
+		        testing::UnitTest::GetInstance()->current_test_info();
+
+		output_dir = std_fs::temp_directory_path() /
+		             ("dosbox_printer_raw_test_" +
+		              std::string(test_info->name()));
+
+		std::error_code ec;
+		std_fs::remove_all(output_dir, ec);
+		std_fs::create_directories(output_dir, ec);
+
+		auto* capture_section = get_section("capture");
+		ASSERT_NE(capture_section, nullptr);
+		capture_section->HandleInputLine("capture_dir = " +
+		                                 output_dir.string());
+		CAPTURE_Init();
+
+		PRINTER_Configure(PrinterModelKind::Passthrough,
+		                  0,
+		                  0.0,
+		                  0.0,
+		                  0 /*timeout_ms*/);
+	}
+
+	void TearDown() override
+	{
+		PRINTER_Reset();
+		CAPTURE_Destroy();
+		DOSBoxTestFixture::TearDown();
+	}
+
+	static std::string read_file_bytes(const std_fs::path& path)
+	{
+		std::ifstream in(path, std::ios::binary);
+		return {std::istreambuf_iterator<char>(in),
+		        std::istreambuf_iterator<char>()};
+	}
+};
+
+TEST_F(PrinterRawPassthroughTest, PreservesEveryByteIncludingFormFeed)
+{
+	const std::vector<uint8_t> bytes = {0x1B,
+	                                    0x2A,
+	                                    0x62,
+	                                    0x38,
+	                                    0x57,
+	                                    0xFF,
+	                                    0x00,
+	                                    0x0C,
+	                                    0x80,
+	                                    0x0C,
+	                                    0xFE,
+	                                    0x0C,
+	                                    0x01,
+	                                    0x0D,
+	                                    0x0A};
+
+	VirtualPrinter::RawPassthrough sink;
+	for (const auto byte : bytes) {
+		sink.Write(byte);
+	}
+	sink.Close();
+
+	const auto out_path = output_dir / "doc0001.prn";
+	ASSERT_TRUE(std_fs::exists(out_path));
+
+	const auto written = read_file_bytes(out_path);
+	ASSERT_EQ(written.size(), bytes.size());
+	for (size_t i = 0; i < bytes.size(); ++i) {
+		EXPECT_EQ(static_cast<uint8_t>(written[i]), bytes[i])
+		        << "byte mismatch at index " << i;
+	}
+}
+
+TEST_F(PrinterRawPassthroughTest, CloseStartsNewFile)
+{
+	const std::string job1 = "first job";
+	const std::string job2 = "second job";
+
+	VirtualPrinter::RawPassthrough sink;
+	for (const char c : job1) {
+		sink.Write(static_cast<uint8_t>(c));
+	}
+	sink.Close();
+	for (const char c : job2) {
+		sink.Write(static_cast<uint8_t>(c));
+	}
+	sink.Close();
+
+	const auto path1 = output_dir / "doc0001.prn";
+	const auto path2 = output_dir / "doc0002.prn";
+	ASSERT_TRUE(std_fs::exists(path1));
+	ASSERT_TRUE(std_fs::exists(path2));
+
+	EXPECT_EQ(read_file_bytes(path1), job1);
+	EXPECT_EQ(read_file_bytes(path2), job2);
+}
+
+// ---------------------------------------------------------------------------
+// PostScript regulation.
+//
+// PostScript is self-describing: showpage delimits pages, ^D delimits
+// jobs. The form-feed events that the printer subsystem fires on idle
+// timeout or Ctrl+F2 must NOT close the in-flight .ps file — only the
+// driver's own ^D byte does. This test drives bytes through the public
+// LPT IO entry points (PRINTER_WriteData / PRINTER_WriteControl) so the
+// regulation logic in printer.cpp::trigger_form_feed is exercised.
+
+class PrinterPostScriptRegulationTest : public DOSBoxTestFixture {
+protected:
+	std_fs::path output_dir;
+
+	void SetUp() override
+	{
+		DOSBoxTestFixture::SetUp();
+
+		const auto* test_info =
+		        testing::UnitTest::GetInstance()->current_test_info();
+
+		output_dir = std_fs::temp_directory_path() /
+		             ("dosbox_printer_ps_reg_test_" +
+		              std::string(test_info->name()));
+
+		std::error_code ec;
+		std_fs::remove_all(output_dir, ec);
+		std_fs::create_directories(output_dir, ec);
+
+		auto* capture_section = get_section("capture");
+		ASSERT_NE(capture_section, nullptr);
+		capture_section->HandleInputLine("capture_dir = " +
+		                                 output_dir.string());
+		CAPTURE_Init();
+
+		PRINTER_Configure(PrinterModelKind::PostScript,
+		                  0,
+		                  0.0,
+		                  0.0,
+		                  0 /*timeout_ms*/);
+	}
+
+	void TearDown() override
+	{
+		PRINTER_Reset();
+		CAPTURE_Destroy();
+		DOSBoxTestFixture::TearDown();
+	}
+
+	// Strobe one byte through the LPT control register, mirroring how
+	// a DOS app would write to the parallel port: write the data
+	// register, raise STROBE, lower STROBE.
+	static void strobe_byte(uint8_t data)
+	{
+		constexpr uint8_t Strobe     = 0x01;
+		constexpr uint8_t Initialise = 0x04;
+
+		PRINTER_WriteData(0, data, 1);
+		PRINTER_WriteControl(0, Initialise | Strobe, 1);
+		PRINTER_WriteControl(0, Initialise, 1);
+	}
+
+	static std::string read_file_bytes(const std_fs::path& path)
+	{
+		std::ifstream in(path, std::ios::binary);
+		return {std::istreambuf_iterator<char>(in),
+		        std::istreambuf_iterator<char>()};
+	}
+};
+
+TEST_F(PrinterPostScriptRegulationTest, FormFeedDoesNotCloseFile)
+{
+	for (const char c : std::string("%!PS")) {
+		strobe_byte(static_cast<uint8_t>(c));
+	}
+
+	PRINTER_FormFeed(true);
+
+	for (const char c : std::string(" more")) {
+		strobe_byte(static_cast<uint8_t>(c));
+	}
+
+	strobe_byte(0x04);
+
+	const auto out_path = output_dir / "doc0001.ps";
+	ASSERT_TRUE(std_fs::exists(out_path));
+
+	EXPECT_FALSE(std_fs::exists(output_dir / "doc0002.ps"));
+
+	EXPECT_EQ(read_file_bytes(out_path), "%!PS more");
 }
 
 } // namespace
