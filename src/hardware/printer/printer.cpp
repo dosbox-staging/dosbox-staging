@@ -696,8 +696,9 @@ uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
 	}
 
 	// Printer is always online and never reports an error.
-	uint8_t status = StatusReservedLow;
-	if (!default_printer->IsBusy()) {
+	uint8_t status  = StatusReservedLow;
+	const bool busy = default_printer->IsBusy();
+	if (!busy) {
 		status |= StatusBusyHigh;
 	}
 	if (!default_printer->Ack()) {
