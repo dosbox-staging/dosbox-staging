@@ -30,7 +30,7 @@ CHECK_NARROWING();
 using VirtualPrinter::Printer;
 using VirtualPrinter::PrinterModel;
 
-static void PRINTER_EventHandler([[maybe_unused]] uint32_t param);
+static void printer_event_handler([[maybe_unused]] uint32_t param);
 
 static std::unique_ptr<Printer> default_printer = nullptr;
 
@@ -273,7 +273,7 @@ void Printer::SelectCodepage(const uint16_t codepage)
 
 void Printer::NewPage(const bool save, const bool reset_x)
 {
-	PIC_RemoveEvents(PRINTER_EventHandler);
+	PIC_RemoveEvents(printer_event_handler);
 	if (printer_timeout) {
 		timeout_dirty = false;
 	}
@@ -637,7 +637,7 @@ static void trigger_form_feed(const bool pressed)
 {
 	if (pressed) {
 		if (default_printer) {
-			PIC_RemoveEvents(PRINTER_EventHandler);
+			PIC_RemoveEvents(printer_event_handler);
 			if (printer_timeout) {
 				timeout_dirty = false;
 			}
@@ -647,11 +647,11 @@ static void trigger_form_feed(const bool pressed)
 	}
 }
 
-static void PRINTER_EventHandler([[maybe_unused]] const uint32_t param)
+static void printer_event_handler([[maybe_unused]] const uint32_t param)
 {
 	// LOG_MSG("printerevent");
 	if (timeout_dirty) { // add another
-		PIC_AddEvent(PRINTER_EventHandler,
+		PIC_AddEvent(printer_event_handler,
 		             static_cast<float>(printer_timeout),
 		             0);
 		// LOG_MSG("timeout renew");
@@ -683,7 +683,7 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 			default_printer->PrintChar(lpt.data);
 		}
 		if (!timeout_dirty) {
-			PIC_AddEvent(PRINTER_EventHandler,
+			PIC_AddEvent(printer_event_handler,
 			             static_cast<float>(printer_timeout),
 			             0);
 			timeout_dirty = true;
@@ -782,9 +782,9 @@ void PRINTER_FormFeed(const bool pressed)
 
 void PRINTER_Reset()
 {
-	// Cancel pending timeout events first so PRINTER_EventHandler can't
+	// Cancel pending timeout events first so printer_event_handler can't
 	// fire on a half-destroyed printer.
-	PIC_RemoveEvents(PRINTER_EventHandler);
+	PIC_RemoveEvents(printer_event_handler);
 	timeout_dirty = false;
 	default_printer.reset();
 	// The IO handlers in printer_glue stay installed across Reset/Init
