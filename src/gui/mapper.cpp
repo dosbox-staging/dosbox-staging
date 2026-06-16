@@ -606,17 +606,19 @@ private:
 
 bool autofire = false;
 
-static void set_joystick_led([[maybe_unused]] SDL_Joystick *joystick,
-                             [[maybe_unused]] const Rgb888 &color)
+static void set_joystick_led(SDL_Joystick* joystick, const Rgb888& color)
 {
 	if (!joystick)
 		return;
 
 	const auto props = SDL_GetJoystickProperties(joystick);
-	const auto has_joy = SDL_GetBooleanProperty(props, SDL_PROP_JOYSTICK_CAP_RGB_LED_BOOLEAN, false);
+	const auto has_led = SDL_GetBooleanProperty(props,
+	                                            SDL_PROP_JOYSTICK_CAP_RGB_LED_BOOLEAN,
+	                                            false);
 
-	if (!has_joy)
+	if (!has_led) {
 		return;
+	}
 
 	// apply the color
 	SDL_SetJoystickLED(joystick, color.red, color.green, color.blue);
