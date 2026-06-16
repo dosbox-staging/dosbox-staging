@@ -1239,16 +1239,19 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	}
 		return true;
 
-	// Tab horizontally (HT)
+	// Tab horizontally (HT) -- jump to the *first* tab stop strictly
+	// to the right of the current x position. (The previous loop kept
+	// overwriting `moveTo` with later matches and ended at the last
+	// tab right of cur_x, which then usually fell past right_margin
+	// and the tab was silently ignored.)
 	case 0x09: {
-		// Find tab right to current pos
 		Real64 moveTo = -1;
 		for (uint8_t i = 0; i < num_horiz_tabs; i++) {
 			if (horiz_tabs[i] > cur_x) {
 				moveTo = horiz_tabs[i];
+				break;
 			}
 		}
-		// Nothing found => Ignore
 		if (moveTo > 0 && moveTo < right_margin) {
 			cur_x = moveTo;
 		}
