@@ -8,7 +8,6 @@
 #include "misc/types.h"
 
 #include <cstdint>
-#include <string>
 
 // Which printer the user picked. Mirrors VirtualPrinter::PrinterModel but
 // kept in plain enum form so the C-style cross-module API doesn't depend
@@ -36,9 +35,8 @@ uint64_t PRINTER_ReadControl(uint64_t port, uint64_t iolen);
 // construction time inside PRINTER_WriteControl. page_width_in /
 // page_height_in are inches (double). Dot-matrix-only settings are
 // ignored when model == PostScript.
-void PRINTER_Configure(PrinterModelKind model, uint16_t dpi,
-                       double page_width_in, double page_height_in,
-                       const std::string& output_dir, int timeout_ms);
+void PRINTER_Configure(PrinterModelKind model, uint16_t dpi, double page_width_in,
+                       double page_height_in, int timeout_ms);
 
 // Trigger a form-feed (eject the current page). Called from the mapper
 // (Ctrl+F2 by default) and from the inactivity-timeout PIC event.

@@ -357,13 +357,6 @@ void PRINTER_AddConfigSection(const ConfigPtr& conf)
 	        "Note:  Only applies to the 'epson-24pin' printer model to set the size of the\n"
 	        "       PNG output image.");
 
-	pstring = s.AddString("printer_output_dir", WhenIdle, ".");
-	pstring->SetHelp(
-	        "Directory where output files are written (PNGs in dot-matrix\n"
-	        "mode, .ps files in PostScript mode, .prn files in passthrough\n"
-	        "mode). Default is the current working directory. The directory\n"
-	        "is auto-created if it doesn't exist.");
-
 	pint = s.AddInt("printer_timeout", WhenIdle, 10000);
 	pint->SetHelp(
 	        "Inactivity timeout in milliseconds after which an unfinished\n"
@@ -426,7 +419,6 @@ void PRINTER_Init()
 	}
 	const auto dpi_u16  = static_cast<uint16_t>(dpi);
 	const auto size_str = section.GetString("printer_page_size");
-	const auto out_dir  = section.GetString("printer_output_dir");
 	const auto timeout  = section.GetInt("printer_timeout");
 
 	double page_w_in = 0.0;
@@ -441,7 +433,7 @@ void PRINTER_Init()
 		parse_page_size("a4", page_w_in, page_h_in);
 	}
 
-	PRINTER_Configure(model, dpi_u16, page_w_in, page_h_in, out_dir, timeout);
+	PRINTER_Configure(model, dpi_u16, page_w_in, page_h_in, timeout);
 
 	install_io_handlers(lpt_port);
 
@@ -480,20 +472,18 @@ void PRINTER_Init()
 	const bool is_dot_matrix = (model == PrinterModelKind::EpsonDotMatrix9Pin ||
 	                            model == PrinterModelKind::EpsonDotMatrix24Pin);
 	if (is_dot_matrix) {
-		LOG_MSG("PRINTER: Initialised %s on %s (%03xh), %dx%d page at %d dpi, output dir %s",
+		LOG_MSG("PRINTER: Initialised %s on %s (%03xh), %dx%d page at %d dpi",
 		        model_name,
 		        port_name.c_str(),
 		        lpt_port,
 		        static_cast<int>(page_w_in * 100 + 0.5),
 		        static_cast<int>(page_h_in * 100 + 0.5),
-		        dpi,
-		        out_dir.c_str());
+		        dpi);
 	} else {
-		LOG_MSG("PRINTER: Initialised %s on %s (%03xh), output dir %s",
+		LOG_MSG("PRINTER: Initialised %s on %s (%03xh)",
 		        model_name,
 		        port_name.c_str(),
-		        lpt_port,
-		        out_dir.c_str());
+		        lpt_port);
 	}
 }
 

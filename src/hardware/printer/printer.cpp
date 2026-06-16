@@ -4,6 +4,7 @@
 
 #include "printer.h"
 
+#include "capture/capture.h"
 #include "config/setup.h"
 #include "gui/mapper.h"
 #include "misc/cross.h"
@@ -45,7 +46,6 @@ static double conf_page_width_in  = 8.27;  // A4
 static double conf_page_height_in = 11.69; // A4
 static int conf_pins              = 24;    // 9 = FX/LX, 24 = LQ
 static uint64_t printer_timeout   = 500;
-static std_fs::path document_path;
 
 namespace VirtualPrinter {
 
@@ -544,12 +544,11 @@ void Printer::FormFeed()
 std::optional<std_fs::path> find_next_indexed_path(const std::string_view basename,
                                                    const std::string_view suffix)
 {
-	const std_fs::path docdir = document_path.empty() ? std_fs::path{"."}
-	                                                  : document_path;
+	const auto& docdir = CAPTURE_GetPath();
 
 	std::error_code ec = {};
 	if (!std_fs::is_directory(docdir, ec)) {
-		LOG_WARNING("PRINTER: docpath '%s' is not a readable directory",
+		LOG_WARNING("PRINTER: capture_dir '%s' is not a readable directory",
 		            docdir.string().c_str());
 		return std::nullopt;
 	}
@@ -774,7 +773,7 @@ uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
 
 void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
                        const double page_width_in, const double page_height_in,
-                       const std::string& output_dir, const int timeout_ms)
+                       const int timeout_ms)
 {
 	switch (model) {
 	case PrinterModelKind::None: conf_model = PrinterModel::None; break;
@@ -802,26 +801,7 @@ void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
 	conf_dpi            = dpi;
 	conf_page_width_in  = page_width_in;
 	conf_page_height_in = page_height_in;
-
-	document_path   = output_dir.empty() ? std_fs::path{"."}
-	                                     : std_fs::path{output_dir};
-	printer_timeout = static_cast<uint64_t>(timeout_ms);
-
-	// Auto-create the output directory if it doesn't exist (existing
-	// behaviour was a confusing per-file error on first page write).
-	if (!document_path.empty()) {
-		std::error_code ec;
-		if (!std_fs::exists(document_path, ec)) {
-			if (std_fs::create_directories(document_path, ec)) {
-				LOG_MSG("PRINTER: Created output directory %s",
-				        document_path.string().c_str());
-			} else if (ec) {
-				LOG_ERR("PRINTER: Failed to create output directory %s: %s",
-				        document_path.string().c_str(),
-				        ec.message().c_str());
-			}
-		}
-	}
+	printer_timeout     = static_cast<uint64_t>(timeout_ms);
 }
 
 void PRINTER_FormFeed(const bool pressed)
