@@ -145,6 +145,10 @@ constexpr auto Print24BitHexDensityGraphics         = 0x85a;
 constexpr double FineVerticalDivisor24Pin = 180.0;
 constexpr double FineVerticalDivisor9Pin  = 216.0;
 
+// Coarser line-spacing divisors for ESC A / FS A (escp2ref.pdf C-39).
+constexpr double CoarseVerticalDivisor24Pin = 60.0;
+constexpr double CoarseVerticalDivisor9Pin  = 72.0;
+
 // ESCP2 'defined unit' divisor used by ESC ( U, ESC ( C, and the
 // ESC + / ESC ( V family when a custom unit hasn't been selected.
 constexpr double DefinedUnitDivisor = 360.0;
@@ -716,10 +720,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Set line spacing (ESC A / FS A) -- n/60 for 24/48-pin,
 		// n/72 for 9-pin (escp2ref.pdf C-39).
-			line_spacing = static_cast<Real64>(params[0]) /
-			               (pins == 9 ? 72.0 : 60.0);
 		case Esc::SetN60InchLineSpacing: // 0x41
 		case Fs::SetN60InchLineSpacing:  // 0x841
+			line_spacing = static_cast<double>(params[0]) /
+			               (pins == 9 ? CoarseVerticalDivisor9Pin
+			                          : CoarseVerticalDivisor24Pin);
 			break;
 
 		// Set page length in lines (ESC C)
@@ -808,10 +813,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		// Set right margin
+		// Set right margin (ESC Q)
+		case Esc::SetRightMargin: // 0x51
 			right_margin = static_cast<Real64>(params[0] - 1.0) /
 			               static_cast<Real64>(cpi);
-		case Esc::SetRightMargin: // 0x51
 			break;
 
 		// Select an international character set (ESC R)
@@ -1064,8 +1069,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Set page length in inches (ESC C NUL)
-			page_height   = static_cast<Real64>(params[0]);
 		case Esc::SetPageLengthInInches: // 0x100
+			page_height   = static_cast<Real64>(params[0]);
 			bottom_margin = page_height;
 			top_margin    = 0.0;
 			break;
@@ -1130,9 +1135,9 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Set unit (ESC (U)
+		case Esc::ParenSetUnit: // 0x255
 			defined_unit = static_cast<Real64>(params[2]) /
 			               static_cast<Real64>(3600);
-		case Esc::ParenSetUnit: // 0x255
 			break;
 
 		// Set absolute vertical print position (ESC (V)
