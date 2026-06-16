@@ -591,7 +591,7 @@ std::optional<std_fs::path> find_next_indexed_path(const std::string_view basena
 
 void Printer::OutputPage()
 {
-	if (const auto out_path = find_next_name("page", ".png")) {
+	if (const auto out_path = find_next_indexed_path("page", ".png")) {
 		if (write_png_page(page, *out_path)) {
 			LOG_MSG("PRINTER: Wrote page to %s",
 			        out_path->string().c_str());
