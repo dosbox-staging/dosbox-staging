@@ -1998,6 +1998,9 @@ static void notify_sdl_setting_updated(SectionProp& section,
 	} else if (prop_name == "keyboard_capture") {
 		set_keyboard_capture();
 
+	} else if (prop_name == "mapperfile") {
+		MAPPER_BindKeys(&section);
+
 	} else if (prop_name == "mute_when_inactive") {
 		configure_pause_and_mute_when_inactive();
 
