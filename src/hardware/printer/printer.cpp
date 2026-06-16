@@ -36,8 +36,8 @@ static std::unique_ptr<Printer> default_printer = nullptr;
 
 static PrinterModel conf_model    = PrinterModel::None;
 static uint16_t conf_dpi          = 360;
-static Real64 conf_page_width_in  = 8.27;  // A4
-static Real64 conf_page_height_in = 11.69; // A4
+static double conf_page_width_in  = 8.27;  // A4
+static double conf_page_height_in = 11.69; // A4
 static int conf_pins              = 24;    // 9 = FX/LX, 24 = LQ
 static uint64_t printer_timeout   = 500;
 static bool timeout_dirty         = false;
@@ -47,8 +47,8 @@ namespace VirtualPrinter {
 
 // Printer::FillPalette lives in printer_glyph.cpp.
 
-Printer::Printer(uint16_t dpi, const Real64 page_width_in,
-                 const Real64 page_height_in, const int pins)
+Printer::Printer(uint16_t dpi, const double page_width_in,
+                 const double page_height_in, const int pins)
 {
 	if (FT_Init_FreeType(&ft_lib)) {
 		LOG_ERR("PRINTER: Unable to init Freetype2. Printing disabled");
@@ -119,11 +119,11 @@ void Printer::ResetPrinter()
 	esc_cmd   = 0;
 	num_param = needed_param = 0;
 
-	// Default printable-area margins of 0.25 inch on all sides match
-	// escapy's reference impl and approximate the non-printable area
-	// of real Epson dot-matrix printers (see escp2ref.pdf Feature
-	// Summary per-model "Nonprintable area" lines, e.g. F-33 for LQ-850).
-	constexpr Real64 DefaultMarginIn = 0.25;
+	// Default printable-area margins of 0.25 inch on all sides
+	// approximate the non-printable area of real Epson dot-matrix
+	// printers (see escp2ref.pdf Feature Summary per-model "Nonprintable
+	// area" lines, e.g. F-33 for LQ-850).
+	constexpr double DefaultMarginIn = 0.25;
 	top_margin                       = DefaultMarginIn;
 	left_margin                      = DefaultMarginIn;
 	page_width                       = default_page_width;
@@ -132,7 +132,7 @@ void Printer::ResetPrinter()
 	bottom_margin       = default_page_height - DefaultMarginIn;
 	cur_x               = left_margin;
 	cur_y               = top_margin;
-	line_spacing        = static_cast<Real64>(1) / 6;
+	line_spacing        = static_cast<double>(1) / 6;
 	cpi                 = 10.0;
 	cur_char_table      = 1;
 	style.data          = 0;
@@ -162,13 +162,13 @@ void Printer::ResetPrinter()
 	NewPage(false, true);
 
 	// Default tabs -- one every 8 characters, measured from the left
-	// margin (not from the page origin). Matches escapy's default tab
-	// table and the Epson ESC/P spec (ESC D description: "absolute
-	// position from the left margin").
+	// margin (not from the page origin). Matches the Epson ESC/P spec
+	// (ESC D description: "absolute position from the left-margin
+	// position").
 	for (uint64_t i = 0; i < 32; i++) {
 		horiz_tabs[i] = left_margin +
-		                static_cast<Real64>((i + 1) * 8) /
-		                        static_cast<Real64>(cpi);
+		                static_cast<double>((i + 1) * 8) /
+		                        static_cast<double>(cpi);
 	}
 	num_horiz_tabs = 32;
 
@@ -404,14 +404,14 @@ void Printer::PrintChar(uint8_t ch)
 	const uint16_t lineStart = static_cast<uint16_t>(PixX());
 
 	// advance the cursor to the right
-	Real64 x_advance;
+	double x_advance;
 	if (style.prop) {
-		x_advance = static_cast<Real64>(
-		        static_cast<Real64>(cur_font->glyph->advance.x) /
-		        static_cast<Real64>(dpi * 64));
+		x_advance = static_cast<double>(
+		        static_cast<double>(cur_font->glyph->advance.x) /
+		        static_cast<double>(dpi * 64));
 	} else {
 		if (hmi < 0) {
-			x_advance = 1 / static_cast<Real64>(act_cpi);
+			x_advance = 1 / static_cast<double>(act_cpi);
 		} else {
 			x_advance = hmi;
 		}

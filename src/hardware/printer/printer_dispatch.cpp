@@ -473,10 +473,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	if (esc_cmd == 0x42) {
 		if (ch == 0 || (num_vert_tabs > 0 &&
 		                vert_tabs[num_vert_tabs - 1] >
-		                        static_cast<Real64>(ch) * line_spacing)) { // Done
+		                        static_cast<double>(ch) * line_spacing)) { // Done
 			esc_cmd = 0;
 		} else if (num_vert_tabs < 16) {
-			vert_tabs[num_vert_tabs++] = static_cast<Real64>(ch) *
+			vert_tabs[num_vert_tabs++] = static_cast<double>(ch) *
 			                             line_spacing;
 		}
 	}
@@ -485,12 +485,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	if (esc_cmd == 0x44) {
 		if (ch == 0 || (num_horiz_tabs > 0 &&
 		                horiz_tabs[num_horiz_tabs - 1] >
-		                        static_cast<Real64>(ch) *
-		                                (1 / static_cast<Real64>(cpi)))) { // Done
+		                        static_cast<double>(ch) *
+		                                (1 / static_cast<double>(cpi)))) { // Done
 			esc_cmd = 0;
 		} else if (num_horiz_tabs < 32) {
-			horiz_tabs[num_horiz_tabs++] = static_cast<Real64>(ch) *
-			                               (1 / static_cast<Real64>(cpi));
+			horiz_tabs[num_horiz_tabs++] = static_cast<double>(ch) *
+			                               (1 / static_cast<double>(cpi));
 		}
 	}
 
@@ -539,7 +539,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Set intercharacter space (ESC SP)
 		case Esc::SetIntercharacterSpace: // 0x20
 			if (!multipoint) {
-				extra_intra_space = static_cast<Real64>(params[0]) /
+				extra_intra_space = static_cast<double>(params[0]) /
 				                    (print_quality == PrintQuality::Draft
 				                             ? 120
 				                             : 180);
@@ -595,8 +595,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 				unitSize = CoarseVerticalDivisor24Pin;
 			}
 
-			const Real64 newX = left_margin +
-			                    (static_cast<Real64>(Param16(0)) /
+			const double newX = left_margin +
+			                    (static_cast<double>(Param16(0)) /
 			                     unitSize);
 			if (newX <= right_margin) {
 				cur_x = newX;
@@ -643,12 +643,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Select 1/8-inch line spacing (ESC 0)
 		case Esc::Select18InchLineSpacing:
-			line_spacing = static_cast<Real64>(1) / 8;
+			line_spacing = static_cast<double>(1) / 8;
 			break; // 0x30
 
 		// Select 1/6-inch line spacing (ESC 2)
 		case Esc::Select16InchLineSpacing:
-			line_spacing = static_cast<Real64>(1) / 6;
+			line_spacing = static_cast<double>(1) / 6;
 			break; // 0x32
 
 		// Set line spacing (ESC 3) -- n/180 for 24/48-pin, n/216 for
@@ -799,7 +799,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Set bottom margin (ESC N)
 		case Esc::SetBottomMargin: // 0x4e
 			top_margin = 0.0;
-			bottom_margin = static_cast<Real64>(params[0]) * line_spacing;
+			bottom_margin = static_cast<double>(params[0]) * line_spacing;
 			break;
 
 		// Cancel bottom (and top) margin
@@ -818,8 +818,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Set right margin (ESC Q)
 		case Esc::SetRightMargin: // 0x51
-			right_margin = static_cast<Real64>(params[0] - 1.0) /
-			               static_cast<Real64>(cpi);
+			right_margin = static_cast<double>(params[0] - 1.0) /
+			               static_cast<double>(cpi);
 			break;
 
 		// Select an international character set (ESC R)
@@ -901,15 +901,15 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 				if (params[0] == 1) { // Proportional spacing
 					style.prop = 1;
 				} else if (params[0] >= 5) {
-					multi_cpi = static_cast<Real64>(360) /
-					            static_cast<Real64>(params[0]);
+					multi_cpi = static_cast<double>(360) /
+					            static_cast<double>(params[0]);
 				}
 			}
 			if (multi_point_size == 0) {
-				multi_point_size = static_cast<Real64>(10.5);
+				multi_point_size = static_cast<double>(10.5);
 			}
 			if (Param16(1) > 0) { // Set points
-				multi_point_size = (static_cast<Real64>(Param16(1))) /
+				multi_point_size = (static_cast<double>(Param16(1))) /
 				                   2;
 			}
 			UpdateFont();
@@ -928,14 +928,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Set relative horizontal print position (ESC \)
 		case Esc::SetRelativeHorizontalPrintPosition: { // 0x5c
 			const int16_t toMove = static_cast<int16_t>(Param16(0));
-			Real64 unitSize      = defined_unit;
+			double unitSize      = defined_unit;
 			if (unitSize < 0) {
 				unitSize = (print_quality == PrintQuality::Draft)
 				                 ? RelativeHorizontalDivisorDraft
 				                 : RelativeHorizontalDivisorLq;
 			}
-			cur_x += static_cast<Real64>(
-			        static_cast<Real64>(toMove) / unitSize);
+			cur_x += static_cast<double>(
+			        static_cast<double>(toMove) / unitSize);
 		} break;
 
 		// Select justification (ESC a)
@@ -991,8 +991,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// margin" / reset shorthand, and the (n - 1) subtraction would
 		// otherwise underflow to a negative position.
 		case Esc::SetLeftMargin: // 0x6c
-			left_margin = static_cast<Real64>(params[0] - 1.0) /
-			              static_cast<Real64>(cpi);
+			left_margin = static_cast<double>(params[0] - 1.0) /
+			              static_cast<double>(cpi);
 
 			if (left_margin < 0.0) {
 				left_margin = 0.0;
@@ -1076,7 +1076,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Set page length in inches (ESC C NUL)
 		case Esc::SetPageLengthInInches: // 0x100
-			page_height   = static_cast<Real64>(params[0]);
+			page_height   = static_cast<double>(params[0]);
 			bottom_margin = page_height;
 			top_margin    = 0.0;
 			break;
@@ -1133,7 +1133,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Set page length in defined unit (ESC (C)
 		case Esc::ParenSetPageLengthInDefinedUnit: // 0x243
 			if (params[0] != 0 && defined_unit > 0) {
-				page_height = bottom_margin = (static_cast<Real64>(
+				page_height = bottom_margin = (static_cast<double>(
 				                                      Param16(2))) *
 				                              defined_unit;
 				top_margin = 0.0;
@@ -1142,18 +1142,18 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Set unit (ESC (U)
 		case Esc::ParenSetUnit: // 0x255
-			defined_unit = static_cast<Real64>(params[2]) /
-			               static_cast<Real64>(3600);
+			defined_unit = static_cast<double>(params[2]) /
+			               static_cast<double>(3600);
 			break;
 
 		// Set absolute vertical print position (ESC (V)
 		case Esc::ParenSetAbsoluteVerticalPrintPosition: { // 0x256
-			Real64 unitSize = defined_unit;
+			double unitSize = defined_unit;
 			if (unitSize < 0) {
-				unitSize = static_cast<Real64>(360.0);
+				unitSize = static_cast<double>(360.0);
 			}
-			const Real64 newPos = top_margin +
-			                      ((static_cast<Real64>(Param16(2))) *
+			const double newPos = top_margin +
+			                      ((static_cast<double>(Param16(2))) *
 			                       unitSize);
 			if (newPos > bottom_margin) {
 				NewPage(true, false);
@@ -1170,10 +1170,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Set page format (ESC (c)
 		case Esc::ParenSetPageFormat: // 0x263
 			if (defined_unit > 0) {
-				Real64 newTop, newBottom;
-				newTop = (static_cast<Real64>(Param16(2))) *
+				double newTop, newBottom;
+				newTop = (static_cast<double>(Param16(2))) *
 				         defined_unit;
-				newBottom = (static_cast<Real64>(Param16(4))) *
+				newBottom = (static_cast<double>(Param16(4))) *
 				            defined_unit;
 				if (newTop >= newBottom) {
 					break;
@@ -1196,12 +1196,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Set relative vertical print position (ESC (v)
 		case Esc::ParenSetRelativeVerticalPrintPosition: { // 0x276
-			Real64 unitSize = defined_unit;
+			double unitSize = defined_unit;
 			if (unitSize < 0) {
 				unitSize = DefinedUnitDivisor;
 			}
-			const Real64 newPos = cur_y +
-			                      (static_cast<Real64>(static_cast<int16_t>(
+			const double newPos = cur_y +
+			                      (static_cast<double>(static_cast<int16_t>(
 			                               Param16(2))) *
 			                       unitSize);
 			if (newPos > top_margin) {
@@ -1256,7 +1256,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 	// Backspace (BS)
 	case 0x08: {
-		Real64 newX = cur_x - (1 / static_cast<Real64>(act_cpi));
+		double newX = cur_x - (1 / static_cast<double>(act_cpi));
 		if (hmi > 0) {
 			newX = cur_x - hmi;
 		}
@@ -1272,7 +1272,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	// tab right of cur_x, which then usually fell past right_margin
 	// and the tab was silently ignored.)
 	case 0x09: {
-		Real64 moveTo = -1;
+		double moveTo = -1;
 		for (uint8_t i = 0; i < num_horiz_tabs; i++) {
 			if (horiz_tabs[i] > cur_x) {
 				moveTo = horiz_tabs[i];
@@ -1299,7 +1299,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 		} else {
 			// Find tab below current pos
-			Real64 moveTo = -1;
+			double moveTo = -1;
 			for (uint8_t i = 0; i < num_vert_tabs; i++) {
 				if (vert_tabs[i] > cur_y) {
 					moveTo = vert_tabs[i];
@@ -1348,7 +1348,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		}
 		return true;
 
-	// Select Real64-width printing (one line) (SO)
+	// Select double-width printing (one line) (SO)
 	case 0x0e:
 		if (!multipoint) {
 			hmi                       = -1;

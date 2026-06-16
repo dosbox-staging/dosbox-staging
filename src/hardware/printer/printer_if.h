@@ -33,7 +33,7 @@ uint64_t PRINTER_ReadControl(uint64_t port, uint64_t iolen);
 
 // Set the printer config values that are read at lazy printer
 // construction time inside PRINTER_WriteControl. page_width_in /
-// page_height_in are inches (Real64). Dot-matrix-only settings are
+// page_height_in are inches (double). Dot-matrix-only settings are
 // ignored when model == PostScript.
 void PRINTER_Configure(PrinterModelKind model, uint16_t dpi,
                        double page_width_in, double page_height_in,
