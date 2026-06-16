@@ -354,11 +354,6 @@ std_fs::path generate_capture_filename(const CaptureType type, const int32_t ind
 	return capture.path / filename;
 }
 
-const std_fs::path& CAPTURE_GetPath()
-{
-	return capture.path;
-}
-
 FILE* CAPTURE_CreateFile(const CaptureType type,
                          const std::optional<std_fs::path>& path)
 {
