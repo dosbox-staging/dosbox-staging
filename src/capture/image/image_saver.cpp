@@ -125,30 +125,25 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 
 	// Write the pixel aspect ratio of the video mode into the PNG pHYs
 	// chunk for raw images.
-	const auto pixel_aspect_ratio = src.video_mode.pixel_aspect_ratio;
+	const auto metadata = PngMetadata::FromVideoMode(src.video_mode);
 
 	if (image.is_paletted()) {
 		if (!png_writer.InitIndexed8(outfile,
 		                             output_width,
 		                             output_height,
-		                             pixel_aspect_ratio,
-		                             src.video_mode,
-		                             image.palette)) {
+		                             image.palette,
+		                             metadata)) {
 			return;
 		}
 	} else {
-		if (!png_writer.InitRgb888(outfile,
-		                           output_width,
-		                           output_height,
-		                           pixel_aspect_ratio,
-		                           src.video_mode)) {
+		if (!png_writer.InitRgb888(outfile, output_width, output_height, metadata)) {
 			return;
 		}
 	}
 
 	constexpr auto MaxBytesPerPixel = 3;
 	row_output_buf.resize(static_cast<size_t>(output_width) *
-	               static_cast<size_t>(MaxBytesPerPixel));
+	                      static_cast<size_t>(MaxBytesPerPixel));
 
 	auto rows_to_write = output_height;
 	while (rows_to_write--) {
@@ -176,8 +171,6 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 	}
 }
 
-static constexpr auto SquarePixelAspectRatio = Fraction{1};
-
 void ImageSaver::SaveUpscaledImage(const RenderedImage& image)
 {
 	PngWriter png_writer = {};
@@ -187,14 +180,16 @@ void ImageSaver::SaveUpscaledImage(const RenderedImage& image)
 	// Always write 1:1 pixel aspect ratio into the PNG pHYs chunk for
 	// upscaled images as the "non-squaredness" is "baked into" the image
 	// data.
+	const auto metadata = PngMetadata::FromVideoModeAsSquare(
+	        image.params.video_mode);
+
 	switch (image_scaler.GetOutputPixelFormat()) {
 	case OutputPixelFormat::Indexed8:
 		if (!png_writer.InitIndexed8(outfile,
 		                             image_scaler.GetOutputWidth(),
 		                             image_scaler.GetOutputHeight(),
-		                             SquarePixelAspectRatio,
-		                             image.params.video_mode,
-		                             image.palette)) {
+		                             image.palette,
+		                             metadata)) {
 			return;
 		}
 		break;
@@ -203,8 +198,7 @@ void ImageSaver::SaveUpscaledImage(const RenderedImage& image)
 		if (!png_writer.InitRgb888(outfile,
 		                           image_scaler.GetOutputWidth(),
 		                           image_scaler.GetOutputHeight(),
-		                           SquarePixelAspectRatio,
-		                           image.params.video_mode)) {
+		                           metadata)) {
 			return;
 		}
 		break;
@@ -226,11 +220,12 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 	// Always write 1:1 pixel aspect ratio into the PNG pHYs chunk for
 	// rendered images as the "non-squaredness" is "baked into" the image
 	// data.
+	const auto metadata = PngMetadata::FromVideoModeAsSquare(src.video_mode);
+
 	if (!png_writer.InitRgb888(outfile,
 	                           check_cast<uint16_t>(src.width),
 	                           check_cast<uint16_t>(src.height),
-	                           SquarePixelAspectRatio,
-	                           src.video_mode)) {
+	                           metadata)) {
 		return;
 	}
 
@@ -243,7 +238,7 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 
 	constexpr auto BytesPerPixel = 3;
 	row_output_buf.resize(static_cast<size_t>(src.width) *
-	               static_cast<size_t>(BytesPerPixel));
+	                      static_cast<size_t>(BytesPerPixel));
 
 	auto rows_to_write = src.height;
 	while (rows_to_write--) {
@@ -273,4 +268,3 @@ void ImageSaver::CloseOutFile()
 		outfile = nullptr;
 	}
 }
-
