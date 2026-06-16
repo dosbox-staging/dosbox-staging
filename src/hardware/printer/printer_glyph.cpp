@@ -4,6 +4,7 @@
 
 #include "printer.h"
 
+#include <algorithm>
 #include <string>
 
 #include "misc/cross.h"
@@ -16,13 +17,15 @@ CHECK_NARROWING();
 namespace VirtualPrinter {
 
 void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
-                          const uint8_t blue_max, uint8_t color_id)
+                          const uint8_t blue_max, const uint8_t color_id)
 {
 	const float red   = red_max / 30.9f;
 	const float green = green_max / 30.9f;
 	const float blue  = blue_max / 30.9f;
 
-	const uint8_t color_mask = color_id <<= 5;
+	PagePixel pixel{};
+	pixel.color_id          = color_id;
+	const uint8_t color_mask = pixel.data;
 
 	for (int i = 0; i < 32; i++) {
 		auto& c = page.palette[i + color_mask];
@@ -162,19 +165,19 @@ void Printer::BlitGlyph(const FT_Bitmap bitmap, const uint16_t destx,
 			// Ignore background and don't go over the border.
 			if (source > 0 && (static_cast<int>(destx + x) < page.width) &&
 			    (static_cast<int>(desty + y) < page.height)) {
-				uint8_t* target = page.pixels.data() + (x + destx) +
-				                  (y + desty) * page.pitch;
+				auto& pixel = *reinterpret_cast<PagePixel*>(
+				        page.pixels.data() + (x + destx) +
+				        (y + desty) * page.pitch);
 				source >>= 3;
 
 				if (add) {
-					if (((*target) & 0x1f) + source > 31) {
-						*target |= (color | 0x1f);
-					} else {
-						*target += source;
-						*target |= color;
-					}
+					const int sum = pixel.intensity + source;
+					pixel.intensity = static_cast<uint8_t>(
+					        std::min(MaxIntensity, sum));
+					pixel.color_id = static_cast<uint8_t>(
+					        pixel.color_id | (color >> 5));
 				} else {
-					*target = source | color;
+					pixel.data = source | color;
 				}
 			}
 		}

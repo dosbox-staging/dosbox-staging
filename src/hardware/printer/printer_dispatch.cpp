@@ -1018,7 +1018,9 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			if (params[0] == 0 || params[0] > 6) {
 				color = ColorBlack;
 			} else {
-				color = static_cast<uint8_t>(params[0] << 5);
+				PagePixel pixel{};
+				pixel.color_id = params[0];
+				color          = pixel.data;
 			}
 			break;
 
@@ -1550,10 +1552,13 @@ void Printer::PrintBitGraph(const uint8_t ch)
 						     page.width) &&
 						    (static_cast<int>(PixY() + yy) <
 						     page.height)) {
-							page.pixels[(PixX() + xx) +
-							            (PixY() + yy) *
-							                    page.pitch] |=
-							        (color | 0x1F);
+							auto& pixel = *reinterpret_cast<PagePixel*>(
+							        &page.pixels[(PixX() + xx) +
+							                     (PixY() + yy) *
+							                             page.pitch]);
+							pixel.intensity = MaxIntensity;
+							pixel.color_id = static_cast<uint8_t>(
+							        pixel.color_id | (color >> 5));
 						}
 					}
 				}
