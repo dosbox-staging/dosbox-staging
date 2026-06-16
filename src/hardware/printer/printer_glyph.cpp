@@ -72,8 +72,8 @@ void Printer::UpdateFont()
 		cur_font = nullptr;
 	}
 
-	Real64 horizPoints = 10.5;
-	Real64 vertPoints  = 10.5;
+	double horizPoints = 10.5;
+	double vertPoints  = 10.5;
 
 	if (!multipoint) {
 		act_cpi = cpi;

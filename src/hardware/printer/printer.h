@@ -145,11 +145,11 @@ enum class Typeface {
 
 class Printer {
 public:
-	// page_width_in and page_height_in are inches (Real64). pins selects
+	// page_width_in and page_height_in are inches (double). pins selects
 	// the printer head pin count (9 = FX/LX series, 24 = LQ series).
 	// 9-pin printers use different line-spacing divisors and lack
 	// several ESC/P 2 commands; the dispatch code branches on `pins`.
-	Printer(uint16_t dpi, Real64 page_width_in, Real64 page_height_in,
+	Printer(uint16_t dpi, double page_width_in, double page_height_in,
 	        int pins = 24);
 	virtual ~Printer();
 
@@ -266,7 +266,7 @@ private:
 	uint8_t color = 0;
 
 	// Position of the print head (in inch).
-	Real64 cur_x = 0.0, cur_y = 0.0;
+	double cur_x = 0.0, cur_y = 0.0;
 
 	// Page resolution in dots per inch.
 	uint16_t dpi = 0;
@@ -291,20 +291,20 @@ private:
 
 	// CPI value set by program and the actual one (taking font types into
 	// account).
-	Real64 cpi = 0.0, act_cpi = 0.0;
+	double cpi = 0.0, act_cpi = 0.0;
 
 	// Score (underline / strikethrough / overscore) style for lines.
 	ScoreType score = ScoreType::None;
 
 	// Margins of the page (in inch).
-	Real64 top_margin = 0.0, bottom_margin = 0.0, right_margin = 0.0,
+	double top_margin = 0.0, bottom_margin = 0.0, right_margin = 0.0,
 	       left_margin = 0.0;
 
 	// Size of the current page (in inch).
-	Real64 page_width = 0.0, page_height = 0.0;
+	double page_width = 0.0, page_height = 0.0;
 
 	// Default size of the page (in inch).
-	Real64 default_page_width = 0.0, default_page_height = 0.0;
+	double default_page_width = 0.0, default_page_height = 0.0;
 
 	// Printer head pin count: 9 (FX/LX) or 24 (LQ). 48-pin printing
 	// happens through ESC * densities 71/72/73 on a 24-pin printer
@@ -327,14 +327,14 @@ private:
 	int superscript_shift_px = 0;
 
 	// Size of one line (in inch).
-	Real64 line_spacing = 0.0;
+	double line_spacing = 0.0;
 
 	// Currently configured horizontal tabs (in inch).
-	std::array<Real64, 32> horiz_tabs = {};
+	std::array<double, 32> horiz_tabs = {};
 	uint8_t num_horiz_tabs            = 0;
 
 	// Currently configured vertical tabs (in inch).
-	std::array<Real64, 16> vert_tabs = {};
+	std::array<double, 16> vert_tabs = {};
 	uint8_t num_vert_tabs            = 0;
 
 	// Currently selected character table / charset.
@@ -347,7 +347,7 @@ private:
 	Typeface lq_typeface = Typeface::Roman;
 
 	// Extra space between two characters (set by program, in inch).
-	Real64 extra_intra_space = 0.0;
+	double extra_intra_space = 0.0;
 
 	// True if a character was read since the printer was last initialised.
 	bool char_read = false;
@@ -396,19 +396,19 @@ private:
 	std::array<uint16_t, 4> char_tables = {};
 
 	// Unit used by some ESC/P2 commands (negative => use default).
-	Real64 defined_unit = -1.0;
+	double defined_unit = -1.0;
 
 	// True if multipoint (scalable) mode is enabled.
 	bool multipoint = false;
 
 	// Point size of font in multipoint mode.
-	Real64 multi_point_size = 0.0;
+	double multi_point_size = 0.0;
 
 	// CPI used in multipoint mode.
-	Real64 multi_cpi = 0.0;
+	double multi_cpi = 0.0;
 
 	// Horizontal motion index (in inch; overrides CPI settings).
-	Real64 hmi = -1.0;
+	double hmi = -1.0;
 
 	// MSB mode.
 	uint8_t msb = 0;
