@@ -39,6 +39,7 @@ target_sources(dosboxcommon PRIVATE
   network/ipxserver.cpp
   network/ne2000.cpp
 
+  printer/postscript_passthrough.cpp
   printer/printer.cpp
   printer/printer_charmaps.cpp
   printer/printer_dispatch.cpp

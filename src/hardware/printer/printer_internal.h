@@ -19,12 +19,6 @@
 
 namespace VirtualPrinter {
 
-// Build the next free path of the form <document_path>/<prefix><N><ext>
-// (N counting from 1). Returns std::nullopt if more than 10000 files in
-// the series already exist or the docpath is unusable.
-std::optional<std_fs::path> find_next_name(const std::string& prefix,
-                                           const std::string& ext);
-
 // Build the path for the next output file in <document_path>, using
 // the 4-digit zero-padded indexed scheme (see
 // utils::format_indexed_filename). `basename` and `suffix` are
