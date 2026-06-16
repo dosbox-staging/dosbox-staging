@@ -15,16 +15,13 @@
 #include <array>
 #include <math.h>
 #include <memory>
-#include <optional>
 #include <vector>
 
 #include <zlib.h>
 
 #include "misc/std_filesystem.h"
 #include "postscript_passthrough.h"
-#include "printer_internal.h"
 #include "raw_passthrough.h"
-#include "utils/indexed_filenames.h"
 #include "utils/string_utils.h"
 
 // PIC_AddEvent / PIC_RemoveEvents drive the form-feed timeout.
@@ -540,23 +537,6 @@ void Printer::FormFeed()
 {
 	// Don't output blank pages
 	NewPage(!IsBlank(), true);
-}
-
-std::optional<std_fs::path> find_next_indexed_path(const std::string_view basename,
-                                                   const std::string_view suffix)
-{
-	const auto& docdir = CAPTURE_GetPath();
-
-	std::error_code ec = {};
-	if (!std_fs::is_directory(docdir, ec)) {
-		LOG_WARNING("PRINTER: capture_dir '%s' is not a readable directory",
-		            docdir.string().c_str());
-		return std::nullopt;
-	}
-
-	const auto next_index = find_highest_file_index(docdir, basename, suffix) + 1;
-	const auto filename = format_indexed_filename(basename, next_index, suffix);
-	return docdir / filename;
 }
 
 void Printer::OutputPage()
