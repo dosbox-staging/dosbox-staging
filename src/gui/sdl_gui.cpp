@@ -152,7 +152,7 @@ double GFX_GetHostRefreshRate()
 		return DefaultHostRefreshRateHz;
 	}
 
-	const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(display_in_use);
+	const auto* mode = SDL_GetCurrentDisplayMode(display_in_use);
 	if (!mode) {
 		LOG_ERR("SDL: Could not get the current display mode: %s",
 		        SDL_GetError());
@@ -282,7 +282,7 @@ static bool is_unpause_event(const SDL_Event event, const KeyPressState unpause_
 		// Others mods include caps lock and num lock which we should not look at.
 		constexpr SDL_Keymod ModMask = SDL_Keymod(SDL_KMOD_CTRL | SDL_KMOD_SHIFT |
 		                                          SDL_KMOD_ALT | SDL_KMOD_GUI);
-		const SDL_Keymod unpause_mod = SDL_Keymod(unpause_key.mod & ModMask);
+		const auto unpause_mod = SDL_Keymod(unpause_key.mod & ModMask);
 		if ((event.key.mod & unpause_mod) == unpause_mod) {
 			return true;
 		}
@@ -314,7 +314,7 @@ static bool is_unpause_event(const SDL_Event event, const KeyPressState unpause_
 	// loop all the time.
 	const auto unpause_key = MAPPER_GetLastKeyPressed();
 
-	const SDL_Keymod inkeymod = SDL_GetModState();
+	const auto inkeymod = SDL_GetModState();
 
 	sdl.is_paused = true;
 	TITLEBAR_RefreshTitle();
@@ -341,12 +341,13 @@ static bool is_unpause_event(const SDL_Event event, const KeyPressState unpause_
 		case SDL_EVENT_QUIT: GFX_RequestExit(true); break;
 
 		case SDL_EVENT_WINDOW_RESTORED:
+			// We may need to re-create a texture and more
 			GFX_ResetScreen();
 			break;
 
 		case SDL_EVENT_KEY_DOWN:
 			if (is_unpause_event(event, unpause_key)) {
-				const SDL_Keymod outkeymod = event.key.mod;
+				const auto outkeymod = event.key.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
 					MAPPER_LosingFocus();
@@ -816,8 +817,8 @@ static SDL_Rect get_desktop_size()
 	if (!SDL_GetDisplayBounds(sdl.display_number, &desktop)) {
 		LOG_ERR("SDL: Could not get display bounds for display number %d: %s", sdl.display_number, SDL_GetError());
 		// Return a safe default
-		desktop.w = 1024;
-		desktop.h = 768;
+		desktop.w = 640;
+		desktop.h = 480;
 		return desktop;
 	}
 
@@ -1023,9 +1024,10 @@ void GFX_CenterMouse()
 	SDL_WarpMouseInWindow(sdl.window, static_cast<float>(width) / 2.0f, static_cast<float>(height) / 2.0f);
 }
 
-void GFX_SetMouseRawInput([[maybe_unused]]const bool requested_raw_input)
+void GFX_SetMouseRawInput([[maybe_unused]] const bool requested_raw_input)
 {
-	// Unsupported (not needed) under SDL3
+	// TODO Raw mouse input is unsupported (and not needed) under SDL3. If this
+	// remains the case, remove the associated config option and related code.
 }
 
 void GFX_SetMouseCapture(const bool requested_capture)
@@ -1853,6 +1855,7 @@ void GFX_InitSdl()
 
 	// Register custom SDL events
 	sdl.start_event_id = SDL_RegisterEvents(enum_val(DosBoxSdlEvent::NumEvents));
+	// SDL3 returns 0 on failure (SDL2 returned (Uint32)-1).
 	if (sdl.start_event_id == 0) {
 		E_Exit("SDL: Error allocating event IDs");
 	}
