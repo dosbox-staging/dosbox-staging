@@ -109,8 +109,6 @@ bool SdlRenderer::InitRenderer(const std::string& render_driver)
 
 	renderer = SDL_CreateRenderer(window, nullptr);
 	if (!renderer && has_specific_driver) {
-		const auto initial_error = std::string(SDL_GetError());
-
 		if (!SDL_ResetHint(SDL_HINT_RENDER_DRIVER)) {
 			LOG_WARNING("SDL: Error resetting SDL render driver hint: %s",
 			            SDL_GetError());
@@ -118,6 +116,8 @@ bool SdlRenderer::InitRenderer(const std::string& render_driver)
 
 		renderer = SDL_CreateRenderer(window, nullptr);
 		if (renderer) {
+			const auto initial_error = std::string(SDL_GetError());
+
 			LOG_WARNING(
 			        "SDL: Error creating '%s' SDL render driver (%s); "
 			        "falling back to automatic selection",
