@@ -59,11 +59,11 @@ bool write_png_page(PageBitmap& page, const std_fs::path& out_path)
 	             PNG_FILTER_TYPE_DEFAULT);
 
 	std::array<png_color, 256> palette = {};
-	for (int i = 0; i < 256; i++) {
-		const auto& c = page.palette[i];
-		palette[i].red   = c.r;
-		palette[i].green = c.g;
-		palette[i].blue  = c.b;
+	for (int i = 0; i < 256; ++i) {
+		const auto& c    = page.palette[i];
+		palette[i].red   = c.red;
+		palette[i].green = c.green;
+		palette[i].blue  = c.blue;
 	}
 	png_set_PLTE(png_ptr, info_ptr, palette.data(), 256);
 

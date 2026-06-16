@@ -32,11 +32,16 @@ void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
 	// linearly-encoded L=128 which looks too dark and produces
 	// visible moire on sub-pixel-aligned dither patterns.
 	for (int i = 0; i < 32; ++i) {
-		auto& c = page.palette[i + color_mask];
-		const float coverage = static_cast<float>(i) / 31.0f;
-		c.r = linear_to_srgb8_lut(1.0f - coverage * (red_max / 255.0f));
-		c.g = linear_to_srgb8_lut(1.0f - coverage * (green_max / 255.0f));
-		c.b = linear_to_srgb8_lut(1.0f - coverage * (blue_max / 255.0f));
+		const auto coverage = static_cast<float>(i) / 31.0f;
+
+		const auto r = linear_to_srgb8_lut(
+		        1.0f - coverage * (red_max / 255.0f));
+		const auto g = linear_to_srgb8_lut(
+		        1.0f - coverage * (green_max / 255.0f));
+		const auto b = linear_to_srgb8_lut(
+		        1.0f - coverage * (blue_max / 255.0f));
+
+		page.palette[i + color_mask] = Rgb888{r, g, b};
 	}
 }
 

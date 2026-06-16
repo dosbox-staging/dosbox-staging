@@ -25,6 +25,7 @@
 #include "misc/support.h"
 #include "misc/types.h"
 #include "utils/bit_view.h"
+#include "utils/rgb888.h"
 
 #include <png.h>
 
@@ -36,17 +37,12 @@ namespace VirtualPrinter {
 // Page bitmap. 8-bit palette-indexed, contiguous storage (no row
 // padding), one entry per pixel.
 struct PageBitmap {
-	std::vector<uint8_t> pixels = {};
-
-	struct RgbColor {
-		uint8_t r = 0;
-		uint8_t g = 0;
-		uint8_t b = 0;
-	};
-	std::array<RgbColor, 256> palette = {};
+	std::vector<uint8_t> pixels     = {};
+	std::array<Rgb888, 256> palette = {};
 
 	int width  = 0;
 	int height = 0;
+
 	// Bytes per row. Equals width for our contiguous buffer.
 	int pitch = 0;
 

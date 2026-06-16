@@ -85,9 +85,8 @@ Printer::Printer(uint16_t dpi, const double page_width_in,
 	// Sub-palette 0 is the 'all white' page background and gets
 	// hand-initialised below; the other seven are derived from
 	// (red_max, green_max, blue_max) tuples by FillPalette.
-	for (uint64_t i = 0; i < 32; i++) {
-		auto& c = page.palette[i];
-		c.r = c.g = c.b = 255;
+	for (int i = 0; i < 32; ++i) {
+		page.palette[i] = Rgb888{255, 255, 255};
 	}
 	FillPalette(0, 0, 0, 1);
 	FillPalette(0, 255, 0, 1);
