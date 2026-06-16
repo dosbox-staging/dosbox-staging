@@ -45,7 +45,6 @@ target_sources(dosboxcommon PRIVATE
   printer/printer_dispatch.cpp
   printer/printer_glue.cpp
   printer/printer_glyph.cpp
-  printer/printer_png.cpp
   printer/raw_passthrough.cpp
 
   serialport/misc_util.cpp

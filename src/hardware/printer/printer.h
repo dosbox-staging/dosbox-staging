@@ -56,10 +56,6 @@ struct PageBitmap {
 	}
 };
 
-// zlib compression levels duplicated locally to avoid pulling in zlib.h.
-constexpr int ZBestCompression = 9;
-constexpr int ZDefaultStrategy = 0;
-
 // FreeType uses signed 26.6 fixed-point for sub-pixel metrics (size
 // metrics, glyph advances, character sizes passed to FT_Set_Char_Size).
 // Multiply a whole-pixel/point value by Ft26Dot6Unit to convert it into
