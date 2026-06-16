@@ -169,7 +169,7 @@ protected:
 		}
 		printer.FormFeed();
 
-		return output_dir / "page0001.png";
+		return output_dir / "print0001.png";
 	}
 
 	// Render one of the PC5150 density-test .bin fixtures at the

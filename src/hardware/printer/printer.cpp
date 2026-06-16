@@ -5,6 +5,7 @@
 #include "printer.h"
 
 #include "capture/capture.h"
+#include "capture/image/png_writer.h"
 #include "config/setup.h"
 #include "gui/mapper.h"
 #include "misc/cross.h"
@@ -17,10 +18,11 @@
 #include <optional>
 #include <vector>
 
+#include <zlib.h>
+
 #include "misc/std_filesystem.h"
 #include "postscript_passthrough.h"
 #include "printer_internal.h"
-#include "printer_png.h"
 #include "raw_passthrough.h"
 #include "utils/indexed_filenames.h"
 #include "utils/string_utils.h"
@@ -559,11 +561,23 @@ std::optional<std_fs::path> find_next_indexed_path(const std::string_view basena
 
 void Printer::OutputPage()
 {
-	if (const auto out_path = find_next_indexed_path("page", ".png")) {
-		if (write_png_page(page, *out_path)) {
-			LOG_MSG("PRINTER: Wrote page to %s",
-			        out_path->string().c_str());
-		}
+	FILE_unique_ptr fp{CAPTURE_CreateFile(CaptureType::PrinterPng)};
+	if (!fp) {
+		return;
+	}
+
+	PngWriter w;
+
+	// Pages favour file size over encode speed; level 9 is the long-
+	// standing dot-matrix output setting.
+	w.SetCompressionLevel(Z_BEST_COMPRESSION);
+
+	if (!w.InitIndexed8(fp.get(), page.width, page.height, page.palette)) {
+		return;
+	}
+
+	for (int y = 0; y < page.height; ++y) {
+		w.WriteRow(page.pixels.begin() + y * page.pitch);
 	}
 }
 
