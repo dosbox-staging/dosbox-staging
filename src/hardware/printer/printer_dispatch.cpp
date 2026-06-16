@@ -1475,21 +1475,17 @@ void Printer::PrintBitGraph(const uint8_t ch)
 
 	const Real64 oldY = cur_y;
 
-	// When page dpi is greater than graphics dpi, the drawn pixels get
-	// "bigger"
-	uint64_t pixsizeX = 1;
-	uint64_t pixsizeY = 1;
-	if (bit_graph.adjacent) {
-		pixsizeX = dpi / bit_graph.horiz_dens > 0 ? dpi / bit_graph.horiz_dens
-		                                          : 1;
-		pixsizeY = dpi / bit_graph.vert_dens > 0 ? dpi / bit_graph.vert_dens
-		                                         : 1;
-	}
-	// TODO figure this out for 360dpi mode in windows
-
-	//	uint64_t pixsizeX = dpi/bit_graph.horiz_dens > 0?
-	// dpi/bit_graph.horiz_dens : 1; 	uint64_t pixsizeY =
-	// dpi/bit_graph.vert_dens > 0? dpi/bit_graph.vert_dens : 1;
+	// When page dpi is greater than graphics dpi, each dot of the
+	// graphics stream becomes a rectangle of (dpi/h_dens) x (dpi/v_dens)
+	// page pixels. Scaling is unconditional — the `adjacent` flag is a
+	// print-head physical property unrelated to pixel size (ESC/P 2
+	// reference C-177).
+	const uint64_t pixsizeX = dpi / bit_graph.horiz_dens > 0
+	                                ? dpi / bit_graph.horiz_dens
+	                                : 1;
+	const uint64_t pixsizeY = dpi / bit_graph.vert_dens > 0
+	                                ? dpi / bit_graph.vert_dens
+	                                : 1;
 
 	for (uint64_t i = 0; i < bit_graph.bytes_column; i++) // for each byte
 	{
