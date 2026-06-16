@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "misc/std_filesystem.h"
+#include "postscript_passthrough.h"
 #include "printer_internal.h"
 #include "printer_png.h"
 #include "raw_passthrough.h"
@@ -35,6 +36,7 @@ using VirtualPrinter::PrinterModel;
 static void printer_event_handler([[maybe_unused]] uint32_t param);
 
 static std::unique_ptr<Printer> default_printer = nullptr;
+static std::unique_ptr<VirtualPrinter::PostScriptPassthrough> postscript_sink = nullptr;
 static std::unique_ptr<VirtualPrinter::RawPassthrough> raw_sink = nullptr;
 
 static PrinterModel conf_model    = PrinterModel::None;
@@ -539,38 +541,6 @@ void Printer::FormFeed()
 	NewPage(!IsBlank(), true);
 }
 
-// Cap on how many existing <prefix><N><ext> files we'll skip past before
-// giving up. Sized to match the largest sensible print job; well beyond
-// anything a real DOS application will produce in one session.
-static constexpr int FindNextNameAttempts = 10000;
-
-// Defined here, declared in printer_internal.h for use from the
-// output backends in printer_png.cpp / printer_ps.cpp.
-std::optional<std_fs::path> find_next_name(const std::string& prefix,
-                                           const std::string& ext)
-{
-	const std_fs::path docdir = document_path.empty() ? std_fs::path{"."}
-	                                                  : document_path;
-	for (int i = 1; i <= FindNextNameAttempts; ++i) {
-		std_fs::path candidate = docdir / (prefix + std::to_string(i) + ext);
-
-		std::error_code ec;
-		if (!std_fs::exists(candidate, ec)) {
-			return candidate;
-		}
-	}
-
-	LOG_WARNING(
-	        "PRINTER: docpath already contains %d %s files matching "
-	        "'%s<N>%s'; output disabled",
-	        FindNextNameAttempts,
-	        prefix.c_str(),
-	        prefix.c_str(),
-	        ext.c_str());
-
-	return std::nullopt;
-}
-
 std::optional<std_fs::path> find_next_indexed_path(const std::string_view basename,
                                                    const std::string_view suffix)
 {
@@ -685,23 +655,36 @@ uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
 	return status;
 }
 
-static void trigger_form_feed(const bool pressed)
+enum class FormFeedSource {
+	UserEjectKey,
+	IdleTimeout,
+};
+
+static void trigger_form_feed(const FormFeedSource source)
 {
-	if (pressed) {
-		PIC_RemoveEvents(printer_event_handler);
-		if (default_printer) {
-			default_printer->FormFeed();
-		}
-		if (raw_sink) {
-			LOG_MSG("PRINTER: Closing raw passthrough job");
-			raw_sink->Close();
-		}
+	PIC_RemoveEvents(printer_event_handler);
+
+	const char* source_str = (source == FormFeedSource::UserEjectKey)
+	                               ? "user eject key"
+	                               : "idle timeout";
+
+	if (default_printer) {
+		LOG_MSG("PRINTER: Form feed (%s)", source_str);
+		default_printer->FormFeed();
+	}
+	// PostScript is self-describing — the driver's own bytes delimit
+	// pages and jobs. Form-feed events (idle timeout / Ctrl+F2) do not
+	// close the file; only the PS end-of-job marker `^D` (handled inside
+	// the sink) does.
+	if (raw_sink) {
+		LOG_MSG("PRINTER: Closing raw passthrough job (%s)", source_str);
+		raw_sink->Close();
 	}
 }
 
 static void printer_event_handler([[maybe_unused]] const uint32_t param)
 {
-	trigger_form_feed(true);
+	trigger_form_feed(FormFeedSource::IdleTimeout);
 }
 
 void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t val,
@@ -726,13 +709,22 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 			if (default_printer) {
 				default_printer->PrintChar(lpt.data);
 			}
+		} else if (conf_model == PrinterModel::PostScript) {
+			if (!postscript_sink) {
+				postscript_sink =
+				        std::make_unique<VirtualPrinter::PostScriptPassthrough>();
+			}
+			postscript_sink->Write(lpt.data);
 		} else if (conf_model == PrinterModel::RawPassthrough) {
 			if (!raw_sink) {
 				raw_sink = std::make_unique<VirtualPrinter::RawPassthrough>();
 			}
 			raw_sink->Write(lpt.data);
 		}
-		if (printer_timeout) {
+		// PostScript is self-regulating — the inactivity timeout
+		// does not apply. The other models still need it for their
+		// auto-eject behaviour.
+		if (printer_timeout && conf_model != PrinterModel::PostScript) {
 			PIC_RemoveEvents(printer_event_handler);
 			PIC_AddEvent(printer_event_handler,
 			             static_cast<float>(printer_timeout),
@@ -834,7 +826,9 @@ void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
 
 void PRINTER_FormFeed(const bool pressed)
 {
-	trigger_form_feed(pressed);
+	if (pressed) {
+		trigger_form_feed(FormFeedSource::UserEjectKey);
+	}
 }
 
 void PRINTER_Reset()
@@ -844,6 +838,7 @@ void PRINTER_Reset()
 	PIC_RemoveEvents(printer_event_handler);
 
 	default_printer.reset();
+	postscript_sink.reset();
 	raw_sink.reset();
 
 	// The IO handlers in printer_glue stay installed across Reset/Init
