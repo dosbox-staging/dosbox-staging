@@ -40,7 +40,6 @@ static double conf_page_width_in  = 8.27;  // A4
 static double conf_page_height_in = 11.69; // A4
 static int conf_pins              = 24;    // 9 = FX/LX, 24 = LQ
 static uint64_t printer_timeout   = 500;
-static bool timeout_dirty         = false;
 static std_fs::path document_path;
 
 namespace VirtualPrinter {
@@ -274,9 +273,6 @@ void Printer::SelectCodepage(const uint16_t codepage)
 void Printer::NewPage(const bool save, const bool reset_x)
 {
 	PIC_RemoveEvents(printer_event_handler);
-	if (printer_timeout) {
-		timeout_dirty = false;
-	}
 
 	if (save) {
 		OutputPage();
@@ -713,12 +709,8 @@ uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
 static void trigger_form_feed(const bool pressed)
 {
 	if (pressed) {
+		PIC_RemoveEvents(printer_event_handler);
 		if (default_printer) {
-			PIC_RemoveEvents(printer_event_handler);
-			if (printer_timeout) {
-				timeout_dirty = false;
-			}
-
 			default_printer->FormFeed();
 		}
 	}
@@ -726,17 +718,7 @@ static void trigger_form_feed(const bool pressed)
 
 static void printer_event_handler([[maybe_unused]] const uint32_t param)
 {
-	if (timeout_dirty) {
-		// More data arrived since this event was queued — push the
-		// timeout further out and re-fire later.
-		PIC_AddEvent(printer_event_handler,
-		             static_cast<float>(printer_timeout),
-		             0);
-		timeout_dirty = false;
-	} else {
-		timeout_dirty = false;
-		trigger_form_feed(true);
-	}
+	trigger_form_feed(true);
 }
 
 void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t val,
@@ -759,11 +741,11 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 		if (default_printer) {
 			default_printer->PrintChar(lpt.data);
 		}
-		if (!timeout_dirty) {
+		if (printer_timeout) {
+			PIC_RemoveEvents(printer_event_handler);
 			PIC_AddEvent(printer_event_handler,
 			             static_cast<float>(printer_timeout),
 			             0);
-			timeout_dirty = true;
 		}
 	}
 
@@ -832,7 +814,6 @@ void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
 	document_path   = output_dir.empty() ? std_fs::path{"."}
 	                                     : std_fs::path{output_dir};
 	printer_timeout = static_cast<uint64_t>(timeout_ms);
-	timeout_dirty   = (printer_timeout == 0);
 
 	// Auto-create the output directory if it doesn't exist (existing
 	// behaviour was a confusing per-file error on first page write).
@@ -861,7 +842,6 @@ void PRINTER_Reset()
 	// Cancel pending timeout events first so printer_event_handler can't
 	// fire on a half-destroyed printer.
 	PIC_RemoveEvents(printer_event_handler);
-	timeout_dirty = false;
 	default_printer.reset();
 	// The IO handlers in printer_glue stay installed across Reset/Init
 	// cycles; clear the LPT register state so a stale strobe sequence
