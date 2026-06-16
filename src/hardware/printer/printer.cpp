@@ -165,9 +165,8 @@ void Printer::ResetPrinter()
 	// (ESC D description: "absolute position from the left-margin
 	// position").
 	for (uint64_t i = 0; i < 32; i++) {
-		horiz_tabs[i] = left_margin +
-		                static_cast<double>((i + 1) * 8) /
-		                        static_cast<double>(cpi);
+		horiz_tabs[i] = left_margin + static_cast<double>((i + 1) * 8) /
+		                                      static_cast<double>(cpi);
 	}
 	num_horiz_tabs = 32;
 
@@ -335,23 +334,23 @@ void Printer::PrintChar(uint8_t ch)
 	// then temporarily stretched in both axes so its em exactly fills
 	// the 1/cpi horizontal cell and the line_spacing vertical cell;
 	// the bitmap overhang baked into each glyph bridges the seam.
-	const auto unicode = cur_map[ch];
+	const auto unicode     = cur_map[ch];
 	const bool is_box_char = unicode >= 0x2500 && unicode <= 0x259F;
 	FT_Face render_face = (is_box_char && !style.prop && mono_box_font != nullptr)
-	                              ? mono_box_font
-	                              : cur_font;
-	const bool apply_box_fill = is_box_char &&
-	                            box_fill_horiz_points > 0.0 &&
-	                            line_spacing > 0.0 &&
-	                            natural_em_height_px > 0;
+	                            ? mono_box_font
+	                            : cur_font;
+	const bool apply_box_fill = is_box_char && box_fill_horiz_points > 0.0 &&
+	                            line_spacing > 0.0 && natural_em_height_px > 0;
 
 	int box_fill_em_h_px   = 0;
 	int box_fill_em_asc_px = 0;
 	if (apply_box_fill) {
 		const auto cell_h_px = static_cast<int>(line_spacing * dpi);
-		const auto box_fill_vert_points = cur_vert_points * BoxFillOvershootVertical *
+		const auto box_fill_vert_points = cur_vert_points *
+		                                  BoxFillOvershootVertical *
 		                                  static_cast<double>(cell_h_px) /
-		                                  static_cast<double>(natural_em_height_px);
+		                                  static_cast<double>(
+		                                          natural_em_height_px);
 		FT_Set_Char_Size(render_face,
 		                 static_cast<FT_F26Dot6>(box_fill_horiz_points *
 		                                         Ft26Dot6Unit),
@@ -359,8 +358,9 @@ void Printer::PrintChar(uint8_t ch)
 		                                         Ft26Dot6Unit),
 		                 dpi,
 		                 dpi);
-		box_fill_em_h_px   = ft26_6_to_pixels(render_face->size->metrics.height);
-		box_fill_em_asc_px = ft26_6_to_pixels(render_face->size->metrics.ascender);
+		box_fill_em_h_px = ft26_6_to_pixels(render_face->size->metrics.height);
+		box_fill_em_asc_px = ft26_6_to_pixels(
+		        render_face->size->metrics.ascender);
 	}
 
 	// Find the glyph for the char to render
@@ -412,14 +412,15 @@ void Printer::PrintChar(uint8_t ch)
 		const auto cell_px = static_cast<int>(dpi / act_cpi);
 
 		signed_pen_x = static_cast<int>(PixX()) +
-		              (cell_px - box_fill_em_px) / 2 +
-		              render_face->glyph->bitmap_left;
+		               (cell_px - box_fill_em_px) / 2 +
+		               render_face->glyph->bitmap_left;
 	} else {
 		signed_pen_x = static_cast<int>(PixX()) +
-		              render_face->glyph->bitmap_left + centre_offset;
+		               render_face->glyph->bitmap_left + centre_offset;
 	}
 
-	const uint16_t pen_x = static_cast<uint16_t>(signed_pen_x < 0 ? 0 : signed_pen_x);
+	const uint16_t pen_x = static_cast<uint16_t>(
+	        signed_pen_x < 0 ? 0 : signed_pen_x);
 
 	// Anchor every glyph to the per-line baseline captured in
 	// UpdateFont() so that double-height chars extend upward from the
@@ -435,10 +436,10 @@ void Printer::PrintChar(uint8_t ch)
 		                      (cell_h_px - box_fill_em_h_px) / 2;
 
 		signed_pen_y = em_top_y + box_fill_em_asc_px -
-		              render_face->glyph->bitmap_top;
+		               render_face->glyph->bitmap_top;
 	} else {
 		signed_pen_y = static_cast<int>(PixY()) + line_baseline_anchor_px -
-		              render_face->glyph->bitmap_top;
+		               render_face->glyph->bitmap_top;
 	}
 	uint16_t pen_y = static_cast<uint16_t>(signed_pen_y < 0 ? 0 : signed_pen_y);
 
@@ -478,9 +479,9 @@ void Printer::PrintChar(uint8_t ch)
 	// advance the cursor to the right
 	double x_advance;
 	if (style.prop) {
-		// advance.x is in 26.6 pixel units; divide by dpi * Ft26Dot6Unit
-		// in a single step to keep sub-pixel precision before
-		// converting to inches.
+		// advance.x is in 26.6 pixel units; divide by dpi *
+		// Ft26Dot6Unit in a single step to keep sub-pixel precision
+		// before converting to inches.
 		x_advance = static_cast<double>(render_face->glyph->advance.x) /
 		            static_cast<double>(dpi * Ft26Dot6Unit);
 	} else {
@@ -763,7 +764,9 @@ uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
 	if (!default_printer) {
 		return CtrlReservedHi | lpt.control;
 	}
+
 	const uint8_t auto_lf = default_printer->GetAutofeed() ? CtrlAutoLf : 0;
+
 	return CtrlReservedHi | auto_lf | (lpt.control & CtrlReadMask);
 }
 
