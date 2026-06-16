@@ -13,12 +13,13 @@ add_executable(dosbox_tests
     dosbox_test_fixture.h
     drives_tests.cpp
     format_convert_tests.cpp
-    frame_dirty_tracker_tests.cpp
     fraction_tests.cpp
+    frame_dirty_tracker_tests.cpp
     fs_utils_tests.cpp
     image_compare.cpp
     image_compare.h
     image_decoder_tests.cpp
+    indexed_filenames_tests.cpp
     int10_modes_tests.cpp
     language_territory_tests.cpp
     math_utils_tests.cpp
