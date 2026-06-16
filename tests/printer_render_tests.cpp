@@ -2875,9 +2875,9 @@ showpage
 	}
 	sink.Write(static_cast<uint8_t>(eot));
 
-	// The sink closes itself on ^D; output file is doc0001.ps in
+	// The sink closes itself on ^D; output file is print0001.ps in
 	// the output_dir.
-	const auto out_path = output_dir / "doc0001.ps";
+	const auto out_path = output_dir / "print0001.ps";
 	ASSERT_TRUE(std_fs::exists(out_path));
 
 	std::ifstream in(out_path, std::ios::binary);
@@ -3087,7 +3087,7 @@ TEST_F(PrinterPostScriptRegulationTest, FormFeedDoesNotCloseFile)
 
 	strobe_byte(0x04);
 
-	const auto out_path = output_dir / "doc0001.ps";
+	const auto out_path = output_dir / "print0001.ps";
 	ASSERT_TRUE(std_fs::exists(out_path));
 
 	EXPECT_FALSE(std_fs::exists(output_dir / "doc0002.ps"));
