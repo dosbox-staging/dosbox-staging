@@ -39,6 +39,11 @@ void CAPTURE_Destroy();
 FILE* CAPTURE_CreateFile(const CaptureType type,
                          const std::optional<std_fs::path>& path = {});
 
+// The resolved capture output directory (the value of `capture_dir` after
+// path resolution). Valid after CAPTURE_Init has run; the directory itself
+// is created lazily on first file write.
+const std_fs::path& CAPTURE_GetPath();
+
 // Used to add the last rendered frame to be captured either as a screenshot
 // or as a video recording (or both).
 void CAPTURE_AddFrame(const RenderedImage& image, const float frames_per_second);

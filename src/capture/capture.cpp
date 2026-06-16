@@ -55,10 +55,10 @@ static struct {
 	{
 		path.clear();
 		path_initialised = false;
-		state.audio = CaptureState::Off;
-		state.midi = CaptureState::Off;
-		state.video = CaptureState::Off;
-		next_index = {};
+		state.audio      = CaptureState::Off;
+		state.midi       = CaptureState::Off;
+		state.video      = CaptureState::Off;
+		next_index       = {};
 	}
 } capture = {};
 
@@ -312,6 +312,11 @@ std_fs::path generate_capture_filename(const CaptureType type, const int32_t ind
 	                                              index,
 	                                              suffix);
 	return capture.path / filename;
+}
+
+const std_fs::path& CAPTURE_GetPath()
+{
+	return capture.path;
 }
 
 FILE* CAPTURE_CreateFile(const CaptureType type,
