@@ -2575,10 +2575,10 @@ static void capture_callback()
 
 static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
                                    SDL_AudioStream* stream,
-                                   int additional_amount,
-                                   [[maybe_unused]] int total_amount)
+                                   int bytes_requested,
+                                   [[maybe_unused]] int total_bytes)
 {
-	if (additional_amount <= 0) {
+	if (bytes_requested <= 0) {
 		return;
 	}
 
@@ -2586,7 +2586,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	constexpr int BytesPerAudioFrame = sizeof(AudioFrame);
 
-	const auto frames_requested = check_cast<size_t>(additional_amount /
+	const auto frames_requested = check_cast<size_t>(bytes_requested /
 	                                                  BytesPerAudioFrame);
 
 	// Mac OSX has been observed to be problematic if we ever block inside
@@ -2603,7 +2603,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	// Satisfy any shortfall with silence
 	std::fill(output.begin() + frames_received, output.end(), AudioFrame{});
 
-	SDL_PutAudioStreamData(stream, output.data(), additional_amount);
+	SDL_PutAudioStreamData(stream, output.data(), bytes_requested);
 }
 
 static void mixer_thread_loop()
