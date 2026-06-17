@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_MOUSE_COMMON_H
-#define DOSBOX_MOUSE_COMMON_H
+#ifndef DOSBOX_PRIVATE_MOUSE_COMMON_H
+#define DOSBOX_PRIVATE_MOUSE_COMMON_H
 
 #include "hardware/input/mouse.h"
 
@@ -147,4 +147,4 @@ union MouseButtons12S {
 	bool operator==(const MouseButtons12S other) const;
 };
 
-#endif // DOSBOX_MOUSE_COMMON_H
+#endif // DOSBOX_PRIVATE_MOUSE_COMMON_H

@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_CAPTURE_MIDI_H
-#define DOSBOX_CAPTURE_MIDI_H
+#ifndef DOSBOX_PRIVATE_CAPTURE_MIDI_H
+#define DOSBOX_PRIVATE_CAPTURE_MIDI_H
 
 void capture_midi_add_data(const bool sysex, const size_t len, const uint8_t* data);
 

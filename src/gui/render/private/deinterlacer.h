@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_RENDER_DEINTERLACER_H
-#define DOSBOX_RENDER_DEINTERLACER_H
+#ifndef DOSBOX_PRIVATE_DEINTERLACER_H
+#define DOSBOX_PRIVATE_DEINTERLACER_H
 
 #include <cstdint>
 #include <vector>
@@ -112,4 +112,4 @@ private:
 	int buffer_pitch = 0;
 };
 
-#endif // DOSBOX_RENDER_DEINTERLACER_H
+#endif // DOSBOX_PRIVATE_DEINTERLACER_H

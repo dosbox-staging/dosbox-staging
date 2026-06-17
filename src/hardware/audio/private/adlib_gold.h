@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_ADLIB_GOLD_H
-#define DOSBOX_ADLIB_GOLD_H
+#ifndef DOSBOX_PRIVATE_ADLIB_GOLD_H
+#define DOSBOX_PRIVATE_ADLIB_GOLD_H
 
 #include "dosbox.h"
 
@@ -126,4 +126,4 @@ private:
 	std::unique_ptr<StereoProcessor> stereo_processor     = {};
 };
 
-#endif // DOSBOX_ADLIB_GOLD_H
+#endif // DOSBOX_PRIVATE_ADLIB_GOLD_H

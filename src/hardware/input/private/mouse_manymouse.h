@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_MOUSE_MANYMOUSE_H
-#define DOSBOX_MOUSE_MANYMOUSE_H
+#ifndef DOSBOX_PRIVATE_MOUSE_MANYMOUSE_H
+#define DOSBOX_PRIVATE_MOUSE_MANYMOUSE_H
 
 #include "hardware/input/mouse.h"
 #include "mouse_interfaces.h"
@@ -102,4 +102,4 @@ private:
 	std::vector<MousePhysical> physical_devices = {};
 };
 
-#endif // DOSBOX_MOUSE_MANYMOUSE_H
+#endif // DOSBOX_PRIVATE_MOUSE_MANYMOUSE_H

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_FLUIDSYNTH_H
-#define DOSBOX_FLUIDSYNTH_H
+#ifndef DOSBOX_PRIVATE_FLUIDSYNTH_H
+#define DOSBOX_PRIVATE_FLUIDSYNTH_H
 
 #include "midi_device.h"
 
@@ -151,4 +151,4 @@ private:
 
 void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, MoreOutputStrings& output);
 
-#endif // DOSBOX_FLUIDSYNTH_H
+#endif // DOSBOX_PRIVATE_FLUIDSYNTH_H

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_MOUSEIF_DOS_DRIVER_STATE_H
-#define DOSBOX_MOUSEIF_DOS_DRIVER_STATE_H
+#ifndef DOSBOX_PRIVATE_MOUSEIF_DOS_DRIVER_STATE_H
+#define DOSBOX_PRIVATE_MOUSEIF_DOS_DRIVER_STATE_H
 
 #include "mouse_common.h"
 
@@ -375,4 +375,4 @@ public:
 	static State virtual_driver_state;
 };
 
-#endif // DOSBOX_MOUSEIF_DOS_DRIVER_STATE_H
+#endif // DOSBOX_PRIVATE_MOUSEIF_DOS_DRIVER_STATE_H

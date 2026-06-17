@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_SHADER_MANAGER_H
-#define DOSBOX_SHADER_MANAGER_H
+#ifndef DOSBOX_PRIVATE_SHADER_MANAGER_H
+#define DOSBOX_PRIVATE_SHADER_MANAGER_H
 
 #include <optional>
 #include <string>
@@ -72,4 +72,4 @@ private:
 	std::unordered_map<std::string, ShaderPreset> shader_preset_cache = {};
 };
 
-#endif // DOSBOX_SHADER_MANAGER_H
+#endif // DOSBOX_PRIVATE_SHADER_MANAGER_H

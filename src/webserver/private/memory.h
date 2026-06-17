@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_WEBSERVER_MEMORY_H
-#define DOSBOX_WEBSERVER_MEMORY_H
+#ifndef DOSBOX_PRIVATE_MEMORY_H
+#define DOSBOX_PRIVATE_MEMORY_H
 
 #include "webserver/bridge.h"
 #include "cpu.h"
@@ -69,4 +69,4 @@ private:
 
 } // namespace Webserver
 
-#endif // DOSBOX_WEBSERVER_MEMORY_H
+#endif // DOSBOX_PRIVATE_MEMORY_H

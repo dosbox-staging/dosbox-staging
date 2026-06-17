@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_MIDI_DEVICE_H
-#define DOSBOX_MIDI_DEVICE_H
+#ifndef DOSBOX_PRIVATE_MIDI_DEVICE_H
+#define DOSBOX_PRIVATE_MIDI_DEVICE_H
 
 #include "midi/midi.h"
 
@@ -38,4 +38,4 @@ public:
 void MIDI_Reset(MidiDevice* device);
 MidiDevice* MIDI_GetCurrentDevice();
 
-#endif // DOSBOX_MIDI_DEVICE_H
+#endif // DOSBOX_PRIVATE_MIDI_DEVICE_H

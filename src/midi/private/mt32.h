@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_MT32_H
-#define DOSBOX_MT32_H
+#ifndef DOSBOX_PRIVATE_MT32_H
+#define DOSBOX_PRIVATE_MT32_H
 
 #include "midi_device.h"
 
@@ -91,4 +91,4 @@ void MT32_ListDevices(MidiDeviceMt32* device, MoreOutputStrings& output);
 
 #endif // C_MT32EMU
 
-#endif // DOSBOX_MT32_H
+#endif // DOSBOX_PRIVATE_MT32_H

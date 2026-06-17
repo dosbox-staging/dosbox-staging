@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_SHADER_COMMON_H
-#define DOSBOX_SHADER_COMMON_H
+#ifndef DOSBOX_PRIVATE_SHADER_COMMON_H
+#define DOSBOX_PRIVATE_SHADER_COMMON_H
 
 #include "gui/private/common.h"
 #include "utils/rect.h"
@@ -271,4 +271,4 @@ struct ShaderInfo {
 	ShaderPreset default_preset = {};
 };
 
-#endif // DOSBOX_SHADER_COMMON_H
+#endif // DOSBOX_PRIVATE_SHADER_COMMON_H

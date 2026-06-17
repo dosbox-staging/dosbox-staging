@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_GUI_PRIVATE_COMMON_H
-#define DOSBOX_GUI_PRIVATE_COMMON_H
+#ifndef DOSBOX_PRIVATE_COMMON_H
+#define DOSBOX_PRIVATE_COMMON_H
 
 #include "dosbox_config.h"
 #include "misc/video.h"

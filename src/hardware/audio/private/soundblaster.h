@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_PRIVATE_SBLASTER_H
-#define DOSBOX_PRIVATE_SBLASTER_H
+#ifndef DOSBOX_PRIVATE_SOUNDBLASTER_H
+#define DOSBOX_PRIVATE_SOUNDBLASTER_H
 
 #include "hardware/audio/opl.h"
 
@@ -41,4 +41,4 @@ private:
 	bool cms_enabled = false;
 };
 
-#endif // DOSBOX_PRIVATE_SBLASTER_H
+#endif // DOSBOX_PRIVATE_SOUNDBLASTER_H

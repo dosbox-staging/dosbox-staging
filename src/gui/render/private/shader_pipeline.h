@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_SHADER_PIPELINE_H
-#define DOSBOX_SHADER_PIPELINE_H
+#ifndef DOSBOX_PRIVATE_SHADER_PIPELINE_H
+#define DOSBOX_PRIVATE_SHADER_PIPELINE_H
 
 #include <iterator>
 #include <optional>
@@ -145,4 +145,4 @@ private:
 	void UpdateMainShaderPassUniforms();
 };
 
-#endif // DOSBOX_SHADER_PIPELINE_H
+#endif // DOSBOX_PRIVATE_SHADER_PIPELINE_H

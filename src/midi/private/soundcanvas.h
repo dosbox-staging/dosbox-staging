@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2024-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_SOUNDCANVAS_H
-#define DOSBOX_SOUNDCANVAS_H
+#ifndef DOSBOX_PRIVATE_SOUNDCANVAS_H
+#define DOSBOX_PRIVATE_SOUNDCANVAS_H
 
 #include "midi_device.h"
 
@@ -110,4 +110,4 @@ private:
 
 void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, MoreOutputStrings& output);
 
-#endif // DOSBOX_SOUNDCANVAS_H
+#endif // DOSBOX_PRIVATE_SOUNDCANVAS_H

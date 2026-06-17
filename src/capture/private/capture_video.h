@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_CAPTURE_VIDEO_H
-#define DOSBOX_CAPTURE_VIDEO_H
+#ifndef DOSBOX_PRIVATE_CAPTURE_VIDEO_H
+#define DOSBOX_PRIVATE_CAPTURE_VIDEO_H
 
 #include "gui/render/render.h"
 
