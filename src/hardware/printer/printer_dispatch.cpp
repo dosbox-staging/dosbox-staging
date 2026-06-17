@@ -513,13 +513,18 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		// Set intercharacter space (ESC SP)
+		// Set intercharacter space (ESC SP). Spec C-108:
+		//   24/48-pin: n/120 in draft, n/180 in LQ.
+		//   9-pin:     n/120 always (regardless of LQ/draft).
 		case Esc::SetIntercharacterSpace: // 0x20
 			if (!multipoint) {
+				const double divisor =
+				        (pins == 9 ||
+				         print_quality == PrintQuality::Draft)
+				                ? 120.0
+				                : 180.0;
 				extra_intra_space = static_cast<double>(params[0]) /
-				                    (print_quality == PrintQuality::Draft
-				                             ? 120
-				                             : 180);
+				                    divisor;
 				hmi = -1;
 				UpdateFont();
 			}
