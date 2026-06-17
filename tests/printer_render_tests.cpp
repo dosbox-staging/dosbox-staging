@@ -2676,6 +2676,32 @@ TEST_F(PrinterRenderTest, Dispatch_EscC_LinesCancelsTopMargin)
 	expect_matches_reference(rendered, "Dispatch_EscC_LinesCancelsTopMargin");
 }
 
+// Dispatch_EscSP_9PinAlwaysUses120: spec C-108 says 9-pin printers
+// use n/120 inch always. The buggy code branched on print_quality
+// and used n/180 in LQ for every pin count. Stream: 9-pin, ESC x 1
+// (LQ), ESC SP 60 (= 0.5" extra space post-fix, 0.333" pre-fix),
+// then "ABC". Pre-fix the chars are packed tighter; post-fix wider.
+TEST_F(PrinterRenderTest, Dispatch_EscSP_9PinAlwaysUses120)
+{
+	const std::vector<uint8_t> bytes = {
+	        0x1B,
+	        'x',
+	        0x01, // LQ mode
+	        0x1B,
+	        ' ',
+	        0x3C, // ESC SP 60
+	        'A',
+	        'B',
+	        'C',
+	};
+	const auto rendered = render_with_page(bytes,
+	                                       DispatchTestDpi,
+	                                       DispatchTestPageWidth,
+	                                       DispatchTestPageHeight,
+	                                       9);
+	expect_matches_reference(rendered, "Dispatch_EscSP_9PinAlwaysUses120");
+}
+
 // Dispatch_Backspace_IncludesIntercharacterSpace: spec C-48 says BS
 // moves left by "one character in the current character pitch plus
 // any additional intercharacter space". The buggy code subtracted
