@@ -40,17 +40,17 @@ static std::unique_ptr<VirtualPrinter::PostScriptPassthrough> postscript_sink = 
 static std::unique_ptr<VirtualPrinter::RawPassthrough> raw_sink = nullptr;
 
 static PrinterModel conf_model    = PrinterModel::None;
-static uint16_t conf_dpi          = 360;
+static int conf_dpi               = 360;
 static double conf_page_width_in  = 8.27;  // A4
 static double conf_page_height_in = 11.69; // A4
 static int conf_pins              = 24;    // 9 = FX/LX, 24 = LQ
-static uint64_t printer_timeout   = 500;
+static int printer_timeout        = 500;
 
 namespace VirtualPrinter {
 
 // Printer::FillPalette lives in printer_glyph.cpp.
 
-Printer::Printer(uint16_t dpi, const double page_width_in,
+Printer::Printer(const int dpi, const double page_width_in,
                  const double page_height_in, const int pins)
 {
 	if (FT_Init_FreeType(&ft_lib)) {
@@ -134,15 +134,15 @@ void Printer::ResetPrinter()
 	right_margin  = default_page_width - DefaultMarginIn;
 	bottom_margin = default_page_height - DefaultMarginIn;
 
-	cur_x               = left_margin;
-	cur_y               = top_margin;
-	line_spacing        = static_cast<double>(1) / 6;
-	cpi                 = 10.0;
-	cur_char_table      = 1;
-	style.data          = 0;
-	extra_intra_space   = 0.0;
-	print_upper_contr   = true;
-	bit_graph.rem_bytes = 0;
+	cur_x                = left_margin;
+	cur_y                = top_margin;
+	line_spacing         = static_cast<double>(1) / 6;
+	cpi                  = 10.0;
+	cur_char_table       = 1;
+	style.data           = 0;
+	extra_intra_space    = 0.0;
+	print_upper_contr    = true;
+	bit_graph.bytes_left = 0;
 
 	densk = 0;
 	densl = 1;
@@ -249,7 +249,7 @@ void Printer::PrintChar(uint8_t ch)
 	}
 
 	// Are we currently printing a bit graphic?
-	if (bit_graph.rem_bytes > 0) {
+	if (bit_graph.bytes_left > 0) {
 		PrintBitGraph(ch);
 		return;
 	}
@@ -333,7 +333,7 @@ void Printer::PrintChar(uint8_t ch)
 	}
 
 	// Fixed-pitch centring. A proportional font (Roman, Sans Serif)
-	// forced into a 1/act_cpi inch cell would otherwise sit
+	// forced into a 1/actual_cpi inch cell would otherwise sit
 	// left-aligned with a visible gap on the right of every char.
 	// Shift narrow glyphs to the middle of the cell to even that out.
 	//
@@ -341,14 +341,14 @@ void Printer::PrintChar(uint8_t ch)
 	// positions glyphs correctly within the advance cell, and shifting
 	// would misalign the CP437 box-drawing characters, where `│`/`─`/`┼`
 	// would land at different X positions and break grids.
-	uint16_t centre_offset = 0;
+	int centre_offset = 0;
 
-	if (!style.prop && act_cpi > 0.0 && !FT_IS_FIXED_WIDTH(render_face)) {
-		const auto cell_px = static_cast<int>(dpi / act_cpi);
+	if (!style.prop && actual_cpi > 0.0 && !FT_IS_FIXED_WIDTH(render_face)) {
+		const auto cell_px = static_cast<int>(dpi / actual_cpi);
 		const auto glyph_w = static_cast<int>(render_face->glyph->bitmap.width);
 
 		if (cell_px > glyph_w) {
-			centre_offset = static_cast<uint16_t>((cell_px - glyph_w) / 2);
+			centre_offset = static_cast<int>((cell_px - glyph_w) / 2);
 		}
 	}
 
@@ -360,8 +360,8 @@ void Printer::PrintChar(uint8_t ch)
 	// glyph differently and break grid alignment.
 	int signed_pen_x = 0;
 
-	if (apply_box_fill && act_cpi > 0.0) {
-		const auto cell_px = static_cast<int>(dpi / act_cpi);
+	if (apply_box_fill && actual_cpi > 0.0) {
+		const auto cell_px = static_cast<int>(dpi / actual_cpi);
 
 		signed_pen_x = static_cast<int>(PixX()) +
 		               (cell_px - box_fill_em_px) / 2 +
@@ -426,7 +426,7 @@ void Printer::PrintChar(uint8_t ch)
 	}
 
 	// For line printing
-	const uint16_t lineStart = static_cast<uint16_t>(PixX());
+	const auto line_start = static_cast<uint16_t>(PixX());
 
 	// advance the cursor to the right
 	double x_advance;
@@ -439,7 +439,7 @@ void Printer::PrintChar(uint8_t ch)
 		            static_cast<double>(dpi * Ft26Dot6Unit);
 	} else {
 		if (hmi < 0) {
-			x_advance = 1 / static_cast<double>(act_cpi);
+			x_advance = 1 / static_cast<double>(actual_cpi);
 		} else {
 			x_advance = hmi;
 		}
@@ -454,32 +454,32 @@ void Printer::PrintChar(uint8_t ch)
 
 		// Find out where to put the line.
 		// TODO height is in fixed-point format from FreeType.
-		uint16_t lineY = static_cast<uint16_t>(PixY());
+		uint16_t line_y = static_cast<uint16_t>(PixY());
 
 		const double height = static_cast<double>(
 		        cur_font->size->metrics.height >> 6);
 
 		if (style.underline) {
-			lineY = static_cast<uint16_t>(
+			line_y = static_cast<uint16_t>(
 			        PixY() + static_cast<uint16_t>(height * 0.9));
 
 		} else if (style.strikethrough) {
-			lineY = static_cast<uint16_t>(
+			line_y = static_cast<uint16_t>(
 			        PixY() + static_cast<uint16_t>(height * 0.45));
 
 		} else if (style.overscore) {
-			lineY = static_cast<uint16_t>(
+			line_y = static_cast<uint16_t>(
 			        PixY() - (((score == ScoreType::Double) ||
 			                   (score == ScoreType::DoubleBroken))
 			                          ? 5
 			                          : 0));
 		}
 
-		DrawLine(lineStart,
+		DrawLine(line_start,
 		         PixX(),
-		         lineY,
-		         score == ScoreType::SingleBroken ||
-		                 score == ScoreType::DoubleBroken);
+		         line_y,
+		         (score == ScoreType::SingleBroken) ||
+		                 (score == ScoreType::DoubleBroken));
 
 		// draw second line if needed
 		if ((score == ScoreType::Double) ||
@@ -488,10 +488,10 @@ void Printer::PrintChar(uint8_t ch)
 			// score is DOUBLE or DOUBLEBROKEN here; the upstream
 			// expression also tested ScoreType::SingleBroken which
 			// is unreachable in this branch.
-			DrawLine(lineStart,
+			DrawLine(line_start,
 			         PixX(),
-			         lineY + 5,
-			         score == ScoreType::DoubleBroken);
+			         line_y + 5,
+			         (score == ScoreType::DoubleBroken));
 		}
 	}
 	// If the next character would go beyond the right margin, line-wrap.
@@ -571,7 +571,7 @@ bool Printer::IsBlank()
 	return true;
 }
 
-uint8_t Printer::GetPixel(const uint32_t num)
+uint8_t Printer::GetPixel(const int num)
 {
 	return page.pixels[(num % page.width) + ((num / page.width) * page.pitch)];
 }
@@ -764,7 +764,7 @@ uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
 // Lifecycle state (active / inactive) lives entirely in printer_glue's
 // PrinterState; this file deliberately has no equivalent flag.
 
-void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
+void PRINTER_Configure(const PrinterModelKind model, const int dpi,
                        const double page_width_in, const double page_height_in,
                        const int timeout_ms)
 {
@@ -794,7 +794,7 @@ void PRINTER_Configure(const PrinterModelKind model, const uint16_t dpi,
 	conf_dpi            = dpi;
 	conf_page_width_in  = page_width_in;
 	conf_page_height_in = page_height_in;
-	printer_timeout     = static_cast<uint64_t>(timeout_ms);
+	printer_timeout     = timeout_ms;
 }
 
 void PRINTER_FormFeed(const bool pressed)

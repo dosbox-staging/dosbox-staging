@@ -46,11 +46,12 @@ struct PageBitmap {
 	// Bytes per row. Equals width for our contiguous buffer.
 	int pitch = 0;
 
-	uint8_t& at(int x, int y)
+	uint8_t& at(const int x, const int y)
 	{
 		return pixels[x + y * pitch];
 	}
-	uint8_t at(int x, int y) const
+
+	uint8_t at(const int x, const int y) const
 	{
 		return pixels[x + y * pitch];
 	}
@@ -175,8 +176,9 @@ public:
 	// the printer head pin count (9 = FX/LX series, 24 = LQ series).
 	// 9-pin printers use different line-spacing divisors and lack
 	// several ESC/P 2 commands; the dispatch code branches on `pins`.
-	Printer(uint16_t dpi, double page_width_in, double page_height_in,
-	        int pins = 24);
+	Printer(const int dpi, const double page_width_in,
+	        const double page_height_in, const int pins = 24);
+
 	virtual ~Printer();
 
 	// Owns FreeType/SDL resources and a singleton Printer* — don't copy.
@@ -210,12 +212,12 @@ public:
 
 private:
 	// Fill one of the eight 32-entry colour sub-palettes in 'page'.
-	void FillPalette(uint8_t red_max, uint8_t green_max, uint8_t blue_max,
-	                 uint8_t color_id);
+	void FillPalette(const uint8_t red_max, const uint8_t green_max,
+	                 const uint8_t blue_max, const uint8_t color_id);
 
 	// Checks if given char belongs to a command and process it. If false,
 	// the character should be printed
-	bool ProcessCommandChar(uint8_t ch);
+	bool ProcessCommandChar(const uint8_t ch);
 
 	// Resets the printer to the factory settings
 	void ResetPrinter();
@@ -224,22 +226,24 @@ private:
 	void UpdateFont();
 
 	// Clears page. If save is true, saves the current page to a bitmap
-	void NewPage(bool save, bool reset_x);
+	void NewPage(const bool save, const bool reset_x);
 
 	// Blits the given glyph on the page surface. If add is true, the values
 	// of bitmap are added to the values of the pixels in the page
-	void BlitGlyph(FT_Bitmap bitmap, uint16_t destx, uint16_t desty, bool add);
+	void BlitGlyph(FT_Bitmap bitmap, const int dest_x, const int dest_y,
+	               const bool add);
 
 	// Draws an anti-aliased line from (fromx, y) to (tox, y). If broken is
 	// true, gaps are included
-	void DrawLine(uint64_t fromx, uint64_t tox, uint64_t y, bool broken);
+	void DrawLine(const int from_x, const int to_x, const int y,
+	              const bool broken);
 
 	// Setup the bit_graph structure
-	void SetupBitImage(uint8_t density, uint16_t num_cols);
+	void SetupBitImage(const uint8_t density, const uint16_t num_cols);
 
 	// Process a character that is part of bit image. Must be called iff
-	// bit_graph.rem_bytes > 0.
-	void PrintBitGraph(uint8_t ch);
+	// bit_graph.bytes_left > 0.
+	void PrintBitGraph(const uint8_t ch);
 
 	// Blit a single bit-image dot into the page bitmap using linear
 	// coverage anti-aliasing. The dot is a 1/horiz_dens by 1/vert_dens
@@ -250,35 +254,36 @@ private:
 	// (capped at MaxIntensity). The pixel's colour-ID bits are set to
 	// the head's current colour. This preserves overprint semantics:
 	// overlapping dots accumulate intensity rather than replacing it.
-	void BlitAntialiasedDot(double left_px, double right_px, double top_px,
-	                        double bottom_px);
+	void BlitAntialiasedDot(const double left_px, const double right_px,
+	                        const double top_px, const double bottom_px);
 
 	// Copies the codepage mapping from the constant array to CurMap
-	void SelectCodepage(uint16_t codepage);
+	void SelectCodepage(const uint16_t codepage);
 
 	// Output current page as a PNG file.
 	void OutputPage();
 
 	// Decode a little-endian 16-bit ESC/P2 parameter starting at params[i].
-	uint16_t Param16(int i) const
+	uint16_t Param16(const int i) const
 	{
 		return static_cast<uint16_t>(params[i + 1] * 256 + params[i]);
 	}
 
 	// Current head position expressed as a pixel coordinate at the
 	// configured DPI.
-	uint64_t PixX() const
+	int PixX() const
 	{
-		return static_cast<uint64_t>(floor(cur_x * dpi + 0.5));
+		return static_cast<int>(floor(cur_x * dpi + 0.5));
 	}
-	uint64_t PixY() const
+
+	int PixY() const
 	{
-		return static_cast<uint64_t>(floor(cur_y * dpi + 0.5));
+		return static_cast<int>(floor(cur_y * dpi + 0.5));
 	}
 
 	// Returns value of the num-th pixel (couting left-right, top-down) in a
 	// safe way
-	uint8_t GetPixel(uint32_t num);
+	uint8_t GetPixel(const int num);
 
 	// FreeType2 library used to render the characters.
 	FT_Library ft_lib = nullptr;
@@ -300,10 +305,11 @@ private:
 	uint8_t color = 0;
 
 	// Position of the print head (in inch).
-	double cur_x = 0.0, cur_y = 0.0;
+	double cur_x = 0.0;
+	double cur_y = 0.0;
 
 	// Page resolution in dots per inch.
-	uint16_t dpi = 0;
+	int dpi = 0;
 
 	// ESC command currently being processed.
 	uint16_t esc_cmd = 0;
@@ -316,7 +322,8 @@ private:
 	bool fs_seen = false;
 
 	// Numbers of parameters already read / needed to process command.
-	uint8_t num_param = 0, needed_param = 0;
+	uint8_t num_param    = 0;
+	uint8_t needed_param = 0;
 
 	// Buffer for the read parameters.
 	std::array<uint8_t, 20> params = {};
@@ -326,20 +333,25 @@ private:
 
 	// CPI value set by program and the actual one (taking font types into
 	// account).
-	double cpi = 0.0, act_cpi = 0.0;
+	double cpi        = 0.0;
+	double actual_cpi = 0.0;
 
 	// Score (underline / strikethrough / overscore) style for lines.
 	ScoreType score = ScoreType::None;
 
 	// Margins of the page (in inch).
-	double top_margin = 0.0, bottom_margin = 0.0, right_margin = 0.0,
-	       left_margin = 0.0;
+	double top_margin    = 0.0;
+	double bottom_margin = 0.0;
+	double right_margin  = 0.0;
+	double left_margin   = 0.0;
 
 	// Size of the current page (in inch).
-	double page_width = 0.0, page_height = 0.0;
+	double page_width  = 0.0;
+	double page_height = 0.0;
 
 	// Default size of the page (in inch).
-	double default_page_width = 0.0, default_page_height = 0.0;
+	double default_page_width  = 0.0;
+	double default_page_height = 0.0;
 
 	// Printer head pin count: 9 (FX/LX) or 24 (LQ). 48-pin printing
 	// happens through ESC * densities 71/72/73 on a 24-pin printer
@@ -418,7 +430,8 @@ private:
 	// Bit-image printing state.
 	struct BitGraphicParams {
 		// Density of image to print (in dpi).
-		uint16_t horiz_dens = 0, vert_dens = 0;
+		uint16_t horiz_dens = 0;
+		uint16_t vert_dens  = 0;
 
 		// Whether to print adjacent pixels (ignored).
 		bool adjacent = false;
@@ -427,7 +440,7 @@ private:
 		uint8_t bytes_column = 0;
 
 		// Bytes left to read before image is done.
-		uint16_t rem_bytes = 0;
+		uint16_t bytes_left = 0;
 
 		// Bytes of the current and last column.
 		std::array<uint8_t, 6> column = {};
@@ -444,7 +457,10 @@ private:
 	} bit_graph{};
 
 	// Image density modes used by the ESC K / L / Y / Z commands.
-	uint8_t densk = 0, densl = 0, densy = 0, densz = 0;
+	uint8_t densk = 0;
+	uint8_t densl = 0;
+	uint8_t densy = 0;
+	uint8_t densz = 0;
 
 	// Currently used ASCII => Unicode mapping.
 	std::array<uint16_t, 256> cur_map = {};

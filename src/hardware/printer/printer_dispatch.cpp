@@ -177,8 +177,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	}
 
 	if (esc_seen) {
-		esc_cmd  = ch;
-		esc_seen = false;
+		esc_cmd   = ch;
+		esc_seen  = false;
 		num_param = 0;
 
 		switch (esc_cmd) {
@@ -564,14 +564,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Set absolute horizontal print position (ESC $)
 		case Esc::SetAbsoluteHorizontalPrintPosition: { // 0x24
-			double unitSize = defined_unit;
-			if (unitSize < 0) {
-				unitSize = CoarseVerticalDivisor24Pin;
+			double unit_size = defined_unit;
+			if (unit_size < 0) {
+				unit_size = CoarseVerticalDivisor24Pin;
 			}
 
 			const double newX = left_margin +
 			                    (static_cast<double>(Param16(0)) /
-			                     unitSize);
+			                     unit_size);
 			if (newX <= right_margin) {
 				cur_x = newX;
 			}
@@ -895,14 +895,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Set relative horizontal print position (ESC \)
 		case Esc::SetRelativeHorizontalPrintPosition: { // 0x5c
 			const int16_t toMove = static_cast<int16_t>(Param16(0));
-			double unitSize      = defined_unit;
-			if (unitSize < 0) {
-				unitSize = (print_quality == PrintQuality::Draft)
-				                 ? RelativeHorizontalDivisorDraft
-				                 : RelativeHorizontalDivisorLq;
+			double unit_size     = defined_unit;
+			if (unit_size < 0) {
+				unit_size = (print_quality == PrintQuality::Draft)
+				                  ? RelativeHorizontalDivisorDraft
+				                  : RelativeHorizontalDivisorLq;
 			}
 			cur_x += static_cast<double>(
-			        static_cast<double>(toMove) / unitSize);
+			        static_cast<double>(toMove) / unit_size);
 		} break;
 
 		// Select justification (ESC a)
@@ -1105,17 +1105,17 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Set absolute vertical print position (ESC (V)
 		case Esc::ParenSetAbsoluteVerticalPrintPosition: { // 0x256
-			double unitSize = defined_unit;
-			if (unitSize < 0) {
-				unitSize = 1.0 / DefinedUnitDivisor;
+			double unit_size = defined_unit;
+			if (unit_size < 0) {
+				unit_size = 1.0 / DefinedUnitDivisor;
 			}
-			const double newPos = top_margin +
-			                      ((static_cast<double>(Param16(2))) *
-			                       unitSize);
-			if (newPos > bottom_margin) {
+			const double new_pos = top_margin +
+			                       (static_cast<double>(Param16(2)) *
+			                        unit_size);
+			if (new_pos > bottom_margin) {
 				NewPage(true, false);
 			} else {
-				cur_y = newPos;
+				cur_y = new_pos;
 			}
 		} break;
 
@@ -1127,45 +1127,47 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Set page format (ESC (c)
 		case Esc::ParenSetPageFormat: // 0x263
 			if (defined_unit > 0) {
-				double newTop, newBottom;
-				newTop = (static_cast<double>(Param16(2))) *
-				         defined_unit;
-				newBottom = (static_cast<double>(Param16(4))) *
-				            defined_unit;
-				if (newTop >= newBottom) {
+				const auto new_top = (static_cast<double>(Param16(2))) *
+				                     defined_unit;
+
+				const auto new_bottom = (static_cast<double>(
+				                                Param16(4))) *
+				                        defined_unit;
+
+				if (new_top >= new_bottom) {
 					break;
 				}
-				if (newTop < page_height) {
-					top_margin = newTop;
+				if (new_top < page_height) {
+					top_margin = new_top;
 				}
-				if (newBottom < page_height) {
-					bottom_margin = newBottom;
+				if (new_bottom < page_height) {
+					bottom_margin = new_bottom;
 				}
 				if (top_margin > cur_y) {
 					cur_y = top_margin;
 				}
-				// LOG_MSG("du %d, p1 %d, p2 %d, newtop %f,
+				// LOG_MSG("du %d, p1 %d, p2 %d, new_top %f,
 				// newbott %f, nt %f, nb %f, ph %f",
 				//	static_cast<uint64_t>(defined_unit),Param16(2),Param16(4),top_margin,bottom_margin,
-				//	newTop,newBottom,page_height);
+				//	new_top,new_bottom,page_height);
 			}
 			break;
 
 		// Set relative vertical print position (ESC (v)
 		case Esc::ParenSetRelativeVerticalPrintPosition: { // 0x276
-			double unitSize = defined_unit;
-			if (unitSize < 0) {
-				unitSize = 1.0 / DefinedUnitDivisor;
+			double unit_size = defined_unit;
+			if (unit_size < 0) {
+				unit_size = 1.0 / DefinedUnitDivisor;
 			}
-			const double newPos = cur_y +
-			                      (static_cast<double>(static_cast<int16_t>(
-			                               Param16(2))) *
-			                       unitSize);
-			if (newPos > top_margin) {
-				if (newPos > bottom_margin) {
+			const double new_pos = cur_y +
+			                       (static_cast<double>(static_cast<int16_t>(
+			                                Param16(2))) *
+			                        unit_size);
+			if (new_pos > top_margin) {
+				if (new_pos > bottom_margin) {
 					NewPage(true, false);
 				} else {
-					cur_y = newPos;
+					cur_y = new_pos;
 				}
 			}
 		} break;
@@ -1213,7 +1215,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 	// Backspace (BS)
 	case 0x08: {
-		double newX = cur_x - (1 / static_cast<double>(act_cpi));
+		double newX = cur_x - (1 / static_cast<double>(actual_cpi));
+
 		if (hmi > 0) {
 			newX = cur_x - hmi;
 		}
@@ -1225,19 +1228,19 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 	// Tab horizontally (HT) -- jump to the *first* tab stop strictly
 	// to the right of the current x position. (The previous loop kept
-	// overwriting `moveTo` with later matches and ended at the last
+	// overwriting `move_to` with later matches and ended at the last
 	// tab right of cur_x, which then usually fell past right_margin
 	// and the tab was silently ignored.)
 	case 0x09: {
-		double moveTo = -1;
+		double move_to = -1;
 		for (uint8_t i = 0; i < num_horiz_tabs; i++) {
 			if (horiz_tabs[i] > cur_x) {
-				moveTo = horiz_tabs[i];
+				move_to = horiz_tabs[i];
 				break;
 			}
 		}
-		if (moveTo > 0 && moveTo < right_margin) {
-			cur_x = moveTo;
+		if (move_to > 0 && move_to < right_margin) {
+			cur_x = move_to;
 		}
 	}
 		return true;
@@ -1256,18 +1259,18 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 		} else {
 			// Find tab below current pos
-			double moveTo = -1;
+			double move_to = -1;
 			for (uint8_t i = 0; i < num_vert_tabs; i++) {
 				if (vert_tabs[i] > cur_y) {
-					moveTo = vert_tabs[i];
+					move_to = vert_tabs[i];
 				}
 			}
 
 			// Nothing found => Act like FF
-			if (moveTo > bottom_margin || moveTo < 0) {
+			if (move_to > bottom_margin || move_to < 0) {
 				NewPage(true, false);
 			} else {
-				cur_y = moveTo;
+				cur_y = move_to;
 			}
 		}
 		if (style.doublewidth_oneline) {
@@ -1292,6 +1295,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			return true;
 		}
 		[[fallthrough]];
+
 	// Line feed
 	case 0x0a:
 		if (style.doublewidth_oneline) {
@@ -1479,7 +1483,7 @@ void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 		bit_graph.vert_dens = 72;
 	}
 
-	bit_graph.rem_bytes         = num_cols * bit_graph.bytes_column;
+	bit_graph.bytes_left        = num_cols * bit_graph.bytes_column;
 	bit_graph.read_bytes_column = 0;
 	bit_graph.col_index         = 0;
 	bit_graph.base_x            = cur_x;
@@ -1512,7 +1516,7 @@ void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 void Printer::PrintBitGraph(const uint8_t ch)
 {
 	bit_graph.column[bit_graph.read_bytes_column++] = ch;
-	bit_graph.rem_bytes--;
+	bit_graph.bytes_left--;
 
 	// Only print after reading a full column
 	if (bit_graph.read_bytes_column < bit_graph.bytes_column) {
@@ -1596,8 +1600,8 @@ void Printer::BlitAntialiasedDot(const double left_px, const double right_px,
 			// on a previously-coloured pixel replaces the
 			// colour-ID but adds to the intensity.
 			pixel.intensity = static_cast<uint8_t>(new_intensity);
-			pixel.color_id  = static_cast<uint8_t>(
-			        pixel.color_id | (color >> 5));
+			pixel.color_id  = static_cast<uint8_t>(pixel.color_id |
+                                                              (color >> 5));
 		}
 	}
 }
