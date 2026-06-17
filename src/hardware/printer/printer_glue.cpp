@@ -337,12 +337,19 @@ void PRINTER_AddConfigSection(const ConfigPtr& conf)
 	        "working directory. The directory is auto-created if it\n"
 	        "doesn't exist.");
 
-	pint = s.AddInt("printer_timeout", WhenIdle, 500);
+	pint = s.AddInt("printer_timeout", WhenIdle, 10000);
 	pint->SetHelp(
 	        "Inactivity timeout in milliseconds after which an unfinished\n"
-	        "page is auto-ejected. Default 500ms. Set to 0 to disable\n"
-	        "auto-eject; you can also eject manually via the 'ejectpage'\n"
-	        "mapper action (default Ctrl+F2, fully remappable).");
+	        "page is auto-ejected. Default 10000ms (10 seconds). DOS print\n"
+	        "drivers commonly pause for several seconds mid-job while\n"
+	        "preparing the next batch of bytes; too short a timeout splits\n"
+	        "one logical page across multiple output files. Raise this\n"
+	        "further if you still see split pages, or set to 0 to disable\n"
+	        "auto-eject entirely. You can also eject manually via the\n"
+	        "'ejectpage' mapper action (default Ctrl+F2, fully remappable).\n"
+	        "\n"
+	        "Ignored when printer_model = postscript -- the PostScript\n"
+	        "output file closes only on the driver's end-of-job marker.");
 }
 
 void PRINTER_Init()
