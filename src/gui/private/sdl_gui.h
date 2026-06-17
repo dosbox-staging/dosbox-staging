@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_SDLMAIN_H
-#define DOSBOX_SDLMAIN_H
+#ifndef DOSBOX_PRIVATE_SDL_GUI_H
+#define DOSBOX_PRIVATE_SDL_GUI_H
 
 #include <cstring>
 #include <memory>

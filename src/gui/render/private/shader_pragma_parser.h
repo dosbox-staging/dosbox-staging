@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_SHADER_PRAGMA_PARSER_H
-#define DOSBOX_SHADER_PRAGMA_PARSER_H
+#ifndef DOSBOX_PRIVATE_SHADER_PRAGMA_PARSER_H
+#define DOSBOX_PRIVATE_SHADER_PRAGMA_PARSER_H
 
 #include <optional>
 #include <string>
@@ -34,4 +34,4 @@ bool SetSetting(const std::string& name, const std::string& value,
 
 } // namespace ShaderPragma
 
-#endif // DOSBOX_SHADER_PRAGMA_PARSER_H
+#endif // DOSBOX_PRIVATE_SHADER_PRAGMA_PARSER_H

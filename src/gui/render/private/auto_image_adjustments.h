@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_AUTO_IMAGE_ADJUSTMENTS_H
-#define DOSBOX_AUTO_IMAGE_ADJUSTMENTS_H
+#ifndef DOSBOX_PRIVATE_AUTO_IMAGE_ADJUSTMENTS_H
+#define DOSBOX_PRIVATE_AUTO_IMAGE_ADJUSTMENTS_H
 
 #include <optional>
 
@@ -44,4 +44,4 @@ private:
 	AutoImageAdjustments GetAutoGraphicsStandardSettings(const VideoMode& video_mode) const;
 };
 
-#endif // DOSBOX_AUTO_IMAGE_ADJUSTMENTS_H
+#endif // DOSBOX_PRIVATE_AUTO_IMAGE_ADJUSTMENTS_H

@@ -1,6 +1,9 @@
 // SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#ifndef DOSBOX_PRIVATE_MESSAGES_PO_ENTRY_H
+#define DOSBOX_PRIVATE_MESSAGES_PO_ENTRY_H
+
 #include "misc/std_filesystem.h"
 
 #include <fstream>
@@ -138,3 +141,5 @@ private:
 
 	std::ofstream out_file = {};
 };
+
+#endif // DOSBOX_PRIVATE_MESSAGES_PO_ENTRY_H

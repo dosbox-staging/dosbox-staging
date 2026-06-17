@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_UNICODE_ENCODINGS_H
-#define DOSBOX_UNICODE_ENCODINGS_H
+#ifndef DOSBOX_PRIVATE_UNICODE_ENCODINGS_H
+#define DOSBOX_PRIVATE_UNICODE_ENCODINGS_H
 
 #include <cstdint>
 #include <string>
@@ -19,4 +19,4 @@ std::u16string wide_to_utf16(const std::u32string& str);
 std::u32string ucs2_to_wide(const std::u16string& str);
 std::u16string wide_to_ucs2(const std::u32string& str);
 
-#endif // DOSBOX_UNICODE_ENCODINGS_H
+#endif // DOSBOX_PRIVATE_UNICODE_ENCODINGS_H

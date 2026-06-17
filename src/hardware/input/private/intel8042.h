@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_INTEL_8042_H
-#define DOSBOX_INTEL_8042_H
+#ifndef DOSBOX_PRIVATE_INTEL8042_H
+#define DOSBOX_PRIVATE_INTEL8042_H
 
 #include <cstdint>
 #include <vector>
@@ -32,4 +32,4 @@ bool MOUSEPS2_PortWrite(const uint8_t byte); // false if mouse not connected
 void KEYBOARD_NotifyReadyForFrame();
 void MOUSEPS2_NotifyReadyForFrame();
 
-#endif // DOSBOX_INTEL_8042_H
+#endif // DOSBOX_PRIVATE_INTEL8042_H

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_AUTO_SHADER_SWITCHER_H
-#define DOSBOX_AUTO_SHADER_SWITCHER_H
+#ifndef DOSBOX_PRIVATE_AUTO_SHADER_SWITCHER_H
+#define DOSBOX_PRIVATE_AUTO_SHADER_SWITCHER_H
 
 #include <string>
 #include <unordered_map>
@@ -87,4 +87,4 @@ private:
 	int pixels_per_scanline_force_single_scan = 1;
 };
 
-#endif // DOSBOX_AUTO_SHADER_SWITCHER_H
+#endif // DOSBOX_PRIVATE_AUTO_SHADER_SWITCHER_H

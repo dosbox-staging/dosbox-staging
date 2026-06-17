@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_MOUSE_INTERFACES_H
-#define DOSBOX_MOUSE_INTERFACES_H
+#ifndef DOSBOX_PRIVATE_MOUSE_INTERFACES_H
+#define DOSBOX_PRIVATE_MOUSE_INTERFACES_H
 
 #include "mouse_common.h"
 
@@ -213,4 +213,4 @@ private:
 	float sensitivity_predefined = 1.0f; // hardcoded for the given interface
 };
 
-#endif // DOSBOX_MOUSE_INTERFACES_H
+#endif // DOSBOX_PRIVATE_MOUSE_INTERFACES_H

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_SHADER_H
-#define DOSBOX_SHADER_H
+#ifndef DOSBOX_PRIVATE_SHADER_H
+#define DOSBOX_PRIVATE_SHADER_H
 
 #include <optional>
 #include <string>
@@ -43,4 +43,4 @@ private:
 	GLint GetUniformLocation(const std::string& name) const;
 };
 
-#endif // DOSBOX_SHADER_H
+#endif // DOSBOX_PRIVATE_SHADER_H

@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_MIDI_WIN32_H
-#define DOSBOX_MIDI_WIN32_H
+#ifndef DOSBOX_PRIVATE_WIN32_H
+#define DOSBOX_PRIVATE_WIN32_H
 
 #include "midi_device.h"
 
@@ -162,4 +162,4 @@ void MIDI_WIN32_ListDevices(MidiDeviceWin32* device, MoreOutputStrings& output);
 
 #endif // WIN32
 
-#endif // DOSBOX_MIDI_WIN32_H
+#endif // DOSBOX_PRIVATE_WIN32_H

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_STEREO_ON_1_H
-#define DOSBOX_STEREO_ON_1_H
+#ifndef DOSBOX_PRIVATE_STON1_DAC_H
+#define DOSBOX_PRIVATE_STON1_DAC_H
 
 #include "dosbox.h"
 
@@ -33,4 +33,4 @@ private:
 	uint8_t stereo_data[2] = {data_reg, data_reg};
 };
 
-#endif // DOSBOX_STEREO_ON_1_H
+#endif // DOSBOX_PRIVATE_STON1_DAC_H

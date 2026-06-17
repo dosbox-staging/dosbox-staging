@@ -12,8 +12,8 @@
  * License: GPL - http://www.gnu.org/licenses/gpl.html
  */
 
-#ifndef DOSBOX_NOISE_GATE_H
-#define DOSBOX_NOISE_GATE_H
+#ifndef DOSBOX_PRIVATE_NOISE_GATE_H
+#define DOSBOX_PRIVATE_NOISE_GATE_H
 
 #include "dosbox.h"
 
@@ -63,4 +63,4 @@ private:
 	float seek_to = {};
 };
 
-#endif // DOSBOX_NOISE_GATE_H
+#endif // DOSBOX_PRIVATE_NOISE_GATE_H

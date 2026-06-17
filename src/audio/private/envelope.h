@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_ENVELOPE_H
-#define DOSBOX_ENVELOPE_H
+#ifndef DOSBOX_PRIVATE_ENVELOPE_H
+#define DOSBOX_PRIVATE_ENVELOPE_H
 
 /*  Audio Envelope
  *  --------------
