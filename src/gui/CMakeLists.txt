@@ -23,6 +23,10 @@ target_sources(dosboxcommon PRIVATE
 )
 endif()
 
+if (OPT_DEBUGGER)
+  target_link_libraries(dosboxcommon PRIVATE imgui::imgui)
+endif()
+
 target_link_libraries(dosboxcommon PRIVATE OpenGL::GL simpleini)
 
 if (C_OPENGL)

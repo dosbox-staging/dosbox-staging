@@ -29,7 +29,7 @@ add_subdirectory(mverb)
 add_subdirectory(nuked)
 
 if (OPT_DEBUGGER)
-  add_subdirectory(PDCurses)
+add_subdirectory(imgui)
 endif()
 
 add_subdirectory(PL_MPEG)
