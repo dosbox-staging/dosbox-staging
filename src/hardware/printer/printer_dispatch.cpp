@@ -31,96 +31,96 @@ namespace VirtualPrinter {
 namespace {
 
 namespace Esc {
-constexpr auto Undoc02                                          = 0x02;
-constexpr auto ReverseLineFeed                                  = 0x0a;
-constexpr auto ReturnToTopOfCurrentPage                         = 0x0c;
-constexpr auto SelectDoubleWidthPrinting                        = 0x0e;
-constexpr auto SelectCondensedPrinting                          = 0x0f;
-constexpr auto ControlPaperLoadingEjecting                      = 0x19;
-constexpr auto SetIntercharacterSpace                           = 0x20;
-constexpr auto MasterSelect                                     = 0x21;
-constexpr auto CancelMsbControl                                 = 0x23;
-constexpr auto SetAbsoluteHorizontalPrintPosition               = 0x24;
-constexpr auto SelectUserDefinedSet                             = 0x25;
-constexpr auto DefineUserDefinedCharacters                      = 0x26;
-constexpr auto TwoBytesSequence                                 = 0x28;
-constexpr auto SelectBitImage                                   = 0x2a;
-constexpr auto SetN360InchLineSpacing                           = 0x2b;
-constexpr auto TurnUnderlineOnOff                               = 0x2d;
-constexpr auto SelectVerticalTabChannel                         = 0x2f;
-constexpr auto Select18InchLineSpacing                          = 0x30;
-constexpr auto Select760InchLineSpacing                         = 0x31;
-constexpr auto Select16InchLineSpacing                          = 0x32;
-constexpr auto SetN180InchLineSpacing                           = 0x33;
-constexpr auto SelectItalicFont                                 = 0x34;
-constexpr auto CancelItalicFont                                 = 0x35;
-constexpr auto EnablePrintingOfUpperControlCodes                = 0x36;
-constexpr auto EnableUpperControlCodes                          = 0x37;
-constexpr auto DisablePaperOutDetector                          = 0x38;
-constexpr auto EnablePaperOutDetector                           = 0x39;
-constexpr auto CopyRomToRam                                     = 0x3a;
-constexpr auto UnidirectionalMode                               = 0x3c;
-constexpr auto SetMsbTo0                                        = 0x3d;
-constexpr auto SetMsbTo1                                        = 0x3e;
-constexpr auto ReassignBitImageMode                             = 0x3f;
-constexpr auto InitializePrinter                                = 0x40;
-constexpr auto SetN60InchLineSpacing                            = 0x41;
-constexpr auto SetVerticalTabs                                  = 0x42;
-constexpr auto SetPageLengthInLines                             = 0x43;
-constexpr auto SetHorizontalTabs                                = 0x44;
-constexpr auto SelectBoldFont                                   = 0x45;
-constexpr auto CancelBoldFont                                   = 0x46;
-constexpr auto SelectDoubleStrikePrinting                       = 0x47;
-constexpr auto CancelDoubleStrikePrinting                       = 0x48;
-constexpr auto SelectCharacterTypePrintPitch                    = 0x49;
-constexpr auto AdvancePrintPositionVertically                   = 0x4a;
-constexpr auto Select60DpiGraphics                              = 0x4b;
-constexpr auto Select120DpiGraphics                             = 0x4c;
-constexpr auto Select105Point12Cpi                              = 0x4d;
-constexpr auto SetBottomMargin                                  = 0x4e;
-constexpr auto CancelBottomMargin                               = 0x4f;
-constexpr auto Select105Point10Cpi                              = 0x50;
-constexpr auto SetRightMargin                                   = 0x51;
-constexpr auto SelectInternationalCharacterSet                  = 0x52;
-constexpr auto SelectSuperscriptSubscriptPrinting               = 0x53;
-constexpr auto CancelSuperscriptSubscriptPrinting               = 0x54;
-constexpr auto TurnUnidirectionalModeOnOff                      = 0x55;
-constexpr auto TurnDoubleWidthPrintingOnOff                     = 0x57;
-constexpr auto SelectFontPitchPoint                             = 0x58;
-constexpr auto Select120DpiDoubleSpeedGraphics                  = 0x59;
-constexpr auto Select240DpiGraphics                             = 0x5a;
-constexpr auto SelectCharacterHeightWidthLineSpacing            = 0x5b;
-constexpr auto SetRelativeHorizontalPrintPosition               = 0x5c;
-constexpr auto Select60Or120Dpi9PinGraphics = 0x5e;
-constexpr auto SelectJustification                              = 0x61;
-constexpr auto SetVerticalTabsInVfuChannels                     = 0x62;
-constexpr auto SetHorizontalMotionIndex                         = 0x63;
-constexpr auto SetVerticalTabStopsEveryNLines                   = 0x65;
-constexpr auto HorizontalVerticalSkip                   = 0x66;
-constexpr auto Select105Point15Cpi                              = 0x67;
-constexpr auto SelectDoubleQuadrupleSize                        = 0x68;
-constexpr auto ImmediatePrint                                   = 0x69;
-constexpr auto ReversePaperFeed                                 = 0x6a;
-constexpr auto SelectTypeface                                   = 0x6b;
-constexpr auto SetLeftMargin                                    = 0x6c;
-constexpr auto TurnProportionalModeOnOff                        = 0x70;
-constexpr auto SelectPrintingColor                              = 0x72;
-constexpr auto LowSpeedModeOnOff                                = 0x73;
-constexpr auto SelectCharacterTable                             = 0x74;
-constexpr auto TurnDoubleHeightPrintingOnOff                    = 0x77;
-constexpr auto SelectLqDraft                                    = 0x78;
-constexpr auto SelectDeselectSlashZero                          = 0x7e;
-constexpr auto SetPageLengthInInches                            = 0x100;
-constexpr auto SkipUnsupportedEscCommand                        = 0x101;
-constexpr auto ParenSelectLineScore                             = 0x22d;
-constexpr auto ParenBarCodeSetupPrint                           = 0x242;
-constexpr auto ParenSetPageLengthInDefinedUnit                  = 0x243;
-constexpr auto ParenSetUnit                                     = 0x255;
-constexpr auto ParenSetAbsoluteVerticalPrintPosition            = 0x256;
-constexpr auto ParenPrintDataAsCharacters                       = 0x25e;
-constexpr auto ParenSetPageFormat                               = 0x263;
-constexpr auto ParenAssignCharacterTable                        = 0x274;
-constexpr auto ParenSetRelativeVerticalPrintPosition            = 0x276;
+constexpr auto Undoc02                               = 0x02;
+constexpr auto ReverseLineFeed                       = 0x0a;
+constexpr auto ReturnToTopOfCurrentPage              = 0x0c;
+constexpr auto SelectDoubleWidthPrinting             = 0x0e;
+constexpr auto SelectCondensedPrinting               = 0x0f;
+constexpr auto ControlPaperLoadingEjecting           = 0x19;
+constexpr auto SetIntercharacterSpace                = 0x20;
+constexpr auto MasterSelect                          = 0x21;
+constexpr auto CancelMsbControl                      = 0x23;
+constexpr auto SetAbsoluteHorizontalPrintPosition    = 0x24;
+constexpr auto SelectUserDefinedSet                  = 0x25;
+constexpr auto DefineUserDefinedCharacters           = 0x26;
+constexpr auto TwoBytesSequence                      = 0x28;
+constexpr auto SelectBitImage                        = 0x2a;
+constexpr auto SetN360InchLineSpacing                = 0x2b;
+constexpr auto TurnUnderlineOnOff                    = 0x2d;
+constexpr auto SelectVerticalTabChannel              = 0x2f;
+constexpr auto Select18InchLineSpacing               = 0x30;
+constexpr auto Select760InchLineSpacing              = 0x31;
+constexpr auto Select16InchLineSpacing               = 0x32;
+constexpr auto SetN180InchLineSpacing                = 0x33;
+constexpr auto SelectItalicFont                      = 0x34;
+constexpr auto CancelItalicFont                      = 0x35;
+constexpr auto EnablePrintingOfUpperControlCodes     = 0x36;
+constexpr auto EnableUpperControlCodes               = 0x37;
+constexpr auto DisablePaperOutDetector               = 0x38;
+constexpr auto EnablePaperOutDetector                = 0x39;
+constexpr auto CopyRomToRam                          = 0x3a;
+constexpr auto UnidirectionalMode                    = 0x3c;
+constexpr auto SetMsbTo0                             = 0x3d;
+constexpr auto SetMsbTo1                             = 0x3e;
+constexpr auto ReassignBitImageMode                  = 0x3f;
+constexpr auto InitializePrinter                     = 0x40;
+constexpr auto SetN60InchLineSpacing                 = 0x41;
+constexpr auto SetVerticalTabs                       = 0x42;
+constexpr auto SetPageLengthInLines                  = 0x43;
+constexpr auto SetHorizontalTabs                     = 0x44;
+constexpr auto SelectBoldFont                        = 0x45;
+constexpr auto CancelBoldFont                        = 0x46;
+constexpr auto SelectDoubleStrikePrinting            = 0x47;
+constexpr auto CancelDoubleStrikePrinting            = 0x48;
+constexpr auto SelectCharacterTypePrintPitch         = 0x49;
+constexpr auto AdvancePrintPositionVertically        = 0x4a;
+constexpr auto Select60DpiGraphics                   = 0x4b;
+constexpr auto Select120DpiGraphics                  = 0x4c;
+constexpr auto Select105Point12Cpi                   = 0x4d;
+constexpr auto SetBottomMargin                       = 0x4e;
+constexpr auto CancelBottomMargin                    = 0x4f;
+constexpr auto Select105Point10Cpi                   = 0x50;
+constexpr auto SetRightMargin                        = 0x51;
+constexpr auto SelectInternationalCharacterSet       = 0x52;
+constexpr auto SelectSuperscriptSubscriptPrinting    = 0x53;
+constexpr auto CancelSuperscriptSubscriptPrinting    = 0x54;
+constexpr auto TurnUnidirectionalModeOnOff           = 0x55;
+constexpr auto TurnDoubleWidthPrintingOnOff          = 0x57;
+constexpr auto SelectFontPitchPoint                  = 0x58;
+constexpr auto Select120DpiDoubleSpeedGraphics       = 0x59;
+constexpr auto Select240DpiGraphics                  = 0x5a;
+constexpr auto SelectCharacterHeightWidthLineSpacing = 0x5b;
+constexpr auto SetRelativeHorizontalPrintPosition    = 0x5c;
+constexpr auto Select60Or120Dpi9PinGraphics          = 0x5e;
+constexpr auto SelectJustification                   = 0x61;
+constexpr auto SetVerticalTabsInVfuChannels          = 0x62;
+constexpr auto SetHorizontalMotionIndex              = 0x63;
+constexpr auto SetVerticalTabStopsEveryNLines        = 0x65;
+constexpr auto HorizontalVerticalSkip                = 0x66;
+constexpr auto Select105Point15Cpi                   = 0x67;
+constexpr auto SelectDoubleQuadrupleSize             = 0x68;
+constexpr auto ImmediatePrint                        = 0x69;
+constexpr auto ReversePaperFeed                      = 0x6a;
+constexpr auto SelectTypeface                        = 0x6b;
+constexpr auto SetLeftMargin                         = 0x6c;
+constexpr auto TurnProportionalModeOnOff             = 0x70;
+constexpr auto SelectPrintingColor                   = 0x72;
+constexpr auto LowSpeedModeOnOff                     = 0x73;
+constexpr auto SelectCharacterTable                  = 0x74;
+constexpr auto TurnDoubleHeightPrintingOnOff         = 0x77;
+constexpr auto SelectLqDraft                         = 0x78;
+constexpr auto SelectDeselectSlashZero               = 0x7e;
+constexpr auto SetPageLengthInInches                 = 0x100;
+constexpr auto SkipUnsupportedEscCommand             = 0x101;
+constexpr auto ParenSelectLineScore                  = 0x22d;
+constexpr auto ParenBarCodeSetupPrint                = 0x242;
+constexpr auto ParenSetPageLengthInDefinedUnit       = 0x243;
+constexpr auto ParenSetUnit                          = 0x255;
+constexpr auto ParenSetAbsoluteVerticalPrintPosition = 0x256;
+constexpr auto ParenPrintDataAsCharacters            = 0x25e;
+constexpr auto ParenSetPageFormat                    = 0x263;
+constexpr auto ParenAssignCharacterTable             = 0x274;
+constexpr auto ParenSetRelativeVerticalPrintPosition = 0x276;
 } // namespace Esc
 
 // ESC/P vertical motion divisors. Vertical positions and line spacings
@@ -524,11 +524,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		//   9-pin:     n/120 always (regardless of LQ/draft).
 		case Esc::SetIntercharacterSpace: // 0x20
 			if (!multipoint) {
-				const double divisor =
-				        (pins == 9 ||
-				         print_quality == PrintQuality::Draft)
-				                ? 120.0
-				                : 180.0;
+				const double divisor = (pins == 9 ||
+				                        print_quality ==
+				                                PrintQuality::Draft)
+				                             ? 120.0
+				                             : 180.0;
 				extra_intra_space = static_cast<double>(params[0]) /
 				                    divisor;
 				hmi = -1;
@@ -582,10 +582,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// when no custom unit is selected is 1/60 inch.
 		case Esc::SetAbsoluteHorizontalPrintPosition: { // 0x24
 			constexpr double DefaultUnitInches = 1.0 / 60.0;
-			const double unit_inches = (defined_unit > 0)
-			                                 ? defined_unit
-			                                 : DefaultUnitInches;
-			const double newX = left_margin +
+			const double unit_inches           = (defined_unit > 0)
+			                                           ? defined_unit
+			                                           : DefaultUnitInches;
+			const double newX                  = left_margin +
 			                    static_cast<double>(Param16(0)) *
 			                            unit_inches;
 			if (newX <= right_margin) {
@@ -606,8 +606,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// stream via the bit_graph discard flag so the rest of the
 		// stream isn't misinterpreted as text.
 		case Esc::Select60Or120Dpi9PinGraphics: // 0x5e
-			bit_graph.bytes_left = static_cast<uint16_t>(
-			        2 * Param16(1));
+			bit_graph.bytes_left = static_cast<uint16_t>(2 * Param16(1));
 			bit_graph.bytes_column      = 2;
 			bit_graph.read_bytes_column = 0;
 			bit_graph.col_index         = 0;
@@ -941,13 +940,13 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			constexpr double DefaultDraftUnitInches = 1.0 / 120.0;
 			constexpr double DefaultLqUnitInches    = 1.0 / 180.0;
 
-			const int16_t toMove     = static_cast<int16_t>(Param16(0));
-			const double unit_inches = (defined_unit > 0)
-			                                 ? defined_unit
-			                                 : ((print_quality ==
-			                                     PrintQuality::Draft)
-			                                            ? DefaultDraftUnitInches
-			                                            : DefaultLqUnitInches);
+			const int16_t toMove = static_cast<int16_t>(Param16(0));
+			const double unit_inches =
+			        (defined_unit > 0)
+			                ? defined_unit
+			                : ((print_quality == PrintQuality::Draft)
+			                           ? DefaultDraftUnitInches
+			                           : DefaultLqUnitInches);
 
 			cur_x += static_cast<double>(toMove) * unit_inches;
 		} break;
@@ -1311,8 +1310,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 		} else {
 			// Spec C-45: move to the *next* vertical tab below the
-			// current print position. vert_tabs is sorted ascending,
-			// so break on the first match.
+			// current print position. vert_tabs is sorted
+			// ascending, so break on the first match.
 			double move_to = -1;
 			for (uint8_t i = 0; i < num_vert_tabs; i++) {
 				if (vert_tabs[i] > cur_y) {
@@ -1411,9 +1410,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	// erase pixels already blitted into the page bitmap in this
 	// streaming model, but we honour the move-to-left-margin half
 	// of the contract so subsequent text starts in the right place.
-	case 0x18:
-		cur_x = left_margin;
-		return true;
+	case 0x18: cur_x = left_margin; return true;
 
 	// ESC
 	case 0x1b: esc_seen = true; return true;

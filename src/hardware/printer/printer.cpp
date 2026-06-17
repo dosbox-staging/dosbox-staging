@@ -785,7 +785,8 @@ void PRINTER_Configure(const PrinterModelKind model, const int dpi,
                        const int timeout_ms)
 {
 	switch (model) {
-	case PrinterModelKind::None: conf_model = PrinterModel::None; break;
+	case PrinterModelKind::None:
+		conf_model = PrinterModel::None;
 		break;
 
 	case PrinterModelKind::EpsonDotMatrix9Pin:
