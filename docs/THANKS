@@ -1,6 +1,6 @@
 We would like to thank:
 
-The SDL2 team for their quality cross-platform software.
+The SDL team for their quality cross-platform software.
 David Reid for his MP3, FLAC, and WAV decoder libraries.
 Sean Barrett for his Vorbis decoder library.
 Alexey Khokholov for his perfect OPL3 emulator.

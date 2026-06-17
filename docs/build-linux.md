@@ -75,8 +75,8 @@ These are generic, distro-independent building instructions.
 - MT32Emu
 - OpenGL headers
 - OpusFile
-- SDL 2.x
-- SDL2_image
+- SDL 3.x
+- SDL3_image
 - asio
 - SpeexDSP
 - zlib-nG
@@ -130,7 +130,7 @@ Release build:
 ```bash
 sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
              autoconf autoconf-archive automake bison libtool libgl1-mesa-dev \
-             libsdl2-dev python3-venv
+             libsdl3-dev python3-venv
 ```
 
 ### Install the vcpkg tool
