@@ -89,8 +89,8 @@ DOSBox Staging has the following library dependencies:
 | [libpng](http://www.libpng.org/pub/png/libpng.html)       | PNG encoding of screen captures                 | libpng             | 1.6.53            | **no** :red_circle: |
 | [libslirp](https://gitlab.freedesktop.org/slirp/libslirp) | General purpose TCP-IP emulator                 | libslirp           | 4.9.0             | yes :green_circle:  |
 | [Opus File](https://opus-codec.org/)                      | CD Audio playback for Opus-encoded audio tracks | opusfile           | 0.12+20221121#1   | **no** :red_circle: |
-| [SDL 2](https://github.com/libsdl-org/SDL)                | OS-agnostic API for video, audio, and eventing  | sdl2               | 2.32.10 (overlay) | **no** :red_circle: |
-| [SDL_image 2](https://github.com/libsdl-org/SDL_image)    | Image decoding for many popular formats         | sdl2-image         | 2.8.8#2           | **no** :red_circle: |
+| [SDL 3](https://github.com/libsdl-org/SDL)                | OS-agnostic API for video, audio, and eventing  | sdl3               | 3.4.10            | **no** :red_circle: |
+| [SDL_image 3](https://github.com/libsdl-org/SDL_image)    | Image decoding for many popular formats         | sdl3-image         | 3.4.4             | **no** :red_circle: |
 | [Asio](https://think-async.com/Asio/)                     | Network API for emulated serial and IPX         | asio               | 1.30.2            | **no** :red_circle: |
 | [SpeexDSP](https://github.com/xiph/speexdsp)              | Audio resampling                                | speexdsp           | 1.2.1#1           | **no** :red_circle: |
 | [zlib-ng](https://github.com/zlib-ng/zlib-ng)             | ZMBV video capture                              | zlib-ng            | 2.3.2             | yes¹ :green_circle: |
