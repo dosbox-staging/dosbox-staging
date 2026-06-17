@@ -1,9 +1,10 @@
 /* PDCurses */
 
 #include "pdcsdl.h"
+#include "pdc_event_queue.h"
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 /*man-start**************************************************************
 
@@ -52,7 +53,7 @@ int PDC_getclipboard(char **contents, long *length)
 {
     PDC_LOG(("PDC_getclipboard() - called\n"));
 
-    if (SDL_HasClipboardText() == SDL_FALSE)
+    if (SDL_HasClipboardText() == false)
         return PDC_CLIP_EMPTY;
     *contents = SDL_GetClipboardText();
     *length = strlen(*contents);
@@ -83,7 +84,7 @@ int PDC_clearclipboard(void)
 {
     PDC_LOG(("PDC_clearclipboard() - called\n"));
 
-    if (SDL_HasClipboardText() == SDL_TRUE)
+    if (SDL_HasClipboardText() == true)
     {
         SDL_SetClipboardText(NULL);
     }

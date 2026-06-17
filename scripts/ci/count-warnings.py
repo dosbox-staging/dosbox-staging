@@ -64,8 +64,10 @@ class MessageFormat(enum.Enum):
 #
 ANSI_COLOR_PATTERN = re.compile(r"\x1b\[[0-9;]*[mGKH]")
 
-# For recognizing warnings from usr/* or subprojects files
-USR_OR_SUBPROJECTS_PATTERN = re.compile(r"^/usr/.*|.*/subprojects/.*")
+# For recognizing warnings from system or third-party files
+OUT_OF_SCOPE_WARNING_PATTERN = re.compile(
+    r"^/usr/.*|.*[\\/]subprojects[\\/].*|.*[\\/]vcpkg_installed[\\/].*"
+)
 
 
 class warning_summaries:
@@ -114,7 +116,7 @@ def count_warning(message_format, line_no, line, warnings):
 
     # Ignore out-of-scope warnings from system and subprojects.
     file = match.group(1)
-    if USR_OR_SUBPROJECTS_PATTERN.match(file):
+    if OUT_OF_SCOPE_WARNING_PATTERN.match(file):
         return 0
 
     # Some warnings (e.g. effc++) are reported multiple times, once

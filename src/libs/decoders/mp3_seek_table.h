@@ -17,7 +17,7 @@
 #include "dosbox_config.h"
 
 #include <vector>    // provides: vector
-#include <SDL.h>     // provides: SDL_RWops
+#include <SDL3/SDL.h>     // provides: SDL_IOStream
 
 // Ensure we only get the API
 #ifdef DR_MP3_IMPLEMENTATION

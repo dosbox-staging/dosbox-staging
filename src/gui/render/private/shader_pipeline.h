@@ -18,8 +18,8 @@
 
 // Glad must be included before SDL
 #include "glad/gl.h"
-#include <SDL.h>
-#include <SDL_opengl.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
 
 struct ShaderPass {
 	Shader shader = {};

@@ -2209,7 +2209,6 @@ int32_t DEBUG_Run(int32_t amount, bool quickexit)
 
 		const auto graphics_window = GFX_GetWindow();
 		SDL_RaiseWindow(graphics_window);
-		SDL_SetWindowInputFocus(graphics_window);
 
 		DOSBOX_SetNormalLoop();
 	}
@@ -2581,9 +2580,9 @@ Bitu DEBUG_Loop(void)
 	return DEBUG_CheckKeys();
 }
 
-#include <queue>
-extern SDL_Window* pdc_window;
-extern std::queue<SDL_Event> pdc_event_queue;
+#include "pdc_event_queue.h"
+extern SDL_Window *pdc_window;
+extern std::queue<QueuedEvent> debugger_event_queue;
 
 void DEBUG_Enable(bool pressed)
 {
@@ -2606,9 +2605,8 @@ void DEBUG_Enable(bool pressed)
 
 	// Defocus the graphical UI and bring the debugger UI into focus
 	GFX_LosingFocus();
-	pdc_event_queue = {};
+	debugger_event_queue = {};
 	SDL_RaiseWindow(pdc_window);
-	SDL_SetWindowInputFocus(pdc_window);
 	SetCodeWinStart();
 	DEBUG_DrawScreen();
 

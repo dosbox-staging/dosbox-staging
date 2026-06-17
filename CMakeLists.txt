@@ -484,8 +484,8 @@ endif()
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
 # Find common external dependencies
-find_package(SDL2 CONFIG REQUIRED)
-find_package(SDL2_image CONFIG REQUIRED)
+find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
+find_package(SDL3_image CONFIG REQUIRED)
 find_package(iir REQUIRED)
 find_package(PNG REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -580,8 +580,7 @@ target_link_libraries(dosboxcommon PRIVATE
 
 target_link_libraries(dosbox PRIVATE
   dosboxcommon
-  $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
-  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+  SDL3::Headers
 )
 
 # Export dynamic symbols so loguru's stack traces can resolve names

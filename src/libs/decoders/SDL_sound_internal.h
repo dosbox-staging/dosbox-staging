@@ -20,7 +20,7 @@
 #endif
 
 // must be included after dosbox_config.h
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 /* SDL 1.2.4 defines this, but better safe than sorry. */
 #if (!defined(__inline__))
@@ -109,7 +109,7 @@ typedef struct __SOUND_DECODERFUNCTIONS__
          * in Sound_SampleInternal section:
          *    Sound_Sample *next;  (offlimits)
          *    Sound_Sample *prev;  (offlimits)
-         *    SDL_RWops *rw;       (can use, but do NOT close it)
+         *    SDL_IOStream *rw;       (can use, but do NOT close it)
          *    const Sound_DecoderFunctions *funcs; (that's this structure)
          *    void *decoder_private; (read and write access)
          *
@@ -178,7 +178,7 @@ typedef struct __SOUND_DECODERFUNCTIONS__
          *  have a valid audio stream with a given set of characteristics.
          *
          * The decoder is responsible for calling seek() on the associated
-         *  SDL_RWops. A failing call to seek() should be the ONLY reason that
+         *  SDL_IOStream. A failing call to seek() should be the ONLY reason that
          *  this method should ever fail!
          */
     int (*rewind)(Sound_Sample *sample);
@@ -192,7 +192,7 @@ typedef struct __SOUND_DECODERFUNCTIONS__
          *  decoding to a given point.
          *
          * The decoder is responsible for calling seek() on the associated
-         *  SDL_RWops.
+         *  SDL_IOStream.
          *
          * If there is an error, try to recover so that the next read will
          *  continue as if nothing happened.
@@ -206,7 +206,7 @@ typedef struct __SOUND_SAMPLEINTERNAL__
 {
     Sound_Sample *next;
     Sound_Sample *prev;
-    SDL_RWops *rw;
+    SDL_IOStream *rw;
     const Sound_DecoderFunctions *funcs;
     void *buffer;
     Uint32 buffer_size;

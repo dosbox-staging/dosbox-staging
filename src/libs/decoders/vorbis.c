@@ -102,7 +102,7 @@ static int VORBIS_open(Sound_Sample *sample, const char *ext)
 {
     (void) ext; // deliberately unused, but present for API compliance
     Sound_SampleInternal *internal = (Sound_SampleInternal *) sample->opaque;
-    SDL_RWops *rw = internal->rw;
+    SDL_IOStream *rw = internal->rw;
     int err = 0;
     stb_vorbis *stb = stb_vorbis_open_rwops(rw, 0, &err, NULL);
 
@@ -112,7 +112,7 @@ static int VORBIS_open(Sound_Sample *sample, const char *ext)
 	}
     internal->decoder_private = stb;
     sample->flags = SOUND_SAMPLEFLAG_CANSEEK;
-    sample->actual.format = AUDIO_S16SYS; // returns byte-order native to the running architecture
+    sample->actual.format = SDL_AUDIO_S16; // returns byte-order native to the running architecture
     sample->actual.channels = stb->channels;
     sample->actual.rate = stb->sample_rate;
     const unsigned int num_frames = stb_vorbis_stream_length_in_samples(stb);
