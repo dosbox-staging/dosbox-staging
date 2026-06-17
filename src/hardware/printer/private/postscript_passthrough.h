@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_PRINTER_POSTSCRIPT_PASSTHROUGH_H
-#define DOSBOX_PRINTER_POSTSCRIPT_PASSTHROUGH_H
+#ifndef DOSBOX_PRIVATE_POSTSCRIPT_PASSTHROUGH_H
+#define DOSBOX_PRIVATE_POSTSCRIPT_PASSTHROUGH_H
 
 #include "dosbox_config.h"
 
@@ -39,4 +39,4 @@ public:
 
 } // namespace VirtualPrinter
 
-#endif // DOSBOX_PRINTER_POSTSCRIPT_PASSTHROUGH_H
+#endif // DOSBOX_PRIVATE_POSTSCRIPT_PASSTHROUGH_H
