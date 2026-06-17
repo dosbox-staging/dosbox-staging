@@ -18,10 +18,9 @@
 
 #include "capture/capture.h"
 #include "config/setup.h"
-#include "hardware/printer/postscript_passthrough.h"
-#include "hardware/printer/printer.h"
-#include "hardware/printer/printer_if.h"
-#include "hardware/printer/raw_passthrough.h"
+#include "hardware/printer/private/postscript_passthrough.h"
+#include "hardware/printer/private/printer.h"
+#include "hardware/printer/private/raw_passthrough.h"
 
 #include <array>
 #include <cstdint>

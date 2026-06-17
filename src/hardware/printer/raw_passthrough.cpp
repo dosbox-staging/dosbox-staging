@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "raw_passthrough.h"
+#include "private/raw_passthrough.h"
 
 #include <cstdio>
 

@@ -6,7 +6,7 @@
 // bit-image helpers (SetupBitImage, PrintBitGraph) that ESC commands
 // in here drive.
 
-#include "printer.h"
+#include "private/printer.h"
 
 #include <algorithm>
 #include <chrono>
@@ -16,7 +16,7 @@
 #include "misc/logging.h"
 #include "utils/checks.h"
 
-#include "printer_charmaps.h"
+#include "private/printer_charmaps.h"
 
 CHECK_NARROWING();
 

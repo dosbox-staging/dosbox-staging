@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2013 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "printer_charmaps.h"
+#include "private/printer_charmaps.h"
 #include "misc/support.h"
 #include "utils/checks.h"
 
