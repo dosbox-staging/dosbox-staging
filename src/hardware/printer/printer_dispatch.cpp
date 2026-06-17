@@ -1107,7 +1107,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::ParenSetAbsoluteVerticalPrintPosition: { // 0x256
 			double unitSize = defined_unit;
 			if (unitSize < 0) {
-				unitSize = static_cast<double>(360.0);
+				unitSize = 1.0 / DefinedUnitDivisor;
 			}
 			const double newPos = top_margin +
 			                      ((static_cast<double>(Param16(2))) *
@@ -1155,7 +1155,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::ParenSetRelativeVerticalPrintPosition: { // 0x276
 			double unitSize = defined_unit;
 			if (unitSize < 0) {
-				unitSize = DefinedUnitDivisor;
+				unitSize = 1.0 / DefinedUnitDivisor;
 			}
 			const double newPos = cur_y +
 			                      (static_cast<double>(static_cast<int16_t>(
