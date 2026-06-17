@@ -1,6 +1,7 @@
 /* PDCurses */
 
 #include "pdcsdl.h"
+#include "pdc_event_queue.h"
 
 /*man-start**************************************************************
 

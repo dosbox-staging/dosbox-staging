@@ -44,20 +44,20 @@ add_library(pdcurses STATIC
   pdcurses/touch.c
   pdcurses/util.c
   pdcurses/window.c
-  ${sdl2_dir}/pdcclip.cpp
-  ${sdl2_dir}/pdcdisp.cpp
-  ${sdl2_dir}/pdcgetsc.cpp
-  ${sdl2_dir}/pdckbd.cpp
-  ${sdl2_dir}/pdcscrn.cpp
-  ${sdl2_dir}/pdcsetsc.cpp
-  sdl2_queue/pdcutil.cpp
+
+  sdl3_queue/pdcclip.cpp
+  sdl3_queue/pdcdisp.cpp
+  sdl3_queue/pdcgetsc.cpp
+  sdl3_queue/pdckbd.cpp
+  sdl3_queue/pdcscrn.cpp
+  sdl3_queue/pdcsetsc.cpp
+  sdl3_queue/pdcutil.cpp
 )
 
-target_include_directories(pdcurses SYSTEM PUBLIC . pdcurses)
+target_include_directories(libpdcurses PUBLIC . pdcurses sdl3_queue)
 
-target_link_libraries(pdcurses PRIVATE
-  project_headers
-  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+target_link_libraries(
+  libpdcurses PRIVATE SDL3::SDL3
 )
 
 disable_warnings(pdcurses)

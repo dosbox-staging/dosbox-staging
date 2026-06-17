@@ -10,7 +10,7 @@
 #include "utils/checks.h"
 #include "utils/string_utils.h"
 
-#include <SDL_misc.h>
+#include <SDL3/SDL.h>
 
 CHECK_NARROWING();
 

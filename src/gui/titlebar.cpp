@@ -21,7 +21,7 @@
 #include "utils/checks.h"
 
 // must be included after dosbox_config.h
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 CHECK_NARROWING();
 
@@ -123,8 +123,9 @@ static bool is_animation_running()
 	return state.timer_id != 0;
 }
 
-static uint32_t animation_tick([[maybe_unused]] uint32_t interval,
-                               [[maybe_unused]] void* name)
+static uint32_t animation_tick([[maybe_unused]] void* userdata,
+							   [[maybe_unused]] SDL_TimerID timer_id,
+                               [[maybe_unused]] uint32_t interval)
 {
 	SDL_Event event = {};
 	event.user.type = GFX_GetUserSdlEventId(DosBoxSdlEvent::RefreshAnimatedTitle);

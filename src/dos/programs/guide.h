@@ -9,8 +9,6 @@
 #include "dos/programs.h"
 #include "misc/help_util.h"
 
-#include <SDL.h>
-
 class GUIDE final : public Program {
 public:
 	GUIDE()

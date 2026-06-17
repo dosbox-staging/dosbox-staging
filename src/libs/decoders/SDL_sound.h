@@ -6,13 +6,13 @@
 /*
  *  Modified SDL Sound API
  *  ----------------------
- *  The basic gist of SDL_sound is that you use an SDL_RWops to get sound data
+ *  The basic gist of SDL_sound is that you use an SDL_IOStream to get sound data
  *  into this library, and SDL_sound will take that data, in one of several
  *  popular formats, and decode it into raw waveform data in the format of
  *  your choice. This gives you a nice abstraction for getting sound into your
  *  game or application; just feed it to SDL_sound, and it will handle
  *  decoding and converting, so you can just pass it to your SDL audio
- *  callback (or whatever). Since it gets data from an SDL_RWops, you can get
+ *  callback (or whatever). Since it gets data from an SDL_IOStream, you can get
  *  the initial sound data from any number of sources: file, memory buffer,
  *  network connection, etc.
  *
@@ -34,8 +34,8 @@
 #include "dosbox_config.h"
 
 // must be included after dosbox_config.h
-#include <SDL.h>
-#include <SDL_endian.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_endian.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,7 +93,7 @@ typedef enum
  * \brief Information about an existing sample's format.
  *
  * These are the basics of a decoded sample's data structure: data format
- *  (see AUDIO_U8 and friends in SDL_audio.h), number of channels, and sample
+ *  (see SDL_AUDIO_U8 and friends in SDL_audio.h), number of channels, and sample
  *  rate. If you need more explanation than that, you should stop developing
  *  sound code right now.
  *
@@ -256,7 +256,7 @@ SNDDECLSPEC int SDLCALL Sound_Init(void);
  * \fn Sound_Quit(void)
  * \brief Shutdown SDL_sound.
  *
- * This closes any SDL_RWops that were being used as sound sources, and frees
+ * This closes any SDL_IOStream that were being used as sound sources, and frees
  *  any resources in use by SDL_sound.
  *
  * All Sound_Sample pointers you had prior to this call are INVALIDATED.
@@ -286,7 +286,7 @@ SNDDECLSPEC int SDLCALL Sound_Quit(void);
  *  file with an extension of "XYZ", if you like. The file extensions are
  *  informational, and only required as a hint to choosing the correct
  *  decoder, since the sound data may not be coming from a file at all, thanks
- *  to the abstraction that an SDL_RWops provides.
+ *  to the abstraction that an SDL_IOStream provides.
  *
  * The returned value is an array of pointers to Sound_DecoderInfo structures,
  *  with a NULL entry to signify the end of the list:
@@ -342,10 +342,10 @@ SNDDECLSPEC void SDLCALL Sound_ClearError(void);
 
 
 /**
- * \fn Sound_Sample *Sound_NewSample(SDL_RWops *rw, const char *ext, Sound_AudioInfo *desired, Uint32 bufferSize)
+ * \fn Sound_Sample *Sound_NewSample(SDL_IOStream *rw, const char *ext, Sound_AudioInfo *desired, Uint32 bufferSize)
  * \brief Start decoding a new sound sample.
  *
- * The data is read via an SDL_RWops structure (see SDL_rwops.h in the SDL
+ * The data is read via an SDL_IOStream structure (see SDL_rwops.h in the SDL
  *  include directory), so it may be coming from memory, disk, network stream,
  *  etc. The (ext) parameter is merely a hint to determining the correct
  *  decoder; if you specify, for example, "mp3" for an extension, and one of
@@ -353,7 +353,7 @@ SNDDECLSPEC void SDLCALL Sound_ClearError(void);
  *  first shot at trying to claim the data for decoding. If none of the
  *  extensions match (or the extension is NULL), then every decoder examines
  *  the data to determine if it can handle it, until one accepts it. In such a
- *  case your SDL_RWops will need to be capable of rewinding to the start of
+ *  case your SDL_IOStream will need to be capable of rewinding to the start of
  *  the stream.
  *
  * If no decoders can handle the data, a NULL value is returned, and a human
@@ -393,9 +393,9 @@ SNDDECLSPEC void SDLCALL Sound_ClearError(void);
  * You do not have to keep a reference to (rw) around. If this function
  *  suceeds, it stores (rw) internally (and disposes of it during the call
  *  to Sound_FreeSample()). If this function fails, it will dispose of the
- *  SDL_RWops for you.
+ *  SDL_IOStream for you.
  *
- *    \param rw SDL_RWops with sound data.
+ *    \param rw SDL_IOStream with sound data.
  *    \param ext File extension normally associated with a data format.
  *               Can usually be NULL.
  *    \param desired Format to convert sound data into. Can usually be NULL,
@@ -413,7 +413,7 @@ SNDDECLSPEC void SDLCALL Sound_ClearError(void);
  * \sa Sound_Rewind
  * \sa Sound_FreeSample
  */
-SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSample(SDL_RWops *rw,
+SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSample(SDL_IOStream *rw,
                                                    const char *ext,
                                                    Sound_AudioInfo *desired);
 
@@ -421,7 +421,7 @@ SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSample(SDL_RWops *rw,
  * \fn Sound_Sample *Sound_NewSampleFromFile(const char *filename, Sound_AudioInfo *desired, Uint32 bufferSize)
  * \brief Start decoding a new sound sample from a file on disk.
  *
- * This is identical to Sound_NewSample(), but it creates an SDL_RWops for you
+ * This is identical to Sound_NewSample(), but it creates an SDL_IOStream for you
  *  from the file located in (filename). Note that (filename) is specified in
  *  platform-dependent notation. ("C:\\music\\mysong.mp3" on windows, and
  *  "/home/icculus/music/mysong.mp3" or whatever on Unix, etc.)
@@ -429,7 +429,7 @@ SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSample(SDL_RWops *rw,
  *  (filename).
  *
  * This can pool RWops structures, so it may fragment the heap less over time
- *  than using SDL_RWFromFile().
+ *  than using SDL_IOFromFile().
  *
  *    \param filename file containing sound data.
  *    \param desired Format to convert sound data into. Can usually be NULL,
@@ -454,7 +454,7 @@ SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSampleFromFile(const char *fname,
  * \fn void Sound_FreeSample(Sound_Sample *sample)
  * \brief Dispose of a Sound_Sample.
  *
- * This will also close/dispose of the SDL_RWops that was used at creation
+ * This will also close/dispose of the SDL_IOStream that was used at creation
  *  time, so there's no need to keep a reference to that around.
  * The Sound_Sample pointer is invalid after this call, and will almost
  *  certainly result in a crash if you attempt to keep using it.
@@ -522,10 +522,10 @@ SNDDECLSPEC Uint32 SDLCALL Sound_Decode_Direct(Sound_Sample *sample, void* buffe
  *  Sound_Decode[All]() will give audio data from the earliest point
  *  in the stream.
  *
- * Beware that this function will fail if the SDL_RWops that feeds the
+ * Beware that this function will fail if the SDL_IOStream that feeds the
  *  decoder can not be rewound via it's seek method, but this can
  *  theoretically be avoided by wrapping it in some sort of buffering
- *  SDL_RWops.
+ *  SDL_IOStream.
  *
  * This function should ONLY fail if the RWops is not seekable, or
  *  SDL_sound is not initialized. Both can be controlled by the application,
@@ -559,9 +559,9 @@ SNDDECLSPEC int SDLCALL Sound_Rewind(Sound_Sample *sample);
  *  sample.
  *
  * Beware that this function can fail for several reasons. If the
- *  SDL_RWops that feeds the decoder can not seek, this call will almost
+ *  SDL_IOStream that feeds the decoder can not seek, this call will almost
  *  certainly fail, but this can theoretically be avoided by wrapping it
- *  in some sort of buffering SDL_RWops. Some decoders can never seek,
+ *  in some sort of buffering SDL_IOStream. Some decoders can never seek,
  *  others can only seek with certain files. The decoders will set a flag
  *  in the sample at creation time to help you determine this.
  *

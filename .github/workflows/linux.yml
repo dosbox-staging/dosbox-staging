@@ -98,7 +98,7 @@ jobs:
           - name: GCC 13, Ubuntu 24.04, debugger build
             os: ubuntu-24.04
             cmake_preset: debug-linux-vcpkg
-            cmake_flags: -DOPT_HEAVY_DEBUGGER=ON
+            cmake_flags: -DOPT_DEBUGGER=ON -DOPT_HEAVY_DEBUGGER=ON
             cc:  gcc
             cxx: g++
             compiler_version: "13"
