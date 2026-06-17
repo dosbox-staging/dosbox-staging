@@ -36,8 +36,10 @@ void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
 
 		const auto r = linear_to_srgb8_lut(
 		        1.0f - coverage * (red_max / 255.0f));
+
 		const auto g = linear_to_srgb8_lut(
 		        1.0f - coverage * (green_max / 255.0f));
+
 		const auto b = linear_to_srgb8_lut(
 		        1.0f - coverage * (blue_max / 255.0f));
 
@@ -96,7 +98,7 @@ void Printer::UpdateFont()
 	double vertPoints  = 10.5;
 
 	if (!multipoint) {
-		act_cpi = cpi;
+		actual_cpi = cpi;
 
 		if (!(style.condensed)) {
 			horizPoints *= 10.0 / cpi;
@@ -105,11 +107,11 @@ void Printer::UpdateFont()
 
 		if (!(style.prop)) {
 			if ((cpi == 10.0) && (style.condensed)) {
-				act_cpi = 17.14;
+				actual_cpi = 17.14;
 				horizPoints *= 10.0 / 17.14;
 			}
 			if ((cpi == 12.0) && (style.condensed)) {
-				act_cpi = 20.0;
+				actual_cpi = 20.0;
 				horizPoints *= 10.0 / 20.0;
 				vertPoints *= 10.0 / 12.0;
 			}
@@ -118,12 +120,12 @@ void Printer::UpdateFont()
 		}
 
 		if ((style.doublewidth) || (style.doublewidth_oneline)) {
-			act_cpi /= 2.0;
+			actual_cpi /= 2.0;
 			horizPoints *= 2.0;
 		}
 	} else {
 		// Multipoint (scalable) mode.
-		act_cpi     = multi_cpi;
+		actual_cpi  = multi_cpi;
 		horizPoints = vertPoints = multi_point_size;
 	}
 
@@ -138,6 +140,7 @@ void Printer::UpdateFont()
 	                 points_to_26_6(vertPoints),
 	                 dpi,
 	                 dpi);
+
 	line_baseline_anchor_px = ft26_6_to_pixels(cur_font->size->metrics.ascender);
 
 	if (!multipoint && style.doubleheight) {
@@ -156,7 +159,7 @@ void Printer::UpdateFont()
 
 		horizPoints *= 2.0 / 3.0;
 		vertPoints *= 2.0 / 3.0;
-		act_cpi /= 2.0 / 3.0;
+		actual_cpi /= 2.0 / 3.0;
 
 	} else {
 		subscript_shift_px   = 0;
@@ -201,11 +204,11 @@ void Printer::UpdateFont()
 	box_fill_horiz_points = 0.0;
 	box_fill_em_px        = 0;
 
-	if (!style.prop && act_cpi > 0.0 && FT_IS_FIXED_WIDTH(box_face)) {
+	if (!style.prop && actual_cpi > 0.0 && FT_IS_FIXED_WIDTH(box_face)) {
 		const auto natural_advance_px = ft26_6_to_pixels(
 		        box_face->size->metrics.max_advance);
 
-		const auto cell_px = static_cast<int>(dpi / act_cpi);
+		const auto cell_px = static_cast<int>(dpi / actual_cpi);
 
 		if (natural_advance_px > 0 && cell_px > natural_advance_px) {
 			box_fill_horiz_points = horizPoints *
@@ -249,26 +252,31 @@ void Printer::UpdateFont()
 	}
 }
 
-void Printer::BlitGlyph(const FT_Bitmap bitmap, const uint16_t destx,
-                        const uint16_t desty, const bool add)
+void Printer::BlitGlyph(const FT_Bitmap bitmap, const int dest_x,
+                        const int dest_y, const bool add)
 {
-	for (uint64_t y = 0; y < bitmap.rows; y++) {
-		for (uint64_t x = 0; x < bitmap.width; x++) {
-			// Read pixel from glyph bitmap.
+	for (uint32_t y = 0; y < bitmap.rows; y++) {
+		for (uint32_t x = 0; x < bitmap.width; x++) {
+			// Read pixel from glyph bitmap
 			uint8_t source = *(bitmap.buffer + x + y * bitmap.pitch);
 
-			// Ignore background and don't go over the border.
-			if (source > 0 && (static_cast<int>(destx + x) < page.width) &&
-			    (static_cast<int>(desty + y) < page.height)) {
+			// Ignore background and don't go over the border
+			if (source > 0 &&
+			    (static_cast<int>(dest_x + x) < page.width) &&
+			    (static_cast<int>(dest_y + y) < page.height)) {
+
 				auto& pixel = *reinterpret_cast<PagePixel*>(
-				        page.pixels.data() + (x + destx) +
-				        (y + desty) * page.pitch);
+				        page.pixels.data() + (x + dest_x) +
+				        (y + dest_y) * page.pitch);
+
 				source >>= 3;
 
 				if (add) {
 					const int sum = pixel.intensity + source;
+
 					pixel.intensity = static_cast<uint8_t>(
 					        std::min(MaxIntensity, sum));
+
 					pixel.color_id = static_cast<uint8_t>(
 					        pixel.color_id | (color >> 5));
 				} else {
@@ -279,23 +287,26 @@ void Printer::BlitGlyph(const FT_Bitmap bitmap, const uint16_t destx,
 	}
 }
 
-void Printer::DrawLine(const uint64_t fromx, const uint64_t tox,
-                       const uint64_t y, const bool broken)
+void Printer::DrawLine(const int from_x, const int to_x, const int y, const bool broken)
 {
-	const uint64_t breakmod = dpi / 15;
-	const uint64_t gapstart = (breakmod * 4) / 5;
+	const int breakmod = dpi / 15;
+	const int gapstart = (breakmod * 4) / 5;
 
-	// Draw anti-aliased line.
-	for (uint64_t x = fromx; x <= tox; x++) {
-		// Skip parts if broken line or going over the border.
+	// Draw anti-aliased line
+	for (int x = from_x; x <= to_x; x++) {
+
+		// Skip parts if broken line or going over the border
 		if ((!broken || (x % breakmod <= gapstart)) &&
 		    (static_cast<int>(x) < page.width)) {
+
 			if (y > 0 && static_cast<int>(y - 1) < page.height) {
 				page.pixels[x + (y - 1) * page.pitch] = 240;
 			}
+
 			if (static_cast<int>(y) < page.height) {
 				page.pixels[x + y * page.pitch] = !broken ? 255 : 240;
 			}
+
 			if (static_cast<int>(y + 1) < page.height) {
 				page.pixels[x + (y + 1) * page.pitch] = 240;
 			}

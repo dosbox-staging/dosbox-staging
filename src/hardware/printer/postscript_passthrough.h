@@ -39,4 +39,4 @@ public:
 
 } // namespace VirtualPrinter
 
-#endif
+#endif // DOSBOX_PRINTER_POSTSCRIPT_PASSTHROUGH_H

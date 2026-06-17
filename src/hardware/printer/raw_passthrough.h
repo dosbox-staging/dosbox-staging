@@ -23,6 +23,7 @@ namespace VirtualPrinter {
 //   - lazy-open on first byte
 //   - closed by Close() (idle timeout / Ctrl+F2 eject) or destruction
 //   - next byte after close starts a new file
+//
 class RawPassthrough {
 public:
 	RawPassthrough() = default;
@@ -33,7 +34,7 @@ public:
 
 	// Append one byte to the current job. Lazy-opens the file on
 	// the first byte.
-	void Write(uint8_t byte);
+	void Write(const uint8_t byte);
 
 	// Close the current job (if any). Subsequent Write() starts a
 	// new file.
@@ -45,4 +46,4 @@ private:
 
 } // namespace VirtualPrinter
 
-#endif
+#endif // DOSBOX_PRINTER_RAW_PASSTHROUGH_H
