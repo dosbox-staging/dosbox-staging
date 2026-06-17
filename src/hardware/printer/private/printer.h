@@ -2,17 +2,6 @@
 // SPDX-FileCopyrightText:  2002-2013 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-// Module-internal printer header. Declares the Printer class that
-// renders an ESC/P 2 byte stream into a per-page bitmap and writes the
-// bitmap to disk as a PNG (Epson 24-pin LQ family), and the C-style
-// cross-cpp API the LPT IO handlers and form-feed mapper hook into.
-//
-// Primary reference (cited as "escp2ref.pdf <section>" throughout the
-// printer sources):
-//
-//     Epson America, "EPSON ESC/P Reference Manual", revised April
-//     1997. https://files.support.epson.com/pdf/general/escp2ref.pdf
-
 #ifndef DOSBOX_PRIVATE_PRINTER_H
 #define DOSBOX_PRIVATE_PRINTER_H
 
