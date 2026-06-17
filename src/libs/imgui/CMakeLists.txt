@@ -7,7 +7,7 @@ add_library(imgui STATIC
     backends/imgui_impl_sdlgpu3.cpp
 )
 
-target_include_directories(imgui PUBLIC
+target_include_directories(imgui SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/backends
 )
@@ -15,3 +15,5 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PRIVATE SDL3::SDL3)
 
 add_library(imgui::imgui ALIAS imgui)
+
+disable_warnings(imgui)
