@@ -1062,13 +1062,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Select printing color (ESC r)
 		case Esc::SelectPrintingColor: // 0x72
-
+			color.data = 0;
 			if (params[0] == 0 || params[0] > 6) {
-				color = ColorBlack;
+				color.color_id = BlackColorId;
 			} else {
-				PagePixel pixel{};
-				pixel.color_id = params[0];
-				color          = pixel.data;
+				color.color_id = params[0];
 			}
 			break;
 
@@ -1708,7 +1706,7 @@ void Printer::BlitAntialiasedDot(const double left_px, const double right_px,
 			// colour-ID but adds to the intensity.
 			pixel.intensity = static_cast<uint8_t>(new_intensity);
 			pixel.color_id  = static_cast<uint8_t>(pixel.color_id |
-                                                              (color >> 5));
+			                                       color.color_id);
 		}
 	}
 }

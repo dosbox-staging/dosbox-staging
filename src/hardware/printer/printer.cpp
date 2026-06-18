@@ -120,7 +120,7 @@ Printer::Printer(const int dpi, const double page_width_in,
 	//   4 = Yellow             (Y)
 	//   5 = Red                (M|Y)
 	//   6 = Green              (C|Y)
-	//   7 = Black              (M|C|Y) -- also ColorBlack
+	//   7 = Black              (M|C|Y) -- also BlackColorId
 	//
 	// Sub-palette 0 is the 'all white' page background.
 	for (int i = 0; i < 32; ++i) {
@@ -134,7 +134,7 @@ Printer::Printer(const int dpi, const double page_width_in,
 	FillPalette(255, 0, 255, 6);
 	FillPalette(255, 255, 255, 7);
 
-	color = ColorBlack;
+	color.color_id = BlackColorId;
 
 	cur_font  = nullptr;
 	char_read = false;
@@ -153,9 +153,9 @@ void Printer::ResetPrinterHard()
 
 void Printer::ResetPrinter()
 {
-	color     = ColorBlack;
-	esc_seen  = false;
-	fs_seen   = false;
+	color.color_id = BlackColorId;
+	esc_seen       = false;
+	fs_seen        = false;
 	esc_cmd   = 0;
 	num_param = needed_param = 0;
 

@@ -180,8 +180,9 @@ union PagePixel {
 constexpr int MaxIntensity = 31;
 
 // Palette is split into 8 sub-palettes of 32 colours each, indexed by
-// the 3-bit colour ID. Black is sub-palette 7.
-constexpr uint8_t ColorBlack = 7 << 5;
+// the 3-bit colour ID. Black is sub-palette 7. Assign to
+// PagePixel::color_id directly.
+constexpr uint8_t BlackColorId = 7;
 
 // MSB control (ESC =, ESC >, ESC #). Printer::msb stores one of these:
 // MsbModeDisabled leaves incoming bytes alone, MsbModeForceLow clears
@@ -344,7 +345,10 @@ private:
 	// box-drawing chars. Mirrors escapy's approach.
 	FT_Face mono_box_font = nullptr;
 
-	uint8_t color = 0;
+	// Print-head colour. Only the colour-ID bits carry information --
+	// the intensity field is always zero in the stored value (it gets
+	// OR-ed in from the glyph or bit-image dot at render time).
+	PagePixel color = {};
 
 	// Position of the print head (in inch).
 	double cur_x = 0.0;
