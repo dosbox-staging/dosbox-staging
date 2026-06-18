@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText:  2002-2013 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "private/printer.h"
+#include "private/virtual_printer.h"
 
 #include <algorithm>
 #include <string>

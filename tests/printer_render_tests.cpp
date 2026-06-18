@@ -21,6 +21,7 @@
 #include "hardware/printer/private/postscript_passthrough.h"
 #include "hardware/printer/private/printer.h"
 #include "hardware/printer/private/raw_passthrough.h"
+#include "hardware/printer/private/virtual_printer.h"
 #include "hardware/printer/printer.h"
 
 #include <array>
