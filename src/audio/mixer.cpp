@@ -2776,6 +2776,7 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	// we just let SDL decide everything. However, the hint is still just a
 	// request, and SDL may still return a different blocksize, according to the
 	// docs. https://wiki.libsdl.org/SDL3/SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES
+	// TODO: clean these options up and just let SDL3 do its thing
 	if (!allow_negotiate) {
 		const std::string samples = std::to_string(requested_blocksize_in_frames);
 		SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, samples.c_str());
