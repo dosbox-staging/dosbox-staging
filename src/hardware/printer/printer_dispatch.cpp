@@ -718,12 +718,17 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			                          : CoarseVerticalDivisor24Pin);
 			break;
 
-		// Set page length in lines (ESC C)
+		// Set page length in lines (ESC C). Spec C-13: setting the
+		// page length cancels both the top and the bottom margin
+		// (the 9-pin variant at C-14 only cancels the bottom, but we
+		// don't have a model-specific code path here and resetting
+		// top_margin on a 9-pin printer is harmless).
 		case Esc::SetPageLengthInLines: // 0x43
 			if (params[0] != 0) {
 				page_height = bottom_margin = static_cast<double>(
 				                                      params[0]) *
 				                              line_spacing;
+				top_margin = 0.0;
 			} else // == 0 => Set page length in inches
 			{
 				needed_param = 1;
