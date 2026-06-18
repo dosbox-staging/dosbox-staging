@@ -162,6 +162,21 @@ constexpr bool is_esc_param_on(const uint8_t p)
 // to 1/3600 inch (escp2ref.pdf C-141).
 constexpr double DefinedUnitMaxResolution = 3600.0;
 
+// ESC ! parameter byte (escp2ref.pdf C-43, table 1-3). Each bit selects
+// one attribute of the master selection. Bit 0 picks between 10 and 12
+// cpi; the upper seven bits map 1:1 to PrinterStyle's low seven flags.
+union MasterSelectByte {
+	uint8_t data = 0;
+	bit_view<0, 1> cpi12;
+	bit_view<1, 1> proportional;
+	bit_view<2, 1> condensed;
+	bit_view<3, 1> bold;
+	bit_view<4, 1> doublestrike;
+	bit_view<5, 1> doublewidth;
+	bit_view<6, 1> italics;
+	bit_view<7, 1> underline;
+};
+
 } // namespace
 
 bool Printer::ProcessCommandChar(const uint8_t ch)
@@ -555,39 +570,31 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Master select (ESC !)
-		case Esc::MasterSelect: // 0x21
-			cpi = params[0] & 0x01 ? 12 : 10;
+		case Esc::MasterSelect: { // 0x21
+			MasterSelectByte sel{};
+			sel.data = params[0];
 
-			// Reset the first seven style bits (prop..superscript)
-			// and rebuild them from the master-select byte below.
-			style.data &= 0xFF80;
-			if (params[0] & 0x02) {
-				style.prop = 1;
-			}
-			if (params[0] & 0x04) {
-				style.condensed = 1;
-			}
-			if (params[0] & 0x08) {
-				style.bold = 1;
-			}
-			if (params[0] & 0x10) {
-				style.doublestrike = 1;
-			}
-			if (params[0] & 0x20) {
-				style.doublewidth = 1;
-			}
-			if (params[0] & 0x40) {
-				style.italics = 1;
-			}
-			if (params[0] & 0x80) {
-				score           = ScoreType::Single;
-				style.underline = 1;
+			cpi = sel.cpi12 ? 12 : 10;
+
+			// Direct bit-to-bit copy clears any flag the master-
+			// select byte doesn't request, matching the spec's
+			// "set the bits to 0 or 1 according to the value of n"
+			// semantics (escp2ref.pdf C-43).
+			style.prop         = sel.proportional;
+			style.condensed    = sel.condensed;
+			style.bold         = sel.bold;
+			style.doublestrike = sel.doublestrike;
+			style.doublewidth  = sel.doublewidth;
+			style.italics      = sel.italics;
+			style.underline    = sel.underline;
+			if (sel.underline) {
+				score = ScoreType::Single;
 			}
 
 			hmi        = -1;
 			multipoint = false;
 			UpdateFont();
-			break;
+		} break;
 
 		// Cancel MSB control (ESC #)
 		case Esc::CancelMsbControl:
