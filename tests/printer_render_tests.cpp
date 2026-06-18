@@ -21,6 +21,7 @@
 #include "hardware/printer/private/postscript_passthrough.h"
 #include "hardware/printer/private/printer.h"
 #include "hardware/printer/private/raw_passthrough.h"
+#include "hardware/printer/printer.h"
 
 #include <array>
 #include <cstdint>
@@ -103,7 +104,7 @@ protected:
 		                                 output_dir.string());
 		CAPTURE_Init();
 
-		PRINTER_Configure(PrinterModelKind::EpsonDotMatrix24Pin,
+		PRINTER_Configure(PrinterModel::EpsonDotMatrix24Pin,
 		                  TestDpi,
 		                  TestPageWidthIn,
 		                  TestPageHeightIn,
@@ -153,8 +154,8 @@ protected:
 		// Refresh global config in case the test uses a different page
 		// size than the default established in SetUp().
 		const auto model = (pins == 9)
-		                           ? PrinterModelKind::EpsonDotMatrix9Pin
-		                           : PrinterModelKind::EpsonDotMatrix24Pin;
+		                           ? PrinterModel::EpsonDotMatrix9Pin
+		                           : PrinterModel::EpsonDotMatrix24Pin;
 		PRINTER_Configure(model,
 		                  dpi,
 		                  width_in,
@@ -2815,7 +2816,7 @@ protected:
 		                                 output_dir.string());
 		CAPTURE_Init();
 
-		PRINTER_Configure(PrinterModelKind::PostScript,
+		PRINTER_Configure(PrinterModel::PostScript,
 		                  0,
 		                  0.0,
 		                  0.0,
@@ -2947,7 +2948,7 @@ protected:
 		                                 output_dir.string());
 		CAPTURE_Init();
 
-		PRINTER_Configure(PrinterModelKind::Passthrough,
+		PRINTER_Configure(PrinterModel::Passthrough,
 		                  0,
 		                  0.0,
 		                  0.0,
@@ -3063,7 +3064,7 @@ protected:
 		                                 output_dir.string());
 		CAPTURE_Init();
 
-		PRINTER_Configure(PrinterModelKind::PostScript,
+		PRINTER_Configure(PrinterModel::PostScript,
 		                  0,
 		                  0.0,
 		                  0.0,

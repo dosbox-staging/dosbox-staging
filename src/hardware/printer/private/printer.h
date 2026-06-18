@@ -23,15 +23,13 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-// Which printer the user picked. Mirrors VirtualPrinter::PrinterModel but
-// kept in plain enum form so the C-style cross-module API doesn't depend
-// on the dot-matrix internals below.
+// Which printer the user picked.
 //
 // EpsonDotMatrix24Pin is the 24-pin LQ family (default, ESC/P + ESC/P 2).
 // EpsonDotMatrix9Pin is the 9-pin FX/LX family (older ESC/P only -- has
 // different line-spacing divisors and lacks several ESC/P 2 commands;
 // see Printer::pins branches in printer_dispatch.cpp).
-enum class PrinterModelKind {
+enum class PrinterModel {
 	None,
 	EpsonDotMatrix9Pin,
 	EpsonDotMatrix24Pin,
@@ -51,9 +49,9 @@ io_val_t PRINTER_ReadControl(io_port_t port, io_width_t width);
 // construction time inside PRINTER_WriteControl. page_width_in /
 // page_height_in are inches (double). Dot-matrix-only settings are
 // ignored when model is PostScript.
-void PRINTER_Configure(const PrinterModelKind model, const int dpi,
-                       const double page_width_in, const double page_height_in,
-                       const int timeout_ms);
+void PRINTER_Configure(PrinterModel model, int dpi,
+                       double page_width_in, double page_height_in,
+                       int timeout_ms);
 
 // Trigger a form-feed (eject the current page). Called from the mapper
 // (Ctrl+F2 by default) and from the inactivity-timeout PIC event.
@@ -164,14 +162,6 @@ enum class PrintQuality : uint8_t {
 	None  = 0x00,
 	Draft = 0x01,
 	Lq    = 0x02,
-};
-
-// Top-level dispatch: what kind of printer the user picked.
-enum class PrinterModel {
-	None,
-	EpsonDotMatrix,
-	PostScript,
-	RawPassthrough,
 };
 
 // Page bitmap pixel encoding. Each byte packs a 5-bit intensity in
