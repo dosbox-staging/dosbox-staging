@@ -20,6 +20,7 @@
 #endif
 
 #include "config/config.h"
+#include "config/migrate/migrate.h"
 #include "config/setup.h"
 #include "debugger/debugger.h"
 #include "dos/dos_locale.h"
@@ -141,6 +142,13 @@ static void register_command_line_help_message()
 	        "\n"
 	        "  --list-shaders           List all available shaders and their paths.\n"
 	        "                           Shaders are to be used in the 'shader' config setting.\n"
+	        "\n"
+	        "  --migrate-config <path>  Recursively migrate DOSBox config files under <path>\n"
+	        "                           to the current settings format. Dry-run by default;\n"
+	        "                           combine with --migrate-write to apply changes.\n"
+	        "\n"
+	        "  --migrate-write          With --migrate-config, write changes (default is dry-run).\n"
+	        "                           Creates a timestamped .bak backup of each modified file.\n"
 	        "\n"
 	        "  --fullscreen             Start in fullscreen mode.\n"
 	        "\n"
@@ -325,7 +333,8 @@ static void init_logger(const CommandLineArguments& args, int argc, char* argv[]
 
 	if (args.version || args.help || args.printconf || args.editconf ||
 	    args.eraseconf || args.list_countries || args.list_layouts ||
-	    args.list_code_pages || args.list_shaders || args.erasemapper) {
+	    args.list_code_pages || args.list_shaders || args.erasemapper ||
+	    !args.migrate_config.empty()) {
 
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
@@ -595,6 +604,15 @@ int main(int argc, char* argv[])
 	// Set up logging after command line was parsed and trivial arguments
 	// have been handled.
 	init_logger(*arguments, argc, argv);
+
+	// The config migrator is a pure text-rewriter and does not need any
+	// emulator state — dispatch before module config registration and
+	// before any config file parsing.
+	if (!arguments->migrate_config.empty()) {
+		ConfigMigrate::Options opts;
+		opts.dry_run = !arguments->migrate_write;
+		return ConfigMigrate::Run(arguments->migrate_config, opts);
+	}
 
 	LOG_MSG("%s version %s", DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
