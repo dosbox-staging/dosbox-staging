@@ -646,20 +646,20 @@ LptRegisters lpt{};
 
 } // namespace
 
-uint64_t PRINTER_ReadData([[maybe_unused]] const uint64_t port,
-                          [[maybe_unused]] const uint64_t iolen)
+io_val_t PRINTER_ReadData([[maybe_unused]] io_port_t port,
+                          [[maybe_unused]] io_width_t width)
 {
 	return lpt.data;
 }
 
-void PRINTER_WriteData([[maybe_unused]] const uint64_t port, const uint64_t val,
-                       [[maybe_unused]] const uint64_t iolen)
+void PRINTER_WriteData([[maybe_unused]] io_port_t port, io_val_t val,
+                       [[maybe_unused]] io_width_t width)
 {
 	lpt.data = static_cast<uint8_t>(val);
 }
 
-uint64_t PRINTER_ReadStatus([[maybe_unused]] const uint64_t port,
-                            [[maybe_unused]] const uint64_t iolen)
+io_val_t PRINTER_ReadStatus([[maybe_unused]] io_port_t port,
+                            [[maybe_unused]] io_width_t width)
 {
 	// Don't create a Printer unless the program really wants to print.
 	if (!default_printer) {
@@ -712,8 +712,8 @@ static void printer_event_handler([[maybe_unused]] const uint32_t param)
 	trigger_form_feed(FormFeedSource::IdleTimeout);
 }
 
-void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t val,
-                          [[maybe_unused]] const uint64_t iolen)
+void PRINTER_WriteControl([[maybe_unused]] io_port_t port, io_val_t val,
+                          [[maybe_unused]] io_width_t width)
 {
 	// Rising edge on the INITIALISE bit triggers a hard reset.
 	if ((val & CtrlInitialise) && default_printer &&
@@ -766,8 +766,8 @@ void PRINTER_WriteControl([[maybe_unused]] const uint64_t port, const uint64_t v
 	}
 }
 
-uint64_t PRINTER_ReadControl([[maybe_unused]] const uint64_t port,
-                             [[maybe_unused]] const uint64_t iolen)
+io_val_t PRINTER_ReadControl([[maybe_unused]] io_port_t port,
+                             [[maybe_unused]] io_width_t width)
 {
 	// Don't create a Printer unless the program really wants to print.
 	if (!default_printer) {
@@ -1035,40 +1035,11 @@ void install_io_handlers(const io_port_t lpt_port)
 	state.control_write = std::make_unique<IO_WriteHandleObject>();
 	state.control_read  = std::make_unique<IO_ReadHandleObject>();
 
-	state.data_write->Install(
-	        data_port,
-	        [](io_port_t /*port*/, io_val_t val, io_width_t /*width*/) {
-		        PRINTER_WriteData(0, val, 1);
-	        },
-	        io_width_t::byte);
-
-	state.data_read->Install(
-	        data_port,
-	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return static_cast<io_val_t>(PRINTER_ReadData(0, 1));
-	        },
-	        io_width_t::byte);
-
-	state.status_read->Install(
-	        status_port,
-	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return static_cast<io_val_t>(PRINTER_ReadStatus(0, 1));
-	        },
-	        io_width_t::byte);
-
-	state.control_write->Install(
-	        control_port,
-	        [](io_port_t /*port*/, io_val_t val, io_width_t /*width*/) {
-		        PRINTER_WriteControl(0, val, 1);
-	        },
-	        io_width_t::byte);
-
-	state.control_read->Install(
-	        control_port,
-	        [](io_port_t /*port*/, io_width_t /*width*/) -> io_val_t {
-		        return static_cast<io_val_t>(PRINTER_ReadControl(0, 1));
-	        },
-	        io_width_t::byte);
+	state.data_write->Install(data_port, PRINTER_WriteData, io_width_t::byte);
+	state.data_read->Install(data_port, PRINTER_ReadData, io_width_t::byte);
+	state.status_read->Install(status_port, PRINTER_ReadStatus, io_width_t::byte);
+	state.control_write->Install(control_port, PRINTER_WriteControl, io_width_t::byte);
+	state.control_read->Install(control_port, PRINTER_ReadControl, io_width_t::byte);
 }
 
 void uninstall_io_handlers()

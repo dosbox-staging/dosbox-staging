@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "hardware/port.h"
 #include "misc/support.h"
 #include "misc/types.h"
 #include "utils/bit_view.h"
@@ -38,14 +39,13 @@ enum class PrinterModelKind {
 	Passthrough,
 };
 
-uint64_t PRINTER_ReadData(const uint64_t port, const uint64_t iolen);
-void PRINTER_WriteData(const uint64_t port, const uint64_t val, const uint64_t iolen);
+io_val_t PRINTER_ReadData(io_port_t port, io_width_t width);
+void PRINTER_WriteData(io_port_t port, io_val_t val, io_width_t width);
 
-uint64_t PRINTER_ReadStatus(const uint64_t port, const uint64_t iolen);
+io_val_t PRINTER_ReadStatus(io_port_t port, io_width_t width);
 
-void PRINTER_WriteControl(const uint64_t port, const uint64_t val,
-                          const uint64_t iolen);
-uint64_t PRINTER_ReadControl(const uint64_t port, const uint64_t iolen);
+void PRINTER_WriteControl(io_port_t port, io_val_t val, io_width_t width);
+io_val_t PRINTER_ReadControl(io_port_t port, io_width_t width);
 
 // Set the printer config values that are read at lazy printer
 // construction time inside PRINTER_WriteControl. page_width_in /
