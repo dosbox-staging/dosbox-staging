@@ -958,12 +958,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Reverse paper feed (ESC j) -- 9-pin only per escp2ref.pdf
 		// C-213, single-byte parameter, n/216 inch reverse. Featured
 		// only on EX-800, EX-1000, FX-80/85/100/185/286, JX-80.
-		// Old FX-* DOS app drivers may still emit it.
+		// Old FX-* DOS app drivers may still emit it. The clamp is
+		// against top_margin (a vertical value) — the previous code
+		// compared against left_margin, which is a horizontal one.
 		case Esc::ReversePaperFeed: { // 0x6a
 			const double reverse = static_cast<double>(params[0]) /
 			                       FineVerticalDivisor9Pin;
 			const double new_y = cur_y - reverse;
-			cur_y = (new_y < left_margin) ? left_margin : new_y;
+			cur_y = (new_y < top_margin) ? top_margin : new_y;
 			break;
 		}
 
