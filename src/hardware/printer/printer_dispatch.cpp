@@ -352,7 +352,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::SetHorizontalMotionIndex: // 0x63
 		// (ESC e) — Set vertical tab stops every n lines
 		case Esc::SetVerticalTabStopsEveryNLines: // 0x65
-		// (ESC f) — Horizontal/vertical skip (spec C-47, m + n)
+		// (ESC f) — Horizontal/vertical skip (escp2ref.pdf C-47, m + n)
 		case Esc::HorizontalVerticalSkip: // 0x66
 			needed_param = 2;
 			break;
@@ -361,7 +361,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::SelectBitImage: // 0x2a
 		// (ESC X) — Select font by pitch and point [conflict]
 		case Esc::SelectFontPitchPoint: // 0x58
-		// (ESC ^) — Select 60/120-dpi 9-pin graphics (spec C-191).
+		// (ESC ^) — Select 60/120-dpi 9-pin graphics (escp2ref.pdf C-191).
 		// Header is m nL nH; the dispatcher must then consume
 		// 2*(nH*256+nL) data bytes — see the late dispatch handler.
 		case Esc::Select60Or120Dpi9PinGraphics: // 0x5e
@@ -393,7 +393,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			return true;
 
 		// (ESC :) — Copy ROM to RAM (ESC : NUL n m, 3 param bytes per
-		// spec C-89). Not implemented; we consume the params so the
+		// escp2ref.pdf C-89). Not implemented; we consume the params so the
 		// rest of the stream isn't misinterpreted as text. The late
 		// dispatch default emits the "recognised but not implemented"
 		// warning once per debounce interval.
@@ -552,7 +552,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		// Set intercharacter space (ESC SP). Spec C-108:
+		// Set intercharacter space (ESC SP). escp2ref.pdf C-108:
 		//   24/48-pin: n/120 in draft, n/180 in LQ.
 		//   9-pin:     n/120 always (regardless of LQ/draft).
 		case Esc::SetIntercharacterSpace: // 0x20
@@ -602,7 +602,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break; // 0x23
 
 		// Set absolute horizontal print position (ESC $).
-		// Spec C-31: position = param × (defined unit) + left_margin.
+		// escp2ref.pdf C-31: position = param × (defined unit) + left_margin.
 		// defined_unit (set by ESC ( U) is in inches/unit; the default
 		// when no custom unit is selected is 1/60 inch.
 		case Esc::SetAbsoluteHorizontalPrintPosition: { // 0x24
@@ -625,7 +625,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Select 60/120-dpi, 9-pin graphics (ESC ^). Header is
 		// m nL nH; (nH*256 + nL) is the column count, with 2 data
-		// bytes per column. Spec C-191 says this is a 9-pin
+		// bytes per column. escp2ref.pdf C-191 says this is a 9-pin
 		// nonrecommended command and recommends ESC * instead. We
 		// don't render the dots; the bytes are pulled out of the
 		// stream via the bit_graph discard flag so the rest of the
@@ -755,7 +755,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			                          : CoarseVerticalDivisor24Pin);
 			break;
 
-		// Set page length in lines (ESC C). Spec C-13: setting the
+		// Set page length in lines (ESC C). escp2ref.pdf C-13: setting the
 		// page length cancels both the top and the bottom margin
 		// (the 9-pin variant at C-14 only cancels the bottom, but we
 		// don't have a model-specific code path here and resetting
@@ -846,7 +846,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		// Set right margin (ESC Q). Spec C-21: right margin sits at
+		// Set right margin (ESC Q). escp2ref.pdf C-21: right margin sits at
 		// the right edge of column n, so position = n / cpi (no off-
 		// by-one — contrast ESC l which puts the *left* edge of
 		// column n at the margin and so subtracts one).
@@ -855,7 +855,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			               static_cast<double>(cpi);
 			break;
 
-		// Select an international character set (ESC R). Spec C-119:
+		// Select an international character set (ESC R). escp2ref.pdf C-119:
 		// n = 0..13 selects a national variant; n = 64 selects the
 		// "Legal" variant which we store as slot 14.
 		case Esc::SelectInternationalCharacterSet: { // 0x52
@@ -969,7 +969,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			break;
 
 		// Set relative horizontal print position (ESC \).
-		// Spec C-33: cur_x += param × (defined unit). defined_unit
+		// escp2ref.pdf C-33: cur_x += param × (defined unit). defined_unit
 		// (set by ESC ( U) is in inches/unit; the default when no
 		// custom unit is selected is 1/120 inch in draft mode and
 		// 1/180 inch in LQ mode.
@@ -1075,7 +1075,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			// Ignore
 			break;
 
-		// Select character table (ESC t). Spec C-137: accepts either
+		// Select character table (ESC t). escp2ref.pdf C-137: accepts either
 		// the table index (0..3) or its ASCII digit ('0'..'3').
 		case Esc::SelectCharacterTable: // 0x74
 			if (params[0] < char_tables.size()) {
@@ -1101,7 +1101,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		// Select LQ or draft (ESC x). Spec C-93: only changes the
+		// Select LQ or draft (ESC x). escp2ref.pdf C-93: only changes the
 		// print quality; condensed is a separate style controlled
 		// by SI / ESC SI / DC2 / ESC ! and must not be touched here.
 		case Esc::SelectLqDraft: // 0x78
@@ -1297,7 +1297,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// BEEEP!
 		return true;
 
-	// Backspace (BS). Spec C-48: moves left by "one character in the
+	// Backspace (BS). escp2ref.pdf C-48: moves left by "one character in the
 	// current character pitch plus any additional intercharacter
 	// space". With an HMI active, the HMI already includes the
 	// intercharacter component, so just undo the HMI advance.
@@ -1344,7 +1344,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 				NewPage(true, false);
 			}
 		} else {
-			// Spec C-45: move to the *next* vertical tab below the
+			// escp2ref.pdf C-45: move to the *next* vertical tab below the
 			// current print position. vert_tabs is sorted
 			// ascending, so break on the first match.
 			double move_to = -1;
@@ -1440,7 +1440,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		UpdateFont();
 		return true;
 
-	// Cancel line (CAN). Spec C-200: clears the current line and
+	// Cancel line (CAN). escp2ref.pdf C-200: clears the current line and
 	// moves the print position to the left-margin position. We can't
 	// erase pixels already blitted into the page bitmap in this
 	// streaming model, but we honour the move-to-left-margin half

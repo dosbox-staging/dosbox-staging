@@ -112,7 +112,7 @@ Printer::Printer(const int dpi, const double page_width_in,
 	// FillPalette's first three args are CMY-dye-coverage maxima
 	// (subtractive), not RGB light. Each sub-palette's full-coverage
 	// light output is (1 - r_max, 1 - g_max, 1 - b_max), so the
-	// indices below double as ESC r colour IDs (spec C-193) AND as
+	// indices below double as ESC r colour IDs (escp2ref.pdf C-193) AND as
 	// OR-overprint bit patterns (M=001, C=010, Y=100):
 	//   1 = Magenta            (M)
 	//   2 = Cyan               (C)
