@@ -1256,10 +1256,13 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// BEEEP!
 		return true;
 
-	// Backspace (BS)
+	// Backspace (BS). Spec C-48: moves left by "one character in the
+	// current character pitch plus any additional intercharacter
+	// space". With an HMI active, the HMI already includes the
+	// intercharacter component, so just undo the HMI advance.
 	case 0x08: {
-		double newX = cur_x - (1 / static_cast<double>(actual_cpi));
-
+		double newX = cur_x - (1 / static_cast<double>(actual_cpi)) -
+		              extra_intra_space;
 		if (hmi > 0) {
 			newX = cur_x - hmi;
 		}
