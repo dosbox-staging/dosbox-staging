@@ -5,6 +5,7 @@
 #include "printer.h"
 
 #include "private/printer.h"
+#include "private/virtual_printer.h"
 
 #include "capture/capture.h"
 #include "capture/image/png_writer.h"

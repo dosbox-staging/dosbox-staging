@@ -6,7 +6,7 @@
 // bit-image helpers (SetupBitImage, PrintBitGraph) that ESC commands
 // in here drive.
 
-#include "private/printer.h"
+#include "private/virtual_printer.h"
 
 #include <algorithm>
 #include <chrono>
