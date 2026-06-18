@@ -64,10 +64,13 @@ constexpr double DefaultCpi           = 10.0;
 constexpr double DefaultLineSpacingIn = 1.0 / 6.0;
 constexpr int DefaultTabIntervalChars = 8;
 
-// MSB control (ESC =, ESC >, ESC #). ch &= MsbClearMask forces bit 7
-// low; ch |= MsbSetMask forces it high.
-constexpr uint8_t MsbClearMask = 0x7F;
-constexpr uint8_t MsbSetMask   = 0x80;
+// ESC = / ESC > target bit 7 of every byte that follows; ESC # cancels
+// the override. Modelled as a bit_view so the cast direction and bit
+// position read directly from the field name rather than from 0x80.
+union ByteWithMsbBit {
+	uint8_t data = 0;
+	bit_view<7, 1> msb;
+};
 
 // Unicode range covering CP437 box-drawing glyphs (U+2500..U+257F) and
 // block elements (U+2580..U+259F). Both are designed to tile across
@@ -275,14 +278,14 @@ void Printer::PrintChar(uint8_t ch)
 		return;
 	}
 
-	// Don't think that DOS programs uses this but well: Apply MSB if desired
+	// Don't think that DOS programs uses this but well: Apply MSB if
+	// desired. Both active modes (MsbModeForceLow = 0, MsbModeForceHigh
+	// = 1) write the mode value straight into bit 7.
 	if (msb != MsbModeDisabled) {
-		if (msb == MsbModeForceLow) {
-			ch &= MsbClearMask;
-		}
-		if (msb == MsbModeForceHigh) {
-			ch |= MsbSetMask;
-		}
+		ByteWithMsbBit byte{};
+		byte.data = ch;
+		byte.msb  = msb;
+		ch        = byte.data;
 	}
 
 	// Are we currently printing a bit graphic?
