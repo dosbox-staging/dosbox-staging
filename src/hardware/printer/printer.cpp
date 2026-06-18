@@ -489,11 +489,9 @@ void Printer::PrintChar(uint8_t ch)
 	    (style.underline || style.strikethrough || style.overscore)) {
 
 		// Find out where to put the line.
-		// TODO height is in fixed-point format from FreeType.
 		int line_y = PixY();
 
-		const double height = static_cast<double>(
-		        cur_font->size->metrics.height >> 6);
+		const auto height = ft26_6_to_pixels(cur_font->size->metrics.height);
 
 		if (style.underline) {
 			line_y = PixY() + static_cast<int>(height * 0.9);
