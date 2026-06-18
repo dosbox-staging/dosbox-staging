@@ -570,16 +570,18 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			msb = 255;
 			break; // 0x23
 
-		// Set absolute horizontal print position (ESC $)
+		// Set absolute horizontal print position (ESC $).
+		// Spec C-31: position = param × (defined unit) + left_margin.
+		// defined_unit (set by ESC ( U) is in inches/unit; the default
+		// when no custom unit is selected is 1/60 inch.
 		case Esc::SetAbsoluteHorizontalPrintPosition: { // 0x24
-			double unit_size = defined_unit;
-			if (unit_size < 0) {
-				unit_size = CoarseVerticalDivisor24Pin;
-			}
-
+			constexpr double DefaultUnitInches = 1.0 / 60.0;
+			const double unit_inches = (defined_unit > 0)
+			                                 ? defined_unit
+			                                 : DefaultUnitInches;
 			const double newX = left_margin +
-			                    (static_cast<double>(Param16(0)) /
-			                     unit_size);
+			                    static_cast<double>(Param16(0)) *
+			                            unit_inches;
 			if (newX <= right_margin) {
 				cur_x = newX;
 			}
