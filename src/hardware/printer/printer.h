@@ -454,6 +454,11 @@ private:
 		// cur_x by 1/horiz_dens per call.
 		uint16_t col_index = 0;
 		double base_x      = 0.0;
+
+		// True while consuming bit-image bytes that should not be
+		// rendered. Used by ESC ^ (9-pin graphics) so the data is
+		// pulled out of the stream without ink reaching the page.
+		bool discard_data = false;
 	} bit_graph{};
 
 	// Image density modes used by the ESC K / L / Y / Z commands.
