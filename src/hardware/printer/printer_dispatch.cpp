@@ -360,10 +360,17 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::SelectUserDefinedSet: // 0x25
 		// (ESC &) — Define user-defined characters
 		case Esc::DefineUserDefinedCharacters: // 0x26
-		// (ESC :) — Copy ROM to RAM
-		case Esc::CopyRomToRam: // 0x3a
 			LOG_ERR("PRINTER: User-defined characters not supported");
 			return true;
+
+		// (ESC :) — Copy ROM to RAM (ESC : NUL n m, 3 param bytes per
+		// spec C-89). Not implemented; we consume the params so the
+		// rest of the stream isn't misinterpreted as text. The late
+		// dispatch default emits the "recognised but not implemented"
+		// warning once per debounce interval.
+		case Esc::CopyRomToRam: // 0x3a
+			needed_param = 3;
+			break;
 
 		// Two bytes sequence
 		case Esc::TwoBytesSequence: return true; // 0x28
