@@ -585,17 +585,17 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			const double unit_inches           = (defined_unit > 0)
 			                                           ? defined_unit
 			                                           : DefaultUnitInches;
-			const double newX                  = left_margin +
-			                    static_cast<double>(Param16(0)) *
-			                            unit_inches;
-			if (newX <= right_margin) {
-				cur_x = newX;
+			const double new_x = left_margin +
+			                     static_cast<double>(Param16(0)) *
+			                             unit_inches;
+			if (new_x <= right_margin) {
+				cur_x = new_x;
 			}
 		} break;
 
 		// Select bit image (ESC *)
 		case Esc::SelectBitImage: // 0x2a
-			SetupBitImage(params[0], static_cast<uint16_t>(Param16(1)));
+			SetupBitImage(params[0], Param16(1));
 			break;
 
 		// Select 60/120-dpi, 9-pin graphics (ESC ^). Header is
@@ -606,7 +606,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// stream via the bit_graph discard flag so the rest of the
 		// stream isn't misinterpreted as text.
 		case Esc::Select60Or120Dpi9PinGraphics: // 0x5e
-			bit_graph.bytes_left = static_cast<uint16_t>(2 * Param16(1));
+			bit_graph.bytes_left        = 2 * Param16(1);
 			bit_graph.bytes_column      = 2;
 			bit_graph.read_bytes_column = 0;
 			bit_graph.col_index         = 0;
@@ -783,12 +783,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Select 60-dpi graphics (ESC K)
 		case Esc::Select60DpiGraphics: // 0x4b
-			SetupBitImage(densk, static_cast<uint16_t>(Param16(0)));
+			SetupBitImage(densk, Param16(0));
 			break;
 
 		// Select 120-dpi graphics (ESC L)
 		case Esc::Select120DpiGraphics: // 0x4c
-			SetupBitImage(densl, static_cast<uint16_t>(Param16(0)));
+			SetupBitImage(densl, Param16(0));
 			break;
 
 		// Select 10.5-point, 12-cpi (ESC M)
@@ -923,12 +923,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Select 120-dpi, double-speed graphics (ESC Y)
 		case Esc::Select120DpiDoubleSpeedGraphics: // 0x59
-			SetupBitImage(densy, static_cast<uint16_t>(Param16(0)));
+			SetupBitImage(densy, Param16(0));
 			break;
 
 		// Select 240-dpi graphics (ESC Z)
 		case Esc::Select240DpiGraphics: // 0x5a
-			SetupBitImage(densz, static_cast<uint16_t>(Param16(0)));
+			SetupBitImage(densz, Param16(0));
 			break;
 
 		// Set relative horizontal print position (ESC \).
@@ -940,7 +940,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			constexpr double DefaultDraftUnitInches = 1.0 / 120.0;
 			constexpr double DefaultLqUnitInches    = 1.0 / 180.0;
 
-			const int16_t toMove = static_cast<int16_t>(Param16(0));
+			const int move_amount = static_cast<int16_t>(Param16(0));
 			const double unit_inches =
 			        (defined_unit > 0)
 			                ? defined_unit
@@ -948,7 +948,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			                           ? DefaultDraftUnitInches
 			                           : DefaultLqUnitInches);
 
-			cur_x += static_cast<double>(toMove) * unit_inches;
+			cur_x += static_cast<double>(move_amount) * unit_inches;
 		} break;
 
 		// Select justification (ESC a)
@@ -1088,7 +1088,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Skip unsupported ESC ( command
 		case Esc::SkipUnsupportedEscCommand: // 0x101
-			needed_param = static_cast<uint8_t>(Param16(0));
+			needed_param = Param16(0);
 			num_param    = 0;
 			break;
 
@@ -1131,7 +1131,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::ParenBarCodeSetupPrint: // 0x242
 			LOG_ERR("PRINTER: Barcode printing not supported");
 			// Find out how many bytes to skip
-			needed_param = static_cast<uint8_t>(Param16(0));
+			needed_param = Param16(0);
 			num_param    = 0;
 			break;
 
@@ -1169,7 +1169,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Print data as characters (ESC (^)
 		case Esc::ParenPrintDataAsCharacters: // 0x25e
-			num_print_as_char = static_cast<uint16_t>(Param16(0));
+			num_print_as_char = Param16(0);
 			break;
 
 		// Set page format (ESC (c)
@@ -1222,7 +1222,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		default: {
 			using Clock = std::chrono::steady_clock;
-			static std::unordered_map<uint16_t, Clock::time_point> last_warned;
+			static std::unordered_map<int, Clock::time_point> last_warned;
 
 			const auto now = Clock::now();
 			auto it        = last_warned.find(esc_cmd);
@@ -1266,13 +1266,13 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	// space". With an HMI active, the HMI already includes the
 	// intercharacter component, so just undo the HMI advance.
 	case 0x08: {
-		double newX = cur_x - (1 / static_cast<double>(actual_cpi)) -
-		              extra_intra_space;
+		double new_x = cur_x - (1 / static_cast<double>(actual_cpi)) -
+		               extra_intra_space;
 		if (hmi > 0) {
-			newX = cur_x - hmi;
+			new_x = cur_x - hmi;
 		}
-		if (newX >= left_margin) {
-			cur_x = newX;
+		if (new_x >= left_margin) {
+			cur_x = new_x;
 		}
 	}
 		return true;
@@ -1284,7 +1284,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	// and the tab was silently ignored.)
 	case 0x09: {
 		double move_to = -1;
-		for (uint8_t i = 0; i < num_horiz_tabs; i++) {
+		for (int i = 0; i < num_horiz_tabs; ++i) {
 			if (horiz_tabs[i] > cur_x) {
 				move_to = horiz_tabs[i];
 				break;
@@ -1313,7 +1313,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			// current print position. vert_tabs is sorted
 			// ascending, so break on the first match.
 			double move_to = -1;
-			for (uint8_t i = 0; i < num_vert_tabs; i++) {
+			for (int i = 0; i < num_vert_tabs; ++i) {
 				if (vert_tabs[i] > cur_y) {
 					move_to = vert_tabs[i];
 					break;
@@ -1427,7 +1427,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 	return false;
 }
-void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
+void Printer::SetupBitImage(const uint8_t density, const int num_cols)
 {
 	switch (density) {
 	case 0:

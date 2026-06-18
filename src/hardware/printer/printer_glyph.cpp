@@ -94,39 +94,39 @@ void Printer::UpdateFont()
 		mono_box_font = nullptr;
 	}
 
-	double horizPoints = 10.5;
-	double vertPoints  = 10.5;
+	double horiz_points = 10.5;
+	double vert_points  = 10.5;
 
 	if (!multipoint) {
 		actual_cpi = cpi;
 
 		if (!(style.condensed)) {
-			horizPoints *= 10.0 / cpi;
-			vertPoints *= 10.0 / cpi;
+			horiz_points *= 10.0 / cpi;
+			vert_points *= 10.0 / cpi;
 		}
 
 		if (!(style.prop)) {
 			if ((cpi == 10.0) && (style.condensed)) {
 				actual_cpi = 17.14;
-				horizPoints *= 10.0 / 17.14;
+				horiz_points *= 10.0 / 17.14;
 			}
 			if ((cpi == 12.0) && (style.condensed)) {
 				actual_cpi = 20.0;
-				horizPoints *= 10.0 / 20.0;
-				vertPoints *= 10.0 / 12.0;
+				horiz_points *= 10.0 / 20.0;
+				vert_points *= 10.0 / 12.0;
 			}
 		} else if (style.condensed) {
-			horizPoints /= 2.0;
+			horiz_points /= 2.0;
 		}
 
 		if ((style.doublewidth) || (style.doublewidth_oneline)) {
 			actual_cpi /= 2.0;
-			horizPoints *= 2.0;
+			horiz_points *= 2.0;
 		}
 	} else {
 		// Multipoint (scalable) mode.
-		actual_cpi  = multi_cpi;
-		horizPoints = vertPoints = multi_point_size;
+		actual_cpi   = multi_cpi;
+		horiz_points = vert_points = multi_point_size;
 	}
 
 	// Capture the natural-size ascender BEFORE the double-height and
@@ -136,15 +136,15 @@ void Printer::UpdateFont()
 	// Taller glyphs (double-height) extend upward from the baseline;
 	// shorter glyphs (sub/super) sit on it.
 	FT_Set_Char_Size(cur_font,
-	                 points_to_26_6(horizPoints),
-	                 points_to_26_6(vertPoints),
+	                 points_to_26_6(horiz_points),
+	                 points_to_26_6(vert_points),
 	                 dpi,
 	                 dpi);
 
 	line_baseline_anchor_px = ft26_6_to_pixels(cur_font->size->metrics.ascender);
 
 	if (!multipoint && style.doubleheight) {
-		vertPoints *= 2.0;
+		vert_points *= 2.0;
 	}
 
 	if ((style.superscript) || (style.subscript)) {
@@ -153,12 +153,12 @@ void Printer::UpdateFont()
 		// is the rise expressed in pixels -- no per-font delta
 		// correction is needed because the baseline is now constant
 		// across font-size changes.
-		const auto rise_px = static_cast<int>(vertPoints) * dpi / 72 / 3;
+		const auto rise_px   = static_cast<int>(vert_points) * dpi / 72 / 3;
 		subscript_shift_px   = rise_px;
 		superscript_shift_px = rise_px;
 
-		horizPoints *= 2.0 / 3.0;
-		vertPoints *= 2.0 / 3.0;
+		horiz_points *= 2.0 / 3.0;
+		vert_points *= 2.0 / 3.0;
 		actual_cpi /= 2.0 / 3.0;
 
 	} else {
@@ -167,21 +167,21 @@ void Printer::UpdateFont()
 	}
 
 	FT_Set_Char_Size(cur_font,
-	                 points_to_26_6(horizPoints),
-	                 points_to_26_6(vertPoints),
+	                 points_to_26_6(horiz_points),
+	                 points_to_26_6(vert_points),
 	                 dpi,
 	                 dpi);
 
-	cur_horiz_points = horizPoints;
-	cur_vert_points  = vertPoints;
+	cur_horiz_points = horiz_points;
+	cur_vert_points  = vert_points;
 
 	// Size the mono fallback to the same dimensions so PrintChar can
 	// swap to it for box-drawing chars in fixed-pitch mode without re-
 	// sizing per glyph.
 	if (mono_box_font != nullptr) {
 		FT_Set_Char_Size(mono_box_font,
-		                 points_to_26_6(horizPoints),
-		                 points_to_26_6(vertPoints),
+		                 points_to_26_6(horiz_points),
+		                 points_to_26_6(vert_points),
 		                 dpi,
 		                 dpi);
 	}
@@ -211,7 +211,7 @@ void Printer::UpdateFont()
 		const auto cell_px = static_cast<int>(dpi / actual_cpi);
 
 		if (natural_advance_px > 0 && cell_px > natural_advance_px) {
-			box_fill_horiz_points = horizPoints *
+			box_fill_horiz_points = horiz_points *
 			                        BoxFillOvershootHorizontal *
 			                        static_cast<double>(cell_px) /
 			                        static_cast<double>(natural_advance_px);
@@ -224,7 +224,7 @@ void Printer::UpdateFont()
 			FT_Set_Char_Size(box_face,
 			                 static_cast<FT_F26Dot6>(box_fill_horiz_points *
 			                                         Ft26Dot6Unit),
-			                 static_cast<FT_F26Dot6>(vertPoints *
+			                 static_cast<FT_F26Dot6>(vert_points *
 			                                         Ft26Dot6Unit),
 			                 dpi,
 			                 dpi);
@@ -233,8 +233,8 @@ void Printer::UpdateFont()
 			        box_face->size->metrics.max_advance);
 
 			FT_Set_Char_Size(box_face,
-			                 points_to_26_6(horizPoints),
-			                 points_to_26_6(vertPoints),
+			                 points_to_26_6(horiz_points),
+			                 points_to_26_6(vert_points),
 			                 dpi,
 			                 dpi);
 		}
@@ -255,15 +255,14 @@ void Printer::UpdateFont()
 void Printer::BlitGlyph(const FT_Bitmap bitmap, const int dest_x,
                         const int dest_y, const bool add)
 {
-	for (uint32_t y = 0; y < bitmap.rows; y++) {
-		for (uint32_t x = 0; x < bitmap.width; x++) {
+	for (int y = 0; y < static_cast<int>(bitmap.rows); ++y) {
+		for (int x = 0; x < static_cast<int>(bitmap.width); ++x) {
 			// Read pixel from glyph bitmap
 			uint8_t source = *(bitmap.buffer + x + y * bitmap.pitch);
 
 			// Ignore background and don't go over the border
-			if (source > 0 &&
-			    (static_cast<int>(dest_x + x) < page.width) &&
-			    (static_cast<int>(dest_y + y) < page.height)) {
+			if (source > 0 && (dest_x + x) < page.width &&
+			    (dest_y + y) < page.height) {
 
 				auto& pixel = *reinterpret_cast<PagePixel*>(
 				        page.pixels.data() + (x + dest_x) +
@@ -293,21 +292,20 @@ void Printer::DrawLine(const int from_x, const int to_x, const int y, const bool
 	const int gapstart = (breakmod * 4) / 5;
 
 	// Draw anti-aliased line
-	for (int x = from_x; x <= to_x; x++) {
+	for (int x = from_x; x <= to_x; ++x) {
 
 		// Skip parts if broken line or going over the border
-		if ((!broken || (x % breakmod <= gapstart)) &&
-		    (static_cast<int>(x) < page.width)) {
+		if ((!broken || (x % breakmod <= gapstart)) && x < page.width) {
 
-			if (y > 0 && static_cast<int>(y - 1) < page.height) {
+			if (y > 0 && (y - 1) < page.height) {
 				page.pixels[x + (y - 1) * page.pitch] = 240;
 			}
 
-			if (static_cast<int>(y) < page.height) {
+			if (y < page.height) {
 				page.pixels[x + y * page.pitch] = !broken ? 255 : 240;
 			}
 
-			if (static_cast<int>(y + 1) < page.height) {
+			if ((y + 1) < page.height) {
 				page.pixels[x + (y + 1) * page.pitch] = 240;
 			}
 		}

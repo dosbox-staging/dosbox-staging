@@ -7,10 +7,10 @@
 
 #include "misc/types.h"
 
-typedef struct {
-	uint64_t codepage;
+struct Charmap {
+	uint16_t codepage;
 	const uint16_t* map;
-} Charmap;
+};
 
 extern const Charmap charmap[];
 extern const uint16_t codepages[15];
