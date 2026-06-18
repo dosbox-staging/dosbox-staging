@@ -341,8 +341,8 @@ void Printer::DrawLine(const int from_x, const int to_x, const int y, const bool
 	for (int x = from_x; x <= to_x; ++x) {
 
 		// Skip parts if broken line or going over the border
-		if ((!broken || (x % dash_period_px <= dash_ink_px)) &&
-		    x < page.width) {
+		if (x >= 0 && x < page.width &&
+		    (!broken || (x % dash_period_px <= dash_ink_px))) {
 
 			if (y > 0 && (y - 1) < page.height) {
 				page.pixels[x + (y - 1) * page.pitch] = LineEdgeIntensity;
