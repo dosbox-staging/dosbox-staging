@@ -3085,9 +3085,9 @@ protected:
 		constexpr uint8_t Strobe     = 0x01;
 		constexpr uint8_t Initialise = 0x04;
 
-		PRINTER_WriteData(0, data, 1);
-		PRINTER_WriteControl(0, Initialise | Strobe, 1);
-		PRINTER_WriteControl(0, Initialise, 1);
+		PRINTER_WriteData(0, data, io_width_t::byte);
+		PRINTER_WriteControl(0, Initialise | Strobe, io_width_t::byte);
+		PRINTER_WriteControl(0, Initialise, io_width_t::byte);
 	}
 
 	static std::string read_file_bytes(const std_fs::path& path)
