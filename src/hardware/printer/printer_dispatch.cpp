@@ -1406,8 +1406,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		UpdateFont();
 		return true;
 
-	// Cancel line (CAN)
-	case 0x18: return true;
+	// Cancel line (CAN). Spec C-200: clears the current line and
+	// moves the print position to the left-margin position. We can't
+	// erase pixels already blitted into the page bitmap in this
+	// streaming model, but we honour the move-to-left-margin half
+	// of the contract so subsequent text starts in the right place.
+	case 0x18:
+		cur_x = left_margin;
+		return true;
 
 	// ESC
 	case 0x1b: esc_seen = true; return true;
