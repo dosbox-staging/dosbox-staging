@@ -466,7 +466,10 @@ const Charmap charmap[] = {
 const uint16_t codepages[15] =
         {0, 437, 932, 850, 851, 853, 855, 860, 863, 865, 852, 857, 862, 864, 866};
 
-// TODO: Implement all international charsets
+// ESC R selects one of 15 international character sets. Only USA (0),
+// France (1), Germany (2), UK (3), and Legal (14) carry their actual
+// substitutions; rows 4 through 13 fall back to USA. Inherited as-is
+// from the DOSBox Daum import.
 const uint16_t int_char_sets[15][12] = {
         {0x0023, 0x0024, 0x0040, 0x005b, 0x005c, 0x005d, 0x005e, 0x0060, 0x007b, 0x007c, 0x007d, 0x007e}, // USA
         {0x0023, 0x0024, 0x00e0, 0x00ba, 0x00e7, 0x00a7, 0x005e, 0x0060, 0x00e9, 0x00f9, 0x00e8, 0x00a8}, // France
