@@ -1050,15 +1050,15 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		// Select LQ or draft (ESC x)
+		// Select LQ or draft (ESC x). Spec C-93: only changes the
+		// print quality; condensed is a separate style controlled
+		// by SI / ESC SI / DC2 / ESC ! and must not be touched here.
 		case Esc::SelectLqDraft: // 0x78
 			if (params[0] == 0 || params[0] == 48) {
-				print_quality   = PrintQuality::Draft;
-				style.condensed = 1;
+				print_quality = PrintQuality::Draft;
 			}
 			if (params[0] == 1 || params[0] == 49) {
-				print_quality   = PrintQuality::Lq;
-				style.condensed = 0;
+				print_quality = PrintQuality::Lq;
 			}
 			hmi = -1;
 			UpdateFont();
