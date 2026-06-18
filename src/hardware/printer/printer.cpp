@@ -185,7 +185,7 @@ void Printer::ResetPrinter()
 	// margin (not from the page origin). Matches the Epson ESC/P spec
 	// (ESC D description: "absolute position from the left-margin
 	// position").
-	for (uint64_t i = 0; i < 32; i++) {
+	for (int i = 0; i < 32; ++i) {
 		horiz_tabs[i] = left_margin + static_cast<double>((i + 1) * 8) /
 		                                      static_cast<double>(cpi);
 	}
@@ -206,13 +206,13 @@ void Printer::SelectCodepage(const uint16_t codepage)
 {
 	const uint16_t* map_to_use = nullptr;
 
-	uint64_t i = 0;
+	int i = 0;
 	while (charmap[i].codepage != 0) {
 		if (charmap[i].codepage == codepage) {
 			map_to_use = charmap[i].map;
 			break;
 		}
-		i++;
+		++i;
 	}
 	if (map_to_use == nullptr) {
 		LOG_WARNING("PRINTER: Unsupported codepage %i. Using CP437 instead.",
@@ -221,8 +221,8 @@ void Printer::SelectCodepage(const uint16_t codepage)
 		return;
 	}
 
-	for (int i = 0; i < 256; i++) {
-		cur_map[i] = map_to_use[i];
+	for (int j = 0; j < 256; ++j) {
+		cur_map[j] = map_to_use[j];
 	}
 }
 
@@ -384,8 +384,7 @@ void Printer::PrintChar(uint8_t ch)
 		               render_face->glyph->bitmap_left + centre_offset;
 	}
 
-	const uint16_t pen_x = static_cast<uint16_t>(
-	        signed_pen_x < 0 ? 0 : signed_pen_x);
+	const int pen_x = signed_pen_x < 0 ? 0 : signed_pen_x;
 
 	// Anchor every glyph to the per-line baseline captured in
 	// UpdateFont() so that double-height chars extend upward from the
@@ -406,7 +405,7 @@ void Printer::PrintChar(uint8_t ch)
 		signed_pen_y = static_cast<int>(PixY()) + line_baseline_anchor_px -
 		               render_face->glyph->bitmap_top;
 	}
-	uint16_t pen_y = static_cast<uint16_t>(signed_pen_y < 0 ? 0 : signed_pen_y);
+	int pen_y = signed_pen_y < 0 ? 0 : signed_pen_y;
 
 	// Sub- and superscript vertical shift. The spec (escp2ref.pdf
 	// C-129) only describes the *direction* ("lower part" vs "upper
@@ -414,10 +413,10 @@ void Printer::PrintChar(uint8_t ch)
 	// the printer. We use rise = point_size / 3 (in PDF baseline units,
 	// converted to pixels in UpdateFont).
 	if (style.subscript) {
-		pen_y = static_cast<uint16_t>(pen_y + subscript_shift_px);
+		pen_y += subscript_shift_px;
 	}
 	if (style.superscript) {
-		pen_y = static_cast<uint16_t>(pen_y - superscript_shift_px);
+		pen_y -= superscript_shift_px;
 	}
 
 	// Copy bitmap into page
@@ -439,7 +438,7 @@ void Printer::PrintChar(uint8_t ch)
 	}
 
 	// For line printing
-	const auto line_start = static_cast<uint16_t>(PixX());
+	const auto line_start = PixX();
 
 	// advance the cursor to the right
 	double x_advance;
@@ -467,25 +466,22 @@ void Printer::PrintChar(uint8_t ch)
 
 		// Find out where to put the line.
 		// TODO height is in fixed-point format from FreeType.
-		uint16_t line_y = static_cast<uint16_t>(PixY());
+		int line_y = PixY();
 
 		const double height = static_cast<double>(
 		        cur_font->size->metrics.height >> 6);
 
 		if (style.underline) {
-			line_y = static_cast<uint16_t>(
-			        PixY() + static_cast<uint16_t>(height * 0.9));
+			line_y = PixY() + static_cast<int>(height * 0.9);
 
 		} else if (style.strikethrough) {
-			line_y = static_cast<uint16_t>(
-			        PixY() + static_cast<uint16_t>(height * 0.45));
+			line_y = PixY() + static_cast<int>(height * 0.45);
 
 		} else if (style.overscore) {
-			line_y = static_cast<uint16_t>(
-			        PixY() - (((score == ScoreType::Double) ||
-			                   (score == ScoreType::DoubleBroken))
-			                          ? 5
-			                          : 0));
+			line_y = PixY() - (((score == ScoreType::Double) ||
+			                    (score == ScoreType::DoubleBroken))
+			                           ? 5
+			                           : 0);
 		}
 
 		DrawLine(line_start,
@@ -1251,7 +1247,7 @@ void PRINTER_Init()
 		parse_page_size("a4", page_w_in, page_h_in);
 	}
 
-	PRINTER_Configure(model, dpi_u16, page_w_in, page_h_in, timeout);
+	PRINTER_Configure(model, dpi, page_w_in, page_h_in, timeout);
 
 	install_io_handlers(lpt_port);
 

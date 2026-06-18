@@ -269,7 +269,7 @@ private:
 	              const bool broken);
 
 	// Setup the bit_graph structure
-	void SetupBitImage(const uint8_t density, const uint16_t num_cols);
+	void SetupBitImage(const uint8_t density, const int num_cols);
 
 	// Process a character that is part of bit image. Must be called iff
 	// bit_graph.bytes_left > 0.
@@ -342,7 +342,7 @@ private:
 	int dpi = 0;
 
 	// ESC command currently being processed.
-	uint16_t esc_cmd = 0;
+	int esc_cmd = 0;
 
 	// True if last read character was an ESC (0x1B).
 	bool esc_seen = false;
@@ -352,8 +352,8 @@ private:
 	bool fs_seen = false;
 
 	// Numbers of parameters already read / needed to process command.
-	uint8_t num_param    = 0;
-	uint8_t needed_param = 0;
+	int num_param    = 0;
+	int needed_param = 0;
 
 	// Buffer for the read parameters.
 	std::array<uint8_t, 20> params = {};
@@ -430,14 +430,14 @@ private:
 
 	// Currently configured horizontal tabs (in inch).
 	std::array<double, 32> horiz_tabs = {};
-	uint8_t num_horiz_tabs            = 0;
+	int num_horiz_tabs                = 0;
 
 	// Currently configured vertical tabs (in inch).
 	std::array<double, 16> vert_tabs = {};
-	uint8_t num_vert_tabs            = 0;
+	int num_vert_tabs                = 0;
 
 	// Currently selected character table / charset.
-	uint8_t cur_char_table = 0;
+	int cur_char_table = 0;
 
 	// Print quality.
 	PrintQuality print_quality = PrintQuality::None;
@@ -460,30 +460,30 @@ private:
 	// Bit-image printing state.
 	struct BitGraphicParams {
 		// Density of image to print (in dpi).
-		uint16_t horiz_dens = 0;
-		uint16_t vert_dens  = 0;
+		int horiz_dens = 0;
+		int vert_dens  = 0;
 
 		// Whether to print adjacent pixels (ignored).
 		bool adjacent = false;
 
 		// Bytes per column.
-		uint8_t bytes_column = 0;
+		int bytes_column = 0;
 
 		// Bytes left to read before image is done.
-		uint16_t bytes_left = 0;
+		int bytes_left = 0;
 
 		// Bytes of the current and last column.
 		std::array<uint8_t, 6> column = {};
 
 		// Bytes read so far for the current column.
-		uint8_t read_bytes_column = 0;
+		int read_bytes_column = 0;
 
 		// Column index and cur_x at the start of the current ESC *
 		// run. PrintBitGraph derives each column's position as
 		// `base_x + col_index/horiz_dens` rather than accumulating
 		// cur_x by 1/horiz_dens per call.
-		uint16_t col_index = 0;
-		double base_x      = 0.0;
+		int col_index = 0;
+		double base_x = 0.0;
 
 		// True while consuming bit-image bytes that should not be
 		// rendered. Used by ESC ^ (9-pin graphics) so the data is
@@ -523,7 +523,7 @@ private:
 
 	// Number of bytes to print as characters (even when normally control
 	// codes).
-	uint16_t num_print_as_char = 0;
+	int num_print_as_char = 0;
 };
 
 } // namespace VirtualPrinter
