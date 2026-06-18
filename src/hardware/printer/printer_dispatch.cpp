@@ -91,7 +91,7 @@ constexpr auto Select120DpiDoubleSpeedGraphics                  = 0x59;
 constexpr auto Select240DpiGraphics                             = 0x5a;
 constexpr auto SelectCharacterHeightWidthLineSpacing            = 0x5b;
 constexpr auto SetRelativeHorizontalPrintPosition               = 0x5c;
-constexpr auto EnablePrintingOfAllCharacterCodesOnNextCharacter = 0x5e;
+constexpr auto Select60Or120Dpi9PinGraphics = 0x5e;
 constexpr auto SelectJustification                              = 0x61;
 constexpr auto SetVerticalTabsInVfuChannels                     = 0x62;
 constexpr auto SetHorizontalMotionIndex                         = 0x63;
@@ -236,9 +236,6 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::Select105Point10Cpi: // 0x50
 		// (ESC T) — Cancel superscript/subscript printing
 		case Esc::CancelSuperscriptSubscriptPrinting: // 0x54
-		// (ESC ^) — Enable printing of all character codes on next
-		// character
-		case Esc::EnablePrintingOfAllCharacterCodesOnNextCharacter: // 0x5e
 		// (ESC g) — Select 10.5-point, 15-cpi
 		case Esc::Select105Point15Cpi: // 0x67
 			needed_param = 0;
@@ -335,9 +332,13 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// (ESC *) — Select bit image
 		case Esc::SelectBitImage: // 0x2a
 		// (ESC X) — Select font by pitch and point [conflict]
-		case Esc::SelectFontPitchPoint:
+		case Esc::SelectFontPitchPoint: // 0x58
+		// (ESC ^) — Select 60/120-dpi 9-pin graphics (spec C-191).
+		// Header is m nL nH; the dispatcher must then consume
+		// 2*(nH*256+nL) data bytes — see the late dispatch handler.
+		case Esc::Select60Or120Dpi9PinGraphics: // 0x5e
 			needed_param = 3;
-			break; // 0x58
+			break;
 
 		// Select character height, width, line spacing
 		case Esc::SelectCharacterHeightWidthLineSpacing:
@@ -587,6 +588,22 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Select bit image (ESC *)
 		case Esc::SelectBitImage: // 0x2a
 			SetupBitImage(params[0], static_cast<uint16_t>(Param16(1)));
+			break;
+
+		// Select 60/120-dpi, 9-pin graphics (ESC ^). Header is
+		// m nL nH; (nH*256 + nL) is the column count, with 2 data
+		// bytes per column. Spec C-191 says this is a 9-pin
+		// nonrecommended command and recommends ESC * instead. We
+		// don't render the dots; the bytes are pulled out of the
+		// stream via the bit_graph discard flag so the rest of the
+		// stream isn't misinterpreted as text.
+		case Esc::Select60Or120Dpi9PinGraphics: // 0x5e
+			bit_graph.bytes_left = static_cast<uint16_t>(
+			        2 * Param16(1));
+			bit_graph.bytes_column      = 2;
+			bit_graph.read_bytes_column = 0;
+			bit_graph.col_index         = 0;
+			bit_graph.discard_data      = true;
 			break;
 
 		// Set n/360-inch line spacing (ESC +) -- 24/48-pin only
@@ -1494,6 +1511,7 @@ void Printer::SetupBitImage(const uint8_t density, const uint16_t num_cols)
 	bit_graph.read_bytes_column = 0;
 	bit_graph.col_index         = 0;
 	bit_graph.base_x            = cur_x;
+	bit_graph.discard_data      = false;
 }
 
 // Bit-image rendering.
@@ -1524,6 +1542,19 @@ void Printer::PrintBitGraph(const uint8_t ch)
 {
 	bit_graph.column[bit_graph.read_bytes_column++] = ch;
 	bit_graph.bytes_left--;
+
+	// ESC ^ (9-pin graphics) consumes bytes without rendering. Reset
+	// the column accumulator each full column so the run ends cleanly
+	// once bytes_left drains.
+	if (bit_graph.discard_data) {
+		if (bit_graph.read_bytes_column >= bit_graph.bytes_column) {
+			bit_graph.read_bytes_column = 0;
+		}
+		if (bit_graph.bytes_left == 0) {
+			bit_graph.discard_data = false;
+		}
+		return;
+	}
 
 	// Only print after reading a full column
 	if (bit_graph.read_bytes_column < bit_graph.bytes_column) {
