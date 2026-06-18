@@ -4,8 +4,10 @@
 #include "rules.h"
 
 #include <cctype>
+#include <cstring>
 #include <string>
 
+#include "cycles_parser.h"
 #include "utils/checks.h"
 
 CHECK_NARROWING();
@@ -611,6 +613,10 @@ const std::vector<Rule> rules = {
          .from_key     = "cputype",
          .action       = Action::Custom,
          .custom       = cpu_cputype},
+        {.from_section = "cpu",
+         .from_key     = "cycles",
+         .action       = Action::Custom,
+         .custom       = MigrateLegacyCycles},
 
         // [mixer]
         {.from_section = "mixer",
