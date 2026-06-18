@@ -138,11 +138,6 @@ constexpr double CoarseVerticalDivisor9Pin  = 72.0;
 // ESC + / ESC ( V family when a custom unit hasn't been selected.
 constexpr double DefinedUnitDivisor = 360.0;
 
-// ESC \ (relative horizontal motion) divisors. 1/120-inch units in
-// draft mode, 1/180-inch units in LQ mode (escp2ref.pdf C-207).
-constexpr double RelativeHorizontalDivisorDraft = 120.0;
-constexpr double RelativeHorizontalDivisorLq    = 180.0;
-
 // Per-opcode debounce interval for unsupported-command warnings.
 // Many DOS apps emit the same unsupported opcode repeatedly; muting
 // outright (once-per-session) hides bursts that come back later,
@@ -918,17 +913,24 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			SetupBitImage(densz, static_cast<uint16_t>(Param16(0)));
 			break;
 
-		// Set relative horizontal print position (ESC \)
+		// Set relative horizontal print position (ESC \).
+		// Spec C-33: cur_x += param × (defined unit). defined_unit
+		// (set by ESC ( U) is in inches/unit; the default when no
+		// custom unit is selected is 1/120 inch in draft mode and
+		// 1/180 inch in LQ mode.
 		case Esc::SetRelativeHorizontalPrintPosition: { // 0x5c
-			const int16_t toMove = static_cast<int16_t>(Param16(0));
-			double unit_size     = defined_unit;
-			if (unit_size < 0) {
-				unit_size = (print_quality == PrintQuality::Draft)
-				                  ? RelativeHorizontalDivisorDraft
-				                  : RelativeHorizontalDivisorLq;
-			}
-			cur_x += static_cast<double>(
-			        static_cast<double>(toMove) / unit_size);
+			constexpr double DefaultDraftUnitInches = 1.0 / 120.0;
+			constexpr double DefaultLqUnitInches    = 1.0 / 180.0;
+
+			const int16_t toMove     = static_cast<int16_t>(Param16(0));
+			const double unit_inches = (defined_unit > 0)
+			                                 ? defined_unit
+			                                 : ((print_quality ==
+			                                     PrintQuality::Draft)
+			                                            ? DefaultDraftUnitInches
+			                                            : DefaultLqUnitInches);
+
+			cur_x += static_cast<double>(toMove) * unit_inches;
 		} break;
 
 		// Select justification (ESC a)
