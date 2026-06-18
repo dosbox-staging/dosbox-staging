@@ -60,11 +60,6 @@ constexpr int BrokenLineInkDenominator = 5;
 // bits (0..MaxIntensity). The 3-bit right-shift maps 256 levels to 32.
 constexpr int GlyphAlphaToIntensityShift = 3;
 
-// PagePixel layout: 5-bit intensity in the low bits, 3-bit colour ID
-// in the high bits (see PagePixel in printer.h). Shift a packed colour
-// byte right by ColorIdBitShift to recover the 0..7 colour ID.
-constexpr int ColorIdBitShift = 5;
-
 } // namespace
 
 void Printer::FillPalette(const uint8_t red_max, const uint8_t green_max,
@@ -327,10 +322,9 @@ void Printer::BlitGlyph(const FT_Bitmap bitmap, const int dest_x,
 					        std::min(MaxIntensity, sum));
 
 					pixel.color_id = static_cast<uint8_t>(
-					        pixel.color_id |
-					        (color >> ColorIdBitShift));
+					        pixel.color_id | color.color_id);
 				} else {
-					pixel.data = source | color;
+					pixel.data = source | color.data;
 				}
 			}
 		}
