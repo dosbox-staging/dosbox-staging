@@ -148,6 +148,14 @@ enum class ScoreType : uint8_t {
 	DoubleBroken = 0x06,
 };
 
+// ESC ( - parameter d1 -- which line position the score (in params[4])
+// applies to (escp2ref.pdf C-145, table 1-13).
+enum class LineKind : uint8_t {
+	Underline     = 1,
+	Strikethrough = 2,
+	Overscore     = 3,
+};
+
 enum class PrintQuality : uint8_t {
 	// Power-on default. Not yet selected by the application via ESC x.
 	// Treated as 'not Draft' by code that checks for the draft mode
