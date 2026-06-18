@@ -804,9 +804,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		// Set right margin (ESC Q)
+		// Set right margin (ESC Q). Spec C-21: right margin sits at
+		// the right edge of column n, so position = n / cpi (no off-
+		// by-one — contrast ESC l which puts the *left* edge of
+		// column n at the margin and so subtracts one).
 		case Esc::SetRightMargin: // 0x51
-			right_margin = static_cast<double>(params[0] - 1.0) /
+			right_margin = static_cast<double>(params[0]) /
 			               static_cast<double>(cpi);
 			break;
 
