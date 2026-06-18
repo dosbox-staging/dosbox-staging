@@ -1148,14 +1148,16 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			style.overscore     = 0;
 			score               = static_cast<ScoreType>(params[4]);
 			if (score != ScoreType::None) {
-				if (params[3] == 1) {
+				switch (static_cast<LineKind>(params[3])) {
+				case LineKind::Underline:
 					style.underline = 1;
-				}
-				if (params[3] == 2) {
+					break;
+				case LineKind::Strikethrough:
 					style.strikethrough = 1;
-				}
-				if (params[3] == 3) {
+					break;
+				case LineKind::Overscore:
 					style.overscore = 1;
+					break;
 				}
 			}
 			UpdateFont();
