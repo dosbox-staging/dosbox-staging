@@ -56,6 +56,32 @@ static int printer_timeout        = 500;
 
 namespace VirtualPrinter {
 
+namespace {
+
+// Default power-on / ESC @ font and layout settings (escp2ref.pdf C-69
+// "Initialize Printer").
+constexpr double DefaultCpi           = 10.0;
+constexpr double DefaultLineSpacingIn = 1.0 / 6.0;
+constexpr int DefaultTabIntervalChars = 8;
+
+// MSB control (ESC =, ESC >, ESC #). ch &= MsbClearMask forces bit 7
+// low; ch |= MsbSetMask forces it high.
+constexpr uint8_t MsbClearMask = 0x7F;
+constexpr uint8_t MsbSetMask   = 0x80;
+
+// Unicode range covering CP437 box-drawing glyphs (U+2500..U+257F) and
+// block elements (U+2580..U+259F). Both are designed to tile across
+// cell boundaries; we render them from a monospace fallback to keep
+// the grid aligned regardless of the active typeface.
+constexpr uint16_t BoxAndBlockGlyphsFirst = 0x2500;
+constexpr uint16_t BoxAndBlockGlyphsLast  = 0x259F;
+
+// SOH (0x01) in the byte stream is treated as a printable space. Carried
+// over from upstream DOSBox; real Epson hardware ignores SOH outright.
+constexpr uint8_t SohRemappedToSpace = 0x01;
+
+} // namespace
+
 // Printer::FillPalette lives in printer_glyph.cpp.
 
 Printer::Printer(const int dpi, const double page_width_in,
@@ -149,8 +175,8 @@ void Printer::ResetPrinter()
 
 	cur_x                = left_margin;
 	cur_y                = top_margin;
-	line_spacing         = static_cast<double>(1) / 6;
-	cpi                  = 10.0;
+	line_spacing         = DefaultLineSpacingIn;
+	cpi                  = DefaultCpi;
 	cur_char_table       = 1;
 	style.data           = 0;
 	extra_intra_space    = 0.0;
@@ -171,7 +197,7 @@ void Printer::ResetPrinter()
 	multi_point_size  = 0.0;
 	multi_cpi         = 0.0;
 	hmi               = -1.0;
-	msb               = 255;
+	msb               = MsbModeDisabled;
 	num_print_as_char = 0;
 	lq_typeface       = Typeface::Roman;
 
@@ -185,13 +211,15 @@ void Printer::ResetPrinter()
 	// margin (not from the page origin). Matches the Epson ESC/P spec
 	// (ESC D description: "absolute position from the left-margin
 	// position").
-	for (int i = 0; i < 32; ++i) {
-		horiz_tabs[i] = left_margin + static_cast<double>((i + 1) * 8) /
-		                                      static_cast<double>(cpi);
+	const int default_num_horiz_tabs = static_cast<int>(horiz_tabs.size());
+	for (int i = 0; i < default_num_horiz_tabs; ++i) {
+		horiz_tabs[i] = left_margin +
+		                static_cast<double>((i + 1) * DefaultTabIntervalChars) /
+		                        static_cast<double>(cpi);
 	}
-	num_horiz_tabs = 32;
+	num_horiz_tabs = default_num_horiz_tabs;
 
-	num_vert_tabs = 255;
+	num_vert_tabs = VerticalTabsNotConfigured;
 }
 
 Printer::~Printer(void)
@@ -252,12 +280,12 @@ void Printer::PrintChar(uint8_t ch)
 	}
 
 	// Don't think that DOS programs uses this but well: Apply MSB if desired
-	if (msb != 255) {
-		if (msb == 0) {
-			ch &= 0x7F;
+	if (msb != MsbModeDisabled) {
+		if (msb == MsbModeForceLow) {
+			ch &= MsbClearMask;
 		}
-		if (msb == 1) {
-			ch |= 0x80;
+		if (msb == MsbModeForceHigh) {
+			ch |= MsbSetMask;
 		}
 	}
 
@@ -279,8 +307,8 @@ void Printer::PrintChar(uint8_t ch)
 		return;
 	}
 
-	if (ch == 0x1) {
-		ch = 0x20;
+	if (ch == SohRemappedToSpace) {
+		ch = ' ';
 	}
 
 	// Box-drawing chars (U+2500..U+257F) and block elements
@@ -293,7 +321,8 @@ void Printer::PrintChar(uint8_t ch)
 	// the bitmap overhang baked into each glyph bridges the seam.
 	const auto unicode = cur_map[ch];
 
-	const bool is_box_char = unicode >= 0x2500 && unicode <= 0x259F;
+	const bool is_box_char = unicode >= BoxAndBlockGlyphsFirst &&
+	                         unicode <= BoxAndBlockGlyphsLast;
 
 	FT_Face render_face = (is_box_char && !style.prop && mono_box_font != nullptr)
 	                            ? mono_box_font

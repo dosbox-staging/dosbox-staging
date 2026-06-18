@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <iterator>
 #include <unordered_map>
 
 #include "misc/logging.h"
@@ -143,6 +144,23 @@ constexpr double DefinedUnitDivisor = 360.0;
 // outright (once-per-session) hides bursts that come back later,
 // logging every invocation drowns the log.
 constexpr std::chrono::seconds UnsupportedOpcodeLogInterval{3};
+
+// ESC/P toggle-parameter convention: most on/off commands accept the
+// numeric value (0, 1) and the ASCII digit ('0', '1') interchangeably
+// (escp2ref.pdf, e.g. ESC - C-99, ESC W C-159, ESC p C-115, ESC x C-93).
+constexpr bool is_esc_param_off(const uint8_t p)
+{
+	return p == 0 || p == '0';
+}
+
+constexpr bool is_esc_param_on(const uint8_t p)
+{
+	return p == 1 || p == '1';
+}
+
+// ESC ( U sets the defined unit as inches / n, where n can resolve down
+// to 1/3600 inch (escp2ref.pdf C-141).
+constexpr double DefinedUnitMaxResolution = 3600.0;
 
 } // namespace
 
@@ -573,7 +591,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Cancel MSB control (ESC #)
 		case Esc::CancelMsbControl:
-			msb = 255;
+			msb = MsbModeDisabled;
 			break; // 0x23
 
 		// Set absolute horizontal print position (ESC $).
@@ -625,10 +643,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Turn underline on/off (ESC -)
 		case Esc::TurnUnderlineOnOff: // 0x2d
-			if (params[0] == 0 || params[0] == 48) {
+			if (is_esc_param_off(params[0])) {
 				style.underline = 0;
 			}
-			if (params[0] == 1 || params[0] == 49) {
+			if (is_esc_param_on(params[0])) {
 				style.underline = 1;
 				score           = ScoreType::Single;
 			}
@@ -687,26 +705,28 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Set MSB to 0 (ESC =)
 		case Esc::SetMsbTo0:
-			msb = 0;
+			msb = MsbModeForceLow;
 			break; // 0x3d
 
 		// Set MSB to 1 (ESC >)
 		case Esc::SetMsbTo1:
-			msb = 1;
+			msb = MsbModeForceHigh;
 			break; // 0x3e
 
-		// Reassign bit-image mode (ESC ?)
+		// Reassign bit-image mode (ESC ?). params[0] is the ASCII letter
+		// of the target command (K/L/Y/Z); params[1] is the new density
+		// mode that command will trigger (escp2ref.pdf C-93).
 		case Esc::ReassignBitImageMode: // 0x3f
-			if (params[0] == 75) {
+			if (params[0] == 'K') {
 				densk = params[1];
 			}
-			if (params[0] == 76) {
+			if (params[0] == 'L') {
 				densl = params[1];
 			}
-			if (params[0] == 89) {
+			if (params[0] == 'Y') {
 				densy = params[1];
 			}
-			if (params[0] == 90) {
+			if (params[0] == 'Z') {
 				densz = params[1];
 			}
 			break;
@@ -828,27 +848,37 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			               static_cast<double>(cpi);
 			break;
 
-		// Select an international character set (ESC R)
-		case Esc::SelectInternationalCharacterSet: // 0x52
-			if (params[0] <= 13 || params[0] == 64) {
-				if (params[0] == 64) {
-					params[0] = 14;
-				}
+		// Select an international character set (ESC R). Spec C-119:
+		// n = 0..13 selects a national variant; n = 64 selects the
+		// "Legal" variant which we store as slot 14.
+		case Esc::SelectInternationalCharacterSet: { // 0x52
+			constexpr uint8_t LastNationalVariant = 13;
+			constexpr uint8_t LegalVariantSelector = 64;
+			constexpr uint8_t LegalVariantSlot     = 14;
 
-				cur_map[0x23] = int_char_sets[params[0]][0];
-				cur_map[0x24] = int_char_sets[params[0]][1];
-				cur_map[0x40] = int_char_sets[params[0]][2];
-				cur_map[0x5b] = int_char_sets[params[0]][3];
-				cur_map[0x5c] = int_char_sets[params[0]][4];
-				cur_map[0x5d] = int_char_sets[params[0]][5];
-				cur_map[0x5e] = int_char_sets[params[0]][6];
-				cur_map[0x60] = int_char_sets[params[0]][7];
-				cur_map[0x7b] = int_char_sets[params[0]][8];
-				cur_map[0x7c] = int_char_sets[params[0]][9];
-				cur_map[0x7d] = int_char_sets[params[0]][10];
-				cur_map[0x7e] = int_char_sets[params[0]][11];
+			if (params[0] > LastNationalVariant &&
+			    params[0] != LegalVariantSelector) {
+				break;
 			}
-			break;
+			if (params[0] == LegalVariantSelector) {
+				params[0] = LegalVariantSlot;
+			}
+
+			// The 12 ASCII positions remapped by ESC R (escp2ref.pdf
+			// C-119 table 1-9).
+			cur_map['#']  = int_char_sets[params[0]][0];
+			cur_map['$']  = int_char_sets[params[0]][1];
+			cur_map['@']  = int_char_sets[params[0]][2];
+			cur_map['[']  = int_char_sets[params[0]][3];
+			cur_map['\\'] = int_char_sets[params[0]][4];
+			cur_map[']']  = int_char_sets[params[0]][5];
+			cur_map['^']  = int_char_sets[params[0]][6];
+			cur_map['`']  = int_char_sets[params[0]][7];
+			cur_map['{']  = int_char_sets[params[0]][8];
+			cur_map['|']  = int_char_sets[params[0]][9];
+			cur_map['}']  = int_char_sets[params[0]][10];
+			cur_map['~']  = int_char_sets[params[0]][11];
+		} break;
 
 		// Select superscript/subscript printing (ESC S). The single
 		// parameter is 0 / '0' (subscript) or 1 / '1' (superscript).
@@ -859,10 +889,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// of the character space (superscript); n = 1 or 49 selects
 		// the *lower* part (subscript).
 		case Esc::SelectSuperscriptSubscriptPrinting: // 0x53
-			if (params[0] == 0 || params[0] == 48) {
+			if (is_esc_param_off(params[0])) {
 				style.superscript = 1;
 			}
-			if (params[0] == 1 || params[0] == 49) {
+			if (is_esc_param_on(params[0])) {
 				style.subscript = 1;
 			}
 			UpdateFont();
@@ -884,10 +914,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::TurnDoubleWidthPrintingOnOff: // 0x57
 			if (!multipoint) {
 				hmi = -1;
-				if (params[0] == 0 || params[0] == 48) {
+				if (is_esc_param_off(params[0])) {
 					style.doublewidth = 0;
 				}
-				if (params[0] == 1 || params[0] == 49) {
+				if (is_esc_param_on(params[0])) {
 					style.doublewidth = 1;
 				}
 				UpdateFont();
@@ -907,7 +937,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 				if (params[0] == 1) { // Proportional spacing
 					style.prop = 1;
 				} else if (params[0] >= 5) {
-					multi_cpi = static_cast<double>(360) /
+					multi_cpi = DefinedUnitDivisor /
 					            static_cast<double>(params[0]);
 				}
 			}
@@ -1011,10 +1041,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 
 		// Turn proportional mode on/off (ESC p)
 		case Esc::TurnProportionalModeOnOff: // 0x70
-			if (params[0] == 0 || params[0] == 48) {
+			if (is_esc_param_off(params[0])) {
 				style.prop = 0;
 			}
-			if (params[0] == 1 || params[0] == 49) {
+			if (is_esc_param_on(params[0])) {
 				style.prop    = 1;
 				print_quality = PrintQuality::Lq;
 			}
@@ -1040,13 +1070,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			// Ignore
 			break;
 
-		// Select character table (ESC t)
+		// Select character table (ESC t). Spec C-137: accepts either
+		// the table index (0..3) or its ASCII digit ('0'..'3').
 		case Esc::SelectCharacterTable: // 0x74
-			if (params[0] < 4) {
+			if (params[0] < char_tables.size()) {
 				cur_char_table = params[0];
 			}
-			if (params[0] >= 48 && params[0] <= 51) {
-				cur_char_table = params[0] - 48;
+			if (params[0] >= '0' && params[0] <= '3') {
+				cur_char_table = params[0] - '0';
 			}
 			SelectCodepage(char_tables[cur_char_table]);
 			UpdateFont();
@@ -1055,10 +1086,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Turn double-height printing on/off (ESC w)
 		case Esc::TurnDoubleHeightPrintingOnOff: // 0x77
 			if (!multipoint) {
-				if (params[0] == 0 || params[0] == 48) {
+				if (is_esc_param_off(params[0])) {
 					style.doubleheight = 0;
 				}
-				if (params[0] == 1 || params[0] == 49) {
+				if (is_esc_param_on(params[0])) {
 					style.doubleheight = 1;
 				}
 				UpdateFont();
@@ -1069,10 +1100,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// print quality; condensed is a separate style controlled
 		// by SI / ESC SI / DC2 / ESC ! and must not be touched here.
 		case Esc::SelectLqDraft: // 0x78
-			if (params[0] == 0 || params[0] == 48) {
+			if (is_esc_param_off(params[0])) {
 				print_quality = PrintQuality::Draft;
 			}
-			if (params[0] == 1 || params[0] == 49) {
+			if (is_esc_param_on(params[0])) {
 				print_quality = PrintQuality::Lq;
 			}
 			hmi = -1;
@@ -1092,15 +1123,13 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			num_param    = 0;
 			break;
 
-		// Assign character table (ESC (t)
+		// Assign character table (ESC (t). The upstream bounds check
+		// '< 16' on params[3] was off by one and would index out of
+		// bounds when params[3] == 15.
 		case Esc::ParenAssignCharacterTable: // 0x274
-			// codepages has 15 entries (indices 0..14). The
-			// upstream bounds check '< 16' was off by one and would
-			// index out of bounds when params[3] == 15.
-			if (params[2] < 4 && params[3] < 15) {
+			if (params[2] < char_tables.size() &&
+			    params[3] < std::size(codepages)) {
 				char_tables[params[2]] = codepages[params[3]];
-				// LOG_MSG("curr table: %d, p2: %d, p3:
-				// %d",cur_char_table,params[2],params[3]);
 				if (params[2] == cur_char_table) {
 					SelectCodepage(char_tables[cur_char_table]);
 				}
@@ -1148,7 +1177,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Set unit (ESC (U)
 		case Esc::ParenSetUnit: // 0x255
 			defined_unit = static_cast<double>(params[2]) /
-			               static_cast<double>(3600);
+			               DefinedUnitMaxResolution;
 			break;
 
 		// Set absolute vertical print position (ESC (V)
@@ -1300,9 +1329,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	case 0x0b:
 		if (num_vert_tabs == 0) { // All tabs cancelled => Act like CR
 			cur_x = left_margin;
-		} else if (num_vert_tabs == 255) // No tabs set since reset =>
-		                                 // Act like LF
-		{
+		} else if (num_vert_tabs == VerticalTabsNotConfigured) {
+			// Vertical tabs never configured this session => Act like LF
 			cur_x = left_margin;
 			cur_y += line_spacing;
 			if (cur_y > bottom_margin) {

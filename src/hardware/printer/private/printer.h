@@ -183,6 +183,18 @@ constexpr int MaxIntensity = 31;
 // the 3-bit colour ID. Black is sub-palette 7.
 constexpr uint8_t ColorBlack = 7 << 5;
 
+// MSB control (ESC =, ESC >, ESC #). Printer::msb stores one of these:
+// MsbModeDisabled leaves incoming bytes alone, MsbModeForceLow clears
+// bit 7, MsbModeForceHigh sets bit 7.
+constexpr uint8_t MsbModeDisabled  = 255;
+constexpr uint8_t MsbModeForceLow  = 0;
+constexpr uint8_t MsbModeForceHigh = 1;
+
+// Printer::num_vert_tabs sentinel meaning "vertical tabs have never
+// been configured this session". VT acts as a line feed in that case
+// (escp2ref.pdf C-43).
+constexpr int VerticalTabsNotConfigured = 255;
+
 enum class Typeface {
 	Roman = 0,
 	SansSerif,
