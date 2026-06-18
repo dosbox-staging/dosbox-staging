@@ -96,7 +96,7 @@ constexpr auto SelectJustification                              = 0x61;
 constexpr auto SetVerticalTabsInVfuChannels                     = 0x62;
 constexpr auto SetHorizontalMotionIndex                         = 0x63;
 constexpr auto SetVerticalTabStopsEveryNLines                   = 0x65;
-constexpr auto AbsoluteHorizontalTabInColumns                   = 0x66;
+constexpr auto HorizontalVerticalSkip                   = 0x66;
 constexpr auto Select105Point15Cpi                              = 0x67;
 constexpr auto SelectDoubleQuadrupleSize                        = 0x68;
 constexpr auto ImmediatePrint                                   = 0x69;
@@ -279,8 +279,6 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::TurnDoubleWidthPrintingOnOff: // 0x57
 		// (ESC a) — Select justification
 		case Esc::SelectJustification: // 0x61
-		// (ESC f) — Absolute horizontal tab in columns [conflict]
-		case Esc::AbsoluteHorizontalTabInColumns: // 0x66
 		// (ESC h) — Select double or quadruple size
 		case Esc::SelectDoubleQuadrupleSize: // 0x68
 		// (ESC i) — Immediate print
@@ -326,6 +324,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::SetHorizontalMotionIndex: // 0x63
 		// (ESC e) — Set vertical tab stops every n lines
 		case Esc::SetVerticalTabStopsEveryNLines: // 0x65
+		// (ESC f) — Horizontal/vertical skip (spec C-47, m + n)
+		case Esc::HorizontalVerticalSkip: // 0x66
 			needed_param = 2;
 			break;
 
