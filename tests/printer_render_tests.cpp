@@ -17,7 +17,7 @@
 // image exists.
 
 #include "hardware/printer/private/printer.h"
-#include "hardware/printer/private/virtual_printer.h"
+#include "hardware/printer/printer.h"
 
 #include <array>
 #include <cstdint>

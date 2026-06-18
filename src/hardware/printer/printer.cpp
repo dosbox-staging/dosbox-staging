@@ -39,7 +39,6 @@
 CHECK_NARROWING();
 
 using VirtualPrinter::Printer;
-using VirtualPrinter::PrinterModel;
 
 static void printer_event_handler([[maybe_unused]] uint32_t param);
 
@@ -51,8 +50,18 @@ static PrinterModel conf_model    = PrinterModel::None;
 static int conf_dpi               = 360;
 static double conf_page_width_in  = 8.27;  // A4
 static double conf_page_height_in = 11.69; // A4
-static int conf_pins              = 24;    // 9 = FX/LX, 24 = LQ
 static int printer_timeout        = 500;
+
+static bool is_dot_matrix(const PrinterModel m)
+{
+	return m == PrinterModel::EpsonDotMatrix9Pin ||
+	       m == PrinterModel::EpsonDotMatrix24Pin;
+}
+
+static int pins_for_model(const PrinterModel m)
+{
+	return (m == PrinterModel::EpsonDotMatrix9Pin) ? 9 : 24;
+}
 
 namespace VirtualPrinter {
 
@@ -723,14 +732,13 @@ void PRINTER_WriteControl([[maybe_unused]] io_port_t port, io_val_t val,
 
 	// Data is strobed to the printer on the falling edge of the STROBE bit.
 	if (!(val & CtrlStrobe) && (lpt.control & CtrlStrobe)) {
-		if (conf_model == PrinterModel::EpsonDotMatrix) {
-
+		if (is_dot_matrix(conf_model)) {
 			if (!default_printer) {
 				default_printer = std::make_unique<Printer>(
 				        conf_dpi,
 				        conf_page_width_in,
 				        conf_page_height_in,
-				        conf_pins);
+				        pins_for_model(conf_model));
 			}
 			if (default_printer) {
 				default_printer->PrintChar(lpt.data);
@@ -743,7 +751,7 @@ void PRINTER_WriteControl([[maybe_unused]] io_port_t port, io_val_t val,
 			}
 			postscript_sink->Write(lpt.data);
 
-		} else if (conf_model == PrinterModel::RawPassthrough) {
+		} else if (conf_model == PrinterModel::Passthrough) {
 			if (!raw_sink) {
 				raw_sink = std::make_unique<VirtualPrinter::RawPassthrough>();
 			}
@@ -798,34 +806,11 @@ io_val_t PRINTER_ReadControl([[maybe_unused]] io_port_t port,
 // Lifecycle state (active / inactive) lives in the PrinterState struct
 // further down; the code above deliberately has no equivalent flag.
 
-void PRINTER_Configure(const PrinterModelKind model, const int dpi,
+void PRINTER_Configure(const PrinterModel model, const int dpi,
                        const double page_width_in, const double page_height_in,
                        const int timeout_ms)
 {
-	switch (model) {
-	case PrinterModelKind::None:
-		conf_model = PrinterModel::None;
-		break;
-
-	case PrinterModelKind::EpsonDotMatrix9Pin:
-		conf_model = PrinterModel::EpsonDotMatrix;
-		conf_pins  = 9;
-		break;
-
-	case PrinterModelKind::EpsonDotMatrix24Pin:
-		conf_model = PrinterModel::EpsonDotMatrix;
-		conf_pins  = 24;
-		break;
-
-	case PrinterModelKind::PostScript:
-		conf_model = PrinterModel::PostScript;
-		break;
-
-	case PrinterModelKind::Passthrough:
-		conf_model = PrinterModel::RawPassthrough;
-		break;
-	}
-
+	conf_model          = model;
 	conf_dpi            = dpi;
 	conf_page_width_in  = page_width_in;
 	conf_page_height_in = page_height_in;
@@ -993,21 +978,21 @@ bool parse_page_size(const std::string& input, double& width_in, double& height_
 	return true;
 }
 
-PrinterModelKind parse_printer_model(const std::string& s)
+PrinterModel parse_printer_model(const std::string& s)
 {
 	if (s == "epson-9pin") {
-		return PrinterModelKind::EpsonDotMatrix9Pin;
+		return PrinterModel::EpsonDotMatrix9Pin;
 	}
 	if (s == "epson-24pin") {
-		return PrinterModelKind::EpsonDotMatrix24Pin;
+		return PrinterModel::EpsonDotMatrix24Pin;
 	}
 	if (s == "postscript") {
-		return PrinterModelKind::PostScript;
+		return PrinterModel::PostScript;
 	}
 	if (s == "passthrough") {
-		return PrinterModelKind::Passthrough;
+		return PrinterModel::Passthrough;
 	}
-	return PrinterModelKind::None;
+	return PrinterModel::None;
 }
 
 PrinterState state{};
@@ -1189,7 +1174,7 @@ void PRINTER_Init()
 
 	const auto model_str = section.GetString("printer_model");
 	const auto model     = parse_printer_model(model_str);
-	if (model == PrinterModelKind::None) {
+	if (model == PrinterModel::None) {
 		return;
 	}
 
@@ -1258,29 +1243,26 @@ void PRINTER_Init()
 
 	const char* model_name = "";
 	switch (model) {
-	case PrinterModelKind::EpsonDotMatrix9Pin:
+	case PrinterModel::EpsonDotMatrix9Pin:
 		model_name = "Epson dot-matrix (9-pin)";
 		break;
 
-	case PrinterModelKind::EpsonDotMatrix24Pin:
+	case PrinterModel::EpsonDotMatrix24Pin:
 		model_name = "Epson dot-matrix (24-pin)";
 		break;
 
-	case PrinterModelKind::PostScript:
+	case PrinterModel::PostScript:
 		model_name = "PostScript passthrough";
 		break;
 
-	case PrinterModelKind::Passthrough:
+	case PrinterModel::Passthrough:
 		model_name = "Raw passthrough";
 		break;
 
-	case PrinterModelKind::None: break;
+	case PrinterModel::None: break;
 	}
 
-	const bool is_dot_matrix = (model == PrinterModelKind::EpsonDotMatrix9Pin ||
-	                            model == PrinterModelKind::EpsonDotMatrix24Pin);
-
-	if (is_dot_matrix) {
+	if (is_dot_matrix(model)) {
 		LOG_MSG("PRINTER: Initialised %s on %s (%03xh), %dx%d page at %d dpi",
 		        model_name,
 		        port_name.c_str(),
