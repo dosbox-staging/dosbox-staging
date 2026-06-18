@@ -594,6 +594,10 @@ void Config::ParseArguments()
 	arguments.lang    = cmdline->FindRemoveStringArgument("lang");
 	arguments.machine = cmdline->FindRemoveStringArgument("machine");
 
+	arguments.migrate_config = cmdline->FindRemoveStringArgument(
+	        "migrate-config");
+	arguments.migrate_write = cmdline->FindRemoveBoolArgument("migrate-write");
+
 	arguments.socket   = cmdline->FindRemoveIntArgument("socket");
 	arguments.wait_pid = cmdline->FindRemoveIntArgument("waitpid");
 

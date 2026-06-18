@@ -47,6 +47,8 @@ struct CommandLineArguments {
 	std::string working_dir;
 	std::string lang;
 	std::string machine;
+	std::string migrate_config;
+	bool migrate_write;
 	std::vector<std::string> conf;
 	std::vector<std::string> set;
 	std::optional<std::vector<std::string>> editconf;
