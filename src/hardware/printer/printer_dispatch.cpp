@@ -446,7 +446,10 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		return true;
 	}
 
-	// Collect vertical tabs
+	// Collect vertical tabs (ESC B). Return after each byte —
+	// otherwise the late dispatch default would log "0x42 not
+	// implemented" and clear esc_cmd, which previously broke
+	// collection of every byte after the first.
 	if (esc_cmd == 0x42) {
 		if (ch == 0 || (num_vert_tabs > 0 &&
 		                vert_tabs[num_vert_tabs - 1] >
@@ -456,9 +459,11 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			vert_tabs[num_vert_tabs++] = static_cast<double>(ch) *
 			                             line_spacing;
 		}
+		return true;
 	}
 
-	// Collect horizontal tabs
+	// Collect horizontal tabs (ESC D). Same return-after-each-byte
+	// reason as the vertical-tabs collector above.
 	if (esc_cmd == 0x44) {
 		if (ch == 0 || (num_horiz_tabs > 0 &&
 		                horiz_tabs[num_horiz_tabs - 1] >
@@ -469,6 +474,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			horiz_tabs[num_horiz_tabs++] = static_cast<double>(ch) *
 			                               (1 / static_cast<double>(cpi));
 		}
+		return true;
 	}
 
 	if (num_param < needed_param) {
@@ -1304,11 +1310,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 				NewPage(true, false);
 			}
 		} else {
-			// Find tab below current pos
+			// Spec C-45: move to the *next* vertical tab below the
+			// current print position. vert_tabs is sorted ascending,
+			// so break on the first match.
 			double move_to = -1;
 			for (uint8_t i = 0; i < num_vert_tabs; i++) {
 				if (vert_tabs[i] > cur_y) {
 					move_to = vert_tabs[i];
+					break;
 				}
 			}
 
