@@ -76,18 +76,23 @@ Printer::Printer(const int dpi, const double page_width_in,
 	// 'colour ID'), the low 5 bits select intensity within that
 	// sub-palette (0 = white, 31 = saturated).
 	//
-	// Sub-palette indices are chosen so that overprinting two
-	// colours ORs the bits of their IDs to produce a third
-	// reasonable colour, mirroring how real ribbon overprinting
-	// works (e.g. magenta=001 OR yellow=100 -> red=101).
+	// FillPalette's first three args are CMY-dye-coverage maxima
+	// (subtractive), not RGB light. Each sub-palette's full-coverage
+	// light output is (1 - r_max, 1 - g_max, 1 - b_max), so the
+	// indices below double as ESC r colour IDs (spec C-193) AND as
+	// OR-overprint bit patterns (M=001, C=010, Y=100):
+	//   1 = Magenta            (M)
+	//   2 = Cyan               (C)
+	//   3 = Violet / Blue      (M|C)
+	//   4 = Yellow             (Y)
+	//   5 = Red                (M|Y)
+	//   6 = Green              (C|Y)
+	//   7 = Black              (M|C|Y) -- also ColorBlack
 	//
-	// Sub-palette 0 is the 'all white' page background and gets
-	// hand-initialised below; the other seven are derived from
-	// (red_max, green_max, blue_max) tuples by FillPalette.
+	// Sub-palette 0 is the 'all white' page background.
 	for (int i = 0; i < 32; ++i) {
 		page.palette[i] = Rgb888{255, 255, 255};
 	}
-	FillPalette(0, 0, 0, 1);
 	FillPalette(0, 255, 0, 1);
 	FillPalette(255, 0, 0, 2);
 	FillPalette(255, 255, 0, 3);
