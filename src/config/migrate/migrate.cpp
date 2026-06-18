@@ -3,13 +3,16 @@
 
 #include "migrate.h"
 
+#include <chrono>
 #include <cstdio>
+#include <ctime>
 #include <fstream>
+#include <ios>
 #include <string>
+#include <system_error>
 
 #include "file_walker.h"
-#include "line_classifier.h"
-#include "rules.h"
+#include "rewriter.h"
 #include "utils/checks.h"
 
 CHECK_NARROWING();
@@ -18,65 +21,115 @@ namespace ConfigMigrate {
 
 namespace {
 
-struct FileReport {
-	int settings_seen          = 0;
-	int rules_matched          = 0;
-	int warnings               = 0;
-	int commented_out_settings = 0;
-	int dos_command_lines      = 0;
-	int unknown_lines          = 0;
-};
-
-FileReport process_file(const std_fs::path& path)
+std::string timestamp_now()
 {
-	FileReport report = {};
+	const auto now      = std::chrono::system_clock::now();
+	const auto now_time = std::chrono::system_clock::to_time_t(now);
+	std::tm tm          = {};
+#ifdef _WIN32
+	localtime_s(&tm, &now_time);
+#else
+	tm = *std::localtime(&now_time);
+#endif
+	char buf[32] = {};
+	std::strftime(buf, sizeof(buf), "%Y%m%d-%H%M%S", &tm);
+	return buf;
+}
 
-	std::ifstream in(path, std::ios::binary);
-	if (!in) {
-		fprintf(stderr, "migrate: cannot open '%s'\n", path.string().c_str());
-		return report;
-	}
+bool write_bytes_atomically(const std_fs::path& path, const std::string& bytes)
+{
+	auto tmp = path;
+	tmp += ".tmp";
 
-	std::string current_section;
-	bool in_autoexec = false;
-
-	std::string line;
-	while (std::getline(in, line)) {
-		// Preserve the newline for the classifier so it can capture
-		// the original EOL bytes.
-		const auto classified = Classify(line + "\n", in_autoexec);
-
-		switch (classified.kind) {
-		case LineKind::SectionHeader:
-			current_section = classified.section;
-			in_autoexec     = (current_section == "autoexec");
-			break;
-
-		case LineKind::Setting: {
-			++report.settings_seen;
-			if (const auto* rule = FindRule(current_section,
-			                                classified.key)) {
-				++report.rules_matched;
-				if (!rule->warning.empty()) {
-					++report.warnings;
-				}
-			}
-			break;
+	{
+		std::ofstream out(tmp, std::ios::binary | std::ios::trunc);
+		if (!out) {
+			return false;
 		}
-
-		case LineKind::CommentedOutSetting:
-			++report.commented_out_settings;
-			break;
-
-		case LineKind::DosCommand: ++report.dos_command_lines; break;
-
-		case LineKind::Unknown: ++report.unknown_lines; break;
-
-		case LineKind::Blank:
-		case LineKind::Comment: break;
+		out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+		if (!out) {
+			return false;
 		}
 	}
-	return report;
+
+	std::error_code ec;
+	std_fs::rename(tmp, path, ec);
+	if (ec) {
+		std_fs::remove(tmp, ec);
+		return false;
+	}
+	return true;
+}
+
+bool make_backup(const std_fs::path& path, std_fs::path& backup_path_out)
+{
+	auto bak = path;
+	bak += ".bak." + timestamp_now();
+
+	std::error_code ec;
+	if (std_fs::exists(bak, ec)) {
+		fprintf(stderr,
+		        "migrate: refusing to overwrite existing backup '%s'\n",
+		        bak.string().c_str());
+		return false;
+	}
+	std_fs::copy_file(path, bak, ec);
+	if (ec) {
+		fprintf(stderr,
+		        "migrate: cannot create backup '%s': %s\n",
+		        bak.string().c_str(),
+		        ec.message().c_str());
+		return false;
+	}
+	backup_path_out = bak;
+	return true;
+}
+
+// Process one file. Returns true if processed successfully (whether or not
+// any rules fired; whether or not the file was rewritten).
+bool process_file(const std_fs::path& path, const bool dry_run)
+{
+	auto parsed = ParseFile(path);
+	if (!parsed) {
+		fprintf(stderr, "migrate: cannot read '%s'\n", path.string().c_str());
+		return false;
+	}
+
+	const auto stats = ApplyMigrations(*parsed);
+
+	printf("  %s: rules=%d warnings=%d removed=%d moved=%d\n",
+	       path.string().c_str(),
+	       stats.rules_applied,
+	       stats.warnings_emitted,
+	       stats.settings_removed,
+	       stats.units_moved);
+
+	for (const auto& w : stats.warnings) {
+		printf("    WARNING: %s\n", w.c_str());
+	}
+
+	if (stats.rules_applied == 0) {
+		return true;
+	}
+
+	const auto serialised = SerialiseFile(*parsed);
+
+	if (dry_run) {
+		return true;
+	}
+
+	std_fs::path backup_path;
+	if (!make_backup(path, backup_path)) {
+		return false;
+	}
+	if (!write_bytes_atomically(path, serialised)) {
+		fprintf(stderr,
+		        "migrate: failed to write '%s'\n",
+		        path.string().c_str());
+		return false;
+	}
+	printf("    backup: %s\n", backup_path.string().c_str());
+	return true;
 }
 
 } // namespace
@@ -94,39 +147,18 @@ int Run(const std_fs::path& root, const Options& opts)
 	       candidates.size(),
 	       opts.dry_run ? " (dry-run)" : "");
 
-	int total_settings = 0;
-	int total_rules    = 0;
-	int total_warnings = 0;
+	int error_count = 0;
 	for (const auto& path : candidates) {
-		const auto report = process_file(path);
-		printf("  %s: settings=%d rules=%d warnings=%d "
-		       "commented-out=%d dos-cmd=%d unknown=%d\n",
-		       path.string().c_str(),
-		       report.settings_seen,
-		       report.rules_matched,
-		       report.warnings,
-		       report.commented_out_settings,
-		       report.dos_command_lines,
-		       report.unknown_lines);
-		total_settings += report.settings_seen;
-		total_rules += report.rules_matched;
-		total_warnings += report.warnings;
+		if (!process_file(path, opts.dry_run)) {
+			++error_count;
+		}
 	}
 
-	printf("migrate: %d setting(s) seen, %d rule(s) matched, %d warning(s)\n",
-	       total_settings,
-	       total_rules,
-	       total_warnings);
-
-	if (total_rules == 0) {
-		printf("migrate: rule table is empty (see config-findings.md). "
-		       "No rewrites performed.\n");
-	} else if (opts.dry_run) {
-		printf("migrate: dry-run; pass --migrate-write to apply changes.\n");
-	} else {
-		printf("migrate: TODO — actual rewrite not yet implemented.\n");
+	if (opts.dry_run) {
+		printf("migrate: dry-run complete; pass --migrate-write to "
+		       "apply changes.\n");
 	}
-	return 0;
+	return error_count == 0 ? 0 : 1;
 }
 
 } // namespace ConfigMigrate
