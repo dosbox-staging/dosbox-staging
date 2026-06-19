@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Check out Pages repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.ACCESS_TOKEN_REPO }}
           repository: dosbox-staging/dosbox-staging.github.io
