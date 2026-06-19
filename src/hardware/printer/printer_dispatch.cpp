@@ -669,8 +669,12 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			}
 			break;
 
-		// Initialize printer (ESC @)
+		// Initialize printer (ESC @) -- soft reset. Save any in-progress
+		// page before clobbering state; DOS drivers typically end a job
+		// with ESC @ to clean up, and the last content fragment lives
+		// in the page buffer until something flushes it.
 		case EscInitializePrinter:
+			FormFeed();
 			ResetPrinter();
 			break; // 0x40
 
