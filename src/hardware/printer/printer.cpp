@@ -142,7 +142,7 @@ void Printer::ResetPrinter()
 	hmi                                              = -1.0;
 	msb                                              = 255;
 	num_print_as_char                                = 0;
-	lq_typeface                                      = Typeface::Courier;
+	lq_typeface                                      = Typeface::Roman;
 
 	SelectCodepage(char_tables[cur_char_table]);
 
