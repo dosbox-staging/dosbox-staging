@@ -18,6 +18,10 @@ struct Charmap {
 // DOS code page; SelectCodepage(0) finds italic_map in charmap[].
 constexpr uint16_t ItalicCodepageId = 0;
 
+// IBM CP819 is the IBM-assigned synonym for ISO-8859-1 (Latin-1). Picked here
+// because 819 is unused by any other Epson character table.
+constexpr uint16_t Latin1CodepageId = 819;
+
 extern const Charmap charmap[];
 
 // Looks up the codepage ID assigned to the (d2, d3) character table identifier
