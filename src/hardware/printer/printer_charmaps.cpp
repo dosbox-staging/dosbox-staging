@@ -3,6 +3,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "private/printer_charmaps.h"
+
+#include <optional>
+
 #include "misc/support.h"
 #include "utils/checks.h"
 
@@ -463,8 +466,41 @@ const Charmap charmap[] = {
         {  0,   nullptr},
 };
 
-const uint16_t codepages[15] =
-        {0, 437, 932, 850, 851, 853, 855, 860, 863, 865, 852, 857, 862, 864, 866};
+// (d2, d3) → codepage ID for ESC ( t. Mirrors escp2ref.pdf C-73 / C-74; only
+// the entries we can fulfil from charmap[] above are registered. Anything not
+// listed makes ESC ( t log a warning and leave the table assignment alone.
+struct CharTableEntry {
+	uint8_t d2  = 0;
+	uint8_t d3  = 0;
+	uint16_t cp = 0;
+};
+
+static const CharTableEntry char_table_registry[] = {
+        { 1,  0, 437}, // PC437 (US)
+        { 1, 16, 737}, // PC437 Greek
+        { 3,  0, 850}, // PC850 (Multilingual)
+        { 6,  0, 855}, // PC855 (Cyrillic)
+        { 7,  0, 860}, // PC860 (Portugal)
+        { 8,  0, 863}, // PC863 (Canada-French)
+        { 9,  0, 865}, // PC865 (Norway)
+        {10,  0, 852}, // PC852 (East Europe)
+        {11,  0, 857}, // PC857 (Turkish)
+        {12,  0, 862}, // PC862 (Hebrew)
+        {13,  0, 864}, // PC864 (Arabic)
+        {13, 32, 864}, // PC AR864
+        {14,  0, 866}, // PC866 (Russian)
+        {24,  0, 861}, // PC861 (Iceland)
+};
+
+std::optional<uint16_t> LookupCharTableCodepage(const uint8_t d2, const uint8_t d3)
+{
+	for (const auto& entry : char_table_registry) {
+		if (entry.d2 == d2 && entry.d3 == d3) {
+			return entry.cp;
+		}
+	}
+	return std::nullopt;
+}
 
 // ESC R selects one of 15 international character sets. Only USA (0),
 // France (1), Germany (2), UK (3), and Legal (14) carry their actual
