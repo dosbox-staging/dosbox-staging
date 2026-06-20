@@ -243,13 +243,11 @@ void Printer::SelectCodepage(const uint16_t codepage)
 {
 	const uint16_t* map_to_use = nullptr;
 
-	int i = 0;
-	while (charmap[i].codepage != 0) {
+	for (int i = 0; charmap[i].map != nullptr; ++i) {
 		if (charmap[i].codepage == codepage) {
 			map_to_use = charmap[i].map;
 			break;
 		}
-		++i;
 	}
 	if (map_to_use == nullptr) {
 		LOG_WARNING("PRINTER: Unsupported codepage %i. Using CP437 instead.",
