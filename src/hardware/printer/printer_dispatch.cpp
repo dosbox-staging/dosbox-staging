@@ -1128,15 +1128,24 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			num_param    = 0;
 			break;
 
-		// Assign character table (ESC (t). The upstream bounds check
-		// '< 16' on params[3] was off by one and would index out of
-		// bounds when params[3] == 15.
+		// Assign character table (ESC (t). escp2ref.pdf C-73 keys each
+		// table by the full (d2, d3) pair; only entries we can fulfil
+		// are registered in printer_charmaps.cpp, anything else logs
+		// and leaves the table slot alone.
 		case Esc::ParenAssignCharacterTable: // 0x274
-			if (params[2] < char_tables.size() &&
-			    params[3] < std::size(codepages)) {
-				char_tables[params[2]] = codepages[params[3]];
-				if (params[2] == cur_char_table) {
-					SelectCodepage(char_tables[cur_char_table]);
+			if (params[2] < char_tables.size()) {
+				const auto cp = LookupCharTableCodepage(params[3],
+				                                       params[4]);
+				if (cp) {
+					char_tables[params[2]] = *cp;
+					if (params[2] == cur_char_table) {
+						SelectCodepage(char_tables[cur_char_table]);
+					}
+				} else {
+					LOG_WARNING("PRINTER: Unsupported character "
+					            "table (d2=%u, d3=%u)",
+					            params[3],
+					            params[4]);
 				}
 			}
 			break;
