@@ -14,6 +14,10 @@ struct Charmap {
 	const uint16_t* map = nullptr;
 };
 
+// Reserved codepage ID for the italic pseudo-table (ESC ( t 0, 0). Not a real
+// DOS code page; SelectCodepage(0) finds italic_map in charmap[].
+constexpr uint16_t ItalicCodepageId = 0;
+
 extern const Charmap charmap[];
 
 // Looks up the codepage ID assigned to the (d2, d3) character table identifier
