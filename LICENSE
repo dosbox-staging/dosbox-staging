@@ -81,8 +81,11 @@ The following 3rd party binaries are shipped with DOSBox Staging:
 
 - TTF fonts in resources/fonts released under the SIL Open Font License
   Version 1.1; original repositories:
-   - IBM Plex Serif / Sans — https://github.com/IBM/plex
-     (roman.ttf, sansserif.ttf, script.ttf)
+   - IBM Plex Serif / Sans / Mono — https://github.com/IBM/plex
+     (roman_prop.ttf, sansserif_prop.ttf, sansserif_fixed.ttf,
+      script_prop.ttf, script_fixed.ttf)
+   - Libertinus Mono — https://github.com/alerque/libertinus
+     (roman_fixed.ttf)
    - Old Timey Mono — https://github.com/dse/old-timey-mono-font
      (courier.ttf; also used as the internal fallback face for CP437
       box-drawing and graphic glyphs)

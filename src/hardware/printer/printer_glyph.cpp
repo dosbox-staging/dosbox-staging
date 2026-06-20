@@ -41,7 +41,7 @@ constexpr int PointsPerInch = 72;
 // Sub/superscript: 2/3 of the natural size, raised/lowered by 1/3 of
 // the point size. Both factors come from the PDF baseline convention
 // (cf. escp2ref.pdf C-129 leaves the offset to the printer).
-constexpr double SubSuperscriptScale       = 2.0 / 3.0;
+constexpr double SubSuperscriptScale        = 2.0 / 3.0;
 constexpr int SubSuperscriptRiseDenominator = 3;
 
 // Anti-aliased line intensities on the page bitmap (palette index =
@@ -52,8 +52,8 @@ constexpr uint8_t LineEdgeIntensity   = 240;
 
 // Broken-line geometry: one gap every BrokenLinePeriod pixels, with the
 // ink-on segment running for BrokenLineInkFraction of that period.
-constexpr int BrokenLinePeriodPerInch = 15;
-constexpr int BrokenLineInkNumerator  = 4;
+constexpr int BrokenLinePeriodPerInch  = 15;
+constexpr int BrokenLineInkNumerator   = 4;
 constexpr int BrokenLineInkDenominator = 5;
 
 // FreeType returns 0..255 alpha; the page-pixel intensity field is 5
@@ -102,20 +102,34 @@ void Printer::UpdateFont()
 		mono_box_font = nullptr;
 	}
 
-	// Map the Epson typeface enum to a font filename. We ship
-	// Liberation Serif / Sans / Mono renamed to these slot names
-	// in resources/fonts/. Users can override by dropping their
-	// own TTF with the same filename into <config-dir>/fonts/.
-	const char* font_filename = "roman.ttf";
+	// Map the Epson typeface enum to a font filename. Most typefaces
+	// ship two asset variants: a proportional TTF used when ESC p 1
+	// is active, and a monospace TTF used when fixed-pitch (ESC p 0)
+	// is active. The monospace variants are drawn to fill a 1/cpi
+	// cell, which proportional TTFs can't do without leaving large
+	// gaps. OCR-A/B share a single ANSI X3.17-1977 OCR-A asset (its
+	// shapes are pitch-independent). Users can override any slot by
+	// dropping their own TTF with the same filename into
+	// <config-dir>/fonts/.
+	const bool prop           = style.prop;
+	const char* font_filename = prop ? "roman_prop.ttf" : "roman_fixed.ttf";
 
 	switch (lq_typeface) {
-	case Typeface::Roman: font_filename = "roman.ttf"; break;
-	case Typeface::SansSerif: font_filename = "sansserif.ttf"; break;
+	case Typeface::Roman:
+		font_filename = prop ? "roman_prop.ttf" : "roman_fixed.ttf";
+		break;
+	case Typeface::SansSerif:
+		font_filename = prop ? "sansserif_prop.ttf" : "sansserif_fixed.ttf";
+		break;
 	case Typeface::Courier: font_filename = "courier.ttf"; break;
-	case Typeface::Script: font_filename = "script.ttf"; break;
+	case Typeface::Script:
+		font_filename = prop ? "script_prop.ttf" : "script_fixed.ttf";
+		break;
 	case Typeface::OcrA:
 	case Typeface::OcrB: font_filename = "ocra.ttf"; break;
-	default: font_filename = "roman.ttf"; break;
+	default:
+		font_filename = prop ? "roman_prop.ttf" : "roman_fixed.ttf";
+		break;
 	}
 
 	// get_resource_path walks the standard hierarchy (bundled
@@ -129,10 +143,10 @@ void Printer::UpdateFont()
 	}
 
 	// Always load the monospace fallback. PrintChar swaps to it for
-	// box-drawing / block-element chars when cur_font isn't itself
-	// monospace and we're in fixed-pitch mode -- proportional fonts
-	// (Roman / Sans Serif / Script) have variable advance widths even
-	// for box chars and so misalign in a grid.
+	// box-drawing / block-element chars and for the cp437 graphic
+	// codepoints (smiley, suits, arrows, ⌂ etc.) that the user-selected
+	// typeface usually doesn't cover. Old Timey Mono (also our Courier
+	// typeface) covers the full cp437 set, so it does double duty here.
 	const auto mono_path = get_resource_path("fonts", "courier.ttf");
 	if (mono_path.empty() ||
 	    FT_New_Face(ft_lib, mono_path.string().c_str(), 0, &mono_box_font)) {
@@ -335,7 +349,7 @@ void Printer::DrawLine(const int from_x, const int to_x, const int y, const bool
 {
 	const int dash_period_px = dpi / BrokenLinePeriodPerInch;
 	const int dash_ink_px    = (dash_period_px * BrokenLineInkNumerator) /
-	                           BrokenLineInkDenominator;
+	                        BrokenLineInkDenominator;
 
 	// Draw anti-aliased line
 	for (int x = from_x; x <= to_x; ++x) {
@@ -349,9 +363,8 @@ void Printer::DrawLine(const int from_x, const int to_x, const int y, const bool
 			}
 
 			if (y < page.height) {
-				page.pixels[x + y * page.pitch] = !broken
-				                                        ? LineCenterIntensity
-				                                        : LineEdgeIntensity;
+				page.pixels[x + y * page.pitch] = !broken ? LineCenterIntensity
+				                                          : LineEdgeIntensity;
 			}
 
 			if ((y + 1) < page.height) {
