@@ -1446,10 +1446,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		}
 		return true;
 
-	// Select printer (DC1)
+	// Select printer (DC1). escp2ref.pdf C-155: when ESC I 1 has put
+	// 0x11 outside the control-codes filter, the byte must be rendered
+	// as a glyph (◄) instead of consumed as a control code.
 	case 0x11:
-		// Ignore
-		return true;
+		if (control_codes_filter[0x11]) {
+			return true;
+		}
+		return false;
 
 	// Cancel condensed printing (DC2)
 	case 0x12:
@@ -1485,7 +1489,14 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 	// exclusive). FS is only meaningful in IBM mode, which we don't
 	// emulate. Discard the FS byte and the opcode byte that follows;
 	// the latter is logged once per opcode (see top of this function).
-	case 0x1c: fs_seen = true; return true;
+	// ESC I 1 lifts 0x1C out of the filter, at which point it must
+	// render as ∟ instead of getting consumed.
+	case 0x1c:
+		if (control_codes_filter[0x1c]) {
+			fs_seen = true;
+			return true;
+		}
+		return false;
 
 	default: return false;
 	}
