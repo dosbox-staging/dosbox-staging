@@ -8,6 +8,7 @@
 #include "dosbox_config.h"
 
 #include <array>
+#include <bitset>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -263,6 +264,15 @@ private:
 	// Copies the codepage mapping from the constant array to CurMap
 	void SelectCodepage(const uint16_t codepage);
 
+	// True flips bytes 0x80..0x9F to printable (ESC 6, ESC m 0). False
+	// puts them back in the filter (ESC 7, ESC m 4).
+	void SetUpperControlCodesPrinting(bool print);
+
+	// True flips the 9-pin SELECTED set (0-6, 16-17, 21-23, 25-26,
+	// 28-31, 128-159) to printable (ESC I 1). False puts them all back
+	// in the filter (ESC I 0).
+	void SetSelectedControlCodesPrinting(bool print);
+
 	// Output current page as a PNG file.
 	void OutputPage();
 
@@ -430,8 +440,10 @@ private:
 	// True if a LF should automatically be added after a CR.
 	bool auto_feed = false;
 
-	// True if the upper-half control characters should be printed.
-	bool print_upper_contr = false;
+	// Bytes whose bit is set are dropped between ProcessCommandChar and
+	// glyph rendering. ESC 6/7/m and ESC I rewrite the relevant ranges;
+	// see escp2ref.pdf C-155 (ESC I), C-77 (ESC 6/7), C-156 (ESC m).
+	std::bitset<256> control_codes_filter = {};
 
 	// Bit-image printing state.
 	struct BitGraphicParams {

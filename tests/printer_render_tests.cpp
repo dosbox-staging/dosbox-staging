@@ -2777,6 +2777,154 @@ TEST_F(PrinterRenderTest, Dispatch_CAN_MovesToLeftMargin)
 }
 
 // ---------------------------------------------------------------------------
+// 9-pin escapy-ported text tests. Same approach as the ESC/P2 escapy
+// tests up above: byte stream is taken verbatim from escapy, but the
+// printer runs in 9-pin mode (pins=9) so the 9-pin-specific paths in
+// the dispatch fire.
+
+// Ported from escapy test_double_width_height with pins=9. Under 9-pin
+// rules, double-height temporarily suspends upper/subscripting,
+// condensed printing, and Draft mode. The byte stream interleaves
+// these to verify the suspend/resume behaviour.
+TEST_F(PrinterRenderTest, Text_DoubleWidthHeight_9pin_Escapy)
+{
+	const auto reset_intercharacter_space = b({0x1B, 'p', 0x00});
+	const auto point_8                = b({0x1B, 'X', 0x00, 0x10, 0x00});
+	const auto point_21               = b({0x1B, 'X', 0x00, 0x2A, 0x00});
+	const auto double_width_m         = b({0x1B, 'W', 0x01});
+	const auto reset_double_width_m   = b({0x1B, 'W', 0x00});
+	const auto double_height          = b({0x1B, 'w', 0x01});
+	const auto reset_double_height    = b({0x1B, 'w', 0x00});
+	const auto enable_upperscripting  = b({0x1B, 'S', 0x00});
+	const auto enable_subscripting    = b({0x1B, 'S', 0x01});
+	const auto disable_super_sub      = b({0x1B, 'T'});
+	const auto enable_condensed       = b({0x0F});
+	const auto disable_condensed      = b({0x12});
+	const auto enable_draft           = b({0x1B, 'x', 0x00});
+	const auto enable_lq              = b({0x1B, 'x', 0x01});
+
+	std::vector<uint8_t> bytes;
+	bytes.insert(bytes.end(), {0x1B, '@'});
+	append_crlf_joined(
+	        bytes,
+	        {
+	                cat({point_8, b("normal text")}),
+	                cat({double_width_m,
+	                     b("double-width text"),
+	                     reset_double_width_m}),
+	                cat({double_height,
+	                     b("double-height text"),
+	                     reset_double_height}),
+	                cat({double_width_m,
+	                     double_height,
+	                     b("double-width + double-height"),
+	                     reset_double_width_m,
+	                     reset_double_height}),
+	                cat({enable_upperscripting,
+	                     b("upperscripting"),
+	                     disable_super_sub,
+	                     b(" normal "),
+	                     enable_subscripting,
+	                     b("subscripting"),
+	                     disable_super_sub}),
+	                cat({double_height,
+	                     enable_upperscripting,
+	                     b("double-height suspends upper/sub"),
+	                     disable_super_sub,
+	                     reset_double_height}),
+	                cat({enable_condensed,
+	                     b("condensed text"),
+	                     disable_condensed}),
+	                cat({double_height,
+	                     enable_condensed,
+	                     b("double-height suspends condensed"),
+	                     disable_condensed,
+	                     reset_double_height}),
+	                cat({enable_draft, b("draft text"), enable_lq}),
+	                cat({double_height,
+	                     enable_draft,
+	                     b("double-height suspends draft"),
+	                     enable_lq,
+	                     reset_double_height}),
+	        });
+
+	const auto rendered = render_with_page(
+	        bytes, EscapyPageDpi, EscapyPageWidthIn, EscapyPageHeightIn, 9);
+	expect_matches_reference(rendered, "Text_DoubleWidthHeight_9pin_Escapy");
+}
+
+// Ported from escapy test_control_codes_printing (9pins). Exercises
+// ESC 6 / ESC 7 (upper-control-code printing toggle), ESC m 0 / ESC m 4
+// (same, alternate command form), and ESC I 0 / ESC I 1 (the broader
+// SELECTED interval that also covers 0-6, 16-17, 21-23, 25-26, 28-31).
+// PrintControlCodes.SELECTED in escapy = sorted union of those ranges.
+TEST_F(PrinterRenderTest, Text_ControlCodesPrinting_9pin_Escapy)
+{
+	const auto point_8 = b({0x1B, 'X', 0x00, 0x10, 0x00});
+	const auto roman   = b({0x1B, 'k', 0x00});
+
+	const auto set_upper    = b({0x1B, '6'});
+	const auto unset_upper  = b({0x1B, '7'});
+	const auto set_upper2   = b({0x1B, 'm', 0x00});
+	const auto unset_upper2 = b({0x1B, 'm', 0x04});
+	const auto enable_ctrl  = b({0x1B, 'I', 0x01});
+	const auto disable_ctrl = b({0x1B, 'I', 0x00});
+
+	std::vector<uint8_t> filter_table;
+	for (int i = 0; i < 7; ++i) {
+		filter_table.push_back(static_cast<uint8_t>(i));
+	}
+	filter_table.push_back(16);
+	filter_table.push_back(17);
+	filter_table.push_back(21);
+	filter_table.push_back(22);
+	filter_table.push_back(23);
+	filter_table.push_back(25);
+	filter_table.push_back(26);
+	for (int i = 28; i < 32; ++i) {
+		filter_table.push_back(static_cast<uint8_t>(i));
+	}
+	for (int i = 128; i < 160; ++i) {
+		filter_table.push_back(static_cast<uint8_t>(i));
+	}
+
+	std::vector<uint8_t> bytes;
+	bytes.insert(bytes.end(), {0x1B, '@'});
+
+	append_crlf_joined(
+	        bytes,
+	        {
+	                cat({point_8, roman, b("default (No control codes)")}),
+	                filter_table,
+
+	                b("enable upper control codes [128-159]"),
+	                cat({set_upper, filter_table}),
+
+	                b("disable upper table (No control codes)"),
+	                cat({unset_upper, filter_table}),
+
+	                b("enable upper table [128-159]"),
+	                cat({set_upper2, filter_table}),
+
+	                b("disable upper table (No control codes)"),
+	                cat({unset_upper2, filter_table}),
+
+	                b("enable all intervals [0-6][16-17][21-23][25-26][28-31][128-159]"),
+	                cat({enable_ctrl, filter_table}),
+
+	                b("disable all intervals (No control codes)"),
+	                cat({disable_ctrl, filter_table}),
+
+	                b("only sub intervals [0-6][16-17][21-23][25-26][28-31]"),
+	                cat({enable_ctrl, unset_upper, filter_table}),
+	        });
+
+	const auto rendered = render_with_page(
+	        bytes, EscapyPageDpi, EscapyPageWidthIn, EscapyPageHeightIn, 9);
+	expect_matches_reference(rendered, "Text_ControlCodesPrinting_9pin_Escapy");
+}
+
+// ---------------------------------------------------------------------------
 // PostScript passthrough.
 //
 // Our PostScript mode is a byte-for-byte passthrough — we don't
