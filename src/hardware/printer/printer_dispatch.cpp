@@ -73,7 +73,7 @@ constexpr auto SelectBoldFont                        = 0x45;
 constexpr auto CancelBoldFont                        = 0x46;
 constexpr auto SelectDoubleStrikePrinting            = 0x47;
 constexpr auto CancelDoubleStrikePrinting            = 0x48;
-constexpr auto SelectCharacterTypePrintPitch         = 0x49;
+constexpr auto EnablePrintingOfControlCodes          = 0x49;
 constexpr auto AdvancePrintPositionVertically        = 0x4a;
 constexpr auto Select60DpiGraphics                   = 0x4b;
 constexpr auto Select120DpiGraphics                  = 0x4c;
@@ -104,6 +104,7 @@ constexpr auto ImmediatePrint                        = 0x69;
 constexpr auto ReversePaperFeed                      = 0x6a;
 constexpr auto SelectTypeface                        = 0x6b;
 constexpr auto SetLeftMargin                         = 0x6c;
+constexpr auto SelectUpperControlCodesPrinting       = 0x6d;
 constexpr auto TurnProportionalModeOnOff             = 0x70;
 constexpr auto SelectPrintingColor                   = 0x72;
 constexpr auto LowSpeedModeOnOff                     = 0x73;
@@ -287,8 +288,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::SetN60InchLineSpacing: // 0x41
 		// (ESC C) — Set page length in lines
 		case Esc::SetPageLengthInLines: // 0x43
-		// (ESC I) — Select character type and print pitch
-		case Esc::SelectCharacterTypePrintPitch: // 0x49
+		// (ESC I) — Enable printing of control codes
+		case Esc::EnablePrintingOfControlCodes: // 0x49
 		// (ESC J) — Advance print position vertically
 		case Esc::AdvancePrintPositionVertically: // 0x4a
 		// (ESC N) — Set bottom margin
@@ -317,6 +318,8 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		case Esc::SelectTypeface: // 0x6b
 		// (ESC 1) — Set left margin
 		case Esc::SetLeftMargin: // 0x6c
+		// (ESC m) — Select printing of upper control codes
+		case Esc::SelectUpperControlCodesPrinting: // 0x6d
 		// (ESC p) — Turn proportional mode on/off
 		case Esc::TurnProportionalModeOnOff: // 0x70
 		// (ESC r) — Select printing color
@@ -695,15 +698,33 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		// Enable printing of upper control codes (ESC 6)
-		case Esc::EnablePrintingOfUpperControlCodes:
-			print_upper_contr = true;
-			break; // 0x36
+		// Print upper control codes 0x80-0x9F as glyphs (ESC 6).
+		case Esc::EnablePrintingOfUpperControlCodes: // 0x36
+			SetUpperControlCodesPrinting(true);
+			break;
 
-		// Enable upper control codes (ESC 7)
-		case Esc::EnableUpperControlCodes:
-			print_upper_contr = false;
-			break; // 0x37
+		// Treat upper control codes 0x80-0x9F as unprintable (ESC 7).
+		case Esc::EnableUpperControlCodes: // 0x37
+			SetUpperControlCodesPrinting(false);
+			break;
+
+		// Select printing of upper control codes (ESC m). escp2ref.pdf
+		// C-156: n=0 prints them, n=4 treats them as unprintable.
+		// Documented as the nonrecommended alias of ESC 6 / ESC 7.
+		case Esc::SelectUpperControlCodesPrinting: // 0x6d
+			if (params[0] == 0) {
+				SetUpperControlCodesPrinting(true);
+			} else if (params[0] == 4) {
+				SetUpperControlCodesPrinting(false);
+			}
+			break;
+
+		// Enable printing of control codes (ESC I). escp2ref.pdf C-155:
+		// n=1 prints 0-6, 16-17, 21-23, 25-26, 28-31, 128-159 as
+		// glyphs; n=0 treats them as unprintable. 9-pin only.
+		case Esc::EnablePrintingOfControlCodes: // 0x49
+			SetSelectedControlCodesPrinting(params[0] != 0);
+			break;
 
 		// Unidirectional mode (one line) (ESC <)
 		case Esc::UnidirectionalMode: // 0x3c

@@ -166,7 +166,7 @@ void Printer::ResetPrinter()
 	color.color_id = BlackColorId;
 	esc_seen       = false;
 	fs_seen        = false;
-	esc_cmd   = 0;
+	esc_cmd        = 0;
 	num_param = needed_param = 0;
 
 	// Default printable-area margins of 0.25 inch on all sides
@@ -189,8 +189,30 @@ void Printer::ResetPrinter()
 	cur_char_table       = 1;
 	style.data           = 0;
 	extra_intra_space    = 0.0;
-	print_upper_contr    = true;
 	bit_graph.bytes_left = 0;
+
+	// 9-pin printers default to treating 0-6, 16-17, 21-23, 25-26,
+	// 28-31, and 128-159 as control codes (escp2ref.pdf C-155, C-77).
+	// ESC/P 2 printers print them as glyphs by default.
+	control_codes_filter.reset();
+	if (pins == 9) {
+		for (int i = 0; i <= 6; ++i) {
+			control_codes_filter.set(i);
+		}
+		control_codes_filter.set(16);
+		control_codes_filter.set(17);
+		for (int i = 21; i <= 23; ++i) {
+			control_codes_filter.set(i);
+		}
+		control_codes_filter.set(25);
+		control_codes_filter.set(26);
+		for (int i = 28; i <= 31; ++i) {
+			control_codes_filter.set(i);
+		}
+		for (int i = 128; i <= 159; ++i) {
+			control_codes_filter.set(i);
+		}
+	}
 
 	densk = 0;
 	densl = 1;
@@ -237,6 +259,31 @@ Printer::~Printer(void)
 		FT_Done_FreeType(ft_lib);
 		ft_lib = nullptr;
 	}
+}
+
+void Printer::SetUpperControlCodesPrinting(const bool print)
+{
+	for (int i = 128; i <= 159; ++i) {
+		control_codes_filter.set(i, !print);
+	}
+}
+
+void Printer::SetSelectedControlCodesPrinting(const bool print)
+{
+	auto set_range = [&](int lo, int hi) {
+		for (int i = lo; i <= hi; ++i) {
+			control_codes_filter.set(i, !print);
+		}
+	};
+
+	set_range(0, 6);
+	control_codes_filter.set(16, !print);
+	control_codes_filter.set(17, !print);
+	set_range(21, 23);
+	control_codes_filter.set(25, !print);
+	control_codes_filter.set(26, !print);
+	set_range(28, 31);
+	set_range(128, 159);
 }
 
 void Printer::SelectCodepage(const uint16_t codepage)
@@ -307,6 +354,11 @@ void Printer::PrintChar(uint8_t ch)
 		num_print_as_char--;
 	} else if (ProcessCommandChar(ch)) {
 		return;
+	} else if (control_codes_filter[ch]) {
+		// ProcessCommandChar fell through to "render this byte", but
+		// ESC 6/7/m/I (or the 9-pin default) says it's a control code,
+		// so drop it.
+		return;
 	}
 
 	// Do not print if no font is available
@@ -327,10 +379,25 @@ void Printer::PrintChar(uint8_t ch)
 	const bool is_box_char = unicode >= BoxAndBlockGlyphsFirst &&
 	                         unicode <= BoxAndBlockGlyphsLast;
 
-	FT_Face render_face = (is_box_char && !style.prop && mono_box_font != nullptr)
-	                            ? mono_box_font
-	                            : cur_font;
+	// CP437 graphic glyphs (the ones that take 0x01..0x1F + 0x7F when
+	// the ESC I / ESC 6 / ESC m filter lets the bytes through) live
+	// scattered across the Arrows, General Punctuation, Geometric
+	// Shapes, Misc Symbols and Misc Technical blocks. Most user-facing
+	// typefaces don't cover them, so fall back to mono_box_font the
+	// same way we do for box-drawing characters.
+	const bool is_cp437_graphic = unicode == 0x2022 || unicode == 0x203c ||
+	                              unicode == 0x221f || unicode == 0x2302 ||
+	                              (unicode >= 0x2190 && unicode <= 0x21a8) ||
+	                              (unicode >= 0x25a0 && unicode <= 0x26ff);
 
+	const bool use_mono_fallback = (is_box_char || is_cp437_graphic) &&
+	                               !style.prop && mono_box_font != nullptr;
+
+	FT_Face render_face = use_mono_fallback ? mono_box_font : cur_font;
+
+	// Box-fill stretches the glyph to tile across cell boundaries —
+	// only correct for the actual box-drawing block, not for the
+	// scattered cp437 graphic glyphs.
 	const bool apply_box_fill = is_box_char && box_fill_horiz_points > 0.0 &&
 	                            line_spacing > 0.0 && natural_em_height_px > 0;
 
@@ -1022,7 +1089,9 @@ void install_io_handlers(const io_port_t lpt_port)
 	state.data_write->Install(data_port, PRINTER_WriteData, io_width_t::byte);
 	state.data_read->Install(data_port, PRINTER_ReadData, io_width_t::byte);
 	state.status_read->Install(status_port, PRINTER_ReadStatus, io_width_t::byte);
-	state.control_write->Install(control_port, PRINTER_WriteControl, io_width_t::byte);
+	state.control_write->Install(control_port,
+	                             PRINTER_WriteControl,
+	                             io_width_t::byte);
 	state.control_read->Install(control_port, PRINTER_ReadControl, io_width_t::byte);
 }
 
@@ -1254,9 +1323,7 @@ void PRINTER_Init()
 		model_name = "PostScript passthrough";
 		break;
 
-	case PrinterModel::Passthrough:
-		model_name = "Raw passthrough";
-		break;
+	case PrinterModel::Passthrough: model_name = "Raw passthrough"; break;
 
 	case PrinterModel::None: break;
 	}
