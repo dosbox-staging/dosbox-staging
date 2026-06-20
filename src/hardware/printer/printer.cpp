@@ -76,10 +76,6 @@ constexpr uint8_t MsbSetMask   = 0x80;
 constexpr uint16_t BoxAndBlockGlyphsFirst = 0x2500;
 constexpr uint16_t BoxAndBlockGlyphsLast  = 0x259F;
 
-// SOH (0x01) in the byte stream is treated as a printable space. Carried
-// over from upstream DOSBox; real Epson hardware ignores SOH outright.
-constexpr uint8_t SohRemappedToSpace = 0x01;
-
 } // namespace
 
 // Printer::FillPalette lives in printer_glyph.cpp.
@@ -305,10 +301,6 @@ void Printer::PrintChar(uint8_t ch)
 	// Do not print if no font is available
 	if (!cur_font) {
 		return;
-	}
-
-	if (ch == SohRemappedToSpace) {
-		ch = ' ';
 	}
 
 	// Box-drawing chars (U+2500..U+257F) and block elements
