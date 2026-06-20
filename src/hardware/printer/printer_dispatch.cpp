@@ -941,10 +941,18 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 			UpdateFont();
 			break;
 
-		// Set left margin (ESC l)
+		// Set left margin (ESC l). escp2ref.pdf C-23 places the left
+		// edge of column n at the margin, so position = (n - 1) / cpi.
+		// Clamp to 0 because real ESC/P drivers use n = 0 as a "no
+		// margin" / reset shorthand, and the (n - 1) subtraction would
+		// otherwise underflow to a negative position.
 		case EscSetLeftMargin: // 0x6c
 			left_margin = static_cast<Real64>(params[0] - 1.0) /
 			              static_cast<Real64>(cpi);
+
+			if (left_margin < 0.0) {
+				left_margin = 0.0;
+			}
 			if (cur_x < left_margin) {
 				cur_x = left_margin;
 			}
