@@ -28,6 +28,7 @@ void DBGUI_DrawOutputWindow();
 float DBGUI_GetWindowY(int window_index);
 float DBGUI_GetTotalHeight();
 float DBGUI_GetWindowWidth();
+float DBGUI_GetPanelOriginX();
 
 // Window title styling helpers (cyan background, black text)
 bool DBGUI_BeginWindowWithStyledTitle(const char* title, int flags);
@@ -93,7 +94,7 @@ struct DBGBlock {
 	uint32_t input_y       = 0;
 	uint32_t global_mask   = 0;
 	/* Window height values in rows */
-	int32_t rows_registers = 4;
+	int32_t rows_registers = 5;
 	int32_t rows_data      = 8;
 	int32_t rows_code      = 11;
 	int32_t rows_variables = 4;
@@ -127,6 +128,11 @@ struct DebuggerInputEvent {
 };
 
 extern std::queue<DebuggerInputEvent> debugger_event_queue;
+
+// True while the debugger loop is the active loop (paused at a breakpoint or
+// single-stepping); false while the emulator is running. Used to route keyboard
+// input to the correct window independently of OS keyboard focus.
+bool DEBUG_IsDebugging();
 
 /* Local Debug Stuff */
 Bitu DasmI386(char* buffer, PhysPt pc, Bitu cur_ip, bool bit32);

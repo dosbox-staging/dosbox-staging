@@ -62,7 +62,10 @@ public:
 	void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings);
 	void SetDeditheringStrength(const float strength);
 
-	void Render(const GLuint vertex_array_object) const;
+	// Render the pipeline. The final pass is rendered into `output_fbo`
+	// (0 = the window's default framebuffer). Hosting the emulator image in
+	// an ImGui panel passes an offscreen FBO here.
+	void Render(const GLuint vertex_array_object, const GLuint output_fbo = 0) const;
 
 	// prevent copying
 	ShaderPipeline(const ShaderPipeline&) = delete;
@@ -92,7 +95,8 @@ private:
 	void UpdatePassTextureUniforms();
 	void UpdateTextureUniforms(const std::vector<ShaderPass>::iterator pass) const;
 
-	void RenderPass(const ShaderPass& pass, const GLuint vertex_array_object) const;
+	void RenderPass(const ShaderPass& pass, const GLuint vertex_array_object,
+	                const GLuint target_fbo) const;
 
 	struct {
 		bool dedithering_enabled = false;

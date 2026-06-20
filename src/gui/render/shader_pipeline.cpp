@@ -466,12 +466,19 @@ void ShaderPipeline::SetDeditheringStrength(const float strength)
 	}
 }
 
-void ShaderPipeline::Render(const GLuint vertex_array_object) const
+void ShaderPipeline::Render(const GLuint vertex_array_object,
+                            const GLuint output_fbo) const
 {
 	assert(IsPipelineComplete());
 
-	for (const auto& pass : shader_passes) {
-		RenderPass(pass, vertex_array_object);
+	for (auto it = shader_passes.begin(); it != shader_passes.end(); ++it) {
+		// Intermediate passes render to their own offscreen textures; the
+		// final pass renders to `output_fbo` (the window framebuffer, or
+		// an offscreen FBO when hosting the image in an ImGui panel).
+		const bool is_last_pass = (std::next(it) == shader_passes.end());
+		const GLuint target_fbo = is_last_pass ? output_fbo : it->out_fbo;
+
+		RenderPass(*it, vertex_array_object, target_fbo);
 	}
 }
 
@@ -489,11 +496,12 @@ ShaderPass& ShaderPipeline::GetShaderPass(const std::string& name)
 }
 
 void ShaderPipeline::RenderPass(const ShaderPass& pass,
-                                const GLuint vertex_array_object) const
+                                const GLuint vertex_array_object,
+                                const GLuint target_fbo) const
 {
 	glUseProgram(pass.shader.program_object);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, pass.out_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, target_fbo);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	const auto& info = pass.shader.info;

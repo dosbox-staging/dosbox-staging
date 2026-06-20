@@ -23,7 +23,7 @@ target_sources(dosboxcommon PRIVATE
 )
 endif()
 
-if (OPT_DEBUGGER)
+if (OPT_DEBUGGER OR C_OPENGL)
   target_link_libraries(dosboxcommon PRIVATE imgui::imgui)
 endif()
 

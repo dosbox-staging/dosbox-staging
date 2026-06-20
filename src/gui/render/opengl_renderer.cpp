@@ -23,6 +23,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 
+#include <imgui.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_sdl3.h>
+
 #if defined(MACOSX) 
 #include "macos_colorspace.h"
 #endif
@@ -217,11 +221,196 @@ bool OpenGlRenderer::InitRenderer()
 
 	shader_pipeline = std::make_unique<ShaderPipeline>();
 
+	InitImGui();
+
 	return true;
+}
+
+void OpenGlRenderer::InitImGui()
+{
+	IMGUI_CHECKVERSION();
+	imgui_context = ImGui::CreateContext();
+	ImGui::SetCurrentContext(imgui_context);
+
+	// Don't read/write an imgui.ini layout file.
+	ImGui::GetIO().IniFilename = nullptr;
+
+	ImGui::StyleColorsDark();
+
+	if (!ImGui_ImplSDL3_InitForOpenGL(window, context)) {
+		LOG_ERR("OPENGL: Failed to initialise ImGui SDL3 backend");
+		ImGui::DestroyContext(imgui_context);
+		imgui_context = nullptr;
+		return;
+	}
+	if (!ImGui_ImplOpenGL3_Init("#version 150")) {
+		LOG_ERR("OPENGL: Failed to initialise ImGui OpenGL3 backend");
+		ImGui_ImplSDL3_Shutdown();
+		ImGui::DestroyContext(imgui_context);
+		imgui_context = nullptr;
+		return;
+	}
+
+	// Let the event loop forward (mouse) events into this context.
+	GFX_SetImGuiEventCallback([this](const SDL_Event& event) {
+		ImGui::SetCurrentContext(imgui_context);
+		ImGui_ImplSDL3_ProcessEvent(&event);
+	});
+}
+
+void OpenGlRenderer::RenderImGuiOverlay()
+{
+	if (!imgui_context) {
+		return;
+	}
+
+	// The debugger may host its own ImGui context; always target ours
+	// before issuing main-window ImGui calls.
+	ImGui::SetCurrentContext(imgui_context);
+
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
+	ImGui::NewFrame();
+
+	// Let other modules (e.g. the debugger) draw their ImGui panels first and
+	// publish how much width to reserve for them (GFX_SetDebuggerReservedWidth).
+	GFX_RunImGuiOverlayCallback();
+
+	// Draw the emulator image (beneath the panels) into the remaining region.
+	DrawEmulatorImage();
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void OpenGlRenderer::DrawEmulatorImage()
+{
+	if (!emulator_target.texture) {
+		return;
+	}
+
+	const ImVec2 display = ImGui::GetIO().DisplaySize;
+
+	const auto fbo_w = static_cast<float>(emulator_target.width);
+	const auto fbo_h = static_cast<float>(emulator_target.height);
+	if (fbo_w <= 0.0f || fbo_h <= 0.0f) {
+		return;
+	}
+
+	// Draw the whole FBO, which already contains the emulator image with its
+	// correct aspect ratio, letterboxing and border baked in by the shader
+	// pipeline's viewport. GL textures are bottom-up, so flip the V coordinate.
+	const auto fbo_aspect = fbo_w / fbo_h;
+
+	// Available region: the full window minus the debugger's reserved right
+	// column (0 when not debugging, so the emulator fills the window as before).
+	const auto reserved = GFX_GetDebuggerReservedWidthLogical();
+	const auto avail_w  = (display.x - reserved > 0.0f) ? display.x - reserved
+	                                                    : 0.0f;
+	const auto avail_h  = display.y;
+
+	// Fit the FBO into the available region, preserving the aspect ratio.
+	auto draw_w = avail_w;
+	auto draw_h = draw_w / fbo_aspect;
+	if (draw_h > avail_h) {
+		draw_h = avail_h;
+		draw_w = draw_h * fbo_aspect;
+	}
+	const auto x0 = (avail_w - draw_w) * 0.5f;
+	const auto y0 = (avail_h - draw_h) * 0.5f;
+
+	ImGui::GetBackgroundDrawList()->AddImage(
+	        static_cast<ImTextureID>(emulator_target.texture),
+	        ImVec2(x0, y0),
+	        ImVec2(x0 + draw_w, y0 + draw_h),
+	        ImVec2(0.0f, 1.0f),
+	        ImVec2(1.0f, 0.0f));
+}
+
+void OpenGlRenderer::ShutdownImGui()
+{
+	if (!imgui_context) {
+		return;
+	}
+
+	// Clear the event callback (it captures this renderer) before teardown.
+	GFX_SetImGuiEventCallback(nullptr);
+
+	ImGui::SetCurrentContext(imgui_context);
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplSDL3_Shutdown();
+	ImGui::DestroyContext(imgui_context);
+	imgui_context = nullptr;
+}
+
+void OpenGlRenderer::EnsureEmulatorTarget(const int canvas_width_px,
+                                          const int canvas_height_px)
+{
+	if (emulator_target.fbo && emulator_target.width == canvas_width_px &&
+	    emulator_target.height == canvas_height_px) {
+		return;
+	}
+
+	DestroyEmulatorTarget();
+
+	emulator_target.width  = canvas_width_px;
+	emulator_target.height = canvas_height_px;
+
+	glGenTextures(1, &emulator_target.texture);
+	glBindTexture(GL_TEXTURE_2D, emulator_target.texture);
+	// Trilinear minification so the emulator image downscales smoothly (no
+	// moire/banding) when it's fit into the debugger's reduced viewport region.
+	// Mipmaps are (re)generated each frame in PresentFrame().
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D,
+	             0,
+	             GL_RGBA8,
+	             canvas_width_px,
+	             canvas_height_px,
+	             0,
+	             GL_RGBA,
+	             GL_UNSIGNED_BYTE,
+	             nullptr);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenFramebuffers(1, &emulator_target.fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, emulator_target.fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER,
+	                       GL_COLOR_ATTACHMENT0,
+	                       GL_TEXTURE_2D,
+	                       emulator_target.texture,
+	                       0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		LOG_ERR("OPENGL: Emulator render target framebuffer is not complete");
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void OpenGlRenderer::DestroyEmulatorTarget()
+{
+	if (emulator_target.fbo) {
+		glDeleteFramebuffers(1, &emulator_target.fbo);
+		emulator_target.fbo = 0;
+	}
+	if (emulator_target.texture) {
+		glDeleteTextures(1, &emulator_target.texture);
+		emulator_target.texture = 0;
+	}
+	emulator_target.width  = 0;
+	emulator_target.height = 0;
 }
 
 OpenGlRenderer::~OpenGlRenderer()
 {
+	// Tear down ImGui and the offscreen target while the GL context is still
+	// current and valid.
+	ShutdownImGui();
+	DestroyEmulatorTarget();
+
 	SDL_GL_ResetAttributes();
 
 	glDeleteVertexArrays(1, &vao);
@@ -475,17 +664,37 @@ void OpenGlRenderer::PrepareFrame()
 
 void OpenGlRenderer::PresentFrame()
 {
-	shader_pipeline->Render(vao);
+	const auto canvas   = GetCanvasSizeInPixels();
+	const auto canvas_w = iroundf(canvas.w);
+	const auto canvas_h = iroundf(canvas.h);
 
-	// Optionally capture frame
+	EnsureEmulatorTarget(canvas_w, canvas_h);
+
+	// Render the emulator image (all shader passes) into the offscreen FBO
+	// instead of straight to the window, so it can be drawn as an ImGui image.
+	shader_pipeline->Render(vao, emulator_target.fbo);
+
+	// Refresh the mipmap chain from the freshly rendered image so the trilinear
+	// minification filter has data to sample when the image is downscaled into
+	// the debugger's reduced viewport region.
+	glBindTexture(GL_TEXTURE_2D, emulator_target.texture);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Optionally capture frame. ReadPixelsPostShader() reads from the
+	// emulator FBO, so captures contain the pure emulator output (no ImGui).
 	if (CAPTURE_IsCapturingPostRenderImage()) {
-		// glReadPixels() implicitly blocks until all pipelined
-		// rendering commands have finished, so we're guaranteed to
-		// read the contents of the up-to-date backbuffer here right
-		// before the buffer swap.
-		//
 		GFX_CaptureRenderedImage();
 	}
+
+	// Composite to the window: clear, then draw the emulator image (as an
+	// ImGui background) with the ImGui panels on top.
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, canvas_w, canvas_h);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	RenderImGuiOverlay();
 
 	// Present frame
 	SDL_GL_SwapWindow(window);
@@ -694,8 +903,10 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 
 	image.is_flipped_vertically = true;
 
-	// Read from backbuffer
-	glReadBuffer(GL_BACK);
+	// Read from the offscreen emulator render target (the post-shader image),
+	// not the window backbuffer, which now holds the composited ImGui frame.
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, emulator_target.fbo);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
 
 	// Alignment is 4 by default which works fine when using the
 	// GL_BGRA pixel format with glReadPixels(). We need to set it 1
@@ -714,8 +925,9 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	             GL_UNSIGNED_BYTE,
 	             image.image_data);
 
-	// Restore default
+	// Restore defaults
 	glPixelStorei(GL_PACK_ALIGNMENT, 4);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 	return image;
 }

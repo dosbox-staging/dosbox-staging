@@ -25,6 +25,9 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 
+// forward declaration
+struct ImGuiContext;
+
 class OpenGlRenderer : public RenderBackend {
 
 public:
@@ -97,8 +100,30 @@ private:
 
 	bool SwitchShader(const std::string& shader_name);
 
+	// ImGui hosting on the main window's GL context (single-window debugger
+	// shell). The emulator image is rendered into an offscreen FBO and drawn
+	// as an ImGui image; the ImGui panels are composited on top each frame.
+	void InitImGui();
+	void RenderImGuiOverlay();
+	void DrawEmulatorImage();
+	void ShutdownImGui();
+
+	// Offscreen render target holding the post-shader emulator image, sized
+	// to the window canvas. (Re)created when the canvas size changes.
+	void EnsureEmulatorTarget(const int canvas_width_px, const int canvas_height_px);
+	void DestroyEmulatorTarget();
+
 	SDL_Window* window    = {};
 	SDL_GLContext context = {};
+
+	ImGuiContext* imgui_context = nullptr;
+
+	struct {
+		int width      = 0;
+		int height     = 0;
+		GLuint fbo     = 0;
+		GLuint texture = 0;
+	} emulator_target = {};
 
 	GLint max_texture_size_px = 0;
 

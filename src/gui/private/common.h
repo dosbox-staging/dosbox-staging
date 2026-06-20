@@ -4,6 +4,8 @@
 #ifndef DOSBOX_GUI_PRIVATE_COMMON_H
 #define DOSBOX_GUI_PRIVATE_COMMON_H
 
+#include <functional>
+
 #include "dosbox_config.h"
 #include "misc/video.h"
 #include "utils/fraction.h"
@@ -102,6 +104,24 @@ bool GFX_StartUpdate(uint32_t*& pixels, int& pitch);
 void GFX_EndUpdate();
 
 void GFX_CaptureRenderedImage();
+
+// ImGui overlay hook. The active render backend invokes the registered callback
+// inside its ImGui frame (between NewFrame and Render) so other modules (e.g.
+// the debugger) can draw ImGui content into the main window without the render
+// module depending on them. The callback draws using the current ImGui context.
+void GFX_SetImGuiOverlayCallback(std::function<void()> callback);
+void GFX_RunImGuiOverlayCallback();
+
+// Width (in ImGui logical units) reserved on the right edge of the window for
+// the debugger panels. The emulator image is fit (aspect-preserved) into the
+// remaining left region. 0 means the emulator uses the full window.
+void GFX_SetDebuggerReservedWidthLogical(const float width);
+float GFX_GetDebuggerReservedWidthLogical();
+
+// Forwards an SDL event to the main window's ImGui context (set by the render
+// backend that hosts ImGui). Used to route mouse input to the debugger panels.
+void GFX_SetImGuiEventCallback(std::function<void(const SDL_Event&)> callback);
+void GFX_RunImGuiEventCallback(const SDL_Event& event);
 
 DosBox::Rect GFX_GetDesktopSize();
 

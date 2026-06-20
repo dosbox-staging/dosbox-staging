@@ -18,13 +18,12 @@
 #include <SDL3/SDL.h>
 
 #include <imgui.h>
-#include <imgui_impl_sdl3.h>
-#include <imgui_impl_sdlgpu3.h>
 
 #include "cpu/cpu.h"
 #include "cpu/registers.h"
 #include "debugger.h"
 #include "debugger_inc.h"
+#include "gui/common.h"
 #include "misc/cross.h"
 #include "misc/support.h"
 #include "utils/string_utils.h"
@@ -50,7 +49,6 @@ static FILE* debuglog = nullptr;
 // ImGui state
 static bool imgui_initialized = false;
 static std::deque<int> key_buffer;
-static float display_scale = 1.0f;
 
 // Event queue
 std::queue<DebuggerInputEvent> debugger_event_queue = {};
@@ -73,9 +71,6 @@ int DBGUI_GetKey()
 	while (!debugger_event_queue.empty()) {
 		DebuggerInputEvent event = debugger_event_queue.front();
 		debugger_event_queue.pop();
-
-		// Process ImGui events
-		ImGui_ImplSDL3_ProcessEvent(&event.ev);
 
 		// Convert SDL events to key codes
 		if (event.ev.type == SDL_EVENT_KEY_DOWN) {
@@ -346,207 +341,37 @@ float DBGUI_GetWindowWidth()
 	return CalcWindowWidth(dbg.window_cols);
 }
 
+// X origin of the debugger panel column: the panels sit in a right-hand column
+// so the emulator image gets the remaining left region.
+float DBGUI_GetPanelOriginX()
+{
+	return ImGui::GetIO().DisplaySize.x - DBGUI_GetWindowWidth();
+}
+
 void DBGUI_StartUp(void)
 {
 	if (imgui_initialized) {
 		return;
 	}
 
-	// Get display scale for high DPI support
-	display_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
-	if (display_scale <= 0.0f) {
-		display_scale = 1.0f;
-	}
-
-	// Create debugger window with initial size (will be resized after ImGui
-	// init). Use approximate pixel values before ImGui metrics are
-	// available, scaled for high DPI displays.
-	constexpr int InitialWindowWidth   = 800;
-	constexpr int InitialWindowHeight  = 600;
-	const SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE |
-	                                     SDL_WINDOW_HIDDEN |
-	                                     SDL_WINDOW_HIGH_PIXEL_DENSITY;
-
-	dbg.win_main = SDL_CreateWindow(
-	        "DOSBox Staging Debugger",
-	        static_cast<int>(InitialWindowWidth * display_scale),
-	        static_cast<int>(InitialWindowHeight * display_scale),
-	        window_flags);
-
-	if (!dbg.win_main) {
-		LOG_ERR("DEBUG: Failed to create debugger window: %s",
-		        SDL_GetError());
-		return;
-	}
-
-	// Create GPU device - SDL_GPU uses Vulkan/Metal/D3D12 under the hood,
-	// avoiding OpenGL context conflicts with the main DOSBox window
-	dbg.gpu_device = SDL_CreateGPUDevice(
-	        SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL |
-	                SDL_GPU_SHADERFORMAT_MSL | SDL_GPU_SHADERFORMAT_METALLIB,
-	        true,
-	        nullptr);
-	if (!dbg.gpu_device) {
-		LOG_ERR("DEBUG: Failed to create GPU device: %s", SDL_GetError());
-		SDL_DestroyWindow(dbg.win_main);
-		dbg.win_main = nullptr;
-		return;
-	}
-
-	if (!SDL_ClaimWindowForGPUDevice(dbg.gpu_device, dbg.win_main)) {
-		LOG_ERR("DEBUG: Failed to claim window for GPU device: %s",
-		        SDL_GetError());
-		SDL_DestroyGPUDevice(dbg.gpu_device);
-		SDL_DestroyWindow(dbg.win_main);
-		dbg.gpu_device = nullptr;
-		dbg.win_main   = nullptr;
-		return;
-	}
-
-	// Setup ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.IniFilename = nullptr; // Disable saving/loading window layout
-
-	// Setup ImGui style
-	ImGui::StyleColorsDark();
-	ImGuiStyle& style       = ImGui::GetStyle();
-	style.WindowRounding    = DBGUI::WindowRounding;
-	style.FrameRounding     = DBGUI::FrameRounding;
-	style.ScrollbarRounding = DBGUI::ScrollbarRounding;
-	style.FontSizeBase      = DBGUI::FontSize;
-
-	// Scale style for high DPI displays
-	style.ScaleAllSizes(display_scale);
-	style.FontScaleDpi = display_scale;
-
-	// Setup Platform/Renderer backends for SDL_GPU
-	ImGui_ImplSDLGPU3_InitInfo init_info   = {};
-	init_info.Device                       = dbg.gpu_device;
-	init_info.ColorTargetFormat            = SDL_GetGPUSwapchainTextureFormat(
-                dbg.gpu_device, dbg.win_main);
-	init_info.MSAASamples = SDL_GPU_SAMPLECOUNT_1;
-
-	ImGui_ImplSDL3_InitForOther(dbg.win_main);
-	ImGui_ImplSDLGPU3_Init(&init_info);
-
-	io.Fonts->AddFontFromMemoryCompressedTTF(IBM_VGA_8x16_compressed_data,
-	                                         IBM_VGA_8x16_compressed_size);
-
+	// The debugger renders into the main DOSBox window's ImGui context (set up
+	// by the OpenGL renderer); it no longer creates its own window, GPU device,
+	// or ImGui context. The panels are drawn via the registered ImGui overlay
+	// callback (see DEBUG_Init / GFX_SetImGuiOverlayCallback).
 	imgui_initialized = true;
 	cycle_count       = 0;
-
-	// Now that ImGui is initialized, resize the window to fit all child
-	// windows. Need to do a dummy frame to get accurate font metrics.
-	ImGui_ImplSDLGPU3_NewFrame();
-	ImGui_ImplSDL3_NewFrame();
-	ImGui::NewFrame();
-
-	// Calculate window dimensions from character rows/columns
-	dbg.window_width  = static_cast<int>(DBGUI_GetWindowWidth());
-	dbg.window_height = static_cast<int>(DBGUI_GetTotalHeight());
-	SDL_SetWindowSize(dbg.win_main, dbg.window_width, dbg.window_height);
-	SDL_SetWindowPosition(dbg.win_main,
-	                      SDL_WINDOWPOS_CENTERED,
-	                      SDL_WINDOWPOS_CENTERED);
-	SDL_ShowWindow(dbg.win_main);
-
-	ImGui::EndFrame();
 }
 
 void DBGUI_Shutdown(void)
 {
-	if (!imgui_initialized) {
-		return;
-	}
-
-	ImGui_ImplSDLGPU3_Shutdown();
-	ImGui_ImplSDL3_Shutdown();
-	ImGui::DestroyContext();
-
-	if (dbg.gpu_device) {
-		SDL_ReleaseWindowFromGPUDevice(dbg.gpu_device, dbg.win_main);
-		SDL_DestroyGPUDevice(dbg.gpu_device);
-		dbg.gpu_device = nullptr;
-	}
-
-	if (dbg.win_main) {
-		SDL_DestroyWindow(dbg.win_main);
-		dbg.win_main = nullptr;
-	}
-
 	imgui_initialized = false;
 }
 
-void DBGUI_NewFrame(void)
-{
-	if (!imgui_initialized) {
-		return;
-	}
+// The debugger no longer drives its own ImGui frame or window; the main
+// window's OpenGL renderer does. These are kept as no-ops for now.
+void DBGUI_NewFrame(void) {}
 
-	ImGui_ImplSDLGPU3_NewFrame();
-	ImGui_ImplSDL3_NewFrame();
-	ImGui::NewFrame();
-}
-
-void DBGUI_Render(void)
-{
-	if (!imgui_initialized) {
-		return;
-	}
-
-	ImGui::Render();
-
-	SDL_GPUCommandBuffer* command_buffer = SDL_AcquireGPUCommandBuffer(
-	        dbg.gpu_device);
-	if (!command_buffer) {
-		LOG_ERR("DEBUG: Failed to acquire GPU command buffer: %s",
-		        SDL_GetError());
-		return;
-	}
-
-	SDL_GPUTexture* swapchain_texture = nullptr;
-	if (!SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer,
-	                                           dbg.win_main,
-	                                           &swapchain_texture,
-	                                           nullptr,
-	                                           nullptr)) {
-		LOG_ERR("DEBUG: Failed to acquire swapchain texture: %s",
-		        SDL_GetError());
-		SDL_SubmitGPUCommandBuffer(command_buffer);
-		return;
-	}
-
-	if (swapchain_texture) {
-		ImDrawData* draw_data = ImGui::GetDrawData();
-
-		// Must call PrepareDrawData before the render pass
-		ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, command_buffer);
-
-		// Set up the color target with clear color
-		SDL_GPUColorTargetInfo target_info = {};
-		target_info.texture                = swapchain_texture;
-		target_info.clear_color.r = DBGUI::ClearColorR / 255.0f;
-		target_info.clear_color.g = DBGUI::ClearColorG / 255.0f;
-		target_info.clear_color.b = DBGUI::ClearColorB / 255.0f;
-		target_info.clear_color.a = DBGUI::ClearColorA / 255.0f;
-		target_info.load_op       = SDL_GPU_LOADOP_CLEAR;
-		target_info.store_op      = SDL_GPU_STOREOP_STORE;
-
-		SDL_GPURenderPass* render_pass = SDL_BeginGPURenderPass(
-		        command_buffer, &target_info, 1, nullptr);
-
-		ImGui_ImplSDLGPU3_RenderDrawData(draw_data,
-		                                 command_buffer,
-		                                 render_pass);
-
-		SDL_EndGPURenderPass(render_pass);
-	}
-
-	SDL_SubmitGPUCommandBuffer(command_buffer);
-}
+void DBGUI_Render(void) {}
 
 // Title bar colors - cyan background with black text (classic DOS style)
 static const ImVec4 TitleBgColor   = ImVec4(0.0f, 0.667f, 0.667f, 1.0f); // Cyan
@@ -666,8 +491,8 @@ void DBGUI_DrawOutputWindow(void)
 	float window_width  = DBGUI_GetWindowWidth();
 	float window_height = CalcWindowHeight(dbg.rows_output);
 
-	ImGui::SetNextWindowPos(ImVec2(0, DBGUI_GetWindowY(4)),
-	                        ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(DBGUI_GetPanelOriginX(), DBGUI_GetWindowY(4)),
+	                        ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 

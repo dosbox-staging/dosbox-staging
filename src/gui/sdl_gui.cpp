@@ -76,15 +76,18 @@ SDL_Rect to_sdl_rect(const DosBox::Rect& r)
 
 static bool is_debugger_event(const SDL_Event& event)
 {
-	if (!dbg.win_main) {
-		return false;
+	// The debugger now lives in the main window, so route keyboard and
+	// text-input events to it whenever it is the active loop (paused at a
+	// breakpoint or single-stepping). Routing by run state rather than which
+	// window holds focus keeps input flowing to the correct consumer on all
+	// platforms (Wayland and many X11 WMs ignore programmatic focus changes).
+	switch (event.type) {
+	case SDL_EVENT_KEY_DOWN:
+	case SDL_EVENT_KEY_UP:
+	case SDL_EVENT_TEXT_INPUT:
+	case SDL_EVENT_TEXT_EDITING: return DEBUG_IsDebugging();
+	default: return false;
 	}
-
-	const auto dbg_window_id   = SDL_GetWindowID(dbg.win_main);
-	const auto event_window    = SDL_GetWindowFromEvent(&event);
-	const auto event_window_id = SDL_GetWindowID(event_window);
-
-	return event_window_id == dbg_window_id;
 }
 #endif
 
@@ -2511,6 +2514,45 @@ void GFX_MaybePresentFrame()
 	}
 }
 
+static std::function<void()> imgui_overlay_callback = {};
+static float debugger_reserved_width_logical        = 0.0f;
+
+void GFX_SetImGuiOverlayCallback(std::function<void()> callback)
+{
+	imgui_overlay_callback = std::move(callback);
+}
+
+void GFX_RunImGuiOverlayCallback()
+{
+	if (imgui_overlay_callback) {
+		imgui_overlay_callback();
+	}
+}
+
+void GFX_SetDebuggerReservedWidthLogical(const float width)
+{
+	debugger_reserved_width_logical = width;
+}
+
+float GFX_GetDebuggerReservedWidthLogical()
+{
+	return debugger_reserved_width_logical;
+}
+
+static std::function<void(const SDL_Event&)> imgui_event_callback = {};
+
+void GFX_SetImGuiEventCallback(std::function<void(const SDL_Event&)> callback)
+{
+	imgui_event_callback = std::move(callback);
+}
+
+void GFX_RunImGuiEventCallback(const SDL_Event& event)
+{
+	if (imgui_event_callback) {
+		imgui_event_callback(event);
+	}
+}
+
 // Returns:
 //   true  - event loop can keep running
 //   false - event loop wants to quit
@@ -2540,6 +2582,16 @@ bool GFX_PollAndHandleEvents()
 				qe.text = event.text.text;
 			}
 			debugger_event_queue.push(std::move(qe));
+			continue;
+		}
+		// While debugging, route mouse input to the debugger panels (the main
+		// window's ImGui context) rather than the frozen emulator.
+		if (DEBUG_IsDebugging() &&
+		    (event.type == SDL_EVENT_MOUSE_MOTION ||
+		     event.type == SDL_EVENT_MOUSE_WHEEL ||
+		     event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+		     event.type == SDL_EVENT_MOUSE_BUTTON_UP)) {
+			GFX_RunImGuiEventCallback(event);
 			continue;
 		}
 #endif

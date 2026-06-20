@@ -970,8 +970,8 @@ static void DrawData(void)
 	float window_height = (dbg.rows_data * line_height) + title_bar_height +
 	                      padding;
 
-	ImGui::SetNextWindowPos(ImVec2(0, DBGUI_GetWindowY(1)),
-	                        ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(DBGUI_GetPanelOriginX(), DBGUI_GetWindowY(1)),
+	                        ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 
@@ -1053,8 +1053,8 @@ static void DrawRegisters(void)
 	float window_height    = (dbg.rows_registers * line_height) +
 	                      title_bar_height + padding;
 
-	ImGui::SetNextWindowPos(ImVec2(0, DBGUI_GetWindowY(0)),
-	                        ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(DBGUI_GetPanelOriginX(), DBGUI_GetWindowY(0)),
+	                        ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 
@@ -1210,7 +1210,8 @@ static void DrawRegisters(void)
 		Bitu changed_flags = reg_flags ^ oldflags;
 		oldflags           = reg_flags;
 
-		ImGui::SameLine();
+		// Flags go on their own line so the register panel fits within the
+		// panel column width.
 		ImGui::Text("C=");
 		ImGui::SameLine(0, 0);
 		if (changed_flags & FLAG_CF) {
@@ -1410,8 +1411,8 @@ static void DrawCode(void)
 	float window_height = (dbg.rows_code * line_height) + title_bar_height +
 	                      padding + separator_height;
 
-	ImGui::SetNextWindowPos(ImVec2(0, DBGUI_GetWindowY(2)),
-	                        ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(DBGUI_GetPanelOriginX(), DBGUI_GetWindowY(2)),
+	                        ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 
@@ -2714,10 +2715,8 @@ uint32_t DEBUG_CheckKeys(void)
 			break;
 		case DBGUI_KEY_F(5): // Run Program
 			debugging = false;
-			// Redraw screen to show "(Running)" before entering normal loop
-			DBGUI_NewFrame();
-			DEBUG_DrawScreen();
-			DBGUI_Render();
+			// Hand the mouse back to the emulator as we resume.
+			MOUSE_NotifyTakeOver(false);
 			ret = DEBUG_Run(1, false);
 			break;
 		case DBGUI_KEY_F(8): // Toggle printable characters
@@ -2849,14 +2848,11 @@ Bitu DEBUG_Loop(void)
 	// TODO Disable sound
 	GFX_PollAndHandleEvents();
 
-	// Start a new ImGui frame
-	DBGUI_NewFrame();
-
-	// Draw debugger windows
-	DEBUG_DrawScreen();
-
-	// Render ImGui
-	DBGUI_Render();
+	// Present the main window. Its registered ImGui overlay callback draws the
+	// debugger panels over the frozen emulator image. The debugger's separate
+	// SDL_GPU window is no longer rendered (it stays hidden); the debugger now
+	// lives entirely in the main window.
+	GFX_MaybePresentFrame();
 
 	// Interrupt started ? - then skip it
 	uint16_t oldCS  = SegValue(cs);
@@ -2871,6 +2867,11 @@ Bitu DEBUG_Loop(void)
 		return 0;
 	}
 	return DEBUG_CheckKeys();
+}
+
+bool DEBUG_IsDebugging()
+{
+	return debugging;
 }
 
 void DEBUG_Enable(bool pressed)
@@ -2892,9 +2893,12 @@ void DEBUG_Enable(bool pressed)
 		return;
 	}
 
-	// Defocus the graphical UI and bring the debugger UI into focus
+	// Defocus the graphical UI and bring the main window (which now hosts the
+	// debugger panels) into focus. Release the mouse capture so the cursor is
+	// visible for interacting with the debugger panels.
 	GFX_LosingFocus();
-	SDL_RaiseWindow(dbg.win_main);
+	MOUSE_NotifyTakeOver(true);
+	SDL_RaiseWindow(GFX_GetWindow());
 	SetCodeWinStart();
 
 	// Maybe show help for the first time in the debugger
@@ -2908,6 +2912,10 @@ void DEBUG_Enable(bool pressed)
 	debugging = true;
 	DOSBOX_SetLoop(&DEBUG_Loop);
 
+	// Discard any events that the debugger window accumulated while emulation
+	// was running (e.g. stray mouse movement) so the debugger starts each
+	// session with a clean slate.
+	debugger_event_queue = {};
 	KEYBOARD_ClrBuffer();
 }
 
@@ -3403,6 +3411,19 @@ void DEBUG_Init()
 	debugCallback = CALLBACK_Allocate();
 
 	CALLBACK_Setup(debugCallback, DEBUG_EnableDebugger, CB_RETF, "debugger");
+
+	// Draw the debugger panels into the main window's ImGui frame while the
+	// debugger is the active loop (paused at a breakpoint or single-stepping).
+	// Reserve a right-hand column for the panels so the emulator image is fit
+	// into the remaining left region.
+	GFX_SetImGuiOverlayCallback([] {
+		if (!DEBUG_IsDebugging()) {
+			GFX_SetDebuggerReservedWidthLogical(0.0f);
+			return;
+		}
+		GFX_SetDebuggerReservedWidthLogical(DBGUI_GetWindowWidth());
+		DEBUG_DrawScreen();
+	});
 }
 
 void DEBUG_Destroy()
@@ -3631,8 +3652,8 @@ static void DrawVariables()
 	float window_height    = (dbg.rows_variables * line_height) +
 	                      title_bar_height + padding;
 
-	ImGui::SetNextWindowPos(ImVec2(0, DBGUI_GetWindowY(3)),
-	                        ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(DBGUI_GetPanelOriginX(), DBGUI_GetWindowY(3)),
+	                        ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 
