@@ -975,8 +975,10 @@ static void DrawData(void)
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 
-	if (DBGUI_BeginWindowWithStyledTitle("-----(Data Overview   Scroll: mousewheel,page up/down)-----",
-	                                     ImGuiWindowFlags_NoCollapse)) {
+	if (DBGUI_BeginWindowWithStyledTitle(
+	            "-----(Data Overview   Scroll: mousewheel,page up/down)-----",
+	            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+	                    ImGuiWindowFlags_NoMove)) {
 		// Handle mouse wheel scrolling when hovering over this window
 		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
 			float wheel = ImGui::GetIO().MouseWheel;
@@ -1058,8 +1060,10 @@ static void DrawRegisters(void)
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 
-	if (DBGUI_BeginWindowWithStyledTitle("-----(Register Overview                              )-----",
-	                                     ImGuiWindowFlags_NoCollapse)) {
+	if (DBGUI_BeginWindowWithStyledTitle(
+	            "-----(Register Overview                              )-----",
+	            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+	                    ImGuiWindowFlags_NoMove)) {
 		ImVec4 highlight_color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
 
 		// Row 1: EAX, ESI, DS, ES, FS, GS, SS, Mode
@@ -1415,8 +1419,10 @@ static void DrawCode(void)
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 
-	if (DBGUI_BeginWindowWithStyledTitle("-----(Code Overview        Scroll: mousewheel,up/down)-----",
-	                                     ImGuiWindowFlags_NoCollapse)) {
+	if (DBGUI_BeginWindowWithStyledTitle(
+	            "-----(Code Overview        Scroll: mousewheel,up/down)-----",
+	            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+	                    ImGuiWindowFlags_NoMove)) {
 		// Handle mouse wheel scrolling when hovering over this window
 		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
 			float wheel = ImGui::GetIO().MouseWheel;
@@ -3636,8 +3642,10 @@ static void DrawVariables()
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 
-	if (DBGUI_BeginWindowWithStyledTitle("-----(Variable Overview                              )-----",
-	                                     ImGuiWindowFlags_NoCollapse)) {
+	if (DBGUI_BeginWindowWithStyledTitle(
+	            "-----(Variable Overview                              )-----",
+	            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+	                    ImGuiWindowFlags_NoMove)) {
 		if (varList.empty()) {
 			ImGui::TextDisabled("(no variables defined)");
 		} else {
