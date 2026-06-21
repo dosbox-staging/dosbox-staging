@@ -3094,6 +3094,10 @@ void MAPPER_DisplayUI() {
 		       SDL_GetError());
 	}
 
+	// The texture output renderer may have a viewport set to a sub-region
+	// of the window; reset it so the mapper can use the full window.
+	SDL_SetRenderViewport(mapper.renderer, nullptr);
+
 	SDL_SetDefaultTextureScaleMode(mapper.renderer, SDL_SCALEMODE_NEAREST);
 
 	if (!SDL_SetRenderLogicalPresentation(
