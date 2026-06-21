@@ -952,6 +952,11 @@ bool DEBUG_ExitLoop(void)
 	return false;
 }
 
+bool DEBUG_IsDebugging()
+{
+	return debugging;
+}
+
 /********************/
 /*   Draw windows   */
 /********************/
@@ -2900,6 +2905,7 @@ void DEBUG_Enable(bool pressed)
 
 	// Defocus the graphical UI and bring the debugger UI into focus
 	GFX_LosingFocus();
+	SDL_ShowWindow(dbg.win_main);
 	SDL_RaiseWindow(dbg.win_main);
 	SetCodeWinStart();
 
