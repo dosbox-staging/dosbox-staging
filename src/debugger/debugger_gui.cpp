@@ -363,8 +363,7 @@ void DBGUI_StartUp(void)
 	// available, scaled for high DPI displays.
 	constexpr int InitialWindowWidth   = 800;
 	constexpr int InitialWindowHeight  = 600;
-	const SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE |
-	                                     SDL_WINDOW_HIDDEN |
+	const SDL_WindowFlags window_flags = SDL_WINDOW_HIDDEN |
 	                                     SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
 	dbg.win_main = SDL_CreateWindow(
@@ -602,7 +601,10 @@ void DBGUI_DrawRegisterWindow(void)
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 
-	if (ImGui::Begin("Registers", nullptr, ImGuiWindowFlags_NoCollapse)) {
+	if (ImGui::Begin("Registers",
+	                 nullptr,
+	                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+	                         ImGuiWindowFlags_NoMove)) {
 		// Row 1: EAX, ESI, DS, ES, FS, GS, SS
 		ImGui::Text("EAX=%08X  ESI=%08X  DS=%04X  ES=%04X  FS=%04X  GS=%04X  SS=%04X",
 		            reg_eax,
@@ -671,10 +673,11 @@ void DBGUI_DrawOutputWindow(void)
 	ImGui::SetNextWindowSize(ImVec2(window_width, window_height),
 	                         ImGuiCond_FirstUseEver);
 
-	if (DBGUI_BeginWindowWithStyledTitle("-----(Output              Scroll: mousewheel,home/end)-----",
-	                                ImGuiWindowFlags_NoCollapse |
-	                                ImGuiWindowFlags_NoScrollbar |
-	                                ImGuiWindowFlags_NoScrollWithMouse)) {
+	if (DBGUI_BeginWindowWithStyledTitle(
+	            "-----(Output              Scroll: mousewheel,home/end)-----",
+	            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+	                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+	                    ImGuiWindowFlags_NoScrollWithMouse)) {
 		// Handle mouse wheel scrolling when hovering over this window
 		if (ImGui::IsWindowHovered()) {
 			float wheel = ImGui::GetIO().MouseWheel;
