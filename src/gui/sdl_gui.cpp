@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #if C_DEBUGGER
+#include "debugger/debugger.h"
 #include "debugger/debugger_inc.h"
 #endif
 
@@ -2534,6 +2535,11 @@ bool GFX_PollAndHandleEvents()
 		
 #if C_DEBUGGER
 		if (is_debugger_event(event)) {
+			if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED &&
+			    !DEBUG_IsDebugging()) {
+				SDL_HideWindow(dbg.win_main);
+				continue;
+			}
 			DebuggerInputEvent qe;
 			qe.ev = event;
 			if (event.type == SDL_EVENT_TEXT_INPUT && event.text.text) {

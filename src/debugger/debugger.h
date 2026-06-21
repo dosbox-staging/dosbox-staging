@@ -21,6 +21,7 @@ bool DEBUG_IntBreakpoint(uint8_t intNum);
 void DEBUG_Enable(bool pressed);
 void DEBUG_CheckExecuteBreakpoint(uint16_t seg, uint32_t off);
 bool DEBUG_ExitLoop(void);
+bool DEBUG_IsDebugging();
 void DEBUG_RefreshPage(int scroll);
 Bitu DEBUG_EnableDebugger();
 
