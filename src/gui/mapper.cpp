@@ -2768,7 +2768,10 @@ void BIND_MappingEvents()
 			 * toggled, at least on X11. Furthermore, the restore
 			 * event should be handled on Android.
 			 */
-			SDL_SetRenderLogicalPresentation(mapper.renderer, 640, 480, SDL_LOGICAL_PRESENTATION_STRETCH);
+			SDL_SetRenderLogicalPresentation(mapper.renderer,
+			                                 640,
+			                                 480,
+			                                 SDL_LOGICAL_PRESENTATION_LETTERBOX);
 			mapper.redraw = true;
 			break;
 		case SDL_EVENT_WINDOW_EXPOSED:
@@ -3091,7 +3094,10 @@ void MAPPER_DisplayUI() {
 		       SDL_GetError());
 	}
 
-	if (!SDL_SetRenderLogicalPresentation(mapper.renderer, 640, 480, SDL_LOGICAL_PRESENTATION_STRETCH)) {
+	SDL_SetDefaultTextureScaleMode(mapper.renderer, SDL_SCALEMODE_NEAREST);
+
+	if (!SDL_SetRenderLogicalPresentation(
+	            mapper.renderer, 640, 480, SDL_LOGICAL_PRESENTATION_LETTERBOX)) {
 		LOG_WARNING("MAPPER: Failed to set renderer logical size: %s",
 		            SDL_GetError());
 	}
