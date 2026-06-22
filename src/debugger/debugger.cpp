@@ -1414,10 +1414,9 @@ static void DrawCode(void)
 	float line_height      = ImGui::GetTextLineHeightWithSpacing();
 	float title_bar_height = ImGui::GetFrameHeight();
 	float padding          = ImGui::GetStyle().WindowPadding.y * 2;
-	float separator_height = 4.0f;
 	float window_width     = DBGUI_GetWindowWidth();
 	float window_height = (dbg.rows_code * line_height) + title_bar_height +
-	                      padding + separator_height;
+	                      padding + DBGUI::WindowSeparatorSpacing;
 
 	ImGui::SetNextWindowPos(ImVec2(0, DBGUI_GetWindowY(2)),
 	                        ImGuiCond_FirstUseEver);
@@ -1427,7 +1426,8 @@ static void DrawCode(void)
 	if (DBGUI_BeginWindowWithStyledTitle(
 	            "-----(Code Overview        Scroll: mousewheel,up/down)-----",
 	            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-	                    ImGuiWindowFlags_NoMove)) {
+	                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+	                    ImGuiWindowFlags_NoScrollWithMouse)) {
 		// Handle mouse wheel scrolling when hovering over this window
 		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
 			float wheel = ImGui::GetIO().MouseWheel;
@@ -1461,7 +1461,8 @@ static void DrawCode(void)
 		ImGui::BeginChild("CodeScrolling",
 		                  ImVec2(0, available_height),
 		                  false,
-		                  ImGuiWindowFlags_HorizontalScrollbar);
+		                  ImGuiWindowFlags_NoScrollbar |
+		                          ImGuiWindowFlags_NoScrollWithMouse);
 
 		bool saveSel;
 		uint32_t disEIP = codeViewData.useEIP;
