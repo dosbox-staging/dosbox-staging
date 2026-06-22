@@ -1275,7 +1275,6 @@ void PRINTER_Init()
 		dpi = DefaultDpi;
 	}
 
-	const auto dpi_u16  = static_cast<uint16_t>(dpi);
 	const auto size_str = section.GetString("printer_page_size");
 	const auto timeout  = section.GetInt("printer_timeout");
 
