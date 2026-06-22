@@ -823,18 +823,6 @@ static SDL_Rect get_desktop_size()
 		return desktop;
 	}
 
-	// Deduct the border decorations from the desktop size
-	int top    = 0;
-	int left   = 0;
-	int bottom = 0;
-	int right  = 0;
-
-	if (SDL_GetWindowBordersSize(sdl.window, &top, &left, &bottom, &right)) {
-		// If SDL_GetWindowBordersSize succeeds, deduct borders
-		desktop.w -= (left + right);
-		desktop.h -= (top + bottom);
-	}
-
 	assert(desktop.w >= minimum_window_size.x);
 	assert(desktop.h >= minimum_window_size.y);
 	return desktop;
