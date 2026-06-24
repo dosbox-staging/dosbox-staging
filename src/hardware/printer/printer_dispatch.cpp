@@ -368,7 +368,7 @@ bool Printer::ProcessCommandChar(const uint8_t ch)
 		// Header is m nL nH; the dispatcher must then consume
 		// 2*(nH*256+nL) data bytes — see the late dispatch handler.
 		case Esc::Select60Or120Dpi9PinGraphics: // 0x5e
-			needed_param = 3;
+			needed_param = 3; //-V1037
 			break;
 
 		// Select character height, width, line spacing

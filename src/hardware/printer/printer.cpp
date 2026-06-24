@@ -335,12 +335,14 @@ void Printer::PrintChar(uint8_t ch)
 
 	// Don't think that DOS programs uses this but well: Apply MSB if
 	// desired. Both active modes (MsbModeForceLow = 0, MsbModeForceHigh
-	// = 1) write the mode value straight into bit 7.
+	// = 1) write the mode value straight into bit 7. The bit_view
+	// overlay yields a byte whose bit 7 carries the mode; we mask off
+	// the original bit 7 of ch and OR it in.
 	if (msb != MsbModeDisabled) {
-		ByteWithMsbBit byte{};
-		byte.data = ch;
-		byte.msb  = msb;
-		ch        = byte.data;
+		constexpr uint8_t LowerBitsMask = 0x7F;
+		ByteWithMsbBit overlay{};
+		overlay.msb = msb;
+		ch = (ch & LowerBitsMask) | overlay.data;
 	}
 
 	// Are we currently printing a bit graphic?
