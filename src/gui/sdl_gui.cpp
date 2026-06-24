@@ -2098,66 +2098,28 @@ int GFX_GetUserSdlEventId(DosBoxSdlEvent event)
 
 static void handle_pause_when_inactive(const SDL_Event& event)
 {
-	if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST ||
-	    event.type == SDL_EVENT_WINDOW_MINIMIZED) {
-		// Window has lost focus, pause the emulator. This is similar to
-		// what PauseDOSBox() does, but the exit criteria is different.
-		// Instead of waiting for the user to hit Alt+Break, we wait for
-		// the window to regain window or input focus.
-		//
-		apply_inactive_settings();
-
+	switch (event.type) {
+	case SDL_EVENT_WINDOW_FOCUS_LOST:
+	case SDL_EVENT_WINDOW_MINIMIZED:
 		KEYBOARD_ClrBuffer();
-
-		sdl.is_paused = true;
+		DOSBOX_Pause(PauseReason::WindowInactive);
 		TITLEBAR_RefreshTitle();
+		break;
 
-		// Prevent the mixer from running while in our pause loop.
-		// Muting is not ideal for some sound devices such as GUS that
-		// loop samples. This also saves CPU time by not rendering
-		// samples we're not going to play anyway.
-		MIXER_LockMixerThread();
-
-		SDL_Event ev;
-
-		while (sdl.is_paused && !DOSBOX_IsShutdownRequested()) {
-			// WaitEvent() waits for an event rather than
-			// polling, so CPU usage drops to zero.
-			SDL_WaitEvent(&ev);
-
-			switch (ev.type) {
-			case SDL_EVENT_QUIT: GFX_RequestExit(true); break;
-			case SDL_EVENT_WINDOW_FOCUS_LOST:
-			case SDL_EVENT_WINDOW_MINIMIZED:
-			case SDL_EVENT_WINDOW_FOCUS_GAINED:
-			case SDL_EVENT_WINDOW_RESTORED:
-			case SDL_EVENT_WINDOW_EXPOSED: {
-				const auto we = ev.type;
-
-				if (we == SDL_EVENT_WINDOW_FOCUS_GAINED ||
-				    we == SDL_EVENT_WINDOW_RESTORED ||
-				    we == SDL_EVENT_WINDOW_EXPOSED) {
-					sdl.is_paused = false;
-					TITLEBAR_RefreshTitle();
-
-					if (we == SDL_EVENT_WINDOW_FOCUS_GAINED) {
-						sdl.is_paused = false;
-						apply_active_settings();
-					}
-				}
-
-				// Release ALT keys, otherwise ALT can stick and cause problems.
-				KEYBOARD_AddKey(KBD_leftalt, false);
-				KEYBOARD_AddKey(KBD_rightalt, false);
-
-				if (we == SDL_EVENT_WINDOW_RESTORED) {
-					// We may need to re-create a texture and more.
-					GFX_ResetScreen();
-				}
-			} break;
-			}
+	case SDL_EVENT_WINDOW_FOCUS_GAINED:
+	case SDL_EVENT_WINDOW_RESTORED:
+		// Only auto-resume if the pause was caused by losing
+		// focus. If the user explicitly hit the pause hotkey
+		// while inactive, the reason was upgraded to
+		// UserRequested and we leave it paused until the user
+		// hits the hotkey again.
+		//
+		if (DOSBOX_IsPaused() &&
+		    DOSBOX_GetPauseReason() == PauseReason::WindowInactive) {
+			DOSBOX_Resume();
+			TITLEBAR_RefreshTitle();
 		}
-		MIXER_UnlockMixerThread();
+		break;
 	}
 }
 
@@ -2502,13 +2464,20 @@ bool GFX_PollAndHandleEvents()
 		}
 
 		if (is_window_event(event)) {
+			// Pause-when-inactive runs FIRST so resume events
+			// (FOCUS_GAINED, RESTORED) actually reach it.
+			// handle_sdl_windowevent below returns true for
+			// those event types and would otherwise short-
+			// circuit them.
+			//
+			if (sdl.pause_when_inactive) {
+				handle_pause_when_inactive(event);
+			}
+
 			auto handling_finished = handle_sdl_windowevent(event);
 			if (handling_finished) {
 				continue;
 			}
-			if (sdl.pause_when_inactive) {
-				handle_pause_when_inactive(event);
-			}			
 		}
 
 		switch(event.type) {
