@@ -109,18 +109,27 @@ jobs:
               echo $FILES | xargs git rm -rf --
           fi
 
+      # The privacy plugin downloads every external URL referenced in the
+      # docs at build time; a transient 5xx from any source crashes the
+      # whole build. Retry the build itself; staging below cannot fail
+      # transiently and stays a plain `run:`.
       - name: Build documentation
+        uses: ./.github/actions/retry
+        with:
+          cmd: |
+            cd dosbox-staging.github.io
+            mkdocs build \
+              --config-file ../dosbox-staging/website/mkdocs.yml \
+              --site-dir $(pwd)/temp-out
+
+      - name: Stage built documentation
         run: |
           cd dosbox-staging.github.io
-          MKDOCS_SRC_PATH=../dosbox-staging/website/
-          TEMP_PATH=$(pwd)/temp-out
           DEST_PATH=$(pwd)/${{ env.dest_path_prefix }}
-
-          mkdocs build --config-file $MKDOCS_SRC_PATH/mkdocs.yml --site-dir $TEMP_PATH
-          mkdir -p $DEST_PATH
-          cp -rf $TEMP_PATH/* $DEST_PATH
-          rm -rf $TEMP_PATH
-          touch $DEST_PATH/.nojekyll
+          mkdir -p "$DEST_PATH"
+          cp -rf temp-out/* "$DEST_PATH"
+          rm -rf temp-out
+          touch "$DEST_PATH/.nojekyll"
 
       - name: Set up Git config
         run: |
@@ -128,7 +137,8 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
 
-      - name: Commit & publish new release
+      - name: Commit new release
+        id:   commit_release
         run: |
           cd dosbox-staging.github.io
           git add .
@@ -139,15 +149,23 @@ jobs:
           # website/**, so the workflow still fires).
           if git diff --cached --quiet; then
             echo "No changes to publish."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           git commit -m "Deployed current website (${{ env.source_git_hash }})"
+          echo "publish=true" >> "$GITHUB_OUTPUT"
 
-          # Retry on non-fast-forward: a cancelled sibling run (cancel-in-progress
-          # is not synchronous) may land its push between our checkout and ours.
-          for i in 1 2 3; do
-            git push && break
+      # Retry on non-fast-forward: a cancelled sibling run (cancel-in-progress
+      # is not synchronous) may land its push between our checkout and ours.
+      - name: Publish new release
+        if:   steps.commit_release.outputs.publish == 'true'
+        uses: ./.github/actions/retry
+        with:
+          cmd: |
+            cd dosbox-staging.github.io
+            git push
+          on-retry: |
+            cd dosbox-staging.github.io
             git pull --rebase
-          done
 

@@ -16,6 +16,11 @@ inputs:
     required: false
     default: '10'
 
+  on-retry:
+    description: 'Shell command run after a failed attempt, before backoff sleep. Hook failures do not abort the retry.'
+    required: false
+    default: ''
+
 runs:
   using: composite
   steps:
@@ -24,6 +29,7 @@ runs:
         RETRY_CMD: ${{ inputs.cmd }}
         RETRY_ATTEMPTS: ${{ inputs.attempts }}
         RETRY_BASE_DELAY: ${{ inputs.base-delay }}
+        RETRY_ON_RETRY: ${{ inputs.on-retry }}
       run: |
         set -u
         for i in $(seq 1 "$RETRY_ATTEMPTS"); do
@@ -39,5 +45,12 @@ runs:
             echo "::error::Command failed after $RETRY_ATTEMPTS attempts: $RETRY_CMD"
             exit 1
           fi
+
+          if [ -n "$RETRY_ON_RETRY" ]; then
+            echo "::group::On-retry hook: $RETRY_ON_RETRY"
+            bash -c "$RETRY_ON_RETRY" || echo "::warning::on-retry hook failed (exit $?), continuing"
+            echo "::endgroup::"
+          fi
+
           sleep $((i * RETRY_BASE_DELAY))
         done
