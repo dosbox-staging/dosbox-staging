@@ -774,9 +774,9 @@ void MidiDeviceSoundCanvas::Render()
 		if (is_work_fifo_backlogged) {
 			RenderBacklogged();
 		} else {
-			constexpr auto OneFrame = 1;
-			work_fifo.IsEmpty() ? RenderAudioFramesToFifo(OneFrame)
-			                    : ProcessWorkFromFifo();
+			work_fifo.IsEmpty()
+			        ? RenderAudioFramesToFifo(IdleRenderBatchFrames)
+			        : ProcessWorkFromFifo();
 		}
 	}
 }

@@ -966,7 +966,7 @@ void MidiDeviceMt32::Render()
 			break;
 		}
 
-		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
+		work_fifo.IsEmpty() ? RenderAudioFramesToFifo(IdleRenderBatchFrames)
 		                    : ProcessWorkFromFifo();
 	}
 }

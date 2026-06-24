@@ -1085,7 +1085,7 @@ void MidiDeviceFluidSynth::Render()
 			break;
 		}
 
-		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
+		work_fifo.IsEmpty() ? RenderAudioFramesToFifo(IdleRenderBatchFrames)
 		                    : ProcessWorkFromFifo();
 	}
 }

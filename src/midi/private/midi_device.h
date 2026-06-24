@@ -22,6 +22,25 @@ constexpr auto CoreMidi  = "coremidi";
 constexpr auto Win32     = "win32";
 } // namespace MidiDeviceName
 
+// Idle-render batch size for internal MIDI synth render threads.
+//
+// When the work FIFO is empty, the render loop calls
+// `RenderAudioFramesToFifo(IdleRenderBatchFrames)` to refill
+// `audio_frame_fifo`. Choosing a small batch (originally 1) means
+// renderFloat() and the FIFO mutex are touched once per audio
+// frame -- at typical sample rates (~44 kHz) that is tens of
+// thousands of unnecessary per-call cycles per second.
+//
+// 64 frames is a balance: large enough to amortise that overhead
+// roughly 64x, small enough that the worst-case delay between a
+// MIDI event arriving and taking effect in the rendered audio is
+// well below human perception (~1.5 ms at 44.1 kHz). MIDI message
+// timing is unchanged because the per-message catch-up render in
+// ProcessWorkFromFifo continues to use the exact pending frame
+// count.
+//
+constexpr int IdleRenderBatchFrames = 64;
+
 class MidiDevice {
 public:
 	enum class Type { Internal, External };
