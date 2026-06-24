@@ -88,11 +88,4 @@ constexpr int MaxBindNameLength = 100;
  */
 void MAPPER_HandleJoyDeviceEvent(SDL_JoyDeviceEvent* event);
 
-struct KeyPressState {
-	SDL_Keycode key = SDLK_UNKNOWN;
-	SDL_Keymod mod  = SDL_KMOD_NONE;
-};
-
-KeyPressState MAPPER_GetLastKeyPressed();
-
 #endif // DOSBOX_MAPPER_H

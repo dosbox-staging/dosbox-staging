@@ -272,35 +272,6 @@ void GFX_RequestExit(const bool pressed)
 	}
 }
 
-static bool is_unpause_event(const SDL_Event event, const KeyPressState unpause_key)
-{
-	if (event.type != SDL_EVENT_KEY_DOWN) {
-		return false;
-	}
-
-	if (event.key.key == unpause_key.key) {
-		// These are the only mods we're going to care about.
-		// Others mods include caps lock and num lock which we should not look at.
-		constexpr SDL_Keymod ModMask = SDL_Keymod(SDL_KMOD_CTRL | SDL_KMOD_SHIFT |
-		                                          SDL_KMOD_ALT | SDL_KMOD_GUI);
-		const auto unpause_mod = SDL_Keymod(unpause_key.mod & ModMask);
-		if ((event.key.mod & unpause_mod) == unpause_mod) {
-			return true;
-		}
-	}
-
-	// Also check previously hard-coded Alt+Pause on Windows/Linux
-	// and Command+P on Mac to ensure we don't have regressions.
-	#if defined(MACOSX)
-	constexpr SDL_Keymod DefaultMod  = SDL_KMOD_GUI;
-	constexpr SDL_Keycode DefaultKey = SDLK_P;
-	#else
-	constexpr SDL_Keymod DefaultMod  = SDL_KMOD_ALT;
-	constexpr SDL_Keycode DefaultKey = SDLK_PAUSE;
-	#endif
-	return event.key.key == DefaultKey && (event.key.mod & DefaultMod);
-}
-
 [[maybe_unused]] static void pause_emulation(bool pressed)
 {
 	if (!pressed) {
