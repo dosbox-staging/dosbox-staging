@@ -89,11 +89,18 @@ jobs:
       - name: Log environment
         run: arch -arch=${{ matrix.conf.arch }} ./scripts/ci/log-env.sh
 
+      # Retried because the docs build (OPT_DOCUMENTATION=ON) downloads
+      # external assets via the MkDocs Material privacy plugin; a transient
+      # 5xx or DNS hiccup on any source crashes the whole build. Wrapping
+      # the entire step keeps the change minimal; the cmake build is
+      # incremental, so a docs-flake retry skips already-compiled artifacts.
       - name: Build release
-        run: |
-          set -xo pipefail
-          cmake -DOPT_DOCUMENTATION=ON --preset release-macos-${{ matrix.conf.arch }}
-          cmake --build --preset release-macos-${{ matrix.conf.arch }} 2>&1 | tee build.log
+        uses: ./.github/actions/retry
+        with:
+          cmd: |
+            set -xeo pipefail
+            cmake -DOPT_DOCUMENTATION=ON --preset release-macos-${{ matrix.conf.arch }}
+            cmake --build --preset release-macos-${{ matrix.conf.arch }} 2>&1 | tee build.log
 
       - name: Run tests
         run: |

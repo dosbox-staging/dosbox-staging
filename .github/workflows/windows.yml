@@ -101,12 +101,19 @@ jobs:
         shell: pwsh
         run:   .\scripts\ci\log-env.ps1
 
-      - name:  Build release
-        if:    ${{ !matrix.conf.debugger }}
-        shell: pwsh
-        run: |
-          cmake -DOPT_DOCUMENTATION=ON --preset release-windows
-          cmake --build --preset release-windows 2>&1 | Tee-Object -FilePath build.log
+      # Retried because the docs build (OPT_DOCUMENTATION=ON) downloads
+      # external assets via the MkDocs Material privacy plugin; a transient
+      # 5xx or DNS hiccup on any source crashes the whole build. Wrapping
+      # the entire step keeps the change minimal; the cmake build is
+      # incremental, so a docs-flake retry skips already-compiled artifacts.
+      - name: Build release
+        if:   ${{ !matrix.conf.debugger }}
+        uses: ./.github/actions/retry
+        with:
+          cmd: |
+            set -eo pipefail
+            cmake -DOPT_DOCUMENTATION=ON --preset release-windows
+            cmake --build --preset release-windows 2>&1 | tee build.log
 
       - name:  Run tests
         if:    ${{ !matrix.conf.debugger }}
@@ -114,12 +121,15 @@ jobs:
         run: |
           ctest -j 4 --preset release-windows 2>&1 | Tee-Object -FilePath tests.log
 
-      - name:  Build release with debugger
-        if:    ${{ matrix.conf.debugger }}
-        shell: pwsh
-        run: |
-          cmake -DOPT_DOCUMENTATION=ON --preset release-windows -DOPT_DEBUGGER=ON -DOPT_HEAVY_DEBUGGER=ON
-          cmake --build --preset release-windows 2>&1 | Tee-Object -FilePath build.log
+      # See the comment on "Build release" above re: why this is retried.
+      - name: Build release with debugger
+        if:   ${{ matrix.conf.debugger }}
+        uses: ./.github/actions/retry
+        with:
+          cmd: |
+            set -eo pipefail
+            cmake -DOPT_DOCUMENTATION=ON --preset release-windows -DOPT_DEBUGGER=ON -DOPT_HEAVY_DEBUGGER=ON
+            cmake --build --preset release-windows 2>&1 | tee build.log
 
       - name: Summarize warnings
         env:

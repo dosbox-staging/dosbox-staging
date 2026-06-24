@@ -164,13 +164,21 @@ jobs:
       - name: Log environment
         run: ./scripts/ci/log-env.sh
 
+      # Retried because the docs build (OPT_DOCUMENTATION=ON) downloads
+      # external assets via the MkDocs Material privacy plugin; a transient
+      # 5xx or DNS hiccup on any source crashes the whole build. Wrapping
+      # the entire step keeps the change minimal; the cmake build is
+      # incremental, so a docs-flake retry skips already-compiled artifacts.
       - name: Build
-        run: |
-          set -xo pipefail
-          export CC=${{ matrix.conf.cc }}
-          export CXX=${{ matrix.conf.cxx }}
-          cmake ${{ matrix.conf.cmake_flags }} -DOPT_DOCUMENTATION=ON --preset ${{ matrix.conf.cmake_preset }}
-          cmake --build --preset ${{ matrix.conf.cmake_preset }} 2>&1 | tee build.log
+        env:
+          CC:  ${{ matrix.conf.cc }}
+          CXX: ${{ matrix.conf.cxx }}
+        uses: ./.github/actions/retry
+        with:
+          cmd: |
+            set -xeo pipefail
+            cmake ${{ matrix.conf.cmake_flags }} -DOPT_DOCUMENTATION=ON --preset ${{ matrix.conf.cmake_preset }}
+            cmake --build --preset ${{ matrix.conf.cmake_preset }} 2>&1 | tee build.log
 
       - name: Run tests
         run: |
@@ -225,11 +233,18 @@ jobs:
       - name: Log environment
         run: ./scripts/ci/log-env.sh
 
+      # Retried because the docs build (OPT_DOCUMENTATION=ON) downloads
+      # external assets via the MkDocs Material privacy plugin; a transient
+      # 5xx or DNS hiccup on any source crashes the whole build. Wrapping
+      # the entire step keeps the change minimal; the cmake build is
+      # incremental, so a docs-flake retry skips already-compiled artifacts.
       - name: Build release
-        run: |
-          set -x
-          cmake -DOPT_DOCUMENTATION=ON --preset release-linux-vcpkg
-          cmake --build --preset release-linux-vcpkg
+        uses: ./.github/actions/retry
+        with:
+          cmd: |
+            set -xe
+            cmake -DOPT_DOCUMENTATION=ON --preset release-linux-vcpkg
+            cmake --build --preset release-linux-vcpkg
 
       - name: Dump workspace contents
         run: find $RUNNER_WORKSPACE
