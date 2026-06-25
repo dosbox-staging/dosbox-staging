@@ -2878,6 +2878,21 @@ static void generate_frames(const int frames_requested)
 		frames_added_this_tick += frames_requested;
 		break;
 	}
+	// Skip the silence-fill if DMA/DAC has never started in this session
+	// (the channel is only enabled inside the Dma and Dac cases below).
+	// Otherwise on SB16 and ESS - where init_speaker_state() forces
+	// sb.speaker_enabled = true at startup - we'd enqueue silence every
+	// PIC tick from process start, with nothing draining the queue (the
+	// mixer thread skips disabled channels). The queue ends up pre-filled
+	// with stale silence ahead of the game's first real audio, baking in
+	// tens of milliseconds of input-to-audio latency for the rest of the
+	// session. Matches the gating pattern used by GUS, LPT DAC, PS1,
+	// Tandy, PC Speaker and ReelMagic. The Tyrian-style brief DmaMasked
+	// dip is unaffected because that only happens after DMA has run.
+	if (!sb.chan->is_enabled) {
+		frames_added_this_tick += frames_requested;
+		break;
+	}
 	// Enqueue a tick's worth of silenced frames
 	// Some games (Tyrian for example) will switch to DmaMasked briefly (less than 5 ticks usually)
 	// We can't use AddSilence on the mixer thread as that asks for a blocksize of audio (usually over 10ms)
