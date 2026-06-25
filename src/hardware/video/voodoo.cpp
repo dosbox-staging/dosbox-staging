@@ -7319,6 +7319,8 @@ static void voodoo_update_dimensions(void) {
 
 static void Voodoo_VerticalTimer(uint32_t /*val*/)
 {
+	DOSBOX_TryActivatePauseAtVerticalRetrace();
+
 	v->draw.frame_start = PIC_FullIndex();
 	PIC_AddEvent(Voodoo_VerticalTimer, v->draw.frame_period_ms);
 

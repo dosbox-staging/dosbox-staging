@@ -1387,6 +1387,8 @@ static void VGA_PanningLatch(uint32_t /*val*/)
 
 static void VGA_VerticalTimer(uint32_t /*val*/)
 {
+	DOSBOX_TryActivatePauseAtVerticalRetrace();
+
 	vga.draw.delay.framestart = PIC_FullIndex();
 	PIC_AddEvent(VGA_VerticalTimer, vga.draw.delay.vtotal);
 
