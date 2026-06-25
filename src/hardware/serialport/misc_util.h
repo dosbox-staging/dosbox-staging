@@ -133,10 +133,8 @@ private:
 	void updateState();
 
 #ifndef ENET_BLOCKING_CONNECT
-	// PIC time (milliseconds since emulator start) so the connect
-	// timeout does not false-fire across an emulator pause.
-	double connectStart = 0.0;
-	bool connecting     = false;
+	int64_t connectStart = 0;
+	bool connecting      = false;
 #endif
 	ENetHost* client                  = nullptr;
 	ENetPeer* peer                    = nullptr;
