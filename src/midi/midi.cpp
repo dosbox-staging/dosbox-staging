@@ -134,18 +134,9 @@ struct Midi {
 	struct {
 		uint8_t buf[MaxMidiSysExBytes] = {};
 
-		size_t pos      = 0;
-		double delay_ms = 0.0;
-
-		// PIC time (ms since emulator start). Frozen during
-		// emulator pause, so sysex pacing does not break across
-		// pauses. Only meaningful while `delay_active` is true:
-		// PIC_FullIndex() returns 0.0 at the start of emulation,
-		// so a 0.0 sentinel would be ambiguous if pacing were
-		// configured before any PIC time elapsed.
-		//
-		double start_pic_index = 0.0;
-		bool delay_active      = false;
+		size_t pos       = 0;
+		int64_t delay_ms = 0;
+		int64_t start_ms = 0;
 	} sysex = {};
 
 	bool is_muted = false;
@@ -371,10 +362,10 @@ void MIDI_RawOutByte(const uint8_t data)
 		return;
 	}
 
-	if (midi.sysex.delay_active) {
-		const auto passed_ms = PIC_FullIndex() - midi.sysex.start_pic_index;
-		if (passed_ms < midi.sysex.delay_ms) {
-			Delay(static_cast<int64_t>(midi.sysex.delay_ms - passed_ms));
+	if (midi.sysex.start_ms) {
+		const auto passed_ticks = GetTicksSince(midi.sysex.start_ms);
+		if (passed_ticks < midi.sysex.delay_ms) {
+			Delay(midi.sysex.delay_ms - passed_ticks);
 		}
 	}
 
@@ -394,9 +385,8 @@ void MIDI_RawOutByte(const uint8_t data)
 		} else {
 			midi.sysex.buf[midi.sysex.pos++] = MidiStatus::EndOfExclusive;
 
-			if (midi.sysex.delay_active &&
-			    (midi.sysex.pos >= 4) && (midi.sysex.pos <= 9) &&
-			    (midi.sysex.buf[1] == 0x41) &&
+			if (midi.sysex.start_ms && (midi.sysex.pos >= 4) &&
+			    (midi.sysex.pos <= 9) && (midi.sysex.buf[1] == 0x41) &&
 			    (midi.sysex.buf[3] == 0x16)) {
 #ifdef DEBUG_MIDI
 				LOG_DEBUG(
@@ -417,7 +407,7 @@ void MIDI_RawOutByte(const uint8_t data)
 				midi.device->SendSysExMessage(midi.sysex.buf,
 				                              midi.sysex.pos);
 
-				if (midi.sysex.delay_active) {
+				if (midi.sysex.start_ms) {
 					if (midi.sysex.buf[5] == 0x7f) {
 						// Reset All Parameters fix
 						midi.sysex.delay_ms = 290;
@@ -438,7 +428,7 @@ void MIDI_RawOutByte(const uint8_t data)
 						midi.sysex.delay_ms = delay_in_ms(
 						        midi.sysex.pos);
 					}
-					midi.sysex.start_pic_index = PIC_FullIndex();
+					midi.sysex.start_ms = GetTicks();
 				}
 			}
 
@@ -690,8 +680,7 @@ public:
 		std::string midiconfig_prefs = section->GetString("midiconfig");
 
 		if (midiconfig_prefs.find("delaysysex") != std::string::npos) {
-			midi.sysex.start_pic_index = PIC_FullIndex();
-			midi.sysex.delay_active    = true;
+			midi.sysex.start_ms = GetTicks();
 			midiconfig_prefs.erase(midiconfig_prefs.find("delaysysex"));
 			LOG_MSG("MIDI: Using delayed SysEx processing");
 		}
