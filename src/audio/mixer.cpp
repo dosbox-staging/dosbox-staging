@@ -208,6 +208,12 @@ struct MixerSettings {
 	std::atomic<bool> fast_forward_mode = false;
 
 	std::recursive_mutex mutex = {};
+
+	// State to restore on MIXER_Resume. Read/written under `mutex`
+	// so the snapshot is sequenced with the mixer thread's view of
+	// `state`.
+	//
+	MixerState pre_pause_state = MixerState::On;
 };
 
 static struct MixerSettings mixer = {};
@@ -2620,6 +2626,23 @@ static void mixer_thread_loop()
 		                             1000.0;
 		last_mixed = now;
 
+		// Paused short-circuits BEFORE mix_samples (not after) to
+		// avoid deadlocking the mixer thread.
+		//
+		// Pull-model channels (MT-32 / FluidSynth / SoundCanvas)
+		// have callbacks that call audio_frame_fifo.BulkDequeue,
+		// which blocks while the fifo is empty. During pause, the
+		// synth render thread is cv-waiting on its pause flag and
+		// not refilling, so calling mix_samples here would block
+		// the mixer thread indefinitely on an empty fifo.
+		//
+		if (mixer.state == MixerState::Paused) {
+			lock.unlock();
+			mixer.output_buffer.assign(mixer.blocksize, AudioFrame{});
+			mixer.final_output.BulkEnqueue(mixer.output_buffer);
+			continue;
+		}
+
 		// "Underflow" is not a concern since moving to a threaded
 		// mixer. If the CPU is running slower than real-time, the audio
 		// drivers will naturally slow down the audio. Therefore, we can
@@ -2711,13 +2734,15 @@ static void mixer_thread_loop()
 	case MixerState::NoSound: return "No sound";
 	case MixerState::On: return "On";
 	case MixerState::Muted: return "Mute";
+	case MixerState::Paused: return "Paused";
 	default: assertm(false, "Invalid MixerState"); return "";
 	}
 }
 
 static void set_mixer_state(const MixerState new_state)
 {
-	assert(new_state == MixerState::Muted || new_state == MixerState::On);
+	assert(new_state == MixerState::Muted || new_state == MixerState::On ||
+	       new_state == MixerState::Paused);
 
 #ifdef DEBUG_MIXER
 	LOG_MSG("MIXER: Changing mixer state from %s to '%s'",
@@ -2725,8 +2750,8 @@ static void set_mixer_state(const MixerState new_state)
 	        to_string(new_state));
 #endif
 
-	if (new_state == MixerState::Muted) {
-		// Clear out any audio in the queue to avoid a stutter on un-mute
+	if (new_state == MixerState::Muted || new_state == MixerState::Paused) {
+		// Clear out any audio in the queue to avoid a stutter on resume
 		mixer.final_output.Clear();
 	}
 
@@ -3049,6 +3074,31 @@ void MIXER_Unmute()
 		TITLEBAR_NotifyAudioMutedStatus(false);
 		LOG_MSG("MIXER: Unmuted audio output");
 	}
+}
+
+void MIXER_Pause()
+{
+	const std::lock_guard<std::recursive_mutex> lock(mixer.mutex);
+
+	if (mixer.state == MixerState::Paused || mixer.state == MixerState::NoSound) {
+		return;
+	}
+	// Capture the current state under the mixer mutex so it is
+	// sequenced with what the mixer thread observes; the same mutex
+	// guards the matching read in MIXER_Resume.
+	//
+	mixer.pre_pause_state = mixer.state;
+	set_mixer_state(MixerState::Paused);
+}
+
+void MIXER_Resume()
+{
+	const std::lock_guard<std::recursive_mutex> lock(mixer.mutex);
+
+	if (mixer.state != MixerState::Paused) {
+		return;
+	}
+	set_mixer_state(mixer.pre_pause_state);
 }
 
 bool MIXER_IsManuallyMuted()

@@ -34,7 +34,7 @@
 // 48000 Hz, that's 48 frames.
 using MIXER_Handler = std::function<void(int frames)>;
 
-enum class MixerState { NoSound, On, Muted };
+enum class MixerState { NoSound, On, Muted, Paused };
 
 static constexpr int MixerBufferByteSize = 16 * 1024;
 static constexpr int MixerBufferMask     = MixerBufferByteSize - 1;
@@ -471,6 +471,15 @@ void MIXER_SetMasterVolume(const AudioFrame gain);
 
 void MIXER_Mute();
 void MIXER_Unmute();
+
+// Transition the mixer to the Paused state (mix_samples is skipped,
+// SDL output is silence). Required during emulator pause to keep the
+// mixer thread from deadlocking on synth render threads.
+//
+void MIXER_Pause();
+
+// Transition the mixer back to its pre-pause state (On / Muted).
+void MIXER_Resume();
 
 void MIXER_LockMixerThread();
 void MIXER_UnlockMixerThread();
