@@ -948,9 +948,38 @@ void MidiDeviceMt32::ProcessWorkFromFifo()
 void MidiDeviceMt32::Render()
 {
 	while (work_fifo.IsRunning()) {
+		// Pause check: blocks the render thread while pause is
+		// active. The `!work_fifo.IsRunning()` disjunct lets the
+		// destructor wake us via work_fifo.Stop() when the synth
+		// shuts down — but in practice DOSBOX_RequestShutdown
+		// force-resumes first, so we won't normally observe that
+		// path. Keep the disjunct for defence in depth.
+		//
+		if (pause_flag.load(std::memory_order_acquire)) {
+			std::unique_lock<std::mutex> lock(pause_mutex);
+			pause_cv.wait(lock, [this] {
+				return !pause_flag.load(std::memory_order_acquire) ||
+				       !work_fifo.IsRunning();
+			});
+		}
+		if (!work_fifo.IsRunning()) {
+			break;
+		}
+
 		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
 		                    : ProcessWorkFromFifo();
 	}
+}
+
+void MidiDeviceMt32::Pause()
+{
+	pause_flag.store(true, std::memory_order_release);
+}
+
+void MidiDeviceMt32::Resume()
+{
+	pause_flag.store(false, std::memory_order_release);
+	pause_cv.notify_all();
 }
 
 ModelAndDir MidiDeviceMt32::GetModelAndDir()

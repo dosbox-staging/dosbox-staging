@@ -9,6 +9,7 @@
 #if C_MT32EMU
 
 #include <atomic>
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -60,6 +61,11 @@ public:
 	ModelAndDir GetModelAndDir();
 	mt32emu_rom_info GetRomInfo();
 
+	// Pause hooks called from the main thread during emulator
+	// pause/resume.
+	void Pause() override;
+	void Resume() override;
+
 private:
 	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
@@ -76,6 +82,13 @@ private:
 	std::mutex service_mutex                  = {};
 	std::unique_ptr<MT32Emu::Service> service = {};
 	std::thread renderer                      = {};
+
+	// Pause synchronisation. Set/cleared from main thread; consumed
+	// by the render thread which cv-waits when pause_flag is true.
+	//
+	std::atomic<bool> pause_flag     = false;
+	std::mutex pause_mutex           = {};
+	std::condition_variable pause_cv = {};
 
 	ModelAndDir model_and_dir = {};
 
