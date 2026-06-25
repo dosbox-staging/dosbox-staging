@@ -1073,9 +1073,32 @@ void MidiDeviceFluidSynth::ProcessWorkFromFifo()
 void MidiDeviceFluidSynth::Render()
 {
 	while (work_fifo.IsRunning()) {
+		// Pause check — see MidiDeviceMt32::Render for rationale.
+		if (pause_flag.load(std::memory_order_acquire)) {
+			std::unique_lock<std::mutex> lock(pause_mutex);
+			pause_cv.wait(lock, [this] {
+				return !pause_flag.load(std::memory_order_acquire) ||
+				       !work_fifo.IsRunning();
+			});
+		}
+		if (!work_fifo.IsRunning()) {
+			break;
+		}
+
 		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
 		                    : ProcessWorkFromFifo();
 	}
+}
+
+void MidiDeviceFluidSynth::Pause()
+{
+	pause_flag.store(true, std::memory_order_release);
+}
+
+void MidiDeviceFluidSynth::Resume()
+{
+	pause_flag.store(false, std::memory_order_release);
+	pause_cv.notify_all();
 }
 
 std_fs::path MidiDeviceFluidSynth::GetSoundFontPath()
