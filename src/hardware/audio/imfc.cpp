@@ -41,11 +41,14 @@
 #include "dosbox.h"
 
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <cmath>
+#include <condition_variable>
 #include <cstring>
 #include <deque>
 #include <functional>
+#include <mutex>
 #include <queue>
 #include <string>
 #include <thread>
@@ -5248,6 +5251,15 @@ private:
 	SDL_Mutex* m_interruptHandlerRunningMutex = nullptr;
 	SDL_Condition* m_interruptHandlerRunningCond    = nullptr;
 
+	// Pause synchronisation for the main thread. The interrupt
+	// thread already cv-waits on m_interruptHandlerRunning and idles
+	// naturally during pause (no DOSBox CPU I/O writes reach the
+	// IMFC port handlers while the CPU is parked in paused_tick).
+	//
+	std::atomic<bool> m_paused        = {};
+	std::mutex m_pauseMutex           = {};
+	std::condition_variable m_pauseCv = {};
+
 	static constexpr auto NumIoHandlers                           = 16;
 	std::array<IO_ReadHandleObject, NumIoHandlers> readHandlers   = {};
 	std::array<IO_WriteHandleObject, NumIoHandlers> writeHandlers = {};
@@ -5743,6 +5755,21 @@ private:
 		log_debug("softReboot - starting infinite loop");
 		m_finishedBootupSequence = true;
 		while (keepRunning.load()) {
+			// Pause check at the top of the loop, between
+			// dispatches, so the emulated Z80's hardware mutex
+			// is not held across the wait.
+			//
+			if (m_paused.load(std::memory_order_acquire)) {
+				std::unique_lock<std::mutex> lock(m_pauseMutex);
+				m_pauseCv.wait(lock, [this] {
+					return !m_paused.load(std::memory_order_acquire) ||
+					       !keepRunning.load();
+				});
+			}
+			if (!keepRunning.load()) {
+				break;
+			}
+
 			// log_debug("DEBUG: heartbeat in MUSIC_MODE_LOOP %i",
 			// debug_count++);
 			// MUSIC_MODE_LOOP_read_MidiIn_And_Dispatch(); //FIXME:
@@ -13225,6 +13252,14 @@ public:
 
 		keepRunning = false;
 
+		// Wake any pause-blocked main thread so it can observe
+		// keepRunning=false and exit.
+		{
+			std::lock_guard<std::mutex> lock(m_pauseMutex);
+			m_paused.store(false, std::memory_order_release);
+		}
+		m_pauseCv.notify_all();
+
 		// Remove access to the IO ports
 		for (auto& rh : readHandlers)
 			rh.Uninstall();
@@ -13236,6 +13271,17 @@ public:
 
 		SDL_WaitThread(m_mainThread, nullptr);
 		SDL_DestroyMutex(m_hardwareMutex);
+	}
+
+	void Pause()
+	{
+		m_paused.store(true, std::memory_order_release);
+	}
+
+	void Resume()
+	{
+		m_paused.store(false, std::memory_order_release);
+		m_pauseCv.notify_all();
 	}
 };
 
@@ -13430,6 +13476,20 @@ void IMFC_Destroy()
 	m_loggerMutex = nullptr;
 #endif
 	MIXER_UnlockMixerThread();
+}
+
+void IMFC_Pause()
+{
+	if (imfc) {
+		imfc->Pause();
+	}
+}
+
+void IMFC_Resume()
+{
+	if (imfc) {
+		imfc->Resume();
+	}
 }
 
 static void notify_imfc_setting_updated([[maybe_unused]] SectionProp& section,
