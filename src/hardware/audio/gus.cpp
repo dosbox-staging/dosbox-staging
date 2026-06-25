@@ -7,7 +7,6 @@
 #include <array>
 #include <iomanip>
 #include <memory>
-#include <queue>
 #include <string>
 #include <unistd.h>
 #include <vector>
@@ -521,11 +520,9 @@ void Gus::RenderUpToNow()
 		        std::floor(elapsed_ms / ms_per_render));
 		assert(num_elapsed_frames > 0);
 
-		// Enqueue in the FIFO that will be drained when the mixer pulls
-		// frames
-		for (auto& frame : RenderFrames(num_elapsed_frames)) {
-			fifo.emplace(frame);
-		}
+		// Append to the FIFO that will be drained when the mixer pulls frames
+		const auto& frames = RenderFrames(num_elapsed_frames);
+		fifo.insert(fifo.end(), frames.begin(), frames.end());
 		last_rendered_ms += num_elapsed_frames * ms_per_render;
 	}
 }
@@ -541,14 +538,15 @@ void Gus::PicCallback(const int num_requested_frames)
 
 	auto num_frames_remaining = num_requested_frames;
 
-	// First, send any frames we've queued since the last callback
-	while (num_frames_remaining && fifo.size()) {
-		AudioFrame frame = fifo.front();
-		fifo.pop();
-		output_queue.NonblockingEnqueue(std::move(frame));
-		--num_frames_remaining;
+	// Drain any pre-rendered cycle-accurate frames in a single bulk enqueue
+	if (!fifo.empty() && num_frames_remaining > 0) {
+		const auto num_from_fifo = std::min(num_frames_remaining,
+		                                    static_cast<int>(fifo.size()));
+		output_queue.NonblockingBulkEnqueue(fifo,
+		                                    static_cast<size_t>(num_from_fifo));
+		num_frames_remaining -= num_from_fifo;
 	}
-	// If the queue's run dry, render the remainder and sync-up our time datum
+	// Render any remaining frames needed
 	if (num_frames_remaining > 0) {
 		auto frames = RenderFrames(num_frames_remaining);
 		output_queue.NonblockingBulkEnqueue(frames, num_frames_remaining);
@@ -1116,6 +1114,8 @@ void Gus::Reset() noexcept
 
 	reset_register.data       = {};
 	mix_control_register.data = MixControlRegisterDefaultState;
+
+	fifo.clear();
 }
 
 static void gus_evict(Section* sec);

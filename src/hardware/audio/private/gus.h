@@ -5,8 +5,6 @@
 #ifndef DOSBOX_PRIVATE_GUS_H
 #define DOSBOX_PRIVATE_GUS_H
 
-#include <queue>
-
 #include "audio/mixer.h"
 #include "hardware/dma.h"
 #include "utils/bit_view.h"
@@ -319,7 +317,7 @@ private:
 	void WriteToRegister();
 
 	// Collections
-	std::queue<AudioFrame> fifo             = {};
+	std::vector<AudioFrame> fifo            = {};
 	vol_scalars_array_t vol_scalars         = {{}};
 	pan_scalars_array_t pan_scalars         = {{}};
 	ram_array_t ram                         = {};
