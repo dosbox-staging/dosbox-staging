@@ -218,6 +218,13 @@ static void paused_tick()
 		Webserver::Bridge::Instance().ProcessRequests();
 	}
 
+	// Drain any mapper-open request the event poll just latched. The
+	// mapper used to schedule itself via PIC_AddEvent, which doesn't
+	// fire while PIC time is frozen; running it here lets the mapper
+	// hotkey work while paused, as the pause design intends.
+	//
+	MAPPER_RunPending();
+
 	constexpr uint64_t one_ms_ns = 1'000'000;
 	SDL_DelayPrecise(one_ms_ns);
 }
@@ -373,6 +380,16 @@ static Bitu normal_loop()
 			if (!GFX_PollAndHandleEvents()) {
 				return 0;
 			}
+
+			// Drain any mapper-open request the event poll just
+			// latched. We have to call it at a point where the
+			// binding-dispatch loop in MAPPER_CheckEvent has fully
+			// unwound (which is the case here, after
+			// GFX_PollAndHandleEvents returned), because
+			// MAPPER_DisplayUI can delete the very binding object
+			// that fired the hotkey.
+			//
+			MAPPER_RunPending();
 
 			if (ticks.remain > 0) {
 				TIMER_AddTick();

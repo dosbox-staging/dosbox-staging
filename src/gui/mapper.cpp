@@ -5,6 +5,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <cctype>
 #include <cstdarg>
@@ -2982,13 +2983,25 @@ void MAPPER_LosingFocus() {
 	}
 }
 
+// Latched by MAPPER_Run, drained by MAPPER_RunPending at a safe point in
+// the main loop. The mapper UI is opened deferred because MAPPER_DisplayUI
+// can delete the very binding object that fired this hotkey, and we must
+// let the binding-dispatch loop in MAPPER_CheckEvent unwind before that
+// happens. We previously deferred via PIC_AddEvent(MAPPER_RunEvent, 0),
+// but PIC events do not fire while the emulator is paused (PIC time is
+// frozen in `paused_tick`), which silently broke the mapper hotkey in
+// pause mode. A plain flag drained by both `normal_loop` and `paused_tick`
+// is cheaper, doesn't ride on emulator time, and works in both states.
+//
+static std::atomic<bool> mapper_open_pending = false;
+
 void MAPPER_RunEvent(uint32_t /*val*/)
 {
 	// Clear buffer
-	KEYBOARD_ClrBuffer();           
-	
+	KEYBOARD_ClrBuffer();
+
 	// Release any keys pressed (buffer gets filled again).
-	GFX_LosingFocus();		
+	GFX_LosingFocus();
 
 	MAPPER_DisplayUI();
 }
@@ -2997,9 +3010,14 @@ void MAPPER_Run(bool pressed) {
 	if (pressed) {
 		return;
 	}
+	mapper_open_pending.store(true, std::memory_order_release);
+}
 
-	// In case mapper deletes the key object that ran it
-	PIC_AddEvent(MAPPER_RunEvent,0);	
+void MAPPER_RunPending()
+{
+	if (mapper_open_pending.exchange(false, std::memory_order_acq_rel)) {
+		MAPPER_RunEvent(0);
+	}
 }
 
 SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,uint32_t flags);

@@ -55,6 +55,16 @@ void MAPPER_AddHandler(MAPPER_Handler *handler,
 
 void MAPPER_BindKeys(Section *sec);
 void MAPPER_Run(bool pressed);
+
+// Drain a pending MAPPER_Run request, if any, by invoking the mapper UI
+// synchronously. Must be called from the main thread at a point where the
+// SDL/mapper event dispatch chain has fully unwound -- typically at the
+// end of the main loop's idle branch, and from `paused_tick` so the
+// mapper hotkey continues to work while the emulator is paused. See the
+// pause/resume design overview in `src/dosbox.h`.
+//
+void MAPPER_RunPending();
+
 void MAPPER_DisplayUI();
 void MAPPER_LosingFocus();
 
