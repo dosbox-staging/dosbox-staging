@@ -24,11 +24,13 @@
 #include "config/setup.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
+#include "hardware/audio/imfc.h"
 #include "hardware/input/joystick.h"
 #include "hardware/input/keyboard.h"
 #include "hardware/input/mouse.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"
+#include "midi/midi.h"
 #include "misc/video.h"
 #include "utils/math_utils.h"
 #include "utils/rgb888.h"
@@ -3031,6 +3033,31 @@ SDL_Surface *SDL_CreateRGBSurfaceFrom(void *pixels, int width, int height, int d
 }
 
 void MAPPER_DisplayUI() {
+	// Important property of MAPPER_DisplayUI's blocking event loop
+	// below: it polls SDL events itself via `BIND_MappingEvents`,
+	// which only dispatches a fixed subset (joystick / mouse-button
+	// / mouse-motion / window resize-restore-expose for redraw / quit
+	// / and key events when capturing a new binding). Window focus
+	// events (FOCUS_LOST / FOCUS_GAINED / MINIMIZED) and the pause /
+	// mute / fullscreen hotkeys all fall into the `default` branch
+	// and are silently consumed without firing `handle_pause_when_inactive`
+	// or any mapper-registered hotkey handler. So while the mapper UI
+	// is open:
+	//
+	//  - DOSBOX_Pause cannot be triggered (no focus-loss dispatch, no
+	//    hotkey dispatch). The "double-pause from mapper" case is
+	//    structurally impossible.
+	//
+	//  - The user cannot toggle mute / fullscreen / capture / etc.
+	//    via hotkeys; they have to close the mapper first. This is
+	//    pre-existing behaviour and matches user expectation: while
+	//    rebinding keys, key events are FOR rebinding, not for
+	//    invoking actions.
+	//
+	// On mapper exit, the SDL event queue has been drained by
+	// BIND_MappingEvents, so no pending pause / focus events spill
+	// into the post-mapper normal_loop.
+	//
 	MOUSE_NotifyTakeOver(true);
 
 	// The mapper is about to take-over SDL's surface and rendering
@@ -3038,7 +3065,35 @@ void MAPPER_DisplayUI() {
 	// main will recreate its rendering pipeline.
 	GFX_Stop();
 
-	MIXER_LockMixerThread();
+	// Suspend audio for the duration of the mapper UI. We use the same
+	// subsystem-pause set that the emulator-level pause uses, so:
+	//
+	//  - If the mapper is opened while the emulator is already paused,
+	//    we don't double-pause; the mapper just runs over the existing
+	//    pause state, and the audio subsystems stay paused on mapper
+	//    exit (the user un-pauses on their own).
+	//
+	//  - If the mapper is opened from a running emulator, we pause
+	//    audio here and resume on mapper exit. The mapper's blocking
+	//    loop already prevents normal_loop from running (CPU thread is
+	//    parked), so PIC time freezes anyway -- this just makes the
+	//    mixer / synth / IMFC bookkeeping match what they'd do for an
+	//    emulator-level pause.
+	//
+	// MOUSE_NotifyEmulatorPaused complements MOUSE_NotifyTakeOver: the
+	// takeover bit routes mouse events to the mapper UI, but absolute-
+	// mode interfaces (seamless, VMware, VirtualBox addons) still
+	// observe cursor moves through the cursor_x_abs / cursor_y_abs
+	// updates that happen unconditionally in MOUSE_EventMoved. Setting
+	// the emulator-paused bit gates those drops too.
+	//
+	const bool was_already_paused = DOSBOX_IsPaused();
+	if (!was_already_paused) {
+		MIXER_Pause();
+		MIDI_PauseAll();
+		IMFC_Pause();
+		MOUSE_NotifyEmulatorPaused(true);
+	}
 
 	// Be sure that there is no update in progress
 	GFX_EndUpdate();
@@ -3165,8 +3220,16 @@ void MAPPER_DisplayUI() {
 		Delay(1);
 	}
 
-	// Exiting the mapper
-	MIXER_UnlockMixerThread();
+	// Exiting the mapper -- mirror the entry-time suspend exactly. If
+	// we opened from a paused emulator, the audio subsystems are left
+	// paused; the eventual DOSBOX_Resume will un-pause them.
+	//
+	if (!was_already_paused) {
+		MOUSE_NotifyEmulatorPaused(false);
+		MIDI_ResumeAll();
+		IMFC_Resume();
+		MIXER_Resume();
+	}
 
 	SDL_DestroyTexture(mapper.font_atlas);
 	if (!SDL_SetRenderLogicalPresentation(
