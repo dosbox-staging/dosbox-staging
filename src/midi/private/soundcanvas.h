@@ -6,8 +6,12 @@
 
 #include "midi_device.h"
 
+#include <atomic>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <optional>
+#include <thread>
 
 #include "audio/clap/event_list.h"
 #include "audio/clap/plugin.h"
@@ -73,6 +77,11 @@ public:
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
+	// Pause hooks called from the main thread during emulator
+	// pause/resume.
+	void Pause() override;
+	void Resume() override;
+
 private:
 	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
@@ -96,6 +105,11 @@ private:
 	} clap = {};
 
 	std::thread renderer = {};
+
+	// Pause synchronisation. Same pattern as the other MIDI devices.
+	std::atomic<bool> pause_flag     = false;
+	std::mutex pause_mutex           = {};
+	std::condition_variable pause_cv = {};
 
 	SoundCanvas::SynthModel model = {};
 

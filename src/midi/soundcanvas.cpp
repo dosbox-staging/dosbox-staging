@@ -756,6 +756,21 @@ void MidiDeviceSoundCanvas::ProcessWorkFromFifoBacklogged()
 void MidiDeviceSoundCanvas::Render()
 {
 	while (work_fifo.IsRunning()) {
+		// Pause check at the top of the loop, covering both the
+		// normal branch and the is_work_fifo_backlogged branch.
+		// See MidiDeviceMt32::Render for rationale.
+		//
+		if (pause_flag.load(std::memory_order_acquire)) {
+			std::unique_lock<std::mutex> lock(pause_mutex);
+			pause_cv.wait(lock, [this] {
+				return !pause_flag.load(std::memory_order_acquire) ||
+				       !work_fifo.IsRunning();
+			});
+		}
+		if (!work_fifo.IsRunning()) {
+			break;
+		}
+
 		if (is_work_fifo_backlogged) {
 			RenderBacklogged();
 		} else {
@@ -764,6 +779,17 @@ void MidiDeviceSoundCanvas::Render()
 			                    : ProcessWorkFromFifo();
 		}
 	}
+}
+
+void MidiDeviceSoundCanvas::Pause()
+{
+	pause_flag.store(true, std::memory_order_release);
+}
+
+void MidiDeviceSoundCanvas::Resume()
+{
+	pause_flag.store(false, std::memory_order_release);
+	pause_cv.notify_all();
 }
 
 static std::set<const SoundCanvas::SynthModel*> available_models = {};
