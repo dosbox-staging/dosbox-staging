@@ -55,6 +55,7 @@ static struct {
 	bool capture_was_requested  = false; // if user requested mouse to be captured
 	bool vmm_wants_pointer      = false; // if virtual machine guest addons wants us
 	                                     // to show the host pointer
+	bool emulator_is_paused     = false; // if DOSBOX_Pause has activated emulator pause
 
 	// if we have a desktop environment, then we can support uncaptured and seamless modes
 	const bool have_desktop_environment = GFX_HaveDesktopEnvironment();
@@ -269,8 +270,14 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	// Drop mouse events (except for button release) if any of:
 	// - GUI has taken over the mouse
 	// - capture type is NoMouse
+	// - the emulator is paused (otherwise host mouse motion during
+	//   pause would accumulate into pending.x_rel / pending.y_rel
+	//   and deliver as a single large delta on resume, jumping the
+	//   in-game cursor and potentially confusing the game's input
+	//   handling)
 	state.should_drop_events = state.gui_has_taken_over ||
-	                           is_config_no_mouse;
+	                           is_config_no_mouse ||
+	                           state.emulator_is_paused;
 	if (!state.is_seamless) {
 
 		// If not Seamless mode, also drop events if any of:
@@ -525,6 +532,12 @@ void MOUSE_ToggleUserCapture(const bool pressed)
 void MOUSE_NotifyTakeOver(const bool gui_has_taken_over)
 {
 	state.gui_has_taken_over = gui_has_taken_over;
+	MOUSE_UpdateGFX();
+}
+
+void MOUSE_NotifyEmulatorPaused(const bool is_paused)
+{
+	state.emulator_is_paused = is_paused;
 	MOUSE_UpdateGFX();
 }
 

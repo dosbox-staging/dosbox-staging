@@ -113,6 +113,17 @@ void MOUSE_NotifyWindowActive(const bool is_active);
 // visible while a GUI is running)
 void MOUSE_NotifyTakeOver(const bool gui_has_taken_over);
 
+// Called when DOSBOX_Pause activates / DOSBOX_Resume runs. While the
+// emulator is paused, host mouse motion would otherwise accumulate
+// into the DOS driver's pending.x_rel / pending.y_rel and deliver as
+// a single large delta on resume, jumping the in-game cursor; this
+// notification flips the mouse layer's drop-events bit so motion,
+// presses, and wheel events stop reaching the emulated interfaces.
+// Button releases still pass through unconditionally, matching the
+// existing convention.
+//
+void MOUSE_NotifyEmulatorPaused(const bool is_paused);
+
 struct MouseScreenParams {
 	// The draw rectangle in logical units. Note the (x1,y1) upper-left
 	// coordinates can be negative if we're "zooming into" the DOS content
