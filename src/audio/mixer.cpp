@@ -3130,6 +3130,30 @@ static void handle_toggle_mute(const bool was_pressed)
 		mixer.is_manually_muted = true;
 		break;
 
+	case MixerState::Paused: {
+		// Audio is already silent because of the emulator pause; we
+		// can't drive the mixer through Muted / On transitions
+		// without going through the pause flow. Instead, arm the
+		// post-resume mute state by updating the pre-pause snapshot
+		// that MIXER_Resume will restore to, and keep MIDI in sync
+		// via MIDI_ArmMuteForResume. is_manually_muted is updated
+		// here so the mute_when_inactive interop (focus-loss
+		// MIXER_Mute / focus-gain MIXER_Unmute is_manually_muted
+		// gated) behaves the same as in non-paused mode -- the
+		// manual mute "owns" the mute state across focus events.
+		//
+		const bool arming_mute = (mixer.pre_pause_state == MixerState::On);
+		mixer.pre_pause_state   = arming_mute ? MixerState::Muted
+		                                      : MixerState::On;
+		mixer.is_manually_muted = arming_mute;
+		MIDI_ArmMuteForResume(arming_mute);
+
+		TITLEBAR_NotifyAudioMutedStatus(arming_mute);
+		LOG_MSG("MIXER: %s audio output (takes effect on resume)",
+		        arming_mute ? "Muted" : "Unmuted");
+		break;
+	}
+
 	default: break;
 	};
 }
