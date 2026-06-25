@@ -220,6 +220,30 @@ void MIDI_RawOutByte(const uint8_t data);
 void MIDI_Mute();
 void MIDI_Unmute();
 
+// Pause / resume the active MIDI device for the duration of an
+// emulator pause:
+//
+//  - Internal MIDI devices (MT-32, FluidSynth, SoundCanvas) have a
+//    render thread that cv-waits on a pause flag.
+//
+//  - External MIDI devices get CC 7 = 0 sent to all channels so
+//    sustained notes don't keep playing for the duration of the
+//    pause.
+//
+// MIDI_PauseAll snapshots the mute state at entry and MIDI_ResumeAll
+// restores it, so a manual user-mute that pre-dates the pause is
+// preserved across the pause cycle.
+//
+void MIDI_PauseAll();
+void MIDI_ResumeAll();
+
+// While the emulator is paused, the manual mute-toggle hotkey can
+// pre-stage a mute / unmute that takes effect when emulation
+// resumes. Update the snapshot used by MIDI_ResumeAll. Caller is
+// responsible for keeping the mixer-side pre-pause state consistent.
+//
+void MIDI_ArmMuteForResume(const bool muted);
+
 struct MidiWork {
 	std::vector<uint8_t> message = {};
 	int num_pending_audio_frames = 0;

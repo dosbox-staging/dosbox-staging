@@ -584,6 +584,58 @@ void MIDI_Unmute()
 	midi.is_muted = false;
 }
 
+// Target mute state for MIDI_ResumeAll to restore on emulator un-pause.
+// Initially captured by MIDI_PauseAll from midi.is_muted at pause entry,
+// so the pre-pause mute state survives the pause cycle. The manual
+// mute-toggle hotkey can also update it via MIDI_ArmMuteForResume while
+// the emulator is paused, to let the user pre-stage a mute / unmute
+// that takes effect when emulation resumes.
+//
+static bool midi_target_muted_after_resume = false;
+
+void MIDI_PauseAll()
+{
+	if (!MIDI_IsAvailable()) {
+		return;
+	}
+
+	// Pause the internal device's render thread (no-op for external
+	// devices). Block sustained notes on external devices by sending
+	// CC 7 = 0 to all channels via MIDI_Mute -- but only if the user
+	// hadn't already muted manually, so we can faithfully restore
+	// the pre-pause mute state on resume.
+	//
+	midi.device->Pause();
+
+	midi_target_muted_after_resume = midi.is_muted;
+	if (!midi_target_muted_after_resume) {
+		MIDI_Mute();
+	}
+}
+
+void MIDI_ResumeAll()
+{
+	if (!MIDI_IsAvailable()) {
+		return;
+	}
+
+	midi.device->Resume();
+
+	// Restore the target post-resume mute state. That's normally
+	// just whatever was active pre-pause, but the manual mute
+	// hotkey can also re-arm it via MIDI_ArmMuteForResume while the
+	// emulator is paused.
+	//
+	if (!midi_target_muted_after_resume) {
+		MIDI_Unmute();
+	}
+}
+
+void MIDI_ArmMuteForResume(const bool muted)
+{
+	midi_target_muted_after_resume = muted;
+}
+
 bool MIDI_IsAvailable()
 {
 	return (midi.device != nullptr);

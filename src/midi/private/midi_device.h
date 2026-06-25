@@ -33,6 +33,11 @@ public:
 
 	virtual void SendMidiMessage(const MidiMessage& msg)      = 0;
 	virtual void SendSysExMessage(uint8_t* sysex, size_t len) = 0;
+
+	// Pause/resume hooks for internal synth render threads.
+	// Default no-op; only Internal devices override.
+	virtual void Pause() {}
+	virtual void Resume() {}
 };
 
 void MIDI_Reset(MidiDevice* device);
