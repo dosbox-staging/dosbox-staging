@@ -47,6 +47,24 @@ void DOSBOX_RequestShutdown();
 
 bool DOSBOX_IsShutdownRequested();
 
+enum class PauseReason : uint8_t {
+	None,
+	UserRequested,
+	WindowInactive,
+};
+
+bool DOSBOX_IsPaused();
+PauseReason DOSBOX_GetPauseReason();
+void DOSBOX_Pause(PauseReason reason);
+void DOSBOX_Resume();
+
+// Called from VGA_VerticalTimer / Voodoo_VerticalTimer to flip pause
+// from "requested" to "active" on a frame boundary. Aligns pause
+// activation to vsync so the last pre-pause frame is fully rendered
+// and captured.
+//
+void DOSBOX_TryActivatePauseAtVerticalRetrace();
+
 // The E_Exit function throws an exception to quit. Call it in unexpected
 // circumstances.
 [[noreturn]] void E_Exit(const char *message, ...)

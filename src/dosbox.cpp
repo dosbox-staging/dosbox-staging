@@ -4,12 +4,14 @@
 
 #include "dosbox.h"
 
+#include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <mutex>
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -79,6 +81,147 @@ SvgaType    svga_type = SvgaType::None;
 
 static LoopHandler * loop;
 
+// Pause state machine. All pause/resume transitions and one-shot
+// pause-init bookkeeping are serialised by `pause_state_mutex`.
+//
+// The flags themselves stay atomic because read-only consumers
+// (DOSBOX_IsPaused / DOSBOX_GetPauseReason / normal_loop's per-iteration
+// check) read them lock-free. The mutex is only acquired by callers
+// that mutate the state machine. Lock ordering: this mutex is acquired
+// first; subsystem mutexes (mixer.mutex, per-synth pause_mutex,
+// IMFC m_pauseMutex) are inner locks. The pause/resume helpers never
+// re-enter this mutex from inside those subsystem hooks.
+//
+static std::mutex pause_state_mutex             = {};
+static std::atomic<bool> pause_requested        = false;
+static std::atomic<bool> pause_active           = false;
+static std::atomic<PauseReason> pause_reason{PauseReason::None};
+
+bool DOSBOX_IsPaused()
+{
+	return pause_active.load(std::memory_order_acquire);
+}
+
+PauseReason DOSBOX_GetPauseReason()
+{
+	return pause_reason.load(std::memory_order_acquire);
+}
+
+void DOSBOX_Pause(const PauseReason reason)
+{
+	const std::lock_guard<std::mutex> lock(pause_state_mutex);
+
+	// Pause is "in flight" between request and activation:
+	// pause_requested is set immediately here but pause_active is
+	// flipped only on the next vertical retrace (up to ~14 ms later
+	// at 70 Hz). A second DOSBOX_Pause call landing inside that
+	// window must NOT overwrite an in-flight UserRequested reason
+	// with WindowInactive, otherwise the later focus-gain event
+	// would auto-resume against the user's intent. Both
+	// pause_active AND pause_requested therefore gate the
+	// upgrade-only branch.
+	//
+	if (pause_active.load(std::memory_order_acquire) ||
+	    pause_requested.load(std::memory_order_acquire)) {
+		if (reason == PauseReason::UserRequested) {
+			pause_reason.store(reason, std::memory_order_release);
+		}
+		return;
+	}
+	pause_reason.store(reason, std::memory_order_release);
+	pause_requested.store(true, std::memory_order_release);
+}
+
+void DOSBOX_TryActivatePauseAtVerticalRetrace()
+{
+	const std::lock_guard<std::mutex> lock(pause_state_mutex);
+
+	// Serialised with DOSBOX_Resume so an activation can't slip in
+	// after Resume has already cleared pause_requested / pause_reason,
+	// which would otherwise leave pause_active=true with no recorded
+	// reason.
+	//
+	if (pause_requested.load(std::memory_order_acquire) &&
+	    !pause_active.load(std::memory_order_acquire)) {
+		pause_active.store(true, std::memory_order_release);
+	}
+}
+
+// DOSBOX_Resume is defined after the `ticks` struct, which it
+// reaches through rebase_wall_clock_on_resume.
+void DOSBOX_Resume();
+
+// One-shot pause initialisation invoked from paused_tick on its first
+// entry. Mutates the subsystems that have a dedicated render/work
+// thread (mixer + internal MIDI synths + IMFC); other subsystems
+// freeze naturally once PIC time stops advancing.
+//
+static bool pause_initialised = false;
+
+static void initialise_pause_on_first_tick()
+{
+	// Order does not matter on pause activation: the mixer entering
+	// Paused stops mix_samples from being called, which stops the
+	// synth channel callbacks from being invoked. Synth render
+	// threads, signalled separately, block on their pause cv at the
+	// top of their loop.
+	//
+	// MIDI_PauseAll covers both internal (render-thread cv-wait) and
+	// external (CC 7 = 0 to all channels) MIDI devices, snapshotting
+	// any pre-existing manual mute so MIDI_ResumeAll can restore it.
+	//
+	// MOUSE_NotifyEmulatorPaused makes the mouse layer drop motion
+	// events that paused_tick will keep pumping through
+	// GFX_PollAndHandleEvents. Without this, the DOS driver's
+	// pending.x_rel / pending.y_rel accumulate host mouse movement
+	// throughout the pause and deliver it as a single large delta on
+	// resume, jumping the in-game cursor.
+	//
+	MIXER_Pause();
+	MIDI_PauseAll();
+	IMFC_Pause();
+	MOUSE_NotifyEmulatorPaused(true);
+}
+
+// CPU-thread tick body for the paused state. Keeps the GFX event
+// pump and frame presenter alive so hotkeys (fullscreen toggle,
+// screenshots, mapper) keep working while emulation is frozen.
+//
+static void paused_tick()
+{
+	if (DOSBOX_IsShutdownRequested()) {
+		return;
+	}
+
+	{
+		// Under the pause state mutex, re-check pause_active in
+		// case a concurrent DOSBOX_Resume (e.g. shutdown path from
+		// the webserver thread) cleared it between normal_loop's
+		// check and here, then run the one-shot pause-init while
+		// the mutex prevents a racing Resume from observing
+		// pause_initialised in an intermediate state.
+		//
+		const std::lock_guard<std::mutex> lock(pause_state_mutex);
+		if (!pause_active.load(std::memory_order_acquire)) {
+			return;
+		}
+		if (!pause_initialised) {
+			initialise_pause_on_first_tick();
+			pause_initialised = true;
+		}
+	}
+
+	GFX_MaybePresentFrame();
+	GFX_PollAndHandleEvents();
+
+	if (WEBSERVER_IsEnabled()) {
+		Webserver::Bridge::Instance().ProcessRequests();
+	}
+
+	constexpr uint64_t one_ms_ns = 1'000'000;
+	SDL_DelayPrecise(one_ms_ns);
+}
+
 static struct {
 	int64_t remain    = {};
 	int64_t last      = {};
@@ -98,6 +241,70 @@ void DOSBOX_SetTicksDone(const int64_t ticks_done)
 	ticks.done = ticks_done;
 }
 
+// Reset the wall-clock tick accounting so increase_ticks doesn't
+// see a huge gap from before pause. PIC time is frozen across pause
+// so its baselines are already consistent; only the wall-clock
+// counters in `ticks` need a rebase.
+//
+static void rebase_wall_clock_on_resume()
+{
+	ticks.last      = GetTicks();
+	ticks.remain    = 0;
+	ticks.added     = 0;
+	ticks.done      = 0;
+	ticks.scheduled = 0;
+}
+
+void DOSBOX_Resume()
+{
+	const std::lock_guard<std::mutex> lock(pause_state_mutex);
+
+	if (!pause_active.load(std::memory_order_acquire) &&
+	    !pause_requested.load(std::memory_order_acquire)) {
+		return;
+	}
+
+	rebase_wall_clock_on_resume();
+
+	// Resume order matters: clear synth/IMFC pause flags BEFORE
+	// transitioning the mixer back to On.
+	//
+	// If the mixer resumed first it would start draining
+	// audio_frame_fifo while the synth render threads were still
+	// cv-waiting; the fifos would briefly underflow until the synths
+	// woke. Doing synth resume first means the synths are ready to
+	// refill the moment the mixer begins draining.
+	//
+	if (pause_initialised) {
+		MIDI_ResumeAll();
+		IMFC_Resume();
+		MIXER_Resume();
+		MOUSE_NotifyEmulatorPaused(false);
+
+		// Reconcile the GFX pipeline with whatever happened to the
+		// host window during pause. `handle_sdl_windowevent` keeps
+		// processing WINDOW_RESTORED / WINDOW_PIXEL_SIZE_CHANGED /
+		// WINDOW_DISPLAY_CHANGED while paused -- it has to, since
+		// the SDL window/render state must stay in sync with the
+		// host. Those events call GFX_ResetScreen, which mutates
+		// vga.draw geometry. Meanwhile the frame presenter
+		// continued to show the pre-pause framebuffer, so vga.draw
+		// briefly described a different geometry than what was on
+		// screen. Running GFX_ResetScreen once more here makes the
+		// first post-resume frame use the freshest viewport / DPI /
+		// mode state, regardless of what the user did with the
+		// window during pause (resize, fullscreen toggle, host DPI
+		// change, move to another display).
+		//
+		GFX_ResetScreen();
+	}
+
+	pause_initialised = false;
+	pause_active.store(false, std::memory_order_release);
+	pause_requested.store(false, std::memory_order_release);
+	pause_reason.store(PauseReason::None, std::memory_order_release);
+}
+
 void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled)
 {
 	ticks.scheduled = ticks_scheduled;
@@ -115,6 +322,11 @@ static Bitu normal_loop()
 	Bits ret;
 
 	while (true) {
+		if (pause_active.load(std::memory_order_acquire)) {
+			paused_tick();
+			return 0;
+		}
+
 		if (PIC_RunQueue()) {
 			if (WEBSERVER_IsEnabled()) {
 				Webserver::Bridge::Instance().ProcessRequests();
@@ -161,6 +373,7 @@ static Bitu normal_loop()
 			if (!GFX_PollAndHandleEvents()) {
 				return 0;
 			}
+
 			if (ticks.remain > 0) {
 				TIMER_AddTick();
 				--ticks.remain;
@@ -434,6 +647,16 @@ void DOSBOX_RunMachine()
 void DOSBOX_RequestShutdown()
 {
 	is_shutdown_requested.store(true, std::memory_order_relaxed);
+
+	// Force-resume on shutdown so any cv-waiting synth/IMFC render
+	// threads wake and can be joined by their destructors. The
+	// alternative — relying on work_fifo.Stop() to wake the cv —
+	// does not work without extra notifies because RWQueue::Stop()
+	// notifies has_items/has_room, not the per-device pause_cv.
+	//
+	if (DOSBOX_IsPaused()) {
+		DOSBOX_Resume();
+	}
 }
 
 bool DOSBOX_IsShutdownRequested()
