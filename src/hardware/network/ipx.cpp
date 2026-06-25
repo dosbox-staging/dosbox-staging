@@ -849,12 +849,16 @@ bool ConnectToServer(const char* strAddr)
 		return false;
 	} else {
 		// Wait for return packet from server.
-		// This will contain our IPX address and port num
-		const auto ticks                    = GetTicks();
+		// This will contain our IPX address and port num.
+		//
+		// PIC time (not wall-clock) is used so the timeout does
+		// not false-fire across an emulator pause.
+		//
+		const auto start_pic_index          = PIC_FullIndex();
 		uint8_t reply_buffer[IPXBUFFERSIZE] = {};
 
 		while (true) {
-			const auto elapsed = GetTicksSince(ticks);
+			const auto elapsed = PIC_FullIndex() - start_pic_index;
 			if (elapsed > 5000) {
 				LOG_WARNING("IPX: Timeout connecting to server at %s",
 				            strAddr);
@@ -1116,21 +1120,24 @@ public:
 				TIMER_DelTickHandler(&IPX_ClientLoop);
 				WriteOut("Sending broadcast ping:\n\n");
 				pingSend();
-				const auto ticks = GetTicks();
-				while ((GetTicksSince(ticks)) < 1500) {
+				// PIC time so the ping timeout does not
+				// false-fire across an emulator pause.
+				const auto start_pic_index = PIC_FullIndex();
+				while ((PIC_FullIndex() - start_pic_index) < 1500) {
 					if (CALLBACK_Idle()) {
 						return;
 					}
 					if(pingCheck(&pingHead)) {
 						WriteOut(
-						        "Response from %d.%d.%d.%d, port %d time=%lldms\n",
+						        "Response from %d.%d.%d.%d, port %d time=%.0fms\n",
 						        CONVIP(pingHead.src.addr
 						                       .byIP.host),
 						        net_to_host16(
 						                pingHead.src
 						                        .addr
 						                        .byIP.port),
-						        GetTicksSince(ticks));
+						        PIC_FullIndex() -
+						                start_pic_index);
 					}
 				}
 				TIMER_AddTickHandler(&IPX_ClientLoop);

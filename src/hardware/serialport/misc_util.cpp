@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <string>
 
+#include "hardware/pic.h"
 #include "hardware/timer.h"
 
 // Constants
@@ -257,7 +258,7 @@ ENETClientSocket::ENETClientSocket(const char *destination, uint16_t port)
 
 #ifndef ENET_BLOCKING_CONNECT
 	// Start connection timeout clock.
-	connectStart = GetTicks();
+	connectStart = PIC_FullIndex();
 	connecting   = true;
 #else
 	ENetEvent event;
@@ -456,8 +457,9 @@ void ENETClientSocket::updateState()
 
 #ifndef ENET_BLOCKING_CONNECT
 	if (connecting) {
-		// Check for timeout.
-		if (GetTicksSince(connectStart) > connection_timeout_ms) {
+		// Check for timeout. PIC time is frozen during emulator
+		// pause so this does not false-fire across pauses.
+		if ((PIC_FullIndex() - connectStart) > connection_timeout_ms) {
 			assert(peer);
 			LOG_WARNING("ENET: Timed out after %.1f seconds waiting for server %s:%u",
 			            connection_timeout_ms / 1000.0,
