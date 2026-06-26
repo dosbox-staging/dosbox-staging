@@ -506,6 +506,7 @@ static void apply_windows_debugger_workaround(const bool is_console_disabled)
 
 static void maybe_create_resource_directories()
 {
+	
 	auto try_create_resource_dir = [](std_fs::path const& dir) {
 		if (!create_dir_if_not_exist(dir)) {
 			LOG_WARNING("CONFIG: Can't create directory '%s'",
@@ -514,6 +515,10 @@ static void maybe_create_resource_directories()
 	};
 	const auto plugins_dir = get_config_dir() / PluginsDir;
 	try_create_resource_dir(plugins_dir);
+
+	//create log subfolder in config dir on startup
+	const auto log_dir = get_config_dir() / "logs";
+	try_create_resource_dir(log_dir);
 
 #if C_OPENGL
 	const auto shaders_dir = get_config_dir() / ShadersDir;

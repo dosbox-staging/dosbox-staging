@@ -10,6 +10,11 @@
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <filesystem>
+#include <iostream>
+#include <algorithm>
+#include <string>
+
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -676,6 +681,67 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 #endif // WIN32
 }
 
+constexpr int32_t MAX_LOG_FILES = 5;
+using LogFileMap = std::map<int32_t, std::filesystem::path>;
+
+static std::optional<LogFileMap> collect_log_files(const std::string& dir_path)
+{
+	namespace fs = std::filesystem;
+	const std::string prefix = "dosbox-staging-";
+	const std::string suffix = ".log"; 
+
+	LogFileMap logfiles;
+
+	std::error_code ec;
+	for(const auto& file : fs::directory_iterator(dir_path, ec)){
+		const auto filename = file.path().filename().string();
+		if (!filename.starts_with(prefix) || filename.ends_with(suffix)){
+			continue;
+		}
+
+		const auto file_index = filename.substr(
+			prefix.size(), 
+			filename.size()-prefix.size()-suffix.size()
+		);
+
+		try{
+			int32_t int_file_index = std::stoi(file_index);
+			logfiles[int_file_index] = file.path();
+		} catch(std::exception&){
+			continue;
+		}
+
+		if (ec) return std::nullopt;
+		return logfiles;
+	}
+}
+
+static void prune_old_logs(LogFileMap& log_files){
+	std::error_code ec;
+	while (log_files.size() >= MAX_LOG_FILES){
+		std::filesystem::remove(log_files.begin()->second, ec);
+		log_files.erase(log_files.begin());
+	}
+}
+
+static std::optional<std::string> next_log_path(const std::string& dir_path){
+	auto log_files = collect_log_files(dir_path);
+	if (!log_files) return std::nullopt;
+
+	prune_old_logs(*log_files);
+
+	int32_t next_index = 1;
+	if (!(*log_files).empty()){
+		next_index = (*log_files).rbegin()->first + 1;
+	}
+
+	char log_filename[64];
+	std::snprintf(log_filename, sizeof(log_filename),
+				"dosbox-staging-%03d.log", next_index);
+	
+	return (std::filesystem::path(dir_path)/log_filename).string(); 
+}
+
 static void dosbox_realinit(SectionProp& section)
 {
 	// Initialize some dosbox internals
@@ -743,23 +809,29 @@ static void dosbox_realinit(SectionProp& section)
 	if (user_log_destination == "console") {
 		// set console on
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING; 
-	} else if (user_log_destination == "file") {
+	} else if (user_log_destination == "file" || 
+				user_log_destination == "console-and-file") {
+		//set up rolling log instead
 		const auto user_log_loc = section.GetString("log_path");
-		loguru::add_file(user_log_loc.c_str(),
-		                 loguru::FileMode::Append,
-		                 loguru::Verbosity_MAX);
-		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; 
-	} else if (user_log_destination == "console-and-file") {
-		const auto user_log_loc = section.GetString("log_path");
-		loguru::add_file(user_log_loc.c_str(),
-		                 loguru::FileMode::Append,
-		                 loguru::Verbosity_MAX);
+		const auto log_index = next_log_path(user_log_loc);
+		
+		char log_filename[64];
+		std::snprintf(log_filename, sizeof(log_filename), 
+					"dosbox-staging-%03d.log", *log_index);
+		const auto log_path = (std::filesystem::path(user_log_loc)/log_filename).string();	
+		loguru::add_file(log_path.c_str(),
+		            loguru::FileMode::Truncate,
+		            loguru::Verbosity_MAX);
+		
+		if (user_log_destination == "file") loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
 
 	} else { // don't display logs
 		// set console off
 		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; 
 	}
 }
+
+
 
 void DOSBOX_Init()
 {
@@ -839,6 +911,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 			"file:  Log messages to a file on disk.\n"
 			"console-and-file:  Log messages to both a file and the command line interface. (default)\n"
 			"off:  Disable all logging.\n");
+	
 	const auto log_path = get_config_dir() / "logs";
 	const auto log_path_str = log_path.string();
 	pstring = section->AddPath("log_path", OnlyAtStart, log_path_str.c_str());
