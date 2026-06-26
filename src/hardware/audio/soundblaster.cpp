@@ -8,6 +8,7 @@
 #include "private/gus.h"
 
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <iomanip>
@@ -35,6 +36,13 @@
 #include "utils/math_utils.h"
 #include "utils/rwqueue.h"
 #include "utils/string_utils.h"
+
+// Set to 1 to enable runtime SB queue tracing (`SB_INSTRUMENTATION`
+// LOG_MSG block printed every 5 wall-clock seconds and again at SB
+// shutdown) for diagnosing audio latency / dropout regressions in
+// `per_tick_callback`, `per_frame_callback` and MixerCallback. See
+// PR #4954 for the methodology.
+#define SB_DEBUG_INSTRUMENTATION 0
 
 constexpr uint8_t MixerIndex = 0x04;
 constexpr uint8_t MixerData  = 0x05;
@@ -1104,11 +1112,172 @@ static uint32_t read_dma_16bit(const uint32_t words_to_read,
 	return check_cast<uint32_t>(words_read);
 }
 
+#if SB_DEBUG_INSTRUMENTATION
+// Lock-free min/max/sum/count aggregator. All updates relaxed -- we
+// only care about the summary, not per-event ordering.
+struct SbStat {
+	std::atomic<uint64_t> sum{0};
+	std::atomic<uint64_t> count{0};
+	std::atomic<int64_t>  min{INT64_MAX};
+	std::atomic<int64_t>  max{INT64_MIN};
+
+	void Record(int64_t v)
+	{
+		sum.fetch_add(static_cast<uint64_t>(v), std::memory_order_relaxed);
+		count.fetch_add(1, std::memory_order_relaxed);
+		auto cur_min = min.load(std::memory_order_relaxed);
+		while (v < cur_min && !min.compare_exchange_weak(
+		                              cur_min, v,
+		                              std::memory_order_relaxed)) {}
+		auto cur_max = max.load(std::memory_order_relaxed);
+		while (v > cur_max && !max.compare_exchange_weak(
+		                              cur_max, v,
+		                              std::memory_order_relaxed)) {}
+	}
+
+	void Reset()
+	{
+		sum.store(0, std::memory_order_relaxed);
+		count.store(0, std::memory_order_relaxed);
+		min.store(INT64_MAX, std::memory_order_relaxed);
+		max.store(INT64_MIN, std::memory_order_relaxed);
+	}
+};
+
+// Latency proxy: queue depth observed by the producer / consumer at the
+// moment they arrived. Higher avg `queue_pre_deq` = higher input-to-audio
+// latency (the mixer plays frames from the front of a deeper queue).
+static SbStat sb_queue_pre_enq;
+static SbStat sb_queue_pre_deq;
+static SbStat sb_frames_needed_stat; // raw value (pre-`max(_, 1)`)
+
+static std::atomic<uint64_t> sb_enq_calls{0};
+static std::atomic<uint64_t> sb_enq_frames_wanted{0};
+// Frames the producer generated that NonblockingBulkEnqueue rejected
+// because the queue was at cap. NOT the same as "audio frames lost":
+// when the producer is ahead of wall-clock time (e.g. cycles=max)
+// these are emulated-future samples the mixer wouldn't have caught
+// up to anyway. Useful as a saturation indicator, not an audio-loss
+// indicator.
+static std::atomic<uint64_t> sb_enq_frames_rejected{0};
+static std::atomic<uint64_t> sb_perframe_calls{0};
+static std::atomic<uint64_t> sb_pertick_calls{0};
+static std::atomic<uint64_t> sb_deq_zero_depth{0}; // mixer arrived to empty queue
+// One-shot / sticky, never reset between periodic dumps.
+static std::atomic<int64_t>  sb_first_dma_qsize{-1};
+static std::atomic<bool>     sb_ff_observed{false};
+// Session-cumulative pre-dequeue depth (the latency proxy). Sticky --
+// each periodic dump reports the average over the whole session, so
+// the trend across the full run is visible alongside the per-window
+// snapshot.
+static std::atomic<uint64_t> sb_queue_pre_deq_cum_sum{0};
+static std::atomic<uint64_t> sb_queue_pre_deq_cum_count{0};
+// Most recent channel sample rate seen at dequeue. Cached so the
+// destructor's final summary can still print latency in milliseconds
+// after the channel has been torn down.
+static std::atomic<int>      sb_last_channel_rate_hz{0};
+
+static void log_sb_instrumentation_summary(const char* label)
+{
+	const auto fmt_stat = [](const SbStat& s) {
+		const auto n = s.count.load(std::memory_order_relaxed);
+		if (n == 0) {
+			return std::string("n=0");
+		}
+		char buf[128] = {};
+		std::snprintf(buf, sizeof(buf),
+		              "n=%llu min=%lld max=%lld avg=%.1f",
+		              static_cast<unsigned long long>(n),
+		              static_cast<long long>(s.min.load(
+		                      std::memory_order_relaxed)),
+		              static_cast<long long>(s.max.load(
+		                      std::memory_order_relaxed)),
+		              static_cast<double>(s.sum.load(
+		                      std::memory_order_relaxed)) /
+		                      static_cast<double>(n));
+		return std::string(buf);
+	};
+	LOG_MSG("SB_INSTRUMENTATION (%s) ==========", label);
+	LOG_MSG("  per_tick_callback calls   : %llu",
+	        (unsigned long long)sb_pertick_calls.load());
+	LOG_MSG("  per_frame_callback calls  : %llu",
+	        (unsigned long long)sb_perframe_calls.load());
+	LOG_MSG("  enqueue calls             : %llu",
+	        (unsigned long long)sb_enq_calls.load());
+	LOG_MSG("  frames wanted (sum)       : %llu",
+	        (unsigned long long)sb_enq_frames_wanted.load());
+	LOG_MSG("  frames rejected by queue  : %llu  (producer overran queue cap; NOT the same as audio loss)",
+	        (unsigned long long)sb_enq_frames_rejected.load());
+	LOG_MSG("  queue depth pre-enqueue   : %s",
+	        fmt_stat(sb_queue_pre_enq).c_str());
+	LOG_MSG("  queue depth pre-dequeue   : %s  (latency proxy)",
+	        fmt_stat(sb_queue_pre_deq).c_str());
+	{
+		const auto cum_n = sb_queue_pre_deq_cum_count.load(
+		        std::memory_order_relaxed);
+		if (cum_n > 0) {
+			const auto cum_sum = sb_queue_pre_deq_cum_sum.load(
+			        std::memory_order_relaxed);
+			const double cum_avg = static_cast<double>(cum_sum) /
+			                       static_cast<double>(cum_n);
+			const auto rate_hz = sb_last_channel_rate_hz.load(
+			        std::memory_order_relaxed);
+			if (rate_hz > 0) {
+				LOG_MSG("  avg latency (cumulative)  : %.1f frames = %.2f ms at %d Hz",
+				        cum_avg,
+				        cum_avg * 1000.0 / static_cast<double>(rate_hz),
+				        rate_hz);
+			} else {
+				LOG_MSG("  avg latency (cumulative)  : %.1f frames (rate unknown)",
+				        cum_avg);
+			}
+		} else {
+			LOG_MSG("  avg latency (cumulative)  : n=0");
+		}
+	}
+	LOG_MSG("  empty-queue at dequeue    : %llu  (underrun indicator)",
+	        (unsigned long long)sb_deq_zero_depth.load());
+	LOG_MSG("  frames_needed (raw)       : %s",
+	        fmt_stat(sb_frames_needed_stat).c_str());
+	const auto first = sb_first_dma_qsize.load(std::memory_order_relaxed);
+	LOG_MSG("  first-DMA queue depth     : %s  (sticky; non-zero => #4949-style pre-fill)",
+	        (first < 0 ? "(no DMA observed)"
+	                   : std::to_string(first).c_str()));
+	LOG_MSG("  fast-forward observed     : %s  (sticky)",
+	        sb_ff_observed.load(std::memory_order_relaxed) ? "yes" : "no");
+	LOG_MSG("==============================");
+
+	// Reset per-window counters so the next summary shows a fresh
+	// 5-second window. One-shots above (first-DMA queue depth, FF
+	// observed) intentionally stay sticky.
+	sb_pertick_calls.store(0, std::memory_order_relaxed);
+	sb_perframe_calls.store(0, std::memory_order_relaxed);
+	sb_enq_calls.store(0, std::memory_order_relaxed);
+	sb_enq_frames_wanted.store(0, std::memory_order_relaxed);
+	sb_enq_frames_rejected.store(0, std::memory_order_relaxed);
+	sb_deq_zero_depth.store(0, std::memory_order_relaxed);
+	sb_queue_pre_enq.Reset();
+	sb_queue_pre_deq.Reset();
+	sb_frames_needed_stat.Reset();
+}
+#endif
+
 static void enqueue_frames(std::vector<AudioFrame>& frames)
 {
 	assert(sblaster);
 	frames_added_this_tick += static_cast<int>(frames.size());
+#if SB_DEBUG_INSTRUMENTATION
+	const auto wanted = frames.size();
+	sb_queue_pre_enq.Record(
+	        static_cast<int64_t>(sblaster->output_queue.Size()));
+	const auto accepted = sblaster->output_queue.NonblockingBulkEnqueue(frames);
+	sb_enq_calls.fetch_add(1, std::memory_order_relaxed);
+	sb_enq_frames_wanted.fetch_add(wanted, std::memory_order_relaxed);
+	sb_enq_frames_rejected.fetch_add(wanted - accepted,
+	                                 std::memory_order_relaxed);
+#else
 	sblaster->output_queue.NonblockingBulkEnqueue(frames);
+#endif
 }
 
 static void play_dma_transfer(const uint32_t bytes_requested)
@@ -3194,6 +3363,22 @@ static void generate_frames(const int frames_requested)
 		break;
 
 	case DspMode::Dma: {
+#if SB_DEBUG_INSTRUMENTATION
+		// Capture queue depth at first DMA dispatch. On unfixed
+		// 0.82.x this would be at the queue cap (pre-filled with
+		// stale silence by the per-tick producer running before the
+		// channel was enabled). On main it should be 0: the
+		// `channel->is_enabled` gate at the top of per_tick_callback
+		// / per_frame_callback (added by e97988a3 "Use the Mixer's
+		// sleep feature in the Sound Blaster") suppresses the
+		// producer until DMA/DAC actually starts. See #4949.
+		int64_t expected = -1;
+		sb_first_dma_qsize.compare_exchange_strong(
+		        expected,
+		        static_cast<int64_t>(sblaster->output_queue.Size()),
+		        std::memory_order_relaxed);
+#endif
+
 		// This is a no-op if the channel is already running. DMA
 		// processing can go for some time using auto-init mode without
 		// having to send IO calls to the card; so we keep it awake when
@@ -3233,6 +3418,10 @@ static void per_tick_callback()
 		return;
 	}
 
+#if SB_DEBUG_INSTRUMENTATION
+	sb_pertick_calls.fetch_add(1, std::memory_order_relaxed);
+#endif
+
 	static float frame_counter = 0.0f;
 
 	frame_counter += std::max(static_cast<float>(sblaster->frames_needed.exchange(
@@ -3267,8 +3456,16 @@ static void per_frame_callback(uint32_t)
 		return;
 	}
 
-	int mixer_needs = std::max(
-	        sblaster->frames_needed.exchange(0, std::memory_order_acq_rel), 1);
+#if SB_DEBUG_INSTRUMENTATION
+	sb_perframe_calls.fetch_add(1, std::memory_order_relaxed);
+#endif
+
+	const int raw_frames_needed = sblaster->frames_needed.exchange(
+	        0, std::memory_order_acq_rel);
+#if SB_DEBUG_INSTRUMENTATION
+	sb_frames_needed_stat.Record(raw_frames_needed);
+#endif
+	int mixer_needs = std::max(raw_frames_needed, 1);
 
 	// Frames added this tick is only useful when we're in an underflow
 	// situation with the mixer. generate_frames() may not give us
@@ -3287,6 +3484,37 @@ void SoundBlaster::MixerCallback(const int frames_requested)
 	constexpr bool Stereo      = true;
 	constexpr bool SignedData  = true;
 	constexpr bool NativeOrder = true;
+
+#if SB_DEBUG_INSTRUMENTATION
+	{
+		const auto sz = output_queue.Size();
+		sb_queue_pre_deq.Record(static_cast<int64_t>(sz));
+		sb_queue_pre_deq_cum_sum.fetch_add(static_cast<uint64_t>(sz),
+		                                   std::memory_order_relaxed);
+		sb_queue_pre_deq_cum_count.fetch_add(1,
+		                                     std::memory_order_relaxed);
+		if (sz == 0) {
+			sb_deq_zero_depth.fetch_add(1, std::memory_order_relaxed);
+		}
+		sb_last_channel_rate_hz.store(channel->GetSampleRate(),
+		                              std::memory_order_relaxed);
+	}
+	if (MIXER_FastForwardModeEnabled()) {
+		sb_ff_observed.store(true, std::memory_order_relaxed);
+	}
+	// Periodic summary every 5 wall-clock seconds. The mixer thread is
+	// the only caller here, so a plain static + simple comparison is
+	// race-free.
+	{
+		using clock = std::chrono::steady_clock;
+		static auto last = clock::now();
+		const auto now = clock::now();
+		if (now - last >= std::chrono::seconds(5)) {
+			last = now;
+			log_sb_instrumentation_summary("periodic");
+		}
+	}
+#endif
 
 	// Fast forward mode can cause the mixer to get very far behind.
 	// In extreme cases, it can cause SoundBlaster code to integer overflow
@@ -3716,6 +3944,10 @@ SoundBlaster::~SoundBlaster()
 
 	// Stop SB DAC
 	LOG_MSG("%s: Shutting down", sb_log_prefix());
+
+#if SB_DEBUG_INSTRUMENTATION
+	log_sb_instrumentation_summary("final");
+#endif
 
 	output_queue.Stop();
 
