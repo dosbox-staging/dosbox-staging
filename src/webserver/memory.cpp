@@ -75,7 +75,6 @@ static void parse_mem_addr(const httplib::Request& req, Segment& segment,
 
 void ReadMemoryCommand::Execute()
 {
-	regs.load();
 	effective_addr = base_segment_to_offset(base) + offset;
 
 	LOG_DEBUG("API: ReadMemoryCommand(0x%06x, %d)", effective_addr, len);
@@ -116,7 +115,6 @@ void ReadMemoryCommand::Get(const Request& req, Response& res)
 
 	if (req.get_header_value("accept").starts_with(TypeJson)) {
 		json j;
-		j["registers"]      = cmd.regs;
 		j["memory"]["addr"] = cmd.effective_addr;
 		j["memory"]["data"] = base64::to_base64(cmd.memory);
 

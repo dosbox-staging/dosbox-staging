@@ -117,8 +117,15 @@ static Bitu normal_loop()
 	while (true) {
 		if (PIC_RunQueue()) {
 			if (WEBSERVER_IsEnabled()) {
+				// Service bridge commands before executing the next instruction so
+				// web-triggered pauses take effect at the next instruction boundary.
 				Webserver::Bridge::Instance().ProcessRequests();
 			}
+#if C_DEBUGGER
+			if (DEBUG_ShouldPauseImmediately()) {
+				return 0;
+			}
+#endif
 
 			ret = (*cpudecoder)();
 			if (ret < 0) {

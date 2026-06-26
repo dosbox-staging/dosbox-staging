@@ -6,6 +6,7 @@ target_sources(dosboxcommon PRIVATE
   core_prefetch.cpp
   core_simple.cpp
   cpu.cpp
+  cpu_snapshot.cpp
   flags.cpp
   mmx.cpp
   modrm.cpp

@@ -21,6 +21,8 @@
 #include "cpu/cpu.h"
 #include "cpu/lazyflags.h"
 #include "cpu/paging.h"
+#include "debugger_api.h"
+#include "debugger_control.h"
 #include "debugger.h"
 #include "debugger_inc.h"
 #include "dos/programs.h"
@@ -37,6 +39,8 @@
 #include "shell/shell.h"
 #include "utils/checks.h"
 #include "utils/string_utils.h"
+#include "webserver/bridge.h"
+#include "webserver/webserver.h"
 
 #include <imgui.h>
 
@@ -53,6 +57,14 @@ static void LogPages(char* selname);
 static void LogCPUInfo(void);
 static void OutputVecTable(char* filename);
 static void DrawVariables(void);
+static Bitu DEBUG_HeadlessLoop(void);
+static void enter_paused_state(DebugPauseMode pause_mode,
+                               DebugStopReason reason,
+                               std::string description);
+static Bitu run_continue_request(DebugPauseMode pause_mode);
+static Bitu run_step_request(DebugPauseMode pause_mode);
+static Bitu service_pause_requests();
+int32_t DEBUG_Run(int32_t amount, bool quickexit);
 
 char* AnalyzeInstruction(char* inst, bool saveSelector);
 uint32_t GetHexValue(char* str, char*& hex);
@@ -2730,7 +2742,7 @@ uint32_t DEBUG_CheckKeys(void)
 			DBGUI_NewFrame();
 			DEBUG_DrawScreen();
 			DBGUI_Render();
-			ret = DEBUG_Run(1, false);
+			ret = run_continue_request(DebugPauseMode::Interactive);
 			break;
 		case DBGUI_KEY_F(8): // Toggle printable characters
 			showPrintable = !showPrintable;
@@ -2755,14 +2767,16 @@ uint32_t DEBUG_CheckKeys(void)
 			break;
 		case DBGUI_KEY_F(10): // Step over inst
 			if (StepOver()) {
+				auto& controller = DebugController::Instance();
+				controller.SetResumePauseMode(DebugPauseMode::Interactive);
+				controller.SetRunningState();
 				ret = DEBUG_Run(1, false);
 				break;
 			}
 			// If we aren't stepping over something, do a normal step.
 			[[fallthrough]];
 		case DBGUI_KEY_F(11): // trace into
-			exitLoop = false;
-			ret      = DEBUG_Run(1, true);
+			ret = run_step_request(DebugPauseMode::Interactive);
 			break;
 		case '\n': // Parse typed Command
 			codeViewData.inputStr[MAXCMDLEN] = '\0';
@@ -2860,6 +2874,12 @@ Bitu DEBUG_Loop(void)
 {
 	// TODO Disable sound
 	GFX_PollAndHandleEvents();
+	if (WEBSERVER_IsEnabled()) {
+		Webserver::Bridge::Instance().ProcessRequests();
+	}
+	if (const auto request_result = service_pause_requests(); request_result) {
+		return request_result;
+	}
 
 	// Start a new ImGui frame
 	DBGUI_NewFrame();
@@ -2885,43 +2905,47 @@ Bitu DEBUG_Loop(void)
 	return DEBUG_CheckKeys();
 }
 
+static Bitu DEBUG_HeadlessLoop()
+{
+	GFX_PollAndHandleEvents();
+	if (WEBSERVER_IsEnabled()) {
+		Webserver::Bridge::Instance().ProcessRequests();
+	}
+	// Headless pauses keep the machine stopped while still servicing
+	// web/MCP continue and step requests without bringing up the UI.
+	if (const auto request_result = service_pause_requests(); request_result) {
+		return request_result;
+	}
+	Delay(1);
+	return 0;
+}
+
 void DEBUG_Enable(bool pressed)
 {
 	if (!pressed) {
 		return;
 	}
+	DebugController::Instance().SetResumePauseMode(DebugPauseMode::Interactive);
+	enter_paused_state(DebugPauseMode::Interactive,
+	                   DebugStopReason::PauseRequested,
+	                   "Interactive debugger entered");
+}
 
-	// Maybe construct the debugger's UI
-	static bool was_ui_started = false;
-	if (!was_ui_started) {
-		DBGUI_StartUp();
-		was_ui_started = DBGUI_IsInitialized();
+bool DEBUG_ShouldPauseImmediately()
+{
+	DebugPauseMode pause_mode = DebugPauseMode::Headless;
+	if (!DebugController::Instance().ConsumePauseRequest(pause_mode)) {
+		return false;
 	}
+	enter_paused_state(pause_mode,
+	                   DebugStopReason::PauseRequested,
+	                   "Pause requested");
+	return true;
+}
 
-	// The debugger is run in release mode so cannot use asserts
-	if (!was_ui_started) {
-		LOG_ERR("DEBUG: Failed to start up the debug window");
-		return;
-	}
-
-	// Defocus the graphical UI and bring the debugger UI into focus
-	GFX_LosingFocus();
-	SDL_ShowWindow(dbg.win_main);
-	SDL_RaiseWindow(dbg.win_main);
-	SetCodeWinStart();
-
-	// Maybe show help for the first time in the debugger
-	static bool was_help_shown = false;
-	if (!was_help_shown) {
-		DEBUG_ShowMsg("***| TYPE HELP (+ENTER) TO GET AN OVERVIEW OF ALL COMMANDS |***\n");
-		was_help_shown = true;
-	}
-
-	// Start the debugging loops
-	debugging = true;
-	DOSBOX_SetLoop(&DEBUG_Loop);
-
-	KEYBOARD_ClrBuffer();
+void DEBUG_SignalPauseLoopExit()
+{
+	exitLoop = true;
 }
 
 void DEBUG_DrawScreen(void)
@@ -3381,6 +3405,131 @@ private:
 	bool active;
 };
 
+static bool ensure_debugger_ui_started()
+{
+	static bool was_ui_started = false;
+	if (!was_ui_started) {
+		DBGUI_StartUp();
+		was_ui_started = DBGUI_IsInitialized();
+	}
+	if (!was_ui_started) {
+		LOG_ERR("DEBUG: Failed to start up the debug window");
+	}
+	return was_ui_started;
+}
+
+static void maybe_show_debugger_help()
+{
+	static bool was_help_shown = false;
+	if (!was_help_shown) {
+		DEBUG_ShowMsg("***| TYPE HELP (+ENTER) TO GET AN OVERVIEW OF ALL COMMANDS |***\n");
+		was_help_shown = true;
+	}
+}
+
+static void enter_paused_state(const DebugPauseMode pause_mode,
+                               const DebugStopReason reason,
+                               std::string description)
+{
+	auto regs = CPU_CaptureRegisters();
+	auto& controller = DebugController::Instance();
+	auto effective_pause_mode = pause_mode;
+
+	if (pause_mode == DebugPauseMode::Interactive &&
+	    !ensure_debugger_ui_started()) {
+		LOG_WARNING("DEBUG: Falling back to headless pause mode");
+		effective_pause_mode = DebugPauseMode::Headless;
+	}
+
+	// Every stop funnels through here so the exported stop state, captured
+	// registers, and chosen paused loop stay in sync.
+	controller.EnterPausedState(effective_pause_mode,
+	                            reason,
+	                            std::move(description),
+	                            regs);
+
+	if (effective_pause_mode == DebugPauseMode::Interactive) {
+		GFX_LosingFocus();
+		SDL_ShowWindow(dbg.win_main);
+		SDL_RaiseWindow(dbg.win_main);
+		SetCodeWinStart();
+		maybe_show_debugger_help();
+		debugging = true;
+		DOSBOX_SetLoop(&DEBUG_Loop);
+	} else {
+		debugging = false;
+		DOSBOX_SetLoop(&DEBUG_HeadlessLoop);
+	}
+
+	KEYBOARD_ClrBuffer();
+}
+
+static Bitu process_debug_run_result(const int32_t ret)
+{
+	if (ret < 0) {
+		return check_cast<Bitu>(1);
+	}
+	if (ret > 0) {
+		if (ret >= CB_MAX) {
+			return 0;
+		}
+		auto callback_result = (*Callback_Handlers[ret])();
+		if (callback_result) {
+			exitLoop = true;
+			CPU_Cycles = CPU_CycleLeft = 0;
+			return callback_result;
+		}
+	}
+	return 0;
+}
+
+static Bitu run_continue_request(const DebugPauseMode pause_mode)
+{
+	auto& controller = DebugController::Instance();
+	controller.SetResumePauseMode(pause_mode);
+	controller.SetRunningState();
+	return process_debug_run_result(DEBUG_Run(1, false));
+}
+
+static Bitu run_step_request(const DebugPauseMode pause_mode)
+{
+	auto& controller = DebugController::Instance();
+	controller.SetResumePauseMode(pause_mode);
+	controller.SetRunningState();
+
+	const auto previous_stop_sequence = controller.GetCurrentStopSequence();
+	const auto run_result = process_debug_run_result(DEBUG_Run(1, true));
+	if (run_result) {
+		return run_result;
+	}
+	if (controller.GetCurrentStopSequence() == previous_stop_sequence) {
+		enter_paused_state(pause_mode,
+		                   DebugStopReason::StepComplete,
+		                   "Step complete");
+	}
+	return 0;
+}
+
+static Bitu service_pause_requests()
+{
+	auto& controller = DebugController::Instance();
+	const auto pause_mode = controller.GetStopState().pause_mode;
+
+	// Continue and step are consumed only while already paused. The normal CPU
+	// loop handles only pause requests via DEBUG_ShouldPauseImmediately().
+	DebugStepMode step_mode = DebugStepMode::Into;
+	if (controller.ConsumeContinueRequest()) {
+		return run_continue_request(pause_mode);
+	}
+	if (controller.ConsumeStepRequest(step_mode)) {
+		if (step_mode != DebugStepMode::Into) {
+			return 0;
+		}
+		return run_step_request(pause_mode);
+	}
+	return 0;
+}
+
 void DEBUG_CheckExecuteBreakpoint(uint16_t seg, uint32_t off)
 {
 	if (pDebugcom && pDebugcom->IsActive()) {
@@ -3393,7 +3542,9 @@ void DEBUG_CheckExecuteBreakpoint(uint16_t seg, uint32_t off)
 Bitu DEBUG_EnableDebugger()
 {
 	exitLoop = true;
-	DEBUG_Enable(true);
+	enter_paused_state(DebugController::Instance().GetResumePauseMode(),
+	                   DebugStopReason::PauseRequested,
+	                   "Debugger paused");
 	CPU_Cycles = CPU_CycleLeft = 0;
 	return 0;
 }
@@ -3881,5 +4032,32 @@ bool DEBUG_HeavyIsBreakpoint(void)
 }
 
 #endif // HEAVY DEBUG
+
+DebugStopState DEBUG_GetStopState()
+{
+	auto stop_state = DebugController::Instance().GetStopState();
+	stop_state.registers = CPU_CaptureRegisters();
+	return stop_state;
+}
+
+DebugResult DEBUG_RequestPause(const DebugPauseMode pause_mode)
+{
+	auto& controller = DebugController::Instance();
+	if (controller.GetStopState().paused) {
+		controller.SetResumePauseMode(pause_mode);
+		return {};
+	}
+	return controller.RequestPause(pause_mode);
+}
+
+DebugResult DEBUG_RequestContinue()
+{
+	return DebugController::Instance().RequestContinue();
+}
+
+DebugResult DEBUG_RequestStep(const DebugStepMode step_mode)
+{
+	return DebugController::Instance().RequestStep(step_mode);
+}
 
 #endif // DEBUG
