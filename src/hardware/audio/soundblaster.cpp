@@ -3413,11 +3413,6 @@ static void per_tick_callback()
 	assert(sblaster);
 	assert(sblaster->channel);
 
-	if (!sblaster->channel->is_enabled) {
-		callback_type.SetNone();
-		return;
-	}
-
 #if SB_DEBUG_INSTRUMENTATION
 	sb_pertick_calls.fetch_add(1, std::memory_order_relaxed);
 #endif
@@ -3450,11 +3445,6 @@ static void per_frame_callback(uint32_t)
 {
 	assert(sblaster);
 	assert(sblaster->channel);
-
-	if (!sblaster->channel->is_enabled) {
-		callback_type.SetNone();
-		return;
-	}
 
 #if SB_DEBUG_INSTRUMENTATION
 	sb_perframe_calls.fetch_add(1, std::memory_order_relaxed);
@@ -3862,6 +3852,16 @@ SoundBlaster::SoundBlaster(Section* conf)
 	                           DefaultPlaybackRateHz,
 	                           ChannelName::SoundBlasterDac,
 	                           channel_features);
+
+	// XXX (#4949 demo): start the per-tick producer immediately at SB
+	// init -- on release/0.82.x, sblaster_pic_callback is registered
+	// unconditionally during SB construction, so the silence-fill path
+	// in generate_frames begins running before any game has touched the
+	// card. Combined with the removed `is_enabled` gate at the top of
+	// per_tick_callback, this reproduces the user's cold-start latency
+	// (queue pre-fills with stale silence ahead of the first real
+	// audio). Reverted in the next commit.
+	callback_type.SetPerTick();
 
 	const std::string sb_filter_prefs = section->GetString("sb_filter");
 
