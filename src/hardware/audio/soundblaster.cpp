@@ -3424,9 +3424,22 @@ static void per_tick_callback()
 
 	static float frame_counter = 0.0f;
 
-	frame_counter += std::max(static_cast<float>(sblaster->frames_needed.exchange(
-	                                  0, std::memory_order_acq_rel)),
-	                          sblaster->channel->GetFramesPerTick());
+	// Advance at the channel's natural per-tick rate. PR #4175
+	// originally added a mixer-signalled catch-up burst here
+	// (`max(frames_needed, natural)`) to recover from underruns on slow
+	// hosts. In practice on fast hosts under `cpu_cycles = max` the
+	// producer already runs at or above the consumer rate, so those
+	// bursts pile on top of the natural rate and push the output queue
+	// to capacity; `NonblockingBulkEnqueue` silently truncates and
+	// audio frames are lost. We rely on the natural rate here,
+	// matching the per-tick pattern used by every other audio module
+	// on this branch (GUS, LPT DAC, PS1, Tandy, PC Speaker).
+	//
+	// per_frame_callback (Direct DAC and tiny auto-init DMA, e.g.
+	// Crystal Dream) still consults frames_needed -- per-frame
+	// production is paced at one frame per scheduled call, not one
+	// tick's worth, so the burst there does not pile on the same way.
+	frame_counter += sblaster->channel->GetFramesPerTick();
 	const int total_frames = ifloor(frame_counter);
 	frame_counter -= static_cast<float>(total_frames);
 
