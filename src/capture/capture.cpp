@@ -355,6 +355,8 @@ void CAPTURE_StartVideoCapture()
 	case CaptureState::Off:
 		capture.state.video = CaptureState::Pending;
 		TITLEBAR_NotifyVideoCaptureStatus(true);
+		LOG_MSG("CAPTURE: Preparing to capture video output; "
+		        "capturing will start on the next emulator frame");
 		break;
 	case CaptureState::Pending:
 	case CaptureState::InProgress:
@@ -370,11 +372,10 @@ void CAPTURE_StopVideoCapture()
 		LOG_WARNING("CAPTURE: Not capturing video output");
 		break;
 	case CaptureState::Pending:
-		// It's very hard to hit this branch; handling it for
-		// completeness only
-		LOG_MSG("CAPTURE: Cancelling pending video output capture");
 		capture.state.video = CaptureState::Off;
 		TITLEBAR_NotifyVideoCaptureStatus(false);
+		LOG_MSG("CAPTURE: Stopped capturing video output "
+		        "(no frames were written)");
 		break;
 	case CaptureState::InProgress:
 		capture_video_finalise();
@@ -451,15 +452,14 @@ static void handle_capture_audio_event(bool pressed)
 
 	switch (capture.state.audio) {
 	case CaptureState::Off:
-		// Capturing the audio output will start in the next few
-		// milliseconds when CAPTURE_AddAudioData is called
 		capture.state.audio = CaptureState::Pending;
+		LOG_MSG("CAPTURE: Preparing to capture audio output; "
+		        "capturing will start with the next audio frame");
 		break;
 	case CaptureState::Pending:
-		// It's practically impossible to hit this branch; handling it
-		// for completeness only
 		capture.state.audio = CaptureState::Off;
-		LOG_MSG("CAPTURE: Cancelled pending audio output capture");
+		LOG_MSG("CAPTURE: Stopped capturing audio output "
+		        "(no audio was written)");
 		break;
 	case CaptureState::InProgress:
 		capture_audio_finalise();
@@ -487,8 +487,8 @@ static void handle_capture_midi_event(bool pressed)
 		break;
 	case CaptureState::Pending:
 		capture.state.midi = CaptureState::Off;
-		LOG_MSG("CAPTURE: Stopped capturing MIDI output before any "
-		        "MIDI message was output (no MIDI file has been created)");
+		LOG_MSG("CAPTURE: Stopped capturing MIDI output "
+		        "(no MIDI messages were written)");
 		break;
 	case CaptureState::InProgress:
 		capture_midi_finalise();
