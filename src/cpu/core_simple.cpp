@@ -124,8 +124,26 @@ static inline uint32_t Fetchd() {
 
 #define EALookupTable (core.ea_table)
 
-Bits CPU_Core_Simple_Run() noexcept
+// The shared string/helper code above always uses the breakpoint-aware reads.
+// The decode loop below is compiled twice via CPU_Core_Simple_Run_T (see
+// CPU_Core_Simple_Run): once honouring memory read breakpoints and once
+// skipping them entirely. Re-point the data-read macros at the core's
+// compile-time op_mode so the no-breakpoint variant carries zero per-read cost.
+#undef LoadMb
+#undef LoadMw
+#undef LoadMd
+#undef LoadMq
+#define LoadMb(off) mem_readb<op_mode>(off)
+#define LoadMw(off) mem_readw<op_mode>(off)
+#define LoadMd(off) mem_readd<op_mode>(off)
+#define LoadMq(off) mem_readq<op_mode>(off)
+
+template <bool debug_active>
+static inline Bits CPU_Core_Simple_Run_T() noexcept
 {
+	[[maybe_unused]] constexpr auto op_mode = debug_active
+	                                                ? MemOpMode::WithBreakpoints
+	                                                : MemOpMode::SkipBreakpoints;
 	while (CPU_Cycles-->0) {
 		LOADIP;
 		core.opcode_index=cpu.code.big*0x200;
@@ -136,10 +154,12 @@ Bits CPU_Core_Simple_Run() noexcept
 		core.base_val_ds=ds;
 #if C_DEBUGGER
 #if C_HEAVY_DEBUGGER
-		if (DEBUG_HeavyIsBreakpoint()) {
-			FillFlags();
-			return debugCallback;
-		};
+		if constexpr (debug_active) {
+			if (DEBUG_HeavyIsBreakpoint()) {
+				FillFlags();
+				return debugCallback;
+			}
+		}
 #endif
 		cycle_count++;
 #endif
@@ -184,6 +204,16 @@ decode_end:
 	SAVEIP;
 	FillFlags();
 	return CBRET_NONE;
+}
+
+Bits CPU_Core_Simple_Run() noexcept
+{
+#if C_DEBUGGER && C_HEAVY_DEBUGGER
+	if (DEBUG_heavy_active) {
+		return CPU_Core_Simple_Run_T<true>();
+	}
+#endif
+	return CPU_Core_Simple_Run_T<false>();
 }
 
 Bits CPU_Core_Simple_Trap_Run() noexcept

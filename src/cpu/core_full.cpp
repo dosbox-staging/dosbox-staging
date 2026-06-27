@@ -20,6 +20,12 @@ typedef PhysPt EAPoint;
 #define LoadMw(off) mem_readw_inline(off)
 #define LoadMd(off) mem_readd_inline(off)
 
+// Instruction fetches are not data reads, so they must never trigger memory
+// read breakpoints (FetchMb), unlike operand data accesses (LoadM*).
+#define FetchMb(off) mem_readb_inline<MemOpMode::SkipBreakpoints>(off)
+#define FetchMw(off) mem_readw_inline<MemOpMode::SkipBreakpoints>(off)
+#define FetchMd(off) mem_readd_inline<MemOpMode::SkipBreakpoints>(off)
+
 #define LoadMbs(off) (int8_t)(LoadMb(off))
 #define LoadMws(off) (int16_t)(LoadMw(off))
 #define LoadMds(off) (int32_t)(LoadMd(off))
@@ -45,17 +51,35 @@ typedef PhysPt EAPoint;
 		continue;											\
 	}
 
-Bits CPU_Core_Full_Run() noexcept
+// The shared helper code above always uses the breakpoint-aware reads. The
+// decode loop below is compiled twice via CPU_Core_Full_Run_T (see
+// CPU_Core_Full_Run): once honouring memory read breakpoints and once skipping
+// them entirely. Re-point the data-read macros at the core's compile-time
+// op_mode so the no-breakpoint variant carries zero per-read cost.
+#undef LoadMb
+#undef LoadMw
+#undef LoadMd
+#define LoadMb(off) mem_readb_inline<op_mode>(off)
+#define LoadMw(off) mem_readw_inline<op_mode>(off)
+#define LoadMd(off) mem_readd_inline<op_mode>(off)
+
+template <bool debug_active>
+static inline Bits CPU_Core_Full_Run_T() noexcept
 {
+	[[maybe_unused]] constexpr auto op_mode = debug_active
+	                                                ? MemOpMode::WithBreakpoints
+	                                                : MemOpMode::SkipBreakpoints;
 	FullData inst{};
 	while (CPU_Cycles-->0) {
 #if C_DEBUGGER
 		cycle_count++;
 #if C_HEAVY_DEBUGGER
-		if (DEBUG_HeavyIsBreakpoint()) {
-			FillFlags();
-			return debugCallback;
-		};
+		if constexpr (debug_active) {
+			if (DEBUG_HeavyIsBreakpoint()) {
+				FillFlags();
+				return debugCallback;
+			}
+		}
 #endif
 #endif
 		LoadIP();
@@ -76,6 +100,16 @@ illegalopcode:
 	}
 	FillFlags();
 	return CBRET_NONE;
+}
+
+Bits CPU_Core_Full_Run() noexcept
+{
+#if C_DEBUGGER && C_HEAVY_DEBUGGER
+	if (DEBUG_heavy_active) {
+		return CPU_Core_Full_Run_T<true>();
+	}
+#endif
+	return CPU_Core_Full_Run_T<false>();
 }
 
 void CPU_Core_Full_Init(void) {

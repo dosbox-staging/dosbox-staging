@@ -139,8 +139,33 @@ static inline uint32_t Fetchd() {
 
 #define EALookupTable (core.ea_table)
 
-Bits CPU_Core_Normal_Run() noexcept
+// The shared string/helper code above always uses the breakpoint-aware reads.
+// The decode loop below is compiled twice via CPU_Core_Normal_Run_T (see
+// CPU_Core_Normal_Run): once honouring memory read breakpoints and once
+// skipping them entirely. Re-point the data-read macros at the core's
+// compile-time op_mode so the no-breakpoint variant carries zero per-read cost.
+#undef LoadMb
+#undef LoadMw
+#undef LoadMd
+#undef LoadMq
+#if (!C_CORE_INLINE)
+#define LoadMb(off) mem_readb<op_mode>(off)
+#define LoadMw(off) mem_readw<op_mode>(off)
+#define LoadMd(off) mem_readd<op_mode>(off)
+#define LoadMq(off) mem_readq<op_mode>(off)
+#else
+#define LoadMb(off) mem_readb_inline<op_mode>(off)
+#define LoadMw(off) mem_readw_inline<op_mode>(off)
+#define LoadMd(off) mem_readd_inline<op_mode>(off)
+#define LoadMq(off) mem_readq_inline<op_mode>(off)
+#endif
+
+template <bool debug_active>
+static inline Bits CPU_Core_Normal_Run_T() noexcept
 {
+	[[maybe_unused]] constexpr auto op_mode = debug_active
+	                                                ? MemOpMode::WithBreakpoints
+	                                                : MemOpMode::SkipBreakpoints;
 	while (CPU_Cycles-->0) {
 		LOADIP;
 		core.opcode_index=cpu.code.big*0x200;
@@ -151,10 +176,12 @@ Bits CPU_Core_Normal_Run() noexcept
 		core.base_val_ds=ds;
 #if C_DEBUGGER
 #if C_HEAVY_DEBUGGER
-		if (DEBUG_HeavyIsBreakpoint()) {
-			FillFlags();
-			return debugCallback;
-		};
+		if constexpr (debug_active) {
+			if (DEBUG_HeavyIsBreakpoint()) {
+				FillFlags();
+				return debugCallback;
+			}
+		}
 #endif
 		cycle_count++;
 #endif
@@ -190,6 +217,18 @@ decode_end:
 	SAVEIP;
 	FillFlags();
 	return CBRET_NONE;
+}
+
+Bits CPU_Core_Normal_Run() noexcept
+{
+#if C_DEBUGGER && C_HEAVY_DEBUGGER
+	// Only the breakpoint/logging-aware variant pays for the per-instruction
+	// and per-data-read debugger checks; everything else runs the lean variant.
+	if (DEBUG_heavy_active) {
+		return CPU_Core_Normal_Run_T<true>();
+	}
+#endif
+	return CPU_Core_Normal_Run_T<false>();
 }
 
 Bits CPU_Core_Normal_Trap_Run() noexcept

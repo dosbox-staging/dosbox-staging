@@ -11,18 +11,18 @@
 }
 
 static inline uint8_t the_Fetchb(EAPoint & loc) {
-	uint8_t temp=LoadMb(loc);
+	uint8_t temp=FetchMb(loc);
 	loc+=1;
 	return temp;
 }
-	
+
 static inline uint16_t the_Fetchw(EAPoint & loc) {
-	uint16_t temp=LoadMw(loc);
+	uint16_t temp=FetchMw(loc);
 	loc+=2;
 	return temp;
 }
 static inline uint32_t the_Fetchd(EAPoint & loc) {
-	uint32_t temp=LoadMd(loc);
+	uint32_t temp=FetchMd(loc);
 	loc+=4;
 	return temp;
 }

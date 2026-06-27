@@ -24,11 +24,14 @@
 #include "debugger/debugger.h"
 #endif
 
+// Prefetch-queue fills are instruction fetches, so they must never trigger
+// memory read breakpoints (FetchMb), unlike data accesses (LoadM*).
 #if (!C_CORE_INLINE)
 #define LoadMb(off) mem_readb(off)
 #define LoadMw(off) mem_readw(off)
 #define LoadMd(off) mem_readd(off)
 #define LoadMq(off) mem_readq(off)
+#define FetchMb(off) mem_readb<MemOpMode::SkipBreakpoints>(off)
 #define SaveMb(off,val)	mem_writeb(off,val)
 #define SaveMw(off,val)	mem_writew(off,val)
 #define SaveMd(off,val)	mem_writed(off,val)
@@ -39,6 +42,7 @@
 #define LoadMw(off) mem_readw_inline(off)
 #define LoadMd(off) mem_readd_inline(off)
 #define LoadMq(off) mem_readq_inline(off)
+#define FetchMb(off) mem_readb_inline<MemOpMode::SkipBreakpoints>(off)
 #define SaveMb(off,val)	mem_writeb_inline(off,val)
 #define SaveMw(off,val)	mem_writew_inline(off,val)
 #define SaveMd(off,val)	mem_writed_inline(off,val)
@@ -118,12 +122,12 @@ static uint8_t Fetchb() {
 			(core.cseip+1<pq_start+CPU_PrefetchQueueSize)) {
 			Bitu remaining_bytes=pq_start+CPU_PrefetchQueueSize-(core.cseip+1);
 			for (Bitu i=0; i<remaining_bytes; i++) prefetch_buffer[i]=prefetch_buffer[core.cseip+1-pq_start+i];
-			for (Bitu i=remaining_bytes; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=LoadMb(core.cseip+1+i);
+			for (Bitu i=remaining_bytes; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=FetchMb(core.cseip+1+i);
 			pq_start=core.cseip+1;
 			pq_valid=true;
 		}
 	} else {
-		for (Bitu i=0; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=LoadMb(core.cseip+i);
+		for (Bitu i=0; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=FetchMb(core.cseip+i);
 		pq_start=core.cseip;
 		pq_valid=true;
 		temp=prefetch_buffer[0];
@@ -145,12 +149,12 @@ static uint16_t Fetchw() {
 			Bitu remaining_bytes = pq_start + CPU_PrefetchQueueSize -
 			                       (core.cseip + 2);
 			for (Bitu i=0; i<remaining_bytes; i++) prefetch_buffer[i]=prefetch_buffer[core.cseip+2-pq_start+i];
-			for (Bitu i=remaining_bytes; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=LoadMb(core.cseip+2+i);
+			for (Bitu i=remaining_bytes; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=FetchMb(core.cseip+2+i);
 			pq_start=core.cseip+2;
 			pq_valid=true;
 		}
 	} else {
-		for (Bitu i=0; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=LoadMb(core.cseip+i);
+		for (Bitu i=0; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=FetchMb(core.cseip+i);
 		pq_start=core.cseip;
 		pq_valid=true;
 		temp=prefetch_buffer[0] | (prefetch_buffer[1]<<8);
@@ -174,12 +178,12 @@ static uint32_t Fetchd() {
 			Bitu remaining_bytes = pq_start + CPU_PrefetchQueueSize -
 			                       (core.cseip + 4);
 			for (Bitu i=0; i<remaining_bytes; i++) prefetch_buffer[i]=prefetch_buffer[core.cseip+4-pq_start+i];
-			for (Bitu i=remaining_bytes; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=LoadMb(core.cseip+4+i);
+			for (Bitu i=remaining_bytes; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=FetchMb(core.cseip+4+i);
 			pq_start=core.cseip+4;
 			pq_valid=true;
 		}
 	} else {
-		for (Bitu i=0; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=LoadMb(core.cseip+i);
+		for (Bitu i=0; i<CPU_PrefetchQueueSize; i++) prefetch_buffer[i]=FetchMb(core.cseip+i);
 		pq_start=core.cseip;
 		pq_valid=true;
 		temp=prefetch_buffer[0] | (prefetch_buffer[1]<<8) |
@@ -204,8 +208,33 @@ static uint32_t Fetchd() {
 
 #define EALookupTable (core.ea_table)
 
-Bits CPU_Core_Prefetch_Run() noexcept
+// The shared string/helper code above always uses the breakpoint-aware reads.
+// The decode loop below is compiled twice via CPU_Core_Prefetch_Run_T (see
+// CPU_Core_Prefetch_Run): once honouring memory read breakpoints and once
+// skipping them entirely. Re-point the data-read macros at the core's
+// compile-time op_mode so the no-breakpoint variant carries zero per-read cost.
+#undef LoadMb
+#undef LoadMw
+#undef LoadMd
+#undef LoadMq
+#if (!C_CORE_INLINE)
+#define LoadMb(off) mem_readb<op_mode>(off)
+#define LoadMw(off) mem_readw<op_mode>(off)
+#define LoadMd(off) mem_readd<op_mode>(off)
+#define LoadMq(off) mem_readq<op_mode>(off)
+#else
+#define LoadMb(off) mem_readb_inline<op_mode>(off)
+#define LoadMw(off) mem_readw_inline<op_mode>(off)
+#define LoadMd(off) mem_readd_inline<op_mode>(off)
+#define LoadMq(off) mem_readq_inline<op_mode>(off)
+#endif
+
+template <bool debug_active>
+static inline Bits CPU_Core_Prefetch_Run_T() noexcept
 {
+	[[maybe_unused]] constexpr auto op_mode = debug_active
+	                                                ? MemOpMode::WithBreakpoints
+	                                                : MemOpMode::SkipBreakpoints;
 	bool invalidate_pq=false;
 	while (CPU_Cycles-->0) {
 		if (invalidate_pq) {
@@ -220,10 +249,12 @@ Bits CPU_Core_Prefetch_Run() noexcept
 		core.base_val_ds=ds;
 #if C_DEBUGGER
 #if C_HEAVY_DEBUGGER
-		if (DEBUG_HeavyIsBreakpoint()) {
-			FillFlags();
-			return debugCallback;
-		};
+		if constexpr (debug_active) {
+			if (DEBUG_HeavyIsBreakpoint()) {
+				FillFlags();
+				return debugCallback;
+			}
+		}
 #endif
 		cycle_count++;
 #endif
@@ -303,6 +334,16 @@ decode_end:
 	SAVEIP;
 	FillFlags();
 	return CBRET_NONE;
+}
+
+Bits CPU_Core_Prefetch_Run() noexcept
+{
+#if C_DEBUGGER && C_HEAVY_DEBUGGER
+	if (DEBUG_heavy_active) {
+		return CPU_Core_Prefetch_Run_T<true>();
+	}
+#endif
+	return CPU_Core_Prefetch_Run_T<false>();
 }
 
 Bits CPU_Core_Prefetch_Trap_Run() noexcept
