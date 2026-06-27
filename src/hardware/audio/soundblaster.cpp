@@ -3524,24 +3524,65 @@ static void per_tick_callback()
 
 	static float frame_counter = 0.0f;
 
-	// Advance at the channel's natural per-tick rate. PR #4175
-	// originally added a mixer-signalled catch-up burst here
-	// (`max(frames_needed, natural)`) to recover from underruns on slow
-	// hosts. In practice on fast hosts under `cpu_cycles = max` the
-	// producer already runs at or above the consumer rate, so those
-	// bursts pile on top of the natural rate and push the output queue
-	// to capacity; `NonblockingBulkEnqueue` silently truncates and
-	// audio frames are lost. We rely on the natural rate here,
-	// matching the per-tick pattern used by every other audio module
-	// on this branch (GUS, LPT DAC, PS1, Tandy, PC Speaker).
+	// Advance at the channel's natural per-tick rate.
+	frame_counter += sblaster->channel->GetFramesPerTick();
+	int total_frames = ifloor(frame_counter);
+	frame_counter -= static_cast<float>(total_frames);
+
+	// Burst-only-when-behind. PR #4175 originally took
+	// `max(frames_needed, natural)` every tick. On fast hosts under
+	// `cpu_cycles = max` that produced standing latency: the producer
+	// already ticks at or above the consumer rate, so any positive
+	// `frames_needed` (a single-shot reading from the most recent
+	// MixerCallback) was added on top of the natural rate and the
+	// queue ratcheted up towards its cap. On slow hosts the same
+	// override was what saved Tyrian / Duke3D from underrun stutter.
+	//
+	// The narrower gate here keeps the underrun protection while
+	// preventing the ratchet. Two conditions must both hold:
+	//
+	//   1. The mixer's most recent callback observed a shortfall
+	//      (`frames_needed > total_frames`, i.e. the queue was so
+	//      low that even one natural per-tick batch will not satisfy
+	//      the next mixer callback).
+	//
+	//   2. The queue is *currently* below one blocksize. That is the
+	//      depth needed to fulfil the next callback in one shot; if
+	//      we are already at or above it the natural per-tick rate
+	//      will keep the queue served and a burst would only deepen
+	//      it -- the exact mechanism behind the original regression.
+	//
+	// On a fast host with `cycles = max` condition 1 fires only in
+	// transients, and condition 2 acts as the brake that keeps those
+	// transients from compounding into standing latency. On a slow
+	// host where per-tick production cannot keep pace, both
+	// conditions fire together and the burst restores PR #4175's
+	// behaviour for the underrun path.
 	//
 	// per_frame_callback (Direct DAC and tiny auto-init DMA, e.g.
-	// Crystal Dream) still consults frames_needed -- per-frame
-	// production is paced at one frame per scheduled call, not one
-	// tick's worth, so the burst there does not pile on the same way.
-	frame_counter += sblaster->channel->GetFramesPerTick();
-	const int total_frames = ifloor(frame_counter);
-	frame_counter -= static_cast<float>(total_frames);
+	// Crystal Dream) keeps its existing `max(frames_needed, 1)`
+	// behaviour: per-frame production is paced at one frame per
+	// scheduled call rather than one tick's worth, so it does not
+	// pile on the same way.
+	//
+	const int raw_frames_needed =
+	        sblaster->frames_needed.exchange(0, std::memory_order_acq_rel);
+
+#if SB_DEBUG_INSTRUMENTATION
+	sb_frames_needed_stat.Record(raw_frames_needed);
+#endif
+
+	if (raw_frames_needed > total_frames) {
+		const int queue_depth = check_cast<int>(
+		        sblaster->output_queue.Size());
+
+		const int target_depth = iceil(
+		        sblaster->channel->GetFramesPerBlock());
+
+		if (queue_depth < target_depth) {
+			total_frames = raw_frames_needed;
+		}
+	}
 
 	while (frames_added_this_tick < total_frames) {
 		generate_frames(total_frames - frames_added_this_tick);
