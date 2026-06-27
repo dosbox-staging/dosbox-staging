@@ -16,6 +16,7 @@
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
+#include "dosbox.h"
 #include "gui/common.h"
 #include "hardware/pic.h"
 #include "misc/video.h"
@@ -393,10 +394,15 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	first_time = false;
 }
 
+// While paused, host mouse motion would otherwise accumulate into the DOS
+// driver's pending delta and deliver as a single large jump on resume.
+// Query the FSM directly rather than mirror it locally.
+//
 static bool should_drop_move()
 {
 	return state.should_drop_events ||
-	       (state.cursor_is_outside && !state.is_seamless);
+	       (state.cursor_is_outside && !state.is_seamless) ||
+	       DOSBOX_IsPaused();
 }
 
 static bool should_drop_press_or_wheel()
