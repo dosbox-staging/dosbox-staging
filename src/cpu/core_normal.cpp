@@ -21,11 +21,17 @@
 #include "debugger/debugger.h"
 #endif
 
+// Instruction fetches are not data reads, so they must never trigger memory
+// read breakpoints. Skipping the check also keeps the hottest memory path (the
+// opcode/operand stream) free of debugger overhead in always-on debugger builds.
 #if (!C_CORE_INLINE)
 #define LoadMb(off) mem_readb(off)
 #define LoadMw(off) mem_readw(off)
 #define LoadMd(off) mem_readd(off)
 #define LoadMq(off) mem_readq(off)
+#define FetchMb(off) mem_readb<MemOpMode::SkipBreakpoints>(off)
+#define FetchMw(off) mem_readw<MemOpMode::SkipBreakpoints>(off)
+#define FetchMd(off) mem_readd<MemOpMode::SkipBreakpoints>(off)
 #define SaveMb(off,val)	mem_writeb(off,val)
 #define SaveMw(off,val)	mem_writew(off,val)
 #define SaveMd(off,val)	mem_writed(off,val)
@@ -36,6 +42,9 @@
 #define LoadMw(off) mem_readw_inline(off)
 #define LoadMd(off) mem_readd_inline(off)
 #define LoadMq(off) mem_readq_inline(off)
+#define FetchMb(off) mem_readb_inline<MemOpMode::SkipBreakpoints>(off)
+#define FetchMw(off) mem_readw_inline<MemOpMode::SkipBreakpoints>(off)
+#define FetchMd(off) mem_readd_inline<MemOpMode::SkipBreakpoints>(off)
 #define SaveMb(off,val)	mem_writeb_inline(off,val)
 #define SaveMw(off,val)	mem_writew_inline(off,val)
 #define SaveMd(off,val)	mem_writed_inline(off,val)
@@ -102,18 +111,18 @@ static struct {
 #define BaseSS		core.base_ss
 
 static inline uint8_t Fetchb() {
-	uint8_t temp=LoadMb(core.cseip);
+	uint8_t temp=FetchMb(core.cseip);
 	core.cseip+=1;
 	return temp;
 }
 
 static inline uint16_t Fetchw() {
-	uint16_t temp=LoadMw(core.cseip);
+	uint16_t temp=FetchMw(core.cseip);
 	core.cseip+=2;
 	return temp;
 }
 static inline uint32_t Fetchd() {
-	uint32_t temp=LoadMd(core.cseip);
+	uint32_t temp=FetchMd(core.cseip);
 	core.cseip+=4;
 	return temp;
 }
