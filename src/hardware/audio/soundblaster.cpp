@@ -11,7 +11,9 @@
 #include <chrono>
 #include <cmath>
 #include <cstring>
+#include <deque>
 #include <iomanip>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -1118,21 +1120,21 @@ static uint32_t read_dma_16bit(const uint32_t words_to_read,
 struct SbStat {
 	std::atomic<uint64_t> sum{0};
 	std::atomic<uint64_t> count{0};
-	std::atomic<int64_t>  min{INT64_MAX};
-	std::atomic<int64_t>  max{INT64_MIN};
+	std::atomic<int64_t> min{INT64_MAX};
+	std::atomic<int64_t> max{INT64_MIN};
 
 	void Record(int64_t v)
 	{
 		sum.fetch_add(static_cast<uint64_t>(v), std::memory_order_relaxed);
 		count.fetch_add(1, std::memory_order_relaxed);
 		auto cur_min = min.load(std::memory_order_relaxed);
-		while (v < cur_min && !min.compare_exchange_weak(
-		                              cur_min, v,
-		                              std::memory_order_relaxed)) {}
+		while (v < cur_min &&
+		       !min.compare_exchange_weak(cur_min, v, std::memory_order_relaxed)) {
+		}
 		auto cur_max = max.load(std::memory_order_relaxed);
-		while (v > cur_max && !max.compare_exchange_weak(
-		                              cur_max, v,
-		                              std::memory_order_relaxed)) {}
+		while (v > cur_max &&
+		       !max.compare_exchange_weak(cur_max, v, std::memory_order_relaxed)) {
+		}
 	}
 
 	void Reset()
@@ -1164,8 +1166,8 @@ static std::atomic<uint64_t> sb_perframe_calls{0};
 static std::atomic<uint64_t> sb_pertick_calls{0};
 static std::atomic<uint64_t> sb_deq_zero_depth{0}; // mixer arrived to empty queue
 // One-shot / sticky, never reset between periodic dumps.
-static std::atomic<int64_t>  sb_first_dma_qsize{-1};
-static std::atomic<bool>     sb_ff_observed{false};
+static std::atomic<int64_t> sb_first_dma_qsize{-1};
+static std::atomic<bool> sb_ff_observed{false};
 // Session-cumulative pre-dequeue depth (the latency proxy). Sticky --
 // each periodic dump reports the average over the whole session, so
 // the trend across the full run is visible alongside the per-window
@@ -1175,7 +1177,55 @@ static std::atomic<uint64_t> sb_queue_pre_deq_cum_count{0};
 // Most recent channel sample rate seen at dequeue. Cached so the
 // destructor's final summary can still print latency in milliseconds
 // after the channel has been torn down.
-static std::atomic<int>      sb_last_channel_rate_hz{0};
+static std::atomic<int> sb_last_channel_rate_hz{0};
+
+// End-to-end latency measurement: producer tags every Nth accepted
+// frame with a wall-clock timestamp; the mixer thread reports the
+// delta when that frame reaches the head of the queue and is pulled.
+// This is the direct equivalent of "tag each AudioFrame with an
+// incremental counter, then measure how long it takes to show up at
+// the dequeue side" (#4954 review feedback) without modifying
+// AudioFrame -- the queue is FIFO so the cumulative producer/consumer
+// frame indices identify the same frames the tags do.
+//
+// Caveats:
+// - Measures producer-side enqueue -> SB MixerCallback dequeue only.
+//   The downstream mixer-internal queue and the SDL output queue are
+//   NOT included; those add a roughly constant overhead on top, so
+//   the measurement is appropriate for comparing branches that only
+//   differ in the SB producer/queue behaviour.
+// - The consumer-side frame count is reconstructed from a FIFO
+//   identity rather than observed directly. Producer enqueue and
+//   counter-bump are two separate relaxed atomics, so the count can
+//   drift by up to one batch per callback in either direction.
+//   Individual measurements are therefore noisy; the periodic
+//   average is still meaningful for relative comparisons.
+static std::atomic<uint64_t> sb_producer_frames_total{0};
+static std::atomic<uint64_t> sb_consumer_frames_total{0};
+static SbStat sb_e2e_latency_us;
+
+struct SbPendingTag {
+	uint64_t target_consumer_idx             = 0;
+	std::chrono::steady_clock::time_point ts = {};
+};
+
+static std::mutex sb_tag_mutex;
+static std::deque<SbPendingTag> sb_pending_tags;
+
+// Frame index at which the next tag will be emitted. Producer-only;
+// updated under the same single-threaded path as enqueue_frames.
+static uint64_t sb_next_tag_at_frame = 0;
+
+// Coarse enough that the tagging path runs once per ~12 ms of audio
+// at 22050 Hz; fine enough that a 5 s window contains hundreds of
+// samples for averaging.
+static constexpr uint64_t SbTagIntervalFrames = 256;
+
+// Hard cap on outstanding tags so a stalled consumer (e.g. paused
+// mixer) cannot grow the queue unbounded. The oldest tag is dropped
+// when the cap is hit -- it would have produced a misleading
+// measurement anyway.
+static constexpr size_t SbPendingTagCap = 256;
 
 static void log_sb_instrumentation_summary(const char* label)
 {
@@ -1185,15 +1235,15 @@ static void log_sb_instrumentation_summary(const char* label)
 			return std::string("n=0");
 		}
 		char buf[128] = {};
-		std::snprintf(buf, sizeof(buf),
+		std::snprintf(buf,
+		              sizeof(buf),
 		              "n=%llu min=%lld max=%lld avg=%.1f",
 		              static_cast<unsigned long long>(n),
-		              static_cast<long long>(s.min.load(
-		                      std::memory_order_relaxed)),
-		              static_cast<long long>(s.max.load(
-		                      std::memory_order_relaxed)),
-		              static_cast<double>(s.sum.load(
-		                      std::memory_order_relaxed)) /
+		              static_cast<long long>(
+		                      s.min.load(std::memory_order_relaxed)),
+		              static_cast<long long>(
+		                      s.max.load(std::memory_order_relaxed)),
+		              static_cast<double>(s.sum.load(std::memory_order_relaxed)) /
 		                      static_cast<double>(n));
 		return std::string(buf);
 	};
@@ -1237,12 +1287,39 @@ static void log_sb_instrumentation_summary(const char* label)
 	}
 	LOG_MSG("  empty-queue at dequeue    : %llu  (underrun indicator)",
 	        (unsigned long long)sb_deq_zero_depth.load());
+	{
+		const auto n = sb_e2e_latency_us.count.load(std::memory_order_relaxed);
+		if (n == 0) {
+			LOG_MSG("  end-to-end latency        : n=0  (no tags consumed yet)");
+		} else {
+			const auto sum = sb_e2e_latency_us.sum.load(
+			        std::memory_order_relaxed);
+			const auto avg_us = static_cast<double>(sum) /
+			                    static_cast<double>(n);
+
+			LOG_MSG("  end-to-end latency        : n=%llu min=%lld us max=%lld us avg=%.1f us (= %.2f ms)  (producer-enqueue -> SB-mixer-dequeue)",
+			        (unsigned long long)n,
+			        (long long)sb_e2e_latency_us.min.load(
+			                std::memory_order_relaxed),
+			        (long long)sb_e2e_latency_us.max.load(
+			                std::memory_order_relaxed),
+			        avg_us,
+			        avg_us / 1000.0);
+		}
+
+		size_t pending = 0;
+		{
+			std::lock_guard<std::mutex> lock(sb_tag_mutex);
+			pending = sb_pending_tags.size();
+		}
+		LOG_MSG("  pending tags              : %llu",
+		        (unsigned long long)pending);
+	}
 	LOG_MSG("  frames_needed (raw)       : %s",
 	        fmt_stat(sb_frames_needed_stat).c_str());
 	const auto first = sb_first_dma_qsize.load(std::memory_order_relaxed);
 	LOG_MSG("  first-DMA queue depth     : %s  (sticky; non-zero => #4949-style pre-fill)",
-	        (first < 0 ? "(no DMA observed)"
-	                   : std::to_string(first).c_str()));
+	        (first < 0 ? "(no DMA observed)" : std::to_string(first).c_str()));
 	LOG_MSG("  fast-forward observed     : %s  (sticky)",
 	        sb_ff_observed.load(std::memory_order_relaxed) ? "yes" : "no");
 	LOG_MSG("==============================");
@@ -1259,6 +1336,7 @@ static void log_sb_instrumentation_summary(const char* label)
 	sb_queue_pre_enq.Reset();
 	sb_queue_pre_deq.Reset();
 	sb_frames_needed_stat.Reset();
+	sb_e2e_latency_us.Reset();
 }
 #endif
 
@@ -1268,13 +1346,35 @@ static void enqueue_frames(std::vector<AudioFrame>& frames)
 	frames_added_this_tick += static_cast<int>(frames.size());
 #if SB_DEBUG_INSTRUMENTATION
 	const auto wanted = frames.size();
-	sb_queue_pre_enq.Record(
-	        static_cast<int64_t>(sblaster->output_queue.Size()));
+	sb_queue_pre_enq.Record(static_cast<int64_t>(sblaster->output_queue.Size()));
 	const auto accepted = sblaster->output_queue.NonblockingBulkEnqueue(frames);
 	sb_enq_calls.fetch_add(1, std::memory_order_relaxed);
 	sb_enq_frames_wanted.fetch_add(wanted, std::memory_order_relaxed);
-	sb_enq_frames_rejected.fetch_add(wanted - accepted,
-	                                 std::memory_order_relaxed);
+	sb_enq_frames_rejected.fetch_add(wanted - accepted, std::memory_order_relaxed);
+
+	// End-to-end latency tagging. Bump the producer's cumulative
+	// frame counter by the number actually enqueued, then push a
+	// timestamped tag if we crossed the next tagging boundary. The
+	// tag targets the frame index that, once consumed, marks the
+	// end of the latency measurement window.
+	if (accepted > 0) {
+		const uint64_t prev_total = sb_producer_frames_total.fetch_add(
+		        accepted, std::memory_order_relaxed);
+		const uint64_t new_total = prev_total + accepted;
+
+		if (new_total >= sb_next_tag_at_frame) {
+			const SbPendingTag tag{new_total,
+			                       std::chrono::steady_clock::now()};
+
+			std::lock_guard<std::mutex> lock(sb_tag_mutex);
+			if (sb_pending_tags.size() >= SbPendingTagCap) {
+				sb_pending_tags.pop_front();
+			}
+			sb_pending_tags.push_back(tag);
+
+			sb_next_tag_at_frame = new_total + SbTagIntervalFrames;
+		}
+	}
 #else
 	sblaster->output_queue.NonblockingBulkEnqueue(frames);
 #endif
@@ -3473,8 +3573,8 @@ static void per_frame_callback(uint32_t)
 	sb_perframe_calls.fetch_add(1, std::memory_order_relaxed);
 #endif
 
-	const int raw_frames_needed = sblaster->frames_needed.exchange(
-	        0, std::memory_order_acq_rel);
+	const int raw_frames_needed =
+	        sblaster->frames_needed.exchange(0, std::memory_order_acq_rel);
 #if SB_DEBUG_INSTRUMENTATION
 	sb_frames_needed_stat.Record(raw_frames_needed);
 #endif
@@ -3504,8 +3604,7 @@ void SoundBlaster::MixerCallback(const int frames_requested)
 		sb_queue_pre_deq.Record(static_cast<int64_t>(sz));
 		sb_queue_pre_deq_cum_sum.fetch_add(static_cast<uint64_t>(sz),
 		                                   std::memory_order_relaxed);
-		sb_queue_pre_deq_cum_count.fetch_add(1,
-		                                     std::memory_order_relaxed);
+		sb_queue_pre_deq_cum_count.fetch_add(1, std::memory_order_relaxed);
 		if (sz == 0) {
 			sb_deq_zero_depth.fetch_add(1, std::memory_order_relaxed);
 		}
@@ -3519,9 +3618,9 @@ void SoundBlaster::MixerCallback(const int frames_requested)
 	// the only caller here, so a plain static + simple comparison is
 	// race-free.
 	{
-		using clock = std::chrono::steady_clock;
+		using clock      = std::chrono::steady_clock;
 		static auto last = clock::now();
-		const auto now = clock::now();
+		const auto now   = clock::now();
 		if (now - last >= std::chrono::seconds(5)) {
 			last = now;
 			log_sb_instrumentation_summary("periodic");
@@ -3541,8 +3640,61 @@ void SoundBlaster::MixerCallback(const int frames_requested)
 		                    std::memory_order_release);
 	}
 
+#if SB_DEBUG_INSTRUMENTATION
+	// Snapshot producer's cumulative count and queue depth on entry.
+	// Together with the post-pull values these let us compute exactly
+	// how many frames the pull consumed, even when the producer
+	// thread is enqueueing concurrently:
+	//   consumed = queue_before + (producer_after - producer_before)
+	//                           - queue_after
+	const uint64_t producer_before = sb_producer_frames_total.load(
+	        std::memory_order_relaxed);
+	const size_t queue_before_pull = output_queue.Size();
+#endif
+
 	MIXER_PullFromQueueCallback<SoundBlaster, AudioFrame, Stereo, SignedData, NativeOrder>(
 	        frames_requested, this);
+
+#if SB_DEBUG_INSTRUMENTATION
+	{
+		const uint64_t producer_after = sb_producer_frames_total.load(
+		        std::memory_order_relaxed);
+		const size_t queue_after_pull = output_queue.Size();
+		const uint64_t produced_during = producer_after - producer_before;
+
+		// Approximate consumed count from the FIFO identity. Not
+		// exact because enqueue_frames updates the queue and bumps
+		// sb_producer_frames_total as two separate relaxed atomics,
+		// so produced_during can lag the actual queue change. Errors
+		// are bounded by one batch per callback and average out over
+		// the periodic window. Clamp covers the negative-drift case.
+		const int64_t consumed_signed =
+		        static_cast<int64_t>(queue_before_pull) +
+		        static_cast<int64_t>(produced_during) -
+		        static_cast<int64_t>(queue_after_pull);
+
+		if (consumed_signed > 0) {
+			const uint64_t consumed = static_cast<uint64_t>(consumed_signed);
+			const uint64_t prev_consumer = sb_consumer_frames_total.fetch_add(
+			        consumed, std::memory_order_relaxed);
+			const uint64_t new_consumer = prev_consumer + consumed;
+
+			const auto now = std::chrono::steady_clock::now();
+			std::lock_guard<std::mutex> lock(sb_tag_mutex);
+			while (!sb_pending_tags.empty() &&
+			       sb_pending_tags.front().target_consumer_idx <=
+			               new_consumer) {
+				const auto& front = sb_pending_tags.front();
+				const auto delta_us =
+				        std::chrono::duration_cast<std::chrono::microseconds>(
+				                now - front.ts)
+				                .count();
+				sb_e2e_latency_us.Record(delta_us);
+				sb_pending_tags.pop_front();
+			}
+		}
+	}
+#endif
 }
 
 static SbType determine_sb_type(const std::string& pref)
