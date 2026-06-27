@@ -481,7 +481,7 @@ private:
 #if C_HEAVY_DEBUGGER
 	bool memory_was_read = false;
 
-	friend bool DEBUG_HeavyIsBreakpoint(void);
+	friend bool DEBUG_HeavyIsBreakpointImpl(void);
 #endif
 };
 
@@ -550,8 +550,19 @@ void CBreakpoint::Activate(bool _active)
 static std::list<CBreakpoint*> BPoints = {};
 
 #if C_HEAVY_DEBUGGER
+bool DEBUG_heavy_active = false;
+
+// Recompute whether the per-instruction / per-memory-read heavy debugger checks
+// need to run at all. Call this whenever a breakpoint or any of the logging
+// states change; the hot paths only pay for the check while this is true.
+static void UpdateHeavyActive()
+{
+	DEBUG_heavy_active = cpuLog || logHeavy || zeroProtect ||
+	                     skipFirstInstruction || !BPoints.empty();
+}
+
 template <typename T>
-void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr)
+void DEBUG_UpdateMemoryReadBreakpointsImpl(const PhysPt addr)
 {
 	static_assert(std::is_unsigned_v<T>);
 	static_assert(std::is_integral_v<T>);
@@ -572,10 +583,10 @@ void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr)
 	}
 }
 // Explicit instantiations
-template void DEBUG_UpdateMemoryReadBreakpoints<uint8_t>(const PhysPt addr);
-template void DEBUG_UpdateMemoryReadBreakpoints<uint16_t>(const PhysPt addr);
-template void DEBUG_UpdateMemoryReadBreakpoints<uint32_t>(const PhysPt addr);
-template void DEBUG_UpdateMemoryReadBreakpoints<uint64_t>(const PhysPt addr);
+template void DEBUG_UpdateMemoryReadBreakpointsImpl<uint8_t>(const PhysPt addr);
+template void DEBUG_UpdateMemoryReadBreakpointsImpl<uint16_t>(const PhysPt addr);
+template void DEBUG_UpdateMemoryReadBreakpointsImpl<uint32_t>(const PhysPt addr);
+template void DEBUG_UpdateMemoryReadBreakpointsImpl<uint64_t>(const PhysPt addr);
 #endif
 
 CBreakpoint* CBreakpoint::AddBreakpoint(uint16_t seg, uint32_t off, bool once)
@@ -584,6 +595,9 @@ CBreakpoint* CBreakpoint::AddBreakpoint(uint16_t seg, uint32_t off, bool once)
 	bp->SetAddress(seg, off);
 	bp->SetOnce(once);
 	BPoints.push_front(bp);
+#if C_HEAVY_DEBUGGER
+	UpdateHeavyActive();
+#endif
 	return bp;
 }
 
@@ -594,6 +608,9 @@ CBreakpoint* CBreakpoint::AddIntBreakpoint(uint8_t intNum, uint16_t ah,
 	bp->SetInt(intNum, ah, al);
 	bp->SetOnce(once);
 	BPoints.push_front(bp);
+#if C_HEAVY_DEBUGGER
+	UpdateHeavyActive();
+#endif
 	return bp;
 }
 
@@ -604,6 +621,9 @@ CBreakpoint* CBreakpoint::AddMemBreakpoint(uint16_t seg, uint32_t off)
 	bp->SetOnce(false);
 	bp->SetType(BKPNT_MEMORY);
 	BPoints.push_front(bp);
+#if C_HEAVY_DEBUGGER
+	UpdateHeavyActive();
+#endif
 	return bp;
 }
 
@@ -772,6 +792,9 @@ void CBreakpoint::DeleteAll()
 		delete bp;
 	}
 	BPoints.clear();
+#if C_HEAVY_DEBUGGER
+	UpdateHeavyActive();
+#endif
 }
 
 bool CBreakpoint::DeleteByIndex(uint16_t index)
@@ -788,6 +811,9 @@ bool CBreakpoint::DeleteByIndex(uint16_t index)
 	BPoints.erase(it);
 	bp->Activate(false);
 	delete bp;
+#if C_HEAVY_DEBUGGER
+	UpdateHeavyActive();
+#endif
 	return true;
 }
 
@@ -841,6 +867,9 @@ bool CBreakpoint::DeleteBreakpoint(uint16_t seg, uint32_t off)
 	if (bp) {
 		BPoints.remove(bp);
 		delete bp;
+#if C_HEAVY_DEBUGGER
+		UpdateHeavyActive();
+#endif
 		return true;
 	}
 
@@ -2149,6 +2178,9 @@ bool ParseCommand(char* str)
 		           << std::uppercase;
 		cpuLog        = true;
 		cpuLogCounter = GetHexValue(found, found);
+#if C_HEAVY_DEBUGGER
+		UpdateHeavyActive();
+#endif
 
 		debugging = false;
 		CBreakpoint::ActivateBreakpointsExceptAt(SegPhys(cs) + reg_eip);
@@ -2254,6 +2286,7 @@ bool ParseCommand(char* str)
 #if C_HEAVY_DEBUGGER
 	if (command == "HEAVYLOG") { // Create Cpu log file
 		logHeavy = !logHeavy;
+		UpdateHeavyActive();
 		DEBUG_ShowMsg("DEBUG: Heavy cpu logging %s.\n",
 		              logHeavy ? "on" : "off");
 		return true;
@@ -2261,6 +2294,7 @@ bool ParseCommand(char* str)
 
 	if (command == "ZEROPROTECT") { // toggle zero protection
 		zeroProtect = !zeroProtect;
+		UpdateHeavyActive();
 		DEBUG_ShowMsg("DEBUG: Zero code execution protection %s.\n",
 		              zeroProtect ? "on" : "off");
 		return true;
@@ -2549,6 +2583,9 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 int32_t DEBUG_Run(int32_t amount, bool quickexit)
 {
 	skipFirstInstruction = true;
+#if C_HEAVY_DEBUGGER
+	UpdateHeavyActive();
+#endif
 	CPU_Cycles           = amount;
 	int32_t ret          = (*cpudecoder)();
 	if (quickexit) {
@@ -3834,7 +3871,7 @@ void DEBUG_HeavyWriteLogInstruction()
 	DEBUG_ShowMsg("DEBUG: Done.\n");
 }
 
-bool DEBUG_HeavyIsBreakpoint(void)
+bool DEBUG_HeavyIsBreakpointImpl(void)
 {
 	static Bitu zero_count = 0;
 	if (cpuLog) {
@@ -3873,10 +3910,13 @@ bool DEBUG_HeavyIsBreakpoint(void)
 		skipFirstInstruction = false;
 		return false;
 	}
-	if (BPoints.size() && CBreakpoint::CheckBreakpoint(SegValue(cs), reg_eip)) {
+	if (!BPoints.empty() && CBreakpoint::CheckBreakpoint(SegValue(cs), reg_eip)) {
 		return true;
 	}
 
+	// Logging may have finished or a one-shot breakpoint may have been
+	// removed; recompute so the cores can drop back to the fast path.
+	UpdateHeavyActive();
 	return false;
 }
 

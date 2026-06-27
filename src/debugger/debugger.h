@@ -35,11 +35,32 @@ extern Bitu debugCallback;
 #endif // C_DEBUGGER
 
 #if C_DEBUGGER && C_HEAVY_DEBUGGER
-bool DEBUG_HeavyIsBreakpoint();
+// True only when something the heavy debugger cares about is armed (a
+// breakpoint, instruction/CPU logging, zero-code protection, ...). It lets the
+// per-instruction and per-memory-read checks below stay a single inlined branch
+// in the CPU cores when nothing is set, instead of an out-of-line call.
+extern bool DEBUG_heavy_active;
+
+bool DEBUG_HeavyIsBreakpointImpl();
 void DEBUG_HeavyWriteLogInstruction();
 
 template <typename T>
-void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr);
+void DEBUG_UpdateMemoryReadBreakpointsImpl(const PhysPt addr);
+
+// Hot path: called once per instruction by the CPU cores.
+inline bool DEBUG_HeavyIsBreakpoint()
+{
+	return DEBUG_heavy_active && DEBUG_HeavyIsBreakpointImpl();
+}
+
+// Hot path: called on every guarded memory read.
+template <typename T>
+inline void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr)
+{
+	if (DEBUG_heavy_active) {
+		DEBUG_UpdateMemoryReadBreakpointsImpl<T>(addr);
+	}
+}
 
 #else
 
