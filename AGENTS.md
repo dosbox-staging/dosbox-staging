@@ -9,6 +9,7 @@ Treat this file as the entry point, not the full policy set. The canonical share
 - `code-style.md`: C++ editing rules for `src/`
 - `commits.md`: commit structure and prefix rules
 - `docs-style.md`: website/docs verification and writing rules
+- `mcp.md`: how agents should use the DOSBox MCP bridge
 
 When work touches one of those areas, read the matching rule file before editing.
 

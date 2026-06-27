@@ -24,8 +24,8 @@ ResourceTextReader = Callable[[DosboxHttpClient], Awaitable[str]]
 
 
 def _to_json_text(payload: Any) -> str:
-    """Serialize one resource payload as pretty-printed stable JSON text."""
-    return json.dumps(payload, indent=2, sort_keys=True)
+    """Serialize one resource payload as compact stable JSON text."""
+    return json.dumps(payload, separators=(",", ":"), sort_keys=True)
 
 
 def list_static_resources() -> list[types.Resource]:
