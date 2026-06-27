@@ -22,6 +22,8 @@ Do not treat it as a general automation surface for unrelated DOSBox tasks.
   named view such as status or registers.
 - Use a **resource template** when you need a parameterized memory read and may
   want to subscribe to that exact URI later.
+- In practice, start with `dosbox://session/status` before and after pause,
+  step, or continue operations.
 
 ## Tools
 
@@ -38,6 +40,7 @@ Pause DOSBox at the next safe debugger boundary.
 Resume execution from a paused debugger state.
 
 - use only when DOSBox is paused
+- calls are rejected while DOSBox is running
 - the bridge then polls until it sees the next stop or another lifecycle change
 
 ### `debug_step`
@@ -45,6 +48,7 @@ Resume execution from a paused debugger state.
 Step one instruction while paused.
 
 - only `mode: "into"` is supported
+- calls are rejected while DOSBox is running
 - the bridge treats this like continue-then-wait-for-next-stop
 
 ### `debug_read_memory`
@@ -63,16 +67,20 @@ Returned shape:
 - `dataBase64`: memory bytes encoded as base64
 
 Use this tool for one-off reads. Prefer resource templates when the memory
-location itself is the object you want to track or revisit.
+location itself is the object you want to track or revisit. The memory
+resource templates return the same logical payload shape.
 
 ## Static Resources
 
-All resource reads return compact JSON text.
+All resource reads return compact JSON text. Read them as JSON payloads encoded
+inside MCP text content, not as already-parsed native objects.
 
 ### `dosbox://session/status`
 
 Use this when you need the current debugger lifecycle state plus registers in
 one payload.
+
+This is the primary coordination resource for debugger control.
 
 Returned fields:
 
