@@ -38,9 +38,9 @@ static Segment str_to_base_segment(const std::string_view str)
 	}
 }
 
-static uint32_t base_segment_to_offset(const Segment segment)
+static uint32_t base_segment_to_offset(const Segment base_segment)
 {
-	switch (segment) {
+	switch (base_segment) {
 	case Segment::CS: return SegPhys(SegNames::cs);
 	case Segment::SS: return SegPhys(SegNames::ss);
 	case Segment::DS: return SegPhys(SegNames::ds);
@@ -52,19 +52,19 @@ static uint32_t base_segment_to_offset(const Segment segment)
 	}
 }
 
-static void parse_mem_addr(const httplib::Request& req, Segment& segment,
+static void parse_mem_addr(const httplib::Request& req, Segment& base_segment,
                            uint32_t& offset)
 {
-	offset  = num_param<uint32_t>(req, Source::Path, "offset");
-	segment = Segment::None;
+	offset       = num_param<uint32_t>(req, Source::Path, "offset");
+	base_segment = Segment::None;
 
 	if (req.path_params.find("segment") != req.path_params.end()) {
 		auto& segment_param = req.path_params.at("segment");
-		segment             = str_to_base_segment(segment_param);
+		base_segment        = str_to_base_segment(segment_param);
 
 		// Segment can either be a register to resolve later or an
 		// address which we can already resolve here.
-		if (segment == Segment::None) {
+		if (base_segment == Segment::None) {
 			const auto seg_addr = PhysicalMake(
 			        num_param<uint16_t>(req, Source::Path, "segment"), 0);
 

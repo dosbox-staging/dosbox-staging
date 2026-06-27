@@ -59,7 +59,7 @@ class SubscriptionManager:
             "last_stop_sequence": None,
         }
 
-    async def start(self) -> None:
+    def start(self) -> None:
         """Start the background poller that drives resource updates."""
         self._stop_event.clear()
         self._poller_task = asyncio.create_task(self._poll_loop())
@@ -190,7 +190,7 @@ async def build_lifespan(
     subscriptions: SubscriptionManager,
 ) -> AsyncIterator[dict[str, Any]]:
     """Own the MCP server lifetime for one DOSBox HTTP client instance."""
-    await subscriptions.start()
+    subscriptions.start()
     try:
         yield {"client": client, "subscriptions": subscriptions}
     finally:

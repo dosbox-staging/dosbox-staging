@@ -14,8 +14,8 @@ server for agents and other MCP clients.
 webserver_enabled = on
 ```
 
-- A local DOSBox instance listening on `127.0.0.1:8086`, or a custom base URL
-  passed to the bridge
+- A local DOSBox instance listening on `127.0.0.1:8086`, or another loopback
+  base URL passed to the bridge
 
 ## Install
 
@@ -35,7 +35,7 @@ of through `mcp run` or `mcp dev`:
 python -m dosbox_mcp
 ```
 
-To target a different DOSBox webserver URL:
+To target a different loopback DOSBox webserver URL:
 
 ```powershell
 python -m dosbox_mcp --base-url http://127.0.0.1:8086

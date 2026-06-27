@@ -3,12 +3,42 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit
+import ipaddress
 import json
 
 import httpx
 
 from .models import DebugStatus
 from .models import MemoryReadResult
+
+JSON_MIME_TYPE = "application/json"
+
+
+def _validate_base_url(base_url: str) -> str:
+    """Accept only loopback DOSBox endpoints for the MCP bridge."""
+    parsed = urlsplit(base_url)
+
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("DOSBox base URL must use http or https")
+
+    hostname = parsed.hostname
+    if hostname is None:
+        raise ValueError("DOSBox base URL must include a host")
+    if hostname == "localhost":
+        return base_url.rstrip("/")
+
+    try:
+        host_ip = ipaddress.ip_address(hostname)
+    except ValueError as exc:
+        raise ValueError(
+            "DOSBox base URL host must be localhost or a loopback IP address"
+        ) from exc
+    if not host_ip.is_loopback:
+        raise ValueError(
+            "DOSBox base URL host must be localhost or a loopback IP address"
+        )
+    return base_url.rstrip("/")
 
 
 class DosboxHttpError(RuntimeError):
@@ -24,8 +54,8 @@ class DosboxHttpClient:
 
     def __init__(self, base_url: str, timeout_seconds: float = 10.0) -> None:
         self._client = httpx.AsyncClient(
-            base_url=base_url.rstrip("/"),
-            headers={"Accept": "application/json"},
+            base_url=_validate_base_url(base_url),
+            headers={"Accept": JSON_MIME_TYPE},
             timeout=httpx.Timeout(timeout_seconds, read=timeout_seconds),
         )
 
@@ -123,7 +153,7 @@ class DosboxHttpClient:
         payload = await self._request_json(
             "GET",
             f"/api/v1/memory/{segment}/{offset}/{length}",
-            headers={"Accept": "application/json"},
+            headers={"Accept": JSON_MIME_TYPE},
         )
         return MemoryReadResult.from_dict(payload)
 
@@ -136,6 +166,6 @@ class DosboxHttpClient:
         payload = await self._request_json(
             "GET",
             f"/api/v1/memory/{address}/{length}",
-            headers={"Accept": "application/json"},
+            headers={"Accept": JSON_MIME_TYPE},
         )
         return MemoryReadResult.from_dict(payload)

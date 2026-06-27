@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 from mcp import types
 
+from .client import JSON_MIME_TYPE
 from .client import DosboxHttpClient
 from .models import MemoryReadResult
 from .models import parse_int
@@ -34,19 +35,19 @@ def list_static_resources() -> list[types.Resource]:
             uri=SESSION_STATUS_URI,
             name="DOSBox Status",
             description="Current debugger stop state and registers.",
-            mimeType="application/json",
+            mimeType=JSON_MIME_TYPE,
         ),
         types.Resource(
             uri=SESSION_REGISTERS_URI,
             name="Registers",
             description="Current CPU register snapshot.",
-            mimeType="application/json",
+            mimeType=JSON_MIME_TYPE,
         ),
         types.Resource(
             uri=SESSION_DOS_INTERNALS_URI,
             name="DOS Internals",
             description="List-of-lists, swappable area, and first shell pointers.",
-            mimeType="application/json",
+            mimeType=JSON_MIME_TYPE,
         ),
     ]
 
@@ -58,13 +59,13 @@ def list_resource_templates() -> list[types.ResourceTemplate]:
             uriTemplate=SEGMENTED_MEMORY_TEMPLATE_URI,
             name="Segmented Memory",
             description="Base64 memory snapshot by segment:offset.",
-            mimeType="application/json",
+            mimeType=JSON_MIME_TYPE,
         ),
         types.ResourceTemplate(
             uriTemplate=PHYSICAL_MEMORY_TEMPLATE_URI,
             name="Physical Memory",
             description="Base64 memory snapshot by physical address.",
-            mimeType="application/json",
+            mimeType=JSON_MIME_TYPE,
         ),
     ]
 

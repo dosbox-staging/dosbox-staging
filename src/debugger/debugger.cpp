@@ -3545,7 +3545,8 @@ Bitu DEBUG_EnableDebugger()
 	enter_paused_state(DebugController::Instance().GetResumePauseMode(),
 	                   DebugStopReason::PauseRequested,
 	                   "Debugger paused");
-	CPU_Cycles = CPU_CycleLeft = 0;
+	CPU_Cycles = 0;
+	CPU_CycleLeft = 0;
 	return 0;
 }
 

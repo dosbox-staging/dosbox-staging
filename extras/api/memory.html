@@ -140,7 +140,7 @@
                     ${segNames.map(s => `<dt class="register">${s.toUpperCase()}:</dt><dd class="register">0x${currentRegisters[s].toString(16).padStart(4, '0')}</dd>`).join(' ')}
 					</dl>
                 `;
-            } catch (_err) {
+            } catch {
                 currentRegisters = null;
                 regBar.textContent = 'Register snapshot unavailable.';
             }
