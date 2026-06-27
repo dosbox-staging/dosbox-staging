@@ -91,6 +91,20 @@ static struct {
 	bool locked       = {};
 } ticks = {};
 
+// Reset wall-clock accounting on resume so `increase_ticks()` doesn't see
+// a multi-second gap from before pause and try to "catch up" by running
+// tens of seconds of emulation in a burst. PIC time is frozen across
+// pause; only the wall-clock counters need this rebase.
+//
+static void rebase_wall_clock_on_resume()
+{
+	ticks.last      = GetTicks();
+	ticks.remain    = 0;
+	ticks.added     = 0;
+	ticks.done      = 0;
+	ticks.scheduled = 0;
+}
+
 int64_t DOSBOX_GetTicksDone()
 {
 	return ticks.done;
@@ -152,6 +166,9 @@ PauseState DOSBOX_GetPauseState()
 	return pause_state.load();
 }
 
+// Forward decl; body lives next to the `ticks` struct it operates on.
+static void rebase_wall_clock_on_resume();
+
 void DOSBOX_SetPauseState(const PauseState new_state)
 {
 	const std::lock_guard lock(pause_state_mutex);
@@ -170,7 +187,15 @@ void DOSBOX_SetPauseState(const PauseState new_state)
 		return;
 	}
 
+	const bool was_paused  = (prev == PauseState::UserPaused ||
+                                 prev == PauseState::FocusLossPaused);
+	const bool now_running = (new_state == PauseState::Running);
+
 	pause_state.store(new_state);
+
+	if (was_paused && now_running) {
+		rebase_wall_clock_on_resume();
+	}
 
 	LOG_MSG("DOSBOX: Pause %s -> %s",
 	        to_string(prev),
