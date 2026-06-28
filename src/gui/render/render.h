@@ -107,6 +107,25 @@ struct Render {
 		int y_scale = 0;
 	} scale = {};
 
+	// Source-pixel snapshot of the last completed frame. Deep-copied from
+	// `scale.cache` at the end of every successful `RENDER_EndUpdate(false)`.
+	//
+	// Used as a clean source for screenshots and video capture, so consumers
+	// don't read the live, possibly mid-frame `scale.cache`, and as the input
+	// for `RENDER_RescaleLastFrame()` after a pause-time recreate.
+	struct {
+		alignas(uint64_t)
+		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
+
+		ImageInfo src         = {};
+		RenderPalette palette = {};
+
+		int pitch = 0;
+
+		// `false` until the first frame has been latched.
+		bool valid = false;
+	} last_complete_source = {};
+
 	RenderPalette palette = {};
 
 	uint32_t* dest = nullptr;

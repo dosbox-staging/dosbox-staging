@@ -348,6 +348,27 @@ static void deinterlace_rendered_output()
 	render.deinterlacer->Deinterlace(image, render.deinterlacing_strength);
 }
 
+// Latch the just-finished frame's source pixels into
+// `render.last_complete_source` so screenshots / video capture and pause-time
+// re-scale can read a clean, complete frame instead of the live
+// `render.scale.cache` (which can be in the middle of an update during a
+// scanout).
+//
+static void latch_last_complete_source()
+{
+	const auto bytes = static_cast<size_t>(render.scale.cache_pitch) *
+	                   static_cast<size_t>(render.src.height);
+
+	std::memcpy(render.last_complete_source.cache.data(),
+	            render.scale.cache.data(),
+	            bytes);
+
+	render.last_complete_source.src     = render.src;
+	render.last_complete_source.palette = render.palette;
+	render.last_complete_source.pitch   = render.scale.cache_pitch;
+	render.last_complete_source.valid   = true;
+}
+
 void RENDER_EndUpdate(const bool abort)
 {
 	if (!render.render_in_progress) {
@@ -355,6 +376,13 @@ void RENDER_EndUpdate(const bool abort)
 	}
 
 	RENDER_DrawLine = empty_line_handler;
+
+	// Latch the just-finished frame before any consumer (capture,
+	// deinterlace) runs, so anything that reads via the latch sees the fresh
+	// frame, not the previous one.
+	if (!abort) {
+		latch_last_complete_source();
+	}
 
 	// Aborted scanouts (vertical retrace cleanup, `VGA_KillDrawing()`) leave
 	// a half-filled cache. Very rarely, such a frame could end up in the
@@ -512,6 +540,11 @@ static void render_callback(GFX_CallbackFunctions_t function)
 void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second)
 {
 	halt_render();
+
+	// Source dimensions or pixel format may change; the latched frame is
+	// only meaningful at the dimensions it was captured at. Drop it and let
+	// the next `RENDER_EndUpdate(false)` re-populate it.
+	render.last_complete_source.valid = false;
 
 	if (image_info.width == 0 || image_info.height == 0 ||
 	    image_info.width > ScalerMaxWidth ||
