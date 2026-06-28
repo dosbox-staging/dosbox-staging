@@ -283,6 +283,13 @@ void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second)
 bool RENDER_StartUpdate();
 void RENDER_EndUpdate(bool abort);
 
+// Returns the last completed source-pixel frame as a non-owning
+// `RenderedImage`. Never returns a torn mid-scanout view -- the live
+// `render.scale.cache` is private to the scaler. `image_data` is null
+// until the first complete frame has been latched (e.g. right after a
+// video mode change); callers must check.
+RenderedImage RENDER_GetCurrentImage();
+
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue);
 
