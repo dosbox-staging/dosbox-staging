@@ -272,35 +272,6 @@ void GFX_RequestExit(const bool pressed)
 	}
 }
 
-static bool is_unpause_event(const SDL_Event event, const KeyPressState unpause_key)
-{
-	if (event.type != SDL_EVENT_KEY_DOWN) {
-		return false;
-	}
-
-	if (event.key.key == unpause_key.key) {
-		// These are the only mods we're going to care about.
-		// Others mods include caps lock and num lock which we should not look at.
-		constexpr SDL_Keymod ModMask = SDL_Keymod(SDL_KMOD_CTRL | SDL_KMOD_SHIFT |
-		                                          SDL_KMOD_ALT | SDL_KMOD_GUI);
-		const auto unpause_mod = SDL_Keymod(unpause_key.mod & ModMask);
-		if ((event.key.mod & unpause_mod) == unpause_mod) {
-			return true;
-		}
-	}
-
-	// Also check previously hard-coded Alt+Pause on Windows/Linux
-	// and Command+P on Mac to ensure we don't have regressions.
-	#if defined(MACOSX)
-	constexpr SDL_Keymod DefaultMod  = SDL_KMOD_GUI;
-	constexpr SDL_Keycode DefaultKey = SDLK_P;
-	#else
-	constexpr SDL_Keymod DefaultMod  = SDL_KMOD_ALT;
-	constexpr SDL_Keycode DefaultKey = SDLK_PAUSE;
-	#endif
-	return event.key.key == DefaultKey && (event.key.mod & DefaultMod);
-}
-
 // Thin wrapper around the FSM. The state machine + `paused_tick()` in
 // `dosbox.cpp` own the actual pause loop; here we just translate the
 // hotkey press into the right transition.
@@ -2133,68 +2104,44 @@ int GFX_GetUserSdlEventId(DosBoxSdlEvent event)
 	return sdl.start_event_id + enum_val(event);
 }
 
+// Focus-loss / focus-gain hook. Routes window-focus events into the FSM:
+// loss requests a `FocusLossPaused`; gain resumes IFF the current pause is
+// a focus-loss one (user-initiated pauses survive focus changes -- the FSM
+// encodes that).
+//
 static void handle_pause_when_inactive(const SDL_Event& event)
 {
-	if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST ||
-	    event.type == SDL_EVENT_WINDOW_MINIMIZED) {
-		// Window has lost focus, pause the emulator. This is similar to
-		// what PauseDOSBox() does, but the exit criteria is different.
-		// Instead of waiting for the user to hit Alt+Break, we wait for
-		// the window to regain window or input focus.
-		//
-		apply_inactive_settings();
+	using enum PauseState;
 
+	switch (event.type) {
+	case SDL_EVENT_WINDOW_FOCUS_LOST:
+	case SDL_EVENT_WINDOW_MINIMIZED:
+		apply_inactive_settings();
 		KEYBOARD_ClrBuffer();
 
-		sdl.is_paused = true;
-		TITLEBAR_RefreshTitle();
-
-		// Prevent the mixer from running while in our pause loop.
-		// Muting is not ideal for some sound devices such as GUS that
-		// loop samples. This also saves CPU time by not rendering
-		// samples we're not going to play anyway.
-		MIXER_LockMixerThread();
-
-		SDL_Event ev;
-
-		while (sdl.is_paused && !DOSBOX_IsShutdownRequested()) {
-			// WaitEvent() waits for an event rather than
-			// polling, so CPU usage drops to zero.
-			SDL_WaitEvent(&ev);
-
-			switch (ev.type) {
-			case SDL_EVENT_QUIT: GFX_RequestExit(true); break;
-			case SDL_EVENT_WINDOW_FOCUS_LOST:
-			case SDL_EVENT_WINDOW_MINIMIZED:
-			case SDL_EVENT_WINDOW_FOCUS_GAINED:
-			case SDL_EVENT_WINDOW_RESTORED:
-			case SDL_EVENT_WINDOW_EXPOSED: {
-				const auto we = ev.type;
-
-				if (we == SDL_EVENT_WINDOW_FOCUS_GAINED ||
-				    we == SDL_EVENT_WINDOW_RESTORED ||
-				    we == SDL_EVENT_WINDOW_EXPOSED) {
-					sdl.is_paused = false;
-					TITLEBAR_RefreshTitle();
-
-					if (we == SDL_EVENT_WINDOW_FOCUS_GAINED) {
-						sdl.is_paused = false;
-						apply_active_settings();
-					}
-				}
-
-				// Release ALT keys, otherwise ALT can stick and cause problems.
-				KEYBOARD_AddKey(KBD_leftalt, false);
-				KEYBOARD_AddKey(KBD_rightalt, false);
-
-				if (we == SDL_EVENT_WINDOW_RESTORED) {
-					// We may need to re-create a texture and more.
-					GFX_ResetScreen();
-				}
-			} break;
-			}
+		if (DOSBOX_GetPauseState() == Running) {
+			DOSBOX_SetPauseState(FocusLossPaused);
+			TITLEBAR_RefreshTitle();
 		}
-		MIXER_UnlockMixerThread();
+		break;
+
+	case SDL_EVENT_WINDOW_FOCUS_GAINED:
+	case SDL_EVENT_WINDOW_RESTORED:
+	case SDL_EVENT_WINDOW_EXPOSED: {
+		if (DOSBOX_GetPauseState() == FocusLossPaused) {
+			DOSBOX_SetPauseState(Running);
+			TITLEBAR_RefreshTitle();
+		}
+		if (event.type == SDL_EVENT_WINDOW_FOCUS_GAINED) {
+			apply_active_settings();
+		}
+		// Release ALT keys; ALT can stick on focus loss.
+		KEYBOARD_AddKey(KBD_leftalt, false);
+		KEYBOARD_AddKey(KBD_rightalt, false);
+		break;
+	}
+
+	default: break;
 	}
 }
 
@@ -2539,13 +2486,20 @@ bool GFX_PollAndHandleEvents()
 		}
 
 		if (is_window_event(event)) {
-			auto handling_finished = handle_sdl_windowevent(event);
+			const auto handling_finished = handle_sdl_windowevent(event);
+
+			// Pause-when-inactive must run for BOTH focus loss
+			// (`FOCUS_LOST` / `MINIMIZED`, which return `false`)
+			// and focus gain (`FOCUS_GAINED` / `RESTORED` /
+			// `EXPOSED`, which return `true`). Bailing on
+			// `handling_finished` before this point would skip the
+			// focus-gain side and leave `FocusLossPaused` stuck.
+			if (sdl.pause_when_inactive) {
+				handle_pause_when_inactive(event);
+			}
 			if (handling_finished) {
 				continue;
 			}
-			if (sdl.pause_when_inactive) {
-				handle_pause_when_inactive(event);
-			}			
 		}
 
 		switch(event.type) {
