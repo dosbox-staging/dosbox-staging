@@ -577,6 +577,15 @@ static void DOSBOX_UnlockSpeed(bool pressed)
 {
 	static bool autoadjust = false;
 
+	// Fast-forward requires PIC + CPU to be running. It's the one feature
+	// whose trigger is suppressed during pause; everything else (mapper,
+	// screenshot, capture, fullscreen, window resize, shader auto-switch,
+	// config reload) keeps working.
+	if (pressed && !DOSBOX_IsRunning()) {
+		LOG_MSG("Fast Forward unavailable while paused");
+		return;
+	}
+
 	if (pressed) {
 		LOG_MSG("Fast Forward ON");
 		ticks.locked = true;

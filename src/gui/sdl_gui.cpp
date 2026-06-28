@@ -301,76 +301,28 @@ static bool is_unpause_event(const SDL_Event event, const KeyPressState unpause_
 	return event.key.key == DefaultKey && (event.key.mod & DefaultMod);
 }
 
+// Thin wrapper around the FSM. The state machine + `paused_tick()` in
+// `dosbox.cpp` own the actual pause loop; here we just translate the
+// hotkey press into the right transition.
+//
 [[maybe_unused]] static void pause_emulation(bool pressed)
 {
 	if (!pressed) {
 		return;
 	}
 
-	// Bit of a hack but this is the key that was used to pause so let's
-	// also check it to unpause. We should really be relying on
-	// MAPPER_CheckEvent() but that is not possible inside this janky pause
-	// loop.
-	// TODO: In the future, re-work pause logic so we use the main event
-	// loop all the time.
-	const auto unpause_key = MAPPER_GetLastKeyPressed();
+	if (DOSBOX_IsPaused()) {
+		DOSBOX_RequestUserResume();
+	} else {
+		DOSBOX_RequestUserPause();
+	}
 
-	const auto inkeymod = SDL_GetModState();
-
-	sdl.is_paused = true;
 	TITLEBAR_RefreshTitle();
-
-	SDL_Event event;
-
-	while (SDL_PollEvent(&event)) {
-		// flush event queue.
-	}
-
-	// Prevent the mixer from running while in our pause loop
-	// Muting is not ideal for some sound devices such as GUS that loop
-	// samples This also saves CPU time by not rendering samples we're not
-	// going to play anyway
-	MIXER_LockMixerThread();
-
-	// NOTE: This is one of the few places where we use SDL key codes with
-	// SDL 2.0, rather than scan codes. Is that the correct behavior?
-	while (sdl.is_paused && !DOSBOX_IsShutdownRequested()) {
-		// since we're not polling, CPU usage drops to 0.
-		SDL_WaitEvent(&event);
-
-		switch (event.type) {
-		case SDL_EVENT_QUIT: GFX_RequestExit(true); break;
-
-		case SDL_EVENT_WINDOW_RESTORED:
-			// We may need to re-create a texture and more
-			GFX_ResetScreen();
-			break;
-
-		case SDL_EVENT_KEY_DOWN:
-			if (is_unpause_event(event, unpause_key)) {
-				const auto outkeymod = event.key.mod;
-				if (inkeymod != outkeymod) {
-					KEYBOARD_ClrBuffer();
-					MAPPER_LosingFocus();
-					// Not perfect if the pressed Alt key is
-					// switched, but then we have to insert
-					// the keys into the mapper or
-					// create/rewrite the event and push it.
-					// Which is tricky due to possible use
-					// of scancodes.
-				}
-				sdl.is_paused = false;
-				TITLEBAR_RefreshTitle();
-				break;
-			}
-		}
-	}
-	MIXER_UnlockMixerThread();
 }
 
 bool GFX_IsPaused()
 {
-	return sdl.is_paused;
+	return DOSBOX_IsPaused();
 }
 
 void GFX_Stop()
