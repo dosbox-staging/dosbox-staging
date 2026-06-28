@@ -328,6 +328,16 @@ void GFX_ResetScreen()
 
 	VGA_SetupDrawing(0);
 	GFX_Start();
+
+	// While paused, the emulator core isn't producing fresh frames, so the
+	// just-recreated renderer would draw a blank or stale-stretched
+	// framebuffer until resume. Drive a synthetic rescale of the latched
+	// source frame at the new dimensions, then present immediately so the
+	// held content shows correctly at the new geometry.
+	if (DOSBOX_IsPaused()) {
+		RENDER_RescaleLastFrame();
+		GFX_MaybePresentFrame();
+	}
 }
 
 static bool is_vsync_enabled()
