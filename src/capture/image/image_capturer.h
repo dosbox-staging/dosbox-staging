@@ -99,6 +99,13 @@ private:
 	void ConfigureGroupedMode(const std::string& prefs);
 
 	ImageSaver& GetNextImageSaver();
+
+	// Drives `MaybeCaptureImage()` synchronously when the emulator is
+	// paused; no-op otherwise. The normal vretrace-driven drain doesn't
+	// fire during pause, so pending requests would never complete (and
+	// grouped captures would reuse stale `rendered_path` values on
+	// subsequent presses).
+	void MaybeDrainOnPause();
 };
 
 #endif // DOSBOX_IMAGE_CAPTURER_H
