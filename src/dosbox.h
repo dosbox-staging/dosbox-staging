@@ -47,6 +47,53 @@ void DOSBOX_RequestShutdown();
 
 bool DOSBOX_IsShutdownRequested();
 
+// Pause state machine. FSM lives in `src/dosbox.cpp`.
+//
+// Three states:
+//   - `Running`: emulator core ticking normally.
+//   - `UserPaused`: user-initiated pause (hotkey or HTTP API).
+//   - `FocusLossPaused`: auto-pause from window focus loss; only the
+//     focus-gain handler resumes this, leaving user-pauses alone.
+//
+// `FocusLossPaused` upgrades to `UserPaused` if the user hits the pause
+// hotkey while focus-loss-paused -- it shouldn't auto-resume on focus
+// gain after that. The reverse never happens.
+//
+// Mapper UI is orthogonal -- it suspends audio via
+// `MIXER_LockMixerThread()` without going through this FSM.
+//
+enum class PauseState : uint8_t {
+	Running,
+	UserPaused,
+	FocusLossPaused,
+};
+
+PauseState DOSBOX_GetPauseState();
+void DOSBOX_SetPauseState(PauseState new_state);
+
+// User-driven pause / resume intent. Mapper hotkey routes through these;
+// HTTP API will expose them as idempotent endpoints.
+//
+// `DOSBOX_RequestUserPause()`: `Running` -> `UserPaused`; from
+// `FocusLossPaused`, upgrades ownership to `UserPaused` so focus-gain no
+// longer auto-resumes. No-op when already user-paused.
+//
+// `DOSBOX_RequestUserResume()`: `UserPaused` -> `Running`. No-op
+// otherwise (only the focus handler resumes `FocusLossPaused`).
+//
+void DOSBOX_RequestUserPause();
+void DOSBOX_RequestUserResume();
+
+inline bool DOSBOX_IsRunning()
+{
+	return (DOSBOX_GetPauseState() == PauseState::Running);
+}
+
+inline bool DOSBOX_IsPaused()
+{
+	return (DOSBOX_GetPauseState() != PauseState::Running);
+}
+
 // The E_Exit function throws an exception to quit. Call it in unexpected
 // circumstances.
 [[noreturn]] void E_Exit(const char *message, ...)

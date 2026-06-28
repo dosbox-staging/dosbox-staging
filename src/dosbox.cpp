@@ -4,12 +4,15 @@
 
 #include "dosbox.h"
 
+#include <atomic>
+#include <cassert>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <mutex>
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -107,11 +110,129 @@ void Null_Init([[maybe_unused]] Section *sec) {
 	// do nothing
 }
 
+// ---------------------------------------------------------------------------
+// Pause state machine
+//
+// Single source of truth. All transitions go through
+// `DOSBOX_SetPauseState()` (validated against `is_valid_transition()`).
+//
+// Callers that want "user pressed the pause / resume button" semantics
+// use `DOSBOX_RequestUserPause()` / `DOSBOX_RequestUserResume()`.
+// ---------------------------------------------------------------------------
+
+static std::mutex pause_state_mutex        = {};
+static std::atomic<PauseState> pause_state = PauseState::Running;
+
+static const char* to_string(const PauseState s)
+{
+	using enum PauseState;
+
+	switch (s) {
+	case Running: return "Running";
+	case UserPaused: return "UserPaused";
+	case FocusLossPaused: return "FocusLossPaused";
+	default: assertm(false, "Invalid PauseState value"); return "";
+	}
+}
+
+static bool is_valid_transition(const PauseState from, const PauseState to)
+{
+	using enum PauseState;
+
+	switch (from) {
+	case Running: return (to == UserPaused || to == FocusLossPaused);
+	case UserPaused: return (to == Running);
+	case FocusLossPaused: return (to == Running || to == UserPaused);
+	default: assertm(false, "Invalid PauseState value"); return false;
+	}
+}
+
+PauseState DOSBOX_GetPauseState()
+{
+	return pause_state.load();
+}
+
+void DOSBOX_SetPauseState(const PauseState new_state)
+{
+	const std::lock_guard lock(pause_state_mutex);
+
+	const auto prev = pause_state.load();
+	if (prev == new_state) {
+		return;
+	}
+
+	if (!is_valid_transition(prev, new_state)) {
+		LOG_WARNING("DOSBOX: Invalid pause transition %s -> %s",
+		            to_string(prev),
+		            to_string(new_state));
+
+		assert(false);
+		return;
+	}
+
+	pause_state.store(new_state);
+
+	LOG_MSG("DOSBOX: Pause %s -> %s",
+	        to_string(prev),
+	        to_string(new_state));
+}
+
+void DOSBOX_RequestUserPause()
+{
+	using enum PauseState;
+
+	switch (DOSBOX_GetPauseState()) {
+	case Running: DOSBOX_SetPauseState(UserPaused); break;
+	case FocusLossPaused: DOSBOX_SetPauseState(UserPaused); break;
+
+	case UserPaused:
+		// already user-paused
+		break;
+
+	default: assertm(false, "Invalid PauseState value");
+	}
+}
+
+void DOSBOX_RequestUserResume()
+{
+	using enum PauseState;
+
+	switch (DOSBOX_GetPauseState()) {
+	case UserPaused: DOSBOX_SetPauseState(Running); break;
+
+	case Running:
+	case FocusLossPaused:
+		// only the focus handler resumes focus-loss pauses
+		break;
+
+	default: assertm(false, "Invalid PauseState value");
+	}
+}
+
+// CPU-thread tick body while paused. Minimal skeleton; subsequent commits
+// will pump frame presentation, host events, the mapper, and the
+// webserver bridge here.
+//
+static Bitu paused_tick()
+{
+	if (DOSBOX_IsShutdownRequested()) {
+		return 1;
+	}
+
+	constexpr uint64_t one_ms_ns = 1'000'000;
+	SDL_DelayPrecise(one_ms_ns);
+	return 0;
+}
+
 // forward declaration
 static void increase_ticks();
 
 static Bitu normal_loop()
 {
+	if (DOSBOX_IsPaused()) {
+		return paused_tick();
+	}
+
 	Bits ret;
 
 	while (true) {
