@@ -2535,40 +2535,43 @@ static void mix_samples(const int frames_requested)
 	}
 }
 
-// Run in the main thread by a PIC Callback
+// Run in the main thread by a PIC Callback. Drains whatever's currently in
+// the capture queue; never zero-pads. `mix_samples()` produces in
+// ~`blocksize` bursts paced by SDL, while this callback is paced by
+// emulator ticks -- two independent clocks. The queue can be momentarily
+// empty when the consumer wakes up before the producer (most visibly across
+// a pause/resume edge); padding with silence would splice zero samples into
+// the captured WAV / AVI audio track. The producer catches up on its next
+// iteration and FIFO ordering keeps capture bit-identical to a
+// continuously-running capture.
+//
+// AVI side effect: 01wb audio chunks per 00dc video frame become bursty
+// rather than uniform -- some video frames get an oversized audio chunk,
+// others get none. Total sample count and the audio stream's reported rate
+// are unchanged, and modern demuxers (VLC, ffmpeg-based players, mpv) sync
+// on sample/frame counts rather than chunk interleaving, so playback is
+// correct. Restoring uniform per-tick chunks would require a smoothing
+// buffer here with a prebuffer to absorb producer jitter; not worth the
+// complexity since no demuxer in current use cares.
 static void capture_callback()
 {
 	if (!(CAPTURE_IsCapturingAudio() || CAPTURE_IsCapturingVideo())) {
 		return;
 	}
 
-	static float frame_counter = 0.0f;
-	frame_counter += get_mixer_frames_per_tick();
-
-	const int num_frames = ifloor(frame_counter);
-	assert(num_frames > 0);
-
-	frame_counter -= static_cast<float>(num_frames);
-
-	const int num_samples = num_frames * 2;
-
-	// We can't block waiting on the mixer thread
-	// Some mixer channels block waiting on the main thread and this would
-	// deadlock
 	static std::vector<int16_t> frames = {};
 	frames.clear();
 
-	const int samples_available = check_cast<int>(mixer.capture_queue.Size());
-	const int samples_requested = std::min(num_samples, samples_available);
-
-	if (samples_requested > 0) {
-		mixer.capture_queue.BulkDequeue(frames,
-		                                std::min(num_samples,
-		                                         samples_available));
+	const auto samples_available = mixer.capture_queue.Size();
+	if (samples_available == 0) {
+		return;
 	}
 
-	// Fill with silence if needed
-	frames.resize(num_samples);
+	mixer.capture_queue.BulkDequeue(frames, samples_available);
+
+	constexpr auto SamplesPerFrame = 2;
+	const auto num_frames = check_cast<uint32_t>(samples_available /
+	                                             SamplesPerFrame);
 
 	CAPTURE_AddAudioData(mixer.sample_rate_hz, num_frames, frames.data());
 }
