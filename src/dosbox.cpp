@@ -209,14 +209,25 @@ void DOSBOX_RequestUserResume()
 	}
 }
 
-// CPU-thread tick body while paused. Minimal skeleton; subsequent commits
-// will pump frame presentation, host events, the mapper, and the
-// webserver bridge here.
+// CPU-thread tick body while paused. Keeps presentation, host input pump,
+// mapper, and webserver bridge alive so hotkeys (fullscreen toggle,
+// screenshot, mapper, capture start/stop, config reload) and remote
+// commands keep working while the emulator core is frozen.
 //
 static Bitu paused_tick()
 {
 	if (DOSBOX_IsShutdownRequested()) {
 		return 1;
+	}
+
+	GFX_MaybePresentFrame();
+
+	if (!GFX_PollAndHandleEvents()) {
+		return 0;
+	}
+
+	if (WEBSERVER_IsEnabled()) {
+		Webserver::Bridge::Instance().ProcessRequests();
 	}
 
 	constexpr uint64_t one_ms_ns = 1'000'000;
