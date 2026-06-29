@@ -34,7 +34,37 @@
 // 48000 Hz, that's 48 frames.
 using MIXER_Handler = std::function<void(int frames)>;
 
-enum class MixerState { NoSound, On, Muted, Paused };
+// Mute FSM. Mirrors the structure of `DOSBOX_PauseState` in dosbox.h --
+// two distinct mute causes (user / focus-loss) with overlapping behaviour
+// but separate ownership of the transition.
+//
+//   Audible       Output flows normally to SDL.
+//   UserMuted     User toggled the mute hotkey (or remote command).
+//                 Survives focus changes; only the user can clear it.
+//   AutoMuted     `mute_when_inactive` kicked in on focus loss.
+//                 Cleared automatically on focus gain.
+//
+// Transitions:
+//   Audible    -> UserMuted    `MIXER_RequestUserMute()`
+//   Audible    -> AutoMuted    `MIXER_RequestAutoMute()`
+//   UserMuted  -> Audible      `MIXER_RequestUserUnmute()`
+//
+//   AutoMuted  -> Audible      `MIXER_RequestAutoUnmute()` /
+//                              `MIXER_RequestUserUnmute()`
+//
+//   AutoMuted  -> UserMuted    `MIXER_RequestUserMute()` (upgrade)
+//
+// No-ops (intentional):
+//
+//   UserMuted  -> AutoMuted    user-mute survives focus changes
+//   UserMuted  -> any via RequestAutoUnmute
+//
+// Pause is orthogonal -- see `MIXER_Pause()` / `MIXER_Resume()`. The mixer
+// is silent if EITHER `DOSBOX_IsPaused()` OR mute_state != Audible. The
+// two axes don't share state, so toggling mute during pause is just a
+// normal mute transition.
+//
+enum class MixerMuteState { Audible, UserMuted, AutoMuted };
 
 static constexpr int MixerBufferByteSize = 16 * 1024;
 static constexpr int MixerBufferMask     = MixerBufferByteSize - 1;
@@ -473,12 +503,34 @@ bool MIXER_FastForwardModeEnabled();
 const AudioFrame MIXER_GetMasterVolume();
 void MIXER_SetMasterVolume(const AudioFrame gain);
 
-void MIXER_Mute();
-void MIXER_Unmute();
+// Mute FSM. See the comment on `MixerMuteState` above for the state graph
+// and the rationale for orthogonal pause / mute states.
+MixerMuteState MIXER_GetMuteState();
 
-// Enter MixerState::Paused (mixer thread short-circuits before mix_samples).
-// Acquires mixer.mutex; on return any in-flight mix is over. Captures
-// the pre-pause state so MIXER_Resume can restore it.
+// User-driven hotkey path. Overrides any AutoMuted state in effect.
+void MIXER_RequestUserMute();
+void MIXER_RequestUserUnmute();
+
+// `mute_when_inactive` focus-loss / focus-gain path. UserMuted survives
+// both -- user-initiated mute trumps focus changes.
+void MIXER_RequestAutoMute();
+void MIXER_RequestAutoUnmute();
+
+// Pause synchronization barrier. The mixer reads `DOSBOX_IsPaused()`
+// directly at the top of its loop, so these don't mutate any mixer-side
+// state -- they just serialize against in-flight `mix_samples()`. By
+// the time `MIXER_Pause()` returns the mixer thread is at a clean loop
+// boundary; `MIXER_Resume()` additionally clears `final_output` so the
+// silence-edge fade-in ramps against fresh real audio.
+//
+// Pause is orthogonal to mute: the mixer is silent on the SDL side if
+// either is in effect. Pause additionally short-circuits `mix_samples()`
+// so the capture queue isn't fed during pause; mute lets `mix_samples()`
+// run and overwrites only the SDL-bound buffer, so captures stay
+// full-volume.
+//
+// !!! ORDER MATTERS relative to MIDI_Pause/Resume. See the comments on
+// `set_subsystems_paused` in dosbox.cpp before reordering callers. !!!
 void MIXER_Pause();
 void MIXER_Resume();
 
@@ -491,10 +543,6 @@ void MIXER_CloseAudioDevice();
 // Off to Pending so the mixer thread still sees Off and isn't enqueueing
 // fresh samples that this call would wipe.
 void MIXER_ClearCaptureQueue();
-
-// Return true if the mixer was explicitly muted by the user (as opposed to
-// auto-muted when `mute_when_inactive` is enabled).
-bool MIXER_IsManuallyMuted();
 
 CrossfeedPreset MIXER_GetCrossfeedPreset();
 void MIXER_SetCrossfeedPreset(const CrossfeedPreset new_preset);
