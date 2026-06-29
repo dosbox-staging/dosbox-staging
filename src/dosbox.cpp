@@ -14,6 +14,7 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
+#include <format> 
 
 
 #ifdef WIN32
@@ -695,7 +696,7 @@ static std::optional<LogFileMap> collect_log_files(const std::string& dir_path)
 	std::error_code ec;
 	for(const auto& file : fs::directory_iterator(dir_path, ec)){
 		const auto filename = file.path().filename().string();
-		if (!filename.starts_with(prefix) || filename.ends_with(suffix)){
+		if (!filename.starts_with(prefix) || !filename.ends_with(suffix)){
 			continue;
 		}
 
@@ -711,9 +712,9 @@ static std::optional<LogFileMap> collect_log_files(const std::string& dir_path)
 			continue;
 		}
 
-		if (ec) return std::nullopt;
-		return logfiles;
 	}
+	if (ec) return std::nullopt;
+	return logfiles;
 }
 
 static void prune_old_logs(LogFileMap& log_files){
@@ -735,9 +736,7 @@ static std::optional<std::string> next_log_path(const std::string& dir_path){
 		next_index = (*log_files).rbegin()->first + 1;
 	}
 
-	char log_filename[64];
-	std::snprintf(log_filename, sizeof(log_filename),
-				"dosbox-staging-%03d.log", next_index);
+	const auto log_filename = std::format("dosbox-staging-{:03d}.log", next_index);
 	
 	return (std::filesystem::path(dir_path)/log_filename).string(); 
 }
