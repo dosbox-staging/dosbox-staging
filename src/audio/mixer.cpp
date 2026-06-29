@@ -2075,7 +2075,8 @@ void MixerChannel::Sleeper::MaybeSleep()
 {
 	// A signed integer can a durration of ~24 days in milliseconds, which
 	// is surely more than enough.
-	const auto awake_for_ms = check_cast<int>(GetTicksSince(woken_at_ms));
+	const auto awake_for_ms = check_cast<int>(
+	        static_cast<int64_t>(PIC_AtomicIndex() - woken_at_pic_ms));
 
 	// Not enough time has passed.. .. try to sleep later
 	if (awake_for_ms < fadeout_or_sleep_after_ms) {
@@ -2102,9 +2103,9 @@ void MixerChannel::Sleeper::MaybeSleep()
 bool MixerChannel::Sleeper::WakeUp()
 {
 	// Always reset for another round of awakeness
-	woken_at_ms   = GetTicks();
-	fadeout_level = 1.0f;
-	had_signal    = false;
+	woken_at_pic_ms = PIC_AtomicIndex();
+	fadeout_level   = 1.0f;
+	had_signal      = false;
 
 	const auto was_sleeping = !channel.is_enabled;
 	if (was_sleeping) {

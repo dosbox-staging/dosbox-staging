@@ -289,7 +289,11 @@ public:
 		static constexpr auto MaxWaitMs     = 5000;
 
 		AudioFrame last_frame          = {};
-		int64_t woken_at_ms            = {};
+		// Wakeup timestamp in PIC (emulator) milliseconds, not wall
+		// clock. The mixer pauses with `DOSBOX_IsPaused()`; PIC time
+		// freezes with it. Using `GetTicks()` would count the pause as
+		// "awake" and force a fade-out / sleep on resume.
+		double woken_at_pic_ms         = {};
 		float fadeout_level            = {};
 		float fadeout_decrement_per_ms = {};
 		int fadeout_or_sleep_after_ms  = {};
