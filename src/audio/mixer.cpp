@@ -2787,6 +2787,11 @@ void MIXER_Resume()
 	MIXER_UnlockMixerThread();
 }
 
+void MIXER_ClearCaptureQueue()
+{
+	mixer.capture_queue.Clear();
+}
+
 void MIXER_CloseAudioDevice()
 {
 	TIMER_DelTickHandler(capture_callback);

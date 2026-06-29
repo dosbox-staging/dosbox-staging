@@ -13,6 +13,7 @@
 #include "private/capture_midi.h"
 #include "private/capture_video.h"
 
+#include "audio/mixer.h"
 #include "config/config.h"
 #include "config/setup.h"
 #include "dosbox_config.h"
@@ -353,6 +354,14 @@ void CAPTURE_StartVideoCapture()
 {
 	switch (capture.state.video) {
 	case CaptureState::Off:
+		// Audio and video share the mixer's capture queue. If neither
+		// is currently capturing, drop any stale samples left behind by
+		// the previous session before flipping to Pending;
+		// `mix_samples()` still sees Off here and won't enqueue fresh
+		// samples that the clear would wipe.
+		if (capture.state.audio == CaptureState::Off) {
+			MIXER_ClearCaptureQueue();
+		}
 		capture.state.video = CaptureState::Pending;
 		TITLEBAR_NotifyVideoCaptureStatus(true);
 		LOG_MSG("CAPTURE: Preparing to capture video output; "
@@ -452,6 +461,11 @@ static void handle_capture_audio_event(bool pressed)
 
 	switch (capture.state.audio) {
 	case CaptureState::Off:
+		// See `CAPTURE_StartVideoCapture()` for why we clear the queue
+		// only when no other capture stream is already keeping it active.
+		if (capture.state.video == CaptureState::Off) {
+			MIXER_ClearCaptureQueue();
+		}
 		capture.state.audio = CaptureState::Pending;
 		LOG_MSG("CAPTURE: Preparing to capture audio output; "
 		        "capturing will start with the next audio frame");

@@ -482,6 +482,12 @@ void MIXER_LockMixerThread();
 void MIXER_UnlockMixerThread();
 void MIXER_CloseAudioDevice();
 
+// Drop any leftover audio samples sitting in the capture queue between
+// recording sessions. Must be called BEFORE flipping a capture state from
+// Off to Pending so the mixer thread still sees Off and isn't enqueueing
+// fresh samples that this call would wipe.
+void MIXER_ClearCaptureQueue();
+
 // Return true if the mixer was explicitly muted by the user (as opposed to
 // auto-muted when `mute_when_inactive` is enabled).
 bool MIXER_IsManuallyMuted();
