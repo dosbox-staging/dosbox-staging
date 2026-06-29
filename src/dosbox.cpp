@@ -811,19 +811,22 @@ static void dosbox_realinit(SectionProp& section)
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING; 
 	} else if (user_log_destination == "file" || 
 				user_log_destination == "console-and-file") {
-		//set up rolling log instead
 		const auto user_log_loc = section.GetString("log_path");
-		const auto log_index = next_log_path(user_log_loc);
-		
-		char log_filename[64];
-		std::snprintf(log_filename, sizeof(log_filename), 
-					"dosbox-staging-%03d.log", *log_index);
-		const auto log_path = (std::filesystem::path(user_log_loc)/log_filename).string();	
-		loguru::add_file(log_path.c_str(),
-		            loguru::FileMode::Truncate,
-		            loguru::Verbosity_MAX);
-		
-		if (user_log_destination == "file") loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
+		const auto log_path = next_log_path(user_log_loc);
+
+		if (!log_path) {
+			// directory inaccessible — fall back to console-only
+			loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
+			return;
+		}
+
+		loguru::add_file(log_path->c_str(),
+					loguru::FileMode::Truncate,
+					loguru::Verbosity_MAX);
+
+		if (user_log_destination == "file") {
+			loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
+		}
 
 	} else { // don't display logs
 		// set console off
