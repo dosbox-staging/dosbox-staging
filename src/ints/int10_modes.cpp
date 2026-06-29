@@ -894,6 +894,12 @@ static void finish_set_mode(bool clearmem) {
 	// Set cursor shape
 	if (CurMode->type==M_TEXT) {
 		INT10_SetCursorShape(0x06,0x07);
+	} else if (is_machine_ega_or_better()) {
+		// The word at offset 0x60 (BIOSMEM_CURSOR_TYPE) gets set
+		// to zero in the BDA after switching to a graphics mode.
+		// Some programs (typically TSRs) might check if this word is
+		// zero to determine whether they're in a graphics mode.
+		real_writew(BIOSMEM_SEG, BIOSMEM_CURSOR_TYPE, 0);
 	}
 	// Set cursor pos for page 0..7
 	for (uint8_t ct=0;ct<8;ct++) INT10_SetCursorPos(0,0,ct);
