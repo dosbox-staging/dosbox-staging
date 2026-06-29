@@ -33,6 +33,18 @@ public:
 
 	virtual void SendMidiMessage(const MidiMessage& msg)      = 0;
 	virtual void SendSysExMessage(uint8_t* sysex, size_t len) = 0;
+
+	// Halt / resume the internal renderer thread (FluidSynth, MT-32,
+	// SoundCanvas). No-op default for External devices, which don't run
+	// a renderer -- their pause path is the volume-zero broadcast in
+	// `MIDI_Mute()`. The renderer pause prevents the synth's internal
+	// clock from advancing while the mixer is halted; without it the
+	// renderer keeps filling `audio_frame_fifo` to capacity during the
+	// pause, and those rendered post-pause samples reach the capture
+	// queue on resume, stretching captured music by up to one
+	// fifo-headroom (~21 ms) per pause cycle.
+	virtual void Pause() {}
+	virtual void Resume() {}
 };
 
 void MIDI_Reset(MidiDevice* device);
