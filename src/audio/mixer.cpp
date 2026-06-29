@@ -2610,6 +2610,51 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	// Satisfy any shortfall with silence
 	std::fill(output.begin() + frames_received, output.end(), AudioFrame{});
 
+	// Silence-edge smoothing. Ramps the SDL-bound audio between full and
+	// muted over a few ms to mask the discontinuity that would otherwise
+	// click when a non-zero sample is followed by 0.0 (entering Paused or
+	// Muted) or the reverse (leaving them). Applied here at the SDL
+	// boundary, not in `mix_samples`, so the capture path stays at full
+	// level and these transitions don't bleed into captured WAV/AVI
+	// audio.
+	const auto state          = mixer.state.load(std::memory_order_relaxed);
+	const bool should_silence = (state == MixerState::Paused ||
+	                             state == MixerState::Muted);
+
+	static float playback_gain  = 1.0f;
+	const float target_gain     = should_silence ? 0.0f : 1.0f;
+	constexpr float SmoothingMs = 5.0f;
+	const float fade_step       = 1.0f / (SmoothingMs *
+                                        static_cast<float>(mixer.sample_rate_hz) /
+                                        1000.0f);
+
+	// Fade-in is gated on actually receiving real samples from
+	// `final_output`. On the resume edge `set_mixer_state` clears the
+	// queue; if SDL polls before the mixer thread has had a chance to
+	// push fresh real audio, the buffer is silence-filled by the
+	// shortfall path above. Ramping gain up over that silence would
+	// hit 1.0 before any real audio arrives, and the first real sample
+	// behind the silence would land at full gain -- click. Hold the
+	// ramp at its current value until we see real samples. Fade-out
+	// has no such gating: when there's nothing to drain, gain just
+	// settles at 0 against whatever silence the mixer thread pushed,
+	// which is the desired end state.
+	const bool got_real_samples = (frames_received > 0);
+
+	for (auto& frame : output) {
+		frame.left *= playback_gain;
+		frame.right *= playback_gain;
+		if (playback_gain < target_gain) {
+			if (got_real_samples) {
+				playback_gain = std::min(target_gain,
+				                         playback_gain + fade_step);
+			}
+		} else if (playback_gain > target_gain) {
+			playback_gain = std::max(target_gain,
+			                         playback_gain - fade_step);
+		}
+	}
+
 	SDL_PutAudioStreamData(stream, output.data(), bytes_requested);
 }
 
