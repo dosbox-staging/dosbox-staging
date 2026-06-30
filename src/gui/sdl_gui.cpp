@@ -288,7 +288,7 @@ void GFX_RequestExit(const bool pressed)
 		DOSBOX_RequestUserPause();
 	}
 
-	// Titlebar refresh happens inside `DOSBOX_SetPauseState()` on the
+	// Titlebar refresh happens inside the pause FSM on the
 	// `Paused`/`Running` edge.
 }
 
@@ -2224,8 +2224,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// Framebuffer); therefore we rely on the FOCUS_GAINED event to
 		// catch window startup and size toggles.
 
-		const bool focus_gained = (event.type ==
-		                           SDL_EVENT_WINDOW_FOCUS_GAINED);
+		const bool focus_gained = (event.type == SDL_EVENT_WINDOW_FOCUS_GAINED);
 		on_window_active(focus_gained);
 
 		if (sdl.draw.callback) {
@@ -2348,9 +2347,9 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	// case SDL_WINDOWEVENT_TAKE_FOCUS:
 	// 	log_window_event("SDL: Window is being offered a focus");
 
-	// 	focus_input();
-	// 	on_window_active(/* focus_gained = */ true);
-	// 	return true;
+		// 	focus_input();
+		// 	on_window_active(/* focus_gained = */ true);
+		// 	return true;
 
 	case SDL_EVENT_WINDOW_HIT_TEST:
 		log_window_event(

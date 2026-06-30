@@ -34,7 +34,7 @@
 // 48000 Hz, that's 48 frames.
 using MIXER_Handler = std::function<void(int frames)>;
 
-// Mute FSM. Mirrors the structure of `DOSBOX_PauseState` in dosbox.h --
+// Mute FSM. Mirrors the structure of the pause FSM in `src/dosbox.cpp` --
 // two distinct mute causes (user / focus-loss) with overlapping behaviour
 // but separate ownership of the transition.
 //

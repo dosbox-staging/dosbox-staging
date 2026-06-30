@@ -47,68 +47,25 @@ void DOSBOX_RequestShutdown();
 
 bool DOSBOX_IsShutdownRequested();
 
-// Pause state machine. FSM lives in `src/dosbox.cpp`. Mirrors the
-// structure of `MixerMuteState` in `audio/mixer.h` -- user-initiated
-// state survives the auto path, only the auto path can be auto-cleared.
+// Pause API. The emulator is either running or paused. Pause requests come
+// from two sources: the user (via hotkeys or the HTTP API), and host-window
+// inactivity (when `pause_when_inactive` conf setting is enabled).
 //
-// Three states:
-//   - `Running`: emulator core ticking normally.
-//   - `UserPaused`: user-initiated pause (hotkey or HTTP API).
-//   - `AutoPaused`: window-inactive auto-pause; only the focus-gain
-//     handler resumes this, leaving user-pauses alone.
+// The FSM and its transition policy live in `dosbox.cpp`; here we expose only
+// intent. User pause trumps auto-pausing, and auto-resume never resumes a
+// user pause; the corresponding request helpers encode that.
 //
-// `AutoPaused` upgrades to `UserPaused` if the user hits the pause
-// hotkey while auto-paused -- it shouldn't auto-resume on focus gain
-// after that. The reverse never happens.
+// Mapper UI is orthogonal -- it suspends audio via `MIXER_LockMixerThread()`
+// without going through this FSM.
 //
-// Mapper UI is orthogonal -- it suspends audio via
-// `MIXER_LockMixerThread()` without going through this FSM.
-//
-enum class PauseState : uint8_t {
-	Running,
-	UserPaused,
-	AutoPaused,
-};
+bool DOSBOX_IsRunning();
+bool DOSBOX_IsPaused();
 
-PauseState DOSBOX_GetPauseState();
-void DOSBOX_SetPauseState(PauseState new_state);
-
-// User-driven pause / resume intent. Mapper hotkey routes through these;
-// HTTP API will expose them as idempotent endpoints.
-//
-// `DOSBOX_RequestUserPause()`: `Running` -> `UserPaused`; from
-// `AutoPaused`, upgrades ownership to `UserPaused` so focus-gain no
-// longer auto-resumes. No-op when already user-paused.
-//
-// `DOSBOX_RequestUserResume()`: `UserPaused` -> `Running`. No-op
-// otherwise (only the auto-resume path resumes `AutoPaused`).
-//
 void DOSBOX_RequestUserPause();
 void DOSBOX_RequestUserResume();
 
-// Auto-driven pause / resume intent. Focus-loss / focus-gain handlers
-// route through these so they don't have to encode FSM policy at the
-// call site.
-//
-// `DOSBOX_RequestAutoPause()`: `Running` -> `AutoPaused`. No-op when
-// already user-paused (user pauses survive auto signals) or already
-// auto-paused.
-//
-// `DOSBOX_RequestAutoResume()`: `AutoPaused` -> `Running`. No-op
-// otherwise; never auto-resumes a user pause.
-//
 void DOSBOX_RequestAutoPause();
 void DOSBOX_RequestAutoResume();
-
-inline bool DOSBOX_IsRunning()
-{
-	return (DOSBOX_GetPauseState() == PauseState::Running);
-}
-
-inline bool DOSBOX_IsPaused()
-{
-	return (DOSBOX_GetPauseState() != PauseState::Running);
-}
 
 // The E_Exit function throws an exception to quit. Call it in unexpected
 // circumstances.

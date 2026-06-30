@@ -128,15 +128,44 @@ void Null_Init([[maybe_unused]] Section *sec) {
 // ---------------------------------------------------------------------------
 // Pause state machine
 //
-// Single source of truth. All transitions go through
-// `DOSBOX_SetPauseState()` (validated against `is_valid_transition()`).
+// Mirrors the structure of `MixerMuteState` in `audio/mixer.h` --
+// user-initiated pause survives the auto-pausing (on focus loss); only the
+// auto-pausing can be auto-cleared.
 //
-// Callers that want "user pressed the pause / resume button" semantics
-// use `DOSBOX_RequestUserPause()` / `DOSBOX_RequestUserResume()`.
+// We have these three states:
+//   - `Running`: emulator core ticking normally.
+//   - `UserPaused`: user-initiated pause (via hotkey or HTTP API).
+//   - `AutoPaused`: auto-paused when the window lost focus (if the
+//     `pause_when_inactive` conf setting is enabled); only the auto-resume
+//     path clears this, leaving user-pauses alone.
+//
+// `AutoPaused` upgrades to `UserPaused` if the user activates pause mode
+// while auto-paused -- it shouldn't auto-resume on focus gain after that. The
+// reverse never happens.
+//
+// All transitions go through `set_pause_state()` (validated against
+// `is_valid_transition()`). Public callers express intent via the four
+// `DOSBOX_Request{User,Auto}{Pause,Resume}()` API functions.
+//
+// THREADING: every mutator runs on the main (emulation) thread -- hotkeys
+// and window events via the SDL event loop, HTTP commands via the
+// webserver bridge's `ProcessRequests()`, and the pending-transition
+// handler via the PIC ticker. The request helpers read `pause_state`
+// without holding `pause_state_mutex` before transitioning, so the mutex
+// alone would NOT make concurrent requesters correct (racy requests would
+// trip the `is_valid_transition()` guard rather than corrupt state). Keep
+// it that way: other threads may only *read* the state, via the
+// `DOSBOX_Is*()` query functions.
 // ---------------------------------------------------------------------------
 
-static std::mutex pause_state_mutex        = {};
-static std::atomic<PauseState> pause_state = PauseState::Running;
+enum class PauseState : uint8_t {
+	Running,
+	UserPaused,
+	AutoPaused,
+};
+
+static std::mutex pause_state_mutex;
+static std::atomic<PauseState> pause_state{PauseState::Running};
 
 static const char* to_string(const PauseState s)
 {
@@ -162,9 +191,19 @@ static bool is_valid_transition(const PauseState from, const PauseState to)
 	}
 }
 
-PauseState DOSBOX_GetPauseState()
+static PauseState get_pause_state()
 {
 	return pause_state.load();
+}
+
+bool DOSBOX_IsRunning()
+{
+	return get_pause_state() == PauseState::Running;
+}
+
+bool DOSBOX_IsPaused()
+{
+	return get_pause_state() != PauseState::Running;
 }
 
 // Idempotent subsystem pause hook driven by the FSM. Mapper UI doesn't
@@ -213,7 +252,7 @@ static void update_subsystem_pause_state()
 	set_subsystems_paused(DOSBOX_IsPaused());
 }
 
-void DOSBOX_SetPauseState(const PauseState new_state)
+static void set_pause_state(const PauseState new_state)
 {
 	using enum PauseState;
 
@@ -272,9 +311,9 @@ void DOSBOX_RequestUserPause()
 {
 	using enum PauseState;
 
-	switch (DOSBOX_GetPauseState()) {
-	case Running: DOSBOX_SetPauseState(UserPaused); break;
-	case AutoPaused: DOSBOX_SetPauseState(UserPaused); break;
+	switch (get_pause_state()) {
+	case Running: set_pause_state(UserPaused); break;
+	case AutoPaused: set_pause_state(UserPaused); break;
 
 	case UserPaused:
 		// already user-paused
@@ -288,11 +327,13 @@ void DOSBOX_RequestUserResume()
 {
 	using enum PauseState;
 
-	switch (DOSBOX_GetPauseState()) {
-	case UserPaused: DOSBOX_SetPauseState(Running); break;
+	switch (get_pause_state()) {
+	case UserPaused: set_pause_state(Running); break;
 
 	case Running:
-	case AutoPaused: break;
+	case AutoPaused:
+		// only the auto-resume path resumes auto-pauses
+		break;
 
 	default: assertm(false, "Invalid PauseState value");
 	}
@@ -302,8 +343,8 @@ void DOSBOX_RequestAutoPause()
 {
 	using enum PauseState;
 
-	switch (DOSBOX_GetPauseState()) {
-	case Running: DOSBOX_SetPauseState(AutoPaused); break;
+	switch (get_pause_state()) {
+	case Running: set_pause_state(AutoPaused); break;
 
 	case UserPaused:
 	case AutoPaused:
@@ -318,8 +359,8 @@ void DOSBOX_RequestAutoResume()
 {
 	using enum PauseState;
 
-	switch (DOSBOX_GetPauseState()) {
-	case AutoPaused: DOSBOX_SetPauseState(Running); break;
+	switch (get_pause_state()) {
+	case AutoPaused: set_pause_state(Running); break;
 
 	case Running:
 	case UserPaused:
@@ -696,7 +737,7 @@ void DOSBOX_RequestShutdown()
 	// from a known-running state. Without this, teardown would block on
 	// the mixer / synth threads that are parked in their pause hooks.
 	if (DOSBOX_IsPaused()) {
-		DOSBOX_SetPauseState(PauseState::Running);
+		set_pause_state(PauseState::Running);
 	}
 }
 
