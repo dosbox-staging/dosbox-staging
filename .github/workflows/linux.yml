@@ -123,7 +123,7 @@ jobs:
       # See linting.yml for notes on this action.
       - name: Install apt dependencies
         id:   apt_cache
-        uses: awalsh128/cache-apt-pkgs-action@681749ae568c81c2037cb9185e38b709b261bd2f # v1.6.1
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
         with:
           packages: ${{ steps.apt_pkgs.outputs.list }}
           version:  "1.0"
@@ -215,7 +215,7 @@ jobs:
       # See linting.yml for notes on this action.
       - name: Install apt dependencies
         id:   apt_cache
-        uses: awalsh128/cache-apt-pkgs-action@681749ae568c81c2037cb9185e38b709b261bd2f # v1.6.1
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
         with:
           packages: ${{ steps.apt_pkgs.outputs.list }}
           version:  "1.0"
