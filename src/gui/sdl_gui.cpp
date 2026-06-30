@@ -2119,32 +2119,25 @@ int GFX_GetUserSdlEventId(DosBoxSdlEvent event)
 	return sdl.start_event_id + enum_val(event);
 }
 
-// Focus-loss / focus-gain hook. Routes window-focus events into the FSM:
-// loss requests an `AutoPaused`; gain resumes IFF the current pause is
-// an auto one (user-initiated pauses survive focus changes -- the FSM
-// encodes that).
+// Focus-loss / focus-gain hook. Routes window-focus events into the FSM
+// via the idempotent auto-request helpers; they encode the policy that
+// user-initiated pauses survive focus changes, so we don't have to.
 //
 static void handle_pause_when_inactive(const SDL_Event& event)
 {
-	using enum PauseState;
-
 	switch (event.type) {
 	case SDL_EVENT_WINDOW_FOCUS_LOST:
 	case SDL_EVENT_WINDOW_MINIMIZED:
 		apply_inactive_settings();
 		KEYBOARD_ClrBuffer();
-
-		if (DOSBOX_GetPauseState() == Running) {
-			DOSBOX_SetPauseState(AutoPaused);
-		}
+		DOSBOX_RequestAutoPause();
 		break;
 
 	case SDL_EVENT_WINDOW_FOCUS_GAINED:
 	case SDL_EVENT_WINDOW_RESTORED:
 	case SDL_EVENT_WINDOW_EXPOSED: {
-		if (DOSBOX_GetPauseState() == AutoPaused) {
-			DOSBOX_SetPauseState(Running);
-		}
+		DOSBOX_RequestAutoResume();
+
 		if (event.type == SDL_EVENT_WINDOW_FOCUS_GAINED) {
 			apply_active_settings();
 		}
