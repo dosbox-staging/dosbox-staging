@@ -47,17 +47,19 @@ void DOSBOX_RequestShutdown();
 
 bool DOSBOX_IsShutdownRequested();
 
-// Pause state machine. FSM lives in `src/dosbox.cpp`.
+// Pause state machine. FSM lives in `src/dosbox.cpp`. Mirrors the
+// structure of `MixerMuteState` in `audio/mixer.h` -- user-initiated
+// state survives the auto path, only the auto path can be auto-cleared.
 //
 // Three states:
 //   - `Running`: emulator core ticking normally.
 //   - `UserPaused`: user-initiated pause (hotkey or HTTP API).
-//   - `FocusLossPaused`: auto-pause from window focus loss; only the
-//     focus-gain handler resumes this, leaving user-pauses alone.
+//   - `AutoPaused`: window-inactive auto-pause; only the focus-gain
+//     handler resumes this, leaving user-pauses alone.
 //
-// `FocusLossPaused` upgrades to `UserPaused` if the user hits the pause
-// hotkey while focus-loss-paused -- it shouldn't auto-resume on focus
-// gain after that. The reverse never happens.
+// `AutoPaused` upgrades to `UserPaused` if the user hits the pause
+// hotkey while auto-paused -- it shouldn't auto-resume on focus gain
+// after that. The reverse never happens.
 //
 // Mapper UI is orthogonal -- it suspends audio via
 // `MIXER_LockMixerThread()` without going through this FSM.
@@ -65,7 +67,7 @@ bool DOSBOX_IsShutdownRequested();
 enum class PauseState : uint8_t {
 	Running,
 	UserPaused,
-	FocusLossPaused,
+	AutoPaused,
 };
 
 PauseState DOSBOX_GetPauseState();
@@ -75,11 +77,11 @@ void DOSBOX_SetPauseState(PauseState new_state);
 // HTTP API will expose them as idempotent endpoints.
 //
 // `DOSBOX_RequestUserPause()`: `Running` -> `UserPaused`; from
-// `FocusLossPaused`, upgrades ownership to `UserPaused` so focus-gain no
+// `AutoPaused`, upgrades ownership to `UserPaused` so focus-gain no
 // longer auto-resumes. No-op when already user-paused.
 //
 // `DOSBOX_RequestUserResume()`: `UserPaused` -> `Running`. No-op
-// otherwise (only the focus handler resumes `FocusLossPaused`).
+// otherwise (only the focus handler resumes `AutoPaused`).
 //
 void DOSBOX_RequestUserPause();
 void DOSBOX_RequestUserResume();
