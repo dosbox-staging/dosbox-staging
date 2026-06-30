@@ -78,10 +78,10 @@
 #include "webserver/bridge.h"
 #include "webserver/webserver.h"
 
-MachineType machine   = MachineType::None;
-SvgaType    svga_type = SvgaType::None;
+MachineType machine = MachineType::None;
+SvgaType svga_type  = SvgaType::None;
 
-static LoopHandler * loop;
+static LoopHandler* loop;
 
 static struct {
 	int64_t remain    = {};
@@ -121,7 +121,8 @@ void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled)
 	ticks.scheduled = ticks_scheduled;
 }
 
-void Null_Init([[maybe_unused]] Section *sec) {
+void Null_Init([[maybe_unused]] Section* sec)
+{
 	// do nothing
 }
 
@@ -215,16 +216,43 @@ bool DOSBOX_IsPaused()
 //
 // The MIDI software synths (FluidSynth, MT-32, SoundCanvas) each run a
 // renderer thread that fills an `audio_frame_fifo` ahead of the mixer's
-// consumption. If the mixer stops draining before the renderer halts --
-// or the renderer wakes before the mixer starts draining -- the
-// renderer rushes to fill the fifo headroom and the synth's internal
-// clock advances by up to one mixer pull (~21 ms) per cycle. Those
-// extra samples reach the capture queue on resume and stretch
-// captured music by N * ~21 ms over N pause/resume cycles.
+// consumption.
 //
-// So: on pause, halt the renderer FIRST. On resume, wake the mixer
-// FIRST. Do not swap these without first re-reading the analysis on
-// 70e3626d5.
+// On PAUSE: halt the renderer FIRST. If the mixer halted first, the
+// still-running renderer would rush to fill the fifo headroom that
+// opens up, advancing the synth's internal clock by up to one mixer
+// pull (~21 ms) per cycle. Those extra samples reach the capture queue
+// on resume and stretch captured music by N * ~21 ms over N
+// pause/resume cycles.
+//
+// `MIDI_Pause()` internally holds `MIXER_LockMixerThread()` across the
+// renderer halt so any in-flight `mix_samples()` drains BEFORE the
+// renderer stops producing samples for it. Without this, the mixer
+// could be mid-`BulkDequeue()` on the synth's `audio_frame_fifo` when
+// the renderer halts and wait forever for samples it cannot produce,
+// deadlocking the mixer thread. The subsequent `MIXER_Pause()` is a
+// reentrant re-lock (mixer.mutex is `std::recursive_mutex`) that keeps
+// the public pause/resume API symmetric.
+//
+// On RESUME: wake the renderer FIRST. Between `pause_state.store(Running)`
+// in `set_pause_state_locked()` and `MIXER_Resume()` acquiring the
+// mixer mutex, the mixer thread can observe `DOSBOX_IsPaused() == false`
+// and enter `mix_samples()` on its own. If the synth's `audio_frame_fifo`
+// has fewer than `blocksize` samples at that moment -- e.g. with a very
+// small `prebuffer`, or a fifo drained by a MIDI burst just before
+// pause -- `mix_samples()` blocks in `BulkDequeue` waiting for samples
+// that only the still-parked renderer can produce, while holding
+// `mixer.mutex`. `MIXER_Resume()` would then block acquiring that
+// mutex, `MIDI_Resume()` (the only thing that notifies the renderer's
+// `pause_cv`) would never run, and the three threads would deadlock.
+//
+// `MIXER_LockMixerThread()`'s queue-stop protocol only unblocks the
+// mixer from PCM channel queues (PCSpeaker, GUS, SB, etc.), not from
+// the MIDI synths' `audio_frame_fifo`s -- so waking the renderer first
+// is the only way to break the cycle. The renderer may briefly refill
+// fifo headroom before the mixer starts consuming (a few frames of
+// extra samples per cycle), but that's much smaller than the
+// pause-side ~21 ms/cycle worst case and worth the trade-off.
 //
 static void set_subsystems_paused(const bool paused)
 {
@@ -239,11 +267,12 @@ static void set_subsystems_paused(const bool paused)
 		MIDI_Pause();
 		MIXER_Pause();
 	} else {
-		// MIXER first so the mixer drains the pre-pause buffered
-		// audio before the renderer wakes and refills the headroom.
-		// See header comment.
-		MIXER_Resume();
+		// MIDI first to wake the renderer before the mixer thread
+		// can race into `mix_samples()` and block on an empty
+		// `audio_frame_fifo`. See header comment for the deadlock
+		// analysis.
 		MIDI_Resume();
+		MIXER_Resume();
 	}
 }
 
@@ -626,7 +655,8 @@ static void increase_ticks()
 					         (ratio_not_removed +
 					          1024.0 / (static_cast<double>(ratio)));
 
-					new_cycle_max = static_cast<int>(CPU_CycleMax * r + 1);
+					new_cycle_max = static_cast<int>(
+					        CPU_CycleMax * r + 1);
 				} else {
 					auto ratio_with_removed = static_cast<int64_t>(
 					        ((static_cast<double>(ratio) - 1024.0) *
@@ -765,10 +795,12 @@ static void DOSBOX_UnlockSpeed(bool pressed)
 		MIXER_EnableFastForwardMode();
 
 		if (CPU_CycleAutoAdjust) {
-			autoadjust = true;
+			autoadjust          = true;
 			CPU_CycleAutoAdjust = false;
 			CPU_CycleMax /= 3;
-			if (CPU_CycleMax<1000) CPU_CycleMax=1000;
+			if (CPU_CycleMax < 1000) {
+				CPU_CycleMax = 1000;
+			}
 		}
 	} else {
 		LOG_MSG("Fast Forward OFF");
@@ -776,7 +808,7 @@ static void DOSBOX_UnlockSpeed(bool pressed)
 		MIXER_DisableFastForwardMode();
 
 		if (autoadjust) {
-			autoadjust = false;
+			autoadjust          = false;
 			CPU_CycleAutoAdjust = true;
 		}
 	}
@@ -786,7 +818,8 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 {
 	const auto arguments = &control->arguments;
 	if (!arguments->machine.empty()) {
-		//update value in config (else no matching against suggested values
+		// update value in config (else no matching against suggested
+		// values
 		section.HandleInputLine(std::string("machine=") + arguments->machine);
 	}
 
@@ -825,7 +858,7 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 		int10.vesa_nolfb = true;
 	} else if (machine_str == "vesa_oldvbe") {
 
-		svga_type = SvgaType::S3;
+		svga_type         = SvgaType::S3;
 		int10.vesa_oldvbe = true;
 
 	} else if (machine_str == "svga_et3000") {
@@ -1092,8 +1125,8 @@ static void notify_dosbox_setting_updated(const SectionProp& section,
 		VGA_SetRefreshRateMode(section.GetString("dos_rate"));
 
 	} else if (prop_name == "shell_config_shortcuts") {
-		// No need to re-init anything; the setting is always queried when
-		// executing a command.
+		// No need to re-init anything; the setting is always queried
+		// when executing a command.
 	}
 }
 

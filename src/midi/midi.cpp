@@ -220,8 +220,8 @@ public:
 	MidiState& operator=(const MidiState&) = delete;
 
 private:
-	std::array<bool, NumMidiNotes* NumMidiChannels> note_on_tracker = {};
-	std::array<uint8_t, NumMidiChannels> channel_volume_tracker     = {};
+	std::array<bool, NumMidiNotes * NumMidiChannels> note_on_tracker = {};
+	std::array<uint8_t, NumMidiChannels> channel_volume_tracker      = {};
 
 	inline size_t NoteAddr(const uint8_t channel, const uint8_t note)
 	{
@@ -589,14 +589,23 @@ void MIDI_Unmute()
 //
 // !!! ORDER MATTERS: this must be called BEFORE MIXER_Pause(). !!!
 //
-// Halting the software synth renderer before the mixer stops draining
-// keeps the renderer from rushing to fill the `audio_frame_fifo`
-// headroom that opens up the moment the mixer halts. With the reverse
-// order, the synth's internal clock advances by up to one mixer pull
-// (~21 ms) per pause cycle, and the rendered samples reach the capture
-// queue on resume -- captured music stretches by N * ~21 ms across N
-// pause/resume cycles. See the header comment on `set_subsystems_paused`
-// in dosbox.cpp for the full analysis.
+// Halting the software synth renderer keeps it from advancing the
+// synth's internal clock while the mixer is halted; without it the
+// renderer rushes to fill the `audio_frame_fifo` headroom that opens
+// up the moment the mixer halts and the synth clock advances by up to
+// one mixer pull (~21 ms) per pause cycle, stretching captured music
+// by N * ~21 ms across N pause/resume cycles. See the header comment
+// on `set_subsystems_paused` in dosbox.cpp for the full analysis.
+//
+// `midi.device->Pause()` halts the renderer thread under
+// `MIXER_LockMixerThread()` to drain any in-flight `mix_samples()`
+// BEFORE the renderer can stop producing samples for it. Without this,
+// `mix_samples()` could be mid-`BulkDequeue()` on the synth's
+// `audio_frame_fifo` (drained K of N requested) when the renderer
+// halts, and would then wait forever for the remaining N-K samples
+// the halted renderer cannot produce -- deadlocking the mixer thread.
+// `mixer.mutex` is `std::recursive_mutex`, so the subsequent
+// `MIXER_Pause()` re-locks harmlessly.
 //
 void MIDI_Pause()
 {
@@ -612,21 +621,37 @@ void MIDI_Pause()
 	// For internal software synths (FluidSynth/MT-32/SoundCanvas) this
 	// halts their renderer thread so the synth's internal clock doesn't
 	// advance during the pause; default no-op override for External.
+	//
+	// Held under `MIXER_LockMixerThread()` so any in-flight
+	// `mix_samples()` drains before the renderer halts; see the
+	// function-level comment above for the deadlock analysis.
 	if (MIDI_IsAvailable()) {
+		MIXER_LockMixerThread();
 		midi.device->Pause();
+		MIXER_UnlockMixerThread();
 	}
 }
 
 // Resume MIDI output as part of a DOSBox resume.
 //
-// !!! ORDER MATTERS: this must be called AFTER MIXER_Resume(). !!!
+// !!! ORDER MATTERS: this must be called BEFORE MIXER_Resume(). !!!
 //
-// The mixer must drain the pre-pause buffered audio from
-// `audio_frame_fifo` before the renderer wakes; otherwise the renderer
-// refills the fifo headroom in the gap before the mixer starts pulling,
-// the synth's internal clock advances, and the extra samples reach the
-// capture queue. See `set_subsystems_paused` in dosbox.cpp for the full
+// Waking the renderer first prevents a deadlock where the mixer thread
+// observes `DOSBOX_IsPaused() == false` and enters `mix_samples()` in
+// the race window between `pause_state.store(Running)` and
+// `MIXER_Resume()` acquiring the mixer mutex. If the synth's
+// `audio_frame_fifo` has fewer than `blocksize` samples at that moment
+// (small `prebuffer`, or a fifo drained by a MIDI burst just before
+// pause), `mix_samples()` blocks in `BulkDequeue` holding `mixer.mutex`
+// while waiting for a still-parked renderer; `MIXER_Resume()` then
+// blocks on the mutex; this function never runs; the renderer stays
+// parked. See `set_subsystems_paused` in dosbox.cpp for the full
 // analysis.
+//
+// This function does NOT take `mixer.mutex` -- the deadlock protection
+// is the ordering, not lock coverage. `pause_cv.notify_all()` alone
+// unwedges any in-flight mixer `BulkDequeue` by kicking the renderer
+// back into producing samples.
 //
 void MIDI_Resume()
 {
@@ -954,16 +979,16 @@ static void init_midiconfig_settings(SectionProp& secprop)
 
 	str_prop->SetEnabledOptions({
 #if (defined(MACOSX) || defined(WIN32))
-		"windows_or_macos",
+	        "windows_or_macos",
 #endif
 #if defined(MACOSX)
-		        "coreaudio",
+	        "coreaudio",
 #endif
 #if C_ALSA
-		        "linux",
+	        "linux",
 #endif
-		        "internal_synth", "physical_mt32"
-	});
+	        "internal_synth",
+	        "physical_mt32"});
 }
 
 void init_midi_config_settings(SectionProp& secprop)
