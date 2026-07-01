@@ -2902,12 +2902,24 @@ static void set_mute_state(const MixerMuteState new_state)
 
 		maybe_clear_final_output_on_unsilence(was_silent, will_be_silent);
 
+		// Skip MIDI updates when a pause is in effect (Pending or
+		// Paused). MIDI is managed by `MIDI_Pause()` / `MIDI_Resume()`
+		// around the pause boundaries -- touching it here while paused
+		// would send volume-restore to external MIDI and revive
+		// hanging notes on an unmute mid-pause.
+		//
+		const bool touch_midi = !DOSBOX_IsPauseRequested();
+
 		if (will_be_audible) {
-			MIDI_Unmute();
+			if (touch_midi) {
+				MIDI_Unmute();
+			}
 			TITLEBAR_NotifyAudioMutedStatus(false);
 			LOG_MSG("MIXER: Unmuted audio output");
 		} else {
-			MIDI_Mute();
+			if (touch_midi) {
+				MIDI_Mute();
+			}
 			TITLEBAR_NotifyAudioMutedStatus(true);
 			LOG_MSG("MIXER: Muted audio output");
 		}
