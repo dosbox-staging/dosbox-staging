@@ -318,7 +318,7 @@ public:
 		static constexpr auto DefaultWaitMs = 500;
 		static constexpr auto MaxWaitMs     = 5000;
 
-		AudioFrame last_frame          = {};
+		AudioFrame last_frame = {};
 		// Wakeup timestamp in PIC (emulator) milliseconds, not wall
 		// clock. The mixer pauses with `DOSBOX_IsPaused()`; PIC time
 		// freezes with it. Using `GetTicks()` would count the pause as
@@ -479,8 +479,8 @@ private:
 
 using MixerChannelPtr = std::shared_ptr<MixerChannel>;
 
-MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
-                                 const int sample_rate_hz, const std::string& name,
+MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler, const int sample_rate_hz,
+                                 const std::string& name,
                                  const std::set<ChannelFeature>& features);
 
 MixerChannelPtr MIXER_FindChannel(const char* name);
@@ -533,6 +533,13 @@ void MIXER_RequestAutoUnmute();
 // `set_subsystems_paused` in dosbox.cpp before reordering callers. !!!
 void MIXER_Pause();
 void MIXER_Resume();
+
+// Current SDL-side fade-out/-in gain (0.0 = silent, 1.0 = full). Updated
+// by `mixer_callback()` on each SDL callback. Read by the PausePending
+// FSM in dosbox.cpp to know when a fade-out has completed, so it can
+// hand off to the actually-paused state at the exact moment the
+// audible fade reaches zero.
+float MIXER_GetPlaybackGain();
 
 void MIXER_LockMixerThread();
 void MIXER_UnlockMixerThread();

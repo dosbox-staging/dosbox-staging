@@ -133,16 +133,37 @@ void Null_Init([[maybe_unused]] Section* sec)
 // user-initiated pause survives the auto-pausing (on focus loss); only the
 // auto-pausing can be auto-cleared.
 //
-// We have these three states:
+// We have these five states:
 //   - `Running`: emulator core ticking normally.
-//   - `UserPaused`: user-initiated pause (via hotkey or HTTP API).
+//   - `UserPausePending`, `AutoPausePending`: user or auto pause has been
+//     requested but the SDL-side fade-out is still in progress. The
+//     emulator core, mixer, MIDI renderer, and capture path all still run
+//     normally -- this is what supplies the audio the fade-out attenuates.
+//     `pending_pause_tick_handler()` on the PIC 1 kHz ticker watches for
+//     the fade to reach zero (`MIXER_GetPlaybackGain() == 0`) and then
+//     transitions us into the corresponding actually-paused state.
+//   - `UserPaused`: user-initiated pause is fully engaged (subsystems
+//     halted). Entered via hotkey or HTTP API through
+//     `UserPausePending`.
 //   - `AutoPaused`: auto-paused when the window lost focus (if the
 //     `pause_when_inactive` conf setting is enabled); only the auto-resume
 //     path clears this, leaving user-pauses alone.
 //
-// `AutoPaused` upgrades to `UserPaused` if the user activates pause mode
-// while auto-paused -- it shouldn't auto-resume on focus gain after that. The
-// reverse never happens.
+// The pending states exist to give the SDL-side fade-out enough real audio
+// to work against. Without them, when pause was requested with a
+// nearly-drained `final_output` buffer (low prebuffer config, host CPU
+// contention, right after fast-forward), the fade would hit silence
+// midway and click. During pending we keep producing real audio, so the
+// fade always has ~5 ms of it to attenuate.
+//
+// Resume has no equivalent pending state because the fade-in works for
+// free: on `MIXER_Resume()` the mixer immediately starts producing real
+// audio and the SDL-side fade-in ramps against it.
+//
+// `AutoPaused` (or `AutoPausePending`) upgrades to `UserPaused` (or
+// `UserPausePending`) if the user activates pause mode while auto-paused
+// -- it shouldn't auto-resume on focus gain after that. The reverse
+// never happens.
 //
 // All transitions go through `set_pause_state()` (validated against
 // `is_valid_transition()`). Public callers express intent via the four
@@ -161,6 +182,8 @@ void Null_Init([[maybe_unused]] Section* sec)
 
 enum class PauseState : uint8_t {
 	Running,
+	UserPausePending,
+	AutoPausePending,
 	UserPaused,
 	AutoPaused,
 };
@@ -174,10 +197,22 @@ static const char* to_string(const PauseState s)
 
 	switch (s) {
 	case Running: return "Running";
+	case UserPausePending: return "UserPausePending";
+	case AutoPausePending: return "AutoPausePending";
 	case UserPaused: return "UserPaused";
 	case AutoPaused: return "AutoPaused";
 	default: assertm(false, "Invalid PauseState value"); return "";
 	}
+}
+
+static bool is_pending_state(const PauseState s)
+{
+	return s == PauseState::UserPausePending || s == PauseState::AutoPausePending;
+}
+
+static bool is_paused_state(const PauseState s)
+{
+	return s == PauseState::UserPaused || s == PauseState::AutoPaused;
 }
 
 static bool is_valid_transition(const PauseState from, const PauseState to)
@@ -185,7 +220,10 @@ static bool is_valid_transition(const PauseState from, const PauseState to)
 	using enum PauseState;
 
 	switch (from) {
-	case Running: return (to == UserPaused || to == AutoPaused);
+	case Running: return (to == UserPausePending || to == AutoPausePending);
+	case UserPausePending: return (to == UserPaused || to == Running);
+	case AutoPausePending:
+		return (to == AutoPaused || to == Running || to == UserPausePending);
 	case UserPaused: return (to == Running);
 	case AutoPaused: return (to == Running || to == UserPaused);
 	default: assertm(false, "Invalid PauseState value"); return false;
@@ -204,6 +242,17 @@ bool DOSBOX_IsRunning()
 
 bool DOSBOX_IsPaused()
 {
+	// Only the actually-paused states -- pending states still have the
+	// emulator core, mixer, and MIDI renderer running so the SDL fade
+	// has audio to work against. See the FSM header comment.
+	return is_paused_state(get_pause_state());
+}
+
+bool DOSBOX_IsPauseRequested()
+{
+	// True for any non-Running state (pending or paused). Callers that
+	// want "user has asked to pause" semantics -- e.g. the SDL fade
+	// trigger, or the shutdown force-resume -- use this.
 	return get_pause_state() != PauseState::Running;
 }
 
@@ -281,58 +330,102 @@ static void update_subsystem_pause_state()
 	set_subsystems_paused(DOSBOX_IsPaused());
 }
 
+static void set_pause_state_locked(const PauseState new_state);
+
 static void set_pause_state(const PauseState new_state)
+{
+	const std::lock_guard lock(pause_state_mutex);
+	set_pause_state_locked(new_state);
+}
+
+// Common transition body. Must be called with `pause_state_mutex` held --
+// this lets `pending_pause_tick_handler()` re-enter without racing an
+// in-flight user-requested transition.
+static void set_pause_state_locked(const PauseState new_state)
 {
 	using enum PauseState;
 
-	bool was_paused  = false;
-	bool now_running = false;
-	PauseState prev  = Running;
-
-	{
-		const std::lock_guard lock(pause_state_mutex);
-
-		prev = pause_state.load();
-		if (prev == new_state) {
-			return;
-		}
-
-		if (!is_valid_transition(prev, new_state)) {
-			LOG_WARNING("DOSBOX: Invalid pause transition %s -> %s",
-			            to_string(prev),
-			            to_string(new_state));
-
-			assertm(false, "Invalid PauseState transition");
-			return;
-		}
-
-		was_paused  = (prev == UserPaused || prev == AutoPaused);
-		now_running = (new_state == Running);
-
-		pause_state.store(new_state);
-
-		if (was_paused && now_running) {
-			rebase_wall_clock_on_resume();
-		}
-
-		update_subsystem_pause_state();
+	const PauseState prev = pause_state.load();
+	if (prev == new_state) {
+		return;
 	}
 
-	// Log + refresh the titlebar only on user-visible edges: pause
-	// becoming active or fully resumed. Owner-only transitions
-	// (`AutoPaused` -> `UserPaused`) skip both -- nothing the user
-	// sees changes.
-	const bool now_paused = (new_state == UserPaused || new_state == AutoPaused);
+	if (!is_valid_transition(prev, new_state)) {
+		LOG_WARNING("DOSBOX: Invalid pause transition %s -> %s",
+		            to_string(prev),
+		            to_string(new_state));
 
-	if (now_paused != was_paused) {
+		assertm(false, "Invalid PauseState transition");
+		return;
+	}
+
+	const bool was_paused_actual   = is_paused_state(prev);
+	const bool was_pause_requested = (prev != Running);
+	const bool now_paused_actual   = is_paused_state(new_state);
+	const bool now_pause_requested = (new_state != Running);
+	const bool now_running         = (new_state == Running);
+
+	pause_state.store(new_state);
+
+	if (was_paused_actual && now_running) {
+		rebase_wall_clock_on_resume();
+	}
+
+	update_subsystem_pause_state();
+
+	// Log + refresh the titlebar on user-visible edges. Titlebar
+	// refresh fires at the request edge (pending) for immediate
+	// feedback -- the fade is imperceptible visually but the pause
+	// indicator should update instantly. Log fires at the actual-pause
+	// edge so it reflects when subsystems really halted.
+	if (now_pause_requested != was_pause_requested) {
 		TITLEBAR_RefreshTitle();
 	}
 
-	if (now_paused && !was_paused) {
+	if (now_paused_actual && !was_paused_actual) {
 		LOG_MSG("DOSBOX: Paused (%s)", to_string(new_state));
 
-	} else if (was_paused && now_running) {
+	} else if (was_paused_actual && now_running) {
 		LOG_MSG("DOSBOX: Resumed");
+	}
+}
+
+// Drives the `*Pending` -> `*Paused` transition. Runs on the emulator
+// thread via PIC's 1 kHz ticker so it fires from a context that's safe
+// to call `MIXER_LockMixerThread()` from (unlike, say, an
+// `SDL_AddTimer` on the SDL timer thread which is a different thread
+// than the mixer thread but still an unsafe caller in principle).
+//
+// The transition is gated on the SDL fade actually completing --
+// `MIXER_GetPlaybackGain()` reflects the ramp maintained by the SDL
+// callback, so we hand off to the actually-paused state exactly when
+// the audible fade-out reaches zero, not on a wall-clock deadline. No
+// timeout fallback: the fade completing IS the signal.
+//
+static void pending_pause_tick_handler()
+{
+	using enum PauseState;
+
+	// Fast path: not in a pending state, nothing to do. This runs
+	// 1000 times a second regardless, so keep it cheap.
+	if (!is_pending_state(get_pause_state())) {
+		return;
+	}
+
+	if (MIXER_GetPlaybackGain() > 0.0f) {
+		return;
+	}
+
+	const std::lock_guard lock(pause_state_mutex);
+
+	// Re-check under the lock in case the state moved between the
+	// unlocked fast-path checks and now (e.g. the user resumed during
+	// the fade).
+	const auto s = pause_state.load();
+	if (s == UserPausePending) {
+		set_pause_state_locked(UserPaused);
+	} else if (s == AutoPausePending) {
+		set_pause_state_locked(AutoPaused);
 	}
 }
 
@@ -340,12 +433,22 @@ void DOSBOX_RequestUserPause()
 {
 	using enum PauseState;
 
+	// Never engage a new pause once shutdown has been requested --
+	// `DOSBOX_RequestShutdown()` force-resumes so teardown runs from a
+	// known-running state, and a late pause request must not undo that
+	// between the shutdown request and the main loop exiting.
+	if (DOSBOX_IsShutdownRequested()) {
+		return;
+	}
+
 	switch (get_pause_state()) {
-	case Running: set_pause_state(UserPaused); break;
+	case Running: set_pause_state(UserPausePending); break;
+	case AutoPausePending: set_pause_state(UserPausePending); break;
 	case AutoPaused: set_pause_state(UserPaused); break;
 
+	case UserPausePending:
 	case UserPaused:
-		// already user-paused
+		// already user-paused (or pending)
 		break;
 
 	default: assertm(false, "Invalid PauseState value");
@@ -357,9 +460,11 @@ void DOSBOX_RequestUserResume()
 	using enum PauseState;
 
 	switch (get_pause_state()) {
+	case UserPausePending: set_pause_state(Running); break;
 	case UserPaused: set_pause_state(Running); break;
 
 	case Running:
+	case AutoPausePending:
 	case AutoPaused:
 		// only the auto-resume path resumes auto-pauses
 		break;
@@ -372,10 +477,18 @@ void DOSBOX_RequestAutoPause()
 {
 	using enum PauseState;
 
-	switch (get_pause_state()) {
-	case Running: set_pause_state(AutoPaused); break;
+	// Never engage a new pause after a shutdown request; see
+	// `DOSBOX_RequestUserPause()`.
+	if (DOSBOX_IsShutdownRequested()) {
+		return;
+	}
 
+	switch (get_pause_state()) {
+	case Running: set_pause_state(AutoPausePending); break;
+
+	case UserPausePending:
 	case UserPaused:
+	case AutoPausePending:
 	case AutoPaused:
 		// user-pause survives auto signals; auto-pause is idempotent
 		break;
@@ -389,9 +502,11 @@ void DOSBOX_RequestAutoResume()
 	using enum PauseState;
 
 	switch (get_pause_state()) {
+	case AutoPausePending: set_pause_state(Running); break;
 	case AutoPaused: set_pause_state(Running); break;
 
 	case Running:
+	case UserPausePending:
 	case UserPaused:
 		// never auto-resume a user pause
 		break;
@@ -491,6 +606,19 @@ static Bitu normal_loop()
 			if (ticks.remain > 0) {
 				TIMER_AddTick();
 				--ticks.remain;
+
+				// `pending_pause_tick_handler()` may have just
+				// engaged the pause inside `TIMER_AddTick()`.
+				// Bail out right away instead of emulating the
+				// rest of the tick budget (up to 20 ms):
+				// subsystems are already parked, so a MIDI
+				// burst in that window could fill the synth's
+				// `work_fifo` and deadlock the main thread on
+				// its blocking enqueue (the consumer -- the
+				// synth renderer thread -- was just halted).
+				if (DOSBOX_IsPaused()) {
+					return 0;
+				}
 			} else {
 				increase_ticks();
 				return 0;
@@ -766,7 +894,9 @@ void DOSBOX_RequestShutdown()
 	// Force-resume so `paused_tick()` exits and subsystem teardown happens
 	// from a known-running state. Without this, teardown would block on
 	// the mixer / synth threads that are parked in their pause hooks.
-	if (DOSBOX_IsPaused()) {
+	// Covers pending states too so the fade-out timer doesn't fire into
+	// a subsystem that's already tearing down.
+	if (DOSBOX_IsPauseRequested()) {
 		set_pause_state(PauseState::Running);
 	}
 }
@@ -1103,6 +1233,10 @@ void DOSBOX_Init()
 	PROGRAMS_Init();
 	TIMER_Init();
 	CMOS_Init();
+
+	// Register the PIC-tick handler that completes pending pauses once
+	// the SDL fade-out has reached zero. See `pending_pause_tick_handler`.
+	TIMER_AddTickHandler(pending_pause_tick_handler);
 }
 
 void DOSBOX_Destroy()
