@@ -351,7 +351,6 @@ void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir) {
 	}
 	// clear lists
 	dir->fileList.clear();
-	dir->longNameList.clear();
 	save_dir = nullptr;
 }
 
@@ -372,7 +371,7 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname) {
 	else
 		return false;
 
-	std::vector<CFileInfo*>::size_type filelist_size = curDir->longNameList.size();
+	std::vector<CFileInfo*>::size_type filelist_size = curDir->fileList.size();
 	if (filelist_size <= 0) {
 		return false;
 	}
@@ -380,11 +379,11 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname) {
 	// The orgname part of the list is not sorted (shortname is)! So we can only walk through it.
 	for(Bitu i = 0; i < filelist_size; i++) {
 #if defined (WIN32)
-		if (strcasecmp(pos,curDir->longNameList[i]->orgname) == 0) {
+		if (strcasecmp(pos,curDir->fileList[i]->orgname) == 0) {
 #else
-		if (strcmp(pos,curDir->longNameList[i]->orgname) == 0) {
+		if (strcmp(pos,curDir->fileList[i]->orgname) == 0) {
 #endif
-			safe_strncpy(shortname, curDir->longNameList[i]->shortname, DOS_NAMELENGTH_ASCII);
+			safe_strncpy(shortname, curDir->fileList[i]->shortname, DOS_NAMELENGTH_ASCII);
 			return true;
 		}
 	}
@@ -425,7 +424,7 @@ int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* short
 unsigned DOS_Drive_Cache::CreateShortNameID(CFileInfo *curDir, const char *name)
 {
 	assert(curDir);
-	const auto filelist_size = curDir->longNameList.size();
+	const auto filelist_size = curDir->fileList.size();
 	if (filelist_size == 0)
 		return 1; // short name IDs start with 1
 
@@ -435,7 +434,7 @@ unsigned DOS_Drive_Cache::CreateShortNameID(CFileInfo *curDir, const char *name)
 
 	while (low <= high) {
 		auto mid = std::midpoint(low, high);
-		const char *other_shortname = curDir->longNameList[mid]->shortname;
+		const char *other_shortname = curDir->fileList[mid]->shortname;
 		const int res = CompareShortname(name, other_shortname);
 		
 		if (res>0)	low  = mid+1; else
@@ -443,9 +442,9 @@ unsigned DOS_Drive_Cache::CreateShortNameID(CFileInfo *curDir, const char *name)
 		else {
 			// any more same x chars in next entries ?	
 			do {
-				found_nr = curDir->longNameList[mid]->shortNr;
+				found_nr = curDir->fileList[mid]->shortNr;
 				mid++;
-			} while((Bitu)mid < filelist_size && (CompareShortname(name, curDir->longNameList[mid]->shortname) == 0));
+			} while((Bitu)mid < filelist_size && (CompareShortname(name, curDir->fileList[mid]->shortname) == 0));
 			break;
 		};
 	}
@@ -577,30 +576,6 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 			unsigned int remaining_space = DOS_NAMELENGTH_ASCII - safe_strlen(info->shortname) - 1;
 			strncat(info->shortname, pos, 4 < remaining_space ? 4 : remaining_space);
 			info->shortname[DOS_NAMELENGTH] = 0;
-		}
-
-		// keep list sorted for CreateShortNameID to work correctly
-		if (!curDir->longNameList.empty()) {
-			if (!(strcmp(info->shortname,curDir->longNameList.back()->shortname)<0)) {
-				// append at end of list
-				curDir->longNameList.push_back(info);
-			} else {
-				// look for position where to insert this element
-				bool found=false;
-				std::vector<CFileInfo*>::iterator it;
-				for (it=curDir->longNameList.begin(); it!=curDir->longNameList.end(); ++it) {
-					if (strcmp(info->shortname,(*it)->shortname)<0) {
-						found = true;
-						break;
-					}
-				}
-				// Put it in longname list...
-				if (found) curDir->longNameList.insert(it,info);
-				else curDir->longNameList.push_back(info);
-			}
-		} else {
-			// empty file list, append
-			curDir->longNameList.push_back(info);
 		}
 	} else {
 		safe_strcpy(info->shortname, tmpName);
