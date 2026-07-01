@@ -31,6 +31,22 @@
 		return codepage437_to_utf16(in_string, out_string, out_length);
 	}
 
+	bool windows_utf8_to_utf16(const char *in_string, wchar_t *out_string, const int out_length);
+
+	template <int out_length>
+	bool windows_utf8_to_utf16(const char *in_string, wchar_t (&out_string)[out_length])
+	{
+		return windows_utf8_to_utf16(in_string, out_string, out_length);
+	}
+
+	bool windows_utf16_to_utf8(const wchar_t *in_string, char *out_string, int out_length);
+
+	template <int out_length>
+	bool windows_utf16_to_utf8(const char *in_string, wchar_t (&out_string)[out_length])
+	{
+		return windows_utf16_to_utf8(in_string, out_string, out_length);
+	}
+
 #else // Linux, macOS
 	using NativeFileHandle = int;
 	constexpr NativeFileHandle InvalidNativeFileHandle = -1;
