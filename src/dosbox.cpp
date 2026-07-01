@@ -373,12 +373,15 @@ static void set_pause_state_locked(const PauseState new_state)
 
 	update_subsystem_pause_state();
 
-	// Log + refresh the titlebar on user-visible edges. Titlebar
-	// refresh fires at the request edge (pending) for immediate
-	// feedback -- the fade is imperceptible visually but the pause
-	// indicator should update instantly. Log fires at the actual-pause
-	// edge so it reflects when subsystems really halted.
-	if (now_pause_requested != was_pause_requested) {
+	// Refresh the titlebar on both the pause-request edge (so any UI
+	// that reflects "pause pending" updates instantly on user input)
+	// and on the actually-paused edge (which is when the paused
+	// indicator -- driven by `DOSBOX_IsPaused()` -- flips). Log only
+	// on the actually-paused edge so it reflects when subsystems
+	// really halted.
+	const bool request_edge = (now_pause_requested != was_pause_requested);
+	const bool actual_edge  = (now_paused_actual != was_paused_actual);
+	if (request_edge || actual_edge) {
 		TITLEBAR_RefreshTitle();
 	}
 
