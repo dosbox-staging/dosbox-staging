@@ -391,3 +391,41 @@ bool local_drive_rename_file_or_directory(const char* old_path, const char* new_
 	}
 	return MoveFileW(utf16_old_path, utf16_new_path);
 }
+
+bool codepage437_to_utf16(const char *in_string, wchar_t *out_string, const int out_length)
+{
+	constexpr UINT Codepage = 437;
+	constexpr DWORD Flags = 0;
+	// -1 means read the entire null terminated string
+	constexpr int InLength = -1;
+	const auto num_chars = MultiByteToWideChar(Codepage, Flags, in_string, InLength, out_string, out_length);
+	if (num_chars >= out_length) {
+		LOG_ERR("FS: codepage437_to_utf16: Insufficient output buffer length");
+		return false;
+	}
+	if (num_chars > 0) {
+		// Ensure output string is null terminated (should be, but just in case)
+		out_string[num_chars] = 0;
+		return true;
+	}
+	const auto error = GetLastError();
+	// Message table source or something, is ignored for our usage
+	constexpr LPCVOID lpSource = nullptr;
+	// Also ignored, only used for FORMAT_MESSAGE_FROM_STRING
+	constexpr va_list* Arguments = nullptr;
+	char error_message[512] = {};
+	if (FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+						lpSource,
+						error,
+						LANG_USER_DEFAULT,
+						error_message,
+						sizeof(error_message),
+						Arguments)) {
+		// Just in case Windows does something dumb I'm sticking a null terminator on the end :)
+		error_message[sizeof(error_message) - 1] = 0;
+		LOG_ERR("FS: MultiByteToWideChar failed with error code %lu: %s", error, error_message);
+	} else {
+		LOG_ERR("FS: MultiByteToWideChar failed with error code %lu: FormatMessageA also failed", error);
+	}
+	return false;
+}
