@@ -604,8 +604,8 @@ void MIDI_Unmute()
 // `audio_frame_fifo` (drained K of N requested) when the renderer
 // halts, and would then wait forever for the remaining N-K samples
 // the halted renderer cannot produce -- deadlocking the mixer thread.
-// `mixer.mutex` is `std::recursive_mutex`, so the subsequent
-// `MIXER_Pause()` re-locks harmlessly.
+// The lock is released before the subsequent `MIXER_Pause()` re-takes
+// it, so the two lock/unlock cycles are sequential, not nested.
 //
 void MIDI_Pause()
 {
