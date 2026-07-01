@@ -212,8 +212,7 @@ public:
 		          id(MAX_OPENDIRS),
 		          nextEntry(0),
 		          shortNr(0),
-		          fileList(0),
-		          longNameList(0)
+		          fileList(0)
 		{}
 
 		~CFileInfo()
@@ -222,7 +221,6 @@ public:
 				delete p;
 			}
 			fileList.clear();
-			longNameList.clear();
 		}
 
 		char        orgname[CROSS_LEN];
@@ -234,7 +232,6 @@ public:
 		unsigned    shortNr;
 		// contents
 		std::vector<CFileInfo*> fileList;
-		std::vector<CFileInfo*> longNameList;
 	};
 
 private:
