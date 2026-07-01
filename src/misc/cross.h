@@ -107,9 +107,9 @@ std_fs::path resolve_home(const std::string &str) noexcept;
 #include <windows.h>
 
 typedef struct dir_struct {
-	HANDLE          handle;
-	char            base_path[MAX_PATH+4];
-	WIN32_FIND_DATA search_data;
+	HANDLE           handle;
+	char             base_path[MAX_PATH+4];
+	WIN32_FIND_DATAW search_data;
 } DirInformation;
 
 #else
