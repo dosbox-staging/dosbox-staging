@@ -313,8 +313,8 @@ RenderedImage RENDER_GetCurrentImage()
 	image.palette = render.last_complete_source.palette.rgb;
 
 	if (is_deinterlacing()) {
-		return render.deinterlacer->Deinterlace(image,
-		                                        render.deinterlacing_strength);
+		return render.deinterlacer->DeinterlaceInPlace(
+		        image, render.deinterlacing_strength);
 	}
 	return image;
 }
@@ -361,7 +361,7 @@ static void deinterlace_rendered_output()
 	// 32-bit BGRX images will always be processed in-place, so we don't
 	// care about the returned `RenderedImage` object (it's the same as the
 	// input image).
-	render.deinterlacer->Deinterlace(image, render.deinterlacing_strength);
+	render.deinterlacer->DeinterlaceInPlace(image, render.deinterlacing_strength);
 }
 
 // Latch the just-finished frame's source pixels into
@@ -395,8 +395,8 @@ void RENDER_EndUpdate(const bool abort)
 	RENDER_DrawLine = empty_line_handler;
 
 	// Latch the just-finished frame before any consumer (capture,
-	// deinterlace) runs, so anything that reads via the latch sees the fresh
-	// frame, not the previous one.
+	// deinterlace) runs, so anything that reads via the latch sees the
+	// fresh frame, not the previous one.
 	if (!abort) {
 		latch_last_complete_source();
 	}
