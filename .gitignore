@@ -100,3 +100,6 @@ cmake_test_discovery_*.json
 
 # Python
 __pycache__
+
+# Zed text editor
+.zed
