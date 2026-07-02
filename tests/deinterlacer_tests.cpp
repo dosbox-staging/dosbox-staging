@@ -145,6 +145,43 @@ RenderedImage MakeBgrx32ImageView(std::vector<uint32_t>& pixels, const int width
 	return image;
 }
 
+// Palette index that maps to `Content` in Indexed8 test images
+constexpr uint8_t ContentIndex = 1;
+
+// Returns a non-owning Indexed8 view over `pixels`; the vector must
+// outlive the returned image and must not be reallocated afterwards.
+RenderedImage MakeIndexed8ImageView(std::vector<uint8_t>& pixels, const int width,
+                                    const int height, const VideoMode& video_mode)
+{
+	assert(pixels.size() == static_cast<size_t>(width) * height);
+
+	RenderedImage image = {};
+
+	image.params.width        = width;
+	image.params.height       = height;
+	image.params.pixel_format = PixelFormat::Indexed8;
+	image.params.video_mode   = video_mode;
+
+	image.pitch      = width;
+	image.image_data = pixels.data();
+
+	image.palette[ContentIndex] = Rgb888(static_cast<uint8_t>(Content >> 16),
+	                                     static_cast<uint8_t>(Content >> 8),
+	                                     static_cast<uint8_t>(Content));
+
+	return image;
+}
+
+// Interprets the pixel data of `image` as uint32_t BGRX32 pixels
+std::vector<uint32_t> ToBgrx32Pixels(const RenderedImage& image)
+{
+	const auto* data = reinterpret_cast<const uint32_t*>(image.image_data);
+	const auto num_pixels = static_cast<size_t>(image.params.width) *
+	                        image.params.height;
+
+	return {data, data + num_pixels};
+}
+
 void FillRow(std::vector<uint32_t>& pixels, const int width, const int row,
              const uint32_t color)
 {
@@ -454,4 +491,173 @@ TEST(DeinterlacerTest, NonFmvModeIsPassedThrough)
 	EXPECT_EQ(result.image_data, image.image_data);
 	EXPECT_EQ(result.params.pixel_format, PixelFormat::BGRX32_ByteArray);
 	ExpectPixelsEqual(pixels, original, 320);
+}
+
+// ----------------------------------------------------------------------------
+// Non-mutating capture-path deinterlacing
+// ----------------------------------------------------------------------------
+
+TEST(DeinterlacerTest, CopyingDeinterlaceDoesNotMutateBgrx32Input)
+{
+	auto pixels         = MakeLineInterlacedPixels(Content, Black);
+	const auto original = pixels;
+
+	const auto image = MakeBgrx32ImageView(pixels,
+	                                       LineWidth,
+	                                       LineHeight,
+	                                       LineFmvVideoMode());
+
+	Deinterlacer deinterlacer = {};
+	const auto result         = deinterlacer.Deinterlace(image,
+                                                     DeinterlacingStrength::Full);
+
+	// The input must be untouched
+	ExpectPixelsEqual(pixels, original, LineWidth);
+
+	// The result is a view into the deinterlacer's internal buffer
+	// holding the deinterlaced frame
+	ASSERT_NE(result.image_data, image.image_data);
+
+	EXPECT_EQ(result.params.pixel_format, PixelFormat::BGRX32_ByteArray);
+	EXPECT_EQ(result.params.width, LineWidth);
+	EXPECT_EQ(result.params.height, LineHeight);
+	EXPECT_FALSE(result.params.rendered_double_scan);
+	EXPECT_FALSE(result.params.rendered_pixel_doubling);
+	EXPECT_EQ(result.pitch, LineWidth * static_cast<int>(sizeof(uint32_t)));
+
+	const auto expected = MakeExpectedLineDeinterlacedPixels(
+	        Content, Black, LineScaleFactor(DeinterlacingStrength::Full));
+
+	ExpectPixelsEqual(ToBgrx32Pixels(result), expected, LineWidth);
+}
+
+TEST(DeinterlacerTest, CopyingLineDeinterlaceConvertsIndexed8ToBgrx32)
+{
+	std::vector<uint8_t> pixels(static_cast<size_t>(LineWidth) * LineHeight, 0);
+
+	for (auto y = LineBlockFirstContentRow; y <= LineBlockLastContentRow; y += 2) {
+		const auto row = pixels.begin() + static_cast<ptrdiff_t>(y) * LineWidth;
+		std::fill(row, row + LineWidth, ContentIndex);
+	}
+	for (auto y = SolidBlockFirstRow; y <= SolidBlockLastRow; ++y) {
+		const auto row = pixels.begin() + static_cast<ptrdiff_t>(y) * LineWidth;
+		std::fill(row, row + LineWidth, ContentIndex);
+	}
+	const auto original = pixels;
+
+	const auto image = MakeIndexed8ImageView(pixels,
+	                                         LineWidth,
+	                                         LineHeight,
+	                                         LineFmvVideoMode());
+
+	Deinterlacer deinterlacer = {};
+	const auto result         = deinterlacer.Deinterlace(image,
+                                                     DeinterlacingStrength::Full);
+
+	EXPECT_EQ(pixels, original);
+	ASSERT_NE(result.image_data, image.image_data);
+
+	EXPECT_EQ(result.params.pixel_format, PixelFormat::BGRX32_ByteArray);
+	EXPECT_EQ(result.params.width, LineWidth);
+	EXPECT_EQ(result.params.height, LineHeight);
+
+	const auto expected = MakeExpectedLineDeinterlacedPixels(
+	        Content, Black, LineScaleFactor(DeinterlacingStrength::Full));
+
+	ExpectPixelsEqual(ToBgrx32Pixels(result), expected, LineWidth);
+}
+
+TEST(DeinterlacerTest, CopyingDotDeinterlaceUndoublesBakedDoubleScanning)
+{
+	// Mode 13h with "baked-in" double scanning: the source holds 320x400
+	// Indexed8 pixels with every video mode row rendered twice. This is
+	// the exact input shape of KGB/Dune FMV captures (which used to get
+	// corrupted by in-place 32-bit writes into the Indexed8 buffer).
+	const auto source_height = DotHeight * 2;
+
+	std::vector<uint8_t> pixels(static_cast<size_t>(DotWidth) * source_height, 0);
+
+	for (auto y = DotBlockFirstRow; y <= DotBlockLastRow; y += 2) {
+		const auto row0 = static_cast<size_t>(y) * 2 * DotWidth;
+
+		for (auto x = 0; x < DotWidth; x += 2) {
+			pixels[row0 + x]            = ContentIndex;
+			pixels[row0 + DotWidth + x] = ContentIndex;
+		}
+	}
+	for (auto y = DotSolidBlockFirstRow; y <= DotSolidBlockLastRow; ++y) {
+		const auto row0 = pixels.begin() +
+		                  static_cast<ptrdiff_t>(y) * 2 * DotWidth;
+		std::fill(row0, row0 + DotWidth * 2, ContentIndex);
+	}
+	const auto original = pixels;
+
+	auto image                        = MakeIndexed8ImageView(pixels,
+                                           DotWidth,
+                                           source_height,
+                                           DotFmvVideoMode());
+	image.params.rendered_double_scan = true;
+
+	Deinterlacer deinterlacer = {};
+	const auto result         = deinterlacer.Deinterlace(image,
+                                                     DeinterlacingStrength::Full);
+
+	EXPECT_EQ(pixels, original);
+	ASSERT_NE(result.image_data, image.image_data);
+
+	EXPECT_EQ(result.params.pixel_format, PixelFormat::BGRX32_ByteArray);
+	EXPECT_EQ(result.params.width, DotWidth);
+	EXPECT_EQ(result.params.height, DotHeight);
+	EXPECT_FALSE(result.params.rendered_double_scan);
+
+	// Baked double scanning must be re-expressed as post-render height
+	// doubling so the params stay consistent with the video mode
+	EXPECT_TRUE(result.params.double_height);
+
+	const auto expected = MakeExpectedDotDeinterlacedPixels(
+	        Content, DotScaleFactor(DeinterlacingStrength::Full));
+
+	ExpectPixelsEqual(ToBgrx32Pixels(result), expected, DotWidth);
+}
+
+TEST(DeinterlacerTest, CopyingDeinterlaceConvertsEvenWithoutPattern)
+{
+	// A qualifying video mode with no interlacing pattern must still
+	// return the decoded BGRX32 copy, so the capture output format stays
+	// stable within a video mode.
+	std::vector<uint8_t> pixels(static_cast<size_t>(DotWidth) * DotHeight,
+	                            ContentIndex);
+	const auto original = pixels;
+
+	const auto image = MakeIndexed8ImageView(pixels,
+	                                         DotWidth,
+	                                         DotHeight,
+	                                         DotFmvVideoMode());
+
+	Deinterlacer deinterlacer = {};
+	const auto result         = deinterlacer.Deinterlace(image,
+                                                     DeinterlacingStrength::Full);
+
+	EXPECT_EQ(pixels, original);
+	ASSERT_NE(result.image_data, image.image_data);
+	EXPECT_EQ(result.params.pixel_format, PixelFormat::BGRX32_ByteArray);
+
+	const std::vector<uint32_t> expected(static_cast<size_t>(DotWidth) * DotHeight,
+	                                     Content);
+
+	ExpectPixelsEqual(ToBgrx32Pixels(result), expected, DotWidth);
+}
+
+TEST(DeinterlacerTest, CopyingDeinterlacePassesThroughNonFmvModes)
+{
+	std::vector<uint32_t> pixels(static_cast<size_t>(320) * 200, Content);
+
+	const auto image = MakeBgrx32ImageView(pixels, 320, 200, NonFmvVideoMode());
+
+	Deinterlacer deinterlacer = {};
+	const auto result         = deinterlacer.Deinterlace(image,
+                                                     DeinterlacingStrength::Full);
+
+	EXPECT_EQ(result.image_data, image.image_data);
+	EXPECT_EQ(result.params.pixel_format, PixelFormat::BGRX32_ByteArray);
 }
