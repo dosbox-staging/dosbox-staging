@@ -55,9 +55,17 @@ uint32_t Deinterlacer::DetectBackgroundColor(const uint32_t* pixel_data) const
 		return true;
 	}();
 
-	// Return the detected colour if we succeeded, or revert to black
+	// Return the detected colour if we succeeded, or revert to black.
+	//
+	// Mask out the unused X byte: `ThresholdInput()` compares masked
+	// pixels against this colour, and on the display path the pixels of
+	// Indexed8 modes carry X=255 from the palette LUT. Without the mask,
+	// every pixel would appear as non-background and these modes would
+	// silently never get deinterlaced.
+	constexpr uint32_t RgbMask = 0x00ffffff;
+
 	constexpr uint32_t Black = 0;
-	return bg_color_detected ? top_left_pixel_color : Black;
+	return (bg_color_detected ? top_left_pixel_color : Black) & RgbMask;
 }
 
 void Deinterlacer::ThresholdInput(const uint32_t* src, bit_buffer& dest,
