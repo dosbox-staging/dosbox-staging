@@ -13,6 +13,7 @@
 #include "dos/drives.h"
 #include "misc/cross.h"
 #include "misc/support.h"
+#include "misc/unicode.h"
 #include "utils/string_utils.h"
 
 int fileInfoCounter = 0;
@@ -486,6 +487,8 @@ Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName, const size
 		};
 	}
 	// not available
+	const std::string host_name = dos_437_to_fs_utf8(shortName);
+	safe_strncpy(shortName, host_name.c_str(), shortName_len);
 	return -1;
 }
 
@@ -504,10 +507,8 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 	Bits	len			= 0;
 	bool	createShort = false;
 
-	// Remove Spaces
-	char tmpNameBuffer[CROSS_LEN];
-	safe_strcpy(tmpNameBuffer, info->orgname);
-	char* tmpName = tmpNameBuffer;
+	std::string dos_name = fs_utf8_to_dos_437(info->orgname);
+	char* tmpName = dos_name.data();
 	upcase(tmpName);
 	createShort = RemoveSpaces(tmpName);
 
