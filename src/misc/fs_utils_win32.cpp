@@ -394,6 +394,15 @@ bool local_drive_rename_file_or_directory(const char* old_path, const char* new_
 	return MoveFileW(utf16_old_path, utf16_new_path);
 }
 
+uint32_t local_drive_get_file_size(const NativeFileHandle handle)
+{
+	const auto size = GetFileSize(handle, nullptr);
+	if (size == INVALID_FILE_SIZE) {
+		return 0;
+	}
+	return size;
+}
+
 bool codepage437_to_utf16(const char *in_string, wchar_t *out_string, const int out_length)
 {
 	constexpr UINT Codepage = 437;

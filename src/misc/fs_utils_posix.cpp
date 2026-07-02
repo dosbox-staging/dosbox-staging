@@ -500,4 +500,13 @@ bool local_drive_rename_file_or_directory(const char* old_path, const char* new_
 	return rename(old_path, new_path) == 0;
 }
 
+uint32_t local_drive_get_file_size(const NativeFileHandle handle)
+{
+	struct stat file_info = {};
+	if (fstat(handle, &file_info) == 0) {
+		return file_info.st_size;
+	}
+	return 0;
+}
+
 #endif

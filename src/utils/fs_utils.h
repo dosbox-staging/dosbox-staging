@@ -195,4 +195,6 @@ bool delete_native_file(const char* path);
 // Simple file/directory removal routines, without MS-DOS compatibility hacks
 bool create_dir_if_not_exist(const std_fs::path& path);
 
+uint32_t local_drive_get_file_size(const NativeFileHandle handle);
+
 #endif
