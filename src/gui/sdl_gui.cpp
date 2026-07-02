@@ -1414,30 +1414,29 @@ static std::optional<SDL_Point> parse_window_position_conf(const std::string& wi
 	return SDL_Point{x, y};
 }
 
-static void save_window_position(const std::optional<SDL_Point> pos)
+static void save_window_position(const int x, const int y)
 {
-	if (pos) {
-		if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
-			sdl.fullscreen.prev_window.x_pos = pos->x;
-			sdl.fullscreen.prev_window.y_pos = pos->y;
-		} else {
-			sdl.windowed.x_pos = pos->x;
-			sdl.windowed.y_pos = pos->y;
-		}
+	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+		sdl.fullscreen.prev_window.x_pos = x;
+		sdl.fullscreen.prev_window.y_pos = y;
 	} else {
-		if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
-			sdl.fullscreen.prev_window.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
-			        sdl.display_number);
+		sdl.windowed.x_pos = x;
+		sdl.windowed.y_pos = y;
+	}
+}
 
-			sdl.fullscreen.prev_window.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
-			        sdl.display_number);
-		} else {
-			sdl.windowed.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
-			        sdl.display_number);
+static void save_default_window_position()
+{
+	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+		sdl.fullscreen.prev_window.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+		        sdl.display_number);
 
-			sdl.windowed.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
-			        sdl.display_number);
-		}
+		sdl.fullscreen.prev_window.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+		        sdl.display_number);
+	} else {
+		sdl.windowed.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
+
+		sdl.windowed.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
 	}
 }
 
@@ -1472,7 +1471,7 @@ void GFX_SaveCurrentWindowSizeAndPosition()
 	SDL_GetWindowPosition(sdl.window, &r.x, &r.y);
 	SDL_GetWindowSize(sdl.window, &r.w, &r.h);
 
-	save_window_position(SDL_Point{r.x, r.y});
+	save_window_position(r.x, r.y);
 	save_window_size(r.w, r.h);
 }
 
@@ -1565,8 +1564,14 @@ static void set_window_size()
 
 static void save_window_position_from_conf()
 {
-	save_window_position(parse_window_position_conf(
-	        get_sdl_section()->GetString("window_position")));
+	if (const auto pos = parse_window_position_conf(
+	            get_sdl_section()->GetString("window_position"));
+	    pos) {
+
+		save_window_position(pos->x, pos->y);
+	} else {
+		save_default_window_position();
+	}
 }
 
 TextureFilterMode GFX_GetTextureFilterMode()
@@ -2355,7 +2360,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		const auto new_y = std::max(y, 0);
 
 		if (!sdl.is_fullscreen) {
-			save_window_position(SDL_Point{new_x, new_y});
+			save_window_position(new_x, new_y);
 
 			set_section_property_value("sdl",
 			                           "window_position",
