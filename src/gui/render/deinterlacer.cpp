@@ -435,28 +435,6 @@ void Deinterlacer::DecodeInputImage(const RenderedImage& input_image)
 	}
 }
 
-bool Deinterlacer::SetUpInputImage(const RenderedImage& input_image)
-{
-	if (input_image.params.pixel_format == PixelFormat::BGRX32_ByteArray) {
-
-		// Not undefined behaviour because the original image buffer was
-		// an uint32_t vector
-		image.width        = input_image.params.width;
-		image.height       = input_image.params.height;
-		image.pitch_pixels = input_image.pitch / sizeof(uint32_t);
-
-		image.data = reinterpret_cast<uint32_t*>(input_image.image_data);
-
-		return true;
-
-	} else {
-		DecodeInputImage(input_image);
-		image.data = decoded_image.data();
-
-		return false;
-	}
-}
-
 // Automatically deinterlace FMV videos in the input image that have every
 // second scanline black. Non-interlaced areas will be left intact.
 //
@@ -466,10 +444,15 @@ RenderedImage Deinterlacer::LineDeinterlace(const RenderedImage& input_image,
 	assert(input_image.image_data);
 	assert(input_image.params.width > 0);
 	assert(input_image.params.height > 0);
+	assert(input_image.params.pixel_format == PixelFormat::BGRX32_ByteArray);
 
-	// `SetUpInputImage()` returns true if the image had to be decoded into
-	// a temporary buffer.
-	auto process_in_place = SetUpInputImage(input_image);
+	// Not undefined behaviour because the original image buffer was an
+	// uint32_t vector
+	image.width  = input_image.params.width;
+	image.height = input_image.params.height;
+	image.pitch_pixels = input_image.pitch / static_cast<int>(sizeof(uint32_t));
+
+	image.data = reinterpret_cast<uint32_t*>(input_image.image_data);
 
 	// We store 64 1-bit pixels per uint64_t, plus 1 uint64_t for
 	// padding at the end of each row. We also store two padding
@@ -530,30 +513,7 @@ RenderedImage Deinterlacer::LineDeinterlace(const RenderedImage& input_image,
 	//
 	CombineOutput(image.data, buffer2, strength);
 
-	if (process_in_place) {
-		return input_image;
-
-	} else {
-		// Create a new `RenderedImage` if we didn't process the input
-		// image in-place
-		constexpr auto BytesPerPixel = sizeof(uint32_t);
-
-		// This won't copy the pixel data, just the container
-		RenderedImage new_image = input_image;
-
-		// We're always outputting a BGRX32 image if we had to decode it
-		new_image.params.pixel_format = PixelFormat::BGRX32_ByteArray;
-		new_image.pitch               = image.width * BytesPerPixel;
-
-		new_image.image_data = reinterpret_cast<uint8_t*>(
-		        decoded_image.data());
-
-		std::memcpy(new_image.image_data,
-		            image.data,
-		            image.width * image.height * BytesPerPixel);
-
-		return new_image;
-	}
+	return input_image;
 }
 
 // Automatically deinterlace "dot pattern" FMV videos in the CD-ROM version
@@ -565,6 +525,7 @@ RenderedImage Deinterlacer::DotDeinterlace(const RenderedImage& input_image,
 	assert(input_image.image_data);
 	assert(input_image.params.width > 0);
 	assert(input_image.params.height > 0);
+	assert(input_image.params.pixel_format == PixelFormat::BGRX32_ByteArray);
 
 	const auto& p = input_image.params;
 
@@ -582,7 +543,7 @@ RenderedImage Deinterlacer::DotDeinterlace(const RenderedImage& input_image,
 	image.pitch_pixels = image.width;
 
 	// We'll decode two rows at a time
-	decoded_image.resize(image.width * 2);
+	dot_rows_buf.resize(image.width * 2);
 
 	ImageDecoder image_decoder(input_image, row_skip_count, pixel_skip_count);
 
@@ -624,7 +585,7 @@ RenderedImage Deinterlacer::DotDeinterlace(const RenderedImage& input_image,
 	auto y = 0;
 
 	while (y < image.height / 3) {
-		auto in_line = decoded_image.begin();
+		auto in_line = dot_rows_buf.begin();
 		image_decoder.GetNextRowAsBgrx32Pixels(in_line);
 		++y;
 
@@ -647,7 +608,7 @@ RenderedImage Deinterlacer::DotDeinterlace(const RenderedImage& input_image,
 
 	while (y < (image.height - 1)) {
 		// Decode row N, except for the first iteration
-		auto in_line = decoded_image.begin();
+		auto in_line = dot_rows_buf.begin();
 		if (!first_iteration) {
 			image_decoder.GetNextRowAsBgrx32Pixels(in_line);
 			++y;
@@ -665,7 +626,7 @@ RenderedImage Deinterlacer::DotDeinterlace(const RenderedImage& input_image,
 		}
 
 		// Decode row N+1
-		in_line = decoded_image.begin() + image.width;
+		in_line = dot_rows_buf.begin() + image.width;
 		image_decoder.GetNextRowAsBgrx32Pixels(in_line);
 		++y;
 
@@ -682,7 +643,7 @@ RenderedImage Deinterlacer::DotDeinterlace(const RenderedImage& input_image,
 		// taking the width/height doubling of the input image into
 		// account.
 		//
-		in_line = decoded_image.begin();
+		in_line = dot_rows_buf.begin();
 
 		if (!double_width && !double_height) {
 			WriteDotDeinterlacedOutput2x2(in_line,
@@ -860,26 +821,78 @@ void Deinterlacer::WriteDotDeinterlacedOutput4x4(
 	out_line += out_pitch * 4;
 }
 
+// Regular deinterlacing of 400+ line 256-colour, high-colour, and true
+// colour modes.
+static bool is_line_deinterlaced_mode(const VideoMode& mode)
+{
+	return mode.is_graphics_mode &&
+	       (mode.color_depth >= ColorDepth::IndexedColor256) &&
+	       (mode.height >= 400);
+}
+
+// Special processing for KGB and Dune CD-ROM versions that use the weird
+// "dot pattern interlacing" in the 320x200 13h VGA mode.
+static bool is_dot_deinterlaced_mode(const VideoMode& mode)
+{
+	return mode.bios_mode_number == 0x13;
+}
+
 RenderedImage Deinterlacer::DeinterlaceInPlace(const RenderedImage& input_image,
                                                const DeinterlacingStrength strength)
 {
-	const auto mode = input_image.params.video_mode;
+	const auto& mode = input_image.params.video_mode;
 
-	if (mode.is_graphics_mode &&
-	    (mode.color_depth >= ColorDepth::IndexedColor256) &&
-	    (mode.height >= 400)) {
-
-		// Regular deinterlacing of 400+ line 256-colour,
-		// high-colour, and true colour modes.
+	if (is_line_deinterlaced_mode(mode)) {
 		return LineDeinterlace(input_image, strength);
 
-	} else if (mode.bios_mode_number == 0x13) {
-		// Special processing for KGB and Dune CD-ROM versions
-		// that use the weird "dot pattern interlacing" in the
-		// 320x200 13h VGA mode.
+	} else if (is_dot_deinterlaced_mode(mode)) {
 		return DotDeinterlace(input_image, strength);
 
 	} else {
 		return input_image;
 	}
+}
+
+RenderedImage Deinterlacer::Deinterlace(const RenderedImage& input_image,
+                                        const DeinterlacingStrength strength)
+{
+	const auto& mode = input_image.params.video_mode;
+
+	if (!is_line_deinterlaced_mode(mode) && !is_dot_deinterlaced_mode(mode)) {
+		return input_image;
+	}
+
+	// Decode the input into the internal buffer (converting it to
+	// un-doubled BGRX32 at video mode dimensions), then deinterlace the
+	// copy in place. The input image is never modified -- it's typically
+	// the render layer's latched source frame, which other consumers
+	// read too.
+	DecodeInputImage(input_image);
+
+	RenderedImage decoded = {};
+
+	decoded.params        = input_image.params;
+	decoded.params.width  = image.width;
+	decoded.params.height = image.height;
+
+	decoded.params.pixel_format = PixelFormat::BGRX32_ByteArray;
+
+	// The decoder has already removed any "baked-in" doubling;
+	// re-express baked double scanning as post-render height doubling so
+	// the params stay consistent with the video mode's intended
+	// presentation (and with its pixel aspect ratio).
+	if (decoded.params.rendered_double_scan) {
+		decoded.params.double_height = true;
+	}
+	decoded.params.rendered_double_scan    = false;
+	decoded.params.rendered_pixel_doubling = false;
+
+	// The decoder always emits the rows top to bottom
+	decoded.is_flipped_vertically = false;
+
+	decoded.pitch = image.width * static_cast<int>(sizeof(uint32_t));
+
+	decoded.image_data = reinterpret_cast<uint8_t*>(decoded_image.data());
+
+	return DeinterlaceInPlace(decoded, strength);
 }
