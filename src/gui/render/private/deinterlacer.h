@@ -29,8 +29,23 @@ public:
 	Deinterlacer()  = default;
 	~Deinterlacer() = default;
 
-	// Expects packed RGBA pixel data (one uint32_t per pixel, no extra
-	// padding per line).
+	// Non-mutating variant for the capture path. When the video mode
+	// qualifies for deinterlacing, decodes the input image into an
+	// internal buffer (converting it to un-doubled 32-bit BGRX at video
+	// mode dimensions), deinterlaces the copy, and returns a view of it
+	// that stays valid until the next `Deinterlace()` call (callers that
+	// need it longer must deep-copy). The input image is never modified.
+	//
+	// Returns the input image unchanged for video modes that don't
+	// qualify for deinterlacing.
+	//
+	RenderedImage Deinterlace(const RenderedImage& image,
+	                          const DeinterlacingStrength strength);
+
+	// In-place variant for the video output path: deinterlaces the given
+	// 32-bit BGRX image directly, modifying its pixel data. Expects
+	// packed pixel data (one uint32_t per pixel, no extra padding per
+	// line).
 	RenderedImage DeinterlaceInPlace(const RenderedImage& image,
 	                                 const DeinterlacingStrength strength);
 
@@ -49,7 +64,6 @@ private:
 	RenderedImage LineDeinterlace(const RenderedImage& input_image,
 	                              const DeinterlacingStrength strength);
 
-	bool SetUpInputImage(const RenderedImage& image);
 	void DecodeInputImage(const RenderedImage& input_image);
 
 	uint32_t DetectBackgroundColor(const uint32_t* pixel_data) const;
@@ -96,9 +110,13 @@ private:
 		uint32_t* data   = {};
 	} image = {};
 
-	// Decoded image for non-BGRX32 images if the image is not processed in
-	// place
+	// Full decoded copy of the input image for the non-mutating
+	// `Deinterlace()` variant (un-doubled BGRX32 at video mode
+	// dimensions); this is the buffer the returned image points into
 	std::vector<uint32_t> decoded_image = {};
+
+	// Two-row decode scratch buffer for the dot deinterlacer
+	std::vector<uint32_t> dot_rows_buf = {};
 
 	// Temporary work buffers holding 1-bit image data
 	bit_buffer buffer1 = {};
