@@ -4,6 +4,8 @@
 #ifndef DOSBOX_GUI_PRIVATE_COMMON_H
 #define DOSBOX_GUI_PRIVATE_COMMON_H
 
+#include <optional>
+
 #include "dosbox_config.h"
 #include "misc/video.h"
 #include "utils/fraction.h"
@@ -120,5 +122,7 @@ enum class DosBoxSdlEvent {
 int GFX_GetUserSdlEventId(DosBoxSdlEvent event);
 
 bool GFX_IsPaused();
+
+void GFX_SaveCurrentWindowSizeAndPosition();
 
 #endif // DOSBOX_GUI_COMMON_H

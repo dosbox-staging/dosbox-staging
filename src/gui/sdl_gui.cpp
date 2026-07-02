@@ -1461,6 +1461,21 @@ static void save_window_size(const int w, const int h)
 	set_section_property_value("sdl", "window_size", format_str("%dx%d", w, h));
 }
 
+void GFX_SaveCurrentWindowSizeAndPosition()
+{
+	if (sdl.is_fullscreen) {
+		return;
+	}
+
+	SDL_Rect r = {};
+
+	SDL_GetWindowPosition(sdl.window, &r.x, &r.y);
+	SDL_GetWindowSize(sdl.window, &r.w, &r.h);
+
+	save_window_position(SDL_Point{r.x, r.y});
+	save_window_size(r.w, r.h);
+}
+
 static void handle_window_size_pref_after_config_load()
 {
 	assert(control);
