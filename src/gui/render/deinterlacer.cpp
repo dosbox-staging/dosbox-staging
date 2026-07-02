@@ -860,8 +860,8 @@ void Deinterlacer::WriteDotDeinterlacedOutput4x4(
 	out_line += out_pitch * 4;
 }
 
-RenderedImage Deinterlacer::Deinterlace(const RenderedImage& input_image,
-                                        const DeinterlacingStrength strength)
+RenderedImage Deinterlacer::DeinterlaceInPlace(const RenderedImage& input_image,
+                                               const DeinterlacingStrength strength)
 {
 	const auto mode = input_image.params.video_mode;
 
