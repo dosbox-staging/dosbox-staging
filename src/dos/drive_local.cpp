@@ -477,18 +477,16 @@ bool localDrive::RemoveDir(const char* dir)
 bool localDrive::TestDir(const char* dir)
 {
 	const std::string host_dir = MapDosToHostFilename(dir);
+	FatAttributeFlags attributes = {};
+	if (local_drive_get_attributes(host_dir.c_str(), attributes) != DOSERR_NONE) {
+		return false;
+	}
 	// Skip directory test, if "\"
 	if (!host_dir.empty() && host_dir.back() != '\\') {
 		// It has to be a directory !
-		struct stat test;
-		if (stat(host_dir.c_str(), &test)) {
-			return false;
-		}
-		if ((test.st_mode & S_IFDIR) == 0) {
-			return false;
-		}
+		return attributes.directory;
 	}
-	return local_drive_path_exists(host_dir.c_str());
+	return true;
 }
 
 bool localDrive::Rename(const char* oldname, const char* newname)
