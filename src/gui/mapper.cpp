@@ -23,6 +23,7 @@
 #include "config/setup.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
+#include "gui/private/common.h"
 #include "hardware/input/joystick.h"
 #include "hardware/input/keyboard.h"
 #include "hardware/input/mouse.h"
@@ -3158,6 +3159,8 @@ void MAPPER_DisplayUI() {
 
 	// Exiting the mapper
 	MIXER_UnlockMixerThread();
+
+	GFX_SaveCurrentWindowSizeAndPosition();
 
 	SDL_DestroyTexture(mapper.font_atlas);
 	if (!SDL_SetRenderLogicalPresentation(
