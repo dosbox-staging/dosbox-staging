@@ -272,7 +272,7 @@ TEST(DeinterlacerTest, LineDeinterlaceFillsMissingLinesAtFullStrength)
 	                                       LineFmvVideoMode());
 
 	Deinterlacer deinterlacer = {};
-	deinterlacer.Deinterlace(image, DeinterlacingStrength::Full);
+	deinterlacer.DeinterlaceInPlace(image, DeinterlacingStrength::Full);
 
 	const auto expected = MakeExpectedLineDeinterlacedPixels(
 	        Content, Black, LineScaleFactor(DeinterlacingStrength::Full));
@@ -292,7 +292,7 @@ TEST(DeinterlacerTest, LineDeinterlaceDimsFilledLinesPerStrength)
 		                                       LineFmvVideoMode());
 
 		Deinterlacer deinterlacer = {};
-		deinterlacer.Deinterlace(image, strength);
+		deinterlacer.DeinterlaceInPlace(image, strength);
 
 		const auto expected = MakeExpectedLineDeinterlacedPixels(
 		        Content, Black, LineScaleFactor(strength));
@@ -313,10 +313,34 @@ TEST(DeinterlacerTest, LineDeinterlaceDetectsNonBlackBackground)
 	                                       LineFmvVideoMode());
 
 	Deinterlacer deinterlacer = {};
-	deinterlacer.Deinterlace(image, DeinterlacingStrength::Full);
+	deinterlacer.DeinterlaceInPlace(image, DeinterlacingStrength::Full);
 
 	const auto expected = MakeExpectedLineDeinterlacedPixels(
 	        Content, Background, LineScaleFactor(DeinterlacingStrength::Full));
+
+	ExpectPixelsEqual(pixels, expected, LineWidth);
+}
+
+TEST(DeinterlacerTest, LineDeinterlaceIgnoresTheUnusedXByte)
+{
+	// On the display path, the pixels of Indexed8 modes go through the
+	// palette LUT which sets the unused X byte to 255. The X byte must
+	// not defeat the background colour detection, otherwise these modes
+	// are silently never deinterlaced.
+	constexpr uint32_t XContent    = 0xff000000 | Content;
+	constexpr uint32_t XBackground = 0xff000000;
+
+	auto pixels      = MakeLineInterlacedPixels(XContent, XBackground);
+	const auto image = MakeBgrx32ImageView(pixels,
+	                                       LineWidth,
+	                                       LineHeight,
+	                                       LineFmvVideoMode());
+
+	Deinterlacer deinterlacer = {};
+	deinterlacer.DeinterlaceInPlace(image, DeinterlacingStrength::Full);
+
+	const auto expected = MakeExpectedLineDeinterlacedPixels(
+	        XContent, XBackground, LineScaleFactor(DeinterlacingStrength::Full));
 
 	ExpectPixelsEqual(pixels, expected, LineWidth);
 }
@@ -337,8 +361,8 @@ TEST(DeinterlacerTest, LineDeinterlaceLeavesPatternlessImageUntouched)
 	                                       LineFmvVideoMode());
 
 	Deinterlacer deinterlacer = {};
-	const auto result         = deinterlacer.Deinterlace(image,
-                                                     DeinterlacingStrength::Full);
+	const auto result         = deinterlacer.DeinterlaceInPlace(image,
+                                                            DeinterlacingStrength::Full);
 
 	EXPECT_EQ(result.image_data, image.image_data);
 	ExpectPixelsEqual(pixels, original, LineWidth);
@@ -357,7 +381,7 @@ TEST(DeinterlacerTest, DotDeinterlaceFillsDotPatternAtFullStrength)
 	                                       DotFmvVideoMode());
 
 	Deinterlacer deinterlacer = {};
-	deinterlacer.Deinterlace(image, DeinterlacingStrength::Full);
+	deinterlacer.DeinterlaceInPlace(image, DeinterlacingStrength::Full);
 
 	const auto expected = MakeExpectedDotDeinterlacedPixels(
 	        Content, DotScaleFactor(DeinterlacingStrength::Full));
@@ -377,7 +401,7 @@ TEST(DeinterlacerTest, DotDeinterlaceDimsFilledLinesPerStrength)
 		                                       DotFmvVideoMode());
 
 		Deinterlacer deinterlacer = {};
-		deinterlacer.Deinterlace(image, strength);
+		deinterlacer.DeinterlaceInPlace(image, strength);
 
 		const auto expected = MakeExpectedDotDeinterlacedPixels(
 		        Content, DotScaleFactor(strength));
@@ -400,8 +424,8 @@ TEST(DeinterlacerTest, DotDeinterlaceLeavesPatternlessImageUntouched)
 	                                       DotFmvVideoMode());
 
 	Deinterlacer deinterlacer = {};
-	const auto result         = deinterlacer.Deinterlace(image,
-                                                     DeinterlacingStrength::Full);
+	const auto result         = deinterlacer.DeinterlaceInPlace(image,
+                                                            DeinterlacingStrength::Full);
 
 	EXPECT_EQ(result.image_data, image.image_data);
 	ExpectPixelsEqual(pixels, original, DotWidth);
@@ -424,8 +448,8 @@ TEST(DeinterlacerTest, NonFmvModeIsPassedThrough)
 	const auto image = MakeBgrx32ImageView(pixels, 320, 200, NonFmvVideoMode());
 
 	Deinterlacer deinterlacer = {};
-	const auto result         = deinterlacer.Deinterlace(image,
-                                                     DeinterlacingStrength::Full);
+	const auto result         = deinterlacer.DeinterlaceInPlace(image,
+                                                            DeinterlacingStrength::Full);
 
 	EXPECT_EQ(result.image_data, image.image_data);
 	EXPECT_EQ(result.params.pixel_format, PixelFormat::BGRX32_ByteArray);
