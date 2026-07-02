@@ -23,14 +23,6 @@
 	// Cannot be constexpr due to Win32 macro
 	#define InvalidNativeFileHandle INVALID_HANDLE_VALUE
 
-	bool codepage437_to_utf16(const char *in_string, wchar_t *out_string, const int out_length);
-
-	template <int out_length>
-	bool codepage437_to_utf16(const char *in_string, wchar_t (&out_string)[out_length])
-	{
-		return codepage437_to_utf16(in_string, out_string, out_length);
-	}
-
 	bool windows_utf8_to_utf16(const char *in_string, wchar_t *out_string, const int out_length);
 
 	template <int out_length>
