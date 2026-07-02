@@ -286,15 +286,16 @@ static void halt_render()
 
 // Returns a non-owning view into the latched source frame
 // (`render.last_complete_source`) -- never the live `render.scale.cache`,
-// so callers can't see a torn mid-scanout state. When deinterlacing is on,
-// the returned image is the deinterlacer's output (either in-place over the
-// latch for 32-bit BGRX, or in the deinterlacer's internal decode buffer
-// for other pixel formats).
+// so callers can't see a torn mid-scanout state. When deinterlacing is on
+// and the video mode qualifies, the returned image is a view into the
+// deinterlacer's internal buffer (un-doubled 32-bit BGRX); the latch is
+// never modified.
 //
 // `image_data` is null until the first complete frame has been latched;
 // callers must check.
 //
-// Callers that need to outlive the next latched frame must deep-copy.
+// Callers that need to outlive the next latched frame (or the next
+// deinterlaced capture) must deep-copy.
 //
 RenderedImage RENDER_GetCurrentImage()
 {
@@ -313,8 +314,8 @@ RenderedImage RENDER_GetCurrentImage()
 	image.palette = render.last_complete_source.palette.rgb;
 
 	if (is_deinterlacing()) {
-		return render.deinterlacer->DeinterlaceInPlace(
-		        image, render.deinterlacing_strength);
+		return render.deinterlacer->Deinterlace(image,
+		                                        render.deinterlacing_strength);
 	}
 	return image;
 }
