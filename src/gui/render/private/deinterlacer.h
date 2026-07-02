@@ -31,8 +31,8 @@ public:
 
 	// Expects packed RGBA pixel data (one uint32_t per pixel, no extra
 	// padding per line).
-	RenderedImage Deinterlace(const RenderedImage& image,
-	                          const DeinterlacingStrength strength);
+	RenderedImage DeinterlaceInPlace(const RenderedImage& image,
+	                                 const DeinterlacingStrength strength);
 
 	// prevent copying
 	Deinterlacer(const Deinterlacer&) = delete;
