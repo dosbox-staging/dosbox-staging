@@ -519,14 +519,11 @@ bool localDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_clust
 bool localDrive::FileExists(const char* name)
 {
 	const std::string host_filename = MapDosToHostFilename(name);
-	struct stat temp_stat;
-	if (stat(host_filename.c_str(), &temp_stat) != 0) {
+	FatAttributeFlags attributes = {};
+	if (local_drive_get_attributes(host_filename.c_str(), attributes) != DOSERR_NONE) {
 		return false;
 	}
-	if (temp_stat.st_mode & S_IFDIR) {
-		return false;
-	}
-	return true;
+	return !attributes.directory;
 }
 
 uint8_t localDrive::GetMediaByte(void)
