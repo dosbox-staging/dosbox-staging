@@ -239,9 +239,15 @@ void SdlRenderer::MaybeRecreateTexture(const int width_px, const int height_px)
 
 void SdlRenderer::UploadFrame(const uint32_t* pixels, const int width_px,
                               const int height_px, const int pitch_bytes,
+                              [[maybe_unused]] const int first_row,
+                              [[maybe_unused]] const int num_rows,
                               const bool double_width, const bool double_height,
                               [[maybe_unused]] const VideoMode& video_mode)
 {
+	// The changed row span is deliberately ignored: a streaming texture's
+	// previous contents are undefined after locking (see below), so
+	// partial writes cannot be relied upon here.
+	//
 	// The SDL renderer has no shader pipeline to promote the source-size
 	// frame to the rendered size, so the doubling is done on the CPU,
 	// in-flight while writing the rows into the texture.
