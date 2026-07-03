@@ -70,6 +70,13 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 {
 	auto& color = render.palette.rgb[entry];
 
+	// Games commonly re-upload an identical palette every frame; only an
+	// actual colour change may trigger palette change handling, otherwise
+	// such games would force a full redraw on every frame.
+	if (color.red == red && color.green == green && color.blue == blue) {
+		return;
+	}
+
 	color.red   = red;
 	color.green = green;
 	color.blue  = blue;
