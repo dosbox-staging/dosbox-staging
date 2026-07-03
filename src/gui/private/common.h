@@ -14,10 +14,10 @@
 // must be included after dosbox_config.h
 #include <SDL3/SDL.h>
 
-constexpr uint8_t GFX_CAN_8      = 1 << 0;
-constexpr uint8_t GFX_CAN_15     = 1 << 1;
-constexpr uint8_t GFX_CAN_16     = 1 << 2;
-constexpr uint8_t GFX_CAN_32     = 1 << 3;
+constexpr uint8_t GFX_CAN_8  = 1 << 0;
+constexpr uint8_t GFX_CAN_15 = 1 << 1;
+constexpr uint8_t GFX_CAN_16 = 1 << 2;
+constexpr uint8_t GFX_CAN_32 = 1 << 3;
 
 typedef enum {
 	GFX_CallbackReset,
@@ -98,6 +98,13 @@ void GFX_Stop();
 // Called at the start of every unique frame (when there have been changes to
 // the framebuffer).
 bool GFX_StartUpdate(uint32_t*& pixels, int& pitch);
+
+// Upload one complete source-dimension BGRX32 frame to the render backend
+// (see `RenderBackend::UploadFrame()`). Called from the present path when
+// the latched source frame is newer than the backend's copy.
+void GFX_UploadFrame(const uint32_t* pixels, const int width_px, const int height_px,
+                     const int pitch_bytes, const bool double_width,
+                     const bool double_height, const VideoMode& video_mode);
 
 // Called at the end of every frame, regardless of whether there have been
 // changes to the framebuffer or not.
