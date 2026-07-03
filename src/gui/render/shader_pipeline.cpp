@@ -310,9 +310,11 @@ void ShaderPipeline::SetPassOutputSizes()
 		}();
 
 		if (std::next(it) == shader_passes.end()) {
-			// The last pass is rendered directly to the window's
-			// framebuffer
-			pass.out_viewport = viewport;
+			// The last pass renders into its own viewport-sized
+			// FBO, positioned at the origin; the render backend
+			// blits it to the viewport rectangle of the window's
+			// framebuffer at present time.
+			pass.out_viewport = {0.0f, 0.0f, viewport.w, viewport.h};
 		} else {
 			pass.out_viewport = {width, height};
 		}
@@ -324,11 +326,7 @@ void ShaderPipeline::CreatePassOutputTextures()
 	for (auto it = shader_passes.begin(); it != shader_passes.end(); ++it) {
 		auto& pass = *it;
 
-		// The last pass is rendered directly to the window's
-		// framebuffer, so we don't need to create an output texture for
-		// it
-		if (std::next(it) != shader_passes.end()) {
-
+		{
 			// Create output texture
 			const auto& preset = pass.shader.info.default_preset;
 
@@ -497,6 +495,13 @@ void ShaderPipeline::Render(const GLuint vertex_array_object) const
 	for (const auto& pass : shader_passes) {
 		RenderPass(pass, vertex_array_object);
 	}
+}
+
+GLuint ShaderPipeline::GetOutputFbo() const
+{
+	assert(!shader_passes.empty());
+
+	return shader_passes.back().out_fbo;
 }
 
 ShaderPass& ShaderPipeline::GetShaderPass(const std::string& name)

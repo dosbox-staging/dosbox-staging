@@ -444,7 +444,31 @@ void OpenGlRenderer::RecreateInputTexture()
 
 void OpenGlRenderer::PresentFrame()
 {
+	// Render the shader pipeline into its viewport-sized output FBO
 	shader_pipeline->Render(vao);
+
+	// Clear the window's framebuffer (the black letterbox areas), then
+	// blit the pipeline output into the viewport rectangle
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	const auto& vp = curr_viewport_size_px;
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, shader_pipeline->GetOutputFbo());
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+	glBlitFramebuffer(0,
+	                  0,
+	                  static_cast<GLint>(vp.w),
+	                  static_cast<GLint>(vp.h),
+	                  static_cast<GLint>(vp.x),
+	                  static_cast<GLint>(vp.y),
+	                  static_cast<GLint>(vp.x + vp.w),
+	                  static_cast<GLint>(vp.y + vp.h),
+	                  GL_COLOR_BUFFER_BIT,
+	                  GL_NEAREST);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 	// Optionally capture frame
 	if (CAPTURE_IsCapturingPostRenderImage()) {
