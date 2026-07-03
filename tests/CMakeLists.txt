@@ -2,6 +2,7 @@
 find_package(GTest REQUIRED)
 
 add_executable(dosbox_tests
+    # stubs.cpp
     ansi_code_markup_tests.cpp
     batch_file_tests.cpp
     bit_view_tests.cpp
@@ -16,6 +17,8 @@ add_executable(dosbox_tests
     fraction_tests.cpp
     fs_utils_tests.cpp
     i8042_wide_read_tests.cpp
+    image_compare.cpp
+    image_compare.h
     image_decoder_tests.cpp
     int10_modes_tests.cpp
     language_territory_tests.cpp
@@ -23,6 +26,7 @@ add_executable(dosbox_tests
     messages_adjust_tests.cpp
     mixer_tests.cpp
     mount_tests.cpp
+    multi_prefix_tests.cpp
     port_containers_tests.cpp
     program_mixer_tests.cpp
     rect_tests.cpp
@@ -33,10 +37,8 @@ add_executable(dosbox_tests
     shell_cmds_tests.cpp
     shell_redirection_tests.cpp
     string_utils_tests.cpp
-    # stubs.cpp
     support_tests.cpp
     unicode_tests.cpp
-    multi_prefix_tests.cpp
 )
 
 # Disable some warnings for deliberately flawed test cases
@@ -56,6 +58,7 @@ endif()
 target_link_libraries(dosbox_tests PRIVATE
     GTest::gmock_main
     dosboxcommon
+    PNG::PNG
     SDL3::Headers
 )
 
