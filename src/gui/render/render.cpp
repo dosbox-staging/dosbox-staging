@@ -87,6 +87,14 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 	if (render.palette.last < entry) {
 		render.palette.last = entry;
 	}
+
+	// For indexed colour modes, a palette change makes the output stale
+	// even when the source pixels are unchanged. (Paletted modes on VGA
+	// machines don't take this path: the VGA layer applies the palette at
+	// scanout time, so palette changes show up as ordinary pixel changes.)
+	if (render.scale.line_palette_handler) {
+		render.frame_dirty.MarkDirty();
+	}
 }
 
 static bool is_deinterlacing()
@@ -129,54 +137,36 @@ static bool maybe_gfx_start_update()
 
 static void empty_line_handler(const void*) {}
 
-static void start_line_handler(const void* src_line_data)
+// The single scanout-time line handler: diff the incoming line against the
+// source cache and copy it in when it changed. No scaling and no render
+// backend involvement happens during scanout; the full frame is rescaled in
+// one batch at the end of the scanout when anything changed (see
+// `replay_frame_to_backend()`).
+//
+static void scanout_line_handler(const void* src_line_data)
 {
+	// VGA can emit more lines than the configured source height in edge
+	// cases (split-line and `vblank_skip` interactions); drop the excess.
+	if (render.scale.curr_row >= render.src.height) {
+		return;
+	}
+
+	// A null line means "line unchanged"; only the row advances
 	if (src_line_data) {
-		if (std::memcmp(src_line_data,
-		                render.scale.cache_read,
-		                render.scale.cache_pitch) != 0) {
+		auto cache_row = reinterpret_cast<uint8_t*>(
+		                         render.scale.cache.data()) +
+		                 static_cast<size_t>(render.scale.curr_row) *
+		                         render.scale.cache_pitch;
 
-			// This triggers transferring the pixel data to the
-			// render backend if the contents of the current frame
-			// has changed since the last frame. This will in turn
-			// make the backend do a buffer swap (if it's
-			// double-buffered). Otherwise, it will keep displaying
-			// the same frame at present time without doing a buffer
-			// swap followed by a texture upload to the GPU.
-			//
-			if (!maybe_gfx_start_update()) {
-				RENDER_DrawLine = empty_line_handler;
-				return;
-			}
+		if (std::memcmp(src_line_data, cache_row, render.scale.cache_pitch) !=
+		    0) {
+			std::memcpy(cache_row, src_line_data, render.scale.cache_pitch);
 
-			// The changed line is about to enter the source cache
 			render.frame_dirty.MarkDirty();
-
-			render.scale.out_write += render.scale.out_pitch *
-			                          scaler_changed_lines[0];
-
-			render.updating_frame = true;
-
-			RENDER_DrawLine = render.scale.line_handler;
-			RENDER_DrawLine(src_line_data);
-			return;
 		}
 	}
 
-	render.scale.cache_read += render.scale.cache_pitch;
-
-	scaler_changed_lines[0] += render.scale.y_scale;
-}
-
-static void finish_line_handler(const void* src_line_data)
-{
-	if (src_line_data) {
-		std::memcpy(render.scale.cache_read,
-		            src_line_data,
-		            render.scale.cache_pitch);
-	}
-
-	render.scale.cache_read += render.scale.cache_pitch;
+	++render.scale.curr_row;
 }
 
 static void clear_cache_handler(const void* src_line_data)
@@ -217,73 +207,11 @@ bool RENDER_StartUpdate()
 		return false;
 	}
 
-	if (render.scale.line_palette_handler) {
-		check_palette();
-	}
+	// Scanout writes into the source cache only; the render backend is
+	// not involved until the frame completes (see `RENDER_EndUpdate()`).
+	render.scale.curr_row = 0;
 
-	render.scale.cache_read = reinterpret_cast<uint8_t*>(
-	        render.scale.cache.data());
-
-	render.scale.out_write = nullptr;
-	render.scale.out_pitch = 0;
-
-	scaler_changed_lines[0]   = 0;
-	scaler_changed_line_index = 0;
-
-	// Set up output image dimensions
-	render.scale.out_width = render.src.width *
-	                         (render.src.double_width ? 2 : 1);
-
-	render.scale.out_height = render.src.height *
-	                          (render.src.double_height ? 2 : 1);
-
-	// Clearing the cache will first process the line to make sure it's
-	// never the same.
-	if (render.scale.clear_cache) {
-
-		// This will force a buffer swap & texture update in the render
-		// backend (see comments in `start_line_handler()`).
-		//
-		if (!maybe_gfx_start_update()) {
-			return false;
-		}
-
-		RENDER_DrawLine = clear_cache_handler;
-
-		render.render_in_progress = true;
-		render.updating_frame     = true;
-		render.scale.clear_cache  = false;
-		return true;
-	}
-
-	if (render.palette.changed) {
-		// Assume palette changes always do a full screen update anyway.
-		//
-		// This will force a buffer swap & texture update in the render
-		// backend (see comments in `start_line_handler()`).
-		//
-		if (!maybe_gfx_start_update()) {
-			return false;
-		}
-
-		// For indexed colour, a palette change makes the output stale
-		// even when the source bytes are identical
-		render.frame_dirty.MarkDirty();
-
-		RENDER_DrawLine = render.scale.line_palette_handler;
-
-		render.render_in_progress = true;
-		return true;
-	}
-
-	// Regular path -- scaler cache reset was not request and the palette
-	// hasn't been changed (for screen modes with indexed colour).
-	//
-	// `GFX_StartUpdate()` will be called conditionally in
-	// `start_line_handler()` if the contents of the current frame differs
-	// from the previous one (see comments in `start_line_handler()`).
-	//
-	RENDER_DrawLine = start_line_handler;
+	RENDER_DrawLine = scanout_line_handler;
 
 	render.render_in_progress = true;
 	return true;
@@ -401,6 +329,60 @@ static void latch_last_complete_source()
 	render.last_complete_source.populated = true;
 }
 
+// Transitional bridge, deleted when frame expansion moves to present time:
+// redraws the complete just-latched frame through the legacy scaler into the
+// render backend at the end of the scanout.
+//
+// The scaler's own per-line diff cache holds the very frame being fed, so
+// every row goes through `clear_cache_handler()`, which first inverts the
+// cache row to force the scaler to treat the line as changed and rewrite
+// the full output (the scaler then restores the cache row as it converts).
+//
+static bool replay_frame_to_backend()
+{
+	// Rebuild the palette LUT for the indexed-colour scaler paths
+	if (render.scale.line_palette_handler) {
+		check_palette();
+	}
+
+	if (!maybe_gfx_start_update()) {
+		// The render backend is inactive (e.g. the mapper UI is open).
+		// The frame stays dirty, so the redraw is retried on the next
+		// completed frame.
+		return false;
+	}
+
+	// Set up output image dimensions (the deinterlacer reads these)
+	render.scale.out_width = render.src.width *
+	                         (render.src.double_width ? 2 : 1);
+
+	render.scale.out_height = render.src.height *
+	                          (render.src.double_height ? 2 : 1);
+
+	render.scale.cache_read = reinterpret_cast<uint8_t*>(
+	        render.scale.cache.data());
+
+	scaler_changed_lines[0]   = 0;
+	scaler_changed_line_index = 0;
+
+	// Feed the latched frame's rows; the latch was copied from the source
+	// cache moments ago, so this is the completed frame. (The cache
+	// itself cannot be the source: `clear_cache_handler()` inverts the
+	// cache rows mid-feed.)
+	const auto* row = reinterpret_cast<const uint8_t*>(
+	        render.last_complete_source.cache.data());
+
+	const auto pitch = render.scale.cache_pitch;
+
+	for (auto y = 0; y < render.src.height; ++y) {
+		clear_cache_handler(row);
+		row += pitch;
+	}
+
+	render.updating_frame = true;
+	return true;
+}
+
 void RENDER_EndUpdate(const bool abort)
 {
 	if (!render.render_in_progress) {
@@ -414,12 +396,6 @@ void RENDER_EndUpdate(const bool abort)
 	// fresh frame, not the previous one.
 	if (!abort) {
 		latch_last_complete_source();
-
-		// An aborted scanout must NOT clear the dirty flag (see the
-		// lifecycle comment in frame_dirty_tracker.h)
-		if (render.frame_dirty.IsDirty()) {
-			render.frame_dirty.NotifyLatched();
-		}
 	}
 
 	// Two gates on captures:
@@ -437,6 +413,16 @@ void RENDER_EndUpdate(const bool abort)
 	    (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo())) {
 
 		handle_capture_frame();
+	}
+
+	// Redraw the frame through the legacy scaler when the source changed.
+	// An aborted scanout must NOT clear the dirty flag (see the lifecycle
+	// comment in frame_dirty_tracker.h): its lines are already in the
+	// source cache, so the next completed frame redraws them.
+	if (!abort && render.frame_dirty.IsDirty()) {
+		if (replay_frame_to_backend()) {
+			render.frame_dirty.NotifyLatched();
+		}
 	}
 
 	// Only deinterlace the output if the frame has changed
@@ -505,9 +491,8 @@ void RENDER_RescaleLastFrame()
 		RENDER_EndUpdate(true);
 	}
 
-	// Force every line as changed so the scaler rewrites the full
-	// output (otherwise the per-line diff cache may skip lines).
-	render.scale.clear_cache = true;
+	// Force a full redraw: the end-of-frame replay must rewrite the
+	// complete output even if the fed rows happen to match the cache.
 	render.frame_dirty.ForceRedraw();
 
 	if (!RENDER_StartUpdate()) {
@@ -635,12 +620,18 @@ static void render_reset()
 	render.palette.changed = false;
 	memset(render.palette.modified, 0, sizeof(render.palette.modified));
 
-	// Finish this frame using a copy only handler
-	RENDER_DrawLine        = finish_line_handler;
+	// A reset can land mid-scanout (window events can fire
+	// `GFX_CallbackReset` while line events are in flight); the in-flight
+	// frame keeps writing into the source cache. The current row is
+	// deliberately NOT reset, so the remaining lines land at their real
+	// rows.
+	RENDER_DrawLine = render.render_in_progress ? scanout_line_handler
+	                                            : empty_line_handler;
+
 	render.scale.out_write = nullptr;
 
-	// Signal the next frame to first reinit the cache
-	render.scale.clear_cache = true;
+	// The output geometry or the palette LUT may have changed: force a
+	// full redraw of the held frame on the next completed scanout.
 	render.frame_dirty.ForceRedraw();
 
 	render.active = true;
@@ -653,7 +644,6 @@ static void render_callback(GFX_CallbackFunctions_t function)
 		return;
 
 	} else if (function == GFX_CallbackRedraw) {
-		render.scale.clear_cache = true;
 		render.frame_dirty.ForceRedraw();
 		return;
 
