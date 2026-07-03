@@ -1887,6 +1887,7 @@ void DOS_Init()
 
 void DOS_Destroy()
 {
+	dos.append_paths.clear(); // Release active APPEND paths on reset
 	CDROM_Image_Destroy();
 	MSCDEX_Destroy();
 

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dos.h"
+#include "dos_append.h"
 
 #include <array>
 #include <cctype>
@@ -617,6 +618,36 @@ bool DOS_FindFirst(const char* search, FatAttributeFlags attr, bool fcb_findfirs
 		return true;
 	}
 
+	// --- APPEND FALLBACK ---
+	// VFS Failure Hook: If the standard directory search yielded no results,
+	// we attempt to match the first appended directory containing results.
+	if (DOS_Append::Resolve(search, [&](const std::string& try_path) {
+		char try_fullsearch[DOS_PATHLENGTH];
+		uint8_t try_drive;
+		if (DOS_MakeName(try_path.c_str(), try_fullsearch, &try_drive)) {
+			std::string try_path_str(try_fullsearch);
+			auto pos = try_path_str.rfind('\\');
+			std::string try_dir = (pos == std::string::npos) ? "" : try_path_str.substr(0, pos);
+			std::string try_pattern = (pos == std::string::npos) ? try_path_str : try_path_str.substr(pos + 1);
+
+			// VFS Fallback MUST NOT clobber the caller's DTA on a failed probe!
+			// We use the system's temporary DTA to probe the appended directory.
+			DOS_DTA temp_dta(dos.tables.tempdta);
+			temp_dta.SetupSearch(try_drive, attr, try_pattern.data());
+
+			if (Drives.at(try_drive)->FindFirst(try_dir.c_str(), temp_dta, fcb_findfirst)) {
+				// The probe succeeded! The appended file exists.
+				// Commit the temp DTA state to the caller's real DTA so FindNext works natively.
+				MEM_BlockCopy(RealToPhysical(dos.dta()), RealToPhysical(dos.tables.tempdta), sizeof(sDTA));
+				return true;
+			}
+		}
+		return false;
+	})) {
+		return true;
+	}
+	// --- END APPEND FALLBACK ---
+
 	return false;
 }
 
@@ -878,6 +909,31 @@ bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb)
 		const auto old_errorcode = dos.errorcode;
 		dos.errorcode = 0;
 		Files[handle] = Drives.at(drive)->FileOpen(fullname, flags);
+
+		if (!Files[handle]) {
+			// --- APPEND FALLBACK ---
+			// VFS Failure Hook: If the native local lookup failed statelessly (returning nullptr),
+			// we iteratively retry the operation across the APPEND directories.
+			DOS_Append::Resolve(name, [&](const std::string& try_path) {
+				char try_fullname[DOS_PATHLENGTH];
+				uint8_t try_drive;
+				
+				// DOS_MakeName acts as our path sanitizer, converting the concatenated
+				// string into an absolute, DOS-compliant path.
+				if (DOS_MakeName(try_path.c_str(), try_fullname, &try_drive)) {
+					// We pass the absolute path directly to the bottom-layer VFS Drive
+					Files[handle] = Drives.at(try_drive)->FileOpen(try_fullname, flags);
+					if (Files[handle]) {
+						// On success, we must bind the Handle state to the newly resolved drive
+						drive = try_drive;
+						return true;
+					}
+				}
+				return false;
+			});
+			// --- END APPEND FALLBACK ---
+		}
+
 		if (Files[handle]) {
 			Files[handle]->SetDrive(drive);
 		}

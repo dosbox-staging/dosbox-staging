@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "shell/shell.h"
+#include "dos/dos_append.h"
 
 #include <algorithm>
 #include <cstring>
@@ -551,6 +552,23 @@ std::string DOS_Shell::ResolvePath(const std::string_view name) const
 		prefixes.insert(prefixes.end(), //-V823
 		                std::make_move_iterator(path_directories.begin()),
 		                std::make_move_iterator(path_directories.end()));
+	}
+
+	// --- APPEND EXECUTABLE HOOK ---
+	// In MS-DOS, APPEND only affects executable lookups (.COM, .EXE, .BAT) 
+	// if the /X (ExecMode) switch is explicitly provided. By hooking into 
+	// ResolvePath, we inject the appended paths directly into the shell's 
+	// execution loop natively.
+	if (DOS_Append::IsActive() && DOS_Append::IsExecutableMode()) {
+		for (const auto& directory : DOS_Append::GetPaths()) {
+			if (!directory.empty()) {
+				std::string dir = directory;
+				if (dir.back() != '\\') {
+					dir += '\\';
+				}
+				prefixes.push_back(dir);
+			}
+		}
 	}
 
 	const bool has_extension = !get_executable_extension(name).empty();

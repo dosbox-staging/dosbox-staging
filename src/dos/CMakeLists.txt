@@ -13,6 +13,7 @@ target_sources(dosboxcommon PRIVATE
   cdrom.cpp
   cdrom_image.cpp
   dos.cpp
+  dos_append.cpp
   dos_classes.cpp
   dos_code_page.cpp
   dos_devices.cpp
@@ -65,6 +66,7 @@ target_sources(dosboxcommon PRIVATE
   programs/setver.cpp
   programs/showpic.cpp
   programs/subst.cpp
+  programs/append.cpp
   programs/tree.cpp
 )
 

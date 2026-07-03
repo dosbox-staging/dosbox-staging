@@ -1042,6 +1042,9 @@ struct DOS_Block {
 	std::string screen_font_file_name = {};
 
 	uint16_t dcp = {};
+
+	// Virtual APPEND path list (cleared automatically on reset)
+	std::vector<std::string> append_paths = {};
 };
 
 extern DOS_Block dos;
