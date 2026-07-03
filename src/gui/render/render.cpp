@@ -89,26 +89,26 @@ void RENDER_DrawLine(const void* src_line_data)
 
 	// VGA can emit more lines than the configured source height in edge
 	// cases (split-line and `vblank_skip` interactions); drop the excess.
-	if (render.scale.curr_row >= render.src.height) {
+	if (render.curr_source.curr_row >= render.src.height) {
 		return;
 	}
 
 	// A null line means "line unchanged"; only the row advances
 	if (src_line_data) {
 		auto cache_row = reinterpret_cast<uint8_t*>(
-		                         render.scale.cache.data()) +
-		                 static_cast<size_t>(render.scale.curr_row) *
-		                         render.scale.cache_pitch;
+		                         render.curr_source.pixels.data()) +
+		                 static_cast<size_t>(render.curr_source.curr_row) *
+		                         render.curr_source.pitch;
 
-		if (std::memcmp(src_line_data, cache_row, render.scale.cache_pitch) !=
+		if (std::memcmp(src_line_data, cache_row, render.curr_source.pitch) !=
 		    0) {
-			std::memcpy(cache_row, src_line_data, render.scale.cache_pitch);
+			std::memcpy(cache_row, src_line_data, render.curr_source.pitch);
 
 			render.frame_dirty.MarkDirty();
 		}
 	}
 
-	++render.scale.curr_row;
+	++render.curr_source.curr_row;
 }
 
 bool RENDER_StartUpdate()
@@ -122,7 +122,7 @@ bool RENDER_StartUpdate()
 
 	// Scanout writes into the source cache only; the render backend is
 	// not involved until the frame completes (see `RENDER_EndUpdate()`).
-	render.scale.curr_row = 0;
+	render.curr_source.curr_row = 0;
 
 	render.render_in_progress = true;
 	return true;
@@ -135,7 +135,7 @@ static void halt_render()
 }
 
 // Returns a non-owning view into the latched source frame
-// (`render.last_complete_source`) -- never the live `render.scale.cache`,
+// (`render.last_complete_source`) -- never the live `render.curr_source.pixels`,
 // so callers can't see a torn mid-scanout state. When deinterlacing is on
 // and the video mode qualifies, the returned image is a view into the
 // deinterlacer's internal buffer (un-doubled 32-bit BGRX); the latch is
@@ -159,7 +159,7 @@ RenderedImage RENDER_GetCurrentImage()
 	image.pitch  = render.last_complete_source.pitch;
 
 	image.image_data = reinterpret_cast<uint8_t*>(
-	        render.last_complete_source.cache.data());
+	        render.last_complete_source.pixels.data());
 
 	image.palette = render.last_complete_source.palette;
 
@@ -190,21 +190,21 @@ static void handle_capture_frame()
 // Latch the just-finished frame's source pixels into
 // `render.last_complete_source` so screenshots / video capture and pause-time
 // re-scale can read a clean, complete frame instead of the live
-// `render.scale.cache` (which can be in the middle of an update during a
+// `render.curr_source.pixels` (which can be in the middle of an update during a
 // scanout).
 //
 static void latch_last_complete_source()
 {
-	const auto bytes = static_cast<size_t>(render.scale.cache_pitch) *
+	const auto bytes = static_cast<size_t>(render.curr_source.pitch) *
 	                   static_cast<size_t>(render.src.height);
 
-	std::memcpy(render.last_complete_source.cache.data(),
-	            render.scale.cache.data(),
+	std::memcpy(render.last_complete_source.pixels.data(),
+	            render.curr_source.pixels.data(),
 	            bytes);
 
 	render.last_complete_source.src       = render.src;
 	render.last_complete_source.palette   = render.palette;
-	render.last_complete_source.pitch     = render.scale.cache_pitch;
+	render.last_complete_source.pitch     = render.curr_source.pitch;
 	render.last_complete_source.valid     = true;
 	render.last_complete_source.populated = true;
 }
@@ -232,7 +232,7 @@ void RENDER_MaybeUploadFrame()
 
 	// The latch rows are tightly packed, so the whole frame can be
 	// expanded in one go
-	auto* dst = render.scale.out_buf.data();
+	auto* dst = render.upload_buf.data();
 
 	switch (latch.src.pixel_format) {
 	case PixelFormat::Indexed8: {
@@ -244,7 +244,7 @@ void RENDER_MaybeUploadFrame()
 		}
 
 		ExpandIndexed8ToBgrx32(reinterpret_cast<const uint8_t*>(
-		                               latch.cache.data()),
+		                               latch.pixels.data()),
 		                       dst,
 		                       num_pixels,
 		                       palette_lut.data());
@@ -252,27 +252,27 @@ void RENDER_MaybeUploadFrame()
 
 	case PixelFormat::RGB555_Packed16:
 		ExpandRgb555ToBgrx32(reinterpret_cast<const uint16_t*>(
-		                             latch.cache.data()),
+		                             latch.pixels.data()),
 		                     dst,
 		                     num_pixels);
 		break;
 
 	case PixelFormat::RGB565_Packed16:
 		ExpandRgb565ToBgrx32(reinterpret_cast<const uint16_t*>(
-		                             latch.cache.data()),
+		                             latch.pixels.data()),
 		                     dst,
 		                     num_pixels);
 		break;
 
 	case PixelFormat::BGR24_ByteArray:
 		ExpandBgr24ToBgrx32(reinterpret_cast<const uint8_t*>(
-		                            latch.cache.data()),
+		                            latch.pixels.data()),
 		                    dst,
 		                    num_pixels);
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
-		CopyBgrx32(latch.cache.data(), dst, num_pixels);
+		CopyBgrx32(latch.pixels.data(), dst, num_pixels);
 		break;
 
 	default:
@@ -422,7 +422,7 @@ void RENDER_RescaleLastFrame()
 
 	const auto pitch     = render.last_complete_source.pitch;
 	const auto* row_base = reinterpret_cast<const uint8_t*>(
-	        render.last_complete_source.cache.data());
+	        render.last_complete_source.pixels.data());
 
 	// Pick the latched row to feed for each output row. The ratio
 	// `latched_height / render_height` is one of {1/1, 2/1, 1/2} per
@@ -480,20 +480,20 @@ static void render_reset()
 
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
-		render.scale.cache_pitch = render.src.width * 1;
+		render.curr_source.pitch = render.src.width * 1;
 		break;
 
 	case PixelFormat::RGB555_Packed16:
 	case PixelFormat::RGB565_Packed16:
-		render.scale.cache_pitch = render.src.width * 2;
+		render.curr_source.pitch = render.src.width * 2;
 		break;
 
 	case PixelFormat::BGR24_ByteArray:
-		render.scale.cache_pitch = render.src.width * 3;
+		render.curr_source.pitch = render.src.width * 3;
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
-		render.scale.cache_pitch = render.src.width * 4;
+		render.curr_source.pitch = render.src.width * 4;
 		break;
 
 	default:

@@ -85,34 +85,37 @@ struct Render {
 	// Frames per second
 	double fps = 0;
 
+	// The live, in-progress source frame VGA scanout writes into (the
+	// completed counterpart is `last_complete_source`)
 	struct {
-		int cache_pitch = 0;
+		int pitch = 0;
 
-		// The row the next `RENDER_DrawLine()` call writes into `cache`
+		// The row the next `RENDER_DrawLine()` call writes into `pixels`
 		int curr_row = 0;
 
-		// The live source frame VGA scanout writes into, at
-		// `render.src` dimensions (baked-in VGA scaling included)
+		// Source pixels at `render.src` dimensions (baked-in VGA
+		// scaling included)
 		alignas(uint64_t)
-		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
+		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> pixels = {};
+	} curr_source = {};
 
-		// Present-time scratch buffer the latched source frame is
-		// expanded into (32-bit BGRX pixels at source dimensions)
-		alignas(uint64_t)
-		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> out_buf = {};
-	} scale = {};
+	// Present-time scratch buffer the latched source frame is expanded
+	// into (32-bit BGRX pixels at source dimensions) before it's handed
+	// to the render backend
+	alignas(uint64_t)
+	        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> upload_buf = {};
 
 	// Source-pixel snapshot of the last completed frame. Deep-copied from
-	// `scale.cache` at the end of every successful
+	// `curr_source.pixels` at the end of every dirty
 	// `RENDER_EndUpdate(false)`.
 	//
-	// Used as a clean source for screenshots and video capture, so
-	// consumers don't read the live, possibly mid-frame `scale.cache`, and
-	// as the input for `RENDER_RescaleLastFrame()` after a pause-time
-	// recreate.
+	// Used as a clean source for present-time expansion, screenshots, and
+	// video capture, so consumers don't read the live, possibly mid-frame
+	// `curr_source.pixels`, and as the input for
+	// `RENDER_RescaleLastFrame()` after a pause-time recreate.
 	struct {
 		alignas(uint64_t)
-		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
+		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> pixels = {};
 
 		ImageInfo src = {};
 
@@ -129,7 +132,7 @@ struct Render {
 		bool valid = false;
 
 		// `true` once any frame has ever been latched. *Not* reset by
-		// `RENDER_SetSize()` -- the cache lives in a fixed-size array
+		// `RENDER_SetSize()` -- the pixels live in a fixed-size array
 		// embedded in this struct, so the bytes survive that reset.
 		// `RENDER_RescaleLastFrame()` reads via this flag during
 		// pause-time recreates: with no scanout coming to repopulate
