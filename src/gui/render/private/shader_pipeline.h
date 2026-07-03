@@ -27,12 +27,13 @@ struct ShaderPass {
 	// Input texture; contains at least one element
 	std::vector<GLuint> in_textures = {};
 
-	// Output texture size for intermediate shader passes (width & height
-	// only), or the position and size of the viewport for the final pass.
+	// Output texture size of the shader pass (width & height only; the
+	// final pass renders at viewport size, positioned at the origin).
 	DosBox::Rect out_size = {};
 
-	// Textures and FBOs for intermediate shader passes. Both are 0 for the
-	// final pass that's rendered directly to the window's framebuffer.
+	// Output texture and FBO of the shader pass. The final pass renders
+	// into its own viewport-sized FBO, which the render backend then
+	// blits to the window's framebuffer.
 	GLuint out_fbo     = 0;
 	GLuint out_texture = 0;
 
@@ -64,6 +65,10 @@ public:
 	void SetDeditheringStrength(const float strength);
 
 	void Render(const GLuint vertex_array_object) const;
+
+	// The FBO holding the final pipeline output at viewport size,
+	// positioned at the origin. Only valid when the pipeline is complete.
+	GLuint GetOutputFbo() const;
 
 	// prevent copying
 	ShaderPipeline(const ShaderPipeline&) = delete;
