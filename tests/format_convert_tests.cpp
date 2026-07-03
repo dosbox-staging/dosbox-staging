@@ -132,6 +132,32 @@ TEST(FormatConvert, CopyBgrx32PreservesXByte)
 	EXPECT_EQ(dst[2], 0xffffffffu);
 }
 
+TEST(FormatConvert, ExpandBgrx32RowCopiesWhenNotDoubling)
+{
+	const std::array<uint32_t, 3> src = {0x00112233u, 0x00445566u, 0x00778899u};
+	std::array<uint32_t, 3> dst = {};
+
+	ExpandBgrx32Row(src.data(), dst.data(), 3, false);
+
+	EXPECT_EQ(dst, src);
+}
+
+TEST(FormatConvert, ExpandBgrx32RowDoublesEachPixel)
+{
+	const std::array<uint32_t, 3> src = {0x00112233u, 0x00445566u, 0x00778899u};
+	std::array<uint32_t, 6> dst = {};
+
+	ExpandBgrx32Row(src.data(), dst.data(), 3, true);
+
+	const std::array<uint32_t, 6> expected = {0x00112233u,
+	                                          0x00112233u,
+	                                          0x00445566u,
+	                                          0x00445566u,
+	                                          0x00778899u,
+	                                          0x00778899u};
+	EXPECT_EQ(dst, expected);
+}
+
 TEST(FormatConvert, OddPixelCountsConvertEveryPixel)
 {
 	// The legacy scaler processed pixels in groups; the expanders must
