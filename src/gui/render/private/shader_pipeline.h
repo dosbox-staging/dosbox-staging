@@ -64,7 +64,15 @@ public:
 	void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings);
 	void SetDeditheringStrength(const float strength);
 
-	void Render(const GLuint vertex_array_object) const;
+	void Render(const GLuint vertex_array_object);
+
+	// The input texture's contents have changed; the next Render() call
+	// must re-run the pipeline.
+	void NotifyInputTextureUpdated();
+
+	// True when the output FBO does not reflect the current input
+	// texture contents or pipeline settings. Cleared by Render().
+	bool IsOutputStale() const;
 
 	// The FBO holding the final pipeline output at viewport size,
 	// positioned at the origin. Only valid when the pipeline is complete.
@@ -103,6 +111,14 @@ private:
 	struct {
 		bool dedithering_enabled = false;
 	} config = {};
+
+	// Pass output is a pure function of the input texture and the
+	// pipeline settings (there are no per-frame uniforms), so presents
+	// can skip re-running the pipeline and re-blit the cached output FBO
+	// when nothing changed. If a shader ever needs per-frame animation
+	// (e.g. a time or frame-count uniform), it must opt out of this
+	// optimisation.
+	bool output_stale = true;
 
 	struct {
 		DosBox::Rect size = {};
