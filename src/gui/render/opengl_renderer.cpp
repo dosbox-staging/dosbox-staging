@@ -335,10 +335,20 @@ void OpenGlRenderer::NotifyRenderSizeChanged([[maybe_unused]] const int new_rend
 
 void OpenGlRenderer::UploadFrame(const uint32_t* pixels, const int width_px,
                                  const int height_px, const int pitch_bytes,
+                                 const int first_row, const int num_rows,
                                  const bool double_width, const bool double_height,
                                  [[maybe_unused]] const VideoMode& video_mode)
 {
-	MaybeUpdateRenderSize(width_px, height_px, double_width, double_height);
+	// The texture contents persist between uploads, so only the changed
+	// row span needs re-uploading -- except onto a freshly (re)created
+	// texture, which starts blank and needs the whole frame once.
+	const auto texture_recreated = MaybeUpdateRenderSize(width_px,
+	                                                     height_px,
+	                                                     double_width,
+	                                                     double_height);
+
+	const auto upload_first_row = texture_recreated ? 0 : first_row;
+	const auto upload_num_rows  = texture_recreated ? height_px : num_rows;
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, input_texture.texture);
@@ -347,14 +357,14 @@ void OpenGlRenderer::UploadFrame(const uint32_t* pixels, const int width_px,
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, pitch_px);
 
 	glTexSubImage2D(GL_TEXTURE_2D,
-	                0, // mimap level (0 = base image)
-	                0, // x offset
-	                0, // y offset
+	                0,                // mimap level (0 = base image)
+	                0,                // x offset
+	                upload_first_row, // y offset
 	                width_px,
-	                height_px,
+	                upload_num_rows,
 	                GL_BGRA,                     // pixel data format
 	                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
-	                pixels);
+	                pixels + static_cast<ptrdiff_t>(upload_first_row) * pitch_px);
 
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -362,7 +372,7 @@ void OpenGlRenderer::UploadFrame(const uint32_t* pixels, const int width_px,
 	shader_pipeline->NotifyInputTextureUpdated();
 }
 
-void OpenGlRenderer::MaybeUpdateRenderSize(const int new_width_px,
+bool OpenGlRenderer::MaybeUpdateRenderSize(const int new_width_px,
                                            const int new_height_px,
                                            const bool new_double_width,
                                            const bool new_double_height)
@@ -377,7 +387,7 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_width_px,
 	//
 	if (new_width_px == 0 && new_height_px == 0) {
 		// no-op
-		return;
+		return false;
 	}
 
 	// Size hasn't changed, don't recreate the texture
@@ -386,7 +396,7 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_width_px,
 	    new_double_width == input_texture.double_width &&
 	    new_double_height == input_texture.double_height) {
 		// no-op
-		return;
+		return false;
 	}
 
 	if (new_width_px > max_texture_size_px || new_height_px > max_texture_size_px) {
@@ -394,7 +404,7 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_width_px,
 		LOG_ERR("OPENGL: No support for texture size of %dx%d pixels",
 		        new_width_px,
 		        new_height_px);
-		return;
+		return false;
 	}
 
 	input_texture.width         = new_width_px;
@@ -409,6 +419,7 @@ void OpenGlRenderer::MaybeUpdateRenderSize(const int new_width_px,
 	                                         input_texture.double_width,
 	                                         input_texture.double_height,
 	                                         input_texture.texture);
+	return true;
 }
 
 void OpenGlRenderer::RecreateInputTexture()
