@@ -145,17 +145,15 @@ struct Render {
 	} last_complete_source = {};
 
 	// Tracks live-frame-vs-latch dirtiness and the latch/upload
-	// generations. Tracking only for now: it mirrors what the legacy
-	// change detection decides but controls nothing yet.
+	// generations: whether the live source cache differs from the latch,
+	// and whether the latch is newer than the frame the render backend
+	// holds (see frame_dirty_tracker.h).
 	FrameDirtyTracker frame_dirty = {};
 
 	RenderPalette palette = {};
 
-	uint32_t* dest = nullptr;
-
 	bool active             = false;
 	bool render_in_progress = false;
-	bool updating_frame     = false;
 
 	AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
 	IntegerScalingMode integer_scaling_mode                = {};
@@ -305,6 +303,12 @@ void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second)
 
 bool RENDER_StartUpdate();
 void RENDER_EndUpdate(bool abort);
+
+// Expand the latched source frame to 32-bit BGRX and hand it to the render
+// backend. Called from the present path; the expansion and upload only run
+// when the latch holds a newer frame than the one the backend has (tracked
+// via the latch and upload generations).
+void RENDER_MaybeUploadFrame();
 
 // Returns the last completed source-pixel frame as a non-owning
 // `RenderedImage`. Never returns a torn mid-scanout view -- the live
