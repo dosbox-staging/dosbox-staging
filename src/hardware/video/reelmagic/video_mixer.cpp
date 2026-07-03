@@ -16,7 +16,7 @@
 #include <string>
 
 #include "config/setup.h"
-#include "gui/render/scaler/scalers.h"
+#include "gui/render/render.h"
 #include "misc/video.h"
 #include "utils/checks.h"
 #include "utils/rgb565.h"

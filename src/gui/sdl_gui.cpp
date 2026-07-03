@@ -306,9 +306,6 @@ bool GFX_IsPaused()
 
 void GFX_Stop()
 {
-	if (sdl.draw.updating_framebuffer) {
-		GFX_EndUpdate();
-	}
 	sdl.draw.active = false;
 }
 
@@ -947,10 +944,6 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
 {
 	assert(sdl.renderer);
 
-	if (sdl.draw.updating_framebuffer) {
-		GFX_EndUpdate();
-	}
-
 	GFX_Stop();
 	// The rendering objects are recreated below with new sizes, after which
 	// frame rendering is re-engaged with the output-type specific calls.
@@ -1078,46 +1071,6 @@ static void toggle_fullscreen_handler(bool pressed)
 	}
 }
 
-// The function should return a writeable buffer for the VGA emulation to
-// render the current framebuffer image into. The buffer was sized for the
-// current DOS video mode by a preceding `GFX_SetSize()` call.
-//
-// `pitch` is the number of bytes used to store a single row of pixel data
-// (can be larger than the actual image width in bytes).
-//
-// The renderer (`render.cpp`) calls this iff the contents of the current
-// emulated VGA framebuffer has changed from the last frame (even it's just a
-// single pixel), otherwise running the scalers and submitting the new frame
-// to the render backend can be optimised away (common scenario in DOS games
-// with low frame rates and mostly static screens, e.g., most RPG, adventure,
-// and strategy titles).
-//
-// So we have two scenarios:
-//
-// 1. Current frame is the same as the previous one:
-//
-//    - `GFX_StartUpdate()` is NOT called for this frame.
-//    - `GFX_EndUpdate()` IS called; `sdl.draw.updating_framebuffer` is FALSE.
-//
-// 2. Current frame contains changes since the previous one:
-//
-//    - `GFX_StartUpdate()` IS called for this frame.
-//    - `GFX_EndUpdate()` IS called; `sdl.draw.updating_framebuffer` is TRUE.
-//
-bool GFX_StartUpdate(uint32_t*& pixels, int& pitch)
-{
-	assert(sdl.renderer);
-
-	if (!sdl.draw.active || sdl.draw.updating_framebuffer) {
-		return false;
-	}
-
-	sdl.renderer->StartFrame(pixels, pitch);
-
-	sdl.draw.updating_framebuffer = true;
-	return true;
-}
-
 void GFX_UploadFrame(const uint32_t* pixels, const int width_px, const int height_px,
                      const int pitch_bytes, const bool double_width,
                      const bool double_height, const VideoMode& video_mode)
@@ -1139,23 +1092,6 @@ void GFX_UploadFrame(const uint32_t* pixels, const int width_px, const int heigh
 void GFX_EndUpdate()
 {
 	assert(sdl.renderer);
-
-	if (sdl.draw.updating_framebuffer) {
-		// `sdl.draw.updating_framebuffer` is true when the contents of
-		// the framebuffer has been changed compared to the previous
-		// frame.
-		//
-		// We're making a copy of the framebuffer as we might present it
-		// a bit later in 'host-rate' mode, otherwise the VGA emulation
-		// could partially overwrite it by the time we present it (this
-		// would introduce tearing even with vsync enabled!)
-		//
-		// Also, we're not updating the texture here yet because if
-		// frames are skiped due to host vs DOS refresh mismatch, we
-		// don't want to upload the texture for the skipped frames.
-		//
-		sdl.renderer->EndFrame();
-	}
 
 	if (GFX_GetPresentationMode() == PresentationMode::DosRate) {
 
@@ -1192,7 +1128,6 @@ void GFX_EndUpdate()
 	// 'host-rate' present is handled in `normal_loop()` in `dosbox.cpp` in
 	// a "cooperative-multitasking" fashion at the end of each emulated 1ms
 	// tick.
-	sdl.draw.updating_framebuffer = false;
 }
 
 uint32_t GFX_MakePixel(const uint8_t red, const uint8_t green, const uint8_t blue)
@@ -2472,7 +2407,6 @@ void GFX_MaybePresentFrame()
 			// it's newer than the backend's copy
 			RENDER_MaybeUploadFrame();
 
-			sdl.renderer->PrepareFrame();
 			sdl.renderer->PresentFrame();
 		}
 

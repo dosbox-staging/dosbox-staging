@@ -88,84 +88,12 @@ public:
 	// Called once per present when the source frame has changed since the
 	// last upload.
 	//
-	// The default implementation CPU-doubles the frame into the legacy
-	// `StartFrame()`/`EndFrame()` backend buffer; render backends
-	// override it with native uploads.
-	//
 	virtual void UploadFrame(const uint32_t* pixels, const int width_px,
 	                         const int height_px, const int pitch_bytes,
 	                         const bool double_width, const bool double_height,
-	                         [[maybe_unused]] const VideoMode& video_mode)
-	{
-		uint32_t* dst       = nullptr;
-		int dst_pitch_bytes = 0;
+	                         const VideoMode& video_mode) = 0;
 
-		StartFrame(dst, dst_pitch_bytes);
-		if (!dst) {
-			return;
-		}
-
-		const auto x_scale = double_width ? 2 : 1;
-		const auto y_scale = double_height ? 2 : 1;
-
-		const auto src_pitch_px = pitch_bytes /
-		                          static_cast<int>(sizeof(uint32_t));
-		const auto dst_pitch_px = dst_pitch_bytes /
-		                          static_cast<int>(sizeof(uint32_t));
-
-		for (auto out_y = 0; out_y < height_px * y_scale; ++out_y) {
-			const auto* src_row = pixels + (out_y / y_scale) * src_pitch_px;
-
-			auto* dst_row = dst + out_y * dst_pitch_px;
-
-			if (x_scale == 1) {
-				std::memcpy(dst_row,
-				            src_row,
-				            static_cast<size_t>(width_px) *
-				                    sizeof(uint32_t));
-			} else {
-				for (auto x = 0; x < width_px; ++x) {
-					dst_row[x * 2 + 0] = src_row[x];
-					dst_row[x * 2 + 1] = src_row[x];
-				}
-			}
-		}
-
-		EndFrame();
-	}
-
-	// Called at the start of every unique frame (when there have been
-	// changes to the DOS framebuffer).
-	//
-	// Should return a writeable buffer for the video emulation to render
-	// the framebuffer image into. The buffer was sized for the current DOS
-	// video mode by a preceding `UpdateRenderSize()` call.
-	//
-	// If a renderer implements a double buffering scheme, this call should
-	// return a pointer to the current render buffer.
-	//
-	// `pitch_out` is the number of bytes used to store a single row of
-	// pixel data, including optional padding bytes at the end of the row.
-	//
-	virtual void StartFrame(uint32_t*& pixels_out, int& pitch_out) = 0;
-
-	// Called at the end of every frame. There is a matching EndUpdate()
-	// call for every StartUpdate() call.
-	//
-	// If a renderer implements a double buffering scheme, this call should
-	// swap the "current" and "last" buffers.
-	//
-	virtual void EndFrame() = 0;
-
-	// Prepares the frame for presentation (e.g., by uploading it to
-	// GPU memory).
-	//
-	// If a renderer implements a double buffering scheme, this call should
-	// prepare the "last" buffer for presentation.
-	//
-	virtual void PrepareFrame() = 0;
-
-	// Presents the frame prepared for presentation by PrepareFrame().
+	// Presents the last uploaded frame.
 	virtual void PresentFrame() = 0;
 
 	// Enables or disables vsync.
