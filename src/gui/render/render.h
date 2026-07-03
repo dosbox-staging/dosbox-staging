@@ -13,6 +13,7 @@
 
 #include "private/deinterlacer.h"
 
+#include "gui/render/frame_dirty_tracker.h"
 #include "gui/render/scaler/scalers.h"
 #include "hardware/video/vga.h"
 #include "utils/fraction.h"
@@ -108,11 +109,13 @@ struct Render {
 	} scale = {};
 
 	// Source-pixel snapshot of the last completed frame. Deep-copied from
-	// `scale.cache` at the end of every successful `RENDER_EndUpdate(false)`.
+	// `scale.cache` at the end of every successful
+	// `RENDER_EndUpdate(false)`.
 	//
-	// Used as a clean source for screenshots and video capture, so consumers
-	// don't read the live, possibly mid-frame `scale.cache`, and as the input
-	// for `RENDER_RescaleLastFrame()` after a pause-time recreate.
+	// Used as a clean source for screenshots and video capture, so
+	// consumers don't read the live, possibly mid-frame `scale.cache`, and
+	// as the input for `RENDER_RescaleLastFrame()` after a pause-time
+	// recreate.
 	struct {
 		alignas(uint64_t)
 		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
@@ -139,6 +142,11 @@ struct Render {
 		// replay through the freshly-configured scaler.
 		bool populated = false;
 	} last_complete_source = {};
+
+	// Tracks live-frame-vs-latch dirtiness and the latch/upload
+	// generations. Tracking only for now: it mirrors what the legacy
+	// change detection decides but controls nothing yet.
+	FrameDirtyTracker frame_dirty = {};
 
 	RenderPalette palette = {};
 

@@ -142,6 +142,9 @@ static void start_line_handler(const void* src_line_data)
 				return;
 			}
 
+			// The changed line is about to enter the source cache
+			render.frame_dirty.MarkDirty();
+
 			render.scale.out_write += render.scale.out_pitch *
 			                          scaler_changed_lines[0];
 
@@ -255,6 +258,10 @@ bool RENDER_StartUpdate()
 		if (!maybe_gfx_start_update()) {
 			return false;
 		}
+
+		// For indexed colour, a palette change makes the output stale
+		// even when the source bytes are identical
+		render.frame_dirty.MarkDirty();
 
 		RENDER_DrawLine = render.scale.line_palette_handler;
 
@@ -400,6 +407,12 @@ void RENDER_EndUpdate(const bool abort)
 	// fresh frame, not the previous one.
 	if (!abort) {
 		latch_last_complete_source();
+
+		// An aborted scanout must NOT clear the dirty flag (see the
+		// lifecycle comment in frame_dirty_tracker.h)
+		if (render.frame_dirty.IsDirty()) {
+			render.frame_dirty.NotifyLatched();
+		}
 	}
 
 	// Two gates on captures:
@@ -488,6 +501,7 @@ void RENDER_RescaleLastFrame()
 	// Force every line as changed so the scaler rewrites the full
 	// output (otherwise the per-line diff cache may skip lines).
 	render.scale.clear_cache = true;
+	render.frame_dirty.ForceRedraw();
 
 	if (!RENDER_StartUpdate()) {
 		return;
@@ -620,7 +634,9 @@ static void render_reset()
 
 	// Signal the next frame to first reinit the cache
 	render.scale.clear_cache = true;
-	render.active            = true;
+	render.frame_dirty.ForceRedraw();
+
+	render.active = true;
 }
 
 static void render_callback(GFX_CallbackFunctions_t function)
@@ -631,6 +647,7 @@ static void render_callback(GFX_CallbackFunctions_t function)
 
 	} else if (function == GFX_CallbackRedraw) {
 		render.scale.clear_cache = true;
+		render.frame_dirty.ForceRedraw();
 		return;
 
 	} else if (function == GFX_CallbackReset) {
