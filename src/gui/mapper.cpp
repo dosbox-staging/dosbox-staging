@@ -3044,8 +3044,6 @@ void MAPPER_DisplayUI() {
 
 	MIXER_LockMixerThread();
 
-	// Be sure that there is no update in progress
-	GFX_EndUpdate();
 	mapper.window = GFX_GetWindow();
 
 	if (mapper.window == nullptr) {

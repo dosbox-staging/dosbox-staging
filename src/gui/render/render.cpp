@@ -35,14 +35,13 @@
 CHECK_NARROWING();
 
 Render render;
-ScalerLineHandler RENDER_DrawLine;
 
 static void render_callback(GFX_CallbackFunctions_t function);
 
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue)
 {
-	auto& color = render.palette.rgb[entry];
+	auto& color = render.palette[entry];
 
 	// Games commonly re-upload an identical palette every frame; only an
 	// actual colour change may trigger palette change handling, otherwise
@@ -55,18 +54,11 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 	color.green = green;
 	color.blue  = blue;
 
-	if (render.palette.first > entry) {
-		render.palette.first = entry;
-	}
-	if (render.palette.last < entry) {
-		render.palette.last = entry;
-	}
-
 	// For indexed colour modes, a palette change makes the output stale
 	// even when the source pixels are unchanged. (Paletted modes on VGA
 	// machines don't take this path: the VGA layer applies the palette at
 	// scanout time, so palette changes show up as ordinary pixel changes.)
-	if (render.scale.line_palette_handler) {
+	if (render.src.pixel_format == PixelFormat::Indexed8) {
 		render.frame_dirty.MarkDirty();
 	}
 }
@@ -81,16 +73,20 @@ static bool is_deinterlacing()
 	return (render.deinterlacing_strength != DeinterlacingStrength::Off);
 }
 
-static void empty_line_handler(const void*) {}
-
-// The single scanout-time line handler: diff the incoming line against the
-// source cache and copy it in when it changed. No pixel-format conversion
-// and no render backend involvement happens during scanout; changed frames
-// are latched at the end of the scanout and expanded to 32-bit BGRX at
-// present time (see `RENDER_MaybeUploadFrame()`).
+// Diff the incoming line against the source cache and copy it in when it
+// changed. No pixel-format conversion and no render backend involvement
+// happens during scanout; changed frames are latched at the end of the
+// scanout and expanded to 32-bit BGRX at present time (see
+// `RENDER_MaybeUploadFrame()`).
 //
-static void scanout_line_handler(const void* src_line_data)
+void RENDER_DrawLine(const void* src_line_data)
 {
+	// Swallow stray lines outside a scanout (after `RENDER_EndUpdate()`
+	// or `halt_render()`)
+	if (!render.render_in_progress) {
+		return;
+	}
+
 	// VGA can emit more lines than the configured source height in edge
 	// cases (split-line and `vblank_skip` interactions); drop the excess.
 	if (render.scale.curr_row >= render.src.height) {
@@ -128,17 +124,12 @@ bool RENDER_StartUpdate()
 	// not involved until the frame completes (see `RENDER_EndUpdate()`).
 	render.scale.curr_row = 0;
 
-	RENDER_DrawLine = scanout_line_handler;
-
 	render.render_in_progress = true;
 	return true;
 }
 
 static void halt_render()
 {
-	RENDER_DrawLine = empty_line_handler;
-	GFX_EndUpdate();
-
 	render.render_in_progress = false;
 	render.active             = false;
 }
@@ -170,7 +161,7 @@ RenderedImage RENDER_GetCurrentImage()
 	image.image_data = reinterpret_cast<uint8_t*>(
 	        render.last_complete_source.cache.data());
 
-	image.palette = render.last_complete_source.palette.rgb;
+	image.palette = render.last_complete_source.palette;
 
 	if (is_deinterlacing()) {
 		return render.deinterlacer->Deinterlace(image,
@@ -248,7 +239,7 @@ void RENDER_MaybeUploadFrame()
 		std::array<uint32_t, NumVgaColors> palette_lut = {};
 
 		for (auto i = 0; i < NumVgaColors; ++i) {
-			const auto& c = latch.palette.rgb[i];
+			const auto& c = latch.palette[i];
 			palette_lut[i] = MakeBgrx32PaletteEntry(c.red, c.green, c.blue);
 		}
 
@@ -323,8 +314,6 @@ void RENDER_EndUpdate(const bool abort)
 	if (!render.render_in_progress) {
 		return;
 	}
-
-	RENDER_DrawLine = empty_line_handler;
 
 	// Latch the just-finished frame before any consumer (capture,
 	// present-time expansion) runs, so anything that reads via the latch
@@ -473,31 +462,11 @@ static void render_reset()
 	// driver operating in a different thread or process.
 	std::lock_guard<std::mutex> guard(render_reset_mutex);
 
-	int render_width_px = render.src.width;
-	bool double_width   = render.src.double_width;
-	bool double_height  = render.src.double_height;
+	const auto double_width  = render.src.double_width;
+	const auto double_height = render.src.double_height;
 
-	auto scaler = &Scale1x;
-
-	if (double_height && double_width) {
-		scaler = &Scale2x;
-	} else if (double_width) {
-		scaler = &ScaleHoriz2x;
-	} else if (double_height) {
-		scaler = &ScaleVert2x;
-	} else {
-		scaler = &Scale1x;
-	}
-
-	render.scale.y_scale = scaler->y_scale;
-
-	if ((render_width_px * scaler->x_scale > ScalerMaxWidth) ||
-	    (render.src.height * scaler->y_scale > ScalerMaxHeight)) {
-		scaler = &Scale1x;
-	}
-
-	render_width_px *= scaler->x_scale;
-	const auto render_height_px = render.src.height * scaler->y_scale;
+	const auto render_width_px = render.src.width * (double_width ? 2 : 1);
+	const auto render_height_px = render.src.height * (double_height ? 2 : 1);
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
 
@@ -509,36 +478,22 @@ static void render_reset()
 	            render.src.video_mode,
 	            &render_callback);
 
-	// Set up scaler variables
 	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
-		render.scale.line_handler         = scaler->line_handlers[0];
-		render.scale.line_palette_handler = scaler->line_handlers[5];
-		render.scale.cache_pitch          = render.src.width * 1;
+		render.scale.cache_pitch = render.src.width * 1;
 		break;
 
 	case PixelFormat::RGB555_Packed16:
-		render.scale.line_handler         = scaler->line_handlers[1];
-		render.scale.line_palette_handler = nullptr;
-		render.scale.cache_pitch          = render.src.width * 2;
-		break;
-
 	case PixelFormat::RGB565_Packed16:
-		render.scale.line_handler         = scaler->line_handlers[2];
-		render.scale.line_palette_handler = nullptr;
-		render.scale.cache_pitch          = render.src.width * 2;
+		render.scale.cache_pitch = render.src.width * 2;
 		break;
 
 	case PixelFormat::BGR24_ByteArray:
-		render.scale.line_handler         = scaler->line_handlers[3];
-		render.scale.line_palette_handler = nullptr;
-		render.scale.cache_pitch          = render.src.width * 3;
+		render.scale.cache_pitch = render.src.width * 3;
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
-		render.scale.line_handler         = scaler->line_handlers[4];
-		render.scale.line_palette_handler = nullptr;
-		render.scale.cache_pitch          = render.src.width * 4;
+		render.scale.cache_pitch = render.src.width * 4;
 		break;
 
 	default:
@@ -546,19 +501,11 @@ static void render_reset()
 		       static_cast<uint8_t>(render.src.pixel_format));
 	}
 
-	// Reset the palette change detection to its initial value
-	render.palette.first   = 0;
-	render.palette.last    = 255;
-	render.palette.changed = false;
-	memset(render.palette.modified, 0, sizeof(render.palette.modified));
-
 	// A reset can land mid-scanout (window events can fire
 	// `GFX_CallbackReset` while line events are in flight); the in-flight
 	// frame keeps writing into the source cache. The current row is
 	// deliberately NOT reset, so the remaining lines land at their real
 	// rows.
-	RENDER_DrawLine = render.render_in_progress ? scanout_line_handler
-	                                            : empty_line_handler;
 
 	// The output geometry or the palette may have changed: force a full
 	// re-expansion and upload of the held frame.
@@ -578,7 +525,6 @@ static void render_callback(GFX_CallbackFunctions_t function)
 		return;
 
 	} else if (function == GFX_CallbackReset) {
-		GFX_EndUpdate();
 		render_reset();
 
 	} else {

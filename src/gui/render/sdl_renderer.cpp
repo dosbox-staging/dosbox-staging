@@ -153,14 +153,6 @@ SdlRenderer::~SdlRenderer()
 		renderer = {};
 		texture  = {};
 	}
-	if (curr_framebuf) {
-		SDL_DestroySurface(curr_framebuf);
-		curr_framebuf = {};
-	}
-	if (last_framebuf) {
-		SDL_DestroySurface(last_framebuf);
-		last_framebuf = {};
-	}
 	if (window) {
 		SDL_DestroyWindow(window);
 		window = {};
@@ -331,49 +323,6 @@ ShaderDescriptor SdlRenderer::GetCurrentShaderDescriptor()
 {
 	// no-op (no shader support)
 	return {};
-}
-
-void SdlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
-{
-	assert(curr_framebuf);
-
-	// Some surfaces must be locked for direct access
-	if (SDL_MUSTLOCK(curr_framebuf)) {
-		SDL_LockSurface(curr_framebuf);
-	}
-
-	pixels_out = static_cast<uint32_t*>(curr_framebuf->pixels);
-	pitch_out  = curr_framebuf->pitch;
-}
-
-void SdlRenderer::EndFrame()
-{
-	assert(curr_framebuf);
-	assert(last_framebuf);
-
-	if (SDL_MUSTLOCK(last_framebuf)) {
-		SDL_LockSurface(last_framebuf);
-	}
-
-	// We need to copy the buffers. We can't just swap them because the VGA
-	// emulation only writes the changed pixels to the framebuffer in each
-	// frame.
-
-	// TODO Couldn't get SDL_BlitSurface to work... If you
-	// can, feel free to use that here, but this works
-	// perfectly fine.
-	std::memcpy(last_framebuf->pixels,
-	            curr_framebuf->pixels,
-	            (curr_framebuf->h * curr_framebuf->pitch));
-
-	last_framebuf_dirty = true;
-}
-
-void SdlRenderer::PrepareFrame()
-{
-	// `UploadFrame()` writes directly into the texture, so there is
-	// nothing to prepare. (This remains part of the interface until the
-	// StartFrame/EndFrame protocol is removed.)
 }
 
 void SdlRenderer::PresentFrame()
