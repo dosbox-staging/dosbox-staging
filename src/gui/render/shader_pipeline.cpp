@@ -160,6 +160,8 @@ bool ShaderPipeline::IsPipelineComplete() const
 
 void ShaderPipeline::NotifyViewportSizeChanged(const DosBox::Rect& new_viewport)
 {
+	output_stale = true;
+
 	if (viewport == new_viewport) {
 		return;
 	}
@@ -178,6 +180,8 @@ void ShaderPipeline::NotifyRenderSizeChanged(const int input_texture_width,
                                              const bool double_height,
                                              const GLuint new_input_texture)
 {
+	output_stale = true;
+
 	if ((ifloor(input_texture.size.w) == input_texture_width) &&
 	    (ifloor(input_texture.size.h) == input_texture_height) &&
 	    (input_texture.double_width == double_width) &&
@@ -199,6 +203,8 @@ void ShaderPipeline::NotifyRenderSizeChanged(const int input_texture_width,
 
 void ShaderPipeline::NotifyVideoModeChanged(const VideoMode& new_video_mode)
 {
+	output_stale = true;
+
 	if (video_mode == new_video_mode) {
 		return;
 	}
@@ -421,6 +427,8 @@ GLuint ShaderPipeline::CreateTexture(const DosBox::Rect& size,
 
 void ShaderPipeline::SetMainShader(const Shader& shader)
 {
+	output_stale = true;
+
 	main_shader        = shader;
 	main_shader_preset = shader.info.default_preset;
 
@@ -432,6 +440,8 @@ void ShaderPipeline::SetMainShader(const Shader& shader)
 
 void ShaderPipeline::SetMainShaderPreset(const ShaderPreset& preset)
 {
+	output_stale = true;
+
 	main_shader_preset = preset;
 
 	if (IsPipelineComplete()) {
@@ -441,6 +451,8 @@ void ShaderPipeline::SetMainShaderPreset(const ShaderPreset& preset)
 
 void ShaderPipeline::SetColorSpace(const ColorSpace _color_space)
 {
+	output_stale = true;
+
 	color_space = _color_space;
 
 	if (IsPipelineComplete()) {
@@ -450,6 +462,8 @@ void ShaderPipeline::SetColorSpace(const ColorSpace _color_space)
 
 void ShaderPipeline::EnableImageAdjustments(const bool enable)
 {
+	output_stale = true;
+
 	enable_image_adjustments = enable;
 
 	if (IsPipelineComplete()) {
@@ -459,6 +473,8 @@ void ShaderPipeline::EnableImageAdjustments(const bool enable)
 
 void ShaderPipeline::SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings)
 {
+	output_stale = true;
+
 	image_adjustment_settings = settings;
 
 	if (IsPipelineComplete()) {
@@ -468,6 +484,8 @@ void ShaderPipeline::SetImageAdjustmentSettings(const ImageAdjustmentSettings& s
 
 void ShaderPipeline::SetDeditheringStrength(const float strength)
 {
+	output_stale = true;
+
 	dedithering_strength = strength;
 
 	const auto enable_dedithering = (strength > 0.0f);
@@ -488,13 +506,25 @@ void ShaderPipeline::SetDeditheringStrength(const float strength)
 	}
 }
 
-void ShaderPipeline::Render(const GLuint vertex_array_object) const
+void ShaderPipeline::Render(const GLuint vertex_array_object)
 {
 	assert(IsPipelineComplete());
 
 	for (const auto& pass : shader_passes) {
 		RenderPass(pass, vertex_array_object);
 	}
+
+	output_stale = false;
+}
+
+void ShaderPipeline::NotifyInputTextureUpdated()
+{
+	output_stale = true;
+}
+
+bool ShaderPipeline::IsOutputStale() const
+{
+	return output_stale;
 }
 
 GLuint ShaderPipeline::GetOutputFbo() const

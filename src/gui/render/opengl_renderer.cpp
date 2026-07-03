@@ -358,6 +358,8 @@ void OpenGlRenderer::UploadFrame(const uint32_t* pixels, const int width_px,
 
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	shader_pipeline->NotifyInputTextureUpdated();
 }
 
 void OpenGlRenderer::MaybeUpdateRenderSize(const int new_width_px,
@@ -444,8 +446,23 @@ void OpenGlRenderer::RecreateInputTexture()
 
 void OpenGlRenderer::PresentFrame()
 {
-	// Render the shader pipeline into its viewport-sized output FBO
-	shader_pipeline->Render(vao);
+	if (!shader_pipeline->IsPipelineComplete()) {
+		// Nothing to present yet (no frame has been uploaded);
+		// present a black window
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		SDL_GL_SwapWindow(window);
+		return;
+	}
+
+	// Re-run the shader pipeline into its viewport-sized output FBO only
+	// when the input frame or the pipeline settings have changed;
+	// otherwise the cached output is re-blitted below. A static DOS
+	// screen presents with a single blit instead of re-running a
+	// potentially expensive shader at host rate.
+	if (shader_pipeline->IsOutputStale()) {
+		shader_pipeline->Render(vao);
+	}
 
 	// Clear the window's framebuffer (the black letterbox areas), then
 	// blit the pipeline output into the viewport rectangle
