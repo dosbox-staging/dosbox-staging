@@ -54,6 +54,11 @@ public:
 	std::string GetCurrentSymbolicShaderDescriptor() override;
 	ShaderDescriptor GetCurrentShaderDescriptor() override;
 
+	void UploadFrame(const uint32_t* pixels, const int width_px,
+	                 const int height_px, const int pitch_bytes,
+	                 const bool double_width, const bool double_height,
+	                 const VideoMode& video_mode) override;
+
 	void StartFrame(uint32_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
 
@@ -85,8 +90,9 @@ private:
 	bool InitRenderer();
 	void RecreateInputTexture();
 
-	void MaybeUpdateRenderSize(const int new_render_width_px,
-	                           const int new_render_height_px);
+	void MaybeUpdateRenderSize(const int new_width_px, const int new_height_px,
+	                           const bool new_double_width,
+	                           const bool new_double_height);
 
 	SetShaderResult SetShaderInternal(const std::string& symbolic_shader_descriptor);
 
@@ -122,6 +128,12 @@ private:
 		int height     = 0;
 		int pitch      = 0;
 		GLuint texture = 0;
+
+		// Additional doubling requested on top of the texture
+		// dimensions, performed by the shader pipeline's
+		// integer-upscale pre-pass
+		bool double_width  = false;
+		bool double_height = false;
 	} input_texture = {};
 
 	// Vertex buffer object
