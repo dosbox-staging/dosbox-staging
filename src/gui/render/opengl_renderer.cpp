@@ -683,13 +683,20 @@ ShaderDescriptor OpenGlRenderer::GetCurrentShaderDescriptor()
 	return curr_shader_descriptor;
 }
 
-RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_px)
+RenderedImage OpenGlRenderer::ReadPixelsPostShader(
+        [[maybe_unused]] const DosBox::Rect output_rect_px)
 {
+	// The complete shader pipeline output is read back from the
+	// viewport-sized output FBO. Unlike the passed-in rectangle (which
+	// clips to the visible canvas), this captures the full viewport --
+	// including the parts that hang off the screen when "zoomed into"
+	// the DOS content in `relative` viewport mode.
+
 	// Create new image
 	RenderedImage image = {};
 
-	image.params.width              = iroundf(output_rect_px.w);
-	image.params.height             = iroundf(output_rect_px.h);
+	image.params.width              = iroundf(curr_viewport_size_px.w);
+	image.params.height             = iroundf(curr_viewport_size_px.h);
 	image.params.double_width       = false;
 	image.params.double_height      = false;
 	image.params.pixel_aspect_ratio = {1};
@@ -707,8 +714,8 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 
 	image.is_flipped_vertically = true;
 
-	// Read from backbuffer
-	glReadBuffer(GL_BACK);
+	// Read from the shader pipeline's output FBO
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, shader_pipeline->GetOutputFbo());
 
 	// Alignment is 4 by default which works fine when using the
 	// GL_BGRA pixel format with glReadPixels(). We need to set it 1
@@ -719,8 +726,8 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	// potentially revert to the default 4-byte alignment
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-	glReadPixels(iroundf(output_rect_px.x),
-	             iroundf(output_rect_px.y),
+	glReadPixels(0,
+	             0,
 	             image.params.width,
 	             image.params.height,
 	             GL_BGR,
@@ -729,6 +736,8 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 
 	// Restore default
 	glPixelStorei(GL_PACK_ALIGNMENT, 4);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 	return image;
 }
