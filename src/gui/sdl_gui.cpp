@@ -1071,8 +1071,9 @@ static void toggle_fullscreen_handler(bool pressed)
 	}
 }
 
-void GFX_UploadFrame(const uint32_t* pixels, const int width_px, const int height_px,
-                     const int pitch_bytes, const bool double_width,
+void GFX_UploadFrame(const uint32_t* pixels, const int width_px,
+                     const int height_px, const int pitch_bytes, const int first_row,
+                     const int num_rows, const bool double_width,
                      const bool double_height, const VideoMode& video_mode)
 {
 	assert(sdl.renderer);
@@ -1081,6 +1082,8 @@ void GFX_UploadFrame(const uint32_t* pixels, const int width_px, const int heigh
 	                          width_px,
 	                          height_px,
 	                          pitch_bytes,
+	                          first_row,
+	                          num_rows,
 	                          double_width,
 	                          double_height,
 	                          video_mode);

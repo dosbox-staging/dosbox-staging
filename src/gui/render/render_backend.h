@@ -85,11 +85,17 @@ public:
 	// included, no render-layer doubling); `double_width` and
 	// `double_height` request the additional doubling on top of that.
 	//
+	// `first_row` and `num_rows` bound the rows that changed since the
+	// last upload; `pixels` always points at the complete frame. Backends
+	// with persistent texture storage can restrict the upload to that
+	// span; others are free to ignore it and upload the whole frame.
+	//
 	// Called once per present when the source frame has changed since the
 	// last upload.
 	//
 	virtual void UploadFrame(const uint32_t* pixels, const int width_px,
 	                         const int height_px, const int pitch_bytes,
+	                         const int first_row, const int num_rows,
 	                         const bool double_width, const bool double_height,
 	                         const VideoMode& video_mode) = 0;
 
