@@ -31,9 +31,10 @@ struct ShaderPass {
 	// final pass renders at viewport size, positioned at the origin).
 	DosBox::Rect out_size = {};
 
-	// Output texture and FBO of the shader pass. The final pass renders
-	// into its own viewport-sized FBO, which the render backend then
-	// blits to the window's framebuffer.
+	// Output texture and FBO of the shader pass. The final pass owns a
+	// viewport-sized FBO that caches the pipeline output for clean
+	// presents and rendered captures; presents of changed frames bypass
+	// it (see `RenderToBackbuffer()`).
 	GLuint out_fbo     = 0;
 	GLuint out_texture = 0;
 
@@ -64,15 +65,30 @@ public:
 	void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings);
 	void SetDeditheringStrength(const float strength);
 
+	// Render the pipeline into the output FBO (see `GetOutputFbo()`).
 	void Render(const GLuint vertex_array_object);
+
+	// Render the pipeline with the final pass drawing straight into the
+	// viewport rectangle of the window's framebuffer, bypassing the
+	// output FBO (which then goes stale). This is the cheap path for
+	// presenting changed frames: it skips a full-viewport FBO write plus
+	// the blit to the window's framebuffer.
+	void RenderToBackbuffer(const GLuint vertex_array_object);
 
 	// The input texture's contents have changed; the next Render() call
 	// must re-run the pipeline.
 	void NotifyInputTextureUpdated();
 
-	// True when the output FBO does not reflect the current input
-	// texture contents or pipeline settings. Cleared by Render().
+	// True when the last rendered output (whatever its target) is out of
+	// date with the input texture contents or pipeline settings. Cleared
+	// by Render() and RenderToBackbuffer().
 	bool IsOutputStale() const;
+
+	// True when the output FBO does not hold the current pipeline
+	// output: the input or settings changed since the last render, or
+	// the last render went to the backbuffer. Consumers of the FBO must
+	// call Render() first when this is set.
+	bool IsOutputFboStale() const;
 
 	// The FBO holding the final pipeline output at viewport size,
 	// positioned at the origin. Only valid when the pipeline is complete.
@@ -106,7 +122,9 @@ private:
 	void UpdatePassTextureUniforms();
 	void UpdateTextureUniforms(const std::vector<ShaderPass>::iterator pass) const;
 
-	void RenderPass(const ShaderPass& pass, const GLuint vertex_array_object) const;
+	void RenderPass(const ShaderPass& pass, const GLuint vertex_array_object,
+	                const GLuint target_fbo,
+	                const DosBox::Rect& target_rect) const;
 
 	struct {
 		bool dedithering_enabled = false;
@@ -119,6 +137,13 @@ private:
 	// (e.g. a time or frame-count uniform), it must opt out of this
 	// optimisation.
 	bool output_stale = true;
+
+	// The output FBO doesn't hold the current pipeline output:
+	// `RenderToBackbuffer()` bypassed it, or the pipeline (and thus the
+	// FBO) was freshly (re)created and nothing has been rendered into it
+	// yet. Only meaningful in combination with `output_stale` -- see
+	// `IsOutputFboStale()`.
+	bool output_fbo_stale = true;
 
 	struct {
 		DosBox::Rect size = {};
