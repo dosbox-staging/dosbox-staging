@@ -13,6 +13,7 @@ add_executable(dosbox_tests
     dosbox_pause_fsm_tests.cpp
     dosbox_test_fixture.h
     drives_tests.cpp
+    format_convert_tests.cpp
     fraction_tests.cpp
     fs_utils_tests.cpp
     image_compare.cpp
