@@ -56,6 +56,7 @@ public:
 
 	void UploadFrame(const uint32_t* pixels, const int width_px,
 	                 const int height_px, const int pitch_bytes,
+	                 const int first_row, const int num_rows,
 	                 const bool double_width, const bool double_height,
 	                 const VideoMode& video_mode) override;
 
@@ -86,7 +87,8 @@ private:
 	bool InitRenderer();
 	void RecreateInputTexture();
 
-	void MaybeUpdateRenderSize(const int new_width_px, const int new_height_px,
+	// Returns true when the input texture was recreated (and is thus blank)
+	bool MaybeUpdateRenderSize(const int new_width_px, const int new_height_px,
 	                           const bool new_double_width,
 	                           const bool new_double_height);
 

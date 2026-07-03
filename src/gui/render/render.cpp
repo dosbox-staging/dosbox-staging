@@ -4,6 +4,7 @@
 
 #include "dosbox.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -104,7 +105,7 @@ void RENDER_DrawLine(const void* src_line_data)
 		    0) {
 			std::memcpy(cache_row, src_line_data, render.curr_source.pitch);
 
-			render.frame_dirty.MarkDirty();
+			render.frame_dirty.MarkRowDirty(render.curr_source.curr_row);
 		}
 	}
 
@@ -195,12 +196,26 @@ static void handle_capture_frame()
 //
 static void latch_last_complete_source()
 {
-	const auto bytes = static_cast<size_t>(render.curr_source.pitch) *
-	                   static_cast<size_t>(render.src.height);
+	// Rows outside the dirty span are identical in the source cache and
+	// the latch (the span covers every change since the last latch), so
+	// only the span rows need copying.
+	const auto span = render.frame_dirty.DirtyRowSpan();
 
-	std::memcpy(render.last_complete_source.pixels.data(),
-	            render.curr_source.pixels.data(),
-	            bytes);
+	const auto max_row   = render.src.height - 1;
+	const auto first_row = std::clamp(span.first, 0, max_row);
+	const auto last_row  = std::clamp(span.last, first_row, max_row);
+
+	const auto pitch = static_cast<size_t>(render.curr_source.pitch);
+
+	const auto offset_bytes = static_cast<size_t>(first_row) * pitch;
+	const auto num_bytes = static_cast<size_t>(last_row - first_row + 1) * pitch;
+
+	std::memcpy(reinterpret_cast<uint8_t*>(
+	                    render.last_complete_source.pixels.data()) +
+	                    offset_bytes,
+	            reinterpret_cast<const uint8_t*>(render.curr_source.pixels.data()) +
+	                    offset_bytes,
+	            num_bytes);
 
 	render.last_complete_source.src       = render.src;
 	render.last_complete_source.palette   = render.palette;
@@ -226,12 +241,30 @@ void RENDER_MaybeUploadFrame()
 		return;
 	}
 
-	const auto width      = latch.src.width;
-	const auto height     = latch.src.height;
-	const auto num_pixels = width * height;
+	const auto width  = latch.src.width;
+	const auto height = latch.src.height;
 
-	// The latch rows are tightly packed, so the whole frame can be
-	// expanded in one go
+	// The FMV deinterlacer below reads and rewrites the whole frame in
+	// place, so it needs every row regenerated regardless of what changed.
+	const auto span = is_deinterlacing()
+	                        ? RowSpan{0, height - 1}
+	                        : render.frame_dirty.PendingUploadRowSpan();
+
+	const auto max_row   = height - 1;
+	const auto first_row = std::clamp(span.first, 0, max_row);
+	const auto last_row  = std::clamp(span.last, first_row, max_row);
+
+	const auto num_rows   = last_row - first_row + 1;
+	const auto num_pixels = width * num_rows;
+
+	// Pixel offset of the span start, valid for both the tightly packed
+	// latch and `upload_buf`
+	const auto span_px = first_row * width;
+
+	// Only the span rows of `upload_buf` are (re-)expanded; the rows
+	// outside it still hold the current frame from earlier uploads, as
+	// every change enters the span (line changes row by row; palette and
+	// geometry changes pend the whole frame).
 	auto* dst = render.upload_buf.data();
 
 	const uint32_t* upload_pixels = dst;
@@ -246,38 +279,42 @@ void RENDER_MaybeUploadFrame()
 		}
 
 		ExpandIndexed8ToBgrx32(reinterpret_cast<const uint8_t*>(
-		                               latch.pixels.data()),
-		                       dst,
+		                               latch.pixels.data()) +
+		                               span_px,
+		                       dst + span_px,
 		                       num_pixels,
 		                       palette_lut.data());
 	} break;
 
 	case PixelFormat::RGB555_Packed16:
 		ExpandRgb555ToBgrx32(reinterpret_cast<const uint16_t*>(
-		                             latch.pixels.data()),
-		                     dst,
+		                             latch.pixels.data()) +
+		                             span_px,
+		                     dst + span_px,
 		                     num_pixels);
 		break;
 
 	case PixelFormat::RGB565_Packed16:
 		ExpandRgb565ToBgrx32(reinterpret_cast<const uint16_t*>(
-		                             latch.pixels.data()),
-		                     dst,
+		                             latch.pixels.data()) +
+		                             span_px,
+		                     dst + span_px,
 		                     num_pixels);
 		break;
 
 	case PixelFormat::BGR24_ByteArray:
 		ExpandBgr24ToBgrx32(reinterpret_cast<const uint8_t*>(
-		                            latch.pixels.data()),
-		                    dst,
+		                            latch.pixels.data()) +
+		                            (span_px * 3),
+		                    dst + span_px,
 		                    num_pixels);
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
 		// Already in upload format: upload straight from the latch and
-		// skip the full-frame copy -- unless the deinterlacer needs a
-		// mutable copy in the upload buffer (it must not modify the
-		// latch).
+		// skip the copy -- unless the deinterlacer needs a mutable copy
+		// in the upload buffer (it must not modify the latch; the span
+		// is the whole frame then).
 		if (is_deinterlacing()) {
 			CopyBgrx32(latch.pixels.data(), dst, num_pixels);
 		} else {
@@ -312,6 +349,8 @@ void RENDER_MaybeUploadFrame()
 	                width,
 	                height,
 	                width * static_cast<int>(sizeof(uint32_t)),
+	                first_row,
+	                num_rows,
 	                latch.src.double_width,
 	                latch.src.double_height,
 	                latch.src.video_mode);

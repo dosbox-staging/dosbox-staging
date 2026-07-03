@@ -50,6 +50,7 @@ public:
 
 	void UploadFrame(const uint32_t* pixels, const int width_px,
 	                 const int height_px, const int pitch_bytes,
+	                 const int first_row, const int num_rows,
 	                 const bool double_width, const bool double_height,
 	                 const VideoMode& video_mode) override;
 
