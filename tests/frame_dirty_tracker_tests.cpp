@@ -97,4 +97,118 @@ TEST(FrameDirtyTracker, ForceRedrawInvalidatesTheUploadedGeneration)
 	EXPECT_FALSE(tracker.IsUploadPending());
 }
 
+TEST(FrameDirtyTracker, RowMarksAccumulateIntoTheDirtySpan)
+{
+	FrameDirtyTracker tracker = {};
+
+	tracker.MarkRowDirty(42);
+	tracker.MarkRowDirty(7);
+	tracker.MarkRowDirty(13);
+
+	EXPECT_TRUE(tracker.IsDirty());
+	EXPECT_EQ(tracker.DirtyRowSpan().first, 7);
+	EXPECT_EQ(tracker.DirtyRowSpan().last, 42);
+}
+
+TEST(FrameDirtyTracker, PaletteChangeDirtiesTheWholeFrame)
+{
+	FrameDirtyTracker tracker = {};
+
+	tracker.MarkRowDirty(100);
+	tracker.MarkDirty();
+
+	EXPECT_EQ(tracker.DirtyRowSpan().first, 0);
+	EXPECT_EQ(tracker.DirtyRowSpan().last, FrameDirtyTracker::WholeFrameRows);
+}
+
+TEST(FrameDirtyTracker, LatchingMovesTheDirtySpanToThePendingUpload)
+{
+	FrameDirtyTracker tracker = {};
+
+	tracker.MarkRowDirty(10);
+	tracker.MarkRowDirty(20);
+	tracker.NotifyLatched();
+
+	EXPECT_EQ(tracker.PendingUploadRowSpan().first, 10);
+	EXPECT_EQ(tracker.PendingUploadRowSpan().last, 20);
+
+	// The dirty span starts fresh: rows marked after the latch must not
+	// widen the already-latched span
+	tracker.MarkRowDirty(500);
+
+	EXPECT_EQ(tracker.PendingUploadRowSpan().first, 10);
+	EXPECT_EQ(tracker.PendingUploadRowSpan().last, 20);
+	EXPECT_EQ(tracker.DirtyRowSpan().first, 500);
+	EXPECT_EQ(tracker.DirtyRowSpan().last, 500);
+}
+
+TEST(FrameDirtyTracker, UnpresentedLatchesUnionTheirPendingSpans)
+{
+	// Presents can lag the DOS rate: when a second frame is latched
+	// before the first was uploaded, the upload must cover both.
+	FrameDirtyTracker tracker = {};
+
+	tracker.MarkRowDirty(10);
+	tracker.NotifyLatched();
+
+	tracker.MarkRowDirty(300);
+	tracker.NotifyLatched();
+
+	EXPECT_EQ(tracker.PendingUploadRowSpan().first, 10);
+	EXPECT_EQ(tracker.PendingUploadRowSpan().last, 300);
+}
+
+TEST(FrameDirtyTracker, UploadingClearsThePendingSpan)
+{
+	FrameDirtyTracker tracker = {};
+
+	tracker.MarkRowDirty(10);
+	tracker.NotifyLatched();
+	tracker.NotifyUploaded();
+
+	tracker.MarkRowDirty(200);
+	tracker.NotifyLatched();
+
+	// Only the new frame's rows are pending, not the already-uploaded
+	// ones
+	EXPECT_EQ(tracker.PendingUploadRowSpan().first, 200);
+	EXPECT_EQ(tracker.PendingUploadRowSpan().last, 200);
+}
+
+TEST(FrameDirtyTracker, SpanSurvivesAbortedScanouts)
+{
+	// Same rule as the flag: aborted rows are already in the source
+	// cache, so their span must stay pending for the eventual latch.
+	FrameDirtyTracker tracker = {};
+
+	tracker.MarkRowDirty(50);
+
+	// ... scanout aborts here (nothing to call) ...
+
+	tracker.MarkRowDirty(60);
+	tracker.NotifyLatched();
+
+	EXPECT_EQ(tracker.PendingUploadRowSpan().first, 50);
+	EXPECT_EQ(tracker.PendingUploadRowSpan().last, 60);
+}
+
+TEST(FrameDirtyTracker, ForceRedrawPendsTheWholeFrame)
+{
+	FrameDirtyTracker tracker = {};
+
+	// Get in sync first
+	tracker.MarkRowDirty(10);
+	tracker.NotifyLatched();
+	tracker.NotifyUploaded();
+
+	tracker.ForceRedraw();
+
+	EXPECT_EQ(tracker.PendingUploadRowSpan().first, 0);
+	EXPECT_EQ(tracker.PendingUploadRowSpan().last,
+	          FrameDirtyTracker::WholeFrameRows);
+
+	EXPECT_EQ(tracker.DirtyRowSpan().first, 0);
+	EXPECT_EQ(tracker.DirtyRowSpan().last, FrameDirtyTracker::WholeFrameRows);
+}
+
 } // namespace
