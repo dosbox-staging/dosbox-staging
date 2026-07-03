@@ -41,4 +41,12 @@ void ExpandBgr24ToBgrx32(const uint8_t* src, uint32_t* dst, const int num_pixels
 
 void CopyBgrx32(const uint32_t* src, uint32_t* dst, const int num_pixels);
 
+// Writes one output row of a CPU-doubled frame: copies `src_width_px`
+// BGRX32 pixels into `dst`, writing each pixel twice when `double_width`
+// is set (`dst` must hold `src_width_px * 2` pixels in that case).
+// Vertical doubling is achieved by calling this on the same source row
+// twice.
+void ExpandBgrx32Row(const uint32_t* src, uint32_t* dst, const int src_width_px,
+                     const bool double_width);
+
 #endif // DOSBOX_RENDER_FORMAT_CONVERT_H

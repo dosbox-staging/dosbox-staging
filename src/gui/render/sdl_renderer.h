@@ -32,7 +32,8 @@ class SdlRenderer : public RenderBackend {
 
 public:
 	SdlRenderer(const int x, const int y, const int width, const int height,
-	            const SDL_WindowFlags sdl_window_flags, const std::string& render_driver,
+	            const SDL_WindowFlags sdl_window_flags,
+	            const std::string& render_driver,
 	            TextureFilterMode texture_filter_mode);
 
 	~SdlRenderer() override;
@@ -57,6 +58,11 @@ public:
 
 	std::string GetCurrentSymbolicShaderDescriptor() override;
 	ShaderDescriptor GetCurrentShaderDescriptor() override;
+
+	void UploadFrame(const uint32_t* pixels, const int width_px,
+	                 const int height_px, const int pitch_bytes,
+	                 const bool double_width, const bool double_height,
+	                 const VideoMode& video_mode) override;
 
 	void StartFrame(uint32_t*& pixels_out, int& pitch_out) override;
 	void EndFrame() override;
@@ -83,6 +89,8 @@ public:
 
 private:
 	bool InitRenderer(const std::string& render_driver);
+
+	void MaybeRecreateTexture(const int width_px, const int height_px);
 
 	SDL_WindowFlags OpenGlDriverCrashWorkaround(const std::string_view render_driver) const;
 
