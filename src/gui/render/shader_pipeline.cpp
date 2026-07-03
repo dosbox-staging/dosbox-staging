@@ -220,6 +220,9 @@ void ShaderPipeline::CreatePipeline()
 {
 	assert(IsPipelineComplete());
 
+	// The freshly created output FBO has undefined contents
+	output_fbo_stale = true;
+
 	LoadAndAddInternalPasses();
 
 	SetPassOutputSizes();
@@ -509,10 +512,34 @@ void ShaderPipeline::Render(const GLuint vertex_array_object)
 	assert(IsPipelineComplete());
 
 	for (const auto& pass : shader_passes) {
-		RenderPass(pass, vertex_array_object);
+		RenderPass(pass, vertex_array_object, pass.out_fbo, pass.out_size);
 	}
 
-	output_stale = false;
+	output_stale     = false;
+	output_fbo_stale = false;
+}
+
+void ShaderPipeline::RenderToBackbuffer(const GLuint vertex_array_object)
+{
+	assert(IsPipelineComplete());
+
+	constexpr GLuint WindowFramebuffer = 0;
+
+	for (auto it = shader_passes.begin(); it != shader_passes.end(); ++it) {
+		const auto is_final_pass = (std::next(it) == shader_passes.end());
+
+		if (is_final_pass) {
+			// The final pass draws into the viewport rectangle of
+			// the window's framebuffer; its glClear() blanks the
+			// letterbox areas.
+			RenderPass(*it, vertex_array_object, WindowFramebuffer, viewport);
+		} else {
+			RenderPass(*it, vertex_array_object, it->out_fbo, it->out_size);
+		}
+	}
+
+	output_stale     = false;
+	output_fbo_stale = true;
 }
 
 void ShaderPipeline::NotifyInputTextureUpdated()
@@ -523,6 +550,11 @@ void ShaderPipeline::NotifyInputTextureUpdated()
 bool ShaderPipeline::IsOutputStale() const
 {
 	return output_stale;
+}
+
+bool ShaderPipeline::IsOutputFboStale() const
+{
+	return output_stale || output_fbo_stale;
 }
 
 GLuint ShaderPipeline::GetOutputFbo() const
@@ -546,11 +578,13 @@ ShaderPass& ShaderPipeline::GetShaderPass(const std::string& name)
 }
 
 void ShaderPipeline::RenderPass(const ShaderPass& pass,
-                                const GLuint vertex_array_object) const
+                                const GLuint vertex_array_object,
+                                const GLuint target_fbo,
+                                const DosBox::Rect& target_rect) const
 {
 	glUseProgram(pass.shader.program_object);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, pass.out_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, target_fbo);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	const auto& info = pass.shader.info;
@@ -569,10 +603,10 @@ void ShaderPipeline::RenderPass(const ShaderPass& pass,
 	}
 
 	// Set up viewport
-	glViewport(static_cast<GLsizei>(pass.out_size.x),
-	           static_cast<GLsizei>(pass.out_size.y),
-	           static_cast<GLsizei>(pass.out_size.w),
-	           static_cast<GLsizei>(pass.out_size.h));
+	glViewport(static_cast<GLsizei>(target_rect.x),
+	           static_cast<GLsizei>(target_rect.y),
+	           static_cast<GLsizei>(target_rect.w),
+	           static_cast<GLsizei>(target_rect.h));
 
 	// Apply shader by drawing an oversized triangle
 	glBindVertexArray(vertex_array_object);
