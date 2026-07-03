@@ -178,7 +178,7 @@ static ImageInfo _vgaImageInfo    = {};
 static double _vgaFramesPerSecond = 0.0;
 
 // state captured from current/active MPEG player
-static PlayerPicturePixel _mpegPictureBuffer[ScalerMaxWidth * ScalerMaxHeight];
+static PlayerPicturePixel _mpegPictureBuffer[RenderMaxWidth * RenderMaxHeight];
 static PlayerPicturePixel* _mpegPictureBufferPtr = _mpegPictureBuffer;
 
 static uint32_t _mpegPictureWidth  = 0;
@@ -196,7 +196,7 @@ ReelMagic_ScalerLineHandler ReelMagic_RENDER_DrawLine = RMR_DrawLine_Passthrough
 static ReelMagic_VideoMixerMPEGProvider* _requestedMpegProvider = nullptr;
 static ReelMagic_VideoMixerMPEGProvider* _activeMpegProvider    = nullptr;
 
-static RenderOutputPixel _finalMixedRenderLineBuffer[ScalerMaxWidth];
+static RenderOutputPixel _finalMixedRenderLineBuffer[RenderMaxWidth];
 static Bitu _currentRenderLineNumber = 0;
 static uint32_t _renderWidth         = 0;
 static uint32_t _renderHeight        = 0;
@@ -668,7 +668,7 @@ void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider* const
 	assert(provider);
 	// Can our MPEG picture buffer accomodate the provider's picture size?
 	const auto dimensions = provider->GetAttrs().PictureSize;
-	if (dimensions.Width > ScalerMaxWidth || dimensions.Height > ScalerMaxHeight) {
+	if (dimensions.Width > RenderMaxWidth || dimensions.Height > RenderMaxHeight) {
 		LOG(LOG_REELMAGIC, LOG_ERROR)(
 		        "Video Mixing Buffers Too Small for MPEG Video Size. Reject Player Push");
 		return;

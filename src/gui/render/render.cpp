@@ -544,8 +544,8 @@ void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second)
 	render.last_complete_source.valid = false;
 
 	if (image_info.width == 0 || image_info.height == 0 ||
-	    image_info.width > ScalerMaxWidth ||
-	    image_info.height > ScalerMaxHeight) {
+	    image_info.width > RenderMaxWidth ||
+	    image_info.height > RenderMaxHeight) {
 		return;
 	}
 

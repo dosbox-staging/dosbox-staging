@@ -100,7 +100,7 @@ typedef uint8_t* (*VGA_Line_Handler)(Bitu vidstart, Bitu line);
 static VGA_Line_Handler VGA_DrawLine;
 
 constexpr auto MaxPixelBytes = sizeof(uint32_t);
-constexpr auto MaxRowBytes   = ScalerMaxWidth * MaxPixelBytes;
+constexpr auto MaxRowBytes   = RenderMaxWidth * MaxPixelBytes;
 
 // The line buffer can be written in units up to RGB888 pixels (32-bit) size
 alignas(uint64_t) static std::array<uint8_t, MaxRowBytes> templine_buffer;
@@ -217,9 +217,9 @@ static uint8_t byte_clamp(int v)
 
 static uint8_t* Composite_Process(uint8_t border, uint32_t blocks, bool double_width)
 {
-	static int temp[ScalerMaxWidth + 10] = {0};
-	static int atemp[ScalerMaxWidth + 2] = {0};
-	static int btemp[ScalerMaxWidth + 2] = {0};
+	static int temp[RenderMaxWidth + 10] = {0};
+	static int atemp[RenderMaxWidth + 2] = {0};
+	static int btemp[RenderMaxWidth + 2] = {0};
 
 	int w = blocks * 4;
 
@@ -3197,7 +3197,7 @@ ImageInfo setup_drawing()
 
 	vga.draw.vblank_skip = vblank_skip;
 
-	assert(render_height > 0 && render_height <= ScalerMaxHeight);
+	assert(render_height > 0 && render_height <= RenderMaxHeight);
 	vga.draw.lines_total = render_height;
 
 	vga.draw.line_length = render_width *
@@ -3317,20 +3317,20 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		vga.draw.image_info = image_info;
 
-		if (image_info.width > ScalerMaxWidth ||
-		    image_info.height > ScalerMaxHeight) {
+		if (image_info.width > RenderMaxWidth ||
+		    image_info.height > RenderMaxHeight) {
 			LOG_ERR("VGA: The calculated video resolution %ux%u will be "
 			        "limited to the maximum of %ux%u",
 			        image_info.width,
 			        image_info.height,
-			        ScalerMaxWidth,
-			        ScalerMaxHeight);
+			        RenderMaxWidth,
+			        RenderMaxHeight);
 
 			vga.draw.image_info.width = std::min(image_info.width,
-			                                     ScalerMaxWidth);
+			                                     RenderMaxWidth);
 
 			vga.draw.image_info.height = std::min(image_info.height,
-			                                      ScalerMaxHeight);
+			                                      RenderMaxHeight);
 		}
 
 		vga.draw.lines_scaled = image_info.forced_single_scan ? 2 : 1;
