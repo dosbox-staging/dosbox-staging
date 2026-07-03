@@ -97,9 +97,12 @@ void GFX_Stop();
 
 // Upload one complete source-dimension BGRX32 frame to the render backend
 // (see `RenderBackend::UploadFrame()`). Called from the present path when
-// the latched source frame is newer than the backend's copy.
-void GFX_UploadFrame(const uint32_t* pixels, const int width_px, const int height_px,
-                     const int pitch_bytes, const bool double_width,
+// the latched source frame is newer than the backend's copy. `first_row`
+// and `num_rows` bound the rows that changed since the last upload;
+// `pixels` always points at the complete frame.
+void GFX_UploadFrame(const uint32_t* pixels, const int width_px,
+                     const int height_px, const int pitch_bytes, const int first_row,
+                     const int num_rows, const bool double_width,
                      const bool double_height, const VideoMode& video_mode);
 
 // Called at the end of every frame; triggers the frame present in
