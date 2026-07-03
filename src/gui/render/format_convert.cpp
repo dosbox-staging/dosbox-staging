@@ -54,3 +54,17 @@ void CopyBgrx32(const uint32_t* src, uint32_t* dst, const int num_pixels)
 {
 	std::memcpy(dst, src, static_cast<size_t>(num_pixels) * sizeof(uint32_t));
 }
+
+void ExpandBgrx32Row(const uint32_t* src, uint32_t* dst, const int src_width_px,
+                     const bool double_width)
+{
+	if (!double_width) {
+		CopyBgrx32(src, dst, src_width_px);
+		return;
+	}
+
+	for (auto x = 0; x < src_width_px; ++x) {
+		dst[x * 2 + 0] = src[x];
+		dst[x * 2 + 1] = src[x];
+	}
+}
