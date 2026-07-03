@@ -455,12 +455,26 @@ void OpenGlRenderer::PresentFrame()
 		return;
 	}
 
-	// Re-run the shader pipeline into its viewport-sized output FBO only
-	// when the input frame or the pipeline settings have changed;
-	// otherwise the cached output is re-blitted below. A static DOS
-	// screen presents with a single blit instead of re-running a
-	// potentially expensive shader at host rate.
-	if (shader_pipeline->IsOutputStale()) {
+	const auto capture_pending = CAPTURE_IsCapturingPostRenderImage();
+
+	// Fast path for changed frames: render the pipeline with the final
+	// pass drawing straight into the backbuffer, skipping the output FBO
+	// write and the full-viewport blit below (a significant per-present
+	// saving on large viewports). The FBO is only refreshed lazily below
+	// when a clean present or a rendered capture actually reads it.
+	if (shader_pipeline->IsOutputStale() && !capture_pending) {
+		shader_pipeline->RenderToBackbuffer(vao);
+		SDL_GL_SwapWindow(window);
+		return;
+	}
+
+	// Clean presents re-blit the cached pipeline output from the
+	// viewport-sized output FBO: a static DOS screen presents with a
+	// single blit instead of re-running a potentially expensive shader
+	// at host rate. Rendered captures also take this path, so
+	// `ReadPixelsPostShader()` can read the complete output back from
+	// the FBO.
+	if (shader_pipeline->IsOutputFboStale()) {
 		shader_pipeline->Render(vao);
 	}
 
@@ -488,10 +502,10 @@ void OpenGlRenderer::PresentFrame()
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 	// Optionally capture frame
-	if (CAPTURE_IsCapturingPostRenderImage()) {
+	if (capture_pending) {
 		// glReadPixels() implicitly blocks until all pipelined
 		// rendering commands have finished, so we're guaranteed to
-		// read the contents of the up-to-date backbuffer here right
+		// read the contents of the up-to-date output FBO here right
 		// before the buffer swap.
 		//
 		GFX_CaptureRenderedImage();
@@ -683,8 +697,7 @@ ShaderDescriptor OpenGlRenderer::GetCurrentShaderDescriptor()
 	return curr_shader_descriptor;
 }
 
-RenderedImage OpenGlRenderer::ReadPixelsPostShader(
-        [[maybe_unused]] const DosBox::Rect output_rect_px)
+RenderedImage OpenGlRenderer::ReadPixelsPostShader([[maybe_unused]] const DosBox::Rect output_rect_px)
 {
 	// The complete shader pipeline output is read back from the
 	// viewport-sized output FBO. Unlike the passed-in rectangle (which
