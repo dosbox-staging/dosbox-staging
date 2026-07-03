@@ -6,10 +6,13 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include "misc/rendered_image.h"
 #include "misc/video.h"
+
+#include "image_compare.h"
 
 namespace {
 
@@ -660,4 +663,230 @@ TEST(DeinterlacerTest, CopyingDeinterlacePassesThroughNonFmvModes)
 
 	EXPECT_EQ(result.image_data, image.image_data);
 	EXPECT_EQ(result.params.pixel_format, PixelFormat::BGRX32_ByteArray);
+}
+
+// ----------------------------------------------------------------------------
+// Golden-image tests
+//
+// Run checked-in input frames (tests/deinterlacer_data/inputs/) through the
+// deinterlacer and compare the results against checked-in reference images
+// (tests/deinterlacer_data/expected/). See tests/deinterlacer_data/README.md
+// for the input-frame provenance and the reference regeneration workflow.
+// ----------------------------------------------------------------------------
+
+namespace {
+
+const std_fs::path DeinterlacerDataDir = "tests/deinterlacer_data";
+
+// The deinterlacer is deterministic integer math, so references must match
+// exactly
+constexpr float GoldenTolerance = 0.0f;
+
+VideoMode GoldenLineVideoMode()
+{
+	VideoMode mode = {};
+
+	mode.bios_mode_number = 0x101;
+	mode.is_graphics_mode = true;
+	mode.width            = 640;
+	mode.height           = 480;
+	mode.color_depth      = ColorDepth::IndexedColor256;
+
+	return mode;
+}
+
+// Load an input PNG as packed BGRX32 pixels (X byte zeroed). Returns an
+// empty vector on failure.
+std::vector<uint32_t> LoadInputBgrx32(const std::string& name, int& width, int& height)
+{
+	DecodedImage decoded = {};
+	if (!DecodePng(DeinterlacerDataDir / "inputs" / name, decoded)) {
+		return {};
+	}
+
+	std::vector<uint32_t> pixels(static_cast<size_t>(decoded.width) *
+	                             decoded.height);
+
+	for (size_t i = 0; i < pixels.size(); ++i) {
+		const uint32_t r = decoded.rgb[i * 3 + 0];
+		const uint32_t g = decoded.rgb[i * 3 + 1];
+		const uint32_t b = decoded.rgb[i * 3 + 2];
+
+		pixels[i] = (r << 16) | (g << 8) | b;
+	}
+
+	width  = decoded.width;
+	height = decoded.height;
+
+	return pixels;
+}
+
+// Repack packed BGRX32 pixels as flat RGB for image comparison (drops the
+// unused X byte)
+DecodedImage ToDecodedImage(const uint32_t* pixels, const int width, const int height)
+{
+	DecodedImage out = {};
+
+	out.width  = width;
+	out.height = height;
+	out.rgb.resize(static_cast<size_t>(width) * height * 3);
+
+	size_t i = 0;
+	for (size_t p = 0; p < static_cast<size_t>(width) * height; ++p) {
+		const auto px = pixels[p];
+
+		out.rgb[i++] = (px >> 16) & 0xff;
+		out.rgb[i++] = (px >> 8) & 0xff;
+		out.rgb[i++] = px & 0xff;
+	}
+	return out;
+}
+
+DecodedImage ToDecodedImage(const RenderedImage& image)
+{
+	assert(image.params.pixel_format == PixelFormat::BGRX32_ByteArray);
+	assert(image.pitch ==
+	       image.params.width * static_cast<int>(sizeof(uint32_t)));
+
+	return ToDecodedImage(reinterpret_cast<const uint32_t*>(image.image_data),
+	                      image.params.width,
+	                      image.params.height);
+}
+
+} // namespace
+
+class DeinterlacerGoldenTest : public ::testing::Test {
+protected:
+	static void SetUpTestSuite()
+	{
+		RemoveStaleActualImages(DeinterlacerDataDir / "expected");
+	}
+
+	static std::string ReferenceName()
+	{
+		return testing::UnitTest::GetInstance()->current_test_info()->name();
+	}
+
+	// Display-path case: load the input frame, deinterlace it in place,
+	// compare against the reference named after the test.
+	void RunDisplayPathCase(const std::string& input_name,
+	                        const VideoMode& video_mode,
+	                        const DeinterlacingStrength strength)
+	{
+		int width  = 0;
+		int height = 0;
+
+		auto pixels = LoadInputBgrx32(input_name, width, height);
+		ASSERT_FALSE(pixels.empty()) << "failed to load input " << input_name;
+
+		const auto input = ToDecodedImage(pixels.data(), width, height);
+
+		const auto image = MakeBgrx32ImageView(pixels, width, height, video_mode);
+
+		Deinterlacer deinterlacer = {};
+		deinterlacer.DeinterlaceInPlace(image, strength);
+
+		const auto actual = ToDecodedImage(pixels.data(), width, height);
+
+		// Guards against a silent passthrough getting blessed as a
+		// reference (e.g. the input frame's pattern not being detected)
+		EXPECT_GT(ComparePixels(input, actual), 0.0f)
+		        << "deinterlacing left the input frame unchanged";
+
+		ExpectMatchesReference(actual,
+		                       DeinterlacerDataDir / "expected",
+		                       ReferenceName(),
+		                       GoldenTolerance);
+	}
+
+	// Capture-path case: load the input frame, run it through the
+	// non-mutating variant, compare the un-doubled BGRX32 result against
+	// the reference named after the test.
+	void RunCapturePathCase(const std::string& input_name,
+	                        const VideoMode& video_mode,
+	                        const DeinterlacingStrength strength)
+	{
+		int width  = 0;
+		int height = 0;
+
+		auto pixels = LoadInputBgrx32(input_name, width, height);
+		ASSERT_FALSE(pixels.empty()) << "failed to load input " << input_name;
+
+		const auto image = MakeBgrx32ImageView(pixels, width, height, video_mode);
+
+		Deinterlacer deinterlacer = {};
+		const auto result = deinterlacer.Deinterlace(image, strength);
+
+		ASSERT_EQ(result.params.pixel_format, PixelFormat::BGRX32_ByteArray);
+		ASSERT_EQ(result.params.width, video_mode.width);
+		ASSERT_EQ(result.params.height, video_mode.height);
+
+		ExpectMatchesReference(ToDecodedImage(result),
+		                       DeinterlacerDataDir / "expected",
+		                       ReferenceName(),
+		                       GoldenTolerance);
+	}
+};
+
+TEST_F(DeinterlacerGoldenTest, LineDisplayLight)
+{
+	RunDisplayPathCase("line-640x480.png",
+	                   GoldenLineVideoMode(),
+	                   DeinterlacingStrength::Light);
+}
+
+TEST_F(DeinterlacerGoldenTest, LineDisplayMedium)
+{
+	RunDisplayPathCase("line-640x480.png",
+	                   GoldenLineVideoMode(),
+	                   DeinterlacingStrength::Medium);
+}
+
+TEST_F(DeinterlacerGoldenTest, LineDisplayStrong)
+{
+	RunDisplayPathCase("line-640x480.png",
+	                   GoldenLineVideoMode(),
+	                   DeinterlacingStrength::Strong);
+}
+
+TEST_F(DeinterlacerGoldenTest, LineDisplayFull)
+{
+	RunDisplayPathCase("line-640x480.png",
+	                   GoldenLineVideoMode(),
+	                   DeinterlacingStrength::Full);
+}
+
+TEST_F(DeinterlacerGoldenTest, DotDisplayFull)
+{
+	// Single-scanned mode 13h frame: the 2x2 dot writer
+	RunDisplayPathCase("dot-320x200.png",
+	                   DotFmvVideoMode(),
+	                   DeinterlacingStrength::Full);
+}
+
+TEST_F(DeinterlacerGoldenTest, DotDisplayDoubleScannedFull)
+{
+	// Baked double-scanned mode 13h frame (320x400 for a 320x200 video
+	// mode): the 2x4 dot writer
+	RunDisplayPathCase("dot-320x400.png",
+	                   DotFmvVideoMode(),
+	                   DeinterlacingStrength::Full);
+}
+
+TEST_F(DeinterlacerGoldenTest, DotDisplayDoubledFull)
+{
+	// Width- and height-doubled mode 13h frame (640x400 for a 320x200
+	// video mode): the 4x4 dot writer
+	RunDisplayPathCase("dot-640x400.png",
+	                   DotFmvVideoMode(),
+	                   DeinterlacingStrength::Full);
+}
+
+TEST_F(DeinterlacerGoldenTest, DotCaptureDoubleScannedFull)
+{
+	// The capture path un-doubles the baked double scanning: 320x400
+	// input comes out as a deinterlaced 320x200 frame
+	RunCapturePathCase("dot-320x400.png",
+	                   DotFmvVideoMode(),
+	                   DeinterlacingStrength::Full);
 }
