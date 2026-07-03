@@ -37,7 +37,7 @@ uint32_t Deinterlacer::DetectBackgroundColor(const uint32_t* pixel_data) const
 
 	// The fastest way is to create a row's worth of data filled with our
 	// background colour candidate, and then memcmp it to the actual rows.
-	std::array<uint32_t, ScalerMaxWidth> bg_color_row = {};
+	std::array<uint32_t, RenderMaxWidth> bg_color_row = {};
 	for (auto x = 0; x < image.width; ++x) {
 		bg_color_row[x] = top_left_pixel_color;
 	}
