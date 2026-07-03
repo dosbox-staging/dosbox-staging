@@ -595,7 +595,7 @@ static void compress_raw_frame(const RenderedImage& image)
 void capture_video_add_frame(const RenderedImage& image, const float frames_per_second)
 {
 	const auto& src = image.params;
-	assert(src.width <= ScalerMaxWidth);
+	assert(src.width <= RenderMaxWidth);
 
 	// To reconstruct the raw image, we must skip every second row when
 	// dealing with "baked-in" double scanning.

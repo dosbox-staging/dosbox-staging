@@ -25,11 +25,11 @@
 // rely on reading past the end of a row; the padding survives purely as
 // buffer-sizing capacity.
 
-// Make sure ScalerMaxWidth remains a multiple of 8
-constexpr int ScalerWidthExtraPadding = 8 * 5;
+// Make sure RenderMaxWidth remains a multiple of 8
+constexpr int RenderWidthExtraPadding = 8 * 5;
 
-constexpr int ScalerMaxWidth  = 1600 + ScalerWidthExtraPadding;
-constexpr int ScalerMaxHeight = 1200;
+constexpr int RenderMaxWidth  = 1600 + RenderWidthExtraPadding;
+constexpr int RenderMaxHeight = 1200;
 
 enum class ViewportMode { Fit, Relative };
 
@@ -96,14 +96,14 @@ struct Render {
 		// Source pixels at `render.src` dimensions (baked-in VGA
 		// scaling included)
 		alignas(uint64_t)
-		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> pixels = {};
+		        std::array<uint32_t, RenderMaxWidth * RenderMaxHeight> pixels = {};
 	} curr_source = {};
 
 	// Present-time scratch buffer the latched source frame is expanded
 	// into (32-bit BGRX pixels at source dimensions) before it's handed
 	// to the render backend
 	alignas(uint64_t)
-	        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> upload_buf = {};
+	        std::array<uint32_t, RenderMaxWidth * RenderMaxHeight> upload_buf = {};
 
 	// Source-pixel snapshot of the last completed frame. Deep-copied from
 	// `curr_source.pixels` at the end of every dirty
@@ -115,7 +115,7 @@ struct Render {
 	// `RENDER_RescaleLastFrame()` after a pause-time recreate.
 	struct {
 		alignas(uint64_t)
-		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> pixels = {};
+		        std::array<uint32_t, RenderMaxWidth * RenderMaxHeight> pixels = {};
 
 		ImageInfo src = {};
 
