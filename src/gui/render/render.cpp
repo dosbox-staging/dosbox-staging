@@ -135,11 +135,11 @@ static void halt_render()
 }
 
 // Returns a non-owning view into the latched source frame
-// (`render.last_complete_source`) -- never the live `render.curr_source.pixels`,
-// so callers can't see a torn mid-scanout state. When deinterlacing is on
-// and the video mode qualifies, the returned image is a view into the
-// deinterlacer's internal buffer (un-doubled 32-bit BGRX); the latch is
-// never modified.
+// (`render.last_complete_source`) -- never the live
+// `render.curr_source.pixels`, so callers can't see a torn mid-scanout state.
+// When deinterlacing is on and the video mode qualifies, the returned image is
+// a view into the deinterlacer's internal buffer (un-doubled 32-bit BGRX); the
+// latch is never modified.
 //
 // `image_data` is null until the first complete frame has been latched;
 // callers must check.
@@ -234,6 +234,8 @@ void RENDER_MaybeUploadFrame()
 	// expanded in one go
 	auto* dst = render.upload_buf.data();
 
+	const uint32_t* upload_pixels = dst;
+
 	switch (latch.src.pixel_format) {
 	case PixelFormat::Indexed8: {
 		std::array<uint32_t, NumVgaColors> palette_lut = {};
@@ -272,7 +274,15 @@ void RENDER_MaybeUploadFrame()
 		break;
 
 	case PixelFormat::BGRX32_ByteArray:
-		CopyBgrx32(latch.pixels.data(), dst, num_pixels);
+		// Already in upload format: upload straight from the latch and
+		// skip the full-frame copy -- unless the deinterlacer needs a
+		// mutable copy in the upload buffer (it must not modify the
+		// latch).
+		if (is_deinterlacing()) {
+			CopyBgrx32(latch.pixels.data(), dst, num_pixels);
+		} else {
+			upload_pixels = latch.pixels.data();
+		}
 		break;
 
 	default:
@@ -298,7 +308,7 @@ void RENDER_MaybeUploadFrame()
 		                                        render.deinterlacing_strength);
 	}
 
-	GFX_UploadFrame(dst,
+	GFX_UploadFrame(upload_pixels,
 	                width,
 	                height,
 	                width * static_cast<int>(sizeof(uint32_t)),
