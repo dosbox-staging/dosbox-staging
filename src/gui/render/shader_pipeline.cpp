@@ -173,16 +173,22 @@ void ShaderPipeline::NotifyViewportSizeChanged(const DosBox::Rect& new_viewport)
 
 void ShaderPipeline::NotifyRenderSizeChanged(const int input_texture_width,
                                              const int input_texture_height,
+                                             const bool double_width,
+                                             const bool double_height,
                                              const GLuint new_input_texture)
 {
 	if ((ifloor(input_texture.size.w) == input_texture_width) &&
 	    (ifloor(input_texture.size.h) == input_texture_height) &&
+	    (input_texture.double_width == double_width) &&
+	    (input_texture.double_height == double_height) &&
 	    (input_texture.texture == new_input_texture)) {
 		return;
 	}
 
-	input_texture.size    = {input_texture_width, input_texture_height};
-	input_texture.texture = new_input_texture;
+	input_texture.size = {input_texture_width, input_texture_height};
+	input_texture.double_width  = double_width;
+	input_texture.double_height = double_height;
+	input_texture.texture       = new_input_texture;
 
 	if (IsPipelineComplete()) {
 		DestroyPipeline();
@@ -245,6 +251,16 @@ void ShaderPipeline::LoadAndAddInternalPasses()
 		// Resize the image to the size of the rendered imge. This can
 		// perform width and/or doubling.
 		LoadAndAddInternalPassOrExit("integer-upscale");
+
+	} else if (input_texture.double_width || input_texture.double_height) {
+		// Promote the source-dimension input to the `Rendered` size.
+		// Only inserted when there is any doubling to do, so
+		// non-doubled modes are spared a redundant full-resolution
+		// pass. Runs after `image-adjustments` on purpose: per-pixel
+		// colour math is cheaper at source dimensions, and
+		// nearest-neighbour upscaling commutes with pointwise
+		// operations.
+		LoadAndAddInternalPassOrExit("integer-upscale");
 	}
 
 	// Main shader pass (e.g., a CRT shader, the sharp shader, an upscaler,
@@ -272,7 +288,13 @@ void ShaderPipeline::SetPassOutputSizes()
 			}
 
 			case Rendered:
-				return {input_texture.size.w, input_texture.size.h};
+				// The input texture holds source-dimension
+				// pixels; the doubling flags promote it to the
+				// rendered size
+				return {input_texture.size.w *
+				                (input_texture.double_width ? 2 : 1),
+				        input_texture.size.h *
+				                (input_texture.double_height ? 2 : 1)};
 
 			case VideoMode:
 				return {video_mode.width, video_mode.height};
@@ -577,8 +599,7 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 		const auto in_texture_name = format_str("INPUT_TEXTURE_%d", i);
 		pass->shader.SetUniform1i(in_texture_name, check_cast<GLint>(i));
 
-		const auto in_texture_size_name = format_str("INPUT_SIZE_%d",
-		                                             i);
+		const auto in_texture_size_name = format_str("INPUT_SIZE_%d", i);
 
 		pass->shader.SetUniform2f(in_texture_size_name,
 		                          in_texture_size.w,
@@ -587,9 +608,7 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 		pass->in_textures.emplace_back(in_texture);
 	}
 
-	shader.SetUniform2f("OUTPUT_SIZE",
-	                    pass->out_size.w,
-	                    pass->out_size.h);
+	shader.SetUniform2f("OUTPUT_SIZE", pass->out_size.w, pass->out_size.h);
 }
 
 void ShaderPipeline::UpdatePassTextureUniforms()
