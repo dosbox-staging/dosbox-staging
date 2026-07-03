@@ -86,13 +86,14 @@ struct Render {
 	double fps = 0;
 
 	struct {
-		bool clear_cache = false;
-
 		ScalerLineHandler line_handler         = nullptr;
 		ScalerLineHandler line_palette_handler = nullptr;
 
 		int cache_pitch     = 0;
 		uint8_t* cache_read = nullptr;
+
+		// The row the next `RENDER_DrawLine()` call writes into `cache`
+		int curr_row = 0;
 
 		alignas(uint64_t)
 		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
