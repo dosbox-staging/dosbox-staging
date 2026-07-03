@@ -49,6 +49,7 @@ public:
 
 	void NotifyRenderSizeChanged(const int input_texture_width,
 	                             const int input_texture_height,
+	                             const bool double_width, const bool double_height,
 	                             const GLuint input_texture);
 
 	void NotifyViewportSizeChanged(const DosBox::Rect& viewport);
@@ -101,6 +102,12 @@ private:
 	struct {
 		DosBox::Rect size = {};
 		GLuint texture    = 0;
+
+		// Additional doubling requested on top of the input texture
+		// dimensions; the `Rendered` output size is the input texture
+		// size multiplied by these.
+		bool double_width  = false;
+		bool double_height = false;
 	} input_texture = {};
 
 	VideoMode video_mode  = {};
