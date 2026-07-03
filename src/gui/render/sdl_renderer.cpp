@@ -11,6 +11,7 @@
 
 #include "capture/capture.h"
 #include "config/setup.h"
+#include "gui/render/format_convert.h"
 #include "misc/video.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
@@ -19,14 +20,14 @@ CHECK_NARROWING();
 
 static constexpr SDL_PixelFormat SdlPixelFormat = SDL_PIXELFORMAT_XRGB8888;
 
-SdlRenderer::SdlRenderer(const int x, const int y,
-						 const int width, const int height,
-						 const SDL_WindowFlags sdl_window_flags,
+SdlRenderer::SdlRenderer(const int x, const int y, const int width,
+                         const int height, const SDL_WindowFlags sdl_window_flags,
                          const std::string& render_driver,
                          TextureFilterMode texture_filter_mode)
         : texture_filter_mode(texture_filter_mode)
 {
-	SDL_WindowFlags flags = sdl_window_flags | OpenGlDriverCrashWorkaround(render_driver);
+	SDL_WindowFlags flags = sdl_window_flags |
+	                        OpenGlDriverCrashWorkaround(render_driver);
 
 	SDL_PropertiesID props = SDL_CreateProperties();
 	SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING, DOSBOX_NAME);
@@ -34,7 +35,7 @@ SdlRenderer::SdlRenderer(const int x, const int y,
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, y);
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, width);
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);
-	
+
 	// For window flags you should use separate window creation properties,
 	// but for easier migration from SDL2 you can use the following:
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER, flags);
@@ -91,8 +92,9 @@ SDL_WindowFlags SdlRenderer::OpenGlDriverCrashWorkaround(const std::string_view 
 
 	// According to SDL3 all renderers support target textures; the default
 	// driver is the first in the list, so just query its name.
-	const char *name = SDL_GetRenderDriver(0);
-	default_driver_is_opengl = (name && std::string_view(name).starts_with("opengl"));
+	const char* name         = SDL_GetRenderDriver(0);
+	default_driver_is_opengl = (name &&
+	                            std::string_view(name).starts_with("opengl"));
 
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
@@ -190,18 +192,33 @@ void SdlRenderer::NotifyViewportSizeChanged(const DosBox::Rect draw_rect_px)
 	}
 }
 
-void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
-                                          const int render_height_px)
+void SdlRenderer::NotifyRenderSizeChanged([[maybe_unused]] const int render_width_px,
+                                          [[maybe_unused]] const int render_height_px)
+{
+	// No-op: the texture is sized to the CPU-doubled frame dimensions
+	// from within `UploadFrame()`.
+}
+
+void SdlRenderer::MaybeRecreateTexture(const int width_px, const int height_px)
 {
 	if (texture) {
+		float curr_width_px  = 0.0f;
+		float curr_height_px = 0.0f;
+
+		SDL_GetTextureSize(texture, &curr_width_px, &curr_height_px);
+
+		if (static_cast<int>(curr_width_px) == width_px &&
+		    static_cast<int>(curr_height_px) == height_px) {
+			return;
+		}
 		SDL_DestroyTexture(texture);
 	}
 
 	texture = SDL_CreateTexture(renderer,
 	                            SdlPixelFormat,
 	                            SDL_TEXTUREACCESS_STREAMING,
-	                            render_width_px,
-	                            render_height_px);
+	                            width_px,
+	                            height_px);
 	if (!texture) {
 		LOG_ERR("SDL: Error creating SDL texture: %s", SDL_GetError());
 		return;
@@ -210,7 +227,7 @@ void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 	switch (texture_filter_mode) {
 	case TextureFilterMode::NearestNeighbour:
 		if (!SDL_SetTextureScaleMode(texture,
-		                            SDL_ScaleMode::SDL_SCALEMODE_NEAREST)) {
+		                             SDL_ScaleMode::SDL_SCALEMODE_NEAREST)) {
 			LOG_ERR("SDL: Error setting texture filtering mode: %s",
 			        SDL_GetError());
 		}
@@ -218,7 +235,7 @@ void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 
 	case TextureFilterMode::Bilinear:
 		if (!SDL_SetTextureScaleMode(texture,
-		                            SDL_ScaleMode::SDL_SCALEMODE_LINEAR)) {
+		                             SDL_ScaleMode::SDL_SCALEMODE_LINEAR)) {
 			LOG_ERR("SDL: Error setting texture filtering mode: %s",
 			        SDL_GetError());
 		}
@@ -226,29 +243,48 @@ void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 
 	default: assertm(false, "Invalid TextureFilterMode"); return;
 	}
+}
 
-	if (curr_framebuf) {
-		SDL_DestroySurface(curr_framebuf);
-	}
-	if (last_framebuf) {
-		SDL_DestroySurface(last_framebuf);
-	}
+void SdlRenderer::UploadFrame(const uint32_t* pixels, const int width_px,
+                              const int height_px, const int pitch_bytes,
+                              const bool double_width, const bool double_height,
+                              [[maybe_unused]] const VideoMode& video_mode)
+{
+	// The SDL renderer has no shader pipeline to promote the source-size
+	// frame to the rendered size, so the doubling is done on the CPU,
+	// in-flight while writing the rows into the texture.
+	const auto x_scale = double_width ? 2 : 1;
+	const auto y_scale = double_height ? 2 : 1;
 
-	curr_framebuf = SDL_CreateSurface(
-	                                               render_width_px,
-	                                               render_height_px,
-	                                               SdlPixelFormat);
+	MaybeRecreateTexture(width_px * x_scale, height_px * y_scale);
 
-	last_framebuf = SDL_CreateSurface(
-	                                               render_width_px,
-	                                               render_height_px,
-	                                               SdlPixelFormat);
-
-	if (!curr_framebuf || !last_framebuf) {
-		SDL_DestroyTexture(texture);
-		LOG_ERR("SDL: Error creating input surface: %s", SDL_GetError());
+	if (!texture) {
 		return;
 	}
+
+	void* dst           = nullptr;
+	int dst_pitch_bytes = 0;
+
+	// A streaming texture's previous contents are undefined after
+	// locking, but every upload writes the complete frame
+	if (!SDL_LockTexture(texture, nullptr, &dst, &dst_pitch_bytes)) {
+		LOG_ERR("SDL: Error locking texture: %s", SDL_GetError());
+		return;
+	}
+
+	const auto src_pitch_px = pitch_bytes / static_cast<int>(sizeof(uint32_t));
+
+	for (auto out_y = 0; out_y < height_px * y_scale; ++out_y) {
+		const auto* src_row = pixels + (out_y / y_scale) * src_pitch_px;
+
+		auto* dst_row = reinterpret_cast<uint32_t*>(
+		        static_cast<uint8_t*>(dst) +
+		        static_cast<size_t>(out_y) * dst_pitch_bytes);
+
+		ExpandBgrx32Row(src_row, dst_row, width_px, double_width);
+	}
+
+	SDL_UnlockTexture(texture);
 }
 
 SdlRenderer::SetShaderResult SdlRenderer::SetShader(
@@ -335,29 +371,19 @@ void SdlRenderer::EndFrame()
 
 void SdlRenderer::PrepareFrame()
 {
-	assert(texture);
-	assert(last_framebuf);
-
-	if (SDL_MUSTLOCK(last_framebuf)) {
-		SDL_UnlockSurface(last_framebuf);
-	}
-
-	if (last_framebuf_dirty) {
-		SDL_UpdateTexture(texture,
-		                  nullptr, // entire texture
-		                  last_framebuf->pixels,
-		                  last_framebuf->pitch);
-
-		last_framebuf_dirty = false;
-	}
+	// `UploadFrame()` writes directly into the texture, so there is
+	// nothing to prepare. (This remains part of the interface until the
+	// StartFrame/EndFrame protocol is removed.)
 }
 
 void SdlRenderer::PresentFrame()
 {
-	assert(texture);
-
 	SDL_RenderClear(renderer);
-	SDL_RenderTexture(renderer, texture, nullptr, nullptr);
+
+	// Null until the first frame has been uploaded
+	if (texture) {
+		SDL_RenderTexture(renderer, texture, nullptr, nullptr);
+	}
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {
 		// glReadPixels() implicitly blocks until all pipelined
@@ -375,8 +401,8 @@ void SdlRenderer::SetVsync(const bool is_enabled)
 {
 	if (!SDL_SetRenderVSync(renderer, (is_enabled ? 1 : 0))) {
 		LOG_WARNING("SDL: Error %s vsync: %s",
-		        (is_enabled ? "enabling" : "disabling"),
-		        SDL_GetError());
+		            (is_enabled ? "enabling" : "disabling"),
+		            SDL_GetError());
 	}
 }
 
@@ -419,7 +445,7 @@ RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_p
 	const auto image_size_bytes = check_cast<uint32_t>(image.params.height *
 	                                                   image.pitch);
 
-	image.image_data   = new uint8_t[image_size_bytes];
+	image.image_data = new uint8_t[image_size_bytes];
 
 	image.is_flipped_vertically = false;
 
