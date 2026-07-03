@@ -23,6 +23,7 @@
 #include "cpu/paging.h"
 #include "cpu/registers.h"
 #include "dos/dos.h"
+#include "dos/dos_append.h"
 #include "dos/drives.h"
 #include "dos/programs/more_output.h"
 #include "hardware/pic.h"
@@ -37,6 +38,7 @@
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {
+	{ "APPEND",   {&DOS_Shell::CMD_APPEND,   "APPEND",   HELP_Filter::All,    HELP_Category::Misc } },
 	{ "CALL",     {&DOS_Shell::CMD_CALL,     "CALL",     HELP_Filter::All,    HELP_Category::Batch } },
 	{ "CD",       {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::Common, HELP_Category::File } },
 	{ "CHDIR",    {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::All,    HELP_Category::File } },
@@ -2732,4 +2734,67 @@ void DOS_Shell::CMD_FOR(char* args)
 		cmd_array[CMD_MAXLINE - 1] = '\0';
 		ParseLine(cmd_array);
 	}
+}
+
+void DOS_Shell::CMD_APPEND(char* args) {
+	HELP("APPEND");
+	StripSpaces(args);
+
+	if (!args || std::strlen(args) == 0) {
+		if (DOS_Append::IsActive()) {
+			std::string out = "APPEND=";
+			const auto& paths = DOS_Append::GetPaths();
+			for (size_t i = 0; i < paths.size(); ++i) {
+				out += paths[i];
+				if (i < paths.size() - 1) {
+					out += ";";
+				}
+			}
+			WriteOut("%s\n", out.c_str());
+		} else {
+			WriteOut("No Append\n");
+		}
+		return;
+	}
+
+	std::string args_str(args);
+	std::string args_upper = args_str;
+	std::transform(args_upper.begin(), args_upper.end(), args_upper.begin(), ::toupper);
+
+	// Parse MS-DOS Executable (/X) switches. When enabled, APPEND will 
+	// intercept executable resolutions (.COM, .EXE, .BAT) in addition to data files.
+	if (args_upper == "/X" || args_upper == "/X:ON" || args_upper == "/E") {
+		DOS_Append::SetExecutableMode(true);
+		return;
+	}
+	if (args_upper == "/X:OFF") {
+		DOS_Append::SetExecutableMode(false);
+		return;
+	}
+	if (args_upper == "/PATH:ON" || args_upper == "/PATH:OFF") {
+		// Legacy data file switches (default behavior, no-op in our subset)
+		return;
+	}
+
+	// Semicolon alone clears the active appended paths
+	if (args_upper == ";") {
+		DOS_Append::SetPaths("");
+		SetEnv("APPEND", "");
+		return;
+	}
+
+	// Update the internal service state with the new paths
+	DOS_Append::SetPaths(args_str);
+
+	// Synchronize the %APPEND% environment variable. This allows external DOS 
+	// programs and legacy installers to verify that the APPEND service is active.
+	std::string env_out = "";
+	const auto& paths = DOS_Append::GetPaths();
+	for (size_t i = 0; i < paths.size(); ++i) {
+		env_out += paths[i];
+		if (i < paths.size() - 1) {
+			env_out += ";";
+		}
+	}
+	SetEnv("APPEND", env_out);
 }

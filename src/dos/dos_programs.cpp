@@ -4,6 +4,7 @@
 
 #include "dos/programs.h"
 
+#include "programs/append.h"
 #include "programs/attrib.h"
 #include "programs/autotype.h"
 #include "programs/boot.h"
@@ -90,6 +91,7 @@ void DOS_SetupPrograms()
 	PROGRAMS_MakeFile("SETVER.EXE", ProgramCreate<SETVER>);
 	PROGRAMS_MakeFile("SHOWPIC.EXE", ProgramCreate<SHOWPIC>);
 	PROGRAMS_MakeFile("SUBST.EXE", ProgramCreate<SUBST>);
+	PROGRAMS_MakeFile("APPEND.EXE", ProgramCreate<APPEND>);
 	PROGRAMS_MakeFile("TREE.COM", ProgramCreate<TREE>);
 
 	// This will allow MOUNT to be invoked as IMGMOUNT for backward

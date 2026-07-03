@@ -1177,6 +1177,28 @@ void SHELL_InitAndRun()
 	        "  [color=light-green]path[reset]\n"
 	        "  [color=light-green]path[reset] [color=light-cyan]Z:\\;C:\\DOS[reset]\n");
 
+	MSG_Add("SHELL_CMD_APPEND_HELP",
+	        "Allows programs to open data files in specified directories as if they were in the current directory.\n");
+	MSG_Add("SHELL_CMD_APPEND_HELP_LONG",
+	        "Allows programs to open data files in specified directories as if they were in\n"
+	        "the current directory. The specified directories are called appended directories.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  [color=light-green]append[reset]\n"
+	        "  [color=light-green]append[reset] [color=light-cyan][[DRIVE:]PATH[;...]][reset]\n"
+	        "\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan][[DRIVE:]PATH[;...]][reset]  path(s) containing a drive and directory\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - More than one path can be specified, separated by a semi-colon (;).\n"
+	        "  - Parameter with only a semi-colon (;) clears all append path settings.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=light-green]append[reset]\n"
+	        "  [color=light-green]append[reset] [color=light-cyan]C:\\GAMES\\WC;D:\\ORIGIN\\WC\\GAMEDAT[reset]\n");
+
+
 	MSG_Add("SHELL_CMD_VER_HELP", "Display the DOS version.\n");
 	MSG_Add("SHELL_CMD_VER_HELP_LONG",
 	        "Usage:\n"
