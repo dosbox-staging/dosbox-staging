@@ -15,6 +15,8 @@ add_executable(dosbox_tests
     drives_tests.cpp
     fraction_tests.cpp
     fs_utils_tests.cpp
+    image_compare.cpp
+    image_compare.h
     image_decoder_tests.cpp
     int10_modes_tests.cpp
     language_territory_tests.cpp
@@ -54,6 +56,7 @@ endif()
 target_link_libraries(dosbox_tests PRIVATE
     GTest::gmock_main
     dosboxcommon
+    PNG::PNG
     SDL3::Headers
 )
 
