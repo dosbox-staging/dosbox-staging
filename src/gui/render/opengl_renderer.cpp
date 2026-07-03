@@ -325,59 +325,87 @@ void OpenGlRenderer::HandleShaderAndPresetChangeViaNotify(const ShaderDescriptor
 	}
 }
 
-void OpenGlRenderer::NotifyRenderSizeChanged(const int new_render_width_px,
-                                             const int new_render_height_px)
+void OpenGlRenderer::NotifyRenderSizeChanged([[maybe_unused]] const int new_render_width_px,
+                                             [[maybe_unused]] const int new_render_height_px)
 {
-	MaybeUpdateRenderSize(new_render_width_px, new_render_height_px);
+	// No-op: the notified dimensions describe the Rendered size
+	// (doubling included), but the input texture is sized to the source
+	// dimensions from within `UploadFrame()`.
 }
 
-void OpenGlRenderer::MaybeUpdateRenderSize(const int new_render_width_px,
-                                           const int new_render_height_px)
+void OpenGlRenderer::UploadFrame(const uint32_t* pixels, const int width_px,
+                                 const int height_px, const int pitch_bytes,
+                                 const bool double_width, const bool double_height,
+                                 [[maybe_unused]] const VideoMode& video_mode)
 {
-	// At startup we set the shader before receiving the first
-	// `UpdateRenderSize()` call.  This will result in
-	// `MaybeSwitchShaderAndPreset()` calling `UpdateRenderSize()` with zero
-	// render dimensions.
+	MaybeUpdateRenderSize(width_px, height_px, double_width, double_height);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, input_texture.texture);
+
+	const auto pitch_px = pitch_bytes / static_cast<int>(sizeof(uint32_t));
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, pitch_px);
+
+	glTexSubImage2D(GL_TEXTURE_2D,
+	                0, // mimap level (0 = base image)
+	                0, // x offset
+	                0, // y offset
+	                width_px,
+	                height_px,
+	                GL_BGRA,                     // pixel data format
+	                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
+	                pixels);
+
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void OpenGlRenderer::MaybeUpdateRenderSize(const int new_width_px,
+                                           const int new_height_px,
+                                           const bool new_double_width,
+                                           const bool new_double_height)
+{
+	// At startup we set the shader before receiving the first frame.
+	// This will result in `MaybeSwitchShaderAndPreset()` calling this
+	// function with zero dimensions.
 	//
 	// It's hard to solve this in a more "elegant" way, so the simplest
 	// solution is just to bail out in the zero dimension case and let the
-	// subsequent `UpdateRenderSize()` call set up the correct render
-	// dimensions.
+	// first `UploadFrame()` call set up the correct dimensions.
 	//
-	if (new_render_width_px == 0 && new_render_height_px == 0) {
+	if (new_width_px == 0 && new_height_px == 0) {
 		// no-op
 		return;
 	}
 
 	// Size hasn't changed, don't recreate the texture
-	if (new_render_width_px == input_texture.width &&
-	    new_render_height_px == input_texture.height) {
+	if (new_width_px == input_texture.width &&
+	    new_height_px == input_texture.height &&
+	    new_double_width == input_texture.double_width &&
+	    new_double_height == input_texture.double_height) {
 		// no-op
 		return;
 	}
 
-	if (new_render_width_px > max_texture_size_px ||
-	    new_render_height_px > max_texture_size_px) {
+	if (new_width_px > max_texture_size_px || new_height_px > max_texture_size_px) {
 
 		LOG_ERR("OPENGL: No support for texture size of %dx%d pixels",
-		        new_render_width_px,
-		        new_render_height_px);
+		        new_width_px,
+		        new_height_px);
 		return;
 	}
 
-	input_texture.width  = new_render_width_px;
-	input_texture.height = new_render_height_px;
+	input_texture.width         = new_width_px;
+	input_texture.height        = new_height_px;
+	input_texture.double_width  = new_double_width;
+	input_texture.double_height = new_double_height;
 
 	RecreateInputTexture();
 
-	// The input texture still holds CPU-doubled Rendered-dimension
-	// pixels, so no additional doubling is requested from the pipeline.
-	// The real doubling flags get passed once uploads switch to source
-	// dimensions.
 	shader_pipeline->NotifyRenderSizeChanged(input_texture.width,
 	                                         input_texture.height,
-	                                         false,
-	                                         false,
+	                                         input_texture.double_width,
+	                                         input_texture.double_height,
 	                                         input_texture.texture);
 }
 
@@ -413,19 +441,8 @@ void OpenGlRenderer::RecreateInputTexture()
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	// Allocate host memory buffers for the texture data. The video card
-	// emulation will write to these buffers, then we'll copy the data to
-	// the texture in GPU memory with `glTexSubImage2D()` before presenting
-	// the frame.
-	const auto pitch_pixels = input_texture.width;
-	const auto num_pixels   = static_cast<size_t>(pitch_pixels) *
-	                        input_texture.height;
-
-	curr_framebuf.resize(num_pixels);
-	last_framebuf.resize(num_pixels);
-
 	constexpr auto BytesPerPixel = sizeof(uint32_t);
-	const auto pitch_bytes       = pitch_pixels * BytesPerPixel;
+	const auto pitch_bytes       = input_texture.width * BytesPerPixel;
 
 	input_texture.pitch = check_cast<int>(pitch_bytes);
 }
@@ -456,8 +473,9 @@ void OpenGlRenderer::EndFrame()
 
 void OpenGlRenderer::PrepareFrame()
 {
-	assert(!last_framebuf.empty());
-
+	// `UploadFrame()` uploads directly into the input texture, so this is
+	// a no-op; the legacy framebuffer path below is only exercised until
+	// the StartFrame/EndFrame protocol is removed.
 	if (last_framebuf_dirty) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, input_texture.texture);
@@ -606,7 +624,10 @@ OpenGlRenderer::SetShaderResult OpenGlRenderer::MaybeSwitchShaderAndPreset(
 
 	curr_shader_descriptor.preset_name = main_shader_preset.name;
 
-	MaybeUpdateRenderSize(input_texture.width, input_texture.height);
+	MaybeUpdateRenderSize(input_texture.width,
+	                      input_texture.height,
+	                      input_texture.double_width,
+	                      input_texture.double_height);
 	return Ok;
 }
 
