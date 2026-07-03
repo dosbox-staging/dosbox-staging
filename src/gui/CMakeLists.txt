@@ -10,7 +10,6 @@ target_sources(dosboxcommon PRIVATE
   render/format_convert.cpp
   render/opengl_renderer.cpp
   render/render.cpp
-  render/scaler/scalers.cpp
   render/sdl_renderer.cpp
   render/shader.cpp
   render/shader_manager.cpp

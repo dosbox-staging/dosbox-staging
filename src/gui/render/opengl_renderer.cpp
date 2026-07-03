@@ -440,61 +440,6 @@ void OpenGlRenderer::RecreateInputTexture()
 	);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	constexpr auto BytesPerPixel = sizeof(uint32_t);
-	const auto pitch_bytes       = input_texture.width * BytesPerPixel;
-
-	input_texture.pitch = check_cast<int>(pitch_bytes);
-}
-
-void OpenGlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
-{
-	assert(!curr_framebuf.empty());
-
-	pixels_out = curr_framebuf.data();
-	if (pixels_out == nullptr) {
-		return;
-	}
-	pitch_out = input_texture.pitch;
-}
-
-void OpenGlRenderer::EndFrame()
-{
-	assert(!curr_framebuf.empty());
-	assert(!last_framebuf.empty());
-
-	// We need to copy the buffers. We can't just swap them because the VGA
-	// emulation only writes the changed pixels to the framebuffer in each
-	// frame.
-
-	last_framebuf       = curr_framebuf;
-	last_framebuf_dirty = true;
-}
-
-void OpenGlRenderer::PrepareFrame()
-{
-	// `UploadFrame()` uploads directly into the input texture, so this is
-	// a no-op; the legacy framebuffer path below is only exercised until
-	// the StartFrame/EndFrame protocol is removed.
-	if (last_framebuf_dirty) {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, input_texture.texture);
-
-		glTexSubImage2D(GL_TEXTURE_2D,
-		                0, // mimap level (0 = base image)
-		                0, // x offset
-		                0, // y offset
-		                input_texture.width,  // width
-		                input_texture.height, // height
-		                GL_BGRA,              // pixel data format
-		                GL_UNSIGNED_INT_8_8_8_8_REV, // pixel data type
-		                last_framebuf.data() // pointer to image data
-		);
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		last_framebuf_dirty = false;
-	}
 }
 
 void OpenGlRenderer::PresentFrame()
