@@ -153,14 +153,6 @@ SdlRenderer::~SdlRenderer()
 		renderer = {};
 		texture  = {};
 	}
-	if (curr_framebuf.surface) {
-		SDL_DestroySurface(curr_framebuf.surface);
-		curr_framebuf = {};
-	}
-	if (last_framebuf.surface) {
-		SDL_DestroySurface(last_framebuf.surface);
-		last_framebuf = {};
-	}
 	if (window) {
 		SDL_DestroyWindow(window);
 		window = {};
@@ -333,45 +325,6 @@ ShaderDescriptor SdlRenderer::GetCurrentShaderDescriptor()
 	return {};
 }
 
-void SdlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
-{
-	assert(curr_framebuf.surface);
-
-	// Some surfaces must be locked for direct access
-	curr_framebuf.LockSurface();
-
-	pixels_out = static_cast<uint32_t*>(curr_framebuf.surface->pixels);
-	pitch_out  = curr_framebuf.surface->pitch;
-}
-
-void SdlRenderer::EndFrame()
-{
-	assert(curr_framebuf.surface);
-	assert(last_framebuf.surface);
-
-	last_framebuf.LockSurface();
-
-	// We need to copy the buffers. We can't just swap them because the VGA
-	// emulation only writes the changed pixels to the framebuffer in each
-	// frame.
-
-	// TODO Couldn't get SDL_BlitSurface to work... If you
-	// can, feel free to use that here, but this works
-	// perfectly fine.
-	std::memcpy(last_framebuf.surface->pixels,
-	            curr_framebuf.surface->pixels,
-	            (curr_framebuf.surface->h * curr_framebuf.surface->pitch));
-
-	last_framebuf_dirty = true;
-}
-
-void SdlRenderer::PrepareFrame()
-{
-	// `UploadFrame()` writes directly into the texture, so there is
-	// nothing to prepare. (This remains part of the interface until the
-	// StartFrame/EndFrame protocol is removed.)
-}
-
 void SdlRenderer::PresentFrame()
 {
 	SDL_RenderClear(renderer);
@@ -492,22 +445,4 @@ uint32_t SdlRenderer::MakePixel(const uint8_t red, const uint8_t green,
 {
 	static_assert(SdlPixelFormat == SDL_PIXELFORMAT_XRGB8888);
 	return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
-}
-
-void SdlSurface::LockSurface()
-{
-	assert(surface);
-	if (SDL_MUSTLOCK(surface) && !is_locked) {
-		SDL_LockSurface(surface);
-		is_locked = true;
-	}
-}
-
-void SdlSurface::UnlockSurface()
-{
-	assert(surface);
-	if (SDL_MUSTLOCK(surface) && is_locked) {
-		SDL_UnlockSurface(surface);
-		is_locked = false;
-	}
 }

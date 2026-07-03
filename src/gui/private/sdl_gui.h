@@ -90,7 +90,7 @@ enum class FullscreenMode { Standard, ForcedBorderless };
 struct SDL_Block {
 	uint32_t start_event_id = UINT32_MAX;
 
-	SDL_Window* window = {};
+	SDL_Window* window           = {};
 	SDL_DisplayID display_number = 0;
 
 	float dpi_scale    = 1.0f;
@@ -117,11 +117,6 @@ struct SDL_Block {
 		bool active = false;
 
 		SDL_Rect draw_rect_px = {};
-
-		// True when the contents of the framebuffer has been changed in the
-		// current frame. We only need to upload new texture data when this flag
-		// is true in GFX_EndUpdate().
-		bool updating_framebuffer = false;
 	} draw = {};
 
 	// The DOS video mode is populated after we set up the SDL window.

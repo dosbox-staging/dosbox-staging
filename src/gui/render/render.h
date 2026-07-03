@@ -14,11 +14,22 @@
 #include "private/deinterlacer.h"
 
 #include "gui/render/frame_dirty_tracker.h"
-#include "gui/render/scaler/scalers.h"
 #include "hardware/video/vga.h"
 #include "utils/fraction.h"
 #include "utils/rect.h"
 #include "utils/rgb888.h"
+
+// The additional padding pixels are partly for some tweaked text modes
+// (e.g., Q200x25x8 used by Necromancer's DOS Navigator), plus as a safety
+// margin. The pixel-format expanders are plain per-pixel loops and must not
+// rely on reading past the end of a row; the padding survives purely as
+// buffer-sizing capacity.
+
+// Make sure ScalerMaxWidth remains a multiple of 8
+constexpr int ScalerWidthExtraPadding = 8 * 5;
+
+constexpr int ScalerMaxWidth  = 1600 + ScalerWidthExtraPadding;
+constexpr int ScalerMaxHeight = 1200;
 
 enum class ViewportMode { Fit, Relative };
 
@@ -68,17 +79,6 @@ enum class AspectRatioCorrectionMode {
 	Stretch
 };
 
-struct RenderPalette {
-	std::array<Rgb888, NumVgaColors> rgb = {};
-
-	uint32_t lut[NumVgaColors]     = {};
-	uint8_t modified[NumVgaColors] = {};
-
-	bool changed = false;
-	int first    = 0;
-	int last     = 0;
-};
-
 struct Render {
 	ImageInfo src = {};
 
@@ -86,27 +86,20 @@ struct Render {
 	double fps = 0;
 
 	struct {
-		ScalerLineHandler line_handler         = nullptr;
-		ScalerLineHandler line_palette_handler = nullptr;
-
-		int cache_pitch     = 0;
-		uint8_t* cache_read = nullptr;
+		int cache_pitch = 0;
 
 		// The row the next `RENDER_DrawLine()` call writes into `cache`
 		int curr_row = 0;
 
+		// The live source frame VGA scanout writes into, at
+		// `render.src` dimensions (baked-in VGA scaling included)
 		alignas(uint64_t)
 		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
 
-		int out_width      = 0;
-		int out_height     = 0;
-		int out_pitch      = 0;
-		uint8_t* out_write = nullptr;
-
+		// Present-time scratch buffer the latched source frame is
+		// expanded into (32-bit BGRX pixels at source dimensions)
 		alignas(uint64_t)
 		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> out_buf = {};
-
-		int y_scale = 0;
 	} scale = {};
 
 	// Source-pixel snapshot of the last completed frame. Deep-copied from
@@ -121,8 +114,9 @@ struct Render {
 		alignas(uint64_t)
 		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
 
-		ImageInfo src         = {};
-		RenderPalette palette = {};
+		ImageInfo src = {};
+
+		std::array<Rgb888, NumVgaColors> palette = {};
 
 		int pitch = 0;
 
@@ -150,7 +144,7 @@ struct Render {
 	// holds (see frame_dirty_tracker.h).
 	FrameDirtyTracker frame_dirty = {};
 
-	RenderPalette palette = {};
+	std::array<Rgb888, NumVgaColors> palette = {};
 
 	bool active             = false;
 	bool render_in_progress = false;
@@ -276,7 +270,13 @@ enum class ColorSpace {
 float get_gamma(const ColorSpace cs);
 
 extern Render render;
-extern ScalerLineHandler RENDER_DrawLine;
+
+// Called once per emitted scanline during VGA scanout (always through the
+// `ReelMagic_RENDER_DrawLine` wrapper). A null `src_line_data` means "line
+// unchanged". Only active between a successful `RENDER_StartUpdate()` and
+// the matching `RENDER_EndUpdate()`; stray calls outside a scanout are
+// ignored.
+void RENDER_DrawLine(const void* src_line_data);
 
 void RENDER_Init();
 void RENDER_Reinit();
