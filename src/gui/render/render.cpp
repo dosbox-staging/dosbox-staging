@@ -19,6 +19,7 @@
 #include "config/setup.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
+#include "gui/render/format_convert.h"
 #include "gui/render/render.h"
 #include "gui/render/render_backend.h"
 #include "hardware/video/vga.h"
@@ -37,33 +38,6 @@ Render render;
 ScalerLineHandler RENDER_DrawLine;
 
 static void render_callback(GFX_CallbackFunctions_t function);
-
-static void check_palette()
-{
-	// Clean up any previous changed palette data
-	if (render.palette.changed) {
-		memset(render.palette.modified, 0, sizeof(render.palette.modified));
-		render.palette.changed = false;
-	}
-	if (render.palette.first > render.palette.last) {
-		return;
-	}
-
-	for (auto i = render.palette.first; i <= render.palette.last; i++) {
-		const auto color = render.palette.rgb[i];
-		const auto new_color = GFX_MakePixel(color.red, color.green, color.blue);
-
-		if (new_color != render.palette.lut[i]) {
-			render.palette.changed     = true;
-			render.palette.modified[i] = 1;
-			render.palette.lut[i]      = new_color;
-		}
-	}
-
-	// Setup palette index to startup values
-	render.palette.first = NumVgaColors;
-	render.palette.last  = 0;
-}
 
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue)
@@ -107,41 +81,13 @@ static bool is_deinterlacing()
 	return (render.deinterlacing_strength != DeinterlacingStrength::Off);
 }
 
-static bool maybe_gfx_start_update()
-{
-	uint32_t* pixel_data = nullptr;
-	int pitch            = 0;
-
-	if (!GFX_StartUpdate(pixel_data, pitch)) {
-		return false;
-	}
-
-	if (is_deinterlacing()) {
-		// Write the scaled output to a temporary buffer first
-		render.scale.out_write = reinterpret_cast<uint8_t*>(
-		        render.scale.out_buf.data());
-
-		render.dest = pixel_data;
-
-	} else {
-		// Write the scaled output directly to the render backend's
-		// texture buffer
-		render.scale.out_write = reinterpret_cast<uint8_t*>(pixel_data);
-		render.dest            = nullptr;
-	}
-
-	render.scale.out_pitch = pitch;
-
-	return true;
-}
-
 static void empty_line_handler(const void*) {}
 
 // The single scanout-time line handler: diff the incoming line against the
-// source cache and copy it in when it changed. No scaling and no render
-// backend involvement happens during scanout; the full frame is rescaled in
-// one batch at the end of the scanout when anything changed (see
-// `replay_frame_to_backend()`).
+// source cache and copy it in when it changed. No pixel-format conversion
+// and no render backend involvement happens during scanout; changed frames
+// are latched at the end of the scanout and expanded to 32-bit BGRX at
+// present time (see `RENDER_MaybeUploadFrame()`).
 //
 static void scanout_line_handler(const void* src_line_data)
 {
@@ -167,35 +113,6 @@ static void scanout_line_handler(const void* src_line_data)
 	}
 
 	++render.scale.curr_row;
-}
-
-static void clear_cache_handler(const void* src_line_data)
-{
-	// `src_line_data` contains a scanline worth of pixel data. All screen
-	// mode widths are multiples of 8, therefore we can access this data one
-	// uint64_t at a time, regardless of pixel format (pixel can be stored
-	// on 1 to 4 bytes).
-	auto src = static_cast<const uint8_t*>(src_line_data);
-
-	// The width of all screen modes and therefore `cache_pitch` too is a
-	// multiple of 8 (`cache_pitch` equals the screen mode's width
-	// multiplied by the number of bytes per pixel and no padding).
-	//
-	auto cache = render.scale.cache_read;
-
-	constexpr auto Step = sizeof(uint64_t);
-	const auto count    = render.scale.cache_pitch / Step;
-
-	for (size_t x = 0; x < count; ++x) {
-		const auto src_val = read_unaligned_uint64(src);
-
-		write_unaligned_uint64(cache, ~src_val);
-
-		src += Step;
-		cache += Step;
-	}
-
-	render.scale.line_handler(src_line_data);
 }
 
 bool RENDER_StartUpdate()
@@ -279,34 +196,6 @@ static void handle_capture_frame()
 	CAPTURE_AddFrame(image, static_cast<float>(render.fps));
 }
 
-static void deinterlace_rendered_output()
-{
-	// Copy scaled & deinterlaced output into the render backend's
-	// texture buffer (always in 32-bit BGRX pixel format)
-	std::memcpy(render.dest,
-	            render.scale.out_buf.data(),
-	            render.scale.out_height * render.scale.out_pitch);
-
-	// Deinterlace the render's backend buffer and leave the scaler
-	// output buffer intact (as deinterlacing the scaler output
-	// buffer itself would screw up the scaler diffing).
-	//
-	RenderedImage image = {};
-
-	image.params              = render.src;
-	image.params.width        = render.scale.out_width;
-	image.params.height       = render.scale.out_height;
-	image.params.pixel_format = PixelFormat::BGRX32_ByteArray;
-	image.pitch               = render.scale.out_pitch;
-
-	image.image_data = reinterpret_cast<uint8_t*>(render.dest);
-
-	// 32-bit BGRX images will always be processed in-place, so we don't
-	// care about the returned `RenderedImage` object (it's the same as the
-	// input image).
-	render.deinterlacer->DeinterlaceInPlace(image, render.deinterlacing_strength);
-}
-
 // Latch the just-finished frame's source pixels into
 // `render.last_complete_source` so screenshots / video capture and pause-time
 // re-scale can read a clean, complete frame instead of the live
@@ -329,58 +218,104 @@ static void latch_last_complete_source()
 	render.last_complete_source.populated = true;
 }
 
-// Transitional bridge, deleted when frame expansion moves to present time:
-// redraws the complete just-latched frame through the legacy scaler into the
-// render backend at the end of the scanout.
-//
-// The scaler's own per-line diff cache holds the very frame being fed, so
-// every row goes through `clear_cache_handler()`, which first inverts the
-// cache row to force the scaler to treat the line as changed and rewrite
-// the full output (the scaler then restores the cache row as it converts).
-//
-static bool replay_frame_to_backend()
+void RENDER_MaybeUploadFrame()
 {
-	// Rebuild the palette LUT for the indexed-colour scaler paths
-	if (render.scale.line_palette_handler) {
-		check_palette();
+	if (!render.active) {
+		return;
+	}
+	if (!render.frame_dirty.IsUploadPending()) {
+		return;
 	}
 
-	if (!maybe_gfx_start_update()) {
-		// The render backend is inactive (e.g. the mapper UI is open).
-		// The frame stays dirty, so the redraw is retried on the next
-		// completed frame.
-		return false;
+	const auto& latch = render.last_complete_source;
+
+	// After a geometry change the latched bytes still describe the
+	// previous video mode; wait for the first freshly latched frame.
+	if (!latch.valid) {
+		return;
 	}
 
-	// Set up output image dimensions (the deinterlacer reads these)
-	render.scale.out_width = render.src.width *
-	                         (render.src.double_width ? 2 : 1);
+	const auto width      = latch.src.width;
+	const auto height     = latch.src.height;
+	const auto num_pixels = width * height;
 
-	render.scale.out_height = render.src.height *
-	                          (render.src.double_height ? 2 : 1);
+	// The latch rows are tightly packed, so the whole frame can be
+	// expanded in one go
+	auto* dst = render.scale.out_buf.data();
 
-	render.scale.cache_read = reinterpret_cast<uint8_t*>(
-	        render.scale.cache.data());
+	switch (latch.src.pixel_format) {
+	case PixelFormat::Indexed8: {
+		std::array<uint32_t, NumVgaColors> palette_lut = {};
 
-	scaler_changed_lines[0]   = 0;
-	scaler_changed_line_index = 0;
+		for (auto i = 0; i < NumVgaColors; ++i) {
+			const auto& c = latch.palette.rgb[i];
+			palette_lut[i] = MakeBgrx32PaletteEntry(c.red, c.green, c.blue);
+		}
 
-	// Feed the latched frame's rows; the latch was copied from the source
-	// cache moments ago, so this is the completed frame. (The cache
-	// itself cannot be the source: `clear_cache_handler()` inverts the
-	// cache rows mid-feed.)
-	const auto* row = reinterpret_cast<const uint8_t*>(
-	        render.last_complete_source.cache.data());
+		ExpandIndexed8ToBgrx32(reinterpret_cast<const uint8_t*>(
+		                               latch.cache.data()),
+		                       dst,
+		                       num_pixels,
+		                       palette_lut.data());
+	} break;
 
-	const auto pitch = render.scale.cache_pitch;
+	case PixelFormat::RGB555_Packed16:
+		ExpandRgb555ToBgrx32(reinterpret_cast<const uint16_t*>(
+		                             latch.cache.data()),
+		                     dst,
+		                     num_pixels);
+		break;
 
-	for (auto y = 0; y < render.src.height; ++y) {
-		clear_cache_handler(row);
-		row += pitch;
+	case PixelFormat::RGB565_Packed16:
+		ExpandRgb565ToBgrx32(reinterpret_cast<const uint16_t*>(
+		                             latch.cache.data()),
+		                     dst,
+		                     num_pixels);
+		break;
+
+	case PixelFormat::BGR24_ByteArray:
+		ExpandBgr24ToBgrx32(reinterpret_cast<const uint8_t*>(
+		                            latch.cache.data()),
+		                    dst,
+		                    num_pixels);
+		break;
+
+	case PixelFormat::BGRX32_ByteArray:
+		CopyBgrx32(latch.cache.data(), dst, num_pixels);
+		break;
+
+	default:
+		E_Exit("RENDER: Invalid pixel_format %u",
+		       static_cast<uint8_t>(latch.src.pixel_format));
 	}
 
-	render.updating_frame = true;
-	return true;
+	// FMV deinterlacing happens on the upload buffer, in place. That's
+	// fine here: the buffer is fully regenerated from the latch on every
+	// upload, so nothing accumulates, and the latch itself is never
+	// modified.
+	if (is_deinterlacing()) {
+		RenderedImage image = {};
+
+		image.params              = latch.src;
+		image.params.pixel_format = PixelFormat::BGRX32_ByteArray;
+
+		image.pitch = width * static_cast<int>(sizeof(uint32_t));
+
+		image.image_data = reinterpret_cast<uint8_t*>(dst);
+
+		render.deinterlacer->DeinterlaceInPlace(image,
+		                                        render.deinterlacing_strength);
+	}
+
+	GFX_UploadFrame(dst,
+	                width,
+	                height,
+	                width * static_cast<int>(sizeof(uint32_t)),
+	                latch.src.double_width,
+	                latch.src.double_height,
+	                latch.src.video_mode);
+
+	render.frame_dirty.NotifyUploaded();
 }
 
 void RENDER_EndUpdate(const bool abort)
@@ -392,10 +327,20 @@ void RENDER_EndUpdate(const bool abort)
 	RENDER_DrawLine = empty_line_handler;
 
 	// Latch the just-finished frame before any consumer (capture,
-	// deinterlace) runs, so anything that reads via the latch sees the
-	// fresh frame, not the previous one.
-	if (!abort) {
+	// present-time expansion) runs, so anything that reads via the latch
+	// sees the fresh frame, not the previous one.
+	//
+	// The latch copy and the generation bump are dirty-gated; captures
+	// below are NOT. A stale-but-identical latch is correct for clean
+	// frames, and AVI timing depends on one captured frame per DOS frame.
+	//
+	// An aborted scanout must NOT clear the dirty flag (see the lifecycle
+	// comment in frame_dirty_tracker.h): its lines are already in the
+	// source cache, so they'd otherwise never be latched and displayed.
+	//
+	if (!abort && render.frame_dirty.IsDirty()) {
 		latch_last_complete_source();
+		render.frame_dirty.NotifyLatched();
 	}
 
 	// Two gates on captures:
@@ -415,25 +360,12 @@ void RENDER_EndUpdate(const bool abort)
 		handle_capture_frame();
 	}
 
-	// Redraw the frame through the legacy scaler when the source changed.
-	// An aborted scanout must NOT clear the dirty flag (see the lifecycle
-	// comment in frame_dirty_tracker.h): its lines are already in the
-	// source cache, so the next completed frame redraws them.
-	if (!abort && render.frame_dirty.IsDirty()) {
-		if (replay_frame_to_backend()) {
-			render.frame_dirty.NotifyLatched();
-		}
-	}
-
-	// Only deinterlace the output if the frame has changed
-	if (is_deinterlacing() && render.updating_frame) {
-		deinterlace_rendered_output();
-	}
-
+	// Triggers the frame present in 'dos-rate' presentation mode (which
+	// in turn runs the present-time expansion and upload when the frame
+	// was dirty)
 	GFX_EndUpdate();
 
 	render.render_in_progress = false;
-	render.updating_frame     = false;
 }
 
 // Repaint the held frame at the current render geometry without
@@ -628,10 +560,8 @@ static void render_reset()
 	RENDER_DrawLine = render.render_in_progress ? scanout_line_handler
 	                                            : empty_line_handler;
 
-	render.scale.out_write = nullptr;
-
-	// The output geometry or the palette LUT may have changed: force a
-	// full redraw of the held frame on the next completed scanout.
+	// The output geometry or the palette may have changed: force a full
+	// re-expansion and upload of the held frame.
 	render.frame_dirty.ForceRedraw();
 
 	render.active = true;

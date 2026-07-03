@@ -4,6 +4,8 @@
 #ifndef DOSBOX_RENDER_BACKEND_H
 #define DOSBOX_RENDER_BACKEND_H
 
+#include <cstdint>
+#include <cstring>
 #include <string>
 
 #include "gui/private/common.h"
@@ -77,6 +79,60 @@ public:
 
 	// Get the shader descriptor of the currently active shader.
 	virtual ShaderDescriptor GetCurrentShaderDescriptor() = 0;
+
+	// Uploads one complete frame. `pixels` holds tightly packed 32-bit
+	// BGRX pixels at the source dimensions (baked-in VGA scaling
+	// included, no render-layer doubling); `double_width` and
+	// `double_height` request the additional doubling on top of that.
+	//
+	// Called once per present when the source frame has changed since the
+	// last upload.
+	//
+	// The default implementation CPU-doubles the frame into the legacy
+	// `StartFrame()`/`EndFrame()` backend buffer; render backends
+	// override it with native uploads.
+	//
+	virtual void UploadFrame(const uint32_t* pixels, const int width_px,
+	                         const int height_px, const int pitch_bytes,
+	                         const bool double_width, const bool double_height,
+	                         [[maybe_unused]] const VideoMode& video_mode)
+	{
+		uint32_t* dst       = nullptr;
+		int dst_pitch_bytes = 0;
+
+		StartFrame(dst, dst_pitch_bytes);
+		if (!dst) {
+			return;
+		}
+
+		const auto x_scale = double_width ? 2 : 1;
+		const auto y_scale = double_height ? 2 : 1;
+
+		const auto src_pitch_px = pitch_bytes /
+		                          static_cast<int>(sizeof(uint32_t));
+		const auto dst_pitch_px = dst_pitch_bytes /
+		                          static_cast<int>(sizeof(uint32_t));
+
+		for (auto out_y = 0; out_y < height_px * y_scale; ++out_y) {
+			const auto* src_row = pixels + (out_y / y_scale) * src_pitch_px;
+
+			auto* dst_row = dst + out_y * dst_pitch_px;
+
+			if (x_scale == 1) {
+				std::memcpy(dst_row,
+				            src_row,
+				            static_cast<size_t>(width_px) *
+				                    sizeof(uint32_t));
+			} else {
+				for (auto x = 0; x < width_px; ++x) {
+					dst_row[x * 2 + 0] = src_row[x];
+					dst_row[x * 2 + 1] = src_row[x];
+				}
+			}
+		}
+
+		EndFrame();
+	}
 
 	// Called at the start of every unique frame (when there have been
 	// changes to the DOS framebuffer).
