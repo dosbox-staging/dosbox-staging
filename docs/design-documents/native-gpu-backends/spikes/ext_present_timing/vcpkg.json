@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "vulkan-ext-present-timing-spike",
+  "version": "0.1.0",
+  "dependencies": [
+    "vulkan-headers",
+    "vulkan-loader",
+    { "name": "sdl3", "features": ["vulkan"] }
+  ],
+  "builtin-baseline": "10ceb139a610ebf3c6aa49cdc4a4b7f3db5d3f2b"
+}

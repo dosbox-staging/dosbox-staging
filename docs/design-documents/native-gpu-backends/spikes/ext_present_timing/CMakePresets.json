@@ -1,0 +1,23 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    { "name": "linux",   "inherits": "base", "generator": "Ninja" },
+    { "name": "macos",   "inherits": "base", "generator": "Ninja" },
+    { "name": "windows", "inherits": "base", "generator": "Visual Studio 17 2022" }
+  ],
+  "buildPresets": [
+    { "name": "linux",   "configurePreset": "linux" },
+    { "name": "macos",   "configurePreset": "macos" },
+    { "name": "windows", "configurePreset": "windows", "configuration": "Release" }
+  ]
+}
