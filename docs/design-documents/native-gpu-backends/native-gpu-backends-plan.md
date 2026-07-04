@@ -25,8 +25,10 @@ On VRR displays (G-Sync/FreeSync/ProMotion), the display refreshes
 when a frame *arrives*, so whoever controls present timing controls
 smoothness. The modern APIs let us hand the display engine a
 **timestamp with each frame** — "show this at exactly T" — via
-`VK_EXT_present_timing` on Vulkan and `present(atTime:)` on Metal,
-with feedback telling us when each frame really reached the glass.
+`VK_EXT_present_timing` on new Linux/Windows drivers and
+`VK_GOOGLE_display_timing` on macOS (where MoltenVK maps it onto
+Metal's `present(atTime:)`), with feedback telling us when each frame
+really reached the glass.
 That gives microsecond-class pacing that is immune to emulation-loop
 load, plus the measurements to prove it. To the best of our knowledge
 (and we surveyed six major emulators' source to check —
@@ -105,17 +107,19 @@ GPU API dependency disappears from the tree entirely.)
   implementation (lavapipe) headlessly — golden-image tests on every
   commit, which the OpenGL backend never had.
 - **A cleaner dependency story**: the risky preview-stage libraries
-  evaluated along the way were rejected; what remains is glslang,
-  SPIRV-Cross, vk-bootstrap, and VMA — all boring, stable, and
-  packaging-friendly ([decision 5](#decision-record-all-locked-2026-07-0304) has the distro review).
-- **Correct colour management and an HDR path**: Metal gets proper
-  Display P3 handling on day one, and the native APIs open the door
+  evaluated along the way were rejected; the only runtime library
+  dependencies left are glslang (packaged by every Linux distro) and,
+  on macOS only, the Khronos-maintained MoltenVK
+  ([decision 5](#decision-record-all-locked-2026-07-0304) has the full review).
+- **Correct colour management and an HDR path**: macOS gets proper
+  Display P3 handling on day one (via `VK_EXT_swapchain_colorspace`),
+  and the native APIs open the door
   to HDR output later (deferred, but no longer architecturally
   blocked).
 - **Documentation as a first-class deliverable**: three kinds. The
-  companion `gpu-backend-learning.md` documents every concept,
+  companion `native-gpu-backends-learning.md` documents every concept,
   experiment, and lesson from other projects' source as the work
-  proceeds, one chapter per commit. `gpu-backend-attribution.md`
+  proceeds, one chapter per commit. `native-gpu-backends-attribution.md`
   publicly thanks the emulator projects and developers whose work
   inspired ours, recording exactly which ideas and code we lifted
   and from where — fairness we owe them, maintained
@@ -141,7 +145,7 @@ superseded and deleted); v2 incorporated the first review round; v3
 was made non-negotiable. [Appendix A](#appendix-a--architecture-decision-memo-2026-07-03-verbatim) is the verbatim architecture
 decision memo; [Appendix B](#appendix-b--follow-up-decisions-dependencies-shader-workflow-cache-deferral-reference-study-2026-07-03) records the follow-up decisions; [Appendix C](#appendix-c--reference-study-design-notes-2026-07-04)
 holds the reference-study design notes; [Appendix D](#appendix-d--spike-results-2026-07-04) the toolchain spike
-results. The learning companion is `gpu-backend-learning.md` (one
+results. The learning companion is `native-gpu-backends-learning.md` (one
 chapter per commit — standing process rule).
 
 **Status: PLANNED — all PRs (1–7) specced to execution grade.
@@ -154,18 +158,36 @@ flesh-out".**
 
 ## Decision record (all locked, 2026-07-03/04)
 
-1. **We build native Vulkan and Metal backends; SDL GPU and dx12 were
-   evaluated and rejected** (the full argument is preserved verbatim
-   in [Appendix A](#appendix-a--architecture-decision-memo-2026-07-03-verbatim)). Both new backends are committed scope, implemented
-   Vulkan-first. The OpenGL backend stays supported for roughly five
+1. **We build ONE native backend — Vulkan — running on every
+   platform; on macOS it runs on MoltenVK. SDL GPU, dx12, and a
+   native Metal backend were each evaluated and rejected** (SDL
+   GPU/dx12: the verbatim argument in
+   [Appendix A](#appendix-a--architecture-decision-memo-2026-07-03-verbatim); the Metal backend: the ecosystem review in
+   [Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05), decided 2026-07-05). Why MoltenVK wins over a
+   second, native backend: it is a **Khronos-maintained** layered
+   implementation of **Vulkan 1.4** over Metal (The Brenwill
+   Workshop); its **`VK_GOOGLE_display_timing` backend has been
+   mature since 2021 and is production-proven by Psychtoolbox-3**, a
+   scientific psychophysics toolkit built around microsecond-exact
+   stimulus presentation — and our own Spike 5 measured it on the
+   M4 Pro delivering interval histograms near-identical to native
+   `presentDrawable:atTime:` (Appendix D); it supports
+   `VK_EXT_swapchain_colorspace` (Display P3 without a Metal code
+   path) and `VK_EXT_metal_objects` (a raw-Metal escape hatch if ever
+   needed); and PPSSPP and RetroArch ship their macOS Vulkan backends
+   on it in production. Deleting the Metal backend removes an entire
+   second executor and WSI implementation, all Objective-C++, runtime
+   MSL generation, and a full test-matrix dimension — one backend,
+   everywhere. The OpenGL backend stays supported for roughly five
    more years as the fallback path, and the `texture` backend stays
    indefinitely — usefully, on Windows it runs on Direct3D 11 through
    SDL_Renderer, which gives us a Microsoft-native fallback without
    writing any D3D code ourselves.
 2. **First-class frame pacing is a core requirement of the project,
    not an optimisation.** Where the platform allows it, we use
-   display-engine present timing — `VK_EXT_present_timing` on Vulkan
-   and `present(atTime:)` on Metal — meaning we attach a target
+   display-engine present timing — `VK_EXT_present_timing` on new
+   Mesa/NVIDIA drivers, `VK_GOOGLE_display_timing` on MoltenVK (which
+   maps it to Metal's `present(atTime:)`) — meaning we attach a target
    timestamp to each present and the display hardware holds the flip
    until exactly that time. Where it isn't available, an app-timed
    deferred-present scheduler serves as the permanent fallback tier.
@@ -176,52 +198,56 @@ flesh-out".**
    presents get due-time scheduling.
 3. **The `output` setting gains per-API values instead of a generic
    "gpu" value**: `texture`, `texturenb` (kept for compatibility),
-   `opengl`, `vulkan` (registered on Linux and Windows), `metal`
-   (macOS), and `auto`. The `auto` value resolves to the best native
-   API for the platform — `vulkan` on Linux and Windows, `metal` on
-   macOS — and falls back through `opengl` to `texture` when the
+   `opengl`, `vulkan` (all platforms — on macOS via MoltenVK), and
+   `auto`. The `auto` value resolves to `vulkan` everywhere and
+   falls back through `opengl` to `texture` when the
    preferred backend can't initialise. An explicitly requested value
    that fails at startup falls down the same chain with a logged
    warning. The setting remains `OnlyAtStart`; there is no runtime
    backend switching, same as today.
 4. **Shaders move to a single hand-maintained source format: Vulkan
-   GLSL 4.50.** Each backend consumes it its own way. The Vulkan
-   backend compiles it to SPIR-V at runtime using glslang. The Metal
-   backend also compiles at runtime, going one step further through
-   SPIRV-Cross to produce Metal Shading Language. The OpenGL backend
+   GLSL 4.50.** The Vulkan backend compiles it to SPIR-V at runtime
+   using glslang — on every platform, macOS included (MoltenVK
+   consumes SPIR-V like any Vulkan driver; no MSL is ever generated
+   by us). The OpenGL backend
    is deliberately kept toolchain-free at runtime: its GLSL 3.30
    variants are produced by an **offline generation script** and
    checked into the repository, with a CI `--check` mode guaranteeing
    they can never go stale relative to the 450 sources. Existing
    user-written 330 shaders keep working on `output = opengl`
-   indefinitely; the 450 format is required only for the vulkan and
-   metal backends. The GL emission uses SPIRV-Cross's `--flatten-ubo`
+   indefinitely; the 450 format is required only for the vulkan
+   backend. The GL emission uses SPIRV-Cross's `--flatten-ubo`
    mode — spike-verified in
    [Appendix D](#appendix-d--spike-results-2026-07-04) — which
    matters because it avoids a GL extension that macOS OpenGL lacks
    and keeps uniform upload offset-based and shared across all
    backends.
-5. **Dependencies**: glslang, SPIRV-Cross, vk-bootstrap, and VMA are
-   added; all four are stable, mature libraries available through
-   vcpkg for our own builds. The Linux distro packaging situation was
-   reviewed (2026-07-04) with the following outcome: glslang is
-   packaged by every major distro and becomes a hard system
-   dependency on Linux; VMA is a single self-contained header, so we
-   use the system package where one exists (Fedora has one) and fall
-   back to a bundled copy of the header elsewhere; vk-bootstrap is
-   not packaged by any major distro, but it is a small (~3k line)
-   MIT-licensed library explicitly designed for vendoring, so it gets
-   bundled under `src/libs/` alongside our other vendored code;
-   SPIRV-Cross is poorly packaged as a *library* (Debian ships only
-   the CLI tool, Fedora has no official package) — but on Linux we
-   only use it for the optional debug-build reflection validator, so
-   it becomes a compile-time-optional dependency there and is never
-   required for a Linux release build. Its one hard-requirement role
-   (MSL generation for Metal) exists only on macOS, where vcpkg/brew
-   provide it and distro packaging is irrelevant. In short: nothing
-   large ever needs bundling. SDL_shadercross and the whole
-   DXC/FXC/DXBC toolchain question disappeared together with SDL GPU
-   and dx12.
+5. **Dependencies (revised 2026-07-05 after the
+   [Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05) review)** — the runtime list is remarkably short:
+   **glslang** (the only runtime library dependency on Linux —
+   packaged by every major distro, hard system dependency) and
+   **MoltenVK** (macOS only, Khronos-maintained, via vcpkg/brew —
+   distro packaging irrelevant). **Vulkan-Hpp costs nothing**: the
+   `vulkan.hpp`/`vulkan_raii.hpp` headers ship inside the
+   vulkan-headers package we need anyway (verified locally).
+   **SPIRV-Cross is demoted to a dev-time CLI tool**: with no MSL
+   generation and the runtime reflection validator replaced by
+   golden-offset unit tests (Spike 2 recorded the offsets), its only
+   remaining role is the offline GL 330 generation script — dev
+   machines and CI only, never shipped, and the CLI is exactly what
+   Debian packages. **vk-bootstrap was considered and dropped**: it
+   solved the raw-C-API init boilerplate, but Vulkan-Hpp plus the
+   Apache-2.0 official-tutorial init template shrink that boilerplate
+   to ~200–400 lines we own for our trivial device requirements — a
+   dependency deleted with thanks. **VMA was considered and
+   dropped**: our allocation profile (a fixed, bounded set of ~15
+   long-lived resources, rebuilt only on rare events) is the worst
+   fit for VMA's strengths; manual allocation with a ~15-line
+   `findMemoryType` helper suffices, with one recorded footgun rule —
+   per-frame upload staging is `HOST_VISIBLE | HOST_COHERENT`,
+   persistently mapped once, reused forever. SDL_shadercross and the
+   whole DXC/FXC/DXBC toolchain question disappeared together with
+   SDL GPU and dx12.
 6. **The on-disk shader cache is deferred to possible future work** —
    not scheduled, not gated on anything. The cache was originally
    justified by DXC's 50–300 ms compile times on the dx12 path; with
@@ -255,7 +281,7 @@ flesh-out".**
    read before designing our own; the distilled design notes with
    file:line references live in [Appendix C](#appendix-c--reference-study-design-notes-2026-07-04), and every
    swapchain/sync/pacing decision in this plan traces back to them.
-10. **The learning companion `gpu-backend-learning.md` is a standing
+10. **The learning companion `native-gpu-backends-learning.md` is a standing
     process rule**: every commit in the series appends a
     textbook-style chapter explaining the concepts the commit
     touches, why the code is shaped the way it is, and where to read
@@ -276,7 +302,7 @@ flesh-out".**
     adapted (with SPDX credit) only from the licence-compatible
     references: Dolphin (GPLv2+), PPSSPP (GPLv2+), RPCS3 (GPLv2), and
     Khronos Vulkan-Samples (Apache-2.0). Every adoption is also
-    recorded with a public shout-out in `gpu-backend-attribution.md`,
+    recorded with a public shout-out in `native-gpu-backends-attribution.md`,
     maintained commit-by-commit as implementation proceeds. Full
     rules in the ["Attribution policy"](#attribution-policy) section.
 12. **Module layout, namespaces, and implementation style** (John's
@@ -290,7 +316,7 @@ flesh-out".**
     (`shader_pipeline.* → opengl_pipeline.*`, `shader.* →
     opengl_shader.*`; the class renames land with [PR 3](#pr-3--shader-toolchain--vulkan-pipeline)'s refactor,
     which guts those classes anyway). Backend-specific file prefixes
-    (`vulkan_`, `metal_`, `opengl_`) are kept even inside the
+    (`vulkan_`, `opengl_`) are kept even inside the
     subdirectories — deliberately, since e.g. a
     `render/vulkan/vulkan.h`-style collision with the SDK's
     `<vulkan/vulkan.h>` must stay impossible. **New code uses
@@ -298,9 +324,8 @@ flesh-out".**
     namespace matches the deepest directory in UpperCamelCase, and
     class names de-stutter inside it — `Vulkan::Renderer`,
     `Vulkan::Device`, `Vulkan::Swapchain`, `Vulkan::Pipeline`,
-    `Metal::Renderer`, `Metal::Pipeline`, `Shaders::PipelineTopology`,
-    `Shaders::UniformPacker`, `Shaders::Compiler`,
-    `Shaders::SpirvReflection`. Moved-but-unrewritten legacy files
+    `Shaders::PipelineTopology`, `Shaders::UniformPacker`,
+    `Shaders::Compiler`. Moved-but-unrewritten legacy files
     (GL, SDL, shader manager) are not retro-namespaced. **The
     implementation must be state of the art C++23** within the
     project style guide: `std::expected` for fallible construction
@@ -314,16 +339,47 @@ flesh-out".**
     but we do not hold back to match deprecated patterns in the old
     code. When modernity and the style guide genuinely conflict:
     ask John.
+13. **Vulkan-Hpp with the RAII layer is the binding** (2026-07-05,
+    [Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05)) — the official modern-tutorial recommendation,
+    adopted because it fits us precisely: with
+    `VULKAN_HPP_NO_EXCEPTIONS` on C++23, `vk::raii` construction
+    functions return `std::expected<vk::raii::Object, vk::Result>` —
+    natively implementing decision 12's error-handling idiom —
+    plus type-safe `vk::StructureChain` pNext chains exactly where
+    the present-timing code needs them, at zero added dependency
+    (the headers ship in vulkan-headers). Device/instance init is
+    hand-written (~200–400 lines) following the Apache-2.0 official
+    tutorial template, with credit. Notable: none of the six studied
+    emulators use Hpp — all predate it with raw-C codebases; the
+    licence firewall means we re-express their patterns anyway, so
+    nothing is lost in translation.
+14. **Slang was evaluated and declined; Vulkan GLSL 4.50 stands**
+    (2026-07-05, [Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05)) — a deliberate divergence from the
+    official tutorial's "Slang as primary shading language"
+    recommendation, for reasons specific to us: converting our 21
+    GLSL shaders to Slang's HLSL-like syntax is a rewrite (Vulkan
+    GLSL is a mechanical conversion, spike-proven); user custom
+    shaders need a runtime compiler and libslang is dynamic-only,
+    tens of MB, and unpackaged on Linux, while glslang is packaged
+    everywhere; and our modding ecosystem writes GLSL — including
+    RetroArch's confusingly-named "slang" format, which we
+    fact-checked to be Vulkan GLSL (`#version 450` + Vulkan layout
+    qualifiers), not the Khronos Slang language. The shader
+    front-end stays a plug-in (`Shaders::Compiler` is the only
+    component that knows GLSL exists), so adopting Slang later is a
+    one-component change — the recorded watch-item.
 
 ## Architecture
 
 ### Backends
 
-`VulkanRenderer` and `MetalRenderer` implement the existing
-`RenderBackend` interface (`src/gui/render/render_backend.h`) —
-unchanged. Each owns its SDL window (surface via
-`SDL_Vulkan_CreateSurface` / `SDL_Metal_CreateView`); SDL keeps doing
-windowing, input, events, audio. The debugger's ImGui-on-SDL-GPU stays
+`Vulkan::Renderer` implements the existing `RenderBackend`
+interface (`src/gui/render/render_backend.h`) — unchanged — and runs
+on every platform: Mesa/proprietary drivers on Linux and Windows,
+**MoltenVK on macOS** (decision 1, [Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05)). It owns its SDL
+window (surface via `SDL_Vulkan_CreateSurface`, which handles the
+CAMetalLayer creation on macOS); SDL keeps doing windowing, input,
+events, audio. The debugger's ImGui-on-SDL-GPU stays
 as-is (own window/device, unaffected); a possible later
 simplification — moving it to the plain SDL_Renderer ImGui backend —
 is recorded under Deferred.
@@ -331,16 +387,20 @@ is recorded under Deferred.
 **Vulkan backend** (`render/vulkan/`, namespace `Vulkan` — see the
 [target-state listing](#target-state--module-layout-and-architecture) below for the full file breakdown):
 
-- Initialisation goes through vk-bootstrap, which handles the
-  instance, validation-layer setup (enabled in debug builds), physical
-  device selection, and queue creation. GPU memory is managed by VMA.
-  Why libraries for this: both are small, standard, and battle-tested
-  to the point of being de-facto parts of the Vulkan ecosystem — VMA
-  in particular is shipped by practically every serious Vulkan
-  application in existence, and vk-bootstrap encodes the one
-  correct way to do the startup ceremony that every application
-  otherwise rewrites by hand. This is boilerplate with well-known
-  correct answers; reinventing it would add risk and zero value.
+- The backend is written against **Vulkan-Hpp's RAII layer**
+  (decision 13): `VULKAN_HPP_NO_EXCEPTIONS` + C++23, so every
+  fallible construction returns
+  `std::expected<vk::raii::Object, vk::Result>`, and pNext chains use
+  type-safe `vk::StructureChain`. Instance/device initialisation is
+  hand-written (~200–400 lines) following the Apache-2.0 official
+  Vulkan tutorial's init sequence, with credit — our device
+  requirements are trivial (Vulkan 1.3+, swapchain, one
+  graphics+present queue), so no bootstrap library is needed. GPU
+  memory is allocated manually: a ~15-line `findMemoryType` helper,
+  one `VkDeviceMemory` per resource (~15 long-lived allocations
+  total), and the recorded staging rule — `HOST_VISIBLE |
+  HOST_COHERENT`, persistently mapped once, reused forever
+  (decision 5 has the full VMA/vk-bootstrap rationale).
 - The swapchain runs with two frames in flight (a single-frame
   experiment is planned for VRR latency testing). Each in-flight
   frame owns a bundle of one fence, one acquire semaphore, one
@@ -408,56 +468,43 @@ is recorded under Deferred.
 - Captures (`ReadPixelsPostShader`) copy the target image into a
   host-visible buffer and wait on a fence. That wait is a stall, but
   a perfectly acceptable one at screenshot cadence.
-- **Present timing**: when `VK_EXT_present_timing` is available, the
-  vretrace-driven present is submitted immediately with an absolute
-  target timestamp (`tick_boundary + PIC_TickIndex() × 1 ms`), and
-  the extension's feedback — the measured time each frame actually
+- **Present timing**: the vretrace-driven present is submitted
+  immediately with an absolute target timestamp (`tick_boundary +
+  PIC_TickIndex() × 1 ms`) through whichever timing dialect the
+  driver offers — `VK_EXT_present_timing` on new Mesa/NVIDIA drivers,
+  or `VK_GOOGLE_display_timing` on MoltenVK (Spike 5-verified: same
+  target-time + feedback-ring contract, near-identical measured
+  results). The feedback — the measured time each frame actually
   reached the glass — drives drift correction, missed-window
-  detection, and the pacing logs. When the extension is absent, the
-  backend runs on the [PR 1](#pr-1--deferred-present-scheduler--pacing-instrumentation) app-timed scheduler tier instead.
+  detection, and the pacing logs. With neither dialect available,
+  the backend runs on the [PR 1](#pr-1--deferred-present-scheduler--pacing-instrumentation) app-timed scheduler tier instead.
 - For CI, device selection can be forced to lavapipe (Mesa's software
   Vulkan implementation), which makes real rendered golden-image
   tests of the shader pipeline possible on every commit, with no GPU
   in the runner.
 
-**Metal backend** (`render/metal/`, namespace `Metal`, Objective-C++ —
-the repo already contains Obj-C++ in `macos_colorspace.mm`, so there
-is precedent). Structurally it mirrors the Vulkan backend but is
-considerably simpler, because Metal has no descriptor sets, no
-render-pass objects, and no manual image-layout transitions
-([Appendix C §8](#8-metal-notes-dolphin)). The window's content is a `CAMetalLayer`; each pass
-becomes an `MTLRenderPipelineState`; shaders arrive as MSL generated
-at runtime by SPIRV-Cross; uploads go straight into shared-storage
-textures on unified-memory hardware, with no staging buffer at all;
-and `nextDrawable` returning nil is handled as a skipped present,
-mirroring the Vulkan acquire-skip. Scheduled presents use
-`present(atTime:)`, with `addPresentedHandler` providing the
-glass-time feedback — the exact mechanism proven working on real
-hardware in [Appendix D Spike 4](#spike-4--metal-scheduled-presents-on-real-hardware-passed).
-
-Colour management on Metal is a real implementation, not a stub
-(investigated 2026-07-05): the GL path tags the **NSWindow** with a
-Display P3 colour space (`macos_colorspace.mm`) so macOS
-colour-matches our internally-P3-managed output to the display
-profile. That mechanism does not cover a `CAMetalLayer`, which Core
-Animation colour-matches according to the layer's own `colorspace`
-property instead — and which defaults to nil, meaning *no* colour
-matching and silently wrong colours on wide-gamut Macs. The Metal
-backend therefore implements `SetColorSpace` by assigning the layer's
-`colorspace` (`kCGColorSpaceDisplayP3` / `kCGColorSpaceSRGB` per the
-`color_space` setting). The shader-side half of colour management
-(the image-adjustments pass) is shared code and needs nothing
-Metal-specific. On Vulkan (Linux/Windows), the swapchain keeps the
-standard `SRGB_NONLINEAR` surface colourspace, matching what the GL
-path effectively does on those platforms today.
+**macOS runs the same Vulkan backend on MoltenVK** — there is no
+Metal backend (decision 1, [Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05), sealed by Spike 5).
+MoltenVK specifics, all verified: timed presents arrive through
+`VK_GOOGLE_display_timing` (measured near-identical to native
+`presentDrawable:atTime:`); colour management goes through
+`VK_EXT_swapchain_colorspace` (Display P3 / sRGB per the
+`color_space` setting — the Metal layer's nil-colorspace default
+never comes into play because MoltenVK configures the layer); and if
+raw Metal access is ever genuinely needed, `VK_EXT_metal_objects`
+exports the underlying objects. Any macOS-specific behaviour lives
+behind a few small ifdefs in the Vulkan backend (e.g. the timing
+dialect probe order), not in a separate code path. Uploads on Apple
+Silicon benefit from unified memory automatically (MoltenVK picks the
+appropriate storage modes).
 
 ### OSD readiness (design constraints only — no OSD is implemented)
 
 The future on-screen display shapes several present-path decisions,
 so its constraints are recorded here and the code gets explicit
-`// TODO(osd): compositing point — see gpu-backend-plan.md` markers
-at the injection points (the present functions of the Vulkan and
-Metal backends, after the letterbox blit).
+`// TODO(osd): compositing point — see native-gpu-backends-plan.md` markers
+at the injection points (the Vulkan backend's present function,
+after the letterbox blit).
 
 How the OSD will work when it arrives: it is **rendered on the CPU
 into a viewport-sized RGBA buffer** — which can be large (a 4K or 5K
@@ -570,7 +617,7 @@ decided by the [PR 5](#pr-5--single-source-shader-library) golden tests.
   (`render/shaders/pipeline_topology.*`, pure logic, unit-tested),
   and the GL-executing remainder becomes `render/opengl/
   opengl_pipeline.*` — one of three thin executors alongside
-  `Vulkan::Pipeline` and `Metal::Pipeline`.
+  `Vulkan::Pipeline` (the one other executor).
 - Audit backend-type conditionals in `sdl_gui.cpp` (e.g. the macOS
   window-restore GL viewport hack ~`sdl_gui.cpp:2135`) for
   new-backend needs.
@@ -625,8 +672,10 @@ src/gui/render/                    — render layer core (backend-independent)
 │   ├── shaders.md                 Shader subsystem: 450 format,
 │   │                              toolchain, topology, offline gen
 │   │
-│   ├── vulkan.md / metal.md /     Per-backend: swapchain lifecycle,
-│   │   opengl.md / sdl.md         sync, present timing, quirks
+│   ├── vulkan.md / opengl.md /   Per-backend: swapchain lifecycle,
+│   │   sdl.md                     sync, present timing, quirks
+│   │                              (vulkan.md includes the MoltenVK
+│   │                              macOS specifics)
 │   │
 │   └── img/                       Rendered diagrams (SVG/PNG) + their
 │                                  editable sources
@@ -672,12 +721,7 @@ src/gui/render/                    — render layer core (backend-independent)
 │   │                              three executors                   (NEW 3)
 │   │
 │   ├── shader_compiler.h / .cpp   Shaders::Compiler — glslang wrapper:
-│   │                              450 → SPIR-V [C_VULKAN || C_METAL]
-│   │                                                                (NEW 3)
-│   │
-│   ├── spirv_reflection.h / .cpp  Shaders::SpirvReflection — debug-build
-│   │                              validation of the packer
-│   │                              [C_VULKAN || C_METAL, optional]   (NEW 3)
+│   │                              450 → SPIR-V [C_VULKAN]           (NEW 3)
 │   │
 │   ├── auto_shader_switcher.h/.cpp   crt-auto-* → shader resolution
 │   │                                                               (MOVED)
@@ -697,8 +741,8 @@ src/gui/render/                    — render layer core (backend-independent)
 │   │                              generated 330 tree      (MOVED, CHG 3,5)
 │   │
 │   ├── macos_colorspace.h / .mm   NSWindow Display P3 tagging (the GL
-│   │                              path's colour management; Metal's
-│   │                              equivalent lives in metal_renderer)
+│   │                              path's colour management; the Vulkan
+│   │                              path uses VK_EXT_swapchain_colorspace)
 │   │                                                               (MOVED)
 │   │
 │   └── private/
@@ -714,15 +758,16 @@ src/gui/render/                    — render layer core (backend-independent)
 ├── vulkan/                        — native Vulkan 1.3 backend
 │   │                                (namespace Vulkan) [C_VULKAN]
 │   │
-│   ├── vulkan_renderer.h / .cpp   Vulkan::Renderer — the backend: owns
+│   ├── vulkan_renderer.h / .cpp   Vulkan::Renderer — the backend on ALL
+│   │                              platforms (macOS via MoltenVK); owns
 │   │                              device/swapchain/executor;
 │   │                              non-blocking acquire; scheduled
 │   │                              presents                       (NEW 2,6)
 │   │
 │   └── private/
 │       │
-│       ├── vulkan_device.h / .cpp Vulkan::Device — instance/device/
-│       │                          queues/VMA via vk-bootstrap;
+│       ├── vulkan_device.h / .cpp Vulkan::Device — Hpp-RAII instance/
+│       │                          device/queues; manual memory helper;
 │       │                          validation layers in debug        (NEW 2)
 │       │
 │       ├── vulkan_swapchain.h/.cpp  Vulkan::Swapchain — swapchain +
@@ -735,29 +780,12 @@ src/gui/render/                    — render layer core (backend-independent)
 │                                  static descriptor sets, target
 │                                  image                             (NEW 3)
 │
-├── metal/                         — native Metal backend (Obj-C++,
-│   │                                namespace Metal) [C_METAL]
-│   │
-│   ├── metal_renderer.h / .mm     Metal::Renderer — the backend:
-│   │                              CAMetalLayer (incl. colorspace =
-│   │                              Display P3/sRGB), nil-drawable skip,
-│   │                              present(atTime:)               (NEW 4,6)
-│   │
-│   └── private/
-│       │
-│       └── metal_pipeline.h / .mm Metal::Pipeline — pass executor:
-│                                  PSOs, MSL via SPIRV-Cross
-│                                  CompilerMSL, target texture      (NEW 4)
-│
 └── sdl/                           — SDL_Renderer backend (legacy code:
     │                                no namespace)
     │
     └── sdl_renderer.h / .cpp      Backend ("texture"/"texturenb"):
                                    CPU doubling, no shaders; fallback
                                    of last resort          (MOVED, CHG 2)
-
-src/libs/vk-bootstrap/             Vendored (MIT; not distro-packaged;
-                                   designed for vendoring)           (NEW 2)
 
 resources/shaders/                 450 sources — the ONLY hand-edited
 ├── _internal/ crt/                shader files                      (CHG 5)
@@ -805,47 +833,48 @@ and call edges in the Relations list below.
 
 ════════ BACKENDS (implement RenderBackend) ════════════════════════════════
 
- ┌──────────────┐ ┌───────────────┐ ┌────────────────────┐ ┌─────────────────┐
- │ SdlRenderer  │ │ OpenGlRenderer│ │ Vulkan::Renderer   │ │ Metal::Renderer │
- ├──────────────┤ ├───────────────┤ ├────────────────────┤ ├─────────────────┤
- │ SDL_Renderer │ │ GL 3.3 core   │ │ window+surface     │ │ CAMetalLayer    │
- │ CPU doubling │ │ window+ctx    │ │ acquire(t=0)→skip  │ │ nextDrawable    │
- │ no shaders   │ │ vsync via     │ │ vsync/present modes│ │  nil→skip       │
- │ last-resort  │ │ swap interval │ │ VK_EXT_present_    │ │ present(atTime:)│
- │ fallback     │ │               │ │  timing (PR 6)     │ │ P3 colorspace   │
- └──────────────┘ └───────┬───────┘ └─────┬──────────────┘ └────────┬────────┘
-                          │               │                         │
-                          │      ┌────────┴──────────┐              │
-                          │      │ Vulkan::Device    │              │
-                          │      ├───────────────────┤              │
-                          │      │ vkb: instance/    │              │
-                          │      │ device/queues     │              │
-                          │      │ VMA allocator     │              │
-                          │      │ validation layers │              │
-                          │      └───────────────────┘              │
-                          │      ┌───────────────────┐              │
-                          │      │ Vulkan::Swapchain │              │
-                          │      ├───────────────────┤              │
-                          │      │ per-frame ring    │              │
-                          │      │ recreation SM     │              │
-                          │      │ timed presents    │              │
-                          │      └───────────────────┘              │
-                          ▼                ▼                        ▼
- ┌────────────────┐ ┌────────────────────────┐ ┌────────────────────────┐
- │ OpenGlPipeline │ │ Vulkan::Pipeline       │ │ Metal::Pipeline        │
- ├────────────────┤ ├────────────────────────┤ ├────────────────────────┤
- │ FBO pass chain │ │ VkPipelines (dynamic   │ │ MTLRenderPipelineStates│
- │ OpenGlShader   │ │  rendering), static    │ │ MSL via CompilerMSL    │
- │  programs      │ │  descriptor sets,      │ │ setFragmentBytes UBOs  │
- │ glUniform4fv   │ │  mapped UBOs,          │ │ sampler states         │
- │  flattened UBO │ │  sampler grid          │ │ target texture +       │
- │ target FBO +   │ │ target image +         │ │  clean-present skip    │
- │  clean-present │ │  clean-present skip    │ │ embedded blit shader   │
- │  skip          │ │                        │ │  for letterbox present │
- └───────┬────────┘ └───────────┬────────────┘ └───────────┬────────────┘
-         │                      │                          │
+ ┌──────────────┐ ┌───────────────┐ ┌──────────────────────────┐
+ │ SdlRenderer  │ │ OpenGlRenderer│ │ Vulkan::Renderer         │
+ ├──────────────┤ ├───────────────┤ ├──────────────────────────┤
+ │ SDL_Renderer │ │ GL 3.3 core   │ │ window+surface           │
+ │ CPU doubling │ │ window+ctx    │ │ acquire(t=0)→skip        │
+ │ no shaders   │ │ vsync via     │ │ vsync/present modes      │
+ │ last-resort  │ │ swap interval │ │ timed presents: EXT_ /   │
+ │ fallback     │ │               │ │  GOOGLE_display_timing   │
+ │              │ │               │ │ macOS: runs on MoltenVK  │
+ └──────────────┘ └───────┬───────┘ └─────┬────────────────────┘
+                          │               │
+                          │      ┌────────┴──────────┐
+                          │      │ Vulkan::Device    │
+                          │      ├───────────────────┤
+                          │      │ Hpp RAII instance/│
+                          │      │ device/queues     │
+                          │      │ manual memory     │
+                          │      │ validation layers │
+                          │      └───────────────────┘
+                          │      ┌───────────────────┐
+                          │      │ Vulkan::Swapchain │
+                          │      ├───────────────────┤
+                          │      │ per-frame ring    │
+                          │      │ recreation SM     │
+                          │      │ timed presents    │
+                          │      └───────────────────┘
+                          ▼                ▼
+ ┌────────────────┐ ┌────────────────────────┐
+ │ OpenGlPipeline │ │ Vulkan::Pipeline       │
+ ├────────────────┤ ├────────────────────────┤
+ │ FBO pass chain │ │ VkPipelines (dynamic   │
+ │ OpenGlShader   │ │  rendering), static    │
+ │  programs      │ │  descriptor sets,      │
+ │ glUniform4fv   │ │  mapped UBOs,          │
+ │  flattened UBO │ │  sampler grid          │
+ │ target FBO +   │ │ target image +         │
+ │  clean-present │ │  clean-present skip    │
+ │  skip          │ │                        │
+ └───────┬────────┘ └───────────┬────────────┘
+         │                      │
 ════════ SHARED SHADER SUBSYSTEM (backend-agnostic) ═══════════════════════
-         ▼                      ▼                          ▼
+         ▼                      ▼
  ┌──────────────────┐ ┌───────────────────────────┐ ┌───────────────────────────┐
  │ ShaderManager    │ │ Shaders::PipelineTopology │ │ Shaders::UniformPacker    │
  ├──────────────────┤ ├───────────────────────────┤ ├───────────────────────────┤
@@ -855,13 +884,13 @@ and call edges in the Relations list below.
  │ 450/gl330 path   │ │ without any GPU           │ │                           │
  │ resolution       │ │                           │ │                           │
  └──────────────────┘ └───────────────────────────┘ └───────────────────────────┘
- ┌──────────────────┐ ┌───────────────────────────┐ ┌───────────────────────────┐
- │ShaderPragmaParser│ │ Shaders::Compiler         │ │ Shaders::SpirvReflection  │
- ├──────────────────┤ ├───────────────────────────┤ ├───────────────────────────┤
- │ #pragma comments │ │ [vulkan + metal]          │ │ [vulkan + metal; debug,   │
- │ → ShaderInfo     │ │ glslang: 450 → SPIR-V     │ │  optional] validates the  │
- │                  │ │                           │ │ UniformPacker's offsets   │
- └──────────────────┘ └───────────────────────────┘ └───────────────────────────┘
+ ┌──────────────────┐ ┌───────────────────────────┐
+ │ShaderPragmaParser│ │ Shaders::Compiler         │
+ ├──────────────────┤ ├───────────────────────────┤
+ │ #pragma comments │ │ [C_VULKAN]                │
+ │ → ShaderInfo     │ │ glslang: 450 → SPIR-V     │
+ │                  │ │                           │
+ └──────────────────┘ └───────────────────────────┘
  ┌──────────────────┐ ┌───────────────────────────┐
  │AutoShaderSwitcher│ │ AutoImageAdjustments      │
  ├──────────────────┤ ├───────────────────────────┤
@@ -884,22 +913,22 @@ and call edges in the Relations list below.
   governor sleep around the pending due time; vretrace calls
   `GFX_SchedulePresent`.
 - Each backend **owns** its executor (`OpenGlPipeline` /
-  `Vulkan::Pipeline` / `Metal::Pipeline`); `Vulkan::Renderer`
-  additionally owns `Vulkan::Device` and `Vulkan::Swapchain`.
-  `SdlRenderer` owns no shader machinery.
+  `Vulkan::Pipeline`); `Vulkan::Renderer` additionally owns
+  `Vulkan::Device` and `Vulkan::Swapchain`. `SdlRenderer` owns no
+  shader machinery.
 - Executors → `ShaderManager` (get `ShaderSource` by resolved name)
   → `Shaders::PipelineTopology` (pass descriptions from sources +
   sizes + flags) → `Shaders::UniformPacker` (offsets + packed
-  bytes). Vulkan/Metal executors additionally → `Shaders::Compiler`
-  (SPIR-V) and, in debug, → `Shaders::SpirvReflection`;
-  `Metal::Pipeline` runs SPIRV-Cross `CompilerMSL` on the SPIR-V.
-  `OpenGlPipeline` compiles the generated 330 text via
+  bytes). The Vulkan executor additionally → `Shaders::Compiler`
+  (SPIR-V); the packer's offsets are pinned by golden-offset unit
+  tests (recorded in Spike 2) rather than a runtime reflection
+  validator. `OpenGlPipeline` compiles the generated 330 text via
   `OpenGlShader` — no runtime toolchain.
 - `ShaderManager` → `ShaderPragmaParser` at source load;
   `AutoShaderSwitcher`/`AutoImageAdjustments` drive
   `RenderBackend.SetShader`/adjustment setters on mode changes
   (unchanged mechanism).
-- `Vulkan::Swapchain` → `Vulkan::Device` (queues, VMA); executors write
+- `Vulkan::Swapchain` → `Vulkan::Device` (queues, memory helper); executors write
   their final pass into the persistent target (image/FBO/texture)
   that both the present blit and `ReadPixelsPostShader` consume —
   the clean-present skip is a staleness bit on that target, uniform
@@ -1017,17 +1046,18 @@ explicitly. Veto/adjust before implementation:
    hardware uses `opengl`/`texture`.
 2. **Vulkan function loading via SDL** —
    `SDL_Vulkan_LoadLibrary`/`SDL_Vulkan_GetVkGetInstanceProcAddr`
-   (SDL already owns the loader); volk only if vk-bootstrap
-   integration turns out awkward.
+   (SDL already owns the loader); volk only if the Hpp dynamic
+   dispatcher setup turns out awkward.
 3. **Shader directory layout**: `resources/shaders/**.glsl` become
    the 450 sources; generated GL files live in a parallel
    `resources/shaders/gl330/` tree. `ShaderManager` resolves
    name → path per backend; user shader dirs keep per-backend formats
    (GL users' custom 330 shaders keep working untouched).
-4. **The Metal PR lands after the toolchain**, so it ships with full
-   pipeline support from day one; its letterbox present uses one tiny
-   embedded MSL blit shader (Metal's blit encoder cannot scale — a
-   shader-free skeleton is impossible there, unlike Vulkan).
+4. *(Superseded 2026-07-05.)* This slot held the Metal-PR sequencing
+   decision (post-toolchain landing, embedded MSL blit shader); the
+   Metal backend was deleted in favour of MoltenVK (decision 1,
+   [Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05)), so nothing remains to decide here. Kept as a
+   tombstone to preserve the numbering.
 5. **`RenderBackend` grows a scheduled-present capability in [PR 6](#pr-6--present-timing-the-flagship)**:
    `SupportsScheduledPresents()` (default false) +
    `PresentFrameAt(due_time_us)` — the only interface change of the
@@ -1036,9 +1066,8 @@ explicitly. Veto/adjust before implementation:
    shader-free present is pure clear+blit commands.
 7. **Uniform update policy**: UBO contents change only at pipeline
    rebuild / settings change (pass output is a pure function of input
-   texture + settings — the clean-present invariant); Vulkan uses one
-   persistently-mapped UBO per pass, Metal uses
-   `setVertexBytes`/`setFragmentBytes` (blocks are tiny).
+   texture + settings — the clean-present invariant); one
+   persistently-mapped UBO per pass.
 8. **Lavapipe CI runs under xvfb** — swapchains need a real window
    system; headless-pure Vulkan can't exercise WSI.
 
@@ -1102,7 +1131,7 @@ maintainers deserve a provenance trail.
   RetroArch, DuckStation, PCSX2, RPCS3, and the Khronos samples
   authors. Every design in this plan stands on lessons they learned
   the hard way, and we say so explicitly: **thank you.**
-- **`gpu-backend-attribution.md` is a deliverable**, maintained as
+- **`native-gpu-backends-attribution.md` is a deliverable**, maintained as
   implementation proceeds (seeded already, alongside this plan). It
   gives public shout-outs to the original developers — or at minimum
   the project — for every idea, pattern, or piece of code we lifted,
@@ -1137,7 +1166,7 @@ Standing constraints for every PR in this series:
 - Every commit compiles individually (`compile-commits.sh` green),
   and every commit appends its learning-doc chapter.
 - Every commit that adopts an idea, pattern, or (licence-compatible)
-  code from a studied project updates `gpu-backend-attribution.md` in
+  code from a studied project updates `native-gpu-backends-attribution.md` in
   the same commit ([Attribution policy](#attribution-policy)).
 - New code follows the module layout, namespace, and modern-C++
   conventions of [decision 12](#decision-record-all-locked-2026-07-0304).
@@ -1148,8 +1177,9 @@ Standing constraints for every PR in this series:
   diagram, and relations from this plan become its living version),
   `shaders.md` (the shader subsystem: the 450 format, the toolchain,
   the pipeline topology, the offline generation), and one part per
-  backend (`vulkan.md`, `metal.md`, `opengl.md`, `sdl.md` — swapchain
-  lifecycle, sync structure, present timing, backend quirks).
+  backend (`vulkan.md` — including the MoltenVK macOS specifics —
+  `opengl.md`, `sdl.md`: swapchain lifecycle, sync structure, present
+  timing, backend quirks).
   Diagrams are produced as **rendered images, not just ASCII charts**
   — with their editable sources checked in next to the exported
   SVG/PNGs so they never become unmodifiable (tool choice at
@@ -1168,8 +1198,8 @@ swapchain, and synchronisation lifecycle.
 New files: `render/vulkan/vulkan_renderer.{h,cpp}` (the
 `RenderBackend` implementation, class `Vulkan::Renderer`),
 `render/vulkan/private/vulkan_device.{h,cpp}` (`Vulkan::Device` —
-instance, device, queues, and the VMA allocator, built on
-vk-bootstrap), and `render/vulkan/private/vulkan_swapchain.{h,cpp}`
+instance, device, queues via Vulkan-Hpp RAII, plus the manual
+memory helper), and `render/vulkan/private/vulkan_swapchain.{h,cpp}`
 (`Vulkan::Swapchain` — the swapchain, the per-frame sync ring, and
 the recreation state machine).
 
@@ -1186,20 +1216,16 @@ Commits:
    renames (those come with [PR 3](#pr-3--shader-toolchain--vulkan-pipeline)'s refactor). Verification: the build
    is green, the unit tests pass, and `git log --follow` tracks every
    file's history across the move.
-2. `build: add vk-bootstrap and VMA dependencies` — vk-bootstrap is
-   vendored into `src/libs/` (it is not packaged by any major Linux
-   distro, but it is a small MIT-licensed library explicitly designed
-   for vendoring — [decision 5](#decision-record-all-locked-2026-07-0304)). VMA and `vulkan-headers` come from
-   vcpkg for our builds; on system-libs builds VMA uses the distro
-   package where one exists and falls back to a bundled copy of its
-   single header. There is no Vulkan loader dependency at all,
-   because SDL already loads the Vulkan library for us ([decision 2](#decision-record-all-locked-2026-07-0304) in
-   the flesh-out list). This commit also adds the `OPT_VULKAN` CMake
-   option (default ON for Linux and Windows, OFF for macOS), which
-   defines `C_VULKAN` via `dosbox_config.h.in.cmake`, and enables the
-   option in the Linux and Windows CI workflows. Verification: the
-   project compiles with the option both ON and OFF on all three
-   platforms.
+2. `build: add the Vulkan build plumbing` — `vulkan-headers` from
+   vcpkg (which includes `vulkan.hpp`/`vulkan_raii.hpp` — Vulkan-Hpp
+   is zero additional dependency); on macOS, MoltenVK from vcpkg.
+   There is no loader dependency (SDL loads the Vulkan library —
+   [decision 2 in the flesh-out list](#decisions-made-during-flesh-out-john-review-these)), no
+   bootstrap library, and no allocator library (decisions 5 and 13).
+   This commit also adds the `OPT_VULKAN` CMake option (default ON on
+   ALL platforms now, macOS included) defining `C_VULKAN`, and
+   enables it in all three CI workflows. Verification: the project
+   compiles with the option ON and OFF on all three platforms.
 3. `Add the vulkan output backend enum and config plumbing` — adds
    `RenderBackendType::Vulkan` to the enum in
    `gui/private/common.h:70`, teaches `configure_renderer()` to parse
@@ -1214,15 +1240,22 @@ Commits:
 4. `Add the Vulkan device and window bring-up` — creates the SDL
    window with the `SDL_WINDOW_VULKAN` flag (following the
    window-properties pattern in `sdl_renderer.cpp:42`) and the
-   surface via `SDL_Vulkan_CreateSurface`. vk-bootstrap then builds
-   the instance (validation layers enabled in debug builds, with
-   their messages routed to `LOG_WARNING`), selects a physical device
-   (requirements: Vulkan 1.3, the swapchain extension, and a queue
-   family that can do both graphics and present), and creates the
-   logical device; the VMA allocator is created last. Destruction
-   order is exercised deliberately under validation. Verification:
-   the program boots to a black window and exits with a clean
-   validation log.
+   surface via `SDL_Vulkan_CreateSurface` (which on macOS creates
+   the CAMetalLayer and loads MoltenVK). Instance and device come up
+   through Vulkan-Hpp RAII construction functions
+   (`VULKAN_HPP_NO_EXCEPTIONS` + C++23 → `std::expected` returns),
+   following the Apache-2.0 official-tutorial init sequence with
+   credit: validation layers in debug builds (messages routed to
+   `LOG_WARNING`), physical-device selection against our trivial
+   requirements (Vulkan 1.3, the swapchain extension, one
+   graphics+present queue family), logical device, then the ~15-line
+   `findMemoryType` helper that replaces an allocator library.
+   Destruction order is RAII, exercised deliberately under
+   validation. One MoltenVK note from Spike 5: when the Khronos
+   loader is absent, loader-only extensions
+   (`VK_KHR_portability_enumeration`) must not be requested.
+   Verification: boots to a black window and exits with a clean
+   validation log on Linux, Windows, and macOS.
 5. `Add the swapchain and per-frame ring` — swapchain creation
    prefers `BGRA8_UNORM`, uses `minImageCount + 1` images for FIFO
    and `max(minImageCount + 2, 3)` for MAILBOX, requests
@@ -1246,7 +1279,8 @@ Commits:
    are enabled for per-present fences and recreation-free
    present-mode switching.
 6. `Implement frame upload and the blit present path` — the upload
-   uses one host-visible VMA staging slot per in-flight frame, grown
+   uses one host-visible staging slot per in-flight frame
+   (persistently mapped `HOST_VISIBLE | HOST_COHERENT` memory), grown
    on demand to the source dimensions times four bytes (see the
    architecture section for why per-frame slots rather than a single
    buffer or a streaming ring). `UploadFrame` reuses
@@ -1295,9 +1329,7 @@ OpenGL (the coupling documented in ["GL-coupling refactors"](#gl-coupling-refact
 
 New files: `render/shaders/shader_compiler.{h,cpp}`
 (`Shaders::Compiler`, the glslang wrapper),
-`render/shaders/spirv_reflection.{h,cpp}` (`Shaders::SpirvReflection`,
-the SPIRV-Cross reflection wrapper, used for debug-build validation
-only), `render/shaders/uniform_packer.{h,cpp}`
+`render/shaders/uniform_packer.{h,cpp}`
 (`Shaders::UniformPacker` — canonical std140 offset computation and
 uniform-block packing, shared by all three executors),
 `render/shaders/pipeline_topology.{h,cpp}`
@@ -1312,14 +1344,13 @@ both classes anyway.
 
 Commits:
 
-1. `build: add glslang and spirv-cross dependencies` — both come from
-   vcpkg for our builds and are linked when `C_VULKAN` or `C_METAL`
-   is enabled. On Linux system-libs builds, glslang is a hard
-   dependency (packaged by every major distro), while SPIRV-Cross is
-   optional: it only backs the debug-build reflection validator
-   there, so its absence merely disables that validator ([decision 5](#decision-record-all-locked-2026-07-0304)
-   has the full packaging review). Verification: the compile matrix
-   passes with every option combination.
+1. `build: add the glslang dependency` — from vcpkg for our builds,
+   linked when `C_VULKAN` is enabled; on Linux system-libs builds it
+   is a hard dependency, packaged by every major distro ([decision 5](#decision-record-all-locked-2026-07-0304)
+   has the full review). SPIRV-Cross is NOT linked at runtime — it
+   exists only as the dev-time CLI in the offline generation script.
+   Verification: the compile matrix passes with every option
+   combination.
 2. `Add the runtime GLSL-to-SPIR-V shader compiler` — a thin wrapper
    over the glslang C++ API: one-time `InitializeProcess()`, the
    stock `GetDefaultResources()` limits, per-stage compilation using
@@ -1327,12 +1358,13 @@ Commits:
    single-file shader format compiles unchanged), targeting Vulkan
    1.3 / SPIR-V 1.6, with compile errors formatted the same way the
    GL backend reports shader errors today. The entire flow was
-   verified in advance by [Appendix D Spike 2](#spike-2--glslang--spirv-cross-library-apis-passed). The debug reflection
-   validator that rides along matches uniform blocks by base type and
-   member names — never by instance name, because anonymous blocks
-   reflect with empty, unstable instance names (a [Spike 2](#spike-2--glslang--spirv-cross-library-apis-passed) finding).
-   Unit tests: the spike's `sharp450.glsl` compiles; garbage input is
-   rejected with a readable message.
+   verified in advance by [Appendix D Spike 2](#spike-2--glslang--spirv-cross-library-apis-passed). The UniformPacker's
+   std140 offsets are pinned by **golden-offset unit tests** — the
+   expected values were recorded by SPIRV-Cross reflection once, in
+   [Spike 2](#spike-2--glslang--spirv-cross-library-apis-passed) (0/8/16/20/24 for the canonical test block); there is
+   no runtime reflection dependency. Unit tests: the spike's
+   `sharp450.glsl` compiles; garbage input is rejected with a
+   readable message.
 3. `Split shader sources from compiled shader objects` — introduces
    `ShaderSource` (name, source text, parsed `ShaderInfo`) and
    reduces `ShaderManager` to caching sources and presets only (its
@@ -1362,7 +1394,8 @@ Commits:
    Descriptor sets are allocated from a pool sized at pipeline
    rebuild and written once ([flesh-out decision 7](#decisions-made-during-flesh-out-john-review-these) — uniforms only
    change on rebuild or settings changes). Intermediate images are
-   VMA-allocated with `COLOR_ATTACHMENT | SAMPLED` usage, 8-bit or
+   allocated via the memory helper with `COLOR_ATTACHMENT | SAMPLED`
+   usage, 8-bit or
    float per the shader's `float_output` pragma; the sampler grid
    (two filter modes × four wrap modes) is created once. Each pass
    has a persistently-mapped uniform buffer packed by the shared
@@ -1387,67 +1420,18 @@ Commits:
 *Exit criteria: `output = vulkan` running `sharp` matches OpenGL, and
 lavapipe golden-image tests are running in CI.*
 
-### PR 4 — Metal backend
+### PR 4 — Metal backend (DELETED 2026-07-05)
 
-Because this PR lands after the shader toolchain exists, the Metal
-backend arrives with full pipeline support from its first release —
-there is no shader-free skeleton phase as there was for Vulkan
-(Metal's blit encoder cannot scale, so a completely shader-free
-present isn't even possible there; see [flesh-out decision 4](#decisions-made-during-flesh-out-john-review-these)).
-
-New files: `render/metal/metal_renderer.{h,mm}` (`Metal::Renderer`)
-and `render/metal/private/metal_pipeline.{h,mm}`
-(`Metal::Pipeline`). Both are Objective-C++; whether ARC is enabled
-should match the repo's existing convention — check
-`macos_colorspace.mm` before starting.
-
-Commits:
-
-1. `build: add the Metal backend option` — adds `OPT_METAL`
-   (macOS-only, default ON), defining `C_METAL`; links the Metal and
-   QuartzCore frameworks; registers the `metal` config value with the
-   fallback chain metal → opengl → texture; enables the option in the
-   macOS CI workflow.
-2. `Add the Metal device and layer bring-up` — creates the layer via
-   `SDL_Metal_CreateView`, sets up the `MTLDevice` and command queue,
-   configures the layer (`pixelFormat = BGRA8Unorm`,
-   `displaySyncEnabled` driven by the vsync setting, and
-   **`colorspace` driven by the `color_space` setting** — Display P3
-   or sRGB via `CGColorSpaceCreateWithName`; this is the Metal
-   equivalent of the GL path's NSWindow colour-space tagging and must
-   not be left at its nil default, which would disable colour
-   matching entirely), tracks drawable size from the viewport
-   notifications, and treats a nil return from `nextDrawable` as a
-   skipped present with its own counter — the Metal equivalent of the
-   Vulkan acquire-skip. `SetColorSpace` is a real implementation on
-   this backend, not a stub.
-3. `Implement upload, pipeline executor, and present` — uploads go
-   into an `MTLTexture` using shared storage on unified-memory
-   hardware; the code queries for unified memory rather than assuming
-   Apple Silicon, because Intel Macs with discrete GPUs need the
-   managed-storage path instead (a PCSX2 lesson, [Appendix C §10](#10-pcsx2-and-rpcs3-added-2026-07-04-new-findings-only)). MSL
-   comes from SPIRV-Cross's `CompilerMSL` (entry point `main0`, with
-   the texture and buffer indices obtained from its resource-binding
-   queries). Each pass becomes an `MTLRenderPipelineState`, keyed by
-   pass and target formats; the sampler-state grid mirrors the Vulkan
-   one; uniforms are small enough to go through
-   `setVertexBytes`/`setFragmentBytes`, so there is no buffer
-   management at all ([flesh-out decision 7](#decisions-made-during-flesh-out-john-review-these)). Intermediate textures
-   and the viewport-sized target texture mirror the Vulkan
-   structure. The letterbox present is a clear plus the one embedded
-   blit shader from [decision 4](#decision-record-all-locked-2026-07-0304), followed by `presentDrawable`, with
-   the `// TODO(osd)` compositing-point marker after the blit (see
-   ["OSD readiness"](#osd-readiness-design-constraints-only--no-osd-is-implemented)); captures read the target texture with
-   `waitUntilCompleted`, which is fine at screenshot cadence. Everything shader-side —
-   `shader_compiler`, `pipeline_topology`, the UniformPacker, the
-   reflection validator — is reused from [PR 3](#pr-3--shader-toolchain--vulkan-pipeline) with zero duplication.
-   Verification: parity against the Vulkan backend on the M4 mini;
-   golden captures for `sharp`, adjustments, and dedither; both
-   storage-mode paths exercised (M-series plus one Intel Mac if one
-   is available — flagged as untested otherwise).
-
-*Exit criteria: `output = metal` reaches parity with the Vulkan
-backend on macOS.*
+This PR no longer exists. The native Metal backend was removed from
+the plan before implementation began: macOS runs the same Vulkan
+backend on MoltenVK, with timed presents through
+`VK_GOOGLE_display_timing` (decision 1,
+[Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05), sealed empirically by Spike 5 in
+[Appendix D](#appendix-d--spike-results-2026-07-04)). The PR number is retained as a tombstone so that
+cross-references, attribution entries, and the learning doc's
+history stay valid. macOS-specific work that survives lands inside
+the Vulkan PRs: the MoltenVK build/CI wiring in [PR 2](#pr-2--vulkan-backend-skeleton-output--vulkan-no-shaders), and the
+`VK_GOOGLE_display_timing` dialect in [PR 6](#pr-6--present-timing-the-flagship).
 
 ### PR 5 — single-source shader library
 
@@ -1545,18 +1529,18 @@ Commits:
    acting); fallback to the [PR 1](#pr-1--deferred-present-scheduler--pacing-instrumentation) scheduler when absent or lying.
    Verify: RTX 3060 + VRR — logged first-pixel-visible intervals
    track 70.086 Hz; `vulkaninfo` confirms the extension.
-3. `Implement scheduled presents in the Metal backend` — host-time →
-   mach-absolute-time conversion, `presentDrawable:atTime:`
-   (DuckStation-validated shape, designed not copied; **proven
-   locally in [Appendix D Spike 4](#spike-4--metal-scheduled-presents-on-real-hardware-passed)**: exact average cadence on the
-   M4 Pro, feedback machinery works), `addPresentedHandler` →
-   lock-free single-writer feedback ring read from the main thread
-   (handlers fire on Metal's internal queue); targets scheduled
-   2–3 refresh cycles ahead ([Spike 4](#spike-4--metal-scheduled-presents-on-real-hardware-passed)'s constant-offset lesson);
-   same drift/miss accounting. Verify: M4 mini on the VRR panel +
-   MBP ProMotion — logged intervals track DOS cadence; check the
-   windowed-vs-fullscreen offset difference ([Spike 4](#spike-4--metal-scheduled-presents-on-real-hardware-passed) measured
-   windowed only).
+3. `Implement the VK_GOOGLE_display_timing dialect` — the MoltenVK/
+   macOS path, Spike 5-verified end to end: probed when
+   `VK_EXT_present_timing` is absent; `VkPresentTimesInfoGOOGLE`
+   chained into the present with `presentID` + `desiredPresentTime`
+   (mach-nanosecond domain on MoltenVK — Spike 5 confirmed);
+   feedback polled via `vkGetPastPresentationTimingGOOGLE` into the
+   same ring as the EXT dialect; refresh duration from
+   `vkGetRefreshCycleDurationGOOGLE`; the same drift/miss accounting.
+   Both dialects feed one internal design — target time in, glass
+   time out. Verify: M4 mini on the VRR panel + MBP ProMotion —
+   logged intervals track DOS cadence (Spike 5 already proves the
+   windowed case; verify fullscreen and the external VRR panel).
 4. `Evaluate Win32 exclusive fullscreen and acquire overlap` — two
    candidate improvements from the reference study get measured on
    the RTX 3060 and kept only if they demonstrably improve pacing:
@@ -1587,8 +1571,8 @@ presentation-mode decision, and the documentation sweep.
 Commits:
 
 1. `Add the auto output mode` — implements the resolution order from
-   [decision 3](#decision-record-all-locked-2026-07-0304): Linux and Windows try `vulkan` first, macOS tries
-   `metal`, and everything falls back through `opengl` to `texture`;
+   [decision 3](#decision-record-all-locked-2026-07-0304): every platform tries `vulkan` first (macOS lands on
+   MoltenVK), falling back through `opengl` to `texture`;
    the chosen backend is logged clearly. The *shipped default*
    config value stays unchanged in this release — flipping the
    default to `auto` is a separate release-management decision to be
@@ -1603,7 +1587,7 @@ Commits:
    workaround for OpenGL's blocking swap) is also shrunk toward zero
    on the native backends.
 3. `docs: native backends, VRR guide, and release notes` — the
-   setting documentation for `vulkan`/`metal`/`auto`; a VRR guide
+   setting documentation for `vulkan`/`auto`; a VRR guide
    covering the recommended configurations (including the
    driver-forced-vsync caveat from [decision 8](#decision-record-all-locked-2026-07-0304) and the NVIDIA
    control-panel DXGI-layering note for windowed VRR on Windows) and
@@ -1624,7 +1608,7 @@ question left behind is when the shipped default flips to `auto`.*
 - **On-disk shader cache** (design preserved): content-addressed
   `shader-cache/` under the config dir; key = SHA-256(post-preamble
   source, stage, target format, tool versions); value = final
-  per-driver artifact (SPIR-V / MSL); atomic temp+rename writes;
+  per-driver artifact (SPIR-V); atomic temp+rename writes;
   age-based prune. Deferred: remaining compiles are single-digit ms.
   (RetroArch ships exactly this pattern — slang_process.cpp:773-808 —
   validating the design if ever needed.)
@@ -1658,7 +1642,7 @@ question left behind is when the shipped default flips to `auto`.*
 - **Pacing proof** ([PR 6](#pr-6--present-timing-the-flagship)): present-timing feedback logs showing flip
   intervals vs DOS cadence on VRR; skip counters ≈ 0 on VRR;
   per-present block time ≈ 0.
-- **Manual matrix per PR**: macOS/Metal; Linux/Vulkan (NVIDIA, AMD,
+- **Manual matrix per PR**: macOS/Vulkan-on-MoltenVK; Linux/Vulkan (NVIDIA, AMD,
   Intel — core team members); Windows/Vulkan (NVIDIA RTX 3060
   + the three AMD iGPU boxes; Intel-on-Windows is untested at home —
   minor gap, `opengl`/`texture` fallbacks cover it); VRR and fixed
@@ -1722,9 +1706,9 @@ question left behind is when the shipped default flips to `auto`.*
   (including synchronisation validation) run in all debug builds, and
   the manual test matrix spreads across three vendors and both fixed
   and VRR displays.
-- **Generated-code drift**: the MSL and generated-330 shader variants
-  could render slightly differently from the hand-written GLSL for
-  the CRT shaders. Golden captures guard every cutover. The standard
+- **Generated-code drift**: the generated-330 shader variants could
+  render slightly differently from the hand-written GLSL for the CRT
+  shaders. Golden captures guard every cutover. The standard
   is "knowably equivalent" across backends (different GPUs round
   differently); bit-identical output is required only where it is
   achievable — the GL legacy path versus the GL generated path.
@@ -1734,10 +1718,15 @@ question left behind is when the shipped default flips to `auto`.*
   this directly on macOS. First-class pacing is a fullscreen
   feature. We document this honestly rather than pretending to solve
   it.
-- **Objective-C++ enters the tree** with the Metal backend. The
-  surface is small, and the repo already contains Obj-C++
-  (`macos_colorspace.mm`), so this is a familiarity cost rather than
-  a technical one.
+- **MoltenVK is a translation layer** with its own quirk tail and
+  the Vulkan "portability subset" caveats. Mitigations: its
+  display-timing backend is production-proven (Psychtoolbox-3),
+  PPSSPP and RetroArch ship it in production, our Spike 5 measured it
+  behaving identically to native Metal for our exact use case, and
+  the portability-subset gaps are exotic features a five-pass
+  fragment pipeline never touches. Xcode's Metal capture plus the
+  Vulkan validation layers both work on it — two debugging toolsets,
+  not zero.
 
 ---
 
@@ -1852,8 +1841,8 @@ Workflow: John checks the repos out locally; Claude inspects them; findings beco
 - Shader cache moved to deferred future work.
 - Reference-implementation study added as a formal plan step (done —
   [Appendix C](#appendix-c--reference-study-design-notes-2026-07-04)).
-- Learning doc named `gpu-backend-learning.md`; repo plan doc named
-  `gpu-backend-plan.md`.
+- Learning doc named `native-gpu-backends-learning.md`; repo plan doc named
+  `native-gpu-backends-plan.md`.
 
 ---
 
@@ -2090,9 +2079,11 @@ our licence flexibility).
 
 # Appendix D — Spike results (2026-07-04)
 
-Four spikes, all run locally. [Spike 1](#spike-1--cli-toolchain-round-trip) (CLI toolchain round-trip) below;
-[Spike 2](#spike-2--glslang--spirv-cross-library-apis-passed) (library APIs), [Spike 3](#spike-3--vk_ext_present_timing-api-surface-pinned) (`VK_EXT_present_timing` API pinning)
-and [Spike 4](#spike-4--metal-scheduled-presents-on-real-hardware-passed) (Metal scheduled presents on real hardware) follow it.
+Five spikes, all run locally. [Spike 1](#spike-1--cli-toolchain-round-trip) (CLI toolchain round-trip) below;
+[Spike 2](#spike-2--glslang--spirv-cross-library-apis-passed) (library APIs), [Spike 3](#spike-3--vk_ext_present_timing-api-surface-pinned) (`VK_EXT_present_timing` API pinning),
+[Spike 4](#spike-4--metal-scheduled-presents-on-real-hardware-passed) (Metal scheduled presents on real hardware), and Spike 5
+(MoltenVK timed presents — the experiment that decided the
+Metal-backend deletion, Appendix E) follow it.
 
 ## Spike 1 — CLI toolchain round-trip
 
@@ -2163,7 +2154,7 @@ spirv-cross --msl sharp.frag.spv
 ## Spike 2 — glslang + SPIRV-Cross library APIs (PASSED)
 
 [PR 3](#pr-3--shader-toolchain--vulkan-pipeline) uses the libraries, not the CLI tools; verified with a small C++
-program (scratchpad `lib_spike.cpp`) against the Homebrew builds,
+program (`spikes/lib_spike.cpp`) against the Homebrew builds,
 on a fragment shader extended with parameter-style members
 (`vec2, vec2, float, float, vec2`):
 
@@ -2217,7 +2208,7 @@ spec" is now resolved. The shape (names verbatim):
 
 ## Spike 4 — Metal scheduled presents on real hardware (PASSED)
 
-Standalone Cocoa/Metal program (scratchpad `metal_spike.mm`): 300
+Standalone Cocoa/Metal program (`spikes/metal_spike.mm`): 300
 clear-colour frames presented via `presentDrawable:atTime:` at a
 70.086 Hz cadence, submitted ~3 ms before each target, actual glass
 times collected via `addPresentedHandler`. Hardware: **Apple M4 Pro,
@@ -2242,10 +2233,197 @@ times collected via `addPresentedHandler`. Hardware: **Apple M4 Pro,
   refresh cycles ahead** (or accept the constant offset — constant
   latency is harmless for pacing; jitter is the enemy). Expect the
   offset to shrink under fullscreen/direct scanout — verify then.
-- Implementation gotchas recorded for [PR 4](#pr-4--metal-backend)/6 (details in the learning
-  doc): unbundled binaries must call `[NSApp finishLaunching]` before
+- Implementation gotchas recorded (details in the learning doc):
+  unbundled binaries must call `[NSApp finishLaunching]` before
   windows will truly present; host the CAMetalLayer as a sublayer of
   a layer-backed view (naive contentView layer replacement gave
   nil-less drawables that never reached glass, plus an AppKit
   teardown crash); presented-handlers fire on Metal's internal queue
   (thread-safe collection required).
+
+## Spike 5 — MoltenVK timed presents (PASSED; deleted the Metal backend)
+
+The experiment that sealed [Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05)'s MoltenVK decision: a raw-C-API
+Vulkan program (`spikes/vulkan_timing_spike.mm`) presenting 300
+clear-colour frames at 70.086 Hz **through MoltenVK** with
+`VK_GOOGLE_display_timing` — `desiredPresentTime` on every present,
+actual glass times read back via `vkGetPastPresentationTimingGOOGLE`.
+Same machine, same display, same cadence as Spike 4, so the numbers
+are directly comparable:
+
+| | Spike 4 (native Metal `atTime:`) | Spike 5 (MoltenVK) |
+|---|---|---|
+| feedback coverage | 300/300 | 300/300 |
+| mean interval | 14.254 ms | **14.275 ms** (target 14.268) |
+| interval histogram | 90 × 8.3 ms + 203 × 16.7 ms | **90 × 8.3 ms + 207 × 16.7 ms** |
+
+- Identical 2:1 vblank alternation on the 120 Hz panel — MoltenVK
+  maps `desiredPresentTime` onto exactly the `presentDrawable:atTime:`
+  machinery Spike 4 validated. The abstraction costs nothing
+  measurable.
+- Feedback is complete and per-present (`desiredPresentTime` +
+  `actualPresentTime` per `presentID`), and
+  `vkGetRefreshCycleDurationGOOGLE` correctly reported the panel
+  (8.333 ms / 120 Hz) — the refresh-duration query our pacing logs
+  want comes free.
+- `VK_GOOGLE_display_timing` is exposed by MoltenVK as a device
+  extension (device: "Apple M4 Pro", Vulkan 1.2 exposed by this
+  MoltenVK build); entry points resolved via `vkGetDeviceProcAddr`.
+- Submission was 10 ms ahead of target; mean lateness 13.1 ms vs
+  Spike 4's 20.6 ms at 3 ms ahead — the same 2–3-frame windowed
+  compositor pipeline, consistent with the schedule-ahead lesson.
+- One integration gotcha for direct-linking MoltenVK (no Khronos
+  loader): `VK_KHR_portability_enumeration` is a *loader* extension —
+  requesting it from MoltenVK itself fails instance creation with
+  `VK_ERROR_EXTENSION_NOT_PRESENT`. Request only what MoltenVK
+  implements (`VK_KHR_surface`, `VK_EXT_metal_surface`).
+
+---
+
+# Appendix E — Ecosystem review: Vulkan-Hpp, MoltenVK, Slang (2026-07-05)
+
+John challenged three plan decisions against the latest authoritative
+Vulkan ecosystem guidance (vulkan.org, the official Khronos tutorial,
+MoltenVK, the Slang initiative), suspecting we had missed critical
+information. He was right on two of the three. This appendix is the
+lightly edited decision memo; the decision record summarises the
+outcomes.
+
+## The verified facts first
+
+- The official Khronos Vulkan tutorial (docs.vulkan.org, source at
+  KhronosGroup/Vulkan-Tutorial) teaches: **Vulkan-Hpp with RAII**,
+  modern C++20, **Slang as the primary shading language**, Vulkan 1.4
+  baseline, dynamic rendering, timeline semaphores.
+- **Local evidence from all six studied emulators: zero use
+  Vulkan-Hpp, zero use vk-bootstrap** — every one drives the raw C
+  API with hand-rolled init. All six acknowledge MoltenVK; PPSSPP and
+  RetroArch ship their macOS Vulkan backends on it in production.
+- **MoltenVK** is a layered Vulkan **1.4** implementation over Metal,
+  maintained under the Khronos Group (The Brenwill Workshop), and
+  supports the extensions that matter to us: **`VK_GOOGLE_display_
+  timing` (mature since 2021)**, `VK_EXT_swapchain_colorspace`,
+  `VK_EXT_metal_objects`, `VK_KHR_present_wait`, calibrated
+  timestamps, and both maintenance1 extensions. `VK_EXT_present_
+  timing` not yet. Its display-timing backend is production-proven by
+  **Psychtoolbox-3** — a scientific psychophysics toolkit whose whole
+  purpose is microsecond-exact stimulus presentation; there is no
+  more demanding present-timing user.
+- **Vulkan-Hpp**: with `VULKAN_HPP_NO_EXCEPTIONS` on C++23, the
+  `vk::raii` construction functions return
+  `std::expected<vk::raii::Object, vk::Result>` — natively
+  implementing decision 12's chosen idiom. And `vulkan.hpp` /
+  `vulkan_raii.hpp` ship **inside the vulkan-headers package**
+  (verified locally): adopting Hpp adds zero dependencies.
+- **Slang** is now a Khronos initiative (NVIDIA-contributed, 15 years
+  of development), targets SPIR-V/MSL/HLSL/GLSL/WGSL/CUDA, is
+  **dynamic-library-only**, packaged in vcpkg with platform wobbles,
+  and essentially **not packaged by any Linux distro**.
+- **Fact-check (John's challenge)**: RetroArch's "slang" shader format
+  is **Vulkan GLSL, not the Khronos Slang language** — verified with
+  a primary artifact (libretro/slang-shaders `stock.slang`:
+  `#version 450`, `layout(push_constant)`,
+  `layout(std140, set = 0, binding = N)`, `#pragma stage` — GLSL
+  syntax throughout) and by RetroArch's compiler invocation (glslang
+  with `EShMsgVulkanRules`). The name is a 2016 libretro coinage
+  predating Khronos's Slang branding.
+
+## 1. Binding layer — switch to Vulkan-Hpp RAII (adopted)
+
+The decisive fact is the `std::expected` one: decision 12 already
+mandates C++23, `std::expected` for fallible construction, and no
+exceptions — and Vulkan-Hpp RAII in exactly that configuration
+natively implements the idiom we would otherwise hand-build around C
+handles. Add `vk::StructureChain` for type-safe pNext chains (the
+present-timing code is pNext-heavy — where raw C hurts most), enum
+classes throughout, and alignment with the freshest official learning
+material.
+
+Counter-arguments, weighed: *"no emulator does this"* — true, but the
+licence firewall means we re-express patterns rather than transplant
+code, so reference-code compatibility costs little; patterns are
+structural. *Compile time* — vulkan.hpp is heavy, but only ~4
+translation units include it. *vk-bootstrap compatibility* — vkb
+never grew first-class Hpp support and mixing the paradigms is
+friction without payoff; **with Hpp we don't need vk-bootstrap**: for
+our trivial requirements (Vulkan 1.3+, swapchain, one
+graphics+present queue — no scoring, no exotic features) the init
+shrinks to ~200–400 lines we own, with the Apache-2.0 official
+tutorial as a licence-clean template. vk-bootstrap was the right
+answer to a question Hpp dissolves; it leaves the plan with thanks.
+
+**VMA — dropped in the same review.** Our allocation profile is a
+small, fixed, bounded set of long-lived resources (one input image,
+~6 intermediates + target, staging slots, a vertex buffer, tiny
+UBOs — ~15 allocations, rebuilt only on rare mode/viewport events).
+That is the *worst* fit for what VMA is good at (sub-allocating many
+churny heterogeneous resources, allocation-count ceilings,
+defragmentation). Manual allocation needs one ~15-line
+`findMemoryType` helper (tutorial-standard); one `VkDeviceMemory` per
+resource is fine at this count. The one real footgun is recorded as a
+rule: the per-frame upload staging must be
+`HOST_VISIBLE | HOST_COHERENT`, **persistently mapped once and
+reused** — never allocate/map/unmap/free per frame (this was already
+our staging-slot design). Revisit VMA only if the transfer profile
+ever stops being fixed.
+
+## 2. MoltenVK — Metal backend deleted (adopted, spike-sealed)
+
+The expectation was to defend the native Metal backend; the evidence
+killed it:
+
+- **Timed presents on macOS through Vulkan exist today and are
+  production-proven** (MoltenVK's `VK_GOOGLE_display_timing`, mature
+  since 2021, Psychtoolbox-3 in production — stronger validation than
+  our own Spike 4). Our Spike 5 then confirmed it empirically on the
+  M4 Pro: interval histograms match native Metal almost exactly
+  (90×8.3 ms + 207×16.7 ms vs 90+203; mean 14.275 ms vs 14.254 ms
+  against a 14.268 ms target). The abstraction costs nothing
+  measurable.
+- **Colorspace solves itself twice over**: `VK_EXT_swapchain_
+  colorspace` at the Vulkan level, and since we own the CAMetalLayer
+  the surface is built on, layer-level knobs remain reachable with at
+  most a few ifdef'd lines.
+- **The escape hatch is real**: `VK_EXT_metal_objects` exports the
+  underlying Metal objects if raw Metal is ever needed.
+
+What deletion buys: the entire Metal backend PR, the second executor,
+the second WSI, Objective-C++ in the tree, runtime MSL generation
+(and with it SPIRV-Cross's last runtime role — it becomes a dev-time
+CLI tool only), the embedded blit shader, and a whole test-matrix
+dimension. What it costs: a macOS-only dependency (Khronos-maintained,
+brew/vcpkg, no distro concerns), slightly muddier GPU debugging
+(Xcode still captures the Metal MoltenVK emits, and Vulkan validation
+layers work on top — arguably both toolsets), the portability-subset
+caveats (its gaps are exotic features a five-pass fragment pipeline
+never touches), and a translation-layer quirk tail (mitigated by
+PPSSPP/RetroArch shipping it in production for years).
+
+The timing ladder becomes: `VK_EXT_present_timing` (new Mesa/NVIDIA)
+→ `VK_GOOGLE_display_timing` (MoltenVK; same internal design — target
+time + feedback ring) → app-timed scheduler. Two extension dialects,
+one backend — versus one dialect and two entire backends. No contest.
+
+## 3. Slang — evaluated and declined, with an open door
+
+Slang is the right recommendation for the tutorial's audience: people
+starting new shader codebases. Our situation differs in three
+specific ways. **Conversion asymmetry**: our 21 shaders are GLSL; to
+Vulkan GLSL 450 the conversion is mechanical (spike-proven, bodies
+untouched); to Slang's HLSL-like syntax it is the full rewrite we
+already rejected when it was called HLSL. **Runtime packaging**: user
+custom shaders need a runtime compiler; glslang is small,
+static-linkable, and packaged by every distro; libslang is
+dynamic-only, tens of MB, and unpackaged on Linux — exactly the
+bundling situation we avoid. **Ecosystem**: our modders and the
+entire retro-shader world write GLSL (RetroArch's "slang" format
+included — see the fact-check above). And the "with MoltenVK it would
+just work" intuition is equally true of GLSL 450: anything emitting
+SPIR-V works identically through MoltenVK; Slang buys nothing
+Mac-specific.
+
+The open door: the shader front-end is a plug-in — only
+`Shaders::Compiler` knows GLSL exists, and the offline GL 330 path
+(SPIR-V → SPIRV-Cross) is front-end-agnostic. If the retro ecosystem
+migrates or Slang's packaging matures, swapping glslang → libslang
+later is a one-component change. That is the recorded watch-item.

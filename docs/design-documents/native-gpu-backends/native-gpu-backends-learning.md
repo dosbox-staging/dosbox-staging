@@ -1,7 +1,7 @@
 # GPU backend learning companion
 
 This document grows alongside the native Vulkan/Metal backend work
-(see `gpu-backend-plan.md`). The deal: **every commit in the series
+(see `native-gpu-backends-plan.md`). The deal: **every commit in the series
 appends a chapter** explaining the concepts that commit touches, why
 the code looks the way it does, and where to read more. It is written
 to be read like a textbook — in order the first time, then dipped into

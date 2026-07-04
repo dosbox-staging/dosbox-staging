@@ -1,0 +1,17 @@
+[1] window + CAMetalLayer up (screen max fps: 120)
+[2] instance created
+[3] device: Apple M4 Pro (Vulkan 1.2)
+[4] VK_GOOGLE_display_timing: SUPPORTED
+[5] device + timing entry points ready
+[6] swapchain: 3 images, 640x400
+[7] refreshDuration: 8.333 ms (120.0 Hz)
+[8] beginning 300 timed presents @ 70.086 Hz
+
+=== MoltenVK VK_GOOGLE_display_timing @ 70.086 Hz, 300 frames ===
+target period: 14.268 ms | presents submitted: 300 | feedback entries: 300
+actual vs desired [ms]: mean=13.103 p50=12.750 p95=16.654 min=8.110 max=49.880 (n=300)
+actual interval  [ms]: mean=14.275 p50=16.667 p95=16.667 min=8.333 max=47.108 (n=299)
+interval histogram:
+    8.0-  9.0 ms:   90 ############################################################
+   16.0- 17.0 ms:  207 ############################################################
+   21.0- 22.0 ms:    1 #

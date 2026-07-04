@@ -1,6 +1,6 @@
 # GPU backend — attributions and thanks
 
-The native Vulkan and Metal render backends (see `gpu-backend-plan.md`)
+The native Vulkan and Metal render backends (see `native-gpu-backends-plan.md`)
 were designed after studying the rendering code of six open-source
 emulators and the official Khronos samples. Every non-trivial design
 decision in that plan stands on lessons these projects' developers
@@ -90,9 +90,11 @@ itemised credits.
 
 - **Scheduled Metal presents** (`presentDrawable:atTime:` with
   host-to-mach time conversion; nil-drawable skip) — the only
-  shipping-emulator precedent for our flagship's Metal half. Idea,
-  independently re-implemented and verified by our own spike
-  (plan Appendix D Spike 4). *Planned (PR 6).*
+  shipping-emulator precedent for display-engine-timed presents on
+  macOS. We now reach the same machinery through MoltenVK's
+  `VK_GOOGLE_display_timing` rather than a Metal backend, but the
+  prior-art credit stands; verified by our own Spikes 4 and 5
+  (plan Appendix D). *Planned (PR 6).*
 - **Acquire-semaphore pool sizing rule** (acquire semaphores must
   outnumber command buffers by one before safe reuse) — subtle
   correctness knowledge absent from the introductory materials.
@@ -105,8 +107,10 @@ itemised credits.
 
 - **Pre-Ventura windowed MAILBOX quirk** (macOS remaps/breaks MAILBOX
   in windowed mode before Ventura) — hard-won macOS-version quirk
-  knowledge that puts the OS version into our test matrix. Idea/
-  workaround. *Planned (PR 4).*
+  knowledge that puts the OS version into our test matrix; still
+  relevant through MoltenVK, whose swapchain rides the same
+  CAMetalLayer. Idea/workaround. *Planned (PR 2/PR 6 macOS
+  testing).*
 
 ## RPCS3 (GPLv2 — adaptable)
 
@@ -135,9 +139,14 @@ sample code is directly adapted, it receives its Apache-2.0
 ## Libraries we build on
 
 Not study subjects but load-bearing dependencies, thanked here all
-the same: **vk-bootstrap** (Charles Giessen), **Vulkan Memory
-Allocator** (AMD GPUOpen), **glslang** and **SPIRV-Cross** (Khronos,
-the latter by Hans-Kristian Arntzen — whose writing on Vulkan also
-taught us plenty), and **SDL** (Sam Lantinga and contributors), which
-keeps doing our windowing, input, and audio even as we take the GPU
-into our own hands.
+the same: **MoltenVK** (The Brenwill Workshop Ltd. / Khronos — the
+layered Vulkan-over-Metal implementation that let us delete an entire
+backend), **Vulkan-Hpp** (Khronos), **glslang** and **SPIRV-Cross**
+(Khronos, the latter by Hans-Kristian Arntzen — whose writing on
+Vulkan also taught us plenty), and **SDL** (Sam Lantinga and
+contributors), which keeps doing our windowing, input, and audio even
+as we take the GPU into our own hands. Two libraries were evaluated
+in earnest and set aside with thanks rather than used —
+**vk-bootstrap** (Charles Giessen) and **Vulkan Memory Allocator**
+(AMD GPUOpen): both excellent at what they do; our requirements
+turned out too small to need them (plan Appendix E).

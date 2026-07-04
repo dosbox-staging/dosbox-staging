@@ -1,0 +1,21 @@
+[1] creating NSApplication
+[2] NSApplication up (launched + active)
+[3] window created
+[4] device: Apple M4 Pro
+[5] layer created
+[6] layer hosted as sublayer
+[7] window on screen
+main screen maximumFramesPerSecond: 120
+frame 0: drawable ok, now=1812550.5164 target=1812550.5133
+frame 1: drawable ok, now=1812550.5265 target=1812550.5276
+frame 2: drawable ok, now=1812550.5429 target=1812550.5418
+
+=== presentDrawable:atTime: @ 70.086 Hz, 300 frames ===
+target period: 14.268 ms
+gpu completed: 300, presented handlers fired: 300
+dropped/unpresented: 2
+present error vs target [ms]: mean=20.609  p50=20.625  p95=24.829  min=14.112  max=26.438  (n=298)
+presented interval       [ms]: mean=14.254  p50=16.667  p95=16.667  min=8.333  max=25.000  (n=297)
+interval histogram:
+    8.0-  9.0 ms:   90 ############################################################
+   16.0- 17.0 ms:  203 ############################################################
