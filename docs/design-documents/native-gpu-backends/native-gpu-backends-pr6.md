@@ -307,7 +307,7 @@ with the outcome if adopted.
 | # | Box | Scenario | Pass when |
 | --- | --- | -------- | --------- |
 | 1 | RTX 3060 + VRR, fullscreen | 70.086 Hz scroller, EXT tier | Criterion 1 numbers in PACING report |
-| 2 | RTX 3060, windowed + NVCP DXGI-swapchain knob | Same content | Documented behaviour; numbers recorded for the VRR guide |
+| 2 | RTX 3060, windowed AND borderless + NVCP DXGI-swapchain knob | Same content | Documented behaviour; numbers recorded for the VRR guide. Borderless expectation (Xenia's finding, plan Appendix C §12): IMMEDIATE may be GDI-copied — no independent flip/VRR on that path |
 | 3 | RTX 3060 | `DOSBOX_PRESENT_TIMING=scheduler` | Clean tier log; PR 1-grade pacing; no crash |
 | 4 | AMD boxes ×3 (no EXT on Windows yet) | Same content | Auto-selects scheduler tier with one clear log line; pacing sane |
 | 5 | M4 mini + external VRR, fullscreen | GOOGLE tier | Criterion 2 numbers |

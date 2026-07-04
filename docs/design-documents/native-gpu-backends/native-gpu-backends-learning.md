@@ -287,7 +287,9 @@ mode that turned out to be the key to macOS compatibility.
 Before writing our own Vulkan and Metal code, we read six shipping
 emulators' render backends (Dolphin, PPSSPP, RetroArch, DuckStation,
 PCSX2, RPCS3 — licences vary; the plan records which are
-patterns-only) and the official Khronos samples. This chapter is the
+patterns-only) and the official Khronos samples; two more, Cemu and
+Xenia, joined after the plan was finished (the closing section of
+this chapter tells that part). This chapter is the
 narrative version; the plan's Appendix C has the file:line
 references. Everything we end up adopting gets credited at the
 adoption site in our code too — the plan's attribution policy makes
@@ -306,7 +308,7 @@ fixed-function needs pencil out at a third of that). Its Metal backend
 is less than half the size of the Vulkan one — a preview of how the
 second backend will feel after the first hardens the shared structure.
 
-#### Six projects, six personalities
+#### Eight projects, eight personalities
 
 Reading that much code back to back, each project develops a distinct
 character, and knowing them helps you know *which* reference to open
@@ -338,6 +340,16 @@ when a given problem bites:
   lie about present timing, which drivers spam errors when minimised,
   how long you may safely wait for anything. Its per-vendor trust
   table goes straight into our feedback validation.
+- **Cemu** (a late entrant — see the closing section) is the
+  production engineer. Everything serves shipping Breath of the Wild
+  smoothly on real machines: mature pipeline and SPIR-V disk caches,
+  async compilation, and the fleet's only use of
+  `VK_KHR_present_wait` — pragmatically, for flow control.
+- **Xenia** (the other late entrant) is the annotator. Triang3l's
+  presenter reads like a WSI field guide with code attached — every
+  fragile spot carries a paragraph explaining exactly why it is
+  fragile, including the best written admission in the fleet that
+  part of swapchain teardown runs on hope.
 
 #### The swapchain dance, and its traps
 
@@ -455,6 +467,104 @@ MoltenVK. Dolphin's Metal observations stay useful all the same,
 because Metal is what MoltenVK speaks underneath: `nextDrawable`'s
 nil is still where our skipped presents ultimately come from on
 macOS.)*
+
+### The late entrants: Cemu and Xenia
+
+After the plan was finished — after the ecosystem review of
+Chapter 7, even — John checked out two more emulators and asked the
+only question that matters at that stage: *is there anything here we
+missed?* It is the same instinct that drove Chapter 7, pointed at a
+different blind spot. A reference study samples a population; adding
+two well-regarded projects the sample didn't include is a cheap test
+of whether the sample was biased. If the newcomers contradicted our
+conclusions, better to know before the first commit. They didn't —
+but the ways they *confirmed* things, and the handful of genuinely
+new facts they added, were worth the afternoon.
+
+The most important result is a negative one. Our flagship rests on
+the claim that no shipping emulator schedules Vulkan presents — a
+claim you can never prove, only fail to falsify, and every project
+added to the study is another chance to falsify it. Cemu and Xenia
+were serious chances, too: Cemu is famous for caring about Wii U
+frame pacing, and Xenia's presenter is the most meticulously
+engineered presentation code we have read anywhere. Both came back
+clean: not one use of `VK_GOOGLE_display_timing` or
+`VK_EXT_present_timing` between them, on any backend. Eight
+emulators, zero schedulers. The claim survives its two best chances
+to die, which is as close to confidence as empiricism gets.
+
+Cemu did something more interesting than nothing, though: it uses
+`VK_KHR_present_wait` — a timing-adjacent extension — for
+**backpressure**. Every present carries an ID, and when too many
+presents are queued unshown, Cemu blocks on the oldest ID before
+submitting more, capping its own latency. With that, the study's
+catalogue of what emulators actually do with the timing extensions
+is complete and pleasingly orthogonal: PPSSPP *measures* with them,
+Cemu *flow-controls* with them, and nobody *schedules* with them.
+Three verbs; the third box stays empty until this project fills it.
+(We don't need Cemu's verb — our zero-timeout acquire skips instead
+of queueing, so there is nothing to flow-control — but it is the
+known tool if a present queue ever appears in our design.)
+
+Cemu's other lesson runs closest to our PR 1. Its `SYNC_AND_LIMIT`
+vsync mode is the nearest published relative of our app-timed
+scheduler tier: a dedicated thread waits on *actual monitor vblanks*
+(via a Windows kernel call), and a gate lets those vblanks through
+to the emulated display at the emulated rate — 59.94 Hz worth of
+them on a 60 Hz panel, the surplus skipped. It works, it ships, and
+it is instructive in both directions. It validates the idea that
+CPU-side pacing against real display timing is production-viable.
+And its two limitations flatter our design precisely where we need
+flattering: it is Windows-only (the macOS and Linux paths are
+literally `cemu_assert_unimplemented()`), and it can only *match a
+fixed rate*, not hit arbitrary per-mode cadences like DOS's 70.086
+Hz — both problems our due-time scheduler doesn't have.
+
+Xenia's contributions are a different genre: not strategies but
+scar tissue, exhaustively documented. One comment block admits, in
+plain language, that Vulkan gives you no signal for when a retiring
+swapchain is safe to destroy — their teardown order is explicitly
+built on *hoping* the window system tracks the rest. We knew the
+deferred-destruction discipline from the other six projects; Xenia
+is the one that says out loud *why* the discipline exists. A second
+comment records that on Windows, borderless fullscreen with
+IMMEDIATE presents gets **GDI-copied instead of independently
+flipped** — no tearing possible, no VRR, regardless of what the
+swapchain thinks it negotiated. That single sentence goes straight
+into our VRR guide, because it is the difference between "fullscreen"
+and "fullscreen" on Windows, and users will hit it. And one workaround
+earns a place in our actual code: on AMD drivers, a descriptor pool
+serving immutable-sampler layouts must still reserve plain sampler
+capacity, or set allocation fails — found by Xenia with validation
+on, on hardware we don't own, in exactly the descriptor shape our
+executor uses. That is the credit bar working as intended.
+
+Two smaller Xenia notes for the permanent record: its present-mode
+ladder inserts `FIFO_RELAXED` between MAILBOX and FIFO — "limit the
+rate, but if a frame is late, tear rather than stall" — a middle
+ground worth remembering when someone next debates vsync semantics;
+and its resource lifecycle runs on monotonic *submission indices*
+rather than a fixed ring of fences ("this image was last used in
+submission 47"), which is the cleaner shape once asynchronous
+producers enter the picture, and the known upgrade path if our OSD
+ever becomes one.
+
+The licences, for completeness: Xenia is BSD-3-Clause — adaptable
+with a credit line. Cemu is MPL-2.0, and checking what that means
+was its own small lesson in reading licences with a grep rather
+than a vibe: MPL-2.0 is GPL-compatible *unless* files carry an
+explicit "Incompatible With Secondary Licenses" notice, and the
+scary-looking Exhibit B text at the bottom of Cemu's LICENSE file
+is just the licence template's own boilerplate — zero of their
+source files invoke it. Verified compatible; adapted code would
+keep its MPL file notice, so we prefer ideas from Cemu anyway.
+
+What the afternoon bought, in one sentence: the flagship claim
+survived its two hardest falsification attempts, the timing-
+extension usage map gained its third and final verb, one real
+driver quirk entered our specs, one real user-facing Windows
+gotcha entered our docs, and the reference-study population stopped
+being a thing a reviewer could reasonably call cherry-picked.
 
 ### Chapter 5: The toolchain spike, step by step
 
@@ -995,6 +1105,14 @@ is shaped the way it is.)*
 - Hans-Kristian Arntzen's blog ([themaister.net](https://themaister.net))
   — the best writing on Vulkan synchronisation and on render-graph
   thinking; he also wrote SPIRV-Cross and RetroArch's Vulkan driver.
+- Xenia's `src/xenia/ui/vulkan/vulkan_presenter.cc` — the most
+  exhaustively commented WSI/presenter code in any emulator; read
+  the comments even if you skip the code (BSD-3-Clause,
+  licence-compatible).
+- Cemu's `src/Cafe/HW/Latte/Renderer/Vulkan/` — production pipeline
+  and SPIR-V disk caches, async compilation, and the only shipping
+  `VK_KHR_present_wait` backpressure usage we know of (MPL-2.0 —
+  compatible; adapted code keeps its file notice).
 
 ### Present timing and pacing
 - [VK_EXT_present_timing: the Journey to State-of-the-Art Frame Pacing in Vulkan](https://www.khronos.org/blog/vk-ext-present-timing-the-journey-to-state-of-the-art-frame-pacing-in-vulkan)

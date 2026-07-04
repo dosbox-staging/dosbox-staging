@@ -9,8 +9,10 @@ is the implementation contract for PR 2. **If reality disagrees with
 this spec, stop and update the spec first.**
 
 **Licence firewall reminder (hard rule):** while implementing this
-PR you may consult Dolphin, PPSSPP, RPCS3, and Khronos
-Vulkan-Samples/Vulkan-Tutorial (with attribution). You must NOT
+PR you may consult Dolphin, PPSSPP, RPCS3, Xenia, and Khronos
+Vulkan-Samples/Vulkan-Tutorial (with attribution), plus Cemu with
+the extra MPL rule (adapted code keeps its MPL file notice — prefer
+ideas over code from Cemu). You must NOT
 open, consult, or copy from DuckStation, RetroArch, or PCSX2 — their
 lessons are already distilled into the plan's Appendix C, and you
 work from that text alone.

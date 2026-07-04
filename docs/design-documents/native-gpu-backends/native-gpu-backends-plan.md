@@ -35,7 +35,7 @@ Metal's `present(atTime:)`), with feedback telling us when each frame
 really reached the glass.
 That gives microsecond-class pacing that is immune to emulation-loop
 load, plus the measurements to prove it. To the best of our knowledge
-(and we surveyed six major emulators' source to check —
+(and we surveyed eight major emulators' source to check —
 [Appendix C §7](#7-present-pacing--the-headline-finding)), **DOSBox
 Staging will be the first emulator to ship Vulkan timestamped
 presents**. Where the mechanism isn't available, an app-timed
@@ -154,7 +154,8 @@ results. The learning companion is `native-gpu-backends-learning.md` (one
 chapter per commit — standing process rule).
 
 **Status: PLANNED — all PRs (1–7) specced to execution grade.
-Reference study (six emulators + Khronos samples, [Appendix C](#appendix-c--reference-study-design-notes-2026-07-04)) and
+Reference study (eight emulators + Khronos samples, [Appendix C](#appendix-c--reference-study-design-notes-2026-07-04);
+Cemu and Xenia joined 2026-07-04) and
 toolchain spike ([Appendix D](#appendix-d--spike-results-2026-07-04)) DONE 2026-07-04. A full consistency
 review of this document against the codebase was done 2026-07-04:
 every file:line claim was re-verified on the `jn/video-refactoring`
@@ -298,9 +299,10 @@ same review pass.
    fought in code. The native present-mode mapping is: vsync on →
    FIFO; vsync off → IMMEDIATE, falling back to MAILBOX and then
    FIFO where IMMEDIATE is unsupported.
-9. **The reference-implementation study is done.** Six shipping
+9. **The reference-implementation study is done.** Eight shipping
    emulators' render backends (Dolphin, PPSSPP, RetroArch,
-   DuckStation, PCSX2, RPCS3) plus the official Khronos samples were
+   DuckStation, PCSX2, RPCS3, and — added 2026-07-04, post-pivot —
+   Cemu and Xenia) plus the official Khronos samples were
    read before designing our own; the distilled design notes with
    file:line references live in [Appendix C](#appendix-c--reference-study-design-notes-2026-07-04), and every
    swapchain/sync/pacing decision in this plan traces back to them.
@@ -323,7 +325,11 @@ same review pass.
     works exclusively from this document and must not open, consult,
     or transcribe those codebases' source. Code and snippets may be
     adapted (with SPDX credit) only from the licence-compatible
-    references: Dolphin (GPLv2+), PPSSPP (GPLv2+), RPCS3 (GPLv2), and
+    references: Dolphin (GPLv2+), PPSSPP (GPLv2+), RPCS3 (GPLv2),
+    Xenia (BSD-3-Clause), Cemu (MPL-2.0, secondary-licence
+    compatible — verified free of per-file Exhibit B notices;
+    adapted code keeps its MPL file-level notice, so prefer ideas
+    over code from Cemu), and
     Khronos Vulkan-Samples (Apache-2.0). Every adoption is also
     recorded with a public shout-out in `native-gpu-backends-attribution.md`,
     maintained commit-by-commit as implementation proceeds. Full
@@ -372,7 +378,7 @@ same review pass.
     the present-timing code needs them, at zero added dependency
     (the headers ship in vulkan-headers). Device/instance init is
     hand-written (~200–400 lines) following the Apache-2.0 official
-    tutorial template, with credit. Notable: none of the six studied
+    tutorial template, with credit. Notable: none of the eight studied
     emulators use Hpp — all predate it with raw-C codebases; the
     licence firewall means we re-express their patterns anyway, so
     nothing is lost in translation.
@@ -1250,7 +1256,12 @@ NVIDIA-minimise quirk ([PR 2](#pr-2--vulkan-backend-skeleton-output--vulkan-no-s
 [PR 6](#pr-6--present-timing-the-flagship), GPLv2 — adaptable with SPDX credit); DuckStation's
 acquire-semaphore sizing rule and Metal `atTime:` approach ([PR 2](#pr-2--vulkan-backend-skeleton-output--vulkan-no-shaders)/
 [PR 6](#pr-6--present-timing-the-flagship), idea credit only); RetroArch's WSI fault-injection testing idea
-([PR 2](#pr-2--vulkan-backend-skeleton-output--vulkan-no-shaders) tests, idea credit). The Khronos Vulkan-Samples sit *below*
+([PR 2](#pr-2--vulkan-backend-skeleton-output--vulkan-no-shaders) tests, idea credit); Dolphin's MoltenVK vendored-build
+integration ([PR 2](#pr-2--vulkan-backend-skeleton-output--vulkan-no-shaders) build, GPLv2+ — adapted code with SPDX credit);
+Xenia's AMD descriptor-pool sampler-capacity quirk ([PR 3](#pr-3--shader-toolchain--vulkan-pipeline),
+BSD-3 — idea/workaround credit) and its Windows
+borderless-fullscreen GDI-copy finding ([PR 6](#pr-6--present-timing-the-flagship)/[PR 7](#pr-7--auto--polish) docs, idea
+credit). The Khronos Vulkan-Samples sit *below*
 the credit bar by definition — they are the official reference
 material whose entire purpose is to be followed — so using their
 patterns needs no idea credit; only directly adapted sample code gets
@@ -1857,7 +1868,7 @@ question left behind is when the shipped default flips to `auto`.*
 - **The WSI/sync debugging tail happens on hardware we don't run
   daily.** Swapchain and synchronisation bugs are notoriously
   vendor-flavoured and intermittent. Mitigations: the design follows
-  patterns proven across six shipping emulators, validation layers
+  patterns proven across eight shipping emulators, validation layers
   (including synchronisation validation) run in all debug builds, and
   the manual test matrix spreads across three vendors and both fixed
   and VRR displays.
@@ -2006,7 +2017,9 @@ Workflow: John checks the repos out locally; Claude inspects them; findings beco
 Sources studied locally: Dolphin (GPLv2+, primary), PPSSPP (GPLv2+),
 RetroArch (GPLv3 — patterns only), Khronos Vulkan-Samples
 (Apache-2.0), DuckStation (CC-BY-NC-ND — **patterns only, no code
-copying**). File:line references are into those checkouts.
+copying**). Added 2026-07-04: PCSX2 and RPCS3 ([§10](#10-pcsx2-and-rpcs3-added-2026-07-04-new-findings-only)), then Cemu and
+Xenia ([§11](#11-cemu-added-2026-07-04-post-pivot-new-findings-only)–[§12](#12-xenia-added-2026-07-04-post-pivot-new-findings-only)) — licences noted per section. File:line
+references are into those checkouts.
 
 ### 1. Sizing and decomposition
 
@@ -2138,6 +2151,12 @@ copying**). File:line references are into those checkouts.
   `VK_EXT_present_timing`'s feedback is poll-based and needs no
   thread; (c) their FrameTimeData ring is the model for our pacing
   logs.
+- **2026-07-04 addendum**: Cemu and Xenia
+  ([§11](#11-cemu-added-2026-07-04-post-pivot-new-findings-only)–[§12](#12-xenia-added-2026-07-04-post-pivot-new-findings-only)) re-confirm the finding — eight projects,
+  still zero Vulkan present scheduling. Cemu adds a third usage
+  category for the timing-adjacent extensions:
+  `VK_KHR_present_wait` for queue-depth *backpressure* (measure /
+  flow-control / schedule — the last box remains empty until us).
 
 ### 8. Metal notes (Dolphin)
 
@@ -2228,7 +2247,167 @@ our licence flexibility).
   numbers.
 - Neither touches `VK_EXT_present_timing`/`VK_GOOGLE_display_timing` —
   the [§7](#7-present-pacing--the-headline-finding) conclusion (Vulkan scheduling is novel territory) holds
-  across all six studied projects.
+  across all six projects studied to this point (and across all
+  eight after [§11](#11-cemu-added-2026-07-04-post-pivot-new-findings-only)–[§12](#12-xenia-added-2026-07-04-post-pivot-new-findings-only)).
+
+## 11. Cemu (added 2026-07-04, post-pivot; new findings only)
+
+Licence: **MPL-2.0, secondary-licence compatible** — grep-verified
+that no source file carries the Exhibit B "Incompatible With
+Secondary Licenses" notice (the Exhibit B text at the bottom of
+their `LICENSE.txt` is the MPL template's own boilerplate, present
+in every verbatim copy of the licence). Code may therefore be
+adapted into this GPL-2.0-or-later project, but adapted portions
+keep their MPL file-level notice — prefer ideas over code from Cemu.
+
+- **No display-timing usage** — grep-verified across the renderer:
+  no `VK_GOOGLE_display_timing`, no `VK_EXT_present_timing`. The
+  seventh project confirming [§7](#7-present-pacing--the-headline-finding).
+- **`VK_KHR_present_wait` as backpressure, not scheduling**
+  (VulkanRenderer.cpp:3023-3039; gated at :1432 on both
+  `present_wait` and `present_id` being available): every present
+  carries a `presentId`; when the queued-present depth reaches the
+  mode's cap, `vkWaitForPresentKHR` blocks (40 ms timeout) on the
+  oldest ID before more work is submitted. This is a **third usage
+  category** for the timing-adjacent extensions across the study:
+  PPSSPP *measures* with them, Cemu *flow-controls* with them,
+  nobody *schedules*. Not adopted — our non-blocking acquire +
+  skip-on-busy achieves flow control without ever blocking the
+  emulation thread — but recorded as the known alternative if
+  present-queue depth control is ever needed.
+- **Host-driven vsync matching, Windows-only** (the
+  `SYNC_AND_LIMIT` vsync mode: SwapchainInfoVk.cpp:340-371 forces
+  FIFO and enables it; LatteTiming.cpp:130-153 gates the emulated
+  vsync signal; VsyncDriver.cpp waits on real monitor vblanks via
+  `D3DKMTWaitForVerticalBlankEvent` on a dedicated thread). Host
+  vblanks arriving faster than the emulated 59.94 Hz (derived as
+  `tick × 1000 / 1002 / 60`, LatteTiming.cpp:17-33) are skipped, so
+  the emulated rate is matched without any timestamped presents.
+  This is the closest existing relative of our [PR 1](#pr-1--deferred-present-scheduler--pacing-instrumentation) app-timed
+  scheduler tier — and it is `cemu_assert_unimplemented()` on
+  macOS/Linux (VsyncDriver.cpp:203-213), which underlines the value
+  of a platform-neutral due-time design. Their fixed-rate matching
+  also cannot generalise to DOS's per-mode rates. Reinforcement,
+  not adoption.
+- **Anti-jitter miss handling**: two or more missed emulated-vsync
+  intervals skip forward rather than burst-catching-up
+  (LatteTiming.cpp:156-177) — the same philosophy as our
+  drift-correction clamping in [PR 6](#pr-6--present-timing-the-flagship).
+- **Pipeline and SPIR-V disk caches in production**
+  (VulkanPipelineStableCache.cpp — async precompilation thread
+  pool; RendererShaderVk.cpp:269-368 — SHA-1-keyed SPIR-V cache):
+  a second production validation of our deferred shader-cache
+  design sketch ([§6](#6-shader-pipeline-executor-retroarch-slang--same-genre-as-ours) recorded RetroArch's as the first).
+- **Unified long-lived descriptor pool with no per-frame churn**
+  (VulkanRenderer.cpp:792, 3244-3263) — supports our
+  static-descriptor-sets choice.
+- **32 MB staging ring tracked by command-buffer completion**
+  (VKRMemoryManager.h:253) — same shape and even the same size as
+  Dolphin's ([§5](#5-upload-path)); more evidence rings serve unbounded 3D traffic,
+  not our fixed transfer profile. Their command-buffer pool is 128
+  deep (VulkanRenderer.h:657) for the same variable-workload
+  reason; our two-frame ring remains right for a fixed workload.
+- **Driver-quirk culture, game-flavoured**: auto-setting
+  `RADV_DEBUG=llvm` for Breath of the Wild on affected Mesa
+  versions (VulkanRenderer.cpp:412-489), an AMD
+  indexed-push-constant workaround (VulkanSurfaceCopy.cpp:170), and
+  NVIDIA's 64 KB uniform-range cap (VulkanRendererCore.cpp:937-944).
+  None touch constructs our five-pass pipeline uses; noted as more
+  evidence for the per-vendor triage mindset [PR 6](#pr-6--present-timing-the-flagship) bakes in.
+- **Third production MoltenVK precedent** (after PPSSPP and
+  RetroArch): macOS ships on MoltenVK via `VK_EXT_metal_surface`
+  over a CAMetalLayer-backed NSView (CocoaSurface.mm) with a
+  hard-coded `dlopen("libMoltenVK.dylib")` (VulkanAPI.cpp:154) and
+  **no `VK_KHR_portability_subset` handling at all** — it works
+  because no validation layer is watching, exactly the trap our
+  [PR 2](#pr-2--vulkan-backend-skeleton-output--vulkan-no-shaders) spec closes by enabling the extension per spec. Their log
+  hint about the MoltenVK "privateapi variant" for logicOp support
+  (VulkanRenderer.cpp:655) confirms why that build variant exists;
+  we need no private-API features.
+- Divergences from the canon, noted not adopted: image count is
+  `max(2, minImageCount)` rather than min+1
+  (SwapchainInfoVk.cpp:36-40), and no `oldSwapchain` handoff on
+  recreation.
+
+## 12. Xenia (added 2026-07-04, post-pivot; new findings only)
+
+Licence: **BSD-3-Clause** (root LICENSE; per-file headers read
+"Copyright <year> Ben Vanik. All rights reserved. / Released under
+the BSD license"). Fully adaptable with SPDX credit.
+
+Xenia's presenter (`src/xenia/ui/vulkan/vulkan_presenter.cc`, by
+Triang3l) is the most exhaustively engineered and commented
+presentation code in the whole study — the comments alone are a WSI
+field guide.
+
+- **No timing extensions on either backend** — grep-verified across
+  the Vulkan code (no `GOOGLE_display_timing`, `present_timing`,
+  `present_wait`) *and* the D3D12 presenter (no waitable swapchain,
+  no `SetMaximumFrameLatency`): their whole pacing story is
+  present-ASAP + mailbox-drop + optional tearing
+  (d3d12_presenter.cc:1079-1086: present without waiting for vsync
+  because a 144 Hz host is no multiple of a 30/60 Hz guest). The
+  eighth project confirming [§7](#7-present-pacing--the-headline-finding) — the headline claim now stands
+  across every emulator we could find with a serious Vulkan
+  presenter.
+- **A presentation-first architecture** worth knowing: one
+  `Presenter` abstraction over D3D12/Vulkan that separates the
+  guest-output path (refresh-driven, lowest latency, paintable
+  straight from the guest thread when no UI is up) from UI
+  composition (rate-limited by a DXGI vblank-wait thread on
+  Windows). The closest published relative of a presenter-centric
+  design like ours.
+- **Submission-index completion timelines** instead of per-frame
+  fence rings (vulkan_gpu_completion_timeline.h): a monotonic
+  submission counter with a fence deque; every resource records
+  "last used in submission N" and teardown waits on exact indices;
+  three independent timelines (paint, UI, guest refresh). Cleaner
+  lifecycle bookkeeping than fixed rings once producers are
+  asynchronous. Our synchronous two-frame ring stays simpler for
+  our case; recorded (alongside [§5](#5-upload-path)'s rings) as the known upgrade
+  shape if an async producer ever appears.
+- **The WSI destruction ambiguity, stated plainly**
+  (vulkan_presenter.cc:147-153): nothing in Vulkan signals when
+  `vkQueuePresentKHR` is truly done with a retiring swapchain — so
+  they destroy the swapchain before its semaphores "hoping" the WSI
+  tracks the rest internally. The best written statement of *why*
+  this area is fragile; validates our deferred-destruction
+  discipline ([§2](#2-swapchain-lifecycle-the-canonical-state-machine)).
+- **AMD descriptor-pool sizing quirk**
+  (vulkan_presenter.cc:2390-2391): with immutable samplers, the
+  descriptor pool must still allocate `VK_DESCRIPTOR_TYPE_SAMPLER`
+  capacity, or set allocation fails on AMD (observed on Adrenalin
+  22.3.2, RX Vega 10, with validation enabled). **Adopted** into
+  [PR 3](#pr-3--shader-toolchain--vulkan-pipeline)'s executor spec — our descriptor layout uses exactly this
+  immutable-sampler shape. Attribution entry planned.
+- **The Windows borderless-fullscreen ceiling**
+  (vulkan_presenter.cc:1202): with IMMEDIATE present mode, "on
+  Windows with borderless fullscreen, GDI copying is used instead
+  of independent flip" — tearing and VRR are unavailable on that
+  path. Hard-won knowledge for our VRR guide and pacing
+  expectations ([PR 6](#pr-6--present-timing-the-flagship)/[PR 7](#pr-7--auto--polish)): true exclusive-style fullscreen and
+  borderless are not equivalent on Windows. Attribution entry
+  planned.
+- **Present-mode ladder with FIFO_RELAXED as a middle ground**
+  (vulkan_presenter.cc:37-55, 1198-1220): IMMEDIATE → MAILBOX →
+  FIFO_RELAXED → FIFO, each behind a config knob; FIFO_RELAXED =
+  "limit the rate, but tear rather than stall when a frame is
+  late". Worth remembering next to our [decision 8](#decision-record-all-locked-2026-07-0304) mapping; not
+  adopted now.
+- Canon confirmations with good receipts: zero-extent guard
+  (:922-949 — "VkSurfaceKHR may have zero-area bounds in some
+  window state cases on Windows"), `oldSwapchain` handoff
+  (:549-559), three swapchain images minimum, desktop surface
+  format prior B8G8R8A8 with R8G8B8A8 as the Android-only primary
+  (:1027-1034). Their acquire uses an infinite timeout — the
+  deliberate opposite of our zero-timeout skip; their painter
+  thread can afford to block, our emulation thread cannot.
+- **FidelityFX FSR/CAS as presenter-side shader passes** (the
+  `guest_output_ffx_*` pipeline, up to six chained effect passes
+  with letterboxing computed per flow): a precedent for
+  post-process scaling living in the presentation layer. Not our
+  architecture — our shader chain owns scaling — noted for
+  completeness.
 
 ---
 

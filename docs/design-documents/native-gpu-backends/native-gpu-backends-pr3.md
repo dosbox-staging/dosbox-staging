@@ -13,8 +13,9 @@ first.**
 
 **Licence firewall reminder:** RetroArch's shader pipeline is the
 same genre as ours — that is exactly why you must NOT open it. Its
-distilled lessons are in Appendix C §6. Dolphin/PPSSPP/RPCS3/
-Khronos material stays fair game with attribution.
+distilled lessons are in Appendix C §6. Dolphin/PPSSPP/RPCS3/Xenia/
+Khronos material stays fair game with attribution (and Cemu with
+the MPL file-notice rule — prefer ideas over code from it).
 
 ## Goal
 
@@ -264,6 +265,14 @@ golden PNGs under `tests/vulkan_golden_data/`.
 - Exactly ONE `vk::raii::DescriptorSetLayout` in the whole system:
   binding 0 = uniform buffer (vertex+fragment stages), bindings
   1..N = combined image samplers (N = max inputs any pass uses).
+  **AMD quirk (adopt with credit):** the descriptor pool must
+  reserve `VK_DESCRIPTOR_TYPE_SAMPLER` capacity in addition to the
+  sampled-image/combined capacity even when the layout uses
+  immutable samplers, or `vkAllocateDescriptorSets` fails on AMD
+  (Xenia's finding: Adrenalin 22.3.2, RX Vega 10, validation on).
+  Credit comment at the pool-sizing site naming Xenia's
+  `vulkan_presenter.cc`; flip the attribution entry in the same
+  commit.
 - Per pass: one `vk::raii::Pipeline` (dynamic rendering — colour
   attachment format chosen per the pass's `float_output`:
   `B8G8R8A8_UNORM` or `R16G16B16A16_SFLOAT`; dynamic viewport +
@@ -316,7 +325,8 @@ write-reference-on-first-run workflow):
 (MoltenVK path) and in the lavapipe job; validation layers silent
 during the golden run (debug build).
 
-**Attribution flips:** none new.
+**Attribution flips:** Xenia "AMD descriptor-pool sampler-capacity
+quirk" → landed.
 
 ### Commit 6 — `Port the internal shaders and sharp to the 450 format`
 
@@ -396,7 +406,8 @@ Linux rows to the core team.
 - [ ] compile-commits green for all 6 commits
 - [ ] Lavapipe job runs goldens + policy tests, green
 - [ ] GL byte-identical capture evidence attached for commits 3–4
-- [ ] Attribution: RetroArch pipeline-prior-art entry flipped
+- [ ] Attribution: RetroArch pipeline-prior-art and Xenia
+      AMD-descriptor-quirk entries flipped
 - [ ] Learning-doc chapters (topology extraction and the executor
       deserve long ones)
 - [ ] `shader` help text updated; the decision-15 fallback behaviour

@@ -21,7 +21,7 @@ this directory. Reading order depends on who you are:
 
 **Reviewing or catching up?** `native-gpu-backends-plan.md` top to
 bottom; the appendices hold the full decision history (A–B), the
-six-emulator reference study (C), the spike results (D), and the
+eight-emulator reference study (C), the spike results (D), and the
 ecosystem review that deleted the Metal backend (E).
 
 **Learning?** `native-gpu-backends-learning.md` is the textbook

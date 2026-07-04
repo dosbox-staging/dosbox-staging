@@ -1,7 +1,7 @@
 # GPU backend — attributions and thanks
 
 The native Vulkan render backend (see `native-gpu-backends-plan.md`)
-was designed after studying the rendering code of six open-source
+was designed after studying the rendering code of eight open-source
 emulators and the official Khronos samples. Every non-trivial design
 decision in that plan stands on lessons these projects' developers
 learned the hard way, over many years, on hardware and drivers we will
@@ -11,7 +11,7 @@ because credit is fair, and because future maintainers deserve the
 provenance trail.
 
 **To the developers of Dolphin, PPSSPP, RetroArch, DuckStation, PCSX2,
-RPCS3, and the Khronos Vulkan-Samples: thank you.**
+RPCS3, Cemu, Xenia, and the Khronos Vulkan-Samples: thank you.**
 
 ## How this file is maintained
 
@@ -38,8 +38,12 @@ regardless of this bar.)
 Licence classes:
 
 - **adaptable** — GPL-2.0-compatible (Dolphin GPLv2+, PPSSPP GPLv2+,
-  RPCS3 GPLv2, Khronos Vulkan-Samples Apache-2.0): ideas *and*
-  code/data may be adapted, with SPDX credit for the latter.
+  RPCS3 GPLv2, Xenia BSD-3-Clause, Khronos Vulkan-Samples
+  Apache-2.0): ideas *and*
+  code/data may be adapted, with SPDX credit for the latter. Cemu
+  (MPL-2.0, verified secondary-licence compatible) is adaptable
+  too, with the extra rule that adapted code keeps its MPL
+  file-level notice — prefer ideas over code from Cemu.
 - **ideas only** — licence-incompatible (RetroArch GPLv3, PCSX2
   GPLv3, DuckStation CC-BY-NC-ND): concepts credited and re-expressed
   in our own words in the plan; copying code is prohibited
@@ -134,6 +138,42 @@ further itemised credits.
 - **Adaptive acquire-timeout with drain-and-retry** (on timeout,
   drain queued frames and retry rather than wait or fail). Idea.
   *Planned (PR 2).*
+
+## Cemu (MPL-2.0 — adaptable with the file-level notice rule)
+
+No itemised entries yet. Cemu's service to the study (plan
+Appendix C §11) was confirmation with weight: the seventh project
+with no Vulkan present scheduling; a production
+`VK_KHR_present_wait`-for-backpressure pattern that sharpened our
+map of how the timing-adjacent extensions get used (measure /
+flow-control / schedule); a second production validation of the
+deferred shader-cache design; and a third production macOS-on-
+MoltenVK precedent. Its Windows-only host-vblank vsync-matching
+mode is the closest existing relative of our app-timed scheduler
+tier — studied, credited here as prior art in spirit, and not
+adopted (our due-time design is platform-neutral and rate-general).
+
+## Xenia (BSD-3-Clause — adaptable)
+
+- **AMD descriptor-pool sampler-capacity quirk**
+  (`src/xenia/ui/vulkan/vulkan_presenter.cc` — with immutable
+  samplers the pool must still allocate
+  `VK_DESCRIPTOR_TYPE_SAMPLER` capacity or allocation fails on AMD;
+  observed on Adrenalin 22.3.2, RX Vega 10, validation on) —
+  exactly the immutable-sampler descriptor shape our Vulkan
+  executor uses; hard-won driver triage of the kind the credit bar
+  exists for. Idea/workaround, provenance recorded per our
+  workaround rule. *Planned (PR 3).*
+- **Windows borderless-fullscreen GDI-copy finding** (IMMEDIATE
+  present mode under borderless fullscreen is GDI-copied rather
+  than independently flipped — no tearing, no VRR on that path) —
+  shapes our VRR guide's fullscreen guidance and the pacing test
+  expectations. Idea/quirk knowledge. *Planned (PR 6/PR 7 docs).*
+
+Beyond the itemised entries, Xenia's presenter (by Triang3l) is the
+most exhaustively commented WSI code in the study — the eighth
+no-scheduling confirmation, and the best written explanation of why
+swapchain teardown is fragile. That service deserves this mention.
 
 ## Khronos Vulkan-Samples (Apache-2.0)
 

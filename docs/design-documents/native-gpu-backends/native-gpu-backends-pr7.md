@@ -171,7 +171,11 @@ links for referenced games, cross-references):**
    class; the decision-8 driver-forced-vsync caveat (desktop rate
    must exceed the DOS rate); the NVIDIA control-panel
    “Vulkan/OpenGL present method → DXGI swapchain” note for
-   windowed VRR on Windows; the compositor ceiling stated honestly
+   windowed VRR on Windows; the Windows borderless-fullscreen
+   ceiling (IMMEDIATE presents may be GDI-copied rather than
+   independently flipped — no tearing/VRR on that path; Xenia's
+   finding, plan Appendix C §12, credited — flip the attribution
+   entry with this commit); the compositor ceiling stated honestly
    (first-class pacing is a fullscreen feature — cite the measured
    Spike 4/5 behaviour); a known-limitations note that Linux pacing
    verification is in the core team's hands.
@@ -227,7 +231,8 @@ learning-doc closing chapter present.
 - [ ] Website build + markdown lint clean
 - [ ] Learning doc closing chapter; attribution file final pass
       (every non-tombstone entry either landed or explicitly
-      dropped-with-reason)
+      dropped-with-reason — including Xenia's borderless-GDI entry,
+      flipped by commit 4)
 - [ ] The one deliberately open question — flipping the shipped
       default to `auto` — recorded in the release notes draft as
       future work
