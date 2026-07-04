@@ -27,9 +27,10 @@ synchronisation lifecycle.
 ## Prerequisites
 
 - PR 1 merged.
-- Dev machine, macOS: nothing beyond the repo build — the loader
-  comes from vcpkg and MoltenVK from the commit-2 fetch script
-  (plan decision 16). Optional, for validation layers only:
+- Dev machine, macOS: full Xcode (the commit-2 MoltenVK source
+  build needs xcodebuild, not just the CLT); the loader comes from
+  vcpkg and MoltenVK is built by the repo build itself (plan
+  decision 16). Optional, for validation layers only:
   `brew install vulkan-validationlayers` (layers are discovered by
   the loader; see commit 4).
 
@@ -168,18 +169,37 @@ still applies at PR end. Boot probe (`$DOSBOX -conf probe.conf` with
    verified 2026-07-04, version 1.4.350.0.)
 
 2. MoltenVK has **no vcpkg port** (verified 2026-07-04 against the
-   pinned baseline) — add `scripts/dev/fetch-moltenvk.sh`: downloads
-   the official Khronos release artifact
-   (`MoltenVK-macos.tar` from the pinned tag — decision 16 records
-   v1.4.x; write the exact version AND its SHA-256 into the script
-   and verify the checksum before extracting), extracts
-   `MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib` (universal
-   arm64+x86_64) plus the `MoltenVK_icd.json` that sits alongside it
-   into `build/<preset>/moltenvk/`, and is idempotent (skips when
-   the pinned version is already present). macOS CMake presets (or
-   the CI step) invoke it. **The pin-bump ritual is deliberate**:
-   bumping means editing version+SHA in this script and re-running
-   the macOS manual matrix — record that rule in the script header.
+   pinned baseline) — it is vendored and **built from source at the
+   pinned tag** (plan decision 16), adapting Dolphin's proven
+   integration (`Externals/MoltenVK/` — GPLv2+, adaptable with
+   SPDX credit; ~40 lines of CMake + two shell scripts). Create
+   `src/libs/moltenvk-build/` (or `extras/` — follow where the
+   tree keeps build-only integrations) containing:
+   - `CMakeLists.txt`: an `ExternalProject_Add` with
+     `GIT_REPOSITORY https://github.com/KhronosGroup/MoltenVK.git`,
+     `GIT_TAG <pinned release tag>` (decision 16 records v1.4.x),
+     a configure step running a **version-gated**
+     `fetchDependencies --macos` (skip when the last-built version
+     matches — Dolphin's timestamp-file trick; MoltenVK's
+     `ExternalRevisions/` pins its internal glslang/SPIRV-Cross/
+     SPIRV-Tools/cereal revisions, so the fetch is reproducible),
+     a `PATCH_COMMAND` applying everything in `patches/` (create
+     the directory with a README; empty until a fix needs
+     carrying), and `make macos` as the build — which produces a
+     **universal (arm64+x86_64) dylib** at
+     `Package/Release/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib`
+     plus the `MoltenVK_icd.json` beside it.
+   - Gate the whole thing on `APPLE AND OPT_VULKAN`.
+   - SPDX credit header naming Dolphin's Externals/MoltenVK as the
+     source of the integration pattern; flip the corresponding
+     attribution entry in the same commit.
+   Requirements note for devs: building MoltenVK needs full Xcode
+   (not just the CLT) — say so in the CMake error message when
+   xcodebuild is missing. CI: cache the ExternalProject build
+   directory keyed on the pinned tag, so the Xcode build runs once
+   per pin bump, not per CI run. **The pin-bump ritual is
+   deliberate**: bumping means editing the tag and re-running the
+   macOS manual matrix — record that rule in a comment at the pin.
 
 3. Top-level `CMakeLists.txt`: mirror the `OPT_OPENGL` block
    (~lines 335-338):
@@ -207,9 +227,10 @@ still applies at PR end. Boot probe (`$DOSBOX -conf probe.conf` with
 6. CI: option defaults ON, so the standard jobs pick it up with no
    edits. Add `-DOPT_VULKAN=OFF` to the `cmake_flags` of exactly ONE
    existing linux.yml matrix entry (compile-out coverage without a
-   new job). In macos.yml, add a `fetch-moltenvk.sh` step (needed at
-   runtime from commit 4 onward; harmless now). No Homebrew
-   packages are added.
+   new job). In macos.yml, add the MoltenVK ExternalProject cache
+   step (keyed on the pinned tag; the build itself rides the normal
+   cmake build from commit 4 onward). No Homebrew packages are
+   added.
 
 **Guardrails:** no source files change in this commit; `C_VULKAN` is
 defined but unused — that is intentional.
@@ -224,13 +245,18 @@ echo '#include <vulkan/vulkan_raii.hpp>
 int main() { return VK_HEADER_VERSION > 0 ? 0 : 1; }' > /tmp/hpp.cpp
 # compile it with the include path vcpkg produced (find it under
 # build/$PRESET/vcpkg_installed/*/include) — must compile clean.
-# macOS: run scripts/dev/fetch-moltenvk.sh twice — first run
-# downloads + checksum-verifies + extracts (dylib + icd json land
-# in build/$PRESET/moltenvk/), second run is an idempotent no-op.
-# Corrupt the recorded SHA-256 locally → the script must refuse.
+# macOS: configure + build twice — the first build fetches, patches,
+# and xcodebuilds MoltenVK (universal dylib + icd json appear under
+# the ExternalProject output); the second build must skip the fetch
+# (version gate) and be a fast no-op. Drop a trivial test patch into
+# patches/ → it must be applied on the next build; remove it after.
+# file build/…/libMoltenVK.dylib → "Mach-O universal binary with 2
+# architectures".
 ```
 
-**Attribution flips:** none.
+**Attribution flips:** Dolphin "MoltenVK vendored-build integration"
+→ landed (adapted build code; SPDX credit in the integration's
+CMakeLists).
 
 ### Commit 3 — `Add the vulkan output backend enum and config plumbing`
 
@@ -364,12 +390,12 @@ recorded static fallback in decision 16). Loading order:
    `Contents/Resources/vulkan/icd.d/MoltenVK_icd.json`.
 2. Dev builds (non-bundled): point SDL at the vcpkg-built loader in
    the build tree, and set `VK_DRIVER_FILES` (formerly
-   `VK_ICD_FILENAMES`) to the fetch script's
-   `build/<preset>/moltenvk/MoltenVK_icd.json` — wire both into the
+   `VK_ICD_FILENAMES`) to the `MoltenVK_icd.json` in the
+   ExternalProject's build output — wire both into the
    dev run environment (CMake preset env or a launcher note) rather
    than requiring devs to export things by hand. Verify the icd
    json's `library_path` resolves relative to its own location and
-   adjust it in the fetch script if needed.
+   adjust it in the build integration if needed.
 3. `SDL_Vulkan_LoadLibrary(nullptr)` system search as the last
    resort (covers SDK-installed setups), then fall back to OpenGL
    with a log message naming every path tried.
@@ -664,7 +690,8 @@ macOS (M4 mini + MBP). `output = vulkan` throughout; compare against
       all 8 commits
 - [ ] Lavapipe CI job green
 - [ ] Matrix filled in (Linux rows may lag — track who owes them)
-- [ ] Attribution entries flipped: Vulkan-Tutorial, DuckStation
+- [ ] Attribution entries flipped: Dolphin MoltenVK-build
+      integration, Vulkan-Tutorial, DuckStation
       sizing rule, RPCS3 ×2, RetroArch ×2, (PCSX2 if landed)
 - [ ] Learning-doc chapters for all 8 commits
 - [ ] Plan's target-state listing still matches reality — update it

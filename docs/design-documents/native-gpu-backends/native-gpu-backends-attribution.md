@@ -48,12 +48,20 @@ Licence classes:
 
 ## Dolphin (GPLv2+ — adaptable)
 
-No entries yet — nothing we took from Dolphin clears the credit bar,
-because what Dolphin gave us was something different: the clearest,
+- **MoltenVK vendored-build integration**
+  (`Externals/MoltenVK/CMakeLists.txt` + `configure.sh`/`patch.sh` —
+  the pinned-tag `ExternalProject` with version-gated
+  `fetchDependencies`, a carried-patches directory, and `make macos`)
+  — the proven shape for building a pinned MoltenVK from source
+  inside a CMake build, adapted for our macOS Vulkan delivery
+  (plan decision 16). Adapted code; SPDX credit. *Planned (PR 2).*
+
+Beyond that single item, what Dolphin gave us was something
+different: the clearest,
 most readable canonical implementation of the standard patterns,
 which made it our primary reference reading during the design study.
 That service deserves this mention even though it produces no
-itemised credits.
+further itemised credits.
 
 ## PPSSPP (GPLv2+ — adaptable)
 

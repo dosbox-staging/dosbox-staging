@@ -404,26 +404,46 @@ same review pass.
     the shipped default ever flips to `auto` — silently degrading a
     working custom-shader setup on upgrade is the scenario to avoid
     ([PR 7](#pr-7--auto--polish) exit note).
-16. **MoltenVK and the Vulkan loader are vendored and pinned on
-    macOS; Homebrew is not a runtime dependency** (John's decision,
-    2026-07-04). LunarG's guidance for Apple platforms is explicit:
+16. **MoltenVK and the Vulkan loader are vendored, pinned, and built
+    from source on macOS; Homebrew is not a runtime dependency**
+    (John's decision, 2026-07-04). LunarG's guidance for Apple
+    platforms is explicit:
     bundle well-tested versions of **both** the loader and MoltenVK
     with the application, and do not rely on a system-wide loader —
     counter to the norm on Windows and Linux, where the
     driver/distro provides them. Delivery: the **loader from the
     existing vcpkg manifest** (`vulkan-loader`, port verified at the
-    pinned baseline — macOS only) and **MoltenVK from the pinned
-    official Khronos release artifact** (`MoltenVK-macos.tar`;
-    version + SHA-256 recorded in the fetch script; v1.4.x exposes
-    Vulkan 1.4; no vcpkg port exists — verified 2026-07-04). The
+    pinned baseline — macOS only; vcpkg builds it from source like
+    every other dependency) and **MoltenVK vendored and built from
+    the pinned upstream tag** (no vcpkg port exists — verified
+    2026-07-04), Dolphin-style: a CMake `ExternalProject` pinned to
+    a release tag, a version-gated `fetchDependencies --macos`
+    (MoltenVK's own `ExternalRevisions/` pins its internal deps), a
+    `patches/` directory for carried fixes (empty until needed), and
+    `make macos` producing a universal dylib. Why build rather than
+    download the official release binaries, in order of weight:
+    **patchability** — the flagship feature rides MoltenVK's
+    display-timing internals, and if we hit an upstream timing bug
+    we carry the fix same-day instead of waiting for a release
+    (Dolphin carries exactly such a patch today); **supply-chain
+    consistency** — every other dependency is built from source
+    through vcpkg, and a downloaded binary would be the one
+    unauditable link; **debuggability** — a symbolised/debug
+    MoltenVK build is available when chasing the timing path.
+    The cost — an ExternalProject integration and Xcode build
+    minutes in CI — is bounded by Dolphin's precedent (~40 lines +
+    two scripts, adaptable with credit) and by caching keyed on the
+    pin. Importing the MoltenVK tree into our repo was rejected:
+    pin-plus-patches gives identical control without a
+    quarter-million-line foreign tree in git. The
     release `.app` bundles `libvulkan.1.dylib` + `libMoltenVK.dylib`
     in `Contents/Frameworks/` with the MoltenVK ICD manifest in
     `Contents/Resources/vulkan/icd.d/` ([PR 7](#pr-7--auto--polish)).
     Version bumps are deliberate: update the pin, run the macOS
     manual matrix. **Static linking was evaluated and set aside**:
-    officially supported (the release artifact ships a static
-    xcframework, and MoltenVK's private-API functions even require
-    it), but it costs the validation-layer path in that binary and
+    officially supported (MoltenVK builds a static xcframework, and
+    its private-API functions even require direct linking), but it
+    costs the validation-layer path in that binary and
     SDL's `SDL_Vulkan_CreateSurface` flow (SDL must dlopen a
     library), forcing a macOS-only surface path. The bundled-loader
     stack keeps one code path on all platforms and the layer

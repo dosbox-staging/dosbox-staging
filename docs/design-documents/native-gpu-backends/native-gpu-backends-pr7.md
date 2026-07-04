@@ -127,9 +127,9 @@ versions of both the loader and MoltenVK; no system-wide loader).
      loader; vcpkg builds are per-arch, so `lipo -create` the two
      arch builds in the universal job, mirroring how the main
      binary is merged;
-   - `Contents/Frameworks/libMoltenVK.dylib` — from the PR 2 fetch
-     script's pinned artifact; the official dylib is already
-     universal, no lipo needed;
+   - `Contents/Frameworks/libMoltenVK.dylib` — from the PR 2
+     vendored source build (`make macos` emits a universal dylib,
+     no lipo needed; take it from either arch runner's build);
    - `Contents/Resources/vulkan/icd.d/MoltenVK_icd.json` — with its
      `library_path` pointing at the bundled dylib
      (`../../../Frameworks/libMoltenVK.dylib`); the loader searches
