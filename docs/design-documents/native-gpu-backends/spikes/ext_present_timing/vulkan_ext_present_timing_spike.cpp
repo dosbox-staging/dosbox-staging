@@ -1,30 +1,35 @@
 // VK_EXT_present_timing spike (Spike 6): present clear-colour frames at a
-// 70.086 Hz cadence through native desktop Vulkan + VK_EXT_present_timing,
-// collect actual first-pixel-visible glass times from past-presentation
-// feedback, and report scheduling accuracy. This is the desktop analogue of
-// Spike 5 (MoltenVK + VK_GOOGLE_display_timing) and validates the tier-1
-// half of the plan's present-timing ladder on real NVIDIA/Mesa hardware.
+// 70.086 Hz cadence through native desktop Vulkan + VK_EXT_present_timing, and
+// read back per-present feedback to prove the display engine actually paces to
+// the target. Desktop analogue of Spike 5 (MoltenVK + VK_GOOGLE_display_timing).
 //
-// It ALSO times vkAcquireNextImageKHR and vkQueuePresentKHR to answer the
-// open question of whether present blocks the calling thread on
-// NVIDIA-Windows FIFO (the "emulation never stalls on the display" invariant).
+// It ALSO times vkAcquireNextImageKHR and vkQueuePresentKHR to answer whether
+// present blocks the calling thread on NVIDIA-Windows FIFO (the "emulation
+// never stalls on the display" invariant).
+//
+// SCHEDULING MODE (learned from a first run on an RTX 3060 / R595 driver):
+//   NVIDIA reports presentAtAbsoluteTimeSupported=0 and does NOT offer the
+//   FIRST_PIXEL_VISIBLE stage or a host-clock time domain. The spec only
+//   guarantees relative-time scheduling and the QUEUE_OPERATIONS_END stage. So
+//   this spike schedules with RELATIVE time (targetTime = the frame period, a
+//   plain nanosecond duration needing no calibration) and measures the
+//   best stage the surface offers (FIRST_PIXEL_VISIBLE if present, else
+//   QUEUE_OPERATIONS_END). The pacing question is: do consecutive feedback
+//   timestamps sit ~14.268 ms apart?
 //
 // Build (from this directory, with VCPKG_ROOT set):
 //   cmake --preset linux   && cmake --build --preset linux
 //   cmake --preset windows && cmake --build --preset windows
 //   cmake --preset macos   && cmake --build --preset macos   (compiles only;
-//     MoltenVK does not expose VK_EXT_present_timing, so it exits at step [4])
+//     MoltenVK does not expose VK_EXT_present_timing, so it exits at step [3])
 //
-// Written against Vulkan-Headers 1.4.350 (spec v3). The shipping API differs
-// from the proposal pinned in the plan's Appendix D Spike 3 - see README.md.
-//
-// This is a spike: minimal error recovery, deliberate leaks before std::exit().
+// Written against Vulkan-Headers 1.4.350 (spec v3). This is a spike: minimal
+// error recovery, deliberate leaks before exit.
 
 #ifdef _WIN32
-// Define before any header: <windows.h> otherwise defines min/max macros that
-// break std::min/std::max; we only need a lean subset for QueryPerformanceCounter.
+// SDL pulls in <windows.h>, which defines min/max macros that break std::min/
+// std::max. Define this before any header to suppress them.
 #define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
 #endif
 
 #include <vulkan/vulkan.h>
@@ -38,23 +43,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <ctime>
 #include <map>
 #include <thread>
 #include <vector>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 static constexpr double   DosRateHz   = 70.086;
 static constexpr int      NumFrames   = 300;
 static constexpr uint32_t MaxInFlight = 2;
-
-// Submit this far ahead of the target time. The display engine holds the flip
-// until the target regardless; the lead only controls how early we submit.
-static constexpr uint64_t SubmitLeadNs = 8'000'000ull;   // 8 ms
-static constexpr uint64_t WarmupNs     = 200'000'000ull;  // 200 ms settle
 
 #define CHECK(x)                                                               \
 	do {                                                                   \
@@ -65,8 +60,6 @@ static constexpr uint64_t WarmupNs     = 200'000'000ull;  // 200 ms settle
 		}                                                             \
 	} while (0)
 
-// Monotonic host nanoseconds for CPU-side submission pacing (independent of
-// the Vulkan swapchain time domain used for target timestamps).
 static uint64_t SteadyNs()
 {
 	return (uint64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -74,52 +67,19 @@ static uint64_t SteadyNs()
 	        .count();
 }
 
-// A host-clock time domain the swapchain exposes, so we can write target
-// timestamps directly without vkGetCalibratedTimestampsKHR. Deltas convert to
-// nanoseconds for reporting.
-struct HostClock {
-	VkTimeDomainKHR domain = VK_TIME_DOMAIN_DEVICE_KHR;  // sentinel = unset
-	uint64_t        id     = 0;
-	uint64_t        qpc_freq = 0;
-
-	uint64_t Now() const
-	{
-#ifdef _WIN32
-		if (domain == VK_TIME_DOMAIN_QUERY_PERFORMANCE_COUNTER_KHR) {
-			LARGE_INTEGER c;
-			QueryPerformanceCounter(&c);
-			return (uint64_t)c.QuadPart;
-		}
-#else
-		struct timespec ts = {};
-		if (domain == VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_KHR) {
-			clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-			return (uint64_t)ts.tv_sec * 1'000'000'000ull + ts.tv_nsec;
-		}
-		if (domain == VK_TIME_DOMAIN_CLOCK_MONOTONIC_KHR) {
-			clock_gettime(CLOCK_MONOTONIC, &ts);
-			return (uint64_t)ts.tv_sec * 1'000'000'000ull + ts.tv_nsec;
-		}
-#endif
-		return 0;
-	}
-
-	uint64_t NsToDomain(uint64_t ns) const
-	{
-		if (qpc_freq) {
-			return (uint64_t)((double)ns * (double)qpc_freq / 1e9);
-		}
-		return ns;  // monotonic domains are already nanoseconds
-	}
-
-	double DomainDeltaToMs(int64_t delta) const
-	{
-		if (qpc_freq) {
-			return (double)delta * 1e3 / (double)qpc_freq;
-		}
-		return (double)delta / 1e6;
-	}
-};
+static void PrintStages(const char* label, VkPresentStageFlagsEXT s)
+{
+	printf("%s0x%x [", label, s);
+	if (s & VK_PRESENT_STAGE_QUEUE_OPERATIONS_END_BIT_EXT)
+		printf(" queue_ops_end");
+	if (s & VK_PRESENT_STAGE_REQUEST_DEQUEUED_BIT_EXT)
+		printf(" request_dequeued");
+	if (s & VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_OUT_BIT_EXT)
+		printf(" first_pixel_out");
+	if (s & VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT)
+		printf(" first_pixel_visible");
+	printf(" ]\n");
+}
 
 static void Stats(std::vector<double> v, const char* name)
 {
@@ -171,7 +131,7 @@ int main(int argc, char** argv)
 	       windowed ? "windowed" : "fullscreen");
 
 	// ------------------------- instance -------------------------
-	uint32_t          sdl_ext_count = 0;
+	uint32_t           sdl_ext_count = 0;
 	char const* const* sdl_exts = SDL_Vulkan_GetInstanceExtensions(&sdl_ext_count);
 	std::vector<const char*> inst_exts(sdl_exts, sdl_exts + sdl_ext_count);
 	inst_exts.push_back(VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME);
@@ -229,25 +189,25 @@ int main(int argc, char** argv)
 	       props.deviceName, VK_API_VERSION_MAJOR(props.apiVersion),
 	       VK_API_VERSION_MINOR(props.apiVersion));
 
-	// ------------------- features + surface caps -------------------
+	// ------------------- device features -------------------
 	VkPhysicalDevicePresentId2FeaturesKHR feat_pid = {
 	        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_2_FEATURES_KHR};
 	VkPhysicalDevicePresentTimingFeaturesEXT feat_pt = {
 	        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_TIMING_FEATURES_EXT};
-	feat_pt.pNext          = &feat_pid;
-	VkPhysicalDeviceFeatures2 feats2 = {
-	        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
-	feats2.pNext = &feat_pt;
+	feat_pt.pNext                    = &feat_pid;
+	VkPhysicalDeviceFeatures2 feats2 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+	feats2.pNext                     = &feat_pt;
 	vkGetPhysicalDeviceFeatures2(pd, &feats2);
-	printf("[4] features: presentTiming=%u presentAtAbsoluteTime=%u "
-	       "presentId2=%u\n",
+	printf("[4] device features: presentTiming=%u absoluteTime=%u "
+	       "relativeTime=%u presentId2=%u\n",
 	       feat_pt.presentTiming, feat_pt.presentAtAbsoluteTime,
-	       feat_pid.presentId2);
-	if (!feat_pt.presentTiming || !feat_pt.presentAtAbsoluteTime) {
-		printf("required feature bits missing\n");
+	       feat_pt.presentAtRelativeTime, feat_pid.presentId2);
+	if (!feat_pt.presentTiming) {
+		printf("presentTiming device feature missing\n");
 		std::exit(2);
 	}
 
+	// ------------------- surface caps -------------------
 	auto pfnSurfCaps2 = (PFN_vkGetPhysicalDeviceSurfaceCapabilities2KHR)
 	        vkGetInstanceProcAddr(instance,
 	                              "vkGetPhysicalDeviceSurfaceCapabilities2KHR");
@@ -259,13 +219,47 @@ int main(int argc, char** argv)
 	        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SURFACE_INFO_2_KHR};
 	surf_info.surface = surface;
 	CHECK(pfnSurfCaps2(pd, &surf_info, &caps2));
-	const bool has_visible_stage =
-	        (ts_caps.presentStageQueries &
-	         VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT) != 0;
-	printf("[5] surface caps: presentTimingSupported=%u "
-	       "presentAtAbsoluteTimeSupported=%u first_pixel_visible_query=%u\n",
+	printf("[5] surface caps: timingSupported=%u absoluteTime=%u "
+	       "relativeTime=%u\n",
 	       ts_caps.presentTimingSupported,
-	       ts_caps.presentAtAbsoluteTimeSupported, has_visible_stage);
+	       ts_caps.presentAtAbsoluteTimeSupported,
+	       ts_caps.presentAtRelativeTimeSupported);
+	PrintStages("    presentStageQueries: ", ts_caps.presentStageQueries);
+	if (!ts_caps.presentTimingSupported) {
+		printf("present timing not supported on this surface\n");
+		std::exit(2);
+	}
+
+	// Choose scheduling mode: prefer relative (needs no host-clock
+	// calibration and is what NVIDIA offers); absolute is the alternative.
+	const bool use_relative = feat_pt.presentAtRelativeTime &&
+	                          ts_caps.presentAtRelativeTimeSupported;
+	if (!use_relative) {
+		printf("relative-time scheduling unavailable (device relative=%u, "
+		       "surface relative=%u). Absolute-time needs calibration, not "
+		       "implemented in this spike. Exiting.\n",
+		       feat_pt.presentAtRelativeTime,
+		       ts_caps.presentAtRelativeTimeSupported);
+		std::exit(2);
+	}
+
+	// Choose the feedback stage: photons-on-glass if offered, else the
+	// guaranteed queue-operations-end.
+	VkPresentStageFlagBitsEXT stage;
+	if (ts_caps.presentStageQueries &
+	    VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT) {
+		stage = VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT;
+	} else if (ts_caps.presentStageQueries &
+	           VK_PRESENT_STAGE_QUEUE_OPERATIONS_END_BIT_EXT) {
+		stage = VK_PRESENT_STAGE_QUEUE_OPERATIONS_END_BIT_EXT;
+	} else {
+		printf("no usable feedback stage advertised\n");
+		std::exit(2);
+	}
+	printf("[5] scheduling=relative, feedback stage=0x%x %s\n", stage,
+	       stage == VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT
+	               ? "(first_pixel_visible = true glass time)"
+	               : "(queue_operations_end = GPU-done, not scanout)");
 
 	// ------------------------- device -------------------------
 	uint32_t qf_count = 0;
@@ -295,15 +289,14 @@ int main(int argc, char** argv)
 	        VK_KHR_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,
 	};
 
-	// Enable the feature bits we need (chained straight into device create).
 	VkPhysicalDevicePresentId2FeaturesKHR en_pid = {
 	        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_2_FEATURES_KHR};
-	en_pid.presentId2 = VK_TRUE;
+	en_pid.presentId2 = feat_pid.presentId2;
 	VkPhysicalDevicePresentTimingFeaturesEXT en_pt = {
 	        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_TIMING_FEATURES_EXT};
-	en_pt.presentTiming         = VK_TRUE;
-	en_pt.presentAtAbsoluteTime = VK_TRUE;
-	en_pt.pNext                 = &en_pid;
+	en_pt.presentTiming        = VK_TRUE;
+	en_pt.presentAtRelativeTime = VK_TRUE;
+	en_pt.pNext                = &en_pid;
 
 	VkDeviceCreateInfo dci      = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
 	dci.pNext                   = &en_pt;
@@ -370,7 +363,7 @@ int main(int argc, char** argv)
 	       img_count, sc.imageExtent.width, sc.imageExtent.height,
 	       tprops.refreshDuration / 1e6, tprops.refreshInterval / 1e6);
 
-	// -------------------- choose host time domain --------------------
+	// Time domain id (relative-time still needs one for the feedback results).
 	VkSwapchainTimeDomainPropertiesEXT tdp = {
 	        VK_STRUCTURE_TYPE_SWAPCHAIN_TIME_DOMAIN_PROPERTIES_EXT};
 	uint64_t td_counter = 0;
@@ -380,43 +373,19 @@ int main(int argc, char** argv)
 	tdp.pTimeDomains   = domains.data();
 	tdp.pTimeDomainIds = domain_ids.data();
 	CHECK(pfnTimeDomains(device, swapchain, &tdp, &td_counter));
-
-	HostClock clock;
-	const VkTimeDomainKHR prefs[] = {
-#ifdef _WIN32
-	        VK_TIME_DOMAIN_QUERY_PERFORMANCE_COUNTER_KHR,
-#else
-	        VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_KHR,
-	        VK_TIME_DOMAIN_CLOCK_MONOTONIC_KHR,
-#endif
-	};
-	for (auto want : prefs) {
-		for (uint32_t i = 0; i < tdp.timeDomainCount && !clock.id; ++i) {
-			if (domains[i] == want) {
-				clock.domain = want;
-				clock.id     = domain_ids[i];
-			}
-		}
-	}
-	if (clock.domain == VK_TIME_DOMAIN_DEVICE_KHR) {
-		printf("no host time domain exposed by the swapchain; this spike "
-		       "needs one (calibrated-timestamp mapping is out of scope). "
-		       "Domains offered: ");
-		for (auto d : domains) {
-			printf("%d ", (int)d);
-		}
-		printf("\n");
+	if (tdp.timeDomainCount == 0) {
+		printf("no swapchain time domains\n");
 		std::exit(4);
 	}
-#ifdef _WIN32
-	if (clock.domain == VK_TIME_DOMAIN_QUERY_PERFORMANCE_COUNTER_KHR) {
-		LARGE_INTEGER f;
-		QueryPerformanceFrequency(&f);
-		clock.qpc_freq = (uint64_t)f.QuadPart;
+	const uint64_t time_domain_id = domain_ids[0];
+	printf("[8] time domains: ");
+	for (uint32_t i = 0; i < tdp.timeDomainCount; ++i) {
+		printf("%d(id=%llu) ", (int)domains[i],
+		       (unsigned long long)domain_ids[i]);
 	}
-#endif
-	printf("[8] host time domain: %d (id=%llu)\n", (int)clock.domain,
-	       (unsigned long long)clock.id);
+	printf("| using id=%llu (feedback times reported in this domain; "
+	       "intervals below assume it counts nanoseconds)\n",
+	       (unsigned long long)time_domain_id);
 
 	// ---------------- per-image clear command buffers ----------------
 	VkCommandPoolCreateInfo cpci = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
@@ -468,7 +437,7 @@ int main(int argc, char** argv)
 	}
 
 	// --------------------- sync primitives ---------------------
-	VkSemaphoreCreateInfo sem_ci = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+	VkSemaphoreCreateInfo sem_ci   = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
 	VkFenceCreateInfo     fence_ci = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
 	fence_ci.flags                 = VK_FENCE_CREATE_SIGNALED_BIT;
 	VkSemaphore acquire_sems[MaxInFlight] = {};
@@ -481,23 +450,19 @@ int main(int argc, char** argv)
 	for (uint32_t i = 0; i < img_count; ++i) {
 		CHECK(vkCreateSemaphore(device, &sem_ci, nullptr, &render_sems[i]));
 	}
-	printf("[9] beginning %d timed presents @ %.3f Hz\n", NumFrames, DosRateHz);
+	printf("[9] beginning %d relative-timed presents @ %.3f Hz\n", NumFrames,
+	       DosRateHz);
 
 	// ------------------- feedback poll (reused buffers) -------------------
-	struct FB {
-		uint64_t target = 0;
-		uint64_t glass  = 0;
-	};
-	std::map<uint64_t, FB> feedback;  // presentId -> times (domain units)
-
-	static constexpr uint32_t kMaxTimings = 64;
-	static constexpr uint32_t kMaxStages  = 8;
+	std::map<uint64_t, uint64_t> feedback;  // presentId -> chosen-stage time
+	static constexpr uint32_t    kMaxTimings = 64;
+	static constexpr uint32_t    kMaxStages  = 8;
 	std::vector<VkPastPresentationTimingEXT> timings(kMaxTimings);
 	std::vector<VkPresentStageTimeEXT>       stage_store(kMaxTimings * kMaxStages);
 
 	auto poll_feedback = [&]() {
 		for (uint32_t i = 0; i < kMaxTimings; ++i) {
-			timings[i]                   = {VK_STRUCTURE_TYPE_PAST_PRESENTATION_TIMING_EXT};
+			timings[i] = {VK_STRUCTURE_TYPE_PAST_PRESENTATION_TIMING_EXT};
 			timings[i].presentStageCount = kMaxStages;
 			timings[i].pPresentStages    = &stage_store[i * kMaxStages];
 		}
@@ -514,37 +479,25 @@ int main(int argc, char** argv)
 		}
 		for (uint32_t k = 0; k < pp.presentationTimingCount; ++k) {
 			const auto& t = timings[k];
-			uint64_t    glass = 0;
 			for (uint32_t s = 0; s < t.presentStageCount; ++s) {
-				if (t.pPresentStages[s].stage &
-				    VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT) {
-					glass = t.pPresentStages[s].time;
+				if (t.pPresentStages[s].stage & stage) {
+					feedback[t.presentId] = t.pPresentStages[s].time;
 				}
 			}
-			feedback[t.presentId] = {t.targetTime, glass};
 		}
 	};
 
 	// ------------------------ present loop ------------------------
-	const uint64_t period_ns   = (uint64_t)(1e9 / DosRateHz);
-	const uint64_t base_steady = SteadyNs();
-	const uint64_t base_domain = clock.Now();
+	// Relative-time targetTime is the minimum visible duration of the PREVIOUS
+	// image, in nanoseconds. Setting it to the frame period makes the display
+	// engine pace the stream; no CPU-side sleep needed (the 2-frame fence ring
+	// throttles submission), so any pacing we measure is the driver's.
+	const uint64_t period_ns = (uint64_t)(1e9 / DosRateHz);
 
 	std::vector<double> present_call_ms, acquire_call_ms;
 	int                 presented = 0;
 
 	for (int i = 0; i < NumFrames; ++i) {
-		const uint64_t offset_ns    = WarmupNs + (uint64_t)i * period_ns;
-		const uint64_t target_domain = base_domain + clock.NsToDomain(offset_ns);
-
-		// Pace CPU submission to ~SubmitLeadNs before the target.
-		const uint64_t wake_steady = base_steady + offset_ns - SubmitLeadNs;
-		const uint64_t now         = SteadyNs();
-		if (wake_steady > now) {
-			std::this_thread::sleep_for(
-			        std::chrono::nanoseconds(wake_steady - now));
-		}
-
 		const uint32_t slot = (uint32_t)i % MaxInFlight;
 		CHECK(vkWaitForFences(device, 1, &frame_fences[slot], VK_TRUE,
 		                      UINT64_MAX));
@@ -575,10 +528,11 @@ int main(int argc, char** argv)
 		const uint64_t present_id = (uint64_t)(i + 1);
 
 		VkPresentTimingInfoEXT ti = {VK_STRUCTURE_TYPE_PRESENT_TIMING_INFO_EXT};
-		ti.targetTime                   = target_domain;
-		ti.timeDomainId                 = clock.id;
-		ti.presentStageQueries          = VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT;
-		ti.targetTimeDomainPresentStage = VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT;
+		ti.flags                        = VK_PRESENT_TIMING_INFO_PRESENT_AT_RELATIVE_TIME_BIT_EXT;
+		ti.targetTime                   = period_ns;
+		ti.timeDomainId                 = time_domain_id;
+		ti.presentStageQueries          = stage;
+		ti.targetTimeDomainPresentStage = stage;
 
 		VkPresentTimingsInfoEXT tis = {VK_STRUCTURE_TYPE_PRESENT_TIMINGS_INFO_EXT};
 		tis.swapchainCount          = 1;
@@ -612,32 +566,33 @@ int main(int argc, char** argv)
 		}
 	}
 
-	// drain trailing feedback
 	vkDeviceWaitIdle(device);
 	std::this_thread::sleep_for(std::chrono::milliseconds(300));
 	poll_feedback();
 
 	// -------------------------- report --------------------------
-	std::vector<double> err_ms, interval_ms;
-	uint64_t            prev_glass = 0;
-	for (const auto& [id, fb] : feedback) {
-		if (fb.glass == 0) {
-			continue;
+	std::vector<double> interval_ms, interval_err_ms;
+	const double        period_ms = 1000.0 / DosRateHz;
+	uint64_t            prev      = 0;
+	for (const auto& [id, t] : feedback) {  // std::map iterates by presentId
+		if (prev) {
+			const double ms = (double)((int64_t)(t - prev)) / 1e6;
+			interval_ms.push_back(ms);
+			interval_err_ms.push_back(ms - period_ms);
 		}
-		err_ms.push_back(clock.DomainDeltaToMs((int64_t)(fb.glass - fb.target)));
-		if (prev_glass) {
-			interval_ms.push_back(
-			        clock.DomainDeltaToMs((int64_t)(fb.glass - prev_glass)));
-		}
-		prev_glass = fb.glass;
+		prev = t;
 	}
 
-	printf("\n=== VK_EXT_present_timing @ %.3f Hz, %d frames - %s ===\n",
+	printf("\n=== VK_EXT_present_timing (relative) @ %.3f Hz, %d frames - %s ===\n",
 	       DosRateHz, NumFrames, props.deviceName);
-	printf("target period: %.3f ms | submitted: %d | feedback entries: %zu\n",
-	       1000.0 / DosRateHz, presented, feedback.size());
-	Stats(err_ms, "glass vs target [ms]");
-	Stats(interval_ms, "glass interval  [ms]");
+	printf("target period: %.3f ms | submitted: %d | feedback entries: %zu | "
+	       "stage: %s\n",
+	       period_ms, presented, feedback.size(),
+	       stage == VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT
+	               ? "first_pixel_visible"
+	               : "queue_operations_end");
+	Stats(interval_ms, "feedback interval [ms]  (want ~14.268)");
+	Stats(interval_err_ms, "interval - period [ms]  (jitter; want ~0)");
 	Stats(present_call_ms, "vkQueuePresentKHR call [ms]  (blocking check)");
 	Stats(acquire_call_ms, "vkAcquireNextImageKHR call [ms]");
 
