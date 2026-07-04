@@ -620,6 +620,18 @@ What our design must therefore keep possible (and does):
 - **Half-resolution + upscale**: a sampler choice at the blend draw
   (the filter/wrap sampler grid already exists).
 
+Two design cross-references for when the OSD work actually starts.
+The update-cadence decoupling above (emulated frame at DOS rate, OSD
+at present or half-present rate) is the same separation Xenia's
+presenter draws between its guest-output path and UI composition —
+the proven shape for exactly this kind of two-layer presenter
+([Appendix C §12](#12-xenia-added-2026-07-04-post-pivot-new-findings-only)). And should OSD *rendering* ever move off the main
+thread, the current synchronous design's assumptions break — the
+designated upgrade shape for asynchronous producers is Xenia's
+submission-index completion timeline plus single-producer mailbox,
+recorded in the same section. Decide against that section, not from
+scratch.
+
 Nothing further is built until OSD work actually starts; these
 constraints plus the TODO markers are the whole deliverable.
 

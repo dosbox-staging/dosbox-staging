@@ -86,7 +86,12 @@ The decision-7 experiment, run and then implemented.
 - Content: 70.086 Hz smooth scroller (Keen-class) + one 60 Hz VESA
   title.
 - Arms: `presentation_mode = dos-rate` vs `host-rate`, vulkan
-  backend, fullscreen, vsync on and off.
+  backend, fullscreen, vsync on and off. Optional bonus arm while
+  the rig is up: `FIFO_RELAXED` on the fixed-rate testbed where the
+  driver offers it (Xenia's tear-rather-than-stall middle ground,
+  plan Appendix C §12). Expected ≈ FIFO for our early-submitting
+  scheduler — confirm cheaply, record the numbers, adopt into the
+  decision-8 mapping only if it measurably wins.
 - Metrics: PR 6 PACING report (interval regularity of what reaches
   glass, skip/drop counts and their pattern regularity) + eyeball
   judgement of the drop cadence (a regular 7-of-8 beat vs irregular
