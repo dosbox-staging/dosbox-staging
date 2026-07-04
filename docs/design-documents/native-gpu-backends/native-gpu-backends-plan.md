@@ -983,6 +983,12 @@ and call edges in the Relations list below.
 ## PR 1 — deferred-present scheduler + pacing instrumentation
 ## (EXECUTION-GRADE SPEC)
 
+> **Implementation contract:**
+> [`native-gpu-backends-pr1.md`](native-gpu-backends-pr1.md) —
+> step-level instructions, guardrails, per-commit self-verification,
+> and the human test matrix. This section remains the design record;
+> the spec file is what the implementing session follows.
+
 Backend-independent — it operates above the `RenderBackend`
 interface, so it improves the existing OpenGL *and* SDL texture
 backends on VRR today; it later becomes the
@@ -1211,9 +1217,28 @@ the Apache-2.0 SPDX line.
 
 ## Implementation order — execution-grade specs
 
+**Per-PR implementation contracts** (written 2026-07-04; the
+sections below remain the design record, the spec files are what the
+implementing session follows — each carries step-level instructions,
+guardrails, per-commit automated self-verification loops, goals,
+success criteria, and a manual test matrix for humans):
+
+- [PR 1 — deferred-present scheduler](native-gpu-backends-pr1.md)
+- [PR 2 — Vulkan backend skeleton](native-gpu-backends-pr2.md)
+- [PR 3 — shader toolchain + Vulkan pipeline](native-gpu-backends-pr3.md)
+- [PR 4 — tombstone (Metal backend deleted)](native-gpu-backends-pr4.md)
+- [PR 5 — single-source shader library](native-gpu-backends-pr5.md)
+- [PR 6 — present timing, the flagship](native-gpu-backends-pr6.md)
+- [PR 7 — `auto` + polish](native-gpu-backends-pr7.md)
+
+Shared rule baked into every spec: **if reality disagrees with the
+spec, stop and update the spec (and this plan) first** — never
+improvise around a mismatch.
+
 Standing constraints for every PR in this series:
 
-- **Licence firewall**: implementation works from this document only.
+- **Licence firewall**: implementation works from this document and
+  the per-PR spec files only.
   Consulting or copying source from DuckStation, RetroArch, or PCSX2
   is prohibited ([decision 11](#decision-record-all-locked-2026-07-0304) and the [Attribution policy](#attribution-policy) have the full
   rule); Dolphin, PPSSPP, RPCS3, and Vulkan-Samples may be consulted
@@ -1243,6 +1268,8 @@ Standing constraints for every PR in this series:
   touches; [PR 7](#pr-7--auto--polish) finalises the set.
 
 ### PR 2 — Vulkan backend skeleton (`output = vulkan`, no shaders)
+
+> Implementation contract: [`native-gpu-backends-pr2.md`](native-gpu-backends-pr2.md)
 
 The goal of this PR is feature parity with the `texture` backend, but
 running on Vulkan on all three platforms (macOS via MoltenVK). No
@@ -1393,6 +1420,8 @@ commit.*
 
 ### PR 3 — shader toolchain + Vulkan pipeline
 
+> Implementation contract: [`native-gpu-backends-pr3.md`](native-gpu-backends-pr3.md)
+
 This PR brings the shader system to the Vulkan backend, and on the
 way performs the refactoring that decouples the shader subsystem from
 OpenGL (the coupling documented in ["GL-coupling refactors"](#gl-coupling-refactors-verified-findings-folded-into-pr-3) above).
@@ -1492,6 +1521,8 @@ lavapipe golden-image tests are running in CI.*
 
 ### PR 4 — Metal backend (DELETED 2026-07-05)
 
+> Tombstone file: [`native-gpu-backends-pr4.md`](native-gpu-backends-pr4.md)
+
 This PR no longer exists. The native Metal backend was removed from
 the plan before implementation began: macOS runs the same Vulkan
 backend on MoltenVK, with timed presents through
@@ -1504,6 +1535,8 @@ the Vulkan PRs: the MoltenVK build/CI wiring in [PR 2](#pr-2--vulkan-backend-ske
 `VK_GOOGLE_display_timing` dialect in [PR 6](#pr-6--present-timing-the-flagship).
 
 ### PR 5 — single-source shader library
+
+> Implementation contract: [`native-gpu-backends-pr5.md`](native-gpu-backends-pr5.md)
 
 This PR collapses the shader sources down to the single
 hand-maintained 450 tree and switches the OpenGL backend onto the
@@ -1520,8 +1553,12 @@ Commits:
    qualifiers from sampler declarations (they require a GL extension
    macOS doesn't have), and stitching the two stages back into our
    single-file format with the `#pragma` metadata block re-attached.
-   Output is deterministic, a `--check` mode regenerates and diffs
-   for CI, and the lint workflow gains the hook.
+   Output is deterministic, and a `--check` mode regenerates and
+   diffs for CI. The hook lives in the **Linux build workflow**, not
+   the lint workflow — the lint job has no vcpkg toolchain, and the
+   check needs the pinned glslang/SPIRV-Cross host tools to
+   distinguish stale files from toolchain drift (corrected
+   2026-07-04; the PR 5 spec has the mechanism).
 2. `Switch the OpenGL executor to flattened uniform blocks` — the GL
    pipeline now uploads each pass's uniforms with a single
    `glUniform4fv` call into the flattened `Uniforms[k]` array,
@@ -1552,6 +1589,8 @@ Commits:
 `--check` guard making stale generated files impossible.*
 
 ### PR 6 — present timing (the flagship)
+
+> Implementation contract: [`native-gpu-backends-pr6.md`](native-gpu-backends-pr6.md)
 
 This PR delivers the project's headline feature: presents scheduled
 by the display engine itself, at timestamps derived from the emulated
@@ -1636,6 +1675,8 @@ measured flip intervals tracking the DOS cadence on VRR, and graceful
 degradation verified by forcibly disabling the extension.*
 
 ### PR 7 — `auto` + polish
+
+> Implementation contract: [`native-gpu-backends-pr7.md`](native-gpu-backends-pr7.md)
 
 The closing PR: the `auto` output value, the deferred
 presentation-mode decision, and the documentation sweep.
