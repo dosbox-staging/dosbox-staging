@@ -1181,7 +1181,7 @@ void SHELL_InitAndRun()
 	        "Allows programs to open data files in specified directories as if they were in the current directory.\n");
 	MSG_Add("SHELL_CMD_APPEND_HELP_LONG",
 	        "Allows programs to open data files in specified directories as if they were in\n"
-	        "the current directory. The specified directories are called appended directories.\n"
+	        "the current directory. Conceptually, this works similarly to PATH but for data files.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]append[reset]\n"
