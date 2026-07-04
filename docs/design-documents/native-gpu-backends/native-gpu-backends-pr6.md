@@ -144,9 +144,15 @@ rule above):
 - Scheduling: chain `VkPresentTimingsInfoEXT` (one
   `VkPresentTimingInfoEXT`: absolute `targetTime` in the calibrated
   domain, `timeDomainId`) into `VkPresentInfoKHR.pNext` via
-  `vk::StructureChain`. **Target = due time + 2–3 refresh cycles of
-  lead** — submit early, let the display engine hold the flip
-  (Spike 4's lesson; a late submit can't beat the pipeline).
+  `vk::StructureChain`. **Target = the due time itself — never add
+  artificial lead.** We cannot submit before the frame exists, so
+  glass time lands at `due + pipeline_depth` as a **constant
+  offset** (Spike 4 measured 2–3 cycles windowed; expect ~1 cycle
+  under fullscreen direct scanout). That constant is benign —
+  jitter is the enemy — and inflating targets to "give the display
+  engine lead" would buy nothing except 2–3 frames of deliberate
+  latency. The offset is measured and reported (commit 5), never
+  chased.
 - Feedback: poll `vkGetPastPresentationTimingEXT` each present;
   correlate via `VK_KHR_present_id2`; read the
   `IMAGE_FIRST_PIXEL_VISIBLE` stage as glass time.
@@ -161,12 +167,21 @@ commit 3 plugs in):
   (Common/GPU/Vulkan/VulkanRenderManager.cpp) — idea credit, see
   native-gpu-backends-attribution.md`).
 - Drift correction, pure and unit-tested:
-  `int64_t ComputeTargetAdjustmentUs(span<const FrameTimeRecord>)` —
-  EMA of (actual − target) over trusted records, clamped to
-  ±0.5 refresh cycles per step, slewing future targets so the DOS
-  clock and display clock converge instead of stair-stepping.
-- Missed-window detection: actual − target > 1.5 refresh cycles →
-  count + trace log.
+  `int64_t ComputeTargetAdjustmentUs(span<const FrameTimeRecord>)`.
+  The offset `actual − target` has two components: a **constant
+  level** (the present pipeline's depth — leave it alone, it is
+  latency, not error) and a **slope** (the DOS clock and the
+  display clock drifting apart — this is what gets corrected).
+  Correct on the slope/trend of the offset over the ring, clamped
+  to ±0.5 refresh cycles per step, slewing future targets so the
+  clocks converge without stair-stepping. Unit tests must include:
+  constant large offset → zero adjustment; slowly growing offset →
+  slew; clamp behaviour.
+- Missed-window detection: `(actual − target)` deviating from the
+  **rolling median offset** by more than one refresh cycle → count
+  + trace log. (Absolute thresholds are wrong here — under a
+  windowed compositor the constant offset alone exceeds any sane
+  absolute threshold.)
 - **Feedback validation with per-vendor trust priors** (adapted from
   RPCS3 — GPLv2, code/data adaptation allowed WITH SPDX):
   `SPDX-FileCopyrightText` line for RPCS3 in the file carrying the
@@ -285,9 +300,12 @@ with the outcome if adopted.
 
 1. Grow `DEBUG_PRESENT_PACING` into a periodic summary (every 512
    presents and at shutdown): presented-interval mean/p95/max vs
-   target period, counts per tier (scheduled/app-timed/immediate/
-   skipped), accumulated drift correction, missed windows, feedback
-   rejects, calibration offset drift. One block, grep-friendly
+   target period; **glass-vs-due offset mean/p95 (the constant
+   pipeline latency — watch that it stays constant; a drifting
+   level means the slope corrector is misbehaving)**; counts per
+   tier (scheduled/app-timed/immediate/
+   skipped); accumulated drift correction; missed windows; feedback
+   rejects; calibration offset drift. One block, grep-friendly
    prefix `PACING:`.
 2. The run sheet: a checklist document for release testing derived
    from the manual matrix below — one row per hardware box from the
