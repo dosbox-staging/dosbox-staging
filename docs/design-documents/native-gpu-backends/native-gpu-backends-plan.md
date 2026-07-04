@@ -107,6 +107,24 @@ GPU API dependency disappears from the tree entirely.)
   condition instead of a hidden block inside the driver, and heavy
   vsync scenarios drop frames cleanly rather than taxing the
   emulation. Accuracy goes up while main-thread cost goes *down*.
+- **A presentation architecture that stays simple — permanently.**
+  Timestamped presents mean the *display engine* does the waiting,
+  the pacing, and the timing arithmetic. Emulators without that
+  mechanism end up building it in application code: a dedicated
+  vblank-wait thread on one platform (Cemu), or a fully
+  asynchronous presenter with three completion timelines, a
+  versioned frame mailbox, and per-resource submission tracking
+  (Xenia — [Appendix C §12](#12-xenia-added-2026-07-04-post-pivot-new-findings-only) is kept in this plan as the cautionary
+  tale). We refuse that entire category of complexity by design:
+  emulation and presentation share one thread, nothing in the
+  present path ever blocks or waits, late work is skipped, and
+  multithreading stays where it is harmless (a future OSD renders
+  on worker threads but only ever hands over finished buffers —
+  see ["OSD readiness"](#osd-readiness-design-constraints-only--no-osd-is-implemented)). Yielding present timing to the display
+  engine is not just the flagship feature — it is precisely what
+  lets the rest of the code stay this simple, and a large part of
+  why owning the swapchain (native Vulkan rather than SDL GPU's
+  sealed present call) was worth the price of admission.
 - **Rendering becomes testable in CI**: with native device selection
   we can run the real shader pipeline on Mesa's software Vulkan
   implementation (lavapipe) headlessly — golden-image tests on every
@@ -594,11 +612,19 @@ after the letterbox blit).
 
 How the OSD will work when it arrives: it is **rendered on the CPU
 into a viewport-sized RGBA buffer** — which can be large (a 4K or 5K
-fullscreen viewport) — then **uploaded every present** and
-**alpha-blended over the emulated image**. Planned performance tweak
-options: updating the OSD at half the present rate, and/or rendering
-it at half resolution with bilinear or nearest-neighbour upscale
-during the blend.
+fullscreen viewport), so the rendering itself will likely be spread
+across worker threads — then **uploaded and alpha-blended over the
+emulated image at present time**. The threading stops at the buffer:
+workers hand over *completed* frames, and at each present the main
+thread takes the latest completed one — or, when none is ready yet,
+simply re-blends the previous. **An OSD frame that misses its
+present is skipped, never awaited** — running the OSD at an
+effective half rate under load is perfectly acceptable. Planned
+performance tweaks: dropping the OSD update rate to half the present
+rate — statically, or dynamically when the emulated rate is high
+(say, DOS modes above ~80 Hz) or when OSD frames are observed
+missing their presents — and/or rendering it at half resolution with
+bilinear or nearest-neighbour upscale during the blend.
 
 What our design must therefore keep possible (and does):
 
@@ -616,21 +642,31 @@ What our design must therefore keep possible (and does):
   OSD by construction — the long-standing design intent.
 - **Half-rate updates**: the OSD texture is persistent, so skipping
   an upload simply re-blends the previous contents — falls out of
-  the upload/present split for free.
+  the upload/present split for free. The same mechanism is the
+  miss-recovery path (a late OSD frame just isn't uploaded this
+  present) and the dynamic half-rate mode.
 - **Half-resolution + upscale**: a sampler choice at the blend draw
   (the filter/wrap sampler grid already exists).
 
-Two design cross-references for when the OSD work actually starts.
-The update-cadence decoupling above (emulated frame at DOS rate, OSD
-at present or half-present rate) is the same separation Xenia's
-presenter draws between its guest-output path and UI composition —
-the proven shape for exactly this kind of two-layer presenter
-([Appendix C §12](#12-xenia-added-2026-07-04-post-pivot-new-findings-only)). And should OSD *rendering* ever move off the main
-thread, the current synchronous design's assumptions break — the
-designated upgrade shape for asynchronous producers is Xenia's
-submission-index completion timeline plus single-producer mailbox,
-recorded in the same section. Decide against that section, not from
-scratch.
+One boundary is permanent and worth stating in bold terms: **the
+present path stays synchronous and single-threaded — asynchronous
+presentation is rejected, not deferred.** Xenia's presenter
+([Appendix C §12](#12-xenia-added-2026-07-04-post-pivot-new-findings-only)) is the plan's cautionary tale here: letting
+producers and consumers touch presentation from multiple threads
+costs three completion timelines, a versioned single-producer
+mailbox, and per-resource submission-index tracking — brilliant
+engineering in service of a problem we simply refuse to have. Lots
+of complexity for, in our case, nothing: the skip-don't-wait
+handoff above gets us a fully multithreaded OSD *renderer* for the
+price of a buffer swap, and on the other side of the present call,
+display-engine-timed presents (the flagship) already do the waiting
+and the pacing that would otherwise demand threads of their own.
+The update-cadence decoupling (emulated frame at DOS rate, OSD at
+present/half rate) is the one idea we do share with Xenia's
+guest-output/UI split — arrived at without the machinery. This is
+the same simplicity argument that anchors the whole project; the
+Overview's "presentation architecture that stays simple" bullet is
+its statement of record.
 
 Nothing further is built until OSD work actually starts; these
 constraints plus the TODO markers are the whole deliverable.
@@ -2376,8 +2412,14 @@ field guide.
   three independent timelines (paint, UI, guest refresh). Cleaner
   lifecycle bookkeeping than fixed rings once producers are
   asynchronous. Our synchronous two-frame ring stays simpler for
-  our case; recorded (alongside [§5](#5-upload-path)'s rings) as the known upgrade
-  shape if an async producer ever appears.
+  our case — and this machinery is retained here as a **cautionary
+  tale, not an upgrade path** (John's ruling, 2026-07-04): it is
+  the price of asynchronous presentation, and the plan refuses to
+  pay it by design. Even the future multithreaded OSD renderer
+  hands over completed CPU buffers to the synchronous present path
+  and skips when late (see "OSD readiness" and the Overview's
+  simplicity bullet); display-engine-timed presents make the whole
+  category of present-side threading unnecessary.
 - **The WSI destruction ambiguity, stated plainly**
   (vulkan_presenter.cc:147-153): nothing in Vulkan signals when
   `vkQueuePresentKHR` is truly done with a retiring swapchain — so

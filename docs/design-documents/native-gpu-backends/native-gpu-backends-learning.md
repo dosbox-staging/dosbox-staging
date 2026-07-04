@@ -546,8 +546,28 @@ ground worth remembering when someone next debates vsync semantics;
 and its resource lifecycle runs on monotonic *submission indices*
 rather than a fixed ring of fences ("this image was last used in
 submission 47"), which is the cleaner shape once asynchronous
-producers enter the picture, and the known upgrade path if our OSD
-ever becomes one.
+producers enter the picture.
+
+That last observation ended up mattering more as a *warning* than as
+a technique. John's reading of Xenia settled a boundary permanently:
+our presentation stays synchronous and single-threaded, full stop —
+asynchronous presentation is rejected, not deferred. Xenia shows
+with unusual clarity what the alternative costs (three completion
+timelines, a versioned mailbox, submission tracking on every
+resource), and for us it would buy nothing: the future OSD renders
+on worker threads, but the handoff is just "the latest finished CPU
+buffer gets blended at present time, a late one is skipped" — if
+that means the OSD effectively runs at half the DOS rate under
+load, that is fine, and we can even detect it and drop the OSD
+renderer to half rate deliberately. Meanwhile the flagship carries
+the other half of the argument: display-engine-timed presents mean
+the *driver* does the waiting and the pacing, which is exactly the
+work that pushes other emulators toward present-side threads in the
+first place. The two decisions anchor each other — we could afford
+to reject SDL GPU's sealed present because we wanted the timestamp,
+and having the timestamp is what lets everything around the present
+call stay this simple. Sometimes the most valuable thing a
+brilliant design teaches you is what you are declining to pay for.
 
 The licences, for completeness: Xenia is BSD-3-Clause — adaptable
 with a credit line. Cemu is MPL-2.0, and checking what that means
