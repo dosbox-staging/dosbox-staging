@@ -256,6 +256,13 @@ compiler tells us where it actually put things), and our canonical
 member order is just a convention we cross-check in debug builds.
 RetroArch has run this exact scheme for years.
 
+*(Refined twice since this was written: the packer's own std140
+arithmetic became the single source of truth — the GL path has no
+toolchain at runtime to ask — with reflection demoted to a debug
+cross-check (Chapters 5–6), and the ecosystem review then replaced
+even that runtime check with offline golden-offset unit tests
+recorded from reflection once, in Spike 2 (Chapter 7).)*
+
 #### glslang and SPIRV-Cross
 
 **glslang** is Khronos's reference GLSL front-end: source string in,
@@ -800,7 +807,11 @@ mattered to us specifically:
 Against that: what would a hand-written Metal backend buy? A second
 pass-graph executor, a second WSI implementation, Objective-C++ in
 the tree, runtime MSL generation (keeping SPIRV-Cross as a runtime
-dependency), an embedded-MSL bootstrap shader, and a permanent
+dependency — and once MSL was gone, its one other runtime job, the
+debug-build offset cross-check, was replaced by offline golden-offset
+unit tests recorded from Spike 2, removing the library from the
+shipped binary entirely), an embedded-MSL bootstrap shader, and a
+permanent
 second column in every test matrix — to reach *the same
 `atTime:` call* MoltenVK reaches for us. The deletion list writes
 itself; the only honest question left was whether the timing quality

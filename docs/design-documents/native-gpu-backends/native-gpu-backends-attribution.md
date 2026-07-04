@@ -1,7 +1,7 @@
 # GPU backend — attributions and thanks
 
-The native Vulkan and Metal render backends (see `native-gpu-backends-plan.md`)
-were designed after studying the rendering code of six open-source
+The native Vulkan render backend (see `native-gpu-backends-plan.md`)
+was designed after studying the rendering code of six open-source
 emulators and the official Khronos samples. Every non-trivial design
 decision in that plan stands on lessons these projects' developers
 learned the hard way, over many years, on hardware and drivers we will
@@ -135,6 +135,18 @@ their patterns (swapchain recreation, sync pooling,
 `swapchain_maintenance1` handling) earns no idea credit. If any
 sample code is directly adapted, it receives its Apache-2.0
 `SPDX-FileCopyrightText` line at that point and an entry here.
+
+## Khronos Vulkan-Tutorial (Apache-2.0)
+
+Same standing as the samples — official reference material meant to
+be followed. One planned adaptation is recorded because actual code
+will derive from it:
+
+- **Instance/device initialisation sequence** (the modern Vulkan-Hpp
+  RAII tutorial's init chapter) — the licence-clean template for our
+  hand-written ~200–400-line device bring-up after vk-bootstrap was
+  dropped (plan decision 13). Adapted code; Apache-2.0 SPDX credit
+  on landing. *Planned (PR 2).*
 
 ## Libraries we build on
 
