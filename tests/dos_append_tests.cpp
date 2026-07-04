@@ -101,7 +101,7 @@ TEST_F(DOS_AppendTest, VFSIntegrationFallback)
 
 	// 4. Assert that the hook correctly found and verified the physical file
 	EXPECT_TRUE(found);
-	EXPECT_EQ(resolved_path, dummy_file.string());
+	EXPECT_EQ(resolved_path, temp_dir.string() + "\\test.txt");
 
 	// Cleanup
 	std::filesystem::remove_all(temp_dir);
