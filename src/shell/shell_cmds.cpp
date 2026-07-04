@@ -2770,10 +2770,6 @@ void DOS_Shell::CMD_APPEND(char* args) {
 		DOS_Append::SetExecutableMode(false);
 		return;
 	}
-	if (args_upper == "/PATH:ON" || args_upper == "/PATH:OFF") {
-		// Legacy data file switches (default behavior, no-op in our subset)
-		return;
-	}
 
 	// Semicolon alone clears the active appended paths
 	if (args_upper == ";") {
