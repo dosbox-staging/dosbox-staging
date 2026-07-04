@@ -33,7 +33,8 @@ finalised, the user-facing VRR guide, and release notes.
    measurements (not vibes) and implemented; the numbers are in the
    PR.
 4. macOS release artifacts run `output = vulkan` out of the box on a
-   clean machine (MoltenVK bundled, no Homebrew required).
+   clean machine (pinned loader + MoltenVK bundled per decision 16;
+   no Homebrew required).
 5. `src/gui/render/docs/` exists per the standing constraint:
    architecture.md, shaders.md, vulkan.md, opengl.md, sdl.md, with
    rendered diagram images AND their editable sources; README.md is
@@ -111,35 +112,47 @@ unreachable).
 **Manual verification:** the protocol itself is the verification;
 paste the comparison table into the PR.
 
-### Commit 3 — `build: bundle MoltenVK into the macOS app`
+### Commit 3 — `build: bundle the Vulkan loader and MoltenVK into the macOS app`
 
-The deferred PR 2 TODO (macos.yml carries it): release artifacts
-must not depend on Homebrew.
+Assembles the decision-16 vendored stack into the release `.app` —
+release artifacts depend on nothing outside the bundle (LunarG's
+recommended posture for Apple platforms: ship well-tested pinned
+versions of both the loader and MoltenVK; no system-wide loader).
 
 **Steps:**
 
-1. In the macOS packaging step (macos.yml, the universal-build job):
-   copy `libMoltenVK.dylib` (from the brew install already in the
-   job) into `Contents/Frameworks/` of the .app for BOTH
-   architectures — brew's bottle is single-arch, so take the dylib
-   from each arch's runner and `lipo -create` them in the universal
-   job, mirroring how the main binary is merged.
-2. `SDL_Vulkan_LoadLibrary(nullptr)` search order (verified in
-   PR 2's ladder) finds `Contents/Frameworks` — confirm by log line
-   on a Homebrew-less run; if it does not, set the load path
-   explicitly relative to the bundle before falling back.
-3. Licence: MoltenVK is Apache-2.0 — add its licence text to the
-   bundle's licence set via the existing licence-copy mechanism
-   (`cmake/add_copy_assets.cmake` copies `licenses/`).
-4. Sign/notarise: the dylib must be signed with the same identity as
-   the app — add it to the codesign invocation's inputs (follow how
+1. In the macOS packaging step (macos.yml, the universal-build job),
+   place into the .app:
+   - `Contents/Frameworks/libvulkan.1.dylib` — the vcpkg-built
+     loader; vcpkg builds are per-arch, so `lipo -create` the two
+     arch builds in the universal job, mirroring how the main
+     binary is merged;
+   - `Contents/Frameworks/libMoltenVK.dylib` — from the PR 2 fetch
+     script's pinned artifact; the official dylib is already
+     universal, no lipo needed;
+   - `Contents/Resources/vulkan/icd.d/MoltenVK_icd.json` — with its
+     `library_path` pointing at the bundled dylib
+     (`../../../Frameworks/libMoltenVK.dylib`); the loader searches
+     the bundle's `Resources/vulkan/icd.d` on macOS.
+2. Wire the PR 2 loading ladder's bundle branch:
+   `SDL_Vulkan_LoadLibrary()` gets the explicit
+   `Contents/Frameworks/libvulkan.1.dylib` path when running from a
+   bundle. Confirm by log line on a clean-Mac run — the ladder logs
+   which path loaded.
+3. Licences: MoltenVK and the Vulkan loader are both Apache-2.0 —
+   add both licence texts to the bundle's licence set via the
+   existing mechanism (`cmake/add_copy_assets.cmake` copies
+   `licenses/`).
+4. Sign/notarise: both dylibs signed with the same identity as the
+   app — add them to the codesign invocation's inputs (follow how
    other bundled dylibs from vcpkg are handled in the same job; the
    job already injects external deps).
 
 **Automated verification:** CI artifact from the PR run, installed
-on a Mac WITHOUT Homebrew MoltenVK (rename brew's dylib away for the
-test): `output = vulkan` boots; `output = auto` selects vulkan;
-codesign verifies (`codesign --verify --deep`).
+on a Mac with NO Homebrew Vulkan anything (or brew's copies renamed
+away): `output = vulkan` boots and logs the bundled-loader path;
+`output = auto` selects vulkan; `codesign --verify --deep` passes;
+`vulkaninfo` is NOT required to exist on the machine.
 
 ### Commit 4 — `docs: native backends, VRR guide, and release notes`
 

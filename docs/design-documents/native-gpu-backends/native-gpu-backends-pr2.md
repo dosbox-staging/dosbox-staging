@@ -27,10 +27,11 @@ synchronisation lifecycle.
 ## Prerequisites
 
 - PR 1 merged.
-- Dev machine: macOS needs `brew install molten-vk vulkan-headers`
-  (already present on John's machine) and, for validation layers,
-  the Khronos loader + validation layers (see commit 4's macOS
-  loading ladder).
+- Dev machine, macOS: nothing beyond the repo build — the loader
+  comes from vcpkg and MoltenVK from the commit-2 fetch script
+  (plan decision 16). Optional, for validation layers only:
+  `brew install vulkan-validationlayers` (layers are discovered by
+  the loader; see commit 4).
 
 ## Success criteria (PR level)
 
@@ -147,7 +148,9 @@ still applies at PR end. Boot probe (`$DOSBOX -conf probe.conf` with
 
 **Steps:**
 
-1. `vcpkg.json`: add `"vulkan-headers"` to dependencies, and give
+1. `vcpkg.json`: add `"vulkan-headers"` (all platforms) and
+   `vulkan-loader` (macOS only — Windows/Linux get their loader
+   from the driver/distro), and give
    SDL3 the `vulkan` feature on every platform (it is currently
    Linux-only — without it `SDL_Vulkan_CreateSurface` is compiled
    out of SDL on Windows/macOS):
@@ -158,13 +161,27 @@ still applies at PR end. Boot probe (`$DOSBOX -conf probe.conf` with
    { "name": "sdl3", "platform": "!linux",
      "features": ["vulkan"] },
    "vulkan-headers",
+   { "name": "vulkan-loader", "platform": "osx" },
    ```
 
-   MoltenVK has **no vcpkg port** (verified 2026-07-04 against the
-   pinned baseline) — it comes from Homebrew on macOS and is
-   runtime-loaded, never linked; nothing to add to the manifest.
+   (The `vulkan-loader` port exists at the pinned baseline —
+   verified 2026-07-04, version 1.4.350.0.)
 
-2. Top-level `CMakeLists.txt`: mirror the `OPT_OPENGL` block
+2. MoltenVK has **no vcpkg port** (verified 2026-07-04 against the
+   pinned baseline) — add `scripts/dev/fetch-moltenvk.sh`: downloads
+   the official Khronos release artifact
+   (`MoltenVK-macos.tar` from the pinned tag — decision 16 records
+   v1.4.x; write the exact version AND its SHA-256 into the script
+   and verify the checksum before extracting), extracts
+   `MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib` (universal
+   arm64+x86_64) plus the `MoltenVK_icd.json` that sits alongside it
+   into `build/<preset>/moltenvk/`, and is idempotent (skips when
+   the pinned version is already present). macOS CMake presets (or
+   the CI step) invoke it. **The pin-bump ritual is deliberate**:
+   bumping means editing version+SHA in this script and re-running
+   the macOS manual matrix — record that rule in the script header.
+
+3. Top-level `CMakeLists.txt`: mirror the `OPT_OPENGL` block
    (~lines 335-338):
 
    ```cmake
@@ -179,19 +196,20 @@ still applies at PR end. Boot probe (`$DOSBOX -conf probe.conf` with
    headers only, no loader; SDL loads the library at runtime, flesh-
    out decision 2.)
 
-3. `src/dosbox_config.h.in.cmake`: add `#cmakedefine01 C_VULKAN`
+4. `src/dosbox_config.h.in.cmake`: add `#cmakedefine01 C_VULKAN`
    next to `C_OPENGL` (~line 72).
 
-4. `src/gui/CMakeLists.txt`: next to the existing
+5. `src/gui/CMakeLists.txt`: next to the existing
    `if (C_OPENGL) target_link_libraries(... glad)` block, add
    `if (C_VULKAN) target_link_libraries(dosboxcommon PRIVATE
    Vulkan::Headers)`.
 
-5. CI: option defaults ON, so the standard jobs pick it up with no
+6. CI: option defaults ON, so the standard jobs pick it up with no
    edits. Add `-DOPT_VULKAN=OFF` to the `cmake_flags` of exactly ONE
    existing linux.yml matrix entry (compile-out coverage without a
-   new job). In macos.yml, add `molten-vk` to the brew install step
-   (needed at runtime from commit 4 onward; harmless now).
+   new job). In macos.yml, add a `fetch-moltenvk.sh` step (needed at
+   runtime from commit 4 onward; harmless now). No Homebrew
+   packages are added.
 
 **Guardrails:** no source files change in this commit; `C_VULKAN` is
 defined but unused — that is intentional.
@@ -206,6 +224,10 @@ echo '#include <vulkan/vulkan_raii.hpp>
 int main() { return VK_HEADER_VERSION > 0 ? 0 : 1; }' > /tmp/hpp.cpp
 # compile it with the include path vcpkg produced (find it under
 # build/$PRESET/vcpkg_installed/*/include) — must compile clean.
+# macOS: run scripts/dev/fetch-moltenvk.sh twice — first run
+# downloads + checksum-verifies + extracts (dylib + icd json land
+# in build/$PRESET/moltenvk/), second run is an idempotent no-op.
+# Corrupt the recorded SHA-256 locally → the script must refuse.
 ```
 
 **Attribution flips:** none.
@@ -316,7 +338,11 @@ a stub except construction/window for now),
   and API version. Enable dynamic rendering via
   `vk::PhysicalDeviceDynamicRenderingFeatures` in the device create
   chain (works for both the 1.3-core and extension cases; list the
-  extension explicitly when running the 1.2 path).
+  extension explicitly when running the 1.2 path). One spec-mandated
+  rule easy to miss because nothing fails without validation: if the
+  device advertises `VK_KHR_portability_subset` (MoltenVK does), it
+  **must** be enabled at device creation — Spike 5 got away without
+  it only because no validation layer was watching.
 - `FindMemoryType(type_bits, required_properties)` — the ~15-line
   tutorial-standard helper on `Device`; no allocator library
   (decision 5).
@@ -325,24 +351,36 @@ a stub except construction/window for now),
   replaced by real construction, falling back to OpenGL exactly as
   the stub did when `Create` returns an error.
 
-**macOS loading ladder (write it into a comment in the code):**
-`SDL_Vulkan_LoadLibrary(nullptr)` finds, in order: a bundled
-`libvulkan.dylib`/`libMoltenVK.dylib` next to the binary or in
-`Contents/Frameworks`, then system paths. For dev machines, the
-Homebrew Khronos loader + MoltenVK ICD is the recommended setup
-(validation layers only work through the loader):
+**macOS loading (the decision-16 vendored stack; write the ladder
+into a comment in the code):** everything goes through the **Vulkan
+loader** — never dlopen MoltenVK directly (that path loses
+validation layers and the SDL surface flow; it exists only as the
+recorded static fallback in decision 16). Loading order:
 
-```sh
-brew install vulkan-loader vulkan-validationlayers molten-vk
-export VK_ICD_FILENAMES="$(brew --prefix molten-vk)/share/vulkan/icd.d/MoltenVK_icd.json"
-```
+1. Bundled app (release, assembled in PR 7):
+   `SDL_Vulkan_LoadLibrary()` with the explicit path to
+   `Contents/Frameworks/libvulkan.1.dylib`; the loader discovers the
+   MoltenVK ICD from the bundle's
+   `Contents/Resources/vulkan/icd.d/MoltenVK_icd.json`.
+2. Dev builds (non-bundled): point SDL at the vcpkg-built loader in
+   the build tree, and set `VK_DRIVER_FILES` (formerly
+   `VK_ICD_FILENAMES`) to the fetch script's
+   `build/<preset>/moltenvk/MoltenVK_icd.json` — wire both into the
+   dev run environment (CMake preset env or a launcher note) rather
+   than requiring devs to export things by hand. Verify the icd
+   json's `library_path` resolves relative to its own location and
+   adjust it in the fetch script if needed.
+3. `SDL_Vulkan_LoadLibrary(nullptr)` system search as the last
+   resort (covers SDK-installed setups), then fall back to OpenGL
+   with a log message naming every path tried.
 
-If the default load fails at runtime, retry with explicit well-known
-paths (`$(brew --prefix)/lib/libvulkan.dylib`, then
-`.../libMoltenVK.dylib`) before falling back to OpenGL with a log
-message naming what was tried. Release-bundling of MoltenVK into the
-.app (copy dylib + rpath fixup in the packaging job) is deliberately
-deferred to PR 7's polish — record a TODO in macos.yml.
+Validation layers: discovered by the loader
+(`brew install vulkan-validationlayers` or the LunarG SDK on dev
+machines); debug builds enable `VK_LAYER_KHRONOS_validation` via
+the existing probe-first rule. With a loader always in the stack,
+`VK_KHR_portability_enumeration` will be advertised and the
+probe-first rule requests it + the enumerate-portability flag —
+without it the loader hides MoltenVK devices entirely.
 
 **Automated verification:**
 
@@ -352,8 +390,9 @@ $DOSBOX -conf /tmp/probe.conf 2>&1 | tee /tmp/log.txt   # output=vulkan
 grep -qi "vulkan.*device\|device.*vulkan" /tmp/log.txt  # device log line
 # Window comes up black (no upload path yet) and exits 0 cleanly.
 # Debug build + validation layers: zero "Validation Error" lines.
-# Deliberate-failure probe: run with VK_ICD_FILENAMES=/dev/null
-# (Linux/macOS-with-loader) → must fall back to OpenGL gracefully.
+# Deliberate-failure probe: run with VK_DRIVER_FILES=/dev/null
+# (Linux and macOS both run through a loader) → must fall back to
+# OpenGL gracefully, logging every load path it tried.
 ```
 
 **Attribution flips:** the Vulkan-Tutorial init-sequence entry
