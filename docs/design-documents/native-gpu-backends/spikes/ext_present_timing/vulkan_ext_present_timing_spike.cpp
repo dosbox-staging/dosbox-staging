@@ -16,7 +16,7 @@
 //     MoltenVK does not expose VK_EXT_present_timing, so it exits at step [4])
 //
 // Written against Vulkan-Headers 1.4.350 (spec v3). The shipping API differs
-// from the proposal pinned in the plan's Appendix D Spike 3 — see README.md.
+// from the proposal pinned in the plan's Appendix D Spike 3 - see README.md.
 //
 // This is a spike: minimal error recovery, deliberate leaks before std::exit().
 
@@ -219,7 +219,7 @@ int main(int argc, char** argv)
 		}
 	}
 	if (!pd) {
-		printf("[3] no device exposes VK_EXT_present_timing — this GPU/"
+		printf("[3] no device exposes VK_EXT_present_timing - this GPU/"
 		       "driver is a tier-3 (app-timed) target. Exiting.\n");
 		std::exit(2);
 	}
@@ -632,7 +632,7 @@ int main(int argc, char** argv)
 		prev_glass = fb.glass;
 	}
 
-	printf("\n=== VK_EXT_present_timing @ %.3f Hz, %d frames — %s ===\n",
+	printf("\n=== VK_EXT_present_timing @ %.3f Hz, %d frames - %s ===\n",
 	       DosRateHz, NumFrames, props.deviceName);
 	printf("target period: %.3f ms | submitted: %d | feedback entries: %zu\n",
 	       1000.0 / DosRateHz, presented, feedback.size());
