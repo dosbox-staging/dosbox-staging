@@ -20,6 +20,13 @@
 //
 // This is a spike: minimal error recovery, deliberate leaks before std::exit().
 
+#ifdef _WIN32
+// Define before any header: <windows.h> otherwise defines min/max macros that
+// break std::min/std::max; we only need a lean subset for QueryPerformanceCounter.
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <vulkan/vulkan.h>
 
 #include <SDL3/SDL.h>
