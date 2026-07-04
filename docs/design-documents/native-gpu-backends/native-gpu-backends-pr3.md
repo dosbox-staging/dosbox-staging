@@ -350,8 +350,7 @@ during the golden run (debug build).
 3. `ShaderManager` resolves per backend: vulkan → `vulkan450/` tree,
    opengl/texture-era paths unchanged. User shader directories are
    NOT dual-tree: a user file is assumed to be in the active
-   backend's format (plan Open question 1's default — pending
-   John's veto).
+   backend's format (plan decision 15).
 4. Wire on the vulkan backend: `SetShader` (compile all passes; on
    ANY user-shader compile failure log a warning naming the 450
    requirement + the porting guide and fall back to `sharp`,
@@ -388,7 +387,7 @@ Linux rows to the core team.
 | 3 | Image adjustments on/off live | Takes effect, clean-present still skips when static |
 | 4 | Dedither strength sweep | Takes effect |
 | 5 | Shader switch at runtime ×10 (incl. under pause) | No leak growth (watch RSS), no validation errors |
-| 6 | Broken/330 user shader on vulkan | Warning + `sharp` fallback (Open question 1 default) |
+| 6 | Broken/330 user shader on vulkan | Warning + `sharp` fallback (plan decision 15) |
 | 7 | GL regression pass | opengl backend: same content set, before/after PR captures identical |
 | 8 | Resize + fullscreen + shader switch interleaved | Stable, letterbox correct |
 
@@ -400,5 +399,5 @@ Linux rows to the core team.
 - [ ] Attribution: RetroArch pipeline-prior-art entry flipped
 - [ ] Learning-doc chapters (topology extraction and the executor
       deserve long ones)
-- [ ] `shader` help text updated; Open-question-1 default noted in
-      the PR description for John's sign-off
+- [ ] `shader` help text updated; the decision-15 fallback behaviour
+      demonstrated (matrix row 6)

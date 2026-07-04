@@ -171,7 +171,7 @@ upload path.
    delete the now-unused legacy GL uniform path from commit 2 step 3.
 3. User shader directories are untouched: user files are read from
    the same locations as today and assumed to be in the active
-   backend's format (Open question 1 default).
+   backend's format (plan decision 15).
 4. The resource-copy mechanism (`cmake/add_copy_assets.cmake`) globs
    recursively — no build changes needed for the new tree; verify
    `gl330/` lands in the build's resources dir.
@@ -204,8 +204,7 @@ list); the porting recipe with the `sharp` before/after as the
 worked example; generation-script usage + `--check`; the user-shader
 story (450 required on vulkan; existing 330 user shaders keep
 working on `output = opengl` indefinitely; the warn-and-fallback
-behaviour on vulkan — Open question 1's default, assuming John has
-signed it off by now; if not, STOP and get the sign-off first).
+behaviour on vulkan — plan decision 15).
 
 **Automated verification:** `cd website && mkdocs build` — zero
 warnings; `../scripts/linting/verify-markdown.sh` — zero warnings;
@@ -220,7 +219,7 @@ British spelling pass.
 | 1 | Per family (crt, scaler, interpolation): one shader on all three backends | GL bit-identical to pre-PR; vulkan visually identical; goldens green |
 | 2 | `crt-auto`, `crt-auto-machine` on 13h/text/VESA | Correct variant + correct render, all backends |
 | 3 | User 330 shader in config dir, `output = opengl` | Works untouched (the compatibility promise) |
-| 4 | User 330 shader, `output = vulkan` | Warning names 450 + guide; falls back to sharp |
+| 4 | User 330 shader, `output = vulkan` | Warning names 450 + guide; falls back to sharp (decision 15) |
 | 5 | Edit a 450 source without regenerating | CI `--check` fails the PR |
 | 6 | macOS GL (`output = opengl`) with generated 330 | Renders correctly — the whole point of `--flatten-ubo` (no 420pack) |
 

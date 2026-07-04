@@ -160,40 +160,19 @@ review of this document against the codebase was done 2026-07-04:
 every file:line claim was re-verified on the `jn/video-refactoring`
 tip (all confirmed, minor drift noted in the per-PR specs), stale
 pre-pivot remnants were fixed, and the items needing John's decision
-were collected in ["Open questions"](#open-questions-john-decide-before-implementation)
-below. Next: John reviews the open questions and the flesh-out
-decisions, then implementation. Hard prerequisite:
+were collected in ["Open questions"](#open-questions) below —
+resolved by John the same day (decision 15; none remain). Next:
+implementation. Hard prerequisite:
 `jn/video-refactoring` tested and merged.**
 
-## Open questions (John: decide before implementation)
+## Open questions
 
-Items surfaced by the 2026-07-04 full-plan review that need a
-decision only John can make. Everything else the review found was
-either fixed in place or folded into the
-[flesh-out decisions](#decisions-made-during-flesh-out-john-review-these)
-— note that flesh-out decision 1 gained the MoltenVK Vulkan-1.2
-proviso in this pass, so re-read it when reviewing that list.
-
-1. **User-written 330 shaders under `output = vulkan`.**
-   [Decision 4](#decision-record-all-locked-2026-07-0304) keeps
-   legacy 330 user shaders working on the OpenGL backend only; the
-   vulkan backend requires the 450 format. The plan never said what
-   happens when a user whose `shader` setting names a custom 330
-   file from their config shaders directory runs the vulkan backend.
-   Proposed default — applied to the PR 3/PR 5 specs unless vetoed:
-   - user shader files are assumed to be in the active backend's
-     format (450 on vulkan, 330 on opengl); no format sniffing;
-   - a user shader that fails to compile on vulkan logs a clear
-     warning naming the 450 requirement and the porting guide, then
-     falls back to `sharp` — the same recovery path a missing or
-     broken shader takes today (`render.cpp` ~903–917);
-   - the PR 5 authoring guide documents this behaviour prominently;
-   - **revisit before the shipped default ever flips to `auto`**:
-     silently degrading a working custom-shader setup on upgrade is
-     the scenario to avoid — the options then are shader-format
-     detection or keeping such users on `opengl`, and that decision
-     is explicitly deferred to the default-flip discussion
-     ([PR 7](#pr-7--auto--polish) exit note).
+None currently. The single question raised by the 2026-07-04 review
+— user-written 330 shaders under `output = vulkan` — was decided by
+John the same day (warn + fall back to `sharp`) and is now
+[decision 15](#decision-record-all-locked-2026-07-0304). Note that
+flesh-out decision 1 gained a MoltenVK API-version proviso in the
+same review pass.
 
 ## Decision record (all locked, 2026-07-03/04)
 
@@ -266,10 +245,12 @@ proviso in this pass, so re-read it when reviewing that list.
    **glslang** (the only runtime library dependency on Linux —
    packaged by every major distro, hard system dependency; in vcpkg
    for our builds) and
-   **MoltenVK** (macOS only, Khronos-maintained, via Homebrew —
-   **no vcpkg port exists**, verified against the pinned baseline
-   2026-07-04; brew ships both `libMoltenVK.dylib` and the static
-   archive, and Spike 5 ran on exactly that package). **Vulkan-Hpp costs nothing**: the
+   **MoltenVK** (macOS only, Khronos-maintained) — vendored and
+   pinned together with the Vulkan loader per
+   [decision 16](#decision-record-all-locked-2026-07-0304): loader
+   via vcpkg, MoltenVK from the pinned official Khronos release
+   artifact. Homebrew is not a runtime or CI dependency (it remains
+   handy for optional local validation layers). **Vulkan-Hpp costs nothing**: the
    `vulkan.hpp`/`vulkan_raii.hpp` headers ship inside the
    vulkan-headers package we need anyway (verified locally).
    **SPIRV-Cross is demoted to a dev-time CLI tool**: with no MSL
@@ -410,8 +391,44 @@ proviso in this pass, so re-read it when reviewing that list.
     front-end stays a plug-in (`Shaders::Compiler` is the only
     component that knows GLSL exists), so adopting Slang later is a
     one-component change — the recorded watch-item.
-
-## Architecture
+15. **User-written legacy 330 shaders under `output = vulkan` warn
+    and fall back to `sharp`** (John's decision, 2026-07-04,
+    resolving the review's open question). User shader files are
+    assumed to be in the active backend's format — 450 on vulkan,
+    330 on opengl; no format sniffing. A user shader that fails to
+    compile on the vulkan backend logs a clear warning naming the
+    450 requirement and the porting guide, then falls back to
+    `sharp` — the same recovery path a missing or broken shader
+    takes today (`render.cpp` ~903–917). Existing 330 user shaders
+    keep working on `output = opengl` indefinitely. Revisit before
+    the shipped default ever flips to `auto` — silently degrading a
+    working custom-shader setup on upgrade is the scenario to avoid
+    ([PR 7](#pr-7--auto--polish) exit note).
+16. **MoltenVK and the Vulkan loader are vendored and pinned on
+    macOS; Homebrew is not a runtime dependency** (John's decision,
+    2026-07-04). LunarG's guidance for Apple platforms is explicit:
+    bundle well-tested versions of **both** the loader and MoltenVK
+    with the application, and do not rely on a system-wide loader —
+    counter to the norm on Windows and Linux, where the
+    driver/distro provides them. Delivery: the **loader from the
+    existing vcpkg manifest** (`vulkan-loader`, port verified at the
+    pinned baseline — macOS only) and **MoltenVK from the pinned
+    official Khronos release artifact** (`MoltenVK-macos.tar`;
+    version + SHA-256 recorded in the fetch script; v1.4.x exposes
+    Vulkan 1.4; no vcpkg port exists — verified 2026-07-04). The
+    release `.app` bundles `libvulkan.1.dylib` + `libMoltenVK.dylib`
+    in `Contents/Frameworks/` with the MoltenVK ICD manifest in
+    `Contents/Resources/vulkan/icd.d/` ([PR 7](#pr-7--auto--polish)).
+    Version bumps are deliberate: update the pin, run the macOS
+    manual matrix. **Static linking was evaluated and set aside**:
+    officially supported (the release artifact ships a static
+    xcframework, and MoltenVK's private-API functions even require
+    it), but it costs the validation-layer path in that binary and
+    SDL's `SDL_Vulkan_CreateSurface` flow (SDL must dlopen a
+    library), forcing a macOS-only surface path. The bundled-loader
+    stack keeps one code path on all platforms and the layer
+    ecosystem intact; static remains the recorded fallback if the
+    loader stack ever misbehaves.
 
 ### Backends
 
@@ -1104,7 +1121,11 @@ explicitly. Veto/adjust before implementation:
    Spike 5's environment): older MoltenVK builds expose Vulkan 1.2,
    so on macOS the probe accepts 1.2 when `VK_KHR_dynamic_rendering`
    is offered as an extension — the code is identical either way
-   (same feature struct, extension enabled explicitly).
+   (same feature struct, extension enabled explicitly). With the
+   [decision 16](#decision-record-all-locked-2026-07-0304) vendored
+   pin (MoltenVK 1.4.x exposes Vulkan 1.4) the shipped app never
+   exercises this; it remains as robustness for unpinned dev
+   environments.
 2. **Vulkan function loading via SDL** —
    `SDL_Vulkan_LoadLibrary`/`SDL_Vulkan_GetVkGetInstanceProcAddr`
    (SDL already owns the loader); volk only if the Hpp dynamic
@@ -1301,10 +1322,10 @@ Commits:
    file's history across the move.
 2. `build: add the Vulkan build plumbing` — `vulkan-headers` from
    vcpkg (which includes `vulkan.hpp`/`vulkan_raii.hpp` — Vulkan-Hpp
-   is zero additional dependency); on macOS, MoltenVK from Homebrew
-   (no vcpkg port exists — verified 2026-07-04; runtime-loaded, not
-   linked, so this is a CI/dev-setup dependency plus release-bundling
-   work, not a link dependency).
+   is zero additional dependency); on macOS, the vendored loader +
+   MoltenVK per [decision 16](#decision-record-all-locked-2026-07-0304)
+   (loader via vcpkg, MoltenVK fetched pinned; both runtime-loaded,
+   not linked).
    The vcpkg manifest's SDL3 entry currently enables the `vulkan`
    feature **on Linux only** — extend it to all platforms, or
    `SDL_Vulkan_CreateSurface` will be compiled out of SDL on
