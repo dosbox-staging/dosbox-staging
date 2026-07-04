@@ -154,6 +154,49 @@ GPU API dependency disappears from the tree entirely.)
   [implementation phase](#implementation-order--execution-grade-specs),
   finalised in [PR 7](#pr-7--auto--polish)).
 
+## Present-timing support — which tier runs where
+
+Same ladder on every platform: probe at startup, use the highest tier
+available; all three feed one internal design (target time in, glass time out).
+
+1. **`VK_EXT_present_timing`** (Linux/Windows) — the display engine holds each
+   present's flip to a target timestamp and reports the glass time back.
+2. **`VK_GOOGLE_display_timing`** (macOS/MoltenVK) — the same contract via
+   Metal `presentAtTime:` (Spike 5-proven; MoltenVK never exposes tier 1).
+3. **App-timed scheduler** — the main loop presents at the due time, open-loop.
+   Always available; also improves the OpenGL/texture backends on VRR
+   ([PR 1](#pr-1--deferred-present-scheduler--pacing-instrumentation)).
+
+**The tier is set by driver version, not GPU age**: a current driver on a
+decade-old GPU qualifies. `VK_EXT_present_timing` shipped in the Vulkan 1.4.335
+spec (2025-11-28) and sits near ~8% device adoption as of mid-2026, so most
+desktop machines run the app-timed tier today. The silicon floors below are
+just how far back each vendor's *current* driver reaches (verified against
+vendor driver notes 2026-07; Spike 6 — `spikes/ext_present_timing/` —
+validates tier 1 on real hardware).
+
+**Windows** — tier 1, else tier 3:
+
+| Vendor / driver | `VK_EXT_present_timing` silicon floor |
+| --- | --- |
+| NVIDIA R595+ (proprietary) | Turing (RTX 20 / GTX 16, ~2018) |
+| AMD, Intel | not shipped yet → app-timed |
+
+**Linux** — tier 1, else tier 3:
+
+| Vendor / driver | `VK_EXT_present_timing` silicon floor |
+| --- | --- |
+| NVIDIA proprietary R595+ | Turing (~2018) |
+| NVIDIA NVK (Mesa 26.1+) | Kepler (~2012) |
+| AMD RADV (Mesa 26.1+) | GCN 1 / HD 7000 (~2012) |
+| Intel ANV (Mesa 26.1+) | Skylake (~2015); older cards use HASVK — no present_timing |
+
+**macOS** — tier 2, else tier 3:
+
+| Method | Floor |
+| --- | --- |
+| `VK_GOOGLE_display_timing` (MoltenVK) | any Metal Mac on macOS 11+ (~2013+) |
+
 ## Plan status
 
 **Starting point: `jn/video-refactoring` tip** (`49d909939`) — the
