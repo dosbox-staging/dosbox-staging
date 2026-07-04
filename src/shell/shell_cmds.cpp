@@ -2743,11 +2743,11 @@ void DOS_Shell::CMD_APPEND(char* args) {
 		if (DOS_Append::IsActive()) {
 			std::string out = "APPEND=";
 			const auto& paths = DOS_Append::GetPaths();
-			for (size_t i = 0; i < paths.size(); ++i) {
-				out += paths[i];
-				if (i < paths.size() - 1) {
-					out += ";";
-				}
+			bool first = true;
+			for (const auto& path : paths) {
+				if (!first) out += ";";
+				out += path;
+				first = false;
 			}
 			WriteOut("%s\n", out.c_str());
 		} else {
@@ -2789,11 +2789,11 @@ void DOS_Shell::CMD_APPEND(char* args) {
 	// programs and legacy installers to verify that the APPEND service is active.
 	std::string env_out = "";
 	const auto& paths = DOS_Append::GetPaths();
-	for (size_t i = 0; i < paths.size(); ++i) {
-		env_out += paths[i];
-		if (i < paths.size() - 1) {
-			env_out += ";";
-		}
+	bool first = true;
+	for (const auto& path : paths) {
+		if (!first) env_out += ";";
+		env_out += path;
+		first = false;
 	}
 	SetEnv("APPEND", env_out);
 }
