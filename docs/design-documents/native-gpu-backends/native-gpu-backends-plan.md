@@ -2637,6 +2637,28 @@ spec" is now resolved. The shape (names verbatim):
   `vkGetSwapchainTimingPropertiesEXT` (`refreshDuration`) — feeds the
   fixed-display quantisation expectations below.
 
+**Shipped-API update (Spike 6, 2026-07 — Vulkan-Headers 1.4.350, spec v3):**
+the extension now ships, and the real API diverges from this proposal pin in
+ways [PR 6](#pr-6--present-timing-the-flagship) must follow (always verify
+against the installed `vulkan-headers`). A runnable, compile-verified
+reference is `spikes/ext_present_timing/`.
+
+- Feedback is a two-struct call now:
+  `vkGetPastPresentationTimingEXT(device, const VkPastPresentationTimingInfoEXT*,
+  VkPastPresentationTimingPropertiesEXT*)`, the latter carrying a
+  `pPresentationTimings` array — not the proposal's simple count+array.
+- Per-stage times arrive as a nested `VkPresentStageTimeEXT` array
+  (`presentStageCount` / `pPresentStages`) inside each
+  `VkPastPresentationTimingEXT`; `presentId` is a `uint64_t` paired with
+  `VkPresentId2KHR` (`VK_KHR_present_id2`).
+- `VkSwapchainTimingPropertiesEXT` reports `refreshInterval` next to
+  `refreshDuration`; `VkPresentTimingInfoEXT` gained `presentStageQueries`
+  and `targetTimeDomainPresentStage`.
+- `vkGetSwapchainTimeDomainPropertiesEXT` returns domains **and** their ids;
+  a host-clock domain (`CLOCK_MONOTONIC` / `QueryPerformanceCounter`) can be
+  used for `targetTime` directly, making the calibrated-timestamps dance
+  optional.
+
 ### Spike 4 — Metal scheduled presents on real hardware (PASSED)
 
 Standalone Cocoa/Metal program (`spikes/metal_spike.mm`): 300
