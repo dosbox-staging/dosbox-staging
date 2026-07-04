@@ -264,9 +264,12 @@ proviso in this pass, so re-read it when reviewing that list.
 5. **Dependencies (revised 2026-07-05 after the
    [Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05) review)** — the runtime list is remarkably short:
    **glslang** (the only runtime library dependency on Linux —
-   packaged by every major distro, hard system dependency) and
-   **MoltenVK** (macOS only, Khronos-maintained, via vcpkg/brew —
-   distro packaging irrelevant). **Vulkan-Hpp costs nothing**: the
+   packaged by every major distro, hard system dependency; in vcpkg
+   for our builds) and
+   **MoltenVK** (macOS only, Khronos-maintained, via Homebrew —
+   **no vcpkg port exists**, verified against the pinned baseline
+   2026-07-04; brew ships both `libMoltenVK.dylib` and the static
+   archive, and Spike 5 ran on exactly that package). **Vulkan-Hpp costs nothing**: the
    `vulkan.hpp`/`vulkan_raii.hpp` headers ship inside the
    vulkan-headers package we need anyway (verified locally).
    **SPIRV-Cross is demoted to a dev-time CLI tool**: with no MSL
@@ -1271,7 +1274,10 @@ Commits:
    file's history across the move.
 2. `build: add the Vulkan build plumbing` — `vulkan-headers` from
    vcpkg (which includes `vulkan.hpp`/`vulkan_raii.hpp` — Vulkan-Hpp
-   is zero additional dependency); on macOS, MoltenVK from vcpkg.
+   is zero additional dependency); on macOS, MoltenVK from Homebrew
+   (no vcpkg port exists — verified 2026-07-04; runtime-loaded, not
+   linked, so this is a CI/dev-setup dependency plus release-bundling
+   work, not a link dependency).
    The vcpkg manifest's SDL3 entry currently enables the `vulkan`
    feature **on Linux only** — extend it to all platforms, or
    `SDL_Vulkan_CreateSurface` will be compiled out of SDL on
