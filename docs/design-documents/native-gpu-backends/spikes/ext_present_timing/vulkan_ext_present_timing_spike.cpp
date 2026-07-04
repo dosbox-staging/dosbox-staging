@@ -243,23 +243,28 @@ int main(int argc, char** argv)
 		std::exit(2);
 	}
 
-	// Choose the feedback stage: photons-on-glass if offered, else the
-	// guaranteed queue-operations-end.
+	// Choose the feedback stage that best tracks the display: photons-on-glass
+	// if offered, else scanout-start (first_pixel_out), else the guaranteed
+	// queue-operations-end (GPU-done, which does NOT reflect display cadence).
 	VkPresentStageFlagBitsEXT stage;
+	const char*               stage_desc;
 	if (ts_caps.presentStageQueries &
 	    VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT) {
-		stage = VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT;
+		stage      = VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT;
+		stage_desc = "first_pixel_visible (true glass time)";
+	} else if (ts_caps.presentStageQueries &
+	           VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_OUT_BIT_EXT) {
+		stage      = VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_OUT_BIT_EXT;
+		stage_desc = "first_pixel_out (scanout start - tracks display cadence)";
 	} else if (ts_caps.presentStageQueries &
 	           VK_PRESENT_STAGE_QUEUE_OPERATIONS_END_BIT_EXT) {
-		stage = VK_PRESENT_STAGE_QUEUE_OPERATIONS_END_BIT_EXT;
+		stage      = VK_PRESENT_STAGE_QUEUE_OPERATIONS_END_BIT_EXT;
+		stage_desc = "queue_operations_end (GPU-done, NOT display cadence)";
 	} else {
 		printf("no usable feedback stage advertised\n");
 		std::exit(2);
 	}
-	printf("[5] scheduling=relative, feedback stage=0x%x %s\n", stage,
-	       stage == VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT
-	               ? "(first_pixel_visible = true glass time)"
-	               : "(queue_operations_end = GPU-done, not scanout)");
+	printf("[5] scheduling=relative, feedback stage=0x%x %s\n", stage, stage_desc);
 
 	// ------------------------- device -------------------------
 	uint32_t qf_count = 0;
@@ -585,12 +590,9 @@ int main(int argc, char** argv)
 
 	printf("\n=== VK_EXT_present_timing (relative) @ %.3f Hz, %d frames - %s ===\n",
 	       DosRateHz, NumFrames, props.deviceName);
-	printf("target period: %.3f ms | submitted: %d | feedback entries: %zu | "
+	printf("target period: %.3f ms | submitted: %d | feedback entries: %zu\n"
 	       "stage: %s\n",
-	       period_ms, presented, feedback.size(),
-	       stage == VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT
-	               ? "first_pixel_visible"
-	               : "queue_operations_end");
+	       period_ms, presented, feedback.size(), stage_desc);
 	Stats(interval_ms, "feedback interval [ms]  (want ~14.268)");
 	Stats(interval_err_ms, "interval - period [ms]  (jitter; want ~0)");
 	Stats(present_call_ms, "vkQueuePresentKHR call [ms]  (blocking check)");
