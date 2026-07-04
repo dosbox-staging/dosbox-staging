@@ -1643,8 +1643,8 @@ question left behind is when the shipped default flips to `auto`.*
   intervals vs DOS cadence on VRR; skip counters ≈ 0 on VRR;
   per-present block time ≈ 0.
 - **Manual matrix per PR**: macOS/Vulkan-on-MoltenVK; Linux/Vulkan (NVIDIA, AMD,
-  Intel — core team members); Windows/Vulkan (NVIDIA RTX 3060
-  + the three AMD iGPU boxes; Intel-on-Windows is untested at home —
+  Intel — core team members); Windows/Vulkan (NVIDIA RTX 3060 and
+  the three AMD iGPU boxes; Intel-on-Windows is untested at home —
   minor gap, `opengl`/`texture` fallbacks cover it); VRR and fixed
   displays; both presentation modes; vsync on/off; fullscreen +
   windowed (compositor-ceiling expectations documented; NVCP
@@ -1730,19 +1730,19 @@ question left behind is when the shipped default flips to `auto`.*
 
 ---
 
-# Appendix A — Architecture decision memo (2026-07-03, verbatim)
+## Appendix A — Architecture decision memo (2026-07-03, verbatim)
 
 Preserved verbatim from the plan-review discussion.
 
-## My opinion: switch to native Vulkan + Metal backends. Drop SDL GPU and dx12.
+### My opinion: switch to native Vulkan + Metal backends. Drop SDL GPU and dx12.
 
 I started this plan on SDL GPU because it's the obvious, low-effort abstraction. Your pacing requirement killed it, and having done the research, I'm now convinced the native route is genuinely better for this project — not just forced. Here's the whole case.
 
-### Why SDL GPU is out
+#### Why SDL GPU is out
 
 I verified this rather than assumed it: SDL GPU performs the present inside `SDL_SubmitGPUCommandBuffer`, exposes no native swapchain or queue handles, has no timestamp parameter, and has no present-timing work in progress upstream. There is no hook. Getting `VK_EXT_present_timing` into SDL GPU would mean patching SDL or driving a months-long upstream API discussion on someone else's timeline. For a non-negotiable requirement, "wait and hope" isn't a plan. SDL GPU is designed for games that don't care *when* the flip happens; we are precisely the opposite case.
 
-### What present timing actually buys us (and why native is the only way)
+#### What present timing actually buys us (and why native is the only way)
 
 `VK_EXT_present_timing` — merged Nov 2025 after five years, feature-complete in [Mesa 26.1 across RADV/NVK/ANV](https://www.phoronix.com/news/Mesa-VK_EXT_present_timing), in NVIDIA's proprietary R595+ on Windows and Linux — and Metal's decade-mature `present(atTime:)` both give the same two-sided contract:
 
@@ -1751,7 +1751,7 @@ I verified this rather than assumed it: SDL GPU performs the present inside `SDL
 
 The app-timed scheduler we agreed on stays — demoted to the permanent fallback tier (extension-less Vulkan drivers, OpenGL), and built first since it helps OpenGL immediately.
 
-### The other things native buys — each real on its own
+#### The other things native buys — each real on its own
 
 - **Dependency risk drops.** SDL_shadercross — preview software, the riskiest external in the old plan — becomes unnecessary. Native Vulkan eats glslang's SPIR-V directly; native Metal eats SPIRV-Cross's MSL directly; both were already committed for the offline 330 generation. We'd add vk-bootstrap and VMA (boring, stable, ubiquitous). Net ledger: one risky dep out, two dull ones in.
 - **Debugging gets honest.** Validation layers (including sync validation) and RenderDoc operate directly on our calls, no abstraction layer between us and the error.
@@ -1759,14 +1759,14 @@ The app-timed scheduler we agreed on stays — demoted to the permanent fallback
 - **The learning goal.** You said you want to genuinely understand SPIR-V, Vulkan, the GPU stack. Owning the swapchain, sync, and pipelines *is* that curriculum; SDL GPU would have taught you SDL GPU's opinions instead.
 - **Precedent.** RetroArch, Dolphin, DuckStation — the emulators whose pacing you're aiming at — all own native backends for exactly these reasons. Every subproblem we'll hit has battle-tested reference code in the open.
 
-### What it costs — no sugar-coating
+#### What it costs — no sugar-coating
 
 - **Roughly double the backend bring-up.** The Vulkan tax: swapchain lifecycle (`OUT_OF_DATE`/`SUBOPTIMAL`, resize races, minimize, surface loss), semaphore/fence correctness (sync bugs are intermittent and vendor-flavoured — the classic time sink), layout transitions, descriptors. Bounded by our tiny fixed pipeline — realistically ~3–4k lines of Vulkan with vk-bootstrap/VMA, ~1.5–2k of Obj-C++ Metal — but this WSI grind is exactly what SDL GPU had a year of community hardening on, and we're walking away from that.
 - **Two native backends to maintain forever**, with driver-quirk triage landing on us.
 - **Early-adopter risk.** The extension is *new*. First-generation driver implementations will have bugs; Windows AMD/Intel support hasn't shipped yet. Mitigated by the fallback ladder we need anyway, plus the extension's own feedback telling us when it's lying.
 - **The compositor ceiling, on every OS.** Under a desktop compositor a window is treated like a fixed-refresh display — the Khronos blog says so outright. First-class pacing is a **fullscreen** story (direct scanout / independent flip) on Windows, Wayland, and macOS alike. Windowed stays best-effort. Every emulator lives with this; we document it and move on.
 
-### Vulkan vs DX12 on Windows, for our workload
+#### Vulkan vs DX12 on Windows, for our workload
 
 Performance is a non-question — a few fragment passes over a small texture; both APIs are absurdly overqualified. What actually differentiates:
 
@@ -1776,7 +1776,7 @@ Performance is a non-question — a few fragment passes over a small texture; bo
 
 So dropping dx12 costs: marginally better windowed presentation and old-Intel robustness — both already covered. It saves: a whole backend, the entire DXC/FXC/DXBC packaging question (which dissolves unresolved, pleasingly), and a test-matrix column. Easy call.
 
-### Ripple effects on the plan
+#### Ripple effects on the plan
 
 - `output`: `texture`, `texturenb`, `opengl`, `vulkan`, `metal`, `auto` (Linux/Windows → `vulkan`, macOS → `metal`, fallback `opengl` → `texture`).
 - All shader-side work is **unchanged** — 450 single-source, pragma system, topology extraction, offline 330 generation, GL-coupling cleanup. That was always the majority of the effort, and it transfers 1:1.
@@ -1784,18 +1784,18 @@ So dropping dx12 costs: marginally better windowed presentation and old-Intel ro
 - PR sequence: ① app-timed scheduler + pacing instrumentation (helps OpenGL today, permanent fallback tier) → ② native Vulkan skeleton (no shaders; upload/blit/captures/present modes) → ③ shader toolchain + Vulkan pipeline executor + internal shaders → ④ Metal backend → ⑤ single-source library + offline script → ⑥ present-timing PR (`VK_EXT_present_timing` + `present(atTime:)` + drift/feedback instrumentation) → ⑦ `auto` + polish. The learning doc runs through all of it, per commit.
 - Fallback ladder at runtime: present-timing extension → app-timed scheduler → (OpenGL/texture paths unchanged).
 
-### Verdict
+#### Verdict
 
 Native Vulkan + Metal, dx12 dropped, SDL GPU dropped, cache demoted to gated. The price is the WSI/sync grind and owning two backends; the payoff is the flagship feature actually existing, measurably, plus a cleaner dependency story, real CI rendering tests, and the deep-dive you wanted anyway. I'd sign it.
 
 ---
 
-# Appendix B — Follow-up decisions: dependencies, shader workflow, cache deferral, reference study (2026-07-03)
+## Appendix B — Follow-up decisions: dependencies, shader workflow, cache deferral, reference study (2026-07-03)
 
 Lightly edited from the review discussion into decision-record form;
 all details preserved.
 
-## vk-bootstrap and VMA, explained
+### vk-bootstrap and VMA, explained
 
 Vulkan's design philosophy is that the driver does *nothing* implicitly — every application must hand-write two large chunks of pure ceremony that have nothing to do with what the app actually draws:
 
@@ -1805,7 +1805,7 @@ Vulkan's design philosophy is that the driver does *nothing* implicitly — ever
 
 The "risky dep out, dull deps in" ledger: SDL_shadercross was **preview software** — API still moving, packaging immature, a real chance of chasing breakage across its releases. vk-bootstrap and VMA are the opposite species: years-stable, MIT, tiny, in vcpkg and every distro, with enormous install bases — "dull" in the best sense. They add code we don't have to write, without adding risk we have to carry. (Both *could* be hand-rolled — the memory needs are a dozen textures and a few buffers — but there's no virtue in rewriting the world's most-rewritten boilerplate.)
 
-## Shader workflow — one correction to the initial understanding
+### Shader workflow — one correction to the initial understanding
 
 Right for OpenGL; Metal needs **no checked-in variants and no offline step**:
 
@@ -1816,11 +1816,11 @@ Right for OpenGL; Metal needs **no checked-in variants and no offline step**:
 
 "A shader was touched" therefore means: edit the 450 source → run the script (regenerates GL 330) → commit both → verify on vulkan, metal, and opengl. Testing on all three per shader change is the honest cost of three backends; golden captures make most of it mechanical.
 
-## Cache → "Possible future work — deferred"
+### Cache → "Possible future work — deferred"
 
 Agreed, fully — and cleaner than a "gated item" (a gate implies someone keeps watching it). Milliseconds on first load is nothing; the cache leaves the executing plan, with the design sketch preserved in the deferred section so it doesn't have to be re-derived if reality ever disagrees.
 
-## On the difficulty estimate — revised down after a fair correction
+### On the difficulty estimate — revised down after a fair correction
 
 There are stable, shipping, open-source implementations of *precisely* this problem, and studying them before writing a line is cheap, high-value, and belongs in the plan as a formal step. What the study genuinely de-risks is the **design** — swapchain recreation strategy, sync architecture, frames-in-flight structure, WSI event handling, how to shape the per-API device abstraction — which is exactly where the "grind" mistakes described in the memo live. The nuance that stays: reference code doesn't eliminate the *debugging tail* on hardware and drivers not run daily (vendor-flavoured quirks, and first-generation `VK_EXT_present_timing` implementations). That's what the manual test matrix is for. Difficulty revised down, not to zero.
 
@@ -1834,7 +1834,7 @@ The study list, with licence hygiene noted (patterns are always fair game; *code
 
 Workflow: John checks the repos out locally; Claude inspects them; findings become both a design-notes section in the plan and an early chapter of the learning doc ("how the pros structure a native video backend"), fitting the per-commit education goal.
 
-## Confirmed outcomes
+### Confirmed outcomes
 
 - **Both Vulkan and Metal are committed scope, Vulkan first; SDL GPU
   out.** (John: "full sold".)
@@ -1846,14 +1846,14 @@ Workflow: John checks the repos out locally; Claude inspects them; findings beco
 
 ---
 
-# Appendix C — Reference study: design notes (2026-07-04)
+## Appendix C — Reference study: design notes (2026-07-04)
 
 Sources studied locally: Dolphin (GPLv2+, primary), PPSSPP (GPLv2+),
 RetroArch (GPLv3 — patterns only), Khronos Vulkan-Samples
 (Apache-2.0), DuckStation (CC-BY-NC-ND — **patterns only, no code
 copying**). File:line references are into those checkouts.
 
-## 1. Sizing and decomposition
+### 1. Sizing and decomposition
 
 - Dolphin Vulkan backend ≈ 10k LOC: VKTexture 1382, VulkanContext
   1274, StateTracker 907, ObjectCache 812, VKSwapChain 732, VKGfx 730,
@@ -1865,7 +1865,7 @@ copying**). File:line references are into those checkouts.
   context/device (vk-bootstrap shrinks this), swapchain, per-frame
   command/sync manager, pipeline executor, upload, readback.
 
-## 2. Swapchain lifecycle (the canonical state machine)
+### 2. Swapchain lifecycle (the canonical state machine)
 
 - **Creation**: image count = `minImageCount + 1` clamped to caps
   (Dolphin VKSwapChain.cpp:291; PPSSPP VulkanContext.cpp:1424); avoid
@@ -1891,7 +1891,7 @@ copying**). File:line references are into those checkouts.
   SURFACE_LOST (`WSI_HARDENING_TEST`, vulkan_common.c:76-100) —
   a testing idea worth stealing for our recreation paths.
 
-## 3. Frames in flight and per-frame sync
+### 3. Frames in flight and per-frame sync
 
 - Dolphin: `NUM_FRAMES_IN_FLIGHT = 2`; per-frame bundle = 1 fence,
   acquire semaphore, render-done semaphore, command buffer(s),
@@ -1911,7 +1911,7 @@ copying**). File:line references are into those checkouts.
   RetroArch caps waits at 500 ms to avoid wedging on stuck drivers
   (vulkan_common.c:150). Adopt the finite-timeout hygiene.
 
-## 4. Runtime vsync switching
+### 4. Runtime vsync switching
 
 - Dolphin: full swapchain recreation on vsync toggle (present mode is
   immutable per swapchain).
@@ -1921,7 +1921,7 @@ copying**). File:line references are into those checkouts.
   (swapchain_recreation.cpp:62-91, 237-238). Adopt: maintenance1 path
   when available, Dolphin-style recreation as fallback.
 
-## 5. Upload path
+### 5. Upload path
 
 - Dolphin streams through a 32 MB fence-tracked ring; that machinery
   exists for unbounded, variably-sized per-frame transfer volumes
@@ -1932,7 +1932,7 @@ copying**). File:line references are into those checkouts.
   case of their ring, without the allocator. Metal: no staging at all
   (`MTLStorageModeShared`).
 
-## 6. Shader pipeline executor (RetroArch slang — same genre as ours)
+### 6. Shader pipeline executor (RetroArch slang — same genre as ours)
 
 - Compilation at preset load only, never per frame; glslang behind a
   **global mutex** with one-time `InitializeProcess()`
@@ -1958,7 +1958,7 @@ copying**). File:line references are into those checkouts.
   (slang_process.cpp:773-808) — validates our deferred cache design;
   still deferred.
 
-## 7. Present pacing — the headline finding
+### 7. Present pacing — the headline finding
 
 - **Nobody schedules presents on Vulkan yet — but DuckStation does on
   Metal.** RetroArch: no display-timing usage at all (pacing =
@@ -1984,7 +1984,7 @@ copying**). File:line references are into those checkouts.
   thread; (c) their FrameTimeData ring is the model for our pacing
   logs.
 
-## 8. Metal notes (Dolphin)
+### 8. Metal notes (Dolphin)
 
 - CAMetalLayer: `setDevice`, `setPixelFormat(BGRA8Unorm)`,
   `setDisplaySyncEnabled` (vsync toggle — no recreation needed!).
@@ -1994,7 +1994,7 @@ copying**). File:line references are into those checkouts.
   unified memory for uploads — the Metal backend is the easy half;
   plan accordingly (Vulkan first hardens the shared structure).
 
-## 9. DuckStation (patterns only — no-derivatives licence)
+### 9. DuckStation (patterns only — no-derivatives licence)
 
 Architecturally the closest relative: five per-API device classes
 behind one `GPUDevice` interface (gpu_device.h, 1048 lines). Sizes:
@@ -2033,7 +2033,7 @@ land well under these. Design lessons (to design, not copy):
 - Present-mode mapping mirrors ours: Disabled → IMMEDIATE, fallback
   MAILBOX, then FIFO; Mailbox → MAILBOX, fallback FIFO.
 
-## 10. PCSX2 and RPCS3 (added 2026-07-04; new findings only)
+### 10. PCSX2 and RPCS3 (added 2026-07-04; new findings only)
 
 Licences: **PCSX2 = GPLv3** (patterns only); **RPCS3 = GPLv2**
 (compatible with GPL-2.0-or-later; patterns still preferred to keep
@@ -2077,7 +2077,7 @@ our licence flexibility).
 
 ---
 
-# Appendix D — Spike results (2026-07-04)
+## Appendix D — Spike results (2026-07-04)
 
 Five spikes, all run locally. [Spike 1](#spike-1--cli-toolchain-round-trip) (CLI toolchain round-trip) below;
 [Spike 2](#spike-2--glslang--spirv-cross-library-apis-passed) (library APIs), [Spike 3](#spike-3--vk_ext_present_timing-api-surface-pinned) (`VK_EXT_present_timing` API pinning),
@@ -2085,7 +2085,7 @@ Five spikes, all run locally. [Spike 1](#spike-1--cli-toolchain-round-trip) (CLI
 (MoltenVK timed presents — the experiment that decided the
 Metal-backend deletion, Appendix E) follow it.
 
-## Spike 1 — CLI toolchain round-trip
+### Spike 1 — CLI toolchain round-trip
 
 Hand-converted `interpolation/sharp.glsl` (330 → 450) and ran the full
 round trip. Tools: glslang 16.3.0, SPIRV-Cross 2026-04-30 (Homebrew).
@@ -2151,7 +2151,7 @@ spirv-cross --msl sharp.frag.spv
 5. Keep the `#pragma` comment block byte-identical.
 6. Bodies otherwise untouched.
 
-## Spike 2 — glslang + SPIRV-Cross library APIs (PASSED)
+### Spike 2 — glslang + SPIRV-Cross library APIs (PASSED)
 
 [PR 3](#pr-3--shader-toolchain--vulkan-pipeline) uses the libraries, not the CLI tools; verified with a small C++
 program (`spikes/lib_spike.cpp`) against the Homebrew builds,
@@ -2174,7 +2174,7 @@ on a fragment shader extended with parameter-style members
   never by instance name (which is also SPIR-V-ID-unstable, per
   [Spike 1](#spike-1--cli-toolchain-round-trip)).
 
-## Spike 3 — VK_EXT_present_timing API surface (pinned)
+### Spike 3 — VK_EXT_present_timing API surface (pinned)
 
 From the released Vulkan-Docs proposal — [PR 6](#pr-6--present-timing-the-flagship) commit 2's "consult the
 spec" is now resolved. The shape (names verbatim):
@@ -2206,7 +2206,7 @@ spec" is now resolved. The shape (names verbatim):
   `vkGetSwapchainTimingPropertiesEXT` (`refreshDuration`) — feeds the
   fixed-display quantisation expectations below.
 
-## Spike 4 — Metal scheduled presents on real hardware (PASSED)
+### Spike 4 — Metal scheduled presents on real hardware (PASSED)
 
 Standalone Cocoa/Metal program (`spikes/metal_spike.mm`): 300
 clear-colour frames presented via `presentDrawable:atTime:` at a
@@ -2241,7 +2241,7 @@ times collected via `addPresentedHandler`. Hardware: **Apple M4 Pro,
   teardown crash); presented-handlers fire on Metal's internal queue
   (thread-safe collection required).
 
-## Spike 5 — MoltenVK timed presents (PASSED; deleted the Metal backend)
+### Spike 5 — MoltenVK timed presents (PASSED; deleted the Metal backend)
 
 The experiment that sealed [Appendix E](#appendix-e--ecosystem-review-vulkan-hpp-moltenvk-slang-2026-07-05)'s MoltenVK decision: a raw-C-API
 Vulkan program (`spikes/vulkan_timing_spike.mm`) presenting 300
@@ -2252,7 +2252,7 @@ Same machine, same display, same cadence as Spike 4, so the numbers
 are directly comparable:
 
 | | Spike 4 (native Metal `atTime:`) | Spike 5 (MoltenVK) |
-|---|---|---|
+| --- | --- | --- |
 | feedback coverage | 300/300 | 300/300 |
 | mean interval | 14.254 ms | **14.275 ms** (target 14.268) |
 | interval histogram | 90 × 8.3 ms + 203 × 16.7 ms | **90 × 8.3 ms + 207 × 16.7 ms** |
@@ -2280,7 +2280,7 @@ are directly comparable:
 
 ---
 
-# Appendix E — Ecosystem review: Vulkan-Hpp, MoltenVK, Slang (2026-07-05)
+## Appendix E — Ecosystem review: Vulkan-Hpp, MoltenVK, Slang (2026-07-05)
 
 John challenged three plan decisions against the latest authoritative
 Vulkan ecosystem guidance (vulkan.org, the official Khronos tutorial,
@@ -2289,7 +2289,7 @@ information. He was right on two of the three. This appendix is the
 lightly edited decision memo; the decision record summarises the
 outcomes.
 
-## The verified facts first
+### The verified facts first
 
 - The official Khronos Vulkan tutorial (docs.vulkan.org, source at
   KhronosGroup/Vulkan-Tutorial) teaches: **Vulkan-Hpp with RAII**,
@@ -2328,7 +2328,7 @@ outcomes.
   with `EShMsgVulkanRules`). The name is a 2016 libretro coinage
   predating Khronos's Slang branding.
 
-## 1. Binding layer — switch to Vulkan-Hpp RAII (adopted)
+### 1. Binding layer — switch to Vulkan-Hpp RAII (adopted)
 
 The decisive fact is the `std::expected` one: decision 12 already
 mandates C++23, `std::expected` for fallible construction, and no
@@ -2367,7 +2367,7 @@ reused** — never allocate/map/unmap/free per frame (this was already
 our staging-slot design). Revisit VMA only if the transfer profile
 ever stops being fixed.
 
-## 2. MoltenVK — Metal backend deleted (adopted, spike-sealed)
+### 2. MoltenVK — Metal backend deleted (adopted, spike-sealed)
 
 The expectation was to defend the native Metal backend; the evidence
 killed it:
@@ -2404,7 +2404,7 @@ The timing ladder becomes: `VK_EXT_present_timing` (new Mesa/NVIDIA)
 time + feedback ring) → app-timed scheduler. Two extension dialects,
 one backend — versus one dialect and two entire backends. No contest.
 
-## 3. Slang — evaluated and declined, with an open door
+### 3. Slang — evaluated and declined, with an open door
 
 Slang is the right recommendation for the tutorial's audience: people
 starting new shader codebases. Our situation differs in three
