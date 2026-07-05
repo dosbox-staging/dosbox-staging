@@ -17,6 +17,17 @@
 // must be included after dosbox_config.h
 #include "SDL.h"
 
+class SdlSurface {
+
+public:
+	void LockSurface();
+	void UnlockSurface();
+	SDL_Surface* surface = nullptr;
+
+private:
+	bool is_locked = false;
+};
+
 class SdlRenderer : public RenderBackend {
 
 public:
@@ -85,10 +96,10 @@ private:
 	// four packed 8-bit values in BGRX byte order (that's in memory order,
 	// so byte N is B, byte N+1 is G, byte N+2 is R).
 	//
-	SDL_Surface* curr_framebuf = {};
+	SdlSurface curr_framebuf = {};
 
 	// Contains the last fully rendered frame, waiting to be presented.
-	SDL_Surface* last_framebuf = {};
+	SdlSurface last_framebuf = {};
 
 	// True if the last framebuffer has been updated since the last present
 	bool last_framebuf_dirty = false;
