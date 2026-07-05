@@ -151,12 +151,12 @@ SdlRenderer::~SdlRenderer()
 		renderer = {};
 		texture  = {};
 	}
-	if (curr_framebuf) {
-		SDL_DestroySurface(curr_framebuf);
+	if (curr_framebuf.surface) {
+		SDL_DestroySurface(curr_framebuf.surface);
 		curr_framebuf = {};
 	}
-	if (last_framebuf) {
-		SDL_DestroySurface(last_framebuf);
+	if (last_framebuf.surface) {
+		SDL_DestroySurface(last_framebuf.surface);
 		last_framebuf = {};
 	}
 	if (window) {
@@ -227,24 +227,26 @@ void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 	default: assertm(false, "Invalid TextureFilterMode"); return;
 	}
 
-	if (curr_framebuf) {
-		SDL_DestroySurface(curr_framebuf);
+	if (curr_framebuf.surface) {
+		SDL_DestroySurface(curr_framebuf.surface);
+		curr_framebuf = {};
 	}
-	if (last_framebuf) {
-		SDL_DestroySurface(last_framebuf);
+	if (last_framebuf.surface) {
+		SDL_DestroySurface(last_framebuf.surface);
+		last_framebuf = {};
 	}
 
-	curr_framebuf = SDL_CreateSurface(
+	curr_framebuf.surface = SDL_CreateSurface(
 	                                               render_width_px,
 	                                               render_height_px,
 	                                               SdlPixelFormat);
 
-	last_framebuf = SDL_CreateSurface(
+	last_framebuf.surface = SDL_CreateSurface(
 	                                               render_width_px,
 	                                               render_height_px,
 	                                               SdlPixelFormat);
 
-	if (!curr_framebuf || !last_framebuf) {
+	if (!curr_framebuf.surface || !last_framebuf.surface) {
 		SDL_DestroyTexture(texture);
 		LOG_ERR("SDL: Error creating input surface: %s", SDL_GetError());
 		return;
@@ -299,25 +301,21 @@ ShaderDescriptor SdlRenderer::GetCurrentShaderDescriptor()
 
 void SdlRenderer::StartFrame(uint32_t*& pixels_out, int& pitch_out)
 {
-	assert(curr_framebuf);
+	assert(curr_framebuf.surface);
 
 	// Some surfaces must be locked for direct access
-	if (SDL_MUSTLOCK(curr_framebuf)) {
-		SDL_LockSurface(curr_framebuf);
-	}
+	curr_framebuf.LockSurface();
 
-	pixels_out = static_cast<uint32_t*>(curr_framebuf->pixels);
-	pitch_out  = curr_framebuf->pitch;
+	pixels_out = static_cast<uint32_t*>(curr_framebuf.surface->pixels);
+	pitch_out  = curr_framebuf.surface->pitch;
 }
 
 void SdlRenderer::EndFrame()
 {
-	assert(curr_framebuf);
-	assert(last_framebuf);
+	assert(curr_framebuf.surface);
+	assert(last_framebuf.surface);
 
-	if (SDL_MUSTLOCK(last_framebuf)) {
-		SDL_LockSurface(last_framebuf);
-	}
+	last_framebuf.LockSurface();
 
 	// We need to copy the buffers. We can't just swap them because the VGA
 	// emulation only writes the changed pixels to the framebuffer in each
@@ -326,9 +324,9 @@ void SdlRenderer::EndFrame()
 	// TODO Couldn't get SDL_BlitSurface to work... If you
 	// can, feel free to use that here, but this works
 	// perfectly fine.
-	std::memcpy(last_framebuf->pixels,
-	            curr_framebuf->pixels,
-	            (curr_framebuf->h * curr_framebuf->pitch));
+	std::memcpy(last_framebuf.surface->pixels,
+	            curr_framebuf.surface->pixels,
+	            (curr_framebuf.surface->h * curr_framebuf.surface->pitch));
 
 	last_framebuf_dirty = true;
 }
@@ -336,17 +334,15 @@ void SdlRenderer::EndFrame()
 void SdlRenderer::PrepareFrame()
 {
 	assert(texture);
-	assert(last_framebuf);
+	assert(last_framebuf.surface);
 
-	if (SDL_MUSTLOCK(last_framebuf)) {
-		SDL_UnlockSurface(last_framebuf);
-	}
+	last_framebuf.UnlockSurface();
 
 	if (last_framebuf_dirty) {
 		SDL_UpdateTexture(texture,
 		                  nullptr, // entire texture
-		                  last_framebuf->pixels,
-		                  last_framebuf->pitch);
+		                  last_framebuf.surface->pixels,
+		                  last_framebuf.surface->pitch);
 
 		last_framebuf_dirty = false;
 	}
@@ -470,4 +466,22 @@ uint32_t SdlRenderer::MakePixel(const uint8_t red, const uint8_t green,
 {
 	static_assert(SdlPixelFormat == SDL_PIXELFORMAT_XRGB8888);
 	return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
+}
+
+void SdlSurface::LockSurface()
+{
+	assert(surface);
+	if (SDL_MUSTLOCK(surface) && !is_locked) {
+		SDL_LockSurface(surface);
+		is_locked = true;
+	}
+}
+
+void SdlSurface::UnlockSurface()
+{
+	assert(surface);
+	if (SDL_MUSTLOCK(surface) && is_locked) {
+		SDL_UnlockSurface(surface);
+		is_locked = false;
+	}
 }
