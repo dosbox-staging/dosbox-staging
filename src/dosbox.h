@@ -47,6 +47,39 @@ void DOSBOX_RequestShutdown();
 
 bool DOSBOX_IsShutdownRequested();
 
+enum class PauseState {
+	// Emulator running normally.
+	Running,
+
+	// User-initiated pause (via hotkey or HTTP API call).
+	UserPaused,
+
+	// Auto-pause from window focus loss; only the focus-gain handler resumes
+	// this, leaving user-pauses alone.
+	//
+	// This gets "upgraded" to `UserPaused` if we receive a pause HTTP
+	// API call while focus-loss-paused (you can't do this via hotkey
+	// interactions; window must get the focus first which will unpause).
+	FocusLossPaused,
+};
+
+PauseState DOSBOX_GetPauseState();
+void DOSBOX_SetPauseState(PauseState new_state);
+
+// User-driven pause / resume intent (via hotkey or HTTP API call).
+void DOSBOX_RequestUserPause();
+void DOSBOX_RequestUserResume();
+
+inline bool DOSBOX_IsRunning()
+{
+	return (DOSBOX_GetPauseState() == PauseState::Running);
+}
+
+inline bool DOSBOX_IsPaused()
+{
+	return (DOSBOX_GetPauseState() != PauseState::Running);
+}
+
 // The E_Exit function throws an exception to quit. Call it in unexpected
 // circumstances.
 [[noreturn]] void E_Exit(const char *message, ...)
