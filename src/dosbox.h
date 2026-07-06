@@ -58,6 +58,14 @@ bool DOSBOX_IsShutdownRequested();
 bool DOSBOX_IsRunning();
 bool DOSBOX_IsPaused();
 
+// True whenever a pause has been requested but not necessarily engaged
+// yet -- covers the SDL fade-out pending window as well as the actually-
+// paused states. Callers that want "user has asked to pause" semantics
+// (e.g. the mixer's fade-to-silence trigger) use this. Callers that care
+// about subsystem state (mixer thread's silence path, capture skip) use
+// `DOSBOX_IsPaused()` instead.
+bool DOSBOX_IsPauseRequested();
+
 void DOSBOX_RequestUserPause();
 void DOSBOX_RequestUserResume();
 
