@@ -282,7 +282,14 @@ void GFX_RequestExit(const bool pressed)
 		return;
 	}
 
-	if (DOSBOX_IsPaused()) {
+	// Toggle on the requested state, not the actual one. During the
+	// pending fade-out window `DOSBOX_IsPaused()` is still false, so
+	// keying off it would map a second press to another (no-op) pause
+	// request. Keying off the request lets a quick second press cancel
+	// the pause during the fade, and guarantees the hotkey can always
+	// exit a pending pause even if the fade never completes (e.g. the
+	// mixer thread wedged on a stalled audio device).
+	if (DOSBOX_IsPauseRequested()) {
 		DOSBOX_RequestUserResume();
 	} else {
 		DOSBOX_RequestUserPause();

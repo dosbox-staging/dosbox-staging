@@ -204,6 +204,12 @@ struct MixerSettings {
 	// level) but overwrites the SDL-bound buffer with silence.
 	std::atomic<MixerMuteState> mute_state = MixerMuteState::Audible;
 
+	// SDL-side fade-out/-in gain, ramped by `mixer_callback()` and
+	// polled by the PausePending FSM in dosbox.cpp (via
+	// `MIXER_GetPlaybackGain()`) to know when the fade-out has
+	// reached zero.
+	std::atomic<float> playback_gain = 1.0f;
+
 	HighpassFilter highpass_filter = {};
 	Compressor compressor          = {};
 	bool do_compressor             = false;
@@ -2600,9 +2606,16 @@ static void capture_callback()
 // Returns whether the SDL output buffer should currently be silenced.
 // Used both by the mixer thread (to silence `final_output` content under
 // mute) and by `mixer_callback()` (to drive the silence-edge gain ramp).
+//
+// Uses `DOSBOX_IsPauseRequested()` (not `DOSBOX_IsPaused()`) so the
+// fade-out ramp starts at the pause-request edge, not at the actual
+// pause. During the pending window the mixer thread and MIDI renderer
+// are still producing real audio -- that's what the fade attenuates
+// against, so it doesn't hit silence half-way through and click.
+//
 static bool mixer_should_silence_output()
 {
-	return DOSBOX_IsPaused() ||
+	return DOSBOX_IsPauseRequested() ||
 	       (mixer.mute_state.load(std::memory_order_acquire) !=
 	        MixerMuteState::Audible);
 }
@@ -2646,8 +2659,12 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	//
 	const bool should_silence = mixer_should_silence_output();
 
-	static float playback_gain = 1.0f;
-	const float target_gain    = should_silence ? 0.0f : 1.0f;
+	// Read the shared gain into a local scratch so the per-frame ramp
+	// doesn't hammer the atomic; commit the final value at the bottom.
+	// The PausePending FSM in dosbox.cpp reads this via
+	// `MIXER_GetPlaybackGain()` to know when the fade-out has completed.
+	float playback_gain = mixer.playback_gain.load(std::memory_order_relaxed);
+	const float target_gain = should_silence ? 0.0f : 1.0f;
 
 	constexpr float SmoothingMs = 5.0f;
 
@@ -2685,7 +2702,14 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		}
 	}
 
+	mixer.playback_gain.store(playback_gain, std::memory_order_relaxed);
+
 	SDL_PutAudioStreamData(stream, output.data(), bytes_requested);
+}
+
+float MIXER_GetPlaybackGain()
+{
+	return mixer.playback_gain.load(std::memory_order_relaxed);
 }
 
 static void mixer_thread_loop()
