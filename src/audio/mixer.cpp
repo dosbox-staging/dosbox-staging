@@ -2909,70 +2909,111 @@ MixerMuteState MIXER_GetMuteState()
 	return mixer.mute_state.load(std::memory_order_acquire);
 }
 
-// User-driven path: pressing the mute hotkey (or invoking it remotely).
-// Trumps any `AutoMuted` state in effect -- once the user has decided, only
-// the user can clear it. Callers are responsible for the `no_sound` guard if
-// they want one (the hotkey handler logs a warning there).
-void MIXER_RequestUserMute()
+// Pure mute-transition policy; it maps (current state, request) to the next
+// state, or `nullopt` for a no-op.
+//
+// The `MIXER_Request*()` functions apply its result via `set_mute_state()`.
+//
+std::optional<MixerMuteState> MIXER_NextMuteState(const MixerMuteState current,
+                                                  const MuteRequest request)
 {
 	using enum MixerMuteState;
 
-	switch (mixer.mute_state.load(std::memory_order_acquire)) {
-	case Audible:
-	case AutoMuted: set_mute_state(UserMuted); break;
+	switch (request) {
+	case MuteRequest::UserMute:
+		// Trumps any AutoMuted state -- once the user has decided, only
+		// the user can clear it. Idempotent once user-muted.
+		//
+		switch (current) {
+		case Audible:
+		case AutoMuted: return UserMuted;
 
-	case UserMuted:
-		// already user-muted
+		case UserMuted: return {};
+
+		default: assertm(false, "Invalid MixerMuteState"); return {};
+		}
 		break;
+
+	case MuteRequest::UserUnmute:
+		// A user unmute clears either kind of mute -- the user is
+		// taking control regardless of how we got muted.
+		//
+		switch (current) {
+		case UserMuted:
+		case AutoMuted: return Audible;
+
+		case Audible: return {};
+
+		default: assertm(false, "Invalid MixerMuteState"); return {};
+		}
+		break;
+
+	case MuteRequest::AutoMute:
+		// Engages only from Audible; a user-mute survives focus loss
+		// and an existing auto-mute is idempotent.
+		//
+		switch (current) {
+		case Audible: return AutoMuted;
+
+		case UserMuted:
+		case AutoMuted: return {};
+
+		default: assertm(false, "Invalid MixerMuteState"); return {};
+		}
+		break;
+
+	case MuteRequest::AutoUnmute:
+		// Clears an auto-mute only; a user-mute must not be cleared by
+		// focus gain.
+		//
+		switch (current) {
+		case AutoMuted: return Audible;
+
+		case UserMuted:
+		case Audible: return {};
+
+		default: assertm(false, "Invalid MixerMuteState"); return {};
+		}
+		break;
+	}
+
+	return {};
+}
+
+// User-driven path: pressing the mute hotkey (or invoking it remotely).
+// Callers are responsible for the `no_sound` guard if they want one (the
+// hotkey handler logs a warning there).
+void MIXER_RequestUserMute()
+{
+	if (const auto next = MIXER_NextMuteState(MIXER_GetMuteState(),
+	                                          MuteRequest::UserMute)) {
+		set_mute_state(*next);
 	}
 }
 
 void MIXER_RequestUserUnmute()
 {
-	using enum MixerMuteState;
-
-	switch (mixer.mute_state.load(std::memory_order_acquire)) {
-	case UserMuted:
-	case AutoMuted:
-		// User-initiated unmute clears either kind of mute. We treat
-		// "user pressed unmute" as the user taking control regardless
-		// of which path got us here.
-		set_mute_state(Audible);
-		break;
-
-	case Audible:
-		// already audible
-		break;
+	if (const auto next = MIXER_NextMuteState(MIXER_GetMuteState(),
+	                                          MuteRequest::UserUnmute)) {
+		set_mute_state(*next);
 	}
 }
 
 // `mute_when_inactive` path: window lost focus.
 void MIXER_RequestAutoMute()
 {
-	using enum MixerMuteState;
-
-	switch (mixer.mute_state.load(std::memory_order_acquire)) {
-	case Audible: set_mute_state(AutoMuted); break;
-
-	case UserMuted:
-	case AutoMuted:
-		// UserMuted survives focus changes. AutoMuted is already in
-		// place. Both no-op.
-		break;
+	if (const auto next = MIXER_NextMuteState(MIXER_GetMuteState(),
+	                                          MuteRequest::AutoMute)) {
+		set_mute_state(*next);
 	}
 }
 
 // `mute_when_inactive` path: window regained focus.
 void MIXER_RequestAutoUnmute()
 {
-	using enum MixerMuteState;
-	switch (mixer.mute_state.load(std::memory_order_acquire)) {
-	case AutoMuted: set_mute_state(Audible); break;
-	case UserMuted:
-	case Audible:
-		// UserMuted must not be cleared by focus gain -- only the user
-		// can clear a user-mute. Audible is a no-op.
-		break;
+	if (const auto next = MIXER_NextMuteState(MIXER_GetMuteState(),
+	                                          MuteRequest::AutoUnmute)) {
+		set_mute_state(*next);
 	}
 }
 
