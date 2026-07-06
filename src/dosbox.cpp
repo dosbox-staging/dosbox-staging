@@ -178,7 +178,9 @@ static void set_subsystems_paused(const bool paused)
 	audio_paused = paused;
 	if (paused) {
 		MIXER_Pause();
+		MIDI_Pause();
 	} else {
+		MIDI_Resume();
 		MIXER_Resume();
 	}
 }

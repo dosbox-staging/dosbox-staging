@@ -584,6 +584,23 @@ void MIDI_Unmute()
 	midi.is_muted = false;
 }
 
+void MIDI_Pause()
+{
+	// If the user has already muted via the mixer, don't double-mute.
+	// `MIDI_Resume()` queries `MIXER_IsManuallyMuted()` to decide whether to
+	// undo on resume; that check is the single source of truth.
+	if (!MIXER_IsManuallyMuted()) {
+		MIDI_Mute();
+	}
+}
+
+void MIDI_Resume()
+{
+	if (!MIXER_IsManuallyMuted()) {
+		MIDI_Unmute();
+	}
+}
+
 bool MIDI_IsAvailable()
 {
 	return (midi.device != nullptr);
