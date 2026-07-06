@@ -288,7 +288,8 @@ void GFX_RequestExit(const bool pressed)
 		DOSBOX_RequestUserPause();
 	}
 
-	TITLEBAR_RefreshTitle();
+	// Titlebar refresh happens inside `DOSBOX_SetPauseState()` on the
+	// `Paused`/`Running` transition.
 }
 
 bool GFX_IsPaused()
@@ -2121,7 +2122,6 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 
 		if (DOSBOX_GetPauseState() == Running) {
 			DOSBOX_SetPauseState(FocusLossPaused);
-			TITLEBAR_RefreshTitle();
 		}
 		break;
 
@@ -2130,7 +2130,6 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 	case SDL_EVENT_WINDOW_EXPOSED: {
 		if (DOSBOX_GetPauseState() == FocusLossPaused) {
 			DOSBOX_SetPauseState(Running);
-			TITLEBAR_RefreshTitle();
 		}
 		if (event.type == SDL_EVENT_WINDOW_FOCUS_GAINED) {
 			apply_active_settings();
